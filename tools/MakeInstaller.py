@@ -52,6 +52,7 @@ make_update = dialog.makeUpdateRadioBox.GetSelection() == 0
 upload = dialog.uploadCB.GetValue()
 
 tmpDir = tempfile.mkdtemp()
+tmpSourceDir = join(tmpDir, "source")
 
 #make_update = False
 #make_update = True
@@ -125,7 +126,7 @@ def GetDir(theDir, extension=None):
 from shutil import copy2 as copy
 import zipfile
 
-main_dir = abspath(join(dirname(sys.argv[0]), "source"))
+main_dir = abspath(join(dirname(sys.argv[0]), ".."))
 os.chdir(main_dir)
 
 bases = ("eg", "plugins", "Languages")
@@ -147,14 +148,13 @@ VersionStr = version_dict['version'] + '_build_' + str(version_dict['buildNum'])
 version_dict['VersionStr'] = VersionStr
 version_dict['DLL_DIR'] = DLL_DIR
 
-removedir("tmp")
 
 for pattern in ("*.py", "*.pyd", "*.png", "*.txt"):
-    xcopy("eg", "tmp\\source\\eg", pattern)
+    xcopy("eg", join(tmpDir, "source\\eg"), pattern)
 for pattern in ("*.png", "*.ico", "*.gif"):
-    xcopy("images", "tmp\\source\\images", pattern)
+    xcopy("images", join(tmpDir, "source\\images"), pattern)
 for pattern in ("*.py", "*.pyd", "*.png", "*.gif", "*.jpg"):
-    xcopy("plugins", "tmp\\source\\plugins", pattern)
+    xcopy("plugins", join(tmpDir, "source\\plugins"), pattern)
     
 # remove DLLs already in the full installer
 #if make_update:
@@ -163,30 +163,31 @@ for pattern in ("*.py", "*.pyd", "*.png", "*.gif", "*.jpg"):
 #    os.remove("tmp/source/plugins/Tira/Tira2.dll")
 #
 
-xcopy("Languages", "tmp\\source\\Languages", "*.py")
+xcopy("Languages", join(tmpSourceDir, "languages"), "*.py")
 
-for dir in os.listdir("tmp\\source\\plugins"):
+for dir in os.listdir(join(tmpSourceDir, "plugins")):
     if dir[:1] == "_":
-        removedir(os.path.join("tmp\\source\\plugins", dir))
+        removedir(join(tmpSourceDir, "plugins", dir))
 
-copy("EventGhost.pyw", "tmp\\source\\")
-copy("EventGhost.ico", "tmp\\source\\")
-copy("LICENSE.TXT", "tmp\\source\\")
-copy("Example.xml", "tmp\\source\\")
+copy("EventGhost.pyw", tmpSourceDir)
+copy("EventGhost.ico", tmpSourceDir)
+copy("LICENSE.TXT", tmpSourceDir)
+copy("Example.xml", tmpSourceDir)
 
 archive = zipfile.ZipFile("EventGhost_%s_Source.zip" % VersionStr, "w", zipfile.ZIP_DEFLATED)
-for root, dirs, files in os.walk("tmp\\source\\"):
-    destdir = root[len("tmp\\source\\"):]
+for root, dirs, files in os.walk(tmpSourceDir):
+    print root, dirs, files
+    destdir = root[len(tmpSourceDir) + 1:]
     for file in files:
-        archive.write(os.path.join(destdir, file))
+        archive.write(join(destdir, file))
 
-xcopy("plugins", "tmp\\source\\plugins", "*.dll")
+xcopy("plugins", join(tmpSourceDir, "plugins"), "*.dll")
     
 # remove DLLs already in the full installer
 if make_update:
-    os.remove("tmp/source/plugins/MceRemote/MceIr.dll")
-    os.remove("tmp/source/plugins/Streamzap/irdata.dll")
-    os.remove("tmp/source/plugins/Tira/Tira2.dll")
+    os.remove(join(tmpSourceDir, "plugins/MceRemote/MceIr.dll"))
+    os.remove(join(tmpSourceDir, "plugins/Streamzap/irdata.dll"))
+    os.remove(join(tmpSourceDir, "plugins/Tira/Tira2.dll"))
 
 #import compileall
 #compileall.compile_dir("tmp\\source\\eg", force=True)
@@ -201,7 +202,7 @@ if make_update:
 #            file.write(item + "\\icon.png", 'icon.png')
 #        file.close()
 
-os.chdir(join(main_dir, 'tmp\\source'))
+os.chdir(join(main_dir, tmpSourceDir))
 
 # The manifest will be inserted as resource into the exe.  This
 # gives the controls the Windows XP appearance (if run on XP ;-)
@@ -261,7 +262,7 @@ except ImportError:
 setup(
     options = dict(
         build = dict(
-            build_base = "..\\build"
+            build_base = join(tmpDir, "build")
         ),
         py2exe = dict(
             compressed = 0,
@@ -290,7 +291,7 @@ setup(
                 "FixTk",
             ],
             dll_excludes = ["DINPUT8.dll", "w9xpopen.exe", "gdiplus.dll", "msvcr71.dll"],
-            dist_dir = "..\\dist",
+            dist_dir = join(tmpDir, "dist"),
         )
     ),
     # The lib directory contains everything except the executables and the python dll.
@@ -319,7 +320,7 @@ setup(
     #cmdclass = {"py2exe": py2exe.run},
 )
 
-os.chdir(join(main_dir, 'tmp\\'))
+os.chdir(tmpDir)
 
 xcopy("source\\eg", "dist\\eg", "*.pyc")
 
