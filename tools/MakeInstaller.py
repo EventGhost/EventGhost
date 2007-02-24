@@ -20,61 +20,26 @@ sourceFiles = (
     "plugins/*.png",
 )
     
-class OptionsDialog(wx.Dialog):
-    def __init__(self):
-        wx.Dialog.__init__(self, None, title="Make EventGhost Installer")
-        
-        # create controls
-        self.makeUpdateRadioBox = wx.RadioBox(
-            self, 
-            choices = ("Make Update", "Make Full Installer"),
-            style = wx.RA_SPECIFY_ROWS
-        )
-        self.uploadCB = wx.CheckBox(self, -1, "Upload")
-        okButton = wx.Button(self, wx.ID_OK)
-        cancelButton = wx.Button(self, wx.ID_CANCEL)
-        
-        # add controls to sizers
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.makeUpdateRadioBox, 0, wx.ALL, 10)
-        sizer.Add(self.uploadCB, 0, wx.ALL, 10)
-        btnSizer = wx.StdDialogButtonSizer()
-        btnSizer.AddButton(okButton)
-        btnSizer.AddButton(cancelButton)
-        btnSizer.Realize()
-        sizer.Add(btnSizer)
-        
-        # layout sizers
-        self.SetSizer(sizer)
-        self.SetAutoLayout(True)
-        sizer.Fit(self)
 
-app = wx.PySimpleApp()
-dialog = OptionsDialog()
-if dialog.ShowModal() == wx.ID_CANCEL:
-    sys.exit(0)
-
-make_update = dialog.makeUpdateRadioBox.GetSelection() == 0
-upload = dialog.uploadCB.GetValue()
+#dialog = OptionsDialog()
+#if dialog.ShowModal() == wx.ID_CANCEL:
+#    sys.exit(0)
+#
+#make_update = dialog.makeUpdateRadioBox.GetSelection() == 0
+#make_update = True
 
 tmpDir = tempfile.mkdtemp()
-tmpSourceDir = join(tmpDir, "source")
+#tmpSourceDir = join(tmpDir, "source")
+trunkDir = abspath(join(dirname(sys.argv[0]), ".."))
 
-#make_update = False
-#make_update = True
-#
-#upload = False
-#upload = True
-#
-
-DLL_DIR = dirname(sys.executable)
 
 def GetVersion():
     data = {}
-    execfile("eg/Version.py", data, data)
+    versionFilePath = join(trunkDir, "eg/Version.py")
+    execfile(versionFilePath, data, data)
     data['buildNum'] += 1
     data['compileTime'] = time.time()
-    fd = file("eg/version.py", "wt")
+    fd = file(versionFilePath, "wt")
     fd.write("version = " + repr(data['version']) + "\n")
     fd.write("buildNum = " + repr(data['buildNum']) + "\n")
     fd.write("compileTime = " + repr(data['compileTime']) + "\n")
@@ -126,83 +91,62 @@ def GetDir(theDir, extension=None):
 from shutil import copy2 as copy
 import zipfile
 
-main_dir = abspath(join(dirname(sys.argv[0]), ".."))
-os.chdir(main_dir)
+#os.chdir(main_dir)
+#
+#bases = ("eg", "plugins", "Languages")
+#for base in ("eg", "plugins", "Languages"):
+#    for filename in locate("*.py", base):
+#        #print filename
+#        data = open(filename, "rb").read()
+#        if '\0' in data:
+#            print "Binary!", filename
+#            continue
+#        newdata = re.sub("\r?\n", "\r\n", data)
+#        if newdata != data:
+#            f = open(filename, "wb")
+#            f.write(newdata)
+#            f.close()
+#
+#
+#
+#for pattern in ("*.py", "*.pyd", "*.png", "*.txt"):
+#    xcopy("eg", join(tmpDir, "source\\eg"), pattern)
+#for pattern in ("*.png", "*.ico", "*.gif"):
+#    xcopy("images", join(tmpDir, "source\\images"), pattern)
+#for pattern in ("*.py", "*.pyd", "*.png", "*.gif", "*.jpg"):
+#    xcopy("plugins", join(tmpDir, "source\\plugins"), pattern)
+#    
+#
+#xcopy("Languages", join(tmpSourceDir, "languages"), "*.py")
+#
+#for dir in os.listdir(join(tmpSourceDir, "plugins")):
+#    if dir[:1] == "_":
+#        removedir(join(tmpSourceDir, "plugins", dir))
+#
+#copy("EventGhost.pyw", tmpSourceDir)
+#copy("EventGhost.ico", tmpSourceDir)
+#copy("LICENSE.TXT", tmpSourceDir)
+#copy("Example.xml", tmpSourceDir)
 
-bases = ("eg", "plugins", "Languages")
-for base in ("eg", "plugins", "Languages"):
-    for filename in locate("*.py", base):
-        #print filename
-        data = open(filename, "rb").read()
-        if '\0' in data:
-            print "Binary!", filename
-            continue
-        newdata = re.sub("\r?\n", "\r\n", data)
-        if newdata != data:
-            f = open(filename, "wb")
-            f.write(newdata)
-            f.close()
-
-version_dict = GetVersion()
-VersionStr = version_dict['version'] + '_build_' + str(version_dict['buildNum'])
-version_dict['VersionStr'] = VersionStr
-version_dict['DLL_DIR'] = DLL_DIR
+def MakeSourceArchive(filepath):
+    archive = zipfile.ZipFile(filepath, "w", zipfile.ZIP_DEFLATED)
+    for root, dirs, files in os.walk(tmpSourceDir):
+        destdir = root[len(tmpSourceDir) + 1:]
+        for file in files:
+            archive.write(join(destdir, file))
+    archive.close()
 
 
-for pattern in ("*.py", "*.pyd", "*.png", "*.txt"):
-    xcopy("eg", join(tmpDir, "source\\eg"), pattern)
-for pattern in ("*.png", "*.ico", "*.gif"):
-    xcopy("images", join(tmpDir, "source\\images"), pattern)
-for pattern in ("*.py", "*.pyd", "*.png", "*.gif", "*.jpg"):
-    xcopy("plugins", join(tmpDir, "source\\plugins"), pattern)
+#xcopy("plugins", join(tmpSourceDir, "plugins"), "*.dll")
     
 # remove DLLs already in the full installer
 #if make_update:
-#    os.remove("tmp/source/plugins/MceRemote/MceIr.dll")
-#    os.remove("tmp/source/plugins/Streamzap/irdata.dll")
-#    os.remove("tmp/source/plugins/Tira/Tira2.dll")
+#    os.remove(join(tmpSourceDir, "plugins/MceRemote/MceIr.dll"))
+#    os.remove(join(tmpSourceDir, "plugins/Streamzap/irdata.dll"))
+#    os.remove(join(tmpSourceDir, "plugins/Tira/Tira2.dll"))
 #
-
-xcopy("Languages", join(tmpSourceDir, "languages"), "*.py")
-
-for dir in os.listdir(join(tmpSourceDir, "plugins")):
-    if dir[:1] == "_":
-        removedir(join(tmpSourceDir, "plugins", dir))
-
-copy("EventGhost.pyw", tmpSourceDir)
-copy("EventGhost.ico", tmpSourceDir)
-copy("LICENSE.TXT", tmpSourceDir)
-copy("Example.xml", tmpSourceDir)
-
-archive = zipfile.ZipFile("EventGhost_%s_Source.zip" % VersionStr, "w", zipfile.ZIP_DEFLATED)
-for root, dirs, files in os.walk(tmpSourceDir):
-    print root, dirs, files
-    destdir = root[len(tmpSourceDir) + 1:]
-    for file in files:
-        archive.write(join(destdir, file))
-
-xcopy("plugins", join(tmpSourceDir, "plugins"), "*.dll")
-    
-# remove DLLs already in the full installer
-if make_update:
-    os.remove(join(tmpSourceDir, "plugins/MceRemote/MceIr.dll"))
-    os.remove(join(tmpSourceDir, "plugins/Streamzap/irdata.dll"))
-    os.remove(join(tmpSourceDir, "plugins/Tira/Tira2.dll"))
-
-#import compileall
-#compileall.compile_dir("tmp\\source\\eg", force=True)
-
-#os.chdir(os.path.join(main_dir, 'tmp\\source\\plugins'))
-#list = os.listdir('.')
-#for item in list:
-#    if os.path.isdir(item) and (item[0] != "_"):
-#        file = zipfile.PyZipFile(item + '.egp', 'w', zipfile.ZIP_STORED)
-#        file.writepy(item)
-#        if os.path.exists(item + "\\icon.png"):
-#            file.write(item + "\\icon.png", 'icon.png')
-#        file.close()
-
-os.chdir(join(main_dir, tmpSourceDir))
+#
+#os.chdir(join(main_dir, tmpSourceDir))
 
 # The manifest will be inserted as resource into the exe.  This
 # gives the controls the Windows XP appearance (if run on XP ;-)
@@ -236,30 +180,8 @@ RT_MANIFEST = 24
 shortpgm = "EventGhost"
 
 
-from distutils.core import setup
-import py2exe
 
-if len(sys.argv) == 1:
-    sys.argv.append("py2exe")
-
-# ModuleFinder can't handle runtime changes to __path__, but win32com uses them,
-# particularly for people who build from sources.  Hook this in.
-try:
-    import modulefinder
-    import win32com
-    for p in win32com.__path__[1:]:
-        modulefinder.AddPackagePath("win32com", p)
-    for extra in ["win32com.shell"]:#,"win32com.shellcon","win32com.mapi"]:
-        __import__(extra)
-        m = sys.modules[extra]
-        for p in m.__path__[1:]:
-            modulefinder.AddPackagePath(extra, p)
-except ImportError:
-    # no build path setup, no worries.
-    pass
-
-
-setup(
+py2exeOptions = dict(
     options = dict(
         build = dict(
             build_base = join(tmpDir, "build")
@@ -298,20 +220,20 @@ setup(
     #zipfile = r"lib\shardlib",
     zipfile = r"lib\python25.zip",
     data_files = [
-        (
-            "",
-            [
-                "Example.xml",
-                "LICENSE.TXT"
-            ]
-        ),
+#        (
+#            "",
+#            [
+#                "Example.xml",
+#                "LICENSE.TXT"
+#            ]
+#        ),
         #("plugins", GetDir("plugins\\", ".egp")),
         #("images", GetDir("images\\")),
     ],
     windows = [
         dict(
-            script = "EventGhost.pyw",
-            icon_resources = [(1, "EventGhost.ico")],
+            script = join(trunkDir, "EventGhost.pyw"),
+            icon_resources = [(1, join(trunkDir, "EventGhost.ico"))],
             other_resources = [(RT_MANIFEST, 1, manifest_template % dict(prog=shortpgm))],
             dest_base = shortpgm
         )
@@ -320,9 +242,6 @@ setup(
     #cmdclass = {"py2exe": py2exe.run},
 )
 
-os.chdir(tmpDir)
-
-xcopy("source\\eg", "dist\\eg", "*.pyc")
 
 inno_script = """
 ; WARNING: This script has been created by py2exe. Changes to this script
@@ -345,9 +264,9 @@ DefaultGroupName=EventGhost
 Compression=lzma/max
 SolidCompression=yes
 InternalCompressLevel=max
-OutputDir=..\.
+OutputDir=%(OUT_DIR)s
 OutputBaseFilename=EventGhost_%(version)s_build_%(buildNum)s_Setup
-LicenseFile=dist\license.txt
+LicenseFile=%(TRUNK)s\LICENSE.TXT
 DisableReadyPage=yes
 AppMutex=EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B
 
@@ -355,16 +274,31 @@ AppMutex=EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B
 Type: filesandordirs; Name: "{app}\eg"
 
 [Files]
-Source: "dist\*.*"; DestDir: "{app}"; Flags: ignoreversion
-Source: "dist\lib\*.*"; DestDir: "{app}\lib"; Flags: ignoreversion recursesubdirs
-Source: "source\images\*.*"; DestDir: "{app}\images"; Flags: ignoreversion recursesubdirs
-Source: "source\plugins\*.*"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs
-Source: "source\eg\*.*"; DestDir: "{app}\eg"; Flags: ignoreversion recursesubdirs
-Source: "source\Languages\*.*"; DestDir: "{app}\Languages"; Flags: ignoreversion recursesubdirs
-Source: "dist\Example.xml"; DestDir: "{userappdata}\EventGhost"; DestName: "MyConfig.xml"; Flags: onlyifdoesntexist uninsneveruninstall
-Source: "..\MFC71.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "%(DLL_DIR)s\msvcr71.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "%(DLL_DIR)s\msvcp71.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "%(DIST)s\*.*"; DestDir: "{app}"; Flags: ignoreversion
+Source: "%(DIST)s\lib\*.*"; DestDir: "{app}\lib"; Flags: ignoreversion recursesubdirs
+
+Source: "%(TRUNK)s\images\*.png"; DestDir: "{app}\images"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+Source: "%(TRUNK)s\images\*.ico"; DestDir: "{app}\images"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+
+Source: "%(TRUNK)s\plugins\*.py"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+Source: "%(TRUNK)s\plugins\*.pyd"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+Source: "%(TRUNK)s\plugins\*.dll"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+Source: "%(TRUNK)s\plugins\*.txt"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+Source: "%(TRUNK)s\plugins\*.png"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+Source: "%(TRUNK)s\plugins\*.gif"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+Source: "%(TRUNK)s\plugins\*.jpg"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+
+Source: "%(TRUNK)s\eg\*.py"; DestDir: "{app}\eg"; Flags: ignoreversion recursesubdirs
+Source: "%(TRUNK)s\eg\*.pyd"; DestDir: "{app}\eg"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+Source: "%(TRUNK)s\eg\*.png"; DestDir: "{app}\eg"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+Source: "%(TRUNK)s\eg\*.txt"; DestDir: "{app}\eg"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+
+Source: "%(TRUNK)s\languages\*.py"; DestDir: "{app}\languages"; Flags: ignoreversion recursesubdirs
+Source: "%(TRUNK)s\Example.xml"; DestDir: "{app}"; Flags: ignoreversion
+Source: "%(TRUNK)s\Example.xml"; DestDir: "{userappdata}\EventGhost"; DestName: "MyConfig.xml"; Flags: onlyifdoesntexist uninsneveruninstall
+Source: "%(PYTHON_DIR)s\MFC71.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "%(PYTHON_DIR)s\msvcr71.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "%(PYTHON_DIR)s\msvcp71.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 [Run]
 Filename: "{app}\EventGhost.exe"; Parameters: "-install"
@@ -397,16 +331,13 @@ DefaultGroupName=EventGhost
 Compression=lzma/max
 SolidCompression=yes
 InternalCompressLevel=max
-OutputDir=..\.
+OutputDir=%(OUT_DIR)s
 OutputBaseFilename=EventGhost_%(version)s_build_%(buildNum)s_Update
 ;DisableFinishedPage=yes
 DisableReadyPage=yes
 CreateUninstallRegKey=no
 UpdateUninstallLogAppName=no
 AppMutex=EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B
-;WizardImageFile=C:\EventGhost\logo.bmp
-;WizardImageStretch=no
-;WizardImageBackColor=$FFFFFF
 
 [Run]
 Filename: "{app}\EventGhost.exe"; Parameters: "-install"
@@ -429,16 +360,23 @@ Source: "source\Example.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "dist\Example.xml"; DestDir: "{userappdata}\EventGhost"; DestName: "MyConfig.xml"; Flags: onlyifdoesntexist uninsneveruninstall
 """
 
-if make_update:
-    pathname = "Update.iss"
-    ofi = open(pathname, "w")
-    ofi.write(inno_update % version_dict)
-    ofi.close()
-else:
-    pathname = "Setup.iss"
-    ofi = open(pathname, "w")
-    ofi.write(inno_script % version_dict)
-    ofi.close()
+
+def InstallPy2exePatch():
+    # ModuleFinder can't handle runtime changes to __path__, but win32com 
+    # uses them, particularly for people who build from sources.  Hook this in.
+    try:
+        import modulefinder
+        import win32com
+        for p in win32com.__path__[1:]:
+            modulefinder.AddPackagePath("win32com", p)
+        for extra in ["win32com.shell"]:#,"win32com.shellcon","win32com.mapi"]:
+            __import__(extra)
+            m = sys.modules[extra]
+            for p in m.__path__[1:]:
+                modulefinder.AddPackagePath(extra, p)
+    except ImportError:
+        # no build path setup, no worries.
+        pass
 
 
 def GetInnoCompilePath(filename):
@@ -455,25 +393,22 @@ def GetInnoCompilePath(filename):
     return value.replace("%1", filename)
     
     
-import win32api
-import win32event
-from win32con import *
-from win32process import *
-
 
 def ExecuteAndWait(commandLine, workingDir=None):
-    if workingDir is None:
-        workingDir = dirname(abspath(pathname))
-    si = STARTUPINFO()
-    si.dwFlags = STARTF_USESHOWWINDOW
-    si.wShowWindow = SW_SHOWNORMAL
-    hProcess, _, _, _ = CreateProcess(
+    import win32event
+    import win32con
+    import win32process
+
+    si = win32process.STARTUPINFO()
+    si.dwFlags = win32con.STARTF_USESHOWWINDOW
+    si.wShowWindow = win32con.SW_SHOWNORMAL
+    hProcess, _, _, _ = win32process.CreateProcess(
         None,         # AppName
         commandLine,  # Command line
         None,         # Process Security
         None,         # ThreadSecurity
         0,            # Inherit Handles?
-        NORMAL_PRIORITY_CLASS|CREATE_NEW_CONSOLE,
+        win32con.NORMAL_PRIORITY_CLASS|win32con.CREATE_NEW_CONSOLE,
         None,         # New environment
         workingDir,   # Current directory
         si            # startup info.
@@ -481,10 +416,128 @@ def ExecuteAndWait(commandLine, workingDir=None):
     win32event.WaitForSingleObject(hProcess, win32event.INFINITE)
 
 
-pathname = abspath(pathname)
-ExecuteAndWait(GetInnoCompilePath(pathname))
 
-if upload:
-    home_dir = abspath(dirname(sys.argv[0]))
-    os.chdir(home_dir)
-    execfile("_upload.py")
+def MakeInstaller(isUpdate):
+    from distutils.core import setup
+    import py2exe
+
+    os.chdir(tmpDir)
+    if len(sys.argv) == 1:
+        sys.argv.append("py2exe")
+    InstallPy2exePatch()
+    setup(**py2exeOptions)
+    
+    #xcopy("source\\eg", "dist\\eg", "*.pyc")
+    if isUpdate:
+        innoScriptPath = abspath("Update.iss")
+        template = inno_update
+    else:
+        innoScriptPath = abspath("Setup.iss")
+        template = inno_script
+        
+    templateOptions = GetVersion()
+    VersionStr = templateOptions['version'] + '_build_' + str(templateOptions['buildNum'])
+    templateOptions['VersionStr'] = VersionStr
+    templateOptions["PYTHON_DIR"] = dirname(sys.executable)
+    templateOptions["OUT_DIR"] = dirname(sys.argv[0])
+    templateOptions["TRUNK"] = trunkDir
+    templateOptions["DIST"] = join(tmpDir, "dist")
+    
+    fd = open(innoScriptPath, "w")
+    fd.write(template % templateOptions)
+    fd.close()
+    
+    ExecuteAndWait(GetInnoCompilePath(innoScriptPath))
+    return "C:/eventghost/EventGhost_0.3.5_build_886_Update.exe"
+
+
+def UploadFile(filename):
+    from ftplib import FTP
+
+
+    dialog = wx.ProgressDialog(
+        "Upload",
+        "Uploading: %s" % filename,
+        maximum=100.0,
+        style = wx.PD_CAN_ABORT
+            | wx.PD_APP_MODAL
+            | wx.PD_ELAPSED_TIME
+            | wx.PD_ESTIMATED_TIME
+            | wx.PD_REMAINING_TIME
+            | wx.PD_SMOOTH
+    )
+
+    class progress:
+        def __init__(self, filepath):
+            self.size = os.path.getsize(filepath)
+            self.fd = open(filepath, "rb")
+            self.pos = 0
+            
+        def read(self, size):
+            self.pos += size
+            keepGoing, skip = dialog.Update(min(100.0, self.pos * 100.0 / self.size))
+            if not keepGoing:
+                return None
+            return self.fd.read(size)
+        
+        def close(self):
+            self.fd.close()
+
+    fd = progress(filename)
+    ftp.storbinary("STOR " + basename(filename), fd)
+    fd.close()
+    dialog.Destroy()
+    
+    
+    
+class MainDialog(wx.Dialog):
+    def __init__(self):
+        wx.Dialog.__init__(self, None, title="Make EventGhost Installer")
+        
+        # create controls
+        self.makeUpdateRadioBox = wx.RadioBox(
+            self, 
+            choices = ("Make Update", "Make Full Installer"),
+            style = wx.RA_SPECIFY_ROWS
+        )
+        self.uploadCB = wx.CheckBox(self, -1, "Upload")
+        okButton = wx.Button(self, wx.ID_OK)
+        okButton.Bind(wx.EVT_BUTTON, self.OnOk)
+        cancelButton = wx.Button(self, wx.ID_CANCEL)
+        cancelButton.Bind(wx.EVT_BUTTON, self.OnCancel)
+        
+        # add controls to sizers
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.makeUpdateRadioBox, 0, wx.ALL, 10)
+        sizer.Add(self.uploadCB, 0, wx.ALL, 10)
+        btnSizer = wx.StdDialogButtonSizer()
+        btnSizer.AddButton(okButton)
+        btnSizer.AddButton(cancelButton)
+        btnSizer.Realize()
+        sizer.Add(btnSizer)
+        
+        # layout sizers
+        self.SetSizer(sizer)
+        self.SetAutoLayout(True)
+        sizer.Fit(self)
+        
+        
+    def OnOk(self, event):
+        self.Show(False)
+        isUpdate = self.makeUpdateRadioBox.GetSelection() == 0
+        filename = MakeInstaller(isUpdate)
+        if self.uploadCB.GetValue():
+            UploadFile(filename)
+        app.ExitMainLoop()
+        
+        
+    def OnCancel(self, event):
+        app.ExitMainLoop()
+        
+
+app = wx.App(0)
+app.SetExitOnFrameDelete(False)
+mainDialog = MainDialog()
+mainDialog.Show()
+app.MainLoop()
+
