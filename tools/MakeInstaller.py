@@ -9,28 +9,9 @@ import shutil
 import time
 
 
-sourceFiles = (
-    "eg/*.py",
-    "eg/*.pyd",
-    "eg/*.png",
-    "images/*.png",
-    "images/*.ico",
-    "languages/*.py",
-    "plugins/*.py",
-    "plugins/*.png",
-)
-    
-
-#dialog = OptionsDialog()
-#if dialog.ShowModal() == wx.ID_CANCEL:
-#    sys.exit(0)
-#
-#make_update = dialog.makeUpdateRadioBox.GetSelection() == 0
-#make_update = True
-
 tmpDir = tempfile.mkdtemp()
-#tmpSourceDir = join(tmpDir, "source")
 trunkDir = abspath(join(dirname(sys.argv[0]), ".."))
+outDir = abspath(join(trunkDir, "../.."))
 
 
 def GetVersion():
@@ -72,10 +53,19 @@ def xcopy(srcdir, destdir, pattern):
 def removedir(path):
     for root, dirs, files in os.walk(path, topdown=False):
         for name in files:
-            os.remove(join(root, name))
+            try:
+                os.remove(join(root, name))
+            except:
+                pass
         for name in dirs:
-            os.rmdir(join(root, name))
-    os.rmdir(path)
+            try:
+                os.rmdir(join(root, name))
+            except:
+                pass
+    try:
+        os.rmdir(path)
+    except:
+        pass
 
 
 def GetDir(theDir, extension=None):
@@ -219,17 +209,6 @@ py2exeOptions = dict(
     # The lib directory contains everything except the executables and the python dll.
     #zipfile = r"lib\shardlib",
     zipfile = r"lib\python25.zip",
-    data_files = [
-#        (
-#            "",
-#            [
-#                "Example.xml",
-#                "LICENSE.TXT"
-#            ]
-#        ),
-        #("plugins", GetDir("plugins\\", ".egp")),
-        #("images", GetDir("images\\")),
-    ],
     windows = [
         dict(
             script = join(trunkDir, "EventGhost.pyw"),
@@ -265,7 +244,7 @@ Compression=lzma/max
 SolidCompression=yes
 InternalCompressLevel=max
 OutputDir=%(OUT_DIR)s
-OutputBaseFilename=EventGhost_%(version)s_build_%(buildNum)s_Setup
+OutputBaseFilename=%(OUT_FILE_BASE)s
 LicenseFile=%(TRUNK)s\LICENSE.TXT
 DisableReadyPage=yes
 AppMutex=EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B
@@ -332,7 +311,7 @@ Compression=lzma/max
 SolidCompression=yes
 InternalCompressLevel=max
 OutputDir=%(OUT_DIR)s
-OutputBaseFilename=EventGhost_%(version)s_build_%(buildNum)s_Update
+OutputBaseFilename=%(OUT_FILE_BASE)s
 ;DisableFinishedPage=yes
 DisableReadyPage=yes
 CreateUninstallRegKey=no
@@ -349,15 +328,27 @@ Filename: "{app}\EventGhost.exe"; Flags: postinstall nowait skipifsilent
 Type: filesandordirs; Name: "{app}\eg"
 
 [Files]
-Source: "source\EventGhost.pyw"; DestDir: "{app}"; Flags: ignoreversion
-Source: "dist\EventGhost.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "source\images\*.png"; DestDir: "{app}\images"; Flags: ignoreversion recursesubdirs
-Source: "source\images\*.ico"; DestDir: "{app}\images"; Flags: ignoreversion recursesubdirs
-Source: "source\plugins\*.*"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs
-Source: "source\eg\*.*"; DestDir: "{app}\eg"; Flags: ignoreversion recursesubdirs
-Source: "source\Languages\*.*"; DestDir: "{app}\Languages"; Flags: ignoreversion recursesubdirs
-Source: "source\Example.xml"; DestDir: "{app}"; Flags: ignoreversion
-Source: "dist\Example.xml"; DestDir: "{userappdata}\EventGhost"; DestName: "MyConfig.xml"; Flags: onlyifdoesntexist uninsneveruninstall
+Source: "%(DIST)s\*.exe"; DestDir: "{app}"; Flags: ignoreversion
+
+Source: "%(TRUNK)s\images\*.png"; DestDir: "{app}\images"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+Source: "%(TRUNK)s\images\*.ico"; DestDir: "{app}\images"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+
+Source: "%(TRUNK)s\plugins\*.py"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+Source: "%(TRUNK)s\plugins\*.pyd"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+;Source: "%(TRUNK)s\plugins\*.dll"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+Source: "%(TRUNK)s\plugins\*.txt"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+Source: "%(TRUNK)s\plugins\*.png"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+Source: "%(TRUNK)s\plugins\*.gif"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+Source: "%(TRUNK)s\plugins\*.jpg"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+
+Source: "%(TRUNK)s\eg\*.py"; DestDir: "{app}\eg"; Flags: ignoreversion recursesubdirs
+Source: "%(TRUNK)s\eg\*.pyd"; DestDir: "{app}\eg"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+Source: "%(TRUNK)s\eg\*.png"; DestDir: "{app}\eg"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+Source: "%(TRUNK)s\eg\*.txt"; DestDir: "{app}\eg"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
+
+Source: "%(TRUNK)s\languages\*.py"; DestDir: "{app}\languages"; Flags: ignoreversion recursesubdirs
+Source: "%(TRUNK)s\Example.xml"; DestDir: "{app}"; Flags: ignoreversion
+Source: "%(TRUNK)s\Example.xml"; DestDir: "{userappdata}\EventGhost"; DestName: "MyConfig.xml"; Flags: onlyifdoesntexist uninsneveruninstall
 """
 
 
@@ -423,39 +414,45 @@ def MakeInstaller(isUpdate):
 
     os.chdir(tmpDir)
     
-    InstallPy2exePatch()
-    #setup(**py2exeOptions)
-    
-    #xcopy("source\\eg", "dist\\eg", "*.pyc")
-    if isUpdate:
-        innoScriptPath = abspath("Update.iss")
-        template = inno_update
-    else:
-        innoScriptPath = abspath("Setup.iss")
-        template = inno_script
-        
     templateOptions = GetVersion()
     VersionStr = templateOptions['version'] + '_build_' + str(templateOptions['buildNum'])
     templateOptions['VersionStr'] = VersionStr
     templateOptions["PYTHON_DIR"] = dirname(sys.executable)
-    templateOptions["OUT_DIR"] = dirname(sys.argv[0])
+    templateOptions["OUT_DIR"] = outDir
     templateOptions["TRUNK"] = trunkDir
     templateOptions["DIST"] = join(tmpDir, "dist")
+
+    InstallPy2exePatch()
+    setup(**py2exeOptions)
+    
+    if isUpdate:
+        innoScriptPath = abspath("Update.iss")
+        template = inno_update
+        outFileBase = "EventGhost_%s_Update" % VersionStr
+    else:
+        innoScriptPath = abspath("Setup.iss")
+        template = inno_script
+        outFileBase = "EventGhost_%s_Setup" % VersionStr
+        
+    templateOptions["OUT_FILE_BASE"] = outFileBase
     
     fd = open(innoScriptPath, "w")
     fd.write(template % templateOptions)
     fd.close()
     
-    #ExecuteAndWait(GetInnoCompilePath(innoScriptPath))
-    return "C:/eventghost/EventGhost_0.3.5_build_886_Update.exe"
+    ExecuteAndWait(GetInnoCompilePath(innoScriptPath))
+    os.chdir(trunkDir)
+    removedir(tmpDir)
+    return join(outDir, outFileBase + ".exe")
 
 
 def UploadFile(filename, url):
     from ftplib import FTP
     from urlparse import urlparse
     urlComponents = urlparse(url)
+    print url
+    print urlComponents
     
-
     dialog = wx.ProgressDialog(
         "Upload",
         "Uploading: %s" % filename,
@@ -484,7 +481,6 @@ def UploadFile(filename, url):
         def close(self):
             self.fd.close()
 
-    print urlComponents
     ftp = FTP(
         urlComponents.hostname, 
         urlComponents.username, 
@@ -499,6 +495,7 @@ def UploadFile(filename, url):
     
     
 class MainDialog(wx.Dialog):
+    
     def __init__(self, url=""):
         
         wx.Dialog.__init__(self, None, title="Make EventGhost Installer")
@@ -551,12 +548,14 @@ class MainDialog(wx.Dialog):
 
 app = wx.App(0)
 app.SetExitOnFrameDelete(False)
+print sys.argv
 if len(sys.argv) == 1:
     sys.argv.append("py2exe")
     url = ""
 else:
     url = sys.argv[1]
     sys.argv[1] = "py2exe"
+print sys.argv
 mainDialog = MainDialog(url)
 mainDialog.Show()
 app.MainLoop()
