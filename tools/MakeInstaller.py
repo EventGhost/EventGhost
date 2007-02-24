@@ -2,6 +2,12 @@ import wx
 import sys
 from os.path import basename, dirname, abspath, join
 import tempfile
+import os
+import re
+import fnmatch
+import shutil
+import time
+
 
 sourceFiles = (
     "eg/*.py",
@@ -60,12 +66,6 @@ tmpSourceDir = join(tmpDir, "source")
 #upload = False
 #upload = True
 #
-
-import os
-import re
-import fnmatch
-import shutil
-import time
 
 DLL_DIR = dirname(sys.executable)
 
