@@ -429,6 +429,7 @@ def MakeInstaller(isUpdate):
     fd.close()
     
     ExecuteAndWait(GetInnoCompilePath(innoScriptPath))
+    print "Building Installer done!"
     os.chdir(trunkDir)
     removedir(tmpDir)
     return join(outDir, outFileBase + ".exe")
@@ -476,6 +477,7 @@ def UploadFile(filename, url):
     fd = progress(filename)
     ftp.storbinary("STOR " + basename(filename), fd)
     fd.close()
+    print "Upload done!"
     dialog.Destroy()
     
     
