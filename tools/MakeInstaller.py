@@ -1,12 +1,14 @@
 import wx
 import sys
-from os.path import basename, dirname, abspath, join
+from os.path import basename, dirname, abspath, join, exists
 import tempfile
 import os
 import re
 import fnmatch
-import shutil
 import time
+from shutil import copy2 as copy
+import zipfile
+
 
 
 tmpDir = tempfile.mkdtemp()
@@ -38,16 +40,16 @@ def locate(pattern, root=os.curdir):
 
     
 def xcopy(srcdir, destdir, pattern):
-    if not os.path.exists(destdir):
+    if not exists(destdir):
         os.makedirs(destdir)
     for root, dirs, files in os.walk(srcdir):
         destdir2 = join(destdir, root[len(srcdir) + 1:])
         for dir in dirs:
-            if not os.path.exists(join(destdir2, dir)):
+            if not exists(join(destdir2, dir)):
                 os.makedirs(join(destdir2, dir))
         for file in files:
             if fnmatch.fnmatch(file, pattern):
-                shutil.copy2(join(root, file), join(destdir2, file))
+                copy(join(root, file), join(destdir2, file))
                 
                 
 def removedir(path):
@@ -77,9 +79,6 @@ def GetDir(theDir, extension=None):
                 continue
         x2.append(theDir + x)
     return x2
-
-from shutil import copy2 as copy
-import zipfile
 
 #os.chdir(main_dir)
 #

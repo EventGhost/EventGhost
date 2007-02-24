@@ -437,6 +437,7 @@ class TriggerEvent(eg.ActionClass):
         
     
     def __call__(self, eventString, waitTime=0):
+        eventString = eg.ParseString(eventString)
         if not waitTime:
             eg.TriggerEvent(eventString)
         else:
