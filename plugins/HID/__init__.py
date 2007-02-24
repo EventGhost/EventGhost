@@ -22,8 +22,6 @@ from ctypes import Structure, Union, c_byte, c_char, c_int, c_long, c_ulong, c_u
 from ctypes import pointer, byref, sizeof, POINTER
 from ctypes.wintypes import ULONG, BOOLEAN
 
-from PluginClass import PluginClass
-
 class Text:
     manufacturer = "Manufacturer"
     deviceName = "Device Name"
@@ -240,7 +238,7 @@ class HIDHelper:
             setupapiDLL.SetupDiGetDeviceInterfaceDetailA(hinfo,
                 byref(interfaceInfo), None, 0, byref(requiredSize), None)
             if requiredSize.value > 250:
-                eg.PrintError(self.text.errorRetrieval)
+                eg.PrintError(self.text.errorRetrieval + " GetDeviceInterfaceDetail")
                 continue #prevent a buffer overflow
 
             #get the actual info
@@ -258,8 +256,8 @@ class HIDHelper:
             try:
                 hidHandle = win32file.CreateFile(
                     device[DEVICE_PATH],
-                    win32con.GENERIC_READ, #|win32con.GENERIC_WRITE,
-                    win32con.FILE_SHARE_READ|win32con.FILE_SHARE_WRITE,
+                    win32con.GENERIC_READ | win32con.GENERIC_WRITE,
+                    win32con.FILE_SHARE_READ | win32con.FILE_SHARE_WRITE,
                     None,
                     win32con.OPEN_EXISTING,
                     0,
@@ -288,7 +286,7 @@ class HIDHelper:
             if not result:
                 #close handle
                 win32file.CloseHandle(hidHandle)
-                eg.PrintError(self.text.errorRetrieval)
+                eg.PrintError(self.text.errorRetrieval + " ManufacturerString")
                 continue
             device[VENDOR_STRING] = infoStr.value
                
@@ -298,7 +296,7 @@ class HIDHelper:
             if not result:
                 #close handle
                 win32file.CloseHandle(hidHandle)
-                eg.PrintError(self.text.errorRetrieval)
+                eg.PrintError(self.text.errorRetrieval + " ProductString")
                 continue
             device[PRODUCT_STRING] = infoStr.value
 
@@ -405,8 +403,8 @@ class HIDThread(threading.Thread):
         try:
             handle = win32file.CreateFile(
                 self.devicePath,
-                    win32con.GENERIC_READ, #|win32con.GENERIC_WRITE,
-                    win32con.FILE_SHARE_READ, #| win32con.FILE_SHARE_WRITE,
+                    win32con.GENERIC_READ | win32con.GENERIC_WRITE,
+                    win32con.FILE_SHARE_READ | win32con.FILE_SHARE_WRITE,
                 None, # no security
                 win32con.OPEN_EXISTING,
                 win32con.FILE_ATTRIBUTE_NORMAL | win32con.FILE_FLAG_OVERLAPPED,
@@ -461,24 +459,10 @@ class HIDThread(threading.Thread):
         )
 
         #parsing caps
-        #getting max DataIndex
-        maxIndex = 1
-        for i in range(bCapsArrL.value):
-            if bCapsArr[i].IsRange:
-                maxIndex = max(maxIndex, bCapsArr[i].Info.Range.DataIndexMax)
-            else:
-                maxIndex = max(maxIndex, bCapsArr[i].Info.NotRange.DataIndex)
-
-        for i in range(vCapsArrL.value):
-            if vCapsArr[i].IsRange:
-                maxIndex = max(maxIndex, vCapsArr[i].Info.Range.DataIndexMax)
-            else:
-                maxIndex = max(maxIndex, vCapsArr[i].Info.NotRange.DataIndex)
-
         # prepare a list to find and store for each index
         # whether it is a button or value
         oldValues = {}
-        dataIndexType = [0] * (maxIndex + 1)
+        dataIndexType = [0] * hidpCaps.NumberInputDataIndices
 
         #list entries depending on caps
         for i in range(bCapsArrL.value):
@@ -529,8 +513,7 @@ class HIDThread(threading.Thread):
                 #raw data events
                 if maxDataL == 0 or self.rawDataEvents:
                     read = str(buf)
-                    PluginClass.TriggerEvent(
-                        self.plugin,
+                    self.plugin.TriggerEvent(
                         binascii.hexlify(read).upper()
                     )
                 else:
@@ -555,8 +538,7 @@ class HIDThread(threading.Thread):
                             if newValue == oldValues[tmpIndex]:
                                 continue
                             oldValues[tmpIndex] = newValue
-                            PluginClass.TriggerEvent(
-                                self.plugin,
+                            self.plugin.TriggerEvent(
                                 "Value." + str(tmpIndex),
                                 payload = newValue
                             )
@@ -569,17 +551,14 @@ class HIDThread(threading.Thread):
                         if self.enduringEvents:
                             self.plugin.TriggerEnduringEvent(evtName)
                         else:
-                            PluginClass.TriggerEvent(self.plugin, evtName)
+                            self.plugin.TriggerEvent(evtName)
                     elif self.enduringEvents:
                         #no buttons pressed anymore
                         self.plugin.EndLastEvent()
                     else:
                         #trigger event so that releasing all buttons
                         #can get noticed even w/o enduring events
-                        PluginClass.TriggerEvent(
-                            self.plugin,
-                            "Button.None"
-                        )
+                        self.plugin.TriggerEvent("Button.None")
 
         #loop aborted
         if self.enduringEvents:
@@ -593,7 +572,7 @@ class HIDThread(threading.Thread):
         #HID thread finished
 
 
-class HID(eg.RawReceiverPlugin):
+class HID(eg.PluginClass):
     helper = None
     canMultiLoad = True
     text = Text
@@ -634,6 +613,8 @@ class HID(eg.RawReceiverPlugin):
     ):
         if eventName:
             self.info.eventPrefix = eventName
+        else:
+            self.info.eventPrefix = "HID"
         #ensure helper object is up to date
         if not self.helper:
             self.helper = HIDHelper()
@@ -680,13 +661,7 @@ class HID(eg.RawReceiverPlugin):
         dialog = eg.ConfigurationDialog(self, resizeable=True)
 
         #building dialog
-        class ListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
-            def __init__(self, parent, ID, pos=wx.DefaultPosition,
-                         size=wx.DefaultSize, style=0):
-                wx.ListCtrl.__init__(self, parent, ID, pos, size, style)
-                listmix.ListCtrlAutoWidthMixin.__init__(self)
-            
-        hidList = ListCtrl(dialog, -1, pos=wx.DefaultPosition,
+        hidList = wx.ListCtrl(dialog, -1, pos=wx.DefaultPosition,
             size=wx.DefaultSize, style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
 
         #create GUI
@@ -795,3 +770,4 @@ class HID(eg.RawReceiverPlugin):
                 device[PRODUCT_STRING],
                 device[VERSION_NUMBER]
             )
+
