@@ -38,6 +38,7 @@ class Text:
     errorRetrieval = "Error getting HID device info."
     errorMultipleDevices = "Multiple devices found. Don't know which to use."
     errorInvalidDataIndex = "Found data index not defined as button or control value."
+    vendorID = "Vendor ID "
 
 #structures for ctypes
 class GUID(Structure):
@@ -54,7 +55,7 @@ class SP_DEVICE_INTERFACE_DATA(Structure):
         ("Flags", c_ulong),
         ("Reserved", POINTER(ULONG))
     ]
-   
+
 class SP_DEVICE_INTERFACE_DETAIL_DATA_A(Structure):
     _fields_ = [("cbSize", c_ulong),
         ("DevicePath", c_char * 255)
@@ -86,7 +87,7 @@ class HIDP_CAPS(Structure):
         ("NumberFeatureValueCaps", c_ushort),
         ("NumberFeatureDataIndices", c_ushort)
     ]
-   
+
 class HIDP_CAPS_UNION(Union):
     class HIDP_BUTTON_CAPS_RANGE(Structure):
         _fields_ = [
@@ -99,7 +100,7 @@ class HIDP_CAPS_UNION(Union):
             ("DataIndexMin", c_ushort),
             ("DataIndexMax", c_ushort)
         ]
-   
+
     class HIDP_BUTTON_CAPS_NOT_RANGE(Structure):
         _fields_ = [
             ("Usage", c_ushort),
@@ -195,50 +196,50 @@ VERSION_NUMBER = MAX_INDEX = 5
 class HIDHelper:
     text = Text
     deviceList = []
-   
+
     def __init__(self):
         self.UpdateDeviceList()
 
     def UpdateDeviceList(self):
         self.deviceList = []
-       
+
         #dll references
         setupapiDLL = ctypes.windll.setupapi
         hidDLL =  ctypes.windll.hid
-       
+
         #prepare Interfacedata
         interfaceInfo = SP_DEVICE_INTERFACE_DATA()
         interfaceInfo.cbSize = sizeof(interfaceInfo)
-       
+
         #prepare InterfaceDetailData Structure
         interfaceDetailData = SP_DEVICE_INTERFACE_DETAIL_DATA_A()
         interfaceDetailData.cbSize = 5
-       
+
         #prepare HIDD_ATTRIBUTES
         hiddAttributes = HIDD_ATTRIBUTES()
         hiddAttributes.cbSize = sizeof(hiddAttributes)
-       
+
         #get guid for HID device class
         g = GUID()
         hidDLL.HidD_GetHidGuid(byref(g))
-       
+
         #get handle to the device information set
         hinfo = setupapiDLL.SetupDiGetClassDevsA(byref(g), None, None,
             DIGCF_PRESENT + DIGCF_DEVICEINTERFACE)
-       
+
         #enumerate devices
         i = 0
         while setupapiDLL.SetupDiEnumDeviceInterfaces(hinfo,
             None, byref(g), i, byref(interfaceInfo)):
             device = {}
             i += 1
-       
+
             #get the required size
             requiredSize = c_ulong()
             setupapiDLL.SetupDiGetDeviceInterfaceDetailA(hinfo,
                 byref(interfaceInfo), None, 0, byref(requiredSize), None)
             if requiredSize.value > 250:
-                eg.PrintError(self.text.errorRetrieval + " GetDeviceInterfaceDetail")
+                eg.PrintError(self.text.errorRetrieval)
                 continue #prevent a buffer overflow
 
             #get the actual info
@@ -269,47 +270,51 @@ class HIDHelper:
                     continue
             except:
                 continue
-               
+
             #getting additional info
             hidDLL.HidD_GetAttributes(int(hidHandle), byref(hiddAttributes))
             device[VENDOR_ID] = hiddAttributes.VendorID
             device[PRODUCT_ID] = hiddAttributes.ProductID
             device[VERSION_NUMBER] = hiddAttributes.VersionNumber
-           
+
             #prepare string buffer for device info strings
             hidpStringType = c_wchar * 128
             infoStr = hidpStringType()
-           
+
             #getting manufacturer
             result = hidDLL.HidD_GetManufacturerString(
                 int(hidHandle), byref(infoStr), ctypes.sizeof(infoStr))
-            if not result:
-                #close handle
-                win32file.CloseHandle(hidHandle)
-                eg.PrintError(self.text.errorRetrieval + " ManufacturerString")
-                continue
-            device[VENDOR_STRING] = infoStr.value
-               
+            if not result or len(infoStr.value) == 0:
+                #build a generic ManufacturerString with the vendor ID
+                device[VENDOR_STRING] = self.text.vendorID + str(hiddAttributes.VendorID)
+            else:
+                device[VENDOR_STRING] = infoStr.value
+
             #getting device name
             result = hidDLL.HidD_GetProductString(
                 int(hidHandle), byref(infoStr), ctypes.sizeof(infoStr))
-            if not result:
-                #close handle
-                win32file.CloseHandle(hidHandle)
-                eg.PrintError(self.text.errorRetrieval + " ProductString")
-                continue
-            device[PRODUCT_STRING] = infoStr.value
+            if not result or len(infoStr.value) == 0:
+                #getting product name via registry
+                devicePathSplit = device[DEVICE_PATH][4:].split("#")
+                regHandle = _winreg.OpenKey(
+                    _winreg.HKEY_LOCAL_MACHINE,
+                    "SYSTEM\\CurrentControlSet\\Enum\\" + devicePathSplit[0] + \
+                    "\\" + devicePathSplit[1] + "\\" + devicePathSplit[2])
+                device[PRODUCT_STRING], regType = _winreg.QueryValueEx(regHandle, "DeviceDesc")
+                _winreg.CloseKey(regHandle)
+            else:
+                device[PRODUCT_STRING] = infoStr.value
 
             #close handle
             win32file.CloseHandle(hidHandle)
-           
+
             #add device to internal list
             self.deviceList.append(device)
 
         #end loop
         #destroy deviceinfolist
         setupapiDLL.SetupDiDestroyDeviceInfoList(hinfo)
-           
+
 
     #gets the devicePath
     #the devicePath parameter is only used with multiple same devices
@@ -338,10 +343,10 @@ class HIDHelper:
                         #found right device
                         return devicePath
                     path = item[DEVICE_PATH]
-       
+
         if found == 1:
             return path
-       
+
         #multiple devices found
         #don't know which to use
         if found > 1:
@@ -369,7 +374,7 @@ class HIDThread(threading.Thread):
         self.abort = False
         self._overlappedRead = win32file.OVERLAPPED()
         self._overlappedRead.hEvent = win32event.CreateEvent(None, 1, 0, None)
-       
+
         #getting devicePath
         self.devicePath = helper.GetDevicePath(
             noOtherPort,
@@ -378,26 +383,26 @@ class HIDThread(threading.Thread):
             productID,
             versionNumber
         )
-       
+
         if not self.devicePath:
             eg.PrintError(self.text.errorFind + self.deviceName)
             return
-       
+
         threading.Thread.__init__(self, name = self.devicePath)
-       
+
         #setting members
         self.plugin = plugin
         self.helper = helper
         self.enduringEvents = enduringEvents
         self.rawDataEvents = rawDataEvents
         self.start()
-   
+
 
     def AbortThread(self):
         self.abort = True
         win32event.SetEvent(self._overlappedRead.hEvent)
-   
-   
+
+
     def run(self):
         #open file/devcice
         try:
@@ -413,18 +418,18 @@ class HIDThread(threading.Thread):
         except:
             eg.PrintError(self.text.errorOpen + self.deviceName)
             return
-       
+
         #getting data to get the right buffer size
         hidDLL =  ctypes.windll.hid
         setupapiDLL = ctypes.windll.setupapi
-       
+
         #get preparsed data
         preparsedData = c_ulong()
         result = hidDLL.HidD_GetPreparsedData(
             int(handle),
             ctypes.byref(preparsedData)
         )
-       
+
         #getCaps
         hidpCaps = HIDP_CAPS()
         result = hidDLL.HidP_GetCaps(preparsedData, ctypes.byref(hidpCaps))
@@ -433,24 +438,24 @@ class HIDThread(threading.Thread):
         rt = c_int(0)   #report type input
         rl = c_ulong(n)  #report length
         maxDataL = hidDLL.HidP_MaxDataListLength(rt, preparsedData)
-       
+
         #getting button caps
         bCapsArrL = c_ushort(hidpCaps.NumberInputButtonCaps)
         bCapsArrType = HIDP_BUTTON_CAPS * bCapsArrL.value
         bCapsArr = bCapsArrType()
-       
+
         hidDLL.HidP_GetButtonCaps(
             rt,
             ctypes.byref(bCapsArr),
             ctypes.byref(bCapsArrL),
             preparsedData
         )
-       
+
         #getting value caps
         vCapsArrL = c_ushort(hidpCaps.NumberInputValueCaps)
         vCapsArrType = HIDP_VALUE_CAPS * vCapsArrL.value
         vCapsArr = vCapsArrType()
-       
+
         hidDLL.HidP_GetValueCaps(
             rt,
             ctypes.byref(vCapsArr),
@@ -489,13 +494,13 @@ class HIDThread(threading.Thread):
                 ii = vCapsArr[i].Info.NotRange.DataIndex
                 dataIndexType[ii] = 2
                 oldValues[ii] = sys.maxint
-       
+
         #prepare data array with maximum possible length
         DataArrayType = HIDP_DATA * maxDataL
         data = DataArrayType()
-       
+
         while not self.abort:
-            #try to read and wait for an event to happen           
+            #try to read and wait for an event to happen
             try:
                 win32event.ResetEvent(self._overlappedRead.hEvent)
                 rc, buf = win32file.ReadFile(handle, n, self._overlappedRead)
@@ -563,7 +568,7 @@ class HIDThread(threading.Thread):
         #loop aborted
         if self.enduringEvents:
             self.plugin.EndLastEvent()
-       
+
         win32file.CloseHandle(handle)
 
         #free references
@@ -577,7 +582,7 @@ class HID(eg.PluginClass):
     canMultiLoad = True
     text = Text
     thread = None
-   
+
     def GetLabel(self,
         eventName,
         enduringEvents,
@@ -590,14 +595,18 @@ class HID(eg.PluginClass):
         productString,
         versionNumber
     ):
-        prefix = "HID:"
+        prefix = "HID: "
+        #one or both strings empty should not happen
         if not vendorString or not productString:
-            return prefix
-        if productString.find(vendorString) != -1:
-            #productString already contains manufacturer
-            return prefix + " " + productString
-        return prefix + " " + vendorString + " " + productString
-   
+            return "HID"
+
+        #productString already contains manufacturer of vendor id only
+        if productString.find(vendorString) != -1 or\
+            vendorString[0:len(self.text.vendorID)] == self.text.vendorID:
+            return prefix + productString
+
+        return prefix + vendorString + " " + productString
+
 
     def __start__(self,
         eventName,
@@ -638,8 +647,8 @@ class HID(eg.PluginClass):
 
     def __stop__(self):
         self.thread.AbortThread()
-               
-           
+
+
     def Configure(self,
         eventName = "",
         enduringEvents = True,
@@ -668,11 +677,11 @@ class HID(eg.PluginClass):
         hidList.InsertColumn(0, self.text.deviceName)
         hidList.InsertColumn(1, self.text.manufacturer)
         hidList.InsertColumn(2, self.text.connected)
-       
-       
+
+
         path = self.helper.GetDevicePath(noOtherPort,
             devicePath, vendorID, productID, versionNumber)
-       
+
         #fill list
         devices = {}
         idx = 0
@@ -703,7 +712,7 @@ class HID(eg.PluginClass):
                 hidList.SetStringItem(idx, 2, self.text.no)
                 hidList.Select(idx)
                 devices[idx] = item
-           
+
 
         #layout
         for i in range(hidList.GetColumnCount()):
@@ -711,9 +720,9 @@ class HID(eg.PluginClass):
             size = hidList.GetColumnWidth(i)
             hidList.SetColumnWidth(i, wx.LIST_AUTOSIZE)
             hidList.SetColumnWidth(i, max(size, hidList.GetColumnWidth(i) + 5))
-       
+
         dialog.sizer.Add(hidList, 1, flag = wx.EXPAND)
-       
+
         #sizers
         optionsSizer = wx.GridBagSizer(0, 5)
 
@@ -725,7 +734,7 @@ class HID(eg.PluginClass):
         eventNameCtrl = wx.TextCtrl(dialog, value = eventName)
         eventNameCtrl.SetMaxLength(32)
         optionsSizer.Add(eventNameCtrl, (0, 1), (1, 2), flag = wx.EXPAND)
-       
+
         #checkbox for no other port option
         noOtherPortCtrl = wx.CheckBox(dialog, -1, self.text.noOtherPort)
         noOtherPortCtrl.SetValue(noOtherPort)
@@ -740,13 +749,13 @@ class HID(eg.PluginClass):
         rawDataEventsCtrl = wx.CheckBox(dialog, -1, self.text.rawDataEvents)
         rawDataEventsCtrl.SetValue(rawDataEvents)
         optionsSizer.Add(rawDataEventsCtrl, (3, 0), (1, 3))
-       
+
         dialog.sizer.Add(optionsSizer)
 
         def OnRawDataEventsChange(event):
             enduringEventsCtrl.Enable(not rawDataEventsCtrl.GetValue())
             event.Skip()
-       
+
         def OnEnduringEventsChange(event):
             rawDataEventsCtrl.Enable(not enduringEventsCtrl.GetValue())
             event.Skip()
@@ -755,7 +764,7 @@ class HID(eg.PluginClass):
         OnEnduringEventsChange(wx.CommandEvent())
         rawDataEventsCtrl.Bind(wx.EVT_CHECKBOX, OnRawDataEventsChange)
         enduringEventsCtrl.Bind(wx.EVT_CHECKBOX, OnEnduringEventsChange)
-       
+
         if dialog.AffirmedShowModal():
             device = devices[hidList.GetFirstSelected()]
             return (
