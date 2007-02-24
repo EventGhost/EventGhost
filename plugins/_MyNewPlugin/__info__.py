@@ -1,5 +1,0 @@
-name = "My New Plugin"
-author = "Me"
-version = "0.0.1"
-kind = "other"
-description = "This is an example plugin."
