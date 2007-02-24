@@ -422,10 +422,9 @@ def MakeInstaller(isUpdate):
     import py2exe
 
     os.chdir(tmpDir)
-    if len(sys.argv) == 1:
-        sys.argv.append("py2exe")
+    
     InstallPy2exePatch()
-    setup(**py2exeOptions)
+    #setup(**py2exeOptions)
     
     #xcopy("source\\eg", "dist\\eg", "*.pyc")
     if isUpdate:
@@ -447,13 +446,15 @@ def MakeInstaller(isUpdate):
     fd.write(template % templateOptions)
     fd.close()
     
-    ExecuteAndWait(GetInnoCompilePath(innoScriptPath))
+    #ExecuteAndWait(GetInnoCompilePath(innoScriptPath))
     return "C:/eventghost/EventGhost_0.3.5_build_886_Update.exe"
 
 
-def UploadFile(filename):
+def UploadFile(filename, url):
     from ftplib import FTP
-
+    from urlparse import urlparse
+    urlComponents = urlparse(url)
+    
 
     dialog = wx.ProgressDialog(
         "Upload",
@@ -483,6 +484,13 @@ def UploadFile(filename):
         def close(self):
             self.fd.close()
 
+    print urlComponents
+    ftp = FTP(
+        urlComponents.hostname, 
+        urlComponents.username, 
+        urlComponents.password
+    )
+    ftp.cwd(urlComponents.path)
     fd = progress(filename)
     ftp.storbinary("STOR " + basename(filename), fd)
     fd.close()
@@ -491,7 +499,8 @@ def UploadFile(filename):
     
     
 class MainDialog(wx.Dialog):
-    def __init__(self):
+    def __init__(self, url=""):
+        
         wx.Dialog.__init__(self, None, title="Make EventGhost Installer")
         
         # create controls
@@ -501,6 +510,11 @@ class MainDialog(wx.Dialog):
             style = wx.RA_SPECIFY_ROWS
         )
         self.uploadCB = wx.CheckBox(self, -1, "Upload")
+        if url:
+            self.uploadCB.SetValue(True)
+        else:
+            self.uploadCB.Enable(False)
+        self.url = url
         okButton = wx.Button(self, wx.ID_OK)
         okButton.Bind(wx.EVT_BUTTON, self.OnOk)
         cancelButton = wx.Button(self, wx.ID_CANCEL)
@@ -527,7 +541,7 @@ class MainDialog(wx.Dialog):
         isUpdate = self.makeUpdateRadioBox.GetSelection() == 0
         filename = MakeInstaller(isUpdate)
         if self.uploadCB.GetValue():
-            UploadFile(filename)
+            UploadFile(filename, self.url)
         app.ExitMainLoop()
         
         
@@ -537,7 +551,13 @@ class MainDialog(wx.Dialog):
 
 app = wx.App(0)
 app.SetExitOnFrameDelete(False)
-mainDialog = MainDialog()
+if len(sys.argv) == 1:
+    sys.argv.append("py2exe")
+    url = ""
+else:
+    url = sys.argv[1]
+    sys.argv[1] = "py2exe"
+mainDialog = MainDialog(url)
 mainDialog.Show()
 app.MainLoop()
 
