@@ -127,17 +127,6 @@ def MakeSourceArchive(filepath):
     archive.close()
 
 
-#xcopy("plugins", join(tmpSourceDir, "plugins"), "*.dll")
-    
-# remove DLLs already in the full installer
-#if make_update:
-#    os.remove(join(tmpSourceDir, "plugins/MceRemote/MceIr.dll"))
-#    os.remove(join(tmpSourceDir, "plugins/Streamzap/irdata.dll"))
-#    os.remove(join(tmpSourceDir, "plugins/Tira/Tira2.dll"))
-#
-#
-#os.chdir(join(main_dir, tmpSourceDir))
-
 # The manifest will be inserted as resource into the exe.  This
 # gives the controls the Windows XP appearance (if run on XP ;-)
 
@@ -450,8 +439,6 @@ def UploadFile(filename, url):
     from ftplib import FTP
     from urlparse import urlparse
     urlComponents = urlparse(url)
-    print url
-    print urlComponents
     
     dialog = wx.ProgressDialog(
         "Upload",
@@ -548,14 +535,12 @@ class MainDialog(wx.Dialog):
 
 app = wx.App(0)
 app.SetExitOnFrameDelete(False)
-print sys.argv
 if len(sys.argv) == 1:
     sys.argv.append("py2exe")
     url = ""
 else:
     url = sys.argv[1]
     sys.argv[1] = "py2exe"
-print sys.argv
 mainDialog = MainDialog(url)
 mainDialog.Show()
 app.MainLoop()
