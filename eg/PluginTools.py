@@ -228,7 +228,10 @@ def GetPluginInfo(pluginName):
     # read in the __info__ of the plugin
     infoDict = {"eg": eg}
     pluginPath = "plugins/" + pluginName
-    if not exists(pluginPath + "/__info__.py") and not exists("eg/CorePlugins/" + pluginName + "/__info__.py"):
+    if (
+        not exists(pluginPath + "/__info__.py") 
+        and not exists("eg/CorePlugins/" + pluginName + "/__info__.py")
+    ):
         PluginInfoMetaClass.raiseOnPluginInfoLoad = True
         PluginInfoMetaClass.lastPluginInfo
         try:
@@ -236,6 +239,9 @@ def GetPluginInfo(pluginName):
         except PluginInfoException:
             PluginInfoMetaClass.raiseOnPluginInfoLoad = False
             infoDict = PluginInfoMetaClass.lastPluginInfo.__dict__
+        except:
+            eg.PrintError('Can\'t read __init__.py for plugin "%s"' % pluginName)
+            return None
     else:
         try:
             execfile(pluginPath + "/__info__.py", infoDict)

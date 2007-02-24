@@ -42,7 +42,7 @@ class PluginItem(ActionItem):
             eg.PrintError("Error loading plugin: %s" % pluginStr)
             self.name = pluginStr + " not found"
             self.isInErrorState = True
-            plugin.info.label = pluginStr
+            #plugin.info.label = pluginStr
         else:
             try:
                 label = plugin.GetLabel(*self.args)

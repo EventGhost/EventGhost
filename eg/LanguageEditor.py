@@ -161,7 +161,7 @@ class LanguageEditor(wx.Frame):
             plugin = eg.OpenPlugin(pluginIdent)
             plugin.info.isStarted = True
         for plugin in os.listdir("Plugins"):
-            if not plugin.startswith("_"):
+            if not plugin.startswith("."):
                 OpenPlugin(plugin)
         
         rightPanel = wx.Panel(splitter)

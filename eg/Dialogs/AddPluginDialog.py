@@ -86,6 +86,8 @@ class AddPluginDialog(eg.Dialog):
         pluginList = []
         for item in os.listdir("Plugins"):
             file_name, extension = os.path.splitext(item)
+            if file_name.startswith("."):
+                continue
             if os.path.isdir("Plugins/" + item) or extension in (".py", ".egp"):
                 if pluginList.count(file_name) == 0:
                     pluginList.append(file_name)
