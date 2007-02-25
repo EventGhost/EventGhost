@@ -31,6 +31,7 @@ Text = eg.GetTranslation(Text)
 system_template = """
 <table>
     <tr><td><b>EventGhost Version:</b></td><td>$version build $build</td></tr>
+    <tr><td><b>SVN Revision:</b></td><td>$svnRevision</td></tr>
     <tr><td><b>Compile Time:</b></td><td>$compileTime</td></tr>
     <tr><td><b>Python Version:</b></td><td>$pyVersion</td></tr>
     <tr><td><b>wxPython Version:</b></td><td>$wxVersion</td></tr>
@@ -233,6 +234,7 @@ class AboutDialog(eg.Dialog):
         d = dict(
             version = eg.version,
             build = str(eg.buildNum),
+            svnRevision = eg.svnRevision,
             compileTime = time.strftime(
                 Text.CreationDate,
                 time.gmtime(eg.compileTime)

@@ -8,7 +8,9 @@ import fnmatch
 import time
 from shutil import copy2 as copy
 import zipfile
-
+import subprocess
+import win32process
+import win32con
 
 
 tmpDir = tempfile.mkdtemp()
@@ -16,7 +18,7 @@ trunkDir = abspath(join(dirname(sys.argv[0]), ".."))
 outDir = abspath(join(trunkDir, "../.."))
 
 
-def GetVersion():
+def UpdateVersionFile(svnRevision):
     data = {}
     versionFilePath = join(trunkDir, "eg/Version.py")
     execfile(versionFilePath, data, data)
@@ -26,6 +28,7 @@ def GetVersion():
     fd.write("version = " + repr(data['version']) + "\n")
     fd.write("buildNum = " + repr(data['buildNum']) + "\n")
     fd.write("compileTime = " + repr(data['compileTime']) + "\n")
+    fd.write("svnRevision = " + repr(svnRevision))
     fd.close()        return data
     
     
@@ -362,6 +365,7 @@ def GetInnoCompilePath(filename):
     """
     Return command line to compile the Inno Script File 'filename'
     """
+    return 'C:\\Programme\\Inno Setup 5\\ISCC.exe "%s"' % filename
     import _winreg
     key = _winreg.OpenKey(
         _winreg.HKEY_CLASSES_ROOT, 
@@ -372,15 +376,43 @@ def GetInnoCompilePath(filename):
     return value.replace("%1", filename)
     
     
+def GetSvnVersion():
+    template = (
+        "Revision = $WCREV$\n"
+        "Modified = $WCMODS?True:False$\n"
+        "Date     = '$WCDATE$'\n"
+        "RevRange = '$WCRANGE$'\n"
+        "Mixed    = $WCMIXED?True:False$\n"
+        "URL      = '$WCURL$'\n"
+    )
+    fd, templatePath = tempfile.mkstemp(text=True)
+    fd = os.fdopen(fd, "wt")
+    fd.write(template)
+    fd.close()
+    fd, resultPath = tempfile.mkstemp(text=True)
+    os.close(fd)
+    SUBWCREV_PATH = r"\programme\tortoisesvn\bin\subwcrev.exe"
+    repository = abspath(sys.argv[0])
+    commandline = '"%s" "%s" "%s" "%s"' % (SUBWCREV_PATH, repository, templatePath, resultPath)
+    ExecuteAndWait(commandline, invisible=True)
+    data = {}
+    execfile(resultPath, {}, data)
+    os.remove(templatePath)
+    os.remove(resultPath)
+    return data['Revision']
+    
 
-def ExecuteAndWait(commandLine, workingDir=None):
+def ExecuteAndWait(commandLine, workingDir=None, invisible=False):
     import win32event
     import win32con
     import win32process
 
     si = win32process.STARTUPINFO()
     si.dwFlags = win32con.STARTF_USESHOWWINDOW
-    si.wShowWindow = win32con.SW_SHOWNORMAL
+    if invisible:
+        si.wShowWindow = win32con.SW_HIDE 
+    else:
+        si.wShowWindow = win32con.SW_SHOWNORMAL
     hProcess, _, _, _ = win32process.CreateProcess(
         None,         # AppName
         commandLine,  # Command line
@@ -402,7 +434,7 @@ def MakeInstaller(isUpdate):
 
     os.chdir(tmpDir)
     
-    templateOptions = GetVersion()
+    templateOptions = UpdateVersionFile(GetSvnVersion())
     VersionStr = templateOptions['version'] + '_build_' + str(templateOptions['buildNum'])
     templateOptions['VersionStr'] = VersionStr
     templateOptions["PYTHON_DIR"] = dirname(sys.executable)
@@ -428,7 +460,17 @@ def MakeInstaller(isUpdate):
     fd.write(template % templateOptions)
     fd.close()
     
-    ExecuteAndWait(GetInnoCompilePath(innoScriptPath))
+    print innoScriptPath
+    si = subprocess.STARTUPINFO()
+    si.dwFlags = subprocess.STARTF_USESHOWWINDOW
+    si.wShowWindow = subprocess.SW_HIDE 
+    subprocess.call(
+        ['/Programme/Inno Setup 5/ISCC.exe', innoScriptPath], 
+        stdout=sys.stdout.fileno(),
+        startupinfo=si
+    )
+    #os.spawnl(os.P_WAIT, '/Programme/Inno Setup 5/ISCC.exe', innoScriptPath"')
+    #ExecuteAndWait(GetInnoCompilePath(innoScriptPath))
     print "Building Installer done!"
     os.chdir(trunkDir)
     removedir(tmpDir)
@@ -440,27 +482,27 @@ def UploadFile(filename, url):
     from urlparse import urlparse
     urlComponents = urlparse(url)
     
-    dialog = wx.ProgressDialog(
-        "Upload",
-        "Uploading: %s" % filename,
-        maximum=100.0,
-        style = wx.PD_CAN_ABORT
-            | wx.PD_APP_MODAL
-            | wx.PD_ELAPSED_TIME
-            | wx.PD_ESTIMATED_TIME
-            | wx.PD_REMAINING_TIME
-            | wx.PD_SMOOTH
-    )
 
     class progress:
         def __init__(self, filepath):
             self.size = os.path.getsize(filepath)
             self.fd = open(filepath, "rb")
             self.pos = 0
+            self.dialog = wx.ProgressDialog(
+                "Upload",
+                "Uploading: %s" % filename,
+                maximum=self.size+1,
+                style = wx.PD_CAN_ABORT
+                    | wx.PD_APP_MODAL
+                    | wx.PD_ELAPSED_TIME
+                    | wx.PD_ESTIMATED_TIME
+                    | wx.PD_REMAINING_TIME
+                    | wx.PD_SMOOTH
+            )
             
         def read(self, size):
+            keepGoing, skip = self.dialog.Update(min(self.size, self.pos))
             self.pos += size
-            keepGoing, skip = dialog.Update(min(100.0, self.pos * 100.0 / self.size))
             if not keepGoing:
                 return None
             return self.fd.read(size)
@@ -468,17 +510,17 @@ def UploadFile(filename, url):
         def close(self):
             self.fd.close()
 
+    fd = progress(filename)
     ftp = FTP(
         urlComponents.hostname, 
         urlComponents.username, 
         urlComponents.password
     )
     ftp.cwd(urlComponents.path)
-    fd = progress(filename)
     ftp.storbinary("STOR " + basename(filename), fd)
     fd.close()
     print "Upload done!"
-    dialog.Destroy()
+    fd.dialog.Destroy()
     
     
     
@@ -506,19 +548,17 @@ class MainDialog(wx.Dialog):
         cancelButton.Bind(wx.EVT_BUTTON, self.OnCancel)
         
         # add controls to sizers
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.makeUpdateRadioBox, 0, wx.ALL, 10)
-        sizer.Add(self.uploadCB, 0, wx.ALL, 10)
         btnSizer = wx.StdDialogButtonSizer()
         btnSizer.AddButton(okButton)
         btnSizer.AddButton(cancelButton)
         btnSizer.Realize()
-        sizer.Add(btnSizer)
         
-        # layout sizers
-        self.SetSizer(sizer)
-        self.SetAutoLayout(True)
-        sizer.Fit(self)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.makeUpdateRadioBox, 0, wx.ALL, 10)
+        sizer.Add(self.uploadCB, 0, wx.ALL, 10)
+        sizer.Add(btnSizer)
+
+        self.SetSizerAndFit(sizer)
         
         
     def OnOk(self, event):
@@ -533,7 +573,6 @@ class MainDialog(wx.Dialog):
     def OnCancel(self, event):
         app.ExitMainLoop()
         
-
 app = wx.App(0)
 app.SetExitOnFrameDelete(False)
 if len(sys.argv) == 1:

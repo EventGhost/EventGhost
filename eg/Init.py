@@ -154,11 +154,12 @@ class EventGhost(object):
         self._lastDefinedPluginClass = None
         self._lastDefinedPluginClassInfo = None
 
-        from Version import version, buildNum, compileTime
+        from Version import version, buildNum, compileTime, svnRevision
         self.version = version
         self.buildNum = buildNum
         self.compileTime = compileTime
         self.versionStr = "%s.%s" % (version, buildNum)
+        self.svnRevision = svnRevision
 
         self.old_std_err = sys.stderr
         

@@ -19,6 +19,7 @@ class Text:
 Text = eg.GetTranslation(Text)
 
 
+
 class PythonEditorFrame(wx.Frame):
     
     def __init__(
@@ -73,6 +74,9 @@ class PythonEditorFrame(wx.Frame):
         AddItem("Apply", hotkey="F4")
         AddItem("Execute", hotkey="F5")
         AddItem()
+#        if eg._debug:
+#            AddItem("EditLinks")
+#            AddItem()
         AddItem("Close", hotkey="Ctrl+W")
 
         # edit menu        
@@ -227,6 +231,12 @@ class ScriptEditor(PythonEditorFrame):
         self.editCtrl.SetSavePoint()
         
         
+    def OnCmdEditLinks(self, event):
+        dialog = EditLinksDialog(self)
+        dialog.ShowModal()
+        dialog.Destroy()
+        
+    
     def OnCmdExecute(self, event):
         self.actionItem.Execute()
         

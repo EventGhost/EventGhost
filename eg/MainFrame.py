@@ -175,6 +175,7 @@ class MainFrame(wx.Frame):
             toolBar.AddControl(self.toolBarSpacer)
         
             AddItem("Reset", image=RESET_ICON)
+            #AddItem("Test", image=RESET_ICON)
 
         toolBar.Realize()
         self.SetToolBar(toolBar)
@@ -297,6 +298,7 @@ class MainFrame(wx.Frame):
             AddItem("GetInfo")
             AddItem("CollectGarbage")
             AddItem("Reset", hotkey = "Pause")
+            AddItem("Test")
             
         menuBar.Realize()
         
@@ -1030,3 +1032,9 @@ class MainFrame(wx.Frame):
         eg.PrintError("Execution stopped by user")
         
     
+    def OnCmdTest(self, event):
+        from eg.Dialogs import LinkListDialog
+        reload(LinkListDialog)
+        dialog = LinkListDialog.LinkListDialog(self)
+        dialog.ShowModal()
+        dialog.Destroy()
