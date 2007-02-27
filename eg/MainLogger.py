@@ -231,6 +231,7 @@ class LoggerCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     def OnCmdClearAll(self, event):
         self.SetItemCount(0)
         self.DeleteAllItems()
+        self.data.clear()
         self.ScrollList(0, 1000000)
         self.Refresh()
     
