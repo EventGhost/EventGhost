@@ -1,3 +1,7 @@
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
 import sys
 import os
 import imp

@@ -1,3 +1,7 @@
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
 import wx
 
 
@@ -46,11 +50,8 @@ class Menu(wx.Menu):
         tmp = MenuItem(self, name, func, kind, hotkey)
         if image is not None:
             tmp.SetBitmap(image)
-        #self.myItems.append(tmp)   
         wx.Menu.AppendItem(self, tmp)
         tmp.Enable(enabled)
-        if func is not None:
-            wx.EVT_MENU(self.parent, tmp.id, func)
         return tmp
 
 
@@ -72,7 +73,6 @@ class Menu(wx.Menu):
                 func()
 
         menuname = getattr(self.myStrings, name, name)
-        #menuhotkey = getattr(self.myStrings, name + "HotKey", "")
         menuitem = self.Append(
             menuname, 
             func_wrapper, 
@@ -98,15 +98,15 @@ class Menu(wx.Menu):
 
 class MenuItem(wx.MenuItem):
     
-    def __init__(self, parent, name, func, kind, hotkey=""):
+    def __init__(self, parentMenu, name, func, kind, hotkey=None):
         id = wx.NewId()
         if hotkey:
             name += " \t" + hotkey
-        wx.MenuItem.__init__(self, parent, id, name, "", kind)
-        self.id = id
+        wx.MenuItem.__init__(self, parentMenu, id, name, "", kind)
         self.func = func
-        self.parent = parent
         self.hotkey = hotkey
+        if func is not None:
+            wx.EVT_MENU(parentMenu.parent, id, func)
 
 
     def SetText(self, name):
@@ -115,8 +115,6 @@ class MenuItem(wx.MenuItem):
         wx.MenuItem.SetText(self, name)
         
         
-    def Enable(self, enable = True):
-        self.parent.Enable(self.id, enable)
         
         
         

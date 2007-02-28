@@ -1,3 +1,7 @@
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
 import eg
 from new import classobj
 import os

@@ -1,3 +1,7 @@
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
 import eg
 import wx
 import xml.etree.cElementTree as ElementTree

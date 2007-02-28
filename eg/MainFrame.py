@@ -1,3 +1,7 @@
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
 import os
 import sys
 import gc
@@ -27,7 +31,6 @@ RESET_ICON = GetIcon('images/error.png')
 Text = eg.text.MainFrame
 
 
-    
 def ExecuteSelectedTreeItem():
     item = eg.treeCtrl.document.selection
     event = eg.EventGhostEvent("OnCmdExecute")
@@ -163,12 +166,6 @@ class MainFrame(wx.Frame):
             self.egEvent.SetShouldEnd()
             event.Skip()
         AddItem("Execute", downFunc=OnLeftDown, upFunc=OnLeftUp)
-        #button = ExecuteButton(toolBar)
-        #toolBar.AddControl(button)
-        #setattr(toolBar.buttons, "Execute", button)
-       
-        #spacer = wx.Control(toolBar, size=(10,1))
-        #toolBar.AddControl(spacer)
         
         if eg._debug:
             self.toolBarSpacer = wx.Control(toolBar, size=(50,1))
@@ -390,16 +387,6 @@ class MainFrame(wx.Frame):
         auiManager.SetManagedWindow(self)
         self.auiManager = auiManager
 
-#        self.toolBarPane = (wx.aui.AuiPaneInfo().
-#                Name("toolBar").
-#                Caption("Toolbar").
-#                ToolbarPane().
-#                Top().
-#                RightDockable(False).
-#                LeftDockable(False)
-#        )
-#        auiManager.AddPane(toolBar, self.toolBarPane)
-#        
         auiManager.AddPane(
             logCtrl, 
             wx.aui.AuiPaneInfo().
@@ -414,8 +401,6 @@ class MainFrame(wx.Frame):
             treeCtrl, 
             wx.aui.AuiPaneInfo().
                 Name("tree").
-                #CaptionVisible().
-                #CenterPane().
                 Center().
                 MinSize((100,100)).
                 Floatable(True).
@@ -840,8 +825,6 @@ class MainFrame(wx.Frame):
     def OnCmdDelete(self, event):
         """ Handle the menu command 'Delete'. """
         self.DispatchCommand("Clear")
-        import gc
-        gc.collect()
                 
                 
     def OnCmdFind(self, event):
@@ -957,7 +940,7 @@ class MainFrame(wx.Frame):
         
         
     def OnCmdLogTime(self, event):
-        flag = self.menuBar.View.LogTime.IsChecked()
+        flag = event.IsChecked()
         config.logTime = flag
         self.logCtrl.SetTimeLogging(flag)
     
