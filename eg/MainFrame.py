@@ -167,7 +167,7 @@ class MainFrame(wx.Frame):
             event.Skip()
         AddItem("Execute", downFunc=OnLeftDown, upFunc=OnLeftUp)
         
-        if eg._debug:
+        if eg.debugLevel:
             self.toolBarSpacer = wx.Control(toolBar, size=(50,1))
             toolBar.AddControl(self.toolBarSpacer)
         
@@ -194,7 +194,7 @@ class MainFrame(wx.Frame):
         DocumentBind(AddItem("Save", False, hotkey="Ctrl+S"), document.isDirty)
         AddItem("SaveAs")
         AddItem()
-        if eg._debug:
+        if eg.debugLevel:
             AddItem("Export")
             AddItem("Import")
             AddItem()
@@ -288,7 +288,7 @@ class MainFrame(wx.Frame):
         AddItem("CheckUpdate")
         AddItem()
         AddItem("About")
-        if eg._debug:
+        if eg.debugLevel:
             AddItem()
             AddItem("Reload")
             AddItem("Shell")
@@ -1001,7 +1001,6 @@ class MainFrame(wx.Frame):
         
         
     def OnCmdCollectGarbage(self, event):
-        #gc.set_debug(gc.DEBUG_LEAK)
         print gc.collect()
         print gc.garbage
         

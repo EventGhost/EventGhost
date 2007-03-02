@@ -1,3 +1,29 @@
+#
+# eg/Init.py
+#
+# Copyright (C) 2005 Lars-Peter Voss
+#
+# This file is part of EventGhost.
+# 
+# EventGhost is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# EventGhost is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with EventGhost; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
 import sys
 import os
 import pythoncom
@@ -111,11 +137,11 @@ class EventGhost(object):
         sys.modules["eg"] = self
         
         
-    def Init(self, debug):
+    def Init(self, debugLevel):
         global eg
         eg = self
         self.APP_NAME = "EventGhost"
-        self._debug = debug
+        self.debugLevel = debugLevel
         self.__InitPIL()
         self.__InitAsyncore()
         
@@ -161,8 +187,6 @@ class EventGhost(object):
         self.versionStr = "%s.%s" % (version, buildNum)
         self.svnRevision = svnRevision
 
-        self.old_std_err = sys.stderr
-        
         from Utils import logit
         self.logit = logit
         
@@ -174,13 +198,13 @@ class EventGhost(object):
         from App import MyApp
         self.app = MyApp(0)
         
-        if not debug:
-            def dummy_func(*args, **kwargs):
+        if not debugLevel:
+            def _DummyFunc(*args, **kwargs):
                 pass
-            self.notice = dummy_func
-            self.whoami = dummy_func
+            self.notice = _DummyFunc
+            self.whoami = _DummyFunc
         else:
-            if debug == 2:
+            if debugLevel == 2:
                 fd = open("Log.txt", "at")
                 class writer:
                     def write(self, data):
@@ -501,6 +525,10 @@ class EventGhost(object):
         self.__dummy_asynchat = dummy_asynchat
 
 
+    def __DeInitAsyncore(self):
+        self.__dummy_asynchat.close()
+        
+
     def DeInit(self):
         eg.whoami()
         self.__dict__["isRunning"] = False
@@ -515,10 +543,6 @@ class EventGhost(object):
         self.SaveConfig()
         self.__DeInitAsyncore()
         self.messageReceiver.close()
-        
-        
-    def __DeInitAsyncore(self):
-        self.__dummy_asynchat.close()
         
         
     def Wait(self, secs, raiseException=True):
@@ -594,15 +618,15 @@ class EventGhost(object):
         self.__dict__["stopExecutionFlag"] = False
         del self.programReturnStack[:]
         while self.programCounter is not None:
-            cur_pointer = self.programCounter
-            cur_item, cur_index = cur_pointer
-            cur_item.Execute()
-            if self.programCounter == cur_pointer:
+            programCounter = self.programCounter
+            currentItem, currentIndex = programCounter
+            currentItem.Execute()
+            if self.programCounter == programCounter:
                 # program counter has not changed. Ask the parent for the next
                 # item.
-                if isinstance(cur_item.parent, eg.MacroItem):
+                if isinstance(currentItem.parent, eg.MacroItem):
                     self.SetProgramCounter(
-                        cur_item.parent.GetNextChild(cur_index)
+                        currentItem.parent.GetNextChild(currentIndex)
                     )
                 else:
                     self.SetProgramCounter(None)
@@ -611,9 +635,9 @@ class EventGhost(object):
                 # we have no next item in this level. So look in the return 
                 # stack if any return has to be executed
                 if self.programReturnStack:
-                    cur_item, cur_index = self.programReturnStack.pop()
+                    currentItem, currentIndex = self.programReturnStack.pop()
                     self.SetProgramCounter(
-                        cur_item.parent.GetNextChild(cur_index)
+                        currentItem.parent.GetNextChild(currentIndex)
                     )
                     
 
@@ -642,15 +666,14 @@ class EventGhost(object):
         if msg:
             self.PrintError(msg)
         tbType, tbValue, tbTraceback = sys.exc_info() 
+        list = ['Traceback (most recent call last) (%d):\n' % self.buildNum]
         if tbTraceback:
-            list = traceback.format_tb(tbTraceback)
-        else:
-            list = []
-        list = list + traceback.format_exception_only(tbType, tbValue)
-        list = ['Traceback (most recent call last) (%d):\n' %self.buildNum] + list[skip:]
+            list += traceback.format_tb(tbTraceback)[skip:]
+        list += traceback.format_exception_only(tbType, tbValue)
+        
         error = "".join(list)
         eg.PrintError(error.rstrip())
-        if eg._debug:
+        if eg.debugLevel:
             sys.stderr.write(error)
             
             

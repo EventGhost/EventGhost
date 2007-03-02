@@ -1,11 +1,49 @@
+#
+# plugins/TestPatterns/__init__.py
+#
+# Copyright (C) 2006 Lars-Peter Voss
+#
+# This file is part of EventGhost.
+# 
+# EventGhost is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# EventGhost is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with EventGhost; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
 import eg
+
+class PluginInfo(eg.PluginInfo):
+    name = "Test Patterns"
+    author = "Bitmonster"
+    version = "0.0.1"
+    description = "Plugin to show some test patterns."
+    icon = (
+        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAV0lEQVR42mNkoBAwgogD"
+        "Bw78B9H29g5Qwf/I0gz/GVH5SPKMowaMGkA9A4BK/qNogCpgZECXhvCBFoJpBwcHmAEH"
+        "YEYC1drDmED1jQwI0MCABQweA8gHAM1iaBEreN/nAAAAAElFTkSuQmCC"
+    )
+
+
 import wx
-
 import threading
+import Image
+import ImageDraw
 from math import sqrt
-import Image, ImageDraw
 from threading import Timer
-
 from eg.WinAPI.Utils import GetMonitorDimensions, BringHwndToFront
 
 

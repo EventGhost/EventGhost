@@ -64,7 +64,7 @@ class EventThread(ThreadWorker):
         event = self.TriggerEvent(suffix, payload, prefix, source)
         event.startProcessed.wait(5.0)
         if not event.startProcessed.isSet():
-            if eg._debug:
+            if eg.debugLevel:
                 eg.notice("timeout TriggerEventWait")
                 traceback.print_stack()
         return event

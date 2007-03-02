@@ -1,3 +1,29 @@
+#
+# plugins/Joystick/__init__.py
+#
+# Copyright (C) 2005 Lars-Peter Voss
+#
+# This file is part of EventGhost.
+# 
+# EventGhost is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# EventGhost is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with EventGhost; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
 import eg
 
 class PluginInfo(eg.PluginInfo):
@@ -8,6 +34,24 @@ class PluginInfo(eg.PluginInfo):
     description = (
         "Use joysticks and gamepads as input devices for EventGhost."
     )   
+    icon = (
+        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QArABNAAA01td7"
+        "AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH1QQHDwonssmjmQAAAIx0RVh0Q29t"
+        "bWVudABNZW51LXNpemVkIGljb24KPT09PT09PT09PQoKKGMpIDIwMDMgSmFrdWIgJ2pp"
+        "bW1hYycgU3RlaW5lciwgCmh0dHA6Ly9qaW1tYWMubXVzaWNoYWxsLmN6CgpjcmVhdGVk"
+        "IHdpdGggdGhlIEdJTVAsCmh0dHA6Ly93d3cuZ2ltcC5vcmdnisdHAAACIUlEQVQ4y5WS"
+        "y2tTQRTGf5Pc5CbW0qSxNvXRh6C4SbAU/4KCexGKiIKoIFgIwYWtD7TdiC5ECgqCSBZd"
+        "1boTRNCFuyJUsxNEFCoVNTW3afTmdW/muLhpmkKy6IEDw/DNN7/55ig61MezhP+q3TNh"
+        "KV8CfOsqsmBQvzo+Xyi16lSnw3V83/oO7Y0b4RCiNY5dZu37urWhegZPzOftTa2vnYFG"
+        "pWNDsbivK4zr92MVa9iuj4Ej/b3A/Vatr8MLUoFdYfymiREMEAwa/F61iA7GicjGmVah"
+        "kUpPzgB3WjfLVganVMHK2XRHuyjm/+HWHNyqQ0WZ0VT6sjSksyqVnpS5h4+2Xf/r5T2q"
+        "y3NYuSL5tRKiYN/wHqKxLuqHL3Dw1G1s2+bGrSkMAK01hUJhC+v4OXJvHtM/1MfIaA+G"
+        "GaD48w+5VYcD5y9iWRZBM7iVgWjxWrxWgRAD15dY1Kf5uvSFz+8+8ao0zv6b71GBECIC"
+        "jUd4BKLRIiDifawAhokb6mXkwSorKyvk376GgInWGsAzaRKIYL24xo/pYdYXpxpEGrfu"
+        "tiQjSF0jutENA6OZ/PICUitRWl6g++RdAI4lR3n67ElzXRfdRG/mtRliaGyCyofnhMYm"
+        "0FqjREgkkiQSSUQUSomH3zDYRmCaJkevZIBM26mybW9yy+UyAJVKZTtBNpvFdV12Ukqp"
+        "LYNIJNJEAqhWqwDUarWOBo7jeEbtRnkHNfsfqMAAn2HmrMwAAAAASUVORK5CYII="
+    )
 
 
 import os

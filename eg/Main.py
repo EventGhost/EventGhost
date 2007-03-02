@@ -30,7 +30,7 @@ hideOnStartup = False
 startupEvent = None
 startupPayload = []
 startupFile = None
-debug = 0
+debugLevel = 0
 i = 0
 
 while True:
@@ -39,9 +39,9 @@ while True:
         break
     arg = sys.argv[i].lower()
     if arg == '-debug':
-        debug = 1
+        debugLevel = 1
     elif arg == '-debug2':
-        debug = 2
+        debugLevel = 2
     elif arg == '-hide':
         hideOnStartup = True
     elif arg == '-install':
@@ -94,7 +94,7 @@ if win32api.GetLastError() != 0:
 
 import Init
 eg = Init.EventGhost()
-eg.Init(debug)
+eg.Init(debugLevel)
 eg.StartGui((startupEvent, startupPayload), startupFile, hideOnStartup)
 eg.app.MainLoop()
 ExitProcess(0)

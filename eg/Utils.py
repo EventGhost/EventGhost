@@ -119,7 +119,7 @@ def logit(level=1, print_return=False):
                 notice(fname + " => " + repr(res))
             return res
         
-        if eg._debug >= level:
+        if eg.debugLevel >= level:
             return wrapper
         else:
             return func

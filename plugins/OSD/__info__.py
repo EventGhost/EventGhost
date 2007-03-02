@@ -1,5 +1,0 @@
-name = "On Screen Display"
-author = "Bitmonster"
-version = "0.0.1"
-kind = "hidden"
-description = "Plugin to show a simple on screen display of text."

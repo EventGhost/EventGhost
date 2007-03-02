@@ -23,6 +23,22 @@ might be jumpy if you use autorepeat in EventGhost (which has a more
 sophisticated scroll acceleration). You find the setting in Zoom Player under:<br>
 <i>Option/Setup => OSD => Navigators => Settings => Disable Scroll Acceleration</i>
 """
+    icon = (
+        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACYklEQVR42o2TX2hSYRTA"
+        "j8vrjSHln0J9EIyVTFMhKrS5Wo4KtmKMag8tF0S+2INEFAXlNHzuxWD24Esog1qtHiJ7"
+        "WWKSeiujlEVIJjmo9eB0TK7dada5ciUnSl34ceGcw+873/edjwd/v63IQeQkMoREkHkk"
+        "iqxCl4/H/fsMBoPXZrONmkymqkgkIkqlUjWRSBB+v/9ZKpVyYE22m0Cq1+uDTqfT8oo4"
+        "QoY+/YQCXQdpbw+M9JNgri4wHo8nnE6nrVhb6CQ47fV657JKKwTf0cDonzQSZHocoL4O"
+        "1j0k9H17BA6HY4LbUr1dMEtR1MTUCyWfXZnpvwflyRsgnPUA+f4YdsKHwGitZjQa57D2"
+        "PMK0C/KZTEZ5INDbWJHRBlEw3UgKH84A+eE4xM8xoFarlzC0G1lrFzzGDk5MLSj4hbUy"
+        "MLp5FNwE4f3bsDl/GSQEQGDgNdvBU66DUrvAjmcwk1WMQZD6AczgZ+ARPCDzZxrZs7vw"
+        "ihbvsGdwEWuDnTrQabXauy6Xa3+MGBKElmSwgkEJTsXIDoCB5Qfrbrc7eUqzWgt9VVxP"
+        "JpNxTP9uFUgQo0ajmbbb7SZstSYWi/nFYrGGW+P7fD7q4/NDxgu3qpDL5eI0TV/C+Jum"
+        "hBUIOMlOZBCxIAYkhby8NqYY/y46ug8XgEqlAtFodIOkOYmsRMiN8xZ2DLjrqqpUqr1y"
+        "ufyq2WzWy2QyKJfLGyS8lvPoQQhOtgn5xbUpRomFk+haJeFw+HCroNuos91sQ8lwUyIQ"
+        "CCAWi72NRCLD/xJ0klxhg/jQ2Lfx5X8ErRIpsp17D8vIyh8RDvE1Ol5jegAAAABJRU5E"
+        "rkJggg=="
+    )
 
 # ===================================================================
 # ZoomPlayer TCP/IP Interface

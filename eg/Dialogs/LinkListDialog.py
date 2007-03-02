@@ -31,7 +31,7 @@ class LinkListDialog(eg.Dialog):
     
     def __init__(self, parent):
         style = wx.DEFAULT_DIALOG_STYLE
-        if eg._debug:
+        if eg.debugLevel:
             style |= wx.RESIZE_BORDER
         eg.Dialog.__init__(self, parent, title="Edit Item Links", style=style)
         

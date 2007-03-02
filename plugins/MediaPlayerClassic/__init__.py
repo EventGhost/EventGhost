@@ -19,7 +19,31 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+import eg
 
+class PluginInfo(eg.PluginInfo):
+    name = "Media Player Classic"
+    author = "MonsterMagnet"
+    version = "1.0.1"
+    kind = "program"
+    description = (
+        'Adds support functions to control Media Player Classic.'
+        '\n\n<p>'
+        'Only for version <b>6.4.8.9</b> or above.</p>'
+        '<p>The plugin will not work with older versions of MPC!</p>'
+        '<p><a href=http://www.eventghost.org/forum/viewtopic.php?t=17>'
+        'Bugreports</a></p>'
+        '<p><a href=http://sourceforge.net/projects/guliverkli/>'
+        'Media Player Classic SourceForge Project</a></p>'
+    )
+    icon = (
+        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAhElEQVR42rWRgQqAIAwF"
+        "fV+++eWr1V6kiM6gQaTVHYehJEdV7bUG18hCInIDQMNhA+L7cQHBETQrBWERDXANjcxm"
+        "Ee6CyFxd6ArkynZT5l7KK9gFbs3CrGgEPLzM1FonAn9kz59stqhnhdhEwK/j3m0Tgj8K"
+        "OPmCr4eYpmMaASt3JS44ADcFoxFdcIMPAAAAAElFTkSuQmCC"
+    )
+    
+    
 MyActionList = (
 ('Main controls', None, (
     ('Exit', 'Quit Application', None, 816),
@@ -154,7 +178,6 @@ MyActionList = (
 )),
 )
 
-import eg
 from win32gui import FindWindow, SendMessageTimeout 
 from win32con import WM_COMMAND, SMTO_ABORTIFHUNG, SMTO_NORMAL
 

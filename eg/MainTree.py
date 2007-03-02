@@ -256,7 +256,7 @@ class TreeCtrl(wx.TreeCtrl):
             event.Skip()
         Bind(wx.EVT_TREE_SEL_CHANGED, OnSelectionChanged)
         
-        if eg._debug:
+        if eg.debugLevel:
             Bind(wx.EVT_TREE_ITEM_GETTOOLTIP, self.OnTooTip)
         #Bind(wx.EVT_TREE_ITEM_COLLAPSED, self.OnCollapsed)
         Bind(wx.EVT_TREE_ITEM_EXPANDED, self.OnExpanded)

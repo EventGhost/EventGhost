@@ -60,7 +60,7 @@ class ScriptEditor(wx.Frame):
         AddItem("Apply", hotkey="F4")
         AddItem("Execute", hotkey="F5")
         AddItem()
-#        if eg._debug:
+#        if eg.debugLevel:
 #            AddItem("EditLinks")
 #            AddItem()
         AddItem("Close", hotkey="Ctrl+W")

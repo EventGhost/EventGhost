@@ -99,7 +99,7 @@ class ConfigurationDialog(eg.Dialog):
     def __init__(self, obj, resizeable=None, showLine=True):
         self.showLine = showLine
         if resizeable is None:
-            resizeable = bool(eg._debug)
+            resizeable = bool(eg.debugLevel)
         self.resizeable = resizeable
         
         if isinstance(obj, eg.PluginClass):
