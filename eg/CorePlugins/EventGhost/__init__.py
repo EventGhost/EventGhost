@@ -174,12 +174,13 @@ class DisableItem(EnableItem):
 
 class EnableExclusive(EnableItem):
     name = "Exclusive enable a folder/macro"
-    description = \
-        "This will enable a specified folder or macro in your "\
-        "configuration, but also disable all other folders and "\
-        "macros that are siblings on the same level in this "\
+    description = (
+        "This will enable a specified folder or macro in your "
+        "configuration, but also disable all other folders and "
+        "macros that are siblings on the same level in this "
         "sub-branch of the tree."
-    iconFile = 'EnableExclusive'
+    )
+    iconFile = "EnableExclusive"
     class text:
         label = "Enable exclusive: %s"
         text1 = "Please select the folder/macro which should be enabled:"

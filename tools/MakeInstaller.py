@@ -4,13 +4,11 @@
 
 import wx
 import sys
-from os.path import basename, dirname, abspath, join, exists
 import tempfile
 import os
 import re
 import fnmatch
 import time
-from shutil import copy2 as copy
 import zipfile
 import subprocess
 import win32process
@@ -18,12 +16,15 @@ import win32con
 import _winreg
 from ftplib import FTP
 from urlparse import urlparse
+from shutil import copy2 as copy
+from os.path import basename, dirname, abspath, join, exists
 
 
 SUBWCREV_PATH = r"\Programme\TortoiseSVN\bin\SubWCRev.exe"
 
 tmpDir = tempfile.mkdtemp()
-trunkDir = abspath(join(dirname(sys.argv[0]), ".."))
+toolsDir = abspath(dirname(sys.argv[0]))
+trunkDir = abspath(join(toolsDir, ".."))
 outDir = abspath(join(trunkDir, "..", ".."))
 
 SourcePattern = (
@@ -236,7 +237,7 @@ SolidCompression=yes
 InternalCompressLevel=max
 OutputDir=%(OUT_DIR)s
 OutputBaseFilename=%(OUT_FILE_BASE)s
-LicenseFile=%(TRUNK)s\LICENSE.TXT
+LicenseFile=%(TOOLS_DIR)s\LICENSE.RTF
 DisableReadyPage=yes
 AppMutex=EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B
 
@@ -389,8 +390,7 @@ def GetSvnVersion():
     fd.close()
     fd, resultPath = tempfile.mkstemp(text=True)
     os.close(fd)
-    repository = abspath(sys.argv[0])
-    Execute(SUBWCREV_PATH, repository, templatePath, resultPath)
+    Execute(SUBWCREV_PATH, trunkDir, templatePath, resultPath)
     data = {}
     execfile(resultPath, {}, data)
     os.remove(templatePath)
@@ -428,6 +428,7 @@ def MakeInstaller(isUpdate):
     templateOptions["PYTHON_DIR"] = dirname(sys.executable)
     templateOptions["OUT_DIR"] = outDir
     templateOptions["TRUNK"] = trunkDir
+    templateOptions["TOOLS_DIR"] = toolsDir
     templateOptions["DIST"] = join(tmpDir, "dist")
 
     print "Creating source ZIP file"

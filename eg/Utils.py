@@ -66,7 +66,7 @@ def whoami(mesg=""):
         if args[0] == "self":
             classname = locals["self"].__class__.__name__ + "."
             del args[0]
-    def test(value):
+    def formatvalue(value):
         t = repr(type(value))
         if t.startswith("<class 'wx._core."):
             s = "wx." + t[len("<class 'wx._core."): -2]
@@ -78,7 +78,7 @@ def whoami(mesg=""):
         return "=" + repr(value)
         
     s = inspect.formatargvalues(
-        args, varargs, varkw, locals, formatvalue=test
+        args, varargs, varkw, locals, formatvalue=formatvalue
     )
     eg.notice(classname + frame.f_code.co_name + s, mesg)
 
@@ -132,7 +132,7 @@ def ParseString(text, filterFunc=None):
     last = len(text) - 1
     while 1:
         pos = text.find('{', start)
-        if pos == -1:
+        if pos < 0:
             break
         if pos == last:
             break
@@ -144,7 +144,7 @@ def ParseString(text, filterFunc=None):
             start = pos + 1
             end = text.find('}', start)
             if end == -1:
-                raise "unmatched bracket"
+                raise SyntaxError("unmatched bracket")
             word = text[start:end]
             res = None
             if filterFunc:

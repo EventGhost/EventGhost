@@ -7,13 +7,14 @@ import os
 import imp
 import traceback
 import inspect
+import weakref
 
 import wx
-
 import eg
-from eg.IconTools import GetWxIconFromFile
 from eg.Controls.PythonEditorCtrl import PythonEditorCtrl
-       
+
+
+    
 class Text:
     title = "Python-Editor - %s"
     class SaveChanges:
@@ -24,45 +25,26 @@ Text = eg.GetTranslation(Text)
 
 
 
-class PythonEditorFrame(wx.Frame):
+class ScriptEditor(wx.Frame):
     
-    def __init__(
-        self, 
-        parent=None, 
-        id=-1, 
-        text=None, 
-        filename=None, 
-        fileTitle=None, 
-        config=None
-    ):
-        self.config = config
-        if filename is None:
-            self.editFile = ""
-        else:
-            self.editFile = filename
-        if fileTitle is None:
-            fileTitle == self.editFile
+    def __init__(self, parent, id, actionItem, action):
+        self.actionItem = actionItem
+        if len(actionItem.args) < 1:
+            actionItem.args = ['']
+        text = actionItem.args[0]
+        config = self.config = action.config
         wx.Frame.__init__(
             self, 
             parent, 
             id,
-            eg.APP_NAME + " " + (Text.title % fileTitle),
+            eg.APP_NAME + " " + (Text.title % actionItem.GetLabel()),
             pos=config.position,
             size=config.size,
             style=wx.DEFAULT_FRAME_STYLE
         )
-        self.SetIcon(
-            GetWxIconFromFile(
-                os.path.join(
-                    os.path.abspath(os.path.split(__file__)[0]),
-                    "PythonScript.png"
-                )
-            )
-        )
+        self.SetIcon(action.info.GetWxIcon())
+        
         self.editCtrl = editCtrl = PythonEditorCtrl(self)
-        if filename is not None:
-            self.editFile = eg.config.ConfigFilePath
-            text = open(self.editFile).read()
         editCtrl.SetText(text)
         editCtrl.EmptyUndoBuffer()
         editCtrl.Colourise(0, -1)
@@ -117,15 +99,8 @@ class PythonEditorFrame(wx.Frame):
         editCtrl.Bind(wx.EVT_RIGHT_UP, self.OnRightClick)
 
 
-    def _FileSave(self):
-        fd = file(self.editFile, "w+")
-        fd.write(self.editCtrl.GetText())
-        fd.close()
-        self.editCtrl.SetSavePoint()
-
-
     def CheckFileNeedsSave(self):
-        if (self.editFile is None) or (self.editCtrl.GetModify()):
+        if self.editCtrl.GetModify():
             dlg = wx.MessageDialog(
                 self,
                 Text.SaveChanges.mesg, 
@@ -212,24 +187,7 @@ class PythonEditorFrame(wx.Frame):
     def OnCmdSelectAll(self, event):
         self.editCtrl.SelectAll()
         
-    
         
-class ScriptEditor(PythonEditorFrame):
-    
-    def __init__(self, parent, id, actionItem, action):
-        if len(actionItem.args) < 1:
-            actionItem.args = ['']
-        PythonEditorFrame.__init__(
-            self, 
-            parent, 
-            id,
-            actionItem.args[0],
-            fileTitle=actionItem.GetLabel(),
-            config = action.config
-        )
-        self.actionItem = actionItem
-
-
     def _FileSave(self):
         self.UndoHandler(self.actionItem, self.editCtrl.GetText())
         self.editCtrl.SetSavePoint()
@@ -270,16 +228,6 @@ class ScriptEditor(PythonEditorFrame):
 
         Redo = Undo
         
-
-gScriptIdCounter = 0
-
-def GetNewId():
-    global gScriptIdCounter
-    gScriptIdCounter += 1
-    return gScriptIdCounter
-
-import weakref
-gScriptDict = weakref.WeakValueDictionary()
 
 #------------------------------------------------------------------------
 # Action: PythonScript
@@ -323,9 +271,12 @@ class PythonScript(eg.ActionClass):
         
         
     class Compile:
-        
+        idCounter = 0
+        scriptDict = weakref.WeakValueDictionary()
+
         def __init__(self, text):
-            id = GetNewId()
+            id = self.__class__.idCounter
+            self.__class__.idCounter += 1
             mod = imp.new_module(str(id))
             self.mod = mod
             mod.eg = eg
@@ -335,7 +286,7 @@ class PythonScript(eg.ActionClass):
             except:
                 eg.PrintError("Error compiling script.")
                 self.PrintTraceback()
-            gScriptDict[id] = self
+            self.scriptDict[id] = self
             
             
         def __call__(self):
@@ -370,7 +321,7 @@ class PythonScript(eg.ActionClass):
                             file, linenum, func
                         )
                     )
-                    lines = gScriptDict[int(file)].text.splitlines()
+                    lines = self.scriptDict[int(file)].text.splitlines()
                     eg.PrintError('    ' + lines[linenum-1].lstrip())
                 else:
                     eg.PrintError(

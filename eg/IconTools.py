@@ -3,8 +3,13 @@ import Image
 import zipfile
 import StringIO
 
-
-gPluginIconDict = {}
+class Icon:
+    iconIndex = None
+    image = None
+    
+    def __init__(self, filePath):
+        pass
+    
 
 
 def pilToBitmap(pil):
@@ -41,14 +46,6 @@ def GetIcon(filename):
     return bmp
 
 
-def GetWxIconFromFile(filename):
-    icon = wx.EmptyIcon()
-    icon.CopyFromBitmap(
-        wx.BitmapFromImage(wx.Image(filename, wx.BITMAP_TYPE_PNG))
-    )
-    return icon
-
-
     
 def SetupIcons(name):
     image1 = Image.open("images/" + name + ".png").convert("RGBA")
@@ -65,8 +62,6 @@ def SetupIcons2(image1):
     bmp2 = pilToBitmap(image2)
     idx = gImageList.Add(bmp1)
     gImageList.Add(bmp2)
-    gImageList2.append(bmp1)
-    gImageList2.append(bmp2)
     return idx
 
 
@@ -86,9 +81,6 @@ def SetupPluginIcons(image1):
     idx = gImageList.Add(bmp1)
     gImageList.Add(bmp2)
     gImageList.Add(bmp3)
-    gImageList2.append(bmp1)
-    gImageList2.append(bmp2)
-    gImageList2.append(bmp3)
     return idx
     
     
@@ -102,62 +94,35 @@ def CreateActionGroupIcon(plugin, iconFile):
     return idx
 
     
-def GetPluginIcon(name):
-    pathname = "Plugins\\" + name + "\\icon.png"
-    try:
-        image = Image.open(pathname).convert("RGBA")
-#        image = wx.EmptyImage(pil.size[0], pil.size[1])
-#        image.SetData(pil.convert('RGB').tostring())
-#        image.SetAlphaData(pil.convert('RGBA').split()[3].tostring())
-#        if not image.Ok():
-#            image = None
-        return image
-    except:
-        try:
-            pathname = "Plugins\\" + name + ".egp"
-            importer = zipfile.ZipFile(pathname, 'r')
-            data = importer.read('icon.png')
-            importer.close()
-            image = Image.open(StringIO.StringIO(data)).convert("RGBA")
-#            image = wx.EmptyImage(pil.size[0], pil.size[1])
-#            image.SetData(pil.convert('RGB').tostring())
-#            image.SetAlphaData(pil.convert('RGBA').split()[3].tostring())
-#            if not image.Ok():
-#                image = None
-        except:
-            image = None
-    return image
-
-
-def GetIconWithIndex(idx):
-    return gImageList2[idx]
-    
+_gPluginIconDict = {}
 
 def AddPluginIcon(pluginName):
     global gPluginIconDict
-    if gPluginIconDict.has_key(pluginName):
-        return gPluginIconDict[pluginName]
-    index = SetupIcons2(GetPluginIcon(pluginName))
-    gPluginIconDict[pluginName] = index
+    if _gPluginIconDict.has_key(pluginName):
+        return _gPluginIconDict[pluginName]
+    pathname = "plugins\\" + pluginName + "\\icon.png"
+    try:
+        image = Image.open(pathname).convert("RGBA")
+    except:
+        image = None
+    index = SetupIcons2(image)
+    _gPluginIconDict[pluginName] = index
     return index
+
 
 def Init():
     global gColour, gColourTuple
     gColour = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
     gColourTuple = (gColour.Red(), gColour.Green(), gColour.Blue())
 
-    global gImageList, gImageList2
+    global gImageList
     gImageList = wx.ImageList(16, 16)
-    gImageList2 = []
     icon = GetIcon("images/info.png")
     gImageList.Add(icon)
-    gImageList2.append(icon)
     icon = GetIcon("images/error.png")
     gImageList.Add(icon)
-    gImageList2.append(icon)
     icon = GetIcon("images/notice.png")
     gImageList.Add(icon)
-    gImageList2.append(icon)
     
     global gDisabledImage
     gDisabledImage = Image.open("images/disabled.png")

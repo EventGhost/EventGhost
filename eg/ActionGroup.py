@@ -8,7 +8,6 @@ from ActionClass import ActionClass
 from Utils import SetClass
 import IconTools
 
-gSingleActionsGroup = None
 
 
 class ActionInfo(object):
@@ -62,13 +61,14 @@ def CreateAction(actionCls, plugin):
         SetClass(translation, text)
         text = translation
         setattr(plugin.text, actionCls.__name__, text)
-    if not hasattr(text.__class__, "name"):
+    textCls = text.__class__
+    if not hasattr(textCls, "name"):
         name = actionCls.name
-        text.__class__.name = actionCls.__name__ if name is None else name
+        textCls.name = actionCls.__name__ if name is None else name
     
-    if not hasattr(text.__class__, "description"):
+    if not hasattr(textCls, "description"):
         description = actionCls.description
-        text.__class__.description = text.__class__.name if description is None else description
+        textCls.description = textCls.name if description is None else description
         
     actionCls.text = text
     action.name = text.name

@@ -1,5 +1,11 @@
-import wx
 import eg
+
+class PluginInfo(eg.PluginInfo):
+    name = "Serial Port"
+    author = "Bitmonster"
+    version = "1.1.0"
+    description = "Arbitrary communication through a serial port."
+
 
     
 class Text:
@@ -24,6 +30,7 @@ class Text:
     
 
 
+import wx
 import threading
 import win32event
 import win32file

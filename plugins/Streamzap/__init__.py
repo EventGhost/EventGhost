@@ -1,3 +1,19 @@
+import eg
+
+class PluginInfo(eg.PluginInfo):
+    name = "Streamzap PC Remote"
+    author = "Bitmonster"
+    version = "1.0.0"
+    kind = "remote"
+    description = (
+        'Hardware plugin for the "Streamzap PC Remote".'
+        '\n\n<p>'
+        '<center><a href=http://www.streamzap.com/products/pcremote/>'
+        'Streamzap, Inc. Homepage<p>'
+        '<img src="crr.jpg" alt="Streamzap" /></a></center>'
+    )
+
+
 import thread
 import threading
 import time
@@ -7,7 +23,6 @@ import array
 from ctypes import cdll, c_ubyte, byref
 from ctypes.wintypes import DWORD
 
-import eg
 
 SAMPLE_TIME = 0.000256
 
