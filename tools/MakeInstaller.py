@@ -243,6 +243,7 @@ AppMutex=EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B
 
 [InstallDelete]
 Type: filesandordirs; Name: "{app}\eg"
+%(INSTALL_DELETE)s
 
 [Files]
 Source: "%(DIST)s\*.*"; DestDir: "{app}"; Flags: ignoreversion
@@ -430,7 +431,17 @@ def MakeInstaller(isUpdate):
     templateOptions["TRUNK"] = trunkDir
     templateOptions["TOOLS_DIR"] = toolsDir
     templateOptions["DIST"] = join(tmpDir, "dist")
-
+    
+    installDeleteDirs = []
+    for item in os.listdir(join(trunkDir, "plugins")):
+        if item.startswith("."):
+            continue
+        path = join(trunkDir, "plugins", item)
+        if os.path.isdir(path):
+            installDeleteDirs.append('Type: filesandordirs; Name: "{app}\plugins\%s"' % item)
+    installDelete = "\n".join(installDeleteDirs)
+    templateOptions["INSTALL_DELETE"] = installDelete
+    
     print "Creating source ZIP file"
     MakeSourceArchive(
         trunkDir, 
