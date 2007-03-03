@@ -88,20 +88,20 @@ class PluginInfoBase(object):
         if not exists(pathname):
             eg.PrintError("File %s does not exist" % pathname)
             return
-        #fp = file(pathname, "U")
-        fp = file(pathname, "r")
+        fp = file(pathname, "U")
+        #fp = file(pathname, "r")
         sys.path.insert(0, abspath(pluginInfo.path))
         eg.SetAttr("_lastDefinedPluginClass", None)
         eg.SetAttr("_lastDefinedPluginClassInfo", pluginInfo)
         try:
             try:
-#                module = imp.load_module(
-#                    "Plugin." + pluginInfo.pluginName, 
-#                    fp, 
-#                    abspath(pathname), 
-#                    ('.py', 'U', 1)
-#                )
-                module = MyImport("Plugin." + pluginInfo.pluginName, fp, pathname)
+                module = imp.load_module(
+                    "Plugin." + pluginInfo.pluginName, 
+                    fp, 
+                    abspath(pathname), 
+                    ('.py', 'U', 1)
+                )
+                #module = MyImport("Plugin." + pluginInfo.pluginName, fp, pathname)
             finally:
                 fp.close()
                 del sys.path[0]
@@ -233,11 +233,12 @@ def GetPluginInfo(pluginName):
         and not exists("eg/CorePlugins/" + pluginName + "/__info__.py")
     ):
         PluginInfoMetaClass.raiseOnPluginInfoLoad = True
-        PluginInfoMetaClass.lastPluginInfo
         try:
-            execfile(pluginPath + "/__init__.py", infoDict)
+            try:
+                execfile(pluginPath + "/__init__.py", infoDict)
+            finally:
+                PluginInfoMetaClass.raiseOnPluginInfoLoad = False
         except PluginInfoException:
-            PluginInfoMetaClass.raiseOnPluginInfoLoad = False
             infoDict = PluginInfoMetaClass.lastPluginInfo.__dict__
         except:
             eg.PrintError('Can\'t read __init__.py for plugin "%s"' % pluginName)

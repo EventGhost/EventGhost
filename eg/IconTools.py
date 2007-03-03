@@ -13,35 +13,34 @@ class Icon:
 
 
 def pilToBitmap(pil):
-    colour = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
-    pil2 = Image.new(
-        "RGBA", 
-        (16,16), 
-        (colour.Red(), colour.Green(), colour.Blue())
-    )
-    pil2.paste(pil, None, pil)
-    image = wx.EmptyImage(pil2.size[0], pil2.size[1], 32)
-    image.SetData(pil2.convert('RGB').tostring())
+    #colour = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
+#    pil2 = Image.new(
+#        "RGBA", 
+#        (16,16), 
+#        #(colour.Red(), colour.Green(), colour.Blue())
+#    )
+    #pil2.paste(pil, None, pil)
+    image = wx.EmptyImage(pil.size[0], pil.size[1], 32)
+    image.SetData(pil.convert('RGB').tostring())
     image.SetAlphaData(pil.convert("RGBA").tostring()[3::4]) 
-    image.ConvertAlphaToMask(10)
+    #image.ConvertAlphaToMask(10)
     #image.SetMaskColour(255,255,255)
     bmp = wx.BitmapFromImage(image, 24)
     return bmp
 
 
 def GetIcon(filename):
-    #return wx.BitmapFromImage(wx.Image(filename, wx.BITMAP_TYPE_PNG))
     pil = Image.open(filename).convert("RGBA")
-    pil2 = Image.new("RGBA", (16,16), gColourTuple)
-    try:
-        pil2.paste(pil, None, pil)
-    except:
-        eg.PrintError("Can't convert %s" % filename)
-    image = wx.EmptyImage(pil2.size[0], pil2.size[1], 32)
-    image.SetData(pil2.convert('RGB').tostring())
+#    pil2 = Image.new("RGBA", (16,16), gColourTuple)
+#    try:
+#        pil2.paste(pil, None, pil)
+#    except:
+#        eg.PrintError("Can't convert %s" % filename)
+    image = wx.EmptyImage(pil.size[0], pil.size[1], 32)
+    image.SetData(pil.convert('RGB').tostring())
     image.SetAlphaData(pil.convert("RGBA").tostring()[3::4]) 
-    image.SetMaskColour(255,255,255)
-    image.ConvertAlphaToMask(128)
+    #image.SetMaskColour(255,255,255)
+    #image.ConvertAlphaToMask(128)
     bmp = wx.BitmapFromImage(image, 24)
     return bmp
 
