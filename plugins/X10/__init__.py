@@ -262,14 +262,12 @@ class X10(eg.PluginClass):
         CoInitialize()
         try:
             comInstance = DispatchWithEvents(X10Control(), X10Events)
-            #comInstance = DispatchWithEvents("X10.ActiveHome", X10Events)
         except:
             self.errorState = 1
             CoUninitialize()
             return
         finally:
             startupEvent.set()
-        #comInstance.SendAction("sendplc", "a1 off")
         comInstance.plugin = self
         pHandles = [self.stopEvent]
         while 1:
@@ -296,7 +294,7 @@ class X10(eg.PluginClass):
     
     
     def Configure(self, remoteType=2, ids=None, prefix="X10"):
-        dialog = eg.ConfigurationDialog(self, resizeable=False)
+        dialog = eg.ConfigurationDialog(self)
         text = self.text
         fbtypes = []
         selection = 0
@@ -358,6 +356,8 @@ class X10(eg.PluginClass):
         
         mainSizer = wx.BoxSizer(wx.HORIZONTAL)
         mainSizer.Add(leftSizer)
+        mainSizer.Add((0,0), 1, wx.EXPAND)
+        mainSizer.Add(wx.StaticLine(dialog, style=wx.LI_VERTICAL), 0, wx.EXPAND)
         mainSizer.Add((0,0), 1, wx.EXPAND)
         mainSizer.Add(rightSizer)
         mainSizer.Add((0,0), 1, wx.EXPAND)

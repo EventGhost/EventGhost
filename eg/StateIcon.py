@@ -10,8 +10,8 @@ class StateIcon(wx.TaskBarIcon):
         #eg.whoami()
         self.stateIcons = (
             wx.Icon("images\\Tray1.png", wx.BITMAP_TYPE_PNG),
-            wx.Icon("images\\Tray1.png", wx.BITMAP_TYPE_PNG),
-            wx.Icon("images\\Tray1.png", wx.BITMAP_TYPE_PNG),
+            wx.Icon("images\\Tray3.png", wx.BITMAP_TYPE_PNG),
+            wx.Icon("images\\Tray2.png", wx.BITMAP_TYPE_PNG),
         )
         wx.TaskBarIcon.__init__(self)
         self.iconTime = 0

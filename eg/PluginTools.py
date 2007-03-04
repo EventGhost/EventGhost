@@ -10,7 +10,7 @@ import types
 import Image
 import wx
 import eg
-from eg.IconTools import pilToBitmap, ICON_IDX_PLUGIN
+from eg.IconTools import PilToBitmap, ICON_IDX_PLUGIN
 from Utils import SetClass
 
 
@@ -189,7 +189,7 @@ class PluginInfoBase(object):
     def GetWxIcon(pluginInfo):
         if pluginInfo.icon:
             icon = wx.EmptyIcon()
-            icon.CopyFromBitmap(pilToBitmap(pluginInfo.icon))
+            icon.CopyFromBitmap(PilToBitmap(pluginInfo.icon))
             return icon
         else:
             return WX_ICON_PLUGIN

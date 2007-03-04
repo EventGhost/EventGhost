@@ -12,7 +12,7 @@ class Icon:
     
 
 
-def pilToBitmap(pil):
+def PilToBitmap(pil):
     #colour = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
 #    pil2 = Image.new(
 #        "RGBA", 
@@ -57,8 +57,8 @@ def SetupIcons2(image1):
         return 0
     image2 = image1.copy()
     image2.paste(gDisabledImage, None, gDisabledImage)
-    bmp1 = pilToBitmap(image1)
-    bmp2 = pilToBitmap(image2)
+    bmp1 = PilToBitmap(image1)
+    bmp2 = PilToBitmap(image2)
     idx = gImageList.Add(bmp1)
     gImageList.Add(bmp2)
     return idx
@@ -69,13 +69,13 @@ def SetupPluginIcons(image1):
         return 0
     image2 = image1.copy()
     image2.paste(gDisabledImage, None, gDisabledImage)
-    bmp1 = pilToBitmap(image1)
-    bmp2 = pilToBitmap(image2)
+    bmp1 = PilToBitmap(image1)
+    bmp2 = PilToBitmap(image2)
     
     small = image1.resize((11,11), Image.BICUBIC)
     image3 = FOLDER_ICON.copy()
     image3.paste(small, (5, 5), small)
-    bmp3 = pilToBitmap(image3)
+    bmp3 = PilToBitmap(image3)
     
     idx = gImageList.Add(bmp1)
     gImageList.Add(bmp2)
@@ -88,7 +88,7 @@ def CreateActionGroupIcon(plugin, iconFile):
     small = image1.resize((11,11), Image.BICUBIC)
     image3 = FOLDER_ICON.copy()
     image3.paste(small, (5, 5), small)
-    bmp = pilToBitmap(image3)
+    bmp = PilToBitmap(image3)
     idx = gImageList.Add(bmp)
     return idx
 

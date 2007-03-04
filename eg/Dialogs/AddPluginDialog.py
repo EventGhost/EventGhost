@@ -2,7 +2,7 @@ import os
 import wx
 
 import eg
-from eg.IconTools import GetIcon, pilToBitmap
+from eg.IconTools import GetIcon, PilToBitmap
 from eg.Controls.SizeGrip import SizeGrip
 
         
@@ -102,7 +102,7 @@ class AddPluginDialog(eg.Dialog):
                     continue
                 name = info.name
                 if info.icon:
-                    idx = imageList.Add(pilToBitmap(info.icon))
+                    idx = imageList.Add(PilToBitmap(info.icon))
                 target = typeIds.get(info.kind, target)
             id = tree.AppendItem(target, name, idx)
             tree.SetPyData(id, info)

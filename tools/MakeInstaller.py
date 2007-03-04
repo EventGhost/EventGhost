@@ -27,7 +27,7 @@ toolsDir = abspath(dirname(sys.argv[0]))
 trunkDir = abspath(join(toolsDir, ".."))
 outDir = abspath(join(trunkDir, "..", ".."))
 
-SourcePattern = (
+SourcePattern = [
     "*.py", 
     "*.pyw", 
     "*.pyd", 
@@ -37,19 +37,46 @@ SourcePattern = (
     "*.gif", 
     "*.xml", 
     "*.ico",
-)
+]
 
-def GetSourceFiles():
+def GetFiles(files, pattern):
     sources = [
-        join(trunkDir, "EventGhost.pyw"),
-        join(trunkDir, "EventGhost.ico"),
-        join(trunkDir, "Example.xml"),
-        join(trunkDir, "LICENSE.TXT"),
+        "EventGhost.pyw",
+        "EventGhost.ico",
+        "Example.xml",
+        "LICENSE.TXT",
     ]
     for directory in ("eg", "plugins", "languages", "images"):
-        sources += locate(SourcePattern, join(trunkDir, directory))
-    return sources
+        for path in locate(pattern, join(trunkDir, directory)):
+            files.append(path[len(trunkDir)+1:])
+    return files
 
+
+def GetSourceFiles():
+    files = [
+        "EventGhost.pyw",
+        "EventGhost.ico",
+        "Example.xml",
+        "LICENSE.TXT",
+    ]
+    return GetFiles(files, SourcePattern)
+
+
+def GetUpdateFiles():
+    files = [
+        "Example.xml",
+        "LICENSE.TXT",
+    ]
+    return GetFiles(files, SourcePattern)
+    
+
+def GetSetupFiles():
+    files = [
+        "Example.xml",
+        "LICENSE.TXT",
+    ]
+    return GetFiles(files, SourcePattern + ["*.dll"])
+    
 
 def UpdateVersionFile(svnRevision):
     data = {}
@@ -71,6 +98,9 @@ def locate(patterns, root=os.curdir):
     supplied root directory.
     '''
     for path, dirs, files in os.walk(root):
+        ignoreDirs = [dir for dir in dirs if dir.startswith("_") or dir == ".svn"]
+        for dir in ignoreDirs:
+            dirs.remove(dir)
         for pattern in patterns:
             for filename in fnmatch.filter(files, pattern):
                 yield join(path, filename)
@@ -246,27 +276,10 @@ Type: filesandordirs; Name: "{app}\eg"
 %(INSTALL_DELETE)s
 
 [Files]
-Source: "%(DIST)s\*.*"; DestDir: "{app}"; Flags: ignoreversion
+Source: "%(DIST)s\*.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "%(DIST)s\*.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "%(DIST)s\lib\*.*"; DestDir: "{app}\lib"; Flags: ignoreversion recursesubdirs
-
-Source: "%(TRUNK)s\images\*.png"; DestDir: "{app}\images"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-Source: "%(TRUNK)s\images\*.ico"; DestDir: "{app}\images"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-
-Source: "%(TRUNK)s\plugins\*.py"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-Source: "%(TRUNK)s\plugins\*.pyd"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-Source: "%(TRUNK)s\plugins\*.dll"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-Source: "%(TRUNK)s\plugins\*.txt"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-Source: "%(TRUNK)s\plugins\*.png"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-Source: "%(TRUNK)s\plugins\*.gif"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-Source: "%(TRUNK)s\plugins\*.jpg"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-
-Source: "%(TRUNK)s\eg\*.py"; DestDir: "{app}\eg"; Flags: ignoreversion recursesubdirs
-Source: "%(TRUNK)s\eg\*.pyd"; DestDir: "{app}\eg"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-Source: "%(TRUNK)s\eg\*.png"; DestDir: "{app}\eg"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-Source: "%(TRUNK)s\eg\*.txt"; DestDir: "{app}\eg"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-
-Source: "%(TRUNK)s\languages\*.py"; DestDir: "{app}\languages"; Flags: ignoreversion recursesubdirs
-Source: "%(TRUNK)s\Example.xml"; DestDir: "{app}"; Flags: ignoreversion
+%(INSTALL_FILES)s
 Source: "%(TRUNK)s\Example.xml"; DestDir: "{userappdata}\EventGhost"; DestName: "MyConfig.xml"; Flags: onlyifdoesntexist uninsneveruninstall
 Source: "%(PYTHON_DIR)s\MFC71.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "%(PYTHON_DIR)s\msvcr71.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -322,25 +335,7 @@ Type: filesandordirs; Name: "{app}\eg"
 
 [Files]
 Source: "%(DIST)s\*.exe"; DestDir: "{app}"; Flags: ignoreversion
-
-Source: "%(TRUNK)s\images\*.png"; DestDir: "{app}\images"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-Source: "%(TRUNK)s\images\*.ico"; DestDir: "{app}\images"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-
-Source: "%(TRUNK)s\plugins\*.py"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-Source: "%(TRUNK)s\plugins\*.pyd"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-;Source: "%(TRUNK)s\plugins\*.dll"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-Source: "%(TRUNK)s\plugins\*.txt"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-Source: "%(TRUNK)s\plugins\*.png"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-Source: "%(TRUNK)s\plugins\*.gif"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-Source: "%(TRUNK)s\plugins\*.jpg"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-
-Source: "%(TRUNK)s\eg\*.py"; DestDir: "{app}\eg"; Flags: ignoreversion recursesubdirs
-Source: "%(TRUNK)s\eg\*.pyd"; DestDir: "{app}\eg"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-Source: "%(TRUNK)s\eg\*.png"; DestDir: "{app}\eg"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-Source: "%(TRUNK)s\eg\*.txt"; DestDir: "{app}\eg"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
-
-Source: "%(TRUNK)s\languages\*.py"; DestDir: "{app}\languages"; Flags: ignoreversion recursesubdirs
-Source: "%(TRUNK)s\Example.xml"; DestDir: "{app}"; Flags: ignoreversion
+%(INSTALL_FILES)s
 Source: "%(TRUNK)s\Example.xml"; DestDir: "{userappdata}\EventGhost"; DestName: "MyConfig.xml"; Flags: onlyifdoesntexist uninsneveruninstall
 """
 
@@ -410,12 +405,10 @@ def Execute(*args):
     )
 
 
-def MakeSourceArchive(sourcePath, filepath):
-    archive = zipfile.ZipFile(filepath, "w", zipfile.ZIP_DEFLATED)
-    headerLength = len(sourcePath)
+def MakeSourceArchive(outFile):
+    archive = zipfile.ZipFile(outFile, "w", zipfile.ZIP_DEFLATED)
     for filename in GetSourceFiles():
-        arcname = filename[headerLength + 1:]
-        archive.write(filename, arcname)
+        archive.write(join(trunkDir, filename), filename)
     archive.close()
 
 
@@ -436,30 +429,38 @@ def MakeInstaller(isUpdate):
     for item in os.listdir(join(trunkDir, "plugins")):
         if item.startswith("."):
             continue
-        path = join(trunkDir, "plugins", item)
-        if os.path.isdir(path):
-            installDeleteDirs.append('Type: filesandordirs; Name: "{app}\plugins\%s"' % item)
+        if os.path.isdir(join(trunkDir, "plugins", item)):
+            installDeleteDirs.append(
+                'Type: filesandordirs; Name: "{app}\plugins\%s"' % item
+            )
     installDelete = "\n".join(installDeleteDirs)
     templateOptions["INSTALL_DELETE"] = installDelete
     
     print "Creating source ZIP file"
-    MakeSourceArchive(
-        trunkDir, 
-        join(outDir, "EventGhost_%s_Source.zip" % VersionStr)
-    )
+    MakeSourceArchive(join(outDir, "EventGhost_%s_Source.zip" % VersionStr))
         
     InstallPy2exePatch()
     setup(**py2exeOptions)
     
+    installFiles = []
     if isUpdate:
+        for file in GetUpdateFiles():
+            installFiles.append(
+                'Source: "' + join(trunkDir, file) + '"; DestDir: "{app}\\' + dirname(file) + '"; Flags: ignoreversion'
+            )
         innoScriptPath = abspath(join(tmpDir, "Update.iss"))
         template = inno_update
         outFileBase = "EventGhost_%s_Update" % VersionStr
     else:
+        for file in GetSetupFiles():
+            installFiles.append(
+                'Source: "' + join(trunkDir, file) + '"; DestDir: "{app}\\' + dirname(file) + '"; Flags: ignoreversion'
+            )
         innoScriptPath = abspath(join(tmpDir, "Setup.iss"))
         template = inno_script
         outFileBase = "EventGhost_%s_Setup" % VersionStr
         
+    templateOptions["INSTALL_FILES"] = "\n".join(installFiles)  
     templateOptions["OUT_FILE_BASE"] = outFileBase
     
     fd = open(innoScriptPath, "w")
