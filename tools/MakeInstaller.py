@@ -470,7 +470,7 @@ def MakeInstaller(isUpdate):
 
 
 def UploadFile(filename, url):
-    
+    aborted = False
     class progress:
         def __init__(self, filepath):
             self.size = os.path.getsize(filepath)
@@ -492,6 +492,7 @@ def UploadFile(filename, url):
             keepGoing, skip = self.dialog.Update(min(self.size, self.pos))
             self.pos += size
             if not keepGoing:
+                aborted = True
                 return None
             return self.fd.read(size)
         
@@ -515,7 +516,10 @@ def UploadFile(filename, url):
         if tempFileName not in fileList:
             break
     ftp.storbinary("STOR " + tempFileName, fd)
-    ftp.rename(tempFileName, basename(filename))
+    if aborted:
+        ftp.delete(tempFileName)
+    else:
+        ftp.rename(tempFileName, basename(filename))
     ftp.quit()
     fd.close()
     print "Upload done!"

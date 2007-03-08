@@ -41,8 +41,10 @@ class RootItem(ContainerItem):
             -1, 
             wx.TreeItemData(self)
         )
+        item = tree.AppendItem(self.id, '')
         font1 = tree.GetItemFont(self.id)
         tree.normalfont = font1
+        tree.Delete(item)
         item = tree.AppendItem(self.id, '')
         tree.SetItemHasChildren(self.id, True)
         # evil workaround to get another font
@@ -75,6 +77,14 @@ class RootItem(ContainerItem):
     
     def CanDelete(self):
         return False
+    
+    
+    def CanDisable(self):
+        return False
+    
+    
+    def Enable(self, flag):
+        pass
     
     
     def DropTest(self, cls):

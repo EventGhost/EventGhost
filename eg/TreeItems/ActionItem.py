@@ -134,13 +134,13 @@ class ActionItem(TreeItem):
         
         
     def GetLabel(self):
-        executable = self.executable
         if self.name:
             name = self.name
         else:
             # often the GetLabel() method of the executable can't handle
             # a call without arguments, because suitable default arguments
             # are missing. So we use a fallback in such cases.
+            executable = self.executable
             try:
                 name = executable.GetLabel(*self.args)
             except:
@@ -199,13 +199,12 @@ class ActionItem(TreeItem):
                 return
             newArgs = item.GetArgumentString()
             if self.oldArgs != newArgs:
-                self.positioner = item.GetPositioner()
+                self.positionData = item.GetPositionData()
                 item.document.AppendUndoHandler(self)
         
         
         def Undo(self, document):
-            parent, pos = self.positioner()
-            item = parent.childs[pos]
+            item = pself.positionData.GetItem()
             args = item.GetArgumentString()
             TreeLink.StartUndo()
             item.SetArgumentString(self.oldArgs)
@@ -233,7 +232,8 @@ class ActionItem(TreeItem):
         if eg.config.logActions:
             self.DoPrint(self.GetLabel())
         if self.shouldSelectOnExecute:
-            wx.CallAfter(self.Select)
+            self.Select()
+            #wx.CallAfter(self.Select)
         eg.currentItem = self
         action = self.executable
         if not action:

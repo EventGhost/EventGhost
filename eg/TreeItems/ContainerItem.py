@@ -83,7 +83,7 @@ class ContainerItem(TreeItem):
             pos = -1
         else:
             childs.insert(pos, child)
-        if id is not None and tree.IsExpanded(id):
+        if id is not None and (id == self.root.id or tree.IsExpanded(id)):
             child.CreateTreeItemAt(tree, id, pos)
             
             

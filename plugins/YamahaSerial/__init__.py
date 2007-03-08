@@ -46,7 +46,7 @@ import eg
 
 class PluginInfo(eg.PluginInfo):
     name = "Yamaha RX-V1000 Serial"
-    author = "Mark CLarkson"
+    author = "Mark Clarkson"
     version = "0.0.1"
     kind = "external"
     description = "Plugin to control Yamaha RX-V1000 receiver using RS232"

@@ -8,7 +8,7 @@ import locale
 import wx
 
 import eg
-from eg import ContainerItem, FolderItem, MacroItem
+from eg import ContainerItem, FolderItem, MacroItem, RootItem, AutostartItem
 from eg.Controls.TreeItemBrowseCtrl import TreeItemBrowseCtrl
 
 
@@ -106,6 +106,10 @@ class EnableItem(eg.ActionClass):
         return True
     
     
+    def IsSelectableItem(self, item):
+        return not isinstance(item, AutostartItem)
+
+
     def Configure(self, link=None):
         dialog = eg.ConfigurationDialog(self, resizeable=True)
         sizer = dialog.sizer
@@ -130,10 +134,10 @@ class EnableItem(eg.ActionClass):
             okButton.Enable(False)
             
         def selectionFunc(event):
-            item = event.GetItem()
-            if item.IsOk():
-                obj = tree.GetPyData(item)
-                if True: #obj.__class__ == egTreeStructure.MacroItem:
+            id = event.GetItem()
+            if id.IsOk():
+                item = tree.GetPyData(id)
+                if self.IsSelectableItem(item):
                     okButton.Enable(True)
                 else:
                     okButton.Enable(False)
@@ -187,20 +191,25 @@ class EnableExclusive(EnableItem):
         
     
     def __call__(self, link):
-        if link:
-            obj = link.target
-            if obj:
-                def doit():
-                    obj.Enable()
-                    folderObj = obj.parent
-                    for child in folderObj.childs:
-                        if isinstance(child, ContainerItem) and child != obj:
-                            child.Enable(False)
-                eg.actionThread.Call(doit)
+        if not link:
+            return
+        item = link.target
+        if not item:
+            return
+        def DoIt():
+            item.Enable(True)
+            for child in item.parent.childs:
+                if child is not item:
+                    child.Enable(False)
+        eg.actionThread.Call(DoIt)
                 
                 
     def filterFunc(self, obj):
         return obj.__class__.__bases__[0] in (FolderItem, MacroItem)
+    
+    
+    def IsSelectableItem(self, item):
+        return item.__class__.__bases__[0] is not RootItem
     
     
     

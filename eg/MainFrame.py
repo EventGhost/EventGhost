@@ -467,18 +467,10 @@ class MainFrame(wx.Frame):
                 and treeStateData.time == root.time
             ):
                 tree.SetExpandState(treeStateData.state)
-                try:
-                    for pos in treeStateData.selected:
-                        selectItem = selectItem.childs[pos]
-                except:
-                    selectItem = root
+                selectItem = tree.ResolvePath(treeStateData.selected)
                     
                 if hasattr(treeStateData, "first"):
-                    try:
-                        for pos in treeStateData.first:
-                            firstItem = firstItem.childs[pos]
-                    except:
-                        firstItem = root
+                    firstItem = tree.ResolvePath(treeStateData.first)
             root.CreateTreeItem(tree, None)
             tree.Expand(root.id)
             selectItem.Select()
@@ -486,7 +478,7 @@ class MainFrame(wx.Frame):
                 tree.ScrollTo(firstItem.id)
         finally:
             tree.Thaw()
-        
+            
         
     def OnSize(self, event):
         """ Handle wx.EVT_SIZE """
@@ -530,13 +522,13 @@ class MainFrame(wx.Frame):
         config.perspective = self.auiManager.SavePerspective()
         if res in (wx.ID_OK, wx.ID_YES):
             tree = self.treeCtrl
-            item = self.document.selection
+            selection = self.document.selection
             firstItem = tree.GetPyData(tree.GetFirstVisibleItem())
             class data:
                 guid = tree.root.guid
                 time = tree.root.time
                 state = tree.GetExpandState()
-                selected = item.GetPath() if item else None
+                selected = selection.GetPath() if selection else None
                 first = firstItem.GetPath()
             config.treeStateData = data
         return None
@@ -620,27 +612,29 @@ class MainFrame(wx.Frame):
             return
         self.lastFocus = focus
         tbb = self.toolBar.buttons
-        canCut, canCopy, canPaste, canDelete = self.GetEditCmdState(focus)
+        canCut, canCopy, canPaste, canDelete, canDisable = self.GetEditCmdState(focus)
         tbb.Cut.Enable(canCut)
         tbb.Copy.Enable(canCopy)
         tbb.Paste.Enable(canPaste)
+        tbb.Disabled.Enable(canDisable)
         
         
     def GetEditCmdState(self, focus):
         if focus == "Edit":
-            return (True, True, True, True)
+            return (True, True, True, True, True)
         elif focus == "Log":
-            return (False, True, False, False)
+            return (False, True, False, False, False)
         elif focus == "Tree" and self.document.selection:
             selection = self.document.selection
             return (
                 selection.CanCut(), 
                 selection.CanCopy(), 
                 selection.CanPaste(), 
-                selection.CanDelete()
+                selection.CanDelete(),
+                selection.CanDisable()
             )
         else:
-            return (False, False, False, False)
+            return (False, False, False, False, False)
         
     
     def OnTreeSelectionEvent(self, selection):
@@ -659,11 +653,12 @@ class MainFrame(wx.Frame):
         tbb.NewAction.Enable(menuState.newAction)
         tbb.NewEvent.Enable(menuState.newEvent)
         tbb.Execute.Enable(menuState.execute)
-        canCut, canCopy, canPaste, canDelete =\
+        canCut, canCopy, canPaste, canDelete, canDisable =\
             self.GetEditCmdState(self.lastFocus)
         tbb.Cut.Enable(canCut)
         tbb.Copy.Enable(canCopy)
         tbb.Paste.Enable(canPaste)
+        tbb.Disabled.Enable(canDisable)
         
     
     def OnUndoEvent(self, hasUndos, hasRedos, undoName, redoName):
@@ -677,7 +672,7 @@ class MainFrame(wx.Frame):
         
         
     def SetupEditMenu(self, menuItems):
-        canCut, canCopy, canPaste, canDelete =\
+        canCut, canCopy, canPaste, canDelete, canDisable =\
             self.GetEditCmdState(self.lastFocus)
         menuItems.cut.Enable(canCut)
         menuItems.copy.Enable(canCopy)
@@ -689,6 +684,7 @@ class MainFrame(wx.Frame):
         menuItems.editItem.Enable(menuState.edit)
         menuItems.executeItem.Enable(menuState.execute)
         menuItems.renameItem.Enable(menuState.rename)
+        menuItems.disableItem.Enable(canDisable)
         menuItems.disableItem.Check(not self.document.selection.isEnabled)
         
         

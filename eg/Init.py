@@ -285,7 +285,7 @@ class EventGhost(object):
         
         
     def StartGui(self, startupEvent, startupFile, hideOnStartup):
-        self.__InitComServer()
+        self.InitWin32Com()
         self.messageReceiver.start()
         
         eg.app.SetupGui()
@@ -487,7 +487,11 @@ class EventGhost(object):
         Image._initialized = 2
         
         
-    def __InitComServer(self):
+    def InitWin32Com(self):
+        # Patch win32com to use the gen_py directory in the programs
+        # application data directory instead of its package directory.
+        # When the program runs "frozen" it would not be able to modify
+        # the package directory
         __gen_path__ = os.path.join(self.APPDATA, "EventGhost", "gen_py")
         if not os.path.exists(__gen_path__):
             os.makedirs(__gen_path__)
@@ -497,7 +501,7 @@ class EventGhost(object):
         import win32com.client
         win32com.client.gencache.is_readonly = False
         
-        # Support for the COM-Server
+        # Support for the COM-Server of the program
         if hasattr(sys, "frozen"):
             pythoncom.frozen = 1
         from WinAPI.COMServer import EventGhostCom
@@ -518,7 +522,7 @@ class EventGhost(object):
         e = win32com.client.Dispatch("EventGhost")        
         
         
-    def __DeInitComServer(self):
+    def DeInitWin32Com(self):
         # shutdown COM-Server
         from win32com.server import factory
         factory.RevokeClassFactories(self.__factory_infos)
@@ -527,14 +531,14 @@ class EventGhost(object):
         
     def __InitAsyncore(self):
         # create a dummy-asynchat to keep asyncore.loop alive    
-        dummy_asynchat = asynchat.async_chat()
-        dummy_asynchat.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        dummyAsyncChat = asynchat.async_chat()
+        dummyAsyncChat.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         thread.start_new_thread(asyncore.loop, (1,))
-        self.__dummy_asynchat = dummy_asynchat
+        self.__dummyAsyncChat = dummyAsyncChat
 
 
     def __DeInitAsyncore(self):
-        self.__dummy_asynchat.close()
+        self.__dummyAsyncChat.close()
         
 
     def DeInit(self):

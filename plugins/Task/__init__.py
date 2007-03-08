@@ -92,6 +92,7 @@ class Task(eg.PluginClass):
         RegisterShellHookWindow(eg.messageReceiver.hwnd)
         
         
+        
     def __stop__(self):
         DeregisterShellHookWindow(eg.messageReceiver.hwnd)
         eg.messageReceiver.RemoveHandler(WM_SHELLHOOKMESSAGE, self.MyWndProc)

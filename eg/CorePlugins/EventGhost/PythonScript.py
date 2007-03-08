@@ -206,15 +206,14 @@ class ScriptEditor(wx.Frame):
     class UndoHandler:
         def __init__(self, item, text):
             self.name = "Edit PythonScript"
-            self.positioner = item.GetPositioner()
+            self.positionData = item.GetPositionData()
             self.oldText = item.args[0]
             item.SetParams(text)
             item.document.AppendUndoHandler(self)
 
 
         def Undo(self, document):
-            parent, pos = self.positioner()
-            item = parent.childs[pos]
+            item = self.positionData.GetItem()
             if item in item.executable.openEditFrames:
                 id = item.executable.openEditFrames[item]
                 win = wx.FindWindowById(id, None)

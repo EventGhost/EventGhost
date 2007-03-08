@@ -27,6 +27,14 @@ class AutostartItem(MacroItem):
         return False
     
     
+    def CanDisable(self):
+        return False
+    
+    
+    def Enable(self, flag):
+        pass
+    
+    
     def UnloadPlugins(self):
         eg.whoami()
         for child in self.childs:

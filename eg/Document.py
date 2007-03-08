@@ -201,9 +201,9 @@ class Document:
         self.undoEvent.Fire(True, hasRedo, ": " + handler.name, redoName)
         
         
-    def RestoreItem(self, _Positioner, xmlData):
+    def RestoreItem(self, positionData, xmlData):
         eg.TreeLink.StartUndo()
-        parent, pos = _Positioner()
+        parent, pos = positionData.GetPosition()
         node = ElementTree.fromstring(xmlData)
         cls = self.XMLTag2ClassDict[node.tag]
         item = cls(parent, node)

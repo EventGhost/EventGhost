@@ -576,23 +576,23 @@ class ZoomPlayer(eg.PluginClass):
                 self.plugin.DoCommand(value)
             return handler
        
-        for className, text, scancode in nvList:
+        for className, descr, scancode in nvList:
             class Handler(eg.ActionClass):
-                name = text
-                description = text
+                name = descr
+                description = descr
                 __call__ = returnHandler("5120 " + str(scancode))
             Handler.__name__ = className
             subGroup.AddAction(Handler)
 
         subGroup = self.AddGroup('Regular Functions')
-        for action_name, text in fnList:
+        for className, descr in fnList:
             class Handler(eg.ActionClass):
-                name = action_name[2:]
-                description = text
-                __call__ = returnHandler("5100 " + action_name)
-            Handler.__name__ = action_name
+                name = className[2:]
+                description = descr
+                __call__ = returnHandler("5100 " + name)
+            Handler.__name__ = className
             action = subGroup.AddAction(Handler)
-            setattr(self, action_name[2:], action)
+            setattr(self, className[2:], action)
 
         def returnExecute(value):
             def __call__(self, value2):
@@ -605,16 +605,16 @@ class ZoomPlayer(eg.PluginClass):
             return GetLabel
        
         subGroup = self.AddGroup('Extended Functions')
-        for action_name, text in exList:
-            shortDoc = text.splitlines()[0].strip()
+        for className, descr in exList:
+            shortDoc = descr.splitlines()[0].strip()
             class Handler(eg.ActionWithStringParameter):
                 name = shortDoc
-                description = text
-                __call__ = returnExecute("5110 " + action_name + ",")
+                description = descr
+                __call__ = returnExecute("5110 " + name + ",")
                 GetLabel = returnGetLabel(shortDoc + ": ")   
-            Handler.__name__ = action_name
+            Handler.__name__ = className
             action = subGroup.AddAction(Handler)
-            setattr(self, action_name[2:], action)
+            setattr(self, className[2:], action)
         self.AddAction(self.MyCommand)
 
 

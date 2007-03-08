@@ -17,22 +17,21 @@ class CmdNewItem:
     """
     
     def Do(self, item):
-        self.positioner = item.GetPositioner()
+        self.positionData = item.GetPositionData()
         self.cls = item.__class__
         item.document.AppendUndoHandler(self)
     
     
     def Undo(self, document):
         eg.whoami()
-        parent, pos = self.positioner()
-        item = parent.childs[pos]
+        item = self.positionData.GetItem()
         self.data = item.GetFullXml()
         item.Delete()
         
         
     def Redo(self, document):
         eg.whoami()
-        item = document.RestoreItem(self.positioner, self.data)
+        item = document.RestoreItem(self.positionData, self.data)
         item.Select()
     
     
@@ -60,7 +59,6 @@ class CmdNewPlugin(CmdNewItem):
             -1,
             file=pluginInfo.pluginName
         )
-        self.positioner = pluginItem.GetPositioner()
         pluginItem.Select()
         if pluginItem.executable:
             if pluginItem.NeedsConfiguration():
@@ -247,21 +245,18 @@ class CmdClear:
             return
 
         self.data = item.GetFullXml()
-        self.positioner = item.GetPositioner()
+        self.positionData = item.GetPositionData()
         document.AppendUndoHandler(self)
         item.Delete()
 
 
     def Undo(self, document):
-        item = document.RestoreItem(self.positioner, self.data)
+        item = document.RestoreItem(self.positionData, self.data)
         item.Select()
         
         
     def Redo(self, document):
-        parent, pos = self.positioner()
-        item = parent.childs[pos]
-        childs = item.childs[:]
-        item.Delete()
+        self.positionData.GetItem().Delete()
 
 
         
@@ -273,7 +268,7 @@ class CmdCut(CmdClear):
             return
 
         self.data = item.GetFullXml()
-        self.positioner = item.GetPositioner()
+        self.positionData = item.GetPositionData()
         document.AppendUndoHandler(self)
         document.tree.Copy()
         item.Delete()
@@ -353,7 +348,7 @@ class CmdPaste:
                 obj = childCls(targetObj, childXmlNode)
                 obj.RestoreState()
                 targetObj.AddChild(obj, pos)
-                self.items.append(obj.GetPositioner())
+                self.items.append(obj.GetPositionData())
             if len(self.items):
                 obj.Select()
                 document.TreeLink.StopLoad()
@@ -364,19 +359,18 @@ class CmdPaste:
             
     def Undo(self, document):
         data = []
-        for positioner in self.items:
-            parent, pos = positioner()
-            item = parent.childs[pos]
-            data.append((positioner, item.GetFullXml()))
+        for positionData in self.items:
+            item = positionData.GetItem()
+            data.append((positionData, item.GetFullXml()))
             item.Delete()
         self.items = data
         
         
     def Redo(self, document):
         data = []
-        for positioner, xmlString in self.items:
-            item = document.RestoreItem(positioner, xmlString)
-            data.append(positioner)
+        for positionData, xmlString in self.items:
+            item = document.RestoreItem(positionData, xmlString)
+            data.append(positionData)
         item.Select()
         self.items = data
         
@@ -387,22 +381,20 @@ class CmdRename:
     
     def __init__(self, document, item, text):
         self.oldText = item.name
-        self.positioner = item.GetPositioner()
+        self.positionData = item.GetPositionData()
         self.text = text
         item.RenameTo(text)
         document.AppendUndoHandler(self)
         
         
     def Undo(self, document):
-        parent, pos = self.positioner()
-        item = parent.childs[pos]
+        item = self.positionData.GetItem()
         item.RenameTo(self.oldText)
         item.Select()
         
         
     def Redo(self, document):
-        parent, pos = self.positioner()
-        item = parent.childs[pos]
+        item = self.positionData.GetItem()
         item.RenameTo(self.text)
         item.Select()
 
@@ -412,22 +404,20 @@ class CmdToggleEnable:
     name = eg.text.MainFrame.Menu.Disabled.replace("&", "")
     
     def __init__(self, document, item):
-        self.positioner = item.GetPositioner()
+        self.positionData = item.GetPositionData()
         self.state = not item.isEnabled
         item.Enable(self.state)
         document.AppendUndoHandler(self)
         
         
     def Undo(self, document):
-        parent, pos = self.positioner()
-        item = parent.childs[pos]
+        item = self.positionData.GetItem()
         item.Enable(not self.state)
         item.Select()
 
         
     def Redo(self, document):
-        parent, pos = self.positioner()
-        item = parent.childs[pos]
+        item = self.positionData.GetItem()
         item.Enable(self.state)
         item.Select()
 
@@ -444,14 +434,14 @@ class CmdMoveTo:
         item.MoveItemTo(parent, pos)
         tree.EnsureVisible(tmp)
         self.oldParentPath = oldParent.GetPath()
-        self.newPositioner = item.GetPositioner()
+        self.newPositionData = item.GetPositionData()
         item.Select()
         document.AppendUndoHandler(self)
     
     
     def Undo(self, document):
         eg.whoami()
-        parent1, pos1 = self.newPositioner()
+        parent1, pos1 = self.newPositionData.GetPosition()
         item = parent1.childs[pos1]
         parent = item.tree.root
         for parentPos in self.oldParentPath:
@@ -464,7 +454,7 @@ class CmdMoveTo:
                 oldPos += 1
         item.MoveItemTo(parent, oldPos)
         self.oldParentPath = oldParent.GetPath()
-        self.newPositioner = item.GetPositioner()
+        self.newPositionData = item.GetPositionData()
         item.Select()
         
     Redo = Undo

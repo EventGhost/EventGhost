@@ -230,6 +230,8 @@ class TreeCtrl(wx.TreeCtrl):
                 |wx.TR_EDIT_LABELS
                 |wx.TR_ROW_LINES
                 |wx.CLIP_CHILDREN
+                #|wx.TR_HIDE_ROOT
+                #|wx.TR_LINES_AT_ROOT 
             )
         )
         self.root = None
@@ -593,3 +595,12 @@ class TreeCtrl(wx.TreeCtrl):
             self.Thaw()
         
         
+    def ResolvePath(self, path):
+        item = self.root
+        try:
+            for pos in path:
+                item = item.childs[pos]
+        except:
+            item = root
+        return item
+

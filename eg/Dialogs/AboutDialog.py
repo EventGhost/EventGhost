@@ -51,6 +51,7 @@ ST = (
             ("Milbrot", "MyTheatre"),
             ("Matthew Jacob Edwards", "Winamp Extensions"),
             ("jorel1969", "Medio"),
+            ("Mark Clarkson", "Yamaha RX-V1000 Serial"),
         ),
     ),
     (

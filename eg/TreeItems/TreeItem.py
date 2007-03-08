@@ -7,7 +7,8 @@ import xml.etree.cElementTree as ElementTree
 import wx
 import eg
 from TreeLink import TreeLink
-    
+from TreePosition import TreePosition
+
 
 class TreeItem(object):
     # name
@@ -156,38 +157,13 @@ class TreeItem(object):
         tree.SelectItem(self.id)
         
         
-    def GetPositioner(self):
+    def GetPositionData(self):
         """ 
-        Returns a callable object to find the position of the item.
-        The callable will return the parent and the index inside the parents
-        childs if called. If the item is the last in the parents childs the
-        callable will return -1 as index.
-        
-        This method is mainly used by the Undo/Redo handlers to find the
-        right position to an item. Because previous Undo/Redo handlers
-        might have deleted/restored in item or any of its parents, they can't 
-        use any direct item reference, but must use an "index path" to find 
-        the right object.
-        
-        Typical usage:
-            positioner = item.GetPositioner()
-            ...
-            parent, pos = positioner()
-            item = parent.childs[pos]
-        """
-        root = self.root
-        parentPath = self.parent.GetPath()
-        itemPos = self.parent.childs.index(self)
-        if itemPos + 1 >= len(self.parent.childs):
-            itemPos = -1
-        def _GetPositioner():
-            searchParent = root
-            for parentPos in parentPath:
-                searchParent = searchParent.childs[parentPos]
-            return searchParent, itemPos
-        return _GetPositioner
-        
-        
+        Returns a TreePosition object to the item.
+        """    
+        return TreePosition(self)
+    
+    
     def Delete(self):
         self._Delete()
         if self.id:
@@ -226,6 +202,10 @@ class TreeItem(object):
     
     
     def GetAllItems(self):
+        """
+        Return a list of all nodes including self, by recusively traversing
+        the child nodes.
+        """
         result = []
         append = result.append
         def _RecurseChilds(item):
@@ -316,8 +296,11 @@ class TreeItem(object):
         return True    
     
     
-    
     def CanDelete(self):
+        return True
+    
+    
+    def CanDisable(self):
         return True
     
     

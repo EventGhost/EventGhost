@@ -168,7 +168,9 @@ class PluginInfoBase(object):
             pluginInfo.instances = [info]
             if pluginInfo.icon:
                 try:
-                    pluginInfo.iconIndex = eg.IconTools.SetupPluginIcons(pluginInfo.icon)
+                    pluginInfo.iconIndex = eg.IconTools.SetupPluginIcons(
+                        pluginInfo.icon
+                    )
                 except:
                     pass
         else:
@@ -193,7 +195,6 @@ class PluginInfoBase(object):
             return icon
         else:
             return WX_ICON_PLUGIN
-    
      
 
 

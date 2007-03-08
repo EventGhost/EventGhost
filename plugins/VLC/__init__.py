@@ -159,15 +159,15 @@ class VLC(eg.PluginClass):
        
         self.AddAction(self.MyCommand)
        
-        for action_name, text, command, in fnList:
+        for actionName, actionDescription, command, in fnList:
             class tmpAction(eg.ActionClass):
-                name = action_name
-                description = text
+                name = actionName
+                description = actionDescription
                 value = command  + "\r\n"
                 def __call__(self2):
                     return self.push(self2.value)
                 
-            tmpAction.__name__ = action_name.replace(" ", "")
+            tmpAction.__name__ = actionName.replace(" ", "")
             self.AddAction(tmpAction)
                              
                             

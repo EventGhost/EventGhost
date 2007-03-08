@@ -95,7 +95,8 @@ class PluginItem(ActionItem):
         if eg.config.logActions:
             self.DoPrint(self.name)
         if self.shouldSelectOnExecute:
-            wx.CallAfter(self.Select)
+            self.Select()
+            #wx.CallAfter(self.Select)
         self.StartPlugin()
         eg.result = self.executable
         return None, None
