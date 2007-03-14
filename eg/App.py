@@ -10,7 +10,7 @@ from win32process import (
     SetPriorityClass, 
     GetCurrentProcess
 )
-from win32con import REALTIME_PRIORITY_CLASS, WM_QUERYENDSESSION
+from win32con import REALTIME_PRIORITY_CLASS, WM_QUERYENDSESSION, WM_ENDSESSION
 
 
 
@@ -32,16 +32,17 @@ class MyApp(wx.App):
         # requests. So we simply disable the built-in handling by assigning
         # a dummy function and generate our own event in the hidden
         # MessageReceiver window.
-        def dummy(event):
-            pass
-        self.Bind(wx.EVT_QUERY_END_SESSION, dummy)
+        self.Bind(wx.EVT_QUERY_END_SESSION, eg.DummyFunc)
+        self.Bind(wx.EVT_END_SESSION, eg.DummyFunc)
         eg.messageReceiver.AddHandler(
             WM_QUERYENDSESSION, 
             self.OnQueryEndSession
         )
         
-        # EVT_END_SESSION works fine. wxWindows only sends one event.
-        self.Bind(wx.EVT_END_SESSION, self.OnEndSession)
+        eg.messageReceiver.AddHandler(
+            WM_ENDSESSION, 
+            self.OnEndSession
+        )
         
         self.onExitFuncs = []
         self.clipboardEvent = eg.EventHook()
@@ -49,50 +50,75 @@ class MyApp(wx.App):
             if event.GetActive():
                 self.clipboardEvent.Fire()
         self.Bind(wx.EVT_ACTIVATE_APP, FireClipboardEvent)
+        
         return True
     
     
     def SetupGui(self):
         eg.whoami()
+        
+        self.focusEvent = eg.EventHook()
+        
         # setup a taskbar menu with icon, and catch some events from it
         import StateIcon
         self.taskBarIcon = taskBarIcon = StateIcon.StateIcon(self)
 
         trayMenu = trayMenu = eg.Menu(taskBarIcon, "")
         text = eg.text.MainFrame.TaskBarMenu
-        
-        def OnMenuShow(event):
-            eg.mainFrame.BringToFront()
-        trayMenu.Append(text.Show, OnMenuShow)
-        
-        def OnMenuHide(event):
-            eg.mainFrame.Iconize(True)
-        trayMenu.Append(text.Hide, OnMenuHide)
+        menuShow = trayMenu.Append(text.Show, self.OnCmdShowMainFrame)
+        menuHide = trayMenu.Append(text.Hide, self.OnCmdHideMainFrame)
         trayMenu.AppendSeparator()
-        
-        def OnMenuExit(event):
-            eg.mainFrame.OnCmdExit(event)
-        trayMenu.Append(text.Exit, OnMenuExit)
+        trayMenu.Append(text.Exit, self.OnCmdExit)
     
         def OnTaskBarMenu(event):
+            #menuShow.Enable(self.mainFrame is None)
+            menuHide.Enable(self.mainFrame is not None)
             taskBarIcon.PopupMenu(trayMenu)
         taskBarIcon.Bind(wx.EVT_TASKBAR_RIGHT_UP, OnTaskBarMenu)
-        taskBarIcon.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, OnMenuShow)
+        taskBarIcon.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnCmdShowMainFrame)
+        
+        from MainFrame import MainFrame
+        self.mainFrame = MainFrame(eg.document)
+        self.SetTopWindow(self.mainFrame)
+        self.mainFrame.Show()
+        #self.mainFrame.Show(not (config.hideOnStartup or hideOnStartup))
     
 
+    #------- TrayIcon menu handlers ------------------------------------------
+    
+    def OnCmdShowMainFrame(self, event):
+        if self.mainFrame:
+            self.mainFrame.Raise()
+        else:
+            from MainFrame import MainFrame
+            self.mainFrame = MainFrame(eg.document)
+            self.mainFrame.Show()
+            self.mainFrame.Raise()
+        
+        
+    def OnCmdHideMainFrame(self, event):
+        if self.mainFrame:
+            self.mainFrame.Destroy()
+        
+        
+    def OnCmdExit(self, event):
+        self.Exit(event)
+        
+    #------------------------------------------------------------------------
+        
     @eg.logit(print_return=True)
     def OnQueryEndSession(self, hwnd, msg, wparam, lparam):
         """System is about to be logged off"""
         # This method gets called from MessageReceiver on a
         # WM_QUERYENDSESSION win32 message.
-        if eg.mainFrame.OnClose() == wx.ID_CANCEL:
+        if self.mainFrame.OnClose() == wx.ID_CANCEL:
             eg.notice("User cancelled shutdown in OnQueryEndSession")
             return 0
         return 1
 
 
     @eg.logit(print_return=True)
-    def OnEndSession(self, event):
+    def OnEndSession(self, hwnd, msg, wparam, lparam):
         """System is logging off"""
         egEvent = eg.eventThread.TriggerEvent("OnEndSession")
         while not egEvent.isEnded:
@@ -103,6 +129,11 @@ class MyApp(wx.App):
          
         
     def Exit(self, event=None):
+        eg.whoami()
+        if self.mainFrame:
+            self.mainFrame.Destroy()
+        else:
+            eg.notice("No MainFrame")
         self.taskBarIcon.alive = False
         self.taskBarIcon.Destroy()
         self.ExitMainLoop()
@@ -110,7 +141,7 @@ class MyApp(wx.App):
         
     @eg.logit()
     def OnExit(self):
-        if eg.mainFrame:
+        if True: #eg.mainFrame:
             egEvent = eg.eventThread.TriggerEvent("OnClose")
             while not egEvent.isEnded:
                 self.Yield()

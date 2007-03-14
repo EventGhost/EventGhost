@@ -204,7 +204,7 @@ class ActionItem(TreeItem):
         
         
         def Undo(self, document):
-            item = pself.positionData.GetItem()
+            item = self.positionData.GetItem()
             args = item.GetArgumentString()
             TreeLink.StartUndo()
             item.SetArgumentString(self.oldArgs)
@@ -264,4 +264,5 @@ class ActionItem(TreeItem):
         if cls == PluginItem and self.parent == self.document.autostartMacro:
             return 4 # 4 = item can be inserted before or after
         return None
+
 

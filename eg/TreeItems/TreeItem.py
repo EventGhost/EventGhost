@@ -19,6 +19,7 @@ class TreeItem(object):
     # xmlId
     # __ weakref__
     
+    xmlTag = "Item"
     dependants = None
     childs = ()
     canExecute = False
@@ -80,7 +81,7 @@ class TreeItem(object):
         write("<")
         write(self.xmlTag)
         for key, value in attr:
-            write(' %s=%s' % (key, quoteattr(str(value)).encode("UTF-8")))
+            write(' %s=%s' % (key, quoteattr(unicode(value)).encode("UTF-8")))
         write(">")
         if pretty:
             new_indent_str = indent_str + "    "
@@ -137,13 +138,17 @@ class TreeItem(object):
     
     
     def DeleteTreeItem(self, tree):
+        eg.AssertThread()
         if self.id is not None:
             tree.Delete(self.id)
             self.id = None
         
         
     def Select(self):
+        eg.AssertThread()
         tree = self.tree
+        if tree is None:
+            return
         if self.id is None:
             root = self.root
             stack = []
@@ -165,6 +170,7 @@ class TreeItem(object):
     
     
     def Delete(self):
+        eg.AssertThread()
         self._Delete()
         if self.id:
             self.tree.Delete(self.id)
@@ -309,6 +315,7 @@ class TreeItem(object):
     
     
     def RenameTo(self, newName):
+        eg.AssertThread()
         eg.whoami()
         self.name = newName
         self.tree.SetItemText(self.id, newName)
@@ -420,7 +427,7 @@ class TreeItem(object):
         
     def DoPrint(self, text):
         wRef = weakref.ref(self)
-        eg.logCtrl.DoPrint(text, self.iconIndex, wRef)
+        eg.log.DoPrint(text, self.iconIndex, wRef)
         
     
     def DropTest(self, cls):

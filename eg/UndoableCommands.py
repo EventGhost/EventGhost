@@ -104,6 +104,7 @@ class CmdNewFolder(CmdNewItem):
             name=eg.text.General.unnamedFolder
         )
         CmdNewItem.Do(self, item)
+        item.tree.SetFocus()
         item.Select()
         item.tree.EditLabel(item.id)
         return item
@@ -403,7 +404,8 @@ class CmdRename:
 class CmdToggleEnable:
     name = eg.text.MainFrame.Menu.Disabled.replace("&", "")
     
-    def __init__(self, document, item):
+    def __init__(self, document):
+        item = document.selection
         self.positionData = item.GetPositionData()
         self.state = not item.isEnabled
         item.Enable(self.state)
@@ -459,4 +461,5 @@ class CmdMoveTo:
         
     Redo = Undo
         
+
 

@@ -423,11 +423,14 @@ class LanguageEditor(wx.Frame):
                         return ""
                     Add(INDENT * indent + repr(transValue) + ",\n")
                 elif transValue is not UnassignedValue and transValue != "":
-                    Add(INDENT * indent + key + " = " + repr(transValue) + "\n")
+                    #if type(transValue) == type(u""):
+                    #    transValue = transValue.decode("latin-1")
+                    Add(INDENT * indent + key + " = " + repr(unicode(transValue)) + "\n")
                 item, cookie = tree.GetNextChild(id, cookie)
             return "".join(res)
         
         fd = open("Languages\\%s.py" % self.config.language, "w")
+        fd.write("# -*- coding: UTF-8 -*-\n")
         fd.write(Traverse(tree.GetRootItem()))
         fd.close()
         self.isDirty = False

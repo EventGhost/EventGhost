@@ -2,28 +2,28 @@ import os
 import sys
 import locale
 
-encoding = locale.getdefaultlocale()[1]
-
+#encoding = locale.getdefaultlocale()[1]
+#
 locale.setlocale(locale.LC_ALL, '')
-if hasattr(sys,"setdefaultencoding"):
-    sys.setdefaultencoding(encoding)
-else:
-    # this needs the sitecustomize.py in the Python path
-    sys.setappdefaultencoding(encoding)
+#if hasattr(sys,"setdefaultencoding"):
+#    sys.setdefaultencoding(encoding)
+#else:
+#    # this needs the sitecustomize.py in the Python path
+#    sys.setappdefaultencoding(encoding)
 
 
 # get program directory
 if hasattr(sys, "frozen"):
-    main_dir = os.path.dirname(sys.executable)
+    mainDir = os.path.dirname(sys.executable)
 else:
-    main_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
+    mainDir = os.path.abspath(os.path.dirname(sys.argv[0]))
 
 # change working directory to program directory
-os.chdir(main_dir)
+os.chdir(mainDir)
 
 # append our pathes to sys.path
-sys.path.append(main_dir + "\\eg")
-sys.path.append(main_dir + "\\Plugins")
+sys.path.append(mainDir + "\\eg")
+sys.path.append(mainDir + "\\Plugins")
 
 # determine the commadline parameters
 hideOnStartup = False
@@ -46,10 +46,10 @@ while True:
         hideOnStartup = True
     elif arg == '-install':
         import compileall
-        compileall.compile_dir(main_dir)
+        compileall.compile_dir(mainDir)
         sys.exit(0)
     elif arg == '-uninstall':
-        for root, dirs, files in os.walk(main_dir):
+        for root, dirs, files in os.walk(mainDir):
             for name in files:
                 if name.lower().endswith(".pyc"):
                     os.remove(os.path.join(root, name))
@@ -74,6 +74,7 @@ while True:
         LanguageEditor.Start()
         sys.exit(0)
 
+# check if another instance of the program is running
 from win32process import ExitProcess
 import win32event, win32api
 appMutex = win32event.CreateMutex(

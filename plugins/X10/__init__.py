@@ -190,7 +190,8 @@ gRemotes = [
             'D': 'B',
             'E': 'C',
             'F': 'D',
-        }            ],
+        }        
+    ],
 ]
 
 
@@ -251,6 +252,10 @@ class X10(eg.PluginClass):
         self.thread.join(10.0)
             
             
+    def GetLabel(self, remoteType=None, ids=None, prefix=None):
+        return "X10: " + gRemotes[remoteType][0]
+        
+        
     def WorkerThread(self, startupEvent, stopEvent):
         from win32event import MsgWaitForMultipleObjects, QS_ALLINPUT, WAIT_OBJECT_0
         from win32com.client import DispatchWithEvents
@@ -371,4 +376,5 @@ class X10(eg.PluginClass):
                 [i+1 for i, button in enumerate(idBtns) if button.GetValue()], 
                 editCtrl.GetValue()
             )
+
 

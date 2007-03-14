@@ -1,3 +1,29 @@
+#
+# eg/Dialogs/AboutDialog.py
+#
+# Copyright (C) 2005 Lars-Peter Voss
+#
+# This file is part of EventGhost.
+# 
+# EventGhost is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# EventGhost is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with EventGhost; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
 import eg
 import wx
 
@@ -7,12 +33,12 @@ import platform
 import thread
 import threading
 
-from string import Template
 from cStringIO import StringIO
 from math import sin
 
 import Image
 from eg.Controls.SizeGrip import SizeGrip
+
 
 class Text:
     Title = "About EventGhost"
@@ -28,19 +54,8 @@ class Text:
 Text = eg.GetTranslation(Text)
 
 
-system_template = """
-<table>
-    <tr><td><b>EventGhost Version:</b></td><td>$version build $build</td></tr>
-    <tr><td><b>SVN Revision:</b></td><td>$svnRevision</td></tr>
-    <tr><td><b>Compile Time:</b></td><td>$compileTime</td></tr>
-    <tr><td><b>Python Version:</b></td><td>$pyVersion</td></tr>
-    <tr><td><b>wxPython Version:</b></td><td>$wxVersion</td></tr>
-    <tr><td><b>PIL Version:</b></td><td>$pilVersion</td></tr>
-    <tr><td><b>Platform:</b></td><td>$platform</td></tr>
-</table>
-"""
 
-ST = (
+SPECIAL_THANKS_DATA = (
     (
         "Plugin Developers:",
         2,
@@ -69,18 +84,33 @@ ST = (
             ('dlandrum', 'PayPal'),
             ('Steve Ingamells', 'PayPal'),
             ('Stoffel', 'remote'),
-            ('Jon Rhees, <a href="http://www.usbuirt.com/">USB-UIRT</a>', 'USB-UIRT'),
-            ('Jonah Peskin, <a href="http://www.streamzap.com/">Streamzap, Inc.</a>', 'Streamzap remote'),
+            (
+                'Jon Rhees, <a href="http://www.usbuirt.com/">USB-UIRT</a>', 
+                'USB-UIRT'
+            ),
+            (
+                'Jonah Peskin, <a href="http://www.streamzap.com/">' \
+                    'Streamzap, Inc.</a>', 
+                'Streamzap remote'
+            ),
         ),
     ),
     (
         'Others:',
         2,
         (
-            ('Benjamin Webb', 'for the nice <a href="http://www.eventghost.org/wiki/Controlling_Your_Living_Room_with_EventGhost">wiki article</a>'),
+            (
+                'Benjamin Webb', 
+                'for the nice <a href="http://www.eventghost.org/wiki/' \
+                'Controlling_Your_Living_Room_with_EventGhost">' \
+                'wiki article</a>'
+            ),
             ('Oliver Wagner', 'for hosting the website'),
             ('Alf & Metallhuhn', 'for creating the EventGhost logo'),
-            ('Mark James', 'for his <a href="http://www.famfamfam.com/">icons</a>'),
+            (
+                'Mark James', 
+                'for his <a href="http://www.famfamfam.com/">icons</a>'
+            ),
         ),
     ),
 )
@@ -89,7 +119,7 @@ ST = (
 
 class AnimatedWindow(wx.Window):
     
-    def __init__(self, parent, id = -1):
+    def __init__(self, parent, id=-1):
         self.x = 0
         self.y = 0
         self.font = wx.Font(
@@ -101,8 +131,8 @@ class AnimatedWindow(wx.Window):
         self.alpha = 0
         self.image = wx.EmptyImage(im.size[0], im.size[1], 32)
         self.image.SetData(im.convert('RGB').tostring())
-        self.bmp_width = im.size[0]
-        self.bmp_height = im.size[1]
+        self.bmpWidth = im.size[0]
+        self.bmpHeight = im.size[1]
         self.time = time.clock()
         self.count = 0
         self.lock = threading.Lock()
@@ -116,18 +146,20 @@ class AnimatedWindow(wx.Window):
         
         
     def OnSize(self,event):
-        self.Width, self.Height = self.GetClientSizeTuple()
+        self.width, self.height = self.GetClientSizeTuple()
         self.lock.acquire()
-        self._Buffer = wx.EmptyBitmap(self.Width, self.Height)
+        self.dcBuffer = wx.EmptyBitmap(self.width, self.height)
         self.lock.release()
-        self.y3 = (self.Height - self.bmp_height) / 4.0
-        self.x3 = (self.Width - self.bmp_width) / 4.0
+        self.y3 = (self.height - self.bmpHeight) / 4.0
+        self.x3 = (self.width - self.bmpWidth) / 4.0
+        textWidth, _, _, _ = self.GetFullTextExtent("EventGhost", self.font) 
+        self.textOffset = (self.width - textWidth) / 2
         self.UpdateDrawing()
 
 
     def UpdateDrawing(self):
         self.lock.acquire()
-        dc = wx.BufferedDC(wx.ClientDC(self), self._Buffer)
+        dc = wx.BufferedDC(wx.ClientDC(self), self.dcBuffer)
         self.Draw(dc)
         self.lock.release()
 
@@ -156,7 +188,7 @@ class AnimatedWindow(wx.Window):
         dc.SetBackground(self.brush)
         dc.Clear() # make sure you clear the bitmap!
         dc.SetFont(self.font)
-        dc.DrawText("EventGhost", 50, 50)
+        dc.DrawText("EventGhost", self.textOffset, 50)
         im = Image.blend(self.im1, self.im2, self.alpha)
         self.image.SetAlphaData(im.tostring()) 
         bmp = wx.BitmapFromImage(self.image, 24)
@@ -165,44 +197,31 @@ class AnimatedWindow(wx.Window):
 
 
 
-class AboutDialog(eg.Dialog):
+class Panel1(wx.Panel):
     
-    def __init__(self, parent=None):
-        wx.Dialog.__init__(
-            self, 
-            parent, 
-            -1, 
-            Text.Title,
-            style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
-        )
-        
-        nb = wx.Notebook(self)
-        self.notebook = nb
-        
-        page1 = wx.Panel(nb, style=wx.SUNKEN_BORDER)
-        nb.AddPage(page1, Text.tabAbout)
-        
-        textCtrl = wx.StaticText(page1, -1, "")
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent, style=wx.SUNKEN_BORDER)
+        textCtrl = wx.StaticText(self, -1, "")
         hypelink1 = eg.HyperLinkCtrl(
-            page1, 
+            self, 
             wx.ID_ANY, 
             "Homepage", 
             URL="http://www.eventghost.org/"
         )
         hypelink2 = eg.HyperLinkCtrl(
-            page1,
+            self,
             wx.ID_ANY, 
             "Forum",
             URL="http://www.eventghost.org/forum/"
         )
         hypelink3 = eg.HyperLinkCtrl(
-            page1,
+            self,
             wx.ID_ANY, 
             "Wiki",
             URL="http://www.eventghost.org/wiki/"
         )
         
-        animatedWindow = AnimatedWindow(page1, -1)
+        animatedWindow = AnimatedWindow(self)
         
         linkLineSizer = wx.BoxSizer(wx.HORIZONTAL)
         linkLineSizer.Add((5,5), 1)
@@ -213,80 +232,24 @@ class AboutDialog(eg.Dialog):
         linkLineSizer.Add(hypelink3, 0, wx.EXPAND, 15)
         linkLineSizer.Add((5,5), 1)
         
-        page1Sizer = wx.BoxSizer(wx.VERTICAL)
-        page1Sizer.Add(
-            textCtrl, 0, wx.ALIGN_CENTER|wx.TOP|wx.LEFT|wx.RIGHT, 5
-        )
-        page1Sizer.Add(linkLineSizer, 0, wx.ALIGN_CENTER|wx.EXPAND)
-        page1Sizer.Add(
-            animatedWindow, 1, wx.ALIGN_CENTER|wx.ALL|wx.EXPAND, 10
-        )
-        page1.SetSizer(page1Sizer)
-        page1.SetAutoLayout(True)
-
-        nb.AddPage(
-            self.CreateHtmlPanel(nb, self.CreateSpecialThanksHtml()), 
-            Text.tabSpecialThanks
-        )
-        nb.AddPage(self.CreateHtmlPanel(nb, eg.license), Text.tabLicense)
-        
-        page4 = wx.Panel(nb)
-        nb.AddPage(page4, Text.tabSystemInfo)
-        d = dict(
-            version = eg.version,
-            build = str(eg.buildNum),
-            svnRevision = eg.svnRevision,
-            compileTime = time.strftime(
-                Text.CreationDate,
-                time.gmtime(eg.compileTime)
-            ),
-            pyVersion = "%d.%d.%d %s %d" % sys.version_info,
-            wxVersion = wx.VERSION_STRING,
-            pilVersion = Image.VERSION,
-            platform = platform.platform(),
-        )
-            
-        sysinfoHtml = eg.HtmlWindow(page4, -1, style=wx.SUNKEN_BORDER)
-        sysinfoHtml.SetPage(Template(system_template).substitute(d))
-        self.sysinfoHtml = sysinfoHtml
-        page4Sizer = wx.BoxSizer(wx.VERTICAL)
-        page4Sizer.Add(sysinfoHtml, 1, wx.EXPAND, 5)
-        page4.SetSizer(page4Sizer)
-        page4.SetAutoLayout(True)
-        sysinfoHtml.Bind(wx.EVT_RIGHT_DOWN, self.OnRightClick)
-        sysinfoHtml.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
-
-        okButton = wx.Button(self, wx.ID_OK, eg.text.General.ok)
-        okButton.SetDefault()
-
-        btnSizer = wx.BoxSizer(wx.HORIZONTAL)
-        btnSizer.Add((0, 0), 1, wx.EXPAND)
-        btnSizer.Add(
-            okButton, 
-            0, 
-            wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND|wx.ALL, 
-            5
-        )
-        btnSizer.Add((0, 0), 1, wx.EXPAND)
-        btnSizer.Add(SizeGrip(self), 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT)
-
-        mainSizer = wx.BoxSizer(wx.VERTICAL)
-        mainSizer.Add(nb, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, 5)
-        mainSizer.Add(btnSizer, 0, wx.EXPAND)
-
-        self.SetSizerAndFit(mainSizer)
-        self.SetMinSize(self.GetSize())
-
-        self.contextMenu = eg.Menu(self, "EditMenu", eg.text.MainFrame.Menu)
-        self.contextMenu.AddItem("Copy")
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(textCtrl, 0, wx.ALIGN_CENTER|wx.TOP|wx.LEFT|wx.RIGHT, 5)
+        sizer.Add(linkLineSizer, 0, wx.ALIGN_CENTER|wx.EXPAND)
+        sizer.Add(animatedWindow, 1, wx.ALIGN_CENTER|wx.ALL|wx.EXPAND, 10)
+        self.SetSizerAndFit(sizer)
         thread.start_new_thread(animatedWindow.DoAnimation, ())
 
 
-    def CreateSpecialThanksHtml(self):
+
+class Panel2(wx.Panel):
+    
+    def __init__(self, parent):        
+        wx.Panel.__init__(self, parent)
+
         output = StringIO()
         write = output.write
         write('<TABLE COLS=2 WIDTH="100%">')
-        for group, cols, persons in ST:
+        for group, cols, persons in SPECIAL_THANKS_DATA:
             write('<TR><TD COLSPAN="2" ALIGN=CENTER><h5><i><u>')
             write(group)
             write('</h5></i></u></TD></TR>')
@@ -305,25 +268,70 @@ class AboutDialog(eg.Dialog):
         write('</TABLE>')
         contents = output.getvalue()
         output.close()
-        return contents
+        self.CreateHtmlWindow(contents)
         
         
-    def CreateHtmlPanel(self, notebook, html):
-        panel = wx.Panel(notebook)
-        licenseHtml = eg.HtmlWindow(
-            panel, 
+    def CreateHtmlWindow(self, html):
+        htmlWindow = eg.HtmlWindow(
+            self, 
             style=wx.SUNKEN_BORDER|eg.HW_NO_SELECTION
         )
-        licenseHtml.SetPage(html)
-        licenseHtml.SetMinSize((460, 250))
-        licenseHtml.SetScrollbars(1, 1, 1000, 1000)
+        htmlWindow.SetPage(html)
+        htmlWindow.SetMinSize((460, 250))
+        htmlWindow.SetScrollbars(1, 1, 1000, 1000)
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(licenseHtml, 1, wx.EXPAND, 5)
-        panel.SetSizer(sizer)
-        panel.SetAutoLayout(True)
-        return panel
+        sizer.Add(htmlWindow, 1, wx.EXPAND, 5)
+        self.SetSizerAndFit(sizer)
         
     
+        
+        
+class Panel3(Panel2):        
+    
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+        self.CreateHtmlWindow(eg.license)
+        
+
+
+class Panel4(wx.Panel):
+    
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+        compileTime = time.strftime(
+            Text.CreationDate, 
+            time.gmtime(eg.compileTime)
+        )
+        sysInfos = (
+            ("EventGhost Version", eg.version),
+            ("SVN Revision", eg.svnRevision),
+            ("Compile Time", compileTime),
+            ("Python Version", "%d.%d.%d %s %d" % sys.version_info),
+            ("wxPython Version", wx.VERSION_STRING),
+            ("PIL Version", Image.VERSION),
+            ("Platform", platform.platform()),
+        )
+        sysInfoTemplate = "".join(
+            [
+                "<tr><td><b>%s:</b></td><td>%s</td></tr>" % sysInfo 
+                for sysInfo in sysInfos
+            ]
+        )
+            
+        sysinfoHtml = eg.HtmlWindow(self, -1, style=wx.SUNKEN_BORDER)
+        sysinfoHtml.SetPage("<table>%s</table>" % sysInfoTemplate)
+        sysinfoHtml.Bind(wx.EVT_RIGHT_DOWN, self.OnRightClick)
+        sysinfoHtml.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
+        self.sysinfoHtml = sysinfoHtml
+        
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(sysinfoHtml, 1, wx.EXPAND, 5)
+        self.SetSizerAndFit(sizer)
+
+        self.contextMenu = eg.Menu(self, "EditMenu", eg.text.MainFrame.Menu)
+        self.contextMenu.AddItem("Copy")
+        
+
     def OnKeyDown(self, event):
         key = event.KeyCode() 
         controlDown = event.ControlDown() 
@@ -346,5 +354,46 @@ class AboutDialog(eg.Dialog):
             wx.TheClipboard.Close()
             wx.TheClipboard.Flush()
             eg.app.clipboardEvent.Fire()
-            
+                    
+        
+        
+class AboutDialog(eg.Dialog):
+    
+    def __init__(self, parent=None):
+        wx.Dialog.__init__(
+            self, 
+            parent, 
+            -1, 
+            Text.Title,
+            style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
+        )
+        
+        notebook = wx.Notebook(self)
+        notebook.AddPage(Panel1(notebook), Text.tabAbout)
+        notebook.AddPage(Panel2(notebook), Text.tabSpecialThanks)
+        notebook.AddPage(Panel3(notebook), Text.tabLicense)
+        notebook.AddPage(Panel4(notebook), Text.tabSystemInfo)
+
+        okButton = wx.Button(self, wx.ID_OK, eg.text.General.ok)
+        okButton.SetDefault()
+
+        btnSizer = wx.BoxSizer(wx.HORIZONTAL)
+        btnSizer.Add((0, 0), 1, wx.EXPAND)
+        btnSizer.Add(
+            okButton, 
+            0, 
+            wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND|wx.ALL, 
+            5
+        )
+        btnSizer.Add((0, 0), 1, wx.EXPAND)
+        btnSizer.Add(SizeGrip(self), 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT)
+
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        mainSizer.Add(notebook, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, 5)
+        mainSizer.Add(btnSizer, 0, wx.EXPAND)
+
+        self.SetSizerAndFit(mainSizer)
+        self.SetMinSize(self.GetSize())
+
+
     

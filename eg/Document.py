@@ -3,6 +3,7 @@
 # $LastChangedBy$
 
 import eg
+import wx
 from new import classobj
 import os
 import xml.etree.cElementTree as ElementTree
@@ -32,7 +33,9 @@ class Observable:
 
     def unset(self):
         self.data = None
-    
+
+gTreeItemTypes = ["TreeItem", "ContainerItem", "EventItem", "ActionItem",
+    "PluginItem", "FolderItem", "MacroItem", "RootItem", "AutostartItem"]    
 
 class Document:
     
@@ -41,26 +44,15 @@ class Document:
             document = self
             tree = None
             root = None
+        self.ItemMixin = ItemMixin
         itemNamespace = {}
-        TreeItem = classobj("TreeItem", (eg.TreeItem, ItemMixin), itemNamespace)
-        ContainerItem = classobj("ContainerItem", (eg.ContainerItem, ItemMixin), itemNamespace)
-        EventItem = classobj("EventItem", (eg.EventItem, ItemMixin), itemNamespace)
-        ActionItem = classobj("ActionItem", (eg.ActionItem, ItemMixin), itemNamespace)
-        PluginItem = classobj("PluginItem", (eg.PluginItem, ItemMixin), itemNamespace)
-        FolderItem = classobj("FolderItem", (eg.FolderItem, ItemMixin), itemNamespace)
-        MacroItem = classobj("MacroItem", (eg.MacroItem, ItemMixin), itemNamespace)
-        RootItem = classobj("RootItem", (eg.RootItem, ItemMixin), itemNamespace)
-        AutostartItem = classobj("AutostartItem", (eg.AutostartItem, ItemMixin), itemNamespace)
-        XMLTag2ClassDict = {
-            RootItem.xmlTag: RootItem,
-            FolderItem.xmlTag: FolderItem,
-            MacroItem.xmlTag: MacroItem,
-            EventItem.xmlTag: EventItem,
-            ActionItem.xmlTag: ActionItem,
-            PluginItem.xmlTag: PluginItem,
-            AutostartItem.xmlTag: AutostartItem,
-        }
-        self.__dict__.update(locals())
+        self.XMLTag2ClassDict = {}
+        for itemType in gTreeItemTypes:
+            baseCls = getattr(eg, itemType)
+            itemCls = classobj(itemType, (baseCls, ItemMixin), itemNamespace)
+            setattr(self, itemType, itemCls)
+            self.XMLTag2ClassDict[itemCls.xmlTag] = itemCls
+
         self.stockUndo = []
         self.stockRedo = []
         self.lastUndoId = 0
@@ -72,12 +64,15 @@ class Document:
         self.isDirty = Observable(False)
         self.filePath = Observable(None)
         self.TreeLink = eg.TreeLink
+        self.root = None
         
         
     def SetTree(self, tree):
         eg.whoami()
         self.tree = tree
         self.ItemMixin.tree = tree
+        if tree and self.root:
+            tree.SetData()
 
 
     def ResetUndoState(self):
@@ -97,7 +92,6 @@ class Document:
         root = self.RootItem(self, node)
         self.root = root
         self.ItemMixin.root = root
-        self.tree.root = root
         node = ElementTree.Element("Autostart")
         self.autostartMacro = self.AutostartItem(root, node)
         self.root.AddChild(self.autostartMacro)
@@ -109,6 +103,8 @@ class Document:
     
     def Load(self, filePath):
         eg.whoami()
+        if self.tree:
+            self.tree.DeleteAllItems()
         if not filePath:
             return self.New()
         self.ResetUndoState()
@@ -117,13 +113,14 @@ class Document:
         eg.TreeLink.StartLoad()
         xmlTree = ElementTree.parse(filePath)
         node = xmlTree.getroot()
-        cls = self.XMLTag2ClassDict[node.tag]
-        root = cls(self, node)
+        root = self.RootItem(self, node)
         self.ItemMixin.root = root
         self.root = root
-        self.tree.root = root
         eg.TreeLink.StopLoad()
         self.isDirty.set(False)
+        if self.tree:
+            self.tree.SetData()
+        
         return root
         
         
@@ -213,5 +210,51 @@ class Document:
         return item
     
     
+    def CheckFileNeedsSave(self):
+        """
+        Checks if the file was changed and if necessary asks the user if he 
+        wants to save it. If the user affirms, calls Save/SaveAs also.
         
+        returns: wx.ID_OK     if no save was needed
+                 wx.ID_YES    if file was saved
+                 wx.ID_NO     if file was not saved
+                 wx.ID_CANCEL if user canceled posssible save
+        """
+        if not self.isDirty.get():
+            return wx.ID_OK
+        dialog = wx.MessageDialog(
+            None, 
+            eg.text.MainFrame.SaveChanges.mesg, 
+            eg.APP_NAME + ": " + eg.text.MainFrame.SaveChanges.title, 
+            style = wx.YES_DEFAULT
+                |wx.YES_NO
+                |wx.CANCEL
+                |wx.STAY_ON_TOP
+                |wx.ICON_EXCLAMATION
+        )
+        res = dialog.ShowModal()
+        dialog.Destroy()
+        if res == wx.ID_CANCEL:
+            return wx.ID_CANCEL
+        if res == wx.ID_YES:
+            return self.OnCmdSave()
+        return wx.ID_NO
+            
+
+    def OnCmdSave(self, event=None):
+        """ Handle the menu command 'Save'. """
+        if self.filePath.get() is None:
+            return self.OnCmdSaveAs()
+        self.Save()
+        return wx.ID_YES
+
+
+    def ExecuteSelected(self):
+        item = self.selection
+        event = eg.EventGhostEvent("OnCmdExecute")
+        eg.actionThread.Call(eg.actionThread.ExecuteTreeItem, item, event)
+        return event
+
+    
+                     
         

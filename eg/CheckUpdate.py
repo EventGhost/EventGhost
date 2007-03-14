@@ -26,49 +26,48 @@ Text = eg.GetTranslation(Text)
 
 
 class MessageDialog(eg.Dialog):
+    
     def __init__(self, version, url):
         self.url = url
-        cur_version = eg.version
+        currendVersion = eg.version
         eg.Dialog.__init__(self, None, -1, Text.title)
         bmp = wx.ArtProvider.GetBitmap(
             wx.ART_INFORMATION, 
             wx.ART_MESSAGE_BOX, 
             (32,32)
         )
-        st_bmp = wx.StaticBitmap(self, -1, bmp)
-        st_txt = wx.StaticText(
+        staticBitmap = wx.StaticBitmap(self, -1, bmp)
+        staticText = wx.StaticText(
             self, 
             -1, 
-            Text.newVersionMesg % (cur_version, version)
+            Text.newVersionMesg % (currendVersion, version)
         )
-        dwnld_btn = wx.Button(self, -1, Text.downloadButton)
-        dwnld_btn.Bind(wx.EVT_BUTTON, self.OnOk)
-        cancel_btn = wx.Button(self, -1, eg.text.General.cancel)
-        cancel_btn.Bind(wx.EVT_BUTTON, self.OnCancel)
+        downloadButton = wx.Button(self, -1, Text.downloadButton)
+        downloadButton.Bind(wx.EVT_BUTTON, self.OnOk)
+        cancelButton = wx.Button(self, -1, eg.text.General.cancel)
+        cancelButton.Bind(wx.EVT_BUTTON, self.OnCancel)
         
         sizer2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer2.Add(st_bmp, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 10)
+        sizer2.Add(staticBitmap, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 10)
         sizer2.Add((5,5), 0)
         sizer2.Add(
-            st_txt, 
+            staticText, 
             0, 
             wx.TOP|wx.RIGHT|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL, 
             10
         )
         
         sizer3 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer3.Add(dwnld_btn)
+        sizer3.Add(downloadButton)
         sizer3.Add((5,5), 0)
-        sizer3.Add(cancel_btn)
+        sizer3.Add(cancelButton)
         
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(sizer2)
         sizer.Add((5,5), 1)
         sizer.Add(sizer3, 0, wx.ALIGN_CENTER_HORIZONTAL)
         sizer.Add((2,10), 0)      
-        self.SetSizer(sizer)
-        self.SetAutoLayout(True)
-        sizer.Fit(self)
+        self.SetSizerAndFit(sizer)
         self.DoModal()
         
  
@@ -84,46 +83,39 @@ class MessageDialog(eg.Dialog):
         
 def CenterOnParent(self):
     parent = eg.mainFrame
-    x,y = parent.GetPosition()
-    width, height = parent.GetSize()
-    cx = x + width / 2
-    cy = y + height / 2
+    x, y = parent.GetPosition()
+    parentWidth, parentHeight = parent.GetSize()
     width, height = self.GetSize()
-    self.SetPosition((cx - width / 2, cy - height / 2))
+    self.SetPosition(
+        ((parentWidth - width) / 2 + x, (parentHeight - height) / 2 + y)
+    )
     
     
 def ShowWaitDialog():
-    dlg = wx.Dialog(
-        None, 
-        -1, 
-        pos=eg.mainFrame.GetPosition(),
-        style=wx.THICK_FRAME|wx.DIALOG_NO_PARENT
-    )
-    st_txt = wx.StaticText(dlg, -1, Text.waitMesg)
+    dialog = wx.Dialog(None, style=wx.THICK_FRAME|wx.DIALOG_NO_PARENT)
+    staticText = wx.StaticText(dialog, -1, Text.waitMesg)
     sizer = wx.BoxSizer(wx.HORIZONTAL)
-    sizer.Add(st_txt, 1, wx.ALL, 20)
-    dlg.SetSizer(sizer)
-    dlg.SetAutoLayout(True)
-    sizer.Fit(dlg)
-    CenterOnParent(dlg)
-    dlg.Show()
+    sizer.Add(staticText, 1, wx.ALL, 20)
+    dialog.SetSizerAndFit(sizer)
+    CenterOnParent(dialog)
+    dialog.Show()
     wx.GetApp().Yield()
-    return dlg
+    return dialog
     
     
 def _checkUpdate(manually = False):
-    dlg = None
+    dialog = None
     try:
         if manually:
-            dlg = ShowWaitDialog()
+            dialog = ShowWaitDialog()
         conn = httplib.HTTPConnection("www.eventghost.org")
         conn.connect()
         conn.sock.settimeout(10.0) 
         conn.request("GET", "/latest_version.txt")
         response = conn.getresponse()
-        if dlg:
-            dlg.Destroy()
-            dlg = None
+        if dialog:
+            dialog.Destroy()
+            dialog = None
         if response.status != 200:
             conn.close()
             raise
@@ -137,26 +129,26 @@ def _checkUpdate(manually = False):
                 wx.CallAfter(MessageDialog, new_version, data[1])
                 return
         if manually:
-            dlg = wx.MessageDialog(
+            dialog = wx.MessageDialog(
                 None, 
                 Text.ManOkMesg, 
                 Text.ManOkTitle,
                 style=wx.OK|wx.ICON_INFORMATION
             )
-            dlg.ShowModal()
-            dlg.Destroy()
+            dialog.ShowModal()
+            dialog.Destroy()
     except:
-        if dlg:
-            dlg.Destroy()
+        if dialog:
+            dialog.Destroy()
         if manually:
-            dlg = wx.MessageDialog(
+            dialog = wx.MessageDialog(
                 None, 
                 Text.ManErrorMesg,
                 Text.ManErrorTitle,
                 style=wx.OK|wx.ICON_ERROR
             )
-            dlg.ShowModal()
-            dlg.Destroy()
+            dialog.ShowModal()
+            dialog.Destroy()
         
         
         

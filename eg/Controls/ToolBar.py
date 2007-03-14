@@ -33,9 +33,13 @@ class ToolBar(wx.ToolBar):
         self.Bind(wx.EVT_TOOL_ENTER, self.OnEvent)
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftClick)
         self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
-        self.Bind(wx.EVT_SIZE, self.OnSize)
+        #self.Bind(wx.EVT_SIZE, self.OnSize)
         self.curTool = -1
         self.lastClickedTool = None
+        
+        
+    def __del__(self):
+        eg.whoami()
         
         
     def OnSize(self, event):

@@ -20,7 +20,7 @@ Text = eg.GetTranslation(Text)
 
 class FindDialog(eg.Dialog):
     
-    def __init__(self, parent):
+    def __init__(self, parent, document):
         eg.Dialog.__init__(
             self, 
             parent, 
@@ -28,7 +28,8 @@ class FindDialog(eg.Dialog):
             title = Text.title,
             style = wx.DEFAULT_DIALOG_STYLE
         )
-        choices = [""]
+        self.document = document
+        self.choices = [""]
         textCtrl = wx.TextCtrl(self)
         wholeWordsOnlyCb = wx.CheckBox(self, -1, Text.wholeWordsOnly)
         caseSensitiveCb = wx.CheckBox(self, -1, Text.caseSensitive)
@@ -101,7 +102,7 @@ class FindDialog(eg.Dialog):
 
 
     def OnFindButton(self, event=None):
-        tree = eg.treeCtrl
+        tree = self.document.tree
         item = tree.GetPyData(tree.GetSelection())
         startItem = item
         originalSearchValue = self.textCtrl.GetValue()

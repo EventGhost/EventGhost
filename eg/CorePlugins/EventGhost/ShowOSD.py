@@ -41,8 +41,6 @@ class OSDFrame(wx.Frame):
         )
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.SetPosition((-10000, -10000))
-        #self.Show()
-        #eg.mainFrame.Raise()
         
         
     def ShowOSD(

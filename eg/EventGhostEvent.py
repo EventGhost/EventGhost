@@ -1,5 +1,4 @@
 import eg
-from wx import CallAfter
 from time import clock
 from threading import Event
 from eg import SetProgramCounter, RunProgram
@@ -8,7 +7,7 @@ GetItemPath = eg.EventItem.GetPath
 
 def Init():
     global LogEvent 
-    LogEvent = eg.logCtrl.LogEvent
+    LogEvent = eg.log.LogEvent
     global actionThread
     actionThread = eg.actionThread
     
@@ -113,7 +112,7 @@ class EventGhostEvent(object):
         if eg.onlyLogAssigned and len(activeHandlers) == 0:
             return
         else:
-            CallAfter(LogEvent, self)
+            LogEvent(self)
         
         activeHandlers = sorted(activeHandlers, key=GetItemPath)
         #print clock()-start, len(eventHandlerList)

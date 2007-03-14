@@ -10,16 +10,15 @@ import wx
 import wx.aui
 
 import eg
-from Document import Document
 from eg import (
     EventItem, 
     ActionItem, 
-    MacroItem,
+    MacroItem, 
     FolderItem, 
     RootItem, 
 )
 from eg.IconTools import GetIcon
-from eg.WinAPI.Utils import BringHwndToFront
+#from eg.WinAPI.Utils import BringHwndToFront
 
 PLUGIN_ICON = GetIcon('images/plugin.png')
 FOLDER_ICON = GetIcon('images/folder.png')
@@ -31,39 +30,6 @@ RESET_ICON = GetIcon('images/error.png')
 Text = eg.text.MainFrame
 
 
-def ExecuteSelectedTreeItem():
-    item = eg.treeCtrl.document.selection
-    event = eg.EventGhostEvent("OnCmdExecute")
-    eg.actionThread.Call(eg.actionThread.ExecuteTreeItem, item, event)
-    return event
-
-    
-class ExecuteButton(wx.Button):
-    
-    def __init__(self, parent):
-        id = wx.NewId()
-        wx.Button.__init__(
-            self, 
-            parent, 
-            id, 
-            Text.Menu.Execute, 
-            style=wx.NO_BORDER
-        )
-        self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
-        self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
-        self.egEvent = None
-        
-        
-    def OnLeftDown(self, event):
-        self.egEvent = ExecuteSelectedTreeItem()
-        event.Skip()
-        
-        
-    def OnLeftUp(self, event):
-        self.egEvent.SetShouldEnd()
-        event.Skip()
-        
-        
         
 class DefaultConfig:
     position = (50, 50)
@@ -80,21 +46,24 @@ class DefaultConfig:
 config = eg.GetConfig("mainFrame", DefaultConfig)
 
 
+
 class MainFrame(wx.Frame):
     """ This is the MainFrame of EventGhost """
         
-    def __init__(self, parent=None):
+    def __init__(self, document):
         """ Create the MainFrame """
+        eg.AssertThread()
+        
         text = eg.text
-        self.document = document = Document()
+        self.document = document
         self.menuState = eg.Bunch()
         wx.Frame.__init__(
             self, 
-            parent, 
-            -1,
-            eg.APP_NAME,
-            pos=config.position,
-            size=(1,1),
+            None, 
+            -1, 
+            eg.APP_NAME, 
+            pos=config.position, 
+            size=(1, 1), 
             style=wx.MINIMIZE_BOX
                 |wx.MAXIMIZE_BOX
                 |wx.RESIZE_BORDER
@@ -104,12 +73,10 @@ class MainFrame(wx.Frame):
                 |wx.CLIP_CHILDREN
                 |wx.TAB_TRAVERSAL
         )
-        from MainLogger import LoggerCtrl
-        logCtrl = LoggerCtrl(self)
-        
-        from MainTree import TreeCtrl
-        treeCtrl = TreeCtrl(self, document=self.document)
-        self.document.SetTree(treeCtrl)
+
+        auiManager = wx.aui.AuiManager()
+        auiManager.SetManagedWindow(self)
+        self.auiManager = auiManager
         
         def UpdateTitle(filePath):
             if filePath is None:
@@ -118,12 +85,13 @@ class MainFrame(wx.Frame):
                 title = os.path.basename(filePath)
             self.SetTitle("EventGhost %s - %s" % (eg.versionStr, title))
         document.filePath.addCallback(UpdateTitle)
-        #UpdateTitle(document.filePath.get())
+        UpdateTitle(document.filePath.get())
         
-        self.treeCtrl = treeCtrl
-        self.logCtrl = logCtrl
+        self.treeCtrl = None
+        self.logCtrl = None
+        self.CreateLogCtrl()
+        self.CreateTreeCtrl()
         
-        self.inProcessing = False
         self.iconState = 0
         self.findDialog = None
         
@@ -155,11 +123,11 @@ class MainFrame(wx.Frame):
         AddItem("NewEvent", image=EVENT_ICON)
         AddItem("NewAction", image=ACTION_ICON)
         AddItem()
-        AddItem("Disabled", func=treeCtrl.ToggleEnable)
+        AddItem("Disabled")
         AddItem()
         
         def OnLeftDown(event):
-            self.egEvent = ExecuteSelectedTreeItem()
+            self.egEvent = document.ExecuteSelected()
             event.Skip()
             
         def OnLeftUp(event):
@@ -168,7 +136,7 @@ class MainFrame(wx.Frame):
         AddItem("Execute", downFunc=OnLeftDown, upFunc=OnLeftUp)
         
         if eg.debugLevel:
-            self.toolBarSpacer = wx.Control(toolBar, size=(50,1))
+            self.toolBarSpacer = wx.Control(toolBar, size=(50, 1))
             toolBar.AddControl(self.toolBarSpacer)
         
             AddItem("Reset", image=RESET_ICON)
@@ -216,23 +184,6 @@ class MainFrame(wx.Frame):
         AddItem()
         AddItem("Find", hotkey="Ctrl+F")
         AddItem("FindNext", hotkey="F3")
-#        AddItem()
-#        AddItem("AddPlugin", image=PLUGIN_ICON)
-#        AddItem("NewFolder", image=FOLDER_ICON)
-#        AddItem("NewMacro", image=MACRO_ICON)
-#        AddItem("NewEvent", image=EVENT_ICON)
-#        AddItem("NewAction", image=ACTION_ICON)
-#        AddItem()
-#        AddItem("Edit", hotkey="Return")
-#        AddItem("Rename", hotkey="F2")
-#        AddItem("Execute", hotkey="F5")
-#        AddItem()
-#        AddItem(
-#            "Disabled", 
-#            kind=wx.ITEM_CHECK, 
-#            hotkey="Ctrl+D", 
-#            func=treeCtrl.ToggleEnable
-#        )
 
         # view menu        
         viewMenu = menuBar.AddMenu("View")
@@ -242,8 +193,8 @@ class MainFrame(wx.Frame):
             kind=wx.ITEM_CHECK
         ).Check(config.showToolbar)
         AddItem()
-        AddItem("ExpandAll", func=treeCtrl.ExpandAll)
-        AddItem("CollapseAll", func=treeCtrl.CollapseAll)
+        AddItem("ExpandAll")
+        AddItem("CollapseAll")
         AddItem()
         AddItem(
             "ExpandOnEvents", 
@@ -275,7 +226,6 @@ class MainFrame(wx.Frame):
             "Disabled", 
             kind=wx.ITEM_CHECK, 
             hotkey="Ctrl+D", 
-            func=treeCtrl.ToggleEnable
         )
         
         # help menu
@@ -302,7 +252,7 @@ class MainFrame(wx.Frame):
         # tree popup menu
         popupMenu = self.popupMenu = eg.Menu(
             self, 
-            Text.Menu.EditMenu,
+            Text.Menu.EditMenu, 
             Text.Menu
         )
         popupMenuItems = self.popupMenuItems = eg.Bunch()
@@ -325,53 +275,17 @@ class MainFrame(wx.Frame):
         popupMenuItems.renameItem = AddItem("Rename")
         popupMenuItems.executeItem = AddItem("Execute")
         AddItem()
-        popupMenuItems.disableItem = AddItem("Disabled", 
-            kind=wx.ITEM_CHECK, 
-            func=treeCtrl.ToggleEnable
-        )
-
+        popupMenuItems.disableItem = AddItem("Disabled", kind=wx.ITEM_CHECK)
+        
         self.SetIcon(eg.app.taskBarIcon.stateIcons[0])
         
-        if not config.logTime:
-            logCtrl.SetTimeLogging(False)
-            
         self.editMenus = (toolBar.buttons, editMenu, popupMenu)
         self.lastFocus = "None"
-        self.focusEvent = eg.EventHook()
-        
-        Bind = logCtrl.Bind
-        def OnLogSetFocus(event):
-            eg.whoami()
-            self.focusEvent.Fire("Log")
-            event.Skip()
-        Bind(wx.EVT_SET_FOCUS, OnLogSetFocus)
-        def OnLogKillFocus(event):
-            eg.whoami()
-            self.focusEvent.Fire("None")
-            event.Skip()
-        Bind(wx.EVT_KILL_FOCUS, OnLogKillFocus)
-        
-        
-        Bind = treeCtrl.Bind
-        def OnTreeSetFocus(event):
-            eg.whoami()
-            self.focusEvent.Fire("Tree")
-            event.Skip()
-        Bind(wx.EVT_SET_FOCUS, OnTreeSetFocus)
-        def OnTreeKillFocus(event):
-            eg.whoami()
-            if not self.treeCtrl.isInEditLabel:
-                self.focusEvent.Fire("None")
-            event.Skip()
-        Bind(wx.EVT_KILL_FOCUS, OnTreeKillFocus)
-
-        Bind(wx.EVT_RIGHT_DOWN, self.OnRightClick)
-        Bind(wx.EVT_RIGHT_UP, self.OnRightUp)
-        
+                
         Bind = self.Bind
         Bind(wx.EVT_ICONIZE, self.OnIconize)
         Bind(wx.EVT_MENU_OPEN, self.OnMenuOpen)
-        Bind(wx.EVT_CLOSE, self.OnCloseEvent)
+        Bind(wx.EVT_CLOSE, self.OnClose)
         Bind(wx.EVT_SIZE, self.OnSize)
         Bind(wx.EVT_MOVE, self.OnMove)
         Bind(wx.aui.EVT_AUI_PANE_CLOSE, self.OnPaneClose)
@@ -383,49 +297,68 @@ class MainFrame(wx.Frame):
         document.selectionEvent.Bind(self.OnTreeSelectionEvent)
         
         # tell FrameManager to manage this frame
-        auiManager = wx.aui.AuiManager()
-        auiManager.SetManagedWindow(self)
-        self.auiManager = auiManager
 
-        auiManager.AddPane(
-            logCtrl, 
-            wx.aui.AuiPaneInfo().
-                Name("logger").
-                Left().
-                MinSize((280,300)).
-                MaximizeButton(True).
-                CloseButton(False)
-        )
-        
-        auiManager.AddPane(
-            treeCtrl, 
-            wx.aui.AuiPaneInfo().
-                Name("tree").
-                Center().
-                MinSize((100,100)).
-                Floatable(True).
-                Dockable(True).
-                MaximizeButton(True).
-                CloseButton(False)
-        )
-        
         if (
             eg.config.buildNum == eg.buildNum 
             and config.perspective is not None
         ):
-            auiManager.LoadPerspective(config.perspective, False)
+            pass
+            #auiManager.LoadPerspective(config.perspective, False)
         auiManager.GetArtProvider().SetMetric(wx.aui.AUI_DOCKART_PANE_BORDER_SIZE, 0)
 
-        auiManager.GetPane("logger").Caption(" " + Text.Logger.caption)
-        auiManager.GetPane("tree").Caption(" " + Text.Tree.caption)
+        #auiManager.GetPane("tree").Caption(" " + Text.Tree.caption)
         toolBar.Show(config.showToolbar)
         auiManager.Update()
-        auiManager.GetPane("logger").MinSize((100,100))
-        self.focusEvent.Bind(self.OnFocusChange)
-        treeCtrl.SetFocus()
+        auiManager.GetPane("logger").MinSize((100, 100))
+        eg.app.focusEvent.Bind(self.OnFocusChange)
         eg.app.clipboardEvent.Bind(self.OnClipboardChange)
         
-
+        
+    def __del__(self):
+        eg.whoami()
+        
+        
+    def CreateTreeCtrl(self):
+        from MainTree import TreeCtrl
+        treeCtrl = TreeCtrl(self, document=eg.document)
+        self.document.SetTree(treeCtrl)
+        self.treeCtrl = treeCtrl
+        self.auiManager.AddPane(
+            treeCtrl, 
+            wx.aui.AuiPaneInfo().
+                Name("tree").
+                Center().
+                MinSize((100, 100)).
+                Floatable(True).
+                Dockable(True).
+                MaximizeButton(True).
+                CloseButton(eg.debugLevel)
+        )
+        self.auiManager.Update()
+        treeCtrl.SetFocus()
+        
+    
+    def CreateLogCtrl(self):
+        from MainLogger import LoggerCtrl
+        logCtrl = LoggerCtrl(self)
+        logCtrl.Freeze()
+        self.logCtrl = logCtrl
+        if not config.logTime:
+            logCtrl.SetTimeLogging(False)
+        self.auiManager.AddPane(
+            logCtrl, 
+            wx.aui.AuiPaneInfo().
+                Name("logger").
+                Left().
+                MinSize((280, 300)).
+                MaximizeButton(True).
+                CloseButton(eg.debugLevel).
+                Caption(" " + Text.Logger.caption)
+        )
+        self.auiManager.Update()
+        logCtrl.Thaw()
+        
+    
     def OnPaneClose(self, event):
         """ 
         React to a wx.aui.EVT_AUI_PANE_CLOSE event.
@@ -433,10 +366,23 @@ class MainFrame(wx.Frame):
         Monitors if the toolbar gets closed and updates the check menu
         entry accordingly
         """
-        if event.GetPane().name == "toolBar":
+        paneName = event.GetPane().name
+        if paneName == "toolBar":
             config.showToolbar = False
             self.menuBar.View.HideShowToolbar.Check(False)
-        
+        elif paneName == "logger":
+            logCtrl = self.logCtrl
+            self.logCtrl = None
+            self.auiManager.DetachPane(logCtrl)
+            self.auiManager.Update()
+            wx.CallAfter(logCtrl.Destroy)
+        elif paneName == "tree":
+            treeCtrl = self.treeCtrl
+            self.treeCtrl = None
+            self.auiManager.DetachPane(treeCtrl)
+            self.auiManager.Update()
+            wx.CallAfter(treeCtrl.Destroy)
+            
         
     def OnPaneMaximize(self, event):
         """ 
@@ -453,153 +399,85 @@ class MainFrame(wx.Frame):
             self.auiManager.LoadPerspective(config.perspective2)
         
         
-    def OnAutoLoad(self, filename):
-        tree = self.treeCtrl
-        tree.Freeze()
-        try:
-            root = self.document.Load(filename)
-            selectItem = root
-            firstItem = root
-            treeStateData = config.treeStateData
-            if (
-                treeStateData 
-                and treeStateData.guid == root.guid
-                and treeStateData.time == root.time
-            ):
-                tree.SetExpandState(treeStateData.state)
-                selectItem = tree.ResolvePath(treeStateData.selected)
-                    
-                if hasattr(treeStateData, "first"):
-                    firstItem = tree.ResolvePath(treeStateData.first)
-            root.CreateTreeItem(tree, None)
-            tree.Expand(root.id)
-            selectItem.Select()
-            if firstItem.id is not None:
-                tree.ScrollTo(firstItem.id)
-        finally:
-            tree.Thaw()
-            
-        
     def OnSize(self, event):
         """ Handle wx.EVT_SIZE """
-        if not self.IsMaximized() and self.IsShown():
+        if not self.IsMaximized() and not self.IsIconized():
             config.size = self.GetSizeTuple()
         event.Skip()
 
 
     def OnMove(self, event):
         """ Handle wx.EVT_MOVE """
-        if not (self.IsMaximized() or self.IsIconized()) and self.IsShown():
+        if not self.IsMaximized() and not self.IsIconized():
             config.position = self.GetPositionTuple()
         event.Skip()
         
         
-    def OnCloseEvent(self, event):
+    def Destroy(self):
+        eg.whoami()
+        self.SetStatusBar(None)
+        eg.app.focusEvent.Unbind(self.OnFocusChange)
+        eg.app.clipboardEvent.Unbind(self.OnClipboardChange)
+        self.document.undoEvent.Unbind(self.OnUndoEvent)
+        self.document.selectionEvent.Unbind(self.OnTreeSelectionEvent)
+        if self.logCtrl:
+            self.logCtrl.Destroy()
+        if self.treeCtrl:
+            self.treeCtrl.Destroy()
+        eg.SetAttr("mainFrame", None)
+        eg.app.mainFrame = None
+        gc.collect()
+        return wx.Frame.Destroy(self)
+    
+    
+    def OnClose(self, event):
         '''Handle wx.EVT_CLOSE'''
         eg.whoami()
-        if config.hideOnClose and event.CanVeto() and self.IsShown():
-            eg.notice("calling Veto")
-            event.Veto()
-            self.Show(False)
-            wx.GetApp().ProcessIdle()
+        event.Veto()
+        if config.hideOnClose:
+            self.Destroy()
         else:
-            if self.OnClose(event) != wx.ID_CANCEL:
-                eg.app.Exit()
+            eg.app.Exit()
 
-
-    def OnClose(self, event=None):
-        eg.whoami()
-        res = self.CheckFileNeedsSave()
-        if res == wx.ID_CANCEL:
-            eg.notice("Skipping event in OnClose")
-            if event:
-                event.Skip(False)
-            return wx.ID_CANCEL
-        #eg.notice("Binding close dummy")
-        #self.Bind(wx.EVT_CLOSE, self.CloseDummy)
-        eg.config.hideOnStartup = self.IsIconized()
-        eg.config.autoloadFilePath = self.document.filePath.get()
-        config.perspective = self.auiManager.SavePerspective()
-        if res in (wx.ID_OK, wx.ID_YES):
-            tree = self.treeCtrl
-            selection = self.document.selection
-            firstItem = tree.GetPyData(tree.GetFirstVisibleItem())
-            class data:
-                guid = tree.root.guid
-                time = tree.root.time
-                state = tree.GetExpandState()
-                selected = selection.GetPath() if selection else None
-                first = firstItem.GetPath()
-            config.treeStateData = data
-        return None
-        
 
     def OnIconize(self, event):
-        if event.Iconized:
-            self.Show(False)
-            event.Skip(True)
-        else:
-            self.Iconize(False)
-            self.Show(True)
-            self.Raise()
-            self.GetFocus()
-        self.UpdateViewOptions()
-        wx.GetApp().ProcessIdle()
+        '''Handle wx.EVT_ICONIZE'''
+        # On iconizing, we actually destroy the frame completely
+        eg.whoami()
+        self.Destroy()
 
 
-    def BringToFront(self):
-        self.Iconize(False)
-        self.Show(True)
-        self.Raise()
-        BringHwndToFront(self.GetHandle())
+#    def OnClose(self, event=None):
+#        eg.whoami()
+#        res = self.document.CheckFileNeedsSave()
+#        if res == wx.ID_CANCEL:
+#            eg.notice("Skipping event in OnClose")
+#            if event:
+#                event.Skip(False)
+#            return wx.ID_CANCEL
+#        #eg.notice("Binding close dummy")
+#        #self.Bind(wx.EVT_CLOSE, self.CloseDummy)
+#        eg.config.hideOnStartup = self.IsIconized()
+#        eg.config.autoloadFilePath = self.document.filePath.get()
+#        #config.perspective = self.auiManager.SavePerspective()
+#        if res in (wx.ID_OK, wx.ID_YES):
+#            if self.logCtrl:
+#                self.CloseLog()
+#            if self.treeCtrl:
+#                self.CloseTree()
+#            self.CloseSelf()
+#        return None
         
-        
-    def OnRightClick(self, event):
-        self.treeCtrl.EndEditLabel(self.treeCtrl.GetSelection(), False)
-        # seems like newer wxPython doesn't select the item on right-click
-        # so we have to do it ourself
-        pos = event.GetPosition()
-        id, flags = self.treeCtrl.HitTest(pos)
-        self.treeCtrl.SelectItem(id)
-        
-
-    def OnRightUp(self, event):
-        self.treeCtrl.SetFocus()
-        self.SetupEditMenu(self.popupMenuItems)
-        self.treeCtrl.PopupMenu(self.popupMenu)
 
 
-    def CheckFileNeedsSave(self):
-        """
-        Checks if the file was changed and if necessary asks the user if he 
-        wants to save it. If the user affirms, calls Save/SaveAs also.
-        
-        returns: wx.ID_OK     if no save was needed
-                 wx.ID_YES    if file was saved
-                 wx.ID_NO     if file was not saved
-                 wx.ID_CANCEL if user canceled posssible save
-        """
-        if not self.document.isDirty.get():
-            return wx.ID_OK
-        dialog = wx.MessageDialog(
-            self,
-            Text.SaveChanges.mesg, 
-            eg.APP_NAME + ": " + Text.SaveChanges.title, 
-            style = wx.YES_DEFAULT
-                |wx.YES_NO
-                |wx.CANCEL
-                |wx.STAY_ON_TOP
-                |wx.ICON_EXCLAMATION
-        )
-        res = dialog.ShowModal()
-        dialog.Destroy()
-        if res == wx.ID_CANCEL:
-            return wx.ID_CANCEL
-        if res == wx.ID_YES:
-            return self.OnCmdSave()
-        return wx.ID_NO
-            
-             
+#    def BringToFront(self):
+#        self.Iconize(False)
+#        self.Show(True)
+#        self.Raise()
+#        BringHwndToFront(self.GetHandle())
+#        
+#        
+
     def OnClipboardChange(self):
         eg.whoami()
         if self.lastFocus == "Tree":
@@ -620,17 +498,19 @@ class MainFrame(wx.Frame):
         
         
     def GetEditCmdState(self, focus):
-        if focus == "Edit":
+        if focus is None:
+            return (False, False, False, False, False)
+        elif focus == "Edit":
             return (True, True, True, True, True)
-        elif focus == "Log":
+        elif focus == self.logCtrl:
             return (False, True, False, False, False)
-        elif focus == "Tree" and self.document.selection:
+        elif focus == self.treeCtrl and self.document.selection:
             selection = self.document.selection
             return (
                 selection.CanCut(), 
                 selection.CanCopy(), 
                 selection.CanPaste(), 
-                selection.CanDelete(),
+                selection.CanDelete(), 
                 selection.CanDisable()
             )
         else:
@@ -685,7 +565,7 @@ class MainFrame(wx.Frame):
         menuItems.executeItem.Enable(menuState.execute)
         menuItems.renameItem.Enable(menuState.rename)
         menuItems.disableItem.Enable(canDisable)
-        menuItems.disableItem.Check(not self.document.selection.isEnabled)
+        menuItems.disableItem.Check(self.document.selection and not self.document.selection.isEnabled)
         
         
     def OnMenuOpen(self, event):
@@ -696,7 +576,7 @@ class MainFrame(wx.Frame):
         expandOnEvents = (
             not self.IsIconized()
             and config.expandOnEvents 
-            and not self.treeCtrl.isInEditLabel
+            and (self.treeCtrl and not self.treeCtrl.isInEditLabel)
         )
         ActionItem.shouldSelectOnExecute = (
             expandOnEvents and not config.expandTillMacro
@@ -708,6 +588,7 @@ class MainFrame(wx.Frame):
         focus = self.FindFocus()
         method = getattr(focus, command, None)
         if method is not None:
+            print focus
             method()
         
         
@@ -787,8 +668,7 @@ class MainFrame(wx.Frame):
         
         
     def OnCmdExit(self, event):
-        if self.OnClose(event) != wx.ID_CANCEL:
-            eg.app.Exit()
+        eg.app.Exit()
         
         
     #------- edit menu -------------------------------------------------------
@@ -827,7 +707,7 @@ class MainFrame(wx.Frame):
         """ Handle the menu command 'Find'. """
         if self.findDialog is None:
             from Dialogs.FindDialog import FindDialog
-            self.findDialog = FindDialog(self)
+            self.findDialog = FindDialog(self, self.document)
         self.findDialog.Show()
         
         
@@ -903,7 +783,12 @@ class MainFrame(wx.Frame):
         """ 
         Menu: Edit -> Execute Element
         """
-        ExecuteSelectedTreeItem().SetShouldEnd()
+        self.document.ExecuteSelected().SetShouldEnd()
+
+
+    def OnCmdDisabled(self, event):
+        from UndoableCommands import CmdToggleEnable
+        CmdToggleEnable(self.document)
 
 
     #------- view menu -------------------------------------------------------
@@ -939,6 +824,20 @@ class MainFrame(wx.Frame):
         flag = event.IsChecked()
         config.logTime = flag
         self.logCtrl.SetTimeLogging(flag)
+    
+    
+    def OnCmdLogTime(self, event):
+        flag = event.IsChecked()
+        config.logTime = flag
+        self.logCtrl.SetTimeLogging(flag)
+    
+    
+    def OnCmdExpandAll(self, event):
+        self.treeCtrl.ExpandAll()
+    
+    
+    def OnCmdCollapseAll(self, event):
+        self.treeCtrl.CollapseAll()
     
     
     #------- help menu -------------------------------------------------------
@@ -983,7 +882,7 @@ class MainFrame(wx.Frame):
         intro = "Welcome to EventGhost"
         win = wx.py.crust.CrustFrame(
             self, 
-            -1,
+            -1, 
             rootObject=eg.globals, 
             locals=eg.globals.__dict__, 
             rootIsNamespace=False
@@ -1011,8 +910,16 @@ class MainFrame(wx.Frame):
         
     
     def OnCmdTest(self, event):
+        self.Close()
+        return
+    
+        self.CreateLogCtrl()
+        return
+        
         from eg.Dialogs import LinkListDialog
         reload(LinkListDialog)
         dialog = LinkListDialog.LinkListDialog(self)
         dialog.ShowModal()
         dialog.Destroy()
+        
+        

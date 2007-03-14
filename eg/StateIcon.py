@@ -39,6 +39,7 @@ class StateIcon(wx.TaskBarIcon):
         
         
     def SetProcessingState(self, state, event):
+        return
         self.reentrantLock.acquire()
         try:
             if state == 0:

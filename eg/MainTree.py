@@ -67,7 +67,6 @@ class EventDropTarget(wx.PyDropTarget):
         self.data = wx.DataObjectComposite()
         self.data.Add(self.tdata)
         self.data.Add(self.ldata)
-        self.data.Add(self.ldata)
         self.SetDataObject(self.data)
         self.lastInsertLine = None
         self.hwnd = window.GetHandle()
@@ -214,10 +213,15 @@ class EventDropTarget(wx.PyDropTarget):
         self.treeCtrl.ClearInsertMark()
 
 
+    def __del__(self):
+        eg.whoami()
+
+
         
 class TreeCtrl(wx.TreeCtrl):
     
     def __init__(self, parent, id=-1, document=None):
+        self.frame = parent
         self.document = document
         wx.TreeCtrl.__init__(
             self, 
@@ -240,6 +244,8 @@ class TreeCtrl(wx.TreeCtrl):
         self.hasFocus = False
         
         Bind = self.Bind
+        Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
+        Bind(wx.EVT_RIGHT_UP, self.OnRightUp)
         Bind(wx.EVT_TREE_ITEM_EXPANDING, self.OnItemExpanding)
         Bind(wx.EVT_TREE_ITEM_COLLAPSING, self.OnItemCollapsing)
         Bind(wx.EVT_TREE_BEGIN_LABEL_EDIT, self.OnBeginLabelEdit)
@@ -260,7 +266,6 @@ class TreeCtrl(wx.TreeCtrl):
         
         if eg.debugLevel:
             Bind(wx.EVT_TREE_ITEM_GETTOOLTIP, self.OnTooTip)
-        #Bind(wx.EVT_TREE_ITEM_COLLAPSED, self.OnCollapsed)
         Bind(wx.EVT_TREE_ITEM_EXPANDED, self.OnExpanded)
 
         id = wx.NewId()
@@ -278,6 +283,67 @@ class TreeCtrl(wx.TreeCtrl):
         # TVM_SETITEMHEIGHT = 4352 + 27
         #SendMessageTimeout(self.hwnd, 4379, 18, 0, 1, 100, 0)
         
+        
+    def SetData(self):
+        self.Freeze()
+        try:
+            root = self.document.root
+            selectItem = root
+            firstItem = root
+#            treeStateData = config.treeStateData
+#            if (
+#                treeStateData 
+#                and treeStateData.guid == root.guid
+#                and treeStateData.time == root.time
+#            ):
+#                tree.SetExpandState(treeStateData.state)
+#                selectItem = tree.ResolvePath(treeStateData.selected)
+#                    
+#                if hasattr(treeStateData, "first"):
+#                    firstItem = tree.ResolvePath(treeStateData.first)
+            root.CreateTreeItem(self, None)
+            self.Expand(root.id)
+            selectItem.Select()
+            if firstItem.id is not None:
+                self.ScrollTo(firstItem.id)
+        finally:
+            self.Thaw()
+
+    
+    def Destroy(self):
+        eg.whoami()
+        self.document.SetTree(None)
+        return wx.TreeCtrl.Destroy(self)
+        #self.SetFocus()
+        tree = self.treeCtrl
+        selection = self.document.selection
+        firstItem = tree.GetPyData(tree.GetFirstVisibleItem())
+        class data:
+            guid = tree.root.guid
+            time = tree.root.time
+            state = tree.GetExpandState()
+            selected = selection.GetPath() if selection else None
+            first = firstItem.GetPath()
+        config.treeStateData = data
+        self.treeCtrl = None
+        wx.CallAfter(tree.Destroy)
+
+    
+    def OnRightDown(self, event):
+        self.EndEditLabel(self.GetSelection(), False)
+        # seems like newer wxPython doesn't select the item on right-click
+        # so we have to do it ourself
+        pos = event.GetPosition()
+        id, flags = self.HitTest(pos)
+        if id.IsOk():
+            self.SelectItem(id)
+        
+
+    def OnRightUp(self, event):
+        self.SetFocus()
+        self.frame.SetupEditMenu(self.frame.popupMenuItems)
+        self.PopupMenu(self.frame.popupMenu)
+
 
     def OnExpanded(self, event):
         if self.OnItemExpandingItem == event.GetItem() and self.OnItemExpandingNum:
@@ -375,11 +441,14 @@ class TreeCtrl(wx.TreeCtrl):
         
     def OnGetFocus(self, event):
         self.hasFocus = True
+        eg.app.focusEvent.Fire(self)
         event.Skip(True)
         
         
     def OnKillFocus(self, event):
         self.hasFocus = False
+        if not self.isInEditLabel:
+            eg.app.focusEvent.Fire(None)
         event.Skip(True)
         
         
@@ -390,12 +459,13 @@ class TreeCtrl(wx.TreeCtrl):
             event.Veto()
             return
         self.isInEditLabel = True
-        eg.mainFrame.focusEvent.Fire("Edit")
+        eg.app.focusEvent.Fire("Edit")
         eg.mainFrame.UpdateViewOptions()
 
         
     def OnEndLabelEdit(self, event):
         self.isInEditLabel = False
+        # avoid programmatic change of the selected item
         eg.mainFrame.UpdateViewOptions()
         id = event.GetItem()
         item = self.GetPyData(id)
@@ -552,10 +622,6 @@ class TreeCtrl(wx.TreeCtrl):
         return True
         
         
-    def ToggleEnable(self):
-        CmdToggleEnable(self.document, self.document.selection)
-        
-        
     def GetExpandState(self):
         eg.whoami()
         vector = []
@@ -601,6 +667,10 @@ class TreeCtrl(wx.TreeCtrl):
             for pos in path:
                 item = item.childs[pos]
         except:
-            item = root
+            item = self.root
         return item
+
+
+    def __del__(self):
+        eg.whoami()
 

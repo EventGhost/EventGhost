@@ -36,9 +36,9 @@ class ActionThread(ThreadWorker):
         eg.SetAttr("ActionClass", ActionClass)
         eg.SetAttr("ActionWithStringParameter", ActionWithStringParameter)
         start = clock()
-        eg.mainFrame.OnAutoLoad(filename)
+        eg.document.Load(filename)
         eg.notice("XML loaded in %f seconds." % (clock() - start))
-        eg.SetProgramCounter((eg.treeCtrl.document.autostartMacro, None))
+        eg.SetProgramCounter((eg.document.autostartMacro, None))
         eg.RunProgram()
         
             
@@ -55,7 +55,7 @@ class ActionThread(ThreadWorker):
         
     @eg.logit()
     def StopSession(self):
-        eg.treeCtrl.document.autostartMacro.UnloadPlugins()
+        eg.document.autostartMacro.UnloadPlugins()
         eg.notice("closing default plugins")
         for pluginIdent in CORE_PLUGINS:
             plugin = getattr(eg.plugins, pluginIdent)

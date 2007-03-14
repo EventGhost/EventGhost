@@ -19,6 +19,7 @@ class Text:
 Text = eg.GetTranslation(Text)
 
 
+
 class AddActionDialog(eg.Dialog):
     
     def __init__(self, searchItem=None):
@@ -32,17 +33,17 @@ class AddActionDialog(eg.Dialog):
                 |wx.RESIZE_BORDER
                 |wx.THICK_FRAME
         )
-        splitter = wx.SplitterWindow(
+        splitterWindow = wx.SplitterWindow(
             self, 
             -1,
             style=wx.SP_LIVE_UPDATE
                 |wx.CLIP_CHILDREN
                 |wx.NO_FULL_REPAINT_ON_RESIZE
         )
-        self.splitter = splitter
+        self.splitterWindow = splitterWindow
 
         style = wx.TR_DEFAULT_STYLE|wx.TR_HIDE_ROOT|wx.TR_FULL_ROW_HIGHLIGHT
-        tree = wx.TreeCtrl(splitter, -1, style=style)
+        tree = wx.TreeCtrl(splitterWindow, -1, style=style)
         tree.SetMinSize((100,100))
         tree.SetImageList(eg.imageList)
         self.tree = tree
@@ -57,7 +58,7 @@ class AddActionDialog(eg.Dialog):
                 % self.GetBackgroundColour().Get()
         )
 
-        rightPanel = self.rightPanel = wx.Panel(splitter)
+        rightPanel = self.rightPanel = wx.Panel(splitterWindow)
         rightSizer = self.rightSizer = wx.BoxSizer(wx.VERTICAL)
         rightPanel.SetSizer(rightSizer)
         rightPanel.SetAutoLayout(True)
@@ -76,21 +77,21 @@ class AddActionDialog(eg.Dialog):
         staticBoxSizer.Add(self.docText, 1, wx.EXPAND)
         rightSizer.Add(staticBoxSizer, 1, wx.EXPAND, 5)
         
-        splitter.SplitVertically(self.tree, rightPanel)
-        splitter.SetMinimumPaneSize(60)
-        splitter.UpdateSize()
+        splitterWindow.SplitVertically(self.tree, rightPanel)
+        splitterWindow.SetMinimumPaneSize(60)
+        splitterWindow.UpdateSize()
 
         self.buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL))
         
         mainSizer = wx.BoxSizer(wx.VERTICAL)
-        mainSizer.Add(splitter, 1, wx.EXPAND|wx.ALL, 5)
+        mainSizer.Add(splitterWindow, 1, wx.EXPAND|wx.ALL, 5)
         mainSizer.Add(self.buttonRow.sizer, 0, wx.EXPAND)
         
         self.SetSizerAndFit(mainSizer)
         minSize = mainSizer.GetMinSize()
         self.SetMinSize(minSize)
         self.SetSize(config.size)
-        self.splitter.SetSashPosition(config.splitPosition)
+        splitterWindow.SetSashPosition(config.splitPosition)
         if config.position is not None:
             self.SetPosition(config.position)
         self.ReloadTree()
@@ -186,8 +187,9 @@ class AddActionDialog(eg.Dialog):
         gLastSelected = self.tree.GetPyData(item)        
         config.size = self.GetSizeTuple()
         config.position = self.GetPositionTuple()
-        config.splitPosition = self.splitter.GetSashPosition()
+        config.splitPosition = self.splitterWindow.GetSashPosition()
         eg.Dialog.Destroy(self)
         
         
+
 

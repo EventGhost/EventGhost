@@ -220,8 +220,12 @@ class PluginItem(ActionItem):
             label = self.executable.GetLabel(*args)
             if label != self.executable.info.label:
                 self.executable.info.label = label
+                self.name = eg.text.General.pluginLabel % label
                 if self.id:
-                    self.tree.SetItemText(self.id, label)
+                    self.tree.SetItemText(
+                        self.id, 
+                        self.name
+                    )
                 self.RefreshAllVisibleActions()
             if self.isEnabled:
                 eg.actionThread.Call(self.StopPlugin)

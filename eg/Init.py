@@ -149,12 +149,11 @@ class EventGhost(object):
         from Utils import Bunch, EventHook
         self.Bunch = Bunch
         self.EventHook = EventHook
-        #self.text = Bunch()
-        #self.text = Text
-        #self.originalText = Bunch()
         self.mainFrame = None
-        self.treeCtrl = None
-        self.logCtrl = None
+        self.document = None
+        #self.treeCtrl = None
+        #self.logCtrl = None
+        
         self.result = None
         self.event = None
         self.eventTable = {}
@@ -197,6 +196,9 @@ class EventGhost(object):
         # exists, we simply create it first
         from App import MyApp
         self.app = MyApp(0)
+        
+        import Log
+        self.log = Log.Log()
         
         if not debugLevel:
             def _DummyFunc(*args, **kwargs):
@@ -288,14 +290,11 @@ class EventGhost(object):
         self.InitWin32Com()
         self.messageReceiver.start()
         
+        from Document import Document
+        self.document = Document()
         eg.app.SetupGui()
-        
-        from MainFrame import MainFrame
-        self.mainFrame = MainFrame()
-                
-        self.logCtrl = self.mainFrame.logCtrl
-        self.treeCtrl = self.mainFrame.treeCtrl
-        self.DoPrint = self.logCtrl.DoPrint
+                        
+        self.DoPrint = self.log.DoPrint
         self.SetProcessingState = eg.app.taskBarIcon.SetProcessingState
 
         from ActionThread import ActionThread
@@ -314,8 +313,6 @@ class EventGhost(object):
         self.__class__.__setattr__ = self.__post__setattr__
         
         config = self.config
-        self.app.SetTopWindow(self.mainFrame)
-        self.mainFrame.Show(not (config.hideOnStartup or hideOnStartup))
 
         if (
             startupFile is None 
@@ -334,7 +331,8 @@ class EventGhost(object):
         if config.checkUpdate:
             from CheckUpdate import CheckUpdate
             wx.CallAfter(CheckUpdate)
-            
+        self.DoPrint(self.text.MainFrame.Logger.welcomeText)
+
             
     __setattr_set = frozenset(
         (
@@ -385,6 +383,7 @@ class EventGhost(object):
         #from ThreadWorker import ThreadWorker
 
         import wx
+        from wx import CallAfter
         from wx.html import HW_NO_SELECTION
         from Validators import DigitOnlyValidator, AlphaOnlyValidator
         from WinAPI.Pathes import (
@@ -666,12 +665,12 @@ class EventGhost(object):
             else:
                 return str(s)
         text = " ".join([convert(arg) for arg in args])
-        self.logCtrl.DoPrint(text, 1)
+        self.log.DoPrint(text, 1)
 
 
     def PrintNotice(self, *args):
         text = " ".join([str(arg) for arg in args])
-        self.logCtrl.DoPrint(text, 2)
+        self.log.DoPrint(text, 2)
 
 
     def PrintTraceback(self, msg=None, skip=0):
@@ -709,4 +708,15 @@ class EventGhost(object):
             config = config.setdefault(part, eg.Bunch)
         return config.setdefault(parts[-1], defaultCls)
             
+            
+    def DummyFunc(*args, **kwargs):
+        pass
+
+
+    def AssertThread(self, threadIdent=None):
+        return
+        if threadIdent is None:
+            threadIdent = self.mainThread
+        if self.debugLevel:
+            assert threadIdent == threading.currentThread()
             

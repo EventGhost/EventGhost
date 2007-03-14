@@ -5,7 +5,8 @@ from TreeItems import TreeItem
 
 
 class ContainerItem(TreeItem):
-        
+    xmlTag = "Container"
+    
     def WriteToXML(self):
         attr, text, childs = TreeItem.WriteToXML(self)
         if self.isExpanded:

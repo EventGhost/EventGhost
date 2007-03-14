@@ -84,7 +84,7 @@ class OptionsDialog(eg.Dialog):
         confirmDeleteCheckBox.SetValue(eg.config.confirmDelete)
         self.confirmDeleteCheckBox = confirmDeleteCheckBox
 
-        chLanguage = wx.combo.BitmapComboBox(
+        languageChoice = wx.combo.BitmapComboBox(
             page1,
             -1, 
             style=wx.CB_READONLY
@@ -95,12 +95,12 @@ class OptionsDialog(eg.Dialog):
                 image = wx.Image(filename)
                 image.Resize((16, 16), (0, 3))
                 bmp = image.ConvertToBitmap()
-                chLanguage.Append(name, bmp)
+                languageChoice.Append(name, bmp)
             else:
-                chLanguage.Append(name)
-        chLanguage.SetSelection(self.languageList.index(eg.config.language))
-        chLanguage.SetMinSize((150, -1))
-        self.chLanguage = chLanguage
+                languageChoice.Append(name)
+        languageChoice.SetSelection(self.languageList.index(eg.config.language))
+        languageChoice.SetMinSize((150, -1))
+        self.languageChoice = languageChoice
 
         self.buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL))
         
@@ -129,7 +129,7 @@ class OptionsDialog(eg.Dialog):
         
         static_box = wx.StaticBox(page1, -1, Text.LanguageGroup)
         langGroupSizer = wx.StaticBoxSizer(static_box, wx.VERTICAL)
-        langGroupSizer.Add(chLanguage, 0, wx.LEFT|wx.RIGHT, 18)
+        langGroupSizer.Add(languageChoice, 0, wx.LEFT|wx.RIGHT, 18)
         
         page1Sizer = wx.BoxSizer(wx.VERTICAL)
         page1Sizer.Add((15, 7), 1)
@@ -182,7 +182,7 @@ class OptionsDialog(eg.Dialog):
         eg.config.limitMemorySize = self.memoryLimitSpinCtrl.GetValue()
         eg.config.confirmDelete = self.confirmDeleteCheckBox.GetValue()
         
-        language = self.languageList[self.chLanguage.GetSelection()]
+        language = self.languageList[self.languageChoice.GetSelection()]
         if eg.config.language != language:
             dlg = wx.MessageDialog(
                 self,
@@ -195,4 +195,5 @@ class OptionsDialog(eg.Dialog):
         eg.config.language = language
         eg.SaveConfig()
         event.Skip()
+
 

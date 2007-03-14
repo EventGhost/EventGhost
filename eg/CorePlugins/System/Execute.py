@@ -34,6 +34,8 @@ class Execute(eg.ActionClass):
             "Idle"
         )
         WaitCheckbox = "Wait till application is terminated before proceed"
+        browseExecutableDialogTitle = "Choose the executable"
+        browseWorkingDirDialogTitle = "Choose the working directory"
 
     
     def __call__(
@@ -120,6 +122,7 @@ class Execute(eg.ActionClass):
             labelText="",
             fileMask="*.*",
             buttonText=eg.text.General.browse,
+            dialogTitle=text.browseExecutableDialogTitle
         )
     
         argumentsText = wx.StaticText(dialog, -1, text.Parameters)
@@ -133,6 +136,7 @@ class Execute(eg.ActionClass):
             startDirectory=workingDir,
             labelText="",
             buttonText=eg.text.General.browse,
+            dialogTitle=text.browseWorkingDirDialogTitle
         )
         
         winStateText = wx.StaticText(dialog, -1, text.WindowOptionsDesc)
