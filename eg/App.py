@@ -1,3 +1,25 @@
+# This file is part of EventGhost.
+# Copyright (C) 2005 Lars-Peter Voss <lpv@eventghost.org>
+# 
+# EventGhost is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# EventGhost is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with EventGhost; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
 import eg
 import wx
 import sys
@@ -16,7 +38,7 @@ from win32con import REALTIME_PRIORITY_CLASS, WM_QUERYENDSESSION, WM_ENDSESSION
 
 class MyApp(wx.App):
     
-    @eg.logit()
+    @eg.LogIt
     def OnInit(self):
         #SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS)
         self.SetAppName(eg.APP_NAME)
@@ -54,9 +76,8 @@ class MyApp(wx.App):
         return True
     
     
-    def SetupGui(self):
-        eg.whoami()
-        
+    @eg.LogIt
+    def SetupGui(self):        
         self.focusEvent = eg.EventHook()
         
         # setup a taskbar menu with icon, and catch some events from it
@@ -79,14 +100,14 @@ class MyApp(wx.App):
         
         from MainFrame import MainFrame
         self.mainFrame = MainFrame(eg.document)
-        self.SetTopWindow(self.mainFrame)
+        #self.SetTopWindow(self.mainFrame)
         self.mainFrame.Show()
         #self.mainFrame.Show(not (config.hideOnStartup or hideOnStartup))
     
 
     #------- TrayIcon menu handlers ------------------------------------------
     
-    def OnCmdShowMainFrame(self, event):
+    def OnCmdShowMainFrame(self, event=None):
         if self.mainFrame:
             self.mainFrame.Raise()
         else:
@@ -106,18 +127,18 @@ class MyApp(wx.App):
         
     #------------------------------------------------------------------------
         
-    @eg.logit(print_return=True)
+    @eg.LogItWithReturn
     def OnQueryEndSession(self, hwnd, msg, wparam, lparam):
         """System is about to be logged off"""
         # This method gets called from MessageReceiver on a
         # WM_QUERYENDSESSION win32 message.
         if self.mainFrame.OnClose() == wx.ID_CANCEL:
-            eg.notice("User cancelled shutdown in OnQueryEndSession")
+            eg.Notice("User cancelled shutdown in OnQueryEndSession")
             return 0
         return 1
 
 
-    @eg.logit(print_return=True)
+    @eg.LogItWithReturn
     def OnEndSession(self, hwnd, msg, wparam, lparam):
         """System is logging off"""
         egEvent = eg.eventThread.TriggerEvent("OnEndSession")
@@ -128,18 +149,17 @@ class MyApp(wx.App):
         self.OnExit()
          
         
+    @eg.LogIt
     def Exit(self, event=None):
-        eg.whoami()
-        if self.mainFrame:
-            self.mainFrame.Destroy()
-        else:
-            eg.notice("No MainFrame")
+        if eg.document.CheckFileNeedsSave() == wx.ID_CANCEL:
+            return
+        eg.document.Close()
         self.taskBarIcon.alive = False
         self.taskBarIcon.Destroy()
         self.ExitMainLoop()
         
         
-    @eg.logit()
+    @eg.LogIt
     def OnExit(self):
         if True: #eg.mainFrame:
             egEvent = eg.eventThread.TriggerEvent("OnClose")
@@ -147,16 +167,16 @@ class MyApp(wx.App):
                 self.Yield()
                 
             for func in self.onExitFuncs:
-                eg.notice(func)
+                eg.Notice(func)
                 func()
                 
             eg.DeInit()
         
-        eg.notice("COM interface count: %s" % pythoncom._GetInterfaceCount())
+        eg.Notice("COM interface count: %s" % pythoncom._GetInterfaceCount())
         
-        eg.notice("Threads:")
+        eg.Notice("Threads:")
         for t in threading.enumerate():
-            eg.notice(" ", t, t.getName())
+            eg.Notice(" ", t, t.getName())
                 
         while self.Pending():
             self.Dispatch()
@@ -165,12 +185,12 @@ class MyApp(wx.App):
         currentThread = threading.currentThread()
         for t in threading.enumerate():
             if t is not currentThread and not t.isDaemon() and t.isAlive():
-                eg.notice("joining: " + str(t))
+                eg.Notice("joining: " + str(t))
                 t.join(5.0)
         
-        eg.notice("Threads:")
+        eg.Notice("Threads:")
         for t in threading.enumerate():
-            eg.notice(" ", t, t.getName())
-        eg.notice("Done!")
+            eg.Notice(" ", t, t.getName())
+        eg.Notice("Done!")
         sys.exit(0)
         

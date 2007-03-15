@@ -194,12 +194,10 @@ class Timer(eg.PluginClass):
 
 
     def __start__(self):
-        eg.whoami()
         self.started = True
 
 
     def __stop__(self):
-        eg.whoami()
         self.started = False
         #end all running threads
         self.AbortAllTimers()

@@ -1,3 +1,25 @@
+# This file is part of EventGhost.
+# Copyright (C) 2005 Lars-Peter Voss <lpv@eventghost.org>
+# 
+# EventGhost is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# EventGhost is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with EventGhost; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
 import threading, traceback, time
 import win32api
 from win32process import SetProcessWorkingSetSize, GetCurrentProcess
@@ -65,12 +87,12 @@ class EventThread(ThreadWorker):
         event.startProcessed.wait(5.0)
         if not event.startProcessed.isSet():
             if eg.debugLevel:
-                eg.notice("timeout TriggerEventWait")
+                eg.Notice("timeout TriggerEventWait")
                 traceback.print_stack()
         return event
     
     
-    @eg.logit()
+    @eg.LogIt
     def StartSession(self, filename):
         self.shouldRun = True
 
@@ -88,10 +110,10 @@ class EventThread(ThreadWorker):
             self.startupEvent = None
                 
 
-    @eg.logit()
+    @eg.LogIt
     def StopSession(self):
         eg.actionThread.CallWait(eg.actionThread.StopSession)
-        eg.notice("StopSession done")
+        eg.Notice("StopSession done")
 
 
     

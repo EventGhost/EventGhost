@@ -1,3 +1,21 @@
+# This file is part of EventGhost.
+# Copyright (C) 2005 Lars-Peter Voss <lpv@eventghost.org>
+# 
+# EventGhost is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# EventGhost is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with EventGhost; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
 # $LastChangedDate$
 # $LastChangedRevision$
 # $LastChangedBy$
@@ -73,19 +91,10 @@ class MainFrame(wx.Frame):
                 |wx.CLIP_CHILDREN
                 |wx.TAB_TRAVERSAL
         )
-
+        document.frame = self
         auiManager = wx.aui.AuiManager()
         auiManager.SetManagedWindow(self)
         self.auiManager = auiManager
-        
-        def UpdateTitle(filePath):
-            if filePath is None:
-                title = eg.text.General.unnamedFile
-            else:
-                title = os.path.basename(filePath)
-            self.SetTitle("EventGhost %s - %s" % (eg.versionStr, title))
-        document.filePath.addCallback(UpdateTitle)
-        UpdateTitle(document.filePath.get())
         
         self.treeCtrl = None
         self.logCtrl = None
@@ -96,9 +105,11 @@ class MainFrame(wx.Frame):
         self.findDialog = None
         
         
+        self.observer = []
         def DocumentBind(item, dataset):
             item.Enable(dataset.get())
             dataset.addCallback(item.Enable)
+            self.observer.append((dataset, item.Enable))
         
         # toolBar
         toolBar = eg.ToolBar(self, style=wx.TB_FLAT)#|wx.TB_NODIVIDER)
@@ -147,7 +158,8 @@ class MainFrame(wx.Frame):
         self.SetMinSize((400, 200))
         
         # statusbar
-        self.statusBar = eg.StatusBar(self)
+        from StatusBar import StatusBar
+        self.statusBar = StatusBar(self)
         self.SetStatusBar(self.statusBar)
 
         # menu creation
@@ -294,8 +306,13 @@ class MainFrame(wx.Frame):
         self.UpdateViewOptions()
         self.SetSize(config.size)
         document.undoEvent.Bind(self.OnUndoEvent)
+        args = document.undoEvent.Get()
+        if len(args):
+            self.OnUndoEvent(*args)
         document.selectionEvent.Bind(self.OnTreeSelectionEvent)
-        
+        args = document.selectionEvent.Get()
+        if len(args):
+            self.OnTreeSelectionEvent(*args)
         # tell FrameManager to manage this frame
 
         if (
@@ -311,15 +328,49 @@ class MainFrame(wx.Frame):
         auiManager.Update()
         auiManager.GetPane("logger").MinSize((100, 100))
         eg.app.focusEvent.Bind(self.OnFocusChange)
+        args = eg.app.focusEvent.Get()
+        if len(args):
+            self.OnFocusChange(*args)
+        
         eg.app.clipboardEvent.Bind(self.OnClipboardChange)
+        self.UpdateTitle(self.document.filePath)
         
         
+    @eg.LogIt
+    def Destroy(self):
+        self.document.frame = None
+        config.perspective = self.auiManager.SavePerspective()
+        self.SetStatusBar(None)
+        for dataset, func in self.observer:
+            dataset.delCallback(func)
+        eg.app.focusEvent.Unbind(self.OnFocusChange)
+        eg.app.clipboardEvent.Unbind(self.OnClipboardChange)
+        self.document.undoEvent.Unbind(self.OnUndoEvent)
+        self.document.selectionEvent.Unbind(self.OnTreeSelectionEvent)
+        if self.logCtrl:
+            self.logCtrl.Destroy()
+        if self.treeCtrl:
+            self.treeCtrl.Destroy()
+        eg.app.mainFrame = None
+        gc.collect()
+        return wx.Frame.Destroy(self)
+    
+    
+    @eg.LogIt
     def __del__(self):
-        eg.whoami()
+        pass
         
         
+    def UpdateTitle(self, filePath):
+        if filePath is None:
+            title = eg.text.General.unnamedFile
+        else:
+            title = os.path.basename(filePath)
+        self.SetTitle("EventGhost %s - %s" % (eg.versionStr, title))
+
+    
     def CreateTreeCtrl(self):
-        from MainTree import TreeCtrl
+        from TreeCtrl import TreeCtrl
         treeCtrl = TreeCtrl(self, document=eg.document)
         self.document.SetTree(treeCtrl)
         self.treeCtrl = treeCtrl
@@ -332,15 +383,16 @@ class MainFrame(wx.Frame):
                 Floatable(True).
                 Dockable(True).
                 MaximizeButton(True).
-                CloseButton(eg.debugLevel)
+                Caption(" " + Text.Tree.caption).
+                CloseButton(False)
         )
         self.auiManager.Update()
         treeCtrl.SetFocus()
         
     
     def CreateLogCtrl(self):
-        from MainLogger import LoggerCtrl
-        logCtrl = LoggerCtrl(self)
+        from LogCtrl import LogCtrl
+        logCtrl = LogCtrl(self)
         logCtrl.Freeze()
         self.logCtrl = logCtrl
         if not config.logTime:
@@ -352,7 +404,7 @@ class MainFrame(wx.Frame):
                 Left().
                 MinSize((280, 300)).
                 MaximizeButton(True).
-                CloseButton(eg.debugLevel).
+                CloseButton(False).
                 Caption(" " + Text.Logger.caption)
         )
         self.auiManager.Update()
@@ -370,18 +422,6 @@ class MainFrame(wx.Frame):
         if paneName == "toolBar":
             config.showToolbar = False
             self.menuBar.View.HideShowToolbar.Check(False)
-        elif paneName == "logger":
-            logCtrl = self.logCtrl
-            self.logCtrl = None
-            self.auiManager.DetachPane(logCtrl)
-            self.auiManager.Update()
-            wx.CallAfter(logCtrl.Destroy)
-        elif paneName == "tree":
-            treeCtrl = self.treeCtrl
-            self.treeCtrl = None
-            self.auiManager.DetachPane(treeCtrl)
-            self.auiManager.Update()
-            wx.CallAfter(treeCtrl.Destroy)
             
         
     def OnPaneMaximize(self, event):
@@ -413,26 +453,9 @@ class MainFrame(wx.Frame):
         event.Skip()
         
         
-    def Destroy(self):
-        eg.whoami()
-        self.SetStatusBar(None)
-        eg.app.focusEvent.Unbind(self.OnFocusChange)
-        eg.app.clipboardEvent.Unbind(self.OnClipboardChange)
-        self.document.undoEvent.Unbind(self.OnUndoEvent)
-        self.document.selectionEvent.Unbind(self.OnTreeSelectionEvent)
-        if self.logCtrl:
-            self.logCtrl.Destroy()
-        if self.treeCtrl:
-            self.treeCtrl.Destroy()
-        eg.SetAttr("mainFrame", None)
-        eg.app.mainFrame = None
-        gc.collect()
-        return wx.Frame.Destroy(self)
-    
-    
+    @eg.LogIt
     def OnClose(self, event):
         '''Handle wx.EVT_CLOSE'''
-        eg.whoami()
         event.Veto()
         if config.hideOnClose:
             self.Destroy()
@@ -440,22 +463,21 @@ class MainFrame(wx.Frame):
             eg.app.Exit()
 
 
+    @eg.LogIt
     def OnIconize(self, event):
         '''Handle wx.EVT_ICONIZE'''
         # On iconizing, we actually destroy the frame completely
-        eg.whoami()
         self.Destroy()
 
 
 #    def OnClose(self, event=None):
-#        eg.whoami()
 #        res = self.document.CheckFileNeedsSave()
 #        if res == wx.ID_CANCEL:
-#            eg.notice("Skipping event in OnClose")
+#            eg.Notice("Skipping event in OnClose")
 #            if event:
 #                event.Skip(False)
 #            return wx.ID_CANCEL
-#        #eg.notice("Binding close dummy")
+#        #eg.Notice("Binding close dummy")
 #        #self.Bind(wx.EVT_CLOSE, self.CloseDummy)
 #        eg.config.hideOnStartup = self.IsIconized()
 #        eg.config.autoloadFilePath = self.document.filePath.get()
@@ -478,8 +500,8 @@ class MainFrame(wx.Frame):
 #        
 #        
 
+    @eg.LogIt
     def OnClipboardChange(self):
-        eg.whoami()
         if self.lastFocus == "Tree":
             canPaste = self.document.selection.CanPaste()
             self.toolBar.buttons.Paste.Enable(canPaste)
@@ -490,20 +512,20 @@ class MainFrame(wx.Frame):
             return
         self.lastFocus = focus
         tbb = self.toolBar.buttons
-        canCut, canCopy, canPaste, canDelete, canDisable = self.GetEditCmdState(focus)
+        canCut, canCopy, canPaste, canDelete = self.GetEditCmdState(focus)
         tbb.Cut.Enable(canCut)
         tbb.Copy.Enable(canCopy)
         tbb.Paste.Enable(canPaste)
-        tbb.Disabled.Enable(canDisable)
         
         
+    @eg.LogIt
     def GetEditCmdState(self, focus):
         if focus is None:
-            return (False, False, False, False, False)
+            return (False, False, False, False)
         elif focus == "Edit":
-            return (True, True, True, True, True)
+            return (True, True, True, True)
         elif focus == self.logCtrl:
-            return (False, True, False, False, False)
+            return (False, True, False, False)
         elif focus == self.treeCtrl and self.document.selection:
             selection = self.document.selection
             return (
@@ -511,10 +533,9 @@ class MainFrame(wx.Frame):
                 selection.CanCopy(), 
                 selection.CanPaste(), 
                 selection.CanDelete(), 
-                selection.CanDisable()
             )
         else:
-            return (False, False, False, False, False)
+            return (False, False, False, False)
         
     
     def OnTreeSelectionEvent(self, selection):
@@ -528,17 +549,18 @@ class MainFrame(wx.Frame):
         menuState.edit = selection.IsConfigurable()
         menuState.execute = selection.canExecute and selection.isEnabled
         menuState.rename = selection.IsEditable()
+        menuState.disable = selection.CanDisable()
         
         tbb = self.toolBar.buttons
-        tbb.NewAction.Enable(menuState.newAction)
-        tbb.NewEvent.Enable(menuState.newEvent)
-        tbb.Execute.Enable(menuState.execute)
-        canCut, canCopy, canPaste, canDelete, canDisable =\
+        canCut, canCopy, canPaste, canDelete =\
             self.GetEditCmdState(self.lastFocus)
         tbb.Cut.Enable(canCut)
         tbb.Copy.Enable(canCopy)
         tbb.Paste.Enable(canPaste)
-        tbb.Disabled.Enable(canDisable)
+        tbb.NewAction.Enable(menuState.newAction)
+        tbb.NewEvent.Enable(menuState.newEvent)
+        tbb.Disabled.Enable(menuState.disable)
+        tbb.Execute.Enable(menuState.execute)
         
     
     def OnUndoEvent(self, hasUndos, hasRedos, undoName, redoName):
@@ -552,7 +574,7 @@ class MainFrame(wx.Frame):
         
         
     def SetupEditMenu(self, menuItems):
-        canCut, canCopy, canPaste, canDelete, canDisable =\
+        canCut, canCopy, canPaste, canDelete =\
             self.GetEditCmdState(self.lastFocus)
         menuItems.cut.Enable(canCut)
         menuItems.copy.Enable(canCopy)
@@ -564,7 +586,7 @@ class MainFrame(wx.Frame):
         menuItems.editItem.Enable(menuState.edit)
         menuItems.executeItem.Enable(menuState.execute)
         menuItems.renameItem.Enable(menuState.rename)
-        menuItems.disableItem.Enable(canDisable)
+        menuItems.disableItem.Enable(menuState.disable)
         menuItems.disableItem.Check(self.document.selection and not self.document.selection.isEnabled)
         
         
@@ -588,7 +610,6 @@ class MainFrame(wx.Frame):
         focus = self.FindFocus()
         method = getattr(focus, command, None)
         if method is not None:
-            print focus
             method()
         
         
@@ -600,7 +621,7 @@ class MainFrame(wx.Frame):
     
     def OnCmdNew(self, event):
         """ Handle the menu command 'New'. """
-        if self.CheckFileNeedsSave() == wx.ID_CANCEL:
+        if self.document.CheckFileNeedsSave() == wx.ID_CANCEL:
             return
         eg.eventThread.CallWait(eg.eventThread.StopSession)
         self.treeCtrl.DeleteAllItems()
@@ -609,7 +630,7 @@ class MainFrame(wx.Frame):
 
     def OnCmdOpen(self, event):
         """ Handle the menu command 'Open'. """
-        if self.CheckFileNeedsSave() == wx.ID_CANCEL:
+        if self.document.CheckFileNeedsSave() == wx.ID_CANCEL:
             return wx.ID_CANCEL
         dlg = wx.FileDialog(self, "", "", "", "*.xml", wx.OPEN)
         res = dlg.ShowModal()
@@ -624,27 +645,12 @@ class MainFrame(wx.Frame):
         
     def OnCmdSave(self, event=None):
         """ Handle the menu command 'Save'. """
-        if self.document.filePath.get() is None:
-            return self.OnCmdSaveAs()
         self.document.Save()
-        return wx.ID_YES
 
 
     def OnCmdSaveAs(self, event=None):
         """ Handle the menu command 'Save As'. """
-        dlg = wx.FileDialog(
-            self, 
-            message="", 
-            wildcard="*.xml", 
-            style=wx.SAVE|wx.OVERWRITE_PROMPT
-        )
-        res = dlg.ShowModal()
-        if res == wx.ID_CANCEL:
-            return res
-        filePath = dlg.GetPath()
-        dlg.Destroy()
-        self.document.Save(filePath)
-        return wx.ID_YES
+        self.document.SaveAs()
 
 
     def OnCmdExport(self, event):

@@ -1,3 +1,25 @@
+# This file is part of EventGhost.
+# Copyright (C) 2005 Lars-Peter Voss <lpv@eventghost.org>
+# 
+# EventGhost is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# EventGhost is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with EventGhost; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
 from time import time, strftime, localtime
 import collections
 
@@ -10,7 +32,7 @@ EVENT_ICON_INDEX = eg.EventItem.iconIndex
 
 
 
-class LoggerCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
+class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     """Implemention of a ListCtrl with a circular buffer."""
     
     def __init__(
@@ -21,8 +43,8 @@ class LoggerCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         size=wx.DefaultSize
     ):
         if eg.debugLevel:
-            self.maxlength = 100
-            self.removeOnMax = 10
+            self.maxlength = 2000
+            self.removeOnMax = 200
         else:
             self.maxlength = 2000
             self.removeOnMax = 200
@@ -93,8 +115,8 @@ class LoggerCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.SetData(eg.log.GetData())
         
         
+    @eg.LogIt
     def Destroy(self):
-        eg.whoami()
         eg.log.SetCtrl(None)
         return wx.ListCtrl.Destroy(self)
         
@@ -211,8 +233,8 @@ class LoggerCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.Refresh()
     
     
+    @eg.LogIt
     def OnRightUp(self, event):
-        eg.whoami()
         self.PopupMenu(self.contextMenu)
 
 
@@ -275,6 +297,7 @@ class LoggerCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.Update()
 
 
+    @eg.LogIt
     def __del__(self):
-        eg.whoami()
+        pass
                  

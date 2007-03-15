@@ -1,4 +1,4 @@
-html="""
+License="""
 <html><head>
 <title>
     GNU General Public License - GNU Project - Free Software Foundation (FSF)

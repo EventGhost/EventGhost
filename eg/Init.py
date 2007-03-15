@@ -1,9 +1,5 @@
-#
-# eg/Init.py
-#
-# Copyright (C) 2005 Lars-Peter Voss
-#
 # This file is part of EventGhost.
+# Copyright (C) 2005 Lars-Peter Voss <lpv@eventghost.org>
 # 
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -39,84 +35,7 @@ import linecache
 import wx
 
 
-class ResultProperty(object):
-    
-    def __get__(self, instance, owner):
-        return self.value
-    
-    def __set__(self, instance, value):
-        self.value = value
-        
-    def __delete__(self, instance, value):
-        raise "Can't delete this variable"
-        
-resultProperty = ResultProperty()
-
-
-
-class GlobalsDict(dict):
-    def keys(self):
-        eg.whoami()
-        x = dict.keys(self)
-        x.append("result")
-        return x
-    
-    def items(self):
-        eg.whoami()
-        x = dict.items(self)
-        x.append(("result", resultProperty.value))
-        return x
-    
-    def __getitem__(self, key):
-        if key == "result":
-            return resultProperty.value
-        return dict.__getitem__(self, key)
-    
-    def __setitem__(self, key, value):
-        if key == "result":
-            resultProperty.value = value
-            return
-        dict.__setitem__(self, key, value)
-    
-    def iteritems(self):
-        eg.whoami()
-        dict.iteritems(self)
-        yield ("result", resultProperty.value)
-    
-    def iterkeys(self):
-        eg.whoami()
-        dict.iterkeys(self)
-        yield "result"
-    
-    def copy(self):
-        eg.whoami()
-        return dict.copy(self)
-    
-    def update(self, b):
-        eg.whoami()
-        return dict.update(self, b)
-    
-    def has_key(self, key):
-        eg.whoami()
-        return dict.has_key(self, key)
-    
-    def len(self):
-        eg.whoami()
-        return dict.len(self) + 1
-    
-    
-class GlobalsBunch(object):
-    
-    result = resultProperty
-    def __new__(cls):
-        inst = object.__new__(cls)
-        inst.__dict__ = GlobalsDict()
-        return  inst
-        
-        
-    
 class EventGhost(object):
-    result = resultProperty
     
     class Exception(Exception):
         def __init__(self, message):
@@ -128,6 +47,7 @@ class EventGhost(object):
 
     class StopException(Exception):
         pass
+    
     
     class HiddenAction:
         pass
@@ -149,36 +69,25 @@ class EventGhost(object):
         from Utils import Bunch, EventHook
         self.Bunch = Bunch
         self.EventHook = EventHook
-        self.mainFrame = None
         self.document = None
-        #self.treeCtrl = None
-        #self.logCtrl = None
         
         self.result = None
         self.event = None
         self.eventTable = {}
         self.eventTable2 = {}
-        self.EventString = '' # eg.EventString is deprecated
         self.plugins = Bunch()
-        self.pluginFileInfo = {}
         self.pluginClassInfo = {}
-        self.corePlugins = {}
-        self.globals = GlobalsBunch()
+        self.globals = Bunch()
         self.globals.eg = self
+        self.result = None
         self.mainThread = threading.currentThread()
-        self.isRunning = True
         self.onlyLogAssigned = False
         self.programCounter = None
         self.programReturnStack = []
         self.stopExecutionFlag = False
         self.lastFoundWindows = []
+        self.currentConfigureItem = None
         
-        self.Plugin = self.plugins # eg.Plugin is deprecated
-        self.Global = self.globals # eg.Global is deprecated
-
-        self._lastDefinedPluginClass = None
-        self._lastDefinedPluginClassInfo = None
-
         from Version import version, buildNum, compileTime, svnRevision
         self.version = version
         self.buildNum = buildNum
@@ -186,8 +95,9 @@ class EventGhost(object):
         self.versionStr = "%s.%s" % (version, buildNum)
         self.svnRevision = svnRevision
 
-        from Utils import logit
-        self.logit = logit
+        from Utils import LogIt, LogItWithReturn
+        self.LogIt = LogIt
+        self.LogItWithReturn = LogItWithReturn
         
         from MessageReceiver import MessageReceiver
         self.messageReceiver = MessageReceiver()
@@ -203,8 +113,7 @@ class EventGhost(object):
         if not debugLevel:
             def _DummyFunc(*args, **kwargs):
                 pass
-            self.notice = _DummyFunc
-            self.whoami = _DummyFunc
+            self.Notice = _DummyFunc
         else:
             if debugLevel == 2:
                 fd = open("Log.txt", "at")
@@ -214,14 +123,13 @@ class EventGhost(object):
                         fd.flush()
                 sys.stderr = writer()
                 
-            from Utils import notice, whoami
-            self.notice = notice
-            self.whoami = whoami
+            from Utils import Notice
+            self.Notice = Notice
     
-            notice("----------------------------------------")
-            notice("        EventGhost started")
-            notice("----------------------------------------")
-            notice("Version:", self.versionStr)
+            Notice("----------------------------------------")
+            Notice("        EventGhost started")
+            Notice("----------------------------------------")
+            Notice("Version:", self.versionStr)
             
 
         import IconTools
@@ -278,7 +186,7 @@ class EventGhost(object):
         from WinAPI.SerialPort import EnumSerialPorts as GetAllPorts
         self.SerialPort.GetAllPorts = classmethod(GetAllPorts)
         
-        eg.notice("Creating SendKeys parser")
+        eg.Notice("Creating SendKeys parser")
         from WinAPI.SendKeys import SendKeysParser
         _sendKeysObj = SendKeysParser()
         self.SendKeys = _sendKeysObj.Parse
@@ -353,6 +261,8 @@ class EventGhost(object):
 
 
     def SetAttr(self, name, value):
+        if not hasattr(self, name):
+            raise AttributeError("eg has not attribute '%s'" % name)
         object.__setattr__(self, name, value)
         
         
@@ -431,15 +341,12 @@ class EventGhost(object):
         from Controls.FontButton import FontButton
         from Controls.ColourSelectButton import ColourSelectButton
         from Controls.DisplayChoice import DisplayChoice
-        from Controls.StatusBar import StatusBar
         from Controls.ToolBar import ToolBar
         from Controls.SerialPortChoice import SerialPortChoice
         from Controls.RadioBox import RadioBox
 
         from Dialogs.HTMLDialog import HTMLDialog
         from Dialogs.ConfigurationDialog import ConfigurationDialog
-
-        from License import html as license
 
         from PluginClass import PluginClass
         from IrDecoder import IrDecoder
@@ -541,15 +448,12 @@ class EventGhost(object):
         
 
     def DeInit(self):
-        eg.whoami()
-        self.__dict__["isRunning"] = False
-        
-        self.notice("stopping Threads")
+        self.Notice("stopping Threads")
         self.actionThread.CallWait(self.actionThread.StopSession)
         self.actionThread.stop()
         self.eventThread.stop()
         
-        self.notice("shutting down")
+        self.Notice("shutting down")
         self.config.onlyLogAssigned = self.onlyLogAssigned
         self.SaveConfig()
         self.__DeInitAsyncore()

@@ -1,3 +1,25 @@
+# This file is part of EventGhost.
+# Copyright (C) 2005 Lars-Peter Voss <lpv@eventghost.org>
+# 
+# EventGhost is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# EventGhost is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with EventGhost; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
 import wx
 import eg
 from eg.IconTools import GetIcon
@@ -28,19 +50,20 @@ class StatusBar(wx.StatusBar):
         self.Reposition()
 
 
+    @eg.LogIt
     def __del__(self):
-        eg.whoami()        
+        pass
     
     
+    @eg.LogIt
     def Destroy(self):
-        eg.whoami()
         self.Unbind(wx.EVT_SIZE)
         self.Unbind(wx.EVT_IDLE)
         return wx.StatusBar.Destroy(self)
 
     
+    @eg.LogIt
     def OnSize(self, evt):
-        eg.whoami()
         self.Reposition()  # for normal size events
         self.sizeChanged = True
 
@@ -57,12 +80,12 @@ class StatusBar(wx.StatusBar):
         self.sizeChanged = False
                 
         
+    @eg.LogIt
     def OnCheckBox(self, event):
-        eg.whoami()
         eg.onlyLogAssigned = self.cb.GetValue()
         
         
+    @eg.LogIt
     def SetState(self, flag):
-        eg.whoami()
         self.icon.SetBitmap(self.icons[flag])
             

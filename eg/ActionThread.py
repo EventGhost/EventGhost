@@ -1,3 +1,25 @@
+# This file is part of EventGhost.
+# Copyright (C) 2005 Lars-Peter Voss <lpv@eventghost.org>
+# 
+# EventGhost is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# EventGhost is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with EventGhost; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
 import threading
 import pythoncom
 import types
@@ -19,25 +41,16 @@ CORE_PLUGINS = (
 
 class ActionThread(ThreadWorker):
     
-    @eg.logit(print_return=True) 
+    @eg.LogItWithReturn
     def StartSession(self, filename):
         eg.eventTable.clear()
-        eg.corePlugins.clear()
-        from InternalActionMixin import ActionClass, ActionWithStringParameter
-        eg.SetAttr("ActionClass", ActionClass)
-        eg.SetAttr("ActionWithStringParameter", ActionWithStringParameter)
         for pluginIdent in CORE_PLUGINS:
-            plugin = eg.OpenPlugin(pluginIdent)
+            plugin = eg.OpenPlugin(pluginIdent, None, ())
             plugin.__start__()
             plugin.info.isStarted = True
-            plugin.info.label = plugin.info.name
-            eg.corePlugins[plugin] = 1
-        from ActionClass import ActionClass, ActionWithStringParameter        
-        eg.SetAttr("ActionClass", ActionClass)
-        eg.SetAttr("ActionWithStringParameter", ActionWithStringParameter)
         start = clock()
         eg.document.Load(filename)
-        eg.notice("XML loaded in %f seconds." % (clock() - start))
+        eg.Notice("XML loaded in %f seconds." % (clock() - start))
         eg.SetProgramCounter((eg.document.autostartMacro, None))
         eg.RunProgram()
         
@@ -53,13 +66,11 @@ class ActionThread(ThreadWorker):
         eg.SetProcessingState(1, event)
         
         
-    @eg.logit()
+    @eg.LogIt
     def StopSession(self):
         eg.document.autostartMacro.UnloadPlugins()
-        eg.notice("closing default plugins")
         for pluginIdent in CORE_PLUGINS:
             plugin = getattr(eg.plugins, pluginIdent)
             plugin.__stop__()
             eg.ClosePlugin(plugin)
-        eg.notice("StopSession done")
         

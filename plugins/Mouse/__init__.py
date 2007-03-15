@@ -1,3 +1,25 @@
+# This file is part of EventGhost.
+# Copyright (C) 2005 Lars-Peter Voss <lpv@eventghost.org>
+# 
+# EventGhost is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# EventGhost is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with EventGhost; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
 import eg
 
 class PluginInfo(eg.PluginInfo):
@@ -5,7 +27,7 @@ class PluginInfo(eg.PluginInfo):
     author = "Bitmonster"
     version = ""
     description = ""
-    kind = "hidden"
+    kind = "core"
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeT"
         "AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH1QQIDRgEM71mAAAAADV0RVh0Q29t"
@@ -58,8 +80,8 @@ class MouseThread(Thread):
         self.start()
 
 
+    @eg.LogItWithReturn
     def run(self):
-        eg.whoami()
         upTime = 0
         while True:
             self.lastTime = clock()
@@ -121,7 +143,6 @@ class MouseThread(Thread):
             if waitTicks < 0:
                 waitTicks = 0.0
             sleep(waitTicks)
-        eg.notice("stopped")        
         
 
 
@@ -142,14 +163,15 @@ class Mouse(eg.PluginClass):
         SetMouseCallback(self.MouseCallBack)
         
         
+    @eg.LogIt
     def __stop__(self):
-        eg.whoami()
         SetMouseCallback(None)
         self.thread.receiveQueue.put(-1)
         
         
+    @eg.LogIt
     def __close__(self):
-        eg.whoami()
+        pass
         
         
     def MouseCallBack(self, value):
@@ -375,7 +397,7 @@ class MouseWheel(eg.ActionClass):
     
     
     def __call__(self, direction=0):
-        print mouse_event(0x0800, 0, 0, direction * 120, 0)
+        mouse_event(0x0800, 0, 0, direction * 120, 0)
         
     
     def GetLabel(self, direction=0):

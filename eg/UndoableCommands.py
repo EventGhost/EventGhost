@@ -1,3 +1,21 @@
+# This file is part of EventGhost.
+# Copyright (C) 2005 Lars-Peter Voss <lpv@eventghost.org>
+# 
+# EventGhost is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# EventGhost is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with EventGhost; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
 # $LastChangedDate$
 # $LastChangedRevision$
 # $LastChangedBy$
@@ -22,15 +40,15 @@ class CmdNewItem:
         item.document.AppendUndoHandler(self)
     
     
+    @eg.LogIt
     def Undo(self, document):
-        eg.whoami()
         item = self.positionData.GetItem()
         self.data = item.GetFullXml()
         item.Delete()
         
         
+    @eg.LogIt
     def Redo(self, document):
-        eg.whoami()
         item = document.RestoreItem(self.positionData, self.data)
         item.Select()
     
@@ -77,8 +95,8 @@ class CmdNewFolder(CmdNewItem):
     or toolbar.
     """
     
+    @eg.LogIt
     def Do(self, document):
-        eg.whoami()
         self.name = eg.text.MainFrame.Menu.NewFolder.replace("&", "")
         obj = document.selection
         if isinstance(obj, (document.MacroItem, document.AutostartItem)):
@@ -159,8 +177,8 @@ class CmdNewAction(CmdNewItem):
     or toolbar.
     """
     
+    @eg.LogIt
     def Do(self, document):
-        eg.whoami()
         self.name = eg.text.MainFrame.Menu.NewAction.replace("&", "")
         # let the user choose an action
         def ShowDialog():
@@ -441,8 +459,8 @@ class CmdMoveTo:
         document.AppendUndoHandler(self)
     
     
+    @eg.LogIt
     def Undo(self, document):
-        eg.whoami()
         parent1, pos1 = self.newPositionData.GetPosition()
         item = parent1.childs[pos1]
         parent = item.tree.root

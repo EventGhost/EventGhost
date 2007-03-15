@@ -1,3 +1,25 @@
+# This file is part of EventGhost.
+# Copyright (C) 2005 Lars-Peter Voss <lpv@eventghost.org>
+# 
+# EventGhost is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# EventGhost is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with EventGhost; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
 import threading
 import base64
 import pickle
@@ -37,19 +59,14 @@ class PluginItem(ActionItem):
         pluginStr = node.attrib['file']
         self.isStarted = False
         self.pluginFile = pluginStr
-        self.executable = plugin = eg.OpenPlugin(pluginStr, ident)
+        self.executable = plugin = eg.OpenPlugin(pluginStr, ident, self.args)
         if plugin is None or plugin.info.initFailed:
             eg.PrintError("Error loading plugin: %s" % pluginStr)
             self.name = pluginStr + " not found"
             self.isInErrorState = True
             #plugin.info.label = pluginStr
         else:
-            try:
-                label = plugin.GetLabel(*self.args)
-            except:
-                label = plugin.info.name
-            plugin.info.label = label
-            self.name = eg.text.General.pluginLabel % label
+            self.name = eg.text.General.pluginLabel % plugin.info.label
             self.iconIndex = plugin.info.iconIndex
             self.isInErrorState = False
 
@@ -58,8 +75,8 @@ class PluginItem(ActionItem):
         return self.name
         
     
+    @eg.LogIt
     def RestoreState(self):
-        eg.whoami()
         if self.isEnabled:
             eg.actionThread.Call(self.StartPlugin)
             

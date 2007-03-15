@@ -1,3 +1,25 @@
+# This file is part of EventGhost.
+# Copyright (C) 2005 Lars-Peter Voss <lpv@eventghost.org>
+# 
+# EventGhost is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# EventGhost is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with EventGhost; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
 import types
 import inspect
 from xml.sax.saxutils import quoteattr
@@ -144,7 +166,10 @@ class ActionItem(TreeItem):
             try:
                 name = executable.GetLabel(*self.args)
             except:
-                name = executable.plugin.info.label + ": " + executable.name
+                name = executable.name
+            pluginInfo = executable.plugin.info
+            if pluginInfo.kind != "core":
+                name = pluginInfo.label + ": " + name
         return name
 
 
@@ -163,8 +188,8 @@ class ActionItem(TreeItem):
         return self.ConfigureHandler().Do(self)
     
     
+    @eg.LogIt
     def DoConfigure(self):
-        eg.whoami()
         executable = self.executable
         if executable is None:
             return None

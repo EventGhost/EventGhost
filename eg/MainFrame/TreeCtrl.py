@@ -1,3 +1,25 @@
+# This file is part of EventGhost.
+# Copyright (C) 2005 Lars-Peter Voss <lpv@eventghost.org>
+# 
+# EventGhost is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# EventGhost is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with EventGhost; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
 import os
 import types
 from cStringIO import StringIO
@@ -213,14 +235,16 @@ class EventDropTarget(wx.PyDropTarget):
         self.treeCtrl.ClearInsertMark()
 
 
+    @eg.LogIt
     def __del__(self):
-        eg.whoami()
+        pass
 
 
         
 class TreeCtrl(wx.TreeCtrl):
     
     def __init__(self, parent, id=-1, document=None):
+        eg.AssertThread()
         self.frame = parent
         self.document = document
         wx.TreeCtrl.__init__(
@@ -284,11 +308,18 @@ class TreeCtrl(wx.TreeCtrl):
         #SendMessageTimeout(self.hwnd, 4379, 18, 0, 1, 100, 0)
         
         
+    @eg.LogIt
+    def __del__(self):
+        pass
+    
+    
     def SetData(self):
+        eg.AssertThread()
         self.Freeze()
         try:
             root = self.document.root
-            selectItem = root
+            self.root = root
+            selectItem = self.document.selection
             firstItem = root
 #            treeStateData = config.treeStateData
 #            if (
@@ -304,15 +335,19 @@ class TreeCtrl(wx.TreeCtrl):
             root.CreateTreeItem(self, None)
             self.Expand(root.id)
             selectItem.Select()
-            if firstItem.id is not None:
-                self.ScrollTo(firstItem.id)
+            firstVisibleItem = self.document.firstVisibleItem
+            if firstVisibleItem and firstVisibleItem.id is not None:
+                self.ScrollTo(firstVisibleItem.id)
         finally:
             self.Thaw()
 
     
+    @eg.LogIt
     def Destroy(self):
-        eg.whoami()
-        self.document.SetTree(None)
+        eg.AssertThread()
+        document = self.document
+        document.firstVisibleItem = self.GetPyData(self.GetFirstVisibleItem())
+        document.SetTree(None)
         return wx.TreeCtrl.Destroy(self)
         #self.SetFocus()
         tree = self.treeCtrl
@@ -358,8 +393,8 @@ class TreeCtrl(wx.TreeCtrl):
         item.isExpanded = False
         
         
+    @eg.LogIt
     def OnItemExpanding(self, event):
-        eg.whoami()
         if not self.OnItemExpandingNum:
             self.OnItemExpandingItem = event.GetItem()
             self.Freeze()
@@ -377,8 +412,8 @@ class TreeCtrl(wx.TreeCtrl):
     
     OnItemExpandingNum = False
     
+    @eg.LogIt
     def OnItemCollapsing(self, event):
-        eg.whoami()
         id = event.GetItem()
         if id == self.root.id:
             event.Veto()
@@ -452,21 +487,21 @@ class TreeCtrl(wx.TreeCtrl):
         event.Skip(True)
         
         
+    @eg.LogIt
     def OnBeginLabelEdit(self, event):
-        eg.whoami()
         obj = self.GetPyData(event.GetItem())
         if (not obj.IsEditable()) or (not self.hasFocus):
             event.Veto()
             return
         self.isInEditLabel = True
         eg.app.focusEvent.Fire("Edit")
-        eg.mainFrame.UpdateViewOptions()
+        # avoid programmatic change of the selected item while editing
+        self.frame.UpdateViewOptions()
 
         
     def OnEndLabelEdit(self, event):
         self.isInEditLabel = False
-        # avoid programmatic change of the selected item
-        eg.mainFrame.UpdateViewOptions()
+        self.frame.UpdateViewOptions()
         id = event.GetItem()
         item = self.GetPyData(id)
         newLabel = event.GetLabel()
@@ -621,56 +656,3 @@ class TreeCtrl(wx.TreeCtrl):
             wx.TheClipboard.Close()
         return True
         
-        
-    def GetExpandState(self):
-        eg.whoami()
-        vector = []
-        append = vector.append
-        def _Traverse(item, i):
-            if isinstance(item, ContainerItem):
-                i += 1
-                if item.isExpanded:
-                    append(i)
-                for child in item.childs:
-                    i = _Traverse(child, i)
-            return i
-        _Traverse(self.root, -1)
-        return vector
-    
-    
-    def SetExpandState(self, vector):
-        eg.whoami()
-        def _Traverse(item, i):
-            if isinstance(item, ContainerItem):
-                i += 1
-                if len(vector) and vector[0] == i:
-                    item.isExpanded = True  
-                    vector.pop(0)
-                else:
-                    item.isExpanded = False
-                for child in item.childs:
-                    i = _Traverse(child, i)
-            return i
-        
-        try:
-            if vector is None:
-                return
-            self.Freeze()
-            _Traverse(self.root, -1)
-        finally:
-            self.Thaw()
-        
-        
-    def ResolvePath(self, path):
-        item = self.root
-        try:
-            for pos in path:
-                item = item.childs[pos]
-        except:
-            item = self.root
-        return item
-
-
-    def __del__(self):
-        eg.whoami()
-

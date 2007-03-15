@@ -1,9 +1,5 @@
-#
-# eg/Dialogs/AboutDialog.py
-#
-# Copyright (C) 2005 Lars-Peter Voss
-#
 # This file is part of EventGhost.
+# Copyright (C) 2005 Lars-Peter Voss <lpv@eventghost.org>
 # 
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -38,6 +34,8 @@ from math import sin
 
 import Image
 from eg.Controls.SizeGrip import SizeGrip
+from License import License
+
 
 
 class Text:
@@ -290,7 +288,7 @@ class Panel3(Panel2):
     
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
-        self.CreateHtmlWindow(eg.license)
+        self.CreateHtmlWindow(License)
         
 
 

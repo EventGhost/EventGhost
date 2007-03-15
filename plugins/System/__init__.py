@@ -1,3 +1,46 @@
+# This file is part of EventGhost.
+# Copyright (C) 2005 Lars-Peter Voss <lpv@eventghost.org>
+# 
+# EventGhost is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# EventGhost is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with EventGhost; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
+import eg
+
+class PluginInfo(eg.PluginInfo):
+    name = "System"
+    author = "Bitmonster"
+    version = ""
+    description = "System"
+    kind = "core"
+    icon = (
+        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QAAAAAAAD5Q7t/"
+        "AAAACXBIWXMAAAsSAAALEgHS3X78AAAAB3RJTUUH1QsEFTMTHK3EDwAAAUhJREFUOMul"
+        "k0FLAlEQx39vd/VLeJSV7hH0ASLqLBEU3u0UQUGHUBJvfYAkukWiKV2DvkHUNeiyxCai"
+        "bAqlVHbYnQ6ur8Qktbm8mcf7/+bNezPwT1MAuXy2CiSn1BYyB4dbVhgkl5dWsO3ERMp2"
+        "u0XpopgGNADbTrC6eTQR4Lq0r30NiEajACwuzCFjahXg5vZhaF8DfN8HwLBMkP5hpcIV"
+        "QVB43ssIWAOCIOgDDBOU/MipAHh88njt9gAQkVHAwEzLDD2h+dzh/eOT7lsPUFgR62+A"
+        "YRp47Q7NVgdEhdAIICjF+BIG1HunOST6fkCl419vMPgFz61P1U0aUKvVuDrfm0jUaDRG"
+        "AIXqZTk9ZStnAFQun50H7na2d/F9H9d1icViQ3UCOI6jeyUej3NyegyQUrl8VtbXNmaa"
+        "xHKliAWkypXi2YzTnPoC/MF4O/QjGPgAAAAASUVORK5CYII="
+    )
+
+
 import time
 import os
 import thread
@@ -20,7 +63,6 @@ import ctypes
 import wx
 import Image
 
-import eg
 import eg.WinAPI.SoundMixer as SoundMixer
 from eg.WinAPI.Utils import BringHwndToFront
 from eg.WinAPI.Utils import GetMonitorDimensions
@@ -150,13 +192,13 @@ class System(eg.PluginClass):
         )
 
 
-    eg.logit(print_return=True)
+    eg.LogItWithReturn
     def __stop__(self):
-        eg.notice("stopping system plugin")
+        eg.Notice("stopping system plugin")
         self.deviceChangeNotifier.Close()
         self.powerBroadcastNotifier.Close()
         UnregisterKeyhook()
-        eg.notice("done stopping system plugin")
+        eg.Notice("done stopping system plugin")
         
         
     def IdleCallback(self):

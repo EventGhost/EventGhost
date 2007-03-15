@@ -1,3 +1,25 @@
+# This file is part of EventGhost.
+# Copyright (C) 2005 Lars-Peter Voss <lpv@eventghost.org>
+# 
+# EventGhost is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# EventGhost is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with EventGhost; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
 from os.path import abspath, exists
 from base64 import b64decode
 from cStringIO import StringIO
@@ -12,6 +34,8 @@ import wx
 import eg
 from eg.IconTools import PilToBitmap, ICON_IDX_PLUGIN
 from Utils import SetClass
+from PluginMetaClass import PluginMetaClass
+from ActionMetaClass import ActionMetaClass
 
 
 WX_ICON_PLUGIN = wx.EmptyIcon()
@@ -91,8 +115,7 @@ class PluginInfoBase(object):
         fp = file(pathname, "U")
         #fp = file(pathname, "r")
         sys.path.insert(0, abspath(pluginInfo.path))
-        eg.SetAttr("_lastDefinedPluginClass", None)
-        eg.SetAttr("_lastDefinedPluginClassInfo", pluginInfo)
+        ActionMetaClass.lastDefinedPluginClassInfo = pluginInfo
         try:
             try:
                 module = imp.load_module(
@@ -111,7 +134,7 @@ class PluginInfoBase(object):
                 1
             )
             return
-        pluginCls = eg._lastDefinedPluginClass
+        pluginCls = PluginMetaClass.lastCls
         pluginInfo.module = module
         pluginInfo.pluginCls = pluginCls
         text = pluginCls.text
@@ -175,7 +198,7 @@ class PluginInfoBase(object):
                     pass
         else:
             pluginInfo.instances.append(plugin.info)
-        eg.SetAttr("_lastDefinedPluginClassInfo", pluginInfo)
+        ActionMetaClass.lastDefinedPluginClassInfo = pluginInfo
         try:
             plugin.__init__()
             info.initFailed = False
@@ -183,7 +206,7 @@ class PluginInfoBase(object):
             eg.PrintError(e.message)
         except:
             eg.PrintTraceback()
-        
+        pluginInfo.label = plugin
         return plugin
         
         
@@ -229,10 +252,7 @@ def GetPluginInfo(pluginName):
     # read in the __info__ of the plugin
     infoDict = {"eg": eg}
     pluginPath = "plugins/" + pluginName
-    if (
-        not exists(pluginPath + "/__info__.py") 
-        and not exists("eg/CorePlugins/" + pluginName + "/__info__.py")
-    ):
+    if not exists(pluginPath + "/__info__.py"):
         PluginInfoMetaClass.raiseOnPluginInfoLoad = True
         try:
             try:
@@ -248,14 +268,10 @@ def GetPluginInfo(pluginName):
         try:
             execfile(pluginPath + "/__info__.py", infoDict)
         except:
-            pluginPath = "eg/CorePlugins/" + pluginName
-            try:
-                execfile(pluginPath + "/__info__.py", infoDict)
-            except:
-                eg.PrintError(
-                    'Can\'t read __info__.py for plugin "%s"' % pluginName
-                )
-                return None
+            eg.PrintError(
+                'Can\'t read __info__.py for plugin "%s"' % pluginName
+            )
+            return None
     
     # create a new sublclass of PluginInfo for this plugin class
     class info(PluginInfoBase):
@@ -294,8 +310,8 @@ def GetPluginInfo(pluginName):
     return info
 
 
-@eg.logit()
-def OpenPlugin(pluginName, evalName=None):
+@eg.LogIt
+def OpenPlugin(pluginName, evalName, args):
     #from time import clock
     #startTime = clock()
     info = GetPluginInfo(pluginName)
@@ -305,11 +321,12 @@ def OpenPlugin(pluginName, evalName=None):
         if not info.LoadModule():
             return None
     plugin = info.CreatePluginInstance(evalName)
-    #eg.notice(clock() - startTime)
+    #eg.Notice(clock() - startTime)
+    plugin.info.label = plugin.GetLabel(*args)
     return plugin
 
         
-@eg.logit()
+@eg.LogIt
 def ClosePlugin(plugin):
     def _delActionListItems(actionList):
         if actionList is not None:

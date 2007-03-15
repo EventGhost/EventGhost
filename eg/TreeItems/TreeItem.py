@@ -1,3 +1,24 @@
+# This file is part of EventGhost.
+# Copyright (C) 2005 Lars-Peter Voss <lpv@eventghost.org>
+# 
+# EventGhost is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# EventGhost is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with EventGhost; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
 
 from xml.sax.saxutils import quoteattr, escape
 import weakref
@@ -106,7 +127,6 @@ class TreeItem(object):
         
         
     def CreateTreeItem(self, tree, parentId):
-        #eg.whoami()
         id = tree.AppendItem(
             parentId,
             self.GetLabel(), 
@@ -119,8 +139,8 @@ class TreeItem(object):
         return id
         
     
+    @eg.LogIt
     def CreateTreeItemAt(self, tree, parentId, pos):
-        eg.whoami()
         if pos == -1 or pos >= len(self.parent.childs):
             return TreeItem.CreateTreeItem(self, tree, parentId)
         else:
@@ -314,9 +334,9 @@ class TreeItem(object):
         return self.name
     
     
+    @eg.LogIt
     def RenameTo(self, newName):
         eg.AssertThread()
-        eg.whoami()
         self.name = newName
         self.tree.SetItemText(self.id, newName)
         wx.CallAfter(self.Refresh)
@@ -333,8 +353,8 @@ class TreeItem(object):
         pass
     
     
+    @eg.LogIt
     def MoveItemTo(self, newParentItem, pos):
-        eg.whoami()
         tree = self.tree
         tree.Freeze()
         try:
@@ -483,5 +503,6 @@ class TreeItem(object):
         return self
     
     
+    @eg.LogIt
     def __del__(self):
-        eg.whoami()
+        pass

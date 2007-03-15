@@ -1,3 +1,25 @@
+# This file is part of EventGhost.
+# Copyright (C) 2005 Lars-Peter Voss <lpv@eventghost.org>
+# 
+# EventGhost is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# EventGhost is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with EventGhost; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
 import os, sys, time
 import win32api, win32con
 import types
@@ -108,7 +130,6 @@ class WindowMatcher:
         timeout=0, 
         stop=2
     ):
-        #eg.whoami()
         self.timeout = timeout
         self.matchNum = matchNum or 0
         self.stop = stop
@@ -200,8 +221,9 @@ class WindowMatcher:
         print len(res), res, execution_time
         
         
+    @eg.LogIt
     def __del__(self):
-        eg.whoami()
+        pass
                 
                 
                 
@@ -302,7 +324,7 @@ class FindWindow(eg.ActionClass):
             return self.text.label % os.path.basename(exe_path or '')
     
     
-    @eg.logit()
+    @eg.LogIt
     def Configure(
         self, 
         program="", 
@@ -507,8 +529,8 @@ class FindWindow(eg.ActionClass):
         Add((5,5))
         Add(sizer1, 1, wx.EXPAND)
 
+        @eg.LogIt
         def get_result():
-            eg.whoami()
             res_list = []
             for cb, tb in options:
                 if not cb.IsChecked():
@@ -551,19 +573,20 @@ class FindWindow(eg.ActionClass):
                 return get_result()
     
 
+    @eg.LogIt
     def __del__(self):
-        eg.whoami()
+        pass
         
         
+    @eg.LogIt
     def OnSelectionChanged(self, event):
-        eg.whoami()
         event.Skip()
         tree = self.tree
         item = tree.GetSelection()
         if not item.IsOk():
             return
         hwnd = tree.GetPyData(item)
-        eg.notice("HWND:", hwnd)
+        eg.Notice("HWND:", hwnd)
         if tree.GetItemParent(item) == tree.root:
             # only selected a program
             pid = hwnd
@@ -641,8 +664,8 @@ class FindWindow(eg.ActionClass):
         set_option(count > 0, options[5], count or 1)
         
             
+    @eg.LogIt
     def OnFinderToolLeftClick(self, event=None):
-        eg.whoami()
         self.oldFramePosition = eg.mainFrame.GetPosition()
         self.oldDialogPosition = self.dialog.GetPosition()
         if self.config.hideOnDrag:
@@ -651,8 +674,8 @@ class FindWindow(eg.ActionClass):
         #event.Skip()
         
         
+    @eg.LogIt
     def OnFinderTool(self, event=None):
-        eg.whoami()
         if self.config.hideOnDrag:
             eg.mainFrame.SetPosition(self.oldFramePosition)
             self.dialog.SetPosition(self.oldDialogPosition)
@@ -819,23 +842,23 @@ class WindowTree(wx.TreeCtrl):
                 self.SetItemHasChildren(index, True)
                 
                 
+    @eg.LogIt
     def Refresh(self):
-        eg.whoami()
         self.Freeze()
         self.DeleteChildren(self.root)
         self.AppendPrograms()
         self.Thaw()
                           
                         
+    @eg.LogIt
     def Destroy(self):
-        eg.whoami()
         self.Unselect()
         self.imageList.Destroy()
         return wx.TreeCtrl.Destroy(self)
     
     
+    @eg.LogIt
     def SelectHwnd(self, hwnd):
-        eg.whoami()
         if hwnd is None:
             self.Unselect()
             return
@@ -865,7 +888,8 @@ class WindowTree(wx.TreeCtrl):
         self.SelectItem(last_item)            
         
         
+    @eg.LogIt
     def __del__(self):
-        eg.whoami()
+        pass
         
         

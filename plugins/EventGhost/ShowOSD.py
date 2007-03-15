@@ -1,3 +1,25 @@
+# This file is part of EventGhost.
+# Copyright (C) 2005 Lars-Peter Voss <lpv@eventghost.org>
+# 
+# EventGhost is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# EventGhost is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with EventGhost; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
 import threading
 import win32gui
 import win32con
@@ -12,8 +34,8 @@ from eg.WinAPI.Utils import GetMonitorDimensions
 class OSDFrame(wx.Frame):
     """ A shaped frame to display the OSD. """
     
+    @eg.LogIt
     def __init__(self, parent):
-        eg.whoami()
         wx.Frame.__init__(
             self, 
             parent, 
@@ -43,6 +65,7 @@ class OSDFrame(wx.Frame):
         self.SetPosition((-10000, -10000))
         
         
+    @eg.LogIt
     def ShowOSD(
         self, 
         osdText="", 
@@ -55,7 +78,6 @@ class OSDFrame(wx.Frame):
         timeout=3.0, 
         event=None
     ):        
-        eg.whoami()
         self.osdText = osdText
         if osdText.strip() == "":
             w = 0
@@ -180,8 +202,9 @@ class OSDFrame(wx.Frame):
         dc.DrawBitmap(self.bitmap, 0, 0, False)
 
 
+    @eg.LogIt
     def __del__(self):
-        eg.whoami()
+        pass
         
      
     
@@ -223,8 +246,8 @@ class ShowOSD(eg.ActionClass):
         wx.CallAfter(makeOSD)
         
 
+    @eg.LogIt
     def OnClose(self):
-        eg.whoami()
         #self.osdFrame.timer.cancel()
         #wx.CallAfter(self.osdFrame.Close)
         self.osdFrame = None
@@ -264,6 +287,7 @@ class ShowOSD(eg.ActionClass):
         return self.text.label % osdText
     
     
+    @eg.LogIt
     def Configure(
         self, 
         osdText="", 
@@ -275,7 +299,6 @@ class ShowOSD(eg.ActionClass):
         displayNumber=0, 
         timeout=3.0
     ):                   
-        eg.whoami()
         dialog = eg.ConfigurationDialog(self)
         text = self.text
         editTextCtrl = wx.TextCtrl(dialog, value=osdText)

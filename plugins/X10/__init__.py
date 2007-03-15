@@ -1,9 +1,5 @@
-#
-# plugins/X10/__init__.py
-#
-# Copyright (C) 2005 Lars-Peter Voss
-#
 # This file is part of EventGhost.
+# Copyright (C) 2005 Lars-Peter Voss <lpv@eventghost.org>
 # 
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -210,7 +206,6 @@ class X10Events:
         eCommandType, 
         varTimestamp
     ):
-        #eg.whoami()
         if EKeyState == 3:
             return
         plugin = self.plugin

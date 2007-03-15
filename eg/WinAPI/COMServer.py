@@ -11,6 +11,6 @@ class EventGhostCom:
         eg.TriggerEvent(eventString, payload)
 
     def BringToFront(self):
-        eg.mainFrame.BringToFront()
+        eg.app.OnCmdShowMainFrame()
 
 
