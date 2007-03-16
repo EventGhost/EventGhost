@@ -72,6 +72,7 @@ class Text:
 
 
 class RFOnOffRepeat(wx.GridBagSizer):
+    """sizer subclass to provice common elements within an sizer"""
     text = Text
     
     def __init__(self, parent, rows, state, repeat, repeatTime):
@@ -134,8 +135,9 @@ class RFOnOffRepeat(wx.GridBagSizer):
         )
         
 
-#ActionClass to send InterTechno RF signals
+
 class TransmitRFInterTechno(eg.ActionClass):
+    """ActionClass to send InterTechno RF signals"""
     description = Text.descriptionRF
     systemCodes = ("A", "B", "C", "D", "E", "F", "G", "H", "I",
         "J", "K", "L", "M", "N", "O", "P")
@@ -195,8 +197,8 @@ class TransmitRFInterTechno(eg.ActionClass):
             )
 
 
-#ActionClass to send Micro Electric RF signals
 class TransmitRFMicroElectric(eg.ActionClass):
+    """ActionClass to send Micro Electric RF signals"""
     description = Text.descriptionRF
     switches = ("A", "B", "C", "D")
 
@@ -275,8 +277,8 @@ class TransmitRFMicroElectric(eg.ActionClass):
             )
 
 
-#ActionClass to send Conrad RF signals
 class TransmitRFConrad(eg.ActionClass):
+    """ActionClass to send Conrad RF signals"""
     description = Text.descriptionRF
     systemCodes = ("1-1-1-1", "2-4-3-1", "3-2-3-4", "4-2-1-2", "1-1-4-3")
     switches = ("Master", "1", "2", "3", "4")
@@ -328,8 +330,8 @@ class TransmitRFConrad(eg.ActionClass):
             )
 
 
-#ActionClass to send IKEA RF signals
 class TransmitRFIkea(eg.ActionClass):
+    """ActionClass to send IKEA Koppla RF signals"""
     description = Text.descriptionRF
 
     def __call__(self, system, channels, level, gradual):
@@ -421,6 +423,7 @@ class TransmitRFIkea(eg.ActionClass):
 
 
 class Sconi(eg.PluginClass):
+    """Main Plugin class for the Sconi EG plugin"""
     canMultiLoad = False
     text = Text
     
