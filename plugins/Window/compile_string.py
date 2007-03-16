@@ -84,6 +84,10 @@ def compile_string(pattern):
         pattern += "$"
         return re.compile(pattern).match
     else:
-        return lambda s: s == pattern
+#        def compare(s):
+#            print repr(s), repr(pattern)
+#            return s == pattern
+#        return compare
+        return lambda s: unicode(s) == pattern
             
     

@@ -26,6 +26,7 @@ import os
 import sys
 
 def Start():
+    print "lang"
     import Init
     global eg
     eg = Init.EventGhost()
@@ -155,8 +156,8 @@ class LanguageEditor(wx.Frame):
         
         imageList = wx.ImageList(16, 16)
         for pathName in (
-            "eg//CorePlugins//EventGhost//DisableItem.png", 
-            "eg//CorePlugins//EventGhost//EnableItem.png", 
+            "plugins//EventGhost//DisableItem.png", 
+            "plugins//EventGhost//EnableItem.png", 
             "images//folder.png", 
             "images//root.png", 
             "images//new.png", 
@@ -179,12 +180,12 @@ class LanguageEditor(wx.Frame):
         #import MainFrame
         from ActionThread import CORE_PLUGINS
         
-        for pluginIdent in CORE_PLUGINS:
-            plugin = eg.OpenPlugin(pluginIdent)
-            plugin.info.isStarted = True
+#        for pluginIdent in CORE_PLUGINS:
+#            plugin = eg.OpenPlugin(pluginIdent, pluginIdent, ())
+#            plugin.info.isStarted = True
         for plugin in os.listdir("Plugins"):
             if not plugin.startswith("."):
-                OpenPlugin(plugin)
+                OpenPlugin(plugin, plugin, ())
         
         rightPanel = wx.Panel(splitter)
         disabledColour = rightPanel.GetBackgroundColour()
@@ -443,7 +444,9 @@ class LanguageEditor(wx.Frame):
                 elif isSequence:
                     if transValue is UnassignedValue:
                         return ""
-                    Add(INDENT * indent + repr(transValue) + ",\n")
+                    if type(transValue) == type(""):
+                        transValue = transValue.decode("latin-1")
+                    Add(INDENT * indent + repr(unicode(transValue)) + ",\n")
                 elif transValue is not UnassignedValue and transValue != "":
                     #if type(transValue) == type(u""):
                     #    transValue = transValue.decode("latin-1")

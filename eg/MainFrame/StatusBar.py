@@ -57,8 +57,8 @@ class StatusBar(wx.StatusBar):
     
     @eg.LogIt
     def Destroy(self):
-        self.Unbind(wx.EVT_SIZE)
-        self.Unbind(wx.EVT_IDLE)
+        #self.Unbind(wx.EVT_SIZE)
+        #self.Unbind(wx.EVT_IDLE)
         return wx.StatusBar.Destroy(self)
 
     
@@ -85,7 +85,6 @@ class StatusBar(wx.StatusBar):
         eg.onlyLogAssigned = self.cb.GetValue()
         
         
-    @eg.LogIt
     def SetState(self, flag):
         self.icon.SetBitmap(self.icons[flag])
             

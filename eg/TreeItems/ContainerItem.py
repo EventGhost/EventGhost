@@ -64,14 +64,6 @@ class ContainerItem(TreeItem):
         return id
 
     
-    def DeleteTreeItem(self, tree):
-        if self.id is not None:
-            for child in self.childs:
-                child.DeleteTreeItem(tree)
-            tree.Delete(self.id)
-            self.id = None
-        
-        
     def _Delete(self):
         for child in self.childs[:]:
             child._Delete()
@@ -98,15 +90,16 @@ class ContainerItem(TreeItem):
     def AddChild(self, child, pos=-1):
         childs = self.childs
         tree = self.tree
+        isValidId = self.HasValidId()
         id = self.id
-        if len(childs) == 0 and id is not None:
+        if len(childs) == 0 and isValidId:
             tree.SetItemHasChildren(id)
         if pos == -1 or pos >= len(childs):
             childs.append(child)
             pos = -1
         else:
             childs.insert(pos, child)
-        if id is not None and (id == self.root.id or tree.IsExpanded(id)):
+        if isValidId and (id == self.root.id or tree.IsExpanded(id)):
             child.CreateTreeItemAt(tree, id, pos)
             
             
@@ -114,9 +107,9 @@ class ContainerItem(TreeItem):
         pos = self.childs.index(child)
         del self.childs[pos]
         tree = self.tree
-        if child.id is not None:
-            child.DeleteTreeItem(tree)
-        if len(self.childs) == 0 and self.id is not None:
+        if child.HasValidId():
+            tree.Delete(child.id)
+        if len(self.childs) == 0 and self.HasValidId():
             tree.SetItemHasChildren(self.id, False)
         return pos
             

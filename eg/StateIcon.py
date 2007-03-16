@@ -52,7 +52,8 @@ class StateIcon(wx.TaskBarIcon):
     def SetIcons(self, state):
         if self.alive:
             self.SetIcon(self.stateIcons[state])
-            eg.mainFrame.statusBar.SetState(state)
+            if eg.document.frame:
+                eg.document.frame.statusBar.SetState(state)
         
         
     def SetIconsDummy(self, state):
@@ -60,7 +61,6 @@ class StateIcon(wx.TaskBarIcon):
         
         
     def SetProcessingState(self, state, event):
-        return
         self.reentrantLock.acquire()
         try:
             if state == 0:

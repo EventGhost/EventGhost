@@ -212,17 +212,17 @@ class Plugin:
             name = u'Sprungbefehl'
             description = u'Springt zu einem anderen Makro, wenn die angegebene Bedingung zutrifft.'
             choices = [
-                'letzter Befehl erfolgreich',
-                'letzter Befehl nicht erfolgreich',
-                'Immer',
+                u'letzter Befehl erfolgreich',
+                u'letzter Befehl nicht erfolgreich',
+                u'Immer',
             ]
             labels = [
-                'Wenn erfolgreich springe zu "%s"',
-                'Wenn erfolglos springe zu "%s"',
-                'Springe zu "%s"',
-                'Wenn erfolgreich springe zu "%s" und kehre zur\xfcck',
-                'Wenn erfolglos springe zu "%s" und kehre zur\xfcck',
-                'Springe zu "%s" und kehre zur\xfcck',
+                u'Wenn erfolgreich springe zu "%s"',
+                u'Wenn erfolglos springe zu "%s"',
+                u'Springe zu "%s"',
+                u'Wenn erfolgreich springe zu "%s" und kehre zur\xfcck',
+                u'Wenn erfolglos springe zu "%s" und kehre zur\xfcck',
+                u'Springe zu "%s" und kehre zur\xfcck',
             ]
             mesg1 = u'W\xe4hle Makro...'
             mesg2 = u'Bitte w\xe4hlen sie das Makro, welches ausgef\xfchrt werden soll, wenn die Bedingung zutrifft.'
@@ -241,11 +241,11 @@ class Plugin:
             description = u'Zeigt einen einfaches "On Screen Display"'
             alignment = u'Ausrichtung:'
             alignmentChoices = [
-                'oben links',
-                'oben rechts',
-                'unten links',
-                'unten rechts',
-                'mittig',
+                u'oben links',
+                u'oben rechts',
+                u'unten links',
+                u'unten rechts',
+                u'mittig',
             ]
             display = u'Zeige auf Monitor:'
             editText = u'Darzustellender Text:'
@@ -260,6 +260,8 @@ class Plugin:
             wait2 = u'Sekunden automatisch aus. (0 = nicht ausblenden)'
             xOffset = u'Horizontaler Versatz X:'
             yOffset = u'Vertikaler Versatz Y:'
+        class StopIf:
+            name = u'Stoppe wenn'
         class StopProcessing:
             name = u'Beende Bearbeitung dieses Ereignisses'
             description = u'Wird dieser Befehl ausgef\xfchrt, dann sucht EventGhost nicht mehr nach weiteren Makros, die zu dem aktuellen Ereignis passen w\xfcrden.'
@@ -293,19 +295,19 @@ class Plugin:
             FilePath = u'Pfad zur ausf\xfchrbaren Datei:'
             Parameters = u'Aufruf-Parameter:'
             ProcessOptions = (
-                'Echtzeit',
-                'H\xf6her als normal',
-                'Normal',
-                'Niedriger als normal',
-                'Niedrig',
+                u'Echtzeit',
+                u'H\xf6her als normal',
+                u'Normal',
+                u'Niedriger als normal',
+                u'Niedrig',
             )
             ProcessOptionsDesc = u'Prozess Priorit\xe4t:'
             WaitCheckbox = u'Auf Beendigung des Programmes warten bevor fortgeschritten wird.'
             WindowOptions = (
-                'Normal',
-                'Minimiert',
-                'Maximiert',
-                'Versteckt',
+                u'Normal',
+                u'Minimiert',
+                u'Maximiert',
+                u'Versteckt',
             )
             WindowOptionsDesc = u'Fenster-Optionen:'
             WorkingDir = u'Startverzeichnis:'
@@ -333,14 +335,14 @@ class Plugin:
             description = u'Erm\xf6glicht es die Laufwerksschublade von CD und DVD-Laufwerken zu \xf6ffnen und zu schlie\xdfen.'
             driveLabel = u'Laufwerk:'
             labels = [
-                '\xd6ffne/Schlie\xdfe Laufwerksschublade: %s',
-                '\xd6ffne Laufwerksschublade: %s',
-                'Schlie\xdfe Laufwerksschublade: %s',
+                u'\xd6ffne/Schlie\xdfe Laufwerksschublade: %s',
+                u'\xd6ffne Laufwerksschublade: %s',
+                u'Schlie\xdfe Laufwerksschublade: %s',
             ]
             options = [
-                'Laufwerksschublade wechselnd \xf6ffnen und schlie\xdfen',
-                'Nur Laufwerksschublade \xf6ffnen',
-                'Nur Laufwerksschublade schlie\xdfen',
+                u'Laufwerksschublade wechselnd \xf6ffnen und schlie\xdfen',
+                u'Nur Laufwerksschublade \xf6ffnen',
+                u'Nur Laufwerksschublade schlie\xdfen',
             ]
             optionsLabel = u'W\xe4hle Aktion'
         class PlaySound:
@@ -365,9 +367,9 @@ class Plugin:
         class SetWallpaper:
             name = u'Desktop-Hintergrund wechseln'
             choices = (
-                'Zentriert',
-                'Nebeneinander',
-                'Gestreckt',
+                u'Zentriert',
+                u'Nebeneinander',
+                u'Gestreckt',
             )
             fileMask = u'Alle Bilddateien|*.jpg;*.bmp;*.gif|Alle Dateien (*.*)|*.*'
             text1 = u'Pfad zur Bilddatei:'
@@ -401,17 +403,17 @@ class Plugin:
             matchNum2 = u'zur\xfcckgeben'
             onlyForground = u'Nur vorderstes Fenster suchen'
             options = (
-                'Programm:',
-                'Fenster Name:',
-                'Fenster Klasse:',
-                'Unter-Fenster Name:',
-                'Unter-Fenster Klasse:',
+                u'Programm:',
+                u'Fenster Name:',
+                u'Fenster Klasse:',
+                u'Unter-Fenster Name:',
+                u'Unter-Fenster Klasse:',
             )
             refresh_btn = u'&Aktualisieren'
             stopMacro = [
-                'Stoppe Makro wenn Ziel nicht gefunden',
-                'Stoppe Makro wenn Ziel gefunden',
-                'Niemals Makro stoppen',
+                u'Stoppe Makro wenn Ziel nicht gefunden',
+                u'Stoppe Makro wenn Ziel gefunden',
+                u'Niemals Makro stoppen',
             ]
             testButton = u'Test'
             wait1 = u'Warte bis zu '
@@ -530,14 +532,14 @@ class Plugin:
         bytesize = u'Datenbits:'
         flowcontrol = u'Flusssteuerung:'
         handshakes = [
-            'Keine',
-            'Xon / Xoff',
-            'Hardware',
+            u'Keine',
+            u'Xon / Xoff',
+            u'Hardware',
         ]
         parities = [
-            'Keine',
-            'Ungerade',
-            'Gerade',
+            u'Keine',
+            u'Ungerade',
+            u'Gerade',
         ]
         parity = u'Parit\xe4t:'
         port = u'Port:'
@@ -594,10 +596,10 @@ class Plugin:
             wait2 = u'ms IR Inaktivit\xe4t vor Aussendung'
             zone = u'Zone:'
             zoneChoices = (
-                'Alle',
-                'Anschlussbuchse R-Kontakt',
-                'Anschlussbuchse L-Kontakt',
-                'Interner Sender',
+                u'Alle',
+                u'Anschlussbuchse R-Kontakt',
+                u'Anschlussbuchse L-Kontakt',
+                u'Interner Sender',
             )
             class LearnDialog:
                 acceptBurstButton = u'Akzeptiere Signalfolge'

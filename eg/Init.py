@@ -95,9 +95,10 @@ class EventGhost(object):
         self.versionStr = "%s.%s" % (version, buildNum)
         self.svnRevision = svnRevision
 
-        from Utils import LogIt, LogItWithReturn
+        from Utils import LogIt, LogItWithReturn, AssertNotMainThread
         self.LogIt = LogIt
         self.LogItWithReturn = LogItWithReturn
+        self.AssertNotMainThread = AssertNotMainThread
         
         from MessageReceiver import MessageReceiver
         self.messageReceiver = MessageReceiver()
@@ -115,6 +116,9 @@ class EventGhost(object):
                 pass
             self.Notice = _DummyFunc
         else:
+            import warnings
+            warnings.simplefilter('error', UnicodeWarning)
+
             if debugLevel == 2:
                 fd = open("Log.txt", "at")
                 class writer:
@@ -616,11 +620,4 @@ class EventGhost(object):
     def DummyFunc(*args, **kwargs):
         pass
 
-
-    def AssertThread(self, threadIdent=None):
-        return
-        if threadIdent is None:
-            threadIdent = self.mainThread
-        if self.debugLevel:
-            assert threadIdent == threading.currentThread()
             

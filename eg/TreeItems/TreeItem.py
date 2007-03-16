@@ -73,6 +73,8 @@ class TreeItem(object):
             attrib[key.lower()] = value
         get = attrib.get
         self.name = get("name", "")
+        if type(self.name) == type(""):
+            self.name = unicode(self.name, "utf8")
         self.isEnabled = not get('enabled') == "False"
         self.xmlId = TreeLink.NewXmlId(int(get('id', -1)), self)
 
@@ -157,29 +159,27 @@ class TreeItem(object):
             return id
     
     
-    def DeleteTreeItem(self, tree):
-        eg.AssertThread()
-        if self.id is not None:
-            tree.Delete(self.id)
-            self.id = None
+    def EnsureValidId(self, tree):
+        parent = self.parent
+        parent.EnsureValidId(tree)
+        if not tree.IsExpanded(parent.id):
+            tree.Expand(parent.id)
+            
         
         
+    def HasValidId(self):
+        parent = self.parent
+        if not parent.HasValidId():
+            return False
+        return self.tree.IsExpanded(parent.id)
+    
+    
+    #@eg.AssertNotMainThread
     def Select(self):
-        eg.AssertThread()
         tree = self.tree
-        if tree is None:
-            return
-        if self.id is None:
-            root = self.root
-            stack = []
-            item = self.parent
-            while item is not root:
-                stack.append(item)
-                item = item.parent
-            for item in reversed(stack):
-                if not tree.IsExpanded(item.id):
-                    tree.Expand(item.id)
-        tree.SelectItem(self.id)
+        if tree:
+            self.EnsureValidId(tree)
+            tree.SelectItem(self.id)
         
         
     def GetPositionData(self):
@@ -189,11 +189,11 @@ class TreeItem(object):
         return TreePosition(self)
     
     
+    @eg.AssertNotMainThread
     def Delete(self):
-        eg.AssertThread()
-        self._Delete()
-        if self.id:
+        if self.HasValidId():
             self.tree.Delete(self.id)
+        self._Delete()
 
 
     def _Delete(self):
@@ -335,8 +335,8 @@ class TreeItem(object):
     
     
     @eg.LogIt
+    @eg.AssertNotMainThread
     def RenameTo(self, newName):
-        eg.AssertThread()
         self.name = newName
         self.tree.SetItemText(self.id, newName)
         wx.CallAfter(self.Refresh)
@@ -354,6 +354,7 @@ class TreeItem(object):
     
     
     @eg.LogIt
+    @eg.AssertNotMainThread
     def MoveItemTo(self, newParentItem, pos):
         tree = self.tree
         tree.Freeze()
@@ -373,7 +374,7 @@ class TreeItem(object):
     
     def Enable(self, enable=True):
         self.isEnabled = enable
-        if self.id is not None:
+        if self.HasValidId():
             self.tree.SetItemImage(
                 self.id,
                 self.iconIndex + (not enable), 
@@ -446,8 +447,7 @@ class TreeItem(object):
         
         
     def DoPrint(self, text):
-        wRef = weakref.ref(self)
-        eg.log.DoPrint(text, self.iconIndex, wRef)
+        eg.log.DoItemPrint(text, self.iconIndex, self)
         
     
     def DropTest(self, cls):

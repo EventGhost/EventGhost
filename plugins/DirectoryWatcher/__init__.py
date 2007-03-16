@@ -53,14 +53,7 @@ class DirectoryWatcher(eg.PluginClass):
     text = Text
     canMultiLoad = True
     
-    @eg.LogIt
-    def __init__(self):
-        self.isEnabled = False
-
-
-    @eg.LogIt
     def __start__(self, path, includeSubdirs):
-        self.isEnabled = True
         self.stopEvent = win32event.CreateEvent(None, 1, 0, None)
         self.path = path
         self.includeSubdirs = includeSubdirs
@@ -70,17 +63,10 @@ class DirectoryWatcher(eg.PluginClass):
         startupEvent.wait(3)
         
         
-    @eg.LogIt
     def __stop__(self):
-        self.isEnabled = False
         if self.thread is not None:
             win32event.PulseEvent(self.stopEvent)
             self.thread.join(5.0)
-        
-        
-    @eg.LogIt
-    def __close__(self):
-        pass
         
         
     def TestFile(self, path):
@@ -121,7 +107,10 @@ class DirectoryWatcher(eg.PluginClass):
                     win32con.FILE_SHARE_READ|win32con.FILE_SHARE_WRITE,
                     None,
                     win32con.OPEN_EXISTING,
-                    win32con.FILE_FLAG_BACKUP_SEMANTICS|win32con.FILE_FLAG_OVERLAPPED,
+                    (
+                        win32con.FILE_FLAG_BACKUP_SEMANTICS
+                        |win32con.FILE_FLAG_OVERLAPPED
+                    ),
                     None
                 )
             except pywintypes.error, e:
@@ -156,19 +145,19 @@ class DirectoryWatcher(eg.PluginClass):
                     size = GetOverlappedResult(hDir, overlapped, 1)
                     results = FILE_NOTIFY_INFORMATION(buffer, size)
                     for action, file in results:
-                        full_filename = os.path.join(self.path, file)
+                        fullFilename = os.path.join(self.path, file)
                         if action ==  1: 
-                            self.TriggerEvent("Created", (full_filename,))
+                            self.TriggerEvent("Created", (fullFilename,))
                         elif action ==  2: 
-                            self.TriggerEvent("Deleted", (full_filename,))
+                            self.TriggerEvent("Deleted", (fullFilename,))
                         elif action ==  3: 
-                            self.TriggerEvent("Updated", (full_filename,))
+                            self.TriggerEvent("Updated", (fullFilename,))
                         elif action == 4:
-                            renamePath = full_filename
+                            renamePath = fullFilename
                         elif action == 5:
                             self.TriggerEvent(
                                 "Renamed", 
-                                (renamePath, full_filename)
+                                (renamePath, fullFilename)
                             )
                             renamePath = None
                 elif rc == WAIT_OBJECT_0+1:

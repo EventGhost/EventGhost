@@ -68,10 +68,9 @@ config = eg.GetConfig("mainFrame", DefaultConfig)
 class MainFrame(wx.Frame):
     """ This is the MainFrame of EventGhost """
         
+    @eg.AssertNotMainThread
     def __init__(self, document):
         """ Create the MainFrame """
-        eg.AssertThread()
-        
         text = eg.text
         self.document = document
         self.menuState = eg.Bunch()
@@ -518,7 +517,7 @@ class MainFrame(wx.Frame):
         tbb.Paste.Enable(canPaste)
         
         
-    @eg.LogIt
+    #@eg.LogIt
     def GetEditCmdState(self, focus):
         if focus is None:
             return (False, False, False, False)
@@ -902,8 +901,10 @@ class MainFrame(wx.Frame):
         
         
     def OnCmdCollectGarbage(self, event):
-        print gc.collect()
-        print gc.garbage
+        gc.set_debug(gc.DEBUG_SAVEALL)
+        print "unreachable object count:", gc.collect()
+        from pprint import pprint
+        pprint(gc.garbage)
         
         
     def OnCmdReset(self, event):

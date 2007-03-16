@@ -25,7 +25,7 @@ from collections import deque
 from types import UnicodeType
 from time import time
 import codecs
-
+import weakref
 import sys
 
 oldStdOut = sys.stdout
@@ -51,7 +51,7 @@ class Log:
         self.data = deque()
         self.maxlength = 5000
         self.ctrl = DummyLogCtrl()
-        
+        return
         if eg.debugLevel:
             class StdOut:
                 def write(self2, data):
@@ -114,10 +114,15 @@ class Log:
                 data.popleft()
 
         
-    def DoPrint(self, text, icon=0, wRef=None):
-        self.Write(text + "\n", icon, wRef)
+    def DoPrint(self, text, icon=0):
+        self.Write(text + "\n", icon, None)
         
         
+    def DoItemPrint(self, text, icon, item):
+        wRef = weakref.ref(item)
+        self.Write(text + "\n", icon, wRef)        
+            
+            
     def LogEvent(self, event):
         """Store and display an EventGhostEvent in the logger."""
         payload = event.payload

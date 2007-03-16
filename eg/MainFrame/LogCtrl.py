@@ -131,8 +131,8 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         event.Skip()
 
 
+    @eg.AssertNotMainThread
     def SetData(self, data):
-        eg.AssertThread()
         #self.Freeze()
         self.data = collections.deque(data)
         self.SetItemCount(len(data))
@@ -194,7 +194,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             wx.LIST_STATE_SELECTED
         )
         if item != -1:
-            text = self.data[item][0]
+            text = self.OnGetItemText(item, 0)
             item = self.GetNextItem(
                 item, 
                 wx.LIST_NEXT_ALL, 
@@ -202,7 +202,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             )
             while item != -1:
                 lines += 1
-                text += "\r\n" + self.GetItemLineText(item)
+                text += "\r\n" + self.OnGetItemText(item, 0)
                 item = self.GetNextItem(
                     item, 
                     wx.LIST_NEXT_ALL, 
@@ -282,8 +282,8 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         return self.data[item][1]
     
 
+    @eg.AssertNotMainThread
     def WriteLine(self, line, icon, wRef, when):
-        eg.AssertThread()
         data = self.data
         if len(data) >= self.maxlength:
              self.Freeze()

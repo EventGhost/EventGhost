@@ -243,8 +243,8 @@ class EventDropTarget(wx.PyDropTarget):
         
 class TreeCtrl(wx.TreeCtrl):
     
+    @eg.AssertNotMainThread
     def __init__(self, parent, id=-1, document=None):
-        eg.AssertThread()
         self.frame = parent
         self.document = document
         wx.TreeCtrl.__init__(
@@ -279,17 +279,10 @@ class TreeCtrl(wx.TreeCtrl):
         Bind(wx.EVT_TREE_ITEM_GETTOOLTIP, self.OnToolTip)
         Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnItemActivate)
         Bind(wx.EVT_TREE_BEGIN_DRAG, self.OnBeginDrag)
-        
-        def OnSelectionChanged(event):
-            id = event.GetItem()
-            item = self.GetPyData(id)
-            document.selection = item
-            document.selectionEvent.Fire(item)
-            event.Skip()
-        Bind(wx.EVT_TREE_SEL_CHANGED, OnSelectionChanged)
+        Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
         
         if eg.debugLevel:
-            Bind(wx.EVT_TREE_ITEM_GETTOOLTIP, self.OnTooTip)
+            Bind(wx.EVT_TREE_ITEM_GETTOOLTIP, self.OnToolTip)
         Bind(wx.EVT_TREE_ITEM_EXPANDED, self.OnExpanded)
 
         id = wx.NewId()
@@ -313,28 +306,14 @@ class TreeCtrl(wx.TreeCtrl):
         pass
     
     
+    @eg.AssertNotMainThread
     def SetData(self):
-        eg.AssertThread()
         self.Freeze()
         try:
-            root = self.document.root
-            self.root = root
-            selectItem = self.document.selection
-            firstItem = root
-#            treeStateData = config.treeStateData
-#            if (
-#                treeStateData 
-#                and treeStateData.guid == root.guid
-#                and treeStateData.time == root.time
-#            ):
-#                tree.SetExpandState(treeStateData.state)
-#                selectItem = tree.ResolvePath(treeStateData.selected)
-#                    
-#                if hasattr(treeStateData, "first"):
-#                    firstItem = tree.ResolvePath(treeStateData.first)
-            root.CreateTreeItem(self, None)
-            self.Expand(root.id)
-            selectItem.Select()
+            self.root = self.document.root
+            self.root.CreateTreeItem(self, None)
+            self.Expand(self.root.id)
+            self.document.selection.Select()
             firstVisibleItem = self.document.firstVisibleItem
             if firstVisibleItem and firstVisibleItem.id is not None:
                 self.ScrollTo(firstVisibleItem.id)
@@ -342,26 +321,16 @@ class TreeCtrl(wx.TreeCtrl):
             self.Thaw()
 
     
+    @eg.AssertNotMainThread
     @eg.LogIt
     def Destroy(self):
-        eg.AssertThread()
         document = self.document
         document.firstVisibleItem = self.GetPyData(self.GetFirstVisibleItem())
         document.SetTree(None)
+        self.Freeze()
+        self.Unbind(wx.EVT_TREE_SEL_CHANGED)
+        self.DeleteAllItems()
         return wx.TreeCtrl.Destroy(self)
-        #self.SetFocus()
-        tree = self.treeCtrl
-        selection = self.document.selection
-        firstItem = tree.GetPyData(tree.GetFirstVisibleItem())
-        class data:
-            guid = tree.root.guid
-            time = tree.root.time
-            state = tree.GetExpandState()
-            selected = selection.GetPath() if selection else None
-            first = firstItem.GetPath()
-        config.treeStateData = data
-        self.treeCtrl = None
-        wx.CallAfter(tree.Destroy)
 
     
     def OnRightDown(self, event):
@@ -379,7 +348,15 @@ class TreeCtrl(wx.TreeCtrl):
         self.frame.SetupEditMenu(self.frame.popupMenuItems)
         self.PopupMenu(self.frame.popupMenu)
 
+        
+    #@eg.LogIt
+    def OnSelectionChanged(self, event):
+        id = event.GetItem()
+        item = self.GetPyData(id)
+        self.document.selection = item
+        event.Skip()
 
+    
     def OnExpanded(self, event):
         if self.OnItemExpandingItem == event.GetItem() and self.OnItemExpandingNum:
             self.ScrollTo(self.OnItemExpandingPos)
@@ -393,7 +370,7 @@ class TreeCtrl(wx.TreeCtrl):
         item.isExpanded = False
         
         
-    @eg.LogIt
+    #@eg.LogIt
     def OnItemExpanding(self, event):
         if not self.OnItemExpandingNum:
             self.OnItemExpandingItem = event.GetItem()
@@ -422,13 +399,17 @@ class TreeCtrl(wx.TreeCtrl):
         item = self.GetPyData(id)
         item.isExpanded = False
         self.Collapse(id)
+        self.DeleteChildren(id)
         self.SetItemHasChildren(id)
-        for child in item.childs:
-            child.DeleteTreeItem(self)
+        newSelectedId = self.GetSelection()
+        newSelectedItem = self.GetPyData(newSelectedId)
+        document = self.document
+        if newSelectedItem is not document.selection:
+            document.selection = newSelectedItem
         self.Thaw()
         
 
-    def OnTooTip(self, event):
+    def OnToolTip(self, event):
         id = event.GetItem()
         item = self.GetPyData(id)
         if not item:

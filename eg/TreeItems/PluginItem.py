@@ -59,7 +59,7 @@ class PluginItem(ActionItem):
         pluginStr = node.attrib['file']
         self.isStarted = False
         self.pluginFile = pluginStr
-        self.executable = plugin = eg.OpenPlugin(pluginStr, ident, self.args)
+        self.executable = plugin = eg.OpenPlugin(pluginStr, ident, self.args, self)
         if plugin is None or plugin.info.initFailed:
             eg.PrintError("Error loading plugin: %s" % pluginStr)
             self.name = pluginStr + " not found"
@@ -133,8 +133,9 @@ class PluginItem(ActionItem):
             self.executable.__start__(*self.args)
             self.executable.info.isStarted = True
         except eg.Exception, e:
-            eg.PrintError(eg.text.Error.pluginStartError % self.executable.name)
-            eg.PrintError(e.message)
+            msg = eg.text.Error.pluginStartError % self.executable.name
+            msg += "\n" + unicode(e.message)
+            eg.log.DoItemPrint(msg, 1, self)
             self.SetErrorState(True)
         except:
             eg.PrintError(eg.text.Error.pluginStartError % self.executable.name)

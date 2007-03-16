@@ -232,14 +232,13 @@ class PluginClass(object):
         Print an error message to the logger.
         
         Prefer to use self.PrintError instead of eg.PrintError, since this
-        method might get enhanced in the future to give the user better
-        information about the source of the error.
+        method gives the user better information about the source of the error.
         
         :Parameters:
           `msg` : string
             The error message you want to have printed to the logger
         """
-        eg.PrintError(msg)
+        eg.log.DoItemPrint(msg, 1, self.info.treeItem)
         
         
     def Configure(self, *args):

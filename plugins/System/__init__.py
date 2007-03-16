@@ -276,7 +276,7 @@ class OpenDriveTray(eg.ActionClass):
                     0
                 )
             except:
-                self.plugin.PrintError(
+                self.PrintError(
                     "Couldn't find drive %s:" % drive[:1].upper()
                 )
                 return 
@@ -295,7 +295,7 @@ class OpenDriveTray(eg.ActionClass):
                     0, 
                     0)
             except:
-                self.plugin.PrintError(
+                self.PrintError(
                     "Couldn't find drive %s:" % drive[:1].upper()
                 )
                 return 

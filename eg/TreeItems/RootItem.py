@@ -85,6 +85,20 @@ class RootItem(ContainerItem):
             child._Delete()
 
 
+    #@eg.AssertNotMainThread
+    def Select(self):
+        if self.tree:
+            self.tree.SelectItem(self.id)
+
+    
+    def EnsureValidId(self, tree):
+        pass
+            
+            
+    def HasValidId(self):
+        return self.tree is not None
+    
+        
     def IsEditable(self):
         return False
     

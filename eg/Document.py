@@ -55,7 +55,7 @@ class Observable:
 gTreeItemTypes = ["TreeItem", "ContainerItem", "EventItem", "ActionItem",
     "PluginItem", "FolderItem", "MacroItem", "RootItem", "AutostartItem"]    
 
-class Document:
+class Document(object):
     
     def __init__(self):
         class ItemMixin:
@@ -77,7 +77,7 @@ class Document:
         self.undoIdOnSave = 0
         self.listeners = {}
         self.undoEvent = eg.EventHook()
-        self.selection = None
+        #self.selection = None
         self.selectionEvent = eg.EventHook()
         self.isDirty = Observable(False)
         self.filePath = None
@@ -85,6 +85,17 @@ class Document:
         self.root = None
         self.firstVisibleItem = None
         self.frame = None
+        self._selection = None
+        
+    def GetSelection(self):
+        return self._selection
+    
+    
+    def SetSelection(self, value):
+        self._selection = value
+        self.selectionEvent.Fire(value)
+        
+    selection = property(fget=GetSelection, fset=SetSelection)
         
         
     def SetFilePath(self, filePath):
@@ -125,6 +136,8 @@ class Document:
         self.isInLabelEdit = False
         eg.TreeLink.StopLoad()
         self.isDirty.set(False)
+        if self.tree:
+            wx.CallAfter(self.tree.SetData)
         return root
         
     
@@ -146,10 +159,20 @@ class Document:
         self.selection = root
         eg.TreeLink.StopLoad()
         self.isDirty.set(False)
+        self.AfterLoad()
         if self.tree:
-            self.tree.SetData()
-        
+            wx.CallAfter(self.tree.SetData)
         return root
+        
+        
+    def AfterLoad(self):
+        tsData = eg.config.treeStateData
+        if tsData.guid == self.root.guid and tsData.time == self.root.time:
+            self.SetExpandState(tsData.expandState)
+            self.selection = self.FindItemWithPath(tsData.selection)
+            self.firstVisibleItem = self.FindItemWithPath(
+                tsData.firstVisibleItem
+            )
         
         
     def WriteFile(self, filePath=None):
@@ -181,9 +204,15 @@ class Document:
     @eg.LogIt
     def Close(self):
         eg.config.hideOnStartup = self.frame is None
-        eg.config.autoloadFilePath = self.filePath
         if self.frame is not None:
             self.frame.Destroy()
+        eg.config.autoloadFilePath = self.filePath
+        stateData = eg.config.treeStateData
+        stateData.guid = self.root.guid
+        stateData.time = self.root.time
+        stateData.expandState = self.GetExpandState()
+        stateData.selection = self.selection.GetPath()
+        stateData.firstVisibleItem = self.firstVisibleItem.GetPath()
     
     
     @eg.LogIt
@@ -321,6 +350,7 @@ class Document:
     def GetExpandState(self):
         vector = []
         append = vector.append
+        ContainerItem = eg.ContainerItem
         def _Traverse(item, i):
             if isinstance(item, ContainerItem):
                 i += 1
@@ -337,7 +367,7 @@ class Document:
     def SetExpandState(self, vector):
         if vector is None:
             return
-        
+        ContainerItem = eg.ContainerItem
         def _Traverse(item, i):
             if isinstance(item, ContainerItem):
                 i += 1

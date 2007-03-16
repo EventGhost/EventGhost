@@ -105,6 +105,7 @@ class PluginInfoBase(object):
     originalText = None
     isStarted = False
     label = None
+    treeItem = None
         
     @classmethod
     def LoadModule(pluginInfo):
@@ -159,14 +160,16 @@ class PluginInfoBase(object):
     
     
     @classmethod
-    def CreatePluginInstance(pluginInfo, evalName):
+    def CreatePluginInstance(pluginInfo, evalName, treeItem):
+        info = pluginInfo()
+        info.treeItem = treeItem
         pluginCls = pluginInfo.pluginCls
         try:
             plugin = pluginCls.__new__(pluginCls)
         except:
             eg.PrintTraceback()
             return None
-        plugin.info = info = pluginInfo()
+        plugin.info = info
         class _Exception(eg.Exception):
             pass
         plugin.Exception = _Exception
@@ -311,7 +314,7 @@ def GetPluginInfo(pluginName):
 
 
 @eg.LogIt
-def OpenPlugin(pluginName, evalName, args):
+def OpenPlugin(pluginName, evalName, args, treeItem=None):
     #from time import clock
     #startTime = clock()
     info = GetPluginInfo(pluginName)
@@ -320,9 +323,12 @@ def OpenPlugin(pluginName, evalName, args):
     if info.pluginCls is None:
         if not info.LoadModule():
             return None
-    plugin = info.CreatePluginInstance(evalName)
+    plugin = info.CreatePluginInstance(evalName, treeItem)
     #eg.Notice(clock() - startTime)
-    plugin.info.label = plugin.GetLabel(*args)
+    try:
+        plugin.info.label = plugin.GetLabel(*args)
+    except:
+        plugin.info.label = plugin.info.name
     return plugin
 
         

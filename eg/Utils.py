@@ -142,7 +142,24 @@ def LogItWithReturn(func):
     return LogItWrapper
         
 
+def AssertNotMainThread(func):
+    if not eg.debugLevel:
+        return func
+    def AssertWrapper(*args, **kwargs):
+        assert eg.mainThread == threading.currentThread()
+        return func(*args, **kwargs)
+    return AssertWrapper
 
+    
+def AssertNotActionThread(func):
+    if not eg.debugLevel:
+        return func
+    def AssertWrapper(*args, **kwargs):
+        assert eg.actionThread == threading.currentThread()
+        return func(*args, **kwargs)
+    return AssertWrapper
+
+    
 def ParseString(text, filterFunc=None):
     start = 0
     chunks = []

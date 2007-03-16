@@ -44,6 +44,8 @@ class DefaultConfig:
     limitMemory = True
     limitMemorySize = 8
     confirmDelete = True
+    class treeStateData:
+        guid = None
     class plugins:
         pass
 
