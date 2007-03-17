@@ -49,7 +49,8 @@ class ActionItem(TreeItem):
     executable = None
     args = ()
     needsCompile = False
-    canExecute = True
+    isExecutable = True
+    isConfigurable = True
     openConfigDialog = None
 
 
@@ -204,7 +205,11 @@ class ActionItem(TreeItem):
             else:
                 result = None
         else:
-            result = executable.Configure(*self.args)
+            try:
+                result = executable.Configure(*self.args)
+            except:
+                eg.PrintError("Error while configuring: %s", self.GetLabel())
+                raise
         if self.openConfigDialog is not None:
             self.openConfigDialog.Destroy()
             self.openConfigDialog = None
@@ -257,8 +262,8 @@ class ActionItem(TreeItem):
         if eg.config.logActions:
             self.DoPrint(self.GetLabel())
         if self.shouldSelectOnExecute:
-            self.Select()
-            #wx.CallAfter(self.Select)
+            #self.Select()
+            wx.CallAfter(self.Select)
         eg.currentItem = self
         action = self.executable
         if not action:
@@ -273,12 +278,14 @@ class ActionItem(TreeItem):
                 eg.result = self.compiledArgs()
             else:
                 eg.result = action(*self.args)
-        except eg.Exception, e:
-            eg.PrintError(e.message)
-        except:
-            wx.CallAfter(self.Select)
-            label = self.executable.GetLabel(*self.args)
-            eg.PrintTraceback(eg.text.Error.InAction % label, 1)
+        finally:
+            pass
+#        except eg.Exception, e:
+#            eg.PrintError(e.message)
+#        except:
+#            wx.CallAfter(self.Select)
+#            label = self.GetLabel()
+#            eg.PrintTraceback(eg.text.Error.InAction % label, 1)
 
 
     def DropTest(self, cls):

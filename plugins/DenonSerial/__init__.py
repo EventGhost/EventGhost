@@ -187,7 +187,7 @@ cmdList = (
 ('SMDTSESDiscrete','Surround Mode DTS ES DSCRT6.1','MSDTS ES DSCRT6.1', None),
 ('SMDTSESMatrix','Surround Mode DTS ES MTRX6.1','MSDTS ES MTRX6.1', None),
 ('SMDolbyHP','Surround Mode DOLBY H/P','MSDOLBY H/P', None),
-('SMDTS+DolbyHP','Surround Mode DTS+DOLBY H/P','MSDTS+DOLBY H/P', None),
+('SMDTSDolbyHP','Surround Mode DTS+DOLBY H/P','MSDTS+DOLBY H/P', None),
 ('SMHOMETHXCINEMA','Surround Mode HOME THX CINEMA','MSHOME THX CINEMA', None),
 ('SMTHX51','Surround Mode THX5.1','MSTHX5.1', None),
 ('SMTHXU2Cinema','Surround Mode THX U2 CINEMA','MSTHX U2 CINEMA', None),
@@ -343,8 +343,7 @@ class DenonSerial(eg.PluginClass):
             elif cmd_rangespec is not None:
                 # Command with argument
                 class ArgHandler(eg.ActionWithStringParameter):
-                    name = cmd_name
-                    description = cmd_text
+                    name = cmd_text
                     cmd = cmd_cmd
                     def __call__(self,data):
                         self.plugin.serial.write(self.cmd+str(data)+chr(13))
@@ -353,8 +352,7 @@ class DenonSerial(eg.PluginClass):
             else:
                 # Argumentless command
                 class Handler(eg.ActionClass):
-                    name = cmd_name
-                    description = cmd_text
+                    name = cmd_text
                     __call__ = createWriter(cmd_cmd)
                 Handler.__name__ = cmd_name
                 group.AddAction(Handler)

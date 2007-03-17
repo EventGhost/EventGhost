@@ -281,7 +281,7 @@ class PythonScript(eg.ActionClass):
         if win is None:
             id = wx.NewId()
             self.openEditFrames[actionItem] = id
-            win = ScriptEditor(eg.app.mainFrame, id, actionItem, self)
+            win = ScriptEditor(eg.document.frame, id, actionItem, self)
         else:
             win.Show()
         win.Raise()

@@ -38,6 +38,7 @@ from TreeItem import TreeItem
 class PluginItem(ActionItem):
     xmlTag = "Plugin"
     iconIndex = eg.SetupIcons("plugin")
+    isRenameable = False            
     
     def WriteToXML(self):
         attr, text, childs = TreeItem.WriteToXML(self)
@@ -112,8 +113,8 @@ class PluginItem(ActionItem):
         if eg.config.logActions:
             self.DoPrint(self.name)
         if self.shouldSelectOnExecute:
-            self.Select()
-            #wx.CallAfter(self.Select)
+            #self.Select()
+            wx.CallAfter(self.Select)
         self.StartPlugin()
         eg.result = self.executable
         return None, None
@@ -210,10 +211,6 @@ class PluginItem(ActionItem):
     
     def AskCut(self):
         return self.AskDelete()
-    
-    
-    def IsEditable(self):
-        return False
     
     
     def NeedsConfiguration(self):

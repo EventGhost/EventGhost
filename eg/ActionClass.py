@@ -73,7 +73,7 @@ class ActionClass(object):
         """
         s = self.name
         if args:
-            s += ': ' + str(args[0])
+            s += ': ' + unicode(args[0])
         return s
         
         

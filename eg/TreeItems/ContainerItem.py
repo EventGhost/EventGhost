@@ -46,6 +46,7 @@ class ContainerItem(TreeItem):
         self.isExpanded = node.attrib.get("expanded") == "True"
         
             
+    @eg.AssertNotMainThread
     def CreateTreeItem(self, tree, parentId):
         id = TreeItem.CreateTreeItem(self, tree, parentId)
         if len(self.childs):
@@ -55,6 +56,7 @@ class ContainerItem(TreeItem):
         return id
             
         
+    @eg.AssertNotMainThread
     def CreateTreeItemAt(self, tree, parentId, pos):
         id = TreeItem.CreateTreeItemAt(self, tree, parentId, pos)
         if len(self.childs):
@@ -81,12 +83,8 @@ class ContainerItem(TreeItem):
 #        return True
 #
         
-    def GetCount(self, count=0):
-        for child in self.childs:
-            count = child.GetCount(count)
-        return count + 1
-
-
+    @eg.AssertNotMainThread
+    @eg.LogIt
     def AddChild(self, child, pos=-1):
         childs = self.childs
         tree = self.tree
@@ -103,6 +101,7 @@ class ContainerItem(TreeItem):
             child.CreateTreeItemAt(tree, id, pos)
             
             
+    @eg.AssertNotMainThread
     def RemoveChild(self, child):
         pos = self.childs.index(child)
         del self.childs[pos]

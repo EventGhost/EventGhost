@@ -85,9 +85,11 @@ def compile_string(pattern):
         return re.compile(pattern).match
     else:
 #        def compare(s):
-#            print repr(s), repr(pattern)
+#            s = s.decode("latin1")
+#            print repr(s)
+#            print repr(pattern)
 #            return s == pattern
 #        return compare
-        return lambda s: unicode(s) == pattern
+        return lambda s: s == pattern
             
     

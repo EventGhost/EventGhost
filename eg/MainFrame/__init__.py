@@ -36,6 +36,13 @@ from eg import (
     RootItem, 
 )
 from eg.IconTools import GetIcon
+import UndoableCommands
+
+# local imports
+from LogCtrl import LogCtrl
+from TreeCtrl import TreeCtrl
+from StatusBar import StatusBar
+
 #from eg.WinAPI.Utils import BringHwndToFront
 
 PLUGIN_ICON = GetIcon('images/plugin.png')
@@ -157,7 +164,6 @@ class MainFrame(wx.Frame):
         self.SetMinSize((400, 200))
         
         # statusbar
-        from StatusBar import StatusBar
         self.statusBar = StatusBar(self)
         self.SetStatusBar(self.statusBar)
 
@@ -369,7 +375,6 @@ class MainFrame(wx.Frame):
 
     
     def CreateTreeCtrl(self):
-        from TreeCtrl import TreeCtrl
         treeCtrl = TreeCtrl(self, document=eg.document)
         self.document.SetTree(treeCtrl)
         self.treeCtrl = treeCtrl
@@ -390,7 +395,6 @@ class MainFrame(wx.Frame):
         
     
     def CreateLogCtrl(self):
-        from LogCtrl import LogCtrl
         logCtrl = LogCtrl(self)
         logCtrl.Freeze()
         self.logCtrl = logCtrl
@@ -501,7 +505,7 @@ class MainFrame(wx.Frame):
 
     @eg.LogIt
     def OnClipboardChange(self):
-        if self.lastFocus == "Tree":
+        if self.lastFocus == self.treeCtrl:
             canPaste = self.document.selection.CanPaste()
             self.toolBar.buttons.Paste.Enable(canPaste)
     
@@ -510,11 +514,11 @@ class MainFrame(wx.Frame):
         if focus == self.lastFocus:
             return
         self.lastFocus = focus
-        tbb = self.toolBar.buttons
+        toolBarButtons = self.toolBar.buttons
         canCut, canCopy, canPaste, canDelete = self.GetEditCmdState(focus)
-        tbb.Cut.Enable(canCut)
-        tbb.Copy.Enable(canCopy)
-        tbb.Paste.Enable(canPaste)
+        toolBarButtons.Cut.Enable(canCut)
+        toolBarButtons.Copy.Enable(canCopy)
+        toolBarButtons.Paste.Enable(canPaste)
         
         
     #@eg.LogIt
@@ -545,10 +549,10 @@ class MainFrame(wx.Frame):
         menuState = self.menuState
         menuState.newEvent = bool(selection.DropTest(EventItem))
         menuState.newAction = not isFolder
-        menuState.edit = selection.IsConfigurable()
-        menuState.execute = selection.canExecute and selection.isEnabled
-        menuState.rename = selection.IsEditable()
-        menuState.disable = selection.CanDisable()
+        menuState.edit = selection.isConfigurable
+        menuState.execute = selection.isExecutable and selection.isEnabled
+        menuState.rename = selection.isRenameable
+        menuState.disable = selection.isDeactivatable
         
         tbb = self.toolBar.buttons
         canCut, canCopy, canPaste, canDelete =\
@@ -731,40 +735,35 @@ class MainFrame(wx.Frame):
         """ 
         Menu: Edit -> Add Plugin
         """
-        from UndoableCommands import CmdNewPlugin
-        eg.actionThread.Call(CmdNewPlugin().Do, self.document)
+        UndoableCommands.NewPlugin().Do(self.document)
             
             
     def OnCmdNewEvent(self, event):
         """ 
         Menu: Edit -> New Event
         """
-        from UndoableCommands import CmdNewEvent
-        eg.actionThread.Call(CmdNewEvent().Do, self.document)
+        UndoableCommands.NewEvent().Do(self.document)
                 
                 
     def OnCmdNewFolder(self, event):
         """ 
         Menu: Edit -> New Folder
         """
-        from UndoableCommands import CmdNewFolder
-        eg.actionThread.Call(CmdNewFolder().Do, self.document)
+        UndoableCommands.NewFolder().Do(self.document)
         
     
     def OnCmdNewMacro(self, event):
         """ 
         Menu: Edit -> New Macro
         """
-        from UndoableCommands import CmdNewMacro
-        eg.actionThread.Call(CmdNewMacro().Do, self.document)
+        UndoableCommands.NewMacro().Do(self.document)
         
     
     def OnCmdNewAction(self, event):
         """ 
         Menu: Edit -> New Action
         """        
-        from UndoableCommands import CmdNewAction
-        eg.actionThread.Call(CmdNewAction().Do, self.document)
+        UndoableCommands.NewAction().Do(self.document)
         
     
     def OnCmdRename(self, event):
@@ -792,8 +791,7 @@ class MainFrame(wx.Frame):
 
 
     def OnCmdDisabled(self, event):
-        from UndoableCommands import CmdToggleEnable
-        CmdToggleEnable(self.document)
+        UndoableCommands.CmdToggleEnable(self.document)
 
 
     #------- view menu -------------------------------------------------------
@@ -825,12 +823,6 @@ class MainFrame(wx.Frame):
         self.UpdateViewOptions()
         
         
-    def OnCmdLogTime(self, event):
-        flag = event.IsChecked()
-        config.logTime = flag
-        self.logCtrl.SetTimeLogging(flag)
-    
-    
     def OnCmdLogTime(self, event):
         flag = event.IsChecked()
         config.logTime = flag
@@ -901,7 +893,7 @@ class MainFrame(wx.Frame):
         
         
     def OnCmdCollectGarbage(self, event):
-        gc.set_debug(gc.DEBUG_SAVEALL)
+        #gc.set_debug(gc.DEBUG_SAVEALL)
         print "unreachable object count:", gc.collect()
         from pprint import pprint
         pprint(gc.garbage)

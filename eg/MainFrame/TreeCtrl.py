@@ -32,7 +32,7 @@ import xml.etree.cElementTree as ElementTree
 import eg
 from eg.TreeItems import *
 from UndoableCommands import (
-    CmdNewEvent, 
+    NewEvent, 
     CmdMoveTo, 
     CmdCut, 
     CmdPaste, 
@@ -64,7 +64,7 @@ class EventDropSource(wx.DropSource):
         data.Add(customData)
         data.Add(textData)
         
-        # We need to hold a reference to our data object, instead it would
+        # We need to hold a reference to our data object, instead it could
         # be garbage collected
         self.data = data
     
@@ -218,8 +218,7 @@ class EventDropTarget(wx.PyDropTarget):
                     label = self.ldata.GetData()
                     self.ldata.SetData("")
                     parent, pos = self.position
-                    eg.actionThread.Call(
-                        CmdNewEvent().Do, 
+                    NewEvent().Do(
                         tree.document, 
                         label, 
                         parent, 
@@ -471,7 +470,7 @@ class TreeCtrl(wx.TreeCtrl):
     @eg.LogIt
     def OnBeginLabelEdit(self, event):
         obj = self.GetPyData(event.GetItem())
-        if (not obj.IsEditable()) or (not self.hasFocus):
+        if (not obj.isRenameable) or (not self.hasFocus):
             event.Veto()
             return
         self.isInEditLabel = True
@@ -520,6 +519,7 @@ class TreeCtrl(wx.TreeCtrl):
         self.Thaw()
     
     
+    @eg.LogItWithReturn
     def OnBeginDrag(self, event):
         dragId = event.GetItem()
         dragObject = self.GetPyData(dragId)
@@ -534,7 +534,6 @@ class TreeCtrl(wx.TreeCtrl):
         self.dragtimer.Start(50)
 
         result = dropSource.DoDragDrop(wx.Drag_AllowMove)
-
         self.dragtimer.Stop()
         dropTarget.dragCls = EventItem
         dropTarget.dragObject = None

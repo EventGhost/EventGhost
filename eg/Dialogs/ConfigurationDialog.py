@@ -92,9 +92,13 @@ class HeaderBox(wx.PyWindow):
         mainSizer.Add((4, 4))
         mainSizer.Add(rightSizer, 1, wx.EXPAND)
         
-        self.SetSizerAndFit(mainSizer)
-        #mainSizer.Layout()
-        #self.Layout()
+        # odd sequence to setup the window, but all other ways seem
+        # to wrap the text wrong
+        self.SetSizer(mainSizer)
+        self.SetAutoLayout(True)
+        mainSizer.Fit(self)
+        mainSizer.Layout()
+        self.Layout()
         self.Bind(wx.EVT_SIZE, self.OnSize)
         
         
@@ -138,10 +142,10 @@ class ConfigurationDialog(eg.Dialog):
         self.configureItem = eg.currentConfigureItem
         eg.currentConfigureItem.openConfigDialog = self
         
-        dialogStyle = wx.DEFAULT_DIALOG_STYLE
+        dialogStyle = wx.CAPTION|wx.CLOSE_BOX|wx.SYSTEM_MENU
         if resizeable:
             dialogStyle |= wx.RESIZE_BORDER
-        eg.Dialog.__init__(self, None, -1, title, style=dialogStyle)
+        eg.Dialog.__init__(self, eg.document.frame, -1, title, style=dialogStyle)
         
 #        icon = obj.info.GetWxIcon()
 #        self.icon = icon
@@ -182,7 +186,7 @@ class ConfigurationDialog(eg.Dialog):
             self.mainSizer.Add(self.buttonRow.sizer, 0, flag, border)
             self.SetSizerAndFit(self.mainSizer)
             self.SetMinSize(self.GetSize())
-            #self.Layout()
+            self.Layout()
             self.__postInited = True
         self.Centre()
         if self.ShowModal() == wx.ID_OK:

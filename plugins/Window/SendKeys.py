@@ -124,7 +124,7 @@ class SendKeys(eg.ActionClass):
             hwnd = None
         else:
             hwnd = hwnds[0]
-        eg.SendKeys(hwnd, data.decode())
+        eg.SendKeys(hwnd, data)
         
         
     def Configure(self, data="", useAlternateMethod=False):

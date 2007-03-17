@@ -427,7 +427,7 @@ class SendKeysParser:
         
     def Parse(self, hwnd, data, useAlternateMethod=False):
         oldHwnd = hwnd
-        self.text = data.decode()
+        self.text = data
         needGetFocus = False
         sendToFront = False
         if hwnd is None:

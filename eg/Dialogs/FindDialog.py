@@ -160,7 +160,7 @@ class FindDialog(eg.Dialog):
             item = iterFunc(item)
             if startItem is item:
                 dlg = wx.MessageDialog(
-                    eg.mainFrame, 
+                    None, 
                     Text.notFoundMesg % originalSearchValue,
                     eg.APP_NAME,
                     wx.OK | wx.ICON_INFORMATION

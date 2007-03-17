@@ -95,10 +95,16 @@ class EventGhost(object):
         self.versionStr = "%s.%s" % (version, buildNum)
         self.svnRevision = svnRevision
 
-        from Utils import LogIt, LogItWithReturn, AssertNotMainThread
+        from Utils import (
+            LogIt, 
+            LogItWithReturn, 
+            AssertNotMainThread, 
+            AssertNotActionThread
+        )
         self.LogIt = LogIt
         self.LogItWithReturn = LogItWithReturn
         self.AssertNotMainThread = AssertNotMainThread
+        self.AssertNotActionThread = AssertNotActionThread
         
         from MessageReceiver import MessageReceiver
         self.messageReceiver = MessageReceiver()
@@ -307,7 +313,7 @@ class EventGhost(object):
             TEMPDIR, 
         )
         from WinAPI.Shortcut import CreateShortcut
-        from WinAPI.Utils import ShrinkMemory, BringHwndToFront
+        from WinAPI.Utils import BringHwndToFront
         from WinAPI.serial import Serial as SerialPort
 
         self.DoImport(

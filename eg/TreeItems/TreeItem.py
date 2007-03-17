@@ -43,8 +43,11 @@ class TreeItem(object):
     xmlTag = "Item"
     dependants = None
     childs = ()
-    canExecute = False
-            
+    isDeactivatable = True
+    isConfigurable = False
+    isRenameable = True            
+    isExecutable = False
+
         
     def GetFullXml(self):
         TreeLink.StartUndo()
@@ -54,16 +57,18 @@ class TreeItem(object):
     
         
     @classmethod
+    @eg.AssertNotMainThread
     def Create(cls, parent, pos, text="", **kwargs):
         node = ElementTree.Element(cls.xmlTag)
         node.text = text
         for k, v in kwargs.items():
             node.attrib[k] = v
-        self = cls(parent, node)
+        self = eg.actionThread.CallWait(cls, parent, node)
         parent.AddChild(self, pos)
         return self
         
         
+    @eg.AssertNotActionThread
     def __init__(self, parent, node):
         self.parent = parent
         self.id = None
@@ -174,7 +179,7 @@ class TreeItem(object):
         return self.tree.IsExpanded(parent.id)
     
     
-    #@eg.AssertNotMainThread
+    @eg.AssertNotMainThread
     def Select(self):
         tree = self.tree
         if tree:
@@ -326,16 +331,12 @@ class TreeItem(object):
         return True
     
     
-    def CanDisable(self):
-        return True
-    
-    
     def GetLabel(self):
         return self.name
     
     
-    @eg.LogIt
     @eg.AssertNotMainThread
+    @eg.LogIt
     def RenameTo(self, newName):
         self.name = newName
         self.tree.SetItemText(self.id, newName)
@@ -353,8 +354,8 @@ class TreeItem(object):
         pass
     
     
-    @eg.LogIt
     @eg.AssertNotMainThread
+    @eg.LogIt
     def MoveItemTo(self, newParentItem, pos):
         tree = self.tree
         tree.Freeze()
@@ -372,6 +373,7 @@ class TreeItem(object):
         return id
             
     
+    #@eg.AssertNotMainThread
     def Enable(self, enable=True):
         self.isEnabled = enable
         if self.HasValidId():
@@ -384,14 +386,6 @@ class TreeItem(object):
                 self.document.selectionEvent.Fire(self)
                 
 
-    def IsEditable(self):
-        return True
-    
-    
-    def IsConfigurable(self):
-        return False
-    
-    
     def Execute(self):
         return None, None
     
@@ -405,10 +399,6 @@ class TreeItem(object):
             return self.childs.index(child)
         except ValueError:
             return None
-    
-    
-    def GetCount(self, count=0):
-        return count + 1
     
     
     def GetPath(self):

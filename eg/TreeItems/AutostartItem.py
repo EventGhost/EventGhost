@@ -26,17 +26,16 @@ from MacroItem import MacroItem
 class AutostartItem(MacroItem):
     xmlTag = "Autostart"
     iconIndex = eg.SetupIcons("Execute")
-
+    isDeactivatable = False
+    isRenameable = False
+    
+    
     def __init__(self, parent, node):
         MacroItem.__init__(self, parent, node)
         self.name = eg.text.General.autostartItem
         self.document.autostartMacro = self
         
         
-    def IsEditable(self):
-        return False
-
-
     def CanCut(self):
         return False
     
@@ -46,10 +45,6 @@ class AutostartItem(MacroItem):
     
     
     def CanDelete(self):
-        return False
-    
-    
-    def CanDisable(self):
         return False
     
     

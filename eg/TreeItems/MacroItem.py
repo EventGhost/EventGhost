@@ -28,7 +28,7 @@ from ContainerItem import ContainerItem
 class MacroItem(ContainerItem):
     xmlTag = "Macro"
     iconIndex = eg.SetupIcons("macro")
-    canExecute = True    
+    isExecutable = True
     
 
     def GetNextChild(self, index):

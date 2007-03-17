@@ -24,6 +24,7 @@ import os, sys, time
 import win32api, win32con
 import types
 import cStringIO
+import locale
 
 from win32process import EnumProcesses, GetModuleFileNameEx
 from os.path import basename
@@ -53,7 +54,7 @@ from compile_string import compile_string
 
 
 ourProcessID = win32api.GetCurrentProcessId()
-
+systemEncoding = locale.getdefaultlocale()[1]
 
 
 def FindWindowByChain(exeName=None, winChain=None, includeInvisible=False):
@@ -139,14 +140,19 @@ class WindowMatcher:
         else:
             self.invisibleMatch = dummy
             
-        self.program = compile_string(program)
-        self.winNameMatch = compile_string(winName) or dummy
-        self.winClassMatch = compile_string(winClass) or dummy
+        def GetMatcher(value):
+            if value is not None:
+                return compile_string(value.encode(systemEncoding)) 
+            else:
+                return dummy
+        self.program = GetMatcher(program)
+        self.winNameMatch = GetMatcher(winName)
+        self.winClassMatch = GetMatcher(winClass)
         self.scanChilds = False
         if (childName is not None) or (childClass is not None):
             self.scanChilds = True
-            self.childNameMatch = compile_string(childName) or dummy
-            self.childClassMatch = compile_string(childClass) or dummy
+            self.childNameMatch = GetMatcher(childName)
+            self.childClassMatch = GetMatcher(childClass)
     
     
     def EnumWindowsProc(self, hwnd, add):
@@ -188,7 +194,7 @@ class WindowMatcher:
                     hwnd, self.EnumChildsProc, child_hwnds.append
                 )
             except:
-                pass
+                raise
         return child_hwnds
 
 
@@ -666,10 +672,10 @@ class FindWindow(eg.ActionClass):
             
     @eg.LogIt
     def OnFinderToolLeftClick(self, event=None):
-        self.oldFramePosition = eg.mainFrame.GetPosition()
+        self.oldFramePosition = eg.document.frame.GetPosition()
         self.oldDialogPosition = self.dialog.GetPosition()
         if self.config.hideOnDrag:
-            eg.mainFrame.SetPosition((-32000, -32000))
+            eg.document.frame.SetPosition((-32000, -32000))
             self.dialog.SetPosition((-32000, -32000))
         #event.Skip()
         
@@ -677,7 +683,7 @@ class FindWindow(eg.ActionClass):
     @eg.LogIt
     def OnFinderTool(self, event=None):
         if self.config.hideOnDrag:
-            eg.mainFrame.SetPosition(self.oldFramePosition)
+            eg.document.frame.SetPosition(self.oldFramePosition)
             self.dialog.SetPosition(self.oldDialogPosition)
         lastTarget = self.finderTool.GetValue()
         if lastTarget is not None:
@@ -795,7 +801,7 @@ class WindowTree(wx.TreeCtrl):
             except:
                 continue
             if name != '':
-                name = u'"' + name + '" '
+                name = '"%s"' % name
             icon_index = 0
             if icon:
                 icon_index = self.imageList.AddIcon(icon)

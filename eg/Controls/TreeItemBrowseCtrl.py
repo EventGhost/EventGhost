@@ -49,7 +49,7 @@ class TreeItemBrowseCtrl(wx.TreeCtrl):
         wx.TreeCtrl.__init__(self, parent, style=style)
         self.SetMinSize((10, 10))
         self.SetImageList(eg.imageList)
-        self.srcTree = srcTree = eg.app.mainFrame.treeCtrl
+        self.srcTree = srcTree = eg.document.frame.treeCtrl
 
         srcRoot = srcTree.GetRootItem()
         text = srcTree.GetItemText(srcRoot)

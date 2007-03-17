@@ -32,6 +32,8 @@ class RootItem(ContainerItem):
     iconIndex = eg.SetupIcons("root")
     time = None
     guid = None
+    isDeactivatable = False
+    isRenameable = True            
     
     def WriteToXML(self):
         attr, text, childs = ContainerItem.WriteToXML(self)
@@ -99,10 +101,6 @@ class RootItem(ContainerItem):
         return self.tree is not None
     
         
-    def IsEditable(self):
-        return False
-    
-    
     def CanCut(self):
         return False
     
@@ -112,10 +110,6 @@ class RootItem(ContainerItem):
     
     
     def CanDelete(self):
-        return False
-    
-    
-    def CanDisable(self):
         return False
     
     

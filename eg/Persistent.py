@@ -88,7 +88,7 @@ def PySave(obj, filename):
     fd.close()
     
     
-def _make_section(name, bases, dict):
+def _MakeSectionMetaClass(name, bases, dict):
     obj = Section()
     obj.__dict__ = dict
     return obj
@@ -96,7 +96,7 @@ def _make_section(name, bases, dict):
     
 def PyLoad(filename, defaults=None):
     obj = Section(defaults)
-    execDict = {"__metaclass__": _make_section}
+    execDict = {"__metaclass__": _MakeSectionMetaClass}
     try:
         execfile(filename, execDict, obj.__dict__)
     except:

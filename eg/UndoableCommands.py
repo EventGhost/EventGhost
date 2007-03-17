@@ -29,12 +29,12 @@ class Text:
     
     
     
-class CmdNewItem:
+class NewItem:
     """
     Abstract class for the creation of new tree items.
     """
     
-    def Do(self, item):
+    def StoreItem(self, item):
         self.positionData = item.GetPositionData()
         self.cls = item.__class__
         item.document.AppendUndoHandler(self)
@@ -54,7 +54,7 @@ class CmdNewItem:
     
     
     
-class CmdNewPlugin(CmdNewItem):
+class NewPlugin(NewItem):
     """
     Create a new PluginItem if the user has choosen to do so from the menu
     or toolbar.
@@ -62,16 +62,14 @@ class CmdNewPlugin(CmdNewItem):
     
     def Do(self, document):
         """ Handle the menu command 'Add Plugin...'. """
-        def ShowDialog():
-            from eg.Dialogs.AddPluginDialog import AddPluginDialog
-            return AddPluginDialog().DoModal()
-        pluginInfo = eg.CallWait(ShowDialog)
+        from eg.Dialogs.AddPluginDialog import AddPluginDialog
+        pluginInfo = AddPluginDialog().DoModal()
         
         if pluginInfo is None:
             return
 
         self.name = eg.text.MainFrame.Menu.AddPlugin.replace("&", "")
-        tree = document.tree
+
         pluginItem = document.PluginItem.Create(
             document.autostartMacro,
             -1,
@@ -80,16 +78,16 @@ class CmdNewPlugin(CmdNewItem):
         pluginItem.Select()
         if pluginItem.executable:
             if pluginItem.NeedsConfiguration():
-                result = eg.CallWait(pluginItem.DoConfigure)
-                if result is False:
+                if not pluginItem.DoConfigure():
                     pluginItem.Delete()
                     return
             eg.actionThread.Call(pluginItem.Execute)
-        CmdNewItem.Do(self, pluginItem)
+        self.StoreItem(pluginItem)
+        return pluginItem
        
             
 
-class CmdNewFolder(CmdNewItem):
+class NewFolder(NewItem):
     """
     Create a new FolderItem if the user has choosen to do so from the menu
     or toolbar.
@@ -121,7 +119,7 @@ class CmdNewFolder(CmdNewItem):
             pos, 
             name=eg.text.General.unnamedFolder
         )
-        CmdNewItem.Do(self, item)
+        self.StoreItem(pluginItem)
         item.tree.SetFocus()
         item.Select()
         item.tree.EditLabel(item.id)
@@ -129,7 +127,7 @@ class CmdNewFolder(CmdNewItem):
     
     
     
-class CmdNewMacro(CmdNewItem):
+class NewMacro(NewItem):
     """
     Create a new MacroItem if the user has choosen to do so from the menu
     or toolbar.
@@ -161,8 +159,8 @@ class CmdNewMacro(CmdNewItem):
             name=eg.text.General.unnamedMacro
         )
         item.Select()
-        CmdNewItem.Do(self, item)
-        actionObj = CmdNewAction().Do(document)
+        self.StoreItem(item)
+        actionObj = NewAction().Do(document)
         if actionObj:
             label = actionObj.GetLabel()
             item.RenameTo(label)
@@ -171,7 +169,7 @@ class CmdNewMacro(CmdNewItem):
 
 
 
-class CmdNewAction(CmdNewItem):
+class NewAction(NewItem):
     """
     Create a new ActionItem if the user has choosen to do so from the menu
     or toolbar.
@@ -181,25 +179,23 @@ class CmdNewAction(CmdNewItem):
     def Do(self, document):
         self.name = eg.text.MainFrame.Menu.NewAction.replace("&", "")
         # let the user choose an action
-        def ShowDialog():
-            from eg.Dialogs.AddActionDialog import AddActionDialog
-            return AddActionDialog().DoModal()
-        action = eg.CallWait(ShowDialog)
+        from eg.Dialogs.AddActionDialog import AddActionDialog
+        action = AddActionDialog().DoModal()
         
         # if user canceled the dialog, take a quick exit
         if action is None:
             return None
         
         # find the right insert position
-        selectedItem = document.selection
-        if isinstance(selectedItem, (document.MacroItem, document.AutostartItem)):
+        selection = document.selection
+        if isinstance(selection, (document.MacroItem, document.AutostartItem)):
             # if a macro is selected, append it as last element of the macro
-            parent = selectedItem
+            parent = selection
             pos = -1
         else:
-            parent = selectedItem.parent
+            parent = selection.parent
             childs = parent.childs
-            for pos in range(childs.index(selectedItem) + 1, len(childs)):
+            for pos in range(childs.index(selection) + 1, len(childs)):
                 if not isinstance(childs[pos], document.EventItem):
                     break
             else:
@@ -217,16 +213,15 @@ class CmdNewAction(CmdNewItem):
         item.Select()
         
         if item.NeedsConfiguration():
-            result = eg.CallWait(item.DoConfigure)
-            if result is False:
+            if not item.DoConfigure():
                 item.Delete()
                 return None
-        CmdNewItem.Do(self, item)
+        self.StoreItem(item)
         return item
     
     
 
-class CmdNewEvent(CmdNewItem):
+class NewEvent(NewItem):
     
     def Do(self, document, label=None, parent=None, pos=-1):
         self.name = eg.text.MainFrame.Menu.NewEvent.replace("&", "")
@@ -251,7 +246,7 @@ class CmdNewEvent(CmdNewItem):
             item.Select()
             item.tree.EditLabel(item.id)
             
-        CmdNewItem.Do(self, item)
+        self.StoreItem(item)
         return item
     
 
@@ -364,7 +359,7 @@ class CmdPaste:
                     pos = before.parent.childs.index(before)
                     if pos + 1 == len(before.parent.childs):
                         pos = -1
-                obj = childCls(targetObj, childXmlNode)
+                obj = eg.actionThread.CallWait(childCls, targetObj, childXmlNode)
                 obj.RestoreState()
                 targetObj.AddChild(obj, pos)
                 self.items.append(obj.GetPositionData())
@@ -446,6 +441,7 @@ class CmdToggleEnable:
 class CmdMoveTo:
     name = "Move Item"
     
+    @eg.LogIt
     def __init__(self, document, item, parent, pos):
         tree = document.tree
         tmp = tree.GetFirstVisibleItem()

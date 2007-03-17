@@ -21,6 +21,7 @@
 # $LastChangedBy$
 
 import threading, traceback, time
+import gc
 import win32api
 from win32process import SetProcessWorkingSetSize, GetCurrentProcess
 
@@ -42,7 +43,7 @@ class EventThread(ThreadWorker):
 
 
     def poll(self):
-        if eg.config.limitMemory and not eg.mainFrame.IsShown():
+        if eg.config.limitMemory and eg.document.frame is None:
             try:
                 SetProcessWorkingSetSize(
                     self.currentProcess,

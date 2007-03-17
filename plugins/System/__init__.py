@@ -513,7 +513,7 @@ class __ComputerPowerAction(eg.ActionClass):
             return s
             
             
-    def Configure(self, dialog, bForceClose=False):
+    def Configure(self, bForceClose=False):
         dialog = eg.ConfigurationDialog(self)
         checkbox = wx.CheckBox(dialog, -1, self.plugin.text.forcedCB)
         checkbox.SetValue(bForceClose)

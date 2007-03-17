@@ -52,6 +52,7 @@ hideOnStartup = False
 startupEvent = None
 startupPayload = []
 startupFile = None
+allowMultiLoad = False
 debugLevel = 0
 i = 0
 
@@ -76,6 +77,8 @@ while True:
                 if name.lower().endswith(".pyc"):
                     os.remove(os.path.join(root, name))
         sys.exit(0)
+    elif arg == '-m' or arg == '-multiload':
+        allowMultiLoad = True
     elif arg == '-e' or arg == '-event':
         i += 1
         if len(sys.argv) <= i:
@@ -96,23 +99,24 @@ while True:
         LanguageEditor.Start()
         sys.exit(0)
 
-# check if another instance of the program is running
-from win32process import ExitProcess
-import win32event, win32api
-appMutex = win32event.CreateMutex(
-    None, 
-    0, 
-    "EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B"
-)
-if win32api.GetLastError() != 0:
-    # another instance of EventGhost is running
-    import win32com.client
-    e = win32com.client.Dispatch("{7EB106DC-468D-4345-9CFE-B0021039114B}")
-    if startupEvent:
-        e.TriggerEvent(startupEvent, startupPayload)
-    else:
-        e.BringToFront()
-    ExitProcess(0)		
+if not allowMultiLoad:
+    # check if another instance of the program is running
+    from win32process import ExitProcess
+    import win32event, win32api
+    appMutex = win32event.CreateMutex(
+        None, 
+        0, 
+        "EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B"
+    )
+    if win32api.GetLastError() != 0:
+        # another instance of EventGhost is running
+        import win32com.client
+        e = win32com.client.Dispatch("{7EB106DC-468D-4345-9CFE-B0021039114B}")
+        if startupEvent:
+            e.TriggerEvent(startupEvent, startupPayload)
+        else:
+            e.BringToFront()
+        ExitProcess(0)		
     
 
 import Init

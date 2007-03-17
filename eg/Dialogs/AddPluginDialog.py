@@ -65,7 +65,7 @@ class AddPluginDialog(eg.Dialog):
 
         eg.Dialog.__init__(
             self, 
-            None, 
+            eg.document.frame, 
             -1, 
             Text.title,
             style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER

@@ -132,7 +132,8 @@ class Document(object):
         self.ItemMixin.root = root
         node = ElementTree.Element("Autostart")
         self.autostartMacro = self.AutostartItem(root, node)
-        self.root.AddChild(self.autostartMacro)
+        root.childs.append(self.autostartMacro)
+        #eg.actionThread.CallWait(self.root.AddChild, self.autostartMacro)
         self.isInLabelEdit = False
         eg.TreeLink.StopLoad()
         self.isDirty.set(False)
@@ -363,7 +364,7 @@ class Document(object):
         return vector
     
     
-    @eg.LogIt
+    #@eg.LogIt
     def SetExpandState(self, vector):
         if vector is None:
             return

@@ -6,7 +6,6 @@ from win32ui import CreateWindowFromHandle
 from win32api import GetCurrentThreadId
 from win32gui import GetForegroundWindow, WindowFromPoint, IsWindow
 from win32process import GetWindowThreadProcessId
-from win32process import SetProcessWorkingSetSize
 from win32process import GetCurrentProcess
 
 
@@ -51,18 +50,11 @@ def BringHwndToFront(hwnd):
         AttachThreadInput(foregroundThreadID, ourThreadID, False)
         
         
-def ShrinkMemory(size):
-    #SetProcessWorkingSetSize(GetCurrentProcess(), -1, -1)
-    try:
-        SetProcessWorkingSetSize(GetCurrentProcess(), 3500000, 8000000)
-    except:
-        pass
-    
-
-
 class MyRectangle:
     def __str__(self):
         return "(%d, %d, %d, %d)" % (self.x, self.y, self.width, self.height)
+
+
 
 def GetMonitorDimensions():
     retval = []

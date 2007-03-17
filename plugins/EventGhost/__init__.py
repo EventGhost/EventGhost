@@ -68,14 +68,17 @@ class PythonCommand(eg.ActionWithStringParameter):
                 result = eval(pythonstring, {}, eg.globals.__dict__)
                 return result
             except SyntaxError:
+                eg.globals.result = None
                 exec pythonstring in {}, eg.globals.__dict__
                 return eg.globals.result
-        except:
-            eg.PrintError(eg.text.Error.InAction % pythonstring)
-            errorlines = traceback.format_exc().splitlines()
-            for i in range(4, len(errorlines)):
-                eg.PrintError(errorlines[i])
-            return
+        finally:
+            pass
+#        except:
+#            eg.PrintError(eg.text.Error.InAction % pythonstring)
+#            errorlines = traceback.format_exc().splitlines()
+#            for i in range(4, len(errorlines)):
+#                eg.PrintError(errorlines[i])
+#            return
         
         
     def GetLabel(self, pythonstring=""):
