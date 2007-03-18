@@ -39,9 +39,9 @@ from eg.IconTools import GetIcon
 import UndoableCommands
 
 # local imports
-from LogCtrl import LogCtrl
-from TreeCtrl import TreeCtrl
-from StatusBar import StatusBar
+from MainFrame.LogCtrl import LogCtrl
+from MainFrame.TreeCtrl import TreeCtrl
+from MainFrame.StatusBar import StatusBar
 
 #from eg.WinAPI.Utils import BringHwndToFront
 
