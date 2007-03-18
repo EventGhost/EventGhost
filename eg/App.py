@@ -23,6 +23,7 @@
 import eg
 import wx
 import sys
+import time
 
 import pythoncom
 import threading
@@ -39,7 +40,7 @@ from win32con import REALTIME_PRIORITY_CLASS, WM_QUERYENDSESSION, WM_ENDSESSION
 class MyApp(wx.App):
     
     
-    @eg.LogIt
+    #@eg.LogIt
     def OnInit(self):
         #SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS)
         self.SetAppName(eg.APP_NAME)
@@ -134,7 +135,7 @@ class MyApp(wx.App):
         """System is about to be logged off"""
         # This method gets called from MessageReceiver on a
         # WM_QUERYENDSESSION win32 message.
-        if self.mainFrame.OnClose() == wx.ID_CANCEL:
+        if eg.document.CheckFileNeedsSave() == wx.ID_CANCEL:
             eg.Notice("User cancelled shutdown in OnQueryEndSession")
             return 0
         return 1
@@ -145,10 +146,13 @@ class MyApp(wx.App):
         """System is logging off"""
         egEvent = eg.eventThread.TriggerEvent("OnEndSession")
         while not egEvent.isEnded:
-            self.Yield()
+            time.sleep(0.01)
+        eg.CallWait(eg.document.Close)
         self.taskBarIcon.alive = False
         self.taskBarIcon.Destroy()
-        self.OnExit()
+        #self.ExitMainLoop()
+	eg.CallWait(self.OnExit)
+	return 0
          
         
     @eg.LogIt
