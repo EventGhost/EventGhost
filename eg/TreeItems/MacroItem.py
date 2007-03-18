@@ -29,6 +29,7 @@ class MacroItem(ContainerItem):
     xmlTag = "Macro"
     iconIndex = eg.SetupIcons("macro")
     isExecutable = True
+    shouldSelectOnExecute = False
     
 
     def GetNextChild(self, index):

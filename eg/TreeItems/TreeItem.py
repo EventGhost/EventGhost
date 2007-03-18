@@ -21,7 +21,6 @@
 # $LastChangedBy$
 
 from xml.sax.saxutils import quoteattr, escape
-import weakref
 from cStringIO import StringIO
 import xml.etree.cElementTree as ElementTree
 
@@ -38,7 +37,6 @@ class TreeItem(object):
     # isEnabled
     # iconIndex
     # xmlId
-    # __ weakref__
     
     xmlTag = "Item"
     dependants = None

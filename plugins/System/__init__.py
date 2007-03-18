@@ -1100,11 +1100,7 @@ class SetSystemIdleTimer(eg.ActionClass):
     
     
     def Configure(self, flag=False):
-        dialog = eg.ConfigurationDialog(
-            self, 
-            showLine=False, 
-            resizeable=False
-        )
+        dialog = eg.ConfigurationDialog(self)
         text = self.text
         radioBox = wx.RadioBox(
             dialog, 

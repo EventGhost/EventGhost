@@ -52,6 +52,7 @@ class ActionItem(TreeItem):
     isExecutable = True
     isConfigurable = True
     openConfigDialog = None
+    shouldSelectOnExecute = False
 
 
     def WriteToXML(self):

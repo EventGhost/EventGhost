@@ -45,28 +45,29 @@ os.chdir(mainDir)
 
 # append our pathes to sys.path
 sys.path.append(mainDir + "\\eg")
-sys.path.append(mainDir + "\\Plugins")
+sys.path.append(mainDir + "\\plugins")
 
 # determine the commadline parameters
-hideOnStartup = False
-startupEvent = None
-startupPayload = []
-startupFile = None
-allowMultiLoad = False
-debugLevel = 0
+class args:
+    hideOnStartup = False
+    startupEvent = None
+    startupFile = None
+    allowMultiLoad = False
+    debugLevel = 0
+    
+    
 i = 0
-
 while True:
     i += 1
     if len(sys.argv) <= i:
         break
     arg = sys.argv[i].lower()
     if arg == '-debug':
-        debugLevel = 1
+        args.debugLevel = 1
     elif arg == '-debug2':
-        debugLevel = 2
-    elif arg == '-hide':
-        hideOnStartup = True
+        args.debugLevel = 2
+    elif arg == '-h' or arg == '-hide':
+        args.hideOnStartup = True
     elif arg == '-install':
         import compileall
         compileall.compile_dir(mainDir)
@@ -78,28 +79,30 @@ while True:
                     os.remove(os.path.join(root, name))
         sys.exit(0)
     elif arg == '-m' or arg == '-multiload':
-        allowMultiLoad = True
+        args.allowMultiLoad = True
     elif arg == '-e' or arg == '-event':
         i += 1
         if len(sys.argv) <= i:
             print "missing event string"
             break
-        startupEvent = sys.argv[i]
+        eventstring = sys.argv[i]
+        payloads = []
         while i+1 < len(sys.argv):
             i += 1
-            startupPayload.append(sys.argv[i])
+            payloads.append(sys.argv[i])
+        args.startupEvent = (eventstring, payloads)
     elif arg == '-f' or arg == '-file':
         i += 1
         if len(sys.argv) <= i:
             print "missing file string"
             break
-        startupFile = sys.argv[i]
+        args.startupFile = sys.argv[i]
     elif arg == '-translate':
         import LanguageEditor
         LanguageEditor.Start()
         sys.exit(0)
 
-if not allowMultiLoad:
+if not args.allowMultiLoad:
     # check if another instance of the program is running
     from win32process import ExitProcess
     import win32event, win32api
@@ -112,8 +115,8 @@ if not allowMultiLoad:
         # another instance of EventGhost is running
         import win32com.client
         e = win32com.client.Dispatch("{7EB106DC-468D-4345-9CFE-B0021039114B}")
-        if startupEvent:
-            e.TriggerEvent(startupEvent, startupPayload)
+        if args.startupEvent is not None:
+            e.TriggerEvent(startupEvent[0], startupEvent[1])
         else:
             e.BringToFront()
         ExitProcess(0)		
@@ -121,7 +124,7 @@ if not allowMultiLoad:
 
 import Init
 eg = Init.EventGhost()
-eg.Init(debugLevel)
-eg.StartGui((startupEvent, startupPayload), startupFile, hideOnStartup)
+eg.Init(args)
+eg.StartGui()
 eg.app.MainLoop()
 ExitProcess(0)

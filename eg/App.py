@@ -38,6 +38,7 @@ from win32con import REALTIME_PRIORITY_CLASS, WM_QUERYENDSESSION, WM_ENDSESSION
 
 class MyApp(wx.App):
     
+    
     @eg.LogIt
     def OnInit(self):
         #SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS)
@@ -98,11 +99,12 @@ class MyApp(wx.App):
         taskBarIcon.Bind(wx.EVT_TASKBAR_RIGHT_UP, OnTaskBarMenu)
         taskBarIcon.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnCmdShowMainFrame)
         
-        from MainFrame import MainFrame
-        self.mainFrame = MainFrame(eg.document)
-        #self.SetTopWindow(self.mainFrame)
-        self.mainFrame.Show()
-        #self.mainFrame.Show(not (config.hideOnStartup or hideOnStartup))
+        if not (eg.config.hideOnStartup or eg.startupArguments.hideOnStartup):
+            from MainFrame import MainFrame
+            self.mainFrame = MainFrame(eg.document)
+            self.mainFrame.Show()
+        else:
+            self.mainFrame = None
     
 
     #------- TrayIcon menu handlers ------------------------------------------

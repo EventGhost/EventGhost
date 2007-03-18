@@ -31,7 +31,6 @@ import sys
 oldStdOut = sys.stdout
 oldStdErr = sys.stderr
 
-
 oldStdOut = codecs.lookup("ascii").streamwriter(sys.stdout, 'backslashreplace')
 oldStdErr = codecs.lookup("ascii").streamwriter(sys.stderr, 'backslashreplace')
 
@@ -51,11 +50,10 @@ class Log:
         self.data = deque()
         self.maxlength = 5000
         self.ctrl = DummyLogCtrl()
-        return
         if eg.debugLevel:
             class StdOut:
                 def write(self2, data):
-                    #self.Write(data, 0)
+                    self.Write(data, 0)
                     oldStdOut.write(data)
             
             class StdErr:
@@ -73,7 +71,7 @@ class Log:
         
         sys.stdout = StdOut()
         sys.stderr = StdErr()
-    
+
     
     @eg.LogIt
     def Destroy(self):

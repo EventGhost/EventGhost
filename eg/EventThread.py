@@ -106,7 +106,7 @@ class EventThread(ThreadWorker):
             eg.SaveConfig()
             self.TriggerEvent("OnInitAfterBoot")
             
-        if self.startupEvent[0]:
+        if self.startupEvent is not None:
             self.TriggerEvent(self.startupEvent[0], self.startupEvent[1])
             self.startupEvent = None
                 

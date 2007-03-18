@@ -85,7 +85,9 @@ class Document(object):
         self.root = None
         self.firstVisibleItem = None
         self.frame = None
+        self.tree = None
         self._selection = None
+        
         
     def GetSelection(self):
         return self._selection

@@ -57,11 +57,12 @@ class EventGhost(object):
         sys.modules["eg"] = self
         
         
-    def Init(self, debugLevel):
+    def Init(self, args):
         global eg
         eg = self
         self.APP_NAME = "EventGhost"
-        self.debugLevel = debugLevel
+        self.startupArguments = args
+        self.debugLevel = args.debugLevel
         self.__InitPIL()
         self.__InitAsyncore()
         
@@ -117,7 +118,7 @@ class EventGhost(object):
         import Log
         self.log = Log.Log()
         
-        if not debugLevel:
+        if not self.debugLevel:
             def _DummyFunc(*args, **kwargs):
                 pass
             self.Notice = _DummyFunc
@@ -125,7 +126,7 @@ class EventGhost(object):
             import warnings
             warnings.simplefilter('error', UnicodeWarning)
 
-            if debugLevel == 2:
+            if self.debugLevel == 2:
                 fd = open("Log.txt", "at")
                 class writer:
                     def write(self, data):
@@ -204,7 +205,7 @@ class EventGhost(object):
         self.actionList = []
         
         
-    def StartGui(self, startupEvent, startupFile, hideOnStartup):
+    def StartGui(self):
         self.InitWin32Com()
         self.messageReceiver.start()
         
@@ -224,7 +225,7 @@ class EventGhost(object):
 
         from EventThread import EventThread
         self.eventThread = eventThread = EventThread()
-        eventThread.startupEvent = startupEvent
+        eventThread.startupEvent = self.startupArguments.startupEvent
         self.TriggerEvent = eventThread.TriggerEvent
         self.TriggerEnduringEvent = eventThread.TriggerEnduringEvent
         
@@ -232,6 +233,7 @@ class EventGhost(object):
         
         config = self.config
 
+        startupFile = self.startupArguments.startupFile
         if (
             startupFile is None 
             and config.useAutoloadFile 
