@@ -1,5 +1,5 @@
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <lpv@eventghost.org> 
+# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org> 
 #                    and Matthew Jacob Edwards
 # 
 # EventGhost is free software; you can redistribute it and/or modify
