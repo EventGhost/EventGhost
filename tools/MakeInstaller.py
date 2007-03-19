@@ -92,7 +92,14 @@ def locate(patterns, root=os.curdir):
     supplied root directory.
     '''
     for path, dirs, files in os.walk(root):
-        ignoreDirs = [dir for dir in dirs if dir.startswith("_") or dir == ".svn"]
+        ignoreDirs = [
+            dir for dir in dirs 
+                if (
+                    dir.startswith("_") 
+                    or dir == ".svn"
+                    or exists(join(path, dir, "noinclude"))
+                )
+        ]
         for dir in ignoreDirs:
             dirs.remove(dir)
         for pattern in patterns:
