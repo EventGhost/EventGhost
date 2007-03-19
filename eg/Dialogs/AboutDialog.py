@@ -33,7 +33,6 @@ from cStringIO import StringIO
 from math import sin
 
 import Image
-from eg.Controls.SizeGrip import SizeGrip
 from License import License
 
 
@@ -384,7 +383,7 @@ class AboutDialog(eg.Dialog):
             5
         )
         btnSizer.Add((0, 0), 1, wx.EXPAND)
-        btnSizer.Add(SizeGrip(self), 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT)
+        btnSizer.Add(eg.SizeGrip(self), 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT)
 
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         mainSizer.Add(notebook, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, 5)

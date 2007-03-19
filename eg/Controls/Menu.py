@@ -23,30 +23,6 @@
 import wx
 
 
-class MenuBar(wx.MenuBar):
-    
-    def __init__(self, parent, stringMappingObj=None):
-        wx.MenuBar.__init__(self)
-        self.parent = parent
-        parent.SetMenuBar(self)
-        self.menus = []
-        self.stringMappingObj = stringMappingObj
-        
-        
-    def AddMenu(self, name=None):
-        fullname = getattr(self.stringMappingObj, name + "Menu", name)
-        menu = Menu(self.parent, fullname, self.stringMappingObj)
-        self.menus.append(menu)
-        setattr(self, name, menu)
-        return menu
-    
-    
-    def Realize(self):
-        for menu in self.menus:
-            wx.MenuBar.Append(self, menu, menu.mytitle)
-
-
-
 class Menu(wx.Menu):
     
     def __init__(self, parent, mytitle = "", myStrings=None):

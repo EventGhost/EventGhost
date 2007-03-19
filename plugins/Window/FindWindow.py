@@ -47,7 +47,6 @@ from eg.WinAPI.Utils import GetHwndIcon, GetHwndChildren, HwndHasChildren
 from eg.WinAPI.Utils import HighlightWindow
 from eg.WinAPI.Utils import GetModulesPID, GetNameOfPID, GetHwndProcessName
 
-from eg.Controls.WindowDragFinder import WindowDragFinder
 from eg.IconTools import GetIcon
 from compile_string import compile_string
         
@@ -371,7 +370,7 @@ class FindWindow(eg.ActionClass):
         self.lastPid = None
         self.hideOnDrag = True
         
-        finderTool = WindowDragFinder(dialog, self.OnFinderToolLeftClick, self.OnFinderTool)
+        finderTool = eg.WindowDragFinder(dialog, self.OnFinderToolLeftClick, self.OnFinderTool)
         #finderTool.Bind(wx.EVT_LEFT_DOWN, self.OnFinderToolLeftClick)
         #finderTool.Bind(wx.EVT_BUTTON, self.OnFinderTool)
         self.finderTool = finderTool

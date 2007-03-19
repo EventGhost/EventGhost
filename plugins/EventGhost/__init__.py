@@ -41,7 +41,6 @@ import locale
 import wx
 
 from eg import ContainerItem, FolderItem, MacroItem, RootItem, AutostartItem
-from eg.Controls.TreeItemBrowseCtrl import TreeItemBrowseCtrl
 
 
 class EventGhost(eg.PluginClass):
@@ -58,7 +57,7 @@ class EventGhost(eg.PluginClass):
 class PythonCommand(eg.ActionWithStringParameter):
     name = "Python Command"
     description = "Executes a parameter as a single Python statement."
-    iconFile = 'PythonCommand'
+    iconFile = 'icons/PythonCommand'
     class text:
         parameterDescription = "Python statement:"
 
@@ -98,7 +97,7 @@ class Comment(eg.ActionClass):
     description = \
         "Just a do-nothing action that can be used to comment your "\
         "configuration."
-    iconFile = 'Comment'
+    iconFile = 'icons/Comment'
 
     def __call__(self):
         pass
@@ -118,7 +117,7 @@ from NewJumpIf import NewJumpIf
 class EnableItem(eg.ActionClass):
     name = "Enable an item"
     description = "Enable an item in the tree."  
-    iconFile = 'EnableItem'
+    iconFile = 'icons/EnableItem'
     class text:
         label = "Enable: %s"
         text1 = "Please select the item which should be enabled:"
@@ -158,7 +157,7 @@ class EnableItem(eg.ActionClass):
             searchItem = None
             link = eg.TreeLink(eg.currentConfigureItem)
             
-        tree = TreeItemBrowseCtrl(
+        tree = eg.TreeItemBrowseCtrl(
             dialog, 
             self.filterFunc, 
             #searchFunc, 
@@ -197,7 +196,7 @@ class EnableItem(eg.ActionClass):
 class DisableItem(EnableItem):
     name = "Disable an item"
     description = "Disable an item"
-    iconFile = 'DisableItem'
+    iconFile = 'icons/DisableItem'
     class text:
         label = "Disable: %s"
         text1 = "Please select the item which should be disabled:"
@@ -219,7 +218,7 @@ class EnableExclusive(EnableItem):
         "macros that are siblings on the same level in this "
         "sub-branch of the tree."
     )
-    iconFile = "EnableExclusive"
+    iconFile = "icons/EnableExclusive"
     class text:
         label = "Enable exclusive: %s"
         text1 = "Please select the folder/macro which should be enabled:"
@@ -251,7 +250,7 @@ class EnableExclusive(EnableItem):
 class Wait(eg.ActionClass):
     name = "Wait some time"
     description = "Wait some time"        
-    iconFile = "Wait"
+    iconFile = "icons/Wait"
     class text:
         label = "Wait: %s sec"
         wait = "Wait"
@@ -289,7 +288,7 @@ class Wait(eg.ActionClass):
 class StopProcessing(eg.ActionClass):
     name = "Stop processing this event"
     description = "Stop processing this event"
-    iconFile = 'StopProcessing'
+    iconFile = 'icons/StopProcessing'
 
     def __call__(self):
         eg.event.skipEvent = True
@@ -301,7 +300,7 @@ class JumpIfLongPress(eg.ActionClass):
     description = \
         "Jumps to another macro, if the button on the remote is "\
         "held down longer than the configured time."
-    iconFile = "LongPress"
+    iconFile = "icons/LongPress"
     class text:
         label = "If button is held down %s sec, go to: %s"
         text1 = "If button is held down for longer than"
@@ -371,7 +370,7 @@ class AutoRepeat(eg.ActionClass):
     description = \
         "Makes the macro where this command is added to an "\
         "autorepeating macro."
-    iconFile = "AutoRepeat"
+    iconFile = "icons/AutoRepeat"
     class text:
         seconds = "seconds"
         text1 = "Start first repetition after"
@@ -472,7 +471,7 @@ class TriggerEvent(eg.ActionClass):
     description = \
         "Causes an event to be generated (optionally after some "\
         "time)."
-    iconFile = "plugin"
+    iconFile = "icons/Plugin"
     class text:
         labelWithTime = 'Trigger event "%s" after %.2f seconds'
         labelWithoutTime = 'Trigger event "%s"'
@@ -544,7 +543,7 @@ class FlushEvents(eg.ActionClass):
         "over again. If you place a \"Flush Events\" command at the "\
         "end of your macro, all the excessive remote key presses "\
         "will be discarded."
-    iconFile = "plugin"
+    iconFile = "icons/Plugin"
     
     def __call__(self):
         eg.eventThread.FlushAllEvents()
@@ -560,7 +559,7 @@ class Jump(eg.ActionClass, eg.HiddenAction):
     description = \
         "Jumps unconditionally to another macro and optionally "\
         "returns from there."        
-    iconFile = 'LongPress'
+    iconFile = 'icons/LongPress'
     class text:
         label1 = "Jump to %s"
         label2 = "Jump to %s and return"
@@ -626,7 +625,7 @@ class JumpIf(eg.ActionClass, eg.HiddenAction):
     description = \
         "Jumps to another macro, if the specified python-evaluation "\
         "returns true."        
-    iconFile = 'LongPress'
+    iconFile = 'icons/LongPress'
     class text:
         label1 = "If %s goto %s"
         label2 = "If %s gosub %s"
@@ -711,7 +710,7 @@ class StopIf(eg.ActionWithStringParameter, eg.HiddenAction):
     description = \
         "Stops executing the current macro, if the specified "\
         "Python-evaluation returns true."
-    iconFile = 'StopProcessing'
+    iconFile = 'icons/StopProcessing'
     class text:
         label = "Stop if %s"
         parameterDescription = "Python condition:"

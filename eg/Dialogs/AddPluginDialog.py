@@ -25,7 +25,6 @@ import wx
 
 import eg
 from eg.IconTools import GetIcon, PilToBitmap
-from eg.Controls.SizeGrip import SizeGrip
 
         
 kindTags = ["remote", "program", "external", "other"]

@@ -31,7 +31,7 @@ import asyncore
 import threading
 import traceback
 import linecache
-
+from os.path import exists
 import wx
 
 
@@ -161,23 +161,16 @@ class EventGhost(object):
         self.text = LoadStrings(config.language)
 
         import WinAPI
-        import Controls
-        import Dialogs
         import TreeItems
         import cFunctions
         sys.modules["eg.WinAPI"] = WinAPI
         self.WinAPI = WinAPI
-        sys.modules["eg.Controls"] = Controls
-        sys.modules["eg.Dialogs"] = Dialogs
         sys.modules["eg.TreeItems"] = TreeItems
         sys.modules["eg.cFunctions"] = cFunctions
     
         from Utils import SetClass
         from Text import Text
         SetClass(self.text, Text)
-
-        #from Dialogs.Dialog import Dialog
-        #self.Dialog = Dialog
 
         self.DoImports1()
         
@@ -187,7 +180,7 @@ class EventGhost(object):
         self.DoImports2()
 
         # replace builtin input and raw_input with a small dialog
-        from eg.Dialogs.SimpleInputDialog import (
+        from Dialogs.SimpleInputDialog import (
             GetSimpleRawInput, 
             GetSimpleInput
         )
@@ -293,16 +286,27 @@ class EventGhost(object):
                 self.__dict__[name] = getattr(getattr(module, name), name)
         
         
+    def __getattr__(self, name):
+        if exists("eg/Controls/%s.py" % name):
+            eg.Notice("loading module %s" % name)
+            mod = __import__("Controls.%s" % name, fromlist=[name])
+            attr = getattr(mod, name)
+            self.__dict__[name] = attr
+            return attr
+        elif exists("eg/Dialogs/%s.py" % name):
+            eg.Notice("loading module %s" % name)
+            mod = __import__("Dialogs.%s" % name, fromlist=[name])
+            attr = getattr(mod, name)
+            self.__dict__[name] = attr
+            return attr
+        raise AttributeError 
+    
+    
     def DoImports1(self):
         from sys import exit as Exit
         
-        self.DoImport(
-            "Dialogs.Dialog",
-            ("Utils", ["hexstring", "ParseString"]),
-            ("ThreadWorker", ["ThreadWorker"]),
-        )
-        #from Utils import hexstring, ParseString
-        #from ThreadWorker import ThreadWorker
+        from Utils import hexstring, ParseString
+        from ThreadWorker import ThreadWorker
 
         import wx
         from wx import CallAfter
@@ -317,49 +321,6 @@ class EventGhost(object):
         from WinAPI.Shortcut import CreateShortcut
         from WinAPI.Utils import BringHwndToFront
         from WinAPI.serial import Serial as SerialPort
-
-        self.DoImport(
-            ("Controls.Menu", ["MenuBar", "Menu"]),
-            "Controls.ButtonRow", 
-            "Controls.StaticTextBox",
-            "Controls.HtmlWindow",
-            "Controls.HyperLinkCtrl",
-            ("Controls.FileBrowseButton", ["FileBrowseButton", "DirBrowseButton"]),
-        )
-#        self.DoImport(
-#            ("Controls",
-#                ("Menu", 
-#                    ["MenuBar", "Menu"]),
-#                "ButtonRow", 
-#                "StaticTextBox",
-#                "HtmlWindow",
-#                "HyperLinkCtrl",
-#                ("FileBrowseButton", 
-#                    ["FileBrowseButton", "DirBrowseButton"]),
-#            )
-#        )
-        #from Controls.Menu import MenuBar, Menu
-        #from Controls.ButtonRow import ButtonRow
-        #from Controls.StaticTextBox import StaticTextBox
-        #from Controls.HtmlWindow import HtmlWindow
-        #from Controls.HyperLinkCtrl import HyperLinkCtrl
-        #from Controls.FileBrowseButton import (
-        #    FileBrowseButton, 
-        #    DirBrowseButton
-        #)
-        from Controls.BrowseItemButton import BrowseMacroButton
-        from Controls.SpinNumCtrl import SpinNumCtrl, SpinIntCtrl
-        from Controls.FontButton import FontButton
-        from Controls.ColourSelectButton import ColourSelectButton
-        from Controls.DisplayChoice import DisplayChoice
-        from Controls.ToolBar import ToolBar
-        from Controls.SerialPortChoice import SerialPortChoice
-        from Controls.RadioBox import RadioBox
-        from Controls.RadioButtonGrid import RadioButtonGrid
-        from Controls.CheckBoxGrid import CheckBoxGrid
-
-        from Dialogs.HTMLDialog import HTMLDialog
-        from Dialogs.ConfigurationDialog import ConfigurationDialog
 
         from PluginClass import PluginClass
         from IrDecoder import IrDecoder

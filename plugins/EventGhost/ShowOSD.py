@@ -211,7 +211,7 @@ class OSDFrame(wx.Frame):
 class ShowOSD(eg.ActionClass):
     name = "Show OSD"
     description = "Shows a simple On Screen Display."
-    iconFile = "ShowOSD"
+    iconFile = "icons/ShowOSD"
     class text:
         label = "Show OSD: %s"
         editText = "Text to display:"

@@ -20,28 +20,37 @@
 # $LastChangedRevision: 81 $
 # $LastChangedBy: bitmonster $
 
-import wx
-from RadioButtonGrid import RadioButtonGrid
+import eg
+import math
 
 
-class CheckBoxGrid(RadioButtonGrid):
-    CtrlType = wx.CheckBox
+class SpinIntCtrl(eg.SpinNumCtrl):
     
-    def GetValue(self):
-        result = []
-        for column in self.ctrlTable:
-            value = 0
-            for i, ctrl in enumerate(column):
-                if ctrl.GetValue():
-                    value |= (1 << i)
-            result.append(value)
-        return result
-            
-            
-    def SetValue(self, value):
-        for x, val in enumerate(value):
-            column = self.ctrlTable[x]
-            for i, ctrl in enumerate(column):
-                ctrl.SetValue(val & (1 << i))
-            
-            
+    def __init__(
+        self, 
+        parent, 
+        id=-1, 
+        value=0, 
+        min=0, 
+        max=None, 
+        size=(-1,-1), 
+        style=0
+    ):
+        allowNegative = bool(min < 0)
+        if max is None:
+            integerWidth = 5
+        else:
+            integerWidth = int(math.ceil(math.log10(max + 1)))
+        eg.SpinNumCtrl.__init__(
+            self, 
+            parent, 
+            id, 
+            value, 
+            min=min, 
+            max=max,
+            size=size, 
+            allowNegative=allowNegative, 
+            groupDigits = False,
+            fractionWidth=0,
+            integerWidth=integerWidth
+        )

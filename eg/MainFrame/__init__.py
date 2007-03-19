@@ -658,8 +658,7 @@ class MainFrame(wx.Frame):
 
     def OnCmdExport(self, event):
         """ Handle the menu command 'Export'. """
-        from eg.Dialogs.ExportDialog import ExportDialog
-        result = ExportDialog().DoModal()
+        result = eg.ExportDialog().DoModal()
         if result:
             for item in result:
                 print item.GetLabel()
@@ -672,8 +671,7 @@ class MainFrame(wx.Frame):
     
     def OnCmdOptions(self, event):
         """ Handle the menu command 'Options...'. """
-        from eg.Dialogs.OptionsDialog import OptionsDialog
-        OptionsDialog().DoModal()
+        eg.OptionsDialog().DoModal()
         
         
     def OnCmdExit(self, event):
@@ -715,8 +713,7 @@ class MainFrame(wx.Frame):
     def OnCmdFind(self, event):
         """ Handle the menu command 'Find'. """
         if self.findDialog is None:
-            from Dialogs.FindDialog import FindDialog
-            self.findDialog = FindDialog(self, self.document)
+            self.findDialog = eg.FindDialog(self, self.document)
         self.findDialog.Show()
         
         
@@ -860,8 +857,7 @@ class MainFrame(wx.Frame):
     
     
     def OnCmdAbout(self, event):
-        from eg.Dialogs.AboutDialog import AboutDialog
-        AboutDialog().DoModal()
+        eg.AboutDialog().DoModal()
     
         
     #----- debugging and experimental stuff that will be removed someday -----

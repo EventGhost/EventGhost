@@ -22,8 +22,6 @@
 
 import eg
 import wx
-from eg.Controls.TreeItemBrowseCtrl import TreeItemBrowseCtrl
-from eg.Controls.SizeGrip import SizeGrip
 
 
 class ExportDialog(eg.Dialog):
@@ -38,7 +36,7 @@ class ExportDialog(eg.Dialog):
         def filterFunc(obj):
             return isinstance(obj, filterClasses)
         
-        tree = TreeItemBrowseCtrl(self, filterFunc, multiSelect=True)
+        tree = eg.TreeItemBrowseCtrl(self, filterFunc, multiSelect=True)
         #tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
         tree.UnselectAll()
         self.treeCtrl = tree
@@ -59,7 +57,7 @@ class ExportDialog(eg.Dialog):
         btnrowSizer.Add((5,5), 1)
         btnrowSizer.Add(stdbtnsizer, 0, wx.TOP|wx.BOTTOM, 6)
         btnrowSizer.Add((2,2), 0)
-        btnrowSizer.Add(SizeGrip(self), 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT)
+        btnrowSizer.Add(eg.SizeGrip(self), 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT)
 
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         mainSizer.Add(staticText, 0, wx.EXPAND|wx.ALL, 5)

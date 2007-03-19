@@ -21,27 +21,29 @@
 # $LastChangedBy: bitmonster $
 
 import wx
-from RadioButtonGrid import RadioButtonGrid
+import eg
 
 
-class CheckBoxGrid(RadioButtonGrid):
-    CtrlType = wx.CheckBox
+class MenuBar(wx.MenuBar):
     
-    def GetValue(self):
-        result = []
-        for column in self.ctrlTable:
-            value = 0
-            for i, ctrl in enumerate(column):
-                if ctrl.GetValue():
-                    value |= (1 << i)
-            result.append(value)
-        return result
-            
-            
-    def SetValue(self, value):
-        for x, val in enumerate(value):
-            column = self.ctrlTable[x]
-            for i, ctrl in enumerate(column):
-                ctrl.SetValue(val & (1 << i))
-            
-            
+    def __init__(self, parent, stringMappingObj=None):
+        wx.MenuBar.__init__(self)
+        self.parent = parent
+        parent.SetMenuBar(self)
+        self.menus = []
+        self.stringMappingObj = stringMappingObj
+        
+        
+    def AddMenu(self, name=None):
+        fullname = getattr(self.stringMappingObj, name + "Menu", name)
+        menu = eg.Menu(self.parent, fullname, self.stringMappingObj)
+        self.menus.append(menu)
+        setattr(self, name, menu)
+        return menu
+    
+    
+    def Realize(self):
+        for menu in self.menus:
+            wx.MenuBar.Append(self, menu, menu.mytitle)
+
+

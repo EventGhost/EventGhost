@@ -29,7 +29,6 @@ import weakref
 
 import wx
 import eg
-from eg.Controls.PythonEditorCtrl import PythonEditorCtrl
 
 
     
@@ -62,7 +61,7 @@ class ScriptEditor(wx.Frame):
         )
         self.SetIcon(action.info.GetWxIcon())
         
-        self.editCtrl = editCtrl = PythonEditorCtrl(self)
+        self.editCtrl = editCtrl = eg.PythonEditorCtrl(self)
         editCtrl.SetText(text)
         editCtrl.EmptyUndoBuffer()
         editCtrl.Colourise(0, -1)
@@ -252,7 +251,7 @@ class ScriptEditor(wx.Frame):
 class PythonScript(eg.ActionClass):
     name = "Python Script"
     description = "Full featured Python script." 
-    iconFile = "PythonScript"
+    iconFile = "icons/PythonScript"
 
     def __init__(self):
         class Default:

@@ -22,7 +22,7 @@
 
 import wx
 import eg
-from SizeGrip import SizeGrip
+
 
 class ButtonRow:
     
@@ -64,7 +64,7 @@ class ButtonRow:
         
         self.sizer = sizer = wx.BoxSizer(wx.HORIZONTAL)
         if parent.GetWindowStyleFlag() & wx.RESIZE_BORDER:
-            self.sizeGrip = SizeGrip(parent)
+            self.sizeGrip = eg.SizeGrip(parent)
             sizer.Add(self.sizeGrip.GetSize(), 1)
             sizer.Add(stdbtnsizer, 0, wx.TOP|wx.BOTTOM, 6)
             sizer.Add(self.sizeGrip, 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT)

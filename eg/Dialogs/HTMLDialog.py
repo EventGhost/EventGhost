@@ -22,7 +22,6 @@
 
 import wx
 import eg
-from eg.Controls.SizeGrip import SizeGrip
 
 
 class DefaultConfig:
@@ -58,7 +57,7 @@ class HTMLDialog(eg.Dialog):
             5
         )
         btnSizer.Add((5, 5), 1, wx.EXPAND)
-        btnSizer.Add(SizeGrip(self), 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT)
+        btnSizer.Add(eg.SizeGrip(self), 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT)
         
         mainSizer.Add(btnSizer, 0, wx.EXPAND)
         

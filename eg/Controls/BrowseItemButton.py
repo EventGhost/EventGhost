@@ -22,7 +22,6 @@
 
 import wx
 import eg
-from eg.Dialogs.TreeItemBrowseDialog import TreeItemBrowseDialog
 
 
 class BrowseMacroButton(wx.Window):
@@ -58,7 +57,7 @@ class BrowseMacroButton(wx.Window):
 
         
     def OnButton(self, event):
-        macro = TreeItemBrowseDialog(
+        macro = eg.TreeItemBrowseDialog(
             self.title,
             self.mesg, 
             self.macro, 
