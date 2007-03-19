@@ -348,14 +348,15 @@ class EventGhost(object):
         #    DirBrowseButton
         #)
         from Controls.BrowseItemButton import BrowseMacroButton
-        from Controls.SpinNumCtrl import SpinNumCtrl
-        from Controls.SpinNumCtrl import SpinIntCtrl
+        from Controls.SpinNumCtrl import SpinNumCtrl, SpinIntCtrl
         from Controls.FontButton import FontButton
         from Controls.ColourSelectButton import ColourSelectButton
         from Controls.DisplayChoice import DisplayChoice
         from Controls.ToolBar import ToolBar
         from Controls.SerialPortChoice import SerialPortChoice
         from Controls.RadioBox import RadioBox
+        from Controls.RadioButtonGrid import RadioButtonGrid
+        from Controls.CheckBoxGrid import CheckBoxGrid
 
         from Dialogs.HTMLDialog import HTMLDialog
         from Dialogs.ConfigurationDialog import ConfigurationDialog

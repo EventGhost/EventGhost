@@ -168,14 +168,16 @@ class MyApp(wx.App):
     @eg.LogIt
     def OnExit(self):
         if True: #eg.mainFrame:
+            eg.Notice("Triggering OnClose")    
             egEvent = eg.eventThread.TriggerEvent("OnClose")
             while not egEvent.isEnded:
                 self.Yield()
+            eg.Notice("Calling exit funcs")    
                 
             for func in self.onExitFuncs:
                 eg.Notice(func)
                 func()
-                
+            eg.Notice("Calling eg.DeInit()")    
             eg.DeInit()
         
         eg.Notice("COM interface count: %s" % pythoncom._GetInterfaceCount())

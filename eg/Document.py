@@ -204,7 +204,7 @@ class Document(object):
         return success    
  
 
-    @eg.LogIt
+    @eg.LogItWithReturn
     def Close(self):
         eg.config.hideOnStartup = self.frame is None
         if self.frame is not None:
