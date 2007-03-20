@@ -22,6 +22,7 @@
 
 import sys
 import os
+import imp
 import pythoncom
 import asynchat
 import thread
@@ -180,12 +181,12 @@ class EventGhost(object):
         self.DoImports2()
 
         # replace builtin input and raw_input with a small dialog
-        from Dialogs.SimpleInputDialog import (
-            GetSimpleRawInput, 
-            GetSimpleInput
-        )
-        sys.modules['__builtin__'].raw_input = GetSimpleRawInput
-        sys.modules['__builtin__'].input = GetSimpleInput
+#        from Dialogs.SimpleInputDialog import (
+#            GetSimpleRawInput, 
+#            GetSimpleInput
+#        )
+#        sys.modules['__builtin__'].raw_input = GetSimpleRawInput
+#        sys.modules['__builtin__'].input = GetSimpleInput
 
         from WinAPI.SerialPort import EnumSerialPorts as GetAllPorts
         self.SerialPort.GetAllPorts = classmethod(GetAllPorts)
@@ -271,35 +272,18 @@ class EventGhost(object):
         object.__setattr__(self, name, value)
         
         
-    def DoImport(self, *imports):
-        g = globals()
-        l = locals()
-        for line in imports:
-            if type(line) == type(()):
-                name, items = line
-                module = __import__(name, g, l, items, -1)
-                for item in items:
-                    self.__dict__[item] = getattr(module, item)
-            else:
-                module = __import__(line, g, l, [], -1)
-                name = line.split(".")[-1]
-                self.__dict__[name] = getattr(getattr(module, name), name)
-        
-        
     def __getattr__(self, name):
-        if exists("eg/Controls/%s.py" % name):
-            eg.Notice("loading module %s" % name)
+        try:
             mod = __import__("Controls.%s" % name, fromlist=[name])
-            attr = getattr(mod, name)
-            self.__dict__[name] = attr
-            return attr
-        elif exists("eg/Dialogs/%s.py" % name):
-            eg.Notice("loading module %s" % name)
-            mod = __import__("Dialogs.%s" % name, fromlist=[name])
-            attr = getattr(mod, name)
-            self.__dict__[name] = attr
-            return attr
-        raise AttributeError 
+        except ImportError:
+            try:
+                mod = __import__("Dialogs.%s" % name, fromlist=[name])
+            except ImportError:
+                raise AttributeError
+        eg.Notice("Loaded module %s" % name)
+        attr = getattr(mod, name)
+        self.__dict__[name] = attr
+        return attr
     
     
     def DoImports1(self):
@@ -422,7 +406,7 @@ class EventGhost(object):
         
 
     def DeInit(self):
-        self.Notice("stopping Threads")
+        self.Notice("stopping threads")
         self.actionThread.CallWait(self.actionThread.StopSession)
         self.actionThread.stop()
         self.eventThread.stop()

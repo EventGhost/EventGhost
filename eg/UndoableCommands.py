@@ -118,7 +118,7 @@ class NewFolder(NewItem):
             pos, 
             name=eg.text.General.unnamedFolder
         )
-        self.StoreItem(pluginItem)
+        self.StoreItem(item)
         item.tree.SetFocus()
         item.Select()
         item.tree.EditLabel(item.id)

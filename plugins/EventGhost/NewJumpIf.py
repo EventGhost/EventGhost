@@ -29,7 +29,7 @@ class NewJumpIf(eg.ActionClass):
     description = \
         "Jumps to another macro, if the specified condition is "\
         "fulfilled."
-    iconFile = "NewJumpIf"
+    iconFile = "icons/NewJumpIf"
     class text:
         text1 = "If:"
         text2 = "Jump to:"

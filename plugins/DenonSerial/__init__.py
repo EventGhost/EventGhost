@@ -287,9 +287,66 @@ cmdList = (
 ('Z3InputCDR', 'Zone 3 Input CDR/TAPE', 'Z3CDR/TAPE', None),
 
 (None,None,None,None),
-('Raw', 'Send Raw command', '', '*'),
 )
 
+class CmdAction(eg.ActionClass):
+    """Base class for all argumentless actions"""
+    
+    def __call__(self):
+        self.plugin.serial.write(self.cmd + chr(13))
+
+
+    
+class ValueAction(eg.ActionWithStringParameter):
+    """Base class for all actions with adjustable argument"""
+    
+    def __call__(self, data):
+        self.plugin.serial.write(self.cmd + str(data) + chr(13))
+        
+        
+        
+class MasterFade(eg.ActionWithStringParameter):
+    name = "Fade MasterVol To"
+    description = "Fade MasterVol To (actual dB value)"
+    
+    def __init__(self):
+        self.fadeLock = thread.allocate_lock()
+
+
+    def __call__(self, data):
+        thread.start_new_thread(self.FadeFunc, (data,))        
+    
+
+    def FadeFunc(self, data):
+        destVol = float(data)
+        self.fadeLock.acquire()
+        cv = self.plugin.currentVolume
+        if destVol > cv:
+            steps = (destVol - cv) * 2
+            while steps > 0:
+                self.plugin.serial.write("MVUP\r")
+                time.sleep(0.15)
+                steps -= 1
+        elif cv > destVol:
+            steps = (cv - destVol) * 2
+            while steps > 0:
+                self.plugin.serial.write("MVDOWN\r")
+                time.sleep(0.15)
+                steps -= 1
+        self.fadeLock.release()
+        
+        
+        
+class Raw(eg.ActionWithStringParameter):
+    name = 'Send Raw command'
+    
+    def __call__(self, data):
+        self.plugin.serial.write(str(data) + chr(13))
+
+
+    
+        
+        
 class DenonSerial(eg.PluginClass):
     canMultiLoad = True
 
@@ -297,39 +354,6 @@ class DenonSerial(eg.PluginClass):
         self.serial = None
         group = self
 
-        def createWriter(cmd):
-            def write(self):
-                self.plugin.serial.write(cmd)
-                self.plugin.serial.write(chr(13))
-            return write
-            
-        class Fader(eg.ActionWithStringParameter):
-            name = "MasterFade"
-            description = "Fade MasterVol To (actual dB value)"
-            __fadeLock=thread.allocate_lock()
-
-            def fadefunc(self, data):
-                destVol = float(data)
-                self.__fadeLock.acquire()
-                cv = self.plugin.currentVolume
-                if destVol > cv:
-                    steps=(destVol - cv) * 2
-                    while steps > 0:
-                        self.plugin.serial.write("MVUP\r")
-                        time.sleep(0.15)
-                        steps -= 1
-                elif cv > destVol:
-                    steps=(cv - destVol) * 2
-                    while steps > 0:
-                        self.plugin.serial.write("MVDOWN\r")
-                        time.sleep(0.15)
-                        steps -= 1
-                self.__fadeLock.release()
-                
-            def __call__(self, data):
-                thread.start_new_thread(Fader.fadefunc, (self, data))
-            __name__ = name
-            
         for cmd_name, cmd_text, cmd_cmd, cmd_rangespec in cmdList:
             if cmd_text is None:
                 # New subgroup, or back up
@@ -338,25 +362,30 @@ class DenonSerial(eg.PluginClass):
                 else:
                     group = self.AddGroup(cmd_name)
                     # Special hack for the FadeTo action
-                    if cmd_name=='Volume':
-                        group.AddAction(Fader)
+                    if cmd_name == 'Volume':
+                        group.AddAction(MasterFade)
             elif cmd_rangespec is not None:
                 # Command with argument
-                class ArgHandler(eg.ActionWithStringParameter):
-                    name = cmd_text
+                actionName, paramDescr = cmd_text.split("(")
+                actionName = actionName.strip()
+                paramDescr = paramDescr[:-1]
+                minValue, maxValue = cmd_rangespec.split("-")
+                
+                class Action(ValueAction):
+                    name = actionName
                     cmd = cmd_cmd
-                    def __call__(self,data):
-                        self.plugin.serial.write(self.cmd+str(data)+chr(13))
-                ArgHandler.__name__ = cmd_name
-                group.AddAction(ArgHandler)
+                    parameterDescription = "Value: (%s)" % paramDescr
+                Action.__name__ = cmd_name
+                group.AddAction(Action)
             else:
                 # Argumentless command
-                class Handler(eg.ActionClass):
+                class Action(CmdAction):
                     name = cmd_text
-                    __call__ = createWriter(cmd_cmd)
-                Handler.__name__ = cmd_name
-                group.AddAction(Handler)
-               
+                Action.__name__ = cmd_name
+                group.AddAction(Action)
+                
+        group.AddAction(Raw)
+
 
     # Serial port reader
     def reader(self):
@@ -411,13 +440,8 @@ class DenonSerial(eg.PluginClass):
     def Configure(self, port=0):
         dialog = eg.ConfigurationDialog(self)
         portCtrl = eg.SerialPortChoice(dialog, value=port)
-        
-        flags = wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL
-        mySizer = wx.FlexGridSizer(4, 2, 5, 5)
-        mySizer.Add(wx.StaticText(dialog, -1, 'Port:'), 0, flags)
-        mySizer.Add(portCtrl, 0, wx.EXPAND)
-
-        dialog.sizer.Add(mySizer)
+        dialog.sizer.Add(wx.StaticText(dialog, -1, 'Port:'))
+        dialog.sizer.Add(portCtrl)
         
         if dialog.AffirmedShowModal():
             return (

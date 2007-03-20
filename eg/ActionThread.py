@@ -45,9 +45,12 @@ class ActionThread(ThreadWorker):
     def StartSession(self, filename):
         eg.eventTable.clear()
         for pluginIdent in CORE_PLUGINS:
-            plugin = eg.OpenPlugin(pluginIdent, None, ())
-            plugin.__start__()
-            plugin.info.isStarted = True
+            try:
+                plugin = eg.OpenPlugin(pluginIdent, None, ())
+                plugin.__start__()
+                plugin.info.isStarted = True
+            except:
+                eg.PrintTraceback()
         start = clock()
         eg.document.Load(filename)
         eg.Notice("XML loaded in %f seconds." % (clock() - start))
@@ -70,7 +73,10 @@ class ActionThread(ThreadWorker):
     def StopSession(self):
         eg.document.autostartMacro.UnloadPlugins()
         for pluginIdent in CORE_PLUGINS:
-            plugin = getattr(eg.plugins, pluginIdent)
-            plugin.__stop__()
-            eg.ClosePlugin(plugin)
+            try:
+                plugin = getattr(eg.plugins, pluginIdent)
+                plugin.__stop__()
+                eg.ClosePlugin(plugin)
+            except:
+                eg.PrintTraceback()
         
