@@ -69,3 +69,14 @@ def NetworkSend(host, port, password, eventString, payload=None):
     return True
 
 
+def Main(argv):
+    host, port = argv[0].split(":")
+    password = argv[1]
+    eventstring = argv[2]
+    payloads = argv[3:]
+    NetworkSend(host, int(port), password, eventstring, payloads)
+    
+    
+if __name__ == '__main__':
+    import sys
+    Main(sys.argv[1:])

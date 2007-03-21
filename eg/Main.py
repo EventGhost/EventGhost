@@ -63,16 +63,8 @@ while True:
         break
     arg = sys.argv[i].lower()
     if arg == "-n" or arg == "-netsend":
-        host, port = sys.argv[i + 1].split(":")
-        password = sys.argv[i + 2]
-        eventstring = sys.argv[i + 3]
-        i += 3
-        payloads = []
-        while i + 1 < len(sys.argv):
-            i += 1
-            payloads.append(sys.argv[i])
-        from NetworkSend import NetworkSend
-        NetworkSend(host, int(port), password, eventstring, payloads)
+        import NetworkSend
+        NetworkSend.Main(sys.argv[i+1:])
         sys.exit(0)
     elif arg == '-debug':
         args.debugLevel = 1
