@@ -72,17 +72,6 @@ class ContainerItem(TreeItem):
         TreeItem._Delete(self)
         
         
-#    def AskDelete(self):
-#        """ Ask all children, if they are ready to be deleted """
-#        if TreeItem.AskDelete(self) is False:
-#            return False
-#        for child in self.childs:
-#            res = child.AskDelete()
-#            if not res:
-#                return False
-#        return True
-#
-        
     @eg.AssertNotMainThread
     @eg.LogIt
     def AddChild(self, child, pos=-1):

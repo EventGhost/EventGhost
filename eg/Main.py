@@ -62,7 +62,19 @@ while True:
     if len(sys.argv) <= i:
         break
     arg = sys.argv[i].lower()
-    if arg == '-debug':
+    if arg == "-n" or arg == "-netsend":
+        host, port = sys.argv[i + 1].split(":")
+        password = sys.argv[i + 2]
+        eventstring = sys.argv[i + 3]
+        i += 3
+        payloads = []
+        while i + 1 < len(sys.argv):
+            i += 1
+            payloads.append(sys.argv[i])
+        from NetworkSend import NetworkSend
+        NetworkSend(host, int(port), password, eventstring, payloads)
+        sys.exit(0)
+    elif arg == '-debug':
         args.debugLevel = 1
     elif arg == '-debug2':
         args.debugLevel = 2
@@ -116,7 +128,7 @@ if not args.allowMultiLoad:
         import win32com.client
         e = win32com.client.Dispatch("{7EB106DC-468D-4345-9CFE-B0021039114B}")
         if args.startupEvent is not None:
-            e.TriggerEvent(startupEvent[0], startupEvent[1])
+            e.TriggerEvent(args.startupEvent[0], args.startupEvent[1])
         else:
             e.BringToFront()
         ExitProcess(0)		

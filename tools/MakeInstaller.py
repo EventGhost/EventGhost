@@ -335,7 +335,7 @@ Filename: "{app}\EventGhost.exe"; Flags: postinstall nowait skipifsilent
 Type: filesandordirs; Name: "{app}\eg"
 
 [Files]
-Source: "%(DIST)s\*.exe"; DestDir: "{app}"; Flags: ignoreversion
+;Source: "%(DIST)s\*.exe"; DestDir: "{app}"; Flags: ignoreversion
 %(INSTALL_FILES)s
 Source: "%(TRUNK)s\Example.xml"; DestDir: "{userappdata}\EventGhost"; DestName: "MyConfig.xml"; Flags: onlyifdoesntexist uninsneveruninstall
 
@@ -441,8 +441,9 @@ def MakeInstaller(isUpdate):
     print "Creating source ZIP file"
     MakeSourceArchive(join(outDir, "EventGhost_%s_Source.zip" % VersionStr))
         
-    InstallPy2exePatch()
-    setup(**py2exeOptions)
+    if not isUpdate:
+        InstallPy2exePatch()
+        setup(**py2exeOptions)
     
     installFiles = []
     if isUpdate:
