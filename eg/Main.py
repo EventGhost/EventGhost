@@ -23,10 +23,8 @@
 import os
 import sys
 import locale
-import codecs
 
 encoding = locale.getdefaultlocale()[1]
-decoder = codecs.getdecoder(encoding)
 
 #
 locale.setlocale(locale.LC_ALL, '')
@@ -58,8 +56,10 @@ class args:
     allowMultiLoad = False
     debugLevel = 0
     
+print encoding
+print sys.argv
 argv = [val.decode(encoding) for val in sys.argv]
-
+print argv
 
 i = 0
 while True:

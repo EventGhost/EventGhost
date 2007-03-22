@@ -185,7 +185,7 @@ def ParseString(text, filterFunc=None):
                 res = filterFunc(word)
             if res is None:	
                 res = eval(word, {}, eg.globals.__dict__)
-            chunks.append(str(res))
+            chunks.append(unicode(res))
             start = end + 1
     chunks.append(text[start:])
     return "".join(chunks)
