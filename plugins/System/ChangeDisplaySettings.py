@@ -46,7 +46,7 @@ class DisplayChoice(wx.Choice):
 
 class ChangeDisplaySettings(eg.ActionClass):
     name = "Change Display Settings"
-    iconFile = "Display"
+    iconFile = "icons/Display"
     
     def __call__(
         self, 

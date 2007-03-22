@@ -128,7 +128,7 @@ class System(eg.PluginClass):
         subgroup = self.AddGroup(
             text.SoundGroup.name, 
             text.SoundGroup.description,
-            "SoundCard"
+            "icons/SoundCard"
         )
         subgroup.AddAction(MuteOn)
         subgroup.AddAction(MuteOff)
@@ -140,7 +140,7 @@ class System(eg.PluginClass):
         subgroup = self.AddGroup(
             text.MonitorGroup.name,
             text.MonitorGroup.description,
-            "Display"
+            "icons/Display"
         )
         subgroup.AddAction(StartScreenSaver)
         subgroup.AddAction(MonitorStandby)
@@ -154,7 +154,7 @@ class System(eg.PluginClass):
         subgroup = self.AddGroup(
             text.PowerGroup.name,
             text.PowerGroup.description,
-            "Shutdown"
+            "icons/Shutdown"
         )
         subgroup.AddAction(PowerDown)
         subgroup.AddAction(Reboot)
@@ -244,7 +244,7 @@ class ResetIdleTimer(eg.ActionClass):
 class OpenDriveTray(eg.ActionClass):
     name = "Open/close drive tray"
     description = "Controls the tray of a CD/DVD-ROM drive."
-    iconFile = "cdrom"
+    iconFile = "icons/cdrom"
     class text:
         labels = [
             "Toggle drive tray: %s",
@@ -366,7 +366,7 @@ class OpenDriveTray(eg.ActionClass):
 
 class PlaySound(eg.ActionWithStringParameter):
     name = "Play Sound"
-    iconFile = "SoundCard"
+    iconFile = "icons/SoundCard"
     class text:
         text1 = "Path to soundfile:"
         text2 = "Wait for completion"
@@ -414,7 +414,7 @@ class SetClipboard(eg.ActionWithStringParameter):
     name = "Copy string to clipboard"
     description = \
         "Copies the string parameter to the system clipboard."
-    iconFile = "SetClipboard"
+    iconFile = "icons/SetClipboard"
     class text:
         error = "Can't open clipboard"
         
@@ -434,7 +434,7 @@ class StartScreenSaver(eg.ActionClass):
     name = "Start windows screen saver"
     description = \
         "Starts the currently in windows selected screensaver."
-    iconFile = "StartScreenSaver"
+    iconFile = "icons/StartScreenSaver"
         
     
     def __call__(self):
@@ -450,7 +450,7 @@ class StartScreenSaver(eg.ActionClass):
 class MonitorStandby(eg.ActionClass):
     name = "Set monitor into stand-by mode"
     description = "Sets the state of the display to low power mode."
-    iconFile = "Display"
+    iconFile = "icons/Display"
         
     def __call__(self):
         win32api.SendMessage(
@@ -467,7 +467,7 @@ class MonitorPowerOff(eg.ActionClass):
     description = \
         "Sets the state of the display to power-off mode. This will "\
         "be the most power-saving mode the display supports."
-    iconFile = "Display"
+    iconFile = "icons/Display"
         
     def __call__(self):
         win32api.SendMessage(
@@ -487,7 +487,7 @@ class MonitorPowerOn(eg.ActionClass):
     description = \
         "Turns on a display, when it is in low power or power-off "\
         "mode. Will also stop a running screensaver."
-    iconFile = "Display"
+    iconFile = "icons/Display"
         
     def __call__(self):
         win32api.SendMessage(
@@ -503,7 +503,7 @@ class MonitorPowerOn(eg.ActionClass):
 # Action: System.PowerDown
 #-----------------------------------------------------------------------------
 class __ComputerPowerAction(eg.ActionClass):
-    iconFile = 'Shutdown'
+    iconFile = "icons/Shutdown"
     
     def GetLabel(self, bForceClose=False):
         s = eg.ActionClass.GetLabel(self)
@@ -530,7 +530,7 @@ class PowerDown(__ComputerPowerAction):
     description = \
         "Shuts down the system and turns off the power. The system "\
         "must support the power-off feature."
-    iconFile = "PowerDown"
+    iconFile = "icons/PowerDown"
     
     def __call__(self, bForceClose=False):
         hToken = OpenProcessToken(  
@@ -550,7 +550,7 @@ class Reboot(__ComputerPowerAction):
     name = "Reboot computer"
     description = \
         "Shuts down the system and then restarts the system."
-    iconFile = "Reboot"
+    iconFile = "icons/Reboot"
 
     def __call__(self, bForceClose=False):
         hToken = OpenProcessToken(  
@@ -571,7 +571,7 @@ class Standby(__ComputerPowerAction):
     description = \
         "This function suspends the system by shutting power down "\
         "and enters a suspend (sleep) state."
-    iconFile = "Standby"
+    iconFile = "icons/Standby"
         
     def __call__(self, bForceClose=False):
         ctypes.windll.Powrprof.SetSuspendState(False, bForceClose, False)
@@ -586,7 +586,7 @@ class Hibernate(__ComputerPowerAction):
     description = \
         "This function suspends the system by shutting power down "\
         "and enters a hibernation (S4) state."
-    iconFile = "Hibernate"
+    iconFile = "icons/Hibernate"
     
     def __call__(self, bForceClose=False):
         ctypes.windll.Powrprof.SetSuspendState(True, bForceClose, False)
@@ -600,7 +600,7 @@ class LogOff(eg.ActionClass):
     name = "Log-off current user"
     description = "Shuts down all processes running in the current "\
         "logon session. Then it logs the user off."
-    iconFile = "LogOff"
+    iconFile = "icons/LogOff"
     
     def __call__(self):
         #SHTDN_REASON_MAJOR_OPERATINGSYSTEM = 0x00020000
@@ -622,7 +622,7 @@ class LockWorkstation(eg.ActionClass):
         "display. Locking a workstation protects it from "\
         "unauthorized use. This function has the same result as "\
         "pressing Ctrl+Alt+Del and clicking Lock Workstation."
-    iconFile = "LockWorkstation"
+    iconFile = "icons/LockWorkstation"
     
     def __call__(self):
         ctypes.windll.user32.LockWorkStation()
@@ -634,7 +634,7 @@ class LockWorkstation(eg.ActionClass):
 #-----------------------------------------------------------------------------
 class SetWallpaper(eg.ActionWithStringParameter):   
     name = "Change Wallpaper"
-    iconFile = "SetWallpaper"
+    iconFile = "icons/SetWallpaper"
     class text:
         text1 = "Path to image file:"
         text2 = "Alignment:"
@@ -721,7 +721,7 @@ class SetWallpaper(eg.ActionWithStringParameter):
 #-----------------------------------------------------------------------------
 class MuteOn(eg.ActionClass):
     name = "Turn Mute On"       
-    iconFile = "SoundCard"
+    iconFile = "icons/SoundCard"
     
     def __call__(self):
         SoundMixer.SetMute(True)
@@ -733,7 +733,7 @@ class MuteOn(eg.ActionClass):
 #-----------------------------------------------------------------------------
 class MuteOff(eg.ActionClass):
     name = "Turn Mute Off"
-    iconFile = "SoundCard"
+    iconFile = "icons/SoundCard"
     
     def __call__(self):
         SoundMixer.SetMute(False)
@@ -746,7 +746,7 @@ class MuteOff(eg.ActionClass):
 #-----------------------------------------------------------------------------
 class ToggleMute(eg.ActionClass):
     name = "Toggle Mute"
-    iconFile = "SoundCard"
+    iconFile = "icons/SoundCard"
     
     def __call__(self):
         return SoundMixer.ToggleMute()
@@ -758,7 +758,7 @@ class ToggleMute(eg.ActionClass):
 #-----------------------------------------------------------------------------
 class SetMasterVolume(eg.ActionClass):
     name = "Set Master Volume"
-    iconFile = "SoundCard"
+    iconFile = "icons/SoundCard"
     class text:
         text1 = "Set master volume to"
         text2 = "percent."
@@ -802,7 +802,7 @@ class SetMasterVolume(eg.ActionClass):
 #-----------------------------------------------------------------------------
 class ChangeMasterVolumeBy(eg.ActionClass):
     name = "Change Master Volume"
-    iconFile = "SoundCard"
+    iconFile = "icons/SoundCard"
     class text:
         text1 = "Change master volume by"
         text2 = "percent."
@@ -918,7 +918,7 @@ class ShowPictureFrame(wx.Frame):
         
 class ShowPicture(eg.ActionClass):
     name = "Show picture"
-    iconFile = "ShowPicture"
+    iconFile = "icons/ShowPicture"
     
     
     def __init__(self):
@@ -970,7 +970,7 @@ class ShowPicture(eg.ActionClass):
         
 class SetDisplayPreset(eg.ActionClass):
     name = "Set Display Preset"
-    iconFile = "Display"
+    iconFile = "icons/Display"
     
     def __call__(self, *args):
         eg.WinAPI.Display.SetDisplayModes(*args)
@@ -1038,7 +1038,7 @@ class WakeOnLan(eg.ActionWithStringParameter):
         "network packet. \n\nYou have to specify the MAC address of "\
         "the computer to wake up in the form:<p>"\
         "<i>00-13-D4-9A-2F-04</i><br> or <i>00:13:D4:9A:2F:04</i>"
-    iconFile = "WakeOnLan"
+    iconFile = "icons/WakeOnLan"
     class text:
         parameterDescription = "MAC address to wake up:"
     

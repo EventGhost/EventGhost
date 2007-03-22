@@ -46,6 +46,7 @@ class DefaultConfig:
     confirmDelete = True
     class treeStateData:
         guid = None
+        time = None
     class plugins:
         pass
 

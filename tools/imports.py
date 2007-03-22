@@ -521,11 +521,11 @@ import xxsubtype
 import zipimport
 import zlib
 import bz2
-#import curses
-#import curses.ascii
-#import curses.panel
-#import curses.textpad
-#import curses.wrapper
+import curses
+import curses.ascii
+import curses.panel
+import curses.textpad
+import curses.wrapper
 import gopherlib
 import os.path
 import select

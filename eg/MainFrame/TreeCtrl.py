@@ -279,6 +279,11 @@ class TreeCtrl(wx.TreeCtrl):
         Bind(wx.EVT_TREE_BEGIN_DRAG, self.OnBeginDrag)
         Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
         Bind(wx.EVT_TREE_ITEM_MENU, self.OnContextMenu)
+        @eg.LogIt
+        def test(event):
+            pass
+        
+        Bind(wx.EVT_TREE_KEY_DOWN, test)
         
         if eg.debugLevel:
             Bind(wx.EVT_TREE_ITEM_GETTOOLTIP, self.OnToolTip)
@@ -476,14 +481,20 @@ class TreeCtrl(wx.TreeCtrl):
             event.Veto()
             return
         self.isInEditLabel = True
-        eg.app.focusEvent.Fire("Edit")
-        # avoid programmatic change of the selected item while editing
-        self.frame.UpdateViewOptions()
+        wx.CallAfter(self.InLabelEdit)
 
+
+    def InLabelEdit(self):
+        eg.app.focusEvent.Fire("Edit")
+        print self.GetEditControl()
+        @eg.LogIt
+        def test(event): event.Skip()
+        self.GetEditControl().Bind(wx.EVT_CHAR, test)
+        
         
     def OnEndLabelEdit(self, event):
         self.isInEditLabel = False
-        self.frame.UpdateViewOptions()
+        eg.app.focusEvent.Fire(self)
         id = event.GetItem()
         item = self.GetPyData(id)
         newLabel = event.GetLabel()

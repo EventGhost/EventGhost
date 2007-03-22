@@ -23,8 +23,11 @@
 import os
 import sys
 import locale
+import codecs
 
-#encoding = locale.getdefaultlocale()[1]
+encoding = locale.getdefaultlocale()[1]
+decoder = codecs.getdecoder(encoding)
+
 #
 locale.setlocale(locale.LC_ALL, '')
 #if hasattr(sys,"setdefaultencoding"):
@@ -55,16 +58,18 @@ class args:
     allowMultiLoad = False
     debugLevel = 0
     
-    
+argv = [val.decode(encoding) for val in sys.argv]
+
+
 i = 0
 while True:
     i += 1
-    if len(sys.argv) <= i:
+    if len(argv) <= i:
         break
-    arg = sys.argv[i].lower()
+    arg = argv[i].lower()
     if arg == "-n" or arg == "-netsend":
         import NetworkSend
-        NetworkSend.Main(sys.argv[i+1:])
+        NetworkSend.Main(argv[i+1:])
         sys.exit(0)
     elif arg == '-debug':
         args.debugLevel = 1
@@ -86,21 +91,24 @@ while True:
         args.allowMultiLoad = True
     elif arg == '-e' or arg == '-event':
         i += 1
-        if len(sys.argv) <= i:
+        if len(argv) <= i:
             print "missing event string"
             break
-        eventstring = sys.argv[i]
-        payloads = []
-        while i+1 < len(sys.argv):
-            i += 1
-            payloads.append(sys.argv[i])
+        eventstring = argv[i]
+        if len(argv) <= i + 1:
+            payloads = None
+        else:
+            payloads = []
+            while i + 1 < len(argv):
+                i += 1
+                payloads.append(argv[i])
         args.startupEvent = (eventstring, payloads)
     elif arg == '-f' or arg == '-file':
         i += 1
-        if len(sys.argv) <= i:
+        if len(argv) <= i:
             print "missing file string"
             break
-        args.startupFile = sys.argv[i]
+        args.startupFile = argv[i]
     elif arg == '-translate':
         import LanguageEditor
         LanguageEditor.Start()

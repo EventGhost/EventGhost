@@ -48,7 +48,7 @@ class AddActionDialog(eg.Dialog):
         self.resultData = None
         eg.Dialog.__init__(
             self, 
-            None, 
+            eg.document.frame, 
             -1,
             Text.title, 
             style=wx.DEFAULT_DIALOG_STYLE

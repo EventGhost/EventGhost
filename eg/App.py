@@ -90,6 +90,8 @@ class MyApp(wx.App):
         text = eg.text.MainFrame.TaskBarMenu
         menuShow = trayMenu.Append(text.Show, self.OnCmdShowMainFrame)
         menuHide = trayMenu.Append(text.Hide, self.OnCmdHideMainFrame)
+        #trayMenu.AppendSeparator()
+        #menuAbout = trayMenu.Append(eg.text.MainFrame.Menu.About, self.OnCmdAbout)
         trayMenu.AppendSeparator()
         trayMenu.Append(text.Exit, self.OnCmdExit)
     
@@ -125,6 +127,10 @@ class MyApp(wx.App):
             self.mainFrame.Destroy()
         
         
+    def OnCmdAbout(self, event):
+        eg.AboutDialog().DoModal()
+        
+            
     def OnCmdExit(self, event):
         self.Exit(event)
         

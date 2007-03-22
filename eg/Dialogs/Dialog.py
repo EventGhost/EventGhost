@@ -24,6 +24,8 @@ import wx
 
 
 class Dialog(wx.Dialog):
+    __instance = None
+    
     
     def DoModal(self):
         result = None
@@ -31,3 +33,6 @@ class Dialog(wx.Dialog):
             result = self.resultData
         self.Destroy()
         return result
+    
+    
+        

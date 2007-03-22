@@ -50,13 +50,13 @@ Text = eg.GetTranslation(Text)
 
 class OptionsDialog(eg.Dialog):
     
-    def __init__(self, parent=None):
+    def __init__(self):
         wx.Dialog.__init__(
             self, 
-            parent, 
+            eg.document.frame, 
             -1,
             Text.Title, 
-            style=wx.DEFAULT_DIALOG_STYLE
+            style=wx.DEFAULT_DIALOG_STYLE|wx.STAY_ON_TOP 
         )
         
         self.languageList = ["en_EN"]

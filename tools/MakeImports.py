@@ -183,5 +183,4 @@ for line in win32.splitlines():
     if line and line[0] != "#":
         fd.write("import %s\n" % line)
     
-
 fd.close()

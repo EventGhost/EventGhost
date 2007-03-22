@@ -34,7 +34,7 @@ from os.path import basename, dirname, abspath
 class Execute(eg.ActionClass):
     name = "Start Application"
     description = "Starts an executable file."
-    iconFile = "Execute"
+    iconFile = "icons/Execute"
     class text:
         label = "Start Program: %s"
         FilePath = "Filepath to executable:"

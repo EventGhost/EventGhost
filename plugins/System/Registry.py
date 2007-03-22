@@ -67,7 +67,7 @@ def Init(plugin):
     subgroup = plugin.AddGroup(
         plugin.text.RegistryGroup.name,
         plugin.text.RegistryGroup.description,
-        "Registry"
+        "icons/Registry"
     )
     subgroup.AddAction(RegistryQuery)
     subgroup.AddAction(RegistryChange)
@@ -479,7 +479,7 @@ def FullKeyName(key, subkey, valueName, maxSubkeyLength = 15):
 class RegistryQuery(eg.ActionClass):
     name = "Query Registry"
     description = "Queries the windows registry and return or compares the value"
-    iconFile = "Registry"
+    iconFile = "icons/Registry"
     class text:
         actions = ("check if exists", "return as result", "compare to")
         labels = (
@@ -652,7 +652,7 @@ class RegistryQuery(eg.ActionClass):
 class RegistryChange(eg.ActionClass):
     name = "Change Registry Value"
     description = "Changes a value in the windows registry"
-    iconFile = "Registry"
+    iconFile = "icons/Registry"
     class text:
         actions = ("create or change", "change if exists only", "delete")
         labels = (

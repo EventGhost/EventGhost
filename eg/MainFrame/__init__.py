@@ -197,7 +197,10 @@ class MainFrame(wx.Frame):
         menuItems.cut = AddItem("Cut", hotkey="Ctrl+X")
         menuItems.copy = AddItem("Copy", hotkey="Ctrl+C")
         menuItems.paste = AddItem("Paste", hotkey="Ctrl+V")
-        menuItems.delete = AddItem("Delete", hotkey="Del")
+        # notice that we add a ascii zero byte at the end of the hotkey.
+        # this way we prevent the normal accelerator to happen. We will later
+        # catch the key ourself.
+        menuItems.delete = AddItem("Delete", hotkey="Del\x00")
         AddItem()
         AddItem("Find", hotkey="Ctrl+F")
         AddItem("FindNext", hotkey="F3")
@@ -339,6 +342,16 @@ class MainFrame(wx.Frame):
         
         eg.app.clipboardEvent.Bind(self.OnClipboardChange)
         self.UpdateTitle(self.document.filePath)
+        
+        # create an accelerator for the "Del" key. This way we can temporarly
+        # disable it while editing a tree label. 
+        # (see TreeCtrl.py OnBeginLabelEdit and OnEndLabelEdit)
+        delId = menuItems.delete.GetId()
+        self.acceleratorTable = wx.AcceleratorTable(
+            [(wx.ACCEL_NORMAL, wx.WXK_DELETE, delId)]
+        )        
+        self.SetAcceleratorTable(self.acceleratorTable)
+        
         
         
     @eg.LogIt
@@ -510,9 +523,20 @@ class MainFrame(wx.Frame):
             self.toolBar.buttons.Paste.Enable(canPaste)
     
     
+    @eg.LogIt
     def OnFocusChange(self, focus):
         if focus == self.lastFocus:
             return
+        if focus == "Edit":
+            # avoid programmatic change of the selected item while editing
+            self.UpdateViewOptions()
+            # temporarily disable the "Del" accelerator
+            self.SetAcceleratorTable(wx.AcceleratorTable([]))
+        elif self.lastFocus == "Edit":
+            # restore the "Del" accelerator
+            self.SetAcceleratorTable(self.acceleratorTable)
+            self.UpdateViewOptions()
+            
         self.lastFocus = focus
         toolBarButtons = self.toolBar.buttons
         canCut, canCopy, canPaste, canDelete = self.GetEditCmdState(focus)
@@ -521,12 +545,19 @@ class MainFrame(wx.Frame):
         toolBarButtons.Paste.Enable(canPaste)
         
         
-    #@eg.LogIt
+    @eg.LogIt
     def GetEditCmdState(self, focus):
         if focus is None:
             return (False, False, False, False)
         elif focus == "Edit":
-            return (True, True, True, True)
+            editCtrl = self.treeCtrl.GetEditControl()
+            start, end = editCtrl.GetSelection()
+            return (
+                editCtrl.CanCut(), 
+                editCtrl.CanCopy(), 
+                editCtrl.CanPaste(), 
+                (start != end)
+            )
         elif focus == self.logCtrl:
             return (False, True, False, False)
         elif focus == self.treeCtrl and self.document.selection:
@@ -541,6 +572,7 @@ class MainFrame(wx.Frame):
             return (False, False, False, False)
         
     
+    @eg.LogIt
     def OnTreeSelectionEvent(self, selection):
         isFolder = selection.__class__ in (
             self.document.FolderItem, 
@@ -576,6 +608,7 @@ class MainFrame(wx.Frame):
             editMenu.Redo.SetText(redoName)
         
         
+    @eg.LogIt
     def SetupEditMenu(self, menuItems):
         canCut, canCopy, canPaste, canDelete =\
             self.GetEditCmdState(self.lastFocus)
@@ -593,6 +626,7 @@ class MainFrame(wx.Frame):
         menuItems.disableItem.Check(self.document.selection and not self.document.selection.isEnabled)
         
         
+    @eg.LogIt
     def OnMenuOpen(self, event):
         self.SetupEditMenu(self.menuItems)            
             
@@ -609,11 +643,19 @@ class MainFrame(wx.Frame):
         MacroItem.shouldSelectOnExecute = expandOnEvents
         
         
-    def DispatchCommand(self, command):
+    @eg.LogIt
+    def DispatchCommand(self, command, event):
+        if self.lastFocus == "Edit" and command == "Clear":
+            editCtrl = self.treeCtrl.GetEditControl()
+            print "trying", editCtrl.GetSelection()
+            editCtrl.Remove(*editCtrl.GetSelection())
+            return
         focus = self.FindFocus()
         method = getattr(focus, command, None)
         if method is not None:
             method()
+        else:
+            event.Skip()
         
         
     #-------------------------------------------------------------------------
@@ -692,22 +734,26 @@ class MainFrame(wx.Frame):
     
     def OnCmdCut(self, event):
         """ Handle the menu command 'Cut'. """
-        self.DispatchCommand("Cut")
+        self.DispatchCommand("Cut", event)
         
         
     def OnCmdCopy(self, event):
         """ Handle the menu command 'Copy'. """
-        self.DispatchCommand("Copy")
+        self.DispatchCommand("Copy", event)
             
             
     def OnCmdPaste(self, event):
         """ Handle the menu command 'Paste'. """
-        self.DispatchCommand("Paste")
+        self.DispatchCommand("Paste", event)
     
     
+    @eg.LogIt
     def OnCmdDelete(self, event):
         """ Handle the menu command 'Delete'. """
-        self.DispatchCommand("Clear")
+        #if self.focus == "Edit":
+        #    self.tree.GetEditControl().EmulateKeyPress()
+        #else:
+        self.DispatchCommand("Clear", event)
                 
                 
     def OnCmdFind(self, event):
@@ -874,7 +920,7 @@ class MainFrame(wx.Frame):
         import wx.py.crust
         intro = "Welcome to EventGhost"
         win = wx.py.crust.CrustFrame(
-            self, 
+            None, 
             -1, 
             rootObject=eg.globals, 
             locals=eg.globals.__dict__, 
@@ -905,15 +951,7 @@ class MainFrame(wx.Frame):
         
     
     def OnCmdTest(self, event):
-        self.Close()
-        return
-    
-        self.CreateLogCtrl()
-        return
-        
-        from eg.Dialogs import LinkListDialog
-        reload(LinkListDialog)
-        dialog = LinkListDialog.LinkListDialog(self)
+        dialog = eg.LinkListDialog(self)
         dialog.ShowModal()
         dialog.Destroy()
         

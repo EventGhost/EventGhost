@@ -356,13 +356,13 @@ class Panel4(wx.Panel):
         
 class AboutDialog(eg.Dialog):
     
-    def __init__(self, parent=None):
+    def __init__(self):
         wx.Dialog.__init__(
             self, 
-            parent, 
+            eg.document.frame, 
             -1, 
             Text.Title,
-            style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
+            style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER 
         )
         
         notebook = wx.Notebook(self)

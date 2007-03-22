@@ -266,6 +266,7 @@ def GetPluginInfo(pluginName):
             infoDict = PluginInfoMetaClass.lastPluginInfo.__dict__
         except:
             eg.PrintError('Can\'t read __init__.py for plugin "%s"' % pluginName)
+            eg.PrintTraceback()
             return None
     else:
         try:
@@ -274,6 +275,7 @@ def GetPluginInfo(pluginName):
             eg.PrintError(
                 'Can\'t read __info__.py for plugin "%s"' % pluginName
             )
+            eg.PrintTraceback()
             return None
     
     # create a new sublclass of PluginInfo for this plugin class
