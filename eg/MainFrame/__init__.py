@@ -356,6 +356,9 @@ class MainFrame(wx.Frame):
         
     @eg.LogIt
     def Destroy(self):
+        self.document.SetTree(None)
+        eg.log.SetCtrl(None)
+        eg.app.mainFrame = None
         self.document.frame = None
         config.perspective = self.auiManager.SavePerspective()
         self.SetStatusBar(None)
@@ -365,12 +368,9 @@ class MainFrame(wx.Frame):
         eg.app.clipboardEvent.Unbind(self.OnClipboardChange)
         self.document.undoEvent.Unbind(self.OnUndoEvent)
         self.document.selectionEvent.Unbind(self.OnTreeSelectionEvent)
-        if self.logCtrl:
-            self.logCtrl.Destroy()
-        if self.treeCtrl:
-            self.treeCtrl.Destroy()
-        eg.app.mainFrame = None
-        gc.collect()
+        self.logCtrl.Destroy()
+        self.treeCtrl.Destroy()
+        #gc.collect()
         return wx.Frame.Destroy(self)
     
     

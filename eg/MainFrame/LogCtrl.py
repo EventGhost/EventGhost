@@ -75,9 +75,9 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             r = max(r - 15, 0)
             g = max(g - 15, 0)
         else:
-            r = min(r + 30, 255)
-            g = min(g + 30, 255)
-            b = min(b + 30, 255)
+            r = min(r + 60, 255)
+            g = min(g + 60, 255)
+            b = min(b + 60, 255)
         sysTextColour = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOWTEXT)
         self.attr1 = wx.ListItemAttr()
         self.attr1.BackgroundColour = (r, g, b)
@@ -118,6 +118,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     @eg.LogIt
     def Destroy(self):
         eg.log.SetCtrl(None)
+        return
         return wx.ListCtrl.Destroy(self)
         
 

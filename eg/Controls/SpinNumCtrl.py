@@ -25,7 +25,7 @@ import locale
 import wx
 from wx.lib import masked
 
-
+encoding = locale.getdefaultlocale()[1]
 localedict = locale.localeconv()
 
 class SpinNumCtrl(wx.Window):
@@ -35,8 +35,8 @@ class SpinNumCtrl(wx.Window):
         "allowNegative": False,
         "min": 0,
         "limited": True,
-        "groupChar": localedict['thousands_sep'],
-        "decimalChar": localedict['decimal_point'],
+        "groupChar": localedict['thousands_sep'].decode(encoding),
+        "decimalChar": localedict['decimal_point'].decode(encoding),
     }
     
     def __init__(
@@ -75,6 +75,12 @@ class SpinNumCtrl(wx.Window):
             name, 
             **new_args
         )
+        self.numCtrl = numCtrl
+        numCtrl.SetCtrlParameters(        
+            validBackgroundColour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW),
+            emptyBackgroundColour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW),
+            foregroundColour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT),
+        )
         numCtrl.SetLimited(True)
         w, h = numCtrl.GetSize()
         spinbutton = wx.SpinButton(
@@ -99,7 +105,6 @@ class SpinNumCtrl(wx.Window):
         self.SetMinSize(self.GetSize())
         self.Bind(wx.EVT_SIZE, self.OnSize)
         self.Bind(wx.EVT_SET_FOCUS, self.OnSetFocus)
-        self.numCtrl = numCtrl
 
 
     def OnSize(self, event):

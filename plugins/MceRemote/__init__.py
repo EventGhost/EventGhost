@@ -58,7 +58,6 @@ class PluginInfo(eg.PluginInfo):
     )
 
 
-import locale
 import os
 from threading import Timer
 import threading

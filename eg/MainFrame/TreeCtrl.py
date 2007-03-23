@@ -334,6 +334,7 @@ class TreeCtrl(wx.TreeCtrl):
         self.Freeze()
         self.Unbind(wx.EVT_TREE_SEL_CHANGED)
         self.DeleteAllItems()
+        return
         return wx.TreeCtrl.Destroy(self)
 
     

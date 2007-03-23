@@ -52,7 +52,6 @@ class PluginInfo(eg.PluginInfo):
 
 
 import wx
-import locale
 import USB_UIRT as UUIRT
 
 

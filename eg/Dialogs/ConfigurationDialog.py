@@ -54,7 +54,9 @@ class HeaderBox(wx.PyWindow):
         self.obj = obj
         self.parent = parent
         wx.PyWindow.__init__(self, parent, -1)
-        self.SetBackgroundColour((255,255,255))
+        self.SetBackgroundColour(
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW)
+        )
         
         nameBox = wx.StaticText(self, -1, obj.name)
         font = wx.Font(8, wx.SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD )

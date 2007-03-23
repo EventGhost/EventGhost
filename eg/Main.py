@@ -56,10 +56,7 @@ class args:
     allowMultiLoad = False
     debugLevel = 0
     
-print encoding
-print sys.argv
 argv = [val.decode(encoding) for val in sys.argv]
-print argv
 
 i = 0
 while True:

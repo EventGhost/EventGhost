@@ -36,7 +36,6 @@ import sys
 import time
 import traceback
 import threading
-import locale
 
 import wx
 

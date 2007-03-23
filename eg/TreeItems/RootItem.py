@@ -53,8 +53,8 @@ class RootItem(ContainerItem):
     def __init__(self, parent, node):
         parent = None
         ContainerItem.__init__(self, parent, node)
-        self.guid = node.attrib.get("guid")
-        self.time = node.attrib.get("time")
+        self.guid = node.attrib.get("guid", "0")
+        self.time = node.attrib.get("time", "0")
         self.name = eg.text.General.configTree
          
         

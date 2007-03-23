@@ -1,4 +1,4 @@
-name = "WMPlayer"
+name = "Windows Media Player"
 author = "Oystein Hansen"
 version = "0.0.1"
 kind = "program"

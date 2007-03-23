@@ -39,7 +39,7 @@ class WindowDragFinder(wx.Control):
         
         self.text = text = eg.plugins.Window.FindWindow.text
         wx.Control.__init__(self, parent, -1, style=wx.SIMPLE_BORDER)
-        self.SetBackgroundColour((255,255,255))
+        self.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW))
         #self.Bind(wx.EVT_LEFT_DOWN, self.OnDragboxClick)
         self.lastTarget = None
         
