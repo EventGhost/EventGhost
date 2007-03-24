@@ -22,6 +22,7 @@
 
 import cPickle as pickle
 import types
+import sys
 
 
 class Section:
@@ -97,9 +98,17 @@ def _MakeSectionMetaClass(name, bases, dict):
 def PyLoad(filename, defaults=None):
     obj = Section(defaults)
     execDict = {"__metaclass__": _MakeSectionMetaClass}
-    try:
+    
+    # BUG: of the python function 'execfile'. It doesn't handle unicode
+    # filenames right.
+    filename = filename.encode(sys.getfilesystemencoding())
+    import eg
+    if eg.debugLevel:
         execfile(filename, execDict, obj.__dict__)
-    except:
-        pass
+    else:
+        try:
+            execfile(filename, execDict, obj.__dict__)
+        except:
+            pass
     return obj
 

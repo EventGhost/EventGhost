@@ -647,7 +647,6 @@ class MainFrame(wx.Frame):
     def DispatchCommand(self, command, event):
         if self.lastFocus == "Edit" and command == "Clear":
             editCtrl = self.treeCtrl.GetEditControl()
-            print "trying", editCtrl.GetSelection()
             editCtrl.Remove(*editCtrl.GetSelection())
             return
         focus = self.FindFocus()

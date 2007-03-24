@@ -55,6 +55,8 @@ class args:
     startupFile = None
     allowMultiLoad = False
     debugLevel = 0
+    translate = False
+    
     
 argv = [val.decode(encoding) for val in sys.argv]
 
@@ -108,8 +110,10 @@ while True:
         args.startupFile = argv[i]
     elif arg == '-translate':
         import LanguageEditor
-        LanguageEditor.Start()
+        args.translate = True
+        LanguageEditor.Start(args)
         sys.exit(0)
+
 
 if not args.allowMultiLoad:
     # check if another instance of the program is running

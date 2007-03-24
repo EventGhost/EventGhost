@@ -251,7 +251,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             _, iconIndex, wref, _ = self.GetItemData(item)
             if iconIndex != EVENT_ICON_INDEX and wref is not None:
                 obj = wref()
-                if obj is not None:
+                if obj is not None and not obj.isDeleted:
                     obj.Select()
         
         

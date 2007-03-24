@@ -173,7 +173,7 @@ class MyApp(wx.App):
         
     @eg.LogIt
     def OnExit(self):
-        if True: #eg.mainFrame:
+        if not eg.startupArguments.translate:
             eg.Notice("Triggering OnClose")    
             egEvent = eg.eventThread.TriggerEvent("OnClose")
             while not egEvent.isEnded:

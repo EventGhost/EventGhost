@@ -34,6 +34,8 @@ import traceback
 import linecache
 from os.path import exists
 import wx
+import locale
+
 
 
 class EventGhost(object):
@@ -61,6 +63,8 @@ class EventGhost(object):
     def Init(self, args):
         global eg
         eg = self
+        self.systemEncoding = encoding = locale.getdefaultlocale()[1]
+        self.CallAfter = wx.CallAfter
         self.APP_NAME = "EventGhost"
         self.startupArguments = args
         self.debugLevel = args.debugLevel
@@ -115,10 +119,9 @@ class EventGhost(object):
         # exists, we simply create it first
         from App import MyApp
         self.app = MyApp(0)
-        
-        import Log
-        self.log = Log.Log()
-        
+        if not args.translate:
+            import Log
+            self.log = Log.Log()
         if not self.debugLevel:
             def _DummyFunc(*args, **kwargs):
                 pass

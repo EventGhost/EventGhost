@@ -33,7 +33,7 @@ class RootItem(ContainerItem):
     time = None
     guid = None
     isDeactivatable = False
-    isRenameable = True            
+    isRenameable = False            
     
     def WriteToXML(self):
         attr, text, childs = ContainerItem.WriteToXML(self)

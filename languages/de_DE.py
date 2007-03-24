@@ -262,6 +262,9 @@ class Plugin:
             yOffset = u'Vertikaler Versatz Y:'
         class StopIf:
             name = u'Stoppe wenn'
+            description = u'Unterbricht die Ausf\xfchrung des aktuellen Makros, wenn die angegebene Python-Bedingung den Wert "wahr" liefert.'
+            label = u'Stoppe wenn %s'
+            parameterDescription = u'Python-Bedingung:'
         class StopProcessing:
             name = u'Beende Bearbeitung dieses Ereignisses'
             description = u'Wird dieser Befehl ausgef\xfchrt, dann sucht EventGhost nicht mehr nach weiteren Makros, die zu dem aktuellen Ereignis passen w\xfcrden.'
@@ -281,12 +284,15 @@ class Plugin:
             wait = u'Warte'
     class System:
         name = u'System'
+        description = u'Diese Aktionen steuern verschiedene Eigenschaften des Betriebssystems.'
         forced = u'Erzwungen: %s'
         forcedCB = u'Erzwinge Schlie\xdfung aller Programme'
         class ChangeDisplaySettings:
             name = u'\xc4ndere Anzeige-Einstellungen'
+            description = u'Anzeige-Eigenschaften \xe4ndern'
         class ChangeMasterVolumeBy:
             name = u'Ver\xe4ndere Master-Lautst\xe4rke'
+            description = u'\xc4ndert die Gesamtlautst\xe4rke relativ.'
             text1 = u'Ver\xe4ndere Master-Lautst\xe4rke um'
             text2 = u'Prozent.'
         class Execute:
@@ -311,6 +317,8 @@ class Plugin:
             )
             WindowOptionsDesc = u'Fenster-Optionen:'
             WorkingDir = u'Startverzeichnis:'
+            browseExecutableDialogTitle = u'W\xe4hlen sie die ausf\xfchrbare Datei'
+            browseWorkingDirDialogTitle = u'W\xe4hlen sie das Arbeitsverzeichnis'
             label = u'Starte Anwendung: %s'
         class Hibernate:
             name = u'Hibernate Modus'
@@ -328,8 +336,10 @@ class Plugin:
             name = u'Bildschirm standby'
         class MuteOff:
             name = u'Stummschaltung aus'
+            description = u'Deaktiviert die Stummschaltung.'
         class MuteOn:
             name = u'Stummschaltung an'
+            description = u'Aktiviert die Stummschaltung.'
         class OpenDriveTray:
             name = u'\xd6ffne/Schlie\xdfe Laufwerksschublade'
             description = u'Erm\xf6glicht es die Laufwerksschublade von CD und DVD-Laufwerken zu \xf6ffnen und zu schlie\xdfen.'
@@ -356,16 +366,22 @@ class Plugin:
             name = u'Energieoptionen'
         class Reboot:
             name = u'Rechner neu starten'
+        class RegistryChange:
+            name = u'Registrierungs-Wert \xe4ndern'
+        class RegistryQuery:
+            name = u'Registrierungs-Wert auslesen'
         class SetClipboard:
             name = u'Zeichenkette in die Zwischenablage kopieren'
             description = u'Kopiert eine als Parameter angegebene Zeichenkette in die System-Zwischenablage.'
             error = u'Kann Zwischenablage nicht \xf6ffnen'
         class SetMasterVolume:
             name = u'Setze Master-Lautst\xe4rke'
+            description = u'Setzt die Gesamtlautst\xe4rke auf einen absoluten Wert.'
             text1 = u'Setze Master-Lautst\xe4rke auf'
             text2 = u'Prozent.'
         class SetWallpaper:
             name = u'Desktop-Hintergrund wechseln'
+            description = u'Wechselt das Desktop-Hintergrundbild.'
             choices = (
                 u'Zentriert',
                 u'Nebeneinander',
@@ -374,14 +390,23 @@ class Plugin:
             fileMask = u'Alle Bilddateien|*.jpg;*.bmp;*.gif|Alle Dateien (*.*)|*.*'
             text1 = u'Pfad zur Bilddatei:'
             text2 = u'Ausrichtung:'
+        class ShowPicture:
+            name = u'Bild anzeigen'
+            allFiles = u'Alle Dateien'
+            allImageFiles = u'Alle Bilddateien'
+            display = u'Monitor:'
+            path = u'Pfad zur Bilddatei:'
         class SoundGroup:
             name = u'Audiokarte'
+            description = u'Diese Aktionen steuern die Audio-Funktionen des Computers.'
         class Standby:
             name = u'Rechner standby'
         class StartScreenSaver:
             name = u'Starte Bildschirmschoner'
+            description = u'Startet den momentan im Betreibssystem ausgew\xe4hlten Blidschrimschoner.'
         class ToggleMute:
             name = u'Stummschaltung umschalten'
+            description = u'Wechselt die Stummschaltung von aktiviert auf deaktiviert und umgekehrt.'
     class Window:
         name = u'Fenster'
         class BringToFront:

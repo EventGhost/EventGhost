@@ -1,4 +1,4 @@
 version = '0.3.6'
-buildNum = 927
-compileTime = 1174660563.234
-svnRevision = 102
+buildNum = 932
+compileTime = 1174686949.687
+svnRevision = 104

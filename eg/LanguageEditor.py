@@ -25,12 +25,11 @@ import types
 import os
 import sys
 
-def Start():
-    print "lang"
+def Start(args):
     import Init
     global eg
     eg = Init.EventGhost()
-    eg.Init(0)
+    eg.Init(args)
     
     global OpenPlugin
     from PluginTools import OpenPlugin
@@ -156,8 +155,8 @@ class LanguageEditor(wx.Frame):
         
         imageList = wx.ImageList(16, 16)
         for pathName in (
-            "plugins//EventGhost//DisableItem.png", 
-            "plugins//EventGhost//EnableItem.png", 
+            "plugins//EventGhost//icons//DisableItem.png", 
+            "plugins//EventGhost//icons//EnableItem.png", 
             "images//folder.png", 
             "images//root.png", 
             "images//new.png", 
@@ -172,11 +171,11 @@ class LanguageEditor(wx.Frame):
         tree.SetPyData(rootId, ["", None, None])
         
         import CheckUpdate
-        import eg.Dialogs.AboutDialog
-        import eg.Dialogs.AddActionDialog
-        import eg.Dialogs.AddPluginDialog
-        import eg.Dialogs.OptionsDialog
-        import eg.Dialogs.FindDialog
+        eg.AboutDialog
+        eg.AddActionDialog
+        eg.AddPluginDialog
+        eg.OptionsDialog
+        eg.FindDialog
         #import MainFrame
         from ActionThread import CORE_PLUGINS
         

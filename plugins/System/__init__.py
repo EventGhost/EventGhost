@@ -211,8 +211,12 @@ class System(eg.PluginClass):
         
         
 class SetIdleTime(eg.ActionClass):
-    name = "Set Idle Time"
-    
+    class text:
+        name = "Set Idle Time"
+        label1 = "Wait"
+        label2 = "seconds before triggering idle event."
+        
+        
     def __call__(self, idleTime):
         HookSetIdleTime(int(idleTime * 1000))
         
@@ -220,13 +224,13 @@ class SetIdleTime(eg.ActionClass):
     def Configure(self, waitTime=60.0):
         dialog = eg.ConfigurationDialog(self)
         mySizer = wx.BoxSizer(wx.HORIZONTAL)
-        staticText = wx.StaticText(dialog, -1, "Wait")
+        staticText = wx.StaticText(dialog, -1, self.text.label1)
         mySizer.Add(staticText, 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
         waitTimeCtrl = eg.SpinNumCtrl(dialog, -1, waitTime, integerWidth=5)
         mySizer.Add(waitTimeCtrl, 0, wx.EXPAND)
-        staticText = wx.StaticText(dialog, -1, "seconds")
+        staticText = wx.StaticText(dialog, -1, self.text.label2)
         mySizer.Add(staticText, 0, wx.ALIGN_CENTER_VERTICAL|wx.LEFT, 5)
-        dialog.sizer.Add(mySizer, 1, wx.EXPAND)
+        dialog.sizer.Add(mySizer, 0, wx.EXPAND)
 
         if dialog.AffirmedShowModal():
             return (waitTimeCtrl.GetValue(),)
@@ -412,8 +416,7 @@ class PlaySound(eg.ActionWithStringParameter):
 
 class SetClipboard(eg.ActionWithStringParameter):
     name = "Copy string to clipboard"
-    description = \
-        "Copies the string parameter to the system clipboard."
+    description = "Copies the string parameter to the system clipboard."
     iconFile = "icons/SetClipboard"
     class text:
         error = "Can't open clipboard"
@@ -432,11 +435,9 @@ class SetClipboard(eg.ActionWithStringParameter):
 
 class StartScreenSaver(eg.ActionClass):
     name = "Start windows screen saver"
-    description = \
-        "Starts the currently in windows selected screensaver."
+    description = "Starts the currently in windows selected screensaver."
     iconFile = "icons/StartScreenSaver"
         
-    
     def __call__(self):
         win32api.SendMessage(
             win32gui.GetForegroundWindow(),
@@ -548,8 +549,7 @@ class PowerDown(__ComputerPowerAction):
 #-----------------------------------------------------------------------------
 class Reboot(__ComputerPowerAction):       
     name = "Reboot computer"
-    description = \
-        "Shuts down the system and then restarts the system."
+    description = "Shuts down the system and then restarts the system."
     iconFile = "icons/Reboot"
 
     def __call__(self, bForceClose=False):
@@ -919,7 +919,11 @@ class ShowPictureFrame(wx.Frame):
 class ShowPicture(eg.ActionClass):
     name = "Show picture"
     iconFile = "icons/ShowPicture"
-    
+    class text:
+        path = "Path to picture:"
+        display = "Monitor"
+        allImageFiles = 'All Image Files'
+        allFiles = "All files"
     
     def __init__(self):
         def DoIt():
@@ -940,7 +944,7 @@ class ShowPicture(eg.ActionClass):
         dialog = eg.ConfigurationDialog(self)
         sizer = dialog.sizer
         
-        st_ctrl = wx.StaticText(dialog, -1, "Path to picture:")
+        st_ctrl = wx.StaticText(dialog, -1, self.text.path)
         sizer.Add(st_ctrl, 0, wx.EXPAND)
         
         filepathCtrl = eg.FileBrowseButton(
@@ -949,13 +953,15 @@ class ShowPicture(eg.ActionClass):
             size=(340,-1),
             initialValue=imageFile,
             labelText="",
-            fileMask='All Image Files|*.jpg;*.bmp;*.gif;*.png'
-                +'|All Files (*.*)|*.*',
+            fileMask='%s|*.jpg;*.bmp;*.gif;*.png|%s (*.*)|*.*' % (
+                self.text.allImageFiles, 
+                self.text.allFiles
+            ),
             buttonText=eg.text.General.browse,
         )
         sizer.Add(filepathCtrl, 0, wx.EXPAND)
     
-        staticText = wx.StaticText(dialog, -1, "Monitor")
+        staticText = wx.StaticText(dialog, -1, self.text.display)
         sizer.Add(staticText, 0, wx.EXPAND|wx.TOP, 10)
         
         choice = eg.DisplayChoice(dialog, -1, display)
@@ -971,7 +977,14 @@ class ShowPicture(eg.ActionClass):
 class SetDisplayPreset(eg.ActionClass):
     name = "Set Display Preset"
     iconFile = "icons/Display"
-    
+    class text:
+        query = "Query current display settings"
+        fields = (
+            "Device", "Left  ", "Top   ", "Width", "Height", "Frequency", 
+            "Colour Depth", "Attached", "Primary", "Flags"
+        )
+        
+        
     def __call__(self, *args):
         eg.WinAPI.Display.SetDisplayModes(*args)
         
@@ -984,15 +997,12 @@ class SetDisplayPreset(eg.ActionClass):
             FillList(eg.WinAPI.Display.GetDisplayModes())
             dialog.buttonRow.okButton.Enable(True)
         
-        button = wx.Button(dialog, -1, "Query current display settings")
+        button = wx.Button(dialog, -1, self.text.query)
         button.Bind(wx.EVT_BUTTON, OnButton)
         dialog.sizer.Add(button)
         dialog.sizer.Add((5,5))
         listCtrl = wx.ListCtrl(dialog, style=wx.LC_REPORT)
-        fields = (
-            "Device", "Left  ", "Top   ", "Width", "Height", "Frequency", 
-            "Colour Depth", "Attached", "Primary", "Flags"
-        )
+        fields = self.text.fields
         for col, name in enumerate(fields):
             listCtrl.InsertColumn(col, name)
         def FillList(args):
@@ -1022,16 +1032,6 @@ import socket
 import struct
 
 class WakeOnLan(eg.ActionWithStringParameter):
-    """
-    Wake on LAN
-
-    Wakes up another computer through sending a special network packet. 
-
-    You have to specify the MAC address of the computer to wake up in the 
-    form:<p>
-    <i>00-13-D4-9A-2F-04</i><br> 
-    or <i>00:13:D4:9A:2F:04</i>
-    """
     name = "Wake on LAN"
     description = \
         "Wakes up another computer through sending a special "\
@@ -1110,7 +1110,7 @@ class SetSystemIdleTimer(eg.ActionClass):
             majorDimension=1
         )
         radioBox.SetSelection(int(flag))
-        dialog.sizer.Add(radioBox, 1, wx.EXPAND)
+        dialog.sizer.Add(radioBox, 0, wx.EXPAND)
 
         if dialog.AffirmedShowModal():
             return (

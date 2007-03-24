@@ -120,7 +120,6 @@ class Task(eg.PluginClass):
         eg.messageReceiver.RemoveHandler(WM_SHELLHOOKMESSAGE, self.MyWndProc)
         
         
-    @eg.LogIt
     def MyWndProc(self, hwnd, mesg, wParam, lParam):
         windowList = self.windowList
         if wParam == HSHELL_WINDOWCREATED:

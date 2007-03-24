@@ -45,6 +45,8 @@ class TreeItem(object):
     isConfigurable = False
     isRenameable = True            
     isExecutable = False
+    # we need this so weakrefs can find out if the item actually lives
+    isDeleted = False 
 
         
     def GetFullXml(self):
@@ -82,6 +84,11 @@ class TreeItem(object):
         self.xmlId = TreeLink.NewXmlId(int(get('id', -1)), self)
 
         
+    @eg.LogIt
+    def __del__(self):
+        pass
+    
+    
     def RestoreState(self):
         pass
     
@@ -200,6 +207,7 @@ class TreeItem(object):
 
 
     def _Delete(self):
+        self.isDeleted = True
         if self.dependants is not None:
             TreeLink.RemoveDependants(self)
         if self.xmlId in TreeLink.sessionId2target:

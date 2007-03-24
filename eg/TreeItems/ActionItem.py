@@ -36,6 +36,10 @@ gPatches = {
     "Registry.RegistryQuery": "System.RegistryQuery",
 }    
 
+gRenamedColour = tuple(
+    int(0.8 * c + 0.2 * (255 - c))
+    for c in wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOWTEXT).Get()
+)
 
 def _compileCall(action, *args):
     return action.Compile(*args)()
@@ -139,18 +143,13 @@ class ActionItem(TreeItem):
         id = self.id
         if id is None:
             return
-        if self.name:
-            tree.SetItemFont(id, tree.italicfont)
-            tree.SetItemTextColour(id, (64,64,64))
-        else:
-            tree.SetItemFont(id, tree.normalfont)
-            tree.SetItemTextColour(id, None)
+        self.SetAttributes(tree, id)
         tree.SetItemText(id, self.GetLabel())
             
             
     def SetAttributes(self, tree, id):
         if self.name:
-            tree.SetItemTextColour(id, (64,64,64))
+            tree.SetItemTextColour(id, gRenamedColour)
             tree.SetItemFont(id, tree.italicfont)
         else:
             tree.SetItemTextColour(id, None)
@@ -279,14 +278,14 @@ class ActionItem(TreeItem):
                 eg.result = self.compiledArgs()
             else:
                 eg.result = action(*self.args)
+        except eg.Exception, e:
+            eg.PrintError(e.message)
+        except:
+            wx.CallAfter(self.Select)
+            label = self.GetLabel()
+            eg.PrintTraceback(eg.text.Error.InAction % label, 1)
         finally:
             pass
-#        except eg.Exception, e:
-#            eg.PrintError(e.message)
-#        except:
-#            wx.CallAfter(self.Select)
-#            label = self.GetLabel()
-#            eg.PrintTraceback(eg.text.Error.InAction % label, 1)
 
 
     def DropTest(self, cls):
