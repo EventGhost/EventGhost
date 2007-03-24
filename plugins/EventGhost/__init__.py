@@ -140,7 +140,7 @@ class EnableItem(eg.ActionClass):
     
     
     def IsSelectableItem(self, item):
-        return not isinstance(item, AutostartItem)
+        return item.isDeactivatable
 
 
     def Configure(self, link=None):

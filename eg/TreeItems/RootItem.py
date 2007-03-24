@@ -113,7 +113,7 @@ class RootItem(ContainerItem):
         return False
     
     
-    def Enable(self, flag):
+    def Enable(self, flag=True):
         pass
     
     

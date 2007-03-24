@@ -25,7 +25,7 @@ SUBWCREV_PATH = r"\Programme\TortoiseSVN\bin\SubWCRev.exe"
 tmpDir = tempfile.mkdtemp()
 toolsDir = abspath(dirname(sys.argv[0]))
 trunkDir = abspath(join(toolsDir, ".."))
-outDir = abspath(join(trunkDir, "..", ".."))
+outDir = abspath(join(trunkDir, ".."))
 
 SourcePattern = [
     "*.py", 
@@ -277,14 +277,11 @@ Type: filesandordirs; Name: "{app}\eg"
 %(INSTALL_DELETE)s
 
 [Files]
-Source: "%(DIST)s\*.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "%(DIST)s\*.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "%(DIST)s\lib\*.*"; DestDir: "{app}\lib"; Flags: ignoreversion recursesubdirs
+Source: "%(TRUNK)s\*.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "%(TRUNK)s\*.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "%(TRUNK)s\lib\*.*"; DestDir: "{app}\lib"; Flags: ignoreversion recursesubdirs
 %(INSTALL_FILES)s
 Source: "%(TRUNK)s\Example.xml"; DestDir: "{userappdata}\EventGhost"; DestName: "MyConfig.xml"; Flags: onlyifdoesntexist uninsneveruninstall
-Source: "%(PYTHON_DIR)s\MFC71.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "%(PYTHON_DIR)s\msvcr71.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "%(PYTHON_DIR)s\msvcp71.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 [Run]
 Filename: "{app}\EventGhost.exe"; Parameters: "-install"
@@ -414,7 +411,7 @@ def MakeSourceArchive(outFile):
     archive.close()
 
 
-def MakeInstaller(isUpdate, makeLib):
+def MakeInstaller(isUpdate, makeLib, makeSourceArchive):
     templateOptions = UpdateVersionFile(GetSvnVersion())
     VersionStr = templateOptions['version'] + '_build_' + str(templateOptions['buildNum'])
     templateOptions['VersionStr'] = VersionStr
@@ -435,8 +432,9 @@ def MakeInstaller(isUpdate, makeLib):
     installDelete = "\n".join(installDeleteDirs)
     templateOptions["INSTALL_DELETE"] = installDelete
     
-    print "Creating source ZIP file"
-    MakeSourceArchive(join(outDir, "EventGhost_%s_Source.zip" % VersionStr))
+    if makeSourceArchive:
+        print "Creating source ZIP file"
+        MakeSourceArchive(join(outDir, "EventGhost_%s_Source.zip" % VersionStr))
         
     if makeLib:
         RemoveDirectory(join(trunkDir, "lib"))
@@ -444,6 +442,10 @@ def MakeInstaller(isUpdate, makeLib):
         import py2exe
         InstallPy2exePatch()
         setup(**py2exeOptions)
+        pythonDir = dirname(sys.executable)
+        copy(join(pythonDir, "MFC71.dll"), trunkDir)
+        copy(join(pythonDir, "msvcr71.dll"), trunkDir)
+        copy(join(pythonDir, "msvcp71.dll"), trunkDir)
     
     installFiles = []
     if isUpdate:
@@ -486,7 +488,7 @@ def UploadFile(filename, url):
             self.pos = 0
             
         def read(self, size):
-            print self.pos
+            print self.pos, int(round(100.0 * self.pos / self.size))
             self.pos += size
             return self.fd.read(size)
         
@@ -527,6 +529,7 @@ class MainDialog(wx.Dialog):
         wx.Dialog.__init__(self, None, title="Make EventGhost Installer")
         
         # create controls
+        self.createSourceCB = wx.CheckBox(self, -1, "Create Source Archive")
         self.createImportsCB = wx.CheckBox(self, -1, "Create Imports")
         self.createLib = wx.CheckBox(self, -1, "Create Lib")
         self.uploadCB = wx.CheckBox(self, -1, "Upload")
@@ -549,6 +552,7 @@ class MainDialog(wx.Dialog):
         btnSizer.Realize()
         
         sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.createSourceCB, 0, wx.ALL, 10)
         sizer.Add(self.createImportsCB, 0, wx.ALL, 10)
         sizer.Add(self.createLib, 0, wx.ALL, 10)
         sizer.Add(self.uploadCB, 0, wx.ALL, 10)
@@ -564,7 +568,8 @@ class MainDialog(wx.Dialog):
             import MakeImports
         isUpdate = self.makeUpdateRadioBox.GetSelection() == 0
         makeLib = self.createLib.GetValue()
-        filename = MakeInstaller(isUpdate, makeLib)
+        makeSourceArchive = self.createSourceCB.GetValue()
+        filename = MakeInstaller(isUpdate, makeLib, makeSourceArchive)
         if self.uploadCB.GetValue():
             UploadFile(filename, self.url)
         app.ExitMainLoop()
