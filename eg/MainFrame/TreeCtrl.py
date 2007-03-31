@@ -487,10 +487,6 @@ class TreeCtrl(wx.TreeCtrl):
 
     def InLabelEdit(self):
         eg.app.focusEvent.Fire("Edit")
-        print self.GetEditControl()
-        @eg.LogIt
-        def test(event): event.Skip()
-        self.GetEditControl().Bind(wx.EVT_CHAR, test)
         
         
     def OnEndLabelEdit(self, event):

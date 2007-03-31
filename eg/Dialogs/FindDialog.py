@@ -179,7 +179,11 @@ class FindDialog(eg.Dialog):
                 for arg in item.args:
                     if type(arg) in StringTypes:
                         text = convertFunc(arg)
-                        pos = text.find(key)
+                        try:
+                            pos = text.find(key)
+                        except UnicodeDecodeError:
+                            # silently ignore unicode errors for byte strings
+                            pos = -1
                         if pos != -1 and matchFunc(text, pos):
                             item.Select()
                             return

@@ -25,8 +25,10 @@ import locale
 import wx
 from wx.lib import masked
 
+
 encoding = locale.getdefaultlocale()[1]
 localedict = locale.localeconv()
+
 
 class SpinNumCtrl(wx.Window):
     _default_args = {
@@ -105,7 +107,8 @@ class SpinNumCtrl(wx.Window):
         self.SetMinSize(self.GetSize())
         self.Bind(wx.EVT_SIZE, self.OnSize)
         self.Bind(wx.EVT_SET_FOCUS, self.OnSetFocus)
-
+        wx.CallAfter(numCtrl.SetSelection, -1, -1)
+        
 
     def OnSize(self, event):
         if self.GetAutoLayout():
@@ -114,6 +117,7 @@ class SpinNumCtrl(wx.Window):
 
     def OnSetFocus(self, event):
         self.numCtrl.SetFocus()
+        self.numCtrl.SetSelection(-1, -1)
         
         
     def OnSpinUp(self, event):

@@ -80,7 +80,13 @@ class HeaderBox(wx.PyWindow):
             )
             helpLink.Bind(hl.EVT_HYPERLINK_LEFT, self.OnLink)
             helpLink.AutoBrowse(False)
-            topRightSizer.Add(helpLink, 0, wx.EXPAND|wx.RIGHT, 4)
+            topRightSizer.Add(helpLink, 0, wx.EXPAND|wx.RIGHT, 2)
+            
+            helpBitmap = wx.StaticBitmap(self)
+            helpBitmap.SetBitmap(wx.Bitmap("images/help.png"))
+            topRightSizer.Add(helpBitmap, 0, wx.RIGHT, 4)
+            helpBitmap.SetCursor(wx.StockCursor(wx.CURSOR_HAND))
+            helpBitmap.Bind(wx.EVT_LEFT_UP, self.OnLink)
         
         rightSizer = wx.BoxSizer(wx.VERTICAL)
         rightSizer.Add((4, 4))

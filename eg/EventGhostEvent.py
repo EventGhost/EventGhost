@@ -114,6 +114,9 @@ class EventGhostEvent(object):
         eventHandlerList += get(eventString, [])
         if self.prefix != "Keyboard":
             eventHandlerList += get(self.suffix, [])
+            key2 = self.suffix.rsplit(".", 1)[-1]
+            if self.suffix != key2:
+                eventHandlerList += get(key2, [])
             eventHandlerList += get('*', [])
             key1 = eventString.rsplit(".", 1)[0] + '.*'
             eventHandlerList += get(key1, [])
