@@ -921,5 +921,9 @@ class ZoomPlayer(eg.PluginClass):
     
     
     class MyCommand(eg.ActionWithStringParameter):
+        name = "Raw Command"
+        
         def __call__(self, cmd):
             self.plugin.DoCommand(cmd)
+            
+            

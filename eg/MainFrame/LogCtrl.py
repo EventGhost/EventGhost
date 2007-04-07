@@ -74,6 +74,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         if sum > 382:
             r = max(r - 15, 0)
             g = max(g - 15, 0)
+            b = max(b - 15, 0)
         else:
             r = min(r + 60, 255)
             g = min(g + 60, 255)

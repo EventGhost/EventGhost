@@ -59,8 +59,8 @@ class Text:
 class Server_Handler (asynchat.async_chat):
     """Telnet engine class. Implements command line user interface."""
     
-    def __init__ (self, sock, addr, hex_md5, cookie, handler, server_ref):
-        self.handler = handler
+    def __init__ (self, sock, addr, hex_md5, cookie, plugin, server_ref):
+        self.plugin = plugin
         self.server_ref = server_ref
         
         # Call constructor of the parent class
@@ -79,7 +79,7 @@ class Server_Handler (asynchat.async_chat):
                   
                 
     def handle_close(self):
-        self.handler.EndLastEvent()
+        self.plugin.EndLastEvent()
         asynchat.async_chat.handle_close(self)
     
     
@@ -109,7 +109,7 @@ class Server_Handler (asynchat.async_chat):
         if self.writable():
             self.push("close\n")
         #asynchat.async_chat.handle_close(self)
-        self.handler.EndLastEvent()
+        self.plugin.EndLastEvent()
         self.state = self.state1
  
 
@@ -145,12 +145,12 @@ class Server_Handler (asynchat.async_chat):
             self.payload.append(line[8:])
         else:
             if line == "ButtonReleased":
-                self.handler.EndLastEvent()
+                self.plugin.EndLastEvent()
             else:
                 if self.payload[-1] == "withoutRelease":
-                    self.handler.TriggerEnduringEvent(line, self.payload)
+                    self.plugin.TriggerEnduringEvent(line, self.payload)
                 else:
-                    self.handler.TriggerEvent(line, self.payload)
+                    self.plugin.TriggerEvent(line, self.payload)
             self.payload = [self.ip]
             
             
