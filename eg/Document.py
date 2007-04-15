@@ -26,6 +26,7 @@ from new import classobj
 import os
 import xml.etree.cElementTree as ElementTree
 from tempfile import mkstemp
+from threading import Lock
 
 
 class Observable:
@@ -54,6 +55,8 @@ class Observable:
 
 gTreeItemTypes = ["TreeItem", "ContainerItem", "EventItem", "ActionItem",
     "PluginItem", "FolderItem", "MacroItem", "RootItem", "AutostartItem"]    
+
+
 
 class Document(object):
     
@@ -87,6 +90,7 @@ class Document(object):
         self.frame = None
         self.tree = None
         self._selection = None
+        self.reentrantLock = Lock()
         
         
     def GetSelection(self):
@@ -278,6 +282,24 @@ class Document(object):
         return item
     
     
+    def ShowFrame(self):
+        self.reentrantLock.acquire()
+        if self.frame is None:
+            from MainFrame import MainFrame
+            self.frame = MainFrame(self)
+            self.frame.Show()
+        self.frame.Raise()
+        self.reentrantLock.release()
+        
+    
+    def HideFrame(self):
+        self.reentrantLock.acquire()
+        if self.frame is not None:
+            self.frame.Destroy()
+            self.frame = None
+        self.reentrantLock.release()
+        
+    
     def CheckFileNeedsSave(self):
         """
         Checks if the file was changed and if necessary asks the user if he 
@@ -300,13 +322,14 @@ class Document(object):
                 |wx.STAY_ON_TOP
                 |wx.ICON_EXCLAMATION
         )
-        res = dialog.ShowModal()
+        result = dialog.ShowModal()
         dialog.Destroy()
-        if res == wx.ID_CANCEL:
+        if result == wx.ID_CANCEL:
             return wx.ID_CANCEL
-        if res == wx.ID_YES:
+        elif result == wx.ID_YES:
             return self.Save()
-        return wx.ID_NO
+        else:
+            return wx.ID_NO
             
 
     def Save(self):
@@ -317,17 +340,17 @@ class Document(object):
 
 
     def SaveAs(self):
-        dlg = wx.FileDialog(
+        fileDialog = wx.FileDialog(
             None, 
             message="", 
             wildcard="*.xml", 
             style=wx.SAVE|wx.OVERWRITE_PROMPT
         )
-        res = dlg.ShowModal()
-        if res == wx.ID_CANCEL:
-            return res
-        filePath = dlg.GetPath()
-        dlg.Destroy()
+        result = fileDialog.ShowModal()
+        if result == wx.ID_CANCEL:
+            return result
+        filePath = fileDialog.GetPath()
+        fileDialog.Destroy()
         self.WriteFile(filePath)
         return wx.ID_YES
 

@@ -31,16 +31,15 @@ from win32process import GetWindowThreadProcessId
 ourProcessID = win32api.GetCurrentProcessId()
 
 
-class WindowDragFinder(wx.Control):
+class WindowDragFinder(wx.PyWindow):
     
     def __init__(self, parent, startFunc, endFunc):
         self.startFunc = startFunc
         self.endFunc = endFunc
         
         self.text = text = eg.plugins.Window.FindWindow.text
-        wx.Control.__init__(self, parent, -1, style=wx.SIMPLE_BORDER)
+        wx.PyWindow.__init__(self, parent, -1, style=wx.SIMPLE_BORDER)
         self.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW))
-        #self.Bind(wx.EVT_LEFT_DOWN, self.OnDragboxClick)
         self.lastTarget = None
         
         # load images
@@ -54,7 +53,6 @@ class WindowDragFinder(wx.Control):
         ).ConvertToBitmap()
 
         # make a cursor from an image
-        path = os.path.dirname(__file__)
         image = wx.Image('images/findertc.png', wx.BITMAP_TYPE_PNG)
         image.SetMaskColour(255, 0, 0)
 
@@ -96,12 +94,16 @@ class WindowDragFinder(wx.Control):
         sizer.Fit(self)
         self.Layout()
         self.SetMinSize(self.GetSize())
-        self.clickCounter = 0
         
         
     def OnSize(self, event):
         if self.GetAutoLayout():
             self.Layout()        
+        
+        
+    @eg.LogIt
+    def AcceptsFocusFromKeyboard(self):
+        return False
         
         
     @eg.LogIt
@@ -171,7 +173,6 @@ class WindowDragFinder(wx.Control):
             HighlightWindow(self.lastTarget)
             
         self.endFunc()
-        #self.Command(wx.CommandEvent(wx.EVT_BUTTON.evtType[0]))
         
         
     def GetValue(self):

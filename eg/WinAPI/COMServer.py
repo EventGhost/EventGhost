@@ -33,6 +33,6 @@ class EventGhostCom:
         eg.TriggerEvent(eventString, payload)
 
     def BringToFront(self):
-        eg.app.OnCmdShowMainFrame()
+        eg.document.ShowFrame()
 
 

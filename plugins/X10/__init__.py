@@ -29,7 +29,7 @@ class PluginInfo(eg.PluginInfo):
     kind = "remote"
     description = (
         'Hardware plugin for X10 compatible RF remotes.'
-        '}n\nThis includes remotes like:<br>'
+        '\n\nThis includes remotes like:<br>'
         '<ul>'
         '<li><a href="http://www.ati.com/products/remotewonder/index.html">'
         'ATI Remote Wonder</a></li>'

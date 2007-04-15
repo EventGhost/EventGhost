@@ -44,11 +44,11 @@ Text = eg.GetTranslation(Text)
 
 class AddActionDialog(eg.Dialog):
     
-    def __init__(self, searchItem=None):
+    def __init__(self, parent):
         self.resultData = None
         eg.Dialog.__init__(
             self, 
-            eg.document.frame, 
+            parent, 
             -1,
             Text.title, 
             style=wx.DEFAULT_DIALOG_STYLE

@@ -39,7 +39,6 @@ from win32con import REALTIME_PRIORITY_CLASS, WM_QUERYENDSESSION, WM_ENDSESSION
 
 class MyApp(wx.App):
     
-    
     #@eg.LogIt
     def OnInit(self):
         #SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS)
@@ -90,47 +89,29 @@ class MyApp(wx.App):
         text = eg.text.MainFrame.TaskBarMenu
         menuShow = trayMenu.Append(text.Show, self.OnCmdShowMainFrame)
         menuHide = trayMenu.Append(text.Hide, self.OnCmdHideMainFrame)
-        #trayMenu.AppendSeparator()
-        #menuAbout = trayMenu.Append(eg.text.MainFrame.Menu.About, self.OnCmdAbout)
         trayMenu.AppendSeparator()
         trayMenu.Append(text.Exit, self.OnCmdExit)
     
         def OnTaskBarMenu(event):
-            #menuShow.Enable(self.mainFrame is None)
-            menuHide.Enable(self.mainFrame is not None)
+            menuHide.Enable(eg.document.frame is not None)
             taskBarIcon.PopupMenu(trayMenu)
         taskBarIcon.Bind(wx.EVT_TASKBAR_RIGHT_UP, OnTaskBarMenu)
         taskBarIcon.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnCmdShowMainFrame)
         
         if not (eg.config.hideOnStartup or eg.startupArguments.hideOnStartup):
-            from MainFrame import MainFrame
-            self.mainFrame = MainFrame(eg.document)
-            self.mainFrame.Show()
-        else:
-            self.mainFrame = None
+            eg.document.ShowFrame()
     
 
     #------- TrayIcon menu handlers ------------------------------------------
     
     def OnCmdShowMainFrame(self, event=None):
-        if self.mainFrame:
-            self.mainFrame.Raise()
-        else:
-            from MainFrame import MainFrame
-            self.mainFrame = MainFrame(eg.document)
-            self.mainFrame.Show()
-            self.mainFrame.Raise()
+        eg.document.ShowFrame()
         
         
     def OnCmdHideMainFrame(self, event):
-        if self.mainFrame:
-            self.mainFrame.Destroy()
+        eg.document.HideFrame()
         
         
-    def OnCmdAbout(self, event):
-        eg.AboutDialog().DoModal()
-        
-            
     def OnCmdExit(self, event):
         self.Exit(event)
         

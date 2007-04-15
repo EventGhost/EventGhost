@@ -50,10 +50,10 @@ Text = eg.GetTranslation(Text)
 
 class OptionsDialog(eg.Dialog):
     
-    def __init__(self):
+    def __init__(self, parent):
         wx.Dialog.__init__(
             self, 
-            eg.document.frame, 
+            parent, 
             -1,
             Text.Title, 
             style=wx.DEFAULT_DIALOG_STYLE|wx.STAY_ON_TOP 

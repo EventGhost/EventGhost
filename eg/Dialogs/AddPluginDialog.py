@@ -59,12 +59,12 @@ Text = eg.GetTranslation(Text)
 
 class AddPluginDialog(eg.Dialog):
 
-    def __init__(self):
+    def __init__(self, parent):
         self.resultData = None
 
         eg.Dialog.__init__(
             self, 
-            eg.document.frame, 
+            parent, 
             -1, 
             Text.title,
             style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER

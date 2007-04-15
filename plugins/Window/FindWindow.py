@@ -144,6 +144,9 @@ class WindowMatcher:
                 return compile_string(value.encode(systemEncoding)) 
             else:
                 return dummy
+            
+        if program:
+            program = program.upper()
         self.program = GetMatcher(program)
         self.winNameMatch = GetMatcher(winName)
         self.winClassMatch = GetMatcher(winClass)
@@ -177,17 +180,18 @@ class WindowMatcher:
         
         
     def Enumerate(self):
-        top_hwnds = []
-        EnumWindows(self.EnumWindowsProc, top_hwnds.append)
+        topWindowsHwnds = []
+        EnumWindows(self.EnumWindowsProc, topWindowsHwnds.append)
         match = self.program
         if match is not None:
-            top_hwnds = [
-                hwnd for hwnd in top_hwnds if match(GetHwndProcessName(hwnd))
+            topWindowsHwnds = [
+                hwnd for hwnd in topWindowsHwnds 
+                    if match(GetHwndProcessName(hwnd).upper())
             ]
         if not self.scanChilds:
-            return top_hwnds
+            return topWindowsHwnds
         child_hwnds = []
-        for hwnd in top_hwnds:
+        for hwnd in topWindowsHwnds:
             try:
                 EnumChildWindows(
                     hwnd, self.EnumChildsProc, child_hwnds.append
@@ -370,11 +374,6 @@ class FindWindow(eg.ActionClass):
         self.lastPid = None
         self.hideOnDrag = True
         
-        finderTool = eg.WindowDragFinder(dialog, self.OnFinderToolLeftClick, self.OnFinderTool)
-        #finderTool.Bind(wx.EVT_LEFT_DOWN, self.OnFinderToolLeftClick)
-        #finderTool.Bind(wx.EVT_BUTTON, self.OnFinderTool)
-        self.finderTool = finderTool
-        
         # the "only search for the frontmost" checkbox
         force_front_cb = wx.CheckBox(dialog, -1, text.onlyForground)
         def OnSearchOnlyFrontmostCheckbox(event):
@@ -398,6 +397,18 @@ class FindWindow(eg.ActionClass):
             tree.SelectHwnd(tmp)
         cbIncludeInvisible.Bind(wx.EVT_CHECKBOX, OnCheckbox)
         
+        # the stop-macro choice
+        stopMacroCtrl = wx.CheckBox(dialog, -1, text.stopMacro[0])
+        if stop != 2:
+            stopMacroCtrl.SetValue(True)
+        
+        finderTool = eg.WindowDragFinder(
+            dialog, 
+            self.OnFinderToolLeftClick, 
+            self.OnFinderTool
+        )
+        self.finderTool = finderTool
+        
         # the HideOnDrag checkbox
         cbHideOnDrag = wx.CheckBox(dialog, -1, text.hide_box)
         cbHideOnDrag.SetValue(self.config.hideOnDrag)
@@ -408,17 +419,7 @@ class FindWindow(eg.ActionClass):
         # the tree to display processes and windows
         tree = self.tree = WindowTree(dialog, -1, includeInvisible)
         cbIncludeInvisible.SetValue(includeInvisible)
-                
-        # the wait parameter
-        waitCtrl = eg.SpinNumCtrl(dialog)
-        waitCtrl.SetValue(timeout)
-        
-        # the stop-macro choice
-        stopMacroCtrl = wx.CheckBox(dialog, -1, text.stopMacro[0])
-        if stop != 2:
-            stopMacroCtrl.SetValue(True)
-        
-        
+                        
         # the refresh button
         refreshButton = wx.Button(dialog, -1, text.refresh_btn)
         def OnButton(event):
@@ -428,13 +429,6 @@ class FindWindow(eg.ActionClass):
         refreshButton.Bind(wx.EVT_BUTTON, OnButton)
         #dialog.buttonRow.Add(refreshButton)
 
-        # the test button
-        testButton = wx.Button(dialog, -1, text.testButton)
-        def OnButton(event):
-            WindowMatcher(*get_result()).Test()
-        testButton.Bind(wx.EVT_BUTTON, OnButton)
-        dialog.buttonRow.Add(testButton)
-        
         #-----------------------------------------
         # construction of the layout with sizers
         #-----------------------------------------
@@ -500,7 +494,7 @@ class FindWindow(eg.ActionClass):
         numMatchCB.SetValue(bool(matchNum))
         sizer1.Add(numMatchCB, (line, 0), (1, 1), wx.ALIGN_CENTER_VERTICAL)
         numMatchCtrl = eg.SpinIntCtrl(dialog, -1, matchNum or 1, 1)
-        sizer1.Add(numMatchCtrl, (line, 1), (1, 1))
+        sizer1.Add(numMatchCtrl, (line, 1), (1, 1), wx.EXPAND)
         sizer1.Add(
             wx.StaticText(dialog, -1, text.matchNum2), 
             (line, 2), 
@@ -511,13 +505,22 @@ class FindWindow(eg.ActionClass):
         options.append((numMatchCB, numMatchCtrl))
         line += 1
         
+        # the wait parameter
+        waitCtrl = eg.SpinNumCtrl(dialog)
+        waitCtrl.SetValue(timeout)
+        
         sizer1.Add(
             wx.StaticText(dialog, -1, text.wait1), 
             (line, 0), 
             (1, 1), 
             wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT
         )
-        sizer1.Add(waitCtrl, (line, 1), (1, 1), wx.ALIGN_CENTER_VERTICAL)
+        sizer1.Add(
+            waitCtrl, 
+            (line, 1), 
+            (1, 1), 
+            wx.ALIGN_CENTER_VERTICAL|wx.EXPAND
+        )
         sizer1.Add(
             wx.StaticText(dialog, -1, text.wait2), 
             (line, 2), 
@@ -534,6 +537,13 @@ class FindWindow(eg.ActionClass):
         Add((5,5))
         Add(sizer1, 1, wx.EXPAND)
 
+        # the test button
+        testButton = wx.Button(dialog, -1, text.testButton)
+        def OnButton(event):
+            WindowMatcher(*get_result()).Test()
+        testButton.Bind(wx.EVT_BUTTON, OnButton)
+        dialog.buttonRow.Add(testButton)
+        
         @eg.LogIt
         def get_result():
             res_list = []

@@ -26,11 +26,7 @@ import wx
 import time
 import sys
 import platform
-import thread
-import threading
-
 from cStringIO import StringIO
-from math import sin
 
 import Image
 from License import License
@@ -113,92 +109,13 @@ SPECIAL_THANKS_DATA = (
 )
         
 
-
-class AnimatedWindow(wx.Window):
-    
-    def __init__(self, parent, id=-1):
-        self.x = 0
-        self.y = 0
-        self.font = wx.Font(
-            40, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_BOLD
-        )
-        im = Image.open("images/logo.png").convert("RGBA")
-        self.im1 = Image.fromstring("L", im.size, im.tostring()[3::4])
-        self.im2 = Image.new("L", im.size, 0)
-        self.alpha = 0
-        self.image = wx.EmptyImage(im.size[0], im.size[1], 32)
-        self.image.SetData(im.convert('RGB').tostring())
-        self.bmpWidth = im.size[0]
-        self.bmpHeight = im.size[1]
-        self.time = time.clock()
-        self.count = 0
-        self.lock = threading.Lock()
-        #self.brush = wx.Brush((255,255,255))
-        wx.Window.__init__(self, parent, id)
-        colour = (247, 247, 249)
-        parent.SetBackgroundColour(colour)
-        self.brush = wx.Brush(colour)
-        self.Bind(wx.EVT_SIZE, self.OnSize)
-        self.OnSize(None)
-        
-        
-    def OnSize(self,event):
-        self.width, self.height = self.GetClientSizeTuple()
-        self.lock.acquire()
-        self.dcBuffer = wx.EmptyBitmap(self.width, self.height)
-        self.lock.release()
-        self.y3 = (self.height - self.bmpHeight) / 4.0
-        self.x3 = (self.width - self.bmpWidth) / 4.0
-        textWidth, _, _, _ = self.GetFullTextExtent("EventGhost", self.font) 
-        self.textOffset = (self.width - textWidth) / 2
-        self.UpdateDrawing()
-
-
-    def UpdateDrawing(self):
-        self.lock.acquire()
-        dc = wx.BufferedDC(wx.ClientDC(self), self.dcBuffer)
-        self.Draw(dc)
-        self.lock.release()
-
-
-    def DoAnimation(self):
-        import ctypes
-        kernel32 = ctypes.windll.kernel32
-        thread = kernel32.GetCurrentThread()
-        kernel32.SetThreadPriority(thread, -15)
-        try:
-            while 1:
-                t = time.clock() / 2.0
-                y3 = self.y3
-                x3 = self.x3
-                self.y = (sin(t) + sin(1.8 * t)) * y3 + y3 * 2.0
-                self.x = (sin(t * 0.8) + sin(1.9 * t)) * x3 + x3 * 2.0
-                self.alpha = sin(t) / 2.0 + 0.5
-                self.UpdateDrawing()
-                time.sleep(0.009)
-        except:
-            pass
-                
-                
-    def Draw(self, dc):
-        dc.BeginDrawing()
-        dc.SetBackground(self.brush)
-        dc.Clear() # make sure you clear the bitmap!
-        dc.SetFont(self.font)
-        dc.DrawText("EventGhost", self.textOffset, 50)
-        im = Image.blend(self.im1, self.im2, self.alpha)
-        self.image.SetAlphaData(im.tostring()) 
-        bmp = wx.BitmapFromImage(self.image, 24)
-        dc.DrawBitmap(bmp, self.x, self.y, True)
-        dc.EndDrawing()
-
-
-
 class Panel1(wx.Panel):
     
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, style=wx.SUNKEN_BORDER)
-        textCtrl = wx.StaticText(self, -1, "")
+        backgroundColour = (247, 247, 249)
+        self.SetBackgroundColour(backgroundColour)
+        #textCtrl = wx.StaticText(self, -1, "")
         hypelink1 = eg.HyperLinkCtrl(
             self, 
             wx.ID_ANY, 
@@ -218,7 +135,8 @@ class Panel1(wx.Panel):
             URL="http://www.eventghost.org/wiki/"
         )
         
-        animatedWindow = AnimatedWindow(self)
+        animatedWindow = eg.AnimatedWindow(self)
+        animatedWindow.SetBackgroundColour(backgroundColour)
         
         linkLineSizer = wx.BoxSizer(wx.HORIZONTAL)
         linkLineSizer.Add((5,5), 1)
@@ -230,11 +148,10 @@ class Panel1(wx.Panel):
         linkLineSizer.Add((5,5), 1)
         
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(textCtrl, 0, wx.ALIGN_CENTER|wx.TOP|wx.LEFT|wx.RIGHT, 5)
-        sizer.Add(linkLineSizer, 0, wx.ALIGN_CENTER|wx.EXPAND)
+        #sizer.Add(textCtrl, 0, wx.ALIGN_CENTER|wx.TOP|wx.LEFT|wx.RIGHT, 5)
+        sizer.Add(linkLineSizer, 0, wx.ALIGN_CENTER|wx.EXPAND|wx.TOP, 15)
         sizer.Add(animatedWindow, 1, wx.ALIGN_CENTER|wx.ALL|wx.EXPAND, 10)
         self.SetSizerAndFit(sizer)
-        thread.start_new_thread(animatedWindow.DoAnimation, ())
 
 
 
@@ -329,8 +246,9 @@ class Panel4(wx.Panel):
         self.contextMenu.AddItem("Copy")
         
 
+    @eg.LogIt
     def OnKeyDown(self, event):
-        key = event.KeyCode() 
+        key = event.GetKeyCode() 
         controlDown = event.ControlDown() 
         if key == ord('C') and controlDown:
             self.OnCmdCopy(event)
@@ -356,15 +274,14 @@ class Panel4(wx.Panel):
         
 class AboutDialog(eg.Dialog):
     
-    def __init__(self):
+    def __init__(self, parent):
         wx.Dialog.__init__(
             self, 
-            eg.document.frame, 
+            parent, 
             -1, 
             Text.Title,
             style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER 
         )
-        
         notebook = wx.Notebook(self)
         notebook.AddPage(Panel1(notebook), Text.tabAbout)
         notebook.AddPage(Panel2(notebook), Text.tabSpecialThanks)

@@ -358,8 +358,6 @@ class MainFrame(wx.Frame):
     def Destroy(self):
         self.document.SetTree(None)
         eg.log.SetCtrl(None)
-        eg.app.mainFrame = None
-        self.document.frame = None
         config.perspective = self.auiManager.SavePerspective()
         self.SetStatusBar(None)
         for dataset, func in self.observer:
@@ -474,7 +472,7 @@ class MainFrame(wx.Frame):
         '''Handle wx.EVT_CLOSE'''
         event.Veto()
         if config.hideOnClose:
-            self.Destroy()
+            self.document.HideFrame()
         else:
             eg.app.Exit()
 
@@ -483,7 +481,7 @@ class MainFrame(wx.Frame):
     def OnIconize(self, event):
         '''Handle wx.EVT_ICONIZE'''
         # On iconizing, we actually destroy the frame completely
-        self.Destroy()
+        self.document.HideFrame()
 
 
 #    def OnClose(self, event=None):
@@ -562,6 +560,7 @@ class MainFrame(wx.Frame):
             return (False, True, False, False)
         elif focus == self.treeCtrl and self.document.selection:
             selection = self.document.selection
+            #print selection
             return (
                 selection.CanCut(), 
                 selection.CanCopy(), 
@@ -623,7 +622,9 @@ class MainFrame(wx.Frame):
         menuItems.executeItem.Enable(menuState.execute)
         menuItems.renameItem.Enable(menuState.rename)
         menuItems.disableItem.Enable(menuState.disable)
-        menuItems.disableItem.Check(self.document.selection and not self.document.selection.isEnabled)
+        menuItems.disableItem.Check(
+            self.document.selection and not self.document.selection.isEnabled
+        )
         
         
     @eg.LogIt
@@ -676,12 +677,12 @@ class MainFrame(wx.Frame):
         """ Handle the menu command 'Open'. """
         if self.document.CheckFileNeedsSave() == wx.ID_CANCEL:
             return wx.ID_CANCEL
-        dlg = wx.FileDialog(self, "", "", "", "*.xml", wx.OPEN)
-        res = dlg.ShowModal()
-        dlg.Destroy()
-        if res == wx.ID_CANCEL:
+        fileDialog = wx.FileDialog(self, "", "", "", "*.xml", wx.OPEN)
+        result = fileDialog.ShowModal()
+        fileDialog.Destroy()
+        if result == wx.ID_CANCEL:
             return wx.ID_CANCEL
-        filePath = dlg.GetPath()
+        filePath = fileDialog.GetPath()
         eg.eventThread.CallWait(eg.eventThread.StopSession)
         self.treeCtrl.DeleteAllItems()
         eg.eventThread.Call(eg.eventThread.StartSession, filePath)
@@ -712,7 +713,7 @@ class MainFrame(wx.Frame):
     
     def OnCmdOptions(self, event):
         """ Handle the menu command 'Options...'. """
-        eg.OptionsDialog().DoModal()
+        eg.OptionsDialog(self).DoModal()
         
         
     def OnCmdExit(self, event):
@@ -902,7 +903,7 @@ class MainFrame(wx.Frame):
     
     
     def OnCmdAbout(self, event):
-        eg.AboutDialog().DoModal()
+        eg.AboutDialog(self).DoModal()
     
         
     #----- debugging and experimental stuff that will be removed someday -----

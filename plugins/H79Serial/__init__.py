@@ -51,7 +51,6 @@ import thread
 import time
 import re
 
-from eg import SpinIntCtrl
 
 cmdList = (
 ('PowerOn', 'Power On', 'OKOKOKOKOK', None ),

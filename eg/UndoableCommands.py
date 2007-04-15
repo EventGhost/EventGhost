@@ -62,7 +62,7 @@ class NewPlugin(NewItem):
     
     def Do(self, document):
         """ Handle the menu command 'Add Plugin...'. """
-        pluginInfo = eg.AddPluginDialog().DoModal()
+        pluginInfo = eg.AddPluginDialog(document.frame).DoModal()
         
         if pluginInfo is None:
             return
@@ -178,7 +178,7 @@ class NewAction(NewItem):
     def Do(self, document):
         self.name = eg.text.MainFrame.Menu.NewAction.replace("&", "")
         # let the user choose an action
-        action = eg.AddActionDialog().DoModal()
+        action = eg.AddActionDialog(document.frame).DoModal()
         
         # if user canceled the dialog, take a quick exit
         if action is None:
