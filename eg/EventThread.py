@@ -21,7 +21,6 @@
 # $LastChangedBy$
 
 import threading, traceback, time
-import gc
 import win32api
 from win32process import SetProcessWorkingSetSize, GetCurrentProcess
 
@@ -31,7 +30,7 @@ import eg
 from ThreadWorker import ThreadWorker
 from EventGhostEvent import EventGhostEvent
 
-MB = 1048576        
+
 
 class EventThread(ThreadWorker):
     

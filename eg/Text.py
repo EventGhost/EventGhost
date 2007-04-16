@@ -92,7 +92,6 @@ class Text:
             Copy = "&Copy"
             Paste = "&Paste"
             Delete = "&Delete"
-            ClearAll = "Clear All"
             SelectAll = "Select &All"
             AddPlugin = "Add Plugin"
             NewFolder = "Add Folder"
@@ -114,6 +113,7 @@ class Text:
             ExpandTillMacro = "Autom. expand only till macro"
             LogActions = "Log Actions"
             LogTime = "Log Times"
+            ClearLog = "Clear Log"
             
             ConfigurationMenu = "&Configuration"
             

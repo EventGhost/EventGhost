@@ -228,6 +228,8 @@ class MainFrame(wx.Frame):
         AddItem()
         AddItem("LogActions", kind=wx.ITEM_CHECK).Check(eg.config.logActions)
         AddItem("LogTime", kind=wx.ITEM_CHECK).Check(config.logTime)
+        AddItem()
+        AddItem("ClearLog")
                 
         # 
         configurationMenu = menuBar.AddMenu("Configuration")
@@ -879,6 +881,10 @@ class MainFrame(wx.Frame):
     def OnCmdCollapseAll(self, event):
         self.treeCtrl.CollapseAll()
     
+    
+    def OnCmdClearLog(self, event):
+        self.logCtrl.OnCmdClearLog(event)
+        
     
     #------- help menu -------------------------------------------------------
     

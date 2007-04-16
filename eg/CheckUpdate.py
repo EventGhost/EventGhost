@@ -51,7 +51,7 @@ class MessageDialog(eg.Dialog):
     
     def __init__(self, version, url):
         self.url = url
-        currendVersion = eg.version
+        currentVersion = eg.version
         eg.Dialog.__init__(self, None, -1, Text.title)
         bmp = wx.ArtProvider.GetBitmap(
             wx.ART_INFORMATION, 
@@ -62,7 +62,7 @@ class MessageDialog(eg.Dialog):
         staticText = wx.StaticText(
             self, 
             -1, 
-            Text.newVersionMesg % (currendVersion, version)
+            Text.newVersionMesg % (currentVersion, version)
         )
         downloadButton = wx.Button(self, -1, Text.downloadButton)
         downloadButton.Bind(wx.EVT_BUTTON, self.OnOk)
@@ -127,7 +127,7 @@ def ShowWaitDialog():
     return dialog
     
     
-def _checkUpdate(manually = False):
+def _checkUpdate(manually=False):
     dialog = None
     try:
         if manually:
@@ -145,12 +145,12 @@ def _checkUpdate(manually = False):
             raise
         data = response.read().splitlines()
         conn.close()
-        new_version = data[0]
-        new_tuple = new_version.split(".")
-        cur_tuple = eg.version.split(".")
-        for i in xrange(0, len(cur_tuple)):
-            if new_tuple[i] > cur_tuple[i]:
-                wx.CallAfter(MessageDialog, new_version, data[1])
+        newVersion = data[0]
+        newVersionTuple = newVersion.split(".")
+        currentVersionTuple = eg.version.split(".")
+        for i in xrange(0, len(currentVersionTuple)):
+            if newVersionTuple[i] > currentVersionTuple[i]:
+                wx.CallAfter(MessageDialog, newVersion, data[1])
                 return
         if manually:
             dialog = wx.MessageDialog(
@@ -181,4 +181,4 @@ def CheckUpdate():
 
 
 def CheckUpdateManually():
-    _checkUpdate(True)
+    _checkUpdate(manually=True)

@@ -95,7 +95,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         menu = eg.Menu(self, "EditMenu", eg.text.MainFrame.Menu)
         menu.AddItem("Copy")
         menu.AddSeparator()
-        menu.AddItem("ClearAll")
+        menu.AddItem("ClearLog")
         self.contextMenu = menu
         
         Bind = self.Bind
@@ -227,7 +227,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             eg.app.clipboardEvent.Fire()
             
             
-    def OnCmdClearAll(self, event):
+    def OnCmdClearLog(self, event):
         self.SetItemCount(0)
         self.DeleteAllItems()
         self.data.clear()

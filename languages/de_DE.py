@@ -31,7 +31,7 @@ class MainFrame:
         AddPlugin = u'&Plugin hinzuf\xfcgen'
         Apply = u'\xc4nderungen &anwenden'
         CheckUpdate = u'Auf neuere Version pr\xfcfen...'
-        ClearAll = u'Alles l\xf6schen'
+        ClearLog = u'Log l\xf6schen'
         Close = u'S&chlie\xdfen'
         CollapseAll = u'Alle einklappen'
         ConfigurationMenu = u'&Konfiguration'
