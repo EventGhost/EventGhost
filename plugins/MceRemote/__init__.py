@@ -36,8 +36,8 @@ class PluginInfo(eg.PluginInfo):
         '\n\n<p>'
         'Will only work, if you have installed the replacement driver for '
         'the MCE remote. You find detailed installation instructions here:'
-        '<br><a href="http://www.byremote.com.au/Hip/mce_remote_faq.htm">'
-        'MCE Remote Replacement Driver FAQ'
+        '<br><a href="http://www.eventghost.org/wiki/MCE_Remote_FAQ">'
+        'MCE Remote FAQ'
         '</a><p><center><img src="MCEv2.png"/></center>'
     )
     icon = (

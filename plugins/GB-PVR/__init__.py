@@ -1,11 +1,12 @@
 import eg
 
 class PluginInfo(eg.PluginInfo):
-    name = "GP-PVR"
+    name = "GB-PVR"
     description = (
-        'Adds support functions to control GP-PVR '
+        'Adds support functions to control GB-PVR '
         '\n\n<p>'
-        '<a href=http://www.gbpvr.com/>www.gbpvr.com</a>'
+        '<a href=http://www.gbpvr.com/>www.gbpvr.com<p>'
+        '<center><img src="logo_small.png" alt="GB-PVR" /></a></center>'
     )
     author = "Bitmonster"
     version = "1.0.0"
@@ -61,7 +62,6 @@ from win32con import SMTO_ABORTIFHUNG, SMTO_NORMAL
 
 
 class GbpvrAction(eg.ActionClass):
-    value = 0
     
     def __call__(self):
         """
@@ -80,7 +80,7 @@ class GbpvrAction(eg.ActionClass):
             )
             return result
         except:
-            eg.PrintError("GB-PVR is not running!")
+            self.PrintError("GB-PVR is not running!")
             return None
         
         
