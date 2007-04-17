@@ -50,9 +50,6 @@ class PluginInfo(eg.PluginInfo):
         "AElFTkSuQmCC"
     )
 
-import wx
-from httplib import HTTPConnection
-    
 
 CMDS = (
     ("Left", "Left", "KEY_LEFT"),
@@ -88,6 +85,39 @@ CMDS = (
     ("Num8", "Number 8", "KEY_8"),               
     ("Num9", "Number 9", "KEY_9"),
 )
+
+
+import wx
+    
+# stolen from the standart library and added a timeout to the socket
+import socket
+from httplib import HTTPConnection
+
+class MyHTTPConnection(HTTPConnection):
+    
+    def connect(self):
+        """Connect to the host and port specified in __init__."""
+        msg = "getaddrinfo returns an empty list"
+        for res in socket.getaddrinfo(self.host, self.port, 0,
+                                      socket.SOCK_STREAM):
+            af, socktype, proto, canonname, sa = res
+            try:
+                self.sock = socket.socket(af, socktype, proto)
+                self.sock.settimeout(2.0)
+                if self.debuglevel > 0:
+                    print "connect: (%s, %s)" % (self.host, self.port)
+                self.sock.connect(sa)
+            except socket.error, msg:
+                if self.debuglevel > 0:
+                    print 'connect fail:', (self.host, self.port)
+                if self.sock:
+                    self.sock.close()
+                self.sock = None
+                continue
+            break
+        if not self.sock:
+            raise socket.error, msg
+
 
 
 class DBox2(eg.PluginClass):
@@ -129,7 +159,7 @@ class DBox2(eg.PluginClass):
     
     
     def SendCommand(self, key):
-        conn = HTTPConnection(self.host)
+        conn = MyHTTPConnection(self.host)
         if self.useRcem:
             conn.request("GET", "/control/rcem?" + key)
         else:
