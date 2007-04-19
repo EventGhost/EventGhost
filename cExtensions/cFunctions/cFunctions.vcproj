@@ -94,7 +94,10 @@
 				Name="VCMIDLTool"/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="cmd /C &quot;copy &quot;&quot;$(TargetPath)&quot;&quot; &quot;&quot;$(ProjectDir)..\..\eg\&quot;&quot;&quot;"/>
+				CommandLine="cmd /C &quot;copy /Y &quot;$(TargetPath)&quot; &quot;$(ProjectDir)..\..\eg\&quot;&quot;
+
+
+"/>
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool

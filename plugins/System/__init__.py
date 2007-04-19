@@ -183,7 +183,7 @@ class System(eg.PluginClass):
         # start the power broadcast notifications
         self.powerBroadcastNotifier = PowerBroadcastNotifier(self)
 
-        # start the power broadcast notifications
+        # start the session change notifications
         self.sessionChangeNotifier = SessionChangeNotifier(self)
 
         RegisterKeyhook(

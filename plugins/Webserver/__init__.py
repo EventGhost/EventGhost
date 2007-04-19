@@ -159,9 +159,9 @@ class Webserver(eg.PluginClass):
     canMultiLoad = True
 
     class text:
-        port = "Use port:"
-        documentRoot = "Use document root:"
-        eventPrefix = "Use event prefix:"
+        port = "Port:"
+        documentRoot = "Document root:"
+        eventPrefix = "Event prefix:"
     
     def __init__(self):
         self.running = False

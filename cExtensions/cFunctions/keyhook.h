@@ -1,5 +1,6 @@
 #include "Python.h"
-
+#define _WIN32_WINNT 0x501
+#include "windows.h"
 
 extern PyObject *
 RegisterKeyhook(PyObject *self, PyObject *args);

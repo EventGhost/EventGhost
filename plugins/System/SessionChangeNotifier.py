@@ -44,22 +44,34 @@ WTS_WPARAM_DICT = {
 
 
 class SessionChangeNotifier:
+    inited = False
     
     def __init__(self, plugin):
+        try:
+            WTSRegisterSessionNotification(
+                eg.messageReceiver.hwnd, 
+                NOTIFY_FOR_ALL_SESSIONS
+            )
+        except NotImplementedError:
+            # Only available on Windows XP and above
+            return
+        
         self.TriggerEvent = plugin.TriggerEvent
         eg.messageReceiver.AddHandler(
             WM_WTSSESSION_CHANGE, 
-            self.OnSessionChange)
-        WTSRegisterSessionNotification(
-            eg.messageReceiver.hwnd, 
-            NOTIFY_FOR_ALL_SESSIONS)
+            self.OnSessionChange
+        )
+        self.inited = True
     
     
     def Close(self):
+        if not self.inited:
+            return
         WTSUnRegisterSessionNotification(eg.messageReceiver.hwnd)
         eg.messageReceiver.RemoveHandler(
             WM_WTSSESSION_CHANGE, 
-            self.OnSessionChange)
+            self.OnSessionChange
+        )
         
         
     @eg.LogIt
@@ -72,3 +84,4 @@ class SessionChangeNotifier:
                 WTSUserName)
             self.TriggerEvent(eventstring, [userName])
         return 1
+    

@@ -610,6 +610,7 @@ import wx.lib.iewin
 import wx.lib.imagebrowser
 import wx.lib.imageutils
 import wx.lib.infoframe
+import wx.lib.inspection
 import wx.lib.intctrl
 import wx.lib.langlistctrl
 import wx.lib.layoutf
@@ -676,9 +677,10 @@ import wx.lib.masked.__init__
 import wx.lib.mixins
 import wx.lib.mixins.grid
 import wx.lib.mixins.imagelist
-import wx.lib.mixins.inspect
+import wx.lib.mixins.inspection
 import wx.lib.mixins.listctrl
 import wx.lib.mixins.rubberband
+import wx.lib.mixins.treemixin
 import wx.lib.mixins.__init__
 import wx.lib.ogl
 import wx.lib.ogl._basic
@@ -807,6 +809,7 @@ import TarIO
 import TgaImagePlugin
 import TiffImagePlugin
 import TiffTags
+import WalImageFile
 import WbmpImagePlugin
 import WmfImagePlugin
 import XbmImagePlugin
