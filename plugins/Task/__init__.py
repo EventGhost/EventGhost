@@ -43,6 +43,8 @@ class PluginInfo(eg.PluginInfo):
 
 import wx
 import os
+from os.path import abspath, join, dirname
+
 from win32gui import GetWindowLong, EnumWindows, GetDesktopWindow 
 from win32api import RegisterWindowMessage, OpenProcess, CloseHandle
 from win32process import GetWindowThreadProcessId, GetModuleFileNameEx
@@ -95,6 +97,7 @@ def GetWindowProcessName(hwnd):
     
     
 
+
 class Task(eg.PluginClass):
 
     def __start__(
@@ -113,16 +116,26 @@ class Task(eg.PluginClass):
         EnumWindows(MyEnumFunc, None)
         eg.messageReceiver.AddHandler(WM_SHELLHOOKMESSAGE, self.MyWndProc)
         eg.messageReceiver.AddHandler(WM_APP+1, self.FocusWndProc)
+        eg.messageReceiver.AddHandler(WM_APP+2, self.FatalWndProc)
         RegisterShellHookWindow(eg.messageReceiver.hwnd)
-        
+        self.hookDll = ctypes.cdll.LoadLibrary(abspath(join(dirname(__file__), "hook.dll")))
+        self.hookDll.StartHook()
         
         
     def __stop__(self):
+        self.hookDll.StopHook()
         DeregisterShellHookWindow(eg.messageReceiver.hwnd)
         eg.messageReceiver.RemoveHandler(WM_SHELLHOOKMESSAGE, self.MyWndProc)
         eg.messageReceiver.RemoveHandler(WM_APP+1, self.FocusWndProc)
+        eg.messageReceiver.RemoveHandler(WM_APP+2, self.FatalWndProc)
         
         
+    @eg.LogIt
+    def FatalWndProc(self, hwnd, mesg, wParam, lParam):
+        print "DLL_PROCESS_DETACH", wParam, lParam
+    
+    
+    @eg.LogIt
     def FocusWndProc(self, hwnd, mesg, wParam, lParam):
         if wParam == 0:
             return
@@ -154,13 +167,13 @@ class Task(eg.PluginClass):
                 if fstr != self.lastDestroyed:
                     self.TriggerEvent("Destroyed." + fstr)
                     self.lastDestroyed = fstr
-#        elif wParam == HSHELL_WINDOWACTIVATED or wParam == 0x8004:
-#            fstr = GetWindowProcessName(lParam)
-#            if fstr and fstr != self.lastActivated:
-#                if self.lastActivated:
-#                    self.TriggerEvent("Deactivated." + self.lastActivated)
-#                self.TriggerEvent("Activated." + fstr)
-#                self.lastActivated = fstr
+        elif wParam == HSHELL_WINDOWACTIVATED or wParam == 0x8004:
+            fstr = GetWindowProcessName(lParam)
+            if fstr and fstr != self.lastActivated:
+                if self.lastActivated:
+                    self.TriggerEvent("Deactivated." + self.lastActivated)
+                self.TriggerEvent("Activated." + fstr)
+                self.lastActivated = fstr
         return 1
 
 
