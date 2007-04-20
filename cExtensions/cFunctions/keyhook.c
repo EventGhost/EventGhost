@@ -13,16 +13,10 @@ static HANDLE waitEvent;
 static HANDLE startupEvent;
 static HINSTANCE hMod;
 
-#pragma data_seg( ".shared" )
-HWND g_egMessageHwnd = 0;
 static DWORD  g_HookThreadId = 0;
 static DWORD g_WaitThreadId = 0;
 HHOOK oldKeyHook = NULL;
 HHOOK oldMouseHook = NULL;
-static HHOOK oldCbtHook = NULL;
-#pragma data_seg()
-#pragma comment( linker, "/SECTION:.shared,RWS" )
-
 BYTE key_state[256];
 DWORD g_idleTime = 60000;
 BYTE currentKeys[16];
@@ -110,18 +104,6 @@ int ProcessInputCommand(HRAWINPUT hRawInput)
 	return 1;
 }
 	
-
-
-LRESULT CALLBACK CbtHookProc(int nCode, WPARAM wParam, LPARAM lParam) 
-{
-	
-	if (nCode == HCBT_SETFOCUS)
-	{
-		PostMessage(g_egMessageHwnd, WM_APP+1, wParam, lParam);
-	}
-	return CallNextHookEx(oldCbtHook, nCode, wParam, lParam);
-}
-
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -476,18 +458,11 @@ HookThread(LPVOID lpParameter)
 {
     MSG msg;
     BOOL bRet; 
-	HOOKPROC hkprcSysMsg; 
 
 	CoInitialize(NULL);
 	if(0==SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL))
 		ErrorExit("SetThreadPriority");;
 	hMod = LoadLibrary("cFunctions.pyd");
-	//hkprcSysMsg = (HOOKPROC)GetProcAddress(hMod, "CbtHookProc"); 
-	oldCbtHook = SetWindowsHookEx(WH_CBT, CbtHookProc, (HINSTANCE) hMod, 0);
-	if(oldCbtHook == NULL)
-	{
-		ErrorExit("oldCbtHook SetWindowsHookEx");
-	}
 	oldKeyHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardProc, (HINSTANCE) hMod, 0);//
 	oldMouseHook = SetWindowsHookEx(WH_MOUSE_LL, MouseHookProc, (HINSTANCE) hMod, 0);//
 	if(oldKeyHook == NULL)
@@ -520,7 +495,6 @@ HookThread(LPVOID lpParameter)
     } 
 	UnhookWindowsHookEx(oldKeyHook);
 	UnhookWindowsHookEx(oldMouseHook);
-	UnhookWindowsHookEx(oldCbtHook);
 	CoUninitialize();
     SetEvent(startupEvent);
 	DEBUG("HookThread stopped");
@@ -682,7 +656,6 @@ RegisterKeyhook(PyObject *self, PyObject *args)
 	DEBUG("RegisterKeyhook");
 	waitEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	startupEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-	g_egMessageHwnd = FindWindow("HiddenMessageReceiver", "EventGhost Message Receiver");
 	handle = CreateThread(NULL, 0, WaitThread, NULL, 0, &g_WaitThreadId);
 	switch(WaitForSingleObject(startupEvent, 3000))
 	{
