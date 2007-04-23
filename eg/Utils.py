@@ -194,7 +194,7 @@ def ParseString(text, filterFunc=None):
 def SetClass(obj, cls):
     for k, v in cls.__dict__.items():
         if type(v) == types.ClassType:
-            if obj.__dict__.has_key(k):
+            if k in obj.__dict__:
                 newValue = getattr(obj, k)
             else:
                 newValue = v()

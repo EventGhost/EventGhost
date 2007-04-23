@@ -222,7 +222,7 @@ def ScanListRecursive(theList, group):
             tmpAction.__name__ = tmpClassName
             group.AddAction(tmpAction)
         else:
-            raise "Wrong number of fields in the list"
+            raise Exception("Wrong number of fields in the list")
 
 
 

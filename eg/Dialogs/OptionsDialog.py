@@ -62,7 +62,7 @@ class OptionsDialog(eg.Dialog):
         self.languageList = ["en_EN"]
         for item in os.listdir("Languages"):
             name, ext = os.path.splitext(item)
-            if ext == ".py" and languageNames.has_key(name):
+            if ext == ".py" and name in languageNames:
                 self.languageList.append(name)
         self.languageList.sort()
         self.languageNameList = [

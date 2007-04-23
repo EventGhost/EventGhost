@@ -67,7 +67,7 @@ class PythonCommand(eg.ActionWithStringParameter):
                 return result
             except SyntaxError:
                 eg.globals.result = None
-                exec pythonstring in {}, eg.globals.__dict__
+                exec(pythonstring, {}, eg.globals.__dict__)
                 return eg.globals.result
         finally:
             pass

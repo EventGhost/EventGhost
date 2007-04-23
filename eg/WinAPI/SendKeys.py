@@ -630,7 +630,7 @@ class SendKeysParser:
                 else:
                     end = text.find("}", i+1)
                     if end == -1:
-                        raise "Matching closing brace not found"
+                        raise Exception("Matching closing brace not found")
                     key = text[i+1:end]
                     i = end + 1
                     key2 = key.replace("_", "+")

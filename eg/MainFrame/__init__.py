@@ -915,7 +915,7 @@ class MainFrame(wx.Frame):
     #----- debugging and experimental stuff that will be removed someday -----
     
     def OnCmdReload(self, event):
-        if self.CheckFileNeedsSave() == wx.ID_CANCEL:
+        if self.document.CheckFileNeedsSave() == wx.ID_CANCEL:
             return wx.ID_CANCEL
         eg.eventThread.CallWait(eg.eventThread.StopSession)
         self.treeCtrl.DeleteAllItems()

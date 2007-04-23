@@ -310,7 +310,7 @@ class PythonScript(eg.ActionClass):
             old_result = eg.result
             mod.result = old_result
             try:
-                exec self.code in mod.__dict__
+                exec(self.code, mod.__dict__)
             except SystemExit:
                 pass
             except:

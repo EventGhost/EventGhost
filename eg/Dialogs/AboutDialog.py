@@ -58,7 +58,7 @@ SPECIAL_THANKS_DATA = (
             ("Oliver Wagner", "Denon AV, Optoma H79"),
             ("Milbrot", "MyTheatre"),
             ("Matthew Jacob Edwards", "Winamp Extensions"),
-            ("jorel1969", "Medio"),
+            ("jorel1969", "Meedio"),
             ("Mark Clarkson", "Yamaha RX-V1000 Serial"),
         ),
     ),
@@ -113,7 +113,7 @@ class Panel1(wx.Panel):
     
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, style=wx.SUNKEN_BORDER)
-        backgroundColour = (247, 247, 249)
+        backgroundColour = (255, 255, 255)
         self.SetBackgroundColour(backgroundColour)
         #textCtrl = wx.StaticText(self, -1, "")
         hypelink1 = eg.HyperLinkCtrl(

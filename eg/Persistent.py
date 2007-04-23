@@ -37,7 +37,7 @@ class Section:
                     
                     
     def setdefault(self, key, default):
-        if not self.__dict__.has_key(key):
+        if key not in self.__dict__:
             setattr(self, key, Section(default))
         else:
             section = self.__dict__[key]

@@ -23,6 +23,7 @@
 import types
 import inspect
 from xml.sax.saxutils import quoteattr
+import colorsys
 
 import wx
 import eg
@@ -36,10 +37,19 @@ gPatches = {
     "Registry.RegistryQuery": "System.RegistryQuery",
 }    
 
-gRenamedColour = tuple(
-    int(0.8 * c + 0.2 * (255 - c))
-    for c in wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOWTEXT).Get()
-)
+def GetRenamedColor():
+    r, g, b = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOWTEXT).Get()
+    h, s, v = colorsys.rgb_to_hsv(r / 255.0, g / 255.0, b / 255.0)        
+    if v > 0.5:
+        v -= 0.25
+    else:
+        v += 0.25
+    rgb = colorsys.hsv_to_rgb(h, s, v)
+    return tuple([int(round(c * 255.0)) for c in rgb])
+
+
+gRenamedColour = GetRenamedColor()
+
 
 def _compileCall(action, *args):
     return action.Compile(*args)()

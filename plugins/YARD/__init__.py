@@ -130,13 +130,16 @@ class YARD(eg.PluginClass):
                 buttons.append("JogLeft")
                 self.TriggerEvent("+".join(buttons))
             elif eventString == "070000001081FF":
-                buttons = ["Button%i" % i for i, btn in enumerate(self.buttons) if btn]
+                buttons = [
+                    "Button%i" % i 
+                    for i, btn in enumerate(self.buttons) if btn
+                ]
                 buttons.append("JogRight")
                 self.TriggerEvent("+".join(buttons))
             else:
                 self.TriggerEvent(eventString)
             return
-        if self.mapTable.has_key(eventString):
+        if eventString in self.mapTable:
             eventString, timeout = self.mapTable[eventString]
         else:
             if self.disableUnmapped:

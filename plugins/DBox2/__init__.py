@@ -116,7 +116,7 @@ class MyHTTPConnection(HTTPConnection):
                 continue
             break
         if not self.sock:
-            raise socket.error, msg
+            raise socket.error(msg)
 
 
 

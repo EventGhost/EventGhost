@@ -266,7 +266,7 @@ class EventGhost(object):
         if name in self.__setattr_set:
             object.__setattr__(self, name, value)
         else:
-            raise "Can't assign to eg-instance"
+            raise Exception("Can't assign to eg-instance")
 
 
     def SetAttr(self, name, value):
@@ -438,7 +438,7 @@ class EventGhost(object):
         
     def RegisterEvent(self, eventString, eventHandler):
         eventTable = self.eventTable
-        if not eventTable.has_key(eventString):
+        if eventString not in eventTable:
             eventTable[eventString] = []
         eventTable[eventString].append(eventHandler)
     
@@ -469,7 +469,7 @@ class EventGhost(object):
 
     def Bind(self, eventString, eventFunc):
         eventTable = self.eventTable2
-        if not eventTable.has_key(eventString):
+        if eventString not in eventTable:
             eventTable[eventString] = []
         eventTable[eventString].append(eventFunc)
     

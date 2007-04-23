@@ -196,7 +196,7 @@ class LanguageEditor(wx.Frame):
         languageList = ["en_EN"]
         for item in os.listdir("Languages"):
             name, ext = os.path.splitext(item)
-            if ext == ".py" and languageNames.has_key(name):
+            if ext == ".py" and name in languageNames:
                 x = langKeys.index(name)
 #                languageChoiceCtrl.SetString(
 #                    x,

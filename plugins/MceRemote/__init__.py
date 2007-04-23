@@ -134,7 +134,7 @@ from ctypes import *
 
 
 
-key_map = {
+KEY_MAP = {
     0x7b9a: "TV_Power", 0x7ba1: "Blue", 0x7ba2: "Yellow", 0x7ba3: "Green",
     0x7ba4: "Red", 0x7ba5: "Teletext", 0x7baf: "Radio", 0x7bb1: "Print",
     0x7bb5: "Videos", 0x7bb6: "Pictures", 0x7bb7: "Recorded_TV",
@@ -152,18 +152,26 @@ key_map = {
 }
 
 
-plugin_dir = os.path.abspath(os.path.split(__file__)[0])
-dll_path = os.path.join(plugin_dir, "MceIr.dll")
+pluginDir = os.path.abspath(os.path.split(__file__)[0])
+dllPath = os.path.join(pluginDir, "MceIr.dll")
 
 
 
 class MceRemote(eg.PluginClass):
     name = "Microsoft MCE Remote"
+    
+    class text:
+        buttonTimeout = "Button release timeout (seconds):"
+        buttonTimeoutDescr = (
+            "(If you get unintended double presses of the buttons, "
+            "increase this value.)"
+        )
 
     def __init__(self):
         self.device = None
-        self.is_enabled = False
-        self.repeat_counter = -1
+        self.isEnabled = False
+        self.waitTime = 0.15
+        self.repeatCounter = -1
         self.timer = Timer(0, self.OnTimeOut)
         self.lastEventString = ""
         self.lastEvent = eg.EventGhostEvent()
@@ -173,19 +181,24 @@ class MceRemote(eg.PluginClass):
             # we are only interested in the hwnd
             self.hwnd = self.frame.GetHandle()
             # insert our WndProc
-            self.oldWndProc = win32gui.SetWindowLong(self.hwnd, 
-                                            win32con.GWL_WNDPROC, self.MyWndProc)
-            self.dll = WinDLL(dll_path)
+            self.oldWndProc = win32gui.SetWindowLong(
+                self.hwnd, 
+                win32con.GWL_WNDPROC, 
+                self.MyWndProc
+            )
+            self.dll = WinDLL(dllPath)
             self.dll.MceIrRegisterEvents(self.hwnd)
             self.dll.MceIrSetRepeatTimes(1,1)
         wx.CallAfter(Init)
         
-    def __start__(self):
-        self.is_enabled = True
+        
+    def __start__(self, waitTime=0.15):
+        self.waitTime = waitTime
+        self.isEnabled = True
 
 
     def __stop__(self):
-        self.is_enabled = False
+        self.isEnabled = False
         
         
     def __close__(self):
@@ -196,18 +209,21 @@ class MceRemote(eg.PluginClass):
             
     def MyWndProc(self, hwnd, mesg, wParam, lParam):
         if mesg == win32con.WM_DESTROY:
-        # Restore the old WndProc.  Notice the use of win32api
-        # instead of win32gui here.  This is to avoid an error due to
-        # not passing a callable object.
-            win32api.SetWindowLong(self.hwnd, 
-                                    win32con.GWL_WNDPROC, self.oldWndProc)
+            # Restore the old WndProc.  Notice the use of win32api
+            # instead of win32gui here.  This is to avoid an error due to
+            # not passing a callable object.
+            win32api.SetWindowLong(
+                self.hwnd, 
+                win32con.GWL_WNDPROC,
+                self.oldWndProc
+            )
         elif mesg == win32con.WM_USER:
             key = lParam & 0xFFFF
-            repeat_counter = (lParam >> 16)
-            if not self.is_enabled:
+            repeatCounter = (lParam >> 16)
+            if not self.isEnabled:
                 return
-            if key_map.has_key(key):
-                eventString = key_map[key]
+            if key in KEY_MAP:
+                eventString = KEY_MAP[key]
             else:
                 eventString = "%X" % key
             self.timer.cancel()       
@@ -216,16 +232,16 @@ class MceRemote(eg.PluginClass):
                     self.lastEvent.SetShouldEnd()
                 self.lastEvent = self.TriggerEnduringEvent(eventString)
                 self.lastEventString = eventString
-                self.repeat_counter = repeat_counter
+                self.repeatCounter = repeatCounter
             else:
-                self.repeat_counter += 1
-                if self.repeat_counter != repeat_counter:
+                self.repeatCounter += 1
+                if self.repeatCounter != repeatCounter:
                     if self.lastEventString != "":
                         self.lastEvent.SetShouldEnd()
                     self.lastEvent = self.TriggerEnduringEvent(eventString)
                     self.lastEventString = eventString
                     
-            self.timer = Timer(0.15, self.OnTimeOut)
+            self.timer = Timer(self.waitTime, self.OnTimeOut)
             self.timer.start()
         else:
             return win32gui.CallWindowProc(
@@ -241,3 +257,22 @@ class MceRemote(eg.PluginClass):
         self.lastEvent.SetShouldEnd()
         self.lastEventString = ""
         
+        
+    def Configure(self, waitTime=0.15):
+        dialog = eg.ConfigurationDialog(self)
+        staticText = wx.StaticText(dialog, -1, self.text.buttonTimeout)
+        dialog.sizer.Add(staticText)
+        waitTimeCtrl = eg.SpinNumCtrl(
+            dialog, 
+            -1,
+            waitTime,
+            integerWidth=3
+        )
+        dialog.sizer.Add(waitTimeCtrl)
+        staticText = wx.StaticText(dialog, -1, self.text.buttonTimeoutDescr)
+        dialog.sizer.Add(staticText, 0, wx.TOP, 5)
+        
+        if dialog.AffirmedShowModal():
+            return (
+                waitTimeCtrl.GetValue(),
+            )

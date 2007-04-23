@@ -157,7 +157,7 @@ class Task(eg.PluginClass):
                 self.lastDestroyed = ""
         elif wParam == HSHELL_WINDOWDESTROYED:
             fstr = GetWindowProcessName(lParam)
-            if windowList.has_key(lParam) and windowList[lParam] != 1:
+            if lParam in windowList and windowList[lParam] != 1:
                 fstr = windowList[lParam]
                 del windowList[lParam]
             if fstr and fstr != "Desktop" and fstr != "Explorer":

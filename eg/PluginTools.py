@@ -50,7 +50,7 @@ def MyImport(name, fd, pathname):
     module = types.ModuleType(name)
     module.__dict__["eg"] = eg
     module.__dict__["__file__"] = pathname
-    exec fd in module.__dict__
+    exec(fd, module.__dict__)
     return module
     
     

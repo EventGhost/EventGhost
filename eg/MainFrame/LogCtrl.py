@@ -22,7 +22,7 @@
 
 from time import time, strftime, localtime
 import collections
-
+import colorsys
 import wx
 import wx.lib.mixins.listctrl as listmix
 
@@ -67,21 +67,24 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.SetImageList(eg.imageList, wx.IMAGE_LIST_SMALL)
 
         sysColour = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
-        r = sysColour.Red()
-        g = sysColour.Green()
-        b = sysColour.Blue()
-        sum = r + g + (b / 2)
-        if sum > 382:
-            r = max(r - 15, 0)
-            g = max(g - 15, 0)
-            b = max(b - 15, 0)
-        else:
-            r = min(r + 60, 255)
-            g = min(g + 60, 255)
-            b = min(b + 60, 255)
         sysTextColour = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOWTEXT)
+
+        hue, saturation, value = colorsys.rgb_to_hsv(
+            sysColour.Red() / 255.0,
+            sysColour.Green() / 255.0,
+            sysColour.Blue() / 255.0
+        )
+        if value > 0.5:
+            value -= 0.05
+        else:
+            value += 0.2
+        r, g, b = colorsys.hsv_to_rgb(hue, saturation, value)
         self.attr1 = wx.ListItemAttr()
-        self.attr1.BackgroundColour = (r, g, b)
+        self.attr1.BackgroundColour = (
+            int(round(r * 255.0)), 
+            int(round(g * 255.0)), 
+            int(round(b * 255.0)), 
+        )
         self.attr1.TextColour = sysTextColour
 
         self.attr2 = wx.ListItemAttr()

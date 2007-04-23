@@ -119,7 +119,7 @@ _gPluginIconDict = {}
 
 def AddPluginIcon(pluginName):
     global gPluginIconDict
-    if _gPluginIconDict.has_key(pluginName):
+    if pluginName in _gPluginIconDict:
         return _gPluginIconDict[pluginName]
     pathname = "plugins\\" + pluginName + "\\icon.png"
     try:

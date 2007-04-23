@@ -136,7 +136,7 @@ class AddActionDialog(eg.Dialog):
                 actionList = i.actionList
                 name = i.name
             else:
-                raise "unknown type in FillTree", i
+                raise Exception("unknown type in FillTree", i)
             tmp = tree.AppendItem(item, name)
             tree.SetPyData(tmp, i)
             tree.SetItemImage(tmp, iconIndex)

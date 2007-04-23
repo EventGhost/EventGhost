@@ -44,7 +44,7 @@ class RawReceiverPlugin(PluginClass):
         if suffix == self.repeatCode:
             suffix = self.lastEventString
             timeout = self.lastTimeout
-        elif self.mapTable.has_key(suffix):
+        elif suffix in self.mapTable:
             newEventString, timeout, repeatCode = self.mapTable[suffix]
             self.repeatCode = repeatCode
         else:

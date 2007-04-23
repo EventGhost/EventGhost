@@ -229,7 +229,7 @@ class AIRT(eg.PluginClass):
                                 buf = buf[7:]
                                 continue
                             else:    
-                                if table is not None and table.has_key(ord(buf[6])):
+                                if table is not None and ord(buf[6]) in table:
                                     eventString += table[ord(buf[6])]
                                 else:
                                     eventString += bin2hexstring(buf[6])

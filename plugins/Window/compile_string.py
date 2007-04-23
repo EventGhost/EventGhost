@@ -45,7 +45,7 @@ def compile_string(pattern):
         tmp += pattern[start:end]
         end += 1
         if len(pattern)-1 < end:
-            raise "unmatched curly-brace at end"
+            raise SyntaxError("unmatched curly-brace at end")
         elif pattern[end] == "{":
             tmp += "{"
             end += 1
@@ -53,7 +53,7 @@ def compile_string(pattern):
             word_start = end
             end = pattern.find('}', word_start)
             if end == -1:
-                raise "unmatched curly-brace"
+                raise SyntaxError("unmatched curly-brace")
             word = pattern[word_start:end]
             if word == "*":
                 if tmp != "":
