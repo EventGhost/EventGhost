@@ -32,7 +32,9 @@ class PluginInfo(eg.PluginInfo):
     author = "Bitmonster and Matthew Jacob Edwards"
     version = "1.0.2"
     kind = "program"
-    description = "Adds support functions to control Winamp"
+    description = (
+        'Adds actions to control <a href="http://www.winamp.com/">Winamp</a>.'
+    )
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACDElEQVR42pWTT0gUcRTH"
         "P7OQemvKQ7pSbkQgHWLm0k2cgxpUsLOBFUS4UmCBZEuHLsHugBAeLPca4U4RmILsinno"

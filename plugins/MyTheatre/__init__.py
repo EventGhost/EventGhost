@@ -26,9 +26,8 @@ class PluginInfo(eg.PluginInfo):
     version = "1.0.0"
     kind = "program"
     description = (
-        'Adds support functions to control MyTheatre '
-        '\n\n<p>'
-        '<a href=http://www.dvbcore.com/>www.dvbcore.com</a>'
+        'Adds actions to control the <a href="http://www.dvbcore.com/">'
+        'MyTheatre</a> multimedia application.'
     )
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAADMklEQVR42m1TX0xScRT+"

@@ -27,7 +27,11 @@ class PluginInfo(eg.PluginInfo):
     author = "Bitmonster"
     version = "1.0.0"
     kind = "program"
-    description = "Adds support functions to control the ffdshow DirectShow filter." 
+    description = (
+        'Adds actions to control the '
+        '<a href="http://ffdshow-tryout.sourceforge.net/">'
+        'ffdshow DirectShow filter</a>.'
+    )
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAADMElEQVR42nVSXUiTYRR+"
         "v+/bn6hbapqoTEf400R3YWmQ6E2gIoIk02Y3BZoadVEIGsxCZAkpSZB6YUiDdlFmNAzC"

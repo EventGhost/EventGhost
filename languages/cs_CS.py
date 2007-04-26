@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 class General:
     autostartItem = u'Automatick\xfd start'
     browse = u'Proch\xe1zet...'
@@ -30,7 +31,6 @@ class MainFrame:
         AddPlugin = u'Vlo\u017eit Plugin...'
         Apply = u'Pou\u017e\xedt'
         CheckUpdate = u'Vyhledat nov\u011bj\u0161\xed verzi...'
-        ClearAll = u'Smazat v\u0161e'
         Close = u'&Zav\u0159\xedt'
         CollapseAll = u'&Sbalit v\u0161e'
         ConfigurationMenu = u'&Konfigurace'
@@ -1024,7 +1024,6 @@ class Plugin:
             description = u'P\u0159edvolby - vzhled kompaktn\xed'
         class ViewMinimal:
             name = u'P\u0159edvolby - vzhled minim\xe1ln\xed'
-
             description = u'P\u0159edvolby - vzhled minim\xe1ln\xed'
         class ViewNormal:
             name = u'P\u0159edvolby - vzhled norm\xe1ln\xed'
@@ -1063,12 +1062,6 @@ class Plugin:
             name = u'Odeslat'
             description = u'Odes\xedlan\xe1 ud\xe1lost'
             parameterDescription = u'Identifik\xe1tor odes\xedlan\xe9 ud\xe1losti:'
-    class OSD:
-        name = u'Obrazovkov\xfd displej (OSD)'
-        description = u'Plugin, slou\u017e\xedc\xed k zobrazov\xe1n\xed jednoduch\xfdch textov\xfdch informac\xed na obrazovce.'
-        class ShowOSD:
-            name = u'Zobrazit OSD'
-            description = u'Zobraz\xed OSD'
     class Serial:
         name = u'S\xe9riov\xfd port'
         description = u'Libovoln\xe1 komunikace p\u0159es s\xe9riov\xfd port.\n<br>Voliteln\u011b m\u016f\u017ee generovat ud\xe1losti.\n\n<p><b>Termin\xe1tor</b> je \u0159et\u011bzec znak\u016f, podle kter\xe9ho p\u0159i generov\xe1n\xed ud\xe1losti plugin identifikuje konec p\u0159ijat\xfdch dat.'

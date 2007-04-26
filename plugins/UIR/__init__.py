@@ -1,14 +1,15 @@
 import eg
 
 class PluginInfo(eg.PluginInfo):
-    name = "UIR/Irman"
+    name = "UIR / Irman"
     author = "Bitmonster"
     version = "1.0.0"
     kind = "remote"
     description = (
-        'Hardware plugin for the "Universal Infrared Receiver" (UIR) '
-        'and the Irman device from '
-        '<a href="http://www.evation.com/irman/index.html">www.evation.com</a>.'
+        'Hardware plugin for the <a href="http://fly.cc.fer.hr/~mozgic/UIR/">'
+        'Universal Infrared Receiver V1 (UIR)</a> '
+        'and the <a href="http://www.evation.com/irman/index.html">Irman</a> '
+        'device.'
     )
 
 

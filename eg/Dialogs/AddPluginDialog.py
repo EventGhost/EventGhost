@@ -48,7 +48,7 @@ class Text:
         "instance of this plugin in your configuration."
     remotePlugins = "Remote Receiver"
     programPlugins = "Program Control"
-    externalPlugins = "External Hardware Control"
+    externalPlugins = "External Equipment"
     otherPlugins = "Other"
     author = "Author:"
     version = "Version:"
@@ -105,7 +105,7 @@ class AddPluginDialog(eg.Dialog):
         
         pluginList = []
         for item in os.listdir("Plugins"):
-            if item.startswith("."):
+            if item.startswith(".") or item.startswith("_"):
                 continue
             file_name, extension = os.path.splitext(item)
             if os.path.isdir("Plugins/" + item) or extension in (".py", ".egp"):
@@ -196,8 +196,43 @@ class AddPluginDialog(eg.Dialog):
         treeCtrl.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelect)
         treeCtrl.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnItemActivated)
         treeCtrl.SelectItem(itemToSelect)
+        if eg.debugLevel:
+            exportListButton = wx.Button(self, -1, "Export list to clipboard")
+            exportListButton.Bind(wx.EVT_BUTTON, self.OnExportList)
+            self.buttonRow.Add(exportListButton)
+            
+            
+    def OnExportList(self, event):
+        import re
+        import cStringIO
+        text = cStringIO.StringIO()
+        tree = self.treeCtrl
+        text.write("This is the list of plugins currently distributed with EventGhost:\n\n")
+        for tag in kindTags:
+            item = self.typeIds[tag]
+            text.write("\n\n== %s ==\n\n" % tree.GetItemText(item))
+            child, cookie = tree.GetFirstChild(item)
+            while child.IsOk():
+                info = tree.GetPyData(child)
+                text.write("====%s====\n" % info.name)
+                s = re.sub(
+                    r'<a\s+href="http://(.*?)">\s*((\n|.)+?)\s*</a>',
+                    r'[http://\1 \2]',
+                    info.description.splitlines()[0]
+                    
+                )
+                text.write(":%s\n\n" % s)
+                child, cookie = tree.GetNextChild(item, cookie)
+        print text.getvalue()
 
-
+        if wx.TheClipboard.Open():
+            tdata = wx.TextDataObject(text.getvalue())
+            wx.TheClipboard.SetData(tdata)
+            wx.TheClipboard.Close()
+            wx.TheClipboard.Flush()
+        text.close()
+        
+            
     def OnSelect(self, event):
         item = event.GetItem()
         self.resultData = info = self.treeCtrl.GetPyData(item)       

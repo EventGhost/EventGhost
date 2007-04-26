@@ -28,7 +28,8 @@ class PluginInfo(eg.PluginInfo):
     version = "1.0.0"
     kind = "remote"
     description = (
-        'Hardware plugin for the "Universal InfraRed Transceiver V2".'
+        'Hardware plugin for the <a href="http://www.fukushima.us/UIRT2/">'
+        'Universal InfraRed Transceiver V2</a>.'
     )
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAaElEQVR42mNkoBAwDgMD"

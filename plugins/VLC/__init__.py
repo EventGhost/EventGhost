@@ -33,7 +33,8 @@ class PluginInfo(eg.PluginInfo):
     version = "0.3"
     kind = "program"
     description = (
-        'Adds support functions to control VideoLan Media Player.'
+        'Adds actions to control the '
+        '<a href="http://www.videolan.org/">VLC media player</a>.'
         '\n\n</p>'
         '<p>Enable the RC Interface or start VLC with:</p>'
         '<p><b>vlc.exe --extraintf=rc --rc-host=localhost:1234 '
@@ -42,7 +43,7 @@ class PluginInfo(eg.PluginInfo):
         'commands that are enabled in VLC!</p>'
         '<p><a href=http://www.eventghost.org/forum/viewtopic.php?t=43>'
         'Help and Bugreport</a></p>'
-        '<p><a href=http://www.videolan.org>VideoLan Media Player</a></p>'
+        '<p><a href="http://www.videolan.org/">VideoLAN project</a></p>'
     )
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACZElEQVR42pXSa0iTURgH"

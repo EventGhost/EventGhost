@@ -28,9 +28,10 @@ class PluginInfo(eg.PluginInfo):
     version = "1.0.0"
     kind = "remote"
     description = (
-        'Hardware plugin for the "Tira" transceivers from Home Electronics.'
+        'Hardware plugin for the <a href="http://www.home-electro.com/">'
+        'Home Electronics Tira</a> transceiver.'
         '\n\n<p>'
-        '<a href=http://www.home-electro.com/>Home Electronics<p>'
+        '<a href=http://www.home-electro.com/><p>'
         '<center><img src="tira.png" alt="Tira2" /></a></center>'
     )
     icon = (

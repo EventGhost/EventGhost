@@ -28,10 +28,11 @@ class PluginInfo(eg.PluginInfo):
     version = "1.0.0"
     kind = "remote"
     description = (
-        'Hardware plugin for the "Streamzap PC Remote".'
+        'Hardware plugin for the '
+        '<a href="http://www.streamzap.com/products/pcremote/">'
+        'Streamzap PC Remote</a>.'
         '\n\n<p>'
-        '<center><a href=http://www.streamzap.com/products/pcremote/>'
-        'Streamzap, Inc. Homepage<p>'
+        '<center><p><a href=http://www.streamzap.com/products/pcremote/>'
         '<img src="crr.jpg" alt="Streamzap" /></a></center>'
     )
     icon = (

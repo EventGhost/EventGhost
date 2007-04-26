@@ -179,10 +179,7 @@ class LanguageEditor(wx.Frame):
         #import MainFrame
         from ActionThread import CORE_PLUGINS
         
-#        for pluginIdent in CORE_PLUGINS:
-#            plugin = eg.OpenPlugin(pluginIdent, pluginIdent, ())
-#            plugin.info.isStarted = True
-        for plugin in os.listdir("Plugins"):
+        for plugin in os.listdir("plugins"):
             if not plugin.startswith("."):
                 OpenPlugin(plugin, plugin, ())
         
@@ -194,7 +191,7 @@ class LanguageEditor(wx.Frame):
         langNames = [languageNames[k] for k in langKeys]
             
         languageList = ["en_EN"]
-        for item in os.listdir("Languages"):
+        for item in os.listdir("languages"):
             name, ext = os.path.splitext(item)
             if ext == ".py" and name in languageNames:
                 x = langKeys.index(name)
@@ -298,7 +295,7 @@ class LanguageEditor(wx.Frame):
         tree.Unbind(wx.EVT_TREE_SEL_CHANGING)
         tree.DeleteChildren(self.rootId)
         translation = eg.Bunch()
-        languagePath = "Languages\\%s.py" % language
+        languagePath = "languages\\%s.py" % language
         if os.path.exists(languagePath):
             execfile(languagePath, {}, translation.__dict__)
         self.translation = translation
@@ -474,14 +471,23 @@ class LanguageEditor(wx.Frame):
             if key.startswith("__"):
                 continue
             if key == "name":
-                value = node.__class__.__dict__[key]
+                try:
+                    value = node.__class__.__dict__[key]
+                except:
+                    print node.__dict__
+                    print evalPath
+                    print "class has no:", key
+                    continue
+                    raise
                 firstItems.append((key, value))
             elif key == "description":
                 try:
                     value = node.__class__.__dict__[key]
                 except:
                     print node.__dict__
+                    print evalPath
                     print "class has no:", key
+                    continue
                     raise
                 firstItems.append((key, value))
             elif type(getattr(node, key)) in (types.ClassType, types.InstanceType):

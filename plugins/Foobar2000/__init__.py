@@ -30,8 +30,8 @@ class PluginInfo(eg.PluginInfo):
     version = "1.0.0"
     kind = "program"
     description = (
-        'Adds support functions to control Foobar2000.'
-        '\n\n<p><a href="http://www.foobar2000.org/">Foobar2000 Homepage</a>'
+        'Adds actions to control the <a href="http://www.foobar2000.org/">'
+        'Foobar2000</a> audio player.'
     )
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAC0UlEQVR42m1TO0hjURA9"

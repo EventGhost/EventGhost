@@ -27,8 +27,8 @@ class PluginInfo(eg.PluginInfo):
     author = "Bitmonster"
     version = "1.0.0"
     description = (
-        "Generates events if files in a defined directory are created, "
-        "deleted or changed."
+        "Monitors a directory and generates events if files are created, "
+        "deleted or changed in it."
     )
 
 import wx

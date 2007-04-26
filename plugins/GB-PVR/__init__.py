@@ -25,9 +25,10 @@ import eg
 class PluginInfo(eg.PluginInfo):
     name = "GB-PVR"
     description = (
-        'Adds support functions to control GB-PVR '
+        'Adds actions to control the '
+        '<a href="http://www.gbpvr.com/">GB-PVR</a> mediacenter.'
         '\n\n<p>'
-        '<a href=http://www.gbpvr.com/>www.gbpvr.com<p>'
+        '<a href="http://www.gbpvr.com/">'
         '<center><img src="logo_small.png" alt="GB-PVR" /></a></center>'
     )
     author = "Bitmonster"

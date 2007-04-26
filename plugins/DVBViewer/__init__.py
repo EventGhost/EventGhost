@@ -28,8 +28,8 @@ class PluginInfo(eg.PluginInfo):
     version = "1.0.1"
     kind = "program"
     description = (
-        'Adds support functions to control DVBViewer Pro/GE'
-        '\n\n<p><a href="http://www.dvbviewer.com/">DVBViewer Homepage</a>'
+        'Adds actions to control '
+        '<a href="http://www.dvbviewer.com/">DVBViewer Pro/GE</a>.'
     )
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAADK0lEQVR42j2TXWgcVRTH"

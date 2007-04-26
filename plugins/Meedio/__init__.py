@@ -5,7 +5,9 @@ class PluginInfo(eg.PluginInfo):
     author = "jorel1969"
     version = "0.0.1"
     kind = "program"
-    description = "Controls Meedio via SendMessage"
+    description = (
+        'Adds actions to control <a href="http://www.meedio.com/">Meedio</a>.'
+    )
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAABnRSTlMA/wD/AP83WBt9"
         "AAACG0lEQVR42nVSTU8TURQ982aGaSnYgUYMVCB+BKlKIBpXJG5YYDSEuHCpG3+CJvwB"

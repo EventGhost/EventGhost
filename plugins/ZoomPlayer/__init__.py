@@ -27,8 +27,8 @@ class PluginInfo(eg.PluginInfo):
     author = "Bitmonster"
     version = "1.0.0"
     kind = "program"
-    description = """
-Adds support functions to control the famous Zoom Player.
+    description = """\
+Adds actions to control the famous <a href="http://www.inmatrix.com/">Zoom Player</a>.
 
 <p>
 <b>Notice:</b><br>

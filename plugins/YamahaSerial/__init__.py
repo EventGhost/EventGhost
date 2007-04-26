@@ -49,7 +49,7 @@ class PluginInfo(eg.PluginInfo):
     author = "Mark Clarkson"
     version = "0.0.1"
     kind = "external"
-    description = "Plugin to control Yamaha RX-V1000 receiver using RS232"
+    description = "Control Yamaha RX-V1000 receivers using RS232."
 
 import wx
 import thread

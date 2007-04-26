@@ -25,7 +25,7 @@ class PluginInfo(eg.PluginInfo):
     name = "Speech"
     author = "MonsterMagnet"
     version = "1.0.0"
-    description = ""
+    description = "Uses the Text-To-Speech service of the Microsoft Speech API (SAPI)."
 
 
 import wx

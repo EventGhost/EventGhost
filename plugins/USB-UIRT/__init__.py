@@ -28,9 +28,10 @@ class PluginInfo(eg.PluginInfo):
     version = "1.0.0"
     kind = "remote"
     description = (
-        'Hardware plugin for the USB-UIRT transceiver.'
+        'Hardware plugin for the <a href="http://www.usbuirt.com/">'
+        'USB-UIRT</a> transceiver.'
         '\n\n<p>'
-        '<a href=http://www.usbuirt.com/>USB-UIRT Home<p>'
+        '<a href="http://www.usbuirt.com/"><p>'
         '<center><img src="picture.jpg" alt="USB-UIRT" /></a></center>'
     )
     icon = (

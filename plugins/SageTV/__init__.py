@@ -6,9 +6,8 @@ class PluginInfo(eg.PluginInfo):
     version = "0.0.1"
     kind = "program"
     description = (
-        'Adds support functions to control SageTV '
-        '\n\n<p>'
-        '<a href=http://www.sagetv.com/>www.sagetv.com</a>'
+        'Adds actions to control the <a href="http://www.sagetv.com/">'
+        'SageTV Media Center</a>.'
     )
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAB3RJTUUH1wMXEAcEHYti"
