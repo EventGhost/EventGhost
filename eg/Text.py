@@ -49,7 +49,7 @@ class Text:
         unnamedMacro = "<unnamed macro>"
         unnamedEvent = "<unnamed event>"
         unnamedFile = "<unnamed file>"
-        moreHelp = "More help"
+        moreHelp = "More info"
         noOptionsAction = "This action has no options to configure."
         noOptionsPlugin = "This plugin has no options to configure."
 

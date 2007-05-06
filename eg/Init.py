@@ -340,6 +340,7 @@ class EventGhost(object):
             ClosePlugin, 
             GetPluginInfo,
             PluginInfo,
+            GetPluginInfoList
         )
         self.__dict__.update(locals())
         

@@ -53,10 +53,10 @@ def NetworkSend(host, port, password, eventString, payload=None):
         # now just pipe those commands to the server
         if (payload is not None) and (len(payload) > 0):
             for pld in payload:
-                sock.sendall("payload " + pld + "\n")
+                sock.sendall("payload " + pld.encode("UTF-8") + "\n")
 
         # send the eventstring
-        sock.sendall(eventString + "\n")
+        sock.sendall(eventString.encode("UTF-8") + "\n")
         
         # tell the server that we are done nicely.
         sock.sendall("close\n")

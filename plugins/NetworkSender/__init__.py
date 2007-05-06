@@ -146,10 +146,10 @@ class NetworkSender(eg.PluginClass):
             # now just pipe those commands to the server
             if (payload is not None) and (len(payload) > 0):
                 for pld in payload:
-                    sock.sendall("payload " + pld + "\n")
+                    sock.sendall("payload " + pld.encode("UTF-8") + "\n")
 
             sock.sendall("payload withoutRelease\n")
-            sock.sendall(eventString + "\n")
+            sock.sendall(eventString.encode("UTF-8") + "\n")
 
             return sock
         

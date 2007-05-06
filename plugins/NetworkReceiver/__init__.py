@@ -139,6 +139,7 @@ class Server_Handler (asynchat.async_chat):
             
             
     def state3(self, line):
+        line = line.decode("UTF-8")
         if line == "close":
             self.initiate_close()
         elif line[:8] == "payload ":

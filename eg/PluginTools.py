@@ -20,11 +20,12 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-from os.path import abspath, exists, join
+from os.path import abspath, exists, join, isdir
 from base64 import b64decode
 from cStringIO import StringIO
 
 import sys
+import os
 import copy
 import imp
 import types
@@ -362,4 +363,23 @@ def ClosePlugin(plugin):
     del plugin
 
 
+gPluginInfoList = None
+
+def GetPluginInfoList():
+    """
+    Get a list of all PluginInfo for all plugins in the plugin directory
+    """
+    global gPluginInfoList
+    if gPluginInfoList is not None:
+        return gPluginInfoList
+    
+    gPluginInfoList = []
+    for filename in os.listdir("plugins"):
+        if filename.startswith(".") or filename.startswith("_"):
+            continue
+        if not isdir(join("plugins", filename)):
+            continue
+        info = eg.GetPluginInfo(filename)
+        gPluginInfoList.append(info)
+    return gPluginInfoList
 

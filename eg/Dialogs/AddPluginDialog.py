@@ -103,28 +103,19 @@ class AddPluginDialog(eg.Dialog):
         self.typeIds = typeIds
         itemToSelect = typeIds["remote"]
         
-        pluginList = []
-        for item in os.listdir("Plugins"):
-            if item.startswith(".") or item.startswith("_"):
-                continue
-            if os.path.isdir("Plugins/" + item):
-                pluginList.append(item)
         defaultTarget = typeIds["other"]
-        for filename in pluginList:
-            info = eg.GetPluginInfo(filename)
+        for info in eg.GetPluginInfoList():
             idx = 0
-            name = filename
             target = defaultTarget
-            if info:
-                if info.kind in ("hidden", "core"):
-                    continue
-                name = info.name
-                if info.icon:
-                    idx = imageList.Add(PilToBitmap(info.icon))
-                target = typeIds.get(info.kind, target)
-            id = treeCtrl.AppendItem(target, name, idx)
+            if info.kind in ("hidden", "core"):
+                continue
+            name = info.name
+            if info.icon:
+                idx = imageList.Add(PilToBitmap(info.icon))
+            target = typeIds.get(info.kind, target)
+            id = treeCtrl.AppendItem(target, info.name, idx)
             treeCtrl.SetPyData(id, info)
-            if filename == config.lastSelection:
+            if info.path == config.lastSelection:
                 itemToSelect = id
                 
         
@@ -194,57 +185,8 @@ class AddPluginDialog(eg.Dialog):
         treeCtrl.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelect)
         treeCtrl.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnItemActivated)
         treeCtrl.SelectItem(itemToSelect)
-        if eg.debugLevel:
-            exportListButton = wx.Button(self, -1, "Export list to clipboard")
-            exportListButton.Bind(wx.EVT_BUTTON, self.OnExportList)
-            self.buttonRow.Add(exportListButton)
-            
-            
-    def OnExportList(self, event):
-        import re
-        import cStringIO
-        text = cStringIO.StringIO()
-        tree = self.treeCtrl
-        text.write("This is the list of plugins currently distributed with EventGhost:\n\n")
-        pluginList = []
-        for item in os.listdir("Plugins"):
-            if item.startswith(".") or item.startswith("_"):
-                continue
-            if os.path.isdir("Plugins/" + item):
-                pluginList.append(item)
-        kindList = ["core"] + kindTags
-        groups = {}
-        for filename in pluginList:
-            info = eg.GetPluginInfo(filename)
-            if info.kind in groups:
-                groups[info.kind].append(info)
-            else:
-                groups[info.kind] = [info]
-        for kind in kindList:
-            text.write("\n\n== %s ==\n\n" % kind)
-            groups[kind].sort()
-            for info in groups[kind]:
-                text.write("====%s====\n" % info.name)
-                try:
-                    description = info.description.splitlines()[0]
-                except:
-                    description = info.description
-                s = re.sub(
-                    r'<a\s+href="http://(.*?)">\s*((\n|.)+?)\s*</a>',
-                    r'[http://\1 \2]',
-                    description
-                )
-                text.write(":%s\n\n" % s)
-        print text.getvalue()
 
-        if wx.TheClipboard.Open():
-            tdata = wx.TextDataObject(text.getvalue())
-            wx.TheClipboard.SetData(tdata)
-            wx.TheClipboard.Close()
-            wx.TheClipboard.Flush()
-        text.close()
-        
-            
+
     def OnSelect(self, event):
         item = event.GetItem()
         self.resultData = info = self.treeCtrl.GetPyData(item)       
@@ -317,5 +259,5 @@ class AddPluginDialog(eg.Dialog):
         expandDict = {}
         for kind, treeId in self.typeIds.iteritems():
             expandDict[kind] = self.treeCtrl.IsExpanded(treeId)
-        config.expandDict = expandDict        
+        config.expandDict = expandDict   
         wx.Dialog.Destroy(self)
