@@ -50,7 +50,7 @@ import socket
 
 
 class Text:
-    port = "Port:"
+    port = "TCP/IP Port:"
     password = "Password:"
     event_prefix = "Event Prefix:"
     

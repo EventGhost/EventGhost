@@ -76,6 +76,7 @@ SPECIAL_THANKS_DATA = (
             ('TomB', 'MCE remote'),
             ('dlandrum', 'PayPal'),
             ('Steve Ingamells', 'PayPal'),
+            ('damdy-cash', 'PayPal'),
             ('Stoffel', 'remote'),
             (
                 'Jon Rhees, <a href="http://www.usbuirt.com/">USB-UIRT</a>', 

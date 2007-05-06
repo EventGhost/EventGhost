@@ -84,9 +84,10 @@ class TreeItem(object):
         self.xmlId = TreeLink.NewXmlId(int(get('id', -1)), self)
 
         
-    @eg.LogIt
-    def __del__(self):
-        pass
+    if eg.debugLevel:
+        @eg.LogIt
+        def __del__(self):
+            pass
     
     
     def RestoreState(self):
@@ -499,6 +500,7 @@ class TreeItem(object):
         return self
     
     
-    @eg.LogIt
-    def __del__(self):
-        pass
+    if eg.debugLevel:
+        @eg.LogIt
+        def __del__(self):
+            pass

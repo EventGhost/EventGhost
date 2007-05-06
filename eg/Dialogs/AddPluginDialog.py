@@ -25,7 +25,7 @@ import wx
 
 import eg
 from eg.IconTools import GetIcon, PilToBitmap
-
+from ActionThread import CORE_PLUGINS
         
 kindTags = ["remote", "program", "external", "other"]
 
@@ -107,10 +107,8 @@ class AddPluginDialog(eg.Dialog):
         for item in os.listdir("Plugins"):
             if item.startswith(".") or item.startswith("_"):
                 continue
-            file_name, extension = os.path.splitext(item)
-            if os.path.isdir("Plugins/" + item) or extension in (".py", ".egp"):
-                if pluginList.count(file_name) == 0:
-                    pluginList.append(file_name)
+            if os.path.isdir("Plugins/" + item):
+                pluginList.append(item)
         defaultTarget = typeIds["other"]
         for filename in pluginList:
             info = eg.GetPluginInfo(filename)
@@ -208,21 +206,35 @@ class AddPluginDialog(eg.Dialog):
         text = cStringIO.StringIO()
         tree = self.treeCtrl
         text.write("This is the list of plugins currently distributed with EventGhost:\n\n")
-        for tag in kindTags:
-            item = self.typeIds[tag]
-            text.write("\n\n== %s ==\n\n" % tree.GetItemText(item))
-            child, cookie = tree.GetFirstChild(item)
-            while child.IsOk():
-                info = tree.GetPyData(child)
+        pluginList = []
+        for item in os.listdir("Plugins"):
+            if item.startswith(".") or item.startswith("_"):
+                continue
+            if os.path.isdir("Plugins/" + item):
+                pluginList.append(item)
+        kindList = ["core"] + kindTags
+        groups = {}
+        for filename in pluginList:
+            info = eg.GetPluginInfo(filename)
+            if info.kind in groups:
+                groups[info.kind].append(info)
+            else:
+                groups[info.kind] = [info]
+        for kind in kindList:
+            text.write("\n\n== %s ==\n\n" % kind)
+            groups[kind].sort()
+            for info in groups[kind]:
                 text.write("====%s====\n" % info.name)
+                try:
+                    description = info.description.splitlines()[0]
+                except:
+                    description = info.description
                 s = re.sub(
                     r'<a\s+href="http://(.*?)">\s*((\n|.)+?)\s*</a>',
                     r'[http://\1 \2]',
-                    info.description.splitlines()[0]
-                    
+                    description
                 )
                 text.write(":%s\n\n" % s)
-                child, cookie = tree.GetNextChild(item, cookie)
         print text.getvalue()
 
         if wx.TheClipboard.Open():

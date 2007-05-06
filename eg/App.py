@@ -85,7 +85,7 @@ class MyApp(wx.App):
         import StateIcon
         self.taskBarIcon = taskBarIcon = StateIcon.StateIcon(self)
 
-        trayMenu = trayMenu = eg.Menu(taskBarIcon, "")
+        trayMenu = self.trayMenu = eg.Menu(taskBarIcon, "")
         text = eg.text.MainFrame.TaskBarMenu
         menuShow = trayMenu.Append(text.Show, self.OnCmdShowMainFrame)
         menuHide = trayMenu.Append(text.Hide, self.OnCmdHideMainFrame)

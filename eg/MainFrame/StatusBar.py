@@ -50,9 +50,10 @@ class StatusBar(wx.StatusBar):
         self.Reposition()
 
 
-    @eg.LogIt
-    def __del__(self):
-        pass
+    if eg.debugLevel:
+        @eg.LogIt
+        def __del__(self):
+            pass
     
     
     @eg.LogIt

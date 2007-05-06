@@ -230,9 +230,10 @@ class WindowMatcher:
         print len(res), res, execution_time
         
         
-    @eg.LogIt
-    def __del__(self):
-        pass
+    if eg.debugLevel:
+        @eg.LogIt
+        def __del__(self):
+            pass
                 
                 
                 
@@ -588,9 +589,10 @@ class FindWindow(eg.ActionClass):
                 return get_result()
     
 
-    @eg.LogIt
-    def __del__(self):
-        pass
+    if eg.debugLevel:
+        @eg.LogIt
+        def __del__(self):
+            pass
         
         
     @eg.LogIt
@@ -903,8 +905,9 @@ class WindowTree(wx.TreeCtrl):
         self.SelectItem(last_item)            
         
         
-    @eg.LogIt
-    def __del__(self):
-        pass
+    if eg.debugLevel:
+        @eg.LogIt
+        def __del__(self):
+            pass
         
         

@@ -162,6 +162,7 @@ class TreeLink(object):
         return "XmlIdLink(%d)" % self.id
         
 
-    @eg.LogIt
-    def __del__(self):
-        pass
+    if eg.debugLevel:
+        @eg.LogIt
+        def __del__(self):
+            pass

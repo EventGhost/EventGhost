@@ -99,7 +99,9 @@ def GetWindowProcessName(hwnd):
 
 
 class Task(eg.PluginClass):
-
+    
+    hookDll = None
+    
     def __start__(
         self, 
         created=True, 
@@ -118,7 +120,8 @@ class Task(eg.PluginClass):
         eg.messageReceiver.AddHandler(WM_APP+1, self.FocusWndProc)
         eg.messageReceiver.AddHandler(WM_APP+2, self.FatalWndProc)
         RegisterShellHookWindow(eg.messageReceiver.hwnd)
-        self.hookDll = ctypes.cdll.LoadLibrary(abspath(join(dirname(__file__), "hook.dll")))
+        if self.hookDll is None:
+            self.hookDll = ctypes.cdll.LoadLibrary(abspath(join(dirname(__file__), "hook.dll")))
         self.hookDll.StartHook()
         
         

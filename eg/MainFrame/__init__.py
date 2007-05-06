@@ -153,15 +153,16 @@ class MainFrame(wx.Frame):
         AddItem("Execute", downFunc=OnLeftDown, upFunc=OnLeftUp)
         
         if eg.debugLevel:
-            self.toolBarSpacer = wx.Control(toolBar, size=(50, 1))
+            self.toolBarSpacer = wx.StaticBitmap(toolBar, size=(50, 10))
             toolBar.AddControl(self.toolBarSpacer)
         
             AddItem("Reset", image=RESET_ICON)
             #AddItem("Test", image=RESET_ICON)
 
-        toolBar.Realize()
         self.SetToolBar(toolBar)
         self.SetMinSize((400, 200))
+        toolBar.Realize()
+        
         
         # statusbar
         self.statusBar = StatusBar(self)
@@ -374,9 +375,10 @@ class MainFrame(wx.Frame):
         return wx.Frame.Destroy(self)
     
     
-    @eg.LogIt
-    def __del__(self):
-        pass
+    if eg.debugLevel:
+        @eg.LogIt
+        def __del__(self):
+            pass
         
         
     def UpdateTitle(self, filePath):

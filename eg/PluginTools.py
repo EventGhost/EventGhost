@@ -20,7 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-from os.path import abspath, exists
+from os.path import abspath, exists, join
 from base64 import b64decode
 from cStringIO import StringIO
 
@@ -84,7 +84,7 @@ class PluginInfoBase(object):
     
     # kind gives a hint in which group the plugin should be shown in
     # the AddPluginDialog
-    kind = None
+    kind = "other"
     
     # icon might be an instance of a PIL icon, that the plugin developer
     # has supplied
@@ -109,7 +109,7 @@ class PluginInfoBase(object):
         
     @classmethod
     def LoadModule(pluginInfo):
-        pathname = pluginInfo.path + "__init__.py"
+        pathname = join(pluginInfo.path, "__init__.py")
         if not exists(pathname):
             eg.PrintError("File %s does not exist" % pathname)
             return
@@ -254,12 +254,12 @@ def GetPluginInfo(pluginName):
     
     # read in the __info__ of the plugin
     infoDict = {"eg": eg}
-    pluginPath = "plugins/" + pluginName
-    if not exists(pluginPath + "/__info__.py"):
+    pluginPath = join("plugins", pluginName)
+    if not exists(join(pluginPath, "__info__.py")):
         PluginInfoMetaClass.raiseOnPluginInfoLoad = True
         try:
             try:
-                execfile(pluginPath + "/__init__.py", infoDict)
+                execfile(join(pluginPath, "__init__.py"), infoDict)
             finally:
                 PluginInfoMetaClass.raiseOnPluginInfoLoad = False
         except PluginInfoException:
@@ -270,7 +270,7 @@ def GetPluginInfo(pluginName):
             return None
     else:
         try:
-            execfile(pluginPath + "/__info__.py", infoDict)
+            execfile(join(pluginPath, "__info__.py"), infoDict)
         except:
             eg.PrintError(
                 'Can\'t read __info__.py for plugin "%s"' % pluginName
@@ -307,7 +307,7 @@ def GetPluginInfo(pluginName):
         
     else:
         try:
-            info.icon = Image.open(pluginPath + "/icon.png").convert("RGBA")
+            info.icon = Image.open(join(pluginPath, "/icon.png")).convert("RGBA")
         except:
             pass
     

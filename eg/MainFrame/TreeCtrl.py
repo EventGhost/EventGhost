@@ -234,9 +234,10 @@ class EventDropTarget(wx.PyDropTarget):
         self.treeCtrl.ClearInsertMark()
 
 
-    @eg.LogIt
-    def __del__(self):
-        pass
+    if eg.debugLevel:
+        @eg.LogIt
+        def __del__(self):
+            pass
 
 
         
@@ -305,9 +306,10 @@ class TreeCtrl(wx.TreeCtrl):
         #SendMessageTimeout(self.hwnd, 4379, 18, 0, 1, 100, 0)
         
         
-    @eg.LogIt
-    def __del__(self):
-        pass
+    if eg.debugLevel:
+        @eg.LogIt
+        def __del__(self):
+            pass
     
     
     @eg.AssertNotMainThread

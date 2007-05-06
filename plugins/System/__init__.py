@@ -424,10 +424,16 @@ class SetClipboard(eg.ActionWithStringParameter):
 
     def __call__(self, text):
         self.clipboardString = eg.ParseString(text)
-        if None == win32clipboard.OpenClipboard(0):
-            win32clipboard.EmptyClipboard()
-            win32clipboard.SetClipboardText(self.clipboardString)
-            win32clipboard.CloseClipboard()
+        if wx.TheClipboard.Open():
+            tdata = wx.TextDataObject(self.clipboardString)
+            wx.TheClipboard.SetData(tdata)
+            wx.TheClipboard.Close()
+            wx.TheClipboard.Flush()
+            eg.app.clipboardEvent.Fire()
+#        if None == win32clipboard.OpenClipboard(0):
+#            win32clipboard.EmptyClipboard()
+#            win32clipboard.SetClipboardText(self.clipboardString)
+#            win32clipboard.CloseClipboard()
         else:
             PrintError(self.text.error)
     

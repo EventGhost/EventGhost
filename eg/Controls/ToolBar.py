@@ -52,19 +52,16 @@ class ToolBar(wx.ToolBar):
     
     def __init__(self, *args, **kwargs):
         wx.ToolBar.__init__(self, *args, **kwargs)
+        self.SetThemeEnabled(True)
         self.Bind(wx.EVT_TOOL_ENTER, self.OnEvent)
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftClick)
         self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
         #self.Bind(wx.EVT_SIZE, self.OnSize)
         self.curTool = -1
         self.lastClickedTool = None
+        #self.SetBackgroundColour(wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DSHADOW))
         
-        
-    @eg.LogIt
-    def __del__(self):
-        pass
-        
-        
+
     @eg.LogIt
     def OnSize(self, event):
         event.Skip()
@@ -147,4 +144,11 @@ class ToolBar(wx.ToolBar):
                 obj.upFunc(event)
         event.Skip()
                 
+                
+    if eg.debugLevel:
+        @eg.LogIt
+        def __del__(self):
+            pass
+        
+        
                 

@@ -202,9 +202,10 @@ class OSDFrame(wx.Frame):
         dc.DrawBitmap(self.bitmap, 0, 0, False)
 
 
-    @eg.LogIt
-    def __del__(self):
-        pass
+    if eg.debugLevel:
+        @eg.LogIt
+        def __del__(self):
+            pass
         
      
     
