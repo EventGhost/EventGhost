@@ -52,7 +52,7 @@ class ToolBar(wx.ToolBar):
     
     def __init__(self, *args, **kwargs):
         wx.ToolBar.__init__(self, *args, **kwargs)
-        self.SetThemeEnabled(True)
+        #self.SetThemeEnabled(True)
         self.Bind(wx.EVT_TOOL_ENTER, self.OnEvent)
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftClick)
         self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
@@ -120,7 +120,7 @@ class ToolBar(wx.ToolBar):
         image = GetIcon("images/" + name + ".png")
         func = getattr(self.parent, "OnCmd" + name)
         menuname = getattr(self.myStrings, name)
-        self.AddCheckLabelTool(id, "", image, shortHelp=menuname)
+        self.AddCheckLabelTool(id, None, image, shortHelp=menuname)
         self.Bind(wx.EVT_TOOL, func, id=id)
         setattr(self.buttons, name, ToolBarButton(self, id))
         

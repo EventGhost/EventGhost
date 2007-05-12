@@ -294,20 +294,25 @@ class CmdPaste:
         tree = document.tree
         self.items = []
         is_internal_paste = False
+        selectionObj = tree.GetPyData(tree.GetSelection())
         if not wx.TheClipboard.Open():
             return
         try:
             dataObj = wx.CustomDataObject("DragEventItem")
             if wx.TheClipboard.GetData(dataObj):
                 selectedObj = tree.GetPyData(tree.GetSelection())
-                if selectedObj.DropTest(EventItem):
+                if selectedObj.DropTest(eg.EventItem):
                     label = dataObj.GetData()
-                    tree.OnNewEvent(label)
+                    parent = selectionObj.parent
+                    pos = parent.childs.index(selectionObj)
+                    NewEvent().Do(
+                        tree.document, 
+                        label)
+                    #tree.OnNewEvent(label)
                 return
             dataObj = wx.TextDataObject()
             if not wx.TheClipboard.GetData(dataObj):
                 return
-            selectionObj = tree.GetPyData(tree.GetSelection())
             clipboardData = dataObj.GetText()
             is_internal_paste = (clipboardData == tree.clipboardData)
             xmlTree = ElementTree.fromstring(clipboardData.encode("utf-8"))

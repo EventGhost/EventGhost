@@ -27,7 +27,8 @@ from win32ts import (
     NOTIFY_FOR_ALL_SESSIONS,
     WTSQuerySessionInformation,
     WTSUserName,
-    WTS_CURRENT_SERVER_HANDLE)
+    WTS_CURRENT_SERVER_HANDLE
+)
 
 WM_WTSSESSION_CHANGE = 0x02B1
 

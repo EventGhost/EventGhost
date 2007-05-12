@@ -26,7 +26,10 @@ class PluginInfo(eg.PluginInfo):
     name = "Mouse"
     author = "Bitmonster"
     version = ""
-    description = ""
+    description = (
+        "Gives you actions to control the mouse pointer and emulation of "
+        "mouse events."
+    )
     kind = "core"
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeT"
@@ -159,7 +162,7 @@ class Mouse(eg.PluginClass):
         self.thread = MouseThread()
         self.leftMouseButtonDown = False
         self.lastMouseEvent = None
-        self.mouseButtonWasBlocked = [False, False, False]
+        self.mouseButtonWasBlocked = [False, False, False, False, False]
         SetMouseCallback(self.MouseCallBack)
         
         
@@ -174,18 +177,18 @@ class Mouse(eg.PluginClass):
         pass
         
         
-    def MouseCallBack(self, value):
-        if value == "MiddleButtonDown":
+    def MouseCallBack(self, buttonName, buttonNum, param):
+        if param:
             if self.lastMouseEvent:
                 self.lastMouseEvent.SetShouldEnd()
-            shouldBlock = HasActiveHandler("Mouse.MiddleButton")
-            self.mouseButtonWasBlocked[1] = shouldBlock
-            self.lastMouseEvent = self.TriggerEnduringEvent("MiddleButton")
+            shouldBlock = HasActiveHandler("Mouse." + buttonName)
+            self.mouseButtonWasBlocked[buttonNum] = shouldBlock
+            self.lastMouseEvent = self.TriggerEnduringEvent(buttonName)
             return shouldBlock
-        elif value == "MiddleButtonUp":
+        else:
             if self.lastMouseEvent:
                 self.lastMouseEvent.SetShouldEnd()
-            return self.mouseButtonWasBlocked[1]
+            return self.mouseButtonWasBlocked[buttonNum]
         return False
     
     

@@ -102,7 +102,6 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.contextMenu = menu
         
         Bind = self.Bind
-        Bind(wx.EVT_RIGHT_DOWN, eg.DummyFunc)
         Bind(wx.EVT_RIGHT_UP, self.OnRightUp)
         Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnRightUp)
         Bind(wx.EVT_LIST_BEGIN_DRAG, self.OnStartDrag)
@@ -159,11 +158,11 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         itemData = self.GetItemData(idx)
         if itemData[1] != EVENT_ICON_INDEX:
             return
-        text = str(itemData[2])
+        text = itemData[2]
         # create our own data format and use it in a
         # custom data object
         customData = wx.CustomDataObject(wx.CustomDataFormat("DragItem"))
-        customData.SetData(text)
+        customData.SetData(text.encode("utf-8"))
 
         # And finally, create the drop source and begin the drag
         # and drop opperation
@@ -221,7 +220,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
                 _, iconIndex, eventstring, _ = self.GetItemData(firstItem)
                 if iconIndex == EVENT_ICON_INDEX:
                     customDataObject = wx.CustomDataObject("DragEventItem")
-                    customDataObject.SetData(str(eventstring))
+                    customDataObject.SetData(eventstring.encode("UTF-8"))
                     dataObjectComposite.Add(customDataObject)
             
             wx.TheClipboard.SetData(dataObjectComposite)
@@ -238,7 +237,6 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.Refresh()
     
     
-    @eg.LogIt
     def OnRightUp(self, event):
         self.PopupMenu(self.contextMenu)
 

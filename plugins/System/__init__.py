@@ -26,7 +26,10 @@ class PluginInfo(eg.PluginInfo):
     name = "System"
     author = "Bitmonster"
     version = ""
-    description = "System"
+    description = (
+        "Controls different aspects of your system, like sound card, "
+        "graphics card, power management, et cetera."
+    )
     kind = "core"
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QAAAAAAAD5Q7t/"

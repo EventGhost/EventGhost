@@ -26,7 +26,11 @@ class PluginInfo(eg.PluginInfo):
     name = "Window"
     author = ""
     version = ""
-    description = ""    
+    description = (
+        "Actions that are related to the control of windows on the desktop, "
+        "like finding specific windows, move, resize and send keypresses to "
+        "them."
+    )
     kind = "core"
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAV0lEQVR42u2TsRGAAAjE"

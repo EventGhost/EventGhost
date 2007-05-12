@@ -138,7 +138,6 @@ class Task(eg.PluginClass):
         print "DLL_PROCESS_DETACH", wParam, lParam
     
     
-    @eg.LogIt
     def FocusWndProc(self, hwnd, mesg, wParam, lParam):
         if wParam == 0:
             return
