@@ -50,18 +50,17 @@ class TreeListCtrl(wx.gizmos.TreeListCtrl):
     
     def __init__(self, *args, **kwargs):
         wx.gizmos.TreeListCtrl.__init__(self, *args, **kwargs)
-        self.Bind(wx.EVT_SIZE, self.OnSize)
+        self.GetMainWindow().Bind(wx.EVT_SIZE, self.OnSize)
         
     
     def OnSize(self, event):
         event.Skip()
-        #self.Unbind(wx.EVT_SIZE)
         wx.CallAfter(self.OnSize2)
         
         
     def OnSize2(self):
-        w, h = self.GetSizeTuple()
-        self.SetColumnWidth(1, w - 204 - wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X))
+        w, h = self.GetMainWindow().GetClientSize()
+        self.SetColumnWidth(1, w - self.GetColumnWidth(0))
         
         
     def GetPrevious(self, item):
@@ -144,6 +143,7 @@ class SysTrayMenu(eg.PluginClass):
             -1,
             style = wx.TR_FULL_ROW_HIGHLIGHT 
                 |wx.TR_DEFAULT_STYLE
+                |wx.VSCROLL
         )
         tree.SetMinSize((10, 10))
         tree.AddColumn(text.labelHeader)
@@ -208,6 +208,7 @@ class SysTrayMenu(eg.PluginClass):
             tree.Expand(tree.GetItemParent(item))
             tree.SelectItem(item)
             tree.EnsureVisible(item)
+            tree.Update()
         addButton.Bind(wx.EVT_BUTTON, OnAdd)
         
         # Delete button
@@ -243,12 +244,12 @@ class SysTrayMenu(eg.PluginClass):
         buttonSizer1 = wx.BoxSizer(wx.VERTICAL)
         buttonSizer1.Add((5, 5), 1, wx.EXPAND)
         buttonSizer1.Add(upButton)
-        buttonSizer1.Add(downButton)
+        buttonSizer1.Add(downButton, 0, wx.TOP, 5)
         buttonSizer1.Add((5, 5), 1, wx.EXPAND)
         
         buttonSizer2 = wx.BoxSizer(wx.VERTICAL)
         buttonSizer2.Add(addButton)
-        buttonSizer2.Add(deleteButton)
+        buttonSizer2.Add(deleteButton, 0, wx.TOP, 5)
         
         buttonSizer = wx.BoxSizer(wx.VERTICAL)
         buttonSizer.Add(buttonSizer1, 1, wx.EXPAND|wx.ALIGN_CENTER_VERTICAL)

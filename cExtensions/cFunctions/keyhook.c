@@ -383,20 +383,20 @@ LRESULT CALLBACK MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 		mhs = (PMSLLHOOKSTRUCT) lParam;
 		switch(wParam)
 		{
-			case WM_LBUTTONDOWN:
-				DEBUG("WM_LBUTTONDOWN");
-				mouseState[0] = TRUE;
-				mesg = "LeftButton";
-				buttonNum = 0;
-				param = 1;
-				break;
-			case WM_LBUTTONUP:
-				DEBUG("WM_LBUTTONUP");
-				mouseState[0] = FALSE;
-				mesg = "LeftButton";
-				buttonNum = 0;
-				param = 0;
-				break;
+			//case WM_LBUTTONDOWN:
+			//	DEBUG("WM_LBUTTONDOWN");
+			//	mouseState[0] = TRUE;
+			//	mesg = "LeftButton";
+			//	buttonNum = 0;
+			//	param = 1;
+			//	break;
+			//case WM_LBUTTONUP:
+			//	DEBUG("WM_LBUTTONUP");
+			//	mouseState[0] = FALSE;
+			//	mesg = "LeftButton";
+			//	buttonNum = 0;
+			//	param = 0;
+			//	break;
 			//case WM_MOUSEMOVE:
 			//	DEBUG("WM_MOUSEMOVE");
 			//	break;
@@ -417,20 +417,20 @@ LRESULT CALLBACK MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 				buttonNum = 1;
 				param = 0;
 				break;
-			case WM_RBUTTONDOWN:
-				DEBUG("WM_RBUTTONDOWN");
-				mouseState[2] = TRUE;
-				mesg = "RightButton";
-				buttonNum = 2;
-				param = 1;
-				break;
-			case WM_RBUTTONUP:
-				DEBUG("WM_RBUTTONUP");
-				mouseState[2] = FALSE;
-				mesg = "RightButton";
-				buttonNum = 2;
-				param = 0;
-				break;
+			//case WM_RBUTTONDOWN:
+			//	DEBUG("WM_RBUTTONDOWN");
+			//	mouseState[2] = TRUE;
+			//	mesg = "RightButton";
+			//	buttonNum = 2;
+			//	param = 1;
+			//	break;
+			//case WM_RBUTTONUP:
+			//	DEBUG("WM_RBUTTONUP");
+			//	mouseState[2] = FALSE;
+			//	mesg = "RightButton";
+			//	buttonNum = 2;
+			//	param = 0;
+			//	break;
 			case WM_XBUTTONDOWN:
 				DEBUG("WM_XBUTTONDOWN");
 				if (HIWORD(mhs->mouseData) == XBUTTON1)

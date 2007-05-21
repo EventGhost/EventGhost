@@ -175,6 +175,11 @@ class MceRemote(eg.PluginClass):
         self.timer = Timer(0, self.OnTimeOut)
         self.lastEventString = ""
         self.lastEvent = eg.EventGhostEvent()
+        
+        
+    def __start__(self, waitTime=0.15):
+        self.waitTime = waitTime
+        self.isEnabled = True
         # create a dummy window
         def Init():
             self.frame = wx.Frame(None, -1, "MceIr Monitor")
@@ -190,23 +195,17 @@ class MceRemote(eg.PluginClass):
             self.dll.MceIrRegisterEvents(self.hwnd)
             self.dll.MceIrSetRepeatTimes(1,1)
         wx.CallAfter(Init)
-        
-        
-    def __start__(self, waitTime=0.15):
-        self.waitTime = waitTime
-        self.isEnabled = True
 
 
     def __stop__(self):
         self.isEnabled = False
-        
-        
-    def __close__(self):
+        self.dll.MceIrUnregisterEvents()
         if self.frame:
             self.frame.Close()
             self.frame = None
-            
-            
+        
+                    
+    @eg.LogIt
     def MyWndProc(self, hwnd, mesg, wParam, lParam):
         if mesg == win32con.WM_DESTROY:
             # Restore the old WndProc.  Notice the use of win32api

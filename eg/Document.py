@@ -282,22 +282,33 @@ class Document(object):
         return item
     
     
+    @eg.LogItWithReturn
     def ShowFrame(self):
-        self.reentrantLock.acquire()
-        if self.frame is None:
-            from MainFrame import MainFrame
-            self.frame = MainFrame(self)
-            self.frame.Show()
-        self.frame.Raise()
-        self.reentrantLock.release()
+        if self.reentrantLock.acquire():
+            if self.frame is None:
+                from MainFrame import MainFrame
+                self.frame = MainFrame(self)
+                self.frame.Show()
+            self.frame.Raise()
+            self.reentrantLock.release()
         
     
+    @eg.LogItWithReturn
     def HideFrame(self):
-        self.reentrantLock.acquire()
-        if self.frame is not None:
-            self.frame.Destroy()
-            self.frame = None
-        self.reentrantLock.release()
+        # NOTICE:
+        # If the program is started through a shortcut with "minimize" option
+        # set, we get an iconize event while ShowFrame() is executing.
+        # Therefor we have to use this CallLater workaround.
+        # TODO:
+        # Find a better way. Preferable detetct the minimize option before
+        # we create the MainFrame.
+        if self.reentrantLock.acquire(False):
+            if self.frame is not None:
+                self.frame.Destroy()
+                self.frame = None
+            self.reentrantLock.release()
+        else:
+            wx.CallLater(100, self.HideFrame)
         
     
     def CheckFileNeedsSave(self):

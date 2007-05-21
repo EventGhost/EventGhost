@@ -119,10 +119,10 @@ class Text:
             
             HelpMenu = "&Help"
             About = "&About EventGhost..."
-            WebHomepage = "EventGhost Homepage"
-            WebForum = "Support Forum"
+            WebHomepage = "Home Page"
+            WebForum = "Support Forums"
             WebWiki = "Wiki"
-            CheckUpdate = "Check for newest version..."
+            CheckUpdate = "Check for updates now..."
             Reset = "Reset"
             
         class SaveChanges:

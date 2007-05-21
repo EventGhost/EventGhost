@@ -84,6 +84,9 @@ class MessageReceiver(ThreadWorker):
             
     
     def MyWndProc(self, hwnd, mesg, wParam, lParam):
+        if mesg == win32con.WM_SIZE:
+            print "sized"
+            return 0
         for handler in self.multipleMessageProcs[mesg]:
             res = handler(hwnd, mesg, wParam, lParam)
             if res == 0:

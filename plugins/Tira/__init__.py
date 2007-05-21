@@ -23,7 +23,7 @@
 import eg
 
 class PluginInfo(eg.PluginInfo):
-    name = "Tira"
+    name = "Home Electronics Tira"
     author = "Bitmonster"
     version = "1.0.0"
     kind = "remote"

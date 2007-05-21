@@ -120,13 +120,13 @@ class Panel1(wx.Panel):
         hypelink1 = eg.HyperLinkCtrl(
             self, 
             wx.ID_ANY, 
-            "Homepage", 
+            "Home Page", 
             URL="http://www.eventghost.org/"
         )
         hypelink2 = eg.HyperLinkCtrl(
             self,
             wx.ID_ANY, 
-            "Forum",
+            "Forums",
             URL="http://www.eventghost.org/forum/"
         )
         hypelink3 = eg.HyperLinkCtrl(

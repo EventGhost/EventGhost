@@ -45,7 +45,9 @@ class PluginInfo(eg.PluginInfo):
 
 
 import time
+import sys
 import os
+import os.path
 import thread
 from threading import Timer
 
@@ -193,8 +195,40 @@ class System(eg.PluginClass):
             self.IdleCallback, 
             self.UnIdleCallback, 
         )
-
-
+        
+        # Use VistaVolume.dll from stridger for sound volume control on Vista
+        if sys.getwindowsversion()[0] > 5:
+            pluginDir = os.path.abspath(os.path.split(__file__)[0])
+            dllPath = os.path.join(pluginDir, "VistaVolume.dll")
+            vistaVolumeDll = ctypes.cdll.LoadLibrary(dllPath)
+            vistaVolumeDll.SetMasterVolume.argtypes = [ctypes.c_float]
+            vistaVolumeDll.GetMasterVolume.restype = ctypes.c_float
+            
+            def MuteOn(self):
+                vistaVolumeDll.SetMute(1)
+               
+            def MuteOff(self):
+                vistaVolumeDll.SetMute(0)
+               
+            def ToggleMute(self):
+                old = vistaVolumeDll.GetMute()
+                vistaVolumeDll.SetMute(not old)
+               
+            def SetMasterVolume(self, value):
+                vistaVolumeDll.SetMasterVolume(value / 100.0)
+               
+            def ChangeMasterVolumeBy(self, value):
+                old = vistaVolumeDll.GetMasterVolume()
+                vistaVolumeDll.SetMasterVolume((old * 100.0 + value) / 100.0)
+                return vistaVolumeDll.GetMasterVolume() * 100.0
+            
+            self.MuteOn.__class__.__call__ = MuteOn
+            self.MuteOff.__class__.__call__ = MuteOff
+            self.ToggleMute.__class__.__call__ = ToggleMute
+            self.SetMasterVolume.__class__.__call__ = SetMasterVolume
+            self.ChangeMasterVolumeBy.__class__.__call__ = ChangeMasterVolumeBy             
+                        
+                
     eg.LogItWithReturn
     def __stop__(self):
         eg.Notice("stopping system plugin")
@@ -927,9 +961,10 @@ class ShowPictureFrame(wx.Frame):
         
 class ShowPicture(eg.ActionClass):
     name = "Show picture"
+    description = "Shows a picture on the screen."
     iconFile = "icons/ShowPicture"
     class text:
-        path = "Path to picture:"
+        path = "Path to picture (use an empty path to clear):"
         display = "Monitor"
         allImageFiles = 'All Image Files'
         allFiles = "All files"
@@ -981,6 +1016,7 @@ class ShowPicture(eg.ActionClass):
                 filepathCtrl.GetValue(), 
                 choice.GetSelection()
             )
+        
         
         
 class SetDisplayPreset(eg.ActionClass):
@@ -1040,30 +1076,29 @@ class SetDisplayPreset(eg.ActionClass):
 import socket
 import struct
 
-class WakeOnLan(eg.ActionWithStringParameter):
+class WakeOnLan(eg.ActionClass):
     name = "Wake on LAN"
-    description = \
-        "Wakes up another computer through sending a special "\
-        "network packet. \n\nYou have to specify the MAC address of "\
-        "the computer to wake up in the form:<p>"\
-        "<i>00-13-D4-9A-2F-04</i><br> or <i>00:13:D4:9A:2F:04</i>"
+    description = (
+        "Wakes up another computer through sending a special "
+        "network packet."
+    )
     iconFile = "icons/WakeOnLan"
     class text:
-        parameterDescription = "MAC address to wake up:"
+        parameterDescription = "Ethernet adapter MAC address to wake up:"
     
     
-    def __call__(self, macaddress):
+    def __call__(self, macAddress):
         # Check macaddress format and try to compensate.
-        if len(macaddress) == 12:
+        if len(macAddress) == 12:
             pass
-        elif len(macaddress) == 12 + 5:
-            sep = macaddress[2]
-            macaddress = macaddress.replace(sep, '')
+        elif len(macAddress) == 12 + 5:
+            sep = macAddress[2]
+            macAddress = macAddress.replace(sep, '')
         else:
             raise ValueError('Incorrect MAC address format')
      
         # Pad the synchronization stream.
-        data = ''.join(['FFFFFFFFFFFF', macaddress * 20])
+        data = ''.join(['FFFFFFFFFFFF', macAddress * 20])
         send_data = '' 
     
         # Split up the hex values and pack.
@@ -1078,6 +1113,23 @@ class WakeOnLan(eg.ActionWithStringParameter):
         sock.sendto(send_data, ('<broadcast>', 7))
 
 
+    def Configure(self, macAddress=""):
+        import wx.lib.masked
+        dialog = eg.ConfigurationDialog(self)
+        macCtrl  = wx.lib.masked.TextCtrl( 
+            dialog, 
+            mask = "##-##-##-##-##-##",
+            includeChars = "ABCDEF",
+            choiceRequired = True,
+            defaultValue = macAddress.upper(),
+            formatcodes = "F!",
+        )
+        dialog.AddLabel(self.text.parameterDescription)
+        dialog.AddCtrl(macCtrl)
+        if dialog.AffirmedShowModal():
+            return (
+                macCtrl.GetValue(),
+            )
 
 #-----------------------------------------------------------------------------
 # Action: System.SetSystemIdleTimer

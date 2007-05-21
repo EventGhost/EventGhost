@@ -33,14 +33,14 @@
 # 0.4 - Added missing InputVAUX and RecordVAUX commands, for
 #       selecting the front inputs
 # 0.5 - EventGhost 0.3.1+ compatibility
-#
+# 0.6 - EventGhost 0.3.6+ compatibility (by bitmonster)
 
 import eg
 
 class PluginInfo(eg.PluginInfo):
     name = "Denon AV Serial"
     author = "Oliver Wagner"
-    version = "0.5"
+    version = "0.6"
     kind = "external"
     description = "Control Denon A/V Amps/Receivers via RS232"
     icon = (
@@ -381,6 +381,7 @@ class DenonSerial(eg.PluginClass):
                 # Argumentless command
                 class Action(CmdAction):
                     name = cmd_text
+                    cmd = cmd_cmd
                 Action.__name__ = cmd_name
                 group.AddAction(Action)
                 

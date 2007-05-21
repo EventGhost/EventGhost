@@ -78,30 +78,32 @@ class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             p = self.path.split('?', 1)
             self.path = p[0]
             f = self.send_head()
-            if f:
-                self.copyfile(f, self.wfile)
-                f.close()
-                f = None
-                if len(p) > 1:
-                    a = p[1].split('&')
-                    event = a[0]
-                    withoutRelease = False
-                    payload = None
-                    if len(a) > 1:
-                        startPos = 1
-                        if a[1] == "withoutRelease":
-                            withoutRelease = True
-                            startPos = 2
-                        if len(a) > startPos:
-                            payload = []
-                            for i in range(startPos, len(a)):
-                                payload.append(a[i])
-                    if event.strip() == "ButtonReleased":
-                        self.EndLastEvent()
-                    elif withoutRelease:
-                        self.TriggerEnduringEvent(event, payload)
-                    else:
-                        self.TriggerEvent(event, payload)
+            if not f:
+                return
+            self.copyfile(f, self.wfile)
+            f.close()
+            f = None
+            if len(p) < 1:
+                return
+            a = p[1].split('&')
+            event = a[0]
+            withoutRelease = False
+            payload = None
+            if len(a) > 1:
+                startPos = 1
+                if a[1] == "withoutRelease":
+                    withoutRelease = True
+                    startPos = 2
+                if len(a) > startPos:
+                    payload = []
+                    for i in range(startPos, len(a)):
+                        payload.append(a[i])
+            if event.strip() == "ButtonReleased":
+                self.EndLastEvent()
+            elif withoutRelease:
+                self.TriggerEnduringEvent(event, payload)
+            else:
+                self.TriggerEvent(event, payload)
         except Exception, ex:
             eg.PrintError("Webserver socket error", self.path)
             eg.PrintError(Exception, ex)

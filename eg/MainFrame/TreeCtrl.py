@@ -331,7 +331,10 @@ class TreeCtrl(wx.TreeCtrl):
     @eg.LogIt
     def Destroy(self):
         document = self.document
-        document.firstVisibleItem = self.GetPyData(self.GetFirstVisibleItem())
+        try:
+            document.firstVisibleItem = self.GetPyData(self.GetFirstVisibleItem())
+        except:
+            pass
         document.SetTree(None)
         self.Freeze()
         self.Unbind(wx.EVT_TREE_SEL_CHANGED)

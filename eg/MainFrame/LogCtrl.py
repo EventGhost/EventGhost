@@ -91,6 +91,14 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.attr2.BackgroundColour = sysColour
         self.attr2.TextColour = sysTextColour
         
+        self.attr3 = wx.ListItemAttr()
+        self.attr3.BackgroundColour = self.attr1.BackgroundColour
+        self.attr3.TextColour = (255, 0, 0)
+        
+        self.attr4 = wx.ListItemAttr()
+        self.attr4.BackgroundColour = sysColour
+        self.attr4.TextColour = (255, 0, 0)
+        
         text = self.text = eg.text.MainFrame.Logger
         self.InsertColumn(0, "")
         
@@ -198,7 +206,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             wx.LIST_STATE_SELECTED
         )
         if item != -1:
-            text = self.OnGetItemText(item, 0)
+            text = self.OnGetItemText(item, 0)[1:]
             item = self.GetNextItem(
                 item, 
                 wx.LIST_NEXT_ALL, 
@@ -206,7 +214,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             )
             while item != -1:
                 lines += 1
-                text += "\r\n" + self.OnGetItemText(item, 0)
+                text += "\r\n" + self.OnGetItemText(item, 0)[1:]
                 item = self.GetNextItem(
                     item, 
                     wx.LIST_NEXT_ALL, 
@@ -244,7 +252,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     def OnMouseMotion(self, event):
         item, flags = self.HitTest(event.GetPosition())
         if flags & wx.LIST_HITTEST_ONITEM:
-            self.tooltip.SetTip(self.OnGetItemText(item, 0))
+            self.tooltip.SetTip(self.OnGetItemText(item, 0)[1:])
         
         
     def OnDoubleClick(self, event):
@@ -276,9 +284,15 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         
     def OnGetItemAttr(self, item):
         if item % 2 == 0:
-            return self.attr1
+            if self.data[item][1] != 1:
+                return self.attr1
+            else:
+                return self.attr3
         else:
-            return self.attr2
+            if self.data[item][1] != 1:
+                return self.attr2
+            else:
+                return self.attr4
 
 
     def OnGetItemImage(self, item):

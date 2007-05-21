@@ -336,6 +336,7 @@ Type: filesandordirs; Name: "{app}\eg"
 %(INSTALL_FILES)s
 Source: "%(TRUNK)s\Example.xml"; DestDir: "{userappdata}\EventGhost"; DestName: "MyConfig.xml"; Flags: onlyifdoesntexist uninsneveruninstall
 Source: "%(TRUNK)s\plugins\TechnoTrendIr\TTUSBIR.dll"; DestDir: "{app}\plugins\TechnoTrendIr"; Flags: ignoreversion
+Source: "%(TRUNK)s\plugins\System\VistaVolume.dll"; DestDir: "{app}\plugins\System"; Flags: ignoreversion
 
 """
 

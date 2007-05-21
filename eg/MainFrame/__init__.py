@@ -335,10 +335,14 @@ class MainFrame(wx.Frame):
             auiManager.LoadPerspective(config.perspective, False)
         auiManager.GetArtProvider().SetMetric(wx.aui.AUI_DOCKART_PANE_BORDER_SIZE, 0)
         #auiManager.SetFlags(auiManager.GetFlags() ^ wx.aui.AUI_MGR_ALLOW_ACTIVE_PANE)
-        #auiManager.GetPane("tree").Caption(" " + Text.Tree.caption)
+        auiManager.GetPane("tree").Caption(" " + Text.Tree.caption)
         toolBar.Show(config.showToolbar)
         auiManager.Update()
-        auiManager.GetPane("logger").MinSize((100, 100))
+        (
+            auiManager.GetPane("logger").
+                MinSize((100, 100)).
+                Caption(" " + Text.Logger.caption)
+        )
         eg.app.focusEvent.Bind(self.OnFocusChange)
         args = eg.app.focusEvent.Get()
         if len(args):
