@@ -21,17 +21,6 @@
 # $LastChangedBy$
 
 import eg
-
-class PluginInfo(eg.PluginInfo):
-    name = "EventGhost"
-    author = ""
-    version = ""
-    description = \
-        "Here you find actions that mainly control the core "\
-        "functionality of EventGhost."    
-    kind = "core"
-    
-    
 import sys
 import time
 import traceback
@@ -49,7 +38,13 @@ class EventGhost(eg.PluginClass):
     Here you find actions that mainly control the core functionality of 
     EventGhost.
     """
-    pass
+    name = "EventGhost"
+    description = (
+        "Here you find actions that mainly control the core "
+        "functionality of EventGhost."    
+    )
+    kind = "core"
+    version = "1.0." + "$LastChangedRevision$".split()[1]
         
 
 

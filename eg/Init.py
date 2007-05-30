@@ -94,6 +94,7 @@ class EventGhost(object):
         self.stopExecutionFlag = False
         self.lastFoundWindows = []
         self.currentConfigureItem = None
+        self.pluginDatabase = {}
         
         from Version import version, buildNum, compileTime, svnRevision
         self.version = version

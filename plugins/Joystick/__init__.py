@@ -20,36 +20,24 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+
+ICON = """iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QArABNAAA01td7
+AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH1QQHDwonssmjmQAAAIx0RVh0Q29tbWVudABNZW
+51LXNpemVkIGljb24KPT09PT09PT09PQoKKGMpIDIwMDMgSmFrdWIgJ2ppbW1hYycgU3RlaW5lciwg
+Cmh0dHA6Ly9qaW1tYWMubXVzaWNoYWxsLmN6CgpjcmVhdGVkIHdpdGggdGhlIEdJTVAsCmh0dHA6Ly
+93d3cuZ2ltcC5vcmdnisdHAAACIUlEQVQ4y5WSy2tTQRTGf5Pc5CbW0qSxNvXRh6C4SbAU/4KCexGK
+iIKoIFgIwYWtD7TdiC5ECgqCSBZd1boTRNCFuyJUsxNEFCoVNTW3afTmdW/muLhpmkKy6IEDw/DNN7
+/55ig61MezhP+q3TNhKV8CfOsqsmBQvzo+Xyi16lSnw3V83/oO7Y0b4RCiNY5dZu37urWhegZPzOft
+Ta2vnYFGpWNDsbivK4zr92MVa9iuj4Ej/b3A/Vatr8MLUoFdYfymiREMEAwa/F61iA7GicjGmVahkU
+pPzgB3WjfLVganVMHK2XRHuyjm/+HWHNyqQ0WZ0VT6sjSksyqVnpS5h4+2Xf/r5T2qy3NYuSL5tRKi
+YN/wHqKxLuqHL3Dw1G1s2+bGrSkMAK01hUJhC+v4OXJvHtM/1MfIaA+GGaD48w+5VYcD5y9iWRZBM7
+iVgWjxWrxWgRAD15dY1Kf5uvSFz+8+8ao0zv6b71GBECICjUd4BKLRIiDifawAhokb6mXkwSorKyvk
+376GgInWGsAzaRKIYL24xo/pYdYXpxpEGrfutiQjSF0jutENA6OZ/PICUitRWl6g++RdAI4lR3n67E
+lzXRfdRG/mtRliaGyCyofnhMYm0FqjREgkkiQSSUQUSomH3zDYRmCaJkevZIBM26mybW9yy+UyAJVK
+ZTtBNpvFdV12UkqpLYNIJNJEAqhWqwDUarWOBo7jeEbtRnkHNfsfqMAAn2HmrMwAAAAASUVORK5CYI
+I="""
+
 import eg
-
-class PluginInfo(eg.PluginInfo):
-    name = "Joystick"
-    author = "Bitmonster"
-    version = "0.0.1"
-    kind = "remote"
-    description = (
-        "Use joysticks and gamepads as input devices for EventGhost."
-    )   
-    icon = (
-        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QArABNAAA01td7"
-        "AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH1QQHDwonssmjmQAAAIx0RVh0Q29t"
-        "bWVudABNZW51LXNpemVkIGljb24KPT09PT09PT09PQoKKGMpIDIwMDMgSmFrdWIgJ2pp"
-        "bW1hYycgU3RlaW5lciwgCmh0dHA6Ly9qaW1tYWMubXVzaWNoYWxsLmN6CgpjcmVhdGVk"
-        "IHdpdGggdGhlIEdJTVAsCmh0dHA6Ly93d3cuZ2ltcC5vcmdnisdHAAACIUlEQVQ4y5WS"
-        "y2tTQRTGf5Pc5CbW0qSxNvXRh6C4SbAU/4KCexGKiIKoIFgIwYWtD7TdiC5ECgqCSBZd"
-        "1boTRNCFuyJUsxNEFCoVNTW3afTmdW/muLhpmkKy6IEDw/DNN7/55ig61MezhP+q3TNh"
-        "KV8CfOsqsmBQvzo+Xyi16lSnw3V83/oO7Y0b4RCiNY5dZu37urWhegZPzOftTa2vnYFG"
-        "pWNDsbivK4zr92MVa9iuj4Ej/b3A/Vatr8MLUoFdYfymiREMEAwa/F61iA7GicjGmVah"
-        "kUpPzgB3WjfLVganVMHK2XRHuyjm/+HWHNyqQ0WZ0VT6sjSksyqVnpS5h4+2Xf/r5T2q"
-        "y3NYuSL5tRKiYN/wHqKxLuqHL3Dw1G1s2+bGrSkMAK01hUJhC+v4OXJvHtM/1MfIaA+G"
-        "GaD48w+5VYcD5y9iWRZBM7iVgWjxWrxWgRAD15dY1Kf5uvSFz+8+8ao0zv6b71GBECIC"
-        "jUd4BKLRIiDifawAhokb6mXkwSorKyvk376GgInWGsAzaRKIYL24xo/pYdYXpxpEGrfu"
-        "tiQjSF0jutENA6OZ/PICUitRWl6g++RdAI4lR3n67ElzXRfdRG/mtRliaGyCyofnhMYm"
-        "0FqjREgkkiQSSUQUSomH3zDYRmCaJkevZIBM26mybW9yy+UyAJVKZTtBNpvFdV12Ukqp"
-        "LYNIJNJEAqhWqwDUarWOBo7jeEbtRnkHNfsfqMAAn2HmrMwAAAAASUVORK5CYII="
-    )
-
-
 import os
 
 EVT_DIRECTION       = 0
@@ -62,6 +50,14 @@ EVT_Z_AXIS          = 5
 
 
 class Joystick(eg.PluginClass):
+    name = "Joystick"
+    author = "Bitmonster"
+    version = "1.0." + "$LastChangedRevision$".split()[1]
+    kind = "remote"
+    description = (
+        "Use joysticks and gamepads as input devices for EventGhost."
+    )   
+    icon = ICON
     
     def __start__(self):
         self.x = 0

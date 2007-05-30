@@ -1,20 +1,4 @@
-__pluginname__ = "Advanced IR-Transceiver"
-__author__ = "Bitmonster"
-__version__ = "1.0." + "$LastChangedRevision$".split()[1]
-__kind__ = "remote"
-__description__ = 'Hardware plugin for the "Advanced IR-Transceiver".'
-
-# $LastChangedRevision$
-
 import eg
-
-class PluginInfo(eg.PluginInfo):
-    name = __pluginname__
-    author = __author__
-    version = __version__
-    kind = __kind__
-    description = __description__
-
 import threading, Queue, time, string, binascii
 import wx
 from eg.WinAPI.SerialPort import SerialPort
@@ -166,11 +150,16 @@ def hexstring2bin(str):
 
 
 
-
 COMSPEED = 115200
 
 
 class AIRT(eg.PluginClass):
+    
+    name = "Advanced IR-Transceiver"
+    author = "Bitmonster"
+    version = "1.0." + "$LastChangedRevision$".split()[1]
+    kind = "remote"
+    description = 'Hardware plugin for the "Advanced IR-Transceiver".'
     
     def __init__(self):
         self.devicename = 'AIRT'

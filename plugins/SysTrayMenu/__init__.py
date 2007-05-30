@@ -21,15 +21,6 @@
 # $LastChangedBy$
 
 import eg
-
-class PluginInfo(eg.PluginInfo):
-    name = "System Tray Menu"
-    description = (
-        "Allows you to add custom menu entries to the tray menu of EventGhost."
-    )
-    author = "Bitmonster"
-    version = "1.0.0"
-    
 import wx
 import wx.gizmos
 
@@ -100,6 +91,12 @@ class TreeListCtrl(wx.gizmos.TreeListCtrl):
     
     
 class SysTrayMenu(eg.PluginClass):
+    name = "System Tray Menu"
+    description = (
+        "Allows you to add custom menu entries to the tray menu of EventGhost."
+    )
+    author = "Bitmonster"
+    version = "1.0.0"
     text = Text
     
     def __init__(self):

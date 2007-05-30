@@ -25,7 +25,7 @@ import eg
 class PluginInfo(eg.PluginInfo):
     name = "System"
     author = "Bitmonster"
-    version = ""
+    version = "1.0." + "$LastChangedRevision$".split()[1]
     description = (
         "Controls different aspects of your system, like sound card, "
         "graphics card, power management, et cetera."

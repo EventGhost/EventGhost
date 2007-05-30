@@ -20,35 +20,21 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+ICON = """iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeT
+AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH1QQIDRgEM71mAAAAADV0RVh0Q29tbWVudAAoYy
+kgMjAwNCBKYWt1YiBTdGVpbmVyCgpDcmVhdGVkIHdpdGggVGhlIEdJTVCQ2YtvAAACHElEQVQ4y42Q
+zUtUURjGf/fcyatz73Wiklwo2R/QplXQ/AURlLYJcrJNQrvQahYFI0wQ7lu0azNtYlAj2rUJRFciUf
+kRgUwOM6Y5jePXfNzznhZ+NOpIvpvD+5zn/M7DY3Fo0ul0JzBQLpdvG2M8wHi++6r7Zs+Tet/Yu9Hr
+W5tb/Yqjc2m7vB3zfPd7LBbzPd/tK/5Zu5ZKpZZSb1LZ0bGRG7u+F2E3PG0dfp1MJl+2tvq9xeLaJv
+AxkUj01aW7UKtV3xvYam525nq6b92znieHEkqpIWwLpRSV7YBoNEoun2VhIUOTY6ODAAmkqJT68PRZ
+orf+w1AoFBq63//A2LZthcNhhoeH0VrjNLVgYTHw8DGlUonC6u/IyEj6DnAAoAAq1ar1c3FxX8zlcl
+QqlX97Po/XGrEa9MWREuPxOPl8nmw2Szwe538Tql9WVlZoa2tjcHDwgHZiwGqhwGqhgO/7dHZ0MDM7
+e7IEG6V1zp05uy/WghrLv5YPaBul9eMBnufuRLXAwsIYQYsgRhCt0SK0n2/nuBKnxBi00YhotA7Qoh
+ERRAsiBiOy559qBJjVWmMrmyAQtNboYBcmgojQdMrZ8083Anyan5/D8zxaWpqxlEKLoPVOfNd1iZyO
+MDPzDeBHow7efv3yuc9xnGhX10U8z8MAGMPOYchkFlhaygG8bgSoVavVu5MT448mJ8YvA1cadJUBrg
+Jrhy/+AqGrAMOnH86mAAAAAElFTkSuQmCC"""
+
 import eg
-
-class PluginInfo(eg.PluginInfo):
-    name = "Mouse"
-    author = "Bitmonster"
-    version = ""
-    description = (
-        "Gives you actions to control the mouse pointer and emulation of "
-        "mouse events."
-    )
-    kind = "core"
-    icon = (
-        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeT"
-        "AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH1QQIDRgEM71mAAAAADV0RVh0Q29t"
-        "bWVudAAoYykgMjAwNCBKYWt1YiBTdGVpbmVyCgpDcmVhdGVkIHdpdGggVGhlIEdJTVCQ"
-        "2YtvAAACHElEQVQ4y42QzUtUURjGf/fcyatz73Wiklwo2R/QplXQ/AURlLYJcrJNQrvQ"
-        "ahYFI0wQ7lu0azNtYlAj2rUJRFciUfkRgUwOM6Y5jePXfNzznhZ+NOpIvpvD+5zn/M7D"
-        "Y3Fo0ul0JzBQLpdvG2M8wHi++6r7Zs+Tet/Yu9HrW5tb/Yqjc2m7vB3zfPd7LBbzPd/t"
-        "K/5Zu5ZKpZZSb1LZ0bGRG7u+F2E3PG0dfp1MJl+2tvq9xeLaJvAxkUj01aW7UKtV3xvY"
-        "am525nq6b92znieHEkqpIWwLpRSV7YBoNEoun2VhIUOTY6ODAAmkqJT68PRZorf+w1Ao"
-        "FBq63//A2LZthcNhhoeH0VrjNLVgYTHw8DGlUonC6u/IyEj6DnAAoAAq1ar1c3FxX8zl"
-        "clQqlX97Po/XGrEa9MWREuPxOPl8nmw2Szwe538Tql9WVlZoa2tjcHDwgHZiwGqhwGqh"
-        "gO/7dHZ0MDM7e7IEG6V1zp05uy/WghrLv5YPaBul9eMBnufuRLXAwsIYQYsgRhCt0SK0"
-        "n2/nuBKnxBi00YhotA7QohERRAsiBiOy559qBJjVWmMrmyAQtNboYBcmgojQdMrZ8083"
-        "Anyan5/D8zxaWpqxlEKLoPVOfNd1iZyOMDPzDeBHow7efv3yuc9xnGhX10U8z8MAGMPO"
-        "YchkFlhaygG8bgSoVavVu5MT448mJ8YvA1cadJUBrgJrhy/+AqGrAMOnH86mAAAAAElF"
-        "TkSuQmCC"
-    )
-
 import wx
 
 from sys import maxint
@@ -153,6 +139,15 @@ class MouseThread(Thread):
 # Plugin: Mouse
 #=============================================================================
 class Mouse(eg.PluginClass):
+    name = "Mouse"
+    author = "Bitmonster"
+    version = "1.0." + "$LastChangedRevision$".split()[1]
+    description = (
+        "Gives you actions to control the mouse pointer and emulation of "
+        "mouse events."
+    )
+    kind = "core"
+    icon = ICON
     
     def __init__(self):
         self.AddAllActions()

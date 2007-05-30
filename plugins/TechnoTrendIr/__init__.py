@@ -21,21 +21,6 @@
 # $LastChangedBy$
 
 import eg
-
-class PluginInfo(eg.PluginInfo):
-    name = "TechnoTrend USB-IR Receiver"
-    author = "Bitmonster"
-    version = "1.0.0"
-    kind = "remote"
-    description = (
-        'Hardware plugin for the '
-        '<a href="http://shop.technotrend.de/shop.php?mode=show_detail&group=6&id=545">'
-        'TechnoTrend USB-IR Receiver</a>.'
-        '\n\n<p>'
-        '<center><img src="IR_receiver.jpg" /></center>'
-    )
-
-
 from ctypes import *
 from ctypes.wintypes import *
 import os
@@ -69,6 +54,17 @@ IRCALLBACKFUNC = CFUNCTYPE(
 
 
 class TTIR(eg.RawReceiverPlugin):
+    name = "TechnoTrend USB-IR Receiver"
+    author = "Bitmonster"
+    version = "1.0." + "$LastChangedRevision$".split()[1]
+    kind = "remote"
+    description = (
+        'Hardware plugin for the '
+        '<a href="http://shop.technotrend.de/shop.php?mode=show_detail&group=6&id=545">'
+        'TechnoTrend USB-IR Receiver</a>.'
+        '\n\n<p>'
+        '<center><img src="IR_receiver.jpg" /></center>'
+    )
     
     def __start__(self):
         self.dll = None

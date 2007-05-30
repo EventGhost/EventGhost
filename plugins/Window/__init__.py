@@ -21,24 +21,6 @@
 # $LastChangedBy$
 
 import eg
-
-class PluginInfo(eg.PluginInfo):
-    name = "Window"
-    author = ""
-    version = ""
-    description = (
-        "Actions that are related to the control of windows on the desktop, "
-        "like finding specific windows, move, resize and send keypresses to "
-        "them."
-    )
-    kind = "core"
-    icon = (
-        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAV0lEQVR42u2TsRGAAAjE"
-        "YDJ+NNgMJ0OwUTo5GgvTfJUcDUxLWFVjHQAwFt2d0r0DwOwQ1eNdIALEzLnRtuQWqJOm"
-        "tICIjGQz+wPfCozMB1cgd/dMG7k4AXr8XoPosfNpAAAAAElFTkSuQmCC"
-    )
-    
-
 import win32gui
 import win32api
 import win32con
@@ -72,7 +54,20 @@ def GetTopLevelOfTargetWindows():
 # Plugin: Window
 #=============================================================================
 class Window(eg.PluginClass):
-    pass
+    name = "Window"
+    author = ""
+    version = "1.0." + "$LastChangedRevision$".split()[1]
+    description = (
+        "Actions that are related to the control of windows on the desktop, "
+        "like finding specific windows, move, resize and send keypresses to "
+        "them."
+    )
+    kind = "core"
+    icon = (
+        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAV0lEQVR42u2TsRGAAAjE"
+        "YDJ+NNgMJ0OwUTo5GgvTfJUcDUxLWFVjHQAwFt2d0r0DwOwQ1eNdIALEzLnRtuQWqJOm"
+        "tICIjGQz+wPfCozMB1cgd/dMG7k4AXr8XoPosfNpAAAAAElFTkSuQmCC"
+    )
 
 
 

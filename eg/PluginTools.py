@@ -254,6 +254,9 @@ def GetPluginInfo(pluginName):
     # read in the __info__ of the plugin
     infoDict = {"eg": eg}
     pluginPath = join("plugins", pluginName)
+    if eg.debugLevel and pluginName in eg.pluginDatabase:
+        infoDict.update(eg.pluginDatabase[pluginName].__dict__)
+        
     if not exists(join(pluginPath, "__info__.py")):
         PluginInfoMetaClass.raiseOnPluginInfoLoad = True
         try:
@@ -264,9 +267,10 @@ def GetPluginInfo(pluginName):
         except PluginInfoException:
             infoDict = PluginInfoMetaClass.lastPluginInfo.__dict__
         except:
-            eg.PrintError('Can\'t read __init__.py for plugin "%s"' % pluginName)
-            eg.PrintTraceback()
-            return None
+            pass
+        #    eg.PrintError('Can\'t read __init__.py for plugin "%s"' % pluginName)
+        #    eg.PrintTraceback()
+        #    return None
     else:
         try:
             execfile(join(pluginPath, "__info__.py"), infoDict)
