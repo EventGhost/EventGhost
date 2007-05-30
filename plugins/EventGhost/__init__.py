@@ -55,7 +55,7 @@ class EventGhost(eg.PluginClass):
 
 class PythonCommand(eg.ActionWithStringParameter):
     name = "Python Command"
-    description = "Executes a parameter as a single Python statement."
+    description = "Executes a single Python statement."
     iconFile = 'icons/PythonCommand'
     class text:
         parameterDescription = "Python statement:"
@@ -181,12 +181,12 @@ class EnableItem(eg.ActionClass):
         tree.SetFocus()
         sizer.Add(tree, 1, wx.EXPAND)
 
-        if dialog.AffirmedShowModal():
-            id = tree.GetSelection()
-            if id.IsOk():
-                obj = tree.GetPyData(id)
-                link.SetTarget(obj)
-            return (link,)
+        yield dialog
+        id = tree.GetSelection()
+        if id.IsOk():
+            obj = tree.GetPyData(id)
+            link.SetTarget(obj)
+        yield (link, )
        
     
     
@@ -234,8 +234,9 @@ class EnableExclusive(EnableItem):
         def DoIt():
             item.isEnabled = True
             wx.CallAfter(item.Enable, True)
+            autostartMacro = item.document.autostartMacro
             for child in item.parent.childs:
-                if child is not item:
+                if child is not item and child is not autostartMacro:
                     child.isEnabled = False
                     wx.CallAfter(child.Enable, False)
         eg.actionThread.Call(DoIt)
@@ -614,12 +615,9 @@ class Jump(eg.ActionClass, eg.HiddenAction):
         sizer.Add(gosubCB, 0, wx.EXPAND)
         dialog.sizer.Add(sizer, 1, wx.EXPAND)
         
-        if dialog.AffirmedShowModal():
-            link.SetTarget(button.GetValue())
-            return (
-                link, 
-                gosubCB.GetValue()
-            )
+        yield dialog
+        link.SetTarget(button.GetValue())
+        yield (link, gosubCB.GetValue())
     
     
     
@@ -698,13 +696,9 @@ class JumpIf(eg.ActionClass, eg.HiddenAction):
         sizer.Add(gosubCB, 0, wx.EXPAND)
         dialog.sizer.Add(sizer, 1, wx.EXPAND)
         
-        if dialog.AffirmedShowModal():
-            link.SetTarget(button.GetValue())
-            return (
-                evalCtrl.GetValue(), 
-                link, 
-                gosubCB.GetValue()
-            )
+        yield dialog
+        link.SetTarget(button.GetValue())
+        yield (evalCtrl.GetValue(), link, gosubCB.GetValue())
 
 
 

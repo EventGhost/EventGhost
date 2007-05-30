@@ -182,12 +182,12 @@ class ChangeDisplaySettings(eg.ActionClass):
         
         UpdateResolutions()
         
-        if dialog.AffirmedShowModal():
-            return (
-                displayChoice.GetSelection() + 1,
-                GetClientData(resolutionChoice),
-                GetClientData(frequencyChoice),
-                GetClientData(depthChoice),
-                includeAllCheckBox.GetValue(),
-                updateRegistryCheckBox.GetValue()
-            )
+        yield dialog
+        yield (
+            displayChoice.GetSelection() + 1,
+            GetClientData(resolutionChoice),
+            GetClientData(frequencyChoice),
+            GetClientData(depthChoice),
+            includeAllCheckBox.GetValue(),
+            updateRegistryCheckBox.GetValue()
+        )

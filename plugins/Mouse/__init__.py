@@ -418,8 +418,8 @@ class MouseWheel(eg.ActionClass):
         sizer.Add(st2, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
         dialog.sizer.Add(sizer)
         
-        if dialog.AffirmedShowModal():
-            return (valueCtrl.GetValue(),)
+        yield dialog
+        yield (valueCtrl.GetValue(), )
 
 
 

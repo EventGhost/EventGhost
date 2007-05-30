@@ -169,17 +169,17 @@ class MoveTo(eg.ActionClass):
         yCB.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)    
         dialog.sizer.Add(mySizer, 1, wx.EXPAND)
 
-        if dialog.AffirmedShowModal():
-            if xCtrl.IsEnabled():
-                x = xCtrl.GetValue()
-            else:
-                x = None
-                
-            if yCtrl.IsEnabled():
-                y = yCtrl.GetValue()
-            else:
-                y = None
-            return (x, y)
+        yield dialog
+        if xCtrl.IsEnabled():
+            x = xCtrl.GetValue()
+        else:
+            x = None
+            
+        if yCtrl.IsEnabled():
+            y = yCtrl.GetValue()
+        else:
+            y = None
+        yield (x, y)
 
 
 
@@ -252,17 +252,17 @@ class Resize(eg.ActionClass):
         yCB.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)    
         dialog.sizer.Add(mySizer, 1, wx.EXPAND)
 
-        if dialog.AffirmedShowModal():
-            if xCtrl.IsEnabled():
-                x = xCtrl.GetValue()
-            else:
-                x = None
-                
-            if yCtrl.IsEnabled():
-                y = yCtrl.GetValue()
-            else:
-                y = None
-            return (x, y)
+        yield dialog
+        if xCtrl.IsEnabled():
+            x = xCtrl.GetValue()
+        else:
+            x = None
+            
+        if yCtrl.IsEnabled():
+            y = yCtrl.GetValue()
+        else:
+            y = None
+        yield (x, y)
 
 
 
@@ -406,23 +406,23 @@ class SendMessage(eg.ActionClass):
             kindCB.SetValue(True)
         dialog.sizer.Add(kindCB, 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 10)
         
-        if dialog.AffirmedShowModal():
-            choice = mesgCtrl.GetValue()
-            try:
-                i = choices.index(choice)
-                mesg = choicesValues[i]
-            except:
-                mesg = int(choice)
-            if kindCB.GetValue():
-                kind = 1
-            else:
-                kind = 0
-            return (
-                mesg, 
-                wParamCtrl.GetValue(),
-                lParamCtrl.GetValue(), 
-                kind
-            )
+        yield dialog
+        choice = mesgCtrl.GetValue()
+        try:
+            i = choices.index(choice)
+            mesg = choicesValues[i]
+        except:
+            mesg = int(choice)
+        if kindCB.GetValue():
+            kind = 1
+        else:
+            kind = 0
+        yield (
+            mesg, 
+            wParamCtrl.GetValue(),
+            lParamCtrl.GetValue(), 
+            kind
+        )
         
 
 #-----------------------------------------------------------------------------
@@ -479,7 +479,7 @@ class SetAlwaysOnTop(eg.ActionClass):
         radioBox.SetSelection(action)
         dialog.sizer.Add(radioBox, 0, wx.EXPAND)
 
-        if dialog.AffirmedShowModal():
-            return (radioBox.GetSelection(), )
+        yield dialog
+        yield (radioBox.GetSelection(), )
         
         

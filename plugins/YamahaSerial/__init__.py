@@ -484,8 +484,6 @@ class YamahaSerial(eg.PluginClass):
 
         dialog.sizer.Add(mySizer)
         
-        if dialog.AffirmedShowModal():
-            return (
-                ports[portCtrl.GetSelection()],
-            )
+        yield dialog
+        yield (ports[portCtrl.GetSelection()], )
                     

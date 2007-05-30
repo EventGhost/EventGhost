@@ -35,6 +35,7 @@ class DefaultConfig:
     hideOnStartup = False
     checkUpdate = False
     logActions = True
+    logMacros = True
     onlyLogAssigned = False
     useAutoloadFile = True
     autoloadFilePath = os.path.join(
@@ -45,6 +46,7 @@ class DefaultConfig:
     limitMemory = True
     limitMemorySize = 8
     confirmDelete = True
+    lastUpdateCheckDate = None
     class treeStateData:
         guid = None
         time = None

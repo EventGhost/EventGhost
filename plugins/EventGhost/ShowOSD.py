@@ -288,7 +288,6 @@ class ShowOSD(eg.ActionClass):
         return self.text.label % osdText
     
     
-    @eg.LogIt
     def Configure(
         self, 
         osdText="", 
@@ -389,20 +388,20 @@ class ShowOSD(eg.ActionClass):
             
         outlineCheckBox.Bind(wx.EVT_CHECKBOX, on_outline)
         
-        if dialog.AffirmedShowModal():
-            if outlineCheckBox.IsChecked():
-                outlineColour = backgroundColourButton.GetColour()
-            else:
-                outlineColour = None
-            return (
-                editTextCtrl.GetValue(),
-                fontButton.GetValue(), 
-                foregroundColourButton.GetColour(), 
-                outlineColour,
-                alignmentChoice.GetSelection(),
-                (xOffsetCtrl.GetValue(), yOffsetCtrl.GetValue()),
-                displayChoice.GetSelection(),
-                timeCtrl.GetValue()
-            )
+        yield dialog
+        if outlineCheckBox.IsChecked():
+            outlineColour = backgroundColourButton.GetColour()
+        else:
+            outlineColour = None
+        yield (
+            editTextCtrl.GetValue(),
+            fontButton.GetValue(), 
+            foregroundColourButton.GetColour(), 
+            outlineColour,
+            alignmentChoice.GetSelection(),
+            (xOffsetCtrl.GetValue(), yOffsetCtrl.GetValue()),
+            displayChoice.GetSelection(),
+            timeCtrl.GetValue()
+        )
         
         

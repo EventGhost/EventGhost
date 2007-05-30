@@ -410,8 +410,8 @@ class ChangeRepeatStatus(eg.ActionClass):
         )
         radioBox.SetSelection(data)
         dialog.sizer.Add(radioBox, 0, wx.EXPAND)
-        if dialog.AffirmedShowModal():
-            return (radioBox.GetSelection(), )
+        yield dialog
+        yield (radioBox.GetSelection(), )
         
         
 # The following action is a subclass of ChangeRepeatStatus, so it inherits
@@ -449,8 +449,8 @@ class SetVolume(eg.ActionWithStringParameter):
         volumeCtrl = eg.SpinNumCtrl(dialog, -1, volume, max=100.0)
         dialog.AddLabel("Volume Level:")
         dialog.AddCtrl(volumeCtrl)
-        if dialog.AffirmedShowModal():
-            return (volumeCtrl.GetValue(), )
+        yield dialog
+        yield (volumeCtrl.GetValue(), )
         
         
         

@@ -160,6 +160,7 @@ class Execute(eg.ActionClass):
             buttonText=eg.text.General.browse,
             dialogTitle=text.browseWorkingDirDialogTitle
         )
+        workingDirCtrl.SetValue(workingDir)
         
         winStateText = wx.StaticText(dialog, -1, text.WindowOptionsDesc)
         winStateChoice = wx.Choice(dialog, -1, choices=text.WindowOptions)
@@ -197,12 +198,12 @@ class Execute(eg.ActionClass):
         Add(waitCheckBox)
         
     
-        if dialog.AffirmedShowModal():
-            return (
-                filepathCtrl.GetValue(),
-                argumentsCtrl.GetValue(),
-                winStateChoice.GetSelection(),
-                waitCheckBox.IsChecked(),
-                4 - priorityChoice.GetSelection(),
-                workingDirCtrl.GetValue()
-            )        
+        yield dialog
+        yield (
+            filepathCtrl.GetValue(),
+            argumentsCtrl.GetValue(),
+            winStateChoice.GetSelection(),
+            waitCheckBox.IsChecked(),
+            4 - priorityChoice.GetSelection(),
+            workingDirCtrl.GetValue()
+        )        

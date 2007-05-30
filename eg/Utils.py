@@ -122,6 +122,9 @@ def LogIt(func):
     if not eg.debugLevel:
         return func
     
+    if func.func_code.co_flags & 0x20:
+        raise "Can't wrap generator function"
+    
     def LogItWrapper(*args, **kwargs):
         fname, argString = GetFuncArgString(func, args, kwargs)
         Notice(fname + argString)
@@ -141,6 +144,18 @@ def LogItWithReturn(func):
         return res
     return LogItWrapper
         
+
+def TimeIt(func):
+    if not eg.debugLevel:
+        return func
+    def TimeItWrapper(*args, **kwargs):
+        startTime = time.clock()
+        fname, argString = GetFuncArgString(func, args, kwargs)
+        res = func(*args, **kwargs)
+        Notice(fname + " :" + repr(time.clock() - startTime))
+        return res
+    return TimeItWrapper
+
 
 def AssertNotMainThread(func):
     if not eg.debugLevel:

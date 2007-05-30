@@ -229,8 +229,8 @@ class VLC(eg.PluginClass):
         cb1.SetValue(feedback_events)
         sizer.Add(cb1, 0, wx.ALL, 5)       
        
-        if dialog.AffirmedShowModal():
-            return hostEdit.GetValue(), portEdit.GetValue(), cb1.GetValue()
+        yield dialog
+        yield (hostEdit.GetValue(), portEdit.GetValue(), cb1.GetValue())
    
 
 
@@ -262,6 +262,6 @@ class VLC(eg.PluginClass):
            
             dialog.sizer.Add(mySizer)
            
-            if dialog.AffirmedShowModal():
-                return textEdit.GetValue(),
+            yield dialog
+            yield (textEdit.GetValue(), )
             

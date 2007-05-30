@@ -20,14 +20,16 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import sys
+
 class PluginMetaClass(type):
     """
     The metaclass of PluginClass that allows us to monitor the definition of a
     new plugin.
     """
-    lastCls = None
     
     def __new__(metacls, name, bases, dict):
         newClass = type.__new__(metacls, name, bases, dict)
-        metacls.lastCls = newClass
+        # store the plugin class as __pluginCls__ in the plugins module
+        sys.modules[newClass.__module__].__pluginCls__ = newClass
         return newClass

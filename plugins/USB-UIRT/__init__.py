@@ -67,6 +67,7 @@ class Text:
     notFound = "<not found>"
     irReception = "IR Reception"
     legacyCodes = "Generate 'legacy' UIRT2-compatible events"
+    stopCodes = "Pass short repeat codes as enduring events"
     
     class TransmitIR:
         name = "Transmit IR"
@@ -110,14 +111,20 @@ class USB_UIRT(eg.RawReceiverPlugin):
         self.AddAction(TransmitIR)
 
 
-    def __start__(self, ledRX=True, ledTX=True, legacyRX=False):
+    def __start__(
+        self, 
+        ledRX=True, 
+        ledTX=True, 
+        legacyRX=False, 
+        repeatStopCodes=False
+    ):
         try:
             self.device = UUIRT.USB_UIRT()
         except UUIRT.UUIRTError, msg:
             self.device = None
             raise eg.Exception(msg)
         self.device.SetReceiveCallback(self.ReceiveCallback)
-        self.device.SetConfig(ledRX, ledTX, legacyRX)
+        self.device.SetConfig(ledRX, ledTX, legacyRX, repeatStopCodes)
         self.enabled = True
         
         
@@ -133,7 +140,13 @@ class USB_UIRT(eg.RawReceiverPlugin):
             self.TriggerEvent(eventString)
         
         
-    def Configure(self, ledRx=None, ledTx=None, legacyRx=None):
+    def Configure(
+        self, 
+        ledRx=None, 
+        ledTx=None, 
+        legacyRx=None, 
+        repeatStopCodes=False
+    ):
         text = self.text
         if self.device:
             protocolVersion = self.device.protocolVersion
@@ -190,15 +203,19 @@ class USB_UIRT(eg.RawReceiverPlugin):
         )
         legacyRxCheckBox = wx.CheckBox(dialog, -1, text.legacyCodes)
         legacyRxCheckBox.SetValue(legacyRX)
+        stopCodesRxCheckBox = wx.CheckBox(dialog, -1, text.stopCodes)
+        stopCodesRxCheckBox.SetValue(repeatStopCodes)
         receiveGroupSizer.Add(legacyRxCheckBox, 0, wx.ALL, 10)
+        receiveGroupSizer.Add(stopCodesRxCheckBox, 0, wx.ALL, 10)
         dialog.sizer.Add(receiveGroupSizer, 0, wx.EXPAND)
 
-        if dialog.AffirmedShowModal():
-            return (
-                ledRxCheckBox.GetValue(),
-                ledTxCheckBox.GetValue(),
-                legacyRxCheckBox.GetValue(),
-            )
+        yield dialog
+        yield (
+            ledRxCheckBox.GetValue(),
+            ledTxCheckBox.GetValue(),
+            legacyRxCheckBox.GetValue(),
+            stopCodesRxCheckBox.GetValue(),
+        )
 
 
 
@@ -341,8 +358,8 @@ class TransmitIR(eg.ActionClass):
                 self.inactivityWaitTime
             )
             
-        if dialog.AffirmedShowModal():
-            return GetResult()
+        yield dialog
+        yield GetResult()
 
 
 class IRLearnDialog(wx.Dialog):

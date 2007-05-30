@@ -223,12 +223,12 @@ class Focus(eg.ActionClass):
 
         dialog.sizer.Add(sizer, 1, wx.EXPAND)
         
-        if dialog.AffirmedShowModal():
-            return (
-                foregroundColourButton.GetColour(), 
-                backgroundColourButton.GetColour(), 
-                displayChoice.GetSelection()
-            )
+        yield dialog
+        yield (
+            foregroundColourButton.GetColour(), 
+            backgroundColourButton.GetColour(), 
+            displayChoice.GetSelection()
+        )
         
             
     
@@ -300,12 +300,12 @@ class IreWindow(eg.ActionClass):
         
         dialog.sizer.Add(sizer, 1, wx.EXPAND)
 
-        if dialog.AffirmedShowModal():
-            return (
-                foregroundColourButton.GetColour(), 
-                backgroundColourButton.GetColour(), 
-                coverageCtrl.GetValue()
-            )
+        yield dialog
+        yield (
+            foregroundColourButton.GetColour(), 
+            backgroundColourButton.GetColour(), 
+            coverageCtrl.GetValue()
+        )
         
         
         
@@ -388,14 +388,14 @@ class Checkerboard(eg.ActionClass):
 
         dialog.sizer.Add(sizer, 1, wx.EXPAND)
 
-        if dialog.AffirmedShowModal():
-            return (
-                foregroundColourButton.GetColour(), 
-                backgroundColourButton.GetColour(), 
-                hCountCtrl.GetValue(),
-                vCountCtrl.GetValue(),
-                displayChoice.GetSelection(),
-            )
+        yield dialog
+        yield (
+            foregroundColourButton.GetColour(), 
+            backgroundColourButton.GetColour(), 
+            hCountCtrl.GetValue(),
+            vCountCtrl.GetValue(),
+            displayChoice.GetSelection(),
+        )
 
 
 
@@ -484,14 +484,14 @@ class Grid(eg.ActionClass):
 
         dialog.sizer.Add(sizer, 1, wx.EXPAND)
 
-        if dialog.AffirmedShowModal():
-            return (
-                foregroundColourButton.GetColour(), 
-                backgroundColourButton.GetColour(), 
-                hCountCtrl.GetValue(),
-                vCountCtrl.GetValue(),
-                displayChoice.GetSelection(),
-            )
+        yield dialog
+        yield (
+            foregroundColourButton.GetColour(), 
+            backgroundColourButton.GetColour(), 
+            hCountCtrl.GetValue(),
+            vCountCtrl.GetValue(),
+            displayChoice.GetSelection(),
+        )
 
         
         
@@ -580,14 +580,14 @@ class Lines(eg.ActionClass):
 
         dialog.sizer.Add(sizer, 1, wx.EXPAND)
 
-        if dialog.AffirmedShowModal():
-            return (
-                foregroundColourButton.GetColour(), 
-                backgroundColourButton.GetColour(), 
-                lineSizeCtrl.GetValue(),
-                orientationCtrl.GetSelection(),
-                displayChoice.GetSelection(),
-            )
+        yield dialog
+        yield (
+            foregroundColourButton.GetColour(), 
+            backgroundColourButton.GetColour(), 
+            lineSizeCtrl.GetValue(),
+            orientationCtrl.GetSelection(),
+            displayChoice.GetSelection(),
+        )
 
         
         

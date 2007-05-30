@@ -23,6 +23,7 @@
 """ Definition of the abstract PluginClass. """
 
 import eg
+import sys
 import wx
 from PluginMetaClass import PluginMetaClass
 from ActionGroup import CreateAction
@@ -206,7 +207,8 @@ class PluginClass(object):
     
     
     def AddAllActions(self):
-        for actionClass in self.info.actionClassList:
+        #for actionClass in self.info.actionClassList:
+        for actionClass in sys.modules[self.__module__].__allActionClasses__:
             self.AddAction(
                 actionClass, 
                 issubclass(actionClass, eg.HiddenAction)
@@ -255,6 +257,7 @@ class PluginClass(object):
         dialog = eg.ConfigurationDialog(self)
         label = wx.StaticText(dialog, -1, eg.text.General.noOptionsPlugin)
         dialog.sizer.Add(label)
-        dialog.AffirmedShowModal()
+        yield dialog
+        yield None
         
         

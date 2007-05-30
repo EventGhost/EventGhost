@@ -221,10 +221,7 @@ class SendKeys(eg.ActionClass):
         SizerAdd((10, 10), 1)
         SizerAdd(alternateMethodCB)
         
-        if dialog.AffirmedShowModal():
-            return (
-                textCtrl.GetValue(),
-                alternateMethodCB.GetValue()
-            )
+        yield dialog
+        yield (textCtrl.GetValue(), alternateMethodCB.GetValue())
 
 

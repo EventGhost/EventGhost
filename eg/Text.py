@@ -111,6 +111,7 @@ class Text:
             ExpandAll = "&Expand All"
             ExpandOnEvents = "Autom. highlight on event"
             ExpandTillMacro = "Autom. expand only till macro"
+            LogMacros = "Log Macros"
             LogActions = "Log Actions"
             LogTime = "Log Times"
             ClearLog = "Clear Log"

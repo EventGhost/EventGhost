@@ -43,6 +43,8 @@ class MacroItem(ContainerItem):
     def Execute(self):
         if self.isEnabled:
             del eg.lastFoundWindows[:]
+            if eg.config.logMacros:
+                self.DoPrint(self.name)
             if self.shouldSelectOnExecute:
                 wx.CallAfter(self.Select)
                 

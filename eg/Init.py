@@ -66,6 +66,7 @@ class EventGhost(object):
         self.systemEncoding = encoding = locale.getdefaultlocale()[1]
         self.CallAfter = wx.CallAfter
         self.APP_NAME = "EventGhost"
+        self.PLUGIN_DIR = os.path.abspath("plugins")
         self.startupArguments = args
         self.debugLevel = args.debugLevel
         self.__InitPIL()
@@ -104,11 +105,13 @@ class EventGhost(object):
         from Utils import (
             LogIt, 
             LogItWithReturn, 
+            TimeIt,
             AssertNotMainThread, 
             AssertNotActionThread
         )
         self.LogIt = LogIt
         self.LogItWithReturn = LogItWithReturn
+        self.TimeIt = TimeIt
         self.AssertNotMainThread = AssertNotMainThread
         self.AssertNotActionThread = AssertNotActionThread
         
@@ -119,9 +122,10 @@ class EventGhost(object):
         # exists, we simply create it first
         from App import MyApp
         self.app = MyApp(0)
-        if not args.translate:
+        if True:#not args.translate:
             import Log
             self.log = Log.Log()
+            self.DoPrint = self.log.DoPrint
         if not self.debugLevel:
             def _DummyFunc(*args, **kwargs):
                 pass
@@ -210,7 +214,6 @@ class EventGhost(object):
         self.document = Document()
         eg.app.SetupGui()
                         
-        self.DoPrint = self.log.DoPrint
         self.SetProcessingState = eg.app.taskBarIcon.SetProcessingState
 
         from ActionThread import ActionThread
@@ -230,6 +233,10 @@ class EventGhost(object):
         
         config = self.config
 
+        if self.debugLevel:
+            import PluginDatabase
+            PluginDatabase.ScanPlugins()
+            
         startupFile = self.startupArguments.startupFile
         if (
             startupFile is None 
@@ -246,8 +253,13 @@ class EventGhost(object):
         eventThread.start()
         wx.CallAfter(eventThread.Call, eventThread.StartSession, startupFile)
         if config.checkUpdate:
-            from CheckUpdate import CheckUpdate
-            wx.CallAfter(CheckUpdate)
+            # avoid more than one check per day
+            today = time.gmtime()[:3]
+            if config.lastUpdateCheckDate != today:
+                config.lastUpdateCheckDate = today
+                from CheckUpdate import CheckUpdate
+                wx.CallAfter(CheckUpdate)
+                
         self.DoPrint(self.text.MainFrame.Logger.welcomeText)
 
             
@@ -305,6 +317,7 @@ class EventGhost(object):
             PROGRAMFILES, 
             TEMPDIR, 
         )
+        
         from WinAPI.Shortcut import CreateShortcut
         from WinAPI.Utils import BringHwndToFront
         from WinAPI.serial import Serial as SerialPort

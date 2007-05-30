@@ -444,8 +444,6 @@ class DenonSerial(eg.PluginClass):
         dialog.sizer.Add(wx.StaticText(dialog, -1, 'Port:'))
         dialog.sizer.Add(portCtrl)
         
-        if dialog.AffirmedShowModal():
-            return (
-                portCtrl.GetValue(),
-            )
+        yield dialog
+        yield (portCtrl.GetValue(), )
                     

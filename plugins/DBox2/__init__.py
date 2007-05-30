@@ -154,8 +154,8 @@ class DBox2(eg.PluginClass):
         useRcemCtrl.SetValue(useRcem)
         dialog.sizer.Add(useRcemCtrl, 0, wx.EXPAND|wx.ALL, 5)
         
-        if dialog.AffirmedShowModal():
-            return (hostCtrl.GetValue(), useRcemCtrl.GetValue())
+        yield dialog
+        yield (hostCtrl.GetValue(), useRcemCtrl.GetValue())
     
     
     def SendCommand(self, key):

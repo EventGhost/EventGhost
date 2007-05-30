@@ -38,7 +38,7 @@ class PluginInfo(eg.PluginInfo):
         'the MCE remote. You find detailed installation instructions here:'
         '<br><a href="http://www.eventghost.org/wiki/MCE_Remote_FAQ">'
         'MCE Remote FAQ'
-        '</a><p><center><img src="MCEv2.png"/></center>'
+        '</a><p><center><img src="MCEv2.jpg"/></center>'
     )
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACfklEQVR42q2TS2gTQRyH"
@@ -271,7 +271,5 @@ class MceRemote(eg.PluginClass):
         staticText = wx.StaticText(dialog, -1, self.text.buttonTimeoutDescr)
         dialog.sizer.Add(staticText, 0, wx.TOP, 5)
         
-        if dialog.AffirmedShowModal():
-            return (
-                waitTimeCtrl.GetValue(),
-            )
+        yield dialog
+        yield (waitTimeCtrl.GetValue(), )

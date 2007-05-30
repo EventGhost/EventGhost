@@ -131,10 +131,8 @@ class Tira(eg.RawReceiverPlugin):
         dialog.sizer.Add(portCtrl)
         dialog.sizer.Add((10,10))
         
-        if dialog.AffirmedShowModal():
-            return (
-                portCtrl.GetValue(),
-            )
+        yield dialog
+        yield (portCtrl.GetValue(), )
         
     
 class TransmitIR(eg.ActionClass):
@@ -198,12 +196,12 @@ class TransmitIR(eg.ActionClass):
         
         dialog.sizer.Add(lowerSizer, 0, wx.EXPAND)
         
-        if dialog.AffirmedShowModal():
-            return (
-                make_string_from_hex(codeBox.GetValue()),
-                repeatBox.GetValue(),
-                -1,
-            )
+        yield dialog
+        yield (
+            make_string_from_hex(codeBox.GetValue()),
+            repeatBox.GetValue(),
+            -1,
+        )
     
     
         

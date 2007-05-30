@@ -263,15 +263,11 @@ class SendRemoteKey(eg.ActionClass):
         
         dialog.sizer.Add(mySizer, 1, wx.EXPAND)
 
-        if dialog.AffirmedShowModal():
-            self.remoteName = remoteCtrl.GetStringSelection()
-            self.keyName = keyCtrl.GetStringSelection()
-            self.numRepeats = numRepeatsCtrl.GetValue()
-            return (
-                self.remoteName, 
-                self.keyName, 
-                self.numRepeats
-            )
+        yield dialog
+        self.remoteName = remoteCtrl.GetStringSelection()
+        self.keyName = keyCtrl.GetStringSelection()
+        self.numRepeats = numRepeatsCtrl.GetValue()
+        yield (self.remoteName, self.keyName, self.numRepeats)
         
         
         

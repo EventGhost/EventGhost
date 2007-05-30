@@ -176,6 +176,7 @@ def _checkUpdate(manually=False):
         
         
         
+@eg.LogIt
 def CheckUpdate():
     threading.Thread(target=_checkUpdate, name="CheckUpdate").start()
 

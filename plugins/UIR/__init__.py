@@ -8,8 +8,10 @@ class PluginInfo(eg.PluginInfo):
     description = (
         'Hardware plugin for the <a href="http://fly.cc.fer.hr/~mozgic/UIR/">'
         'Universal Infrared Receiver V1 (UIR)</a> '
-        'and the <a href="http://www.evation.com/irman/index.html">Irman</a> '
+        'and the <a href="http://www.evation.com/irman/index.html">'
+        'Evation.com Irman</a> '
         'device.'
+        '<p><center><img src="irman_front.jpg" alt="Irman" /></a></center>'
     )
 
 
@@ -121,9 +123,7 @@ class UIR(eg.RawReceiverPlugin):
         dialog.sizer.Add(wx.StaticText(dialog, -1, 'COM Port:'))
         dialog.sizer.Add(portCtrl)
         
-        if dialog.AffirmedShowModal():
-            return (
-                portCtrl.GetValue(),
-            )
+        yield dialog
+        yield (portCtrl.GetValue(), )
                     
         

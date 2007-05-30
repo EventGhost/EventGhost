@@ -228,6 +228,7 @@ class MainFrame(wx.Frame):
             kind=wx.ITEM_CHECK
         ).Check(config.expandTillMacro)
         AddItem()
+        AddItem("LogMacros", kind=wx.ITEM_CHECK).Check(eg.config.logMacros)
         AddItem("LogActions", kind=wx.ITEM_CHECK).Check(eg.config.logActions)
         AddItem("LogTime", kind=wx.ITEM_CHECK).Check(config.logTime)
         AddItem()
@@ -881,6 +882,11 @@ class MainFrame(wx.Frame):
         self.SendSizeEvent()
 
 
+    def OnCmdLogMacros(self, event):
+        eg.config.logMacros = not eg.config.logMacros
+        self.menuBar.View.LogMacros.Check(eg.config.logMacros)
+        
+        
     def OnCmdLogActions(self, event):
         eg.config.logActions = not eg.config.logActions
         self.menuBar.View.LogActions.Check(eg.config.logActions)

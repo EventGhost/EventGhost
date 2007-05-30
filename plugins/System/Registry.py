@@ -637,15 +637,14 @@ class RegistryQuery(eg.ActionClass):
        
         dialog.sizer.Add(sizer2, flag = wx.EXPAND)
 
-        if dialog.AffirmedShowModal():
-            key, subkey, valueName = regChooserCtrl.GetValue()
-            compareValue = compareValueCtrl.GetValue()
-            for i in range(0,3):
-                if rb[i].GetValue():
-                    action = i
-                    break
-
-            return (key, subkey, valueName, action, compareValue)
+        yield dialog
+        key, subkey, valueName = regChooserCtrl.GetValue()
+        compareValue = compareValueCtrl.GetValue()
+        for i in range(0,3):
+            if rb[i].GetValue():
+                action = i
+                break
+        yield (key, subkey, valueName, action, compareValue)
            
        
            
@@ -855,17 +854,17 @@ class RegistryChange(eg.ActionClass):
        
         dialog.sizer.Add(newValueSizer, flag = wx.EXPAND)
 
-        if dialog.AffirmedShowModal():
-            key, subkey, valueName = regChooserCtrl.GetValue()
+        yield dialog
+        key, subkey, valueName = regChooserCtrl.GetValue()
 
-            for i, item in enumerate(rb):
-                if item.GetValue():
-                    action = i
-                    break
+        for i, item in enumerate(rb):
+            if item.GetValue():
+                action = i
+                break
 
-            keyType = regTypes[typeChoice.GetSelection()][0]
+        keyType = regTypes[typeChoice.GetSelection()][0]
 
-            newValue = newValueCtrl.GetValue()
+        newValue = newValueCtrl.GetValue()
 
-            return (key, subkey, valueName, action, keyType, newValue)
+        yield (key, subkey, valueName, action, keyType, newValue)
         

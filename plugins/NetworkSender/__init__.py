@@ -85,12 +85,12 @@ class NetworkSender(eg.PluginClass):
         dialog.AddLabel(self.text.password)
         dialog.AddCtrl(passwordCtrl)
         
-        if dialog.AffirmedShowModal():
-            return (
-                hostCtrl.GetValue(), 
-                portCtrl.GetValue(), 
-                passwordCtrl.GetValue()
-            )
+        yield dialog
+        yield (
+            hostCtrl.GetValue(), 
+            portCtrl.GetValue(), 
+            passwordCtrl.GetValue()
+        )
 
 
     def Send(self, eventString, payload=None):

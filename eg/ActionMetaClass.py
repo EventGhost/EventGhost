@@ -26,10 +26,9 @@ class ActionMetaClass(type):
     The metaclass of ActionClass that allows us to monitor the definition of
     new actions.
     """
-    lastDefinedPluginClassInfo = None
+    allActionClasses = []
     
     def __new__(metacls, name, bases, dict):
         newClass = type.__new__(metacls, name, bases, dict)
-        if metacls.lastDefinedPluginClassInfo:
-            metacls.lastDefinedPluginClassInfo.actionClassList.append(newClass)
+        metacls.allActionClasses.append(newClass)
         return newClass

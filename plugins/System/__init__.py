@@ -229,13 +229,11 @@ class System(eg.PluginClass):
             self.ChangeMasterVolumeBy.__class__.__call__ = ChangeMasterVolumeBy             
                         
                 
-    eg.LogItWithReturn
+    @eg.LogItWithReturn
     def __stop__(self):
-        eg.Notice("stopping system plugin")
         self.deviceChangeNotifier.Close()
         self.powerBroadcastNotifier.Close()
         UnregisterKeyhook()
-        eg.Notice("done stopping system plugin")
         
         
     def IdleCallback(self):
@@ -269,8 +267,8 @@ class SetIdleTime(eg.ActionClass):
         mySizer.Add(staticText, 0, wx.ALIGN_CENTER_VERTICAL|wx.LEFT, 5)
         dialog.sizer.Add(mySizer, 0, wx.EXPAND)
 
-        if dialog.AffirmedShowModal():
-            return (waitTimeCtrl.GetValue(),)
+        yield dialog
+        yield (waitTimeCtrl.GetValue(), )
         
         
         
@@ -397,11 +395,8 @@ class OpenDriveTray(eg.ActionClass):
         sizer.Add((5,5))
         sizer.Add(mySizer, 0, wx.EXPAND|wx.ALL, 5)
           
-        if dialog.AffirmedShowModal():
-            return (
-                str(choice.GetStringSelection()),
-                radiobox.GetSelection()
-            )
+        yield dialog
+        yield (str(choice.GetStringSelection()), radiobox.GetSelection())
 
 
 
@@ -439,15 +434,12 @@ class PlaySound(eg.ActionWithStringParameter):
         sizer.Add(filepathCtrl, 0, wx.EXPAND)
         sizer.Add(wait_checkbox, 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 10)
     
-        if dialog.AffirmedShowModal():
-            if wait_checkbox.IsChecked():
-                flags = wx.SOUND_SYNC
-            else:
-                flags = wx.SOUND_ASYNC
-            return (
-                filepathCtrl.GetValue(), 
-                flags,
-            )
+        yield dialog
+        if wait_checkbox.IsChecked():
+            flags = wx.SOUND_SYNC
+        else:
+            flags = wx.SOUND_ASYNC
+        yield (filepathCtrl.GetValue(), flags)
 
 
 
@@ -562,10 +554,8 @@ class __ComputerPowerAction(eg.ActionClass):
         checkbox = wx.CheckBox(dialog, -1, self.plugin.text.forcedCB)
         checkbox.SetValue(bForceClose)
         dialog.sizer.Add(checkbox, 0, wx.ALL, 10)
-        if dialog.AffirmedShowModal():
-            return (
-                checkbox.GetValue(),
-            )
+        yield dialog
+        yield (checkbox.GetValue(), )
     
             
             
@@ -751,11 +741,8 @@ class SetWallpaper(eg.ActionWithStringParameter):
         choice.SetSelection(style)                        
         sizer.Add(choice, 0, wx.BOTTOM, 10)
     
-        if dialog.AffirmedShowModal():
-            return (
-                filepathCtrl.GetValue(), 
-                choice.GetSelection(),
-            )
+        yield dialog
+        yield (filepathCtrl.GetValue(), choice.GetSelection())
         
         
         
@@ -833,10 +820,8 @@ class SetMasterVolume(eg.ActionClass):
         
         dialog.sizer.Add(sizer, 1, wx.EXPAND)
         
-        if dialog.AffirmedShowModal():
-            return (
-                float(valueCtrl.GetValue()),
-            )
+        yield dialog
+        yield (float(valueCtrl.GetValue()), )
 
 
 
@@ -878,10 +863,8 @@ class ChangeMasterVolumeBy(eg.ActionClass):
         
         dialog.sizer.Add(sizer, 1, wx.EXPAND)
         
-        if dialog.AffirmedShowModal():
-            return (
-                float(valueCtrl.GetValue()),
-            )
+        yield dialog
+        yield (float(valueCtrl.GetValue()), )
 
 
 #-----------------------------------------------------------------------------
@@ -1011,11 +994,8 @@ class ShowPicture(eg.ActionClass):
         choice = eg.DisplayChoice(dialog, -1, display)
         sizer.Add(choice, 0, wx.BOTTOM, 10)
     
-        if dialog.AffirmedShowModal():
-            return (
-                filepathCtrl.GetValue(), 
-                choice.GetSelection()
-            )
+        yield dialog
+        yield (filepathCtrl.GetValue(), choice.GetSelection())
         
         
         
@@ -1066,8 +1046,8 @@ class SetDisplayPreset(eg.ActionClass):
         listCtrl.SetMinSize((x+4, -1))
         dialog.sizer.Add(listCtrl, 1, wx.EXPAND)
         
-        if dialog.AffirmedShowModal():
-            return result[0]
+        yield dialog
+        yield result[0]
         
         
 #-----------------------------------------------------------------------------
@@ -1126,10 +1106,9 @@ class WakeOnLan(eg.ActionClass):
         )
         dialog.AddLabel(self.text.parameterDescription)
         dialog.AddCtrl(macCtrl)
-        if dialog.AffirmedShowModal():
-            return (
-                macCtrl.GetValue(),
-            )
+        yield dialog
+        yield (macCtrl.GetValue(), )
+    
 
 #-----------------------------------------------------------------------------
 # Action: System.SetSystemIdleTimer
@@ -1173,8 +1152,6 @@ class SetSystemIdleTimer(eg.ActionClass):
         radioBox.SetSelection(int(flag))
         dialog.sizer.Add(radioBox, 0, wx.EXPAND)
 
-        if dialog.AffirmedShowModal():
-            return (
-                bool(radioBox.GetSelection()),
-            )
+        yield dialog
+        yield (bool(radioBox.GetSelection()), )
         

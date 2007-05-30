@@ -903,14 +903,14 @@ class ZoomPlayer(eg.PluginClass):
         dialog.AddLabel("")
         dialog.AddCtrl(newEventCtrl)
        
-        if dialog.AffirmedShowModal():
-            return (
-                hostEdit.GetValue(), 
-                portEdit.GetValue(), 
-                None,
-                None,
-                newEventCtrl.GetValue(),
-            )
+        yield dialog
+        yield (
+            hostEdit.GetValue(), 
+            portEdit.GetValue(), 
+            None,
+            None,
+            newEventCtrl.GetValue(),
+        )
     
     
     

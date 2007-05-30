@@ -216,8 +216,8 @@ class Foobar2000(eg.PluginClass):
         dialog.AddLabel("Path to foobar2000 executable:")
         dialog.AddCtrl(filepathCtrl)
         
-        if dialog.AffirmedShowModal():
-            return (filepathCtrl.GetValue(), )
+        yield dialog
+        yield (filepathCtrl.GetValue(), )
         
         
     def GetFoobar2000Path(self):

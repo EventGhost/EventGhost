@@ -1,11 +1,17 @@
+__pluginname__ = "Advanced IR-Transceiver"
+__author__ = "Bitmonster"
+__version__ = "1.0." + "$LastChangedRevision: 81 $".split()[1]
+__kind__ = "remote"
+__description__ = 'Hardware plugin for the "Advanced IR-Transceiver".'
+
 import eg
 
 class PluginInfo(eg.PluginInfo):
-    name = "Advanced IR-Transceiver"
-    author = "Bitmonster"
-    version = "1.0.0"
-    kind = "remote"
-    description = "Hardware plugin for the \"Advanced IR-Transceiver\"."
+    name = __pluginname__
+    author = __author__
+    version = __version__
+    kind = __kind__
+    description = __description__
 
 import threading, Queue, time, string, binascii
 import wx
@@ -278,11 +284,8 @@ class AIRT(eg.PluginClass):
         dialog.sizer.Add(wx.StaticText(dialog, -1, 'RF Remotes:'))
         dialog.sizer.Add(remoteCtrl)
         
-        if dialog.AffirmedShowModal():
-            return (
-                portCtrl.GetValue(),
-                remoteCtrl.GetValue(),
-            )
+        yield dialog
+        yield (portCtrl.GetValue(), remoteCtrl.GetValue(), )
                     
 
 
@@ -312,8 +315,8 @@ class SendIR(eg.ActionClass):
         dataCtrl = wx.TextCtrl(dialog, -1, datastr)
         dialog.sizer.Add(dataCtrl, 0, wx.EXPAND)
         
-        if dialog.AffirmedShowModal():
-            datastr = dataCtrl.GetValue()
-            data = hexstring2bin(datastr)
-            return data, 1, True
+        yield dialog
+        datastr = dataCtrl.GetValue()
+        data = hexstring2bin(datastr)
+        yield (data, 1, True)
     

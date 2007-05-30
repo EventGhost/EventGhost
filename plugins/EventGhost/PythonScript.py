@@ -267,7 +267,8 @@ class PythonScript(eg.ActionClass):
 
     def Configure(self, *args):
         wx.CallAfter(self.OnOpen, eg.currentConfigureItem)
-        return args
+        yield None
+        yield args
 
 
     def OnOpen(self, actionItem):

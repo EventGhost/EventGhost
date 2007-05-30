@@ -83,7 +83,7 @@ class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.copyfile(f, self.wfile)
             f.close()
             f = None
-            if len(p) < 1:
+            if len(p) < 2:
                 return
             a = p[1].split('&')
             event = a[0]
@@ -227,10 +227,10 @@ class Webserver(eg.PluginClass):
         dialog.AddLabel(self.text.eventPrefix)
         dialog.AddCtrl(editCtrl)
         
-        if dialog.AffirmedShowModal():
-            return (
-                editCtrl.GetValue(), 
-                int(portCtrl.GetValue()), 
-                filepathCtrl.GetValue()
-            )
+        yield dialog
+        yield (
+            editCtrl.GetValue(), 
+            int(portCtrl.GetValue()), 
+            filepathCtrl.GetValue()
+        )
 

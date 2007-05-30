@@ -47,12 +47,24 @@ WX_ICON_PLUGIN.CopyFromBitmap(
 
 sys.modules["Plugin"] = imp.new_module("Plugin")
 
-def MyImport(name, fd, pathname):
-    module = types.ModuleType(name)
-    module.__dict__["eg"] = eg
-    module.__dict__["__file__"] = pathname
-    exec(fd, module.__dict__)
+
+def _LoadPluginModule(pluginDir):
+    moduleName = "Plugin." + pluginDir
+    if moduleName in sys.modules:
+        return sys.modules[moduleName]
+    modulePath = join(eg.PLUGIN_DIR, pluginDir)
+    filename = join(modulePath, "__init__.py")
+    ActionMetaClass.allActionClasses = []
+    fp = file(filename, "U")
+    sys.path.insert(0, modulePath)
+    try:
+        module = imp.load_module(moduleName, fp, filename, ('.py', 'U', 1))
+    finally:
+        fp.close()
+        del sys.path[0]
+    module.__allActionClasses__ = ActionMetaClass.allActionClasses
     return module
+    
     
     
 class PluginInfoBase(object):
@@ -114,29 +126,15 @@ class PluginInfoBase(object):
         if not exists(pathname):
             eg.PrintError("File %s does not exist" % pathname)
             return
-        fp = file(pathname, "U")
-        #fp = file(pathname, "r")
-        sys.path.insert(0, abspath(pluginInfo.path))
-        ActionMetaClass.lastDefinedPluginClassInfo = pluginInfo
         try:
-            try:
-                module = imp.load_module(
-                    "Plugin." + pluginInfo.pluginName, 
-                    fp, 
-                    abspath(pathname), 
-                    ('.py', 'U', 1)
-                )
-                #module = MyImport("Plugin." + pluginInfo.pluginName, fp, pathname)
-            finally:
-                fp.close()
-                del sys.path[0]
+            module = _LoadPluginModule(pluginInfo.pluginName)
         except:
             eg.PrintTraceback(
                 "Error while loading plugin-file %s." % pluginInfo.path,
                 1
             )
             return
-        pluginCls = PluginMetaClass.lastCls
+        pluginCls = module.__pluginCls__
         pluginInfo.module = module
         pluginInfo.pluginCls = pluginCls
         text = pluginCls.text
@@ -202,7 +200,7 @@ class PluginInfoBase(object):
                     pass
         else:
             pluginInfo.instances.append(plugin.info)
-        ActionMetaClass.lastDefinedPluginClassInfo = pluginInfo
+        ActionMetaClass.allActionClasses = pluginInfo.module.__allActionClasses__
         try:
             plugin.__init__()
             info.initFailed = False
@@ -319,8 +317,6 @@ def GetPluginInfo(pluginName):
 
 @eg.LogIt
 def OpenPlugin(pluginName, evalName, args, treeItem=None):
-    #from time import clock
-    #startTime = clock()
     info = GetPluginInfo(pluginName)
     if info is None:
         return None
@@ -328,7 +324,6 @@ def OpenPlugin(pluginName, evalName, args, treeItem=None):
         if not info.LoadModule():
             return None
     plugin = info.CreatePluginInstance(evalName, treeItem)
-    #eg.Notice(clock() - startTime)
     try:
         plugin.info.label = plugin.GetLabel(*args)
     except:
