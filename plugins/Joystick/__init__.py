@@ -39,6 +39,19 @@ I="""
 
 import eg
 import os
+import imp
+
+eg.RegisterPlugin(
+    name = "Joystick",
+    author = "Bitmonster",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
+    kind = "remote",
+    description = (
+        "Use joysticks and gamepads as input devices for EventGhost."
+    ),
+    icon = ICON,
+)
+
 
 EVT_DIRECTION       = 0
 EVT_BTN_RELEASED    = 1
@@ -50,19 +63,10 @@ EVT_Z_AXIS          = 5
 
 
 class Joystick(eg.PluginClass):
-    name = "Joystick"
-    author = "Bitmonster"
-    version = "1.0." + "$LastChangedRevision$".split()[1]
-    kind = "remote"
-    description = (
-        "Use joysticks and gamepads as input devices for EventGhost."
-    )   
-    icon = ICON
     
     def __start__(self):
         self.x = 0
         self.y = 0
-        import imp
         path = os.path.join(os.path.dirname(__file__), "_dxJoystick.pyd")
         self._dxJoystick = imp.load_dynamic("_dxJoystick", path)
         self._dxJoystick.RegisterEventFunc(self.EventFunc)

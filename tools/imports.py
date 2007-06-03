@@ -665,6 +665,8 @@ import wx.lib.editor.__init__
 import wx.lib.floatcanvas
 import wx.lib.floatcanvas.Resources
 import wx.lib.floatcanvas.__init__
+import wx.lib.floatcanvas.Utilities
+import wx.lib.floatcanvas.Utilities.__init__
 import wx.lib.masked
 import wx.lib.masked.combobox
 import wx.lib.masked.ctrl

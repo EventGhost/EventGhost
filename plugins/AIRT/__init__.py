@@ -3,6 +3,17 @@ import threading, Queue, time, string, binascii
 import wx
 from eg.WinAPI.SerialPort import SerialPort
 
+
+eg.RegisterPlugin(
+    name = "Advanced IR-Transceiver",
+    author = "Bitmonster",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
+    kind = "remote",
+    description = 'Hardware plugin for the "Advanced IR-Transceiver".',
+    canMultiLoad = True,
+)
+
+
 ATI_Remote_Table = {
     0x00: "A",
     0x01: "B",
@@ -155,12 +166,6 @@ COMSPEED = 115200
 
 class AIRT(eg.PluginClass):
     
-    name = "Advanced IR-Transceiver"
-    author = "Bitmonster"
-    version = "1.0." + "$LastChangedRevision$".split()[1]
-    kind = "remote"
-    description = 'Hardware plugin for the "Advanced IR-Transceiver".'
-    
     def __init__(self):
         self.devicename = 'AIRT'
         self.thread = None
@@ -300,7 +305,12 @@ class SendIR(eg.ActionClass):
         return bin2hexstring(data)
     
     
-    def Configure(self, data='\x00\x00\x00\x00\x00\x00\x00\x00', repeats=1, block=False):
+    def Configure(
+        self, 
+        data='\x00\x00\x00\x00\x00\x00\x00\x00', 
+        repeats=1, 
+        block=False
+    ):
         dialog = eg.ConfigurationDialog(self)
         datastr = bin2hexstring(data)
         dataCtrl = wx.TextCtrl(dialog, -1, datastr)

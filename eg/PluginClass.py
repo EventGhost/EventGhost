@@ -43,10 +43,6 @@ class PluginClass(object):
     #: the __info__.py and might get translated to the user's current language.
     description = None
     
-    #: If your plugin supports more than one instance in the 
-    #: configuration-tree, set 'canMultiLoad' to True in your class-definition.
-    canMultiLoad = False
-    
     #: don't try to manipulate this private variable yourself.
     info = None
     #: don't try to manipulate this private variable yourself.

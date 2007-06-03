@@ -24,6 +24,15 @@ import eg
 import wx
 import wx.gizmos
 
+eg.RegisterPlugin(
+    name = "System Tray Menu",
+    description = (
+        "Allows you to add custom menu entries to the tray menu of EventGhost."
+    ),
+    author = "Bitmonster",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
+)
+
 
 class Text:
     labelHeader = "Label"
@@ -91,12 +100,6 @@ class TreeListCtrl(wx.gizmos.TreeListCtrl):
     
     
 class SysTrayMenu(eg.PluginClass):
-    name = "System Tray Menu"
-    description = (
-        "Allows you to add custom menu entries to the tray menu of EventGhost."
-    )
-    author = "Bitmonster"
-    version = "1.0.0"
     text = Text
     
     def __init__(self):

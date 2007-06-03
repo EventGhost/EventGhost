@@ -119,6 +119,8 @@ class PluginInfoBase(object):
     isStarted = False
     label = None
     treeItem = None
+    canMultiLoad = False
+    
         
     @classmethod
     def LoadModule(pluginInfo):
@@ -137,6 +139,8 @@ class PluginInfoBase(object):
         pluginCls = module.__pluginCls__
         pluginInfo.module = module
         pluginInfo.pluginCls = pluginCls
+        if getattr(pluginCls, "canMultiLoad", False):
+            pluginInfo.canMultiLoad = True
         text = pluginCls.text
         if text is None:
             class text:
@@ -254,8 +258,8 @@ def GetPluginInfo(pluginName):
     # read in the __info__ of the plugin
     infoDict = {"eg": eg}
     pluginPath = join("plugins", pluginName)
-    if eg.debugLevel and pluginName in eg.pluginDatabase:
-        infoDict.update(eg.pluginDatabase[pluginName].__dict__)
+    if pluginName in eg.pluginDatabase.database:
+        infoDict.update(eg.pluginDatabase.GetPluginInfo(pluginName).__dict__)
         
     if not exists(join(pluginPath, "__info__.py")):
         PluginInfoMetaClass.raiseOnPluginInfoLoad = True
@@ -289,6 +293,7 @@ def GetPluginInfo(pluginName):
         version = infoDict.get("version", PluginInfoBase.version)
         kind = infoDict.get("kind", PluginInfoBase.kind)
         api = infoDict.get("api", PluginInfoBase.api)
+        canMultiLoad = infoDict.get("canMultiLoad", PluginInfoBase.canMultiLoad)
         path = pluginPath + "/"
     info.pluginName = pluginName
     info.englishName = info.name

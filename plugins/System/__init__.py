@@ -332,7 +332,8 @@ class OpenDriveTray(eg.ActionClass):
                     None, 
                     OPEN_EXISTING, 
                     0, 
-                    0)
+                    0
+                )
             except:
                 self.PrintError(
                     "Couldn't find drive %s:" % drive[:1].upper()

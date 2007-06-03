@@ -22,16 +22,17 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "d-box2 Remote Emulator"
-    author = "Bitmonster"
-    version = "1.0.0"
-    kind = "external"
+eg.RegisterPlugin(
+    name = "d-box2 Remote Emulator",
+    author = "Bitmonster",
+    version = "1.0.0",
+    kind = "external",
+    canMultiLoad = True,
     description = (
         "Control your d-box2 set-top box over Ethernet.\n"
         "\n"
         "<p><i>(Linux/Neutrino must be installed on the box)</i>"
-    )
+    ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACmklEQVR42o2TS0hVYRDH"
         "/3O+c859dX1mvhOzSw+kByZW1ibICIQIxSBqYUUQLdpkoW0Meu3b3AiCFrWqMFoItTGL"
@@ -48,7 +49,8 @@ class PluginInfo(eg.PluginInfo):
         "FUn61btULqQcIvizAX/BYR6+BuiUBTIkrzMw+H8g/nqtJDJuDJmEy8D3sOR3TkwjlZ6H"
         "IOf3LRSESnjE9/BJaU6KQ0mHR4LnhOLQ0uWIBFfE7/onfnxeNDm/ADdeEckvKwEjAAAA"
         "AElFTkSuQmCC"
-    )
+    ),
+)
 
 
 CMDS = (
@@ -121,7 +123,6 @@ class MyHTTPConnection(HTTPConnection):
 
 
 class DBox2(eg.PluginClass):
-    canMultiLoad = True
     
     def __init__(self):
         self.host = "127.0.0.1"

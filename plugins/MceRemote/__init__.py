@@ -26,11 +26,11 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "Microsoft MCE Remote"
-    author = "Bitmonster"
-    version = "1.0." + "$LastChangedRevision$".split()[1]
-    kind = "remote"
+eg.RegisterPlugin(
+    name = "Microsoft MCE Remote",
+    author = "Bitmonster",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
+    kind = "remote",
     description = (
         'Plugin for the Microsoft MCE remote.'
         '\n\n<p>'
@@ -39,7 +39,7 @@ class PluginInfo(eg.PluginInfo):
         '<br><a href="http://www.eventghost.org/wiki/MCE_Remote_FAQ">'
         'MCE Remote FAQ'
         '</a><p><center><img src="MCEv2.jpg"/></center>'
-    )
+    ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACfklEQVR42q2TS2gTQRyH"
         "f5N9NNlts20abYyxVirWShGLUh8XoSpUUBEVUU+5CXoQr+LNm14UtRCpRcGLHnqoiooN"
@@ -55,7 +55,8 @@ class PluginInfo(eg.PluginInfo):
         "Q/RR6jKo1zmgOrLYtAIzphSEZ2cQ8gGTio0E5SGFa6BrBiJSKxqm97mAWE83VUJjSEzG"
         "nXT5v34ugkqKDkPW4OEZCCIH4iEg1IPOttPQ0quXVe6910vh6EuX/F5U1hmWZV/a+LP0"
         "EBbRaJSs3Gf61/YbN1kg0OJlna4AAAAASUVORK5CYII="
-    )
+    ),
+)
 
 
 import os
@@ -158,7 +159,6 @@ dllPath = os.path.join(pluginDir, "MceIr.dll")
 
 
 class MceRemote(eg.PluginClass):
-    name = "Microsoft MCE Remote"
     
     class text:
         buttonTimeout = "Button release timeout (seconds):"
@@ -194,17 +194,36 @@ class MceRemote(eg.PluginClass):
             self.dll = WinDLL(dllPath)
             self.dll.MceIrRegisterEvents(self.hwnd)
             self.dll.MceIrSetRepeatTimes(1,1)
+            
+            #Bind to suspend notifications so we can go into suspend
+            eg.Bind("System.Suspend", self.OnSuspend)
+            eg.Bind("System.Resume", self.OnResume)
         wx.CallAfter(Init)
 
 
     def __stop__(self):
         self.isEnabled = False
+        
+        #Unbind from power notification events
+        eg.Unbind("System.Suspend", self.OnSuspend)
+        eg.Unbind("System.Resume", self.OnResume)
+        
         self.dll.MceIrUnregisterEvents()
         if self.frame:
             self.frame.Close()
             self.frame = None
         
-                    
+        
+    def OnSuspend(self, event):
+        if self.isEnabled:
+            self.dll.MceIrSuspend()
+    
+    
+    def OnResume(self, event):
+        if self.isEnabled:
+            self.dll.MceIrResume()       
+          
+                        
     @eg.LogIt
     def MyWndProc(self, hwnd, mesg, wParam, lParam):
         if mesg == win32con.WM_DESTROY:

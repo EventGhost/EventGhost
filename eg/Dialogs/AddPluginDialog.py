@@ -217,7 +217,7 @@ class AddPluginDialog(eg.Dialog):
         if (
             info
             and info.pluginCls 
-            and not info.pluginCls.canMultiLoad 
+            and not info.canMultiLoad 
             and info.instances
         ):
             wx.MessageBox(

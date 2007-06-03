@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+
 ICON = """iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeT
 AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH1QQIDRgEM71mAAAAADV0RVh0Q29tbWVudAAoYy
 kgMjAwNCBKYWt1YiBTdGVpbmVyCgpDcmVhdGVkIHdpdGggVGhlIEdJTVCQ2YtvAAACHElEQVQ4y42Q
@@ -34,7 +36,17 @@ ERRAsiBiOy559qBJjVWmMrmyAQtNboYBcmgojQdMrZ8083Anyan5/D8zxaWpqxlEKLoPVOfNd1iZyO
 MDPzDeBHow7efv3yuc9xnGhX10U8z8MAGMPOYchkFlhaygG8bgSoVavVu5MT448mJ8YvA1cadJUBrg
 Jrhy/+AqGrAMOnH86mAAAAAElFTkSuQmCC"""
 
-import eg
+eg.RegisterPlugin(
+    name = "Mouse",
+    author = "Bitmonster",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
+    description = (
+        "Gives you actions to control the mouse pointer and emulation of "
+        "mouse events."
+    ),
+    kind = "core",
+    icon = ICON,
+)
 import wx
 
 from sys import maxint
@@ -139,15 +151,6 @@ class MouseThread(Thread):
 # Plugin: Mouse
 #=============================================================================
 class Mouse(eg.PluginClass):
-    name = "Mouse"
-    author = "Bitmonster"
-    version = "1.0." + "$LastChangedRevision$".split()[1]
-    description = (
-        "Gives you actions to control the mouse pointer and emulation of "
-        "mouse events."
-    )
-    kind = "core"
-    icon = ICON
     
     def __init__(self):
         self.AddAllActions()

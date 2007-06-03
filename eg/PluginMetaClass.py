@@ -27,9 +27,11 @@ class PluginMetaClass(type):
     The metaclass of PluginClass that allows us to monitor the definition of a
     new plugin.
     """
+    lastCreatedCls = None
     
     def __new__(metacls, name, bases, dict):
         newClass = type.__new__(metacls, name, bases, dict)
         # store the plugin class as __pluginCls__ in the plugins module
         sys.modules[newClass.__module__].__pluginCls__ = newClass
+        PluginMetaClass.lastCreatedCls = newClass
         return newClass

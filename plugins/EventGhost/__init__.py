@@ -30,6 +30,14 @@ import wx
 
 from eg import ContainerItem, FolderItem, MacroItem, RootItem, AutostartItem
 
+eg.RegisterPlugin(
+    name = "EventGhost",
+    description = ("Here you find actions that mainly control the core "
+        "functionality of EventGhost."),
+    kind = "core",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
+)
+
 
 class EventGhost(eg.PluginClass):
     """
@@ -38,14 +46,7 @@ class EventGhost(eg.PluginClass):
     Here you find actions that mainly control the core functionality of 
     EventGhost.
     """
-    name = "EventGhost"
-    description = (
-        "Here you find actions that mainly control the core "
-        "functionality of EventGhost."    
-    )
-    kind = "core"
-    version = "1.0." + "$LastChangedRevision$".split()[1]
-        
+    pass
 
 
 class PythonCommand(eg.ActionWithStringParameter):

@@ -94,7 +94,6 @@ class EventGhost(object):
         self.stopExecutionFlag = False
         self.lastFoundWindows = []
         self.currentConfigureItem = None
-        self.pluginDatabase = {}
         
         from Version import version, buildNum, compileTime, svnRevision
         self.version = version
@@ -206,6 +205,9 @@ class EventGhost(object):
 
         self.actionList = []
         
+        from PluginDatabase import PluginDatabase
+        self.pluginDatabase = PluginDatabase()
+        
         
     def StartGui(self):
         self.InitWin32Com()
@@ -229,15 +231,11 @@ class EventGhost(object):
         eventThread.startupEvent = self.startupArguments.startupEvent
         self.TriggerEvent = eventThread.TriggerEvent
         self.TriggerEnduringEvent = eventThread.TriggerEnduringEvent
-        
+                    
         self.__class__.__setattr__ = self.__post__setattr__
         
         config = self.config
 
-        if self.debugLevel:
-            import PluginDatabase
-            PluginDatabase.ScanPlugins()
-            
         startupFile = self.startupArguments.startupFile
         if (
             startupFile is None 
@@ -451,6 +449,10 @@ class EventGhost(object):
         return True
         
         
+    def RegisterPlugin(self, **kwargs):
+        pass
+    
+    
     def RegisterEvent(self, eventString, eventHandler):
         eventTable = self.eventTable
         if eventString not in eventTable:

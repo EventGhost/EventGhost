@@ -24,14 +24,14 @@
 # start the main program
 import sys
 import imp
-from os.path import dirname, abspath
+from os.path import dirname, abspath, join
 
 if hasattr(sys, "frozen"):
-    path = dirname(sys.executable)
+    programPath = dirname(unicode(sys.executable, sys.getfilesystemencoding()))
 else:
-    path = abspath(dirname(sys.argv[0])) 
+    programPath = dirname(unicode(__file__, sys.getfilesystemencoding()))
     
-imp.load_source("Main", path + "/eg/Main.py")
+imp.load_source("Main", join(programPath, "eg", "Main.py"))
 
 print "should never come here"
 # The "imports" module file is created by the tools/MakeImports.py script
