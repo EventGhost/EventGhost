@@ -22,16 +22,17 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "Test Patterns"
-    author = "Bitmonster"
-    version = "0.0.1"
-    description = "Plugin to show some test patterns."
+eg.RegisterPlugin(
+    name = "Test Patterns",
+    author = "Bitmonster",
+    version = "0.0.1",
+    description = "Plugin to show some test patterns.",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAV0lEQVR42mNkoBAwgogD"
         "Bw78B9H29g5Qwf/I0gz/GVH5SPKMowaMGkA9A4BK/qNogCpgZECXhvCBFoJpBwcHmAEH"
         "YEYC1drDmED1jQwI0MCABQweA8gHAM1iaBEreN/nAAAAAElFTkSuQmCC"
-    )
+    ),
+)
 
 
 import wx

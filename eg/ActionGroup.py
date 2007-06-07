@@ -46,7 +46,7 @@ class ActionInfo(object):
     
 def CreateAction(actionCls, plugin):
     if not issubclass(actionCls, ActionClass):
-        eg.Notice("create new class from " + str(actionCls))
+        eg.DebugNote("creating new action class from " + str(actionCls))
         actionCls = new.classobj(
             actionCls.__name__,
             (actionCls, ActionClass), 

@@ -601,7 +601,7 @@ class FindWindow(eg.ActionClass):
         if not item.IsOk():
             return
         hwnd = tree.GetPyData(item)
-        eg.Notice("HWND:", hwnd)
+        eg.DebugNote("HWND:", hwnd)
         if tree.GetItemParent(item) == tree.root:
             # only selected a program
             pid = hwnd

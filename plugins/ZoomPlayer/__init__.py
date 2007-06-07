@@ -22,29 +22,32 @@
 
 import eg
     
-class PluginInfo(eg.PluginInfo):
-    name = "Zoom Player"
-    author = "Bitmonster"
-    version = "1.0.0"
-    kind = "program"
-    description = """\
-Adds actions to control the famous <a href="http://www.inmatrix.com/">Zoom Player</a>.
-
-<p>
-<b>Notice:</b><br>
-To make it work, you have to enable TCP control in Zoom Player. Either enable it
-in the options of Zoom Player under:
-<p>
-<i>Option/Setup => Values & Tools => Interface => Enable External TCP Control</i>
-<P>
-or call the executable with the option <i>/TCP:[port]</i>
-<p>
-<b>Hint:</b><br>
-Disable scroll acceleration in Zoom Player. Otherweise scrolling in navigators 
-might be jumpy if you use autorepeat in EventGhost (which has a more 
-sophisticated scroll acceleration). You find the setting in Zoom Player under:<br>
-<i>Option/Setup => OSD => Navigators => Settings => Disable Scroll Acceleration</i>
-"""
+eg.RegisterPlugin(
+    name = "Zoom Player",
+    author = "Bitmonster",
+    version = "1.0.0",
+    kind = "program",
+    description = (
+        'Adds actions to control the famous '
+        '<a href="http://www.inmatrix.com/">Zoom Player</a>.'
+        '\n<p>'
+        '<b>Notice:</b><br>'
+        'To make it work, you have to enable TCP control in Zoom Player. '
+        'Either enable it in the options of Zoom Player under:'
+        '<p>'
+        '<i>Option/Setup => Values & Tools => Interface => Enable External '
+        'TCP Control</i>'
+        '<p>'
+        'or call the executable with the option <i>/TCP:[port]</i>'
+        '<p>'
+        '<b>Hint:</b><br>'
+        'Disable scroll acceleration in Zoom Player. Otherweise scrolling in '
+        'navigators might be jumpy if you use autorepeat in EventGhost (which '
+        'has a more sophisticated scroll acceleration). You find the setting '
+        'in Zoom Player under:<br>'
+        '<i>Option/Setup => OSD => Navigators => Settings => Disable Scroll '
+        'Acceleration</i>'
+    ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACYklEQVR42o2TX2hSYRTA"
         "j8vrjSHln0J9EIyVTFMhKrS5Wo4KtmKMag8tF0S+2INEFAXlNHzuxWD24Esog1qtHiJ7"
@@ -60,7 +63,8 @@ sophisticated scroll acceleration). You find the setting in Zoom Player under:<b
         "ufyq2WzWy2QyKJfLGyS8lvPoQQhOtgn5xbUpRomFk+haJeFw+HCroNuos91sQ8lwUyIQ"
         "CCAWi72NRCLD/xJ0klxhg/jQ2Lfx5X8ErRIpsp17D8vIyh8RDvE1Ol5jegAAAABJRU5E"
         "rkJggg=="
-    )
+    ),
+)
 
 # ===================================================================
 # ZoomPlayer TCP/IP Interface

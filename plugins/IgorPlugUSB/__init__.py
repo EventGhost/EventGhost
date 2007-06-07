@@ -22,15 +22,16 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "IgorPlug-USB"
-    author = "Bitmonster"
-    version = "0.0.1"
-    kind = "remote"
+eg.RegisterPlugin(
+    name = "IgorPlug-USB",
+    author = "Bitmonster",
+    version = "0.0.1",
+    kind = "remote",
     description = (
         'Plugin for <a href="http://www.cesko.host.sk/">'
         'Igor Cesko\'s USB IR</a> receiver.'
-    )
+    ),
+)
 
 
 from thread import start_new_thread

@@ -90,7 +90,8 @@ def GetMyRepresentation(value):
     return "=" + repr(value)
                 
                 
-def Notice(*args):
+def DebugNote(*args):
+    """Logs a message if debugLevel is set."""
     t = threading.currentThread()
     s = [time.strftime("%H:%M:%S:")]
     s.append(str(t.getName()) + ":")
@@ -127,7 +128,7 @@ def LogIt(func):
     
     def LogItWrapper(*args, **kwargs):
         fname, argString = GetFuncArgString(func, args, kwargs)
-        Notice(fname + argString)
+        DebugNote(fname + argString)
         return func(*args, **kwargs)
     return LogItWrapper
         
@@ -138,9 +139,9 @@ def LogItWithReturn(func):
     
     def LogItWrapper(*args, **kwargs):
         fname, argString = GetFuncArgString(func, args, kwargs)
-        Notice(fname + argString)
+        DebugNote(fname + argString)
         res = func(*args, **kwargs)
-        Notice(fname + " => " + repr(res))
+        DebugNote(fname + " => " + repr(res))
         return res
     return LogItWrapper
         
@@ -152,7 +153,7 @@ def TimeIt(func):
         startTime = time.clock()
         fname, argString = GetFuncArgString(func, args, kwargs)
         res = func(*args, **kwargs)
-        Notice(fname + " :" + repr(time.clock() - startTime))
+        DebugNote(fname + " :" + repr(time.clock() - startTime))
         return res
     return TimeItWrapper
 

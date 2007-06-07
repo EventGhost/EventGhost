@@ -1,5 +1,5 @@
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2007 Lars-Peter Voss <bitmonster@eventghost.org>
 # 
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,25 +20,50 @@
 # $LastChangedRevision: 133 $
 # $LastChangedBy: bitmonster $
 
+from __future__ import with_statement
 import eg
 import sys
 import os
-from os.path import isdir, join, exists, abspath
-import cPickle as pickle
 import imp
+import cPickle as pickle
+from os.path import isdir, join, exists, abspath
+from base64 import b64decode
+from cStringIO import StringIO
+import Image
 
 from PluginTools import _LoadPluginModule
-
-class RegisterPluginDone(Exception):
-    pass
 
 
 
 class PluginFileInfo:
+    # some informational fields
+    name = "unknown name"
+    author = "unknown author"
+    version = "unknow version"
+    
+    # kind gives a hint in which group the plugin should be shown in
+    # the AddPluginDialog
+    kind = "other"
 
     def __init__(self, pluginDir):
-        self.module = None
         self.dirname = pluginDir
+        
+        # first try to find the deprecated "__info__.py" file
+        infoPyPath = join(eg.PLUGIN_DIR, pluginDir, "__info__.py")
+        if exists(infoPyPath):
+            infoDict = {}
+            try:
+                execfile(infoPyPath, infoDict)
+            except:
+                eg.PrintError(eg.text.Error.pluginInfoPyError % pluginDir)
+                eg.PrintTraceback()
+            else:
+                del infoDict["__builtins__"]
+                try:
+                    self.RegisterPlugin(**infoDict)
+                except PluginFileInfo.RegisterPluginDone:
+                    return
+                
         old = eg.RegisterPlugin
         eg.SetAttr("RegisterPlugin", self.RegisterPlugin)
         try:
@@ -46,26 +71,53 @@ class PluginFileInfo:
                 module = _LoadPluginModule(self.dirname)
             finally:
                 eg.SetAttr("RegisterPlugin", old)
-        except RegisterPluginDone:
+        # It is expected that the loading will raise RegisterPluginDone
+        # because RegisterPlugin is called inside the module
+        except PluginFileInfo.RegisterPluginDone:
             return
         except:
-            eg.PrintTraceback(
-                "Error while loading plugin-file %s." % self.dirname
-            )
+            eg.PrintTraceback(eg.text.Error.pluginLoadError % self.dirname)
             return
         
         
-    def RegisterPlugin(self, **kwargs):
-        self.__dict__.update(kwargs)
-        raise RegisterPluginDone
+    class RegisterPluginDone(Exception):
+        """
+        RegisterPlugin will raise this exception to interrupt the loading 
+        of the plugin module file.
+        """
+        pass
+
+
+    def RegisterPlugin(
+        self, 
+        name = None,
+        description = None,
+        kind = "other",
+        author = "unknown author",
+        version = "unknown version",
+        icon = None,
+        canMultiLoad = False,
+    ):
+        if description is None:
+            description = name
+        self.name = name
+        self.description = description
+        self.kind = kind
+        self.author = author
+        self.version = version
+        self.icon = icon
+        self.canMultiLoad = canMultiLoad
+        # we are done with this plugin module, so we can interrupt further 
+        # processing by raising RegisterPluginDone
+        raise PluginFileInfo.RegisterPluginDone
     
     
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        if "module" in state:
-            del state["module"]
-        return state
-    
+#    def __getstate__(self):
+#        state = self.__dict__.copy()
+#        if "module" in state:
+#            del state["module"]
+#        return state
+#    
     
     def __repr__(self):
         return "\n".join(
@@ -80,10 +132,11 @@ class PluginFileInfo:
         )
         
         
+        
 class PluginDatabase:
     
     @eg.TimeIt  
-    def __init__(self, forceRebuild=False):
+    def __init__(self, forceRebuild=False):#(eg.debugLevel > 0)):
         """
         Scans the plugin directory to get all needed information for all 
         plugins.
@@ -94,17 +147,12 @@ class PluginDatabase:
         """
         
         # load the database file if exists
-        databasePath = join(eg.APPDATA, eg.APP_NAME, "PluginDatabase")
-        if not forceRebuild and exists(databasePath):
-            databaseFile = open(databasePath, "rb")
-            try:
-                database = pickle.load(databaseFile)
-            except:
-                database = {}
-            databaseFile.close()
-        else:
-            database = {}
-            
+        self.database = {}
+        self.databasePath = join(eg.APPDATA, eg.APP_NAME, "PluginDatabase")
+        if not forceRebuild:
+            self.Load()
+        database = self.database
+        
         # a new database will be created at the end if a plugin has changed
         hasChanged = False
         newDatabase = {}
@@ -131,7 +179,7 @@ class PluginDatabase:
                     
             
             # if the highest timestamp doesn't differ from the database's one
-            # we can skip further processing
+            # we can use the old entry and skip further processing
             if dirname in database:
                 if database[dirname].timestamp == highestTimestamp:
                     newDatabase[dirname] = database[dirname]
@@ -142,17 +190,41 @@ class PluginDatabase:
             pluginInfo = PluginFileInfo(dirname)
             pluginInfo.timestamp = highestTimestamp
             newDatabase[dirname] = pluginInfo
-            #print repr(pluginInfo)
+            print repr(pluginInfo)
             
         # only save if something has changed
-        if hasChanged or len(database):
-            eg.Notice("writing new plugin database")
-            databaseFile = open(databasePath, "wb")
-            pickle.dump(newDatabase, databaseFile, -1)
-            databaseFile.close()
-        
+        needsSave = hasChanged or len(database)
         self.database = newDatabase
+        if needsSave:
+            self.Save()
+                
         
+    @eg.LogIt
+    def Save(self):
+        """
+        Save the database to disc.
+        """
+        with file(self.databasePath, "wb") as databaseFile:
+            pickle.dump(eg.versionStr, databaseFile, -1)
+            pickle.dump(self.database, databaseFile, -1)
         
+    
+    def Load(self):
+        """
+        Load the database from disc.
+        """
+        if not exists(self.databasePath):
+            return
+        with file(self.databasePath, "rb") as databaseFile:
+            try:
+                version = pickle.load(databaseFile)
+                if version != eg.versionStr:
+                    eg.DebugNote("PluginDatabase version mismatch")
+                    return
+                self.database = pickle.load(databaseFile)
+            except:
+                eg.PrintTraceback()
+        
+    
     def GetPluginInfo(self, pluginName):
         return self.database[pluginName]

@@ -103,17 +103,15 @@ class AddPluginDialog(eg.Dialog):
         self.typeIds = typeIds
         itemToSelect = typeIds["remote"]
         
-        defaultTarget = typeIds["other"]
         for info in eg.GetPluginInfoList():
-            idx = 0
-            target = defaultTarget
             if info.kind in ("hidden", "core"):
                 continue
-            name = info.name
             if info.icon:
                 idx = imageList.Add(PilToBitmap(info.icon))
-            target = typeIds.get(info.kind, target)
-            id = treeCtrl.AppendItem(target, info.name, idx)
+            else:
+                idx = 0
+
+            id = treeCtrl.AppendItem(typeIds[info.kind], info.name, idx)
             treeCtrl.SetPyData(id, info)
             if info.path == config.lastSelection:
                 itemToSelect = id

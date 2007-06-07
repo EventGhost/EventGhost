@@ -44,12 +44,13 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "Yamaha RX-V1000 Serial"
-    author = "Mark Clarkson"
-    version = "0.0.1"
-    kind = "external"
-    description = "Control Yamaha RX-V1000 receivers using RS232."
+eg.RegisterPlugin(
+    name = "Yamaha RX-V1000 Serial",
+    author = "Mark Clarkson",
+    version = "0.0.1",
+    kind = "external",
+    description = "Control Yamaha RX-V1000 receivers using RS232.",
+)
 
 import wx
 import thread

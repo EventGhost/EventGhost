@@ -22,11 +22,11 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "Streamzap PC Remote"
-    author = "Bitmonster"
-    version = "1.0.0"
-    kind = "remote"
+eg.RegisterPlugin(
+    name = "Streamzap PC Remote",
+    author = "Bitmonster",
+    version = "1.0.0",
+    kind = "remote",
     description = (
         'Hardware plugin for the '
         '<a href="http://www.streamzap.com/products/pcremote/">'
@@ -34,12 +34,13 @@ class PluginInfo(eg.PluginInfo):
         '\n\n<p>'
         '<center><p><a href=http://www.streamzap.com/products/pcremote/>'
         '<img src="crr.jpg" alt="Streamzap" /></a></center>'
-    )
+    ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAOElEQVR42mNkoBAwDl4D"
         "/gMRIxEWMFKimWgD8BnISIlmkg3AZhh9DaBPIBJjK0EDSDFkEOcFYgEAwk8kEWJRdKUA"
         "AAAASUVORK5CYII="
-    )
+    ),
+)
 
 
 import thread

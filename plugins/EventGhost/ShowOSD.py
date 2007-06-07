@@ -159,7 +159,11 @@ class OSDFrame(wx.Frame):
         _,_,w,_ = r.GetBox()
         self.hasShape = self.SetShape(r)
         self.bitmap = bitmap
-        d = GetMonitorDimensions()[displayNumber]
+        monitorDimensions = GetMonitorDimensions()
+        try:
+            d = monitorDimensions[displayNumber]
+        except IndexError:
+            d = monitorDimensions[0]
         xOffset, yOffset = offset
         if alignment == 0: 
             # Top Left

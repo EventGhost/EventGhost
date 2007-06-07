@@ -24,15 +24,15 @@
 # definition of an eg.PluginInfo subclass.
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "Foobar2000"
-    author = "MonsterMagnet"
-    version = "1.0.0"
-    kind = "program"
+eg.RegisterPlugin(
+    name = "Foobar2000",
+    author = "MonsterMagnet",
+    version = "1.0.0",
+    kind = "program",
     description = (
         'Adds actions to control the <a href="http://www.foobar2000.org/">'
         'Foobar2000</a> audio player.'
-    )
+    ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAC0UlEQVR42m1TO0hjURA9"
         "1/8nH+OPJdoYRIWgLgZhwUJsLFZUkG0iYiGCgnZpJKRQUDfEVhAsDWIRFSzURtlO0YiC"
@@ -50,7 +50,8 @@ class PluginInfo(eg.PluginInfo):
         "CTXdNr7J5XLh9vZWWuI50YMveXh4wMXFRVzR/35ra+vPvr4+cUF/dQxC7iCdTouVPL5c"
         "yPH8/Izz83OcnZ39YQA7LS89nu9UaGQ7GUBnwm3prXGw0BSZq6urEH09fwEfgnAhbyFf"
         "mQAAAABJRU5ErkJggg=="
-    )
+    ),
+)
 
 
 # Since we also have to do some GUI stuff, we also need 'wx'

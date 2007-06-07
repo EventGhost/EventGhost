@@ -22,15 +22,15 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "DVBViewer"
-    author = "Bitmonster"
-    version = "1.0.1"
-    kind = "program"
+eg.RegisterPlugin(
+    name = "DVBViewer",
+    author = "Bitmonster",
+    version = "1.0.1",
+    kind = "program",
     description = (
         'Adds actions to control '
         '<a href="http://www.dvbviewer.com/">DVBViewer Pro/GE</a>.'
-    )
+    ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAADK0lEQVR42j2TXWgcVRTH"
         "f/fOzM5uNknJxvoRt6kaCwlBjFJRsIgasUFLH1KFCqIIBTHUh9aCRQTRPviSokiLFREh"
@@ -50,7 +50,8 @@ class PluginInfo(eg.PluginInfo):
         "DjfyRncHmEbWhdlHZ5WrrrZkU9aOIi2stFWXDZcK+zpQRP/oYFncVvueTm3/fpHyuGRo"
         "YGVlk+dkZ+kiztQgv0IyleVOLNmEesH/3ZEAJPEK/gVNWWvcNcmGsgAAAABJRU5ErkJg"
         "gg=="
-    )
+    ),
+)
     
 
 CMDS = (

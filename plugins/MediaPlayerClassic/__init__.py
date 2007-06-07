@@ -21,11 +21,11 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "Media Player Classic"
-    author = "MonsterMagnet"
-    version = "1.0.1"
-    kind = "program"
+eg.RegisterPlugin(
+    name = "Media Player Classic",
+    author = "MonsterMagnet",
+    version = "1.0.1",
+    kind = "program",
     description = (
         'Adds actions to control '
         '<a href="http://sourceforge.net/projects/guliverkli/">'
@@ -37,13 +37,14 @@ class PluginInfo(eg.PluginInfo):
         'Bugreports</a></p>'
         '<p><a href="http://sourceforge.net/projects/guliverkli/">'
         'Media Player Classic SourceForge Project</a></p>'
-    )
+    ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAhElEQVR42rWRgQqAIAwF"
         "fV+++eWr1V6kiM6gQaTVHYehJEdV7bUG18hCInIDQMNhA+L7cQHBETQrBWERDXANjcxm"
         "Ee6CyFxd6ArkynZT5l7KK9gFbs3CrGgEPLzM1FonAn9kz59stqhnhdhEwK/j3m0Tgj8K"
         "OPmCr4eYpmMaASt3JS44ADcFoxFdcIMPAAAAAElFTkSuQmCC"
-    )
+    ),
+)
     
     
 MyActionList = (

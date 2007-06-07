@@ -87,7 +87,7 @@ class EventThread(ThreadWorker):
         event.startProcessed.wait(5.0)
         if not event.startProcessed.isSet():
             if eg.debugLevel:
-                eg.Notice("timeout TriggerEventWait")
+                eg.DebugNote("timeout TriggerEventWait")
                 traceback.print_stack()
         return event
     
@@ -113,7 +113,7 @@ class EventThread(ThreadWorker):
     @eg.LogIt
     def StopSession(self):
         eg.actionThread.CallWait(eg.actionThread.StopSession)
-        eg.Notice("StopSession done")
+        eg.DebugNote("StopSession done")
 
 
     

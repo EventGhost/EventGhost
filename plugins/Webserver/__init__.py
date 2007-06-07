@@ -22,14 +22,14 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "Webserver"
-    author = "Bitmonster"
-    version = "1.0.0"
+eg.RegisterPlugin(
+    name = "Webserver",
+    author = "Bitmonster",
+    version = "1.0.0",
     description = (
         "Implements a small webserver, that you can use to generate events "
         "through HTML-pages."
-    )
+    ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeT"
         "AAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH1gEECzsZ7j1DbAAAAu1JREFUOMul"
@@ -48,7 +48,8 @@ class PluginInfo(eg.PluginInfo):
         "HQ3gdQwrEZxs39j6fKdSqbSU+5/Y++uHsieateuHg9VYPCpTqSSp6QSJmIqhm+z9VnJu"
         "V6o9Jv2beq++WywWf3IcZ/hgmNKh9JnVk4+d31CCyRXDljEAx9T6zrC+dzYrribCcn9z"
         "c/ObTqdzALjiIQmNArF76gcMYAB0gT7g3l/+ByWIP9hU8ktfAAAAAElFTkSuQmCC"
-    )
+    ),
+)
 
 import wx
 import BaseHTTPServer

@@ -22,13 +22,13 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "Network Event Sender"
-    version = "1.0.0"
-    author = "Bitmonster"
+eg.RegisterPlugin(
+    name = "Network Event Sender",
+    version = "1.0.0",
+    author = "Bitmonster",
     description = (
         "Sends events to an Network Event Receiver plugin through TCP/IP."
-    )
+    ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QAAAAAAAD5Q7t/"
         "AAAACXBIWXMAAAsSAAALEgHS3X78AAAAB3RJTUUH1gIQFgQOuRVmrAAAAVRJREFUOMud"
@@ -39,7 +39,8 @@ class PluginInfo(eg.PluginInfo):
         "geKxqqpCYnpSYL2/feIbleuTrZErjCwxEpGpNzp0ew7tjshaKOb8BsgIBnePdXAlz05g"
         "XV1ZEyplWaZQzGUVL8lx+qhv7yM78NRqtYJ30KhVucynAq8AoJ+fBhqUjLKe/uXPZzI7"
         "e/tBBumN9U1s2/at9FiBQANM0+S/UsL4/qIvHUp+5VOP+PAAAAAASUVORK5CYII="
-    )
+    ),
+)
 
 
 import wx

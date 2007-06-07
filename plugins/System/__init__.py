@@ -22,15 +22,15 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "System"
-    author = "Bitmonster"
-    version = "1.0." + "$LastChangedRevision$".split()[1]
+eg.RegisterPlugin(
+    name = "System",
+    author = "Bitmonster",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
     description = (
         "Controls different aspects of your system, like sound card, "
         "graphics card, power management, et cetera."
-    )
-    kind = "core"
+    ),
+    kind = "core",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QAAAAAAAD5Q7t/"
         "AAAACXBIWXMAAAsSAAALEgHS3X78AAAAB3RJTUUH1QsEFTMTHK3EDwAAAUhJREFUOMul"
@@ -41,7 +41,8 @@ class PluginInfo(eg.PluginInfo):
         "YRp47Q7NVgdEhdAIICjF+BIG1HunOST6fkCl419vMPgFz61P1U0aUKvVuDrfm0jUaDRG"
         "AIXqZTk9ZStnAFQun50H7na2d/F9H9d1icViQ3UCOI6jeyUej3NyegyQUrl8VtbXNmaa"
         "xHKliAWkypXi2YzTnPoC/MF4O/QjGPgAAAAASUVORK5CYII="
-    )
+    ),
+)
 
 
 import time

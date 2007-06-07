@@ -123,7 +123,7 @@ class MyApp(wx.App):
         # This method gets called from MessageReceiver on a
         # WM_QUERYENDSESSION win32 message.
         if eg.document.CheckFileNeedsSave() == wx.ID_CANCEL:
-            eg.Notice("User cancelled shutdown in OnQueryEndSession")
+            eg.DebugNote("User cancelled shutdown in OnQueryEndSession")
             return 0
         return 1
 
@@ -155,23 +155,23 @@ class MyApp(wx.App):
     @eg.LogIt
     def OnExit(self):
         if not eg.startupArguments.translate:
-            eg.Notice("Triggering OnClose")    
+            eg.DebugNote("Triggering OnClose")    
             egEvent = eg.eventThread.TriggerEvent("OnClose")
             while not egEvent.isEnded:
                 self.Yield()
-            eg.Notice("Calling exit funcs")    
+            eg.DebugNote("Calling exit funcs")    
                 
             for func in self.onExitFuncs:
-                eg.Notice(func)
+                eg.DebugNote(func)
                 func()
-            eg.Notice("Calling eg.DeInit()")    
+            eg.DebugNote("Calling eg.DeInit()")    
             eg.DeInit()
         
-        eg.Notice("COM interface count: %s" % pythoncom._GetInterfaceCount())
+        eg.DebugNote("COM interface count: %s" % pythoncom._GetInterfaceCount())
         
-        eg.Notice("Threads:")
+        eg.DebugNote("Threads:")
         for t in threading.enumerate():
-            eg.Notice(" ", t, t.getName())
+            eg.DebugNote(" ", t, t.getName())
                 
         while self.Pending():
             self.Dispatch()
@@ -180,12 +180,12 @@ class MyApp(wx.App):
         currentThread = threading.currentThread()
         for t in threading.enumerate():
             if t is not currentThread and not t.isDaemon() and t.isAlive():
-                eg.Notice("joining: " + str(t))
+                eg.DebugNote("joining: " + str(t))
                 t.join(5.0)
         
-        eg.Notice("Threads:")
+        eg.DebugNote("Threads:")
         for t in threading.enumerate():
-            eg.Notice(" ", t, t.getName())
-        eg.Notice("Done!")
+            eg.DebugNote(" ", t, t.getName())
+        eg.DebugNote("Done!")
         sys.exit(0)
         

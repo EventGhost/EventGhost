@@ -37,12 +37,12 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "Denon AV Serial"
-    author = "Oliver Wagner"
-    version = "0.6"
-    kind = "external"
-    description = "Control Denon A/V Amps/Receivers via RS232"
+eg.RegisterPlugin(
+    name = "Denon AV Serial",
+    author = "Oliver Wagner",
+    version = "0.6",
+    kind = "external",
+    description = "Control Denon A/V Amps/Receivers via RS232",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAA"
         "AAd0SU1FB9YDBAsPCqtpoiUAAAAWdEVYdFNvZnR3YXJlAFBhaW50Lk5FVCAyLjZsqHS1"
@@ -64,7 +64,8 @@ class PluginInfo(eg.PluginInfo):
         "uJQA+cdIFYF8GC3F/Xs3vDM8kaZ4sP+YD/4RX5B+Wk1l3SXnkG2zu7uwZrHuqa1rILuw"
         "hNSsfOSxsQQoPkN2WI4iPp7EzBx+dPRLb7zK0orl1Z2FEmwvTM4HZ0kzZvM7hqZfMbaJ"
         "jEw8YHh8kvrGFmr1euaf/iPZAW12uzD2t1n4DwtSpLoLWTYZAAAAAElFTkSuQmCC"
-    )
+    ),
+)
 
 
 import wx

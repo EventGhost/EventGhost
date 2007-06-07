@@ -59,6 +59,9 @@ class Text:
         InScript = 'Error in Script: "%s"'
         pluginNotActivated = 'Plugin "%s" is not activated'
         pluginStartError = "Error starting plugin: %s"
+        pluginLoadError = "Error while loading plugin-file %s."
+        pluginInfoPyError = "Error while reading __info__.py for plugin %s"
+        pluginNotFound = "Can't find plugin: %s"
         
     class Plugin:
         pass

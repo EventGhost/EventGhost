@@ -1,14 +1,14 @@
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "SageTV"
-    author = "Bitmonster"
-    version = "0.0.1"
-    kind = "program"
+eg.RegisterPlugin(
+    name = "SageTV",
+    author = "Bitmonster",
+    version = "0.0.1",
+    kind = "program",
     description = (
         'Adds actions to control the <a href="http://www.sagetv.com/">'
         'SageTV Media Center</a>.'
-    )
+    ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAB3RJTUUH1wMXEAcEHYti"
         "bwAAABd0RVh0U29mdHdhcmUAR0xEUE5HIHZlciAzLjRxhaThAAAACHRwTkdHTEQzAAAA"
@@ -27,7 +27,8 @@ class PluginInfo(eg.PluginInfo):
         "y8P25GSEMwyMhkiEqtVXSKtcWYRdpVJVmFjjB45lpQoilLhsYtmgKGLCNJKYnvIsie+G"
         "qEKSqbBixUB0SiLKaK46nVbbQjSrQ0Juk/E1TZimidFq20JDQx+S5jzlbVMqlZq1j1FO"
         "iDOJv24WkUHsJnYR6UQmkUI4/mz9FwoIacGNmDGLAAAAAElFTkSuQmCC"
-    )
+    ),
+)
 
 
 from win32gui import FindWindow, SendMessageTimeout

@@ -22,18 +22,18 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "USB-UIRT"
-    author = "Jon Rhees"
-    version = "1.0.0"
-    kind = "remote"
+eg.RegisterPlugin(
+    name = "USB-UIRT",
+    author = "Jon Rhees",
+    version = "1.0.0",
+    kind = "remote",
     description = (
         'Hardware plugin for the <a href="http://www.usbuirt.com/">'
         'USB-UIRT</a> transceiver.'
         '\n\n<p>'
         '<a href="http://www.usbuirt.com/"><p>'
         '<center><img src="picture.jpg" alt="USB-UIRT" /></a></center>'
-    )
+    ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACbklEQVR42mXTa4hMYRzH"
         "8f9zzoxmsblMJrzYRHgj140XkiG1Vomd1OwoRVHKreSyRWSRvJHSZktKq0E7LvvCFG/k"
@@ -49,7 +49,8 @@ class PluginInfo(eg.PluginInfo):
         "FSUJfSutF1UEUW22H800mlwzbWfRYKVIhsh6I3YFpVGRyFUSRpfkPC4wo8oNAlMM5oh5"
         "fn93sTDGKjKTIZZ1lSKjijh534jlK/JuosaxamVVSv7/NXGtJwiI5rt/QdoW/AOsdcg6"
         "Kwb6cgAAAABJRU5ErkJggg=="
-    )
+    ),
+)
 
 
 import wx

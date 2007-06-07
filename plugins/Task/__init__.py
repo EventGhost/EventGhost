@@ -22,11 +22,11 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "Task Create/Switch Events"
-    author = "Bitmonster"
-    version = "1.0.0"
-    description = "Generates events if tasks are created or switched."
+eg.RegisterPlugin(
+    name = "Task Create/Switch Events",
+    author = "Bitmonster",
+    version = "1.0.0",
+    description = "Generates events if tasks are created or switched.",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABuklEQVR42o1Sv0tCYRQ9"
         "L1FccpCEB73wVy1NjTrUPxD1lgZp0dWKaAhXxWhoyWgoIUjHBEH65RSE0CAUgWIPLAqR"
@@ -38,7 +38,8 @@ class PluginInfo(eg.PluginInfo):
         "HYPrzF+pVHriSpLUxbGHJAgCIpFIr0EqlYI0KmH6Y1o5XC6XaaFBpW+1WqhWq7BYLLRI"
         "X9ciFQNRFJHP53FoO4T3xdsTu9lsolgswm63Kz1b9tPTI6xmAVzk+Eg+PbtUvQNWstxS"
         "xHv7B+1bEBfnVd8CK6vFrIhZ/w1wBAQrC42uqQAAAABJRU5ErkJggg=="
-    )
+    ),
+)
 
 
 import wx

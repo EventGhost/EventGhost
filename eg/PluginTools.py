@@ -55,13 +55,15 @@ def _LoadPluginModule(pluginDir):
     modulePath = join(eg.PLUGIN_DIR, pluginDir)
     filename = join(modulePath, "__init__.py")
     ActionMetaClass.allActionClasses = []
-    fp = file(filename, "U")
+    #fp = file(filename, "U")
     sys.path.insert(0, modulePath)
     try:
-        module = imp.load_module(moduleName, fp, filename, ('.py', 'U', 1))
+        #module = imp.load_module(moduleName, fp, filename, ('.py', 'U', 1))
+        module = imp.load_source(moduleName, filename)
     finally:
-        fp.close()
+        #fp.close()
         del sys.path[0]
+        pass
     module.__allActionClasses__ = ActionMetaClass.allActionClasses
     return module
     
@@ -226,28 +228,6 @@ class PluginInfoBase(object):
             return WX_ICON_PLUGIN
      
 
-
-class PluginInfoException(Exception):
-    pass
-
-
-class PluginInfoMetaClass(type):
-    lastPluginInfo = None
-    raiseOnPluginInfoLoad = False
-    
-    def __init__(cls, name, bases, dictionary):
-        PluginInfoMetaClass.__init__ = PluginInfoMetaClass.init2
-        
-    def init2(cls, name, bases, dictionary):
-        if PluginInfoMetaClass.raiseOnPluginInfoLoad:
-            PluginInfoMetaClass.lastPluginInfo = cls
-            raise PluginInfoException
-    
-    
-class PluginInfo(object):
-    __metaclass__ = PluginInfoMetaClass
-    
-
         
 def GetPluginInfo(pluginName):
     # first look, if we already have cached this plugin class
@@ -255,36 +235,13 @@ def GetPluginInfo(pluginName):
     if info is not None:
         return info
     
-    # read in the __info__ of the plugin
-    infoDict = {"eg": eg}
     pluginPath = join("plugins", pluginName)
-    if pluginName in eg.pluginDatabase.database:
-        infoDict.update(eg.pluginDatabase.GetPluginInfo(pluginName).__dict__)
-        
-    if not exists(join(pluginPath, "__info__.py")):
-        PluginInfoMetaClass.raiseOnPluginInfoLoad = True
-        try:
-            try:
-                execfile(join(pluginPath, "__init__.py"), infoDict)
-            finally:
-                PluginInfoMetaClass.raiseOnPluginInfoLoad = False
-        except PluginInfoException:
-            infoDict = PluginInfoMetaClass.lastPluginInfo.__dict__
-        except:
-            pass
-        #    eg.PrintError('Can\'t read __init__.py for plugin "%s"' % pluginName)
-        #    eg.PrintTraceback()
-        #    return None
-    else:
-        try:
-            execfile(join(pluginPath, "__info__.py"), infoDict)
-        except:
-            eg.PrintError(
-                'Can\'t read __info__.py for plugin "%s"' % pluginName
-            )
-            eg.PrintTraceback()
-            return None
+    if pluginName not in eg.pluginDatabase.database:
+        eg.PrintError(eg.text.Error.pluginNotFound)
+        return None
     
+    infoDict = eg.pluginDatabase.GetPluginInfo(pluginName).__dict__
+        
     # create a new sublclass of PluginInfo for this plugin class
     class info(PluginInfoBase):
         name = infoDict.get("name", PluginInfoBase.name)
@@ -307,9 +264,8 @@ def GetPluginInfo(pluginName):
     info.textCls = textCls
     
     # get the icon if any
-    if "icon" in infoDict:
-        data = b64decode(infoDict["icon"])
-        fd = StringIO(data)
+    if "icon" in infoDict and infoDict["icon"] is not None:
+        fd = StringIO(b64decode(infoDict["icon"]))
         info.icon = Image.open(fd).convert("RGBA")
         fd.close()
     else:

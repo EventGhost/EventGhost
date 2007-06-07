@@ -130,6 +130,7 @@ class EventGhost(object):
             def _DummyFunc(*args, **kwargs):
                 pass
             self.Notice = _DummyFunc
+            self.DebugNote = _DummyFunc
         else:
             import warnings
             warnings.simplefilter('error', UnicodeWarning)
@@ -142,13 +143,14 @@ class EventGhost(object):
                         fd.flush()
                 sys.stderr = writer()
                 
-            from Utils import Notice
-            self.Notice = Notice
+            from Utils import DebugNote
+            self.Notice = DebugNote
+            self.DebugNote = DebugNote
     
-            Notice("----------------------------------------")
-            Notice("        EventGhost started")
-            Notice("----------------------------------------")
-            Notice("Version:", self.versionStr)
+            DebugNote("----------------------------------------")
+            DebugNote("        EventGhost started")
+            DebugNote("----------------------------------------")
+            DebugNote("Version:", self.versionStr)
             
 
         import IconTools
@@ -198,7 +200,7 @@ class EventGhost(object):
         from WinAPI.SerialPort import EnumSerialPorts as GetAllPorts
         self.SerialPort.GetAllPorts = classmethod(GetAllPorts)
         
-        eg.Notice("Creating SendKeys parser")
+        eg.DebugNote("Creating SendKeys parser")
         from WinAPI.SendKeys import SendKeysParser
         _sendKeysObj = SendKeysParser()
         self.SendKeys = _sendKeysObj.Parse
@@ -294,7 +296,7 @@ class EventGhost(object):
                 mod = __import__("Dialogs.%s" % name, fromlist=[name])
             except ImportError:
                 raise AttributeError
-        eg.Notice("Loaded module %s" % name)
+        eg.DebugNote("Loaded module %s" % name)
         attr = getattr(mod, name)
         self.__dict__[name] = attr
         return attr
@@ -351,7 +353,6 @@ class EventGhost(object):
             OpenPlugin, 
             ClosePlugin, 
             GetPluginInfo,
-            PluginInfo,
             GetPluginInfoList
         )
         self.__dict__.update(locals())

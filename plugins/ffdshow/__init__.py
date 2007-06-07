@@ -22,16 +22,16 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "ffdshow"
-    author = "Bitmonster"
-    version = "1.0.0"
-    kind = "program"
+eg.RegisterPlugin(
+    name = "ffdshow",
+    author = "Bitmonster",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
+    kind = "program",
     description = (
         'Adds actions to control the '
         '<a href="http://ffdshow-tryout.sourceforge.net/">'
         'ffdshow DirectShow filter</a>.'
-    )
+    ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAADMElEQVR42nVSXUiTYRR+"
         "v+/bn6hbapqoTEf400R3YWmQ6E2gIoIk02Y3BZoadVEIGsxCZAkpSZB6YUiDdlFmNAzC"
@@ -51,8 +51,8 @@ class PluginInfo(eg.PluginInfo):
         "5wIUihE3ImaFv4zYDrwbPhcwUQIRDg+BKVoA/ADkgAD4DpwHvlK1wC/AC9yJ5T+PtgC7"
         "AJwC3gCnAQlgp/JjvZ6MkRtjdzTnJyU7Jji2v8P5j3EA/2/gD9tgef0euQO8AAAAAElF"
         "TkSuQmCC"
-    )
-
+    ),
+)
 
 
 

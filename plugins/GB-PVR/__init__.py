@@ -22,25 +22,26 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "GB-PVR"
+eg.RegisterPlugin(
+    name = "GB-PVR",
     description = (
         'Adds actions to control the '
         '<a href="http://www.gbpvr.com/">GB-PVR</a> mediacenter.'
         '\n\n<p>'
         '<a href="http://www.gbpvr.com/">'
         '<center><img src="logo_small.png" alt="GB-PVR" /></a></center>'
-    )
-    author = "Bitmonster"
-    version = "1.0.0"
-    kind = "program"
+    ),
+    author = "Bitmonster",
+    version = "1.0.0",
+    kind = "program",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAB3RJTUUH1wQPFDUmBR98"
         "RgAAABd0RVh0U29mdHdhcmUAR0xEUE5HIHZlciAzLjRxhaThAAAACHRwTkdHTEQzAAAA"
         "AEqAKR8AAAAEZ0FNQQAAsY8L/GEFAAAAVUlEQVR4nGNgGKzgPwE+SYaQpPk/ERi35v9E"
         "YHyGQBRs3Ph/37NnYAxiI2OiDMCmkSQDcGlmmDCBAhcANRNtALomZEyUAZTEAgMDhekA"
         "3RBCYoMEAABOirV0kXTs6QAAAABJRU5ErkJggg=="
-    )
+    ),
+)
     
     
 ACTIONS = (

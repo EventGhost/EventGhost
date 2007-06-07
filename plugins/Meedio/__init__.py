@@ -1,13 +1,13 @@
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "Meedio"
-    author = "jorel1969"
-    version = "0.0.1"
-    kind = "program"
+eg.RegisterPlugin(
+    name = "Meedio",
+    author = "jorel1969",
+    version = "0.0.1",
+    kind = "program",
     description = (
         'Adds actions to control <a href="http://www.meedio.com/">Meedio</a>.'
-    )
+    ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAABnRSTlMA/wD/AP83WBt9"
         "AAACG0lEQVR42nVSTU8TURQ982aGaSnYgUYMVCB+BKlKIBpXJG5YYDSEuHCpG3+CJvwB"
@@ -22,8 +22,8 @@ class PluginInfo(eg.PluginInfo):
         "KxeMVAxOJv+kpz1tGmuzH1oWSXLxduJ62jReDI05mTxrbG6GgThinkleTrXskqKxczdm"
         "ALAYAwDx3S/OZd2ljX+agogTFYnquyYkinPZcsGSJP4Cq6FlCpeS/scAAAAASUVORK5C"
         "YII="
-    )
-
+    ),
+)
 
 
 import win32gui

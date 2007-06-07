@@ -22,15 +22,17 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "Directory Watcher"
-    author = "Bitmonster"
-    version = "1.0.0"
-    canMultiLoad = True
+eg.RegisterPlugin(
+    name = "Directory Watcher",
+    author = "Bitmonster",
+    version = "1.0.0",
+    canMultiLoad = True,
     description = (
         "Monitors a directory and generates events if files are created, "
         "deleted or changed in it."
-    )
+    ),
+)
+
 
 import wx
 

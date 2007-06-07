@@ -22,21 +22,22 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "UIRT2"
-    author = "Bitmonster"
-    version = "1.0.0"
-    kind = "remote"
+eg.RegisterPlugin(
+    name = "UIRT2",
+    author = "Bitmonster",
+    version = "1.0.0",
+    kind = "remote",
     description = (
         'Hardware plugin for the <a href="http://www.fukushima.us/UIRT2/">'
         'Universal InfraRed Transceiver V2</a>.'
-    )
+    ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAaElEQVR42mNkoBAwDgMD"
         "/jMw/IeaRLJhIL1gAw4eOMBg7+AANwQsgYWNrrkR2QWkGALTXE+uAQ1APkgziguQQpU8"
         "F5BiAE4XNEIkGYkJRJghcANgmkmJRpAhjA1QA0jVjORlysDAGwAAHWBIBf4cTRAAAAAA"
         "SUVORK5CYII="
-    )
+    ),
+)
 
 
 import threading

@@ -1,10 +1,10 @@
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "UIR / Irman"
-    author = "Bitmonster"
-    version = "1.0.0"
-    kind = "remote"
+eg.RegisterPlugin(
+    name = "UIR / Irman",
+    author = "Bitmonster",
+    version = "1.0.0",
+    kind = "remote",
     description = (
         'Hardware plugin for the <a href="http://fly.cc.fer.hr/~mozgic/UIR/">'
         'Universal Infrared Receiver V1 (UIR)</a> '
@@ -12,7 +12,8 @@ class PluginInfo(eg.PluginInfo):
         'Evation.com Irman</a> '
         'device.'
         '<p><center><img src="irman_front.jpg" alt="Irman" /></a></center>'
-    )
+    ),
+)
 
 
 import wx

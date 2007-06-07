@@ -44,7 +44,7 @@ class Observable:
     def set(self, data):
         self.data = data
         for func in self.callbacks:
-            #eg.Notice(func, data)
+            #eg.DebugNote(func, data)
             func(data)
 
     def get(self):

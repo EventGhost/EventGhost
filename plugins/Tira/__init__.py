@@ -22,18 +22,18 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "Home Electronics Tira"
-    author = "Bitmonster"
-    version = "1.0.0"
-    kind = "remote"
+eg.RegisterPlugin(
+    name = "Home Electronics Tira",
+    author = "Bitmonster",
+    version = "1.0.0",
+    kind = "remote",
     description = (
         'Hardware plugin for the <a href="http://www.home-electro.com/">'
         'Home Electronics Tira</a> transceiver.'
         '\n\n<p>'
         '<a href=http://www.home-electro.com/><p>'
         '<center><img src="tira.png" alt="Tira2" /></a></center>'
-    )
+    ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAADYUlEQVR42m2Te0yTVxjG"
         "n9Pv0tJ26BQbWkMrif5hgBoU4pgsBJhx08RKtIrxAmJkKiwo848RGRabsZvJQDQRLyFe"
@@ -54,7 +54,8 @@ class PluginInfo(eg.PluginInfo):
         "gZEXPc4dkqx1MQD/HkCJsrIyVFV9F8mt1k4M+qZjcMCIlDNdcI8aIeY5IYF9D2jwvwCH"
         "w4FduxyRfN48t6a3bwYGHpvwSXEn3H/EQrzrlKSwNqwA/gbEbU6NEWivbAAAAABJRU5E"
         "rkJggg=="
-    )
+    ),
+)
     
     
 import wx

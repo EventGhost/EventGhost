@@ -1,8 +1,9 @@
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "Test Plugin"
-    description = "Only used to demonstrate some aspects of the Plugin-API."
+eg.RegisterPlugin(
+    name = "Test Plugin",
+    description = "Only used to demonstrate some aspects of the Plugin-API.",
+)
     
 
 

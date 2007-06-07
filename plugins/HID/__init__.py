@@ -1,14 +1,15 @@
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "Generic HID"
-    author = "Bartman"
-    version = "1.0.0"
-    kind = "remote"
+eg.RegisterPlugin(
+    name = "Generic HID",
+    author = "Bartman",
+    version = "1.0.0",
+    kind = "remote",
     description = (
         'Communication with devices that follow the '
         'Human Interface Device (HID) standard.'
-    )
+    ),
+)
 
 import time
 import binascii

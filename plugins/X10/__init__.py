@@ -22,11 +22,11 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "X10 Remote"
-    author = "Bitmonster"
-    version = "1.0.0"
-    kind = "remote"
+eg.RegisterPlugin(
+    name = "X10 Remote",
+    author = "Bitmonster",
+    version = "1.0.0",
+    kind = "remote",
     description = (
         'Hardware plugin for X10 compatible RF remotes.'
         '\n\nThis includes remotes like:<br>'
@@ -45,13 +45,14 @@ class PluginInfo(eg.PluginInfo):
         'Niveus PC Remote Control</a></li>'
         '<li>Medion RF Remote Control</li>'
         '</ul>'
-    )
+    ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAYklEQVR42mNkoBAwwhgq"
         "uf//k6LxzmRGRrgBpGpGNoSRXM1wL1DFgNuTGBhU8xCCyHx0Ngggq4W7AKYQlwZchqJ4"
         "Ad0l+AymvgHYFBJtAFUCkaJopMgAEEFRUoZxKMpMlAAAoBBdp8TBL7gAAAAASUVORK5C"
         "YII="
-    )
+    ),
+)
 
 import threading
 import win32event

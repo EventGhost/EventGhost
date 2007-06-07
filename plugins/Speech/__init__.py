@@ -21,12 +21,14 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "Speech"
-    author = "MonsterMagnet"
-    version = "1.0.0"
-    description = "Uses the Text-To-Speech service of the Microsoft Speech API (SAPI)."
-
+eg.RegisterPlugin(
+    name = "Speech",
+    author = "MonsterMagnet",
+    version = "1.0.0",
+    description = (
+        "Uses the Text-To-Speech service of the Microsoft Speech API (SAPI)."
+    ),
+)
 
 import wx
 from win32com.client import Dispatch

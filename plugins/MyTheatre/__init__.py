@@ -20,15 +20,15 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "MyTheatre"
-    author = "Milbrot"
-    version = "1.0.0"
-    kind = "program"
+eg.RegisterPlugin(
+    name = "MyTheatre",
+    author = "Milbrot",
+    version = "1.0.0",
+    kind = "program",
     description = (
         'Adds actions to control the <a href="http://www.dvbcore.com/">'
         'MyTheatre</a> multimedia application.'
-    )
+    ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAADMklEQVR42m1TX0xScRT+"
         "Ln+7dCkEiTCFm5ZiW2WLP0FZuVHZU6tcL2091dbW5nzsqS3XWy++Vw/W2mpzPeVsjbUF"
@@ -48,7 +48,8 @@ class PluginInfo(eg.PluginInfo):
         "hU1jy1CCh98smtW9925cu/v6r1uoIhD45PD5PEPNzR0Wcg8FJpdDPpMAn4mDSEWRItiA"
         "89b9AavVufuYdsLv/9gdCn1zsixPVyplyKTi5ZNdp112++Vd5/wHnkdmfX7nue8AAAAA"
         "SUVORK5CYII="
-    )
+    ),
+)
     
 
 from win32gui import FindWindow, SendMessageTimeout

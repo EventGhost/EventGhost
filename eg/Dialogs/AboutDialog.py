@@ -218,7 +218,7 @@ class Panel4(wx.Panel):
             time.gmtime(eg.compileTime)
         )
         sysInfos = (
-            ("EventGhost Version", eg.version),
+            ("EventGhost Version", eg.versionStr),
             ("SVN Revision", eg.svnRevision),
             ("Compile Time", compileTime),
             ("Python Version", "%d.%d.%d %s %d" % sys.version_info),

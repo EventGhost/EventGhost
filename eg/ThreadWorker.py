@@ -109,10 +109,10 @@ class ThreadWorker(threading.Thread):
                 except:
                     eg.PrintTraceback()
         elif rc == WAIT_OBJECT_0+1:
-            #eg.Notice("WAIT_OBJECT_0+1")
+            #eg.DebugNote("WAIT_OBJECT_0+1")
             if pythoncom.PumpWaitingMessages():
-                eg.Notice("Got WM_QUIT")
-            #eg.Notice("WAIT_OBJECT_0+1 done")
+                eg.DebugNote("Got WM_QUIT")
+            #eg.DebugNote("WAIT_OBJECT_0+1 done")
         elif rc == WAIT_TIMEOUT:
             # Our timeout has elapsed.
             self.poll()

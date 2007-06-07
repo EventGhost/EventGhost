@@ -47,6 +47,8 @@ eg.RegisterPlugin(
     kind = "core",
     icon = ICON,
 )
+
+
 import wx
 
 from sys import maxint

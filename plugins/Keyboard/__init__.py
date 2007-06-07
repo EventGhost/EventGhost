@@ -22,12 +22,12 @@
 
 import eg
 
-class PluginInfo(eg.PluginInfo):
-    name = "Keyboard"
-    author = "Bitmonster"
-    version = "0.0.1"
-    kind = "remote"
-    description = "This plugin generates events on keypresses (hotkeys)."
+eg.RegisterPlugin(
+    name = "Keyboard",
+    author = "Bitmonster",
+    version = "0.0.1",
+    kind = "remote",
+    description = "This plugin generates events on keypresses (hotkeys).",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeT"
         "AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH1QQIDBMjdIFglwAAADV0RVh0Q29t"
@@ -41,7 +41,8 @@ class PluginInfo(eg.PluginInfo):
         "AuRyOSzLYnllOeCCEkzTxHVdTNNUDkA+n8d13ck8DYPudTecQavVUuQ02u32ZJssK7qE"
         "0WhEsVhESomUEiB09zwvWDKf9x3sX1ye7/E3nPFffAJVOqjtMbQazAAAAABJRU5ErkJg"
         "gg=="
-    )
+    ),
+)
 
 
 from eg import HasActiveHandler
