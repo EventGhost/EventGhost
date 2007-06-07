@@ -40,7 +40,7 @@ import eg
 eg.RegisterPlugin(
     name = "Denon AV Serial",
     author = "Oliver Wagner",
-    version = "0.6",
+    version = "0.6." + "$LastChangedRevision$".split()[1],
     kind = "external",
     description = "Control Denon A/V Amps/Receivers via RS232",
     icon = (

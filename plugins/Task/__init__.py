@@ -25,7 +25,7 @@ import eg
 eg.RegisterPlugin(
     name = "Task Create/Switch Events",
     author = "Bitmonster",
-    version = "1.0.0",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
     description = "Generates events if tasks are created or switched.",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABuklEQVR42o1Sv0tCYRQ9"

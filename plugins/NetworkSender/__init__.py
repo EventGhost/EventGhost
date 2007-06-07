@@ -24,7 +24,7 @@ import eg
 
 eg.RegisterPlugin(
     name = "Network Event Sender",
-    version = "1.0.0",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
     author = "Bitmonster",
     description = (
         "Sends events to an Network Event Receiver plugin through TCP/IP."

@@ -32,7 +32,7 @@ eg.RegisterPlugin(
         '<center><img src="logo_small.png" alt="GB-PVR" /></a></center>'
     ),
     author = "Bitmonster",
-    version = "1.0.0",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "program",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAB3RJTUUH1wQPFDUmBR98"

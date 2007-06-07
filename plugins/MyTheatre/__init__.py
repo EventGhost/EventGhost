@@ -23,7 +23,7 @@ import eg
 eg.RegisterPlugin(
     name = "MyTheatre",
     author = "Milbrot",
-    version = "1.0.0",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "program",
     description = (
         'Adds actions to control the <a href="http://www.dvbcore.com/">'

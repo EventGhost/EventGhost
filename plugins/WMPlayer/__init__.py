@@ -23,6 +23,18 @@
 # Every plugin code should begin with the import of 'eg'
 import eg
 
+eg.RegisterPlugin(
+    name = "Windows Media Player",
+    author = "Oystein Hansen",
+    version = "0.1." + "$LastChangedRevision$".split()[1],
+    kind = "program",
+    description = (
+        'Adds actions to control the '
+        '<a href="http://www.microsoft.com/windows/windowsmedia/">'
+        'Windows Media Player</a>.'
+    ),
+)
+
 # Now we import some other things we will need later
 import wx
 from win32gui import FindWindow, SendMessageTimeout, GetWindowText

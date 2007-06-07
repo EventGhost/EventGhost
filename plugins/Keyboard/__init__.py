@@ -25,7 +25,7 @@ import eg
 eg.RegisterPlugin(
     name = "Keyboard",
     author = "Bitmonster",
-    version = "0.0.1",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
     description = "This plugin generates events on keypresses (hotkeys).",
     icon = (

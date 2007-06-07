@@ -25,7 +25,7 @@ import eg
 eg.RegisterPlugin(
     name = "DVBViewer",
     author = "Bitmonster",
-    version = "1.0.1",
+    version = "1.1." + "$LastChangedRevision$".split()[1],
     kind = "program",
     description = (
         'Adds actions to control '

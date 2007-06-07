@@ -3,7 +3,7 @@ import eg
 eg.RegisterPlugin(
     name = "Generic HID",
     author = "Bartman",
-    version = "1.0.0",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
     description = (
         'Communication with devices that follow the '

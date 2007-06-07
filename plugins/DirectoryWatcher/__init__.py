@@ -25,7 +25,7 @@ import eg
 eg.RegisterPlugin(
     name = "Directory Watcher",
     author = "Bitmonster",
-    version = "1.0.0",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
     canMultiLoad = True,
     description = (
         "Monitors a directory and generates events if files are created, "

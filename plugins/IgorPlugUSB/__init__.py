@@ -25,7 +25,7 @@ import eg
 eg.RegisterPlugin(
     name = "IgorPlug-USB",
     author = "Bitmonster",
-    version = "0.0.1",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
     description = (
         'Plugin for <a href="http://www.cesko.host.sk/">'

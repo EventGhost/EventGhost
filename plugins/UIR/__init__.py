@@ -3,7 +3,7 @@ import eg
 eg.RegisterPlugin(
     name = "UIR / Irman",
     author = "Bitmonster",
-    version = "1.0.0",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
     description = (
         'Hardware plugin for the <a href="http://fly.cc.fer.hr/~mozgic/UIR/">'

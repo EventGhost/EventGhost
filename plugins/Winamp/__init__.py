@@ -30,7 +30,7 @@ import eg
 eg.RegisterPlugin(
     name = "Winamp",
     author = "Bitmonster and Matthew Jacob Edwards",
-    version = "1.0.2",
+    version = "1.2." + "$LastChangedRevision$".split()[1],
     kind = "program",
     description = (
         'Adds actions to control <a href="http://www.winamp.com/">Winamp</a>.'

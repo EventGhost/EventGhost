@@ -3,7 +3,7 @@ import eg
 eg.RegisterPlugin(
     name = "Meedio",
     author = "jorel1969",
-    version = "0.0.1",
+    version = "0.1." + "$LastChangedRevision$".split()[1],
     kind = "program",
     description = (
         'Adds actions to control <a href="http://www.meedio.com/">Meedio</a>.'

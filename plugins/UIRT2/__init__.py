@@ -25,7 +25,7 @@ import eg
 eg.RegisterPlugin(
     name = "UIRT2",
     author = "Bitmonster",
-    version = "1.0.0",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
     description = (
         'Hardware plugin for the <a href="http://www.fukushima.us/UIRT2/">'

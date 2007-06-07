@@ -25,7 +25,7 @@ import eg
 eg.RegisterPlugin(
     name = "Test Patterns",
     author = "Bitmonster",
-    version = "0.0.1",
+    version = "0.1." + "$LastChangedRevision$".split()[1],
     description = "Plugin to show some test patterns.",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAV0lEQVR42mNkoBAwgogD"

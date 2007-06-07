@@ -3,7 +3,7 @@ import eg
 eg.RegisterPlugin(
     name = "Y.A.R.D.",
     author = "Bitmonster",
-    version = "0.0.1",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
     description = (
         'Hardware plugin for the <a href="http://www.htpc-news.de/yard/">'

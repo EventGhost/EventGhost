@@ -25,7 +25,7 @@ import eg
 eg.RegisterPlugin(
     name = "Serial Port",
     author = "Bitmonster",
-    version = "1.1.0",
+    version = "1.1." + "$LastChangedRevision$".split()[1],
     description = "Arbitrary communication through a serial port.",
 )
 

@@ -30,7 +30,7 @@ import eg
 eg.RegisterPlugin(
     name = "VLC media player",
     author = "MonsterMagnet",
-    version = "0.3",
+    version = "0.3." + "$LastChangedRevision$".split()[1],
     kind = "program",
     description = (
         'Adds actions to control the '

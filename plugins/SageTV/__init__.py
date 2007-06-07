@@ -3,7 +3,7 @@ import eg
 eg.RegisterPlugin(
     name = "SageTV",
     author = "Bitmonster",
-    version = "0.0.1",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "program",
     description = (
         'Adds actions to control the <a href="http://www.sagetv.com/">'

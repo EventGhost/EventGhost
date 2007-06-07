@@ -25,7 +25,7 @@ import eg
 eg.RegisterPlugin(
     name = "Optoma H79 Serial",
     author = "Oliver Wagner",
-    version = "0.2",
+    version = "0.2." + "$LastChangedRevision$".split()[1],
     kind = "external",
     description = "Control an Optoma H79 projector via RS232",
     icon = (

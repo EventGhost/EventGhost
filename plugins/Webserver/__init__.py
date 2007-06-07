@@ -25,7 +25,7 @@ import eg
 eg.RegisterPlugin(
     name = "Webserver",
     author = "Bitmonster",
-    version = "1.0.0",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
     description = (
         "Implements a small webserver, that you can use to generate events "
         "through HTML-pages."

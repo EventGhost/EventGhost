@@ -24,7 +24,7 @@ import eg
 eg.RegisterPlugin(
     name = "Media Player Classic",
     author = "MonsterMagnet",
-    version = "1.0.1",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "program",
     description = (
         'Adds actions to control '

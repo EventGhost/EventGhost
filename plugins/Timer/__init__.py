@@ -7,7 +7,7 @@ import time
 eg.RegisterPlugin(
     name = "Timer",
     author = "Bartman",
-    version = "1.0.0",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
     description = (
         "Triggers an event after an adjustable time and optionally repeats it "
         "after an interval."

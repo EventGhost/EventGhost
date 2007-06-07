@@ -24,7 +24,7 @@ import eg
 eg.RegisterPlugin(
     name = "Speech",
     author = "MonsterMagnet",
-    version = "1.0.0",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
     description = (
         "Uses the Text-To-Speech service of the Microsoft Speech API (SAPI)."
     ),
