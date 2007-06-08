@@ -27,7 +27,6 @@ from cStringIO import StringIO
 import sys
 import os
 import copy
-import imp
 import types
 
 import Image
@@ -45,28 +44,21 @@ WX_ICON_PLUGIN.CopyFromBitmap(
 )
 
 
-sys.modules["Plugin"] = imp.new_module("Plugin")
 
-
-def _LoadPluginModule(pluginDir):
-    moduleName = "Plugin." + pluginDir
+def ImportPlugin(pluginDir):
+    moduleName = "pluginImport." + pluginDir
     if moduleName in sys.modules:
         return sys.modules[moduleName]
     modulePath = join(eg.PLUGIN_DIR, pluginDir)
-    filename = join(modulePath, "__init__.py")
     ActionMetaClass.allActionClasses = []
-    #fp = file(filename, "U")
     sys.path.insert(0, modulePath)
     try:
-        #module = imp.load_module(moduleName, fp, filename, ('.py', 'U', 1))
-        module = imp.load_source(moduleName, filename)
+        module = __import__(moduleName, None, None, [''])
     finally:
-        #fp.close()
         del sys.path[0]
-        pass
     module.__allActionClasses__ = ActionMetaClass.allActionClasses
     return module
-    
+
     
     
 class PluginInfoBase(object):
@@ -131,7 +123,7 @@ class PluginInfoBase(object):
             eg.PrintError("File %s does not exist" % pathname)
             return
         try:
-            module = _LoadPluginModule(pluginInfo.pluginName)
+            module = ImportPlugin(pluginInfo.pluginName)
         except:
             eg.PrintTraceback(
                 "Error while loading plugin-file %s." % pluginInfo.path,
@@ -237,7 +229,7 @@ def GetPluginInfo(pluginName):
     
     pluginPath = join("plugins", pluginName)
     if pluginName not in eg.pluginDatabase.database:
-        eg.PrintError(eg.text.Error.pluginNotFound)
+        eg.PrintError(eg.text.Error.pluginNotFound % pluginName)
         return None
     
     infoDict = eg.pluginDatabase.GetPluginInfo(pluginName).__dict__

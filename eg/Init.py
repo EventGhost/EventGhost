@@ -57,7 +57,7 @@ class EventGhost(object):
     
     
     def __init__(self):
-        sys.modules["eg"] = self
+        sys.modules["eg"] = self        
         
         
     def Init(self, args):
@@ -67,6 +67,13 @@ class EventGhost(object):
         self.CallAfter = wx.CallAfter
         self.APP_NAME = "EventGhost"
         self.PLUGIN_DIR = os.path.abspath("plugins")
+        
+        # we create a package 'pluginImport' and set its path to the plugin-dir
+        # se we can simply use __import__ to load a plugin file 
+        pluginPackage = imp.new_module("pluginImport")
+        pluginPackage.__path__ = [self.PLUGIN_DIR]
+        sys.modules["pluginImport"] = pluginPackage
+        
         self.startupArguments = args
         self.debugLevel = args.debugLevel
         self.__InitPIL()

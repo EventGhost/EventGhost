@@ -31,10 +31,17 @@ from base64 import b64decode
 from cStringIO import StringIO
 import Image
 
-from PluginTools import _LoadPluginModule
+from PluginTools import ImportPlugin
 
-
-
+class PilImage(Image.Image):
+    
+    def __getstate__(self):
+        return self.mode, self.size, self.tostring()
+        
+    def __setstate__(self):
+        print setstate
+        
+        
 class PluginFileInfo:
     # some informational fields
     name = "unknown name"
@@ -68,13 +75,13 @@ class PluginFileInfo:
         eg.SetAttr("RegisterPlugin", self.RegisterPlugin)
         try:
             try:
-                module = _LoadPluginModule(self.dirname)
+                module = ImportPlugin(self.dirname)
             finally:
                 eg.SetAttr("RegisterPlugin", old)
         # It is expected that the loading will raise RegisterPluginDone
         # because RegisterPlugin is called inside the module
         except PluginFileInfo.RegisterPluginDone:
-            return
+            pass
         except:
             eg.PrintTraceback(eg.text.Error.pluginLoadError % self.dirname)
             return
@@ -136,7 +143,7 @@ class PluginFileInfo:
 class PluginDatabase:
     
     @eg.TimeIt  
-    def __init__(self, forceRebuild=False):#(eg.debugLevel > 0)):
+    def __init__(self, forceRebuild=(eg.debugLevel > 0)):
         """
         Scans the plugin directory to get all needed information for all 
         plugins.
@@ -190,7 +197,7 @@ class PluginDatabase:
             pluginInfo = PluginFileInfo(dirname)
             pluginInfo.timestamp = highestTimestamp
             newDatabase[dirname] = pluginInfo
-            print repr(pluginInfo)
+            #print repr(pluginInfo)
             
         # only save if something has changed
         needsSave = hasChanged or len(database)

@@ -209,9 +209,12 @@ class ActionItem(TreeItem):
         if executable.Configure.func_code.co_flags & 0x20:
             gen = executable.Configure(*self.args)
             dialog = gen.next()
-            res = dialog.AffirmedShowModal()
-            if res:
-                result = gen.next()
+            if dialog is not None:
+                res = dialog.AffirmedShowModal()
+                if res:
+                    result = gen.next()
+                else:
+                    result = None
             else:
                 result = None
         else:

@@ -62,7 +62,7 @@ class PluginItem(ActionItem):
         self.pluginFile = pluginStr
         self.executable = plugin = eg.OpenPlugin(pluginStr, ident, self.args, self)
         if plugin is None or plugin.info.initFailed:
-            eg.PrintError("Error loading plugin: %s" % pluginStr)
+            #eg.PrintError("Error loading plugin: %s" % pluginStr)
             self.name = pluginStr + " not found"
             self.isInErrorState = True
             #plugin.info.label = pluginStr
