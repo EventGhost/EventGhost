@@ -280,8 +280,8 @@ class AIRT(eg.PluginClass):
         dialog.sizer.Add(wx.StaticText(dialog, -1, 'RF Remotes:'))
         dialog.sizer.Add(remoteCtrl)
         
-        yield dialog
-        yield (portCtrl.GetValue(), remoteCtrl.GetValue(), )
+        if dialog.AffirmedShowModal():
+            return (portCtrl.GetValue(), remoteCtrl.GetValue(), )
                     
 
 
@@ -316,8 +316,8 @@ class SendIR(eg.ActionClass):
         dataCtrl = wx.TextCtrl(dialog, -1, datastr)
         dialog.sizer.Add(dataCtrl, 0, wx.EXPAND)
         
-        yield dialog
-        datastr = dataCtrl.GetValue()
-        data = hexstring2bin(datastr)
-        yield (data, 1, True)
+        if dialog.AffirmedShowModal():
+            datastr = dataCtrl.GetValue()
+            data = hexstring2bin(datastr)
+            return (data, 1, True)
     

@@ -227,12 +227,12 @@ def GetPluginInfo(pluginName):
     if info is not None:
         return info
     
-    pluginPath = join("plugins", pluginName)
     if pluginName not in eg.pluginDatabase.database:
         eg.PrintError(eg.text.Error.pluginNotFound % pluginName)
         return None
     
     infoDict = eg.pluginDatabase.GetPluginInfo(pluginName).__dict__
+    pluginPath = join("plugins", pluginName)
         
     # create a new sublclass of PluginInfo for this plugin class
     class info(PluginInfoBase):

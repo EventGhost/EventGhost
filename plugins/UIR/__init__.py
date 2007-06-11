@@ -124,7 +124,7 @@ class UIR(eg.RawReceiverPlugin):
         dialog.sizer.Add(wx.StaticText(dialog, -1, 'COM Port:'))
         dialog.sizer.Add(portCtrl)
         
-        yield dialog
-        yield (portCtrl.GetValue(), )
+        if dialog.AffirmedShowModal():
+            return (portCtrl.GetValue(), )
                     
         

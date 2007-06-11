@@ -210,13 +210,13 @@ class USB_UIRT(eg.RawReceiverPlugin):
         receiveGroupSizer.Add(stopCodesRxCheckBox, 0, wx.ALL, 10)
         dialog.sizer.Add(receiveGroupSizer, 0, wx.EXPAND)
 
-        yield dialog
-        yield (
-            ledRxCheckBox.GetValue(),
-            ledTxCheckBox.GetValue(),
-            legacyRxCheckBox.GetValue(),
-            stopCodesRxCheckBox.GetValue(),
-        )
+        if dialog.AffirmedShowModal():
+            return (
+                ledRxCheckBox.GetValue(),
+                ledTxCheckBox.GetValue(),
+                legacyRxCheckBox.GetValue(),
+                stopCodesRxCheckBox.GetValue(),
+            )
 
 
 
@@ -359,8 +359,8 @@ class TransmitIR(eg.ActionClass):
                 self.inactivityWaitTime
             )
             
-        yield dialog
-        yield GetResult()
+        if dialog.AffirmedShowModal():
+            return GetResult()
 
 
 class IRLearnDialog(wx.Dialog):

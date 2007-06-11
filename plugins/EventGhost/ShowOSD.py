@@ -392,20 +392,20 @@ class ShowOSD(eg.ActionClass):
             
         outlineCheckBox.Bind(wx.EVT_CHECKBOX, on_outline)
         
-        yield dialog
-        if outlineCheckBox.IsChecked():
-            outlineColour = backgroundColourButton.GetColour()
-        else:
-            outlineColour = None
-        yield (
-            editTextCtrl.GetValue(),
-            fontButton.GetValue(), 
-            foregroundColourButton.GetColour(), 
-            outlineColour,
-            alignmentChoice.GetSelection(),
-            (xOffsetCtrl.GetValue(), yOffsetCtrl.GetValue()),
-            displayChoice.GetSelection(),
-            timeCtrl.GetValue()
-        )
+        if dialog.AffirmedShowModal():
+            if outlineCheckBox.IsChecked():
+                outlineColour = backgroundColourButton.GetColour()
+            else:
+                outlineColour = None
+            return (
+                editTextCtrl.GetValue(),
+                fontButton.GetValue(), 
+                foregroundColourButton.GetColour(), 
+                outlineColour,
+                alignmentChoice.GetSelection(),
+                (xOffsetCtrl.GetValue(), yOffsetCtrl.GetValue()),
+                displayChoice.GetSelection(),
+                timeCtrl.GetValue()
+            )
         
         

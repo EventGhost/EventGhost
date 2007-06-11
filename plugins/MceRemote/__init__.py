@@ -290,5 +290,5 @@ class MceRemote(eg.PluginClass):
         staticText = wx.StaticText(dialog, -1, self.text.buttonTimeoutDescr)
         dialog.sizer.Add(staticText, 0, wx.TOP, 5)
         
-        yield dialog
-        yield (waitTimeCtrl.GetValue(), )
+        if dialog.AffirmedShowModal():
+            return (waitTimeCtrl.GetValue(), )

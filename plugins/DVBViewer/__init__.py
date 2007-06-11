@@ -302,8 +302,8 @@ class DVBViewer(eg.PluginClass):
         )
         radioBox.SetSelection(int(useSendMessage))
         dialog.sizer.Add(radioBox, 0, wx.EXPAND)
-        yield dialog
-        yield (radioBox.GetSelection() == 1, )
+        if dialog.AffirmedShowModal():
+            return (radioBox.GetSelection() == 1, )
         
         
     

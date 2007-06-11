@@ -188,8 +188,9 @@ class ConfigurationDialog(eg.Dialog):
         
 
 
-    def AffirmedShowModal(self):
+    def FinishSetup(self):
         if not self.__postInited:
+            self.__postInited = True
             line = wx.StaticLine(self)
             self.sizer.Add((0,0))
             self.mainSizer.Add(line, 0, wx.EXPAND|wx.ALIGN_CENTER)
@@ -208,12 +209,35 @@ class ConfigurationDialog(eg.Dialog):
             self.SetSizerAndFit(self.mainSizer)
             self.SetMinSize(self.GetSize())
             self.Layout()
-            self.__postInited = True
         self.Centre()
+        
+    
+    def SetCallback(self, callback, *args, **kwargs):
+        def OkCallWarpper(event):
+            callback(wx.ID_OK, *args, **kwargs)
+        self.buttonRow.okButton.Bind(wx.EVT_BUTTON, OkCallWarpper)
+        def CancelCallWarpper(event):
+            callback(wx.ID_CANCEL, *args, **kwargs)
+        self.buttonRow.cancelButton.Bind(wx.EVT_BUTTON, CancelCallWarpper)
+    
+    
+    def AffirmedShowModal(self):
+        FinishSetup()
         if self.ShowModal() == wx.ID_OK:
             return True
         return False
 
+
+    def AffirmedShowModal(self):
+        gr1 = eg.Greenlet.getcurrent()
+        self.FinishSetup()
+        self.Show()
+        self.Raise()
+        self.SetCallback(gr1.switch)
+        result = gr1.parent.switch()
+        self.Hide()
+        self.Destroy()
+        return result == wx.ID_OK
 
 #    def OnHelp(self, event):
 #        self.configureItem.ShowHelp()

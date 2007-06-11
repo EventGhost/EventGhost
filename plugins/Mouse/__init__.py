@@ -227,8 +227,8 @@ class GoDirection(eg.ActionClass):
         sizer.Add(st2, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
         dialog.sizer.Add(sizer)
         
-        yield dialog
-        yield (valueCtrl.GetValue(),)
+        if dialog.AffirmedShowModal():
+            return (valueCtrl.GetValue(),)
 
 
 #-----------------------------------------------------------------------------
@@ -375,17 +375,17 @@ class MoveAbsolute(eg.ActionClass):
         yCB.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)    
         dialog.sizer.Add(mySizer, 1, wx.EXPAND)
 
-        yield dialog
-        if xCtrl.IsEnabled():
-            x = xCtrl.GetValue()
-        else:
-            x = None
-            
-        if yCtrl.IsEnabled():
-            y = yCtrl.GetValue()
-        else:
-            y = None
-        yield (x, y)
+        if dialog.AffirmedShowModal():
+            if xCtrl.IsEnabled():
+                x = xCtrl.GetValue()
+            else:
+                x = None
+                
+            if yCtrl.IsEnabled():
+                y = yCtrl.GetValue()
+            else:
+                y = None
+            return (x, y)
 
 
 #-----------------------------------------------------------------------------
@@ -418,8 +418,8 @@ class MouseWheel(eg.ActionClass):
         sizer.Add(st2, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
         dialog.sizer.Add(sizer)
         
-        yield dialog
-        yield (valueCtrl.GetValue(), )
+        if dialog.AffirmedShowModal():
+            return (valueCtrl.GetValue(), )
 
 
 

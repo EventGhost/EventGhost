@@ -366,11 +366,11 @@ class X10(eg.PluginClass):
         
         dialog.sizer.Add(mainSizer, 1, wx.EXPAND)
         
-        yield dialog
-        yield (
-            gRemotesOrder[choice.GetSelection()], 
-            [i+1 for i, button in enumerate(idBtns) if button.GetValue()], 
-            editCtrl.GetValue()
-        )
+        if dialog.AffirmedShowModal():
+            return (
+                gRemotesOrder[choice.GetSelection()], 
+                [i+1 for i, button in enumerate(idBtns) if button.GetValue()], 
+                editCtrl.GetValue()
+            )
 
 

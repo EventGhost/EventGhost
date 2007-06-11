@@ -270,18 +270,18 @@ class Serial(eg.RawReceiverPlugin):
         Add(prefixCtrl, (9, 1), flag=wx.EXPAND)
         dialog.sizer.Add(mySizer)
 
-        yield dialog
-        yield (
-            portCtrl.GetValue(), 
-            int(baudrateCtrl.GetValue()),
-            bytesizeCtrl.GetSelection(),
-            parityCtrl.GetSelection(),
-            stopbitsCtrl.GetSelection(),
-            handshakeCtrl.GetSelection(),
-            generateEventsCtrl.GetValue(),
-            terminatorCtrl.GetValue(),
-            prefixCtrl.GetValue(),
-        )
+        if dialog.AffirmedShowModal():
+            return (
+                portCtrl.GetValue(), 
+                int(baudrateCtrl.GetValue()),
+                bytesizeCtrl.GetSelection(),
+                parityCtrl.GetSelection(),
+                stopbitsCtrl.GetSelection(),
+                handshakeCtrl.GetSelection(),
+                generateEventsCtrl.GetValue(),
+                terminatorCtrl.GetValue(),
+                prefixCtrl.GetValue(),
+            )
         
         
         
@@ -368,10 +368,10 @@ class Serial(eg.RawReceiverPlugin):
             countCtrl.Enable(flag)
             timeCtrl.Enable(flag)
             
-            yield dialog
-            if rb1.GetValue():
-                yield (None, 0.0)
-            else:
-                yield (countCtrl.GetValue(), timeCtrl.GetValue() / 1000.0)
+            if dialog.AffirmedShowModal():
+                if rb1.GetValue():
+                    return (None, 0.0)
+                else:
+                    return (countCtrl.GetValue(), timeCtrl.GetValue() / 1000.0)
         
         

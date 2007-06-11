@@ -812,7 +812,7 @@ class MainFrame(wx.Frame):
         """ 
         Menu: Edit -> Add Plugin
         """
-        UndoableCommands.NewPlugin().Do(self.document)
+        eg.Greenlet(UndoableCommands.NewPlugin().Do).switch(self.document)
             
             
     def OnCmdNewEvent(self, event):
@@ -833,14 +833,14 @@ class MainFrame(wx.Frame):
         """ 
         Menu: Edit -> New Macro
         """
-        UndoableCommands.NewMacro().Do(self.document)
+        eg.Greenlet(UndoableCommands.NewMacro().Do).switch(self.document)
         
     
     def OnCmdNewAction(self, event):
         """ 
         Menu: Edit -> New Action
         """        
-        UndoableCommands.NewAction().Do(self.document)
+        eg.Greenlet(UndoableCommands.NewAction().Do).switch(self.document)
         
     
     def OnCmdRename(self, event):
@@ -857,7 +857,7 @@ class MainFrame(wx.Frame):
         """
         item = self.document.selection
         if isinstance(item, ActionItem):
-            item.Configure()
+            eg.Greenlet(UndoableCommands.CmdConfigure().Do).switch(item)
 
 
     def OnCmdExecute(self, event):

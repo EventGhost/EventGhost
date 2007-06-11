@@ -770,18 +770,18 @@ class HID(eg.PluginClass):
         rawDataEventsCtrl.Bind(wx.EVT_CHECKBOX, OnRawDataEventsChange)
         enduringEventsCtrl.Bind(wx.EVT_CHECKBOX, OnEnduringEventsChange)
 
-        yield dialog
-        device = devices[hidList.GetFirstSelected()]
-        yield (
-            eventNameCtrl.GetValue(),
-            enduringEventsCtrl.GetValue(),
-            rawDataEventsCtrl.GetValue(),
-            noOtherPortCtrl.GetValue(),
-            device[DEVICE_PATH],
-            device[VENDOR_ID],
-            device[VENDOR_STRING],
-            device[PRODUCT_ID],
-            device[PRODUCT_STRING],
-            device[VERSION_NUMBER]
-        )
+        if dialog.AffirmedShowModal():
+            device = devices[hidList.GetFirstSelected()]
+            return (
+                eventNameCtrl.GetValue(),
+                enduringEventsCtrl.GetValue(),
+                rawDataEventsCtrl.GetValue(),
+                noOtherPortCtrl.GetValue(),
+                device[DEVICE_PATH],
+                device[VENDOR_ID],
+                device[VENDOR_STRING],
+                device[PRODUCT_ID],
+                device[PRODUCT_STRING],
+                device[VERSION_NUMBER]
+            )
 

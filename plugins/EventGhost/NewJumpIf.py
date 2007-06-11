@@ -95,6 +95,6 @@ class NewJumpIf(eg.ActionClass):
         sizer.Add(gosubCB, 0, wx.EXPAND)
         dialog.sizer.Add(sizer, 0, wx.EXPAND)
         
-        yield dialog
-        link.SetTarget(button.GetValue())
-        yield (link, ch.GetSelection(), gosubCB.GetValue())
+        if dialog.AffirmedShowModal():
+            link.SetTarget(button.GetValue())
+            return (link, ch.GetSelection(), gosubCB.GetValue())

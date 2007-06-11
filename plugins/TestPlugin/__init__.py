@@ -50,11 +50,11 @@ class RadioButtonGridDemo(eg.ActionClass):
         radioButtonGrid.SetValue(value)
         
         dialog.sizer.Add(radioButtonGrid)
-        yield dialog
-        yield (
-            # GetValue() will return the index sequence of the control.
-            radioButtonGrid.GetValue(),
-        )
+        if dialog.AffirmedShowModal():
+            return (
+                # GetValue() will return the index sequence of the control.
+                radioButtonGrid.GetValue(),
+            )
             
             
             
@@ -92,11 +92,11 @@ class CheckBoxGridDemo(eg.ActionClass):
         checkBoxGrid.SetValue(value)
         
         dialog.sizer.Add(checkBoxGrid)
-        yield dialog
-        yield (
-            # GetValue() will return the bitfield-sequence of the control.
-            checkBoxGrid.GetValue(),
-        )
+        if dialog.AffirmedShowModal():
+            return (
+                # GetValue() will return the bitfield-sequence of the control.
+                checkBoxGrid.GetValue(),
+            )
             
     
     
@@ -111,6 +111,6 @@ class SpinIntCtrlDemo(eg.ActionClass):
         dialog = eg.ConfigurationDialog(self)
         spinIntCtrl = eg.SpinIntCtrl(dialog, min=0, max=100, value=value)
         dialog.sizer.Add(spinIntCtrl)
-        yield dialog
-        yield (spinIntCtrl.GetValue(), )
+        if dialog.AffirmedShowModal():
+            return (spinIntCtrl.GetValue(), )
         

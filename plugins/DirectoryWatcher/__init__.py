@@ -189,9 +189,9 @@ class DirectoryWatcher(eg.PluginClass):
         Add((5, 5))
         Add(includeSubdirsCB, 0, wx.EXPAND)
         
-        yield dialog
-        yield (
-            dirpathCtrl.GetValue(),
-            includeSubdirsCB.GetValue(),
-        )
+        if dialog.AffirmedShowModal():
+            return (
+                dirpathCtrl.GetValue(),
+                includeSubdirsCB.GetValue(),
+            )
     

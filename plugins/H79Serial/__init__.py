@@ -194,6 +194,6 @@ class H79Serial(eg.PluginClass):
         )
         mySizer.Add(portCtrl, 0, wx.EXPAND)
         dialog.sizer.Add(mySizer)
-        yield dialog
-        yield (portCtrl.GetValue(), )
+        if dialog.AffirmedShowModal():
+            return (portCtrl.GetValue(), )
                     

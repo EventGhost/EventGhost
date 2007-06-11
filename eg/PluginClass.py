@@ -253,7 +253,7 @@ class PluginClass(object):
         dialog = eg.ConfigurationDialog(self)
         label = wx.StaticText(dialog, -1, eg.text.General.noOptionsPlugin)
         dialog.sizer.Add(label)
-        yield dialog
-        yield None
+        if dialog.AffirmedShowModal():
+            pass
         
         

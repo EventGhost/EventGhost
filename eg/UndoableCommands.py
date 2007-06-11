@@ -21,6 +21,7 @@
 # $LastChangedBy$
 
 import eg
+eg.DebugNote("Loading UndoableCommands")
 import wx
 import xml.etree.cElementTree as ElementTree
 
@@ -76,10 +77,14 @@ class NewPlugin(NewItem):
         )
         pluginItem.Select()
         if pluginItem.executable:
-            if pluginItem.NeedsConfiguration():
-                if not pluginItem.DoConfigure():
+            if pluginItem.NeedsStartupConfiguration():
+                args = pluginItem.ProcessConfigureDialog()
+                if args is None:
                     pluginItem.Delete()
-                    return
+                    return None
+                else:
+                    pluginItem.SetParams(*args)
+                    pluginItem.Refresh()
             eg.actionThread.Call(pluginItem.Execute)
         self.StoreItem(pluginItem)
         return pluginItem
@@ -210,10 +215,15 @@ class NewAction(NewItem):
         )
         item.Select()
         
-        if item.NeedsConfiguration():
-            if not item.DoConfigure():
+        if item.NeedsStartupConfiguration():
+            args = item.ProcessConfigureDialog()
+            if args is None:
                 item.Delete()
                 return None
+            else:
+                item.SetParams(*args)
+                item.Refresh()
+                
         self.StoreItem(item)
         return item
     
@@ -480,3 +490,31 @@ class CmdMoveTo:
         
 
 
+class CmdConfigure:
+    
+    def Do(self, item):
+        newArgs = item.ProcessConfigureDialog()
+        if newArgs is None:
+            return
+        self.name = eg.text.MainFrame.Menu.Edit.replace("&", "")
+        self.oldArgumentString = item.GetArgumentString()
+        item.SetParams(*newArgs)
+        newArgumentString = item.GetArgumentString()
+        if self.oldArgumentString != newArgumentString:
+            self.positionData = item.GetPositionData()
+            item.document.AppendUndoHandler(self)
+            item.Refresh()
+    
+    
+    def Undo(self, document):
+        item = self.positionData.GetItem()
+        argumentString = item.GetArgumentString()
+        TreeLink.StartUndo()
+        item.SetArgumentString(self.oldArgumentString)
+        TreeLink.StopUndo()
+        self.oldArgumentString = argumentString
+        item.Refresh()
+        item.Select()
+
+    Redo = Undo
+        

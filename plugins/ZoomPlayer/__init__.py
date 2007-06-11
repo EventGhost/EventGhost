@@ -30,7 +30,7 @@ eg.RegisterPlugin(
     description = (
         'Adds actions to control the famous '
         '<a href="http://www.inmatrix.com/">Zoom Player</a>.'
-        '\n<p>'
+        '\n\n<p>'
         '<b>Notice:</b><br>'
         'To make it work, you have to enable TCP control in Zoom Player. '
         'Either enable it in the options of Zoom Player under:'
@@ -907,14 +907,14 @@ class ZoomPlayer(eg.PluginClass):
         dialog.AddLabel("")
         dialog.AddCtrl(newEventCtrl)
        
-        yield dialog
-        yield (
-            hostEdit.GetValue(), 
-            portEdit.GetValue(), 
-            None,
-            None,
-            newEventCtrl.GetValue(),
-        )
+        if dialog.AffirmedShowModal():
+            return (
+                hostEdit.GetValue(), 
+                portEdit.GetValue(), 
+                None,
+                None,
+                newEventCtrl.GetValue(),
+            )
     
     
     

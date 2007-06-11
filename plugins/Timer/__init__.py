@@ -436,8 +436,8 @@ class Timer(eg.PluginClass):
         timerListCtrl.Bind(wx.EVT_LIST_ITEM_DESELECTED, ListSelection)
         dialog.Bind(wx.EVT_SIZE, OnSize)
 
-        yield dialog
-        yield args
+        if dialog.AffirmedShowModal():
+            return args
 
     #function to fill the timer name Combobox
     def GetTimerNames(self):
@@ -669,35 +669,30 @@ class TimerAction(eg.ActionClass):
 
         #dialog.sizer.Add(sizer)
 
-        yield dialog
-        timerName = timerNameCtrl.GetValue()
-        plugin.lastTimerName = timerName
-        plugin.AddTimerName(timerName)
-        for i in range(len(rb)):
-            if rb[i].GetValue():
-                action = i
-                break
-        loops = loopCtrl.GetValue()
-       
-        showRemainingLoops = showRemaingLoopsCtrl.GetValue()
-       
-        eventName = eventNameCtrl.GetValue()
-       
-        interval = intervalCtrl.GetValue()
-       
-        startTimeType = startTimeTypeCtrl.GetSelection()
-       
-        addCounterToName = addCounterToNameCtrl.GetValue()
-
-       
-        startTime = startTimeCtrl.GetValue()
-
-        yield (timerName,
-            action,
-            loops,
-            interval,
-            eventName,
-            addCounterToName,
-            showRemainingLoops,
-            startTimeType,
-            startTime)
+        if dialog.AffirmedShowModal():
+            timerName = timerNameCtrl.GetValue()
+            plugin.lastTimerName = timerName
+            plugin.AddTimerName(timerName)
+            for i in range(len(rb)):
+                if rb[i].GetValue():
+                    action = i
+                    break
+            loops = loopCtrl.GetValue()
+            showRemainingLoops = showRemaingLoopsCtrl.GetValue()
+            eventName = eventNameCtrl.GetValue()
+            interval = intervalCtrl.GetValue()
+            startTimeType = startTimeTypeCtrl.GetSelection()
+            addCounterToName = addCounterToNameCtrl.GetValue()
+            startTime = startTimeCtrl.GetValue()
+    
+            return (
+                timerName,
+                action,
+                loops,
+                interval,
+                eventName,
+                addCounterToName,
+                showRemainingLoops,
+                startTimeType,
+                startTime
+            )

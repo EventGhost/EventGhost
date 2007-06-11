@@ -228,10 +228,10 @@ class Webserver(eg.PluginClass):
         dialog.AddLabel(self.text.eventPrefix)
         dialog.AddCtrl(editCtrl)
         
-        yield dialog
-        yield (
-            editCtrl.GetValue(), 
-            int(portCtrl.GetValue()), 
-            filepathCtrl.GetValue()
-        )
+        if dialog.AffirmedShowModal():
+            return (
+                editCtrl.GetValue(), 
+                int(portCtrl.GetValue()), 
+                filepathCtrl.GetValue()
+            )
 

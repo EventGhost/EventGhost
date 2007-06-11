@@ -297,6 +297,6 @@ class TextToSpeech(eg.ActionClass):
                 volumeCtrl.GetValue()
             )
                     
-        yield dialog
-        yield ReturnResult()
+        if dialog.AffirmedShowModal():
+            return ReturnResult()
 

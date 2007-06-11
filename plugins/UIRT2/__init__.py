@@ -270,8 +270,8 @@ class UIRT2(eg.RawReceiverPlugin):
         )
         dialog.sizer.Add(portCtrl)
 
-        yield dialog
-        yield (portCtrl.GetValue(), )
+        if dialog.AffirmedShowModal():
+            return (portCtrl.GetValue(), )
     
     
     
@@ -361,24 +361,24 @@ class UIRT2(eg.RawReceiverPlugin):
             cb.SetValue(wait_till_finished)
             dialog.sizer.Add(cb)
 
-            yield dialog
-            code1 = code1Ctrl.GetValue()
-            if len(code1) == 0:
-                yield (None, cb.GetValue())
-            code2 = code2Ctrl.GetValue()
-            repeatCount = repeatCtrl.GetValue()
-            carrier = 3 - carrierCtrl.GetSelection()
-            if code1[0] == "R":
-                data = binascii.unhexlify(code1[1:])
-                bCmd = repeatCount | (carrier << 6)
-                code = "\x36" + chr(len(data) + 2) + data + chr(bCmd)
-            elif len(code2) == 0:
-                data = binascii.unhexlify(code1)
-                bCmd = repeatCount | (carrier << 6)
-                code = chr(bCmd) + data
-            else:
-                bCmd = 0 | (carrier << 6)
-                bCmd2 = repeatCount | (carrier << 6)
-                code = chr(bCmd) + binascii.unhexlify(code1) \
-                       + chr(bCmd2) + binascii.unhexlify(code2)
-            yield (code + calc_checksum(code), cb.GetValue())
+            if dialog.AffirmedShowModal():
+                code1 = code1Ctrl.GetValue()
+                if len(code1) == 0:
+                    return (None, cb.GetValue())
+                code2 = code2Ctrl.GetValue()
+                repeatCount = repeatCtrl.GetValue()
+                carrier = 3 - carrierCtrl.GetSelection()
+                if code1[0] == "R":
+                    data = binascii.unhexlify(code1[1:])
+                    bCmd = repeatCount | (carrier << 6)
+                    code = "\x36" + chr(len(data) + 2) + data + chr(bCmd)
+                elif len(code2) == 0:
+                    data = binascii.unhexlify(code1)
+                    bCmd = repeatCount | (carrier << 6)
+                    code = chr(bCmd) + data
+                else:
+                    bCmd = 0 | (carrier << 6)
+                    bCmd2 = repeatCount | (carrier << 6)
+                    code = chr(bCmd) + binascii.unhexlify(code1) \
+                           + chr(bCmd2) + binascii.unhexlify(code2)
+                return (code + calc_checksum(code), cb.GetValue())

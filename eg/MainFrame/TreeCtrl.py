@@ -38,7 +38,8 @@ from UndoableCommands import (
     CmdPaste, 
     CmdClear, 
     CmdRename, 
-    CmdToggleEnable
+    CmdToggleEnable,
+    CmdConfigure,
 )
 
 import ctypes
@@ -280,11 +281,6 @@ class TreeCtrl(wx.TreeCtrl):
         Bind(wx.EVT_TREE_BEGIN_DRAG, self.OnBeginDrag)
         Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
         Bind(wx.EVT_TREE_ITEM_MENU, self.OnContextMenu)
-        @eg.LogIt
-        def test(event):
-            pass
-        
-        Bind(wx.EVT_TREE_KEY_DOWN, test)
         
         if eg.debugLevel:
             Bind(wx.EVT_TREE_ITEM_GETTOOLTIP, self.OnToolTip)
@@ -458,7 +454,7 @@ class TreeCtrl(wx.TreeCtrl):
         if item.IsOk():
             pyObj = self.GetPyData(item)
             if isinstance(pyObj, ActionItem):
-                pyObj.Configure()
+                wx.CallAfter(eg.Greenlet(CmdConfigure().Do).switch, pyObj)
                 return
         event.Skip()
         

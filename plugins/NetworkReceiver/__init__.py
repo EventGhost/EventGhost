@@ -229,6 +229,6 @@ class NetworkReceiver(eg.PluginClass):
         dialog.AddLabel(self.text.event_prefix)
         dialog.AddCtrl(ctrl3)
         
-        yield dialog
-        yield (ctrl1.GetValue(), ctrl2.GetValue(), ctrl3.GetValue())
+        if dialog.AffirmedShowModal():
+            return (ctrl1.GetValue(), ctrl2.GetValue(), ctrl3.GetValue())
 

@@ -351,7 +351,7 @@ class EventGhost(object):
             PluginItem, 
         )
         from TreeItems.TreeLink import TreeLink
-
+        from greenlet import greenlet as Greenlet
         self.__dict__.update(locals())
         
         

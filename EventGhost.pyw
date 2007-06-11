@@ -38,5 +38,6 @@ print "should never come here"
 # and is located in the "tools" directory also.
 # It includes all modules the program might need. This way we force py2exe
 # to include them in the distribution.
+import greenlet
 import imports
 

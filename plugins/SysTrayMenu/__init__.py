@@ -279,18 +279,18 @@ class SysTrayMenu(eg.PluginClass):
         else:
             tree.SelectItem(root)
             
-        yield dialog
-        resultList = []
-        def Traverse(item):
-            child, cookie = tree.GetFirstChild(item)
-            while child.IsOk():
-                data = tree.GetItemText(child, 0), "item", tree.GetItemText(child, 1)
-                resultList.append(data)
-                if tree.HasChildren(child):
-                    Traverse(child)
-                child, cookie = tree.GetNextChild(item, cookie)
-        Traverse(root)
-        yield (resultList, )
+        if dialog.AffirmedShowModal():
+            resultList = []
+            def Traverse(item):
+                child, cookie = tree.GetFirstChild(item)
+                while child.IsOk():
+                    data = tree.GetItemText(child, 0), "item", tree.GetItemText(child, 1)
+                    resultList.append(data)
+                    if tree.HasChildren(child):
+                        Traverse(child)
+                    child, cookie = tree.GetNextChild(item, cookie)
+            Traverse(root)
+            return (resultList, )
     
     
         

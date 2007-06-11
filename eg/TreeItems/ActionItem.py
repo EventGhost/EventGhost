@@ -67,7 +67,8 @@ class ActionItem(TreeItem):
     isConfigurable = True
     openConfigDialog = None
     shouldSelectOnExecute = False
-
+    configurationGenerator = None
+    configurationDialog = None
 
     def WriteToXML(self):
         attr, text, childs = TreeItem.WriteToXML(self)
@@ -107,8 +108,8 @@ class ActionItem(TreeItem):
         else:
             self.needsCompile = False
         self.SetArgumentString(argString)
-
-
+    
+    
     def GetArgumentString(self):
         return ", ".join([repr(arg) for arg in self.args])
     
@@ -184,81 +185,53 @@ class ActionItem(TreeItem):
         return name
 
 
-    def NeedsConfiguration(self):
+    def NeedsStartupConfiguration(self):
+        """
+        Returns True if the item wants to be configured after creation.
+        """
+        # if the Configure method of the executable is overriden, we assume
+        # the items wants to configured after creation
         im_func = self.executable.Configure.im_func
-        if im_func != eg.ActionClass.Configure.im_func:
-            return True
-        return False
+        return im_func != eg.ActionClass.Configure.im_func
     
     
     def IsConfigurable(self):
         return True
     
     
-    def Configure(self):
-        return self.ConfigureHandler().Do(self)
-    
-    
     @eg.LogIt
-    def DoConfigure(self):
+    def ProcessConfigureDialog(self):
+        """
+        Process user request to configure this item.
+        """
         executable = self.executable
         if executable is None:
             return None
+        if self.openConfigDialog:
+            self.openConfigDialog.Raise()
+            return
         eg.SetAttr("currentConfigureItem", self)
         
         if executable.Configure.func_code.co_flags & 0x20:
             gen = executable.Configure(*self.args)
             dialog = gen.next()
-            if dialog is not None:
-                res = dialog.AffirmedShowModal()
-                if res:
-                    result = gen.next()
-                else:
-                    result = None
-            else:
-                result = None
+            if dialog is None:
+                return
+            if not dialog.AffirmedShowModal():
+                return
+            args = gen.next()
         else:
             try:
-                result = executable.Configure(*self.args)
+                args = executable.Configure(*self.args)
             except:
                 eg.PrintError("Error while configuring: %s", self.GetLabel())
                 raise
         if self.openConfigDialog is not None:
             self.openConfigDialog.Destroy()
             self.openConfigDialog = None
-        if result is None:
-            return False
-        self.SetParams(*result)
-        self.Refresh()
-        return True
-        
-            
-    class ConfigureHandler:
-        
-        def Do(self, item):
-            self.name = eg.text.MainFrame.Menu.Edit.replace("&", "")
-            self.oldArgs = item.GetArgumentString()
-            if item.DoConfigure() is False:
-                return
-            newArgs = item.GetArgumentString()
-            if self.oldArgs != newArgs:
-                self.positionData = item.GetPositionData()
-                item.document.AppendUndoHandler(self)
+        return args
         
         
-        def Undo(self, document):
-            item = self.positionData.GetItem()
-            args = item.GetArgumentString()
-            TreeLink.StartUndo()
-            item.SetArgumentString(self.oldArgs)
-            TreeLink.StopUndo()
-            self.oldArgs = args
-            item.Refresh()
-            item.Select()
-
-        Redo = Undo
-        
-
     def ShowHelp(self):
         action = self.executable
         eg.HTMLDialog(

@@ -68,7 +68,7 @@ class PluginFileInfo:
                 del infoDict["__builtins__"]
                 try:
                     self.RegisterPlugin(**infoDict)
-                except PluginFileInfo.RegisterPluginDone:
+                except PluginFileInfo.RegisterPluginException:
                     return
                 
         old = eg.RegisterPlugin
@@ -78,16 +78,16 @@ class PluginFileInfo:
                 module = ImportPlugin(self.dirname)
             finally:
                 eg.SetAttr("RegisterPlugin", old)
-        # It is expected that the loading will raise RegisterPluginDone
+        # It is expected that the loading will raise RegisterPluginException
         # because RegisterPlugin is called inside the module
-        except PluginFileInfo.RegisterPluginDone:
+        except PluginFileInfo.RegisterPluginException:
             pass
         except:
             eg.PrintTraceback(eg.text.Error.pluginLoadError % self.dirname)
             return
         
         
-    class RegisterPluginDone(Exception):
+    class RegisterPluginException(Exception):
         """
         RegisterPlugin will raise this exception to interrupt the loading 
         of the plugin module file.
@@ -116,7 +116,7 @@ class PluginFileInfo:
         self.canMultiLoad = canMultiLoad
         # we are done with this plugin module, so we can interrupt further 
         # processing by raising RegisterPluginDone
-        raise PluginFileInfo.RegisterPluginDone
+        raise PluginFileInfo.RegisterPluginException
     
     
 #    def __getstate__(self):

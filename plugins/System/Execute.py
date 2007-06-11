@@ -198,12 +198,12 @@ class Execute(eg.ActionClass):
         Add(waitCheckBox)
         
     
-        yield dialog
-        yield (
-            filepathCtrl.GetValue(),
-            argumentsCtrl.GetValue(),
-            winStateChoice.GetSelection(),
-            waitCheckBox.IsChecked(),
-            4 - priorityChoice.GetSelection(),
-            workingDirCtrl.GetValue()
-        )        
+        if dialog.AffirmedShowModal():
+            return (
+                filepathCtrl.GetValue(),
+                argumentsCtrl.GetValue(),
+                winStateChoice.GetSelection(),
+                waitCheckBox.IsChecked(),
+                4 - priorityChoice.GetSelection(),
+                workingDirCtrl.GetValue()
+            )        

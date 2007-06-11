@@ -102,8 +102,8 @@ class ActionClass(object):
         dialog = eg.ConfigurationDialog(self)
         label = wx.StaticText(dialog, -1, eg.text.General.noOptionsAction)
         dialog.sizer.Add(label)
-        yield dialog
-        yield None
+        if dialog.AffirmedShowModal():
+            pass
     
     
 # An ActionClass will only define a "Compile" method, if it uses a special 
@@ -164,6 +164,6 @@ class ActionWithStringParameter(ActionClass):
         parameterCtrl.SetFocus()
         wx.CallAfter(parameterCtrl.SetInsertionPointEnd)
         
-        yield dialog
-        yield (parameterCtrl.GetValue(), )
+        if dialog.AffirmedShowModal():
+            return (parameterCtrl.GetValue(), )
 

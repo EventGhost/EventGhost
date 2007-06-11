@@ -151,7 +151,7 @@ class EnableItem(eg.ActionClass):
             searchItem = link.target
         else:
             searchItem = None
-            link = eg.TreeLink(eg.currentConfigureItem)
+        link = eg.TreeLink(eg.currentConfigureItem)
             
         tree = eg.TreeItemBrowseCtrl(
             dialog, 
@@ -177,12 +177,12 @@ class EnableItem(eg.ActionClass):
         tree.SetFocus()
         sizer.Add(tree, 1, wx.EXPAND)
 
-        yield dialog
-        id = tree.GetSelection()
-        if id.IsOk():
-            obj = tree.GetPyData(id)
-            link.SetTarget(obj)
-        yield (link, )
+        if dialog.AffirmedShowModal():
+            id = tree.GetSelection()
+            if id.IsOk():
+                obj = tree.GetPyData(id)
+                link.SetTarget(obj)
+            return (link, )
        
     
     
@@ -280,8 +280,8 @@ class Wait(eg.ActionClass):
         mySizer.Add(staticText, 0, wx.ALIGN_CENTER_VERTICAL|wx.LEFT, 5)
         dialog.sizer.Add(mySizer, 0, wx.EXPAND)
         
-        yield dialog
-        yield (waitTimeCtrl.GetValue(),)
+        if dialog.AffirmedShowModal():
+            return (waitTimeCtrl.GetValue(),)
         
 
 
@@ -356,12 +356,12 @@ class JumpIfLongPress(eg.ActionClass):
                     
         dialog.sizer.Add(mySizer, 1, wx.EXPAND|wx.TOP, 5)
         
-        yield dialog
-        link.SetTarget(button.GetValue())
-        yield (
-            intervalCtrl.GetValue(), 
-            link
-        )
+        if dialog.AffirmedShowModal():
+            link.SetTarget(button.GetValue())
+            return (
+                intervalCtrl.GetValue(), 
+                link
+            )
 
 
 
@@ -459,13 +459,13 @@ class AutoRepeat(eg.ActionClass):
         
         dialog.sizer.Add(sizer)#, 0, wx.EXPAND)
         
-        yield dialog
-        yield (
-            firstDelayCtrl.GetValue(),
-            startDelayCtrl.GetValue(),
-            endDelayCtrl.GetValue(),
-            sweepTimeCtrl.GetValue()
-        )
+        if dialog.AffirmedShowModal():
+            return (
+                firstDelayCtrl.GetValue(),
+                startDelayCtrl.GetValue(),
+                endDelayCtrl.GetValue(),
+                sweepTimeCtrl.GetValue()
+            )
 
 
 
@@ -521,11 +521,11 @@ class TriggerEvent(eg.ActionClass):
         sizer2.Add(staticText, 0, wx.ALIGN_CENTER_VERTICAL)
         sizer.Add(sizer2, 0, wx.EXPAND)
         
-        yield dialog
-        yield (
-            eventStringCtrl.GetValue(),
-            waitTimeCtrl.GetValue(),
-        )
+        if dialog.AffirmedShowModal():
+            return (
+                eventStringCtrl.GetValue(),
+                waitTimeCtrl.GetValue(),
+            )
     
     
 
@@ -611,9 +611,9 @@ class Jump(eg.ActionClass, eg.HiddenAction):
         sizer.Add(gosubCB, 0, wx.EXPAND)
         dialog.sizer.Add(sizer, 1, wx.EXPAND)
         
-        yield dialog
-        link.SetTarget(button.GetValue())
-        yield (link, gosubCB.GetValue())
+        if dialog.AffirmedShowModal():
+            link.SetTarget(button.GetValue())
+            return (link, gosubCB.GetValue())
     
     
     
@@ -692,9 +692,9 @@ class JumpIf(eg.ActionClass, eg.HiddenAction):
         sizer.Add(gosubCB, 0, wx.EXPAND)
         dialog.sizer.Add(sizer, 1, wx.EXPAND)
         
-        yield dialog
-        link.SetTarget(button.GetValue())
-        yield (evalCtrl.GetValue(), link, gosubCB.GetValue())
+        if dialog.AffirmedShowModal():
+            link.SetTarget(button.GetValue())
+            return (evalCtrl.GetValue(), link, gosubCB.GetValue())
 
 
 

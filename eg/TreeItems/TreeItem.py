@@ -57,7 +57,7 @@ class TreeItem(object):
     
         
     @classmethod
-    @eg.AssertNotMainThread
+    #@eg.AssertNotMainThread
     def Create(cls, parent, pos, text="", **kwargs):
         node = ElementTree.Element(cls.xmlTag)
         node.text = text
@@ -68,7 +68,7 @@ class TreeItem(object):
         return self
         
         
-    @eg.AssertNotActionThread
+    #@eg.AssertNotActionThread
     def __init__(self, parent, node):
         self.parent = parent
         self.id = None
