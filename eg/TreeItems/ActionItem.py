@@ -212,20 +212,11 @@ class ActionItem(TreeItem):
             return
         eg.SetAttr("currentConfigureItem", self)
         
-        if executable.Configure.func_code.co_flags & 0x20:
-            gen = executable.Configure(*self.args)
-            dialog = gen.next()
-            if dialog is None:
-                return
-            if not dialog.AffirmedShowModal():
-                return
-            args = gen.next()
-        else:
-            try:
-                args = executable.Configure(*self.args)
-            except:
-                eg.PrintError("Error while configuring: %s", self.GetLabel())
-                raise
+        try:
+            args = executable.Configure(*self.args)
+        except:
+            eg.PrintError("Error while configuring: %s", self.GetLabel())
+            raise
         if self.openConfigDialog is not None:
             self.openConfigDialog.Destroy()
             self.openConfigDialog = None

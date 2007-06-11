@@ -18,7 +18,7 @@ from ftplib import FTP
 from urlparse import urlparse
 from shutil import copy2 as copy
 from os.path import basename, dirname, abspath, join, exists
-
+import pysvn
 
 SUBWCREV_PATH = r"\Programme\TortoiseSVN\bin\SubWCRev.exe"
 
@@ -82,8 +82,10 @@ def UpdateVersionFile(svnRevision):
     fd.write("version = " + repr(data['version']) + "\n")
     fd.write("buildNum = " + repr(data['buildNum']) + "\n")
     fd.write("compileTime = " + repr(data['compileTime']) + "\n")
-    fd.write("svnRevision = " + repr(svnRevision))
-    fd.close()        return data
+    fd.write("svnRevision = int('$LastChangedRevision$'.split()[1])")
+    fd.close()    
+    svn = pysvn.Client()
+    svn.checkin([trunkDir], "Create installer for %s.%i" % (data['version'], data['buildNum']))    return data
     
     
 def locate(patterns, root=os.curdir):
