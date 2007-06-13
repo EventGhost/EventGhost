@@ -27,6 +27,7 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
+    canMultiLoad = True,
     description = (
         'Hardware plugin for X10 compatible RF remotes.'
         '\n\nThis includes remotes like:<br>'
@@ -54,10 +55,8 @@ eg.RegisterPlugin(
     ),
 )
 
-import threading
-import win32event
 import wx
-
+from win32com.client import DispatchWithEvents
 
 class Text:
     allButton = "&All"
@@ -221,80 +220,56 @@ class X10Events:
         
         
         
+class WorkerThread(eg.ThreadWorker):
+    
+    def __init__(self, plugin, eventHandler):
+        self.plugin = plugin
+        self.eventHandler = eventHandler
+        self.comInstance = None
+        eg.ThreadWorker.__init__(self)
+        
+    
+    def Setup(self):
+        try:
+            self.comInstance = DispatchWithEvents(
+                'X10net.X10Control.1', 
+                self.eventHandler
+            )
+        except:
+            pass
+        
+        
+    def Finish(self):
+        if self.comInstance:
+            self.comInstance.Close()
+    
+        
+        
 class X10(eg.PluginClass):
     text = Text
-    canMultiLoad = True
     
     def __start__(self, remoteType=None, ids=None, prefix=None):
         self.remoteType = remoteType
         self.ids = ids
         self.info.eventPrefix = prefix
         self.mappingTable = gRemotes[remoteType][1]
-        self.errorState = 0
-        startupEvent = threading.Event()
-        self.stopEvent = win32event.CreateEvent(None, 0, 0, None)
-        self.thread = threading.Thread(
-            target=self.WorkerThread, 
-            args=(startupEvent, self.stopEvent)
-        )
-        self.thread.start()
-        startupEvent.wait(10.0)
-        if self.errorState:
+        
+        class SubX10Events(X10Events):
+            plugin = self
+        self.workerThread = WorkerThread(self, SubX10Events)
+        self.workerThread.Start(timeout=5.0)
+        if not self.workerThread.comInstance:
             raise eg.Exception(self.text.errorMesg)
         
 
     def __stop__(self):
-        win32event.SetEvent(self.stopEvent)
-        self.thread.join(10.0)
+        self.workerThread.Stop()
             
             
     def GetLabel(self, remoteType=None, ids=None, prefix=None):
         return "X10: " + gRemotes[remoteType][0]
         
         
-    def WorkerThread(self, startupEvent, stopEvent):
-        from win32event import MsgWaitForMultipleObjects, QS_ALLINPUT, WAIT_OBJECT_0
-        from win32com.client import DispatchWithEvents
-        from pythoncom import CoInitialize, CoUninitialize, PumpWaitingMessages        
-        
-        CoInitialize()
-        #import win32com.client
-        #win32com.client.gencache.EnsureModule('X10net.X10Control', 0, 1, 0)
-
-        try:
-            #comInstance = DispatchWithEvents(X10Control(), X10Events)
-            comInstance = DispatchWithEvents('X10net.X10Control.1', X10Events)
-        except:
-            self.errorState = 1
-            CoUninitialize()
-            return
-        finally:
-            startupEvent.set()
-        comInstance.plugin = self
-        pHandles = [self.stopEvent]
-        while 1:
-            # We can't simply give a timeout of 30 seconds, as
-            # we may continouusly be recieving other input messages,
-            # and therefore never expire.
-            rc = MsgWaitForMultipleObjects(
-                    pHandles, # list of objects
-                    0, # wait all
-                    500,  # timeout
-                    QS_ALLINPUT, # type of input
-                    #win32event.QS_ALLEVENTS, # type of input
-                    )
-            if rc == WAIT_OBJECT_0:
-                # Event signaled.
-                break
-            elif rc == WAIT_OBJECT_0+1:
-                # Message waiting.
-                PumpWaitingMessages()
-            
-        comInstance.Close()
-        CoUninitialize()
-        del comInstance
-    
-    
     def Configure(self, remoteType=2, ids=None, prefix="X10"):
         dialog = eg.ConfigurationDialog(self)
         text = self.text

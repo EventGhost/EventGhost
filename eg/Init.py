@@ -220,7 +220,7 @@ class EventGhost(object):
         
     def StartGui(self):
         self.InitWin32Com()
-        self.messageReceiver.start()
+        self.messageReceiver.Start()
         
         from Document import Document
         self.document = Document()
@@ -233,7 +233,7 @@ class EventGhost(object):
         
         from EventGhostEvent import Init
         Init()
-        actionThread.start()
+        actionThread.Start()
 
         from EventThread import EventThread
         self.eventThread = eventThread = EventThread()
@@ -258,7 +258,7 @@ class EventGhost(object):
             else:
                 startupFile = config.autoloadFilePath
                 
-        eventThread.start()
+        eventThread.Start()
         wx.CallAfter(eventThread.Call, eventThread.StartSession, startupFile)
         if config.checkUpdate:
             # avoid more than one check per day
@@ -432,14 +432,14 @@ class EventGhost(object):
     def DeInit(self):
         self.Notice("stopping threads")
         self.actionThread.CallWait(self.actionThread.StopSession)
-        self.actionThread.stop()
-        self.eventThread.stop()
+        self.actionThread.Stop()
+        self.eventThread.Stop()
         
         self.Notice("shutting down")
         self.config.onlyLogAssigned = self.onlyLogAssigned
         self.SaveConfig()
         self.__DeInitAsyncore()
-        self.messageReceiver.close()
+        self.messageReceiver.Close()
         
         
     def Wait(self, secs, raiseException=True):

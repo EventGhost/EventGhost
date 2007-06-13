@@ -24,12 +24,12 @@ import eg
 
 eg.RegisterPlugin(
     name = "DVBViewer",
-    author = "Bitmonster",
-    version = "1.1." + "$LastChangedRevision$".split()[1],
+    author = "Bitmonster & Nativityplay",
+    version = "1.2." + "$LastChangedRevision$".split()[1],
     kind = "program",
     description = (
-        'Adds actions to control '
-        '<a href="http://www.dvbviewer.com/">DVBViewer Pro/GE</a>.'
+        'Adds support functions to control DVBViewer Pro/GE and returns events.'
+        '\n\n<p><a href="http://www.dvbviewer.com/">DVBViewer Homepage</a>'
     ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAADK0lEQVR42j2TXWgcVRTH"
@@ -215,22 +215,103 @@ CMDS = (
     ("ShutdownCard", "Shutdown Card", 12327),
     ("ShutdownMonitor", "Shutdown Monitor", 12328),
     ("StopGraph", "Stop Graph", 16383),
-    #("Exit", "Exit", 12294),
+    ("Exit", "Exit", 12294),
 )
 
         
 import wx
-import pythoncom
-from win32com.client import Dispatch
+from win32com.client import Dispatch, DispatchWithEvents
 from win32gui import SendMessageTimeout
 from win32con import SMTO_BLOCK, SMTO_ABORTIFHUNG
 
+
+class Text:
+    interfaceBox = "Interface API"
+    useComApi = "COM-API (for DVBViewer Pro)"
+    useSendMessage = "SendMessage-API (for DVBViewer GE)"
+    errorNoWindow = "Couldn't find DVBViewer window"
+
+
+class EventHandler:
+
+    def OnonEndRecord(self):
+        self.TriggerEvent("EndRecord")               
+       
+    def OnonOSDWindow(self, WindowID):
+        self.TriggerEvent("Window:" + str(WindowID))
+
+    def OnonSelectedItemChange(self):
+        self.TriggerEvent("SelectedItemChange")
+
+    def OnChannelChange(self, ChannelNr):
+        self.TriggerEvent("Channel", ChannelNr)
+
+    def OnonRDS(self, RDS):
+        self.TriggerEvent("RDS:" + str(RDS))
+
+    def OnonPlaylist(self, Filename):
+        self.TriggerEvent("Playlist", str(Filename))
+
+    def OnonControlChange(self, WindowID, ControlID):
+        self.TriggerEvent("ControlChange:WindID" + str(WindowID) + "ContrID"+ str(ControlID))
+
+    def OnonAction(self, ActionID):
+        self.TriggerEvent("Action:" + str(ActionID))
+
+    def OnPlaybackEnd(self):
+        self.TriggerEvent("PlaybackEnd")
+
+    def OnonStartRecord(self, ID):
+        self.TriggerEvent("StartRecord", str(ID))
+       
+    def OnonAddRecord(self, ID):
+        self.TriggerEvent("AddRecord:" + str(ID))
+
+    def OnPlaystatechange(self, RendererType, State):
+        self.TriggerEvent("Playstatechange:RenderTy" + str(RendererType) + "State"+ str(State))
+
+    def OnonPlaybackstart(self):
+        self.TriggerEvent("Playbackstart")
+        
+    def OnonDVBVClose(self):
+        self.plugin.workerThread.Stop()
+        self.TriggerEvent("Close")
+
+    
+    
+    
+class WorkerThread(eg.ThreadWorker):
+    """
+    Handles the COM interface in a thread of its own.
+    """
+    def __init__(self, plugin):
+        self.plugin = plugin
+        eg.ThreadWorker.__init__(self)
+    
+    
+    def Setup(self):
+        """
+        This will be called inside the thread at the beginning.
+        """
+        self.dvbviewer = Dispatch("DVBViewerServer.DVBViewer")
+        comEvents = self.dvbviewer.Events
+        self.comObj = DispatchWithEvents(comEvents, self.plugin.EventHandler)
+            
+            
+    def Finish(self):
+        """
+        This will be called inside the thread when it finishes. It will even
+        be called if the thread exits through an exception.
+        """
+        self.plugin.workerThread = None
+
+    
     
 class DVBViewer(eg.PluginClass):
+    text = Text
     
     def __init__(self):
-        self.AddAction(self.Start)
-        self.dvbviewer = None
+        self.AddAction(Start)
         for tmpName, tmpDescription, tmpValue in CMDS:
             class tmpAction(eg.ActionClass):
                 name = tmpDescription
@@ -240,29 +321,33 @@ class DVBViewer(eg.PluginClass):
             tmpAction.__name__ = tmpName
             self.AddAction(tmpAction)
             
+        # create a new subclass of the EventHandler with the ability to use 
+        # the plugin's TriggerEvent method
+        class SubEventHandler(EventHandler):
+            plugin = self
+            TriggerEvent = self.TriggerEvent
+        self.EventHandler = SubEventHandler
+        self.workerThread = None
+            
             
     def __start__(self, useSendMessage=False):
         if useSendMessage:
             self.SearchWindowProc = eg.plugins.Window.FindWindow.Compile(
-                'DVBViewer.exe', 
-                None, 
-                'TfrmMain', 
-                None, 
-                None, 
-                1, 
-                True, 
-                0.0, 
-                0
-            )
+                'DVBViewer.exe', None, 'TfrmMain', None, None, 1, True, 0.0, 0)
             self.SendCommand = self.SendCommandThroughSendMessage
         else:
             self.SendCommand = self.SendCommandThroughCOM
+        
             
-                
+    def __stop__(self):
+        if self.workerThread:
+            self.workerThread.Stop()
+        
+        
     def SendCommandThroughSendMessage(self, value):
         hwnds = self.SearchWindowProc()
         if len(hwnds) == 0:
-            self.PrintError("Couldn't find DVBViewer window")
+            self.PrintError(self.text.errorNoWindow)
             return
         _, result = SendMessageTimeout(
             hwnds[0],
@@ -273,31 +358,25 @@ class DVBViewer(eg.PluginClass):
             2000 # wait at most 2 seconds
         )
 
-
+        
     def SendCommandThroughCOM(self, value):
-
-        if self.dvbviewer is None:
-            self.dvbviewer = Dispatch("DVBViewerServer.DVBViewer")
-        try:
-            self.dvbviewer.SendCommand(value)
-        except pythoncom.com_error: 
-            del self.dvbviewer
-            self.dvbviewer = None
-            self.dvbviewer = Dispatch("DVBViewerServer.DVBViewer")
-            self.dvbviewer.SendCommand(value)
-            
+        if not self.workerThread:
+            self.workerThread = WorkerThread(self)
+            self.workerThread.Start(timeout=5.0)
+        self.workerThread.CallWait(
+            self.workerThread.dvbviewer.SendCommand, 
+            value
+        )
+           
             
     def Configure(self, useSendMessage=False):
+        text = self.text
         dialog = eg.ConfigurationDialog(self)
-        choices = [
-            "COM-API (for DVBViewer Pro)",
-            "SendMessage-API (for DVBViewer GE)"
-        ]
         radioBox = wx.RadioBox(
             dialog, 
             -1, 
-            "Interface API", 
-            choices=choices, 
+            text.interfaceBox, 
+            choices=[text.useComApi, text.useSendMessage], 
             style=wx.RA_SPECIFY_ROWS
         )
         radioBox.SetSelection(int(useSendMessage))
@@ -307,10 +386,15 @@ class DVBViewer(eg.PluginClass):
         
         
     
-    class Start(eg.ActionClass):
-        name = "Start DVBViewer"
-        description = "Start DVBViewer through COM-API. For DVBViewer Pro only."
-        
-        def __call__(self):
-            self.plugin.dvbviewer = Dispatch("DVBViewerServer.DVBViewer")
+class Start(eg.ActionClass):
+    name = "Start DVBViewer"
+    description = "Start DVBViewer through COM-API. For DVBViewer Pro only."
+   
+    def __call__(self):
+        if self.workerThread:
+            self.workerThread.Stop(timeout=5.0)
+        self.workerThread = WorkerThread(self)
+        self.workerThread.Start(timeout=5.0)
+            
+
         

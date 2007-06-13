@@ -29,7 +29,7 @@ import eg
 # and expose some information about itself through an eg.PluginInfo subclass
 eg.RegisterPlugin(
     name = "Winamp",
-    author = "Bitmonster and Matthew Jacob Edwards",
+    author = "Bitmonster & Matthew Jacob Edwards",
     version = "1.2." + "$LastChangedRevision$".split()[1],
     kind = "program",
     description = (

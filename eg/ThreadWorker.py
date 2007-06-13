@@ -55,13 +55,12 @@ class ThreadWorkerAction:
 
 
 
-class ThreadWorker(threading.Thread):
+class ThreadWorker:
     
     def __init__(self):
-        threading.Thread.__init__(
-            self, 
+        self.__thread = threading.Thread(
             None, 
-            self.MainLoop, 
+            self.__MainLoop, 
             self.__class__.__name__
         )
         self.__alive = True
@@ -72,24 +71,63 @@ class ThreadWorker(threading.Thread):
         self.__dummyEvent = CreateEvent(None, 0, 0, None)
         
         
-    def Init2(self):
+    def Setup(self):
+        """
+        This will be called inside the thread at the beginning.
+        """
         pass
     
     
+    def Finish(self):
+        """
+        This will be called inside the thread when it finishes. It will even
+        be called if the thread exits through an exception.
+        """
+        pass
+    
+    
+    def Start(self, timeout=0.0):
+        if timeout > 0.0:
+            startupEvent = threading.Event()
+            self.Call(startupEvent.set)
+            self.__thread.start()
+            startupEvent.wait(timeout)
+            return startupEvent.isSet()
+        else:
+            self.__thread.start()
+            return True
+        
+        
+    def Stop(self, timeout=0.0):
+        """
+        Call this if the thread should stop.
+        """
+        def _stop():
+            self.__alive = False
+            
+        self.Call(_stop)
+        if timeout > 0.0:
+            self.__thread.join(blocking)
+            return self.__thread.isAlive()
+        
+        
     @eg.LogItWithReturn
-    def MainLoop(self):
+    def __MainLoop(self):
         """
         Mainloop of the new thread.
         """
         pythoncom.CoInitialize()
         pythoncom.PumpWaitingMessages()
-        self.Init2()
-        while self.__alive:
-            self.DoOneEvent()
-        pythoncom.CoUninitialize()
+        self.Setup()
+        try:
+            while self.__alive:
+                self.__DoOneEvent()
+        finally:
+            pythoncom.CoUninitialize()
+            self.Finish()
             
             
-    def DoOneEvent(self):
+    def __DoOneEvent(self):
         rc = MsgWaitForMultipleObjects(
             (self.__wakeEvent,), 
             0, 
@@ -115,7 +153,7 @@ class ThreadWorker(threading.Thread):
             #eg.DebugNote("WAIT_OBJECT_0+1 done")
         elif rc == WAIT_TIMEOUT:
             # Our timeout has elapsed.
-            self.poll()
+            self.Poll()
         else:
             raise RuntimeError("unexpected win32wait return value")
         
@@ -167,18 +205,7 @@ class ThreadWorker(threading.Thread):
                 return
     
     
-    def stop(self):
-        """
-        Call this if the thread should stop.
-        """
-        def _stop():
-            self.__alive = False
-            
-        self.Call(_stop)
-        #self.join()
-        
-        
-    def poll(self):
+    def Poll(self):
         pass
     
     

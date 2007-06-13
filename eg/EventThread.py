@@ -41,7 +41,7 @@ class EventThread(ThreadWorker):
         self.currentProcess = GetCurrentProcess()
 
 
-    def poll(self):
+    def Poll(self):
         if eg.config.limitMemory and eg.document.frame is None:
             try:
                 SetProcessWorkingSetSize(
@@ -50,10 +50,10 @@ class EventThread(ThreadWorker):
                     eg.config.limitMemorySize * 1048576
                 )
             except:
-                self.poll = self.poll2
+                self.Poll = self.Poll2
                 
                 
-    def poll2(self):
+    def Poll2(self):
         pass
     
         

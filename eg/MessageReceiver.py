@@ -41,7 +41,7 @@ class MessageReceiver(ThreadWorker):
         
         
     @eg.LogIt
-    def Init2(self):
+    def Setup(self):
         wc = win32gui.WNDCLASS()
         wc.hInstance = win32api.GetModuleHandle(None)
         wc.lpszClassName = "HiddenMessageReceiver"
@@ -95,7 +95,7 @@ class MessageReceiver(ThreadWorker):
     
         
     @eg.LogIt
-    def close(self):
+    def Close(self):
         self.hwnd = None
-        self.stop()
+        self.Stop()
         

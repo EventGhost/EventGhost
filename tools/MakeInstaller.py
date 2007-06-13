@@ -20,8 +20,6 @@ from shutil import copy2 as copy
 from os.path import basename, dirname, abspath, join, exists
 import pysvn
 
-SUBWCREV_PATH = r"\Programme\TortoiseSVN\bin\SubWCRev.exe"
-
 tmpDir = tempfile.mkdtemp()
 toolsDir = abspath(dirname(sys.argv[0]))
 trunkDir = abspath(join(toolsDir, ".."))
@@ -72,7 +70,7 @@ def GetSetupFiles():
     return GetFiles(files, SourcePattern + ["*.dll"])
     
 
-def UpdateVersionFile(svnRevision):
+def UpdateVersionFile():
     data = {}
     versionFilePath = join(trunkDir, "eg/Version.py")
     execfile(versionFilePath, data, data)
@@ -85,7 +83,7 @@ def UpdateVersionFile(svnRevision):
     fd.write("svnRevision = int('$LastChangedRevision$'.split()[1])")
     fd.close()    
     svn = pysvn.Client()
-    svn.checkin([trunkDir], "Create installer for %s.%i" % (data['version'], data['buildNum']))    return data
+    svn.checkin([trunkDir], "Created installer for %s.%i" % (data['version'], data['buildNum']))    return data
     
     
 def locate(patterns, root=os.curdir):
@@ -373,29 +371,7 @@ def CompileInnoScript(innoScriptPath):
     _winreg.CloseKey(key)
     Execute(join(installPath, "ISCC.exe"), innoScriptPath)
     
-    
-def GetSvnVersion():
-    template = (
-        "Revision = $WCREV$\n"
-        "Modified = $WCMODS?True:False$\n"
-        "Date     = '$WCDATE$'\n"
-        "RevRange = '$WCRANGE$'\n"
-        "Mixed    = $WCMIXED?True:False$\n"
-        "URL      = '$WCURL$'\n"
-    )
-    fd, templatePath = tempfile.mkstemp(text=True)
-    fd = os.fdopen(fd, "wt")
-    fd.write(template)
-    fd.close()
-    fd, resultPath = tempfile.mkstemp(text=True)
-    os.close(fd)
-    Execute(SUBWCREV_PATH, trunkDir, templatePath, resultPath)
-    data = {}
-    execfile(resultPath, {}, data)
-    os.remove(templatePath)
-    os.remove(resultPath)
-    return data['Revision']
-    
+        
 
 def Execute(*args):
     si = subprocess.STARTUPINFO()
@@ -416,7 +392,7 @@ def MakeSourceArchive(outFile):
 
 
 def MakeInstaller(isUpdate, makeLib, makeSourceArchive):
-    templateOptions = UpdateVersionFile(GetSvnVersion())
+    templateOptions = UpdateVersionFile()
     VersionStr = templateOptions['version'] + '_build_' + str(templateOptions['buildNum'])
     templateOptions['VersionStr'] = VersionStr
     templateOptions["PYTHON_DIR"] = dirname(sys.executable)
