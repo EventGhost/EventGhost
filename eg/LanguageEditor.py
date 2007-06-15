@@ -24,6 +24,7 @@ import wx
 import types
 import os
 import sys
+import codecs
 
 def Start(args):
     import Init
@@ -444,13 +445,13 @@ class LanguageEditor(wx.Frame):
                         transValue = transValue.decode("latin-1")
                     Add(INDENT * indent + repr(unicode(transValue)) + ",\n")
                 elif transValue is not UnassignedValue and transValue != "":
-                    #if type(transValue) == type(u""):
+                    #if type(transValue) == type(""):
                     #    transValue = transValue.decode("latin-1")
                     Add(INDENT * indent + key + " = " + repr(unicode(transValue)) + "\n")
                 item, cookie = tree.GetNextChild(id, cookie)
             return "".join(res)
         
-        fd = open("Languages\\%s.py" % self.config.language, "w")
+        fd = codecs.open("Languages\\%s.py" % self.config.language, "w", "UTF-8")
         fd.write("# -*- coding: UTF-8 -*-\n")
         fd.write(Traverse(tree.GetRootItem()))
         fd.close()

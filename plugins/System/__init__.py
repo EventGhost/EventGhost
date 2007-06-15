@@ -192,10 +192,13 @@ class System(eg.PluginClass):
         # start the session change notifications
         self.sessionChangeNotifier = SessionChangeNotifier(self)
 
-        RegisterKeyhook(
-            self.IdleCallback, 
-            self.UnIdleCallback, 
-        )
+        try:
+            RegisterKeyhook(
+                self.IdleCallback, 
+                self.UnIdleCallback, 
+            )
+        except:
+            eg.PrintTraceback()
         
         # Use VistaVolume.dll from stridger for sound volume control on Vista
         if sys.getwindowsversion()[0] > 5:
