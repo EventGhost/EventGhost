@@ -107,6 +107,7 @@ eg.RegisterPlugin(
 ##define COPY_GET_PRESETLIST		14 //Get the list of presets (array of strings)
 ##define COPY_GET_SOURCEFILE		15 //Get the filename currently played
 
+import sys
 import win32gui
 import win32con
 import ctypes
@@ -130,17 +131,108 @@ class COPYDATASTRUCT(ctypes.Structure):
 PCOPYDATASTRUCT = ctypes.POINTER(COPYDATASTRUCT)
 
 
+WPRM_SETPARAM_ID = 0
+WPRM_PUTPARAM = 1
+WPRM_GETPARAM = 2
+WPRM_GETPARAM2 = 3
 WPRM_STOP = 4
 WPRM_RUN = 5
 WPRM_PREVPRESET = 11
 WPRM_NEXTPRESET = 12 
+
 COPY_SETACTIVEPRESET = 10
 COPY_GET_PRESETLIST = 14
 COPY_GET_SOURCEFILE = 15
 
+class WParamAction(eg.ActionClass):
+    
+    def __call__(self):
+        return self.plugin.SendFfdshowMessage(self.value)
+    
+    
+    
+class GetIntAction(eg.ActionClass):
+    
+    def __call__(self):
+        try:
+            hwnd = win32gui.FindWindow("ffdshow_remote_class", None)
+        except:
+            self.plugin.PrintError("ffdshow instance not found")
+            return None
+        return win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
+    
+    
+    
+class SetIntAction(eg.ActionClass):
+    parameterDescription = "Set to:"
+    
+    def __call__(self, value=0):
+        try:
+            hwnd = win32gui.FindWindow("ffdshow_remote_class", None)
+        except:
+            self.plugin.PrintError("ffdshow instance not found")
+            return None
+        win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
+        win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, value)
+    
+    
+    def Configure(self, value=0):
+        dialog = eg.ConfigurationDialog(self)
+        valueCtrl = eg.SpinIntCtrl(
+            dialog, 
+            min = -sys.maxint - 1, 
+            max = sys.maxint, 
+            value = value
+        )
+        dialog.AddLabel(self.parameterDescription)
+        dialog.AddCtrl(valueCtrl)
+        if dialog.AffirmedShowModal():
+            return (valueCtrl.GetValue(), )
+    
+    
+class ChangeIntAction(SetIntAction):
+    parameterDescription = "Change by:"
+    
+    def __call__(self, value=0):
+        try:
+            hwnd = win32gui.FindWindow("ffdshow_remote_class", None)
+        except:
+            self.plugin.PrintError("ffdshow instance not found")
+            return None
+        oldValue = win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
+        newValue = oldValue + value
+        win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
+        win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, newValue)
+        return newValue
+    
+    
+    
+    
+CMDS = (
+    (WParamAction, "Run", "Run", None, 5),
+    (WParamAction, "Stop", "Stop", None, 4),
+    (WParamAction, "PreviousPreset", "Previous Preset", None, 11),
+    (WParamAction, "NextPreset", "Next Preset", None, 12),
+    (GetIntAction, "GetSubtitleDelay", "Get Subtitle Delay", None, 812),
+    (SetIntAction, "SetSubtitleDelay", "Set Subtitle Delay", None, 812),
+    (ChangeIntAction, "ChangeSubtitleDelay", "Change Subtitle Delay", None, 812),
+)
+
 
 class Ffdshow(eg.PluginClass):
     
+    def __init__(self):
+        for aType, aClsName, aName, aDescription, aValue in CMDS:
+            class tmpAction(aType):
+                name = aName
+                description = aDescription
+                value = aValue
+            tmpAction.__name__ = aClsName
+            self.AddAction(tmpAction)
+        self.AddAction(GetPresets)
+        self.AddAction(SetPreset)
+        
+        
     def __start__(self):
         self.mesg = win32gui.RegisterWindowMessage("ffdshow_remote_message")
         eg.messageReceiver.AddHandler(win32con.WM_COPYDATA, self.Handler)
@@ -160,37 +252,6 @@ class Ffdshow(eg.PluginClass):
             self.PrintError("ffdshow instance not found")
             return None
         return win32gui.SendMessage(hwnd, self.mesg, wParam, lParam)
-
-
-
-class Stop(eg.ActionClass):
-    
-    def __call__(self):
-        return self.plugin.SendFfdshowMessage(WPRM_STOP)
-        
-
-
-class Run(eg.ActionClass):
-    
-    def __call__(self):
-        return self.plugin.SendFfdshowMessage(WPRM_RUN)
-        
-
-
-class PreviousPreset(eg.ActionClass):
-    name = "Previous Preset"
-    
-    def __call__(self):
-        return self.plugin.SendFfdshowMessage(WPRM_PREVPRESET)
-        
-
-
-class NextPreset(eg.ActionClass):
-    name = "Next Preset"
-    
-    def __call__(self):
-        return self.plugin.SendFfdshowMessage(WPRM_NEXTPRESET)
-        
 
 
 class SetPreset(eg.ActionWithStringParameter):
@@ -234,5 +295,4 @@ class GetPresets(eg.ActionClass):
             eg.messageReceiver.hwnd, 
             ctypes.addressof(cds)
         )
-        
         
