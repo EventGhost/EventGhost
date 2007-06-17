@@ -21,12 +21,37 @@
 # $LastChangedBy$
 
 import wx
+import eg
 
 
 class Dialog(wx.Dialog):
     __instance = None
     
+    @classmethod
+    def ShowModeless(cls, *args, **kwargs):
+        self = cls.__instance
+        if self:
+            self.Show()
+            self.Raise()
+            return self
+        else:
+            self = cls(*args, **kwargs)
+            @eg.LogIt
+            def OnDestroy(event):
+                cls.__instance = None
+                event.Skip()
+            self.Bind(wx.EVT_WINDOW_DESTROY, OnDestroy)
+            @eg.LogIt
+            def OnClose(event):
+                self.Destroy()
+                event.Skip()
+            self.Bind(wx.EVT_CLOSE, OnClose)
+
+            cls.__instance = self
+            self.Show()
+            return self
     
+        
     def DoModal(self):
         result = None
         if self.ShowModal() == wx.ID_OK and hasattr(self, "resultData"):

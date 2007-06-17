@@ -31,7 +31,7 @@ if hasattr(sys, "frozen"):
 else:
     programPath = dirname(unicode(__file__, sys.getfilesystemencoding()))
     
-imp.load_source("Main", join(programPath, "eg", "Main.py"))
+imp.load_source("Main", join(programPath, u"eg", u"Main.py"))
 
 print "should never come here"
 # The "imports" module file is created by the tools/MakeImports.py script

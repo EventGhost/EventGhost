@@ -51,12 +51,12 @@ Text = eg.GetTranslation(Text)
 class OptionsDialog(eg.Dialog):
     
     def __init__(self, parent):
-        wx.Dialog.__init__(
+        eg.Dialog.__init__(
             self, 
             parent, 
             -1,
             Text.Title, 
-            style=wx.DEFAULT_DIALOG_STYLE|wx.STAY_ON_TOP 
+            style=wx.DEFAULT_DIALOG_STYLE
         )
         
         self.languageList = ["en_EN"]
@@ -215,6 +215,11 @@ class OptionsDialog(eg.Dialog):
             dlg.Destroy()
         eg.config.language = language
         eg.SaveConfig()
+        self.Destroy()
         event.Skip()
 
+
+    def OnCancel(self, event):
+        self.Destroy()
+        event.Skip()
 

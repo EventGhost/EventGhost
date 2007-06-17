@@ -271,10 +271,11 @@ class Panel4(wx.Panel):
             wx.TheClipboard.Flush()
             eg.app.clipboardEvent.Fire()
                     
-        
+
+     
         
 class AboutDialog(eg.Dialog):
-    
+
     def __init__(self, parent):
         wx.Dialog.__init__(
             self, 
@@ -309,6 +310,16 @@ class AboutDialog(eg.Dialog):
 
         self.SetSizerAndFit(mainSizer)
         self.SetMinSize(self.GetSize())
+        
+        okButton.Bind(wx.EVT_BUTTON, self.OnClose)
+        
+        
+    @eg.LogIt
+    def OnClose(self, event):
+        self.Destroy()
+        event.Skip()
+        
+
 
 
     

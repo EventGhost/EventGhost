@@ -352,7 +352,7 @@ class Document(object):
 
     def SaveAs(self):
         fileDialog = wx.FileDialog(
-            None, 
+            self.frame, 
             message="", 
             wildcard="*.xml", 
             style=wx.SAVE|wx.OVERWRITE_PROMPT

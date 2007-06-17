@@ -219,7 +219,8 @@ class ConfigurationDialog(eg.Dialog):
         def CancelCallWarpper(event):
             callback(wx.ID_CANCEL, *args, **kwargs)
         self.buttonRow.cancelButton.Bind(wx.EVT_BUTTON, CancelCallWarpper)
-    
+        self.Bind(wx.EVT_CLOSE, CancelCallWarpper)
+        
     
     def AffirmedShowModal(self):
         FinishSetup()

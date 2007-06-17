@@ -144,6 +144,7 @@ COPY_SETACTIVEPRESET = 10
 COPY_GET_PRESETLIST = 14
 COPY_GET_SOURCEFILE = 15
 
+
 class WParamAction(eg.ActionClass):
     
     def __call__(self):
@@ -190,6 +191,7 @@ class SetIntAction(eg.ActionClass):
             return (valueCtrl.GetValue(), )
     
     
+    
 class ChangeIntAction(SetIntAction):
     parameterDescription = "Change by:"
     
@@ -211,11 +213,11 @@ class ChangeIntAction(SetIntAction):
 CMDS = (
     (WParamAction, "Run", "Run", None, 5),
     (WParamAction, "Stop", "Stop", None, 4),
-    (WParamAction, "PreviousPreset", "Previous Preset", None, 11),
-    (WParamAction, "NextPreset", "Next Preset", None, 12),
     (GetIntAction, "GetSubtitleDelay", "Get Subtitle Delay", None, 812),
     (SetIntAction, "SetSubtitleDelay", "Set Subtitle Delay", None, 812),
     (ChangeIntAction, "ChangeSubtitleDelay", "Change Subtitle Delay", None, 812),
+    (WParamAction, "PreviousPreset", "Previous Preset", None, 11),
+    (WParamAction, "NextPreset", "Next Preset", None, 12),
 )
 
 
@@ -252,6 +254,7 @@ class Ffdshow(eg.PluginClass):
             self.PrintError("ffdshow instance not found")
             return None
         return win32gui.SendMessage(hwnd, self.mesg, wParam, lParam)
+
 
 
 class SetPreset(eg.ActionWithStringParameter):

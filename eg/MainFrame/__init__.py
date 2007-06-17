@@ -76,6 +76,8 @@ config = eg.GetConfig("mainFrame", DefaultConfig)
 class MainFrame(wx.Frame):
     """ This is the MainFrame of EventGhost """
         
+    aboutDialog = None
+    
     @eg.AssertNotMainThread
     def __init__(self, document):
         """ Create the MainFrame """
@@ -555,7 +557,7 @@ class MainFrame(wx.Frame):
             self.toolBar.buttons.Paste.Enable(canPaste)
     
     
-    @eg.LogIt
+    #@eg.LogIt
     def OnFocusChange(self, focus):
         if focus == self.lastFocus:
             return
@@ -577,7 +579,7 @@ class MainFrame(wx.Frame):
         toolBarButtons.Paste.Enable(canPaste)
         
         
-    @eg.LogIt
+    #@eg.LogIt
     def GetEditCmdState(self, focus):
         if focus is None:
             return (False, False, False, False)
@@ -747,7 +749,7 @@ class MainFrame(wx.Frame):
     
     def OnCmdOptions(self, event):
         """ Handle the menu command 'Options...'. """
-        eg.OptionsDialog(self).DoModal()
+        eg.OptionsDialog.ShowModeless(self)
         
         
     def OnCmdExit(self, event):
@@ -946,7 +948,8 @@ class MainFrame(wx.Frame):
     
     
     def OnCmdAbout(self, event):
-        eg.AboutDialog(self).DoModal()
+        #eg.AboutDialog(self).DoModal()
+        eg.AboutDialog.ShowModeless(self)
     
         
     #----- debugging and experimental stuff that will be removed someday -----
