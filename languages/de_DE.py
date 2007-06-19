@@ -515,6 +515,8 @@ class Plugin:
             name = u'Linke Maustaste'
         class LeftDoubleClick:
             name = u'Linke Maustaste Doppelklick '
+        class MiddleButton:
+            name = u'Mittlere Maustaste'
         class MouseWheel:
             name = u'Drehe Mausrad'
             description = u'Emuliert Drehungen des Mausrades'

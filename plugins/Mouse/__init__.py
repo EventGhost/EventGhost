@@ -248,6 +248,20 @@ class LeftButton(eg.ActionClass):
 
 
 #-----------------------------------------------------------------------------
+# Action: Mouse.MiddleButton
+#-----------------------------------------------------------------------------
+class MiddleButton(eg.ActionClass):
+    name = "Middle mouse button"
+    
+    def __call__(self):
+        def UpFunc():
+            mouse_event(0x0040, 0, 0, 0, 0)
+        mouse_event(0x0020, 0, 0, 0, 0)
+        eg.event.AddUpFunc(UpFunc)
+        
+
+
+#-----------------------------------------------------------------------------
 # Action: Mouse.RightButton
 #-----------------------------------------------------------------------------
 class RightButton(eg.ActionClass):
