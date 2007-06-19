@@ -14,6 +14,7 @@ import subprocess
 import win32process
 import win32con
 import _winreg
+import locale
 from ftplib import FTP
 from urlparse import urlparse
 from shutil import copy2 as copy
@@ -21,7 +22,7 @@ from os.path import basename, dirname, abspath, join, exists
 import pysvn
 
 tmpDir = tempfile.mkdtemp()
-toolsDir = abspath(dirname(sys.argv[0]))
+toolsDir = abspath(dirname(sys.argv[0].decode(sys.getfilesystemencoding())))
 trunkDir = abspath(join(toolsDir, ".."))
 outDir = abspath(join(trunkDir, ".."))
 
@@ -70,9 +71,9 @@ def GetSetupFiles():
     return GetFiles(files, SourcePattern + ["*.dll"])
     
 
-def UpdateVersionFile():
+def UpdateVersionFile(commitSvn):
     data = {}
-    versionFilePath = join(trunkDir, "eg/Version.py")
+    versionFilePath = join(trunkDir, "eg", "Version.py")
     execfile(versionFilePath, data, data)
     data['buildNum'] += 1
     data['compileTime'] = time.time()
@@ -82,8 +83,9 @@ def UpdateVersionFile():
     fd.write("compileTime = " + repr(data['compileTime']) + "\n")
     fd.write("svnRevision = int('$LastChangedRevision$'.split()[1])")
     fd.close()    
-    svn = pysvn.Client()
-    svn.checkin([trunkDir], "Created installer for %s.%i" % (data['version'], data['buildNum']))    return data
+    if commitSvn:
+        svn = pysvn.Client()
+        svn.checkin([trunkDir], "Created installer for %s.%i" % (data['version'], data['buildNum']))    return data
     
     
 def locate(patterns, root=os.curdir):
@@ -391,8 +393,8 @@ def MakeSourceArchive(outFile):
     archive.close()
 
 
-def MakeInstaller(isUpdate, makeLib, makeSourceArchive):
-    templateOptions = UpdateVersionFile()
+def MakeInstaller(isUpdate, makeLib, makeSourceArchive, commitSvn):
+    templateOptions = UpdateVersionFile(commitSvn)
     VersionStr = templateOptions['version'] + '_build_' + str(templateOptions['buildNum'])
     templateOptions['VersionStr'] = VersionStr
     templateOptions["PYTHON_DIR"] = dirname(sys.executable)
@@ -514,6 +516,8 @@ class MainDialog(wx.Dialog):
         self.createLib = wx.CheckBox(self, -1, "Create Lib")
         self.uploadCB = wx.CheckBox(self, -1, "Upload")
         self.uploadCB.SetValue(bool(url))
+        self.commitCB = wx.CheckBox(self, -1, "SVN Commit")
+        self.commitCB.SetValue(True)
         self.makeUpdateRadioBox = wx.RadioBox(
             self, 
             choices = ("Make Update", "Make Full Installer"),
@@ -536,6 +540,7 @@ class MainDialog(wx.Dialog):
         sizer.Add(self.createImportsCB, 0, wx.ALL, 10)
         sizer.Add(self.createLib, 0, wx.ALL, 10)
         sizer.Add(self.uploadCB, 0, wx.ALL, 10)
+        sizer.Add(self.commitCB, 0, wx.ALL, 10)
         sizer.Add(self.makeUpdateRadioBox, 0, wx.ALL, 10)
         sizer.Add(btnSizer)
 
@@ -549,7 +554,8 @@ class MainDialog(wx.Dialog):
         isUpdate = self.makeUpdateRadioBox.GetSelection() == 0
         makeLib = self.createLib.GetValue()
         makeSourceArchive = self.createSourceCB.GetValue()
-        filename = MakeInstaller(isUpdate, makeLib, makeSourceArchive)
+        commitSvn = self.commitCB.GetValue()
+        filename = MakeInstaller(isUpdate, makeLib, makeSourceArchive, commitSvn)
         if self.uploadCB.GetValue():
             UploadFile(filename, self.url)
         app.ExitMainLoop()

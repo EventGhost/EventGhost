@@ -380,7 +380,9 @@ class EventGhost(object):
         # application data directory instead of its package directory.
         # When the program runs "frozen" it would not be able to modify
         # the package directory
-        __gen_path__ = os.path.join(self.APPDATA, "EventGhost", "gen_py")
+        __gen_path__ = os.path.join(
+            self.APPDATA, "EventGhost", "gen_py"
+        ).encode('mbcs')
         if not os.path.exists(__gen_path__):
             os.makedirs(__gen_path__)
         import win32com
