@@ -22,7 +22,7 @@ from os.path import basename, dirname, abspath, join, exists
 import pysvn
 
 tmpDir = tempfile.mkdtemp()
-toolsDir = abspath(dirname(sys.argv[0].decode(sys.getfilesystemencoding())))
+toolsDir = abspath(dirname(sys.argv[0]))
 trunkDir = abspath(join(toolsDir, ".."))
 outDir = abspath(join(trunkDir, ".."))
 
