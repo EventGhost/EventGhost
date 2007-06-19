@@ -47,6 +47,7 @@ class DefaultConfig:
     limitMemorySize = 8
     confirmDelete = True
     lastUpdateCheckDate = None
+    defaultThreadStartTimeout = 5.00
     class treeStateData:
         guid = None
         time = None

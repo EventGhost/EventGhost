@@ -362,7 +362,7 @@ class DVBViewer(eg.PluginClass):
     def SendCommandThroughCOM(self, value):
         if not self.workerThread:
             self.workerThread = WorkerThread(self)
-            self.workerThread.Start(timeout=5.0)
+            self.workerThread.Start()
         self.workerThread.CallWait(
             self.workerThread.dvbviewer.SendCommand, 
             value
@@ -394,7 +394,7 @@ class Start(eg.ActionClass):
         if self.workerThread:
             self.workerThread.Stop(timeout=5.0)
         self.workerThread = WorkerThread(self)
-        self.workerThread.Start(timeout=5.0)
+        self.workerThread.Start()
             
 
         

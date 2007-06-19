@@ -129,6 +129,7 @@ class EventGhost(object):
         # exists, we simply create it first
         from App import MyApp
         self.app = MyApp(0)
+
         if True:#not args.translate:
             import Log
             self.log = Log.Log()
@@ -160,6 +161,11 @@ class EventGhost(object):
             DebugNote("Version:", self.versionStr)
             
 
+        from ConfigData import LoadConfig, SaveConfig
+        self.config = config = LoadConfig()
+        self.SaveConfig = SaveConfig
+        self.onlyLogAssigned = config.onlyLogAssigned
+        
         import IconTools
         IconTools.Init()
         self.IconTools = IconTools
@@ -167,11 +173,6 @@ class EventGhost(object):
         self.imageList = IconTools.gImageList
         self.AddPluginIcon = IconTools.AddPluginIcon
         sys.modules["eg.IconTools"] = IconTools
-        
-        from ConfigData import LoadConfig, SaveConfig
-        self.config = config = LoadConfig()
-        self.SaveConfig = SaveConfig
-        self.onlyLogAssigned = config.onlyLogAssigned
         
         from LanguageTools import LoadStrings, GetTranslation
         self.GetTranslation = GetTranslation

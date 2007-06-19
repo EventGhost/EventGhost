@@ -86,7 +86,9 @@ class ThreadWorker:
         pass
     
     
-    def Start(self, timeout=0.0):
+    def Start(self, timeout=None):
+        if timeout is None:
+            timeout = eg.config.defaultThreadStartTimeout
         if timeout > 0.0:
             startupEvent = threading.Event()
             self.Call(startupEvent.set)

@@ -257,7 +257,7 @@ class X10(eg.PluginClass):
         class SubX10Events(X10Events):
             plugin = self
         self.workerThread = WorkerThread(self, SubX10Events)
-        self.workerThread.Start(timeout=5.0)
+        self.workerThread.Start()
         if not self.workerThread.comInstance:
             raise eg.Exception(self.text.errorMesg)
         
