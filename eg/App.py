@@ -179,7 +179,12 @@ class MyApp(wx.App):
         # try to wait till all utility threads have ended
         currentThread = threading.currentThread()
         for t in threading.enumerate():
-            if t is not currentThread and not t.isDaemon() and t.isAlive():
+            if (
+                t is not currentThread 
+                and (t is not eg.messageReceiver) 
+                and not t.isDaemon() 
+                and t.isAlive()
+            ):
                 eg.DebugNote("joining: " + str(t))
                 t.join(5.0)
         

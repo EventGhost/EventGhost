@@ -185,6 +185,22 @@ class OSDFrame(wx.Frame):
             # Screen Center
             x = d.x + ((d.width - w) / 2) + xOffset
             y = d.y + ((d.height - h) / 2) + yOffset
+        elif alignment == 5:
+            # Bottom Center
+            x = d.x + ((d.width - w) / 2) + xOffset
+            y = d.y + d.height - yOffset - h
+        elif alignment == 6:
+            # Top Center
+            x = d.x + ((d.width - w) / 2) + xOffset
+            y = yOffset
+        elif alignment == 7:
+            # Left Center
+            x = d.x + xOffset
+            y = d.y + ((d.height - h) / 2) + yOffset 
+        elif alignment == 8:
+            # Right Center
+            x = d.x + d.width - xOffset - w
+            y = d.y + ((d.height - h) / 2) + yOffset
         self.Show()
         win32gui.BringWindowToTop(self.GetHandle())
         self.Refresh()
@@ -232,7 +248,11 @@ class ShowOSD(eg.ActionClass):
             "Top Right", 
             "Bottom Left",
             "Bottom Right", 
-            "Center"
+            "Screen Center",
+            "Bottom Center",
+            "Top Center",
+            "Left Center",
+            "Right Center",
         ]
         display = "Show on display:"
         xOffset = "Horizontal offset X:"

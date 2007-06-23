@@ -66,6 +66,7 @@ class MainFrame:
         Paste = u'E&inf\xfcgen'
         Redo = u'&Wiederholen'
         Rename = u'Element &umbenennen'
+        Reset = u'Zur\xfccksetzen'
         Save = u'&Speichern'
         SaveAs = u'Speichern &unter...'
         SelectAll = u'&Alles markieren'
@@ -87,7 +88,10 @@ class Error:
     FileNotFound = u'Datei "%s" konnte nicht gefunden werden.'
     InAction = u'Fehler in Befehl: "%s"'
     InScript = u'Fehler in Skript: "%s"'
+    pluginInfoPyError = u'Fehler beim Lesen der __info__.py f\xfcr Plugin %s'
+    pluginLoadError = u'Fehler beim Laden der Plugin-Datei %s.'
     pluginNotActivated = u'Plugin "%s" ist nicht aktiviert'
+    pluginNotFound = u'Plugin nicht gefunden: %s'
     pluginStartError = u'Fehler beim Start des Plugins: %s'
 class CheckUpdate:
     ManErrorMesg = u'Es konnte nicht festgestellt werden, ob es eine neuere Version von EventGhost gibt.\n\nBitte versuchen sie es sp\xe4ter noch einmal.'
@@ -246,6 +250,10 @@ class Plugin:
                 u'unten links',
                 u'unten rechts',
                 u'mittig',
+                u'mittig unten',
+                u'mittig oben',
+                u'mittig links',
+                u'mittig rechts',
             ]
             display = u'Zeige auf Monitor:'
             editText = u'Darzustellender Text:'
@@ -328,6 +336,7 @@ class Plugin:
             name = u'Benutzer abmelden'
         class MonitorGroup:
             name = u'Bildschirm'
+            description = u'Diese Befehle steuern verschiedene Eigenschaften des Bildschirms.'
         class MonitorPowerOff:
             name = u'Bildschirm ausschalten'
         class MonitorPowerOn:

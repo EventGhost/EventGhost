@@ -524,7 +524,7 @@ class LanguageEditor(wx.Frame):
                     try:
                         transValue = eval(tmp, self.translationDict)
                         icon = 1
-                    except (AttributeError, NameError):
+                    except (AttributeError, NameError, IndexError):
                         transValue = UnassignedValue
                         icon = 0
                     tmpId = tree.AppendItem(newId, "[%i]" % i, icon)

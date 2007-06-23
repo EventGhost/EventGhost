@@ -192,7 +192,7 @@ class Panel2(wx.Panel):
             style=wx.SUNKEN_BORDER|eg.HW_NO_SELECTION
         )
         htmlWindow.SetPage(html)
-        htmlWindow.SetMinSize((460, 250))
+        htmlWindow.SetMinSize((460, 270))
         htmlWindow.SetScrollbars(1, 1, 1000, 1000)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(htmlWindow, 1, wx.EXPAND, 5)
