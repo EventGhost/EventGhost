@@ -155,7 +155,7 @@ class PluginDatabase:
         
         # load the database file if exists
         self.database = {}
-        self.databasePath = join(eg.APPDATA, eg.APP_NAME, "PluginDatabase")
+        self.databasePath = join(eg.CONFIG_DIR, "PluginDatabase")
         if not forceRebuild:
             self.Load()
         database = self.database

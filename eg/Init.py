@@ -326,7 +326,7 @@ class EventGhost(object):
             PROGRAMFILES, 
             TEMPDIR, 
         )
-        
+        self.CONFIG_DIR = os.path.join(APPDATA, self.APP_NAME)
         from WinAPI.Shortcut import CreateShortcut
         from WinAPI.Utils import BringHwndToFront
         from WinAPI.serial import Serial as SerialPort
@@ -381,14 +381,12 @@ class EventGhost(object):
         # application data directory instead of its package directory.
         # When the program runs "frozen" it would not be able to modify
         # the package directory
-        __gen_path__ = os.path.join(
-            self.APPDATA, "EventGhost", "gen_py"
-        ).encode('mbcs')
-        if not os.path.exists(__gen_path__):
-            os.makedirs(__gen_path__)
+        genPath = os.path.join(self.CONFIG_DIR, "gen_py").encode('mbcs')
+        if not os.path.exists(genPath):
+            os.makedirs(genPath)
         import win32com
-        win32com.__gen_path__ = __gen_path__
-        sys.modules["win32com.gen_py"].__path__ = [__gen_path__]
+        win32com.__gen_path__ = genPath
+        sys.modules["win32com.gen_py"].__path__ = [genPath]
         import win32com.client
         win32com.client.gencache.is_readonly = False
         
