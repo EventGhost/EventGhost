@@ -152,6 +152,8 @@ class ThreadWorker:
             #eg.DebugNote("WAIT_OBJECT_0+1")
             if pythoncom.PumpWaitingMessages():
                 eg.DebugNote("Got WM_QUIT")
+                self.__alive = False
+                return
             #eg.DebugNote("WAIT_OBJECT_0+1 done")
         elif rc == WAIT_TIMEOUT:
             # Our timeout has elapsed.
