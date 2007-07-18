@@ -248,6 +248,12 @@ def UseForegroundWindowOnly():
                 
 class FindWindow(eg.ActionClass):
     name = "Find a window"
+    description = (
+        'Searches for a window, which is afterwards used as a target for '
+        'further window actions in the macro.\n\n<p>'
+        'If a macro has no "Find a window" actions, all window actions will '
+        'target the frontmost window.'
+    )
     iconFile = "FindWindow"
     class text:
         label = "Find Window: %s"

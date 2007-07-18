@@ -509,9 +509,9 @@ class CmdConfigure:
     def Undo(self, document):
         item = self.positionData.GetItem()
         argumentString = item.GetArgumentString()
-        TreeLink.StartUndo()
+        eg.TreeLink.StartUndo()
         item.SetArgumentString(self.oldArgumentString)
-        TreeLink.StopUndo()
+        eg.TreeLink.StopUndo()
         self.oldArgumentString = argumentString
         item.Refresh()
         item.Select()

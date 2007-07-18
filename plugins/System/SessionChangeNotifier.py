@@ -21,14 +21,16 @@
 # $LastChangedBy$
 
 import eg
+import time
+import ctypes
 from win32ts import (
-    WTSRegisterSessionNotification, 
     WTSUnRegisterSessionNotification,
-    NOTIFY_FOR_ALL_SESSIONS,
     WTSQuerySessionInformation,
     WTSUserName,
-    WTS_CURRENT_SERVER_HANDLE
+    WTS_CURRENT_SERVER_HANDLE,
+    NOTIFY_FOR_ALL_SESSIONS,
 )
+import win32api
 
 WM_WTSSESSION_CHANGE = 0x02B1
 
@@ -41,21 +43,38 @@ WTS_WPARAM_DICT = {
     6: "SessionLogoff",
     7: "SessionLock",
     8: "SessionUnlock",
-    9: "SessionRemoteControl"}
+    9: "SessionRemoteControl"
+}
 
 
 class SessionChangeNotifier:
     inited = False
     
     def __init__(self, plugin):
-        try:
-            WTSRegisterSessionNotification(
+        # WTSRegisterSessionNotification seems to have an odd bug (throwing an
+        # exception at an unexpected location). Therefor we use the ctypes
+        # version
+        WTSRegisterSessionNotification = ctypes.windll.WtsApi32.WTSRegisterSessionNotification
+        for tries in range(60):
+            success = WTSRegisterSessionNotification(
                 eg.messageReceiver.hwnd, 
                 NOTIFY_FOR_ALL_SESSIONS
             )
-        except NotImplementedError:
-            # Only available on Windows XP and above
-            return
+            if success:
+                break
+            errorNum = win32api.GetLastError()
+            # if we get the error RPC_S_INVALID_BINDING (1702), the system
+            # hasn't started all needed services. For this reason we wait some
+            # time and try it again.
+            if errorNum == 1702:
+                time.sleep(1.0)
+                continue
+            # some other error has happened
+            raise SystemError("WTSRegisterSessionNotification", errorNum)
+            #return
+        else:
+            raise SystemError("WTSRegisterSessionNotification timeout")
+            
         
         self.TriggerEvent = plugin.TriggerEvent
         eg.messageReceiver.AddHandler(

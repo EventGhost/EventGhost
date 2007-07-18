@@ -272,7 +272,7 @@ def GetPluginInfo(pluginName):
     return info
 
 
-@eg.LogIt
+@eg.LogItWithReturn
 def OpenPlugin(pluginName, evalName, args, treeItem=None):
     info = GetPluginInfo(pluginName)
     if info is None:

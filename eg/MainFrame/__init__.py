@@ -83,7 +83,14 @@ class MainFrame(wx.Frame):
         """ Create the MainFrame """
         text = eg.text
         self.document = document
-        self.menuState = eg.Bunch()
+        self.menuState = menuState = eg.Bunch()
+        menuState.newEvent = False
+        menuState.newAction = False
+        menuState.edit = False
+        menuState.execute = False
+        menuState.rename = False
+        menuState.disable = False
+
         wx.Frame.__init__(
             self, 
             None, 
@@ -659,7 +666,7 @@ class MainFrame(wx.Frame):
         menuItems.renameItem.Enable(menuState.rename)
         menuItems.disableItem.Enable(menuState.disable)
         menuItems.disableItem.Check(
-            self.document.selection and not self.document.selection.isEnabled
+            bool(self.document.selection and not self.document.selection.isEnabled)
         )
         
         

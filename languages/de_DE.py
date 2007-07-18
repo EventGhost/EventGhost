@@ -612,7 +612,9 @@ class Plugin:
     class SysTrayMenu:
         name = u'System Tray Men\xfc'
         description = u'Erm\xf6glicht es das Tray-Men\xfc von EventGhost um eigene Men\xfc-Eintr\xe4ge zu erweitern.'
-        addButton = u'Hinzuf\xfcgen'
+        addBox = u'Hinzuf\xfcgen:'
+        addItemButton = u'Men\xfceintrag'
+        addSeparatorButton = u'Trennlinie'
         deleteButton = u'Entfernen'
         editEvent = u'Ereignis:'
         editLabel = u'Beschriftung:'

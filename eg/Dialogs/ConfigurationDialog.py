@@ -223,22 +223,22 @@ class ConfigurationDialog(eg.Dialog):
         
     
     def AffirmedShowModal(self):
-        FinishSetup()
+        self.FinishSetup()
         if self.ShowModal() == wx.ID_OK:
             return True
         return False
 
 
-    def AffirmedShowModal(self):
-        gr1 = eg.Greenlet.getcurrent()
-        self.FinishSetup()
-        self.Show()
-        self.Raise()
-        self.SetCallback(gr1.switch)
-        result = gr1.parent.switch()
-        self.Hide()
-        self.Destroy()
-        return result == wx.ID_OK
+#    def AffirmedShowModal(self):
+#        gr1 = eg.Greenlet.getcurrent()
+#        self.FinishSetup()
+#        self.Show()
+#        self.Raise()
+#        self.SetCallback(gr1.switch)
+#        result = gr1.parent.switch()
+#        self.Hide()
+#        self.Destroy()
+#        return result == wx.ID_OK
 
 #    def OnHelp(self, event):
 #        self.configureItem.ShowHelp()

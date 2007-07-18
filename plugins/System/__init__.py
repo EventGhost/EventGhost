@@ -80,7 +80,6 @@ from ChangeDisplaySettings import ChangeDisplaySettings
 from Execute import Execute
 from DeviceChangeNotifier import DeviceChangeNotifier
 from PowerBroadcastNotifier import PowerBroadcastNotifier
-from SessionChangeNotifier import SessionChangeNotifier
 import Registry
 
 class Text:
@@ -190,6 +189,7 @@ class System(eg.PluginClass):
         self.powerBroadcastNotifier = PowerBroadcastNotifier(self)
 
         # start the session change notifications
+        from SessionChangeNotifier import SessionChangeNotifier
         self.sessionChangeNotifier = SessionChangeNotifier(self)
 
         try:
