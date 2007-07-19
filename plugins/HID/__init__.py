@@ -36,7 +36,9 @@ class Text:
     no = "No"
     enduringEvents = "Trigger enduring events for buttons"
     rawDataEvents = "Use raw Data as event name"
+    multipleDeviceOptions = "Options for multiple same devices"
     noOtherPort = "Use selected device only if connected to current port"
+    useFirstDevice = "Use first device found"
     errorFind = "Error finding HID device: "
     errorOpen = "Error opening HID device: "
     errorRead = "Error reading HID device: "
@@ -328,7 +330,8 @@ class HIDHelper:
         devicePath,
         vendorID,
         productID,
-        versionNumber
+        versionNumber,
+        useFirstDevice = False
     ):
         found = 0
         path = ""
@@ -344,7 +347,7 @@ class HIDHelper:
                     and item[PRODUCT_ID] == productID \
                     and item[VERSION_NUMBER] == versionNumber:
                     found = found + 1
-                    if item[DEVICE_PATH] == devicePath:
+                    if (item[DEVICE_PATH] == devicePath) or (useFirstDevice):
                         #found right device
                         return devicePath
                     path = item[DEVICE_PATH]
@@ -372,7 +375,8 @@ class HIDThread(threading.Thread):
         vendorString,
         productID,
         productString,
-        versionNumber
+        versionNumber,
+        useFirstDevice
     ):
         self.text = Text
         self.deviceName = vendorString + " " + productString
@@ -386,7 +390,8 @@ class HIDThread(threading.Thread):
             devicePath,
             vendorID,
             productID,
-            versionNumber
+            versionNumber,
+            useFirstDevice
         )
 
         if not self.devicePath:
@@ -598,7 +603,8 @@ class HID(eg.PluginClass):
         vendorString,
         productID,
         productString,
-        versionNumber
+        versionNumber,
+        useFirstDevice = False
     ):
         prefix = "HID: "
         #one or both strings empty should not happen
@@ -623,7 +629,8 @@ class HID(eg.PluginClass):
         vendorString,
         productID,
         productString,
-        versionNumber
+        versionNumber,
+        useFirstDevice = False
     ):
         if eventName:
             self.info.eventPrefix = eventName
@@ -647,7 +654,8 @@ class HID(eg.PluginClass):
             vendorString,
             productID,
             productString,
-            versionNumber
+            versionNumber,
+            useFirstDevice
         )
 
     def __stop__(self):
@@ -664,7 +672,8 @@ class HID(eg.PluginClass):
         vendorString = None,
         productID = None,
         productString = None,
-        versionNumber = None
+        versionNumber = None,
+        useFirstDevice = False
     ):
         #ensure helper object is up to date
         if not self.helper:
@@ -700,10 +709,7 @@ class HID(eg.PluginClass):
 
         #add not connected device to bottom of list
         if not path:
-            if not devicePath:
-                #just select first entry on first start
-                hidList.Select(0)
-            else:
+            if devicePath:
                 item = {
                     DEVICE_PATH: devicePath,
                     VENDOR_ID: vendorID,
@@ -718,6 +724,9 @@ class HID(eg.PluginClass):
                 hidList.Select(idx)
                 devices[idx] = item
 
+        if hidList.GetFirstSelected() == -1:
+            #no device selected, disable ok button
+            dialog.buttonRow.okButton.Enable(False)
 
         #layout
         for i in range(hidList.GetColumnCount()):
@@ -740,22 +749,37 @@ class HID(eg.PluginClass):
         eventNameCtrl.SetMaxLength(32)
         optionsSizer.Add(eventNameCtrl, (0, 1), (1, 2), flag = wx.EXPAND)
 
-        #checkbox for no other port option
-        noOtherPortCtrl = wx.CheckBox(dialog, -1, self.text.noOtherPort)
-        noOtherPortCtrl.SetValue(noOtherPort)
-        optionsSizer.Add(noOtherPortCtrl, (1, 0), (1, 3))
-
         #checkbox for enduring event option
         enduringEventsCtrl = wx.CheckBox(dialog, -1, self.text.enduringEvents)
         enduringEventsCtrl.SetValue(enduringEvents)
-        optionsSizer.Add(enduringEventsCtrl, (2, 0), (1, 3))
+        optionsSizer.Add(enduringEventsCtrl, (1, 0), (1, 3))
 
         #checkbox for raw data events
         rawDataEventsCtrl = wx.CheckBox(dialog, -1, self.text.rawDataEvents)
         rawDataEventsCtrl.SetValue(rawDataEvents)
-        optionsSizer.Add(rawDataEventsCtrl, (3, 0), (1, 3))
+        optionsSizer.Add(rawDataEventsCtrl, (2, 0), (1, 3))
+
+        #text
+        optionsSizer.Add(
+            wx.StaticText(dialog, -1, self.text.multipleDeviceOptions),
+            (3, 0), (1, 3),
+            flag = wx.ALIGN_CENTER_VERTICAL)
+        
+        #checkbox for use first device
+        useFirstDeviceCtrl = wx.CheckBox(dialog, -1, self.text.useFirstDevice)
+        useFirstDeviceCtrl.SetValue(useFirstDevice)
+        optionsSizer.Add(useFirstDeviceCtrl, (4, 0), (1, 3))
+
+        #checkbox for no other port option
+        noOtherPortCtrl = wx.CheckBox(dialog, -1, self.text.noOtherPort)
+        noOtherPortCtrl.SetValue(noOtherPort)
+        optionsSizer.Add(noOtherPortCtrl, (5, 0), (1, 3))
 
         dialog.sizer.Add(optionsSizer)
+
+        def OnHidListSelect(event):
+            dialog.buttonRow.okButton.Enable(True)
+            event.Skip()
 
         def OnRawDataEventsChange(event):
             enduringEventsCtrl.Enable(not rawDataEventsCtrl.GetValue())
@@ -765,10 +789,23 @@ class HID(eg.PluginClass):
             rawDataEventsCtrl.Enable(not enduringEventsCtrl.GetValue())
             event.Skip()
 
+        def OnUseFirstDeviceCtrlChange(event):
+            noOtherPortCtrl.Enable(not useFirstDeviceCtrl.GetValue())
+            event.Skip()
+
+        def OnNoOtherPortChange(event):
+            useFirstDeviceCtrl.Enable(not noOtherPortCtrl.GetValue())
+            event.Skip()
+
         OnRawDataEventsChange(wx.CommandEvent())
         OnEnduringEventsChange(wx.CommandEvent())
+        OnUseFirstDeviceCtrlChange(wx.CommandEvent())
+        OnNoOtherPortChange(wx.CommandEvent())
         rawDataEventsCtrl.Bind(wx.EVT_CHECKBOX, OnRawDataEventsChange)
         enduringEventsCtrl.Bind(wx.EVT_CHECKBOX, OnEnduringEventsChange)
+        useFirstDeviceCtrl.Bind(wx.EVT_CHECKBOX, OnUseFirstDeviceCtrlChange)
+        noOtherPortCtrl.Bind(wx.EVT_CHECKBOX, OnNoOtherPortChange)
+        hidList.Bind(wx.EVT_LIST_ITEM_SELECTED, OnHidListSelect)
 
         if dialog.AffirmedShowModal():
             device = devices[hidList.GetFirstSelected()]
@@ -782,6 +819,7 @@ class HID(eg.PluginClass):
                 device[VENDOR_STRING],
                 device[PRODUCT_ID],
                 device[PRODUCT_STRING],
-                device[VERSION_NUMBER]
+                device[VERSION_NUMBER],
+                useFirstDeviceCtrl.GetValue()
             )
 
