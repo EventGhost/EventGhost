@@ -229,6 +229,7 @@ py2exeOptions = dict(
                 "msvcr71.dll"
             ],
             dist_dir = trunkDir,
+            custom_boot_script=join(trunkDir, "eg", "Py2ExeBootScript.py")
         )
     ),
     # The lib directory contains everything except the executables and the python dll.
@@ -334,7 +335,7 @@ Filename: "{app}\EventGhost.exe"; Flags: postinstall nowait skipifsilent
 Type: filesandordirs; Name: "{app}\eg"
 
 [Files]
-;Source: "%(DIST)s\*.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "%(TRUNK)s\*.exe"; DestDir: "{app}"; Flags: ignoreversion
 %(INSTALL_FILES)s
 Source: "%(TRUNK)s\Example.xml"; DestDir: "{userappdata}\EventGhost"; DestName: "MyConfig.xml"; Flags: onlyifdoesntexist uninsneveruninstall
 Source: "%(TRUNK)s\plugins\TechnoTrendIr\TTUSBIR.dll"; DestDir: "{app}\plugins\TechnoTrendIr"; Flags: ignoreversion

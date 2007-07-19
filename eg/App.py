@@ -181,7 +181,7 @@ class MyApp(wx.App):
         for t in threading.enumerate():
             if (
                 t is not currentThread 
-                and (t is not eg.messageReceiver) 
+                and (t is not eg.messageReceiver._ThreadWorker__thread) 
                 and not t.isDaemon() 
                 and t.isAlive()
             ):

@@ -188,9 +188,11 @@ class System(eg.PluginClass):
         # start the power broadcast notifications
         self.powerBroadcastNotifier = PowerBroadcastNotifier(self)
 
-        # start the session change notifications
-        from SessionChangeNotifier import SessionChangeNotifier
-        self.sessionChangeNotifier = SessionChangeNotifier(self)
+        # start the session change notifications (only on Win XP and above)
+        majorVersion, minorVersion = sys.getwindowsversion()[0:2]
+        if majorVersion > 5 or (majorVersion == 5 and minorVersion > 0):
+            from SessionChangeNotifier import SessionChangeNotifier
+            self.sessionChangeNotifier = SessionChangeNotifier(self)
 
         try:
             RegisterKeyhook(
@@ -201,7 +203,7 @@ class System(eg.PluginClass):
             eg.PrintTraceback()
         
         # Use VistaVolume.dll from stridger for sound volume control on Vista
-        if sys.getwindowsversion()[0] > 5:
+        if majorVersion > 5:
             pluginDir = os.path.abspath(os.path.split(__file__)[0])
             dllPath = os.path.join(pluginDir, "VistaVolume.dll")
             vistaVolumeDll = ctypes.cdll.LoadLibrary(dllPath)
