@@ -310,7 +310,7 @@ Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
 [Setup]
 ShowLanguageDialog=auto
 AppId=EventGhost
-AppName=EventGhost-Update %(version)s build %(buildNum)s
+AppName=EventGhost
 AppVerName=EventGhost-Update %(version)s build %(buildNum)s
 DefaultDirName={pf}\EventGhost
 DefaultGroupName=EventGhost

@@ -132,6 +132,9 @@ class Task(eg.PluginClass):
         eg.messageReceiver.RemoveHandler(WM_SHELLHOOKMESSAGE, self.MyWndProc)
         eg.messageReceiver.RemoveHandler(WM_APP+1, self.FocusWndProc)
         eg.messageReceiver.RemoveHandler(WM_APP+2, self.FatalWndProc)
+        from _ctypes import FreeLibrary
+        FreeLibrary(self.hookDll._handle)
+        self.hookDll = None
         
         
     @eg.LogIt
