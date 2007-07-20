@@ -61,15 +61,10 @@ eg.RegisterPlugin(
 
 import os
 from threading import Timer
-import threading
-import time
-import win32event
 import win32api
 import win32gui
 import win32con
-
 import wx
-
 from ctypes import *
 
 #BOOL WINAPI MceIrRegisterEvents(HWND hWnd)
@@ -157,6 +152,104 @@ pluginDir = os.path.abspath(os.path.split(__file__)[0])
 dllPath = os.path.join(pluginDir, "MceIr.dll")
 
 
+class MceMessageReceiver(eg.ThreadWorker):
+    """
+    A thread with a hidden window to receive win32 messages from the driver
+    """
+    def __init__(self, plugin, waitTime):
+        self.plugin = plugin
+        self.waitTime = waitTime
+        eg.ThreadWorker.__init__(self)
+        
+        
+    @eg.LogIt
+    def Setup(self):
+        """
+        This will be called inside the thread at the beginning.
+        """
+        self.timer = Timer(0, self.OnTimeOut)
+        self.lastEvent = eg.EventGhostEvent()
+        
+        wc = win32gui.WNDCLASS()
+        wc.hInstance = win32api.GetModuleHandle(None)
+        wc.lpszClassName = "HiddenMceMessageReceiver"
+        wc.style = win32con.CS_VREDRAW|win32con.CS_HREDRAW;
+        wc.hCursor = win32gui.LoadCursor(0, win32con.IDC_ARROW)
+        wc.hbrBackground = win32con.COLOR_WINDOW
+        wc.lpfnWndProc = self.MyWndProc
+        classAtom = win32gui.RegisterClass(wc)
+        self.hwnd = win32gui.CreateWindow(
+            classAtom,
+            "MCE Remote Message Receiver",
+            win32con.WS_OVERLAPPED|win32con.WS_SYSMENU,
+            0, 
+            0,
+            win32con.CW_USEDEFAULT, 
+            win32con.CW_USEDEFAULT,
+            0, 
+            0,
+            wc.hInstance, 
+            None
+        )
+        self.wc = wc
+        self.classAtom = classAtom
+        self.hinst = wc.hInstance
+        
+        self.dll = WinDLL(dllPath)
+        self.dll.MceIrRegisterEvents(self.hwnd)
+        self.dll.MceIrSetRepeatTimes(1,1)
+        
+        # Bind to suspend notifications so we can go into suspend
+        eg.Bind("System.Suspend", self.OnSuspend)
+        eg.Bind("System.Resume", self.OnResume)
+        
+        
+    @eg.LogIt
+    def Finish(self):
+        """
+        This will be called inside the thread when it finishes. It will even
+        be called if the thread exits through an exception.
+        """
+        # Unbind from power notification events
+        eg.Unbind("System.Suspend", self.OnSuspend)
+        eg.Unbind("System.Resume", self.OnResume)
+        
+        self.dll.MceIrUnregisterEvents()
+        win32gui.DestroyWindow(self.hwnd)
+        self.hwnd = None
+        win32gui.UnregisterClass(self.classAtom, self.hinst)
+        self.Stop()
+        
+        
+    def OnSuspend(self, event):
+        self.dll.MceIrSuspend()
+    
+    
+    def OnResume(self, event):
+        self.dll.MceIrResume()       
+          
+                        
+    @eg.LogIt
+    def MyWndProc(self, hwnd, mesg, wParam, lParam):
+        if mesg == win32con.WM_USER:
+            self.timer.cancel()
+            key = lParam & 0xFFFF
+            repeatCounter = (lParam >> 16)     
+            if key in KEY_MAP:
+                eventString = KEY_MAP[key]
+            else:
+                eventString = "%X" % key
+            if repeatCounter == 0:
+                self.lastEvent = self.plugin.TriggerEnduringEvent(eventString)                
+            self.timer = Timer(self.waitTime, self.OnTimeOut)
+            self.timer.start()
+        return 1
+    
+    
+    def OnTimeOut(self):
+        self.lastEvent.SetShouldEnd()
+        
+        
 
 class MceRemote(eg.PluginClass):
     
@@ -167,113 +260,13 @@ class MceRemote(eg.PluginClass):
             "increase this value.)"
         )
 
-    def __init__(self):
-        self.device = None
-        self.isEnabled = False
-        self.waitTime = 0.15
-        self.repeatCounter = -1
-        self.timer = Timer(0, self.OnTimeOut)
-        self.lastEventString = ""
-        self.lastEvent = eg.EventGhostEvent()
-        
-        
     def __start__(self, waitTime=0.15):
-        self.waitTime = waitTime
-        self.isEnabled = True
-        # create a dummy window
-        def Init():
-            self.frame = wx.Frame(None, -1, "MceIr Monitor")
-            # we are only interested in the hwnd
-            self.hwnd = self.frame.GetHandle()
-            # insert our WndProc
-            self.oldWndProc = win32gui.SetWindowLong(
-                self.hwnd, 
-                win32con.GWL_WNDPROC, 
-                self.MyWndProc
-            )
-            self.dll = WinDLL(dllPath)
-            self.dll.MceIrRegisterEvents(self.hwnd)
-            self.dll.MceIrSetRepeatTimes(1,1)
-            
-            #Bind to suspend notifications so we can go into suspend
-            eg.Bind("System.Suspend", self.OnSuspend)
-            eg.Bind("System.Resume", self.OnResume)
-        wx.CallAfter(Init)
+        self.msgThread = MceMessageReceiver(self, waitTime)
+        self.msgThread.Start()
 
 
     def __stop__(self):
-        self.isEnabled = False
-        
-        #Unbind from power notification events
-        eg.Unbind("System.Suspend", self.OnSuspend)
-        eg.Unbind("System.Resume", self.OnResume)
-        
-        self.dll.MceIrUnregisterEvents()
-        if self.frame:
-            self.frame.Close()
-            self.frame = None
-        
-        
-    def OnSuspend(self, event):
-        if self.isEnabled:
-            self.dll.MceIrSuspend()
-    
-    
-    def OnResume(self, event):
-        if self.isEnabled:
-            self.dll.MceIrResume()       
-          
-                        
-    @eg.LogIt
-    def MyWndProc(self, hwnd, mesg, wParam, lParam):
-        if mesg == win32con.WM_DESTROY:
-            # Restore the old WndProc.  Notice the use of win32api
-            # instead of win32gui here.  This is to avoid an error due to
-            # not passing a callable object.
-            win32api.SetWindowLong(
-                self.hwnd, 
-                win32con.GWL_WNDPROC,
-                self.oldWndProc
-            )
-        elif mesg == win32con.WM_USER:
-            key = lParam & 0xFFFF
-            repeatCounter = (lParam >> 16)
-            if not self.isEnabled:
-                return
-            if key in KEY_MAP:
-                eventString = KEY_MAP[key]
-            else:
-                eventString = "%X" % key
-            self.timer.cancel()       
-            if self.lastEventString != eventString:
-                if self.lastEventString != "":
-                    self.lastEvent.SetShouldEnd()
-                self.lastEvent = self.TriggerEnduringEvent(eventString)
-                self.lastEventString = eventString
-                self.repeatCounter = repeatCounter
-            else:
-                self.repeatCounter += 1
-                if self.repeatCounter != repeatCounter:
-                    if self.lastEventString != "":
-                        self.lastEvent.SetShouldEnd()
-                    self.lastEvent = self.TriggerEnduringEvent(eventString)
-                    self.lastEventString = eventString
-                    
-            self.timer = Timer(self.waitTime, self.OnTimeOut)
-            self.timer.start()
-        else:
-            return win32gui.CallWindowProc(
-                self.oldWndProc, 
-                hwnd, 
-                mesg,
-                wParam, 
-                lParam
-            )
-        
-        
-    def OnTimeOut(self):
-        self.lastEvent.SetShouldEnd()
-        self.lastEventString = ""
+        self.msgThread.Stop()
         
         
     def Configure(self, waitTime=0.15):
