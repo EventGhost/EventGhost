@@ -349,7 +349,7 @@ class HIDHelper:
                     found = found + 1
                     if (item[DEVICE_PATH] == devicePath) or (useFirstDevice):
                         #found right device
-                        return devicePath
+                        return item[DEVICE_PATH]
                     path = item[DEVICE_PATH]
 
         if found == 1:
@@ -694,7 +694,7 @@ class HID(eg.PluginClass):
 
 
         path = self.helper.GetDevicePath(noOtherPort,
-            devicePath, vendorID, productID, versionNumber)
+            devicePath, vendorID, productID, versionNumber, useFirstDevice)
 
         #fill list
         devices = {}
