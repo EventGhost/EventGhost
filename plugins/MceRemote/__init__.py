@@ -29,7 +29,7 @@ import eg
 eg.RegisterPlugin(
     name = "Microsoft MCE Remote",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.1." + "$LastChangedRevision$".split()[1],
     kind = "remote",
     description = (
         'Plugin for the Microsoft MCE remote.'
@@ -65,6 +65,7 @@ import win32api
 import win32gui
 import win32con
 import wx
+from msvcrt import get_osfhandle
 from ctypes import *
 
 #BOOL WINAPI MceIrRegisterEvents(HWND hWnd)
@@ -216,7 +217,6 @@ class MceMessageReceiver(eg.ThreadWorker):
         
         self.dll.MceIrUnregisterEvents()
         win32gui.DestroyWindow(self.hwnd)
-        self.hwnd = None
         win32gui.UnregisterClass(self.classAtom, self.hinst)
         self.Stop()
         
@@ -260,6 +260,10 @@ class MceRemote(eg.PluginClass):
             "increase this value.)"
         )
 
+    def __init__(self):
+        self.AddAction(TransmitIr)
+            
+            
     def __start__(self, waitTime=0.15):
         self.msgThread = MceMessageReceiver(self, waitTime)
         self.msgThread.Start()
@@ -285,3 +289,56 @@ class MceRemote(eg.PluginClass):
         
         if dialog.AffirmedShowModal():
             return (waitTimeCtrl.GetValue(), )
+        
+        
+        
+class TransmitIr(eg.ActionClass):
+    name = "Transmit IR"
+    
+    def __call__(self, code=""):
+        tmpFile = os.tmpfile()
+        tmpFile.write(code)
+        tmpFile.seek(0)
+        self.plugin.msgThread.dll.MceIrPlaybackFromFile(
+            get_osfhandle(tmpFile.fileno())
+        )
+        
+        
+    def Configure(self, code=""):
+        dialog = eg.ConfigurationDialog(self)
+        code = ' '.join([("%02X" % ord(c)) for c in code])
+            
+        editCtrl = wx.TextCtrl(dialog, -1, code, style=wx.TE_MULTILINE)
+        font = editCtrl.GetFont()
+        font.SetFaceName("Courier New")
+        editCtrl.SetFont(font)
+        editCtrl.SetMinSize((-1, 100))
+        
+        def Learn(event):
+            tmpFile = os.tmpfile()
+            self.plugin.msgThread.dll.MceIrRecordToFile(
+                get_osfhandle(tmpFile.fileno()), 
+                10000
+            )
+            tmpFile.seek(0)
+            code = tmpFile.read()
+            tmpFile.close()
+            editCtrl.SetValue(' '.join([("%02X" % ord(c)) for c in code]))
+        learnButton = wx.Button(dialog, -1, "Learn IR Code")
+        learnButton.Bind(wx.EVT_BUTTON, Learn)
+        
+        def TestTransmission(event):
+            self(editCtrl.GetValue().replace(" ", "").decode("hex_codec"))
+        testButton = wx.Button(dialog, -1, "Test IR Transmission")
+        testButton.Bind(wx.EVT_BUTTON, TestTransmission)
+        
+        dialog.sizer.Add(editCtrl, 1, wx.EXPAND)
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(learnButton)
+        sizer.Add((5,5), 1)
+        sizer.Add(testButton)
+        dialog.sizer.Add(sizer, 0, wx.EXPAND)
+        if dialog.AffirmedShowModal():
+            code = editCtrl.GetValue().replace(" ", "").decode("hex_codec")
+            return (code, )
+    

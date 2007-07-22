@@ -101,9 +101,10 @@ class ActionClass(object):
         """
         dialog = eg.ConfigurationDialog(self)
         label = wx.StaticText(dialog, -1, eg.text.General.noOptionsAction)
+        dialog.buttonRow.applyButton.Enable(False)
         dialog.sizer.Add(label)
         if dialog.AffirmedShowModal():
-            pass
+            return ()
     
     
 # An ActionClass will only define a "Compile" method, if it uses a special 

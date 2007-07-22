@@ -452,10 +452,8 @@ class TreeCtrl(wx.TreeCtrl):
     def OnItemActivate(self, event):
         item = event.GetItem()
         if item.IsOk():
-            pyObj = self.GetPyData(item)
-            if isinstance(pyObj, ActionItem):
-                wx.CallAfter(eg.Greenlet(CmdConfigure().Do).switch, pyObj)
-                return
+            wx.CallAfter(CmdConfigure().Try, self.document)
+            return
         event.Skip()
         
         

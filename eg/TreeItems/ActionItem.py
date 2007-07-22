@@ -68,7 +68,7 @@ class ActionItem(TreeItem):
     openConfigDialog = None
     shouldSelectOnExecute = False
     configurationGenerator = None
-    configurationDialog = None
+
 
     def WriteToXML(self):
         attr, text, childs = TreeItem.WriteToXML(self)
@@ -199,30 +199,6 @@ class ActionItem(TreeItem):
         return True
     
     
-    @eg.LogIt
-    def ProcessConfigureDialog(self):
-        """
-        Process user request to configure this item.
-        """
-        executable = self.executable
-        if executable is None:
-            return None
-        if self.openConfigDialog:
-            self.openConfigDialog.Raise()
-            return
-        eg.SetAttr("currentConfigureItem", self)
-        
-        try:
-            args = executable.Configure(*self.args)
-        except:
-            eg.PrintError("Error while configuring: %s", self.GetLabel())
-            raise
-        if self.openConfigDialog is not None:
-            self.openConfigDialog.Destroy()
-            self.openConfigDialog = None
-        return args
-        
-        
     def ShowHelp(self):
         action = self.executable
         eg.HTMLDialog(

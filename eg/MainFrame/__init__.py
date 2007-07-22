@@ -864,9 +864,7 @@ class MainFrame(wx.Frame):
         """ 
         Menu: Edit -> Configure Element
         """
-        item = self.document.selection
-        if isinstance(item, ActionItem):
-            eg.Greenlet(UndoableCommands.CmdConfigure().Do).switch(item)
+        UndoableCommands.CmdConfigure().Try(self.document)
 
 
     def OnCmdExecute(self, event):

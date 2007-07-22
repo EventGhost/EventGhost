@@ -585,8 +585,9 @@ class FindWindow(eg.ActionClass):
             force_front_cb.SetValue(True)
             OnSearchOnlyFrontmostCheckbox(None)
         tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
-        if dialog.AffirmedShowModal():
-            tree.Unbind(wx.EVT_TREE_SEL_CHANGED)
+        ok = dialog.AffirmedShowModal()
+        tree.Unbind(wx.EVT_TREE_SEL_CHANGED)
+        if ok:
             if force_front_cb.IsChecked():
                 return (None, None, None, None, None, None, None, None, None)
             else:

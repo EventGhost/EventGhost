@@ -33,7 +33,7 @@ class ButtonRow:
         default_button = None
         text = eg.text.General
         for ctrl in buttonIds:
-            if ctrl not in (wx.ID_OK, wx.ID_CANCEL, wx.ID_HELP):
+            if ctrl not in (wx.ID_OK, wx.ID_CANCEL, wx.ID_APPLY, wx.ID_HELP):
                 stdbtnsizer.Add(ctrl)
                 
         if wx.ID_OK in buttonIds:
@@ -50,6 +50,14 @@ class ButtonRow:
             if not default_button:
                 default_button = cancelButton
             self.cancelButton = cancelButton
+        
+        if wx.ID_APPLY in buttonIds:
+            applyButton = wx.Button(parent, wx.ID_APPLY, text.apply)
+            applyButton.Bind(wx.EVT_BUTTON, self.OnApply)
+            stdbtnsizer.AddButton(applyButton)
+            if not default_button:
+                default_button = applyButton
+            self.applyButton = applyButton
         
         if wx.ID_HELP in buttonIds:
             helpButton = wx.Button(parent, wx.ID_HELP, text.help)
@@ -105,6 +113,13 @@ class ButtonRow:
     def OnCancel(self, event):
         if hasattr(self.parent, "OnCancel"):
             self.parent.OnCancel(event)
+        else:
+            event.Skip()
+            
+            
+    def OnApply(self, event):
+        if hasattr(self.parent, "OnApply"):
+            self.parent.OnApply(event)
         else:
             event.Skip()
             

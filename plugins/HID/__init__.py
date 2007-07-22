@@ -725,8 +725,9 @@ class HID(eg.PluginClass):
                 devices[idx] = item
 
         if hidList.GetFirstSelected() == -1:
-            #no device selected, disable ok button
+            #no device selected, disable ok and apply button
             dialog.buttonRow.okButton.Enable(False)
+            dialog.buttonRow.applyButton.Enable(False)
 
         #layout
         for i in range(hidList.GetColumnCount()):
@@ -779,6 +780,7 @@ class HID(eg.PluginClass):
 
         def OnHidListSelect(event):
             dialog.buttonRow.okButton.Enable(True)
+            dialog.buttonRow.applyButton.Enable(True)
             event.Skip()
 
         def OnRawDataEventsChange(event):

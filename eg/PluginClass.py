@@ -251,9 +251,10 @@ class PluginClass(object):
         with the same arguments as the __start__ method would receive.
         """
         dialog = eg.ConfigurationDialog(self)
+        dialog.buttonRow.applyButton.Enable(False)
         label = wx.StaticText(dialog, -1, eg.text.General.noOptionsPlugin)
         dialog.sizer.Add(label)
         if dialog.AffirmedShowModal():
-            pass
+            return ()
         
         

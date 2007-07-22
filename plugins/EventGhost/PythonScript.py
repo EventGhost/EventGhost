@@ -254,10 +254,10 @@ class PythonScript(eg.ActionClass):
     iconFile = "icons/PythonScript"
 
     def __init__(self):
-        class Default:
+        class Defaults:
             size = (400, 300)
             position = (10, 10)
-        self.config = eg.GetConfig("plugins.EventGhost.PythonScript", Default)
+        self.config = eg.GetConfig("plugins.EventGhost.PythonScript", Defaults)
         self.openEditFrames = {}
 
         
@@ -266,6 +266,12 @@ class PythonScript(eg.ActionClass):
 
 
     def Configure(self, *args):
+#        actionItem = eg.currentConfigureItem
+#        win = ScriptEditor(actionItem.document.frame, -1, actionItem, self)
+#        actionItem.openConfigDialog = win
+#        win.Raise()
+#        gr1 = eg.Greenlet.getcurrent()
+#        self.result = gr1.parent.switch()
         wx.CallAfter(self.OnOpen, eg.currentConfigureItem)
         return None
 

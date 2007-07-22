@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 class General:
+    apply = u'\xdc&bernehmen'
     autostartItem = u'Autostart'
     browse = u'Suchen...'
     cancel = u'Abbrechen'

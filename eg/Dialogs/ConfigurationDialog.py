@@ -126,9 +126,20 @@ class HeaderBox(wx.PyWindow):
     def AcceptsFocus(self):
         return False
     
+    
+    
+def ConfigurationDialog(executable, *args, **kwargs):    
+    if executable == eg.currentConfigureItem.executable and eg.currentConfigureItem.openConfigDialog:
+        dialog = eg.currentConfigureItem.openConfigDialog
+        dialog.Freeze()
+        dialog.Clear()
+        return dialog
+    else:
+        return ConfigurationDialogBase(executable, *args, **kwargs)
         
         
-class ConfigurationDialog(eg.Dialog):
+        
+class ConfigurationDialogBase(eg.Dialog):
     """
     A configuration dialog for all plug-ins and actions.
     """
@@ -154,7 +165,7 @@ class ConfigurationDialog(eg.Dialog):
         if resizeable:
             dialogStyle |= wx.RESIZE_BORDER
         eg.Dialog.__init__(self, eg.document.frame, -1, title, style=dialogStyle)
-        
+        self.Freeze()
 #        icon = obj.info.GetWxIcon()
 #        self.icon = icon
 #        if icon:
@@ -162,7 +173,7 @@ class ConfigurationDialog(eg.Dialog):
         
         self.buttonRow = eg.ButtonRow(
             self, 
-            (wx.ID_OK, wx.ID_CANCEL)
+            (wx.ID_OK, wx.ID_CANCEL, wx.ID_APPLY)
         )
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         paramSizer = wx.BoxSizer(wx.VERTICAL)
@@ -187,13 +198,12 @@ class ConfigurationDialog(eg.Dialog):
         )        
         
 
-
     def FinishSetup(self):
         if not self.__postInited:
-            self.__postInited = True
             line = wx.StaticLine(self)
             self.sizer.Add((0,0))
             self.mainSizer.Add(line, 0, wx.EXPAND|wx.ALIGN_CENTER)
+            self.buttonRow.applyButton.MoveAfterInTabOrder(line)
             self.buttonRow.cancelButton.MoveAfterInTabOrder(line)
             self.buttonRow.okButton.MoveAfterInTabOrder(line)
             
@@ -206,12 +216,22 @@ class ConfigurationDialog(eg.Dialog):
                 flag = wx.EXPAND|wx.RIGHT
                 border = 10
             self.mainSizer.Add(self.buttonRow.sizer, 0, flag, border)
-            self.SetSizerAndFit(self.mainSizer)
-            self.SetMinSize(self.GetSize())
-            self.Layout()
-        self.Centre()
+
+        self.SetSizerAndFit(self.mainSizer)
+        self.SetMinSize(self.GetSize())
+        self.Layout()
+        #self.Refresh()
+        self.Thaw()
+        if not self.__postInited:
+            self.Centre()
+        self.__postInited = True
         
-    
+        
+    def Clear(self):
+        #self.__postInited = False
+        self.sizer.Clear(deleteWindows=True)
+            
+        
     def SetCallback(self, callback, *args, **kwargs):
         def OkCallWarpper(event):
             callback(wx.ID_OK, *args, **kwargs)
@@ -219,6 +239,9 @@ class ConfigurationDialog(eg.Dialog):
         def CancelCallWarpper(event):
             callback(wx.ID_CANCEL, *args, **kwargs)
         self.buttonRow.cancelButton.Bind(wx.EVT_BUTTON, CancelCallWarpper)
+        def ApplyCallWarpper(event):
+            callback(wx.ID_APPLY, *args, **kwargs)
+        self.buttonRow.applyButton.Bind(wx.EVT_BUTTON, ApplyCallWarpper)
         self.Bind(wx.EVT_CLOSE, CancelCallWarpper)
         
     
@@ -229,17 +252,26 @@ class ConfigurationDialog(eg.Dialog):
         return False
 
 
-#    def AffirmedShowModal(self):
-#        gr1 = eg.Greenlet.getcurrent()
-#        self.FinishSetup()
-#        self.Show()
-#        self.Raise()
-#        self.SetCallback(gr1.switch)
-#        result = gr1.parent.switch()
-#        self.Hide()
-#        self.Destroy()
-#        return result == wx.ID_OK
-
+    def AffirmedShowModal(self):
+        gr1 = eg.Greenlet.getcurrent()
+        self.FinishSetup()
+        self.Show()
+        self.Raise()
+        def SwitchWrapper(resultCode):
+            def wrapper(event):
+                gr1.switch(resultCode)
+            return wrapper
+        self.buttonRow.okButton.Bind(wx.EVT_BUTTON, SwitchWrapper(wx.ID_OK))
+        self.buttonRow.cancelButton.Bind(wx.EVT_BUTTON, SwitchWrapper(wx.ID_CANCEL))
+        self.buttonRow.applyButton.Bind(wx.EVT_BUTTON, SwitchWrapper(wx.ID_APPLY))
+        self.Bind(wx.EVT_CLOSE, SwitchWrapper(wx.ID_CANCEL))
+        
+        self.result = gr1.parent.switch()
+        #self.Hide()
+        #self.Destroy()
+        return self.result in (wx.ID_OK, wx.ID_APPLY)
+    
+    
 #    def OnHelp(self, event):
 #        self.configureItem.ShowHelp()
 #

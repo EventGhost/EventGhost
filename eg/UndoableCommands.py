@@ -78,13 +78,16 @@ class NewPlugin(NewItem):
         pluginItem.Select()
         if pluginItem.executable:
             if pluginItem.NeedsStartupConfiguration():
-                args = pluginItem.ProcessConfigureDialog()
-                if args is None:
+                if not CmdConfigure().Do(pluginItem):
                     pluginItem.Delete()
                     return None
-                else:
-                    pluginItem.SetParams(*args)
-                    pluginItem.Refresh()
+#                args = pluginItem.ProcessConfigureDialog()
+#                if args is None:
+#                    pluginItem.Delete()
+#                    return None
+#                else:
+#                    pluginItem.SetParams(*args)
+#                    pluginItem.Refresh()
             eg.actionThread.Call(pluginItem.Execute)
         self.StoreItem(pluginItem)
         return pluginItem
@@ -216,13 +219,17 @@ class NewAction(NewItem):
         item.Select()
         
         if item.NeedsStartupConfiguration():
-            args = item.ProcessConfigureDialog()
-            if args is None:
-                item.Delete()
-                return None
-            else:
-                item.SetParams(*args)
-                item.Refresh()
+            if item.NeedsStartupConfiguration():
+                if not CmdConfigure().Do(item):
+                    item.Delete()
+                    return None
+#            args = item.ProcessConfigureDialog()
+#            if args is None:
+#                item.Delete()
+#                return None
+#            else:
+#                item.SetParams(*args)
+#                item.Refresh()
                 
         self.StoreItem(item)
         return item
@@ -492,18 +499,58 @@ class CmdMoveTo:
 
 class CmdConfigure:
     
+    def Try(self, document):
+        item = document.selection
+        if isinstance(item, eg.ActionItem):
+            eg.Greenlet(self.Do).switch(item)
+        
+    
     def Do(self, item):
-        newArgs = item.ProcessConfigureDialog()
-        if newArgs is None:
-            return
-        self.name = eg.text.MainFrame.Menu.Edit.replace("&", "")
+        executable = item.executable
+        if executable is None:
+            return False
+        if item.openConfigDialog:
+            item.openConfigDialog.Raise()
+            return False
+        
         self.oldArgumentString = item.GetArgumentString()
+        oldArgs = item.args
+        self.name = eg.text.MainFrame.Menu.Edit.replace("&", "")
+        
+        wasApplied = False
+        while True:
+            eg.SetAttr("currentConfigureItem", item)
+            try:
+                newArgs = executable.Configure(*item.args)
+            except:
+                eg.PrintError("Error while configuring: %s", item.GetLabel())
+                raise
+            if item.openConfigDialog is not None:
+                userAction = item.openConfigDialog.result
+                if userAction == wx.ID_CANCEL:
+                    item.openConfigDialog.Destroy()
+                    del item.openConfigDialog
+                    if wasApplied:
+                        item.SetParams(*oldArgs)
+                    return False
+                elif userAction == wx.ID_OK:
+                    item.openConfigDialog.Destroy()
+                    del item.openConfigDialog
+                    break
+                elif userAction == wx.ID_APPLY:
+                    item.SetParams(*newArgs)
+                    item.Refresh()
+                    wasApplied = True
+                    continue
+            elif newArgs is None:
+                return False
         item.SetParams(*newArgs)
         newArgumentString = item.GetArgumentString()
         if self.oldArgumentString != newArgumentString:
             self.positionData = item.GetPositionData()
             item.document.AppendUndoHandler(self)
             item.Refresh()
+        return True
     
     
     def Undo(self, document):

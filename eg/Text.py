@@ -40,6 +40,7 @@ class Text:
             "Are you sure you want to delete the selection?")
         ok = "OK"
         cancel = "Cancel"
+        apply = "Apply"
         help = "&Help"
         choose = "Choose"
         browse = "Browse..."
