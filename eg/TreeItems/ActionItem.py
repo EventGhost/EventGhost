@@ -26,10 +26,10 @@ from xml.sax.saxutils import quoteattr
 import colorsys
 
 import wx
-import eg
 
-from TreeItem import TreeItem
-from TreeLink import TreeLink
+import eg
+from TreeItems.TreeItem import TreeItem
+from TreeItems.TreeLink import TreeLink
 
 
 gPatches = {
@@ -242,11 +242,11 @@ class ActionItem(TreeItem):
 
 
     def DropTest(self, cls):
-        if cls == EventItem and self.parent != self.document.autostartMacro:
+        if cls == eg.EventItem and self.parent != self.document.autostartMacro:
             return 2 # 2 = item would move before
-        if cls == ActionItem:
+        if cls == eg.ActionItem:
             return 4 # 4 = item can be inserted before or after
-        if cls == PluginItem and self.parent == self.document.autostartMacro:
+        if cls == eg.PluginItem and self.parent == self.document.autostartMacro:
             return 4 # 4 = item can be inserted before or after
         return None
 

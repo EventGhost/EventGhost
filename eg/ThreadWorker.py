@@ -20,10 +20,10 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import threading
+from threading import Event, Thread, Lock
 from collections import deque
 from time import clock
-import pythoncom
+from pythoncom import CoInitialize, CoUninitialize, PumpWaitingMessages
 from win32event import (
     CreateEvent,
     SetEvent,
@@ -32,7 +32,6 @@ from win32event import (
     WAIT_TIMEOUT, 
     QS_ALLINPUT
 )
-
 import eg
 
 class ThreadWorkerAction:
@@ -46,7 +45,7 @@ class ThreadWorkerAction:
         self.args = args
         self.kwargs = kwargs
         self.returnValue = None
-        self.event = threading.Event()
+        self.event = Event()
         
         
     def __call__(self):
@@ -58,7 +57,7 @@ class ThreadWorkerAction:
 class ThreadWorker:
     
     def __init__(self):
-        self.__thread = threading.Thread(
+        self.__thread = Thread(
             None, 
             self.__MainLoop, 
             self.__class__.__name__
@@ -66,7 +65,7 @@ class ThreadWorker:
         self.__alive = True
         self.__timeout = 120.0
         self.__queue = deque()
-        self.__queue_lock = threading.Lock()
+        self.__queue_lock = Lock()
         self.__wakeEvent = CreateEvent(None, 0, 0, None)
         self.__dummyEvent = CreateEvent(None, 0, 0, None)
         
@@ -90,7 +89,7 @@ class ThreadWorker:
         if timeout is None:
             timeout = eg.config.defaultThreadStartTimeout
         if timeout > 0.0:
-            startupEvent = threading.Event()
+            startupEvent = Event()
             self.Call(startupEvent.set)
             self.__thread.start()
             startupEvent.wait(timeout)
@@ -118,14 +117,14 @@ class ThreadWorker:
         """
         Mainloop of the new thread.
         """
-        pythoncom.CoInitialize()
-        pythoncom.PumpWaitingMessages()
+        CoInitialize()
+        PumpWaitingMessages()
         self.Setup()
         try:
             while self.__alive:
                 self.__DoOneEvent()
         finally:
-            pythoncom.CoUninitialize()
+            CoUninitialize()
             self.Finish()
             
             
@@ -150,7 +149,7 @@ class ThreadWorker:
                     eg.PrintTraceback()
         elif rc == WAIT_OBJECT_0+1:
             #eg.DebugNote("WAIT_OBJECT_0+1")
-            if pythoncom.PumpWaitingMessages():
+            if PumpWaitingMessages():
                 eg.DebugNote("Got WM_QUIT")
                 self.__alive = False
                 return
@@ -180,7 +179,7 @@ class ThreadWorker:
                 # Timeout expired.
                 return
             # must be a message.
-            pythoncom.PumpWaitingMessages()
+            PumpWaitingMessages()
             timeout = endTime - clock()
             if timeout < 0:
                 return
@@ -203,7 +202,7 @@ class ThreadWorker:
                 # Timeout expired.
                 return
             # must be a message.
-            pythoncom.PumpWaitingMessages()
+            PumpWaitingMessages()
             timeout = endTime - clock()
             if timeout < 0:
                 return

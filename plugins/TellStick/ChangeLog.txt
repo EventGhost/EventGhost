@@ -1,0 +1,10 @@
+1.0.1 (2007-07-04)
+==================
+
+- Compatible fixes for EventGhost 0.3.6-branch
+
+
+1.0.0 (2007-06-28)
+==================
+
+First initial release

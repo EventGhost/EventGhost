@@ -21,7 +21,7 @@
 # $LastChangedBy$
 
 import eg
-from ContainerItem import ContainerItem
+from TreeItems.ContainerItem import ContainerItem
 
 
 class FolderItem(ContainerItem):
@@ -29,9 +29,9 @@ class FolderItem(ContainerItem):
     iconIndex = eg.SetupIcons("folder")
 
     def DropTest(self, cls):
-        if cls == MacroItem:
+        if cls == eg.MacroItem:
             return 5 # item can be inserted before or after or dropped inside
-        if cls == FolderItem:
+        if cls == eg.FolderItem:
             return 5 # item can be inserted before or after or dropped inside
         return None # item cannot be dropped on it
 

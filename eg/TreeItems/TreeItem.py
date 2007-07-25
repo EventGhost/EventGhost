@@ -26,8 +26,8 @@ import xml.etree.cElementTree as ElementTree
 
 import wx
 import eg
-from TreeLink import TreeLink
-from TreePosition import TreePosition
+from TreeItems.TreeLink import TreeLink
+from TreeItems.TreePosition import TreePosition
 
 
 class TreeItem(object):
@@ -314,7 +314,7 @@ class TreeItem(object):
         try:
             dataObj = wx.CustomDataObject("DragEventItem")
             if wx.TheClipboard.GetData(dataObj):
-                if self.DropTest(EventItem):
+                if self.DropTest(eg.EventItem):
                     return True
                 
             dataObj = wx.TextDataObject()

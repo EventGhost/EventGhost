@@ -21,7 +21,7 @@
 # $LastChangedBy$
 
 import eg
-from TreeItem import TreeItem
+from TreeItems.TreeItem import TreeItem
 
 
         
@@ -48,7 +48,7 @@ class EventItem(TreeItem):
     def DropTest(self, cls):
         if cls == EventItem:
             return 4 # 4 = item can be inserted before or after
-        if cls == ActionItem:
+        if cls == eg.ActionItem:
             return 3 # 3 = item would move after
         return None # None = item cannot be dropped on it
 

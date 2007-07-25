@@ -296,7 +296,7 @@ class PythonScript(eg.ActionClass):
         idCounter = 0
         scriptDict = weakref.WeakValueDictionary()
 
-        def __init__(self, text):
+        def __init__(self, text=""):
             id = self.__class__.idCounter
             self.__class__.idCounter += 1
             mod = imp.new_module(str(id))

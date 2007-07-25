@@ -21,7 +21,7 @@
 # $LastChangedBy$
 
 import eg
-from MacroItem import MacroItem
+from TreeItems.MacroItem import MacroItem
 
 class AutostartItem(MacroItem):
     xmlTag = "Autostart"
@@ -62,13 +62,13 @@ class AutostartItem(MacroItem):
     
     
     def DropTest(self, cls):
-        if cls == FolderItem:
+        if cls == eg.FolderItem:
             return 3 # 3 = item would move after
-        if cls == MacroItem:
+        if cls == eg.MacroItem:
             return 3 # 3 = item would move after
-        if cls == ActionItem:
+        if cls == eg.ActionItem:
             return 1 # 1 = item would be dropped inside
-        #if cls == PluginItem:
+        #if cls == eg.PluginItem:
         #    return 1 # 1 = item would be dropped inside
         return None # None = item cannot be dropped on it
 

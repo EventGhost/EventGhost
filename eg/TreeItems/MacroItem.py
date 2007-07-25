@@ -22,7 +22,7 @@
 
 import wx
 import eg
-from ContainerItem import ContainerItem
+from TreeItems.ContainerItem import ContainerItem
 
 
 class MacroItem(ContainerItem):
@@ -55,12 +55,12 @@ class MacroItem(ContainerItem):
 
 
     def DropTest(self, cls):
-        if cls == EventItem:
+        if cls == eg.EventItem:
             return 1 # 1 = item would be dropped inside
-        if cls == MacroItem:
+        if cls == eg.MacroItem:
             return 4 # 4 = item can be inserted before or after
-        if cls == FolderItem:
+        if cls == eg.FolderItem:
             return 4 # 4 = item can be inserted before or after
-        if cls == ActionItem:
+        if cls == eg.ActionItem:
             return 1 # 1 = item would be dropped inside
         return None  # None = item cannot be dropped on it

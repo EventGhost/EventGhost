@@ -339,18 +339,16 @@ class EventGhost(object):
         from ActionGroup import ActionGroup
 
         #from time import sleep as Wait
-        import TreeItems
-        from TreeItems import (
-            TreeItem, 
-            ContainerItem, 
-            EventItem, 
-            RootItem,
-            MacroItem, 
-            FolderItem, 
-            ActionItem,
-            AutostartItem, 
-            PluginItem, 
-        )
+        #import TreeItems
+        from TreeItems.TreeItem import TreeItem
+        from TreeItems.ContainerItem import ContainerItem
+        from TreeItems.EventItem import EventItem
+        from TreeItems.RootItem import RootItem
+        from TreeItems.MacroItem import MacroItem
+        from TreeItems.FolderItem import FolderItem
+        from TreeItems.ActionItem import ActionItem
+        from TreeItems.AutostartItem import AutostartItem
+        from TreeItems.PluginItem import PluginItem
         from TreeItems.TreeLink import TreeLink
         from greenlet import greenlet as Greenlet
         self.__dict__.update(locals())
@@ -531,6 +529,7 @@ class EventGhost(object):
                         currentItem.parent.GetNextChild(currentIndex)
                     )
                 else:
+                    print currentItem.parent
                     self.SetProgramCounter(None)
                 
             if self.programCounter is None:

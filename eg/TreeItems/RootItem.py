@@ -20,11 +20,11 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import wx
-import eg
-from ContainerItem import ContainerItem
 import pythoncom
 import time
+import wx
+import eg
+from TreeItems.ContainerItem import ContainerItem
 
 
 class RootItem(ContainerItem):
@@ -118,9 +118,9 @@ class RootItem(ContainerItem):
     
     
     def DropTest(self, cls):
-        if cls == MacroItem:
+        if cls == eg.MacroItem:
             return 1 # 1 = item would be dropped inside
-        if cls == FolderItem:
+        if cls == eg.FolderItem:
             return 1 # 1 = item would be dropped inside
         return None  # None = item cannot be dropped on it
     
