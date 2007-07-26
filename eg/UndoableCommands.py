@@ -219,10 +219,10 @@ class NewAction(NewItem):
         item.Select()
         
         if item.NeedsStartupConfiguration():
-            if item.NeedsStartupConfiguration():
-                if not CmdConfigure().Do(item):
-                    item.Delete()
-                    return None
+            if not CmdConfigure().Do(item):
+                print "config"
+                item.Delete()
+                return None
 #            args = item.ProcessConfigureDialog()
 #            if args is None:
 #                item.Delete()
@@ -518,6 +518,7 @@ class CmdConfigure:
         self.name = eg.text.MainFrame.Menu.Edit.replace("&", "")
         
         wasApplied = False
+        print "apply start"
         while True:
             eg.SetAttr("currentConfigureItem", item)
             try:
@@ -544,6 +545,9 @@ class CmdConfigure:
                     continue
             elif newArgs is None:
                 return False
+            elif newArgs is -1:
+                # This is most likely a PythonScript action
+                return True
         item.SetParams(*newArgs)
         newArgumentString = item.GetArgumentString()
         if self.oldArgumentString != newArgumentString:

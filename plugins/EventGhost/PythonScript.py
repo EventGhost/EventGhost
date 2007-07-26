@@ -273,7 +273,7 @@ class PythonScript(eg.ActionClass):
 #        gr1 = eg.Greenlet.getcurrent()
 #        self.result = gr1.parent.switch()
         wx.CallAfter(self.OnOpen, eg.currentConfigureItem)
-        return None
+        return -1
 
 
     def OnOpen(self, actionItem):
