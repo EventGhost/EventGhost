@@ -1,3 +1,5 @@
+26th July 2007 - v0.6.0
+
 EventGhost plugin for receiving Lirc-style events written in python.
 
 Extract into the EventGhost\Plugins directory, files should be as follows;
@@ -24,5 +26,8 @@ Ask on the forum or email jinxdone@earthling.net
 
 
 changelog:
+V0.6.0 - Removed the internal enduring-event generation
+       - Added adjustable enduring event timeout value
+       - some other minor changes
 
 v0.5.0 - First public version

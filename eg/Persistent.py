@@ -24,6 +24,7 @@ import cPickle as pickle
 import types
 import sys
 import eg
+from os.path import exists
 
 
 class Section:
@@ -103,10 +104,11 @@ def PyLoad(filename, defaults=None):
     # BUG: of the python function 'execfile'. It doesn't handle unicode
     # filenames right.
     filename = filename.encode(sys.getfilesystemencoding())
-    try:
-        execfile(filename, execDict, obj.__dict__)
-    except:
-        if eg.debugLevel:
-            raise
+    if exists(filename):
+        try:
+            execfile(filename, execDict, obj.__dict__)
+        except:
+            if eg.debugLevel:
+                raise
     return obj
 

@@ -1,10 +1,10 @@
-### Script for handling (Win)Lirc events by jinxdone - 4th Jan 2007
+### Script for handling (Win)Lirc events by jinxdone - 26th July 2007
 
 
 import eg, wx, socket, asyncore, time, threading
 
 class Text:
-	version = "0.5.0"
+	version = "0.6.0"
 	title = "LIRC Event Receiver plugin v" + version + " by jinxdone"
 	host = "Host:"
 	port = "Port:"
@@ -12,8 +12,8 @@ class Text:
 	onlyfirst = "Only use the first event"
 	addremote = "Add remote-name"
 	addrepeat = "Add repeat-tag"
-	enduring = "Use enduring-events"
 	ignoretime = "Ignoretime after first event (ms)"
+	timeout = "Timeout for enduring events (ms)"
 
 
 
@@ -24,13 +24,12 @@ class Lirc_Reader(asyncore.dispatcher):
 	###
 	def __init__(
 		self, host,	port,	handler, onlyfirst,
-		addremote, addrepeat, enduring, ignoretime
+		addremote, addrepeat, ignoretime
 	):
 		self.handler = handler
 		self.onlyfirst = onlyfirst
 		self.addremote = addremote
 		self.addrepeat = addrepeat
-		self.enduring = enduring
 		self.ignoretime = ignoretime
 		asyncore.dispatcher.__init__(self)
 		self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -39,11 +38,6 @@ class Lirc_Reader(asyncore.dispatcher):
 
 	### Some helper functions..
 	###
-	def checker(self):
-		print "ending event.."
-		self.handler.EndLastEvent()
-
-
 	def mscounter(self):
 		if time.time()*1000 - self.recvtime*1000 < self.ignoretime:
 			return False
@@ -62,15 +56,15 @@ class Lirc_Reader(asyncore.dispatcher):
 	### or if we want to close it ourselves.
 	###
 	def handle_close(self):
-		print "Closing the lirc-reader.."
+		print "Lirc: Closing the lirc-reader.."
 		self.close()
 
 
 	### This will be run if theres a problem opening the connection
 	###
 	def handle_expt(self):
-		self.handler.PrintError("Could not connect to the target host!")
-		print "Please doublecheck your configuration and that the target is reachable"
+		self.handler.PrintError("Lirc: Could not connect to the target host!")
+		print "Lirc: Please doublecheck your configuration and that the target is reachable"
 		self.handler.__stop__()
 
 	### This gets run whenever asyncore detects there is data waiting
@@ -103,35 +97,20 @@ class Lirc_Reader(asyncore.dispatcher):
 				self.egevent = self.event[2]
 
 			if self.event[1] == "00":
-				if self.enduring:
-					try:
-						self.schedule.cancel()
-					except:
-						pass
-					self.handler.TriggerEnduringEvent(self.egevent)
-					self.schedule = threading.Timer(0.4, self.checker)
-					self.schedule.start()
-				else:
-					if not self.onlyfirst:
-						if self.ignoretime:
-							self.recvtime = time.time()
-					self.handler.TriggerEvent(self.egevent)
-			else:
-				if self.enduring:
-					#print "giving cpr to this event.. " + self.event[1]
-					self.schedule.cancel()
-					self.schedule = threading.Timer(0.4, self.checker)
-					self.schedule.start()
-				else:
-					if self.onlyfirst:
-						break
-					if self.addrepeat:
-						self.egevent = self.egevent + "++"
+				if not self.onlyfirst:
 					if self.ignoretime:
-						if self.mscounter():
-							self.handler.TriggerEvent(self.egevent)
-					else:
+						self.recvtime = time.time()
+				self.handler.TriggerEvent(self.egevent)
+			else:
+				if self.onlyfirst:
+					break
+				if self.addrepeat:
+					self.egevent = self.egevent + "++"
+				if self.ignoretime:
+					if self.mscounter():
 						self.handler.TriggerEvent(self.egevent)
+				else:
+					self.handler.TriggerEvent(self.egevent)
 
 
 	### mandatory, but we won't need these..
@@ -144,19 +123,17 @@ class Lirc_Reader(asyncore.dispatcher):
 		pass
 
 
-
 ### The EventGhost classes and functions are over here..
-class Lirc(eg.PluginClass):
+class Lirc(eg.RawReceiverPlugin):
 	canMultiLoad = True
-    
 
-	def __start__(self, host, port, onlyfirst, addremote, addrepeat, enduring, ignoretime):
+	def __start__(self, host, port, onlyfirst, addremote, addrepeat, ignoretime, timeout):
 		self.port = port
 		self.host = host
 		self.onlyfirst = onlyfirst
 		self.addremote = addremote
 		self.addrepeat = addrepeat
-		self.enduring = enduring
+		self.timeout = timeout / 1000.0
 		self.ignoretime = ignoretime
 		self.reader = Lirc_Reader(
 			self.host,
@@ -165,14 +142,13 @@ class Lirc(eg.PluginClass):
 			self.onlyfirst,
 			self.addremote,
 			self.addrepeat,
-			self.enduring,
 			self.ignoretime
 		)
-		
+
 
 	def __stop__(self):
 		if self.reader:
-		    self.reader.handle_close()
+			self.reader.handle_close()
 		self.reader = None
 
 
@@ -183,8 +159,8 @@ class Lirc(eg.PluginClass):
 		onlyfirst = False,
 		addremote = False,
 		addrepeat = False,
-		enduring = False,
-		ignoretime = 0
+		ignoretime = 0,
+		timeout = 200,
 	):
 		text = Text
 		dialog = eg.ConfigurationDialog(self)
@@ -209,17 +185,19 @@ class Lirc(eg.PluginClass):
 		AddRemoteCtrl.SetValue(addremote)
 		AddRepeatCtrl = wx.CheckBox(dialog, -1, text.addrepeat)
 		AddRepeatCtrl.SetValue(addrepeat)
-		EnduringCtrl = wx.CheckBox(dialog, -1, text.enduring)
-		EnduringCtrl.SetValue(enduring)
 		IgnoreTimeText = wx.StaticText(dialog, -1, text.ignoretime)
 		IgnoreTimeCtrl = eg.SpinIntCtrl(dialog, -1, ignoretime, max=60000)
+		TimeoutText = wx.StaticText(dialog, -1, text.timeout)
+		TimeoutCtrl = eg.SpinIntCtrl(dialog, -1, timeout, max=10000)
 
 		IgnoreBox = wx.BoxSizer()
 		IgnoreBox.Add(IgnoreTimeCtrl, 0, wx.ALL, 2)
 		IgnoreBox.Add(IgnoreTimeText, 0, wx.ALL, 5)
 
+		TimeoutBox = wx.BoxSizer()
+		TimeoutBox.Add(TimeoutCtrl, 0, wx.ALL, 2)
+		TimeoutBox.Add(TimeoutText, 0, wx.ALL, 5)
 
-		
 		BoxSizer = wx.BoxSizer(wx.VERTICAL)
 		BoxSizer.Add(OnlyFirstCtrl, 0, wx.ALL, 5)
 		BoxSizer.Add(AddRemoteCtrl, 0, wx.ALL, 5)
@@ -227,17 +205,13 @@ class Lirc(eg.PluginClass):
 		#BoxSizer.Add(IgnoreTimeText, 0, wx.ALL, 5)
 		#BoxSizer.Add(IgnoreTimeCtrl, 0, wx.ALL, 5)
 		BoxSizer.Add(IgnoreBox, 0, wx.ALL, 3)
-		#BoxSizer.Add(EnduringCtrl, 0, wx.ALL, 5)
+		BoxSizer.Add(TimeoutBox, 0, wx.ALL, 3)
 
 		dialog.sizer.Add(TitleText, 0, wx.EXPAND)
-		#dialog.sizer.Add(HostSizer, 0,)
 		dialog.sizer.Add(shbSizer, 0, wx.EXPAND)
 		dialog.sizer.Add(BoxSizer, 0,)
-		EnduringBox = wx.BoxSizer()
-		EnduringBox.Add(EnduringCtrl, 0, wx.ALL, 5)
-		dialog.sizer.Add(EnduringBox, 0, wx.EXPAND|wx.UP, 15)
 
-		
+
 		if dialog.AffirmedShowModal():
 		    return (
 				HostCtrl.GetValue(), 
@@ -245,6 +219,6 @@ class Lirc(eg.PluginClass):
 				OnlyFirstCtrl.GetValue(), 
 				AddRemoteCtrl.GetValue(), 
 				AddRepeatCtrl.GetValue(), 
-				EnduringCtrl.GetValue(),
-				IgnoreTimeCtrl.GetValue()
+				IgnoreTimeCtrl.GetValue(),
+				TimeoutCtrl.GetValue()
 		    )
