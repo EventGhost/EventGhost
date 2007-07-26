@@ -89,7 +89,7 @@ from FindWindow import FindWindow
 class BringToFront(eg.ActionClass):
     name = "Bring to front"
     description = "Bring the specified window to front."
-    iconFile = "BringToFront"
+    iconFile = "icons/BringToFront"
     
     def __call__(self):
         for hwnd in GetTargetWindows():

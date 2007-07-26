@@ -59,7 +59,7 @@ def _compileCall(action, *args):
 class ActionItem(TreeItem):
     xmlTag = "Action"
     
-    iconIndex = eg.SetupIcons("action")
+    icon = eg.Icons.ACTION_ICON
     executable = None
     args = ()
     needsCompile = False
@@ -101,7 +101,7 @@ class ActionItem(TreeItem):
             action = eg.plugins.EventGhost.PythonCommand
             argString = repr(text)
         self.executable = action
-        self.iconIndex = action.info.iconIndex
+        self.icon = action.info.icon
         if hasattr(action, "Compile"):
             self.needsCompile = True
             action.__call__ = _compileCall
@@ -204,7 +204,7 @@ class ActionItem(TreeItem):
         eg.HTMLDialog(
             action.name, 
             action.description, 
-            action.info.GetWxIcon(),
+            action.info.icon.GetWxIcon(),
             "plugins/%s/" % action.plugin.__module__
         ).DoModal()
         

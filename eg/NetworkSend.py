@@ -25,7 +25,7 @@ def NetworkSend(host, port, password, eventString, payload=None):
         # APOP protocol. The server gives you a cookie you add :<password>
         # calculate the md5 digest out of this and send it back
         # if the digests match you are in.
-        # We do this so that noone can listen in on our password exchange
+        # We do this so that none can listen in on our password exchange
         # much safer then plain text.
 
         cookie = sock.recv(128)        

@@ -36,7 +36,6 @@ from eg import (
     FolderItem, 
     RootItem, 
 )
-from eg.IconTools import GetIcon
 import UndoableCommands
 
 # local imports
@@ -44,14 +43,14 @@ from MainFrame.LogCtrl import LogCtrl
 from MainFrame.TreeCtrl import TreeCtrl
 from MainFrame.StatusBar import StatusBar
 
-#from eg.WinAPI.Utils import BringHwndToFront
+from eg.WinAPI.Utils import BringHwndToFront
 
-PLUGIN_ICON = GetIcon('images/plugin.png')
-FOLDER_ICON = GetIcon('images/folder.png')
-MACRO_ICON = GetIcon('images/macro.png')
-EVENT_ICON = GetIcon('images/event.png')
-ACTION_ICON = GetIcon('images/action.png')
-RESET_ICON = GetIcon('images/error.png')
+PLUGIN_ICON = eg.Icons.PLUGIN_ICON.GetBitmap()
+FOLDER_ICON = eg.Icons.FOLDER_ICON.GetBitmap()
+MACRO_ICON = eg.Icons.MACRO_ICON.GetBitmap()
+EVENT_ICON = eg.Icons.EVENT_ICON.GetBitmap()
+ACTION_ICON = eg.Icons.ACTION_ICON.GetBitmap()
+RESET_ICON = eg.Icons.PathIcon('images/error.png').GetBitmap()
 
 Text = eg.text.MainFrame
 
@@ -420,6 +419,11 @@ class MainFrame(wx.Frame):
             pass
         
         
+    def Raise(self):
+        BringHwndToFront(self.GetHandle())
+        wx.Frame.Raise(self)
+    
+    
     def UpdateTitle(self, filePath):
         if filePath is None:
             title = eg.text.General.unnamedFile

@@ -29,7 +29,7 @@ import eg
 from ThreadWorker import ThreadWorker
 from time import clock
 
-EVENT_ICON_INDEX = eg.EventItem.iconIndex
+EVENT_ICON_INDEX = eg.EventItem.icon.index
 
 CORE_PLUGINS = (
     "EventGhost",

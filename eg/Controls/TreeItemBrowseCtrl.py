@@ -48,7 +48,7 @@ class TreeItemBrowseCtrl(wx.TreeCtrl):
             style |= wx.TR_MULTIPLE 
         wx.TreeCtrl.__init__(self, parent, style=style)
         self.SetMinSize((10, 10))
-        self.SetImageList(eg.imageList)
+        self.SetImageList(eg.Icons.gImageList)
         self.srcTree = srcTree = eg.document.frame.treeCtrl
 
         srcRoot = srcTree.GetRootItem()
@@ -114,7 +114,7 @@ class TreeItemBrowseCtrl(wx.TreeCtrl):
             tmp = self.AppendItem(
                 id,
                 child.GetLabel(),
-                child.iconIndex + (not child.isEnabled),
+                child.icon.index if child.isEnabled else child.icon.disabledIndex,
                 -1,
                 wx.TreeItemData(child)
             )

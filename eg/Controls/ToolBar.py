@@ -22,8 +22,8 @@
 
 import wx
 import eg
-from eg.IconTools import GetIcon
-
+GetIcon = eg.Icons.GetIcon
+#GetIcon = wx.Bitmap
 
 class ToolBarButton:
     def __init__(self, toolbar, id):

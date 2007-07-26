@@ -47,7 +47,7 @@ from eg.WinAPI.Utils import GetHwndIcon, GetHwndChildren, HwndHasChildren
 from eg.WinAPI.Utils import HighlightWindow
 from eg.WinAPI.Utils import GetModulesPID, GetNameOfPID, GetHwndProcessName
 
-from eg.IconTools import GetIcon
+GetIcon = eg.Icons.GetIcon
 from compile_string import compile_string
         
 
@@ -254,7 +254,7 @@ class FindWindow(eg.ActionClass):
         'If a macro has no "Find a window" actions, all window actions will '
         'target the frontmost window.'
     )
-    iconFile = "FindWindow"
+    iconFile = "icons/FindWindow"
     class text:
         label = "Find Window: %s"
         label2 = "Find frontmost window"
@@ -722,12 +722,12 @@ class WindowTree(wx.TreeCtrl):
             style=self.STYLE, 
             size=(-1, 150)
         )
-        path = os.path.dirname(__file__)
+        path = os.path.join(os.path.dirname(__file__), "icons")
         self.imageList = imageList = wx.ImageList(16, 16)
-        imageList.Add(GetIcon(os.path.join(path, "cwindow.png")))
-        imageList.Add(GetIcon(os.path.join(path, "cedit.png")))
-        imageList.Add(GetIcon(os.path.join(path, "cstatic.png")))
-        imageList.Add(GetIcon(os.path.join(path, "cbutton.png")))
+        imageList.Add(wx.Bitmap(os.path.join(path, "cwindow.png")))
+        imageList.Add(wx.Bitmap(os.path.join(path, "cedit.png")))
+        imageList.Add(wx.Bitmap(os.path.join(path, "cstatic.png")))
+        imageList.Add(wx.Bitmap(os.path.join(path, "cbutton.png")))
         self.SetImageList(imageList)
         self.root = self.AddRoot("")
         
@@ -842,7 +842,7 @@ class WindowTree(wx.TreeCtrl):
                 continue
             if name != "":
                 name = "\"" + name + "\" "
-            index = self.AppendItem(item, name + className)
+            index = self.AppendItem(item, name + className, 0)
             self.SetPyData(index, hwnd)
             if className == "Edit" or className == "TEdit":
                 self.SetItemImage(index, 1, which=wx.TreeItemIcon_Normal)

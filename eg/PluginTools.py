@@ -32,7 +32,6 @@ import types
 import Image
 import wx
 import eg
-from eg.IconTools import PilToBitmap, ICON_IDX_PLUGIN
 from Utils import SetClass
 from PluginMetaClass import PluginMetaClass
 from ActionMetaClass import ActionMetaClass
@@ -95,11 +94,8 @@ class PluginInfoBase(object):
     
     # icon might be an instance of a PIL icon, that the plugin developer
     # has supplied
-    icon = None
-    # If there is such icon, it will be added to the global IconList and the
-    # index is stored in iconIndex. If there is no icon supplied, iconIndex
-    # will point to the default icon for plugins in the IconList
-    iconIndex = ICON_IDX_PLUGIN
+    icon = eg.Icons.PLUGIN_ICON
+
     
     evalName = None
     instances = None
@@ -189,13 +185,6 @@ class PluginInfoBase(object):
         info.eventPrefix = evalName
         if pluginInfo.instances is None:
             pluginInfo.instances = [info]
-            if pluginInfo.icon:
-                try:
-                    pluginInfo.iconIndex = eg.IconTools.SetupPluginIcons(
-                        pluginInfo.icon
-                    )
-                except:
-                    pass
         else:
             pluginInfo.instances.append(plugin.info)
         ActionMetaClass.allActionClasses = pluginInfo.module.__allActionClasses__
@@ -208,17 +197,7 @@ class PluginInfoBase(object):
             eg.PrintTraceback()
         pluginInfo.label = plugin
         return plugin
-        
-        
-    @classmethod
-    def GetWxIcon(pluginInfo):
-        if pluginInfo.icon:
-            icon = wx.EmptyIcon()
-            icon.CopyFromBitmap(PilToBitmap(pluginInfo.icon))
-            return icon
-        else:
-            return WX_ICON_PLUGIN
-     
+             
 
         
 def GetPluginInfo(pluginName):
@@ -257,16 +236,11 @@ def GetPluginInfo(pluginName):
     
     # get the icon if any
     if "icon" in infoDict and infoDict["icon"] is not None:
-        fd = StringIO(b64decode(infoDict["icon"]))
-        info.icon = Image.open(fd).convert("RGBA")
-        fd.close()
+        info.icon = eg.Icons.StringIcon(infoDict["icon"])
     else:
         iconPath = join(pluginPath, "icon.png")
         if exists(iconPath):
-            #try:
-            info.icon = Image.open(join(pluginPath, "icon.png")).convert("RGBA")
-        #except:
-        #    pass
+            info.icon = eg.Icons.PathIcon(iconPath)
     
     info.actionClassList = []
     return info

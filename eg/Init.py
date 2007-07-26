@@ -166,13 +166,8 @@ class EventGhost(object):
         self.SaveConfig = SaveConfig
         self.onlyLogAssigned = config.onlyLogAssigned
         
-        import IconTools
-        IconTools.Init()
-        self.IconTools = IconTools
-        self.SetupIcons = IconTools.SetupIcons
-        self.imageList = IconTools.gImageList
-        self.AddPluginIcon = IconTools.AddPluginIcon
-        sys.modules["eg.IconTools"] = IconTools
+        import Icons
+        self.Icons = Icons
         
         from LanguageTools import LoadStrings, GetTranslation
         self.GetTranslation = GetTranslation
@@ -303,7 +298,7 @@ class EventGhost(object):
             try:
                 mod = __import__("Dialogs.%s" % name, fromlist=[name])
             except ImportError:
-                raise AttributeError
+                raise
         eg.DebugNote("Loaded module %s" % name)
         attr = getattr(mod, name)
         self.__dict__[name] = attr

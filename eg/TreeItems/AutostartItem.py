@@ -25,7 +25,7 @@ from TreeItems.MacroItem import MacroItem
 
 class AutostartItem(MacroItem):
     xmlTag = "Autostart"
-    iconIndex = eg.SetupIcons("Execute")
+    icon = eg.Icons.PathIcon("images/Execute.png")
     isDeactivatable = False
     isRenameable = False
     

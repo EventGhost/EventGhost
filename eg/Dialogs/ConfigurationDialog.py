@@ -66,7 +66,7 @@ class HeaderBox(wx.PyWindow):
         self.descBox = descBox
         
         staticBitmap = wx.StaticBitmap(self)
-        staticBitmap.SetIcon(obj.info.GetWxIcon())
+        staticBitmap.SetIcon(obj.info.icon.GetWxIcon())
         
         topRightSizer = wx.BoxSizer(wx.HORIZONTAL)
         topRightSizer.Add(nameBox, 1, wx.EXPAND|wx.ALIGN_BOTTOM)
@@ -166,10 +166,6 @@ class ConfigurationDialogBase(eg.Dialog):
             dialogStyle |= wx.RESIZE_BORDER
         eg.Dialog.__init__(self, eg.document.frame, -1, title, style=dialogStyle)
         self.Freeze()
-#        icon = obj.info.GetWxIcon()
-#        self.icon = icon
-#        if icon:
-#            self.SetIcon(icon)
         
         self.buttonRow = eg.ButtonRow(
             self, 

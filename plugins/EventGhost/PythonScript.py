@@ -59,7 +59,7 @@ class ScriptEditor(wx.Frame):
             size=config.size,
             style=wx.DEFAULT_FRAME_STYLE
         )
-        self.SetIcon(action.info.GetWxIcon())
+        self.SetIcon(action.info.icon.GetWxIcon())
         
         self.editCtrl = editCtrl = eg.PythonEditorCtrl(self)
         editCtrl.SetText(text)

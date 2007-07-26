@@ -27,7 +27,7 @@ from TreeItems.TreeItem import TreeItem
         
 class EventItem(TreeItem):
     xmlTag = "Event"
-    iconIndex = eg.SetupIcons("event")
+    icon = eg.Icons.EVENT_ICON
     
     def __init__(self, parent, node):
         TreeItem.__init__(self, parent, node)

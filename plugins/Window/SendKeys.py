@@ -76,7 +76,7 @@ And here is the list of the remaining keywords EventGhost understands:<br>
 class SendKeys(eg.ActionClass):
     name = "Emulate Keystrokes"
     description = description
-    iconFile = "SendKeys"
+    iconFile = "icons/SendKeys"
     class text:
         useAlternativeMethod = "Use alternate method to emulate keypresses"
         insertButton = "&Insert"

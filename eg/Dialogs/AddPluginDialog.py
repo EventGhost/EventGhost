@@ -24,7 +24,6 @@ import os
 import wx
 
 import eg
-from eg.IconTools import GetIcon, PilToBitmap
 from ActionThread import CORE_PLUGINS
         
 kindTags = ["remote", "program", "external", "other"]
@@ -89,8 +88,8 @@ class AddPluginDialog(eg.Dialog):
         treeCtrl.SetMinSize((170, 200))
 
         imageList = self.imageList = wx.ImageList(16, 16)
-        imageList.Add(GetIcon("images/plugin.png"))
-        imageList.Add(GetIcon("images/folder.png"))
+        imageList.Add(eg.Icons.PLUGIN_ICON.GetBitmap())
+        imageList.Add(eg.Icons.FOLDER_ICON.GetBitmap())
         treeCtrl.SetImageList(imageList)
         
         root = treeCtrl.AddRoot("")
@@ -107,7 +106,7 @@ class AddPluginDialog(eg.Dialog):
             if info.kind in ("hidden", "core"):
                 continue
             if info.icon:
-                idx = imageList.Add(PilToBitmap(info.icon))
+                idx = imageList.Add(info.icon.GetBitmap())
             else:
                 idx = 0
 

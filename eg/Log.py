@@ -132,7 +132,7 @@ class Log:
                 mesg = eventstring + ' ' + repr(payload)
         else:
             mesg = eventstring
-        self.Write(mesg + "\n", eg.EventItem.iconIndex, eventstring)
+        self.Write(mesg + "\n", eg.EventItem.icon.index, eventstring)
         
         
     

@@ -96,15 +96,17 @@ class RegistryLazyTree(wx.TreeCtrl):
         self.text = text
         wx.TreeCtrl.__init__(self, parent, id, pos, size, style, validator, name)
 
-        self.SetImageList(eg.imageList)
+        self.imageList = imageList = wx.ImageList(16, 16)
+        rootIcon = imageList.Add(eg.Icons.GetIcon("images/root.png"))
+        self.folderIcon = imageList.Add(eg.Icons.GetIcon("images/folder.png"))
+        self.valueIcon = imageList.Add(eg.Icons.GetIcon("images/action.png"))
+        self.SetImageList(imageList)
         self.SetMinSize((-1,200))
         self.treeRoot = self.AddRoot(
             "Registry",
-            image = eg.SetupIcons("root"),
+            image = rootIcon,
             data = wx.TreeItemData((True, None, None, None))
         )
-        self.folderIcon = eg.SetupIcons("folder")
-        self.valueIcon = eg.SetupIcons("action")
         #Adding keys
         for item in regKeys:
             #a tupel of 4 values is assigned to every item

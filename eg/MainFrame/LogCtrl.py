@@ -28,7 +28,7 @@ import wx.lib.mixins.listctrl as listmix
 
 import eg
 
-EVENT_ICON_INDEX = eg.EventItem.iconIndex
+EVENT_ICON_INDEX = eg.EventItem.icon.index
 
 
 
@@ -64,7 +64,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             )
         )
         listmix.ListCtrlAutoWidthMixin.__init__(self)
-        self.SetImageList(eg.imageList, wx.IMAGE_LIST_SMALL)
+        self.SetImageList(eg.Icons.gImageList, wx.IMAGE_LIST_SMALL)
 
         sysColour = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
         sysTextColour = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOWTEXT)

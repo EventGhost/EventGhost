@@ -27,7 +27,7 @@ from TreeItems.ContainerItem import ContainerItem
 
 class MacroItem(ContainerItem):
     xmlTag = "Macro"
-    iconIndex = eg.SetupIcons("macro")
+    icon = eg.Icons.MACRO_ICON
     isExecutable = True
     shouldSelectOnExecute = False
     

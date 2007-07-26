@@ -29,7 +29,7 @@ from TreeItems.ContainerItem import ContainerItem
 
 class RootItem(ContainerItem):
     xmlTag = "EventGhost"    
-    iconIndex = eg.SetupIcons("root")
+    icon = eg.Icons.PathIcon("images/root.png")
     time = None
     guid = None
     isDeactivatable = False
@@ -61,7 +61,7 @@ class RootItem(ContainerItem):
     def CreateTreeItem(self, tree, parentId):
         self.id = tree.AddRoot(
             self.name,
-            self.iconIndex, 
+            self.icon.index, 
             -1, 
             wx.TreeItemData(self)
         )

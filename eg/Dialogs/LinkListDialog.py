@@ -30,7 +30,7 @@ class LinkList(wx.ListCtrl, ListCtrlAutoWidthMixin):
     def __init__(self, parent):
         wx.ListCtrl.__init__(self, parent, style=wx.LC_REPORT|wx.LC_VIRTUAL)
         ListCtrlAutoWidthMixin.__init__(self)
-        self.SetImageList(eg.imageList, wx.IMAGE_LIST_SMALL)
+        self.SetImageList(eg.Icons.gImageList, wx.IMAGE_LIST_SMALL)
         self.InsertColumn(0, "ID")
         self.InsertColumn(1, "Item Label")
         self.SetItemCount(1)

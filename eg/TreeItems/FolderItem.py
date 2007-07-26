@@ -26,7 +26,7 @@ from TreeItems.ContainerItem import ContainerItem
 
 class FolderItem(ContainerItem):
     xmlTag = "Folder"
-    iconIndex = eg.SetupIcons("folder")
+    icon = eg.Icons.FOLDER_ICON
 
     def DropTest(self, cls):
         if cls == eg.MacroItem:

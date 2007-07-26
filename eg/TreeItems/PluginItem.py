@@ -37,7 +37,7 @@ from TreeItems.TreeItem import TreeItem
 
 class PluginItem(ActionItem):
     xmlTag = "Plugin"
-    iconIndex = eg.SetupIcons("plugin")
+    icon = eg.Icons.PLUGIN_ICON
     isRenameable = False            
     
     def WriteToXML(self):
@@ -68,7 +68,7 @@ class PluginItem(ActionItem):
             #plugin.info.label = pluginStr
         else:
             self.name = eg.text.General.pluginLabel % plugin.info.label
-            self.iconIndex = plugin.info.iconIndex
+            self.icon = plugin.info.icon
             self.isInErrorState = False
 
 
@@ -224,7 +224,7 @@ class PluginItem(ActionItem):
         eg.HTMLDialog(
             eg.text.General.pluginLabel % plugin.name, 
             plugin.description, 
-            plugin.info.GetWxIcon(),
+            plugin.info.icon.GetWxIcon(),
             basePath=plugin.info.path
         ).DoModal()
         

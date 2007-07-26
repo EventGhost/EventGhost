@@ -30,7 +30,6 @@ import wx
 import xml.etree.cElementTree as ElementTree
     
 import eg
-from eg.TreeItems import *
 from UndoableCommands import (
     NewEvent, 
     CmdMoveTo, 
@@ -45,7 +44,7 @@ from UndoableCommands import (
 import ctypes
 SendMessageTimeout = ctypes.windll.user32.SendMessageTimeoutA
 SendMessage = ctypes.windll.user32.SendMessageA
-
+ContainerItem = eg.ContainerItem
 
 
 class EventDropSource(wx.DropSource):
@@ -81,7 +80,7 @@ class EventDropTarget(wx.PyDropTarget):
     def __init__(self, window):
         wx.PyDropTarget.__init__(self)
         self.treeCtrl = window
-        self.dragCls = EventItem
+        self.dragCls = eg.EventItem
         self.dragObject = None
         # specify the type of data we will accept
         self.tdata = wx.TextDataObject()
@@ -265,7 +264,7 @@ class TreeCtrl(wx.TreeCtrl):
         )
         self.root = None
         self.rootname = eg.text.General.configTree
-        self.SetImageList(eg.imageList)
+        self.SetImageList(eg.Icons.gImageList)
         self.hasFocus = False
         
         Bind = self.Bind
@@ -544,7 +543,7 @@ class TreeCtrl(wx.TreeCtrl):
 
         result = dropSource.DoDragDrop(wx.Drag_AllowMove)
         self.dragtimer.Stop()
-        dropTarget.dragCls = EventItem
+        dropTarget.dragCls = eg.EventItem
         dropTarget.dragObject = None
         dropTarget.isExternalDrag = True
         insert_mark_pos = dropTarget.position

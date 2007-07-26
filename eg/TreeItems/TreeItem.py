@@ -35,7 +35,6 @@ class TreeItem(object):
     # id
     # parent
     # isEnabled
-    # iconIndex
     # xmlId
     
     xmlTag = "Item"
@@ -143,7 +142,7 @@ class TreeItem(object):
         id = tree.AppendItem(
             parentId,
             self.GetLabel(), 
-            self.iconIndex + (not self.isEnabled), 
+            self.icon.index if self.isEnabled else self.icon.disabledIndex, 
             -1, 
             wx.TreeItemData(self)
         )
@@ -161,7 +160,7 @@ class TreeItem(object):
                 parentId,
                 pos, 
                 self.GetLabel(), 
-                self.iconIndex + (not self.isEnabled), 
+                self.icon.index if self.isEnabled else self.icon.disabledIndex,  
                 -1, 
                 wx.TreeItemData(self)
             )
@@ -391,7 +390,7 @@ class TreeItem(object):
         if self.HasValidId():
             self.tree.SetItemImage(
                 self.id,
-                self.iconIndex + (not enable), 
+                self.icon.index if enable else self.icon.disabledIndex, 
                 wx.TreeItemIcon_Normal
             )
             if self.document.selection == self:
@@ -449,7 +448,7 @@ class TreeItem(object):
         
         
     def DoPrint(self, text):
-        eg.log.DoItemPrint(text, self.iconIndex, self)
+        eg.log.DoItemPrint(text, self.icon.index, self)
         
     
     def DropTest(self, cls):

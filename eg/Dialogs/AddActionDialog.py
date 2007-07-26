@@ -67,7 +67,7 @@ class AddActionDialog(eg.Dialog):
         style = wx.TR_DEFAULT_STYLE|wx.TR_HIDE_ROOT|wx.TR_FULL_ROW_HIGHLIGHT
         tree = wx.TreeCtrl(splitterWindow, -1, style=style)
         tree.SetMinSize((100,100))
-        tree.SetImageList(eg.imageList)
+        tree.SetImageList(eg.Icons.gImageList)
         self.tree = tree
         
         tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
@@ -123,16 +123,16 @@ class AddActionDialog(eg.Dialog):
         tree = self.tree
         for i in data:
             if isinstance(i, eg.ActionClass):
-                iconIndex = i.info.iconIndex
+                iconIndex = i.info.icon.index
                 actionList = None
                 name = i.name
             elif isinstance(i, eg.PluginClass):
-                iconIndex = i.info.iconIndex + 2
+                iconIndex = i.info.icon.folderIndex
                 actionList = i.info.actionList
                 i = i.info
                 name = i.label
             elif isinstance(i, eg.ActionGroup):
-                iconIndex = i.iconIndex
+                iconIndex = i.icon.folderIndex
                 actionList = i.actionList
                 name = i.name
             else:

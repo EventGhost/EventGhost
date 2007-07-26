@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg.IconTools
 import eg
 import new
 import types
@@ -28,19 +27,16 @@ import Image
 
 from ActionClass import ActionClass
 from Utils import SetClass
-import IconTools
 
 
 
 class ActionInfo(object):
-    iconIndex = None
+    icon = eg.Icons.ACTION_ICON
     
-    def __init__(self, iconIndex):
-        self.iconIndex = iconIndex
+    def __init__(self, icon):
+        self.icon = icon
         
         
-    def GetWxIcon(self):
-        return eg.imageList.GetIcon(self.iconIndex)
     
     
     
@@ -54,19 +50,15 @@ def CreateAction(actionCls, plugin):
         )
     action = actionCls.__new__(actionCls)
     action.plugin = plugin
+    icon = plugin.info.icon
     if action.iconFile:
         try:
             path = plugin.info.path + action.iconFile + ".png"
-            img = Image.open(path).convert("RGBA")
+            icon = eg.Icons.PathIcon(path)
         except:
             eg.PrintError(
                 "Error while loading icon file %s" % action.iconFile
             )
-            iconIndex = plugin.info.iconIndex
-        else:
-            iconIndex = eg.IconTools.SetupIcons2(img)
-    else:
-        iconIndex = plugin.info.iconIndex
 
     text = actionCls.text
     if text is None:
@@ -95,7 +87,7 @@ def CreateAction(actionCls, plugin):
     actionCls.text = text
     action.name = text.name
     action.description = text.description
-    action.info = ActionInfo(iconIndex)
+    action.info = ActionInfo(icon)
     action.__init__()
     return action
     
@@ -105,7 +97,7 @@ class ActionGroup:
     plugin = None
     name = None
     description = None
-    iconIndex = eg.IconTools.ICON_IDX_FOLDER
+    icon = eg.Icons.FOLDER_ICON
     
     def __init__(self, plugin, name=None, description=None, iconFile=None):
         self.plugin = plugin
@@ -113,9 +105,9 @@ class ActionGroup:
         self.name = name or plugin.name
         self.description = description or plugin.description
         if iconFile is None:
-            self.iconIndex = plugin.info.iconIndex + 2
+            self.icon = plugin.info.icon
         else:
-            self.iconIndex = IconTools.CreateActionGroupIcon(plugin, iconFile)
+            self.icon = eg.Icons.PathIcon(plugin.info.path + iconFile + ".png")
         self.actionList = []
         
         
