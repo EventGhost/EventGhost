@@ -44,7 +44,10 @@ from UndoableCommands import (
 import ctypes
 SendMessageTimeout = ctypes.windll.user32.SendMessageTimeoutA
 SendMessage = ctypes.windll.user32.SendMessageA
+
 ContainerItem = eg.ContainerItem
+EventItem = eg.EventItem
+
 
 
 class EventDropSource(wx.DropSource):
@@ -80,7 +83,7 @@ class EventDropTarget(wx.PyDropTarget):
     def __init__(self, window):
         wx.PyDropTarget.__init__(self)
         self.treeCtrl = window
-        self.dragCls = eg.EventItem
+        self.dragCls = EventItem
         self.dragObject = None
         # specify the type of data we will accept
         self.tdata = wx.TextDataObject()
@@ -423,7 +426,7 @@ class TreeCtrl(wx.TreeCtrl):
             return
         xmlId = item.xmlId
         s = item.GetLabel() + "\n\nxmlId: " + str(xmlId)
-        if isinstance(item, ContainerItem):
+        if isinstance(item, eg.ContainerItem):
             s += "\nchilds: " + str(len(item.childs)) 
             s += "\nexpanded:" + str(item.isExpanded)
             s += "\nIsExpanded:" + str(self.IsExpanded(id))
@@ -543,7 +546,7 @@ class TreeCtrl(wx.TreeCtrl):
 
         result = dropSource.DoDragDrop(wx.Drag_AllowMove)
         self.dragtimer.Stop()
-        dropTarget.dragCls = eg.EventItem
+        dropTarget.dragCls = EventItem
         dropTarget.dragObject = None
         dropTarget.isExternalDrag = True
         insert_mark_pos = dropTarget.position
