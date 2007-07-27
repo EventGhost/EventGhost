@@ -174,8 +174,6 @@ class EmptyOriginal:
 
 @eg.LogIt
 def LoadStrings(language):   
-    #if language == "en_EN":
-    #    return
     class tmp:
         pass
     tmp = tmp()
@@ -184,8 +182,7 @@ def LoadStrings(language):
             del dict["__module__"]
             class EmptyTextBunch:
                 pass
-            cls = new.instance(EmptyTextBunch, dict)
-            return cls
+            return new.instance(EmptyTextBunch, dict)
     try:
         execfile(
             "Languages\\" + language + ".py", 

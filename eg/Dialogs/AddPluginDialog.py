@@ -25,6 +25,7 @@ import wx
 
 import eg
 from ActionThread import CORE_PLUGINS
+from PluginTools import GetPluginInfoList
         
 kindTags = ["remote", "program", "external", "other"]
 
@@ -102,7 +103,7 @@ class AddPluginDialog(eg.Dialog):
         self.typeIds = typeIds
         itemToSelect = typeIds["remote"]
         
-        for info in eg.GetPluginInfoList():
+        for info in GetPluginInfoList():
             if info.kind in ("hidden", "core"):
                 continue
             if info.icon:

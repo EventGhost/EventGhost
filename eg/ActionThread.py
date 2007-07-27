@@ -20,13 +20,9 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import threading
-import pythoncom
-import types
-import wx
 
 import eg
-from ThreadWorker import ThreadWorker
+from PluginTools import OpenPlugin
 from time import clock
 
 EVENT_ICON_INDEX = eg.EventItem.icon.index
@@ -39,14 +35,14 @@ CORE_PLUGINS = (
 )
 
 
-class ActionThread(ThreadWorker):
+class ActionThread(eg.ThreadWorker):
     
     @eg.LogItWithReturn
     def StartSession(self, filename):
         eg.eventTable.clear()
         for pluginIdent in CORE_PLUGINS:
             try:
-                plugin = eg.OpenPlugin(pluginIdent, None, ())
+                plugin = OpenPlugin(pluginIdent, None, ())
                 plugin.__start__()
                 plugin.info.isStarted = True
             except:
@@ -54,7 +50,7 @@ class ActionThread(ThreadWorker):
         start = clock()
         eg.document.Load(filename)
         eg.DebugNote("XML loaded in %f seconds." % (clock() - start))
-        eg.SetProgramCounter((eg.document.autostartMacro, None))
+        eg.programCounter = (eg.document.autostartMacro, None)
         eg.RunProgram()
         
             
@@ -62,7 +58,7 @@ class ActionThread(ThreadWorker):
         eg.SetProcessingState(2, event)
         eg.event = event
         if isinstance(obj, eg.MacroItem):
-            eg.SetProgramCounter((obj, 0))
+            eg.programCounter = (obj, 0)
             eg.RunProgram()
         elif isinstance(obj, eg.ActionItem):
             obj.Execute()

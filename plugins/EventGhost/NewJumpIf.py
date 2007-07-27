@@ -58,7 +58,7 @@ class NewJumpIf(eg.ActionClass):
                 eg.programReturnStack.append(eg.programCounter)
             next = link.target
             next_id = next.parent.GetChildIndex(next)
-            eg.SetProgramCounter((next, next_id))
+            eg.programCounter = (next, next_id)
         return eg.result
     
         

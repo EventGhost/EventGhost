@@ -197,7 +197,7 @@ class ConfigurationDialogBase(eg.Dialog):
     def FinishSetup(self):
         if not self.__postInited:
             line = wx.StaticLine(self)
-            self.sizer.Add((0,0))
+            #self.sizer.Add((0,0))
             self.mainSizer.Add(line, 0, wx.EXPAND|wx.ALIGN_CENTER)
             self.buttonRow.applyButton.MoveAfterInTabOrder(line)
             self.buttonRow.cancelButton.MoveAfterInTabOrder(line)
@@ -212,8 +212,9 @@ class ConfigurationDialogBase(eg.Dialog):
                 flag = wx.EXPAND|wx.RIGHT
                 border = 10
             self.mainSizer.Add(self.buttonRow.sizer, 0, flag, border)
-
-        self.SetSizerAndFit(self.mainSizer)
+            self.SetSizer(self.mainSizer)
+            
+        self.mainSizer.Fit(self)
         self.SetMinSize(self.GetSize())
         self.Layout()
         #self.Refresh()
@@ -226,7 +227,12 @@ class ConfigurationDialogBase(eg.Dialog):
     def Clear(self):
         #self.__postInited = False
         self.sizer.Clear(deleteWindows=True)
-            
+        #self.sizer.Add((0,0))
+        for child in self.buttonRow.sizer.GetChildren()[:-3]:
+            #if child.IsWindow():
+                child.DeleteWindows()
+        #print self.buttonRow.sizer.GetChildren()[:-3]
+        
         
     def SetCallback(self, callback, *args, **kwargs):
         def OkCallWarpper(event):

@@ -21,6 +21,7 @@
 # $LastChangedBy$
 
 import eg
+import Version
 import wx
 
 import time
@@ -215,11 +216,11 @@ class Panel4(wx.Panel):
         wx.Panel.__init__(self, parent)
         compileTime = time.strftime(
             Text.CreationDate, 
-            time.gmtime(eg.compileTime)
+            time.gmtime(Version.compileTime)
         )
         sysInfos = (
             ("EventGhost Version", eg.versionStr),
-            ("SVN Revision", eg.svnRevision),
+            ("SVN Revision", Version.svnRevision),
             ("Compile Time", compileTime),
             ("Python Version", "%d.%d.%d %s %d" % sys.version_info),
             ("wxPython Version", wx.VERSION_STRING),

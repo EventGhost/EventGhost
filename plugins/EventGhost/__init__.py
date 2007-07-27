@@ -317,7 +317,7 @@ class JumpIfLongPress(eg.ActionClass):
         if not eg.event.shouldEnd.isSet():
             next = link.target
             next_id = next.parent.GetChildIndex(next)
-            eg.SetProgramCounter((next, next_id))
+            eg.programCounter = (next, next_id)
                 
                 
     def GetLabel(self, interval, link):
@@ -404,7 +404,7 @@ class AutoRepeat(eg.ActionClass):
             event.shouldEnd.wait(res)
             #wait_event.wait(res)
             if not event.shouldEnd.isSet():
-                eg.SetProgramCounter((eg.currentItem.parent.childs[0], 0))
+                eg.programCounter = (eg.currentItem.parent.childs[0], 0)
             
             
     def Configure(
@@ -577,7 +577,7 @@ class Jump(eg.ActionClass, eg.HiddenAction):
             eg.programReturnStack.append(eg.programCounter)
         next = link.target
         next_id = next.parent.GetChildIndex(next)
-        eg.SetProgramCounter((next, next_id))
+        eg.programCounter = (next, next_id)
 
 
     def GetLabel(self, link, gosub=False):
@@ -649,7 +649,7 @@ class JumpIf(eg.ActionClass, eg.HiddenAction):
                 eg.programReturnStack.append(eg.programCounter)
             next = link.target
             next_id = next.parent.GetChildIndex(next)
-            eg.SetProgramCounter((next, next_id))
+            eg.programCounter = (next, next_id)
         
         
     def GetLabel(self, evalstr, link, gosub=False):
@@ -719,7 +719,7 @@ class StopIf(eg.ActionWithStringParameter, eg.HiddenAction):
             result = False
             eg.PrintTraceback()
         if result:
-            eg.SetProgramCounter(None)
+            eg.programCounter = None
         return eg.globals.result
         
         

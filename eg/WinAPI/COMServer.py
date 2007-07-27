@@ -20,6 +20,9 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import os
+import sys
+import atexit
 import pythoncom
 import eg
 
@@ -36,3 +39,44 @@ class EventGhostCom:
         eg.document.ShowFrame()
 
 
+# Patch win32com to use the gen_py directory in the programs
+# application data directory instead of its package directory.
+# When the program runs "frozen" it would not be able to modify
+# the package directory
+genPath = os.path.join(eg.CONFIG_DIR, "gen_py").encode('mbcs')
+if not os.path.exists(genPath):
+    os.makedirs(genPath)
+import win32com
+win32com.__gen_path__ = genPath
+sys.modules["win32com.gen_py"].__path__ = [genPath]
+import win32com.client
+win32com.client.gencache.is_readonly = False
+
+# Support for the COM-Server of the program
+if hasattr(sys, "frozen"):
+    pythoncom.frozen = 1
+#from WinAPI.COMServer import EventGhostCom
+from win32com.server.register import RegisterClasses
+import pywintypes
+try:
+    RegisterClasses(EventGhostCom, quiet=True)
+except pywintypes.error, data:
+    if data[0] != 5:
+        raise
+sys.coinit_flags = 2
+from win32com.server import factory
+__factory_infos = factory.RegisterClassFactories(["EventGhost"])
+#import win32api
+#pythoncom.EnableQuitMessage(win32api.GetCurrentThreadId())    
+pythoncom.CoResumeClassObjects()
+
+e = win32com.client.Dispatch("EventGhost")       
+
+
+def DeInit():
+    # shutdown COM-Server
+    factory.RevokeClassFactories(__factory_infos)
+    pythoncom.CoUninitialize()
+        
+atexit.register(DeInit)
+ 

@@ -20,11 +20,10 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import threading, traceback, time
+import traceback
+import time
 import win32api
 from win32process import SetProcessWorkingSetSize, GetCurrentProcess
-
-import wx
 
 import eg
 from ThreadWorker import ThreadWorker

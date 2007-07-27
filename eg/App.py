@@ -24,7 +24,6 @@ import eg
 import wx
 import sys
 import time
-
 import pythoncom
 import threading
 from win32process import (

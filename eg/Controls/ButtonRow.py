@@ -30,7 +30,7 @@ class ButtonRow:
         self.parent = parent
         self.numSpecialCtrls = 0
         self.stdbtnsizer = stdbtnsizer = wx.StdDialogButtonSizer()
-        default_button = None
+        defaultButton = None
         text = eg.text.General
         for ctrl in buttonIds:
             if ctrl not in (wx.ID_OK, wx.ID_CANCEL, wx.ID_APPLY, wx.ID_HELP):
@@ -40,35 +40,35 @@ class ButtonRow:
             okButton = wx.Button(parent, wx.ID_OK, text.ok)
             okButton.Bind(wx.EVT_BUTTON, self.OnOK)
             stdbtnsizer.AddButton(okButton)
-            default_button = okButton
+            defaultButton = okButton
             self.okButton = okButton
             
         if wx.ID_CANCEL in buttonIds:
             cancelButton = wx.Button(parent, wx.ID_CANCEL, text.cancel)
             cancelButton.Bind(wx.EVT_BUTTON, self.OnCancel)
             stdbtnsizer.AddButton(cancelButton)
-            if not default_button:
-                default_button = cancelButton
+            if not defaultButton:
+                defaultButton = cancelButton
             self.cancelButton = cancelButton
         
         if wx.ID_APPLY in buttonIds:
             applyButton = wx.Button(parent, wx.ID_APPLY, text.apply)
             applyButton.Bind(wx.EVT_BUTTON, self.OnApply)
             stdbtnsizer.AddButton(applyButton)
-            if not default_button:
-                default_button = applyButton
+            if not defaultButton:
+                defaultButton = applyButton
             self.applyButton = applyButton
         
         if wx.ID_HELP in buttonIds:
             helpButton = wx.Button(parent, wx.ID_HELP, text.help)
             helpButton.Bind(wx.EVT_BUTTON, self.OnHelp)
             stdbtnsizer.AddButton(helpButton)
-            if not default_button:
-                default_button = helpButton
+            if not defaultButton:
+                defaultButton = helpButton
             self.helpButton = helpButton
         
         stdbtnsizer.Realize()
-        default_button.SetDefault()
+        defaultButton.SetDefault()
         
         self.sizer = sizer = wx.BoxSizer(wx.HORIZONTAL)
         if parent.GetWindowStyleFlag() & wx.RESIZE_BORDER:

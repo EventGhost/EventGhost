@@ -26,7 +26,6 @@ import time
 import inspect
 import types
 
-import wx
 import eg
 
 
@@ -68,7 +67,7 @@ class EventHook(object):
 
     
         
-def hexstring(text):
+def HexString(text):
     """
     Returns representation of the bytes in a string as a nicely formatted 
     hex-digits-string.

@@ -193,7 +193,7 @@ class Serial(eg.RawReceiverPlugin):
         self, 
         port=0, 
         baudrate=9600,
-        bytesize=8,
+        bytesize=3,
         parity=0,
         stopbits=0,
         handshake=0,
@@ -218,7 +218,7 @@ class Serial(eg.RawReceiverPlugin):
         )
         
         bytesizeCtrl = wx.Choice(dialog, choices=['5', '6', '7', '8'])
-        bytesizeCtrl.SetSelection(8 - 5)
+        bytesizeCtrl.SetSelection(bytesize)
         
         parityCtrl = wx.Choice(dialog, choices=text.parities)
         parityCtrl.SetSelection(parity)

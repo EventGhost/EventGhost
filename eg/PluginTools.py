@@ -306,7 +306,7 @@ def GetPluginInfoList():
             continue
         if not isdir(join("plugins", filename)):
             continue
-        info = eg.GetPluginInfo(filename)
+        info = GetPluginInfo(filename)
         gPluginInfoList.append(info)
     return gPluginInfoList
 

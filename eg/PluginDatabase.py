@@ -72,12 +72,12 @@ class PluginFileInfo:
                     return
                 
         old = eg.RegisterPlugin
-        eg.SetAttr("RegisterPlugin", self.RegisterPlugin)
+        eg.RegisterPlugin = self.RegisterPlugin
         try:
             try:
                 module = ImportPlugin(self.dirname)
             finally:
-                eg.SetAttr("RegisterPlugin", old)
+                eg.RegisterPlugin = old
         # It is expected that the loading will raise RegisterPluginException
         # because RegisterPlugin is called inside the module
         except PluginFileInfo.RegisterPluginException:

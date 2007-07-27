@@ -49,9 +49,9 @@ class MacroItem(ContainerItem):
                 wx.CallAfter(self.Select)
                 
             if self.childs:
-                eg.SetProgramCounter((self.childs[0], 0))
+                eg.programCounter = (self.childs[0], 0)
             else:
-                eg.SetProgramCounter(None)
+                eg.programCounter = None
 
 
     def DropTest(self, cls):

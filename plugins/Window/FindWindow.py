@@ -218,7 +218,7 @@ class WindowMatcher:
             eg.Wait(0.1)
         stop = self.stop
         if (stop == 0 and not hwnds) or (stop == 1 and hwnds):
-            eg.SetProgramCounter(None)
+            eg.programCounter = None
         eg.lastFoundWindows[:] = hwnds
         return hwnds
         

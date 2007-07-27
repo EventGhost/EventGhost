@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import wx
 import eg
 from ActionMetaClass import ActionMetaClass
 
@@ -130,7 +131,6 @@ class ActionClass(object):
 #    
     
     
-import wx
     
 class ActionWithStringParameter(ActionClass):
     """

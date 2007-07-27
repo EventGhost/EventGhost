@@ -1002,8 +1002,8 @@ class MainFrame(wx.Frame):
         
         
     def OnCmdReset(self, event):
-        eg.__dict__["stopExecutionFlag"] = True
-        eg.SetProgramCounter(None)
+        eg.stopExecutionFlag = True
+        eg.programCounter = None
         del eg.programReturnStack[:]
         eg.eventThread.FlushAllEvents()
         eg.actionThread.FlushAllEvents()

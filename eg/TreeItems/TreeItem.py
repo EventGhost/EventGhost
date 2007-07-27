@@ -50,7 +50,10 @@ class TreeItem(object):
         
     def GetFullXml(self):
         TreeLink.StartUndo()
-        data = self.GetXml()
+        output = StringIO()
+        self.GetXmlString(output.write, "", False)
+        data = output.getvalue()
+        output.close()
         TreeLink.StopUndo()
         return data
     
@@ -130,14 +133,6 @@ class TreeItem(object):
         write("</%s>" % self.xmlTag)
                 
                 
-    def GetXml(self, indent_str="", pretty=False):
-        output = StringIO()
-        self.GetXmlString(output.write, "", False)
-        data = output.getvalue()
-        output.close()
-        return data
-        
-        
     def CreateTreeItem(self, tree, parentId):
         id = tree.AppendItem(
             parentId,

@@ -23,7 +23,6 @@
 import eg
 import new
 import types
-import Image
 
 from ActionClass import ActionClass
 from Utils import SetClass

@@ -35,6 +35,7 @@ import linecache
 from os.path import exists
 import wx
 import locale
+import atexit
 
 
 
@@ -63,7 +64,11 @@ class EventGhost(object):
     def Init(self, args):
         global eg
         eg = self
-        self.systemEncoding = encoding = locale.getdefaultlocale()[1]
+        sys.modules["eg"] = self
+        
+        self.startupArguments = args
+        self.debugLevel = args.debugLevel
+        self.systemEncoding = locale.getdefaultlocale()[1]
         self.CallAfter = wx.CallAfter
         self.APP_NAME = "EventGhost"
         self.PLUGIN_DIR = os.path.abspath("plugins")
@@ -74,26 +79,40 @@ class EventGhost(object):
         pluginPackage.__path__ = [self.PLUGIN_DIR]
         sys.modules["pluginImport"] = pluginPackage
         
-        self.startupArguments = args
-        self.debugLevel = args.debugLevel
-        self.__InitPIL()
-        self.__InitAsyncore()
+        # initialize PIL's Image module
+        import Image
+        import PngImagePlugin
+        import JpegImagePlugin
+        import BmpImagePlugin
+        import GifImagePlugin
+        Image._initialized = 2  
         
-        sys.modules["eg"] = self
-        from Utils import Bunch, EventHook
-        self.Bunch = Bunch
-        self.EventHook = EventHook
+        # create a dummy-asynchat to keep asyncore.loop alive    
+        dummyAsyncChat = asynchat.async_chat()
+        dummyAsyncChat.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        thread.start_new_thread(asyncore.loop, (1,))
+        atexit.register(dummyAsyncChat.close)
+        
+        import Utils
+        self.LogIt = Utils.LogIt
+        self.LogItWithReturn = Utils.LogItWithReturn
+        self.TimeIt = Utils.TimeIt
+        self.AssertNotMainThread = Utils.AssertNotMainThread
+        self.AssertNotActionThread = Utils.AssertNotActionThread
+        self.Bunch = Utils.Bunch
+        self.EventHook = Utils.EventHook
+        self.HexString = Utils.HexString
+        self.ParseString = Utils.ParseString
+        
         self.document = None
-        
         self.result = None
         self.event = None
         self.eventTable = {}
         self.eventTable2 = {}
-        self.plugins = Bunch()
+        self.plugins = eg.Bunch()
         self.pluginClassInfo = {}
-        self.globals = Bunch()
+        self.globals = eg.Bunch()
         self.globals.eg = self
-        self.result = None
         self.mainThread = threading.currentThread()
         self.onlyLogAssigned = False
         self.programCounter = None
@@ -102,63 +121,34 @@ class EventGhost(object):
         self.lastFoundWindows = []
         self.currentConfigureItem = None
         
-        from Version import version, buildNum, compileTime, svnRevision
+        from Version import version, buildNum
         self.version = version
         self.buildNum = buildNum
-        self.compileTime = compileTime
         self.versionStr = "%s.%s" % (version, buildNum)
-        self.svnRevision = svnRevision
 
-        from Utils import (
-            LogIt, 
-            LogItWithReturn, 
-            TimeIt,
-            AssertNotMainThread, 
-            AssertNotActionThread
-        )
-        self.LogIt = LogIt
-        self.LogItWithReturn = LogItWithReturn
-        self.TimeIt = TimeIt
-        self.AssertNotMainThread = AssertNotMainThread
-        self.AssertNotActionThread = AssertNotActionThread
-        
         from MessageReceiver import MessageReceiver
         self.messageReceiver = MessageReceiver()
         
         # because some functions are only available if a wxApp instance
         # exists, we simply create it first
-        from App import MyApp
-        self.app = MyApp(0)
+        import App
+        self.app = App.MyApp(0)
 
-        if True:#not args.translate:
-            import Log
-            self.log = Log.Log()
-            self.DoPrint = self.log.DoPrint
+        import Log
+        self.log = Log.Log()
+        self.DoPrint = self.log.DoPrint
         if not self.debugLevel:
-            def _DummyFunc(*args, **kwargs):
-                pass
-            self.Notice = _DummyFunc
-            self.DebugNote = _DummyFunc
+            self.DebugNote = self.DummyFunc
         else:
             import warnings
             warnings.simplefilter('error', UnicodeWarning)
 
-            if self.debugLevel == 2:
-                fd = open("Log.txt", "at")
-                class writer:
-                    def write(self, data):
-                        fd.write(data)
-                        fd.flush()
-                sys.stderr = writer()
-                
-            from Utils import DebugNote
-            self.Notice = DebugNote
-            self.DebugNote = DebugNote
+            self.DebugNote = Utils.DebugNote
     
-            DebugNote("----------------------------------------")
-            DebugNote("        EventGhost started")
-            DebugNote("----------------------------------------")
-            DebugNote("Version:", self.versionStr)
+            self.DebugNote("----------------------------------------")
+            self.DebugNote("        EventGhost started")
+            self.DebugNote("----------------------------------------")
+            self.DebugNote("Version:", self.versionStr)
             
 
         from ConfigData import LoadConfig, SaveConfig
@@ -174,23 +164,24 @@ class EventGhost(object):
         self.text = LoadStrings(config.language)
 
         import WinAPI
-        import TreeItems
-        import cFunctions
         sys.modules["eg.WinAPI"] = WinAPI
         self.WinAPI = WinAPI
+        import TreeItems
+        import cFunctions
         sys.modules["eg.TreeItems"] = TreeItems
         sys.modules["eg.cFunctions"] = cFunctions
     
-        from Utils import SetClass
         from Text import Text
-        SetClass(self.text, Text)
+        Utils.SetClass(self.text, Text)
 
         self.DoImports1()
         
-        from EventGhostEvent import EventGhostEvent
-        self.EventGhostEvent = EventGhostEvent
+        import EventGhostEvent
+        self.EventGhostEvent = EventGhostEvent.EventGhostEvent
 
-        self.DoImports2()
+        import PluginTools
+        self.OpenPlugin = PluginTools.OpenPlugin
+        self.ClosePlugin = PluginTools.ClosePlugin
 
         # replace builtin input and raw_input with a small dialog
 #        from Dialogs.SimpleInputDialog import (
@@ -215,7 +206,7 @@ class EventGhost(object):
         
         
     def StartGui(self):
-        self.InitWin32Com()
+        import WinAPI.COMServer
         self.messageReceiver.Start()
         
         from Document import Document
@@ -237,8 +228,6 @@ class EventGhost(object):
         self.TriggerEvent = eventThread.TriggerEvent
         self.TriggerEnduringEvent = eventThread.TriggerEnduringEvent
                     
-        self.__class__.__setattr__ = self.__post__setattr__
-        
         config = self.config
 
         startupFile = self.startupArguments.startupFile
@@ -261,36 +250,12 @@ class EventGhost(object):
             today = time.gmtime()[:3]
             if config.lastUpdateCheckDate != today:
                 config.lastUpdateCheckDate = today
-                from CheckUpdate import CheckUpdate
-                wx.CallAfter(CheckUpdate)
+                import CheckUpdate
+                wx.CallAfter(CheckUpdate.Start)
                 
         self.DoPrint(self.text.MainFrame.Logger.welcomeText)
 
             
-    __setattr_set = frozenset(
-        (
-            "result",
-            "currentItem", 
-            "event", 
-            "eventString", 
-            "EventString",
-            "onlyLogAssigned"
-        )
-    )
-    
-    def __post__setattr__(self, name, value):
-        if name in self.__setattr_set:
-            object.__setattr__(self, name, value)
-        else:
-            raise Exception("Can't assign to eg-instance")
-
-
-    def SetAttr(self, name, value):
-        if not hasattr(self, name):
-            raise AttributeError("eg has not attribute '%s'" % name)
-        object.__setattr__(self, name, value)
-        
-        
     def __getattr__(self, name):
         try:
             mod = __import__("Controls.%s" % name, fromlist=[name])
@@ -308,7 +273,6 @@ class EventGhost(object):
     def DoImports1(self):
         from sys import exit as Exit
         
-        from Utils import hexstring, ParseString
         from ThreadWorker import ThreadWorker
 
         import wx
@@ -349,90 +313,15 @@ class EventGhost(object):
         self.__dict__.update(locals())
         
         
-    def DoImports2(self):    
-        from PluginTools import (
-            OpenPlugin, 
-            ClosePlugin, 
-            GetPluginInfo,
-            GetPluginInfoList
-        )
-        self.__dict__.update(locals())
-        
-        
-    def __InitPIL(self):
-        # initialize PIL's Image module
-        import Image
-        import PngImagePlugin
-        import JpegImagePlugin
-        import BmpImagePlugin
-        import GifImagePlugin
-        Image._initialized = 2
-        
-        
-    def InitWin32Com(self):
-        # Patch win32com to use the gen_py directory in the programs
-        # application data directory instead of its package directory.
-        # When the program runs "frozen" it would not be able to modify
-        # the package directory
-        genPath = os.path.join(self.CONFIG_DIR, "gen_py").encode('mbcs')
-        if not os.path.exists(genPath):
-            os.makedirs(genPath)
-        import win32com
-        win32com.__gen_path__ = genPath
-        sys.modules["win32com.gen_py"].__path__ = [genPath]
-        import win32com.client
-        win32com.client.gencache.is_readonly = False
-        
-        # Support for the COM-Server of the program
-        if hasattr(sys, "frozen"):
-            pythoncom.frozen = 1
-        from WinAPI.COMServer import EventGhostCom
-        from win32com.server.register import RegisterClasses
-        import pywintypes
-        try:
-            RegisterClasses(EventGhostCom, quiet=True)
-        except pywintypes.error, data:
-            if data[0] != 5:
-                raise
-        sys.coinit_flags = 2
-        from win32com.server import factory
-        self.__factory_infos = factory.RegisterClassFactories(["EventGhost"])
-        #import win32api
-        #pythoncom.EnableQuitMessage(win32api.GetCurrentThreadId())	
-        pythoncom.CoResumeClassObjects()
-
-        e = win32com.client.Dispatch("EventGhost")        
-        
-        
-    def DeInitWin32Com(self):
-        # shutdown COM-Server
-        from win32com.server import factory
-        factory.RevokeClassFactories(self.__factory_infos)
-        pythoncom.CoUninitialize()
-        
-        
-    def __InitAsyncore(self):
-        # create a dummy-asynchat to keep asyncore.loop alive    
-        dummyAsyncChat = asynchat.async_chat()
-        dummyAsyncChat.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        thread.start_new_thread(asyncore.loop, (1,))
-        self.__dummyAsyncChat = dummyAsyncChat
-
-
-    def __DeInitAsyncore(self):
-        self.__dummyAsyncChat.close()
-        
-
     def DeInit(self):
-        self.Notice("stopping threads")
+        self.DebugNote("stopping threads")
         self.actionThread.CallWait(self.actionThread.StopSession)
         self.actionThread.Stop()
         self.eventThread.Stop()
         
-        self.Notice("shutting down")
+        self.DebugNote("shutting down")
         self.config.onlyLogAssigned = self.onlyLogAssigned
         self.SaveConfig()
-        self.__DeInitAsyncore()
         self.messageReceiver.Close()
         
         
@@ -505,12 +394,8 @@ class EventGhost(object):
             del eventTable[eventString]
 
 
-    def SetProgramCounter(self, counter):
-        self.__dict__["programCounter"] = counter
-    
-    
     def RunProgram(self):
-        self.__dict__["stopExecutionFlag"] = False
+        self.stopExecutionFlag = False
         del self.programReturnStack[:]
         while self.programCounter is not None:
             programCounter = self.programCounter
@@ -520,25 +405,24 @@ class EventGhost(object):
                 # program counter has not changed. Ask the parent for the next
                 # item.
                 if isinstance(currentItem.parent, eg.MacroItem):
-                    self.SetProgramCounter(
+                    self.programCounter = \
                         currentItem.parent.GetNextChild(currentIndex)
-                    )
                 else:
                     print currentItem.parent
-                    self.SetProgramCounter(None)
+                    self.programCounter = None
                 
             if self.programCounter is None:
                 # we have no next item in this level. So look in the return 
                 # stack if any return has to be executed
                 if self.programReturnStack:
                     currentItem, currentIndex = self.programReturnStack.pop()
-                    self.SetProgramCounter(
+                    self.programCounter = \
                         currentItem.parent.GetNextChild(currentIndex)
-                    )
+                    
                     
 
     def StopMacro(self, ignoreReturn=False):
-        self.SetProgramCounter(None)
+        self.programCounter = None
         if ignoreReturn:
             del self.programReturnStack[:]
         

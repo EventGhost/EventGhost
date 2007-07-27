@@ -220,17 +220,8 @@ class NewAction(NewItem):
         
         if item.NeedsStartupConfiguration():
             if not CmdConfigure().Do(item):
-                print "config"
                 item.Delete()
                 return None
-#            args = item.ProcessConfigureDialog()
-#            if args is None:
-#                item.Delete()
-#                return None
-#            else:
-#                item.SetParams(*args)
-#                item.Refresh()
-                
         self.StoreItem(item)
         return item
     
@@ -518,9 +509,8 @@ class CmdConfigure:
         self.name = eg.text.MainFrame.Menu.Edit.replace("&", "")
         
         wasApplied = False
-        print "apply start"
         while True:
-            eg.SetAttr("currentConfigureItem", item)
+            eg.currentConfigureItem = item
             try:
                 newArgs = executable.Configure(*item.args)
             except:

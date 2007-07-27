@@ -23,7 +23,7 @@
 import eg
 from time import clock
 from threading import Event
-from eg import SetProgramCounter, RunProgram
+from eg import RunProgram
 
 GetItemPath = eg.EventItem.GetPath
 
@@ -146,7 +146,7 @@ class EventGhostEvent(object):
         self.skipEvent = False
         for eventHandler in activeHandlers:
             try:
-                SetProgramCounter((eventHandler.parent, None))
+                eg.programCounter = (eventHandler.parent, None)
                 RunProgram()
             except:
                 eg.PrintTraceback()
