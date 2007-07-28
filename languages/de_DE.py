@@ -667,7 +667,7 @@ class Plugin:
         port = u'TCP/IP Port:'
     class X10:
         name = u'X10 Fernbedienung'
-        description = u'Plugin f\xfcr X10 kompatible Funkfernbedienungen.\n\nDies beinhaltet Fernbedienungen wie:<br>\n<ul>\n<li><a href="http://www.ati.com/products/remotewonder/index.html">ATI Remote Wonder</a></li>\n<li><a href="http://www.snapstream.com/">SnapStream Firefly</a></li>\n<li><a href="http://www.nvidia.com/object/feature_PC_remote.html">NVIDIA Personal Cinema Remote</a></li>\n<li><a href="http://www.marmitek.com/">Marmitek PC Control</a></li>\n<li><a href="http://www.pearl.de/product.jsp?pdid=PE4444&catid=1601&vid=916&curr=DEM">Pearl Q-Sonic Master Remote 6in1</a></li>\n<li>Medion RF Remote Control</li>\n</ul>\n'
+        description = u'Plugin f\xfcr X10 kompatible Funkfernbedienungen.\n\nDies beinhaltet Fernbedienungen wie:<br>\n<ul>\n<li><a href="http://www.ati.com/products/remotewonder/index.html">ATI Remote Wonder</a></li>\n<li><a href="http://www.ati.com/products/remotewonderplus/index.html">ATI Remote Wonder\u2122 PLUS</a></li>\n<li><a href="http://www.snapstream.com/">SnapStream Firefly</a></li>\n<li><a href="http://www.nvidia.com/object/feature_PC_remote.html">NVIDIA Personal Cinema Remote</a></li>\n<li><a href="http://www.marmitek.com/">Marmitek PC Control</a></li>\n<li><a href="http://www.pearl.de/product.jsp?pdid=PE4444&catid=1601&vid=916&curr=DEM">Pearl Q-Sonic Master Remote 6in1</a></li>\n<li>Medion RF Remote Control</li>\n</ul>\n'
         allButton = u'&Alle'
         errorMesg = u'Kein X10 Empf\xe4nger gefunden!'
         idBox = u'Aktivierte IDs:'

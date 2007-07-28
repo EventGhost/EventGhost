@@ -76,7 +76,9 @@ class OptionsDialog(eg.Dialog):
         cbStartWithWindows = wx.CheckBox(page1, -1, Text.StartWithWindows)
         cbStartWithWindows.SetValue(eg.config.startWithWindows)
         self.cbStartWithWindows = cbStartWithWindows        
-
+        if eg.STARTUP is None:
+            cbStartWithWindows.Enable(False)
+            
         cbHideOnClose = wx.CheckBox(page1, -1, Text.HideOnClose)
         cbHideOnClose.SetValue(eg.config.mainFrame.hideOnClose)
         self.cbHideOnClose = cbHideOnClose

@@ -32,11 +32,14 @@ def get_path2 (folderId):
     location = shell.SHGetFolderPath(0, folderId, None, 0)
     return location
 
+
 APPDATA = get_path2(shellcon.CSIDL_APPDATA)
 try:
     STARTUP = shell.SHGetSpecialFolderPath(0, shellcon.CSIDL_STARTUP)
 except:
-    STARTUP = ""
+    STARTUP = None
 PROGRAMFILES = get_path2(shellcon.CSIDL_PROGRAM_FILES)
 TEMPDIR = win32api.GetTempPath()
+
+# FOLDERID_Startup = GUID("{B97D20BB-F46A-4C97-BA105E3608430854}")
 
