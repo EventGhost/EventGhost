@@ -236,7 +236,7 @@ class PluginClass(object):
           `msg` : string
             The error message you want to have printed to the logger
         """
-        eg.log.DoItemPrint(msg, 1, self.info.treeItem)
+        eg.log.PrintItem(msg, eg.Icons.ERROR_ICON, self.info.treeItem)
         
         
     def Configure(self, *args):
@@ -258,3 +258,5 @@ class PluginClass(object):
             return ()
         
         
+    class Exception(eg.Exception):
+        pass

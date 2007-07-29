@@ -213,7 +213,7 @@ class ActionItem(TreeItem):
         if not self.isEnabled:
             return
         if eg.config.logActions:
-            self.DoPrint(self.GetLabel())
+            self.Print(self.GetLabel())
         if self.shouldSelectOnExecute:
             #self.Select()
             wx.CallAfter(self.Select)

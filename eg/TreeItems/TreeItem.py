@@ -442,8 +442,8 @@ class TreeItem(object):
         
         
         
-    def DoPrint(self, text):
-        eg.log.DoItemPrint(text, self.icon.index, self)
+    def Print(self, text):
+        eg.log.PrintItem(text, self.icon, self)
         
     
     def DropTest(self, cls):

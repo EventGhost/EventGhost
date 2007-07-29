@@ -409,6 +409,7 @@ class MainFrame(wx.Frame):
         self.document.selectionEvent.Unbind(self.OnTreeSelectionEvent)
         self.logCtrl.Destroy()
         self.treeCtrl.Destroy()
+        eg.Icons.ClearImageList()
         #gc.collect()
         return wx.Frame.Destroy(self)
     

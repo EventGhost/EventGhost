@@ -28,8 +28,8 @@ import wx.lib.mixins.listctrl as listmix
 
 import eg
 
-EVENT_ICON_INDEX = eg.EventItem.icon.index
-
+EVENT_ICON = eg.EventItem.icon
+ERROR_ICON = eg.Icons.ERROR_ICON
 
 
 class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
@@ -164,7 +164,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     def OnStartDrag(self, event):
         idx = event.GetIndex()
         itemData = self.GetItemData(idx)
-        if itemData[1] != EVENT_ICON_INDEX:
+        if itemData[1] != EVENT_ICON:
             return
         text = itemData[2]
         # create our own data format and use it in a
@@ -225,8 +225,8 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             dataObjectComposite = wx.DataObjectComposite()
             dataObjectComposite.Add(textDataObject)
             if lines == 1:
-                _, iconIndex, eventstring, _ = self.GetItemData(firstItem)
-                if iconIndex == EVENT_ICON_INDEX:
+                _, icon, eventstring, _ = self.GetItemData(firstItem)
+                if icon == EVENT_ICON:
                     customDataObject = wx.CustomDataObject("DragEventItem")
                     customDataObject.SetData(eventstring.encode("UTF-8"))
                     dataObjectComposite.Add(customDataObject)
@@ -258,8 +258,8 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     def OnDoubleClick(self, event):
         item, flags = self.HitTest(event.GetPosition())
         if flags & wx.LIST_HITTEST_ONITEM:
-            _, iconIndex, wref, _ = self.GetItemData(item)
-            if iconIndex != EVENT_ICON_INDEX and wref is not None:
+            _, icon, wref, _ = self.GetItemData(item)
+            if icon != eg.EventItem.icon and wref is not None:
                 obj = wref()
                 if obj is not None and not obj.isDeleted:
                     obj.Select()
@@ -284,19 +284,19 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         
     def OnGetItemAttr(self, item):
         if item % 2 == 0:
-            if self.data[item][1] != 1:
+            if self.data[item][1] != ERROR_ICON:
                 return self.attr1
             else:
                 return self.attr3
         else:
-            if self.data[item][1] != 1:
+            if self.data[item][1] != ERROR_ICON:
                 return self.attr2
             else:
                 return self.attr4
 
 
     def OnGetItemImage(self, item):
-        return self.data[item][1]
+        return self.data[item][1].index
     
 
     @eg.AssertNotMainThread

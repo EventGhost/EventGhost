@@ -53,7 +53,7 @@ def GetIcon(filePath):
     
 
 class Icon(object):
-    """An object representing an icon with some caching functionality.
+    """An object representing an icon with some memoization functionality.
     
     The icon is initialized by a file path (see PathIcon) or by a base64encoded
     string (see StringIcon). The object will not load/convert any data before
@@ -107,7 +107,7 @@ class Icon(object):
 
 
     def __getattr__(self, name):
-        """Implements the caching magic for the icon.
+        """Implements the memoization magic for the icon.
         
         Only called if an attribute 'name' does not exist. The code will look 
         if a corresponding method '_name' exists, calls this method and stores
@@ -115,7 +115,7 @@ class Icon(object):
         this attribute) and returns the result.
         """
         if not hasattr(self, "_" + name):
-            raise
+            raise AttributeError
         result = getattr(self, "_" + name)()
         setattr(self, name, result)
         return result
@@ -129,47 +129,59 @@ class PathIcon(Icon):
         cached instance. Otherwise creates a new instance and adds it to the 
         cache.
         """
-        path = abspath(path)
-        if gIconCache.has_key(path):
-            return gIconCache[path]
+        key = abspath(path)
+        if gIconCache.has_key(key):
+            return gIconCache[key]
         self = super(PathIcon, cls).__new__(cls)
-        gIconCache[path] = self
-        self.path = path
+        gIconCache[key] = self
+        self.key = key
         return self
     
     
     def _pil(self):
         """Return a PIL image of the icon."""
-        return Image.open(self.path).convert("RGBA")
+        return Image.open(self.key).convert("RGBA")
         
         
         
 class StringIcon(Icon):
     
-    def __new__(cls, data):
+    def __new__(cls, key):
         """If an instance of this data is already in the cache, returns the 
         cached instance. Otherwise creates a new instance and adds it to the 
         cache.
         """
-        if gIconCache.has_key(data):
-            return gIconCache[data]
+        if gIconCache.has_key(key):
+            return gIconCache[key]
         self = super(StringIcon, cls).__new__(cls)
-        gIconCache[data] = self
-        self.data = data
+        gIconCache[key] = self
+        self.key = key
         return self
     
     
     def _pil(self):
         """Return a PIL image of the icon."""
-        fd = StringIO(b64decode(self.data))
+        fd = StringIO(b64decode(self.key))
         pil = Image.open(fd).convert("RGBA")
         fd.close()
         return pil
 
+
+
+def ClearImageList():
+    """Delete the global wxImageList and replace it with a new empty one."""
+    global gImageList
+    gImageList.RemoveAll()
+    gImageList = wx.ImageList(16, 16)
+    # clear out all instance variables for all icons, except the key variable
+    for icon in gIconCache.itervalues():
+        icon.__dict__ = {"key": icon.key}
         
         
 # setup some commonly used icons
-        
+INFO_ICON = PathIcon("images/info.png")
+ERROR_ICON = PathIcon("images/error.png")
+NOTICE_ICON = PathIcon("images/notice.png")
 FOLDER_ICON = PathIcon("images/folder.png")
 DISABLED_ICON = PathIcon("images/disabled.png")
 PLUGIN_ICON = PathIcon("images/plugin.png")
@@ -177,8 +189,4 @@ EVENT_ICON = PathIcon("images/event.png")
 ACTION_ICON = PathIcon("images/action.png")
 MACRO_ICON = PathIcon("images/macro.png")
 
-gImageList.Add(GetIcon("images/info.png"))
-gImageList.Add(GetIcon("images/error.png"))
-gImageList.Add(GetIcon("images/notice.png"))
 
-           

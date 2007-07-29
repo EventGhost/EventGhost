@@ -76,3 +76,14 @@ class ActionThread(eg.ThreadWorker):
             except:
                 eg.PrintTraceback()
         
+        
+    def HandleAction(self, action):
+        try:
+            action()
+        except eg.PluginClass.Exception, e:
+            eg.log.PrintItem(e.message, eg.Icons.ERROR_ICON, e.obj.info.treeItem)
+            e.obj.info.treeItem.SetErrorState(True)
+            #print "ex:", type(e), e.obj
+        except:
+            eg.PrintTraceback()
+            

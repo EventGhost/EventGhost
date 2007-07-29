@@ -395,7 +395,7 @@ class HIDThread(threading.Thread):
         )
 
         if not self.devicePath:
-            eg.PrintError(self.text.errorFind + self.deviceName)
+            plugin.PrintError(self.text.errorFind + self.deviceName)
             return
 
         threading.Thread.__init__(self, name = self.devicePath)
@@ -426,7 +426,7 @@ class HIDThread(threading.Thread):
                 0
             )
         except:
-            eg.PrintError(self.text.errorOpen + self.deviceName)
+            self.plugin.PrintError(self.text.errorOpen + self.deviceName)
             return
 
         #getting data to get the right buffer size
@@ -520,7 +520,7 @@ class HIDThread(threading.Thread):
                     win32event.INFINITE
                 )
             except:
-                eg.PrintError(self.text.errorRead + self.deviceName)
+                self.plugin.PrintError(self.text.errorRead + self.deviceName)
                 self.abort = True
 
             #parse data
@@ -558,7 +558,7 @@ class HIDThread(threading.Thread):
                                 payload = newValue
                             )
                         else:
-                            eg.PrintError(self.text.errorInvalidDataIndex)
+                            self.plugin.PrintError(self.text.errorInvalidDataIndex)
                     if len(btnPressed):
                         #one or more buttons pressed
                         #btnPressed.sort()

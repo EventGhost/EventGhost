@@ -143,10 +143,7 @@ class ThreadWorker:
                     break
                 action = self.__queue.popleft()
                 self.__queue_lock.release()
-                try:
-                    action()
-                except:
-                    eg.PrintTraceback()
+                self.HandleAction(action)
         elif rc == WAIT_OBJECT_0+1:
             #eg.DebugNote("WAIT_OBJECT_0+1")
             if PumpWaitingMessages():
@@ -161,6 +158,13 @@ class ThreadWorker:
             raise RuntimeError("unexpected win32wait return value")
         
             
+    def HandleAction(self, action):
+        try:
+            action()
+        except:
+            eg.PrintTraceback()
+        
+    
     def Wait(self, timeout):
         otimeout = timeout
         start = clock()

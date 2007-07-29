@@ -111,7 +111,7 @@ class PluginItem(ActionItem):
         if not self.isEnabled:
             return None, None
         if eg.config.logActions:
-            self.DoPrint(self.name)
+            self.Print(self.name)
         if self.shouldSelectOnExecute:
             #self.Select()
             wx.CallAfter(self.Select)
@@ -136,7 +136,7 @@ class PluginItem(ActionItem):
         except eg.Exception, e:
             msg = eg.text.Error.pluginStartError % self.executable.name
             msg += "\n" + unicode(e.message)
-            eg.log.DoItemPrint(msg, 1, self)
+            eg.log.PrintItem(msg, eg.Icons.ERROR_ICON, self)
             self.SetErrorState(True)
         except:
             eg.PrintError(eg.text.Error.pluginStartError % self.executable.name)
@@ -229,8 +229,10 @@ class PluginItem(ActionItem):
         ).DoModal()
         
                         
+    @eg.LogIt
     def SetParams(self, *args):
-        if args != self.args:
+            self.SetErrorState(False)
+        #if args != self.args:
             self.args = args
             label = self.executable.GetLabel(*args)
             if label != self.executable.info.label:

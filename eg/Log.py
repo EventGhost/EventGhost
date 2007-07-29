@@ -34,12 +34,16 @@ oldStdErr = sys.stderr
 oldStdOut = codecs.lookup("ascii").streamwriter(sys.stdout, 'backslashreplace')
 oldStdErr = codecs.lookup("ascii").streamwriter(sys.stderr, 'backslashreplace')
 
+INFO_ICON = eg.Icons.INFO_ICON
+ERROR_ICON = eg.Icons.ERROR_ICON
+NOTICE_ICON = eg.Icons.NOTICE_ICON
+
 
 
 class DummyLogCtrl:
     
     def WriteLine(self, line, icon, wRef, when):
-        oldStdOut.write("%03d: %s\n" % (icon, line))
+        oldStdOut.write("%s\n" % line)
     
     
     
@@ -53,7 +57,7 @@ class Log:
         if eg.debugLevel:
             class StdOut:
                 def write(self2, data):
-                    self.Write(data, 0)
+                    self.Write(data, INFO_ICON)
                     oldStdOut.write(data)
             
             class StdErr:
@@ -63,11 +67,11 @@ class Log:
         else:
             class StdOut:
                 def write(self2, data):
-                    self.Write(data, 0)
+                    self.Write(data, INFO_ICON)
             
             class StdErr:
                 def write(self2, data):
-                    self.Write(data, 1)
+                    self.Write(data, ERROR_ICON)
         
         sys.stdout = StdOut()
         sys.stderr = StdErr()
@@ -112,13 +116,20 @@ class Log:
                 data.popleft()
 
         
-    def DoPrint(self, text, icon=0):
-        self.Write(text + "\n", icon, None)
+    def Print(self, text):
+        self.Write(text + "\n", INFO_ICON, None)
         
         
-    def DoItemPrint(self, text, icon, item):
-        wRef = weakref.ref(item)
-        self.Write(text + "\n", icon, wRef)        
+    def PrintError(self, text):
+        self.Write(text + "\n", ERROR_ICON, None)
+        
+        
+    def PrintNotice(self, text):
+        self.Write(text + "\n", NOTICE_ICON, None)
+        
+        
+    def PrintItem(self, text, icon, item):
+        self.Write(text + "\n", icon, weakref.ref(item))        
             
             
     def LogEvent(self, event):
@@ -132,7 +143,7 @@ class Log:
                 mesg = eventstring + ' ' + repr(payload)
         else:
             mesg = eventstring
-        self.Write(mesg + "\n", eg.EventItem.icon.index, eventstring)
+        self.Write(mesg + "\n", eg.EventItem.icon, eventstring)
         
         
     

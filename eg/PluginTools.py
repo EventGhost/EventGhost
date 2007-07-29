@@ -37,6 +37,7 @@ from PluginMetaClass import PluginMetaClass
 from ActionMetaClass import ActionMetaClass
 
 
+
 WX_ICON_PLUGIN = wx.EmptyIcon()
 WX_ICON_PLUGIN.CopyFromBitmap(
     wx.Bitmap("images/Plugin.png", wx.BITMAP_TYPE_PNG)
@@ -163,9 +164,12 @@ class PluginInfoBase(object):
             eg.PrintTraceback()
             return None
         plugin.info = info
-        class _Exception(eg.Exception):
-            pass
+        
+        # create an unique exception for every plugin instance
+        class _Exception(eg.PluginClass.Exception):
+            obj = plugin
         plugin.Exception = _Exception
+
         if evalName is None:
             evalName = pluginCls.__name__
             i = 1

@@ -134,9 +134,12 @@ class EventGhost(object):
         import App
         self.app = App.MyApp(0)
 
+        import Icons
+        self.Icons = Icons
+        
         import Log
         self.log = Log.Log()
-        self.DoPrint = self.log.DoPrint
+        self.Print = self.log.Print
         if not self.debugLevel:
             self.DebugNote = self.DummyFunc
         else:
@@ -155,9 +158,6 @@ class EventGhost(object):
         self.config = config = LoadConfig()
         self.SaveConfig = SaveConfig
         self.onlyLogAssigned = config.onlyLogAssigned
-        
-        import Icons
-        self.Icons = Icons
         
         from LanguageTools import LoadStrings, GetTranslation
         self.GetTranslation = GetTranslation
@@ -253,7 +253,7 @@ class EventGhost(object):
                 import CheckUpdate
                 wx.CallAfter(CheckUpdate.Start)
                 
-        self.DoPrint(self.text.MainFrame.Logger.welcomeText)
+        self.Print(self.text.MainFrame.Logger.welcomeText)
 
             
     def __getattr__(self, name):
@@ -434,12 +434,12 @@ class EventGhost(object):
             else:
                 return str(s)
         text = " ".join([convert(arg) for arg in args])
-        self.log.DoPrint(text, 1)
+        self.log.PrintError(text)
 
 
     def PrintNotice(self, *args):
         text = " ".join([str(arg) for arg in args])
-        self.log.DoPrint(text, 2)
+        self.log.PrintNotice(text)
 
 
     def PrintTraceback(self, msg=None, skip=0):
