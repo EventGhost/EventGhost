@@ -991,11 +991,20 @@ class MainFrame(wx.Frame):
         
         
     def OnCmdCollectGarbage(self, event):
+        import gc
         gc.set_debug(gc.DEBUG_SAVEALL)
+    
         from pprint import pprint
         print "unreachable object count:", gc.collect()
-        print_cycles(gc.garbage, sys.stdout)
-        pprint(gc.garbage)
+        #print_cycles(gc.garbage, sys.stdout)
+        l = gc.garbage[:]
+        for i, o in enumerate(l):
+            print "Object Num %d:" % i
+            pprint(o)
+            print "Referrers:"
+            #print(gc.get_referrers(o))
+            print "Referents:"
+            #print(gc.get_referents(o))
         print "Done."
         #print "unreachable object count:", gc.collect()
         #from pprint import pprint
@@ -1075,5 +1084,8 @@ def print_cycles(objects, outstream=sys.stdout, show_progress=False):
                 recurse(referent, start, all, current_path + [obj])
 
     for obj in objects:
-        outstream.write("Examining: %r\n" % obj)
+        try:
+            outstream.write("Examining: %s\n" % repr(obj))
+        except:
+            outstream.write("Examining: %s\n" % obj)
         recurse(obj, obj, { }, [])        

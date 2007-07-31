@@ -160,7 +160,6 @@ class Lirc(eg.RawReceiverPlugin):
 
 
     def HandleException(self, msg):
-        self.__stop__()
         raise self.Exception(msg)
     
     

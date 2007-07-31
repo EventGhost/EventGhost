@@ -23,6 +23,7 @@
 import eg
 import Version
 import wx
+#from wx.html import HW_NO_SELECTION
 
 import time
 import sys
@@ -190,7 +191,7 @@ class Panel2(wx.Panel):
     def CreateHtmlWindow(self, html):
         htmlWindow = eg.HtmlWindow(
             self, 
-            style=wx.SUNKEN_BORDER|eg.HW_NO_SELECTION
+            style=wx.SUNKEN_BORDER|wx.html.HW_NO_SELECTION
         )
         htmlWindow.SetPage(html)
         htmlWindow.SetMinSize((460, 270))

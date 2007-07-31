@@ -129,8 +129,7 @@ if not args.allowMultiLoad:
     
 
 import Init
-eg = Init.EventGhost()
-eg.Init(args)
+eg = Init.EventGhost(args)
 eg.StartGui()
 eg.app.MainLoop()
 ExitProcess(0)

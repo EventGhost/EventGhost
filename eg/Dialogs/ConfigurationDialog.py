@@ -20,11 +20,10 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import wx
 import eg
 import re
 
-from wx.html import HW_SCROLLBAR_NEVER, HW_NO_SELECTION 
+import wx
 import wx.lib.hyperlink as hl
 
 REPLACE_BR_TAG = re.compile('<br[ \/]*>')

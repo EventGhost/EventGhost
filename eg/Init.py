@@ -41,27 +41,7 @@ import atexit
 
 class EventGhost(object):
     
-    class Exception(Exception):
-        def __init__(self, message):
-            self.message = message
-            
-        def __str__(self):
-            return repr(self.message)
-
-
-    class StopException(Exception):
-        pass
-    
-    
-    class HiddenAction:
-        pass
-    
-    
-    def __init__(self):
-        sys.modules["eg"] = self        
-        
-        
-    def Init(self, args):
+    def __init__(self, args):
         global eg
         eg = self
         sys.modules["eg"] = self
@@ -194,11 +174,6 @@ class EventGhost(object):
         from WinAPI.SerialPort import EnumSerialPorts as GetAllPorts
         self.SerialPort.GetAllPorts = classmethod(GetAllPorts)
         
-        eg.DebugNote("Creating SendKeys parser")
-        from WinAPI.SendKeys import SendKeysParser
-        _sendKeysObj = SendKeysParser()
-        self.SendKeys = _sendKeysObj.Parse
-
         self.actionList = []
         
         from PluginDatabase import PluginDatabase
@@ -272,22 +247,11 @@ class EventGhost(object):
     
     def DoImports1(self):
         from sys import exit as Exit
-        
         from ThreadWorker import ThreadWorker
-
-        import wx
-        from wx import CallAfter
-        from wx.html import HW_NO_SELECTION
         from Validators import DigitOnlyValidator, AlphaOnlyValidator
-        from WinAPI.Pathes import (
-            APPDATA, 
-            STARTUP, 
-            PROGRAMFILES, 
-            TEMPDIR, 
-        )
+        from WinAPI.Pathes import APPDATA, STARTUP, PROGRAMFILES, TEMPDIR
         self.CONFIG_DIR = os.path.join(APPDATA, self.APP_NAME)
         from WinAPI.Shortcut import CreateShortcut
-        from WinAPI.Utils import BringHwndToFront
         from WinAPI.serial import Serial as SerialPort
 
         from PluginClass import PluginClass
@@ -297,7 +261,6 @@ class EventGhost(object):
         from ActionClass import ActionClass, ActionWithStringParameter
         from ActionGroup import ActionGroup
 
-        #from time import sleep as Wait
         #import TreeItems
         from TreeItems.TreeItem import TreeItem
         from TreeItems.ContainerItem import ContainerItem
@@ -408,7 +371,6 @@ class EventGhost(object):
                     self.programCounter = \
                         currentItem.parent.GetNextChild(currentIndex)
                 else:
-                    print currentItem.parent
                     self.programCounter = None
                 
             if self.programCounter is None:
@@ -482,3 +444,19 @@ class EventGhost(object):
         pass
 
             
+    class Exception(Exception):
+        def __init__(self, message):
+            self.message = message
+            
+        def __str__(self):
+            return repr(self.message)
+
+
+    class StopException(Exception):
+        pass
+    
+    
+    class HiddenAction:
+        pass
+    
+    

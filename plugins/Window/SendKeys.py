@@ -22,6 +22,7 @@
 
 import eg
 import wx
+from eg.WinAPI.SendKeys import SendKeys as egSendKeys
 
 description = """\
 This action emulates keystrokes to control other programs. Just type the text 
@@ -124,7 +125,7 @@ class SendKeys(eg.ActionClass):
             hwnd = None
         else:
             hwnd = hwnds[0]
-        eg.SendKeys(hwnd, data)
+        egSendKeys(hwnd, data, useAlternateMethod)
         
         
     def Configure(self, data="", useAlternateMethod=False):

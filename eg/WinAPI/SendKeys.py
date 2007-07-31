@@ -445,8 +445,10 @@ class SendKeysParser:
         self.sendInputStruct = INPUT()
         self.sendInputStruct.type = INPUT_KEYBOARD
         self.rawData = []
+        _, self.ourProcessID = GetWindowThreadProcessId(self.dummy_hwnd)
         
         
+    @eg.LogItWithReturn
     def Parse(self, hwnd, data, useAlternateMethod=False):
         oldHwnd = hwnd
         self.text = data
@@ -464,8 +466,10 @@ class SendKeysParser:
         ourThreadID = GetCurrentThreadId()
 
         # If not, attach our thread's 'input' to the foreground thread's
-        if threadID != ourThreadID:
+        self.attached = False
+        if threadID != ourThreadID and processID != self.ourProcessID:
             AttachThreadInput(threadID, ourThreadID, True)
+            self.attached = True
             
         if needGetFocus:
             try:
@@ -501,25 +505,25 @@ class SendKeysParser:
             self.SendRawCodes2()
 
         SetKeyboardState(byref(oldKeyboardState))
-        self.WaitForInputProcessed()
-        if threadID != ourThreadID:
+        if self.attached:
+            self.WaitForInputProcessed()
             AttachThreadInput(threadID, ourThreadID, False)
         if self.procHandle:
             CloseHandle(self.procHandle)
 
         
     def WaitForInputProcessed(self):
-        if self.procHandle:
+        if self.procHandle and self.attached:
             try:
                 WaitForInputIdle(self.procHandle, 100)
             except:
                 pass
-        def DoIt():
-            SetTimer(self.dummy_hwnd, 1, 0, None)
-            self.msg.message = 0
-            while self.msg.message != WM_TIMER:
-                GetMessage(byref(self.msg), self.dummy_hwnd, 0, 0)
-        eg.CallWait(DoIt)
+            def DoIt():
+                SetTimer(self.dummy_hwnd, 1, 0, None)
+                self.msg.message = 0
+                while self.msg.message != WM_TIMER:
+                    GetMessage(byref(self.msg), self.dummy_hwnd, 0, 0)
+            eg.CallWait(DoIt)
             
  
     def SendRawCodes1(self):
@@ -651,3 +655,8 @@ class SendKeysParser:
                 i += 1
                 self.ParseSingleChar(ch)
                 
+                
+eg.DebugNote("Creating SendKeys parser")
+SendKeys = SendKeysParser().Parse
+
+
