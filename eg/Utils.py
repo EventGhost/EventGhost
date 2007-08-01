@@ -30,7 +30,12 @@ import eg
 
 
 class Bunch:
+    """The simple but handy "collector of a bunch of named stuff" class.
     
+    Often we want to just collect a bunch of stuff together, naming each 
+    item of the bunch; a dictionary's OK for that, but a small do-nothing 
+    class is even handier, and prettier to use.
+    """
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
     
@@ -90,7 +95,7 @@ def GetMyRepresentation(value):
                 
                 
 def DebugNote(*args):
-    """Logs a message if debugLevel is set."""
+    """Logs a message if eg.debugLevel is set."""
     t = threading.currentThread()
     s = [time.strftime("%H:%M:%S:")]
     s.append(str(t.getName()) + ":")
@@ -119,6 +124,7 @@ def GetFuncArgString(func, args, kwargs):
 
 
 def LogIt(func):
+    """Logs the function call, if eg.debugLevel is set."""
     if not eg.debugLevel:
         return func
     
@@ -133,6 +139,7 @@ def LogIt(func):
         
 
 def LogItWithReturn(func):
+    """Logs the function call and return, if eg.debugLevel is set."""
     if not eg.debugLevel:
         return func
     
@@ -146,6 +153,10 @@ def LogItWithReturn(func):
         
 
 def TimeIt(func):
+    """ Decorator to measure the execution time of a function.
+    
+    Will print the time to the log.
+    """
     if not eg.debugLevel:
         return func
     def TimeItWrapper(*args, **kwargs):

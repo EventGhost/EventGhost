@@ -22,7 +22,7 @@
 
 import wx
 import eg
-from TreeItems.ContainerItem import ContainerItem
+from ContainerItem import ContainerItem
 
 
 class MacroItem(ContainerItem):

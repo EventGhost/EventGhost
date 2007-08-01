@@ -21,7 +21,7 @@
 # $LastChangedBy$
 
 import eg
-from TreeItems.MacroItem import MacroItem
+from MacroItem import MacroItem
 
 class AutostartItem(MacroItem):
     xmlTag = "Autostart"

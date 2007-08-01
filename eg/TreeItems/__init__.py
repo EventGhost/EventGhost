@@ -21,3 +21,16 @@
 # $LastChangedBy$
 
 
+from TreeItem import TreeItem
+from ContainerItem import ContainerItem
+from EventItem import EventItem
+from RootItem import RootItem
+from MacroItem import MacroItem
+from FolderItem import FolderItem
+from ActionItem import ActionItem
+from AutostartItem import AutostartItem
+from PluginItem import PluginItem
+from TreeLink import TreeLink
+from TreePosition import TreePosition
+
+__all__ = [name for name in dir() if not name.startswith('_')]

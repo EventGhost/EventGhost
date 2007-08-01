@@ -55,7 +55,8 @@ class ThreadWorkerAction:
 
 
 class ThreadWorker:
-    
+    """General purpose message pumping thread, that is used in many places.
+    """
     def __init__(self):
         self.__thread = Thread(
             None, 

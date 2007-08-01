@@ -30,8 +30,8 @@ from xml.sax.saxutils import quoteattr
 import wx
 
 import eg
-from TreeItems.ActionItem import ActionItem
-from TreeItems.TreeItem import TreeItem
+from ActionItem import ActionItem
+from TreeItem import TreeItem
 
 
 

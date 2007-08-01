@@ -22,7 +22,7 @@
 
 import wx
 import eg
-from TreeItems.TreeItem import TreeItem
+from TreeItem import TreeItem
 
 
 

@@ -26,8 +26,8 @@ import xml.etree.cElementTree as ElementTree
 
 import wx
 import eg
-from TreeItems.TreeLink import TreeLink
-from TreeItems.TreePosition import TreePosition
+from TreeLink import TreeLink
+from TreePosition import TreePosition
 
 
 class TreeItem(object):

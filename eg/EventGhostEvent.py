@@ -23,16 +23,19 @@
 import eg
 from time import clock
 from threading import Event
-from eg import RunProgram
 
-GetItemPath = eg.EventItem.GetPath
 
 def Init():
     global LogEvent 
     LogEvent = eg.log.LogEvent
     global actionThread
     actionThread = eg.actionThread
-    
+    global RunProgram
+    RunProgram = eg.RunProgram
+    global GetItemPath
+    GetItemPath = eg.EventItem.GetPath
+
+
     
 class EventGhostEvent(object):
     

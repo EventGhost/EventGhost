@@ -27,21 +27,39 @@ from ActionMetaClass import ActionMetaClass
 
 class ActionClass(object):
     """ 
-    Base class of every action of a EventGhost-Plugin written in Python 
+    Base class of every action of a EventGhost plugin written in Python 
+    
+    :sort: name, description, iconFile, text, plugin, info
+    
+    :cvar name:
+        Set this to descriptive name in your class definition. 
+        It might get translated by PluginClass.AddAction() to the user's 
+        language if a translation is found.
+    
+    :cvar description:
+        Set this to descriptive description in your class definition. 
+        It might get translated by PluginClass.AddAction() to the user's 
+        language if a translation is found.
+    
+     :cvar iconFile:
+        Name of an icon file if any. Use a 16x16-PNG and drop it inside your
+        plugin's folder. Only specify the name of the file without extension.
+     
+    :cvar text: 
+        Assign a class with text strings to this field to get them localized.
+
+     :ivar plugin:      
+        This will be set from PluginClass.AddAction() for convenience, so every 
+        action can access its own plugin instance through this member variable.
+     
+     :ivar info:      
+        Internally used house keeping data. Don't try to manipulate
+        this yourself.
     """
     
-    # Set these to descriptive values in your class definition. 
-    # They might get translated by PluginClass.AddAction to the user's 
-    # language if a translation is found.
     name = None
     description = None
-    
-    # This will be set from PluginClass.AddAction for convenience, so every 
-    # action can access its own plugin instance through this member variable.
     plugin = None
-    
-    # Name of a icon-file if any. Use a 16x16-PNG and drop it inside your
-    # plugin's folder. Only specify the name of the file without extension.
     iconFile = None
     
     # Don't try to manipulate these variables yourself:

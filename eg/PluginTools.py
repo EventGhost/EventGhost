@@ -35,13 +35,7 @@ import eg
 from Utils import SetClass
 from PluginMetaClass import PluginMetaClass
 from ActionMetaClass import ActionMetaClass
-
-
-
-WX_ICON_PLUGIN = wx.EmptyIcon()
-WX_ICON_PLUGIN.CopyFromBitmap(
-    wx.Bitmap("images/Plugin.png", wx.BITMAP_TYPE_PNG)
-)
+from EventGhostEvent import EventGhostEvent 
 
 
 
@@ -102,7 +96,7 @@ class PluginInfoBase(object):
     instances = None
     actionList = None
     expanded = False
-    lastEvent = eg.EventGhostEvent()
+    lastEvent = EventGhostEvent()
     actionClassList = None
     initFailed = True
     api = 1

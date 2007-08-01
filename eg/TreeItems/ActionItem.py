@@ -28,8 +28,8 @@ import colorsys
 import wx
 
 import eg
-from TreeItems.TreeItem import TreeItem
-from TreeItems.TreeLink import TreeLink
+from TreeItem import TreeItem
+from TreeLink import TreeLink
 
 
 gPatches = {

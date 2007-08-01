@@ -29,8 +29,7 @@ import codecs
 def Start(args):
     import Init
     global eg
-    eg = Init.EventGhost()
-    eg.Init(args)
+    eg = Init.EventGhost(args)
     
     global OpenPlugin
     from PluginTools import OpenPlugin

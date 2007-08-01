@@ -22,9 +22,12 @@
 
 import eg
 import math
+from SpinNumCtrl import SpinNumCtrl 
 
-
-class SpinIntCtrl(eg.SpinNumCtrl):
+class SpinIntCtrl(SpinNumCtrl):
+    """A wx.Control that shows a integer value and spin buttons to let
+    the user change it.
+    """
     
     def __init__(
         self, 

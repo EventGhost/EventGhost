@@ -24,7 +24,7 @@ import pythoncom
 import time
 import wx
 import eg
-from TreeItems.ContainerItem import ContainerItem
+from ContainerItem import ContainerItem
 
 
 class RootItem(ContainerItem):

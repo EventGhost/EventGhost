@@ -31,25 +31,26 @@ from ActionGroup import CreateAction
        
 class PluginClass(object):
     """ 
-    Base class of every EventGhost-Plugin written in Python 
+    Base class of every EventGhost plugin written in Python 
+    
+    :sort: name, description, __init__, __start__, __stop__, __close__
+    
+    :ivar name: 
+        The (localized) name of the plugin.
+    :ivar description: 
+        The (localized) description of the plugin.
+    :ivar info: 
+        Internally used house keeping data. Don't try to manipulate
+        this yourself.
+    :cvar text: 
+        Assign a class with text strings to this field to get them localized.
     """
     
-    #: 'name' is a read-only field. Don't set or manipulate
-    #: it yourself. It will be set from the information you supplied in 
-    #: the __info__.py and might get translated to the user's current language.
     name = None
-    #: 'description' is a read-only field. Don't set or manipulate
-    #: it yourself. It will be set from the information you supplied in 
-    #: the __info__.py and might get translated to the user's current language.
     description = None
-    
-    #: don't try to manipulate this private variable yourself.
     info = None
-    #: don't try to manipulate this private variable yourself.
     text = None
-    #: don't try to manipulate this private variable yourself.
     __metaclass__ = PluginMetaClass 
-
 
     def __init__(self):
         """
@@ -189,7 +190,7 @@ class PluginClass(object):
                 Description of the sub-group. Can include HTML tags.
             
         :return: The new sub-group instance
-        :rtype: <instance of eg.ActionGroup>
+        :rtype: eg.ActionGroup instance
             
         """
         actionList = self.info.actionList

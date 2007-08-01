@@ -38,7 +38,6 @@ import locale
 import atexit
 
 
-
 class EventGhost(object):
     
     def __init__(self, args):
@@ -72,7 +71,7 @@ class EventGhost(object):
         dummyAsyncChat.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         thread.start_new_thread(asyncore.loop, (1,))
         atexit.register(dummyAsyncChat.close)
-        
+
         import Utils
         self.LogIt = Utils.LogIt
         self.LogItWithReturn = Utils.LogItWithReturn
@@ -100,7 +99,8 @@ class EventGhost(object):
         self.stopExecutionFlag = False
         self.lastFoundWindows = []
         self.currentConfigureItem = None
-        
+        self.actionList = []
+                
         from Version import version, buildNum
         self.version = version
         self.buildNum = buildNum
@@ -173,8 +173,6 @@ class EventGhost(object):
 
         from WinAPI.SerialPort import EnumSerialPorts as GetAllPorts
         self.SerialPort.GetAllPorts = classmethod(GetAllPorts)
-        
-        self.actionList = []
         
         from PluginDatabase import PluginDatabase
         self.pluginDatabase = PluginDatabase()
@@ -256,7 +254,6 @@ class EventGhost(object):
 
         from PluginClass import PluginClass
         from IrDecoder import IrDecoder
-        from IrDecoder2 import IrDecoder2
         from RawReceiverPlugin import RawReceiverPlugin
         from ActionClass import ActionClass, ActionWithStringParameter
         from ActionGroup import ActionGroup
@@ -459,4 +456,4 @@ class EventGhost(object):
     class HiddenAction:
         pass
     
-    
+

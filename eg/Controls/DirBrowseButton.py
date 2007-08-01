@@ -19,5 +19,12 @@
 # $LastChangedDate: 2007-03-18 13:14:34 +0100 (So, 18 Mrz 2007) $
 # $LastChangedRevision: 81 $
 # $LastChangedBy: bitmonster $
+
 import FileBrowseButton
-from wx.lib.filebrowsebutton import DirBrowseButton
+from wx.lib.filebrowsebutton import DirBrowseButton as _DirBrowseButton
+
+class DirBrowseButton(_DirBrowseButton):
+    """A control to allow the user to type in a filename or browse with the 
+    standard file dialog to select directory.
+    """
+    pass

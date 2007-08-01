@@ -31,6 +31,10 @@ localedict = locale.localeconv()
 
 
 class SpinNumCtrl(wx.Window):
+    """A wx.Control that shows a fixed width floating point value and spin 
+    buttons to let the user change it.
+    """
+    
     _default_args = {
         "integerWidth": 3,
         "fractionWidth": 2,

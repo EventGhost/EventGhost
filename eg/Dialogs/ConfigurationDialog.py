@@ -21,130 +21,42 @@
 # $LastChangedBy$
 
 import eg
-import re
-
+from Dialog import Dialog
 import wx
-import wx.lib.hyperlink as hl
-
-REPLACE_BR_TAG = re.compile('<br[ \/]*>')
-REMOVE_HTML_PATTERN = re.compile('<([^!>]([^>]|\n)*)>')
 
 
-class HeaderBox(wx.PyWindow):
-    """
-    The top description box of every action/plugin configuration dialog.
-    """
-    
-    def __init__(self, parent, obj):
-        description = obj.description.strip()
-        text = ""
-        for line in description.splitlines():
-            if line == "":
-                break
-            text += line
-        
-        hasAdditionalHelp = (description != text)
-        text = REPLACE_BR_TAG.sub('\n', text)
-        text = REMOVE_HTML_PATTERN.sub('', text)
-        if text == obj.name:
-            self.text = ""
-        else:
-            self.text = text
-        self.obj = obj
-        self.parent = parent
-        wx.PyWindow.__init__(self, parent, -1)
-        self.SetBackgroundColour(
-            wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW)
-        )
-        
-        nameBox = wx.StaticText(self, -1, obj.name)
-        font = wx.Font(8, wx.SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD )
-        nameBox.SetFont(font)
-        
-        descBox = wx.StaticText(self, -1, style=wx.ST_NO_AUTORESIZE )
-        self.descBox = descBox
-        
-        staticBitmap = wx.StaticBitmap(self)
-        staticBitmap.SetIcon(obj.info.icon.GetWxIcon())
-        
-        topRightSizer = wx.BoxSizer(wx.HORIZONTAL)
-        topRightSizer.Add(nameBox, 1, wx.EXPAND|wx.ALIGN_BOTTOM)
-        if hasAdditionalHelp:
-            helpLink = hl.HyperLinkCtrl(
-                self, 
-                wx.ID_ANY, 
-                eg.text.General.moreHelp, 
-                URL=eg.text.General.moreHelp,
-                style=wx.TAB_TRAVERSAL 
-            )
-            helpLink.Bind(hl.EVT_HYPERLINK_LEFT, self.OnLink)
-            helpLink.AutoBrowse(False)
-            topRightSizer.Add(helpLink, 0, wx.EXPAND|wx.RIGHT, 2)
-            
-            helpBitmap = wx.StaticBitmap(self)
-            helpBitmap.SetBitmap(wx.Bitmap("images/help.png"))
-            topRightSizer.Add(helpBitmap, 0, wx.RIGHT, 4)
-            helpBitmap.SetCursor(wx.StockCursor(wx.CURSOR_HAND))
-            helpBitmap.Bind(wx.EVT_LEFT_UP, self.OnLink)
-        
-        rightSizer = wx.BoxSizer(wx.VERTICAL)
-        rightSizer.Add((4, 4))
-        rightSizer.Add(topRightSizer, 0, wx.EXPAND|wx.TOP, 2)
-        rightSizer.Add(descBox, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 8)
-        rightSizer.Add((8, 8))
-        
-        mainSizer = wx.BoxSizer(wx.HORIZONTAL)
-        mainSizer.Add((4, 4))
-        mainSizer.Add(staticBitmap, 0, wx.TOP, 5)
-        mainSizer.Add((4, 4))
-        mainSizer.Add(rightSizer, 1, wx.EXPAND)
-        
-        # odd sequence to setup the window, but all other ways seem
-        # to wrap the text wrong
-        self.SetSizer(mainSizer)
-        self.SetAutoLayout(True)
-        mainSizer.Fit(self)
-        mainSizer.Layout()
-        self.Layout()
-        self.Bind(wx.EVT_SIZE, self.OnSize)
+#def ConfigurationDialog(executable, *args, **kwargs):    
+#    if executable == eg.currentConfigureItem.executable and eg.currentConfigureItem.openConfigDialog:
+#        dialog = eg.currentConfigureItem.openConfigDialog
+#        dialog.Freeze()
+#        dialog.Clear()
+#        return dialog
+#    else:
+#        return ConfigurationDialogBase(executable, *args, **kwargs)
+#        
         
         
-    def OnSize(self, event=None):
-        if self.GetAutoLayout():
-            self.Layout()
-            y = self.descBox.GetSize()[0]
-            self.descBox.SetLabel(self.text)
-            self.descBox.Wrap(y)
-            self.Layout()
-
-
-    def OnLink(self, event):
-        self.parent.configureItem.ShowHelp()
-        
-        
-    def AcceptsFocus(self):
-        return False
-    
-    
-    
-def ConfigurationDialog(executable, *args, **kwargs):    
-    if executable == eg.currentConfigureItem.executable and eg.currentConfigureItem.openConfigDialog:
-        dialog = eg.currentConfigureItem.openConfigDialog
-        dialog.Freeze()
-        dialog.Clear()
-        return dialog
-    else:
-        return ConfigurationDialogBase(executable, *args, **kwargs)
-        
-        
-        
-class ConfigurationDialogBase(eg.Dialog):
+class ConfigurationDialog(Dialog):
     """
     A configuration dialog for all plug-ins and actions.
     """
     __postInited = False
+    __isInited = False
     
+    def __new__(cls, obj, *args, **kwargs):
+        if obj == eg.currentConfigureItem.executable and eg.currentConfigureItem.openConfigDialog:
+            self = eg.currentConfigureItem.openConfigDialog
+            self.Freeze()
+            self.Clear()
+            return self
+        else:
+            return eg.Dialog.__new__(cls, obj, *args, **kwargs)
+        
+        
     def __init__(self, obj, resizeable=None, showLine=True):
+        if self.__isInited:
+            return
+        self.__isInited = True
         self.showLine = showLine
         if resizeable is None:
             resizeable = bool(eg.debugLevel)
@@ -172,7 +84,7 @@ class ConfigurationDialogBase(eg.Dialog):
         )
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         paramSizer = wx.BoxSizer(wx.VERTICAL)
-        self.headerBox = HeaderBox(self, obj)
+        self.headerBox = eg.HeaderBox(self, obj)
         mainSizer.SetMinSize((450, 300))
         mainSizer.Add(self.headerBox, 0, wx.EXPAND, 0)
         mainSizer.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.ALIGN_CENTER, 0)

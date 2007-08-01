@@ -21,7 +21,7 @@
 # $LastChangedBy$
 
 import eg
-from TreeItems.ContainerItem import ContainerItem
+from ContainerItem import ContainerItem
 
 
 class FolderItem(ContainerItem):

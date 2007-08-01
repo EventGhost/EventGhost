@@ -33,13 +33,6 @@ import Image
 
 from PluginTools import ImportPlugin
 
-class PilImage(Image.Image):
-    
-    def __getstate__(self):
-        return self.mode, self.size, self.tostring()
-        
-    def __setstate__(self):
-        print setstate
         
         
 class PluginFileInfo:
