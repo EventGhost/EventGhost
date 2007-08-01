@@ -26,6 +26,7 @@ import sys
 import os
 import imp
 import cPickle as pickle
+from os import stat
 from os.path import isdir, join, exists, abspath
 from base64 import b64decode
 from cStringIO import StringIO
@@ -169,9 +170,10 @@ class PluginDatabase:
             # get the highest timestamp of all files in that directory
             highestTimestamp = 0
             for dirpath, dirnames, filenames in os.walk(pluginDir):
-                for filename in filenames:
-                    timestamp = os.stat(join(dirpath, filename)).st_mtime
-                    highestTimestamp = max(highestTimestamp, timestamp)
+                highestTimestamp = max(
+                    [stat(join(dirpath, filename)).st_mtime
+                        for filename in filenames]
+                )
                 # little hack to avoid scanning of SVN directories
                 for directory in dirnames[:]:
                     if directory.startswith(".svn"):
