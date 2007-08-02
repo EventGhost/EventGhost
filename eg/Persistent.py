@@ -110,5 +110,7 @@ def PyLoad(filename, defaults=None):
         except:
             if eg.debugLevel:
                 raise
+    else:
+        eg.DebugNote('File "%s" does not exist.' % filename)
     return obj
 
