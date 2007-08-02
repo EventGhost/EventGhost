@@ -619,7 +619,6 @@ class MainFrame(wx.Frame):
             return (False, False, False, False)
         
     
-    @eg.LogIt
     def OnTreeSelectionEvent(self, selection):
         isFolder = selection.__class__ in (
             self.document.FolderItem, 

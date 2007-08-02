@@ -28,11 +28,11 @@ import codecs
 import weakref
 import sys
 
-oldStdOut = sys.stdout
-oldStdErr = sys.stderr
+_oldStdOut = sys.stdout
+_oldStdErr = sys.stderr
 
-oldStdOut = codecs.lookup("ascii").streamwriter(sys.stdout, 'backslashreplace')
-oldStdErr = codecs.lookup("ascii").streamwriter(sys.stderr, 'backslashreplace')
+oldStdOut = codecs.lookup("ascii").streamwriter(_oldStdOut, 'backslashreplace')
+oldStdErr = codecs.lookup("ascii").streamwriter(_oldStdErr, 'backslashreplace')
 
 INFO_ICON = eg.Icons.INFO_ICON
 ERROR_ICON = eg.Icons.ERROR_ICON
@@ -75,6 +75,8 @@ class Log:
         
         sys.stdout = StdOut()
         sys.stderr = StdErr()
+        if eg.debugLevel == 2:
+            _oldStdErr._displayMessage = False
 
     
     @eg.LogIt

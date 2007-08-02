@@ -24,11 +24,11 @@
 This script is executed by py2exe for the frozen application directly after
 boot_common.py in the py2exe site package has been executed.
 
-The drawback of the default boot_common.py is, that it directs sys.stdout
+The drawback of the default boot_common.py is, that it directs sys.stderr
 to a log file (that's fine so far) in the applications program folder (that's
 bad for user accounts with limited priviliges).
 
-So we redirect the sys.stdout to a log file in the applications data folder.
+So we redirect the sys.stderr to a log file in the applications data folder.
 """
 
 
@@ -37,6 +37,7 @@ class StdErrReplacement(object):
     _file = None
     _error = None
     _logFilePath = None
+    _displayMessage = True
     
     def write(self, text):
         if self._file is None and self._error is None:
@@ -66,14 +67,7 @@ class StdErrReplacement(object):
                 )
             else:
                 import atexit
-                import ctypes
-                atexit.register(
-                    ctypes.windll.user32.MessageBoxA, 
-                    0,
-                    "See the logfile '%s' for details" % self._logFilePath,
-                    "Errors occurred in EventGhost",
-                    0
-                )
+                atexit.register(self.__DisplayMessage)
         if self._file is not None:
             self._file.write(text)
             self._file.flush()
@@ -83,6 +77,25 @@ class StdErrReplacement(object):
         if self._file is not None:
             self._file.flush()
             
+            
+    def __DisplayMessage(self):
+        if not self._displayMessage:
+            return
+        import ctypes
+        result = ctypes.windll.user32.MessageBoxA(
+            0,
+            (
+                'See the logfile "%s" for details.\n\n'
+                "Do you want to open the file now?"
+            ) % self._logFilePath,
+            "Errors occurred in EventGhost",
+            4
+        )
+        if result == 6:
+            import subprocess
+            subprocess.Popen('Notepad.exe "%s"' % self._logFilePath)
+
+
             
 import sys
 sys.stderr = StdErrReplacement()
