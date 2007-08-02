@@ -229,5 +229,78 @@ def SetClass(obj, cls):
     obj.__class__ = cls
     
 
+# TODO: find a better place for EnsureVisible
 
+import wx
+
+def EnsureVisible(window):
+    """ Ensures the given wx.TopLevelWindow is visible on the screen. 
+    Moves and resizes it if necessary.
+    """
+    # get all display rectangles
+    displayRects = [wx.Display(i).GetClientArea() 
+        for i in range(wx.Display.GetCount())]
+            
+    # wx.Display.GetFromPoint doesn't take GetClientArea into account, so
+    # we have to define our own function
+    def GetDisplayFromPoint(point):
+        for displayNum, displayRect in enumerate(displayRects):
+            if displayRect.Contains(point):
+                return displayNum
+        else:
+            return wx.NOT_FOUND
+        
+    windowRect = window.GetScreenRect()
+    topLeft = windowRect.GetTopLeft()
+    bottomRight = windowRect.GetBottomRight()
+    
+    if (
+        GetDisplayFromPoint(topLeft) != wx.NOT_FOUND
+        and GetDisplayFromPoint(bottomRight) != wx.NOT_FOUND
+    ):
+        return
+    
+    # get the nearest display
+    displayNum = wx.Display.GetFromWindow(window)
+    if displayNum == wx.NOT_FOUND:
+        displayNum = 0
+        parent = window.GetParent()
+        if parent:
+            displayNum = wx.Display.GetFromWindow(parent)
+    
+    displayRect = displayRects[displayNum]
+
+    dLeft, dTop = displayRect.GetTopLeft().Get()
+    dRight, dBottom = displayRect.GetBottomRight().Get()
+    
+    wLeft, wTop = topLeft.Get()
+    wRight, wBottom = bottomRight.Get()
+    
+    # shift the dialog horizontally into the display area
+    if wLeft < dLeft:
+        wRight += (dLeft - wLeft)
+        wLeft = dLeft
+        if wRight > dRight:
+            wRight = dRight
+    elif wRight > dRight:
+        wLeft += (dRight - wRight)
+        wRight = dRight
+        if wLeft < dLeft:
+            wLeft = dLeft
+            
+    # shift the dialog vertically into the display area
+    if wTop < dTop:
+        wBottom += (dTop - wTop)
+        wTop = dTop
+        if wBottom > dBottom:
+            wBottom = dBottom
+    elif wBottom > dBottom:
+        wTop += (dBottom - wBottom)
+        wBottom = dBottom
+        if wTop < dTop:
+            wTop = dTop
+            
+    # set the new position and size
+    newRect = wx.RectPP((wLeft, wTop), (wRight, wBottom))
+    window.SetRect(newRect)
 

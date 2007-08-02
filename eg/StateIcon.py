@@ -22,7 +22,6 @@
 
 import eg
 import wx
-import time
 import threading
 
 

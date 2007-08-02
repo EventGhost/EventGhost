@@ -203,6 +203,7 @@ class AddActionDialog(eg.Dialog):
             event.Skip()
 
 
+    @eg.LogItWithReturn
     def Destroy(self):
         global gLastSelected
         item = self.tree.GetSelection()

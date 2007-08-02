@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import sys
 import threading
 import wx
 import eg

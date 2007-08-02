@@ -114,6 +114,7 @@ class ScriptEditor(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.OnCmdClose)
         self.Bind(wx.EVT_MENU_OPEN, self.OnShowMenu)
         editCtrl.Bind(wx.EVT_RIGHT_UP, self.OnRightClick)
+        eg.Utils.EnsureVisible(self)
 
 
     def CheckFileNeedsSave(self):

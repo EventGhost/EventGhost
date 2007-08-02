@@ -20,9 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import types
-import inspect
-from xml.sax.saxutils import quoteattr
 import colorsys
 
 import wx

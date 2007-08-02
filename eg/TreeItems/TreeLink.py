@@ -21,7 +21,6 @@
 # $LastChangedBy$
 
 import eg
-import types
 
     
 class TreeLink(object):

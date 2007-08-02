@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import wx
 import eg
 from TreeItem import TreeItem
 

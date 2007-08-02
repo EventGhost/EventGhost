@@ -20,13 +20,9 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import threading
 import base64
 import pickle
-import copy
-import types
 
-from xml.sax.saxutils import quoteattr
 import wx
 
 import eg

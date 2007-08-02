@@ -23,7 +23,6 @@
 import wx
 import types
 import os
-import sys
 import codecs
 
 def Start(args):

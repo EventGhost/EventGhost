@@ -52,12 +52,13 @@ class Dialog(wx.Dialog):
             return self
     
         
+    @eg.LogItWithReturn
     def DoModal(self):
         result = None
+        eg.Utils.EnsureVisible(self)
         if self.ShowModal() == wx.ID_OK and hasattr(self, "resultData"):
             result = self.resultData
         self.Destroy()
         return result
     
     
-        

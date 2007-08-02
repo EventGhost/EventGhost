@@ -25,7 +25,6 @@ from eg.WinAPI.Utils import HighlightWindow, BestWindowFromPoint
 import win32api
 import win32gui
 import eg
-import os
 from win32process import GetWindowThreadProcessId
 
 ourProcessID = win32api.GetCurrentProcessId()

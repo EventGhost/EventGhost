@@ -22,15 +22,10 @@
 
 from __future__ import with_statement
 import eg
-import sys
 import os
-import imp
 import cPickle as pickle
 from os import stat
-from os.path import isdir, join, exists, abspath
-from base64 import b64decode
-from cStringIO import StringIO
-import Image
+from os.path import isdir, join, exists
 
 from PluginTools import ImportPlugin
 

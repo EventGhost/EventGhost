@@ -20,17 +20,13 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-from os.path import abspath, exists, join, isdir
-from base64 import b64decode
-from cStringIO import StringIO
+from os.path import exists, join, isdir
 
 import sys
 import os
 import copy
 import types
 
-import Image
-import wx
 import eg
 from Utils import SetClass
 from PluginMetaClass import PluginMetaClass

@@ -392,7 +392,7 @@ class MainFrame(wx.Frame):
             ]
         )        
         self.SetAcceleratorTable(self.acceleratorTable)
-        
+        eg.Utils.EnsureVisible(self)
         
         
     @eg.LogIt

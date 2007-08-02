@@ -20,6 +20,11 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+"""
+:var gImageList: The global wx.ImageList of the module.
+
+:undocumented: gIconCache, gDisabledImage, gFolderImage
+"""
 from os.path import abspath
 from base64 import b64decode
 from cStringIO import StringIO
@@ -27,14 +32,15 @@ import wx
 import Image
 
 
-gIconCache = {}
+
 gImageList = wx.ImageList(16, 16)
+gIconCache = {}
 gDisabledImage = Image.open("images/disabled.png")
 gFolderImage = Image.open("images/folder.png").convert("RGBA")
 
 
 def PilToBitmap(pil):
-    """Convert a PIL image to a wx.Bitmap (with alpha channel support)."""
+    """ Convert a PIL image to a wx.Bitmap (with alpha channel support). """
     image = wx.EmptyImage(pil.size[0], pil.size[1], 32)
     image.SetData(pil.convert('RGB').tostring())
     image.SetAlphaData(pil.convert("RGBA").tostring()[3::4]) 
@@ -43,7 +49,7 @@ def PilToBitmap(pil):
 
 
 def GetIcon(filePath):
-    """Returns a wx.Bitmap loaded from 'filePath'.
+    """ Returns a wx.Bitmap loaded from 'filePath'.
     
     Uses PIL functions, because this way we have better alpha channel 
     handling.
@@ -53,7 +59,7 @@ def GetIcon(filePath):
     
 
 class Icon(object):
-    """An object representing an icon with some memoization functionality.
+    """ An object representing an icon with some memoization functionality.
     
     The icon is initialized by a file path (see PathIcon) or by a base64encoded
     string (see StringIcon). The object will not load/convert any data before
@@ -63,7 +69,7 @@ class Icon(object):
     """
     
     def _pil(self):
-        """Return a PIL image of the icon.
+        """ Return a PIL image of the icon.
         
         Abstract method that must be implemented in a subclass.
         """
@@ -71,12 +77,12 @@ class Icon(object):
     
     
     def _index(self):
-        """Return the index of this icon inside the global wx.ImageList."""
+        """ Return the index of this icon inside the global wx.ImageList. """
         return gImageList.Add(PilToBitmap(self.pil))
     
     
     def _disabledIndex(self):
-        """Creates a version of the icon with a "disabled" mark overlayed and
+        """ Creates a version of the icon with a "disabled" mark overlayed and
         returns its index inside the global wx.ImageList.
         """
         image = self.pil.copy()
@@ -85,7 +91,7 @@ class Icon(object):
     
     
     def _folderIndex(self):
-        """Creates a folder icon with a small version of the icon overlayed and
+        """ Creates a folder icon with a small version of the icon overlayed and
         returns its index inside the global wx.ImageList. 
         """
         small = self.pil.resize((11,11), Image.BICUBIC)
@@ -95,19 +101,19 @@ class Icon(object):
     
     
     def GetBitmap(self):
-        """Return a wx.Bitmap of the icon."""
+        """ Return a wx.Bitmap of the icon. """
         return PilToBitmap(self.pil)
 
 
     def GetWxIcon(self):
-        """Return a wx.Icon of the icon."""
+        """ Return a wx.Icon of the icon. """
         icon = wx.EmptyIcon()
         icon.CopyFromBitmap(PilToBitmap(self.pil))
         return icon
 
 
     def __getattr__(self, name):
-        """Implements the memoization magic for the icon.
+        """ Implements the memoization magic for the icon.
         
         Only called if an attribute 'name' does not exist. The code will look 
         if a corresponding method '_name' exists, calls this method and stores
@@ -125,7 +131,7 @@ class Icon(object):
 class PathIcon(Icon):
     
     def __new__(cls, path):
-        """If an instance of this path is already in the cache, returns the 
+        """ If an instance of this path is already in the cache, returns the 
         cached instance. Otherwise creates a new instance and adds it to the 
         cache.
         """
@@ -139,7 +145,7 @@ class PathIcon(Icon):
     
     
     def _pil(self):
-        """Return a PIL image of the icon."""
+        """ Return a PIL image of the icon. """
         return Image.open(self.key).convert("RGBA")
         
         
@@ -147,7 +153,7 @@ class PathIcon(Icon):
 class StringIcon(Icon):
     
     def __new__(cls, key):
-        """If an instance of this data is already in the cache, returns the 
+        """ If an instance of this data is already in the cache, returns the 
         cached instance. Otherwise creates a new instance and adds it to the 
         cache.
         """
@@ -160,7 +166,7 @@ class StringIcon(Icon):
     
     
     def _pil(self):
-        """Return a PIL image of the icon."""
+        """ Return a PIL image of the icon. """
         fd = StringIO(b64decode(self.key))
         pil = Image.open(fd).convert("RGBA")
         fd.close()
@@ -169,7 +175,7 @@ class StringIcon(Icon):
 
 
 def ClearImageList():
-    """Delete the global wxImageList and replace it with a new empty one."""
+    """ Delete the global wxImageList and replace it with a new empty one. """
     global gImageList
     gImageList.RemoveAll()
     gImageList = wx.ImageList(16, 16)

@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import math
 import locale
 import wx
 from wx.lib import masked

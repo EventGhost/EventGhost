@@ -22,7 +22,6 @@
 # $LastChangedBy$
 
 import eg
-import types
 import new
 
 from Utils import SetClass

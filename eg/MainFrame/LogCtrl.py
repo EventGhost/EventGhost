@@ -20,7 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-from time import time, strftime, localtime
+from time import strftime, localtime
 import collections
 import colorsys
 import wx

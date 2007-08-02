@@ -20,10 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import os
-import types
 from cStringIO import StringIO
-import win32api
 from time import clock
 
 import wx

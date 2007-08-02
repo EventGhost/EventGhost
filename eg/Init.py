@@ -23,7 +23,6 @@
 import sys
 import os
 import imp
-import pythoncom
 import asynchat
 import thread
 import socket
@@ -31,7 +30,6 @@ import time
 import asyncore
 import threading
 import traceback
-import linecache
 from os.path import exists
 import wx
 import locale
@@ -73,6 +71,7 @@ class EventGhost(object):
         atexit.register(dummyAsyncChat.close)
 
         import Utils
+        self.Utils = Utils
         self.LogIt = Utils.LogIt
         self.LogItWithReturn = Utils.LogItWithReturn
         self.TimeIt = Utils.TimeIt

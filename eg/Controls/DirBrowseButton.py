@@ -20,11 +20,13 @@
 # $LastChangedRevision: 81 $
 # $LastChangedBy: bitmonster $
 
+# this import is needed first, because it applies 
+# patches to wx.lib.filebrowsebutton
 import FileBrowseButton
 from wx.lib.filebrowsebutton import DirBrowseButton as _DirBrowseButton
 
 class DirBrowseButton(_DirBrowseButton):
-    """A control to allow the user to type in a filename or browse with the 
+    """ A control to allow the user to type in a filename or browse with the 
     standard file dialog to select directory.
     """
     pass
