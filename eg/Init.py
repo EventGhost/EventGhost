@@ -176,8 +176,12 @@ class EventGhost(object):
         from PluginDatabase import PluginDatabase
         self.pluginDatabase = PluginDatabase()
         
+        from WinAPI.SendKeys import SendKeys
+        self.SendKeys = SendKeys
+        
         
     def StartGui(self):
+        import WinAPI.SendKeys
         import WinAPI.COMServer
         self.messageReceiver.Start()
         

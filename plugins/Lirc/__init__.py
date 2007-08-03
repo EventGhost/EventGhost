@@ -4,7 +4,7 @@ name = "LIRC Event Receiver"
 kind = "remote"
 version = "0.6.0"
 author = "jinxdone"
-description = """
+description = """\
 Plugin for receiving Lirc eventstrings and generating EventGhost events 
 accordingly.
 

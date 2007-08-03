@@ -11,7 +11,7 @@ eg.RegisterPlugin(
         'and the <a href="http://www.evation.com/irman/index.html">'
         'Evation.com Irman</a> '
         'device.'
-        '<p><center><img src="irman_front.jpg" alt="Irman" /></a></center>'
+        '\n\n<p><center><img src="irman_front.jpg" alt="Irman" /></a></center>'
     ),
 )
 

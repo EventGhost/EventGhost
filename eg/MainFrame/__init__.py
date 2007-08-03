@@ -162,8 +162,8 @@ class MainFrame(wx.Frame):
         AddItem("Execute", downFunc=OnLeftDown, upFunc=OnLeftUp)
         
         if eg.debugLevel:
-            self.toolBarSpacer = wx.StaticBitmap(toolBar, size=(50, 10))
-            toolBar.AddControl(self.toolBarSpacer)
+            #self.toolBarSpacer = wx.StaticBitmap(toolBar, size=(50, 10))
+            #toolBar.AddControl(self.toolBarSpacer)
         
             AddItem("Reset", image=RESET_ICON)
             #AddItem("Test", image=RESET_ICON)

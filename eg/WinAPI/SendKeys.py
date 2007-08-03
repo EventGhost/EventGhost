@@ -1,25 +1,3 @@
-# This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
-
 vkCodes = (
     ('AltGr', 10),
     ('Shift', 16),
@@ -433,9 +411,9 @@ for keyword, code in vkCodes:
     VK_Keys[keyword.upper()] = code
     
     
-    
 class SendKeysParser:
     
+    @eg.LogIt
     def __init__(self):        
         self.dummy_window = wx.Frame(None, -1, "Dummy Window")
         self.dummy_hwnd = self.dummy_window.GetHandle()
@@ -445,13 +423,11 @@ class SendKeysParser:
         self.sendInputStruct = INPUT()
         self.sendInputStruct.type = INPUT_KEYBOARD
         self.rawData = []
-        _, self.ourProcessID = GetWindowThreadProcessId(self.dummy_hwnd)
         
         
-    @eg.LogItWithReturn
     def Parse(self, hwnd, data, useAlternateMethod=False):
         oldHwnd = hwnd
-        self.text = data
+        self.text = data.decode()
         needGetFocus = False
         sendToFront = False
         if hwnd is None:
@@ -466,10 +442,8 @@ class SendKeysParser:
         ourThreadID = GetCurrentThreadId()
 
         # If not, attach our thread's 'input' to the foreground thread's
-        self.attached = False
-        if threadID != ourThreadID and processID != self.ourProcessID:
+        if threadID != ourThreadID:
             AttachThreadInput(threadID, ourThreadID, True)
-            self.attached = True
             
         if needGetFocus:
             try:
@@ -505,25 +479,25 @@ class SendKeysParser:
             self.SendRawCodes2()
 
         SetKeyboardState(byref(oldKeyboardState))
-        if self.attached:
-            self.WaitForInputProcessed()
+        self.WaitForInputProcessed()
+        if threadID != ourThreadID:
             AttachThreadInput(threadID, ourThreadID, False)
         if self.procHandle:
             CloseHandle(self.procHandle)
 
         
     def WaitForInputProcessed(self):
-        if self.procHandle and self.attached:
+        if self.procHandle:
             try:
                 WaitForInputIdle(self.procHandle, 100)
             except:
                 pass
-            def DoIt():
-                SetTimer(self.dummy_hwnd, 1, 0, None)
-                self.msg.message = 0
-                while self.msg.message != WM_TIMER:
-                    GetMessage(byref(self.msg), self.dummy_hwnd, 0, 0)
-            eg.CallWait(DoIt)
+        def DoIt():
+            SetTimer(self.dummy_hwnd, 1, 0, None)
+            self.msg.message = 0
+            while self.msg.message != WM_TIMER:
+                GetMessage(byref(self.msg), self.dummy_hwnd, 0, 0)
+        eg.CallWait(DoIt)
             
  
     def SendRawCodes1(self):
@@ -634,7 +608,7 @@ class SendKeysParser:
                 else:
                     end = text.find("}", i+1)
                     if end == -1:
-                        raise Exception("Matching closing brace not found")
+                        raise "Matching closing brace not found"
                     key = text[i+1:end]
                     i = end + 1
                     key2 = key.replace("_", "+")
@@ -655,8 +629,5 @@ class SendKeysParser:
                 i += 1
                 self.ParseSingleChar(ch)
                 
-                
-eg.DebugNote("Creating SendKeys parser")
+
 SendKeys = SendKeysParser().Parse
-
-

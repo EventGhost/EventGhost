@@ -23,7 +23,6 @@
 import eg
 import Version
 import wx
-#from wx.html import HW_NO_SELECTION
 
 import time
 import sys
@@ -62,6 +61,8 @@ SPECIAL_THANKS_DATA = (
             ("Matthew Jacob Edwards", "Winamp Extensions"),
             ("jorel1969", "Meedio"),
             ("Mark Clarkson", "Yamaha RX-V1000 Serial"),
+            ("jinxdone", "LIRC Event Receiver"),
+            ("Micke Prag", "TellStick")
         ),
     ),
     (
@@ -69,6 +70,7 @@ SPECIAL_THANKS_DATA = (
         2,
         (
             ("Lubo&scaron; R&uuml;ckl", "Czech"),
+            ("Fredrik Jacobsson", "Swedish"),
         ),
     ),
     (
@@ -79,6 +81,7 @@ SPECIAL_THANKS_DATA = (
             ('dlandrum', 'PayPal'),
             ('Steve Ingamells', 'PayPal'),
             ('damdy-cash', 'PayPal'),
+            ('some anonymous people', 'PayPal'),
             ('Stoffel', 'remote'),
             (
                 'Jon Rhees, <a href="http://www.usbuirt.com/">USB-UIRT</a>', 
@@ -122,19 +125,19 @@ class Panel1(wx.Panel):
         hypelink1 = eg.HyperLinkCtrl(
             self, 
             wx.ID_ANY, 
-            "Home Page", 
+            eg.text.MainFrame.Menu.WebHomepage, 
             URL="http://www.eventghost.org/"
         )
         hypelink2 = eg.HyperLinkCtrl(
             self,
             wx.ID_ANY, 
-            "Forums",
+            eg.text.MainFrame.Menu.WebForum,
             URL="http://www.eventghost.org/forum/"
         )
         hypelink3 = eg.HyperLinkCtrl(
             self,
             wx.ID_ANY, 
-            "Wiki",
+            eg.text.MainFrame.Menu.WebWiki,
             URL="http://www.eventghost.org/wiki/"
         )
         
@@ -229,10 +232,8 @@ class Panel4(wx.Panel):
             ("Platform", platform.platform()),
         )
         sysInfoTemplate = "".join(
-            [
-                "<tr><td><b>%s:</b></td><td>%s</td></tr>" % sysInfo 
-                for sysInfo in sysInfos
-            ]
+            ["<tr><td><b>%s:</b></td><td>%s</td></tr>" % sysInfo 
+                for sysInfo in sysInfos]
         )
             
         sysinfoHtml = eg.HtmlWindow(self, -1, style=wx.SUNKEN_BORDER)
