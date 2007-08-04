@@ -378,6 +378,7 @@ class HIDThread(threading.Thread):
         versionNumber,
         useFirstDevice
     ):
+        self.plugin = plugin
         self.text = Text
         self.deviceName = vendorString + " " + productString
         self.abort = False
@@ -396,12 +397,12 @@ class HIDThread(threading.Thread):
 
         if not self.devicePath:
             plugin.PrintError(self.text.errorFind + self.deviceName)
+            self.plugin.status = 2
             return
 
         threading.Thread.__init__(self, name = self.devicePath)
 
         #setting members
-        self.plugin = plugin
         self.helper = helper
         self.enduringEvents = enduringEvents
         self.rawDataEvents = rawDataEvents
@@ -411,6 +412,7 @@ class HIDThread(threading.Thread):
     def AbortThread(self):
         self.abort = True
         win32event.SetEvent(self._overlappedRead.hEvent)
+        self.plugin.status = 2
 
 
     def run(self):
@@ -427,6 +429,7 @@ class HIDThread(threading.Thread):
             )
         except:
             self.plugin.PrintError(self.text.errorOpen + self.deviceName)
+            self.plugin.status = 3
             return
 
         #getting data to get the right buffer size
@@ -509,6 +512,9 @@ class HIDThread(threading.Thread):
         DataArrayType = HIDP_DATA * maxDataL
         data = DataArrayType()
 
+        #initiziling finished. setting status
+        self.plugin.status = 1
+
         while not self.abort:
             #try to read and wait for an event to happen
             try:
@@ -522,6 +528,8 @@ class HIDThread(threading.Thread):
             except:
                 self.plugin.PrintError(self.text.errorRead + self.deviceName)
                 self.abort = True
+                #device got disconnected so set status to waiting
+                self.plugin.status = 2
 
             #parse data
             if len(buf) == n and not self.abort:
@@ -592,6 +600,50 @@ class HID(eg.PluginClass):
     canMultiLoad = True
     text = Text
     thread = None
+    status = -1
+    # -1: not initizilized
+    #  0: stopped
+    #  1: running
+    #  2: waiting for device
+    #  3: error
+
+    
+    def ReconnectDevice(self, event):
+        """method to reconnect a disconnect device"""
+        if self.status == 2:
+            #updating devicelist
+            self.helper.UpdateDeviceList()
+            
+            #check if the right device was connected
+            #getting devicePath
+            self.devicePath = self.helper.GetDevicePath(
+                self.noOtherPort,
+                self.devicePath,
+                self.vendorID,
+                self.productID,
+                self.versionNumber,
+                self.useFirstDevice
+            )
+            if not self.devicePath:
+                #wrong device
+                return
+            
+            #create thread
+            self.thread = HIDThread(
+                self,
+                self.helper,
+                self.enduringEvents,
+                self.rawDataEvents,
+                self.noOtherPort,
+                self.devicePath,
+                self.vendorID,
+                self.vendorString,
+                self.productID,
+                self.productString,
+                self.versionNumber,
+                self.useFirstDevice
+            )
+
 
     def GetLabel(self,
         eventName,
@@ -632,6 +684,20 @@ class HID(eg.PluginClass):
         versionNumber,
         useFirstDevice = False
     ):
+
+        #saving parameters so they cn be used to reconnect a device
+        self.eventName = eventName
+        self.enduringEvents = enduringEvents
+        self.rawDataEvents = rawDataEvents
+        self.noOtherPort = noOtherPort
+        self.devicePath = devicePath
+        self.vendorID = vendorID
+        self.vendorString = vendorString
+        self.productID = productID
+        self.productString = productString
+        self.versionNumber = versionNumber
+        self.useFirstDevice = useFirstDevice
+
         if eventName:
             self.info.eventPrefix = eventName
         else:
@@ -657,9 +723,16 @@ class HID(eg.PluginClass):
             versionNumber,
             useFirstDevice
         )
+        #Bind plugin to RegisterDeviceNotification message 
+        eg.Bind("System.DeviceAttached", self.ReconnectDevice)
 
     def __stop__(self):
         self.thread.AbortThread()
+        
+        #unbind from RegisterDeviceNotification message
+        eg.Unbind("System.DeviceAttached", self.ReconnectDevice)
+        self.status = 0
+        
 
 
     def Configure(self,
