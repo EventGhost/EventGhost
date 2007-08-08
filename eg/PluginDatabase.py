@@ -165,10 +165,10 @@ class PluginDatabase:
             # get the highest timestamp of all files in that directory
             highestTimestamp = 0
             for dirpath, dirnames, filenames in os.walk(pluginDir):
-                highestTimestamp = max(
-                    [stat(join(dirpath, filename)).st_mtime
-                        for filename in filenames]
-                )
+                for filename in filenames:
+                    timestamp = stat(join(dirpath, filename)).st_mtime
+                    if timestamp > highestTimestamp:
+                        highestTimestamp = timestamp
                 # little hack to avoid scanning of SVN directories
                 for directory in dirnames[:]:
                     if directory.startswith(".svn"):

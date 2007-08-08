@@ -981,11 +981,11 @@ class Plugin:
         name = u'TellStick'
         description = u'<p>Plugin f\xf6r att kontrollera TellStick-kompatibla enheter.</p>\n\n<p><a href="http://www.telldus.se">Telldus Hemsida</a></p><center><img src="tellstick.png" /></center>'
         class TurnOff:
-            name = u'T\xe4nd'
-            description = u'T\xe4nder en TellStick-enhet'
-        class TurnOn:
             name = u'Sl\xe4ck'
             description = u'Sl\xe4cker en TellStick-enhet'
+        class TurnOn:
+            name = u'T\xe4nd'
+            description = u'T\xe4nder en TellStick-enhet'
     class Timer:
         name = u'Timer'
         description = u'Triggar en h\xe4ndelse efter en inst\xe4lld tid och repeterar efter ett intervall om du s\xe5 \xf6nskar'

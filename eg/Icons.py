@@ -57,7 +57,13 @@ def GetIcon(filePath):
     return PilToBitmap(Image.open(filePath).convert("RGBA"))
     
     
-
+def GetIconOnTop(foregroundIcon, backgroundIcon, size=(10, 10)):
+    small = foregroundIcon.pil.resize(size, Image.BICUBIC)
+    image = backgroundIcon.pil.copy()
+    image.paste(small, (16 - size[0], 16 - size[1]), small)
+    return image
+    
+    
 class Icon(object):
     """ An object representing an icon with some memoization functionality.
     
@@ -94,9 +100,9 @@ class Icon(object):
         """ Creates a folder icon with a small version of the icon overlayed and
         returns its index inside the global wx.ImageList. 
         """
-        small = self.pil.resize((11,11), Image.BICUBIC)
+        small = self.pil.resize((12,12), Image.BICUBIC)
         image = gFolderImage.copy()
-        image.paste(small, (5, 5), small)
+        image.paste(small, (4, 4), small)
         return gImageList.Add(PilToBitmap(image))
     
     

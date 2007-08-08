@@ -172,6 +172,9 @@ class Server(asyncore.dispatcher):
         
         # Create socket of requested type
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        
+        # restart the asyncore loop, so it notices the new socket
+        eg.RestartAsyncore()
 
         # Set it to re-use address
         self.set_reuse_addr()

@@ -44,12 +44,27 @@ from MainFrame.TreeCtrl import TreeCtrl
 from MainFrame.StatusBar import StatusBar
 
 from eg.WinAPI.Utils import BringHwndToFront
+ADD_ICON = eg.Icons.PathIcon('images/add.png')
 
-PLUGIN_ICON = eg.Icons.PLUGIN_ICON.GetBitmap()
-FOLDER_ICON = eg.Icons.FOLDER_ICON.GetBitmap()
-MACRO_ICON = eg.Icons.MACRO_ICON.GetBitmap()
-EVENT_ICON = eg.Icons.EVENT_ICON.GetBitmap()
-ACTION_ICON = eg.Icons.ACTION_ICON.GetBitmap()
+PLUGIN_ICON = eg.Icons.PilToBitmap(
+    eg.Icons.GetIconOnTop(ADD_ICON, eg.Icons.PLUGIN_ICON)
+)
+FOLDER_ICON = eg.Icons.PilToBitmap(
+    eg.Icons.GetIconOnTop(ADD_ICON, eg.Icons.FOLDER_ICON)
+)
+MACRO_ICON = eg.Icons.PilToBitmap(
+    eg.Icons.GetIconOnTop(ADD_ICON, eg.Icons.MACRO_ICON)
+)
+EVENT_ICON = eg.Icons.PilToBitmap(
+    eg.Icons.GetIconOnTop(ADD_ICON, eg.Icons.EVENT_ICON)
+)
+ACTION_ICON = eg.Icons.PilToBitmap(
+    eg.Icons.GetIconOnTop(ADD_ICON, eg.Icons.ACTION_ICON)
+)
+#FOLDER_ICON = eg.Icons.FOLDER_ICON.GetBitmap()
+#MACRO_ICON = eg.Icons.MACRO_ICON.GetBitmap()
+#EVENT_ICON = eg.Icons.EVENT_ICON.GetBitmap()
+#ACTION_ICON = eg.Icons.ACTION_ICON.GetBitmap()
 RESET_ICON = eg.Icons.PathIcon('images/error.png').GetBitmap()
 
 Text = eg.text.MainFrame

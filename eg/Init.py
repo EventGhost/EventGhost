@@ -23,17 +23,12 @@
 import sys
 import os
 import imp
-import asynchat
-import thread
-import socket
 import time
-import asyncore
 import threading
 import traceback
 from os.path import exists
 import wx
 import locale
-import atexit
 
 
 class EventGhost(object):
@@ -64,11 +59,9 @@ class EventGhost(object):
         import GifImagePlugin
         Image._initialized = 2  
         
-        # create a dummy-asynchat to keep asyncore.loop alive    
-        dummyAsyncChat = asynchat.async_chat()
-        dummyAsyncChat.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        thread.start_new_thread(asyncore.loop, (1,))
-        atexit.register(dummyAsyncChat.close)
+        # create a global asyncore loop thread
+        import AsyncoreLoop
+        self.RestartAsyncore = AsyncoreLoop.RestartAsyncore
 
         import Utils
         self.Utils = Utils

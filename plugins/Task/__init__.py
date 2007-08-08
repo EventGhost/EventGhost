@@ -46,6 +46,7 @@ import wx
 import os
 from os.path import abspath, join, dirname
 
+import win32api
 from win32gui import GetWindowLong, EnumWindows, GetDesktopWindow 
 from win32api import RegisterWindowMessage, OpenProcess, CloseHandle
 from win32process import GetWindowThreadProcessId, GetModuleFileNameEx
@@ -132,8 +133,10 @@ class Task(eg.PluginClass):
         eg.messageReceiver.RemoveHandler(WM_SHELLHOOKMESSAGE, self.MyWndProc)
         eg.messageReceiver.RemoveHandler(WM_APP+1, self.FocusWndProc)
         eg.messageReceiver.RemoveHandler(WM_APP+2, self.FatalWndProc)
-        from _ctypes import FreeLibrary
-        FreeLibrary(self.hookDll._handle)
+        res = win32api.FreeLibrary(self.hookDll._handle)
+        if not res:
+            err = win32api.GetLastError()
+            eg.DebugNote("FreeLibrary:", err, win32api.FormatMessage(err))
         self.hookDll = None
         
         

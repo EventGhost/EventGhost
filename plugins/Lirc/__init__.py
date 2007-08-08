@@ -80,6 +80,7 @@ class Lirc_Reader(asyncore.dispatcher):
         self.ignoretime = ignoretime
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        eg.RestartAsyncore()
         self.connect((host, port))
         self.buffer = ""
 

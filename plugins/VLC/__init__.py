@@ -113,7 +113,7 @@ class VLC_Session(asynchat.async_chat):
         self.buffer = ''
         self.handler = handler
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-
+        eg.RestartAsyncore()
         try:
             self.connect(address)
         except:

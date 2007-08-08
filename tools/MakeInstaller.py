@@ -565,7 +565,7 @@ class MainDialog(wx.Dialog):
     def OnCancel(self, event):
         app.ExitMainLoop()
      
-
+print vars(pysvn.Client().info(trunkDir))
 app = wx.App(0)
 app.SetExitOnFrameDelete(False)
 if len(sys.argv) == 1:

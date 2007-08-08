@@ -527,6 +527,7 @@ class ZoomPlayerSession(asynchat.async_chat):
         
         # create and connect a socket
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        eg.RestartAsyncore()
         self.settimeout(1.0)
         try:
             self.connect(address)

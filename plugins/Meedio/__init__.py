@@ -9,19 +9,20 @@ eg.RegisterPlugin(
         'Adds actions to control <a href="http://www.meedio.com/">Meedio</a>.'
     ),
     icon = (
-        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAABnRSTlMA/wD/AP83WBt9"
-        "AAACG0lEQVR42nVSTU8TURQ982aGaSnYgUYMVCB+BKlKIBpXJG5YYDSEuHCpG3+CJvwB"
-        "l5q4g4XrSoykxugCjMYFkWqIbkxMDVJTPxA6nX4N05l58951QUEI9Wxu7k3OOTk3B8Lj"
-        "TnrdX7bpMKpEnIhIitDJ5P3VChGh/OjzfHd08eI4Vel/KBesp4ljr8evivUGK3FXSln6"
-        "tmo9fo9WIMjNB/OBqIReNWiE6sPns73dk5puiIaf6L9ETJAQisogIENBniA7tJc/9Y5N"
-        "jt67bwxHFSICABv2nY8r7253Rk8BMEfPc172t6teeYMCOTH9CncJugJAaxqbiN0adJ8V"
-        "/Phaz0i8ZmeNLr1jQOe+4/w4CoB0UrCPQExqqRhT9dNTiaHpvr0AuYVfTg6oQQHbuTSH"
-        "IpnkMno8qUXU/YmD7fCEehNVkKADBIKgLa4wRLr0/YTKmgMA/VBU5aADU7WTMbSzw2+1"
-        "OrJi2NtbdzNIIZzA+5nzykn7a90tBe6Wv/3bs77Uk4NQrQhkU7xJUKDSFgewvqhqbSpF"
-        "IuS0hQFF4m0AYAEu0LGTVoR8pfZn6Y3wG8mpa9rZTuikqKxqVcy+hHS5ny0VXi7EB0bM"
-        "KxeMVAxOJv+kpz1tGmuzH1oWSXLxduJ62jReDI05mTxrbG6GgThinkleTrXskqKxczdm"
-        "ALAYAwDx3S/OZd2ljX+agogTFYnquyYkinPZcsGSJP4Cq6FlCpeS/scAAAAASUVORK5C"
-        "YII="
+        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAB3RJTUUH1wgDEBgNAaYl"
+        "jAAAABd0RVh0U29mdHdhcmUAR0xEUE5HIHZlciAzLjRxhaThAAAACHRwTkdHTEQzAAAA"
+        "AEqAKR8AAAAEZ0FNQQAAsY8L/GEFAAACDElEQVR4nGNgAIIn27favjp+VIGBSPBk6ybb"
+        "D9evSoA58yNDYlcIcf5Zqyh579vzZ5yEND/euskSqP73BnX5q90N9ewMParyLcsFOf4B"
+        "Bf/dnDEljJABB0J854HUrxTjfdxRXsbLcOzgQZZLbU2JO+zM9uwP9Jrw+8sXJlyagc4W"
+        "3ulotelYanz723NnpDEU3J43y221tNDbNXJiV9aryx8DGrhrk57aISD/HBA/XSHC/fbT"
+        "ndvcOJ337vJFNaBX/m7WEvh/xE/m/8kohf/n01T+Xy3R+H80UPY/0JCHeP338eZ1MaAB"
+        "Py5mq/77vtv+/7dddnD6QoYKyIDThAzgAhrw5Xq55n+QRmR8Ilz+/y4X2z1EGXC3WRfD"
+        "BQfcJP+DwoSQAfxAA7496jfEcMEOU5H/221M9xEyQBpowK/7HXr/nkwy+n+rTvvfhUyV"
+        "/8dD5f6tluIGhcFZvAY82bbZGBQLQPwdGGVfgBo+AqP1E5D/FWTwGlnRp1g1ApOn+ZH4"
+        "iO693i79b06fVAO6ROjz/XvsILnfX78yAfk8INc9XLfKareb/SJgwkv58ughP1jzBEPt"
+        "Cqit/8/VlBfhdSIQbNJXPwFSu1KM71FjaooIw2QL4xpo2v705twZKUIGXGyqywGpXyUp"
+        "+LI5K0OU4djhw8zXJ/dHPli9woaQZhD48+M7y8XmuvRXJ45pgvgAfoQui0aPQukAAAAA"
+        "SUVORK5CYII="
     ),
 )
 
