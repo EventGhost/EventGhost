@@ -393,7 +393,7 @@ class Start(eg.ActionClass):
     def __call__(self):
         if self.plugin.workerThread:
             self.plugin.workerThread.Stop(timeout=5.0)
-        self.plugin.workerThread = DvbViewerWorkerThread(self)
+        self.plugin.workerThread = DvbViewerWorkerThread(self.plugin)
         self.plugin.workerThread.Start()
             
 
