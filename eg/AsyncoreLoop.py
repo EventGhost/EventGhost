@@ -35,6 +35,7 @@ atexit.register(dispatcher.close)
 
 
 def RestartAsyncore():
+    """ Informs the asyncore loop of a new socket to handle. """
     global dispatcher
     
     oldDispatcher = dispatcher

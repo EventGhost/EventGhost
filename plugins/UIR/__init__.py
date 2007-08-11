@@ -24,6 +24,7 @@ import win32event
 
 class UIR(eg.RawReceiverPlugin):
     canMultiLoad = True
+    lastReceivedTime = 0
     
     @eg.LogIt
     def __start__(self, port):
@@ -112,7 +113,7 @@ class UIR(eg.RawReceiverPlugin):
         if self.lastReceivedTime + 1.0 < now:
             self.buffer = ""
         self.lastReceivedTime = now
-        self.buffer += "%X" % ord(data)
+        self.buffer += "%02X" % ord(data)
         if len(self.buffer) >= 12:
             self.TriggerEvent(self.buffer)
             self.buffer = ""

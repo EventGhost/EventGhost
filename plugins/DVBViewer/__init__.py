@@ -391,10 +391,10 @@ class Start(eg.ActionClass):
     description = "Start DVBViewer through COM-API. For DVBViewer Pro only."
    
     def __call__(self):
-        if self.workerThread:
-            self.workerThread.Stop(timeout=5.0)
-        self.workerThread = DvbViewerWorkerThread(self)
-        self.workerThread.Start()
+        if self.plugin.workerThread:
+            self.plugin.workerThread.Stop(timeout=5.0)
+        self.plugin.workerThread = DvbViewerWorkerThread(self)
+        self.plugin.workerThread.Start()
             
 
         

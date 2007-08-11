@@ -222,7 +222,7 @@ class X10Events:
         
         
         
-class WorkerThread(eg.ThreadWorker):
+class X10WorkerThread(eg.ThreadWorker):
     
     def __init__(self, plugin, eventHandler):
         self.plugin = plugin
@@ -258,9 +258,10 @@ class X10(eg.PluginClass):
         
         class SubX10Events(X10Events):
             plugin = self
-        self.workerThread = WorkerThread(self, SubX10Events)
+        self.workerThread = X10WorkerThread(self, SubX10Events)
         self.workerThread.Start()
         if not self.workerThread.comInstance:
+            self.workerThread.Stop()
             raise eg.Exception(self.text.errorMesg)
         
 
