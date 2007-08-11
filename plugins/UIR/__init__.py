@@ -27,8 +27,10 @@ class UIR(eg.RawReceiverPlugin):
     lastReceivedTime = 0
     
     @eg.LogIt
-    def __start__(self, port):
+    def __start__(self, port, byteCount=6, initSequence=True):
         self.port = port
+        self.byteCount = byteCount
+        self.initSequence = initSequence
         self.stopEvent = win32event.CreateEvent(None, 1, 0, None)
         self.receiveThread = threading.Thread(target=self.ReceiveThread)
         self.receiveThread.start()    
@@ -67,12 +69,13 @@ class UIR(eg.RawReceiverPlugin):
             serialPort.setDTR()
             time.sleep(0.05)
             serialPort.flushInput()
-            serialPort.write("I")
-            time.sleep(0.05)
-            serialPort.write("R")
-            if serialPort.read(2) != "OK":
-                self.PrintError("Got no OK from device.")
-                #return
+            if self.initSequence:
+                serialPort.write("I")
+                time.sleep(0.05)
+                serialPort.write("R")
+                if serialPort.read(2) != "OK":
+                    self.PrintError("Got no OK from device.")
+                    #return
             overlapped = serialPort._overlappedRead
             hComPort = serialPort.hComPort
             hEvent = overlapped.hEvent
@@ -114,18 +117,30 @@ class UIR(eg.RawReceiverPlugin):
             self.buffer = ""
         self.lastReceivedTime = now
         self.buffer += "%02X" % ord(data)
-        if len(self.buffer) >= 12:
+        if len(self.buffer) >= (self.byteCount * 2):
             self.TriggerEvent(self.buffer)
             self.buffer = ""
             
         
-    def Configure(self, port=0):
+    def Configure(self, port=0, byteCount=6, initSequence=True):
         dialog = eg.ConfigurationDialog(self)
         portCtrl = eg.SerialPortChoice(dialog, value=port)
+        byteCountCtrl = eg.SpinIntCtrl(dialog, min=1, max=32, value=byteCount)
+        initSequenceCtrl = wx.CheckBox(dialog, -1, "Initialise device on start.")
+        initSequenceCtrl.SetValue(initSequence)
         dialog.sizer.Add(wx.StaticText(dialog, -1, 'COM Port:'))
         dialog.sizer.Add(portCtrl)
+        dialog.sizer.Add((10, 10))
+        dialog.sizer.Add(wx.StaticText(dialog, -1, 'Event Byte Count (default=6):'))
+        dialog.sizer.Add(byteCountCtrl)
+        dialog.sizer.Add((15, 15))
+        dialog.sizer.Add(initSequenceCtrl)
         
         if dialog.AffirmedShowModal():
-            return (portCtrl.GetValue(), )
+            return (
+                portCtrl.GetValue(), 
+                byteCountCtrl.GetValue(), 
+                initSequenceCtrl.GetValue()
+            )
                     
         
