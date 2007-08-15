@@ -149,6 +149,6 @@ class Scheduler(threading.Thread):
     def Stop(self):
         def func():
             self.keepRunning = False
-        self.AddTaskRelative(-1, func)
+        self.AddTask(-1, func)
         
         
