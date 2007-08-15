@@ -101,6 +101,10 @@ class EventGhost(object):
         from MessageReceiver import MessageReceiver
         self.messageReceiver = MessageReceiver()
         
+        from Scheduler import Scheduler
+        self.scheduler = Scheduler()
+        self.scheduler.start()
+        
         # because some functions are only available if a wxApp instance
         # exists, we simply create it first
         import App
@@ -272,8 +276,10 @@ class EventGhost(object):
     def DeInit(self):
         self.DebugNote("stopping threads")
         self.actionThread.CallWait(self.actionThread.StopSession)
+        self.scheduler.Stop()
         self.actionThread.Stop()
         self.eventThread.Stop()
+        
         
         self.DebugNote("shutting down")
         self.config.onlyLogAssigned = self.onlyLogAssigned
@@ -452,4 +458,4 @@ class EventGhost(object):
     class HiddenAction:
         pass
     
-
+    

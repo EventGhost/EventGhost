@@ -274,7 +274,8 @@ class EventHandler:
         self.TriggerEvent("Playbackstart")
         
     def OnonDVBVClose(self):
-        self.plugin.workerThread.Stop()
+        if self.plugin.workerThread:
+            self.plugin.workerThread.Stop()
         self.TriggerEvent("Close")
 
     
@@ -303,6 +304,7 @@ class DvbViewerWorkerThread(eg.ThreadWorker):
         This will be called inside the thread when it finishes. It will even
         be called if the thread exits through an exception.
         """
+        del self.dvbviewer
         self.plugin.workerThread = None
 
     
@@ -362,7 +364,7 @@ class DVBViewer(eg.PluginClass):
     def SendCommandThroughCOM(self, value):
         if not self.workerThread:
             self.workerThread = DvbViewerWorkerThread(self)
-            self.workerThread.Start()
+            self.workerThread.Start(20.0)
         self.workerThread.CallWait(
             self.workerThread.dvbviewer.SendCommand, 
             value
@@ -392,9 +394,10 @@ class Start(eg.ActionClass):
    
     def __call__(self):
         if self.plugin.workerThread:
+            return
             self.plugin.workerThread.Stop(timeout=5.0)
         self.plugin.workerThread = DvbViewerWorkerThread(self.plugin)
-        self.plugin.workerThread.Start()
+        self.plugin.workerThread.Start(20.0)
             
 
         

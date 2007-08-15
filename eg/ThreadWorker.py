@@ -109,7 +109,7 @@ class ThreadWorker:
             
         self.Call(_stop)
         if timeout > 0.0:
-            self.__thread.join(blocking)
+            self.__thread.join(timeout)
             return self.__thread.isAlive()
         
         

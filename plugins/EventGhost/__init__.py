@@ -24,7 +24,6 @@ import eg
 import sys
 import time
 import traceback
-import threading
 
 import wx
 
@@ -488,8 +487,11 @@ class TriggerEvent(eg.ActionClass):
         if not waitTime:
             eg.TriggerEvent(eventString)
         else:
-            t = threading.Timer(waitTime, eg.TriggerEvent, (eventString,))
-            t.start()
+            eg.scheduler.AddTaskRelative(
+                waitTime,
+                eg.TriggerEvent,
+                eventString,
+            )
 
 
     def GetLabel(self, eventString="", waitTime=0):
