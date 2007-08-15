@@ -487,7 +487,7 @@ class TriggerEvent(eg.ActionClass):
         if not waitTime:
             eg.TriggerEvent(eventString)
         else:
-            eg.scheduler.AddTaskRelative(
+            eg.scheduler.AddTask(
                 waitTime,
                 eg.TriggerEvent,
                 eventString,

@@ -77,6 +77,9 @@ from ThreadWorker import ThreadWorker
 from EventThread import EventThread as _EventThread
 TriggerEvent = staticmethod(_EventThread.TriggerEvent)
 
+from Scheduler import Scheduler as _Scheduler
+scheduler = _Scheduler
+
 def RegisterPlugin(        
     name = None,
     description = None,

@@ -21,13 +21,19 @@
 # $LastChangedBy: bitmonster $
 
 import eg
-from time import clock
+from time import clock, time
 from heapq import heappush, heapify, heappop
 import threading
 
 
 
 class Scheduler(threading.Thread):
+    """Sometimes you want to execute some code at a specified time or after a 
+    specified time period. EventGhost includes a small scheduler, that helps 
+    you to accomplish this.
+    
+    :undocumented: Stop, MainLoop, __init__
+    """
 
     def __init__(self):
         self.keepRunning = True
@@ -37,10 +43,44 @@ class Scheduler(threading.Thread):
         threading.Thread.__init__(self, target=self.MainLoop)
         
         
-    def AddTaskAbsolute(self, startTime, callback, *args, **kwargs):
+    def AddTask(self, waitTime, func, *args, **kwargs):
+        """
+        This function will call the callable `func` after `waitTime`
+        seconds (expressed as a floating point number) with optional 
+        parameters, by adding it to the scheduler's queue. A little example:
+
+        .. python::
+            def MyTestFunc(myArgument):
+                print "MyTestFunc was called with:", repr(myArgument)
+            
+            eg.scheduler.AddTask(10.0, MyTestFunc, "just some test data")
+            
+        Ten seconds after invocation of the code it will print the following 
+        message to the log::
+        
+            MyTestFunc was called with: 'just some test data'
+        
+        The function will also return an object, that you can use as the 
+        `task` identifier for `CancelTask()`.
+
+        :Parameters:
+          waitTime
+            The time to wait in floating point seconds.
+          func
+            The callable to invoke after the time has elapsed.
+          args
+            Optional positional arguments for the callable.
+          kwargs
+            Optional keyword arguments for the callable.
+            
+        :Returns:
+          An object to identify the task.
+        
+        """
+        startTime = clock() + waitTime
         try:
             self.lock.acquire()
-            task = (startTime, callback, args, kwargs)
+            task = (startTime, func, args, kwargs)
             heappush(self.heap, task)
             self.event.set()
         finally:
@@ -48,12 +88,35 @@ class Scheduler(threading.Thread):
         return task
         
         
-    def AddTaskRelative(self, waitTime, callback, *args, **kwargs):
-        startTime = clock() + waitTime
-        return self.AddTaskAbsolute(startTime, callback, *args, **kwargs)
+    def AddTaskAbsolute(self, startTime, func, *args, **kwargs):
+        """
+        This does the same as `AddTask`, but the `startTime` parameter specifies
+        an absolute time expressed in floating point seconds since the epoch. 
+        Take a look at the documentation of `Python's time module`_, 
+        for more information about this time format. Again a little example:
+        
+        .. python::
+            import time
+            startTime = time.mktime((2007, 8, 15, 16, 53, 0, 0, 0, -1))
+            eg.scheduler.AddTaskAbsolute(startTime, eg.TriggerEvent, "MyEvent")
+            
+        This will trigger the event "Main.MyEvent" at 16:53:00 on 15 August 
+        2007. If you run this code after this point of time, the 
+        `eg.TriggerEvent` will be called immediately. 
+        
+        .. _Python's time module: http://docs.python.org/lib/module-time.html
+        """
+        return self.AddTask(startTime - time(), func, *args, **kwargs)
         
         
-    def RemoveTask(self, task):
+    def CancelTask(self, task):
+        """
+        This will cancel a task formerly added by `AddTask` or 
+        `AddTaskAbsolute`, if the task hasn't been started yet. 
+        
+        If the task has already been called or simply wasn't added before, the 
+        function will raise an IndexError.
+        """
         try:
             self.lock.acquire()
             self.heap.remove(task)
@@ -69,50 +132,23 @@ class Scheduler(threading.Thread):
             self.event.wait(timeout)
             self.lock.acquire()
             self.event.clear()
-            startTime, callback, args, kwargs = self.heap[0]
+            startTime, func, args, kwargs = self.heap[0]
             if startTime <= clock():
                 heappop(self.heap)
                 self.lock.release()
                 try:
-                    callback(*args, **kwargs)
+                    func(*args, **kwargs)
                 except:
                     eg.PrintTraceback()
+                startTime = self.heap[0][0]
             else:
                 self.lock.release()
-                startTime = self.heap[0][0]
             timeout = startTime - clock()
             
             
     def Stop(self):
-        def callback():
+        def func():
             self.keepRunning = False
-        self.AddTaskRelative(-1, callback)
+        self.AddTaskRelative(-1, func)
         
-            
-            
-if __name__ == "__main__":
-    import random
-    import time
-    
-    s = Scheduler()
-    s.start()
-    
-    counter = 0
-    def make_test_func(i, timeout):
-        def test_func():
-            global counter
-            print "test", i, counter, timeout, clock() - timeout
-            counter += 1
-            time.sleep(0.01)
-        return test_func
-        
-    times = [random.random() * 10.0 for i in range(100)]
-    times.sort()
-    for i, timeout in enumerate(times):
-        time.sleep(0.01)
-        s.AddTaskRelative(timeout, make_test_func(i, clock() + timeout))
-    print "done"
-    
-                
-                
         
