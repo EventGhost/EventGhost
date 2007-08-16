@@ -43,7 +43,7 @@ class Text:
     errorOpen = "Error opening HID device: "
     errorRead = "Error reading HID device: "
     errorRetrieval = "Error getting HID device info."
-    errorReportLength = "Report length must not be zero for device"
+    errorReportLength = "Report length must not be zero for device "
     errorMultipleDevices = "Multiple devices found. Don't know which to use."
     errorInvalidDataIndex = "Found data index not defined as button or control value."
     vendorID = "Vendor ID "
