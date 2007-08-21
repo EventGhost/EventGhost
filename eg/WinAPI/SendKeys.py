@@ -427,7 +427,7 @@ class SendKeysParser:
         
     def Parse(self, hwnd, data, useAlternateMethod=False):
         oldHwnd = hwnd
-        self.text = data.decode()
+        self.text = data
         needGetFocus = False
         sendToFront = False
         if hwnd is None:
@@ -586,6 +586,9 @@ class SendKeysParser:
     def ParseSingleChar(self, ch):
         data = []
         key = VkKeyScan(ord(ch)) & 0xFFFF
+        if key == 0xFFFF:
+            eg.PrintError("Cannot translate character '%s' to key sequence!" % ch)
+            return
         if key & 0x200:
             data.append(VK_CONTROL)
         if key & 0x400:

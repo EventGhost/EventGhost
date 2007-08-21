@@ -75,7 +75,7 @@ except:
 pythoncom.CoResumeClassObjects()
 
 try:
-    e = win32com.client.Dispatch("{7EB106DC-468D-4345-9CFE-B0021039114B}")   
+    e = win32com.client.Dispatch("EventGhost")   
 except:
     eg.PrintError("Unable to establish COM disptach!")    
 
