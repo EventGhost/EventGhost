@@ -290,7 +290,7 @@ class FindWindow(eg.ActionClass):
             
     def Compile(
         self, 
-        program, 
+        program=None, 
         winName=None, 
         winClass=None, 
         childName=None,

@@ -55,10 +55,7 @@ class FontButton(wx.Button):
     def OnFontButton(self, event):
         data = wx.FontData()
         if self.fontInfo is not None:
-            font = wx.Font(18, wx.SWISS, wx.NORMAL, wx.BOLD)
-            nfi = wx.NativeFontInfo()
-            nfi.FromString(self.fontInfo)
-            font.SetNativeFontInfo(nfi)
+            font = wx.FontFromNativeInfoString(self.fontInfo)  
             data.SetInitialFont(font)
         dlg = wx.FontDialog(self.GetParent(), data)
         if dlg.ShowModal() == wx.ID_OK:
@@ -70,5 +67,10 @@ class FontButton(wx.Button):
         
     def GetValue(self):
         return self.fontInfo
+    
+    
+    def SetValue(self, fontInfo):
+        self.fontInfo = fontInfo
+    
     
     

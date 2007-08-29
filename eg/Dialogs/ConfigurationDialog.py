@@ -139,7 +139,7 @@ class ConfigurationDialog(Dialog):
         #self.__postInited = False
         self.sizer.Clear(deleteWindows=True)
         #self.sizer.Add((0,0))
-        for child in self.buttonRow.sizer.GetChildren()[:-3]:
+        for child in list(self.buttonRow.sizer.GetChildren())[:-3]:
             #if child.IsWindow():
                 child.DeleteWindows()
         #print self.buttonRow.sizer.GetChildren()[:-3]

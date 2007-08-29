@@ -30,7 +30,7 @@ class ColourSelectButton(csel.ColourSelect):
     def __init__(
         self, 
         parent, 
-        id, 
+        id=wx.ID_ANY, 
         label="", 
         colour=wx.BLACK,
         pos=wx.DefaultPosition, 
@@ -95,3 +95,8 @@ class ColourSelectButton(csel.ColourSelect):
         # Converts the wx.Colour object to an RGB-tuple. 
         colour = csel.ColourSelect.GetColour(self)
         return colour.Red(), colour.Green(), colour.Blue()
+    
+    
+    def GetValue(self):
+        # Converts the wx.Colour object to an RGB-tuple. 
+        return csel.ColourSelect.GetColour(self).Get()

@@ -217,12 +217,12 @@ class NewAction(NewItem):
             )
         )
         item.Select()
+        self.StoreItem(item)
         
         if item.NeedsStartupConfiguration():
             if not CmdConfigure().Do(item):
                 item.Delete()
                 return None
-        self.StoreItem(item)
         return item
     
     

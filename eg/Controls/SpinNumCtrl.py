@@ -69,6 +69,7 @@ class SpinNumCtrl(wx.Window):
                 
         new_args.update(kwargs)
         wx.Window.__init__(self, parent, id, pos, size, style)
+        self.SetThemeEnabled(True)
         numCtrl = masked.NumCtrl(
             self, 
             -1, 
