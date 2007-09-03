@@ -74,19 +74,17 @@ class NetworkSender(eg.PluginClass):
 
 
     def Configure(self, host="127.0.0.1", port=1024, password=""):
-        dialog = eg.ConfigurationDialog(self)
-        hostCtrl = wx.TextCtrl(dialog, -1, host)
-        portCtrl = eg.SpinIntCtrl(dialog, -1, port, max=65535)
-        passwordCtrl = wx.TextCtrl(dialog, -1, password, style=wx.TE_PASSWORD)
-                
-        dialog.AddLabel(self.text.host)
-        dialog.AddCtrl(hostCtrl)
-        dialog.AddLabel(self.text.port)
-        dialog.AddCtrl(portCtrl)
-        dialog.AddLabel(self.text.password)
-        dialog.AddCtrl(passwordCtrl)
+        panel = eg.ConfigPanel(self)
         
-        if dialog.AffirmedShowModal():
+        hostCtrl = panel.TextCtrl(host)
+        portCtrl = panel.SpinIntCtrl(port, max=65535)
+        passwordCtrl = panel.TextCtrl(password, style=wx.TE_PASSWORD)
+        
+        panel.AddLine(self.text.host, hostCtrl)
+        panel.AddLine(self.text.port, portCtrl)
+        panel.AddLine(self.text.password, passwordCtrl)
+
+        if panel.Affirmed():
             return (
                 hostCtrl.GetValue(), 
                 portCtrl.GetValue(), 

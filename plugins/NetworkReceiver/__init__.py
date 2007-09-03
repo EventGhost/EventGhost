@@ -220,18 +220,21 @@ class NetworkReceiver(eg.PluginClass):
 
 
     def Configure(self, port=1024, password="", prefix="TCP"):
-        dialog = eg.ConfigurationDialog(self)
-        ctrl1 = eg.SpinIntCtrl(dialog, -1, port, max=65535)
-        ctrl2 = wx.TextCtrl(dialog, -1, password, style=wx.TE_PASSWORD)
-        ctrl3 = wx.TextCtrl(dialog, -1, prefix)
+        panel = eg.ConfigPanel(self)
         
-        dialog.AddLabel(self.text.port)
-        dialog.AddCtrl(ctrl1)
-        dialog.AddLabel(self.text.password)
-        dialog.AddCtrl(ctrl2)
-        dialog.AddLabel(self.text.event_prefix)
-        dialog.AddCtrl(ctrl3)
+        portCtrl = panel.SpinIntCtrl(port, max=65535)
+        panel.AddLine(self.text.port, portCtrl)
         
-        if dialog.AffirmedShowModal():
-            return (ctrl1.GetValue(), ctrl2.GetValue(), ctrl3.GetValue())
+        passwordCtrl = panel.TextCtrl(password, style=wx.TE_PASSWORD)
+        panel.AddLine(self.text.password, passwordCtrl)
+        
+        eventPrefixCtrl = panel.TextCtrl(prefix)
+        panel.AddLine(self.text.event_prefix, eventPrefixCtrl)
+        
+        if panel.Affirmed():
+            return (
+                portCtrl.GetValue(), 
+                passwordCtrl.GetValue(), 
+                eventPrefixCtrl.GetValue()
+            )
 

@@ -162,8 +162,8 @@ class Webserver(eg.PluginClass):
     canMultiLoad = True
 
     class text:
-        port = "Port:"
-        documentRoot = "Document root:"
+        port = "TCP/IP port:"
+        documentRoot = "HTML documents root:"
         eventPrefix = "Event prefix:"
     
     def __init__(self):
@@ -205,30 +205,17 @@ class Webserver(eg.PluginClass):
 
 
     def Configure(self, prefix="HTTP", port=80, basepath=""):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         
-        portCtrl = eg.SpinIntCtrl(dialog, -1, port, min=1, max=65535)
-
-        filepathCtrl = eg.DirBrowseButton(
-            dialog, 
-            -1, 
-            size=(320,-1),
-            startDirectory=basepath, 
-            labelText="",
-            buttonText=eg.text.General.browse
-        )
-        filepathCtrl.SetValue(basepath)
+        portCtrl = panel.SpinIntCtrl(port, min=1, max=65535)
+        filepathCtrl = panel.DirBrowseButton(basepath)
+        editCtrl = panel.TextCtrl(prefix)
         
-        editCtrl = wx.TextCtrl(dialog, -1, prefix)
+        panel.AddLine(self.text.port, portCtrl)
+        panel.AddLine(self.text.documentRoot, filepathCtrl)
+        panel.AddLine(self.text.eventPrefix, editCtrl)
         
-        dialog.AddLabel(self.text.port)
-        dialog.AddCtrl(portCtrl)
-        dialog.AddLabel(self.text.documentRoot)
-        dialog.AddCtrl(filepathCtrl)
-        dialog.AddLabel(self.text.eventPrefix)
-        dialog.AddCtrl(editCtrl)
-        
-        if dialog.AffirmedShowModal():
+        if panel.Affirmed():
             return (
                 editCtrl.GetValue(), 
                 int(portCtrl.GetValue()), 

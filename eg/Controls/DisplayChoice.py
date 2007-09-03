@@ -20,14 +20,14 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 import wx
+           
             
-            
-class DisplayChoice(wx.Choice):
+class DisplayChoice(eg.Choice):
     
-    def __init__(self, parent, id=-1, display=0):
+    def __init__(self, parent, value, *args, **kwargs):
         numDisplays = wx.Display().GetCount()
-        display = min(display, numDisplays)
+        display = min(value, numDisplays)
         choices = ["Monitor %d" % (i+1) for i in range(numDisplays)]
-        wx.Choice.__init__(self, parent, id, choices=choices)
-        self.SetSelection(display)                        
+        eg.Choice.__init__(self, parent, value, choices=choices, *args, **kwargs)

@@ -197,38 +197,20 @@ class Focus(eg.ActionClass):
         backgroundColour=(0,0,0),
         display=0,
     ):
-        dialog = eg.ConfigurationDialog(self, resizeable=True)
-        sizer = wx.FlexGridSizer(3, 2, 5, 5)
+        panel = eg.ConfigPanel(self)
+        foregroundColourButton = panel.ColourSelectButton(foregroundColour)       
+        backgroundColourButton = panel.ColourSelectButton(backgroundColour)
+        displayChoice = panel.DisplayChoice(display)
         
-        st = wx.StaticText(dialog, -1, "Foreground Colour:")
-        sizer.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
+        panel.AddLine("Foreground Colour:", foregroundColourButton)
+        panel.AddLine("Background Colour:", backgroundColourButton)
+        panel.AddLine("Display:", displayChoice)
         
-        foregroundColourButton = eg.ColourSelectButton(
-            dialog, -1, eg.text.General.choose, foregroundColour
-        )
-        sizer.Add(foregroundColourButton, 0, wx.EXPAND)
-        
-        st = wx.StaticText(dialog, -1, "Background Colour:")
-        sizer.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
-        
-        backgroundColourButton = eg.ColourSelectButton(
-            dialog, -1, eg.text.General.choose, backgroundColour
-        )
-        sizer.Add(backgroundColourButton, 0, wx.EXPAND)
-        
-        st = wx.StaticText(dialog, -1, "Display:")
-        sizer.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
-        
-        displayChoice = eg.DisplayChoice(dialog, -1, display)
-        sizer.Add(displayChoice, 0, wx.EXPAND)
-
-        dialog.sizer.Add(sizer, 1, wx.EXPAND)
-        
-        if dialog.AffirmedShowModal():
+        if panel.Affirmed():
             return (
-                foregroundColourButton.GetColour(), 
-                backgroundColourButton.GetColour(), 
-                displayChoice.GetSelection()
+                foregroundColourButton.GetValue(), 
+                backgroundColourButton.GetValue(), 
+                displayChoice.GetValue()
             )
         
             
@@ -268,43 +250,22 @@ class IreWindow(eg.ActionClass):
         coverage=25.0,
         aspectRatio = 0,
     ):
-        dialog = eg.ConfigurationDialog(self)
-        sizer = wx.FlexGridSizer(5, 2, 5, 5)
+        panel = eg.ConfigPanel(self)
         
-        st = wx.StaticText(dialog, -1, "Foreground Colour:")
-        sizer.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
+        foregroundColourButton = panel.ColourSelectButton(foregroundColour)
+        backgroundColourButton = panel.ColourSelectButton(backgroundColour)
+        coverageCtrl = panel.SpinNumCtrl(coverage, min=0, max=100)
+        aspectChoice = panel.Choice(choices=self.aspectChoices)
 
-        foregroundColourButton = eg.ColourSelectButton(
-            dialog, -1, eg.text.General.choose, foregroundColour
-        )
-        sizer.Add(foregroundColourButton, 0, wx.EXPAND)
+        panel.AddLine("Foreground Colour:", foregroundColourButton)
+        panel.AddLine("Background Colour:", backgroundColourButton)
+        panel.AddLine("Percent Coverage:", coverageCtrl)
+        panel.AddLine("Aspect Ratio:", aspectChoice)
         
-        st = wx.StaticText(dialog, -1, "Background Colour:")
-        sizer.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
-
-        backgroundColourButton = eg.ColourSelectButton(
-            dialog, -1, eg.text.General.choose, backgroundColour
-        )
-        sizer.Add(backgroundColourButton, 0, wx.EXPAND)
-                
-        st = wx.StaticText(dialog, -1, "Percent Coverage:")
-        sizer.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
-
-        coverageCtrl = eg.SpinNumCtrl(dialog, min=0, max=100, value=coverage)
-        sizer.Add(coverageCtrl, 0, wx.EXPAND)
-        
-        st = wx.StaticText(dialog, -1, "Aspect Ratio:")
-        sizer.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
-
-        aspectChoice = wx.Choice(dialog, choices=self.aspectChoices)
-        sizer.Add(aspectChoice, 0, wx.EXPAND)
-        
-        dialog.sizer.Add(sizer, 1, wx.EXPAND)
-
-        if dialog.AffirmedShowModal():
+        if panel.Affirmed():
             return (
-                foregroundColourButton.GetColour(), 
-                backgroundColourButton.GetColour(), 
+                foregroundColourButton.GetValue(), 
+                backgroundColourButton.GetValue(), 
                 coverageCtrl.GetValue()
             )
         
@@ -350,52 +311,26 @@ class Checkerboard(eg.ActionClass):
         vCount=4,
         display=0
     ):
-        dialog = eg.ConfigurationDialog(self)
-        sizer = wx.FlexGridSizer(5, 2, 5, 5)
-        
-        st = wx.StaticText(dialog, -1, "Foreground Colour:")
-        sizer.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
+        panel = eg.ConfigPanel(self)
+        foregroundColourButton = panel.ColourSelectButton(foregroundColour)
+        backgroundColourButton = panel.ColourSelectButton(backgroundColour)
+        hCountCtrl = panel.SpinIntCtrl(hCount, min=0, max=100)
+        vCountCtrl = panel.SpinIntCtrl(vCount, min=0, max=100)
+        displayChoice = panel.DisplayChoice(display)
 
-        foregroundColourButton = eg.ColourSelectButton(
-            dialog, -1, eg.text.General.choose, foregroundColour
-        )
-        sizer.Add(foregroundColourButton, 0, wx.EXPAND)
+        panel.AddLine("Foreground Colour:", foregroundColourButton)
+        panel.AddLine("Background Colour:", backgroundColourButton)
+        panel.AddLine("Num Horizontal Boxes:", hCountCtrl)
+        panel.AddLine("Num Vertical Boxes:", vCountCtrl)
+        panel.AddLine("Display:", displayChoice)
         
-        st = wx.StaticText(dialog, -1, "Background Colour:")
-        sizer.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
-
-        backgroundColourButton = eg.ColourSelectButton(
-            dialog, -1, eg.text.General.choose, backgroundColour
-        )
-        sizer.Add(backgroundColourButton, 0, wx.EXPAND)
-        
-        st = wx.StaticText(dialog, -1, "Num Horizontal Boxes:")
-        sizer.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
-
-        hCountCtrl = eg.SpinIntCtrl(dialog, min=0, max=100, value=hCount)
-        sizer.Add(hCountCtrl, 0, wx.EXPAND)
-        
-        st = wx.StaticText(dialog, -1, "Num Vertical Boxes:")
-        sizer.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
-
-        vCountCtrl = eg.SpinIntCtrl(dialog, min=0, max=100, value=vCount)
-        sizer.Add(vCountCtrl, 0, wx.EXPAND)
-        
-        st = wx.StaticText(dialog, -1, "Display:")
-        sizer.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
-        
-        displayChoice = eg.DisplayChoice(dialog, -1, display)
-        sizer.Add(displayChoice, 0, wx.EXPAND)
-
-        dialog.sizer.Add(sizer, 1, wx.EXPAND)
-
-        if dialog.AffirmedShowModal():
+        if panel.Affirmed():
             return (
-                foregroundColourButton.GetColour(), 
-                backgroundColourButton.GetColour(), 
+                foregroundColourButton.GetValue(), 
+                backgroundColourButton.GetValue(), 
                 hCountCtrl.GetValue(),
                 vCountCtrl.GetValue(),
-                displayChoice.GetSelection(),
+                displayChoice.GetValue(),
             )
 
 
@@ -446,52 +381,27 @@ class Grid(eg.ActionClass):
         vCount=9,
         display=0
     ):
-        dialog = eg.ConfigurationDialog(self)
-        sizer = wx.FlexGridSizer(5, 2, 5, 5)
-        
-        st = wx.StaticText(dialog, -1, "Foreground Colour:")
-        sizer.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
+        panel = eg.ConfigPanel(self)
 
-        foregroundColourButton = eg.ColourSelectButton(
-            dialog, -1, eg.text.General.choose, foregroundColour
-        )
-        sizer.Add(foregroundColourButton, 0, wx.EXPAND)
-        
-        st = wx.StaticText(dialog, -1, "Background Colour:")
-        sizer.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
+        foregroundColourButton = panel.ColourSelectButton(foregroundColour)
+        backgroundColourButton = panel.ColourSelectButton(backgroundColour)
+        hCountCtrl = panel.SpinIntCtrl(hCount, min=0, max=100)
+        vCountCtrl = panel.SpinIntCtrl(vCount, min=0, max=100)
+        displayChoice = panel.DisplayChoice(display)
 
-        backgroundColourButton = eg.ColourSelectButton(
-            dialog, -1, eg.text.General.choose, backgroundColour
-        )
-        sizer.Add(backgroundColourButton, 0, wx.EXPAND)
+        panel.AddLine("Foreground Colour:", foregroundColourButton)
+        panel.AddLine("Background Colour:", backgroundColourButton)
+        panel.AddLine("Num Horizontal Boxes:", hCountCtrl)
+        panel.AddLine("Num Vertical Boxes:", vCountCtrl)
+        panel.AddLine("Display:", displayChoice)
         
-        st = wx.StaticText(dialog, -1, "Num Horizontal Boxes:")
-        sizer.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
-
-        hCountCtrl = eg.SpinIntCtrl(dialog, min=0, max=100, value=hCount)
-        sizer.Add(hCountCtrl, 0, wx.EXPAND)
-        
-        st = wx.StaticText(dialog, -1, "Num Vertical Boxes:")
-        sizer.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
-
-        vCountCtrl = eg.SpinIntCtrl(dialog, min=0, max=100, value=vCount)
-        sizer.Add(vCountCtrl, 0, wx.EXPAND)
-        
-        st = wx.StaticText(dialog, -1, "Display:")
-        sizer.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
-        
-        displayChoice = eg.DisplayChoice(dialog, -1, display)
-        sizer.Add(displayChoice, 0, wx.EXPAND)
-
-        dialog.sizer.Add(sizer, 1, wx.EXPAND)
-
-        if dialog.AffirmedShowModal():
+        if panel.Affirmed():
             return (
-                foregroundColourButton.GetColour(), 
-                backgroundColourButton.GetColour(), 
+                foregroundColourButton.GetValue(), 
+                backgroundColourButton.GetValue(), 
                 hCountCtrl.GetValue(),
                 vCountCtrl.GetValue(),
-                displayChoice.GetSelection(),
+                displayChoice.GetValue(),
             )
 
         
@@ -535,59 +445,30 @@ class Lines(eg.ActionClass):
         orientation=0,
         display=0
     ):
-        dialog = eg.ConfigurationDialog(self)
-        orientationCtrl = wx.RadioBox(
-            dialog, 
-            label="Orientation",
-            choices=[
-                "Horizontal",
-                "Vertical",
-            ],
-            style=wx.RA_SPECIFY_ROWS 
-        )
-        orientationCtrl.SetSelection(orientation)
-        dialog.sizer.Add(orientationCtrl, 0, wx.EXPAND)
-        dialog.sizer.Add((5, 5))
-        
-        sizer = wx.FlexGridSizer(5, 2, 5, 5)
-        
-        st = wx.StaticText(dialog, -1, "Foreground Colour:")
-        sizer.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
+        panel = eg.ConfigPanel(self)
+        choices=[
+            "Horizontal",
+            "Vertical",
+        ]
+        orientationCtrl = panel.Choice(orientation, choices=choices)
+        foregroundColourButton = panel.ColourSelectButton(foregroundColour)
+        backgroundColourButton = panel.ColourSelectButton(backgroundColour)
+        lineSizeCtrl = panel.SpinIntCtrl(lineSize, min=1, max=100)
+        displayChoice = panel.DisplayChoice(display)
 
-        foregroundColourButton = eg.ColourSelectButton(
-            dialog, -1, eg.text.General.choose, foregroundColour
-        )
-        sizer.Add(foregroundColourButton, 0, wx.EXPAND)
+        panel.AddLine("Orientation", orientationCtrl)
+        panel.AddLine("Foreground Colour:", foregroundColourButton)
+        panel.AddLine("Background Colour:", backgroundColourButton)
+        panel.AddLine("Line Size:", lineSizeCtrl)
+        panel.AddLine("Display:", displayChoice)
         
-        st = wx.StaticText(dialog, -1, "Background Colour:")
-        sizer.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
-
-        backgroundColourButton = eg.ColourSelectButton(
-            dialog, -1, eg.text.General.choose, backgroundColour
-        )
-        sizer.Add(backgroundColourButton, 0, wx.EXPAND)
-        
-        st = wx.StaticText(dialog, -1, "Line Size:")
-        sizer.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
-
-        lineSizeCtrl = eg.SpinIntCtrl(dialog, min=1, max=100, value=lineSize)
-        sizer.Add(lineSizeCtrl, 0, wx.EXPAND)
-                
-        st = wx.StaticText(dialog, -1, "Display:")
-        sizer.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
-        
-        displayChoice = eg.DisplayChoice(dialog, -1, display)
-        sizer.Add(displayChoice, 0, wx.EXPAND)
-
-        dialog.sizer.Add(sizer, 1, wx.EXPAND)
-
-        if dialog.AffirmedShowModal():
+        if panel.Affirmed():
             return (
-                foregroundColourButton.GetColour(), 
-                backgroundColourButton.GetColour(), 
+                foregroundColourButton.GetValue(), 
+                backgroundColourButton.GetValue(), 
                 lineSizeCtrl.GetValue(),
                 orientationCtrl.GetSelection(),
-                displayChoice.GetSelection(),
+                displayChoice.GetValue(),
             )
 
         

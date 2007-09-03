@@ -218,14 +218,8 @@ class GoDirection(eg.ActionClass):
     def Configure(self, direction=0):
         dialog = eg.ConfigurationDialog(self)
         direction = float(direction)
-        st1 = wx.StaticText(dialog, -1, self.text.text1)
         valueCtrl = eg.SpinNumCtrl(dialog, -1, direction, min=0, max=360)
-        st2 = wx.StaticText(dialog, -1, self.text.text2)
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(st1, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer.Add(valueCtrl)
-        sizer.Add(st2, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
-        dialog.sizer.Add(sizer)
+        dialog.AddGrid([(self.text.text1, valueCtrl, self.text.text2)])
         
         if dialog.AffirmedShowModal():
             return (valueCtrl.GetValue(),)
@@ -353,41 +347,37 @@ class MoveAbsolute(eg.ActionClass):
     def Configure(self, x=0, y=0):
         dialog = eg.ConfigurationDialog(self)
         text = self.text
-        mySizer = wx.FlexGridSizer(2, 3, 5, 5)
+
         xCB = wx.CheckBox(dialog, -1, text.text1)
         xCB.SetValue(x is not None)
-        mySizer.Add(xCB, 1, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND)
+        def HandleXCheckBox(event):
+            xCtrl.Enable(event.IsChecked())
+        xCB.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)    
+
         xCtrl = eg.SpinIntCtrl(dialog, min=-maxint-1, max=maxint)
         if x is None:
             x = 0
             xCtrl.Enable(False)
         xCtrl.SetValue(x)
-        mySizer.Add(xCtrl, 0, wx.EXPAND)
-        stctrl = wx.StaticText(dialog, -1, text.text2)
-        mySizer.Add(stctrl, 1, wx.ALIGN_CENTER_VERTICAL)
         
-        def HandleXCheckBox(event):
-            xCtrl.Enable(event.IsChecked())
-         
-        xCB.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)    
-
         yCB = wx.CheckBox(dialog, -1, text.text3)
         yCB.SetValue(y is not None)
-        mySizer.Add(yCB, 1, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND)
+        def HandleYCheckBox(event):
+            yCtrl.Enable(event.IsChecked())  
+        yCB.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)    
+
         yCtrl = eg.SpinIntCtrl(dialog, min=-maxint-1, max=maxint)
         if y is None:
             y = 0
             yCtrl.Enable(False)
         yCtrl.SetValue(y)
-        mySizer.Add(yCtrl, 0, wx.EXPAND)
-        stctrl = wx.StaticText(dialog, -1, text.text4)
-        mySizer.Add(stctrl, 1, wx.ALIGN_CENTER_VERTICAL)
         
-        def HandleYCheckBox(event):
-            yCtrl.Enable(event.IsChecked())
-         
-        yCB.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)    
-        dialog.sizer.Add(mySizer, 1, wx.EXPAND)
+        dialog.AddGrid(
+            (
+                (xCB, xCtrl, text.text2),
+                (yCB, yCtrl, text.text4),
+            )
+        )
 
         if dialog.AffirmedShowModal():
             if xCtrl.IsEnabled():
@@ -423,15 +413,8 @@ class MouseWheel(eg.ActionClass):
 
     def Configure(self, direction=0):
         dialog = eg.ConfigurationDialog(self)
-        st1 = wx.StaticText(dialog, -1, self.text.text1)
         valueCtrl = eg.SpinIntCtrl(dialog, -1, direction, min=-100, max=100)
-        st2 = wx.StaticText(dialog, -1, self.text.text2)
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(st1, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer.Add(valueCtrl)
-        sizer.Add(st2, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
-        dialog.sizer.Add(sizer)
-        
+        dialog.AddGrid([(self.text.text1, valueCtrl, self.text.text2)])     
         if dialog.AffirmedShowModal():
             return (valueCtrl.GetValue(), )
 

@@ -133,41 +133,38 @@ class MoveTo(eg.ActionClass):
     def Configure(self, x=0, y=0):
         dialog = eg.ConfigurationDialog(self)
         text = self.text
-        mySizer = wx.FlexGridSizer(2, 3, 5, 5)
+
         xCB = wx.CheckBox(dialog, -1, text.text1)
         xCB.SetValue(x is not None)
-        mySizer.Add(xCB, 1, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND)
+        def HandleXCheckBox(event):
+            xCtrl.Enable(event.IsChecked())
+        xCB.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)    
+
         xCtrl = eg.SpinIntCtrl(dialog, min=-32768, max=32767)
         if x is None:
             x = 0
             xCtrl.Enable(False)
         xCtrl.SetValue(x)
-        mySizer.Add(xCtrl, 0, wx.EXPAND)
-        stctrl = wx.StaticText(dialog, -1, text.text2)
-        mySizer.Add(stctrl, 1, wx.ALIGN_CENTER_VERTICAL)
         
-        def HandleXCheckBox(event):
-            xCtrl.Enable(event.IsChecked())
-         
-        xCB.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)    
 
         yCB = wx.CheckBox(dialog, -1, text.text3)
         yCB.SetValue(y is not None)
-        mySizer.Add(yCB, 1, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND)
+        def HandleYCheckBox(event):
+            yCtrl.Enable(event.IsChecked())
+        yCB.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)    
+
         yCtrl = eg.SpinIntCtrl(dialog, min=-32768, max=32767)
         if y is None:
             y = 0
             yCtrl.Enable(False)
         yCtrl.SetValue(y)
-        mySizer.Add(yCtrl, 0, wx.EXPAND)
-        stctrl = wx.StaticText(dialog, -1, text.text4)
-        mySizer.Add(stctrl, 1, wx.ALIGN_CENTER_VERTICAL)
         
-        def HandleYCheckBox(event):
-            yCtrl.Enable(event.IsChecked())
-         
-        yCB.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)    
-        dialog.sizer.Add(mySizer, 1, wx.EXPAND)
+        dialog.AddGrid(
+            (
+                (xCB, xCtrl, text.text2),
+                (yCB, yCtrl, text.text4),
+            )
+        )
 
         if dialog.AffirmedShowModal():
             if xCtrl.IsEnabled():
@@ -214,43 +211,37 @@ class Resize(eg.ActionClass):
     def Configure(self, x=0, y=0):
         dialog = eg.ConfigurationDialog(self)
         text = self.text
-        mySizer = wx.FlexGridSizer(2, 3, 5, 5)
         xCB = wx.CheckBox(dialog, -1, text.text1)
         xCB.SetValue(x is not None)
-        mySizer.Add(xCB, 1, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND)
         
         xCtrl = eg.SpinIntCtrl(dialog, min=-32768, max=32767)
         if x is None:
             x = 0
             xCtrl.Enable(False)
         xCtrl.SetValue(x)
-        mySizer.Add(xCtrl, 0, wx.EXPAND)
-        
-        stctrl = wx.StaticText(dialog, -1, text.text2)
-        mySizer.Add(stctrl, 1, wx.ALIGN_CENTER_VERTICAL)
         
         def HandleXCheckBox(event):
             xCtrl.Enable(event.IsChecked())
-         
         xCB.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)    
 
         yCB = wx.CheckBox(dialog, -1, text.text3)
         yCB.SetValue(y is not None)
-        mySizer.Add(yCB, 1, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND)
         yCtrl = eg.SpinIntCtrl(dialog, min=-32768, max=32767)
         if y is None:
             y = 0
             yCtrl.Enable(False)
         yCtrl.SetValue(y)
-        mySizer.Add(yCtrl, 0, wx.EXPAND)
-        stctrl = wx.StaticText(dialog, -1, text.text4)
-        mySizer.Add(stctrl, 1, wx.ALIGN_CENTER_VERTICAL)
         
         def HandleYCheckBox(event):
             yCtrl.Enable(event.IsChecked())
-         
         yCB.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)    
-        dialog.sizer.Add(mySizer, 1, wx.EXPAND)
+
+        dialog.AddGrid(
+            (
+                (xCB, xCtrl, text.text2),
+                (yCB, yCtrl, text.text4),
+            )
+        )
 
         if dialog.AffirmedShowModal():
             if xCtrl.IsEnabled():
@@ -360,53 +351,35 @@ class SendMessage(eg.ActionClass):
             
             
     def Configure(self, mesg=win32con.WM_COMMAND, wParam=0, lParam=0, kind=0):
-        dialog = eg.ConfigurationDialog(self)
-        mySizer = wx.FlexGridSizer(3, 2, 5, 5)
-        
-        stctrl = wx.StaticText(dialog, -1, "Message:")
-        mySizer.Add(stctrl, 1, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND)
-        
         choices = [x[1] for x in self.msgConstants]
         choicesValues = [x[0] for x in self.msgConstants]
-        mesgCtrl = wx.ComboBox(
-            dialog, 
-            choices=choices, 
-            style=wx.CB_DROPDOWN,
-            validator=eg.DigitOnlyValidator(choices)
-        )
         try:
             i = choicesValues.index(mesg)
             choice = choices[i]
         except:
             choice = str(mesg)
-        mesgCtrl.SetValue(choice)
-        mySizer.Add(mesgCtrl, 0, wx.EXPAND)
-        
-        stctrl = wx.StaticText(dialog, -1, "wParam:")
-        mySizer.Add(stctrl, 1, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND)
-        
-        wParamCtrl = eg.SpinIntCtrl(dialog, value=wParam, min=0, max=65535)
-        mySizer.Add(wParamCtrl, 0, wx.EXPAND)
-        
-        stctrl = wx.StaticText(dialog, -1, "lParam:")
-        mySizer.Add(stctrl, 1, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND)
-        
-        lParamCtrl = eg.SpinIntCtrl(
-            dialog, 
-            value=lParam, 
-            min=0, 
-            max=4294967295
-        )
-        mySizer.Add(lParamCtrl, 0, wx.EXPAND)
-        
-        dialog.sizer.Add(mySizer, 1, wx.EXPAND)
 
-        kindCB = wx.CheckBox(dialog, -1, self.text.text1)
-        if kind == 1:
-            kindCB.SetValue(True)
-        dialog.sizer.Add(kindCB, 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 10)
+        panel = eg.ConfigPanel(self)
         
-        if dialog.AffirmedShowModal():
+        mesgCtrl = wx.ComboBox(
+            panel, 
+            choices=choices, 
+            style=wx.CB_DROPDOWN,
+            validator=eg.DigitOnlyValidator(choices)
+        )
+        mesgCtrl.SetValue(choice)
+        
+        wParamCtrl = panel.SpinIntCtrl(wParam, max=65535)
+        lParamCtrl = panel.SpinIntCtrl(lParam, max=4294967295)
+        kindCB = panel.CheckBox(kind==1, self.text.text1)
+        
+        panel.AddLine("Message:", mesgCtrl)
+        panel.AddLine("wParam:", wParamCtrl)
+        panel.AddLine("lParam:", lParamCtrl)
+        #panel.AddLine()
+        panel.AddLine(kindCB)
+        
+        if panel.Affirmed():
             choice = mesgCtrl.GetValue()
             try:
                 i = choices.index(choice)
@@ -453,13 +426,7 @@ class SetAlwaysOnTop(eg.ActionClass):
                 flag = win32con.HWND_NOTOPMOST
                 
             win32gui.SetWindowPos(
-                hwnd, 
-                flag,
-                0, 
-                0, 
-                0, 
-                0, 
-                win32con.SWP_NOMOVE | win32con.SWP_NOSIZE
+                hwnd, flag, 0, 0, 0, 0, win32con.SWP_NOMOVE|win32con.SWP_NOSIZE
             )
 
 

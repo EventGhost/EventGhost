@@ -23,7 +23,7 @@
 import eg
 from Dialog import Dialog
 import wx
-
+import types
 
 #def ConfigurationDialog(executable, *args, **kwargs):    
 #    if executable == eg.currentConfigureItem.executable and eg.currentConfigureItem.openConfigDialog:
@@ -104,11 +104,12 @@ class ConfigurationDialog(Dialog):
             )
         )        
         
+        
 
     def FinishSetup(self):
         if not self.__postInited:
+            # Temporary hack to fix button ordering problems.
             line = wx.StaticLine(self)
-            #self.sizer.Add((0,0))
             self.mainSizer.Add(line, 0, wx.EXPAND|wx.ALIGN_CENTER)
             self.buttonRow.applyButton.MoveAfterInTabOrder(line)
             self.buttonRow.cancelButton.MoveAfterInTabOrder(line)
@@ -200,4 +201,24 @@ class ConfigurationDialog(Dialog):
         
     def AddCtrlExpanded(self, ctrl):
         self.sizer.Add(ctrl, 0, wx.BOTTOM|wx.EXPAND, 10)
+        
+        
+    def AddGrid(self, grid, vgap=10, hgap=5):
+        columns = len(max(grid))
+        sizer = wx.GridBagSizer(vgap, hgap)
+        sizer.SetFlexibleDirection(wx.HORIZONTAL)
+        for rowNum, row in enumerate(grid):
+            for colNum, ctrl in enumerate(row):
+                if type(ctrl) in types.StringTypes:
+                    ctrl = wx.StaticText(self, -1, ctrl)
+                
+                sizer.Add(
+                    ctrl, 
+                    (rowNum, colNum), 
+                    (1,1), 
+                    wx.ALIGN_CENTER_VERTICAL
+                )
+            if colNum < columns - 1:
+                sizer.SetItemSpan(ctrl, (1, columns - colNum))
+        self.sizer.Add(sizer)
         

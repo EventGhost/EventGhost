@@ -144,18 +144,12 @@ class DBox2(eg.PluginClass):
         
         
     def Configure(self, host="127.0.0.1", useRcem=False):
-        dialog = eg.ConfigurationDialog(self)
-        text1 = wx.StaticText(dialog, -1, "d-box2 Host:")
-        hostCtrl = wx.TextCtrl(dialog, -1, host)
-        mySizer = wx.FlexGridSizer(cols=2)
-        mySizer.Add(text1, 0, wx.EXPAND|wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
-        mySizer.Add(hostCtrl, 0, wx.EXPAND)
-        dialog.sizer.Add(mySizer, 1, wx.EXPAND)
-        useRcemCtrl = wx.CheckBox(dialog, -1, 'Use "rcem" instead of "rcsim"')
-        useRcemCtrl.SetValue(useRcem)
-        dialog.sizer.Add(useRcemCtrl, 0, wx.EXPAND|wx.ALL, 5)
-        
-        if dialog.AffirmedShowModal():
+        panel = eg.ConfigPanel(self)
+        hostCtrl = panel.TextCtrl(host)
+        useRcemCtrl = panel.CheckBox(useRcem, 'Use "rcem" instead of "rcsim"')
+        panel.AddLine("d-box2 Host:", hostCtrl)
+        panel.AddLine(useRcemCtrl)        
+        if panel.Affirmed():
             return (hostCtrl.GetValue(), useRcemCtrl.GetValue())
     
     

@@ -998,11 +998,11 @@ class ShowPicture(eg.ActionClass):
         staticText = wx.StaticText(dialog, -1, self.text.display)
         sizer.Add(staticText, 0, wx.EXPAND|wx.TOP, 10)
         
-        choice = eg.DisplayChoice(dialog, -1, display)
+        displayChoice = eg.DisplayChoice(dialog, display)
         sizer.Add(choice, 0, wx.BOTTOM, 10)
     
         if dialog.AffirmedShowModal():
-            return (filepathCtrl.GetValue(), choice.GetSelection())
+            return (filepathCtrl.GetValue(), displayChoice.GetValue())
         
         
         

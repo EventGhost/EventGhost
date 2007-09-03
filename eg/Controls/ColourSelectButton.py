@@ -21,82 +21,63 @@
 # $LastChangedBy$
 
 import wx
-import wx.lib.colourselect as csel
+import eg
 
 
-
-class ColourSelectButton(csel.ColourSelect):
+class ColourSelectButton(wx.BitmapButton):
     
     def __init__(
         self, 
-        parent, 
-        id=wx.ID_ANY, 
-        label="", 
-        colour=wx.BLACK,
+        parent,
+        value=(255, 255, 255), 
         pos=wx.DefaultPosition, 
-        size=wx.DefaultSize,
-        callback=None, 
-        style=0
+        size=(40, wx.Button.GetDefaultSize()[1]), 
+        style=wx.BU_AUTODRAW, 
+        validator=wx.DefaultValidator, 
+        name="ColourSelectButton",
     ):
-        csel.ColourSelect.__init__(
-            self, 
-            parent, 
-            id, 
-            label, 
-            colour, 
-            pos, 
-            size,
-            callback, 
-            style
+        self.value = value
+        wx.BitmapButton.__init__(
+            self, parent, -1, wx.NullBitmap, pos, size, style, validator, name
         )
-        self.Bind(wx.EVT_SIZE, self._OnSize)
+        self.SetValue(value)
+        self.Bind(wx.EVT_BUTTON, self.OnButton)
         
         
-    def _OnSize(self, event):
-        bmp = self.MakeBitmap()
-        self.SetBitmap(bmp)
-        if self.label:
-            w = self.GetParent().GetTextExtent(self.label)[0] + 18
-        else:
-            w = 20
-        self.SetMinSize((w,-1))
-        event.Skip()
+    def OnButton(self, event):
+        colourData = wx.ColourData()
+        colourData.SetChooseFull(True)
+        colourData.SetColour(self.value)
+        for n, colour in enumerate(eg.config.colourPickerCustomColours):
+            colourData.SetCustomColour(n, colour)
+        dialog = wx.ColourDialog(self.GetParent(), colourData)
+        dialog.SetTitle("Colour Picker")
+        if dialog.ShowModal() == wx.ID_OK:
+            colourData = dialog.GetColourData()
+            self.SetValue(colourData.GetColour().Get())
+        eg.config.colourPickerCustomColours = [
+            colourData.GetCustomColour(n).Get() for n in range(16)
+        ]
+        dialog.Destroy()
         
-        
-    def MakeBitmap(self):
-        bdr = 8
-        width, height = self.GetSize()
-        _, height = self.GetDefaultSize()
-        bmp = wx.EmptyBitmap(width-bdr, height-bdr)
-        dc = wx.MemoryDC()
-        dc.SelectObject(bmp)
-        dc.SetFont(self.GetFont())
-        label = self.GetLabel()
-        # Just make a little colored bitmap
-        dc.SetBackground(wx.Brush(self.colour))
-        dc.Clear()
-
-        if label:
-            # Add a label to it
-            avg = reduce(lambda a, b: a + b, self.colour.Get()) / 3
-            fcolour = avg > 128 and wx.BLACK or wx.WHITE
-            dc.SetTextForeground(fcolour)
-            dc.DrawLabel(
-                label, 
-                (0,0, width-bdr, height-bdr),
-                wx.ALIGN_CENTER
-            )
-            
-        dc.SelectObject(wx.NullBitmap)
-        return bmp
-    
-    
-    def GetColour(self):
-        # Converts the wx.Colour object to an RGB-tuple. 
-        colour = csel.ColourSelect.GetColour(self)
-        return colour.Red(), colour.Green(), colour.Blue()
-    
     
     def GetValue(self):
-        # Converts the wx.Colour object to an RGB-tuple. 
-        return csel.ColourSelect.GetColour(self).Get()
+        return self.value
+    
+    
+    def SetValue(self, value):
+        self.value = value
+        w, h = self.GetSize()
+        w -= 10
+        h -= 10
+        image = wx.EmptyImage(w, h)
+        r, g, b = value
+        for x in xrange(w):
+            for y in xrange(h):
+                if x == 0 or x == w - 1 or y == 0 or y == h - 1:
+                    image.SetRGB(x, y, 0, 0, 0)
+                else:
+                    image.SetRGB(x, y, r, g, b)
+            
+        self.SetBitmapLabel(image.ConvertToBitmap())
+        

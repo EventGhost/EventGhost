@@ -123,20 +123,17 @@ class UIR(eg.RawReceiverPlugin):
             
         
     def Configure(self, port=0, byteCount=6, initSequence=True):
-        dialog = eg.ConfigurationDialog(self)
-        portCtrl = eg.SerialPortChoice(dialog, value=port)
-        byteCountCtrl = eg.SpinIntCtrl(dialog, min=1, max=32, value=byteCount)
-        initSequenceCtrl = wx.CheckBox(dialog, -1, "Initialise device on start.")
-        initSequenceCtrl.SetValue(initSequence)
-        dialog.sizer.Add(wx.StaticText(dialog, -1, 'COM Port:'))
-        dialog.sizer.Add(portCtrl)
-        dialog.sizer.Add((10, 10))
-        dialog.sizer.Add(wx.StaticText(dialog, -1, 'Event Byte Count (default=6):'))
-        dialog.sizer.Add(byteCountCtrl)
-        dialog.sizer.Add((15, 15))
-        dialog.sizer.Add(initSequenceCtrl)
+        panel = eg.ConfigPanel(self)
         
-        if dialog.AffirmedShowModal():
+        portCtrl = panel.SerialPortChoice(port)
+        byteCountCtrl = panel.SpinIntCtrl(byteCount, min=1, max=32)
+        initSequenceCtrl = panel.CheckBox(initSequence, "Initialise device on start")
+
+        panel.AddLine('COM Port:', portCtrl)
+        panel.AddLine('Event Byte Count:', byteCountCtrl, '(default=6)')
+        panel.AddLine(initSequenceCtrl)
+        
+        if panel.Affirmed():
             return (
                 portCtrl.GetValue(), 
                 byteCountCtrl.GetValue(), 

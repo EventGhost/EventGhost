@@ -32,7 +32,7 @@ class ImagePicker(wx.Window):
         self.mesg = mesg
         wx.Window.__init__(self, parent, -1)
         self.button = wx.Button(self, -1, label)
-        self.imageBox = wx.StaticBitmap(self, -1, size=(30, 30), style=wx.SUNKEN_BORDER)
+        self.imageBox = wx.StaticBitmap(self, -1, size=(10, 10), style=wx.SUNKEN_BORDER)
         self.SetValue(imageString)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(self.button, 0, wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 5)
@@ -76,7 +76,7 @@ class ImagePicker(wx.Window):
             stream = StringIO(b64decode(imageString))
             image = wx.ImageFromStream(stream)
             stream.close()
-            boxWidth, boxHeight = (30, 30)
+            boxWidth, boxHeight = (10, 10)
             w, h = image.GetSize()
             if w > boxWidth:
                 h *= 1.0 * boxWidth / w

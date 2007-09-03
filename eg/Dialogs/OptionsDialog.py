@@ -69,9 +69,9 @@ class OptionsDialog(eg.Dialog):
             languageNames[x].decode("UTF-8") for x in self.languageList
         ]
         notebook = wx.Notebook(self, -1)
-        page1 = wx.Panel(notebook, -1)
+        page1 = wx.Panel(notebook)
         notebook.AddPage(page1, Text.Tab1)
-
+        
         # page 1 controls        
         cbStartWithWindows = wx.CheckBox(page1, -1, Text.StartWithWindows)
         cbStartWithWindows.SetValue(eg.config.startWithWindows)

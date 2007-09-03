@@ -66,7 +66,6 @@ class ThreadWorker:
         self.__alive = True
         self.__timeout = 120.0
         self.__queue = deque()
-        self.__queue_lock = Lock()
         self.__wakeEvent = CreateEvent(None, 0, 0, None)
         self.__dummyEvent = CreateEvent(None, 0, 0, None)
         
@@ -138,12 +137,10 @@ class ThreadWorker:
         )
         if rc == WAIT_OBJECT_0:
             while 1:
-                self.__queue_lock.acquire()
-                if len(self.__queue) == 0:
-                    self.__queue_lock.release()
+                try:
+                    action = self.__queue.popleft()
+                except IndexError:
                     break
-                action = self.__queue.popleft()
-                self.__queue_lock.release()
                 self.HandleAction(action)
         elif rc == WAIT_OBJECT_0+1:
             #eg.DebugNote("WAIT_OBJECT_0+1")
@@ -218,16 +215,12 @@ class ThreadWorker:
     
     
     def AppendEvent(self, event):
-        self.__queue_lock.acquire()
         self.__queue.append(event)
-        self.__queue_lock.release()
         SetEvent(self.__wakeEvent)
         
         
     def FlushAllEvents(self):
-        self.__queue_lock.acquire()
         self.__queue.clear()
-        self.__queue_lock.release()
 
 
     def Call(self, func, *args, **kwargs):
@@ -236,9 +229,7 @@ class ThreadWorker:
         there. Doesn't wait for the completion.
         """
         action = ThreadWorkerAction(func, args, kwargs)
-        self.__queue_lock.acquire()
         self.__queue.append(action)
-        self.__queue_lock.release()
         SetEvent(self.__wakeEvent)
         return action
         

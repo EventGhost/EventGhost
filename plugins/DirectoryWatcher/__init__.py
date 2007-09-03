@@ -171,25 +171,14 @@ class DirectoryWatcher(eg.PluginClass):
                 
             
     def Configure(self, path="", includeSubdirs=False):
-        dialog = eg.ConfigurationDialog(self)
-        staticText1 = wx.StaticText(dialog, -1, self.text.watchPath)
-        dirpathCtrl = eg.DirBrowseButton(
-            dialog, -1, size=(320,-1),
-            startDirectory=path, 
-            labelText="",
-            buttonText=eg.text.General.browse
-        )
-        dirpathCtrl.SetValue(path)
-        includeSubdirsCB = wx.CheckBox(dialog, -1, self.text.watchSubDirs)
-        includeSubdirsCB.SetValue(includeSubdirs)
+        panel = eg.ConfigPanel(self)
+        dirpathCtrl = panel.DirBrowseButton(path)
+        includeSubdirsCB = panel.CheckBox(includeSubdirs, self.text.watchSubDirs)
         
-        Add = dialog.sizer.Add
-        Add(staticText1, 0, wx.EXPAND)
-        Add(dirpathCtrl, 0, wx.EXPAND)
-        Add((5, 5))
-        Add(includeSubdirsCB, 0, wx.EXPAND)
-        
-        if dialog.AffirmedShowModal():
+        panel.AddLine(self.text.watchPath, dirpathCtrl)
+        panel.AddLine(includeSubdirsCB)
+
+        if panel.Affirmed():
             return (
                 dirpathCtrl.GetValue(),
                 includeSubdirsCB.GetValue(),

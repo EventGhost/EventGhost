@@ -274,20 +274,12 @@ class MceRemote(eg.PluginClass):
         
         
     def Configure(self, waitTime=0.15):
-        dialog = eg.ConfigurationDialog(self)
-        staticText = wx.StaticText(dialog, -1, self.text.buttonTimeout)
-        dialog.sizer.Add(staticText)
-        waitTimeCtrl = eg.SpinNumCtrl(
-            dialog, 
-            -1,
-            waitTime,
-            integerWidth=3
-        )
-        dialog.sizer.Add(waitTimeCtrl)
-        staticText = wx.StaticText(dialog, -1, self.text.buttonTimeoutDescr)
-        dialog.sizer.Add(staticText, 0, wx.TOP, 5)
+        panel = eg.ConfigPanel(self)
+        waitTimeCtrl = panel.SpinNumCtrl(waitTime, integerWidth=3)
+        panel.AddLine(self.text.buttonTimeout, waitTimeCtrl)
+        panel.AddLine(self.text.buttonTimeoutDescr)
         
-        if dialog.AffirmedShowModal():
+        if panel.Affirmed():
             return (waitTimeCtrl.GetValue(), )
         
         
