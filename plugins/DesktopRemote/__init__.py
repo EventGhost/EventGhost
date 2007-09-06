@@ -54,6 +54,7 @@ class Text:
 class ButtonType: pass
 class LineType: pass
 
+
         
 class ImageButton(wx.Button):
     
@@ -70,7 +71,6 @@ class ImageButton(wx.Button):
             #message=self.mesg,
             style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST,
             wildcard="All image files|*jpg;*.png;*.bmp;*.gif|All files|*.*"
-
         )
         if dialog.ShowModal() == wx.ID_OK:
             filePath = dialog.GetPath()
@@ -373,14 +373,19 @@ class Show(eg.ActionClass):
             return (xPosCtrl.GetValue(), yPosCtrl.GetValue())
         
         
+        
 class GenButton(buttons.GenButton):
+    
     def DrawFocusIndicator(self, *args):
         pass
     
 
+
 class GenBitmapButton(buttons.GenBitmapButton):
+    
     def DrawFocusIndicator(self, *args):
         pass
+    
     
     
 class RemotePanel(wx.Panel):

@@ -43,8 +43,28 @@ class Text:
     generateEvents = "Generate events on incoming data"
     terminator = "Terminator:"
     eventPrefix = "Event prefix:"
+    encoding = "Encoding:"
+    codecChoices = [
+        "System code page",
+        "HEX",
+        "Latin-1",
+        "UTF-8",
+        "UTF-16",
+        "Python string escape",
+    ]
     class Write:
         name = "Write Data"
+        description = (
+            "Writes some text through the serial port."
+            "\n\n<p>"
+            "You can use Python string escapes to send non-printable "
+            "characters. Some examples:<p>"
+            "\\n will send a Linefeed (LF)<br>"
+            "\\r will send a Carriage Return (CR)<br>"
+            "\\t will send a Horizontal Tab (TAB)<br>"
+            "\\x0B will send the ASCII character with the hexcode 0B<br>"
+            "\\\\ will send a single Backslash."            
+        )
     class Read:
         name = "Read Data"
         read_all = "Read as many bytes as are currently available"
@@ -57,6 +77,22 @@ import wx
 import threading
 import win32event
 import win32file
+import codecs
+import binascii
+
+def MyHexDecoder(input):
+    return (binascii.b2a_hex(input).upper(), len(input))
+        
+        
+DECODING_FUNCS = [
+    codecs.getdecoder(eg.systemEncoding),
+    MyHexDecoder,
+    codecs.getdecoder("latin1"),
+    codecs.getdecoder("utf8"),
+    codecs.getdecoder("utf16"),
+    codecs.getencoder("string_escape"),
+]
+
 
 class Serial(eg.RawReceiverPlugin):
     canMultiLoad = True
@@ -82,6 +118,7 @@ class Serial(eg.RawReceiverPlugin):
         generateEvents=False,
         terminator="",
         prefix="Serial",
+        encodingNum=0,
     ):
         xonxoff = 0
         rtscts = 0
@@ -107,6 +144,7 @@ class Serial(eg.RawReceiverPlugin):
         self.serial.timeout = 1.0
         self.serial.setRTS()
         if generateEvents:
+            self.decoder = DECODING_FUNCS[encodingNum]
             self.terminator = eg.ParseString(terminator).decode('string_escape')
             self.info.eventPrefix = prefix
             self.stopEvent = win32event.CreateEvent(None, 1, 0, None)
@@ -129,9 +167,9 @@ class Serial(eg.RawReceiverPlugin):
         self.buffer += ch
         pos = self.buffer.find(self.terminator)
         if pos != -1:
-            eventstring = self.buffer[:pos].strip()
+            eventstring = self.buffer[:pos]
             if eventstring:
-                self.TriggerEvent(eventstring)
+                self.TriggerEvent(self.decoder(eventstring)[0])
             self.buffer = self.buffer[pos+len(self.terminator):]
             
             
@@ -200,6 +238,7 @@ class Serial(eg.RawReceiverPlugin):
         generateEvents=False,
         terminator="\\r",
         prefix="Serial",
+        encodingNum=0,
     ):
         text = self.text
         dialog = eg.ConfigurationDialog(self)
@@ -240,10 +279,15 @@ class Serial(eg.RawReceiverPlugin):
         prefixCtrl.SetValue(prefix)
         prefixCtrl.Enable(generateEvents)
         
+        encodingCtrl = wx.Choice(dialog, choices=text.codecChoices)
+        encodingCtrl.Enable(generateEvents)
+        encodingCtrl.SetSelection(encodingNum)
+        
         def OnCheckBox(event):
             flag = generateEventsCtrl.GetValue()
             terminatorCtrl.Enable(flag)
             prefixCtrl.Enable(flag)
+            encodingCtrl.Enable(flag)
         generateEventsCtrl.Bind(wx.EVT_CHECKBOX, OnCheckBox)
         
         flags = wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL
@@ -268,6 +312,9 @@ class Serial(eg.RawReceiverPlugin):
         Add(terminatorCtrl, (8, 1), flag=wx.EXPAND)
         Add(wx.StaticText(dialog, -1, text.eventPrefix), (9, 0), flag=flags)
         Add(prefixCtrl, (9, 1), flag=wx.EXPAND)
+        Add(wx.StaticText(dialog, -1, text.encoding), (10, 0), flag=flags)
+        Add(encodingCtrl, (10, 1), flag=wx.EXPAND)
+        
         dialog.sizer.Add(mySizer)
 
         if dialog.AffirmedShowModal():
@@ -281,22 +328,12 @@ class Serial(eg.RawReceiverPlugin):
                 generateEventsCtrl.GetValue(),
                 terminatorCtrl.GetValue(),
                 prefixCtrl.GetValue(),
+                encodingCtrl.GetSelection(),
             )
         
         
         
     class Write(eg.ActionWithStringParameter):
-        description = (
-            "Writes some text through the serial port."
-            "\n\n<p>"
-            "You can use Python string escapes to send non-printable "
-            "characters. Some examples:<p>"
-            "\\n will send a Linefeed (LF)<br>"
-            "\\r will send a Carriage Return (CR)<br>"
-            "\\t will send a Horizontal Tab (TAB)<br>"
-            "\\x0B will send the ASCII character with the hexcode 0B<br>"
-            "\\\\ will send a single Backslash."            
-        )
         
         def __call__(self, data):
             data = eg.ParseString(data, self.replaceFunc)
