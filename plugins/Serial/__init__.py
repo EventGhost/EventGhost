@@ -67,6 +67,18 @@ class Text:
         )
     class Read:
         name = "Read Data"
+        description = (
+            "Reads data from the serial port."
+            "\n\n<p>"
+            "This action returns the data through <i>eg.result</i>, as any "
+            "action does that is returning data. So you have to use "
+            '<a href="http://www.eventghost.org/wiki/Scripting">'
+            "Python scripting</a> to do anything with the result."
+            "<p>"
+            "Using this action and enabling event generation in the plugin "
+            "cannot be used at the same time, as one of it will always eat "
+            "the data away from the other."        
+        )
         read_all = "Read as many bytes as are currently available"
         read_some = "Read exactly this number of bytes:"
         read_time = "and wait this maximum number of milliseconds for them:"
@@ -79,6 +91,7 @@ import win32event
 import win32file
 import codecs
 import binascii
+
 
 def MyHexDecoder(input):
     return (binascii.b2a_hex(input).upper(), len(input))
@@ -280,8 +293,8 @@ class Serial(eg.RawReceiverPlugin):
         prefixCtrl.Enable(generateEvents)
         
         encodingCtrl = wx.Choice(dialog, choices=text.codecChoices)
-        encodingCtrl.Enable(generateEvents)
         encodingCtrl.SetSelection(encodingNum)
+        encodingCtrl.Enable(generateEvents)
         
         def OnCheckBox(event):
             flag = generateEventsCtrl.GetValue()

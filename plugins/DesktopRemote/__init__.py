@@ -131,6 +131,10 @@ class DesktopRemote(eg.PluginClass):
         self.lastEvent.SetShouldEnd()
     
     
+    def __stop(self):
+        if self.frame:
+            self.frame.Destroy()
+
 
 
 class CreateNew(eg.ActionClass):

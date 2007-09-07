@@ -51,6 +51,7 @@ class Text:
         unnamedEvent = "<unnamed event>"
         unnamedFile = "<unnamed file>"
         moreHelp = "More info"
+        moreTag = "more..."
         noOptionsAction = "This action has no options to configure."
         noOptionsPlugin = "This plugin has no options to configure."
 
