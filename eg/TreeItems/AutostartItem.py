@@ -49,6 +49,7 @@ class AutostartItem(MacroItem):
     
     
     def Enable(self, flag=True):
+        # never disable the Autostart item
         pass
     
     

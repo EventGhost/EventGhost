@@ -28,6 +28,28 @@ eg.RegisterPlugin(
     description = (
         "Uses the Text-To-Speech service of the Microsoft Speech API (SAPI)."
     ),
+    icon = (
+        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAA7DAAAOwwHH"
+        "b6hkAAADh0lEQVR4nIXSW0yTBxgG4P/GxRkZ2+gWtR2YCBoOlsL/87fQg4WldkLHqQZo"
+        "RcbBUBDCYFxsukaJqyLdAgw3p1AcOhHXNhzaIWLXtVSoWNx0LMsssspGUMYWMB3URVre"
+        "XSxpRnaxL/nu3u+5ePMRxP+Mt2MDZ9EqsT0YSsfceBXmxkrhMXFXvR0bOP8JT0zckV3t"
+        "6S9pP9fdpL8ybNJ/aR+93x8H/3IPfDN1WPlJhUVnFvx3y3FDw5rPktB56wDL1w6YrLdx"
+        "wzWFaxNuWIc/x/y4GoE/NPC5D2PlXjEWbW/A55DDdjxsUZCS/Nk6oNtyZ61x7Fe0P/Bi"
+        "6CngnL2FeXs5ArPvwzdZhqWRDPgccgRM6WgrY3roJK5uHWAcm5pvdK+hdRboWgC6Zpcx"
+        "Y5EiMFUPTFYDrkN4ZpKiXbX10SsRlDkjjT5OEARB9LzHUDnO8Zt6de/MHbV58O5dH05O"
+        "A1oPoB7/DceOFcH7TQa8w/tBJSZ4GBFJ118X0lqapsMJff3GhokOGeZGTmHaVIkOjQQH"
+        "TD+j8tYyau4BFc4/MXhJiZUBCQ7lcv+KiBZOCvl8BYdDsQQCcjNhOvLyQ/eZFPx4Vojv"
+        "Wnm4dnQ79taewpum3yG/CWSNAGr9ZSjrNYhPzvMKxfvMu0kpWygkNxEEQRDu1q1LGMwE"
+        "LPv/2cFM0NkF4Hfex96vVnFkYAEntHa/PLNiYUfsnpuxvILT8XQuK1jc9x+81IfuPYBB"
+        "Ahgk8F3kIz69GLUtvbjc6UJBzlUIBE2+SPY+ZyyZ17IroTA2OkEZEgQuqJ4TP26Ng/88"
+        "Cf95EjMfRkOWrULnp3q0tdmQmnoG2Tk6lJWffSySVh2MTJS/xk45+HwQiFJHcTTtioDl"
+        "JAn7iV0o0eUgtyEPo85R9Pa5UF19BYWFnWhutq4dKG60JQoKKVJQtDkIKA0ZS3Xf1mH8"
+        "l4d4ugrUjLyNktslyGlQwNjnwEfNZpSXd0Grve7niUsdtPgtFZtf+GIQoMwUSl2lOGyv"
+        "wrTvCZQ2JaRWKajKNNSqm9DysRk1de1PRJKKSWZUmoESFuWSKfkvBAGGjgF2PxuSIQnS"
+        "umQQfSEKJJ8WPQvdkfBoy27uD6HhlCmUlaTfHiO9wOblqzjc/HBSrNi47oVDtpGGkG2k"
+        "MYRJGkNZ1MCWmGQji+J98mpckiQskophhPMimDtTmTtjZWFxXMWmf9/+DRM268fQlSoX"
+        "AAAAAElFTkSuQmCC"
+    ),
 )
 
 import wx

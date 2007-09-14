@@ -35,8 +35,6 @@ class ActionInfo(object):
     def __init__(self, icon):
         self.icon = icon
         
-        
-    
     
     
 def CreateAction(actionCls, plugin):

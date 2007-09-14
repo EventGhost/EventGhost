@@ -155,7 +155,15 @@ class MouseThread(Thread):
 class Mouse(eg.PluginClass):
     
     def __init__(self):
-        self.AddAllActions()
+        self.AddAction(GoDirection)
+        self.AddAction(LeftButton)
+        self.AddAction(MiddleButton)
+        self.AddAction(RightButton)
+        self.AddAction(LeftDoubleClick)
+        self.AddAction(RightDoubleClick)
+        self.AddAction(ToggleLeftButton)
+        self.AddAction(MoveAbsolute)
+        self.AddAction(MouseWheel)
     
     
     def __start__(self):

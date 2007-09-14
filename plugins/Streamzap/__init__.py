@@ -155,21 +155,32 @@ class Streamzap(eg.RawReceiverPlugin):
     def __stop__(self):
         self.abort_thread = True
         
-        
+    
+    def HandleException(self, msg):    
+        def Do():
+            raise self.Exception(msg)
+        eg.actionThread.Call(Do)
+    
+    
     def ReceiveThread(self, startupEvent):
         # This is the code executing in the new thread. 
         try:
             dll = cdll.LoadLibrary(dll_path)
         except:
-            raise self.Exception("Streamzap DLL not found.")
+            self.HandleException("Streamzap DLL not found.")
+            startupEvent.set()
+            return
         
         if dll.sz_Open() != 1:
-            raise self.Exception(
-                "Cannot open Streamzap driver!\n" +
-                "Please check that the receiver is connected " +
-                "properly and no other application is accessing " +
+            self.HandleException(
+                "Cannot open Streamzap driver!\n"
+                "Please check that the receiver is connected "
+                "properly and no other application is accessing "
                 "the driver."
             )
+            startupEvent.set()
+            return
+            
             
         dll.sz_Flush()
         

@@ -183,10 +183,8 @@ class Foobar2000(eg.PluginClass):
             # on the next iteration.
             tmpActionClass.__name__ = tmpClassName
             
-        # EventGhost will monitor the creation of every new subclass of 
-        # eg.ActionClass, so everything that is finally needed is to call
-        # self.AddAllActions() to instantiate all defined actions. 
-        self.AddAllActions()
+            # Finally we cann add the new ActionClass to our plugin
+            self.AddAction(tmpActionClass)
 
 
     def __start__(self, foobar2000Path=None):

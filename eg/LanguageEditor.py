@@ -51,19 +51,19 @@ def ExpandKeyname(key):
     tmp = ""
     lastWasUpper = key[0].isupper()
     for c in key[1:]:
-        cIsUpper = c.isupper()
+        clsUpper = c.isupper()
         if lastWasUpper:
-            if cIsUpper:
+            if clsUpper:
                 tmp += last
             else:
                 tmp += " " + last
         else:
-            if cIsUpper:
+            if clsUpper:
                 tmp += last + " "
             else:
                 tmp += last
         last = c
-        lastWasUpper = cIsUpper
+        lastWasUpper = clsUpper
     return (tmp + last).lstrip()
 
 

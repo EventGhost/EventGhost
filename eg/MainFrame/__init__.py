@@ -210,7 +210,7 @@ class MainFrame(wx.Frame):
             AddItem()
         AddItem("Options")
         AddItem()
-        AddItem("Exit", hotkey="Alt+F4")
+        AddItem("Exit")
 
         # edit menu        
         editMenu = menuBar.AddMenu("Edit")

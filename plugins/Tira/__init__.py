@@ -87,7 +87,7 @@ class Tira(eg.RawReceiverPlugin):
         self.dll = None
         eg.RawReceiverPlugin.__init__(self)
         self.inTest = False
-        self.AddAllActions()
+        self.AddAction(TransmitIR)
         
     
     def __start__(self, port=2):
@@ -199,10 +199,10 @@ class TransmitIR(eg.ActionClass):
         
         if dialog.AffirmedShowModal():
             return (
-            make_string_from_hex(codeBox.GetValue()),
-            repeatBox.GetValue(),
-            -1,
-        )
+                make_string_from_hex(codeBox.GetValue()),
+                repeatBox.GetValue(),
+                -1,
+            )
     
     
         
@@ -223,8 +223,7 @@ class IRLearnDialog(wx.Dialog):
             "2. PRESS and HOLD the desired button on your remote until "
             "learning is complete..."
         )
-        staticText = wx.StaticText(self, -1, text,
-                                        style=wx.ST_NO_AUTORESIZE)
+        staticText = wx.StaticText(self, -1, text, style=wx.ST_NO_AUTORESIZE)
         def OnCancel(event):
             self.shouldRun = False
             

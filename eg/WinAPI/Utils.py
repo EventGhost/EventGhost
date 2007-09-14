@@ -37,7 +37,7 @@ def GetTopLevelWindowOf(hwnd):
     return GetAncestor(hwnd, GA_ROOT)
 
 
-def BringHwndToFront(hwnd):
+def BringHwndToFront(hwnd, invalidate=True):
     if hwnd is None:
         return
     hwnd = GetAncestor(hwnd, GA_ROOT)
@@ -67,7 +67,8 @@ def BringHwndToFront(hwnd):
     win.ShowWindow(style)
     win.BringWindowToTop()
     # Force our window to redraw
-    win.InvalidateRect()
+    if invalidate:
+        win.InvalidateRect()
     if foregroundThreadID != ourThreadID:
         AttachThreadInput(foregroundThreadID, ourThreadID, False)
         

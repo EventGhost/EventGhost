@@ -101,10 +101,6 @@ class EventGhost(object):
         from MessageReceiver import MessageReceiver
         self.messageReceiver = MessageReceiver()
         
-        from Scheduler import Scheduler
-        self.scheduler = Scheduler()
-        self.scheduler.start()
-        
         # because some functions are only available if a wxApp instance
         # exists, we simply create it first
         import App
@@ -170,8 +166,8 @@ class EventGhost(object):
         from WinAPI.SerialPort import EnumSerialPorts as GetAllPorts
         self.SerialPort.GetAllPorts = classmethod(GetAllPorts)
         
-        from PluginDatabase import PluginDatabase
-        self.pluginDatabase = PluginDatabase()
+        from PluginManager import PluginManager
+        self.pluginManager = PluginManager()
         
         from WinAPI.SendKeys import SendKeys
         self.SendKeys = SendKeys
@@ -180,6 +176,11 @@ class EventGhost(object):
     def StartGui(self):
         import WinAPI.SendKeys
         import WinAPI.COMServer
+        
+        from Scheduler import Scheduler
+        self.scheduler = Scheduler()
+        self.scheduler.start()
+        
         self.messageReceiver.Start()
         
         from Document import Document
@@ -302,10 +303,6 @@ class EventGhost(object):
         return True
         
         
-    def RegisterPlugin(self, **kwargs):
-        pass
-    
-    
     def RegisterEvent(self, eventString, eventHandler):
         eventTable = self.eventTable
         if eventString not in eventTable:

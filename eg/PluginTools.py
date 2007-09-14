@@ -30,7 +30,6 @@ import types
 import eg
 from Utils import SetClass
 from PluginMetaClass import PluginMetaClass
-from ActionMetaClass import ActionMetaClass
 from EventGhostEvent import EventGhostEvent 
 
 
@@ -40,13 +39,11 @@ def ImportPlugin(pluginDir):
     if moduleName in sys.modules:
         return sys.modules[moduleName]
     modulePath = join(eg.PLUGIN_DIR, pluginDir)
-    ActionMetaClass.allActionClasses = []
     sys.path.insert(0, modulePath)
     try:
         module = __import__(moduleName, None, None, [''])
     finally:
         del sys.path[0]
-    module.__allActionClasses__ = ActionMetaClass.allActionClasses
     return module
 
     
@@ -95,7 +92,6 @@ class PluginInfoBase(object):
     lastEvent = EventGhostEvent()
     actionClassList = None
     initFailed = True
-    api = 1
     originalText = None
     isStarted = False
     label = None
@@ -181,7 +177,6 @@ class PluginInfoBase(object):
             pluginInfo.instances = [info]
         else:
             pluginInfo.instances.append(plugin.info)
-        ActionMetaClass.allActionClasses = pluginInfo.module.__allActionClasses__
         try:
             plugin.__init__()
             info.initFailed = False
@@ -200,11 +195,11 @@ def GetPluginInfo(pluginName):
     if info is not None:
         return info
     
-    if pluginName not in eg.pluginDatabase.database:
+    if pluginName not in eg.pluginManager.database:
         eg.PrintError(eg.text.Error.pluginNotFound % pluginName)
         return None
     
-    infoDict = eg.pluginDatabase.GetPluginInfo(pluginName).__dict__
+    infoDict = eg.pluginManager.GetPluginInfo(pluginName).__dict__
     pluginPath = join("plugins", pluginName)
         
     # create a new sublclass of PluginInfo for this plugin class
@@ -214,7 +209,6 @@ def GetPluginInfo(pluginName):
         author = infoDict.get("author", PluginInfoBase.author)
         version = infoDict.get("version", PluginInfoBase.version)
         kind = infoDict.get("kind", PluginInfoBase.kind)
-        api = infoDict.get("api", PluginInfoBase.api)
         canMultiLoad = infoDict.get("canMultiLoad", PluginInfoBase.canMultiLoad)
         path = pluginPath + "/"
     info.pluginName = pluginName
@@ -283,24 +277,4 @@ def ClosePlugin(plugin):
     del info
     del plugin
 
-
-gPluginInfoList = None
-
-def GetPluginInfoList():
-    """
-    Get a list of all PluginInfo for all plugins in the plugin directory
-    """
-    global gPluginInfoList
-    if gPluginInfoList is not None:
-        return gPluginInfoList
-    
-    gPluginInfoList = []
-    for filename in os.listdir("plugins"):
-        if filename.startswith(".") or filename.startswith("_"):
-            continue
-        if not isdir(join("plugins", filename)):
-            continue
-        info = GetPluginInfo(filename)
-        gPluginInfoList.append(info)
-    return gPluginInfoList
 

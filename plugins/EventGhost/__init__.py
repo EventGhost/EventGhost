@@ -21,13 +21,6 @@
 # $LastChangedBy$
 
 import eg
-import sys
-import time
-import traceback
-
-import wx
-
-from eg import ContainerItem, FolderItem, MacroItem, RootItem, AutostartItem
 
 eg.RegisterPlugin(
     name = "EventGhost",
@@ -37,6 +30,16 @@ eg.RegisterPlugin(
     version = "1.0." + "$LastChangedRevision$".split()[1],
 )
 
+import sys
+import time
+import traceback
+import wx
+from eg import ContainerItem, FolderItem, MacroItem, RootItem, AutostartItem
+
+from PythonScript import PythonScript
+from ShowOSD import ShowOSD
+from NewJumpIf import NewJumpIf
+
 
 class EventGhost(eg.PluginClass):
     """
@@ -45,7 +48,24 @@ class EventGhost(eg.PluginClass):
     Here you find actions that mainly control the core functionality of 
     EventGhost.
     """
-    pass
+    def __init__(self):
+        self.AddAction(PythonCommand)
+        self.AddAction(PythonScript)
+        self.AddAction(Comment)
+        self.AddAction(NewJumpIf)
+        self.AddAction(EnableItem)
+        self.AddAction(DisableItem)
+        self.AddAction(EnableExclusive)
+        #self.AddAction(EnableNextExclusive)
+        #self.AddAction(EnablePreviousExclusive)
+        self.AddAction(Wait)
+        self.AddAction(StopProcessing)
+        self.AddAction(JumpIfLongPress)
+        self.AddAction(AutoRepeat)
+        self.AddAction(TriggerEvent)
+        self.AddAction(FlushEvents)
+        self.AddAction(ShowOSD)
+
 
 
 class PythonCommand(eg.ActionWithStringParameter):
@@ -77,14 +97,7 @@ class PythonCommand(eg.ActionWithStringParameter):
     def GetLabel(self, pythonstring=""):
         return pythonstring
         
-        
-        
-#-----------------------------------------------------------------------------
-# Action: EventGhost.PythonScript
-#-----------------------------------------------------------------------------
-from PythonScript import PythonScript
-    
-    
+            
     
 class Comment(eg.ActionClass):
     name = "Comment"
@@ -96,14 +109,6 @@ class Comment(eg.ActionClass):
     def __call__(self):
         pass
         
-        
-        
-#-----------------------------------------------------------------------------
-# Action: EventGhost.NewJumpIf
-#-----------------------------------------------------------------------------
-from NewJumpIf import NewJumpIf
-
-
 
 #-----------------------------------------------------------------------------
 # Action: EventGhost.EnableItem
@@ -122,6 +127,7 @@ class EnableItem(eg.ActionClass):
             if obj:
                 obj.isEnabled = True
                 wx.CallAfter(obj.Enable, True)
+                return obj
     
     
     def GetLabel(self, link):
@@ -243,6 +249,77 @@ class EnableExclusive(EnableItem):
     
     def IsSelectableItem(self, item):
         return item.__class__.__bases__[0] is not RootItem
+    
+    
+    
+class EnableNextExclusive(EnableExclusive):
+    name = "Exclusive enable next child"
+    class text:
+        label = "Enable next child in: %s"
+        text1 = "Please select the folder/macro which should be enabled:"
+    
+    def __call__(self, link):
+        if not link:
+            return
+        item = link.target
+        if not item:
+            return
+        def DoIt():
+            childs = item.childs
+            for i in range(len(childs)):
+                child = childs[i]
+                if child.isEnabled:
+                    child.isEnabled = False
+                    wx.CallAfter(child.Enable, False)
+                    break
+            i += 1
+            if i >= len(childs):
+                i = 0
+            child = childs[i]
+            child.isEnabled = True
+            wx.CallAfter(child.Enable, True)
+            
+            for n in range(i+1, len(childs)):
+                child = childs[n]
+                child.isEnabled = False
+                wx.CallAfter(child.Enable, False)
+
+        eg.actionThread.Call(DoIt)
+    
+    
+    
+class EnablePreviousExclusive(EnableExclusive):
+    name = "Exclusive enable previous child"
+    class text:
+        label = "Enable previous child in: %s"
+        text1 = "Please select the folder/macro which should be enabled:"
+    
+    def __call__(self, link):
+        if not link:
+            return
+        item = link.target
+        if not item:
+            return
+        def DoIt():
+            childs = item.childs
+            for searchPos in range(len(childs)):
+                child = childs[searchPos]
+                if child.isEnabled:
+                    break
+            searchPos -= 1
+            if searchPos < 0:
+                searchPos = len(childs) - 1
+            child = childs[searchPos]
+            child.isEnabled = True
+            wx.CallAfter(child.Enable, True)
+            
+            for n in range(len(childs)):
+                if n != searchPos:
+                    child = childs[n]
+                    child.isEnabled = False
+                    wx.CallAfter(child.Enable, False)
+
+        eg.actionThread.Call(DoIt)
     
     
     
@@ -728,9 +805,4 @@ class StopIf(eg.ActionWithStringParameter, eg.HiddenAction):
     def GetLabel(self, evalstr):
         return self.text.label % evalstr
 
-
-#-----------------------------------------------------------------------------
-# Action: EventGhost.ShowOSD
-#-----------------------------------------------------------------------------
-import ShowOSD
 

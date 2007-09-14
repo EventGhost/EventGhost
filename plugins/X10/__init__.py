@@ -231,6 +231,7 @@ class X10WorkerThread(eg.ThreadWorker):
         eg.ThreadWorker.__init__(self)
         
     
+    @eg.LogItWithReturn
     def Setup(self):
         try:
             self.comInstance = DispatchWithEvents(
@@ -238,6 +239,7 @@ class X10WorkerThread(eg.ThreadWorker):
                 self.eventHandler
             )
         except:
+            eg.PrintTraceback()
             pass
         
         

@@ -27,11 +27,20 @@ import cPickle as pickle
 from os import stat
 from os.path import isdir, join, exists
 
+import PluginTools
 from PluginTools import ImportPlugin
 
         
+class RegisterPluginException(Exception):
+    """
+    RegisterPlugin will raise this exception to interrupt the loading 
+    of the plugin module file.
+    """
+    pass
+
+
         
-class PluginFileInfo:
+class PluginModuleInfo:
     # some informational fields
     name = "unknown name"
     author = "unknown author"
@@ -40,99 +49,23 @@ class PluginFileInfo:
     # kind gives a hint in which group the plugin should be shown in
     # the AddPluginDialog
     kind = "other"
-
-    def __init__(self, pluginDir):
-        self.dirname = pluginDir
-        
-        # first try to find the deprecated "__info__.py" file
-        infoPyPath = join(eg.PLUGIN_DIR, pluginDir, "__info__.py")
-        if exists(infoPyPath):
-            infoDict = {}
-            try:
-                execfile(infoPyPath, infoDict)
-            except:
-                eg.PrintError(eg.text.Error.pluginInfoPyError % pluginDir)
-                eg.PrintTraceback()
-            else:
-                del infoDict["__builtins__"]
-                try:
-                    self.RegisterPlugin(**infoDict)
-                except PluginFileInfo.RegisterPluginException:
-                    return
-                
-        old = eg.RegisterPlugin
-        eg.RegisterPlugin = self.RegisterPlugin
-        try:
-            try:
-                module = ImportPlugin(self.dirname)
-            finally:
-                eg.RegisterPlugin = old
-        # It is expected that the loading will raise RegisterPluginException
-        # because RegisterPlugin is called inside the module
-        except PluginFileInfo.RegisterPluginException:
-            pass
-        except:
-            eg.PrintTraceback(eg.text.Error.pluginLoadError % self.dirname)
-            return
-        
-        
-    class RegisterPluginException(Exception):
-        """
-        RegisterPlugin will raise this exception to interrupt the loading 
-        of the plugin module file.
-        """
-        pass
-
-
-    def RegisterPlugin(
-        self, 
-        name = None,
-        description = None,
-        kind = "other",
-        author = "unknown author",
-        version = "unknown version",
-        icon = None,
-        canMultiLoad = False,
-    ):
-        if description is None:
-            description = name
-        self.name = name
-        self.description = description
-        self.kind = kind
-        self.author = author
-        self.version = version
-        self.icon = icon
-        self.canMultiLoad = canMultiLoad
-        # we are done with this plugin module, so we can interrupt further 
-        # processing by raising RegisterPluginDone
-        raise PluginFileInfo.RegisterPluginException
     
+    dirname = None
+
+        
+        
+class PluginManager:
     
-#    def __getstate__(self):
-#        state = self.__dict__.copy()
-#        if "module" in state:
-#            del state["module"]
-#        return state
-#    
+    # the PluginInfo currently been processed
+    currentInfo = None
     
-    def __repr__(self):
-        return "\n".join(
-            (
-                "--------- PluginFileInfo --------",
-                "Name: %r" % self.name,
-                "PluginDir: %r" % self.dirname,
-                "Author: %r" % self.author,
-                "Version: %r" % self.version,
-                "Kind: %r" % self.kind,
-            )
-        )
-        
-        
-        
-class PluginDatabase:
+    def __init__(self):
+        eg.RegisterPlugin = self.RegisterPluginDummy
+        self.Refresh()
+    
     
     @eg.TimeIt  
-    def __init__(self, forceRebuild=(eg.debugLevel > 0)):
+    def Refresh(self, forceRebuild=(eg.debugLevel > 0)):
         """
         Scans the plugin directory to get all needed information for all 
         plugins.
@@ -144,7 +77,7 @@ class PluginDatabase:
         
         # load the database file if exists
         self.database = {}
-        self.databasePath = join(eg.CONFIG_DIR, "PluginDatabase")
+        self.databasePath = join(eg.CONFIG_DIR, "pluginManager")
         if not forceRebuild:
             self.Load()
         database = self.database
@@ -152,7 +85,10 @@ class PluginDatabase:
         # a new database will be created at the end if a plugin has changed
         hasChanged = False
         newDatabase = {}
-            
+        
+        # prepare the interruption of plugin module import on RegisterPlugin
+        eg.RegisterPlugin = self.RegisterPlugin
+        
         # scan through all directories in the plugin directory
         for dirname in os.listdir(eg.PLUGIN_DIR):
             # filter out non-plugin names
@@ -184,11 +120,17 @@ class PluginDatabase:
                     continue
             
             hasChanged = True
-            pluginInfo = PluginFileInfo(dirname)
-            pluginInfo.timestamp = highestTimestamp
-            newDatabase[dirname] = pluginInfo
+            pluginInfo = self.LoadPluginInfo(dirname)
+            if pluginInfo is None:
+                print dirname
+            else:
+                pluginInfo.timestamp = highestTimestamp
+                newDatabase[dirname] = pluginInfo
             #print repr(pluginInfo)
             
+        # let RegisterPlugin be a normal (and useless) function again
+        eg.RegisterPlugin = self.RegisterPluginDummy
+        
         # only save if something has changed
         needsSave = hasChanged or len(database)
         self.database = newDatabase
@@ -216,7 +158,7 @@ class PluginDatabase:
             try:
                 version = pickle.load(databaseFile)
                 if version != eg.versionStr:
-                    eg.DebugNote("PluginDatabase version mismatch")
+                    eg.DebugNote("pluginManager version mismatch")
                     return
                 self.database = pickle.load(databaseFile)
             except:
@@ -225,3 +167,70 @@ class PluginDatabase:
     
     def GetPluginInfo(self, pluginName):
         return self.database[pluginName]
+    
+    
+    def LoadPluginInfo(self, pluginDir):
+        self.currentInfo = PluginModuleInfo()
+        self.currentInfo.dirname = pluginDir
+        
+        # first try to find the deprecated "__info__.py" file
+        infoPyPath = join(eg.PLUGIN_DIR, pluginDir, "__info__.py")
+        if exists(infoPyPath):
+            infoDict = {}
+            try:
+                execfile(infoPyPath, infoDict)
+            except:
+                eg.PrintError(eg.text.Error.pluginInfoPyError % pluginDir)
+                eg.PrintTraceback()
+            else:
+                del infoDict["__builtins__"]
+                try:
+                    self.RegisterPlugin(**infoDict)
+                except RegisterPluginException:
+                    return self.currentInfo
+                
+        try:
+            module = ImportPlugin(pluginDir)
+        # It is expected that the loading will raise RegisterPluginException
+        # because RegisterPlugin is called inside the module
+        except RegisterPluginException:
+            return self.currentInfo
+        except:
+            eg.PrintTraceback(eg.text.Error.pluginLoadError % pluginDir)
+            return
+        finally:
+            self.currentInfo = None
+        
+        
+    def RegisterPlugin(
+        self, 
+        name = None,
+        description = None,
+        kind = "other",
+        author = "unknown author",
+        version = "unknown version",
+        icon = None,
+        canMultiLoad = False,
+    ):
+        if description is None:
+            description = name
+        self.currentInfo.__dict__.update(locals())
+        # we are done with this plugin module, so we can interrupt further 
+        # processing by raising RegisterPluginDone
+        raise RegisterPluginException
+        
+    
+    def RegisterPluginDummy(self, *args, **kwargs):
+        pass
+    
+    
+    def GetPluginInfoList(self):
+        """
+        Get a list of all PluginInfo for all plugins in the plugin directory
+        """
+        return [
+            PluginTools.GetPluginInfo(pluginName) 
+            for pluginName in self.database.iterkeys()
+        ]
+
+

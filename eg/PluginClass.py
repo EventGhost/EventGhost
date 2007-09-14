@@ -60,7 +60,7 @@ class PluginClass(object):
         This is also the right place to add all actions the plugin wants to 
         publish with calls to AddAction and AddGroup.
         """
-        self.AddAllActions()
+        pass
         
         
     def __start__(self, *args):
@@ -201,15 +201,6 @@ class PluginClass(object):
         group = eg.ActionGroup(self, name, description, iconFile)
         actionList.append(group)
         return group
-    
-    
-    def AddAllActions(self):
-        #for actionClass in self.info.actionClassList:
-        for actionClass in sys.modules[self.__module__].__allActionClasses__:
-            self.AddAction(
-                actionClass, 
-                issubclass(actionClass, eg.HiddenAction)
-            )
     
     
     def GetLabel(self, *args):

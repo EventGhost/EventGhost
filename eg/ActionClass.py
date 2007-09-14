@@ -65,7 +65,6 @@ class ActionClass(object):
     # Don't try to manipulate these variables yourself:
     info = None
     text = None
-    __metaclass__ = ActionMetaClass
     
     
     def __call__(self, *args):

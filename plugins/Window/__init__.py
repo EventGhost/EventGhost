@@ -53,6 +53,8 @@ from eg.WinAPI.win32types import SendNotifyMessage
 from eg.WinAPI.win32types import PostMessage as Win32_PostMessage
 from eg.WinAPI.win32types import SendMessage as Win32_SendMessage
 
+from FindWindow import FindWindow
+from SendKeys import SendKeys
 
 
 def GetTargetWindows():
@@ -73,19 +75,22 @@ def GetTopLevelOfTargetWindows():
 # Plugin: Window
 #=============================================================================
 class Window(eg.PluginClass):
-    pass
+
+    def __init__(self):
+        self.AddAction(FindWindow)
+        self.AddAction(BringToFront)
+        self.AddAction(SendKeys)
+        self.AddAction(MoveTo)
+        self.AddAction(Resize)
+        self.AddAction(Maximize)
+        self.AddAction(Minimize)
+        self.AddAction(Restore)
+        self.AddAction(Close)
+        self.AddAction(SendMessage)
+        self.AddAction(SetAlwaysOnTop)
 
 
-#-----------------------------------------------------------------------------
-# Action: Window.FindWindow
-#-----------------------------------------------------------------------------
-from FindWindow import FindWindow
 
-
-
-#-----------------------------------------------------------------------------
-# Action: Window.BringToFront
-#-----------------------------------------------------------------------------
 class BringToFront(eg.ActionClass):
     name = "Bring to front"
     description = "Bring the specified window to front."
@@ -97,15 +102,6 @@ class BringToFront(eg.ActionClass):
 
 
 
-#-----------------------------------------------------------------------------
-# Action: Window.SendKeys
-#-----------------------------------------------------------------------------
-from SendKeys import SendKeys
-
-
-#-----------------------------------------------------------------------------
-# Action: Window.MoveTo
-#-----------------------------------------------------------------------------
 class MoveTo(eg.ActionClass):
     name = "Move Absolute"
     class text:
@@ -180,9 +176,6 @@ class MoveTo(eg.ActionClass):
 
 
 
-#-----------------------------------------------------------------------------
-# Action: Window.Resize
-#-----------------------------------------------------------------------------
 class Resize(eg.ActionClass):
     name = "Resize"
     description = "Resizes a window to the specified dimension."
@@ -257,9 +250,6 @@ class Resize(eg.ActionClass):
 
 
 
-#-----------------------------------------------------------------------------
-# Action: Window.Maximize
-#-----------------------------------------------------------------------------
 class Maximize(eg.ActionClass):
     name = "Maximize"
     
@@ -269,9 +259,6 @@ class Maximize(eg.ActionClass):
 
 
 
-#-----------------------------------------------------------------------------
-# Action: Window.Minimize
-#-----------------------------------------------------------------------------
 class Minimize(eg.ActionClass):
     name = "Minimize"
     
@@ -281,9 +268,6 @@ class Minimize(eg.ActionClass):
 
 
 
-#-----------------------------------------------------------------------------
-# Action: Window.Restore
-#-----------------------------------------------------------------------------
 class Restore(eg.ActionClass):
     name = "Restore"
     
@@ -293,9 +277,6 @@ class Restore(eg.ActionClass):
 
 
 
-#-----------------------------------------------------------------------------
-# Action: Window.Close
-#-----------------------------------------------------------------------------
 class Close(eg.ActionClass):
     name = "Close"
     description = "Closes application windows"
@@ -311,9 +292,6 @@ class Close(eg.ActionClass):
 
 
 
-#-----------------------------------------------------------------------------
-# Action: Window.SendMessage
-#-----------------------------------------------------------------------------
 class SendMessage(eg.ActionClass):
     name = "Send Message"
     description = \
@@ -398,9 +376,7 @@ class SendMessage(eg.ActionClass):
             )
         
 
-#-----------------------------------------------------------------------------
-# Action: Window.SetAlwaysOnTop
-#-----------------------------------------------------------------------------
+
 class SetAlwaysOnTop(eg.ActionClass):
     name = "Set always on top property"
     class text:

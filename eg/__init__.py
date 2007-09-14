@@ -15,7 +15,7 @@ The one and all eg object.
     
 :undocumented: AssertNotMainThread, ActionMetaClass, PluginMetaClass, 
     ActionGroup, Controls, Dialogs, EventGhostEvent, EventThread, TreeItems,
-    PluginDatabase, PluginTools, _app, _name
+    pluginManager, PluginTools, _app, _name
 """
 
 import wx as _wx
@@ -90,7 +90,7 @@ def RegisterPlugin(
     canMultiLoad = False,
 ):
     pass
-from PluginDatabase import PluginFileInfo as _PluginFileInfo
+from pluginManager import PluginFileInfo as _PluginFileInfo
 RegisterPlugin.__doc__ = _PluginFileInfo.RegisterPlugin.__doc__
 
 __all__ = [_name for _name in dir() if not _name.startswith('_')]
