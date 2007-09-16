@@ -32,6 +32,7 @@ eg.RegisterPlugin(
     author = "Bitmonster & Matthew Jacob Edwards",
     version = "1.2." + "$LastChangedRevision$".split()[1],
     kind = "program",
+    addActionGroup = True,
     description = (
         'Adds actions to control <a href="http://www.winamp.com/">Winamp</a>.'
     ),

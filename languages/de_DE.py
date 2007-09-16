@@ -119,6 +119,9 @@ class AddPluginDialog:
     remotePlugins = u'Fernbedienungsempf\xe4nger'
     title = u'Plugin hinzuf\xfcgen...'
     version = u'Version:'
+class AddActionGroupDialog:
+    caption = u'Befehle hinzuf\xfcgen?'
+    message = u'EventGhost kann einen Ordner mit allen Befehlen dieses Plugins dem Konfigurationsbaum hinzuf\xfcgen. Wenn Sie dieses wollen, selektieren Sie bitte unten die Stelle an dem dies geschehen soll und dr\xfccken die OK-Schaltfl\xe4che.\n\nAnsonsten dr\xfccken Sie bitte die Abbrechen-Schaltfl\xe4che.'
 class OptionsDialog:
     CheckUpdate = u'Auf neuere Version pr\xfcfen beim Programmstart'
     HideOnClose = u'Minimiere wenn Schlie\xdfen-Schaltfl\xe4che gedr\xfcckt wird'
@@ -186,25 +189,6 @@ class Plugin:
         class FlushEvents:
             name = u'Verwerfe alle ausstehenden Ereignisse'
             description = u'Diese Aktion verwirft alle Ereignisse die sich momentan in der Verarbeitungsschlange befinden.\n\nDieses ist n\xfctzlich, wenn ein Makro eine ziemlich lange Zeit zum Verarbeiten braucht und sich Ereignisse innherhalb dieser Zeit angesammelt haben, die nicht verarbeitet werden sollen.\n\n<p><b>Beispiel:</b> Sie haben ein lang andauerndes "Starte System" Makro, welches ca. 90 Sekunden braucht um z.B. einen Projektor anzuschalten und dann verschiedene Programme zu starten. Der Benutzer wird von dieser Ausf\xfchrung nichts sehen, bis endlich der Projektor ein Bild zeigt und daher u.U. aus Ungeduld die ausl\xf6sende Taste mehrfach dr\xfccken, was dazu f\xfchren w\xfcrde, dass diese lange Verarbeitung wieder und wieder gestartet wird. Um dieses zu verhindern, k\xf6nnen Sie die "Verwerfe alle ausstehenden Ereignisse" Aktion an das Ende Ihres Makros stellen, wodurch die \xfcberfl\xfcssigen Tastendruck-Wiederholungen entfernt werden.'
-        class Jump:
-            name = u'Unbedingter Sprung'
-            description = u'Springt zu einem anderen Makro.'
-            label1 = u'Springe zu %s'
-            label2 = u'Springe zu %s und kehre zur\xfcck'
-            mesg1 = u'W\xe4hle Makro...'
-            mesg2 = u'Bitte w\xe4hlen sie das Makro, welches ausgef\xfchrt werden soll:'
-            text2 = u'Gehe zu:'
-            text3 = u'Kehre zur\xfcck nach Ausf\xfchrung'
-        class JumpIf:
-            name = u'Bedingter Sprung'
-            description = u'Springt zu einem anderen Makro, wenn die angegebene Python-Bedingung den Wahrheitswert "True" ergibt.'
-            label1 = u'Wenn %s springe zu %s'
-            label2 = u'Wenn %s springe zu %s und kehre zur\xfcck'
-            mesg1 = u'W\xe4hle Makro...'
-            mesg2 = u'Bitte w\xe4hlen sie das Makro, welches ausgef\xfchrt werden soll, wenn die Python-Bedingung zutrifft.'
-            text1 = u'Wenn:'
-            text2 = u'Gehe zu:'
-            text3 = u'Kehre zur\xfcck nach Ausf\xfchrung'
         class JumpIfLongPress:
             name = u'Wenn langer Tastendruck'
             description = u'Springt zu einem anderen Makro, wenn die ausl\xf6sende Taste l\xe4nger als die eingestellte Zeit gedr\xfcckt wird.'
@@ -268,11 +252,6 @@ class Plugin:
             wait2 = u'Sekunden automatisch aus. (0 = nicht ausblenden)'
             xOffset = u'Horizontaler Versatz X:'
             yOffset = u'Vertikaler Versatz Y:'
-        class StopIf:
-            name = u'Stoppe wenn'
-            description = u'Unterbricht die Ausf\xfchrung des aktuellen Makros, wenn die angegebene Python-Bedingung den Wert "wahr" liefert.'
-            label = u'Stoppe wenn %s'
-            parameterDescription = u'Python-Bedingung:'
         class StopProcessing:
             name = u'Beende Bearbeitung dieses Ereignisses'
             description = u'Wird dieser Befehl ausgef\xfchrt, dann sucht EventGhost nicht mehr nach weiteren Makros, die zu dem aktuellen Ereignis passen w\xfcrden.'

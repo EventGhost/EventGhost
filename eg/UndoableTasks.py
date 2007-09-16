@@ -21,7 +21,7 @@
 # $LastChangedBy$
 
 import eg
-eg.DebugNote("Loading UndoableCommands")
+eg.DebugNote("Loading UndoableTasks")
 import wx
 import xml.etree.cElementTree as ElementTree
 
@@ -88,12 +88,50 @@ class NewPlugin(NewItem):
 #                else:
 #                    pluginItem.SetParams(*args)
 #                    pluginItem.Refresh()
-            eg.actionThread.Call(pluginItem.Execute)
+            eg.actionThread.CallWait(pluginItem.Execute)
         self.StoreItem(pluginItem)
+        if pluginInfo.addActionGroup:
+            AddActionGroup().Do(document, pluginItem)
         return pluginItem
        
             
-
+            
+class AddActionGroup(NewItem):
+    name="Add all actions of plugin"
+    
+    def Do(self, document, pluginItem):
+        parentItem = eg.AddActionGroupDialog(document.frame).DoModal()
+        if parentItem is None:
+            return
+        
+        def Traverse(parentItem, info):
+            folderItem = document.FolderItem.Create(
+                parentItem, 
+                name=info.name
+            )
+            for action in info.actionList:
+                if isinstance(action, eg.ActionGroup):
+                    Traverse(folderItem, action)
+                else:
+                    macroItem = document.MacroItem.Create(
+                        folderItem, 
+                        name=action.name
+                    )
+                    actionItem = document.ActionItem.Create(
+                        macroItem,
+                        text = "%s.%s()" % (
+                            action.plugin.info.evalName, 
+                            action.__class__.__name__
+                        ),
+                    )
+            return folderItem
+        folderItem = Traverse(parentItem, pluginItem.executable.info)
+        self.StoreItem(folderItem)
+        folderItem.Select()
+        folderItem.tree.Expand(folderItem.id)
+            
+    
+    
 class NewFolder(NewItem):
     """
     Create a new FolderItem if the user has choosen to do so from the menu

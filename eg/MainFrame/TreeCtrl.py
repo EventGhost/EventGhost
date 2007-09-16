@@ -27,7 +27,7 @@ import wx
 import xml.etree.cElementTree as ElementTree
     
 import eg
-from UndoableCommands import (
+from UndoableTasks import (
     NewEvent, 
     CmdMoveTo, 
     CmdCut, 

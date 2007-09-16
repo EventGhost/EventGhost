@@ -28,6 +28,7 @@ eg.RegisterPlugin(
     version = "0.2." + "$LastChangedRevision$".split()[1],
     kind = "external",
     description = "Control an Optoma H79 projector via RS232",
+    addActionGroup = True,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARn"
         "QU1BAACxjwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdw"

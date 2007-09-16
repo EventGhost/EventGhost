@@ -50,6 +50,8 @@ eg.RegisterPlugin(
     version = "0.1." + "$LastChangedRevision$".split()[1],
     kind = "external",
     description = "Control Yamaha RX-V1000 receivers using RS232.",
+    canMultiLoad = True,
+    addActionGroup = True,
 )
 
 import wx
@@ -127,7 +129,6 @@ cmdList = (
 )
 
 class YamahaSerial(eg.PluginClass):
-    canMultiLoad = True
 
     def __init__(self):
         self.serial = None

@@ -36,7 +36,7 @@ from eg import (
     FolderItem, 
     RootItem, 
 )
-import UndoableCommands
+import UndoableTasks
 
 # local imports
 from MainFrame.LogCtrl import LogCtrl
@@ -840,35 +840,35 @@ class MainFrame(wx.Frame):
         """ 
         Menu: Edit -> Add Plugin
         """
-        eg.Greenlet(UndoableCommands.NewPlugin().Do).switch(self.document)
+        eg.Greenlet(UndoableTasks.NewPlugin().Do).switch(self.document)
             
             
     def OnCmdNewEvent(self, event):
         """ 
         Menu: Edit -> New Event
         """
-        UndoableCommands.NewEvent().Do(self.document)
+        UndoableTasks.NewEvent().Do(self.document)
                 
                 
     def OnCmdNewFolder(self, event):
         """ 
         Menu: Edit -> New Folder
         """
-        UndoableCommands.NewFolder().Do(self.document)
+        UndoableTasks.NewFolder().Do(self.document)
         
     
     def OnCmdNewMacro(self, event):
         """ 
         Menu: Edit -> New Macro
         """
-        eg.Greenlet(UndoableCommands.NewMacro().Do).switch(self.document)
+        eg.Greenlet(UndoableTasks.NewMacro().Do).switch(self.document)
         
     
     def OnCmdNewAction(self, event):
         """ 
         Menu: Edit -> New Action
         """        
-        eg.Greenlet(UndoableCommands.NewAction().Do).switch(self.document)
+        eg.Greenlet(UndoableTasks.NewAction().Do).switch(self.document)
         
     
     def OnCmdRename(self, event):
@@ -883,7 +883,7 @@ class MainFrame(wx.Frame):
         """ 
         Menu: Edit -> Configure Element
         """
-        UndoableCommands.CmdConfigure().Try(self.document)
+        UndoableTasks.CmdConfigure().Try(self.document)
 
 
     def OnCmdExecute(self, event):
@@ -894,7 +894,7 @@ class MainFrame(wx.Frame):
 
 
     def OnCmdDisabled(self, event):
-        UndoableCommands.CmdToggleEnable(self.document)
+        UndoableTasks.CmdToggleEnable(self.document)
 
 
     #------- view menu -------------------------------------------------------

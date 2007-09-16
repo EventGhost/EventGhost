@@ -211,6 +211,7 @@ class PluginManager:
         version = "unknown version",
         icon = None,
         canMultiLoad = False,
+        addActionGroup = False,
     ):
         if description is None:
             description = name
@@ -228,9 +229,12 @@ class PluginManager:
         """
         Get a list of all PluginInfo for all plugins in the plugin directory
         """
-        return [
+        infoList = [
             PluginTools.GetPluginInfo(pluginName) 
             for pluginName in self.database.iterkeys()
         ]
+        infoList.sort(key=lambda x: x.name.lower())
+        return infoList
+        
 
 

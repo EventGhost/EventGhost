@@ -28,6 +28,7 @@ eg.RegisterPlugin(
     author = "Oystein Hansen",
     version = "0.1." + "$LastChangedRevision$".split()[1],
     kind = "program",
+    addActionGroup = True,
     description = (
         'Adds actions to control the '
         '<a href="http://www.microsoft.com/windows/windowsmedia/">'
@@ -73,8 +74,8 @@ class ActionPrototype(eg.ActionClass):
             _, result = SendMessageTimeout(
                 hWMP, # the window handle
                 WM_COMMAND, # the message number
-                self.data, # the lParam value
-                0, # the wParam value
+                self.data, # the wParam value
+                0, # the lParam value
                 SMTO_BLOCK|SMTO_ABORTIFHUNG,
                 2000 # wait at most 2 seconds
             )

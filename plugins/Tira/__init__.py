@@ -226,6 +226,7 @@ class IRLearnDialog(wx.Dialog):
         staticText = wx.StaticText(self, -1, text, style=wx.ST_NO_AUTORESIZE)
         def OnCancel(event):
             self.shouldRun = False
+            self.EndModal(wx.OK)
             
         cancelButton = wx.Button(self, -1, eg.text.General.cancel)
         cancelButton.Bind(wx.EVT_BUTTON, OnCancel)
@@ -251,6 +252,8 @@ class IRLearnDialog(wx.Dialog):
         #featureValue = c_uint(0x1)
         #self.dll.tira_access_feature(0xF0000000, 1, byref(featureValue), 0x0)
         dll = self.dll
+        if dll is None:
+            return
         dll.tira_start_capture()
         size = c_int()
         buffer = pointer(c_ubyte())
@@ -268,6 +271,5 @@ class IRLearnDialog(wx.Dialog):
             dll.tira_delete(buffer)
         else:
             dll.tira_cancel_capture()
-        self.EndModal(wx.OK)
         
 

@@ -43,6 +43,8 @@ eg.RegisterPlugin(
     version = "0.6." + "$LastChangedRevision$".split()[1],
     kind = "external",
     description = "Control Denon A/V Amps/Receivers via RS232",
+    canMultiLoad = True,
+    addActionGroup = True,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAA"
         "AAd0SU1FB9YDBAsPCqtpoiUAAAAWdEVYdFNvZnR3YXJlAFBhaW50Lk5FVCAyLjZsqHS1"
@@ -349,7 +351,6 @@ class Raw(eg.ActionWithStringParameter):
         
         
 class DenonSerial(eg.PluginClass):
-    canMultiLoad = True
 
     def __init__(self):
         self.serial = None

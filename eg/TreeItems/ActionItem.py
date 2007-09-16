@@ -21,6 +21,7 @@
 # $LastChangedBy$
 
 import colorsys
+import inspect
 
 import wx
 
@@ -103,7 +104,8 @@ class ActionItem(TreeItem):
             self.needsCompile = True
             action.__call__ = _compileCall
         else:
-            self.needsCompile = False
+            self.needsCompile = False            
+            
         self.SetArgumentString(argString)
     
     

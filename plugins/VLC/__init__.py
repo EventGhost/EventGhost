@@ -32,6 +32,8 @@ eg.RegisterPlugin(
     author = "MonsterMagnet",
     version = "0.3." + "$LastChangedRevision$".split()[1],
     kind = "program",
+    canMultiLoad = True,
+    addActionGroup = True,
     description = (
         'Adds actions to control the '
         '<a href="http://www.videolan.org/">VLC media player</a>.'

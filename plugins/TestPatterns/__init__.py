@@ -44,6 +44,9 @@ from math import sqrt, sin, cos
 import math
 from threading import Timer
 from eg.WinAPI.Utils import GetMonitorDimensions, BringHwndToFront
+import cStringIO
+from base64 import b64decode
+
 
 
 def rint(value):
@@ -74,8 +77,7 @@ def MakeTextBitmap(text):
     del draw
     return imageToBitmap(pilToImage(im, False))
     
-import cStringIO
-from base64 import b64decode
+
 FOCUS_PATTERN = b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAACgAAAAoAQMAAAC2MCouAAAABlBMVEUAAAD///+l2Z/d"
     "AAAAAnRSTlMA/1uRIrUAAABkSURBVHjaY2AAg/p/DPb/oWQCE4MCM0N+1ff11QyZXlNW"
@@ -91,6 +93,7 @@ ASPECT_RATIOS = [
     ("4:3 CCIR 601 Frame", (1.0, 1.0)),
     ("16:9 CCIR 601 Frame", (1.0, 1.0)),
 ]
+
 
 class DrawFrame(wx.Frame):
     

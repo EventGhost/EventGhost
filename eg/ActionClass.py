@@ -105,7 +105,7 @@ class ActionClass(object):
         eg.PrintError(msg)
         
         
-    def Configure(self, *args):
+    def Configure(self): #, *args):
         """
         This should be overridden in a subclass, if the action wants to have 
         a configuration dialog.
@@ -155,12 +155,15 @@ class ActionWithStringParameter(ActionClass):
     #: Set parameterDescription to a descriptive string of the one and only
     #: parameter this action has.
     parameterDescription = None
+    defaultParameter = ""
     
-    def Configure(self, s=""):
+    def Configure(self, parameter=None):
         """
         Simple configuration dialog with a single TextCtrl to edit the
         the string parameter of this action.
         """
+        if parameter is None:
+            parameter = self.defaultParameter
         dialog = eg.ConfigurationDialog(self, resizeable=True)
 
         parameterDescription = None
@@ -176,7 +179,7 @@ class ActionWithStringParameter(ActionClass):
             labelCtrl = wx.StaticText(dialog, -1, parameterDescription)
             dialog.sizer.Add(labelCtrl, 0, wx.EXPAND)
             dialog.sizer.Add((5, 5))
-        parameterCtrl = wx.TextCtrl(dialog, -1, s)
+        parameterCtrl = wx.TextCtrl(dialog, -1, parameter)
         dialog.sizer.Add(parameterCtrl, 0, wx.EXPAND)
         parameterCtrl.SetFocus()
         wx.CallAfter(parameterCtrl.SetInsertionPointEnd)

@@ -60,7 +60,7 @@ class TreeItem(object):
         
     @classmethod
     #@eg.AssertNotMainThread
-    def Create(cls, parent, pos, text="", **kwargs):
+    def Create(cls, parent, pos=-1, text="", **kwargs):
         node = ElementTree.Element(cls.xmlTag)
         node.text = text
         for k, v in kwargs.items():

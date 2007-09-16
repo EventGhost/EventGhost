@@ -266,7 +266,7 @@ class PythonScript(eg.ActionClass):
         return self.name
 
 
-    def Configure(self, *args):
+    def Configure(self, text=""):
 #        actionItem = eg.currentConfigureItem
 #        win = ScriptEditor(actionItem.document.frame, -1, actionItem, self)
 #        actionItem.openConfigDialog = win

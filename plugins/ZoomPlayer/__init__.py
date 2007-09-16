@@ -27,6 +27,8 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "program",
+    canMultiLoad = True,
+    addActionGroup = True,
     description = (
         'Adds actions to control the famous '
         '<a href="http://www.inmatrix.com/">Zoom Player</a>.'
@@ -597,14 +599,13 @@ class FnAction(eg.ActionClass):
        
 class ExAction(eg.ActionWithStringParameter):
     
-    def __call__(self, param):
+    def __call__(self, param="0"):
         self.plugin.DoCommand("5110 " + self.value + "," + param)
                 
        
        
        
 class ZoomPlayer(eg.PluginClass):
-    canMultiLoad = True
    
     def __init__(self):
         self.host = "localhost"

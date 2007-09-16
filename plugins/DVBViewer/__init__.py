@@ -27,6 +27,7 @@ eg.RegisterPlugin(
     author = "Bitmonster & Nativityplay",
     version = "1.2." + "$LastChangedRevision$".split()[1],
     kind = "program",
+    addActionGroup = True,
     description = (
         'Adds support functions to control <a href="http://www.dvbviewer.com/">'
         'DVBViewer Pro/GE</a> and returns events.'

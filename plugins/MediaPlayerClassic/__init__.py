@@ -26,6 +26,7 @@ eg.RegisterPlugin(
     author = "MonsterMagnet",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "program",
+    addActionGroup = True,
     description = (
         'Adds actions to control '
         '<a href="http://sourceforge.net/projects/guliverkli/">'

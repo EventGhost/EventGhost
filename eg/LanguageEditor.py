@@ -173,6 +173,7 @@ class LanguageEditor(wx.Frame):
         eg.AboutDialog
         eg.AddActionDialog
         eg.AddPluginDialog
+        eg.AddActionGroupDialog
         eg.OptionsDialog
         eg.FindDialog
         #import MainFrame
@@ -308,6 +309,7 @@ class LanguageEditor(wx.Frame):
             "CheckUpdate",
             "AddActionDialog",
             "AddPluginDialog",
+            "AddActionGroupDialog",
             "OptionsDialog",
             "FindDialog",
             "AboutDialog",

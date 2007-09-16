@@ -131,9 +131,10 @@ class DesktopRemote(eg.PluginClass):
         self.lastEvent.SetShouldEnd()
     
     
-    def __stop(self):
+    def __stop__(self):
         if self.frame:
-            self.frame.Destroy()
+            wx.CallAfter(self.frame.Destroy)
+            self.frame = None
 
 
 

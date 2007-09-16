@@ -28,6 +28,7 @@ eg.RegisterPlugin(
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "external",
     canMultiLoad = True,
+    addActionGroup = True,
     description = (
         "Control your d-box2 set-top box over Ethernet.\n"
         "\n"

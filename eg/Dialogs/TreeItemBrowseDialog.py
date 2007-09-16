@@ -26,15 +26,23 @@ import eg
 
 class TreeItemBrowseDialog(eg.Dialog):
     
-    def __init__(self, title, text, searchItem, resultClasses):
+    def __init__(
+        self, 
+        title, 
+        text, 
+        searchItem, 
+        resultClasses, 
+        filterClasses=(eg.FolderItem, eg.MacroItem),
+        parent=None,
+    ):
         self.resultData = searchItem
         self.resultClasses = resultClasses
         self.foundId = None
         style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
-        wx.Dialog.__init__(self, None, -1, title=title, style=style)
+        wx.Dialog.__init__(self, parent, -1, title=title, style=style)
         staticText = wx.StaticText(self, -1, text)
-        
-        filterClasses = (eg.FolderItem, eg.MacroItem)
+        staticText.Wrap(430)
+
         def filterFunc(obj):
             return isinstance(obj, filterClasses)
         
@@ -67,6 +75,7 @@ class TreeItemBrowseDialog(eg.Dialog):
         self.SetSizerAndFit(mainSizer)
         #self.SetMinSize(self.GetSize())
         self.SetSize((450,400))
+        
         if not searchItem:
             okButton.Enable(False)
         self.Centre()

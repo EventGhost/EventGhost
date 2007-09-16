@@ -97,6 +97,7 @@ class PluginInfoBase(object):
     label = None
     treeItem = None
     canMultiLoad = False
+    addActionGroup = False
     
         
     @classmethod
@@ -210,6 +211,7 @@ def GetPluginInfo(pluginName):
         version = infoDict.get("version", PluginInfoBase.version)
         kind = infoDict.get("kind", PluginInfoBase.kind)
         canMultiLoad = infoDict.get("canMultiLoad", PluginInfoBase.canMultiLoad)
+        addActionGroup = infoDict.get("addActionGroup", PluginInfoBase.addActionGroup)
         path = pluginPath + "/"
     info.pluginName = pluginName
     info.englishName = info.name

@@ -27,6 +27,7 @@ eg.RegisterPlugin(
     kind = "program",
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision: 187 $".split()[1],
+    addActionGroup = True,
     description = (
         "Adds actions to control <a href='http://www.team-mediaportal.com/'>"
         "MediaPortal</a>."
