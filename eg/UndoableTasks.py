@@ -255,12 +255,12 @@ class NewAction(NewItem):
             )
         )
         item.Select()
-        self.StoreItem(item)
         
         if item.NeedsStartupConfiguration():
-            if not CmdConfigure().Do(item):
+            if not CmdConfigure().Do(item, True):
                 item.Delete()
                 return None
+        self.StoreItem(item)
         return item
     
     
@@ -534,7 +534,7 @@ class CmdConfigure:
             eg.Greenlet(self.Do).switch(item)
         
     
-    def Do(self, item):
+    def Do(self, item, isFirstConfigure=False):
         executable = item.executable
         if executable is None:
             return False
@@ -579,8 +579,9 @@ class CmdConfigure:
         item.SetParams(*newArgs)
         newArgumentString = item.GetArgumentString()
         if self.oldArgumentString != newArgumentString:
-            self.positionData = item.GetPositionData()
-            item.document.AppendUndoHandler(self)
+            if not isFirstConfigure:
+                self.positionData = item.GetPositionData()
+                item.document.AppendUndoHandler(self)
             item.Refresh()
         return True
     
