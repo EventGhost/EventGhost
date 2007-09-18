@@ -34,7 +34,7 @@ class Text:
     Tab1 = "General"
     StartGroup = "On Start"
     HideOnStartup = "Hide on startup"
-    HideOnClose = "Hide main window if close box is pressed"
+    HideOnClose = "Send to Systray on Close"
     UseAutoloadFile = "Autoload file"
     LanguageGroup = "Language"
     Warning = \

@@ -212,16 +212,20 @@ class System(eg.PluginClass):
             
             def MuteOn(self):
                 vistaVolumeDll.SetMute(1)
+                return True
                
             def MuteOff(self):
                 vistaVolumeDll.SetMute(0)
+                return False
                
             def ToggleMute(self):
-                old = vistaVolumeDll.GetMute()
-                vistaVolumeDll.SetMute(not old)
+                newValue = not vistaVolumeDll.GetMute()
+                vistaVolumeDll.SetMute(newValue)
+                return newValue
                
             def SetMasterVolume(self, value):
                 vistaVolumeDll.SetMasterVolume(value / 100.0)
+                return vistaVolumeDll.GetMasterVolume() * 100.0
                
             def ChangeMasterVolumeBy(self, value):
                 old = vistaVolumeDll.GetMasterVolume()
@@ -803,7 +807,8 @@ class SetMasterVolume(eg.ActionClass):
         
     def __call__(self, value):
         SoundMixer.SetMasterVolume(value)
-        
+        return SoundMixer.GetMasterVolume()
+    
         
     def GetLabel(self, value):
         return self.text.name + ": " + str(value) + " %"
