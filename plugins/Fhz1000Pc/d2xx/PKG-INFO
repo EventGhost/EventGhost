@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: PyUSB
+Version: 1.2
+Summary: FTDI D2XX Python driver
+Home-page: http://bleyer.org
+Author: Pablo Bleyer
+Author-email: pablo@bleyer.org
+License: LGPL
+Description: UNKNOWN
+Platform: UNKNOWN
