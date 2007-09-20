@@ -101,6 +101,7 @@ class Fhz1000Pc(eg.PluginClass):
     
     
 class ActionBase(eg.ActionClass):
+    defaultAddress = 0x094001
     
     def __call__(self, address):
         x, a0 = divmod(address, 256)
@@ -127,9 +128,11 @@ class ActionBase(eg.ActionClass):
             address += (int(addressString[i], 4) - 1)
         return address
         
-        
     
-    def Configure(self, address=0x094001):       
+    def Configure(self, address=None):       
+        if address is None:
+            address = self.defaultAddress
+            
         panel = eg.ConfigPanel(self)
             
         maskedCtrl = masked.TextCtrl(
@@ -145,7 +148,9 @@ class ActionBase(eg.ActionClass):
         panel.AddLine("Address:", maskedCtrl)
         
         if panel.Affirmed():
-            return (self.GetAddressFromString(maskedCtrl.GetPlainValue()), )
+            address = self.GetAddressFromString(maskedCtrl.GetPlainValue())
+            ActionBase.defaultAddress = address
+            return (address, )
             
 
 
@@ -155,10 +160,16 @@ class Dim(ActionBase):
     def __call__(self, address, level):
         x, a0 = divmod(address, 256)
         a2, a1 = divmod(x, 256)
-        self.plugin.WriteFhz(0x04, 0x02, 0x01, 0x01, a2, a1, a0, 1 + level)
+        self.plugin.WriteFhz(0x04, 0x02, 0x01, 0x01, a2, a1, a0, level)
     
     
-    def Configure(self, address=0x094001, level=0):       
+    def GetLabel(self, address, level):
+        return "Set dim-level to %.02f %%" % (level * 100.00 / 16)
+    
+    
+    def Configure(self, address=None, level=1):       
+        if address is None:
+            address = self.defaultAddress
         panel = eg.ConfigPanel(self)
             
         maskedCtrl = masked.TextCtrl(
@@ -170,16 +181,34 @@ class Dim(ActionBase):
             validRequired=False,
         )
         maskedCtrl.SetValue(self.GetStringFromAddress(address))
-        levelCtrl = panel.SpinIntCtrl(level+1, min=1, max=16)
+        
+        def LevelCallback(value):
+            return "%.02f %%" % (value * 100.00 / 16)
+        
+        levelCtrl = eg.Slider(
+            panel, 
+            value=level, 
+            min=1, 
+            max=16, 
+            minLabel="6.25 %",
+            maxLabel="100.00 %",
+            style = wx.SL_AUTOTICKS|wx.SL_TOP,
+            size=(300,-1),
+            levelCallback=LevelCallback
+        )
+        levelCtrl.SetMinSize((300, -1))
         
         panel.AddLine("Address:", maskedCtrl)
         panel.AddLine("Level:", levelCtrl)
         
         if panel.Affirmed():
+            address = self.GetAddressFromString(maskedCtrl.GetPlainValue())
+            ActionBase.defaultAddress = address
             return (
-                self.GetAddressFromString(maskedCtrl.GetPlainValue()), 
-                levelCtrl.GetValue() - 1,
+                address, 
+                levelCtrl.GetValue(),
             )
+            
             
             
 class Off(ActionBase):
@@ -191,9 +220,11 @@ class On(ActionBase):
     funccode = 0x11
         
         
+        
 class ToggleDim(ActionBase):
     name = "Toggle dimming"
     funccode = 0x12
+    
     
 
 class DimUp(ActionBase):
@@ -201,18 +232,22 @@ class DimUp(ActionBase):
     funccode = 0x13
     
 
+
 class DimDown(ActionBase):
     name = "Dim down"
     funccode = 0x14
+    
     
 
 class Toggle(ActionBase):
     funccode = 0x15
     
+    
 
 class StartProgramTimer(ActionBase):
     name = "Start/stop programming timer"
     funccode = 0x16
+    
     
 
 class ResetToFactoryDefaults(ActionBase):
