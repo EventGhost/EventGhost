@@ -1,7 +1,10 @@
 import eg
 
 eg.RegisterPlugin(
-    name="FHZ 1000 PC"
+    name="FHZ 1000 PC",
+    kind="external",
+    author="Bitmonster",
+    version = "1.0." + "$LastChangedRevision: 229 $".split()[1],    
 )
 
 import time
@@ -46,9 +49,13 @@ class Fhz1000Pc(eg.PluginClass):
         # FS20 Init (if required)
         self.WriteFhz(0x04, 0xc9, 0x01, 0x96)
         
+        self.SetFhzTime()
+        
         
     def __stop__(self):
+        self.WriteFhz(0x04, 0xc9, 0x01, 0x97)
         self.handle.close()
+        self.handle = None
         
         
     def WriteFhz(self, telegramType, *args):
@@ -81,6 +88,15 @@ class Fhz1000Pc(eg.PluginClass):
         if eg.debugLevel:
             print ("-> %02X %02X " % (startByte, length)) + dataStr
         return telegramType, data[2:]
+    
+    
+    def SetFhzTime(self):
+        t = time.localtime()
+        year = t.tm_year % 100 
+        self.WriteFhz(
+            0xc9, 0x02, 0x01, 0x61, 
+            year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min
+        )
     
     
     
@@ -180,13 +196,13 @@ class ToggleDim(ActionBase):
     funccode = 0x12
     
 
-class DimDown(ActionBase):
-    name = "Dim down"
+class DimUp(ActionBase):
+    name = "Dim up"
     funccode = 0x13
     
 
-class DimUp(ActionBase):
-    name = "Dim up"
+class DimDown(ActionBase):
+    name = "Dim down"
     funccode = 0x14
     
 
