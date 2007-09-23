@@ -252,6 +252,7 @@ class EventGhost(object):
         self.CONFIG_DIR = os.path.join(APPDATA, self.APP_NAME)
         from WinAPI.Shortcut import CreateShortcut
         from WinAPI.serial import Serial as SerialPort
+        from WinAPI.SerialThread import SerialThread
 
         from PluginClass import PluginClass
         from IrDecoder import IrDecoder

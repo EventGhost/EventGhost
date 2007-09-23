@@ -132,14 +132,9 @@ Medion_Remote_Table = {
     }
 
 
-def bin2hexstring(str):
-    if len(str) > 0:
-        str2 = binascii.hexlify(str[0])
-        for i in xrange(1, len(str)):
-            str2 = str2 + ' ' + binascii.hexlify(str[i])
-        return string.upper(str2)
-    else:
-        return str
+def bin2hexstring(data):
+    return " ".join(["%02X" % ord(x) for x in data])
+
 
 def hexstring2bin(str):
     val = 0
@@ -174,95 +169,67 @@ class AIRT(eg.PluginClass):
         
     def __start__(self, port=0, remotes=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]):
         self.remotes = remotes
-        self.receiveQueue = Queue.Queue(2048)
-        self._want_abort = False
         self.port = port
-        self.thread = threading.Thread(target=self.ThreadWorker)
-        self.thread.start()
-
-
-    def __stop__(self):
-        self._want_abort = True
-
-
-    def ThreadWorker(self):
-        # This is the code executing in the new thread. 
-        lasttime = time.clock()
-        event_bytecount = 0
-        event_bytes = ""
-        self.sp = SerialPort(self.port, COMSPEED)
-        self.sp.open()
-        self.sp.write("\x00\x00\x00")
-        buf = ""
-        received_event = None
-        while not self._want_abort:
-            if not self.receiveQueue.empty():
-                received_event = self.receiveQueue.get()
-                #print bin2hexstring(received_event.data)
-                self.sp.write(received_event.data)
-            data = self.sp.read(-1)
-            if data:
-                buf = buf + data
-                lasttime = time.clock()
-            elif (time.clock() - lasttime > 0.01) and (buf != ""):
-                while len(buf):
-                    if ord(buf[0]) >= 128 and len(buf) >= 7:
-                        eventString = ''
-                        if ord(buf[0]) == 255:
-                            x10Id = ord(buf[5])
-                            remoteType = self.remotes[x10Id]
-                            if remoteType == 2:
-                                table = ATI_Remote_Table
-                            elif remoteType == 1:
-                                table = Medion_Remote_Table
-                            elif remoteType == 3:
-                                eventString = bin2hexstring(buf[5])
-                                table = None
-                            else:
-                                buf = buf[7:]
-                                continue
-                            eventString = str(x10Id + 1) + "."
-                            if (
-                                (ord(buf[6]) == 0x79 and ord(buf[2]) == 1)
-                                or (ord(buf[6]) == 0x7D and ord(buf[2]) == 1)
-                                or (ord(buf[2]) == 0)
-                            ):
-                                self.EndLastEvent()
-                                buf = buf[7:]
-                                continue
-                            else:    
-                                if table is not None and ord(buf[6]) in table:
-                                    eventString += table[ord(buf[6])]
-                                else:
-                                    eventString += bin2hexstring(buf[6])
-                        else:
-                            eventString = bin2hexstring(buf[0:7])
-                        self.TriggerEnduringEvent(eventString)
-                        buf = buf[7:]
-                    elif ord(buf[0]) == 6:
-                        if received_event <> None:
-                            received_event.set()
-                            received_event = None
-                        else:
-                            self.TriggerEvent('Received', ['<ACK>'])
-                        buf = buf[1:]
-                    elif ord(buf[0]) == 21:
-                        self.TriggerEvent('Received', ['<NAK>'])
-                        buf = buf[1:]
-                    else:
-                        self.TriggerEvent('Received', [bin2hexstring(buf)])
-                        buf = ''
-            else:
-                time.sleep(0.02)
-        self.sp.close()
+        self.lastActionEvent = None
+        self.serialPort = eg.SerialPort(port, baudrate=COMSPEED)
+        self.serialThread = eg.SerialThread(self.serialPort.hComPort)
+        self.serialThread.SetReadEventCallback(self.HandleReceive)
+        self.serialThread.Start()
+        self.serialThread.Write("\x00\x00\x00")
 
     
-    def SendRaw(self, data, block=False):
-        event = threading.Event()
-        event.data = data
-        self.receiveQueue.put(event)
-        if block:
-            event.wait(2.0)
+    def __stop__(self):
+        self.serialThread.Stop()
+        self.serialPort.close()
+        
+        
+    def HandleReceive(self, serial):
+        byte = ord(serial.Read(1))
+        if byte == 6:
+            if self.lastActionEvent:
+                self.lastActionEvent.set()
+                self.lastActionEvent = None
+            else:
+                self.TriggerEvent('Received', ['<ACK>'])
+        elif byte == 21:
+            self.TriggerEvent('Received', ['<NAK>'])
+        elif byte == 255:
+            # receive X10 code
+            data = serial.Read(6, 0.2)
+            if len(data) < 6:
+                return
+            x10Id = ord(data[4])
+            remoteType = self.remotes[x10Id]
+            if remoteType == 2:
+                table = ATI_Remote_Table
+            elif remoteType == 1:
+                table = Medion_Remote_Table
+            elif remoteType == 3:
+                eventString = bin2hexstring(data[4])
+                table = None
+            else:
+                return
+            eventString = str(x10Id + 1) + "."            
+            if (
+                (ord(data[5]) == 0x79 and ord(data[1]) == 1)
+                or (ord(data[5]) == 0x7D and ord(data[1]) == 1)
+                or (ord(data[1]) == 0)
+            ):
+                self.EndLastEvent()
+                return
+            else:    
+                if table is not None and ord(data[5]) in table:
+                    eventString += table[ord(data[5])]
+                else:
+                    eventString += bin2hexstring(data[5])
+                self.TriggerEnduringEvent(eventString)
+        elif byte > 127:
+            # receive other IR code
+            eventString = bin2hexstring(byte + data)
+            self.TriggerEnduringEvent(eventString)
+        else:
+            # received something unknown
+            self.TriggerEvent('Received', [bin2hexstring(byte + data)])
 
 
     def Configure(self, port=0, remotes=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]):
@@ -293,9 +260,11 @@ class SendIR(eg.ActionClass):
             repeats = ord(data[7])
         event = threading.Event()
         event.data = data[:7] + chr(repeats)
-        self.plugin.receiveQueue.put(event)
+        sp = self.plugin.serialThread
+        self.plugin.lastActionEvent = event
+        sp.Write(event.data)
         if repeats == 0:
-            eg.event.AddUpFunc(self.plugin.SendRaw, '\xAB')
+            eg.event.AddUpFunc(sp.Write, '\xAB')
         if block and repeats != 0:
             event.wait(2.0)
             #print "block done"
@@ -312,8 +281,7 @@ class SendIR(eg.ActionClass):
         block=False
     ):
         dialog = eg.ConfigurationDialog(self)
-        datastr = bin2hexstring(data)
-        dataCtrl = wx.TextCtrl(dialog, -1, datastr)
+        dataCtrl = wx.TextCtrl(dialog, -1, bin2hexstring(data))
         dialog.sizer.Add(dataCtrl, 0, wx.EXPAND)
         
         if dialog.AffirmedShowModal():
