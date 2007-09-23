@@ -618,7 +618,10 @@ class Standby(__ComputerPowerAction):
     iconFile = "icons/Standby"
         
     def __call__(self, bForceClose=False):
-        ctypes.windll.Powrprof.SetSuspendState(False, bForceClose, False)
+        thread.start_new_thread(
+            ctypes.windll.Powrprof.SetSuspendState, 
+            (False, bForceClose, False)
+        )
         
         
         
@@ -633,7 +636,10 @@ class Hibernate(__ComputerPowerAction):
     iconFile = "icons/Hibernate"
     
     def __call__(self, bForceClose=False):
-        ctypes.windll.Powrprof.SetSuspendState(True, bForceClose, False)
+        thread.start_new_thread(
+            ctypes.windll.Powrprof.SetSuspendState, 
+            (True, bForceClose, False)
+        )
         
         
         

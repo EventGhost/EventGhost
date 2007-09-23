@@ -89,13 +89,6 @@ class Fhz1000Pc(eg.PluginClass):
 #            self.nextTaskTime, 
 #            self.TimeScheduleTask
 #        )
-#        commTimeouts = FTTIMEOUTS()
-#        commTimeouts.ReadIntervalTimeout = 0
-#        commTimeouts.ReadTotalTimeoutMultiplier = 0
-#        commTimeouts.ReadTotalTimeoutConstant = 10
-#        commTimeouts.WriteTotalTimeoutMultiplier = 0
-#        commTimeouts.WriteTotalTimeoutConstant = 200    
-#        d2xx.FT_W32_SetCommTimeouts(self.ftHandle, byref(commTimeouts))
         self.receiveThread.ResumeReadEvents()
         
         

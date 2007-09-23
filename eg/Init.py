@@ -163,7 +163,7 @@ class EventGhost(object):
 #        sys.modules['__builtin__'].raw_input = GetSimpleRawInput
 #        sys.modules['__builtin__'].input = GetSimpleInput
 
-        from WinAPI.SerialPort import EnumSerialPorts as GetAllPorts
+        from WinAPI.SerialThread import EnumSerialPorts as GetAllPorts
         self.SerialPort.GetAllPorts = classmethod(GetAllPorts)
         
         from PluginManager import PluginManager

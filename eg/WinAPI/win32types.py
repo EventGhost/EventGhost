@@ -23,7 +23,6 @@
 from ctypes import *
 from ctypes.wintypes import *
 from GUID import GUID
-import win32api
 
 GWL_STYLE = -16
 WS_MINIMIZE = 0x20000000

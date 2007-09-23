@@ -33,6 +33,7 @@ from win32event import (
     QS_ALLINPUT
 )
 import eg
+import threading
 
 class ThreadWorkerAction:
     """ 
@@ -132,7 +133,7 @@ class ThreadWorker:
         rc = MsgWaitForMultipleObjects(
             (self.__wakeEvent,), 
             0, 
-            1000, 
+            10000, 
             QS_ALLINPUT
         )
         if rc == WAIT_OBJECT_0:

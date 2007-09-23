@@ -1,7 +1,6 @@
 import eg
-import threading, Queue, time, string, binascii
+import threading
 import wx
-from eg.WinAPI.SerialPort import SerialPort
 
 
 eg.RegisterPlugin(
@@ -140,7 +139,7 @@ def hexstring2bin(str):
     val = 0
     count = 0
     str2=''
-    str = string.upper(str)
+    str = str.upper()
     for ch in str:
         if ch >= '0' and ch <= '9':
             val = val * 16 + (ord(ch) - ord('0'))

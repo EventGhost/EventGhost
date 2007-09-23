@@ -157,4 +157,4 @@ class EventGhostEvent(object):
                 break
         self.SetStarted()
         eg.SetProcessingState(1, self)
-        
+    

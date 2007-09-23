@@ -87,16 +87,15 @@ def EnumSerialPorts(dummy=None):
     global gSerialPortList
     if gSerialPortList is None:
         gSerialPortList = []
-        add = gSerialPortList.append
         GetLastError = win32api.GetLastError
         cc = pointer(COMMCONFIG())
         dwSize = DWORD(0)
         dwSizeRef = byref(dwSize)
-        for i in range(0,255):
+        for i in range(0, 255):
             com_str = 'COM%d' % (i+1)
             res = GetDefaultCommConfig(c_char_p(com_str), cc, dwSizeRef)
             if res == 1 or (res == 0 and GetLastError() == 122):
-                add(i)
+                gSerialPortList.append(i)
     return gSerialPortList
 
 
