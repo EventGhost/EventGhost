@@ -21,8 +21,8 @@
 # $LastChangedBy$
 
 import eg
-from win32con import WM_DEVICECHANGE
-from eg.WinAPI.win32types import (
+from eg.WinAPI.cTypes import (
+    WM_DEVICECHANGE,
     DEV_BROADCAST_HDR,
     DEV_BROADCAST_DEVICEINTERFACE,
     DEV_BROADCAST_VOLUME,
@@ -30,11 +30,22 @@ from eg.WinAPI.win32types import (
     DBT_DEVICEREMOVECOMPLETE,
     DBT_DEVTYP_VOLUME,
     DBT_DEVTYP_DEVICEINTERFACE,
+    CLSIDFromString,
     RegisterDeviceNotification,
     UnregisterDeviceNotification,
     pointer,
+    sizeof,
+    string_at,
 )
 
+class DEV_BROADCAST_DEVICEINTERFACE(DEV_BROADCAST_DEVICEINTERFACE):
+
+    def __init__(self, dbcc_devicetype=0, dbcc_classguid=None):
+        self.dbcc_devicetype = dbcc_devicetype
+        CLSIDFromString(dbcc_classguid, self.dbcc_classguid)
+        self.dbcc_size = sizeof(DEV_BROADCAST_DEVICEINTERFACE)
+        
+DBD_NAME_OFFSET = DEV_BROADCAST_DEVICEINTERFACE.dbcc_name.offset
 
 
 def DriveLettersFromMask(mask):
@@ -96,8 +107,8 @@ class DeviceChangeNotifier:
                 for driveLetter in DriveLettersFromMask(dbcv.dbcv_unitmask):
                     self.TriggerEvent("DriveMounted." + driveLetter)
             elif dbch.dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE:
-                dbcc = DEV_BROADCAST_DEVICEINTERFACE.from_address(lparam)
-                self.TriggerEvent("DeviceAttached", [dbcc.dbcc_name])
+                deviceName = string_at(lparam + DBD_NAME_OFFSET)
+                self.TriggerEvent("DeviceAttached", [deviceName])
         elif wparam == DBT_DEVICEREMOVECOMPLETE:
             dbch = DEV_BROADCAST_HDR.from_address(lparam)
             if dbch.dbch_devicetype == DBT_DEVTYP_VOLUME:
@@ -105,6 +116,6 @@ class DeviceChangeNotifier:
                 for driveLetter in DriveLettersFromMask(dbcv.dbcv_unitmask):
                     self.TriggerEvent("DriveRemoved." + driveLetter)
             elif dbch.dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE:
-                dbcc = DEV_BROADCAST_DEVICEINTERFACE.from_address(lparam)
-                self.TriggerEvent("DeviceRemoved", [dbcc.dbcc_name])
+                deviceName = string_at(lparam + DBD_NAME_OFFSET)
+                self.TriggerEvent("DeviceRemoved", [deviceName])
         return 1

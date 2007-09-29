@@ -55,6 +55,7 @@ class Fhz1000Pc(eg.PluginClass):
         self.receiveThread.WriteFile = d2xx.FT_W32_WriteFile
         self.receiveThread.ReadFile = d2xx.FT_W32_ReadFile
         self.receiveThread.ClearCommError = d2xx.FT_W32_ClearCommError
+        self.receiveThread.CloseHandle = d2xx.FT_W32_CloseHandle
         
         d2xx.FT_SetLatencyTimer(self.ftHandle, 2)
         d2xx.FT_SetBaudRate(self.ftHandle, 9600)
@@ -85,10 +86,10 @@ class Fhz1000Pc(eg.PluginClass):
         self.nextTaskTime = time.mktime(t)
         self.WriteFhz(*self.GetTimeData())
         self.nextTaskTime += 60.0
-#        self.timeTask = eg.scheduler.AddTaskAbsolute(
-#            self.nextTaskTime, 
-#            self.TimeScheduleTask
-#        )
+        self.timeTask = eg.scheduler.AddTaskAbsolute(
+            self.nextTaskTime, 
+            self.TimeScheduleTask
+        )
         self.receiveThread.ResumeReadEvents()
         
         
@@ -97,11 +98,8 @@ class Fhz1000Pc(eg.PluginClass):
         if self.timeTask is not None:
             eg.scheduler.CancelTask(self.timeTask)
         self.WriteFhz(0x04, 0xc9, 0x01, 0x97)
-        if self.ftHandle:
-            d2xx.FT_W32_CloseHandle(self.ftHandle)
-            self.ftHandle = None
         if self.receiveThread:
-            self.receiveThread.Stop()
+            self.receiveThread.Close()
         
         
     def HandleReceive(self, serial):
@@ -167,7 +165,7 @@ class Fhz1000Pc(eg.PluginClass):
         )
         
         
-    def TimeScheduleTask(self, repeats=32):
+    def TimeScheduleTask(self, repeats=1):
         """
         Send the current time 50 times and schedule the next execution at the
         next minute.

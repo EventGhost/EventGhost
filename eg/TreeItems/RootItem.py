@@ -25,6 +25,7 @@ import time
 import wx
 import eg
 from ContainerItem import ContainerItem
+from TreeItem import HINT_NO_DROP, HINT_MOVE_INSIDE
 
 
 class RootItem(ContainerItem):
@@ -119,8 +120,8 @@ class RootItem(ContainerItem):
     
     def DropTest(self, cls):
         if cls == eg.MacroItem:
-            return 1 # 1 = item would be dropped inside
+            return HINT_MOVE_INSIDE
         if cls == eg.FolderItem:
-            return 1 # 1 = item would be dropped inside
-        return None  # None = item cannot be dropped on it
+            return HINT_MOVE_INSIDE
+        return HINT_NO_DROP
     

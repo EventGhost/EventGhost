@@ -22,7 +22,7 @@
 
 import eg
 from ContainerItem import ContainerItem
-
+from TreeItem import HINT_MOVE_EVERYWHERE, HINT_NO_DROP
 
 class FolderItem(ContainerItem):
     xmlTag = "Folder"
@@ -30,9 +30,8 @@ class FolderItem(ContainerItem):
 
     def DropTest(self, cls):
         if cls == eg.MacroItem:
-            return 5 # item can be inserted before or after or dropped inside
+            return HINT_MOVE_EVERYWHERE
         if cls == eg.FolderItem:
-            return 5 # item can be inserted before or after or dropped inside
-        return None # item cannot be dropped on it
+            return HINT_MOVE_EVERYWHERE
+        return HINT_NO_DROP
 
-    

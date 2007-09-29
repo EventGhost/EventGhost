@@ -31,9 +31,44 @@ import wx
 import locale
 
 
+class GlobalsBunch(object):
+    
+    def __setattr__(self, name, value):
+        #print name, "=", value
+        self.__dict__[name] = value
+        
+    def __delattr__(self, name):
+        #print "del", name
+        del self.__dict__[name]
+        
+        
+class ResultDescriptor(object):
+    def __init__(self):
+        self.data = None
+        
+    def __set__(self, instance, value):
+        self.data = value
+        #print value
+        
+    def __get__(self, instance, owner):
+        return self.data
+    
+    
 class EventGhost(object):
     
+    def result_fget(self):
+        return self._result
+    
+    
+    def result_fset(self, value):
+        #print value
+        self._result = value
+        
+    result = property(result_fget, result_fset)
+    
+    
     def __init__(self, args):
+        self._result = None
         global eg
         eg = self
         sys.modules["eg"] = self
@@ -82,7 +117,7 @@ class EventGhost(object):
         self.eventTable2 = {}
         self.plugins = eg.Bunch()
         self.pluginClassInfo = {}
-        self.globals = eg.Bunch()
+        self.globals = GlobalsBunch()
         self.globals.eg = self
         self.mainThread = threading.currentThread()
         self.onlyLogAssigned = False
@@ -455,5 +490,4 @@ class EventGhost(object):
     
     class HiddenAction:
         pass
-    
     

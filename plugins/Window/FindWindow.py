@@ -42,7 +42,7 @@ import wx
 
 
 import eg
-from eg.WinAPI.win32types import GetAncestor, GA_ROOT, GA_PARENT
+from eg.WinAPI.cTypes import GetAncestor, GA_ROOT, GA_PARENT
 from eg.WinAPI.Utils import GetHwndIcon, GetHwndChildren, HwndHasChildren
 from eg.WinAPI.Utils import HighlightWindow
 from eg.WinAPI.Utils import GetModulesPID, GetNameOfPID, GetHwndProcessName

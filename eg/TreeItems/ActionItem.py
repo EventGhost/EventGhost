@@ -27,6 +27,7 @@ import wx
 
 import eg
 from TreeItem import TreeItem
+from TreeItem import HINT_NO_DROP, HINT_MOVE_BEFORE, HINT_MOVE_BEFORE_OR_AFTER
 from TreeLink import TreeLink
 
 
@@ -49,18 +50,12 @@ def GetRenamedColor():
 gRenamedColour = GetRenamedColor()
 
 
-def _compileCall(action, *args):
-    return action.Compile(*args)()
-                    
-
-    
 class ActionItem(TreeItem):
     xmlTag = "Action"
     
     icon = eg.Icons.ACTION_ICON
     executable = None
-    args = ()
-    needsCompile = False
+    args = None
     isExecutable = True
     isConfigurable = True
     openConfigDialog = None
@@ -99,13 +94,7 @@ class ActionItem(TreeItem):
             action = eg.plugins.EventGhost.PythonCommand
             argString = repr(text)
         self.executable = action
-        self.icon = action.info.icon
-        if hasattr(action, "Compile"):
-            self.needsCompile = True
-            action.__call__ = _compileCall
-        else:
-            self.needsCompile = False            
-            
+        self.icon = action.info.icon            
         self.SetArgumentString(argString)
     
     
@@ -143,8 +132,7 @@ class ActionItem(TreeItem):
     def SetParams(self, *args):
         if self.args != args:
             self.args = args
-            if self.needsCompile:
-                self.compiledArgs = self.executable.Compile(*args)
+            self.compiled = self.executable.Compile(*args)
             #self.Refresh()
         
         
@@ -226,10 +214,7 @@ class ActionItem(TreeItem):
             )
             return
         try:
-            if self.needsCompile:
-                eg.result = self.compiledArgs()
-            else:
-                eg.result = action(*self.args)
+            self.compiled()
         except eg.Exception, e:
             eg.PrintError(e.message)
         except:
@@ -242,11 +227,12 @@ class ActionItem(TreeItem):
 
     def DropTest(self, cls):
         if cls == eg.EventItem and self.parent != self.document.autostartMacro:
-            return 2 # 2 = item would move before
+            return HINT_MOVE_BEFORE
         if cls == eg.ActionItem:
-            return 4 # 4 = item can be inserted before or after
+            return HINT_MOVE_BEFORE_OR_AFTER
         if cls == eg.PluginItem and self.parent == self.document.autostartMacro:
-            return 4 # 4 = item can be inserted before or after
-        return None
+            return HINT_MOVE_BEFORE_OR_AFTER
+        return HINT_NO_DROP
+
 
 

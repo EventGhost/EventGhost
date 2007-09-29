@@ -75,6 +75,18 @@ class EventDropSource(wx.DropSource):
 
 
 
+from TreeItems.TreeItem import (
+    HINT_NO_DROP, HINT_MOVE_INSIDE, HINT_MOVE_BEFORE, HINT_MOVE_AFTER,
+    HINT_MOVE_BEFORE_OR_AFTER, HINT_MOVE_EVERYWHERE
+)
+
+HITTEST_FLAGS = (
+    wx.TREE_HITTEST_ONITEMLABEL |
+    wx.TREE_HITTEST_ONITEMICON |
+    wx.TREE_HITTEST_ONITEMRIGHT
+)
+
+
 class EventDropTarget(wx.PyDropTarget):
     
     def __init__(self, window):
@@ -90,7 +102,6 @@ class EventDropTarget(wx.PyDropTarget):
         self.data.Add(self.tdata)
         self.data.Add(self.ldata)
         self.SetDataObject(self.data)
-        self.lastInsertLine = None
         self.hwnd = window.GetHandle()
         self.lastExpanded = None
         self.lastHighlighted = None
@@ -110,15 +121,10 @@ class EventDropTarget(wx.PyDropTarget):
         # only the copy cursor will be shown, even if the source allows
         # moves.  You can use the passed in (x,y) to determine what kind
         # of feedback to give.
-        id, flags = tree.HitTest(tree.ScreenToClient(wx.GetMousePosition()))
-        if (
-            flags & (
-                wx.TREE_HITTEST_ONITEMLABEL
-                |wx.TREE_HITTEST_ONITEMICON
-                |wx.TREE_HITTEST_ONITEMRIGHT
-            )
-        ):
-            obj = tree.GetPyData(id)
+        point = tree.ScreenToClient(wx.GetMousePosition())
+        targetItem, flags = tree.HitTest(point)
+        if flags & HITTEST_FLAGS:
+            obj = tree.GetPyData(targetItem)
             dragObject = self.dragObject
             tmp_obj = obj
             while tmp_obj is not None:
@@ -128,71 +134,71 @@ class EventDropTarget(wx.PyDropTarget):
                 tmp_obj = tmp_obj.parent
 
             insertionHint = obj.DropTest(dragCls)
-            if id == tree.lastDropTarget:
+            if targetItem == tree.lastDropTarget:
                 if self.lastDropTime + 0.6 < clock():
                     if (obj.__class__ == tree.document.FolderItem 
-                        or insertionHint == 1 
-                        or insertionHint == 5) and not tree.IsExpanded(id):
-                        tree.Expand(id)
+                        or insertionHint == HINT_MOVE_INSIDE
+                        or insertionHint == HINT_MOVE_EVERYWHERE) and not tree.IsExpanded(targetItem):
+                        tree.Expand(targetItem)
             else:
                 self.lastDropTime = clock()
-                tree.lastDropTarget = id
+                tree.lastDropTarget = targetItem
                 
-            if insertionHint == 4:
-                x2, y2, w2, h2 = tree.GetBoundingRect(id)
+            if insertionHint == HINT_MOVE_BEFORE_OR_AFTER:
+                x2, y2, w2, h2 = tree.GetBoundingRect(targetItem)
                 if y > y2 + h2 / 2:
-                    insertionHint = 3
+                    insertionHint = HINT_MOVE_AFTER
                 else:
-                    insertionHint = 2
-            elif insertionHint == 5:
-                x2, y2, w2, h2 = tree.GetBoundingRect(id)
-                if y < y2 + h2 / 4: # before
-                    insertionHint = 2
-                elif y > y2 + (h2 / 4) * 3: # after
-                    insertionHint = 3
-                else: #inside
-                    insertionHint = 1
+                    insertionHint = HINT_MOVE_BEFORE
+            elif insertionHint == HINT_MOVE_EVERYWHERE:
+                x2, y2, w2, h2 = tree.GetBoundingRect(targetItem)
+                if y < y2 + h2 / 4:
+                    insertionHint = HINT_MOVE_BEFORE
+                elif y > y2 + (h2 / 4) * 3:
+                    insertionHint = HINT_MOVE_AFTER
+                else: 
+                    insertionHint = HINT_MOVE_INSIDE
                 
-            if insertionHint is None: # cannot be dropped
+            if insertionHint == HINT_NO_DROP:
                 tree.ClearInsertMark()
                 self.position = None
                 result = wx.DragNone
-            elif insertionHint == 1: # would be moved inside
-                tree.SetItemDropHighlight(id, True)
-                self.lastHighlighted = id
+            elif insertionHint == HINT_MOVE_INSIDE:
+                tree.SetItemDropHighlight(targetItem, True)
+                self.lastHighlighted = targetItem
                 self.position = (obj, 0)
                 for i in xrange(len(obj.childs)-1, -1, -1):
                     next = obj.childs[i]
                     insertionHint = next.DropTest(dragCls)
-                    if insertionHint in (3,4,5):
+                    if insertionHint in (HINT_MOVE_AFTER, HINT_MOVE_BEFORE_OR_AFTER, HINT_MOVE_EVERYWHERE):
                         tree.SetInsertMark(next.id, 1)
                         self.position = (obj, i+1)
                         break
                 else:
                     tree.ClearInsertMark()
                 result = wx.DragMove
-            elif insertionHint == 2: # would move before
+            elif insertionHint == HINT_MOVE_BEFORE:
                 parent = obj.parent
                 pos = parent.GetChildIndex(obj)
                 for i in xrange(pos-1, -1, -1):
                     next = parent.childs[i]
                     insertionHint = next.DropTest(dragCls)
-                    if insertionHint == 2:
-                        id = next.id
+                    if insertionHint == HINT_MOVE_BEFORE:
+                        targetItem = next.id
                         pos -= 1
-                tree.SetInsertMark(id, 0)
+                tree.SetInsertMark(targetItem, 0)
                 self.position = (parent, pos)
                 result = wx.DragMove
-            elif insertionHint == 3: # would move after
+            elif insertionHint == HINT_MOVE_AFTER:
                 parent = obj.parent
                 pos = parent.GetChildIndex(obj)
                 for i in xrange(pos+1, len(parent.childs)):
                     next = parent.childs[i]
                     insertionHint = next.DropTest(dragCls)
-                    if insertionHint == 3:
-                        id = next.id
+                    if insertionHint == HINT_MOVE_AFTER:
+                        targetItem = next.id
                         pos += 1
-                tree.SetInsertMark(id, 1)
+                tree.SetInsertMark(targetItem, 1)
                 self.position = (parent, pos+1)
                 result = wx.DragMove
             return result
@@ -244,24 +250,16 @@ class EventDropTarget(wx.PyDropTarget):
 class TreeCtrl(wx.TreeCtrl):
     
     @eg.AssertNotMainThread
-    def __init__(self, parent, id=-1, document=None):
+    def __init__(self, parent, document=None):
         self.frame = parent
         self.document = document
-        wx.TreeCtrl.__init__(
-            self, 
-            parent, 
-            id,
-            wx.DefaultPosition, 
-            wx.DefaultSize,
-            style=(
-                wx.TR_HAS_BUTTONS
-                |wx.TR_EDIT_LABELS
-                |wx.TR_ROW_LINES
-                |wx.CLIP_CHILDREN
-                #|wx.TR_HIDE_ROOT
-                #|wx.TR_LINES_AT_ROOT 
-            )
+        style = (
+            wx.TR_HAS_BUTTONS |
+            wx.TR_EDIT_LABELS |
+            wx.TR_ROW_LINES |
+            wx.CLIP_CHILDREN
         )
+        wx.TreeCtrl.__init__(self, parent, style=style)
         self.root = None
         self.rootname = eg.text.General.configTree
         self.SetImageList(eg.Icons.gImageList)
@@ -288,14 +286,12 @@ class TreeCtrl(wx.TreeCtrl):
         id = wx.NewId()
         self.dragtimer = wx.Timer(self, id)
         wx.EVT_TIMER(self, id, self.OnDragTimer)
-        self.lastDropCount = 0
         self.lastDropTarget = None
         self.isInEditLabel = False
         
         self.clipboardData = u""
         self.dropTarget = EventDropTarget(self)
         self.SetDropTarget(self.dropTarget)
-        self.lastInsertLine = None
         self.hwnd = self.GetHandle()
         # TVM_SETITEMHEIGHT = 4352 + 27
         #SendMessageTimeout(self.hwnd, 4379, 18, 0, 1, 100, 0)
@@ -335,7 +331,7 @@ class TreeCtrl(wx.TreeCtrl):
         self.Unbind(wx.EVT_TREE_SEL_CHANGED)
         self.DeleteAllItems()
         return
-        return wx.TreeCtrl.Destroy(self)
+        #return wx.TreeCtrl.Destroy(self)
 
     
     @eg.LogIt
@@ -430,18 +426,11 @@ class TreeCtrl(wx.TreeCtrl):
         event.SetToolTip(s)
         
         
-    def SetInsertMark(self, id, after):
+    def SetInsertMark(self, treeItem, after):
         # TVM_SETINSERTMARK = 4378
-        if id is not None:
-            SendMessageTimeout(
-                self.hwnd, 
-                4378, 
-                after, 
-                long(id.m_pItem), 
-                1, 
-                100, 
-                0
-            )
+        if treeItem is not None:
+            lParam = long(treeItem.m_pItem)
+            SendMessageTimeout(self.hwnd, 4378, after, lParam, 1, 100, 0)
     
     
     def ClearInsertMark(self):
@@ -560,15 +549,9 @@ class TreeCtrl(wx.TreeCtrl):
     def OnDragTimer(self, event):
         id, flags = self.HitTest(self.ScreenToClient(wx.GetMousePosition()))
         if flags & wx.TREE_HITTEST_ABOVE:
-            first = self.GetFirstVisibleItem()
             self.ScrollLines(-1)
-            #if first != self.GetFirstVisibleItem():
-            #    self.Refresh()
         elif flags & wx.TREE_HITTEST_BELOW:
-            first = self.GetFirstVisibleItem()
             self.ScrollLines(1)
-            #if first != self.GetFirstVisibleItem():
-            #    self.Refresh()
 
 
     def Cut(self, event=None):
@@ -625,19 +608,19 @@ class TreeCtrl(wx.TreeCtrl):
             dataObj = wx.TextDataObject()
             if not wx.TheClipboard.GetData(dataObj):
                 return False
+            
             try:
                 data = dataObj.GetText().encode("utf-8")
-                xml_tree = ElementTree.fromstring(data)
-                for childXmlNode in xml_tree:
-                    targetObj = selectionObj
-                    childCls = self.document.XMLTag2ClassDict[childXmlNode.tag].__bases__[0]
-                    if targetObj.DropTest(childCls) in (1, 5):
+                xmlTree = ElementTree.fromstring(data)
+                xmlTagToClassDict = self.document.XMLTag2ClassDict
+                for node in xmlTree:
+                    childCls = xmlTagToClassDict[node.tag].__bases__[0]
+                    if selectionObj.DropTest(childCls) in (1, 5):
                         continue
-                    if targetObj.parent is None:
+                    if selectionObj.parent is None:
                         return False
-                    else:
-                        if targetObj.parent.DropTest(childCls) not in (1, 5):
-                            return False
+                    elif selectionObj.parent.DropTest(childCls) not in (1, 5):
+                        return False
             except:
                 return False
         finally:            

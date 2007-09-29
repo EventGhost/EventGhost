@@ -97,6 +97,8 @@ class PluginManager:
             pluginDir = join(eg.PLUGIN_DIR, dirname)
             if not isdir(pluginDir):
                 continue
+            if not exists(join(pluginDir, "__init__.py")):
+                continue
             
             # get the highest timestamp of all files in that directory
             highestTimestamp = 0

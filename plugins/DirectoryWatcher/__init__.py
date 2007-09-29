@@ -60,7 +60,7 @@ class DirectoryWatcher(eg.PluginClass):
         self.path = path
         self.includeSubdirs = includeSubdirs
         startupEvent = threading.Event()
-        self.thread = threading.Thread(target=self.ThreadLoop, args=(startupEvent,))
+        self.thread = threading.Thread(target=self.ThreadLoop, name="DirectoryWatcherThread", args=(startupEvent,))
         self.thread.start()
         startupEvent.wait(3)
         

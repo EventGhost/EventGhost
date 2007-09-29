@@ -24,10 +24,12 @@ import eg
 
 import win32con
 
+
 PBT_POWERSETTINGCHANGE = 0x8013
 
 PbtMessages = {
-    win32con.PBT_APMBATTERYLOW: "BatteryLow",
+    win32con.PBT_APMBATTERYLOW: "BatteryLow", # not in vista, use 
+                                              # PBT_APMPOWERSTATUSCHANGE instead
     win32con.PBT_APMOEMEVENT: "OemEvent",
     win32con.PBT_APMPOWERSTATUSCHANGE: "PowerStatusChange",
     win32con.PBT_APMQUERYSUSPEND: "QuerySuspend",

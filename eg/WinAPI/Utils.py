@@ -29,9 +29,11 @@ from win32api import GetCurrentThreadId
 from win32gui import GetForegroundWindow, WindowFromPoint, IsWindow
 from win32process import GetWindowThreadProcessId
 from win32process import GetCurrentProcess
+from WinAPI.cTypes import (
+    AttachThreadInput, GA_ROOT, PtVisible, SaveDC, RestoreDC, SetROP2,
+    GetAncestor, Rectangle
+)
 
-
-from eg.WinAPI.win32types import *
 
 def GetTopLevelWindowOf(hwnd):
     return GetAncestor(hwnd, GA_ROOT)
@@ -79,6 +81,8 @@ class MyRectangle:
 
 
 
+from WinAPI.cTypes import EnumDisplayMonitors
+
 def GetMonitorDimensions():
     retval = []
     def cb(hMonitor, hdcMonitor, lprcMonitor, dwData):
@@ -108,7 +112,6 @@ from win32gui import (
     GetClassLong,
     IsWindowVisible, 
     EnumChildWindows, 
-    EnumChildWindows, 
     GetParent
 )
 
@@ -131,13 +134,12 @@ def GetAllWindowChildren(hwnd):
     return data
 
 from win32gui import (UpdateWindow, GetWindowRect, GetWindowDC, SelectObject,
-    ReleaseDC, GetDC, DeleteObject, GetStockObject, ScreenToClient)
+    ReleaseDC, GetDC, DeleteObject, GetStockObject, ScreenToClient, CreatePen)
 from win32api import GetSystemMetrics
 from win32con import R2_NOT, PS_INSIDEFRAME, SM_CXBORDER, NULL_BRUSH
 
 _H_BORDERWIDTH = 3 * win32api.GetSystemMetrics(SM_CXBORDER)
 _H_BORDERCOLOUR = win32api.RGB(255, 0, 0)
-Rectangle = gdi32.Rectangle
 
 
 def HighlightWindow(hwnd):

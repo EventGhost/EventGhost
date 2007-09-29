@@ -184,7 +184,7 @@ class MyApp(wx.App):
                 and not t.isDaemon() 
                 and t.isAlive()
             ):
-                eg.DebugNote("joining: " + str(t))
+                eg.DebugNote("joining: " + str(t) + repr(t._Thread__target))
                 t.join(5.0)
         
         eg.DebugNote("Threads:")

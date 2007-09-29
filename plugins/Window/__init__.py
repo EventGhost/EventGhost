@@ -49,9 +49,9 @@ import wx
 
 from eg.WinAPI.Utils import GetTopLevelWindowOf
 from eg.WinAPI.Utils import BringHwndToFront
-from eg.WinAPI.win32types import SendNotifyMessage
-from eg.WinAPI.win32types import PostMessage as Win32_PostMessage
-from eg.WinAPI.win32types import SendMessage as Win32_SendMessage
+from eg.WinAPI.cTypes import SendNotifyMessage
+from eg.WinAPI.cTypes import PostMessage as Win32_PostMessage
+from eg.WinAPI.cTypes import SendMessage as Win32_SendMessage
 
 from FindWindow import FindWindow
 from SendKeys import SendKeys

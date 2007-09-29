@@ -351,9 +351,7 @@ class CmdPaste:
                     label = dataObj.GetData()
                     parent = selectionObj.parent
                     pos = parent.childs.index(selectionObj)
-                    NewEvent().Do(
-                        tree.document, 
-                        label)
+                    NewEvent().Do(tree.document, label)
                     #tree.OnNewEvent(label)
                 return
             dataObj = wx.TextDataObject()

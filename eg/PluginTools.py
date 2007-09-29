@@ -245,6 +245,8 @@ def OpenPlugin(pluginName, evalName, args, treeItem=None):
         if not info.LoadModule():
             return None
     plugin = info.CreatePluginInstance(evalName, treeItem)
+    if hasattr(plugin, "Compile"):
+        plugin.Compile(*args)
     try:
         plugin.info.label = plugin.GetLabel(*args)
     except:

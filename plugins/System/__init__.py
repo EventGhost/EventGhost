@@ -821,24 +821,10 @@ class SetMasterVolume(eg.ActionClass):
          
         
     def Configure(self, value=0):
-        dialog = eg.ConfigurationDialog(self)
-        text = self.text
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        
-        st1 = wx.StaticText(dialog, -1, text.text1)
-        sizer.Add(st1, 0, wx.ALIGN_CENTER_VERTICAL)
-        sizer.Add((5,5))
-        
-        valueCtrl = eg.SpinNumCtrl(dialog, -1, value, min=0, max=100)
-        sizer.Add(valueCtrl, 0, wx.EXPAND|wx.ALIGN_CENTER_VERTICAL)
-        sizer.Add((5,5))
-        
-        st2 = wx.StaticText(dialog, -1, text.text2)
-        sizer.Add(st2, 0, wx.ALIGN_CENTER_VERTICAL)
-        
-        dialog.sizer.Add(sizer, 1, wx.EXPAND)
-        
-        if dialog.AffirmedShowModal():
+        panel = eg.ConfigPanel(self)
+        valueCtrl = panel.SpinNumCtrl(value, min=0, max=100)
+        panel.AddLine(self.text.text1, valueCtrl, self.text.text2)
+        if panel.Affirmed():
             return (float(valueCtrl.GetValue()), )
 
 
@@ -863,26 +849,13 @@ class ChangeMasterVolumeBy(eg.ActionClass):
         return self.text.name + ": " + str(value) + " %"
          
         
-    def Configure(self, value=0):            
-        dialog = eg.ConfigurationDialog(self)
-        text = self.text
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        
-        st1 = wx.StaticText(dialog, -1, text.text1)
-        sizer.Add(st1, 0, wx.ALIGN_CENTER_VERTICAL)
-        sizer.Add((5,5))
-        
-        valueCtrl = eg.SpinNumCtrl(dialog, -1, value, min=-100, max=100)
-        sizer.Add(valueCtrl, 0, wx.EXPAND|wx.ALIGN_CENTER_VERTICAL)
-        sizer.Add((5,5))
-        
-        st2 = wx.StaticText(dialog, -1, text.text2)
-        sizer.Add(st2, 0, wx.ALIGN_CENTER_VERTICAL)
-        
-        dialog.sizer.Add(sizer, 1, wx.EXPAND)
-        
-        if dialog.AffirmedShowModal():
+    def Configure(self, value=0):
+        panel = eg.ConfigPanel(self)
+        valueCtrl = panel.SpinNumCtrl(value, min=-100, max=100)
+        panel.AddLine(self.text.text1, valueCtrl, self.text.text2)
+        if panel.Affirmed():
             return (float(valueCtrl.GetValue()), )
+
 
 
 #-----------------------------------------------------------------------------
@@ -1031,7 +1004,11 @@ class SetDisplayPreset(eg.ActionClass):
     def __call__(self, *args):
         eg.WinAPI.Display.SetDisplayModes(*args)
         
-        
+    
+    def GetLabel(self, *args):
+        return self.name
+    
+    
     def Configure(self, *args):
         result = [None]
         dialog = eg.ConfigurationDialog(self)
@@ -1131,7 +1108,7 @@ class WakeOnLan(eg.ActionClass):
 #-----------------------------------------------------------------------------
 # Action: System.SetSystemIdleTimer
 #-----------------------------------------------------------------------------
-from eg.WinAPI.win32types import SetThreadExecutionState
+from eg.WinAPI.cTypes import SetThreadExecutionState
 
 class SetSystemIdleTimer(eg.ActionClass):
     name = "Set system idle timer"

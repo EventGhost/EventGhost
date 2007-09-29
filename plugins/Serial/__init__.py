@@ -161,7 +161,7 @@ class Serial(eg.RawReceiverPlugin):
             self.terminator = eg.ParseString(terminator).decode('string_escape')
             self.info.eventPrefix = prefix
             self.stopEvent = win32event.CreateEvent(None, 1, 0, None)
-            self.receiveThread = threading.Thread(target=self.ReceiveThread)
+            self.receiveThread = threading.Thread(target=self.ReceiveThread, name="SerialThread")
             self.receiveThread.start()
         else:
             self.receiveThread = None

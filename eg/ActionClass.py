@@ -71,9 +71,12 @@ class ActionClass(object):
         Do the actual work. Will in most cases be overwritten in subclasses.
         """
         # This Compile call is only here to support calls of pre-compiled 
-        # actions (see below) from PythonScript/PythonCommand actions. 
+        # actions (see below) like PythonScript/PythonCommand actions. 
         # Normally all actions will overwrite this __call__ method completely.
-        self.Compile(*args)()
+        if self.Compile.im_func != ActionClass.Compile.im_func:
+            self.Compile(*args)()
+        else:
+            raise NotImplementedError
     
     
     def GetLabel(self, *args):
@@ -124,27 +127,29 @@ class ActionClass(object):
             return ()
     
     
-# An ActionClass will only define a "Compile" method, if it uses a special 
-# way to implement its action. These actions receive a call to Compile
-# everytime their parameters change (the user has reconfigured the action)
-# or in the moment the configuration file is loaded and an action of this 
-# type is created because it was saved in the tree. 
-# The Compile method should return a "callable" object, that will be called 
-# without any arguments. This "callable" will then be called instead of the
-# the actions __call__ method.
-# This way actions can be build that need considerable time to compute
-# somthing out of the parameters but need less time for the actual execution 
-# of the action. One example of such action is the PythonScript action, that 
-# compiles the Python source everytime it changes and then this compiled
-# code object gets called instead of doing compile&run in the __call__ method.
-#
-#
-#    def Compile(self, *args):
-#        """
-#        Special implementation for actions with pre-compiled parameters.
-#        """
-#        raise NotImplementedError
-#    
+    def Compile(self, *args):
+        """
+        Implementation for actions with pre-compiled parameters.
+
+        An ActionClass will only override the "Compile" method, if it uses a 
+        special way to implement its action. An action receives a call to 
+        Compile everytime their parameters change (the user has reconfigured 
+        the action) or in the moment the configuration file is loaded and an 
+        action of this type is created because it was saved in the tree. 
+        The Compile method should return a "callable" object, that will be 
+        called without any arguments. This "callable" will then be called 
+        instead of the the actions __call__ method.
+        This way actions can be build that need considerable time to compute
+        somthing out of the parameters but need less time for the actual 
+        execution of the action. One example of such action is the 
+        PythonScript action, that compiles the Python source everytime it 
+        changes and then this compiled code object gets called instead of 
+        doing compile&run in the __call__ method.
+        """
+        def CallWrapper():
+            self(*args)
+        return CallWrapper
+    
     
     
     

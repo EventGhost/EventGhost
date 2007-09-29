@@ -992,8 +992,9 @@ class MainFrame(wx.Frame):
         win = wx.py.crust.CrustFrame(
             None, 
             -1, 
-            rootObject=eg.globals, 
-            locals=eg.globals.__dict__, 
+            rootObject=eg.globals.__dict__, 
+            #locals=eg.globals.__dict__, 
+            locals={}, 
             rootIsNamespace=False
         )
         win.Show()

@@ -88,7 +88,7 @@ class TimerThread(Thread):
         # threading Thread doesn't like unicode strings as name. This seems
         # to be a bug of the library. We don't need the name anyhow, so we
         # init it anonymous.
-        Thread.__init__(self)
+        Thread.__init__(self, name="TimerThread")
         if not eventName:
             eventName = name
         self.name = name

@@ -267,7 +267,6 @@ vkCodes = (
 import eg
 import wx
 
-from eg.WinAPI.win32types import *
 from win32gui import GetForegroundWindow
 from win32process import GetWindowThreadProcessId
 from win32event import WaitForInputIdle
@@ -278,119 +277,20 @@ from win32api import (
     CloseHandle, 
     MAKELONG,
 )
-from win32con import (
-    PROCESS_QUERY_INFORMATION, 
-    WM_TIMER, 
-    WM_SYSKEYDOWN, 
-    WM_KEYDOWN, 
-    WM_SYSKEYUP, 
-    WM_KEYUP,
+from WinAPI.cTypes import (
+    SendInput, INPUT, INPUT_KEYBOARD, KEYEVENTF_KEYUP,
+    GetGUIThreadInfo, GUITHREADINFO, PROCESS_QUERY_INFORMATION, VK_SHIFT,
+    VK_LSHIFT, VK_CONTROL, VK_LCONTROL, VK_MENU, VK_LMENU, VK_RMENU,
+    WM_TIMER, WM_SYSKEYDOWN, WM_KEYDOWN, WM_SYSKEYUP, WM_KEYUP,
+    AttachThreadInput, VkKeyScanW, TCHAR,
+    MapVirtualKey, GetMessage, PostMessage, MSG,
+    byref, sizeof, pointer, c_char, c_ubyte, _user32
 )
+GetKeyboardState = _user32.GetKeyboardState
+SetKeyboardState = _user32.SetKeyboardState
+SetTimer = _user32.SetTimer
 
-
-SMTO_NORMAL = 0
-SMTO_BLOCK = 1
-SMTO_ABORTIFHUNG = 2
-SMTO_NOTIMEOUTIFNOTHUNG = 8
-
-VK_SHIFT = 16
-VK_LSHIFT = 160
-VK_CONTROL = 0x11
-VK_LCONTROL = 0xA2
-VK_MENU = 0x12
-VK_LMENU = 0xA4
-VK_RMENU = 0xA5
-PROCESS_QUERY_INFORMATION = 1024
-
-
-#typedef struct tagKEYBDINPUT {
-#    WORD wVk;
-#    WORD wScan;
-#    DWORD dwFlags;
-#    DWORD time;
-#    ULONG_PTR dwExtraInfo;
-#} KEYBDINPUT, *PKEYBDINPUT;
-
-class KEYBDINPUT(Structure):
-    _fields_ = [
-        ('wVk', WORD),
-        ('wScan', WORD),
-        ('dwFlags', DWORD),
-        ('time', DWORD),
-        ('dwExtraInfo', ULONG_PTR),
-    ]
-
-#typedef struct tagMOUSEINPUT {
-#    LONG dx;
-#    LONG dy;
-#    DWORD mouseData;
-#    DWORD dwFlags;
-#    DWORD time;
-#    ULONG_PTR dwExtraInfo;
-#} MOUSEINPUT, *PMOUSEINPUT;
-
-class MOUSEINPUT(Structure):
-    _fields_ = [
-        ('dx', LONG),
-        ('dy', LONG),
-        ('mouseData', DWORD),
-        ('dwFlags', DWORD),
-        ('time', DWORD),
-        ('dwExtraInfo', ULONG_PTR),
-    ]
-
-#typedef struct tagHARDWAREINPUT {
-#    DWORD uMsg;
-#    WORD wParamL;
-#    WORD wParamH;
-#} HARDWAREINPUT, *PHARDWAREINPUT;
-
-class HARDWAREINPUT(Structure):
-    _fields_ = [
-        ('uMsg', DWORD),
-        ('wParamL', WORD),
-        ('wParamH', WORD),
-    ]
-
-#typedef struct tagINPUT { 
-#  DWORD type; 
-#  union {MOUSEINPUT mi; 
-#            KEYBDINPUT ki;
-#            HARDWAREINPUT hi;
-#           };
-#  }INPUT, *PINPUT;
-
-class INPUT(Structure):
-    class _INPUT_UNION(Union):
-        _fields_ = [
-            ("mi", MOUSEINPUT), 
-            ("ki", KEYBDINPUT),
-            ("hi", HARDWAREINPUT),  
-        ]
-    _fields_ = [
-        ("type", DWORD), 
-        ("_union", _INPUT_UNION),
-    ]
-    _anonymous_ = ("_union",)
-
-LPINPUT = POINTER(INPUT)
-
-
-SendInput = windll.user32.SendInput
-SendInput.argTypes = [UINT, LPINPUT, c_int]
-SendInput.restype  = UINT
-
-INPUT_MOUSE = 0
-INPUT_KEYBOARD = 1
-INPUT_HARDWARE = 2
-
-KEYEVENTF_EXTENDEDKEY = 1
-KEYEVENTF_KEYUP = 2
-KEYEVENTF_UNICODE = 4
-KEYEVENTF_SCANCODE = 8
-
-PBYTE = c_ubyte * 256
-
+PBYTE256 = c_ubyte * 256
 
 VK_Keys = {
     'BACK': 0x08, 
@@ -452,7 +352,8 @@ class SendKeysParser:
                 hwnd = None
         if not sendToFront:
             guiTreadInfo = GUITHREADINFO()
-            if GetGUIThreadInfo(0, pointer(guiTreadInfo)):
+            guiTreadInfo.cbSize = sizeof(GUITHREADINFO)
+            if GetGUIThreadInfo(0, byref(guiTreadInfo)):
                 sendToFront = (guiTreadInfo.hwndFocus == hwnd)
             else:
                 sendToFront = False
@@ -467,8 +368,8 @@ class SendKeysParser:
         except:
             self.procHandle = None
         #self.WaitForInputProcessed()
-        self.keyboardStateBuffer = PBYTE()
-        oldKeyboardState = PBYTE()
+        self.keyboardStateBuffer = PBYTE256()
+        oldKeyboardState = PBYTE256()
         GetKeyboardState(byref(oldKeyboardState))
         
         del self.rawData[:]
@@ -585,7 +486,7 @@ class SendKeysParser:
         
     def ParseSingleChar(self, ch):
         data = []
-        key = VkKeyScan(ord(ch)) & 0xFFFF
+        key = VkKeyScanW(ch) & 0xFFFF
         if key == 0xFFFF:
             eg.PrintError("Cannot translate character '%s' to key sequence!" % ch)
             return

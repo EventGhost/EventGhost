@@ -22,7 +22,7 @@
 
 import eg
 from TreeItem import TreeItem
-
+from TreeItem import HINT_NO_DROP, HINT_MOVE_BEFORE_OR_AFTER, HINT_MOVE_AFTER
 
         
 class EventItem(TreeItem):
@@ -47,9 +47,9 @@ class EventItem(TreeItem):
         
     def DropTest(self, cls):
         if cls == EventItem:
-            return 4 # 4 = item can be inserted before or after
+            return HINT_MOVE_BEFORE_OR_AFTER
         if cls == eg.ActionItem:
-            return 3 # 3 = item would move after
-        return None # None = item cannot be dropped on it
+            return HINT_MOVE_AFTER
+        return HINT_NO_DROP
 
 

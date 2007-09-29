@@ -29,6 +29,14 @@ import eg
 from TreeLink import TreeLink
 from TreePosition import TreePosition
 
+HINT_NO_DROP = None           # item cannot be dropped on it
+HINT_MOVE_INSIDE = 1          # item would be dropped inside
+HINT_MOVE_BEFORE = 2          # item would move before
+HINT_MOVE_AFTER = 3           # item would move after
+HINT_MOVE_BEFORE_OR_AFTER = 4 # item can be inserted before or after
+HINT_MOVE_EVERYWHERE = 5      # item can be inserted before or after or dropped inside
+
+
 
 class TreeItem(object):
     # name
@@ -447,14 +455,7 @@ class TreeItem(object):
         
     
     def DropTest(self, cls):
-        # returns:
-        #   None = item cannot be dropped on it
-        #   1 = item would be dropped inside
-        #   2 = item would move before
-        #   3 = item would move after
-        #   4 = item can be inserted before or after
-        #   5 = item can be inserted before or after or dropped inside
-        return None # None = item cannot be dropped on it
+        return HINT_NO_DROP
     
 
     def GetNextItem(self):

@@ -23,6 +23,7 @@
 import wx
 import eg
 from ContainerItem import ContainerItem
+from TreeItem import HINT_NO_DROP, HINT_MOVE_INSIDE, HINT_MOVE_BEFORE_OR_AFTER
 
 
 class MacroItem(ContainerItem):
@@ -56,11 +57,12 @@ class MacroItem(ContainerItem):
 
     def DropTest(self, cls):
         if cls == eg.EventItem:
-            return 1 # 1 = item would be dropped inside
+            return HINT_MOVE_INSIDE
         if cls == eg.MacroItem:
-            return 4 # 4 = item can be inserted before or after
+            return HINT_MOVE_BEFORE_OR_AFTER
         if cls == eg.FolderItem:
-            return 4 # 4 = item can be inserted before or after
+            return HINT_MOVE_BEFORE_OR_AFTER
         if cls == eg.ActionItem:
-            return 1 # 1 = item would be dropped inside
-        return None  # None = item cannot be dropped on it
+            return HINT_MOVE_INSIDE
+        return HINT_NO_DROP
+

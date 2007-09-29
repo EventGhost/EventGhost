@@ -174,6 +174,7 @@ class Webserver(eg.PluginClass):
         self.info.eventPrefix = prefix
         self.port = port
         self.basepath = basepath
+        self.abort = False
         self.httpd_thread = threading.Thread(target=self.ThreadLoop)
         self.httpd_thread.start()
         self.running = True
@@ -199,7 +200,6 @@ class Webserver(eg.PluginClass):
         server.basepath = self.basepath
 
         # Handle one request at a time until stopped
-        self.abort = False
         while not self.abort:
             server.handle_request()
 

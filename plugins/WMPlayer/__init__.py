@@ -48,9 +48,13 @@ ACTIONS = (
     ("FastRewind", "Rewind", "Rewind.", 18812),
     ("VolumeUp", "Volume Up", "Raises WMPlayer's volume by 5%.", 18815),
     ("VolumeDown", "Volume Down", "Lower WMPlayer's volume by 5%.", 18816),
-    ("Exit", "Exit", "Closes Windows Media Player.", 57665),
+    ("ToggleMute", "Toggle Mute", "Simulate a press on the mute button.", 18817),
     ("ToggleShuffle", "Toggle Shuffle", "Toggles Shuffle.", 18842),
     ("ToggleRepeat", "Toggle Repeat", "Toggles Repeat.", 18843),
+    ("NowPlaying", "Now Playing", "Switches to the \"Now playing\" window.", 16000),
+    ("Library", "Library", "Switches to the \"Library\" window.", 16004),
+    ("Fullscreen", "Fullscreen", "Switches between fullscreen and normal mode.", 18782),
+    ("Exit", "Exit", "Closes Windows Media Player.", 57665),
 )
 
 

@@ -59,8 +59,7 @@ class ChangeDisplaySettings(eg.ActionClass):
     ):
         # CDS_UPDATEREGISTRY = 1
         flags = int(updateRegistry)
-        gDisplays[displayNum - 1].SetDisplayMode(
-            size, frequency, depth, flags)
+        gDisplays[displayNum - 1].SetDisplayMode(size, frequency, depth, flags)
     
     
     def GetLabel(

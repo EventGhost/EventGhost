@@ -63,7 +63,7 @@ class Log:
             class StdErr:
                 def write(self2, data):
                     #self.Write(data, 1)
-                    oldStdErr.write(data)
+                    oldStdErr.write(data.decode("mbcs"))
         else:
             class StdOut:
                 def write(self2, data):
