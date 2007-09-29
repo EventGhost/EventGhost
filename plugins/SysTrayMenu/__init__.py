@@ -375,6 +375,7 @@ class SysTrayMenu(eg.PluginClass):
                         Traverse(child)
                     child, cookie = tree.GetNextChild(item, cookie)
             Traverse(root)
+            self.Compile(resultList)
             return (resultList, )
     
     
@@ -382,13 +383,13 @@ class SysTrayMenu(eg.PluginClass):
 class Enable(eg.ActionClass):
     
     class text:
-        name = "Enable"
+        name = "Enable Item"
         description = "Enables a menu item."
     
     def __call__(self, menuId):
-        wxItem = self.plugin.menuIdToWxItem.get(menuId, None)
-        if wxItem is not None:
-            wxItem.Enable(True)
+        item = self.plugin.menuIdToWxItem.get(menuId, None)
+        if item is not None:
+            item.Enable(True)
     
 
     def GetLabel(self, menuId):
@@ -408,13 +409,13 @@ class Enable(eg.ActionClass):
 class Disable(Enable):
     
     class text:
-        name = "Disable"
+        name = "Disable Item"
         description = "Disables a menu item."
     
     def __call__(self, menuId):
-        wxItem = self.plugin.menuIdToWxItem.get(menuId, None)
-        if wxItem is not None:
-            wxItem.Enable(False)
+        item = self.plugin.menuIdToWxItem.get(menuId, None)
+        if item is not None:
+            item.Enable(False)
     
         
         

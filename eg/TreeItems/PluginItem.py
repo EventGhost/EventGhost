@@ -227,8 +227,8 @@ class PluginItem(ActionItem):
                         
     @eg.LogIt
     def SetParams(self, *args):
-            self.SetErrorState(False)
-        #if args != self.args:
+        self.SetErrorState(False)
+        if args != self.args:
             self.args = args
             label = self.executable.GetLabel(*args)
             if label != self.executable.info.label:
@@ -239,7 +239,7 @@ class PluginItem(ActionItem):
                         self.id, 
                         self.name
                     )
-                self.RefreshAllVisibleActions()
+            self.RefreshAllVisibleActions()
             if self.isEnabled:
                 eg.actionThread.Call(self.StopPlugin)
                 eg.actionThread.Call(self.StartPlugin)

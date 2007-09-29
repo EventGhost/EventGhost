@@ -129,7 +129,7 @@ class ActionClass(object):
     
     def Compile(self, *args):
         """
-        Implementation for actions with pre-compiled parameters.
+        Implementation of pre-compiled parameters.
 
         An ActionClass will only override the "Compile" method, if it uses a 
         special way to implement its action. An action receives a call to 

@@ -21,7 +21,7 @@
 # $LastChangedBy$
 
 from cStringIO import StringIO
-from time import clock
+from time import clock, sleep
 
 import wx
 import xml.etree.cElementTree as ElementTree
@@ -274,11 +274,12 @@ class TreeCtrl(wx.TreeCtrl):
         Bind(wx.EVT_SET_FOCUS, self.OnGetFocus)
         Bind(wx.EVT_KILL_FOCUS, self.OnKillFocus)
         Bind(wx.EVT_TREE_ITEM_GETTOOLTIP, self.OnToolTip)
-        Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnItemActivate)
+        #Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnItemActivate)
         Bind(wx.EVT_TREE_BEGIN_DRAG, self.OnBeginDrag)
         Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
         Bind(wx.EVT_TREE_ITEM_MENU, self.OnContextMenu)
-        
+        Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
+        Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDClick)
         if eg.debugLevel:
             Bind(wx.EVT_TREE_ITEM_GETTOOLTIP, self.OnToolTip)
         Bind(wx.EVT_TREE_ITEM_EXPANDED, self.OnExpanded)
@@ -301,6 +302,18 @@ class TreeCtrl(wx.TreeCtrl):
         @eg.LogIt
         def __del__(self):
             pass
+    
+    
+    def OnLeftUp(self, event):
+        event.Skip()
+        
+        
+    def OnLeftDClick(self, event):
+        treeItem, flags = self.HitTest(event.GetPosition())
+        if treeItem.IsOk():
+            while wx.GetMouseState().LeftDown():
+                wx.GetApp().Yield()
+            CmdConfigure().Try(self.document)
     
     
     @eg.AssertNotMainThread
@@ -442,7 +455,7 @@ class TreeCtrl(wx.TreeCtrl):
         if item.IsOk():
             wx.CallAfter(CmdConfigure().Try, self.document)
             return
-        event.Skip()
+        #event.Skip()
         
         
     def OnToolTip(self, event):
