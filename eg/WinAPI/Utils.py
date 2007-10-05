@@ -31,7 +31,7 @@ from win32process import GetWindowThreadProcessId
 from win32process import GetCurrentProcess
 from WinAPI.cTypes import (
     AttachThreadInput, GA_ROOT, PtVisible, SaveDC, RestoreDC, SetROP2,
-    GetAncestor, Rectangle
+    GetAncestor, Rectangle, MONITORENUMPROC
 )
 
 
@@ -94,7 +94,7 @@ def GetMonitorDimensions():
         rect.height = r.bottom - r.top
         retval.append(rect)
         return 1
-    temp = EnumDisplayMonitors(0, 0, cb, 0)
+    temp = EnumDisplayMonitors(0, None, MONITORENUMPROC(cb), 0)
     return retval
 
 
