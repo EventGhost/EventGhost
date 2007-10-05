@@ -31,6 +31,7 @@ import eg
 from Utils import SetClass
 from PluginMetaClass import PluginMetaClass
 from EventGhostEvent import EventGhostEvent 
+from PluginProxy import PluginProxy
 
 
 
@@ -97,7 +98,7 @@ class PluginInfoBase(object):
     label = None
     treeItem = None
     canMultiLoad = False
-    addActionGroup = False
+    createMacrosOnAdd = False
     
         
     @classmethod
@@ -144,6 +145,7 @@ class PluginInfoBase(object):
     def CreatePluginInstance(pluginInfo, evalName, treeItem):
         info = pluginInfo()
         info.treeItem = treeItem
+        info.actions = {}
         pluginCls = pluginInfo.pluginCls
         try:
             plugin = pluginCls.__new__(pluginCls)
@@ -165,7 +167,7 @@ class PluginInfoBase(object):
                 evalName = pluginCls.__name__ + str(i)
         assert not hasattr(eg.plugins, evalName)
         info.evalName = evalName
-        setattr(eg.plugins, evalName, plugin)
+        setattr(eg.plugins, evalName, PluginProxy(plugin))
         
         if evalName != pluginCls.__name__:
             numStr = evalName[len(pluginCls.__name__):]
@@ -211,7 +213,7 @@ def GetPluginInfo(pluginName):
         version = infoDict.get("version", PluginInfoBase.version)
         kind = infoDict.get("kind", PluginInfoBase.kind)
         canMultiLoad = infoDict.get("canMultiLoad", PluginInfoBase.canMultiLoad)
-        addActionGroup = infoDict.get("addActionGroup", PluginInfoBase.addActionGroup)
+        createMacrosOnAdd = infoDict.get("createMacrosOnAdd", PluginInfoBase.createMacrosOnAdd)
         path = pluginPath + "/"
     info.pluginName = pluginName
     info.englishName = info.name

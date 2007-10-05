@@ -76,6 +76,14 @@ class RadioBox(wx.Panel):
         return self.value
     
     
+    def GetValue(self):
+        return self.value
+    
+    
+    def SetValue(self, value):
+        self.SetSelection(int(value))
+    
+    
         
         
         

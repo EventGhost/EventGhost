@@ -51,7 +51,7 @@ eg.RegisterPlugin(
     kind = "external",
     description = "Control Yamaha RX-V1000 receivers using RS232.",
     canMultiLoad = True,
-    addActionGroup = True,
+    createMacrosOnAdd = True,
 )
 
 import wx

@@ -28,7 +28,7 @@ eg.RegisterPlugin(
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "external",
     canMultiLoad = True,
-    addActionGroup = True,
+    createMacrosOnAdd = True,
     description = (
         "Control your d-box2 set-top box over Ethernet.\n"
         "\n"
@@ -123,20 +123,34 @@ class MyHTTPConnection(HTTPConnection):
 
 
 
+class ActionPrototype(eg.ActionClass):
+    
+    def __call__(self):
+        conn = MyHTTPConnection(self.plugin.host)
+        try:
+            if self.plugin.useRcem:
+                conn.request("GET", "/control/rcem?" + self.data)
+            else:
+                conn.request("GET", "/control/exec?Y_Tools&rcsim&" + self.data)
+        except socket.error, e:
+            if isinstance(e.message, socket.timeout):
+                self.PrintError("d-box2 connection attempt timed out!")
+                return
+            raise
+        conn.getresponse()
+        conn.close()
+        
+        
+
 class DBox2(eg.PluginClass):
     
     def __init__(self):
-        self.host = "127.0.0.1"
-        SendCommand = self.SendCommand
-        
         for tmpName, tmpDescription, tmpKey in CMDS:
-            class tmpAction(eg.ActionClass):
+            class TmpAction(ActionPrototype):
                 name = tmpDescription
-                key = tmpKey
-                def __call__(self2):
-                    SendCommand(self2.key)
-            tmpAction.__name__ = tmpName
-            self.AddAction(tmpAction)
+                data = tmpKey
+            TmpAction.__name__ = tmpName
+            self.AddAction(TmpAction)
         
         
     def __start__(self, host, useRcem=False):
@@ -153,13 +167,4 @@ class DBox2(eg.PluginClass):
         if panel.Affirmed():
             return (hostCtrl.GetValue(), useRcemCtrl.GetValue())
     
-    
-    def SendCommand(self, key):
-        conn = MyHTTPConnection(self.host)
-        if self.useRcem:
-            conn.request("GET", "/control/rcem?" + key)
-        else:
-            conn.request("GET", "/control/exec?Y_Tools&rcsim&" + key)
-        conn.getresponse()
-        conn.close()
         

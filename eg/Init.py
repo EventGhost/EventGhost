@@ -30,18 +30,6 @@ from os.path import exists
 import wx
 import locale
 
-
-class GlobalsBunch(object):
-    
-    def __setattr__(self, name, value):
-        #print name, "=", value
-        self.__dict__[name] = value
-        
-    def __delattr__(self, name):
-        #print "del", name
-        del self.__dict__[name]
-        
-        
 class ResultDescriptor(object):
     def __init__(self):
         self.data = None
@@ -54,6 +42,7 @@ class ResultDescriptor(object):
         return self.data
     
     
+    
 class EventGhost(object):
     
     def result_fget(self):
@@ -61,7 +50,6 @@ class EventGhost(object):
     
     
     def result_fset(self, value):
-        #print value
         self._result = value
         
     result = property(result_fget, result_fset)
@@ -117,7 +105,8 @@ class EventGhost(object):
         self.eventTable2 = {}
         self.plugins = eg.Bunch()
         self.pluginClassInfo = {}
-        self.globals = GlobalsBunch()
+        
+        self.globals = Utils.Bunch()
         self.globals.eg = self
         self.mainThread = threading.currentThread()
         self.onlyLogAssigned = False

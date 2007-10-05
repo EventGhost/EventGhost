@@ -81,9 +81,8 @@ class PythonCommand(eg.ActionWithStringParameter):
                 result = eval(pythonstring, {}, eg.globals.__dict__)
                 return result
             except SyntaxError:
-                eg.globals.result = None
                 exec(pythonstring, {}, eg.globals.__dict__)
-                return eg.globals.result
+                return eg.result
         finally:
             pass
 #        except:
@@ -341,23 +340,11 @@ class Wait(eg.ActionClass):
 
 
     def Configure(self, waitTime=0.0):
-        dialog = eg.ConfigurationDialog(self)
-        mySizer = wx.BoxSizer(wx.HORIZONTAL)
-        staticText = wx.StaticText(dialog, -1, self.text.wait)
-        mySizer.Add(staticText, 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
-        waitTimeCtrl = eg.SpinNumCtrl(
-            dialog, 
-            -1,
-            waitTime,
-            integerWidth=3
-        )
-        mySizer.Add(waitTimeCtrl, 0, wx.EXPAND)
-        staticText = wx.StaticText(dialog, -1, self.text.seconds)
-        mySizer.Add(staticText, 0, wx.ALIGN_CENTER_VERTICAL|wx.LEFT, 5)
-        dialog.sizer.Add(mySizer, 0, wx.EXPAND)
-        
-        if dialog.AffirmedShowModal():
-            return (waitTimeCtrl.GetValue(),)
+        panel = eg.ConfigPanel(self)
+        waitTimeCtrl = panel.SpinNumCtrl(waitTime, integerWidth=3)
+        panel.AddLine(self.text.wait, waitTimeCtrl, self.text.seconds)
+        if panel.Affirmed():
+            return (waitTimeCtrl.GetValue(), )
         
 
 
@@ -490,52 +477,21 @@ class AutoRepeat(eg.ActionClass):
         endDelay=0.01, 
         sweepTime=3.0
     ):
-        dialog = eg.ConfigurationDialog(self)
         text = self.text
-
-        st1 = wx.StaticText(dialog, -1, text.text1)
-        firstDelayCtrl = eg.SpinNumCtrl(dialog)
-        firstDelayCtrl.SetValue(firstDelay)
-        st2 = wx.StaticText(dialog, -1, text.seconds)
+        panel = eg.ConfigPanel(self)
+        firstDelayCtrl = panel.SpinNumCtrl(firstDelay)
+        startDelayCtrl = panel.SpinNumCtrl(startDelay)
+        sweepTimeCtrl = panel.SpinNumCtrl(sweepTime)
+        endDelayCtrl = panel.SpinNumCtrl(endDelay)
         
-        st3 = wx.StaticText(dialog, -1, text.text2)
-        startDelayCtrl = eg.SpinNumCtrl(dialog)
-        startDelayCtrl.SetValue(startDelay)
-        st4 = wx.StaticText(dialog, -1, text.seconds)
+        panel.SetColumnFlags(0, wx.ALIGN_RIGHT)
+        panel.AddLine(text.text1, firstDelayCtrl, text.seconds)
+        panel.AddLine(text.text2, startDelayCtrl, text.seconds)
+        panel.AddLine()
+        panel.AddLine(text.text3, sweepTimeCtrl, text.seconds)
+        panel.AddLine(text.text4, endDelayCtrl, text.seconds)
         
-        st5 = wx.StaticText(dialog, -1, text.text3)
-        sweepTimeCtrl = eg.SpinNumCtrl(dialog)
-        sweepTimeCtrl.SetValue(sweepTime)
-        st6 = wx.StaticText(dialog, -1, text.seconds)
-        
-        st7 = wx.StaticText(dialog, -1, text.text4)
-        endDelayCtrl = eg.SpinNumCtrl(dialog)
-        endDelayCtrl.SetValue(endDelay)
-        st8 = wx.StaticText(dialog, -1, text.seconds)
-        
-        sizer = wx.FlexGridSizer(4,3,5,5)
-        sizer.SetFlexibleDirection(wx.HORIZONTAL)
-        sizer.AddGrowableCol(0, 1)
-        Add = sizer.Add
-        Add(st1, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
-        Add(firstDelayCtrl, 1, wx.EXPAND)
-        Add(st2, 0, wx.ALIGN_CENTER_VERTICAL)
-        Add(st3, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
-        Add(startDelayCtrl, 1, wx.EXPAND)
-        Add(st4, 0, wx.ALIGN_CENTER_VERTICAL)
-        Add((5, 5))
-        Add((5, 5))
-        Add((5, 5))
-        Add(st5, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
-        Add(sweepTimeCtrl, 1, wx.EXPAND)
-        Add(st6, 0, wx.ALIGN_CENTER_VERTICAL)
-        Add(st7, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
-        Add(endDelayCtrl, 1, wx.EXPAND)
-        Add(st8, 0, wx.ALIGN_CENTER_VERTICAL)
-        
-        dialog.sizer.Add(sizer)#, 0, wx.EXPAND)
-        
-        if dialog.AffirmedShowModal():
+        if panel.Affirmed():
             return (
                 firstDelayCtrl.GetValue(),
                 startDelayCtrl.GetValue(),

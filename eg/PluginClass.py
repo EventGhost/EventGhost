@@ -162,7 +162,6 @@ class PluginClass(object):
             but is otherwise fully functional.
         """
         action = CreateAction(action, self)
-        setattr(self, action.__class__.__name__, action)
         actionList = self.info.actionList
         if actionList is None:
             actionList = []

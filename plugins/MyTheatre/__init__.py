@@ -25,7 +25,7 @@ eg.RegisterPlugin(
     author = "Milbrot",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "program",
-    addActionGroup = True,
+    createMacrosOnAdd = True,
     description = (
         'Adds actions to control the <a href="http://www.dvbcore.com/">'
         'MyTheatre</a> multimedia application.'

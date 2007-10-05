@@ -274,7 +274,7 @@ class TreeCtrl(wx.TreeCtrl):
         Bind(wx.EVT_SET_FOCUS, self.OnGetFocus)
         Bind(wx.EVT_KILL_FOCUS, self.OnKillFocus)
         Bind(wx.EVT_TREE_ITEM_GETTOOLTIP, self.OnToolTip)
-        #Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnItemActivate)
+        Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnItemActivate)
         Bind(wx.EVT_TREE_BEGIN_DRAG, self.OnBeginDrag)
         Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
         Bind(wx.EVT_TREE_ITEM_MENU, self.OnContextMenu)
@@ -308,14 +308,27 @@ class TreeCtrl(wx.TreeCtrl):
         event.Skip()
         
         
+    @eg.LogIt
     def OnLeftDClick(self, event):
         treeItem, flags = self.HitTest(event.GetPosition())
         if treeItem.IsOk():
-            while wx.GetMouseState().LeftDown():
-                wx.GetApp().Yield()
-            CmdConfigure().Try(self.document)
+            if isinstance(self.document.selection, eg.ActionItem):
+                while wx.GetMouseState().LeftDown():
+                    wx.GetApp().Yield()
+                CmdConfigure().Try(self.document)
+                return
+        event.Skip()
     
     
+    @eg.LogIt
+    def OnItemActivate(self, event):
+        item = event.GetItem()
+        if item.IsOk():
+            wx.CallAfter(CmdConfigure().Try, self.document)
+            return
+        #event.Skip()
+        
+        
     @eg.AssertNotMainThread
     def SetData(self):
         self.Freeze()
@@ -450,14 +463,6 @@ class TreeCtrl(wx.TreeCtrl):
         SendMessageTimeout(self.hwnd, 4378, 0, long(0), 1, 100, 0)
         
 
-    def OnItemActivate(self, event):
-        item = event.GetItem()
-        if item.IsOk():
-            wx.CallAfter(CmdConfigure().Try, self.document)
-            return
-        #event.Skip()
-        
-        
     def OnToolTip(self, event):
         pass
         

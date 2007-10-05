@@ -61,8 +61,10 @@ class MenuTreeListCtrl(wx.gizmos.TreeListCtrl):
             style = wx.TR_FULL_ROW_HIGHLIGHT 
                 |wx.TR_DEFAULT_STYLE
                 |wx.VSCROLL
+                |wx.ALWAYS_SHOW_SB 
+                |wx.CLIP_CHILDREN
         )
-        self.SetMinSize((10, 10))
+        self.SetMinSize((10, 150))
         self.AddColumn(text.labelHeader)
         self.AddColumn(text.eventHeader)
         root = self.AddRoot(text.name)
@@ -142,7 +144,8 @@ class MenuTreeListCtrl(wx.gizmos.TreeListCtrl):
     def GetSelectedId(self):
         selectedId = self.GetSelection()
         data = self.GetPyData(selectedId)
-        return data[3]
+        if data is not None:
+            return data[3]
         
     
     
@@ -214,6 +217,7 @@ class SysTrayMenu(eg.PluginClass):
         
         @eg.LogIt
         def OnSelectionChanged(event):
+            itemType = 0
             item = tree.GetSelection()
             if item == root:
                 enableMoveFlag = False
@@ -221,6 +225,7 @@ class SysTrayMenu(eg.PluginClass):
             elif tree.GetPyData(item)[1] == "separator":
                 enableMoveFlag = True
                 enableEditFlag = False
+                itemType = 2
             else:
                 enableMoveFlag = True
                 enableEditFlag = True
@@ -231,6 +236,7 @@ class SysTrayMenu(eg.PluginClass):
             eventBox.Enable(enableEditFlag)
             labelBox.SetLabel(tree.GetItemText(item, 0))
             eventBox.SetLabel(tree.GetItemText(item, 1))
+            #itemTypeCtrl.SetSelection(itemType)
         tree.Bind(wx.EVT_TREE_SEL_CHANGED, OnSelectionChanged)
         
         # Delete button
@@ -319,6 +325,10 @@ class SysTrayMenu(eg.PluginClass):
             tree.SetItemText(item, eventBox.GetValue(), 1)
         eventBox.Bind(wx.EVT_TEXT, OnEventTextChange)
         
+        # Item type control
+        #choices = ["Menu item", "Check menu item", "Separator"]
+        #itemTypeCtrl = wx.Choice(dialog, choices=choices)
+        
         # construction of the dialog with sizers
         staticBox = wx.StaticBox(dialog, -1, text.addBox)
         
@@ -344,6 +354,9 @@ class SysTrayMenu(eg.PluginClass):
         staticText2 = wx.StaticText(dialog, -1, text.editEvent)
         editSizer.Add(staticText2, 0, wx.ALIGN_CENTER_VERTICAL)
         editSizer.Add(eventBox, 0, wx.EXPAND)
+        #staticText3 = wx.StaticText(dialog, -1, "Item type:")
+        #editSizer.Add(staticText3, 0, wx.ALIGN_CENTER_VERTICAL)
+        #editSizer.Add(itemTypeCtrl, 0, wx.EXPAND)
         
         leftSizer = wx.BoxSizer(wx.VERTICAL)
         leftSizer.Add(tree, 1, wx.EXPAND)

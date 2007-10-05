@@ -28,7 +28,7 @@ eg.RegisterPlugin(
     author = "Oystein Hansen",
     version = "0.1." + "$LastChangedRevision$".split()[1],
     kind = "program",
-    addActionGroup = True,
+    createMacrosOnAdd = True,
     description = (
         'Adds actions to control the '
         '<a href="http://www.microsoft.com/windows/windowsmedia/">'

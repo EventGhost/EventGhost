@@ -70,7 +70,7 @@ class ActionThread(eg.ThreadWorker):
         eg.document.autostartMacro.UnloadPlugins()
         for pluginIdent in CORE_PLUGINS:
             try:
-                plugin = getattr(eg.plugins, pluginIdent)
+                plugin = getattr(eg.plugins, pluginIdent).plugin
                 plugin.__stop__()
                 eg.ClosePlugin(plugin)
             except:

@@ -5,7 +5,7 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "program",
-    addActionGroup = True,
+    createMacrosOnAdd = True,
     description = (
         'Adds actions to control the <a href="http://www.sagetv.com/">'
         'SageTV Media Center</a>.'
@@ -31,6 +31,8 @@ eg.RegisterPlugin(
     ),
 )
 
+# Plugin implements the description from here: 
+# http://www.sage.tv/2_papers/SageTVWindowsMessages.txt
 
 from win32gui import FindWindow, SendMessageTimeout
 from win32con import SMTO_BLOCK, SMTO_ABORTIFHUNG
@@ -132,12 +134,30 @@ COMMANDS = (
 class SageTV(eg.PluginClass):
     
     def __init__(self):
+        self.targetClass = "SageApp"
         for cmdFuncName, cmdName, cmdValue in COMMANDS:
             class Action(SageTvAction):
                 name = cmdName
                 value = cmdValue
             Action.__name__ = cmdFuncName
             self.AddAction(Action)
+            
+    
+    def __start__(self, useClient=False):
+        if useClient:
+            self.targetClass = "SageClientApp"
+        else:
+            self.targetClass = "SageApp"
+            
+        
+        
+    def Configure(self, useClient=False):
+        panel = eg.ConfigPanel(self)
+        choices = ["Target SageTV.exe", "Target SageTVClient.exe"]
+        useClientCtrl = panel.RadioBox(useClient, choices=choices)
+        panel.AddLine(useClientCtrl)
+        if panel.Affirmed():
+            return (useClientCtrl.GetValue(), )
 
 
 
@@ -149,7 +169,7 @@ class SageTvAction(eg.ActionClass):
         SendMessageTimeout.
         """
         try:
-            hwnd = FindWindow("SageApp", "SageWin")
+            hwnd = FindWindow(self.plugin.targetClass, "SageWin")
             _, result = SendMessageTimeout(
                 hwnd,
                 1258, # WM_USER + 234

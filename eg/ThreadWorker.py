@@ -33,7 +33,7 @@ from win32event import (
     QS_ALLINPUT
 )
 import eg
-import threading
+
 
 class ThreadWorkerAction:
     """ 
@@ -144,12 +144,10 @@ class ThreadWorker:
                     break
                 self.HandleAction(action)
         elif rc == WAIT_OBJECT_0+1:
-            #eg.DebugNote("WAIT_OBJECT_0+1")
             if PumpWaitingMessages():
                 eg.DebugNote("Got WM_QUIT")
                 self.__alive = False
                 return
-            #eg.DebugNote("WAIT_OBJECT_0+1 done")
         elif rc == WAIT_TIMEOUT:
             # Our timeout has elapsed.
             self.Poll()

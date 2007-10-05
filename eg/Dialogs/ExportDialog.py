@@ -23,6 +23,11 @@
 import eg
 import wx
 
+class Text:
+    mesg = "Please select the folder you want to export"
+    
+text = Text
+
 
 class ExportDialog(eg.Dialog):
     
@@ -30,13 +35,13 @@ class ExportDialog(eg.Dialog):
         self.foundId = None
         style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
         wx.Dialog.__init__(self, None, -1, title="Export", style=style)
-        staticText = wx.StaticText(self, -1, "Please select the items you want to export")
+        staticText = wx.StaticText(self, -1, text.mesg)
         
-        filterClasses = (eg.FolderItem, eg.MacroItem)
+        filterClasses = (eg.FolderItem, )#eg.MacroItem)
         def filterFunc(obj):
             return isinstance(obj, filterClasses)
         
-        tree = eg.TreeItemBrowseCtrl(self, filterFunc, multiSelect=True)
+        tree = eg.TreeItemBrowseCtrl(self, filterFunc) #, multiSelect=True)
         #tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
         tree.UnselectAll()
         self.treeCtrl = tree

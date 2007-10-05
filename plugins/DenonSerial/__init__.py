@@ -44,7 +44,7 @@ eg.RegisterPlugin(
     kind = "external",
     description = "Control Denon A/V Amps/Receivers via RS232",
     canMultiLoad = True,
-    addActionGroup = True,
+    createMacrosOnAdd = True,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAA"
         "AAd0SU1FB9YDBAsPCqtpoiUAAAAWdEVYdFNvZnR3YXJlAFBhaW50Lk5FVCAyLjZsqHS1"

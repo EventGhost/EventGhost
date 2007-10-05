@@ -147,7 +147,7 @@ class ActionClass(object):
         doing compile&run in the __call__ method.
         """
         def CallWrapper():
-            self(*args)
+            return self(*args)
         return CallWrapper
     
     

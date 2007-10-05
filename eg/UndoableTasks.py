@@ -90,7 +90,7 @@ class NewPlugin(NewItem):
 #                    pluginItem.Refresh()
             eg.actionThread.CallWait(pluginItem.Execute)
         self.StoreItem(pluginItem)
-        if pluginInfo.addActionGroup:
+        if pluginInfo.createMacrosOnAdd:
             AddActionGroup().Do(document, pluginItem)
         return pluginItem
        

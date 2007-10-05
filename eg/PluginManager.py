@@ -213,7 +213,7 @@ class PluginManager:
         version = "unknown version",
         icon = None,
         canMultiLoad = False,
-        addActionGroup = False,
+        createMacrosOnAdd = False,
     ):
         if description is None:
             description = name

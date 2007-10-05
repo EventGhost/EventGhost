@@ -5,7 +5,7 @@ eg.RegisterPlugin(
     author = "jorel1969",
     version = "0.1." + "$LastChangedRevision$".split()[1],
     kind = "program",
-    addActionGroup = True,
+    createMacrosOnAdd = True,
     description = (
         'Adds actions to control <a href="http://www.meedio.com/">Meedio</a>.'
     ),

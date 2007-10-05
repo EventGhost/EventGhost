@@ -42,4 +42,17 @@ PROGRAMFILES = get_path2(shellcon.CSIDL_PROGRAM_FILES)
 TEMPDIR = win32api.GetTempPath()
 
 # FOLDERID_Startup = GUID("{B97D20BB-F46A-4C97-BA105E3608430854}")
-
+if True:
+    from cTypes import (
+        byref, create_unicode_buffer, SHGetFolderPathW, CSIDL_APPDATA, 
+        CSIDL_PROGRAM_FILES, CSIDL_STARTUP, SHGFP_TYPE_CURRENT, TCHAR, 
+        MAX_PATH
+    )
+    
+    pszPath = create_unicode_buffer(MAX_PATH)
+    rc = SHGetFolderPathW(0, CSIDL_PROGRAM_FILES, 0, SHGFP_TYPE_CURRENT, pszPath)
+    PROGRAMFILES = pszPath.value
+    rc = SHGetFolderPathW(0, CSIDL_STARTUP, 0, SHGFP_TYPE_CURRENT, pszPath)
+    STARTUP = pszPath.value
+    rc = SHGetFolderPathW(0, CSIDL_APPDATA, 0, SHGFP_TYPE_CURRENT, pszPath)
+    APPDATA = pszPath.value

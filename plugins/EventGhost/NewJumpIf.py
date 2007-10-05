@@ -67,10 +67,34 @@ class NewJumpIf(eg.ActionClass):
 
 
     def Configure(self, link=None, kind=0, gosub=False):
-        dialog = eg.ConfigurationDialog(self)
+        #dialog = eg.ConfigurationDialog(self)
         text = self.text
         if link is None:
             link = eg.TreeLink(eg.currentConfigureItem)
+        panel = eg.ConfigPanel(self)
+        kindCtrl = panel.Choice(kind, choices=text.choices)
+        linkCtrl = panel.BrowseMacroButton(
+            eg.text.General.choose,
+            text.mesg1,
+            text.mesg2,
+            link.target
+        )
+        gosubCtrl = panel.CheckBox(gosub, text.text3)
+        
+        panel.SetColumnFlags(1, wx.EXPAND)
+        panel.AddLine(text.text1, kindCtrl)
+        panel.AddLine(text.text2, linkCtrl)
+        panel.AddLine(None, gosubCtrl)
+        
+        if panel.Affirmed():
+            link.SetTarget(linkCtrl.GetValue())
+            return (
+                link, 
+                kindCtrl.GetValue(), 
+                gosubCtrl.GetValue()
+            )
+        return
+        
         ch = wx.Choice(dialog, choices=text.choices)
         ch.SetSelection(kind)
         label1 = wx.StaticText(dialog, -1, text.text1)

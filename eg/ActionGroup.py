@@ -30,7 +30,7 @@ from Utils import SetClass
 
 
 class ActionInfo(object):
-    icon = eg.Icons.ACTION_ICON
+    __slots__ = ["icon"]
     
     def __init__(self, icon):
         self.icon = icon
@@ -86,15 +86,13 @@ def CreateAction(actionCls, plugin):
     action.description = text.description
     action.info = ActionInfo(icon)
     action.__init__()
+    plugin.info.actions[actionCls.__name__] = action
     return action
     
     
                 
 class ActionGroup:
-    plugin = None
-    name = None
-    description = None
-    icon = eg.Icons.FOLDER_ICON
+    __slots__ = ["plugin", "name", "description", "icon", "actionList"]
     
     def __init__(self, plugin, name=None, description=None, iconFile=None):
         self.plugin = plugin
@@ -116,7 +114,6 @@ class ActionGroup:
     
     def AddAction(self, actionClass, hidden=False):
         action = CreateAction(actionClass, self.plugin)
-        setattr(self.plugin, actionClass.__name__, action)
         if not hidden:
             self.actionList.append(action)
         return action

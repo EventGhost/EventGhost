@@ -214,7 +214,7 @@ class ActionItem(TreeItem):
             )
             return
         try:
-            self.compiled()
+            eg.result = self.compiled()
         except eg.Exception, e:
             eg.PrintError(e.message)
         except:

@@ -28,7 +28,7 @@ eg.RegisterPlugin(
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "program",
     canMultiLoad = True,
-    addActionGroup = True,
+    createMacrosOnAdd = True,
     description = (
         'Adds actions to control the famous '
         '<a href="http://www.inmatrix.com/">Zoom Player</a>.'
