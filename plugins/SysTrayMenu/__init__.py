@@ -101,7 +101,9 @@ class MenuTreeListCtrl(wx.gizmos.TreeListCtrl):
         
     def OnSize2(self):
         w, h = self.GetMainWindow().GetClientSize()
-        self.SetColumnWidth(1, w - self.GetColumnWidth(0))
+        newWidth = w - self.GetColumnWidth(0)
+        if self.GetColumnWidth(1) != newWidth:
+            self.SetColumnWidth(1, newWidth)
         self.__inSizing = False
         
         

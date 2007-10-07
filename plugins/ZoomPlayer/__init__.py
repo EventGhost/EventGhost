@@ -899,20 +899,14 @@ class ZoomPlayer(eg.PluginClass):
         dummy2=None,
         useNewEvents=False
     ):
-        dialog = eg.ConfigurationDialog(self)
-
-        hostEdit = wx.TextCtrl(dialog, -1, host)       
-        portEdit = eg.SpinIntCtrl(dialog, -1, port, max=65535)
-        newEventCtrl = wx.CheckBox(dialog, -1, "Use new events")
-        newEventCtrl.SetValue(useNewEvents)
-        dialog.AddLabel("TCP/IP control host:")
-        dialog.AddCtrl(hostEdit)
-        dialog.AddLabel("TCP/IP control port:")
-        dialog.AddCtrl(portEdit)
-        dialog.AddLabel("")
-        dialog.AddCtrl(newEventCtrl)
-       
-        if dialog.AffirmedShowModal():
+        panel = eg.ConfigPanel(self)
+        hostEdit = panel.TextCtrl(host)       
+        portEdit = panel.SpinIntCtrl(port, max=65535)
+        newEventCtrl = panel.CheckBox(useNewEvents, "Use new events")
+        panel.AddLine("TCP/IP host:", hostEdit)
+        panel.AddLine("TCP/IP port:", portEdit)
+        panel.AddLine(newEventCtrl)
+        if panel.Affirmed():
             return (
                 hostEdit.GetValue(), 
                 portEdit.GetValue(), 

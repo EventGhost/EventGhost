@@ -262,7 +262,6 @@ class Plugin:
             osdColour = u'F\xe4rg:'
             osdColourButton = u'V\xe4lj'
             osdFont = u'Teckensnitt'
-            osdFontButton = u'V\xe4lj'
             outlineColour = u'V\xe4lj'
             outlineFont = u'Bakgrundsf\xe4rg'
             wait1 = u'G\xf6m efter'

@@ -23,36 +23,35 @@
 import wx
 
 
-class FontButton(wx.Button):
+class FontSelectButton(wx.BitmapButton):
     
     def __init__(
         self, 
         parent, 
         id=-1,
-        label="Font", 
         pos=wx.DefaultPosition, 
-        size=wx.DefaultSize, 
-        style=0, 
+        size=(40, wx.Button.GetDefaultSize()[1]), 
+        style=wx.BU_AUTODRAW, 
         validator=wx.DefaultValidator, 
-        name="font button", 
+        name="FontSelectButton", 
         fontInfo=None
     ):
         self.fontInfo = fontInfo
-        wx.Button.__init__(
+        wx.BitmapButton.__init__(
             self, 
             parent, 
             id, 
-            label, 
+            wx.Bitmap("images/font.png"), 
             pos, 
             size, 
             style,
             validator, 
             name
         )
-        self.Bind(wx.EVT_BUTTON, self.OnFontButton)
+        self.Bind(wx.EVT_BUTTON, self.OnButton)
         
         
-    def OnFontButton(self, event):
+    def OnButton(self, event):
         data = wx.FontData()
         if self.fontInfo is not None:
             font = wx.FontFromNativeInfoString(self.fontInfo)  

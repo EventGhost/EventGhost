@@ -246,7 +246,6 @@ class Plugin:
             label = u'Zeige OSD: %s'
             osdColour = u'OSD Farbe:'
             osdFont = u'OSD Zeichensatz:'
-            osdFontButton = u'Zeichensatz'
             outlineFont = u'Umrandungsfarbe'
             wait1 = u'Blende OSD nach'
             wait2 = u'Sekunden automatisch aus. (0 = nicht ausblenden)'

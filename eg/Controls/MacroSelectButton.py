@@ -24,7 +24,7 @@ import wx
 import eg
 
 
-class BrowseMacroButton(wx.Window):
+class MacroSelectButton(wx.Window):
     
     def __init__(self, parent, label, title, mesg, macro=None):
         if macro is None:

@@ -205,7 +205,7 @@ class CreateNew(eg.ActionClass):
         windowColourCtrl = panel.ColourSelectButton(windowColour)
         foregroundColourCtrl = panel.ColourSelectButton(foregroundColour)
         backgroundColourCtrl = panel.ColourSelectButton(backgroundColour)
-        fontCtrl = panel.FontButton(fontInfo)
+        fontCtrl = panel.FontSelectButton(fontInfo)
         
         panel.AddLine("Caption:", captionCtrl)
         panel.AddLine("Window style:", windowStyleCtrl)
@@ -305,7 +305,7 @@ class AddButton(eg.ActionClass):
         fontInfo = MakeOption(
             "fontInfo", 
             panel.CheckBox(label="Override button font:"), 
-            panel.FontButton(label="Choose Font")
+            panel.FontSelectButton()
         )
 
         width = MakeOption(

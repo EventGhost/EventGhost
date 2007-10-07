@@ -408,7 +408,7 @@ class JumpIfLongPress(eg.ActionClass):
         
         textCtrl = wx.StaticText(dialog, -1, text.text3)
         mySizer.Add(textCtrl, 0, wx.ALIGN_CENTER_VERTICAL)
-        button = eg.BrowseMacroButton(  
+        button = eg.MacroSelectButton(  
             dialog,
             eg.text.General.choose,
             text.text4,
@@ -628,7 +628,7 @@ class Jump(eg.ActionClass, eg.HiddenAction):
             link = eg.TreeLink(dialog.actionItem)
         text = self.text
         label2 = wx.StaticText(dialog, -1, text.text2)
-        button = eg.BrowseMacroButton(  
+        button = eg.MacroSelectButton(  
             dialog,
             eg.text.General.choose,
             text.mesg1,
@@ -707,7 +707,7 @@ class JumpIf(eg.ActionClass, eg.HiddenAction):
         label1 = wx.StaticText(dialog, -1, text.text1)
         evalCtrl = wx.TextCtrl(dialog, -1, evalStr)
         label2 = wx.StaticText(dialog, -1, text.text2)
-        button = eg.BrowseMacroButton(  
+        button = eg.MacroSelectButton(  
             dialog,
             eg.text.General.choose,
             text.mesg1,

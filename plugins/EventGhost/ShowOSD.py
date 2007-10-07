@@ -237,7 +237,6 @@ class ShowOSD(eg.ActionClass):
         label = "Show OSD: %s"
         editText = "Text to display:"
         osdFont = "OSD Font:"
-        osdFontButton = "Font Face"
         osdColour = "OSD Colour:"
         outlineFont = "Outline OSD"
         alignment = "Alignment:"
@@ -332,9 +331,7 @@ class ShowOSD(eg.ActionClass):
         timeCtrl = eg.SpinNumCtrl(dialog, -1, value=timeout)
         
 
-        fontButton = eg.FontButton(
-            dialog, -1, text.osdFontButton, fontInfo=fontInfo
-        )
+        fontButton = eg.FontSelectButton(dialog, fontInfo=fontInfo)
         foregroundColourButton = eg.ColourSelectButton(dialog, foregroundColour)
         
         if backgroundColour is None:
@@ -356,7 +353,7 @@ class ShowOSD(eg.ActionClass):
         Add(editTextCtrl, (0, 1), (1, 4), flag=EXP)
         
         Add(wx.StaticText(dialog, -1, text.osdFont), (1, 3), flag=ACV)
-        Add(fontButton, (1, 4), flag=EXP)
+        Add(fontButton, (1, 4))
         
         Add(wx.StaticText(dialog, -1, text.osdColour), (2, 3), flag=ACV)
         Add(foregroundColourButton, (2, 4))

@@ -48,14 +48,10 @@ class EventGhostEvent(object):
         self.payload = payload
         self.source = source
         self.time = clock()
-        
         self.startProcessed = Event()
         self.isEnded = False
-        
         self.shouldEnd = Event()
-        
         self.upFuncList = []
-        self.onlyShowIfAssigned = False
         
         
     def AddUpFunc(self, func, *args, **kwargs):

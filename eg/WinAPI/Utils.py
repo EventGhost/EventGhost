@@ -31,7 +31,7 @@ from win32process import GetWindowThreadProcessId
 from win32process import GetCurrentProcess
 from WinAPI.cTypes import (
     AttachThreadInput, GA_ROOT, PtVisible, SaveDC, RestoreDC, SetROP2,
-    GetAncestor, Rectangle, MONITORENUMPROC
+    GetAncestor, Rectangle
 )
 
 
@@ -81,7 +81,7 @@ class MyRectangle:
 
 
 
-from WinAPI.cTypes import EnumDisplayMonitors
+from WinAPI.cTypes import EnumDisplayMonitors, MONITORENUMPROC
 
 def GetMonitorDimensions():
     retval = []

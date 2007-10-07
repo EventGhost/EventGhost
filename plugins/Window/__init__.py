@@ -127,56 +127,35 @@ class MoveTo(eg.ActionClass):
          
         
     def Configure(self, x=0, y=0):
-        dialog = eg.ConfigurationDialog(self)
         text = self.text
-
-        xCB = wx.CheckBox(dialog, -1, text.text1)
-        xCB.SetValue(x is not None)
+        panel = eg.ConfigPanel(self)
+        xCheckBox = panel.CheckBox(x is not None, text.text1)
+        xCtrl = panel.SpinIntCtrl(0 if x is None else x, min=-32768, max=32767)
+        xCtrl.Enable(x is not None)
+        yCheckBox = panel.CheckBox(y is not None, text.text3)
+        yCtrl = panel.SpinIntCtrl(0 if y is None else y, min=-32768, max=32767)
+        yCtrl.Enable(y is not None)
+        
         def HandleXCheckBox(event):
             xCtrl.Enable(event.IsChecked())
-        xCB.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)    
+        xCheckBox.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)    
 
-        xCtrl = eg.SpinIntCtrl(dialog, min=-32768, max=32767)
-        if x is None:
-            x = 0
-            xCtrl.Enable(False)
-        xCtrl.SetValue(x)
-        
-
-        yCB = wx.CheckBox(dialog, -1, text.text3)
-        yCB.SetValue(y is not None)
         def HandleYCheckBox(event):
             yCtrl.Enable(event.IsChecked())
-        yCB.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)    
+        yCheckBox.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)    
 
-        yCtrl = eg.SpinIntCtrl(dialog, min=-32768, max=32767)
-        if y is None:
-            y = 0
-            yCtrl.Enable(False)
-        yCtrl.SetValue(y)
-        
-        dialog.AddGrid(
-            (
-                (xCB, xCtrl, text.text2),
-                (yCB, yCtrl, text.text4),
+        panel.AddLine(xCheckBox, xCtrl, text.text2)
+        panel.AddLine(yCheckBox, yCtrl, text.text4)
+
+        if panel.Affirmed():
+            return (
+                xCtrl.GetValue() if xCtrl.IsEnabled() else None,
+                yCtrl.GetValue() if yCtrl.IsEnabled() else None,
             )
-        )
-
-        if dialog.AffirmedShowModal():
-            if xCtrl.IsEnabled():
-                x = xCtrl.GetValue()
-            else:
-                x = None
-                
-            if yCtrl.IsEnabled():
-                y = yCtrl.GetValue()
-            else:
-                y = None
-            return (x, y)
 
 
 
-class Resize(eg.ActionClass):
+class Resize(MoveTo):
     name = "Resize"
     description = "Resizes a window to the specified dimension."
     class text:
@@ -200,54 +179,6 @@ class Resize(eg.ActionClass):
     def GetLabel(self, x, y):
         return self.text.label % (str(x), str(y))
             
-            
-    def Configure(self, x=0, y=0):
-        dialog = eg.ConfigurationDialog(self)
-        text = self.text
-        xCB = wx.CheckBox(dialog, -1, text.text1)
-        xCB.SetValue(x is not None)
-        
-        xCtrl = eg.SpinIntCtrl(dialog, min=-32768, max=32767)
-        if x is None:
-            x = 0
-            xCtrl.Enable(False)
-        xCtrl.SetValue(x)
-        
-        def HandleXCheckBox(event):
-            xCtrl.Enable(event.IsChecked())
-        xCB.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)    
-
-        yCB = wx.CheckBox(dialog, -1, text.text3)
-        yCB.SetValue(y is not None)
-        yCtrl = eg.SpinIntCtrl(dialog, min=-32768, max=32767)
-        if y is None:
-            y = 0
-            yCtrl.Enable(False)
-        yCtrl.SetValue(y)
-        
-        def HandleYCheckBox(event):
-            yCtrl.Enable(event.IsChecked())
-        yCB.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)    
-
-        dialog.AddGrid(
-            (
-                (xCB, xCtrl, text.text2),
-                (yCB, yCtrl, text.text4),
-            )
-        )
-
-        if dialog.AffirmedShowModal():
-            if xCtrl.IsEnabled():
-                x = xCtrl.GetValue()
-            else:
-                x = None
-                
-            if yCtrl.IsEnabled():
-                y = yCtrl.GetValue()
-            else:
-                y = None
-            return (x, y)
-
 
 
 class Maximize(eg.ActionClass):
@@ -364,15 +295,11 @@ class SendMessage(eg.ActionClass):
                 mesg = choicesValues[i]
             except:
                 mesg = int(choice)
-            if kindCB.GetValue():
-                kind = 1
-            else:
-                kind = 0
             return (
                 mesg, 
                 wParamCtrl.GetValue(),
                 lParamCtrl.GetValue(), 
-                kind
+                1 if kindCB.GetValue() else 0
             )
         
 

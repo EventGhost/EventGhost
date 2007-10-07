@@ -73,7 +73,7 @@ class NewJumpIf(eg.ActionClass):
             link = eg.TreeLink(eg.currentConfigureItem)
         panel = eg.ConfigPanel(self)
         kindCtrl = panel.Choice(kind, choices=text.choices)
-        linkCtrl = panel.BrowseMacroButton(
+        linkCtrl = panel.MacroSelectButton(
             eg.text.General.choose,
             text.mesg1,
             text.mesg2,
@@ -99,7 +99,7 @@ class NewJumpIf(eg.ActionClass):
         ch.SetSelection(kind)
         label1 = wx.StaticText(dialog, -1, text.text1)
         label2 = wx.StaticText(dialog, -1, text.text2)
-        button = eg.BrowseMacroButton(
+        button = eg.MacroSelectButton(
             dialog,
             eg.text.General.choose,
             text.mesg1,

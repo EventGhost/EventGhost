@@ -40,6 +40,8 @@ class ThreadWorkerAction:
     Represents an item that will be put on the ThreadWorker queue to be
     executed there.
     """
+    __slots__ = ["time", "func", "args", "kwargs", "returnValue", "event"]
+    
     def __init__(self, func, args, kwargs):
         self.time = clock()
         self.func = func
