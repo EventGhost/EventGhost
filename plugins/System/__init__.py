@@ -210,33 +210,33 @@ class System(eg.PluginClass):
             vistaVolumeDll.SetMasterVolume.argtypes = [ctypes.c_float]
             vistaVolumeDll.GetMasterVolume.restype = ctypes.c_float
             
-            def MuteOn(self):
+            def MuteOn2(self):
                 vistaVolumeDll.SetMute(1)
                 return True
                
-            def MuteOff(self):
+            def MuteOff2(self):
                 vistaVolumeDll.SetMute(0)
                 return False
                
-            def ToggleMute(self):
+            def ToggleMute2(self):
                 newValue = not vistaVolumeDll.GetMute()
                 vistaVolumeDll.SetMute(newValue)
                 return newValue
                
-            def SetMasterVolume(self, value):
+            def SetMasterVolume2(self, value):
                 vistaVolumeDll.SetMasterVolume(value / 100.0)
                 return vistaVolumeDll.GetMasterVolume() * 100.0
                
-            def ChangeMasterVolumeBy(self, value):
+            def ChangeMasterVolumeBy2(self, value):
                 old = vistaVolumeDll.GetMasterVolume()
                 vistaVolumeDll.SetMasterVolume((old * 100.0 + value) / 100.0)
                 return vistaVolumeDll.GetMasterVolume() * 100.0
             
-            self.MuteOn.__class__.__call__ = MuteOn
-            self.MuteOff.__class__.__call__ = MuteOff
-            self.ToggleMute.__class__.__call__ = ToggleMute
-            self.SetMasterVolume.__class__.__call__ = SetMasterVolume
-            self.ChangeMasterVolumeBy.__class__.__call__ = ChangeMasterVolumeBy             
+            self.info.actions["MuteOn"].__class__.__call__ = MuteOn2
+            self.info.actions["MuteOff"].__class__.__call__ = MuteOff2
+            self.info.actions["ToggleMute"].__class__.__call__ = ToggleMute2
+            self.info.actions["SetMasterVolume"].__class__.__call__ = SetMasterVolume2
+            self.info.actions["ChangeMasterVolumeBy"].__class__.__call__ = ChangeMasterVolumeBy2          
                         
                 
     @eg.LogItWithReturn
