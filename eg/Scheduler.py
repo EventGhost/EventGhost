@@ -39,7 +39,7 @@ class Scheduler(threading.Thread):
         self.keepRunning = True
         self.event = threading.Event()
         self.lock = threading.Lock()
-        self.heap = [(clock() + 100000000, None, None, None)]
+        self.heap = [(time() + 100000000, None, None, None)]
         threading.Thread.__init__(self, target=self.MainLoop)
         
         
@@ -77,15 +77,7 @@ class Scheduler(threading.Thread):
           An object to identify the task.
         
         """
-        startTime = clock() + waitTime
-        try:
-            self.lock.acquire()
-            task = (startTime, func, args, kwargs)
-            heappush(self.heap, task)
-            self.event.set()
-        finally:
-            self.lock.release()
-        return task
+        return self.AddTaskAbsolute(time() + waitTime, func, *args, **kwargs)
         
         
     def AddTaskAbsolute(self, startTime, func, *args, **kwargs):
@@ -106,7 +98,14 @@ class Scheduler(threading.Thread):
         
         .. _Python's time module: http://docs.python.org/lib/module-time.html
         """
-        return self.AddTask(startTime - time(), func, *args, **kwargs)
+        try:
+            self.lock.acquire()
+            task = (startTime, func, args, kwargs)
+            heappush(self.heap, task)
+            self.event.set()
+        finally:
+            self.lock.release()
+        return task
         
         
     def CancelTask(self, task):
@@ -133,7 +132,7 @@ class Scheduler(threading.Thread):
             self.lock.acquire()
             self.event.clear()
             startTime, func, args, kwargs = self.heap[0]
-            if startTime <= clock():
+            if startTime <= time():
                 heappop(self.heap)
                 self.lock.release()
                 try:
@@ -143,7 +142,7 @@ class Scheduler(threading.Thread):
                 startTime = self.heap[0][0]
             else:
                 self.lock.release()
-            timeout = startTime - clock()
+            timeout = startTime - time()
             
             
     def Stop(self):

@@ -175,12 +175,11 @@ class TogglePlay(eg.ActionClass):
     # of the action.
     def __call__(self):
         if GetPlayingStatus() == "stopped":
-            # Every action gets a reference to its plugin added on 
-            # instantiation, so we can also use other actions of the 
-            # plugin here.
-            self.plugin.Play()
+            # Play
+            return SendCommand(WM_COMMAND, 40045)
         else:
-            self.plugin.Pause()
+            # Pause
+            return SendCommand(WM_COMMAND, 40046)
     
     
 # The remaining actions all follow the same pattern:

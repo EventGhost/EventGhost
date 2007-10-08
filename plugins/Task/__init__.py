@@ -26,7 +26,10 @@ eg.RegisterPlugin(
     name = "Task Create/Switch Events",
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
-    description = "Generates events if tasks are created or switched.",
+    description = (
+        "Generates events if an application starts, exits or "
+        "gets switched into focus."
+    ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABuklEQVR42o1Sv0tCYRQ9"
         "L1FccpCEB73wVy1NjTrUPxD1lgZp0dWKaAhXxWhoyWgoIUjHBEH65RSE0CAUgWIPLAqR"

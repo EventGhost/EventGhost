@@ -68,7 +68,7 @@ class SpinNumCtrl(wx.Window):
                 new_args["allowNegative"] = True
                 
         new_args.update(kwargs)
-        wx.Window.__init__(self, parent, id, pos, size, style)
+        wx.Window.__init__(self, parent, id, pos, size, 0)
         self.SetThemeEnabled(True)
         numCtrl = masked.NumCtrl(
             self, 
