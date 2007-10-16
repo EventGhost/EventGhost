@@ -59,7 +59,6 @@ import thread
 import time
 import re
 
-from eg import SpinIntCtrl
 
 
 cmdList = (
@@ -395,7 +394,7 @@ class YamahaSerial(eg.PluginClass):
                     group = self.AddGroup(cmd_name)
             else:
                 # Argumentless command
-                class Handler:
+                class Handler(eg.ActionClass):
                     name = cmd_name
                     description = cmd_text
                     __call__ = createWriter(cmd_cmd)

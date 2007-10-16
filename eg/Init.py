@@ -115,6 +115,7 @@ class EventGhost(object):
         self.stopExecutionFlag = False
         self.lastFoundWindows = []
         self.currentConfigureItem = None
+        self.pluginList = []
         self.actionList = []
                 
         from Version import version, buildNum
@@ -134,6 +135,7 @@ class EventGhost(object):
         self.Icons = Icons
         
         import Log
+        print "starting", args.debugLevel
         self.log = Log.Log()
         self.Print = self.log.Print
         if not self.debugLevel:

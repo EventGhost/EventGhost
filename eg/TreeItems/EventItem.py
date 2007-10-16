@@ -31,7 +31,7 @@ class EventItem(TreeItem):
     
     def __init__(self, parent, node):
         TreeItem.__init__(self, parent, node)
-        eg.RegisterEvent(self.name, self)
+        eg.RegisterEvent(self.name, self)        
         
         
     def _Delete(self):

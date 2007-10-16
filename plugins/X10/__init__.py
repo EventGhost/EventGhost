@@ -240,7 +240,6 @@ class X10WorkerThread(eg.ThreadWorker):
             )
         except:
             eg.PrintTraceback()
-            pass
         
         
     def Finish(self):
@@ -267,6 +266,12 @@ class X10(eg.PluginClass):
             raise eg.Exception(self.text.errorMesg)
         
 
+    def SetArguments(self, remoteType=2, ids=None, prefix=None):
+        eventList = [(name, None) for name in gRemotes[remoteType][1].values()]
+        eventList.sort()
+        self.RegisterEvents(eventList)
+        
+        
     def __stop__(self):
         self.workerThread.Stop()
             

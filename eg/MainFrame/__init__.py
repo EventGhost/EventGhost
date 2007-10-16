@@ -1036,7 +1036,8 @@ class MainFrame(wx.Frame):
         
     
     def OnCmdTest(self, event):
-        dialog = eg.LinkListDialog(self)
+        dialog = eg.AddEventDialog(self)
+        #dialog = eg.LinkListDialog(self)
         dialog.ShowModal()
         dialog.Destroy()
         

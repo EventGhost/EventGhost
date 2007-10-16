@@ -99,6 +99,18 @@ class PluginClass(object):
         pass
         
                             
+    def SetArguments(self, *args):
+        pass
+    
+    
+    def RegisterEvents(self, eventList):
+        self.info.eventList = eventList
+
+            
+    def GetEvents(self):
+        return None
+    
+    
     def TriggerEvent(self, suffix, payload=None):
         """
         Trigger an event.

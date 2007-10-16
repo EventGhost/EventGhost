@@ -100,6 +100,8 @@ class PluginInfoBase(object):
     canMultiLoad = False
     createMacrosOnAdd = False
     
+    eventList = None
+    
         
     @classmethod
     def LoadModule(pluginInfo):
@@ -168,6 +170,7 @@ class PluginInfoBase(object):
         assert not hasattr(eg.plugins, evalName)
         info.evalName = evalName
         setattr(eg.plugins, evalName, PluginProxy(plugin))
+        eg.pluginList.append(plugin)
         
         if evalName != pluginCls.__name__:
             numStr = evalName[len(pluginCls.__name__):]
@@ -247,6 +250,7 @@ def OpenPlugin(pluginName, evalName, args, treeItem=None):
         if not info.LoadModule():
             return None
     plugin = info.CreatePluginInstance(evalName, treeItem)
+    plugin.SetArguments(*args)
     if hasattr(plugin, "Compile"):
         plugin.Compile(*args)
     try:

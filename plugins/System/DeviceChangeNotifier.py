@@ -63,7 +63,8 @@ class DeviceChangeNotifier:
         self.TriggerEvent = plugin.TriggerEvent
         eg.messageReceiver.AddHandler(WM_DEVICECHANGE, self.OnDeviceChange)
 
-        self.handle = RegisterDeviceNotification(
+        # Disk device class
+        self.handle1 = RegisterDeviceNotification(
             eg.messageReceiver.hwnd, 
             pointer(
                 DEV_BROADCAST_DEVICEINTERFACE(
@@ -74,7 +75,7 @@ class DeviceChangeNotifier:
             0
         )
         # HID device class
-        self.handle = RegisterDeviceNotification(
+        self.handle2 = RegisterDeviceNotification(
             eg.messageReceiver.hwnd, 
             pointer(
                 DEV_BROADCAST_DEVICEINTERFACE(
@@ -87,7 +88,8 @@ class DeviceChangeNotifier:
     
     
     def Close(self):
-        UnregisterDeviceNotification(self.handle)
+        UnregisterDeviceNotification(self.handle1)
+        UnregisterDeviceNotification(self.handle2)
         eg.messageReceiver.RemoveHandler(WM_DEVICECHANGE, self.OnDeviceChange)
         
         

@@ -114,7 +114,16 @@ def getDeviceHandle(drive):
     '''Returns a properly formatted device handle for DeviceIOControl call.'''
     return "\\\\.\\%s:" % drive[:1].upper()
 
-        
+
+EVENT_LIST = (
+    ("Idle", None),
+    ("UnIdle", None),
+    ("DriveMounted", None),
+    ("DriveRemoved", None),
+    ("DeviceAttached", None),
+    ("DeviceRemoved", None),
+)
+    
 #=============================================================================
 # Plugin: System
 #=============================================================================
@@ -123,6 +132,9 @@ class System(eg.PluginClass):
     
     def __init__(self):
         text = self.text
+
+        self.RegisterEvents(EVENT_LIST)
+        
         self.AddAction(Execute)
         self.AddAction(OpenDriveTray)
         self.AddAction(SetClipboard)

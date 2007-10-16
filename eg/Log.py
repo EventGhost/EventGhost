@@ -76,7 +76,10 @@ class Log:
         sys.stdout = StdOut()
         sys.stderr = StdErr()
         if eg.debugLevel == 2:
-            _oldStdErr._displayMessage = False
+            try:
+                _oldStdErr._displayMessage = False
+            except:
+                pass
 
     
     @eg.LogIt
