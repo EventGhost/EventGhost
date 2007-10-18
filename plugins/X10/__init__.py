@@ -239,7 +239,8 @@ class X10WorkerThread(eg.ThreadWorker):
                 self.eventHandler
             )
         except:
-            eg.PrintTraceback()
+            pass
+            #eg.PrintTraceback()
         
         
     def Finish(self):

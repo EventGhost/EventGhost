@@ -16,16 +16,19 @@ if not hasattr(sys, "frozen"): # detect py2exe
     except ImportError :
         print "ctypeslib is not installed!"
     else:
-        ctypeslib.dynamic_module.include(
-            "#define _WIN32_WINNT 0x500\n"
-            "#define WIN32_LEAN_AND_MEAN\n"
-            "#define NO_STRICT\n"
-            "#include <windows.h>\n"
-            "#include <Dbt.h>\n"
-            "#include <objbase.h>\n"
-            "#include <Mmsystem.h>\n"
-            "#include <shlobj.h>\n"
-        )        
+        try:
+            ctypeslib.dynamic_module.include(
+                "#define _WIN32_WINNT 0x500\n"
+                "#define WIN32_LEAN_AND_MEAN\n"
+                "#define NO_STRICT\n"
+                "#include <windows.h>\n"
+                "#include <Dbt.h>\n"
+                "#include <objbase.h>\n"
+                "#include <Mmsystem.h>\n"
+                "#include <shlobj.h>\n"
+            )       
+        except WindowsError:
+            print "GCC_XML most likely not installed"
 # everything after the following line is automatically created
 #-----------------------------------------------------------------------------#
 class _DCB(Structure):

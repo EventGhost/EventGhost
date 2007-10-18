@@ -212,7 +212,10 @@ class USB_UIRT:
         try:
             dll = WinDLL('uuirtdrv')
         except:
-            raise UUIRTError("Unable to load uuirtdrv.dll!")
+            raise UUIRTError(
+                "Unable to load uuirtdrv.dll!\n"
+                "Please make sure driver is installed!"
+            )
         puDrvVersion = c_uint(0)
         if not dll.UUIRTGetDrvInfo(byref(puDrvVersion)):
             raise UUIRTError("Unable to retrieve uuirtdrv version!")
