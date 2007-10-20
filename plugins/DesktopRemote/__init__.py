@@ -113,6 +113,7 @@ class DesktopRemote(eg.PluginClass):
         self.AddAction(AddButton)
         self.AddAction(StartNewLine)
         self.AddAction(Show)
+        self.AddAction(Close)
         self.data = []
         self.lastEvent = None
         self.defaults = {
@@ -370,13 +371,22 @@ class Show(eg.ActionClass):
     
     def Configure(self, xPos=0, yPos=0):
         panel = eg.ConfigPanel(self)
-        xPosCtrl = panel.SpinIntCtrl(xPos)
-        yPosCtrl = panel.SpinIntCtrl(yPos)
+        xPosCtrl = panel.SpinIntCtrl(xPos, min=-32768, max=32767)
+        yPosCtrl = panel.SpinIntCtrl(yPos, min=-32768, max=32767)
         panel.AddLine("Screen horizontal position:", xPosCtrl)
         panel.AddLine("Screen vertical position:", yPosCtrl)
         if panel.Affirmed():
             return (xPosCtrl.GetValue(), yPosCtrl.GetValue())
         
+        
+        
+class Close(eg.ActionClass):
+    
+    def __call__(self):
+        if self.plugin.frame:
+            self.plugin.frame.Destroy()
+            self.plugin.frame = None
+            
         
         
 class GenButton(buttons.GenButton):
