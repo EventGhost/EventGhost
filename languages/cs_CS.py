@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 class General:
+    apply = u'Pou\u017e\xedt'
     autostartItem = u'Automatick\xfd start'
     browse = u'Proch\xe1zet...'
     cancel = u'Storno'
@@ -11,6 +12,7 @@ class General:
     deleteQuestion = u'Jste si jist\xfd, \u017ee chcete odstranit tuto polo\u017eku?'
     help = u'&Pomoc'
     moreHelp = u'V\xedce...'
+    moreTag = u'v\xedce...'
     noOptionsAction = u'Tato akce nem\xe1 \u017e\xe1dn\xe9 mo\u017enosti nastaven\xed.'
     noOptionsPlugin = u'Tento plugin nem\xe1 \u017e\xe1dn\xe9 mo\u017enosti nastaven\xed.'
     ok = u'OK'
@@ -31,6 +33,7 @@ class MainFrame:
         AddPlugin = u'Vlo\u017eit Plugin...'
         Apply = u'Pou\u017e\xedt'
         CheckUpdate = u'Vyhledat nov\u011bj\u0161\xed verzi...'
+        ClearLog = u'Vy\u010distit'
         Close = u'&Zav\u0159\xedt'
         CollapseAll = u'&Sbalit v\u0161e'
         ConfigurationMenu = u'&Konfigurace'
@@ -53,6 +56,7 @@ class MainFrame:
         HideShowToolbar = u'Panel n\xe1stroj\u016f'
         Import = u'Import...'
         LogActions = u'Logovat &akce'
+        LogMacros = u'Logovat &makra'
         LogTime = u'&Logovat \u010das'
         New = u'&Nov\xfd'
         NewAction = u'Vlo\u017eit akci...'
@@ -86,7 +90,10 @@ class Error:
     FileNotFound = u'Soubor "%s" nebyl nalezen.'
     InAction = u'Chyba v akci: "%s"'
     InScript = u'Chyba ve skriptu: "%s"'
+    pluginInfoPyError = u'Chyba p\u0159i \u010dten\xed souboru __info__.py pro plugin %s'
+    pluginLoadError = u'Chyba p\u0159i zav\xe1d\u011bn\xed pluginu %s.'
     pluginNotActivated = u'Plugin "%s" nebyl aktivov\xe1n'
+    pluginNotFound = u'Plugin %s nenalezen.'
     pluginStartError = u'Chyba p\u0159i spu\u0161t\u011bn\xed pluginu: %s'
 class CheckUpdate:
     ManErrorMesg = u'Nebylo mo\u017en\xe9 z\xedskat informace z webov\xe9 str\xe1nky EventGhost.\n\nPros\xedm, zkuste to znovu pozd\u011bji.'
@@ -112,6 +119,9 @@ class AddPluginDialog:
     remotePlugins = u'P\u0159ij\xedma\u010de d\xe1lkov\xfdch povel\u016f'
     title = u'V\xfdb\u011br pluginu ke vlo\u017een\xed...'
     version = u'Verze:'
+class AddActionGroupDialog:
+    caption = u'Vlo\u017eit akce ?'
+    message = u'EventGhost m\u016f\u017ee vlo\u017eit slo\u017eku se v\u0161emi akcemi tohoto pluginu do konfigura\u010dn\xedho stromu. Jestli\u017ee si to p\u0159ejete, zvolte m\xedsto pro vkl\xe1danou slo\u017eku a stiskn\u011bte tla\u010d\xedtko OK.\n\nJinak stiskn\u011bte tla\u010d\xedtko Storno.'
 class OptionsDialog:
     CheckUpdate = u'Kontrolovat existenci nov\u011bj\u0161\xed verze p\u0159i spu\u0161t\u011bn\xed'
     HideOnClose = u'Skr\xfdt hlavn\xed okno aplikace p\u0159i stisknut\xed zav\xedrac\xedho tla\u010d\xedtka'
@@ -179,25 +189,6 @@ class Plugin:
         class FlushEvents:
             name = u'Zahodit ud\xe1losti'
             description = u'Akce "Zahodit ud\xe1losti" m\xe1 za n\xe1sledek vypr\xe1zdn\u011bn\xed pracovn\xed fronty. To je u\u017eite\u010dn\xe9 v p\u0159\xedpad\u011b, \u017ee n\u011bjak\xe9 makro se zpracov\xe1v\xe1 ur\u010ditou dobu a ud\xe1losti, kter\xe9 se nahromad\xed b\u011bhem jeho zpracov\xe1n\xed, by nem\u011bly b\xfdt zpracov\xe1ny.\n\n<p><b>P\u0159\xedklad:</b> M\xe1te zdlouhav\xe9 makro "start syst\xe9mu", jeho\u017e zpracov\xe1n\xed trv\xe1 okolo 90 sekund. Koncov\xfd u\u017eivatel nebude nic vid\u011bt, dokud se nerozsv\xedt\xed projektor. To trv\xe1 asi 60 sekund. Je velmi pravd\u011bpodobn\xe9, \u017ee u\u017eivatel bude opakovan\u011b ma\u010dkat tla\u010d\xedtko d\xe1lkov\xe9ho ovlada\u010de, kter\xe9 startuje makro (v domn\u011bn\xed, \u017ee se nic ned\u011bje). Pokud na konec makra um\xedst\xedte p\u0159\xedkaz "Zahodit ud\xe1losti", v\u0161echna nadbyte\u010dn\xe1 stisknut\xed tla\u010d\xedtka budou z fronty vymaz\xe1na.'
-        class Jump:
-            name = u'Sko\u010dit'
-            description = u'Nepodm\xedn\u011bn\u011b sko\u010d\xed na jin\xe9 makro a voliteln\u011b se odtamtud vr\xe1t\xed.'
-            label1 = u'Sko\u010dit na %s'
-            label2 = u'Sko\u010dit na %s a vr\xe1tit se'
-            mesg1 = u'V\xfdb\u011br makra...'
-            mesg2 = u'Pros\xedm vyberte makro, kter\xe9 m\xe1 b\xfdt spu\u0161t\u011bno:'
-            text2 = u'Sko\u010dit na:'
-            text3 = u'Vr\xe1tit se po proveden\xed'
-        class JumpIf:
-            name = u'Podm\xedn\u011bn\u011b sko\u010dit'
-            description = u'Sko\u010d\xed na jin\xe9 makro, pokud  je spln\u011bna zadan\xe1 podm\xednka (vyhodnocen\xed v\xfdrazu Pythonem vrac\xed pravdu) .'
-            label1 = u'Jestli\u017ee %s sko\u010dit na %s'
-            label2 = u'Jestli\u017ee %s odsko\u010dit na %s'
-            mesg1 = u'V\xfdb\u011br makra...'
-            mesg2 = u'Pros\xedm vyberte makro, kter\xe9 m\xe1 b\xfdt spu\u0161t\u011bno, je-li podm\xednka spln\u011bna.'
-            text1 = u'Jestli\u017ee:'
-            text2 = u'Sko\u010dit na:'
-            text3 = u'Vr\xe1tit se po proveden\xed'
         class JumpIfLongPress:
             name = u'Sko\u010dit p\u0159i dlouh\xe9m stisku'
             description = u'Sko\u010d\xed na jin\xe9 makro, pokud tla\u010d\xedtko na d\xe1lkov\xe9m ovlada\u010di je stisknut\xe9 d\xe9le, ne\u017e je nastaven\xfd \u010das.'
@@ -245,25 +236,21 @@ class Plugin:
                 u'Dole vlevo',
                 u'Dole vpravo',
                 u'Uprost\u0159ed',
+                u'Dole uprost\u0159ed',
+                u'Naho\u0159e uprost\u0159ed',
+                u'Vlevo uprost\u0159ed',
+                u'Vpravo uprost\u0159ed',
             ]
             display = u'Zobrazit na:'
             editText = u'Text k zobrazen\xed:'
             label = u'Zobrazit OSD: %s'
             osdColour = u'Barva OSD:'
-            osdColourButton = u'Barva p\xedsma'
             osdFont = u'OSD p\xedsmo:'
-            osdFontButton = u'P\xedsmo'
-            outlineColour = u'Barva obrysu'
             outlineFont = u'Obrys OSD'
             wait1 = u'Automaticky skr\xfdt OSD po'
             wait2 = u'sekund\xe1ch (0 = nikdy)'
             xOffset = u'Vodorovn\xfd ofset X:'
             yOffset = u'Svisl\xfd ofset Y:'
-        class StopIf:
-            name = u'Zastavit jestli\u017ee'
-            description = u'Zastav\xed prov\xe1d\u011bn\xed makra, jestli\u017ee  je spln\u011bna zadan\xe1 podm\xednka (vyhodnocen\xed v\xfdrazu Pythonem vrac\xed pravdu) .'
-            label = u'Zastavit jestli\u017ee %s'
-            parameterDescription = u'Podm\xednka v jazyce Python:'
         class StopProcessing:
             name = u'Zastavit zpracov\xe1n\xed t\xe9to ud\xe1losti'
             description = u'Zastav\xed zpracov\xe1n\xed t\xe9to ud\xe1losti'
@@ -316,6 +303,8 @@ class Plugin:
             )
             WindowOptionsDesc = u'Velikost okna:'
             WorkingDir = u'Pracovn\xed slo\u017eka:'
+            browseExecutableDialogTitle = u'Volba spustiteln\xe9ho souboru'
+            browseWorkingDirDialogTitle = u'Volba pracovn\xed slo\u017eky'
             label = u'Spustit program: %s'
         class Hibernate:
             name = u'Uspat po\u010d\xedta\u010d'
@@ -432,9 +421,24 @@ class Plugin:
         class SetDisplayPreset:
             name = u'Nastavit p\u0159edvolby displeje'
             description = u'Nastav\xed p\u0159edvolby displeje'
+            fields = (
+                u'Za\u0159\xedzen\xed',
+                u'Vlevo',
+                u'Naho\u0159e',
+                u'\u0160\xed\u0159ka',
+                u'V\xfd\u0161ka',
+                u'Kmito\u010det',
+                u'Kvalita barev',
+                u'P\u0159ipojeno',
+                u'Prim\xe1rn\xed',
+                u'Vlajky',
+            )
+            query = u'Zjitit aktu\xe1ln\xed nastaven\xed displeje'
         class SetIdleTime:
-            name = u'Nastavit dobu ne\u010dinnosti'
-            description = u'Nastav\xed dobu ne\u010dinnosti'
+            name = u'Nastavit dobu pro ne\u010dinnost'
+            description = u'Nastav\xed dobu pro generov\xe1n\xed ud\xe1losti ne\u010dinnost'
+            label1 = u'\u010cekat'
+            label2 = u'sekund p\u0159ed generov\xe1n\xedm ud\xe1losti ne\u010dinnost.'
         class SetMasterVolume:
             name = u'Nastavit hlavn\xed hlasitost'
             description = u'Nastav\xed hlavn\xed hlasitost'
@@ -462,6 +466,10 @@ class Plugin:
         class ShowPicture:
             name = u'Zobrazit obr\xe1zek'
             description = u'Zobraz\xed obr\xe1zek'
+            allFiles = u'V\u0161echny soubory'
+            allImageFiles = u'V\u0161echny soubory typu obr\xe1zek'
+            display = u'Monitor'
+            path = u'Cesta k obr\xe1zku (pro vymaz\xe1n\xed pou\u017eijte pr\xe1zdnou cestu):'
         class SoundGroup:
             name = u'Zvukov\xe1 karta'
             description = u'Tyto akce ovl\xe1daj\xed zvukovou kartu va\u0161eho po\u010d\xedta\u010de.'
@@ -480,6 +488,7 @@ class Plugin:
             parameterDescription = u'MAC adresa po\u010d\xedta\u010de, kter\xfd m\xe1 b\xfdt probuzen:'
     class Window:
         name = u'Okno'
+        description = u'Akce spojen\xe9 s \u0159\xedzen\xedm okna na obrazovce, jako nalezen\xed ur\u010dit\xe9ho okna, p\u0159esun, zm\u011bna velikosti a odesl\xe1n\xed stisk\u016f kl\xe1ves k ur\u010dit\xe9mu oknu.'
         class BringToFront:
             name = u'P\u0159en\xe9st do pop\u0159ed\xed'
             description = u'P\u0159enese ur\u010den\xe9 okno do pop\u0159ed\xed.'
@@ -595,6 +604,7 @@ class Plugin:
             radioBox = u'Zvolte akci:'
     class Mouse:
         name = u'My\u0161'
+        description = u'Akce k \u0159\xedzen\xed ukazatele my\u0161i a emulov\xe1n\xed ud\xe1lost\xed, generovan\xfdch my\u0161\xed.'
         class GoDirection:
             name = u'Spustit pohyb my\u0161i'
             description = u'Spust\xed pohyb my\u0161i dan\xfdm sm\u011brem'
@@ -607,6 +617,9 @@ class Plugin:
         class LeftDoubleClick:
             name = u'Poklepat lev\xfdm tla\u010d\xedtkem my\u0161i'
             description = u'Emuluje poklep\xe1n\xed lev\xfdm tla\u010d\xedtkem my\u0161i'
+        class MiddleButton:
+            name = u'Prost\u0159edn\xed tla\u010d\xedtko my\u0161i'
+            description = u'Prost\u0159edn\xed tla\u010d\xedtko my\u0161i'
         class MouseWheel:
             name = u'Emulovat pohyb kole\u010dka my\u0161i'
             description = u'Emuluje pohyb kole\u010dka my\u0161i'
@@ -630,11 +643,185 @@ class Plugin:
         class ToggleLeftButton:
             name = u'Zm\u011bnit stav lev\xe9ho tla\u010d\xedtka my\u0161i'
             description = u'Zm\u011bn\xed stav lev\xe9ho tla\u010d\xedtka my\u0161i'
+    class Billy:
+        name = u'Billy'
+        description = u'P\u0159id\xe1v\xe1 akce k \u0159\xedzen\xed audio p\u0159ehr\xe1va\u010de <a href="http://www.sheepfriends.com/?page=billy">Billy</a>. \n\n<p><BR><B>POZOR !<BR>Spr\xe1vn\u011b pracuje pouze s beta verz\xed 1.04b p\u0159ehr\xe1va\u010de Billy !</B><BR>Se star\u0161\xed verz\xed bude plugin pracovat v omezen\xe9m re\u017eimu !</p>'
+        filemask = u'Billy.exe|Billy.exe|V\u0161echny soubory (*.*)|*.*'
+        grpDescription1 = u'Skupina nejd\u016fle\u017eit\u011bj\u0161\xedch akc\xed k ovl\xe1d\xe1n\xed p\u0159ehr\xe1va\u010de Billy'
+        grpDescription2 = u'Skupina akc\xed pro pr\xe1ci se seznamy audiosoubor\u016f'
+        grpDescription3 = u'Skupina zvl\xe1\u0161tn\xedch akc\xed (nap\u0159. reset mixeru Windows)'
+        grpDescription4 = u'Skupina akc\xed pro pr\xe1ci s Obl\xedben\xfdmi'
+        grpName1 = u'Hlavn\xed'
+        grpName2 = u'Seznamy'
+        grpName3 = u'Zvl\xe1\u0161tn\xed akce'
+        grpName4 = u'Obl\xedben\xe9'
+        label = u'Cesta k souboru Billy.exe:'
+        text1 = u'Nemohu naj\xedt okno p\u0159ehr\xe1va\u010de Billy !'
+        title = u'Napsal Pako podle n\u011bkter\xfdch plugin\u016f od autor\u016f MonsterMagnet a Bitmonster'
+        version = u'Verze: '
+        class AddFile:
+            name = u'P\u0159idat soubor(y)'
+            description = u'Otev\u0159e dialog pro p\u0159id\xe1n\xed souboru(\u016f).'
+        class AddFolder:
+            name = u'P\u0159idat slo\u017eku'
+            description = u'Otev\u0159e dialog pro p\u0159id\xe1n\xed slo\u017eky s audio soubory.'
+        class AddPlistToFav:
+            name = u'P\u0159idat seznam k Obl\xedben\xfdm'
+            description = u'P\u0159id\xe1 seznam k Obl\xedben\xfdm.'
+        class AddURL:
+            name = u'P\u0159idat internetov\xe9 radio'
+            description = u'P\u0159id\xe1 internetov\xe9 radio.'
+        class CheckNewFiles:
+            name = u'Zkontrolovat nov\xe9 soubory'
+            description = u'Zkontroluje, zda ve slo\u017ece nejsou nov\xe9 soubory.'
+        class ClearHistory:
+            name = u'Vy\u010distit historii p\u0159ehran\xfdch nebo ozna\u010den\xfdch soubor\u016f'
+            description = u'Odstran\xed ozna\u010den\xed p\u0159ehran\xfdch a do fronty za\u0159azen\xfdch soubor\u016f.'
+        class ClearList:
+            name = u'Vy\u010distit seznam'
+            description = u'Vy\u010dist\xed seznam.'
+        class CopyEntry:
+            name = u'Kop\xedrovat polo\u017eku seznamu'
+            description = u'Kop\xedruje polo\u017eku seznamu do schr\xe1nky.'
+        class CropQueued:
+            name = u'Odstranit neozna\u010den\xe9'
+            description = u'"Odst\u0159ihne" ozna\u010den\xe9 polo\u017eky seznamu (neozna\u010den\xe9 odstran\xed).'
+        class CutEntry:
+            name = u'Vyjmout polo\u017eku seznamu'
+            description = u'Vyjme polo\u017eku seznamu (zkop\xedruje do schr\xe1nky).'
+        class Delete:
+            name = u'Hodit soubor do ko\u0161e'
+            description = u'Odstran\xed soubor (do ko\u0161e).'
+        class EditEntry:
+            name = u'Editovat polo\u017eku seznamu'
+            description = u'Otev\u0159e dialog pro editaci polo\u017eky seznamu.'
+        class ExitBilly:
+            name = u'Ukon\u010dit Billy'
+            description = u'Ukon\u010d\xed b\u011bh p\u0159ehr\xe1va\u010de Billy.'
+        class Explore:
+            name = u'Otev\u0159\xedt slo\u017eku'
+            description = u'Otev\u0159e slo\u017eku s pr\xe1v\u011b p\u0159ehr\xe1van\xfdm souborem.'
+        class Find:
+            name = u'Naj\xedt'
+            description = u'Otev\u0159e dialog pro hled\xe1n\xed v aktu\xe1ln\xedm seznamu.'
+        class LoadFav1:
+            name = u'Zav\xe9st Obl\xedben\xe9 1'
+            description = u'Zavede se seznam Obl\xedben\xe9 1.'
+        class LoadFav2:
+            name = u'Zav\xe9st Obl\xedben\xe9 2'
+            description = u'Zavede se seznam Obl\xedben\xe9 2.'
+        class LoadFav3:
+            name = u'Zav\xe9st Obl\xedben\xe9 3'
+            description = u'Zavede se seznam Obl\xedben\xe9 3.'
+        class LoadFav4:
+            name = u'Zav\xe9st Obl\xedben\xe9 4'
+            description = u'Zavede se seznam Obl\xedben\xe9 4.'
+        class LoadFav5:
+            name = u'Zav\xe9st Obl\xedben\xe9 5'
+            description = u'Zavede se seznam Obl\xedben\xe9 5.'
+        class LoadFav6:
+            name = u'Zav\xe9st Obl\xedben\xe9 6'
+            description = u'Zavede se seznam Obl\xedben\xe9 6.'
+        class LoadFav7:
+            name = u'Zav\xe9st Obl\xedben\xe9 7'
+            description = u'Zavede se seznam Obl\xedben\xe9 7.'
+        class LoadFav8:
+            name = u'Zav\xe9st Obl\xedben\xe9 8'
+            description = u'Zavede se seznam Obl\xedben\xe9 8.'
+        class LoadFav9:
+            name = u'Zav\xe9st Obl\xedben\xe9 9'
+            description = u'Zavede se seznam Obl\xedben\xe9 9.'
+        class Minimize:
+            name = u'Minimalizovat do oznamovac\xed oblasti'
+            description = u'P\u0159ehr\xe1va\u010d se minimalizuje do oznamovac\xed oblasti.'
+        class Next:
+            name = u'Dal\u0161\xed'
+            description = u'P\u0159esko\u010d\xed na dal\u0161\xed soubor (skladbu).'
+        class OpenFolder:
+            name = u'Otev\u0159\xedt slo\u017eku'
+            description = u'Otev\u0159e slo\u017eku s audiosoubory.'
+        class OpenPlaylist:
+            name = u'Otev\u0159\xedt seznam'
+            description = u'Otev\u0159e (zavede) seznam.'
+        class OrganizeFav:
+            name = u'Organizovat Obl\xedben\xe9'
+            description = u'Otev\u0159e dialog pro organizaci Obl\xedben\xfdch.'
+        class PasteEntry:
+            name = u'Vlo\u017eit polo\u017eku seznamu'
+            description = u'Vlo\u017e\xed polo\u017eku seznamu ze schr\xe1nky.'
+        class PausePlay:
+            name = u'Pozastavit/P\u0159ehr\xe1t'
+            description = u'Pozastav\xed/spust\xed p\u0159ehr\xe1v\xe1n\xed.'
+        class Play:
+            name = u'P\u0159ehr\xe1t'
+            description = u'Spust\xed p\u0159ehr\xe1v\xe1n\xed.'
+        class Previous:
+            name = u'P\u0159edchoz\xed'
+            description = u'P\u0159esko\xed na p\u0159edchoz\xed soubor (skladbu).'
+        class Properties:
+            name = u'Vlastnosti'
+            description = u'Otev\u0159e dialog pro editaci nebo hromadn\xe9 p\u0159ejmenov\xe1n\xed (p\u0159i v\xedcen\xe1sobn\xe9m v\xfdb\u011bru).'
+        class Queue:
+            name = u'Za\u0159adit do fronty'
+            description = u'Vybran\xfd soubor za\u0159ad\xed do fronty.'
+        class Record:
+            name = u'Ukl\xe1dat internetov\xe9 radio'
+            description = u'Ukl\xe1dat internetov\xe9 radio do souboru.'
+        class Remove:
+            name = u'Odstranit soubor ze seznamu'
+            description = u'Odstran\xed soubor ze seznamu.'
+        class ResetMixer:
+            name = u'Resetovat mixer Windows'
+            description = u'Resetuje mixer Windows.'
+        class Run:
+            name = u'Spustit nebo obnovit'
+            description = u'Spou\u0161t\xed p\u0159ehr\xe1va\u010d Billy s jeho defaultn\xedm nastaven\xedm nebo ho obnov\xed.'
+            text2 = u'Nemohu naj\xedt soubor Billy.exe !'
+        class SavePlaylist:
+            name = u'Ulo\u017eit seznam'
+            description = u'Otev\u0159e dialog pro ulo\u017een\xed seznamu.'
+        class Settings:
+            name = u'Nastaven\xed'
+            description = u'Otev\u0159e nab\xeddku nastaven\xed p\u0159ehr\xe1va\u010de Billy.'
+        class Stop:
+            name = u'Zastavit'
+            description = u'Zastav\xed p\u0159ehr\xe1v\xe1n\xed.'
+        class ToStart:
+            name = u'Sko\u010dit na za\u010d\xe1tek souboru'
+            description = u'Sko\u010d\xed na za\u010d\xe1tek p\u0159ehr\xe1van\xe9ho souboru.'
+        class TogglePlayMode:
+            name = u'Zm\u011bnit re\u017eim p\u0159ehr\xe1v\xe1n\xed'
+            description = u'Zm\u011bn\xed re\u017eim p\u0159ehr\xe1v\xe1n\xed.'
+        class ToggleViewMode:
+            name = u'Zm\u011bnit zp\u016fsob zobrazen\xed'
+            description = u'Zm\u011bn\xed zp\u016fsob zobrazen\xed seznamu.'
+    class DesktopRemote:
+        name = u'Ovlada\u010d na pracovn\xed plo\u0161e'
+        description = u'Na pracovn\xed plo\u0161e vykresl\xed okno v podob\u011b d\xe1lkov\xe9ho ovlada\u010de'
+        class AddButton:
+            name = u'P\u0159idat tla\u010d\xedtko'
+            description = u'P\u0159id\xe1 tla\u010d\xedtko'
+            event = u'Ud\xe1lost:'
+            label = u'N\xe1pis:'
+        class CreateNew:
+            name = u'Vytvo\u0159it nov\xfd ovlada\u010d'
+            description = u'Vytvo\u0159\xed nov\xfd ovlada\u010d'
+        class Show:
+            name = u'Zobrazit'
+            description = u'Zobraz\xed vytvo\u0159en\xfd ovlada\u010d'
+        class StartNewLine:
+            name = u'Za\u010d\xedt nov\xfd \u0159\xe1dek'
+            description = u'Za\u010dne na nov\xe9m \u0159\xe1dku'
     class DirectoryWatcher:
         name = u'Hl\xedda\u010d slo\u017eky'
         description = u'Generuje ud\xe1losti, jestli\u017ee soubory v ur\u010den\xe9 slo\u017ece jsou vytvo\u0159eny, smaz\xe1ny\nnebo zm\u011bn\u011bny.'
         watchPath = u'Hl\xeddan\xe1 slo\u017eka:'
         watchSubDirs = u'Hl\xeddat i podslo\u017eky'
+    class Egon:
+        name = u'Egon'
+        description = u'Hardwarov\xfd plugin pro IR USB p\u0159ij\xedma\u010d <a href="http://ruckl.wz.cz/egon/egon.html">Egon</a>.\n\n<p><img src="Egon_top.png" /><BR><B><U>Charakteristika:</U></B><BR>Mal\xfd, jednoduch\xfd, minimum sou\u010d\xe1stek, jednostrann\xfd pl. spoj spoj\u016f<BR>Mo\u017enost upgrade firmware pomoc\xed bootloaderu<BR>Konfigurovateln\xfd pomoc\xed termin\xe1lov\xe9ho programu<BR>Aktu\xe1ln\xed verze rozpozn\xe1 17 IR protokol\u016f (nap\u0159. RC5 apod.)<BR>Implementov\xe1n re\u017eim pro anal\xfdzu nezn\xe1m\xe9ho protokolu<BR><BR><I>Konstrukce je zdarma pro nekomer\u010dn\xed pou\u017eit\xed</I>'
+        error = u'Nemohu otev\u0159\xedt virtu\xe1ln\xed s\xe9riov\xfd port'
+        port = u'Virtu\xe1ln\xed s\xe9riov\xfd port:'
     class Foobar2000:
         name = u'Foobar2000'
         description = u'P\u0159id\xe1v\xe1 podporu funkc\xed pro \u0159\xedzen\xed aplikace Foobar2000.\n\n<p><a href="http://www.foobar2000.org/">Domovsk\xe1 str\xe1nka aplikace Foobar2000</a>'
@@ -1067,6 +1254,15 @@ class Plugin:
         description = u'Libovoln\xe1 komunikace p\u0159es s\xe9riov\xfd port.\n<br>Voliteln\u011b m\u016f\u017ee generovat ud\xe1losti.\n\n<p><b>Termin\xe1tor</b> je \u0159et\u011bzec znak\u016f, podle kter\xe9ho p\u0159i generov\xe1n\xed ud\xe1losti plugin identifikuje konec p\u0159ijat\xfdch dat.'
         baudrate = u'Bit\u016f za sekundu:'
         bytesize = u'Datov\xfdch bit\u016f:'
+        codecChoices = [
+            u'Syst\xe9mov\xe1 k\xf3dov\xe1 str\xe1nka',
+            u'HEX',
+            u'Latin-1',
+            u'UTF-8',
+            u'UTF-16',
+            u'Python escape \u0159et\u011bzec',
+        ]
+        encoding = u'K\xf3dov\xe1n\xed:'
         eventPrefix = u'Prefix ud\xe1losti:'
         flowcontrol = u'\u0158\xedzen\xed toku:'
         generateEvents = u'Generovat ud\xe1losti z p\u0159\xedchoz\xedch dat'
@@ -1095,6 +1291,7 @@ class Plugin:
             description = u'Vys\xedl\xe1n\xed dat'
     class Speech:
         name = u'Hlas'
+        description = u'Pou\u017eije slu\u017ebu p\u0159evod textu na \u0159e\u010d Microsoft Speech API (SAPI)'
         class TextToSpeech:
             name = u'P\u0159evod textu na \u0159e\u010d'
             description = u'Pou\u017e\xedv\xe1 Microsoft Speech API (SAPI) k p\u0159evodu textu na \u0159e\u010d.'
@@ -1114,19 +1311,28 @@ class Plugin:
             slow = u'Pomalu'
             textBoxLabel = u'Text'
             voiceProperties = u'Vlastnosti hlasu'
+    class SysTrayMenu:
+        name = u'Nab\xeddka v oznamovac\xed oblasti'
+        description = u'Umo\u017e\u0148uje p\u0159idat u\u017eivatelskou nab\xeddku do syst\xe9mov\xe9 nab\xeddky EventGhost (SysTrayMenu).'
+        addBox = u'P\u0159idat:'
+        addItemButton = u'Polo\u017eka nab\xeddky'
+        addSeparatorButton = u'Odd\u011blova\u010d'
+        deleteButton = u'Odstranit'
+        editEvent = u'Editovat:'
+        editLabel = u'N\xe1pis:'
+        eventHeader = u'Ud\xe1lost'
+        labelHeader = u'N\xe1pis'
+        unnamedEvent = u'Ud\xe1lost_%s'
+        unnamedLabel = u'Nov\xe1 polo\u017eka %s'
+        class Disable:
+            name = u'Zak\xe1zat polo\u017eku'
+            description = u'Zak\xe1\u017ee polo\u017eku nab\xeddky.'
+        class Enable:
+            name = u'Povolit polo\u017eku'
+            description = u'Povol\xed polo\u017eku nab\xeddky.'
     class Task:
-        name = u'Ud\xe1losti, generovan\xe9 spr\xe1vcem \xfaloh'
+        name = u'Spr\xe1vce \xfaloh'
         description = u'Generuje ud\xe1losti, souvisej\xedc\xed se spr\xe1vou \xfaloh syst\xe9mu Windows.'
-    class TestPatterns:
-        class Close:
-            name = u'Zav\u0159\xedt'
-            description = u'Zav\u0159\xedt'
-        class Focus:
-            name = u'Ohnisko (focus)'
-            description = u'Ohnisko (focus)'
-        class Grid:
-            name = u'M\u0159\xed\u017eka'
-            description = u'M\u0159\xed\u017eka'
     class Timer:
         name = u'\u010casova\u010d'
         description = u'Generuje ud\xe1losti po nastaviteln\xe9 dob\u011b a opakuje je v dan\xe9m intervalu.\nOpakov\xe1n\xed m\u016f\u017ee b\xfdt nekone\u010dn\xe9 anebo je mo\u017en\xe9 zadat po\u010det opakov\xe1n\xed.'
@@ -1181,9 +1387,11 @@ class Plugin:
                 u'v p\u0159\xed\u0161t\xed cel\xe9 hodin\u011b',
             )
             timerName = u'N\xe1zev \u010dasova\u010de:'
+    class UIR:
+        description = u'Hardwarov\xfd plugin pro IR p\u0159ij\xedma\u010de <a href="http://fly.cc.fer.hr/~mozgic/UIR/">Universal Infrared Receiver V1 (UIR)</a> a <a href="http://www.evation.com/irman/index.html">Irman</a>.\n\n<p><center><img src="irman_front.jpg" alt="Irman" /></a></center>'
     class Webserver:
         name = u'Webov\xfd server'
         description = u'Implementuje mal\xfd webov\xfd server, kter\xfd m\u016f\u017ee b\xfdt pou\u017eit pro generov\xe1n\xed\nud\xe1lost\xed prost\u0159ednictv\xedm HTML-str\xe1nek.'
-        documentRoot = u'Ko\u0159enov\xfd adres\xe1\u0159 dokumentu:'
+        documentRoot = u'Ko\u0159enov\xfd adres\xe1\u0159 HTML dokumentu:'
         eventPrefix = u'Prefix ud\xe1losti:'
         port = u'Port:'
