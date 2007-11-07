@@ -30,8 +30,8 @@ eg.RegisterPlugin(
     canMultiLoad = True,
     createMacrosOnAdd = True,
     description = (
-        'Adds actions to control TheaterTek'
-        '<b>Notice:</b><br>'
+        'Adds actions to control <a href="http://www.theatertek.com/">TheaterTek</a>.'
+        '\n<p><b>Notice:</b><br>'
         'To make it work, you have to enable TCP control in TheaterTek. '
     ),
 

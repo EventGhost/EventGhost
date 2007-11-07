@@ -167,7 +167,7 @@ class EventGhost(object):
         import cFunctions
         sys.modules["eg.TreeItems"] = TreeItems
         sys.modules["eg.cFunctions"] = cFunctions
-    
+            
         from Text import Text
         Utils.SetClass(self.text, Text)
 

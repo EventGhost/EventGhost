@@ -357,6 +357,8 @@ class USB_UIRT:
         self.bAbortLearn.value = -1
         
         
+    import eg
+    @eg.LogIt
     def TransmitIR(self, code, repeatCount=1, inactivityWaitTime=0):
         if len(code) > 5:
             start = 0

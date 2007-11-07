@@ -222,24 +222,24 @@ class System(eg.PluginClass):
             vistaVolumeDll.SetMasterVolume.argtypes = [ctypes.c_float]
             vistaVolumeDll.GetMasterVolume.restype = ctypes.c_float
             
-            def MuteOn2(self):
+            def MuteOn2(self, deviceId=0):
                 vistaVolumeDll.SetMute(1)
                 return True
                
-            def MuteOff2(self):
+            def MuteOff2(self, deviceId=0):
                 vistaVolumeDll.SetMute(0)
                 return False
                
-            def ToggleMute2(self):
+            def ToggleMute2(self, deviceId=0):
                 newValue = not vistaVolumeDll.GetMute()
                 vistaVolumeDll.SetMute(newValue)
                 return newValue
                
-            def SetMasterVolume2(self, value):
+            def SetMasterVolume2(self, value, deviceId=0):
                 vistaVolumeDll.SetMasterVolume(value / 100.0)
                 return vistaVolumeDll.GetMasterVolume() * 100.0
                
-            def ChangeMasterVolumeBy2(self, value):
+            def ChangeMasterVolumeBy2(self, value, deviceId=0):
                 old = vistaVolumeDll.GetMasterVolume()
                 vistaVolumeDll.SetMasterVolume((old * 100.0 + value) / 100.0)
                 return vistaVolumeDll.GetMasterVolume() * 100.0
@@ -776,45 +776,38 @@ class SetWallpaper(eg.ActionWithStringParameter):
         
         
 #-----------------------------------------------------------------------------
-# Action: System.MuteOn
+# Soundcard actions
 #-----------------------------------------------------------------------------
+
 class MuteOn(eg.ActionClass):
     name = "Turn Mute On"       
     iconFile = "icons/SoundCard"
     
-    def __call__(self):
-        SoundMixer.SetMute(True)
+    def __call__(self, deviceId=0):
+        SoundMixer.SetMute(True, deviceId)
         return True
 
 
-#-----------------------------------------------------------------------------
-# Action: System.MuteOff
-#-----------------------------------------------------------------------------
+
 class MuteOff(eg.ActionClass):
     name = "Turn Mute Off"
     iconFile = "icons/SoundCard"
     
-    def __call__(self):
-        SoundMixer.SetMute(False)
+    def __call__(self, deviceId=0):
+        SoundMixer.SetMute(False, deviceId)
         return False
 
 
 
-#-----------------------------------------------------------------------------
-# Action: System.ToggleMute
-#-----------------------------------------------------------------------------
 class ToggleMute(eg.ActionClass):
     name = "Toggle Mute"
     iconFile = "icons/SoundCard"
     
-    def __call__(self):
-        return SoundMixer.ToggleMute()
+    def __call__(self, deviceId=0):
+        return SoundMixer.ToggleMute(deviceId)
 
 
 
-#-----------------------------------------------------------------------------
-# Action: System.SetMasterVolume
-#-----------------------------------------------------------------------------
 class SetMasterVolume(eg.ActionClass):
     name = "Set Master Volume"
     iconFile = "icons/SoundCard"
@@ -823,27 +816,32 @@ class SetMasterVolume(eg.ActionClass):
         text2 = "percent."
         
         
-    def __call__(self, value):
-        SoundMixer.SetMasterVolume(value)
-        return SoundMixer.GetMasterVolume()
+    def __call__(self, value, deviceId=0):
+        SoundMixer.SetMasterVolume(value, deviceId)
+        return SoundMixer.GetMasterVolume(deviceId)
     
         
-    def GetLabel(self, value):
-        return self.text.name + ": " + str(value) + " %"
+    def GetLabel(self, value, deviceId=0):
+        if deviceId > 0:
+            return "%s #%i: %.2f %%" % (self.text.name, deviceId+1, value)
+        else:
+            return "%s: %.2f %%" % (self.text.name, value)
          
         
-    def Configure(self, value=0):
+    def Configure(self, value=0, deviceId=0):
         panel = eg.ConfigPanel(self)
+        deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
         valueCtrl = panel.SpinNumCtrl(value, min=0, max=100)
+        panel.AddLine("Device:", deviceCtrl)
         panel.AddLine(self.text.text1, valueCtrl, self.text.text2)
         if panel.Affirmed():
-            return (float(valueCtrl.GetValue()), )
+            return (
+                float(valueCtrl.GetValue()), 
+                deviceCtrl.GetValue(),
+            )
 
 
 
-#-----------------------------------------------------------------------------
-# Action: System.ChangeMasterVolumeBy
-#-----------------------------------------------------------------------------
 class ChangeMasterVolumeBy(eg.ActionClass):
     name = "Change Master Volume"
     iconFile = "icons/SoundCard"
@@ -852,16 +850,16 @@ class ChangeMasterVolumeBy(eg.ActionClass):
         text2 = "percent."
         
     
-    def __call__(self, value):
+    def __call__(self, value, deviceId=0):
         SoundMixer.ChangeMasterVolumeBy(value)
         return SoundMixer.GetMasterVolume()
 
 
-    def GetLabel(self, value):
+    def GetLabel(self, value, deviceId=0):
         return self.text.name + ": " + str(value) + " %"
          
         
-    def Configure(self, value=0):
+    def Configure(self, value=0, deviceId=0):
         panel = eg.ConfigPanel(self)
         valueCtrl = panel.SpinNumCtrl(value, min=-100, max=100)
         panel.AddLine(self.text.text1, valueCtrl, self.text.text2)

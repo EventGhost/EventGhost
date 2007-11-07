@@ -62,7 +62,10 @@ SPECIAL_THANKS_DATA = (
             ("jorel1969", "Meedio"),
             ("Mark Clarkson", "Yamaha RX-V1000 Serial"),
             ("jinxdone", "LIRC Event Receiver"),
-            ("Micke Prag", "TellStick")
+            ("Micke Prag", "TellStick"),
+            ("oystein", "Windows Media Player"),
+            ("Lubo&scaron; R&uuml;ckl", "Billy, MediaMonkey"),
+            ("SurFan", "TheaterTek"),
         ),
     ),
     (

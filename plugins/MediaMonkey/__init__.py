@@ -1,4 +1,4 @@
-version="0.1.0"
+version="0.1.1"
 
 # Plugins/MediaMonkey/__init__.py
 #
@@ -20,6 +20,7 @@ version="0.1.0"
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
+#Last change: 2007-11-02 13:43
 
 import eg
 
@@ -31,7 +32,10 @@ eg.RegisterPlugin(
     createMacrosOnAdd = True,
     description = (
         'Adds support functions to control '
-        '<a href="http://www.MediaMonkey.com/">MediaMonkey</a>.'
+        '<a href="http://www.MediaMonkey.com/">MediaMonkey</a>. \n\n<P>'
+        '<BR><B>Note:</B><BR>'
+        'To make functional event triggering from MediaMonkey, you must install'
+        '<BR>file "EventGhost.vbs" to MediaMonkey/Scripts/Auto folder.'
     ),
     icon = (
         "R0lGODlhEAAQAPcAAAQCBMSORFxKLLSupExKVOy2ZKRiLCwyZJyGbERCRHRiXNzOlPTmpO"
@@ -74,9 +78,9 @@ class Text:
         "Here you find further actions for control of MediaMonkey"
         " (volume, balance, seek)."
     )
-    extrGrpName = "Writing to MediaMonkey"
+    extrGrpName = "Writing to database MM"
     extrGrpDescr = (
-        "Here is action for writing some one parameters to MediaMonkey."
+        "Here is action for writing some one parameters to database MediaMonkey."
     )
     infoGrpName = "Information retrieval"
     infoGrpDescr = (
@@ -1157,11 +1161,12 @@ class GetUniversal(eg.ActionClass):
 
 #====================================================================
 class WritingToMM(eg.ActionClass):
-    name = "Writing to MediaMonkey"
-    description = "Writing some one parameters to MediaMonkey."
+    name = "Writing to database MM"
+    description = "Writing some one parameters to database MediaMonkey."
     class text:
         label="Select requested property:"
         set = "Set "
+        checkboxlabel = "Make entry to ID3 tag too"
         class Properties:
             Comment = "Comment"
             Custom1 = "Custom 1"
@@ -1177,53 +1182,59 @@ class WritingToMM(eg.ActionClass):
         text=self.text
         txt=text.Properties
         self.listCtrl=(
-            "wx.TextCtrl(dialog, -1, arrayValue[%s])",
+            "wx.TextCtrl(dialog, -1, arrayValue[%s][0])",
             (
-                "eg.SpinNumCtrl(dialog,-1,arrayValue[%s],max=100.0,min=0.0,"
+                "eg.SpinNumCtrl(dialog,-1,arrayValue[%s][0],max=100.0,min=0.0,"
                 "fractionWidth=1,increment=10,style=wx.TE_READONLY)"
             )
         )
         self.infoList=(
-            ("Tempo",txt.Tempo,0),
-            ("Mood",txt.Mood,0),
-            ("Occasion",txt.Occasion,0),
-            ("Quality",txt.Quality,0),
-            ("Custom1",txt.Custom1,0),
-            ("Custom2",txt.Custom2,0),
-            ("Custom3",txt.Custom3,0),
-            ("Comment",txt.Comment,0),
-            ("Genre",txt.Genre,0),
-            ("Rating",txt.Rating,1),
+            ("Tempo",txt.Tempo,0,False),
+            ("Mood",txt.Mood,0,False),
+            ("Occasion",txt.Occasion,0,False),
+            ("Quality",txt.Quality,0,False),
+            ("Custom1",txt.Custom1,0,False),
+            ("Custom2",txt.Custom2,0,False),
+            ("Custom3",txt.Custom3,0,False),
+            ("Comment",txt.Comment,0,True),
+            ("Genre",txt.Genre,0,True),
+            ("Rating",txt.Rating,1,True),
         )
     def __call__(self, i, arrayValue):
         if self.infoList[i][2]==0:
             self.plugin.setMM("Player.CurrentSong."+self.infoList[i][0]\
-                +'=u"'+arrayValue[i]+'"')
+                +'=u"'+arrayValue[i][0]+'"')
         else:
             self.plugin.setMM("Player.CurrentSong."+self.infoList[i][0]\
-                +"="+str(arrayValue[i]))
+                +"="+str(arrayValue[i][0]))
+        self.plugin.setMM("Player.CurrentSong.UpdateDB()")
+        if arrayValue[i][1]:
+            self.plugin.setMM("Player.CurrentSong.WriteTags()")
         
     def GetLabel(self, i, arrayValue):
         if self.infoList[i][2]==0:
-            return self.text.set+self.infoList[i][1]+'="'+arrayValue[i]+'"'
+            result = self.text.set+self.infoList[i][1]+"="+arrayValue[i][0]
         else:
-            return self.text.set+self.infoList[i][1]+"="+str(int(arrayValue[i]))
+            result = self.text.set+self.infoList[i][1]+"="+str(int(arrayValue[i][0]))
+        if arrayValue[i][1]:
+            result += " (+ID3)"
+        return result
         
 
     def Configure(
         self,
         i=0,
         arrayValue=[
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            0
+            ["",False],
+            ["",False],
+            ["",False],
+            ["",False],
+            ["",False],
+            ["",False],
+            ["",False],
+            ["",False],
+            ["",False],
+            [0,False],
         ]
     ):
         #text=Text
@@ -1252,15 +1263,23 @@ class WritingToMM(eg.ActionClass):
                 self.infoList[choiceCtrl.GetSelection()][1]+":"
             )
             indx=self.infoList[choiceCtrl.GetSelection()][2]
-            dummy = arrayValue[0] # otherwise error:
+            dummy = arrayValue[0][0] # otherwise error:
 # >>>  NameError: name 'arrayValue' is not defined  <<<   ??????????????????????
             dynCtrl = eval(self.listCtrl[indx] % str(choiceCtrl.GetSelection()))
             dynSizer.Add(dynLbl, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
             dynSizer.Add(dynCtrl, 0, wx.EXPAND)
+            if self.infoList[choiceCtrl.GetSelection()][3]:
+                chkBoxCtrl = wx.CheckBox(dialog, label=self.text.checkboxlabel)
+                chkBoxCtrl.SetValue(arrayValue[choiceCtrl.GetSelection()][1])
+                dynSizer.Add((5,5))
+                dynSizer.Add(chkBoxCtrl, 0, wx.EXPAND)
             mainSizer.Layout()
         choiceCtrl.Bind(wx.EVT_CHOICE, onChoiceChange)
         onChoiceChange()
         if dialog.AffirmedShowModal():
-            arrayValue[choiceCtrl.GetSelection()]=\
+            arrayValue[choiceCtrl.GetSelection()][0]=\
                 dynSizer.GetChildren()[1].GetWindow().GetValue()
+            if self.infoList[choiceCtrl.GetSelection()][3]:
+                arrayValue[choiceCtrl.GetSelection()][1]=\
+                    dynSizer.GetChildren()[3].GetWindow().GetValue()
             return (choiceCtrl.GetSelection(),arrayValue )

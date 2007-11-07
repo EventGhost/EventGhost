@@ -237,7 +237,8 @@ class TransmitIR(eg.ActionClass):
         dialog = eg.ConfigurationDialog(self)
         if repeatCount is None:
             repeatCount = self.repeatCount
-        inactivityWaitTime = inactivityWaitTime or self.inactivityWaitTime
+        if inactivityWaitTime is None:
+            inactivityWaitTime = self.inactivityWaitTime
         if len(code) > 0:
             zone = 0
             if code[0] == "Z":
@@ -361,6 +362,7 @@ class TransmitIR(eg.ActionClass):
             
         if dialog.AffirmedShowModal():
             return GetResult()
+
 
 
 class IRLearnDialog(wx.Dialog):
