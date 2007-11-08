@@ -54,6 +54,7 @@ eg.RegisterPlugin(
 
 
 # Now we import some other things we will need later
+import math
 import wx
 from win32gui import FindWindow, SendMessageTimeout, GetWindowText
 from win32con import WM_COMMAND, WM_USER, SMTO_BLOCK, SMTO_ABORTIFHUNG
@@ -140,6 +141,7 @@ class Winamp(eg.PluginClass):
         self.AddAction(ChangeShuffleStatus)
         self.AddAction(ChangeRepeatStatus)
         self.AddAction(SetVolume)
+        self.AddAction(ChangeVolume)
         
         group = self.AddGroup(
             self.text.infoGroupName, 
@@ -437,24 +439,6 @@ class ChangeShuffleStatus(ChangeRepeatStatus):
 
 
         
-class SetVolume(eg.ActionWithStringParameter):
-    name = "Set Volume Level"
-    description = "Sets the volume to a percentage (%)."
-    
-    def __call__(self, volume):
-        return SendCommand(WM_WA_IPC, (int(volume)*255)/100, WA_SETVOLUME)
-
-
-    def Configure(self, volume=100.0):
-        dialog = eg.ConfigurationDialog(self)
-        volumeCtrl = eg.SpinNumCtrl(dialog, -1, volume, max=100.0)
-        dialog.AddLabel("Volume Level:")
-        dialog.AddCtrl(volumeCtrl)
-        if dialog.AffirmedShowModal():
-            return (volumeCtrl.GetValue(), )
-        
-        
-        
 class GetPlayingSongTitle(eg.ActionClass):
     name = "Get Currently Playing Song Title"
     description = "Gets the currently playing song title."
@@ -485,12 +469,75 @@ class GetVolume(eg.ActionClass):
     description = "Gets the volume level as a percentage (%)."
     
     def __call__(self):
-        intReturn = SendCommand(WM_WA_IPC, -666, WA_SETVOLUME)
-        if intReturn is not None:
-            return ((intReturn * 100.0) / 255)
-        else:
-            return None
+        volume = SendCommand(WM_WA_IPC, -666, WA_SETVOLUME)
+        if volume is None:
+            return
+        return math.floor(volume / 2.55)
 
+
+
+class SetVolume(eg.ActionWithStringParameter):
+    name = "Set Volume Level"
+    description = "Sets the volume to a percentage (%)."
+    class text:
+        text1 = "Set volume to"
+        text2 = "percent."
+        label = "Set Volume to %.2f %%"
+    
+    def __call__(self, volume):
+        SendCommand(WM_WA_IPC, int(math.ceil(volume * 2.55)), WA_SETVOLUME)
+        return volume
+
+
+    def GetLabel(self, percentage):
+        return self.text.label % percentage
+        
+        
+    def Configure(self, percentage=1.0):
+        panel = eg.ConfigPanel(self)
+        valueCtrl = panel.SpinNumCtrl(percentage, min=-100, max=100)
+        panel.AddLine(self.text.text1, valueCtrl, self.text.text2)
+        if panel.Affirmed():
+            return (
+                float(valueCtrl.GetValue()), 
+            )
+        
+        
+        
+class ChangeVolume():      
+    name = "Change Volume Level"
+    description = "Changes the volume relative to the current value."
+    class text:
+        text1 = "Change volume by"
+        text2 = "percent."
+        label = "Change Volume by %.2f %%"
+        
+    def __call__(self, percentage=1.0):  
+        volume = SendCommand(WM_WA_IPC, -666, WA_SETVOLUME)
+        if volume is None:
+            return
+        volume = math.floor(volume / 2.55) + percentage
+        if volume < 0.0:
+            volume = 0.0
+        elif volume > 100.0:
+            volume = 100.0
+        SendCommand(WM_WA_IPC, int(math.ceil(volume * 2.55)), WA_SETVOLUME)
+        return volume
+        
+        
+    def GetLabel(self, percentage):
+        return self.text.label % percentage
+        
+        
+    def Configure(self, percentage=1.0):
+        panel = eg.ConfigPanel(self)
+        valueCtrl = panel.SpinNumCtrl(percentage, min=-100, max=100)
+        panel.AddLine(self.text.text1, valueCtrl, self.text.text2)
+        if panel.Affirmed():
+            return (
+                float(valueCtrl.GetValue()), 
+            )
+         
         
         
 class GetShuffleStatus(eg.ActionClass):
