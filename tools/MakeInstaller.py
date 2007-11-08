@@ -36,6 +36,7 @@ SourcePattern = [
     "*.gif", 
     "*.xml", 
     "*.ico",
+    "*.vbs",
 ]
 
 def GetFiles(files, pattern):

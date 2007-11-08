@@ -788,6 +788,20 @@ class MuteOn(eg.ActionClass):
         return True
 
 
+    def GetLabel(self, *args):
+        return self.text.name
+         
+        
+    def Configure(self, deviceId=0):
+        panel = eg.ConfigPanel(self)
+        deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
+        panel.AddLine("Device:", deviceCtrl)
+        if panel.Affirmed():
+            return (
+                deviceCtrl.GetValue(),
+            )
+
+
 
 class MuteOff(eg.ActionClass):
     name = "Turn Mute Off"
@@ -796,6 +810,20 @@ class MuteOff(eg.ActionClass):
     def __call__(self, deviceId=0):
         SoundMixer.SetMute(False, deviceId)
         return False
+
+
+    def GetLabel(self, *args):
+        return self.text.name
+         
+        
+    def Configure(self, deviceId=0):
+        panel = eg.ConfigPanel(self)
+        deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
+        panel.AddLine("Device:", deviceCtrl)
+        if panel.Affirmed():
+            return (
+                deviceCtrl.GetValue(),
+            )
 
 
 
@@ -807,10 +835,26 @@ class ToggleMute(eg.ActionClass):
         return SoundMixer.ToggleMute(deviceId)
 
 
+    def GetLabel(self, *args):
+        return self.text.name
+         
+        
+    def Configure(self, deviceId=0):
+        panel = eg.ConfigPanel(self)
+        deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
+        panel.AddLine("Device:", deviceCtrl)
+        if panel.Affirmed():
+            return (
+                deviceCtrl.GetValue(),
+            )
+
+
 
 class SetMasterVolume(eg.ActionClass):
     name = "Set Master Volume"
+    description = "Sets the master volume to an absolute value."
     iconFile = "icons/SoundCard"
+    
     class text:
         text1 = "Set master volume to"
         text2 = "percent."
@@ -832,8 +876,12 @@ class SetMasterVolume(eg.ActionClass):
         panel = eg.ConfigPanel(self)
         deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
         valueCtrl = panel.SpinNumCtrl(value, min=0, max=100)
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(wx.StaticText(panel, -1, self.text.text1), 0, wx.ALIGN_CENTER_VERTICAL)
+        sizer.Add(valueCtrl, 0, wx.LEFT|wx.RIGHT, 5)
+        sizer.Add(wx.StaticText(panel, -1, self.text.text2), 0, wx.ALIGN_CENTER_VERTICAL)
         panel.AddLine("Device:", deviceCtrl)
-        panel.AddLine(self.text.text1, valueCtrl, self.text.text2)
+        panel.AddLine(sizer)
         if panel.Affirmed():
             return (
                 float(valueCtrl.GetValue()), 
@@ -844,6 +892,7 @@ class SetMasterVolume(eg.ActionClass):
 
 class ChangeMasterVolumeBy(eg.ActionClass):
     name = "Change Master Volume"
+    description = "Changes the master volume relative to the current value."
     iconFile = "icons/SoundCard"
     class text:
         text1 = "Change master volume by"
@@ -856,15 +905,27 @@ class ChangeMasterVolumeBy(eg.ActionClass):
 
 
     def GetLabel(self, value, deviceId=0):
-        return self.text.name + ": " + str(value) + " %"
+        if deviceId > 0:
+            return "%s #%i: %.2f %%" % (self.text.name, deviceId+1, value)
+        else:
+            return "%s: %.2f %%" % (self.text.name, value)
          
         
     def Configure(self, value=0, deviceId=0):
         panel = eg.ConfigPanel(self)
+        deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
         valueCtrl = panel.SpinNumCtrl(value, min=-100, max=100)
-        panel.AddLine(self.text.text1, valueCtrl, self.text.text2)
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(wx.StaticText(panel, -1, self.text.text1), 0, wx.ALIGN_CENTER_VERTICAL)
+        sizer.Add(valueCtrl, 0, wx.LEFT|wx.RIGHT, 5)
+        sizer.Add(wx.StaticText(panel, -1, self.text.text2), 0, wx.ALIGN_CENTER_VERTICAL)
+        panel.AddLine("Device:", deviceCtrl)
+        panel.AddLine(sizer)
         if panel.Affirmed():
-            return (float(valueCtrl.GetValue()), )
+            return (
+                float(valueCtrl.GetValue()), 
+                deviceCtrl.GetValue(),
+            )
 
 
 

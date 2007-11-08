@@ -131,6 +131,11 @@ class EventGhost(object):
         import App
         self.app = App.MyApp(0)
 
+        from ConfigData import LoadConfig, SaveConfig
+        self.config = config = LoadConfig()
+        self.SaveConfig = SaveConfig
+        self.onlyLogAssigned = config.onlyLogAssigned
+        
         import Icons
         self.Icons = Icons
         
@@ -151,11 +156,6 @@ class EventGhost(object):
             self.DebugNote("Version:", self.versionStr)
             
 
-        from ConfigData import LoadConfig, SaveConfig
-        self.config = config = LoadConfig()
-        self.SaveConfig = SaveConfig
-        self.onlyLogAssigned = config.onlyLogAssigned
-        
         from LanguageTools import LoadStrings, GetTranslation
         self.GetTranslation = GetTranslation
         self.text = LoadStrings(config.language)
