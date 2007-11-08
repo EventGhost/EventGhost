@@ -900,8 +900,8 @@ class ChangeMasterVolumeBy(eg.ActionClass):
         
     
     def __call__(self, value, deviceId=0):
-        SoundMixer.ChangeMasterVolumeBy(value)
-        return SoundMixer.GetMasterVolume()
+        SoundMixer.ChangeMasterVolumeBy(value, deviceId)
+        return SoundMixer.GetMasterVolume(deviceId)
 
 
     def GetLabel(self, value, deviceId=0):
