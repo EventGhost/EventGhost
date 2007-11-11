@@ -216,4 +216,32 @@ class IrDecoder:
             else:
                 if value > level_high:
                     code |= 1
+                    
+#        # shift in b'10', so we have an identifiable beginning
+#        code = 3L
+#        
+#        last_mark_time = 0
+#        last_space_time = 0
+#        tolerance = 2
+#        
+#        for i in xrange(0, dataLen):
+#            # get the raw timing
+#            value = data[i]
+#            # make room for next bit
+#            code = code << 1
+#            if i % 2:
+#                if (
+#                    (value >= last_space_time + tolerance) 
+#                    or (value <= last_space_time - tolerance)
+#                ):
+#                    code |= 1
+#                last_space_time = value
+#            else:
+#                if (
+#                    (value >= last_mark_time + tolerance) 
+#                    or (value <= last_mark_time - tolerance)
+#                ):
+#                    code |= 1
+#                last_mark_time = value
+
         return "U%X" % code
