@@ -1,4 +1,3 @@
-# -*- coding: UTF-8 -*-
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
 # 

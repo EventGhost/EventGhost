@@ -122,13 +122,9 @@ class EventGhost(object):
         self.buildNum = buildNum
         self.versionStr = "%s.%s" % (version, buildNum)
 
-        #from MessageReceiver import MessageReceiver
-        #self.messageReceiver = MessageReceiver()
-        
         # because some functions are only available if a wxApp instance
         # exists, we simply create it first
-        import App
-        self.app = App.MyApp(0)
+        self.app
 
         import Icons
         self.Icons = Icons
@@ -142,19 +138,19 @@ class EventGhost(object):
         # redirect all wxPython error messages to our log
         class MyLog(wx.PyLog):
             def DoLog(self2, level, msg, timestamp):
-                if (level < 6) and not self.debugLevel:
+                if (level < 6):# and not self.debugLevel:
                     return
                 sys.stderr.write("Error%d: %s" % (level, msg))
-        wx.Log.SetActiveTarget(MyLog())
+        #wx.Log.SetActiveTarget(MyLog())
 
-        from ConfigData import LoadConfig, SaveConfig
-        self.config = config = LoadConfig()
-        self.SaveConfig = SaveConfig
-        self.onlyLogAssigned = config.onlyLogAssigned
+        self.onlyLogAssigned = eg.config.onlyLogAssigned
         
         from LanguageTools import LoadStrings, GetTranslation
         self.GetTranslation = GetTranslation
-        self.text = LoadStrings(config.language)
+        self.text = LoadStrings(eg.config.language)
+
+        from Text import Text
+        Utils.SetClass(self.text, Text)
 
         import WinAPI
         sys.modules["eg.WinAPI"] = WinAPI
@@ -162,10 +158,10 @@ class EventGhost(object):
         import cFunctions
         sys.modules["eg.cFunctions"] = cFunctions
             
-        from Text import Text
-        Utils.SetClass(self.text, Text)
-
-        self.DoImports1()
+        self.DoImports()
+        
+        from greenlet import greenlet
+        self.Greenlet = greenlet
         
         import PluginTools
         self.OpenPlugin = PluginTools.OpenPlugin
@@ -248,16 +244,13 @@ class EventGhost(object):
         return attr
     
     
-    def DoImports1(self):
+    def DoImports(self):
         from sys import exit as Exit
-        from Validators import DigitOnlyValidator, AlphaOnlyValidator
         from WinAPI.Pathes import APPDATA, STARTUP, PROGRAMFILES, TEMPDIR
         self.CONFIG_DIR = os.path.join(APPDATA, self.APP_NAME)
         from WinAPI.Shortcut import CreateShortcut
         from WinAPI.serial import Serial as SerialPort
         from WinAPI.SerialThread import SerialThread
-
-        from greenlet import greenlet as Greenlet
         self.__dict__.update(locals())
         
         
@@ -270,7 +263,7 @@ class EventGhost(object):
         
         self.PrintDebugNotice("shutting down")
         self.config.onlyLogAssigned = self.onlyLogAssigned
-        self.SaveConfig()
+        self.config.Save()
         self.messageReceiver.Close()
         
         
@@ -344,14 +337,13 @@ class EventGhost(object):
         del self.programReturnStack[:]
         while self.programCounter is not None:
             programCounter = self.programCounter
-            currentItem, currentIndex = programCounter
-            currentItem.Execute()
+            item, idx = programCounter
+            item.Execute()
             if self.programCounter == programCounter:
                 # program counter has not changed. Ask the parent for the next
                 # item.
-                if isinstance(currentItem.parent, eg.MacroItem):
-                    self.programCounter = \
-                        currentItem.parent.GetNextChild(currentIndex)
+                if isinstance(item.parent, eg.MacroItem):
+                    self.programCounter = item.parent.GetNextChild(idx)
                 else:
                     self.programCounter = None
                 
@@ -359,9 +351,8 @@ class EventGhost(object):
                 # we have no next item in this level. So look in the return 
                 # stack if any return has to be executed
                 if self.programReturnStack:
-                    currentItem, currentIndex = self.programReturnStack.pop()
-                    self.programCounter = \
-                        currentItem.parent.GetNextChild(currentIndex)
+                    item, idx = self.programReturnStack.pop()
+                    self.programCounter = item.parent.GetNextChild(idx)
                     
 
     def StopMacro(self, ignoreReturn=False):
@@ -387,8 +378,8 @@ class EventGhost(object):
         config = self.config
         parts = searchPath.split(".")
         for part in parts[:-1]:
-            config = config.setdefault(part, eg.Bunch)
-        return config.setdefault(parts[-1], defaultCls)
+            config = config.SetDefault(part, eg.Bunch)
+        return config.SetDefault(parts[-1], defaultCls)
             
             
     def DummyFunc(*args, **kwargs):

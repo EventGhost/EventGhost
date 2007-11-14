@@ -179,7 +179,7 @@ class Log:
                 s.append(str(arg))
             sys.stderr.write(" ".join(s) + "\n")
     else:
-        def PrintDebugNotice(self, args):
+        def PrintDebugNotice(self, *args):
             pass
 
 

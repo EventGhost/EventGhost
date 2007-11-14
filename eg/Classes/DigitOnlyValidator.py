@@ -16,36 +16,27 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# $LastChangedDate: 2007-07-25 05:07:21 +0200 (Mi, 25 Jul 2007) $
+# $LastChangedRevision: 187 $
+# $LastChangedBy: bitmonster $
 
 import string
 import wx
 
 
-ALPHA_ONLY = 1
-DIGIT_ONLY = 2
-
-
-class BaseValidator(wx.PyValidator):
-
-    def __init__(self, flag=None, choices=None):
+class DigitOnlyValidator(wx.PyValidator):
+    
+    def __init__(self, choices=None):
         wx.PyValidator.__init__(self)
-        self.flag = flag
         self.choices = choices
         self.Bind(wx.EVT_CHAR, self.OnChar)
 
 
     def Clone(self):
-        return BaseValidator(self.flag, self.choices)
+        return DigitOnlyValidator(self.choices)
 
 
     def TransferToWindow(self):
-        return True
-
-
-    def TransferFromWindow(self):
         return True
 
 
@@ -60,15 +51,9 @@ class BaseValidator(wx.PyValidator):
             except:
                 pass
         
-        if self.flag == ALPHA_ONLY:
-            for x in val:
-                if x not in string.letters:
-                    return False
-
-        elif self.flag == DIGIT_ONLY:
-            for x in val:
-                if x not in string.digits:
-                    return False
+        for x in val:
+            if x not in string.digits:
+                return False
 
         return True
 
@@ -80,11 +65,7 @@ class BaseValidator(wx.PyValidator):
             event.Skip()
             return
 
-        if self.flag == ALPHA_ONLY and chr(key) in string.letters:
-            event.Skip()
-            return
-
-        if self.flag == DIGIT_ONLY and chr(key) in string.digits:
+        if chr(key) in string.digits:
             event.Skip()
             return
 
@@ -96,16 +77,4 @@ class BaseValidator(wx.PyValidator):
         return
 
 
-
-class DigitOnlyValidator(BaseValidator):
-    
-    def __init__(self, choices=None):
-        BaseValidator.__init__(self, DIGIT_ONLY, choices)
-
-
-
-class AlphaOnlyValidator(BaseValidator):
-    
-    def __init__(self, choices=None):
-        BaseValidator.__init__(self, ALPHA_ONLY, choices)
         

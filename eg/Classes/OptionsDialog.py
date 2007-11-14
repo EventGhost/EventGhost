@@ -216,7 +216,7 @@ class OptionsDialog(eg.Dialog):
             dlg.ShowModal()
             dlg.Destroy()
         eg.config.language = language
-        eg.SaveConfig()
+        eg.config.Save()
         self.Destroy()
         event.Skip()
 

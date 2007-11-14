@@ -177,7 +177,7 @@ class LanguageEditor(wx.Frame):
         eg.OptionsDialog
         eg.FindDialog
         #import MainFrame
-        from ActionThread import CORE_PLUGINS
+        from Singletons.ActionThread import CORE_PLUGINS
         
         for plugin in os.listdir("plugins"):
             if not plugin.startswith("."):
@@ -406,7 +406,7 @@ class LanguageEditor(wx.Frame):
         self.config.position = self.GetPositionTuple()
         self.config.size = self.GetSizeTuple()
         self.config.splitPosition = self.tree.GetSizeTuple()[0]
-        eg.SaveConfig()
+        eg.config.Save()
         wx.GetApp().ExitMainLoop()
             
         

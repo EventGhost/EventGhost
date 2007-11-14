@@ -64,7 +64,7 @@ SPECIAL_THANKS_DATA = (
             ("jinxdone", "LIRC Event Receiver"),
             ("Micke Prag", "TellStick"),
             ("oystein", "Windows Media Player"),
-            ("Lubo&scaron; R&uuml;ckl", "Billy, MediaMonkey"),
+            ("Lubo&scaron; R&uuml;ckl", "Billy, MediaMonkey, IrfanView"),
             ("SurFan", "TheaterTek"),
         ),
     ),

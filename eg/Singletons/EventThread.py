@@ -101,7 +101,7 @@ class EventThread(ThreadWorker):
         boottime = time.time() - win32api.GetTickCount() / 1000.0
         if boottime > int(eg.config.storedBootTime) + 10:
             eg.config.storedBootTime = boottime
-            eg.SaveConfig()
+            eg.config.Save()
             self.TriggerEvent("OnInitAfterBoot")
             
         if self.startupEvent is not None:

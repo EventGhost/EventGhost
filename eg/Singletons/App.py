@@ -36,7 +36,11 @@ from win32con import REALTIME_PRIORITY_CLASS, WM_QUERYENDSESSION, WM_ENDSESSION
 
 
 
-class MyApp(wx.App):
+class App(wx.App):
+    
+    def __init__(self):
+        wx.App.__init__(self, 0)
+    
     
     #@eg.LogIt
     def OnInit(self):
