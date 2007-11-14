@@ -283,9 +283,9 @@ class FindWindow(eg.ActionClass):
         )
 
     def __init__(self):
-        class defaults:
+        class Defaults:
             hideOnDrag = False
-        self.config = eg.GetConfig("plugins.Window.FindWindow", defaults)
+        self.config = eg.GetConfig("plugins.Window.FindWindow", Defaults)
             
             
     def Compile(

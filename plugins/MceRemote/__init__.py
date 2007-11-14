@@ -197,7 +197,7 @@ class MceMessageReceiver(eg.ThreadWorker):
         self.hinst = wc.hInstance
         
         self.dll = WinDLL(dllPath)
-        #self.dll.MceIrRegisterEvents(self.hwnd)
+        self.dll.MceIrRegisterEvents(self.hwnd)
         self.dll.MceIrSetRepeatTimes(1,1)
         
         # Bind to suspend notifications so we can go into suspend
