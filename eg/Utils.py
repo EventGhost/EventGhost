@@ -93,18 +93,7 @@ def GetMyRepresentation(value):
         return "=<wx.%s>" % t[len("<class 'wx._controls."): -2]
     return "=" + repr(value)
                 
-                
-def DebugNote(*args):
-    """Logs a message if eg.debugLevel is set."""
-    t = threading.currentThread()
-    s = [time.strftime("%H:%M:%S:")]
-    s.append(str(t.getName()) + ":")
-
-    for arg in args:
-        s.append(str(arg))
-    sys.stderr.write(" ".join(s) + "\n")
-
-        
+                        
 def GetFuncArgString(func, args, kwargs):
     classname = ""
     argnames, varargs, varkw, defaults = inspect.getargspec(func)
@@ -133,7 +122,7 @@ def LogIt(func):
     
     def LogItWrapper(*args, **kwargs):
         fname, argString = GetFuncArgString(func, args, kwargs)
-        DebugNote(fname + argString)
+        eg.PrintDebugNotice(fname + argString)
         return func(*args, **kwargs)
     return LogItWrapper
         
@@ -143,13 +132,13 @@ def LogItWithReturn(func):
     if not eg.debugLevel:
         return func
     
-    def LogItWrapper(*args, **kwargs):
+    def LogItWithReturnWrapper(*args, **kwargs):
         fname, argString = GetFuncArgString(func, args, kwargs)
-        DebugNote(fname + argString)
+        eg.PrintDebugNotice(fname + argString)
         res = func(*args, **kwargs)
-        DebugNote(fname + " => " + repr(res))
+        eg.PrintDebugNotice(fname + " => " + repr(res))
         return res
-    return LogItWrapper
+    return LogItWithReturnWrapper
         
 
 def TimeIt(func):
@@ -163,7 +152,7 @@ def TimeIt(func):
         startTime = time.clock()
         fname, argString = GetFuncArgString(func, args, kwargs)
         res = func(*args, **kwargs)
-        DebugNote(fname + " :" + repr(time.clock() - startTime))
+        eg.PrintDebugNotice(fname + " :" + repr(time.clock() - startTime))
         return res
     return TimeItWrapper
 
@@ -234,12 +223,15 @@ def SetClass(obj, cls):
 import wx
 
 def EnsureVisible(window):
-    """ Ensures the given wx.TopLevelWindow is visible on the screen. 
+    """ 
+    Ensures the given wx.TopLevelWindow is visible on the screen. 
     Moves and resizes it if necessary.
     """
     # get all display rectangles
-    displayRects = [wx.Display(i).GetClientArea() 
-        for i in range(wx.Display.GetCount())]
+    displayRects = [
+        wx.Display(i).GetClientArea() 
+        for i in range(wx.Display.GetCount())
+    ]
             
     # wx.Display.GetFromPoint doesn't take GetClientArea into account, so
     # we have to define our own function
@@ -251,14 +243,13 @@ def EnsureVisible(window):
             return wx.NOT_FOUND
         
     windowRect = window.GetScreenRect()
-    topLeft = windowRect.GetTopLeft()
-    bottomRight = windowRect.GetBottomRight()
+    windowTopLeft = windowRect.GetTopLeft()
+    windowBottomRight = windowRect.GetBottomRight()
     
-    if (
-        GetDisplayFromPoint(topLeft) != wx.NOT_FOUND
-        and GetDisplayFromPoint(bottomRight) != wx.NOT_FOUND
-    ):
-        return
+    # if the entire window is contained on the display, take a quick exit
+    if GetDisplayFromPoint(windowTopLeft) != wx.NOT_FOUND:
+        if GetDisplayFromPoint(windowBottomRight) != wx.NOT_FOUND:
+            return
     
     # get the nearest display
     displayNum = wx.Display.GetFromWindow(window)
@@ -270,37 +261,37 @@ def EnsureVisible(window):
     
     displayRect = displayRects[displayNum]
 
-    dLeft, dTop = displayRect.GetTopLeft().Get()
-    dRight, dBottom = displayRect.GetBottomRight().Get()
+    displayLeft, displayTop = displayRect.GetTopLeft().Get()
+    displayRight, displayBottom = displayRect.GetBottomRight().Get()
     
-    wLeft, wTop = topLeft.Get()
-    wRight, wBottom = bottomRight.Get()
+    windowLeft, windowTop = windowTopLeft.Get()
+    windowRight, windowBottom = windowBottomRight.Get()
     
     # shift the dialog horizontally into the display area
-    if wLeft < dLeft:
-        wRight += (dLeft - wLeft)
-        wLeft = dLeft
-        if wRight > dRight:
-            wRight = dRight
-    elif wRight > dRight:
-        wLeft += (dRight - wRight)
-        wRight = dRight
-        if wLeft < dLeft:
-            wLeft = dLeft
+    if windowLeft < displayLeft:
+        windowRight += (displayLeft - windowLeft)
+        windowLeft = displayLeft
+        if windowRight > displayRight:
+            windowRight = displayRight
+    elif windowRight > displayRight:
+        windowLeft += (displayRight - windowRight)
+        windowRight = displayRight
+        if windowLeft < displayLeft:
+            windowLeft = displayLeft
             
     # shift the dialog vertically into the display area
-    if wTop < dTop:
-        wBottom += (dTop - wTop)
-        wTop = dTop
-        if wBottom > dBottom:
-            wBottom = dBottom
-    elif wBottom > dBottom:
-        wTop += (dBottom - wBottom)
-        wBottom = dBottom
-        if wTop < dTop:
-            wTop = dTop
+    if windowTop < displayTop:
+        windowBottom += (displayTop - windowTop)
+        windowTop = displayTop
+        if windowBottom > displayBottom:
+            windowBottom = displayBottom
+    elif windowBottom > displayBottom:
+        windowTop += (displayBottom - windowBottom)
+        windowBottom = displayBottom
+        if windowTop < displayTop:
+            windowTop = displayTop
             
     # set the new position and size
-    newRect = wx.RectPP((wLeft, wTop), (wRight, wBottom))
+    newRect = wx.RectPP((windowLeft, windowTop), (windowRight, windowBottom))
     window.SetRect(newRect)
 

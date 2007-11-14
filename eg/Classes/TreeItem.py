@@ -119,25 +119,25 @@ class TreeItem(object):
         return attr, None, childs
 
 
-    def GetXmlString(self, write, indent_str="", pretty=True):
+    def GetXmlString(self, write, indentStr="", pretty=True):
         attr, text, childs = self.WriteToXML()
-        write(indent_str)
+        write(indentStr)
         write("<")
         write(self.xmlTag)
         for key, value in attr:
             write(' %s=%s' % (key, quoteattr(unicode(value)).encode("UTF-8")))
         write(">")
         if pretty:
-            new_indent_str = indent_str + "    "
+            newIndentStr = indentStr + "    "
         else:
-            new_indent_str = indent_str
+            newIndentStr = indentStr
         if text is not None:
-            write(new_indent_str)
+            write(newIndentStr)
             write(escape(text).encode("UTF-8"))
         if childs:
             for child in childs:
-                child.GetXmlString(write, new_indent_str, pretty)
-        write(indent_str)
+                child.GetXmlString(write, newIndentStr, pretty)
+        write(indentStr)
         write("</%s>" % self.xmlTag)
                 
                 
@@ -324,8 +324,7 @@ class TreeItem(object):
                 return False
             try:
                 data = dataObj.GetText().encode("utf-8")
-                xml_tree = ElementTree.fromstring(data)
-                for childXmlNode in xml_tree:
+                for childXmlNode in ElementTree.fromstring(data):
                     childCls = self.document.XMLTag2ClassDict[childXmlNode.tag].__bases__[0]
                     if self.DropTest(childCls) in (1, 5):
                         continue

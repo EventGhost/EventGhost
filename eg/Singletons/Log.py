@@ -21,12 +21,14 @@
 # $LastChangedBy: bitmonster $
 
 import eg
-from collections import deque
-from types import UnicodeType
-from time import time
 import codecs
 import weakref
 import sys
+import traceback
+import threading
+from collections import deque
+from types import UnicodeType
+from time import time, strftime
 
 _oldStdOut = sys.stdout
 _oldStdErr = sys.stderr
@@ -80,6 +82,13 @@ class Log:
                 _oldStdErr._displayMessage = False
             except:
                 pass
+        if eg.debugLevel:
+            import warnings
+            warnings.simplefilter('error', UnicodeWarning)
+            self.PrintDebugNotice("----------------------------------------")
+            self.PrintDebugNotice("        EventGhost started")
+            self.PrintDebugNotice("----------------------------------------")
+            self.PrintDebugNotice("Version:", eg.versionStr)
 
     
     @eg.LogIt
@@ -125,11 +134,18 @@ class Log:
         self.Write(text + "\n", INFO_ICON, None)
         
         
-    def PrintError(self, text):
+    def PrintError(self, *args):
+        def convert(s):
+            if type(s) == type(u""):
+                return s
+            else:
+                return str(s)
+        text = " ".join([convert(arg) for arg in args])
         self.Write(text + "\n", ERROR_ICON, None)
         
         
-    def PrintNotice(self, text):
+    def PrintNotice(self, *args):
+        text = " ".join([str(arg) for arg in args])
         self.Write(text + "\n", NOTICE_ICON, None)
         
         
@@ -137,6 +153,36 @@ class Log:
         self.Write(text + "\n", icon, weakref.ref(item))        
             
             
+    def PrintTraceback(self, msg=None, skip=0):
+        if msg:
+            self.PrintError(msg)
+        tbType, tbValue, tbTraceback = sys.exc_info() 
+        list = ['Traceback (most recent call last) (%d):\n' % eg.buildNum]
+        if tbTraceback:
+            list += traceback.format_tb(tbTraceback)[skip:]
+        list += traceback.format_exception_only(tbType, tbValue)
+        
+        error = "".join(list)
+        self.Write(error.rstrip() + "\n", ERROR_ICON, None)
+        if eg.debugLevel:
+            sys.stderr.write(error)
+            
+            
+    if eg.debugLevel:
+        def PrintDebugNotice(self, *args):
+            """Logs a message if eg.debugLevel is set."""
+            t = threading.currentThread()
+            s = [strftime("%H:%M:%S:")]
+            s.append(str(t.getName()) + ":")
+        
+            for arg in args:
+                s.append(str(arg))
+            sys.stderr.write(" ".join(s) + "\n")
+    else:
+        def PrintDebugNotice(self, args):
+            pass
+
+
     def LogEvent(self, event):
         """Store and display an EventGhostEvent in the logger."""
         payload = event.payload

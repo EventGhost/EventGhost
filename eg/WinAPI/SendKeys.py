@@ -430,10 +430,10 @@ class SendKeysParser:
         for block in self.rawData:        
             for virtualKey in block:
                 vk = virtualKey & 0xFF
-                high_bits = virtualKey & 0xFF00
+                highBits = virtualKey & 0xFF00
                 lparam = MAKELONG(
                     0, 
-                    MapVirtualKey(vk, 0) | high_bits
+                    MapVirtualKey(vk, 0) | highBits
                 ) | 1
                 
                 keyboardStateBuffer[vk] |= 129  
@@ -457,10 +457,10 @@ class SendKeysParser:
                 
             for virtualKey in reversed(block):
                 vk = virtualKey & 0xFF
-                high_bits = virtualKey & 0xFF00
+                highBits = virtualKey & 0xFF00
                 lparam = MAKELONG(
                     0,
-                    MapVirtualKey(vk, 0) | high_bits
+                    MapVirtualKey(vk, 0) | highBits
                 )
                 lparam |= 0xC0000001
                 
@@ -502,11 +502,11 @@ class SendKeysParser:
         
     def ParseText(self, text):
         i = 0
-        str_len = len(text)
-        while i < str_len:
+        strLen = len(text)
+        while i < strLen:
             ch = text[i]
             if ch == "{":
-                if i+1 < str_len and text[i+1] == "{":
+                if i+1 < strLen and text[i+1] == "{":
                     i += 2
                     self.ParseSingleChar(ch)
                 else:

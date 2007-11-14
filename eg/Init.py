@@ -25,7 +25,6 @@ import os
 import imp
 import time
 import threading
-import traceback
 from os.path import exists
 import wx
 import locale
@@ -98,7 +97,7 @@ class EventGhost(object):
         self.HexString = Utils.HexString
         self.ParseString = Utils.ParseString
         
-        self.document = None
+        #self.document = None
         self.result = None
         self.event = None
         self.eventTable = {}
@@ -123,8 +122,8 @@ class EventGhost(object):
         self.buildNum = buildNum
         self.versionStr = "%s.%s" % (version, buildNum)
 
-        from MessageReceiver import MessageReceiver
-        self.messageReceiver = MessageReceiver()
+        #from MessageReceiver import MessageReceiver
+        #self.messageReceiver = MessageReceiver()
         
         # because some functions are only available if a wxApp instance
         # exists, we simply create it first
@@ -134,29 +133,18 @@ class EventGhost(object):
         import Icons
         self.Icons = Icons
         
-        import Log
-        self.log = Log.Log()
         self.Print = self.log.Print
-        if not self.debugLevel:
-            self.DebugNote = self.DummyFunc
-        else:
-            import warnings
-            warnings.simplefilter('error', UnicodeWarning)
-
-            self.DebugNote = Utils.DebugNote
-    
-            self.DebugNote("----------------------------------------")
-            self.DebugNote("        EventGhost started")
-            self.DebugNote("----------------------------------------")
-            self.DebugNote("Version:", self.versionStr)
+        self.PrintError = self.log.PrintError
+        self.PrintNotice = self.log.PrintNotice
+        self.PrintTraceback = self.log.PrintTraceback
+        self.PrintDebugNotice = self.log.PrintDebugNotice
             
-
         # redirect all wxPython error messages to our log
         class MyLog(wx.PyLog):
             def DoLog(self2, level, msg, timestamp):
-                if (level < 6): # and not self.debugLevel:
+                if (level < 6) and not self.debugLevel:
                     return
-                self.log.PrintError("Error%d: %s" % (level, msg))
+                sys.stderr.write("Error%d: %s" % (level, msg))
         wx.Log.SetActiveTarget(MyLog())
 
         from ConfigData import LoadConfig, SaveConfig
@@ -171,9 +159,7 @@ class EventGhost(object):
         import WinAPI
         sys.modules["eg.WinAPI"] = WinAPI
         self.WinAPI = WinAPI
-        import TreeItems
         import cFunctions
-        sys.modules["eg.TreeItems"] = TreeItems
         sys.modules["eg.cFunctions"] = cFunctions
             
         from Text import Text
@@ -181,9 +167,6 @@ class EventGhost(object):
 
         self.DoImports1()
         
-        import EventGhostEvent
-        self.EventGhostEvent = EventGhostEvent.EventGhostEvent
-
         import PluginTools
         self.OpenPlugin = PluginTools.OpenPlugin
         self.ClosePlugin = PluginTools.ClosePlugin
@@ -199,9 +182,6 @@ class EventGhost(object):
         from WinAPI.SerialThread import EnumSerialPorts as GetAllPorts
         self.SerialPort.GetAllPorts = classmethod(GetAllPorts)
         
-        from PluginManager import PluginManager
-        self.pluginManager = PluginManager()
-        
         from WinAPI.SendKeys import SendKeys
         self.SendKeys = SendKeys
         
@@ -210,30 +190,18 @@ class EventGhost(object):
         import WinAPI.SendKeys
         import WinAPI.COMServer
         
-        from Scheduler import Scheduler
-        self.scheduler = Scheduler()
         self.scheduler.start()
-        
         self.messageReceiver.Start()
-        
-        from Document import Document
-        self.document = Document()
         eg.app.SetupGui()
                         
         self.SetProcessingState = eg.app.taskBarIcon.SetProcessingState
 
-        from ActionThread import ActionThread
-        self.actionThread = actionThread = ActionThread()
-        
-        from EventGhostEvent import Init
-        Init()
-        actionThread.Start()
+        self.EventGhostEvent.Init()
+        self.actionThread.Start()
 
-        from EventThread import EventThread
-        self.eventThread = eventThread = EventThread()
-        eventThread.startupEvent = self.startupArguments.startupEvent
-        self.TriggerEvent = eventThread.TriggerEvent
-        self.TriggerEnduringEvent = eventThread.TriggerEnduringEvent
+        eg.eventThread.startupEvent = self.startupArguments.startupEvent
+        self.TriggerEvent = eg.eventThread.TriggerEvent
+        self.TriggerEnduringEvent = eg.eventThread.TriggerEnduringEvent
                     
         config = self.config
 
@@ -250,8 +218,8 @@ class EventGhost(object):
             else:
                 startupFile = config.autoloadFilePath
                 
-        eventThread.Start()
-        wx.CallAfter(eventThread.Call, eventThread.StartSession, startupFile)
+        eg.eventThread.Start()
+        wx.CallAfter(eg.eventThread.Call, eg.eventThread.StartSession, startupFile)
         if config.checkUpdate:
             # avoid more than one check per day
             today = time.gmtime()[:3]
@@ -264,14 +232,17 @@ class EventGhost(object):
 
             
     def __getattr__(self, name):
+        if name[0].islower():
+            modName = name[0].upper() + name[1:]
+            mod = __import__("Singletons." + modName, fromlist=[modName])
+            singelton = getattr(mod, modName)()
+            self.__dict__[name] = singelton
+            return singelton
+            
         try:
-            mod = __import__("Controls.%s" % name, fromlist=[name])
+            mod = __import__("Classes." + name, fromlist=[name])
         except ImportError:
-            try:
-                mod = __import__("Dialogs.%s" % name, fromlist=[name])
-            except ImportError:
-                raise
-        eg.DebugNote("Loaded module %s" % name)
+            raise
         attr = getattr(mod, name)
         self.__dict__[name] = attr
         return attr
@@ -279,7 +250,6 @@ class EventGhost(object):
     
     def DoImports1(self):
         from sys import exit as Exit
-        from ThreadWorker import ThreadWorker
         from Validators import DigitOnlyValidator, AlphaOnlyValidator
         from WinAPI.Pathes import APPDATA, STARTUP, PROGRAMFILES, TEMPDIR
         self.CONFIG_DIR = os.path.join(APPDATA, self.APP_NAME)
@@ -287,36 +257,18 @@ class EventGhost(object):
         from WinAPI.serial import Serial as SerialPort
         from WinAPI.SerialThread import SerialThread
 
-        from PluginClass import PluginClass
-        from IrDecoder import IrDecoder
-        from RawReceiverPlugin import RawReceiverPlugin
-        from ActionClass import ActionClass, ActionWithStringParameter
-        from ActionGroup import ActionGroup
-
-        #import TreeItems
-        from TreeItems.TreeItem import TreeItem
-        from TreeItems.ContainerItem import ContainerItem
-        from TreeItems.EventItem import EventItem
-        from TreeItems.RootItem import RootItem
-        from TreeItems.MacroItem import MacroItem
-        from TreeItems.FolderItem import FolderItem
-        from TreeItems.ActionItem import ActionItem
-        from TreeItems.AutostartItem import AutostartItem
-        from TreeItems.PluginItem import PluginItem
-        from TreeItems.TreeLink import TreeLink
         from greenlet import greenlet as Greenlet
         self.__dict__.update(locals())
         
         
     def DeInit(self):
-        self.DebugNote("stopping threads")
+        self.PrintDebugNotice("stopping threads")
         self.actionThread.CallWait(self.actionThread.StopSession)
         self.scheduler.Stop()
         self.actionThread.Stop()
         self.eventThread.Stop()
         
-        
-        self.DebugNote("shutting down")
+        self.PrintDebugNotice("shutting down")
         self.config.onlyLogAssigned = self.onlyLogAssigned
         self.SaveConfig()
         self.messageReceiver.Close()
@@ -411,7 +363,6 @@ class EventGhost(object):
                     self.programCounter = \
                         currentItem.parent.GetNextChild(currentIndex)
                     
-                    
 
     def StopMacro(self, ignoreReturn=False):
         self.programCounter = None
@@ -419,36 +370,6 @@ class EventGhost(object):
             del self.programReturnStack[:]
         
         
-    def PrintError(self, *args):
-        def convert(s):
-            if type(s) == type(u""):
-                return s
-            else:
-                return str(s)
-        text = " ".join([convert(arg) for arg in args])
-        self.log.PrintError(text)
-
-
-    def PrintNotice(self, *args):
-        text = " ".join([str(arg) for arg in args])
-        self.log.PrintNotice(text)
-
-
-    def PrintTraceback(self, msg=None, skip=0):
-        if msg:
-            self.PrintError(msg)
-        tbType, tbValue, tbTraceback = sys.exc_info() 
-        list = ['Traceback (most recent call last) (%d):\n' % self.buildNum]
-        if tbTraceback:
-            list += traceback.format_tb(tbTraceback)[skip:]
-        list += traceback.format_exception_only(tbType, tbValue)
-        
-        error = "".join(list)
-        eg.PrintError(error.rstrip())
-        if eg.debugLevel:
-            sys.stderr.write(error)
-            
-            
     def CallWait(self, func, *args, **kwargs):
         result = [None]
         event = threading.Event()

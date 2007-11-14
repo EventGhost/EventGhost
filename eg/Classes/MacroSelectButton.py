@@ -28,14 +28,14 @@ class MacroSelectButton(wx.Window):
     
     def __init__(self, parent, label, title, mesg, macro=None):
         if macro is None:
-            macro_name = ""
+            macroName = ""
         else:
-            macro_name = macro.name
+            macroName = macro.name
         self.title = title
         self.mesg = mesg
         self.macro = macro
         wx.Window.__init__(self, parent, -1)
-        self.textBox = eg.StaticTextBox(self, -1, macro_name, size=(200,-1))
+        self.textBox = eg.StaticTextBox(self, -1, macroName, size=(200,-1))
         self.button = wx.Button(self, -1, label)
         self.Bind(wx.EVT_BUTTON, self.OnButton)
         sizer = wx.BoxSizer(wx.HORIZONTAL)

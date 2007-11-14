@@ -82,11 +82,11 @@ class ActionItem(TreeItem):
             # this should never happen
             return
         text = text.strip()
-        obj_str, remainder = text.split('(', 1)
-        obj_str = gPatches.get(obj_str, obj_str)                
+        objStr, remainder = text.split('(', 1)
+        objStr = gPatches.get(objStr, objStr)                
         argString, _ = remainder.rsplit(')', 1)
         try:
-            action = eval(obj_str, eg.plugins.__dict__)
+            action = eval(objStr, eg.plugins.__dict__)
         except:
             eg.PrintError("Can't find action: " + text)
             action = None

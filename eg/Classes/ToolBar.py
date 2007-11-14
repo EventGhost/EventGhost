@@ -88,11 +88,11 @@ class ToolBar(wx.ToolBar):
             obj.downFunc = downFunc
         else:
             if func is None:
-                func_wrapper = getattr(self.parent, "OnCmd" + name)
+                FuncWrapper = getattr(self.parent, "OnCmd" + name)
             else:
-                def func_wrapper(event):
+                def FuncWrapper(event):
                     func()
-            self.Bind(wx.EVT_TOOL, func_wrapper, id=id)
+            self.Bind(wx.EVT_TOOL, FuncWrapper, id=id)
         setattr(self.buttons, name, obj)
         return obj
         

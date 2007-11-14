@@ -21,7 +21,6 @@
 # $LastChangedBy$
 
 import eg
-from ThreadWorker import ThreadWorker
 
 import win32gui
 import win32api
@@ -29,7 +28,7 @@ import win32con
 
 
 
-class MessageReceiver(ThreadWorker):
+class MessageReceiver(eg.ThreadWorker):
     """
     A thread with a hidden window to receive win32 messages for different 
     purposes.
@@ -37,7 +36,7 @@ class MessageReceiver(ThreadWorker):
     def __init__(self):
         self.messageProcs = {}
         self.multipleMessageProcs = {}
-        ThreadWorker.__init__(self)
+        eg.ThreadWorker.__init__(self)
         
         
     @eg.LogIt

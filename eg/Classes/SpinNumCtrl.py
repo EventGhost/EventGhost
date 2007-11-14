@@ -34,7 +34,7 @@ class SpinNumCtrl(wx.Window):
     buttons to let the user change it.
     """
     
-    _default_args = {
+    _defaultArgs = {
         "integerWidth": 3,
         "fractionWidth": 2,
         "allowNegative": False,
@@ -62,12 +62,12 @@ class SpinNumCtrl(wx.Window):
         else:
             self.increment = 1
 
-        new_args = self._default_args.copy()
+        newArgs = self._defaultArgs.copy()
         if kwargs.has_key("min"):
             if kwargs["min"] < 0:
-                new_args["allowNegative"] = True
+                newArgs["allowNegative"] = True
                 
-        new_args.update(kwargs)
+        newArgs.update(kwargs)
         wx.Window.__init__(self, parent, id, pos, size, 0)
         self.SetThemeEnabled(True)
         numCtrl = masked.NumCtrl(
@@ -79,7 +79,7 @@ class SpinNumCtrl(wx.Window):
             style,
             validator, 
             name, 
-            **new_args
+            **newArgs
         )
         self.numCtrl = numCtrl
         numCtrl.SetCtrlParameters(        

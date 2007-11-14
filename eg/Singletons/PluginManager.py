@@ -160,7 +160,7 @@ class PluginManager:
             try:
                 version = pickle.load(databaseFile)
                 if version != eg.versionStr:
-                    eg.DebugNote("pluginManager version mismatch")
+                    eg.PrintDebugNotice("pluginManager version mismatch")
                     return
                 self.database = pickle.load(databaseFile)
             except:

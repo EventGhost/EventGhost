@@ -150,8 +150,8 @@ class OptionsDialog(eg.Dialog):
             )
         )
         
-        static_box = wx.StaticBox(page1, -1, Text.LanguageGroup)
-        langGroupSizer = wx.StaticBoxSizer(static_box, wx.VERTICAL)
+        staticBox = wx.StaticBox(page1, -1, Text.LanguageGroup)
+        langGroupSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
         langGroupSizer.Add(languageChoice, 0, wx.LEFT|wx.RIGHT, 18)
         
         page1Sizer = wx.BoxSizer(wx.VERTICAL)

@@ -29,8 +29,7 @@ import types
 
 import eg
 from Utils import SetClass
-from PluginMetaClass import PluginMetaClass
-from EventGhostEvent import EventGhostEvent 
+from Classes.PluginMetaClass import PluginMetaClass
 from PluginProxy import PluginProxy
 
 
@@ -90,7 +89,7 @@ class PluginInfoBase(object):
     instances = None
     actionList = None
     expanded = False
-    lastEvent = EventGhostEvent()
+    lastEvent = eg.EventGhostEvent()
     actionClassList = None
     initFailed = True
     originalText = None

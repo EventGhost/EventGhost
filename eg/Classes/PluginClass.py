@@ -26,7 +26,7 @@ import eg
 import sys
 import wx
 from PluginMetaClass import PluginMetaClass
-from ActionGroup import CreateAction
+CreateAction = eg.ActionGroup.CreateAction
         
        
 class PluginClass(object):

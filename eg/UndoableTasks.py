@@ -21,7 +21,7 @@
 # $LastChangedBy$
 
 import eg
-eg.DebugNote("Loading UndoableTasks")
+eg.PrintDebugNotice("Loading UndoableTasks")
 import wx
 import xml.etree.cElementTree as ElementTree
 

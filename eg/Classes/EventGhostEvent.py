@@ -25,21 +25,22 @@ from time import clock
 from threading import Event
 
 
-def Init():
-    global LogEvent 
-    LogEvent = eg.log.LogEvent
-    global actionThread
-    actionThread = eg.actionThread
-    global RunProgram
-    RunProgram = eg.RunProgram
-    global GetItemPath
-    GetItemPath = eg.EventItem.GetPath
-
-
     
 class EventGhostEvent(object):
     
     data = None
+
+    @classmethod
+    def Init(cls):
+        global LogEvent 
+        LogEvent = eg.log.LogEvent
+        global actionThread
+        actionThread = eg.actionThread
+        global RunProgram
+        RunProgram = eg.RunProgram
+        global GetItemPath
+        GetItemPath = eg.EventItem.GetPath
+
 
     def __init__(self, suffix="", payload=None, prefix="Main", source=eg):
         self.string = prefix + "." + suffix

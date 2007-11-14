@@ -20,15 +20,14 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-from threading import Timer
 import eg
-from PluginClass import PluginClass
+from threading import Timer
 
 eg._lastDefinedPluginClass = None
 
 
 
-class RawReceiverPlugin(PluginClass):
+class RawReceiverPlugin(eg.PluginClass):
     
     def __init__(self):
         self.mapTable = {}
@@ -55,7 +54,7 @@ class RawReceiverPlugin(PluginClass):
             self.repeatCode = None
         self.timer.cancel()       
         if self.lastEventString != suffix:
-            PluginClass.TriggerEnduringEvent(self, newEventString, payload)
+            self.TriggerEnduringEvent(newEventString, payload)
             self.lastEventString = suffix
         self.timer = Timer(timeout, self.OnTimeOut)
         self.timer.start()
@@ -68,8 +67,8 @@ class RawReceiverPlugin(PluginClass):
         self.lastEventString = ""
         
         
-    def Map(self, what, to, timeout=None, repeat_code=None):
-        self.mapTable[what] = (to, timeout or self.timeout, repeat_code)
+    def Map(self, what, to, timeout=None, repeatCode=None):
+        self.mapTable[what] = (to, timeout or self.timeout, repeatCode)
 
 
 

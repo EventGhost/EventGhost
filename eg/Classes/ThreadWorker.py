@@ -147,7 +147,7 @@ class ThreadWorker:
                 self.HandleAction(action)
         elif rc == WAIT_OBJECT_0+1:
             if PumpWaitingMessages():
-                eg.DebugNote("Got WM_QUIT")
+                eg.PrintDebugNotice("Got WM_QUIT")
                 self.__alive = False
                 return
         elif rc == WAIT_TIMEOUT:

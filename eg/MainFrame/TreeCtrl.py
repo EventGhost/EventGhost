@@ -74,8 +74,7 @@ class EventDropSource(wx.DropSource):
         
 
 
-
-from TreeItems.TreeItem import (
+from Classes.TreeItem import (
     HINT_NO_DROP, HINT_MOVE_INSIDE, HINT_MOVE_BEFORE, HINT_MOVE_AFTER,
     HINT_MOVE_BEFORE_OR_AFTER, HINT_MOVE_EVERYWHERE
 )
@@ -126,12 +125,12 @@ class EventDropTarget(wx.PyDropTarget):
         if flags & HITTEST_FLAGS:
             obj = tree.GetPyData(targetItem)
             dragObject = self.dragObject
-            tmp_obj = obj
-            while tmp_obj is not None:
-                if tmp_obj == dragObject:
+            tmpObj = obj
+            while tmpObj is not None:
+                if tmpObj == dragObject:
                     self.position = None
                     return wx.DragNone
-                tmp_obj = tmp_obj.parent
+                tmpObj = tmpObj.parent
 
             insertionHint = obj.DropTest(dragCls)
             if targetItem == tree.lastDropTarget:
@@ -553,14 +552,14 @@ class TreeCtrl(wx.TreeCtrl):
         dropTarget.dragCls = EventItem
         dropTarget.dragObject = None
         dropTarget.isExternalDrag = True
-        insert_mark_pos = dropTarget.position
+        insertionMarkPos = dropTarget.position
         self.SelectItem(dragId, False)
         self.ClearInsertMark()
         if dropTarget.lastHighlighted is not None:
             self.SetItemDropHighlight(dropTarget.lastHighlighted, False)
         
-        if insert_mark_pos is not None:
-            parent, pos = insert_mark_pos
+        if insertionMarkPos is not None:
+            parent, pos = insertionMarkPos
             CmdMoveTo(self.document, dragObject, parent, pos)
 
 
@@ -605,8 +604,8 @@ class TreeCtrl(wx.TreeCtrl):
         if obj == self.root:
             obj.GetXmlString(buffer.write, "\r\n", True)
         else:
-            build_str = str(eg.buildNum)
-            buffer.write('\r\n<EventGhost Version="%s">' % build_str)
+            buildStr = str(eg.buildNum)
+            buffer.write('\r\n<EventGhost Version="%s">' % buildStr)
             obj.GetXmlString(buffer.write, "\r\n    ", True)
             buffer.write('\r\n</EventGhost>')
         data = buffer.getvalue()

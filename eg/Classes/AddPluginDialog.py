@@ -23,7 +23,7 @@
 import wx
 
 import eg
-from ActionThread import CORE_PLUGINS
+from Singletons.ActionThread import CORE_PLUGINS
         
 kindTags = ["remote", "program", "external", "other"]
 
@@ -200,7 +200,7 @@ class AddPluginDialog(eg.Dialog):
             description = info.description
             self.descrBox.SetBasePath(info.path)
             self.authorLabel.SetLabel(Text.author)
-            self.authorText.SetLabel(info.author)
+            self.authorText.SetLabel(info.author.replace("&", "&&"))
             self.versionLabel.SetLabel(Text.version)
             self.versionText.SetLabel(info.version)
             self.okButton.Enable(True)

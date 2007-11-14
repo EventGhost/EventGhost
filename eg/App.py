@@ -122,7 +122,7 @@ class MyApp(wx.App):
         # This method gets called from MessageReceiver on a
         # WM_QUERYENDSESSION win32 message.
         if eg.document.CheckFileNeedsSave() == wx.ID_CANCEL:
-            eg.DebugNote("User cancelled shutdown in OnQueryEndSession")
+            eg.PrintDebugNotice("User cancelled shutdown in OnQueryEndSession")
             return 0
         return 1
 
@@ -154,23 +154,23 @@ class MyApp(wx.App):
     @eg.LogIt
     def OnExit(self):
         if not eg.startupArguments.translate:
-            eg.DebugNote("Triggering OnClose")    
+            eg.PrintDebugNotice("Triggering OnClose")    
             egEvent = eg.eventThread.TriggerEvent("OnClose")
             while not egEvent.isEnded:
                 self.Yield()
-            eg.DebugNote("Calling exit funcs")    
+            eg.PrintDebugNotice("Calling exit funcs")    
                 
             for func in self.onExitFuncs:
-                eg.DebugNote(func)
+                eg.PrintDebugNotice(func)
                 func()
-            eg.DebugNote("Calling eg.DeInit()")    
+            eg.PrintDebugNotice("Calling eg.DeInit()")    
             eg.DeInit()
         
-        eg.DebugNote("COM interface count: %s" % pythoncom._GetInterfaceCount())
+        eg.PrintDebugNotice("COM interface count: %s" % pythoncom._GetInterfaceCount())
         
-        eg.DebugNote("Threads:")
+        eg.PrintDebugNotice("Threads:")
         for t in threading.enumerate():
-            eg.DebugNote(" ", t, t.getName())
+            eg.PrintDebugNotice(" ", t, t.getName())
                 
         while self.Pending():
             self.Dispatch()
@@ -184,12 +184,12 @@ class MyApp(wx.App):
                 and not t.isDaemon() 
                 and t.isAlive()
             ):
-                eg.DebugNote("joining: " + str(t) + repr(t._Thread__target))
+                eg.PrintDebugNotice("joining: " + str(t) + repr(t._Thread__target))
                 t.join(5.0)
         
-        eg.DebugNote("Threads:")
+        eg.PrintDebugNotice("Threads:")
         for t in threading.enumerate():
-            eg.DebugNote(" ", t, t.getName())
-        eg.DebugNote("Done!")
+            eg.PrintDebugNotice(" ", t, t.getName())
+        eg.PrintDebugNotice("Done!")
         sys.exit(0)
         

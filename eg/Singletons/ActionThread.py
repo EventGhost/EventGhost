@@ -49,7 +49,7 @@ class ActionThread(eg.ThreadWorker):
                 eg.PrintTraceback()
         start = clock()
         eg.document.Load(filename)
-        eg.DebugNote("XML loaded in %f seconds." % (clock() - start))
+        eg.PrintDebugNotice("XML loaded in %f seconds." % (clock() - start))
         eg.programCounter = (eg.document.autostartMacro, None)
         eg.RunProgram()
         

@@ -552,11 +552,11 @@ class MainFrame(wx.Frame):
 #    def OnClose(self, event=None):
 #        res = self.document.CheckFileNeedsSave()
 #        if res == wx.ID_CANCEL:
-#            eg.DebugNote("Skipping event in OnClose")
+#            eg.PrintDebugNotice("Skipping event in OnClose")
 #            if event:
 #                event.Skip(False)
 #            return wx.ID_CANCEL
-#        #eg.DebugNote("Binding close dummy")
+#        #eg.PrintDebugNotice("Binding close dummy")
 #        #self.Bind(wx.EVT_CLOSE, self.CloseDummy)
 #        eg.config.hideOnStartup = self.IsIconized()
 #        eg.config.autoloadFilePath = self.document.filePath.get()

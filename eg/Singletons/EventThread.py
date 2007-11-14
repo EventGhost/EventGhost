@@ -26,8 +26,8 @@ import win32api
 from win32process import SetProcessWorkingSetSize, GetCurrentProcess
 
 import eg
-from ThreadWorker import ThreadWorker
-from EventGhostEvent import EventGhostEvent
+ThreadWorker = eg.ThreadWorker
+EventGhostEvent = eg.EventGhostEvent
 
 
 
@@ -86,7 +86,7 @@ class EventThread(ThreadWorker):
         event.startProcessed.wait(5.0)
         if not event.startProcessed.isSet():
             if eg.debugLevel:
-                eg.DebugNote("timeout TriggerEventWait")
+                eg.PrintDebugNotice("timeout TriggerEventWait")
                 traceback.print_stack()
         return event
     
@@ -112,7 +112,7 @@ class EventThread(ThreadWorker):
     @eg.LogIt
     def StopSession(self):
         eg.actionThread.CallWait(eg.actionThread.StopSession)
-        eg.DebugNote("StopSession done")
+        eg.PrintDebugNotice("StopSession done")
 
 
     

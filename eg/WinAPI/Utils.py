@@ -189,12 +189,12 @@ def HighlightWindow(hwnd):
 
 def BestWindowFromPoint(point):
     x, y = point
-    found_window = WindowFromPoint(point)
+    foundWindow = WindowFromPoint(point)
     
-    hwnds = GetAllWindowChildren(GetAncestor(found_window, GA_ROOT))
+    hwnds = GetAllWindowChildren(GetAncestor(foundWindow, GA_ROOT))
     if not hwnds:
-        return found_window
-    found_window_area = sys.maxint
+        return foundWindow
+    foundWindowArea = sys.maxint
     for hwnd in hwnds:
         left, top, right, bottom = GetWindowRect(hwnd)
         if x >= left and x <= right and y >= top and y <= bottom:
@@ -202,11 +202,11 @@ def BestWindowFromPoint(point):
             x2, y2 = ScreenToClient(hwnd, point)
             if PtVisible(hdc, x2, y2):
                 area = (right - left) * (bottom - top)
-                if area < found_window_area:
-                    found_window = hwnd
-                    found_window_area = area
+                if area < foundWindowArea:
+                    foundWindow = hwnd
+                    foundWindowArea = area
             ReleaseDC(hwnd, hdc)
-    return found_window
+    return foundWindow
 
 
 

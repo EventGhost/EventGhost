@@ -51,25 +51,25 @@ class Menu(wx.Menu):
 
     def AddItem(
         self, 
-        name=None, 
-        enabled=True, 
-        kind=wx.ITEM_NORMAL, 
-        image=None,
+        name = None, 
+        enabled = True, 
+        kind = wx.ITEM_NORMAL, 
+        image = None,
         hotkey = "",
         func = None
     ):
         if name is None:
             return wx.Menu.AppendSeparator(self)
         if func is None:
-            func_wrapper = getattr(self.parent, "OnCmd" + name)
+            FuncWrapper = getattr(self.parent, "OnCmd" + name)
         else:
-            def func_wrapper(event):
+            def FuncWrapper(event):
                 func()
 
         menuname = getattr(self.myStrings, name, name)
         menuitem = self.Append(
             menuname, 
-            func_wrapper, 
+            FuncWrapper, 
             hotkey, 
             enabled, 
             kind, 

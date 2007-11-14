@@ -44,7 +44,7 @@ class Observable:
     def set(self, data):
         self.data = data
         for func in self.callbacks:
-            #eg.DebugNote(func, data)
+            #eg.PrintDebugNotice(func, data)
             func(data)
 
     def get(self):
@@ -188,10 +188,10 @@ class Document(object):
         else:
             filePath = self.filePath
         success = False
-        fd, tmp_path = mkstemp(".xml", "$", os.path.dirname(filePath))
+        fd, tmpPath = mkstemp(".xml", "$", os.path.dirname(filePath))
         os.close(fd)
         try:
-            fd = file(tmp_path, "w+")
+            fd = file(tmpPath, "w+")
             fd.write('<?xml version="1.0" encoding="UTF-8" ?>')
             self.root.GetXmlString(fd.write, "", False)
             fd.close()
@@ -199,7 +199,7 @@ class Document(object):
                 os.remove(filePath)
             except:
                 pass
-            os.rename(tmp_path, filePath)
+            os.rename(tmpPath, filePath)
             self.isDirty.set(False)
             self.undoStateOnSave = self.undoState
             success = True

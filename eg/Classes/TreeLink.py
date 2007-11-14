@@ -56,7 +56,7 @@ class TreeLink(object):
                 elif id in cls.id2target:
                     target = cls.id2target[id]
                 else:
-                    eg.DebugNote("target id %d not found" % id)
+                    eg.PrintDebugNotice("target id %d not found" % id)
                     continue
                 cls.id2target[target.xmlId] = target
                 link.id = target.xmlId
