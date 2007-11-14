@@ -139,7 +139,7 @@ class Task(eg.PluginClass):
         res = win32api.FreeLibrary(self.hookDll._handle)
         if not res:
             err = win32api.GetLastError()
-            eg.DebugNote("FreeLibrary:", err, win32api.FormatMessage(err))
+            eg.PrintDebugNotice("FreeLibrary:", err, win32api.FormatMessage(err))
         self.hookDll = None
         
         
