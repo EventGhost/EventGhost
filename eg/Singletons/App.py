@@ -80,53 +80,13 @@ class App(wx.App):
         return True
     
     
-    @eg.LogIt
-    def SetupGui(self):        
-        self.focusEvent = eg.EventHook()
-        
-        # setup a taskbar menu with icon, and catch some events from it
-        import StateIcon
-        self.taskBarIcon = taskBarIcon = StateIcon.StateIcon(self)
-
-        trayMenu = self.trayMenu = eg.Menu(taskBarIcon, "")
-        text = eg.text.MainFrame.TaskBarMenu
-        menuShow = trayMenu.Append(text.Show, self.OnCmdShowMainFrame)
-        menuHide = trayMenu.Append(text.Hide, self.OnCmdHideMainFrame)
-        trayMenu.AppendSeparator()
-        trayMenu.Append(text.Exit, self.OnCmdExit)
-    
-        def OnTaskBarMenu(event):
-            menuHide.Enable(eg.document.frame is not None)
-            taskBarIcon.PopupMenu(trayMenu)
-        taskBarIcon.Bind(wx.EVT_TASKBAR_RIGHT_UP, OnTaskBarMenu)
-        taskBarIcon.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnCmdShowMainFrame)
-        
-        if not (eg.config.hideOnStartup or eg.startupArguments.hideOnStartup):
-            eg.document.ShowFrame()
-    
-
-    #------- TrayIcon menu handlers ------------------------------------------
-    
-    def OnCmdShowMainFrame(self, event=None):
-        eg.document.ShowFrame()
-        
-        
-    def OnCmdHideMainFrame(self, event):
-        eg.document.HideFrame()
-        
-        
-    def OnCmdExit(self, event):
-        self.Exit(event)
-        
-    #------------------------------------------------------------------------
-        
     @eg.LogItWithReturn
     def OnQueryEndSession(self, hwnd, msg, wparam, lparam):
         """System is about to be logged off"""
         # This method gets called from MessageReceiver on a
         # WM_QUERYENDSESSION win32 message.
         if eg.document.CheckFileNeedsSave() == wx.ID_CANCEL:
-            eg.PrintDebugNotice("User cancelled shutdown in OnQueryEndSession")
+            eg.PrintDebugNotice("User canceled shutdown in OnQueryEndSession")
             return 0
         return 1
 
@@ -138,8 +98,8 @@ class App(wx.App):
         while not egEvent.isEnded:
             time.sleep(0.01)
         eg.CallWait(eg.document.Close)
-        self.taskBarIcon.alive = False
-        self.taskBarIcon.Destroy()
+        eg.taskBarIcon.alive = False
+        eg.taskBarIcon.Destroy()
         #self.ExitMainLoop()
     	eg.CallWait(self.OnExit)
     	return 0
@@ -150,8 +110,8 @@ class App(wx.App):
         if eg.document.CheckFileNeedsSave() == wx.ID_CANCEL:
             return
         eg.document.Close()
-        self.taskBarIcon.alive = False
-        self.taskBarIcon.Destroy()
+        eg.taskBarIcon.alive = False
+        eg.taskBarIcon.Destroy()
         self.ExitMainLoop()
         
         

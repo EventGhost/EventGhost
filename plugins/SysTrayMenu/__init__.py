@@ -181,7 +181,7 @@ class SysTrayMenu(eg.PluginClass):
         self.menuIdToData = {}
         if len(self.menuData) == 0:
             return
-        menu =  eg.app.trayMenu
+        menu =  eg.taskBarIcon.menu
         self.menuIdToWxItem[-1] = menu.PrependSeparator()
         for data in reversed(self.menuData):
             name, kind, eventName, menuId = data

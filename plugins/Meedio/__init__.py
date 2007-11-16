@@ -97,7 +97,7 @@ class MeedioPlugin(eg.PluginClass):
     self.AddAction(Green)
     self.AddAction(Yellow)
     self.AddAction(Blue)
-    self.AddAction(Down)
+    self.AddAction(Focus)
     
 
 

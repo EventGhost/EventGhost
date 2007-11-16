@@ -134,12 +134,12 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         
 
     def OnSetFocus(self, event):
-        eg.app.focusEvent.Fire(self)
+        eg.focusEvent.Fire(self)
         event.Skip()
         
         
     def OnKillFocus(self, event):
-        eg.app.focusEvent.Fire(None)
+        eg.focusEvent.Fire(None)
         event.Skip()
 
 

@@ -16,16 +16,16 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# $LastChangedDate: 2007-11-14 16:52:51 +0100 (Mi, 14 Nov 2007) $
+# $LastChangedRevision: 266 $
+# $LastChangedBy: bitmonster $
 
 import eg
 import wx
 import threading
 
 
-class StateIcon(wx.TaskBarIcon):
+class TaskBarIcon(wx.TaskBarIcon):
     
     def __init__(self, parent=None):
         self.stateIcons = (
@@ -47,7 +47,34 @@ class StateIcon(wx.TaskBarIcon):
 #        self.iconTimer = wx.Timer(self, tmpID)
 #        wx.EVT_TIMER(self, tmpID, self.ResetIcon2)
         
+        menu = self.menu = eg.Menu(self, "")
+        text = eg.text.MainFrame.TaskBarMenu
+        self.menuShow = menu.Append(text.Show, self.OnCmdShowMainFrame)
+        self.menuHide = menu.Append(text.Hide, self.OnCmdHideMainFrame)
+        menu.AppendSeparator()
+        menu.Append(text.Exit, self.OnCmdExit)
+    
+        self.Bind(wx.EVT_TASKBAR_RIGHT_UP, self.OnTaskBarMenu)
+        self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnCmdShowMainFrame)
         
+        
+    def OnTaskBarMenu(self, event):
+        self.menuHide.Enable(eg.document.frame is not None)
+        self.PopupMenu(self.menu)
+        
+        
+    def OnCmdShowMainFrame(self, event=None):
+        eg.document.ShowFrame()
+        
+        
+    def OnCmdHideMainFrame(self, event):
+        eg.document.HideFrame()
+        
+        
+    def OnCmdExit(self, event):
+        eg.app.Exit(event)
+        
+
     def SetIcons(self, state):
         if self.alive:
             self.SetIcon(self.stateIcons[state])

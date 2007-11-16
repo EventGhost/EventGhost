@@ -327,7 +327,7 @@ class MainFrame(wx.Frame):
         AddItem()
         popupMenuItems.disableItem = AddItem("Disabled", kind=wx.ITEM_CHECK)
         
-        self.SetIcon(eg.app.taskBarIcon.stateIcons[0])
+        self.SetIcon(eg.taskBarIcon.stateIcons[0])
         
         self.editMenus = (toolBar.buttons, editMenu, popupMenu)
         self.lastFocus = "None"
@@ -369,8 +369,8 @@ class MainFrame(wx.Frame):
                 MinSize((100, 100)).
                 Caption(" " + Text.Logger.caption)
         )
-        eg.app.focusEvent.Bind(self.OnFocusChange)
-        args = eg.app.focusEvent.Get()
+        eg.focusEvent.Bind(self.OnFocusChange)
+        args = eg.focusEvent.Get()
         if len(args):
             self.OnFocusChange(*args)
         
@@ -420,7 +420,7 @@ class MainFrame(wx.Frame):
         self.SetStatusBar(None)
         for dataset, func in self.observer:
             dataset.delCallback(func)
-        eg.app.focusEvent.Unbind(self.OnFocusChange)
+        eg.focusEvent.Unbind(self.OnFocusChange)
         eg.app.clipboardEvent.Unbind(self.OnClipboardChange)
         self.document.undoEvent.Unbind(self.OnUndoEvent)
         self.document.selectionEvent.Unbind(self.OnTreeSelectionEvent)

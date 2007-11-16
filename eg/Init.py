@@ -188,9 +188,13 @@ class EventGhost(object):
         
         self.scheduler.start()
         self.messageReceiver.Start()
-        eg.app.SetupGui()
-                        
-        self.SetProcessingState = eg.app.taskBarIcon.SetProcessingState
+
+        self.focusEvent = eg.EventHook()
+        
+        if not (eg.config.hideOnStartup or eg.startupArguments.hideOnStartup):
+            eg.document.ShowFrame()
+            
+        self.SetProcessingState = eg.taskBarIcon.SetProcessingState
 
         self.EventGhostEvent.Init()
         self.actionThread.Start()

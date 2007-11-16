@@ -468,14 +468,14 @@ class TreeCtrl(wx.TreeCtrl):
         
     def OnGetFocus(self, event):
         self.hasFocus = True
-        eg.app.focusEvent.Fire(self)
+        eg.focusEvent.Fire(self)
         event.Skip(True)
         
         
     def OnKillFocus(self, event):
         self.hasFocus = False
         if not self.isInEditLabel:
-            eg.app.focusEvent.Fire(None)
+            eg.focusEvent.Fire(None)
         event.Skip(True)
         
         
@@ -490,12 +490,12 @@ class TreeCtrl(wx.TreeCtrl):
 
 
     def InLabelEdit(self):
-        eg.app.focusEvent.Fire("Edit")
+        eg.focusEvent.Fire("Edit")
         
         
     def OnEndLabelEdit(self, event):
         self.isInEditLabel = False
-        eg.app.focusEvent.Fire(self)
+        eg.focusEvent.Fire(self)
         id = event.GetItem()
         item = self.GetPyData(id)
         newLabel = event.GetLabel()

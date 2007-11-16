@@ -5,7 +5,7 @@ eg.RegisterPlugin(
     description = "Only used to demonstrate some aspects of the Plugin-API.",
 )
     
-
+import wx
 
 class TestPlugin(eg.PluginClass):
     
@@ -13,6 +13,7 @@ class TestPlugin(eg.PluginClass):
         self.AddAction(RadioButtonGridDemo)
         self.AddAction(CheckBoxGridDemo)
         self.AddAction(SpinIntCtrlDemo)
+        self.AddAction(DictionaryTest)
         
         
 
@@ -113,4 +114,33 @@ class SpinIntCtrlDemo(eg.ActionClass):
         dialog.sizer.Add(spinIntCtrl)
         if dialog.AffirmedShowModal():
             return (spinIntCtrl.GetValue(), )
+        
+        
+        
+class DictionaryTest(eg.ActionClass):
+    
+    def __call__(self, a, b, c):
+        print a, b, c
+        
+        
+    def Configure(self, a=True, b="", c=""):
+        panel = eg.ConfigPanel2(self)
+        
+        aValueCtrl = panel.CheckBox(a, "Set aValue to True")
+        bValueCtrl = panel.TextCtrl(b)
+        cValueCtrl = panel.TextCtrl(c)
+        
+        panel.AddLine(aValueCtrl)
+        panel.AddLine("bValue", bValueCtrl)
+        panel.AddLine("cValue", cValueCtrl)
+        
+        while panel.Affirmed():
+            panel.SetResult(
+                aValueCtrl.GetValue(),
+                bValueCtrl.GetValue(),
+                cValueCtrl.GetValue(),
+            )
+        
+        
+        
         
