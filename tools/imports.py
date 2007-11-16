@@ -811,7 +811,6 @@ import TarIO
 import TgaImagePlugin
 import TiffImagePlugin
 import TiffTags
-import WalImageFile
 import WbmpImagePlugin
 import WmfImagePlugin
 import XbmImagePlugin
