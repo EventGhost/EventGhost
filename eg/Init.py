@@ -66,10 +66,10 @@ class EventGhost(object):
         self.CallAfter = wx.CallAfter
         self.APP_NAME = "EventGhost"
         self.PLUGIN_DIR = os.path.abspath("plugins")
-        self.APPDATA = eg.pathes.RoamingAppData
-        self.STARTUP = eg.pathes.Startup
-        self.PROGRAMFILES = eg.pathes.ProgramFiles
-        self.TEMPDIR = eg.pathes.TemporaryFiles
+        self.APPDATA = eg.folderPath.RoamingAppData
+        self.STARTUP = eg.folderPath.Startup
+        self.PROGRAMFILES = eg.folderPath.ProgramFiles
+        self.TEMPDIR = eg.folderPath.TemporaryFiles
         self.CONFIG_DIR = os.path.join(self.APPDATA, self.APP_NAME)
         
         # we create a package 'pluginImport' and set its path to the plugin-dir
