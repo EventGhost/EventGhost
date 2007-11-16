@@ -1,4 +1,4 @@
-version="0.2.1" 
+version="0.2.2" 
 
 # Plugins/IrfanView/__init__.py
 #
@@ -82,7 +82,7 @@ class Text:
 import wx
 import os
 from ConfigParser import SafeConfigParser
-from shutil import copyfile
+#from shutil import copyfile
 import _winreg
 import win32api
 import locale
@@ -232,7 +232,8 @@ class IrfanView(eg.PluginClass):
                 0, 
                 None, 
                 "hh.exe",
-                ('mk:@MSITStore:'+head+'\i_view32.chm::/'+html_page).encode(myEncoding), 
+                ('mk:@MSITStore:'+head+'\i_view32.chm::/'\
+                +html_page).encode(myEncoding), 
                 os.environ['SYSTEMROOT'], 
                 1
             )
@@ -391,6 +392,30 @@ class RunCommandLine(eg.ActionClass):
 class RunSlideshow(eg.ActionClass):
     name = "Run slideshow"
     description = "Run IrfanView and start slideshow."
+    defaults = {
+        "label_": "",
+        "width_": 800.0,
+        "high_": 600.0,
+        "delay_": 5.0,
+        "filepath_": eg.APPDATA,
+        "dirpath_": eg.APPDATA,
+        "mode_": 1,
+        "source_": 0,
+        "fit_": 1,
+        "progress_": 0,
+        "loop_": False,
+        "noRepeat_": False,
+        "suppress_": True,
+        "displText_": True,
+        "soundLoop_": True,
+        "resample_": True,
+        "hideCursor_": True,
+        "alpha_": True,
+        "close_": True,
+        "mon_": 1,
+        "mask_": u"$D$F $X",
+    }
+    
     class text:
         err ="Couldn't find file i_view32.exe !"
         runslideshow = "Run slideshow "
@@ -425,7 +450,10 @@ class RunSlideshow(eg.ActionClass):
         alpha = "Use Alpha blending between images"
         close = "Close IrfanView after the last file"
         filepath = "Path to text file:"
-        filemask = "Text files (*.txt)|*.txt|List files (*.lst)|*.lst|All-Files (*.*)|*.*"
+        filemask = (
+            "Text files (*.txt)|*.txt|List files (*.lst)|*.lst"
+            "|All-Files (*.*)|*.*"
+        ) 
         dirpath = "Path to folder:"
         toolTipFile = 'Type filename or click browse to choose file'
         browseTitle = "Selected folder:"
@@ -435,7 +463,9 @@ class RunSlideshow(eg.ActionClass):
         help = "Help"
         mask = 'Mask for "Show text":'
     
-    def __call__(self,arrayValue):
+    def __call__(self, kwargs):
+        options = self.defaults.copy()
+        options.update(kwargs)
         head, tail = os.path.split(self.plugin.IrfanViewPath)            
         cp = SafeConfigParser()
         cp.optionxform = str #Case sensitive !
@@ -443,34 +473,34 @@ class RunSlideshow(eg.ActionClass):
         sec="Slideshow"
         if not cp.has_section(sec):
             cp.add_section(sec)
-        cp.set(sec, "WindowW", str(int(arrayValue[1])))
-        cp.set(sec, "WindowH", str(int(arrayValue[2])))
-        cp.set(sec, "AutoDelay", str(arrayValue[3]))
-        cp.set(sec, "RandomDelay", str(arrayValue[3]))
-        cp.set(sec, "PlayInWindow", str(arrayValue[6]))
-        cp.set(sec, "Advancement", str(arrayValue[9]+1))
-        cp.set(sec, "Loop", str(int(arrayValue[10])))
-        cp.set(sec, "NoSameImageAgain", str(int(arrayValue[11])))
-        cp.set(sec, "SuppressErrors", str(int(arrayValue[12])))
-        cp.set(sec, "ShowFilename", str(int(arrayValue[13])))
-        cp.set(sec, "LoopAudio", str(int(arrayValue[14])))
-        cp.set(sec, "HideCursor", str(int(arrayValue[16])))
-        cp.set(sec,"StopAndClose",str(int(arrayValue[18])))
-        if len(arrayValue[20])>0:
-            cp.set(sec, "Text", arrayValue[20])
+        cp.set(sec, "WindowW", str(int(options["width_"])))
+        cp.set(sec, "WindowH", str(int(options["high_"])))
+        cp.set(sec, "AutoDelay", str(options["delay_"]))
+        cp.set(sec, "RandomDelay", str(options["delay_"]))
+        cp.set(sec, "PlayInWindow", str(options["mode_"]))
+        cp.set(sec, "Advancement", str(options["progress_"]+1))
+        cp.set(sec, "Loop", str(int(options["loop_"])))
+        cp.set(sec, "NoSameImageAgain", str(int(options["noRepeat_"])))
+        cp.set(sec, "SuppressErrors", str(int(options["suppress_"])))
+        cp.set(sec, "ShowFilename", str(int(options["displText_"])))
+        cp.set(sec, "LoopAudio", str(int(options["soundLoop_"])))
+        cp.set(sec, "HideCursor", str(int(options["hideCursor_"])))
+        cp.set(sec,"StopAndClose",str(int(options["close_"])))
+        if len(options["mask_"])>0:
+            cp.set(sec, "Text", options["mask_"])
         sec="Viewing"
         if not cp.has_section(sec):
             cp.add_section(sec)
-        cp.set(sec, "ShowFullScreen", str(arrayValue[8]))
-        cp.set(sec, "FSResample", str(int(arrayValue[15])))
-        cp.set(sec, "FSAlpha", str(int(arrayValue[17])))
+        cp.set(sec, "ShowFullScreen", str(options["fit_"]))
+        cp.set(sec, "FSResample", str(int(options["resample_"])))
+        cp.set(sec, "FSAlpha", str(int(options["alpha_"])))
         fp = open(eg.APPDATA+"\\EventGhost\\i_view32.ini",'wb') 
         cp.write(fp) 
         fp.close()
-        params='/slideshow="'+(arrayValue[4] if arrayValue[7] else arrayValue[5])
-        params+='" /ini="'+eg.APPDATA+'\\EventGhost\\" /monitor='+str(arrayValue[19])
-        if len(arrayValue[21])>0:
-            params+=' '+arrayValue[21]
+        params='/slideshow="'+(options["filepath_"] if options["source_"] \
+            else options["dirpath_"])
+        params+='" /ini="'+eg.APPDATA+'\\EventGhost\\" /monitor='\
+            +str(options["mon_"])
         try:
             return win32api.ShellExecute(
                 0, 
@@ -483,35 +513,14 @@ class RunSlideshow(eg.ActionClass):
         except:
             self.PrintError(self.text.err)
             
-    def GetLabel(self,arrayValue):
-        return self.text.runslideshow+arrayValue[0]
-    def Configure(
-        self,
-        arrayValue=[
-            "",
-            800.0,
-            600.0,
-            5.0,
-            eg.APPDATA,
-            eg.APPDATA,
-            1,
-            0,
-            1,
-            0,
-            False,
-            False,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            2,
-            u"$D$F $X",
-            "",
-        ]
-    ):
+    def GetLabel(self, kwargs):
+        options = self.defaults.copy()
+        options.update(kwargs)
+        return self.text.runslideshow+options["label_"]
+        
+    def Configure(self, kwargs={}):
+        options = self.defaults.copy()
+        options.update(kwargs)
         dialog = eg.ConfigurationDialog(self)
         radioBoxMode = wx.RadioBox(
             dialog, 
@@ -520,7 +529,7 @@ class RunSlideshow(eg.ActionClass):
             choices=[self.text.modeFull, self.text.modeWin], 
             style=wx.RA_SPECIFY_ROWS
         )
-        radioBoxMode.SetSelection(arrayValue[6])
+        radioBoxMode.SetSelection(options["mode_"])
         radioBoxMode.SetMinSize((197,65))
         radioBoxSource = wx.RadioBox(
             dialog, 
@@ -529,30 +538,40 @@ class RunSlideshow(eg.ActionClass):
             choices=[self.text.folder, self.text.txtFile], 
             style=wx.RA_SPECIFY_ROWS
         )
-        radioBoxSource.SetSelection(arrayValue[7])
+        radioBoxSource.SetSelection(options["source_"])
         radioBoxSource.SetMinSize((197,65))
         radioBoxFit = wx.RadioBox(
             dialog, 
             -1, 
             self.text.radioboxfit, 
-            choices=[self.text.mode1_1, self.text.onlyBig, self.text.fitAll, self.text.scratchAll], 
+            choices=[
+                self.text.mode1_1,
+                self.text.onlyBig,
+                self.text.fitAll,
+                self.text.scratchAll
+            ], 
             style=wx.RA_SPECIFY_ROWS
         )
-        radioBoxFit.SetSelection(arrayValue[8])
+        radioBoxFit.SetSelection(options["fit_"])
         radioBoxFit.SetMinSize((197,100))
         radioBoxProgress = wx.RadioBox(
             dialog, 
             -1, 
             self.text.radioboxprogress, 
-            choices=[self.text.autoDelay, self.text.autoKeyb, self.text.randomDelay, self.text.randomKeyb], 
+            choices=[
+                self.text.autoDelay,
+                self.text.autoKeyb,
+                self.text.randomDelay,
+                self.text.randomKeyb
+            ], 
             style=wx.RA_SPECIFY_ROWS
         )
-        radioBoxProgress.SetSelection(arrayValue[9])
+        radioBoxProgress.SetSelection(options["progress_"])
         widthLbl=wx.StaticText(dialog, -1, self.text.width)
         widthCtrl = eg.SpinNumCtrl(
             dialog,
             -1,
-            arrayValue[1],
+            options["width_"],
             max=8000.0,
             integerWidth= 4,
             fractionWidth=0,
@@ -562,7 +581,7 @@ class RunSlideshow(eg.ActionClass):
         highCtrl = eg.SpinNumCtrl(
             dialog,
             -1,
-            arrayValue[2],
+            options["high_"],
             max=8000.0,
             integerWidth= 4,
             fractionWidth=0,
@@ -572,7 +591,7 @@ class RunSlideshow(eg.ActionClass):
         delayCtrl = eg.SpinNumCtrl(
             dialog,
             -1,
-            arrayValue[3],
+            options["delay_"],
             max=99999.0,
             integerWidth= 5,
             fractionWidth=1,
@@ -580,42 +599,42 @@ class RunSlideshow(eg.ActionClass):
         )
         loopCtrl = wx.CheckBox(dialog, -1, self.text.loop)
         loopCtrl.SetMinSize((205,15))
-        loopCtrl.SetValue(arrayValue[10])
+        loopCtrl.SetValue(options["loop_"])
         noRepeatCtrl = wx.CheckBox(dialog, -1, self.text.noRepeat)
-        noRepeatCtrl.SetValue(arrayValue[11])
+        noRepeatCtrl.SetValue(options["noRepeat_"])
         suppressCtrl = wx.CheckBox(dialog, -1, self.text.suppress)
-        suppressCtrl.SetValue(arrayValue[12])
+        suppressCtrl.SetValue(options["suppress_"])
         displTextCtrl = wx.CheckBox(dialog, -1, self.text.displtext)
-        displTextCtrl.SetValue(arrayValue[13])
+        displTextCtrl.SetValue(options["displText_"])
         soundLoopCtrl = wx.CheckBox(dialog, -1, self.text.soundLoop)
-        soundLoopCtrl.SetValue(arrayValue[14])
+        soundLoopCtrl.SetValue(options["soundLoop_"])
         resampleCtrl = wx.CheckBox(dialog, -1, self.text.resample)
-        resampleCtrl.SetValue(arrayValue[15])
+        resampleCtrl.SetValue(options["resample_"])
         hideCursorCtrl = wx.CheckBox(dialog, -1, self.text.hideCursor)
-        hideCursorCtrl.SetValue(arrayValue[16])
+        hideCursorCtrl.SetValue(options["hideCursor_"])
         alphaCtrl = wx.CheckBox(dialog, -1, self.text.alpha)
-        alphaCtrl.SetValue(arrayValue[17])
+        alphaCtrl.SetValue(options["alpha_"])
         closeCtrl = wx.CheckBox(dialog, -1, self.text.close)
-        closeCtrl.SetValue(arrayValue[18])
+        closeCtrl.SetValue(options["close_"])
         #
         monLbl=wx.StaticText(dialog, -1, self.text.monitor)
         monLbl.Enable(False)
         monCtrl = eg.SpinIntCtrl(
             dialog,
             -1,
-            arrayValue[19],
+            options["mon_"],
             max=99,
         )
         monCtrl.Enable(False)
         labelLbl=wx.StaticText(dialog, -1, self.text.label)
-        labelCtrl=wx.TextCtrl(dialog,-1,arrayValue[0])
+        labelCtrl=wx.TextCtrl(dialog,-1,options["label_"])
         #
         #lineOptLbl=wx.StaticText(dialog, -1, self.text.lineOpt)
         #lineOptCtrl=wx.TextCtrl(dialog,-1,arrayValue[21])
         #lineOptCtrl.SetMinSize((333,20))
         #hlpbtnCommandCtrl = wx.Button(dialog, -1, self.text.help)
         maskLbl=wx.StaticText(dialog, -1, self.text.mask)
-        maskCtrl=wx.TextCtrl(dialog,-1,arrayValue[20])
+        maskCtrl=wx.TextCtrl(dialog,-1,options["mask_"])
         hlpbtnPatternCtrl = wx.Button(dialog, -1, self.text.help)
         
         #Sizers
@@ -700,13 +719,13 @@ class RunSlideshow(eg.ActionClass):
                 filepathCtrl = eg.FileBrowseButton(
                     dialog, 
                     size=(370,-1),
-                    initialValue=arrayValue[4], 
+                    initialValue=options["filepath_"], 
                     startDirectory=eg.PROGRAMFILES,
                     fileMask = self.text.filemask,
                     buttonText=eg.text.General.browse,
                     toolTip=self.text.toolTipFile
                 )
-                filepathCtrl.SetValue(arrayValue[4])
+                filepathCtrl.SetValue(options["filepath_"])
                 dynSizer.Add(filepathLbl,0,wx.TOP,8)
                 dynSizer.Add(filepathCtrl,0)
             else:
@@ -715,13 +734,13 @@ class RunSlideshow(eg.ActionClass):
                     dialog, 
                     -1, 
                     size=(370,-1),
-                    startDirectory=arrayValue[5],
+                    startDirectory=options["dirpath_"],
                     labelText="",
                     buttonText=eg.text.General.browse,
                     dialogTitle=self.text.browseTitle,
                     toolTip=self.text.toolTipFolder
                 )
-                dirpathCtrl.SetValue(arrayValue[5])
+                dirpathCtrl.SetValue(options["dirpath_"])
                 dynSizer.Add(dirpathLbl,0,wx.TOP,8)
                 dynSizer.Add(dirpathCtrl,0)
             mainSizer.Layout()
@@ -736,6 +755,7 @@ class RunSlideshow(eg.ActionClass):
             noRepeatCtrl.Enable(radioBoxProgress.GetSelection()>1)
             delayCtrl.Enable((radioBoxProgress.GetSelection()+1)%2)
             delayLbl.Enable((radioBoxProgress.GetSelection()+1)%2)
+            
         radioBoxProgress.Bind(wx.EVT_RADIOBOX, onProgressChange)
         onProgressChange()
 
@@ -744,50 +764,92 @@ class RunSlideshow(eg.ActionClass):
             highCtrl.Enable(radioBoxMode.GetSelection())
             widthLbl.Enable(radioBoxMode.GetSelection())
             highLbl.Enable(radioBoxMode.GetSelection())
+            
         radioBoxMode.Bind(wx.EVT_RADIOBOX, onModeChange)
+        onModeChange()
+
+        def onCloseChange(event=None):
+            loopCtrl.Enable(not closeCtrl.GetValue())
+            
+        closeCtrl.Bind(wx.EVT_CHECKBOX, onCloseChange)
         onModeChange()
 
         def onBtnPatternClick(event=None):
             self.plugin.OpenHelpPage('hlp_text_patternoptions.htm')
-        hlpbtnPatternCtrl.Bind(wx.EVT_BUTTON, onBtnPatternClick, hlpbtnPatternCtrl)
+            
+        hlpbtnPatternCtrl.Bind(
+            wx.EVT_BUTTON,
+            onBtnPatternClick,
+            hlpbtnPatternCtrl
+        )
         
         def onShowTextChange(event=None):
             maskLbl.Enable(displTextCtrl.GetValue())
             maskCtrl.Enable(displTextCtrl.GetValue())
             hlpbtnPatternCtrl.Enable(displTextCtrl.GetValue())
+            
         displTextCtrl.Bind(wx.EVT_CHECKBOX, onShowTextChange)
         onShowTextChange()
         if dialog.AffirmedShowModal():
-            arrayValue[0]=labelCtrl.GetValue()
-            arrayValue[1]=widthCtrl.GetValue()
-            arrayValue[2]=highCtrl.GetValue()
-            arrayValue[3]=delayCtrl.GetValue()
+            #kwargs = {}
+            kwargs["label_"]=labelCtrl.GetValue()
+            kwargs["width_"]=widthCtrl.GetValue()
+            kwargs["high_"]=highCtrl.GetValue()
+            kwargs["delay_"]=delayCtrl.GetValue()
             if radioBoxSource.GetSelection():
-                arrayValue[4]=dynSizer.GetChildren()[1].GetWindow().GetValue()
+                kwargs["filepath_"]=\
+                    dynSizer.GetChildren()[1].GetWindow().GetValue()
             else:
-                arrayValue[5]=dynSizer.GetChildren()[1].GetWindow().GetValue()
-            arrayValue[6]=radioBoxMode.GetSelection()
-            arrayValue[7]=radioBoxSource.GetSelection()
-            arrayValue[8]=radioBoxFit.GetSelection()
-            arrayValue[9]=radioBoxProgress.GetSelection()
-            arrayValue[10]=loopCtrl.GetValue()
-            arrayValue[11]=noRepeatCtrl.GetValue()
-            arrayValue[12]=suppressCtrl.GetValue()
-            arrayValue[13]=displTextCtrl.GetValue()
-            arrayValue[14]=soundLoopCtrl.GetValue()
-            arrayValue[15]=resampleCtrl.GetValue()
-            arrayValue[16]=hideCursorCtrl.GetValue()
-            arrayValue[17]=alphaCtrl.GetValue()
-            arrayValue[18]=closeCtrl.GetValue()
-            arrayValue[19]=monCtrl.GetValue()
-            arrayValue[20]=maskCtrl.GetValue()
-            #arrayValue[21]=lineOptCtrl.GetValue()
-            return (arrayValue,)
+                kwargs["dirpath_"]=\
+                    dynSizer.GetChildren()[1].GetWindow().GetValue()
+            kwargs["mode_"]=radioBoxMode.GetSelection()
+            kwargs["source_"]=radioBoxSource.GetSelection()
+            kwargs["fit_"]=radioBoxFit.GetSelection()
+            kwargs["progress_"]=radioBoxProgress.GetSelection()
+            kwargs["loop_"]=loopCtrl.GetValue()
+            kwargs["noRepeat_"]=noRepeatCtrl.GetValue()
+            kwargs["suppress_"]=suppressCtrl.GetValue()
+            kwargs["displText_"]=displTextCtrl.GetValue()
+            kwargs["soundLoop_"]=soundLoopCtrl.GetValue()
+            kwargs["resample_"]=resampleCtrl.GetValue()
+            kwargs["hideCursor_"]=hideCursorCtrl.GetValue()
+            kwargs["alpha_"]=alphaCtrl.GetValue()
+            kwargs["close_"]=closeCtrl.GetValue()
+            kwargs["mon_"]=monCtrl.GetValue()
+            kwargs["mask_"]=maskCtrl.GetValue()
+            #kwargs["lineOpt_"]=lineOptCtrl.GetValue()
+            #print kwargs
+            return (kwargs,)
 
 
 class RunWithOptions(eg.ActionClass):
     name = "Run with options"
     description = "Run IrfanView with options."
+    defaults = {
+        "label_": "",
+        "filepath_": "",
+        "resample_": True,
+        "alpha_": True,
+        "hide_": True,
+        "displ_": True,
+        "resample2_": True,
+        "center_": True,
+        "caption_": True,
+        "menuBar_": True,
+        "toolBar_": True,
+        "statusBar_": True,
+        "fullOrWin_": 0,
+        "winMode_": 2,
+        "fullMode_": 1,
+        "xCoord_": 50,
+        "yCoord_": 50,
+        "width_": 800,
+        "high_": 600,
+        "mon_": 1,
+        "lineOpt_": "",
+        "mask_": u"$D$F $X"
+    }
+    
     class text:
         err ="Couldn't find file i_view32.exe !"
         runwithoption = "Run with option "
@@ -840,7 +902,9 @@ class RunWithOptions(eg.ActionClass):
         mask = 'Mask for "Show text":'
         help = "Help"
     
-    def __call__(self,arrayValue):
+    def __call__(self, kwargs):
+        options = self.defaults.copy()
+        options.update(kwargs)
         head, tail = os.path.split(self.plugin.IrfanViewPath)            
         cp = SafeConfigParser()
         cp.optionxform = str #Case sensitive !
@@ -848,33 +912,35 @@ class RunWithOptions(eg.ActionClass):
         sec="WinPosition"
         if not cp.has_section(sec):
             cp.add_section(sec)
-        cp.set(sec, "Width", str(arrayValue[17]))
-        cp.set(sec, "Height", str(arrayValue[18]))
+        cp.set(sec, "Width", str(options["width_"]))
+        cp.set(sec, "Height", str(options["high_"]))
         fp = open(head+"\\i_view32.ini",'wb') 
         cp.write(fp) 
         fp.close()
         sec="Viewing"
         if not cp.has_section(sec):
             cp.add_section(sec)
-        cp.set(sec, "FSResample", str(int(arrayValue[2])))
-        cp.set(sec, "FSAlpha", str(int(arrayValue[3])))
-        cp.set(sec, "HideCursor", str(int(arrayValue[4])))
-        cp.set(sec, "ShowFullScreenName", str(int(arrayValue[5])))
-        cp.set(sec, "UseResample", str(int(arrayValue[6])))
-        cp.set(sec, "Centered", str(int(arrayValue[7])))
-        cp.set(sec, "FullScreen", str(arrayValue[12]))
-        cp.set(sec, "FitWindowOption", str(arrayValue[13]+1))
-        cp.set(sec, "ShowFullScreen", str(arrayValue[14]))
-        if len(arrayValue[21])>0:
-            cp.set(sec, "FullText", arrayValue[21])
+        cp.set(sec, "FSResample", str(int(options["resample_"])))
+        cp.set(sec, "FSAlpha", str(int(options["alpha_"])))
+        cp.set(sec, "HideCursor", str(int(options["hide_"])))
+        cp.set(sec, "ShowFullScreenName", str(int(options["displ_"])))
+        cp.set(sec, "UseResample", str(int(options["resample2_"])))
+        cp.set(sec, "Centered", str(int(options["center_"])))
+        cp.set(sec, "FullScreen", str(options["fullOrWin_"]))
+        cp.set(sec, "FitWindowOption", str(options["winMode_"]+1))
+        cp.set(sec, "ShowFullScreen", str(options["fullMode_"]))
+        if len(mask_)>0:
+            cp.set(sec, "FullText", options["mask_"])
         fp = open(eg.APPDATA+"\\EventGhost\\i_view32.ini",'wb') 
         cp.write(fp) 
         fp.close()
-        params=arrayValue[1]+' /hide='+str(8*arrayValue[8]+4*arrayValue[9]+2*arrayValue[10]+arrayValue[11])
-        params+=' /ini="'+eg.APPDATA+'\\EventGhost\\" /pos=('+str(arrayValue[15])+','+str(arrayValue[16])+')'
-        if len(arrayValue[20])>0:
-            params+=' '+arrayValue[20]
-        #params+=' /monitor='+str(arrayValue[19])
+        params=options["filepath_"]+' /hide='+str(8*options["caption_"]\
+            +4*options["menuBar_"]+2*options["toolBar_"]+options["statusBar_"])
+        params+=' /ini="'+eg.APPDATA+'\\EventGhost\\" /pos=('\
+            +str(options["xCoord_"])+','+str(options["yCoord_"])+')'
+        if len(options["lineOpt_"])>0:
+            params+=' '+options["lineOpt_"]
+        #params+=' /monitor='+str(mon_)
         try:
             return win32api.ShellExecute(
                 0, 
@@ -887,44 +953,23 @@ class RunWithOptions(eg.ActionClass):
         except:
             self.PrintError(self.text.err)
             
-    def GetLabel(self,arrayValue):
-        return self.text.runwithoption+arrayValue[0]
-    def Configure(
-        self,
-        arrayValue=[
-            "",
-            "",
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            0,
-            2,
-            1,
-            50,
-            50,
-            800,
-            600,
-            1,
-            "",
-            u"$D$F $X"
-        ]
-    ):
+    def GetLabel(self, kwargs):
+        options = self.defaults.copy()
+        options.update(kwargs)
+        return self.text.runwithoption+options["label_"]
+        
+    def Configure(self, kwargs={}):
+        options = self.defaults.copy()
+        options.update(kwargs)
         dialog = eg.ConfigurationDialog(self)
-        radioBoxFullOrWin = wx.RadioBox(
+        radioBoxfullOrWin = wx.RadioBox(
             dialog, 
             -1, 
             self.text.radioboxmode, 
             choices=[self.text.modeWin, self.text.modeFull], 
             style=wx.RA_SPECIFY_ROWS
         )
-        radioBoxFullOrWin.SetSelection(arrayValue[12])
+        radioBoxfullOrWin.SetSelection(options["fullOrWin_"])
         radioBoxWinMode = wx.RadioBox(
             dialog, 
             -1, 
@@ -941,7 +986,7 @@ class RunWithOptions(eg.ActionClass):
             ], 
             style=wx.RA_SPECIFY_ROWS
         )
-        radioBoxWinMode.SetSelection(arrayValue[13])
+        radioBoxWinMode.SetSelection(options["winMode_"])
         radioBoxFullMode = wx.RadioBox(
             dialog, 
             -1, 
@@ -954,38 +999,38 @@ class RunWithOptions(eg.ActionClass):
             ], 
             style=wx.RA_SPECIFY_ROWS
         )
-        radioBoxFullMode.SetSelection(arrayValue[14])
+        radioBoxFullMode.SetSelection(options["fullMode_"])
         resampleCtrl = wx.CheckBox(dialog, -1, self.text.resample)
-        resampleCtrl.SetValue(arrayValue[2])
+        resampleCtrl.SetValue(options["resample_"])
         alphaCtrl = wx.CheckBox(dialog, -1, self.text.alpha)
-        alphaCtrl.SetValue(arrayValue[3])
+        alphaCtrl.SetValue(options["alpha_"])
         hideCursorCtrl = wx.CheckBox(dialog, -1, self.text.hideCursor)
-        hideCursorCtrl.SetValue(arrayValue[4])
+        hideCursorCtrl.SetValue(options["hide_"])
         displTextCtrl = wx.CheckBox(dialog, -1, self.text.displtext)
-        displTextCtrl.SetValue(arrayValue[5])
+        displTextCtrl.SetValue(options["displ_"])
         captionCtrl = wx.CheckBox(dialog, -1, self.text.caption)
-        captionCtrl.SetValue(arrayValue[8])
+        captionCtrl.SetValue(options["caption_"])
         menuBarCtrl = wx.CheckBox(dialog, -1, self.text.menuBar)
-        menuBarCtrl.SetValue(arrayValue[9])
+        menuBarCtrl.SetValue(options["menuBar_"])
         toolBarCtrl = wx.CheckBox(dialog, -1, self.text.toolBar)
-        toolBarCtrl.SetValue(arrayValue[10])
+        toolBarCtrl.SetValue(options["toolBar_"])
         statusLineCtrl = wx.CheckBox(dialog, -1, self.text.statusLine)
-        statusLineCtrl.SetValue(arrayValue[11])
+        statusLineCtrl.SetValue(options["statusBar_"])
         resample2Ctrl = wx.CheckBox(dialog, -1, self.text.resample2)
-        resample2Ctrl.SetValue(arrayValue[6])
+        resample2Ctrl.SetValue(options["resample2_"])
         centerImageCtrl = wx.CheckBox(dialog, -1, self.text.centerImage)
-        centerImageCtrl.SetValue(arrayValue[7])
+        centerImageCtrl.SetValue(options["center_"])
         maskLbl=wx.StaticText(dialog, -1, self.text.mask)
-        maskCtrl=wx.TextCtrl(dialog,-1,arrayValue[21])
+        maskCtrl=wx.TextCtrl(dialog,-1,options["mask_"])
         hlpbtnPatternCtrl = wx.Button(dialog, -1, self.text.help)
         labelLbl=wx.StaticText(dialog, -1, self.text.label)
-        labelCtrl=wx.TextCtrl(dialog,-1,arrayValue[0])
+        labelCtrl=wx.TextCtrl(dialog,-1,options["label_"])
         monLbl=wx.StaticText(dialog, -1, self.text.monitor)
         monLbl.Enable(False)
         monCtrl = eg.SpinIntCtrl(
             dialog,
             -1,
-            arrayValue[19],
+            options["mon_"],
             max=99,
         )
         monCtrl.Enable(False)
@@ -993,45 +1038,45 @@ class RunWithOptions(eg.ActionClass):
         xCoordCtrl = eg.SpinIntCtrl(
             dialog,
             -1,
-            arrayValue[15],
+            options["xCoord_"],
             max=8000,
         )
         yCoordLbl=wx.StaticText(dialog, -1, self.text.yCoord)
         yCoordCtrl = eg.SpinIntCtrl(
             dialog,
             -1,
-            arrayValue[16],
+            options["yCoord_"],
             max=8000,
         )
         widthLbl=wx.StaticText(dialog, -1, self.text.width)
         widthCtrl = eg.SpinIntCtrl(
             dialog,
             -1,
-            arrayValue[17],
+            options["width_"],
             max=8000,
         )
         highLbl=wx.StaticText(dialog, -1, self.text.high)
         highCtrl = eg.SpinIntCtrl(
             dialog,
             -1,
-            arrayValue[18],
+            options["high_"],
             max=8000,
         )
         lineOptLbl=wx.StaticText(dialog, -1, self.text.lineOpt)
-        lineOptCtrl=wx.TextCtrl(dialog,-1,arrayValue[20])
+        lineOptCtrl=wx.TextCtrl(dialog,-1,options["lineOpt_"])
         lineOptCtrl.SetMinSize((333,20))
         hlpbtnCommandCtrl = wx.Button(dialog, -1, self.text.help)
         filepathLbl=wx.StaticText(dialog, -1, self.text.filepath)
         filepathCtrl = eg.FileBrowseButton(
             dialog, 
             size=(370,-1),
-            initialValue=arrayValue[1], 
+            initialValue=options["filepath_"], 
             startDirectory=eg.PROGRAMFILES,
             fileMask = self.text.filemask,
             buttonText=eg.text.General.browse,
             toolTip=self.text.toolTipFile
         )
-        filepathCtrl.SetValue(arrayValue[1])
+        filepathCtrl.SetValue(options["filepath_"])
         #Sizers
         posAndSizeSizer = wx.FlexGridSizer(4,2,hgap=40,vgap=1)
         posAndSizeSizer.Add(xCoordLbl,0,wx.TOP,0)
@@ -1055,7 +1100,7 @@ class RunWithOptions(eg.ActionClass):
         maskSizer.Add(hlpbtnPatternCtrl,0,wx.TOP,1)
         #
         leftSizer = wx.BoxSizer(wx.VERTICAL)
-        leftSizer.Add(radioBoxFullOrWin,0,wx.EXPAND)
+        leftSizer.Add(radioBoxfullOrWin,0,wx.EXPAND)
         leftSizer.Add(radioBoxWinMode,0,wx.EXPAND|wx.TOP,9)
         leftSizer.Add(boxSizer4,0,wx.EXPAND|wx.TOP,9)
         leftSizer.Add(maskSizer,0,wx.EXPAND|wx.TOP,12)
@@ -1098,8 +1143,8 @@ class RunWithOptions(eg.ActionClass):
         rightSizer.Add(boxSizer3,0,wx.EXPAND|wx.TOP,7)
         rightSizer.Add(boxSizer2,0,wx.EXPAND|wx.TOP,7)
         rightSizer.Add(monLblSizer,0,wx.EXPAND|wx.TOP,7)
-        #=#
-        cmdlineSizer = wx.FlexGridSizer(4,2,hgap=5,vgap=1) #X
+        #
+        cmdlineSizer = wx.FlexGridSizer(4,2,hgap=5,vgap=1)
         cmdlineSizer.Add(lineOptLbl,0,wx.TOP,0)
         cmdlineSizer.Add((1,1))
         cmdlineSizer.Add(lineOptCtrl,0,wx.TOP,1)
@@ -1120,10 +1165,18 @@ class RunWithOptions(eg.ActionClass):
         dialog.sizer.Add(mainSizer)
         def onBtnPatternClick(event=None):
             self.plugin.OpenHelpPage('hlp_text_patternoptions.htm')
-        hlpbtnPatternCtrl.Bind(wx.EVT_BUTTON, onBtnPatternClick, hlpbtnPatternCtrl)
+        hlpbtnPatternCtrl.Bind(
+            wx.EVT_BUTTON,
+            onBtnPatternClick,
+            hlpbtnPatternCtrl
+        )
         def onBtnCommandClick(event=None):
             self.plugin.OpenHelpPage('hlp_command_line.htm') 
-        hlpbtnCommandCtrl.Bind(wx.EVT_BUTTON, onBtnCommandClick, hlpbtnCommandCtrl)
+        hlpbtnCommandCtrl.Bind(
+            wx.EVT_BUTTON,
+            onBtnCommandClick,
+            hlpbtnCommandCtrl
+        )
         def onModeChange(event=None):
             widthCtrl.Enable(radioBoxWinMode.GetSelection() in [1,2,5])
             highCtrl.Enable(radioBoxWinMode.GetSelection() in [1,2,5])
@@ -1143,29 +1196,30 @@ class RunWithOptions(eg.ActionClass):
         onShowTextChange()
         
         if dialog.AffirmedShowModal():
-            arrayValue[0]=labelCtrl.GetValue()
-            arrayValue[1]=filepathCtrl.GetValue()
-            arrayValue[2]=resampleCtrl.GetValue()
-            arrayValue[3]=alphaCtrl.GetValue()
-            arrayValue[4]=hideCursorCtrl.GetValue()
-            arrayValue[5]=displTextCtrl.GetValue()
-            arrayValue[6]=resample2Ctrl.GetValue()
-            arrayValue[7]=centerImageCtrl.GetValue()
-            arrayValue[8]=captionCtrl.GetValue()
-            arrayValue[9]=menuBarCtrl.GetValue()
-            arrayValue[10]=toolBarCtrl.GetValue()
-            arrayValue[11]=statusLineCtrl.GetValue()
-            arrayValue[12]=radioBoxFullOrWin.GetSelection()
-            arrayValue[13]=radioBoxWinMode.GetSelection()
-            arrayValue[14]=radioBoxFullMode.GetSelection()
-            arrayValue[15]=xCoordCtrl.GetValue()
-            arrayValue[16]=yCoordCtrl.GetValue()
-            arrayValue[17]=widthCtrl.GetValue()
-            arrayValue[18]=highCtrl.GetValue()
-            arrayValue[19]=monCtrl.GetValue()
-            arrayValue[20]=lineOptCtrl.GetValue()
-            arrayValue[21]=maskCtrl.GetValue()
-            return (arrayValue,)
+            #kwargs = {}
+            kwargs["label_"]=labelCtrl.GetValue()
+            kwargs["filepath_"]=filepathCtrl.GetValue()
+            kwargs["resample_"]=resampleCtrl.GetValue()
+            kwargs["alpha_"]=alphaCtrl.GetValue()
+            kwargs["hide_"]=hideCursorCtrl.GetValue()
+            kwargs["displ_"]=displTextCtrl.GetValue()
+            kwargs["resample2_"]=resample2Ctrl.GetValue()
+            kwargs["center_"]=centerImageCtrl.GetValue()
+            kwargs["caption_"]=captionCtrl.GetValue()
+            kwargs["menuBar_"]=menuBarCtrl.GetValue()
+            kwargs["toolBar_"]=toolBarCtrl.GetValue()
+            kwargs["statusBar_"]=statusLineCtrl.GetValue()
+            kwargs["fullOrWin_"]=radioBoxfullOrWin.GetSelection()
+            kwargs["winMode_"]=radioBoxWinMode.GetSelection()
+            kwargs["fullMode_"]=radioBoxFullMode.GetSelection()
+            kwargs["xCoord_"]=xCoordCtrl.GetValue()
+            kwargs["yCoord_"]=yCoordCtrl.GetValue()
+            kwargs["width_"]=widthCtrl.GetValue()
+            kwargs["high_"]=highCtrl.GetValue()
+            kwargs["mon_"]=monCtrl.GetValue()
+            kwargs["lineOpt_"]=lineOptCtrl.GetValue()
+            kwargs["mask_"]=maskCtrl.GetValue()
+            return (kwargs,)
 
 
 

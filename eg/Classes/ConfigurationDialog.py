@@ -48,6 +48,7 @@ class ConfigurationDialog(Dialog):
             self = eg.currentConfigureItem.openConfigDialog
             self.Freeze()
             self.Clear()
+            self.Freeze()
             return self
         else:
             return eg.Dialog.__new__(cls, obj, *args, **kwargs)
@@ -130,7 +131,11 @@ class ConfigurationDialog(Dialog):
         self.SetMinSize(self.GetSize())
         self.Layout()
         #self.Refresh()
-        self.Thaw()
+        try:
+            while self.IsFrozen():
+                self.Thaw()
+        except:
+            pass
         if not self.__postInited:
             self.Centre()
         self.__postInited = True

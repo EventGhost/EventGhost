@@ -66,6 +66,11 @@ class EventGhost(object):
         self.CallAfter = wx.CallAfter
         self.APP_NAME = "EventGhost"
         self.PLUGIN_DIR = os.path.abspath("plugins")
+        self.APPDATA = eg.pathes.RoamingAppData
+        self.STARTUP = eg.pathes.Startup
+        self.PROGRAMFILES = eg.pathes.ProgramFiles
+        self.TEMPDIR = eg.pathes.TemporaryFiles
+        self.CONFIG_DIR = os.path.join(self.APPDATA, self.APP_NAME)
         
         # we create a package 'pluginImport' and set its path to the plugin-dir
         # se we can simply use __import__ to load a plugin file 
@@ -158,7 +163,13 @@ class EventGhost(object):
         import cFunctions
         sys.modules["eg.cFunctions"] = cFunctions
             
-        self.DoImports()
+        self.Exit = sys.exit
+        from WinAPI.Shortcut import CreateShortcut
+        self.CreateShortcut = CreateShortcut
+        from WinAPI.serial import Serial
+        self.SerialPort = Serial
+        from WinAPI.SerialThread import SerialThread
+        self.SerialThread = SerialThread
         
         from greenlet import greenlet
         self.Greenlet = greenlet
@@ -248,16 +259,6 @@ class EventGhost(object):
         return attr
     
     
-    def DoImports(self):
-        from sys import exit as Exit
-        from WinAPI.Pathes import APPDATA, STARTUP, PROGRAMFILES, TEMPDIR
-        self.CONFIG_DIR = os.path.join(APPDATA, self.APP_NAME)
-        from WinAPI.Shortcut import CreateShortcut
-        from WinAPI.serial import Serial as SerialPort
-        from WinAPI.SerialThread import SerialThread
-        self.__dict__.update(locals())
-        
-        
     def DeInit(self):
         self.PrintDebugNotice("stopping threads")
         self.actionThread.CallWait(self.actionThread.StopSession)
