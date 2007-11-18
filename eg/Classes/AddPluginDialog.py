@@ -20,10 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import wx
-
 import eg
-from Singletons.ActionThread import CORE_PLUGINS
+import wx
         
 kindTags = ["remote", "program", "external", "other"]
 
@@ -37,13 +35,14 @@ class DefaultConfig:
 config = eg.GetConfig("AddPluginDialog", DefaultConfig)
 
 
-class Text:
+class Text(eg.TranslatableStrings):
     title = "Choose a plugin to add..."
     noInfo = "No information available."
     noMultiloadTitle = "No multiload possible"
-    noMultiload = \
-        "This plugin doesn't support multiload and you already have one " \
+    noMultiload = (
+        "This plugin doesn't support multiload and you already have one " 
         "instance of this plugin in your configuration."
+    )
     remotePlugins = "Remote Receiver"
     programPlugins = "Program Control"
     externalPlugins = "External Equipment"
@@ -52,7 +51,6 @@ class Text:
     version = "Version:"
     descriptionBox = "Description"
     
-Text = eg.GetTranslation(Text)
 
 
 class AddPluginDialog(eg.Dialog):

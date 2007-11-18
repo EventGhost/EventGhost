@@ -279,8 +279,8 @@ class MceRemote(eg.PluginClass):
         panel.AddLine(self.text.buttonTimeout, waitTimeCtrl)
         panel.AddLine(self.text.buttonTimeoutDescr)
         
-        if panel.Affirmed():
-            return (waitTimeCtrl.GetValue(), )
+        while panel.Affirmed():
+            panel.SetResult(waitTimeCtrl.GetValue())
         
         
         

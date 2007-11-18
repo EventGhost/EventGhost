@@ -43,7 +43,7 @@ class StatusBar(wx.StatusBar):
         rect = self.GetFieldRect(0)
         self.cb = wx.CheckBox(self, -1, eg.text.MainFrame.onlyLogAssigned)
         self.cb.SetBackgroundColour(wx.SystemSettings_GetColour(wx.SYS_COLOUR_MENUBAR))
-        self.cb.SetValue(eg.onlyLogAssigned)
+        self.cb.SetValue(eg.config.onlyLogAssigned)
         self.cb.Bind(wx.EVT_CHECKBOX, self.OnCheckBox)
         self.cb.SetPosition((rect.x+2, rect.y+2))
         self.Reposition()
@@ -82,7 +82,7 @@ class StatusBar(wx.StatusBar):
         
     @eg.LogIt
     def OnCheckBox(self, event):
-        eg.onlyLogAssigned = self.cb.GetValue()
+        eg.config.onlyLogAssigned = self.cb.GetValue()
         
         
     def SetState(self, flag):

@@ -545,22 +545,33 @@ class CmdConfigure:
         self.name = eg.text.MainFrame.Menu.Edit.replace("&", "")
         
         wasApplied = False
+        gr = None
         while True:
             eg.currentConfigureItem = item
             try:
-                newArgs = executable.Configure(*item.args)
+                if gr is None or gr.dead:
+                    gr = eg.Greenlet(executable.Configure)
+                    newArgs = gr.switch(*item.args)
+                else:
+                    newArgs = gr.switch()
+                #newArgs = executable.Configure(*item.args)
             except:
                 eg.PrintError("Error while configuring: %s", item.GetLabel())
                 raise
             if item.openConfigDialog is not None:
                 userAction = item.openConfigDialog.result
                 if userAction == wx.ID_CANCEL:
+                    if not gr.dead:
+                        gr.switch()
                     item.openConfigDialog.Destroy()
                     del item.openConfigDialog
                     if wasApplied:
                         item.SetParams(*oldArgs)
+                        item.Refresh()
                     return False
                 elif userAction == wx.ID_OK:
+                    if not gr.dead:
+                        gr.switch(wx.ID_CANCEL)
                     item.openConfigDialog.Destroy()
                     del item.openConfigDialog
                     break
@@ -583,7 +594,7 @@ class CmdConfigure:
             item.Refresh()
         return True
     
-    
+
     def Undo(self, document):
         item = self.positionData.GetItem()
         argumentString = item.GetArgumentString()

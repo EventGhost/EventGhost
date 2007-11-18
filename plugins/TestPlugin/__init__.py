@@ -124,7 +124,7 @@ class DictionaryTest(eg.ActionClass):
         
         
     def Configure(self, a=True, b="", c=""):
-        panel = eg.ConfigPanel2(self)
+        panel = eg.ConfigPanel(self)
         
         aValueCtrl = panel.CheckBox(a, "Set aValue to True")
         bValueCtrl = panel.TextCtrl(b)

@@ -199,7 +199,7 @@ class Foobar2000(eg.PluginClass):
             foobar2000Path = self.GetFoobar2000Path()
             if foobar2000Path is None:
                 foobar2000Path = os.path.join(
-                    eg.PROGRAMFILES, 
+                    eg.folderPath.ProgramFiles, 
                     "foobar2000", 
                     "foobar2000.exe"
                 )
@@ -208,7 +208,7 @@ class Foobar2000(eg.PluginClass):
             dialog, 
             size=(320,-1),
             initialValue=foobar2000Path, 
-            startDirectory=eg.PROGRAMFILES,
+            startDirectory=eg.folderPath.ProgramFiles,
             labelText="",
             fileMask = "Foobar2000 executable|foobar2000.exe|All-Files (*.*)|*.*",
             buttonText=eg.text.General.browse

@@ -220,8 +220,8 @@ class CreateNew(eg.ActionClass):
         panel.AddLine("Button background colour:", backgroundColourCtrl)
         panel.AddLine("Button font:", fontCtrl)
         
-        if panel.Affirmed():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 widthCtrl.GetValue(),
                 heightCtrl.GetValue(),
                 rowGapCtrl.GetValue(),
@@ -321,7 +321,7 @@ class AddButton(eg.ActionClass):
             panel.SpinIntCtrl()
         )
 
-        if panel.Affirmed():
+        while panel.Affirmed():
             image = kwargs.get("image", None)
             kwargs = {}
             kwargs["label"] = labelCtrl.GetValue()
@@ -334,7 +334,7 @@ class AddButton(eg.ActionClass):
             imageOption()
             if invisibleCtrl.GetValue():
                 kwargs["invisible"] = True
-            return kwargs,
+            panel.SetResult(kwargs)
 
         
         
@@ -354,8 +354,8 @@ class StartNewLine(eg.ActionClass):
         panel = eg.ConfigPanel(self)
         heightCtrl = panel.SpinIntCtrl(height)
         panel.AddLine("Height:", heightCtrl)
-        if panel.Affirmed():
-            return (heightCtrl.GetValue(), )
+        while panel.Affirmed():
+            panel.SetResult(heightCtrl.GetValue(), )
 
 
 
@@ -375,8 +375,8 @@ class Show(eg.ActionClass):
         yPosCtrl = panel.SpinIntCtrl(yPos, min=-32768, max=32767)
         panel.AddLine("Screen horizontal position:", xPosCtrl)
         panel.AddLine("Screen vertical position:", yPosCtrl)
-        if panel.Affirmed():
-            return (xPosCtrl.GetValue(), yPosCtrl.GetValue())
+        while panel.Affirmed():
+            panel.SetResult(xPosCtrl.GetValue(), yPosCtrl.GetValue())
         
         
         

@@ -24,7 +24,7 @@ import eg
 import wx
 from new import classobj
 import os
-import xml.etree.cElementTree as ElementTree
+from xml.etree import cElementTree as ElementTree
 from tempfile import mkstemp
 from threading import Lock
 

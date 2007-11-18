@@ -164,7 +164,7 @@ class DBox2(eg.PluginClass):
         useRcemCtrl = panel.CheckBox(useRcem, 'Use "rcem" instead of "rcsim"')
         panel.AddLine("d-box2 Host:", hostCtrl)
         panel.AddLine(useRcemCtrl)        
-        if panel.Affirmed():
-            return (hostCtrl.GetValue(), useRcemCtrl.GetValue())
+        while panel.Affirmed():
+            panel.SetResult(hostCtrl.GetValue(), useRcemCtrl.GetValue())
     
         

@@ -231,8 +231,8 @@ class NetworkReceiver(eg.PluginClass):
         eventPrefixCtrl = panel.TextCtrl(prefix)
         panel.AddLine(self.text.event_prefix, eventPrefixCtrl)
         
-        if panel.Affirmed():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 portCtrl.GetValue(), 
                 passwordCtrl.GetValue(), 
                 eventPrefixCtrl.GetValue()

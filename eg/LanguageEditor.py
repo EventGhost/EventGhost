@@ -177,7 +177,6 @@ class LanguageEditor(wx.Frame):
         eg.OptionsDialog
         eg.FindDialog
         #import MainFrame
-        from Singletons.ActionThread import CORE_PLUGINS
         
         for plugin in os.listdir("plugins"):
             if not plugin.startswith("."):

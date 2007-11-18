@@ -384,7 +384,7 @@ class MainFrame(wx.Frame):
             cb = self.statusBar.cb
             flag = not cb.GetValue()
             cb.SetValue(flag)
-            eg.onlyLogAssigned = flag
+            eg.config.onlyLogAssigned = flag
 
         toggleOnlyLogAssignedId = wx.NewId()
         wx.EVT_MENU(self, toggleOnlyLogAssignedId, ToggleOnlyLogAssigned)

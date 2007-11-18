@@ -24,23 +24,15 @@ import eg
 from time import clock
 from threading import Event
 
+actionThread = eg.actionThread
+LogEvent = eg.log.LogEvent
+RunProgram = eg.RunProgram
+GetItemPath = eg.EventItem.GetPath
+config = eg.config
 
-    
 class EventGhostEvent(object):
     
     data = None
-
-    @classmethod
-    def Init(cls):
-        global LogEvent 
-        LogEvent = eg.log.LogEvent
-        global actionThread
-        actionThread = eg.actionThread
-        global RunProgram
-        RunProgram = eg.RunProgram
-        global GetItemPath
-        GetItemPath = eg.EventItem.GetPath
-
 
     def __init__(self, suffix="", payload=None, prefix="Main", source=eg):
         self.string = prefix + "." + suffix
@@ -134,7 +126,7 @@ class EventGhostEvent(object):
             else:
                 activeHandlers.add(eventHandler)
         # show the event in the logger
-        if eg.onlyLogAssigned and len(activeHandlers) == 0:
+        if config.onlyLogAssigned and len(activeHandlers) == 0:
             return
         else:
             LogEvent(self)

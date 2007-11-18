@@ -32,13 +32,12 @@ import eg
 
 
     
-class Text:
+class Text(eg.TranslatableStrings):
     title = "Python-Editor - %s"
     class SaveChanges:
         title = "Apply changes?"
         mesg = "The file was altered.\n\nDo you want to apply the changes?\n"
 
-Text = eg.GetTranslation(Text)
 
 
 

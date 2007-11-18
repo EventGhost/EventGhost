@@ -185,7 +185,7 @@ class ConfigurationDialog(Dialog):
         self.buttonRow.applyButton.Bind(wx.EVT_BUTTON, SwitchWrapper(wx.ID_APPLY))
         self.Bind(wx.EVT_CLOSE, SwitchWrapper(wx.ID_CANCEL))
         
-        self.result = gr1.parent.switch()
+        self.result = eg.mainGreenlet.switch()
         #self.Hide()
         #self.Destroy()
         return self.result in (wx.ID_OK, wx.ID_APPLY)

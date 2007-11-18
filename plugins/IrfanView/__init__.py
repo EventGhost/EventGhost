@@ -1,4 +1,4 @@
-version="0.2.2" 
+version="0.2.3" 
 
 # Plugins/IrfanView/__init__.py
 #
@@ -285,7 +285,7 @@ class IrfanView(eg.PluginClass):
             IrfanViewPath = self.GetIrfanViewPath()
             if IrfanViewPath is None:
                 IrfanViewPath = os.path.join(
-                    eg.PROGRAMFILES, 
+                    eg.folderPath.ProgramFiles, 
                     "IrfanView", 
                     "i_view32.exe"
                 )
@@ -294,7 +294,7 @@ class IrfanView(eg.PluginClass):
             dialog, 
             size=(320,-1),
             initialValue=IrfanViewPath, 
-            startDirectory=eg.PROGRAMFILES,
+            startDirectory=eg.folderPath.ProgramFiles,
             fileMask = self.text.filemask,
             buttonText=eg.text.General.browse
         )
@@ -397,8 +397,8 @@ class RunSlideshow(eg.ActionClass):
         "width_": 800.0,
         "high_": 600.0,
         "delay_": 5.0,
-        "filepath_": eg.APPDATA,
-        "dirpath_": eg.APPDATA,
+        "filepath_": eg.folderPath.Pictures,
+        "dirpath_": eg.folderPath.Pictures,
         "mode_": 1,
         "source_": 0,
         "fit_": 1,
@@ -494,12 +494,12 @@ class RunSlideshow(eg.ActionClass):
         cp.set(sec, "ShowFullScreen", str(options["fit_"]))
         cp.set(sec, "FSResample", str(int(options["resample_"])))
         cp.set(sec, "FSAlpha", str(int(options["alpha_"])))
-        fp = open(eg.APPDATA+"\\EventGhost\\i_view32.ini",'wb') 
+        fp = open(eg.folderPath.RoamingAppData+"\\EventGhost\\i_view32.ini",'wb') 
         cp.write(fp) 
         fp.close()
         params='/slideshow="'+(options["filepath_"] if options["source_"] \
             else options["dirpath_"])
-        params+='" /ini="'+eg.APPDATA+'\\EventGhost\\" /monitor='\
+        params+='" /ini="'+eg.folderPath.RoamingAppData+'\\EventGhost\\" /monitor='\
             +str(options["mon_"])
         try:
             return win32api.ShellExecute(
@@ -720,7 +720,7 @@ class RunSlideshow(eg.ActionClass):
                     dialog, 
                     size=(370,-1),
                     initialValue=options["filepath_"], 
-                    startDirectory=eg.PROGRAMFILES,
+                    startDirectory=eg.folderPath.ProgramFiles,
                     fileMask = self.text.filemask,
                     buttonText=eg.text.General.browse,
                     toolTip=self.text.toolTipFile
@@ -818,7 +818,6 @@ class RunSlideshow(eg.ActionClass):
             kwargs["mon_"]=monCtrl.GetValue()
             kwargs["mask_"]=maskCtrl.GetValue()
             #kwargs["lineOpt_"]=lineOptCtrl.GetValue()
-            #print kwargs
             return (kwargs,)
 
 
@@ -827,7 +826,7 @@ class RunWithOptions(eg.ActionClass):
     description = "Run IrfanView with options."
     defaults = {
         "label_": "",
-        "filepath_": "",
+        "filepath_": eg.folderPath.Pictures,
         "resample_": True,
         "alpha_": True,
         "hide_": True,
@@ -929,18 +928,18 @@ class RunWithOptions(eg.ActionClass):
         cp.set(sec, "FullScreen", str(options["fullOrWin_"]))
         cp.set(sec, "FitWindowOption", str(options["winMode_"]+1))
         cp.set(sec, "ShowFullScreen", str(options["fullMode_"]))
-        if len(mask_)>0:
+        if len(options["mask_"])>0:
             cp.set(sec, "FullText", options["mask_"])
-        fp = open(eg.APPDATA+"\\EventGhost\\i_view32.ini",'wb') 
+        fp = open(eg.folderPath.RoamingAppData+"\\EventGhost\\i_view32.ini",'wb') 
         cp.write(fp) 
         fp.close()
         params=options["filepath_"]+' /hide='+str(8*options["caption_"]\
             +4*options["menuBar_"]+2*options["toolBar_"]+options["statusBar_"])
-        params+=' /ini="'+eg.APPDATA+'\\EventGhost\\" /pos=('\
+        params+=' /ini="'+eg.folderPath.RoamingAppData+'\\EventGhost\\" /pos=('\
             +str(options["xCoord_"])+','+str(options["yCoord_"])+')'
         if len(options["lineOpt_"])>0:
             params+=' '+options["lineOpt_"]
-        #params+=' /monitor='+str(mon_)
+        #params+=' /monitor='+str(options["mon_"])
         try:
             return win32api.ShellExecute(
                 0, 
@@ -1071,7 +1070,7 @@ class RunWithOptions(eg.ActionClass):
             dialog, 
             size=(370,-1),
             initialValue=options["filepath_"], 
-            startDirectory=eg.PROGRAMFILES,
+            startDirectory=eg.folderPath.ProgramFiles,
             fileMask = self.text.filemask,
             buttonText=eg.text.General.browse,
             toolTip=self.text.toolTipFile

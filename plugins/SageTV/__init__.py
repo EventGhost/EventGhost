@@ -156,8 +156,8 @@ class SageTV(eg.PluginClass):
         choices = ["Target SageTV.exe", "Target SageTVClient.exe"]
         useClientCtrl = panel.RadioBox(useClient, choices=choices)
         panel.AddLine(useClientCtrl)
-        if panel.Affirmed():
-            return (useClientCtrl.GetValue(), )
+        while panel.Affirmed():
+            panel.SetResult(useClientCtrl.GetValue())
 
 
 

@@ -29,7 +29,7 @@ import eg
 
 from LanguageTools import languageNames
 
-class Text:
+class Text(eg.TranslatableStrings):
     Title = "Options"
     Tab1 = "General"
     StartGroup = "On Start"
@@ -45,7 +45,6 @@ class Text:
     limitMemory2 = "MB"
     confirmDelete = "Confirm delete of tree items"
     
-Text = eg.GetTranslation(Text)
 
 
 class OptionsDialog(eg.Dialog):
@@ -76,7 +75,7 @@ class OptionsDialog(eg.Dialog):
         cbStartWithWindows = wx.CheckBox(page1, -1, Text.StartWithWindows)
         cbStartWithWindows.SetValue(eg.config.startWithWindows)
         self.cbStartWithWindows = cbStartWithWindows        
-        if eg.STARTUP is None:
+        if eg.folderPath.Startup is None:
             cbStartWithWindows.Enable(False)
             
         cbHideOnClose = wx.CheckBox(page1, -1, Text.HideOnClose)
@@ -182,7 +181,7 @@ class OptionsDialog(eg.Dialog):
         tmp = self.cbStartWithWindows.GetValue()
         if tmp <> eg.config.startWithWindows:
             eg.config.startWithWindows = tmp
-            path = os.path.join(eg.STARTUP, eg.APP_NAME)
+            path = os.path.join(eg.folderPath.Startup, eg.APP_NAME)
             path += ".lnk"
             if tmp:
                 # create shortcut in autostart dir

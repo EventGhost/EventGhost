@@ -4,7 +4,13 @@ License="""
     GNU General Public License - GNU Project - Free Software Foundation (FSF)
 </title>
 </head>
-<body alink="#ff0000" bgcolor="#ffffff" link="#1f00ff" text="#000000" vlink="#9900dd">
+<body 
+    alink="#ff0000" 
+    bgcolor="#ffffff" 
+    link="#1f00ff" 
+    text="#000000" 
+    vlink="#9900dd"
+>
 <h3>GNU General Public License</h3>
 <p>
 Version 2, June 1991

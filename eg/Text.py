@@ -23,21 +23,23 @@
 class Text:
     class General:
         configTree = "Configuration Tree"
-        deleteQuestion = \
-            "Are you sure you want to delete this item?"
-        deleteManyQuestion = \
-            "This element has %s subelements.\n"\
+        deleteQuestion = "Are you sure you want to delete this item?"
+        deleteManyQuestion = (
+            "This element has %s subelements.\n"
             "Are you sure you want to delete them all?"
-        deletePlugin = \
-            "This plugin is used by actions in your configuration.\n"\
-            "You cannot remove it before all actions that are using this plugin "\
+        )
+        deletePlugin = (
+            "This plugin is used by actions in your configuration.\n"
+            "You cannot remove it before all actions that are using this plugin "
             "have been removed."
+        )
         deleteLinkedItems = (
             "At least one item outside your selection refers to an "
             "item inside your selection. If you continue to delete "
             "this selection, the referring item won't properly work "
             "anymore.\n\n"
-            "Are you sure you want to delete the selection?")
+            "Are you sure you want to delete the selection?"
+        )
         ok = "OK"
         cancel = "Cancel"
         apply = "Apply"

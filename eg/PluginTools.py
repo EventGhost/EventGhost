@@ -30,7 +30,19 @@ import types
 import eg
 from Utils import SetClass
 from Classes.PluginMetaClass import PluginMetaClass
-from PluginProxy import PluginProxy
+
+
+
+class PluginProxy(object):
+    
+    def __init__(self, plugin):
+        self.plugin = plugin
+        self.actions = plugin.info.actions
+        
+    
+    def __getattr__(self, name):
+        return self.actions[name]
+        
 
 
 

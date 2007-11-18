@@ -34,11 +34,9 @@ class DefaultConfig:
 config = eg.GetConfig("AddActionDialog", DefaultConfig)
 
 
-class Text:
+class Text(eg.TranslatableStrings):
     title = "Select an action to add..."
     descriptionLabel = "Description"
-
-Text = eg.GetTranslation(Text)
 
 
 

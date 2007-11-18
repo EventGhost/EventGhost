@@ -119,6 +119,6 @@ class NewJumpIf(eg.ActionClass):
         sizer.Add(gosubCB, 0, wx.EXPAND)
         dialog.sizer.Add(sizer, 0, wx.EXPAND)
         
-        if dialog.AffirmedShowModal():
+        while dialog.AffirmedShowModal():
             link.SetTarget(button.GetValue())
-            return (link, ch.GetSelection(), gosubCB.GetValue())
+            panel.SetResult(link, ch.GetSelection(), gosubCB.GetValue())

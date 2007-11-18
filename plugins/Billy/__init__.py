@@ -208,7 +208,7 @@ class Billy(eg.PluginClass):
     def Configure(self, BillyPath=None):
         if BillyPath is None:
             BillyPath = os.path.join(
-                eg.PROGRAMFILES, 
+                eg.folderPath.ProgramFiles, 
                 "Billy", 
                 "Billy.exe"
             )
@@ -219,7 +219,7 @@ class Billy(eg.PluginClass):
             dialog, 
             size=(320,-1),
             initialValue=BillyPath, 
-            startDirectory=eg.PROGRAMFILES,
+            startDirectory=eg.folderPath.ProgramFiles,
             fileMask = self.text.filemask,
             buttonText=eg.text.General.browse
         )

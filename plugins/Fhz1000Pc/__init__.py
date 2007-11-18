@@ -228,10 +228,10 @@ class ActionBase(eg.ActionClass):
 
         panel.AddLine("Address:", maskedCtrl)
         
-        if panel.Affirmed():
+        while panel.Affirmed():
             address = self.GetAddressFromString(maskedCtrl.GetPlainValue())
             ActionBase.defaultAddress = address
-            return (address, )
+            panel.SetResult(address)
             
 
 
@@ -282,10 +282,10 @@ class Dim(ActionBase):
         panel.AddLine("Address:", maskedCtrl)
         panel.AddLine("Level:", levelCtrl)
         
-        if panel.Affirmed():
+        while panel.Affirmed():
             address = self.GetAddressFromString(maskedCtrl.GetPlainValue())
             ActionBase.defaultAddress = address
-            return (
+            panel.SetResult(
                 address, 
                 levelCtrl.GetValue(),
             )

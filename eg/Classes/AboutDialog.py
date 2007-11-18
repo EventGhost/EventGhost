@@ -21,7 +21,7 @@
 # $LastChangedBy$
 
 import eg
-import Version
+import eg.Version
 import wx
 
 import time
@@ -30,11 +30,10 @@ import platform
 from cStringIO import StringIO
 
 import Image
-from License import License
 
 
 
-class Text:
+class Text(eg.TranslatableStrings):
     Title = "About EventGhost"
     Author = "Author: %s"
     Version = "Version: %s (build %s)"
@@ -44,10 +43,6 @@ class Text:
     tabLicense = "License Agreement"
     tabSystemInfo = "System Information"
     
-
-Text = eg.GetTranslation(Text)
-
-
 
 SPECIAL_THANKS_DATA = (
     (
@@ -214,7 +209,7 @@ class Panel3(Panel2):
     
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
-        self.CreateHtmlWindow(License)
+        self.CreateHtmlWindow(eg.License)
         
 
 
@@ -224,11 +219,11 @@ class Panel4(wx.Panel):
         wx.Panel.__init__(self, parent)
         compileTime = time.strftime(
             Text.CreationDate, 
-            time.gmtime(Version.compileTime)
+            time.gmtime(eg.Version.compileTime)
         )
         sysInfos = (
             ("EventGhost Version", eg.versionStr),
-            ("SVN Revision", Version.svnRevision),
+            ("SVN Revision", eg.Version.svnRevision),
             ("Compile Time", compileTime),
             ("Python Version", "%d.%d.%d %s %d" % sys.version_info),
             ("wxPython Version", wx.VERSION_STRING),

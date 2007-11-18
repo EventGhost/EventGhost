@@ -9,7 +9,7 @@ The one and all eg object.
 :group Utility: 
     Bunch, Exception, ThreadWorker
 :group Constants: 
-    APP_NAME, APPDATA, PLUGIN_DIR
+    APP_NAME, PLUGIN_DIR
 :group Function Decorators:
     LogIt, LogItWithReturn, AssertNotMainThread, TimeIt
     
@@ -35,10 +35,6 @@ result = None
 
 #: The applications name.
 APP_NAME = "EventGhost"
-
-#: This is the path to the Application Data on Windows. This will look 
-#: like this: C:\\Documents and Settings\\[User Name]\\Application Data
-APPDATA = ""
 
 #: Path to the directory where the plugins are stored.
 PLUGIN_DIR = _os.path.abspath("plugins")

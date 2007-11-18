@@ -712,7 +712,7 @@ class SetWallpaper(eg.ActionWithStringParameter):
         if imageFile:
             im = Image.open(imageFile)
             if im.format != 'BMP':
-                imageFile =  eg.APPDATA + '\\Microsoft\\Wallpaper1.bmp'
+                imageFile =  eg.folderPath.RoamingAppData + '\\Microsoft\\Wallpaper1.bmp'
                 im.save(imageFile)
         tile, wstyle = (("0", "0"), ("1", "0"), ("0", "2"))[style]
         hKey = win32api.RegCreateKey(
@@ -796,10 +796,8 @@ class MuteOn(eg.ActionClass):
         panel = eg.ConfigPanel(self)
         deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
         panel.AddLine("Device:", deviceCtrl)
-        if panel.Affirmed():
-            return (
-                deviceCtrl.GetValue(),
-            )
+        while panel.Affirmed():
+            panel.SetResult(deviceCtrl.GetValue())
 
 
 
@@ -820,10 +818,8 @@ class MuteOff(eg.ActionClass):
         panel = eg.ConfigPanel(self)
         deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
         panel.AddLine("Device:", deviceCtrl)
-        if panel.Affirmed():
-            return (
-                deviceCtrl.GetValue(),
-            )
+        while panel.Affirmed():
+            panel.SetResult(deviceCtrl.GetValue())
 
 
 
@@ -843,10 +839,8 @@ class ToggleMute(eg.ActionClass):
         panel = eg.ConfigPanel(self)
         deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
         panel.AddLine("Device:", deviceCtrl)
-        if panel.Affirmed():
-            return (
-                deviceCtrl.GetValue(),
-            )
+        while panel.Affirmed():
+            panel.SetResult(deviceCtrl.GetValue())
 
 
 
@@ -882,8 +876,8 @@ class SetMasterVolume(eg.ActionClass):
         sizer.Add(wx.StaticText(panel, -1, self.text.text2), 0, wx.ALIGN_CENTER_VERTICAL)
         panel.AddLine("Device:", deviceCtrl)
         panel.AddLine(sizer)
-        if panel.Affirmed():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 float(valueCtrl.GetValue()), 
                 deviceCtrl.GetValue(),
             )
@@ -921,8 +915,8 @@ class ChangeMasterVolumeBy(eg.ActionClass):
         sizer.Add(wx.StaticText(panel, -1, self.text.text2), 0, wx.ALIGN_CENTER_VERTICAL)
         panel.AddLine("Device:", deviceCtrl)
         panel.AddLine(sizer)
-        if panel.Affirmed():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 float(valueCtrl.GetValue()), 
                 deviceCtrl.GetValue(),
             )

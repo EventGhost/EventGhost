@@ -200,13 +200,9 @@ class SetDisplay(eg.ActionClass):
     def Configure(self, display=0):
         panel = eg.ConfigPanel(self)
         displayChoice = panel.DisplayChoice(display)
-        
         panel.AddLine("Display:", displayChoice)
-        
-        if panel.Affirmed():
-            return (
-                displayChoice.GetValue(),
-            )
+        while panel.Affirmed():
+            panel.SetResult(displayChoice.GetValue())
         
         
         
@@ -246,8 +242,8 @@ class Focus(TestPatternAction):
         panel.AddLine("Foreground Colour:", foregroundColourButton)
         panel.AddLine("Background Colour:", backgroundColourButton)
         
-        if panel.Affirmed():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 foregroundColourButton.GetValue(), 
                 backgroundColourButton.GetValue(), 
                 0
@@ -297,8 +293,8 @@ class IreWindow(TestPatternAction):
         panel.AddLine("Percent Coverage:", coverageCtrl)
         panel.AddLine("Aspect Ratio:", aspectChoice)
         
-        if panel.Affirmed():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 foregroundColourButton.GetValue(), 
                 backgroundColourButton.GetValue(), 
                 coverageCtrl.GetValue(),
@@ -358,8 +354,8 @@ class Checkerboard(TestPatternAction):
         panel.AddLine("Num Horizontal Boxes:", hCountCtrl)
         panel.AddLine("Num Vertical Boxes:", vCountCtrl)
         
-        if panel.Affirmed():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 foregroundColourButton.GetValue(), 
                 backgroundColourButton.GetValue(), 
                 hCountCtrl.GetValue(),
@@ -421,8 +417,8 @@ class Grid(TestPatternAction):
         panel.AddLine("Num Horizontal Boxes:", hCountCtrl)
         panel.AddLine("Num Vertical Boxes:", vCountCtrl)
         
-        if panel.Affirmed():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 foregroundColourButton.GetValue(), 
                 backgroundColourButton.GetValue(), 
                 hCountCtrl.GetValue(),
@@ -479,8 +475,8 @@ class Lines(TestPatternAction):
         panel.AddLine("Background Colour:", backgroundColourButton)
         panel.AddLine("Line Size:", lineSizeCtrl)
         
-        if panel.Affirmed():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 foregroundColourButton.GetValue(), 
                 backgroundColourButton.GetValue(), 
                 lineSizeCtrl.GetValue(),
@@ -568,8 +564,8 @@ class Bars(TestPatternAction):
         panel.AddLine(showNumbersCtrl)
         panel.AddLine("Number Font:", fontCtrl)
         
-        if panel.Affirmed():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 firstColourButton.GetValue(), 
                 lastColourButton.GetValue(), 
                 barCountCtrl.GetValue(),
@@ -644,8 +640,8 @@ class SiemensStar(TestPatternAction):
         panel.AddLine("Beam Count:", beamCountCtrl)
         panel.AddLine("Radius:", radiusCtrl, "% (0=fill entire screen)")
         
-        if panel.Affirmed():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 backgroundColourButton.GetValue(), 
                 firstColourButton.GetValue(), 
                 secondColourButton.GetValue(), 
@@ -695,8 +691,8 @@ class Burst(TestPatternAction):
         panel.AddLine("Min Colour:", secondColourButton)
         panel.AddLine("Num Burst Lines:", beamCountCtrl)
         
-        if panel.Affirmed():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 firstColourButton.GetValue(), 
                 secondColourButton.GetValue(), 
                 beamCountCtrl.GetValue(),
@@ -737,8 +733,8 @@ class Geometry(TestPatternAction):
         panel = eg.ConfigPanel(self)
         aspectCtrl = panel.Choice(aspectRatio, choices=zip(*ASPECT_RATIOS)[0])
         panel.AddLine("Aspect Ratio:", aspectCtrl)
-        if panel.Affirmed():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 aspectCtrl.GetValue(), 
             )
 

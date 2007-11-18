@@ -191,16 +191,4 @@ def LoadStrings(language):
         pass
     return tmp
 
-
-
-def GetTranslation(cls):
-    module = cls.__module__.split(".")[-1]
-    trans = getattr(eg.text, module, None)
-    if trans is None:
-        class trans:
-            pass
-        trans = trans()
-    SetClass(trans, cls)
-    setattr(eg.text, module, trans)
-    return trans
     

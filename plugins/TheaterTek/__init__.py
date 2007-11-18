@@ -809,8 +809,8 @@ class TheaterTek(eg.PluginClass):
         portEdit = panel.SpinIntCtrl(port, max=65535)
         panel.AddLine("TCP/IP host:", hostEdit)
         panel.AddLine("TCP/IP port:", portEdit)
-        if panel.Affirmed():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 hostEdit.GetValue(), 
                 portEdit.GetValue(), 
                 None,

@@ -47,11 +47,11 @@ from eg.WinAPI.Utils import GetHwndIcon, GetHwndChildren, HwndHasChildren
 from eg.WinAPI.Utils import HighlightWindow
 from eg.WinAPI.Utils import GetModulesPID, GetNameOfPID, GetHwndProcessName
 
-GetIcon = eg.Icons.GetIcon
-from compile_string import compile_string
+# imports local to plugin
+from CompileString import CompileString
         
 
-
+GetIcon = eg.Icons.GetIcon
 ourProcessID = win32api.GetCurrentProcessId()
 systemEncoding = locale.getdefaultlocale()[1]
 
@@ -141,7 +141,7 @@ class WindowMatcher:
             
         def GetMatcher(value):
             if value is not None:
-                return compile_string(value.encode(systemEncoding)) 
+                return CompileString(value.encode(systemEncoding)) 
             else:
                 return dummy
             

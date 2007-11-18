@@ -497,10 +497,8 @@ class SetVolume(eg.ActionWithStringParameter):
         panel = eg.ConfigPanel(self)
         valueCtrl = panel.SpinNumCtrl(percentage, min=-100, max=100)
         panel.AddLine(self.text.text1, valueCtrl, self.text.text2)
-        if panel.Affirmed():
-            return (
-                float(valueCtrl.GetValue()), 
-            )
+        while panel.Affirmed():
+            panel.SetResult(float(valueCtrl.GetValue()))
         
         
         
@@ -533,10 +531,8 @@ class ChangeVolume():
         panel = eg.ConfigPanel(self)
         valueCtrl = panel.SpinNumCtrl(percentage, min=-100, max=100)
         panel.AddLine(self.text.text1, valueCtrl, self.text.text2)
-        if panel.Affirmed():
-            return (
-                float(valueCtrl.GetValue()), 
-            )
+        while panel.Affirmed():
+            panel.SetResult(float(valueCtrl.GetValue()))
          
         
         

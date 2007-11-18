@@ -215,8 +215,8 @@ class Webserver(eg.PluginClass):
         panel.AddLine(self.text.documentRoot, filepathCtrl)
         panel.AddLine(self.text.eventPrefix, editCtrl)
         
-        if panel.Affirmed():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 editCtrl.GetValue(), 
                 int(portCtrl.GetValue()), 
                 filepathCtrl.GetValue()

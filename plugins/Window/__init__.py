@@ -53,6 +53,7 @@ from eg.WinAPI.cTypes import SendNotifyMessage
 from eg.WinAPI.cTypes import PostMessage as Win32_PostMessage
 from eg.WinAPI.cTypes import SendMessage as Win32_SendMessage
 
+# imports local to plugin
 from FindWindow import FindWindow
 from SendKeys import SendKeys
 
@@ -147,8 +148,8 @@ class MoveTo(eg.ActionClass):
         panel.AddLine(xCheckBox, xCtrl, text.text2)
         panel.AddLine(yCheckBox, yCtrl, text.text4)
 
-        if panel.Affirmed():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 xCtrl.GetValue() if xCtrl.IsEnabled() else None,
                 yCtrl.GetValue() if yCtrl.IsEnabled() else None,
             )
@@ -288,14 +289,14 @@ class SendMessage(eg.ActionClass):
         #panel.AddLine()
         panel.AddLine(kindCB)
         
-        if panel.Affirmed():
+        while panel.Affirmed():
             choice = mesgCtrl.GetValue()
             try:
                 i = choices.index(choice)
                 mesg = choicesValues[i]
             except:
                 mesg = int(choice)
-            return (
+            panel.SetResult(
                 mesg, 
                 wParamCtrl.GetValue(),
                 lParamCtrl.GetValue(), 

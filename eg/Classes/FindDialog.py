@@ -25,7 +25,7 @@ import wx
 import string
 from types import StringTypes
 
-class Text:
+class Text(eg.TranslatableStrings):
     title = "Find"
     searchLabel = "Fi&nd what:"
     wholeWordsOnly = "Match &whole word only"
@@ -37,7 +37,6 @@ class Text:
     down = "&Down"
     notFoundMesg = '"%s" couldn\'t be found.'
 
-Text = eg.GetTranslation(Text)
 
 
 class FindDialog(eg.Dialog):

@@ -83,8 +83,8 @@ class NetworkSender(eg.PluginClass):
         panel.AddLine(self.text.port, portCtrl)
         panel.AddLine(self.text.password, passwordCtrl)
 
-        if panel.Affirmed():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 hostCtrl.GetValue(), 
                 portCtrl.GetValue(), 
                 passwordCtrl.GetValue()

@@ -133,8 +133,8 @@ class UIR(eg.RawReceiverPlugin):
         panel.AddLine('Event Byte Count:', byteCountCtrl, '(default=6)')
         panel.AddLine(initSequenceCtrl)
         
-        if panel.Affirmed():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 portCtrl.GetValue(), 
                 byteCountCtrl.GetValue(), 
                 initSequenceCtrl.GetValue()

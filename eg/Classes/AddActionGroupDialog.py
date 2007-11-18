@@ -23,7 +23,7 @@
 import wx
 import eg
 
-class Text:
+class Text(eg.TranslatableStrings):
     caption = "Add Actions?"
     message = (
         "EventGhost can add a folder with all actions of this plugin to your "
@@ -32,7 +32,6 @@ class Text:
         "Otherwise press the cancel button."
     )
 
-text = eg.GetTranslation(Text)
 
 
 class AddActionGroupDialog(eg.TreeItemBrowseDialog):
@@ -40,8 +39,8 @@ class AddActionGroupDialog(eg.TreeItemBrowseDialog):
     def __init__(self, parent=None):
         eg.TreeItemBrowseDialog.__init__(
             self, 
-            text.caption,
-            text.message,
+            Text.caption,
+            Text.message,
             None,
             (eg.FolderItem, eg.RootItem),
             filterClasses=(eg.FolderItem, ),

@@ -24,7 +24,7 @@ import eg
 import new
 import types
 
-from Utils import SetClass
+from eg.Utils import SetClass
 
 ActionClass = eg.ActionClass
 

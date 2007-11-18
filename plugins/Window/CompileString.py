@@ -33,7 +33,7 @@ class MatchAny:
     pass
     
 
-def compile_string(pattern):
+def CompileString(pattern):
     if pattern is None:
         return None
     res = []

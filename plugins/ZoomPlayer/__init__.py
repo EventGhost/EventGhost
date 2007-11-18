@@ -927,8 +927,8 @@ class ZoomPlayer(eg.PluginClass):
         panel.AddLine("TCP/IP host:", hostEdit)
         panel.AddLine("TCP/IP port:", portEdit)
         panel.AddLine(newEventCtrl)
-        if panel.Affirmed():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 hostEdit.GetValue(), 
                 portEdit.GetValue(), 
                 None,

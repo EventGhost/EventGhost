@@ -178,8 +178,8 @@ class DirectoryWatcher(eg.PluginClass):
         panel.AddLine(self.text.watchPath, dirpathCtrl)
         panel.AddLine(includeSubdirsCB)
 
-        if panel.Affirmed():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 dirpathCtrl.GetValue(),
                 includeSubdirsCB.GetValue(),
             )

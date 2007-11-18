@@ -27,7 +27,7 @@ import webbrowser
 import wx
 import eg
 
-class Text:
+class Text(eg.TranslatableStrings):
     title = "New EventGhost version available..."
     newVersionMesg = \
         "A newer version of EventGhost has been released.\n\n"\
@@ -44,7 +44,6 @@ class Text:
         "website.\n\n"\
         "Please try it again later."
 
-Text = eg.GetTranslation(Text)
 
 
 class MessageDialog(eg.Dialog):

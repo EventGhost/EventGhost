@@ -25,6 +25,8 @@ import os
 import imp
 import time
 import threading
+import asyncore
+import socket
 from os.path import exists
 import wx
 import locale
@@ -59,18 +61,23 @@ class EventGhost(object):
         global eg
         eg = self
         sys.modules["eg"] = self
+        self.__path__ = [os.path.abspath("eg")]
         
-        self.startupArguments = args
-        self.debugLevel = args.debugLevel
-        self.systemEncoding = locale.getdefaultlocale()[1]
-        self.CallAfter = wx.CallAfter
-        self.APP_NAME = "EventGhost"
-        self.PLUGIN_DIR = os.path.abspath("plugins")
-        self.APPDATA = eg.folderPath.RoamingAppData
-        self.STARTUP = eg.folderPath.Startup
-        self.PROGRAMFILES = eg.folderPath.ProgramFiles
-        self.TEMPDIR = eg.folderPath.TemporaryFiles
-        self.CONFIG_DIR = os.path.join(self.APPDATA, self.APP_NAME)
+        eg.startupArguments = args
+        eg.debugLevel = args.debugLevel
+        eg.systemEncoding = locale.getdefaultlocale()[1]
+        eg.CallAfter = wx.CallAfter
+        eg.APP_NAME = "EventGhost"
+        eg.PLUGIN_DIR = os.path.abspath("plugins")
+        #eg.APPDATA = eg.folderPath.RoamingAppData
+        #eg.PROGRAMFILES = eg.folderPath.ProgramFiles
+        eg.CONFIG_DIR = os.path.join(eg.folderPath.RoamingAppData, eg.APP_NAME)
+        eg.CORE_PLUGINS = (
+            "EventGhost",
+            "System",
+            "Window",
+            "Mouse",
+        )
         
         # we create a package 'pluginImport' and set its path to the plugin-dir
         # se we can simply use __import__ to load a plugin file 
@@ -87,58 +94,58 @@ class EventGhost(object):
         Image._initialized = 2  
         
         # create a global asyncore loop thread
-        import AsyncoreLoop
-        self.RestartAsyncore = AsyncoreLoop.RestartAsyncore
+        eg.dummyAsyncoreDispatcher = None
+        eg.RestartAsyncore()
+        threading.Thread(target=asyncore.loop, name="AsyncoreThread").start()
 
         import Utils
-        self.Utils = Utils
-        self.LogIt = Utils.LogIt
-        self.LogItWithReturn = Utils.LogItWithReturn
-        self.TimeIt = Utils.TimeIt
-        self.AssertNotMainThread = Utils.AssertNotMainThread
-        self.AssertNotActionThread = Utils.AssertNotActionThread
-        self.Bunch = Utils.Bunch
-        self.EventHook = Utils.EventHook
-        self.HexString = Utils.HexString
-        self.ParseString = Utils.ParseString
+        eg.Utils = Utils
+        eg.LogIt = Utils.LogIt
+        eg.LogItWithReturn = Utils.LogItWithReturn
+        eg.TimeIt = Utils.TimeIt
+        eg.AssertNotMainThread = Utils.AssertNotMainThread
+        eg.AssertNotActionThread = Utils.AssertNotActionThread
+        eg.Bunch = Utils.Bunch
+        eg.EventHook = Utils.EventHook
+        eg.HexString = Utils.HexString
+        eg.ParseString = Utils.ParseString
         
         #self.document = None
-        self.result = None
-        self.event = None
-        self.eventTable = {}
-        self.eventTable2 = {}
-        self.plugins = eg.Bunch()
-        self.pluginClassInfo = {}
+        eg.result = None
+        eg.event = None
+        eg.eventTable = {}
+        eg.eventTable2 = {}
+        eg.plugins = eg.Bunch()
+        eg.pluginClassInfo = {}
         
-        self.globals = Utils.Bunch()
-        self.globals.eg = self
-        self.mainThread = threading.currentThread()
-        self.onlyLogAssigned = False
-        self.programCounter = None
-        self.programReturnStack = []
-        self.stopExecutionFlag = False
-        self.lastFoundWindows = []
-        self.currentConfigureItem = None
-        self.pluginList = []
-        self.actionList = []
+        eg.globals = Utils.Bunch()
+        eg.globals.eg = self
+        eg.mainThread = threading.currentThread()
+        eg.programCounter = None
+        eg.programReturnStack = []
+        eg.stopExecutionFlag = False
+        eg.lastFoundWindows = []
+        eg.currentConfigureItem = None
+        eg.pluginList = []
+        eg.actionList = []
                 
         from Version import version, buildNum
-        self.version = version
-        self.buildNum = buildNum
-        self.versionStr = "%s.%s" % (version, buildNum)
+        eg.version = version
+        eg.buildNum = buildNum
+        eg.versionStr = "%s.%s" % (version, buildNum)
 
         # because some functions are only available if a wxApp instance
         # exists, we simply create it first
-        self.app
+        eg.app
 
         import Icons
         self.Icons = Icons
         
-        self.Print = self.log.Print
-        self.PrintError = self.log.PrintError
-        self.PrintNotice = self.log.PrintNotice
-        self.PrintTraceback = self.log.PrintTraceback
-        self.PrintDebugNotice = self.log.PrintDebugNotice
+        eg.Print = self.log.Print
+        eg.PrintError = self.log.PrintError
+        eg.PrintNotice = self.log.PrintNotice
+        eg.PrintTraceback = self.log.PrintTraceback
+        eg.PrintDebugNotice = self.log.PrintDebugNotice
             
         # redirect all wxPython error messages to our log
         class MyLog(wx.PyLog):
@@ -148,35 +155,27 @@ class EventGhost(object):
                 sys.stderr.write("Error%d: %s" % (level, msg))
         #wx.Log.SetActiveTarget(MyLog())
 
-        self.onlyLogAssigned = eg.config.onlyLogAssigned
-        
-        from LanguageTools import LoadStrings, GetTranslation
-        self.GetTranslation = GetTranslation
-        self.text = LoadStrings(eg.config.language)
+        from LanguageTools import LoadStrings
+        eg.text = LoadStrings(eg.config.language)
 
         from Text import Text
         Utils.SetClass(self.text, Text)
 
-        import WinAPI
-        sys.modules["eg.WinAPI"] = WinAPI
-        self.WinAPI = WinAPI
-        import cFunctions
-        sys.modules["eg.cFunctions"] = cFunctions
-            
-        self.Exit = sys.exit
-        from WinAPI.Shortcut import CreateShortcut
-        self.CreateShortcut = CreateShortcut
-        from WinAPI.serial import Serial
-        self.SerialPort = Serial
-        from WinAPI.SerialThread import SerialThread
-        self.SerialThread = SerialThread
+        eg.Exit = sys.exit
+        from eg.WinAPI.Shortcut import CreateShortcut
+        eg.CreateShortcut = CreateShortcut
+        from eg.WinAPI.serial import Serial
+        eg.SerialPort = Serial
+        from eg.WinAPI.SerialThread import SerialThread
+        eg.SerialThread = SerialThread
         
-        from greenlet import greenlet
-        self.Greenlet = greenlet
+        from eg.greenlet import greenlet
+        eg.Greenlet = greenlet
+        eg.mainGreenlet = greenlet.getcurrent()
         
-        import PluginTools
-        self.OpenPlugin = PluginTools.OpenPlugin
-        self.ClosePlugin = PluginTools.ClosePlugin
+        from eg.PluginTools import OpenPlugin, ClosePlugin
+        eg.OpenPlugin = OpenPlugin
+        eg.ClosePlugin = ClosePlugin
 
         # replace builtin input and raw_input with a small dialog
 #        from Dialogs.SimpleInputDialog import (
@@ -187,15 +186,15 @@ class EventGhost(object):
 #        sys.modules['__builtin__'].input = GetSimpleInput
 
         from WinAPI.SerialThread import EnumSerialPorts as GetAllPorts
-        self.SerialPort.GetAllPorts = classmethod(GetAllPorts)
+        eg.SerialPort.GetAllPorts = classmethod(GetAllPorts)
         
-        from WinAPI.SendKeys import SendKeys
-        self.SendKeys = SendKeys
+        from eg.WinAPI.SendKeys import SendKeys
+        eg.SendKeys = SendKeys
         
         
     def StartGui(self):
-        import WinAPI.SendKeys
-        import WinAPI.COMServer
+        import eg.WinAPI.SendKeys
+        import eg.WinAPI.COMServer
         
         self.scheduler.start()
         self.messageReceiver.Start()
@@ -207,7 +206,6 @@ class EventGhost(object):
             
         self.SetProcessingState = eg.taskBarIcon.SetProcessingState
 
-        self.EventGhostEvent.Init()
         self.actionThread.Start()
 
         eg.eventThread.startupEvent = self.startupArguments.startupEvent
@@ -245,13 +243,13 @@ class EventGhost(object):
     def __getattr__(self, name):
         if name[0].islower():
             modName = name[0].upper() + name[1:]
-            mod = __import__("Singletons." + modName, fromlist=[modName])
+            mod = __import__("eg.Singletons." + modName, fromlist=[modName])
             singelton = getattr(mod, modName)()
             self.__dict__[name] = singelton
             return singelton
             
         try:
-            mod = __import__("Classes." + name, fromlist=[name])
+            mod = __import__("eg.Classes." + name, fromlist=[name])
         except ImportError:
             raise
         attr = getattr(mod, name)
@@ -265,13 +263,23 @@ class EventGhost(object):
         self.scheduler.Stop()
         self.actionThread.Stop()
         self.eventThread.Stop()
+        self.dummyAsyncoreDispatcher.close()
         
         self.PrintDebugNotice("shutting down")
-        self.config.onlyLogAssigned = self.onlyLogAssigned
         self.config.Save()
         self.messageReceiver.Close()
         
         
+    def RestartAsyncore(self):
+        """ Informs the asyncore loop of a new socket to handle. """
+        oldDispatcher = eg.dummyAsyncoreDispatcher
+        dispatcher = asyncore.dispatcher()
+        dispatcher.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        eg.dummyAsyncoreDispatcher = dispatcher
+        if oldDispatcher:
+            oldDispatcher.close()
+    
+    
     def Wait(self, secs, raiseException=True):
         while secs > 0.0:
             if self.stopExecutionFlag:
@@ -287,25 +295,6 @@ class EventGhost(object):
         return True
         
         
-    def RegisterEvent(self, eventString, eventHandler):
-        eventTable = self.eventTable
-        if eventString not in eventTable:
-            eventTable[eventString] = []
-        eventTable[eventString].append(eventHandler)
-    
-                
-    def UnRegisterEvent(self, eventString, eventHandler):
-        eventTable = self.eventTable
-        if eventString not in eventTable:
-            return
-        try:
-            eventTable[eventString].remove(eventHandler)
-        except:
-            pass
-        if len(eventTable[eventString]) == 0:
-            del eventTable[eventString]
-
-    
     def HasActiveHandler(self, eventstring):
         for eventHandler in self.eventTable.get(eventstring, []):
             obj = eventHandler

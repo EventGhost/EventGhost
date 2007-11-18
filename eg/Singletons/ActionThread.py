@@ -22,17 +22,10 @@
 
 
 import eg
-from PluginTools import OpenPlugin
 from time import clock
 
 EVENT_ICON_INDEX = eg.EventItem.icon.index
 
-CORE_PLUGINS = (
-    "EventGhost",
-    "System",
-    "Window",
-    "Mouse",
-)
 
 
 class ActionThread(eg.ThreadWorker):
@@ -40,9 +33,9 @@ class ActionThread(eg.ThreadWorker):
     @eg.LogItWithReturn
     def StartSession(self, filename):
         eg.eventTable.clear()
-        for pluginIdent in CORE_PLUGINS:
+        for pluginIdent in eg.CORE_PLUGINS:
             try:
-                plugin = OpenPlugin(pluginIdent, None, ())
+                plugin = eg.OpenPlugin(pluginIdent, None, ())
                 plugin.__start__()
                 plugin.info.isStarted = True
             except:
@@ -68,7 +61,7 @@ class ActionThread(eg.ThreadWorker):
     @eg.LogIt
     def StopSession(self):
         eg.document.autostartMacro.UnloadPlugins()
-        for pluginIdent in CORE_PLUGINS:
+        for pluginIdent in eg.CORE_PLUGINS:
             try:
                 plugin = getattr(eg.plugins, pluginIdent).plugin
                 plugin.__stop__()

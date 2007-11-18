@@ -26,15 +26,14 @@ import win32api
 from win32process import SetProcessWorkingSetSize, GetCurrentProcess
 
 import eg
-ThreadWorker = eg.ThreadWorker
 EventGhostEvent = eg.EventGhostEvent
 
 
 
-class EventThread(ThreadWorker):
+class EventThread(eg.ThreadWorker):
     
     def __init__(self):
-        ThreadWorker.__init__(self)
+        eg.ThreadWorker.__init__(self)
         eg.event = EventGhostEvent("")
         self.startupEvent = None
         self.currentProcess = GetCurrentProcess()

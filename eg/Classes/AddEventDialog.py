@@ -35,11 +35,10 @@ class DefaultConfig:
 config = eg.GetConfig("AddEventDialog", DefaultConfig)
 
 
-class Text:
+class Text(eg.TranslatableStrings):
     title = "Select an event to add..."
     descriptionLabel = "Description"
 
-Text = eg.GetTranslation(Text)
 
 
 class EventInfo:

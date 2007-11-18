@@ -145,11 +145,10 @@ class EnableItem(eg.ActionClass):
 
 
     def Configure(self, link=None):
-        dialog = eg.ConfigurationDialog(self, resizeable=True)
-        sizer = dialog.sizer
-        okButton = dialog.buttonRow.okButton
-        staticText = wx.StaticText(dialog, -1, self.text.text1)
-        sizer.Add(staticText, 0, wx.BOTTOM, 5)
+        panel = eg.ConfigPanel(self, resizeable=True)
+        okButton = panel.dialog.buttonRow.okButton
+        applyButton = panel.dialog.buttonRow.applyButton
+        sizer = wx.BoxSizer(wx.VERTICAL)
         self.foundId = None
         if link is not None:
             searchItem = link.target
@@ -158,7 +157,7 @@ class EnableItem(eg.ActionClass):
         link = eg.TreeLink(eg.currentConfigureItem)
             
         tree = eg.TreeItemBrowseCtrl(
-            dialog, 
+            panel, 
             self.filterFunc, 
             #searchFunc, 
             selectItem=searchItem
@@ -166,6 +165,7 @@ class EnableItem(eg.ActionClass):
         
         if not searchItem:
             okButton.Enable(False)
+            applyButton.Enable(False)
             
         def selectionFunc(event):
             id = event.GetItem()
@@ -173,20 +173,23 @@ class EnableItem(eg.ActionClass):
                 item = tree.GetPyData(id)
                 if self.IsSelectableItem(item):
                     okButton.Enable(True)
+                    applyButton.Enable(True)
                 else:
                     okButton.Enable(False)
+                    applyButton.Enable(False)
             event.Skip()
         tree.Bind(wx.EVT_TREE_SEL_CHANGED, selectionFunc)
         #tree.SetMinSize((-1,300))
         tree.SetFocus()
+        sizer.Add(wx.StaticText(panel, -1, self.text.text1), 0, wx.BOTTOM, 5)
         sizer.Add(tree, 1, wx.EXPAND)
-
-        if dialog.AffirmedShowModal():
+        panel.SetSizerAndFit(sizer)
+        while panel.Affirmed():
             id = tree.GetSelection()
             if id.IsOk():
                 obj = tree.GetPyData(id)
                 link.SetTarget(obj)
-            return (link, )
+            panel.SetResult(link)
        
     
     
@@ -343,8 +346,8 @@ class Wait(eg.ActionClass):
         panel = eg.ConfigPanel(self)
         waitTimeCtrl = panel.SpinNumCtrl(waitTime, integerWidth=3)
         panel.AddLine(self.text.wait, waitTimeCtrl, self.text.seconds)
-        if panel.Affirmed():
-            return (waitTimeCtrl.GetValue(), )
+        while panel.Affirmed():
+            panel.SetResult(waitTimeCtrl.GetValue())
         
 
 
@@ -491,8 +494,8 @@ class AutoRepeat(eg.ActionClass):
         panel.AddLine(text.text3, sweepTimeCtrl, text.seconds)
         panel.AddLine(text.text4, endDelayCtrl, text.seconds)
         
-        if panel.Affirmed():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 firstDelayCtrl.GetValue(),
                 startDelayCtrl.GetValue(),
                 endDelayCtrl.GetValue(),

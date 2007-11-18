@@ -282,7 +282,7 @@ class X10(eg.PluginClass):
         
         
     def Configure(self, remoteType=2, ids=None, prefix="X10"):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         text = self.text
         fbtypes = []
         selection = 0
@@ -290,15 +290,15 @@ class X10(eg.PluginClass):
             fbtypes.append(gRemotes[id][0])
             if id == remoteType:
                 selection = i
-        choice = wx.Choice(dialog, -1, choices=fbtypes)
+        choice = wx.Choice(panel, -1, choices=fbtypes)
         choice.SetSelection(selection)
         
-        editCtrl = wx.TextCtrl(dialog, -1, prefix)
+        editCtrl = wx.TextCtrl(panel, -1, prefix)
         
         btnsizer = wx.FlexGridSizer(4, 4)
         idBtns = []
         for i in xrange(16):
-            btn = wx.ToggleButton(dialog, -1, size=(35, 35), label=str(i + 1))
+            btn = wx.ToggleButton(panel, -1, size=(35, 35), label=str(i + 1))
             if (ids is None) or ((i+1) in ids):
                 btn.SetValue(True)
             btnsizer.Add(btn)
@@ -309,7 +309,7 @@ class X10(eg.PluginClass):
                 item.SetValue(True)
     
         selectAllBtn = wx.Button(
-            dialog, -1, text.allButton, style=wx.BU_EXACTFIT
+            panel, -1, text.allButton, style=wx.BU_EXACTFIT
         )
         selectAllBtn.Bind(wx.EVT_BUTTON, OnSelectAll)
         
@@ -318,7 +318,7 @@ class X10(eg.PluginClass):
                 item.SetValue(False)
             
         selectNoneBtn = wx.Button(
-            dialog, -1, text.noneButton, style=wx.BU_EXACTFIT
+            panel, -1, text.noneButton, style=wx.BU_EXACTFIT
         )
         selectNoneBtn.Bind(wx.EVT_BUTTON, OnSelectNone)
 
@@ -333,27 +333,28 @@ class X10(eg.PluginClass):
         idSizer.Add(rightBtnSizer, 0, wx.EXPAND)
         
         leftSizer = wx.BoxSizer(wx.VERTICAL)
-        leftSizer.Add(wx.StaticText(dialog, -1, text.remoteBox), 0, wx.BOTTOM, 2)
+        leftSizer.Add(wx.StaticText(panel, -1, text.remoteBox), 0, wx.BOTTOM, 2)
         leftSizer.Add(choice, 0, wx.BOTTOM, 10)
-        leftSizer.Add(wx.StaticText(dialog, -1, text.usePrefix), 0, wx.BOTTOM, 2)
+        leftSizer.Add(wx.StaticText(panel, -1, text.usePrefix), 0, wx.BOTTOM, 2)
         leftSizer.Add(editCtrl)
         
         rightSizer = wx.BoxSizer(wx.VERTICAL)
-        rightSizer.Add(wx.StaticText(dialog, -1, text.idBox), 0, wx.BOTTOM, 2)
+        rightSizer.Add(wx.StaticText(panel, -1, text.idBox), 0, wx.BOTTOM, 2)
         rightSizer.Add(idSizer)
         
         mainSizer = wx.BoxSizer(wx.HORIZONTAL)
         mainSizer.Add(leftSizer)
         mainSizer.Add((0,0), 1, wx.EXPAND)
-        mainSizer.Add(wx.StaticLine(dialog, style=wx.LI_VERTICAL), 0, wx.EXPAND)
+        mainSizer.Add(wx.StaticLine(panel, style=wx.LI_VERTICAL), 0, wx.EXPAND)
         mainSizer.Add((0,0), 1, wx.EXPAND)
         mainSizer.Add(rightSizer)
         mainSizer.Add((0,0), 1, wx.EXPAND)
         
-        dialog.sizer.Add(mainSizer, 1, wx.EXPAND)
+        panel.SetSizerAndFit(mainSizer)
+        #panel.sizer.Add(mainSizer, 1, wx.EXPAND)
         
-        if dialog.AffirmedShowModal():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 gRemotesOrder[choice.GetSelection()], 
                 [i+1 for i, button in enumerate(idBtns) if button.GetValue()], 
                 editCtrl.GetValue()

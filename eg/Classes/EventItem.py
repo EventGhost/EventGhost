@@ -31,20 +31,39 @@ class EventItem(TreeItem):
     
     def __init__(self, parent, node):
         TreeItem.__init__(self, parent, node)
-        eg.RegisterEvent(self.name, self)        
+        self.RegisterEvent(self.name)        
         
         
     def _Delete(self):
-        eg.UnRegisterEvent(self.name, self)
+        self.UnRegisterEvent(self.name)
         TreeItem._Delete(self)
         
         
     def RenameTo(self, newName):
-        eg.UnRegisterEvent(self.name, self)
+        self.UnRegisterEvent(self.name)
         TreeItem.RenameTo(self, newName)
-        eg.RegisterEvent(newName, self)
+        self.RegisterEvent(newName)
         
         
+    def RegisterEvent(self, eventString):
+        eventTable = eg.eventTable
+        if eventString not in eventTable:
+            eventTable[eventString] = []
+        eventTable[eventString].append(self)
+    
+                
+    def UnRegisterEvent(self, eventString):
+        eventTable = eg.eventTable
+        if eventString not in eventTable:
+            return
+        try:
+            eventTable[eventString].remove(self)
+        except:
+            pass
+        if len(eventTable[eventString]) == 0:
+            del eventTable[eventString]
+
+    
     def DropTest(self, cls):
         if cls == EventItem:
             return HINT_MOVE_BEFORE_OR_AFTER
