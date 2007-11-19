@@ -212,25 +212,25 @@ class Billy(eg.PluginClass):
                 "Billy", 
                 "Billy.exe"
             )
-        dialog = eg.ConfigurationDialog(self)
-        TitleText = wx.StaticText(dialog, -1, self.text.title, style=wx.ALIGN_LEFT)
-        VersionText = wx.StaticText(dialog, -1, self.text.version+version, style=wx.ALIGN_LEFT)
+        panel = eg.ConfigPanel(self)
+        TitleText = wx.StaticText(panel, -1, self.text.title, style=wx.ALIGN_LEFT)
+        VersionText = wx.StaticText(panel, -1, self.text.version+version, style=wx.ALIGN_LEFT)
         filepathCtrl = eg.FileBrowseButton(
-            dialog, 
+            panel, 
             size=(320,-1),
             initialValue=BillyPath, 
             startDirectory=eg.folderPath.ProgramFiles,
             fileMask = self.text.filemask,
             buttonText=eg.text.General.browse
         )
-        dialog.sizer.Add(TitleText, 0, wx.EXPAND)
-        dialog.sizer.Add(VersionText, 0, wx.EXPAND)
-        dialog.sizer.Add((5, 20))
-        dialog.AddLabel(self.text.label)
-        dialog.AddCtrl(filepathCtrl)
+        panel.sizer.Add(TitleText, 0, wx.EXPAND)
+        panel.sizer.Add(VersionText, 0, wx.EXPAND)
+        panel.sizer.Add((5, 20))
+        panel.AddLabel(self.text.label)
+        panel.AddCtrl(filepathCtrl)
         
-        if dialog.AffirmedShowModal():
-            return (filepathCtrl.GetValue(), )
+        while panel.Affirmed():
+            panel.SetResult(filepathCtrl.GetValue())
 
 class Run(eg.ActionClass):
     name = "Run or Restore"

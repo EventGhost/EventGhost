@@ -209,8 +209,7 @@ class SendRemoteKey(eg.ActionClass):
 
 
     def Configure(self, remoteName=None, keyName=None, numRepeats=None):
-        dialog = eg.ConfigurationDialog(self)
-        comObj = Dispatch(YARDcom.Yard.CLSID)
+        panel = eg.ConfigPanel(self)
             
         remoteName = remoteName or self.remoteName or ""
         keyName = keyName or self.keyName or ""
@@ -218,26 +217,32 @@ class SendRemoteKey(eg.ActionClass):
         
         mySizer = wx.FlexGridSizer(3, 2, 5, 5)
 
-        st1 = wx.StaticText(dialog, -1, "Fernbedienung")
+        st1 = wx.StaticText(panel, -1, "Fernbedienung")
         mySizer.Add(st1, 0, wx.ALIGN_CENTER_VERTICAL)
         
         rchoices = []
         kchoices = []
         foundRemoteIndex = 0
-        remotes = comObj.GetRemotes()
-        for i in xrange(len(remotes)):
-            rName = remotes.Item(i).Name
-            rchoices.append(rName)
-            if rName == remoteName:
-                foundRemoteIndex = i
+        comObj = None
+        try:
+            comObj = Dispatch(YARDcom.Yard.CLSID)
+        except:
+            pass
+        else:
+            remotes = comObj.GetRemotes()
+            for i in xrange(len(remotes)):
+                rName = remotes.Item(i).Name
+                rchoices.append(rName)
+                if rName == remoteName:
+                    foundRemoteIndex = i
 
-        remoteCtrl = wx.Choice(dialog, -1, choices=rchoices)#, size=(150,-1))
+        remoteCtrl = wx.Choice(panel, -1, choices=rchoices)#, size=(150,-1))
         mySizer.Add(remoteCtrl, 1, wx.EXPAND)
 
-        st2 = wx.StaticText(dialog, -1, "Name der Taste")
+        st2 = wx.StaticText(panel, -1, "Name der Taste")
         mySizer.Add(st2, 0, wx.ALIGN_CENTER_VERTICAL)
         
-        keyCtrl = wx.Choice(dialog, -1, choices=kchoices)#, size=(150,-1))
+        keyCtrl = wx.Choice(panel, -1, choices=kchoices)#, size=(150,-1))
         mySizer.Add(keyCtrl, 1, wx.EXPAND)
         
         def UpdateKeys(event=None):
@@ -254,21 +259,22 @@ class SendRemoteKey(eg.ActionClass):
                 
         remoteCtrl.Bind(wx.EVT_CHOICE, UpdateKeys)
         remoteCtrl.Select(foundRemoteIndex)
-        UpdateKeys()
+        if comObj:
+            UpdateKeys()
         
-        st3 = wx.StaticText(dialog, -1, "Anzahl der Wiederholungen")
+        st3 = wx.StaticText(panel, -1, "Anzahl der Wiederholungen")
         mySizer.Add(st3, 0, wx.ALIGN_CENTER_VERTICAL)
         
-        numRepeatsCtrl = eg.SpinIntCtrl(dialog, value=numRepeats,  min=1)
+        numRepeatsCtrl = eg.SpinIntCtrl(panel, value=numRepeats,  min=1)
         mySizer.Add(numRepeatsCtrl)
         
-        dialog.sizer.Add(mySizer, 1, wx.EXPAND)
+        panel.sizer.Add(mySizer, 1, wx.EXPAND)
 
-        if dialog.AffirmedShowModal():
+        while panel.Affirmed():
             self.remoteName = remoteCtrl.GetStringSelection()
             self.keyName = keyCtrl.GetStringSelection()
             self.numRepeats = numRepeatsCtrl.GetValue()
-            return (self.remoteName, self.keyName, self.numRepeats)
+            panel.SetResult(self.remoteName, self.keyName, self.numRepeats)
         
         
         

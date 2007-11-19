@@ -148,7 +148,6 @@ class EnableItem(eg.ActionClass):
         panel = eg.ConfigPanel(self, resizeable=True)
         okButton = panel.dialog.buttonRow.okButton
         applyButton = panel.dialog.buttonRow.applyButton
-        sizer = wx.BoxSizer(wx.VERTICAL)
         self.foundId = None
         if link is not None:
             searchItem = link.target
@@ -181,9 +180,8 @@ class EnableItem(eg.ActionClass):
         tree.Bind(wx.EVT_TREE_SEL_CHANGED, selectionFunc)
         #tree.SetMinSize((-1,300))
         tree.SetFocus()
-        sizer.Add(wx.StaticText(panel, -1, self.text.text1), 0, wx.BOTTOM, 5)
-        sizer.Add(tree, 1, wx.EXPAND)
-        panel.SetSizerAndFit(sizer)
+        panel.sizer.Add(panel.StaticText(self.text.text1), 0, wx.BOTTOM, 5)
+        panel.sizer.Add(tree, 1, wx.EXPAND)
         while panel.Affirmed():
             id = tree.GetSelection()
             if id.IsOk():
@@ -391,28 +389,28 @@ class JumpIfLongPress(eg.ActionClass):
 
 
     def Configure(self, interval=2.0, link=None):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         text = self.text
         if link is None:
             link = eg.TreeLink(eg.currentConfigureItem)
         
         sizer1 = wx.BoxSizer(wx.HORIZONTAL)
-        textCtrl = wx.StaticText(dialog, -1, text.text1)
+        textCtrl = wx.StaticText(panel, -1, text.text1)
         sizer1.Add(textCtrl, 0, wx.ALIGN_CENTER_VERTICAL)
-        intervalCtrl = eg.SpinNumCtrl(dialog)
+        intervalCtrl = eg.SpinNumCtrl(panel)
         intervalCtrl.SetValue(interval)
         sizer1.Add(intervalCtrl, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
-        textCtrl = wx.StaticText(dialog, -1, text.text2)
+        textCtrl = wx.StaticText(panel, -1, text.text2)
         sizer1.Add(textCtrl, 0, wx.ALIGN_CENTER_VERTICAL)
-        dialog.sizer.Add(sizer1)
+        panel.sizer.Add(sizer1)
         
         mySizer = wx.FlexGridSizer(2,3,5,5)
         mySizer.AddGrowableCol(1, 1)
         
-        textCtrl = wx.StaticText(dialog, -1, text.text3)
+        textCtrl = wx.StaticText(panel, -1, text.text3)
         mySizer.Add(textCtrl, 0, wx.ALIGN_CENTER_VERTICAL)
         button = eg.MacroSelectButton(  
-            dialog,
+            panel,
             eg.text.General.choose,
             text.text4,
             text.text5,
@@ -420,14 +418,11 @@ class JumpIfLongPress(eg.ActionClass):
         )
         mySizer.Add(button, 1, wx.EXPAND)
                     
-        dialog.sizer.Add(mySizer, 1, wx.EXPAND|wx.TOP, 5)
+        panel.sizer.Add(mySizer, 1, wx.EXPAND|wx.TOP, 5)
         
-        if dialog.AffirmedShowModal():
+        while panel.Affirmed():
             link.SetTarget(button.GetValue())
-            return (
-                intervalCtrl.GetValue(), 
-                link
-            )
+            panel.SetResult(intervalCtrl.GetValue(), link)
 
 
 
@@ -538,29 +533,29 @@ class TriggerEvent(eg.ActionClass):
         
     
     def Configure(self, eventString="", waitTime=0):
-        dialog = eg.ConfigurationDialog(self)
-        sizer = dialog.sizer
+        panel = eg.ConfigPanel(self)
+        sizer = panel.sizer
         text = self.text
         
         sizer1 = wx.BoxSizer(wx.HORIZONTAL)
-        staticText = wx.StaticText(dialog, -1, text.text1)
+        staticText = wx.StaticText(panel, -1, text.text1)
         sizer1.Add(staticText, 0, wx.ALIGN_CENTER_VERTICAL, 5)
         
-        eventStringCtrl = wx.TextCtrl(dialog, -1, eventString, size=(250, -1))
+        eventStringCtrl = wx.TextCtrl(panel, -1, eventString, size=(250, -1))
         sizer1.Add(eventStringCtrl, 0, wx.LEFT, 5)
         sizer.Add(sizer1, 0, wx.EXPAND)
         
         sizer2 = wx.BoxSizer(wx.HORIZONTAL)
-        staticText = wx.StaticText(dialog, -1, text.text2)
+        staticText = wx.StaticText(panel, -1, text.text2)
         sizer2.Add(staticText, 0, wx.ALIGN_CENTER_VERTICAL)
-        waitTimeCtrl = eg.SpinNumCtrl(dialog, -1, waitTime, integerWidth=5)
+        waitTimeCtrl = eg.SpinNumCtrl(panel, -1, waitTime, integerWidth=5)
         sizer2.Add(waitTimeCtrl, 0, wx.ALL, 5)
-        staticText = wx.StaticText(dialog, -1, text.text3)
+        staticText = wx.StaticText(panel, -1, text.text3)
         sizer2.Add(staticText, 0, wx.ALIGN_CENTER_VERTICAL)
         sizer.Add(sizer2, 0, wx.EXPAND)
         
-        if dialog.AffirmedShowModal():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 eventStringCtrl.GetValue(),
                 waitTimeCtrl.GetValue(),
             )
@@ -626,19 +621,19 @@ class Jump(eg.ActionClass, eg.HiddenAction):
         
         
     def Configure(self, link=None, gosub=False):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         if link is None:
-            link = eg.TreeLink(dialog.actionItem)
+            link = eg.TreeLink(panel.actionItem)
         text = self.text
-        label2 = wx.StaticText(dialog, -1, text.text2)
+        label2 = wx.StaticText(panel, -1, text.text2)
         button = eg.MacroSelectButton(  
-            dialog,
+            panel,
             eg.text.General.choose,
             text.mesg1,
             text.mesg2,
             link.target
         )
-        gosubCB = wx.CheckBox(dialog, -1, text.text3)
+        gosubCB = wx.CheckBox(panel, -1, text.text3)
         gosubCB.SetValue(gosub)
         sizer = wx.FlexGridSizer(2, 2, 5, 5)
         sizer.AddGrowableCol(1, 1)
@@ -647,11 +642,11 @@ class Jump(eg.ActionClass, eg.HiddenAction):
         sizer.Add(button, 1, wx.EXPAND)
         sizer.Add((0, 0))
         sizer.Add(gosubCB, 0, wx.EXPAND)
-        dialog.sizer.Add(sizer, 1, wx.EXPAND)
+        panel.sizer.Add(sizer, 1, wx.EXPAND)
         
-        if dialog.AffirmedShowModal():
+        while panel.Affirmed():
             link.SetTarget(button.GetValue())
-            return (link, gosubCB.GetValue())
+            panel.SetResult(link, gosubCB.GetValue())
     
     
     
@@ -703,21 +698,21 @@ class JumpIf(eg.ActionClass, eg.HiddenAction):
         link=None, 
         gosub=False
     ):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         if link is None:
-            link = eg.TreeLink(dialog.actionItem)
+            link = eg.TreeLink(panel.actionItem)
         text = self.text
-        label1 = wx.StaticText(dialog, -1, text.text1)
-        evalCtrl = wx.TextCtrl(dialog, -1, evalStr)
-        label2 = wx.StaticText(dialog, -1, text.text2)
+        label1 = wx.StaticText(panel, -1, text.text1)
+        evalCtrl = wx.TextCtrl(panel, -1, evalStr)
+        label2 = wx.StaticText(panel, -1, text.text2)
         button = eg.MacroSelectButton(  
-            dialog,
+            panel,
             eg.text.General.choose,
             text.mesg1,
             text.mesg2,
             link.target
         )
-        gosubCB = wx.CheckBox(dialog, -1, text.text3)
+        gosubCB = wx.CheckBox(panel, -1, text.text3)
         gosubCB.SetValue(gosub)
         sizer = wx.FlexGridSizer(2,2,5,5)
         sizer.AddGrowableCol(1, 1)
@@ -728,11 +723,11 @@ class JumpIf(eg.ActionClass, eg.HiddenAction):
         sizer.Add(button, 1, wx.EXPAND)
         sizer.Add((0,0))
         sizer.Add(gosubCB, 0, wx.EXPAND)
-        dialog.sizer.Add(sizer, 1, wx.EXPAND)
+        panel.sizer.Add(sizer, 1, wx.EXPAND)
         
-        if dialog.AffirmedShowModal():
+        while panel.Affirmed():
             link.SetTarget(button.GetValue())
-            return (evalCtrl.GetValue(), link, gosubCB.GetValue())
+            panel.SetResult(evalCtrl.GetValue(), link, gosubCB.GetValue())
 
 
 

@@ -132,12 +132,12 @@ class Execute(eg.ActionClass):
     ):
         if not workingDir:
             workingDir = ""
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         text = self.text
         waitForCompletion = bool(waitForCompletion)
-        fileText = wx.StaticText(dialog, -1, text.FilePath)
+        fileText = wx.StaticText(panel, -1, text.FilePath)
         filepathCtrl = eg.FileBrowseButton(
-            dialog, 
+            panel, 
             -1, 
             size=(320,-1),
             initialValue=pathname,
@@ -147,12 +147,12 @@ class Execute(eg.ActionClass):
             dialogTitle=text.browseExecutableDialogTitle
         )
     
-        argumentsText = wx.StaticText(dialog, -1, text.Parameters)
-        argumentsCtrl = wx.TextCtrl(dialog, -1, arguments)
+        argumentsText = wx.StaticText(panel, -1, text.Parameters)
+        argumentsCtrl = wx.TextCtrl(panel, -1, arguments)
         
-        workingDirText = wx.StaticText(dialog, -1, text.WorkingDir)
+        workingDirText = wx.StaticText(panel, -1, text.WorkingDir)
         workingDirCtrl = eg.DirBrowseButton(
-            dialog, 
+            panel, 
             -1, 
             size=(320,-1),
             startDirectory=workingDir,
@@ -162,15 +162,15 @@ class Execute(eg.ActionClass):
         )
         workingDirCtrl.SetValue(workingDir)
         
-        winStateText = wx.StaticText(dialog, -1, text.WindowOptionsDesc)
-        winStateChoice = wx.Choice(dialog, -1, choices=text.WindowOptions)
+        winStateText = wx.StaticText(panel, -1, text.WindowOptionsDesc)
+        winStateChoice = wx.Choice(panel, -1, choices=text.WindowOptions)
         winStateChoice.SetSelection(winState)
         
-        prioritiesText = wx.StaticText(dialog, -1, text.ProcessOptionsDesc)
-        priorityChoice = wx.Choice(dialog, -1, choices=text.ProcessOptions)
+        prioritiesText = wx.StaticText(panel, -1, text.ProcessOptionsDesc)
+        priorityChoice = wx.Choice(panel, -1, choices=text.ProcessOptions)
         priorityChoice.SetSelection(4 - priority)
     
-        waitCheckBox = wx.CheckBox(dialog, -1, text.WaitCheckbox)
+        waitCheckBox = wx.CheckBox(panel, -1, text.WaitCheckbox)
         waitCheckBox.SetValue(waitForCompletion)
         
         lowerSizer = wx.GridBagSizer(0, 0)
@@ -184,7 +184,7 @@ class Execute(eg.ActionClass):
         Add(priorityChoice, (1, 2))
         Add((1, 1), (0, 3), flag=wx.EXPAND)
 
-        Add = dialog.sizer.Add
+        Add = panel.sizer.Add
         Add(fileText)
         Add(filepathCtrl, 0, wx.EXPAND)
         Add((10,10))
@@ -198,8 +198,8 @@ class Execute(eg.ActionClass):
         Add(waitCheckBox)
         
     
-        if dialog.AffirmedShowModal():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 filepathCtrl.GetValue(),
                 argumentsCtrl.GetValue(),
                 winStateChoice.GetSelection(),

@@ -198,7 +198,7 @@ class SysTrayMenu(eg.PluginClass):
         
     def __stop__(self):
         for item in self.menuIdToWxItem.values():
-            eg.app.trayMenu.RemoveItem(item)
+            eg.taskBarIcon.menu.RemoveItem(item)
         self.menuIdToWxItem.clear()
         self.wxIdToData.clear()
         
@@ -211,10 +211,10 @@ class SysTrayMenu(eg.PluginClass):
     
     def Configure(self, menuData=[]):
         menuData = self.Compile(menuData)
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         text = self.text
         
-        tree = MenuTreeListCtrl(dialog, text, menuData)
+        tree = MenuTreeListCtrl(panel, text, menuData)
         root = tree.GetRootItem()
         
         @eg.LogIt
@@ -242,7 +242,7 @@ class SysTrayMenu(eg.PluginClass):
         tree.Bind(wx.EVT_TREE_SEL_CHANGED, OnSelectionChanged)
         
         # Delete button
-        deleteButton = wx.Button(dialog, -1, text.deleteButton)
+        deleteButton = wx.Button(panel, -1, text.deleteButton)
         deleteButton.Enable(False)
         def OnDelete(event):
             item = tree.GetSelection()
@@ -258,7 +258,7 @@ class SysTrayMenu(eg.PluginClass):
         
         # Up button
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_UP, wx.ART_OTHER, (16, 16))
-        upButton = wx.BitmapButton(dialog, -1, bmp)
+        upButton = wx.BitmapButton(panel, -1, bmp)
         upButton.Enable(False)
         def OnUp(event):
             item = tree.GetSelection()
@@ -275,7 +275,7 @@ class SysTrayMenu(eg.PluginClass):
         
         # Down button
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_DOWN, wx.ART_OTHER, (16, 16))
-        downButton = wx.BitmapButton(dialog, -1, bmp)
+        downButton = wx.BitmapButton(panel, -1, bmp)
         downButton.Enable(False)
         def OnDown(event):
             item = tree.GetSelection()
@@ -288,7 +288,7 @@ class SysTrayMenu(eg.PluginClass):
         downButton.Bind(wx.EVT_BUTTON, OnDown)
 
         # Add menu item button
-        addItemButton = wx.Button(dialog, -1, text.addItemButton)
+        addItemButton = wx.Button(panel, -1, text.addItemButton)
         @eg.LogIt
         def OnAddItem(event):
             numStr = str(tree.GetCount() + 1)
@@ -303,7 +303,7 @@ class SysTrayMenu(eg.PluginClass):
         addItemButton.Bind(wx.EVT_BUTTON, OnAddItem)
         
         # Add separator button
-        addSeparatorButton = wx.Button(dialog, -1, text.addSeparatorButton)
+        addSeparatorButton = wx.Button(panel, -1, text.addSeparatorButton)
         def OnAddSeparator(event):
             item = tree.AppendItem(root, "---------")
             tree.SetPyData(item, ("", "separator", "", tree.GetNewMenuId()))
@@ -314,14 +314,14 @@ class SysTrayMenu(eg.PluginClass):
         addSeparatorButton.Bind(wx.EVT_BUTTON, OnAddSeparator)
         
         # Label edit box
-        labelBox = wx.TextCtrl(dialog, -1)
+        labelBox = wx.TextCtrl(panel, -1)
         def OnLabelTextChange(event):
             item = tree.GetSelection()
             tree.SetItemText(item, labelBox.GetValue(), 0)
         labelBox.Bind(wx.EVT_TEXT, OnLabelTextChange)
         
         # Event edit box
-        eventBox = wx.TextCtrl(dialog, -1)
+        eventBox = wx.TextCtrl(panel, -1)
         def OnEventTextChange(event):
             item = tree.GetSelection()
             tree.SetItemText(item, eventBox.GetValue(), 1)
@@ -332,7 +332,7 @@ class SysTrayMenu(eg.PluginClass):
         #itemTypeCtrl = wx.Choice(dialog, choices=choices)
         
         # construction of the dialog with sizers
-        staticBox = wx.StaticBox(dialog, -1, text.addBox)
+        staticBox = wx.StaticBox(panel, -1, text.addBox)
         
         addSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
         #addSizer = wx.BoxSizer(wx.VERTICAL)
@@ -350,10 +350,10 @@ class SysTrayMenu(eg.PluginClass):
         
         editSizer = wx.FlexGridSizer(2, 2, 5, 5)
         editSizer.AddGrowableCol(1)
-        staticText1 = wx.StaticText(dialog, -1, text.editLabel)
+        staticText1 = wx.StaticText(panel, -1, text.editLabel)
         editSizer.Add(staticText1, 0, wx.ALIGN_CENTER_VERTICAL)
         editSizer.Add(labelBox, 0, wx.EXPAND)
-        staticText2 = wx.StaticText(dialog, -1, text.editEvent)
+        staticText2 = wx.StaticText(panel, -1, text.editEvent)
         editSizer.Add(staticText2, 0, wx.ALIGN_CENTER_VERTICAL)
         editSizer.Add(eventBox, 0, wx.EXPAND)
         #staticText3 = wx.StaticText(dialog, -1, "Item type:")
@@ -369,7 +369,7 @@ class SysTrayMenu(eg.PluginClass):
         mainSizer.Add((5, 5))
         mainSizer.Add(rightSizer, 0, wx.EXPAND)
         
-        dialog.sizer.Add(mainSizer, 1, wx.EXPAND)
+        panel.sizer.Add(mainSizer, 1, wx.EXPAND)
         
         next = tree.GetFirstChild(root)[0]
         if next.IsOk():
@@ -377,7 +377,7 @@ class SysTrayMenu(eg.PluginClass):
         else:
             tree.SelectItem(root)
             
-        if dialog.AffirmedShowModal():
+        while panel.Affirmed():
             resultList = []
             def Traverse(item):
                 child, cookie = tree.GetFirstChild(item)
@@ -391,7 +391,7 @@ class SysTrayMenu(eg.PluginClass):
                     child, cookie = tree.GetNextChild(item, cookie)
             Traverse(root)
             self.Compile(resultList)
-            return (resultList, )
+            panel.SetResult(resultList)
     
     
     
@@ -413,11 +413,11 @@ class Enable(eg.ActionClass):
     
     def Configure(self, menuId=None):
         plugin = self.plugin
-        dialog = eg.ConfigurationDialog(self)
-        tree = MenuTreeListCtrl(dialog, plugin.text, plugin.menuData, menuId)
-        dialog.sizer.Add(tree, 1, wx.EXPAND)
-        if dialog.AffirmedShowModal():
-            return (tree.GetSelectedId(),)
+        panel = eg.ConfigPanel(self)
+        tree = MenuTreeListCtrl(panel, plugin.text, plugin.menuData, menuId)
+        panel.sizer.Add(tree, 1, wx.EXPAND)
+        while panel.Affirmed():
+            panel.SetResult(tree.GetSelectedId())
         
         
         

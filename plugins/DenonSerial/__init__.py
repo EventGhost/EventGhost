@@ -441,11 +441,9 @@ class DenonSerial(eg.PluginClass):
             
             
     def Configure(self, port=0):
-        dialog = eg.ConfigurationDialog(self)
-        portCtrl = eg.SerialPortChoice(dialog, value=port)
-        dialog.sizer.Add(wx.StaticText(dialog, -1, 'Port:'))
-        dialog.sizer.Add(portCtrl)
-        
-        if dialog.AffirmedShowModal():
-            return (portCtrl.GetValue(), )
+        panel = eg.ConfigPanel(self)
+        portCtrl = panel.SerialPortChoice(port)
+        panel.AddLine("Port:", portCtrl)
+        while panel.Affirmed():
+            panel.SetResult(portCtrl.GetValue())
                     

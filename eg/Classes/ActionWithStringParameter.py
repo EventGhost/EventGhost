@@ -40,7 +40,7 @@ class ActionWithStringParameter(eg.ActionClass):
         """
         if parameter is None:
             parameter = self.defaultParameter
-        dialog = eg.ConfigurationDialog(self, resizeable=True)
+        panel = eg.ConfigPanel(self, resizeable=True)
 
         parameterDescription = None
         if self.parameterDescription:
@@ -52,14 +52,14 @@ class ActionWithStringParameter(eg.ActionClass):
             parameterDescription = self.text.parameterDescription
 
         if parameterDescription:    
-            labelCtrl = wx.StaticText(dialog, -1, parameterDescription)
-            dialog.sizer.Add(labelCtrl, 0, wx.EXPAND)
-            dialog.sizer.Add((5, 5))
-        parameterCtrl = wx.TextCtrl(dialog, -1, parameter)
-        dialog.sizer.Add(parameterCtrl, 0, wx.EXPAND)
+            labelCtrl = panel.StaticText(parameterDescription)
+            panel.sizer.Add(labelCtrl, 0, wx.EXPAND)
+            panel.sizer.Add((5, 5))
+        parameterCtrl = panel.TextCtrl(parameter)
+        panel.sizer.Add(parameterCtrl, 0, wx.EXPAND)
         parameterCtrl.SetFocus()
         wx.CallAfter(parameterCtrl.SetInsertionPointEnd)
         
-        if dialog.AffirmedShowModal():
-            return (parameterCtrl.GetValue(), )
+        while panel.Affirmed():
+            panel.SetResult(parameterCtrl.GetValue())
 

@@ -153,7 +153,6 @@ class VLC_Session(asynchat.async_chat):
         
        
 class VLC(eg.PluginClass):
-    canMultiLoad = True
    
     def __init__(self):
         self.host = "localhost"
@@ -210,30 +209,20 @@ class VLC(eg.PluginClass):
 
 
     def Configure(self, host="localhost", port=1234, feedback_events=True): 
-        dialog = eg.ConfigurationDialog(self)
-        sizer = dialog.sizer
-        mySizer = wx.FlexGridSizer(cols=2)
-
-        staticText = wx.StaticText(dialog, -1, "TCP Control Host:")
-        mySizer.Add(staticText, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
-       
-        hostEdit = wx.TextCtrl(dialog, -1, host)
-        mySizer.Add(hostEdit, 0, wx.EXPAND|wx.ALL, 5)
-       
-        staticText = wx.StaticText(dialog, -1, "TCP Control Port:")
-        mySizer.Add(staticText, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
-       
-        portEdit = IntCtrl.IntCtrl(dialog, -1, port)
-        mySizer.Add(portEdit, 0, wx.EXPAND|wx.ALL, 5)
-       
-        sizer.Add(mySizer, 1, wx.EXPAND|wx.ALIGN_CENTER)
-       
-        cb1 = wx.CheckBox(dialog, -1, "Show VLC feedback events")
-        cb1.SetValue(feedback_events)
-        sizer.Add(cb1, 0, wx.ALL, 5)       
-       
-        if dialog.AffirmedShowModal():
-            return (hostEdit.GetValue(), portEdit.GetValue(), cb1.GetValue())
+        panel = eg.ConfigPanel(self)
+        hostEdit = panel.TextCtrl(host)
+        portEdit = panel.SpinIntCtrl(port)
+        checkBox = panel.CheckBox(feedback_events, "Show VLC feedback events")
+        panel.AddLine("TCP Control Host:", hostEdit)
+        panel.AddLine("TCP Control Port:", portEdit)
+        panel.AddLine()
+        panel.AddLine(checkBox)
+        while panel.Affirmed():
+            panel.SetResult(
+                hostEdit.GetValue(), 
+                portEdit.GetValue(), 
+                checkBox.GetValue()
+            )
    
 
 
@@ -247,24 +236,24 @@ class VLC(eg.PluginClass):
                    
                 
         def Configure(self, text="marq-marquee EventGhost"):
-            dialog = eg.ConfigurationDialog(self)
+            panel = eg.ConfigPanel(self)
             mySizer = wx.FlexGridSizer(rows=3)
 
-            staticText = wx.StaticText(dialog, -1, "My Command: (Type 'H' to "
+            staticText = panel.StaticText("My Command: (Type 'H' to "
                                        "see a list of all available commands.)")
             mySizer.Add(staticText, 0, wx.EXPAND|wx.ALL, 5)
        
-            textEdit = wx.TextCtrl(dialog, -1, text)
+            textEdit = panel.TextCtrl(text)
             mySizer.Add(textEdit, 0, wx.EXPAND|wx.ALL, 5)
 
-            button = wx.Button(dialog, -1, label="Test")
+            button = panel.Button("Test")
             def OnButton(event):
                 self(textEdit.GetValue())
             button.Bind(wx.EVT_BUTTON, OnButton)
             mySizer.Add(button, 0, wx.EXPAND|wx.ALL, 5)
            
-            dialog.sizer.Add(mySizer)
+            panel.sizer.Add(mySizer)
            
-            if dialog.AffirmedShowModal():
-                return (textEdit.GetValue(), )
+            while panel.Affirmed():
+                panel.SetResult(textEdit.GetValue())
             

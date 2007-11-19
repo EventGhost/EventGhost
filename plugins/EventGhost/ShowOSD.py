@@ -316,32 +316,30 @@ class ShowOSD(eg.ActionClass):
         foregroundColour=(255,255,255), 
         backgroundColour=(0,0,0),
         alignment=0, 
-        offset=(0,0), 
+        offset=(0, 0), 
         displayNumber=0, 
         timeout=3.0
     ):                   
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         text = self.text
-        editTextCtrl = wx.TextCtrl(dialog, value=osdText)
-        alignmentChoice = wx.Choice(dialog, -1, choices=text.alignmentChoices)
-        alignmentChoice.SetSelection(alignment)
-        displayChoice = eg.DisplayChoice(dialog, displayNumber)
-        xOffsetCtrl = eg.SpinIntCtrl(dialog, -1, offset[0], -32000, 32000)
-        yOffsetCtrl = eg.SpinIntCtrl(dialog, -1, offset[1], -32000, 32000)
-        timeCtrl = eg.SpinNumCtrl(dialog, -1, value=timeout)
+        editTextCtrl = panel.TextCtrl(osdText)
+        alignmentChoice = panel.Choice(alignment, choices=text.alignmentChoices)
+        displayChoice = eg.DisplayChoice(panel, displayNumber)
+        xOffsetCtrl = panel.SpinIntCtrl(offset[0], -32000, 32000)
+        yOffsetCtrl = panel.SpinIntCtrl(offset[1], -32000, 32000)
+        timeCtrl = panel.SpinNumCtrl(timeout)
         
 
-        fontButton = eg.FontSelectButton(dialog, fontInfo=fontInfo)
-        foregroundColourButton = eg.ColourSelectButton(dialog, foregroundColour)
+        fontButton = panel.FontSelectButton(fontInfo)
+        foregroundColourButton = panel.ColourSelectButton(foregroundColour)
         
         if backgroundColour is None:
             tmpColour = (0,0,0)
         else:
             tmpColour = backgroundColour
-        outlineCheckBox = wx.CheckBox(dialog, -1, text.outlineFont)
-        outlineCheckBox.SetValue(backgroundColour is not None)
+        outlineCheckBox = panel.CheckBox(backgroundColour is not None, text.outlineFont)
         
-        backgroundColourButton = eg.ColourSelectButton(dialog, tmpColour)
+        backgroundColourButton = panel.ColourSelectButton(tmpColour)
         if backgroundColour is None:
             backgroundColourButton.Enable(False)
                 
@@ -349,52 +347,52 @@ class ShowOSD(eg.ActionClass):
         EXP = wx.EXPAND
         ACV = wx.ALIGN_CENTER_VERTICAL
         Add = sizer.Add
-        Add(wx.StaticText(dialog, -1, text.editText), (0, 0), flag=ACV)
+        Add(wx.StaticText(panel, -1, text.editText), (0, 0), flag=ACV)
         Add(editTextCtrl, (0, 1), (1, 4), flag=EXP)
         
-        Add(wx.StaticText(dialog, -1, text.osdFont), (1, 3), flag=ACV)
+        Add(panel.StaticText(text.osdFont), (1, 3), flag=ACV)
         Add(fontButton, (1, 4))
         
-        Add(wx.StaticText(dialog, -1, text.osdColour), (2, 3), flag=ACV)
+        Add(panel.StaticText(text.osdColour), (2, 3), flag=ACV)
         Add(foregroundColourButton, (2, 4))
 
         Add(outlineCheckBox, (3, 3), flag=EXP)
         Add(backgroundColourButton, (3, 4))
         
-        Add(wx.StaticText(dialog, -1, text.alignment), (1, 0), flag=ACV)
+        Add(panel.StaticText(text.alignment), (1, 0), flag=ACV)
         Add(alignmentChoice, (1, 1), flag=EXP)
-        Add(wx.StaticText(dialog, -1, text.display), (2, 0), flag=ACV)
+        Add(panel.StaticText(text.display), (2, 0), flag=ACV)
         Add(displayChoice, (2, 1), flag=EXP)
         
-        Add(wx.StaticText(dialog, -1, text.xOffset), (3, 0), flag=ACV)
+        Add(panel.StaticText(text.xOffset), (3, 0), flag=ACV)
         Add(xOffsetCtrl, (3, 1), flag=EXP)
         
-        Add(wx.StaticText(dialog, -1, text.yOffset), (4, 0), flag=ACV)
+        Add(panel.StaticText(text.yOffset), (4, 0), flag=ACV)
         Add(yOffsetCtrl, (4, 1), flag=EXP)
         
-        Add(wx.StaticText(dialog, -1, text.wait1), (5, 0), flag=ACV)
+        Add(panel.StaticText(text.wait1), (5, 0), flag=ACV)
         Add(timeCtrl, (5, 1), flag=EXP)
-        Add(wx.StaticText(dialog, -1, text.wait2), (5, 2), (1, 3), flag=ACV)
+        Add(panel.StaticText(text.wait2), (5, 2), (1, 3), flag=ACV)
             
         sizer.AddGrowableCol(2)
-        dialog.sizer.Add(sizer, 1, wx.EXPAND)
+        panel.sizer.Add(sizer, 1, wx.EXPAND)
         
         def OnCheckBox(event):
             backgroundColourButton.Enable(outlineCheckBox.IsChecked())
             
         outlineCheckBox.Bind(wx.EVT_CHECKBOX, OnCheckBox)
         
-        if dialog.AffirmedShowModal():
+        while panel.Affirmed():
             if outlineCheckBox.IsChecked():
                 outlineColour = backgroundColourButton.GetValue()
             else:
                 outlineColour = None
-            return (
+            panel.SetResult(
                 editTextCtrl.GetValue(),
                 fontButton.GetValue(), 
                 foregroundColourButton.GetValue(), 
                 outlineColour,
-                alignmentChoice.GetSelection(),
+                alignmentChoice.GetValue(),
                 (xOffsetCtrl.GetValue(), yOffsetCtrl.GetValue()),
                 displayChoice.GetValue(),
                 timeCtrl.GetValue()

@@ -232,22 +232,22 @@ class AIRT(eg.PluginClass):
 
 
     def Configure(self, port=0, remotes=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]):
-        dialog = eg.ConfigurationDialog(self)
-        portCtrl = eg.SerialPortChoice(dialog, value=port)
+        panel = eg.ConfigPanel(self)
+        portCtrl = eg.SerialPortChoice(panel, value=port)
         remoteCtrl = eg.RadioButtonGrid(
-            dialog, 
+            panel, 
             rows=["None", "Medion", "ATI", "X10"],
             columns=[str(i) for i in range(1, 17)]
         )
         remoteCtrl.SetValue(remotes)
-        dialog.sizer.Add(wx.StaticText(dialog, -1, 'Port:'))
-        dialog.sizer.Add(portCtrl)
-        dialog.sizer.Add((10, 10))
-        dialog.sizer.Add(wx.StaticText(dialog, -1, 'RF Remotes:'))
-        dialog.sizer.Add(remoteCtrl)
+        panel.sizer.Add(wx.StaticText(panel, -1, 'Port:'))
+        panel.sizer.Add(portCtrl)
+        panel.sizer.Add((10, 10))
+        panel.sizer.Add(wx.StaticText(panel, -1, 'RF Remotes:'))
+        panel.sizer.Add(remoteCtrl)
         
-        if dialog.AffirmedShowModal():
-            return (portCtrl.GetValue(), remoteCtrl.GetValue(), )
+        while panel.Affirmed():
+            panel.SetResult(portCtrl.GetValue(), remoteCtrl.GetValue())
                     
 
 
@@ -279,12 +279,12 @@ class SendIR(eg.ActionClass):
         repeats=1, 
         block=False
     ):
-        dialog = eg.ConfigurationDialog(self)
-        dataCtrl = wx.TextCtrl(dialog, -1, bin2hexstring(data))
-        dialog.sizer.Add(dataCtrl, 0, wx.EXPAND)
+        panel = eg.ConfigPanel(self)
+        dataCtrl = panel.TextCtrl(bin2hexstring(data))
+        panel.sizer.Add(dataCtrl, 0, wx.EXPAND)
         
-        if dialog.AffirmedShowModal():
+        while panel.Affirmed():
             datastr = dataCtrl.GetValue()
             data = hexstring2bin(datastr)
-            return (data, 1, True)
+            panel.SetResult(data, 1, True)
     

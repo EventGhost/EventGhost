@@ -289,21 +289,21 @@ class IrfanView(eg.PluginClass):
                     "IrfanView", 
                     "i_view32.exe"
                 )
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         filepathCtrl = eg.FileBrowseButton(
-            dialog, 
+            panel, 
             size=(320,-1),
             initialValue=IrfanViewPath, 
             startDirectory=eg.folderPath.ProgramFiles,
             fileMask = self.text.filemask,
             buttonText=eg.text.General.browse
         )
-        dialog.sizer.Add((5, 20))
-        dialog.AddLabel(self.text.label)
-        dialog.AddCtrl(filepathCtrl)
+        panel.sizer.Add((5, 20))
+        panel.AddLabel(self.text.label)
+        panel.AddCtrl(filepathCtrl)
         
-        if dialog.AffirmedShowModal():
-            return (filepathCtrl.GetValue(), )
+        while panel.Affirmed():
+            panel.SetResult(filepathCtrl.GetValue())
 
     def GetIrfanViewPath(self):
         """
@@ -368,25 +368,25 @@ class RunCommandLine(eg.ActionClass):
         return "Run command line "+label
         
     def Configure(self,label="",cmdline=""):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         mainSizer =wx.BoxSizer(wx.VERTICAL)
-        cmdlineLbl=wx.StaticText(dialog, -1, self.text.cmdline)
-        cmdlineCtrl=wx.TextCtrl(dialog,-1,cmdline)
+        cmdlineLbl=wx.StaticText(panel, -1, self.text.cmdline)
+        cmdlineCtrl=wx.TextCtrl(panel,-1,cmdline)
         cmdlineCtrl.SetMinSize((400,20))
-        hlpbtnCtrl = wx.Button(dialog, -1, self.text.help)
+        hlpbtnCtrl = wx.Button(panel, -1, self.text.help)
         def onBtnClick(event=None):
             self.plugin.OpenHelpPage('hlp_command_line.htm') 
         hlpbtnCtrl.Bind(wx.EVT_BUTTON, onBtnClick, hlpbtnCtrl)            
-        labelLbl=wx.StaticText(dialog, -1, self.text.label)
-        labelCtrl=wx.TextCtrl(dialog,-1,label)
+        labelLbl=wx.StaticText(panel, -1, self.text.label)
+        labelCtrl=wx.TextCtrl(panel,-1,label)
         mainSizer.Add(cmdlineLbl,0,wx.TOP,20)
         mainSizer.Add(cmdlineCtrl,0,wx.EXPAND)
         mainSizer.Add(hlpbtnCtrl,0,wx.ALIGN_RIGHT|wx.TOP,8)
         mainSizer.Add(labelLbl,0,wx.ALIGN_RIGHT|wx.TOP,50)
         mainSizer.Add(labelCtrl,0,wx.ALIGN_RIGHT)        
-        dialog.sizer.Add(mainSizer)
-        if dialog.AffirmedShowModal():
-            return (labelCtrl.GetValue(),cmdlineCtrl.GetValue())
+        panel.sizer.Add(mainSizer)
+        while panel.Affirmed():
+            panel.SetResult(labelCtrl.GetValue(),cmdlineCtrl.GetValue())
 
 
 class RunSlideshow(eg.ActionClass):
@@ -521,9 +521,9 @@ class RunSlideshow(eg.ActionClass):
     def Configure(self, kwargs={}):
         options = self.defaults.copy()
         options.update(kwargs)
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         radioBoxMode = wx.RadioBox(
-            dialog, 
+            panel, 
             -1, 
             self.text.radioboxmode, 
             choices=[self.text.modeFull, self.text.modeWin], 
@@ -532,7 +532,7 @@ class RunSlideshow(eg.ActionClass):
         radioBoxMode.SetSelection(options["mode_"])
         radioBoxMode.SetMinSize((197,65))
         radioBoxSource = wx.RadioBox(
-            dialog, 
+            panel, 
             -1, 
             self.text.radioboxsource, 
             choices=[self.text.folder, self.text.txtFile], 
@@ -541,7 +541,7 @@ class RunSlideshow(eg.ActionClass):
         radioBoxSource.SetSelection(options["source_"])
         radioBoxSource.SetMinSize((197,65))
         radioBoxFit = wx.RadioBox(
-            dialog, 
+            panel, 
             -1, 
             self.text.radioboxfit, 
             choices=[
@@ -555,7 +555,7 @@ class RunSlideshow(eg.ActionClass):
         radioBoxFit.SetSelection(options["fit_"])
         radioBoxFit.SetMinSize((197,100))
         radioBoxProgress = wx.RadioBox(
-            dialog, 
+            panel, 
             -1, 
             self.text.radioboxprogress, 
             choices=[
@@ -567,9 +567,9 @@ class RunSlideshow(eg.ActionClass):
             style=wx.RA_SPECIFY_ROWS
         )
         radioBoxProgress.SetSelection(options["progress_"])
-        widthLbl=wx.StaticText(dialog, -1, self.text.width)
+        widthLbl=wx.StaticText(panel, -1, self.text.width)
         widthCtrl = eg.SpinNumCtrl(
-            dialog,
+            panel,
             -1,
             options["width_"],
             max=8000.0,
@@ -577,9 +577,9 @@ class RunSlideshow(eg.ActionClass):
             fractionWidth=0,
             increment=10
         )
-        highLbl=wx.StaticText(dialog, -1, self.text.high)
+        highLbl=wx.StaticText(panel, -1, self.text.high)
         highCtrl = eg.SpinNumCtrl(
-            dialog,
+            panel,
             -1,
             options["high_"],
             max=8000.0,
@@ -587,9 +587,9 @@ class RunSlideshow(eg.ActionClass):
             fractionWidth=0,
             increment=10
         )
-        delayLbl=wx.StaticText(dialog, -1, self.text.delay)
+        delayLbl=wx.StaticText(panel, -1, self.text.delay)
         delayCtrl = eg.SpinNumCtrl(
-            dialog,
+            panel,
             -1,
             options["delay_"],
             max=99999.0,
@@ -597,45 +597,45 @@ class RunSlideshow(eg.ActionClass):
             fractionWidth=1,
             increment=0.1
         )
-        loopCtrl = wx.CheckBox(dialog, -1, self.text.loop)
+        loopCtrl = wx.CheckBox(panel, -1, self.text.loop)
         loopCtrl.SetMinSize((205,15))
         loopCtrl.SetValue(options["loop_"])
-        noRepeatCtrl = wx.CheckBox(dialog, -1, self.text.noRepeat)
+        noRepeatCtrl = wx.CheckBox(panel, -1, self.text.noRepeat)
         noRepeatCtrl.SetValue(options["noRepeat_"])
-        suppressCtrl = wx.CheckBox(dialog, -1, self.text.suppress)
+        suppressCtrl = wx.CheckBox(panel, -1, self.text.suppress)
         suppressCtrl.SetValue(options["suppress_"])
-        displTextCtrl = wx.CheckBox(dialog, -1, self.text.displtext)
+        displTextCtrl = wx.CheckBox(panel, -1, self.text.displtext)
         displTextCtrl.SetValue(options["displText_"])
-        soundLoopCtrl = wx.CheckBox(dialog, -1, self.text.soundLoop)
+        soundLoopCtrl = wx.CheckBox(panel, -1, self.text.soundLoop)
         soundLoopCtrl.SetValue(options["soundLoop_"])
-        resampleCtrl = wx.CheckBox(dialog, -1, self.text.resample)
+        resampleCtrl = wx.CheckBox(panel, -1, self.text.resample)
         resampleCtrl.SetValue(options["resample_"])
-        hideCursorCtrl = wx.CheckBox(dialog, -1, self.text.hideCursor)
+        hideCursorCtrl = wx.CheckBox(panel, -1, self.text.hideCursor)
         hideCursorCtrl.SetValue(options["hideCursor_"])
-        alphaCtrl = wx.CheckBox(dialog, -1, self.text.alpha)
+        alphaCtrl = wx.CheckBox(panel, -1, self.text.alpha)
         alphaCtrl.SetValue(options["alpha_"])
-        closeCtrl = wx.CheckBox(dialog, -1, self.text.close)
+        closeCtrl = wx.CheckBox(panel, -1, self.text.close)
         closeCtrl.SetValue(options["close_"])
         #
-        monLbl=wx.StaticText(dialog, -1, self.text.monitor)
+        monLbl=wx.StaticText(panel, -1, self.text.monitor)
         monLbl.Enable(False)
         monCtrl = eg.SpinIntCtrl(
-            dialog,
+            panel,
             -1,
             options["mon_"],
             max=99,
         )
         monCtrl.Enable(False)
-        labelLbl=wx.StaticText(dialog, -1, self.text.label)
-        labelCtrl=wx.TextCtrl(dialog,-1,options["label_"])
+        labelLbl=wx.StaticText(panel, -1, self.text.label)
+        labelCtrl=wx.TextCtrl(panel,-1,options["label_"])
         #
         #lineOptLbl=wx.StaticText(dialog, -1, self.text.lineOpt)
         #lineOptCtrl=wx.TextCtrl(dialog,-1,arrayValue[21])
         #lineOptCtrl.SetMinSize((333,20))
         #hlpbtnCommandCtrl = wx.Button(dialog, -1, self.text.help)
-        maskLbl=wx.StaticText(dialog, -1, self.text.mask)
-        maskCtrl=wx.TextCtrl(dialog,-1,options["mask_"])
-        hlpbtnPatternCtrl = wx.Button(dialog, -1, self.text.help)
+        maskLbl=wx.StaticText(panel, -1, self.text.mask)
+        maskCtrl=wx.TextCtrl(panel,-1,options["mask_"])
+        hlpbtnPatternCtrl = wx.Button(panel, -1, self.text.help)
         
         #Sizers
         monSizer=wx.BoxSizer(wx.VERTICAL)
@@ -679,7 +679,7 @@ class RunSlideshow(eg.ActionClass):
         windowSizer.Add(highLbl, 0)
         windowSizer.Add(widthCtrl, 0,wx.LEFT,10)
         windowSizer.Add(highCtrl, 0)
-        box = wx.StaticBox(dialog,-1,self.text.windowSize)
+        box = wx.StaticBox(panel,-1,self.text.windowSize)
         boxSizer = wx.StaticBoxSizer(box,wx.HORIZONTAL)
         boxSizer.Add(windowSizer,0)
         #
@@ -710,14 +710,14 @@ class RunSlideshow(eg.ActionClass):
         mainSizer.Add(maskMonLblSizer,0,wx.EXPAND|wx.TOP,8)
         #mainSizer.Add(lineOptSizer,0,wx.TOP,8)
         mainSizer.Add(dynSizer,0)
-        dialog.sizer.Add(mainSizer)
+        panel.sizer.Add(mainSizer)
         #
         def onSourceChange(event=None):
             dynSizer.Clear(True)
             if radioBoxSource.GetSelection():
-                filepathLbl=wx.StaticText(dialog, -1, self.text.filepath)
+                filepathLbl=wx.StaticText(panel, -1, self.text.filepath)
                 filepathCtrl = eg.FileBrowseButton(
-                    dialog, 
+                    panel, 
                     size=(370,-1),
                     initialValue=options["filepath_"], 
                     startDirectory=eg.folderPath.ProgramFiles,
@@ -729,9 +729,9 @@ class RunSlideshow(eg.ActionClass):
                 dynSizer.Add(filepathLbl,0,wx.TOP,8)
                 dynSizer.Add(filepathCtrl,0)
             else:
-                dirpathLbl=wx.StaticText(dialog, -1, self.text.dirpath)
+                dirpathLbl=wx.StaticText(panel, -1, self.text.dirpath)
                 dirpathCtrl = eg.DirBrowseButton(
-                    dialog, 
+                    panel, 
                     -1, 
                     size=(370,-1),
                     startDirectory=options["dirpath_"],
@@ -790,7 +790,7 @@ class RunSlideshow(eg.ActionClass):
             
         displTextCtrl.Bind(wx.EVT_CHECKBOX, onShowTextChange)
         onShowTextChange()
-        if dialog.AffirmedShowModal():
+        while panel.Affirmed():
             #kwargs = {}
             kwargs["label_"]=labelCtrl.GetValue()
             kwargs["width_"]=widthCtrl.GetValue()
@@ -818,7 +818,7 @@ class RunSlideshow(eg.ActionClass):
             kwargs["mon_"]=monCtrl.GetValue()
             kwargs["mask_"]=maskCtrl.GetValue()
             #kwargs["lineOpt_"]=lineOptCtrl.GetValue()
-            return (kwargs,)
+            panel.SetResult(kwargs)
 
 
 class RunWithOptions(eg.ActionClass):
@@ -960,9 +960,9 @@ class RunWithOptions(eg.ActionClass):
     def Configure(self, kwargs={}):
         options = self.defaults.copy()
         options.update(kwargs)
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         radioBoxfullOrWin = wx.RadioBox(
-            dialog, 
+            panel, 
             -1, 
             self.text.radioboxmode, 
             choices=[self.text.modeWin, self.text.modeFull], 
@@ -970,7 +970,7 @@ class RunWithOptions(eg.ActionClass):
         )
         radioBoxfullOrWin.SetSelection(options["fullOrWin_"])
         radioBoxWinMode = wx.RadioBox(
-            dialog, 
+            panel, 
             -1, 
             self.text.radioboxwinmode, 
             choices=[
@@ -987,7 +987,7 @@ class RunWithOptions(eg.ActionClass):
         )
         radioBoxWinMode.SetSelection(options["winMode_"])
         radioBoxFullMode = wx.RadioBox(
-            dialog, 
+            panel, 
             -1, 
             self.text.radiofullmode, 
             choices=[
@@ -999,75 +999,75 @@ class RunWithOptions(eg.ActionClass):
             style=wx.RA_SPECIFY_ROWS
         )
         radioBoxFullMode.SetSelection(options["fullMode_"])
-        resampleCtrl = wx.CheckBox(dialog, -1, self.text.resample)
+        resampleCtrl = wx.CheckBox(panel, -1, self.text.resample)
         resampleCtrl.SetValue(options["resample_"])
-        alphaCtrl = wx.CheckBox(dialog, -1, self.text.alpha)
+        alphaCtrl = wx.CheckBox(panel, -1, self.text.alpha)
         alphaCtrl.SetValue(options["alpha_"])
-        hideCursorCtrl = wx.CheckBox(dialog, -1, self.text.hideCursor)
+        hideCursorCtrl = wx.CheckBox(panel, -1, self.text.hideCursor)
         hideCursorCtrl.SetValue(options["hide_"])
-        displTextCtrl = wx.CheckBox(dialog, -1, self.text.displtext)
+        displTextCtrl = wx.CheckBox(panel, -1, self.text.displtext)
         displTextCtrl.SetValue(options["displ_"])
-        captionCtrl = wx.CheckBox(dialog, -1, self.text.caption)
+        captionCtrl = wx.CheckBox(panel, -1, self.text.caption)
         captionCtrl.SetValue(options["caption_"])
-        menuBarCtrl = wx.CheckBox(dialog, -1, self.text.menuBar)
+        menuBarCtrl = wx.CheckBox(panel, -1, self.text.menuBar)
         menuBarCtrl.SetValue(options["menuBar_"])
-        toolBarCtrl = wx.CheckBox(dialog, -1, self.text.toolBar)
+        toolBarCtrl = wx.CheckBox(panel, -1, self.text.toolBar)
         toolBarCtrl.SetValue(options["toolBar_"])
-        statusLineCtrl = wx.CheckBox(dialog, -1, self.text.statusLine)
+        statusLineCtrl = wx.CheckBox(panel, -1, self.text.statusLine)
         statusLineCtrl.SetValue(options["statusBar_"])
-        resample2Ctrl = wx.CheckBox(dialog, -1, self.text.resample2)
+        resample2Ctrl = wx.CheckBox(panel, -1, self.text.resample2)
         resample2Ctrl.SetValue(options["resample2_"])
-        centerImageCtrl = wx.CheckBox(dialog, -1, self.text.centerImage)
+        centerImageCtrl = wx.CheckBox(panel, -1, self.text.centerImage)
         centerImageCtrl.SetValue(options["center_"])
-        maskLbl=wx.StaticText(dialog, -1, self.text.mask)
-        maskCtrl=wx.TextCtrl(dialog,-1,options["mask_"])
-        hlpbtnPatternCtrl = wx.Button(dialog, -1, self.text.help)
-        labelLbl=wx.StaticText(dialog, -1, self.text.label)
-        labelCtrl=wx.TextCtrl(dialog,-1,options["label_"])
-        monLbl=wx.StaticText(dialog, -1, self.text.monitor)
+        maskLbl=wx.StaticText(panel, -1, self.text.mask)
+        maskCtrl=wx.TextCtrl(panel,-1,options["mask_"])
+        hlpbtnPatternCtrl = wx.Button(panel, -1, self.text.help)
+        labelLbl=wx.StaticText(panel, -1, self.text.label)
+        labelCtrl=wx.TextCtrl(panel,-1,options["label_"])
+        monLbl=wx.StaticText(panel, -1, self.text.monitor)
         monLbl.Enable(False)
         monCtrl = eg.SpinIntCtrl(
-            dialog,
+            panel,
             -1,
             options["mon_"],
             max=99,
         )
         monCtrl.Enable(False)
-        xCoordLbl=wx.StaticText(dialog, -1, self.text.xCoord)
+        xCoordLbl=wx.StaticText(panel, -1, self.text.xCoord)
         xCoordCtrl = eg.SpinIntCtrl(
-            dialog,
+            panel,
             -1,
             options["xCoord_"],
             max=8000,
         )
-        yCoordLbl=wx.StaticText(dialog, -1, self.text.yCoord)
+        yCoordLbl=wx.StaticText(panel, -1, self.text.yCoord)
         yCoordCtrl = eg.SpinIntCtrl(
-            dialog,
+            panel,
             -1,
             options["yCoord_"],
             max=8000,
         )
-        widthLbl=wx.StaticText(dialog, -1, self.text.width)
+        widthLbl=wx.StaticText(panel, -1, self.text.width)
         widthCtrl = eg.SpinIntCtrl(
-            dialog,
+            panel,
             -1,
             options["width_"],
             max=8000,
         )
-        highLbl=wx.StaticText(dialog, -1, self.text.high)
+        highLbl=wx.StaticText(panel, -1, self.text.high)
         highCtrl = eg.SpinIntCtrl(
-            dialog,
+            panel,
             -1,
             options["high_"],
             max=8000,
         )
-        lineOptLbl=wx.StaticText(dialog, -1, self.text.lineOpt)
-        lineOptCtrl=wx.TextCtrl(dialog,-1,options["lineOpt_"])
+        lineOptLbl=wx.StaticText(panel, -1, self.text.lineOpt)
+        lineOptCtrl=wx.TextCtrl(panel,-1,options["lineOpt_"])
         lineOptCtrl.SetMinSize((333,20))
-        hlpbtnCommandCtrl = wx.Button(dialog, -1, self.text.help)
-        filepathLbl=wx.StaticText(dialog, -1, self.text.filepath)
+        hlpbtnCommandCtrl = wx.Button(panel, -1, self.text.help)
+        filepathLbl=wx.StaticText(panel, -1, self.text.filepath)
         filepathCtrl = eg.FileBrowseButton(
-            dialog, 
+            panel, 
             size=(370,-1),
             initialValue=options["filepath_"], 
             startDirectory=eg.folderPath.ProgramFiles,
@@ -1087,7 +1087,7 @@ class RunWithOptions(eg.ActionClass):
         posAndSizeSizer.Add(widthCtrl,0,wx.TOP,0)
         posAndSizeSizer.Add(highCtrl,0,wx.TOP,0)
         #
-        box4 = wx.StaticBox(dialog,-1,self.text.posAndSize)
+        box4 = wx.StaticBox(panel,-1,self.text.posAndSize)
         boxSizer4 = wx.StaticBoxSizer(box4,wx.HORIZONTAL)
         boxSizer4.Add((10,1),0)
         boxSizer4.Add(posAndSizeSizer,0,wx.EXPAND)
@@ -1104,21 +1104,21 @@ class RunWithOptions(eg.ActionClass):
         leftSizer.Add(boxSizer4,0,wx.EXPAND|wx.TOP,9)
         leftSizer.Add(maskSizer,0,wx.EXPAND|wx.TOP,12)
         #
-        box1 = wx.StaticBox(dialog,-1,self.text.fsOptions)
+        box1 = wx.StaticBox(panel,-1,self.text.fsOptions)
         boxSizer1 = wx.StaticBoxSizer(box1,wx.VERTICAL)
         boxSizer1.Add(resampleCtrl, 0,wx.ALL,2)
         boxSizer1.Add(alphaCtrl, 0,wx.ALL,2)
         boxSizer1.Add(hideCursorCtrl, 0,wx.ALL,2)
         boxSizer1.Add(displTextCtrl, 0,wx.ALL,2)
         #
-        box2 = wx.StaticBox(dialog,-1,self.text.windowHide)        
+        box2 = wx.StaticBox(panel,-1,self.text.windowHide)        
         boxSizer2 = wx.StaticBoxSizer(box2,wx.VERTICAL)
         boxSizer2.Add(captionCtrl, 0,wx.ALL,2)
         boxSizer2.Add(menuBarCtrl, 0,wx.ALL,2)
         boxSizer2.Add(toolBarCtrl, 0,wx.ALL,2)
         boxSizer2.Add(statusLineCtrl, 0,wx.ALL,2)
         #
-        box3 = wx.StaticBox(dialog,-1,self.text.windowOption)
+        box3 = wx.StaticBox(panel,-1,self.text.windowOption)
         boxSizer3 = wx.StaticBoxSizer(box3,wx.VERTICAL)
         boxSizer3.Add(resample2Ctrl, 0,wx.ALL,2)
         boxSizer3.Add(centerImageCtrl, 0,wx.ALL,2)
@@ -1161,7 +1161,7 @@ class RunWithOptions(eg.ActionClass):
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         mainSizer.Add(leftrightSizer,0)
         mainSizer.Add(bottomSizer,0)
-        dialog.sizer.Add(mainSizer)
+        panel.sizer.Add(mainSizer)
         def onBtnPatternClick(event=None):
             self.plugin.OpenHelpPage('hlp_text_patternoptions.htm')
         hlpbtnPatternCtrl.Bind(
@@ -1194,7 +1194,7 @@ class RunWithOptions(eg.ActionClass):
         displTextCtrl.Bind(wx.EVT_CHECKBOX, onShowTextChange)
         onShowTextChange()
         
-        if dialog.AffirmedShowModal():
+        while panel.Affirmed():
             #kwargs = {}
             kwargs["label_"]=labelCtrl.GetValue()
             kwargs["filepath_"]=filepathCtrl.GetValue()
@@ -1218,7 +1218,7 @@ class RunWithOptions(eg.ActionClass):
             kwargs["mon_"]=monCtrl.GetValue()
             kwargs["lineOpt_"]=lineOptCtrl.GetValue()
             kwargs["mask_"]=maskCtrl.GetValue()
-            return (kwargs,)
+            panel.SetResult(kwargs)
 
 
 

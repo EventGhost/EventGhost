@@ -5,6 +5,7 @@ eg.RegisterPlugin(
     author = "Bartman",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
+    canMultiLoad = True,
     description = (
         'Communication with devices that follow the '
         'Human Interface Device (HID) standard.'
@@ -602,7 +603,6 @@ class HIDThread(threading.Thread):
 
 class HID(eg.PluginClass):
     helper = None
-    canMultiLoad = True
     text = Text
     thread = None
     status = -1
@@ -759,10 +759,10 @@ class HID(eg.PluginClass):
         else:
             self.helper.UpdateDeviceList()
 
-        dialog = eg.ConfigurationDialog(self, resizeable=True)
+        panel = eg.ConfigPanel(self, resizeable=True)
 
         #building dialog
-        hidList = wx.ListCtrl(dialog, -1, pos=wx.DefaultPosition,
+        hidList = wx.ListCtrl(panel, -1, pos=wx.DefaultPosition,
             size=wx.DefaultSize, style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
 
         #create GUI
@@ -804,8 +804,8 @@ class HID(eg.PluginClass):
 
         if hidList.GetFirstSelected() == -1:
             #no device selected, disable ok and apply button
-            dialog.buttonRow.okButton.Enable(False)
-            dialog.buttonRow.applyButton.Enable(False)
+            panel.dialog.buttonRow.okButton.Enable(False)
+            panel.dialog.buttonRow.applyButton.Enable(False)
 
         #layout
         for i in range(hidList.GetColumnCount()):
@@ -814,51 +814,51 @@ class HID(eg.PluginClass):
             hidList.SetColumnWidth(i, wx.LIST_AUTOSIZE)
             hidList.SetColumnWidth(i, max(size, hidList.GetColumnWidth(i) + 5))
 
-        dialog.sizer.Add(hidList, 1, flag = wx.EXPAND)
+        panel.sizer.Add(hidList, 1, flag = wx.EXPAND)
 
         #sizers
         optionsSizer = wx.GridBagSizer(0, 5)
 
         #eventname
         optionsSizer.Add(
-            wx.StaticText(dialog, -1, self.text.eventName),
+            wx.StaticText(panel, -1, self.text.eventName),
             (0, 0),
             flag = wx.ALIGN_CENTER_VERTICAL)
-        eventNameCtrl = wx.TextCtrl(dialog, value = eventName)
+        eventNameCtrl = wx.TextCtrl(panel, value = eventName)
         eventNameCtrl.SetMaxLength(32)
         optionsSizer.Add(eventNameCtrl, (0, 1), (1, 2), flag = wx.EXPAND)
 
         #checkbox for enduring event option
-        enduringEventsCtrl = wx.CheckBox(dialog, -1, self.text.enduringEvents)
+        enduringEventsCtrl = wx.CheckBox(panel, -1, self.text.enduringEvents)
         enduringEventsCtrl.SetValue(enduringEvents)
         optionsSizer.Add(enduringEventsCtrl, (1, 0), (1, 3))
 
         #checkbox for raw data events
-        rawDataEventsCtrl = wx.CheckBox(dialog, -1, self.text.rawDataEvents)
+        rawDataEventsCtrl = wx.CheckBox(panel, -1, self.text.rawDataEvents)
         rawDataEventsCtrl.SetValue(rawDataEvents)
         optionsSizer.Add(rawDataEventsCtrl, (2, 0), (1, 3))
 
         #text
         optionsSizer.Add(
-            wx.StaticText(dialog, -1, self.text.multipleDeviceOptions),
+            wx.StaticText(panel, -1, self.text.multipleDeviceOptions),
             (3, 0), (1, 3),
             flag = wx.ALIGN_CENTER_VERTICAL)
         
         #checkbox for use first device
-        useFirstDeviceCtrl = wx.CheckBox(dialog, -1, self.text.useFirstDevice)
+        useFirstDeviceCtrl = wx.CheckBox(panel, -1, self.text.useFirstDevice)
         useFirstDeviceCtrl.SetValue(useFirstDevice)
         optionsSizer.Add(useFirstDeviceCtrl, (4, 0), (1, 3))
 
         #checkbox for no other port option
-        noOtherPortCtrl = wx.CheckBox(dialog, -1, self.text.noOtherPort)
+        noOtherPortCtrl = wx.CheckBox(panel, -1, self.text.noOtherPort)
         noOtherPortCtrl.SetValue(noOtherPort)
         optionsSizer.Add(noOtherPortCtrl, (5, 0), (1, 3))
 
-        dialog.sizer.Add(optionsSizer)
+        panel.sizer.Add(optionsSizer)
 
         def OnHidListSelect(event):
-            dialog.buttonRow.okButton.Enable(True)
-            dialog.buttonRow.applyButton.Enable(True)
+            panel.dialog.buttonRow.okButton.Enable(True)
+            panel.dialog.buttonRow.applyButton.Enable(True)
             event.Skip()
 
         def OnRawDataEventsChange(event):
@@ -887,9 +887,9 @@ class HID(eg.PluginClass):
         noOtherPortCtrl.Bind(wx.EVT_CHECKBOX, OnNoOtherPortChange)
         hidList.Bind(wx.EVT_LIST_ITEM_SELECTED, OnHidListSelect)
 
-        if dialog.AffirmedShowModal():
+        while panel.Affirmed():
             device = devices[hidList.GetFirstSelected()]
-            return (
+            panel.SetResult(
                 eventNameCtrl.GetValue(),
                 enduringEventsCtrl.GetValue(),
                 rawDataEventsCtrl.GetValue(),

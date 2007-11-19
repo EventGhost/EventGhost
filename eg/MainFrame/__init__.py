@@ -842,7 +842,10 @@ class MainFrame(wx.Frame):
         """ 
         Menu: Edit -> Add Plugin
         """
-        eg.Greenlet(UndoableTasks.NewPlugin().Do).switch(self.document)
+        pluginInfo = eg.AddPluginDialog(self).DoModal()
+        if pluginInfo is None:
+            return
+        eg.Greenlet(UndoableTasks.NewPlugin().Do).switch(self.document, pluginInfo)
             
             
     def OnCmdNewEvent(self, event):
@@ -870,7 +873,12 @@ class MainFrame(wx.Frame):
         """ 
         Menu: Edit -> New Action
         """        
-        eg.Greenlet(UndoableTasks.NewAction().Do).switch(self.document)
+        # let the user choose an action
+        action = eg.AddActionDialog(self).DoModal()
+        # if user canceled the dialog, take a quick exit
+        if action is None:
+            return None
+        eg.Greenlet(UndoableTasks.NewAction().Do).switch(self.document, action)
         
     
     def OnCmdRename(self, event):

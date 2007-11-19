@@ -45,7 +45,7 @@ eg.RegisterPlugin(
     author=author, 
     version=version, 
     kind=kind,
-    canMultiLoad = True,
+    canMultiLoad=True,
 )
 
 import wx, socket, asyncore, time, threading
@@ -221,32 +221,32 @@ class Lirc(eg.RawReceiverPlugin):
         timeout = 200,
     ):
         text = Text
-        dialog = eg.ConfigurationDialog(self)
-        TitleText = wx.StaticText(dialog, -1, text.title, style=wx.ALIGN_CENTER)
-        HostText = wx.StaticText(dialog, -1, text.host)
-        HostCtrl = wx.TextCtrl(dialog, -1, host)
-        PortText = wx.StaticText(dialog, -1, text.port)
-        PortCtrl = eg.SpinIntCtrl(dialog, -1, port, max=65535)
+        panel = eg.ConfigPanel(self)
+        TitleText = wx.StaticText(panel, -1, text.title, style=wx.ALIGN_CENTER)
+        HostText = wx.StaticText(panel, -1, text.host)
+        HostCtrl = wx.TextCtrl(panel, -1, host)
+        PortText = wx.StaticText(panel, -1, text.port)
+        PortCtrl = eg.SpinIntCtrl(panel, -1, port, max=65535)
 
         HostSizer = wx.FlexGridSizer(cols=2)
         HostSizer.Add(HostText, 0, wx.ALL, 5)
         HostSizer.Add(HostCtrl, 0, wx.ALL, 3)
         HostSizer.Add(PortText, 0, wx.ALL, 5)
         HostSizer.Add(PortCtrl, 0, wx.ALL, 3)
-        HostBox = wx.StaticBox(dialog, -1, text.hosttitle)
+        HostBox = wx.StaticBox(panel, -1, text.hosttitle)
         shbSizer = wx.StaticBoxSizer(HostBox)
         shbSizer.Add(HostSizer, 0, wx.ALIGN_CENTER|wx.ALL, 5)
 
-        OnlyFirstCtrl = wx.CheckBox(dialog, -1, text.onlyfirst)
+        OnlyFirstCtrl = wx.CheckBox(panel, -1, text.onlyfirst)
         OnlyFirstCtrl.SetValue(onlyfirst)
-        AddRemoteCtrl = wx.CheckBox(dialog, -1, text.addremote)
+        AddRemoteCtrl = wx.CheckBox(panel, -1, text.addremote)
         AddRemoteCtrl.SetValue(addremote)
-        AddRepeatCtrl = wx.CheckBox(dialog, -1, text.addrepeat)
+        AddRepeatCtrl = wx.CheckBox(panel, -1, text.addrepeat)
         AddRepeatCtrl.SetValue(addrepeat)
-        IgnoreTimeText = wx.StaticText(dialog, -1, text.ignoretime)
-        IgnoreTimeCtrl = eg.SpinIntCtrl(dialog, -1, ignoretime, max=60000)
-        TimeoutText = wx.StaticText(dialog, -1, text.timeout)
-        TimeoutCtrl = eg.SpinIntCtrl(dialog, -1, timeout, max=10000)
+        IgnoreTimeText = wx.StaticText(panel, -1, text.ignoretime)
+        IgnoreTimeCtrl = eg.SpinIntCtrl(panel, -1, ignoretime, max=60000)
+        TimeoutText = wx.StaticText(panel, -1, text.timeout)
+        TimeoutCtrl = eg.SpinIntCtrl(panel, -1, timeout, max=10000)
 
         IgnoreBox = wx.BoxSizer()
         IgnoreBox.Add(IgnoreTimeCtrl, 0, wx.ALL, 2)
@@ -265,13 +265,13 @@ class Lirc(eg.RawReceiverPlugin):
         BoxSizer.Add(IgnoreBox, 0, wx.ALL, 3)
         BoxSizer.Add(TimeoutBox, 0, wx.ALL, 3)
 
-        dialog.sizer.Add(TitleText, 0, wx.EXPAND)
-        dialog.sizer.Add(shbSizer, 0, wx.EXPAND)
-        dialog.sizer.Add(BoxSizer, 0,)
+        panel.sizer.Add(TitleText, 0, wx.EXPAND)
+        panel.sizer.Add(shbSizer, 0, wx.EXPAND)
+        panel.sizer.Add(BoxSizer, 0,)
 
 
-        if dialog.AffirmedShowModal():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 HostCtrl.GetValue(), 
                 PortCtrl.GetValue(), 
                 OnlyFirstCtrl.GetValue(), 

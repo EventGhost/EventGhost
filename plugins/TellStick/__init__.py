@@ -42,9 +42,12 @@ class DeviceBase(object):
         return self.name + " " + (c_char_p(self.plugin.dll.devGetName(device))).value
 
     def Configure(self, device=0):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         deviceList = []
-        numDevices = self.plugin.dll.devGetNumberOfDevices()
+        try:
+            numDevices = self.plugin.dll.devGetNumberOfDevices()
+        except:
+            numDevices = 0
         selected = 0
         for i in range(numDevices):
             id = self.plugin.dll.devGetDeviceId(i)
@@ -52,16 +55,18 @@ class DeviceBase(object):
             if (id == device):
                 selected = i
             deviceList.append(name)
-        deviceCtrl = wx.Choice(dialog, -1, choices=deviceList)
+        deviceCtrl = wx.Choice(panel, -1, choices=deviceList)
         deviceCtrl.Select(selected)
-        dialog.sizer.Add(
-            wx.StaticText(dialog, -1, "Device:"), 
+        panel.sizer.Add(
+            wx.StaticText(panel, -1, "Device:"), 
             0, 
             wx.ALIGN_CENTER_VERTICAL
         )
-        dialog.sizer.Add(deviceCtrl, 0, wx.ALIGN_CENTER_VERTICAL)
-        if dialog.AffirmedShowModal():
-            return (self.plugin.dll.devGetDeviceId(deviceCtrl.GetSelection()), )
+        panel.sizer.Add(deviceCtrl, 0, wx.ALIGN_CENTER_VERTICAL)
+        while panel.Affirmed():
+            panel.SetResult(
+                self.plugin.dll.devGetDeviceId(deviceCtrl.GetSelection())
+            )
 
 class TurnOn(DeviceBase, eg.ActionClass):
     name = "Turn on"

@@ -374,18 +374,18 @@ class DVBViewer(eg.PluginClass):
             
     def Configure(self, useSendMessage=False):
         text = self.text
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         radioBox = wx.RadioBox(
-            dialog, 
+            panel, 
             -1, 
             text.interfaceBox, 
             choices=[text.useComApi, text.useSendMessage], 
             style=wx.RA_SPECIFY_ROWS
         )
         radioBox.SetSelection(int(useSendMessage))
-        dialog.sizer.Add(radioBox, 0, wx.EXPAND)
-        if dialog.AffirmedShowModal():
-            return (radioBox.GetSelection() == 1, )
+        panel.sizer.Add(radioBox, 0, wx.EXPAND)
+        while panel.Affirmed():
+            panel.SetResult(radioBox.GetSelection() == 1)
         
         
     
@@ -396,7 +396,7 @@ class Start(eg.ActionClass):
     def __call__(self):
         if self.plugin.workerThread:
             return
-            self.plugin.workerThread.Stop(timeout=5.0)
+            #self.plugin.workerThread.Stop(timeout=5.0)
         self.plugin.workerThread = DvbViewerWorkerThread(self.plugin)
         self.plugin.workerThread.Start(20.0)
             

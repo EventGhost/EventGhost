@@ -61,13 +61,8 @@ class NewPlugin(NewItem):
     or toolbar.
     """
     
-    def Do(self, document):
+    def Do(self, document, pluginInfo):
         """ Handle the menu command 'Add Plugin...'. """
-        pluginInfo = eg.AddPluginDialog(document.frame).DoModal()
-        
-        if pluginInfo is None:
-            return
-
         self.name = eg.text.MainFrame.Menu.AddPlugin.replace("&", "")
 
         pluginItem = document.PluginItem.Create(
@@ -205,7 +200,14 @@ class NewMacro(NewItem):
         )
         item.Select()
         self.StoreItem(item)
-        actionObj = NewAction().Do(document)
+        # let the user choose an action
+        action = eg.AddActionDialog(document.frame).DoModal()
+        
+        # if user canceled the dialog, take a quick exit
+        if action is None:
+            return item
+        
+        actionObj = NewAction().Do(document, action)
         if actionObj:
             label = actionObj.GetLabel()
             item.RenameTo(label)
@@ -221,15 +223,8 @@ class NewAction(NewItem):
     """
     
     @eg.LogIt
-    def Do(self, document):
+    def Do(self, document, action):
         self.name = eg.text.MainFrame.Menu.NewAction.replace("&", "")
-        # let the user choose an action
-        action = eg.AddActionDialog(document.frame).DoModal()
-        
-        # if user canceled the dialog, take a quick exit
-        if action is None:
-            return None
-        
         # find the right insert position
         selection = document.selection
         if isinstance(selection, (document.MacroItem, document.AutostartItem)):

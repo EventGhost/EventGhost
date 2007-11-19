@@ -213,24 +213,24 @@ class TextToSpeech(eg.ActionClass):
         volume=100
     ):
         text = self.text
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         plugin = self.plugin
             
-        textCtrl = wx.TextCtrl(dialog, -1, voiceText)           
+        textCtrl = wx.TextCtrl(panel, -1, voiceText)           
        
-        insertTimeButton = wx.Button(dialog, -1, text.buttonInsertTime)
+        insertTimeButton = wx.Button(panel, -1, text.buttonInsertTime)
         def OnButton(event):
             textCtrl.WriteText('{TIME}')
             textCtrl.SetFocus()
         insertTimeButton.Bind(wx.EVT_BUTTON, OnButton)
         
-        insertDateButton = wx.Button(dialog, -1, text.buttonInsertDate)
+        insertDateButton = wx.Button(panel, -1, text.buttonInsertDate)
         def OnButton(event):
             textCtrl.WriteText('{DATE}')
             textCtrl.SetFocus()
         insertDateButton.Bind(wx.EVT_BUTTON, OnButton)
         
-        testButton = wx.Button(dialog, -1, text.buttonPlayback)
+        testButton = wx.Button(panel, -1, text.buttonPlayback)
         def OnButton(event):
             self(*ReturnResult())
         testButton.Bind(wx.EVT_BUTTON, OnButton)
@@ -246,11 +246,11 @@ class TextToSpeech(eg.ActionClass):
         except:
             voiceIndex = 0
             allVoices = []
-        voiceChoice = wx.Choice(dialog, -1, choices=allVoices)
+        voiceChoice = wx.Choice(panel, -1, choices=allVoices)
         voiceChoice.Select(voiceIndex)
 
         rateCtrl = CustomSlider(
-            dialog,
+            panel,
             value = int(rate),
             valueLabel = text.normal,
             minValue = -5,
@@ -261,7 +261,7 @@ class TextToSpeech(eg.ActionClass):
         )
                    
         volumeCtrl = CustomSlider(
-            dialog,
+            panel,
             value = volume,
             valueLabel = "%(1)i %%",
             minValue = 0,
@@ -273,7 +273,7 @@ class TextToSpeech(eg.ActionClass):
         volumeCtrl.slider.SetTickFreq(10, 3)
         
 
-        staticBox = wx.StaticBox(dialog, -1, text.textBoxLabel)
+        staticBox = wx.StaticBox(panel, -1, text.textBoxLabel)
         staticBoxSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
         
         sizer1 = wx.BoxSizer(wx.HORIZONTAL)
@@ -287,28 +287,28 @@ class TextToSpeech(eg.ActionClass):
         sizer2.Add(testButton, 0, wx.LEFT, 5)
         staticBoxSizer.Add(sizer2, 0, wx.ALL|wx.EXPAND, 5)
 
-        dialog.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
+        panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
 
-        staticBox = wx.StaticBox(dialog, -1, text.voiceProperties)
+        staticBox = wx.StaticBox(panel, -1, text.voiceProperties)
         staticBoxSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
         
         sizer1 = wx.FlexGridSizer(3, 2, 5, 5)
         sizer1.AddGrowableCol(1, 1)
         
-        st = wx.StaticText(dialog, -1, text.labelVoice)
+        st = wx.StaticText(panel, -1, text.labelVoice)
         sizer1.Add(st, 0, wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM, 10)
         sizer1.Add(voiceChoice, 0, wx.EXPAND|wx.BOTTOM, 10)
         
-        st = wx.StaticText(dialog, -1, text.labelRate)
+        st = wx.StaticText(panel, -1, text.labelRate)
         sizer1.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
         sizer1.Add(rateCtrl, 0, wx.EXPAND)
         
-        st = wx.StaticText(dialog, -1, text.labelVolume)
+        st = wx.StaticText(panel, -1, text.labelVolume)
         sizer1.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
         sizer1.Add(volumeCtrl, 0, wx.EXPAND)
         
         staticBoxSizer.Add(sizer1, 0, wx.EXPAND|wx.ALL, 5)
-        dialog.sizer.Add(staticBoxSizer, 0, wx.EXPAND|wx.TOP, 10)
+        panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND|wx.TOP, 10)
        
         def ReturnResult():
             return (
@@ -319,6 +319,6 @@ class TextToSpeech(eg.ActionClass):
                 volumeCtrl.GetValue()
             )
                     
-        if dialog.AffirmedShowModal():
-            return ReturnResult()
+        while panel.Affirmed():
+            panel.SetResult(*ReturnResult())
 

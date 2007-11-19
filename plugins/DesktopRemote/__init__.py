@@ -355,7 +355,7 @@ class StartNewLine(eg.ActionClass):
         heightCtrl = panel.SpinIntCtrl(height)
         panel.AddLine("Height:", heightCtrl)
         while panel.Affirmed():
-            panel.SetResult(heightCtrl.GetValue(), )
+            panel.SetResult(heightCtrl.GetValue())
 
 
 

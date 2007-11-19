@@ -572,11 +572,11 @@ class RegistryQuery(eg.ActionClass):
             config.lastSubkeySelected = subkey
             config.lastValueNameSelected = valueName
 
-        dialog = eg.ConfigurationDialog(self, resizeable=True)
+        panel = eg.ConfigPanel(self, resizeable=True)
        
         #keyChooser
         regChooserCtrl = RegistryChooser(
-            dialog,
+            panel,
             -1,
             text2,
             key,
@@ -594,8 +594,8 @@ class RegistryQuery(eg.ActionClass):
 
         regChooserCtrl.tree.Bind(wx.EVT_TREE_SEL_CHANGED, updateLastSelectedKeys)
 
-        dialog.sizer.Add(regChooserCtrl, 1,  flag = wx.EXPAND)
-        dialog.sizer.Add(wx.Size(5,5))
+        panel.sizer.Add(regChooserCtrl, 1,  flag = wx.EXPAND)
+        panel.sizer.Add(wx.Size(5,5))
 
         choices = len(text.actions)
         rb = range(0,choices)
@@ -603,7 +603,7 @@ class RegistryQuery(eg.ActionClass):
         sizer2.AddGrowableCol(4)
 
         sizer2.Add(
-            wx.StaticText(dialog, -1, text2.actionText),
+            wx.StaticText(panel, -1, text2.actionText),
             flag = wx.ALIGN_CENTER_VERTICAL
         )
 
@@ -613,7 +613,7 @@ class RegistryQuery(eg.ActionClass):
             event.Skip()
 
         rb[0] = wx.RadioButton(
-            dialog,
+            panel,
             -1,
             text.actions[0],
             style = wx.RB_GROUP
@@ -621,15 +621,15 @@ class RegistryQuery(eg.ActionClass):
         rb[0].SetValue(action == 0)
         sizer2.Add(rb[0], flag = wx.ALIGN_CENTER_VERTICAL)
        
-        rb[1] = wx.RadioButton(dialog, -1, text.actions[1])
+        rb[1] = wx.RadioButton(panel, -1, text.actions[1])
         rb[1].SetValue(action == 1)
         sizer2.Add(rb[1], flag = wx.ALIGN_CENTER_VERTICAL)
 
-        rb[2] = wx.RadioButton(dialog, -1, text.actions[2])
+        rb[2] = wx.RadioButton(panel, -1, text.actions[2])
         rb[2].SetValue(action == 2)
         sizer2.Add(rb[2], flag = wx.ALIGN_CENTER_VERTICAL)
 
-        compareValueCtrl = wx.TextCtrl(dialog, -1, compareValue, size=(200,-1)) #, size=(200,-1)
+        compareValueCtrl = wx.TextCtrl(panel, -1, compareValue, size=(200,-1)) #, size=(200,-1)
         sizer2.Add(compareValueCtrl, flag = wx.EXPAND)
 
         onRadioButton(wx.CommandEvent())
@@ -637,16 +637,16 @@ class RegistryQuery(eg.ActionClass):
         rb[1].Bind(wx.EVT_RADIOBUTTON, onRadioButton)
         rb[2].Bind(wx.EVT_RADIOBUTTON, onRadioButton)
        
-        dialog.sizer.Add(sizer2, flag = wx.EXPAND)
+        panel.sizer.Add(sizer2, flag = wx.EXPAND)
 
-        if dialog.AffirmedShowModal():
+        while panel.Affirmed():
             key, subkey, valueName = regChooserCtrl.GetValue()
             compareValue = compareValueCtrl.GetValue()
             for i in range(0,3):
                 if rb[i].GetValue():
                     action = i
                     break
-            return (key, subkey, valueName, action, compareValue)
+            panel.SetResult(key, subkey, valueName, action, compareValue)
            
        
            
@@ -768,11 +768,11 @@ class RegistryChange(eg.ActionClass):
             config.lastSubkeySelected = subkey
             config.lastValueNameSelected = valueName
 
-        dialog = eg.ConfigurationDialog(self, resizeable=True)
+        panel = eg.ConfigPanel(self, resizeable=True)
        
         #keyChooser
         regChooserCtrl = RegistryChooser(
-            dialog,
+            panel,
             -1,
             text2,
             key,
@@ -789,8 +789,8 @@ class RegistryChange(eg.ActionClass):
 
         regChooserCtrl.Bind(wx.EVT_TREE_SEL_CHANGED, updateLastSelectedKeys)
 
-        dialog.sizer.Add(regChooserCtrl, 1,  flag = wx.EXPAND)
-        dialog.sizer.Add(wx.Size(5,5))
+        panel.sizer.Add(regChooserCtrl, 1,  flag = wx.EXPAND)
+        panel.sizer.Add(wx.Size(5,5))
 
         #Action
         actionSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -799,7 +799,7 @@ class RegistryChange(eg.ActionClass):
         rb = range(0, choices)
 
         actionSizer.Add(
-            wx.StaticText(dialog, -1, text2.actionText),
+            wx.StaticText(panel, -1, text2.actionText),
             flag = wx.ALIGN_CENTER_VERTICAL
         )
 
@@ -809,39 +809,39 @@ class RegistryChange(eg.ActionClass):
             typeChoice.Enable(flag)
             event.Skip()
 
-        rb[0] = wx.RadioButton(dialog, -1, text.actions[0], style = wx.RB_GROUP)
+        rb[0] = wx.RadioButton(panel, -1, text.actions[0], style = wx.RB_GROUP)
         rb[0].SetValue(action == 0)
         actionSizer.Add(rb[0], flag = wx.ALIGN_CENTER_VERTICAL)
        
-        rb[1] = wx.RadioButton(dialog, -1, text.actions[1])
+        rb[1] = wx.RadioButton(panel, -1, text.actions[1])
         rb[1].SetValue(action == 1)
         actionSizer.Add(rb[1], flag = wx.ALIGN_CENTER_VERTICAL)
 
-        rb[2] = wx.RadioButton(dialog, -1, text.actions[2])
+        rb[2] = wx.RadioButton(panel, -1, text.actions[2])
         rb[2].SetValue(action == 2)
         actionSizer.Add(rb[2], flag = wx.ALIGN_CENTER_VERTICAL)
 
-        dialog.sizer.Add(actionSizer)
-        dialog.sizer.Add(wx.Size(5,5))
+        panel.sizer.Add(actionSizer)
+        panel.sizer.Add(wx.Size(5,5))
 
         #new Value Input
         newValueSizer = wx.FlexGridSizer(1, 4, 5, 5)
         newValueSizer.AddGrowableCol(1)
        
         newValueSizer.Add(
-            wx.StaticText(dialog, -1, text2.newValue),
+            wx.StaticText(panel, -1, text2.newValue),
             flag = wx.ALIGN_CENTER_VERTICAL
         )
 
-        newValueCtrl = wx.TextCtrl(dialog, -1, newValue, size=(200,-1))
+        newValueCtrl = wx.TextCtrl(panel, -1, newValue, size=(200,-1))
         newValueSizer.Add(newValueCtrl, flag = wx.EXPAND)
 
         newValueSizer.Add(
-            wx.StaticText(dialog, -1, text2.typeText),
+            wx.StaticText(panel, -1, text2.typeText),
             flag = wx.ALIGN_CENTER_VERTICAL
         )
 
-        typeChoice = wx.Choice(dialog, -1)
+        typeChoice = wx.Choice(panel, -1)
         for i, value in  enumerate(regTypes):
             typeChoice.Append(value[1])
             if value[0] == keyType:
@@ -854,9 +854,9 @@ class RegistryChange(eg.ActionClass):
         rb[1].Bind(wx.EVT_RADIOBUTTON, onRadioButton)
         rb[2].Bind(wx.EVT_RADIOBUTTON, onRadioButton)
        
-        dialog.sizer.Add(newValueSizer, flag = wx.EXPAND)
+        panel.sizer.Add(newValueSizer, flag = wx.EXPAND)
 
-        if dialog.AffirmedShowModal():
+        while panel.Affirmed():
             key, subkey, valueName = regChooserCtrl.GetValue()
     
             for i, item in enumerate(rb):
@@ -868,5 +868,5 @@ class RegistryChange(eg.ActionClass):
     
             newValue = newValueCtrl.GetValue()
     
-            return (key, subkey, valueName, action, keyType, newValue)
+            panel.SetResult(key, subkey, valueName, action, keyType, newValue)
         

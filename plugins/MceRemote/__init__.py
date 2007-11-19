@@ -297,10 +297,10 @@ class TransmitIr(eg.ActionClass):
         
         
     def Configure(self, code=""):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         code = ' '.join([("%02X" % ord(c)) for c in code])
             
-        editCtrl = wx.TextCtrl(dialog, -1, code, style=wx.TE_MULTILINE)
+        editCtrl = wx.TextCtrl(panel, -1, code, style=wx.TE_MULTILINE)
         font = editCtrl.GetFont()
         font.SetFaceName("Courier New")
         editCtrl.SetFont(font)
@@ -316,21 +316,21 @@ class TransmitIr(eg.ActionClass):
             code = tmpFile.read()
             tmpFile.close()
             editCtrl.SetValue(' '.join([("%02X" % ord(c)) for c in code]))
-        learnButton = wx.Button(dialog, -1, "Learn IR Code")
+        learnButton = wx.Button(panel, -1, "Learn IR Code")
         learnButton.Bind(wx.EVT_BUTTON, Learn)
         
         def TestTransmission(event):
             self(editCtrl.GetValue().replace(" ", "").decode("hex_codec"))
-        testButton = wx.Button(dialog, -1, "Test IR Transmission")
+        testButton = wx.Button(panel, -1, "Test IR Transmission")
         testButton.Bind(wx.EVT_BUTTON, TestTransmission)
         
-        dialog.sizer.Add(editCtrl, 1, wx.EXPAND)
+        panel.sizer.Add(editCtrl, 1, wx.EXPAND)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(learnButton)
         sizer.Add((5,5), 1)
         sizer.Add(testButton)
-        dialog.sizer.Add(sizer, 0, wx.EXPAND)
-        if dialog.AffirmedShowModal():
+        panel.sizer.Add(sizer, 0, wx.EXPAND)
+        while panel.Affirmed():
             code = editCtrl.GetValue().replace(" ", "").decode("hex_codec")
-            return (code, )
+            panel.SetResult(code)
     

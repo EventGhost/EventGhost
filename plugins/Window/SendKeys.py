@@ -128,7 +128,7 @@ class SendKeys(eg.ActionClass):
         
         
     def Configure(self, data="", useAlternateMethod=False):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         text = self.text
         key = text.Keys
         keyChoices = [
@@ -174,16 +174,16 @@ class SendKeys(eg.ActionClass):
         keyLabels, keyWords = zip(*keyChoices)
         keyLabels += fKeys
         keyWords += fKeys
-        textCtrl = wx.TextCtrl(dialog, -1, data, style=wx.TE_NOHIDESEL)
-        alternateMethodCB = wx.CheckBox(dialog, -1, text.useAlternativeMethod)
+        textCtrl = wx.TextCtrl(panel, -1, data, style=wx.TE_NOHIDESEL)
+        alternateMethodCB = wx.CheckBox(panel, -1, text.useAlternativeMethod)
         alternateMethodCB.SetValue(useAlternateMethod)
         
-        shiftCB = wx.CheckBox(dialog, -1, "Shift")
-        ctrlCB = wx.CheckBox(dialog, -1, "Ctrl")
-        altCB = wx.CheckBox(dialog, -1, "Alt")
-        keyChoice = wx.Choice(dialog, -1, choices=keyLabels)
+        shiftCB = wx.CheckBox(panel, -1, "Shift")
+        ctrlCB = wx.CheckBox(panel, -1, "Ctrl")
+        altCB = wx.CheckBox(panel, -1, "Alt")
+        keyChoice = wx.Choice(panel, -1, choices=keyLabels)
         keyChoice.SetSelection(0)
-        insertButton = wx.Button(dialog, -1, text.insertButton)
+        insertButton = wx.Button(panel, -1, text.insertButton)
         
         def OnInsert(event):
             res = []
@@ -207,21 +207,21 @@ class SendKeys(eg.ActionClass):
         rightSizer.Add(keyChoice)
         rightSizer.Add(insertButton, 0, wx.TOP|wx.ALIGN_CENTER_HORIZONTAL, 15)
         
-        staticBox = wx.StaticBox(dialog, -1, text.specialKeyTool)
+        staticBox = wx.StaticBox(panel, -1, text.specialKeyTool)
         specialKeySizer = wx.StaticBoxSizer(staticBox, wx.HORIZONTAL)
         specialKeySizer.Add(cbSizer)
         specialKeySizer.Add((15, 15))
         specialKeySizer.Add(rightSizer)
         
-        SizerAdd = dialog.sizer.Add
-        SizerAdd(wx.StaticText(dialog, -1, text.textToType))
+        SizerAdd = panel.sizer.Add
+        SizerAdd(wx.StaticText(panel, -1, text.textToType))
         SizerAdd(textCtrl, 0, wx.EXPAND)
         SizerAdd((10, 10))
         SizerAdd(specialKeySizer, 0, wx.ALIGN_RIGHT)
         SizerAdd((10, 10), 1)
         SizerAdd(alternateMethodCB)
         
-        if dialog.AffirmedShowModal():
-            return (textCtrl.GetValue(), alternateMethodCB.GetValue())
+        while panel.Affirmed():
+            panel.SetResult(textCtrl.GetValue(), alternateMethodCB.GetValue())
 
 

@@ -67,7 +67,6 @@ class NewJumpIf(eg.ActionClass):
 
 
     def Configure(self, link=None, kind=0, gosub=False):
-        #dialog = eg.ConfigurationDialog(self)
         text = self.text
         if link is None:
             link = eg.TreeLink(eg.currentConfigureItem)
@@ -86,39 +85,10 @@ class NewJumpIf(eg.ActionClass):
         panel.AddLine(text.text2, linkCtrl)
         panel.AddLine(None, gosubCtrl)
         
-        if panel.Affirmed():
+        while panel.Affirmed():
             link.SetTarget(linkCtrl.GetValue())
-            return (
+            panel.SetResult(
                 link, 
                 kindCtrl.GetValue(), 
                 gosubCtrl.GetValue()
             )
-        return
-        
-        ch = wx.Choice(dialog, choices=text.choices)
-        ch.SetSelection(kind)
-        label1 = wx.StaticText(dialog, -1, text.text1)
-        label2 = wx.StaticText(dialog, -1, text.text2)
-        button = eg.MacroSelectButton(
-            dialog,
-            eg.text.General.choose,
-            text.mesg1,
-            text.mesg2,
-            link.target
-        )
-        gosubCB = wx.CheckBox(dialog, -1, text.text3)
-        gosubCB.SetValue(gosub)
-        sizer = wx.FlexGridSizer(2,2,5,5)
-        sizer.AddGrowableCol(1, 1)
-        sizer.AddGrowableRow(1, 1)
-        sizer.Add(label1, 0, wx.ALIGN_CENTER_VERTICAL)
-        sizer.Add(ch, 0, wx.EXPAND)
-        sizer.Add(label2, 0, wx.ALIGN_CENTER_VERTICAL)
-        sizer.Add(button, 1, wx.EXPAND)
-        sizer.Add((0,0))
-        sizer.Add(gosubCB, 0, wx.EXPAND)
-        dialog.sizer.Add(sizer, 0, wx.EXPAND)
-        
-        while dialog.AffirmedShowModal():
-            link.SetTarget(button.GetValue())
-            panel.SetResult(link, ch.GetSelection(), gosubCB.GetValue())

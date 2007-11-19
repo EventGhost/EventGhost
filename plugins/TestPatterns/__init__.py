@@ -556,7 +556,7 @@ class Bars(TestPatternAction):
         lastColourButton = panel.ColourSelectButton(lastColour)
         barCountCtrl = panel.SpinIntCtrl(barCount, min=1, max=100)
         showNumbersCtrl = panel.CheckBox(showNumbers, "Show Numbers")
-        fontCtrl = panel.FontButton(fontStr)
+        fontCtrl = panel.FontSelectButton(fontStr)
         panel.AddLine("Orientation", orientationCtrl)
         panel.AddLine("First Colour:", firstColourButton)
         panel.AddLine("Last Colour:", lastColourButton)

@@ -25,10 +25,10 @@ class RadioButtonGridDemo(eg.ActionClass):
         
     
     def Configure(self, value=()):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         
         radioButtonGrid = eg.RadioButtonGrid(
-            dialog, 
+            panel, 
             # The columns are supplied as a sequence of strings. 
             # Each element is a column header. You can use empty strings, if
             # you wish no headers.
@@ -50,12 +50,10 @@ class RadioButtonGridDemo(eg.ActionClass):
         # the remaining columns untouched (they default to row0 on creation).
         radioButtonGrid.SetValue(value)
         
-        dialog.sizer.Add(radioButtonGrid)
-        if dialog.AffirmedShowModal():
-            return (
-                # GetValue() will return the index sequence of the control.
-                radioButtonGrid.GetValue(),
-            )
+        panel.sizer.Add(radioButtonGrid)
+        while panel.Affirmed():
+            # GetValue() will return the index sequence of the control.
+            panel.SetResult(radioButtonGrid.GetValue())
             
             
             
@@ -67,10 +65,10 @@ class CheckBoxGridDemo(eg.ActionClass):
         
     
     def Configure(self, value=()):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         
         checkBoxGrid = eg.CheckBoxGrid(
-            dialog, 
+            panel, 
             # The columns are supplied as a sequence of strings. 
             # Each element is a column header
             columns=("1", "2", "3", "4", "5", "6", "7", "8"),
@@ -92,12 +90,10 @@ class CheckBoxGridDemo(eg.ActionClass):
         # the remaining columns untouched (they default to unset on creation).
         checkBoxGrid.SetValue(value)
         
-        dialog.sizer.Add(checkBoxGrid)
-        if dialog.AffirmedShowModal():
-            return (
-                # GetValue() will return the bitfield-sequence of the control.
-                checkBoxGrid.GetValue(),
-            )
+        panel.sizer.Add(checkBoxGrid)
+        while panel.Affirmed():
+            # GetValue() will return the bitfield-sequence of the control.
+            panel.SetResult(checkBoxGrid.GetValue())
             
     
     
@@ -109,11 +105,11 @@ class SpinIntCtrlDemo(eg.ActionClass):
         
         
     def Configure(self, value=0):
-        dialog = eg.ConfigurationDialog(self)
-        spinIntCtrl = eg.SpinIntCtrl(dialog, min=0, max=100, value=value)
-        dialog.sizer.Add(spinIntCtrl)
-        if dialog.AffirmedShowModal():
-            return (spinIntCtrl.GetValue(), )
+        panel = eg.ConfigPanel(self)
+        spinIntCtrl = eg.SpinIntCtrl(panel, min=0, max=100, value=value)
+        panel.sizer.Add(spinIntCtrl)
+        while panel.Affirmed():
+            panel.SetResult(spinIntCtrl.GetValue())
         
         
         

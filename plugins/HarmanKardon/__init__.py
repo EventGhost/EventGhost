@@ -292,11 +292,11 @@ class HarmanKardon(eg.RawReceiverPlugin):
     ):
         text = self.text
         oldevstring=" "
-        dialog = eg.ConfigurationDialog(self)
-        portCtrl = eg.SerialPortChoice(dialog, value=port)
+        panel = eg.ConfigPanel(self)
+        portCtrl = eg.SerialPortChoice(panel, value=port)
         
         baudrateCtrl = wx.ComboBox(
-            dialog,
+            panel,
             value=str(baudrate),
             choices=[
                         '38400' 
@@ -305,26 +305,26 @@ class HarmanKardon(eg.RawReceiverPlugin):
             validator=eg.DigitOnlyValidator()
         )
         
-        bytesizeCtrl = wx.Choice(dialog, choices=['5', '6', '7', '8'])
+        bytesizeCtrl = wx.Choice(panel, choices=['5', '6', '7', '8'])
         bytesizeCtrl.SetSelection(8 - 5)
         
-        parityCtrl = wx.Choice(dialog, choices=text.parities)
+        parityCtrl = wx.Choice(panel, choices=text.parities)
         parityCtrl.SetSelection(parity)
         
-        stopbitsCtrl = wx.Choice(dialog, choices=['1', '2'])
+        stopbitsCtrl = wx.Choice(panel, choices=['1', '2'])
         stopbitsCtrl.SetSelection(stopbits)
         
-        handshakeCtrl = wx.Choice(dialog, choices=text.handshakes)
+        handshakeCtrl = wx.Choice(panel, choices=text.handshakes)
         handshakeCtrl.SetSelection(handshake)
         
-        generateEventsCtrl = wx.CheckBox(dialog, label=text.generateEvents)
+        generateEventsCtrl = wx.CheckBox(panel, label=text.generateEvents)
         generateEventsCtrl.SetValue(generateEvents)
         
-        terminatorCtrl = wx.TextCtrl(dialog)
+        terminatorCtrl = wx.TextCtrl(panel)
         terminatorCtrl.SetValue(terminator)
         terminatorCtrl.Enable(generateEvents)
         
-        prefixCtrl = wx.TextCtrl(dialog)
+        prefixCtrl = wx.TextCtrl(panel)
         prefixCtrl.SetValue(prefix)
         prefixCtrl.Enable(generateEvents)
         
@@ -337,29 +337,29 @@ class HarmanKardon(eg.RawReceiverPlugin):
         flags = wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL
         mySizer = wx.GridBagSizer(5, 5)
         Add = mySizer.Add
-        Add(wx.StaticText(dialog, -1, text.port), (0, 0), flag=flags)
+        Add(wx.StaticText(panel, -1, text.port), (0, 0), flag=flags)
         Add(portCtrl, (0, 1), flag=wx.EXPAND)
-        Add(wx.StaticText(dialog, -1, text.baudrate), (1, 0), flag=flags)
+        Add(wx.StaticText(panel, -1, text.baudrate), (1, 0), flag=flags)
         Add(baudrateCtrl, (1, 1), flag=wx.EXPAND)
-        Add(wx.StaticText(dialog, -1, text.bytesize), (2, 0), flag=flags)
+        Add(wx.StaticText(panel, -1, text.bytesize), (2, 0), flag=flags)
         Add(bytesizeCtrl, (2, 1), flag=wx.EXPAND)
-        Add(wx.StaticText(dialog, -1, text.parity), (3, 0), flag=flags)
+        Add(wx.StaticText(panel, -1, text.parity), (3, 0), flag=flags)
         Add(parityCtrl, (3, 1), flag=wx.EXPAND)
-        Add(wx.StaticText(dialog, -1, text.stopbits), (4, 0), flag=flags)
+        Add(wx.StaticText(panel, -1, text.stopbits), (4, 0), flag=flags)
         Add(stopbitsCtrl, (4, 1), flag=wx.EXPAND)
-        Add(wx.StaticText(dialog, -1, text.flowcontrol), (5, 0), flag=flags)
+        Add(wx.StaticText(panel, -1, text.flowcontrol), (5, 0), flag=flags)
         Add(handshakeCtrl, (5, 1), flag=wx.EXPAND)
         
         Add((5, 5), (6, 0), (1, 2), flag=flags)
         Add(generateEventsCtrl, (7, 0), (1, 2), flag=flags)
-        Add(wx.StaticText(dialog, -1, text.terminator), (8, 0), flag=flags)
+        Add(wx.StaticText(panel, -1, text.terminator), (8, 0), flag=flags)
         Add(terminatorCtrl, (8, 1), flag=wx.EXPAND)
-        Add(wx.StaticText(dialog, -1, text.eventPrefix), (9, 0), flag=flags)
+        Add(wx.StaticText(panel, -1, text.eventPrefix), (9, 0), flag=flags)
         Add(prefixCtrl, (9, 1), flag=wx.EXPAND)
-        dialog.sizer.Add(mySizer)
+        panel.sizer.Add(mySizer)
 
-        if dialog.AffirmedShowModal():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 portCtrl.GetValue(), 
                 int(baudrateCtrl.GetValue()),
                 bytesizeCtrl.GetSelection(),

@@ -124,16 +124,11 @@ class Tira(eg.RawReceiverPlugin):
         
         
     def Configure(self, port=2):
-        dialog = eg.ConfigurationDialog(self)
-        st1 = wx.StaticText(dialog, -1, "Virtual COM Port:")
-        dialog.sizer.Add(st1)
-        portCtrl = eg.SerialPortChoice(dialog, value=port)
-        
-        dialog.sizer.Add(portCtrl)
-        dialog.sizer.Add((10,10))
-        
-        if dialog.AffirmedShowModal():
-            return (portCtrl.GetValue(), )
+        panel = eg.ConfigPanel(self)
+        portCtrl = panel.SerialPortChoice(port)
+        panel.AddLine("Virtual COM Port:", portCtrl)
+        while panel.Affirmed():
+            panel.SetResult(portCtrl.GetValue())
         
     
 class TransmitIR(eg.ActionClass):
@@ -152,54 +147,54 @@ class TransmitIR(eg.ActionClass):
     
     
     def Configure(self, irData="", repeatCount=1, frequency=-1):
-        def make_hex_string(buffer):
+        def MakeHexString(buffer):
             result = ""
             for x in buffer:
                 result += "%0.2X " % ord(x)
             return result
                 
-        def make_string_from_hex(buffer):
+        def MakeStringFromHex(buffer):
             result = ""
             for hexdigit in buffer.split(" "):
                 if len(hexdigit) == 2:
                     result += chr(int(hexdigit, 16))
             return result
                 
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         style = wx.TE_MULTILINE|wx.TE_BESTWRAP
         codeBox = wx.TextCtrl(
-            dialog, 
+            panel, 
             -1, 
-            make_hex_string(irData), 
+            MakeHexString(irData), 
             size=(300, 150), 
             style=style
         )
-        dialog.sizer.Add(codeBox, 1, wx.EXPAND)
-        dialog.sizer.Add((5,5))
+        panel.sizer.Add(codeBox, 1, wx.EXPAND)
+        panel.sizer.Add((5,5))
         
         lowerSizer = wx.BoxSizer(wx.HORIZONTAL)
-        staticText = wx.StaticText(dialog, -1, "Repeat count:")
+        staticText = wx.StaticText(panel, -1, "Repeat count:")
         lowerSizer.Add(staticText, 0, wx.ALIGN_CENTER_VERTICAL)
         
-        repeatBox = eg.SpinIntCtrl(dialog, min=1, value=repeatCount)
+        repeatBox = eg.SpinIntCtrl(panel, min=1, value=repeatCount)
         lowerSizer.Add(repeatBox)
         lowerSizer.Add((5,5), 1, wx.EXPAND)
         
         def OnCapture(event):
-            dlg = IRLearnDialog(dialog, self.plugin.dll)
+            dlg = IRLearnDialog(panel, self.plugin.dll)
             dlg.ShowModal()
             if dlg.result is not None:
-                codeBox.SetValue(make_hex_string(dlg.result))
+                codeBox.SetValue(MakeHexString(dlg.result))
         
-        captureButton = wx.Button(dialog, -1, "Learn IR Code")
+        captureButton = wx.Button(panel, -1, "Learn IR Code")
         lowerSizer.Add(captureButton, 0, wx.ALIGN_RIGHT)
         captureButton.Bind(wx.EVT_BUTTON, OnCapture)
         
-        dialog.sizer.Add(lowerSizer, 0, wx.EXPAND)
+        panel.sizer.Add(lowerSizer, 0, wx.EXPAND)
         
-        if dialog.AffirmedShowModal():
-            return (
-                make_string_from_hex(codeBox.GetValue()),
+        while panel.Affirmed():
+            panel.SetResult(
+                MakeStringFromHex(codeBox.GetValue()),
                 repeatBox.GetValue(),
                 -1,
             )

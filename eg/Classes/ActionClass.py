@@ -119,12 +119,12 @@ class ActionClass(object):
         If the action is reconfigured by the user, this method will be called
         with the same arguments as the __call__ method.
         """
-        dialog = eg.ConfigurationDialog(self)
-        label = wx.StaticText(dialog, -1, eg.text.General.noOptionsAction)
-        dialog.buttonRow.applyButton.Enable(False)
-        dialog.sizer.Add(label)
-        if dialog.AffirmedShowModal():
-            return ()
+        panel = eg.ConfigPanel(self)
+        label = panel.StaticText(eg.text.General.noOptionsAction)
+        panel.dialog.buttonRow.applyButton.Enable(False)
+        panel.sizer.Add(label)
+        while panel.Affirmed():
+            panel.SetResult()
     
     
     def Compile(self, *args):

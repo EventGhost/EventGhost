@@ -28,6 +28,7 @@ eg.RegisterPlugin(
     version = "0.2." + "$LastChangedRevision$".split()[1],
     kind = "external",
     description = "Control an Optoma H79 projector via RS232",
+    canMultiLoad = True,
     createMacrosOnAdd = True,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARn"
@@ -110,7 +111,6 @@ cmdList = (
 )
 
 class H79Serial(eg.PluginClass):
-    canMultiLoad = True
 
     def __init__(self):
         self.serial = None
@@ -185,16 +185,9 @@ class H79Serial(eg.PluginClass):
             
             
     def Configure(self, port=0):
-        dialog = eg.ConfigurationDialog(self)
-        portCtrl = eg.SerialPortChoice(dialog, value=port)
-        mySizer = wx.FlexGridSizer(4, 2, 5, 5)
-        mySizer.Add(
-            wx.StaticText(dialog, -1, 'Port:'), 
-            0, 
-            wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL
-        )
-        mySizer.Add(portCtrl, 0, wx.EXPAND)
-        dialog.sizer.Add(mySizer)
-        if dialog.AffirmedShowModal():
-            return (portCtrl.GetValue(), )
+        panel = eg.ConfigPanel(self)
+        portCtrl = panel.SerialPortChoice(port)
+        panel.AddLine("Port:", portCtrl)
+        while panel.Affirmed():
+            panel.SetResult(portCtrl.GetValue())
                     

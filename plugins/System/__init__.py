@@ -279,18 +279,11 @@ class SetIdleTime(eg.ActionClass):
         
         
     def Configure(self, waitTime=60.0):
-        dialog = eg.ConfigurationDialog(self)
-        mySizer = wx.BoxSizer(wx.HORIZONTAL)
-        staticText = wx.StaticText(dialog, -1, self.text.label1)
-        mySizer.Add(staticText, 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
-        waitTimeCtrl = eg.SpinNumCtrl(dialog, -1, waitTime, integerWidth=5)
-        mySizer.Add(waitTimeCtrl, 0, wx.EXPAND)
-        staticText = wx.StaticText(dialog, -1, self.text.label2)
-        mySizer.Add(staticText, 0, wx.ALIGN_CENTER_VERTICAL|wx.LEFT, 5)
-        dialog.sizer.Add(mySizer, 0, wx.EXPAND)
-
-        if dialog.AffirmedShowModal():
-            return (waitTimeCtrl.GetValue(), )
+        panel = eg.ConfigPanel(self)
+        waitTimeCtrl = panel.SpinNumCtrl(waitTime, integerWidth=5)
+        panel.AddLine(self.text.label1, waitTimeCtrl, self.text.label2)
+        while panel.Affirmed():
+            panel.SetResult(waitTimeCtrl.GetValue())
         
         
         
@@ -384,10 +377,10 @@ class OpenDriveTray(eg.ActionClass):
          
         
     def Configure(self, old_drive=None, action=0):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         text = self.text
         radiobox = wx.RadioBox(
-            dialog, 
+            panel, 
             -1,
             text.optionsLabel, 
             choices=text.options, 
@@ -401,9 +394,9 @@ class OpenDriveTray(eg.ActionClass):
         for drive in letters:
             if win32file.GetDriveType(drive) == 5:
                 cdDrives.append(drive)
-        label = wx.StaticText(dialog, -1, text.driveLabel)
+        label = wx.StaticText(panel, -1, text.driveLabel)
  
-        choice = wx.Choice(dialog, -1, choices=cdDrives)
+        choice = wx.Choice(panel, -1, choices=cdDrives)
         if old_drive is None:
             old_drive = ''
         if not choice.SetStringSelection(old_drive):
@@ -413,13 +406,16 @@ class OpenDriveTray(eg.ActionClass):
         mySizer.Add((5,5))
         mySizer.Add(choice)
         
-        sizer = dialog.sizer
+        sizer = panel.sizer
         sizer.Add(radiobox, 0, wx.EXPAND)
         sizer.Add((5,5))
         sizer.Add(mySizer, 0, wx.EXPAND|wx.ALL, 5)
           
-        if dialog.AffirmedShowModal():
-            return (str(choice.GetStringSelection()), radiobox.GetSelection())
+        while panel.Affirmed():
+            panel.SetResult(
+                str(choice.GetStringSelection()), 
+                radiobox.GetSelection()
+            )
 
 
 
@@ -438,31 +434,21 @@ class PlaySound(eg.ActionWithStringParameter):
     
     
     def Configure(self, wavfile='', flags=wx.SOUND_ASYNC):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         text = self.text
-        fileText = wx.StaticText(dialog, -1, text.text1)
-        filepathCtrl = eg.FileBrowseButton(
-            dialog, -1, size=(340,-1),
-            initialValue=wavfile,
-            labelText="",
-            fileMask=text.fileMask,
-            buttonText=eg.text.General.browse,
-        )
-    
-        wait_checkbox = wx.CheckBox(dialog, -1, text.text2)
-        wait_checkbox.SetValue(flags == wx.SOUND_SYNC)
+        filepathCtrl = panel.FileBrowseButton(wavfile, fileMask=text.fileMask)
+        waitCheckbox = panel.CheckBox(flags == wx.SOUND_SYNC, text.text2)
         
-        sizer = dialog.sizer
-        sizer.Add(fileText, 0, wx.EXPAND)
-        sizer.Add(filepathCtrl, 0, wx.EXPAND)
-        sizer.Add(wait_checkbox, 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 10)
+        panel.sizer.Add(panel.StaticText(text.text1), 0, wx.EXPAND)
+        panel.sizer.Add(filepathCtrl, 0, wx.EXPAND)
+        panel.sizer.Add(waitCheckbox, 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 10)
     
-        if dialog.AffirmedShowModal():
-            if wait_checkbox.IsChecked():
+        while panel.Affirmed():
+            if waitCheckbox.IsChecked():
                 flags = wx.SOUND_SYNC
             else:
                 flags = wx.SOUND_ASYNC
-            return (filepathCtrl.GetValue(), flags)
+            panel.SetResult(filepathCtrl.GetValue(), flags)
 
 
 
@@ -573,12 +559,11 @@ class __ComputerPowerAction(eg.ActionClass):
             
             
     def Configure(self, bForceClose=False):
-        dialog = eg.ConfigurationDialog(self)
-        checkbox = wx.CheckBox(dialog, -1, self.plugin.text.forcedCB)
-        checkbox.SetValue(bForceClose)
-        dialog.sizer.Add(checkbox, 0, wx.ALL, 10)
-        if dialog.AffirmedShowModal():
-            return (checkbox.GetValue(), )
+        panel = eg.ConfigPanel(self)
+        checkbox = panel.CheckBox(bForceClose, self.plugin.text.forcedCB)
+        panel.sizer.Add(checkbox, 0, wx.ALL, 10)
+        while panel.Affirmed():
+            panel.SetResult(checkbox.GetValue())
     
             
             
@@ -745,15 +730,15 @@ class SetWallpaper(eg.ActionWithStringParameter):
 
 
     def Configure(self, imageFile='', style=1):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         text = self.text
-        sizer = dialog.sizer
+        sizer = panel.sizer
         
-        st_ctrl = wx.StaticText(dialog, -1, text.text1)
+        st_ctrl = wx.StaticText(panel, -1, text.text1)
         sizer.Add(st_ctrl, 0, wx.EXPAND)
         
         filepathCtrl = eg.FileBrowseButton(
-            dialog, 
+            panel, 
             -1,
             size = (340,-1),
             initialValue = imageFile,
@@ -763,15 +748,15 @@ class SetWallpaper(eg.ActionWithStringParameter):
         )
         sizer.Add(filepathCtrl, 0, wx.EXPAND)
     
-        st_ctrl = wx.StaticText(dialog, -1, text.text2)
+        st_ctrl = wx.StaticText(panel, -1, text.text2)
         sizer.Add(st_ctrl, 0, wx.EXPAND|wx.TOP, 10)
         
-        choice = wx.Choice(dialog, -1, choices=text.choices)
+        choice = wx.Choice(panel, -1, choices=text.choices)
         choice.SetSelection(style)                        
         sizer.Add(choice, 0, wx.BOTTOM, 10)
     
-        if dialog.AffirmedShowModal():
-            return (filepathCtrl.GetValue(), choice.GetSelection())
+        while panel.Affirmed():
+            panel.SetResult(filepathCtrl.GetValue(), choice.GetSelection())
         
         
         
@@ -1024,14 +1009,14 @@ class ShowPicture(eg.ActionClass):
 
 
     def Configure(self, imageFile='', display=0):
-        dialog = eg.ConfigurationDialog(self)
-        sizer = dialog.sizer
+        panel = eg.ConfigPanel(self)
+        sizer = panel.sizer
         
-        st_ctrl = wx.StaticText(dialog, -1, self.text.path)
+        st_ctrl = wx.StaticText(panel, -1, self.text.path)
         sizer.Add(st_ctrl, 0, wx.EXPAND)
         
         filepathCtrl = eg.FileBrowseButton(
-            dialog, 
+            panel, 
             -1, 
             size=(340,-1),
             initialValue=imageFile,
@@ -1044,14 +1029,14 @@ class ShowPicture(eg.ActionClass):
         )
         sizer.Add(filepathCtrl, 0, wx.EXPAND)
     
-        staticText = wx.StaticText(dialog, -1, self.text.display)
+        staticText = wx.StaticText(panel, -1, self.text.display)
         sizer.Add(staticText, 0, wx.EXPAND|wx.TOP, 10)
         
-        displayChoice = eg.DisplayChoice(dialog, display)
-        sizer.Add(choice, 0, wx.BOTTOM, 10)
+        displayChoice = eg.DisplayChoice(panel, display)
+        sizer.Add(displayChoice, 0, wx.BOTTOM, 10)
     
-        if dialog.AffirmedShowModal():
-            return (filepathCtrl.GetValue(), displayChoice.GetValue())
+        while panel.Affirmed():
+            panel.SetResult(filepathCtrl.GetValue(), displayChoice.GetValue())
         
         
         
@@ -1076,17 +1061,19 @@ class SetDisplayPreset(eg.ActionClass):
     
     def Configure(self, *args):
         result = [None]
-        dialog = eg.ConfigurationDialog(self)
-        dialog.buttonRow.okButton.Enable(False)
+        panel = eg.ConfigPanel(self)
+        panel.dialog.buttonRow.okButton.Enable(False)
+        panel.dialog.buttonRow.applyButton.Enable(False)
         def OnButton(event):
             FillList(eg.WinAPI.Display.GetDisplayModes())
-            dialog.buttonRow.okButton.Enable(True)
+            panel.dialog.buttonRow.okButton.Enable(True)
+            panel.dialog.buttonRow.applyButton.Enable(True)
         
-        button = wx.Button(dialog, -1, self.text.query)
+        button = wx.Button(panel, -1, self.text.query)
         button.Bind(wx.EVT_BUTTON, OnButton)
-        dialog.sizer.Add(button)
-        dialog.sizer.Add((5,5))
-        listCtrl = wx.ListCtrl(dialog, style=wx.LC_REPORT)
+        panel.sizer.Add(button)
+        panel.sizer.Add((5,5))
+        listCtrl = wx.ListCtrl(panel, style=wx.LC_REPORT)
         fields = self.text.fields
         for col, name in enumerate(fields):
             listCtrl.InsertColumn(col, name)
@@ -1104,10 +1091,10 @@ class SetDisplayPreset(eg.ActionClass):
         for i in range(len(fields)):
             x += listCtrl.GetColumnWidth(i)
         listCtrl.SetMinSize((x+4, -1))
-        dialog.sizer.Add(listCtrl, 1, wx.EXPAND)
+        panel.sizer.Add(listCtrl, 1, wx.EXPAND)
         
-        if dialog.AffirmedShowModal():
-            return result[0]
+        while panel.Affirmed():
+            panel.SetResult(*result[0])
         
         
 #-----------------------------------------------------------------------------
@@ -1155,19 +1142,18 @@ class WakeOnLan(eg.ActionClass):
 
     def Configure(self, macAddress=""):
         import wx.lib.masked
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         macCtrl  = wx.lib.masked.TextCtrl( 
-            dialog, 
+            panel, 
             mask = "##-##-##-##-##-##",
             includeChars = "ABCDEF",
             choiceRequired = True,
             defaultValue = macAddress.upper(),
             formatcodes = "F!",
         )
-        dialog.AddLabel(self.text.parameterDescription)
-        dialog.AddCtrl(macCtrl)
-        if dialog.AffirmedShowModal():
-            return (macCtrl.GetValue(), )
+        panel.AddLine(self.text.parameterDescription, macCtrl)
+        while panel.Affirmed():
+            panel.SetResult(macCtrl.GetValue())
     
 
 #-----------------------------------------------------------------------------
@@ -1200,18 +1186,18 @@ class SetSystemIdleTimer(eg.ActionClass):
     
     
     def Configure(self, flag=False):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         text = self.text
         radioBox = wx.RadioBox(
-            dialog, 
+            panel, 
             -1, 
             text.text,
             choices=text.choices, 
             majorDimension=1
         )
         radioBox.SetSelection(int(flag))
-        dialog.sizer.Add(radioBox, 0, wx.EXPAND)
+        panel.sizer.Add(radioBox, 0, wx.EXPAND)
 
-        if dialog.AffirmedShowModal():
-            return (bool(radioBox.GetSelection()), )
+        while panel.Affirmed():
+            panel.SetResult(bool(radioBox.GetSelection()))
         

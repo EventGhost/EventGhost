@@ -107,8 +107,8 @@ class ConfigDialog(eg.Dialog):
         else:
             self.mainSizer.Add(self.buttonRow.sizer, 0, wx.EXPAND|wx.RIGHT, 10)
         self.SetSizerAndFit(self.mainSizer)
+        self.Fit()
         self.SetMinSize(self.GetSize())
-        self.Layout()
         self.Centre()
         self.Show()
         
@@ -118,7 +118,6 @@ class ConfigPanel(wx.PyPanel):
     
     def __init__(self, executable, resizeable=None, showLine=True):
         self.nextResult = None
-        eg.currentConfigureItem.isNewConfigure = True
         self.gr = eg.Greenlet.getcurrent()
         dialog = ConfigDialog(executable, resizeable, showLine)
         self.dialog = dialog
@@ -129,13 +128,36 @@ class ConfigPanel(wx.PyPanel):
         self.rowFlags = {}
         self.colFlags = {}
         self.shown = False
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
 
 
+    def AddLabel(self, label):
+        self.sizer.Add(self.StaticText(label), 0, wx.BOTTOM, 2)
+        
+        
+    def AddCtrl(self, ctrl):
+        self.sizer.Add(ctrl, 0, wx.BOTTOM, 10)
+        
+        
+    def SetSizerProperty(self, vgap=6, hgap=5):
+        self.sizerProps = (vgap, hgap)
+    
+    
+    def SetRowFlags(self, rowNum, flags):
+        self.rowFlags[rowNum] = flags
+        
+    
+    def SetColumnFlags(self, colNum, flags):
+        self.colFlags[colNum] = flags
+        
+    
     def FinishSetup(self):
         self.shown = True
         if self.lines:
             self.AddGrid(self.lines, *self.sizerProps)
-        self.dialog.FinishSetup()
+        else:
+            self.SetSizerAndFit(self.sizer)
+        self.dialog.FinishSetup()        
     
     
     def Affirmed(self):
@@ -185,6 +207,10 @@ class ConfigPanel(wx.PyPanel):
         
         
         
+    def StaticText(self, label, *args, **kwargs):
+        return wx.StaticText(self, -1, label, *args, **kwargs)
+        
+    
     def SpinIntCtrl(self, value=0, *args, **kwargs):
         return eg.SpinIntCtrl(self, -1, value, *args, **kwargs)
     
@@ -231,6 +257,12 @@ class ConfigPanel(wx.PyPanel):
         return wx.Button(self, -1, label, *args, **kwargs)
     
     
+    def RadioButton(self, value, label="", *args, **kwargs):
+        ctrl = wx.RadioButton(self, -1, label, *args, **kwargs)
+        ctrl.SetValue(value)
+        return ctrl
+        
+    
     def DirBrowseButton(self, value, *args, **kwargs):
         dirpathCtrl = eg.DirBrowseButton(
             self,
@@ -241,6 +273,18 @@ class ConfigPanel(wx.PyPanel):
         )
         dirpathCtrl.SetValue(value)
         return dirpathCtrl
+    
+    
+    def FileBrowseButton(self, value, *args, **kwargs):
+        filepathCtrl = eg.FileBrowseButton(
+            self,
+            size=(320,-1),
+            initialValue=value, 
+            labelText="",
+            buttonText=eg.text.General.browse,
+            **kwargs
+        )
+        return filepathCtrl
     
     
     def SerialPortChoice(self, value=0, *args, **kwargs):

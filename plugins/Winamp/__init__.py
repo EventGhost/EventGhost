@@ -404,17 +404,17 @@ class ChangeRepeatStatus(eg.ActionClass):
 
 
     def Configure(self, data=0):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         radioBox = wx.RadioBox(
-            dialog, 
+            panel, 
             label=self.text.radioBoxLabel,
             choices=self.text.radioBoxOptions,
             style=wx.RA_SPECIFY_ROWS 
         )
         radioBox.SetSelection(data)
-        dialog.sizer.Add(radioBox, 0, wx.EXPAND)
-        if dialog.AffirmedShowModal():
-            return (radioBox.GetSelection(), )
+        panel.sizer.Add(radioBox, 0, wx.EXPAND)
+        while panel.Affirmed():
+            panel.SetResult(radioBox.GetSelection())
         
         
 # The following action is a subclass of ChangeRepeatStatus, so it inherits

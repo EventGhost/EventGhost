@@ -27,6 +27,7 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
+    canMultiLoad = True,
     description = (
         'Hardware plugin for the <a href="http://www.fukushima.us/UIRT2/">'
         'Universal InfraRed Transceiver V2</a>.'
@@ -244,7 +245,6 @@ class UirtThread(threading.Thread):
 
 
 class UIRT2(eg.RawReceiverPlugin):
-    canMultiLoad = True
     
     def __init__(self):
         eg.RawReceiverPlugin.__init__(self)
@@ -260,18 +260,11 @@ class UIRT2(eg.RawReceiverPlugin):
 
 
     def Configure(self, comport=0):
-        dialog = eg.ConfigurationDialog(self)
-        portCtrl = eg.SerialPortChoice(dialog, value=comport)
-        
-        dialog.sizer.Add(
-            wx.StaticText(dialog, -1, "COM-Port:"), 
-            0, 
-            wx.ALIGN_CENTER_VERTICAL
-        )
-        dialog.sizer.Add(portCtrl)
-
-        if dialog.AffirmedShowModal():
-            return (portCtrl.GetValue(), )
+        panel = eg.ConfigPanel(self)
+        portCtrl = panel.SerialPortChoice(comport)
+        panel.AddLine("COM-Port:", portCtrl)
+        while panel.Affirmed():
+            panel.SetResult(portCtrl.GetValue())
     
     
     
@@ -292,7 +285,7 @@ class UIRT2(eg.RawReceiverPlugin):
         
         
         def Configure(self, code=None, wait_till_finished=True):
-            dialog = eg.ConfigurationDialog(self)
+            panel = eg.ConfigPanel(self)
             code1 = ""
             code2 = ""
             repeatCount = 4
@@ -325,15 +318,15 @@ class UIRT2(eg.RawReceiverPlugin):
             sizer = wx.FlexGridSizer(4,2,5,5)
             sizer.AddGrowableCol(1)
             
-            st1 = wx.StaticText(dialog, -1, "Code 1:")
+            st1 = wx.StaticText(panel, -1, "Code 1:")
             sizer.Add(st1, 0, wx.ALIGN_CENTER_VERTICAL)
-            code1Ctrl = wx.TextCtrl(dialog, -1, code1, size=(325,-1))
+            code1Ctrl = wx.TextCtrl(panel, -1, code1, size=(325,-1))
             sizer.Add(code1Ctrl)
             
-            st2 = wx.StaticText(dialog, -1, "Code 2:")
+            st2 = wx.StaticText(panel, -1, "Code 2:")
             sizer.Add(st2, 0, wx.ALIGN_CENTER_VERTICAL)
             code2Ctrl = wx.TextCtrl(
-                dialog, 
+                panel, 
                 -1, 
                 code2, 
                 size=(275,-1), 
@@ -341,30 +334,31 @@ class UIRT2(eg.RawReceiverPlugin):
             )
             sizer.Add(code2Ctrl)
             
-            st3 = wx.StaticText(dialog, -1, "Repeat:")
+            st3 = wx.StaticText(panel, -1, "Repeat:")
             sizer.Add(st3, 0, wx.ALIGN_CENTER_VERTICAL)
-            repeatCtrl = eg.SpinIntCtrl(dialog, -1, repeatCount, 1, 31)
+            repeatCtrl = eg.SpinIntCtrl(panel, -1, repeatCount, 1, 31)
             repeatCtrl.SetInitialSize((50,-1))
             sizer.Add(repeatCtrl, 0)
             
-            st3 = wx.StaticText(dialog, -1, "Carrier:")
+            st3 = wx.StaticText(panel, -1, "Carrier:")
             sizer.Add(st3, 0, wx.ALIGN_CENTER_VERTICAL)
             choices = ('35.7 kHz', '37.0 kHz', '38.4 kHz', '40.0 kHz')
-            carrierCtrl = wx.Choice(dialog, -1, choices=choices)
+            carrierCtrl = wx.Choice(panel, -1, choices=choices)
             carrierCtrl.SetSelection(3 - carrier)
             sizer.Add(carrierCtrl, 0)
                         
-            dialog.sizer.Add(sizer, 0, wx.EXPAND)
+            panel.sizer.Add(sizer, 0, wx.EXPAND)
             
-            dialog.sizer.Add((5,5))
-            cb = wx.CheckBox(dialog, -1, "Pause till transmission finished")
+            panel.sizer.Add((5,5))
+            cb = wx.CheckBox(panel, -1, "Pause till transmission finished")
             cb.SetValue(wait_till_finished)
-            dialog.sizer.Add(cb)
+            panel.sizer.Add(cb)
 
-            if dialog.AffirmedShowModal():
+            while panel.Affirmed():
                 code1 = code1Ctrl.GetValue()
                 if len(code1) == 0:
-                    return (None, cb.GetValue())
+                    panel.SetResult(None, cb.GetValue())
+                    continue
                 code2 = code2Ctrl.GetValue()
                 repeatCount = repeatCtrl.GetValue()
                 carrier = 3 - carrierCtrl.GetSelection()
@@ -381,4 +375,4 @@ class UIRT2(eg.RawReceiverPlugin):
                     bCmd2 = repeatCount | (carrier << 6)
                     code = chr(bCmd) + binascii.unhexlify(code1) \
                            + chr(bCmd2) + binascii.unhexlify(code2)
-                return (code + calc_checksum(code), cb.GetValue())
+                panel.SetResult(code + calc_checksum(code), cb.GetValue())

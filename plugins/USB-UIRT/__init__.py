@@ -160,58 +160,48 @@ class USB_UIRT(eg.RawReceiverPlugin):
             firmwareDate = text.notFound
             ledRX, ledTX, legacyRX = False, False, False
             
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
+        ledRxCheckBox = panel.CheckBox(ledRX, text.blinkRx)
+        ledTxCheckBox = panel.CheckBox(ledTX, text.blinkTx)
+        legacyRxCheckBox = panel.CheckBox(legacyRX, text.legacyCodes)
+        stopCodesRxCheckBox = panel.CheckBox(repeatStopCodes, text.stopCodes)
+
         infoGroupSizer = wx.StaticBoxSizer(
-            wx.StaticBox(dialog, -1, text.uuInfo), 
+            wx.StaticBox(panel, -1, text.uuInfo), 
             wx.VERTICAL
         )
         infoSizer = wx.FlexGridSizer(3, 2)
-        
-        staticText = wx.StaticText(dialog, -1, text.uuProtocol)
-        infoSizer.Add(staticText, 0, wx.EXPAND)
-        staticText = wx.StaticText(dialog, -1, protocolVersion)
-        infoSizer.Add(staticText, 0, wx.EXPAND)
-        staticText = wx.StaticText(dialog, -1, text.uuFirmVersion)
-        infoSizer.Add(staticText, 0, wx.EXPAND)
-        staticText = wx.StaticText(dialog, -1, firmwareVersion)
-        infoSizer.Add(staticText, 0, wx.EXPAND)
-        staticText = wx.StaticText(dialog, -1, text.uuFirmDate)
-        infoSizer.Add(staticText, 0, wx.EXPAND)
-        staticText = wx.StaticText(dialog, -1, firmwareDate)
-        infoSizer.Add(staticText, 0, wx.EXPAND)
+        infoSizer.Add(panel.StaticText(text.uuProtocol), 0, wx.EXPAND)
+        infoSizer.Add(panel.StaticText(protocolVersion), 0, wx.EXPAND)
+        infoSizer.Add(panel.StaticText(text.uuFirmVersion), 0, wx.EXPAND)
+        infoSizer.Add(panel.StaticText(firmwareVersion), 0, wx.EXPAND)
+        infoSizer.Add(panel.StaticText(text.uuFirmDate), 0, wx.EXPAND)
+        infoSizer.Add(panel.StaticText(firmwareDate), 0, wx.EXPAND)
         
         infoGroupSizer.Add(infoSizer, 0, wx.LEFT, 5)
-        dialog.sizer.Add(infoGroupSizer, 0, wx.EXPAND)
+        panel.sizer.Add(infoGroupSizer, 0, wx.EXPAND)
         
-        dialog.sizer.Add((15,15))
+        panel.sizer.Add((15,15))
 
         ledGroupSizer = wx.StaticBoxSizer(
-            wx.StaticBox(dialog, -1, text.redIndicator), 
+            wx.StaticBox(panel, -1, text.redIndicator), 
             wx.VERTICAL
         )
-        ledRxCheckBox = wx.CheckBox(dialog, -1, text.blinkRx)
-        ledRxCheckBox.SetValue(ledRX)
         ledGroupSizer.Add(ledRxCheckBox, 0, wx.ALL, 10)
-        ledTxCheckBox = wx.CheckBox(dialog, -1, text.blinkTx)
-        ledTxCheckBox.SetValue(ledTX)
         ledGroupSizer.Add(ledTxCheckBox, 0, wx.ALL, 10)
-        dialog.sizer.Add(ledGroupSizer, 0, wx.EXPAND)
+        panel.sizer.Add(ledGroupSizer, 0, wx.EXPAND)
         
-        dialog.sizer.Add((15,15))
+        panel.sizer.Add((15,15))
         receiveGroupSizer = wx.StaticBoxSizer(
-            wx.StaticBox(dialog, -1, text.irReception), 
+            wx.StaticBox(panel, -1, text.irReception), 
             wx.VERTICAL
         )
-        legacyRxCheckBox = wx.CheckBox(dialog, -1, text.legacyCodes)
-        legacyRxCheckBox.SetValue(legacyRX)
-        stopCodesRxCheckBox = wx.CheckBox(dialog, -1, text.stopCodes)
-        stopCodesRxCheckBox.SetValue(repeatStopCodes)
         receiveGroupSizer.Add(legacyRxCheckBox, 0, wx.ALL, 10)
         receiveGroupSizer.Add(stopCodesRxCheckBox, 0, wx.ALL, 10)
-        dialog.sizer.Add(receiveGroupSizer, 0, wx.EXPAND)
+        panel.sizer.Add(receiveGroupSizer, 0, wx.EXPAND)
 
-        if dialog.AffirmedShowModal():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 ledRxCheckBox.GetValue(),
                 ledTxCheckBox.GetValue(),
                 legacyRxCheckBox.GetValue(),
@@ -234,7 +224,7 @@ class TransmitIR(eg.ActionClass):
     
     def Configure(self, code='', repeatCount=None, inactivityWaitTime=None):
         text = self.text
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         if repeatCount is None:
             repeatCount = self.repeatCount
         if inactivityWaitTime is None:
@@ -247,18 +237,16 @@ class TransmitIR(eg.ActionClass):
         else:
             zone = 0
         
-        editCtrl = wx.TextCtrl(dialog, -1, code, style=wx.TE_MULTILINE)
+        editCtrl = panel.TextCtrl(code, style=wx.TE_MULTILINE)
         font = editCtrl.GetFont()
         font.SetFaceName("Courier New")
         editCtrl.SetFont(font)
         editCtrl.SetMinSize((-1, 100))
         
-        st1 = wx.StaticText(dialog, -1, text.repeatCount)
-        
-        repeatCtrl = eg.SpinIntCtrl(dialog, -1, min=0, max=127)
+        repeatCtrl = eg.SpinIntCtrl(panel, -1, min=0, max=127)
         repeatCtrl.SetInitialSize((50,-1))
         
-        infiniteCtrl = wx.CheckBox(dialog, -1, text.infinite)
+        infiniteCtrl = wx.CheckBox(panel, -1, text.infinite)
         if repeatCount == 32767:
             repeatCtrl.SetValue(4)
             repeatCtrl.Enable(False)
@@ -270,30 +258,25 @@ class TransmitIR(eg.ActionClass):
             repeatCtrl.Enable(not infiniteCtrl.GetValue())
         infiniteCtrl.Bind(wx.EVT_CHECKBOX, OnInfiniteCtrl)
         
-        st2 = wx.StaticText(dialog, -1, text.wait1)
-        waitCtrl = eg.SpinIntCtrl(dialog, -1, inactivityWaitTime, 0, 500)
-        waitCtrl.SetValue(inactivityWaitTime)
+        waitCtrl = panel.SpinIntCtrl(inactivityWaitTime, 0, 500)
         waitCtrl.SetInitialSize((50,-1))
-        st3 = wx.StaticText(dialog, -1, text.wait2)
         
-        zoneCtrl = wx.Choice(dialog, -1, choices=text.zoneChoices)
+        zoneCtrl = wx.Choice(panel, -1, choices=text.zoneChoices)
         zoneCtrl.Select(zone)
                 
-        learnButton = wx.Button(dialog, -1, text.learnButton)  
-        testButton = wx.Button(dialog, -1, text.testButton)
+        learnButton = panel.Button(text.learnButton)  
+        testButton = panel.Button(text.testButton)
         if self.plugin.device is None:
             learnButton.Enable(False)
             testButton.Enable(False)
             
-        st5 = wx.StaticText(dialog, -1, text.zone)
-        
-        dialog.sizer.Add(wx.StaticText(dialog, -1, text.irCode))
-        dialog.sizer.Add(editCtrl, 1, wx.EXPAND)
-        dialog.sizer.Add((5,5))
+        panel.sizer.Add(panel.StaticText(text.irCode))
+        panel.sizer.Add(editCtrl, 1, wx.EXPAND)
+        panel.sizer.Add((5,5))
 
         stFlags = wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT
         gridSizer = wx.GridBagSizer(5,5)
-        gridSizer.Add(st1, (0,0), flag=stFlags)
+        gridSizer.Add(panel.StaticText(text.repeatCount), (0,0), flag=stFlags)
         
         tmpSizer = wx.BoxSizer(wx.HORIZONTAL)
         tmpSizer.Add(repeatCtrl)
@@ -301,17 +284,15 @@ class TransmitIR(eg.ActionClass):
         tmpSizer.Add(infiniteCtrl, 0, wx.ALIGN_CENTER_VERTICAL)
         gridSizer.Add(tmpSizer, (0,1))
 
-        #gridSizer.Add(repeatCtrl, (0,1))
-        #gridSizer.Add(infiniteCtrl, (0,2), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT)
-        gridSizer.Add(st2, (1,0), flag=stFlags)
+        gridSizer.Add(panel.StaticText(text.wait1), (1,0), flag=stFlags)
         
         tmpSizer = wx.BoxSizer(wx.HORIZONTAL)
         tmpSizer.Add(waitCtrl)
         tmpSizer.Add((5,5))
-        tmpSizer.Add(st3, 0, wx.ALIGN_CENTER_VERTICAL)
+        tmpSizer.Add(panel.StaticText(text.wait2), 0, wx.ALIGN_CENTER_VERTICAL)
         gridSizer.Add(tmpSizer, (1,1))
         
-        gridSizer.Add(st5, (2,0), flag=stFlags)
+        gridSizer.Add(panel.StaticText(text.zone), (2,0), flag=stFlags)
         gridSizer.Add(zoneCtrl, (2,1))
         gridSizer.AddGrowableCol(4,1)
         gridSizer.Add(
@@ -325,9 +306,9 @@ class TransmitIR(eg.ActionClass):
             flag=wx.ALIGN_RIGHT|wx.EXPAND
         )
         
-        dialog.sizer.Add(gridSizer, 0, wx.EXPAND)
+        panel.sizer.Add(gridSizer, 0, wx.EXPAND)
         
-        def learnIR(event):
+        def LearnIR(event):
             learnDialog = IRLearnDialog(
                 None, 
                 self.plugin.device, 
@@ -337,11 +318,11 @@ class TransmitIR(eg.ActionClass):
             if learnDialog.code:
                 editCtrl.SetValue(learnDialog.code)
             learnDialog.Destroy()
-        learnButton.Bind(wx.EVT_BUTTON, learnIR)
+        learnButton.Bind(wx.EVT_BUTTON, LearnIR)
             
-        def testIR(event):
+        def TestIR(event):
             self.plugin.device.TransmitIR(*GetResult())
-        testButton.Bind(wx.EVT_BUTTON, testIR)
+        testButton.Bind(wx.EVT_BUTTON, TestIR)
 
         def GetResult():
             zone = zoneCtrl.GetSelection()
@@ -360,8 +341,8 @@ class TransmitIR(eg.ActionClass):
                 self.inactivityWaitTime
             )
             
-        if dialog.AffirmedShowModal():
-            return GetResult()
+        while panel.Affirmed():
+            panel.SetResult(*GetResult())
 
 
 

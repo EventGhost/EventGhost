@@ -253,12 +253,12 @@ class PluginClass(object):
         If the plugin is reconfigured by the user, this method will be called
         with the same arguments as the __start__ method would receive.
         """
-        dialog = eg.ConfigurationDialog(self)
-        dialog.buttonRow.applyButton.Enable(False)
-        label = wx.StaticText(dialog, -1, eg.text.General.noOptionsPlugin)
-        dialog.sizer.Add(label)
-        if dialog.AffirmedShowModal():
-            return ()
+        panel = eg.ConfigPanel(self)
+        panel.dialog.buttonRow.applyButton.Enable(False)
+        label = panel.StaticText(eg.text.General.noOptionsPlugin)
+        panel.sizer.Add(label)
+        while panel.Affirmed():
+            panel.SetResult()
         
         
     class Exception(eg.Exception):

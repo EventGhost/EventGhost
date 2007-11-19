@@ -224,13 +224,12 @@ class GoDirection(eg.ActionClass):
     
 
     def Configure(self, direction=0):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         direction = float(direction)
-        valueCtrl = eg.SpinNumCtrl(dialog, -1, direction, min=0, max=360)
-        dialog.AddGrid([(self.text.text1, valueCtrl, self.text.text2)])
-        
-        if dialog.AffirmedShowModal():
-            return (valueCtrl.GetValue(),)
+        valueCtrl = panel.SpinNumCtrl(float(direction), min=0, max=360)
+        panel.AddLine(self.text.text1, valueCtrl, self.text.text2)
+        while panel.Affirmed():
+            panel.SetResult(valueCtrl.GetValue())
 
 
 #-----------------------------------------------------------------------------
@@ -353,41 +352,33 @@ class MoveAbsolute(eg.ActionClass):
 
     
     def Configure(self, x=0, y=0):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         text = self.text
 
-        xCB = wx.CheckBox(dialog, -1, text.text1)
-        xCB.SetValue(x is not None)
+        xCB = panel.CheckBox(x is not None, text.text1)
         def HandleXCheckBox(event):
             xCtrl.Enable(event.IsChecked())
         xCB.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)    
 
-        xCtrl = eg.SpinIntCtrl(dialog, min=-maxint-1, max=maxint)
         if x is None:
             x = 0
             xCtrl.Enable(False)
-        xCtrl.SetValue(x)
+        xCtrl = panel.SpinIntCtrl(x, min=-maxint-1, max=maxint)
         
-        yCB = wx.CheckBox(dialog, -1, text.text3)
-        yCB.SetValue(y is not None)
+        yCB = panel.CheckBox(y is not None, text.text3)
         def HandleYCheckBox(event):
             yCtrl.Enable(event.IsChecked())  
         yCB.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)    
 
-        yCtrl = eg.SpinIntCtrl(dialog, min=-maxint-1, max=maxint)
         if y is None:
             y = 0
             yCtrl.Enable(False)
-        yCtrl.SetValue(y)
+        yCtrl = panel.SpinIntCtrl(y, min=-maxint-1, max=maxint)
         
-        dialog.AddGrid(
-            (
-                (xCB, xCtrl, text.text2),
-                (yCB, yCtrl, text.text4),
-            )
-        )
+        panel.AddLine(xCB, xCtrl, text.text2)
+        panel.AddLine(yCB, yCtrl, text.text4)
 
-        if dialog.AffirmedShowModal():
+        while panel.Affirmed():
             if xCtrl.IsEnabled():
                 x = xCtrl.GetValue()
             else:
@@ -397,7 +388,7 @@ class MoveAbsolute(eg.ActionClass):
                 y = yCtrl.GetValue()
             else:
                 y = None
-            return (x, y)
+            panel.SetResult(x, y)
 
 
 #-----------------------------------------------------------------------------
@@ -420,11 +411,11 @@ class MouseWheel(eg.ActionClass):
     
 
     def Configure(self, direction=0):
-        dialog = eg.ConfigurationDialog(self)
-        valueCtrl = eg.SpinIntCtrl(dialog, -1, direction, min=-100, max=100)
-        dialog.AddGrid([(self.text.text1, valueCtrl, self.text.text2)])     
-        if dialog.AffirmedShowModal():
-            return (valueCtrl.GetValue(), )
+        panel = eg.ConfigPanel(self)
+        valueCtrl = panel.SpinIntCtrl(direction, min=-100, max=100)
+        panel.AddLine(self.text.text1, valueCtrl, self.text.text2)     
+        while panel.Affirmed():
+            panel.SetResult(valueCtrl.GetValue())
 
 
 

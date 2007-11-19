@@ -470,21 +470,9 @@ class YamahaSerial(eg.PluginClass):
             
             
     def Configure(self, port=0):
-        dialog = eg.ConfigurationDialog(self)
-        ports = eg.SerialPort.GetAllPorts()
-        choices = []
-        for portnum in ports:
-            choices.append("COM%d" % (portnum + 1))
-        portCtrl = wx.Choice(dialog, -1, choices=choices)
-        portCtrl.SetSelection(port)
-        
-        flags = wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL
-        mySizer = wx.FlexGridSizer(4, 2, 5, 5)
-        mySizer.Add(wx.StaticText(dialog, -1, 'Port:'), 0, flags)
-        mySizer.Add(portCtrl, 0, wx.EXPAND)
-
-        dialog.sizer.Add(mySizer)
-        
-        if dialog.AffirmedShowModal():
-            return (ports[portCtrl.GetSelection()], )
+        panel = eg.ConfigPanel(self)
+        portCtrl = panel.SerialPortChoice(port)
+        panel.AddLine("Port:", portCtrl)
+        while panel.Affirmed():
+            panel.SetResult(portCtrl.GetValue())
                     

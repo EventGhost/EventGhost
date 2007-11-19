@@ -84,29 +84,29 @@ class ChangeDisplaySettings(eg.ActionClass):
         includeAll=False, 
         updateRegistry=False
     ):
-        dialog = eg.ConfigurationDialog(self)                            
+        panel = eg.ConfigPanel(self)                            
         if displayNum is None:
             displayNum = 1
             size, frequency, depth = gDisplays[0].GetCurrentMode()
             
-        displayChoice = DisplayChoice(dialog)
+        displayChoice = DisplayChoice(panel)
         if displayNum is not None and displayNum <= displayChoice.GetCount():
             displayChoice.SetSelection(displayNum - 1)
             
-        resolutionChoice = wx.Choice(dialog)
-        frequencyChoice = wx.Choice(dialog)
-        depthChoice = wx.Choice(dialog)
-        includeAllCheckBox = wx.CheckBox(dialog, -1, 
+        resolutionChoice = wx.Choice(panel)
+        frequencyChoice = wx.Choice(panel)
+        depthChoice = wx.Choice(panel)
+        includeAllCheckBox = wx.CheckBox(panel, -1, 
             "Include modes this monitor might not support.")
         includeAllCheckBox.SetValue(includeAll)
-        updateRegistryCheckBox = wx.CheckBox(dialog, -1, 
+        updateRegistryCheckBox = wx.CheckBox(panel, -1, 
             "Store mode in the registry.")
         updateRegistryCheckBox.SetValue(updateRegistry)
         
-        st1 = wx.StaticText(dialog, -1, "Display:")
-        st2 = wx.StaticText(dialog, -1, "Resolution:")
-        st3 = wx.StaticText(dialog, -1, "Frequency:")
-        st4 = wx.StaticText(dialog, -1, "Colour Depth:")
+        st1 = wx.StaticText(panel, -1, "Display:")
+        st2 = wx.StaticText(panel, -1, "Resolution:")
+        st3 = wx.StaticText(panel, -1, "Frequency:")
+        st4 = wx.StaticText(panel, -1, "Colour Depth:")
         
         sizer = wx.GridBagSizer(5, 5)
         Add = sizer.Add
@@ -118,9 +118,9 @@ class ChangeDisplaySettings(eg.ActionClass):
         Add(frequencyChoice, (2, 1), (1, 1))
         Add(st4, (3, 0), (1, 1), wx.ALIGN_CENTER_VERTICAL)
         Add(depthChoice, (3, 1), (1, 1))
-        dialog.sizer.Add(sizer)
-        dialog.sizer.Add(includeAllCheckBox, 0, wx.TOP, 10)
-        dialog.sizer.Add(updateRegistryCheckBox, 0, wx.TOP, 10)
+        panel.sizer.Add(sizer)
+        panel.sizer.Add(includeAllCheckBox, 0, wx.TOP, 10)
+        panel.sizer.Add(updateRegistryCheckBox, 0, wx.TOP, 10)
         
         settings = eg.Bunch()
         
@@ -181,8 +181,8 @@ class ChangeDisplaySettings(eg.ActionClass):
         
         UpdateResolutions()
         
-        if dialog.AffirmedShowModal():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 displayChoice.GetSelection() + 1,
                 GetClientData(resolutionChoice),
                 GetClientData(frequencyChoice),

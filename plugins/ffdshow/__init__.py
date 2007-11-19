@@ -178,17 +178,15 @@ class SetIntAction(eg.ActionClass):
     
     
     def Configure(self, value=0):
-        dialog = eg.ConfigurationDialog(self)
-        valueCtrl = eg.SpinIntCtrl(
-            dialog, 
+        panel = eg.ConfigPanel(self)
+        valueCtrl = panel.SpinIntCtrl(
+            value, 
             min = -sys.maxint - 1, 
             max = sys.maxint, 
-            value = value
         )
-        dialog.AddLabel(self.parameterDescription)
-        dialog.AddCtrl(valueCtrl)
-        if dialog.AffirmedShowModal():
-            return (valueCtrl.GetValue(), )
+        panel.AddLine(self.parameterDescription, valueCtrl)
+        while panel.Affirmed():
+            panel.SetResult(valueCtrl.GetValue())
     
     
     

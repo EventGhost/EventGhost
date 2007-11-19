@@ -153,7 +153,7 @@ class EventGhost(object):
                 if (level < 6):# and not self.debugLevel:
                     return
                 sys.stderr.write("Error%d: %s" % (level, msg))
-        #wx.Log.SetActiveTarget(MyLog())
+        wx.Log.SetActiveTarget(MyLog())
 
         from LanguageTools import LoadStrings
         eg.text = LoadStrings(eg.config.language)

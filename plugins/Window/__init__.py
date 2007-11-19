@@ -339,18 +339,17 @@ class SetAlwaysOnTop(eg.ActionClass):
     
     
     def Configure(self, action=2):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         radioBox = wx.RadioBox(
-            dialog, 
+            panel,
             -1,
             self.text.radioBox,
             choices=self.text.actions, 
             style=wx.RA_SPECIFY_ROWS
         )
         radioBox.SetSelection(action)
-        dialog.sizer.Add(radioBox, 0, wx.EXPAND)
-
-        if dialog.AffirmedShowModal():
-            return (radioBox.GetSelection(), )
+        panel.sizer.Add(radioBox, 0, wx.EXPAND)
+        while panel.Affirmed():
+            panel.SetResult(radioBox.GetSelection())
         
         

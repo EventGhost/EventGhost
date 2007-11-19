@@ -55,6 +55,7 @@ class ConfigurationDialog(Dialog):
         
         
     def __init__(self, obj, resizeable=None, showLine=True):
+        eg.PrintError("eg.ConfigurationDialog is deprecated! " + repr(obj))
         if self.__isInited:
             return
         self.__isInited = True

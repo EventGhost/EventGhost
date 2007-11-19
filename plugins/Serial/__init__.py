@@ -26,6 +26,7 @@ eg.RegisterPlugin(
     name = "Serial Port",
     author = "Bitmonster",
     version = "1.1." + "$LastChangedRevision$".split()[1],
+    canMultiLoad = True,
     description = "Arbitrary communication through a serial port.",
 )
 
@@ -108,7 +109,6 @@ DECODING_FUNCS = [
 
 
 class Serial(eg.RawReceiverPlugin):
-    canMultiLoad = True
     text = Text
     
     def __init__(self):
@@ -254,11 +254,11 @@ class Serial(eg.RawReceiverPlugin):
         encodingNum=0,
     ):
         text = self.text
-        dialog = eg.ConfigurationDialog(self)
-        portCtrl = eg.SerialPortChoice(dialog, value=port)
+        panel = eg.ConfigPanel(self)
+        portCtrl = panel.SerialPortChoice(port)
         
         baudrateCtrl = wx.ComboBox(
-            dialog,
+            panel,
             value=str(baudrate),
             choices=[
                         '110', '300', '600', '1200', '2400', '4800', '9600',
@@ -269,31 +269,16 @@ class Serial(eg.RawReceiverPlugin):
             validator=eg.DigitOnlyValidator()
         )
         
-        bytesizeCtrl = wx.Choice(dialog, choices=['5', '6', '7', '8'])
-        bytesizeCtrl.SetSelection(bytesize)
-        
-        parityCtrl = wx.Choice(dialog, choices=text.parities)
-        parityCtrl.SetSelection(parity)
-        
-        stopbitsCtrl = wx.Choice(dialog, choices=['1', '2'])
-        stopbitsCtrl.SetSelection(stopbits)
-        
-        handshakeCtrl = wx.Choice(dialog, choices=text.handshakes)
-        handshakeCtrl.SetSelection(handshake)
-        
-        generateEventsCtrl = wx.CheckBox(dialog, label=text.generateEvents)
-        generateEventsCtrl.SetValue(generateEvents)
-        
-        terminatorCtrl = wx.TextCtrl(dialog)
-        terminatorCtrl.SetValue(terminator)
+        bytesizeCtrl = panel.Choice(bytesize, choices=['5', '6', '7', '8'])
+        parityCtrl = panel.Choice(parity, choices=text.parities)
+        stopbitsCtrl = panel.Choice(stopbits, choices=['1', '2'])
+        handshakeCtrl = panel.Choice(handshake, choices=text.handshakes)
+        generateEventsCtrl = panel.CheckBox(generateEvents, label=text.generateEvents)
+        terminatorCtrl = panel.TextCtrl(terminator)
         terminatorCtrl.Enable(generateEvents)
-        
-        prefixCtrl = wx.TextCtrl(dialog)
-        prefixCtrl.SetValue(prefix)
+        prefixCtrl = panel.TextCtrl(prefix)
         prefixCtrl.Enable(generateEvents)
-        
-        encodingCtrl = wx.Choice(dialog, choices=text.codecChoices)
-        encodingCtrl.SetSelection(encodingNum)
+        encodingCtrl = panel.Choice(encodingNum, choices=text.codecChoices)
         encodingCtrl.Enable(generateEvents)
         
         def OnCheckBox(event):
@@ -303,45 +288,31 @@ class Serial(eg.RawReceiverPlugin):
             encodingCtrl.Enable(flag)
         generateEventsCtrl.Bind(wx.EVT_CHECKBOX, OnCheckBox)
         
-        flags = wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL
-        mySizer = wx.GridBagSizer(5, 5)
-        Add = mySizer.Add
-        Add(wx.StaticText(dialog, -1, text.port), (0, 0), flag=flags)
-        Add(portCtrl, (0, 1), flag=wx.EXPAND)
-        Add(wx.StaticText(dialog, -1, text.baudrate), (1, 0), flag=flags)
-        Add(baudrateCtrl, (1, 1), flag=wx.EXPAND)
-        Add(wx.StaticText(dialog, -1, text.bytesize), (2, 0), flag=flags)
-        Add(bytesizeCtrl, (2, 1), flag=wx.EXPAND)
-        Add(wx.StaticText(dialog, -1, text.parity), (3, 0), flag=flags)
-        Add(parityCtrl, (3, 1), flag=wx.EXPAND)
-        Add(wx.StaticText(dialog, -1, text.stopbits), (4, 0), flag=flags)
-        Add(stopbitsCtrl, (4, 1), flag=wx.EXPAND)
-        Add(wx.StaticText(dialog, -1, text.flowcontrol), (5, 0), flag=flags)
-        Add(handshakeCtrl, (5, 1), flag=wx.EXPAND)
-        
-        Add((5, 5), (6, 0), (1, 2), flag=flags)
-        Add(generateEventsCtrl, (7, 0), (1, 2), flag=flags)
-        Add(wx.StaticText(dialog, -1, text.terminator), (8, 0), flag=flags)
-        Add(terminatorCtrl, (8, 1), flag=wx.EXPAND)
-        Add(wx.StaticText(dialog, -1, text.eventPrefix), (9, 0), flag=flags)
-        Add(prefixCtrl, (9, 1), flag=wx.EXPAND)
-        Add(wx.StaticText(dialog, -1, text.encoding), (10, 0), flag=flags)
-        Add(encodingCtrl, (10, 1), flag=wx.EXPAND)
-        
-        dialog.sizer.Add(mySizer)
+        panel.SetColumnFlags(1, wx.EXPAND)
+        panel.AddLine(text.port, portCtrl)
+        panel.AddLine(text.baudrate, baudrateCtrl)
+        panel.AddLine(text.bytesize, bytesizeCtrl)
+        panel.AddLine(text.parity, parityCtrl)
+        panel.AddLine(text.stopbits, stopbitsCtrl)
+        panel.AddLine(text.flowcontrol, handshakeCtrl)
+        panel.AddLine()
+        panel.AddLine(generateEventsCtrl)
+        panel.AddLine(text.terminator, terminatorCtrl)
+        panel.AddLine(text.eventPrefix, prefixCtrl)
+        panel.AddLine(text.encoding, encodingCtrl)
 
-        if dialog.AffirmedShowModal():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 portCtrl.GetValue(), 
                 int(baudrateCtrl.GetValue()),
-                bytesizeCtrl.GetSelection(),
-                parityCtrl.GetSelection(),
-                stopbitsCtrl.GetSelection(),
-                handshakeCtrl.GetSelection(),
+                bytesizeCtrl.GetValue(),
+                parityCtrl.GetValue(),
+                stopbitsCtrl.GetValue(),
+                handshakeCtrl.GetValue(),
                 generateEventsCtrl.GetValue(),
                 terminatorCtrl.GetValue(),
                 prefixCtrl.GetValue(),
-                encodingCtrl.GetSelection(),
+                encodingCtrl.GetValue(),
             )
         
         
@@ -383,45 +354,47 @@ class Serial(eg.RawReceiverPlugin):
         
         def Configure(self, count=None, timeout=1.0):
             text = self.text
-            dialog = eg.ConfigurationDialog(self)
-            rb1 = wx.RadioButton(dialog, -1, text.read_all, style=wx.RB_GROUP)
-            rb2 = wx.RadioButton(dialog, -1, text.read_some)
+            panel = eg.ConfigPanel(self)
             if count is None:
                 count = 1
-                rb1.SetValue(True)
+                flag = False
             else:
-                rb2.SetValue(True)
+                flag = True
             if timeout is None:
                 timeout = 1.0
-            countCtrl = eg.SpinIntCtrl(dialog, -1, count, 1, 1024)
-            timeCtrl = eg.SpinIntCtrl(dialog, -1, int(timeout * 1000), 0, 10000)
+            rb1 = panel.RadioButton(not flag, text.read_all, style=wx.RB_GROUP)
+            rb2 = panel.RadioButton(flag, text.read_some)
+            countCtrl = panel.SpinIntCtrl(count, 1, 1024)
+            countCtrl.Enable(flag)
+            timeCtrl = panel.SpinIntCtrl(int(timeout * 1000), 0, 10000)
+            timeCtrl.Enable(flag)
             
-            def onRadioButton(event):
+            def OnRadioButton(event):
                 flag = rb2.GetValue()
                 countCtrl.Enable(flag)
                 timeCtrl.Enable(flag)
                 event.Skip()
-                
-            rb1.Bind(wx.EVT_RADIOBUTTON, onRadioButton)
-            rb2.Bind(wx.EVT_RADIOBUTTON, onRadioButton)
-            Add = dialog.sizer.Add
+            rb1.Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
+            rb2.Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
+            
+            Add = panel.sizer.Add
             Add(rb1)
             Add((5,5))
             Add(rb2)
             Add((5,5))
             Add(countCtrl, 0, wx.LEFT, 25)
             Add((5,5))
-            Add(wx.StaticText(dialog, -1, text.read_time), 0, wx.LEFT, 25)
+            Add(panel.StaticText(text.read_time), 0, wx.LEFT, 25)
             Add((5,5))
             Add(timeCtrl, 0, wx.LEFT, 25)
-            flag = rb2.GetValue()
-            countCtrl.Enable(flag)
-            timeCtrl.Enable(flag)
-            
-            if dialog.AffirmedShowModal():
+
+            while panel.Affirmed():
                 if rb1.GetValue():
-                    return (None, 0.0)
+                    panel.SetResult(None, 0.0)
                 else:
-                    return (countCtrl.GetValue(), timeCtrl.GetValue() / 1000.0)
+                    panel.SetResult(
+                        countCtrl.GetValue(), 
+                        timeCtrl.GetValue() / 1000.0
+                    )
         
         

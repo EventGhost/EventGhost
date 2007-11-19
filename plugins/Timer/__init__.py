@@ -312,10 +312,10 @@ class Timer(eg.PluginClass):
 
 
     def Configure(self, *args):
-        dialog = eg.ConfigurationDialog(self, resizeable=True)
+        panel = eg.ConfigPanel(self, resizeable=True)
 
-        dialog.sizer.Add(
-            wx.StaticText(dialog, -1, self.text.listhl),
+        panel.sizer.Add(
+            wx.StaticText(panel, -1, self.text.listhl),
             flag = wx.ALIGN_CENTER_VERTICAL
         )
 
@@ -325,7 +325,7 @@ class Timer(eg.PluginClass):
         mySizer.AddGrowableCol(2)
         mySizer.AddGrowableCol(3)
        
-        timerListCtrl = wx.ListCtrl(dialog, -1, style=wx.LC_REPORT | wx.VSCROLL | wx.HSCROLL)
+        timerListCtrl = wx.ListCtrl(panel, -1, style=wx.LC_REPORT | wx.VSCROLL | wx.HSCROLL)
        
         for i, colLabel in enumerate(self.text.colLabels):
             timerListCtrl.InsertColumn(i, colLabel)
@@ -345,22 +345,22 @@ class Timer(eg.PluginClass):
         mySizer.Add(timerListCtrl, (0,0), (1, 5), flag = wx.EXPAND)
 
         #buttons
-        abortButton = wx.Button(dialog, -1, "Abort")
+        abortButton = wx.Button(panel, -1, "Abort")
         mySizer.Add(abortButton, (1,0))
        
-        abortAllButton = wx.Button(dialog, -1, "Abort all")
+        abortAllButton = wx.Button(panel, -1, "Abort all")
         mySizer.Add(abortAllButton, (1,1), flag = wx.ALIGN_CENTER_HORIZONTAL)
        
-        restartButton = wx.Button(dialog, -1, "Restart")
+        restartButton = wx.Button(panel, -1, "Restart")
         mySizer.Add(restartButton, (1,2), flag = wx.ALIGN_CENTER_HORIZONTAL)
        
-        restartAllButton = wx.Button(dialog, -1, "Restart All")
+        restartAllButton = wx.Button(panel, -1, "Restart All")
         mySizer.Add(restartAllButton, (1,3), flag = wx.ALIGN_CENTER_HORIZONTAL)
        
-        refreshButton = wx.Button(dialog, -1, "Refresh")
+        refreshButton = wx.Button(panel, -1, "Refresh")
         mySizer.Add(refreshButton, (1,4), flag = wx.ALIGN_RIGHT)
        
-        dialog.sizer.Add(mySizer, 1, flag = wx.EXPAND)
+        panel.sizer.Add(mySizer, 1, flag = wx.EXPAND)
        
         def PopulateList (event):
             timerListCtrl.DeleteAllItems()
@@ -434,10 +434,10 @@ class Timer(eg.PluginClass):
         refreshButton.Bind(wx.EVT_BUTTON, PopulateList)
         timerListCtrl.Bind(wx.EVT_LIST_ITEM_SELECTED, ListSelection)
         timerListCtrl.Bind(wx.EVT_LIST_ITEM_DESELECTED, ListSelection)
-        dialog.Bind(wx.EVT_SIZE, OnSize)
+        panel.Bind(wx.EVT_SIZE, OnSize)
 
-        if dialog.AffirmedShowModal():
-            return args
+        while panel.Affirmed():
+            panel.SetResult(*args)
 
     #function to fill the timer name Combobox
     def GetTimerNames(self):
@@ -524,26 +524,26 @@ class TimerAction(eg.ActionClass):
         text = self.text
         plugin = self.plugin
 
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
 
         #name
         nameSizer = wx.BoxSizer(wx.HORIZONTAL)
 
 
         nameSizer.Add(
-            wx.StaticText(dialog, -1, self.text.timerName),
+            wx.StaticText(panel, -1, self.text.timerName),
             flag = wx.ALIGN_CENTER_VERTICAL
         )
         if not timerName:
             timerName = plugin.lastTimerName
-        timerNameCtrl = wx.ComboBox(dialog, -1,
+        timerNameCtrl = wx.ComboBox(panel, -1,
             timerName,
             choices = plugin.GetTimerNames(),
             size=(200,-1))
         nameSizer.Add(timerNameCtrl, flag = wx.EXPAND)
 
-        dialog.sizer.Add(nameSizer)
-        dialog.sizer.Add(wx.Size(5,5))
+        panel.sizer.Add(nameSizer)
+        panel.sizer.Add(wx.Size(5,5))
        
         #action and settings
         #sizer = wx.GridBagSizer(5, 5)
@@ -553,11 +553,11 @@ class TimerAction(eg.ActionClass):
         choices = len(text.actions)
         rb = range(0, choices + 1)
        
-        rb[0] = wx.RadioButton(dialog, -1, text.start, style = wx.RB_GROUP)
+        rb[0] = wx.RadioButton(panel, -1, text.start, style = wx.RB_GROUP)
         rb[0].SetValue(action == 0)
 
-        dialog.sizer.Add(wx.Size(5,5))
-        dialog.sizer.Add(rb[0], flag = wx.ALIGN_CENTER_VERTICAL)
+        panel.sizer.Add(wx.Size(5,5))
+        panel.sizer.Add(rb[0], flag = wx.ALIGN_CENTER_VERTICAL)
        
         #space to indent the settings
         startSettingsSizer = wx.GridBagSizer(5, 5)
@@ -567,47 +567,47 @@ class TimerAction(eg.ActionClass):
 
         #loop
         startSettingsSizer.Add(
-            wx.StaticText(dialog, -1, self.text.loop1),
+            wx.StaticText(panel, -1, self.text.loop1),
             (rowCount, 0), flag = wx.ALIGN_CENTER_VERTICAL)
-        loopCtrl = eg.SpinIntCtrl(dialog, -1, loops, 0, size=(200,-1))
+        loopCtrl = eg.SpinIntCtrl(panel, -1, loops, 0, size=(200,-1))
         startSettingsSizer.Add(loopCtrl, (rowCount, 1), flag = wx.EXPAND)
         startSettingsSizer.Add(
-            wx.StaticText(dialog, -1, self.text.loop2),
+            wx.StaticText(panel, -1, self.text.loop2),
             (rowCount, 2), (1, 2),
             flag = wx.ALIGN_CENTER_VERTICAL)
 
         #showRemaingLoopsText
         rowCount += 1
-        showRemaingLoopsCtrl = wx.CheckBox(dialog, -1, text.showRemaingLoopsText)
+        showRemaingLoopsCtrl = wx.CheckBox(panel, -1, text.showRemaingLoopsText)
         showRemaingLoopsCtrl.SetValue(showRemainingLoops)
         startSettingsSizer.Add(showRemaingLoopsCtrl, (rowCount, 1), (1, 3))
        
         #intervall
         rowCount += 1
         startSettingsSizer.Add(
-            wx.StaticText(dialog, -1, self.text.interval1),
+            wx.StaticText(panel, -1, self.text.interval1),
             (rowCount, 0), flag = wx.ALIGN_CENTER_VERTICAL)
         intervalCtrl = eg.SpinNumCtrl(
-            dialog, -1, interval, size=(200,-1), integerWidth=7
+            panel, -1, interval, size=(200,-1), integerWidth=7
         )
         startSettingsSizer.Add(intervalCtrl, (rowCount, 1), flag = wx.EXPAND)
        
         startSettingsSizer.Add(
-            wx.StaticText(dialog, -1, self.text.interval2),
+            wx.StaticText(panel, -1, self.text.interval2),
             (rowCount, 2), (1, 2),
             flag = wx.ALIGN_CENTER_VERTICAL)
 
         #startTime
         rowCount += 1
         startSettingsSizer.Add(
-            wx.StaticText(dialog, -1, self.text.startTime),
+            wx.StaticText(panel, -1, self.text.startTime),
             (rowCount, 0), flag = wx.ALIGN_CENTER_VERTICAL)
-        startTimeTypeCtrl = wx.Choice(dialog, -1, choices = text.startTimeTypes)
+        startTimeTypeCtrl = wx.Choice(panel, -1, choices = text.startTimeTypes)
         startTimeTypeCtrl.SetSelection(startTimeType)
         startSettingsSizer.Add(startTimeTypeCtrl, (rowCount, 1), (1, 2), flag = wx.EXPAND)
        
         startTimeCtrl = wx.lib.masked.timectrl.TimeCtrl(
-            dialog,
+            panel,
             format = "24HHMMSS"
         )
         startTimeCtrl.SetValue(startTime)
@@ -616,14 +616,14 @@ class TimerAction(eg.ActionClass):
         #eventName
         rowCount += 1
         startSettingsSizer.Add(
-            wx.StaticText(dialog, -1, self.text.eventName),
+            wx.StaticText(panel, -1, self.text.eventName),
             (rowCount, 0), flag = wx.ALIGN_CENTER_VERTICAL)
-        eventNameCtrl = wx.TextCtrl(dialog, -1, eventName, size=(200,-1))
+        eventNameCtrl = wx.TextCtrl(panel, -1, eventName, size=(200,-1))
         startSettingsSizer.Add(eventNameCtrl, (rowCount, 1), (1, 3), flag = wx.EXPAND)
        
         #addCounterToName
         rowCount += 1
-        addCounterToNameCtrl = wx.CheckBox(dialog, -1, text.addCounterToName)
+        addCounterToNameCtrl = wx.CheckBox(panel, -1, text.addCounterToName)
         addCounterToNameCtrl.SetValue(addCounterToName)
         startSettingsSizer.Add(addCounterToNameCtrl, (rowCount, 1), (1, 3))
 
@@ -631,17 +631,17 @@ class TimerAction(eg.ActionClass):
         settingsSizer.Add(wx.Size(20,20))
         settingsSizer.Add(startSettingsSizer)
        
-        dialog.sizer.Add(wx.Size(5,5))
+        panel.sizer.Add(wx.Size(5,5))
        
-        dialog.sizer.Add(settingsSizer)
+        panel.sizer.Add(settingsSizer)
         #remaining radio buttons
        
         for i in range(1, len(rb)):
             rowCount += 1
-            rb[i] = wx.RadioButton(dialog, -1, text.actions[i - 1])
+            rb[i] = wx.RadioButton(panel, -1, text.actions[i - 1])
             rb[i].SetValue(action == i)
-            dialog.sizer.Add(wx.Size(5,5))
-            dialog.sizer.Add(rb[i], flag = wx.ALIGN_CENTER_VERTICAL)
+            panel.sizer.Add(wx.Size(5,5))
+            panel.sizer.Add(rb[i], flag = wx.ALIGN_CENTER_VERTICAL)
 
         def onRadioButton(event):
             flag = rb[0].GetValue()
@@ -667,9 +667,9 @@ class TimerAction(eg.ActionClass):
            
         startTimeTypeCtrl.Bind(wx.EVT_CHOICE, onChoiceChange)
 
-        #dialog.sizer.Add(sizer)
+        #panel.sizer.Add(sizer)
 
-        if dialog.AffirmedShowModal():
+        while panel.Affirmed():
             timerName = timerNameCtrl.GetValue()
             plugin.lastTimerName = timerName
             plugin.AddTimerName(timerName)
@@ -685,7 +685,7 @@ class TimerAction(eg.ActionClass):
             addCounterToName = addCounterToNameCtrl.GetValue()
             startTime = startTimeCtrl.GetValue()
     
-            return (
+            panel.SetResult(
                 timerName,
                 action,
                 loops,

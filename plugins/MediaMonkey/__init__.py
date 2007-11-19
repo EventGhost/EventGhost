@@ -299,18 +299,18 @@ class SetVolume(eg.ActionClass):
         return self.text.label_tree+str(int(volume))+"%"
 
     def Configure(self, volume=100.0):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         volumeCtrl = eg.SpinNumCtrl(
-            dialog,
+            panel,
             -1,
             volume,
             max=100.0,
             fractionWidth=1
         )
-        dialog.AddLabel(self.text.label_conf)
-        dialog.AddCtrl(volumeCtrl)
-        if dialog.AffirmedShowModal():
-            return (volumeCtrl.GetValue(), )
+        panel.AddLabel(self.text.label_conf)
+        panel.AddCtrl(volumeCtrl)
+        while panel.Affirmed():
+            panel.SetResult(volumeCtrl.GetValue())
             
             
 #====================================================================
@@ -336,12 +336,12 @@ class VolumeUp(eg.ActionClass):
         return self.text.label_tree+str(int(step))+"%"
 
     def Configure(self, step=10.0):
-        dialog = eg.ConfigurationDialog(self)
-        volumeCtrl = eg.SpinNumCtrl(dialog, -1, step, max=100.0,fractionWidth=1)
-        dialog.AddLabel(self.text.label_conf)
-        dialog.AddCtrl(volumeCtrl)
-        if dialog.AffirmedShowModal():
-            return (volumeCtrl.GetValue(), )
+        panel = eg.ConfigPanel(self)
+        volumeCtrl = eg.SpinNumCtrl(panel, -1, step, max=100.0,fractionWidth=1)
+        panel.AddLabel(self.text.label_conf)
+        panel.AddCtrl(volumeCtrl)
+        while panel.Affirmed():
+            panel.SetResult(volumeCtrl.GetValue())
 
 #====================================================================
 class VolumeDown(eg.ActionClass):
@@ -363,19 +363,19 @@ class VolumeDown(eg.ActionClass):
         return self.text.label_tree+str(abs(int(step)))+"%"
 
     def Configure(self, step=-10.0):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         volumeCtrl = eg.SpinNumCtrl(
-            dialog,
+            panel,
             -1,
             step,
             max=0.0,
             min=-100.0,
             fractionWidth=1
         )
-        dialog.AddLabel(self.text.label_conf)
-        dialog.AddCtrl(volumeCtrl)
-        if dialog.AffirmedShowModal():
-            return (volumeCtrl.GetValue(), )
+        panel.AddLabel(self.text.label_conf)
+        panel.AddCtrl(volumeCtrl)
+        while panel.Affirmed():
+            panel.SetResult(volumeCtrl.GetValue())
 
 #====================================================================
 class SetBalance(eg.ActionClass):
@@ -391,19 +391,19 @@ class SetBalance(eg.ActionClass):
         return self.text.label_tree+str(int(balance))+"%"
 
     def Configure(self, balance=0.0):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         balanceCtrl = eg.SpinNumCtrl(
-            dialog,
+            panel,
             -1,
             balance,
             max=100.0,
             min=-100.0,
             fractionWidth=1
         )
-        dialog.AddLabel(self.text.label_conf)
-        dialog.AddCtrl(balanceCtrl)
-        if dialog.AffirmedShowModal():
-            return (balanceCtrl.GetValue(), )
+        panel.AddLabel(self.text.label_conf)
+        panel.AddCtrl(balanceCtrl)
+        while panel.Affirmed():
+            panel.SetResult(balanceCtrl.GetValue())
 
 #====================================================================
 class BalanceRight(eg.ActionClass):
@@ -426,18 +426,18 @@ class BalanceRight(eg.ActionClass):
         return self.text.label_tree+str(int(step))+"%"
 
     def Configure(self, step=10.0):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         balanceCtrl = eg.SpinNumCtrl(
-            dialog,
+            panel,
             -1,
             step,
             max=100.0,
             fractionWidth=1
         )
-        dialog.AddLabel(self.text.label_conf)
-        dialog.AddCtrl(balanceCtrl)
-        if dialog.AffirmedShowModal():
-            return (balanceCtrl.GetValue(), )
+        panel.AddLabel(self.text.label_conf)
+        panel.AddCtrl(balanceCtrl)
+        while panel.Affirmed():
+            panel.SetResult(balanceCtrl.GetValue())
 
 #====================================================================
 class BalanceLeft(eg.ActionClass):
@@ -460,18 +460,18 @@ class BalanceLeft(eg.ActionClass):
         return self.text.label_tree+str(int(step))+"%"
 
     def Configure(self, step=10.0):
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         balanceCtrl = eg.SpinNumCtrl(
-            dialog,
+            panel,
             -1,
             step,
             max=100.0,
             fractionWidth=1
         )
-        dialog.AddLabel(self.text.label_conf)
-        dialog.AddCtrl(balanceCtrl)
-        if dialog.AffirmedShowModal():
-            return (balanceCtrl.GetValue(), )
+        panel.AddLabel(self.text.label_conf)
+        panel.AddCtrl(balanceCtrl)
+        while panel.Affirmed():
+            panel.SetResult(balanceCtrl.GetValue())
 
 #====================================================================
 class Seek(eg.ActionClass):
@@ -510,21 +510,21 @@ class Seek(eg.ActionClass):
         
     def Configure(self, step=10.0, direction=0):
         text=Text
-        dialog = eg.ConfigurationDialog(self)
-        seekCtrl = eg.SpinNumCtrl(dialog, -1, step, max=100.0, fractionWidth=1)
+        panel = eg.ConfigPanel(self)
+        seekCtrl = eg.SpinNumCtrl(panel, -1, step, max=100.0, fractionWidth=1)
         radioBox = wx.RadioBox(
-            dialog, 
+            panel, 
             -1, 
             self.text.radiobox, 
             choices=[self.text.btnForward, self.text.btnBackward], 
             style=wx.RA_SPECIFY_ROWS
         )
-        dialog.AddLabel(self.text.label)
-        dialog.AddCtrl(seekCtrl)
+        panel.AddLabel(self.text.label)
+        panel.AddCtrl(seekCtrl)
         radioBox.SetSelection(direction)
-        dialog.sizer.Add(radioBox, 0, wx.EXPAND)
-        if dialog.AffirmedShowModal():
-            return (seekCtrl.GetValue(),radioBox.GetSelection(),)
+        panel.sizer.Add(radioBox, 0, wx.EXPAND)
+        while panel.Affirmed():
+            panel.SetResult(seekCtrl.GetValue(),radioBox.GetSelection())
             
 
 #====================================================================
@@ -643,44 +643,44 @@ class GetBasicSongInfo(eg.ActionClass):
         arrayInfo=[False]*11
     ):
         text=self.text
-        dialog = eg.ConfigurationDialog(self)
-        filepathCtrl = wx.CheckBox(dialog, -1, self.text.filepath)
+        panel = eg.ConfigPanel(self)
+        filepathCtrl = wx.CheckBox(panel, -1, self.text.filepath)
         filepathCtrl.SetValue(arrayInfo[0])
-        filenameCtrl = wx.CheckBox(dialog, -1, self.text.filename)
+        filenameCtrl = wx.CheckBox(panel, -1, self.text.filename)
         filenameCtrl.SetValue(arrayInfo[1])
-        tracktitleCtrl = wx.CheckBox(dialog, -1, self.text.tracktitle)
+        tracktitleCtrl = wx.CheckBox(panel, -1, self.text.tracktitle)
         tracktitleCtrl.SetValue(arrayInfo[2])
-        artistCtrl = wx.CheckBox(dialog, -1, self.text.artist)
+        artistCtrl = wx.CheckBox(panel, -1, self.text.artist)
         artistCtrl.SetValue(arrayInfo[3])
-        albumCtrl = wx.CheckBox(dialog, -1, self.text.album)
+        albumCtrl = wx.CheckBox(panel, -1, self.text.album)
         albumCtrl.SetValue(arrayInfo[4])
-        albumartistCtrl = wx.CheckBox(dialog, -1, self.text.albumartist)
+        albumartistCtrl = wx.CheckBox(panel, -1, self.text.albumartist)
         albumartistCtrl.SetValue(arrayInfo[5])
-        yearCtrl = wx.CheckBox(dialog, -1, self.text.year)
+        yearCtrl = wx.CheckBox(panel, -1, self.text.year)
         yearCtrl.SetValue(arrayInfo[6])
-        trackCtrl = wx.CheckBox(dialog, -1, self.text.track)
+        trackCtrl = wx.CheckBox(panel, -1, self.text.track)
         trackCtrl.SetValue(arrayInfo[7])
-        genreCtrl = wx.CheckBox(dialog, -1, self.text.genre)
+        genreCtrl = wx.CheckBox(panel, -1, self.text.genre)
         genreCtrl.SetValue(arrayInfo[8])
-        ratingCtrl = wx.CheckBox(dialog, -1, self.text.rating)
+        ratingCtrl = wx.CheckBox(panel, -1, self.text.rating)
         ratingCtrl.SetValue(arrayInfo[9])
-        commentCtrl = wx.CheckBox(dialog, -1, self.text.comment)
+        commentCtrl = wx.CheckBox(panel, -1, self.text.comment)
         commentCtrl.SetValue(arrayInfo[10])
 
-        dialog.AddCtrl(filepathCtrl)
-        dialog.AddCtrl(filenameCtrl)
-        dialog.AddCtrl(tracktitleCtrl)
-        dialog.AddCtrl(artistCtrl)
-        dialog.AddCtrl(albumCtrl)
-        dialog.AddCtrl(albumartistCtrl)
-        dialog.AddCtrl(yearCtrl)
-        dialog.AddCtrl(trackCtrl)
-        dialog.AddCtrl(genreCtrl)
-        dialog.AddCtrl(ratingCtrl)
-        dialog.AddCtrl(commentCtrl)
+        panel.AddCtrl(filepathCtrl)
+        panel.AddCtrl(filenameCtrl)
+        panel.AddCtrl(tracktitleCtrl)
+        panel.AddCtrl(artistCtrl)
+        panel.AddCtrl(albumCtrl)
+        panel.AddCtrl(albumartistCtrl)
+        panel.AddCtrl(yearCtrl)
+        panel.AddCtrl(trackCtrl)
+        panel.AddCtrl(genreCtrl)
+        panel.AddCtrl(ratingCtrl)
+        panel.AddCtrl(commentCtrl)
 
 
-        if dialog.AffirmedShowModal():
+        while panel.Affirmed():
             arrayInfo=[
                 filepathCtrl.GetValue(),
                 filenameCtrl.GetValue(),
@@ -694,7 +694,7 @@ class GetBasicSongInfo(eg.ActionClass):
                 ratingCtrl.GetValue(),
                 commentCtrl.GetValue()
             ]
-            return (arrayInfo,)
+            panel.SetResult(arrayInfo)
 
 
 #====================================================================
@@ -765,51 +765,51 @@ class GetDetailSongInfo(eg.ActionClass):
         arrayInfo=[False]*12
     ):
         text=self.text
-        dialog = eg.ConfigurationDialog(self)
-        composerCtrl = wx.CheckBox(dialog, -1, self.text.composer)
+        panel = eg.ConfigPanel(self)
+        composerCtrl = wx.CheckBox(panel, -1, self.text.composer)
         composerCtrl.SetValue(arrayInfo[0])
-        lyricistCtrl = wx.CheckBox(dialog, -1, self.text.lyricist)
+        lyricistCtrl = wx.CheckBox(panel, -1, self.text.lyricist)
         lyricistCtrl.SetValue(arrayInfo[1])
-        involvedpeopleCtrl = wx.CheckBox(dialog, -1, self.text.involvedpeople)
+        involvedpeopleCtrl = wx.CheckBox(panel, -1, self.text.involvedpeople)
         involvedpeopleCtrl.SetValue(arrayInfo[2])
-        originaltitleCtrl = wx.CheckBox(dialog, -1, self.text.originaltitle)
+        originaltitleCtrl = wx.CheckBox(panel, -1, self.text.originaltitle)
         originaltitleCtrl.SetValue(arrayInfo[3])
-        originalartistCtrl = wx.CheckBox(dialog, -1, self.text.originalartist)
+        originalartistCtrl = wx.CheckBox(panel, -1, self.text.originalartist)
         originalartistCtrl.SetValue(arrayInfo[4])
         originallyricistCtrl = wx.CheckBox(
-            dialog,
+            panel,
             -1,
             self.text.originallyricist
         )
         originallyricistCtrl.SetValue(arrayInfo[5])
-        originalyearCtrl = wx.CheckBox(dialog, -1, self.text.originalyear)
+        originalyearCtrl = wx.CheckBox(panel, -1, self.text.originalyear)
         originalyearCtrl.SetValue(arrayInfo[6])
-        BPMCtrl = wx.CheckBox(dialog, -1, self.text.BPM)
+        BPMCtrl = wx.CheckBox(panel, -1, self.text.BPM)
         BPMCtrl.SetValue(arrayInfo[7])
-        ISRCCtrl = wx.CheckBox(dialog, -1, self.text.ISRC)
+        ISRCCtrl = wx.CheckBox(panel, -1, self.text.ISRC)
         ISRCCtrl.SetValue(arrayInfo[8])
-        publisherCtrl = wx.CheckBox(dialog, -1, self.text.publisher)
+        publisherCtrl = wx.CheckBox(panel, -1, self.text.publisher)
         publisherCtrl.SetValue(arrayInfo[9])
-        encoderCtrl = wx.CheckBox(dialog, -1, self.text.encoder)
+        encoderCtrl = wx.CheckBox(panel, -1, self.text.encoder)
         encoderCtrl.SetValue(arrayInfo[10])
-        copyrightCtrl = wx.CheckBox(dialog, -1, self.text.copyright)
+        copyrightCtrl = wx.CheckBox(panel, -1, self.text.copyright)
         copyrightCtrl.SetValue(arrayInfo[11])
 
-        dialog.AddCtrl(composerCtrl)
-        dialog.AddCtrl(lyricistCtrl)
-        dialog.AddCtrl(involvedpeopleCtrl)
-        dialog.AddCtrl(originaltitleCtrl)
-        dialog.AddCtrl(originalartistCtrl)
-        dialog.AddCtrl(originallyricistCtrl)
-        dialog.AddCtrl(originalyearCtrl)
-        dialog.AddCtrl(BPMCtrl)
-        dialog.AddCtrl(ISRCCtrl)
-        dialog.AddCtrl(publisherCtrl)
-        dialog.AddCtrl(encoderCtrl)
-        dialog.AddCtrl(copyrightCtrl)
+        panel.AddCtrl(composerCtrl)
+        panel.AddCtrl(lyricistCtrl)
+        panel.AddCtrl(involvedpeopleCtrl)
+        panel.AddCtrl(originaltitleCtrl)
+        panel.AddCtrl(originalartistCtrl)
+        panel.AddCtrl(originallyricistCtrl)
+        panel.AddCtrl(originalyearCtrl)
+        panel.AddCtrl(BPMCtrl)
+        panel.AddCtrl(ISRCCtrl)
+        panel.AddCtrl(publisherCtrl)
+        panel.AddCtrl(encoderCtrl)
+        panel.AddCtrl(copyrightCtrl)
 
 
-        if dialog.AffirmedShowModal():
+        while panel.Affirmed():
             arrayInfo=[
                 composerCtrl.GetValue(),
                 lyricistCtrl.GetValue(),
@@ -824,7 +824,7 @@ class GetDetailSongInfo(eg.ActionClass):
                 encoderCtrl.GetValue(),
                 copyrightCtrl.GetValue()
             ]
-            return (arrayInfo,)
+            panel.SetResult(arrayInfo)
 
 
 #====================================================================
@@ -867,31 +867,31 @@ class GetClassificationInfo(eg.ActionClass):
         arrayInfo=[False]*7
     ):
         text=self.text
-        dialog = eg.ConfigurationDialog(self)
-        tempoCtrl = wx.CheckBox(dialog, -1, self.text.tempo)
+        panel = eg.ConfigPanel(self)
+        tempoCtrl = wx.CheckBox(panel, -1, self.text.tempo)
         tempoCtrl.SetValue(arrayInfo[0])
-        moodCtrl = wx.CheckBox(dialog, -1, self.text.mood)
+        moodCtrl = wx.CheckBox(panel, -1, self.text.mood)
         moodCtrl.SetValue(arrayInfo[1])
-        occasionCtrl = wx.CheckBox(dialog, -1, self.text.occasion)
+        occasionCtrl = wx.CheckBox(panel, -1, self.text.occasion)
         occasionCtrl.SetValue(arrayInfo[2])
-        qualityCtrl = wx.CheckBox(dialog, -1, self.text.quality)
+        qualityCtrl = wx.CheckBox(panel, -1, self.text.quality)
         qualityCtrl.SetValue(arrayInfo[3])
-        custom1Ctrl = wx.CheckBox(dialog, -1, self.text.custom1)
+        custom1Ctrl = wx.CheckBox(panel, -1, self.text.custom1)
         custom1Ctrl.SetValue(arrayInfo[4])
-        custom2Ctrl = wx.CheckBox(dialog, -1, self.text.custom2)
+        custom2Ctrl = wx.CheckBox(panel, -1, self.text.custom2)
         custom2Ctrl.SetValue(arrayInfo[5])
-        custom3Ctrl = wx.CheckBox(dialog, -1, self.text.custom3)
+        custom3Ctrl = wx.CheckBox(panel, -1, self.text.custom3)
         custom3Ctrl.SetValue(arrayInfo[6])
 
-        dialog.AddCtrl(tempoCtrl)
-        dialog.AddCtrl(moodCtrl)
-        dialog.AddCtrl(occasionCtrl)
-        dialog.AddCtrl(qualityCtrl)
-        dialog.AddCtrl(custom1Ctrl)
-        dialog.AddCtrl(custom2Ctrl)
-        dialog.AddCtrl(custom3Ctrl)
+        panel.AddCtrl(tempoCtrl)
+        panel.AddCtrl(moodCtrl)
+        panel.AddCtrl(occasionCtrl)
+        panel.AddCtrl(qualityCtrl)
+        panel.AddCtrl(custom1Ctrl)
+        panel.AddCtrl(custom2Ctrl)
+        panel.AddCtrl(custom3Ctrl)
 
-        if dialog.AffirmedShowModal():
+        while panel.Affirmed():
             arrayInfo=[
                 tempoCtrl.GetValue(),
                 moodCtrl.GetValue(),
@@ -901,7 +901,7 @@ class GetClassificationInfo(eg.ActionClass):
                 custom2Ctrl.GetValue(),
                 custom3Ctrl.GetValue()
             ]
-            return (arrayInfo,)
+            panel.SetResult(arrayInfo)
 #====================================================================
 class GetTechnicalSongInfo(eg.ActionClass):
     name = "Get technical song info"
@@ -949,46 +949,46 @@ class GetTechnicalSongInfo(eg.ActionClass):
         arrayInfo=[False]*9
     ):
         text=self.text
-        dialog = eg.ConfigurationDialog(self)
-        lengthCtrl = wx.CheckBox(dialog, -1, self.text.length)
+        panel = eg.ConfigPanel(self)
+        lengthCtrl = wx.CheckBox(panel, -1, self.text.length)
         lengthCtrl.SetValue(arrayInfo[0])
-        bitrateCtrl = wx.CheckBox(dialog, -1, self.text.bitrate)
+        bitrateCtrl = wx.CheckBox(panel, -1, self.text.bitrate)
         bitrateCtrl.SetValue(arrayInfo[1])
-#        seekableCtrl = wx.CheckBox(dialog, -1, self.text.seekable)
+#        seekableCtrl = wx.CheckBox(panel, -1, self.text.seekable)
 #        seekableCtrl.SetValue(seekable)
-        frequencyCtrl = wx.CheckBox(dialog, -1, self.text.frequency)
+        frequencyCtrl = wx.CheckBox(panel, -1, self.text.frequency)
         frequencyCtrl.SetValue(arrayInfo[2])
-        stereoCtrl = wx.CheckBox(dialog, -1, self.text.stereo)
+        stereoCtrl = wx.CheckBox(panel, -1, self.text.stereo)
         stereoCtrl.SetValue(arrayInfo[3])
-#        copyrightedCtrl = wx.CheckBox(dialog, -1, self.text.copyrighted)
+#        copyrightedCtrl = wx.CheckBox(panel, -1, self.text.copyrighted)
 #        copyrightedCtrl.SetValue(copyrighted)
-#        originalCtrl = wx.CheckBox(dialog, -1, self.text.original)
+#        originalCtrl = wx.CheckBox(panel, -1, self.text.original)
 #        originalCtrl.SetValue(original)
-        counterCtrl = wx.CheckBox(dialog, -1, self.text.counter)
+        counterCtrl = wx.CheckBox(panel, -1, self.text.counter)
         counterCtrl.SetValue(arrayInfo[4])
-        lastplayedCtrl = wx.CheckBox(dialog, -1, self.text.lastplayed)
+        lastplayedCtrl = wx.CheckBox(panel, -1, self.text.lastplayed)
         lastplayedCtrl.SetValue(arrayInfo[5])
-        filesizeCtrl = wx.CheckBox(dialog, -1, self.text.filesize)
+        filesizeCtrl = wx.CheckBox(panel, -1, self.text.filesize)
         filesizeCtrl.SetValue(arrayInfo[6])
-        VBRCtrl = wx.CheckBox(dialog, -1, self.text.VBR)
+        VBRCtrl = wx.CheckBox(panel, -1, self.text.VBR)
         VBRCtrl.SetValue(arrayInfo[7])
-        levelingCtrl = wx.CheckBox(dialog, -1, self.text.leveling)
+        levelingCtrl = wx.CheckBox(panel, -1, self.text.leveling)
         levelingCtrl.SetValue(arrayInfo[8])
 
-        dialog.AddCtrl(lengthCtrl)
-        dialog.AddCtrl(bitrateCtrl)
-#        dialog.AddCtrl(seekableCtrl)
-        dialog.AddCtrl(frequencyCtrl)
-        dialog.AddCtrl(stereoCtrl)
-#        dialog.AddCtrl(copyrightedCtrl)
-#        dialog.AddCtrl(originalCtrl)
-        dialog.AddCtrl(counterCtrl)
-        dialog.AddCtrl(lastplayedCtrl)
-        dialog.AddCtrl(filesizeCtrl)
-        dialog.AddCtrl(VBRCtrl)
-        dialog.AddCtrl(levelingCtrl)
+        panel.AddCtrl(lengthCtrl)
+        panel.AddCtrl(bitrateCtrl)
+#        panel.AddCtrl(seekableCtrl)
+        panel.AddCtrl(frequencyCtrl)
+        panel.AddCtrl(stereoCtrl)
+#        panel.AddCtrl(copyrightedCtrl)
+#        panel.AddCtrl(originalCtrl)
+        panel.AddCtrl(counterCtrl)
+        panel.AddCtrl(lastplayedCtrl)
+        panel.AddCtrl(filesizeCtrl)
+        panel.AddCtrl(VBRCtrl)
+        panel.AddCtrl(levelingCtrl)
 
-        if dialog.AffirmedShowModal():
+        while panel.Affirmed():
             arrayInfo=[
                 lengthCtrl.GetValue(),
                 bitrateCtrl.GetValue(),
@@ -1003,7 +1003,7 @@ class GetTechnicalSongInfo(eg.ActionClass):
                 VBRCtrl.GetValue(),
                 levelingCtrl.GetValue(),
             ]
-            return (arrayInfo,)
+            panel.SetResult(arrayInfo)
 
 
 
@@ -1147,16 +1147,16 @@ class GetUniversal(eg.ActionClass):
     def Configure(self, i=0):
         #text=Text
         choices=[tpl[1] for tpl in self.infoList]
-        dialog=eg.ConfigurationDialog(self)
-        dialog.AddLabel(self.text.label)
+        panel=eg.ConfigPanel(self)
+        panel.AddLabel(self.text.label)
         infoCtrl=wx.Choice(
-            dialog,
+            panel,
             choices=choices,
         )
         infoCtrl.SetSelection(i)
-        dialog.AddCtrl(infoCtrl)
-        if dialog.AffirmedShowModal():
-            return (infoCtrl.GetSelection(), )
+        panel.AddCtrl(infoCtrl)
+        while panel.Affirmed():
+            panel.SetResult(infoCtrl.GetSelection())
 
 
 #====================================================================
@@ -1182,9 +1182,9 @@ class WritingToMM(eg.ActionClass):
         text=self.text
         txt=text.Properties
         self.listCtrl=(
-            "wx.TextCtrl(dialog, -1, arrayValue[%s][0])",
+            "wx.TextCtrl(panel, -1, arrayValue[%s][0])",
             (
-                "eg.SpinNumCtrl(dialog,-1,arrayValue[%s][0],max=100.0,min=0.0,"
+                "eg.SpinNumCtrl(panel,-1,arrayValue[%s][0],max=100.0,min=0.0,"
                 "fractionWidth=1,increment=10,style=wx.TE_READONLY)"
             )
         )
@@ -1239,10 +1239,10 @@ class WritingToMM(eg.ActionClass):
     ):
         #text=Text
         choices=[tpl[1] for tpl in self.infoList]
-        dialog = eg.ConfigurationDialog(self)
-        choiceLbl=wx.StaticText(dialog, -1, self.text.label)
+        panel = eg.ConfigPanel(self)
+        choiceLbl=wx.StaticText(panel, -1, self.text.label)
         choiceCtrl=wx.Choice(
-            dialog,
+            panel,
             choices=choices,
         )
         choiceCtrl.SetSelection(i)
@@ -1253,12 +1253,12 @@ class WritingToMM(eg.ActionClass):
         mainSizer.Add(choiceSizer, 0, wx.EXPAND|wx.ALL, 10)
         dynSizer = wx.GridSizer(rows=1, cols=2, hgap=5, vgap=5) 
         mainSizer.Add(dynSizer, 0, wx.EXPAND|wx.BOTTOM, 10)        
-        dialog.sizer.Add(mainSizer)
+        panel.sizer.Add(mainSizer)
 
         def onChoiceChange(event=None):
             dynSizer.Clear(True)
             dynLbl = wx.StaticText(
-                dialog,
+                panel,
                 -1,
                 self.infoList[choiceCtrl.GetSelection()][1]+":"
             )
@@ -1269,17 +1269,17 @@ class WritingToMM(eg.ActionClass):
             dynSizer.Add(dynLbl, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
             dynSizer.Add(dynCtrl, 0, wx.EXPAND)
             if self.infoList[choiceCtrl.GetSelection()][3]:
-                chkBoxCtrl = wx.CheckBox(dialog, label=self.text.checkboxlabel)
+                chkBoxCtrl = wx.CheckBox(panel, label=self.text.checkboxlabel)
                 chkBoxCtrl.SetValue(arrayValue[choiceCtrl.GetSelection()][1])
                 dynSizer.Add((5,5))
                 dynSizer.Add(chkBoxCtrl, 0, wx.EXPAND)
             mainSizer.Layout()
         choiceCtrl.Bind(wx.EVT_CHOICE, onChoiceChange)
         onChoiceChange()
-        if dialog.AffirmedShowModal():
+        while panel.Affirmed():
             arrayValue[choiceCtrl.GetSelection()][0]=\
                 dynSizer.GetChildren()[1].GetWindow().GetValue()
             if self.infoList[choiceCtrl.GetSelection()][3]:
                 arrayValue[choiceCtrl.GetSelection()][1]=\
                     dynSizer.GetChildren()[3].GetWindow().GetValue()
-            return (choiceCtrl.GetSelection(),arrayValue )
+            panel.SetResult(choiceCtrl.GetSelection(),arrayValue )
