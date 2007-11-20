@@ -23,7 +23,7 @@
 """
 :var gImageList: The global wx.ImageList of the module.
 
-:undocumented: gIconCache, gDisabledImage, gFolderImage
+:undocumented: gIconCache, gDisabledImage, _gFolderImage
 """
 from os.path import abspath
 from base64 import b64decode
@@ -32,11 +32,10 @@ import wx
 import Image
 
 
-
 gImageList = wx.ImageList(16, 16)
-gIconCache = {}
-gDisabledImage = Image.open("images/disabled.png")
-gFolderImage = Image.open("images/folder.png").convert("RGBA")
+_gIconCache = {}
+_gDisabledImage = Image.open("images/disabled.png")
+_gFolderImage = Image.open("images/folder.png").convert("RGBA")
 
 
 def PilToBitmap(pil):
@@ -64,7 +63,7 @@ def GetIconOnTop(foregroundIcon, backgroundIcon, size=(10, 10)):
     return image
     
     
-class Icon(object):
+class IconBase(object):
     """ An object representing an icon with some memoization functionality.
     
     The icon is initialized by a file path (see PathIcon) or by a base64encoded
@@ -92,7 +91,7 @@ class Icon(object):
         returns its index inside the global wx.ImageList.
         """
         image = self.pil.copy()
-        image.paste(gDisabledImage, None, gDisabledImage)
+        image.paste(_gDisabledImage, None, _gDisabledImage)
         return gImageList.Add(PilToBitmap(image))
     
     
@@ -101,7 +100,7 @@ class Icon(object):
         returns its index inside the global wx.ImageList. 
         """
         small = self.pil.resize((12,12), Image.BICUBIC)
-        image = gFolderImage.copy()
+        image = _gFolderImage.copy()
         image.paste(small, (4, 4), small)
         return gImageList.Add(PilToBitmap(image))
     
@@ -134,7 +133,7 @@ class Icon(object):
         
         
         
-class PathIcon(Icon):
+class PathIcon(IconBase):
     
     def __new__(cls, path):
         """ If an instance of this path is already in the cache, returns the 
@@ -142,10 +141,10 @@ class PathIcon(Icon):
         cache.
         """
         key = abspath(path)
-        if gIconCache.has_key(key):
-            return gIconCache[key]
+        if _gIconCache.has_key(key):
+            return _gIconCache[key]
         self = super(PathIcon, cls).__new__(cls)
-        gIconCache[key] = self
+        _gIconCache[key] = self
         self.key = key
         return self
     
@@ -156,17 +155,17 @@ class PathIcon(Icon):
         
         
         
-class StringIcon(Icon):
+class StringIcon(IconBase):
     
     def __new__(cls, key):
         """ If an instance of this data is already in the cache, returns the 
         cached instance. Otherwise creates a new instance and adds it to the 
         cache.
         """
-        if gIconCache.has_key(key):
-            return gIconCache[key]
+        if _gIconCache.has_key(key):
+            return _gIconCache[key]
         self = super(StringIcon, cls).__new__(cls)
-        gIconCache[key] = self
+        _gIconCache[key] = self
         self.key = key
         return self
     
@@ -186,7 +185,7 @@ def ClearImageList():
     gImageList.RemoveAll()
     gImageList = wx.ImageList(16, 16)
     # clear out all instance variables for all icons, except the key variable
-    for icon in gIconCache.itervalues():
+    for icon in _gIconCache.itervalues():
         icon.__dict__ = {"key": icon.key}
         
         

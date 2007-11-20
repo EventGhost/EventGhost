@@ -27,6 +27,7 @@ from win32con import (
     WS_CHILD, WS_VISIBLE, SBS_SIZEGRIP, SBS_SIZEBOXTOPLEFTALIGN,
     SM_CYHSCROLL, SM_CXVSCROLL
 )
+FLAGS = WS_CHILD|WS_VISIBLE|SBS_SIZEGRIP|SBS_SIZEBOXTOPLEFTALIGN
 
 
 class SizeGrip(PyWindow):
@@ -41,7 +42,7 @@ class SizeGrip(PyWindow):
         self.sizeGripHandle = CreateWindow(
             "Scrollbar",
             None,
-            WS_CHILD|WS_VISIBLE|SBS_SIZEGRIP|SBS_SIZEBOXTOPLEFTALIGN,
+            FLAGS,
             0, 0, 0, 0,
             self.GetHandle(),
             0,

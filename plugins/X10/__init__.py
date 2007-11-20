@@ -350,8 +350,7 @@ class X10(eg.PluginClass):
         mainSizer.Add(rightSizer)
         mainSizer.Add((0,0), 1, wx.EXPAND)
         
-        panel.SetSizerAndFit(mainSizer)
-        #panel.sizer.Add(mainSizer, 1, wx.EXPAND)
+        panel.sizer.Add(mainSizer, 1, wx.EXPAND)
         
         while panel.Affirmed():
             panel.SetResult(

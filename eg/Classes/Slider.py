@@ -22,6 +22,7 @@
 
 import wx
 
+
 class Slider(wx.Window):
     
     def __init__(

@@ -27,7 +27,8 @@ import types
 
 class ConfigDialog(eg.Dialog):
 
-    def __init__(self, obj, resizeable=None, showLine=True):
+    def __init__(self, panel, obj, resizeable=None, showLine=True):
+        self.panel = panel
         self.result = None
         self.gr = eg.Greenlet.getcurrent()
         self.showLine = showLine
@@ -89,6 +90,7 @@ class ConfigDialog(eg.Dialog):
         
         
     def OnApply(self, event):
+        self.panel.SetFocus()
         self.result = wx.ID_APPLY
         self.gr.switch(wx.ID_APPLY)
         
@@ -114,12 +116,12 @@ class ConfigDialog(eg.Dialog):
         
 
 
-class ConfigPanel(wx.PyPanel):
+class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
     
     def __init__(self, executable, resizeable=None, showLine=True):
         self.nextResult = None
         self.gr = eg.Greenlet.getcurrent()
-        dialog = ConfigDialog(executable, resizeable, showLine)
+        dialog = ConfigDialog(self, executable, resizeable, showLine)
         self.dialog = dialog
         wx.PyPanel.__init__(self, dialog, -1)
         self.lines = []
@@ -206,93 +208,3 @@ class ConfigPanel(wx.PyPanel):
         self.SetSizer(sizer)
         
         
-        
-    def StaticText(self, label, *args, **kwargs):
-        return wx.StaticText(self, -1, label, *args, **kwargs)
-        
-    
-    def SpinIntCtrl(self, value=0, *args, **kwargs):
-        return eg.SpinIntCtrl(self, -1, value, *args, **kwargs)
-    
-    
-    def SpinNumCtrl(self, value=0, *args, **kwargs):
-        return eg.SpinNumCtrl(self, -1, value, *args, **kwargs)
-    
-    
-    def TextCtrl(self, value="", *args, **kwargs):
-        return wx.TextCtrl(self, -1, value, *args, **kwargs)
-    
-    
-    def Choice(self, value=0, *args, **kwargs):
-        return eg.Choice(self, value, *args, **kwargs)
-    
-    
-    def DisplayChoice(self, value=0, *args, **kwargs):
-        return eg.DisplayChoice(self, value, *args, **kwargs)
-    
-    
-    def ColourSelectButton(self, value=(255, 255, 255), *args, **kwargs):
-        return eg.ColourSelectButton(self, value, *args, **kwargs)
-    
-    
-    def FontSelectButton(self, value=None, *args, **kwargs):
-        fontCtrl = eg.FontSelectButton(self)
-        fontCtrl.SetValue(value)
-        return fontCtrl
-    
-    
-    def CheckBox(self, value=0, label="", *args, **kwargs):
-        checkBox = wx.CheckBox(self, -1, label, *args, **kwargs)
-        checkBox.SetValue(value)
-        return checkBox
-    
-    
-    def RadioBox(self, value=0, label="", *args, **kwargs):
-        radioBox = eg.RadioBox(self, -1, label, *args, **kwargs)
-        radioBox.SetValue(value)
-        return radioBox
-    
-    
-    def Button(self, label="", *args, **kwargs):
-        return wx.Button(self, -1, label, *args, **kwargs)
-    
-    
-    def RadioButton(self, value, label="", *args, **kwargs):
-        ctrl = wx.RadioButton(self, -1, label, *args, **kwargs)
-        ctrl.SetValue(value)
-        return ctrl
-        
-    
-    def DirBrowseButton(self, value, *args, **kwargs):
-        dirpathCtrl = eg.DirBrowseButton(
-            self,
-            size=(320,-1),
-            startDirectory=value, 
-            labelText="",
-            buttonText=eg.text.General.browse
-        )
-        dirpathCtrl.SetValue(value)
-        return dirpathCtrl
-    
-    
-    def FileBrowseButton(self, value, *args, **kwargs):
-        filepathCtrl = eg.FileBrowseButton(
-            self,
-            size=(320,-1),
-            initialValue=value, 
-            labelText="",
-            buttonText=eg.text.General.browse,
-            **kwargs
-        )
-        return filepathCtrl
-    
-    
-    def SerialPortChoice(self, value=0, *args, **kwargs):
-        kwargs['value'] = value
-        return eg.SerialPortChoice(self, *args, **kwargs)
-    
-    
-    def MacroSelectButton(self, *args, **kwargs):
-        return eg.MacroSelectButton(self, *args, **kwargs)
-    
-
