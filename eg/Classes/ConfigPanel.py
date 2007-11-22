@@ -199,7 +199,7 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
     def SetResult(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
-        self.dialog.buttonRow.applyButton.Enable(False)
+        #self.dialog.buttonRow.applyButton.Enable(False)
         self.isDirty = False
         self.nextResult = self.gr.parent.switch(args)
 
