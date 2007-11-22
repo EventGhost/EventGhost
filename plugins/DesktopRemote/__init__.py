@@ -78,6 +78,7 @@ class ImageButton(wx.Button):
             stream = fd.read()
             fd.close()
             self.SetValue(b64encode(stream))
+            event.Skip()
         
         
     def SetValue(self, value):
@@ -254,6 +255,7 @@ class AddButton(eg.ActionClass):
             value = kwargs.get(name, None)
             def OnCheckBox(event):
                 ctrl.Enable(checkBox.GetValue())
+                event.Skip()
             checkBox.Bind(wx.EVT_CHECKBOX, OnCheckBox)
             if value is None:
                 checkBox.SetValue(False)

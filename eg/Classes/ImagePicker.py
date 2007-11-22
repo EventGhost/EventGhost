@@ -67,6 +67,7 @@ class ImagePicker(wx.Window):
             stream = fd.read()
             fd.close()
             self.SetValue(b64encode(stream))
+            event.Skip()
             
             
             

@@ -506,7 +506,7 @@ class Plugin:
             label2 = u'Naj\xedt okno, kter\xe9 je nejv\xedce v pop\u0159ed\xed'
             matchNum1 = u'Vr\xe1tit pouze'
             matchNum2 = u'. nalezen\xe9 okno'
-            onlyForground = u'Pouze okno, kter\xe9 je nejv\xedce v pop\u0159ed\xed'
+            onlyFrontmost = u'Pouze okno, kter\xe9 je nejv\xedce v pop\u0159ed\xed'
             options = (
                 u'Aplikace:',
                 u'Jm\xe9no okna:',

@@ -528,7 +528,7 @@ class Plugin:
             label2 = u'Hitta det fr\xe4msta f\xf6nstret'
             matchNum1 = u'Skicka endast tillbaka'
             matchNum2 = u':e tr\xe4ff'
-            onlyForground = u'Matcha endast det fr\xe4msta f\xf6nstret'
+            onlyFrontmost = u'Matcha endast det fr\xe4msta f\xf6nstret'
             options = (
                 u'Program:',
                 u'F\xf6nsternamn:',

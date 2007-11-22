@@ -197,7 +197,6 @@ class Execute(eg.ActionClass):
         Add((10,15))
         Add(waitCheckBox)
         
-    
         while panel.Affirmed():
             panel.SetResult(
                 filepathCtrl.GetValue(),

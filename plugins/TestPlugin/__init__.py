@@ -14,6 +14,7 @@ class TestPlugin(eg.PluginClass):
         self.AddAction(CheckBoxGridDemo)
         self.AddAction(SpinIntCtrlDemo)
         self.AddAction(DictionaryTest)
+        self.AddAction(EventTest)
         
         
 
@@ -136,6 +137,43 @@ class DictionaryTest(eg.ActionClass):
                 bValueCtrl.GetValue(),
                 cValueCtrl.GetValue(),
             )
+        
+        
+        
+class EventTest(eg.ActionClass):
+    
+    def __call__(self, a):
+        print a
+        
+        
+    def Configure(self, myString="Hello World"):
+        panel = eg.ConfigPanel(self)
+        
+        myCheckBox = wx.CheckBox(panel, -1, "Enable TextCtrl:")
+        myTextCtrl = wx.TextCtrl(panel)
+        if myString is None:
+            myCheckBox.SetValue(False)
+            myTextCtrl.Enable(False)
+            myTextCtrl.SetValue("")
+        else:
+            myCheckBox.SetValue(True)
+            myTextCtrl.Enable(True)
+            myTextCtrl.SetValue(myString)
+
+        def OnCheckBox(event):
+            myTextCtrl.Enable(myCheckBox.GetValue())
+            event.Skip() # <= This is important! Don't forget it!
+        myCheckBox.Bind(wx.EVT_CHECKBOX, OnCheckBox)
+        
+        panel.sizer.Add(myCheckBox)
+        panel.sizer.Add(myTextCtrl)
+        
+        while panel.Affirmed():
+            if myCheckBox.GetValue():
+                result = myTextCtrl.GetValue()
+            else:
+                result = None
+            panel.SetResult(result)
         
         
         

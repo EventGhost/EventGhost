@@ -184,6 +184,12 @@ class SendKeys(eg.ActionClass):
         keyChoice = wx.Choice(panel, -1, choices=keyLabels)
         keyChoice.SetSelection(0)
         insertButton = wx.Button(panel, -1, text.insertButton)
+        def DummyHandler(event):
+            pass # used to prevent propagating of the event to the panel
+        shiftCB.Bind(wx.EVT_CHECKBOX, DummyHandler)
+        ctrlCB.Bind(wx.EVT_CHECKBOX, DummyHandler)
+        altCB.Bind(wx.EVT_CHECKBOX, DummyHandler)
+        keyChoice.Bind(wx.EVT_CHOICE, DummyHandler)
         
         def OnInsert(event):
             res = []

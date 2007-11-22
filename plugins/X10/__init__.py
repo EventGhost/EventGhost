@@ -307,6 +307,7 @@ class X10(eg.PluginClass):
         def OnSelectAll(event):
             for item in idBtns:
                 item.SetValue(True)
+            event.Skip()
     
         selectAllBtn = wx.Button(
             panel, -1, text.allButton, style=wx.BU_EXACTFIT
@@ -316,6 +317,7 @@ class X10(eg.PluginClass):
         def OnSelectNone(event):
             for item in idBtns:
                 item.SetValue(False)
+            event.Skip()
             
         selectNoneBtn = wx.Button(
             panel, -1, text.noneButton, style=wx.BU_EXACTFIT

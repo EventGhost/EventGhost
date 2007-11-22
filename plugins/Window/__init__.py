@@ -139,10 +139,12 @@ class MoveTo(eg.ActionClass):
         
         def HandleXCheckBox(event):
             xCtrl.Enable(event.IsChecked())
+            event.Skip()
         xCheckBox.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)    
 
         def HandleYCheckBox(event):
             yCtrl.Enable(event.IsChecked())
+            event.Skip()
         yCheckBox.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)    
 
         panel.AddLine(xCheckBox, xCtrl, text.text2)

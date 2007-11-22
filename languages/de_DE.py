@@ -276,6 +276,13 @@ class Plugin:
         class ChangeDisplaySettings:
             name = u'\xc4ndere Anzeige-Einstellungen'
             description = u'Anzeige-Eigenschaften \xe4ndern'
+            colourDepth = u'Farbtiefe:'
+            display = u'Bildschirm:'
+            frequency = u'Bildschirmfrequenz:'
+            includeAll = u'Modi anzeigen, die von dieser Monitor unter Umst\xe4nden nicht angezeigt werden.'
+            label = u'Setze Anzeige %d auf %dx%d@%d Hz'
+            resolution = u'Aufl\xf6sung:'
+            storeInRegistry = u'Speichere Einstellung in der Registry.'
         class ChangeMasterVolumeBy:
             name = u'Ver\xe4ndere Master-Lautst\xe4rke'
             description = u'\xc4ndert die Gesamtlautst\xe4rke relativ.'
@@ -307,9 +314,11 @@ class Plugin:
             browseWorkingDirDialogTitle = u'W\xe4hlen sie das Arbeitsverzeichnis'
             label = u'Starte Anwendung: %s'
         class Hibernate:
-            name = u'Hibernate Modus'
+            name = u'Ruhezustand'
+            description = u'Wenn der Computer in den Ruhezustand wechselt, wird der Inhalt des Arbeitsspeichers gespeichert und der Computer wird heruntergefahren. Wenn er wieder gestartet wird, kehrt er zum vorherigen Zustand zur\xfcck. (Hibernation/S4)'
         class LockWorkstation:
-            name = u'Rechner sperren'
+            name = u'Computer sperren'
+            description = u'Dieser Befehl sendet eine Anforderung and das System den Bildschirm zu sperren. Den Computer zu sperren sch\xfctzt ihn vor unbefugtem Zugriff. Dieser Befehl f\xfchrt zu dem gleichen Ergebnis wie das Dr\xfccken von Ctrl+Alt+Del und das anschlie\xdfende Klicken auf "Computer sperren".'
         class LogOff:
             name = u'Benutzer abmelden'
         class MonitorGroup:
@@ -413,7 +422,7 @@ class Plugin:
             label2 = u'Finde vorderstes Fenster'
             matchNum1 = u'Nur den Treffer Nr.'
             matchNum2 = u'zur\xfcckgeben'
-            onlyForground = u'Nur vorderstes Fenster suchen'
+            onlyFrontmost = u'Nur vorderstes Fenster suchen'
             options = (
                 u'Programm:',
                 u'Fenster Name:',

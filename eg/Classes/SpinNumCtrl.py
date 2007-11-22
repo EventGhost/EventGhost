@@ -34,6 +34,7 @@ class SpinNumCtrl(wx.Window):
     buttons to let the user change it.
     """
     
+    EVT_NUM = masked.EVT_NUM
     _defaultArgs = {
         "integerWidth": 3,
         "fractionWidth": 2,

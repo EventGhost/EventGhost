@@ -66,6 +66,7 @@ class MacroSelectButton(wx.Window):
         if macro:
             self.textBox.SetLabel(macro.name)
             self.macro = macro
+            self.ProcessEvent(wx.CommandEvent(wx.EVT_TEXT.evtType[0], self.GetId()))
             
             
     def GetValue(self):

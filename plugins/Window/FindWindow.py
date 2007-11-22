@@ -190,15 +190,15 @@ class WindowMatcher:
             ]
         if not self.scanChilds:
             return topWindowsHwnds
-        child_hwnds = []
+        childHwnds = []
         for hwnd in topWindowsHwnds:
             try:
                 EnumChildWindows(
-                    hwnd, self.EnumChildsProc, child_hwnds.append
+                    hwnd, self.EnumChildsProc, childHwnds.append
                 )
             except:
                 raise
-        return child_hwnds
+        return childHwnds
 
 
     def __call__(self):
@@ -261,7 +261,7 @@ class FindWindow(eg.ActionClass):
         drag1 = "Drag me to\na window."
         drag2 = "Now move me\nto a window."
         refresh_btn = "&Refresh"
-        onlyForground = "Only match frontmost window"
+        onlyFrontmost = "Only match frontmost window"
         invisible_box = "Search invisible items also"
         hide_box = "Hide EventGhost while dragging"
         stopMacro = [
@@ -333,11 +333,11 @@ class FindWindow(eg.ActionClass):
             )
     
     
-    def GetLabel(self, exe_path, *args):
+    def GetLabel(self, program, *args):
         if args[7] is None:
             return self.text.label2
         else:
-            return self.text.label % os.path.basename(exe_path or '')
+            return self.text.label % os.path.basename(program or '')
     
     
     def Configure(
@@ -375,15 +375,15 @@ class FindWindow(eg.ActionClass):
             else:
                 childName = None
                 childClass = None
-        self.dialog = panel
+        self.dialog = panel.dialog
         self.lastHwnd = None
         self.lastPid = None
         self.hideOnDrag = True
         
         # the "only search for the frontmost" checkbox
-        force_front_cb = wx.CheckBox(panel, -1, text.onlyForground)
+        cbOnlyFrontmost = wx.CheckBox(panel, -1, text.onlyFrontmost)
         def OnSearchOnlyFrontmostCheckbox(event):
-            flag = not force_front_cb.IsChecked()
+            flag = not cbOnlyFrontmost.IsChecked()
             cbIncludeInvisible.Enable(flag)
             stopMacroCtrl.Enable(flag)
             waitCtrl.Enable(flag)
@@ -392,7 +392,8 @@ class FindWindow(eg.ActionClass):
                 tb.Enable(flag and cb.GetValue())
             self.options[-1][0].Enable(flag)
             self.options[-1][1].Enable(flag)
-        force_front_cb.Bind(wx.EVT_CHECKBOX, OnSearchOnlyFrontmostCheckbox)
+            event.Skip()
+        cbOnlyFrontmost.Bind(wx.EVT_CHECKBOX, OnSearchOnlyFrontmostCheckbox)
         
         # the IncludeInvisible checkbox
         cbIncludeInvisible = wx.CheckBox(panel, -1, text.invisible_box)
@@ -401,6 +402,7 @@ class FindWindow(eg.ActionClass):
             tree.includeInvisible = cbIncludeInvisible.IsChecked()
             tree.Refresh()
             tree.SelectHwnd(tmp)
+            event.Skip()
         cbIncludeInvisible.Bind(wx.EVT_CHECKBOX, OnCheckbox)
         
         # the stop-macro choice
@@ -449,7 +451,7 @@ class FindWindow(eg.ActionClass):
         topSizer.AddGrowableCol(2, 100)
         topSizer.SetEmptyCellSize((0, 0))
         Add = topSizer.Add
-        Add(force_front_cb, (0, 0), (1, 2), wx.ALIGN_CENTER_VERTICAL)
+        Add(cbOnlyFrontmost, (0, 0), (1, 2), wx.ALIGN_CENTER_VERTICAL)
         Add(cbIncludeInvisible, (1, 0), (1, 2), wx.ALIGN_CENTER_VERTICAL)
         Add(
             stopMacroCtrl, 
@@ -473,6 +475,7 @@ class FindWindow(eg.ActionClass):
         def Wrapper(textCtrl, checkBox):
             def OnCheckBox(event):
                 textCtrl.Enable(checkBox.GetValue())
+                event.Skip()
             return OnCheckBox
         
         def MakeLine(line, checkBoxText, value):
@@ -515,7 +518,7 @@ class FindWindow(eg.ActionClass):
         waitCtrl.SetValue(timeout)
         
         sizer1.Add(
-            wx.StaticText(panel, -1, text.wait1), 
+            panel.StaticText(text.wait1), 
             (line, 0), 
             (1, 1), 
             wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT
@@ -527,7 +530,7 @@ class FindWindow(eg.ActionClass):
             wx.ALIGN_CENTER_VERTICAL|wx.EXPAND
         )
         sizer1.Add(
-            wx.StaticText(panel, -1, text.wait2), 
+            panel.StaticText(text.wait2), 
             (line, 2), 
             (1, 3), 
             wx.ALIGN_CENTER_VERTICAL
@@ -580,14 +583,14 @@ class FindWindow(eg.ActionClass):
             self.lastHwnd = hwnds[matchNum-1]
             tree.SelectHwnd(self.lastHwnd)
         if searchOnlyFrontmost:
-            force_front_cb.SetValue(True)
+            cbOnlyFrontmost.SetValue(True)
             OnSearchOnlyFrontmostCheckbox(None)
-        tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
         while True:
+            tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
             ok = panel.Affirmed()
             tree.Unbind(wx.EVT_TREE_SEL_CHANGED)
             if ok:
-                if force_front_cb.IsChecked():
+                if cbOnlyFrontmost.IsChecked():
                     panel.SetResult(None, None, None, None, None, None, None, None, None)
                 else:
                     panel.SetResult(*GetResult())
@@ -712,7 +715,6 @@ class FindWindow(eg.ActionClass):
     
 
 class WindowTree(wx.TreeCtrl):
-    STYLE = wx.TR_DEFAULT_STYLE|wx.TR_HIDE_ROOT|wx.TR_FULL_ROW_HIGHLIGHT
     
     def __init__(self, parent, id=-1, includeInvisible=False):
         self.includeInvisible = includeInvisible
@@ -720,7 +722,7 @@ class WindowTree(wx.TreeCtrl):
             self, 
             parent, 
             -1, 
-            style=self.STYLE, 
+            style=wx.TR_DEFAULT_STYLE|wx.TR_HIDE_ROOT|wx.TR_FULL_ROW_HIGHLIGHT, 
             size=(-1, 150)
         )
         path = os.path.join(os.path.dirname(__file__), "icons")
@@ -914,6 +916,7 @@ class WindowTree(wx.TreeCtrl):
     if eg.debugLevel:
         @eg.LogIt
         def __del__(self):
+            
             pass
         
         

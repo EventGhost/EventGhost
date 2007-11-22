@@ -55,9 +55,6 @@ class ConfigDialog(eg.Dialog):
             self, 
             (wx.ID_OK, wx.ID_CANCEL, wx.ID_APPLY)
         )
-        self.buttonRow.okButton.Bind(wx.EVT_BUTTON, self.OnOk)
-        self.buttonRow.cancelButton.Bind(wx.EVT_BUTTON, self.OnCancel)
-        self.buttonRow.applyButton.Bind(wx.EVT_BUTTON, self.OnApply)
         self.Bind(wx.EVT_CLOSE, self.OnCancel)
 
         mainSizer = wx.BoxSizer(wx.VERTICAL)
@@ -79,7 +76,7 @@ class ConfigDialog(eg.Dialog):
         )        
 
 
-    def OnOk(self, event):
+    def OnOK(self, event):
         self.result = wx.ID_OK
         self.gr.switch(wx.ID_OK)
         
@@ -114,11 +111,17 @@ class ConfigDialog(eg.Dialog):
         self.Centre()
         self.Show()
         
-
+    
 
 class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
     
-    def __init__(self, executable, resizeable=None, showLine=True):
+    def __init__(
+        self, 
+        executable, 
+        resizeable=None, 
+        showLine=True, 
+        handleIsDirty=False
+    ):
         self.nextResult = None
         self.gr = eg.Greenlet.getcurrent()
         dialog = ConfigDialog(self, executable, resizeable, showLine)
@@ -130,7 +133,16 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         self.rowFlags = {}
         self.colFlags = {}
         self.shown = False
+        self.maxRowNum = 0
         self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.isDirty = False
+        #self.dialog.buttonRow.applyButton.Enable(False)
+        
+    @eg.LogIt
+    def SetIsDirty(self, flag=True):
+        self.isDirty = flag
+        if flag:
+            self.dialog.buttonRow.applyButton.Enable(True)
 
 
     def AddLabel(self, label):
@@ -160,6 +172,17 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         else:
             self.SetSizerAndFit(self.sizer)
         self.dialog.FinishSetup()        
+        def OnEvent(event):
+            self.SetIsDirty()
+        #wx.EVT_COMMAND(self, wx.ID_ANY, wx.ID_ANY, OnEvent)
+        self.Bind(wx.EVT_CHECKBOX, OnEvent)
+        self.Bind(wx.EVT_BUTTON, OnEvent)
+        self.Bind(wx.EVT_CHOICE, OnEvent)
+        self.Bind(wx.EVT_TOGGLEBUTTON, OnEvent)
+        self.Bind(wx.EVT_TEXT, OnEvent)
+        self.Bind(wx.EVT_RADIOBOX, OnEvent)
+        self.Bind(wx.EVT_RADIOBUTTON, OnEvent)
+        self.Bind(wx.EVT_TREE_SEL_CHANGED, OnEvent)
     
     
     def Affirmed(self):
@@ -176,22 +199,24 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
     def SetResult(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
+        self.dialog.buttonRow.applyButton.Enable(False)
+        self.isDirty = False
         self.nextResult = self.gr.parent.switch(args)
 
     
     def AddLine(self, *items, **kwargs):
-        growable = kwargs.get("growable", False)
-        self.lines.append((items, growable))
+        self.maxRowNum = max(self.maxRowNum, len(items))
+        self.lines.append((items, kwargs))
 
 
     def AddGrid(self, grid, vgap=6, hgap=5):
-        columns = len(max(grid))
+        columns = self.maxRowNum
         sizer = wx.GridBagSizer(vgap, hgap)
         sizer.SetFlexibleDirection(wx.HORIZONTAL)
         RowFlagsGet = self.rowFlags.get
         ColFlagsGet = self.colFlags.get
-        for rowNum, (row, growable) in enumerate(grid):
-            if growable:
+        for rowNum, (row, kwargs) in enumerate(grid):
+            if kwargs.get("growable", False):
                 sizer.AddGrowableRow(rowNum)
             for colNum, ctrl in enumerate(row):
                 if ctrl is None:
@@ -206,5 +231,4 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
             if colNum < columns - 1:
                 sizer.SetItemSpan(ctrl, (1, columns - colNum + 1))
         self.SetSizer(sizer)
-        
         

@@ -109,9 +109,6 @@ class Config(Section):
     lastUpdateCheckDate = None
     defaultThreadStartTimeout = 5.00
     colourPickerCustomColours = [(-1, -1, -1, 255) for n in range(16)]
-    class treeStateData:
-        guid = None
-        time = None
     class plugins:
         pass
 

@@ -81,7 +81,6 @@ class DefaultConfig:
     expandTillMacro = False
     perspective = None
     perspective2 = None
-    treeStateData = None
 
 config = eg.GetConfig("mainFrame", DefaultConfig)
 

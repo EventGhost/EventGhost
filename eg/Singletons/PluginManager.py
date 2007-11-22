@@ -215,6 +215,8 @@ class PluginManager:
         canMultiLoad = False,
         createMacrosOnAdd = False,
     ):
+        if name is None:
+            name = self.currentInfo.dirname
         if description is None:
             description = name
         self.currentInfo.__dict__.update(locals())

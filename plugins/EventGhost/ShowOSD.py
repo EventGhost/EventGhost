@@ -379,6 +379,7 @@ class ShowOSD(eg.ActionClass):
         
         def OnCheckBox(event):
             backgroundColourButton.Enable(outlineCheckBox.IsChecked())
+            event.Skip()
             
         outlineCheckBox.Bind(wx.EVT_CHECKBOX, OnCheckBox)
         

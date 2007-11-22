@@ -203,21 +203,21 @@ class Foobar2000(eg.PluginClass):
                     "foobar2000", 
                     "foobar2000.exe"
                 )
-        dialog = eg.ConfigurationDialog(self)
+        panel = eg.ConfigPanel(self)
         filepathCtrl = eg.FileBrowseButton(
-            dialog, 
+            panel, 
             size=(320,-1),
             initialValue=foobar2000Path, 
             startDirectory=eg.folderPath.ProgramFiles,
             labelText="",
             fileMask = "Foobar2000 executable|foobar2000.exe|All-Files (*.*)|*.*",
-            buttonText=eg.text.General.browse
+            buttonText=eg.text.General.browse,
         )
-        dialog.AddLabel("Path to foobar2000 executable:")
-        dialog.AddCtrl(filepathCtrl)
+        panel.AddLabel("Path to foobar2000 executable:")
+        panel.AddCtrl(filepathCtrl)
         
-        if dialog.AffirmedShowModal():
-            return (filepathCtrl.GetValue(), )
+        while panel.Affirmed():
+            panel.SetResult(filepathCtrl.GetValue())
         
         
     def GetFoobar2000Path(self):

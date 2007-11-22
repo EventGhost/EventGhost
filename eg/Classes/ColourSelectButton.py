@@ -55,6 +55,7 @@ class ColourSelectButton(wx.BitmapButton):
         if dialog.ShowModal() == wx.ID_OK:
             colourData = dialog.GetColourData()
             self.SetValue(colourData.GetColour().Get())
+            event.Skip()
         eg.config.colourPickerCustomColours = [
             colourData.GetCustomColour(n).Get() for n in range(16)
         ]

@@ -34,6 +34,7 @@ eg.RegisterPlugin(
 # Plugin implements the description from here: 
 # http://www.sage.tv/2_papers/SageTVWindowsMessages.txt
 
+import wx
 from win32gui import FindWindow, SendMessageTimeout
 from win32con import SMTO_BLOCK, SMTO_ABORTIFHUNG
 
@@ -153,11 +154,16 @@ class SageTV(eg.PluginClass):
         
     def Configure(self, useClient=False):
         panel = eg.ConfigPanel(self)
-        choices = ["Target SageTV.exe", "Target SageTVClient.exe"]
-        useClientCtrl = panel.RadioBox(useClient, choices=choices)
-        panel.AddLine(useClientCtrl)
+        useClientCtrl = wx.RadioBox(
+            panel, 
+            label = "Target:", 
+            choices=["SageTV.exe", "SageTVClient.exe"], 
+            style=wx.RA_SPECIFY_ROWS
+        )
+        useClientCtrl.SetSelection(useClient)
+        panel.sizer.Add(useClientCtrl, 0, wx.EXPAND)
         while panel.Affirmed():
-            panel.SetResult(useClientCtrl.GetValue())
+            panel.SetResult(useClientCtrl.GetSelection())
 
 
 

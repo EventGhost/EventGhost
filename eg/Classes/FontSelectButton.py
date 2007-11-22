@@ -63,6 +63,7 @@ class FontSelectButton(wx.BitmapButton):
             data = dlg.GetFontData()
             font = data.GetChosenFont()
             self.fontInfo = font.GetNativeFontInfo().ToString()
+            event.Skip()
         dlg.Destroy()       
         
         

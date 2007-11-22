@@ -28,6 +28,12 @@ from xml.etree import cElementTree as ElementTree
 from tempfile import mkstemp
 from threading import Lock
 
+class TreeStateData:
+    guid = None
+    time = None
+
+config = eg.GetConfig("treeStateData", TreeStateData)
+
 
 class Observable:
     

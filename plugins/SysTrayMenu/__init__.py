@@ -239,6 +239,7 @@ class SysTrayMenu(eg.PluginClass):
             labelBox.SetLabel(tree.GetItemText(item, 0))
             eventBox.SetLabel(tree.GetItemText(item, 1))
             #itemTypeCtrl.SetSelection(itemType)
+            #event.Skip()
         tree.Bind(wx.EVT_TREE_SEL_CHANGED, OnSelectionChanged)
         
         # Delete button
@@ -318,6 +319,7 @@ class SysTrayMenu(eg.PluginClass):
         def OnLabelTextChange(event):
             item = tree.GetSelection()
             tree.SetItemText(item, labelBox.GetValue(), 0)
+            event.Skip()
         labelBox.Bind(wx.EVT_TEXT, OnLabelTextChange)
         
         # Event edit box
@@ -325,6 +327,7 @@ class SysTrayMenu(eg.PluginClass):
         def OnEventTextChange(event):
             item = tree.GetSelection()
             tree.SetItemText(item, eventBox.GetValue(), 1)
+            event.Skip()
         eventBox.Bind(wx.EVT_TEXT, OnEventTextChange)
         
         # Item type control

@@ -256,6 +256,7 @@ class TransmitIR(eg.ActionClass):
             
         def OnInfiniteCtrl(event):
             repeatCtrl.Enable(not infiniteCtrl.GetValue())
+            event.Skip()
         infiniteCtrl.Bind(wx.EVT_CHECKBOX, OnInfiniteCtrl)
         
         waitCtrl = panel.SpinIntCtrl(inactivityWaitTime, 0, 500)

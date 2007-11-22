@@ -286,6 +286,7 @@ class Serial(eg.RawReceiverPlugin):
             terminatorCtrl.Enable(flag)
             prefixCtrl.Enable(flag)
             encodingCtrl.Enable(flag)
+            event.Skip()
         generateEventsCtrl.Bind(wx.EVT_CHECKBOX, OnCheckBox)
         
         panel.SetColumnFlags(1, wx.EXPAND)

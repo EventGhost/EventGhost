@@ -48,6 +48,16 @@ class ChangeDisplaySettings(eg.ActionClass):
     name = "Change Display Settings"
     iconFile = "icons/Display"
     
+    class text:
+        label = "Set Display%d to mode %dx%d@%d Hz"
+        display = "Display:"
+        resolution = "Resolution:"
+        frequency = "Frequency:"
+        colourDepth = "Colour Depth:"
+        includeAll = "Include modes this monitor might not support."
+        storeInRegistry = "Store mode in the registry."
+    
+    
     def __call__(
         self, 
         displayNum=None, 
@@ -71,8 +81,7 @@ class ChangeDisplaySettings(eg.ActionClass):
         includeAll, 
         updateRegistry=False
     ):
-        return "Set Display%d to mode %dx%d@%d Hz" % (
-            displayNum, size[0], size[1], frequency)
+        return self.text.label % (displayNum, size[0], size[1], frequency)
         
         
     def Configure(
@@ -84,6 +93,7 @@ class ChangeDisplaySettings(eg.ActionClass):
         includeAll=False, 
         updateRegistry=False
     ):
+        text = self.text
         panel = eg.ConfigPanel(self)                            
         if displayNum is None:
             displayNum = 1
@@ -96,31 +106,33 @@ class ChangeDisplaySettings(eg.ActionClass):
         resolutionChoice = wx.Choice(panel)
         frequencyChoice = wx.Choice(panel)
         depthChoice = wx.Choice(panel)
-        includeAllCheckBox = wx.CheckBox(panel, -1, 
-            "Include modes this monitor might not support.")
-        includeAllCheckBox.SetValue(includeAll)
-        updateRegistryCheckBox = wx.CheckBox(panel, -1, 
-            "Store mode in the registry.")
-        updateRegistryCheckBox.SetValue(updateRegistry)
+        includeAllCheckBox = panel.CheckBox(includeAll, text.includeAll)
+        updateRegistryCheckBox = panel.CheckBox(updateRegistry, text.storeInRegistry)
         
-        st1 = wx.StaticText(panel, -1, "Display:")
-        st2 = wx.StaticText(panel, -1, "Resolution:")
-        st3 = wx.StaticText(panel, -1, "Frequency:")
-        st4 = wx.StaticText(panel, -1, "Colour Depth:")
+        sizer = wx.GridBagSizer(6, 5)
+        flag = wx.ALIGN_CENTER_VERTICAL
+        sizer.Add(panel.StaticText(text.display),     (0, 0), flag=flag)
+        sizer.Add(panel.StaticText(text.resolution),  (1, 0), flag=flag)
+        sizer.Add(panel.StaticText(text.frequency),   (2, 0), flag=flag)
+        sizer.Add(panel.StaticText(text.colourDepth), (3, 0), flag=flag)
+        sizer.Add(displayChoice,                      (0, 1), flag=flag)
+        sizer.Add(resolutionChoice,                   (1, 1), flag=flag)
+        sizer.Add(frequencyChoice,                    (2, 1), flag=flag)
+        sizer.Add(depthChoice,                        (3, 1), flag=flag)
         
-        sizer = wx.GridBagSizer(5, 5)
-        Add = sizer.Add
-        Add(st1, (0, 0), (1, 1), wx.ALIGN_CENTER_VERTICAL)
-        Add(displayChoice, (0, 1), (1, 1))
-        Add(st2, (1, 0), (1, 1), wx.ALIGN_CENTER_VERTICAL)
-        Add(resolutionChoice, (1, 1), (1, 1))
-        Add(st3, (2, 0), (1, 1), wx.ALIGN_CENTER_VERTICAL)
-        Add(frequencyChoice, (2, 1), (1, 1))
-        Add(st4, (3, 0), (1, 1), wx.ALIGN_CENTER_VERTICAL)
-        Add(depthChoice, (3, 1), (1, 1))
-        panel.sizer.Add(sizer)
-        panel.sizer.Add(includeAllCheckBox, 0, wx.TOP, 10)
-        panel.sizer.Add(updateRegistryCheckBox, 0, wx.TOP, 10)
+        panel.sizer.Add(sizer, 0, wx.EXPAND)
+        flag = wx.ALIGN_CENTER_VERTICAL|wx.TOP
+        panel.sizer.Add(includeAllCheckBox, 0, flag, 10)
+        panel.sizer.Add(updateRegistryCheckBox, 0, flag, 10)
+        
+#        sizer = eg.Sizer(panel)
+#        sizer.AddLine(text.display, displayChoice)
+#        sizer.AddLine(text.resolution, resolutionChoice)
+#        sizer.AddLine(text.frequency, frequencyChoice)
+#        sizer.AddLine(text.colourDepth, depthChoice)
+#        sizer.AddLine(includeAllCheckBox)
+#        sizer.AddLine(updateRegistryCheckBox)
+#        panel.sizer.Add(sizer)
         
         settings = eg.Bunch()
         
@@ -143,6 +155,8 @@ class ChangeDisplaySettings(eg.ActionClass):
                     sel = pos
             resolutionChoice.Select(sel)
             UpdateDeepth(None)
+            if event:
+                event.Skip()
                 
         @eg.LogIt
         def UpdateDeepth(event=None):
@@ -153,13 +167,14 @@ class ChangeDisplaySettings(eg.ActionClass):
             depthChoice.Clear()
             sel = len(depthList) - 1
             for pos, bits in enumerate(depthList):
-                depthChoice.Append("%d Bits" % bits)
+                depthChoice.Append("%d Bit" % bits)
                 depthChoice.SetClientData(pos, bits)
                 if bits == depth:
                     sel = pos
             depthChoice.Select(sel)
             UpdateFrequencies()
-        
+            if event:
+                event.Skip()       
         
         @eg.LogIt
         def UpdateFrequencies(event=None):
@@ -173,6 +188,8 @@ class ChangeDisplaySettings(eg.ActionClass):
                 if f == frequency:
                     sel = pos
             frequencyChoice.Select(sel)
+            if event:
+                event.Skip()
 
         displayChoice.Bind(wx.EVT_CHOICE, UpdateResolutions)
         resolutionChoice.Bind(wx.EVT_CHOICE, UpdateDeepth)

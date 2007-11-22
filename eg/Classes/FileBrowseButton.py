@@ -56,6 +56,13 @@ def createBrowseButton( self):
     return button
 
 
+def OnChanged(self, evt):
+    if self.callCallback and self.changeCallback:
+        self.changeCallback(evt)
+    #ADDED:
+    evt.Skip()
+
 FileBrowseButton.createDialog = createDialog
 FileBrowseButton.createBrowseButton = createBrowseButton
+FileBrowseButton.OnChanged = OnChanged
 

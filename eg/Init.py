@@ -94,6 +94,7 @@ class EventGhost(object):
         Image._initialized = 2  
         
         # create a global asyncore loop thread
+        # TODO: Only start if asyncore is requested
         eg.dummyAsyncoreDispatcher = None
         eg.RestartAsyncore()
         threading.Thread(target=asyncore.loop, name="AsyncoreThread").start()
@@ -162,12 +163,6 @@ class EventGhost(object):
         Utils.SetClass(self.text, Text)
 
         eg.Exit = sys.exit
-        from eg.WinAPI.Shortcut import CreateShortcut
-        eg.CreateShortcut = CreateShortcut
-        from eg.WinAPI.serial import Serial
-        eg.SerialPort = Serial
-        from eg.WinAPI.SerialThread import SerialThread
-        eg.SerialThread = SerialThread
         
         from eg.greenlet import greenlet
         eg.Greenlet = greenlet
@@ -185,6 +180,13 @@ class EventGhost(object):
 #        sys.modules['__builtin__'].raw_input = GetSimpleRawInput
 #        sys.modules['__builtin__'].input = GetSimpleInput
 
+        # TODO: make this lazy imports
+        from eg.WinAPI.serial import Serial
+        eg.SerialPort = Serial
+        
+        from eg.WinAPI.SerialThread import SerialThread
+        eg.SerialThread = SerialThread
+        
         from WinAPI.SerialThread import EnumSerialPorts as GetAllPorts
         eg.SerialPort.GetAllPorts = classmethod(GetAllPorts)
         
@@ -193,7 +195,6 @@ class EventGhost(object):
         
         
     def StartGui(self):
-        import eg.WinAPI.SendKeys
         import eg.WinAPI.COMServer
         
         self.scheduler.start()
@@ -252,6 +253,7 @@ class EventGhost(object):
             mod = __import__("eg.Classes." + name, fromlist=[name])
         except ImportError:
             raise
+        #print("Loaded %s" % name)
         attr = getattr(mod, name)
         self.__dict__[name] = attr
         return attr

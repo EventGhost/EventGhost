@@ -185,7 +185,7 @@ class OptionsDialog(eg.Dialog):
             path += ".lnk"
             if tmp:
                 # create shortcut in autostart dir
-                eg.CreateShortcut(
+                eg.Shortcut.Create(
                     path=path,
                     target=os.path.abspath(sys.executable),
                     arguments="-hide"
