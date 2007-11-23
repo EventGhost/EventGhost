@@ -26,18 +26,20 @@ import eg
     
 class NewJumpIf(eg.ActionClass):
     name = "Jump"
-    description = \
-        "Jumps to another macro, if the specified condition is "\
+    description = (
+        "Jumps to another macro, if the specified condition is "
         "fulfilled."
+    )
     iconFile = "icons/NewJumpIf"
     class text:
         text1 = "If:"
         text2 = "Jump to:"
         text3 = "and return after execution"
         mesg1 = "Select the macro..."
-        mesg2 = \
-            "Please select the macro that should be executed, if the "\
+        mesg2 = (
+            "Please select the macro that should be executed, if the "
             "condition is fulfilled."
+        )
         choices = [
             "last action was successful",
             "last action was unsuccessful",
@@ -87,8 +89,4 @@ class NewJumpIf(eg.ActionClass):
         
         while panel.Affirmed():
             link.SetTarget(linkCtrl.GetValue())
-            panel.SetResult(
-                link, 
-                kindCtrl.GetValue(), 
-                gosubCtrl.GetValue()
-            )
+            panel.SetResult(link, kindCtrl.GetValue(), gosubCtrl.GetValue())

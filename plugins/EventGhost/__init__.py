@@ -65,6 +65,8 @@ class EventGhost(eg.PluginClass):
         self.AddAction(TriggerEvent)
         self.AddAction(FlushEvents)
         self.AddAction(ShowOSD)
+        self.AddAction(JumpIf, hidden=True)
+        self.AddAction(StopIf, hidden=True)
 
 
 
