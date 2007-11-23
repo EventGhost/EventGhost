@@ -89,6 +89,17 @@ def UpdateVersionFile(commitSvn):
         svn.checkin([trunkDir], "Created installer for %s.%i" % (data['version'], data['buildNum']))    return data
     
     
+def UpdateChangeLog(templateOptions):    
+    path = join(trunkDir, "CHANGELOG.TXT")
+    fd = open(path, "r")
+    s1 = fd.read()
+    fd.close()
+    s2 = "%s.%s:\n" % (templateOptions['version'], templateOptions['buildNum'])
+    fd = open(path, "w+")
+    fd.write(s1 + s2)
+    fd.close()
+    
+
 def locate(patterns, root=os.curdir):
     '''
     Locate all files matching supplied filename patterns in and below
@@ -395,6 +406,7 @@ def MakeSourceArchive(outFile):
 
 def MakeInstaller(isUpdate, makeLib, makeSourceArchive, commitSvn):
     templateOptions = UpdateVersionFile(commitSvn)
+    UpdateChangeLog(templateOptions)
     VersionStr = templateOptions['version'] + '_build_' + str(templateOptions['buildNum'])
     templateOptions['VersionStr'] = VersionStr
     templateOptions["PYTHON_DIR"] = dirname(sys.executable)

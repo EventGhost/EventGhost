@@ -1,4 +1,4 @@
-version="0.2.3" 
+version="0.2.4" 
 
 # Plugins/IrfanView/__init__.py
 #
@@ -66,12 +66,12 @@ class Text:
     grpName4 = "Settings"
     grpName5 = "View"
     grpName6 = "Other"
-    grpDescription1 = "Adds File menu to control IrfanView"
-    grpDescription2 = "Adds Edit menu to control IrfanView"
-    grpDescription3 = "Adds Picture menu to control IrfanView"
-    grpDescription4 = "Adds Settings menu to control IrfanView"
-    grpDescription5 = "Adds View menu to control IrfanView"
-    grpDescription6 = "Adds other actions to control IrfanView"
+    grpDescription1 = "Adds File menu to control IrfanView."
+    grpDescription2 = "Adds Edit menu to control IrfanView."
+    grpDescription3 = "Adds Picture menu to control IrfanView."
+    grpDescription4 = "Adds Settings menu to control IrfanView."
+    grpDescription5 = "Adds View menu to control IrfanView."
+    grpDescription6 = "Adds other actions to control IrfanView."
     err ="Couldn't find file i_view32.exe !"
 
     class RunDefault:
@@ -92,8 +92,8 @@ Actions =((#Tuple 0 - most important actions
     ("OpenDialog","Show open dialog","Show open dialog.",u'{O}'),
     ("ShowNextPgOrFile","Show next page OR file","Show next page in a multipage image OR load next file in directory.",u'{Ctrl+PgDown}'),
     ("ShowPrevPgOrFile","Show previous page OR file","Show previous page in a multipage image OR load previous file in directory.",u'{Ctrl+PgUp}'),
-    ("LoadFirstFile","Load first file","Load first file in the directory.",u'{Ctrl+Home}'),
-    ("LoadLastFile","Load last file","Load last file in the directory.",u'{Ctrl+End}'),
+    ("LoadFirstFile","First file in directory","Load first file in the directory.",u'{Ctrl+Home}'),
+    ("LoadLastFile","Last file in directory","Load last file in the directory.",u'{Ctrl+End}'),
     ("CloseActualWindow","Close actual window","Close actual window (main window, slideshow, full screen,thumbnails or a dialog).",u'{Esc}'),
     ("ToggleStatusBar","Show/hide status bar","Show/hide status bar.",u'{Alt+Shift+S}'),
     ("ToggleToolbar","Show/hide toolbar","Show/hide toolbar.",u'{Alt+Shift+T}'),
@@ -105,8 +105,8 @@ Actions =((#Tuple 0 - most important actions
     ("OriginalSize","Original size","Original size (no zoom).",u'{Ctrl+H}'),
     ("FullScreen","Full Screen","Full Screen.",u'{Enter}'),
     ("FullScreenMode1","Full screen mode 1:1","Full screen mode: Show images/movies with the original size (1:1).",u'{1}'),
-    ("FullScreenMode2","Large fit to full screen","Full screen mode: Fit to screen: large images only.",u'{2}'),
-    ("FullScreenMode3","All fit to full screen","Full screen mode: Fit to screen: all images/movies.",u'{3}'),
+    ("FullScreenMode2","Large fit to full screen","Full screen mode: Fit to screen only large images.",u'{2}'),
+    ("FullScreenMode3","All fit to full screen","Full screen mode: Fit to screen all images/movies.",u'{3}'),
     ("FullScreenMode4","All stretch to full screen","Full screen mode: Stretch all images/movies to screen.",u'{4}'),
     ("StartDirSlideshow","Start directory slideshow","Start slideshow with current directory files.",u'{Ctrl+W}'),
     ("ToggleAutSlideshow1","Start/stop automatic slideshow","Start/stop automatic viewing (slideshow in window).",u'{Shift+A}'),
@@ -127,24 +127,24 @@ Actions =((#Tuple 0 - most important actions
     ("SaveAs",'Show "Save as" dialog','Show "Save as" dialog.',u'{S}'),
     ("PrintDialog","Show Print dialog","Show Print dialog.",u'{Ctrl+P}'),
     ("DirectPrint","Direct print","Print image, hide print dialog (direct print).",u'{Ctrl+Alt+P}'),
-    ("AcquireBatchScanning","Acquire/Batch Scanning","Acquire/Batch Scanning",u'{Ctrl+Shift+A}'),
+    ("AcquireBatchScanning","Acquire/Batch Scanning","Acquire/Batch Scanning.",u'{Ctrl+Shift+A}'),
     #("CloseActualWindow","Close actual window","Close actual window (main window, slideshow, full screen, thumbnails or a dialog).",u'{Esc}'),
     ("SearchFiles","Search files","Search files.",u'{Ctrl+F}'),
 ),(#Tuple 2 - Edit menu
-    ("EditUndo","Edit -> Undo","Edit -> Undo.",u'{Ctrl+Z}'),
-    ("CreateSelection","Create custom selection","Edit -> Create custom selection.",u'{Shift+C}'),
-    ("InsertText","Insert text into selection","Edit -> Insert text into selection.",u'{Ctrl+T}'),
+    ("EditUndo","Edit - Undo","Edit - Undo.",u'{Ctrl+Z}'),
+    ("CreateSelection","Create custom selection","Create custom selection.",u'{Shift+C}'),
+    ("InsertText","Insert text into selection","Edit - Insert text into selection.",u'{Ctrl+T}'),
     ("CutSelectionRectangle","Cut selection rectangle","Cut selection rectangle.",u'{Ctrl+X}'),
     ("CropSelectionRectangle","Crop selection rectangle","Crop selection rectangle.",u'{Ctrl+Y}'),
     ("CopyToClipboard","Copy image to clipboard","Copy image to clipboard.",u'{Ctrl+C}'),
 #    ("PasteFromClipboard","Paste image from clipboard","Paste image from clipboard.",u'{Ins}'),
     ("PasteFromClipboard","Paste from clipboard","Paste image from clipboard.",u'{Ctrl+V}'),
-    ("EditDelete","Edit -> Delete","Edit -> Delete.",u'{D}'),
+    ("EditDelete","Delete (Clear display) ","Delete - clear display.",u'{D}'),
 ),(#Tuple 3 - Picture menu
     ("ShowInformation","Show image information","Show image information.",u'{I}'),
     ("RotateLeft","Rotate left","Rotate left.",u'{L}'),
     ("RotateRight","Rotate right","Rotate right.",u'{R}'),
-    ("RotateAngle","Rotate by angle","Rotate by angle.",u'{Ctrl+U}'),
+    ("RotateAngle","User/Fine rotation","Rotate by angle.",u'{Ctrl+U}'),
     ("VerticalFlip","Vertical flip","Vertical flip.",u'{V}'),
     ("HorizontalFlip","Horizontal flip","Horizontal flip.",u'{H}'),
     ("ResampleDialog","Show Resample dialog","Show Resample dialog.",u'{Ctrl+R}'),
@@ -155,8 +155,8 @@ Actions =((#Tuple 0 - most important actions
     ("EffectsSetup","Effects setup","Effects setup.",u'{Ctrl+E}'),
     ("AdobeFiltersDialog","Adobe 8BF filters dialog","Adobe 8BF filters dialog.",u'{Ctrl+K}'),
     ("FilterFactoryDialog","Filter Factory dialog","Filter Factory dialog.",u'{K}'),
-    ("RotationLeft","Lossless JPG rot. Left","Lossless JPG rotation - to Left.",u'{Ctrl+Shift+L}'),
-    ("RotationRight","Lossless JPG rot. Right","Lossless JPG rotation - to Right.",u'{Ctrl+Shift+R}'),
+    ("RotationLeft","Lossless JPG rotation Left","Lossless JPG rotation - to left.",u'{Ctrl+Shift+L}'),
+    ("RotationRight","Lossless JPG rotation right","Lossless JPG rotation - to right.",u'{Ctrl+Shift+R}'),
 ),(#Tuple 4 - Settings menu
     ("PropertiesDialog","Show Properties dialog","Show Properties dialog.",u'{P}'),
     ("StopAnimation","Stop animation","Stop GIF or ANI animation.",u'{G}'),
@@ -179,8 +179,8 @@ Actions =((#Tuple 0 - most important actions
     #("FullScreenMode2","Large fit to full screen","Full screen mode: Fit to screen: large images only.",u'{2}'),
     #("FullScreenMode3","All fit to full screen","Full screen mode: Fit to screen: all images/movies.",u'{3}'),
     #("FullScreenMode4","All stretch to full screen","Full screen mode: Stretch all images/movies to screen.",u'{4}'),
-    ("LoadNextFile","Load next file","Load next file in directory.",u'{Space}'),
-    ("LoadPrevFile","Load previous file","Load previous file in directory.",u'{Backspace}'),
+    ("LoadNextFile","Next file in directory","Load next file in directory.",u'{Space}'),
+    ("LoadPrevFile","Previous file in directory","Load previous file in directory.",u'{Backspace}'),
     #("LoadFirstFile","Load first file","Load first file in the directory.",u'{Ctrl+Home}'),
     #("LoadLastFile","Load last file","Load last file in the directory.",u'{Ctrl+End}'),
     ("OpenRandomImage","Open random image","Open random image from the directory.",u'{Ctrl+M}'),
@@ -208,13 +208,13 @@ Actions =((#Tuple 0 - most important actions
     ("ToggleSlideshow","Fullscreen/Slideshow text display","Toggle fullscreen/slideshow text display.",u'{N}'),
     #("StartDirSlideshow","Start directory slideshow","Start slideshow with current directory files.",u'{Ctrl+W}'),
     ("ShowExifDialog","Show EXIF dialog","Show EXIF dialog for JPGs with available EXIF data.",u'{E}'),
-    ("ControlSwitchThumb","Control switch in thumb. wind.","Control switch in the thumbnail window.",u'{Ctrl+Tab}'),
+    ("ControlSwitchThumb","Control switch in thumbnail window","Control switch in the thumbnail window.",u'{Ctrl+Tab}'),
     ("SwitchMainThumbnail","Switch main/thumbnail window","Switch between main and thumbnail window (if visible).",u'{Tab}'),
     ("SelectAllThumb","Select all thumbnails","Select all thumbnails (thumbnail window).",u'{Ctrl+A}'),
     ("OpenBrowseDialog",'Show "Browse-Subfolders" dialog.','Show "Browse-Subfolders" dialog.',u'{Ctrl+B}'),
     ("ShowIptcDialog","Show IPTC dialog","Show IPTC dialog for JPGs.",u'{Ctrl+I}'),
     ("SendByMail","Send image by email","Send image by email.",u'{Shift+M}'),
-    ("CopyFilename","Copy filename to clipboard.","Copy current filename to clipboard.",u'{Shift+P}'),
+    ("CopyFilename","Copy filename to clipboard","Copy current filename to clipboard.",u'{Shift+P}'),
     ("JumpIntoToolbar","Jump into toolbar edit field","Jump into the toolbar edit field.",u'{Shift+T}'),
     ("Help","Help","Help.",u'{F1}'),
     ("AboutIrfanView",'Show "About IrfanView" dialog','Show "About IrfanView" dialog.',u'{A}'),
@@ -374,8 +374,9 @@ class RunCommandLine(eg.ActionClass):
         cmdlineCtrl=wx.TextCtrl(panel,-1,cmdline)
         cmdlineCtrl.SetMinSize((400,20))
         hlpbtnCtrl = wx.Button(panel, -1, self.text.help)
-        def onBtnClick(event=None):
+        def onBtnClick(event):
             self.plugin.OpenHelpPage('hlp_command_line.htm') 
+            event.Skip()
         hlpbtnCtrl.Bind(wx.EVT_BUTTON, onBtnClick, hlpbtnCtrl)            
         labelLbl=wx.StaticText(panel, -1, self.text.label)
         labelCtrl=wx.TextCtrl(panel,-1,label)
@@ -744,17 +745,22 @@ class RunSlideshow(eg.ActionClass):
                 dynSizer.Add(dirpathLbl,0,wx.TOP,8)
                 dynSizer.Add(dirpathCtrl,0)
             mainSizer.Layout()
+            if event:
+                event.Skip()
         radioBoxSource.Bind(wx.EVT_RADIOBOX, onSourceChange)
         onSourceChange()
 
-        #def onBtnCommandClick(event=None):
+        #def onBtnCommandClick(event):
         #    self.plugin.OpenHelpPage('hlp_command_line.htm') 
+        #    event.Skip()
         #hlpbtnCommandCtrl.Bind(wx.EVT_BUTTON, onBtnCommandClick, hlpbtnCommandCtrl)
 
         def onProgressChange(event=None):
             noRepeatCtrl.Enable(radioBoxProgress.GetSelection()>1)
             delayCtrl.Enable((radioBoxProgress.GetSelection()+1)%2)
             delayLbl.Enable((radioBoxProgress.GetSelection()+1)%2)
+            if event:
+                event.Skip()
             
         radioBoxProgress.Bind(wx.EVT_RADIOBOX, onProgressChange)
         onProgressChange()
@@ -764,18 +770,23 @@ class RunSlideshow(eg.ActionClass):
             highCtrl.Enable(radioBoxMode.GetSelection())
             widthLbl.Enable(radioBoxMode.GetSelection())
             highLbl.Enable(radioBoxMode.GetSelection())
+            if event:
+                event.Skip()
             
         radioBoxMode.Bind(wx.EVT_RADIOBOX, onModeChange)
         onModeChange()
 
         def onCloseChange(event=None):
             loopCtrl.Enable(not closeCtrl.GetValue())
+            if event:
+                event.Skip()
             
         closeCtrl.Bind(wx.EVT_CHECKBOX, onCloseChange)
-        onModeChange()
+        onCloseChange()
 
-        def onBtnPatternClick(event=None):
+        def onBtnPatternClick(event):
             self.plugin.OpenHelpPage('hlp_text_patternoptions.htm')
+            event.Skip()
             
         hlpbtnPatternCtrl.Bind(
             wx.EVT_BUTTON,
@@ -787,6 +798,8 @@ class RunSlideshow(eg.ActionClass):
             maskLbl.Enable(displTextCtrl.GetValue())
             maskCtrl.Enable(displTextCtrl.GetValue())
             hlpbtnPatternCtrl.Enable(displTextCtrl.GetValue())
+            if event:
+                event.Skip()
             
         displTextCtrl.Bind(wx.EVT_CHECKBOX, onShowTextChange)
         onShowTextChange()
@@ -1162,15 +1175,17 @@ class RunWithOptions(eg.ActionClass):
         mainSizer.Add(leftrightSizer,0)
         mainSizer.Add(bottomSizer,0)
         panel.sizer.Add(mainSizer)
-        def onBtnPatternClick(event=None):
+        def onBtnPatternClick(event):
             self.plugin.OpenHelpPage('hlp_text_patternoptions.htm')
+            event.Skip()
         hlpbtnPatternCtrl.Bind(
             wx.EVT_BUTTON,
             onBtnPatternClick,
             hlpbtnPatternCtrl
         )
-        def onBtnCommandClick(event=None):
+        def onBtnCommandClick(event):
             self.plugin.OpenHelpPage('hlp_command_line.htm') 
+            event.Skip()
         hlpbtnCommandCtrl.Bind(
             wx.EVT_BUTTON,
             onBtnCommandClick,
@@ -1185,12 +1200,16 @@ class RunWithOptions(eg.ActionClass):
             yCoordCtrl.Enable(radioBoxWinMode.GetSelection() in [1,2,5])
             xCoordLbl.Enable(radioBoxWinMode.GetSelection() in [1,2,5])
             yCoordLbl.Enable(radioBoxWinMode.GetSelection() in [1,2,5])
+            if event:
+                event.Skip()
         radioBoxWinMode.Bind(wx.EVT_RADIOBOX, onModeChange)
         onModeChange()
         def onShowTextChange(event=None):
             maskLbl.Enable(displTextCtrl.GetValue())
             maskCtrl.Enable(displTextCtrl.GetValue())
             hlpbtnPatternCtrl.Enable(displTextCtrl.GetValue())
+            if event:
+                event.Skip()
         displTextCtrl.Bind(wx.EVT_CHECKBOX, onShowTextChange)
         onShowTextChange()
         

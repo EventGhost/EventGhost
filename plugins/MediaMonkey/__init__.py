@@ -1,4 +1,4 @@
-version="0.1.1"
+version="0.1.2"
 
 # Plugins/MediaMonkey/__init__.py
 #
@@ -1182,9 +1182,9 @@ class WritingToMM(eg.ActionClass):
         text=self.text
         txt=text.Properties
         self.listCtrl=(
-            "wx.TextCtrl(panel, -1, arrayValue[%s][0])",
+            "wx.TextCtrl(panel, -1, arrayValue0[%s])",
             (
-                "eg.SpinNumCtrl(panel,-1,arrayValue[%s][0],max=100.0,min=0.0,"
+                "eg.SpinNumCtrl(panel,-1,arrayValue0[%s],max=100.0,min=0.0,"
                 "fractionWidth=1,increment=10,style=wx.TE_READONLY)"
             )
         )
@@ -1200,23 +1200,23 @@ class WritingToMM(eg.ActionClass):
             ("Genre",txt.Genre,0,True),
             ("Rating",txt.Rating,1,True),
         )
-    def __call__(self, i, arrayValue):
+    def __call__(self, i, arrayValue0, arrayValue1):
         if self.infoList[i][2]==0:
             self.plugin.setMM("Player.CurrentSong."+self.infoList[i][0]\
-                +'=u"'+arrayValue[i][0]+'"')
+                +'=u"'+arrayValue0[i]+'"')
         else:
             self.plugin.setMM("Player.CurrentSong."+self.infoList[i][0]\
-                +"="+str(arrayValue[i][0]))
+                +"="+str(arrayValue0[i]))
         self.plugin.setMM("Player.CurrentSong.UpdateDB()")
-        if arrayValue[i][1]:
+        if arrayValue1[i]:
             self.plugin.setMM("Player.CurrentSong.WriteTags()")
         
-    def GetLabel(self, i, arrayValue):
+    def GetLabel(self, i, arrayValue0, arrayValue1):
         if self.infoList[i][2]==0:
-            result = self.text.set+self.infoList[i][1]+"="+arrayValue[i][0]
+            result = self.text.set+self.infoList[i][1]+"="+arrayValue0[i]
         else:
-            result = self.text.set+self.infoList[i][1]+"="+str(int(arrayValue[i][0]))
-        if arrayValue[i][1]:
+            result = self.text.set+self.infoList[i][1]+"="+str(int(arrayValue0[i]))
+        if arrayValue1[i]:
             result += " (+ID3)"
         return result
         
@@ -1224,18 +1224,19 @@ class WritingToMM(eg.ActionClass):
     def Configure(
         self,
         i=0,
-        arrayValue=[
-            ["",False],
-            ["",False],
-            ["",False],
-            ["",False],
-            ["",False],
-            ["",False],
-            ["",False],
-            ["",False],
-            ["",False],
-            [0,False],
-        ]
+        arrayValue0=[
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            50,
+        ],
+        arrayValue1 = [False] * 10
     ):
         #text=Text
         choices=[tpl[1] for tpl in self.infoList]
@@ -1263,23 +1264,25 @@ class WritingToMM(eg.ActionClass):
                 self.infoList[choiceCtrl.GetSelection()][1]+":"
             )
             indx=self.infoList[choiceCtrl.GetSelection()][2]
-            dummy = arrayValue[0][0] # otherwise error:
-# >>>  NameError: name 'arrayValue' is not defined  <<<   ??????????????????????
+            dummy = arrayValue0[0] # otherwise error:
+# >>>  NameError: name 'arrayValue0' is not defined  <<<   ??????????????????????
             dynCtrl = eval(self.listCtrl[indx] % str(choiceCtrl.GetSelection()))
             dynSizer.Add(dynLbl, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
             dynSizer.Add(dynCtrl, 0, wx.EXPAND)
             if self.infoList[choiceCtrl.GetSelection()][3]:
                 chkBoxCtrl = wx.CheckBox(panel, label=self.text.checkboxlabel)
-                chkBoxCtrl.SetValue(arrayValue[choiceCtrl.GetSelection()][1])
+                chkBoxCtrl.SetValue(arrayValue1[choiceCtrl.GetSelection()])
                 dynSizer.Add((5,5))
                 dynSizer.Add(chkBoxCtrl, 0, wx.EXPAND)
             mainSizer.Layout()
+            if event:
+                event.Skip()
         choiceCtrl.Bind(wx.EVT_CHOICE, onChoiceChange)
         onChoiceChange()
         while panel.Affirmed():
-            arrayValue[choiceCtrl.GetSelection()][0]=\
+            arrayValue0[choiceCtrl.GetSelection()]=\
                 dynSizer.GetChildren()[1].GetWindow().GetValue()
             if self.infoList[choiceCtrl.GetSelection()][3]:
-                arrayValue[choiceCtrl.GetSelection()][1]=\
+                arrayValue1[choiceCtrl.GetSelection()]=\
                     dynSizer.GetChildren()[3].GetWindow().GetValue()
-            panel.SetResult(choiceCtrl.GetSelection(),arrayValue )
+            panel.SetResult(choiceCtrl.GetSelection(),arrayValue0, arrayValue1 )

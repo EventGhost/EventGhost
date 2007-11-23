@@ -506,7 +506,7 @@ class Plugin:
             label2 = u'Naj\xedt okno, kter\xe9 je nejv\xedce v pop\u0159ed\xed'
             matchNum1 = u'Vr\xe1tit pouze'
             matchNum2 = u'. nalezen\xe9 okno'
-            onlyFrontmost = u'Pouze okno, kter\xe9 je nejv\xedce v pop\u0159ed\xed'
+            onlyForground = u'Pouze okno, kter\xe9 je nejv\xedce v pop\u0159ed\xed'
             options = (
                 u'Aplikace:',
                 u'Jm\xe9no okna:',
@@ -861,6 +861,429 @@ class Plugin:
     class IgorPlugUSB:
         name = u'IgorPlug-USB'
         description = u'Plugin pro IR p\u0159ij\xedma\u010d od Igora \u010ce\u0161ka.\n\n<p><a href="http://www.cesko.host.sk/">Domovsk\xe1 str\xe1nka Igora \u010ce\u0161ka</a></center>'
+    class IrfanView:
+        name = u'IrfanView'
+        description = u'P\u0159id\xe1v\xe1 akce k ovl\xe1d\xe1n\xed <a href="http://www.irfanview.com/">IrfanView</a>.'
+        err = u'Nemohu naj\xedt soubor i_view32.exe !'
+        filemask = u'i_view32.exe|i_view32.exe|V\u0161echny soubory (*.*)|*.*'
+        grpDescription1 = u'P\u0159id\xe1v\xe1 nab\xeddku Soubor k ovl\xe1d\xe1n\xed IrfanView.'
+        grpDescription2 = u'P\u0159id\xe1v\xe1 nab\xeddku \xdapravy k ovl\xe1d\xe1n\xed IrfanView.'
+        grpDescription3 = u'P\u0159id\xe1v\xe1 nab\xeddku Obr\xe1zek k ovl\xe1d\xe1n\xed IrfanView.'
+        grpDescription4 = u'P\u0159id\xe1v\xe1 nab\xeddku Nastaven\xed k ovl\xe1d\xe1n\xed IrfanView.'
+        grpDescription5 = u'P\u0159id\xe1v\xe1 nab\xeddku Zobrazit k ovl\xe1d\xe1n\xed IrfanView.'
+        grpDescription6 = u'P\u0159id\xe1v\xe1 ostatn\xed akce k ovl\xe1d\xe1n\xed IrfanView.'
+        grpName1 = u'Soubor'
+        grpName2 = u'\xdapravy'
+        grpName3 = u'Obr\xe1zek'
+        grpName4 = u'Nastaven\xed'
+        grpName5 = u'Zobrazit'
+        grpName6 = u'Ostatn\xed'
+        label = u'Cesta k souboru i_view32.exe:'
+        text1 = u'Nemohu naj\xedt okno IrfanView !'
+        class AboutIrfanView:
+            name = u'Zobrazit dialog "O programu IrfanView"'
+            description = u'Zobraz\xed dialog "O programu IrfanView".'
+        class AcquireBatchScanning:
+            name = u'Skenovat/D\xe1vkov\xe9 skenov\xe1n\xed'
+            description = u'Zobraz\xed dialog Skenovat/D\xe1vkov\xe9 skenov\xe1n\xed.'
+        class AdobeFiltersDialog:
+            name = u'Filtry Adobe 8BF'
+            description = u'Filtry Adobe 8BF.'
+        class AppendToSlideshow:
+            name = u'P\u0159ipojit k aktu\xe1ln\xed prezentaci'
+            description = u'P\u0159ipoj\xed aktu\xe1ln\xed soubor k aktu\xe1ln\xed prezentaci.'
+        class AutoColorCorrection:
+            name = u'Automatick\xe9 p\u0159izp\u016fsoben\xed barev'
+            description = u'Automatick\xe9 p\u0159izp\u016fsoben\xed barev.'
+        class BatchConversionRename:
+            name = u'D\xe1vkov\xe1 konverze/p\u0159ejmenov\xe1n\xed'
+            description = u'Zobraz\xed dialog D\xe1vkov\xe1 konverze/p\u0159ejmenov\xe1n\xed.'
+        class CaptureDialog:
+            name = u'Zobrazit dialog "Sejmut\xed obrazovky"'
+            description = u'Zobraz\xed dialog "Nastaven\xed zachycen\xed obrazovky".'
+        class CloseActualWindow:
+            name = u'Zav\u0159\xedt aktu\xe1ln\xed okno'
+            description = u'Zav\u0159e aktu\xe1ln\xed okno (hlavn\xed okno, prezentaci, celoobrazovkov\xfd re\u017eim, miniatury nebo dialog).'
+        class ControlSwitchThumb:
+            name = u'P\u0159epnout \u0159\xedzen\xed v okn\u011b miniatur'
+            description = u'P\u0159epne \u0159\xedzen\xed v okn\u011b miniatur.'
+        class CopyFile:
+            name = u'Kop\xedrovat soubor'
+            description = u'Kop\xedruje soubor.'
+        class CopyFilename:
+            name = u'Kop\xedrovat n\xe1zev souboru do schr\xe1nky'
+            description = u'Kop\xedruje n\xe1zev souboru do schr\xe1nky.'
+        class CopyToClipboard:
+            name = u'Kop\xedrovat obr\xe1zek do schr\xe1nky'
+            description = u'Kop\xedruje obr\xe1zek do schr\xe1nky.'
+        class CreateSelection:
+            name = u'Vytvo\u0159it vlastn\xed v\xfdb\u011br'
+            description = u'Vytvo\u0159\xed vlastn\xed v\xfdb\u011br.'
+        class CropSelectionRectangle:
+            name = u'O\u0159\xedznout'
+            description = u'O\u0159\xedzne vybran\xfd obd\xe9ln\xedk.'
+        class CutSelectionRectangle:
+            name = u'Vyjmout v\xfdb\u011br'
+            description = u'Vyjme vybran\xfd obd\xe9ln\xedk.'
+        class DeleteFile:
+            name = u'Odstranit soubor'
+            description = u'Odstran\xed aktu\xe1ln\xed soubor.'
+        class DirectPrint:
+            name = u'Tisknout p\u0159\xedmo'
+            description = u'Tiskne obr\xe1zek p\u0159\xedmo - bez otev\u0159en\xed dialogu.'
+        class EditDelete:
+            name = u'Odstranit (Vy\u010distit obrazovku)'
+            description = u'Odstran\xed obr\xe1zek (vy\u010dist\xed obrazovku).'
+        class EditMultipageTif:
+            name = u'Upravit v\xedcestr\xe1nkov\xfd TIF'
+            description = u'\xdaprava v\xedcestr\xe1nkov\xe9ho TIFu.'
+        class EditUndo:
+            name = u'Zp\u011bt (Undo)'
+            description = u'Zp\u011bt (Undo).'
+        class EffectsSetup:
+            name = u'Prohl\xed\u017ee\u010d efekt\u016f'
+            description = u'Prohl\xed\u017ee\u010d efekt\u016f.'
+        class EnhanceColors:
+            name = u'Upravit barvy'
+            description = u'\xdaprava barev.'
+        class Exit:
+            name = u'Konec'
+            description = u'Konec.'
+        class FilterFactoryDialog:
+            name = u'Dialog V\xfdroba filtru'
+            description = u'Zobraz\xed dialog V\xfdroba filtru.'
+        class FullScreen:
+            name = u'Cel\xe1 obrazovka'
+            description = u'Cel\xe1 obrazovka.'
+        class FullScreenMode1:
+            name = u'Re\u017eim cel\xe1 obrazovka - 1:1'
+            description = u'Re\u017eim cel\xe1 obrazovka: Zobrazit obr\xe1zky/filmy v p\u016fvodn\xed velikosti.'
+        class FullScreenMode2:
+            name = u'Re\u017eim cel\xe1 obrazovka - p\u0159izp\u016fsobit pouze velk\xe9'
+            description = u'Re\u017eim cel\xe1 obrazovka: P\u0159izp\u016fsobit obrazovce pouze velk\xe9 obr\xe1zky (doporu\u010deno).'
+        class FullScreenMode3:
+            name = u'Re\u017eim cel\xe1 obrazovka - p\u0159izp\u016fsobit v\u0161echny'
+            description = u'Re\u017eim cel\xe1 obrazovka: P\u0159izp\u016fsobit obrazovce v\u0161echny obr\xe1zky/filmy.'
+        class FullScreenMode4:
+            name = u'Re\u017eim cel\xe1 obrazovka - rozt\xe1hnout v\u0161echny'
+            description = u'Re\u017eim cel\xe1 obrazovka: Rozt\xe1hnout v\u0161echny obr\xe1zky/filmy.'
+        class Help:
+            name = u'Pomoc'
+            description = u'Pomoc.'
+        class HorizontalFlip:
+            name = u'Horizont\xe1ln\xed p\u0159eklopen\xed'
+            description = u'Horizont\xe1ln\xed p\u0159eklopen\xed.'
+        class InsertText:
+            name = u'Vlo\u017eit text do v\xfdb\u011bru'
+            description = u'Vlo\u017e\xed text do v\xfdb\u011bru.'
+        class JpgLosslessOperations:
+            name = u'JPG bezeztr\xe1tov\xe9 operace'
+            description = u'JPG bezeztr\xe1tov\xe9 operace (PlugIn).'
+        class JumpIntoToolbar:
+            name = u'Sko\u010dit do edita\u010dn\xedho pole n\xe1strojov\xe9 li\u0161ty'
+            description = u'Sko\u010d\xed do edita\u010dn\xedho pole n\xe1strojov\xe9 li\u0161ty.'
+        class LoadFirstFile:
+            name = u'Prvn\xed soubor v adres\xe1\u0159i'
+            description = u'Prvn\xed soubor v adres\xe1\u0159i.'
+        class LoadLastFile:
+            name = u'Posledn\xed soubor v adres\xe1\u0159i'
+            description = u'Posledn\xed soubor v adres\xe1\u0159i.'
+        class LoadNextFile:
+            name = u'Dal\u0161\xed soubor v adres\xe1\u0159i'
+            description = u'Dal\u0161\xed soubor v adres\xe1\u0159i.'
+        class LoadPrevFile:
+            name = u'P\u0159edchoz\xed soubor v adres\xe1\u0159i'
+            description = u'P\u0159edchoz\xed soubor v adres\xe1\u0159i.'
+        class MinimizeWindow:
+            name = u'Minimalizovat okno'
+            description = u'Minimalizuje okno ("Boss" tla\u010d\xedtko).'
+        class MoveFile:
+            name = u'P\u0159esunout soubor'
+            description = u'P\u0159esune soubor.'
+        class OpenBrowseDialog:
+            name = u'Zobrazit dialog "Proch\xe1zet-Subadres\xe1\u0159e"'
+            description = u'Zobraz\xed dialog "Proch\xe1zet-Subadres\xe1\u0159e".'
+        class OpenDialog:
+            name = u'Zobrazit dialog "Otev\u0159\xedt"'
+            description = u'Zobraz\xed dialog "Otev\u0159\xedt".'
+        class OpenInExternal:
+            name = u'Otev\u0159\xedt v extern\xedm prohl\xed\u017ee\u010di'
+            description = u'Otev\u0159e v extern\xedm prohl\xed\u017ee\u010di.'
+        class OpenRandomImage:
+            name = u'Otev\u0159\xedt n\xe1hodn\xfd obr\xe1zek'
+            description = u'Otev\u0159e n\xe1hodn\xfd obr\xe1zek.'
+        class OriginalSize:
+            name = u'P\u016fvodn\xed velikost'
+            description = u'P\u016fvodn\xed velikost (\u017e\xe1dn\xe9 zv\u011bt\u0161en\xed).'
+        class PasteFromClipboard:
+            name = u'Vlo\u017eit ze schr\xe1nky'
+            description = u'Vlo\u017e\xed ze schr\xe1nky.'
+        class PreviousWallpaper:
+            name = u'Nastavit jako pozad\xed plochy - p\u016fvodn\xed.'
+            description = u'Nastav\xed p\u016fvodn\xed pozad\xed plochy.'
+        class PrintDialog:
+            name = u'Zobrazit dialog Tisk'
+            description = u'Zobraz\xed dialog Tisk.'
+        class PropertiesDialog:
+            name = u'Zobrazit dialog Vlastnosti'
+            description = u'Zobraz\xed dialog Vlastnosti.'
+        class RedEyeReduction:
+            name = u'Zrdukovat \u010derven\xe9 o\u010di (v\xfdb\u011br)'
+            description = u'Provede redukci \u010derven\xfdch o\u010d\xed v aktu\xe1ln\xedm v\xfdb\u011bru.'
+        class Refresh:
+            name = u'Obnovit'
+            description = u'Aktualizuje obsah okna.'
+        class RenameFile:
+            name = u'P\u0159ejmenovat soubor'
+            description = u'P\u0159ejmenuje soubor.'
+        class ReopenFile:
+            name = u'Znovu otev\u0159\xedt'
+            description = u'Znovu otev\u0159e soubor.'
+        class ResampleDialog:
+            name = u'Zobrazit dialog Zm\u011bnit velikost/rozli\u0161en\xed'
+            description = u'Zobraz\xed dialog Zm\u011bnit velikost/rozli\u0161en\xed.'
+        class RotateAngle:
+            name = u'U\u017eivatelsk\xe1/jemn\xe1 rotace'
+            description = u'U\u017eivatelsk\xe1/jemn\xe1 rotace (podle zadan\xe9ho \xfahlu).'
+        class RotateLeft:
+            name = u'Oto\u010dit vlevo'
+            description = u'Oto\u010d\xed obr\xe1zek o 90\xb0 vlevo.'
+        class RotateRight:
+            name = u'Oto\u010dit vpravo'
+            description = u'Oto\u010d\xed obr\xe1zek o 90\xb0 vpravo.'
+        class RotationLeft:
+            name = u'JPG bezeztr\xe1tov\xe1 rotace vlevo'
+            description = u'JPG bezeztr\xe1tov\xe1 rotace vlevo.'
+        class RotationRight:
+            name = u'JPG bezeztr\xe1tov\xe1 rotace vpravo'
+            description = u'JPG bezeztr\xe1tov\xe1 rotace vpravo.'
+        class RunCommandLine:
+            name = u'Spustit s p\u0159\xedkazovou \u0159\xe1dkou'
+            description = u'Spust\xed IrfanView s p\u0159\xedkazovou \u0159\xe1dkou.'
+            cmdline = u'Vlo\u017ete p\u0159\xedkazov\xfd \u0159\xe1dek (nap\u0159. /killmesoftly ):'
+            err = u'Nemohu naj\xedt soubor i_view32.exe !'
+            help = u'Pomoc'
+            label = u'Jmenovka t\xe9to akce:'
+        class RunDefault:
+            name = u'Spustit s p\u0159ednastaven\xfdmi parametry'
+            description = u'Spust\xed IrfanView s p\u0159ednastaven\xfdmi parametry.'
+            text2 = u'Nemohu naj\xedt soubor i_view32.exe !'
+        class RunSlideshow:
+            name = u'Spustit prezentaci'
+            description = u'Spust\xed IrfanView a otev\u0159e prezentaci.'
+            alpha = u'Pou\u017e\xedt Alfa prol\xedn\xe1n\xed mezi obr\xe1zky'
+            autoDelay = u'Automaticky po nastaven\xe9m zpo\u017ed\u011bn\xed'
+            autoKeyb = u'Automaticky od vstupu my\u0161i/kl\xe1vesnice'
+            browseTitle = u'Vybran\xe1 slo\u017eka:'
+            close = u'Zav\u0159\xedt IrfanView po posledn\xedm souboru'
+            delay = u'Zpo\u017ed\u011bn\xed [s]:'
+            dirpath = u'Cesta ke slo\u017ece:'
+            displtext = u'Zobrazit text (n\xe1zev souboru ...):'
+            err = u'Nemohu naj\xedt soubor i_view32.exe !'
+            filemask = u'Textov\xe9 soubory (*.txt)|*.txt|Seznamy (*.lst)|*.lst|V\u0161echny soubory (*.*)|*.*'
+            filepath = u'Cesta k souboru s prezentac\xed:'
+            fitAll = u'P\u0159izp\u016fsobit v\u0161echny obr\xe1zky'
+            folder = u'Slo\u017eka'
+            help = u'Pomoc'
+            hideCursor = u'Skr\xfdt kurzor my\u0161i'
+            high = u'V\xfd\u0161ka:'
+            label = u'Jmenovka t\xe9to prezentace:'
+            lineOpt = u'P\u0159\xedkazov\xfd \u0159\xe1dek:'
+            loop = u'Smy\u010dka'
+            mask = u'Maska pro "zobrazit text":'
+            mode1_1 = u'P\u016fvodn\xed velikost'
+            modeFull = u'Cel\xe1 obrazovka'
+            modeWin = u'Okno uprost\u0159ed obrazovky'
+            monitor = u'Monitor:'
+            noRepeat = u'Neopakovat obr\xe1zky'
+            onlyBig = u'P\u0159izp\u016fsobit pouze velk\xe9 obr\xe1zky'
+            radioboxfit = u'Re\u017eim p\u0159izp\u016fsoben\xed'
+            radioboxmode = u'Re\u017eim prezentace'
+            radioboxprogress = u'Postup sn\xedmk\u016f'
+            radioboxsource = u'Zdroj prezentace'
+            randomDelay = u'N\xe1hodn\u011b po nastaven\xe9m zpo\u017ed\u011bn\xed'
+            randomKeyb = u'N\xe1hodn\u011b od vstupu my\u0161i/kl\xe1vesnice'
+            resample = u'Pou\u017e\xedt funkci "Resample" (pomalej\u0161\xed)'
+            runslideshow = u'Spustit prezentaci'
+            scratchAll = u'Rozt\xe1hnout v\u0161echny obr\xe1zky'
+            soundLoop = u'Smy\u010dka pro MP3 (hudba na pozad\xed)'
+            suppress = u'Potla\u010dit chyby v pr\u016fb\u011bhu p\u0159ehr\xe1v\xe1n\xed'
+            toolTipFile = u'Napi\u0161te n\xe1zev souboru nebo kliknut\xedm na tla\u010d\xedtko otev\u0159ete dialog'
+            toolTipFolder = u'Napi\u0161te n\xe1zev slo\u017eky nebo kliknut\xedm na tla\u010d\xedtko otev\u0159ete dialog'
+            txtFile = u'Soubor s prezentac\xed'
+            width = u'\u0160\xed\u0159ka:'
+            windowSize = u'Velikost okna [pixely]'
+        class RunWithOptions:
+            name = u'Spustit s mo\u017enostmi'
+            description = u'Spust\xed IrfanView s vlastn\xedmi p\u0159edvolbami.'
+            alpha = u'Pou\u017e\xedt Alfa prol\xedn\xe1n\xed mezi obr\xe1zky'
+            caption = u'Z\xe1hlav\xed okna'
+            centerImage = u'Vyst\u0159edit obr\xe1zek v okn\u011b'
+            displtext = u'Zobrazit text (n\xe1zev souboru ...)'
+            err = u'Nemohu naj\xedt soubor i_view32.exe !'
+            filemask = u'JPG soubory (*.jpg)|*.jpg|BMP soubory (*.bmp)|*.bmp|PNG soubory (*.png)|*.png|V\u0161echny soubory (*.*)|*.*'
+            filepath = u'Cesta k souboru:'
+            fitAll = u'P\u0159izp\u016fsobit v\u0161echny obr\xe1zky'
+            fsOptions = u'Mo\u017enosti re\u017eimu Cel\xe1 obrazovka'
+            help = u'Pomoc'
+            hideCursor = u'Skr\xfdt kurzor my\u0161i'
+            high = u'V\xfd\u0161ka:'
+            label = u'Jmenovka t\xe9to akce:'
+            lineOpt = u'Ostatn\xed volby vlo\u017ete do p\u0159\xedkazov\xe9ho \u0159\xe1dku:'
+            mask = u'Maska pro "Zobrazit text":'
+            menuBar = u'Nab\xeddkov\xe1 li\u0161ta'
+            mode1_1 = u'P\u016fvodn\xed velikost'
+            modeFull = u'Cel\xe1 obrazovka'
+            modeWin = u'Okno'
+            monitor = u'Monitor:'
+            onlyBig = u'P\u0159izp\u016fsobit pouze velk\xe9 obr\xe1zky'
+            posAndSize = u'Startovn\xed pozice a velikost okna'
+            radioboxmode = u'Spustit v re\u017eimu'
+            radioboxwinmode = u'Re\u017eim p\u0159izp\u016fsoben\xed - Okno'
+            radiofullmode = u'Re\u017eim p\u0159izp\u016fsoben\xed - Cel\xe1 obrazovka'
+            resample = u'Pou\u017e\xedt funkci "Resample" (pomalej\u0161\xed)'
+            resample2 = u'Pou\u017e\xedt funkci "Resample"'
+            runwithoption = u'Spustit s mo\u017enostmi'
+            scratchAll = u'Rozt\xe1hnout v\u0161echny obr\xe1zky'
+            statusLine = u'Stavov\xfd \u0159\xe1dek'
+            toolBar = u'N\xe1strojov\xe1 li\u0161ta'
+            toolTipFile = u'Napi\u0161te n\xe1zev souboru nebo kliknut\xedm na tla\u010d\xedtko otev\u0159ete dialog'
+            width = u'\u0160\xed\u0159ka:'
+            winMode1 = u'P\u0159izp\u016fsobit okno obr\xe1zku'
+            winMode2 = u'P\u0159izp\u016fsobit obr\xe1zky oknu'
+            winMode3 = u'P\u0159izp\u016fsobit oknu pouze velk\xe9 obr\xe1zky'
+            winMode4 = u'P\u0159izp\u016fsobit obr\xe1zky pracovn\xed plo\u0161e'
+            winMode5 = u'P\u0159izp\u016fsobit plo\u0161e pouze velk\xe9 obr\xe1zky'
+            winMode6 = u'Nep\u0159izp\u016fsobovat'
+            winMode7 = u'P\u0159izp\u016fsobit obr\xe1zky \u0161\xed\u0159ce prac. plochy'
+            winMode8 = u'P\u0159izp\u016fsobit obr\xe1zky v\xfd\u0161ce prac. plochy'
+            windowHide = u'Skr\xfdt prvky okna (vybr\xe1no=skr\xfdt)'
+            windowOption = u'Mo\u017enosti re\u017eimu Okno'
+            xCoord = u'X sou\u0159adnice:'
+            yCoord = u'Y sou\u0159adnice:'
+        class SaveAs:
+            name = u'Zobrazit dialog "Ulo\u017eit jako"'
+            description = u'Zobraz\xed dialog "Ulo\u017eit jako".'
+        class SaveDialog:
+            name = u'Zobrazit dialog "Ulo\u017eit"'
+            description = u'Zobraz\xed dialog "Ulo\u017eit".'
+        class ScrollDownOrNext:
+            name = u'Dol\u016f nebo dal\u0161\xed soubor'
+            description = u'Otev\u0159e dal\u0161\xed soubor ve slo\u017ece anebo posune obr\xe1zek dol\u016f.'
+        class ScrollImageDown:
+            name = u'Posunout dol\u016f'
+            description = u'Posune obr\xe1zek dol\u016f.'
+        class ScrollImageUp:
+            name = u'Posunout nahoru'
+            description = u'Posune obr\xe1zek nahoru.'
+        class ScrollLeftOrPrevious:
+            name = u'Vlevo nebo p\u0159edchoz\xed soubor'
+            description = u'Posune obr\xe1zek vlevo nebo otev\u0159e p\u0159edchoz\xed soubor.'
+        class ScrollRightOrNext:
+            name = u'Vpravo nebo dal\u0161\xed soubor'
+            description = u'Posune obr\xe1zek vpravo nebo otev\u0159e dal\u0161\xed soubor.'
+        class ScrollToBeginOrFirstFile:
+            name = u'Posunout na za\u010d\xe1tek nebo otev\u0159\xedt prvn\xed soubor'
+            description = u'Posune na za\u010d\xe1tek (horizont\xe1ln\u011b) nebo otev\u0159e prvn\xed soubor ve slo\u017ece.'
+        class ScrollToEndOrLastFile:
+            name = u'Posunout na konec nebo otev\u0159\xedt posledn\xed soubor'
+            description = u'Posune na konec (horizont\xe1ln\u011b) nebo otev\u0159e posledn\xed soubor ve slo\u017ece.'
+        class ScrollUpOrPrevious:
+            name = u'Nahoru nebo p\u0159edchoz\xed soubor'
+            description = u'Otev\u0159e p\u0159edchoz\xed soubor ve slo\u017ece anebo posune obr\xe1zek nahoru.'
+        class SearchFiles:
+            name = u'Hledat soubory'
+            description = u'Hled\xe1 soubory.'
+        class SelectAllThumb:
+            name = u'Vybrat v\u0161echny miniatury'
+            description = u'Vybere v\u0161echny miniatury (v okn\u011b miniatur).'
+        class SendByMail:
+            name = u'Poslat obr\xe1zek e-mailem'
+            description = u'Po\u0161le obr\xe1zek e-mailem.'
+        class Sharpen:
+            name = u'Zaost\u0159it'
+            description = u'Zaost\u0159\xed obr\xe1zek.'
+        class ShowCommentDialog:
+            name = u'Zobrazit dialog "Koment\xe1\u0159 JPG souboru"'
+            description = u'Zobraz\xed dialog "Koment\xe1\u0159 JPG souboru".'
+        class ShowExifDialog:
+            name = u'Zobrazit dialog "EXIF info"'
+            description = u'Zobraz\xed dialog "EXIF info".'
+        class ShowInHexViewer:
+            name = u'Zobrazit v HEX prohl\xed\u017ee\u010di'
+            description = u'Otev\u0159e obr\xe1zek v HEX prohl\xed\u017ee\u010di.'
+        class ShowInformation:
+            name = u'Zobrazit informace o obr\xe1zku'
+            description = u'Zobraz\xed informace o obr\xe1zku.'
+        class ShowIptcDialog:
+            name = u'Zobrazit dialog IPTC'
+            description = u'Zobraz\xed dialog IPTC.'
+        class ShowNextPgOrFile:
+            name = u'Dal\u0161\xed str\xe1nku nebo soubor'
+            description = u'Zobraz\xed dal\u0161\xed str\xe1nku v\xedcestr\xe1nkov\xe9ho obr\xe1zku nebo otev\u0159e dal\u0161\xed obr\xe1zek ve slo\u017ece.'
+        class ShowPrevPgOrFile:
+            name = u'P\u0159edchoz\xed str\xe1nku nebo soubor'
+            description = u'Zobraz\xed p\u0159edchoz\xed str\xe1nku v\xedcestr\xe1nkov\xe9ho obr\xe1zku nebo otev\u0159e p\u0159edchoz\xed obr\xe1zek ve slo\u017ece.'
+        class SlideshowDialog:
+            name = u'Zobrazit dialog Prezentace'
+            description = u'Zobraz\xed dialog Prezentace.'
+        class StartDirSlideshow:
+            name = u'Spustit prezentaci ve slo\u017ece'
+            description = u'Spust\xed prezentaci ze soubor\u016f aktu\xe1ln\xed slo\u017eky.'
+        class StopAnimation:
+            name = u'Zastavit animaci'
+            description = u'Zastav\xed GIF nebo ANI animaci.'
+        class SwitchMainThumbnail:
+            name = u'P\u0159epnout okno hlavn\xed/miniatury'
+            description = u'P\u0159epne mezi hlavn\xedm oknem a oknem miniatur (je-li viditeln\xe9).'
+        class Thumbnails:
+            name = u'Miniatury'
+            description = u'Miniatury.'
+        class ToggleAutSlideshow1:
+            name = u'Spustit/zastavit "Prezentaci v okn\u011b"'
+            description = u'Spust\xed/zastav\xed  "Prezentaci v okn\u011b".'
+        class ToggleAutSlideshow2:
+            name = u'Zastavit/spustit prezentaci'
+            description = u'Zastav\xed prezentaci. P\u0159i op\u011btovn\xe9m pou\u017eit\xed prezentace pokra\u010duje.'
+        class ToggleCaption:
+            name = u'Zobrazit/skr\xfdt z\xe1hlav\xed okna'
+            description = u'Zobraz\xed/skryje z\xe1hlav\xed okna.'
+        class ToggleFit:
+            name = u'P\u0159izp\u016fsobit plo\u0161e/p\u0159izp\u016fsobit obr\xe1zku'
+            description = u'P\u0159ep\xedn\xe1 mezi "P\u0159izp\u016fsobit obr\xe1zky plo\u0161e" a "P\u0159izp\u016fsobit okno obr\xe1zku".'
+        class ToggleLockZoom:
+            name = u'Zamknout/odemknout zv\u011bt\u0161en\xed'
+            description = u'Zamkne/odemkne zv\u011bt\u0161en\xed (tak\xe9 v re\u017eimu Cel\xe1 obrazovka).'
+        class ToggleMenuBar:
+            name = u'Zobrazit/skr\xfdt nab\xeddkovou li\u0161tu'
+            description = u'Zobraz\xed/skryje nab\xeddkovou li\u0161tu.'
+        class ToggleSlideshow:
+            name = u'Zobrazit/skr\xfdt text (cel\xe1 obrazovka/prezentace)'
+            description = u'Zobraz\xed/skryje text (v re\u017eimech cel\xe1 obrazovka/prezentace).'
+        class ToggleStatusBar:
+            name = u'Zobrazit/skr\xfdt stavov\xfd \u0159\xe1dek'
+            description = u'Zobraz\xed/skryje stavov\xfd \u0159\xe1dek.'
+        class ToggleToolbar:
+            name = u'Zobrazit/skr\xfdt n\xe1strojovou li\u0161tu'
+            description = u'Zobraz\xed/skryje n\xe1strojovou li\u0161tu.'
+        class VerticalFlip:
+            name = u'Vertik\xe1ln\xed p\u0159eklopen\xed'
+            description = u'Vertik\xe1ln\xed p\u0159eklopen\xed.'
+        class WallpaperCentered:
+            name = u'Nastavit jako pozad\xed plochy - na st\u0159ed'
+            description = u'Nastav\xed obr\xe1zek jako pozad\xed plochy - na st\u0159ed.'
+        class WallpaperStretched:
+            name = u'Nastavit jako pozad\xed plochy - rozt\xe1hnout'
+            description = u'Nastav\xed obr\xe1zek jako pozad\xed plochy - rozt\xe1hnout'
+        class WallpaperTiled:
+            name = u'Nastavit jako pozad\xed plochy - vedle sebe'
+            description = u'Nastav\xed obr\xe1zek jako pozad\xed plochy - vedle sebe'
+        class ZoomIn:
+            name = u'Zv\u011bt\u0161it'
+            description = u'Zv\u011bt\u0161\xed obr\xe1zek.'
+        class ZoomOut:
+            name = u'Zmen\u0161it'
+            description = u'Zmen\u0161\xed obr\xe1zek.'
     class Joystick:
         name = u'P\xe1kov\xfd ovlada\u010d'
         description = u'Umo\u017e\u0148uje pou\u017e\xedt p\xe1kov\xe9 ovlada\u010de a gamepady jako vstupn\xed za\u0159\xedzen\xed pro EventGhost.'
@@ -1082,6 +1505,23 @@ class Plugin:
             description = u'Zv\xfd\u0161\xed hlasitost o x%.'
             label_conf = u'Krok v %:'
             label_tree = u'Zv\xfd\u0161it hlasitost o '
+        class WritingToMM:
+            name = u'Zapsat do datab\xe1ze MM'
+            description = u'Z\xe1pis n\u011bkter\xfdch parametr\u016f do datab\xe1ze MediaMonkey.'
+            checkboxlabel = u'Zapsat tak\xe9 do ID3 tagu'
+            label = u'V\xfdb\u011br po\u017eadovan\xe9 vlastnosti:'
+            set = u'Nastavit '
+            class Properties:
+                Comment = u'Koment\xe1\u0159'
+                Custom1 = u'Vlastn\xed 1'
+                Custom2 = u'Vlastn\xed 2'
+                Custom3 = u'Vlastn\xed 3'
+                Genre = u'\u017d\xe1nr'
+                Mood = u'N\xe1lada'
+                Occasion = u'P\u0159\xedle\u017eitost'
+                Quality = u'Kvalita'
+                Rating = u'Hodnocen\xed'
+                Tempo = u'Tempo'
     class MediaPlayerClassic:
         name = u'Media Player Classic'
         description = u'P\u0159id\xe1v\xe1 podporu funkc\xed k ovl\xe1d\xe1n\xed aplikace  Media Player Classic.\n\n<p>Pouze pro verzi <b>6.4.8.9</b> nebo nov\u011bj\u0161\xed.</p>\n<p>Plugin nebude pracovat se star\u0161\xedmi verzemi MPC !</p>\n<p>\n<a href=http://www.eventghost.org/forum/viewtopic.php?t=17>Hl\xe1\u0161en\xed o chyb\xe1ch</a></p>\n<p><a href=http://sourceforge.net/projects/guliverkli/>\nMedia Player Classic SourceForge Project</a></p>'
