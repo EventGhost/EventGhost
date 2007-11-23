@@ -41,7 +41,13 @@ class Fhz1000Pc(eg.PluginClass):
         self.readBuffer = ""
         
         global d2xx
-        d2xx = ctypes.windll.LoadLibrary("ftd2xx.dll")
+        try:
+            d2xx = ctypes.windll.LoadLibrary("ftd2xx.dll")
+        except:
+            raise self.Exception(
+                "FHZ PC DLL not found (ftd2xx.dll).\n"
+                "Make sure you have installed the driver for the device!"
+            )
         self.ftHandle = d2xx.FT_W32_CreateFile(
             'ELV FHZ 1000 PC',
             win32con.GENERIC_READ|win32con.GENERIC_WRITE,

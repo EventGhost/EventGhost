@@ -156,6 +156,9 @@ class CreateNew(eg.ActionClass):
         fontInfo=u'0;-13;0;0;0;700;0;0;0;0;3;2;1;34;Arial',
         caption="Remote",
         windowStyle=0,
+        showInTaskbar=True,
+        moveOnDrag=True,
+        iconizeOnDoubleClick=True,
     ):
         plugin = self.plugin
         plugin.data = []
@@ -170,6 +173,9 @@ class CreateNew(eg.ActionClass):
         plugin.windowColour = windowColour
         plugin.caption = caption
         plugin.windowStyle = windowStyle
+        plugin.showInTaskbar = showInTaskbar
+        plugin.moveOnDrag = moveOnDrag
+        plugin.iconizeOnDoubleClick = iconizeOnDoubleClick
 
     
     def GetLabel(self, *args):
@@ -189,10 +195,16 @@ class CreateNew(eg.ActionClass):
         fontInfo=u'0;-13;0;0;0;700;0;0;0;0;3;2;1;34;Arial',
         caption="Remote",
         windowStyle=0,
+        showInTaskbar=True,
+        moveOnDrag=True,
+        iconizeOnDoubleClick=True,
     ):
         panel = eg.ConfigPanel(self)
         panel.SetSizerProperty(vgap=2)
         captionCtrl = panel.TextCtrl(caption)
+        showInTaskbarCtrl = panel.CheckBox(showInTaskbar, "Show in taskbar")
+        moveOnDragCtrl = panel.CheckBox(moveOnDrag, "Move window on drag click in empty area")
+        iconizeOnDoubleClickCtrl = panel.CheckBox(iconizeOnDoubleClick, "Minimize window on double click in empty area")
         choices = [
             "Normal window",
             "Simple border",
@@ -210,6 +222,9 @@ class CreateNew(eg.ActionClass):
         fontCtrl = panel.FontSelectButton(fontInfo)
         
         panel.AddLine("Caption:", captionCtrl)
+        panel.AddLine(showInTaskbarCtrl)
+        panel.AddLine(moveOnDragCtrl)
+        panel.AddLine(iconizeOnDoubleClickCtrl)
         panel.AddLine("Window style:", windowStyleCtrl)
         panel.AddLine("Default button width:", widthCtrl)
         panel.AddLine("Default button height:", heightCtrl)
@@ -234,6 +249,9 @@ class CreateNew(eg.ActionClass):
                 fontCtrl.GetValue(),
                 captionCtrl.GetValue(),
                 windowStyleCtrl.GetValue(),
+                showInTaskbarCtrl.GetValue(),
+                moveOnDragCtrl.GetValue(),
+                iconizeOnDoubleClickCtrl.GetValue(),
             )
 
 
@@ -407,11 +425,13 @@ class GenBitmapButton(buttons.GenBitmapButton):
     
 class RemotePanel(wx.Panel):
     
-    def __init__(self, parent, *args, **kwargs):
+    def __init__(self, parent, plugin):
         self.parent = parent
-        wx.Panel.__init__(self, parent, *args, **kwargs)
-        self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
-        self.Bind(wx.EVT_LEFT_DCLICK, self.OnCmdIconize)
+        wx.Panel.__init__(self, parent)
+        if plugin.moveOnDrag:
+            self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
+        if plugin.iconizeOnDoubleClick:
+            self.Bind(wx.EVT_LEFT_DCLICK, self.OnCmdIconize)
         self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
         
         self.menu = menu = wx.Menu()
@@ -468,46 +488,41 @@ class RemotePanel(wx.Panel):
 
         
         
+class RemoteFrame(wx.Frame):
+    
+    def __init__(self, plugin, pos):
+        style = wx.SYSTEM_MENU|wx.MINIMIZE_BOX|wx.CLIP_CHILDREN|wx.CLOSE_BOX
+        if not plugin.showInTaskbar:
+            style |= wx.FRAME_NO_TASKBAR
+        if plugin.windowStyle == 0:
+            style |= wx.CAPTION
+        elif plugin.windowStyle == 1:
+            style |= wx.RAISED_BORDER
+        elif plugin.windowStyle == 2:
+            style |= wx.NO_BORDER|wx.FRAME_SHAPED
+        wx.Frame.__init__(self, None, title=plugin.caption, pos=pos, style=style)
+        self.SetBackgroundColour(plugin.windowColour)
+        
+        
+
 def CreateRemote(plugin, xPos, yPos):
     data = plugin.data
     borderSize = plugin.borderSize
     
     if plugin.frame:
         plugin.frame.Destroy()
+    style = wx.SYSTEM_MENU|wx.MINIMIZE_BOX|wx.CLIP_CHILDREN|wx.CLOSE_BOX
+    if not plugin.showInTaskbar:
+        style |= wx.FRAME_NO_TASKBAR
     if plugin.windowStyle == 0:
-        style = (
-            wx.SYSTEM_MENU
-            |wx.MINIMIZE_BOX
-            |wx.CLIP_CHILDREN
-            |wx.CAPTION
-            |wx.CLOSE_BOX
-        )
+        style |= wx.CAPTION
     elif plugin.windowStyle == 1:
-        style = (
-            wx.SYSTEM_MENU
-            |wx.MINIMIZE_BOX
-            |wx.CLIP_CHILDREN
-            |wx.CLOSE_BOX
-            |wx.RAISED_BORDER
-        )
+        style |= wx.RAISED_BORDER
     elif plugin.windowStyle == 2:
-        style = (
-            wx.NO_BORDER
-            |wx.SYSTEM_MENU
-            |wx.FRAME_SHAPED
-            |wx.MINIMIZE_BOX
-            |wx.CLOSE_BOX
-            |wx.CLIP_CHILDREN
-        )
-    plugin.frame = frame = wx.Frame(
-        None, 
-        wx.ID_ANY, 
-        plugin.caption, 
-        pos=(xPos, yPos),
-        style = style
-    )
-    frame.SetBackgroundColour(plugin.windowColour)
-    panel = RemotePanel(frame)
+        style |= wx.NO_BORDER|wx.FRAME_SHAPED
+        
+    plugin.frame = frame = RemoteFrame(plugin, (xPos, yPos))
+    panel = RemotePanel(frame, plugin)
     mainSizer = wx.BoxSizer(wx.VERTICAL)
     mainSizer.Add((0, borderSize))
     lineSizer = wx.BoxSizer(wx.HORIZONTAL)

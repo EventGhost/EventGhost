@@ -326,7 +326,12 @@ class MainFrame(wx.Frame):
         AddItem()
         popupMenuItems.disableItem = AddItem("Disabled", kind=wx.ITEM_CHECK)
         
-        self.SetIcon(eg.taskBarIcon.stateIcons[0])
+        iconBundle = wx.IconBundle()
+        iconBundle.AddIcon(eg.taskBarIcon.stateIcons[0])
+        icon = wx.EmptyIcon()
+        icon.LoadFile("images/icon32x32.png", wx.BITMAP_TYPE_PNG)
+        iconBundle.AddIcon(icon)
+        self.SetIcons(iconBundle)
         
         self.editMenus = (toolBar.buttons, editMenu, popupMenu)
         self.lastFocus = "None"
