@@ -213,7 +213,7 @@ class PluginInfoBase(object):
         try:
             self.instance.__start__(*args, **kwargs)
             self.isStarted = True
-            self.lastExcpetion = None
+            self.lastException = None
         except eg.Exception, exc:
             self.lastException = exc
             msg = eg.text.Error.pluginStartError % self.name

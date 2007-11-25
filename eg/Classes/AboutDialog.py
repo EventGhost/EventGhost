@@ -299,11 +299,11 @@ class ChangelogPanel(Panel2):
         )
         for line in fd:
             if line.startswith("+"):
-                res.append(lineTemplate % ("ADDED", line[1:]))
+                res.append(lineTemplate % ("NEW", line[1:]))
             elif line.startswith("-"):
-                res.append(lineTemplate % ("FIXED", line[1:]))
+                res.append(lineTemplate % ("FIX", line[1:]))
             elif line.startswith("*"):
-                res.append(lineTemplate % ("UPDATED", line[1:]))
+                res.append(lineTemplate % ("UPD", line[1:]))
             elif line.strip() == "":
                 pass
             else:
@@ -329,8 +329,7 @@ class AboutDialog(eg.Dialog):
         notebook.AddPage(Panel2(notebook), Text.tabSpecialThanks)
         notebook.AddPage(Panel3(notebook), Text.tabLicense)
         notebook.AddPage(Panel4(notebook), Text.tabSystemInfo)
-        if eg.debugLevel:
-            notebook.AddPage(ChangelogPanel(notebook), Text.tabChangelog)
+        notebook.AddPage(ChangelogPanel(notebook), Text.tabChangelog)
 
         okButton = wx.Button(self, wx.ID_OK, eg.text.General.ok)
         okButton.SetDefault()

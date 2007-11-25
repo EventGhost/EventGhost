@@ -226,18 +226,6 @@ class USB_UIRT(eg.RawReceiverPlugin):
             raise self.Exception("Error calling UUIRTSetUUIRTConfig")
 
 
-    def GetConfig(self):
-        puConfig = UINT32()
-        if not self.dll.UUIRTGetUUIRTConfig(self.hDrvHandle, byref(puConfig)):
-            self.dll = None
-            raise self.Exception("Error calling UUIRTGetUUIRTConfig")
-        return (
-            bool(puConfig.value & UUIRTDRV_CFG_LEDRX),
-            bool(puConfig.value & UUIRTDRV_CFG_LEDTX),
-            bool(puConfig.value & UUIRTDRV_CFG_LEGACYRX)
-        )
-
-
     def ReceiveCallback(self, eventString, userdata):
         if self.enabled:
             self.TriggerEvent(eventString)
@@ -256,17 +244,15 @@ class USB_UIRT(eg.RawReceiverPlugin):
             protocolVersion = self.protocolVersion
             firmwareVersion = self.firmwareVersion
             firmwareDate = self.firmwareDate.strftime("%x")
-            ledRX, ledTX, legacyRX = self.GetConfig()
         else:
             protocolVersion = text.notFound
             firmwareVersion = text.notFound
             firmwareDate = text.notFound
-            ledRX, ledTX, legacyRX = False, False, False
             
         panel = eg.ConfigPanel(self)
-        ledRxCheckBox = panel.CheckBox(ledRX, text.blinkRx)
-        ledTxCheckBox = panel.CheckBox(ledTX, text.blinkTx)
-        legacyRxCheckBox = panel.CheckBox(legacyRX, text.legacyCodes)
+        ledRxCheckBox = panel.CheckBox(ledRx, text.blinkRx)
+        ledTxCheckBox = panel.CheckBox(ledTx, text.blinkTx)
+        legacyRxCheckBox = panel.CheckBox(legacyRx, text.legacyCodes)
         stopCodesRxCheckBox = panel.CheckBox(repeatStopCodes, text.stopCodes)
 
         infoGroupSizer = wx.StaticBoxSizer(

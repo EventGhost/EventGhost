@@ -264,7 +264,7 @@ class X10(eg.PluginClass):
         self.workerThread.Start()
         if not self.workerThread.comInstance:
             self.workerThread.Stop()
-            raise eg.Exception(self.text.errorMesg)
+            raise self.Exception(self.text.errorMesg)
         
 
     def SetArguments(self, remoteType=2, ids=None, prefix=None):

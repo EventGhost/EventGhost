@@ -1,3 +1,5 @@
++ Changelog tab in the about dialog
+
 Version 0.3.6.1183 (11/25/2007)
 + If a plugin gets into error state, it will now try to restart itself on execute, disable/enable or pressing ok or apply in the configuration dialog.
 + eg.Exceptions class for generic translatable error messages

@@ -384,7 +384,10 @@ class EventGhost(object):
 
             
     class Exception(Exception):
-        pass
+        
+        def __unicode__(self):
+            res = [unicode(arg) for arg in self.args]
+            return "\n".join(res)
 
 
     class StopException(Exception):

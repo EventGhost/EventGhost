@@ -59,11 +59,9 @@ class PluginItem(ActionItem):
         if info is None or info.initFailed:
             #eg.PrintError("Error loading plugin: %s" % pluginStr)
             self.name = pluginStr + " not found"
-            self.isInErrorState = True
         else:
             self.name = eg.text.General.pluginLabel % info.label
             self.icon = info.icon
-            self.isInErrorState = False
             self.executable = info.instance
 
 
@@ -78,7 +76,7 @@ class PluginItem(ActionItem):
             
     
     def SetAttributes(self, tree, id):
-        if self.isInErrorState:
+        if self.info.lastException:
             tree.SetItemTextColour(id, eg.colour.pluginError)
     
     
@@ -88,16 +86,11 @@ class PluginItem(ActionItem):
         
         
     def SetErrorState(self):
-        if not self.isInErrorState:
-            wx.CallAfter(self._SetColour, eg.colour.pluginError)
-            self.isInErrorState = True
-            self.info.isStarted = False
+        wx.CallAfter(self._SetColour, eg.colour.pluginError)
         
         
     def ClearErrorState(self):
-        if self.isInErrorState:
-            wx.CallAfter(self._SetColour, eg.colour.treeItem)
-            self.isInErrorState = False
+        wx.CallAfter(self._SetColour, eg.colour.treeItem)
         
         
     def Refresh(self):
