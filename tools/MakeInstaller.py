@@ -52,6 +52,7 @@ def GetSourceFiles():
         "EventGhost.ico",
         "Example.xml",
         "LICENSE.TXT",
+        "CHANGELOG.TXT",
     ]
     return GetFiles(files, SourcePattern)
 
@@ -60,6 +61,7 @@ def GetUpdateFiles():
     files = [
         "Example.xml",
         "LICENSE.TXT",
+        "CHANGELOG.TXT",
     ]
     return GetFiles(files, SourcePattern)
     
@@ -67,7 +69,7 @@ def GetUpdateFiles():
 def GetSetupFiles():
     files = [
         "Example.xml",
-        "LICENSE.TXT",
+        "CHANGELOG.TXT",
     ]
     return GetFiles(files, SourcePattern + ["*.dll"])
     
@@ -91,7 +93,7 @@ def UpdateVersionFile(commitSvn):
     
 def UpdateChangeLog(templateOptions):    
     path = join(trunkDir, "CHANGELOG.TXT")
-    s1 = "\n\nVersion %s.%s (%s)\n" % (
+    s1 = "Version %s.%s (%s)\n" % (
         templateOptions['version'], 
         templateOptions['buildNum'],
         time.strftime("%m/%d/%Y"),
