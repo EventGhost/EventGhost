@@ -42,7 +42,9 @@ class Text(eg.TranslatableStrings):
     tabSpecialThanks = "Special Thanks"
     tabLicense = "License Agreement"
     tabSystemInfo = "System Information"
+    tabChangelog = "Changelog"
     
+
 
 SPECIAL_THANKS_DATA = (
     (
@@ -276,6 +278,41 @@ class Panel4(wx.Panel):
 
      
         
+class ChangelogPanel(Panel2):
+    
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+        fd = open("CHANGELOG.TXT")
+        if not fd:
+            return
+        res = ["<TABLE>"]
+        headerTemplate = (
+            "<TR><TD COLSPAN=2><P><FONT SIZE=+0><B><U>%s"
+            "</U></B></FONT></TD</TR>"
+        )
+        lineTemplate = (
+            "<TR>"
+            "<TD VALIGN=TOP><b>&nbsp;&nbsp;%s</b></TD>"
+            "<TD>%s</TD>"
+            "</TR>"
+        )
+        for line in fd:
+            if line.startswith("+"):
+                res.append(lineTemplate % ("ADDED", line[1:]))
+            elif line.startswith("-"):
+                res.append(lineTemplate % ("FIXED", line[1:]))
+            elif line.startswith("*"):
+                res.append(lineTemplate % ("UPDATED", line[1:]))
+            elif line.strip() == "":
+                pass
+            else:
+                res.append(headerTemplate % line)
+        res.append("</TABLE>")
+        fd.close()
+        self.CreateHtmlWindow("".join(res))
+
+
+
 class AboutDialog(eg.Dialog):
 
     def __init__(self, parent):
@@ -291,6 +328,8 @@ class AboutDialog(eg.Dialog):
         notebook.AddPage(Panel2(notebook), Text.tabSpecialThanks)
         notebook.AddPage(Panel3(notebook), Text.tabLicense)
         notebook.AddPage(Panel4(notebook), Text.tabSystemInfo)
+        if eg.debugLevel:
+            notebook.AddPage(ChangeLogPanel(notebook), Text.tabChangelog)
 
         okButton = wx.Button(self, wx.ID_OK, eg.text.General.ok)
         okButton.SetDefault()

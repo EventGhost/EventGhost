@@ -1,0 +1,5 @@
++ If a plugin gets into error state, it will now try to restart itself on execute, disable/enable or pressing ok or apply in the configuration dialog.
++ eg.Exceptions class for generic translatable error messages
+
+Version 0.3.6.1182 (11/23/2007)
+* Czech language file, MediaMonkey and IrfanView

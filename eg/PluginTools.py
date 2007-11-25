@@ -45,7 +45,6 @@ class PluginProxy(object):
         
 
 
-
 def ImportPlugin(pluginDir):
     moduleName = "pluginImport." + pluginDir
     if moduleName in sys.modules:
@@ -112,7 +111,8 @@ class PluginInfoBase(object):
     createMacrosOnAdd = False
     
     eventList = None
-    
+    lastException = None
+    instance = None
         
     @classmethod
     def LoadModule(pluginInfo):
@@ -155,11 +155,11 @@ class PluginInfoBase(object):
     
     
     @classmethod
-    def CreatePluginInstance(pluginInfo, evalName, treeItem):
-        info = pluginInfo()
+    def CreatePluginInstance(pluginInfoCls, evalName, treeItem):
+        info = pluginInfoCls()
         info.treeItem = treeItem
         info.actions = {}
-        pluginCls = pluginInfo.pluginCls
+        pluginCls = pluginInfoCls.pluginCls
         try:
             plugin = pluginCls.__new__(pluginCls)
         except:
@@ -171,7 +171,8 @@ class PluginInfoBase(object):
         class _Exception(eg.PluginClass.Exception):
             obj = plugin
         plugin.Exception = _Exception
-
+        plugin.Exceptions = eg.ExceptionsProvider(plugin)
+        
         if evalName is None:
             evalName = pluginCls.__name__
             i = 1
@@ -185,27 +186,74 @@ class PluginInfoBase(object):
         
         if evalName != pluginCls.__name__:
             numStr = evalName[len(pluginCls.__name__):]
-            plugin.name = pluginInfo.name + " #" + numStr
+            plugin.name = pluginInfoCls.name + " #" + numStr
         else:
-            plugin.name = pluginInfo.name
-        plugin.description = pluginInfo.description
+            plugin.name = pluginInfoCls.name
+        plugin.description = pluginInfoCls.description
         info.eventPrefix = evalName
-        if pluginInfo.instances is None:
-            pluginInfo.instances = [info]
+        if pluginInfoCls.instances is None:
+            pluginInfoCls.instances = [info]
         else:
-            pluginInfo.instances.append(plugin.info)
+            pluginInfoCls.instances.append(plugin.info)
         try:
             plugin.__init__()
             info.initFailed = False
+            info.instance = plugin
         except eg.Exception, e:
             eg.PrintError(e.message)
         except:
             eg.PrintTraceback()
-        pluginInfo.label = plugin
-        return plugin
+        pluginInfoCls.label = plugin
+        return info
              
-
+             
+    def Start(self, args=(), kwargs={}):
+        if self.isStarted:
+            return
+        try:
+            self.instance.__start__(*args, **kwargs)
+            self.isStarted = True
+            self.lastExcpetion = None
+        except eg.Exception, exc:
+            self.lastException = exc
+            msg = eg.text.Error.pluginStartError % self.name
+            msg += "\n" + unicode(exc)
+            eg.log.PrintItem(msg, eg.Icons.ERROR_ICON, self.treeItem)
+            self.treeItem.SetErrorState()
+        except Exception, exc:
+            self.lastException = exc
+            eg.PrintError(eg.text.Error.pluginStartError % self.name)
+            eg.PrintTraceback()
+            self.treeItem.SetErrorState()
+            
+            
+    def Stop(self):
+        """
+        This is a wrapper for the __stop__ member of a eg.PluginClass.
         
+        It should only be called from the ActionThread.
+        """
+        if self.lastException:
+            return
+        if not self.isStarted:
+            return
+        self.isStarted = False
+        try:
+            self.instance.__stop__()
+        except eg.Exception, exc:
+            self.lastException = exc
+            msg = eg.text.Error.pluginStartError % self.name
+            msg += "\n" + unicode(exc)
+            eg.log.PrintItem(msg, eg.Icons.ERROR_ICON, self.treeItem)
+            self.treeItem.SetErrorState()
+        except Exception, exc:
+            self.lastException = exc
+            eg.PrintError(eg.text.Error.pluginStartError % self.name)
+            eg.PrintTraceback()
+            self.treeItem.SetErrorState()
+            
+            
+            
 def GetPluginInfo(pluginName):
     # first look, if we already have cached this plugin class
     info = eg.pluginClassInfo.get(pluginName, None)
@@ -254,21 +302,22 @@ def GetPluginInfo(pluginName):
 
 @eg.LogIt
 def OpenPlugin(pluginName, evalName, args, treeItem=None):
-    info = GetPluginInfo(pluginName)
-    if info is None:
+    pluginInfoCls = GetPluginInfo(pluginName)
+    if pluginInfoCls is None:
         return None
-    if info.pluginCls is None:
-        if not info.LoadModule():
+    if pluginInfoCls.pluginCls is None:
+        if not pluginInfoCls.LoadModule():
             return None
-    plugin = info.CreatePluginInstance(evalName, treeItem)
+    info = pluginInfoCls.CreatePluginInstance(evalName, treeItem)
+    plugin = info.instance
     plugin.SetArguments(*args)
     if hasattr(plugin, "Compile"):
         plugin.Compile(*args)
     try:
-        plugin.info.label = plugin.GetLabel(*args)
+        info.label = plugin.GetLabel(*args)
     except:
-        plugin.info.label = plugin.info.name
-    return plugin
+        info.label = plugin.info.name
+    return info
 
         
 @eg.LogIt

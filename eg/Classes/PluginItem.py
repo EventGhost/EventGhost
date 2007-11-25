@@ -54,18 +54,17 @@ class PluginItem(ActionItem):
             self.args = ()
         ident = node.attrib.get('identifier', None)
         pluginStr = node.attrib['file']
-        self.isStarted = False
         self.pluginFile = pluginStr
-        self.executable = plugin = eg.OpenPlugin(pluginStr, ident, self.args, self)
-        if plugin is None or plugin.info.initFailed:
+        self.info = info = eg.OpenPlugin(pluginStr, ident, self.args, self)
+        if info is None or info.initFailed:
             #eg.PrintError("Error loading plugin: %s" % pluginStr)
             self.name = pluginStr + " not found"
             self.isInErrorState = True
-            #plugin.info.label = pluginStr
         else:
-            self.name = eg.text.General.pluginLabel % plugin.info.label
-            self.icon = plugin.info.icon
+            self.name = eg.text.General.pluginLabel % info.label
+            self.icon = info.icon
             self.isInErrorState = False
+            self.executable = info.instance
 
 
     def GetLabel(self):
@@ -80,7 +79,7 @@ class PluginItem(ActionItem):
     
     def SetAttributes(self, tree, id):
         if self.isInErrorState:
-            tree.SetItemTextColour(id, (255,0,0))
+            tree.SetItemTextColour(id, eg.colour.pluginError)
     
     
     def _SetColour(self, colour):
@@ -88,15 +87,17 @@ class PluginItem(ActionItem):
             self.tree.SetItemTextColour(self.id, colour)
         
         
-    def SetErrorState(self, state):
-        if state:
-            if not self.isInErrorState:
-                wx.CallAfter(self._SetColour, (255,0,0))
-                self.isInErrorState = True
-        else:
-            if self.isInErrorState:
-                wx.CallAfter(self._SetColour, (0,0,0))
-                self.isInErrorState = False
+    def SetErrorState(self):
+        if not self.isInErrorState:
+            wx.CallAfter(self._SetColour, eg.colour.pluginError)
+            self.isInErrorState = True
+            self.info.isStarted = False
+        
+        
+    def ClearErrorState(self):
+        if self.isInErrorState:
+            wx.CallAfter(self._SetColour, eg.colour.treeItem)
+            self.isInErrorState = False
         
         
     def Refresh(self):
@@ -122,25 +123,8 @@ class PluginItem(ActionItem):
         
         It should only be called from the ActionThread.
         """
-        if self.isInErrorState:
-            return
-        if self.isStarted:
-            return
-        try:
-            self.executable.__start__(*self.args)
-            self.executable.info.isStarted = True
-        except eg.Exception, e:
-            msg = eg.text.Error.pluginStartError % self.executable.name
-            msg += "\n" + unicode(e.message)
-            eg.log.PrintItem(msg, eg.Icons.ERROR_ICON, self)
-            self.SetErrorState(True)
-        except:
-            eg.PrintError(eg.text.Error.pluginStartError % self.executable.name)
-            eg.PrintTraceback()
-            self.SetErrorState(True)
-        else:
-            self.SetErrorState(False)
-        self.isStarted = True
+        if self.info:
+            self.info.Start(self.args)
         
         
     def StopPlugin(self):
@@ -149,22 +133,8 @@ class PluginItem(ActionItem):
         
         It should only be called from the ActionThread.
         """
-        if self.isInErrorState:
-            return
-        if not self.isStarted:
-            return
-        try:
-            self.executable.__stop__()
-        except eg.Exception, e:
-            eg.PrintError("Error stopping plugin: %s" % self.executable.name)
-            eg.PrintError(e.message)
-            #self.SetErrorState(True)
-        except:
-            eg.PrintError("Error stopping plugin: %s" % self.executable.name)
-            eg.PrintTraceback()
-            self.SetErrorState(True)
-        self.isStarted = False
-        self.executable.info.isStarted = False
+        if self.info:
+            self.info.Stop()
         
         
     def Enable(self, flag=True):
@@ -181,6 +151,7 @@ class PluginItem(ActionItem):
                 self.StopPlugin()
                 eg.ClosePlugin(self.executable)
                 self.executable = None
+                self.info = None
             eg.actionThread.Call(ClosePlugin)
             
         ActionItem._Delete(self)
@@ -210,13 +181,13 @@ class PluginItem(ActionItem):
     
     
     def NeedsStartupConfiguration(self):
-        if self.executable.Configure.im_func != eg.PluginClass.Configure.im_func:
+        if self.info.instance.Configure.im_func != eg.PluginClass.Configure.im_func:
             return True
         return False
     
     
     def ShowHelp(self):
-        plugin = self.executable
+        plugin = self.info.instance
         eg.HTMLDialog(
             eg.text.General.pluginLabel % plugin.name, 
             plugin.description, 
@@ -227,22 +198,23 @@ class PluginItem(ActionItem):
                         
     @eg.LogIt
     def SetParams(self, *args):
-        self.SetErrorState(False)
-        if args != self.args:
-            self.args = args
-            label = self.executable.GetLabel(*args)
-            if label != self.executable.info.label:
-                self.executable.info.label = label
-                self.name = eg.text.General.pluginLabel % label
-                if self.id:
-                    self.tree.SetItemText(
-                        self.id, 
-                        self.name
-                    )
-            self.RefreshAllVisibleActions()
-            if self.isEnabled:
-                eg.actionThread.Call(self.StopPlugin)
-                eg.actionThread.Call(self.StartPlugin)
+        info = self.info
+        if not info.lastException and args == self.args:
+            return
+        self.args = args
+        label = info.instance.GetLabel(*args)
+        if label != info.label:
+            info.label = label
+            self.name = eg.text.General.pluginLabel % label
+            if self.id:
+                self.tree.SetItemText(
+                    self.id, 
+                    self.name
+                )
+        self.RefreshAllVisibleActions()
+        if self.isEnabled:
+            eg.actionThread.Call(self.StopPlugin)
+            eg.actionThread.Call(self.StartPlugin)
 
 
     def RefreshAllVisibleActions(self):
@@ -250,7 +222,7 @@ class PluginItem(ActionItem):
         Calls Refresh() for all currently visible actions of this plugin.
         """
         ActionItem = self.document.ActionItem
-        plugin = self.executable
+        plugin = self.info.instance
         def Traverse(item):
             if item.__class__ == ActionItem:
                 if item.executable.plugin == plugin:

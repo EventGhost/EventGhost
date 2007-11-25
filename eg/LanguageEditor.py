@@ -176,6 +176,7 @@ class LanguageEditor(wx.Frame):
         eg.AddActionGroupDialog
         eg.OptionsDialog
         eg.FindDialog
+        import Classes.Exceptions
         #import MainFrame
         
         for plugin in os.listdir("plugins"):
@@ -305,6 +306,7 @@ class LanguageEditor(wx.Frame):
             "General",
             "MainFrame",
             "Error",
+            "Exceptions",
             "CheckUpdate",
             "AddActionDialog",
             "AddPluginDialog",

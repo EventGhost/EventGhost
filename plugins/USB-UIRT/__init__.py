@@ -53,10 +53,6 @@ eg.RegisterPlugin(
 )
 
 
-import wx
-import USB_UIRT as UUIRT
-
-
 class Text:
     uuInfo = "USB-UIRT Info"
     uuProtocol = "Protocol Version: "
@@ -102,12 +98,56 @@ class Text:
 
 
     
+import wx
+
+from ctypes import (
+    c_int, c_uint, c_ulong, byref, c_ubyte, c_char_p, c_void_p, POINTER, 
+    WINFUNCTYPE, Structure, GetLastError, create_string_buffer, WinDLL
+)
+import datetime
+import threading
+
+INVALID_HANDLE_VALUE = -1
+UINT32 = c_uint
+
+class UUINFO(Structure):
+    _fields_ = (
+        ('fwVersion',   c_uint),
+        ('protVersion', c_uint),
+        ('fwDateDay',   c_ubyte),
+        ('fwDateMonth', c_ubyte),
+        ('fwDateYear',  c_ubyte),
+    )
+PUUINFO = POINTER(UUINFO)
+
+UUIRTDRV_ERR_NO_DEVICE = 0x20000001
+UUIRTDRV_ERR_NO_RESP = 0x20000002
+UUIRTDRV_ERR_NO_DLL = 0x20000003
+UUIRTDRV_ERR_VERSION = 0x20000004
+
+UUIRTDRV_CFG_LEDRX = 0x0001
+UUIRTDRV_CFG_LEDTX = 0x0002
+UUIRTDRV_CFG_LEGACYRX = 0x0004
+
+UUIRTDRV_IRFMT_UUIRT = 0x0000
+UUIRTDRV_IRFMT_PRONTO = 0x0010
+
+UUIRTDRV_IRFMT_LEARN_FORCERAW = 0x0100
+UUIRTDRV_IRFMT_LEARN_FORCESTRUC    = 0x0200
+UUIRTDRV_IRFMT_LEARN_FORCEFREQ = 0x0400
+UUIRTDRV_IRFMT_LEARN_FREQDETECT    = 0x0800
+
+UUCALLBACKPROC = WINFUNCTYPE(c_int, c_char_p, c_void_p)
+LEARNCALLBACKPROC = WINFUNCTYPE(c_int, c_uint, c_uint, c_ulong, c_void_p)
+
+
+
 class USB_UIRT(eg.RawReceiverPlugin):
     text = Text
     
     def __init__(self):
-        self.device = None
         eg.RawReceiverPlugin.__init__(self)
+        self.dll = None
         self.enabled = False
         self.AddAction(TransmitIR)
 
@@ -119,27 +159,90 @@ class USB_UIRT(eg.RawReceiverPlugin):
         legacyRX=False, 
         repeatStopCodes=False
     ):
+        self.codeFormat = UUIRTDRV_IRFMT_PRONTO
         try:
-            self.device = UUIRT.USB_UIRT()
-        except UUIRT.UUIRTError, msg:
-            self.device = None
-            raise eg.Exception(msg)
-        self.device.SetReceiveCallback(self.ReceiveCallback)
-        self.device.SetConfig(ledRX, ledTX, legacyRX, repeatStopCodes)
+            dll = WinDLL('uuirtdrv')
+        except:
+            raise self.Exceptions.DriverNotFound
+        puDrvVersion = c_uint(0)
+        if not dll.UUIRTGetDrvInfo(byref(puDrvVersion)):
+            raise self.Exception("Unable to retrieve uuirtdrv version!")
+        if puDrvVersion.value != 0x0100:
+            raise self.Exception("Invalid uuirtdrv version!")
+
+        hDrvHandle = dll.UUIRTOpen()
+        if hDrvHandle == INVALID_HANDLE_VALUE:
+            err = GetLastError()
+            if err == UUIRTDRV_ERR_NO_DLL:
+                raise self.Exceptions.DeviceNotFound
+            elif err == UUIRTDRV_ERR_NO_DEVICE:
+                raise self.Exceptions.DeviceNotFound
+            elif err == UUIRTDRV_ERR_NO_RESP:
+                raise self.Exceptions.DeviceInitFailed
+            else:
+                raise self.Exceptions.DeviceInitFailed
+        self.hDrvHandle = hDrvHandle
+
+        puuInfo = UUINFO()
+        if not dll.UUIRTGetUUIRTInfo(hDrvHandle, byref(puuInfo)):
+            raise self.Exceptions.DeviceInitFailed
+        self.firmwareVersion = str(puuInfo.fwVersion >> 8) + '.' + str(puuInfo.fwVersion & 0xFF)
+        self.protocolVersion = str(puuInfo.protVersion >> 8) + '.' + str(puuInfo.protVersion & 0xFF)
+        self.firmwareDate = datetime.date(
+            puuInfo.fwDateYear+2000,
+            puuInfo.fwDateMonth, 
+            puuInfo.fwDateDay
+        )
+        self.dll = dll
+        self.receiveProc = UUCALLBACKPROC(self.ReceiveCallback)
+        if not dll.UUIRTSetReceiveCallback(self.hDrvHandle, self.receiveProc, 0):
+            self.dll = None
+            raise self.Exception("Error calling UUIRTSetReceiveCallback")
+
+        self.SetConfig(ledRX, ledTX, legacyRX, repeatStopCodes)
         self.enabled = True
         
         
     def __stop__(self):
         self.enabled = False
-        if self.device:
-            self.device.Close()
-            self.device = None
+        if self.dll:
+            if not self.dll.UUIRTClose(self.hDrvHandle):
+                raise self.Exception("Error calling UUIRTClose")
+            self.dll = None
         
         
-    def ReceiveCallback(self, eventString):
+    def SetConfig(self, ledRX, ledTX, legacyRX, repeatStopCodes=False):
+        value = 0
+        if ledRX:
+            value |= UUIRTDRV_CFG_LEDRX
+        if ledTX:
+            value |= UUIRTDRV_CFG_LEDTX
+        if legacyRX:
+            value |= UUIRTDRV_CFG_LEGACYRX
+        if repeatStopCodes:
+            value |= 16
+        if not self.dll.UUIRTSetUUIRTConfig(self.hDrvHandle, UINT32(value)):
+            self.dll = None
+            raise self.Exception("Error calling UUIRTSetUUIRTConfig")
+
+
+    def GetConfig(self):
+        puConfig = UINT32()
+        if not self.dll.UUIRTGetUUIRTConfig(self.hDrvHandle, byref(puConfig)):
+            self.dll = None
+            raise self.Exception("Error calling UUIRTGetUUIRTConfig")
+        return (
+            bool(puConfig.value & UUIRTDRV_CFG_LEDRX),
+            bool(puConfig.value & UUIRTDRV_CFG_LEDTX),
+            bool(puConfig.value & UUIRTDRV_CFG_LEGACYRX)
+        )
+
+
+    def ReceiveCallback(self, eventString, userdata):
         if self.enabled:
             self.TriggerEvent(eventString)
-        
+        return 0
+    
         
     def Configure(
         self, 
@@ -149,11 +252,11 @@ class USB_UIRT(eg.RawReceiverPlugin):
         repeatStopCodes=False
     ):
         text = self.text
-        if self.device:
-            protocolVersion = self.device.protocolVersion
-            firmwareVersion = self.device.firmwareVersion
-            firmwareDate = self.device.firmwareDate.strftime("%x")
-            ledRX, ledTX, legacyRX = self.device.GetConfig()
+        if self.dll:
+            protocolVersion = self.protocolVersion
+            firmwareVersion = self.firmwareVersion
+            firmwareDate = self.firmwareDate.strftime("%x")
+            ledRX, ledTX, legacyRX = self.GetConfig()
         else:
             protocolVersion = text.notFound
             firmwareVersion = text.notFound
@@ -215,7 +318,31 @@ class TransmitIR(eg.ActionClass):
     inactivityWaitTime = 0
     
     def __call__(self, code='', repeatCount=4, inactivityWaitTime=0):
-        self.plugin.device.TransmitIR(code, repeatCount, inactivityWaitTime)
+        if len(code) > 5:
+            start = 0
+            if code[0] == "Z":
+                start = 2
+            if code[start+3] == "R":
+                codeFormat = UUIRTDRV_IRFMT_UUIRT
+            elif code[start+4] == " ":
+                codeFormat = UUIRTDRV_IRFMT_PRONTO
+            else:
+                codeFormat = UUIRTDRV_IRFMT_LEARN_FORCESTRUC
+        else:
+            repeatCount = 0
+            codeFormat = UUIRTDRV_IRFMT_PRONTO
+            code = ""
+        if not self.plugin.dll.UUIRTTransmitIR(
+            self.plugin.hDrvHandle,    # hHandle
+            c_char_p(code),     # IRCode
+            codeFormat,         # codeFormat
+            repeatCount,        # repeatCount
+            inactivityWaitTime, # inactivityWaitTime
+            0,                  # hEvent
+            0,                  # reserved1
+            0                   # reserved2
+        ):
+            raise self.Exceptions.DeviceNotReady
         
         
     def GetLabel(self, code='', repeatCount=4, inactivityWaitTime=0):
@@ -267,7 +394,7 @@ class TransmitIR(eg.ActionClass):
                 
         learnButton = panel.Button(text.learnButton)  
         testButton = panel.Button(text.testButton)
-        if self.plugin.device is None:
+        if self.plugin.dll is None:
             learnButton.Enable(False)
             testButton.Enable(False)
             
@@ -312,17 +439,19 @@ class TransmitIR(eg.ActionClass):
         def LearnIR(event):
             learnDialog = IRLearnDialog(
                 None, 
-                self.plugin.device, 
+                self.plugin.dll, 
+                self.plugin.hDrvHandle,
                 text.LearnDialog
             )
             learnDialog.ShowModal()
             if learnDialog.code:
                 editCtrl.SetValue(learnDialog.code)
+            learnDialog.AbortLearnThreadWait()
             learnDialog.Destroy()
         learnButton.Bind(wx.EVT_BUTTON, LearnIR)
             
         def TestIR(event):
-            self.plugin.device.TransmitIR(*GetResult())
+            self(*GetResult())
         testButton.Bind(wx.EVT_BUTTON, TestIR)
 
         def GetResult():
@@ -349,10 +478,11 @@ class TransmitIR(eg.ActionClass):
 
 class IRLearnDialog(wx.Dialog):
     
-    def __init__(self, parent, device, text):
-        self.device = device
-        self.device.SetRawMode(False)
+    def __init__(self, parent, dll, hDrvHandle, text):
+        self.dll = dll
+        self.hDrvHandle = hDrvHandle
         self.code = None
+        self.codeFormat = UUIRTDRV_IRFMT_PRONTO
         wx.Dialog.__init__(
             self, 
             parent, 
@@ -429,9 +559,54 @@ class IRLearnDialog(wx.Dialog):
         sizer.Fit(self)
         self.SetMinSize(self.GetSize())
         self.Bind(wx.EVT_CLOSE, self.OnClose)
-        self.device.StartLearnIR(self.LearnCallback, self.OnLearnSuccess)
+        self.StartLearnIR()
 
 
+    def SetRawMode(self, flag=True):
+        if flag:
+            self.codeFormat = UUIRTDRV_IRFMT_LEARN_FORCERAW
+        else:
+            self.codeFormat = UUIRTDRV_IRFMT_PRONTO
+
+
+    def StartLearnIR(self):
+        self.learnThreadAbortEvent = threading.Event()
+        self.bAbortLearn = c_int(0)
+        self.learnThread = threading.Thread(target=self.LearnThread)
+        self.learnThread.start()
+        
+        
+    def AbortLearnThread(self):
+        self.bAbortLearn.value = True
+        
+        
+    def AbortLearnThreadWait(self):
+        self.bAbortLearn.value = True
+        self.learnThreadAbortEvent.wait(10)
+        
+        
+    def AcceptBurst(self):
+        self.bAbortLearn.value = -1
+        
+
+    def LearnThread(self):
+        learnBuffer = create_string_buffer('\000' * 2048)
+        self.dll.UUIRTLearnIR(  
+            self.hDrvHandle,                       # hHandle
+            self.codeFormat,                       # codeFormat
+            learnBuffer,                           # IRCode buffer
+            LEARNCALLBACKPROC(self.LearnCallback), # progressProc
+            0x5a5a5a5a,                            # userData
+            byref(self.bAbortLearn),               # *pAbort
+            0,                                     # param1
+            0,                                     # reserved0
+            0                                      # reserved1
+        )
+        if self.bAbortLearn.value != 1:
+            self.OnLearnSuccess(learnBuffer.value)
+        self.learnThreadAbortEvent.set()
+        
+        
     def LearnCallback(self, progress, sigQuality, carrierFreq, userData):
         if progress > 0:
             self.burstButton.Enable(True)
@@ -449,20 +624,20 @@ class IRLearnDialog(wx.Dialog):
         
         
     def OnRawBox(self, event):
-        self.device.AbortLearnThreadWait()
-        self.device.SetRawMode(self.forceRawCtrl.GetValue())
+        self.AbortLearnThreadWait()
+        self.SetRawMode(self.forceRawCtrl.GetValue())
         self.burstButton.Enable(False)
         self.progressCtrl.SetValue(0)     
         self.sigQualityCtrl.SetValue(0)
-        self.device.StartLearnIR(self.LearnCallback, self.OnLearnSuccess)
+        self.StartLearnIR()
         
         
     def OnAcceptBurst(self, event):
-        self.device.AcceptBurst()
+        self.AcceptBurst()
     
     
     def OnClose(self, event):
-        self.device.AbortLearnThread()
+        self.AbortLearnThread()
         event.Skip()
         
         

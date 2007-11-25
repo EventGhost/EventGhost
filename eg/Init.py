@@ -93,12 +93,6 @@ class EventGhost(object):
         import GifImagePlugin
         Image._initialized = 2  
         
-        # create a global asyncore loop thread
-        # TODO: Only start if asyncore is requested
-        eg.dummyAsyncoreDispatcher = None
-        eg.RestartAsyncore()
-        threading.Thread(target=asyncore.loop, name="AsyncoreThread").start()
-
         import Utils
         eg.Utils = Utils
         eg.LogIt = Utils.LogIt
@@ -195,6 +189,13 @@ class EventGhost(object):
         
         
     def StartGui(self):
+        global eg
+        # create a global asyncore loop thread
+        # TODO: Only start if asyncore is requested
+        eg.dummyAsyncoreDispatcher = None
+        eg.RestartAsyncore()
+        threading.Thread(target=asyncore.loop, name="AsyncoreThread").start()
+
         import eg.WinAPI.COMServer
         
         self.scheduler.start()
@@ -383,11 +384,7 @@ class EventGhost(object):
 
             
     class Exception(Exception):
-        def __init__(self, message):
-            self.message = message
-            
-        def __str__(self):
-            return repr(self.message)
+        pass
 
 
     class StopException(Exception):

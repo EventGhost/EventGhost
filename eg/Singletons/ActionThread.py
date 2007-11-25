@@ -35,9 +35,9 @@ class ActionThread(eg.ThreadWorker):
         eg.eventTable.clear()
         for pluginIdent in eg.CORE_PLUGINS:
             try:
-                plugin = eg.OpenPlugin(pluginIdent, None, ())
-                plugin.__start__()
-                plugin.info.isStarted = True
+                pluginInfo = eg.OpenPlugin(pluginIdent, None, ())
+                pluginInfo.instance.__start__()
+                pluginInfo.isStarted = True
             except:
                 eg.PrintTraceback()
         start = clock()
@@ -75,7 +75,7 @@ class ActionThread(eg.ThreadWorker):
             action()
         except eg.PluginClass.Exception, e:
             eg.log.PrintItem(e.message, eg.Icons.ERROR_ICON, e.obj.info.treeItem)
-            e.obj.info.treeItem.SetErrorState(True)
+            e.obj.info.treeItem.SetErrorState()
             #print "ex:", type(e), e.obj
         except:
             eg.PrintTraceback()

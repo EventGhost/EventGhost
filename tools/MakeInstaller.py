@@ -91,10 +91,14 @@ def UpdateVersionFile(commitSvn):
     
 def UpdateChangeLog(templateOptions):    
     path = join(trunkDir, "CHANGELOG.TXT")
+    s1 = "\n\nVersion %s.%s (%s)\n" % (
+        templateOptions['version'], 
+        templateOptions['buildNum'],
+        time.strftime("%m/%d/%Y"),
+    )
     fd = open(path, "r")
-    s1 = fd.read()
+    s2 = fd.read()
     fd.close()
-    s2 = "%s.%s:\n" % (templateOptions['version'], templateOptions['buildNum'])
     fd = open(path, "w+")
     fd.write(s1 + s2)
     fd.close()

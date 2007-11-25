@@ -113,6 +113,7 @@ class ActionGroup:
         action.name = text.name
         action.description = text.description
         action.info = ActionInfo(icon)
+        action.Exceptions = eg.ExceptionsProvider(action)
         action.__init__()
         plugin.info.actions[actionCls.__name__] = action
         return action

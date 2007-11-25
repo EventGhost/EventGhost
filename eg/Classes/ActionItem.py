@@ -216,7 +216,8 @@ class ActionItem(TreeItem):
         try:
             eg.result = self.compiled()
         except eg.Exception, e:
-            eg.PrintError(e.message)
+            #eg.PrintError(e.message)
+            eg.log.PrintItem(unicode(e), eg.Icons.ERROR_ICON, self)
         except:
             wx.CallAfter(self.Select)
             label = self.GetLabel()

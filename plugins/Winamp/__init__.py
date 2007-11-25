@@ -72,24 +72,26 @@ def FindWinAMPWindow():
     return hWnd
 
 
-def SendCommand(mesg, wParam, lParam=0):
-    """
-    Find Winamp's message window and send it a message with 
-    SendMessageTimeout.
-    """
-    try:
-        hWinamp = FindWindow('Winamp v1.x', None)
-        _, result = SendMessageTimeout(
-            hWinamp,
-            mesg, 
-            wParam, 
-            lParam, 
-            SMTO_BLOCK|SMTO_ABORTIFHUNG,
-            2000 # wait at most 2 seconds
-        )
-        return result
-    except:
-        eg.PrintError("Winamp is not running")
+class ActionBase(eg.ActionClass):
+    
+    def SendCommand(self, mesg, wParam, lParam=0):
+        """
+        Find Winamp's message window and send it a message with 
+        SendMessageTimeout.
+        """
+        try:
+            hWinamp = FindWindow('Winamp v1.x', None)
+            _, result = SendMessageTimeout(
+                hWinamp,
+                mesg, 
+                wParam, 
+                lParam, 
+                SMTO_BLOCK|SMTO_ABORTIFHUNG,
+                2000 # wait at most 2 seconds
+            )
+            return result
+        except:
+            raise self.Exceptions.ProgramNotRunning
 
 
 def GetPlayingStatus():
@@ -98,7 +100,7 @@ def GetPlayingStatus():
     
     The return value is one of the strings 'playing', 'paused' or 'stopped'.
     """
-    iStatus = SendCommand(WM_USER, 0, 104)
+    iStatus = self.SendCommand(WM_USER, 0, 104)
     if iStatus == 1:
         return 'playing'
     elif iStatus == 3:
@@ -162,9 +164,9 @@ class Winamp(eg.PluginClass):
 
 
 # Here we define our first action. Actions are always subclasses of 
-# eg.ActionClass.
+# ActionBase.
 
-class TogglePlay(eg.ActionClass):
+class TogglePlay(ActionBase):
     # We start with a descriptive definition of the member-variables 'name' 
     # and 'description'. 
     #
@@ -178,37 +180,37 @@ class TogglePlay(eg.ActionClass):
     def __call__(self):
         if GetPlayingStatus() == "stopped":
             # Play
-            return SendCommand(WM_COMMAND, 40045)
+            return self.SendCommand(WM_COMMAND, 40045)
         else:
             # Pause
-            return SendCommand(WM_COMMAND, 40046)
+            return self.SendCommand(WM_COMMAND, 40046)
     
     
 # The remaining actions all follow the same pattern:
-#   1. Define a subclass of eg.ActionClass.
+#   1. Define a subclass of ActionBase.
 #   2. Add a descriptive 'name' and 'description' member-variable.
 #   3. Define a __call__ method, that will do the actual work.
 
 
-class Play(eg.ActionClass):
+class Play(ActionBase):
     # If we don't define a 'name' member, EventGhost creates one with the
     # class-name as content.
     description = "Simulate a press on the play button."
     
     def __call__(self):
-        return SendCommand(WM_COMMAND, 40045)
+        return self.SendCommand(WM_COMMAND, 40045)
 
 
 
-class Pause(eg.ActionClass):
+class Pause(ActionBase):
     description = "Simulate a press on the pause button."
     
     def __call__(self):
-        return SendCommand(WM_COMMAND, 40046)
+        return self.SendCommand(WM_COMMAND, 40046)
 
 
 
-class DiscretePause(eg.ActionClass):
+class DiscretePause(ActionBase):
     name = "Discrete Pause"
     description = (
         "Pauses Winamp if it is playing, but won't do anything if "
@@ -217,132 +219,132 @@ class DiscretePause(eg.ActionClass):
     
     def __call__(self):
         if GetPlayingStatus() == "playing":
-            return SendCommand(WM_COMMAND, 40046)
+            return self.SendCommand(WM_COMMAND, 40046)
 
 
 
-class Stop(eg.ActionClass):
+class Stop(ActionBase):
     description = "Simulate a press on the stop button."
     
     def __call__(self):
-        return SendCommand(WM_COMMAND, 40047)
+        return self.SendCommand(WM_COMMAND, 40047)
 
 
 
-class PreviousTrack(eg.ActionClass):
+class PreviousTrack(ActionBase):
     name = "Previous Track"
     description = "Simulate a press on the previous track button."
     
     def __call__(self):
-        return SendCommand(WM_COMMAND, 40044)
+        return self.SendCommand(WM_COMMAND, 40044)
 
 
 
-class NextTrack(eg.ActionClass):
+class NextTrack(ActionBase):
     name = "Next Track"
     description = "Simulate a press on the next track button."
     
     def __call__(self):
-        return SendCommand(WM_COMMAND, 40048)
+        return self.SendCommand(WM_COMMAND, 40048)
 
 
 
-class FastForward(eg.ActionClass):
+class FastForward(ActionBase):
     name = "Fast Forward"
     description = "Fast-forward 5 seconds."
     
     def __call__(self):
-        return SendCommand(WM_COMMAND, 40148)
+        return self.SendCommand(WM_COMMAND, 40148)
 
 
 
-class FastRewind(eg.ActionClass):
+class FastRewind(ActionBase):
     name = "Fast Rewind"
     description = "Fast-rewind 5 seconds."
     
     def __call__(self):
-        return SendCommand(WM_COMMAND, 40144)
+        return self.SendCommand(WM_COMMAND, 40144)
 
 
 
-class Fadeout(eg.ActionClass):
+class Fadeout(ActionBase):
     name = "Fadeout"
     description = "Fade out and stop."
     
     def __call__(self):
-        return SendCommand(WM_COMMAND, 40147)
+        return self.SendCommand(WM_COMMAND, 40147)
 
 
 
-class VolumeUp(eg.ActionClass):
+class VolumeUp(ActionBase):
     name = "Volume Up"
     description = "Raises Winamp's volume by 1%."
     
     def __call__(self):
-        return SendCommand(WM_COMMAND, 40058)
+        return self.SendCommand(WM_COMMAND, 40058)
 
 
 
-class VolumeDown(eg.ActionClass):
+class VolumeDown(ActionBase):
     name = "Volume Down"
     description = "Lower Winamp's volume by 1%."
     
     def __call__(self):
-        return SendCommand(WM_COMMAND, 40059)
+        return self.SendCommand(WM_COMMAND, 40059)
 
 
 
-class Exit(eg.ActionClass):
+class Exit(ActionBase):
     name = "Exit"
     description = "Closes Winamp."
     
     def __call__(self):
-        return SendCommand(WM_COMMAND, 40001)
+        return self.SendCommand(WM_COMMAND, 40001)
 
 
 
-class ShowFileinfo(eg.ActionClass):
+class ShowFileinfo(ActionBase):
     name = "Show File Info"
     description = "Opens file info box."
     
     def __call__(self):
-        return SendCommand(WM_COMMAND, 40188)
+        return self.SendCommand(WM_COMMAND, 40188)
 
 
 
-class ChooseFile(eg.ActionClass):
+class ChooseFile(ActionBase):
     name = "Choose File"
     description = "Opens the file dialog."
     
     def __call__(self):
-        return SendCommand(WM_COMMAND, 40029)
+        return self.SendCommand(WM_COMMAND, 40029)
 
 
 
-class ExVis(eg.ActionClass):
+class ExVis(ActionBase):
     name = "Execute Visualisation"
     description = "Execute current visualization plug-in."
     
     def __call__(self):
-        return SendCommand(WM_COMMAND, 40192)
+        return self.SendCommand(WM_COMMAND, 40192)
 
 
 
-class ToggleShuffle(eg.ActionClass, eg.HiddenAction):
+class ToggleShuffle(ActionBase, eg.HiddenAction):
     name = "Toggle Shuffle"
     description = "Toggles Shuffle."
     
     def __call__(self):
-        return SendCommand(WM_COMMAND, 40023)
+        return self.SendCommand(WM_COMMAND, 40023)
 
 
 
-class ToggleRepeat(eg.ActionClass, eg.HiddenAction):
+class ToggleRepeat(ActionBase, eg.HiddenAction):
     name = "Toggle Repeat"
     description = "Toggles Repeat."
     
     def __call__(self):
-        return SendCommand(WM_COMMAND, 40022)
+        return self.SendCommand(WM_COMMAND, 40022)
 
 
 
@@ -381,7 +383,7 @@ WM_WA_IPC = WM_USER
 
 
 
-class ChangeRepeatStatus(eg.ActionClass):
+class ChangeRepeatStatus(ActionBase):
     class text:
         name = "Change Repeat Status"
         description = "Changes the repeat playlist status."
@@ -394,9 +396,9 @@ class ChangeRepeatStatus(eg.ActionClass):
         
     def __call__(self, data=0):
         if data == 2:
-            return SendCommand(WM_COMMAND, 40022)
+            return self.SendCommand(WM_COMMAND, 40022)
         else:
-            return SendCommand(WM_WA_IPC, int(data), WA_SETREPEATSTATUS)
+            return self.SendCommand(WM_WA_IPC, int(data), WA_SETREPEATSTATUS)
 
 
     def GetLabel(self, data=0):
@@ -433,13 +435,13 @@ class ChangeShuffleStatus(ChangeRepeatStatus):
         
     def __call__(self,data):
         if data == 2:
-            return SendCommand(WM_COMMAND, 40023)
+            return self.SendCommand(WM_COMMAND, 40023)
         else:
-            return SendCommand(WM_WA_IPC, int(data), WA_SETSHUFFLESTATUS)
+            return self.SendCommand(WM_WA_IPC, int(data), WA_SETSHUFFLESTATUS)
 
 
         
-class GetPlayingSongTitle(eg.ActionClass):
+class GetPlayingSongTitle(ActionBase):
     name = "Get Currently Playing Song Title"
     description = "Gets the currently playing song title."
     
@@ -464,12 +466,12 @@ class GetPlayingSongTitle(eg.ActionClass):
         
         
         
-class GetVolume(eg.ActionClass):
+class GetVolume(ActionBase):
     name = "Get Volume Level"
     description = "Gets the volume level as a percentage (%)."
     
     def __call__(self):
-        volume = SendCommand(WM_WA_IPC, -666, WA_SETVOLUME)
+        volume = self.SendCommand(WM_WA_IPC, -666, WA_SETVOLUME)
         if volume is None:
             return
         return math.floor(volume / 2.55)
@@ -485,7 +487,7 @@ class SetVolume(eg.ActionWithStringParameter):
         label = "Set Volume to %.2f %%"
     
     def __call__(self, volume):
-        SendCommand(WM_WA_IPC, int(math.ceil(volume * 2.55)), WA_SETVOLUME)
+        self.SendCommand(WM_WA_IPC, int(math.ceil(volume * 2.55)), WA_SETVOLUME)
         return volume
 
 
@@ -511,7 +513,7 @@ class ChangeVolume():
         label = "Change Volume by %.2f %%"
         
     def __call__(self, percentage=1.0):  
-        volume = SendCommand(WM_WA_IPC, -666, WA_SETVOLUME)
+        volume = self.SendCommand(WM_WA_IPC, -666, WA_SETVOLUME)
         if volume is None:
             return
         volume = math.floor(volume / 2.55) + percentage
@@ -519,7 +521,7 @@ class ChangeVolume():
             volume = 0.0
         elif volume > 100.0:
             volume = 100.0
-        SendCommand(WM_WA_IPC, int(math.ceil(volume * 2.55)), WA_SETVOLUME)
+        self.SendCommand(WM_WA_IPC, int(math.ceil(volume * 2.55)), WA_SETVOLUME)
         return volume
         
         
@@ -536,52 +538,52 @@ class ChangeVolume():
          
         
         
-class GetShuffleStatus(eg.ActionClass):
+class GetShuffleStatus(ActionBase):
     name = "Get Shuffle Status"
     description = "Gets the shuffle status 1 = shuffle on,  0 = shuffle off."
     
     def __call__(self):
-        return SendCommand(WM_WA_IPC, 0, WA_GETSHUFFLESTATUS)
+        return self.SendCommand(WM_WA_IPC, 0, WA_GETSHUFFLESTATUS)
 
       
             
-class GetRepeatStatus(eg.ActionClass):
+class GetRepeatStatus(ActionBase):
     name = "Get Repeat Status"
     description = "Gets the repeat playlist status 1 = repeat on,  0 = repeat off."
     
     def __call__(self):
-        return SendCommand(WM_WA_IPC, 0, WA_GETREPEATSTATUS)
+        return self.SendCommand(WM_WA_IPC, 0, WA_GETREPEATSTATUS)
 
 
 
-class GetSampleRate(eg.ActionClass):
+class GetSampleRate(ActionBase):
     name = "Get Sample Rate"
     description = "Gets the sample rate (khz) of the currently playing song."
     
     def __call__(self):
-        return SendCommand(WM_WA_IPC, 0, WA_GETINFO)
+        return self.SendCommand(WM_WA_IPC, 0, WA_GETINFO)
 
         
         
-class GetBitRate(eg.ActionClass):
+class GetBitRate(ActionBase):
     name = "Get Bit Rate"
     description = "Gets the bit rate (kbps) of the currently playing song."
     
     def __call__(self):
-        return SendCommand(WM_WA_IPC, 1, WA_GETINFO)
+        return self.SendCommand(WM_WA_IPC, 1, WA_GETINFO)
 
         
         
-class GetChannels(eg.ActionClass):
+class GetChannels(ActionBase):
     name = "Get Channels"
     description = "Gets the # of channels (mono,stereo) of the currently playing song."
     
     def __call__(self):
-        return SendCommand(WM_WA_IPC, 2, WA_GETINFO)
+        return self.SendCommand(WM_WA_IPC, 2, WA_GETINFO)
 
         
         
-class GetPosition(eg.ActionClass):
+class GetPosition(ActionBase):
     name = "Get Playlist Position"
     description = (
         "Gets the number (position) of the currently playing song within "
@@ -589,7 +591,7 @@ class GetPosition(eg.ActionClass):
     )
 
     def __call__(self):
-        intReturn = SendCommand(WM_WA_IPC, 0, WA_GETLISTPOS)
+        intReturn = self.SendCommand(WM_WA_IPC, 0, WA_GETLISTPOS)
         if intReturn is not None:
             return intReturn + 1 
         else:
@@ -597,21 +599,21 @@ class GetPosition(eg.ActionClass):
 
         
         
-class GetLength(eg.ActionClass):
+class GetLength(ActionBase):
     name = "Get Playlist Length"
     description = "Gets the number of songs in the playlist."
     
     def __call__(self):
-        return SendCommand(WM_WA_IPC, 0, WA_GETLISTLENGTH)
+        return self.SendCommand(WM_WA_IPC, 0, WA_GETLISTLENGTH)
 
         
         
-class GetElapsed(eg.ActionClass):
+class GetElapsed(ActionBase):
     name = "Get Song Elapsed"
     description = "Gets the elapsed time, in seconds, into the currently playing song."
     
     def __call__(self):
-        intReturn = SendCommand(WM_WA_IPC, 0, WA_GETOUTPUTTIME)
+        intReturn = self.SendCommand(WM_WA_IPC, 0, WA_GETOUTPUTTIME)
         if intReturn is not None:
             return intReturn / 1000.0
         else:
@@ -619,12 +621,12 @@ class GetElapsed(eg.ActionClass):
 
         
         
-class GetDuration(eg.ActionClass):
+class GetDuration(ActionBase):
     name = "Get Song Duration"
     description = "Gets the duration, in seconds, of the currently playing song."
     
     def __call__(self):
-        return SendCommand(WM_WA_IPC, 1, WA_GETOUTPUTTIME)
+        return self.SendCommand(WM_WA_IPC, 1, WA_GETOUTPUTTIME)
 
         
 

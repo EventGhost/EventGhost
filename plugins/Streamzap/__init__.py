@@ -43,7 +43,6 @@ eg.RegisterPlugin(
 )
 
 
-import thread
 import threading
 import time
 import os
@@ -59,8 +58,8 @@ MyDecoder = eg.IrDecoder(SAMPLE_TIME)
 MyDecoder.RC5_THRESHOLD = 5
 MyDecoder.suppressRc5ToggleBit = False
 
-plugin_dir = os.path.abspath(os.path.split(__file__)[0])
-dll_path = os.path.join(plugin_dir, "irdata.dll")
+pluginDir = os.path.abspath(os.path.split(__file__)[0])
+dllPath = os.path.join(pluginDir, "irdata.dll")
 
 
 EVENTS = (
@@ -119,41 +118,37 @@ class Streamzap(eg.RawReceiverPlugin):
 
 
     def __start__(self, comport=0):
-        self.abort_thread = False
+        self.abortThread = False
+        self.lastException = None
         startupEvent = threading.Event()
-        self.thread = thread.start_new_thread(self.ReceiveThread, (startupEvent,))
+        self.thread = threading.Thread(
+            target=self.ReceiveThread, 
+            args=(startupEvent,)
+        )
+        self.thread.start()
         startupEvent.wait(5.0)
+        if self.lastException:
+            raise self.lastException
         
 
     def __stop__(self):
-        self.abort_thread = True
+        self.abortThread = True
+        self.thread.join(5.0)
         
-    
-    def HandleException(self, msg):    
-        def Do():
-            raise self.Exception(msg)
-        eg.actionThread.Call(Do)
-    
     
     def ReceiveThread(self, startupEvent):
         # This is the code executing in the new thread. 
         try:
-            dll = cdll.LoadLibrary(dll_path)
+            dll = cdll.LoadLibrary(dllPath)
         except:
-            self.HandleException("Streamzap DLL not found.")
+            self.lastException = self.Exceptions.DriverNotFound
             startupEvent.set()
             return
         
         if dll.sz_Open() != 1:
-            self.HandleException(
-                "Cannot open Streamzap driver!\n"
-                "Please check that the receiver is connected "
-                "properly and no other application is accessing "
-                "the driver."
-            )
+            self.lastException = self.Exceptions.DriverNotOpen
             startupEvent.set()
             return
-            
             
         dll.sz_Flush()
         
@@ -165,7 +160,7 @@ class Streamzap(eg.RawReceiverPlugin):
         i = 0
         
         startupEvent.set()
-        while not self.abort_thread:
+        while not self.abortThread:
             dll.sz_ReadFile(byref(byteIRdata), byref(dwNumBytesRead))
             val = byteIRdata.value
 

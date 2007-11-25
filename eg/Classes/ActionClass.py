@@ -64,6 +64,7 @@ class ActionClass(object):
     # Don't try to manipulate these variables yourself:
     info = None
     text = None
+    Exceptions = None # will be setup later by AddAction
     
     
     def __call__(self, *args):
