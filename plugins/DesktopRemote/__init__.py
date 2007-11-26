@@ -27,6 +27,7 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision: 187 $".split()[1],
     canMultiLoad = True,
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=513",
     description = (
         "Creates a remote-like desktop window."
     ),

@@ -49,6 +49,7 @@ eg.RegisterPlugin(
     author = "Mark Clarkson",
     version = "0.1." + "$LastChangedRevision$".split()[1],
     kind = "external",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=123",
     description = "Control Yamaha RX-V1000 receivers using RS232.",
     canMultiLoad = True,
     createMacrosOnAdd = True,

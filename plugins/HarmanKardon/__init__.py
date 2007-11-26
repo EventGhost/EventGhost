@@ -102,6 +102,7 @@ eg.RegisterPlugin(
     version = "1.0." + "$LastChangedRevision: 145 $".split()[1],
     description = "Allows control of a Harman Kardon AVR4xx/6xx series receiver through a serial port.",
     kind = "external",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=447",
     canMultiLoad = True,
 )
     

@@ -32,7 +32,8 @@ eg.RegisterPlugin(
         'Adds actions to control <a href="http://www.irfanview.com/">'
         'IrfanView</a>.'
     ),
-    createMacrosOnAdd = True,    
+    createMacrosOnAdd = True,  
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=579",  
     icon = (
         "R0lGODlhEAAQAPcAAAQCBISChIQCBMTCxPwCBPz+/AAAAAAAAHoDFR0AAAAAAAAAAAAEFQ"
         "AAABUAAAAAAA0CDQAAAAAAAAAAAAAADQIAAAAAAAAAAAAABAEADwAAEAAABygArukABBIA"

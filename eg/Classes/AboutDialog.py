@@ -63,6 +63,7 @@ SPECIAL_THANKS_DATA = (
             ("oystein", "Windows Media Player"),
             ("Lubo&scaron; R&uuml;ckl", "Billy, MediaMonkey, IrfanView"),
             ("SurFan", "TheaterTek"),
+            ("townkat", "DVB Dream"),
         ),
     ),
     (
@@ -101,9 +102,11 @@ SPECIAL_THANKS_DATA = (
         (
             (
                 'Benjamin Webb', 
-                'for the nice <a href="http://www.eventghost.org/wiki/' \
-                'Controlling_Your_Living_Room_with_EventGhost">' \
-                'wiki article</a>'
+                (
+                    'for the nice <a href="http://www.eventghost.org/wiki/' 
+                    'Controlling_Your_Living_Room_with_EventGhost">'
+                    'wiki article</a>'
+                )
             ),
             ('Oliver Wagner', 'for hosting the website'),
             ('Alf & Metallhuhn', 'for creating the EventGhost logo'),

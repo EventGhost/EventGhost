@@ -113,6 +113,7 @@ class PluginInfoBase(object):
     eventList = None
     lastException = None
     instance = None
+    url = None
         
     @classmethod
     def LoadModule(pluginInfo):
@@ -274,6 +275,7 @@ def GetPluginInfo(pluginName):
         author = infoDict.get("author", PluginInfoBase.author)
         version = infoDict.get("version", PluginInfoBase.version)
         kind = infoDict.get("kind", PluginInfoBase.kind)
+        url = infoDict.get("url", PluginInfoBase.url)
         canMultiLoad = infoDict.get("canMultiLoad", PluginInfoBase.canMultiLoad)
         createMacrosOnAdd = infoDict.get("createMacrosOnAdd", PluginInfoBase.createMacrosOnAdd)
         path = pluginPath + "/"

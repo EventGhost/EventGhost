@@ -37,6 +37,7 @@ eg.RegisterPlugin(
         '<BR>The plugin will work with older versions of Billy only in limited mode!</p>'
     ),
     createMacrosOnAdd = True,    
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=537",
     icon = (
         "R0lGODlhEAAQAPcAAAQCBMz+tPz+/AAAABkEFSEAAAAAAAAAAGECDR4AAAAAAAAAAAAADQAAABUA"
         "AAAAAA0AyAAAHgAAEAAAagAAXQIABAAAhQAAAwAAFwMAAAAAAAAAAIgBAeIAABIAAAAAAOkaGeUA"

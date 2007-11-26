@@ -34,6 +34,7 @@ eg.RegisterPlugin(
         '<a href=http://www.home-electro.com/><p>'
         '<center><img src="tira.png" alt="Tira2" /></a></center>'
     ),
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=569",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAADYUlEQVR42m2Te0yTVxjG"
         "n9Pv0tJ26BQbWkMrif5hgBoU4pgsBJhx08RKtIrxAmJkKiwo848RGRabsZvJQDQRLyFe"

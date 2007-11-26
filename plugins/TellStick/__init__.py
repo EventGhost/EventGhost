@@ -11,6 +11,7 @@ eg.RegisterPlugin(
     author = "Micke Prag",
     version = "0.1.1",
     kind = "external",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=455",
     description = (
         '<p>Plugin to control TellStick devices.</p>'
         '\n\n<p><a href="http://www.telldus.se">Telldus Hompage</a></p>'

@@ -214,6 +214,7 @@ class PluginManager:
         icon = None,
         canMultiLoad = False,
         createMacrosOnAdd = False,
+        url = None,
     ):
         if name is None:
             name = self.currentInfo.dirname

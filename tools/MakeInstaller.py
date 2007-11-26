@@ -25,6 +25,7 @@ tmpDir = tempfile.mkdtemp()
 toolsDir = abspath(dirname(sys.argv[0]))
 trunkDir = abspath(join(toolsDir, ".."))
 outDir = abspath(join(trunkDir, ".."))
+includeNoIncludes = False
 
 SourcePattern = [
     "*.py", 
@@ -121,7 +122,7 @@ def locate(patterns, root=os.curdir):
                 if (
                     dir.startswith("_") 
                     or dir == ".svn"
-                    or exists(join(path, dir, "noinclude"))
+                    or (includeNoIncludes and exists(join(path, dir, "noinclude")))
                 )
         ]
         for dir in ignoreDirs:
@@ -540,6 +541,7 @@ class MainDialog(wx.Dialog):
         self.uploadCB.SetValue(bool(url))
         self.commitCB = wx.CheckBox(self, -1, "SVN Commit")
         self.commitCB.SetValue(True)
+        self.includeNoIncludesCB = wx.CheckBox(self, -1, "Include 'noinclude' plugins")
         self.makeUpdateRadioBox = wx.RadioBox(
             self, 
             choices = ("Make Update", "Make Full Installer"),
@@ -563,6 +565,7 @@ class MainDialog(wx.Dialog):
         sizer.Add(self.createLib, 0, wx.ALL, 10)
         sizer.Add(self.uploadCB, 0, wx.ALL, 10)
         sizer.Add(self.commitCB, 0, wx.ALL, 10)
+        sizer.Add(self.includeNoIncludesCB, 0, wx.ALL, 10)
         sizer.Add(self.makeUpdateRadioBox, 0, wx.ALL, 10)
         sizer.Add(btnSizer)
 
@@ -577,6 +580,8 @@ class MainDialog(wx.Dialog):
         makeLib = self.createLib.GetValue()
         makeSourceArchive = self.createSourceCB.GetValue()
         commitSvn = self.commitCB.GetValue()
+        global includeNoIncludes
+        includeNoIncludes = self.includeNoIncludesCB.GetValue()
         filename = MakeInstaller(isUpdate, makeLib, makeSourceArchive, commitSvn)
         if self.uploadCB.GetValue():
             UploadFile(filename, self.url)

@@ -38,6 +38,7 @@ eg.RegisterPlugin(
         '\n'
         'Options->Remote->RemoteControlType->Native'
     ),
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=612",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAAXNSR0IArs4c6QAAAARn"
         "QU1BAACxjwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdw"

@@ -33,6 +33,7 @@ eg.RegisterPlugin(
     version = "1.2." + "$LastChangedRevision$".split()[1],
     kind = "program",
     createMacrosOnAdd = True,
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=201",
     description = (
         'Adds actions to control <a href="http://www.winamp.com/">Winamp</a>.'
     ),

@@ -103,7 +103,7 @@ class SerialThread(Thread):
     CreateFile = CreateFile
     CloseHandle = CloseHandle
 
-    def __init__(self, hFile):
+    def __init__(self, hFile=0):
         self.deviceStr = ""
         Thread.__init__(self, target=self.ReceiveThreadProc)
         self.hFile = int(hFile)
@@ -126,13 +126,20 @@ class SerialThread(Thread):
         self.callbackThread = Thread(target=self.CallbackThreadProc, name="SerialReceiveThreadProc")
         
     
-    def Open(self):
+    def Open(self, port=0, baudrate=9600):
+        #the "//./COMx" format is required for devices >= 9
+        #not all versions of windows seem to support this propperly
+        #so that the first few ports are used with the DOS device name
+        if port < 9:
+            deviceStr = 'COM%d' % (port+1) #numbers are transformed to a string
+        else:
+            deviceStr = '\\\\.\\COM%d' % (port+1)
         try:
             self.hFile = CreateFile(
-                self.deviceStr,
+                deviceStr,
                 GENERIC_READ | GENERIC_WRITE,
                 0, # exclusive access
-                0, # no security
+                None, # no security
                 OPEN_EXISTING,
                 FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
                 0
@@ -141,7 +148,8 @@ class SerialThread(Thread):
             self.hFile = None    # cause __del__ is called anyway
             raise SerialException("could not open port: %s" % msg)
         GetCommState(self.hFile, byref(self.dcb))
-
+        self.dcb.BaudRate = baudrate
+        SetCommState(self.hFile, byref(self.dcb))
     
         
     def Close(self):

@@ -46,6 +46,7 @@ eg.RegisterPlugin(
     version=version, 
     kind=kind,
     canMultiLoad=True,
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=219",
 )
 
 import wx, socket, asyncore, time, threading

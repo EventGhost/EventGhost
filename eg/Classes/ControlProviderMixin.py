@@ -62,7 +62,7 @@ class ControlProviderMixin:
     
     def CheckBox(self, value=0, label="", *args, **kwargs):
         checkBox = wx.CheckBox(self, -1, label, *args, **kwargs)
-        checkBox.SetValue(value)
+        checkBox.SetValue(bool(value))
         return checkBox
     
     

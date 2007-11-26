@@ -37,6 +37,7 @@ eg.RegisterPlugin(
         'To make functional event triggering from MediaMonkey, you must install'
         '<BR>file "EventGhost.vbs" to MediaMonkey/Scripts/Auto folder.'
     ),
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=563",
     icon = (
         "R0lGODlhEAAQAPcAAAQCBMSORFxKLLSupExKVOy2ZKRiLCwyZJyGbERCRHRiXNzOlPTmpO"
         "QCpCwqLCQynOSmXGRifGRSNPzejNTe3KSWZJRKFJxiPIR6XCwyVNS2jCwyfLSejNTW1LRO"
