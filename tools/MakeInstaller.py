@@ -122,7 +122,7 @@ def locate(patterns, root=os.curdir):
                 if (
                     dir.startswith("_") 
                     or dir == ".svn"
-                    or (includeNoIncludes and exists(join(path, dir, "noinclude")))
+                    or (not includeNoIncludes and exists(join(path, dir, "noinclude")))
                 )
         ]
         for dir in ignoreDirs:
