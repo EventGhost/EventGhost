@@ -36,7 +36,8 @@ class ConfigDialog(eg.Dialog):
             resizeable = bool(eg.debugLevel)
         self.resizeable = resizeable
         
-        if isinstance(obj, eg.PluginClass):
+        isPlugin = isinstance(obj, eg.PluginClass)
+        if isPlugin:
             title = eg.text.General.pluginLabel % obj.name
             flags = wx.EXPAND|wx.ALL|wx.ALIGN_CENTER
         else:
@@ -55,6 +56,13 @@ class ConfigDialog(eg.Dialog):
             self, 
             (wx.ID_OK, wx.ID_CANCEL, wx.ID_APPLY)
         )
+        testButton = None
+        if not isPlugin:
+            testButton = wx.Button(self, -1, eg.text.General.test)
+            self.buttonRow.Add(testButton)
+            testButton.Bind(wx.EVT_BUTTON, self.OnTestButton)
+        self.buttonRow.testButton = testButton
+            
         self.Bind(wx.EVT_CLOSE, self.OnCancel)
 
         mainSizer = wx.BoxSizer(wx.VERTICAL)
@@ -92,13 +100,22 @@ class ConfigDialog(eg.Dialog):
         self.gr.switch(wx.ID_APPLY)
         
         
+    def OnTestButton(self, event):
+        self.panel.SetFocus()
+        self.result = eg.ID_TEST
+        self.gr.switch(eg.ID_TEST)
+        
+        
     def FinishSetup(self):
-        # Temporary hack to fix button ordering problems.
+        # Temporary hack to fix button tabulator ordering problems.
         line = wx.StaticLine(self)
         self.mainSizer.Add(line, 0, wx.EXPAND|wx.ALIGN_CENTER)
-        self.buttonRow.applyButton.MoveAfterInTabOrder(line)
-        self.buttonRow.cancelButton.MoveAfterInTabOrder(line)
-        self.buttonRow.okButton.MoveAfterInTabOrder(line)
+        buttonRow = self.buttonRow
+        buttonRow.applyButton.MoveAfterInTabOrder(line)
+        buttonRow.cancelButton.MoveAfterInTabOrder(line)
+        buttonRow.okButton.MoveAfterInTabOrder(line)
+        if buttonRow.testButton:
+            buttonRow.testButton.MoveAfterInTabOrder(line)
         if not self.showLine:
             line.Hide()
         if self.resizeable:
@@ -109,6 +126,7 @@ class ConfigDialog(eg.Dialog):
         self.Fit()
         self.SetMinSize(self.GetSize())
         self.Centre()
+        self.panel.SetFocus()
         self.Show()
         
     

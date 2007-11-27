@@ -545,12 +545,10 @@ class FindWindow(eg.ActionClass):
         Add((5,5))
         Add(sizer1, 1, wx.EXPAND)
 
-        # the test button
-        testButton = wx.Button(panel.dialog, -1, text.testButton)
+        # re-assign the test button
         def OnButton(event):
             WindowMatcher(*GetResult()).Test()
-        testButton.Bind(wx.EVT_BUTTON, OnButton)
-        panel.dialog.buttonRow.Add(testButton)
+        panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
         
         @eg.LogIt
         def GetResult():

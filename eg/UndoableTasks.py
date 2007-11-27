@@ -540,6 +540,7 @@ class CmdConfigure:
         self.name = eg.text.MainFrame.Menu.Edit.replace("&", "")
         
         wasApplied = False
+        lastArgs = oldArgs
         gr = None
         while True:
             eg.currentConfigureItem = item
@@ -571,9 +572,15 @@ class CmdConfigure:
                     del item.openConfigDialog
                     break
                 elif userAction == wx.ID_APPLY:
+                    lastArgs = newArgs
                     item.SetParams(*newArgs)
                     item.Refresh()
                     wasApplied = True
+                    continue
+                elif userAction == eg.ID_TEST:
+                    item.SetParams(*newArgs)
+                    eg.actionThread.CallWait(item.Execute)
+                    item.SetParams(*lastArgs)
                     continue
             elif newArgs is None:
                 return False

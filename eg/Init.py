@@ -78,6 +78,7 @@ class EventGhost(object):
             "Window",
             "Mouse",
         )
+        eg.ID_TEST = wx.NewId()
         
         # we create a package 'pluginImport' and set its path to the plugin-dir
         # se we can simply use __import__ to load a plugin file 
@@ -132,7 +133,7 @@ class EventGhost(object):
         # because some functions are only available if a wxApp instance
         # exists, we simply create it first
         eg.app
-
+                
         import Icons
         self.Icons = Icons
         
