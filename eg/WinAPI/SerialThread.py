@@ -34,7 +34,8 @@ from WinAPI.cTypes import (
     GetOverlappedResult, CreateEvent, SetEvent, ResetEvent, GetLastError,
     ERROR_IO_PENDING, WAIT_TIMEOUT, WAIT_OBJECT_0, QS_ALLINPUT, INFINITE,
     SETDTR, CLRDTR, SETRTS, CLRRTS, GENERIC_READ, GENERIC_WRITE, OPEN_EXISTING,
-    FILE_ATTRIBUTE_NORMAL, FILE_FLAG_OVERLAPPED
+    FILE_ATTRIBUTE_NORMAL, FILE_FLAG_OVERLAPPED, DTR_CONTROL_DISABLE, NOPARITY,
+    ONESTOPBIT
 )
 
 INDENT = "    "
@@ -126,6 +127,16 @@ class SerialThread(Thread):
         self.callbackThread = Thread(target=self.CallbackThreadProc, name="SerialReceiveThreadProc")
         
     
+    def __enter__(self):
+        self.SuspendReadEvents()
+        return self
+    
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.ResumeReadEvents()
+        return False
+    
+    
     def Open(self, port=0, baudrate=9600):
         #the "//./COMx" format is required for devices >= 9
         #not all versions of windows seem to support this propperly
@@ -147,9 +158,26 @@ class SerialThread(Thread):
         except Exception, msg:
             self.hFile = None    # cause __del__ is called anyway
             raise SerialException("could not open port: %s" % msg)
-        GetCommState(self.hFile, byref(self.dcb))
-        self.dcb.BaudRate = baudrate
-        SetCommState(self.hFile, byref(self.dcb))
+        dcb = self.dcb
+        GetCommState(self.hFile, byref(dcb))
+        dcb.fBinary = True
+        dcb.fParity = False
+        dcb.fOutxCtsFlow = False
+        dcb.fOutxDsrFlow = False
+        dcb.fDtrControl = DTR_CONTROL_DISABLE
+        dcb.fDsrSensitivity = False
+        dcb.fTXContinueOnXoff = True
+        dcb.fOutX = False
+        dcb.fInX = False
+        dcb.fErrorChar = False
+        dcb.fNull = False
+        dcb.fRtsControl = False
+        dcb.fAbortOnError = False
+        dcb.ByteSize = 8
+        dcb.Parity = NOPARITY
+        dcb.StopBits = ONESTOPBIT
+        dcb.BaudRate = baudrate
+        SetCommState(self.hFile, byref(dcb))
     
         
     def Close(self):
@@ -189,7 +217,10 @@ class SerialThread(Thread):
     
     def ResumeReadEvents(self):
         self.readEventLock.release()
-    
+        self.readCondition.acquire()
+        self.readCondition.notifyAll()
+        self.readCondition.release()
+        
     
     def ReceiveThreadProc(self):
         hFile = self.hFile

@@ -71,7 +71,6 @@ class Text:
         description = "Transmits an IR code via the USB-UIRT hardware."
         irCode = "IR Code:"
         learnButton = "Learn an IR Code..."
-        testButton = "Test Transmit IR Code"
         repeatCount = "Repeat Count:"
         infinite = "Infinite"
         wait1 = "Wait:"
@@ -159,6 +158,7 @@ class USB_UIRT(eg.RawReceiverPlugin):
         legacyRX=False, 
         repeatStopCodes=False
     ):
+        self.args = (ledRX, ledTX, legacyRX, repeatStopCodes)
         self.codeFormat = UUIRTDRV_IRFMT_PRONTO
         try:
             dll = WinDLL('uuirtdrv')
@@ -201,9 +201,11 @@ class USB_UIRT(eg.RawReceiverPlugin):
 
         self.SetConfig(ledRX, ledTX, legacyRX, repeatStopCodes)
         self.enabled = True
+        eg.Bind("System.DeviceRemoved", self.OnDeviceRemoved)
         
         
     def __stop__(self):
+        eg.Unbind("System.DeviceRemoved", self.OnDeviceRemoved)
         self.enabled = False
         if self.dll:
             if not self.dll.UUIRTClose(self.hDrvHandle):
@@ -211,6 +213,22 @@ class USB_UIRT(eg.RawReceiverPlugin):
             self.dll = None
         
         
+    def OnDeviceRemoved(self, eventstring):
+        if eventstring.payload[0].split("#")[1] == 'Vid_0403&Pid_f850':
+            if self.dll:
+                if not self.dll.UUIRTClose(self.hDrvHandle):
+                    raise self.Exception("Error calling UUIRTClose")
+                self.dll = None
+            eg.Bind("System.DeviceAttached", self.OnDeviceAttached)
+    
+    
+    def OnDeviceAttached(self, eventstring):
+        if eventstring.payload[0].split("#")[1] == 'Vid_0403&Pid_f850':
+            if self.enabled:
+                self.__start__(*self.args)
+            eg.Unbind("System.DeviceAttached", self.OnDeviceAttached)
+            
+    
     def SetConfig(self, ledRX, ledTX, legacyRX, repeatStopCodes=False):
         value = 0
         if ledRX:
@@ -304,6 +322,8 @@ class TransmitIR(eg.ActionClass):
     inactivityWaitTime = 0
     
     def __call__(self, code='', repeatCount=4, inactivityWaitTime=0):
+        if not self.plugin.dll:
+            raise self.Exceptions.DeviceNotReady
         if len(code) > 5:
             start = 0
             if code[0] == "Z":
@@ -379,10 +399,8 @@ class TransmitIR(eg.ActionClass):
         zoneCtrl.Select(zone)
                 
         learnButton = panel.Button(text.learnButton)  
-        testButton = panel.Button(text.testButton)
         if self.plugin.dll is None:
             learnButton.Enable(False)
-            testButton.Enable(False)
             
         panel.sizer.Add(panel.StaticText(text.irCode))
         panel.sizer.Add(editCtrl, 1, wx.EXPAND)
@@ -414,11 +432,6 @@ class TransmitIR(eg.ActionClass):
             (0,5), 
             flag=wx.ALIGN_RIGHT|wx.EXPAND
         )
-        gridSizer.Add(
-            testButton, 
-            (1,5), 
-            flag=wx.ALIGN_RIGHT|wx.EXPAND
-        )
         
         panel.sizer.Add(gridSizer, 0, wx.EXPAND)
         
@@ -436,11 +449,7 @@ class TransmitIR(eg.ActionClass):
             learnDialog.Destroy()
         learnButton.Bind(wx.EVT_BUTTON, LearnIR)
             
-        def TestIR(event):
-            self(*GetResult())
-        testButton.Bind(wx.EVT_BUTTON, TestIR)
-
-        def GetResult():
+        while panel.Affirmed():
             zone = zoneCtrl.GetSelection()
             if zone > 0:
                 code = "Z" + str(zone) + editCtrl.GetValue()
@@ -451,14 +460,11 @@ class TransmitIR(eg.ActionClass):
             else:
                 self.repeatCount = repeatCtrl.GetValue()
             self.inactivityWaitTime = waitCtrl.GetValue()
-            return (
+            panel.SetResult(
                 code,
                 self.repeatCount, 
                 self.inactivityWaitTime
             )
-            
-        while panel.Affirmed():
-            panel.SetResult(*GetResult())
 
 
 

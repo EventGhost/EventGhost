@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import eg
 
 eg.RegisterPlugin(
@@ -65,6 +66,7 @@ ACTIONS = (
 
 import wx
 
+
 STX = 0x02
 ACK = chr(0x06)
 NAK = chr(0x15)
@@ -75,29 +77,218 @@ ALL_BYTE_VALUES = frozenset(range(256))
 class ActionBase(eg.ActionClass):
     
     def __call__(self):
-        self.plugin.DoCommand(self, *self.value)
+        with self.plugin.serialThread as serial:
+            self.SendCommand(serial, *self.value)
 
 
+    def SendCommand(self, serial, cmd, dat1=0, dat2=0, dat3=0, dat4=0, block=None):
+        data = [self.plugin.address, cmd, dat1, dat2, dat3, dat4]
+        checksum = sum(data) % 256
+        data.append(checksum)
+        
+        if block is not None:
+            data2 = [ord(x) for x in block]
+            checksum2 = sum(data2) % 256
+            data += data2
+            data.append(checksum2)
+            
+        offset = 0
+        if STX in data:
+            offset = 1
+            while offset in data:
+                offset += 1
+            offset = (STX - offset) % 256
+    
+        data = [STX, offset] + [(x + offset) % 256 for x in data]
+        s = "".join([chr(x) for x in data])
+        if eg.debugLevel:
+            print " ".join(["%02X" % x for x in data])
+        serial.Write(s)
+        res = serial.Read(1, 0.5)
+        if res != ACK:
+            raise self.Exceptions.DeviceNotFound("Got no ACK!")
 
-class SetText(eg.ActionWithStringParameter):
+
+    def GetResponse(self, serial, cmde):
+        answer = serial.Read(7, 1.0)
+        if len(answer) < 7:
+            raise self.Exception("Not enough bytes received!")
+        if eg.debugLevel:
+            print " ".join(["%02X" % ord(x) for x in answer])
+        answer = [ord(c) for c in answer]
+        adr, cmd, dat1, dat2, dat3, dat4, chks = answer
+        if adr != self.plugin.address:
+            raise self.Exception("Wrong address received!")
+        if cmd != cmde:
+            raise self.Exception("Wrong command received!")
+        if chks != sum(answer[:6]) % 256:
+            raise self.Exception("Wrong checksum received!")
+        return dat1, dat2, dat3, dat4
+    
+    
+
+class SetText(ActionBase, eg.ActionWithStringParameter):
     
     def __call__(self, s):
         s = s + (chr(0) * (208 - len(s)))
-        self.plugin.DoCommand(self, 0x70, 0x02, 0x02, 0x01, 0x0c, s)
+        with self.plugin.serialThread as serial:
+            self.SendCommand(serial, 0x70, 0x01, 0x01, 0x01, 0x0c, s)
     
     
     
-class ReadTime(eg.ActionClass):
+class ReadTime(ActionBase):
     
     def __call__(self):
-        self.plugin.DoCommand(self, 0x60)
+        with self.plugin.serialThread as serial:
+            self.SendCommand(serial, 0x60)
+            dat1, dat2, dat3, dat4 = self.GetResponse(serial, 0x60)
+            result = dat1 * 256 + dat2
+            print "Hours:", result
+            return result
         
         
         
-class RequestShape(eg.ActionClass):
+class ReadStatus(ActionBase):
+    
+    def __call__(self):
+        with self.plugin.serialThread as serial:
+            self.SendCommand(serial, 0x4b)
+            dat1, dat2, dat3, dat4 = self.GetResponse(serial, 0x4b)
+            print "Fast/Slow:", bool(dat1 & (1 << 7))
+            print "Green Convergence:", bool(dat1 & (1 << 6))
+            print "Cursor Position:", dat2
+            print "PC mode:", bool(dat3 & (1 << 3))
+            print "Text mode:", bool(dat3 & (1 << 2))
+            print "Pause:", bool(dat3 & (1 << 1))
+            print "Standby:", bool(dat3 & (1 << 0))
+            extraInfo = bool(dat3 & (1 << 7))
+            if extraInfo:
+                print "Magnetic focus:", bool(dat3 & (1 << 6))
+                print "Convergence is stripped:", bool(dat3 & (1 << 7))
+                print "Orbiting installed:", bool(dat4 & (1 << 0))
+                print "Soft edge installed:", bool(dat4 & (1 << 1))
+                print "Contrast modulation installed:", bool(dat4 & (1 << 2))
+                print "NS is mounted on the convergence:", bool(dat4 & (1 << 3))
+                print "Controller with ASIC:", bool(dat4 & (1 << 4))
+                print "IRIS is installed:", bool(dat4 & (1 << 5))
+                print "Dynamic stigmators:", bool(dat4 & (1 << 6))
+            
+        
+        
+        
+class ReadVersion(ActionBase):
+    
+    def __call__(self):
+        with self.plugin.serialThread as serial:
+            self.SendCommand(serial, 0x4c)
+            dat1, dat2, dat3, dat4 = self.GetResponse(serial, 0x4c)
+            print "Identifier:", chr(dat1)
+            print "Version: %d%d.%d%d" % (dat2 / 16, dat2 & 0x0f, dat3 / 16, dat3 & 0x0f)
+            print "Model:", dat4
+            
+        
+        
+        
+class ReadSerialNumber(ActionBase):
+    
+    def __call__(self):
+        with self.plugin.serialThread as serial:
+            self.SendCommand(serial, 0x4d)
+            dat1, dat2, dat3, dat4 = self.GetResponse(serial, 0x4d)
+            digits = (
+                chr(48 + (dat1 & 0x0f)),
+                chr(48 + (dat2 / 16)),
+                chr(48 + (dat2 & 0x0f)),
+                chr(48 + (dat3 / 16)),
+                chr(48 + (dat3 & 0x0f)),
+                chr(48 + (dat4 / 16)),
+                chr(48 + (dat4 & 0x0f))
+            )
+            s = "".join(digits)
+            print "Serial Number:", s
+            return 
+        
+        
+        
+class GetInfo(ActionBase):        
+    
+    def __call__(self):
+        with self.plugin.serialThread as serial:
+            self.SendCommand(serial, 0x4b)
+            dat1, dat2, dat3, dat4 = self.GetResponse(serial, 0x4b)
+            print "Fast/Slow:", bool(dat1 & (1 << 7))
+            print "Green Convergence:", bool(dat1 & (1 << 6))
+            print "Cursor Position:", dat2
+            print "PC mode:", bool(dat3 & (1 << 3))
+            print "Text mode:", bool(dat3 & (1 << 2))
+            print "Pause:", bool(dat3 & (1 << 1))
+            print "Standby:", bool(dat3 & (1 << 0))
+            extraInfo = bool(dat3 & (1 << 7))
+            if extraInfo:
+                print "Magnetic focus:", bool(dat3 & (1 << 6))
+                print "Convergence is stripped:", bool(dat3 & (1 << 7))
+                print "Orbiting installed:", bool(dat4 & (1 << 0))
+                print "Soft edge installed:", bool(dat4 & (1 << 1))
+                print "Contrast modulation installed:", bool(dat4 & (1 << 2))
+                print "NS is mounted on the convergence:", bool(dat4 & (1 << 3))
+                print "Controller with ASIC:", bool(dat4 & (1 << 4))
+                print "IRIS is installed:", bool(dat4 & (1 << 5))
+                print "Dynamic stigmators:", bool(dat4 & (1 << 6))
+            self.SendCommand(serial, 0x4d)
+            dat1, dat2, dat3, dat4 = self.GetResponse(serial, 0x4d)
+            digits = (
+                chr(48 + (dat1 & 0x0f)),
+                chr(48 + (dat2 / 16)),
+                chr(48 + (dat2 & 0x0f)),
+                chr(48 + (dat3 / 16)),
+                chr(48 + (dat3 & 0x0f)),
+                chr(48 + (dat4 / 16)),
+                chr(48 + (dat4 & 0x0f))
+            )
+            s = "".join(digits)
+            print "Serial Number:", s
+            self.SendCommand(serial, 0x60)
+            dat1, dat2, dat3, dat4 = self.GetResponse(serial, 0x60)
+            result = dat1 * 256 + dat2
+            print "Hours:", result
+            self.SendCommand(serial, 0x4c)
+            dat1, dat2, dat3, dat4 = self.GetResponse(serial, 0x4c)
+            print "Identifier:", chr(dat1)
+            print "Version: %d%d.%d%d" % (dat2 / 16, dat2 & 0x0f, dat3 / 16, dat3 & 0x0f)
+            print "Model:", dat4
+            self.SendCommand(serial, 0x4a)
+            dat1, dat2, dat3, dat4 = self.GetResponse(serial, 0x4a)
+            print "Horizontal period: %dns" % (dat1 * 250)
+            print "Vertical frequency: %d Hz" % dat4
+            if dat2 & 0x80:
+                print "Source block number: %d not closed" % (dat2 & 0x7f)
+            else:
+                print "Source block number: %d" % (dat2 & 0x7f)
+            SOURCES = {
+                0: "Video",
+                1: "SVHS",
+                2: "TTL",
+                3: "RGsB",
+                4: "RGBS",
+                5: "Internal",
+                8: "Forced video",
+                9: "Forced SVHS",
+                0xA: "Forced TTL",
+                0xB: "Forced RGsB",
+                0xC: "Forced RGBS",
+            }
+            print "Source: " + SOURCES.get(dat3 / 16, "Unknown")
+            INSTALLATIONS = ["Rear/ Ceiling", "Front / Table", "Front/ Ceiling", "Rear / Table"]
+            print "Installation: " + INSTALLATIONS[dat3 & 0x03]
+            print "HDTV:", dat3 & 0x04
+            
+            
+            
+class RequestShape(ActionBase):
     
     def __call__(self, shape=0, x=0, y=0, colours=0x07):
-        self.plugin.DoCommand(self, 0x78, shape, x * 16 + y, colours)
+        with self.plugin.serialThread as serial:
+            self.DoCommand(serial, 0x78, shape, y * 16 + x, colours)
         
         
     def Configure(self, shape=0, x=0, y=0, colours=0x07):
@@ -112,9 +303,9 @@ class RequestShape(eg.ActionClass):
             ("Horizontal bars, switch colour", 0x09),
         ]
         panel = eg.ConfigPanel(self)
-        shapeCtrl = panel.SpinIntCtrl(shape)
-        xCtrl = panel.SpinIntCtrl(x)
-        yCtrl = panel.SpinIntCtrl(y)
+        shapeCtrl = panel.SpinIntCtrl(shape, max=255)
+        xCtrl = panel.SpinIntCtrl(x, max=9)
+        yCtrl = panel.SpinIntCtrl(y, max=9)
         redCtrl = panel.CheckBox(colours & 0x01, "Red")
         greenCtrl = panel.CheckBox(colours & 0x02, "Green")
         blueCtrl = panel.CheckBox(colours & 0x04, "Blue")
@@ -126,8 +317,8 @@ class RequestShape(eg.ActionClass):
         panel.AddLine(None, blueCtrl)
         while panel.Affirmed():
             colours = int(redCtrl.GetValue()) * 0x01
-            colours |= int(redCtrl.GetValue()) * 0x02
-            colours |= int(redCtrl.GetValue()) * 0x04
+            colours |= int(greenCtrl.GetValue()) * 0x02
+            colours |= int(blueCtrl.GetValue()) * 0x04
             panel.SetResult(
                 shapeCtrl.GetValue(),
                 xCtrl.GetValue(),
@@ -137,14 +328,15 @@ class RequestShape(eg.ActionClass):
         
 
 
-class LockIr(eg.ActionClass):
+class LockIr(ActionBase):
     name = "Lock IR"
     description = (
         "Programs the projector to filter out certain infra red commands."
     )
     
     def __call__(self, flags=0x7f):
-        self.plugin.DoCommand(self, 0x50, flags)
+        with self.plugin.serialThread as serial:
+            self.SendCommand(serial, 0x50, flags)
         
         
     def Configure(self, flags=0x7f):
@@ -172,6 +364,32 @@ class LockIr(eg.ActionClass):
         
         
         
+class ReadPotentiometer(ActionBase):
+    
+    def __call__(self, kind, x=0, y=0):
+        with self.plugin.serialThread as serial:
+            self.SendCommand(serial, 0x79, kind, y * 16 + x)
+            dat1, dat2, dat3, dat4 = self.GetResponse(serial, 0x79)
+            print "Value:", dat3
+            return dat3
+            
+        
+    def Configure(self, kind=0, x=0, y=0):
+        panel = eg.ConfigPanel(self)
+        kindCtrl = panel.SpinIntCtrl(kind, max=255)
+        xCtrl = panel.SpinIntCtrl(x, max=9)
+        yCtrl = panel.SpinIntCtrl(y, max=9)
+        panel.AddLine("Potentiometer:", kindCtrl)
+        panel.AddLine("X coordinate:", xCtrl)
+        panel.AddLine("Y coordinate:", yCtrl)
+        while panel.Affirmed():
+            panel.SetResult(
+                kindCtrl.GetValue(),
+                xCtrl.GetValue(),
+                yCtrl.GetValue(),
+            )
+        
+        
 class Barco(eg.PluginClass):
     
     def __init__(self):
@@ -182,19 +400,26 @@ class Barco(eg.PluginClass):
                 value = tmpValue
             TmpAction.__name__ = evalName
             self.AddAction(TmpAction)
-        self.AddAction(SetText)
-        self.AddAction(ReadTime)
-        self.AddAction(RequestShape)
-        self.AddAction(LockIr)
+        group = self.AddGroup("Unfinished")
+        group.AddAction(SetText)
+        group.AddAction(RequestShape)
+        group.AddAction(LockIr)
+        group.AddAction(ReadSerialNumber)
+        group.AddAction(ReadVersion)
+        group.AddAction(ReadStatus)
+        group.AddAction(ReadTime)
+        group.AddAction(GetInfo)
+        group.AddAction(ReadPotentiometer)
     
     
     @eg.LogIt
     def __start__(self, port=0, address=0, baudrate=9600):
         self.port = port
-        self.address = 0
+        self.address = address
         self.serialThread = eg.SerialThread()
         self.serialThread.SetReadEventCallback(self.OnReceive)
         self.serialThread.Open(port, baudrate)
+        self.serialThread.SetRts()
         self.serialThread.Start()
         
         
@@ -205,35 +430,7 @@ class Barco(eg.PluginClass):
     def OnReceive(self, serial):
         data = serial.Read(512)
         print "Barco: " + " ".join(["%02X" % ord(c) for c in data])
-        
     
-    def DoCommand(self, action, cmd, dat1=0, dat2=0, dat3=0, dat4=0, block=None):
-        data = [self.address, cmd, dat1, dat2, dat3, dat4]
-        checksum = sum(data) % 256
-        data.append(checksum)
-        
-        if block is not None:
-            data2 = [ord(x) for x in block]
-            checksum2 = sum(data2) % 256
-            data += data2
-            data.append(checksum2)
-            
-        offset = 1
-        while offset in data:
-            offset += 1
-        offset = (STX - offset) % 256
-    
-        data = [STX, offset] + [(x + offset) % 256 for x in data]
-        s = "".join([chr(x) for x in data])
-        self.serialThread.SuspendReadEvents()
-        try:
-            self.serialThread.Write(s)
-            res = self.serialThread.Read(1, 0.5)
-            if res != ACK:
-                raise action.Exceptions.DeviceNotFound("Got no ACK!")
-        finally:
-            self.serialThread.ResumeReadEvents()
-
     
     def Configure(self, port=0, address=0, baudrate=9600):
         panel = eg.ConfigPanel(self)

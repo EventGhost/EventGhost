@@ -156,7 +156,6 @@ class Text:
     errorCreate = "Cannot create voice object"
     buttonInsertTime = "Insert time"    
     buttonInsertDate = "Insert date"
-    buttonPlayback = "Playback text"
     normal = "Normal"
     slow = "Slow"
     fast = "Fast"
@@ -229,11 +228,6 @@ class TextToSpeech(eg.ActionClass):
             textCtrl.WriteText('{DATE}')
             textCtrl.SetFocus()
         insertDateButton.Bind(wx.EVT_BUTTON, OnButton)
-        
-        testButton = wx.Button(panel, -1, text.buttonPlayback)
-        def OnButton(event):
-            self(*ReturnResult())
-        testButton.Bind(wx.EVT_BUTTON, OnButton)
         
         try:
             VoiceObj = self.plugin.VoiceObj
@@ -310,15 +304,12 @@ class TextToSpeech(eg.ActionClass):
         staticBoxSizer.Add(sizer1, 0, wx.EXPAND|wx.ALL, 5)
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND|wx.TOP, 10)
        
-        def ReturnResult():
-            return (
+        while panel.Affirmed():
+            panel.SetResult(
                 voiceChoice.GetStringSelection(),
                 rateCtrl.GetValue(), 
                 textCtrl.GetValue(), 
                 0,
                 volumeCtrl.GetValue()
             )
-                    
-        while panel.Affirmed():
-            panel.SetResult(*ReturnResult())
 

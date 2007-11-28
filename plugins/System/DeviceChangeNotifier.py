@@ -85,11 +85,23 @@ class DeviceChangeNotifier:
             ),
             0
         )
+        # USB device class
+        self.handle3 = RegisterDeviceNotification(
+            eg.messageReceiver.hwnd, 
+            pointer(
+                DEV_BROADCAST_DEVICEINTERFACE(
+                    dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE,
+                    dbcc_classguid = "{a5dcbf10-6530-11d2-901f-00c04fb951ed}"
+                )
+            ),
+            0
+        )
     
     
     def Close(self):
         UnregisterDeviceNotification(self.handle1)
         UnregisterDeviceNotification(self.handle2)
+        UnregisterDeviceNotification(self.handle3)
         eg.messageReceiver.RemoveHandler(WM_DEVICECHANGE, self.OnDeviceChange)
         
         

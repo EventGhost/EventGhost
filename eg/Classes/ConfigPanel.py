@@ -61,6 +61,7 @@ class ConfigDialog(eg.Dialog):
             testButton = wx.Button(self, -1, eg.text.General.test)
             self.buttonRow.Add(testButton)
             testButton.Bind(wx.EVT_BUTTON, self.OnTestButton)
+            
         self.buttonRow.testButton = testButton
             
         self.Bind(wx.EVT_CLOSE, self.OnCancel)

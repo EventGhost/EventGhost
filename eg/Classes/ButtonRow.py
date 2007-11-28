@@ -92,7 +92,7 @@ class ButtonRow:
         border=5
     ):
         if self.numSpecialCtrls == 0:
-            self.sizer.Insert(0, (5,5))
+            self.sizer.Insert(0, (15, 5))
         self.sizer.Insert(
             self.numSpecialCtrls+1, 
             ctrl, 

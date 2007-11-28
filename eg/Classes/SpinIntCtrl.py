@@ -44,6 +44,7 @@ class SpinIntCtrl(eg.SpinNumCtrl):
             integerWidth = 5
         else:
             integerWidth = int(math.ceil(math.log10(max + 1)))
+            
         eg.SpinNumCtrl.__init__(
             self, 
             parent, 

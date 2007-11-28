@@ -826,3 +826,6 @@ CSIDL_SYSTEMX86 = 41 # Variable c_int
 CSIDL_TEMPLATES = 21 # Variable c_int
 CSIDL_WINDOWS = 36 # Variable c_int
 CSIDL_FLAG_DONT_VERIFY = 16384 # Variable c_int
+DTR_CONTROL_DISABLE = 0 # Variable c_int
+NOPARITY = 0 # Variable c_int
+ONESTOPBIT = 0 # Variable c_int

@@ -80,8 +80,10 @@ class SpinNumCtrl(wx.Window):
             style,
             validator, 
             name, 
-            **newArgs
+            #**newArgs # to avoid bug in NumCtrl
         )
+        numCtrl.SetParameters(**newArgs) # to avoid bug in NumCtrl
+        
         self.numCtrl = numCtrl
         numCtrl.SetCtrlParameters(        
             validBackgroundColour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW),
