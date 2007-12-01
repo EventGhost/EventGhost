@@ -407,7 +407,6 @@ class IntegerAction(eg.ActionClass):
                 max(min(self.tempValue, maxValue), minValue),
                 min = minValue, 
                 max = maxValue,
-                #size = wx.Size(100, -1),
                 fractionWidth = fractionWidth,
                 integerWidth = integerWidth + additionalWidth)
         
@@ -426,12 +425,9 @@ class IntegerAction(eg.ActionClass):
                 max(min(self.tempValue, maxValue), minValue),
                 min = minValue,
                 max = maxValue,
-                #size = wx.Size(100, -1),
                 fractionWidth = fractionWidth,
                 integerWidth = integerWidth + additionalWidth)
                 
-            #valueCtrl.SetMinSize((120, -1))
-            #valueCtrl2.SetMinSize((120, -1))
             valueCtrl.Bind(wx.EVT_TEXT, OnSpin)
             valueCtrl2.Bind(wx.EVT_TEXT, OnSpin)
         
@@ -609,7 +605,7 @@ CMDS = (
 
     #CropNzoom
     (IntegerAction, "CropNzoom", "CropNzoomMagnificationX", "Crop: Magnification X", None, 714, (0, 100, True, 1)),
-    (IntegerAction, "CropNzoom", "CropNzoomMagnificationY", "Crop: Magnification Y", None, 720, (0, 100, False, 100)),
+    (IntegerAction, "CropNzoom", "CropNzoomMagnificationY", "Crop: Magnification Y", None, 720, (0, 100, True, 1)),
     (ToggleAction, "CropNzoom", "CropNzoomMagnificationLock", "Crop: Magnification Lock", None, 721, None),
     
     #DeBand
