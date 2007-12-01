@@ -73,11 +73,6 @@ class AddActionDialog(eg.Dialog):
         tree.Bind(wx.EVT_TREE_ITEM_COLLAPSED, self.OnCollapsed)
         tree.Bind(wx.EVT_TREE_ITEM_EXPANDED, self.OnExpanded)
        
-        self.htmlTemplate = (
-            '<html><body bgcolor="#%02X%02X%02X">%%s</body></html>' 
-                % self.GetBackgroundColour().Get()
-        )
-
         rightPanel = self.rightPanel = wx.Panel(splitterWindow)
         rightSizer = self.rightSizer = wx.BoxSizer(wx.VERTICAL)
         rightPanel.SetSizer(rightSizer)
@@ -181,7 +176,7 @@ class AddActionDialog(eg.Dialog):
                 info = data
         self.nameText.SetLabel(data.name)
         self.docText.SetBasePath(info.path)
-        self.docText.SetPage(self.htmlTemplate % data.description)
+        self.docText.SetPage(data.description)
         
         
     def OnCollapsed(self, event):

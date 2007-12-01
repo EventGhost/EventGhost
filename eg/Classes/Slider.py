@@ -98,8 +98,8 @@ class Slider(wx.Window):
         return self.slider.GetValue()
         
         
-    def SetValue(self):
-        self.slider.SetValue()
-        
+    def SetValue(self, value):
+        self.slider.SetValue(value)
+        self.OnScrollChanged()
         
         

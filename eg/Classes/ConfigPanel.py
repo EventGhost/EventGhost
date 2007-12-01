@@ -155,7 +155,8 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         self.maxRowNum = 0
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.isDirty = False
-        #self.dialog.buttonRow.applyButton.Enable(False)
+        if eg.debugLevel:
+            self.dialog.buttonRow.applyButton.Enable(False)
         
     @eg.LogIt
     def SetIsDirty(self, flag=True):
@@ -190,6 +191,7 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
             self.AddGrid(self.lines, *self.sizerProps)
         else:
             self.SetSizerAndFit(self.sizer)
+            
         self.dialog.FinishSetup()        
         def OnEvent(event):
             self.SetIsDirty()
@@ -218,7 +220,8 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
     def SetResult(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
-        #self.dialog.buttonRow.applyButton.Enable(False)
+        if eg.debugLevel:
+            self.dialog.buttonRow.applyButton.Enable(False)
         self.isDirty = False
         self.nextResult = self.gr.parent.switch(args)
 

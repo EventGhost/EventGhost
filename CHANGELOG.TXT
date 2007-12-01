@@ -1,10 +1,13 @@
-Version 0.3.6.1199 (11/28/2007)
+* Many enhancements to the ffdshow plugin by Bartman.
+- Better handling of colours if the user has changed the colours in his desktop theme.
+
+Version 0.3.6.1218 (11/28/2007)
 + First version of a plugin for Barco CRT projectors.
 + All action configuration dialogs now have a "Test" button, that will execute the current settings just like it would if you confirm the dialog and press execute in the toolbar. The difference is, that changes you've made are not stored until you confirm the dialog with the ok button. So you can cancel your changes even if you have pressed the test button.
 
 Version 0.3.6.1190 (11/25/2007)
-+ DVB Dream plugin from townkat
-+ Changelog tab in the about dialog
++ DVB Dream plugin from townkat.
++ Changelog tab in the about dialog.
 + If a plugin gets into error state, it will now try to restart itself on execute, disable/enable or pressing ok or apply in the configuration dialog.
-+ eg.Exceptions class for generic translatable error messages
++ eg.Exceptions class for generic translatable error messages.
 * Czech language file, MediaMonkey and IrfanView

@@ -21,6 +21,7 @@
 # $LastChangedBy$
 
 import eg
+import wx
 
 eg.RegisterPlugin(
     name = "ffdshow",
@@ -158,8 +159,8 @@ class GetIntAction(eg.ActionClass):
         try:
             hwnd = win32gui.FindWindow("ffdshow_remote_class", None)
         except:
-            self.plugin.PrintError("ffdshow instance not found")
-            return None
+            raise self.Exceptions.ProgramNotRunning
+
         return win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
     
     
@@ -171,8 +172,8 @@ class SetIntAction(eg.ActionClass):
         try:
             hwnd = win32gui.FindWindow("ffdshow_remote_class", None)
         except:
-            self.plugin.PrintError("ffdshow instance not found")
-            return None
+            raise self.Exceptions.ProgramNotRunning
+
         win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
         win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, value)
     
@@ -197,40 +198,525 @@ class ChangeIntAction(SetIntAction):
         try:
             hwnd = win32gui.FindWindow("ffdshow_remote_class", None)
         except:
-            self.plugin.PrintError("ffdshow instance not found")
-            return None
+            raise self.Exceptions.ProgramNotRunning
+
         oldValue = win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
         newValue = oldValue + value
         win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
         win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, newValue)
         return newValue
+
+
+class ToggleAction(eg.ActionClass):
+    
+    def __call__(self, action):
+        #0: disable, 1: enable, 2: toggle, 3: getStatus
+        try:
+            hwnd = win32gui.FindWindow("ffdshow_remote_class", None)
+        except:
+            raise self.Exceptions.ProgramNotRunning
+            
+        if action == 0 or action == 1:
+            win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
+            win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, action)
+            return action
+            
+        oldValue = win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
+        
+        if action == 2:
+            if oldValue:
+                newValue = 0
+            else:
+                newValue = 1
+            win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
+            win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, newValue)
+            return newValue
+            
+        if action == 3:
+            return oldValue
+            
+    
+    def GetLabel(self, action):
+        labels = (
+            "Disable %s",
+            "Enable %s",
+            "Toggle %s",
+            "Get Status of %s"
+        )
+        return labels[action] % self.name
+    
+
+    def Configure(self, action = 2):
+        panel = eg.ConfigPanel(self)
+        panel.AddLabel(self.description);
+        
+        radioButtons = (
+            wx.RadioButton(panel, -1, "Disable", style = wx.RB_GROUP),
+            wx.RadioButton(panel, -1, "Enable"),
+            wx.RadioButton(panel, -1, "Toggle"),
+            wx.RadioButton(panel, -1, "Get status")
+        )
+
+        radioButtons[action].SetValue(True)
+        for rb in radioButtons:
+            panel.AddCtrl(rb)
+        
+        while panel.Affirmed():
+            for i in range(len(radioButtons)):
+                if radioButtons[i].GetValue():
+                    action = i
+                    break
+            panel.SetResult(action)
+
+
+class IntegerAction(eg.ActionClass):
+    #min, max, showSlider, scaleFactor
+    options = (-sys.maxint - 1, sys.maxint, False, 1)
+    def __call__(self, action, value):
+        #0: set to, 1: change by, 2: get value
+        try:
+            hwnd = win32gui.FindWindow("ffdshow_remote_class", None)
+        except:
+            raise self.Exceptions.ProgramNotRunning            
+
+        if action == 2:
+            return win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)    
+            
+        if action == 1:
+            value += win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
+            
+        value = max(self.options[0], value)
+        value = min(self.options[1], value)
+        
+        win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
+        win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, value)
+        return value
+            
+    
+    def FormatValue(self, value):
+        if self.options[3] == 1:
+            return str(value)
+        else:
+            return "%.02f" % (value / float(self.options[3]))
+        
+    
+    def GetLabel(self, action, value):
+        labels = (
+            "Set %s to %s",
+            "Change %s by %s",
+        )
+        if action < 2:
+            return labels[action] % (self.name, self.FormatValue(value))
+        else:
+            return "Get Value of %s" % self.name
     
     
+
+    def Configure(self, action = 0, value = 0):
+        """ this panel uses to controls
+            one for setting and one for changing the value
+            the right one is chosen depending on the value of the radiobuttons
+        """
+        
+        def OnRadioButton(event):
+            valueCtrl.Show(radioButtons[0].GetValue())
+            valueCtrl2.Show(radioButtons[1].GetValue())
+            if radioButtons[0].GetValue():
+                self.tempValue = valueCtrl.GetValue()
+            if radioButtons[1].GetValue():
+                panel.Layout()
+            panel.Layout()
+            event.Skip()
+            
+        def OnSlider(event):
+            self.tempValue = event.GetEventObject().GetValue()
+            valueCtrl.SetValue(self.tempValue)
+            valueCtrl2.SetValue(self.tempValue)
+            event.Skip()
+        
+        def OnSpin(event):
+            self.tempValue = event.GetEventObject().GetValue()
+            valueCtrl.SetValue(self.tempValue)
+            valueCtrl2.SetValue(self.tempValue)
+            event.Skip()
+
+            
+        panel = eg.ConfigPanel(self)
+        
+        radioButtons = (
+            wx.RadioButton(panel, -1, "Set to value", style = wx.RB_GROUP),
+            wx.RadioButton(panel, -1, "Change by value"),
+            wx.RadioButton(panel, -1, "Get current value")
+        )
+
+        radioButtons[action].SetValue(True)
+        for rb in radioButtons:
+            rb.Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
+            panel.AddCtrl(rb)
+        
+        if self.options[2]:
+            
+            def LevelCallback(value):
+                return self.FormatValue(value)
+                
+            self.tempValue = value
+            
+            valueCtrl = eg.Slider(
+                panel, 
+                value = value, 
+                min = self.options[0], 
+                max = self.options[1], 
+                minLabel = self.FormatValue(self.options[0]),
+                maxLabel = self.FormatValue(self.options[1]),
+                style = wx.SL_TOP | wx.EXPAND,
+                levelCallback=LevelCallback)
+                
+            bound = self.options[1] - self.options[0]
+            valueCtrl2 = eg.Slider(
+                panel, 
+                value = value, 
+                min = bound * -1, 
+                max = bound, 
+                minLabel = self.FormatValue(bound * -1),
+                maxLabel = self.FormatValue(bound),
+                style = wx.SL_TOP | wx.EXPAND,
+                levelCallback=LevelCallback)
+                
+            valueCtrl.SetMinSize((300, -1))
+            valueCtrl2.SetMinSize((300, -1))
+            valueCtrl.Bind(wx.EVT_SCROLL, OnSlider)
+            valueCtrl2.Bind(wx.EVT_SCROLL, OnSlider)
+                
+        else:
+            fractionWidth = len(str(self.options[3])) - 1
+            
+            self.tempValue = value / float(self.options[3])
+            minValue = self.options[0] / float(self.options[3])
+            maxValue = self.options[1] / float(self.options[3])
+            #integerWidth = max(len(str(int(minValue))), len(str(int(maxValue))))
+            integerWidth = 11
+
+            if minValue < 0:
+                additionalWidth = 0
+            else:
+                additionalWidth = 1
+
+            valueCtrl = eg.SpinNumCtrl(
+                panel,
+                -1,
+                max(min(self.tempValue, maxValue), minValue),
+                min = minValue, 
+                max = maxValue,
+                #size = wx.Size(100, -1),
+                fractionWidth = fractionWidth,
+                integerWidth = integerWidth + additionalWidth)
+        
+            bound = (self.options[1] - self.options[0]) / float(self.options[3])
+            minValue = bound * -1
+            maxValue = bound
+            
+            if minValue < 0:
+                additionalWidth = 0
+            else:
+                additionalWidth = 1
+
+            valueCtrl2 = eg.SpinNumCtrl(
+                panel,
+                -1,
+                max(min(self.tempValue, maxValue), minValue),
+                min = minValue,
+                max = maxValue,
+                #size = wx.Size(100, -1),
+                fractionWidth = fractionWidth,
+                integerWidth = integerWidth + additionalWidth)
+                
+            #valueCtrl.SetMinSize((120, -1))
+            #valueCtrl2.SetMinSize((120, -1))
+            valueCtrl.Bind(wx.EVT_TEXT, OnSpin)
+            valueCtrl2.Bind(wx.EVT_TEXT, OnSpin)
+        
+        panel.AddCtrl(valueCtrl)
+        panel.AddCtrl(valueCtrl2)
+        
+        OnRadioButton(wx.CommandEvent())
+        
+        while panel.Affirmed():
+            if not self.options[2]:
+                value = int(self.tempValue * float(self.options[3]))
+            else:
+                value = self.tempValue
+            #print "Affirmed", value
+            for i in range(len(radioButtons)):
+                if radioButtons[i].GetValue():
+                    action = i
+                    break
+                    panel = eg.ConfigPanel(self)
+            panel.SetResult(action, value)
+
+
+class SelectAction(eg.ActionClass):
+    options = ()
+    def __init__(self, *args, **kwargs):
+        eg.ActionClass.__init__(self, *args, **kwargs)
+        #rebuild the options sequence to quickly find entries
+        #each entry is a tuple of (key, index, text, next, prev)
+        newOptions = {}
+        i = 0
+        optionLength = len(self.options)
+        
+        for key, text in self.options:
+            newOptions[key] = (
+                key, 
+                i, #index
+                text, 
+                self.options[(i + 1) % optionLength][0], #next
+                self.options[(i - 1) % optionLength][0]) #prev
+            i += 1
+            
+        self.options = newOptions
     
-    
-CMDS = (
-    (WParamAction, "Run", "Run", None, 5),
-    (WParamAction, "Stop", "Stop", None, 4),
-    (GetIntAction, "GetSubtitleDelay", "Get Subtitle Delay", None, 812),
-    (SetIntAction, "SetSubtitleDelay", "Set Subtitle Delay", None, 812),
-    (ChangeIntAction, "ChangeSubtitleDelay", "Change Subtitle Delay", None, 812),
-    (WParamAction, "PreviousPreset", "Previous Preset", None, 11),
-    (WParamAction, "NextPreset", "Next Preset", None, 12),
+    def __call__(self, action, value):
+        #0: set to, 1: next, 2: previous 3: get value
+   
+        try:
+            hwnd = win32gui.FindWindow("ffdshow_remote_class", None)
+        except:
+            raise self.Exceptions.ProgramNotRunning            
+
+        if action == 3:
+            return win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)    
+            
+        if action == 1 or action == 2:
+            value = win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
+            if self.options.has_key(value):
+                entry = self.options[value]
+                if action == 1:
+                    value = entry[3]
+                else:
+                    value = entry[4]
+            else:
+                if action == 1:
+                    value += 1
+                else:
+                    value -= 1
+
+            
+        win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
+        win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, value)
+        return value
+        
+
+    def GetLabel(self, action, value):
+        if action == 0:
+            return "Set %s to %s" % (self.name, self.options[value][2])
+        if action == 1:
+            return "Set %s to next setting" % self.name
+        if action == 2:
+            return  "Set %s to previous setting" % self.name
+        if action == 3:
+            return "Get %s setting" % self.name
+        return self.name
+
+    def Configure(self, action = 0, value = sys.maxint):
+        """ this panel uses to controls
+            one for setting and one for changing the value
+            the right one is chosen depending on the value of the radiobuttons
+        """
+        
+        def OnRadioButton(event):
+            choiceCtrl.Enable(radioButtons[0].GetValue())
+            event.Skip()
+            
+        panel = eg.ConfigPanel(self)
+        
+        #radiobuttons
+        radioButtons = (
+            wx.RadioButton(panel, -1, "Set to value", style = wx.RB_GROUP),
+            wx.RadioButton(panel, -1, "Next setting"),
+            wx.RadioButton(panel, -1, "Previous setting"),
+            wx.RadioButton(panel, -1, "Get current setting")
+        )
+
+        radioButtons[action].SetValue(True)
+        for rb in radioButtons:
+            rb.Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
+            panel.AddCtrl(rb)
+        
+        #create control and add dummy entries
+        choiceCtrl = wx.Choice(panel, -1)
+        for i in range(len(self.options)):
+            choiceCtrl.Append("")
+        
+        #set entries to real values
+        for key, entry in self.options.iteritems():
+            choiceCtrl.SetString(entry[1], entry[2])
+            choiceCtrl.SetClientData(entry[1], entry[0])
+            if entry[0] == value:
+                choiceCtrl.Select(entry[1])
+        if choiceCtrl.GetSelection() == wx.NOT_FOUND:
+            choiceCtrl.Select(0)
+        
+        panel.AddCtrl(choiceCtrl)
+        
+        OnRadioButton(wx.CommandEvent())
+        
+        while panel.Affirmed():
+            value = choiceCtrl.GetClientData(choiceCtrl.GetSelection())
+            for i in range(len(radioButtons)):
+                if radioButtons[i].GetValue():
+                    action = i
+                    break
+            #print action, value
+            panel.SetResult(action, value)
+
+
+#Name, internalName, description, filterXXX, isXXX, showXXX, orderXXX, fullXXX, halfXXX
+FILTERS = (
+    ("Avisynth", "Avisynth", None, 1250, 1251, 1260, 1252, 1253, None), 
+    ("Bitmap overlay", "Bitmap", None, 1650, 1651, 1652, 1653, 1654, None),
+    ("Blur & NR", "Blur", None, 900, 901, 936, 903, 905, None),
+    ("Crop", "CropNzoom", None, 747, 712, 752, 754, 765, None),
+    ("DCT", "DCT", None, 450, 451, 462, 452, 453, 463),
+    ("DeBand", "GradFun", None, 1150, 1151, 1152, 1153, 1154, 1155),
+    ("Deinterlacing", "Deinterlace", None, 1400, 1401, 1418, 1424, 1402 , None),
+    ("DScaler filter", "DScaler", None, 2200, 2201, 2206, 2202, 2203, 2207),
+    ("Grab", "Grab", None, 2000, 2001, 2013, 2002, 2003, None),
+    ("Levels", "Levels", None, 1600, 1601, 1611, 1602, 1603, 1612),
+    ("Logoaway", "Logoaway", None, 1450, 1451, 1452, 1453, 1454, None),
+    ("Noise", "Noise", None, 500, 501, 512, 506, 507, 513),
+    ("Offset & flip", "Offset", None, 1100, 1101, 1110, 1102, 1109, 1111),
+    ("OSD", "OSD", "Actions to control ffdshow's OSD", None, 1501, None, None, None, None),
+    ("Perspective correction", "Perspective", None, 2300, 2301, 2314, 2302, 2303, 2315),
+    ("Picture properties", "PictProp", None, 200, 205, 217, 207, 213, 218),
+    ("Postprocessing", "Postproc", None, 100, 106, 120, 109, 111, 121),
+    ("Presets", "Presets", "Actions to control ffdshow presets", None, None, None, None, None, None),
+    ("Resize & aspect", "Resize", None, 700, 701, 751, 722, 723, None),
+    ("Sharpen", "Sharpen", None, 400, 401, 427, 407, 408, 428),
+    ("Subtitles", "Subtitles", None, 800, 801, 828, 815, 817, None),
+    ("Visualizations", "Vis", None, 1200, 1201, 1206, 1202, None, None),
+    ("Warpsharp", "Warpsharp", None, 430, 431, 442, 432, 433, 443)    
 )
+
+#aType, aGroup, aClsName, aName, aDescription, aValue, aOptions
+CMDS = (
+    (WParamAction, None, "Run", "Run", None, 5, None),
+    (WParamAction, None, "Stop", "Stop", None, 4, None),
+    
+    #deprecated actions
+    (GetIntAction, "deprecated", "GetSubtitleDelay", "Get Subtitle Delay", None, 812, None),
+    (SetIntAction, "deprecated", "SetSubtitleDelay", "Set Subtitle Delay", None, 812, None),
+    (ChangeIntAction, "deprecated", "ChangeSubtitleDelay", "Change Subtitle Delay", None, 812, None),
+
+    #CropNzoom
+    (IntegerAction, "CropNzoom", "CropNzoomMagnificationX", "Crop: Magnification X", None, 714, (0, 100, True, 1)),
+    (IntegerAction, "CropNzoom", "CropNzoomMagnificationY", "Crop: Magnification Y", None, 720, (0, 100, False, 100)),
+    (ToggleAction, "CropNzoom", "CropNzoomMagnificationLock", "Crop: Magnification Lock", None, 721, None),
+    
+    #DeBand
+    (IntegerAction, "GradFun", "GradFunThreshold", "DeBand: Threshold", None, 1156, (101, 2000, True, 100)),
+    
+    #Deinterlacing
+    (ToggleAction, "Deinterlace", "DeinterlaceSwapFields", "Deinterlacing: Swap fields", None, 1409, None),
+    (SelectAction, "Deinterlace", "DeinterlaceMethod", "Deinterlacing: Method", None, 1403,
+        ( (12, "Bypass"),
+            (0, "Linear interpolation"),
+            (1, "Linear blending"),
+            (2, "Cubic interpolation"),
+            (3, "Cubic blending"),
+            (4, "Median"),
+            (5, "TomsMoComp"),
+            (6, "DGBob"),
+            (7, "Framerate doubler"),
+            (8, "ffmpeg deinterlacer"),
+            (9, "DScaler plugin"),
+            (10, "5-tap lowpass"),
+            (11, "Kernel deinterlacer"),
+            (13, "Kernel bob" ))),
+    
+    #Presets
+    (WParamAction, "Presets", "PreviousPreset", "Previous Preset", None, 11, None),
+    (WParamAction, "Presets", "NextPreset", "Next Preset", None, 12, None),
+
+    #subtitle actions
+    (IntegerAction, "Subtitles", "SubtitleDelay", "Subtitle: Delay", None, 812, None),
+
+)
+
 
 
 class Ffdshow(eg.PluginClass):
     
     def __init__(self):
-        for aType, aClsName, aName, aDescription, aValue in CMDS:
+        groups = {}
+        for filterName, internalName, description, filterId, isId, showId, orderId, fullId, halfId in FILTERS:
+            if not description:
+                description = "Actions to control the %s filter within ffdshow" % filterName
+            group = self.AddGroup(filterName, description)
+            groups[internalName] = group
+            
+            #enable/disable filter
+            if isId:
+                class tmpAction(ToggleAction):
+                    name = filterName + " filter"
+                    description = "Sets or retrieves the status of the %s filter" % filterName
+                    value = isId
+                tmpAction.__name__ = internalName + "Toggle"
+                group.AddAction(tmpAction)
+            
+            if showId:
+                class tmpAction(ToggleAction):
+                    name = filterName + " filter visibility"
+                    description = "Sets or retrieves the visibility of the %s filter" % filterName
+                    value = showId
+                tmpAction.__name__ = internalName + "Visibility"
+                group.AddAction(tmpAction)
+
+            if fullId:
+                class tmpAction(ToggleAction):
+                    name = filterName + " filter \"Process whole image\" property"
+                    description = "Sets or retrieves the \"Process whole image\" property of the %s filter" % filterName
+                    value = fullId
+                tmpAction.__name__ = internalName + "ProcessWholeImage"
+                group.AddAction(tmpAction)
+
+            if halfId:
+                class tmpAction(ToggleAction):
+                    name = filterName + " filter \"Only right half\" property"
+                    description = "Sets or retrieves the \"Only right half\" property of the %s filter" % filterName
+                    value = halfId
+                tmpAction.__name__ = internalName + "ProcessRightHalf"
+                group.AddAction(tmpAction)
+
+            if orderId:
+                class tmpAction(IntegerAction):
+                    name = filterName + " order"
+                    description = "Sets or retrieves the position of the %s filter" % filterName
+                    value = orderId
+                tmpAction.__name__ = internalName + "Order"
+                group.AddAction(tmpAction)
+
+
+        #add commands
+        for aType, aGroup, aClsName, aName, aDescription, aValue, aOptions in CMDS:
             class tmpAction(aType):
                 name = aName
                 description = aDescription
                 value = aValue
+                if aOptions:
+                    options = aOptions
             tmpAction.__name__ = aClsName
-            self.AddAction(tmpAction)
-        self.AddAction(GetPresets)
-        self.AddAction(SetPreset)
+            if not aGroup:
+                self.AddAction(tmpAction)
+            else:
+                if aGroup == "deprecated":
+                    self.AddAction(tmpAction, hidden = True)
+                else:
+                    group = groups[aGroup]
+                    group.AddAction(tmpAction)
+        
+        group = groups["Presets"]
+        group.AddAction(GetPresets)
+        group.AddAction(SetPreset)
         
         
     def __start__(self):
@@ -249,8 +735,8 @@ class Ffdshow(eg.PluginClass):
         try:
             hwnd = win32gui.FindWindow("ffdshow_remote_class", None)
         except:
-            self.PrintError("ffdshow instance not found")
-            return None
+            raise self.Exceptions.ProgramNotRunning
+            
         return win32gui.SendMessage(hwnd, self.mesg, wParam, lParam)
 
 
@@ -264,8 +750,8 @@ class SetPreset(eg.ActionWithStringParameter):
         try:
             hwnd = win32gui.FindWindow("ffdshow_remote_class", None)
         except:
-            self.PrintError("ffdshow instance not found")
-            return
+            raise self.Exceptions.ProgramNotRunning
+            
         cds = COPYDATASTRUCT()
         cds.dwData = COPY_SETACTIVEPRESET
         cds.lpData = ctypes.c_char_p(preset)
@@ -285,8 +771,7 @@ class GetPresets(eg.ActionClass):
         try:
             hwnd = win32gui.FindWindow("ffdshow_remote_class", None)
         except:
-            self.PrintError("ffdshow instance not found")
-            return
+            raise self.Exceptions.ProgramNotRunning
         
         cds = COPYDATASTRUCT()
         cds.dwData = COPY_GET_PRESETLIST

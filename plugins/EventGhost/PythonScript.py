@@ -225,7 +225,7 @@ class ScriptEditor(wx.Frame):
             self.name = "Edit PythonScript"
             self.positionData = item.GetPositionData()
             self.oldText = item.args[0]
-            item.SetParams(text)
+            item.SetArgs((text, ))
             item.document.AppendUndoHandler(self)
 
 
@@ -238,7 +238,7 @@ class ScriptEditor(wx.Frame):
                     win.editCtrl.SetText(self.oldText)
                     win.editCtrl.SetSavePoint()
             tmp = item.args[0]
-            item.SetParams(self.oldText)
+            item.SetArgs((self.oldText, ))
             self.oldText = tmp
 
 
@@ -313,15 +313,15 @@ class PythonScript(eg.ActionClass):
             
         def __call__(self):
             mod = self.mod
-            old_result = eg.result
-            mod.result = old_result
+            oldResult = eg.result
+            mod.result = oldResult
             try:
                 exec(self.code, mod.__dict__)
             except SystemExit:
                 pass
             except:
                 self.PrintTraceback()
-            if eg.result is not old_result:
+            if eg.result is not oldResult:
                 return eg.result
             else:
                 return mod.result

@@ -191,7 +191,7 @@ class PluginItem(ActionItem):
         
                         
     @eg.LogIt
-    def SetParams(self, *args):
+    def SetArgs(self, args):
         info = self.info
         if not info.lastException and args == self.args:
             return

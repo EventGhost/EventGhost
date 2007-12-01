@@ -81,7 +81,7 @@ class NewPlugin(NewItem):
 #                    pluginItem.Delete()
 #                    return None
 #                else:
-#                    pluginItem.SetParams(*args)
+#                    pluginItem.SetArgs(args)
 #                    pluginItem.Refresh()
             eg.actionThread.CallWait(pluginItem.Execute)
         self.StoreItem(pluginItem)
@@ -528,6 +528,7 @@ class CmdConfigure:
         
     
     def Do(self, item, isFirstConfigure=False):
+        # TODO: doing the thread ping-pong right
         executable = item.executable
         if executable is None:
             return False
@@ -562,7 +563,7 @@ class CmdConfigure:
                     item.openConfigDialog.Destroy()
                     del item.openConfigDialog
                     if wasApplied:
-                        item.SetParams(*oldArgs)
+                        item.SetArgs(oldArgs)
                         item.Refresh()
                     return False
                 elif userAction == wx.ID_OK:
@@ -573,21 +574,23 @@ class CmdConfigure:
                     break
                 elif userAction == wx.ID_APPLY:
                     lastArgs = newArgs
-                    item.SetParams(*newArgs)
+                    item.SetArgs(newArgs)
                     item.Refresh()
                     wasApplied = True
                     continue
                 elif userAction == eg.ID_TEST:
-                    item.SetParams(*newArgs)
-                    eg.actionThread.CallWait(item.Execute)
-                    item.SetParams(*lastArgs)
+                    def Do():
+                        item.SetArgs(newArgs)
+                        item.Execute()
+                        item.SetArgs(lastArgs)
+                    eg.actionThread.Call(Do)
                     continue
             elif newArgs is None:
                 return False
             elif newArgs is -1:
                 # This is most likely a PythonScript action
                 return True
-        item.SetParams(*newArgs)
+        item.SetArgs(newArgs)
         newArgumentString = item.GetArgumentString()
         if self.oldArgumentString != newArgumentString:
             if not isFirstConfigure:

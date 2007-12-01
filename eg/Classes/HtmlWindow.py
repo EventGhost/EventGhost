@@ -20,28 +20,42 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 import thread
 import webbrowser
 import threading
 
 import wx
-import wx.html as html
+from wx.html import HtmlWindow as OriginalHtmlWindow
+from wx.html import HTML_URL_IMAGE, HTML_OPEN
 
 wx.InitAllImageHandlers()
 
 
-class HtmlWindow(html.HtmlWindow):
+class HtmlWindow(OriginalHtmlWindow):
     basePath = None
     
-    def __init__(self, *args, **kwargs):
-        html.HtmlWindow.__init__(self, *args, **kwargs)
-        
+    def __init__(self, parent, *args, **kwargs):
+        OriginalHtmlWindow.__init__(self, parent, *args, **kwargs)
+        self.SetForegroundColour(parent.GetForegroundColour())
+        self.SetBackgroundColour(parent.GetBackgroundColour())
         # bugfix: don't open links to soon, as the event might come from the
         # opening of this window (mouse up event)
         self.waiting = True
         threading.Timer(0.5, self.OnTimeout).start()
 
 
+    def SetPage(self, html):
+        r1, g1, b1 = self.GetBackgroundColour().Get()
+        r2, g2, b2 = self.GetForegroundColour().Get()
+        OriginalHtmlWindow.SetPage(
+            self,
+            '<html><body bgcolor="#%02X%02X%02X" text="#%02X%02X%02X">%s</body></html>' 
+                % (r1, g1, b1, r2, g2, b2, html)
+        )
+        
+    
+    
     def OnTimeout(self):
         self.waiting = False
         
@@ -61,12 +75,12 @@ class HtmlWindow(html.HtmlWindow):
         
     def OnOpeningURL(self, type, url):
         if (
-            type == html.HTML_URL_IMAGE
+            type == HTML_URL_IMAGE
             and (self.basePath is not None)
             and not url.startswith(self.basePath)
         ):
             return self.basePath + url
         else:
-            return html.HTML_OPEN
+            return HTML_OPEN
         
         

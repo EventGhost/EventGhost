@@ -15,6 +15,7 @@ class TestPlugin(eg.PluginClass):
         self.AddAction(SpinIntCtrlDemo)
         self.AddAction(DictionaryTest)
         self.AddAction(EventTest)
+        self.AddAction(SpinNumCtrl)
         
         
 
@@ -176,5 +177,46 @@ class EventTest(eg.ActionClass):
             panel.SetResult(result)
         
         
+class SpinNumCtrl(eg.ActionClass):
+    
+    def __call__(self, value):
+        print value
+        
+        
+    def Configure(self, value=0):
+        panel = eg.ConfigPanel(self)
+        cb = panel.CheckBox(True, "Toggle")
+        def OnCb(event):
+            flag = cb.GetValue()
+            ctrl.Show(flag)
+            ctrl2.Show(not flag)
+            panel.Layout()
+        cb.Bind(wx.EVT_CHECKBOX, OnCb)
+        
+        ctrl = eg.SpinNumCtrl(
+            panel, 
+            value=1, 
+            min = 0,
+            max = 10,
+            integerWidth = 11, 
+            fractionWidth=0,
+            #autoSize=False,
+        )
+        ctrl2 = eg.SpinNumCtrl(
+            panel, 
+            value=-1, 
+            min = -20,
+            max = 20,
+            integerWidth = 5, 
+            fractionWidth=0,
+            #autoSize=False,
+        )
+        ctrl.Show()
+        ctrl2.Show(False)
+        panel.sizer.Add(cb)
+        panel.sizer.Add(ctrl)
+        panel.sizer.Add(ctrl2)
+        while panel.Affirmed():
+            panel.SetResult(ctrl.GetValue())
         
         

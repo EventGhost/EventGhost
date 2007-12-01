@@ -23,7 +23,7 @@
 import locale
 import wx
 from wx.lib import masked
-
+import eg
 
 encoding = locale.getdefaultlocale()[1]
 localedict = locale.localeconv()
@@ -74,7 +74,7 @@ class SpinNumCtrl(wx.Window):
         numCtrl = masked.NumCtrl(
             self, 
             -1, 
-            value, 
+            0, #value, 
             pos, 
             size, 
             style,
@@ -83,6 +83,7 @@ class SpinNumCtrl(wx.Window):
             #**newArgs # to avoid bug in NumCtrl
         )
         numCtrl.SetParameters(**newArgs) # to avoid bug in NumCtrl
+        numCtrl.SetValue(value) # to avoid bug in NumCtrl
         
         self.numCtrl = numCtrl
         numCtrl.SetCtrlParameters(        
@@ -104,12 +105,10 @@ class SpinNumCtrl(wx.Window):
         spinbutton.Bind(wx.EVT_SPIN_UP, self.OnSpinUp)
         spinbutton.Bind(wx.EVT_SPIN_DOWN, self.OnSpinDown)
         
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(numCtrl, 0, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND)
+        sizer = self.sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(numCtrl, 1, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND)
         sizer.Add(spinbutton, 0, wx.ALIGN_CENTER)
-        self.SetSizer(sizer)
-        self.SetAutoLayout(True)
-        sizer.Fit(self)
+        self.SetSizerAndFit(sizer)
         self.Layout()
         self.SetMinSize(self.GetSize())
         self.Bind(wx.EVT_SIZE, self.OnSize)

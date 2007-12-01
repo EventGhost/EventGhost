@@ -200,12 +200,15 @@ class Panel2(wx.Panel):
             self, 
             style=wx.SUNKEN_BORDER|wx.html.HW_NO_SELECTION
         )
+        htmlWindow.SetForegroundColour(eg.colour.windowText)
+        htmlWindow.SetBackgroundColour(eg.colour.windowBackground)
         htmlWindow.SetPage(html)
         htmlWindow.SetMinSize((460, 270))
         htmlWindow.SetScrollbars(1, 1, 1000, 1000)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(htmlWindow, 1, wx.EXPAND, 5)
         self.SetSizerAndFit(sizer)
+        return htmlWindow
         
     
         
@@ -218,7 +221,7 @@ class Panel3(Panel2):
         
 
 
-class Panel4(wx.Panel):
+class Panel4(Panel2):
     
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
@@ -226,7 +229,7 @@ class Panel4(wx.Panel):
             Text.CreationDate, 
             time.gmtime(eg.Version.compileTime)
         )
-        sysInfos = (
+        self.sysInfos = (
             ("EventGhost Version", eg.versionStr),
             ("SVN Revision", eg.Version.svnRevision),
             ("Compile Time", compileTime),
@@ -235,21 +238,17 @@ class Panel4(wx.Panel):
             ("PIL Version", Image.VERSION),
             ("Platform", platform.platform()),
         )
+        
         sysInfoTemplate = "".join(
             ["<tr><td><b>%s:</b></td><td>%s</td></tr>" % sysInfo 
-                for sysInfo in sysInfos]
+                for sysInfo in self.sysInfos]
         )
             
-        sysinfoHtml = eg.HtmlWindow(self, -1, style=wx.SUNKEN_BORDER)
-        sysinfoHtml.SetPage("<table>%s</table>" % sysInfoTemplate)
+        sysinfoHtml = self.CreateHtmlWindow("<table>%s</table>" % sysInfoTemplate)
         sysinfoHtml.Bind(wx.EVT_RIGHT_DOWN, self.OnRightClick)
         sysinfoHtml.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
         self.sysinfoHtml = sysinfoHtml
         
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(sysinfoHtml, 1, wx.EXPAND, 5)
-        self.SetSizerAndFit(sizer)
-
         self.contextMenu = eg.Menu(self, "EditMenu", eg.text.MainFrame.Menu)
         self.contextMenu.AddItem("Copy")
         
@@ -268,10 +267,10 @@ class Panel4(wx.Panel):
         self.PopupMenu(self.contextMenu)
 
 
+    @eg.LogIt
     def OnCmdCopy(self, event):
         if wx.TheClipboard.Open():
-            text = self.sysinfoHtml.SelectionToText()
-            text = text.replace("\n", "\r\n")             
+            text = "\r\n".join(["%s: %s" % x for x in self.sysInfos])
             tdata = wx.TextDataObject(text)
             wx.TheClipboard.SetData(tdata)
             wx.TheClipboard.Close()

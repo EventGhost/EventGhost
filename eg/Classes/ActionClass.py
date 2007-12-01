@@ -58,13 +58,14 @@ class ActionClass(object):
     
     name = None
     description = None
-    plugin = None
     iconFile = None
     
-    # Don't try to manipulate these variables yourself:
+    # Don't try to manipulate these variables yourself.
+    # Will be set later by AddAction.
+    plugin = None
     info = None
     text = None
-    Exceptions = None # will be setup later by AddAction
+    Exceptions = None 
     
     
     def __call__(self, *args):

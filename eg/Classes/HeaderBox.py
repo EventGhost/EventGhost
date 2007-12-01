@@ -64,6 +64,12 @@ class HeaderBox(wx.PyWindow):
         
         if hasAdditionalHelp:
             self.text += ' <a href="ShowMoreHelp">' + eg.text.General.moreTag + '</a>'
+        r, g, b = self.GetBackgroundColour().Get()
+        r2, g2, b2 = self.GetForegroundColour().Get()
+        self.text = (
+            '<html><body bgcolor="#%02X%02X%02X" text="#%02X%02X%02X">%s</body></html>' 
+                % (r, g, b, r2, g2, b2, self.text)
+        )
         self.descBox = descBox = html.HtmlWindow(self)
         descBox.SetBorders(1)
         descBox.SetFonts("Arial", "Times New Roman", [8, 8, 8, 8, 8, 8, 8])

@@ -288,7 +288,7 @@ class RequestShape(ActionBase):
     
     def __call__(self, shape=0, x=0, y=0, colours=0x07):
         with self.plugin.serialThread as serial:
-            self.DoCommand(serial, 0x78, shape, y * 16 + x, colours)
+            self.SendCommand(serial, 0x78, shape, y * 16 + x, colours)
         
         
     def Configure(self, shape=0, x=0, y=0, colours=0x07):

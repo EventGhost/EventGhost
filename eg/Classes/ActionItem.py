@@ -115,7 +115,7 @@ class ActionItem(TreeItem):
         except:
             eg.PrintTraceback()
             args = ()
-        self.SetParams(*args)
+        self.SetArgs(args)
             
 
     def _Delete(self):
@@ -129,7 +129,7 @@ class ActionItem(TreeItem):
                 del arg
         
     
-    def SetParams(self, *args):
+    def SetArgs(self, args):
         if self.args != args:
             self.args = args
             self.compiled = self.executable.Compile(*args)
@@ -177,7 +177,7 @@ class ActionItem(TreeItem):
         Returns True if the item wants to be configured after creation.
         """
         # if the Configure method of the executable is overriden, we assume
-        # the items wants to configured after creation
+        # the item wants to be configured after creation
         im_func = self.executable.Configure.im_func
         return im_func != eg.ActionClass.Configure.im_func
     
