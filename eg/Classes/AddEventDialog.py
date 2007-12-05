@@ -21,9 +21,6 @@
 # $LastChangedBy: bitmonster $
 
 
-import eg
-import wx
-
 gLastSelected = None
 
 

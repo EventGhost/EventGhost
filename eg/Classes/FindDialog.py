@@ -20,8 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
-import wx
+
 import string
 from types import StringTypes
 

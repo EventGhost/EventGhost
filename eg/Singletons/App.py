@@ -20,8 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
-import wx
 import sys
 import time
 import pythoncom

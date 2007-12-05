@@ -37,11 +37,6 @@ from win32gui import (
 )
 from win32process import GetWindowThreadProcessId
 
-
-import wx
-
-
-import eg
 from eg.WinAPI.cTypes import GetAncestor, GA_ROOT, GA_PARENT
 from eg.WinAPI.Utils import GetHwndIcon, GetHwndChildren, HwndHasChildren
 from eg.WinAPI.Utils import HighlightWindow
@@ -582,7 +577,7 @@ class FindWindow(eg.ActionClass):
             tree.SelectHwnd(self.lastHwnd)
         if searchOnlyFrontmost:
             cbOnlyFrontmost.SetValue(True)
-            OnSearchOnlyFrontmostCheckbox(None)
+            OnSearchOnlyFrontmostCheckbox(wx.CommandEvent())
         while True:
             tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
             ok = panel.Affirmed()

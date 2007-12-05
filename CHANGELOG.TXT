@@ -1,3 +1,8 @@
+* The Test Pattern/Geometry action now takes the aspect ratio into account. For ITU-R BT.601 aspect ratios it also shows the "non active" pixels at the sides.
+* The Test Pattern/Bars action can now also make double bars.
+- If you reopened the window after you have cleared the log, the whole log was shown again.
+
+Version 0.3.6.1223 (12/01/2007)
 * Many enhancements to the ffdshow plugin by Bartman.
 - Better handling of colours if the user has changed the colours in his desktop theme.
 

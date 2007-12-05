@@ -20,9 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 import eg.Version
-import wx
 
 import time
 import sys

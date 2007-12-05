@@ -20,8 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
-import wx
+
 from new import classobj
 import os
 from xml.etree import cElementTree as ElementTree

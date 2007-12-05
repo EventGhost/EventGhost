@@ -21,7 +21,6 @@
 # $LastChangedBy: bitmonster $
 
 import string
-import wx
 
 
 class DigitOnlyValidator(wx.PyValidator):

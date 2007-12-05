@@ -24,8 +24,6 @@ from xml.sax.saxutils import quoteattr, escape
 from cStringIO import StringIO
 import xml.etree.cElementTree as ElementTree
 
-import wx
-import eg
 from TreeLink import TreeLink
 from TreePosition import TreePosition
 

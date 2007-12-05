@@ -24,7 +24,6 @@ import win32file, win32con, win32api
 import ctypes
 from ctypes import *
 from ctypes.wintypes import *
-import eg
 
 GetDefaultCommConfig = ctypes.windll.kernel32.GetDefaultCommConfigA
 

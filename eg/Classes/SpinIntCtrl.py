@@ -20,7 +20,6 @@
 # $LastChangedRevision: 81 $
 # $LastChangedBy: bitmonster $
 
-import eg
 import math
 
 

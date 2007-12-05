@@ -20,8 +20,7 @@
 # $LastChangedRevision: 110 $
 # $LastChangedBy: bitmonster $
 
-import eg
-import wx
+
 import Image
 from math import sin
 import time

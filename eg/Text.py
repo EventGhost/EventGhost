@@ -146,4 +146,4 @@ class Text:
             
         class Tree:
             caption = "Configuration"
-            
+

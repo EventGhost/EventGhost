@@ -20,8 +20,7 @@
 # $LastChangedRevision: 263 $
 # $LastChangedBy: bitmonster $
 
-import eg
-import wx
+
 import types
 
 

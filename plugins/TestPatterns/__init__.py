@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 
 eg.RegisterPlugin(
     name = "Test Pattern",
@@ -35,7 +34,6 @@ eg.RegisterPlugin(
 )
 
 
-import wx
 import threading
 import colorsys
 import Image
@@ -49,10 +47,6 @@ from base64 import b64decode
 
 
 
-def rint(value):
-    return int(round(value))
-    
-    
 def pilToImage(pil,alpha=True):
     if alpha:
         image = apply( wx.EmptyImage, pil.size )
@@ -87,11 +81,12 @@ FOCUS_PATTERN = b64decode(
 FOCUS_IMAGE = wx.ImageFromStream(cStringIO.StringIO(FOCUS_PATTERN))
 
 ASPECT_RATIOS = [
-    ("1:1 Pixelmapping", (1.0, 1.0)),
-    ("4:3 Frame", (4.0, 3.0)),
-    ("16:9 Frame", (16.0, 9.0)),
-    ("4:3 CCIR 601 Frame", (1.0, 1.0)),
-    ("16:9 CCIR 601 Frame", (1.0, 1.0)),
+    # name, aspectRatio, isCCIR601
+    ("1:1 Pixelmapping", None, False),
+    ("4:3 Frame", 4.0 / 3.0, False),
+    ("16:9 Frame", 16.0 / 9.0, False),
+    ("4:3 ITU-R BT.601 PAL", (720.0 / 702.0) * (4.0 / 3.0), True),
+    ("16:9 ITU-R BT.601 PAL", (720.0 / 702.0) * (16.0 / 9.0), True),
 ]
 
 
@@ -161,6 +156,7 @@ class TestPatterns(eg.PluginClass):
         self.AddAction(IreWindow)
         self.AddAction(Checkerboard)
         self.AddAction(Grid)
+        self.AddAction(Dots)
         self.AddAction(Lines)
         self.AddAction(Bars)
         self.AddAction(SiemensStar)
@@ -423,7 +419,87 @@ class Grid(TestPatternAction):
                 backgroundColourButton.GetValue(), 
                 hCountCtrl.GetValue(),
                 vCountCtrl.GetValue(),
-                0,
+            )
+
+        
+        
+class Dots(TestPatternAction):
+    
+    def Draw(
+        self, 
+        dc,
+        foregroundColour=(255,255,255),
+        backgroundColour=(0,0,0),
+        hCount=4, 
+        vCount=4,
+        diameter=1,
+        antialiasing=False
+    ):
+        diameter *= 1.0
+        dc.SetBackground(wx.Brush(backgroundColour))
+        dc.Clear()
+        if antialiasing and diameter > 1:
+            gc = wx.GraphicsContext.Create(dc)
+            gc.Translate(0, 0)
+            gc.Scale(1.0, 1.0)
+            d = diameter + 1
+        else:
+            gc = dc
+            d = diameter + 2
+        gc.SetPen(wx.Pen(backgroundColour, 0))
+        gc.SetBrush(wx.Brush(foregroundColour))
+        w, h = dc.GetSizeTuple()
+        if hCount == 1:
+            xOffset = (w - diameter) / 2.0  - 1
+            width = 0
+        else:
+            xOffset = -1
+            width = (w - diameter) / (hCount - 1)
+        if vCount == 1:
+            yOffset = (h - diameter) / 2.0 - 1
+            height = 0
+        else:
+            yOffset = -1
+            height = (h - diameter) / (vCount - 1)
+            
+        for y in range(vCount):
+            for x in range(hCount):
+                gc.DrawEllipse(x * width + xOffset, y * height + yOffset, d, d)
+                
+    
+    def Configure(
+        self, 
+        foregroundColour=(255,255,255), 
+        backgroundColour=(0,0,0),
+        hCount=16, 
+        vCount=9,
+        diameter=1,
+        antialiasing=False
+    ):
+        panel = eg.ConfigPanel(self)
+
+        foregroundColourButton = panel.ColourSelectButton(foregroundColour)
+        backgroundColourButton = panel.ColourSelectButton(backgroundColour)
+        hCountCtrl = panel.SpinIntCtrl(hCount, min=1, max=100)
+        vCountCtrl = panel.SpinIntCtrl(vCount, min=1, max=100)
+        diameterCtrl = panel.SpinIntCtrl(diameter, min=1)
+        anialiasingCtrl = panel.CheckBox(antialiasing, "Use Anti-Aliasing")
+
+        panel.AddLine("Foreground Colour:", foregroundColourButton)
+        panel.AddLine("Background Colour:", backgroundColourButton)
+        panel.AddLine("Num Horizontal Dots:", hCountCtrl)
+        panel.AddLine("Num Vertical Dots:", vCountCtrl)
+        panel.AddLine("Dot Diameter:", diameterCtrl)
+        panel.AddLine(anialiasingCtrl)
+        
+        while panel.Affirmed():
+            panel.SetResult(
+                foregroundColourButton.GetValue(), 
+                backgroundColourButton.GetValue(), 
+                hCountCtrl.GetValue(),
+                vCountCtrl.GetValue(),
+                diameterCtrl.GetValue(),
+                anialiasingCtrl.GetValue(),
             )
 
         
@@ -495,7 +571,7 @@ class Bars(TestPatternAction):
         lastColour=(255,255,255),
         barCount=16, 
         orientation=0,
-        display=0, # deprecated
+        makeDoubleBars=False,
         showNumbers=True,
         fontStr=u'0;-19;0;0;0;400;0;0;0;0;3;2;1;34;Arial',
     ):
@@ -509,22 +585,41 @@ class Bars(TestPatternAction):
         r1, g1, b1 = firstColour
         r2, g2, b2 = lastColour
         dc.SetFont(wx.FontFromNativeInfoString(fontStr))
-        for n in range(barCount):
-            r = r1 + (1.0 * (r2 - r1) / (barCount - 1)) * n
-            g = g1 + (1.0 * (g2 - g1) / (barCount - 1)) * n
-            b = b1 + (1.0 * (b2 - b1) / (barCount - 1)) * n
+        if makeDoubleBars:
+            w1 = w / 2
+            h1 = h / 2
+        else:
+            w1 = w
+            h1 = h
+        for n1 in range(barCount):
+            n2 = (barCount - n1 - 1)
+            r = r1 + (1.0 * (r2 - r1) / (barCount - 1)) * n1
+            g = g1 + (1.0 * (g2 - g1) / (barCount - 1)) * n1
+            b = b1 + (1.0 * (b2 - b1) / (barCount - 1)) * n1
             dc.SetPen(wx.Pen((r, g, b), 1))
             dc.SetBrush(wx.Brush((r, g, b)))
-            numberStr = str(n + 1)
+            numberStr = str(n1 + 1)
             tw, th = dc.GetTextExtent(numberStr)
             if orientation == 0:
-                dc.DrawRectangle(n * barSize, 0, barSize, h)
-                x = n * barSize + ((barSize - tw) / 2)
-                y = (h * 0.66 - th)
+                dc.DrawRectangle(n1 * barSize, 0, barSize, h1)
+                if makeDoubleBars:
+                    dc.DrawRectangle(n2 * barSize, h1, barSize, h)
+                    ty1 = h / 2 * 0.95 - th
+                    ty2 = h / 2 * 1.05
+                else:
+                    ty1 = (h * 0.66 - th)
+                tx1 = n1 * barSize + ((barSize - tw) / 2)
+                tx2 = n2 * barSize + ((barSize - tw) / 2)
             else:
-                dc.DrawRectangle(0, n * barSize, w, barSize)
-                x = w * 0.66 - tw
-                y = n * barSize + ((barSize - th) / 2)
+                dc.DrawRectangle(0, n1 * barSize, w1, barSize)
+                if makeDoubleBars:
+                    dc.DrawRectangle(w1, n2 * barSize, w1, barSize)
+                    tx1 = w / 2 * 0.95 - tw
+                    tx2 = w / 2 * 1.05
+                else:
+                    tx1 = w * 0.66 - tw
+                ty1 = n1 * barSize + ((barSize - th) / 2)
+                ty2 = n2 * barSize + ((barSize - th) / 2)
             if showNumbers:
                 v = colorsys.rgb_to_hsv(r / 255.0, g / 255.0, b / 255.0)[2]
                 if v < 0.5:
@@ -533,7 +628,9 @@ class Bars(TestPatternAction):
                 else:
                     dc.SetTextBackground((255, 255, 255))
                     dc.SetTextForeground((0, 0, 0))
-                dc.DrawText(numberStr, x, y)
+                dc.DrawText(numberStr, tx1, ty1)
+                if makeDoubleBars:
+                    dc.DrawText(numberStr, tx2, ty2)
     
     
     def Configure(
@@ -542,7 +639,7 @@ class Bars(TestPatternAction):
         lastColour=(255,255,255),
         barCount=16, 
         orientation=0,
-        display=0, # deprecated
+        makeDoubleBars=False,
         showNumbers=True,
         fontStr=u'0;-19;0;0;0;400;0;0;0;0;3;2;1;34;Arial',
     ):
@@ -555,12 +652,14 @@ class Bars(TestPatternAction):
         firstColourButton = panel.ColourSelectButton(firstColour)
         lastColourButton = panel.ColourSelectButton(lastColour)
         barCountCtrl = panel.SpinIntCtrl(barCount, min=1, max=100)
+        makeDoubleBarsCtrl = panel.CheckBox(makeDoubleBars, "Make Double Bars")
         showNumbersCtrl = panel.CheckBox(showNumbers, "Show Numbers")
         fontCtrl = panel.FontSelectButton(fontStr)
         panel.AddLine("Orientation", orientationCtrl)
         panel.AddLine("First Colour:", firstColourButton)
         panel.AddLine("Last Colour:", lastColourButton)
         panel.AddLine("Bar Count:", barCountCtrl)
+        panel.AddLine(makeDoubleBarsCtrl)
         panel.AddLine(showNumbersCtrl)
         panel.AddLine("Number Font:", fontCtrl)
         
@@ -569,8 +668,8 @@ class Bars(TestPatternAction):
                 firstColourButton.GetValue(), 
                 lastColourButton.GetValue(), 
                 barCountCtrl.GetValue(),
-                orientationCtrl.GetSelection(),
-                0,
+                orientationCtrl.GetValue(),
+                makeDoubleBarsCtrl.GetValue(),
                 showNumbersCtrl.GetValue(),
                 fontCtrl.GetValue()
             )
@@ -705,26 +804,41 @@ class Geometry(TestPatternAction):
     def Draw(
         self,
         dc,
-        aspectRatio=0
+        aspectRatioIndex=0
     ):
         dc.SetBackground(wx.Brush("black"))
         dc.Clear()
         w, h = dc.GetSizeTuple()
         gc = wx.GraphicsContext.Create(dc)
-        scaleFactor = min(w, h)
         gc.PushState()
-        gc.Translate(w / 2.0, h / 2.0)
-        gc.Scale(1.0, 1.0)
-        gc.SetPen(wx.Pen("white", 4))
+        gc.SetPen(wx.Pen("white", 3.0))
         gc.SetBrush(wx.TRANSPARENT_BRUSH)
-        r = scaleFactor * 0.9
-        gc.DrawEllipse(-r / 2, -r / 2, r, r)
-        gc.SetPen(wx.Pen("white", 2))
-        gc.PopState()
-        gc.DrawRectangle(0.5, 0.5, w-2, h-2)
-        gc.DrawLines(((0, (h-1)/2.0), (w-1, (h-1)/2.0)))
-        gc.DrawLines((((w-1)/2.0, 0), ((w-1)/2.0, h)))
         
+        name, aspectRatio, isCCIR601 = ASPECT_RATIOS[aspectRatioIndex]
+        if aspectRatio is None:
+            gc.Scale(h / 1000.0, h / 1000.0)
+            gc.Translate(1000.0 * (w * 1.0 / h) / 2, 500)
+        elif w > h:
+            gc.Scale(w / (aspectRatio * 1000.0), h / 1000.0)
+            gc.Translate(500 * aspectRatio, 500)
+        gc.DrawEllipse(-450, -450, 900, 900)
+        gc.PopState()
+        dc.SetPen(wx.Pen("white", 2))
+        if isCCIR601:
+            offset = int(round(w * 8.0 / 720.0))
+            dc.SetBrush(wx.GREY_BRUSH)
+            dc.DrawRectangle(1, 1, offset-1, h-1)
+            dc.DrawRectangle(w-offset, 1, offset, h-1)
+            
+        dc.SetBrush(wx.TRANSPARENT_BRUSH)
+        dc.DrawRectangle(1, 1, w-1, h-1)
+        dc.DrawLine(0, h/2, w, h/2)
+        dc.DrawLine(w/2, 0, w/2, h)
+        
+        
+    def GetLabel(self, aspektRatio):
+        return ASPECT_RATIOS[aspektRatio][0]
+    
     
     def Configure(
         self,

@@ -25,7 +25,6 @@ import time
 import win32api
 from win32process import SetProcessWorkingSetSize, GetCurrentProcess
 
-import eg
 EventGhostEvent = eg.EventGhostEvent
 
 

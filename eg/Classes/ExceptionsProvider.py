@@ -16,15 +16,23 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
-           
-            
-class DisplayChoice(eg.Choice):
+# $LastChangedDate: 2007-10-05 02:25:25 +0200 (Fri, 05 Oct 2007) $
+# $LastChangedRevision: 242 $
+# $LastChangedBy: bitmonster $
+
+
+
+class ExceptionsProvider(object):
     
-    def __init__(self, parent, value, *args, **kwargs):
-        numDisplays = wx.Display().GetCount()
-        display = min(value, numDisplays)
-        choices = ["Monitor %d" % (i+1) for i in range(numDisplays)]
-        eg.Choice.__init__(self, parent, value, choices=choices, *args, **kwargs)
+    def __init__(self, source):
+        self.source = source
+        
+    def __getattr__(self, name):
+        exception = getattr(eg.Exceptions, name)
+        class subException(exception):
+            source = self.source
+        subException.__name__ = "Sub" + name
+        setattr(self, name, subException)
+        return subException
+    
+    

@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 
 eg.RegisterPlugin(
     name = "Window",
@@ -45,7 +44,6 @@ import win32api
 import win32con
 import os
 import string
-import wx
 
 from eg.WinAPI.Utils import GetTopLevelWindowOf
 from eg.WinAPI.Utils import BringHwndToFront

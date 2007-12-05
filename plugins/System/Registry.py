@@ -2,8 +2,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
-import wx
+
 import _winreg
 import binascii
 

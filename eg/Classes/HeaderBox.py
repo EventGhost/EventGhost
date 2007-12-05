@@ -20,10 +20,7 @@
 # $LastChangedRevision: 195 $
 # $LastChangedBy: bitmonster $
 
-import eg
 import re
-
-import wx
 import wx.html as html
 
 REPLACE_BR_TAG = re.compile('<br[ \/]*>')
@@ -70,10 +67,10 @@ class HeaderBox(wx.PyWindow):
             '<html><body bgcolor="#%02X%02X%02X" text="#%02X%02X%02X">%s</body></html>' 
                 % (r, g, b, r2, g2, b2, self.text)
         )
-        self.descBox = descBox = html.HtmlWindow(self)
+        self.descBox = descBox = wx.html.HtmlWindow(self)
         descBox.SetBorders(1)
         descBox.SetFonts("Arial", "Times New Roman", [8, 8, 8, 8, 8, 8, 8])
-        descBox.Bind(html.EVT_HTML_LINK_CLICKED, self.OnLinkClicked)
+        descBox.Bind(wx.html.EVT_HTML_LINK_CLICKED, self.OnLinkClicked)
         
         staticBitmap = wx.StaticBitmap(self)
         staticBitmap.SetIcon(obj.info.icon.GetWxIcon())

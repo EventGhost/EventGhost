@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 
 eg.RegisterPlugin(
     name = "Network Event Receiver",
@@ -40,7 +39,6 @@ eg.RegisterPlugin(
     ),
 )
 
-import wx
 
 import asynchat
 import asyncore

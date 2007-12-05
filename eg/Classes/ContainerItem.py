@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 from TreeItem import TreeItem
 
 

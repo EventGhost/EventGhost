@@ -20,8 +20,7 @@
 # $LastChangedRevision: 266 $
 # $LastChangedBy: bitmonster $
 
-import eg
-import wx
+
 import threading
 
 

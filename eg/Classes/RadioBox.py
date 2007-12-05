@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import wx
 
 class RadioBox(wx.Panel):
     

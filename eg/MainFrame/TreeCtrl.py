@@ -23,10 +23,8 @@
 from cStringIO import StringIO
 from time import clock, sleep
 
-import wx
 import xml.etree.cElementTree as ElementTree
     
-import eg
 from UndoableTasks import (
     NewEvent, 
     CmdMoveTo, 

@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 
 eg.RegisterPlugin(
     name = "TechnoTrend USB-IR Receiver",

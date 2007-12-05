@@ -20,9 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import wx
-import eg
-
 
 class ButtonRow:
     
@@ -129,5 +126,4 @@ class ButtonRow:
             self.parent.OnHelp(event)
         else:
             event.Skip()
-            
-     
+

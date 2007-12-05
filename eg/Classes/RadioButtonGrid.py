@@ -20,8 +20,6 @@
 # $LastChangedRevision: 81 $
 # $LastChangedBy: bitmonster $
 
-import wx
-
 
 class RadioButtonGrid(wx.Panel):
     CtrlType = wx.RadioButton

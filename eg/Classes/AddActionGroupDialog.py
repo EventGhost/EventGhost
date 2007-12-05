@@ -20,8 +20,6 @@
 # $LastChangedRevision: 198 $
 # $LastChangedBy: bitmonster $
 
-import wx
-import eg
 
 class Text(eg.TranslatableStrings):
     caption = "Add Actions?"

@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 
 eg.RegisterPlugin(
     name = "Serial Port",
@@ -85,8 +84,6 @@ class Text:
         read_time = "and wait this maximum number of milliseconds for them:"
     
 
-
-import wx
 import threading
 import win32event
 import win32file

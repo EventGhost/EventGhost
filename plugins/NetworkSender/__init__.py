@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 
 eg.RegisterPlugin(
     name = "Network Event Sender",
@@ -43,11 +42,8 @@ eg.RegisterPlugin(
 )
 
 
-import wx
-
 import socket
 import md5
-
 
 
 class Text:

@@ -21,7 +21,6 @@
 # $LastChangedBy$
 
 from wx.lib.filebrowsebutton import FileBrowseButton
-import wx
 import types
 
 

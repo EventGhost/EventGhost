@@ -20,7 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
+
 eg.RegisterPlugin(
     name = "System Tray Menu",
     description = (
@@ -45,7 +45,6 @@ class Text:
     
     
 import types
-import wx
 import wx.gizmos
 
 class MenuItemData:

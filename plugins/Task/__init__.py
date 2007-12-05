@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 
 eg.RegisterPlugin(
     name = "Task Create/Switch Events",
@@ -45,7 +44,6 @@ eg.RegisterPlugin(
 )
 
 
-import wx
 import os
 from os.path import abspath, join, dirname
 

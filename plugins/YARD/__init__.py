@@ -1,4 +1,3 @@
-import eg
 
 eg.RegisterPlugin(
     name = "Y.A.R.D.",
@@ -20,8 +19,6 @@ eg.RegisterPlugin(
     ),
 )
 
-
-import wx
 
 import os
 

@@ -20,8 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import wx
-
 
 class StaticTextBox(wx.PyWindow):
     

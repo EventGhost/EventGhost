@@ -20,9 +20,6 @@
 # $LastChangedRevision: 242 $
 # $LastChangedBy: bitmonster $
 
-import eg
-import wx
-
 
 class EventRemapDialog(eg.Dialog):
     

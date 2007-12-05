@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 
 eg.RegisterPlugin(
     name = "USB-UIRT",
@@ -95,9 +94,6 @@ class Text:
                 "2. PRESS and HOLD the desired button on\n"\
                 "your remote until learning is complete..."
 
-
-    
-import wx
 
 from ctypes import (
     c_int, c_uint, c_ulong, byref, c_ubyte, c_char_p, c_void_p, POINTER, 

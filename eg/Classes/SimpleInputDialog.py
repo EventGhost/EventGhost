@@ -21,8 +21,6 @@
 # $LastChangedBy$
 
 import threading
-import wx
-import eg
 
 
 PROMPT = "Please type your input..."

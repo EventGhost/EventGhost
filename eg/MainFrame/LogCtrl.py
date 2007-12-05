@@ -23,10 +23,8 @@
 from time import strftime, localtime
 import collections
 import colorsys
-import wx
 import wx.lib.mixins.listctrl as listmix
 
-import eg
 
 EVENT_ICON = eg.EventItem.icon
 ERROR_ICON = eg.Icons.ERROR_ICON
@@ -241,6 +239,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.SetItemCount(0)
         self.DeleteAllItems()
         self.data.clear()
+        eg.log.data.clear()
         self.ScrollList(0, 1000000)
         self.Refresh()
     

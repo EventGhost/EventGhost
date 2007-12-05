@@ -20,8 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import wx
-
 
 class FontSelectButton(wx.BitmapButton):
     

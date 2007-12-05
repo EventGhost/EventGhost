@@ -20,7 +20,6 @@
 # $LastChangedRevision: 242 $
 # $LastChangedBy: bitmonster $
 
-import eg
 import types
 
 class Text(eg.TranslatableStrings):

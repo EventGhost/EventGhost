@@ -286,8 +286,6 @@ vkCodes = (
     ('Return', 13),
 )
 
-import eg
-import wx
 
 from win32gui import GetForegroundWindow
 from win32process import GetWindowThreadProcessId

@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 
 eg.RegisterPlugin(
     name = "Webserver",
@@ -51,7 +50,7 @@ eg.RegisterPlugin(
     ),
 )
 
-import wx
+
 import BaseHTTPServer
 import SimpleHTTPServer
 import os

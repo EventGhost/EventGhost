@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 
 eg.RegisterPlugin(
     name = "Directory Watcher",
@@ -33,8 +32,6 @@ eg.RegisterPlugin(
     ),
 )
 
-
-import wx
 
 import os
 import threading

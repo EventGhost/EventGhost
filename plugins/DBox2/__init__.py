@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 
 eg.RegisterPlugin(
     name = "d-box2 Remote Emulator",
@@ -89,8 +88,6 @@ CMDS = (
     ("Num9", "Number 9", "KEY_9"),
 )
 
-
-import wx
     
 # stolen from the standart library and added a timeout to the socket
 import socket

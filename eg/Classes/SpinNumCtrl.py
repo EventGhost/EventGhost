@@ -21,9 +21,7 @@
 # $LastChangedBy$
 
 import locale
-import wx
 from wx.lib import masked
-import eg
 
 encoding = locale.getdefaultlocale()[1]
 localedict = locale.localeconv()

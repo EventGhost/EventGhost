@@ -1,5 +1,4 @@
 from __future__ import with_statement
-import eg
 
 eg.RegisterPlugin(
     name = "Barco CRT Projector",
@@ -64,8 +63,6 @@ ACTIONS = (
     ("SharpnessDown", "Sharpness Down", None, (0x37, )),
 )
 
-import wx
-
 
 STX = 0x02
 ACK = chr(0x06)
@@ -112,21 +109,59 @@ class ActionBase(eg.ActionClass):
     def GetResponse(self, serial, cmde):
         answer = serial.Read(7, 1.0)
         if len(answer) < 7:
-            raise self.Exception("Not enough bytes received!")
+            raise self.Exceptions.DeviceNotFound("Not enough bytes received!")
         if eg.debugLevel:
             print " ".join(["%02X" % ord(x) for x in answer])
         answer = [ord(c) for c in answer]
         adr, cmd, dat1, dat2, dat3, dat4, chks = answer
         if adr != self.plugin.address:
-            raise self.Exception("Wrong address received!")
+            raise self.Exceptions.DeviceNotFound("Wrong address received!")
         if cmd != cmde:
-            raise self.Exception("Wrong command received!")
+            raise self.Exceptions.DeviceNotFound("Wrong command received!")
         if chks != sum(answer[:6]) % 256:
-            raise self.Exception("Wrong checksum received!")
+            raise sself.Exceptions.DeviceNotFound("Wrong checksum received!")
         return dat1, dat2, dat3, dat4
     
     
 
+class SendCustom(ActionBase):
+    
+    def __call__(self, cmd, dat1, dat2, dat3, dat4):
+        with self.plugin.serialThread as serial:
+            self.SendCommand(serial, cmd, dat1, dat2, dat3, dat4)
+            
+            
+    def GetLabel(self, *args):
+            return " ".join("%02X" % arg for arg in args)
+        
+            
+    def Configure(self, cmd=0, dat1=0, dat2=0, dat3=0, dat4=0):
+        panel = eg.ConfigPanel(self)
+        values = cmd, dat1, dat2, dat3, dat4
+        ctrls = [panel.SpinIntCtrl(values[i], min=0, max=255) for i in range(5)]
+        hexCtrl = panel.StaticText("")
+        def UpdateValue(event):
+            res = ["%02X" % ctrl.GetValue() for ctrl in ctrls]
+            hexCtrl.SetLabel(" ".join(res))
+            event.Skip()
+        UpdateValue(wx.CommandEvent())
+        for ctrl in ctrls:
+            ctrl.Bind(wx.EVT_TEXT, UpdateValue)
+
+        panel.AddLine("CMD:", ctrls[0])
+        panel.AddLine(
+            "DAT1:", ctrls[1], None, 
+            "DAT2:", ctrls[2], None, 
+            "DAT3:", ctrls[3], None, 
+            "DAT4:", ctrls[4]
+        )
+        panel.AddLine()
+        panel.AddLine("Hex string:", hexCtrl)
+        while panel.Affirmed():
+            panel.SetResult(*(ctrl.GetValue() for ctrl in ctrls))
+            
+            
+            
 class SetText(ActionBase, eg.ActionWithStringParameter):
     
     def __call__(self, s):
@@ -368,9 +403,9 @@ class ReadPotentiometer(ActionBase):
     
     def __call__(self, kind, x=0, y=0):
         with self.plugin.serialThread as serial:
-            self.SendCommand(serial, 0x79, kind, y * 16 + x)
-            dat1, dat2, dat3, dat4 = self.GetResponse(serial, 0x79)
-            print "Value:", dat3
+            self.SendCommand(serial, 0x7a, kind, y * 16 + x)
+            dat1, dat2, dat3, dat4 = self.GetResponse(serial, 0x7a)
+            print "Value:", dat1, dat2, dat3, dat4
             return dat3
             
         
@@ -387,6 +422,40 @@ class ReadPotentiometer(ActionBase):
                 kindCtrl.GetValue(),
                 xCtrl.GetValue(),
                 yCtrl.GetValue(),
+            )
+        
+        
+        
+class WritePotentiometer(ActionBase):
+    
+    def __call__(self, kind, x=0, y=0, value=128, flags=3):
+        print kind, x, y, value, flags
+        with self.plugin.serialThread as serial:
+            self.SendCommand(serial, 0x79, kind, y * 16 + x, value, flags)
+            
+        
+    def Configure(self, kind=0, x=0, y=0, value=128, flags=3):
+        panel = eg.ConfigPanel(self)
+        kindCtrl = panel.SpinIntCtrl(kind, max=255)
+        xCtrl = panel.SpinIntCtrl(x, max=9)
+        yCtrl = panel.SpinIntCtrl(y, max=9)
+        valueCtrl = panel.SpinIntCtrl(value, max=255)
+        deltaCb = panel.CheckBox(not (flags & 1), "Value is delta")
+        storeCb = panel.CheckBox(not (flags & 2), "Store in EEPROM")
+        panel.AddLine("Potentiometer:", kindCtrl)
+        panel.AddLine("X coordinate:", xCtrl)
+        panel.AddLine("Y coordinate:", yCtrl)
+        panel.AddLine("Value/Delta:", valueCtrl)
+        panel.AddLine(deltaCb)
+        panel.AddLine(storeCb)
+        
+        while panel.Affirmed():
+            panel.SetResult(
+                kindCtrl.GetValue(),
+                xCtrl.GetValue(),
+                yCtrl.GetValue(),
+                valueCtrl.GetValue(),
+                int(not deltaCb.GetValue()) + int(not storeCb.GetValue()) * 2
             )
         
         
@@ -410,6 +479,8 @@ class Barco(eg.PluginClass):
         group.AddAction(ReadTime)
         group.AddAction(GetInfo)
         group.AddAction(ReadPotentiometer)
+        group.AddAction(WritePotentiometer)
+        group.AddAction(SendCustom)
     
     
     @eg.LogIt

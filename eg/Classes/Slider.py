@@ -20,8 +20,6 @@
 # $LastChangedRevision: 263 $
 # $LastChangedBy: bitmonster $
 
-import wx
-
 
 class Slider(wx.Window):
     

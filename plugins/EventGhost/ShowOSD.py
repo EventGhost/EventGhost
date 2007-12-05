@@ -24,9 +24,7 @@ import threading
 import win32gui
 import win32con
 import win32event
-import wx
 
-import eg
 from eg.WinAPI.Utils import GetMonitorDimensions
 
     

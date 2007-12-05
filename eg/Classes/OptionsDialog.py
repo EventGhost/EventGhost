@@ -23,9 +23,7 @@
 import os
 import sys
 
-import wx
 import wx.combo
-import eg
 
 from LanguageTools import languageNames
 

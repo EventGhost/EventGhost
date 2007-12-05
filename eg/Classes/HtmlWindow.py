@@ -20,12 +20,10 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 import thread
 import webbrowser
 import threading
 
-import wx
 from wx.html import HtmlWindow as OriginalHtmlWindow
 from wx.html import HTML_URL_IMAGE, HTML_OPEN
 

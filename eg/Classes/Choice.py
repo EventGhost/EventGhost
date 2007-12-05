@@ -20,7 +20,6 @@
 # $LastChangedRevision: 222 $
 # $LastChangedBy: bitmonster $
 
-import wx
 
 class Choice(wx.Choice):
     

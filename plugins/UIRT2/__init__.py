@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 
 eg.RegisterPlugin(
     name = "UIRT2",
@@ -46,7 +45,6 @@ import Queue
 import time
 import binascii
 import string
-import wx
 from eg.WinAPI.SerialPort import SerialPort, EnumSerialPorts
 
 SAMPLE_TIME = 0.00005

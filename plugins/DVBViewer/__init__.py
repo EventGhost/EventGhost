@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 
 eg.RegisterPlugin(
     name = "DVBViewer",
@@ -220,7 +219,6 @@ CMDS = (
 )
 
         
-import wx
 from win32com.client import Dispatch, DispatchWithEvents
 from win32gui import SendMessageTimeout
 from win32con import SMTO_BLOCK, SMTO_ABORTIFHUNG

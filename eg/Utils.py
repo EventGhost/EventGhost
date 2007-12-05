@@ -21,12 +21,10 @@
 # $LastChangedBy$
 
 import threading
-import sys
 import time
 import inspect
 import types
 
-import eg
 
 
 class Bunch:
@@ -220,7 +218,6 @@ def SetClass(obj, cls):
 
 # TODO: find a better place for EnsureVisible
 
-import wx
 
 def EnsureVisible(window):
     """ 

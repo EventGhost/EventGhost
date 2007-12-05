@@ -20,9 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import wx
 
-import eg
 from eg.WinAPI.Display import GetDisplays
 
 gDisplays = GetDisplays()

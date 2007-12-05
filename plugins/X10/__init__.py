@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 
 eg.RegisterPlugin(
     name = "X10 Remote",
@@ -57,7 +56,7 @@ eg.RegisterPlugin(
     ),
 )
 
-import wx
+
 from win32com.client import DispatchWithEvents
 
 class Text:

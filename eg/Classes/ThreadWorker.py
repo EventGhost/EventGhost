@@ -32,7 +32,6 @@ from win32event import (
     WAIT_TIMEOUT, 
     QS_ALLINPUT
 )
-import eg
 
 
 class ThreadWorkerAction:

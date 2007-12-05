@@ -20,9 +20,6 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
-# Every plugin code should begin with the import of 'eg'
-import eg
-
 eg.RegisterPlugin(
     name = "Windows Media Player",
     author = "Oystein Hansen",

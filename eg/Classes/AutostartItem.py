@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 from MacroItem import MacroItem
 from TreeItem import HINT_NO_DROP, HINT_MOVE_INSIDE, HINT_MOVE_AFTER
 

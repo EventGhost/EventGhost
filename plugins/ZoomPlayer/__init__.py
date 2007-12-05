@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
     
 eg.RegisterPlugin(
     name = "Zoom Player",
@@ -274,7 +273,6 @@ import socket
 import asyncore
 import threading
 import new
-import wx
                 
 
 fnList = (

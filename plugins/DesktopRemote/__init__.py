@@ -20,7 +20,6 @@
 # $LastChangedRevision: 187 $
 # $LastChangedBy: bitmonster $
 
-import eg
 
 eg.RegisterPlugin(
     name = "Desktop Remote",
@@ -34,7 +33,6 @@ eg.RegisterPlugin(
 )
 
 
-import wx
 import wx.lib.buttons as buttons
 import os
 from base64 import b64decode, b64encode

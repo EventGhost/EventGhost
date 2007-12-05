@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 from eg.WinAPI.cTypes import (
     WM_DEVICECHANGE,
     DEV_BROADCAST_HDR,

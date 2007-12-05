@@ -21,7 +21,6 @@
 # $LastChangedBy: bitmonster $
 
 from __future__ import with_statement
-import eg
 import os
 import cPickle as pickle
 from os import stat

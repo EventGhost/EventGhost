@@ -24,7 +24,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 
 eg.RegisterPlugin(
     name = "Microsoft MCE Remote",
@@ -64,7 +63,6 @@ from threading import Timer
 import win32api
 import win32gui
 import win32con
-import wx
 from msvcrt import get_osfhandle
 from ctypes import *
 

@@ -20,16 +20,12 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-from os.path import exists, join, isdir
+from os.path import exists, join
 
 import sys
-import os
-import copy
 import types
 
-import eg
 from Utils import SetClass
-from Classes.PluginMetaClass import PluginMetaClass
 
 
 

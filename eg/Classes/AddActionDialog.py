@@ -20,8 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import wx
-import eg
 
 gLastSelected = None
 

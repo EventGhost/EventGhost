@@ -22,8 +22,6 @@
 
 import pythoncom
 import time
-import wx
-import eg
 from ContainerItem import ContainerItem
 from TreeItem import HINT_NO_DROP, HINT_MOVE_INSIDE
 

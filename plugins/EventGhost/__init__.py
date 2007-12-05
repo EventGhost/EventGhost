@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 
 eg.RegisterPlugin(
     name = "EventGhost",
@@ -33,7 +32,6 @@ eg.RegisterPlugin(
 import sys
 import time
 import traceback
-import wx
 from eg import ContainerItem, FolderItem, MacroItem, RootItem, AutostartItem
 
 from PythonScript import PythonScript

@@ -23,9 +23,6 @@
 import base64
 import pickle
 
-import wx
-
-import eg
 from ActionItem import ActionItem
 from TreeItem import TreeItem
 

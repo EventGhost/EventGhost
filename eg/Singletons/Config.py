@@ -20,8 +20,7 @@
 # $LastChangedRevision: 223 $
 # $LastChangedBy: bitmonster $
 
-import eg
-import wx
+
 import os
 import sys
 from os.path import exists
@@ -140,7 +139,6 @@ class Config(Section):
     
     def Save(self):
         global configFilePath
-        import eg
         self.buildNum = eg.buildNum
         fd = open(configFilePath, 'w+')
         RecursivePySave(self, fd.write)

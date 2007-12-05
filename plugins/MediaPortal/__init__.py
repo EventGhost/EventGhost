@@ -20,7 +20,6 @@
 # $LastChangedRevision: 187 $
 # $LastChangedBy: bitmonster $
 
-import eg
 
 eg.RegisterPlugin(
     name = "MediaPortal",

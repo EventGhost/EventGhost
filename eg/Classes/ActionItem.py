@@ -21,11 +21,7 @@
 # $LastChangedBy$
 
 import colorsys
-import inspect
 
-import wx
-
-import eg
 from TreeItem import TreeItem
 from TreeItem import HINT_NO_DROP, HINT_MOVE_BEFORE, HINT_MOVE_BEFORE_OR_AFTER
 from TreeLink import TreeLink

@@ -20,7 +20,6 @@
 # $LastChangedRevision: 242 $
 # $LastChangedBy: bitmonster $
 
-import wx
 
 class Colour:
     windowText = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOWTEXT).Get()

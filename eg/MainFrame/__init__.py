@@ -25,10 +25,8 @@ import sys
 import gc
 import re
 
-import wx
 import wx.aui
 
-import eg
 from eg import (
     EventItem, 
     ActionItem, 
@@ -552,36 +550,6 @@ class MainFrame(wx.Frame):
         # On iconizing, we actually destroy the frame completely
         self.document.HideFrame()
 
-
-#    def OnClose(self, event=None):
-#        res = self.document.CheckFileNeedsSave()
-#        if res == wx.ID_CANCEL:
-#            eg.PrintDebugNotice("Skipping event in OnClose")
-#            if event:
-#                event.Skip(False)
-#            return wx.ID_CANCEL
-#        #eg.PrintDebugNotice("Binding close dummy")
-#        #self.Bind(wx.EVT_CLOSE, self.CloseDummy)
-#        eg.config.hideOnStartup = self.IsIconized()
-#        eg.config.autoloadFilePath = self.document.filePath.get()
-#        #config.perspective = self.auiManager.SavePerspective()
-#        if res in (wx.ID_OK, wx.ID_YES):
-#            if self.logCtrl:
-#                self.CloseLog()
-#            if self.treeCtrl:
-#                self.CloseTree()
-#            self.CloseSelf()
-#        return None
-        
-
-
-#    def BringToFront(self):
-#        self.Iconize(False)
-#        self.Show(True)
-#        self.Raise()
-#        BringHwndToFront(self.GetHandle())
-#        
-#        
 
     @eg.LogIt
     def OnClipboardChange(self):

@@ -21,7 +21,6 @@
 # $LastChangedBy: bitmonster $
 
 
-import eg
 from threading import Thread, Lock, Condition, currentThread
 from time import clock
 import ctypes

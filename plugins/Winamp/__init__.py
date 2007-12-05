@@ -22,11 +22,7 @@
 # $LastChangedBy$
 
 
-
-# Every plugin code should begin with the import of 'eg'
-import eg
-
-# and expose some information about itself through an eg.PluginInfo subclass
+# expose some information about the plugin through an eg.PluginInfo subclass
 eg.RegisterPlugin(
     name = "Winamp",
     author = "Bitmonster & Matthew Jacob Edwards",
@@ -56,7 +52,6 @@ eg.RegisterPlugin(
 
 # Now we import some other things we will need later
 import math
-import wx
 from win32gui import FindWindow, SendMessageTimeout, GetWindowText
 from win32con import WM_COMMAND, WM_USER, SMTO_BLOCK, SMTO_ABORTIFHUNG
 

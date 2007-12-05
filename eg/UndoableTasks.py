@@ -20,9 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 eg.PrintDebugNotice("Loading UndoableTasks")
-import wx
 import xml.etree.cElementTree as ElementTree
 
 class Text:

@@ -28,7 +28,6 @@
 from os.path import abspath
 from base64 import b64decode
 from cStringIO import StringIO
-import wx
 import Image
 
 

@@ -24,14 +24,13 @@ import sys
 import win32con
 import win32gui
 import win32api
-from win32ui import CreateWindowFromHandle
-from win32api import GetCurrentThreadId
-from win32gui import GetForegroundWindow, WindowFromPoint, IsWindow
-from win32process import GetWindowThreadProcessId
-from win32process import GetCurrentProcess
+import win32process
+from win32gui import WindowFromPoint
 from WinAPI.cTypes import (
     AttachThreadInput, GA_ROOT, PtVisible, SaveDC, RestoreDC, SetROP2,
-    GetAncestor, Rectangle
+    GetAncestor, Rectangle, IsWindow, IsIconic, SW_RESTORE,
+    ShowWindow, BringWindowToTop, UpdateWindow, GetForegroundWindow, 
+    InvalidateRect, GetCurrentThreadId, GetWindowThreadProcessId, SW_SHOWNA
 )
 
 
@@ -45,32 +44,27 @@ def BringHwndToFront(hwnd, invalidate=True):
     hwnd = GetAncestor(hwnd, GA_ROOT)
     if not IsWindow(hwnd):
         return
-    win = CreateWindowFromHandle(hwnd)
     
-    # If the window is in a minimized state, maximize now
-    style = win.GetStyle()
-    if style & win32con.WS_MINIMIZE:
-        win.ShowWindow(win32con.SW_RESTORE)
-        win.BringWindowToTop()
-        win.UpdateWindow()
+    # If the window is in a minimized state, restore now
+    if IsIconic(hwnd):
+        ShowWindow(hwnd, SW_RESTORE)
+        BringWindowToTop(hwnd)
+        UpdateWindow(hwnd)
     
     # Check to see if we are the foreground thread
-    try:
-        h = GetForegroundWindow()
-        foregroundThreadID, processID = GetWindowThreadProcessId(h)
-    except:
-        foregroundThreadID = None
+    h = GetForegroundWindow()
+    foregroundThreadID = GetWindowThreadProcessId(h, None)
     ourThreadID = GetCurrentThreadId()
 
     # If not, attach our thread's 'input' to the foreground thread's
     if foregroundThreadID != ourThreadID:
         AttachThreadInput(foregroundThreadID, ourThreadID, True)
 
-    win.ShowWindow(style)
-    win.BringWindowToTop()
+    ShowWindow(hwnd, SW_SHOWNA)
+    BringWindowToTop(hwnd)
     # Force our window to redraw
     if invalidate:
-        win.InvalidateRect()
+        InvalidateRect(hwnd, None, True)
     if foregroundThreadID != ourThreadID:
         AttachThreadInput(foregroundThreadID, ourThreadID, False)
         
@@ -135,7 +129,6 @@ def GetAllWindowChildren(hwnd):
 
 from win32gui import (UpdateWindow, GetWindowRect, GetWindowDC, SelectObject,
     ReleaseDC, GetDC, DeleteObject, GetStockObject, ScreenToClient, CreatePen)
-from win32api import GetSystemMetrics
 from win32con import R2_NOT, PS_INSIDEFRAME, SM_CXBORDER, NULL_BRUSH
 
 _H_BORDERWIDTH = 3 * win32api.GetSystemMetrics(SM_CXBORDER)
@@ -342,7 +335,7 @@ def GetModulesPID(exeName):
 
 
 def GetHwndProcessName(hwnd):
-    pid = GetWindowThreadProcessId(hwnd)[1]
+    pid = win32process.GetWindowThreadProcessId(hwnd)[1]
     try:
         handle = OpenProcess(_GetNameOfPID_FLAGS, False, pid)
     except:

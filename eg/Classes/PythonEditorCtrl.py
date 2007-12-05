@@ -22,7 +22,6 @@
 
 import keyword
 import re
-import wx
 from wx.stc import *
 
 if wx.Platform == '__WXMSW__':

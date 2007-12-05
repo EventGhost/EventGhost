@@ -21,7 +21,6 @@
 # $LastChangedBy$
 
 
-import eg
 from time import clock
 
 EVENT_ICON_INDEX = eg.EventItem.icon.index

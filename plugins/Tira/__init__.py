@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 
 eg.RegisterPlugin(
     name = "Home Electronics Tira",
@@ -59,7 +58,6 @@ eg.RegisterPlugin(
 )
     
     
-import wx
 import time
 import threading
 from os.path import abspath, join, dirname

@@ -20,9 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import wx
-import eg
-
 
 class TreeItemBrowseDialog(eg.Dialog):
     

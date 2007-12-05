@@ -27,10 +27,6 @@ import traceback
 import inspect
 import weakref
 
-import wx
-import eg
-
-
     
 class Text(eg.TranslatableStrings):
     title = "Python-Editor - %s"

@@ -27,8 +27,6 @@ import time
 import threading
 import asyncore
 import socket
-from os.path import exists
-import wx
 import locale
 
 class ResultDescriptor(object):
@@ -62,6 +60,10 @@ class EventGhost(object):
         eg = self
         sys.modules["eg"] = self
         self.__path__ = [os.path.abspath("eg")]
+        import __builtin__
+        __builtin__.__dict__["eg"] = self
+        import wx
+        __builtin__.__dict__["wx"] = wx
         
         eg.startupArguments = args
         eg.debugLevel = args.debugLevel

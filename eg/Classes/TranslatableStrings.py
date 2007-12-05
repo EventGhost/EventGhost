@@ -22,7 +22,6 @@
 
 
 
-import eg
 from Utils import SetClass
 
 class CustomMetaclass(type):

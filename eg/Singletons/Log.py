@@ -20,7 +20,6 @@
 # $LastChangedRevision: 67 $
 # $LastChangedBy: bitmonster $
 
-import eg
 import codecs
 import weakref
 import sys

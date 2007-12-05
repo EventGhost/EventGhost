@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 
 eg.RegisterPlugin(
     name = "System",
@@ -66,7 +65,6 @@ from win32security import (
 )
 
 import ctypes
-import wx
 import Image
 
 import eg.WinAPI.SoundMixer as SoundMixer

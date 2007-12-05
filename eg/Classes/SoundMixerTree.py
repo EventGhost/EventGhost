@@ -20,9 +20,7 @@
 # $LastChangedRevision: 240 $
 # $LastChangedBy: bitmonster $
 
-import wx
 
-import eg
 from eg.WinAPI.cTypes import (
     byref, 
     sizeof, 

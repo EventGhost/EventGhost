@@ -20,9 +20,6 @@
 # $LastChangedRevision: 81 $
 # $LastChangedBy: bitmonster $
 
-import wx
-import eg
-
 
 class MenuBar(wx.MenuBar):
     

@@ -22,9 +22,6 @@
 
 """ Definition of the abstract PluginClass. """
 
-import eg
-import sys
-import wx
 from PluginMetaClass import PluginMetaClass
 CreateAction = eg.ActionGroup.CreateAction
         

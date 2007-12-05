@@ -20,8 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
-import wx
 
 class Text:
     mesg = "Please select the folder you want to export"

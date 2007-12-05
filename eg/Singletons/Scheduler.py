@@ -20,7 +20,6 @@
 # $LastChangedRevision: 192 $
 # $LastChangedBy: bitmonster $
 
-import eg
 from time import clock, time
 from heapq import heappush, heapify, heappop
 import threading

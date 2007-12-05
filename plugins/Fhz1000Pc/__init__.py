@@ -14,7 +14,6 @@ from ctypes import byref, c_char_p, Structure, POINTER
 from ctypes.wintypes import DWORD
 import win32file
 import win32con
-import wx
 import wx.lib.masked as masked
 
 FT_OPEN_BY_DESCRIPTION = 2

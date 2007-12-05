@@ -70,7 +70,6 @@ eg.RegisterPlugin(
 )
 
 
-import wx
 import thread
 import time
 import re

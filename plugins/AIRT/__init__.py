@@ -1,6 +1,3 @@
-import eg
-import threading
-import wx
 
 
 eg.RegisterPlugin(
@@ -12,6 +9,7 @@ eg.RegisterPlugin(
     canMultiLoad = True,
 )
 
+import threading
 
 ATI_Remote_Table = {
     0x00: "A",

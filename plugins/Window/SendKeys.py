@@ -20,8 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
-import wx
 
 description = """\
 This action emulates keystrokes to control other programs. Just type the text 

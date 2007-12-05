@@ -829,3 +829,44 @@ CSIDL_FLAG_DONT_VERIFY = 16384 # Variable c_int
 DTR_CONTROL_DISABLE = 0 # Variable c_int
 NOPARITY = 0 # Variable c_int
 ONESTOPBIT = 0 # Variable c_int
+IsWindow = _user32.IsWindow
+IsWindow.restype = BOOL
+IsWindow.argtypes = [HWND]
+IsIconic = _user32.IsIconic
+IsIconic.restype = BOOL
+IsIconic.argtypes = [HWND]
+class tagWINDOWPLACEMENT(Structure):
+    pass
+WINDOWPLACEMENT = tagWINDOWPLACEMENT
+tagWINDOWPLACEMENT._fields_ = [
+    ('length', UINT),
+    ('flags', UINT),
+    ('showCmd', UINT),
+    ('ptMinPosition', POINT),
+    ('ptMaxPosition', POINT),
+    ('rcNormalPosition', RECT),
+]
+SW_RESTORE = 9 # Variable c_int
+ShowWindow = _user32.ShowWindow
+ShowWindow.restype = BOOL
+ShowWindow.argtypes = [HWND, c_int]
+BringWindowToTop = _user32.BringWindowToTop
+BringWindowToTop.restype = BOOL
+BringWindowToTop.argtypes = [HWND]
+UpdateWindow = _user32.UpdateWindow
+UpdateWindow.restype = BOOL
+UpdateWindow.argtypes = [HWND]
+GetForegroundWindow = _user32.GetForegroundWindow
+GetForegroundWindow.restype = HWND
+GetForegroundWindow.argtypes = []
+InvalidateRect = _user32.InvalidateRect
+InvalidateRect.restype = BOOL
+InvalidateRect.argtypes = [HWND, POINTER(RECT), BOOL]
+GetCurrentThreadId = _kernel32.GetCurrentThreadId
+GetCurrentThreadId.restype = DWORD
+GetCurrentThreadId.argtypes = []
+GetWindowThreadProcessId = _user32.GetWindowThreadProcessId
+GetWindowThreadProcessId.restype = DWORD
+GetWindowThreadProcessId.argtypes = [HWND, LPDWORD]
+SW_SHOWNORMAL = 1 # Variable c_int
+SW_SHOWNA = 8 # Variable c_int

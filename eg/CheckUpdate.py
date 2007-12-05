@@ -24,8 +24,6 @@ import threading
 import httplib
 import webbrowser
 
-import wx
-import eg
 
 class Text(eg.TranslatableStrings):
     title = "New EventGhost version available..."

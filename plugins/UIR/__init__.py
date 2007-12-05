@@ -1,4 +1,4 @@
-import eg
+
 
 eg.RegisterPlugin(
     name = "UIR / Irman",
@@ -16,7 +16,6 @@ eg.RegisterPlugin(
 )
 
 
-import wx
 import time
 import threading
 import win32event

@@ -1,11 +1,9 @@
-import eg
 
 eg.RegisterPlugin(
     name = "Test Plugin",
     description = "Only used to demonstrate some aspects of the Plugin-API.",
 )
     
-import wx
 
 class TestPlugin(eg.PluginClass):
     

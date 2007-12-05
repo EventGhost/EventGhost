@@ -21,7 +21,6 @@
 # $LastChangedBy: bitmonster $
 
 
-import wx
 import types
 
 

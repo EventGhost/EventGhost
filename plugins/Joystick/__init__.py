@@ -37,10 +37,6 @@ lzXRfdRG/mtRliaGyCyofnhMYm0FqjREgkkiQSSUQUSomH3zDYRmCaJkevZIBM26mybW9yy+UyAJVK
 ZTtBNpvFdV12UkqpLYNIJNJEAqhWqwDUarWOBo7jeEbtRnkHNfsfqMAAn2HmrMwAAAAASUVORK5CYI
 I="""
 
-import eg
-import os
-import imp
-
 eg.RegisterPlugin(
     name = "Joystick",
     author = "Bitmonster",
@@ -51,6 +47,9 @@ eg.RegisterPlugin(
     ),
     icon = ICON,
 )
+
+import os
+import imp
 
 
 EVT_DIRECTION       = 0

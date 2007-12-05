@@ -20,10 +20,6 @@
 # $LastChangedRevision: 188 $
 # $LastChangedBy: bitmonster $
 
-import wx
-import eg
-
-
 
 class StatusBar(wx.StatusBar):
     
