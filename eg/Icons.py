@@ -39,10 +39,7 @@ _gFolderImage = Image.open("images/folder.png").convert("RGBA")
 
 def PilToBitmap(pil):
     """ Convert a PIL image to a wx.Bitmap (with alpha channel support). """
-    image = wx.EmptyImage(pil.size[0], pil.size[1], 32)
-    image.SetData(pil.convert('RGB').tostring())
-    image.SetAlphaData(pil.convert("RGBA").tostring()[3::4]) 
-    return wx.BitmapFromImage(image, 24)
+    return wx.BitmapFromBufferRGBA(pil.size[0], pil.size[1], pil.tostring())
 
 
 

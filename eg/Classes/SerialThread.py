@@ -23,8 +23,7 @@
 
 from threading import Thread, Lock, Condition, currentThread
 from time import clock
-import ctypes
-from WinAPI.cTypes import (
+from ctypes.dynamic import (
     pointer, sizeof, create_string_buffer, Structure, Union, byref, WinError,
     HANDLE, DWORD, LPCSTR, CreateFile, CloseHandle, 
     DCB, OVERLAPPED, COMSTAT, COMMTIMEOUTS, COMMCONFIG, ReadFile, WriteFile,
@@ -34,7 +33,7 @@ from WinAPI.cTypes import (
     ERROR_IO_PENDING, WAIT_TIMEOUT, WAIT_OBJECT_0, QS_ALLINPUT, INFINITE,
     SETDTR, CLRDTR, SETRTS, CLRRTS, GENERIC_READ, GENERIC_WRITE, OPEN_EXISTING,
     FILE_ATTRIBUTE_NORMAL, FILE_FLAG_OVERLAPPED, DTR_CONTROL_DISABLE, NOPARITY,
-    ONESTOPBIT
+    ONESTOPBIT, FormatError, GetLastError
 )
 
 INDENT = "    "
@@ -63,29 +62,6 @@ def dumps(obj, name=None, indent=""):
 
 
 
-gSerialPortList = None
-
-def EnumSerialPorts(dummy=None):
-    """
-    Return a list of all available serial ports of the system. (COM1 = 0)
-    """
-    global gSerialPortList
-    if gSerialPortList is None:
-        gSerialPortList = []
-        commconfig = COMMCONFIG()
-        commconfig.dwSize = sizeof(COMMCONFIG)
-        lpCC = pointer(commconfig)
-        dwSize = DWORD(0)
-        lpdwSize = byref(dwSize)
-        for i in range(0, 255):
-            name = 'COM%d' % (i+1)
-            res = GetDefaultCommConfig(LPCSTR(name), lpCC, lpdwSize)
-            if res == 1 or (res == 0 and GetLastError() == 122):
-                gSerialPortList.append(i)
-    return gSerialPortList
-
-
-
 class SerialException(Exception):
     """Base class for serial port related exceptions."""
     pass
@@ -102,7 +78,28 @@ class SerialThread(Thread):
     ClearCommError = ClearCommError
     CreateFile = CreateFile
     CloseHandle = CloseHandle
+    _serialPortList = None
+    
+    @classmethod
+    def GetAllPorts(cls):
+        serialPortList = cls._serialPortList
+        if serialPortList is not None:
+            return serialPortList
+        serialPortList = []
+        commconfig = COMMCONFIG()
+        commconfig.dwSize = sizeof(COMMCONFIG)
+        lpCC = pointer(commconfig)
+        dwSize = DWORD(0)
+        lpdwSize = byref(dwSize)
+        for i in range(0, 255):
+            name = 'COM%d' % (i+1)
+            res = GetDefaultCommConfig(LPCSTR(name), lpCC, lpdwSize)
+            if res == 1 or (res == 0 and GetLastError() == 122):
+                serialPortList.append(i)
+        cls._serialPortList = serialPortList
+        return serialPortList
 
+        
     def __init__(self, hFile=0):
         self.deviceStr = ""
         Thread.__init__(self, target=self.ReceiveThreadProc)
@@ -190,7 +187,7 @@ class SerialThread(Thread):
             #SetCommTimeouts(self.hFile, self._orgTimeouts)
             #Close COM-Port:
             if not self.CloseHandle(self.hFile):
-                print (ctypes.FormatError(ctypes.GetLastError())).decode('mbcs')
+                print (FormatError(GetLastError())).decode('mbcs')
             self.hFile = None
 
     

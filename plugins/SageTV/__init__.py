@@ -1,5 +1,3 @@
-import eg
-
 eg.RegisterPlugin(
     name = "SageTV",
     author = "Bitmonster",
@@ -34,7 +32,6 @@ eg.RegisterPlugin(
 # Plugin implements the description from here: 
 # http://www.sage.tv/2_papers/SageTVWindowsMessages.txt
 
-import wx
 from win32gui import FindWindow, SendMessageTimeout
 from win32con import SMTO_BLOCK, SMTO_ABORTIFHUNG
 

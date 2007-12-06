@@ -297,7 +297,7 @@ class PythonScript(eg.ActionClass):
             self.__class__.idCounter += 1
             mod = imp.new_module(str(id))
             self.mod = mod
-            mod.eg = eg
+            #mod.eg = eg
             self.text = text
             try:
                 self.code = compile(text + "\n", str(id), "exec")

@@ -36,8 +36,6 @@ eg.RegisterPlugin(
 
 import threading
 import colorsys
-import Image
-import ImageDraw
 from math import sqrt, sin, cos
 import math
 from threading import Timer
@@ -46,31 +44,6 @@ import cStringIO
 from base64 import b64decode
 
 
-
-def pilToImage(pil,alpha=True):
-    if alpha:
-        image = apply( wx.EmptyImage, pil.size )
-        image.SetData( pil.convert( "RGB").tostring() )
-        image.SetAlphaData(pil.convert("RGBA").tostring()[3::4])
-    else:
-        image = wx.EmptyImage(pil.size[0], pil.size[1])
-        new_image = pil.convert('RGB')
-        data = new_image.tostring()
-        image.SetData(data)
-    return image
-
-
-def imageToBitmap(image):
-    return image.ConvertToBitmap()
-
-
-def MakeTextBitmap(text):
-    im = Image.new("RGB", (200,200), (0,0,0))
-    draw = ImageDraw.Draw(im)
-    draw.text((1,1), text)
-    del draw
-    return imageToBitmap(pilToImage(im, False))
-    
 
 FOCUS_PATTERN = b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAACgAAAAoAQMAAAC2MCouAAAABlBMVEUAAAD///+l2Z/d"

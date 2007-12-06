@@ -20,7 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-from eg.WinAPI.cTypes import (
+from ctypes.dynamic import (
     byref, sizeof, addressof, pointer,
     HMIXER, 
     MIXERCAPS,
@@ -279,7 +279,7 @@ def GetDeviceLines(deviceId=0):
                 print "            Control:", name
             
             
-from eg.WinAPI.cTypes import (
+from ctypes.dynamic import (
     MIXERCONTROL_CT_CLASS_MASK,
     
     MIXERCONTROL_CT_CLASS_FADER,

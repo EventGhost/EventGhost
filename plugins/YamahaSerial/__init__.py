@@ -42,7 +42,6 @@
 # 0.0.1 - initial
 #
 
-import eg
 
 eg.RegisterPlugin(
     name = "Yamaha RX-V1000 Serial",
@@ -55,11 +54,9 @@ eg.RegisterPlugin(
     createMacrosOnAdd = True,
 )
 
-import wx
 import thread
 import time
 import re
-
 
 
 cmdList = (

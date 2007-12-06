@@ -130,6 +130,7 @@ class Tira(eg.RawReceiverPlugin):
             panel.SetResult(portCtrl.GetValue())
         
     
+    
 class TransmitIR(eg.ActionClass):
     name = "Transmit IR"
     repeatCount = 1

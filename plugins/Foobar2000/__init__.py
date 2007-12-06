@@ -22,7 +22,7 @@
 
 # Every EventGhost plugin should start with the import of 'eg' and the 
 # definition of an eg.PluginInfo subclass.
-import eg
+
 
 eg.RegisterPlugin(
     name = "Foobar2000",
@@ -54,9 +54,6 @@ eg.RegisterPlugin(
     ),
 )
 
-
-# Since we also have to do some GUI stuff, we also need 'wx'
-import wx
 
 # Now import some other modules that are needed for the special purpose of
 # this plugin.

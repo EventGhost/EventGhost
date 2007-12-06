@@ -21,7 +21,6 @@
 # $LastChangedBy: bitmonster $
 
 
-import Image
 from math import sin
 import time
  
@@ -37,13 +36,9 @@ class AnimatedWindow(wx.PyWindow):
         self.logo1 = wx.Bitmap("images/opensource-55x48.png")
         self.logo2 = wx.Bitmap("images/python-powered-w-100x40.png")
         self.logo3 = wx.Bitmap("images/logo2.png")
-        im = Image.open("images/logo.png").convert("RGBA")
-        self.im1 = Image.fromstring("L", im.size, im.tostring()[3::4])
-        self.im2 = Image.new("L", im.size, 0)
-        self.image = wx.EmptyImage(im.size[0], im.size[1], 32)
-        self.image.SetData(im.convert('RGB').tostring())
-        self.bmpWidth = im.size[0]
-        self.bmpHeight = im.size[1]
+        self.image = wx.Image("images/logo.png", wx.BITMAP_TYPE_PNG)
+        self.bmpWidth = self.image.GetWidth()
+        self.bmpHeight = self.image.GetHeight()
         self.time = time.clock()
         self.count = 0
         self.Bind(wx.EVT_SIZE, self.OnSize)
@@ -126,10 +121,8 @@ class AnimatedWindow(wx.PyWindow):
         y = (sin(t) + sin(1.8 * t)) * y3 + y3 * 2.0
         x = (sin(t * 0.8) + sin(1.9 * t)) * x3 + x3 * 2.0
         alpha = sin(t) / 2.0 + 0.5
-        
-        im = Image.blend(self.im1, self.im2, alpha)
-        self.image.SetAlphaData(im.tostring()) 
-        bmp = wx.BitmapFromImage(self.image, 24)
+        image = self.image.AdjustChannels(1.0, 1.0, 1.0, alpha)
+        bmp = wx.BitmapFromImage(image, 24)
         dc.DrawBitmap(bmp, x, y, True)
         dc.EndDrawing()
 

@@ -20,7 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-from WinAPI.cTypes import (
+from ctypes.dynamic import (
     sizeof, pointer, c_char_p, LPCSTR,
     ENUM_CURRENT_SETTINGS, EDS_RAWMODE, EnumDisplayDevices,
     EnumDisplaySettingsEx, ChangeDisplaySettingsEx, DISPLAY_DEVICE, DEVMODE, 

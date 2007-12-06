@@ -37,7 +37,7 @@ from win32gui import (
 )
 from win32process import GetWindowThreadProcessId
 
-from eg.WinAPI.cTypes import GetAncestor, GA_ROOT, GA_PARENT
+from ctypes.dynamic import GetAncestor, GA_ROOT, GA_PARENT
 from eg.WinAPI.Utils import GetHwndIcon, GetHwndChildren, HwndHasChildren
 from eg.WinAPI.Utils import HighlightWindow
 from eg.WinAPI.Utils import GetModulesPID, GetNameOfPID, GetHwndProcessName

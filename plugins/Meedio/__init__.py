@@ -1,4 +1,3 @@
-import eg
 
 eg.RegisterPlugin(
     name = "Meedio",

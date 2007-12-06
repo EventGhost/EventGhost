@@ -21,12 +21,26 @@
 # $LastChangedBy$
 
 
-import win32api
-import win32event
-from win32con import *
-from win32process import *
+from win32api import FormatMessage
+from win32event import WaitForSingleObject, INFINITE
+from win32process import STARTUPINFO, CreateProcess
 from os.path import basename, dirname, abspath
 
+
+WINSTATE_FLAGS = (
+    1, # SW_SHOWNORMAL
+    6, # SW_MINIMIZE | SW_HIDE
+    3, # SW_SHOWMAXIMIZED
+    0, # SW_HIDE 
+)
+
+PRIORITY_FLAGS = (
+    64,    # IDLE_PRIORITY_CLASS
+    16384, # BELOW_NORMAL_PRIORITY_CLASS
+    32,    # NORMAL_PRIORITY_CLASS
+    32768, # ABOVE_NORMAL_PRIORITY_CLASS
+    256,   # REALTIME_PRIORITY_CLASS 
+)
 
 
 class Execute(eg.ActionClass):
@@ -71,22 +85,11 @@ class Execute(eg.ActionClass):
         if not workingDir:
             workingDir = dirname(abspath(pathname))
         arguments = eg.ParseString(arguments)
-        commandLine = '"' + pathname + '" ' + arguments
-        si = STARTUPINFO()
-        si.dwFlags = STARTF_USESHOWWINDOW
-        si.wShowWindow = (
-            SW_SHOWNORMAL,
-            SW_MINIMIZE|SW_HIDE,
-            SW_SHOWMAXIMIZED,
-            SW_HIDE 
-        )[winState]
-        priorityFlag = (
-            IDLE_PRIORITY_CLASS,
-            BELOW_NORMAL_PRIORITY_CLASS,
-            NORMAL_PRIORITY_CLASS,
-            ABOVE_NORMAL_PRIORITY_CLASS,
-            REALTIME_PRIORITY_CLASS 
-        )[priority]
+        commandLine = '"%s" %s' % (pathname, arguments)
+        startupInfo = STARTUPINFO()
+        startupInfo.dwFlags = 1 # STARTF_USESHOWWINDOW
+        startupInfo.wShowWindow = WINSTATE_FLAGS[winState]
+        priorityFlag = PRIORITY_FLAGS[priority]
         try:
             hProcess, _, _, _ = CreateProcess(
                 None,         # AppName
@@ -94,17 +97,15 @@ class Execute(eg.ActionClass):
                 None,         # Process Security
                 None,         # ThreadSecurity
                 0,            # Inherit Handles?
-                priorityFlag|CREATE_NEW_CONSOLE,
+                priorityFlag | 16, # priorityFlag | CREATE_NEW_CONSOLE
                 None,         # New environment
                 workingDir,   # Current directory
-                si            # startup info
+                startupInfo   # startup info
             )
         except:
-            s = win32api.FormatMessage(0).strip()
-            raise eg.Exception(s)
-        else:
-            if waitForCompletion:
-                win32event.WaitForSingleObject(hProcess, win32event.INFINITE)
+            raise self.Exception(FormatMessage(0).strip())
+        if waitForCompletion:
+            WaitForSingleObject(hProcess, INFINITE)
     
     
     def GetLabel(

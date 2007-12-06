@@ -151,5 +151,7 @@ class ActionClass(object):
         return CallWrapper
     
     
+    class Exception(eg.Exception):
+        pass
     
     

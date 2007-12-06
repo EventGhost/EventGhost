@@ -1,4 +1,3 @@
-import eg
 
 eg.RegisterPlugin(
     name = "Generic HID",
@@ -22,7 +21,6 @@ import threading
 import win32con
 import win32event
 import win32file
-import wx
 import wx.lib.mixins.listctrl as listmix
 
 from ctypes import Structure, Union, c_byte, c_char, c_int, c_long, c_ulong, c_ushort, c_wchar

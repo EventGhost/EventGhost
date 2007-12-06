@@ -1,4 +1,3 @@
-import eg
 
 eg.RegisterPlugin(
     name="FHZ 1000 PC",
@@ -9,15 +8,13 @@ eg.RegisterPlugin(
 
 import time
 import os
-import ctypes
-from ctypes import byref, c_char_p, Structure, POINTER
+from ctypes import byref, c_char_p, Structure, POINTER, windll
 from ctypes.wintypes import DWORD
 import win32file
 import win32con
 import wx.lib.masked as masked
 
 FT_OPEN_BY_DESCRIPTION = 2
-
 
 
 
@@ -41,7 +38,7 @@ class Fhz1000Pc(eg.PluginClass):
         
         global d2xx
         try:
-            d2xx = ctypes.windll.LoadLibrary("ftd2xx.dll")
+            d2xx = windll.LoadLibrary("ftd2xx.dll")
         except:
             raise self.Exception(
                 "FHZ PC DLL not found (ftd2xx.dll).\n"

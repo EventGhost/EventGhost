@@ -21,55 +21,9 @@
 # $LastChangedBy$
 
 import win32file, win32con, win32api
-import ctypes
-from ctypes import *
-from ctypes.wintypes import *
-
-GetDefaultCommConfig = ctypes.windll.kernel32.GetDefaultCommConfigA
-
-class DCB(ctypes.Structure):
-    _fields_ = [
-        ("DCBlength", DWORD),
-        ("BaudRate", DWORD),
-        ("flags", DWORD),
-        ("wReserved", WORD),
-        ("XonLim", WORD),
-        ("XoffLim", WORD),
-        ("ByteSize", BYTE),
-        ("Parity", BYTE),
-        ("StopBits", BYTE),
-        ("XonChar", c_char),
-        ("XoffChar", c_char),
-        ("ErrorChar", c_char),
-        ("EofChar", c_char),
-        ("EvtChar", c_char),
-        ("wReserved1", WORD),
-    ]
-
-    def __init__(self):
-        ctypes.Structure.__init__(self)
-        self.DCBlength = sizeof(self)
         
         
-        
-class COMMCONFIG(ctypes.Structure):
-    _fields_ = [
-        ("dwSize", DWORD),
-        ("wVersion", WORD),
-        ("wReserved", WORD),
-        ("dcb", DCB),
-        ("dwProviderSubType", DWORD),
-        ("dwProviderOffset", DWORD),
-        ("dwProviderSize", DWORD),
-    ]
-    
-    def __init__(self):
-        ctypes.Structure.__init__(self)
-        self.dwSize = sizeof(COMMCONFIG)
-        self.dcb.DCBlength = sizeof(DCB)
-        
-        
-def device(portnum):
+def DeviceString(portnum):
     """Turn a port number into a device name"""
     #the "//./COMx" format is required for devices >= 9
     #not all versions of windows seem to support this propperly
@@ -78,24 +32,6 @@ def device(portnum):
         return 'COM%d' % (portnum+1) #numbers are transformed to a string
     else:
         return '\\\\.\\COM%d' % (portnum+1)
-
-
-gSerialPortList = None
-
-def EnumSerialPorts(dummy=None):
-    global gSerialPortList
-    if gSerialPortList is None:
-        gSerialPortList = []
-        GetLastError = win32api.GetLastError
-        cc = pointer(COMMCONFIG())
-        dwSize = DWORD(0)
-        dwSizeRef = byref(dwSize)
-        for i in range(0, 255):
-            com_str = 'COM%d' % (i+1)
-            res = GetDefaultCommConfig(c_char_p(com_str), cc, dwSizeRef)
-            if res == 1 or (res == 0 and GetLastError() == 122):
-                gSerialPortList.append(i)
-    return gSerialPortList
 
 
 
@@ -112,7 +48,7 @@ class SerialPort:
     def open(self):
         try:
             self.fd=win32file.CreateFile(
-                device(self.port),
+                DeviceString(self.port),
                 win32con.GENERIC_READ|win32con.GENERIC_WRITE,
                 0,    # exclusive access
                 None, # no security
@@ -159,7 +95,7 @@ class SerialPort:
             win32file.SetCommState(self.fd, dcb)
             win32file.SetCommTimeouts(self.fd, (-1 ,0 ,0,100,100))
         except:
-            #eg.PrintError("Error opening " + device(self.port))
+            #eg.PrintError("Error opening " + DeviceString(self.port))
             #eg.PrintTraceback()
             if self.fd:
                 win32file.CloseHandle(self.fd)

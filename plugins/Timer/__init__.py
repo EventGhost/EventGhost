@@ -1,8 +1,3 @@
-import eg
-import wx
-from threading import Thread, Event
-import time
-
 
 eg.RegisterPlugin(
     name = "Timer",
@@ -14,6 +9,10 @@ eg.RegisterPlugin(
     ),
     url = "http://www.eventghost.org/forum/viewtopic.php?t=572",
 )
+
+from threading import Thread, Event
+import time
+
 
 class Text:
    

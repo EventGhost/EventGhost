@@ -35,9 +35,10 @@ eg.RegisterPlugin(
     ),
 )
 
-from ctypes import *
-from ctypes.wintypes import *
 import os
+from ctypes.dynamic import (
+    cdll, DWORD, POINTER, ULONG, HANDLE, BYTE, c_void_p, c_int, CFUNCTYPE
+)
 
 # enum USBIR_MODES
 USBIR_MODE_NONE = 0
@@ -73,11 +74,13 @@ class TTIR(eg.RawReceiverPlugin):
         self.dll = None
         pluginDir = os.path.abspath(os.path.split(__file__)[0])
         dll = cdll.LoadLibrary(os.path.join(pluginDir, "TTUSBIR.dll"))
-        self.dll = dll
         self.cCallback = IRCALLBACKFUNC(self.IrCallback)
         self.hOpen = dll.irOpen(0, USBIR_MODE_ALL_CODES, self.cCallback, 0)
+        if self.hOpen == -1:
+            raise self.Exceptions.DeviceNotFound
         self.ir_GetUniqueCode = dll.ir_GetUniqueCode
         self.ir_GetUniqueCode.restype  = DWORD
+        self.dll = dll
     
     
     def __stop__(self):

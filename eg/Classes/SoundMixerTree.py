@@ -21,7 +21,7 @@
 # $LastChangedBy: bitmonster $
 
 
-from eg.WinAPI.cTypes import (
+from ctypes.dynamic import (
     byref, 
     sizeof, 
     pointer,

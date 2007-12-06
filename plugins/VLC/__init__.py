@@ -25,7 +25,6 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-import eg
 
 eg.RegisterPlugin(
     name = "VLC media player",
@@ -66,8 +65,6 @@ eg.RegisterPlugin(
 )
 
 import asynchat, socket
-import wx
-import wx.lib.intctrl as IntCtrl
 
 fnList = (
 ('Play', 'Start playing', 'pause'),
@@ -239,19 +236,14 @@ class VLC(eg.PluginClass):
             panel = eg.ConfigPanel(self)
             mySizer = wx.FlexGridSizer(rows=3)
 
-            staticText = panel.StaticText("My Command: (Type 'H' to "
-                                       "see a list of all available commands.)")
-            mySizer.Add(staticText, 0, wx.EXPAND|wx.ALL, 5)
-       
+            staticText = panel.StaticText(
+                "My Command: (Type 'H' to see a list of all available "
+                "commands.)"
+            )
             textEdit = panel.TextCtrl(text)
+            mySizer.Add(staticText, 0, wx.EXPAND|wx.ALL, 5)
             mySizer.Add(textEdit, 0, wx.EXPAND|wx.ALL, 5)
 
-            button = panel.Button("Test")
-            def OnButton(event):
-                self(textEdit.GetValue())
-            button.Bind(wx.EVT_BUTTON, OnButton)
-            mySizer.Add(button, 0, wx.EXPAND|wx.ALL, 5)
-           
             panel.sizer.Add(mySizer)
            
             while panel.Affirmed():

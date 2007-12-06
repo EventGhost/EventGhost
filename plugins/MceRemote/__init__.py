@@ -64,7 +64,7 @@ import win32api
 import win32gui
 import win32con
 from msvcrt import get_osfhandle
-from ctypes import *
+from ctypes import WinDLL
 
 #BOOL WINAPI MceIrRegisterEvents(HWND hWnd)
 #------------------------------------------
@@ -317,17 +317,9 @@ class TransmitIr(eg.ActionClass):
         learnButton = wx.Button(panel, -1, "Learn IR Code")
         learnButton.Bind(wx.EVT_BUTTON, Learn)
         
-        def TestTransmission(event):
-            self(editCtrl.GetValue().replace(" ", "").decode("hex_codec"))
-        testButton = wx.Button(panel, -1, "Test IR Transmission")
-        testButton.Bind(wx.EVT_BUTTON, TestTransmission)
-        
         panel.sizer.Add(editCtrl, 1, wx.EXPAND)
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(learnButton)
-        sizer.Add((5,5), 1)
-        sizer.Add(testButton)
-        panel.sizer.Add(sizer, 0, wx.EXPAND)
+        panel.sizer.Add((5, 5))
+        panel.sizer.Add(learnButton, 0, wx.ALIGN_RIGHT)
         while panel.Affirmed():
             code = editCtrl.GetValue().replace(" ", "").decode("hex_codec")
             panel.SetResult(code)

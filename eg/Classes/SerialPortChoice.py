@@ -46,7 +46,7 @@ class SerialPortChoice(wx.Choice):
                 no value is given.
         """
         
-        ports = eg.SerialPort.GetAllPorts()
+        ports = eg.SerialThread.GetAllPorts()
         self.ports = ports
         choices = [("COM%d" % (portnum + 1)) for portnum in ports]
         wx.Choice.__init__(

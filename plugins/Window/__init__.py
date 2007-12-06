@@ -45,11 +45,10 @@ import win32con
 import os
 import string
 
-from eg.WinAPI.Utils import GetTopLevelWindowOf
 from eg.WinAPI.Utils import BringHwndToFront
-from eg.WinAPI.cTypes import SendNotifyMessage
-from eg.WinAPI.cTypes import PostMessage as Win32_PostMessage
-from eg.WinAPI.cTypes import SendMessage as Win32_SendMessage
+from ctypes.dynamic import SendNotifyMessage, GetAncestor, GA_ROOT
+from ctypes.dynamic import PostMessage as Win32_PostMessage
+from ctypes.dynamic import SendMessage as Win32_SendMessage
 
 # imports local to plugin
 from FindWindow import FindWindow
@@ -67,7 +66,7 @@ def GetTopLevelOfTargetWindows():
     hwnds = eg.lastFoundWindows
     if not hwnds:
         return [win32gui.GetForegroundWindow()]
-    return list(set([GetTopLevelWindowOf(hwnd) for hwnd in hwnds]))
+    return list(set([GetAncestor(hwnd, GA_ROOT) for hwnd in hwnds]))
 
 
 #=============================================================================

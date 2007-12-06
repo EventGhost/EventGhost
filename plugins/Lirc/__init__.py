@@ -37,7 +37,6 @@ low your events may sometimes be interrupted abrubtly.
  (default = 200, recommended between 150-400, depending on your setup)
 </UL>"""
 
-import eg
 
 eg.RegisterPlugin(
     name=name, 
@@ -49,7 +48,7 @@ eg.RegisterPlugin(
     url = "http://www.eventghost.org/forum/viewtopic.php?t=219",
 )
 
-import wx, socket, asyncore, time, threading
+import socket, asyncore, time, threading
 
 class Text:
     version = "0.6.0"

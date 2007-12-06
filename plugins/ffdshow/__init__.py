@@ -20,9 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
-import wx
-
 eg.RegisterPlugin(
     name = "ffdshow",
     author = "Bitmonster",

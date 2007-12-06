@@ -297,7 +297,7 @@ from win32api import (
     CloseHandle, 
     MAKELONG,
 )
-from WinAPI.cTypes import (
+from ctypes.dynamic import (
     SendInput, INPUT, INPUT_KEYBOARD, KEYEVENTF_KEYUP,
     GetGUIThreadInfo, GUITHREADINFO, PROCESS_QUERY_INFORMATION, VK_SHIFT,
     VK_LSHIFT, VK_CONTROL, VK_LCONTROL, VK_MENU, VK_LMENU, VK_RMENU,

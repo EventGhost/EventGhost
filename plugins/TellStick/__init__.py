@@ -4,7 +4,6 @@
 # Copyright (C) 2007 Telldus Technologies
 #
 
-import eg
 
 eg.RegisterPlugin(
     name = "TellStick",
@@ -18,8 +17,6 @@ eg.RegisterPlugin(
         '<center><img src="tellstick.png" /></center>'
     ),
 )
-
-import wx
 
 from ctypes import windll, c_char_p
 

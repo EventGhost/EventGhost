@@ -90,11 +90,6 @@
 # FAROUDJA      82 72 C6 39     
 # TONE          82 72 C5 3A
 
-import eg
-
-hktopmsg=""
-hkbotmsg=""
-
 
 eg.RegisterPlugin(
     name = "Harman Kardon Serial Control",
@@ -106,6 +101,9 @@ eg.RegisterPlugin(
     canMultiLoad = True,
 )
     
+hktopmsg=""
+hkbotmsg=""
+
 class Text:
     port = "Port:"
     baudrate = "Baudrate:"
@@ -122,8 +120,6 @@ class Text:
         name = "Send to HK Receiver"    
 
 
-
-import wx
 import threading
 import win32event
 import win32file
@@ -423,11 +419,4 @@ class HarmanKardon(eg.RawReceiverPlugin):
                 return chr(10)
             else:
                 return None
-
-
-        
-        
-       
-        
-        
 

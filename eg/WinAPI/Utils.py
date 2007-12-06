@@ -26,16 +26,12 @@ import win32gui
 import win32api
 import win32process
 from win32gui import WindowFromPoint
-from WinAPI.cTypes import (
+from ctypes.dynamic import (
     AttachThreadInput, GA_ROOT, PtVisible, SaveDC, RestoreDC, SetROP2,
     GetAncestor, Rectangle, IsWindow, IsIconic, SW_RESTORE,
     ShowWindow, BringWindowToTop, UpdateWindow, GetForegroundWindow, 
     InvalidateRect, GetCurrentThreadId, GetWindowThreadProcessId, SW_SHOWNA
 )
-
-
-def GetTopLevelWindowOf(hwnd):
-    return GetAncestor(hwnd, GA_ROOT)
 
 
 def BringHwndToFront(hwnd, invalidate=True):
@@ -68,27 +64,21 @@ def BringHwndToFront(hwnd, invalidate=True):
     if foregroundThreadID != ourThreadID:
         AttachThreadInput(foregroundThreadID, ourThreadID, False)
         
-        
-class MyRectangle:
-    def __str__(self):
-        return "(%d, %d, %d, %d)" % (self.x, self.y, self.width, self.height)
+#def _BringHwndToFront(self):
+#    BringHwndToFront(self.GetHandle())
+#wx.Window.BringHwndToFront = _BringHwndToFront        
 
 
-
-from WinAPI.cTypes import EnumDisplayMonitors, MONITORENUMPROC
+from ctypes.dynamic import EnumDisplayMonitors, MONITORENUMPROC
 
 def GetMonitorDimensions():
     retval = []
-    def cb(hMonitor, hdcMonitor, lprcMonitor, dwData):
+    def MonitorEnumProc(hMonitor, hdcMonitor, lprcMonitor, dwData):
         r = lprcMonitor.contents
-        rect = MyRectangle()
-        rect.x = r.left
-        rect.y = r.top
-        rect.width = r.right - r.left
-        rect.height = r.bottom - r.top
+        rect = wx.Rect(r.left, r.top, r.right - r.left, r.bottom - r.top)
         retval.append(rect)
         return 1
-    temp = EnumDisplayMonitors(0, None, MONITORENUMPROC(cb), 0)
+    temp = EnumDisplayMonitors(0, None, MONITORENUMPROC(MonitorEnumProc), 0)
     return retval
 
 

@@ -328,7 +328,6 @@ import socket
 import asyncore
 import threading
 import new
-import wx
 
 ttRequests = (
 ('IP_APPLICATION', '0000', 'Request Application name'),

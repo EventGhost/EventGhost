@@ -51,11 +51,15 @@ import os.path
 import thread
 from threading import Timer
 
-from win32con import *
+from win32con import (
+    GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, WM_SYSCOMMAND, SC_SCREENSAVE,
+    SC_MONITORPOWER, TOKEN_ADJUST_PRIVILEGES, TOKEN_QUERY, SE_SHUTDOWN_NAME,
+    SE_PRIVILEGE_ENABLED, EWX_LOGOFF, SPI_SETDESKWALLPAPER, SPIF_SENDCHANGE,
+    SPIF_UPDATEINIFILE, HKEY_CURRENT_USER, REG_SZ
+)
 import win32api
 import win32gui
 import win32file
-import win32con
 import win32process
 import win32clipboard
 from win32security import (
@@ -688,69 +692,62 @@ class SetWallpaper(eg.ActionWithStringParameter):
             "Tiled", 
             "Stretched"
         )
-        fileMask = "All Image Files|*.jpg;*.bmp;*.gif|All Files (*.*)|*.*"
+        fileMask = "All Image Files|*.jpg;*.bmp;*.gif;*.png|All Files (*.*)|*.*"
         
 
-    def __call__(self, imageFile='', style=1):
-        if imageFile:
-            im = Image.open(imageFile)
-            if im.format != 'BMP':
-                imageFile =  eg.folderPath.RoamingAppData + '\\Microsoft\\Wallpaper1.bmp'
-                im.save(imageFile)
+    def __call__(self, imageFileName='', style=1):
+        if imageFileName:
+            image = wx.Image(imageFileName)
+            imageFileName = eg.folderPath.RoamingAppData + '\\Microsoft\\Wallpaper1.bmp'
+            image.SaveFile(imageFileName, wx.BITMAP_TYPE_BMP)
         tile, wstyle = (("0", "0"), ("1", "0"), ("0", "2"))[style]
         hKey = win32api.RegCreateKey(
-            win32con.HKEY_CURRENT_USER,
+            HKEY_CURRENT_USER,
             "Control Panel\\Desktop"
         )
         win32api.RegSetValueEx(
             hKey, 
             "TileWallpaper", 
             0, 
-            win32con.REG_SZ, 
+            REG_SZ, 
             tile
         )
         win32api.RegSetValueEx(
             hKey, 
             "WallpaperStyle", 
             0, 
-            win32con.REG_SZ, 
+            REG_SZ, 
             wstyle
         )
         win32api.RegCloseKey(hKey)
         
-        cs = ctypes.c_buffer(imageFile)
+        cs = ctypes.c_buffer(imageFileName)
         ok = ctypes.windll.user32.SystemParametersInfoA(
-            win32con.SPI_SETDESKWALLPAPER, 
+            SPI_SETDESKWALLPAPER, 
             0, 
             cs, 
-            win32con.SPIF_SENDCHANGE|win32con.SPIF_UPDATEINIFILE
+            SPIF_SENDCHANGE|SPIF_UPDATEINIFILE
         )
 
 
-    def Configure(self, imageFile='', style=1):
+    def Configure(self, imageFileName='', style=1):
         panel = eg.ConfigPanel(self)
         text = self.text
-        sizer = panel.sizer
-        
-        st_ctrl = wx.StaticText(panel, -1, text.text1)
-        sizer.Add(st_ctrl, 0, wx.EXPAND)
-        
         filepathCtrl = eg.FileBrowseButton(
             panel, 
             -1,
             size = (340,-1),
-            initialValue = imageFile,
+            initialValue = imageFileName,
             labelText = "",
             fileMask = text.fileMask,
             buttonText =  eg.text.General.browse,
         )
-        sizer.Add(filepathCtrl, 0, wx.EXPAND)
-    
-        st_ctrl = wx.StaticText(panel, -1, text.text2)
-        sizer.Add(st_ctrl, 0, wx.EXPAND|wx.TOP, 10)
-        
         choice = wx.Choice(panel, -1, choices=text.choices)
         choice.SetSelection(style)                        
+        sizer = panel.sizer
+        sizer.Add(panel.StaticText(text.text1), 0, wx.EXPAND)
+        sizer.Add(filepathCtrl, 0, wx.EXPAND)
+        sizer.Add(panel.StaticText(text.text2), 0, wx.EXPAND|wx.TOP, 10)
         sizer.Add(choice, 0, wx.BOTTOM, 10)
     
         while panel.Affirmed():
@@ -928,29 +925,27 @@ class ShowPictureFrame(wx.Frame):
 
         
     def SetPicture(self, pic_path=None, display=0):
-        if pic_path:
-            mons = GetMonitorDimensions()
-            d = mons[display]
-            pil = Image.open(pic_path)
-            width, height = pil.size
-            if (width > d.width) or (height > d.height):
-                xfactor = (width * 1.0 / d.width)
-                yfactor = (height * 1.0 / d.height)
-                if xfactor > yfactor:
-                    width = d.width
-                    height = int(round(height / xfactor))
-                else:
-                    width = int(round(width / yfactor))
-                    height = d.height
-                pil = pil.resize((width, height), Image.NEAREST)
-                
-            image = wx.EmptyImage(width, height)
-            image.SetData(pil.convert('RGB').tostring())
-            bitmap = image.ConvertToBitmap()
-            self.staticBitmap.SetBitmap(bitmap)
-            x = d.x + (d.width - width) / 2
-            y = d.y + (d.height - height) / 2
-            self.SetDimensions(x, y, width, height)
+        if not pic_path:
+            return
+        d = GetMonitorDimensions()[display]
+        pil = Image.open(pic_path)
+        width, height = pil.size
+        if (width > d.width) or (height > d.height):
+            xfactor = (width * 1.0 / d.width)
+            yfactor = (height * 1.0 / d.height)
+            if xfactor > yfactor:
+                width = d.width
+                height = int(round(height / xfactor))
+            else:
+                width = int(round(width / yfactor))
+                height = d.height
+            pil = pil.resize((width, height), Image.NEAREST)
+            
+        bitmap = wx.BitmapFromBuffer(width, height, pil.convert('RGB').tostring())
+        self.staticBitmap.SetBitmap(bitmap)
+        x = d.x + (d.width - width) / 2
+        y = d.y + (d.height - height) / 2
+        self.SetDimensions(x, y, width, height)
         
         
     def LeftDblClick(self, evt):
@@ -1157,7 +1152,7 @@ class WakeOnLan(eg.ActionClass):
 #-----------------------------------------------------------------------------
 # Action: System.SetSystemIdleTimer
 #-----------------------------------------------------------------------------
-from eg.WinAPI.cTypes import SetThreadExecutionState
+from ctypes.dynamic import SetThreadExecutionState
 
 class SetSystemIdleTimer(eg.ActionClass):
     name = "Set system idle timer"

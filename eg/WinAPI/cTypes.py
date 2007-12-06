@@ -31,6 +31,22 @@ if not hasattr(sys, "frozen"): # detect py2exe
             print "GCC_XML most likely not installed"
 # everything after the following line is automatically created
 #-----------------------------------------------------------------------------#
+class _SECURITY_ATTRIBUTES(Structure):
+    pass
+LPSECURITY_ATTRIBUTES = POINTER(_SECURITY_ATTRIBUTES)
+CreateFileA = _kernel32.CreateFileA
+CreateFileA.restype = HANDLE
+CreateFileA.argtypes = [LPCSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE]
+CreateFile = CreateFileA # alias
+LPVOID = c_void_p
+_SECURITY_ATTRIBUTES._fields_ = [
+    ('nLength', DWORD),
+    ('lpSecurityDescriptor', LPVOID),
+    ('bInheritHandle', BOOL),
+]
+CloseHandle = _kernel32.CloseHandle
+CloseHandle.restype = BOOL
+CloseHandle.argtypes = [HANDLE]
 class _DCB(Structure):
     pass
 DCB = _DCB
@@ -127,7 +143,6 @@ _COMMCONFIG._fields_ = [
     ('dwProviderSize', DWORD),
     ('wcProviderData', WCHAR * 1),
 ]
-LPVOID = c_void_p
 LPDWORD = POINTER(DWORD)
 LPOVERLAPPED = POINTER(_OVERLAPPED)
 ReadFile = _kernel32.ReadFile
@@ -165,18 +180,10 @@ WaitForSingleObject.argtypes = [HANDLE, DWORD]
 GetOverlappedResult = _kernel32.GetOverlappedResult
 GetOverlappedResult.restype = BOOL
 GetOverlappedResult.argtypes = [HANDLE, LPOVERLAPPED, LPDWORD, BOOL]
-class _SECURITY_ATTRIBUTES(Structure):
-    pass
-LPSECURITY_ATTRIBUTES = POINTER(_SECURITY_ATTRIBUTES)
 CreateEventA = _kernel32.CreateEventA
 CreateEventA.restype = HANDLE
 CreateEventA.argtypes = [LPSECURITY_ATTRIBUTES, BOOL, BOOL, LPCSTR]
 CreateEvent = CreateEventA # alias
-_SECURITY_ATTRIBUTES._fields_ = [
-    ('nLength', DWORD),
-    ('lpSecurityDescriptor', LPVOID),
-    ('bInheritHandle', BOOL),
-]
 SetEvent = _kernel32.SetEvent
 SetEvent.restype = BOOL
 SetEvent.argtypes = [HANDLE]
@@ -192,6 +199,14 @@ SETDTR = 5 # Variable c_int
 CLRDTR = 6 # Variable c_int
 SETRTS = 3 # Variable c_int
 CLRRTS = 4 # Variable c_int
+GENERIC_READ = 2147483648L # Variable c_ulong
+GENERIC_WRITE = 1073741824 # Variable c_long
+OPEN_EXISTING = 3 # Variable c_int
+FILE_ATTRIBUTE_NORMAL = 128 # Variable c_int
+FILE_FLAG_OVERLAPPED = 1073741824 # Variable c_int
+DTR_CONTROL_DISABLE = 0 # Variable c_int
+NOPARITY = 0 # Variable c_int
+ONESTOPBIT = 0 # Variable c_int
 class tagINPUT(Structure):
     pass
 LPINPUT = POINTER(tagINPUT)
@@ -313,11 +328,336 @@ GetAncestor.argtypes = [HWND, UINT]
 Rectangle = _gdi32.Rectangle
 Rectangle.restype = BOOL
 Rectangle.argtypes = [HDC, c_int, c_int, c_int, c_int]
+IsWindow = _user32.IsWindow
+IsWindow.restype = BOOL
+IsWindow.argtypes = [HWND]
+IsIconic = _user32.IsIconic
+IsIconic.restype = BOOL
+IsIconic.argtypes = [HWND]
+SW_RESTORE = 9 # Variable c_int
+ShowWindow = _user32.ShowWindow
+ShowWindow.restype = BOOL
+ShowWindow.argtypes = [HWND, c_int]
+BringWindowToTop = _user32.BringWindowToTop
+BringWindowToTop.restype = BOOL
+BringWindowToTop.argtypes = [HWND]
+UpdateWindow = _user32.UpdateWindow
+UpdateWindow.restype = BOOL
+UpdateWindow.argtypes = [HWND]
+GetForegroundWindow = _user32.GetForegroundWindow
+GetForegroundWindow.restype = HWND
+GetForegroundWindow.argtypes = []
+InvalidateRect = _user32.InvalidateRect
+InvalidateRect.restype = BOOL
+InvalidateRect.argtypes = [HWND, POINTER(RECT), BOOL]
+GetCurrentThreadId = _kernel32.GetCurrentThreadId
+GetCurrentThreadId.restype = DWORD
+GetCurrentThreadId.argtypes = []
+GetWindowThreadProcessId = _user32.GetWindowThreadProcessId
+GetWindowThreadProcessId.restype = DWORD
+GetWindowThreadProcessId.argtypes = [HWND, LPDWORD]
+SW_SHOWNA = 8 # Variable c_int
 LPCRECT = POINTER(RECT)
 MONITORENUMPROC = WINFUNCTYPE(BOOL, c_void_p, c_void_p, POINTER(tagRECT), c_long)
 EnumDisplayMonitors = _user32.EnumDisplayMonitors
 EnumDisplayMonitors.restype = BOOL
 EnumDisplayMonitors.argtypes = [HDC, LPCRECT, MONITORENUMPROC, LPARAM]
+HMIXER = HANDLE
+class tagMIXERCAPSA(Structure):
+    pass
+MIXERCAPSA = tagMIXERCAPSA
+MIXERCAPS = MIXERCAPSA
+MMVERSION = UINT
+CHAR = c_char
+tagMIXERCAPSA._pack_ = 1
+tagMIXERCAPSA._fields_ = [
+    ('wMid', WORD),
+    ('wPid', WORD),
+    ('vDriverVersion', MMVERSION),
+    ('szPname', CHAR * 32),
+    ('fdwSupport', DWORD),
+    ('cDestinations', DWORD),
+]
+class tagMIXERCONTROLA(Structure):
+    pass
+MIXERCONTROLA = tagMIXERCONTROLA
+MIXERCONTROL = MIXERCONTROLA
+class N16tagMIXERCONTROLA5DOLLAR_128E(Union):
+    pass
+class N16tagMIXERCONTROLA5DOLLAR_1285DOLLAR_129E(Structure):
+    pass
+N16tagMIXERCONTROLA5DOLLAR_1285DOLLAR_129E._pack_ = 1
+N16tagMIXERCONTROLA5DOLLAR_1285DOLLAR_129E._fields_ = [
+    ('lMinimum', LONG),
+    ('lMaximum', LONG),
+]
+class N16tagMIXERCONTROLA5DOLLAR_1285DOLLAR_130E(Structure):
+    pass
+N16tagMIXERCONTROLA5DOLLAR_1285DOLLAR_130E._pack_ = 1
+N16tagMIXERCONTROLA5DOLLAR_1285DOLLAR_130E._fields_ = [
+    ('dwMinimum', DWORD),
+    ('dwMaximum', DWORD),
+]
+N16tagMIXERCONTROLA5DOLLAR_128E._pack_ = 1
+N16tagMIXERCONTROLA5DOLLAR_128E._anonymous_ = ['_0', '_1']
+N16tagMIXERCONTROLA5DOLLAR_128E._fields_ = [
+    ('_0', N16tagMIXERCONTROLA5DOLLAR_1285DOLLAR_129E),
+    ('_1', N16tagMIXERCONTROLA5DOLLAR_1285DOLLAR_130E),
+    ('dwReserved', DWORD * 6),
+]
+class N16tagMIXERCONTROLA5DOLLAR_131E(Union):
+    pass
+N16tagMIXERCONTROLA5DOLLAR_131E._pack_ = 1
+N16tagMIXERCONTROLA5DOLLAR_131E._fields_ = [
+    ('cSteps', DWORD),
+    ('cbCustomData', DWORD),
+    ('dwReserved', DWORD * 6),
+]
+tagMIXERCONTROLA._pack_ = 1
+tagMIXERCONTROLA._fields_ = [
+    ('cbStruct', DWORD),
+    ('dwControlID', DWORD),
+    ('dwControlType', DWORD),
+    ('fdwControl', DWORD),
+    ('cMultipleItems', DWORD),
+    ('szShortName', CHAR * 16),
+    ('szName', CHAR * 64),
+    ('Bounds', N16tagMIXERCONTROLA5DOLLAR_128E),
+    ('Metrics', N16tagMIXERCONTROLA5DOLLAR_131E),
+]
+class tagMIXERLINECONTROLSA(Structure):
+    pass
+MIXERLINECONTROLSA = tagMIXERLINECONTROLSA
+MIXERLINECONTROLS = MIXERLINECONTROLSA
+class N21tagMIXERLINECONTROLSA5DOLLAR_136E(Union):
+    pass
+N21tagMIXERLINECONTROLSA5DOLLAR_136E._pack_ = 1
+N21tagMIXERLINECONTROLSA5DOLLAR_136E._fields_ = [
+    ('dwControlID', DWORD),
+    ('dwControlType', DWORD),
+]
+LPMIXERCONTROLA = POINTER(tagMIXERCONTROLA)
+tagMIXERLINECONTROLSA._pack_ = 1
+tagMIXERLINECONTROLSA._anonymous_ = ['_0']
+tagMIXERLINECONTROLSA._fields_ = [
+    ('cbStruct', DWORD),
+    ('dwLineID', DWORD),
+    ('_0', N21tagMIXERLINECONTROLSA5DOLLAR_136E),
+    ('cControls', DWORD),
+    ('cbmxctrl', DWORD),
+    ('pamxctrl', LPMIXERCONTROLA),
+]
+class tagMIXERLINEA(Structure):
+    pass
+MIXERLINEA = tagMIXERLINEA
+MIXERLINE = MIXERLINEA
+DWORD_PTR = ULONG_PTR
+class N13tagMIXERLINEA5DOLLAR_126E(Structure):
+    pass
+N13tagMIXERLINEA5DOLLAR_126E._pack_ = 1
+N13tagMIXERLINEA5DOLLAR_126E._fields_ = [
+    ('dwType', DWORD),
+    ('dwDeviceID', DWORD),
+    ('wMid', WORD),
+    ('wPid', WORD),
+    ('vDriverVersion', MMVERSION),
+    ('szPname', CHAR * 32),
+]
+tagMIXERLINEA._pack_ = 1
+tagMIXERLINEA._fields_ = [
+    ('cbStruct', DWORD),
+    ('dwDestination', DWORD),
+    ('dwSource', DWORD),
+    ('dwLineID', DWORD),
+    ('fdwLine', DWORD),
+    ('dwUser', DWORD_PTR),
+    ('dwComponentType', DWORD),
+    ('cChannels', DWORD),
+    ('cConnections', DWORD),
+    ('cControls', DWORD),
+    ('szShortName', CHAR * 16),
+    ('szName', CHAR * 64),
+    ('Target', N13tagMIXERLINEA5DOLLAR_126E),
+]
+class tMIXERCONTROLDETAILS(Structure):
+    pass
+MIXERCONTROLDETAILS = tMIXERCONTROLDETAILS
+class N20tMIXERCONTROLDETAILS5DOLLAR_138E(Union):
+    pass
+N20tMIXERCONTROLDETAILS5DOLLAR_138E._pack_ = 1
+N20tMIXERCONTROLDETAILS5DOLLAR_138E._fields_ = [
+    ('hwndOwner', HWND),
+    ('cMultipleItems', DWORD),
+]
+tMIXERCONTROLDETAILS._pack_ = 1
+tMIXERCONTROLDETAILS._anonymous_ = ['_0']
+tMIXERCONTROLDETAILS._fields_ = [
+    ('cbStruct', DWORD),
+    ('dwControlID', DWORD),
+    ('cChannels', DWORD),
+    ('_0', N20tMIXERCONTROLDETAILS5DOLLAR_138E),
+    ('cbDetails', DWORD),
+    ('paDetails', LPVOID),
+]
+class tMIXERCONTROLDETAILS_UNSIGNED(Structure):
+    pass
+MIXERCONTROLDETAILS_UNSIGNED = tMIXERCONTROLDETAILS_UNSIGNED
+tMIXERCONTROLDETAILS_UNSIGNED._pack_ = 1
+tMIXERCONTROLDETAILS_UNSIGNED._fields_ = [
+    ('dwValue', DWORD),
+]
+MMRESULT = UINT
+LPHMIXER = POINTER(HMIXER)
+mixerOpen = _winmm.mixerOpen
+mixerOpen.restype = MMRESULT
+mixerOpen.argtypes = [LPHMIXER, UINT, DWORD_PTR, DWORD_PTR, DWORD]
+mixerGetNumDevs = _winmm.mixerGetNumDevs
+mixerGetNumDevs.restype = UINT
+mixerGetNumDevs.argtypes = []
+UINT_PTR = c_uint
+LPMIXERCAPSA = POINTER(tagMIXERCAPSA)
+mixerGetDevCapsA = _winmm.mixerGetDevCapsA
+mixerGetDevCapsA.restype = MMRESULT
+mixerGetDevCapsA.argtypes = [UINT_PTR, LPMIXERCAPSA, UINT]
+mixerGetDevCaps = mixerGetDevCapsA # alias
+HMIXEROBJ = HANDLE
+LPMIXERCONTROLDETAILS = POINTER(tMIXERCONTROLDETAILS)
+mixerGetControlDetailsA = _winmm.mixerGetControlDetailsA
+mixerGetControlDetailsA.restype = MMRESULT
+mixerGetControlDetailsA.argtypes = [HMIXEROBJ, LPMIXERCONTROLDETAILS, DWORD]
+mixerGetControlDetails = mixerGetControlDetailsA # alias
+LPMIXERLINEA = POINTER(tagMIXERLINEA)
+mixerGetLineInfoA = _winmm.mixerGetLineInfoA
+mixerGetLineInfoA.restype = MMRESULT
+mixerGetLineInfoA.argtypes = [HMIXEROBJ, LPMIXERLINEA, DWORD]
+mixerGetLineInfo = mixerGetLineInfoA # alias
+LPMIXERLINECONTROLSA = POINTER(tagMIXERLINECONTROLSA)
+mixerGetLineControlsA = _winmm.mixerGetLineControlsA
+mixerGetLineControlsA.restype = MMRESULT
+mixerGetLineControlsA.argtypes = [HMIXEROBJ, LPMIXERLINECONTROLSA, DWORD]
+mixerGetLineControls = mixerGetLineControlsA # alias
+mixerSetControlDetails = _winmm.mixerSetControlDetails
+mixerSetControlDetails.restype = MMRESULT
+mixerSetControlDetails.argtypes = [HMIXEROBJ, LPMIXERCONTROLDETAILS, DWORD]
+MIXERLINE_COMPONENTTYPE_DST_SPEAKERS = 4 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_MUTE = 536936450 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_VOLUME = 1342373889 # Variable c_long
+MIXER_GETLINEINFOF_COMPONENTTYPE = 3 # Variable c_long
+MIXER_GETLINECONTROLSF_ONEBYTYPE = 2 # Variable c_long
+MIXER_GETLINECONTROLSF_ALL = 0 # Variable c_long
+MIXER_GETLINEINFOF_DESTINATION = 0 # Variable c_long
+MIXER_GETLINEINFOF_SOURCE = 1 # Variable c_long
+MMSYSERR_NOERROR = 0 # Variable c_int
+MIXERCONTROL_CT_CLASS_MASK = 4026531840L # Variable c_ulong
+MIXERCONTROL_CT_CLASS_FADER = 1342177280 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_BASS = 1342373890 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_TREBLE = 1342373891 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_EQUALIZER = 1342373892 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_FADER = 1342373888 # Variable c_long
+MIXERCONTROL_CT_CLASS_LIST = 1879048192 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_SINGLESELECT = 1879113728 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_MULTIPLESELECT = 1895890944 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_MUX = 1879113729 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_MIXER = 1895890945 # Variable c_long
+MIXERCONTROL_CT_CLASS_METER = 268435456 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_BOOLEANMETER = 268500992 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_PEAKMETER = 268566529 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_SIGNEDMETER = 268566528 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_UNSIGNEDMETER = 268632064 # Variable c_long
+MIXERCONTROL_CT_CLASS_NUMBER = 805306368 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_SIGNED = 805437440 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_UNSIGNED = 805502976 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_PERCENT = 805634048 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_DECIBELS = 805568512 # Variable c_long
+MIXERCONTROL_CT_CLASS_SLIDER = 1073741824 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_SLIDER = 1073872896 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_PAN = 1073872897 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_QSOUNDPAN = 1073872898 # Variable c_long
+MIXERCONTROL_CT_CLASS_SWITCH = 536870912 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_BOOLEAN = 536936448 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_BUTTON = 553713664 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_LOUDNESS = 536936452 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_MONO = 536936451 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_ONOFF = 536936449 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_STEREOENH = 536936453 # Variable c_long
+MIXERCONTROL_CT_CLASS_TIME = 1610612736 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_MICROTIME = 1610809344 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_MILLITIME = 1627586560 # Variable c_long
+MIXERCONTROL_CT_CLASS_CUSTOM = 0 # Variable c_long
+MIXERCONTROL_CONTROLF_DISABLED = 2147483648L # Variable c_ulong
+MIXERCONTROL_CONTROLF_MULTIPLE = 2 # Variable c_long
+MIXERCONTROL_CONTROLF_UNIFORM = 1 # Variable c_long
+SendNotifyMessageA = _user32.SendNotifyMessageA
+SendNotifyMessageA.restype = BOOL
+SendNotifyMessageA.argtypes = [HWND, UINT, WPARAM, LPARAM]
+SendNotifyMessage = SendNotifyMessageA # alias
+LONG_PTR = c_long
+LRESULT = LONG_PTR
+SendMessageA = _user32.SendMessageA
+SendMessageA.restype = LRESULT
+SendMessageA.argtypes = [HWND, UINT, WPARAM, LPARAM]
+SendMessage = SendMessageA # alias
+GA_PARENT = 1 # Variable c_int
+WM_DEVICECHANGE = 537 # Variable c_int
+class _DEV_BROADCAST_HDR(Structure):
+    pass
+DEV_BROADCAST_HDR = _DEV_BROADCAST_HDR
+_DEV_BROADCAST_HDR._fields_ = [
+    ('dbch_size', DWORD),
+    ('dbch_devicetype', DWORD),
+    ('dbch_reserved', DWORD),
+]
+class _DEV_BROADCAST_DEVICEINTERFACE_A(Structure):
+    pass
+DEV_BROADCAST_DEVICEINTERFACE_A = _DEV_BROADCAST_DEVICEINTERFACE_A
+DEV_BROADCAST_DEVICEINTERFACE = DEV_BROADCAST_DEVICEINTERFACE_A
+class _GUID(Structure):
+    pass
+_GUID._fields_ = [
+    ('Data1', c_ulong),
+    ('Data2', c_ushort),
+    ('Data3', c_ushort),
+    ('Data4', c_ubyte * 8),
+]
+GUID = _GUID
+_DEV_BROADCAST_DEVICEINTERFACE_A._fields_ = [
+    ('dbcc_size', DWORD),
+    ('dbcc_devicetype', DWORD),
+    ('dbcc_reserved', DWORD),
+    ('dbcc_classguid', GUID),
+    ('dbcc_name', c_char * 1),
+]
+class _DEV_BROADCAST_VOLUME(Structure):
+    pass
+DEV_BROADCAST_VOLUME = _DEV_BROADCAST_VOLUME
+_DEV_BROADCAST_VOLUME._fields_ = [
+    ('dbcv_size', DWORD),
+    ('dbcv_devicetype', DWORD),
+    ('dbcv_reserved', DWORD),
+    ('dbcv_unitmask', DWORD),
+    ('dbcv_flags', WORD),
+]
+DBT_DEVICEARRIVAL = 32768 # Variable c_int
+DBT_DEVICEREMOVECOMPLETE = 32772 # Variable c_int
+DBT_DEVTYP_VOLUME = 2 # Variable c_int
+DBT_DEVTYP_DEVICEINTERFACE = 5 # Variable c_int
+CLSID = GUID
+LPCLSID = POINTER(CLSID)
+CLSIDFromString = _ole32.CLSIDFromString
+CLSIDFromString.restype = HRESULT
+CLSIDFromString.argtypes = [LPOLESTR, LPCLSID]
+HDEVNOTIFY = PVOID
+RegisterDeviceNotificationA = _user32.RegisterDeviceNotificationA
+RegisterDeviceNotificationA.restype = HDEVNOTIFY
+RegisterDeviceNotificationA.argtypes = [HANDLE, LPVOID, DWORD]
+RegisterDeviceNotification = RegisterDeviceNotificationA # alias
+UnregisterDeviceNotification = _user32.UnregisterDeviceNotification
+UnregisterDeviceNotification.restype = BOOL
+UnregisterDeviceNotification.argtypes = [HDEVNOTIFY]
+EXECUTION_STATE = DWORD
+SetThreadExecutionState = _kernel32.SetThreadExecutionState
+SetThreadExecutionState.restype = EXECUTION_STATE
+SetThreadExecutionState.argtypes = [EXECUTION_STATE]
 ENUM_CURRENT_SETTINGS = 4294967295L # Variable c_ulong
 EDS_RAWMODE = 2 # Variable c_int
 class _DISPLAY_DEVICEA(Structure):
@@ -327,7 +667,6 @@ EnumDisplayDevicesA = _user32.EnumDisplayDevicesA
 EnumDisplayDevicesA.restype = BOOL
 EnumDisplayDevicesA.argtypes = [LPCSTR, DWORD, PDISPLAY_DEVICEA, DWORD]
 EnumDisplayDevices = EnumDisplayDevicesA # alias
-CHAR = c_char
 _DISPLAY_DEVICEA._fields_ = [
     ('cb', DWORD),
     ('DeviceName', CHAR * 32),
@@ -425,448 +764,3 @@ DM_DISPLAYFREQUENCY = 4194304 # Variable c_long
 CDS_UPDATEREGISTRY = 1 # Variable c_int
 CDS_NORESET = 268435456 # Variable c_int
 CDS_SET_PRIMARY = 16 # Variable c_int
-WM_DEVICECHANGE = 537 # Variable c_int
-class _DEV_BROADCAST_HDR(Structure):
-    pass
-DEV_BROADCAST_HDR = _DEV_BROADCAST_HDR
-_DEV_BROADCAST_HDR._fields_ = [
-    ('dbch_size', DWORD),
-    ('dbch_devicetype', DWORD),
-    ('dbch_reserved', DWORD),
-]
-class _DEV_BROADCAST_DEVICEINTERFACE_A(Structure):
-    pass
-DEV_BROADCAST_DEVICEINTERFACE_A = _DEV_BROADCAST_DEVICEINTERFACE_A
-DEV_BROADCAST_DEVICEINTERFACE = DEV_BROADCAST_DEVICEINTERFACE_A
-class _GUID(Structure):
-    pass
-_GUID._fields_ = [
-    ('Data1', c_ulong),
-    ('Data2', c_ushort),
-    ('Data3', c_ushort),
-    ('Data4', c_ubyte * 8),
-]
-GUID = _GUID
-_DEV_BROADCAST_DEVICEINTERFACE_A._fields_ = [
-    ('dbcc_size', DWORD),
-    ('dbcc_devicetype', DWORD),
-    ('dbcc_reserved', DWORD),
-    ('dbcc_classguid', GUID),
-    ('dbcc_name', c_char * 1),
-]
-class _DEV_BROADCAST_VOLUME(Structure):
-    pass
-DEV_BROADCAST_VOLUME = _DEV_BROADCAST_VOLUME
-_DEV_BROADCAST_VOLUME._fields_ = [
-    ('dbcv_size', DWORD),
-    ('dbcv_devicetype', DWORD),
-    ('dbcv_reserved', DWORD),
-    ('dbcv_unitmask', DWORD),
-    ('dbcv_flags', WORD),
-]
-DBT_DEVICEARRIVAL = 32768 # Variable c_int
-DBT_DEVICEREMOVECOMPLETE = 32772 # Variable c_int
-DBT_DEVTYP_VOLUME = 2 # Variable c_int
-DBT_DEVTYP_DEVICEINTERFACE = 5 # Variable c_int
-CLSID = GUID
-LPCLSID = POINTER(CLSID)
-CLSIDFromString = _ole32.CLSIDFromString
-CLSIDFromString.restype = HRESULT
-CLSIDFromString.argtypes = [LPOLESTR, LPCLSID]
-HDEVNOTIFY = PVOID
-RegisterDeviceNotificationA = _user32.RegisterDeviceNotificationA
-RegisterDeviceNotificationA.restype = HDEVNOTIFY
-RegisterDeviceNotificationA.argtypes = [HANDLE, LPVOID, DWORD]
-RegisterDeviceNotification = RegisterDeviceNotificationA # alias
-UnregisterDeviceNotification = _user32.UnregisterDeviceNotification
-UnregisterDeviceNotification.restype = BOOL
-UnregisterDeviceNotification.argtypes = [HDEVNOTIFY]
-EXECUTION_STATE = DWORD
-SetThreadExecutionState = _kernel32.SetThreadExecutionState
-SetThreadExecutionState.restype = EXECUTION_STATE
-SetThreadExecutionState.argtypes = [EXECUTION_STATE]
-SendNotifyMessageA = _user32.SendNotifyMessageA
-SendNotifyMessageA.restype = BOOL
-SendNotifyMessageA.argtypes = [HWND, UINT, WPARAM, LPARAM]
-SendNotifyMessage = SendNotifyMessageA # alias
-LONG_PTR = c_long
-LRESULT = LONG_PTR
-SendMessageA = _user32.SendMessageA
-SendMessageA.restype = LRESULT
-SendMessageA.argtypes = [HWND, UINT, WPARAM, LPARAM]
-SendMessage = SendMessageA # alias
-GA_PARENT = 1 # Variable c_int
-class tagMIXERCONTROLA(Structure):
-    pass
-MIXERCONTROLA = tagMIXERCONTROLA
-MIXERCONTROL = MIXERCONTROLA
-class N16tagMIXERCONTROLA5DOLLAR_128E(Union):
-    pass
-class N16tagMIXERCONTROLA5DOLLAR_1285DOLLAR_129E(Structure):
-    pass
-N16tagMIXERCONTROLA5DOLLAR_1285DOLLAR_129E._pack_ = 1
-N16tagMIXERCONTROLA5DOLLAR_1285DOLLAR_129E._fields_ = [
-    ('lMinimum', LONG),
-    ('lMaximum', LONG),
-]
-class N16tagMIXERCONTROLA5DOLLAR_1285DOLLAR_130E(Structure):
-    pass
-N16tagMIXERCONTROLA5DOLLAR_1285DOLLAR_130E._pack_ = 1
-N16tagMIXERCONTROLA5DOLLAR_1285DOLLAR_130E._fields_ = [
-    ('dwMinimum', DWORD),
-    ('dwMaximum', DWORD),
-]
-N16tagMIXERCONTROLA5DOLLAR_128E._pack_ = 1
-N16tagMIXERCONTROLA5DOLLAR_128E._anonymous_ = ['_0', '_1']
-N16tagMIXERCONTROLA5DOLLAR_128E._fields_ = [
-    ('_0', N16tagMIXERCONTROLA5DOLLAR_1285DOLLAR_129E),
-    ('_1', N16tagMIXERCONTROLA5DOLLAR_1285DOLLAR_130E),
-    ('dwReserved', DWORD * 6),
-]
-class N16tagMIXERCONTROLA5DOLLAR_131E(Union):
-    pass
-N16tagMIXERCONTROLA5DOLLAR_131E._pack_ = 1
-N16tagMIXERCONTROLA5DOLLAR_131E._fields_ = [
-    ('cSteps', DWORD),
-    ('cbCustomData', DWORD),
-    ('dwReserved', DWORD * 6),
-]
-tagMIXERCONTROLA._pack_ = 1
-tagMIXERCONTROLA._fields_ = [
-    ('cbStruct', DWORD),
-    ('dwControlID', DWORD),
-    ('dwControlType', DWORD),
-    ('fdwControl', DWORD),
-    ('cMultipleItems', DWORD),
-    ('szShortName', CHAR * 16),
-    ('szName', CHAR * 64),
-    ('Bounds', N16tagMIXERCONTROLA5DOLLAR_128E),
-    ('Metrics', N16tagMIXERCONTROLA5DOLLAR_131E),
-]
-class tagMIXERLINECONTROLSA(Structure):
-    pass
-MIXERLINECONTROLSA = tagMIXERLINECONTROLSA
-MIXERLINECONTROLS = MIXERLINECONTROLSA
-class N21tagMIXERLINECONTROLSA5DOLLAR_136E(Union):
-    pass
-N21tagMIXERLINECONTROLSA5DOLLAR_136E._pack_ = 1
-N21tagMIXERLINECONTROLSA5DOLLAR_136E._fields_ = [
-    ('dwControlID', DWORD),
-    ('dwControlType', DWORD),
-]
-LPMIXERCONTROLA = POINTER(tagMIXERCONTROLA)
-tagMIXERLINECONTROLSA._pack_ = 1
-tagMIXERLINECONTROLSA._anonymous_ = ['_0']
-tagMIXERLINECONTROLSA._fields_ = [
-    ('cbStruct', DWORD),
-    ('dwLineID', DWORD),
-    ('_0', N21tagMIXERLINECONTROLSA5DOLLAR_136E),
-    ('cControls', DWORD),
-    ('cbmxctrl', DWORD),
-    ('pamxctrl', LPMIXERCONTROLA),
-]
-class tagMIXERLINEA(Structure):
-    pass
-MIXERLINEA = tagMIXERLINEA
-MIXERLINE = MIXERLINEA
-DWORD_PTR = ULONG_PTR
-class N13tagMIXERLINEA5DOLLAR_126E(Structure):
-    pass
-MMVERSION = UINT
-N13tagMIXERLINEA5DOLLAR_126E._pack_ = 1
-N13tagMIXERLINEA5DOLLAR_126E._fields_ = [
-    ('dwType', DWORD),
-    ('dwDeviceID', DWORD),
-    ('wMid', WORD),
-    ('wPid', WORD),
-    ('vDriverVersion', MMVERSION),
-    ('szPname', CHAR * 32),
-]
-tagMIXERLINEA._pack_ = 1
-tagMIXERLINEA._fields_ = [
-    ('cbStruct', DWORD),
-    ('dwDestination', DWORD),
-    ('dwSource', DWORD),
-    ('dwLineID', DWORD),
-    ('fdwLine', DWORD),
-    ('dwUser', DWORD_PTR),
-    ('dwComponentType', DWORD),
-    ('cChannels', DWORD),
-    ('cConnections', DWORD),
-    ('cControls', DWORD),
-    ('szShortName', CHAR * 16),
-    ('szName', CHAR * 64),
-    ('Target', N13tagMIXERLINEA5DOLLAR_126E),
-]
-class tMIXERCONTROLDETAILS(Structure):
-    pass
-MIXERCONTROLDETAILS = tMIXERCONTROLDETAILS
-class N20tMIXERCONTROLDETAILS5DOLLAR_138E(Union):
-    pass
-N20tMIXERCONTROLDETAILS5DOLLAR_138E._pack_ = 1
-N20tMIXERCONTROLDETAILS5DOLLAR_138E._fields_ = [
-    ('hwndOwner', HWND),
-    ('cMultipleItems', DWORD),
-]
-tMIXERCONTROLDETAILS._pack_ = 1
-tMIXERCONTROLDETAILS._anonymous_ = ['_0']
-tMIXERCONTROLDETAILS._fields_ = [
-    ('cbStruct', DWORD),
-    ('dwControlID', DWORD),
-    ('cChannels', DWORD),
-    ('_0', N20tMIXERCONTROLDETAILS5DOLLAR_138E),
-    ('cbDetails', DWORD),
-    ('paDetails', LPVOID),
-]
-class tMIXERCONTROLDETAILS_UNSIGNED(Structure):
-    pass
-MIXERCONTROLDETAILS_UNSIGNED = tMIXERCONTROLDETAILS_UNSIGNED
-tMIXERCONTROLDETAILS_UNSIGNED._pack_ = 1
-tMIXERCONTROLDETAILS_UNSIGNED._fields_ = [
-    ('dwValue', DWORD),
-]
-MMRESULT = UINT
-HMIXER = HANDLE
-LPHMIXER = POINTER(HMIXER)
-mixerOpen = _winmm.mixerOpen
-mixerOpen.restype = MMRESULT
-mixerOpen.argtypes = [LPHMIXER, UINT, DWORD_PTR, DWORD_PTR, DWORD]
-HMIXEROBJ = HANDLE
-LPMIXERCONTROLDETAILS = POINTER(tMIXERCONTROLDETAILS)
-mixerGetControlDetailsA = _winmm.mixerGetControlDetailsA
-mixerGetControlDetailsA.restype = MMRESULT
-mixerGetControlDetailsA.argtypes = [HMIXEROBJ, LPMIXERCONTROLDETAILS, DWORD]
-mixerGetControlDetails = mixerGetControlDetailsA # alias
-MIXERLINE_COMPONENTTYPE_DST_SPEAKERS = 4 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_MUTE = 536936450 # Variable c_long
-MIXER_GETLINEINFOF_COMPONENTTYPE = 3 # Variable c_long
-MIXER_GETLINECONTROLSF_ONEBYTYPE = 2 # Variable c_long
-MMSYSERR_NOERROR = 0 # Variable c_int
-LPMIXERLINEA = POINTER(tagMIXERLINEA)
-mixerGetLineInfoA = _winmm.mixerGetLineInfoA
-mixerGetLineInfoA.restype = MMRESULT
-mixerGetLineInfoA.argtypes = [HMIXEROBJ, LPMIXERLINEA, DWORD]
-mixerGetLineInfo = mixerGetLineInfoA # alias
-LPMIXERLINECONTROLSA = POINTER(tagMIXERLINECONTROLSA)
-mixerGetLineControlsA = _winmm.mixerGetLineControlsA
-mixerGetLineControlsA.restype = MMRESULT
-mixerGetLineControlsA.argtypes = [HMIXEROBJ, LPMIXERLINECONTROLSA, DWORD]
-mixerGetLineControls = mixerGetLineControlsA # alias
-mixerSetControlDetails = _winmm.mixerSetControlDetails
-mixerSetControlDetails.restype = MMRESULT
-mixerSetControlDetails.argtypes = [HMIXEROBJ, LPMIXERCONTROLDETAILS, DWORD]
-MIXERCONTROL_CONTROLTYPE_VOLUME = 1342373889 # Variable c_long
-CreateFileA = _kernel32.CreateFileA
-CreateFileA.restype = HANDLE
-CreateFileA.argtypes = [LPCSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE]
-CreateFile = CreateFileA # alias
-GENERIC_READ = 2147483648L # Variable c_ulong
-GENERIC_WRITE = 1073741824 # Variable c_long
-OPEN_EXISTING = 3 # Variable c_int
-FILE_ATTRIBUTE_NORMAL = 128 # Variable c_int
-FILE_FLAG_OVERLAPPED = 1073741824 # Variable c_int
-CloseHandle = _kernel32.CloseHandle
-CloseHandle.restype = BOOL
-CloseHandle.argtypes = [HANDLE]
-SHGetFolderPathA = _shell32.SHGetFolderPathA
-SHGetFolderPathA.restype = HRESULT
-SHGetFolderPathA.argtypes = [HWND, c_int, HANDLE, DWORD, LPSTR]
-SHGetFolderPath = SHGetFolderPathA # alias
-CSIDL_PROGRAM_FILES = 38 # Variable c_int
-SHGFP_TYPE_CURRENT = 0
-CSIDL_STARTUP = 7 # Variable c_int
-SHGetFolderPathW = _shell32.SHGetFolderPathW
-SHGetFolderPathW.restype = HRESULT
-SHGetFolderPathW.argtypes = [HWND, c_int, HANDLE, DWORD, LPWSTR]
-CSIDL_APPDATA = 26 # Variable c_int
-class tagMIXERCAPSA(Structure):
-    pass
-MIXERCAPSA = tagMIXERCAPSA
-MIXERCAPS = MIXERCAPSA
-tagMIXERCAPSA._pack_ = 1
-tagMIXERCAPSA._fields_ = [
-    ('wMid', WORD),
-    ('wPid', WORD),
-    ('vDriverVersion', MMVERSION),
-    ('szPname', CHAR * 32),
-    ('fdwSupport', DWORD),
-    ('cDestinations', DWORD),
-]
-mixerGetNumDevs = _winmm.mixerGetNumDevs
-mixerGetNumDevs.restype = UINT
-mixerGetNumDevs.argtypes = []
-UINT_PTR = c_uint
-LPMIXERCAPSA = POINTER(tagMIXERCAPSA)
-mixerGetDevCapsA = _winmm.mixerGetDevCapsA
-mixerGetDevCapsA.restype = MMRESULT
-mixerGetDevCapsA.argtypes = [UINT_PTR, LPMIXERCAPSA, UINT]
-mixerGetDevCaps = mixerGetDevCapsA # alias
-MIXER_GETLINEINFOF_DESTINATION = 0 # Variable c_long
-MIXER_GETLINECONTROLSF_ALL = 0 # Variable c_long
-MIXER_GETLINEINFOF_SOURCE = 1 # Variable c_long
-MIXERCONTROL_CT_CLASS_MASK = 4026531840L # Variable c_ulong
-MIXERCONTROL_CT_CLASS_FADER = 1342177280 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_BASS = 1342373890 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_TREBLE = 1342373891 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_EQUALIZER = 1342373892 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_FADER = 1342373888 # Variable c_long
-MIXERCONTROL_CT_CLASS_LIST = 1879048192 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_SINGLESELECT = 1879113728 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_MULTIPLESELECT = 1895890944 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_MUX = 1879113729 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_MIXER = 1895890945 # Variable c_long
-MIXERCONTROL_CT_CLASS_METER = 268435456 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_BOOLEANMETER = 268500992 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_PEAKMETER = 268566529 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_SIGNEDMETER = 268566528 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_UNSIGNEDMETER = 268632064 # Variable c_long
-MIXERCONTROL_CT_CLASS_NUMBER = 805306368 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_SIGNED = 805437440 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_UNSIGNED = 805502976 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_PERCENT = 805634048 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_DECIBELS = 805568512 # Variable c_long
-MIXERCONTROL_CT_CLASS_SLIDER = 1073741824 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_SLIDER = 1073872896 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_PAN = 1073872897 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_QSOUNDPAN = 1073872898 # Variable c_long
-MIXERCONTROL_CT_CLASS_SWITCH = 536870912 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_BOOLEAN = 536936448 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_BUTTON = 553713664 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_LOUDNESS = 536936452 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_MONO = 536936451 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_ONOFF = 536936449 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_STEREOENH = 536936453 # Variable c_long
-MIXERCONTROL_CT_CLASS_TIME = 1610612736 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_MICROTIME = 1610809344 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_MILLITIME = 1627586560 # Variable c_long
-MIXERCONTROL_CT_CLASS_CUSTOM = 0 # Variable c_long
-MIXERCONTROL_CONTROLF_DISABLED = 2147483648L # Variable c_ulong
-MIXERCONTROL_CONTROLF_MULTIPLE = 2 # Variable c_long
-MIXERCONTROL_CONTROLF_UNIFORM = 1 # Variable c_long
-MIXER_GETLINECONTROLSF_ONEBYID = 1 # Variable c_long
-class tMIXERCONTROLDETAILS_SIGNED(Structure):
-    pass
-MIXERCONTROLDETAILS_SIGNED = tMIXERCONTROLDETAILS_SIGNED
-tMIXERCONTROLDETAILS_SIGNED._pack_ = 1
-tMIXERCONTROLDETAILS_SIGNED._fields_ = [
-    ('lValue', LONG),
-]
-class tMIXERCONTROLDETAILS_BOOLEAN(Structure):
-    pass
-MIXERCONTROLDETAILS_BOOLEAN = tMIXERCONTROLDETAILS_BOOLEAN
-tMIXERCONTROLDETAILS_BOOLEAN._pack_ = 1
-tMIXERCONTROLDETAILS_BOOLEAN._fields_ = [
-    ('fValue', LONG),
-]
-MIXER_GETCONTROLDETAILSF_VALUE = 0 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_CUSTOM = 0 # Variable c_long
-class tagMIXERCONTROLDETAILS_LISTTEXTA(Structure):
-    pass
-MIXERCONTROLDETAILS_LISTTEXTA = tagMIXERCONTROLDETAILS_LISTTEXTA
-MIXERCONTROLDETAILS_LISTTEXT = MIXERCONTROLDETAILS_LISTTEXTA
-tagMIXERCONTROLDETAILS_LISTTEXTA._pack_ = 1
-tagMIXERCONTROLDETAILS_LISTTEXTA._fields_ = [
-    ('dwParam1', DWORD),
-    ('dwParam2', DWORD),
-    ('szName', CHAR * 64),
-]
-MIXER_GETCONTROLDETAILSF_LISTTEXT = 1 # Variable c_long
-CSIDL_MYPICTURES = 39 # Variable c_int
-CSIDL_ADMINTOOLS = 48 # Variable c_int
-CSIDL_ALTSTARTUP = 29 # Variable c_int
-CSIDL_BITBUCKET = 10 # Variable c_int
-CSIDL_CDBURN_AREA = 59 # Variable c_int
-CSIDL_COMMON_ADMINTOOLS = 47 # Variable c_int
-CSIDL_COMMON_ALTSTARTUP = 30 # Variable c_int
-CSIDL_COMMON_APPDATA = 35 # Variable c_int
-CSIDL_COMMON_DESKTOPDIRECTORY = 25 # Variable c_int
-CSIDL_COMMON_DOCUMENTS = 46 # Variable c_int
-CSIDL_COMMON_FAVORITES = 31 # Variable c_int
-CSIDL_COMMON_MUSIC = 53 # Variable c_int
-CSIDL_COMMON_OEM_LINKS = 58 # Variable c_int
-CSIDL_COMMON_PICTURES = 54 # Variable c_int
-CSIDL_COMMON_PROGRAMS = 23 # Variable c_int
-CSIDL_COMMON_STARTMENU = 22 # Variable c_int
-CSIDL_COMMON_STARTUP = 24 # Variable c_int
-CSIDL_COMMON_TEMPLATES = 45 # Variable c_int
-CSIDL_COMMON_VIDEO = 55 # Variable c_int
-CSIDL_COMPUTERSNEARME = 61 # Variable c_int
-CSIDL_CONNECTIONS = 49 # Variable c_int
-CSIDL_CONTROLS = 3 # Variable c_int
-CSIDL_COOKIES = 33 # Variable c_int
-CSIDL_DESKTOP = 0 # Variable c_int
-CSIDL_DESKTOPDIRECTORY = 16 # Variable c_int
-CSIDL_DRIVES = 17 # Variable c_int
-CSIDL_FAVORITES = 6 # Variable c_int
-CSIDL_FONTS = 20 # Variable c_int
-CSIDL_HISTORY = 34 # Variable c_int
-CSIDL_INTERNET = 1 # Variable c_int
-CSIDL_INTERNET_CACHE = 32 # Variable c_int
-CSIDL_LOCAL_APPDATA = 28 # Variable c_int
-CSIDL_MYDOCUMENTS = 12 # Variable c_int
-CSIDL_MYMUSIC = 13 # Variable c_int
-CSIDL_MYVIDEO = 14 # Variable c_int
-CSIDL_NETHOOD = 19 # Variable c_int
-CSIDL_NETWORK = 18 # Variable c_int
-CSIDL_PERSONAL = 5 # Variable c_int
-CSIDL_PRINTERS = 4 # Variable c_int
-CSIDL_PRINTHOOD = 27 # Variable c_int
-CSIDL_PROFILE = 40 # Variable c_int
-CSIDL_PROGRAM_FILESX86 = 42 # Variable c_int
-CSIDL_PROGRAM_FILES_COMMON = 43 # Variable c_int
-CSIDL_PROGRAM_FILES_COMMONX86 = 44 # Variable c_int
-CSIDL_PROGRAMS = 2 # Variable c_int
-CSIDL_RECENT = 8 # Variable c_int
-CSIDL_RESOURCES = 56 # Variable c_int
-CSIDL_RESOURCES_LOCALIZED = 57 # Variable c_int
-CSIDL_SENDTO = 9 # Variable c_int
-CSIDL_STARTMENU = 11 # Variable c_int
-CSIDL_SYSTEM = 37 # Variable c_int
-CSIDL_SYSTEMX86 = 41 # Variable c_int
-CSIDL_TEMPLATES = 21 # Variable c_int
-CSIDL_WINDOWS = 36 # Variable c_int
-CSIDL_FLAG_DONT_VERIFY = 16384 # Variable c_int
-DTR_CONTROL_DISABLE = 0 # Variable c_int
-NOPARITY = 0 # Variable c_int
-ONESTOPBIT = 0 # Variable c_int
-IsWindow = _user32.IsWindow
-IsWindow.restype = BOOL
-IsWindow.argtypes = [HWND]
-IsIconic = _user32.IsIconic
-IsIconic.restype = BOOL
-IsIconic.argtypes = [HWND]
-class tagWINDOWPLACEMENT(Structure):
-    pass
-WINDOWPLACEMENT = tagWINDOWPLACEMENT
-tagWINDOWPLACEMENT._fields_ = [
-    ('length', UINT),
-    ('flags', UINT),
-    ('showCmd', UINT),
-    ('ptMinPosition', POINT),
-    ('ptMaxPosition', POINT),
-    ('rcNormalPosition', RECT),
-]
-SW_RESTORE = 9 # Variable c_int
-ShowWindow = _user32.ShowWindow
-ShowWindow.restype = BOOL
-ShowWindow.argtypes = [HWND, c_int]
-BringWindowToTop = _user32.BringWindowToTop
-BringWindowToTop.restype = BOOL
-BringWindowToTop.argtypes = [HWND]
-UpdateWindow = _user32.UpdateWindow
-UpdateWindow.restype = BOOL
-UpdateWindow.argtypes = [HWND]
-GetForegroundWindow = _user32.GetForegroundWindow
-GetForegroundWindow.restype = HWND
-GetForegroundWindow.argtypes = []
-InvalidateRect = _user32.InvalidateRect
-InvalidateRect.restype = BOOL
-InvalidateRect.argtypes = [HWND, POINTER(RECT), BOOL]
-GetCurrentThreadId = _kernel32.GetCurrentThreadId
-GetCurrentThreadId.restype = DWORD
-GetCurrentThreadId.argtypes = []
-GetWindowThreadProcessId = _user32.GetWindowThreadProcessId
-GetWindowThreadProcessId.restype = DWORD
-GetWindowThreadProcessId.argtypes = [HWND, LPDWORD]
-SW_SHOWNORMAL = 1 # Variable c_int
-SW_SHOWNA = 8 # Variable c_int

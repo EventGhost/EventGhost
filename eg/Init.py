@@ -60,6 +60,8 @@ class EventGhost(object):
         eg = self
         sys.modules["eg"] = self
         self.__path__ = [os.path.abspath("eg")]
+        
+        # add 'eg' and 'wx' to the builtin name space of every module
         import __builtin__
         __builtin__.__dict__["eg"] = self
         import wx
@@ -95,6 +97,9 @@ class EventGhost(object):
         import BmpImagePlugin
         import GifImagePlugin
         Image._initialized = 2  
+        
+        import WinAPI.cTypes
+        sys.modules["ctypes.dynamic"] = WinAPI.cTypes
         
         import Utils
         eg.Utils = Utils
@@ -180,12 +185,6 @@ class EventGhost(object):
         # TODO: make this lazy imports
         from eg.WinAPI.serial import Serial
         eg.SerialPort = Serial
-        
-        from eg.WinAPI.SerialThread import SerialThread
-        eg.SerialThread = SerialThread
-        
-        from WinAPI.SerialThread import EnumSerialPorts as GetAllPorts
-        eg.SerialPort.GetAllPorts = classmethod(GetAllPorts)
         
         from eg.WinAPI.SendKeys import SendKeys
         eg.SendKeys = SendKeys
