@@ -46,7 +46,7 @@ class Text:
         help = "&Help"
         choose = "Choose"
         browse = "Browse..."
-        test = "Test"
+        test = "&Test"
         pluginLabel = "Plugin: %s"
         autostartItem = "Autostart"
         unnamedFolder = "<unnamed folder>"

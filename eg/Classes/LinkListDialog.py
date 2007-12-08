@@ -60,7 +60,7 @@ class LinkListDialog(eg.Dialog):
         
         addButton = wx.Button(self, -1, "Add")
         deleteButton = wx.Button(self, -1, "Delete")
-        buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL))
+        buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL), True)
         
         btnSizer = wx.BoxSizer(wx.HORIZONTAL)
         btnSizer.Add((10, 10), 1)

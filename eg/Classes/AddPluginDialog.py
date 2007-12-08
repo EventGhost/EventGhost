@@ -159,7 +159,7 @@ class AddPluginDialog(eg.Dialog):
         splitterWindow.SetSashGravity(0.0)
         splitterWindow.UpdateSize()
 
-        self.buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL))
+        self.buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL), True)
         self.okButton = self.buttonRow.okButton
         self.okButton.Enable(False)
         

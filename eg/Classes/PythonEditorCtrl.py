@@ -52,7 +52,8 @@ class PythonEditorCtrl(StyledTextCtrl):
         ID=-1,
         pos=wx.DefaultPosition, 
         size=wx.DefaultSize,
-        style=0
+        style=0,
+        value="",
     ):
         StyledTextCtrl.__init__(self, parent, ID, pos, size, style)
         StyleSetSpec = self.StyleSetSpec
@@ -216,6 +217,79 @@ class PythonEditorCtrl(StyledTextCtrl):
         self.reslash = re.compile(r"\\\Z")
         self.renonwhitespace = re.compile('\S', re.M)
         self.tabwidth = 4
+        
+        # popup menu
+        popupMenu = self.popupMenu = eg.Menu(self, "", eg.text.MainFrame.Menu)
+        AddItem = popupMenu.AddItem
+        AddItem("Undo")
+        AddItem("Redo")
+        AddItem()
+        AddItem("Cut")
+        AddItem("Copy")
+        AddItem("Paste")
+        AddItem("Delete")
+        AddItem()
+        AddItem("SelectAll")
+        self.Bind(wx.EVT_RIGHT_UP, self.OnRightClick)
+        
+        self.SetText(value)
+        self.EmptyUndoBuffer()
+        self.Bind(EVT_STC_MODIFIED, self.OnSavePointLeft)
+        
+        
+    def OnSavePointLeft(self, event):
+        wx.PostEvent(self, eg.ControlChangedEvent(self.GetId()))
+
+    
+    def GetValue(self):
+        return self.GetText()
+    
+    
+    def SetValue(self, value):
+        self.SetText(value)
+    
+    
+    def OnRightClick(self, event):
+        self.ValidateEditMenu(self.popupMenu)
+        self.PopupMenu(self.popupMenu)
+
+
+    def ValidateEditMenu(self, menu):
+        menu.Undo.Enable(self.CanUndo())
+        menu.Redo.Enable(self.CanRedo())
+        first, last = self.GetSelection()
+        menu.Cut.Enable(first != last)
+        menu.Copy.Enable(first != last)
+        menu.Paste.Enable(self.CanPaste())
+        menu.Delete.Enable(True)
+
+        
+    def OnCmdUndo(self, event):
+        self.Undo()
+        
+        
+    def OnCmdRedo(self, event):
+        self.Redo()
+        
+        
+    def OnCmdCut(self, event):
+        self.Cut()
+        
+        
+    def OnCmdCopy(self, event):
+        self.Copy()
+        
+        
+    def OnCmdPaste(self, event):
+        self.Paste()
+        
+        
+    def OnCmdDelete(self, event):
+        self.Delete()
+        
+        
+    def OnCmdSelectAll(self, event):
+        self.SelectAll()
         
         
     def Delete(self):

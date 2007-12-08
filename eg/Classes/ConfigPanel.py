@@ -26,13 +26,11 @@ import types
 
 class ConfigDialog(eg.Dialog):
 
-    def __init__(self, panel, obj, resizeable=None, showLine=True):
+    def __init__(self, panel, obj, resizeable=False, showLine=True):
         self.panel = panel
         self.result = None
         self.gr = eg.Greenlet.getcurrent()
         self.showLine = showLine
-        if resizeable is None:
-            resizeable = bool(eg.debugLevel)
         self.resizeable = resizeable
         
         isPlugin = isinstance(obj, eg.PluginClass)
@@ -48,12 +46,13 @@ class ConfigDialog(eg.Dialog):
         
         dialogStyle = wx.CAPTION|wx.CLOSE_BOX|wx.SYSTEM_MENU
         if resizeable:
-            dialogStyle |= wx.RESIZE_BORDER
+            dialogStyle |= wx.RESIZE_BORDER|wx.MAXIMIZE_BOX
         eg.Dialog.__init__(self, eg.document.frame, -1, title, style=dialogStyle)
         
         self.buttonRow = eg.ButtonRow(
             self, 
-            (wx.ID_OK, wx.ID_CANCEL, wx.ID_APPLY)
+            (wx.ID_OK, wx.ID_CANCEL, wx.ID_APPLY),
+            resizeable
         )
         testButton = None
         if not isPlugin:
@@ -64,6 +63,7 @@ class ConfigDialog(eg.Dialog):
         self.buttonRow.testButton = testButton
             
         self.Bind(wx.EVT_CLOSE, self.OnCancel)
+        self.Bind(wx.EVT_MAXIMIZE, self.OnMaximize)
 
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         paramSizer = wx.BoxSizer(wx.VERTICAL)
@@ -84,6 +84,23 @@ class ConfigDialog(eg.Dialog):
         )        
 
 
+    @eg.LogIt
+    def OnMaximize(self, event):
+        if self.buttonRow.sizeGrip:
+            self.buttonRow.sizeGrip.Hide()
+        self.Bind(wx.EVT_SIZE, self.OnRestore)
+        event.Skip()
+            
+            
+    @eg.LogIt
+    def OnRestore(self, event):
+        if not self.IsMaximized():
+            self.Unbind(wx.EVT_SIZE)
+            if self.buttonRow.sizeGrip:
+                self.buttonRow.sizeGrip.Show()
+        event.Skip()
+            
+            
     def OnOK(self, event):
         self.result = wx.ID_OK
         self.gr.switch(wx.ID_OK)
@@ -127,7 +144,6 @@ class ConfigDialog(eg.Dialog):
         self.SetMinSize(self.GetSize())
         self.Centre()
         self.panel.SetFocus()
-        self.Show()
         
     
 
@@ -138,8 +154,11 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         executable, 
         resizeable=None, 
         showLine=True, 
-        handleIsDirty=False
+        handleIsDirty=False,
+        
     ):
+        #if resizeable is None:
+        #    resizeable = bool(eg.debugLevel)
         self.nextResult = None
         self.gr = eg.Greenlet.getcurrent()
         dialog = ConfigDialog(self, executable, resizeable, showLine)
@@ -203,11 +222,13 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         self.Bind(wx.EVT_RADIOBOX, OnEvent)
         self.Bind(wx.EVT_RADIOBUTTON, OnEvent)
         self.Bind(wx.EVT_TREE_SEL_CHANGED, OnEvent)
+        self.Bind(eg.EVT_CONTROL_CHANGED, OnEvent)
     
     
     def Affirmed(self):
         if not self.shown:
             self.FinishSetup()
+        self.dialog.Show()
         if self.nextResult == wx.ID_CANCEL:
             return False
         resultCode = eg.mainGreenlet.switch()

@@ -23,7 +23,7 @@
 
 class ButtonRow:
     
-    def __init__(self, parent, buttonIds):
+    def __init__(self, parent, buttonIds, resizeGrip=False):
         self.parent = parent
         self.numSpecialCtrls = 0
         self.stdbtnsizer = stdbtnsizer = wx.StdDialogButtonSizer()
@@ -68,7 +68,7 @@ class ButtonRow:
         defaultButton.SetDefault()
         
         self.sizer = sizer = wx.BoxSizer(wx.HORIZONTAL)
-        if parent.GetWindowStyleFlag() & wx.RESIZE_BORDER:
+        if resizeGrip:
             self.sizeGrip = eg.SizeGrip(parent)
             sizer.Add(self.sizeGrip.GetSize(), 1)
             sizer.Add(stdbtnsizer, 0, wx.TOP|wx.BOTTOM, 6)

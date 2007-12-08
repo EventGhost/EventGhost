@@ -94,7 +94,7 @@ class AddActionDialog(eg.Dialog):
         splitterWindow.SetMinimumPaneSize(60)
         splitterWindow.UpdateSize()
 
-        self.buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL))
+        self.buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL), True)
         
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         mainSizer.Add(splitterWindow, 1, wx.EXPAND|wx.ALL, 5)

@@ -32,214 +32,9 @@ class Text(eg.TranslatableStrings):
     title = "Python-Editor - %s"
     class SaveChanges:
         title = "Apply changes?"
-        mesg = "The file was altered.\n\nDo you want to apply the changes?\n"
+        mesg = "The script was altered.\n\nDo you want to apply the changes?\n"
 
 
-
-
-class ScriptEditor(wx.Frame):
-    
-    def __init__(self, parent, id, actionItem, action):
-        self.actionItem = actionItem
-        if len(actionItem.args) < 1:
-            actionItem.args = ['']
-        text = actionItem.args[0]
-        config = self.config = action.config
-        wx.Frame.__init__(
-            self, 
-            parent, 
-            id,
-            eg.APP_NAME + " " + (Text.title % actionItem.GetLabel()),
-            pos=config.position,
-            size=config.size,
-            style=wx.DEFAULT_FRAME_STYLE
-        )
-        self.SetIcon(action.info.icon.GetWxIcon())
-        
-        self.editCtrl = editCtrl = eg.PythonEditorCtrl(self)
-        editCtrl.SetText(text)
-        editCtrl.EmptyUndoBuffer()
-        editCtrl.Colourise(0, -1)
-
-        self.CreateStatusBar()
-
-        # menu creation
-        self.MenuBar = eg.MenuBar(self, eg.text.MainFrame.Menu)
-
-        # file menu
-        fileMenu = self.MenuBar.AddMenu("File")
-        AddItem = fileMenu.AddItem
-        AddItem("Apply", hotkey="F4")
-        AddItem("Execute", hotkey="F5")
-        AddItem()
-#        if eg.debugLevel:
-#            AddItem("EditLinks")
-#            AddItem()
-        AddItem("Close", hotkey="Ctrl+W")
-
-        # edit menu        
-        editMenu = self.MenuBar.AddMenu("Edit")
-        AddItem = editMenu.AddItem
-        AddItem("Undo", hotkey="Ctrl+Z")
-        AddItem("Redo", hotkey="Ctrl+Y")
-        AddItem()
-        AddItem("Cut", hotkey="Ctrl+X")
-        AddItem("Copy", hotkey="Ctrl+C")
-        AddItem("Paste", hotkey="Ctrl+V")
-        AddItem("Delete", hotkey="Del")
-        AddItem()
-        AddItem("SelectAll", hotkey="Ctrl+A")
-
-        self.MenuBar.Realize()
-        
-        # popup menu
-        popupMenu = self.popupMenu = eg.Menu(self, "", eg.text.MainFrame.Menu)
-        AddItem = popupMenu.AddItem
-        AddItem("Undo")
-        AddItem("Redo")
-        AddItem()
-        AddItem("Cut")
-        AddItem("Copy")
-        AddItem("Paste")
-        AddItem("Delete")
-        AddItem()
-        AddItem("SelectAll")
-
-        self.Show(True)
-        self.Bind(wx.EVT_CLOSE, self.OnCmdClose)
-        self.Bind(wx.EVT_MENU_OPEN, self.OnShowMenu)
-        editCtrl.Bind(wx.EVT_RIGHT_UP, self.OnRightClick)
-        eg.Utils.EnsureVisible(self)
-
-
-    def CheckFileNeedsSave(self):
-        if self.editCtrl.GetModify():
-            dlg = wx.MessageDialog(
-                self,
-                Text.SaveChanges.mesg, 
-                Text.SaveChanges.title, 
-                wx.YES_DEFAULT 
-                    |wx.YES_NO
-                    |wx.CANCEL
-                    |wx.STAY_ON_TOP
-                    |wx.ICON_EXCLAMATION
-            )
-            res = dlg.ShowModal()
-            dlg.Destroy()
-            if res == wx.ID_CANCEL:
-                return wx.ID_CANCEL
-            if res == wx.ID_YES:
-                self._FileSave()
-        return wx.ID_OK
-
-
-    def OnShowMenu(self, event):
-        self.ValidateEditMenu(self.MenuBar.Edit)
-        self.MenuBar.File.Apply.Enable(self.editCtrl.GetModify())
-        
-        
-    def OnRightClick(self, event):
-        self.ValidateEditMenu(self.popupMenu)
-        self.editCtrl.PopupMenu(self.popupMenu)
-
-
-    def ValidateEditMenu(self, menu):
-        editCtrl = self.editCtrl
-        menu.Undo.Enable(editCtrl.CanUndo())
-        menu.Redo.Enable(editCtrl.CanRedo())
-        first, last = editCtrl.GetSelection()
-        menu.Cut.Enable(first != last)
-        menu.Copy.Enable(first != last)
-        menu.Paste.Enable(editCtrl.CanPaste())
-        menu.Delete.Enable(True)
-
-
-    def OnCmdApply(self, event):
-        self._FileSave()
-        
-        
-    def OnCmdExecute(self, event):
-        pass
-        
-        
-    def OnCmdClose(self, event):
-        if self.CheckFileNeedsSave() == wx.ID_CANCEL:
-            return wx.ID_CANCEL
-                
-        self.Bind(wx.EVT_CLOSE, None)
-        self.config.size = self.GetSizeTuple()
-        self.config.position = self.GetPositionTuple()
-        self.Close()
-        return None
-        
-        
-    def OnCmdUndo(self, event):
-        self.editCtrl.Undo()
-        
-        
-    def OnCmdRedo(self, event):
-        self.editCtrl.Redo()
-        
-        
-    def OnCmdCut(self, event):
-        self.editCtrl.Cut()
-        
-        
-    def OnCmdCopy(self, event):
-        self.editCtrl.Copy()
-        
-        
-    def OnCmdPaste(self, event):
-        self.editCtrl.Paste()
-        
-        
-    def OnCmdDelete(self, event):
-        self.editCtrl.Delete()
-        
-        
-    def OnCmdSelectAll(self, event):
-        self.editCtrl.SelectAll()
-        
-        
-    def _FileSave(self):
-        self.UndoHandler(self.actionItem, self.editCtrl.GetText())
-        self.editCtrl.SetSavePoint()
-        
-        
-    def OnCmdEditLinks(self, event):
-        dialog = EditLinksDialog(self)
-        dialog.ShowModal()
-        dialog.Destroy()
-        
-    
-    def OnCmdExecute(self, event):
-        self.actionItem.Execute()
-        
-        
-    class UndoHandler:
-        def __init__(self, item, text):
-            self.name = "Edit PythonScript"
-            self.positionData = item.GetPositionData()
-            self.oldText = item.args[0]
-            item.SetArgs((text, ))
-            item.document.AppendUndoHandler(self)
-
-
-        def Undo(self, document):
-            item = self.positionData.GetItem()
-            if item in item.executable.openEditFrames:
-                id = item.executable.openEditFrames[item]
-                win = wx.FindWindowById(id, None)
-                if win is not None:
-                    win.editCtrl.SetText(self.oldText)
-                    win.editCtrl.SetSavePoint()
-            tmp = item.args[0]
-            item.SetArgs((self.oldText, ))
-            self.oldText = tmp
-
-
-        Redo = Undo
-        
 
 #------------------------------------------------------------------------
 # Action: PythonScript
@@ -251,10 +46,9 @@ class PythonScript(eg.ActionClass):
 
     def __init__(self):
         class Defaults:
-            size = (400, 300)
+            size = (600, 420)
             position = (10, 10)
         self.config = eg.GetConfig("plugins.EventGhost.PythonScript", Defaults)
-        self.openEditFrames = {}
 
         
     def GetLabel(self, pythonstring=None):
@@ -262,32 +56,19 @@ class PythonScript(eg.ActionClass):
 
 
     def Configure(self, text=""):
-#        actionItem = eg.currentConfigureItem
-#        win = ScriptEditor(actionItem.document.frame, -1, actionItem, self)
-#        actionItem.openConfigDialog = win
-#        win.Raise()
-#        gr1 = eg.Greenlet.getcurrent()
-#        self.result = gr1.parent.switch()
-        wx.CallAfter(self.OnOpen, eg.currentConfigureItem)
-        return -1
-
-
-    def OnOpen(self, actionItem):
-        if actionItem not in self.openEditFrames:
-            id = wx.NewId()
-            self.openEditFrames[actionItem] = id
-        else:
-            id = self.openEditFrames[actionItem]
-        win = wx.FindWindowById(id, None)
-        if win is None:
-            id = wx.NewId()
-            self.openEditFrames[actionItem] = id
-            win = ScriptEditor(eg.document.frame, id, actionItem, self)
-        else:
-            win.Show()
-        win.Raise()
+        panel = eg.ConfigPanel(self, resizeable=True)
+        editCtrl = eg.PythonEditorCtrl(panel, value=text)
+        panel.sizer.Add(editCtrl, 1, wx.EXPAND)
+        panel.FinishSetup()
+        panel.dialog.SetPosition(self.config.position)
+        panel.dialog.SetSize(self.config.size)
+        while panel.Affirmed():
+            panel.SetResult(editCtrl.GetValue())
+        if not panel.dialog.IsMaximized():
+            self.config.size = panel.dialog.GetSizeTuple()
+            self.config.position = panel.dialog.GetPositionTuple()
         
-        
+
     class Compile:
         idCounter = 0
         scriptDict = weakref.WeakValueDictionary()
@@ -302,12 +83,17 @@ class PythonScript(eg.ActionClass):
             try:
                 self.code = compile(text + "\n", str(id), "exec")
             except:
+                self.code = None
                 eg.PrintError("Error compiling script.")
                 self.PrintTraceback()
             self.scriptDict[id] = self
             
             
         def __call__(self):
+            if self.code is None:
+                self.__init__(self.text)
+                if self.code is None:
+                    return
             mod = self.mod
             oldResult = eg.result
             mod.result = oldResult

@@ -1,3 +1,7 @@
+* Now using wxPython 2.8.7.1
+* The PythonScript action now uses the same configuration panel as all other actions.
+- TechnoTrend USB-IR plugin was not functional after a supend/resume of the system.
+
 Version 0.3.6.1238 (12/05/2007)
 * The Test Pattern/Geometry action now takes the aspect ratio into account. For ITU-R BT.601 aspect ratios it also shows the "non active" pixels at the sides.
 * The Test Pattern/Bars action can now also make double bars.
