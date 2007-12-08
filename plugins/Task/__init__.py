@@ -124,7 +124,7 @@ class Task(eg.PluginClass):
         eg.messageReceiver.AddHandler(WM_APP+2, self.FatalWndProc)
         RegisterShellHookWindow(eg.messageReceiver.hwnd)
         if self.hookDll is None:
-            self.hookDll = ctypes.cdll.LoadLibrary(abspath(join(dirname(__file__), "hook.dll")))
+            self.hookDll = ctypes.CDLL(abspath(join(dirname(__file__), "hook.dll")))
         self.hookDll.StartHook()
         
         
@@ -134,11 +134,12 @@ class Task(eg.PluginClass):
         eg.messageReceiver.RemoveHandler(WM_SHELLHOOKMESSAGE, self.MyWndProc)
         eg.messageReceiver.RemoveHandler(WM_APP+1, self.FocusWndProc)
         eg.messageReceiver.RemoveHandler(WM_APP+2, self.FatalWndProc)
-        res = win32api.FreeLibrary(self.hookDll._handle)
-        if not res:
-            err = win32api.GetLastError()
-            eg.PrintDebugNotice("FreeLibrary:", err, win32api.FormatMessage(err))
-        self.hookDll = None
+        #handle = self.hookDll._handle
+        del self.hookDll
+        #res = win32api.FreeLibrary(handle)
+        #if not res:
+        #    err = win32api.GetLastError()
+         #   eg.PrintDebugNotice("FreeLibrary:", err, win32api.FormatMessage(err))
         
         
     @eg.LogIt

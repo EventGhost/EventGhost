@@ -1,3 +1,4 @@
+Version 0.3.6.1242 (12/08/2007)
 * Now using wxPython 2.8.7.1
 * The PythonScript action now uses the same configuration panel as all other actions.
 - TechnoTrend USB-IR plugin was not functional after a supend/resume of the system.
