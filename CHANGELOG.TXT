@@ -1,3 +1,5 @@
+
+Version 0.3.6.1248 (12/10/2007)
 + The apply button of all action/plugin configuration dialogs now stays disabled till the user actually has changed a control in the dialog.
 - Some more plugins had problem with suspend/resume of the computer.
 - It was possible that some dialogs opened outside the visible desktop area if the user had changed his display settings while EventGhost is running.

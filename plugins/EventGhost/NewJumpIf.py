@@ -52,7 +52,7 @@ class NewJumpIf(eg.ActionClass):
         ]
         
     def __call__(self, link, kind=0, gosub=False):
-        if (bool(eg.result) != bool(kind)) or kind == 2:
+        if kind == 2 or (bool(eg.result) != bool(kind)):
             if gosub:
                 eg.programReturnStack.append(eg.programCounter)
             next = link.target

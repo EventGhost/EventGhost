@@ -153,9 +153,9 @@ class OSDFrame(wx.Frame):
         self.SetPosition((-10000, -10000))
         self.SetClientSize((w, h))
         
-        r = wx.RegionFromBitmap(bitmap)
-        _,_,w,_ = r.GetBox()
-        self.hasShape = self.SetShape(r)
+        region = wx.RegionFromBitmap(bitmap)
+        _,_,w,_ = region.GetBox()
+        self.hasShape = self.SetShape(region)
         self.bitmap = bitmap
         monitorDimensions = GetMonitorDimensions()
         try:
