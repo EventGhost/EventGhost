@@ -260,3 +260,13 @@ class PluginClass(object):
         
     class Exception(eg.Exception):
         pass
+    
+    
+    def OnComputerSuspend(self):
+        """Prepares the plugin for suspension of the computer."""
+        pass
+    
+    
+    def OnComputerResume(self):
+        """Prepares the plugin for resumption of the computer."""
+        pass

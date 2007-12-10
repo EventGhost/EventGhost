@@ -361,7 +361,6 @@ Type: filesandordirs; Name: "{app}\\eg"
 Source: "%(TRUNK)s\\*.exe"; DestDir: "{app}"; Flags: ignoreversion
 %(INSTALL_FILES)s
 Source: "%(TRUNK)s\\Example.xml"; DestDir: "{userappdata}\\EventGhost"; DestName: "MyConfig.xml"; Flags: onlyifdoesntexist uninsneveruninstall
-Source: "%(TRUNK)s\plugins\Task\*.dll"; DestDir: "{app}\plugins\Task"; Flags: ignoreversion
 """
 
 

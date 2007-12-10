@@ -148,9 +148,8 @@ class Serial(eg.RawReceiverPlugin):
                 rtscts=rtscts,
             )
         except:
-            eg.PrintTraceback()
             self.serial = None
-            raise eg.Exception("Can't open COM port.")
+            raise self.Exceptions.SerialOpenFailed
         self.serial.timeout = 1.0
         self.serial.setRTS()
         if generateEvents:

@@ -2,7 +2,7 @@
 
 name = "LIRC Event Receiver"
 kind = "remote"
-version = "0.6.0"
+version = "0.6.1"
 author = "jinxdone"
 description = """\
 Plugin for receiving Lirc eventstrings and generating EventGhost events 
@@ -36,6 +36,9 @@ more reliably, but it adds 'lag' to the end of each event, if you set it too
 low your events may sometimes be interrupted abrubtly.
  (default = 200, recommended between 150-400, depending on your setup)
 </UL>"""
+
+# 0.6.1 Added code to handle re-connect after suspend/resume of the 
+#       system (by Bitmonster)
 
 
 eg.RegisterPlugin(
@@ -103,8 +106,9 @@ class Lirc_Reader(asyncore.dispatcher):
     ### This will be run if the tcp connection is disconnected
     ### or if we want to close it ourselves.
     ###
+    @eg.LogIt
     def handle_close(self):
-        print "Lirc: Closing the lirc-reader.."
+        #print "Lirc: Closing the lirc-reader.."
         self.close()
 
 
@@ -198,8 +202,26 @@ class Lirc(eg.RawReceiverPlugin):
             self.addrepeat,
             self.ignoretime
         )
-
-
+        
+    
+    def OnComputerSuspend(self):
+        if self.reader:
+            self.reader.handle_close()
+    
+    
+    def OnComputerResume(self):
+        if self.reader:
+            self.reader = Lirc_Reader(
+                self.host,
+                self.port,
+                self,
+                self.onlyfirst,
+                self.addremote,
+                self.addrepeat,
+                self.ignoretime
+            )
+    
+    
     def __stop__(self):
         if self.reader:
             self.reader.handle_close()

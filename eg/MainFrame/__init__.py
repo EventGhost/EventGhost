@@ -985,7 +985,7 @@ class MainFrame(wx.Frame):
         
     def OnCmdGetInfo(self, event):
         self.document.selection.ShowInfo()
-        
+
         
     def OnCmdCollectGarbage(self, event):
         import gc

@@ -118,7 +118,10 @@ class Log:
     
     
     def Write(self, text, icon, wRef=None):
-        lines = (self.buffer + text).split("\n")
+        try:
+            lines = (self.buffer + text).split("\n")
+        except UnicodeDecodeError:
+            lines = (self.buffer + text.decode("mbcs")).split("\n")
         self.buffer = lines[-1]
         data = self.data
         when = time()

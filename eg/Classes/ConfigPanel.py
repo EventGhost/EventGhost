@@ -118,7 +118,7 @@ class ConfigDialog(eg.Dialog):
         
         
     def OnTestButton(self, event):
-        self.panel.SetFocus()
+        #self.panel.SetFocus()
         self.result = eg.ID_TEST
         self.gr.switch(eg.ID_TEST)
         
@@ -173,8 +173,8 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         self.maxRowNum = 0
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.isDirty = False
-        if eg.debugLevel:
-            self.dialog.buttonRow.applyButton.Enable(False)
+        #if eg.debugLevel:
+        self.dialog.buttonRow.applyButton.Enable(False)
         
     @eg.LogIt
     def SetIsDirty(self, flag=True):
@@ -212,8 +212,8 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
             
         self.dialog.FinishSetup()        
         def OnEvent(event):
+            #print event
             self.SetIsDirty()
-        #wx.EVT_COMMAND(self, wx.ID_ANY, wx.ID_ANY, OnEvent)
         self.Bind(wx.EVT_CHECKBOX, OnEvent)
         self.Bind(wx.EVT_BUTTON, OnEvent)
         self.Bind(wx.EVT_CHOICE, OnEvent)
@@ -228,6 +228,7 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
     def Affirmed(self):
         if not self.shown:
             self.FinishSetup()
+        eg.Utils.EnsureVisible(self.dialog)
         self.dialog.Show()
         if self.nextResult == wx.ID_CANCEL:
             return False
@@ -240,8 +241,8 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
     def SetResult(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
-        if eg.debugLevel:
-            self.dialog.buttonRow.applyButton.Enable(False)
+        #if eg.debugLevel:
+        self.dialog.buttonRow.applyButton.Enable(False)
         self.isDirty = False
         self.nextResult = self.gr.parent.switch(args)
 

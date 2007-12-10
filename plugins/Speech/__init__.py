@@ -277,7 +277,6 @@ class TextToSpeech(eg.ActionClass):
         sizer2.Add(insertTimeButton)
         sizer2.Add(insertDateButton, 0, wx.LEFT|wx.EXPAND|wx.ALIGN_LEFT, 5)
         sizer2.Add((5, 5), 1)
-        sizer2.Add(testButton, 0, wx.LEFT, 5)
         staticBoxSizer.Add(sizer2, 0, wx.ALL|wx.EXPAND, 5)
 
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)

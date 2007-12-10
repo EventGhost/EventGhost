@@ -164,11 +164,15 @@ class AIRT(eg.PluginClass):
         self.AddAction(SendIR)
         
         
+    @eg.LogIt
     def __start__(self, port=0, remotes=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]):
         self.remotes = remotes
         self.port = port
         self.lastActionEvent = None
-        self.serialPort = eg.SerialPort(port, baudrate=COMSPEED)
+        try:
+            self.serialPort = eg.SerialPort(port, baudrate=COMSPEED)
+        except:
+            raise self.Exceptions.SerialOpenFailed
         self.serialThread = eg.SerialThread(self.serialPort.hComPort)
         self.serialThread.SetReadEventCallback(self.HandleReceive)
         self.serialThread.Start()

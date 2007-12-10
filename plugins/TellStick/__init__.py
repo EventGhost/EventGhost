@@ -27,6 +27,7 @@ class TellStick(eg.PluginClass):
         self.AddAction(TurnOff)
 
     def __start__(self):
+        self.dll = None
         try:
             self.dll = windll.LoadLibrary("TellUsbD101.dll")
         except: 
@@ -62,9 +63,13 @@ class DeviceBase(object):
         )
         panel.sizer.Add(deviceCtrl, 0, wx.ALIGN_CENTER_VERTICAL)
         while panel.Affirmed():
-            panel.SetResult(
-                self.plugin.dll.devGetDeviceId(deviceCtrl.GetSelection())
-            )
+            if self.plugin.dll is not None:
+                device = self.plugin.dll.devGetDeviceId(deviceCtrl.GetSelection())
+            else:
+                device = 0
+            panel.SetResult(device)
+            
+            
 
 class TurnOn(DeviceBase, eg.ActionClass):
     name = "Turn on"

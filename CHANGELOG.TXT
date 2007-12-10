@@ -1,3 +1,7 @@
++ The apply button of all action/plugin configuration dialogs now stays disabled till the user actually has changed a control in the dialog.
+- Some more plugins had problem with suspend/resume of the computer.
+- It was possible that some dialogs opened outside the visible desktop area if the user had changed his display settings while EventGhost is running.
+
 Version 0.3.6.1242 (12/08/2007)
 * Now using wxPython 2.8.7.1
 * The PythonScript action now uses the same configuration panel as all other actions.

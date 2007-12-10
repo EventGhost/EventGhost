@@ -79,3 +79,23 @@ class ActionThread(eg.ThreadWorker):
         except:
             eg.PrintTraceback()
             
+            
+    def OnComputerSuspend(self):
+        """Calls OnComputerSuspend of every enabled plugin."""
+        for plugin in eg.pluginList:
+            if plugin.info.isStarted:
+                try:
+                    plugin.OnComputerSuspend()
+                except:
+                    eg.PrintTraceback()
+            
+            
+    def OnComputerResume(self):
+        """Calls OnComputerResume of every enabled plugin."""
+        for plugin in eg.pluginList:
+            if plugin.info.isStarted:
+                try:
+                    plugin.OnComputerResume()
+                except:
+                    eg.PrintTraceback()
+            

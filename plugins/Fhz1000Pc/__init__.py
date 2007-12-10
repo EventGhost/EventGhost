@@ -104,6 +104,14 @@ class Fhz1000Pc(eg.PluginClass):
             self.receiveThread.Close()
         
         
+    def OnComputerSuspend(self):
+        self.__stop__()
+        
+        
+    def OnComputerResume(self):
+        self.__start__()
+    
+    
     def HandleReceive(self, serial):
         data = serial.Read(512)
         print "HR: " + " ".join(["%02X" % ord(c) for c in data])

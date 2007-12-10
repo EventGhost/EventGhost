@@ -27,10 +27,11 @@ class Text(eg.TranslatableStrings):
     DriverNotOpen = "Could not open driver!"
     DeviceNotFound = "Device not found!"
     ProgramNotRunning = "Application is not running!"
+    ProgramNotFound = "Application not found!"
     InitFailed = "Initialization failed!"
     DeviceInitFailed = "Unable to initalize device!"
     DeviceNotReady = "Device is not ready!"
-    
+    SerialOpenFailed = "Can't open serial port!"
     
     
 class Exception(eg.Exception):
@@ -73,5 +74,13 @@ class Exceptions:
 
     class ProgramNotRunning(Exception):
         text = Text.ProgramNotRunning
+    
+
+    class ProgramNotFound(Exception):
+        text = Text.ProgramNotFound
+    
+
+    class SerialOpenFailed(Exception):
+        text = Text.SerialOpenFailed
     
 

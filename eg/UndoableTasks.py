@@ -23,10 +23,6 @@
 eg.PrintDebugNotice("Loading UndoableTasks")
 import xml.etree.cElementTree as ElementTree
 
-class Text:
-    rename = "Rename item"
-    
-    
     
 class NewItem:
     """
@@ -74,13 +70,6 @@ class NewPlugin(NewItem):
                 if not CmdConfigure().Do(pluginItem):
                     pluginItem.Delete()
                     return None
-#                args = pluginItem.ProcessConfigureDialog()
-#                if args is None:
-#                    pluginItem.Delete()
-#                    return None
-#                else:
-#                    pluginItem.SetArgs(args)
-#                    pluginItem.Refresh()
             eg.actionThread.CallWait(pluginItem.Execute)
         self.StoreItem(pluginItem)
         if pluginInfo.createMacrosOnAdd:

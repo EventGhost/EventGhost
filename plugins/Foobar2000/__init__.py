@@ -188,6 +188,8 @@ class Foobar2000(eg.PluginClass):
     def __start__(self, foobar2000Path=None):
         if foobar2000Path is None:
             foobar2000Path = self.GetFoobar2000Path()
+        if not os.path.exists(foobar2000Path):
+            raise self.Exceptions.ProgramNotFound
         self.foobar2000Path = foobar2000Path
         
         

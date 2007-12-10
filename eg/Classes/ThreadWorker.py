@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+from sys import exc_info
 from threading import Event, Thread, Lock
 from collections import deque
 from time import clock
@@ -39,20 +40,28 @@ class ThreadWorkerAction:
     Represents an item that will be put on the ThreadWorker queue to be
     executed there.
     """
-    __slots__ = ["time", "func", "args", "kwargs", "returnValue", "event"]
+    __slots__ = ["time", "func", "args", "kwargs", "returnValue", "processed", "exceptionInfo", "raiseException"]
     
-    def __init__(self, func, args, kwargs):
+    def __init__(self, func, args, kwargs, raiseException=True):
         self.time = clock()
         self.func = func
         self.args = args
         self.kwargs = kwargs
         self.returnValue = None
-        self.event = Event()
+        self.processed = Event()
+        self.raiseException = raiseException
+        self.exceptionInfo = None
         
         
     def __call__(self):
-        self.returnValue = self.func(*self.args, **self.kwargs)
-        self.event.set()        
+        try:
+            self.returnValue = self.func(*self.args, **self.kwargs)
+        except Exception, exc:
+            if self.raiseException:
+                raise exc
+            else:
+                self.exceptionInfo = exc_info()
+        self.processed.set()        
 
 
 
@@ -239,10 +248,15 @@ class ThreadWorker:
         Transmit a function and arguments to the thread and let it execute 
         there. Waits for completion and returns the result of the function.
         """
-        action = self.Call(func, *args, **kwargs)
-        action.event.wait(self.__timeout)
-        if not action.event.isSet():
+        action = ThreadWorkerAction(func, args, kwargs, False)
+        self.__queue.append(action)
+        SetEvent(self.__wakeEvent)
+        action.processed.wait(self.__timeout)
+        if not action.processed.isSet():
             raise Exception("Timout in CallWait")
+        elif action.exceptionInfo is not None:
+            excType, excValue, excTraceback = action.exceptionInfo
+            raise excType, excValue, excTraceback
         return action.returnValue
     
     

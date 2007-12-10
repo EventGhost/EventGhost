@@ -82,27 +82,19 @@ class TTIR(eg.RawReceiverPlugin):
         self.ir_GetUniqueCode = dll.ir_GetUniqueCode
         self.ir_GetUniqueCode.restype  = DWORD
         self.dll = dll
-        # Bind to suspend notifications so we can go into suspend
-        eg.Bind("System.Suspend", self.OnSuspend)
-        eg.Bind("System.Resume", self.OnResume)
         
     
-    def OnSuspend(self, event):
-        if self.hOpen is not None:
-            self.dll.irClose(self.hOpen)
+    def OnComputerSuspend(self):
+        self.dll.irClose(self.hOpen)
     
     
-    def OnResume(self, event):
+    def OnComputerResume(self):
         self.hOpen = self.dll.irOpen(0, USBIR_MODE_ALL_CODES, self.cCallback, 0)
         if self.hOpen == -1:
             raise self.Exceptions.DeviceNotFound
     
     
     def __stop__(self):
-        # Unbind from power notification events
-        eg.Unbind("System.Suspend", self.OnSuspend)
-        eg.Unbind("System.Resume", self.OnResume)
-        
         if self.dll is not None:
             self.dll.irClose(self.hOpen)
     

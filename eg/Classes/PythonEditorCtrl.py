@@ -24,24 +24,14 @@ import keyword
 import re
 from wx.stc import *
 
-if wx.Platform == '__WXMSW__':
-    faces = { 
-        'times': 'Times New Roman',
-        'mono' : 'Courier New',
-        'helv' : 'Arial',
-        'other': 'Comic Sans MS',
-        'size' : 10,
-        'size2': 8,
-    }
-else:
-    faces = { 
-        'times': 'Times',
-        'mono' : 'Courier',
-        'helv' : 'Helvetica',
-        'other': 'new century schoolbook',
-        'size' : 12,
-        'size2': 10,
-    }
+faces = { 
+    'times': 'Times New Roman',
+    'mono' : 'Courier New',
+    'helv' : 'Arial',
+    'other': 'Comic Sans MS',
+    'size' : 10,
+    'size2': 8,
+}
 
 
 class PythonEditorCtrl(StyledTextCtrl):
@@ -234,12 +224,19 @@ class PythonEditorCtrl(StyledTextCtrl):
         
         self.SetText(value)
         self.EmptyUndoBuffer()
-        self.Bind(EVT_STC_MODIFIED, self.OnSavePointLeft)
+        self.Bind(EVT_STC_SAVEPOINTLEFT, self.OnSavePointLeft)
         
         
     def OnSavePointLeft(self, event):
+        self.Bind(EVT_STC_MODIFIED, self.OnModified)
         wx.PostEvent(self, eg.ControlChangedEvent(self.GetId()))
-
+        event.Skip()
+        
+        
+    def OnModified(self, event):
+        wx.PostEvent(self, eg.ControlChangedEvent(self.GetId()))
+        event.Skip()
+    
     
     def GetValue(self):
         return self.GetText()
@@ -301,6 +298,8 @@ class PythonEditorCtrl(StyledTextCtrl):
         if (keycode == wx.WXK_RETURN) or (keycode == 372):
             self.CmdKeyExecute(STC_CMD_NEWLINE)
             self._autoindent()
+        elif keycode == wx.WXK_TAB and event.GetModifiers() == wx.MOD_CONTROL:
+            self.Navigate()
         else:
             event.Skip()
     

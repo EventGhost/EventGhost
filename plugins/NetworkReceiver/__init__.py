@@ -175,11 +175,11 @@ class Server(asyncore.dispatcher):
         eg.RestartAsyncore()
 
         # Set it to re-use address
-        self.set_reuse_addr()
+        #self.set_reuse_addr()
         
         # Bind to all interfaces of this host at specified port
         self.bind(('', port))
-        
+
         # Start listening for incoming requests
         #self.listen (1024)
         self.listen(5)
@@ -208,7 +208,10 @@ class NetworkReceiver(eg.PluginClass):
         self.port = port
         self.password = password
         self.info.eventPrefix = prefix
-        self.server = Server(self.port, self.password, self)
+        try:
+            self.server = Server(self.port, self.password, self)
+        except socket.error, exc:
+            raise self.Exception(exc[1])
         
         
     def __stop__(self):

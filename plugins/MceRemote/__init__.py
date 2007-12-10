@@ -195,12 +195,9 @@ class MceMessageReceiver(eg.ThreadWorker):
         self.hinst = wc.hInstance
         
         self.dll = WinDLL(dllPath)
-        self.dll.MceIrRegisterEvents(self.hwnd)
+        if not self.dll.MceIrRegisterEvents(self.hwnd):
+            raise self.plugin.Exceptions.DeviceNotFound
         self.dll.MceIrSetRepeatTimes(1,1)
-        
-        # Bind to suspend notifications so we can go into suspend
-        eg.Bind("System.Suspend", self.OnSuspend)
-        eg.Bind("System.Resume", self.OnResume)
         
         
     @eg.LogIt
@@ -208,25 +205,13 @@ class MceMessageReceiver(eg.ThreadWorker):
         """
         This will be called inside the thread when it finishes. It will even
         be called if the thread exits through an exception.
-        """
-        # Unbind from power notification events
-        eg.Unbind("System.Suspend", self.OnSuspend)
-        eg.Unbind("System.Resume", self.OnResume)
-        
+        """        
         self.dll.MceIrUnregisterEvents()
         win32gui.DestroyWindow(self.hwnd)
         win32gui.UnregisterClass(self.classAtom, self.hinst)
-        self.Stop()
+        self.Stop() # is this needed?
         
         
-    def OnSuspend(self, event):
-        self.dll.MceIrSuspend()
-    
-    
-    def OnResume(self, event):
-        self.dll.MceIrResume()       
-          
-                        
     #@eg.LogIt
     def MyWndProc(self, hwnd, mesg, wParam, lParam):
         if mesg == win32con.WM_USER:
@@ -267,6 +252,16 @@ class MceRemote(eg.PluginClass):
         self.msgThread.Start()
 
 
+    @eg.LogIt
+    def OnComputerSuspend(self):
+        self.msgThread.CallWait(self.msgThread.dll.MceIrSuspend)
+    
+    
+    @eg.LogIt
+    def OnComputerResume(self):
+        self.msgThread.CallWait(self.msgThread.dll.MceIrResume)       
+          
+                        
     def __stop__(self):
         self.msgThread.Stop()
         

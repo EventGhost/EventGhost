@@ -115,6 +115,7 @@ class FindDialog(eg.Dialog):
 
 
     def Show(self):
+        eg.Utils.EnsureVisible(self)
         eg.Dialog.Show(self)
         self.Raise()
         self.textCtrl.SetSelection(-1, -1)

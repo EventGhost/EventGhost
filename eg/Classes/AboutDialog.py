@@ -117,7 +117,7 @@ SPECIAL_THANKS_DATA = (
 )
         
 
-class Panel1(wx.Panel):
+class AboutPanel(wx.Panel):
     
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, style=wx.SUNKEN_BORDER)
@@ -130,18 +130,24 @@ class Panel1(wx.Panel):
             eg.text.MainFrame.Menu.WebHomepage, 
             URL="http://www.eventghost.org/"
         )
+        font = hypelink1.GetFont()
+        font.SetPointSize(11)
+        font.SetWeight(wx.FONTWEIGHT_BOLD)
+        hypelink1.SetFont(font)
         hypelink2 = eg.HyperLinkCtrl(
             self,
             wx.ID_ANY, 
             eg.text.MainFrame.Menu.WebForum,
             URL="http://www.eventghost.org/forum/"
         )
+        hypelink2.SetFont(font)
         hypelink3 = eg.HyperLinkCtrl(
             self,
             wx.ID_ANY, 
             eg.text.MainFrame.Menu.WebWiki,
             URL="http://www.eventghost.org/wiki/"
         )
+        hypelink3.SetFont(font)
         
         animatedWindow = eg.AnimatedWindow(self)
         animatedWindow.SetBackgroundColour(backgroundColour)
@@ -163,10 +169,29 @@ class Panel1(wx.Panel):
 
 
 
-class Panel2(wx.Panel):
+class HtmlPanel(wx.Panel):
+    
+    def __init__(self, parent, html):
+        wx.Panel.__init__(self, parent)
+        htmlWindow = eg.HtmlWindow(
+            self, 
+            style=wx.SUNKEN_BORDER|wx.html.HW_NO_SELECTION
+        )
+        htmlWindow.SetForegroundColour(eg.colour.windowText)
+        htmlWindow.SetBackgroundColour(eg.colour.windowBackground)
+        htmlWindow.SetPage(html)
+        htmlWindow.SetMinSize((480, 270))
+        htmlWindow.SetScrollbars(1, 1, 1000, 1000)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(htmlWindow, 1, wx.EXPAND, 5)
+        self.SetSizerAndFit(sizer)
+        self.htmlWindow = htmlWindow
+        
+
+
+class SpecialThanksPanel(HtmlPanel):
     
     def __init__(self, parent):        
-        wx.Panel.__init__(self, parent)
 
         output = StringIO()
         write = output.write
@@ -190,39 +215,21 @@ class Panel2(wx.Panel):
         write('</TABLE>')
         contents = output.getvalue()
         output.close()
-        self.CreateHtmlWindow(contents)
-        
-        
-    def CreateHtmlWindow(self, html):
-        htmlWindow = eg.HtmlWindow(
-            self, 
-            style=wx.SUNKEN_BORDER|wx.html.HW_NO_SELECTION
-        )
-        htmlWindow.SetForegroundColour(eg.colour.windowText)
-        htmlWindow.SetBackgroundColour(eg.colour.windowBackground)
-        htmlWindow.SetPage(html)
-        htmlWindow.SetMinSize((460, 270))
-        htmlWindow.SetScrollbars(1, 1, 1000, 1000)
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(htmlWindow, 1, wx.EXPAND, 5)
-        self.SetSizerAndFit(sizer)
-        return htmlWindow
+        HtmlPanel.__init__(self, parent, contents)
         
     
         
         
-class Panel3(Panel2):        
+class LicensePanel(HtmlPanel):        
     
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent)
-        self.CreateHtmlWindow(eg.License)
+        HtmlPanel.__init__(self, parent, eg.License)
         
 
 
-class Panel4(Panel2):
+class SystemInfoPanel(HtmlPanel):
     
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent)
         compileTime = time.strftime(
             Text.CreationDate, 
             time.gmtime(eg.Version.compileTime)
@@ -242,10 +249,9 @@ class Panel4(Panel2):
                 for sysInfo in self.sysInfos]
         )
             
-        sysinfoHtml = self.CreateHtmlWindow("<table>%s</table>" % sysInfoTemplate)
-        sysinfoHtml.Bind(wx.EVT_RIGHT_DOWN, self.OnRightClick)
-        sysinfoHtml.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
-        self.sysinfoHtml = sysinfoHtml
+        HtmlPanel.__init__(self, parent, "<table>%s</table>" % sysInfoTemplate)
+        self.htmlWindow.Bind(wx.EVT_RIGHT_DOWN, self.OnRightClick)
+        self.htmlWindow.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
         
         self.contextMenu = eg.Menu(self, "EditMenu", eg.text.MainFrame.Menu)
         self.contextMenu.AddItem("Copy")
@@ -278,10 +284,9 @@ class Panel4(Panel2):
 
      
         
-class ChangelogPanel(Panel2):
+class ChangelogPanel(HtmlPanel):
     
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent)
         try:
             fd = open("CHANGELOG.TXT")
         except:
@@ -310,7 +315,7 @@ class ChangelogPanel(Panel2):
                 res.append(headerTemplate % line)
         res.append("</TABLE>")
         fd.close()
-        self.CreateHtmlWindow("".join(res))
+        HtmlPanel.__init__(self, parent, "".join(res))
 
 
 
@@ -324,13 +329,13 @@ class AboutDialog(eg.Dialog):
             Text.Title,
             style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER 
         )
-        notebook = wx.Notebook(self)
-        notebook.AddPage(Panel1(notebook), Text.tabAbout)
-        notebook.AddPage(Panel2(notebook), Text.tabSpecialThanks)
-        notebook.AddPage(Panel3(notebook), Text.tabLicense)
-        notebook.AddPage(Panel4(notebook), Text.tabSystemInfo)
+        notebook = self.notebook = wx.Notebook(self)
+        notebook.AddPage(AboutPanel(notebook), Text.tabAbout)
+        notebook.AddPage(SpecialThanksPanel(notebook), Text.tabSpecialThanks)
+        notebook.AddPage(LicensePanel(notebook), Text.tabLicense)
+        notebook.AddPage(SystemInfoPanel(notebook), Text.tabSystemInfo)
         notebook.AddPage(ChangelogPanel(notebook), Text.tabChangelog)
-
+        notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnPageChanged)
         okButton = wx.Button(self, wx.ID_OK, eg.text.General.ok)
         okButton.SetDefault()
 
@@ -351,8 +356,13 @@ class AboutDialog(eg.Dialog):
 
         self.SetSizerAndFit(mainSizer)
         self.SetMinSize(self.GetSize())
-        
         okButton.Bind(wx.EVT_BUTTON, self.OnClose)
+        
+    
+    def OnPageChanged(self, event):
+        pageNum = event.GetSelection()
+        self.notebook.ChangeSelection(pageNum)
+        self.notebook.GetPage(pageNum).SetFocus()
         
         
     @eg.LogIt

@@ -55,11 +55,14 @@ class DirectoryWatcher(eg.PluginClass):
     def __start__(self, path, includeSubdirs):
         self.stopEvent = win32event.CreateEvent(None, 1, 0, None)
         self.path = path
+        self.startException = None
         self.includeSubdirs = includeSubdirs
         startupEvent = threading.Event()
         self.thread = threading.Thread(target=self.ThreadLoop, name="DirectoryWatcherThread", args=(startupEvent,))
         self.thread.start()
         startupEvent.wait(3)
+        if self.startException is not None:
+            raise self.Exception(self.startException[2])
         
         
     def __stop__(self):
@@ -113,7 +116,7 @@ class DirectoryWatcher(eg.PluginClass):
                     None
                 )
             except pywintypes.error, e:
-                self.PrintError(e[2])
+                self.startException = e
                 startupEvent.set()
                 return
             overlapped = win32file.OVERLAPPED()
@@ -177,7 +180,7 @@ class DirectoryWatcher(eg.PluginClass):
 
         while panel.Affirmed():
             panel.SetResult(
-                dirpathCtrl.GetValue(),
+                dirpathCtrl.GetValue(), 
                 includeSubdirsCB.GetValue(),
             )
     

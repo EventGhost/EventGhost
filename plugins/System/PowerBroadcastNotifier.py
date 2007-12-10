@@ -60,6 +60,8 @@ class PowerBroadcastNotifier:
         
     @eg.LogIt
     def OnPowerBroadcast(self, hwnd, msg, wparam, lparam):
+        if wparam == win32con.PBT_APMRESUMEAUTOMATIC:
+            eg.actionThread.CallWait(eg.actionThread.OnComputerResume)
         msg = PbtMessages.get(wparam, None)
         if msg is not None:
             eg.eventThread.TriggerEventWait(
@@ -67,4 +69,6 @@ class PowerBroadcastNotifier:
                 prefix="System", 
                 source=self.plugin
             )
+        if wparam == win32con.PBT_APMSUSPEND:
+            eg.actionThread.CallWait(eg.actionThread.OnComputerSuspend)
         return 1

@@ -29,19 +29,7 @@ import asyncore
 import socket
 import locale
 
-class ResultDescriptor(object):
-    def __init__(self):
-        self.data = None
-        
-    def __set__(self, instance, value):
-        self.data = value
-        #print value
-        
-    def __get__(self, instance, owner):
-        return self.data
-    
-    
-    
+
 class EventGhost(object):
     
     def result_fget(self):
