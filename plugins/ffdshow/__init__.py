@@ -326,13 +326,19 @@ class IntegerAction(eg.ActionClass):
             event.Skip()
             
         def OnSlider(event):
-            self.tempValue = event.GetEventObject().GetValue()
+            val = event.GetEventObject().GetValue()
+            if val != self.tempValue:
+                panel.SetIsDirty()
+            self.tempValue = val
             valueCtrl.SetValue(self.tempValue)
             valueCtrl2.SetValue(self.tempValue)
             event.Skip()
         
         def OnSpin(event):
-            self.tempValue = event.GetEventObject().GetValue()
+            val = event.GetEventObject().GetValue()
+            if val != self.tempValue:
+                panel.SetIsDirty()
+            self.tempValue = val
             valueCtrl.SetValue(self.tempValue)
             valueCtrl2.SetValue(self.tempValue)
             event.Skip()
