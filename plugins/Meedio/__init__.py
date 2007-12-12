@@ -35,7 +35,7 @@ import win32gui
 def controlMeedio(inputVal):
     try:
       hMeedioWnd = win32gui.FindWindow('H2-WM-COMMAND', None)
-      eg.result = win32gui.SendMessage(hMeedioWnd, 273, inputVal, 0)
+      return win32gui.SendMessage(hMeedioWnd, 273, inputVal, 0)
     except Exception:
       pass
 

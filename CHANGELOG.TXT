@@ -1,3 +1,5 @@
++ FindWindow now shows a list of the found windows if the test button is pressed.
++ PlayStation 3 Bluetooth Remote plugin from Thierry Couquillou.
 
 Version 0.3.6.1248 (12/10/2007)
 + The apply button of all action/plugin configuration dialogs now stays disabled till the user actually has changed a control in the dialog.

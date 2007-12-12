@@ -62,6 +62,7 @@ eg.RegisterPlugin(
     author = "Thierry Couquillou (based on the HID code of Bartman)",
     version = "2.0.1",
     kind = "remote",
+    url="http://www.eventghost.org/forum/viewtopic.php?t=640",
     description = (
         "Hardware plugin for the PS3 Bluetooth Remote"
         "\n\n<p>" + README.replace("\n", "<br>")

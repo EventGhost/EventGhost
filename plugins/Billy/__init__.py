@@ -152,6 +152,7 @@ Actions = ((
     ("LoadFav9","Load Favorite 9","Load Favorite playlist 9.",u'{Ctrl+9}'),
 ))
 
+FindBilly = eg.WindowMatcher(u'Billy.exe', u'{*}Billy{*}', u'TAppBilly', None, None, 1, True, 0.0, 0)
 
 # Now we can start to define the plugin by subclassing eg.PluginClass
 class Billy(eg.PluginClass):
@@ -189,9 +190,9 @@ class Billy(eg.PluginClass):
                     HotKey=tmpHotKey
                     # Every action needs a workhorse.
                     def __call__(self):
-                        handle = self.plugin.FindBilly()
-                        if len(handle) != 0:
-                            eg.plugins.Window.SendKeys(self.HotKey, False)
+                        hwnds = FindBilly()
+                        if len(hwnds) != 0:
+                            eg.SendKeys(hwnds[0], self.HotKey, False)
                         else:
                             self.PrintError(self.plugin.text.text1)
                         return
@@ -204,8 +205,8 @@ class Billy(eg.PluginClass):
                 group.AddAction(tmpActionClass)
 
     def __start__(self, BillyPath=None):
-        self.BillyPath = BillyPath
-        self.FindBilly=eg.plugins.Window.FindWindow.Compile(u'Billy.exe', u'{*}Billy{*}', u'TAppBilly', None, None, 1, True, 1.0, 0)                 
+        self.BillyPath = BillyPath    
+                     
     def Configure(self, BillyPath=None):
         if BillyPath is None:
             BillyPath = os.path.join(

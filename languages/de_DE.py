@@ -425,7 +425,7 @@ class Plugin:
             description = u'Schlie\xdft Anwendungs-Fenster'
         class FindWindow:
             name = u'Finde Fenster'
-            description = u'Sucht ein Fenster, welches dann f\xfcr weitere Befehle der Fenster-Gruppe als Ziel definiert wird.'
+            description = u'Sucht ein oder mehrere Fenster, welche dann f\xfcr weitere Befehle der Fenster-Gruppe als Ziel definiert werden.\n\n<p>Wenn ein Makro keinen "Finde Fenster" Befehl besitzt, werden alle Fenster Befehle dieses Makros nur auf das vorderste Fenster zielen.\n<p>In den Textfeldern k\xf6nnen Sie die in geschweifte Klammern gesetzten Platzhalter {*} f\xfcr beliebiger Zeichenfolgen und/oder {?} f\xfcr genau ein Zeichen verwenden.'
             drag1 = u'Ziehe mich auf\nein Fenster.'
             drag2 = u'Nun bewege mich\nauf ein Fenster.'
             hide_box = u'Verstecke EventGhost beim Ziehen'

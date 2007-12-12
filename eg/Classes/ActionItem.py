@@ -128,7 +128,11 @@ class ActionItem(TreeItem):
     def SetArgs(self, args):
         if self.args != args:
             self.args = args
-            self.compiled = self.executable.Compile(*args)
+            try:
+                self.compiled = self.executable.Compile(*args)
+            except:
+                eg.PrintTraceback(source=self)
+                self.compiled = None
             #self.Refresh()
         
         

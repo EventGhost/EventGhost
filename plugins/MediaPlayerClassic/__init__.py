@@ -183,7 +183,7 @@ MyActionList = (
 
 from win32gui import FindWindow, SendMessageTimeout 
 from win32con import WM_COMMAND, SMTO_ABORTIFHUNG, SMTO_NORMAL
-
+SMTO_FLAGS = SMTO_ABORTIFHUNG | SMTO_NORMAL
 
 
 class MyActionTemplate(eg.ActionClass):
@@ -196,13 +196,12 @@ class MyActionTemplate(eg.ActionClass):
                 WM_COMMAND, 
                 self.value, 
                 0, 
-                SMTO_ABORTIFHUNG|SMTO_NORMAL, 
+                SMTO_FLAGS, 
                 1000
             )
             return result
         except:
-            eg.PrintError("MediaPlayerClassic not running") 
-            return None
+            raise self.Exceptions.ProgramNotRunning
     
 
 

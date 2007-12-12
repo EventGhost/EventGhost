@@ -110,9 +110,8 @@ ACTIONS = [
 
 from win32gui import SendMessageTimeout
 from win32con import SMTO_ABORTIFHUNG, SMTO_NORMAL
-from pluginImport.Window.FindWindow import WindowMatcher
 
-MyWindowMatcher = WindowMatcher("MediaPortal.exe").Enumerate
+MyWindowMatcher = eg.WindowMatcher("MediaPortal.exe")
 
 
 
@@ -130,7 +129,7 @@ class ActionPrototype(eg.ActionClass):
                 1000
             )[1]
         except:
-            self.PrintError("MediaPortal is not running!")
+            raise self.Excpetions.ProgramNotRunning
 
 
 

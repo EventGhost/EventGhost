@@ -20,7 +20,6 @@
 # $LastChangedRevision: 242 $
 # $LastChangedBy: bitmonster $
 
-import types
 
 class Text(eg.TranslatableStrings):
     DriverNotFound = "Driver not found!"

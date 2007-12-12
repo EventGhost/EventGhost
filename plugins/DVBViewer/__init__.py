@@ -306,6 +306,10 @@ class DvbViewerWorkerThread(eg.ThreadWorker):
         del self.dvbviewer
         self.plugin.workerThread = None
 
+
+MyWindowMatcher = eg.WindowMatcher(
+    'DVBViewer.exe', None, 'TfrmMain', None, None, 1, True, 0.0, 0
+)
     
     
 class DVBViewer(eg.PluginClass):
@@ -333,8 +337,6 @@ class DVBViewer(eg.PluginClass):
             
     def __start__(self, useSendMessage=False):
         if useSendMessage:
-            self.SearchWindowProc = eg.plugins.Window.FindWindow.Compile(
-                'DVBViewer.exe', None, 'TfrmMain', None, None, 1, True, 0.0, 0)
             self.SendCommand = self.SendCommandThroughSendMessage
         else:
             self.SendCommand = self.SendCommandThroughCOM
@@ -346,7 +348,7 @@ class DVBViewer(eg.PluginClass):
         
         
     def SendCommandThroughSendMessage(self, value):
-        hwnds = self.SearchWindowProc()
+        hwnds = MyWindowMatcher()
         if len(hwnds) == 0:
             self.PrintError(self.text.errorNoWindow)
             return

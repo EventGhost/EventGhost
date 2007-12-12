@@ -45,7 +45,7 @@ import win32con
 import os
 import string
 
-from eg.WinAPI.Utils import BringHwndToFront
+from eg.WinAPI.Utils import BringHwndToFront, CloseHwnd
 from ctypes.dynamic import SendNotifyMessage, GetAncestor, GA_ROOT
 from ctypes.dynamic import PostMessage as Win32_PostMessage
 from ctypes.dynamic import SendMessage as Win32_SendMessage
@@ -214,12 +214,7 @@ class Close(eg.ActionClass):
     
     def __call__(self):
         for hwnd in GetTopLevelOfTargetWindows():
-            SendNotifyMessage(
-                hwnd, 
-                win32con.WM_SYSCOMMAND, 
-                win32con.SC_CLOSE, 
-                0
-            )
+            CloseHwnd(hwnd)
 
 
 

@@ -21,8 +21,6 @@ version="0.2.4"
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
-import eg
-
 eg.RegisterPlugin(
     name = "IrfanView",
     author = "Pako",
@@ -87,6 +85,7 @@ from ConfigParser import SafeConfigParser
 import _winreg
 import win32api
 import locale
+from eg.WinAPI.Utils import CloseHwnd
 myEncoding = locale.getdefaultlocale()[1]
 
 Actions =((#Tuple 0 - most important actions
@@ -221,6 +220,9 @@ Actions =((#Tuple 0 - most important actions
     ("AboutIrfanView",'Show "About IrfanView" dialog','Show "About IrfanView" dialog.',u'{A}'),
 ))
 
+FindIrfanView = eg.WindowMatcher(
+    u'i_view32.exe', None, u'IrfanView', None, None, 1, False, 0.0, 0
+)
 
 class IrfanView(eg.PluginClass):
     text=Text
@@ -262,9 +264,9 @@ class IrfanView(eg.PluginClass):
                     description = tmpDescription
                     hotKey = tmpHotKey
                     def __call__(self):
-                        handle = self.plugin.FindIrfanView()
-                        if len(handle) != 0:
-                            eg.plugins.Window.SendKeys(self.hotKey, False)
+                        hwnds = FindIrfanView()
+                        if len(hwnds) != 0:
+                            eg.SendKeys(hwnds[0], self.hotKey, False)
                         else:
                             self.PrintError(self.plugin.text.text1)
                         return
@@ -276,10 +278,7 @@ class IrfanView(eg.PluginClass):
             i+=1
 
     def __start__(self, IrfanViewPath=None):
-        self.IrfanViewPath = IrfanViewPath
-        self.FindIrfanView=eg.plugins.Window.FindWindow.Compile(
-            u'i_view32.exe', None, u'IrfanView', None, None, 1, False, 1.0, 0
-        )                 
+        self.IrfanViewPath = IrfanViewPath                 
 
     def Configure(self, IrfanViewPath=None):
         if IrfanViewPath is None:
@@ -1247,9 +1246,9 @@ class Exit(eg.ActionClass):
     name = "Exit"
     description = "Exit."
     def __call__(self):
-        handle = self.plugin.FindIrfanView()
-        if len(handle) != 0:
-            eg.plugins.Window.Close()
+        hwnds = FindIrfanView()
+        if len(hwnds) != 0:
+            CloseHwnd(hwnds[0])
         else:
             self.PrintError(self.plugin.text.text1)
         return

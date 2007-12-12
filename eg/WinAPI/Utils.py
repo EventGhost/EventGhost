@@ -30,7 +30,8 @@ from ctypes.dynamic import (
     AttachThreadInput, GA_ROOT, PtVisible, SaveDC, RestoreDC, SetROP2,
     GetAncestor, Rectangle, IsWindow, IsIconic, SW_RESTORE,
     ShowWindow, BringWindowToTop, UpdateWindow, GetForegroundWindow, 
-    InvalidateRect, GetCurrentThreadId, GetWindowThreadProcessId, SW_SHOWNA
+    InvalidateRect, GetCurrentThreadId, GetWindowThreadProcessId, SW_SHOWNA,
+    SendNotifyMessage,
 )
 
 
@@ -68,7 +69,10 @@ def BringHwndToFront(hwnd, invalidate=True):
 #    BringHwndToFront(self.GetHandle())
 #wx.Window.BringHwndToFront = _BringHwndToFront        
 
-
+def CloseHwnd(hwnd):
+    SendNotifyMessage(hwnd, win32con.WM_SYSCOMMAND, win32con.SC_CLOSE, 0)
+    
+    
 from ctypes.dynamic import EnumDisplayMonitors, MONITORENUMPROC
 
 def GetMonitorDimensions():
@@ -99,11 +103,9 @@ from win32gui import (
     GetParent
 )
 
-from wx import NullIcon
 
-
-def _GetAllWindowChildren_EnumProc(hwnd, data):
-    data.append(hwnd)
+def _GetAllWindowChildren_EnumProc(hwnd, add):
+    add(hwnd)
     return True
 
 
@@ -112,7 +114,7 @@ def GetAllWindowChildren(hwnd):
     """
     data = []
     try:
-        EnumChildWindows(hwnd, _GetAllWindowChildren_EnumProc, data)
+        EnumChildWindows(hwnd, _GetAllWindowChildren_EnumProc, data.append)
     except win32gui.error, exception:
         data = []
     return data
@@ -215,7 +217,7 @@ def GetHwndIcon(hwnd):
             if hicon < 10:
                 hicon = GetClassLong(hwnd, GCL_HICON)
     if hicon != 0:
-        icon = NullIcon
+        icon = wx.NullIcon
         icon.SetHandle(hicon)
         icon.SetSize((16,16))
         return icon
@@ -285,55 +287,34 @@ def GetHwndChildren(hwnd, invisible):
 from win32api import OpenProcess, CloseHandle
 from win32process import GetModuleFileNameEx, EnumProcesses
 
-_GetNameOfPID_FLAGS = (
-    win32con.PROCESS_QUERY_INFORMATION|win32con.PROCESS_VM_READ
-)
 
 def GetNameOfPID(pid):
     try:
-        handle = OpenProcess(_GetNameOfPID_FLAGS, False, pid)
+        # 1040 = PROCESS_QUERY_INFORMATION|PROCESS_VM_READ
+        hProcess = OpenProcess(1040, False, pid)
     except:
         return ""
     try:
-        exe = GetModuleFileNameEx(handle, 0)
+        return GetModuleFileNameEx(hProcess, 0)
     except:
-        exe = ""
-    CloseHandle(handle)
-    return exe
+        return ""
+    finally:
+        CloseHandle(hProcess)
     
     
 from os.path import basename
 
-def GetModulesPID(exeName):
-    result = []
-    processes = EnumProcesses()
-    for pid in processes:
-        try:
-            # 1040 = PROCESS_QUERY_INFORMATION|PROCESS_VM_READ
-            handle = OpenProcess(1040, False, pid)
-        except:
-            continue
-        try:
-            exe = GetModuleFileNameEx(handle, 0)
-        except:
-            exe = ""
-        CloseHandle(handle)
-        if exeName == basename(exe):
-            result.append(pid)
-    return result
-
-
-
 def GetHwndProcessName(hwnd):
     pid = win32process.GetWindowThreadProcessId(hwnd)[1]
     try:
-        handle = OpenProcess(_GetNameOfPID_FLAGS, False, pid)
+        # 1040 = PROCESS_QUERY_INFORMATION|PROCESS_VM_READ
+        hProcess = OpenProcess(1040, False, pid)
     except:
         return ""
     try:
-        exe = GetModuleFileNameEx(handle, 0)
+        return basename(GetModuleFileNameEx(hProcess, 0))
     except:
-        exe = ""
-    CloseHandle(handle)
-    return basename(exe)
+        return ""
+    finally:
+        CloseHandle(hProcess)
     

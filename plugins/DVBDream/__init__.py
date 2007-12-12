@@ -19,42 +19,19 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-import eg
-
 eg.RegisterPlugin(
     name = "DVB Dream",
     author = "townkat",
-    version = "2" ,
+    version = "4" ,
     kind = "program",
     createMacrosOnAdd = True,
     description = (
         'Adds actions to control '
-        '<a href="http://www.dvbdream.org">'
-        'DVB Dream</a>.'
+        '<a href="http://www.dvbdream.org">DVB Dream</a>.'
         '\n\n<p>'
-        'Tested with DVB Dream 1.4d'
-        '\n\n<p>'
-        'In DVB Dream Select:'
-        '\n'
+        'Tested with DVB Dream 1.4d<p>'
+        'In DVB Dream Select:<br>'
         'Options->Remote->RemoteControlType->Native'
-    ),
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=612",
-    icon = (
-        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAAXNSR0IArs4c6QAAAARn"
-        "QU1BAACxjwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdw"
-        "nLpRPAAAAklJREFUOE+Vkt1PUnEYx+m6f6B1059Qrbtu20RraytnLa3GlktqeqGzVlHZ"
-        "IjIXp5klGqaB8bqABOTFFhDIm0dEOJzDISXAAwUY76/iHKdDMKZNL3qunn2f3+f3e37f"
-        "fQ/hOE76rypXdiQa8MMcSJD1WljCtGafRIc2ld0NKVvYYnHkBqP16uAUTw0BXNPikqeQ"
-        "iQ+8kOwPEOrkJ7CTQj1ybrqzl+lygkIBHwv9oI8rDgSIQQvlZeuVfqKBYY/X690uZY63"
-        "M1lyPyCCARHySowwPkKhaL724fo11x8IUcRlMOhjsZgHcvuDYTTwC/Fj3mBkLRj+HtgI"
-        "hyN3AGU6X6kBClPAsrLmQxEMwxAESUVDHXQzoIlNmtMCV6mbHz1Jg1oeO6UqcyZbIlVx"
-        "/K3Q8ncZeNXpmJdLgz7H5ScWsS0hsKa+eLL9vBCZDp25a+OKtZn8FimTLyt0rkwytqBW"
-        "3BtiHm0do7P1XTTjqCzwRrmhXfn9TOTveu44TdHOiDWEpbWV+obnbt1/Tb45sYxupou4"
-        "VG3teGo/3K47RrWdH0FujKMXGaunegxTfGUDaNoXiBZG+dboz7BqOf5eHxfZkyIwxTHF"
-        "WdrI7FeMxZX/C/Qw5nG8mkomsqnNddS9jkKwC0Tc4MS7GfY098SF4WKl2rC1/sgjQOiw"
-        "L1rMRtM33c52OZlM5HK5YDBQKhbaBrX1M3uAgTEj+fbs2T5+Wy9vhK2EIAiBIRiGOGJV"
-        "91AjKXuA3VmwejYv0ZRUuuzaw88sGdQcHQjsGyRC/AMHw0nBpbiPVAAAAABJRU5ErkJg"
-        "gg=="
     ),
 )
     
@@ -72,10 +49,10 @@ MyActionList = (
     ('Seven', 'Seven', None, 10),
     ('Eight', 'Eight', None, 11),
     ('Nine', 'Nine', None, 12),
-    ('ChUp', 'ChUp', None, 13),
-    ('ChDn', 'ChDn', None, 14),
-    ('VolumeDn', 'VolumeDn', None, 15),
-    ('VolumeUp', 'VolumeUp', None, 16),
+    ('ChUp', 'Channel Up', None, 13),
+    ('ChDn', 'Channel Down', None, 14),
+    ('VolumeUp', 'Volume Up', None, 16),
+    ('VolumeDn', 'Volume Down', None, 15),
     ('Ok', 'Ok', None, 17),
     ('Record', 'Record', None, 18),
     ('Recall', 'Recall', None, 19),
@@ -84,15 +61,15 @@ MyActionList = (
     ('EPG', 'EPG', None, 22),
     ('Tab', 'Tab', None, 23),
     ('Info', 'Info', None, 24),
-    ('Optional1', 'Optional1', None, 25),
-    ('Optional2', 'Optional2', None, 26),
-    ('Optional3', 'Optional3', None, 27),
-    ('Optional4', 'Optional4', None, 28),
-    ('Optional5', 'Optional5', None, 29),
-    ('Optional6', 'Optional6', None, 30),
-    ('Optional7', 'Optional7', None, 31),
-    ('Optional8', 'Optional8', None, 32),
-    ('Optional9', 'Optional9', None, 33),
+    ('Optional1', 'Optional 1', None, 25),
+    ('Optional2', 'Optional 2', None, 26),
+    ('Optional3', 'Optional 3', None, 27),
+    ('Optional4', 'Optional 4', None, 28),
+    ('Optional5', 'Optional 5', None, 29),
+    ('Optional6', 'Optional 6', None, 30),
+    ('Optional7', 'Optional 7', None, 31),
+    ('Optional8', 'Optional 8', None, 32),
+    ('Optional9', 'Optional 9', None, 33),
     ('Play', 'Play', None, 34),
     ('Stop', 'Stop', None, 35),
     ('Forward', 'Forward', None, 36),
@@ -105,34 +82,30 @@ MyActionList = (
     ('Yellow', 'Yellow', None, 43),
     ('Blue', 'Blue', None, 44),
     ('Radio', 'Radio', None, 45),
-    ('RecordList', 'RecordList', None, 46),
+    ('RecordList', 'Record List', None, 46),
     ('Exit', 'Exit', None, 47),
 )
 
 
-from win32gui import FindWindow, SendMessageTimeout 
+from win32gui import SendMessageTimeout 
 from win32con import SMTO_ABORTIFHUNG, SMTO_NORMAL
-from pluginImport.Window.FindWindow import WindowMatcher
 
-MyWindowMatcher = WindowMatcher("dvbdream.exe").Enumerate
-
-
+SMTO_FLAGS = SMTO_ABORTIFHUNG | SMTO_NORMAL
+MyWindowMatcher = eg.WindowMatcher(
+    u'dvbdream.exe', None, u'Tfmain', None, None, None, True, 0.0, 0
+) 
 
 class MyActionTemplate(eg.ActionClass):
     
     def __call__(self):
+        hwnds = MyWindowMatcher()
+        if len(hwnds) == 0:
+            raise self.Exceptions.ProgramNotRunning
         try:
-            hwnd = MyWindowMatcher()[0]
-            return SendMessageTimeout(
-                hwnd, 
-                1347, 
-                0, 
-                self.value, 
-                SMTO_ABORTIFHUNG|SMTO_NORMAL, 
-                1000
-            )[1]
+    	    for hwnd in hwnds:           
+            	SendMessageTimeout(hwnd, 1347, 0, self.value, SMTO_FLAGS, 1000)	
         except:
-            self.PrintError("DVB Dream not running")
+            raise self.Exceptions.ProgramNotRunning
     
 
 

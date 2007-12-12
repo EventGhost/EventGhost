@@ -22,11 +22,11 @@
 
 
 from eg.WinAPI.Utils import HighlightWindow, BestWindowFromPoint
-import win32api
-import win32gui
+from win32api import GetCurrentProcessId
+from win32gui import GetCursorPos
 from win32process import GetWindowThreadProcessId
 
-ourProcessID = win32api.GetCurrentProcessId()
+ourProcessID = GetCurrentProcessId()
 
 
 class WindowDragFinder(wx.PyWindow):
@@ -136,7 +136,7 @@ class WindowDragFinder(wx.PyWindow):
 
     def OnDrag(self, event):
         # get the mouse coordinates
-        point = win32gui.GetCursorPos()
+        point = GetCursorPos()
         # find the window under cursor
         hwnd = BestWindowFromPoint(point)
         # do we have targeted a new window?

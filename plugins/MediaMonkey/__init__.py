@@ -65,6 +65,7 @@ eg.RegisterPlugin(
         
 import wx
 from win32com.client import Dispatch
+from eg.WinAPI.Utils import CloseHwnd
 #import new
 
 
@@ -186,6 +187,18 @@ class Start(eg.ActionClass):
         self.plugin.MM.ShutdownAfterDisconnect=False
 
 #====================================================================
+MyWindowMatcher = eg.WindowMatcher(
+    u'MediaMonkey.exe',
+    u'{*}MediaMonkey{*}',
+    u'TFMainWindow',
+    None,
+    None,
+    1,
+    True,
+    0,
+    0
+)
+
 class Exit(eg.ActionClass):
     name = "Exit MediaMonkey"
     description = "Exit MediaMonkey."
@@ -196,18 +209,12 @@ class Exit(eg.ActionClass):
                 del self.plugin.MM
         except:
             pass
-        eg.plugins.Window.FindWindow(
-            u'MediaMonkey.exe',
-            u'{*}MediaMonkey{*}',
-            u'TFMainWindow',
-            None,
-            None,
-            1,
-            True,
-            1.0,
-            0
-        )
-        eg.plugins.Window.Close()
+        hwnds = MyWindowMatcher()
+        if hwnds:
+            CloseHwnd(hwnds[0])
+        else:
+            raise self.Exceptions.ProgramNotRunning
+        
 
 #====================================================================
 class Play(eg.ActionClass):

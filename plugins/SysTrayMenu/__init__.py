@@ -210,7 +210,7 @@ class SysTrayMenu(eg.PluginClass):
     
     def Configure(self, menuData=[]):
         menuData = self.Compile(menuData)
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel(self, resizeable=True)
         text = self.text
         
         tree = MenuTreeListCtrl(panel, text, menuData)

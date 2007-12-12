@@ -20,14 +20,10 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import os, sys, time
-import win32api, win32con
-import types
-import cStringIO
-import locale
-
-from win32process import EnumProcesses, GetModuleFileNameEx
-from os.path import basename
+from time import sleep
+from win32api import GetCurrentProcessId
+from win32process import EnumProcesses
+from os.path import basename, join, dirname
 from win32gui import (
     EnumWindows, 
     EnumChildWindows, 
@@ -38,199 +34,34 @@ from win32gui import (
 from win32process import GetWindowThreadProcessId
 
 from ctypes.dynamic import GetAncestor, GA_ROOT, GA_PARENT
-from eg.WinAPI.Utils import GetHwndIcon, GetHwndChildren, HwndHasChildren
-from eg.WinAPI.Utils import HighlightWindow
-from eg.WinAPI.Utils import GetModulesPID, GetNameOfPID, GetHwndProcessName
-
-# imports local to plugin
-from CompileString import CompileString
+from eg.WinAPI.Utils import (
+    GetHwndIcon, 
+    GetHwndChildren, 
+    HwndHasChildren,
+    HighlightWindow,
+    GetNameOfPID, 
+)
         
 
-GetIcon = eg.Icons.GetIcon
-ourProcessID = win32api.GetCurrentProcessId()
-systemEncoding = locale.getdefaultlocale()[1]
+ourProcessID = GetCurrentProcessId()
+
+STOP_IF_NOT_FOUND = 0
+STOP_IF_FOUND = 1
+STOP_NEVER = 2
 
 
-def FindWindowByChain(exeName=None, winChain=None, includeInvisible=False):
-    pids = GetModulesPID(basename(exeName))
-    hwnds = []
-    pids_hwnds = []
-    for i in pids:
-        pids_hwnds.append([])
-        
-    def EnumProc(hwnd, data):
-        _, pid = GetWindowThreadProcessId(hwnd)
-        if pid in pids:
-            if not includeInvisible and not IsWindowVisible(hwnd):
-                return True
-            pids_hwnds[pids.index(pid)].append(hwnd)
-        return True
+class TestDialog(eg.Dialog):  
     
-    EnumWindows(EnumProc, None)
+    def __init__(self, parent, hwnds):
+        eg.Dialog.__init__(self, parent, title="Found Windows", size=(500, 200))
+        list = eg.WindowList(self, hwnds)
+        okButton = wx.Button(self, wx.ID_OK)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(list, 1, wx.EXPAND|wx.ALL, 5)
+        sizer.Add(okButton, 0, wx.ALIGN_CENTER|wx.ALL, 5)
+        self.SetSizer(sizer)
         
-    def MatchWindow(hwnds, level, result):
-        titleName, className, count = winChain[level]
-        i = 0
-        for hwnd in hwnds:
-            if titleName != GetWindowText(hwnd):
-                continue
-            if className != GetClassName(hwnd):
-                continue
-            i += 1
-            if count != i:
-                continue
-            if len(winChain) > level + 1:
-                hwnds = GetHwndChildren(hwnd, includeInvisible)
-                MatchWindow(hwnds, level + 1, result)
-                return True
-            else:
-                result.append(hwnd)
-                return True
-        return False
-            
-    result = []
-    for pid in pids:
-        MatchWindow(pids_hwnds[pids.index(pid)], 0, result)
-    return result
 
-
-def FindWindowWait(
-    exeName=None, 
-    winChain=None, 
-    includeInvisible=False, 
-    timeout=0
-):
-    endtime = time.clock() + timeout
-    while 1:
-        hwnds = FindWindowByChain(exeName, winChain, includeInvisible)
-        if hwnds:
-            return hwnds
-        if time.clock() >= endtime:
-            return []
-        eg.Wait(0.1)
-                
-
-
-class WindowMatcher:
-    
-    def __init__(
-        self, 
-        program, 
-        winName=None, 
-        winClass=None, 
-        childName=None,
-        childClass=None, 
-        matchNum=1, 
-        includeInvisible=False, 
-        timeout=0, 
-        stop=2
-    ):
-        self.timeout = timeout
-        self.matchNum = matchNum or 0
-        self.stop = stop
-        dummy = (lambda x: True)
-        if not includeInvisible:
-            self.invisibleMatch = IsWindowVisible
-        else:
-            self.invisibleMatch = dummy
-            
-        def GetMatcher(value):
-            if value is not None:
-                return CompileString(value.encode(systemEncoding)) 
-            else:
-                return dummy
-            
-        if program:
-            program = program.upper()
-        self.program = GetMatcher(program)
-        self.winNameMatch = GetMatcher(winName)
-        self.winClassMatch = GetMatcher(winClass)
-        self.scanChilds = False
-        if (childName is not None) or (childClass is not None):
-            self.scanChilds = True
-            self.childNameMatch = GetMatcher(childName)
-            self.childClassMatch = GetMatcher(childClass)
-    
-    
-    def EnumWindowsProc(self, hwnd, add):
-        if not self.invisibleMatch(hwnd):
-            return True
-        if not self.winClassMatch(GetClassName(hwnd)):
-            return True
-        if not self.winNameMatch(GetWindowText(hwnd)):
-            return True
-        add(hwnd)
-        return True
-    
-    
-    def EnumChildsProc(self, hwnd, add):
-        if not self.invisibleMatch(hwnd):
-            return True
-        if not self.childClassMatch(GetClassName(hwnd)):
-            return True
-        if not self.childNameMatch(GetWindowText(hwnd)):
-            return True
-        add(hwnd)
-        return True
-        
-        
-    def Enumerate(self):
-        topWindowsHwnds = []
-        EnumWindows(self.EnumWindowsProc, topWindowsHwnds.append)
-        match = self.program
-        if match is not None:
-            topWindowsHwnds = [
-                hwnd for hwnd in topWindowsHwnds 
-                    if match(GetHwndProcessName(hwnd).upper())
-            ]
-        if not self.scanChilds:
-            return topWindowsHwnds
-        childHwnds = []
-        for hwnd in topWindowsHwnds:
-            try:
-                EnumChildWindows(
-                    hwnd, self.EnumChildsProc, childHwnds.append
-                )
-            except:
-                raise
-        return childHwnds
-
-
-    def __call__(self):
-        endtime = time.clock() + self.timeout
-        matchNum = self.matchNum
-        while 1:
-            hwnds = self.Enumerate()
-            if matchNum:
-                if len(hwnds) >= matchNum:
-                    hwnds = [hwnds[matchNum-1]]
-                    break
-            elif hwnds:
-                break
-            if time.clock() >= endtime:
-                hwnds = []
-                break
-            eg.Wait(0.1)
-        stop = self.stop
-        if (stop == 0 and not hwnds) or (stop == 1 and hwnds):
-            eg.programCounter = None
-        eg.lastFoundWindows[:] = hwnds
-        return hwnds
-        
-            
-    def Test(self):
-        start = time.clock()
-        res = self.Enumerate()
-        execution_time = time.clock() - start
-        print len(res), res, execution_time
-        
-        
-    if eg.debugLevel:
-        @eg.LogIt
-        def __del__(self):
-            pass
-                
-                
                 
 def UseForegroundWindowOnly():
     """ Instruct EventGhost to use the active desktop window only, by 
@@ -247,7 +78,9 @@ class FindWindow(eg.ActionClass):
         'Searches for a window, which is afterwards used as a target for '
         'further window actions in the macro.\n\n<p>'
         'If a macro has no "Find a window" actions, all window actions will '
-        'target the frontmost window.'
+        'target the frontmost window.<p>'
+        'In the edit boxes you can use the curly brace wildcards {*} to match '
+        'any string sequence and {?} to match a single letter.'
     )
     iconFile = "icons/FindWindow"
     class text:
@@ -293,46 +126,39 @@ class FindWindow(eg.ActionClass):
         matchNum=1, 
         includeInvisible=False, 
         timeout=0, 
-        stop=2
+        stopMacro=STOP_IF_NOT_FOUND
     ):
-        if type(winName) in (types.TupleType, types.ListType):
-            class OldFindWindow:
-                exe_path = program
-                win_chain = winName
-                include_invisible = winClass
-                timeout = childName
-                def __call__(self):
-                    res = FindWindowWait(
-                        self.exe_path, 
-                        self.win_chain,
-                        self.include_invisible, 
-                        self.timeout
-                    )
-                    eg.lastFoundWindows[:] = res
-                    return res
-            return OldFindWindow()
-        else:
-            if stop is None:
-                return UseForegroundWindowOnly
+        if stopMacro is None:
+            return UseForegroundWindowOnly
 
-            return WindowMatcher(
-                program, 
-                winName, 
-                winClass, 
-                childName,
-                childClass, 
-                matchNum, 
-                includeInvisible,
-                timeout, 
-                stop
-            )
+        matcher = eg.WindowMatcher(
+            program, 
+            winName, 
+            winClass, 
+            childName,
+            childClass, 
+            matchNum, 
+            includeInvisible,
+            timeout, 
+        )
+        def Do():
+            hwnds = matcher()
+            if (
+                (stopMacro == STOP_IF_NOT_FOUND and not hwnds) 
+                or (stopMacro == STOP_IF_FOUND and hwnds)
+            ):
+                eg.programCounter = None
+            eg.lastFoundWindows[:] = hwnds
+            return hwnds
+        return Do
+
     
     
     def GetLabel(self, program, *args):
         if args[7] is None:
             return self.text.label2
         else:
-            return self.text.label % os.path.basename(program or '')
+            return self.text.label % basename(program or '')
     
     
     def Configure(
@@ -345,7 +171,7 @@ class FindWindow(eg.ActionClass):
         matchNum=1, 
         includeInvisible=False, 
         timeout=0, 
-        stop=0
+        stop=STOP_IF_NOT_FOUND
     ):
         panel = eg.ConfigPanel(self, resizeable=True)
         text = self.text
@@ -357,19 +183,6 @@ class FindWindow(eg.ActionClass):
             timeout = 0
             stop = 0
             searchOnlyFrontmost = True
-        elif type(winName) in  (types.TupleType, types.ListType):
-            program = basename(program)
-            win_chain = winName
-            includeInvisible = winClass
-            timeout = childName
-            winName = win_chain[0][0]
-            winClass = win_chain[0][1]
-            if len(win_chain) > 1:
-                childName = win_chain[-1][0]
-                childClass = win_chain[-1][1]
-            else:
-                childName = None
-                childClass = None
         self.dialog = panel.dialog
         self.lastHwnd = None
         self.lastPid = None
@@ -431,10 +244,7 @@ class FindWindow(eg.ActionClass):
             tree.SelectHwnd(tmp)
         refreshButton.Bind(wx.EVT_BUTTON, OnButton)
 
-        #-----------------------------------------
         # construction of the layout with sizers
-        #-----------------------------------------
-        
         dragSizer = wx.StaticBoxSizer(
             wx.StaticBox(panel, -1, "Drag Finder"), 
             wx.VERTICAL
@@ -542,7 +352,9 @@ class FindWindow(eg.ActionClass):
 
         # re-assign the test button
         def OnButton(event):
-            WindowMatcher(*GetResult()).Test()
+            args = GetResult()[:-2] # we don't need timeout and stopMacro parameter
+            hwnds = eg.WindowMatcher(*args)()
+            TestDialog(panel.dialog, hwnds).ShowModal()
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
         
         @eg.LogIt
@@ -556,12 +368,12 @@ class FindWindow(eg.ActionClass):
             resultList.append(tree.includeInvisible)
             resultList.append(waitCtrl.GetValue())
             if stopMacroCtrl.IsChecked():
-                resultList.append(0)
+                resultList.append(STOP_IF_NOT_FOUND)
             else:
-                resultList.append(2)
+                resultList.append(STOP_NEVER)
             return resultList
         
-        hwnds = WindowMatcher(
+        hwnds = eg.WindowMatcher(
             program, 
             winName, 
             winClass, 
@@ -569,9 +381,7 @@ class FindWindow(eg.ActionClass):
             childClass, 
             matchNum, 
             includeInvisible,
-            timeout, 
-            stop
-        ).Enumerate()
+        )()
         if matchNum is not None and len(hwnds) >= matchNum:
             self.lastHwnd = hwnds[matchNum-1]
             tree.SelectHwnd(self.lastHwnd)
@@ -718,12 +528,12 @@ class WindowTree(wx.TreeCtrl):
             style=wx.TR_DEFAULT_STYLE|wx.TR_HIDE_ROOT|wx.TR_FULL_ROW_HIGHLIGHT, 
             size=(-1, 150)
         )
-        path = os.path.join(os.path.dirname(__file__), "icons")
+        path = join(dirname(__file__), "icons")
         self.imageList = imageList = wx.ImageList(16, 16)
-        imageList.Add(wx.Bitmap(os.path.join(path, "cwindow.png")))
-        imageList.Add(wx.Bitmap(os.path.join(path, "cedit.png")))
-        imageList.Add(wx.Bitmap(os.path.join(path, "cstatic.png")))
-        imageList.Add(wx.Bitmap(os.path.join(path, "cbutton.png")))
+        imageList.Add(wx.Bitmap(join(path, "cwindow.png")))
+        imageList.Add(wx.Bitmap(join(path, "cedit.png")))
+        imageList.Add(wx.Bitmap(join(path, "cstatic.png")))
+        imageList.Add(wx.Bitmap(join(path, "cbutton.png")))
         self.SetImageList(imageList)
         self.root = self.AddRoot("")
         
@@ -734,7 +544,7 @@ class WindowTree(wx.TreeCtrl):
             hwnd = self.GetPyData(self.GetSelection())
             for i in range(10):
                 HighlightWindow(hwnd)
-                time.sleep(0.1)
+                sleep(0.1)
         menu.Append("Highlight", OnCmdHighlight)
         
         def OnPopupMenu(event):
@@ -796,7 +606,7 @@ class WindowTree(wx.TreeCtrl):
                 if icon:
                     iconIndex = self.imageList.AddIcon(icon)
                     break
-            exe = os.path.basename(GetNameOfPID(pid))
+            exe = basename(GetNameOfPID(pid))
             item = self.AppendItem(self.root, exe)
             self.SetItemHasChildren(item, True)
             self.SetPyData(item, pid)
@@ -909,7 +719,6 @@ class WindowTree(wx.TreeCtrl):
     if eg.debugLevel:
         @eg.LogIt
         def __del__(self):
-            
             pass
         
         

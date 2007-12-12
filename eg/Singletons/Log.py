@@ -155,7 +155,7 @@ class Log:
         self.Write(text + "\n", icon, weakref.ref(item))        
             
             
-    def PrintTraceback(self, msg=None, skip=0):
+    def PrintTraceback(self, msg=None, skip=0, source=None):
         if msg:
             self.PrintError(msg)
         tbType, tbValue, tbTraceback = sys.exc_info() 
@@ -165,7 +165,9 @@ class Log:
         list += traceback.format_exception_only(tbType, tbValue)
         
         error = "".join(list)
-        self.Write(error.rstrip() + "\n", ERROR_ICON, None)
+        if source is not None:
+            source = weakref.ref(source)
+        self.Write(error.rstrip() + "\n", ERROR_ICON, source)
         if eg.debugLevel:
             sys.stderr.write(error)
             
