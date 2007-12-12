@@ -26,6 +26,7 @@ from types import StringTypes
 from time import clock
 from win32gui import EnumWindows, EnumChildWindows, IsWindowVisible
 from win32gui import GetWindowText, GetClassName
+import pywintypes
 from eg.WinAPI.Utils import GetHwndProcessName
 
 
@@ -188,7 +189,10 @@ class WindowMatcher:
             return topWindowsHwnds
         childHwnds = []
         for hwnd in topWindowsHwnds:
-            EnumChildWindows(hwnd, self.EnumChildsProc, childHwnds.append)
+            try:
+                EnumChildWindows(hwnd, self.EnumChildsProc, childHwnds.append)
+            except pywintypes.error:
+                pass
         return childHwnds
 
 
