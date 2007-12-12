@@ -16,9 +16,9 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate: 2007-03-14 16:18:13 +0100 (Mi, 14 Mrz 2007) $
-# $LastChangedRevision: 67 $
-# $LastChangedBy: bitmonster $
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
 
 class TreePosition:
     """ 

@@ -16,9 +16,9 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate: 2007-06-11 17:35:24 +0200 (Mo, 11 Jun 2007) $
-# $LastChangedRevision: 145 $
-# $LastChangedBy: bitmonster $
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
 
 # POWER ON      80 70 C0 3F     
 # POWER OFF     80 70 9F 60     
@@ -94,7 +94,7 @@
 eg.RegisterPlugin(
     name = "Harman Kardon Serial Control",
     author = "Kingtd/Bitmonster",
-    version = "1.0." + "$LastChangedRevision: 145 $".split()[1],
+    version = "1.0." + "$LastChangedRevision$".split()[1],
     description = "Allows control of a Harman Kardon AVR4xx/6xx series receiver through a serial port.",
     kind = "external",
     url = "http://www.eventghost.org/forum/viewtopic.php?t=447",

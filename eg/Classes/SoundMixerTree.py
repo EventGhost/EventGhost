@@ -16,9 +16,9 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate: 2007-09-29 16:57:14 +0200 (Sat, 29 Sep 2007) $
-# $LastChangedRevision: 240 $
-# $LastChangedBy: bitmonster $
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
 
 
 from ctypes.dynamic import (

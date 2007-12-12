@@ -16,16 +16,16 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate: 2007-11-18 21:09:03 +0100 (So, 18 Nov 2007) $
-# $LastChangedRevision: 274 $
-# $LastChangedBy: bitmonster $
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
 
 
 eg.RegisterPlugin(
     name="FHZ 1000 PC",
     kind="external",
     author="Bitmonster",
-    version = "1.0." + "$LastChangedRevision: 229 $".split()[1],    
+    version = "1.0." + "$LastChangedRevision$".split()[1],    
 )
 
 import time

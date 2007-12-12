@@ -16,9 +16,9 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate: 2007-07-27 18:08:37 +0200 (Fri, 27 Jul 2007) $
-# $LastChangedRevision: 192 $
-# $LastChangedBy: bitmonster $
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
 
 from time import clock, time
 from heapq import heappush, heapify, heappop

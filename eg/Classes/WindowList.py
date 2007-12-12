@@ -16,9 +16,9 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate: 2007-11-18 21:09:03 +0100 (So, 18 Nov 2007) $
-# $LastChangedRevision: 274 $
-# $LastChangedBy: bitmonster $
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
 
 import sys
 import wx.lib.mixins.listctrl as listmix

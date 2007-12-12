@@ -16,15 +16,15 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate: 2007-07-25 05:07:21 +0200 (Mi, 25 Jul 2007) $
-# $LastChangedRevision: 187 $
-# $LastChangedBy: bitmonster $
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
 
 
 eg.RegisterPlugin(
     name = "Desktop Remote",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision: 187 $".split()[1],
+    version = "1.0." + "$LastChangedRevision$".split()[1],
     canMultiLoad = True,
     url = "http://www.eventghost.org/forum/viewtopic.php?t=513",
     description = (
