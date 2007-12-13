@@ -165,13 +165,14 @@ class EventGhost(object):
         eg.ClosePlugin = ClosePlugin
 
         # replace builtin input and raw_input with a small dialog
-#        from Dialogs.SimpleInputDialog import (
-#            GetSimpleRawInput, 
-#            GetSimpleInput
-#        )
-#        sys.modules['__builtin__'].raw_input = GetSimpleRawInput
-#        sys.modules['__builtin__'].input = GetSimpleInput
+        def raw_input(prompt=None):
+            return eg.CallWait(eg.SimpleInputDialog.CreateModal, prompt)
+        __builtin__.raw_input = raw_input
 
+        def input(prompt=None):
+            return eval(raw_input(prompt))
+        __builtin__.input = input
+        
         # TODO: make this lazy imports
         from eg.WinAPI.serial import Serial
         eg.SerialPort = Serial
