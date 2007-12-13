@@ -140,6 +140,126 @@ fnList = (
         "Run foobar with its default settings.", 
         None
     ),
+    (
+        "SeekAhead1s", 
+        "Seek ahead by 1 second", 
+        "Seek ahead by 1 second.", 
+        '/command:"Seek ahead by 1 second"'
+    ),
+    (
+        "VolumeUp", 
+        "Volume Up", 
+        "Turn Volume Up.", 
+        '/command:"Volume up"'
+    ),
+    (
+        "VolumeDown", 
+        "Volume Down", 
+        "Turn Volume Down.", 
+        '/command:"Volume down"'
+    ),
+    (
+        "VolumeMute", 
+        "Volume Mute", 
+        "Turn Volume Mute.", 
+        '/command:"Volume mute"'
+    ),
+    (
+        "SeekAhead1s", 
+        "Seek ahead by 1 seconds", 
+        "Seek ahead by 1 seconds.", 
+        '/command:"Seek ahead by 1 seconds"'
+    ),
+    (
+        "SeekAhead5s", 
+        "Seek ahead by 5 seconds", 
+        "Seek ahead by 5 seconds.", 
+        '/command:"Seek ahead by 5 seconds"'
+    ),
+    (
+        "SeekAhead10s", 
+        "Seek ahead by 10 seconds", 
+        "Seek ahead by 10 seconds.", 
+        '/command:"Seek ahead by 10 seconds"'
+    ),
+    (
+        "SeekAhead30s", 
+        "Seek ahead by 30 seconds", 
+        "Seek ahead by 30 seconds.", 
+        '/command:"Seek ahead by 30 seconds"'
+    ),
+    (
+        "SeekAhead1m", 
+        "Seek ahead by 1 minute", 
+        "Seek ahead by 1 minute.", 
+        '/command:"Seek ahead by 1 minute"'
+    ),
+    (
+        "SeekAhead2m", 
+        "Seek ahead by 2 minute", 
+        "Seek ahead by 2 minute.", 
+        '/command:"Seek ahead by 2 minute"'
+    ),
+    (
+        "SeekAhead5m", 
+        "Seek ahead by 5 minute", 
+        "Seek ahead by 5 minute.", 
+        '/command:"Seek ahead by 5 minute"'
+    ),
+    (
+        "SeekAhead10m", 
+        "Seek ahead by 10 minute", 
+        "Seek ahead by 10 minute.", 
+        '/command:"Seek ahead by 10 minute"'
+    ),
+    (
+        "SeekBack1s", 
+        "Seek back by 1 seconds", 
+        "Seek back by 1 seconds.", 
+        '/command:"Seek back by 1 seconds"'
+    ),
+    (
+        "SeekBack5s", 
+        "Seek back by 5 seconds", 
+        "Seek back by 5 seconds.", 
+        '/command:"Seek back by 5 seconds"'
+    ),
+    (
+        "SeekBack10s", 
+        "Seek back by 10 seconds", 
+        "Seek back by 10 seconds.", 
+        '/command:"Seek back by 10 seconds"'
+    ),
+    (
+        "SeekBack30s", 
+        "Seek back by 30 seconds", 
+        "Seek back by 30 seconds.", 
+        '/command:"Seek back by 30 seconds"'
+    ),
+    (
+        "SeekBack1m", 
+        "Seek back by 1 minute", 
+        "Seek back by 1 minute.", 
+        '/command:"Seek back by 1 minute"'
+    ),
+    (
+        "SeekBack2m", 
+        "Seek back by 2 minute", 
+        "Seek back by 2 minute.", 
+        '/command:"Seek back by 2 minute"'
+    ),
+    (
+        "SeekBack5m", 
+        "Seek back by 5 minute", 
+        "Seek back by 5 minute.", 
+        '/command:"Seek back by 5 minute"'
+    ),
+    (
+        "SeekBack10m", 
+        "Seek back by 10 minute", 
+        "Seek back by 10 minute.", 
+        '/command:"Seek back by 10 minute"'
+    ),
 )
 
 
