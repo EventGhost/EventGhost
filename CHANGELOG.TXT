@@ -1,3 +1,5 @@
++ Volume and seek actions for the foobar2000 plugin.
++ Replaced Python's built-in input() and raw_input() with a function that shows a simple input dialog. It has no real use-cases in EventGhost, but this way you can experiment with nearly every source code from tutorials.
 + FindWindow now shows a list of the found windows if the test button is pressed.
 + PlayStation 3 Bluetooth Remote plugin from Thierry Couquillou.
 
