@@ -1,4 +1,4 @@
-version="0.1.2"
+version="0.1.4"
 
 # Plugins/MediaMonkey/__init__.py
 #
@@ -20,9 +20,9 @@ version="0.1.2"
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2007-11-02 13:43
+#Last change: 2007-12-14 15:57
 
-import eg
+#import eg
 
 eg.RegisterPlugin(
     name = "MediaMonkey",
@@ -35,7 +35,7 @@ eg.RegisterPlugin(
         '<a href="http://www.MediaMonkey.com/">MediaMonkey</a>. \n\n<P>'
         '<BR><B>Note:</B><BR>'
         'To make functional event triggering from MediaMonkey, you must install'
-        'file "EventGhost.vbs" to MediaMonkey/Scripts/Auto folder.'
+        '<BR>file "EventGhost.vbs" to MediaMonkey/Scripts/Auto folder.'
     ),
     url = "http://www.eventghost.org/forum/viewtopic.php?t=563",
     icon = (
@@ -63,11 +63,9 @@ eg.RegisterPlugin(
 )
     
         
-import wx
+#import wx
 from win32com.client import Dispatch
 from eg.WinAPI.Utils import CloseHwnd
-#import new
-
 
 #====================================================================
 class Text:
@@ -106,7 +104,8 @@ class MediaMonkey(eg.PluginClass):
         group.AddAction(Stop)
         group.AddAction(Next)
         group.AddAction(Previous)
-
+        group.AddAction(LoadPlaylist)
+        
         group = self.AddGroup(
             self.text.levelGrpName, 
             self.text.levelGrpDescr
@@ -150,30 +149,18 @@ class MediaMonkey(eg.PluginClass):
     def __stop__(self):
         try:
             if self.MM:
-                del self._MM
+                del self.MM
         except:
             pass
-
-    def getMM(self, command):
-        try:
-            if self.MM.IsRunning:
-                return eval("self.MM." + command)
-            else:
-                self.PrintError(self.text.errorConnect)
-                return
-        except:
-            self.PrintError(self.text.errorConnect)
-            return
             
-    def setMM(self, command):
-        try:
-            if self.MM.IsRunning:
-                exec "self.MM." + command 
-            else:
-                self.PrintError(self.text.errorConnect)
-        except:
-            self.PrintError(self.text.errorConnect)
-
+    def DispMM(self):
+        if self.MM is None:
+            try:
+                self.MM = Dispatch("SongsDB.SDBApplication")
+                self.MM.ShutdownAfterDisconnect=False
+            except:
+                raise self.Exceptions.ProgramNotRunning
+        return self.MM
 #====================================================================
 #====================================================================
 class Start(eg.ActionClass):
@@ -200,29 +187,40 @@ MyWindowMatcher = eg.WindowMatcher(
 )
 
 class Exit(eg.ActionClass):
-    name = "Exit MediaMonkey"
-    description = "Exit MediaMonkey."
-    
-    def __call__(self):
+    name = "Exit/Disconnect MediaMonkey"
+    description = "Exit or Disconnect MediaMonkey."
+    class text:
+        choice_label="Close MediaMonkey too"
+
+    def __call__(self,choice):
         try:
             if self.plugin.MM:
                 del self.plugin.MM
         except:
             pass
+        self.plugin.MM=None
         hwnds = MyWindowMatcher()
-        if hwnds:
-            CloseHwnd(hwnds[0])
-        else:
-            raise self.Exceptions.ProgramNotRunning
+        if choice:
+            if hwnds:
+                CloseHwnd(hwnds[0])
+            else:
+                raise self.Exceptions.ProgramNotRunning
         
+    def Configure(self, choice=False):
+        panel = eg.ConfigPanel(self)
+        choiceCtrl = wx.CheckBox(panel, -1, self.text.choice_label)
+        choiceCtrl.SetValue(choice)
+        panel.AddCtrl(choiceCtrl)
 
+        while panel.Affirmed():
+            panel.SetResult(choiceCtrl.GetValue())
 #====================================================================
 class Play(eg.ActionClass):
     name = "Play"
     description = "Play."
 
     def __call__(self):
-        self.plugin.setMM("Player.Play()")
+        self.plugin.DispMM().Player.Play()
 
 #====================================================================
 class TogglePlay(eg.ActionClass):
@@ -230,12 +228,12 @@ class TogglePlay(eg.ActionClass):
     description = "Toggles between play and pause of MediaMonkey."
     
     def __call__(self):
-        if  not self.plugin.getMM("Player.isPlaying"):
+        if  not self.plugin.DispMM().Player.isPlaying:
             # Play
-            return self.plugin.getMM("Player.Play()")
+            return self.plugin.DispMM().Player.Play()
         else:
             # Toggle Play/Pause
-            return self.plugin.getMM("Player.Pause()")
+            return self.plugin.DispMM().Player.Pause()
 
 #====================================================================
 class DiscretePause(eg.ActionClass):
@@ -246,9 +244,9 @@ class DiscretePause(eg.ActionClass):
     )
     
     def __call__(self):
-        if (self.plugin.getMM("Player.isPlaying")):
-            if (not self.plugin.getMM("Player.isPaused")):
-                return self.plugin.getMM("Player.Pause()")
+        if self.plugin.DispMM().Player.isPlaying:
+            if (not self.plugin.DispMM().Player.isPaused):
+                return self.plugin.DispMM().Player.Pause()
 
 #====================================================================
 class Stop(eg.ActionClass):
@@ -256,7 +254,7 @@ class Stop(eg.ActionClass):
     description = "Simulate a press on the stop button."
     
     def __call__(self):
-        return self.plugin.getMM("Player.Stop()")
+        return self.plugin.DispMM().Player.Stop()
         
         
 #====================================================================
@@ -265,7 +263,7 @@ class Next(eg.ActionClass):
     description = "Next."
 
     def __call__(self):
-        self.plugin.setMM("Player.Next()")
+        self.plugin.DispMM().Player.Next()
 
 #====================================================================
 class Previous(eg.ActionClass):
@@ -273,7 +271,7 @@ class Previous(eg.ActionClass):
     description = "Previous."
 
     def __call__(self):
-        self.plugin.setMM("Player.Previous()")
+        self.plugin.DispMM().Player.Previous()
 
 
 #====================================================================
@@ -283,11 +281,11 @@ class ToggleMute(eg.ActionClass):
 
     def __call__(self):
         if not self.plugin.muted:
-            self.plugin.volume=self.plugin.getMM("Player.Volume")
-            self.plugin.setMM("Player.Volume=0")
+            self.plugin.volume=self.plugin.DispMM().Player.Volume
+            self.plugin.DispMM().Player.Volume=0
             self.plugin.muted=True
         else:
-            self.plugin.setMM("Player.Volume="+str(self.plugin.volume))
+            setattr(self.plugin.DispMM().Player,"Volume",self.plugin.volume)
             self.plugin.muted=False
 
 
@@ -299,7 +297,7 @@ class SetVolume(eg.ActionClass):
         label_tree="Set volume "
         label_conf="Volume Level:"
     def __call__(self, volume):
-        self.plugin.setMM("Player.Volume = "+str(volume/100))
+        setattr(self.plugin.DispMM().Player,"Volume",volume/100)
         if volume!=0:
             self.plugin.muted=False
 
@@ -332,13 +330,13 @@ class VolumeUp(eg.ActionClass):
     def __call__(self, step):
         if step>0:
             self.plugin.muted=False
-            volume=self.plugin.getMM("Player.Volume")
+            volume=self.plugin.DispMM().Player.Volume
             if volume<1:
                 if volume>(1-step/100):
                     volume=1
                 else:
                     volume+=step/100
-                self.plugin.setMM("Player.Volume="+str(volume))
+                setattr(self.plugin.DispMM().Player,"Volume",volume)
 
     def GetLabel(self, step):
         return self.text.label_tree+str(int(step))+"%"
@@ -359,13 +357,13 @@ class VolumeDown(eg.ActionClass):
         label_tree="Volume down "
         label_conf="Volume step:"
     def __call__(self, step):
-        volume=self.plugin.getMM("Player.Volume")
+        volume=self.plugin.DispMM().Player.Volume
         if volume>0:
             if volume<abs(step)/100:
                 volume=0
             else:
                 volume+=step/100
-            self.plugin.setMM("Player.Volume="+str(volume))
+            setattr(self.plugin.DispMM().Player,"Volume",volume)
 
     def GetLabel(self, step):
         return self.text.label_tree+str(abs(int(step)))+"%"
@@ -393,7 +391,7 @@ class SetBalance(eg.ActionClass):
         label_tree="Set balance "
         label_conf = "Balance (-100 ... 100):"
     def __call__(self, balance):
-        self.plugin.setMM("Player.Panning = "+str(balance/100))
+        setattr(self.plugin.DispMM().Player,"Panning",balance/100)
 
     def GetLabel(self, balance):
         return self.text.label_tree+str(int(balance))+"%"
@@ -422,13 +420,13 @@ class BalanceRight(eg.ActionClass):
         label_conf = "Balance step:"
     def __call__(self, step):
         if step>0:
-            balance=self.plugin.getMM("Player.Panning")
+            balance=self.plugin.DispMM().Player.Panning
             if balance<1:
                 if balance>(1-step/100):
                     balance=1
                 else:
                     balance+=step/100
-                self.plugin.setMM("Player.Panning="+str(balance))
+                setattr(self.plugin.DispMM().Player,"Panning",balance)
 
     def GetLabel(self, step):
         return self.text.label_tree+str(int(step))+"%"
@@ -456,13 +454,13 @@ class BalanceLeft(eg.ActionClass):
         label_conf = "Balance step:"
     def __call__(self, step):
         if step>0:
-            balance=self.plugin.getMM("Player.Panning")
+            balance=self.plugin.DispMM().Player.Panning
             if balance>-1:
                 if balance<(step/100-1):
                     balance=-1
                 else:
                     balance+=-step/100
-                self.plugin.setMM("Player.Panning="+str(balance))
+                setattr(self.plugin.DispMM().Player,"Panning",balance)
 
     def GetLabel(self, step):
         return self.text.label_tree+str(int(step))+"%"
@@ -494,22 +492,20 @@ class Seek(eg.ActionClass):
         tree_lab2 = "backward"
         tree_lab3 = "forward"
     def __call__(self, step, direction):
-        length=self.plugin.getMM("Player.CurrentSongLength")
-        pos=self.plugin.getMM("Player.PlaybackTime")
+        length=self.plugin.DispMM().Player.CurrentSongLength
+        pos=self.plugin.DispMM().Player.PlaybackTime
         if direction: #Backward
             if pos>length*step/100:
-                self.plugin.setMM(
-                    "Player.PlaybackTime="+str(pos-length*step/100)
-                )
+                setattr(self.plugin.DispMM().\
+                    Player,"PlaybackTime",pos-length*step/100)
             else:
-                self.plugin.setMM("Player.PlaybackTime=0")
+                self.plugin.DispMM().Player.PlaybackTime=0
         else:         #Forward   
             if pos<length-length*step/100:
-                self.plugin.setMM(
-                    "Player.PlaybackTime="+str(pos+length*step/100)
-                )
+                setattr(self.plugin.DispMM().\
+                    Player,"PlaybackTime",pos+length*step/100)
             else:
-                self.plugin.setMM("Player.PlaybackTime="+str(length-500))
+                setattr(self.plugin.DispMM().Player,"PlaybackTime",length-500)
             
     def GetLabel(self, step, direction):
         return self.text.tree_lab1\
@@ -540,7 +536,7 @@ class GetVolume(eg.ActionClass):
     name = "Get Volume"
     description = "Get Volume."
     def __call__(self):
-        return 100*self.plugin.getMM("Player.Volume")
+        return 100*self.plugin.DispMM().Player.Volume
 
 
 #====================================================================
@@ -548,15 +544,15 @@ class GetBalance(eg.ActionClass):
     name = "Get Balance"
     description = "Get Balance."
     def __call__(self):
-        return 100*self.plugin.getMM("Player.Panning")
+        return 100*self.plugin.DispMM().Player.Panning
 
 #====================================================================
 class GetStatus(eg.ActionClass):
     name = "Get Status"
     description = "Get Status (return string Playing, Paused or Stoped)."
     def __call__(self):
-        playing=self.plugin.getMM("Player.isPlaying")
-        paused=self.plugin.getMM("Player.isPaused")
+        playing=self.plugin.DispMM().Player.isPlaying
+        paused=self.plugin.DispMM().Player.isPaused
         if not playing:
             return "Stoped"
         elif playing and not paused:
@@ -569,14 +565,14 @@ class GetRepeat(eg.ActionClass):
     name = "Get Repeat"
     description = "Get Repeat Status."
     def __call__(self):
-        return self.plugin.getMM("Player.isRepeat")
+        return self.plugin.DispMM().Player.isRepeat
 
 #====================================================================
 class GetShuffle(eg.ActionClass):
     name = "Get Shuffle"
     description = "Get Shuffle Status."
     def __call__(self):
-        return self.plugin.getMM("Player.isShuffle")
+        return self.plugin.DispMM().Player.isShuffle
 
 
 #====================================================================
@@ -584,7 +580,7 @@ class GetPosition(eg.ActionClass):
     name = "Get Position in ms"
     description = "Get Position in ms."
     def __call__(self):
-        return self.plugin.getMM("Player.PlaybackTime")
+        return self.plugin.DispMM().Player.PlaybackTime
 
 #====================================================================
 class GetBasicSongInfo(eg.ActionClass):
@@ -604,7 +600,7 @@ class GetBasicSongInfo(eg.ActionClass):
         comment = "Comment"
 
     def __call__(self,arrayInfo):
-        path=self.plugin.getMM("Player.CurrentSong.Path")
+        path=self.plugin.DispMM().Player.CurrentSong.Path
         indx=path.rfind("\\")+1
         result=path[:indx]+"," if arrayInfo[0] else ""
         result+=path[indx:]+"," if arrayInfo[1] else ""
@@ -632,10 +628,10 @@ class GetBasicSongInfo(eg.ActionClass):
         )
         for propert,cond,numeric in zip(listPropert,arrayInfo[2:],listNum):
             if numeric:
-                result+=str(self.plugin.getMM("Player.CurrentSong."+propert))\
+                result+=str(getattr(self.plugin.DispMM().Player.CurrentSong,propert))\
                     +"," if cond else ""
             else:
-                result+=self.plugin.getMM("Player.CurrentSong."+propert)\
+                result+=getattr(self.plugin.DispMM().Player.CurrentSong,propert)\
                     +"," if cond else ""
         return result[:-1]        
 
@@ -755,10 +751,10 @@ class GetDetailSongInfo(eg.ActionClass):
         result=""
         for propert,cond,numeric in zip(listPropert,arrayInfo,listNum):
             if numeric:
-                result+=str(self.plugin.getMM("Player.CurrentSong."+propert))\
+                result+=str(getattr(self.plugin.DispMM().Player.CurrentSong,propert))\
                     +"," if cond else ""
             else:    
-                result+=self.plugin.getMM("Player.CurrentSong."+propert)\
+                result+=getattr(self.plugin.DispMM().Player.CurrentSong,propert)\
                     +"," if cond else ""
         return result[:-1]
 
@@ -860,7 +856,7 @@ class GetClassificationInfo(eg.ActionClass):
         )
         result=""
         for propert,cond in zip(listPropert,arrayInfo):
-            result+=self.plugin.getMM("Player.CurrentSong."+propert)\
+            result+=getattr(self.plugin.DispMM().Player.CurrentSong,propert)\
                 +"," if cond else ""
         return result[:-1]
 
@@ -942,7 +938,7 @@ class GetTechnicalSongInfo(eg.ActionClass):
         )
         result=""
         for propert,cond in zip(listPropert,arrayInfo):
-            result+=str(self.plugin.getMM("Player.CurrentSong."+propert))\
+            result+=str(getattr(self.plugin.DispMM().Player.CurrentSong,propert))\
                 +"," if cond else ""
         return result[:-1]
 
@@ -1147,7 +1143,7 @@ class GetUniversal(eg.ActionClass):
             ("Year",txt.Year),
         )
     def __call__(self, i):
-        return self.plugin.getMM("Player.CurrentSong."+self.infoList[i][0])
+        return getattr(self.plugin.DispMM().Player.CurrentSong,self.infoList[i][0])
 
     def GetLabel(self, i):
         return self.text.get+self.infoList[i][1]
@@ -1209,15 +1205,11 @@ class WritingToMM(eg.ActionClass):
             ("Rating",txt.Rating,1,True),
         )
     def __call__(self, i, arrayValue0, arrayValue1):
-        if self.infoList[i][2]==0:
-            self.plugin.setMM("Player.CurrentSong."+self.infoList[i][0]\
-                +'=u"'+arrayValue0[i]+'"')
-        else:
-            self.plugin.setMM("Player.CurrentSong."+self.infoList[i][0]\
-                +"="+str(arrayValue0[i]))
-        self.plugin.setMM("Player.CurrentSong.UpdateDB()")
+        setattr(self.plugin.DispMM().Player.CurrentSong,self.infoList[i][0]\
+            ,arrayValue0[i])
+        self.plugin.DispMM().Player.CurrentSong.UpdateDB()
         if arrayValue1[i]:
-            self.plugin.setMM("Player.CurrentSong.WriteTags()")
+            self.plugin.DispMM().Player.CurrentSong.WriteTags()
         
     def GetLabel(self, i, arrayValue0, arrayValue1):
         if self.infoList[i][2]==0:
@@ -1294,3 +1286,29 @@ class WritingToMM(eg.ActionClass):
                 arrayValue1[choiceCtrl.GetSelection()]=\
                     dynSizer.GetChildren()[3].GetWindow().GetValue()
             panel.SetResult(choiceCtrl.GetSelection(),arrayValue0, arrayValue1 )
+
+class LoadPlaylist(eg.ActionClass):
+    name = "Load Playlist by Name"
+    description = "Loads a MediaMonkey playlist defined by name."
+    class text:
+        playlistName = "Name of Playlist:"
+
+    def __call__(self, plString):
+        MMobj = self.plugin.DispMM()
+        MMobj.Player.Stop()
+        MMobj.Player.PlaylistClear()
+        plItems = MMobj.PlaylistByTitle(plString).Tracks
+        MMobj.Player.PlaylistAddTracks(plItems)
+        MMobj.Player.currentSongIndex = 0
+        MMobj.Player.Play()
+       
+    def Configure(self, plString=""):
+        panel = eg.ConfigPanel(self)
+        text = self.text
+        textCtrl = wx.TextCtrl(panel, -1, plString, style=wx.TE_NOHIDESEL)
+        SizerAdd = panel.sizer.Add
+        SizerAdd(wx.StaticText(panel, -1, text.playlistName))
+        SizerAdd(textCtrl, 0, wx.EXPAND)
+
+        while panel.Affirmed():
+            panel.SetResult(textCtrl.GetValue())            
