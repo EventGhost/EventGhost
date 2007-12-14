@@ -92,16 +92,8 @@ class EventGhost(object):
         sys.modules["ctypes.dynamic"] = WinAPI.cTypes
         
         import Utils
-        eg.Utils = Utils
-        eg.LogIt = Utils.LogIt
-        eg.LogItWithReturn = Utils.LogItWithReturn
-        eg.TimeIt = Utils.TimeIt
-        eg.AssertNotMainThread = Utils.AssertNotMainThread
-        eg.AssertNotActionThread = Utils.AssertNotActionThread
-        eg.Bunch = Utils.Bunch
-        eg.EventHook = Utils.EventHook
-        eg.HexString = Utils.HexString
-        eg.ParseString = Utils.ParseString
+        for name in Utils.__all__:
+            setattr(eg, name, getattr(Utils, name))
         
         #self.document = None
         eg.result = None

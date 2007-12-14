@@ -29,10 +29,7 @@ class NamespaceTree(wx.gizmos.TreeListCtrl):
             else:
                 typeStr = typeStr[7:-2]
             self.SetItemText(item, typeStr, 1)
-            try:
-                valueStr = repr(value)
-            except:
-                valueStr = "unknown"
+            valueStr = repr(value)
             self.SetItemText(item, valueStr, 2)
             self.SetPyData(item, value)
         self.Expand(root)

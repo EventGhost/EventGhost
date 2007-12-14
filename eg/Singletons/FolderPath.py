@@ -86,9 +86,11 @@ buffer = create_unicode_buffer(MAX_PATH)
 GetTempPathW(MAX_PATH, buffer)
 temporaryFiles = buffer.value[:-1]
 
-class FolderPath:
+
+class FolderPath(object):
     __ALL__ = CSIDL.keys() + ["TemporaryFiles"]
     TemporaryFiles = temporaryFiles
+    __repr__ = object.__repr__
     
     def __getattr__(self, name):
         csidl = CSIDL[name]
