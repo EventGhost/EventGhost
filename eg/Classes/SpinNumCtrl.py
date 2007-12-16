@@ -126,22 +126,12 @@ class SpinNumCtrl(wx.Window):
         
     def OnSpinUp(self, event):
         value = self.numCtrl.GetValue() + self.increment
-        minValue, maxValue = self.numCtrl.GetBounds()
-        if maxValue is not None and value > maxValue:
-            value = maxValue
-        if minValue is not None and value < minValue:
-            value = minValue
-        self.numCtrl.SetValue(value)
+        self.SetValue(value)
         
         
     def OnSpinDown(self, event):
         value = self.numCtrl.GetValue() - self.increment
-        minValue, maxValue = self.numCtrl.GetBounds()
-        if maxValue is not None and value > maxValue:
-            value = maxValue
-        if minValue is not None and value < minValue:
-            value = minValue
-        self.numCtrl.SetValue(value)
+        self.SetValue(value)
         
     
     def OnChar(self, event):
@@ -159,6 +149,7 @@ class SpinNumCtrl(wx.Window):
         return self.numCtrl.GetValue()
 
 
+    @eg.LogIt
     def SetValue(self, value):
         minValue, maxValue = self.numCtrl.GetBounds()
         if maxValue is not None and value > maxValue:
