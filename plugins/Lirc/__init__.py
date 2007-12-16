@@ -558,7 +558,7 @@ the LIRC documentation
             actionCtrl.SetSelection(0)
             actionText = wx.StaticText(panel, -1, text.actaction)
 
-            repeatCtrl = wx.SpinCtrl(panel, -1, actionParam, max=600)
+            repeatCtrl = eg.SpinIntCtrl(panel, -1, actionParam, max=600)
             repeatText = wx.StaticText(panel, -1, text.actrepeat)
 
             stringText = wx.StaticText(panel, -1, text.actstring)
@@ -590,7 +590,7 @@ the LIRC documentation
             cmdCtrl.Bind(wx.EVT_CHOICE, OnCmdChoice)
             remoteCtrl.Bind(wx.EVT_CHOICE, OnRemoteChoice)
             actionCtrl.Bind(wx.EVT_CHOICE, OnActionChoice)
-            repeatCtrl.Bind(wx.EVT_SPINCTRL, OnRepeatSpin)
+            repeatCtrl.Bind(eg.EVT_VALUE_CHANGED, OnRepeatSpin)
 
             def UpdateControls():
                 items = actionStr.split()

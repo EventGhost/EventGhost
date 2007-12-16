@@ -229,12 +229,12 @@ class PythonEditorCtrl(StyledTextCtrl):
         
     def OnSavePointLeft(self, event):
         self.Bind(EVT_STC_MODIFIED, self.OnModified)
-        wx.PostEvent(self, eg.ControlChangedEvent(self.GetId()))
+        wx.PostEvent(self, eg.ValueChangedEvent(self.GetId()))
         event.Skip()
         
         
     def OnModified(self, event):
-        wx.PostEvent(self, eg.ControlChangedEvent(self.GetId()))
+        wx.PostEvent(self, eg.ValueChangedEvent(self.GetId()))
         event.Skip()
     
     

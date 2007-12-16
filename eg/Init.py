@@ -55,7 +55,7 @@ class EventGhost(object):
         import wx
         __builtin__.__dict__["wx"] = wx
         import wx.lib.newevent
-        eg.ControlChangedEvent, eg.EVT_CONTROL_CHANGED = wx.lib.newevent.NewCommandEvent()
+        eg.ValueChangedEvent, eg.EVT_VALUE_CHANGED = wx.lib.newevent.NewCommandEvent()
         
         eg.startupArguments = args
         eg.debugLevel = args.debugLevel

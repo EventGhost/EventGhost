@@ -149,7 +149,6 @@ class SpinNumCtrl(wx.Window):
         return self.numCtrl.GetValue()
 
 
-    @eg.LogIt
     def SetValue(self, value):
         minValue, maxValue = self.numCtrl.GetBounds()
         if maxValue is not None and value > maxValue:
@@ -157,7 +156,7 @@ class SpinNumCtrl(wx.Window):
         if minValue is not None and value < minValue:
             value = minValue
         res = self.numCtrl.SetValue(value)
-        wx.PostEvent(self, eg.ControlChangedEvent(self.GetId()))
+        wx.PostEvent(self, eg.ValueChangedEvent(self.GetId()))
         return res
 
 
