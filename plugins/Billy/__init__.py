@@ -1,4 +1,4 @@
-version="0.3.2" 
+version="0.3.3" 
 
 # Plugins/Billy/__init__.py
 #
@@ -23,7 +23,7 @@ version="0.3.2"
 
 # Every EventGhost plugin should start with the import of 'eg' and the 
 # definition of an eg.PluginInfo subclass.
-import eg
+#import eg
 
 eg.RegisterPlugin(
     name = "Billy Player",
@@ -78,12 +78,12 @@ class Text:
         text2="Couldn't find file Billy.exe !"
  
 
-# Since we also have to do some GUI stuff, we also need 'wx'
-import wx
+#import wx
 
 # Now import some other modules that are needed for the special purpose of this plugin.
 import os
 import win32api
+from win32gui import GetWindowText
 
 Actions = ((
     ("Play","Play","Play selected file.",u'{Enter}'),
@@ -175,6 +175,7 @@ class Billy(eg.PluginClass):
         )
 
         self.AddAction(Run)
+        self.AddAction(GetPlayingFile)
         BillyPath = ""
         
         # And now begins the tricky part. We will loop through every tuple in
@@ -236,7 +237,7 @@ class Billy(eg.PluginClass):
 
 class Run(eg.ActionClass):
     name = "Run or Restore"
-    description = "Run Billy with its default settings or Restore."
+    description = "Run Billy with its default settings or restore window."
     
     def __call__(self):
         try:
@@ -253,3 +254,16 @@ class Run(eg.ActionClass):
             # Some error-checking is always fine.
             self.PrintError(self.text.text2)
          
+# new since 0.3.3:
+class GetPlayingFile(eg.ActionClass):
+    name = "Get Currently Playing File"
+    description = "Gets the name of currently playing file."
+    
+    def __call__(self):
+        strBillyTitle = ""
+        hwnds = FindBilly()
+        if ( hwnds is not None ):
+            strBillyTitle = GetWindowText(hwnds[0])
+            strBillyTitle = strBillyTitle.replace(" - Billy", "")
+        return strBillyTitle        
+        
