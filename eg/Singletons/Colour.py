@@ -26,3 +26,4 @@ class Colour:
     windowBackground = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW).Get()
     treeItem = windowText
     pluginError = (255, 0, 0)
+    

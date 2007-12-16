@@ -55,8 +55,8 @@ class ActionItem(TreeItem):
     isExecutable = True
     isConfigurable = True
     openConfigDialog = None
+    helpDialog = None
     shouldSelectOnExecute = False
-    configurationGenerator = None
 
 
     def WriteToXML(self):
@@ -186,14 +186,26 @@ class ActionItem(TreeItem):
         return True
     
     
-    def ShowHelp(self):
+    @eg.LogIt
+    def ShowHelp(self, parent=None):
+        if self.helpDialog:
+            self.helpDialog.Raise()
+            return
         action = self.executable
-        eg.HTMLDialog(
+        self.helpDialog = eg.HTMLDialog(
+            parent,
             action.name, 
             action.description, 
             action.info.icon.GetWxIcon(),
             "plugins/%s/" % action.plugin.__module__
-        ).DoModal()
+        )
+        def OnClose(event):
+            self.helpDialog.Destroy()
+            del self.helpDialog
+        self.helpDialog.Bind(wx.EVT_CLOSE, OnClose)
+        self.helpDialog.okButton.Bind(wx.EVT_BUTTON, OnClose)
+        self.helpDialog.Show()
+        
         
     
     def Execute(self):

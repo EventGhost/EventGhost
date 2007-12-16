@@ -171,7 +171,7 @@ class EventGhost(object):
         
         from eg.WinAPI.SendKeys import SendKeys
         eg.SendKeys = SendKeys
-        
+
         
     def StartGui(self):
         global eg

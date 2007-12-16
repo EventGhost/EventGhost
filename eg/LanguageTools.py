@@ -191,3 +191,37 @@ def LoadStrings(language):
     return tmp
 
     
+#@eg.LogIt
+#def LoadStrings(language):   
+#    return eg.LazyPickle.Read("Languages\\" + language + ".dat")
+#
+#    
+#for lang in ("de_DE", "sv_SV", "cs_CS", "fr_FR"):
+#    class tmp:
+#        pass
+#    execfile(
+#        "Languages\\" + lang + ".py", 
+#        {}, 
+#        tmp.__dict__
+#    )
+#    eg.LazyPickle.Write(tmp, "Languages\\" + lang + ".dat")
+    
+import os
+
+def LoadAll():
+    import CheckUpdate
+    eg.AboutDialog
+    eg.AddActionDialog
+    eg.AddPluginDialog
+    eg.AddActionGroupDialog
+    eg.OptionsDialog
+    eg.FindDialog
+    import Classes.Exceptions
+    #import MainFrame
+    
+    for plugin in os.listdir("plugins"):
+        if not plugin.startswith("."):
+            eg.OpenPlugin(plugin, plugin, ())
+
+
+    

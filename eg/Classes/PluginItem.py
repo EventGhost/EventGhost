@@ -177,14 +177,25 @@ class PluginItem(ActionItem):
         return False
     
     
-    def ShowHelp(self):
+    @eg.LogIt
+    def ShowHelp(self, parent=None):
+        if self.helpDialog:
+            self.helpDialog.Raise()
+            return
         plugin = self.info.instance
-        eg.HTMLDialog(
+        self.helpDialog = eg.HTMLDialog(
+            parent,
             eg.text.General.pluginLabel % plugin.name, 
             plugin.description, 
             plugin.info.icon.GetWxIcon(),
             basePath=plugin.info.path
-        ).DoModal()
+        )
+        def OnClose(event):
+            self.helpDialog.Destroy()
+            del self.helpDialog
+        self.helpDialog.Bind(wx.EVT_CLOSE, OnClose)
+        self.helpDialog.okButton.Bind(wx.EVT_BUTTON, OnClose)
+        self.helpDialog.Show()
         
                         
     @eg.LogIt

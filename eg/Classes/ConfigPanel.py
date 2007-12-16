@@ -76,7 +76,7 @@ class ConfigDialog(eg.Dialog):
         self.sizer = paramSizer
         
         def ShowHelp(event):
-            self.configureItem.ShowHelp()
+            self.configureItem.ShowHelp(self)
         wx.EVT_MENU(self, wx.ID_HELP, ShowHelp)
         
         self.SetAcceleratorTable(

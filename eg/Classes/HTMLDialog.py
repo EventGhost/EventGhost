@@ -30,10 +30,10 @@ config = eg.GetConfig("HTMLDialog", DefaultConfig)
 
 class HTMLDialog(eg.Dialog):
     
-    def __init__(self, title, htmldata, icon=None, basePath=None):
+    def __init__(self, parent, title, htmldata, icon=None, basePath=None):
         
         style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
-        wx.Dialog.__init__(self, None, -1, title, style=style)
+        wx.Dialog.__init__(self, parent, -1, title, style=style)
         if icon:
             self.SetIcon(icon)
         htmlCtrl = eg.HtmlWindow(self, -1, style=wx.SUNKEN_BORDER)
@@ -42,6 +42,7 @@ class HTMLDialog(eg.Dialog):
         htmlCtrl.SetPage(htmldata)
         okButton = wx.Button(self, wx.ID_OK, eg.text.General.ok)
         okButton.SetDefault()
+        self.okButton = okButton
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         mainSizer.Add(htmlCtrl, 1, wx.EXPAND|wx.ALL, 5)
         

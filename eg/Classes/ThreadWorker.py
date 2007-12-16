@@ -58,7 +58,7 @@ class ThreadWorkerAction:
             self.returnValue = self.func(*self.args, **self.kwargs)
         except Exception, exc:
             if self.raiseException:
-                eg.PrintTraceback()
+                #eg.PrintTraceback()
                 raise exc
             else:
                 self.exceptionInfo = exc_info()

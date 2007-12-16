@@ -62,6 +62,7 @@ SPECIAL_THANKS_DATA = (
             ("Lubo&scaron; R&uuml;ckl", "Billy, MediaMonkey, IrfanView"),
             ("SurFan", "TheaterTek"),
             ("townkat", "DVB Dream"),
+            ("Thierry Couquillou", "PlayStation 3 Bluetooth Remote"),
         ),
     ),
     (
