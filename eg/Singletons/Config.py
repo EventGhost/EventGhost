@@ -114,7 +114,7 @@ class Config(Section):
 
     def __init__(self):
         global configFilePath
-        configDir = wx.StandardPaths.Get().GetUserDataDir()
+        configDir = eg.CONFIG_DIR
         if not os.path.exists(configDir):
             os.makedirs(configDir)
             import shutil

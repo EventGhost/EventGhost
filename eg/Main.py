@@ -49,6 +49,7 @@ class args:
     allowMultiLoad = False
     debugLevel = 0
     translate = False
+    configDir = None
     
     
 argv = [val.decode(encoding) for val in sys.argv]
@@ -101,6 +102,12 @@ while True:
             print "missing file string"
             break
         args.startupFile = argv[i]
+    elif arg == '-configdir':
+        i += 1
+        if len(argv) <= i:
+            print "missing directory string"
+            break
+        args.configDir = argv[i]
     elif arg == '-translate':
         import LanguageEditor
         args.translate = True

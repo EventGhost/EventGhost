@@ -65,7 +65,10 @@ class EventGhost(object):
         eg.PLUGIN_DIR = os.path.abspath("plugins")
         eg.APPDATA = eg.folderPath.RoamingAppData
         eg.PROGRAMFILES = eg.folderPath.ProgramFiles
-        eg.CONFIG_DIR = os.path.join(eg.folderPath.RoamingAppData, eg.APP_NAME)
+        if args.configDir is None:
+            eg.CONFIG_DIR = os.path.join(eg.folderPath.RoamingAppData, eg.APP_NAME)
+        else:
+            eg.CONFIG_DIR = args.configDir
         eg.CORE_PLUGINS = (
             "EventGhost",
             "System",
