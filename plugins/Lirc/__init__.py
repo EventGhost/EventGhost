@@ -23,6 +23,7 @@
 ### 2007-12-16  - Moved all strings to the Text -class
 ###             - Fixed some bugs in the Send(eg.ActionClass)'s
 ###               configuration dialog
+###             - Added handling for suspend states
 ### 
 ### v0.7.0      - Added support for sending lirc events along with a
 ### 2007-12-16    nice little dialog configuration screen
@@ -111,7 +112,7 @@ import socket, asyncore, time, threading
 ############################## BEGIN TEXT CLASS ##############################
 ###
 class Text:
-    version = "0.7.0"
+    version = "0.7.1"
     title = "LIRC Client plugin v" + version + " by jinxdone"
     host = "Host:"
     port = "Port:"
@@ -121,17 +122,6 @@ class Text:
     addrepeat = "Add repeat-tag"
     ignoretime = "Ignoretime after first event (ms)"
     timeout = "Timeout for enduring events (ms)"
-    selectiontitle = "Command selection"
-    actcmd = "Command"
-    actremote = "Remote"
-    actaction = "Action"
-    actrepeat = "Repeat"
-    actstring = "Event String:"
-    acthelp = (
-       "You may use the fields in the Command selection to help form a string to send.\n"
-       "Or simply just type in the string directly into the field below."
-    )
-    acterrormsg = "Error sending event! Send buffer is missing!"
     noremotesfound = "No remotes found! (bad lirc configuration?)"
     disconnected = "Disconnected from the LIRC server!"
     startupexception = (
@@ -139,9 +129,11 @@ class Text:
        "Please doublecheck your configuration and that the "
        "LIRC server is reachable"
     )
-
+    suspendconnection = "Closing the connection to the LIRC-server.."
+    resumeconnection = "Resuming the connection to the LIRC-server.."
 ###
 ############################### END TEXT CLASS ###############################
+
 
 
 
@@ -309,7 +301,10 @@ class Lirc(eg.RawReceiverPlugin):
         eg.RawReceiverPlugin.__init__(self)
         self.AddAction(self.Send)
 
-    def __start__(self, host, port, onlyfirst, addremote, addrepeat, ignoretime, timeout):
+    def __start__(
+        self, host, port, onlyfirst, addremote, 
+        addrepeat, ignoretime, timeout
+    ):
         text = self.text
         self.port = port
         self.host = host
@@ -320,6 +315,14 @@ class Lirc(eg.RawReceiverPlugin):
         self.ignoretime = ignoretime
         self.Send.remotes = []
         self.Send.remotelist = []
+        self.InitConnection()
+
+    def __stop__(self):
+        if self.reader:
+            self.reader.handle_close()
+        self.reader = None
+
+    def InitConnection(self):
         self.reader = Lirc_Reader(
             self.host,
             self.port,
@@ -349,16 +352,19 @@ class Lirc(eg.RawReceiverPlugin):
               self.reader.sbuffer += "LIST " + self.remote + "\n"
            asyncore.poll()
 
-    def __stop__(self):
-        if self.reader:
-            self.reader.handle_close()
-        self.reader = None
-
-
     def HandleException(self, msg):
         raise self.Exception(msg)
     
-    
+    def OnComputerSuspend(self, suspendType):
+        if self.reader:
+            self.reader.handle_close()
+            print self.text.suspendconnection
+        self.reader = None
+
+    def OnComputerResume(self, suspendType):
+        print self.text.resumeconnection
+        self.InitConnection()
+
     def Configure(
         self,
         host="127.0.0.1",
@@ -475,11 +481,31 @@ the LIRC documentation
 ########################### END ACTION DESCRIPTION ###########################
 
 
+############################## BEGIN TEXT CLASS ##############################
+###
+        class Text:
+            selectiontitle = "Command selection"
+            actcmd = "Command"
+            actremote = "Remote"
+            actaction = "Action"
+            actrepeat = "Repeat"
+            actstring = "Event String:"
+            acthelp = (
+               "You may use the fields in the Command selection to help form a string to send.\n"
+               "Or simply just type in the string directly into the field below."
+            )
+            acterrormsg = "Error sending event! Send buffer is missing!"
+###
+############################### END TEXT CLASS ###############################
+
+
+        text = Text
+
 # The workhorse method.. (how tiny)!
         def __call__(self, msg):
             try: self.plugin.reader.sbuffer
             except AttributeError:
-               raise self.Exception(self.plugin.text.acterrormsg)
+               raise self.Exception(self.text.acterrormsg)
             else:
                self.plugin.reader.sbuffer = msg + "\n"
                asyncore.poll()
@@ -490,7 +516,7 @@ the LIRC documentation
                 self.remotelist.append(remote[0])
 
         def Configure(self, actionStr=""):
-            text = self.plugin.text
+            text = self.text
             remotes = self.remotes
             remotelist = self.remotelist
             actionParam = "0"
