@@ -253,12 +253,12 @@ class MceRemote(eg.PluginClass):
 
 
     @eg.LogIt
-    def OnComputerSuspend(self):
+    def OnComputerSuspend(self, suspendType):
         self.msgThread.CallWait(self.msgThread.dll.MceIrSuspend)
     
     
     @eg.LogIt
-    def OnComputerResume(self):
+    def OnComputerResume(self, suspendType):
         self.msgThread.CallWait(self.msgThread.dll.MceIrResume)       
           
                         

@@ -24,6 +24,7 @@ eg.RegisterPlugin(
     author = "townkat",
     version = "4" ,
     kind = "program",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=612",
     createMacrosOnAdd = True,
     description = (
         'Adds actions to control '

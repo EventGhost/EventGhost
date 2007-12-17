@@ -85,7 +85,7 @@ class ActionThread(eg.ThreadWorker):
         for plugin in eg.pluginList:
             if plugin.info.isStarted:
                 try:
-                    plugin.OnComputerSuspend()
+                    plugin.OnComputerSuspend(None)
                 except:
                     eg.PrintTraceback()
             
@@ -95,7 +95,7 @@ class ActionThread(eg.ThreadWorker):
         for plugin in eg.pluginList:
             if plugin.info.isStarted:
                 try:
-                    plugin.OnComputerResume()
+                    plugin.OnComputerResume(None)
                 except:
                     eg.PrintTraceback()
             

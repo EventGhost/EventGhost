@@ -25,6 +25,7 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "program",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=613",
     description = (
         'Adds actions to control the '
         '<a href="http://ffdshow-tryout.sourceforge.net/">'

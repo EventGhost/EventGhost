@@ -262,11 +262,11 @@ class PluginClass(object):
         pass
     
     
-    def OnComputerSuspend(self):
+    def OnComputerSuspend(self, suspendType):
         """Prepares the plugin for suspension of the computer."""
         pass
     
     
-    def OnComputerResume(self):
+    def OnComputerResume(self, suspendType):
         """Prepares the plugin for resumption of the computer."""
         pass

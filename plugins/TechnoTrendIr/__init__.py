@@ -84,11 +84,11 @@ class TTIR(eg.RawReceiverPlugin):
         self.dll = dll
         
     
-    def OnComputerSuspend(self):
+    def OnComputerSuspend(self, suspendType):
         self.dll.irClose(self.hOpen)
     
     
-    def OnComputerResume(self):
+    def OnComputerResume(self, suspendType):
         self.hOpen = self.dll.irOpen(0, USBIR_MODE_ALL_CODES, self.cCallback, 0)
         if self.hOpen == -1:
             raise self.Exceptions.DeviceNotFound

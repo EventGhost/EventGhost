@@ -126,11 +126,11 @@ class Fhz1000Pc(eg.PluginClass):
             self.receiveThread.Close()
         
         
-    def OnComputerSuspend(self):
+    def OnComputerSuspend(self, suspendType):
         self.__stop__()
         
         
-    def OnComputerResume(self):
+    def OnComputerResume(self, suspendType):
         self.__start__()
     
     
