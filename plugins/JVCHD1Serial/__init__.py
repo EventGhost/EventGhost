@@ -18,11 +18,13 @@ from __future__ import with_statement
 
 eg.RegisterPlugin(
     name = "JVC HD-1 Projector",
+    description = "This plugin is for controlling an JVC HD-1 projector via RS-232",
     kind = "external",
     author = "Oliver Wagner",
     version = "1.0.0",
     canMultiLoad = True,
     createMacrosOnAdd = True,
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=650",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARn"
         "QU1BAACxjwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdw"
@@ -87,16 +89,16 @@ class ActionBase(eg.ActionClass):
 
 
     def SendCommand(self, serial, cmd, data):
-	serial.Write(cmd)
-	serial.Write(UNITID1)
-	serial.Write(UNITID2)
+        serial.Write(cmd)
+        serial.Write(UNITID1)
+        serial.Write(UNITID2)
         serial.Write("".join([chr(x) for x in data]))
-	serial.Write(END)
+        serial.Write(END)
         res = serial.Read(1, 1.0)
         if res != ACK:
             raise self.Exceptions.DeviceNotFound("Got no ACK!")
-	while res!=END:
-		res=serial.Read(1, 0.5)
+        while res != END:
+            res = serial.Read(1, 0.5)
 
 
     def GetResponse(self, serial, cmde):
@@ -110,21 +112,20 @@ class ActionBase(eg.ActionClass):
 class JVCHD1Serial(eg.PluginClass):
     
     def __init__(self):
-	self.info.eventPrefix = "JVC-HD1"
+        self.info.eventPrefix = "JVC-HD1"
         for evalName, tmpDescription, tmpCmd, tmpData in ACTIONS:
             class TmpAction(ActionBase):
                 name = evalName
                 description = tmpDescription
                 cmd = tmpCmd
-		data = tmpData
+                data = tmpData
             TmpAction.__name__ = evalName
             self.AddAction(TmpAction)
     
     
     @eg.LogIt
-    def __start__(self, port=0, address=0, baudrate=9600):
+    def __start__(self, port=0):
         self.port = port
-        self.address = address
         self.serialThread = eg.SerialThread()
         self.serialThread.SetReadEventCallback(self.OnReceive)
         self.serialThread.Open(port, 19200)
@@ -138,41 +139,42 @@ class JVCHD1Serial(eg.PluginClass):
         
     def OnReceive(self, serial):
         data = serial.Read(1)
-	if data==RESP:
-		serial.Read(2,1.0) # Skip unit ID
-		c1=serial.Read(1,1.0)
-		c2=serial.Read(1,1.0)
-		state=serial.Read(1,1.0)
-		serial.Read(1,1.0) # Skip 0x0a
-		if c1==chr(0x50) and c2==chr(0x57):
-			if state==chr(0x30):
-				sid="Standby"
-			elif state==chr(0x31):
-				sid="PowerOn"
-			elif state==chr(0x32):
-				sid="CoolingDown"
-			elif state==chr(0x34):
-				sid="Warning"
-			else:
-				sid="UNKNOWN%02X" % ord(state)
-			self.TriggerEvent("PowerState."+sid)
-		elif c1==chr(0x49) and c2==chr(0x50):
-			if state==chr(0x30):
-				sid="SVideo"
-			elif state==chr(0x31):
-				sid="Video"
-			elif state==chr(0x32):
-				sid="Composite"
-			elif state==chr(0x36):
-				sid="HDMI1"
-			elif state==chr(0x37):
-				sid="HDMI2"
-			else:
-				sid="UNKNOWN%02X" % ord(state)
-			self.TriggerEvent("Input."+sid)
-		else:
-			raise self.Exceptions.DeviceNotReady("Unexpected response %02X%02X" %(ord(c1),ord(c2)))
-			
+        if data != RESP:
+            return
+        serial.Read(2, 1.0) # Skip unit ID
+        c1 = serial.Read(1, 1.0)
+        c2 = serial.Read(1, 1.0)
+        state = serial.Read(1, 1.0)
+        serial.Read(1, 1.0) # Skip 0x0a
+        if c1 == chr(0x50) and c2 == chr(0x57):
+            if state == chr(0x30):
+                sid =" Standby"
+            elif state == chr(0x31):
+                sid = "PowerOn"
+            elif state == chr(0x32):
+                sid = "CoolingDown"
+            elif state == chr(0x34):
+                sid = "Warning"
+            else:
+                sid = "UNKNOWN%02X" % ord(state)
+            self.TriggerEvent("PowerState." + sid)
+        elif c1 == chr(0x49) and c2 == chr(0x50):
+            if state == chr(0x30):
+                sid = "SVideo"
+            elif state == chr(0x31):
+                sid = "Video"
+            elif state == chr(0x32):
+                sid = "Composite"
+            elif state == chr(0x36):
+                sid = "HDMI1"
+            elif state == chr(0x37):
+                sid = "HDMI2"
+            else:
+                sid = "UNKNOWN%02X" % ord(state)
+            self.TriggerEvent("Input." + sid)
+        else:
+            raise self.Exceptions.DeviceNotReady("Unexpected response %02X%02X" %(ord(c1), ord(c2)))
+            
     
     
     def Configure(self, port=0):
