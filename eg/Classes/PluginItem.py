@@ -79,7 +79,7 @@ class PluginItem(ActionItem):
     
     
     def _SetColour(self, colour):
-        if self.id is not None:
+        if self.HasValidId():
             self.tree.SetItemTextColour(self.id, colour)
         
         
