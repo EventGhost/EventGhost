@@ -90,19 +90,19 @@ class ActionBase(eg.ActionClass):
             raise self.Exceptions.ProgramNotRunning
 
 
-def GetPlayingStatus():
-    """
-    Get the current status of Winamp.
-    
-    The return value is one of the strings 'playing', 'paused' or 'stopped'.
-    """
-    iStatus = self.SendCommand(WM_USER, 0, 104)
-    if iStatus == 1:
-        return 'playing'
-    elif iStatus == 3:
-        return 'paused'
-    else:
-        return 'stopped'
+    def GetPlayingStatus(self):
+        """
+        Get the current status of Winamp.
+        
+        The return value is one of the strings 'playing', 'paused' or 'stopped'.
+        """
+        iStatus = self.SendCommand(WM_USER, 0, 104)
+        if iStatus == 1:
+            return 'playing'
+        elif iStatus == 3:
+            return 'paused'
+        else:
+            return 'stopped'
 
 
 # And now we define the actual plugin:
@@ -174,7 +174,7 @@ class TogglePlay(ActionBase):
     # Every action should have a __call__ method that will do the actual work
     # of the action.
     def __call__(self):
-        if GetPlayingStatus() == "stopped":
+        if self.GetPlayingStatus() == "stopped":
             # Play
             return self.SendCommand(WM_COMMAND, 40045)
         else:
@@ -214,7 +214,7 @@ class DiscretePause(ActionBase):
     )
     
     def __call__(self):
-        if GetPlayingStatus() == "playing":
+        if self.GetPlayingStatus() == "playing":
             return self.SendCommand(WM_COMMAND, 40046)
 
 
