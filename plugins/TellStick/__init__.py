@@ -11,11 +11,12 @@ eg.RegisterPlugin(
     version = "0.1.1",
     kind = "external",
     url = "http://www.eventghost.org/forum/viewtopic.php?t=455",
-    description = (
-        '<p>Plugin to control TellStick devices.</p>'
-        '\n\n<p><a href="http://www.telldus.se">Telldus Hompage</a></p>'
-        '<center><img src="tellstick.png" /></center>'
-    ),
+    description = 'Plugin to control TellStick devices.',
+    help = """
+        <a href="http://www.telldus.se">Telldus Hompage</a>
+        
+        <center><img src="tellstick.png" /></center>
+    """,
 )
 
 from ctypes import windll, c_char_p

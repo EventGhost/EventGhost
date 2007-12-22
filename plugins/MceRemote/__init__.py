@@ -30,15 +30,15 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.1." + "$LastChangedRevision$".split()[1],
     kind = "remote",
-    description = (
-        'Plugin for the Microsoft MCE remote.'
-        '\n\n<p>'
-        'Will only work, if you have installed the replacement driver for '
-        'the MCE remote. You find detailed installation instructions here:'
-        '<br><a href="http://www.eventghost.org/wiki/MCE_Remote_FAQ">'
-        'MCE Remote FAQ'
-        '</a><p><center><img src="MCEv2.jpg"/></center>'
-    ),
+    description = 'Plugin for the Microsoft MCE remote.',
+    help = """
+        Will only work, if you have installed the replacement driver for 
+        the MCE remote. You find detailed installation instructions here:
+        <a href="http://www.eventghost.org/wiki/MCE_Remote_FAQ">
+        MCE Remote FAQ</a>
+        
+        <center><img src="MCEv2.jpg"/></center>
+    """,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACfklEQVR42q2TS2gTQRyH"
         "f5N9NNlts20abYyxVirWShGLUh8XoSpUUBEVUU+5CXoQr+LNm14UtRCpRcGLHnqoiooN"

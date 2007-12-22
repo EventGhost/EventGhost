@@ -39,8 +39,8 @@ class ControlProviderMixin:
         return wx.TextCtrl(self, -1, value, *args, **kwargs)
     
     
-    def Choice(self, value=0, *args, **kwargs):
-        return eg.Choice(self, value, *args, **kwargs)
+    def Choice(self, value, choices, *args, **kwargs):
+        return eg.Choice(self, value, choices, *args, **kwargs)
     
     
     def DisplayChoice(self, value=0, *args, **kwargs):
@@ -112,3 +112,13 @@ class ControlProviderMixin:
         return eg.MacroSelectButton(self, *args, **kwargs)
     
 
+    def ComboBox(
+        self, 
+        value, 
+        choices, 
+        pos=wx.DefaultPosition, 
+        size=wx.DefaultSize, 
+        *args, 
+        **kwargs
+    ):
+        return wx.ComboBox(self, -1, value, pos, size, choices, *args, **kwargs)

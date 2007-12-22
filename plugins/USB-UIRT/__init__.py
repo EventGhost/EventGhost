@@ -391,8 +391,7 @@ class TransmitIR(eg.ActionClass):
         waitCtrl = panel.SpinIntCtrl(inactivityWaitTime, 0, 500)
         waitCtrl.SetInitialSize((50,-1))
         
-        zoneCtrl = wx.Choice(panel, -1, choices=text.zoneChoices)
-        zoneCtrl.Select(zone)
+        zoneCtrl = panel.Choice(zone, text.zoneChoices)
                 
         learnButton = panel.Button(text.learnButton)  
         if self.plugin.dll is None:
@@ -446,7 +445,7 @@ class TransmitIR(eg.ActionClass):
         learnButton.Bind(wx.EVT_BUTTON, LearnIR)
             
         while panel.Affirmed():
-            zone = zoneCtrl.GetSelection()
+            zone = zoneCtrl.GetValue()
             if zone > 0:
                 code = "Z" + str(zone) + editCtrl.GetValue()
             else:

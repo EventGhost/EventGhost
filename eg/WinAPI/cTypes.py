@@ -764,3 +764,90 @@ DM_DISPLAYFREQUENCY = 4194304 # Variable c_long
 CDS_UPDATEREGISTRY = 1 # Variable c_int
 CDS_NORESET = 268435456 # Variable c_int
 CDS_SET_PRIMARY = 16 # Variable c_int
+WS_CHILD = 1073741824 # Variable c_long
+WS_VISIBLE = 268435456 # Variable c_long
+SBS_SIZEGRIP = 16 # Variable c_long
+SBS_SIZEBOXTOPLEFTALIGN = 2 # Variable c_long
+SM_CYHSCROLL = 3 # Variable c_int
+SM_CXVSCROLL = 2 # Variable c_int
+GetSystemMetrics = _user32.GetSystemMetrics
+GetSystemMetrics.restype = c_int
+GetSystemMetrics.argtypes = [c_int]
+GetModuleHandleA = _kernel32.GetModuleHandleA
+GetModuleHandleA.restype = HMODULE
+GetModuleHandleA.argtypes = [LPCSTR]
+GetModuleHandle = GetModuleHandleA # alias
+CreateWindowExA = _user32.CreateWindowExA
+CreateWindowExA.restype = HWND
+CreateWindowExA.argtypes = [DWORD, LPCSTR, LPCSTR, DWORD, c_int, c_int, c_int, c_int, HWND, HMENU, HINSTANCE, LPVOID]
+CreateWindowEx = CreateWindowExA # alias
+WM_SIZE = 5 # Variable c_int
+CW_USEDEFAULT = -2147483648 # Variable c_int
+WS_OVERLAPPED = 0 # Variable c_long
+WS_SYSMENU = 524288 # Variable c_long
+COLOR_WINDOW = 5 # Variable c_int
+CS_VREDRAW = 1 # Variable c_int
+CS_HREDRAW = 2 # Variable c_int
+STRING = c_char_p
+IDC_ARROW = 32512 # Variable STRING
+HCURSOR = HICON
+LoadCursorA = _user32.LoadCursorA
+LoadCursorA.restype = HCURSOR
+LoadCursorA.argtypes = [HINSTANCE, LPCSTR]
+LoadCursor = LoadCursorA # alias
+class tagWNDCLASSA(Structure):
+    pass
+WNDCLASSA = tagWNDCLASSA
+WNDCLASS = WNDCLASSA
+WNDPROC = WINFUNCTYPE(LRESULT, c_void_p, c_uint, c_uint, c_long)
+tagWNDCLASSA._fields_ = [
+    ('style', UINT),
+    ('lpfnWndProc', WNDPROC),
+    ('cbClsExtra', c_int),
+    ('cbWndExtra', c_int),
+    ('hInstance', HINSTANCE),
+    ('hIcon', HICON),
+    ('hCursor', HCURSOR),
+    ('hbrBackground', HBRUSH),
+    ('lpszMenuName', LPCSTR),
+    ('lpszClassName', LPCSTR),
+]
+class tagWNDCLASSEXA(Structure):
+    pass
+WNDCLASSEXA = tagWNDCLASSEXA
+RegisterClassExA = _user32.RegisterClassExA
+RegisterClassExA.restype = ATOM
+RegisterClassExA.argtypes = [POINTER(WNDCLASSEXA)]
+RegisterClassEx = RegisterClassExA # alias
+tagWNDCLASSEXA._fields_ = [
+    ('cbSize', UINT),
+    ('style', UINT),
+    ('lpfnWndProc', WNDPROC),
+    ('cbClsExtra', c_int),
+    ('cbWndExtra', c_int),
+    ('hInstance', HINSTANCE),
+    ('hIcon', HICON),
+    ('hCursor', HCURSOR),
+    ('hbrBackground', HBRUSH),
+    ('lpszMenuName', LPCSTR),
+    ('lpszClassName', LPCSTR),
+    ('hIconSm', HICON),
+]
+RegisterClassA = _user32.RegisterClassA
+RegisterClassA.restype = ATOM
+RegisterClassA.argtypes = [POINTER(WNDCLASSA)]
+RegisterClass = RegisterClassA # alias
+WS_OVERLAPPEDWINDOW = 13565952 # Variable c_long
+DefWindowProcA = _user32.DefWindowProcA
+DefWindowProcA.restype = LRESULT
+DefWindowProcA.argtypes = [HWND, UINT, WPARAM, LPARAM]
+DefWindowProc = DefWindowProcA # alias
+CoInitialize = _ole32.CoInitialize
+CoInitialize.restype = HRESULT
+CoInitialize.argtypes = [LPVOID]
+CoUninitialize = _ole32.CoUninitialize
+CoUninitialize.restype = None
+CoUninitialize.argtypes = []
+GetFocus = _user32.GetFocus
+GetFocus.restype = HWND
+GetFocus.argtypes = []

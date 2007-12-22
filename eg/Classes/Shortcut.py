@@ -86,3 +86,5 @@ class Shortcut:
         self.startIn = sh.GetWorkingDirectory()
         self.icons = sh.GetIconLocation()
         return self
+
+

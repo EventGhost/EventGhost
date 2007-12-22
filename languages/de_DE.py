@@ -565,7 +565,10 @@ class Plugin:
         description = u'Allgemeine Kommunikation \xfcber einen seriellen Anschluss.'
         baudrate = u'Bits pro Sekunde:'
         bytesize = u'Datenbits:'
+        encoding = u'Zeichenkodierung:'
+        eventPrefix = u'Ereignis-Prefix'
         flowcontrol = u'Flusssteuerung:'
+        generateEvents = u'Generiere Ereignisse bei eintreffenden Daten'
         handshakes = [
             u'Keine',
             u'Xon / Xoff',
@@ -579,6 +582,7 @@ class Plugin:
         parity = u'Parit\xe4t:'
         port = u'Port:'
         stopbits = u'Stopbits:'
+        terminator = u'Endzeichen:'
         class Read:
             name = u'Lese'
             read_all = u'Lese soviele Zeichen wie momentan verf\xfcgbar sind.'
@@ -620,13 +624,71 @@ class Plugin:
         labelHeader = u'Beschriftung'
         unnamedEvent = u'Ereignis%s'
         unnamedLabel = u'Neuer Men\xfc-Eintrag %s'
+    class TestPatterns:
+        name = u'Testbild'
+        description = u'Erm\xf6glicht die Anzeige einer Reihe von Testbildern.'
+        aspectRatio = u'Seitenverh\xe4ltnis:'
+        aspectRatios = [
+            u'1:1 Pixel-Zuordnung',
+            u'4:3 Vollbild',
+            u'16:9 Vollbild',
+            u'4:3 Vollbild nach ITU-R BT.601 PAL',
+            u'16:9 Vollbild nach ITU-R BT.601 PAL',
+        ]
+        backgroundColour = u'Hintergrundfarbe:'
+        coverage = u'Abdeckung (Prozent):'
+        display = u'Bildschirm:'
+        dotDiameter = u'Durchmesser:'
+        firstColour = u'Erste Farbe:'
+        foregroundColour = u'Vordergrundfarbe:'
+        lastColour = u'Letzte Farbe:'
+        lineSize = u'Linienst\xe4rke:'
+        makeDoubleBars = u'Doppelte Balken'
+        numElements = u'Elementanzahl:'
+        numHorizontalElements = u'Anzahl horizontaler Elemente:'
+        numVerticalElements = u'Anzahl vertikaler Elemente:'
+        numberFont = u'Nummer Zeichensatz:'
+        orientation = u'Ausrichtung:'
+        orientations = [
+            u'horizontal',
+            u'vertical',
+        ]
+        radius1 = u'Radius:'
+        radius2 = u'% (0=ganzer Bildschirm)'
+        secondColour = u'Zweite Farbe:'
+        showNumbers = u'Zeige Nummern'
+        useAntiAlias = u'Verwende Anti-Aliasing'
+        class Bars:
+            name = u'Balken'
+        class Checkerboard:
+            name = u'Schachbrett'
+        class Close:
+            name = u'Schlie\xdfen'
+        class Dots:
+            name = u'Punkte'
+        class Focus:
+            name = u'Fokus'
+        class Geometry:
+            name = u'Geometrie'
+        class Grid:
+            name = u'Gitter'
+        class IreWindow:
+            name = u'IRE Fenster'
+        class Lines:
+            name = u'Linien'
+        class SetDisplay:
+            name = u'Anzeige setzen'
+        class SiemensStar:
+            name = u'Siemensstern'
     class USB_UIRT:
+        name = u'USB-UIRT'
         blinkRx = u'Blinke bei Empfang'
         blinkTx = u'Blinke beim Senden'
         irReception = u'IR Empfang'
         legacyCodes = u'Generiere UIRT2-kompatible Ereignisse'
         notFound = u'<unbekannt>'
         redIndicator = u'Funktion der roten Anzeige-LED'
+        stopCodes = u'Akzeptiere kurze Wiederholsequenzen als fortdauernde Ereignisse'
         uuFirmDate = u'Firmware Datum: '
         uuFirmVersion = u'Firmware Version: '
         uuInfo = u'USB-UIRT Information'

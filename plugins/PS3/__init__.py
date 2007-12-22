@@ -1,49 +1,55 @@
 README = """\
-1) BLUETOOTH
-------------
+<u><b>1) Bluetooth</b></u>
 
 Tested succesfully working with Bluetooth Software :
-WIDCOMM Bluetooth Software 5.1.0.1100
-5.1.0.1100 is not the last version. 
-it's the most versatile version works with most of Bluetooth adapter
-in a patched version. see http://forum.gsmhosting.com/vbb/forumdisplay.php?f=237
-to help about patched WIDCOMM Bluetooth Software 5.1.0.1100
-(Restart PC, Right click on bluetooth icon in task bar and stop/start bluetooth device can help)
+WIDCOMM Bluetooth Software 5.1.0.1100.
+
+5.1.0.1100 is not the last version, but it's the most versatile version and
+works with most of Bluetooth adapter in a patched version. 
+See <a href"http://forum.gsmhosting.com/vbb/forumdisplay.php?f=237">
+this thread</a> to help about patched WIDCOMM Bluetooth Software 5.1.0.1100
+(Restart PC, right click on bluetooth icon in task bar and stop/start bluetooth 
+device can help)
 
 On remote, to activate discoverable mode, press simultaneously "start+enter". 
 On PC choose "Next (no code)"
 
-Check in "Device Manager" / "Human Interface Devices"
-PS3 Remote should appears as "HID-compliant game controller"
-If not, if it's appears as "HID Keyboard Device" in "Keyboards"
-Delete it, Right click on bluetooth icon in task bar and 
+Check in "Device Manager" / "Human Interface Devices" that the
+PS3 Remote appears as "HID-compliant game controller".
+If not, if it appears as "HID Keyboard Device" in "Keyboards",
+delete it, right click on bluetooth icon in task bar and 
 stop/start bluetooth device to force new device detection. 
 This time should appears as "HID-compliant game controller"
 
-2) HID PLUGIN
--------------
+<u><b>2) Plugin</b></u>
 
-This plugin generate: 
+This plugin generates: 
 
-- ENDURING events named like "HID.Eject"
+<ul>
+<li>ENDURING events named like "HID.Eject"</li>
+</ul>
 
 and lot of additional NORMAL events for:
 
-- short click on remote, events name end with ".S" eg. "HID.Eject.S"
-- long click on remote, events name end with ".L"
-- double click on remote, events name end with ".D"
-- mixte (double click with second one long), events name end with ".M"
+<ul>
+<li>short click on remote, events name end with ".S" eg. "HID.Eject.S"</li>
+<li>long click on remote, events name end with ".L"</li>
+<li>double click on remote, events name end with ".D"</li>
+<li>mixte (double click with second one long), events name end with ".M"</li>
+</ul>
 
 and special selectable or not events:
 
-- "Sleep" when remote is not used
-- "Hibernate" when remote is not use during a long time
-- "WakeUp" for first event after "Sleep" or "Hibernate"
-- "Zone.X" where X is relative to Zone Key in Remote (see Remote paper manual)
+<ul>
+<li>"Sleep" when remote is not used</li>
+<li>"Hibernate" when remote is not use during a long time</li>
+<li>"WakeUp" for first event after "Sleep" or "Hibernate"</li>
+<li>"Zone.X" where X is relative to Zone Key in Remote (see Remote paper manual)
   event generated when a new key is pressed in another zone.
   each remote key belong of on zone except one, the key with strange
-  symbol below the directional pad. this is by design.
-- "Release" can be generated for each relase of each key.
+  symbol below the directional pad. this is by design.</li>
+<li>"Release" can be generated for each relase of each key.</li>
+</ul>
 
 Of course all these additional events are not needed,
 it's possible to do the same thing by EventGhost configuration
@@ -63,10 +69,8 @@ eg.RegisterPlugin(
     version = "2.0.1",
     kind = "remote",
     url="http://www.eventghost.org/forum/viewtopic.php?t=640",
-    description = (
-        "Hardware plugin for the PS3 Bluetooth Remote"
-        "\n\n<p>" + README.replace("\n", "<br>")
-    )
+    description = "Hardware plugin for the PS3 Bluetooth Remote",
+    help = README,
 )
 
 

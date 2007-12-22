@@ -287,12 +287,10 @@ vkCodes = (
 )
 
 
-from win32gui import GetForegroundWindow
 from win32process import GetWindowThreadProcessId
 from win32event import WaitForInputIdle
 from win32api import (
     GetCurrentThreadId, 
-    GetFocus, 
     OpenProcess, 
     CloseHandle, 
     MAKELONG,
@@ -302,9 +300,9 @@ from ctypes.dynamic import (
     GetGUIThreadInfo, GUITHREADINFO, PROCESS_QUERY_INFORMATION, VK_SHIFT,
     VK_LSHIFT, VK_CONTROL, VK_LCONTROL, VK_MENU, VK_LMENU, VK_RMENU,
     WM_TIMER, WM_SYSKEYDOWN, WM_KEYDOWN, WM_SYSKEYUP, WM_KEYUP,
-    AttachThreadInput, VkKeyScanW, TCHAR,
-    MapVirtualKey, GetMessage, PostMessage, MSG,
-    byref, sizeof, pointer, c_char, c_ubyte, _user32
+    AttachThreadInput, VkKeyScanW, TCHAR, MapVirtualKey, GetMessage, 
+    PostMessage, MSG, byref, sizeof, pointer, c_char, c_ubyte, _user32, 
+    GetFocus, GetForegroundWindow,
 )
 GetKeyboardState = _user32.GetKeyboardState
 SetKeyboardState = _user32.SetKeyboardState
@@ -366,10 +364,7 @@ class SendKeysParser:
             AttachThreadInput(threadID, ourThreadID, True)
             
         if needGetFocus:
-            try:
-                hwnd = GetFocus()
-            except:
-                hwnd = None
+            hwnd = GetFocus()
         if not sendToFront:
             guiTreadInfo = GUITHREADINFO()
             guiTreadInfo.cbSize = sizeof(GUITHREADINFO)
@@ -378,6 +373,8 @@ class SendKeysParser:
             else:
                 sendToFront = False
         self.sendToFront = sendToFront
+        if not hwnd:
+            hwnd = None
         self.hwnd = hwnd
         try:
             self.procHandle = OpenProcess(

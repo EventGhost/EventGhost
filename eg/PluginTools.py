@@ -40,7 +40,6 @@ class PluginProxy(object):
         return self.actions[name]
         
 
-
 def ImportPlugin(pluginDir):
     moduleName = "pluginImport." + pluginDir
     if moduleName in sys.modules:

@@ -69,9 +69,7 @@ def GetTopLevelOfTargetWindows():
     return list(set([GetAncestor(hwnd, GA_ROOT) for hwnd in hwnds]))
 
 
-#=============================================================================
-# Plugin: Window
-#=============================================================================
+
 class Window(eg.PluginClass):
 
     def __init__(self):
@@ -255,23 +253,22 @@ class SendMessage(eg.ActionClass):
             
             
     def Configure(self, mesg=win32con.WM_COMMAND, wParam=0, lParam=0, kind=0):
-        choices = [x[1] for x in self.msgConstants]
-        choicesValues = [x[0] for x in self.msgConstants]
+        mesgValues, mesgNames = zip(*self.msgConstants)
+        mesgValues, mesgNames = list(mesgValues), list(mesgNames)
         try:
-            i = choicesValues.index(mesg)
-            choice = choices[i]
+            i = mesgValues.index(mesg)
+            choice = mesgNames[i]
         except:
             choice = str(mesg)
 
         panel = eg.ConfigPanel(self)
         
-        mesgCtrl = wx.ComboBox(
-            panel, 
-            choices=choices, 
+        mesgCtrl = panel.ComboBox(
+            choice, 
+            mesgNames, 
             style=wx.CB_DROPDOWN,
-            validator=eg.DigitOnlyValidator(choices)
+            validator=eg.DigitOnlyValidator(mesgNames)
         )
-        mesgCtrl.SetValue(choice)
         
         wParamCtrl = panel.SpinIntCtrl(wParam, max=65535)
         lParamCtrl = panel.SpinIntCtrl(lParam, max=4294967295)
@@ -285,9 +282,10 @@ class SendMessage(eg.ActionClass):
         
         while panel.Affirmed():
             choice = mesgCtrl.GetValue()
+            print choice
             try:
-                i = choices.index(choice)
-                mesg = choicesValues[i]
+                i = mesgNames.index(choice)
+                mesg = mesgValues[i]
             except:
                 mesg = int(choice)
             panel.SetResult(

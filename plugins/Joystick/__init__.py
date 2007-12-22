@@ -42,9 +42,7 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
-    description = (
-        "Use joysticks and gamepads as input devices for EventGhost."
-    ),
+    description = "Use joysticks and gamepads as input devices for EventGhost.",
     icon = ICON,
 )
 

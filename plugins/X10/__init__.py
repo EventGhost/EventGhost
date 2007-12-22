@@ -27,27 +27,27 @@ eg.RegisterPlugin(
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
     canMultiLoad = True,
-    description = (
-        'Hardware plugin for X10 compatible RF remotes.'
-        '\n\nThis includes remotes like:<br>'
-        '<ul>'
-        '<li><a href="http://www.ati.com/products/remotewonder/index.html">'
-        u'ATI Remote Wonder\u2122</a></li>'
-        '<li><a href="http://www.ati.com/products/remotewonderplus/index.html">'
-        u'ATI Remote Wonder\u2122 PLUS</a></li>'
-        '<li><a href="http://www.snapstream.com/">'
-        'SnapStream Firefly</a></li>'
-        '<li><a href="http://www.nvidia.com/object/feature_PC_remote.html">'
-        'NVIDIA Personal Cinema Remote</a></li>'
-        '<li><a href="http://www.marmitek.com/">'
-        'Marmitek PC Control</a></li>'
-        '<li><a href="http://www.pearl.de/product.jsp?pdid=PE4444&catid=1601">'
-        'Pearl Q-Sonic Master Remote 6in1</a></li>'
-        '<li><a href="http://www.niveusmedia.com/support/PCremote.htm">'
-        'Niveus PC Remote Control</a></li>'
-        '<li>Medion RF Remote Control</li>'
-        '</ul>'
-    ),
+    description = 'Hardware plugin for X10 compatible RF remotes.',
+    help = u"""
+        This includes remotes like:
+        <ul>
+        <li><a href="http://www.ati.com/products/remotewonder/index.html">
+        ATI Remote Wonder\u2122</a></li>
+        <li><a href="http://www.ati.com/products/remotewonderplus/index.html">
+        ATI Remote Wonder\u2122 PLUS</a></li>
+        <li><a href="http://www.snapstream.com/">
+        SnapStream Firefly</a></li>
+        <li><a href="http://www.nvidia.com/object/feature_PC_remote.html">
+        NVIDIA Personal Cinema Remote</a></li>
+        <li><a href="http://www.marmitek.com/">
+        Marmitek PC Control</a></li>
+        <li><a href="http://www.pearl.de/product.jsp?pdid=PE4444&catid=1601">
+        Pearl Q-Sonic Master Remote 6in1</a></li>
+        <li><a href="http://www.niveusmedia.com/support/PCremote.htm">
+        Niveus PC Remote Control</a></li>
+        <li>Medion RF Remote Control</li>
+        </ul>
+    """,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAYklEQVR42mNkoBAwwhgq"
         "uf//k6LxzmRGRrgBpGpGNoSRXM1wL1DFgNuTGBhU8xCCyHx0Ngggq4W7AKYQlwZchqJ4"
@@ -289,10 +289,8 @@ class X10(eg.PluginClass):
             fbtypes.append(gRemotes[id][0])
             if id == remoteType:
                 selection = i
-        choice = wx.Choice(panel, -1, choices=fbtypes)
-        choice.SetSelection(selection)
-        
-        editCtrl = wx.TextCtrl(panel, -1, prefix)
+        remoteTypeCtrl = panel.Choice(selection, fbtypes)
+        prefixCtrl = panel.TextCtrl(prefix)
         
         btnsizer = wx.FlexGridSizer(4, 4)
         idBtns = []
@@ -303,30 +301,24 @@ class X10(eg.PluginClass):
             btnsizer.Add(btn)
             idBtns.append(btn)
             
+        selectAllButton = panel.Button(text.allButton, style=wx.BU_EXACTFIT)
         def OnSelectAll(event):
             for item in idBtns:
                 item.SetValue(True)
             event.Skip()
-    
-        selectAllBtn = wx.Button(
-            panel, -1, text.allButton, style=wx.BU_EXACTFIT
-        )
-        selectAllBtn.Bind(wx.EVT_BUTTON, OnSelectAll)
+        selectAllButton.Bind(wx.EVT_BUTTON, OnSelectAll)
         
+        selectNoneButton = panel.Button(text.noneButton, style=wx.BU_EXACTFIT)
         def OnSelectNone(event):
             for item in idBtns:
                 item.SetValue(False)
             event.Skip()
-            
-        selectNoneBtn = wx.Button(
-            panel, -1, text.noneButton, style=wx.BU_EXACTFIT
-        )
-        selectNoneBtn.Bind(wx.EVT_BUTTON, OnSelectNone)
+        selectNoneButton.Bind(wx.EVT_BUTTON, OnSelectNone)
 
         rightBtnSizer = wx.BoxSizer(wx.VERTICAL)
-        rightBtnSizer.Add(selectAllBtn, 0, wx.EXPAND)
+        rightBtnSizer.Add(selectAllButton, 0, wx.EXPAND)
         rightBtnSizer.Add((5,5), 1)
-        rightBtnSizer.Add(selectNoneBtn, 0, wx.EXPAND)
+        rightBtnSizer.Add(selectNoneButton, 0, wx.EXPAND)
             
         idSizer = wx.BoxSizer(wx.HORIZONTAL)
         idSizer.Add(btnsizer)
@@ -334,13 +326,13 @@ class X10(eg.PluginClass):
         idSizer.Add(rightBtnSizer, 0, wx.EXPAND)
         
         leftSizer = wx.BoxSizer(wx.VERTICAL)
-        leftSizer.Add(wx.StaticText(panel, -1, text.remoteBox), 0, wx.BOTTOM, 2)
-        leftSizer.Add(choice, 0, wx.BOTTOM, 10)
-        leftSizer.Add(wx.StaticText(panel, -1, text.usePrefix), 0, wx.BOTTOM, 2)
-        leftSizer.Add(editCtrl)
+        leftSizer.Add(panel.StaticText(text.remoteBox), 0, wx.BOTTOM, 2)
+        leftSizer.Add(remoteTypeCtrl, 0, wx.BOTTOM, 10)
+        leftSizer.Add(panel.StaticText(text.usePrefix), 0, wx.BOTTOM, 2)
+        leftSizer.Add(prefixCtrl)
         
         rightSizer = wx.BoxSizer(wx.VERTICAL)
-        rightSizer.Add(wx.StaticText(panel, -1, text.idBox), 0, wx.BOTTOM, 2)
+        rightSizer.Add(panel.StaticText(text.idBox), 0, wx.BOTTOM, 2)
         rightSizer.Add(idSizer)
         
         mainSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -355,9 +347,9 @@ class X10(eg.PluginClass):
         
         while panel.Affirmed():
             panel.SetResult(
-                gRemotesOrder[choice.GetSelection()], 
+                gRemotesOrder[remoteTypeCtrl.GetValue()], 
                 [i+1 for i, button in enumerate(idBtns) if button.GetValue()], 
-                editCtrl.GetValue()
+                prefixCtrl.GetValue()
             )
 
 

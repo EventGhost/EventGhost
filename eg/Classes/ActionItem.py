@@ -103,10 +103,10 @@ class ActionItem(TreeItem):
             args = eval(
                 'returnArgs(%s)' % argString,
                 eg.globals.__dict__, 
-                {
-                    'returnArgs': lambda *x: x,
-                    'XmlIdLink': lambda id: TreeLink.CreateFromArgument(self, id),
-                }
+                dict(
+                    returnArgs = lambda *x: x,
+                    XmlIdLink = lambda id: TreeLink.CreateFromArgument(self, id),
+                )
             )
         except:
             eg.PrintTraceback()

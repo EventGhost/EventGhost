@@ -30,7 +30,8 @@ eg.RegisterPlugin(
     description = (
         "Adds actions to control <a href='http://www.team-mediaportal.com/'>"
         "MediaPortal</a>."
-        "\n\n<p>"
+    ),
+    help = (
         "<b>Note:</b> You have to install and enable this "
         '<a href="http://www.team-mediaportal.com/component/'
         'option,com_remository/Itemid,35/func,fileinfo/id,238/">'

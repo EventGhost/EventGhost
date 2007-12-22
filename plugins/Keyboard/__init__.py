@@ -26,19 +26,19 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
-    description = (
-        "This plugin generates events on keypresses (hotkeys)."
-        "\n\n<p>"
-        "<b>Notice:</b> If such a keyboard event is assigned to a macro, the "
-        "plugin will block the key, so Windows or another application will "
-        "not see it anymore. This is needed to permit remapping of keys as "
-        "otherwise the old key would reach the target in conjunction of "
-        "another action you might want to do and this is mostly not what you "
-        "intend.<p>"
-        "But this blocking only happens, if a macro would actually execute in "
-        "succession of the event. So if the macro or any of its parents is "
-        "disabled, the keypress will pass through."
-    ),
+    description = "This plugin generates events on keypresses (hotkeys).",
+    help = """
+        <b>Notice:</b> If such a keyboard event is assigned to a macro, the 
+        plugin will block the key, so Windows or another application will
+        not see it anymore. This is needed to permit remapping of keys as
+        otherwise the old key would reach the target in conjunction of
+        another action you might want to do and this is mostly not what you
+        intend.
+        
+        But this blocking only happens, if a macro would actually execute in
+        succession of the event. So if the macro or any of its parents is
+        disabled, the keypress will pass through.
+    """,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeT"
         "AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH1QQIDBMjdIFglwAAADV0RVh0Q29t"

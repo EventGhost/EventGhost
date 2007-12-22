@@ -27,9 +27,7 @@ eg.RegisterPlugin(
     version = "1.0." + "$LastChangedRevision$".split()[1],
     canMultiLoad = True,
     url = "http://www.eventghost.org/forum/viewtopic.php?t=513",
-    description = (
-        "Creates a remote-like desktop window."
-    ),
+    description = "Creates a remote-like desktop window.",
 )
 
 

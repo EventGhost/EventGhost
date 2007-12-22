@@ -23,8 +23,10 @@
 
 eg.RegisterPlugin(
     name = "EventGhost",
-    description = ("Here you find actions that mainly control the core "
-        "functionality of EventGhost."),
+    description = (
+        "Here you find actions that mainly control the core "
+        "functionality of EventGhost."
+    ),
     kind = "core",
     version = "1.0." + "$LastChangedRevision$".split()[1],
 )

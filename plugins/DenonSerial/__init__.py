@@ -4,25 +4,6 @@
 # Written by Oliver Wagner, <owagner@hometheatersoftware.com>
 # Public Domain
 #
-# Small trivial plugin to control Denon AVRs and AMPs via RS-232
-# Developed and tested with an AVR 3806 only, but might work with 
-# different devices. YMMV.
-#
-# Replies from the AVR are turned into events. Description of
-# commands and their replies can be found in the document
-# "AVR3806_PROTOCOL.PDF", which is available from the Denon
-# websites. The events are slightly rewritten in order to be
-# more useful within EG's event matching system:
-# - replies with trailing numbers have a "." prefixed to the number.
-#   This allows to match on the Event "DenonSerial.EVENTNAME.*", and
-#   parse the parameter. Trailing spaces are removed. Example:
-#   MV70 -> MV.70
-#   MVMAX 80 -> MVMAX.80
-# - similarily, ":" are replaced with ".":
-#   PSSB:ON -> PSSB.ON
-#
-# The plugin keeps track of the current master volume in order to
-# support the FadeTo command.
 #
 # Revision history:
 # -----------------
@@ -35,14 +16,38 @@
 # 0.5 - EventGhost 0.3.1+ compatibility
 # 0.6 - EventGhost 0.3.6+ compatibility (by bitmonster)
 
-import eg
+help = """\
+Small trivial plugin to control Denon AVRs and AMPs via RS-232.
+Developed and tested with an AVR 3806 only, but might work with 
+different devices. YMMV.
 
+Replies from the AVR are turned into events. Description of
+commands and their replies can be found in the document
+"AVR3806_PROTOCOL.PDF", which is available from the Denon
+websites. 
+
+The events are slightly rewritten in order to be
+more useful within EventGhosts's event matching system:
+<ul>
+<li> Replies with trailing numbers have a "." prefixed to the number.
+   This allows to match on the Event "DenonSerial.EVENTNAME.*", and
+   parse the parameter. Trailing spaces are removed. Example:<br>
+   MV70 -> MV.70<br>
+   MVMAX 80 -> MVMAX.80</li>
+<li>Similarily, ":" are replaced with ".":<br>
+   PSSB:ON -> PSSB.ON</li>
+</ul>
+
+The plugin keeps track of the current master volume in order to
+support the FadeTo command."""
+ 
 eg.RegisterPlugin(
     name = "Denon AV Serial",
     author = "Oliver Wagner",
     version = "0.6." + "$LastChangedRevision$".split()[1],
     kind = "external",
     description = "Control Denon A/V Amps/Receivers via RS232",
+    help = help,
     canMultiLoad = True,
     createMacrosOnAdd = True,
     icon = (

@@ -20,6 +20,31 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+__description__ = """\
+Adds actions to control the famous 
+<a href="http://www.inmatrix.com/">Zoom Player</a>.
+"""
+
+__help__ = """\
+<b>Notice:</b><br>
+To make it work, you have to enable TCP control in Zoom Player. Either enable 
+it in the options of Zoom Player under:
+
+<i>Option/Setup => Values & Tools => Interface => Enable External TCP 
+Control</i>
+
+or call the executable with the option <i>/TCP:[port]</i>
+
+
+<b>Hint:</b><br>
+Disable scroll acceleration in Zoom Player. Otherweise scrolling in 
+navigators might be jumpy if you use autorepeat in EventGhost (which 
+has a more sophisticated scroll acceleration). You find the setting 
+in Zoom Player under:
+
+<i>Option/Setup => OSD => Navigators => Settings => Disable Scroll 
+Acceleration</i>
+"""
     
 eg.RegisterPlugin(
     name = "Zoom Player",
@@ -28,27 +53,8 @@ eg.RegisterPlugin(
     kind = "program",
     canMultiLoad = True,
     createMacrosOnAdd = True,
-    description = (
-        'Adds actions to control the famous '
-        '<a href="http://www.inmatrix.com/">Zoom Player</a>.'
-        '\n\n<p>'
-        '<b>Notice:</b><br>'
-        'To make it work, you have to enable TCP control in Zoom Player. '
-        'Either enable it in the options of Zoom Player under:'
-        '<p>'
-        '<i>Option/Setup => Values & Tools => Interface => Enable External '
-        'TCP Control</i>'
-        '<p>'
-        'or call the executable with the option <i>/TCP:[port]</i>'
-        '<p>'
-        '<b>Hint:</b><br>'
-        'Disable scroll acceleration in Zoom Player. Otherweise scrolling in '
-        'navigators might be jumpy if you use autorepeat in EventGhost (which '
-        'has a more sophisticated scroll acceleration). You find the setting '
-        'in Zoom Player under:<br>'
-        '<i>Option/Setup => OSD => Navigators => Settings => Disable Scroll '
-        'Acceleration</i>'
-    ),
+    description = __description__,
+    help = __help__,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAA7DAAAOwwHH"
         "b6hkAAAC5ElEQVR4nIWTz08cZRjH5z/YmTnqoZvGm2cPiKEYzSZErTXFNrHUJt68tNmW"

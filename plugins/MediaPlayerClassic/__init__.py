@@ -26,18 +26,21 @@ eg.RegisterPlugin(
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "program",
     createMacrosOnAdd = True,
-    description = (
-        'Adds actions to control '
-        '<a href="http://sourceforge.net/projects/guliverkli/">'
-        'Media Player Classic</a>.'
-        '\n\n<p>'
-        'Only for version <b>6.4.8.9</b> or above.'
-        'The plugin will not work with older versions of MPC!</p>'
-        '<p><a href=http://www.eventghost.org/forum/viewtopic.php?t=17>'
-        'Bugreports</a></p>'
-        '<p><a href="http://sourceforge.net/projects/guliverkli/">'
-        'Media Player Classic SourceForge Project</a></p>'
-    ),
+    description = """
+        Adds actions to control 
+        <a href="http://sourceforge.net/projects/guliverkli/">
+        Media Player Classic</a>.
+    """,
+    help = """
+        Only for version <b>6.4.8.9</b> or above.
+        The plugin will not work with older versions of MPC!
+        
+        <a href=http://www.eventghost.org/forum/viewtopic.php?t=17>
+        Bugreports</a>
+        
+        <p><a href="http://sourceforge.net/projects/guliverkli/">
+        Media Player Classic SourceForge Project</a>
+    """,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAhElEQVR42rWRgQqAIAwF"
         "fV+++eWr1V6kiM6gQaTVHYehJEdV7bUG18hCInIDQMNhA+L7cQHBETQrBWERDXANjcxm"

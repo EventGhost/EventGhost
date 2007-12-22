@@ -4,23 +4,22 @@
 # Written by Oliver Wagner, <owagner@hometheatersoftware.com>
 # Public Domain
 #
-# Small trivial plugin to control an Optoma H79 PJ via RS-232.
-# Commands are taken straight out of the RS232_H79.pdf document
-# available from the Optoma website. Please note that, at least
-# with the documented command set, the serial input is pretty much
-# just a remote replacement, i.e. most of the serial commands
-# refer to remote functions, and you need to fiddle with 
-# Up/Down/Left/Right/Enter to actually change values. Yes, this sucks.
-#
-# PJ replies are returned to EG as events.
-#
 # Revision history:
 # -----------------
 # 0.1 - initial
 # 0.2 - EventGhost 0.3.1+ compatibility
 #
 
-import eg
+help = """\
+Commands are taken straight out of the RS232_H79.pdf document
+available from the Optoma website. Please note that, at least
+with the documented command set, the serial input is pretty much
+just a remote replacement, i.e. most of the serial commands
+refer to remote functions, and you need to fiddle with 
+Up, Down, Left, Right and Enter to actually change values. 
+Yes, this sucks.
+
+Projector replies are returned to EventGhost as events."""
 
 eg.RegisterPlugin(
     name = "Optoma H79 Serial",
@@ -28,6 +27,7 @@ eg.RegisterPlugin(
     version = "0.2." + "$LastChangedRevision$".split()[1],
     kind = "external",
     description = "Control an Optoma H79 projector via RS232",
+    help = help,
     canMultiLoad = True,
     createMacrosOnAdd = True,
     icon = (

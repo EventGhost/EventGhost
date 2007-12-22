@@ -24,16 +24,11 @@ from sys import exc_info
 from threading import Event, Thread, Lock
 from collections import deque
 from time import clock
-from pythoncom import CoInitialize, CoUninitialize, PumpWaitingMessages
-from win32event import (
-    CreateEvent,
-    SetEvent,
-    MsgWaitForMultipleObjects,
-    WAIT_OBJECT_0, 
-    WAIT_TIMEOUT, 
-    QS_ALLINPUT
+from pythoncom import PumpWaitingMessages
+from ctypes.dynamic import (
+    CreateEvent, SetEvent, WAIT_OBJECT_0, WAIT_TIMEOUT, QS_ALLINPUT, 
+    MsgWaitForMultipleObjects, byref, HANDLE, CoInitialize, CoUninitialize
 )
-
 
 class ThreadWorkerAction:
     """ 
@@ -80,6 +75,7 @@ class ThreadWorker:
         self.__queue = deque()
         self.__wakeEvent = CreateEvent(None, 0, 0, None)
         self.__dummyEvent = CreateEvent(None, 0, 0, None)
+        self.__events = (HANDLE * 1)(self.__wakeEvent)
         
         
     def Setup(self):
@@ -129,7 +125,7 @@ class ThreadWorker:
         """
         Mainloop of the new thread.
         """
-        CoInitialize()
+        CoInitialize(None)
         PumpWaitingMessages()
         self.Setup()
         try:
@@ -142,7 +138,8 @@ class ThreadWorker:
             
     def __DoOneEvent(self):
         rc = MsgWaitForMultipleObjects(
-            (self.__wakeEvent,), 
+            1,
+            self.__events, 
             0, 
             10000, 
             QS_ALLINPUT
@@ -177,9 +174,11 @@ class ThreadWorker:
         otimeout = timeout
         start = clock()
         endTime = clock() + timeout
+        events = (HANDLE * 1)(self.__dummyEvent)
         while True:
             rc = MsgWaitForMultipleObjects(
-                (self.__dummyEvent,),
+                1,
+                events,
                 0,
                 int(timeout * 1000),
                 QS_ALLINPUT

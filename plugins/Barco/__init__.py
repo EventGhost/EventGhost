@@ -2,6 +2,7 @@ from __future__ import with_statement
 
 eg.RegisterPlugin(
     name = "Barco CRT Projector",
+    description = "Controls Barco CRT projectors via RS232.",
     kind = "external",
     author = "Bitmonster",
     version = "1.0.0",

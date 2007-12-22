@@ -90,6 +90,11 @@ import win32file
 import codecs
 import binascii
 
+BAUDRATES = [
+    '110', '300', '600', '1200', '2400', '4800', '9600', '14400', '19200', 
+    '38400', '57600', '115200', '128000', '256000'
+]
+
 
 def MyHexDecoder(input):
     return (binascii.b2a_hex(input).upper(), len(input))
@@ -110,9 +115,8 @@ class Serial(eg.RawReceiverPlugin):
     
     def __init__(self):
         eg.RawReceiverPlugin.__init__(self)
-        self.AddAction(self.Write)
-        self.AddAction(self.Read)
-        self.Send = self.Write
+        self.AddAction(Write)
+        self.AddAction(Read)
         self.serial = None
         self.buffer = ""
 
@@ -253,28 +257,22 @@ class Serial(eg.RawReceiverPlugin):
         panel = eg.ConfigPanel(self)
         portCtrl = panel.SerialPortChoice(port)
         
-        baudrateCtrl = wx.ComboBox(
-            panel,
-            value=str(baudrate),
-            choices=[
-                        '110', '300', '600', '1200', '2400', '4800', '9600',
-                        '14400', '19200', '38400', '57600', '115200', 
-                        '128000', '256000'
-                    ],
+        baudrateCtrl = panel.ComboBox(
+            str(baudrate),
+            BAUDRATES,
             style=wx.CB_DROPDOWN,
             validator=eg.DigitOnlyValidator()
         )
-        
-        bytesizeCtrl = panel.Choice(bytesize, choices=['5', '6', '7', '8'])
-        parityCtrl = panel.Choice(parity, choices=text.parities)
-        stopbitsCtrl = panel.Choice(stopbits, choices=['1', '2'])
-        handshakeCtrl = panel.Choice(handshake, choices=text.handshakes)
-        generateEventsCtrl = panel.CheckBox(generateEvents, label=text.generateEvents)
+        bytesizeCtrl = panel.Choice(bytesize, ['5', '6', '7', '8'])
+        parityCtrl = panel.Choice(parity, text.parities)
+        stopbitsCtrl = panel.Choice(stopbits, ['1', '2'])
+        handshakeCtrl = panel.Choice(handshake, text.handshakes)
+        generateEventsCtrl = panel.CheckBox(generateEvents, text.generateEvents)
         terminatorCtrl = panel.TextCtrl(terminator)
         terminatorCtrl.Enable(generateEvents)
         prefixCtrl = panel.TextCtrl(prefix)
         prefixCtrl.Enable(generateEvents)
-        encodingCtrl = panel.Choice(encodingNum, choices=text.codecChoices)
+        encodingCtrl = panel.Choice(encodingNum, text.codecChoices)
         encodingCtrl.Enable(generateEvents)
         
         def OnCheckBox(event):
@@ -314,84 +312,84 @@ class Serial(eg.RawReceiverPlugin):
         
         
         
-    class Write(eg.ActionWithStringParameter):
-        
-        def __call__(self, data):
-            data = eg.ParseString(data, self.replaceFunc)
-            data = data.decode('string_escape')
-            self.plugin.serial.write(str(data))
-            return self.plugin.serial
-            
-            
-        def replaceFunc(self, data):
-            data = data.strip()
-            if data == "CR":
-                return chr(13)
-            elif data == "LF":
-                return chr(10)
-            else:
-                return None
+class Write(eg.ActionWithStringParameter):
+    
+    def __call__(self, data):
+        data = eg.ParseString(data, self.replaceFunc)
+        data = data.decode('string_escape')
+        self.plugin.serial.write(str(data))
+        return self.plugin.serial
         
         
+    def replaceFunc(self, data):
+        data = data.strip()
+        if data == "CR":
+            return chr(13)
+        elif data == "LF":
+            return chr(10)
+        else:
+            return None
+    
+    
+    
+class Read(eg.ActionClass):
+    
+    def __call__(self, count=None, timeout=0.0):
+        serial = self.plugin.serial
+        serial.timeout = timeout
+        if count is None:
+            count = 1024
+        data = serial.read(count)
+        return data
+    
+    
+    def GetLabel(self, *args):
+        return eg.ActionClass.GetLabel(self)
+    
+    
+    def Configure(self, count=None, timeout=1.0):
+        text = self.text
+        panel = eg.ConfigPanel(self)
+        if count is None:
+            count = 1
+            flag = False
+        else:
+            flag = True
+        if timeout is None:
+            timeout = 1.0
+        rb1 = panel.RadioButton(not flag, text.read_all, style=wx.RB_GROUP)
+        rb2 = panel.RadioButton(flag, text.read_some)
+        countCtrl = panel.SpinIntCtrl(count, 1, 1024)
+        countCtrl.Enable(flag)
+        timeCtrl = panel.SpinIntCtrl(int(timeout * 1000), 0, 10000)
+        timeCtrl.Enable(flag)
         
-    class Read(eg.ActionClass):
-        
-        def __call__(self, count=None, timeout=0.0):
-            serial = self.plugin.serial
-            serial.timeout = timeout
-            if count is None:
-                count = 1024
-            data = serial.read(count)
-            return data
-        
-        
-        def GetLabel(self, *args):
-            return eg.ActionClass.GetLabel(self)
-        
-        
-        def Configure(self, count=None, timeout=1.0):
-            text = self.text
-            panel = eg.ConfigPanel(self)
-            if count is None:
-                count = 1
-                flag = False
-            else:
-                flag = True
-            if timeout is None:
-                timeout = 1.0
-            rb1 = panel.RadioButton(not flag, text.read_all, style=wx.RB_GROUP)
-            rb2 = panel.RadioButton(flag, text.read_some)
-            countCtrl = panel.SpinIntCtrl(count, 1, 1024)
+        def OnRadioButton(event):
+            flag = rb2.GetValue()
             countCtrl.Enable(flag)
-            timeCtrl = panel.SpinIntCtrl(int(timeout * 1000), 0, 10000)
             timeCtrl.Enable(flag)
-            
-            def OnRadioButton(event):
-                flag = rb2.GetValue()
-                countCtrl.Enable(flag)
-                timeCtrl.Enable(flag)
-                event.Skip()
-            rb1.Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
-            rb2.Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
-            
-            Add = panel.sizer.Add
-            Add(rb1)
-            Add((5,5))
-            Add(rb2)
-            Add((5,5))
-            Add(countCtrl, 0, wx.LEFT, 25)
-            Add((5,5))
-            Add(panel.StaticText(text.read_time), 0, wx.LEFT, 25)
-            Add((5,5))
-            Add(timeCtrl, 0, wx.LEFT, 25)
-
-            while panel.Affirmed():
-                if rb1.GetValue():
-                    panel.SetResult(None, 0.0)
-                else:
-                    panel.SetResult(
-                        countCtrl.GetValue(), 
-                        timeCtrl.GetValue() / 1000.0
-                    )
+            event.Skip()
+        rb1.Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
+        rb2.Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
         
+        Add = panel.sizer.Add
+        Add(rb1)
+        Add((5,5))
+        Add(rb2)
+        Add((5,5))
+        Add(countCtrl, 0, wx.LEFT, 25)
+        Add((5,5))
+        Add(panel.StaticText(text.read_time), 0, wx.LEFT, 25)
+        Add((5,5))
+        Add(timeCtrl, 0, wx.LEFT, 25)
+
+        while panel.Affirmed():
+            if rb1.GetValue():
+                panel.SetResult(None, 0.0)
+            else:
+                panel.SetResult(
+                    countCtrl.GetValue(), 
+                    timeCtrl.GetValue() / 1000.0
+                )
+    
         

@@ -214,11 +214,17 @@ class PluginManager:
         canMultiLoad = False,
         createMacrosOnAdd = False,
         url = None,
+        help = None,
     ):
         if name is None:
             name = self.currentInfo.dirname
         if description is None:
             description = name
+        if help is not None:
+            help = "\n".join([s.strip() for s in help.splitlines()])
+            #help = help.replace("\n\n\n", "<p>")
+            help = help.replace("\n\n", "<p>")
+            description += "\n\n<p>" + help
         self.currentInfo.__dict__.update(locals())
         # we are done with this plugin module, so we can interrupt further 
         # processing by raising RegisterPluginDone

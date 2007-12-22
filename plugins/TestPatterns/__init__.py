@@ -43,27 +43,63 @@ from eg.WinAPI.Utils import GetMonitorDimensions, BringHwndToFront
 import cStringIO
 from base64 import b64decode
 
+class Text:
+    foregroundColour = "Foreground colour:"
+    backgroundColour = "Background colour:"
+    display = "Display:"
+    aspectRatio = "Aspect ratio:"
+    aspectRatios = [
+        "1:1 Pixelmapping", 
+        "4:3 Frame",
+        "16:9 Frame",
+        "4:3 ITU-R BT.601 PAL",
+        "16:9 ITU-R BT.601 PAL",
+    ]
+    coverage = "Coverage (percent):"
+    orientation = "Orientation:"
+    orientations = ["Horizontal", "Vertical"]
+    numVerticalElements = "Number of vertical elements:"
+    numHorizontalElements = "Number of horizontal elements:"
+    numElements = "Number of elements:"
+    useAntiAlias = "Use Anti-Aliasing"
+    firstColour = "First colour:"
+    secondColour = "Second colour:"
+    lastColour = "Last colour:"
+    dotDiameter = "Dot Diameter:"
+    makeDoubleBars = "Make Double Bars"
+    showNumbers = "Show Numbers"
+    numberFont = "Number Font:"
+    lineSize = "Line Size:"
+    radius1 = "Radius:"
+    radius2 = "% (0=fill entire screen)"
+    
 
-
+#FOCUS_PATTERN = b64decode(
+#    "iVBORw0KGgoAAAANSUhEUgAAACgAAAAoAQMAAAC2MCouAAAABlBMVEUAAAD///+l2Z/d"
+#    "AAAAAnRSTlMA/1uRIrUAAABkSURBVHjaY2AAg/p/DPb/oWQCE4MCM0N+1ff11QyZXlNW"
+#    "ekPJ/F//1/9mSHQSUXSGslFkweoheuv/AwEDA5DNwMAPFK9g4ASq8YCS/EC9PxgYgeY4"
+#    "QNkosmD1EL0Qc6jgHoTvAMSAW32HrwidAAAAAElFTkSuQmCC"
+#)
 FOCUS_PATTERN = b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAACgAAAAoAQMAAAC2MCouAAAABlBMVEUAAAD///+l2Z/d"
-    "AAAAAnRSTlMA/1uRIrUAAABkSURBVHjaY2AAg/p/DPb/oWQCE4MCM0N+1ff11QyZXlNW"
-    "ekPJ/F//1/9mSHQSUXSGslFkweoheuv/AwEDA5DNwMAPFK9g4ASq8YCS/EC9PxgYgeY4"
-    "QNkosmD1EL0Qc6jgHoTvAMSAW32HrwidAAAAAElFTkSuQmCC"
-)
+    "AAAAZElEQVR4nGNgAIP6fwz2/6FkAhODAjNDftX39dUMmV5TVnpDyfxf/9f/Zkh0ElF0"
+    "hrJRZMHqIXrr/wMBAwOQzcDADxSvYOAEqvGAkvxAvT8YGIHmOEDZKLJg9RC9EHOo4B6E"
+    "7wDEgFt9VLehNwAAAABJRU5ErkJggg=="
+)        
+        
 FOCUS_IMAGE = wx.ImageFromStream(cStringIO.StringIO(FOCUS_PATTERN))
 
 ASPECT_RATIOS = [
-    # name, aspectRatio, isCCIR601
-    ("1:1 Pixelmapping", None, False),
-    ("4:3 Frame", 4.0 / 3.0, False),
-    ("16:9 Frame", 16.0 / 9.0, False),
-    ("4:3 ITU-R BT.601 PAL", (720.0 / 702.0) * (4.0 / 3.0), True),
-    ("16:9 ITU-R BT.601 PAL", (720.0 / 702.0) * (16.0 / 9.0), True),
+    # aspectRatio, isCCIR601
+    (None, False),
+    (4.0 / 3.0, False),
+    (16.0 / 9.0, False),
+    ((720.0 / 702.0) * (4.0 / 3.0), True),
+    ((720.0 / 702.0) * (16.0 / 9.0), True),
 ]
 
 
-class DrawFrame(wx.Frame):
+class DrawingFrame(wx.Frame):
     
     def __init__(self, parent=None):
         wx.Frame.__init__(
@@ -121,9 +157,10 @@ class DrawFrame(wx.Frame):
 
 
 class TestPatterns(eg.PluginClass):
+    text = Text
     
     def __init__(self):
-        self.frame = DrawFrame(None)
+        self.frame = DrawingFrame(None)
         self.AddAction(SetDisplay)
         self.AddAction(Focus)
         self.AddAction(IreWindow)
@@ -157,6 +194,7 @@ class TestPatternAction(eg.ActionClass):
 
 
 class SetDisplay(eg.ActionClass):      
+    name = "Set Display"
     
     def __call__(self, display=0):
         self.plugin.frame.displayNum = display
@@ -169,12 +207,12 @@ class SetDisplay(eg.ActionClass):
     def Configure(self, display=0):
         panel = eg.ConfigPanel(self)
         displayChoice = panel.DisplayChoice(display)
-        panel.AddLine("Display:", displayChoice)
+        panel.AddLine(self.plugin.text.display, displayChoice)
         while panel.Affirmed():
             panel.SetResult(displayChoice.GetValue())
         
-        
-        
+
+
 class Focus(TestPatternAction):
         
     def Draw(
@@ -185,17 +223,28 @@ class Focus(TestPatternAction):
         display=0, # deprecated
     ):
         image = FOCUS_IMAGE.Copy()
-        image.Replace(255, 255, 255, *foregroundColour)
-        bmp = wx.BitmapFromImage(image)
+        image.ConvertToMono(255,255,255)
+        bmp = wx.BitmapFromImage(image, 1)
         bmpWidth, bmpHeight = bmp.GetSize()
-        dc.SetBackground(wx.Brush(backgroundColour))
-        dc.Clear()
+        #bmp.SetMask(None)
+        
+        mdc = wx.MemoryDC()
+        bmp2 = wx.EmptyBitmap(bmpWidth, bmpHeight, 1)
+        mdc.SelectObject(bmp2)
+        mdc.SetTextForeground((255, 255, 255))
+        mdc.SetTextBackground((0, 0, 0))
+        mdc.DrawBitmap(bmp, 0, 0, False)
+        mdc.SelectObject(wx.NullBitmap)
+        bmp = bmp2
+        
+        dc.SetTextForeground(backgroundColour)
+        dc.SetTextBackground(foregroundColour)
         w, h = dc.GetSizeTuple()
         startX = (bmpWidth - (w % bmpWidth)) / 2
         startY = (bmpHeight - (h % bmpHeight)) / 2
         for x in range(-startX, w, bmpWidth):
             for y in range(-startY, h, bmpHeight):
-                dc.DrawBitmap(bmp, x, y, True)
+                dc.DrawBitmap(bmp, x, y, False)
     
     
     def Configure(
@@ -204,30 +253,33 @@ class Focus(TestPatternAction):
         backgroundColour=(0,0,0),
         display=0, #deprecated
     ):
+        text = self.plugin.text
         panel = eg.ConfigPanel(self)
-        foregroundColourButton = panel.ColourSelectButton(foregroundColour)       
-        backgroundColourButton = panel.ColourSelectButton(backgroundColour)
+        foregroundColourCtrl = panel.ColourSelectButton(foregroundColour)       
+        backgroundColourCtrl = panel.ColourSelectButton(backgroundColour)
         
-        panel.AddLine("Foreground Colour:", foregroundColourButton)
-        panel.AddLine("Background Colour:", backgroundColourButton)
+        panel.AddLine(text.foregroundColour, foregroundColourCtrl)
+        panel.AddLine(text.backgroundColour, backgroundColourCtrl)
         
         while panel.Affirmed():
             panel.SetResult(
-                foregroundColourButton.GetValue(), 
-                backgroundColourButton.GetValue(), 
+                foregroundColourCtrl.GetValue(), 
+                backgroundColourCtrl.GetValue(), 
                 0
             )
         
             
     
 class IreWindow(TestPatternAction):
-        
+    name = "IRE Window"
+    
     def Draw(
         self, 
         dc,
         foregroundColour, 
         backgroundColour, 
         coverage, 
+        aspectRatio=0,
         display=0, # deprecated
     ):
         dc.SetBackground(wx.Brush(backgroundColour))
@@ -250,24 +302,25 @@ class IreWindow(TestPatternAction):
         aspectRatio=0,
         display=0, # deprecated
     ):
+        text = self.plugin.text
         panel = eg.ConfigPanel(self)
         
-        foregroundColourButton = panel.ColourSelectButton(foregroundColour)
-        backgroundColourButton = panel.ColourSelectButton(backgroundColour)
+        foregroundColourCtrl = panel.ColourSelectButton(foregroundColour)
+        backgroundColourCtrl = panel.ColourSelectButton(backgroundColour)
         coverageCtrl = panel.SpinNumCtrl(coverage, min=0, max=100)
-        aspectChoice = panel.Choice(choices=zip(*ASPECT_RATIOS)[0])
+        aspectChoice = panel.Choice(aspectRatio, text.aspectRatios)
 
-        panel.AddLine("Foreground Colour:", foregroundColourButton)
-        panel.AddLine("Background Colour:", backgroundColourButton)
-        panel.AddLine("Percent Coverage:", coverageCtrl)
-        panel.AddLine("Aspect Ratio:", aspectChoice)
+        panel.AddLine(text.foregroundColour, foregroundColourCtrl)
+        panel.AddLine(text.backgroundColour, backgroundColourCtrl)
+        panel.AddLine(text.coverage, coverageCtrl)
+        panel.AddLine(text.aspectRatio, aspectChoice)
         
         while panel.Affirmed():
             panel.SetResult(
-                foregroundColourButton.GetValue(), 
-                backgroundColourButton.GetValue(), 
+                foregroundColourCtrl.GetValue(), 
+                backgroundColourCtrl.GetValue(), 
                 coverageCtrl.GetValue(),
-                0,
+                aspectChoice.GetValue(),
             )
         
         
@@ -312,21 +365,22 @@ class Checkerboard(TestPatternAction):
         vCount=4,
         display=0, #deprecated
     ):
+        text = self.plugin.text
         panel = eg.ConfigPanel(self)
-        foregroundColourButton = panel.ColourSelectButton(foregroundColour)
-        backgroundColourButton = panel.ColourSelectButton(backgroundColour)
+        foregroundColourCtrl = panel.ColourSelectButton(foregroundColour)
+        backgroundColourCtrl = panel.ColourSelectButton(backgroundColour)
         hCountCtrl = panel.SpinIntCtrl(hCount, min=0, max=100)
         vCountCtrl = panel.SpinIntCtrl(vCount, min=0, max=100)
 
-        panel.AddLine("Foreground Colour:", foregroundColourButton)
-        panel.AddLine("Background Colour:", backgroundColourButton)
-        panel.AddLine("Num Horizontal Boxes:", hCountCtrl)
-        panel.AddLine("Num Vertical Boxes:", vCountCtrl)
+        panel.AddLine(text.foregroundColour, foregroundColourCtrl)
+        panel.AddLine(text.backgroundColour, backgroundColourCtrl)
+        panel.AddLine(text.numHorizontalElements, hCountCtrl)
+        panel.AddLine(text.numVerticalElements, vCountCtrl)
         
         while panel.Affirmed():
             panel.SetResult(
-                foregroundColourButton.GetValue(), 
-                backgroundColourButton.GetValue(), 
+                foregroundColourCtrl.GetValue(), 
+                backgroundColourCtrl.GetValue(), 
                 hCountCtrl.GetValue(),
                 vCountCtrl.GetValue(),
                 0,
@@ -374,22 +428,23 @@ class Grid(TestPatternAction):
         vCount=9,
         display=0, # deprecated
     ):
+        text = self.plugin.text
         panel = eg.ConfigPanel(self)
 
-        foregroundColourButton = panel.ColourSelectButton(foregroundColour)
-        backgroundColourButton = panel.ColourSelectButton(backgroundColour)
+        foregroundColourCtrl = panel.ColourSelectButton(foregroundColour)
+        backgroundColourCtrl = panel.ColourSelectButton(backgroundColour)
         hCountCtrl = panel.SpinIntCtrl(hCount, min=0, max=100)
         vCountCtrl = panel.SpinIntCtrl(vCount, min=0, max=100)
 
-        panel.AddLine("Foreground Colour:", foregroundColourButton)
-        panel.AddLine("Background Colour:", backgroundColourButton)
-        panel.AddLine("Num Horizontal Boxes:", hCountCtrl)
-        panel.AddLine("Num Vertical Boxes:", vCountCtrl)
+        panel.AddLine(text.foregroundColour, foregroundColourCtrl)
+        panel.AddLine(text.backgroundColour, backgroundColourCtrl)
+        panel.AddLine(text.numHorizontalElements, hCountCtrl)
+        panel.AddLine(text.numVerticalElements, vCountCtrl)
         
         while panel.Affirmed():
             panel.SetResult(
-                foregroundColourButton.GetValue(), 
-                backgroundColourButton.GetValue(), 
+                foregroundColourCtrl.GetValue(), 
+                backgroundColourCtrl.GetValue(), 
                 hCountCtrl.GetValue(),
                 vCountCtrl.GetValue(),
             )
@@ -449,26 +504,27 @@ class Dots(TestPatternAction):
         diameter=1,
         antialiasing=False
     ):
+        text = self.plugin.text
         panel = eg.ConfigPanel(self)
 
-        foregroundColourButton = panel.ColourSelectButton(foregroundColour)
-        backgroundColourButton = panel.ColourSelectButton(backgroundColour)
+        foregroundColourCtrl = panel.ColourSelectButton(foregroundColour)
+        backgroundColourCtrl = panel.ColourSelectButton(backgroundColour)
         hCountCtrl = panel.SpinIntCtrl(hCount, min=1, max=100)
         vCountCtrl = panel.SpinIntCtrl(vCount, min=1, max=100)
         diameterCtrl = panel.SpinIntCtrl(diameter, min=1)
-        anialiasingCtrl = panel.CheckBox(antialiasing, "Use Anti-Aliasing")
+        anialiasingCtrl = panel.CheckBox(antialiasing, text.useAntiAlias)
 
-        panel.AddLine("Foreground Colour:", foregroundColourButton)
-        panel.AddLine("Background Colour:", backgroundColourButton)
-        panel.AddLine("Num Horizontal Dots:", hCountCtrl)
-        panel.AddLine("Num Vertical Dots:", vCountCtrl)
-        panel.AddLine("Dot Diameter:", diameterCtrl)
+        panel.AddLine(text.foregroundColour, foregroundColourCtrl)
+        panel.AddLine(text.backgroundColour, backgroundColourCtrl)
+        panel.AddLine(text.numHorizontalElements, hCountCtrl)
+        panel.AddLine(text.numVerticalElements, vCountCtrl)
+        panel.AddLine(text.dotDiameter, diameterCtrl)
         panel.AddLine(anialiasingCtrl)
         
         while panel.Affirmed():
             panel.SetResult(
-                foregroundColourButton.GetValue(), 
-                backgroundColourButton.GetValue(), 
+                foregroundColourCtrl.GetValue(), 
+                backgroundColourCtrl.GetValue(), 
                 hCountCtrl.GetValue(),
                 vCountCtrl.GetValue(),
                 diameterCtrl.GetValue(),
@@ -509,25 +565,22 @@ class Lines(TestPatternAction):
         orientation=0,
         display=0, # deprecated
     ):
+        text = self.plugin.text
         panel = eg.ConfigPanel(self)
-        choices=[
-            "Horizontal",
-            "Vertical",
-        ]
-        orientationCtrl = panel.Choice(orientation, choices=choices)
-        foregroundColourButton = panel.ColourSelectButton(foregroundColour)
-        backgroundColourButton = panel.ColourSelectButton(backgroundColour)
+        orientationCtrl = panel.Choice(orientation, text.orientations)
+        foregroundColourCtrl = panel.ColourSelectButton(foregroundColour)
+        backgroundColourCtrl = panel.ColourSelectButton(backgroundColour)
         lineSizeCtrl = panel.SpinIntCtrl(lineSize, min=1, max=100)
 
-        panel.AddLine("Orientation", orientationCtrl)
-        panel.AddLine("Foreground Colour:", foregroundColourButton)
-        panel.AddLine("Background Colour:", backgroundColourButton)
-        panel.AddLine("Line Size:", lineSizeCtrl)
+        panel.AddLine(text.orientation, orientationCtrl)
+        panel.AddLine(text.foregroundColour, foregroundColourCtrl)
+        panel.AddLine(text.backgroundColour, backgroundColourCtrl)
+        panel.AddLine(text.lineSize, lineSizeCtrl)
         
         while panel.Affirmed():
             panel.SetResult(
-                foregroundColourButton.GetValue(), 
-                backgroundColourButton.GetValue(), 
+                foregroundColourCtrl.GetValue(), 
+                backgroundColourCtrl.GetValue(), 
                 lineSizeCtrl.GetValue(),
                 orientationCtrl.GetSelection(),
                 0,
@@ -616,25 +669,22 @@ class Bars(TestPatternAction):
         showNumbers=True,
         fontStr=u'0;-19;0;0;0;400;0;0;0;0;3;2;1;34;Arial',
     ):
+        text = self.plugin.text
         panel = eg.ConfigPanel(self)
-        choices=[
-            "Horizontal",
-            "Vertical",
-        ]
-        orientationCtrl = panel.Choice(orientation, choices=choices)
+        orientationCtrl = panel.Choice(orientation, text.orientations)
         firstColourButton = panel.ColourSelectButton(firstColour)
         lastColourButton = panel.ColourSelectButton(lastColour)
         barCountCtrl = panel.SpinIntCtrl(barCount, min=1, max=100)
-        makeDoubleBarsCtrl = panel.CheckBox(makeDoubleBars, "Make Double Bars")
-        showNumbersCtrl = panel.CheckBox(showNumbers, "Show Numbers")
+        makeDoubleBarsCtrl = panel.CheckBox(makeDoubleBars, text.makeDoubleBars)
+        showNumbersCtrl = panel.CheckBox(showNumbers, text.showNumbers)
         fontCtrl = panel.FontSelectButton(fontStr)
-        panel.AddLine("Orientation", orientationCtrl)
-        panel.AddLine("First Colour:", firstColourButton)
-        panel.AddLine("Last Colour:", lastColourButton)
-        panel.AddLine("Bar Count:", barCountCtrl)
+        panel.AddLine(text.orientation, orientationCtrl)
+        panel.AddLine(text.firstColour, firstColourButton)
+        panel.AddLine(text.lastColour, lastColourButton)
+        panel.AddLine(text.numElements, barCountCtrl)
         panel.AddLine(makeDoubleBarsCtrl)
         panel.AddLine(showNumbersCtrl)
-        panel.AddLine("Number Font:", fontCtrl)
+        panel.AddLine(text.numberFont, fontCtrl)
         
         while panel.Affirmed():
             panel.SetResult(
@@ -699,29 +749,29 @@ class SiemensStar(TestPatternAction):
         radius=100.0,
         display=0, # deprecated
     ):
+        text = self.plugin.text
         panel = eg.ConfigPanel(self)
-        backgroundColourButton = panel.ColourSelectButton(backgroundColour)
+        backgroundColourCtrl = panel.ColourSelectButton(backgroundColour)
         firstColourButton = panel.ColourSelectButton(firstColour)
         secondColourButton = panel.ColourSelectButton(secondColour)
         beamCountCtrl = panel.SpinIntCtrl(numBeams, min=2)
         radiusCtrl = panel.SpinNumCtrl(radius, max=100.0)
         
-        panel.AddLine("Background colour:", backgroundColourButton)
-        panel.AddLine("Odd Beam Colour:", firstColourButton)
-        panel.AddLine("Even Beam Colour:", secondColourButton)
-        panel.AddLine("Beam Count:", beamCountCtrl)
-        panel.AddLine("Radius:", radiusCtrl, "% (0=fill entire screen)")
+        panel.AddLine(text.backgroundColour, backgroundColourCtrl)
+        panel.AddLine(text.firstColour, firstColourButton)
+        panel.AddLine(text.secondColour, secondColourButton)
+        panel.AddLine(text.numElements, beamCountCtrl)
+        panel.AddLine(text.radius1, radiusCtrl, text.radius2)
         
         while panel.Affirmed():
             panel.SetResult(
-                backgroundColourButton.GetValue(), 
+                backgroundColourCtrl.GetValue(), 
                 firstColourButton.GetValue(), 
                 secondColourButton.GetValue(), 
                 beamCountCtrl.GetValue(),
                 radiusCtrl.GetValue(),
                 0,
             )
-
 
 
 class Burst(TestPatternAction):    
@@ -754,14 +804,15 @@ class Burst(TestPatternAction):
         secondColour=(255, 255, 255),
         numBeams=16,
     ):
+        text = self.plugin.text
         panel = eg.ConfigPanel(self)
         firstColourButton = panel.ColourSelectButton(firstColour)
         secondColourButton = panel.ColourSelectButton(secondColour)
         beamCountCtrl = panel.SpinIntCtrl(numBeams, min=1)
         
-        panel.AddLine("Max Colour:", firstColourButton)
-        panel.AddLine("Min Colour:", secondColourButton)
-        panel.AddLine("Num Burst Lines:", beamCountCtrl)
+        panel.AddLine(text.firstColour, firstColourButton)
+        panel.AddLine(text.secondColour, secondColourButton)
+        panel.AddLine(text.numElements, beamCountCtrl)
         
         while panel.Affirmed():
             panel.SetResult(
@@ -787,7 +838,7 @@ class Geometry(TestPatternAction):
         gc.SetPen(wx.Pen("white", 3.0))
         gc.SetBrush(wx.TRANSPARENT_BRUSH)
         
-        name, aspectRatio, isCCIR601 = ASPECT_RATIOS[aspectRatioIndex]
+        aspectRatio, isCCIR601 = ASPECT_RATIOS[aspectRatioIndex]
         if aspectRatio is None:
             gc.Scale(h / 1000.0, h / 1000.0)
             gc.Translate(1000.0 * (w * 1.0 / h) / 2, 500)
@@ -810,30 +861,26 @@ class Geometry(TestPatternAction):
         
         
     def GetLabel(self, aspektRatio):
-        return ASPECT_RATIOS[aspektRatio][0]
+        return self.name + ": " + self.plugin.text.aspectRatios[aspektRatio]
     
     
     def Configure(
         self,
         aspectRatio=0,
     ):
+        text = self.plugin.text
         panel = eg.ConfigPanel(self)
-        aspectCtrl = panel.Choice(aspectRatio, choices=zip(*ASPECT_RATIOS)[0])
-        panel.AddLine("Aspect Ratio:", aspectCtrl)
+        aspectCtrl = panel.Choice(aspectRatio, text.aspectRatios)
+        panel.AddLine(text.aspectRatio, aspectCtrl)
         while panel.Affirmed():
-            panel.SetResult(
-                aspectCtrl.GetValue(), 
-            )
+            panel.SetResult(aspectCtrl.GetValue())
 
         
         
 class PixelCropping(TestPatternAction):        
     name = "Pixel Cropping"
     
-    def Draw(
-        self,
-        dc
-    ):
+    def Draw(self, dc):
         numLines = 40
         textColour = (255, 255, 255)
 
@@ -936,7 +983,7 @@ class PixelCropping(TestPatternAction):
             wx.FONTWEIGHT_BOLD
         )
         dc.SetFont(font)#, textColour)
-        text = "Pixel Cropping\n%d x %d" % (w, h)
+        text = (self.name + "\n%d x %d") % (w, h)
         y = 0
         data = []
         for line in text.splitlines():
@@ -947,8 +994,6 @@ class PixelCropping(TestPatternAction):
         offset = (h - y) / 2
         for line, x, y in data:
             dc.DrawText(line, x, offset + y)
-        
-        
         
         
         

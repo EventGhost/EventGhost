@@ -28,11 +28,8 @@ eg.RegisterPlugin(
     kind = "external",
     canMultiLoad = True,
     createMacrosOnAdd = True,
-    description = (
-        "Control your d-box2 set-top box over Ethernet.\n"
-        "\n"
-        "<p><i>(Linux/Neutrino must be installed on the box)</i>"
-    ),
+    description = "Control your d-box2 set-top box over Ethernet.",
+    help = "<i>(Linux/Neutrino must be installed on the box)</i>",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACmklEQVR42o2TS0hVYRDH"
         "/3O+c859dX1mvhOzSw+kByZW1ibICIQIxSBqYUUQLdpkoW0Meu3b3AiCFrWqMFoItTGL"
