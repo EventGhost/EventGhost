@@ -63,7 +63,6 @@ class Text:
         pluginNotActivated = 'Plugin "%s" is not activated'
         pluginStartError = "Error starting plugin: %s"
         pluginLoadError = "Error while loading plugin-file %s."
-        pluginNotFound = "Can't find plugin: %s"
         
     class Plugin:
         pass

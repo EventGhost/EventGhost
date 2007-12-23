@@ -170,6 +170,7 @@ class EventGhost(object):
         
         from eg.WinAPI.SendKeys import SendKeys
         eg.SendKeys = SendKeys
+        
         if args.translate:
             eg.LanguageEditor()
         else:
@@ -205,17 +206,12 @@ class EventGhost(object):
         config = self.config
 
         startupFile = self.startupArguments.startupFile
-        if (
-            startupFile is None 
-            and config.useAutoloadFile 
-            and config.autoloadFilePath
-        ):
-            if not os.path.exists(config.autoloadFilePath):
-                eg.PrintError(
-                    self.text.Error.FileNotFound % config.autoloadFilePath
-                )
+        autoloadFilePath = config.autoloadFilePath
+        if startupFile is None and config.useAutoloadFile and autoloadFilePath:
+            if not os.path.exists(autoloadFilePath):
+                eg.PrintError(self.text.Error.FileNotFound % autoloadFilePath)
             else:
-                startupFile = config.autoloadFilePath
+                startupFile = autoloadFilePath
                 
         eg.eventThread.Start()
         wx.CallAfter(eg.eventThread.Call, eg.eventThread.StartSession, startupFile)
@@ -237,11 +233,7 @@ class EventGhost(object):
             self.__dict__[name] = singelton
             return singelton
             
-        try:
-            mod = __import__("eg.Classes." + name, fromlist=[name])
-        except ImportError:
-            raise
-        #print("Loaded %s" % name)
+        mod = __import__("eg.Classes." + name, globals(), locals(), [name], 0)
         attr = getattr(mod, name)
         self.__dict__[name] = attr
         return attr

@@ -34,7 +34,6 @@ from eg import (
     FolderItem, 
     RootItem, 
 )
-import UndoableTasks
 
 # local imports
 from LogCtrl import LogCtrl
@@ -788,28 +787,28 @@ class MainFrame(wx.Frame):
         pluginInfo = eg.AddPluginDialog(self).DoModal()
         if pluginInfo is None:
             return
-        eg.Greenlet(UndoableTasks.NewPlugin().Do).switch(self.document, pluginInfo)
+        eg.Greenlet(eg.UndoHandler.NewPlugin().Do).switch(self.document, pluginInfo)
             
             
     def OnCmdNewEvent(self, event):
         """ 
         Menu: Edit -> New Event
         """
-        UndoableTasks.NewEvent().Do(self.document)
+        eg.UndoHandler.NewEvent().Do(self.document)
                 
                 
     def OnCmdNewFolder(self, event):
         """ 
         Menu: Edit -> New Folder
         """
-        UndoableTasks.NewFolder().Do(self.document)
+        eg.UndoHandler.NewFolder().Do(self.document)
         
     
     def OnCmdNewMacro(self, event):
         """ 
         Menu: Edit -> New Macro
         """
-        eg.Greenlet(UndoableTasks.NewMacro().Do).switch(self.document)
+        eg.Greenlet(eg.UndoHandler.NewMacro().Do).switch(self.document)
         
     
     def OnCmdNewAction(self, event):
@@ -821,7 +820,7 @@ class MainFrame(wx.Frame):
         # if user canceled the dialog, take a quick exit
         if action is None:
             return None
-        eg.Greenlet(UndoableTasks.NewAction().Do).switch(self.document, action)
+        eg.Greenlet(eg.UndoHandler.NewAction().Do).switch(self.document, action)
         
     
     def OnCmdRename(self, event):
@@ -836,7 +835,7 @@ class MainFrame(wx.Frame):
         """ 
         Menu: Edit -> Configure Element
         """
-        UndoableTasks.CmdConfigure().Try(self.document)
+        eg.UndoHandler.Configure().Try(self.document)
 
 
     def OnCmdExecute(self, event):
@@ -847,7 +846,7 @@ class MainFrame(wx.Frame):
 
 
     def OnCmdDisabled(self, event):
-        UndoableTasks.CmdToggleEnable(self.document)
+        eg.UndoHandler.ToggleEnable(self.document)
 
 
     #------- view menu -------------------------------------------------------

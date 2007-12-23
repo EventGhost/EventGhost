@@ -25,17 +25,6 @@ from time import clock, sleep
 
 import xml.etree.cElementTree as ElementTree
     
-from UndoableTasks import (
-    NewEvent, 
-    CmdMoveTo, 
-    CmdCut, 
-    CmdPaste, 
-    CmdClear, 
-    CmdRename, 
-    CmdToggleEnable,
-    CmdConfigure,
-)
-
 import ctypes
 SendMessageTimeout = ctypes.windll.user32.SendMessageTimeoutA
 SendMessage = ctypes.windll.user32.SendMessageA
@@ -221,7 +210,7 @@ class EventDropTarget(wx.PyDropTarget):
                     label = self.ldata.GetData()
                     self.ldata.SetData("")
                     parent, pos = self.position
-                    NewEvent().Do(
+                    eg.UndoHandler.NewEvent().Do(
                         tree.document, 
                         label, 
                         parent, 
@@ -312,7 +301,7 @@ class TreeCtrl(wx.TreeCtrl):
             if isinstance(self.document.selection, eg.ActionItem):
                 while wx.GetMouseState().LeftDown():
                     wx.GetApp().Yield()
-                CmdConfigure().Try(self.document)
+                eg.UndoHandler.Configure().Try(self.document)
                 return
         event.Skip()
     
@@ -321,7 +310,7 @@ class TreeCtrl(wx.TreeCtrl):
     def OnItemActivate(self, event):
         item = event.GetItem()
         if item.IsOk():
-            wx.CallAfter(CmdConfigure().Try, self.document)
+            wx.CallAfter(eg.UndoHandler.Configure().Try, self.document)
             return
         #event.Skip()
         
@@ -498,7 +487,7 @@ class TreeCtrl(wx.TreeCtrl):
         item = self.GetPyData(id)
         newLabel = event.GetLabel()
         if not event.IsEditCancelled() and item.GetLabel() != newLabel:
-            CmdRename(self.document, item, newLabel)
+            eg.UndoHandler.Rename(self.document, item, newLabel)
         event.Skip()
         
         
@@ -558,7 +547,7 @@ class TreeCtrl(wx.TreeCtrl):
         
         if insertionMarkPos is not None:
             parent, pos = insertionMarkPos
-            CmdMoveTo(self.document, dragObject, parent, pos)
+            eg.UndoHandler.MoveTo(self.document, dragObject, parent, pos)
 
 
     def OnDragTimer(self, event):
@@ -570,7 +559,7 @@ class TreeCtrl(wx.TreeCtrl):
 
 
     def Cut(self, event=None):
-        CmdCut(self.document, self.document.selection)
+        eg.UndoHandler.Cut(self.document, self.document.selection)
         
         
     def Copy(self, event=None):
@@ -586,11 +575,11 @@ class TreeCtrl(wx.TreeCtrl):
 
 
     def Paste(self, event=None):
-        CmdPaste(self.document)
+        eg.UndoHandler.Paste(self.document)
         
 
     def Clear(self, event=None):
-        CmdClear(self.document, self.document.selection)
+        eg.UndoHandler.Clear(self.document, self.document.selection)
                 
 
     def GetItemXml(self, obj):

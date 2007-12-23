@@ -45,10 +45,10 @@ class UnknownPlugin(eg.PluginClass):
     def __init__(self):
         raise self.Exceptions.PluginNotFound
     
-    
     def __start__(self, *args):
         raise self.Exceptions.PluginNotFound
     
+        
     
     
 class PluginInfo(object):
@@ -130,7 +130,7 @@ class PluginInfo(object):
             return info
         
         if pluginName not in eg.pluginManager.database:
-            eg.PrintError(eg.text.Error.pluginNotFound % pluginName)
+            #eg.PrintError(eg.text.Error.pluginNotFound % pluginName)
             return None
         
         infoDict = eg.pluginManager.GetPluginInfo(pluginName).__dict__
@@ -256,11 +256,15 @@ class PluginInfo(object):
         try:
             plugin.__init__()
             info.initFailed = False
+        except eg.Exceptions.PluginNotFound, exc:
+            pass
         except eg.Exception, e:
             eg.PrintError(e.message)
+            print "kokoko", repr(e)
         except:
             eg.PrintTraceback()
-        pluginInfoCls.label = plugin
+        
+        pluginInfoCls.label = plugin # ???
         return info
              
              
@@ -270,7 +274,7 @@ class PluginInfo(object):
         pluginInfoCls = cls.GetPluginInfo(pluginName)
         if pluginInfoCls is None:
             class pluginInfoCls(PluginInfo):
-                name = pluginName + " not found"
+                name = pluginName
                 pluginCls = UnknownPlugin
         if pluginInfoCls.pluginCls is None:
             if not pluginInfoCls.LoadModule():

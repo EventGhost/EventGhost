@@ -69,7 +69,7 @@ class PluginItem(ActionItem):
             
     
     def SetAttributes(self, tree, id):
-        if self.info.lastException:
+        if self.info.lastException or self.info.initFailed:
             tree.SetItemTextColour(id, eg.colour.pluginError)
     
     
