@@ -20,7 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-__all__ = ["Bunch", "EventHook", "HexString", "LogIt", "LogItWithReturn",
+__all__ = ["Bunch", "EventHook", "LogIt", "LogItWithReturn",
     "TimeIt", "AssertNotMainThread", "AssertNotActionThread", "ParseString",
     "SetClass", "EnsureVisible", "namedtuple"
 ]
@@ -75,15 +75,6 @@ class EventHook(object):
 
 
     
-        
-def HexString(text):
-    """
-    Returns representation of the bytes in a string as a nicely formatted 
-    hex-digits-string.
-    """
-    return " ".join([("%0.2X" % ord(c)) for c in text]) 
-
-
 def GetMyRepresentation(value):
     """
     Give a shorter representation of some wx-objects. Returns normal repr()

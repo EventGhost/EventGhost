@@ -37,9 +37,9 @@ from eg import (
 import UndoableTasks
 
 # local imports
-from MainFrame.LogCtrl import LogCtrl
-from MainFrame.TreeCtrl import TreeCtrl
-from MainFrame.StatusBar import StatusBar
+from LogCtrl import LogCtrl
+from TreeCtrl import TreeCtrl
+from StatusBar import StatusBar
 
 from eg.WinAPI.Utils import BringHwndToFront
 ADD_ICON = eg.Icons.PathIcon('images/add.png')
@@ -139,7 +139,7 @@ class MainFrame(wx.Frame):
             self.observer.append((dataset, item.Enable))
         
         # toolBar
-        toolBar = eg.ToolBar(self, style=wx.TB_FLAT)#|wx.TB_NODIVIDER)
+        toolBar = eg.ToolBar(self, style=wx.TB_FLAT)
         self.toolBar = toolBar
         toolBar.SetParams(self, Text.Menu)
         toolBar.SetToolBitmapSize((16, 16))
@@ -174,11 +174,7 @@ class MainFrame(wx.Frame):
         AddItem("Execute", downFunc=OnLeftDown, upFunc=OnLeftUp)
         
         if eg.debugLevel:
-            #self.toolBarSpacer = wx.StaticBitmap(toolBar, size=(50, 10))
-            #toolBar.AddControl(self.toolBarSpacer)
-        
             AddItem("Reset", image=RESET_ICON)
-            #AddItem("Test", image=RESET_ICON)
 
         self.SetToolBar(toolBar)
         self.SetMinSize((400, 200))
@@ -194,135 +190,110 @@ class MainFrame(wx.Frame):
         menuItems = self.menuItems = eg.Bunch()
 
         # file menu
-        fileMenu = menuBar.AddMenu("File")
-        AddItem = fileMenu.AddItem
-        AddItem("New", hotkey="Ctrl+N")
-        AddItem("Open", hotkey="Ctrl+O")
-        DocumentBind(AddItem("Save", False, hotkey="Ctrl+S"), document.isDirty)
-        AddItem("SaveAs")
-        AddItem()
+        menu = menuBar.AddMenu("File")
+        menu.Item("New", hotkey="Ctrl+N")
+        menu.Item("Open", hotkey="Ctrl+O")
+        DocumentBind(menu.Item("Save", False, hotkey="Ctrl+S"), document.isDirty)
+        menu.Item("SaveAs")
+        menu.Separator()
         if eg.debugLevel:
-            AddItem("Export")
-            AddItem("Import")
-            AddItem()
-        AddItem("Options")
-        AddItem()
-        AddItem("Exit")
+            menu.Item("Export")
+            menu.Item("Import")
+            menu.Separator()
+        menu.Item("Options")
+        menu.Separator()
+        menu.Item("Exit")
 
         # edit menu        
-        editMenu = menuBar.AddMenu("Edit")
-        AddItem = editMenu.AddItem
-        
-        menuItems.undo = AddItem("Undo", hotkey="Ctrl+Z")
-        menuItems.redo = AddItem("Redo", hotkey="Ctrl+Y")
-        AddItem()
-        menuItems.cut = AddItem("Cut", hotkey="Ctrl+X")
-        menuItems.copy = AddItem("Copy", hotkey="Ctrl+C")
-        menuItems.paste = AddItem("Paste", hotkey="Ctrl+V")
+        menu = editMenu = menuBar.AddMenu("Edit")
+        menuItems.undo = menu.Item("Undo", hotkey="Ctrl+Z")
+        menuItems.redo = menu.Item("Redo", hotkey="Ctrl+Y")
+        menu.Separator()
+        menuItems.cut = menu.Item("Cut", hotkey="Ctrl+X")
+        menuItems.copy = menu.Item("Copy", hotkey="Ctrl+C")
+        menuItems.paste = menu.Item("Paste", hotkey="Ctrl+V")
         # notice that we add a ascii zero byte at the end of the hotkey.
         # this way we prevent the normal accelerator to happen. We will later
         # catch the key ourself.
         oldLogging = wx.Log.EnableLogging(False) # suppress warning
-        menuItems.delete = AddItem("Delete", hotkey="Del\x00")
+        menuItems.delete = menu.Item("Delete", hotkey="Del\x00")
         wx.Log.EnableLogging(oldLogging)
-        AddItem()
-        AddItem("Find", hotkey="Ctrl+F")
-        AddItem("FindNext", hotkey="F3")
+        menu.Separator()
+        menu.Item("Find", hotkey="Ctrl+F")
+        menu.Item("FindNext", hotkey="F3")
 
         # view menu        
-        viewMenu = menuBar.AddMenu("View")
-        AddItem = viewMenu.AddItem
-        AddItem(
-            "HideShowToolbar", 
-            kind=wx.ITEM_CHECK
-        ).Check(config.showToolbar)
-        AddItem()
-        AddItem("ExpandAll")
-        AddItem("CollapseAll")
-        AddItem()
-        AddItem(
-            "ExpandOnEvents", 
-            kind=wx.ITEM_CHECK
-        ).Check(config.expandOnEvents)
-        AddItem(
-            "ExpandTillMacro", 
-            config.expandOnEvents, 
-            kind=wx.ITEM_CHECK
-        ).Check(config.expandTillMacro)
-        AddItem()
-        AddItem("LogMacros", kind=wx.ITEM_CHECK).Check(eg.config.logMacros)
-        AddItem("LogActions", kind=wx.ITEM_CHECK).Check(eg.config.logActions)
-        AddItem("LogTime", kind=wx.ITEM_CHECK).Check(config.logTime)
-        AddItem()
-        AddItem("ClearLog")
+        menu = menuBar.AddMenu("View")
+        menu.CheckItem("HideShowToolbar", config.showToolbar)
+        menu.Separator()
+        menu.Item("ExpandAll")
+        menu.Item("CollapseAll")
+        menu.Separator()
+        menu.CheckItem("ExpandOnEvents", config.expandOnEvents)
+        menu.CheckItem("ExpandTillMacro", config.expandTillMacro, config.expandOnEvents)
+        menu.Separator()
+        menu.CheckItem("LogMacros", eg.config.logMacros)
+        menu.CheckItem("LogActions", eg.config.logActions)
+        menu.CheckItem("LogTime", config.logTime)
+        menu.Separator()
+        menu.Item("ClearLog")
                 
         # 
-        configurationMenu = menuBar.AddMenu("Configuration")
-        AddItem = configurationMenu.AddItem
-        menuItems.newPlugin = AddItem("AddPlugin", image=PLUGIN_ICON)
-        menuItems.newFolder = AddItem("NewFolder", image=FOLDER_ICON)
-        menuItems.newMacro = AddItem("NewMacro", image=MACRO_ICON)
-        menuItems.newEvent = AddItem("NewEvent", image=EVENT_ICON)
-        menuItems.newAction = AddItem("NewAction", image=ACTION_ICON)
-        AddItem()
-        menuItems.editItem = AddItem("Edit", hotkey="Return")
-        menuItems.renameItem = AddItem("Rename", hotkey="F2")
-        menuItems.executeItem = AddItem("Execute", hotkey="F5")
-        AddItem()
-        menuItems.disableItem = AddItem(
-            "Disabled", 
-            kind=wx.ITEM_CHECK, 
-            hotkey="Ctrl+D", 
-        )
+        menu = menuBar.AddMenu("Configuration")
+        menuItems.newPlugin = menu.Item("AddPlugin", image=PLUGIN_ICON)
+        menuItems.newFolder = menu.Item("NewFolder", image=FOLDER_ICON)
+        menuItems.newMacro = menu.Item("NewMacro", image=MACRO_ICON)
+        menuItems.newEvent = menu.Item("NewEvent", image=EVENT_ICON)
+        menuItems.newAction = menu.Item("NewAction", image=ACTION_ICON)
+        menu.Separator()
+        menuItems.editItem = menu.Item("Edit", hotkey="Return")
+        menuItems.renameItem = menu.Item("Rename", hotkey="F2")
+        menuItems.executeItem = menu.Item("Execute", hotkey="F5")
+        menu.Separator()
+        menuItems.disableItem = menu.CheckItem("Disabled", hotkey="Ctrl+D")
         
         # help menu
-        helpMenu = menuBar.AddMenu("Help")
-        AddItem = helpMenu.AddItem
-        AddItem("WebHomepage")
-        AddItem("WebForum")
-        AddItem("WebWiki")
-        AddItem()
-        AddItem("CheckUpdate")
-        AddItem()
-        AddItem("About")
+        menu = menuBar.AddMenu("Help")
+        menu.Item("WebHomepage")
+        menu.Item("WebForum")
+        menu.Item("WebWiki")
+        menu.Separator()
+        menu.Item("CheckUpdate")
+        menu.Separator()
+        menu.Item("About")
         if eg.debugLevel:
-            AddItem()
-            AddItem("Reload")
-            AddItem("Shell")
-            AddItem("GetInfo")
-            AddItem("CollectGarbage")
-            AddItem("Reset", hotkey = "Pause")
-            AddItem("Test")
+            menu.Separator()
+            menu.Item("Reload")
+            menu.Item("Shell")
+            menu.Item("GetInfo")
+            menu.Item("CollectGarbage")
+            menu.Item("Reset", hotkey="Pause")
+            menu.Item("Test")
             
         menuBar.Realize()
         
         # tree popup menu
-        popupMenu = self.popupMenu = eg.Menu(
-            self, 
-            Text.Menu.EditMenu, 
-            Text.Menu
-        )
-        popupMenuItems = self.popupMenuItems = eg.Bunch()
-        AddItem = popupMenu.AddItem
-        popupMenuItems.undo = AddItem("Undo")
-        popupMenuItems.redo = AddItem("Redo")
-        AddItem()
-        popupMenuItems.cut = AddItem("Cut")
-        popupMenuItems.copy = AddItem("Copy")
-        popupMenuItems.paste = AddItem("Paste")
-        popupMenuItems.delete = AddItem("Delete")
-        AddItem()
-        popupMenuItems.newPlugin = AddItem("AddPlugin", image=PLUGIN_ICON)
-        popupMenuItems.newFolder = AddItem("NewFolder", image=FOLDER_ICON)
-        popupMenuItems.newMacro = AddItem("NewMacro", image=MACRO_ICON)
-        popupMenuItems.newEvent = AddItem("NewEvent", image=EVENT_ICON)
-        popupMenuItems.newAction = AddItem("NewAction", image=ACTION_ICON)
-        AddItem()
-        popupMenuItems.editItem = AddItem("Edit")
-        popupMenuItems.renameItem = AddItem("Rename")
-        popupMenuItems.executeItem = AddItem("Execute")
-        AddItem()
-        popupMenuItems.disableItem = AddItem("Disabled", kind=wx.ITEM_CHECK)
+        popupMenu = self.popupMenu = eg.Menu(self, Text.Menu.EditMenu, Text.Menu)
+        pmi = self.popupMenuItems = eg.Bunch()
+        pmi.undo = popupMenu.Item("Undo")
+        pmi.redo = popupMenu.Item("Redo")
+        popupMenu.Separator()
+        pmi.cut = popupMenu.Item("Cut")
+        pmi.copy = popupMenu.Item("Copy")
+        pmi.paste = popupMenu.Item("Paste")
+        pmi.delete = popupMenu.Item("Delete")
+        popupMenu.Separator()
+        pmi.newPlugin = popupMenu.Item("AddPlugin", image=PLUGIN_ICON)
+        pmi.newFolder = popupMenu.Item("NewFolder", image=FOLDER_ICON)
+        pmi.newMacro = popupMenu.Item("NewMacro", image=MACRO_ICON)
+        pmi.newEvent = popupMenu.Item("NewEvent", image=EVENT_ICON)
+        pmi.newAction = popupMenu.Item("NewAction", image=ACTION_ICON)
+        popupMenu.Separator()
+        pmi.editItem = popupMenu.Item("Edit")
+        pmi.renameItem = popupMenu.Item("Rename")
+        pmi.executeItem = popupMenu.Item("Execute")
+        popupMenu.Separator()
+        pmi.disableItem = popupMenu.CheckItem("Disabled")
         
         iconBundle = wx.IconBundle()
         iconBundle.AddIcon(eg.taskBarIcon.stateIcons[0])
@@ -411,7 +382,7 @@ class MainFrame(wx.Frame):
             ]
         )        
         self.SetAcceleratorTable(self.acceleratorTable)
-        eg.Utils.EnsureVisible(self)
+        eg.EnsureVisible(self)
         
         
     @eg.LogIt
@@ -949,8 +920,7 @@ class MainFrame(wx.Frame):
     
     
     def OnCmdCheckUpdate(self, event):
-        import CheckUpdate
-        CheckUpdate.CheckUpdateManually()
+        eg.CheckUpdate.CheckUpdateManually()
     
     
     def OnCmdAbout(self, event):
@@ -1018,7 +988,8 @@ class MainFrame(wx.Frame):
         
     
     def OnCmdTest(self, event):
-        eg.NamespaceTree.Test()
+        eg.AddEventDialog(self).ShowModal()
+        #eg.NamespaceTree.Test()
 
         
 import gc

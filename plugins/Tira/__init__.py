@@ -148,10 +148,7 @@ class TransmitIR(eg.ActionClass):
     
     def Configure(self, irData="", repeatCount=1, frequency=-1):
         def MakeHexString(buffer):
-            result = ""
-            for x in buffer:
-                result += "%0.2X " % ord(x)
-            return result
+            return " ".join([("%0.2X" % ord(c)) for c in buffer]) 
                 
         def MakeStringFromHex(buffer):
             result = ""

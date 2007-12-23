@@ -26,8 +26,6 @@ import cPickle as pickle
 from os import stat
 from os.path import isdir, join, exists
 
-import PluginTools
-from PluginTools import ImportPlugin
 
         
 class RegisterPluginException(Exception):
@@ -174,24 +172,8 @@ class PluginManager:
         self.currentInfo = PluginModuleInfo()
         self.currentInfo.dirname = pluginDir
         
-        # first try to find the deprecated "__info__.py" file
-        infoPyPath = join(eg.PLUGIN_DIR, pluginDir, "__info__.py")
-        if exists(infoPyPath):
-            infoDict = {}
-            try:
-                execfile(infoPyPath, infoDict)
-            except:
-                eg.PrintError(eg.text.Error.pluginInfoPyError % pluginDir)
-                eg.PrintTraceback()
-            else:
-                del infoDict["__builtins__"]
-                try:
-                    self.RegisterPlugin(**infoDict)
-                except RegisterPluginException:
-                    return self.currentInfo
-                
         try:
-            module = ImportPlugin(pluginDir)
+            module = eg.PluginInfo.ImportPlugin(pluginDir)
         # It is expected that the loading will raise RegisterPluginException
         # because RegisterPlugin is called inside the module
         except RegisterPluginException:
@@ -222,7 +204,6 @@ class PluginManager:
             description = name
         if help is not None:
             help = "\n".join([s.strip() for s in help.splitlines()])
-            #help = help.replace("\n\n\n", "<p>")
             help = help.replace("\n\n", "<p>")
             description += "\n\n<p>" + help
         self.currentInfo.__dict__.update(locals())
@@ -240,7 +221,7 @@ class PluginManager:
         Get a list of all PluginInfo for all plugins in the plugin directory
         """
         infoList = [
-            PluginTools.GetPluginInfo(pluginName) 
+            eg.PluginInfo.GetPluginInfo(pluginName) 
             for pluginName in self.database.iterkeys()
         ]
         infoList.sort(key=lambda x: x.name.lower())

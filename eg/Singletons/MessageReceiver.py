@@ -79,7 +79,6 @@ class MessageReceiver(eg.ThreadWorker):
             del self.multipleMessageProcs[mesg]
             
     
-    @eg.LogIt
     def MyWndProc(self, hwnd, mesg, wParam, lParam):
         if mesg == WM_SIZE:
             print "MessageReceiver sized"

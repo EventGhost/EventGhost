@@ -31,6 +31,7 @@ class Text(eg.TranslatableStrings):
     DeviceInitFailed = "Unable to initalize device!"
     DeviceNotReady = "Device is not ready!"
     SerialOpenFailed = "Can't open serial port!"
+    PluginNotFound = "Plugin not found!"
     
     
 class Exception(eg.Exception):
@@ -83,3 +84,5 @@ class Exceptions:
         text = Text.SerialOpenFailed
     
 
+    class PluginNotFound(Exception):
+        text = Text.PluginNotFound

@@ -95,7 +95,7 @@ class ActionItem(TreeItem):
     
     
     def GetArgumentString(self):
-        return ", ".join([repr(arg) for arg in self.args])
+        return ", ".join([repr(arg) for arg in self.GetArgs()])
     
         
     def SetArgumentString(self, argString):
@@ -116,7 +116,7 @@ class ActionItem(TreeItem):
 
     def _Delete(self):
         TreeItem._Delete(self)
-        for arg in self.args:
+        for arg in self.GetArgs():
             if isinstance(arg, TreeLink):
                 if arg.target:
                     arg.target.dependants.remove(arg)
@@ -125,6 +125,10 @@ class ActionItem(TreeItem):
                 del arg
         
     
+    def GetArgs(self):
+        return self.args
+    
+
     def SetArgs(self, args):
         if self.args != args:
             self.args = args

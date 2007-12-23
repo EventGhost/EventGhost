@@ -16,9 +16,9 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# $LastChangedDate: 2007-12-22 14:02:56 +0100 (Sa, 22 Dez 2007) $
+# $LastChangedRevision: 343 $
+# $LastChangedBy: bitmonster $
 
 from os.path import exists, join
 
@@ -26,7 +26,6 @@ import sys
 import types
 
 from Utils import SetClass
-
 
 
 class PluginProxy(object):
@@ -39,22 +38,20 @@ class PluginProxy(object):
     def __getattr__(self, name):
         return self.actions[name]
         
-
-def ImportPlugin(pluginDir):
-    moduleName = "pluginImport." + pluginDir
-    if moduleName in sys.modules:
-        return sys.modules[moduleName]
-    modulePath = join(eg.PLUGIN_DIR, pluginDir)
-    sys.path.insert(0, modulePath)
-    try:
-        module = __import__(moduleName, None, None, [''])
-    finally:
-        del sys.path[0]
-    return module
-
+        
+        
+class UnknownPlugin(eg.PluginClass):
+    
+    def __init__(self):
+        raise self.Exceptions.PluginNotFound
     
     
-class PluginInfoBase(object):
+    def __start__(self, *args):
+        raise self.Exceptions.PluginNotFound
+    
+    
+    
+class PluginInfo(object):
     """
     This is an abstract class to hold information about a plugin.
     
@@ -109,7 +106,71 @@ class PluginInfoBase(object):
     lastException = None
     instance = None
     url = None
+    args = ()
+    kwargs = {}
+    
+    @classmethod
+    def ImportPlugin(cls, pluginDir):
+        moduleName = "pluginImport." + pluginDir
+        if moduleName in sys.modules:
+            return sys.modules[moduleName]
+        modulePath = join(eg.PLUGIN_DIR, pluginDir)
+        sys.path.insert(0, modulePath)
+        try:
+            module = __import__(moduleName, None, None, [''])
+        finally:
+            del sys.path[0]
+        return module
+    
+    @classmethod
+    def GetPluginInfo(cls, pluginName):
+        # first look, if we already have cached this plugin class
+        info = eg.pluginClassInfo.get(pluginName, None)
+        if info is not None:
+            return info
         
+        if pluginName not in eg.pluginManager.database:
+            eg.PrintError(eg.text.Error.pluginNotFound % pluginName)
+            return None
+        
+        infoDict = eg.pluginManager.GetPluginInfo(pluginName).__dict__
+        pluginPath = join("plugins", pluginName)
+            
+        # create a new sublclass of PluginInfo for this plugin class
+        class info(cls):
+            name = infoDict.get("name", cls.name)
+            description = infoDict.get("description", cls.description)
+            author = infoDict.get("author", cls.author)
+            version = infoDict.get("version", cls.version)
+            kind = infoDict.get("kind", cls.kind)
+            url = infoDict.get("url", cls.url)
+            canMultiLoad = infoDict.get("canMultiLoad", cls.canMultiLoad)
+            createMacrosOnAdd = infoDict.get("createMacrosOnAdd", cls.createMacrosOnAdd)
+            path = pluginPath + "/"
+        info.pluginName = pluginName
+        info.englishName = info.name
+        info.englishDescription = info.description
+        
+        # try to translate name and description
+        textCls = getattr(eg.text.Plugin, pluginName, None)
+        if textCls is not None:
+            info.name = getattr(textCls, "name", info.name)
+            info.description = getattr(textCls, "description", info.description)
+        info.textCls = textCls
+        
+        # get the icon if any
+        if "icon" in infoDict and infoDict["icon"] is not None:
+            info.icon = eg.Icons.StringIcon(infoDict["icon"])
+        else:
+            iconPath = join(pluginPath, "icon.png")
+            if exists(iconPath):
+                info.icon = eg.Icons.PathIcon(iconPath)
+        
+        info.actionClassList = []
+        return info
+    
+    
+
     @classmethod
     def LoadModule(pluginInfo):
         pathname = join(pluginInfo.path, "__init__.py")
@@ -117,7 +178,7 @@ class PluginInfoBase(object):
             eg.PrintError("File %s does not exist" % pathname)
             return
         try:
-            module = ImportPlugin(pluginInfo.pluginName)
+            module = pluginInfo.ImportPlugin(pluginInfo.pluginName)
         except:
             eg.PrintTraceback(
                 "Error while loading plugin-file %s." % pluginInfo.path,
@@ -191,10 +252,10 @@ class PluginInfoBase(object):
             pluginInfoCls.instances = [info]
         else:
             pluginInfoCls.instances.append(plugin.info)
+        info.instance = plugin
         try:
             plugin.__init__()
             info.initFailed = False
-            info.instance = plugin
         except eg.Exception, e:
             eg.PrintError(e.message)
         except:
@@ -203,11 +264,35 @@ class PluginInfoBase(object):
         return info
              
              
-    def Start(self, args=(), kwargs={}):
+    @classmethod
+    @eg.LogIt
+    def Open(cls, pluginName, evalName, args, treeItem=None):
+        pluginInfoCls = cls.GetPluginInfo(pluginName)
+        if pluginInfoCls is None:
+            class pluginInfoCls(PluginInfo):
+                name = pluginName + " not found"
+                pluginCls = UnknownPlugin
+        if pluginInfoCls.pluginCls is None:
+            if not pluginInfoCls.LoadModule():
+                return None
+        info = pluginInfoCls.CreatePluginInstance(evalName, treeItem)
+        plugin = info.instance
+        info.args = args
+        plugin.SetArguments(*args)
+        if hasattr(plugin, "Compile"):
+            plugin.Compile(*args)
+        try:
+            info.label = plugin.GetLabel(*args)
+        except:
+            info.label = plugin.info.name
+        return info
+    
+        
+    def Start(self):
         if self.isStarted:
             return
         try:
-            self.instance.__start__(*args, **kwargs)
+            self.instance.__start__(*self.args, **self.kwargs)
             self.isStarted = True
             self.lastException = None
             self.treeItem.ClearErrorState()
@@ -250,99 +335,32 @@ class PluginInfoBase(object):
             self.treeItem.SetErrorState()
             
             
-            
-def GetPluginInfo(pluginName):
-    # first look, if we already have cached this plugin class
-    info = eg.pluginClassInfo.get(pluginName, None)
-    if info is not None:
-        return info
+    @eg.LogIt
+    def Close(self):
+        if self.isStarted:
+            self.Stop()
+        plugin = self.instance
+        def DeleteActionListItems(actionList):
+            if actionList is not None:
+                for item in actionList:
+                    if isinstance(item, eg.ActionClass):
+                        item.plugin = None
+                    else:
+                        DeleteActionListItems(item.actionList)
+                        item.plugin = None
+                del actionList
+                
+        if not self.initFailed:
+            plugin.__close__()
+        delattr(eg.plugins, self.evalName)
+        eg.pluginList.remove(plugin)
+        DeleteActionListItems(self.actionList)
+        try:
+            eg.actionList.remove(plugin)
+        except:
+            pass
+        self.instances.remove(self)
+        self.instance = None
+        plugin.AddAction = None
     
-    if pluginName not in eg.pluginManager.database:
-        eg.PrintError(eg.text.Error.pluginNotFound % pluginName)
-        return None
-    
-    infoDict = eg.pluginManager.GetPluginInfo(pluginName).__dict__
-    pluginPath = join("plugins", pluginName)
-        
-    # create a new sublclass of PluginInfo for this plugin class
-    class info(PluginInfoBase):
-        name = infoDict.get("name", PluginInfoBase.name)
-        description = infoDict.get("description", PluginInfoBase.description)
-        author = infoDict.get("author", PluginInfoBase.author)
-        version = infoDict.get("version", PluginInfoBase.version)
-        kind = infoDict.get("kind", PluginInfoBase.kind)
-        url = infoDict.get("url", PluginInfoBase.url)
-        canMultiLoad = infoDict.get("canMultiLoad", PluginInfoBase.canMultiLoad)
-        createMacrosOnAdd = infoDict.get("createMacrosOnAdd", PluginInfoBase.createMacrosOnAdd)
-        path = pluginPath + "/"
-    info.pluginName = pluginName
-    info.englishName = info.name
-    info.englishDescription = info.description
-    
-    # try to translate name and description
-    textCls = getattr(eg.text.Plugin, pluginName, None)
-    if textCls is not None:
-        info.name = getattr(textCls, "name", info.name)
-        info.description = getattr(textCls, "description", info.description)
-    info.textCls = textCls
-    
-    # get the icon if any
-    if "icon" in infoDict and infoDict["icon"] is not None:
-        info.icon = eg.Icons.StringIcon(infoDict["icon"])
-    else:
-        iconPath = join(pluginPath, "icon.png")
-        if exists(iconPath):
-            info.icon = eg.Icons.PathIcon(iconPath)
-    
-    info.actionClassList = []
-    return info
-
-
-@eg.LogIt
-def OpenPlugin(pluginName, evalName, args, treeItem=None):
-    pluginInfoCls = GetPluginInfo(pluginName)
-    if pluginInfoCls is None:
-        return None
-    if pluginInfoCls.pluginCls is None:
-        if not pluginInfoCls.LoadModule():
-            return None
-    info = pluginInfoCls.CreatePluginInstance(evalName, treeItem)
-    plugin = info.instance
-    plugin.SetArguments(*args)
-    if hasattr(plugin, "Compile"):
-        plugin.Compile(*args)
-    try:
-        info.label = plugin.GetLabel(*args)
-    except:
-        info.label = plugin.info.name
-    return info
-
-        
-@eg.LogIt
-def ClosePlugin(plugin):
-    def _delActionListItems(actionList):
-        if actionList is not None:
-            for item in actionList:
-                if isinstance(item, eg.ActionClass):
-                    item.plugin = None
-                else:
-                    _delActionListItems(item.actionList)
-                    item.plugin = None
-            del actionList
-            
-    info = plugin.info
-    if not info.initFailed:
-        plugin.__close__()
-    delattr(eg.plugins, info.evalName)
-    _delActionListItems(info.actionList)
-    try:
-        eg.actionList.remove(plugin)
-    except:
-        pass
-    info.instances.remove(info)
-    info.instance = None
-    plugin.AddAction = None
-    del info
-    del plugin
-
 

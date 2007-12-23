@@ -23,22 +23,8 @@
 import types
 import os
 import codecs
-import wx
 
-def Start(args):
-    import Init
-    global eg
-    eg = Init.EventGhost(args)
-    
-    global OpenPlugin
-    from PluginTools import OpenPlugin
-    
-    global languageNames
-    from LanguageTools import languageNames
-
-    LanguageEditor(None)
-    eg.app.MainLoop()
-
+from LanguageTools import languageNames
 
 
 class UnassignedValue:
@@ -95,8 +81,7 @@ class Text:
         
 class LanguageEditor(wx.Frame):
     
-    def __init__(self, parent):
-        global eg
+    def __init__(self, parent=None):
         class DefaultConfig:
             position = (50, 50)
             size = (700, 433)
@@ -120,30 +105,27 @@ class LanguageEditor(wx.Frame):
         menuBar = eg.MenuBar(self, Text.Menu)
 
         # file menu
-        fileMenu = menuBar.AddMenu("File")
-        AddItem = fileMenu.AddItem
-        AddItem("Open", hotkey="Ctrl+O")
-        AddItem("Save", hotkey="Ctrl+S")
-        AddItem()
-        AddItem("Exit", hotkey="Alt+F4")
+        menu = menuBar.AddMenu("File")
+        menu.Item("Open", hotkey="Ctrl+O")
+        menu.Item("Save", hotkey="Ctrl+S")
+        menu.Separator()
+        menu.Item("Exit", hotkey="Alt+F4")
 
         # edit menu        
-        editMenu = menuBar.AddMenu("Edit")
-        AddItem = editMenu.AddItem
-        AddItem("Undo", False, hotkey="Ctrl+Z")
-        AddItem("Redo", False, hotkey="Ctrl+Y")
-        AddItem()
-        AddItem("Cut", hotkey="Ctrl+X")
-        AddItem("Copy", hotkey="Ctrl+C")
-        AddItem("Paste", hotkey="Ctrl+V")
-        AddItem("Delete")        
-        AddItem()
-        AddItem("FindNext", hotkey="F3")  
+        menu = menuBar.AddMenu("Edit")
+        menu.Item("Undo", False, hotkey="Ctrl+Z")
+        menu.Item("Redo", False, hotkey="Ctrl+Y")
+        menu.Separator()
+        menu.Item("Cut", hotkey="Ctrl+X")
+        menu.Item("Copy", hotkey="Ctrl+C")
+        menu.Item("Paste", hotkey="Ctrl+V")
+        menu.Item("Delete")        
+        menu.Separator()
+        menu.Item("FindNext", hotkey="F3")  
 
         # help menu
-        helpMenu = menuBar.AddMenu("Help")
-        AddItem = helpMenu.AddItem
-        AddItem("About")  
+        menu = menuBar.AddMenu("Help")
+        menu.Item("About")  
         
         menuBar.Realize()
         
@@ -169,7 +151,7 @@ class LanguageEditor(wx.Frame):
         rootId = tree.AddRoot("Language Strings", 3)
         tree.SetPyData(rootId, ["", None, None])
         
-        import CheckUpdate
+        eg.CheckUpdate
         eg.AboutDialog
         eg.AddActionDialog
         eg.AddPluginDialog
@@ -181,7 +163,7 @@ class LanguageEditor(wx.Frame):
         
         for plugin in os.listdir("plugins"):
             if not plugin.startswith("."):
-                OpenPlugin(plugin, plugin, ())
+                eg.PluginInfo.Open(plugin, plugin, ())
         
         rightPanel = wx.Panel(splitter)
         disabledColour = rightPanel.GetBackgroundColour()

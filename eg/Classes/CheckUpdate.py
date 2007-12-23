@@ -173,10 +173,13 @@ def _checkUpdate(manually=False):
         
         
         
-@eg.LogIt
-def Start():
-    threading.Thread(target=_checkUpdate, name="CheckUpdate").start()
-
-
-def CheckUpdateManually():
-    _checkUpdate(manually=True)
+class CheckUpdate:
+    @classmethod
+    @eg.LogIt
+    def Start(cls):
+        threading.Thread(target=_checkUpdate, name="CheckUpdate").start()
+    
+    
+    @classmethod
+    def CheckUpdateManually(cls):
+        _checkUpdate(manually=True)

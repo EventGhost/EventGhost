@@ -500,7 +500,7 @@ class SetVolume(eg.ActionWithStringParameter):
         
         
         
-class ChangeVolume():      
+class ChangeVolume(ActionBase):      
     name = "Change Volume Level"
     description = "Changes the volume relative to the current value."
     class text:

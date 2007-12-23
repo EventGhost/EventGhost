@@ -53,7 +53,6 @@ class Text:
         unnamedMacro = "<unnamed macro>"
         unnamedEvent = "<unnamed event>"
         unnamedFile = "<unnamed file>"
-        moreHelp = "More info"
         moreTag = "more..."
         noOptionsAction = "This action has no options to configure."
         noOptionsPlugin = "This plugin has no options to configure."
@@ -61,11 +60,9 @@ class Text:
     class Error:
         FileNotFound = "File \"%s\" couldn't be found."
         InAction = 'Error in Action: "%s"'
-        InScript = 'Error in Script: "%s"'
         pluginNotActivated = 'Plugin "%s" is not activated'
         pluginStartError = "Error starting plugin: %s"
         pluginLoadError = "Error while loading plugin-file %s."
-        pluginInfoPyError = "Error while reading __info__.py for plugin %s"
         pluginNotFound = "Can't find plugin: %s"
         
     class Plugin:

@@ -49,15 +49,13 @@ class Menu(wx.Menu):
 
     def AddItem(
         self, 
-        name = None, 
+        name, 
         enabled = True, 
         kind = wx.ITEM_NORMAL, 
         image = None,
         hotkey = "",
         func = None
     ):
-        if name is None:
-            return wx.Menu.AppendSeparator(self)
         if func is None:
             FuncWrapper = getattr(self.parent, "OnCmd" + name)
         else:
@@ -77,12 +75,20 @@ class Menu(wx.Menu):
         return menuitem
     
     
-    def AddCheckItem(self, name, enabled=True, checked=False, image=None):
-        item = self.AddItem(name, enabled, wx.ITEM_CHECK, image)
+    def Item(self, *args, **kwargs):
+        return self.AddItem(*args, **kwargs)
+    
+    
+    def CheckItem(self, name, checked=False, enabled=True, image=None, hotkey=""):
+        item = self.AddItem(name, enabled, wx.ITEM_CHECK, image, hotkey)
         item.Check(checked)
         return item
     
     
+    def Separator(self):
+        wx.Menu.AppendSeparator(self)
+
+
     def AddSeparator(self):
         wx.Menu.AppendSeparator(self)
 

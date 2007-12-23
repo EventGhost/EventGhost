@@ -34,7 +34,7 @@ class ActionThread(eg.ThreadWorker):
         eg.eventTable.clear()
         for pluginIdent in eg.CORE_PLUGINS:
             try:
-                pluginInfo = eg.OpenPlugin(pluginIdent, None, ())
+                pluginInfo = eg.PluginInfo.Open(pluginIdent, None, ())
                 pluginInfo.instance.__start__()
                 pluginInfo.isStarted = True
             except:
@@ -63,8 +63,7 @@ class ActionThread(eg.ThreadWorker):
         for pluginIdent in eg.CORE_PLUGINS:
             try:
                 plugin = getattr(eg.plugins, pluginIdent).plugin
-                plugin.__stop__()
-                eg.ClosePlugin(plugin)
+                plugin.info.Close()
             except:
                 eg.PrintTraceback()
         

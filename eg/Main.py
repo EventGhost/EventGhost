@@ -109,13 +109,10 @@ while True:
             break
         args.configDir = argv[i]
     elif arg == '-translate':
-        import LanguageEditor
         args.translate = True
-        LanguageEditor.Start(args)
-        sys.exit(0)
 
 
-if not args.allowMultiLoad:
+if (not args.allowMultiLoad) and (not args.translate):
     # check if another instance of the program is running
     from win32process import ExitProcess
     import win32event, win32api
@@ -137,6 +134,5 @@ if not args.allowMultiLoad:
 
 from Init import EventGhost
 eg = EventGhost(args)
-eg.StartGui()
 eg.app.MainLoop()
 ExitProcess(0)

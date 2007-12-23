@@ -209,7 +209,7 @@ def LoadStrings(language):
 import os
 
 def LoadAll():
-    import CheckUpdate
+    eg.CheckUpdate
     eg.AboutDialog
     eg.AddActionDialog
     eg.AddPluginDialog
@@ -221,7 +221,7 @@ def LoadAll():
     
     for plugin in os.listdir("plugins"):
         if not plugin.startswith("."):
-            eg.OpenPlugin(plugin, plugin, ())
+            eg.PluginInfo.Open(plugin, plugin, ())
 
 
     

@@ -535,10 +535,9 @@ class CmdConfigure:
             try:
                 if gr is None or gr.dead:
                     gr = eg.Greenlet(executable.Configure)
-                    newArgs = gr.switch(*item.args)
+                    newArgs = gr.switch(*item.GetArgs())
                 else:
                     newArgs = gr.switch()
-                #newArgs = executable.Configure(*item.args)
             except:
                 eg.PrintError("Error while configuring: %s", item.GetLabel())
                 raise

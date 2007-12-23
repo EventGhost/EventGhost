@@ -104,7 +104,6 @@ class DeviceChangeNotifier:
         eg.messageReceiver.RemoveHandler(WM_DEVICECHANGE, self.OnDeviceChange)
         
         
-    @eg.LogIt
     def OnDeviceChange(self, hwnd, msg, wparam, lparam):
         #
         # WM_DEVICECHANGE:

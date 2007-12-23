@@ -28,17 +28,6 @@ import inspect
 import weakref
 
     
-class Text(eg.TranslatableStrings):
-    title = "Python-Editor - %s"
-    class SaveChanges:
-        title = "Apply changes?"
-        mesg = "The script was altered.\n\nDo you want to apply the changes?\n"
-
-
-
-#------------------------------------------------------------------------
-# Action: PythonScript
-#------------------------------------------------------------------------
 class PythonScript(eg.ActionClass):
     name = "Python Script"
     description = "Full featured Python script." 
@@ -55,9 +44,9 @@ class PythonScript(eg.ActionClass):
         return self.name
 
 
-    def Configure(self, text=""):
+    def Configure(self, sourceCode=""):
         panel = eg.ConfigPanel(self, resizeable=True)
-        editCtrl = eg.PythonEditorCtrl(panel, value=text)
+        editCtrl = eg.PythonEditorCtrl(panel, value=sourceCode)
         panel.sizer.Add(editCtrl, 1, wx.EXPAND)
         panel.FinishSetup()
         panel.dialog.SetPosition(self.config.position)
@@ -73,15 +62,14 @@ class PythonScript(eg.ActionClass):
         idCounter = 0
         scriptDict = weakref.WeakValueDictionary()
 
-        def __init__(self, text=""):
+        def __init__(self, sourceCode=""):
             id = self.__class__.idCounter
             self.__class__.idCounter += 1
             mod = imp.new_module(str(id))
             self.mod = mod
-            #mod.eg = eg
-            self.text = text
+            self.sourceCode = sourceCode
             try:
-                self.code = compile(text + "\n", str(id), "exec")
+                self.code = compile(sourceCode + "\n", str(id), "exec")
             except:
                 self.code = None
                 eg.PrintError("Error compiling script.")
@@ -91,7 +79,7 @@ class PythonScript(eg.ActionClass):
             
         def __call__(self):
             if self.code is None:
-                self.__init__(self.text)
+                self.__init__(self.sourceCode)
                 if self.code is None:
                     return
             mod = self.mod
@@ -111,7 +99,7 @@ class PythonScript(eg.ActionClass):
 
         def PrintTraceback(self):
             eg.PrintError("Traceback (most recent call last):")
-            lines = self.text.splitlines()
+            lines = self.sourceCode.splitlines()
             tb_type, tb_value, tb_traceback = sys.exc_info() 
             for entry in traceback.extract_tb(tb_traceback)[1:]:
                 file, linenum, func, source = entry
@@ -125,7 +113,7 @@ class PythonScript(eg.ActionClass):
                             file, linenum, func
                         )
                     )
-                    lines = self.scriptDict[int(file)].text.splitlines()
+                    lines = self.scriptDict[int(file)].sourceCode.splitlines()
                     eg.PrintError('    ' + lines[linenum-1].lstrip())
                 else:
                     eg.PrintError(

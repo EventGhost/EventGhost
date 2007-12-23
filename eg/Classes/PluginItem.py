@@ -38,29 +38,24 @@ class PluginItem(ActionItem):
         attr, text, childs = TreeItem.WriteToXML(self)
         del attr[0]
         attr.append(('File', self.pluginFile))
-        if self.executable:
-            attr.append(('Identifier', self.executable.info.evalName))
-        text = base64.b64encode(pickle.dumps(self.args, 2))
+        attr.append(('Identifier', self.executable.info.evalName))
+        text = base64.b64encode(pickle.dumps(self.info.args, 2))
         return attr, text, childs
     
     
     def __init__(self, parent, node):
         TreeItem.__init__(self, parent, node)
         if node.text:
-            self.args = pickle.loads(base64.b64decode(node.text))
+            args = pickle.loads(base64.b64decode(node.text))
         else:
-            self.args = ()
+            args = ()
         ident = node.attrib.get('identifier', None)
         pluginStr = node.attrib['file']
         self.pluginFile = pluginStr
-        self.info = info = eg.OpenPlugin(pluginStr, ident, self.args, self)
-        if info is None or info.initFailed:
-            #eg.PrintError("Error loading plugin: %s" % pluginStr)
-            self.name = pluginStr + " not found"
-        else:
-            self.name = eg.text.General.pluginLabel % info.label
-            self.icon = info.icon
-            self.executable = info.instance
+        self.info = info = eg.PluginInfo.Open(pluginStr, ident, args, self)
+        self.name = eg.text.General.pluginLabel % info.label
+        self.icon = info.icon
+        self.executable = info.instance
 
 
     def GetLabel(self):
@@ -70,11 +65,11 @@ class PluginItem(ActionItem):
     @eg.LogIt
     def RestoreState(self):
         if self.isEnabled:
-            eg.actionThread.Call(self.StartPlugin)
+            eg.actionThread.Call(self.info.Start)
             
     
     def SetAttributes(self, tree, id):
-        if self.info and self.info.lastException:
+        if self.info.lastException:
             tree.SetItemTextColour(id, eg.colour.pluginError)
     
     
@@ -103,49 +98,24 @@ class PluginItem(ActionItem):
         if self.shouldSelectOnExecute:
             #self.Select()
             wx.CallAfter(self.Select)
-        self.StartPlugin()
+        self.info.Start()
         eg.result = self.executable
         return None, None
-        
-        
-    def StartPlugin(self):
-        """
-        This is a wrapper for the __start__ member of a eg.PluginClass.
-        
-        It should only be called from the ActionThread.
-        """
-        if self.info:
-            self.info.Start(self.args)
-        
-        
-    def StopPlugin(self):
-        """
-        This is a wrapper for the __stop__ member of a eg.PluginClass.
-        
-        It should only be called from the ActionThread.
-        """
-        if self.info:
-            self.info.Stop()
         
         
     def Enable(self, flag=True):
         ActionItem.Enable(self, flag)
         if flag:
-            eg.actionThread.Call(self.StartPlugin)
+            eg.actionThread.Call(self.info.Start)
         else:
-            eg.actionThread.Call(self.StopPlugin)
+            eg.actionThread.Call(self.info.Stop)
 
 
     def _Delete(self):
-        if self.executable:
-            def ClosePlugin():
-                self.StopPlugin()
-                eg.ClosePlugin(self.executable)
-                self.executable = None
-                self.info = None
-            eg.actionThread.Call(ClosePlugin)
-            
+        eg.actionThread.Call(self.info.Close)
         ActionItem._Delete(self)
+        self.executable = None
+        self.info = None
         
         
     def AskDelete(self):
@@ -198,12 +168,16 @@ class PluginItem(ActionItem):
         self.helpDialog.Show()
         
                         
+    def GetArgs(self):
+        return self.info.args
+    
+    
     @eg.LogIt
     def SetArgs(self, args):
         info = self.info
-        if not info.lastException and args == self.args:
+        if not info.lastException and args == self.info.args:
             return
-        self.args = args
+        self.info.args = args
         label = info.instance.GetLabel(*args)
         if label != info.label:
             info.label = label
@@ -215,8 +189,8 @@ class PluginItem(ActionItem):
                 )
         self.RefreshAllVisibleActions()
         if self.isEnabled:
-            eg.actionThread.Call(self.StopPlugin)
-            eg.actionThread.Call(self.StartPlugin)
+            eg.actionThread.Call(self.info.Stop)
+            eg.actionThread.Call(self.info.Start)
 
 
     def RefreshAllVisibleActions(self):

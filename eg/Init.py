@@ -155,10 +155,6 @@ class EventGhost(object):
         eg.Greenlet = greenlet
         eg.mainGreenlet = greenlet.getcurrent()
         
-        from eg.PluginTools import OpenPlugin, ClosePlugin
-        eg.OpenPlugin = OpenPlugin
-        eg.ClosePlugin = ClosePlugin
-
         # replace builtin input and raw_input with a small dialog
         def raw_input(prompt=None):
             return eg.CallWait(eg.SimpleInputDialog.CreateModal, prompt)
@@ -174,6 +170,10 @@ class EventGhost(object):
         
         from eg.WinAPI.SendKeys import SendKeys
         eg.SendKeys = SendKeys
+        if args.translate:
+            eg.LanguageEditor()
+        else:
+            eg.StartGui()
 
         
     def StartGui(self):
@@ -224,8 +224,7 @@ class EventGhost(object):
             today = time.gmtime()[:3]
             if config.lastUpdateCheckDate != today:
                 config.lastUpdateCheckDate = today
-                import CheckUpdate
-                wx.CallAfter(CheckUpdate.Start)
+                wx.CallAfter(eg.CheckUpdate.Start)
                 
         self.Print(self.text.MainFrame.Logger.welcomeText)
 

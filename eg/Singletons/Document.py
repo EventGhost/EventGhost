@@ -291,8 +291,7 @@ class Document(object):
     def ShowFrame(self):
         if self.reentrantLock.acquire(False):
             if self.frame is None:
-                from MainFrame import MainFrame
-                self.frame = MainFrame(self)
+                self.frame = eg.MainFrame(self)
                 self.frame.Show()
             self.frame.Raise()
             self.reentrantLock.release()
