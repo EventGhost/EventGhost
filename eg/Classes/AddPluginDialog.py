@@ -53,7 +53,8 @@ class Text(eg.TranslatableStrings):
 
 class AddPluginDialog(eg.Dialog):
 
-    def __init__(self, parent):
+    @eg.LogItWithReturn
+    def Process(self, parent):
         self.resultData = None
 
         eg.Dialog.__init__(
@@ -70,7 +71,6 @@ class AddPluginDialog(eg.Dialog):
                 |wx.CLIP_CHILDREN
                 |wx.NO_FULL_REPAINT_ON_RESIZE
         )
-        self.splitterWindow = splitterWindow
 
         self.treeCtrl = treeCtrl = wx.TreeCtrl(
             splitterWindow,
@@ -177,6 +177,16 @@ class AddPluginDialog(eg.Dialog):
         treeCtrl.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelect)
         treeCtrl.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnItemActivated)
         treeCtrl.SelectItem(itemToSelect)
+        while self.Affirmed():
+            if self.CheckMultiload():
+                self.SetResult(self.resultData)
+        config.size = self.GetSizeTuple()
+        config.position = self.GetPositionTuple()
+        config.splitPosition = splitterWindow.GetSashPosition()
+        expandDict = {}
+        for kind, treeId in typeIds.iteritems():
+            expandDict[kind] = treeCtrl.IsExpanded(treeId)
+        config.expandDict = expandDict   
 
 
     def OnSelect(self, event):
@@ -226,30 +236,8 @@ class AddPluginDialog(eg.Dialog):
         item = self.treeCtrl.GetSelection()
         info = self.treeCtrl.GetPyData(item)
         if info is not None:
-            if self.CheckMultiload():
-                self.EndModal(wx.ID_OK)
-            else:
-                event.Skip()
-        else:
-            event.Skip()
+            self.OnOK()
+            return
+        event.Skip()
         
         
-    @eg.LogIt
-    def OnOK(self, event):
-        if self.CheckMultiload():
-            event.Skip()
-        
-        
-    def OnCancel(self, event):
-        self.Close()
-
-
-    def Destroy(self):
-        config.size = self.GetSizeTuple()
-        config.position = self.GetPositionTuple()
-        config.splitPosition = self.splitterWindow.GetSashPosition()
-        expandDict = {}
-        for kind, treeId in self.typeIds.iteritems():
-            expandDict[kind] = self.treeCtrl.IsExpanded(treeId)
-        config.expandDict = expandDict   
-        wx.Dialog.Destroy(self)

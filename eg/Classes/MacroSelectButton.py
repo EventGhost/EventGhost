@@ -54,17 +54,20 @@ class MacroSelectButton(wx.Window):
 
         
     def OnButton(self, event):
-        macro = eg.TreeItemBrowseDialog(
+        dialog = eg.TreeItemBrowseDialog(
             self.title,
             self.mesg, 
             self.macro, 
             (eg.MacroItem,)
-        ).DoModal()
-        if macro:
-            self.textBox.SetLabel(macro.name)
-            self.macro = macro
-            self.ProcessEvent(wx.CommandEvent(wx.EVT_TEXT.evtType[0], self.GetId()))
-            
+        )
+        if dialog.ShowModal() == wx.ID_OK:
+            macro = dialog.GetValue()
+            if macro:
+                self.textBox.SetLabel(macro.name)
+                self.macro = macro
+                self.ProcessEvent(wx.CommandEvent(wx.EVT_TEXT.evtType[0], self.GetId()))
+        dialog.Destroy()
+        
             
     def GetValue(self):
         return self.macro

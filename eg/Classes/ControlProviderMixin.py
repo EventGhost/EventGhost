@@ -122,3 +122,10 @@ class ControlProviderMixin:
         **kwargs
     ):
         return wx.ComboBox(self, -1, value, pos, size, choices, *args, **kwargs)
+
+
+    def VerticalStaticBoxSizer(self, label, *items):
+        staticBox = wx.StaticBox(self, -1, label)
+        sizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
+        sizer.AddMany(items)
+        return sizer

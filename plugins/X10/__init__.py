@@ -315,34 +315,34 @@ class X10(eg.PluginClass):
             event.Skip()
         selectNoneButton.Bind(wx.EVT_BUTTON, OnSelectNone)
 
-        rightBtnSizer = wx.BoxSizer(wx.VERTICAL)
-        rightBtnSizer.Add(selectAllButton, 0, wx.EXPAND)
-        rightBtnSizer.Add((5,5), 1)
-        rightBtnSizer.Add(selectNoneButton, 0, wx.EXPAND)
-            
-        idSizer = wx.BoxSizer(wx.HORIZONTAL)
-        idSizer.Add(btnsizer)
-        idSizer.Add((10, 10), 0)
-        idSizer.Add(rightBtnSizer, 0, wx.EXPAND)
-        
-        leftSizer = wx.BoxSizer(wx.VERTICAL)
-        leftSizer.Add(panel.StaticText(text.remoteBox), 0, wx.BOTTOM, 2)
-        leftSizer.Add(remoteTypeCtrl, 0, wx.BOTTOM, 10)
-        leftSizer.Add(panel.StaticText(text.usePrefix), 0, wx.BOTTOM, 2)
-        leftSizer.Add(prefixCtrl)
-        
-        rightSizer = wx.BoxSizer(wx.VERTICAL)
-        rightSizer.Add(panel.StaticText(text.idBox), 0, wx.BOTTOM, 2)
-        rightSizer.Add(idSizer)
-        
-        mainSizer = wx.BoxSizer(wx.HORIZONTAL)
-        mainSizer.Add(leftSizer)
-        mainSizer.Add((0,0), 1, wx.EXPAND)
-        mainSizer.Add(wx.StaticLine(panel, style=wx.LI_VERTICAL), 0, wx.EXPAND)
-        mainSizer.Add((0,0), 1, wx.EXPAND)
-        mainSizer.Add(rightSizer)
-        mainSizer.Add((0,0), 1, wx.EXPAND)
-        
+        rightBtnSizer = eg.VerticalBoxSizer(
+            (selectAllButton, 0, wx.EXPAND),
+            ((5,5), 1),
+            (selectNoneButton, 0, wx.EXPAND),
+        )
+        idSizer = eg.HorizontalBoxSizer(
+            (btnsizer),
+            ((10, 10), 0),
+            (rightBtnSizer, 0, wx.EXPAND),
+        )
+        leftSizer = eg.VerticalBoxSizer(
+            (panel.StaticText(text.remoteBox), 0, wx.BOTTOM, 2),
+            (remoteTypeCtrl, 0, wx.BOTTOM, 10),
+            (panel.StaticText(text.usePrefix), 0, wx.BOTTOM, 2),
+            (prefixCtrl),
+        )
+        rightSizer = eg.VerticalBoxSizer(
+            (panel.StaticText(text.idBox), 0, wx.BOTTOM, 2),
+            (idSizer),
+        )
+        mainSizer = eg.HorizontalBoxSizer(
+            (leftSizer),
+            ((0,0), 1, wx.EXPAND),
+            (wx.StaticLine(panel, style=wx.LI_VERTICAL), 0, wx.EXPAND),
+            ((0,0), 1, wx.EXPAND),
+            (rightSizer),
+            ((0,0), 1, wx.EXPAND),
+        )
         panel.sizer.Add(mainSizer, 1, wx.EXPAND)
         
         while panel.Affirmed():

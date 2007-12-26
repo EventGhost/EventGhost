@@ -43,25 +43,21 @@ from StatusBar import StatusBar
 from eg.WinAPI.Utils import BringHwndToFront
 ADD_ICON = eg.Icons.PathIcon('images/add.png')
 
-PLUGIN_ICON = eg.Icons.PilToBitmap(
+ADD_PLUGIN_ICON = eg.Icons.PilToBitmap(
     eg.Icons.GetIconOnTop(ADD_ICON, eg.Icons.PLUGIN_ICON)
 )
-FOLDER_ICON = eg.Icons.PilToBitmap(
+ADD_FOLDER_ICON = eg.Icons.PilToBitmap(
     eg.Icons.GetIconOnTop(ADD_ICON, eg.Icons.FOLDER_ICON)
 )
-MACRO_ICON = eg.Icons.PilToBitmap(
+ADD_MACRO_ICON = eg.Icons.PilToBitmap(
     eg.Icons.GetIconOnTop(ADD_ICON, eg.Icons.MACRO_ICON)
 )
-EVENT_ICON = eg.Icons.PilToBitmap(
+ADD_EVENT_ICON = eg.Icons.PilToBitmap(
     eg.Icons.GetIconOnTop(ADD_ICON, eg.Icons.EVENT_ICON)
 )
-ACTION_ICON = eg.Icons.PilToBitmap(
+ADD_ACTION_ICON = eg.Icons.PilToBitmap(
     eg.Icons.GetIconOnTop(ADD_ICON, eg.Icons.ACTION_ICON)
 )
-#FOLDER_ICON = eg.Icons.FOLDER_ICON.GetBitmap()
-#MACRO_ICON = eg.Icons.MACRO_ICON.GetBitmap()
-#EVENT_ICON = eg.Icons.EVENT_ICON.GetBitmap()
-#ACTION_ICON = eg.Icons.ACTION_ICON.GetBitmap()
 RESET_ICON = eg.Icons.PathIcon('images/error.png').GetBitmap()
 
 Text = eg.text.MainFrame
@@ -93,6 +89,8 @@ class MainFrame(wx.Frame):
         """ Create the MainFrame """
         text = eg.text
         self.document = document
+        self.aboutDialog = None
+        self.optionsDialog = None
         self.menuState = menuState = eg.Bunch()
         menuState.newEvent = False
         menuState.newAction = False
@@ -154,11 +152,11 @@ class MainFrame(wx.Frame):
         AddItem("Undo")
         AddItem("Redo")
         AddItem()
-        AddItem("AddPlugin", image=PLUGIN_ICON)
-        AddItem("NewFolder", image=FOLDER_ICON)
-        AddItem("NewMacro", image=MACRO_ICON)
-        AddItem("NewEvent", image=EVENT_ICON)
-        AddItem("NewAction", image=ACTION_ICON)
+        AddItem("AddPlugin", image=ADD_PLUGIN_ICON)
+        AddItem("NewFolder", image=ADD_FOLDER_ICON)
+        AddItem("NewMacro", image=ADD_MACRO_ICON)
+        AddItem("NewEvent", image=ADD_EVENT_ICON)
+        AddItem("NewAction", image=ADD_ACTION_ICON)
         AddItem()
         AddItem("Disabled")
         AddItem()
@@ -178,7 +176,6 @@ class MainFrame(wx.Frame):
         self.SetToolBar(toolBar)
         self.SetMinSize((400, 200))
         toolBar.Realize()
-        
         
         # statusbar
         self.statusBar = StatusBar(self)
@@ -237,13 +234,13 @@ class MainFrame(wx.Frame):
         menu.Separator()
         menu.Item("ClearLog")
                 
-        # 
+        # configuration menu
         menu = menuBar.AddMenu("Configuration")
-        menuItems.newPlugin = menu.Item("AddPlugin", image=PLUGIN_ICON)
-        menuItems.newFolder = menu.Item("NewFolder", image=FOLDER_ICON)
-        menuItems.newMacro = menu.Item("NewMacro", image=MACRO_ICON)
-        menuItems.newEvent = menu.Item("NewEvent", image=EVENT_ICON)
-        menuItems.newAction = menu.Item("NewAction", image=ACTION_ICON)
+        menuItems.newPlugin = menu.Item("AddPlugin", image=ADD_PLUGIN_ICON)
+        menuItems.newFolder = menu.Item("NewFolder", image=ADD_FOLDER_ICON)
+        menuItems.newMacro = menu.Item("NewMacro", image=ADD_MACRO_ICON)
+        menuItems.newEvent = menu.Item("NewEvent", image=ADD_EVENT_ICON)
+        menuItems.newAction = menu.Item("NewAction", image=ADD_ACTION_ICON)
         menu.Separator()
         menuItems.editItem = menu.Item("Edit", hotkey="Return")
         menuItems.renameItem = menu.Item("Rename", hotkey="F2")
@@ -282,11 +279,11 @@ class MainFrame(wx.Frame):
         pmi.paste = popupMenu.Item("Paste")
         pmi.delete = popupMenu.Item("Delete")
         popupMenu.Separator()
-        pmi.newPlugin = popupMenu.Item("AddPlugin", image=PLUGIN_ICON)
-        pmi.newFolder = popupMenu.Item("NewFolder", image=FOLDER_ICON)
-        pmi.newMacro = popupMenu.Item("NewMacro", image=MACRO_ICON)
-        pmi.newEvent = popupMenu.Item("NewEvent", image=EVENT_ICON)
-        pmi.newAction = popupMenu.Item("NewAction", image=ACTION_ICON)
+        pmi.newPlugin = popupMenu.Item("AddPlugin", image=ADD_PLUGIN_ICON)
+        pmi.newFolder = popupMenu.Item("NewFolder", image=ADD_FOLDER_ICON)
+        pmi.newMacro = popupMenu.Item("NewMacro", image=ADD_MACRO_ICON)
+        pmi.newEvent = popupMenu.Item("NewEvent", image=ADD_EVENT_ICON)
+        pmi.newAction = popupMenu.Item("NewAction", image=ADD_ACTION_ICON)
         popupMenu.Separator()
         pmi.editItem = popupMenu.Item("Edit")
         pmi.renameItem = popupMenu.Item("Rename")
@@ -399,7 +396,6 @@ class MainFrame(wx.Frame):
         self.logCtrl.Destroy()
         self.treeCtrl.Destroy()
         eg.Icons.ClearImageList()
-        #gc.collect()
         return wx.Frame.Destroy(self)
     
     
@@ -528,7 +524,6 @@ class MainFrame(wx.Frame):
             self.toolBar.buttons.Paste.Enable(canPaste)
     
     
-    #@eg.LogIt
     def OnFocusChange(self, focus):
         if focus == self.lastFocus:
             return
@@ -550,7 +545,6 @@ class MainFrame(wx.Frame):
         toolBarButtons.Paste.Enable(canPaste)
         
         
-    #@eg.LogIt
     def GetEditCmdState(self, focus):
         if focus is None:
             return (False, False, False, False)
@@ -567,7 +561,6 @@ class MainFrame(wx.Frame):
             return (False, True, False, False)
         elif focus == self.treeCtrl and self.document.selection:
             selection = self.document.selection
-            #print selection
             return (
                 selection.CanCut(), 
                 selection.CanCopy(), 
@@ -668,10 +661,7 @@ class MainFrame(wx.Frame):
     #---- Menu Handlers ------------------------------------------------------
     #-------------------------------------------------------------------------
     
-    #------- file menu -------------------------------------------------------
-    
     def OnCmdNew(self, event):
-        """ Handle the menu command 'New'. """
         if self.document.CheckFileNeedsSave() == wx.ID_CANCEL:
             return
         eg.eventThread.CallWait(eg.eventThread.StopSession)
@@ -680,7 +670,6 @@ class MainFrame(wx.Frame):
 
 
     def OnCmdOpen(self, event):
-        """ Handle the menu command 'Open'. """
         if self.document.CheckFileNeedsSave() == wx.ID_CANCEL:
             return wx.ID_CANCEL
         fileDialog = wx.FileDialog(self, "", "", "", "*.xml", wx.OPEN)
@@ -695,82 +684,69 @@ class MainFrame(wx.Frame):
         
         
     def OnCmdSave(self, event=None):
-        """ Handle the menu command 'Save'. """
         self.document.Save()
 
 
     def OnCmdSaveAs(self, event=None):
-        """ Handle the menu command 'Save As'. """
         self.document.SaveAs()
 
 
     def OnCmdExport(self, event):
-        """ Handle the menu command 'Export'. """
-        result = eg.ExportDialog().DoModal()
-        if result:
-            for item in result:
+        result = eg.ExportDialog.GetModalResult()
+        if result is not None:
+            for item in result[0][0]:
                 print item.GetLabel()
 
 
     def OnCmdImport(self, event):
-        """ Handle the menu command 'Import'. """
         pass
     
     
+    @eg.AsGreenlet
     def OnCmdOptions(self, event):
-        """ Handle the menu command 'Options...'. """
-        eg.OptionsDialog.ShowModeless(self)
-        
+        if not self.optionsDialog:
+            self.optionsDialog = eg.OptionsDialog.Create(self)
+            while self.optionsDialog.GetResult() is not None:
+                pass
+        else:
+            self.optionsDialog.Raise()
+            
         
     def OnCmdExit(self, event):
         eg.app.Exit()
         
         
-    #------- edit menu -------------------------------------------------------
-    
     def OnCmdUndo(self, event):
-        """ Handle the menu command 'Undo'. """
         self.document.Undo()
             
             
     def OnCmdRedo(self, event):
-        """ Handle the menu command 'Redo'. """
         self.document.Redo()
         
     
     def OnCmdCut(self, event):
-        """ Handle the menu command 'Cut'. """
         self.DispatchCommand("Cut", event)
         
         
     def OnCmdCopy(self, event):
-        """ Handle the menu command 'Copy'. """
         self.DispatchCommand("Copy", event)
             
             
     def OnCmdPaste(self, event):
-        """ Handle the menu command 'Paste'. """
         self.DispatchCommand("Paste", event)
     
     
-    @eg.LogIt
     def OnCmdDelete(self, event):
-        """ Handle the menu command 'Delete'. """
-        #if self.focus == "Edit":
-        #    self.tree.GetEditControl().EmulateKeyPress()
-        #else:
         self.DispatchCommand("Clear", event)
                 
                 
     def OnCmdFind(self, event):
-        """ Handle the menu command 'Find'. """
         if self.findDialog is None:
             self.findDialog = eg.FindDialog(self, self.document)
         self.findDialog.Show()
         
         
     def OnCmdFindNext(self, event):
-        """ Handle the menu command 'Find Next'. """
         if (
             self.findDialog is None 
             or not self.findDialog.searchButton.IsEnabled()
@@ -781,67 +757,47 @@ class MainFrame(wx.Frame):
         
 
     def OnCmdAddPlugin(self, event):
-        """ 
-        Menu: Edit -> Add Plugin
-        """
-        pluginInfo = eg.AddPluginDialog(self).DoModal()
+        result = eg.AddPluginDialog.GetModalResult(self)
+        if result is None:
+            return
+        pluginInfo = result[0][0]
         if pluginInfo is None:
             return
         eg.Greenlet(eg.UndoHandler.NewPlugin().Do).switch(self.document, pluginInfo)
             
             
     def OnCmdNewEvent(self, event):
-        """ 
-        Menu: Edit -> New Event
-        """
         eg.UndoHandler.NewEvent().Do(self.document)
                 
                 
     def OnCmdNewFolder(self, event):
-        """ 
-        Menu: Edit -> New Folder
-        """
         eg.UndoHandler.NewFolder().Do(self.document)
         
     
     def OnCmdNewMacro(self, event):
-        """ 
-        Menu: Edit -> New Macro
-        """
-        eg.Greenlet(eg.UndoHandler.NewMacro().Do).switch(self.document)
+        eg.UndoHandler.NewMacro().Do(self.document)
         
     
     def OnCmdNewAction(self, event):
-        """ 
-        Menu: Edit -> New Action
-        """        
         # let the user choose an action
-        action = eg.AddActionDialog(self).DoModal()
+        result = eg.AddActionDialog.GetModalResult(self)
         # if user canceled the dialog, take a quick exit
-        if action is None:
+        if result is None:
             return None
+        action = result[0][0]
         eg.Greenlet(eg.UndoHandler.NewAction().Do).switch(self.document, action)
         
     
     def OnCmdRename(self, event):
-        """ 
-        Menu: Edit -> Rename
-        """
         self.treeCtrl.SetFocus()
         self.treeCtrl.EditLabel(self.treeCtrl.GetSelection())
 
 
     def OnCmdEdit(self, event):
-        """ 
-        Menu: Edit -> Configure Element
-        """
         eg.UndoHandler.Configure().Try(self.document)
 
 
     def OnCmdExecute(self, event):
-        """ 
-        Menu: Edit -> Execute Element
-        """
         self.document.ExecuteSelected().SetShouldEnd()
 
 
@@ -849,8 +805,6 @@ class MainFrame(wx.Frame):
         eg.UndoHandler.ToggleEnable(self.document)
 
 
-    #------- view menu -------------------------------------------------------
-    
     def OnCmdHideShowToolbar(self, event):
         config.showToolbar = not config.showToolbar
         #self.auiManager.GetPane("toolBar").Show(config.showToolbar)
@@ -901,8 +855,6 @@ class MainFrame(wx.Frame):
         self.logCtrl.OnCmdClearLog(event)
         
     
-    #------- help menu -------------------------------------------------------
-    
     def OnCmdWebHomepage(self, event):
         import webbrowser
         webbrowser.open("http://www.eventghost.org/", True, True)
@@ -922,9 +874,15 @@ class MainFrame(wx.Frame):
         eg.CheckUpdate.CheckUpdateManually()
     
     
+    @eg.AsGreenlet
     def OnCmdAbout(self, event):
-        #eg.AboutDialog(self).DoModal()
-        eg.AboutDialog.ShowModeless(self)
+        if self.aboutDialog is None:
+            self.aboutDialog = eg.AboutDialog.Create(self)
+            self.aboutDialog.GetResult()
+            self.aboutDialog = None
+        else:
+            self.aboutDialog.Raise()
+
     
         
     #----- debugging and experimental stuff that will be removed someday -----
@@ -986,8 +944,16 @@ class MainFrame(wx.Frame):
         eg.PrintError("Execution stopped by user")
         
     
+    @eg.AsGreenlet
     def OnCmdTest(self, event):
-        eg.AddEventDialog(self).ShowModal()
+        dialog = eg.AddEventDialog.Create(self)
+        while True:
+            result = dialog.GetResult()
+            if result is None:
+                break
+            label = result[0][0]
+            eg.UndoHandler.NewEvent().Do(self.document, label)
+        #eg.AddEventDialog.GetModalResult(self)
         #eg.NamespaceTree.Test()
 
         

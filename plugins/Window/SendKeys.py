@@ -172,9 +172,8 @@ class SendKeys(eg.ActionClass):
         keyLabels, keyWords = zip(*keyChoices)
         keyLabels += fKeys
         keyWords += fKeys
-        textCtrl = wx.TextCtrl(panel, -1, data, style=wx.TE_NOHIDESEL)
-        alternateMethodCB = wx.CheckBox(panel, -1, text.useAlternativeMethod)
-        alternateMethodCB.SetValue(useAlternateMethod)
+        textCtrl = panel.TextCtrl(data, style=wx.TE_NOHIDESEL)
+        alternateMethodCB = panel.CheckBox(useAlternateMethod, text.useAlternativeMethod)
         
         shiftCB = wx.CheckBox(panel, -1, "Shift")
         ctrlCB = wx.CheckBox(panel, -1, "Ctrl")
@@ -202,28 +201,31 @@ class SendKeys(eg.ActionClass):
             textCtrl.WriteText(s)
         insertButton.Bind(wx.EVT_BUTTON, OnInsert)
         
-        cbSizer = wx.BoxSizer(wx.VERTICAL)
-        cbSizer.Add(shiftCB, 0, wx.EXPAND|wx.BOTTOM, 5)
-        cbSizer.Add(ctrlCB, 0, wx.EXPAND|wx.BOTTOM, 5)
-        cbSizer.Add(altCB, 0, wx.EXPAND, 0)
-        
-        rightSizer = wx.BoxSizer(wx.VERTICAL)
-        rightSizer.Add(keyChoice)
-        rightSizer.Add(insertButton, 0, wx.TOP|wx.ALIGN_CENTER_HORIZONTAL, 15)
-        
+        cbSizer = eg.VerticalBoxSizer(
+            (shiftCB, 0, wx.EXPAND|wx.BOTTOM, 5),
+            (ctrlCB, 0, wx.EXPAND|wx.BOTTOM, 5),
+            (altCB, 0, wx.EXPAND, 0),
+        )
+        rightSizer = eg.VerticalBoxSizer(
+            (keyChoice),
+            (insertButton, 0, wx.TOP|wx.ALIGN_CENTER_HORIZONTAL, 15),
+        )
         staticBox = wx.StaticBox(panel, -1, text.specialKeyTool)
         specialKeySizer = wx.StaticBoxSizer(staticBox, wx.HORIZONTAL)
         specialKeySizer.Add(cbSizer)
         specialKeySizer.Add((15, 15))
         specialKeySizer.Add(rightSizer)
         
-        SizerAdd = panel.sizer.Add
-        SizerAdd(wx.StaticText(panel, -1, text.textToType))
-        SizerAdd(textCtrl, 0, wx.EXPAND)
-        SizerAdd((10, 10))
-        SizerAdd(specialKeySizer, 0, wx.ALIGN_RIGHT)
-        SizerAdd((10, 10), 1)
-        SizerAdd(alternateMethodCB)
+        panel.sizer.AddMany(
+            (
+                (panel.StaticText(text.textToType)),
+                (textCtrl, 0, wx.EXPAND),
+                ((10, 10)),
+                (specialKeySizer, 0, wx.ALIGN_RIGHT),
+                ((10, 10), 1),
+                (alternateMethodCB),
+            )
+        )
         
         while panel.Affirmed():
             panel.SetResult(textCtrl.GetValue(), alternateMethodCB.GetValue())

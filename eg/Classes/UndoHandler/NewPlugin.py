@@ -39,7 +39,7 @@ class NewPlugin(eg.UndoHandler.NewItem):
         pluginItem.Select()
         if pluginItem.executable:
             if pluginItem.NeedsStartupConfiguration():
-                if not eg.UndoHandler.Configure().Do(pluginItem):
+                if not eg.UndoHandler.Configure().Do(pluginItem, True):
                     pluginItem.Delete()
                     return None
             eg.actionThread.CallWait(pluginItem.Execute)

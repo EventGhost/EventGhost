@@ -57,7 +57,6 @@ class AnimatedWindow(wx.PyWindow):
         dc.Clear() # make sure you clear the bitmap!
         dc.SetFont(self.font)
         dc.SetTextForeground((128, 128, 128))
-        #dc.DrawText("EventGhost", self.textOffset, 50)
         
         w1 = self.logo1.GetWidth()
         w2 = self.logo2.GetWidth()
@@ -101,8 +100,6 @@ class AnimatedWindow(wx.PyWindow):
         self.dcBuffer = wx.EmptyBitmap(self.width, self.height)
         self.y3 = (self.height - self.bmpHeight) / 4.0
         self.x3 = (self.width - self.bmpWidth) / 4.0
-        textWidth, _, _, _ = self.GetFullTextExtent("EventGhost", self.font) 
-        self.textOffset = (self.width - textWidth) // 2
         self.MakeBackground()
         self.UpdateDrawing()
 

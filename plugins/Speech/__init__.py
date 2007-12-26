@@ -265,42 +265,40 @@ class TextToSpeech(eg.ActionClass):
         )
         volumeCtrl.slider.SetTickFreq(10, 3)
         
-
-        staticBox = wx.StaticBox(panel, -1, text.textBoxLabel)
-        staticBoxSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
+        sizer1 = eg.HorizontalBoxSizer(
+            (textCtrl, 1, wx.EXPAND)
+        )
+        sizer2 = eg.HorizontalBoxSizer(
+            (insertTimeButton),
+            (insertDateButton, 0, wx.LEFT|wx.EXPAND|wx.ALIGN_LEFT, 5),
+            ((5, 5), 1),
+        )
+        staticBoxSizer1 = panel.VerticalStaticBoxSizer(
+            text.textBoxLabel,
+            (sizer1, 0, wx.EXPAND|wx.ALL, 5),
+            (sizer2, 0, wx.EXPAND|wx.ALL, 5),
+        )
+        ACV = wx.ALIGN_CENTER_VERTICAL
+        sizer3 = wx.FlexGridSizer(3, 2, 5, 5)
+        sizer3.AddGrowableCol(1, 1)
+        sizer3.AddMany(
+            (
+                (panel.StaticText(text.labelVoice), 0, ACV|wx.BOTTOM, 10),
+                (voiceChoice, 0, wx.EXPAND|wx.BOTTOM, 10),
+                (panel.StaticText(text.labelRate), 0, ACV),
+                (rateCtrl, 0, wx.EXPAND),
+                (panel.StaticText(text.labelVolume), 0, ACV),
+                (volumeCtrl, 0, wx.EXPAND),
+            )
+        )
         
-        sizer1 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer1.Add(textCtrl, 1, wx.EXPAND)
-        staticBoxSizer.Add(sizer1, 0, wx.EXPAND|wx.ALL, 5)
+        staticBoxSizer2 = panel.VerticalStaticBoxSizer(
+            text.voiceProperties,
+            (sizer3, 0, wx.EXPAND|wx.ALL, 5),
+        )
         
-        sizer2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer2.Add(insertTimeButton)
-        sizer2.Add(insertDateButton, 0, wx.LEFT|wx.EXPAND|wx.ALIGN_LEFT, 5)
-        sizer2.Add((5, 5), 1)
-        staticBoxSizer.Add(sizer2, 0, wx.ALL|wx.EXPAND, 5)
-
-        panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
-
-        staticBox = wx.StaticBox(panel, -1, text.voiceProperties)
-        staticBoxSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
-        
-        sizer1 = wx.FlexGridSizer(3, 2, 5, 5)
-        sizer1.AddGrowableCol(1, 1)
-        
-        st = wx.StaticText(panel, -1, text.labelVoice)
-        sizer1.Add(st, 0, wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM, 10)
-        sizer1.Add(voiceChoice, 0, wx.EXPAND|wx.BOTTOM, 10)
-        
-        st = wx.StaticText(panel, -1, text.labelRate)
-        sizer1.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
-        sizer1.Add(rateCtrl, 0, wx.EXPAND)
-        
-        st = wx.StaticText(panel, -1, text.labelVolume)
-        sizer1.Add(st, 0, wx.ALIGN_CENTER_VERTICAL)
-        sizer1.Add(volumeCtrl, 0, wx.EXPAND)
-        
-        staticBoxSizer.Add(sizer1, 0, wx.EXPAND|wx.ALL, 5)
-        panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND|wx.TOP, 10)
+        panel.sizer.Add(staticBoxSizer1, 0, wx.EXPAND)
+        panel.sizer.Add(staticBoxSizer2, 0, wx.EXPAND|wx.TOP, 10)
        
         while panel.Affirmed():
             panel.SetResult(

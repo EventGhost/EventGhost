@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+STANDARD_IDS = (wx.ID_OK, wx.ID_CANCEL, wx.ID_APPLY, wx.ID_HELP)
 
 class ButtonRow:
     
@@ -27,23 +28,24 @@ class ButtonRow:
         self.parent = parent
         self.numSpecialCtrls = 0
         self.stdbtnsizer = stdbtnsizer = wx.StdDialogButtonSizer()
+        AddButton = stdbtnsizer.AddButton
         defaultButton = None
         text = eg.text.General
         for ctrl in buttonIds:
-            if ctrl not in (wx.ID_OK, wx.ID_CANCEL, wx.ID_APPLY, wx.ID_HELP):
+            if ctrl not in STANDARD_IDS:
                 stdbtnsizer.Add(ctrl)
                 
         if wx.ID_OK in buttonIds:
             okButton = wx.Button(parent, wx.ID_OK, text.ok)
             okButton.Bind(wx.EVT_BUTTON, self.OnOK)
-            stdbtnsizer.AddButton(okButton)
+            AddButton(okButton)
             defaultButton = okButton
             self.okButton = okButton
             
         if wx.ID_CANCEL in buttonIds:
             cancelButton = wx.Button(parent, wx.ID_CANCEL, text.cancel)
             cancelButton.Bind(wx.EVT_BUTTON, self.OnCancel)
-            stdbtnsizer.AddButton(cancelButton)
+            AddButton(cancelButton)
             if not defaultButton:
                 defaultButton = cancelButton
             self.cancelButton = cancelButton
@@ -51,7 +53,7 @@ class ButtonRow:
         if wx.ID_APPLY in buttonIds:
             applyButton = wx.Button(parent, wx.ID_APPLY, text.apply)
             applyButton.Bind(wx.EVT_BUTTON, self.OnApply)
-            stdbtnsizer.AddButton(applyButton)
+            AddButton(applyButton)
             if not defaultButton:
                 defaultButton = applyButton
             self.applyButton = applyButton
@@ -59,7 +61,7 @@ class ButtonRow:
         if wx.ID_HELP in buttonIds:
             helpButton = wx.Button(parent, wx.ID_HELP, text.help)
             helpButton.Bind(wx.EVT_BUTTON, self.OnHelp)
-            stdbtnsizer.AddButton(helpButton)
+            AddButton(helpButton)
             if not defaultButton:
                 defaultButton = helpButton
             self.helpButton = helpButton
@@ -77,8 +79,6 @@ class ButtonRow:
             sizer.Add((3,3), 1)
             sizer.Add(stdbtnsizer, 0, wx.TOP|wx.BOTTOM, 6)
             sizer.Add((2,2), 0)      
-
-        self.sizer = sizer
         
         
     def Add(

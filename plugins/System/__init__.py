@@ -378,7 +378,7 @@ class OpenDriveTray(eg.ActionClass):
         return self.text.labels[action] % drive
          
         
-    def Configure(self, old_drive=None, action=0):
+    def Configure(self, drive=None, action=0):
         panel = eg.ConfigPanel(self)
         text = self.text
         radiobox = wx.RadioBox(
@@ -393,26 +393,27 @@ class OpenDriveTray(eg.ActionClass):
         #is not already set the first drive returned becomes the default.
         cdDrives = []
         letters = [letter + ':' for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ']
-        for drive in letters:
-            if win32file.GetDriveType(drive) == 5:
-                cdDrives.append(drive)
-        label = wx.StaticText(panel, -1, text.driveLabel)
- 
+        for driveLetter in letters:
+            if win32file.GetDriveType(driveLetter) == 5:
+                cdDrives.append(driveLetter)
+
         choice = wx.Choice(panel, -1, choices=cdDrives)
-        if old_drive is None:
-            old_drive = ''
-        if not choice.SetStringSelection(old_drive):
+        if drive is None:
+            drive = ''
+        if not choice.SetStringSelection(drive):
             choice.SetSelection(0)
-        mySizer = wx.BoxSizer(wx.HORIZONTAL)
-        mySizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL)
-        mySizer.Add((5,5))
-        mySizer.Add(choice)
-        
-        sizer = panel.sizer
-        sizer.Add(radiobox, 0, wx.EXPAND)
-        sizer.Add((5,5))
-        sizer.Add(mySizer, 0, wx.EXPAND|wx.ALL, 5)
-          
+        mySizer = eg.HorizontalBoxSizer(
+            (panel.StaticText(text.driveLabel), 0, wx.ALIGN_CENTER_VERTICAL),
+            ((5,5)),
+            (choice),
+        )
+        panel.sizer.AddMany(
+            (
+                (radiobox, 0, wx.EXPAND),
+                ((5,5)),
+                (mySizer, 0, wx.EXPAND|wx.ALL, 5),
+            )
+        )
         while panel.Affirmed():
             panel.SetResult(
                 str(choice.GetStringSelection()), 
@@ -848,12 +849,13 @@ class SetMasterVolume(eg.ActionClass):
         
     def Configure(self, value=0, deviceId=0):
         panel = eg.ConfigPanel(self)
-        deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
+        deviceCtrl = panel.Choice(deviceId, SoundMixer.GetMixerDevices())
         valueCtrl = panel.SpinNumCtrl(value, min=0, max=100)
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(wx.StaticText(panel, -1, self.text.text1), 0, wx.ALIGN_CENTER_VERTICAL)
-        sizer.Add(valueCtrl, 0, wx.LEFT|wx.RIGHT, 5)
-        sizer.Add(wx.StaticText(panel, -1, self.text.text2), 0, wx.ALIGN_CENTER_VERTICAL)
+        sizer = eg.HorizontalBoxSizer(
+            (panel.StaticText(self.text.text1), 0, wx.ALIGN_CENTER_VERTICAL),
+            (valueCtrl, 0, wx.LEFT|wx.RIGHT, 5),
+            (panel.StaticText(self.text.text2), 0, wx.ALIGN_CENTER_VERTICAL),
+        )
         panel.AddLine("Device:", deviceCtrl)
         panel.AddLine(sizer)
         while panel.Affirmed():
@@ -889,10 +891,11 @@ class ChangeMasterVolumeBy(eg.ActionClass):
         panel = eg.ConfigPanel(self)
         deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
         valueCtrl = panel.SpinNumCtrl(value, min=-100, max=100)
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(wx.StaticText(panel, -1, self.text.text1), 0, wx.ALIGN_CENTER_VERTICAL)
-        sizer.Add(valueCtrl, 0, wx.LEFT|wx.RIGHT, 5)
-        sizer.Add(wx.StaticText(panel, -1, self.text.text2), 0, wx.ALIGN_CENTER_VERTICAL)
+        sizer = eg.HorizontalBoxSizer(
+            (panel.StaticText(self.text.text1), 0, wx.ALIGN_CENTER_VERTICAL),
+            (valueCtrl, 0, wx.LEFT|wx.RIGHT, 5),
+            (panel.StaticText(self.text.text2), 0, wx.ALIGN_CENTER_VERTICAL),
+        )
         panel.AddLine("Device:", deviceCtrl)
         panel.AddLine(sizer)
         while panel.Affirmed():
@@ -1003,31 +1006,25 @@ class ShowPicture(eg.ActionClass):
 
     def Configure(self, imageFile='', display=0):
         panel = eg.ConfigPanel(self)
-        sizer = panel.sizer
-        
-        st_ctrl = wx.StaticText(panel, -1, self.text.path)
-        sizer.Add(st_ctrl, 0, wx.EXPAND)
-        
+        text = self.text
         filepathCtrl = eg.FileBrowseButton(
             panel, 
-            -1, 
             size=(340,-1),
             initialValue=imageFile,
             labelText="",
             fileMask='%s|*.jpg;*.bmp;*.gif;*.png|%s (*.*)|*.*' % (
-                self.text.allImageFiles, 
-                self.text.allFiles
+                text.allImageFiles, 
+                text.allFiles
             ),
             buttonText=eg.text.General.browse,
         )
-        sizer.Add(filepathCtrl, 0, wx.EXPAND)
-    
-        staticText = wx.StaticText(panel, -1, self.text.display)
-        sizer.Add(staticText, 0, wx.EXPAND|wx.TOP, 10)
-        
         displayChoice = eg.DisplayChoice(panel, display)
-        sizer.Add(displayChoice, 0, wx.BOTTOM, 10)
-    
+        
+        panel.AddLabel(text.path)
+        panel.AddCtrl(filepathCtrl)
+        panel.AddLabel(text.display)
+        panel.AddCtrl(displayChoice)
+
         while panel.Affirmed():
             panel.SetResult(filepathCtrl.GetValue(), displayChoice.GetValue())
         

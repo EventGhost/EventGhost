@@ -23,7 +23,7 @@
 
 class TreeItemBrowseDialog(eg.Dialog):
     
-    def __init__(
+    def Process(
         self, 
         title, 
         text, 
@@ -36,7 +36,7 @@ class TreeItemBrowseDialog(eg.Dialog):
         self.resultClasses = resultClasses
         self.foundId = None
         style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
-        wx.Dialog.__init__(self, parent, -1, title=title, style=style)
+        eg.Dialog.__init__(self, parent, -1, title=title, style=style)
         staticText = wx.StaticText(self, -1, text)
         staticText.Wrap(430)
 
@@ -47,35 +47,20 @@ class TreeItemBrowseDialog(eg.Dialog):
         tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
         self.treeCtrl = tree
         
-        okButton = wx.Button(self, wx.ID_OK, eg.text.General.ok)
-        self.okButton = okButton
-        
-        cancelButton = wx.Button(self, wx.ID_CANCEL, eg.text.General.cancel)
-
-        stdbtnsizer = wx.StdDialogButtonSizer()
-        stdbtnsizer.AddButton(okButton)
-        stdbtnsizer.AddButton(cancelButton)
-        okButton.SetDefault()
-        stdbtnsizer.Realize()
-        
-        btnrowSizer = wx.BoxSizer(wx.HORIZONTAL)
-        btnrowSizer.Add((5,5), 1)
-        btnrowSizer.Add(stdbtnsizer, 0, wx.TOP|wx.BOTTOM, 6)
-        btnrowSizer.Add((2,2), 0)
-        btnrowSizer.Add(eg.SizeGrip(self), 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT)
-
-        mainSizer = wx.BoxSizer(wx.VERTICAL)
-        mainSizer.Add(staticText, 0, wx.EXPAND|wx.ALL, 5)
-        mainSizer.Add(tree, 1, wx.EXPAND)
-        mainSizer.Add(btnrowSizer, 0, wx.EXPAND)
+        self.buttonRow = eg.ButtonRow(self, (wx.ID_CANCEL, wx.ID_OK), True)
+        mainSizer = eg.VerticalBoxSizer(
+            (staticText, 0, wx.EXPAND|wx.ALL, 5),
+            (tree, 1, wx.EXPAND),
+            (self.buttonRow.sizer, 0, wx.EXPAND),
+        )
 
         self.SetSizerAndFit(mainSizer)
-        #self.SetMinSize(self.GetSize())
         self.SetSize((450,400))
         
         if not searchItem:
-            okButton.Enable(False)
-        self.Centre()
+            self.buttonRow.okButton.Enable(False)
+        while self.Affirmed():
+            self.SetResult(self.resultData)
 
 
     def OnSelectionChanged(self, event):
@@ -84,8 +69,11 @@ class TreeItemBrowseDialog(eg.Dialog):
             obj = self.treeCtrl.GetPyData(item)
             if isinstance(obj, self.resultClasses):
                 self.resultData = obj
-                self.okButton.Enable(True)
+                self.buttonRow.okButton.Enable(True)
             else:
-                self.okButton.Enable(False)
+                self.buttonRow.okButton.Enable(False)
         event.Skip()
 
+
+    def GetValue(self):
+        return self.resultData

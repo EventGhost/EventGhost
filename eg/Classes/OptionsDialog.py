@@ -23,7 +23,7 @@
 import os
 import sys
 
-import wx.combo
+from wx.combo import BitmapComboBox
 
 from LanguageTools import languageNames
 
@@ -47,69 +47,56 @@ class Text(eg.TranslatableStrings):
 
 class OptionsDialog(eg.Dialog):
     
-    def __init__(self, parent):
+    def Process(self, parent=None):
+        t = Text
+        c = eg.config
+        
         eg.Dialog.__init__(
             self, 
             parent, 
             -1,
-            Text.Title, 
+            t.Title, 
             style=wx.DEFAULT_DIALOG_STYLE
         )
         
-        self.languageList = ["en_EN"]
+        languageList = ["en_EN"]
         for item in os.listdir("Languages"):
             name, ext = os.path.splitext(item)
             if ext == ".py" and name in languageNames:
-                self.languageList.append(name)
-        self.languageList.sort()
-        self.languageNameList = [
-            languageNames[x].decode("UTF-8") for x in self.languageList
+                languageList.append(name)
+        languageList.sort()
+        languageNameList = [
+            languageNames[x].decode("UTF-8") for x in languageList
         ]
         notebook = wx.Notebook(self, -1)
-        page1 = wx.Panel(notebook)
-        notebook.AddPage(page1, Text.Tab1)
+        page1 = eg.Panel(notebook)
+        notebook.AddPage(page1, t.Tab1)
         
         # page 1 controls        
-        cbStartWithWindows = wx.CheckBox(page1, -1, Text.StartWithWindows)
-        cbStartWithWindows.SetValue(eg.config.startWithWindows)
-        self.cbStartWithWindows = cbStartWithWindows        
-        if eg.folderPath.Startup is None:
-            cbStartWithWindows.Enable(False)
-            
-        cbHideOnClose = wx.CheckBox(page1, -1, Text.HideOnClose)
-        cbHideOnClose.SetValue(eg.config.mainFrame.hideOnClose)
-        self.cbHideOnClose = cbHideOnClose
-        
-        cbCheckUpdate = wx.CheckBox(page1, -1, Text.CheckUpdate)
-        cbCheckUpdate.SetValue(eg.config.checkUpdate)
-        self.cbCheckUpdate = cbCheckUpdate
-        
-        memoryLimitCheckBox = wx.CheckBox(page1, -1, Text.limitMemory1)
-        memoryLimitCheckBox.SetValue(eg.config.limitMemory)
-        self.memoryLimitCheckBox = memoryLimitCheckBox
-        
-        memoryLimitSpinCtrl = eg.SpinIntCtrl(
-            page1, 
-            value=eg.config.limitMemorySize,
-            min=4,
-            max=100
+        startWithWindowsCtrl = page1.CheckBox(
+            c.startWithWindows, 
+            t.StartWithWindows
         )
-        self.memoryLimitSpinCtrl = memoryLimitSpinCtrl
+        if eg.folderPath.Startup is None:
+            startWithWindowsCtrl.Enable(False)
+            
+        hideOnCloseCtrl = page1.CheckBox(c.mainFrame.hideOnClose, t.HideOnClose)
+        checkUpdateCtrl = page1.CheckBox(c.checkUpdate, t.CheckUpdate)
+        memoryLimitCtrl = page1.CheckBox(c.limitMemory, t.limitMemory1)
+        memoryLimitSpinCtrl = page1.SpinIntCtrl(
+            c.limitMemorySize,
+            min=4,
+            max=999
+        )
         def OnMemoryLimitCheckBox(event):
-            memoryLimitSpinCtrl.Enable(memoryLimitCheckBox.IsChecked())
-        memoryLimitCheckBox.Bind(wx.EVT_CHECKBOX, OnMemoryLimitCheckBox)
+            memoryLimitSpinCtrl.Enable(memoryLimitCtrl.IsChecked())
+        memoryLimitCtrl.Bind(wx.EVT_CHECKBOX, OnMemoryLimitCheckBox)
         OnMemoryLimitCheckBox(None)
         
-        confirmDeleteCheckBox = wx.CheckBox(page1, -1, Text.confirmDelete)
-        confirmDeleteCheckBox.SetValue(eg.config.confirmDelete)
-        self.confirmDeleteCheckBox = confirmDeleteCheckBox
+        confirmDeleteCtrl = page1.CheckBox(c.confirmDelete, t.confirmDelete)
 
-        languageChoice = wx.combo.BitmapComboBox(
-            page1,
-            -1, 
-            style=wx.CB_READONLY
-        )
-        for name, code in zip(self.languageNameList, self.languageList):
+        languageChoice = BitmapComboBox(page1, style=wx.CB_READONLY)
+        for name, code in zip(languageNameList, languageList):
             filename = "images/flags/%s.png" % code
             if os.path.exists(filename):
                 image = wx.Image(filename)
@@ -118,107 +105,91 @@ class OptionsDialog(eg.Dialog):
                 languageChoice.Append(name, bmp)
             else:
                 languageChoice.Append(name)
-        languageChoice.SetSelection(self.languageList.index(eg.config.language))
+        languageChoice.SetSelection(languageList.index(c.language))
         languageChoice.SetMinSize((150, -1))
-        self.languageChoice = languageChoice
 
-        self.buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL))
+        buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL, wx.ID_APPLY))
         
         # construction of the layout with sizers
         
-        memoryLimitSizer = wx.BoxSizer(wx.HORIZONTAL)
-        memoryLimitSizer.Add(memoryLimitCheckBox, 0, wx.ALIGN_CENTER_VERTICAL)
-        memoryLimitSizer.Add(memoryLimitSpinCtrl, 0, wx.ALIGN_CENTER_VERTICAL)
-        memoryLimitSizer.Add(
-            wx.StaticText(page1, -1, Text.limitMemory2), 
-            0, 
-            wx.ALIGN_CENTER_VERTICAL|wx.LEFT,
-            2
+        ACV = wx.ALIGN_CENTER_VERTICAL
+        memoryLimitSizer = eg.HorizontalBoxSizer(
+            (memoryLimitCtrl, 0, ACV),
+            (memoryLimitSpinCtrl, 0, ACV),
+            (page1.StaticText(t.limitMemory2), 0, ACV|wx.LEFT, 2),
         )
         
         startGroupSizer = wx.GridSizer(4, 1, 2, 2)
         startGroupSizer.AddMany(
             (
-                (cbStartWithWindows, 0, wx.ALIGN_CENTER_VERTICAL),
-                (cbHideOnClose, 0, wx.ALIGN_CENTER_VERTICAL),
-                (cbCheckUpdate, 0, wx.ALIGN_CENTER_VERTICAL),
-                (memoryLimitSizer, 0, wx.ALIGN_CENTER_VERTICAL),
-                (confirmDeleteCheckBox, 0, wx.ALIGN_CENTER_VERTICAL),
+                (startWithWindowsCtrl, 0, ACV),
+                (hideOnCloseCtrl, 0, ACV),
+                (checkUpdateCtrl, 0, ACV),
+                (memoryLimitSizer, 0, ACV),
+                (confirmDeleteCtrl, 0, ACV),
             )
         )
         
-        staticBox = wx.StaticBox(page1, -1, Text.LanguageGroup)
-        langGroupSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
-        langGroupSizer.Add(languageChoice, 0, wx.LEFT|wx.RIGHT, 18)
+        langGroupSizer = page1.VerticalStaticBoxSizer(
+            t.LanguageGroup,
+            (languageChoice, 0, wx.LEFT|wx.RIGHT, 18),
+        )
         
-        page1Sizer = wx.BoxSizer(wx.VERTICAL)
-        page1Sizer.Add((15, 7), 1)
-        page1Sizer.Add(startGroupSizer, 0, wx.EXPAND|wx.ALL, 5)
-        page1Sizer.Add((15, 7), 1)
-        page1Sizer.Add(langGroupSizer, 0, wx.EXPAND|wx.ALL, 5)
+        page1Sizer = eg.VerticalBoxSizer(
+            ((15, 7), 1),
+            (startGroupSizer, 0, wx.EXPAND|wx.ALL, 5),
+            ((15, 7), 1),
+            (langGroupSizer, 0, wx.EXPAND|wx.ALL, 5),
+        )
         page1.SetSizer(page1Sizer)
         page1.SetAutoLayout(True)
         
-        notebookSizer = wx.BoxSizer(wx.VERTICAL)
-        notebookSizer.Add(notebook, 1, wx.EXPAND)
-        
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(notebookSizer, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, 5)
-        sizer.Add(self.buttonRow.sizer, 0, wx.EXPAND)
-
+        sizer = eg.VerticalBoxSizer(
+            (notebook, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, 5),
+            (buttonRow.sizer, 0, wx.EXPAND),
+        )
         self.SetSizerAndFit(sizer)
         self.SetMinSize(self.GetSize())
         notebook.ChangeSelection(0)
         
-
-    def OnUseAutoloadFileCB(self, event):
-        self.fbAutoloadFilePath.Enable(self.cbUseAutoloadFile.GetValue())
-
-
-    def OnOK(self, event):
-        tmp = self.cbStartWithWindows.GetValue()
-        if tmp <> eg.config.startWithWindows:
-            eg.config.startWithWindows = tmp
-            path = os.path.join(eg.folderPath.Startup, eg.APP_NAME)
-            path += ".lnk"
-            if tmp:
-                # create shortcut in autostart dir
-                eg.Shortcut.Create(
-                    path=path,
-                    target=os.path.abspath(sys.executable),
-                    arguments="-hide"
+        while self.Affirmed():
+            tmp = startWithWindowsCtrl.GetValue()
+            if tmp <> eg.config.startWithWindows:
+                c.startWithWindows = tmp
+                path = os.path.join(eg.folderPath.Startup, eg.APP_NAME)
+                path += ".lnk"
+                if tmp:
+                    # create shortcut in autostart dir
+                    eg.Shortcut.Create(
+                        path=path,
+                        target=os.path.abspath(sys.executable),
+                        arguments="-hide"
+                    )
+                else:
+                    # remove shortcut from autostart dir
+                    try:
+                        os.remove(path)
+                    except:
+                        pass
+                    
+            c.mainFrame.hideOnClose = hideOnCloseCtrl.GetValue()
+            c.checkUpdate = checkUpdateCtrl.GetValue()
+            c.limitMemory = bool(memoryLimitCtrl.GetValue())
+            c.limitMemorySize = memoryLimitSpinCtrl.GetValue()
+            c.confirmDelete = confirmDeleteCtrl.GetValue()
+            
+            language = languageList[languageChoice.GetSelection()]
+            if c.language != language:
+                dlg = wx.MessageDialog(
+                    self,
+                    t.Warning, 
+                    "", 
+                    wx.OK|wx.ICON_INFORMATION
                 )
-            else:
-                # remove shortcut from autostart dir
-                try:
-                    os.remove(path)
-                except:
-                    pass
-                
-        eg.config.mainFrame.hideOnClose = self.cbHideOnClose.GetValue()
-        eg.config.checkUpdate = self.cbCheckUpdate.GetValue()
-        eg.config.limitMemory = bool(self.memoryLimitCheckBox.GetValue())
-        eg.config.limitMemorySize = self.memoryLimitSpinCtrl.GetValue()
-        eg.config.limitMemorySize = self.memoryLimitSpinCtrl.GetValue()
-        eg.config.confirmDelete = self.confirmDeleteCheckBox.GetValue()
-        
-        language = self.languageList[self.languageChoice.GetSelection()]
-        if eg.config.language != language:
-            dlg = wx.MessageDialog(
-                self,
-                Text.Warning, 
-                "", 
-                wx.OK|wx.ICON_INFORMATION
-            )
-            dlg.ShowModal()
-            dlg.Destroy()
-        eg.config.language = language
-        eg.config.Save()
-        self.Destroy()
-        event.Skip()
+                dlg.ShowModal()
+                dlg.Destroy()
+            c.language = language
+            c.Save()
+            self.SetResult()
 
-
-    def OnCancel(self, event):
-        self.Destroy()
-        event.Skip()
 

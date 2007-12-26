@@ -210,16 +210,15 @@ class PythonEditorCtrl(StyledTextCtrl):
         
         # popup menu
         popupMenu = self.popupMenu = eg.Menu(self, "", eg.text.MainFrame.Menu)
-        AddItem = popupMenu.AddItem
-        AddItem("Undo")
-        AddItem("Redo")
-        AddItem()
-        AddItem("Cut")
-        AddItem("Copy")
-        AddItem("Paste")
-        AddItem("Delete")
-        AddItem()
-        AddItem("SelectAll")
+        popupMenu.Item("Undo")
+        popupMenu.Item("Redo")
+        popupMenu.Separator()
+        popupMenu.Item("Cut")
+        popupMenu.Item("Copy")
+        popupMenu.Item("Paste")
+        popupMenu.Item("Delete")
+        popupMenu.Separator()
+        popupMenu.Item("SelectAll")
         self.Bind(wx.EVT_RIGHT_UP, self.OnRightClick)
         
         self.SetText(value)

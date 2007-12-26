@@ -75,21 +75,18 @@ class HeaderBox(wx.PyWindow):
         staticBitmap = wx.StaticBitmap(self)
         staticBitmap.SetIcon(obj.info.icon.GetWxIcon())
         
-        topRightSizer = wx.BoxSizer(wx.HORIZONTAL)
-        topRightSizer.Add(nameBox, 1, wx.EXPAND|wx.ALIGN_BOTTOM)
-        
-        rightSizer = wx.BoxSizer(wx.VERTICAL)
-        rightSizer.Add((4, 4))
-        rightSizer.Add(topRightSizer, 0, wx.EXPAND|wx.TOP, 2)
-        rightSizer.Add(descBox, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 8)
-        #rightSizer.Add((8, 8))
-        
-        mainSizer = wx.BoxSizer(wx.HORIZONTAL)
-        mainSizer.Add((4, 4))
-        mainSizer.Add(staticBitmap, 0, wx.TOP, 5)
-        mainSizer.Add((4, 4))
-        mainSizer.Add(rightSizer, 1, wx.EXPAND)
-        
+        mainSizer = eg.HorizontalBoxSizer(
+            ((4, 4)),
+            (staticBitmap, 0, wx.TOP, 5),
+            ((4, 4)),
+            (eg.VerticalBoxSizer(
+                ((4, 4)),
+                (eg.HorizontalBoxSizer(
+                    (nameBox, 1, wx.EXPAND|wx.ALIGN_BOTTOM),
+                ), 0, wx.EXPAND|wx.TOP, 2),
+                (descBox, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 8),
+            ), 1, wx.EXPAND),
+        )
         # odd sequence to setup the window, but all other ways seem
         # to wrap the text wrong
         self.SetSizer(mainSizer)

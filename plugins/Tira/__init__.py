@@ -182,6 +182,7 @@ class TransmitIR(eg.ActionClass):
             dlg.ShowModal()
             if dlg.result is not None:
                 codeBox.SetValue(MakeHexString(dlg.result))
+            dlg.Destroy()
         
         captureButton = wx.Button(panel, -1, "Learn IR Code")
         lowerSizer.Add(captureButton, 0, wx.ALIGN_RIGHT)

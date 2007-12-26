@@ -36,7 +36,10 @@ class NewEvent(eg.UndoHandler.NewItem):
                     break
             else:
                 pos = 0
-            
+        if not isinstance(parent, eg.MacroItem):
+            return
+        if isinstance(parent, eg.AutostartItem):
+            return    
         if label is not None:
             item = document.EventItem.Create(parent, pos, name=label)
             item.Select()

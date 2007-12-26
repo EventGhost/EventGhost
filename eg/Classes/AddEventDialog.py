@@ -50,7 +50,9 @@ class EventInfo:
         
 class AddEventDialog(eg.Dialog):
     
-    def __init__(self, parent):
+    @eg.LogItWithReturn
+    def Process(self, parent):
+        global gLastSelected
         self.resultData = None
         eg.Dialog.__init__(
             self, 
@@ -66,7 +68,6 @@ class AddEventDialog(eg.Dialog):
                 |wx.CLIP_CHILDREN
                 |wx.NO_FULL_REPAINT_ON_RESIZE
         )
-        self.splitterWindow = splitterWindow
 
         style = wx.TR_DEFAULT_STYLE|wx.TR_HIDE_ROOT|wx.TR_FULL_ROW_HIGHLIGHT
         tree = wx.TreeCtrl(splitterWindow, -1, style=style)
@@ -78,6 +79,7 @@ class AddEventDialog(eg.Dialog):
         tree.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnActivated)
         tree.Bind(wx.EVT_TREE_ITEM_COLLAPSED, self.OnCollapsed)
         tree.Bind(wx.EVT_TREE_ITEM_EXPANDED, self.OnExpanded)
+        tree.Bind(wx.EVT_TREE_BEGIN_DRAG, self.OnStartDrag)
        
         self.htmlTemplate = (
             '<html><body bgcolor="#%02X%02X%02X">%%s</body></html>' 
@@ -121,6 +123,14 @@ class AddEventDialog(eg.Dialog):
         if config.position is not None:
             self.SetPosition(config.position)
         self.ReloadTree()
+        while self.Affirmed():
+            print self.resultData
+            self.SetResult(self.resultData)
+        item = tree.GetSelection()
+        gLastSelected = tree.GetPyData(item)        
+        config.size = self.GetSizeTuple()
+        config.position = self.GetPositionTuple()
+        config.splitPosition = splitterWindow.GetSashPosition()
 
 
     def FillTree(self):
@@ -162,17 +172,12 @@ class AddEventDialog(eg.Dialog):
         if not item.IsOk():
             return
         data = self.tree.GetPyData(item)
-#        if isinstance(data, eg.ActionClass):
-#            self.resultData = data
-#            self.buttonRow.okButton.Enable(True)
-#            info = data.plugin.info
-#        else:
-#            self.resultData = None
-#            self.buttonRow.okButton.Enable(False)
-#            if isinstance(data, eg.ActionGroup):
-#                info = data.plugin.info
-#            else:
-#                info = data
+        if isinstance(data, EventInfo):
+            self.resultData = data.info.eventPrefix + "." + data.name
+            self.buttonRow.okButton.Enable(True)
+        else:
+            self.resultData = None
+            self.buttonRow.okButton.Enable(False)
         self.nameText.SetLabel(data.name)
         #self.docText.SetBasePath(data.info.path)
         self.docText.SetPage(self.htmlTemplate % data.description)
@@ -189,21 +194,30 @@ class AddEventDialog(eg.Dialog):
     def OnActivated(self, event):
         item = self.tree.GetSelection()
         data = self.tree.GetPyData(item)
-        if isinstance(data, eg.ActionClass):
-            self.EndModal(wx.ID_OK)
+        if isinstance(data, EventInfo):
+            self.OnOK()
         else:
             event.Skip()
 
 
     @eg.LogItWithReturn
-    def Destroy(self):
-        global gLastSelected
-        item = self.tree.GetSelection()
-        gLastSelected = self.tree.GetPyData(item)        
-        config.size = self.GetSizeTuple()
-        config.position = self.GetPositionTuple()
-        config.splitPosition = self.splitterWindow.GetSashPosition()
-        eg.Dialog.Destroy(self)
+    def OnStartDrag(self, event):
+        item = self.tree.GetPyData(event.GetItem())
+        text = item.info.eventPrefix + "." + item.name
+        # create our own data format and use it in a
+        # custom data object
+        customData = wx.CustomDataObject(wx.CustomDataFormat("DragItem"))
+        customData.SetData(text.encode("utf-8"))
+
+        # And finally, create the drop source and begin the drag
+        # and drop opperation
+        dropSource = wx.DropSource(self)
+        dropSource.SetData(customData)
+        result = dropSource.DoDragDrop(wx.Drag_DefaultMove)
+        if result == wx.DragMove:
+            self.Refresh()
+            
+
         
         
 

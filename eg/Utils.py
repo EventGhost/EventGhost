@@ -22,7 +22,8 @@
 
 __all__ = ["Bunch", "EventHook", "LogIt", "LogItWithReturn",
     "TimeIt", "AssertNotMainThread", "AssertNotActionThread", "ParseString",
-    "SetClass", "EnsureVisible", "namedtuple"
+    "SetClass", "EnsureVisible", "namedtuple", "AsGreenlet",
+    "VerticalBoxSizer", "HorizontalBoxSizer",
 ]
     
 
@@ -212,7 +213,12 @@ def SetClass(obj, cls):
             setattr(obj, k, newValue)
     obj.__class__ = cls
     
-
+    
+def AsGreenlet(func):
+    def Wrapper(*args, **kwargs):
+        gr = eg.Greenlet(func)
+        return gr.switch(*args, **kwargs)
+    return Wrapper
 # TODO: find a better place for EnsureVisible
 
 
@@ -290,6 +296,23 @@ def EnsureVisible(window):
     window.SetRect(newRect)
 
 
+
+class VerticalBoxSizer(wx.BoxSizer):
+    
+    def __init__(self, *items):
+        wx.BoxSizer.__init__(self, wx.VERTICAL)
+        self.AddMany(items)
+        
+        
+        
+class HorizontalBoxSizer(wx.BoxSizer):
+    
+    def __init__(self, *items):
+        wx.BoxSizer.__init__(self, wx.HORIZONTAL)
+        self.AddMany(items)        
+        
+        
+        
 from operator import itemgetter as _itemgetter
 from keyword import iskeyword as _iskeyword
 import sys as _sys

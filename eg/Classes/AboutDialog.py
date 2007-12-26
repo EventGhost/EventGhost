@@ -124,7 +124,6 @@ class AboutPanel(wx.Panel):
         wx.Panel.__init__(self, parent, style=wx.SUNKEN_BORDER)
         backgroundColour = (255, 255, 255)
         self.SetBackgroundColour(backgroundColour)
-        #textCtrl = wx.StaticText(self, -1, "")
         hypelink1 = eg.HyperLinkCtrl(
             self, 
             wx.ID_ANY, 
@@ -153,19 +152,18 @@ class AboutPanel(wx.Panel):
         animatedWindow = eg.AnimatedWindow(self)
         animatedWindow.SetBackgroundColour(backgroundColour)
         
-        linkLineSizer = wx.BoxSizer(wx.HORIZONTAL)
-        linkLineSizer.Add((5,5), 1)
-        linkLineSizer.Add(hypelink1, 0, wx.EXPAND, 15)
-        linkLineSizer.Add((5,5), 1)
-        linkLineSizer.Add(hypelink2, 0, wx.EXPAND, 15)
-        linkLineSizer.Add((5,5), 1)
-        linkLineSizer.Add(hypelink3, 0, wx.EXPAND, 15)
-        linkLineSizer.Add((5,5), 1)
-        
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        #sizer.Add(textCtrl, 0, wx.ALIGN_CENTER|wx.TOP|wx.LEFT|wx.RIGHT, 5)
-        sizer.Add(linkLineSizer, 0, wx.ALIGN_CENTER|wx.EXPAND|wx.TOP, 15)
-        sizer.Add(animatedWindow, 1, wx.ALIGN_CENTER|wx.ALL|wx.EXPAND, 10)
+        sizer = eg.VerticalBoxSizer(
+            (eg.HorizontalBoxSizer(
+                ((5,5), 1),
+                (hypelink1, 0, wx.EXPAND, 15),
+                ((5,5), 1),
+                (hypelink2, 0, wx.EXPAND, 15),
+                ((5,5), 1),
+                (hypelink3, 0, wx.EXPAND, 15),
+                ((5,5), 1),
+            ), 0, wx.ALIGN_CENTER|wx.EXPAND|wx.TOP, 15),
+            (animatedWindow, 1, wx.ALIGN_CENTER|wx.ALL|wx.EXPAND, 10),
+        )
         self.SetSizerAndFit(sizer)
 
 
@@ -183,9 +181,11 @@ class HtmlPanel(wx.Panel):
         htmlWindow.SetPage(html)
         htmlWindow.SetMinSize((480, 270))
         htmlWindow.SetScrollbars(1, 1, 1000, 1000)
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(htmlWindow, 1, wx.EXPAND, 5)
-        self.SetSizerAndFit(sizer)
+        self.SetSizerAndFit(
+            eg.VerticalBoxSizer(
+                (htmlWindow, 1, wx.EXPAND, 5),
+            )
+        )
         self.htmlWindow = htmlWindow
         
 
@@ -322,56 +322,45 @@ class ChangelogPanel(HtmlPanel):
 
 class AboutDialog(eg.Dialog):
 
-    def __init__(self, parent):
-        wx.Dialog.__init__(
+    def Process(self, parent):
+        eg.Dialog.__init__(
             self, 
             parent, 
             -1, 
             Text.Title,
-            style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER 
+            style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER |wx.STAY_ON_TOP 
         )
-        notebook = self.notebook = wx.Notebook(self)
+        notebook = wx.Notebook(self)
         notebook.AddPage(AboutPanel(notebook), Text.tabAbout)
         notebook.AddPage(SpecialThanksPanel(notebook), Text.tabSpecialThanks)
         notebook.AddPage(LicensePanel(notebook), Text.tabLicense)
         notebook.AddPage(SystemInfoPanel(notebook), Text.tabSystemInfo)
         notebook.AddPage(ChangelogPanel(notebook), Text.tabChangelog)
-        notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnPageChanged)
+        
+        def OnPageChanged(event):
+            pageNum = event.GetSelection()
+            notebook.ChangeSelection(pageNum)
+            notebook.GetPage(pageNum).SetFocus()
+        notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, OnPageChanged)
+        
         okButton = wx.Button(self, wx.ID_OK, eg.text.General.ok)
         okButton.SetDefault()
-
-        btnSizer = wx.BoxSizer(wx.HORIZONTAL)
-        btnSizer.Add((0, 0), 1, wx.EXPAND)
-        btnSizer.Add(
-            okButton, 
-            0, 
-            wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND|wx.ALL, 
-            5
+        okButton.Bind(wx.EVT_BUTTON, self.OnOK)
+        
+        buttonSizer = eg.HorizontalBoxSizer(
+            ((0, 0), 1, wx.EXPAND),
+            (okButton, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND|wx.ALL, 5),
+            ((0, 0), 1, wx.EXPAND),
+            (eg.SizeGrip(self), 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT),
         )
-        btnSizer.Add((0, 0), 1, wx.EXPAND)
-        btnSizer.Add(eg.SizeGrip(self), 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT)
-
-        mainSizer = wx.BoxSizer(wx.VERTICAL)
-        mainSizer.Add(notebook, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, 5)
-        mainSizer.Add(btnSizer, 0, wx.EXPAND)
-
+        mainSizer = eg.VerticalBoxSizer(
+            (notebook, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, 5),
+            (buttonSizer, 0, wx.EXPAND),
+        )
         self.SetSizerAndFit(mainSizer)
         self.SetMinSize(self.GetSize())
-        okButton.Bind(wx.EVT_BUTTON, self.OnClose)
-        
+        self.Affirmed()
     
-    def OnPageChanged(self, event):
-        pageNum = event.GetSelection()
-        self.notebook.ChangeSelection(pageNum)
-        self.notebook.GetPage(pageNum).SetFocus()
         
         
-    @eg.LogIt
-    def OnClose(self, event):
-        self.Destroy()
-        event.Skip()
         
-
-
-
-    

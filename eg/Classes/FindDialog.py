@@ -67,36 +67,32 @@ class FindDialog(eg.Dialog):
         searchButton.Enable(False)
         cancelButton = wx.Button(self, wx.ID_CANCEL, eg.text.General.cancel)
         
-        upperLeftSizer = wx.BoxSizer(wx.HORIZONTAL)
-        upperLeftSizer.Add(
-            wx.StaticText(self, -1, Text.searchLabel), 
-            0, 
-            wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 
-            5
+        ACV = wx.ALIGN_CENTER_VERTICAL
+        upperLeftSizer = eg.HorizontalBoxSizer(
+            (self.StaticText(Text.searchLabel), 0, ACV|wx.RIGHT, 5),
+            (textCtrl, 1, wx.EXPAND),
         )
-        upperLeftSizer.Add(textCtrl, 1, wx.EXPAND)
-        
-        cbSizer = wx.BoxSizer(wx.VERTICAL)
-        cbSizer.Add(wholeWordsOnlyCb)
-        cbSizer.Add(caseSensitiveCb, 0, wx.TOP, 5)
-        cbSizer.Add(searchParametersCb, 0, wx.TOP, 5)
-        
-        lowerLeftSizer = wx.BoxSizer(wx.HORIZONTAL)
-        lowerLeftSizer.Add(cbSizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 10)
-        lowerLeftSizer.Add(directionRb)
-        
-        leftSizer = wx.BoxSizer(wx.VERTICAL)
-        leftSizer.Add(upperLeftSizer, 0, wx.EXPAND|wx.ALL, 5)
-        leftSizer.Add(lowerLeftSizer, 0, wx.EXPAND|wx.ALL, 5)
-
-        btnSizer = wx.BoxSizer(wx.VERTICAL)
-        btnSizer.Add(searchButton, 0, wx.EXPAND)
-        btnSizer.Add(cancelButton, 0, wx.EXPAND|wx.TOP, 5)
-
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(leftSizer, 1, wx.EXPAND)
-        sizer.Add(btnSizer, 0, wx.EXPAND|wx.ALL, 5)
-        
+        cbSizer = eg.VerticalBoxSizer(
+            (wholeWordsOnlyCb),
+            (caseSensitiveCb, 0, wx.TOP, 5),
+            (searchParametersCb, 0, wx.TOP, 5),
+        )
+        lowerLeftSizer = eg.HorizontalBoxSizer(
+            (cbSizer, 0, ACV|wx.RIGHT, 10),
+            (directionRb),
+        )
+        leftSizer = eg.VerticalBoxSizer(
+            (upperLeftSizer, 0, wx.EXPAND|wx.ALL, 5),
+            (lowerLeftSizer, 0, wx.EXPAND|wx.ALL, 5),
+        )
+        btnSizer = eg.VerticalBoxSizer(
+            (searchButton, 0, wx.EXPAND),
+            (cancelButton, 0, wx.EXPAND|wx.TOP, 5),
+        )
+        sizer = eg.HorizontalBoxSizer(
+            (leftSizer, 1, wx.EXPAND),
+            (btnSizer, 0, wx.EXPAND|wx.ALL, 5),
+        )
         self.SetSizerAndFit(sizer)
         self.SetMinSize(self.GetSize())
         
@@ -139,7 +135,6 @@ class FindDialog(eg.Dialog):
         else:
             iterFunc = eg.TreeItem.GetPreviousItem
         ActionItem = eg.ActionItem
-        PythonScript = eg.plugins.EventGhost.PythonScript
         keyLen = len(key)
         if self.wholeWordsOnlyCb.GetValue():
             matchFunc = lambda text, pos: (
@@ -175,7 +170,7 @@ class FindDialog(eg.Dialog):
                 item.Select()
                 return
             if searchParameters and isinstance(item, ActionItem):
-                for arg in item.args:
+                for arg in item.GetArgs():
                     if type(arg) in StringTypes:
                         text = convertFunc(arg)
                         try:

@@ -40,7 +40,8 @@ class Text(eg.TranslatableStrings):
 
 class AddActionDialog(eg.Dialog):
     
-    def __init__(self, parent):
+    def Process(self, parent):
+        global gLastSelected
         self.resultData = None
         eg.Dialog.__init__(
             self, 
@@ -58,7 +59,6 @@ class AddActionDialog(eg.Dialog):
                 |wx.CLIP_CHILDREN
                 |wx.NO_FULL_REPAINT_ON_RESIZE
         )
-        self.splitterWindow = splitterWindow
 
         style = wx.TR_DEFAULT_STYLE|wx.TR_HIDE_ROOT|wx.TR_FULL_ROW_HIGHLIGHT
         tree = wx.TreeCtrl(splitterWindow, -1, style=style)
@@ -108,6 +108,15 @@ class AddActionDialog(eg.Dialog):
         if config.position is not None:
             self.SetPosition(config.position)
         self.ReloadTree()
+        while self.Affirmed():
+            self.SetResult(self.resultData)
+        
+        item = self.tree.GetSelection()
+        gLastSelected = tree.GetPyData(item)        
+        config.size = self.GetSizeTuple()
+        config.position = self.GetPositionTuple()
+        config.splitPosition = splitterWindow.GetSashPosition()
+        
 
 
     def FillTree(self, item, data):
@@ -189,20 +198,10 @@ class AddActionDialog(eg.Dialog):
         item = self.tree.GetSelection()
         data = self.tree.GetPyData(item)
         if isinstance(data, eg.ActionClass):
-            self.EndModal(wx.ID_OK)
+            self.OnOK()
         else:
             event.Skip()
 
-
-    @eg.LogItWithReturn
-    def Destroy(self):
-        global gLastSelected
-        item = self.tree.GetSelection()
-        gLastSelected = self.tree.GetPyData(item)        
-        config.size = self.GetSizeTuple()
-        config.position = self.GetPositionTuple()
-        config.splitPosition = self.splitterWindow.GetSashPosition()
-        eg.Dialog.Destroy(self)
         
         
 

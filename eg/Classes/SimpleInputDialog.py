@@ -23,31 +23,28 @@
 PROMPT = "Please type your input..."
 
 class SimpleInputDialog(eg.Dialog):
+    
     def __init__(self, prompt=None, initialValue=""):
         if prompt is None:
             prompt = PROMPT
-        self.resultData = None
-        wx.Dialog.__init__(
+        eg.Dialog.__init__(
             self, None, -1, PROMPT, style=wx.RESIZE_BORDER|wx.CAPTION
         )
-        st = wx.StaticText(self, -1, prompt)
-        self.textCtrl = wx.TextCtrl(self, -1, initialValue, size=(300, -1))
-        btnrow = eg.ButtonRow(self, [wx.ID_OK])
-        mainSizer = wx.BoxSizer(wx.VERTICAL)
-        mainSizer.Add(st, 0, wx.EXPAND|wx.ALL, 5)
-        mainSizer.Add(self.textCtrl, 0, wx.EXPAND|wx.ALL, 5)
-        mainSizer.Add((5, 5), 1, wx.EXPAND)
-        mainSizer.Add(wx.StaticLine(self), 0, wx.EXPAND)
-        mainSizer.Add(btnrow.sizer, 0, wx.EXPAND)        
+        textCtrl = self.TextCtrl(initialValue, size=(300, -1))
+        buttonRow = eg.ButtonRow(self, [wx.ID_OK])
+        mainSizer = eg.VerticalBoxSizer(
+            (self.StaticText(prompt), 0, wx.EXPAND|wx.ALL, 5),
+            (textCtrl, 0, wx.EXPAND|wx.ALL, 5),
+            ((5, 5), 1, wx.EXPAND),
+            (wx.StaticLine(self), 0, wx.EXPAND),
+            (buttonRow.sizer, 0, wx.EXPAND),
+        )
         self.SetSizerAndFit(mainSizer)
         self.SetMinSize(self.GetSize())
+        while self.Affirmed():
+            self.SetResult(textCtrl.GetValue())
         
-        
-    def OnOK(self, event):
-        self.resultData = self.textCtrl.GetValue()
-        event.Skip()
-                
         
     @classmethod
     def CreateModal(cls, prompt=None):
-        return cls(prompt).DoModal()
+        return cls.GetModalResult(prompt)

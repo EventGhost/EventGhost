@@ -48,8 +48,8 @@ class EventDropSource(wx.DropSource):
         textData = wx.TextDataObject(text)
         
         data = wx.DataObjectComposite()
-        data.Add(customData)
         data.Add(textData)
+        data.Add(customData)
         
         # We need to hold a reference to our data object, instead it could
         # be garbage collected
@@ -194,6 +194,7 @@ class EventDropTarget(wx.PyDropTarget):
         return wx.DragNone
 
 
+    @eg.LogIt
     def OnData(self, x, y, d):
         # Called when OnDrop returns True.  
         tree = self.treeCtrl
@@ -550,12 +551,26 @@ class TreeCtrl(wx.TreeCtrl):
             eg.UndoHandler.MoveTo(self.document, dragObject, parent, pos)
 
 
+    def GetTopLevelWindow(self):
+        win1 = self
+        while True:
+            win2 = win1.GetParent()
+            if win2 is None:
+                return win1
+            win1 = win2
+            
+        
     def OnDragTimer(self, event):
-        id, flags = self.HitTest(self.ScreenToClient(wx.GetMousePosition()))
-        if flags & wx.TREE_HITTEST_ABOVE:
-            self.ScrollLines(-1)
-        elif flags & wx.TREE_HITTEST_BELOW:
-            self.ScrollLines(1)
+        pos = wx.GetMousePosition()
+        r = self.GetScreenRect()
+        r2 = self.GetTopLevelWindow().GetScreenRect()
+        if r.x <= pos.x <= r.GetRight():
+            if pos.y < r.y:
+                if pos.y > r2.y:
+                    self.ScrollLines(-1)
+            elif pos.y > r.GetBottom():
+                if pos.y < r2.GetBottom():
+                    self.ScrollLines(1)
 
 
     def Cut(self, event=None):

@@ -53,12 +53,10 @@ class MessageDialog(eg.Dialog):
         bmp = wx.ArtProvider.GetBitmap(
             wx.ART_INFORMATION, 
             wx.ART_MESSAGE_BOX, 
-            (32,32)
+            (32, 32)
         )
         staticBitmap = wx.StaticBitmap(self, -1, bmp)
-        staticText = wx.StaticText(
-            self, 
-            -1, 
+        staticText = self.StaticText(
             Text.newVersionMesg % (currentVersion, version)
         )
         downloadButton = wx.Button(self, -1, Text.downloadButton)
@@ -66,28 +64,26 @@ class MessageDialog(eg.Dialog):
         cancelButton = wx.Button(self, -1, eg.text.General.cancel)
         cancelButton.Bind(wx.EVT_BUTTON, self.OnCancel)
         
-        sizer2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer2.Add(staticBitmap, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 10)
-        sizer2.Add((5,5), 0)
-        sizer2.Add(
-            staticText, 
-            0, 
-            wx.TOP|wx.RIGHT|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL, 
-            10
+        sizer2 = eg.HorizontalBoxSizer(
+            (staticBitmap, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 10),
+            ((5, 5), 0),
+            (staticText, 0, wx.TOP|wx.RIGHT|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL, 10),
         )
-        
-        sizer3 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer3.Add(downloadButton)
-        sizer3.Add((5,5), 0)
-        sizer3.Add(cancelButton)
-        
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(sizer2)
-        sizer.Add((5,5), 1)
-        sizer.Add(sizer3, 0, wx.ALIGN_CENTER_HORIZONTAL)
-        sizer.Add((2,10), 0)      
-        self.SetSizerAndFit(sizer)
-        self.DoModal()
+        self.SetSizerAndFit(
+            eg.VerticalBoxSizer(
+                (sizer2),
+                ((5, 5), 1),
+                (
+                    eg.HorizontalBoxSizer(
+                        (downloadButton),
+                        ((5, 5), 0),
+                        (cancelButton),
+                    ), 0, wx.ALIGN_CENTER_HORIZONTAL
+                ),
+                ((2, 10), 0),
+            )  
+        )
+        self.ShowModal()
         
  
     def OnCancel(self, event):

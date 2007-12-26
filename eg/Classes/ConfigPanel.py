@@ -69,9 +69,13 @@ class ConfigDialog(eg.Dialog):
         paramSizer = wx.BoxSizer(wx.VERTICAL)
         self.headerBox = eg.HeaderBox(self, obj)
         mainSizer.SetMinSize((450, 300))
-        mainSizer.Add(self.headerBox, 0, wx.EXPAND, 0)
-        mainSizer.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.ALIGN_CENTER, 0)
-        mainSizer.Add(paramSizer, 1, flags|wx.ALIGN_CENTER_VERTICAL, 15)
+        mainSizer.AddMany(
+            (
+                (self.headerBox, 0, wx.EXPAND, 0),
+                (wx.StaticLine(self), 0, wx.EXPAND|wx.ALIGN_CENTER, 0),
+                (paramSizer, 1, flags|wx.ALIGN_CENTER_VERTICAL, 15),
+            )
+        )
         self.mainSizer = mainSizer
         self.sizer = paramSizer
         
@@ -118,7 +122,6 @@ class ConfigDialog(eg.Dialog):
         
         
     def OnTestButton(self, event):
-        #self.panel.SetFocus()
         self.result = eg.ID_TEST
         self.gr.switch(eg.ID_TEST)
         
@@ -140,7 +143,7 @@ class ConfigDialog(eg.Dialog):
         else:
             self.mainSizer.Add(self.buttonRow.sizer, 0, wx.EXPAND|wx.RIGHT, 10)
         self.SetSizerAndFit(self.mainSizer)
-        self.Fit()
+        self.Fit() # without the addition Fit(), some dialogs get a bad size
         self.SetMinSize(self.GetSize())
         self.Centre()
         self.panel.SetFocus()
@@ -173,7 +176,6 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         self.maxRowNum = 0
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.isDirty = False
-        #if eg.debugLevel:
         self.dialog.buttonRow.applyButton.Enable(False)
         
     @eg.LogIt
@@ -212,7 +214,6 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
             
         self.dialog.FinishSetup()        
         def OnEvent(event):
-            #print event
             self.SetIsDirty()
         self.Bind(wx.EVT_CHECKBOX, OnEvent)
         self.Bind(wx.EVT_BUTTON, OnEvent)
@@ -241,7 +242,6 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
     def SetResult(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
-        #if eg.debugLevel:
         self.dialog.buttonRow.applyButton.Enable(False)
         self.isDirty = False
         self.nextResult = self.gr.parent.switch(args)

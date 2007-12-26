@@ -335,42 +335,41 @@ class SysTrayMenu(eg.PluginClass):
         
         # construction of the dialog with sizers
         staticBox = wx.StaticBox(panel, -1, text.addBox)
-        
         addSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
-        #addSizer = wx.BoxSizer(wx.VERTICAL)
         addSizer.Add(addItemButton, 0, wx.EXPAND)
         addSizer.Add((5, 5))
         addSizer.Add(addSeparatorButton, 0, wx.EXPAND)
 
-        rightSizer = wx.BoxSizer(wx.VERTICAL)
-        rightSizer.Add(deleteButton, 0, wx.EXPAND)
-        rightSizer.Add((5, 5), 1, wx.EXPAND)
-        rightSizer.Add(upButton)
-        rightSizer.Add(downButton, 0, wx.TOP, 5)
-        rightSizer.Add((5, 5), 1, wx.EXPAND)
-        rightSizer.Add(addSizer, 0, wx.EXPAND)
-        
         editSizer = wx.FlexGridSizer(2, 2, 5, 5)
         editSizer.AddGrowableCol(1)
-        staticText1 = wx.StaticText(panel, -1, text.editLabel)
-        editSizer.Add(staticText1, 0, wx.ALIGN_CENTER_VERTICAL)
-        editSizer.Add(labelBox, 0, wx.EXPAND)
-        staticText2 = wx.StaticText(panel, -1, text.editEvent)
-        editSizer.Add(staticText2, 0, wx.ALIGN_CENTER_VERTICAL)
-        editSizer.Add(eventBox, 0, wx.EXPAND)
-        #staticText3 = wx.StaticText(dialog, -1, "Item type:")
-        #editSizer.Add(staticText3, 0, wx.ALIGN_CENTER_VERTICAL)
-        #editSizer.Add(itemTypeCtrl, 0, wx.EXPAND)
+        editSizer.AddMany(
+            (
+                (panel.StaticText(text.editLabel), 0, wx.ALIGN_CENTER_VERTICAL),
+                (labelBox, 0, wx.EXPAND),
+                (panel.StaticText(text.editEvent), 0, wx.ALIGN_CENTER_VERTICAL),
+                (eventBox, 0, wx.EXPAND),
+            )
+        )
         
-        leftSizer = wx.BoxSizer(wx.VERTICAL)
-        leftSizer.Add(tree, 1, wx.EXPAND)
-        leftSizer.Add(editSizer, 0, wx.EXPAND|wx.TOP, 5)
-        
-        mainSizer = wx.BoxSizer(wx.HORIZONTAL)
-        mainSizer.Add(leftSizer, 1, wx.EXPAND)
-        mainSizer.Add((5, 5))
-        mainSizer.Add(rightSizer, 0, wx.EXPAND)
-        
+        mainSizer = eg.HorizontalBoxSizer(
+            (
+                eg.VerticalBoxSizer(
+                    (tree, 1, wx.EXPAND),
+                    (editSizer, 0, wx.EXPAND|wx.TOP, 5),
+                ), 1, wx.EXPAND
+            ),
+            ((5, 5)),
+            (
+                eg.VerticalBoxSizer(
+                    (deleteButton, 0, wx.EXPAND),
+                    ((5, 5), 1, wx.EXPAND),
+                    (upButton),
+                    (downButton, 0, wx.TOP, 5),
+                    ((5, 5), 1, wx.EXPAND),
+                    (addSizer, 0, wx.EXPAND),
+                ), 0, wx.EXPAND
+            ),
+        )
         panel.sizer.Add(mainSizer, 1, wx.EXPAND)
         
         next = tree.GetFirstChild(root)[0]

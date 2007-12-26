@@ -49,19 +49,16 @@ class TestDialog(eg.Dialog):
         )
         list = eg.WindowList(self, hwnds)
         okButton = wx.Button(self, wx.ID_OK)
-        btnSizer = wx.BoxSizer(wx.HORIZONTAL)
-        btnSizer.Add((0, 0), 1, wx.EXPAND)
-        btnSizer.Add(
-            okButton, 
-            0, 
-            wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND|wx.ALL, 
-            5
+        btnSizer = eg.HorizontalBoxSizer(
+            ((0, 0), 1, wx.EXPAND),
+            (okButton, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND|wx.ALL, 5),
+            ((0, 0), 1, wx.EXPAND),
+            (eg.SizeGrip(self), 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT),
         )
-        btnSizer.Add((0, 0), 1, wx.EXPAND)
-        btnSizer.Add(eg.SizeGrip(self), 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT)
-        mainSizer = wx.BoxSizer(wx.VERTICAL)
-        mainSizer.Add(list, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, 5)
-        mainSizer.Add(btnSizer, 0, wx.EXPAND)
+        mainSizer = eg.VerticalBoxSizer(
+            (list, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, 5),
+            (btnSizer, 0, wx.EXPAND),
+        )
         self.SetSizer(mainSizer)
         
 
@@ -357,7 +354,9 @@ class FindWindow(eg.ActionClass):
         def OnButton(event):
             args = GetResult()[:-2] # we don't need timeout and stopMacro parameter
             hwnds = eg.WindowMatcher(*args)()
-            TestDialog(panel.dialog, hwnds).ShowModal()
+            dialog = TestDialog(panel.dialog, hwnds)
+            dialog.ShowModal()
+            dialog.Destroy()
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
         
         @eg.LogIt

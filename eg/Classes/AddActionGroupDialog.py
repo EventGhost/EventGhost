@@ -34,13 +34,13 @@ class Text(eg.TranslatableStrings):
 
 class AddActionGroupDialog(eg.TreeItemBrowseDialog):
     
-    def __init__(self, parent=None):
-        eg.TreeItemBrowseDialog.__init__(
+    def Process(self, parent=None):
+        eg.TreeItemBrowseDialog.Process(
             self, 
             Text.caption,
             Text.message,
-            None,
-            (eg.FolderItem, eg.RootItem),
+            searchItem=None,
+            resultClasses=(eg.FolderItem, eg.RootItem),
             filterClasses=(eg.FolderItem, ),
             parent=parent,
         )

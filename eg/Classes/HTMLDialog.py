@@ -33,7 +33,7 @@ class HTMLDialog(eg.Dialog):
     def __init__(self, parent, title, htmldata, icon=None, basePath=None):
         
         style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
-        wx.Dialog.__init__(self, parent, -1, title, style=style)
+        eg.Dialog.__init__(self, parent, -1, title, style=style)
         if icon:
             self.SetIcon(icon)
         htmlCtrl = eg.HtmlWindow(self, -1, style=wx.SUNKEN_BORDER)
@@ -43,22 +43,17 @@ class HTMLDialog(eg.Dialog):
         okButton = wx.Button(self, wx.ID_OK, eg.text.General.ok)
         okButton.SetDefault()
         self.okButton = okButton
-        mainSizer = wx.BoxSizer(wx.VERTICAL)
-        mainSizer.Add(htmlCtrl, 1, wx.EXPAND|wx.ALL, 5)
         
-        btnSizer = wx.BoxSizer(wx.HORIZONTAL)
-        btnSizer.Add((5, 5), 1, wx.EXPAND)
-        btnSizer.Add(
-            okButton, 
-            0, 
-            wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND, 
-            5
+        btnSizer = eg.HorizontalBoxSizer(
+            ((5, 5), 1, wx.EXPAND),
+            (okButton, 0, wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND, 5),
+            ((5, 5), 1, wx.EXPAND),
+            (eg.SizeGrip(self), 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT),
         )
-        btnSizer.Add((5, 5), 1, wx.EXPAND)
-        btnSizer.Add(eg.SizeGrip(self), 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT)
-        
-        mainSizer.Add(btnSizer, 0, wx.EXPAND)
-        
+        mainSizer = eg.VerticalBoxSizer(
+            (htmlCtrl, 1, wx.EXPAND|wx.ALL, 5),
+            (btnSizer, 0, wx.EXPAND),
+        )
         self.SetSizerAndFit(mainSizer)
         if config.position is not None:
             self.SetPosition(config.position)

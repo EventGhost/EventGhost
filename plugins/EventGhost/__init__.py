@@ -396,34 +396,33 @@ class JumpIfLongPress(eg.ActionClass):
         if link is None:
             link = eg.TreeLink(eg.currentConfigureItem)
         
-        sizer1 = wx.BoxSizer(wx.HORIZONTAL)
-        textCtrl = wx.StaticText(panel, -1, text.text1)
-        sizer1.Add(textCtrl, 0, wx.ALIGN_CENTER_VERTICAL)
-        intervalCtrl = eg.SpinNumCtrl(panel)
-        intervalCtrl.SetValue(interval)
-        sizer1.Add(intervalCtrl, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
-        textCtrl = wx.StaticText(panel, -1, text.text2)
-        sizer1.Add(textCtrl, 0, wx.ALIGN_CENTER_VERTICAL)
-        panel.sizer.Add(sizer1)
-        
-        mySizer = wx.FlexGridSizer(2,3,5,5)
-        mySizer.AddGrowableCol(1, 1)
-        
-        textCtrl = wx.StaticText(panel, -1, text.text3)
-        mySizer.Add(textCtrl, 0, wx.ALIGN_CENTER_VERTICAL)
-        button = eg.MacroSelectButton(  
+        intervalCtrl = panel.SpinNumCtrl(interval)
+        macroCtrl = eg.MacroSelectButton(  
             panel,
             eg.text.General.choose,
             text.text4,
             text.text5,
             link.target
         )
-        mySizer.Add(button, 1, wx.EXPAND)
+
+        sizer1 = eg.HorizontalBoxSizer(
+            (panel.StaticText(text.text1), 0, wx.ALIGN_CENTER_VERTICAL),
+            (intervalCtrl, 0, wx.LEFT|wx.RIGHT, 5),
+            (panel.StaticText(text.text2), 0, wx.ALIGN_CENTER_VERTICAL),
+        )
+        mySizer = wx.FlexGridSizer(2,3,5,5)
+        mySizer.AddGrowableCol(1, 1)
+        mySizer.Add(panel.StaticText(text.text3), 0, wx.ALIGN_CENTER_VERTICAL)
+        mySizer.Add(macroCtrl, 1, wx.EXPAND)
                     
-        panel.sizer.Add(mySizer, 1, wx.EXPAND|wx.TOP, 5)
-        
+        panel.sizer.AddMany(
+            (
+                (sizer1),
+                (mySizer, 1, wx.EXPAND|wx.TOP, 5),
+            )
+        )
         while panel.Affirmed():
-            link.SetTarget(button.GetValue())
+            link.SetTarget(macroCtrl.GetValue())
             panel.SetResult(intervalCtrl.GetValue(), link)
 
 
@@ -536,26 +535,26 @@ class TriggerEvent(eg.ActionClass):
     
     def Configure(self, eventString="", waitTime=0):
         panel = eg.ConfigPanel(self)
-        sizer = panel.sizer
         text = self.text
         
-        sizer1 = wx.BoxSizer(wx.HORIZONTAL)
-        staticText = wx.StaticText(panel, -1, text.text1)
-        sizer1.Add(staticText, 0, wx.ALIGN_CENTER_VERTICAL, 5)
+        eventStringCtrl = panel.TextCtrl(eventString, size=(250, -1))
+        waitTimeCtrl = panel.SpinNumCtrl(waitTime, integerWidth=5)
         
-        eventStringCtrl = wx.TextCtrl(panel, -1, eventString, size=(250, -1))
-        sizer1.Add(eventStringCtrl, 0, wx.LEFT, 5)
-        sizer.Add(sizer1, 0, wx.EXPAND)
-        
-        sizer2 = wx.BoxSizer(wx.HORIZONTAL)
-        staticText = wx.StaticText(panel, -1, text.text2)
-        sizer2.Add(staticText, 0, wx.ALIGN_CENTER_VERTICAL)
-        waitTimeCtrl = eg.SpinNumCtrl(panel, -1, waitTime, integerWidth=5)
-        sizer2.Add(waitTimeCtrl, 0, wx.ALL, 5)
-        staticText = wx.StaticText(panel, -1, text.text3)
-        sizer2.Add(staticText, 0, wx.ALIGN_CENTER_VERTICAL)
-        sizer.Add(sizer2, 0, wx.EXPAND)
-        
+        sizer1 = eg.HorizontalBoxSizer(
+            (panel.StaticText(text.text1), 0, wx.ALIGN_CENTER_VERTICAL, 5),
+            (eventStringCtrl, 0, wx.LEFT, 5),
+        )
+        sizer2 = eg.HorizontalBoxSizer(
+            (panel.StaticText(text.text2), 0, wx.ALIGN_CENTER_VERTICAL),
+            (waitTimeCtrl, 0, wx.ALL, 5),
+            (panel.StaticText(text.text3), 0, wx.ALIGN_CENTER_VERTICAL),
+        )
+        panel.sizer.AddMany(
+            (
+                (sizer1, 0, wx.EXPAND),
+                (sizer2, 0, wx.EXPAND),
+            )
+        )
         while panel.Affirmed():
             panel.SetResult(
                 eventStringCtrl.GetValue(),
