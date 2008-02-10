@@ -160,6 +160,7 @@ class Mouse(eg.PluginClass):
         self.AddAction(RightDoubleClick)
         self.AddAction(ToggleLeftButton)
         self.AddAction(MoveAbsolute)
+        self.AddAction(MoveRelative)
         self.AddAction(MouseWheel)
     
     
@@ -343,6 +344,73 @@ class MoveAbsolute(eg.ActionClass):
             y = cy
         SetCursorPos((x, y))
             
+            
+    def GetLabel(self, x, y):
+        return self.text.label % (str(x), str(y))
+
+    
+    def Configure(self, x=0, y=0):
+        panel = eg.ConfigPanel(self)
+        text = self.text
+
+        xCB = panel.CheckBox(x is not None, text.text1)
+        def HandleXCheckBox(event):
+            xCtrl.Enable(event.IsChecked())
+        xCB.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)    
+
+        if x is None:
+            x = 0
+            xCtrl.Enable(False)
+        xCtrl = panel.SpinIntCtrl(x, min=-maxint-1, max=maxint)
+        
+        yCB = panel.CheckBox(y is not None, text.text3)
+        def HandleYCheckBox(event):
+            yCtrl.Enable(event.IsChecked())  
+        yCB.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)    
+
+        if y is None:
+            y = 0
+            yCtrl.Enable(False)
+        yCtrl = panel.SpinIntCtrl(y, min=-maxint-1, max=maxint)
+        
+        panel.AddLine(xCB, xCtrl, text.text2)
+        panel.AddLine(yCB, yCtrl, text.text4)
+
+        while panel.Affirmed():
+            if xCtrl.IsEnabled():
+                x = xCtrl.GetValue()
+            else:
+                x = None
+                
+            if yCtrl.IsEnabled():
+                y = yCtrl.GetValue()
+            else:
+                y = None
+            panel.SetResult(x, y)
+
+#-----------------------------------------------------------------------------
+# Action: Mouse.MoveRelative
+#-----------------------------------------------------------------------------
+class MoveRelative(eg.ActionClass):
+    name = "Move Relative"
+    class text:
+        label = "Change Mouse position by x:%s, y:%s"
+        text1 = "Change horizontal position X by"
+        text2 = "pixels"
+        text3 = "Change vertical position Y by"
+        text4 = "pixels"
+
+    
+    def __call__(self, x, y):
+        cx, cy = GetCursorPos()
+        if x is None:
+            x = 0
+        if y is None:
+            y = 0
+        
+        SetCursorPos((cx + x, cy + y))
+
+         
             
     def GetLabel(self, x, y):
         return self.text.label % (str(x), str(y))
