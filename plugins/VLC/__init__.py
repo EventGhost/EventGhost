@@ -62,6 +62,7 @@ eg.RegisterPlugin(
         "Hdn5XEojkgbFIE6sJwWm6hDwYr/okIz367GENRMtqihs9Df+Brue2BE7hqGjAAAAAElF"
         "TkSuQmCC"
     ),
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=693",
 )
 
 import asynchat, socket

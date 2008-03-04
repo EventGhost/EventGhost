@@ -20,10 +20,10 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-__description__ = """\
-Adds actions to control the famous 
-<a href="http://www.inmatrix.com/">Zoom Player</a>.
-"""
+__description__ = (
+    'Adds actions to control the famous '
+    '<a href="http://www.inmatrix.com/">Zoom Player</a>.'
+)
 
 __help__ = """\
 <b>Notice:</b><br>

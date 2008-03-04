@@ -34,6 +34,7 @@ eg.RegisterPlugin(
         'Foobar2000</a> audio player.'
     ),
     createMacrosOnAdd = True,
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=695",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAC0UlEQVR42m1TO0hjURA9"
         "1/8nH+OPJdoYRIWgLgZhwUJsLFZUkG0iYiGCgnZpJKRQUDfEVhAsDWIRFSzURtlO0YiC"

@@ -229,9 +229,11 @@ class ThreadWorker:
         otimeout = timeout
         start = clock()
         endTime = clock() + timeout
+        events = (HANDLE * 1)(event)
         while True:
             rc = MsgWaitForMultipleObjects(
-                (event,),
+                1,
+                events,
                 0,
                 int(timeout * 1000),
                 QS_ALLINPUT

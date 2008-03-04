@@ -26,11 +26,11 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
-    description = """
-        Hardware plugin for the 
-        <a href="http://www.streamzap.com/products/pcremote/">
-        Streamzap PC Remote</a>.
-    """,
+    description = (
+        'Hardware plugin for the '
+        '<a href="http://www.streamzap.com/products/pcremote/">'
+        'Streamzap PC Remote</a>.'
+    ),
     help = """
         <center><a href=http://www.streamzap.com/products/pcremote/>
         <img src="crr.jpg" alt="Streamzap" /></a></center>

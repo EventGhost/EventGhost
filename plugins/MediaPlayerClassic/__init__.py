@@ -26,11 +26,11 @@ eg.RegisterPlugin(
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "program",
     createMacrosOnAdd = True,
-    description = """
-        Adds actions to control 
-        <a href="http://sourceforge.net/projects/guliverkli/">
-        Media Player Classic</a>.
-    """,
+    description = (
+        'Adds actions to control '
+        '<a href="http://sourceforge.net/projects/guliverkli/">'
+        'Media Player Classic</a>.'
+    ),
     help = """
         Only for version <b>6.4.8.9</b> or above.
         The plugin will not work with older versions of MPC!
@@ -47,6 +47,7 @@ eg.RegisterPlugin(
         "Ee6CyFxd6ArkynZT5l7KK9gFbs3CrGgEPLzM1FonAn9kz59stqhnhdhEwK/j3m0Tgj8K"
         "OPmCr4eYpmMaASt3JS44ADcFoxFdcIMPAAAAAElFTkSuQmCC"
     ),
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=694"
 )
     
     
