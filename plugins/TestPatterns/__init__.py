@@ -330,11 +330,11 @@ class Checkerboard(TestPatternAction):
     def Draw(
         self, 
         dc,
-        foregroundColour, 
-        backgroundColour, 
-        hCount, 
-        vCount, 
-        display, # deprecated
+        foregroundColour=(255,255,255), 
+        backgroundColour=(0,0,0),
+        hCount=4, 
+        vCount=4,
+        display=0, #deprecated
     ):
         dc.SetBackground(wx.Brush(backgroundColour))
         dc.Clear()

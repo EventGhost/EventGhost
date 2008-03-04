@@ -53,6 +53,7 @@ SPECIAL_THANKS_DATA = (
             ("MonsterMagnet", "Foobar2000, MPC, VLC, Speech"),
             ("Oliver Wagner", "Denon AV, Optoma H79, JVC HD-1"),
             ("Lubo&scaron; R&uuml;ckl", "Billy, MediaMonkey, IrfanView"),
+            ("Dexter", "Sound Mixer Ex, Marantz Serial"),
             ("Milbrot", "MyTheatre"),
             ("Matthew Jacob Edwards", "Winamp Extensions"),
             ("jorel1969", "Meedio"),
@@ -63,6 +64,7 @@ SPECIAL_THANKS_DATA = (
             ("SurFan", "TheaterTek"),
             ("townkat", "DVB Dream"),
             ("Thierry Couquillou", "PlayStation 3 Bluetooth Remote"),
+            ("Dean Owens", "X10 CM15A"),
         ),
     ),
     (
