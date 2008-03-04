@@ -88,7 +88,10 @@ def UpdateVersionFile(commitSvn):
     fd.write("svnRevision = int('$LastChangedRevision$'.split()[1])")
     fd.close()    
     if commitSvn:
+        def ssl_server_trust_prompt(trust_dict):
+            return True, 0, True
         svn = pysvn.Client()
+        svn.callback_ssl_server_trust_prompt = ssl_server_trust_prompt
         svn.checkin([trunkDir], "Created installer for %s.%i" % (data['version'], data['buildNum']))    return data
     
     
