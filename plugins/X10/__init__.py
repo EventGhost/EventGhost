@@ -219,33 +219,33 @@ class X10Events:
         elif EKeyState == 2:
             plugin.EndLastEvent()
         
+    @eg.LogIt
+    def __getattr__(self, name):
+        "Create event handler methods on demand"
+        if name.startswith("__") and name.endswith("__"):
+            raise AttributeError(name)
+
+        def handler(*args):
+            print args
+            return 0
+
+        return handler
         
         
 class X10WorkerThread(eg.ThreadWorker):
+    comInstance = None
     
-    def __init__(self, plugin, eventHandler):
+    def Setup(self, plugin, eventHandler):
         self.plugin = plugin
         self.eventHandler = eventHandler
-        self.comInstance = None
-        eg.ThreadWorker.__init__(self)
-        
-    
-    @eg.LogItWithReturn
-    def Setup(self):
-        try:
-            self.comInstance = DispatchWithEvents(
-                'X10net.X10Control.1', 
-                self.eventHandler
-            )
-        except:
-            pass
-            #eg.PrintTraceback()
-        
+        self.comInstance = DispatchWithEvents('X10net.X10Control.1', eventHandler)
+
         
     def Finish(self):
         if self.comInstance:
             self.comInstance.Close()
-    
+            del self.comInstance
+        
         
         
 class X10(eg.PluginClass):
@@ -260,9 +260,9 @@ class X10(eg.PluginClass):
         class SubX10Events(X10Events):
             plugin = self
         self.workerThread = X10WorkerThread(self, SubX10Events)
-        self.workerThread.Start()
-        if not self.workerThread.comInstance:
-            self.workerThread.Stop()
+        try:
+            self.workerThread.Start()
+        except:
             raise self.Exception(self.text.errorMesg)
         
 
@@ -315,27 +315,27 @@ class X10(eg.PluginClass):
             event.Skip()
         selectNoneButton.Bind(wx.EVT_BUTTON, OnSelectNone)
 
-        rightBtnSizer = eg.VerticalBoxSizer(
+        rightBtnSizer = eg.VBoxSizer(
             (selectAllButton, 0, wx.EXPAND),
             ((5,5), 1),
             (selectNoneButton, 0, wx.EXPAND),
         )
-        idSizer = eg.HorizontalBoxSizer(
+        idSizer = eg.HBoxSizer(
             (btnsizer),
             ((10, 10), 0),
             (rightBtnSizer, 0, wx.EXPAND),
         )
-        leftSizer = eg.VerticalBoxSizer(
+        leftSizer = eg.VBoxSizer(
             (panel.StaticText(text.remoteBox), 0, wx.BOTTOM, 2),
             (remoteTypeCtrl, 0, wx.BOTTOM, 10),
             (panel.StaticText(text.usePrefix), 0, wx.BOTTOM, 2),
             (prefixCtrl),
         )
-        rightSizer = eg.VerticalBoxSizer(
+        rightSizer = eg.VBoxSizer(
             (panel.StaticText(text.idBox), 0, wx.BOTTOM, 2),
             (idSizer),
         )
-        mainSizer = eg.HorizontalBoxSizer(
+        mainSizer = eg.HBoxSizer(
             (leftSizer),
             ((0,0), 1, wx.EXPAND),
             (wx.StaticLine(panel, style=wx.LI_VERTICAL), 0, wx.EXPAND),

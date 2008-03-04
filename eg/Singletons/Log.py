@@ -20,11 +20,12 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import codecs
-import weakref
+#import codecs
 import sys
 import traceback
-import threading
+import codecs
+from weakref import ref
+from threading import currentThread
 from collections import deque
 from types import UnicodeType
 from time import time, strftime
@@ -32,7 +33,7 @@ from time import time, strftime
 _oldStdOut = sys.stdout
 _oldStdErr = sys.stderr
 
-oldStdOut = codecs.lookup("ascii").streamwriter(_oldStdOut, 'backslashreplace')
+oldStdOut = _oldStdOut #codecs.lookup("ascii").streamwriter(_oldStdOut, 'backslashreplace')
 oldStdErr = codecs.lookup("ascii").streamwriter(_oldStdErr, 'backslashreplace')
 
 INFO_ICON = eg.Icons.INFO_ICON
@@ -152,7 +153,7 @@ class Log:
         
         
     def PrintItem(self, text, icon, item):
-        self.Write(text + "\n", icon, weakref.ref(item))        
+        self.Write(text + "\n", icon, ref(item))        
             
             
     def PrintTraceback(self, msg=None, skip=0, source=None):
@@ -166,16 +167,25 @@ class Log:
         
         error = "".join(list)
         if source is not None:
-            source = weakref.ref(source)
+            source = ref(source)
         self.Write(error.rstrip() + "\n", ERROR_ICON, source)
         if eg.debugLevel:
             sys.stderr.write(error)
             
+
+    def PrintStack(self, skip=0):
+        list = ['Stack trace (most recent call last) (%d):\n' % eg.buildNum]
+        list += traceback.format_stack(sys._getframe().f_back)[skip:]
+        error = "".join(list)
+        self.Write(error.rstrip() + "\n", ERROR_ICON)
+        if eg.debugLevel:
+            sys.stderr.write(error)
             
+
     if eg.debugLevel:
         def PrintDebugNotice(self, *args):
             """Logs a message if eg.debugLevel is set."""
-            t = threading.currentThread()
+            t = currentThread()
             s = [strftime("%H:%M:%S:")]
             s.append(str(t.getName()) + ":")
         

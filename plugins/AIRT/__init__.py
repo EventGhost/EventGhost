@@ -226,10 +226,12 @@ class AIRT(eg.PluginClass):
                 self.TriggerEnduringEvent(eventString)
         elif byte > 127:
             # receive other IR code
+            data = serial.Read(6, 0.2)
             eventString = bin2hexstring(byte + data)
             self.TriggerEnduringEvent(eventString)
         else:
             # received something unknown
+            data = serial.Read()
             self.TriggerEvent('Received', [bin2hexstring(byte + data)])
 
 

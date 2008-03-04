@@ -32,7 +32,7 @@ class SimpleInputDialog(eg.Dialog):
         )
         textCtrl = self.TextCtrl(initialValue, size=(300, -1))
         buttonRow = eg.ButtonRow(self, [wx.ID_OK])
-        mainSizer = eg.VerticalBoxSizer(
+        mainSizer = eg.VBoxSizer(
             (self.StaticText(prompt), 0, wx.EXPAND|wx.ALL, 5),
             (textCtrl, 0, wx.EXPAND|wx.ALL, 5),
             ((5, 5), 1, wx.EXPAND),

@@ -278,7 +278,7 @@ import asynchat
 import socket
 import asyncore
 import threading
-import new
+from types import ClassType
                 
 
 fnList = (
@@ -536,7 +536,14 @@ nvList = (
 )
 
 
-        
+class Text:
+    tcpBox = "TCP/IP Settings"
+    hostLabel = "Host:"
+    portLabel = "Port:"
+    eventBox = "Event generation"
+    useNewEvents = "Use new events"
+   
+   
    
 class ZoomPlayerSession(asynchat.async_chat):
     """
@@ -631,7 +638,8 @@ class ExAction(eg.ActionWithStringParameter):
        
        
 class ZoomPlayer(eg.PluginClass):
-   
+    text = Text
+    
     def __init__(self):
         self.host = "localhost"
         self.port = 4769
@@ -648,7 +656,7 @@ class ZoomPlayer(eg.PluginClass):
         group = self.AddGroup('Navigational Commands')
         for className, descr, scancode in nvList:
             clsAttributes = dict(name=descr, value=scancode)
-            cls = new.classobj(className, (NvAction,), clsAttributes)
+            cls = ClassType(className, (NvAction,), clsAttributes)
             group.AddAction(cls)
 
         group = self.AddGroup('Regular Functions')
@@ -658,7 +666,7 @@ class ZoomPlayer(eg.PluginClass):
                 description=descr, 
                 value=className
             )
-            cls = new.classobj(className, (FnAction,), clsAttributes)
+            cls = ClassType(className, (FnAction,), clsAttributes)
             action = group.AddAction(cls)
 
             # TODO: is this really needed anymore?
@@ -671,7 +679,7 @@ class ZoomPlayer(eg.PluginClass):
                 description=descr, 
                 value=className
             )
-            cls = new.classobj(className, (ExAction,), clsAttributes)
+            cls = ClassType(className, (ExAction,), clsAttributes)
             action = group.AddAction(cls)
             
             # TODO: is this really needed anymore?
@@ -924,17 +932,28 @@ class ZoomPlayer(eg.PluginClass):
         dummy2=None,
         useNewEvents=False
     ):
+        text = self.text
         panel = eg.ConfigPanel(self)
-        hostEdit = panel.TextCtrl(host)       
-        portEdit = panel.SpinIntCtrl(port, max=65535)
-        newEventCtrl = panel.CheckBox(useNewEvents, "Use new events")
-        panel.AddLine("TCP/IP host:", hostEdit)
-        panel.AddLine("TCP/IP port:", portEdit)
-        panel.AddLine(newEventCtrl)
+        hostCtrl = panel.TextCtrl(host)       
+        portCtrl = panel.SpinIntCtrl(port, max=65535)
+        newEventCtrl = panel.CheckBox(useNewEvents, text.useNewEvents)
+        
+        tcpBox = panel.BoxedGroup(
+            text.tcpBox,
+            (text.hostLabel, hostCtrl),
+            (text.portLabel, portCtrl),
+        )
+        eg.EqualizeWidths(tcpBox.GetColumnItems(0))
+        eventBox = panel.BoxedGroup(
+            text.eventBox,
+            newEventCtrl,
+        )
+        panel.sizer.Add(tcpBox, 0, wx.EXPAND)
+        panel.sizer.Add(eventBox, 0, wx.TOP|wx.EXPAND, 10)
         while panel.Affirmed():
             panel.SetResult(
-                hostEdit.GetValue(), 
-                portEdit.GetValue(), 
+                hostCtrl.GetValue(), 
+                portCtrl.GetValue(), 
                 None,
                 None,
                 newEventCtrl.GetValue(),

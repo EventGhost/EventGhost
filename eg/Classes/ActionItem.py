@@ -86,10 +86,10 @@ class ActionItem(TreeItem):
         except:
             eg.PrintError("Can't find action: " + text)
             action = None
-        if not isinstance(action, eg.ActionClass):
+        if action is None or not issubclass(action, eg.ActionClass):
             action = eg.plugins.EventGhost.PythonCommand
             argString = repr(text)
-        self.executable = action
+        self.executable = action()
         self.icon = action.info.icon            
         self.SetArgumentString(argString)
     
@@ -209,7 +209,6 @@ class ActionItem(TreeItem):
         self.helpDialog.Bind(wx.EVT_CLOSE, OnClose)
         self.helpDialog.okButton.Bind(wx.EVT_BUTTON, OnClose)
         self.helpDialog.Show()
-        
         
     
     def Execute(self):

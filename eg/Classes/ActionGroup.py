@@ -20,8 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import new
-import types
+from types import ClassType
 
 from eg.Utils import SetClass
 
@@ -65,23 +64,22 @@ class ActionGroup:
 
     @classmethod
     def CreateAction(cls, actionCls, plugin):
+        pluginInfo = plugin.info
         if not issubclass(actionCls, ActionClass):
             eg.PrintDebugNotice("creating new action class from " + str(actionCls))
-            actionCls = new.classobj(
+            actionCls = ClassType(
                 actionCls.__name__,
                 (actionCls, ActionClass), 
                 {}
             )
-        action = actionCls.__new__(actionCls)
-        action.plugin = plugin
-        icon = plugin.info.icon
-        if action.iconFile:
+        icon = pluginInfo.icon
+        if actionCls.iconFile:
             try:
-                path = plugin.info.path + action.iconFile + ".png"
+                path = pluginInfo.path + actionCls.iconFile + ".png"
                 icon = eg.Icons.PathIcon(path)
             except:
                 eg.PrintError(
-                    "Error while loading icon file %s" % action.iconFile
+                    "Error while loading icon file %s" % actionCls.iconFile
                 )
     
         text = actionCls.text
@@ -92,7 +90,7 @@ class ActionGroup:
                     pass
                 text = text()
                 setattr(plugin.text, actionCls.__name__, text)
-        elif type(text) == types.ClassType:        
+        elif type(text) == ClassType:        
             translation = getattr(plugin.text, actionCls.__name__, None)
             if translation is None:
                 translation = text()
@@ -108,12 +106,19 @@ class ActionGroup:
             description = actionCls.description
             textCls.description = textCls.name if description is None else description
             
-        actionCls.text = text
-        action.name = text.name
-        action.description = text.description
-        action.info = ActionInfo(icon)
-        action.Exceptions = eg.ExceptionsProvider(action)
-        action.__init__()
-        plugin.info.actions[actionCls.__name__] = action
-        return action
+        actionCls = ClassType(
+            actionCls.__name__,
+            (actionCls, ), 
+            dict(
+                name = text.name,
+                description = text.description,
+                plugin = plugin,
+                info = ActionInfo(icon),
+                text = text,
+                Exceptions = eg.Exceptions
+            )
+        )
+        pluginInfo.actions[actionCls.__name__] = actionCls
+        actionCls.OnAddAction()
+        return actionCls
     

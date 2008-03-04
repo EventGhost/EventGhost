@@ -282,7 +282,6 @@ class SendMessage(eg.ActionClass):
         
         while panel.Affirmed():
             choice = mesgCtrl.GetValue()
-            print choice
             try:
                 i = mesgNames.index(choice)
                 mesg = mesgValues[i]

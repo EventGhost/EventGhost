@@ -21,7 +21,7 @@
 # $LastChangedBy$
 
 
-from new import classobj
+from types import ClassType
 import os
 from xml.etree import cElementTree as ElementTree
 from tempfile import mkstemp
@@ -75,7 +75,7 @@ class Document(object):
         self.XMLTag2ClassDict = {}
         for itemType in gTreeItemTypes:
             baseCls = getattr(eg, itemType)
-            itemCls = classobj(itemType, (baseCls, ItemMixin), itemNamespace)
+            itemCls = ClassType(itemType, (baseCls, ItemMixin), itemNamespace)
             setattr(self, itemType, itemCls)
             self.XMLTag2ClassDict[itemCls.xmlTag] = itemCls
 
@@ -144,7 +144,6 @@ class Document(object):
         node = ElementTree.Element("Autostart")
         self.autostartMacro = self.AutostartItem(root, node)
         root.childs.append(self.autostartMacro)
-        #eg.actionThread.CallWait(self.root.AddChild, self.autostartMacro)
         self.isInLabelEdit = False
         eg.TreeLink.StopLoad()
         self.isDirty.set(False)

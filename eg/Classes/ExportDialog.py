@@ -45,7 +45,7 @@ class ExportDialog(eg.Dialog):
         
         buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL), True)
 
-        mainSizer = eg.VerticalBoxSizer(
+        mainSizer = eg.VBoxSizer(
             (staticText, 0, wx.EXPAND|wx.ALL, 5),
             (tree, 1, wx.EXPAND),
             (buttonRow.sizer, 0, wx.EXPAND),

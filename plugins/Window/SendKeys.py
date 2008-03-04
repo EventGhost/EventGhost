@@ -201,12 +201,12 @@ class SendKeys(eg.ActionClass):
             textCtrl.WriteText(s)
         insertButton.Bind(wx.EVT_BUTTON, OnInsert)
         
-        cbSizer = eg.VerticalBoxSizer(
+        cbSizer = eg.VBoxSizer(
             (shiftCB, 0, wx.EXPAND|wx.BOTTOM, 5),
             (ctrlCB, 0, wx.EXPAND|wx.BOTTOM, 5),
             (altCB, 0, wx.EXPAND, 0),
         )
-        rightSizer = eg.VerticalBoxSizer(
+        rightSizer = eg.VBoxSizer(
             (keyChoice),
             (insertButton, 0, wx.TOP|wx.ALIGN_CENTER_HORIZONTAL, 15),
         )

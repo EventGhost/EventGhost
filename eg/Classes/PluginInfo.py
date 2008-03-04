@@ -218,17 +218,17 @@ class PluginInfo(object):
         info.actions = {}
         pluginCls = pluginInfoCls.pluginCls
         try:
-            plugin = pluginCls.__new__(pluginCls)
+            pluginObj = pluginCls.__new__(pluginCls)
         except:
             eg.PrintTraceback()
             return None
-        plugin.info = info
-        
+        pluginObj.info = info
+
         # create an unique exception for every plugin instance
         class _Exception(eg.PluginClass.Exception):
-            obj = plugin
-        plugin.Exception = _Exception
-        plugin.Exceptions = eg.ExceptionsProvider(plugin)
+            obj = pluginObj
+        pluginObj.Exception = _Exception
+        pluginObj.Exceptions = eg.ExceptionsProvider(pluginObj)
         
         if evalName is None:
             evalName = pluginCls.__name__
@@ -238,23 +238,25 @@ class PluginInfo(object):
                 evalName = pluginCls.__name__ + str(i)
         assert not hasattr(eg.plugins, evalName)
         info.evalName = evalName
-        setattr(eg.plugins, evalName, PluginProxy(plugin))
-        eg.pluginList.append(plugin)
+        setattr(eg.plugins, evalName, PluginProxy(pluginObj))
+        eg.pluginList.append(pluginObj)
         
         if evalName != pluginCls.__name__:
             numStr = evalName[len(pluginCls.__name__):]
-            plugin.name = pluginInfoCls.name + " #" + numStr
+            pluginObj.name = pluginInfoCls.name + " #" + numStr
         else:
-            plugin.name = pluginInfoCls.name
-        plugin.description = pluginInfoCls.description
+            pluginObj.name = pluginInfoCls.name
+        pluginObj.description = pluginInfoCls.description
         info.eventPrefix = evalName
         if pluginInfoCls.instances is None:
             pluginInfoCls.instances = [info]
         else:
-            pluginInfoCls.instances.append(plugin.info)
-        info.instance = plugin
+            pluginInfoCls.instances.append(pluginObj.info)
+        info.instance = pluginObj
+        info.actionList = []
+        eg.actionList.append(pluginObj)
         try:
-            plugin.__init__()
+            pluginObj.__init__()
             info.initFailed = False
         except eg.Exceptions.PluginNotFound, exc:
             pass
@@ -264,7 +266,7 @@ class PluginInfo(object):
         except:
             eg.PrintTraceback()
         
-        pluginInfoCls.label = plugin # ???
+        pluginInfoCls.label = pluginObj # ???
         return info
              
              
@@ -347,7 +349,7 @@ class PluginInfo(object):
         def DeleteActionListItems(actionList):
             if actionList is not None:
                 for item in actionList:
-                    if isinstance(item, eg.ActionClass):
+                    if isinstance(item, type) and issubclass(item, eg.ActionClass):
                         item.plugin = None
                     else:
                         DeleteActionListItems(item.actionList)

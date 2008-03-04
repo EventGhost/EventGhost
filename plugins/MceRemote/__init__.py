@@ -155,17 +155,12 @@ class MceMessageReceiver(eg.ThreadWorker):
     """
     A thread with a hidden window to receive win32 messages from the driver
     """
-    def __init__(self, plugin, waitTime):
-        self.plugin = plugin
-        self.waitTime = waitTime
-        eg.ThreadWorker.__init__(self)
-        
-        
-    @eg.LogIt
-    def Setup(self):
+    def Setup(self, plugin, waitTime):
         """
         This will be called inside the thread at the beginning.
         """
+        self.plugin = plugin
+        self.waitTime = waitTime
         self.timer = Timer(0, self.OnTimeOut)
         self.lastEvent = eg.EventGhostEvent()
         

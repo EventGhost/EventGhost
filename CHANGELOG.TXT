@@ -1,3 +1,8 @@
++ Sound Mixer Ex plugin from Dexter.
++ Marantz Serial plugin from Dexter.
++ X10 CM15A plugin from Dean Owens.
+* Now using Python 2.5.2.
+
 Version 0.3.6.1255 (12/13/2007)
 + Volume and seek actions for the foobar2000 plugin.
 + Replaced Python's built-in input() and raw_input() with a function that shows a simple input dialog. It has no real use-cases in EventGhost, but this way you can experiment with nearly every example code from typical Python tutorials.

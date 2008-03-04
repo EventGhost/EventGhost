@@ -274,13 +274,14 @@ class USB_UIRT(eg.RawReceiverPlugin):
             wx.VERTICAL
         )
         infoSizer = wx.FlexGridSizer(3, 2)
-        infoSizer.Add(panel.StaticText(text.uuProtocol), 0, wx.EXPAND)
-        infoSizer.Add(panel.StaticText(protocolVersion), 0, wx.EXPAND)
-        infoSizer.Add(panel.StaticText(text.uuFirmVersion), 0, wx.EXPAND)
-        infoSizer.Add(panel.StaticText(firmwareVersion), 0, wx.EXPAND)
-        infoSizer.Add(panel.StaticText(text.uuFirmDate), 0, wx.EXPAND)
-        infoSizer.Add(panel.StaticText(firmwareDate), 0, wx.EXPAND)
-        
+        infoSizer.AddMany([
+            (panel.StaticText(text.uuProtocol), 0, wx.EXPAND),
+            (panel.StaticText(protocolVersion), 0, wx.EXPAND),
+            (panel.StaticText(text.uuFirmVersion), 0, wx.EXPAND),
+            (panel.StaticText(firmwareVersion), 0, wx.EXPAND),
+            (panel.StaticText(text.uuFirmDate), 0, wx.EXPAND),
+            (panel.StaticText(firmwareDate), 0, wx.EXPAND),
+        ])
         infoGroupSizer.Add(infoSizer, 0, wx.LEFT, 5)
         panel.sizer.Add(infoGroupSizer, 0, wx.EXPAND)
         

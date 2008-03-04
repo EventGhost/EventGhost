@@ -30,6 +30,7 @@ eg.RegisterPlugin(
 
 import time
 import os
+from functools import partial
 from ctypes import byref, c_char_p, Structure, POINTER, windll
 from ctypes.wintypes import DWORD
 import win32file
@@ -204,7 +205,7 @@ class Fhz1000Pc(eg.PluginClass):
         """
         data = self.GetTimeData()
         for i in range(repeats):
-            eg.actionThread.CallWait(self.WriteFhzNoWait, *data)
+            eg.actionThread.CallWait(partial(self.WriteFhzNoWait, *data))
         self.nextTaskTime += 60.0
         self.timeTask = eg.scheduler.AddTaskAbsolute(
             self.nextTaskTime, 

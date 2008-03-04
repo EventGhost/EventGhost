@@ -49,13 +49,13 @@ class TestDialog(eg.Dialog):
         )
         list = eg.WindowList(self, hwnds)
         okButton = wx.Button(self, wx.ID_OK)
-        btnSizer = eg.HorizontalBoxSizer(
+        btnSizer = eg.HBoxSizer(
             ((0, 0), 1, wx.EXPAND),
             (okButton, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND|wx.ALL, 5),
             ((0, 0), 1, wx.EXPAND),
             (eg.SizeGrip(self), 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT),
         )
-        mainSizer = eg.VerticalBoxSizer(
+        mainSizer = eg.VBoxSizer(
             (list, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, 5),
             (btnSizer, 0, wx.EXPAND),
         )
@@ -110,10 +110,9 @@ class FindWindow(eg.ActionClass):
             "Child Class:"
         )
 
-    def __init__(self):
-        class Defaults:
-            hideOnDrag = False
-        self.config = eg.GetConfig("plugins.Window.FindWindow", Defaults)
+    class ConfigDefaults:
+        hideOnDrag = False
+    config = eg.GetConfig("plugins.Window.FindWindow", ConfigDefaults)
             
             
     def Compile(

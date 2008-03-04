@@ -48,8 +48,10 @@ import md5
 
 class Text:
     host = "Host:"
-    port = "TCP/IP Port:"
+    port = "Port:"
     password = "Password:"
+    tcpBox = "TCP/IP Settings"
+    securityBox = "Security"
     class Map:
         parameterDescription = "Event name to send:"
     
@@ -70,14 +72,28 @@ class NetworkSender(eg.PluginClass):
 
 
     def Configure(self, host="127.0.0.1", port=1024, password=""):
+        text = self.text
         panel = eg.ConfigPanel(self)
         hostCtrl = panel.TextCtrl(host)
         portCtrl = panel.SpinIntCtrl(port, max=65535)
         passwordCtrl = panel.TextCtrl(password, style=wx.TE_PASSWORD)
         
-        panel.AddLine(self.text.host, hostCtrl)
-        panel.AddLine(self.text.port, portCtrl)
-        panel.AddLine(self.text.password, passwordCtrl)
+        st1 = panel.StaticText(text.host)
+        st2 = panel.StaticText(text.port)
+        st3 = panel.StaticText(text.password)
+        eg.EqualizeWidths((st1, st2, st3))
+        tcpBox = panel.BoxedGroup(
+            text.tcpBox,
+            (st1, hostCtrl),
+            (st2, portCtrl),
+        )
+        securityBox = panel.BoxedGroup(
+            text.securityBox,
+            (st3, passwordCtrl),
+        )
+        
+        panel.sizer.Add(tcpBox, 0, wx.EXPAND)
+        panel.sizer.Add(securityBox, 0, wx.TOP|wx.EXPAND, 10)
 
         while panel.Affirmed():
             panel.SetResult(

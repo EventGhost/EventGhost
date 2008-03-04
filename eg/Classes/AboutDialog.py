@@ -82,6 +82,7 @@ SPECIAL_THANKS_DATA = (
             ('Steve Ingamells', 'PayPal'),
             ('damdy-cash', 'PayPal'),
             ('krambriw', 'PayPal'),
+            ('loomy', 'PayPal'),
             ('some anonymous people', 'PayPal'),
             ('Stoffel', 'remote'),
             (
@@ -152,8 +153,8 @@ class AboutPanel(wx.Panel):
         animatedWindow = eg.AnimatedWindow(self)
         animatedWindow.SetBackgroundColour(backgroundColour)
         
-        sizer = eg.VerticalBoxSizer(
-            (eg.HorizontalBoxSizer(
+        sizer = eg.VBoxSizer(
+            (eg.HBoxSizer(
                 ((5,5), 1),
                 (hypelink1, 0, wx.EXPAND, 15),
                 ((5,5), 1),
@@ -182,7 +183,7 @@ class HtmlPanel(wx.Panel):
         htmlWindow.SetMinSize((480, 270))
         htmlWindow.SetScrollbars(1, 1, 1000, 1000)
         self.SetSizerAndFit(
-            eg.VerticalBoxSizer(
+            eg.VBoxSizer(
                 (htmlWindow, 1, wx.EXPAND, 5),
             )
         )
@@ -328,7 +329,7 @@ class AboutDialog(eg.Dialog):
             parent, 
             -1, 
             Text.Title,
-            style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER |wx.STAY_ON_TOP 
+            style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
         )
         notebook = wx.Notebook(self)
         notebook.AddPage(AboutPanel(notebook), Text.tabAbout)
@@ -347,13 +348,13 @@ class AboutDialog(eg.Dialog):
         okButton.SetDefault()
         okButton.Bind(wx.EVT_BUTTON, self.OnOK)
         
-        buttonSizer = eg.HorizontalBoxSizer(
+        buttonSizer = eg.HBoxSizer(
             ((0, 0), 1, wx.EXPAND),
             (okButton, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND|wx.ALL, 5),
             ((0, 0), 1, wx.EXPAND),
             (eg.SizeGrip(self), 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT),
         )
-        mainSizer = eg.VerticalBoxSizer(
+        mainSizer = eg.VBoxSizer(
             (notebook, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, 5),
             (buttonSizer, 0, wx.EXPAND),
         )

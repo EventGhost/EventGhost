@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+from functools import partial
 from xml.sax.saxutils import quoteattr, escape
 from cStringIO import StringIO
 import xml.etree.cElementTree as ElementTree
@@ -71,7 +72,7 @@ class TreeItem(object):
         node.text = text
         for k, v in kwargs.items():
             node.attrib[k] = v
-        self = eg.actionThread.CallWait(cls, parent, node)
+        self = eg.actionThread.CallWait(partial(cls, parent, node))
         parent.AddChild(self, pos)
         return self
         

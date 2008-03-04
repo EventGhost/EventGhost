@@ -222,6 +222,7 @@ CMDS = (
 from win32com.client import Dispatch, DispatchWithEvents
 from win32gui import SendMessageTimeout
 from win32con import SMTO_BLOCK, SMTO_ABORTIFHUNG
+from functools import partial
 
 
 class Text:
@@ -284,15 +285,11 @@ class DvbViewerWorkerThread(eg.ThreadWorker):
     """
     Handles the COM interface in a thread of its own.
     """
-    def __init__(self, plugin):
-        self.plugin = plugin
-        eg.ThreadWorker.__init__(self)
-    
-    
-    def Setup(self):
+    def Setup(self, plugin):
         """
         This will be called inside the thread at the beginning.
         """
+        self.plugin = plugin
         self.dvbviewer = Dispatch("DVBViewerServer.DVBViewer")
         comEvents = self.dvbviewer.Events
         self.comObj = DispatchWithEvents(comEvents, self.plugin.EventHandler)
@@ -367,8 +364,7 @@ class DVBViewer(eg.PluginClass):
             self.workerThread = DvbViewerWorkerThread(self)
             self.workerThread.Start(20.0)
         self.workerThread.CallWait(
-            self.workerThread.dvbviewer.SendCommand, 
-            value
+            partial(self.workerThread.dvbviewer.SendCommand, value)
         )
            
             

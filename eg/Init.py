@@ -28,6 +28,7 @@ import threading
 import asyncore
 import socket
 import locale
+from functools import partial
 
 
 class EventGhost(object):
@@ -134,6 +135,7 @@ class EventGhost(object):
         eg.PrintNotice = self.log.PrintNotice
         eg.PrintTraceback = self.log.PrintTraceback
         eg.PrintDebugNotice = self.log.PrintDebugNotice
+        eg.PrintStack = self.log.PrintStack
             
         # redirect all wxPython error messages to our log
         class MyLog(wx.PyLog):
@@ -157,7 +159,9 @@ class EventGhost(object):
         
         # replace builtin input and raw_input with a small dialog
         def raw_input(prompt=None):
-            return eg.CallWait(eg.SimpleInputDialog.CreateModal, prompt)
+            return eg.CallWait(
+                partial(eg.SimpleInputDialog.CreateModal, prompt)
+            )
         __builtin__.raw_input = raw_input
 
         def input(prompt=None):
@@ -179,6 +183,25 @@ class EventGhost(object):
         
     def StartGui(self):
         global eg
+        #Bit of a dance to force comtypes generated interfaces in to our directory
+        import comtypes.client
+        genPath = os.path.join(eg.CONFIG_DIR, "cgen_py").encode('mbcs')
+        if not os.path.exists(genPath):
+            os.makedirs(genPath)
+        genInitPath = os.path.join(eg.CONFIG_DIR, "cgen_py", "__init__.py").encode('mbcs')
+        if not os.path.exists(genInitPath):
+            ofi = open(genInitPath, "w")
+            ofi.write("# comtypes.gen package, directory for generated files.\n")
+            ofi.close()
+        
+        comtypes.client.gen_dir = genPath
+        import comtypes
+        sys.path.insert(0, eg.CONFIG_DIR)
+        sys.modules["comtypes.gen"] = comtypes.gen=__import__("cgen_py", globals(),locals(),[])
+        del sys.path[0]
+        import comtypes.client._generate
+        comtypes.client._generate.__verbose__ = False
+
         # create a global asyncore loop thread
         # TODO: Only start if asyncore is requested
         eg.dummyAsyncoreDispatcher = None
@@ -337,12 +360,12 @@ class EventGhost(object):
             del self.programReturnStack[:]
         
         
-    def CallWait(self, func, *args, **kwargs):
+    def CallWait(self, func):
         result = [None]
         event = threading.Event()
         def CallWaitWrapper():
             try:
-                result[0] = func(*args, **kwargs)
+                result[0] = func()
             finally:
                 event.set()
         wx.CallAfter(CallWaitWrapper)

@@ -75,13 +75,13 @@ class HeaderBox(wx.PyWindow):
         staticBitmap = wx.StaticBitmap(self)
         staticBitmap.SetIcon(obj.info.icon.GetWxIcon())
         
-        mainSizer = eg.HorizontalBoxSizer(
+        mainSizer = eg.HBoxSizer(
             ((4, 4)),
             (staticBitmap, 0, wx.TOP, 5),
             ((4, 4)),
-            (eg.VerticalBoxSizer(
+            (eg.VBoxSizer(
                 ((4, 4)),
-                (eg.HorizontalBoxSizer(
+                (eg.HBoxSizer(
                     (nameBox, 1, wx.EXPAND|wx.ALIGN_BOTTOM),
                 ), 0, wx.EXPAND|wx.TOP, 2),
                 (descBox, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 8),

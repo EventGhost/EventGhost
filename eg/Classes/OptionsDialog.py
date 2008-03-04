@@ -113,7 +113,7 @@ class OptionsDialog(eg.Dialog):
         # construction of the layout with sizers
         
         ACV = wx.ALIGN_CENTER_VERTICAL
-        memoryLimitSizer = eg.HorizontalBoxSizer(
+        memoryLimitSizer = eg.HBoxSizer(
             (memoryLimitCtrl, 0, ACV),
             (memoryLimitSpinCtrl, 0, ACV),
             (page1.StaticText(t.limitMemory2), 0, ACV|wx.LEFT, 2),
@@ -130,12 +130,12 @@ class OptionsDialog(eg.Dialog):
             )
         )
         
-        langGroupSizer = page1.VerticalStaticBoxSizer(
+        langGroupSizer = page1.VStaticBoxSizer(
             t.LanguageGroup,
             (languageChoice, 0, wx.LEFT|wx.RIGHT, 18),
         )
         
-        page1Sizer = eg.VerticalBoxSizer(
+        page1Sizer = eg.VBoxSizer(
             ((15, 7), 1),
             (startGroupSizer, 0, wx.EXPAND|wx.ALL, 5),
             ((15, 7), 1),
@@ -144,7 +144,7 @@ class OptionsDialog(eg.Dialog):
         page1.SetSizer(page1Sizer)
         page1.SetAutoLayout(True)
         
-        sizer = eg.VerticalBoxSizer(
+        sizer = eg.VBoxSizer(
             (notebook, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, 5),
             (buttonRow.sizer, 0, wx.EXPAND),
         )

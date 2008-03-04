@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+from types import ClassType
 
 gLastSelected = None
 
@@ -122,14 +123,16 @@ class AddActionDialog(eg.Dialog):
     def FillTree(self, item, data):
         tree = self.tree
         for i in data:
-            if isinstance(i, eg.ActionClass):
+            if isinstance(i, type) and issubclass(i, eg.ActionClass):
                 iconIndex = i.info.icon.index
                 actionList = None
                 name = i.name
             elif isinstance(i, eg.PluginClass):
-                iconIndex = i.info.icon.folderIndex
-                actionList = i.info.actionList
                 i = i.info
+                actionList = i.actionList
+                if not len(actionList):
+                    continue
+                iconIndex = i.icon.folderIndex
                 name = i.label
             elif isinstance(i, eg.ActionGroup):
                 iconIndex = i.icon.folderIndex
@@ -170,7 +173,7 @@ class AddActionDialog(eg.Dialog):
         if not item.IsOk():
             return
         data = self.tree.GetPyData(item)
-        if isinstance(data, eg.ActionClass):
+        if isinstance(data, type) and issubclass(data, eg.ActionClass):
             self.resultData = data
             self.buttonRow.okButton.Enable(True)
             info = data.plugin.info
@@ -197,7 +200,7 @@ class AddActionDialog(eg.Dialog):
     def OnActivated(self, event):
         item = self.tree.GetSelection()
         data = self.tree.GetPyData(item)
-        if isinstance(data, eg.ActionClass):
+        if isinstance(data, type) and issubclass(data, eg.ActionClass):
             self.OnOK()
         else:
             event.Skip()

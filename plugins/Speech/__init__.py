@@ -265,15 +265,15 @@ class TextToSpeech(eg.ActionClass):
         )
         volumeCtrl.slider.SetTickFreq(10, 3)
         
-        sizer1 = eg.HorizontalBoxSizer(
+        sizer1 = eg.HBoxSizer(
             (textCtrl, 1, wx.EXPAND)
         )
-        sizer2 = eg.HorizontalBoxSizer(
+        sizer2 = eg.HBoxSizer(
             (insertTimeButton),
             (insertDateButton, 0, wx.LEFT|wx.EXPAND|wx.ALIGN_LEFT, 5),
             ((5, 5), 1),
         )
-        staticBoxSizer1 = panel.VerticalStaticBoxSizer(
+        staticBoxSizer1 = panel.VStaticBoxSizer(
             text.textBoxLabel,
             (sizer1, 0, wx.EXPAND|wx.ALL, 5),
             (sizer2, 0, wx.EXPAND|wx.ALL, 5),
@@ -292,7 +292,7 @@ class TextToSpeech(eg.ActionClass):
             )
         )
         
-        staticBoxSizer2 = panel.VerticalStaticBoxSizer(
+        staticBoxSizer2 = panel.VStaticBoxSizer(
             text.voiceProperties,
             (sizer3, 0, wx.EXPAND|wx.ALL, 5),
         )

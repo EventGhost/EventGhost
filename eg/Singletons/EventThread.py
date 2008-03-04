@@ -24,6 +24,7 @@ import traceback
 import time
 import win32api
 from win32process import SetProcessWorkingSetSize, GetCurrentProcess
+from functools import partial
 
 EventGhostEvent = eg.EventGhostEvent
 
@@ -93,7 +94,10 @@ class EventThread(eg.ThreadWorker):
     def StartSession(self, filename):
         self.shouldRun = True
 
-        eg.actionThread.CallWait(eg.actionThread.StartSession, filename)
+        eg.actionThread.CallWait(
+            partial(eg.actionThread.StartSession, filename),
+            120
+        )
         
         self.TriggerEvent("OnInit")
         boottime = time.time() - win32api.GetTickCount() / 1000.0
@@ -109,7 +113,7 @@ class EventThread(eg.ThreadWorker):
 
     @eg.LogIt
     def StopSession(self):
-        eg.actionThread.CallWait(eg.actionThread.StopSession)
+        eg.actionThread.CallWait(eg.actionThread.StopSession, 120)
         eg.PrintDebugNotice("StopSession done")
 
 

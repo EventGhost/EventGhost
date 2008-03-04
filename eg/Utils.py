@@ -23,15 +23,18 @@
 __all__ = ["Bunch", "EventHook", "LogIt", "LogItWithReturn",
     "TimeIt", "AssertNotMainThread", "AssertNotActionThread", "ParseString",
     "SetClass", "EnsureVisible", "namedtuple", "AsGreenlet",
-    "VerticalBoxSizer", "HorizontalBoxSizer",
+    "VBoxSizer", "HBoxSizer", "EqualizeWidths", "P",
 ]
     
 
 import threading
 import time
 import inspect
-import types
+from types import ClassType
 
+
+def P(*args, **kwargs):
+    return (args, kwargs)
 
 
 class Bunch:
@@ -204,7 +207,7 @@ def ParseString(text, filterFunc=None):
 
 def SetClass(obj, cls):
     for k, v in cls.__dict__.items():
-        if type(v) == types.ClassType:
+        if type(v) == ClassType:
             if k in obj.__dict__:
                 newValue = getattr(obj, k)
             else:
@@ -297,7 +300,7 @@ def EnsureVisible(window):
 
 
 
-class VerticalBoxSizer(wx.BoxSizer):
+class VBoxSizer(wx.BoxSizer):
     
     def __init__(self, *items):
         wx.BoxSizer.__init__(self, wx.VERTICAL)
@@ -305,14 +308,21 @@ class VerticalBoxSizer(wx.BoxSizer):
         
         
         
-class HorizontalBoxSizer(wx.BoxSizer):
+class HBoxSizer(wx.BoxSizer):
     
     def __init__(self, *items):
         wx.BoxSizer.__init__(self, wx.HORIZONTAL)
         self.AddMany(items)        
         
         
-        
+def EqualizeWidths(ctrls):
+    maxWidth = 0
+    for ctrl in ctrls:
+        maxWidth = max(maxWidth, ctrl.GetBestSize()[0])
+    for ctrl in ctrls:
+        ctrl.SetMinSize((maxWidth, -1))
+
+
 from operator import itemgetter as _itemgetter
 from keyword import iskeyword as _iskeyword
 import sys as _sys

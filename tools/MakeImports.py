@@ -7,9 +7,16 @@ warnings.simplefilter('error', DeprecationWarning)
 
 skipModules = [
     "wx.lib.vtk",
+    "wx.tools.Editra",
 ]
 
+class DummyStdOut:
+    def write(self, data):
+        pass
+    
 def TestImport(moduleName):
+    oldStdOut = sys.stdout
+    sys.stdout = DummyStdOut()
     try:
         __import__(moduleName)
         return (True, "", "")
@@ -19,7 +26,11 @@ def TestImport(moduleName):
         return False, "ImportError", str(e)
     except SyntaxError, e:
         return False, "SyntaxError", str(e)
-        
+    except Exception, e:
+        return False, "Exception", str(e)
+    finally:
+        sys.stdout = oldStdOut
+    
     
 def ScanPath(path, prefix, skipPath=[]):
     modules = []
@@ -30,7 +41,7 @@ def ScanPath(path, prefix, skipPath=[]):
         for dir in dirs[:]:
             if not os.path.exists(join(root, dir, "__init__.py")):
                 dirs.remove(dir)
-            if dir in skipPath:
+            if package + "." + dir in skipPath:
                 dirs.remove(dir)
         if package in skipPath:
             continue
@@ -49,9 +60,13 @@ def ScanPath(path, prefix, skipPath=[]):
             ):
                 continue
             moduleName = package + name
+            print "Testing:", moduleName,
             ok, eType, eMesg = TestImport(moduleName)
             if ok:
+                print "Ok"
                 modules.append(moduleName)
+            else:
+                print "Error", eType, eMesg
     return modules
 
 def ReadGlobalModuleIndex():
@@ -85,7 +100,7 @@ for module in ReadGlobalModuleIndex():
     if module in ignoreModules:
         continue
     if module not in result:
-        print module
+        print "Not in global index:", module
         result.append(module)
 
 fd = open("imports.py", "wt")
@@ -103,15 +118,20 @@ for module in result:
 
 import wx
 fd.write("\nimport wx\n")
-for module in ScanPath(os.path.dirname(wx.__file__), "wx.", ["wx.lib.vtk"]):
+for module in ScanPath(os.path.dirname(wx.__file__), "wx.", skipModules):
     fd.write("import %s\n" % module)
 fd.write("\n")
 
 import Image
 for module in ScanPath(os.path.dirname(Image.__file__), ""):
     fd.write("import %s\n" % module)
+    
+import comtypes
+fd.write("\nimport comtypes\n")
+for module in ScanPath(os.path.dirname(comtypes.__file__), "comtypes.", ["comtypes.gen"]):
+    fd.write("import %s\n" % module)
+    
 fd.write("""
-
 import win32com
 import win32com.server
 import win32com.server.factory

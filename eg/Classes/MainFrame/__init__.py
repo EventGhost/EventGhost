@@ -27,6 +27,7 @@ import re
 
 import wx.aui
 
+from eg.WinAPI.Utils import BringHwndToFront
 from eg import (
     EventItem, 
     ActionItem, 
@@ -40,7 +41,7 @@ from LogCtrl import LogCtrl
 from TreeCtrl import TreeCtrl
 from StatusBar import StatusBar
 
-from eg.WinAPI.Utils import BringHwndToFront
+
 ADD_ICON = eg.Icons.PathIcon('images/add.png')
 
 ADD_PLUGIN_ICON = eg.Icons.PilToBitmap(
@@ -264,7 +265,7 @@ class MainFrame(wx.Frame):
             menu.Item("GetInfo")
             menu.Item("CollectGarbage")
             menu.Item("Reset", hotkey="Pause")
-            menu.Item("Test")
+            menu.Item("AddEventDialog")
             
         menuBar.Realize()
         
@@ -939,13 +940,13 @@ class MainFrame(wx.Frame):
         eg.stopExecutionFlag = True
         eg.programCounter = None
         del eg.programReturnStack[:]
-        eg.eventThread.FlushAllEvents()
-        eg.actionThread.FlushAllEvents()
+        eg.eventThread.ClearPendingEvents()
+        eg.actionThread.ClearPendingEvents()
         eg.PrintError("Execution stopped by user")
         
     
     @eg.AsGreenlet
-    def OnCmdTest(self, event):
+    def OnCmdAddEventDialog(self, event):
         dialog = eg.AddEventDialog.Create(self)
         while True:
             result = dialog.GetResult()

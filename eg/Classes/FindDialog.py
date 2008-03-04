@@ -68,28 +68,28 @@ class FindDialog(eg.Dialog):
         cancelButton = wx.Button(self, wx.ID_CANCEL, eg.text.General.cancel)
         
         ACV = wx.ALIGN_CENTER_VERTICAL
-        upperLeftSizer = eg.HorizontalBoxSizer(
+        upperLeftSizer = eg.HBoxSizer(
             (self.StaticText(Text.searchLabel), 0, ACV|wx.RIGHT, 5),
             (textCtrl, 1, wx.EXPAND),
         )
-        cbSizer = eg.VerticalBoxSizer(
+        cbSizer = eg.VBoxSizer(
             (wholeWordsOnlyCb),
             (caseSensitiveCb, 0, wx.TOP, 5),
             (searchParametersCb, 0, wx.TOP, 5),
         )
-        lowerLeftSizer = eg.HorizontalBoxSizer(
+        lowerLeftSizer = eg.HBoxSizer(
             (cbSizer, 0, ACV|wx.RIGHT, 10),
             (directionRb),
         )
-        leftSizer = eg.VerticalBoxSizer(
+        leftSizer = eg.VBoxSizer(
             (upperLeftSizer, 0, wx.EXPAND|wx.ALL, 5),
             (lowerLeftSizer, 0, wx.EXPAND|wx.ALL, 5),
         )
-        btnSizer = eg.VerticalBoxSizer(
+        btnSizer = eg.VBoxSizer(
             (searchButton, 0, wx.EXPAND),
             (cancelButton, 0, wx.EXPAND|wx.TOP, 5),
         )
-        sizer = eg.HorizontalBoxSizer(
+        sizer = eg.HBoxSizer(
             (leftSizer, 1, wx.EXPAND),
             (btnSizer, 0, wx.EXPAND|wx.ALL, 5),
         )

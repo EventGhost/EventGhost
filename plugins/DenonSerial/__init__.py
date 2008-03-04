@@ -316,9 +316,7 @@ class MasterFade(eg.ActionWithStringParameter):
     name = "Fade MasterVol To"
     description = "Fade MasterVol To (actual dB value)"
     
-    def __init__(self):
-        self.fadeLock = thread.allocate_lock()
-
+    fadeLock = thread.allocate_lock()
 
     def __call__(self, data):
         thread.start_new_thread(self.FadeFunc, (data,))        

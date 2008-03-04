@@ -51,7 +51,7 @@ class NewAction(eg.UndoHandler.NewItem):
             pos, 
             text = "%s.%s()" % (
                 action.plugin.info.evalName, 
-                action.__class__.__name__
+                action.__name__
             )
         )
         item.Select()

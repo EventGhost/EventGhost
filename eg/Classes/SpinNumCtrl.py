@@ -160,4 +160,20 @@ class SpinNumCtrl(wx.Window):
         return res
 
 
+    def __OnSpin(self, pos):
+        """
+        This is the function that gets called in response to up/down arrow or
+        bound spin button events.
+        """
+        #self.__IncrementValue(key, self.__posCurrent)   # changes the value
+
+        # Ensure adjusted control regains focus and has adjusted portion
+        # selected:
+        numCtrl = self.numCtrl
+        numCtrl.SetFocus()
+        start, end = numCtrl._FindField(pos)._extent
+        print start, end
+        numCtrl.SetInsertionPoint(start)
+        numCtrl.SetSelection(start, end)
+
 

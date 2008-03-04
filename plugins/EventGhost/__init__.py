@@ -168,7 +168,7 @@ class EnableItem(eg.ActionClass):
             okButton.Enable(False)
             applyButton.Enable(False)
             
-        def selectionFunc(event):
+        def OnSelectionChanged(event):
             id = event.GetItem()
             if id.IsOk():
                 item = tree.GetPyData(id)
@@ -179,7 +179,7 @@ class EnableItem(eg.ActionClass):
                     okButton.Enable(False)
                     applyButton.Enable(False)
             event.Skip()
-        tree.Bind(wx.EVT_TREE_SEL_CHANGED, selectionFunc)
+        tree.Bind(wx.EVT_TREE_SEL_CHANGED, OnSelectionChanged)
         #tree.SetMinSize((-1,300))
         tree.SetFocus()
         panel.sizer.Add(panel.StaticText(self.text.text1), 0, wx.BOTTOM, 5)
@@ -405,7 +405,7 @@ class JumpIfLongPress(eg.ActionClass):
             link.target
         )
 
-        sizer1 = eg.HorizontalBoxSizer(
+        sizer1 = eg.HBoxSizer(
             (panel.StaticText(text.text1), 0, wx.ALIGN_CENTER_VERTICAL),
             (intervalCtrl, 0, wx.LEFT|wx.RIGHT, 5),
             (panel.StaticText(text.text2), 0, wx.ALIGN_CENTER_VERTICAL),
@@ -415,12 +415,7 @@ class JumpIfLongPress(eg.ActionClass):
         mySizer.Add(panel.StaticText(text.text3), 0, wx.ALIGN_CENTER_VERTICAL)
         mySizer.Add(macroCtrl, 1, wx.EXPAND)
                     
-        panel.sizer.AddMany(
-            (
-                (sizer1),
-                (mySizer, 1, wx.EXPAND|wx.TOP, 5),
-            )
-        )
+        panel.sizer.AddMany(((sizer1), (mySizer, 1, wx.EXPAND|wx.TOP, 5)))
         while panel.Affirmed():
             link.SetTarget(macroCtrl.GetValue())
             panel.SetResult(intervalCtrl.GetValue(), link)
@@ -519,11 +514,7 @@ class TriggerEvent(eg.ActionClass):
         if not waitTime:
             eg.TriggerEvent(eventString)
         else:
-            eg.scheduler.AddTask(
-                waitTime,
-                eg.TriggerEvent,
-                eventString,
-            )
+            eg.scheduler.AddTask(waitTime, eg.TriggerEvent, eventString)
 
 
     def GetLabel(self, eventString="", waitTime=0):
@@ -540,51 +531,48 @@ class TriggerEvent(eg.ActionClass):
         eventStringCtrl = panel.TextCtrl(eventString, size=(250, -1))
         waitTimeCtrl = panel.SpinNumCtrl(waitTime, integerWidth=5)
         
-        sizer1 = eg.HorizontalBoxSizer(
+        sizer1 = eg.HBoxSizer(
             (panel.StaticText(text.text1), 0, wx.ALIGN_CENTER_VERTICAL, 5),
             (eventStringCtrl, 0, wx.LEFT, 5),
         )
-        sizer2 = eg.HorizontalBoxSizer(
+        sizer2 = eg.HBoxSizer(
             (panel.StaticText(text.text2), 0, wx.ALIGN_CENTER_VERTICAL),
             (waitTimeCtrl, 0, wx.ALL, 5),
             (panel.StaticText(text.text3), 0, wx.ALIGN_CENTER_VERTICAL),
         )
-        panel.sizer.AddMany(
-            (
-                (sizer1, 0, wx.EXPAND),
-                (sizer2, 0, wx.EXPAND),
-            )
-        )
+        panel.sizer.AddMany(((sizer1, 0, wx.EXPAND), (sizer2, 0, wx.EXPAND)))
         while panel.Affirmed():
             panel.SetResult(
-                eventStringCtrl.GetValue(),
+                eventStringCtrl.GetValue(), 
                 waitTimeCtrl.GetValue(),
             )
     
     
 
 class FlushEvents(eg.ActionClass):
-    name = "Flush Events"
-    description = \
-        "The \"Flush Events\" flushes all events which are "\
-        "currently in the processing queue. It is useful in case a "\
-        "macro has just some lengthy processing, and events have "\
-        "queued up during that processing which should not be "\
-        "processed.\n\n<p>"\
-        "<b>Example:</b> You have a lengthy \"start system\" macro "\
-        "which takes about 90 seconds to process. The end user will "\
-        "not see anything until the projector lights up, which "\
-        "takes 60s. It is very likely that he presses the remote "\
-        "button which starts the macro for several times in a row, "\
-        "causing all of the lengthy processing to start over and "\
-        "over again. If you place a \"Flush Events\" command at the "\
-        "end of your macro, all the excessive remote key presses "\
+    name = "Clear Pending Events"
+    description = (
+        "The \"Clear Pending Events\" clears all unprocessed events which are "
+        "currently in the processing queue."
+        "\n\n<p>"
+        "It is useful in case a macro has just some lengthy processing, and "
+        "events have queued up during that processing which should not be "
+        "processed.<p>"
+        "<b>Example:</b> You have a lengthy \"start system\" macro "
+        "which takes about 90 seconds to process. The end user will "
+        "not see anything until the projector lights up, which "
+        "takes 60s. It is very likely that he presses the remote "
+        "button which starts the macro for several times in a row, "
+        "causing all of the lengthy processing to start over and "
+        "over again. If you place a \"Clear Pending Events\" command at the "
+        "end of your macro, all the excessive remote key presses "
         "will be discarded."
+    )
     iconFile = "icons/Plugin"
     
     def __call__(self):
-        eg.eventThread.FlushAllEvents()
-        eg.actionThread.FlushAllEvents()
+        eg.eventThread.ClearPendingEvents()
+        eg.actionThread.ClearPendingEvents()
 
 
 

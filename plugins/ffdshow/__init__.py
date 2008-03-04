@@ -456,24 +456,25 @@ class IntegerAction(eg.ActionClass):
 
 class SelectAction(eg.ActionClass):
     options = ()
-    def __init__(self, *args, **kwargs):
-        eg.ActionClass.__init__(self, *args, **kwargs)
+    
+    @classmethod
+    def OnAddAction(cls):
         #rebuild the options sequence to quickly find entries
         #each entry is a tuple of (key, index, text, next, prev)
         newOptions = {}
         i = 0
-        optionLength = len(self.options)
+        optionLength = len(cls.options)
         
-        for key, text in self.options:
+        for key, text in cls.options:
             newOptions[key] = (
                 key, 
                 i, #index
                 text, 
-                self.options[(i + 1) % optionLength][0], #next
-                self.options[(i - 1) % optionLength][0]) #prev
+                cls.options[(i + 1) % optionLength][0], #next
+                cls.options[(i - 1) % optionLength][0]) #prev
             i += 1
             
-        self.options = newOptions
+        cls.options = newOptions
     
     def __call__(self, action, value):
         #0: set to, 1: next, 2: previous 3: get value

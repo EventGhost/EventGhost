@@ -11,7 +11,6 @@ class General:
     deletePlugin = u'Dieses Plugin wird von Befehlen in ihrer aktuellen Konfiguration benutzt.\n\nSie k\xf6nnen es erst entfernen, wenn alle Befehle die dieses Plugin benutzen\nvorher ebenfalls entfernt wurden.'
     deleteQuestion = u'Soll dieses Element wirklich gel\xf6scht werden?'
     help = u'&Hilfe'
-    moreHelp = u'Weitere Hilfe'
     moreTag = u'mehr...'
     noOptionsAction = u'Diese Aktion hat keine einstellbaren Optionen.'
     noOptionsPlugin = u'Dieses Plugin hat keine einstellbaren Optionen.'
@@ -90,11 +89,8 @@ class MainFrame:
 class Error:
     FileNotFound = u'Datei "%s" konnte nicht gefunden werden.'
     InAction = u'Fehler in Befehl: "%s"'
-    InScript = u'Fehler in Skript: "%s"'
-    pluginInfoPyError = u'Fehler beim Lesen der __info__.py f\xfcr Plugin %s'
     pluginLoadError = u'Fehler beim Laden der Plugin-Datei %s.'
     pluginNotActivated = u'Plugin "%s" ist nicht aktiviert'
-    pluginNotFound = u'Plugin nicht gefunden: %s'
     pluginStartError = u'Fehler beim Start des Plugins: %s'
 class Exceptions:
     DeviceInitFailed = u'Ger\xe4t kann nicht initialisiert werden!'
@@ -103,6 +99,7 @@ class Exceptions:
     DriverNotFound = u'Treiber nicht gefunden!'
     DriverNotOpen = u'Kann den Treiber nicht \xf6ffnen!'
     InitFailed = u'Initialisierung fehlgeschlagen!'
+    PluginNotFound = u'Plugin nicht gefunden!'
     ProgramNotFound = u'Programm nicht gefunden!'
     ProgramNotRunning = u'Programm ist nicht gestartet!'
     SerialOpenFailed = u'Kann den seriellen Anschluss nicht \xf6ffnen!'
@@ -376,8 +373,52 @@ class Plugin:
             name = u'Rechner neu starten'
         class RegistryChange:
             name = u'Registrierungs-Wert \xe4ndern'
+            description = u'Ver\xe4ndert einen Wert in der Windows-Registrierung'
+            actions = (
+                u'anlegen oder ver\xe4ndern',
+                u'nur \xe4ndern wenn vorhanden',
+                u'l\xf6schen',
+            )
+            labels = (
+                u'\xc4ndere "%s" zu "%s"',
+                u'\xc4ndere "%s" zu "%s" nur wenn vorhanden',
+                u'L\xf6sche "%s"',
+            )
+        class RegistryGroup:
+            name = u'Registrierung'
+            description = u'Abfrage und \xc4nderung von Werten in der Windows-Registrierung.'
+            actionText = u'Aktion:'
+            chooseText = u'Registrierungs-Schl\xfcssel w\xe4hlen:'
+            defaultText = u'(Standard)'
+            keyOpenError = u'Fehler beim \xd6ffnen des Registrierungs-Schl\xfcssels'
+            keyText = u'Schl\xfcssel:'
+            keyText2 = u'Schl\xfcssel'
+            newValue = u'Neuer Wert'
+            noKeyError = u'Kein Schl\xfcssel angegeben'
+            noNewValueError = u'Kein neuer Wert angegeben'
+            noSubkeyError = u'Kein Unterschl\xfcssel angegeben'
+            noTypeError = u'Keinen Type angegeben'
+            noValueNameError = u'Kein Name f\xfcr den Wert angegeben'
+            noValueText = u'Wert nicht gefunden'
+            oldType = u'Momentaner Typ:'
+            oldValue = u'Momentaner Wert:'
+            typeText = u'Typ:'
+            valueChangeError = u'Fehler beim Versuch den Wert zu \xe4ndern'
+            valueName = u'Name:'
+            valueText = u'Wert:'
         class RegistryQuery:
             name = u'Registrierungs-Wert auslesen'
+            description = u'Fragt die Windows-Registrierung ab und liefert einen Wert zur\xfcck oder vergleicht ihn.'
+            actions = (
+                u'teste auf Existenz',
+                u'liefere als Resultat zur\xfcck',
+                u'vergleiche mit',
+            )
+            labels = (
+                u'Pr\xfcfe ob "%s" vorhanden',
+                u'Liefere "%s" als Resultat zur\xfcck',
+                u'Vergleiche "%s" mit "%s"',
+            )
         class SetClipboard:
             name = u'Zeichenkette in die Zwischenablage kopieren'
             description = u'Kopiert eine als Parameter angegebene Zeichenkette in die System-Zwischenablage.'
@@ -553,13 +594,15 @@ class Plugin:
     class NetworkReceiver:
         name = u'Netzwerk Ereignis Empf\xe4nger'
         description = u'Empf\xe4ngt Ereignisse von einem "Netzwerk Ereignis Sender" Plugin.'
-        event_prefix = u'Ereignis Prefix:'
+        eventPrefix = u'Ereignis Prefix:'
         password = u'Passwort:'
         port = u'Port:'
     class NetworkSender:
         name = u'Netzwerk Ereignis Sender'
         description = u'Sendet Ereignisse zu einem "Netzwerk Ereignis Empf\xe4nger" Plugin \xfcber das TCP/IP Protokoll.'
         password = u'Passwort:'
+        securityBox = u'Sicherheit'
+        tcpBox = u'TCP/IP Einstellungen'
     class Serial:
         name = u'Serieller Anschluss'
         description = u'Allgemeine Kommunikation \xfcber einen seriellen Anschluss.'
@@ -580,7 +623,7 @@ class Plugin:
             u'Gerade',
         ]
         parity = u'Parit\xe4t:'
-        port = u'Port:'
+        port = u'Anschluss:'
         stopbits = u'Stopbits:'
         terminator = u'Endzeichen:'
         class Read:

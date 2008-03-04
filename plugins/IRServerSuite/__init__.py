@@ -84,6 +84,9 @@ class Client(asyncore.dispatcher):
         sent = self.send(self.buffer)
         self.buffer = self.buffer[sent:]
         
+    def handle_expt(self):
+        self.close() # connection failed, shutdown
+        
         
 class IRServerSuite(eg.PluginClass):
     

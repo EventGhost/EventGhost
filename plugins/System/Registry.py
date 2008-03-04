@@ -489,9 +489,10 @@ class RegistryQuery(eg.ActionClass):
             'Compare "%s" with %s'
         )
 
-    
-    def __init__(self):
-        self.text2 = self.plugin.text.RegistryGroup
+    @classmethod
+    def OnAddAction(cls):
+        cls.text2 = cls.plugin.text.RegistryGroup
+        
         
     def __call__(self, key, subkey, valueName, action, compareValue):
         if not key:#nothing selected
@@ -661,8 +662,10 @@ class RegistryChange(eg.ActionClass):
             'Delete "%s"'
         )
     
-    def __init__(self):
-        self.text2 = self.plugin.text.RegistryGroup
+    
+    @classmethod
+    def OnAddAction(cls):
+        cls.text2 = cls.plugin.text.RegistryGroup
         
 
     def __call__(self, key, subkey, valueName, action, keyType, newValue):

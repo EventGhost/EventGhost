@@ -64,17 +64,17 @@ class MessageDialog(eg.Dialog):
         cancelButton = wx.Button(self, -1, eg.text.General.cancel)
         cancelButton.Bind(wx.EVT_BUTTON, self.OnCancel)
         
-        sizer2 = eg.HorizontalBoxSizer(
+        sizer2 = eg.HBoxSizer(
             (staticBitmap, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 10),
             ((5, 5), 0),
             (staticText, 0, wx.TOP|wx.RIGHT|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL, 10),
         )
         self.SetSizerAndFit(
-            eg.VerticalBoxSizer(
+            eg.VBoxSizer(
                 (sizer2),
                 ((5, 5), 1),
                 (
-                    eg.HorizontalBoxSizer(
+                    eg.HBoxSizer(
                         (downloadButton),
                         ((5, 5), 0),
                         (cancelButton),

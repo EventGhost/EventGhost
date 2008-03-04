@@ -44,13 +44,13 @@ class HTMLDialog(eg.Dialog):
         okButton.SetDefault()
         self.okButton = okButton
         
-        btnSizer = eg.HorizontalBoxSizer(
+        btnSizer = eg.HBoxSizer(
             ((5, 5), 1, wx.EXPAND),
             (okButton, 0, wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND, 5),
             ((5, 5), 1, wx.EXPAND),
             (eg.SizeGrip(self), 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT),
         )
-        mainSizer = eg.VerticalBoxSizer(
+        mainSizer = eg.VBoxSizer(
             (htmlCtrl, 1, wx.EXPAND|wx.ALL, 5),
             (btnSizer, 0, wx.EXPAND),
         )

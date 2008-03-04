@@ -159,7 +159,7 @@ class PluginClass(object):
         self.info.lastEvent.SetShouldEnd()
         
         
-    def AddAction(self, action, hidden=False):
+    def AddAction(self, actionCls, hidden=False):
         """
         Add an action to the AddActionDialog of EventGhost for this plugin.
         
@@ -170,14 +170,9 @@ class PluginClass(object):
             If set to True, the action will not show up in the AddActionDialog
             but is otherwise fully functional.
         """
-        action = CreateAction(action, self)
-        actionList = self.info.actionList
-        if actionList is None:
-            actionList = []
-            eg.actionList.append(self)
-            self.info.actionList = actionList
+        action = CreateAction(actionCls, self)
         if not hidden:
-            actionList.append(action)
+            self.info.actionList.append(action)
         return action
     
     
@@ -201,13 +196,8 @@ class PluginClass(object):
         :rtype: eg.ActionGroup instance
             
         """
-        actionList = self.info.actionList
-        if actionList is None:
-            actionList = []
-            eg.actionList.append(self)
-            self.info.actionList = actionList
         group = eg.ActionGroup(self, name, description, iconFile)
-        actionList.append(group)
+        self.info.actionList.append(group)
         return group
     
     

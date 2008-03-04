@@ -351,16 +351,16 @@ class SysTrayMenu(eg.PluginClass):
             )
         )
         
-        mainSizer = eg.HorizontalBoxSizer(
+        mainSizer = eg.HBoxSizer(
             (
-                eg.VerticalBoxSizer(
+                eg.VBoxSizer(
                     (tree, 1, wx.EXPAND),
                     (editSizer, 0, wx.EXPAND|wx.TOP, 5),
                 ), 1, wx.EXPAND
             ),
             ((5, 5)),
             (
-                eg.VerticalBoxSizer(
+                eg.VBoxSizer(
                     (deleteButton, 0, wx.EXPAND),
                     ((5, 5), 1, wx.EXPAND),
                     (upButton),

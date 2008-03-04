@@ -853,7 +853,7 @@ class HID(eg.PluginClass):
         noOtherPortCtrl.SetValue(noOtherPort)
         optionsSizer.Add(noOtherPortCtrl, (5, 0), (1, 3))
 
-        panel.sizer.Add(optionsSizer)
+        panel.sizer.Add(optionsSizer, 0, wx.TOP, 10)
 
         def OnHidListSelect(event):
             panel.dialog.buttonRow.okButton.Enable(True)

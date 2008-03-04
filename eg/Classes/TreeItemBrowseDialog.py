@@ -48,7 +48,7 @@ class TreeItemBrowseDialog(eg.Dialog):
         self.treeCtrl = tree
         
         self.buttonRow = eg.ButtonRow(self, (wx.ID_CANCEL, wx.ID_OK), True)
-        mainSizer = eg.VerticalBoxSizer(
+        mainSizer = eg.VBoxSizer(
             (staticText, 0, wx.EXPAND|wx.ALL, 5),
             (tree, 1, wx.EXPAND),
             (self.buttonRow.sizer, 0, wx.EXPAND),

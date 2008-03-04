@@ -284,18 +284,27 @@ class Serial(eg.RawReceiverPlugin):
         generateEventsCtrl.Bind(wx.EVT_CHECKBOX, OnCheckBox)
         
         panel.SetColumnFlags(1, wx.EXPAND)
-        panel.AddLine(text.port, portCtrl)
-        panel.AddLine(text.baudrate, baudrateCtrl)
-        panel.AddLine(text.bytesize, bytesizeCtrl)
-        panel.AddLine(text.parity, parityCtrl)
-        panel.AddLine(text.stopbits, stopbitsCtrl)
-        panel.AddLine(text.flowcontrol, handshakeCtrl)
-        panel.AddLine()
-        panel.AddLine(generateEventsCtrl)
-        panel.AddLine(text.terminator, terminatorCtrl)
-        panel.AddLine(text.eventPrefix, prefixCtrl)
-        panel.AddLine(text.encoding, encodingCtrl)
-
+        portSettingsBox = panel.BoxedGroup(
+            "Port settings",
+            (text.port, portCtrl),
+            (text.baudrate, baudrateCtrl),
+            (text.bytesize, bytesizeCtrl),
+            (text.parity, parityCtrl),
+            (text.stopbits, stopbitsCtrl),
+            (text.flowcontrol, handshakeCtrl),
+        )
+        eventSettingsBox = panel.BoxedGroup(
+            "Event generation",
+            (generateEventsCtrl),
+            (text.terminator, terminatorCtrl),
+            (text.eventPrefix, prefixCtrl),
+            (text.encoding, encodingCtrl),
+        )
+        eg.EqualizeWidths(portSettingsBox.GetColumnItems(0))
+        eg.EqualizeWidths(portSettingsBox.GetColumnItems(1))
+        eg.EqualizeWidths(eventSettingsBox.GetColumnItems(0)[1:])
+        eg.EqualizeWidths(eventSettingsBox.GetColumnItems(1))
+        panel.sizer.Add(eg.HBoxSizer(portSettingsBox, (10, 10), eventSettingsBox))
         while panel.Affirmed():
             panel.SetResult(
                 portCtrl.GetValue(), 

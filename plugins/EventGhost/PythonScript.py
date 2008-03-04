@@ -33,11 +33,10 @@ class PythonScript(eg.ActionClass):
     description = "Full featured Python script." 
     iconFile = "icons/PythonScript"
 
-    def __init__(self):
-        class Defaults:
-            size = (600, 420)
-            position = (10, 10)
-        self.config = eg.GetConfig("plugins.EventGhost.PythonScript", Defaults)
+    class ConfigDefaults:
+        size = (600, 420)
+        position = (10, 10)
+    config = eg.GetConfig("plugins.EventGhost.PythonScript", ConfigDefaults)
 
         
     def GetLabel(self, pythonstring=None):

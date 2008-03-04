@@ -35,8 +35,16 @@ class ControlProviderMixin:
         return eg.SpinNumCtrl(self, -1, value, *args, **kwargs)
     
     
-    def TextCtrl(self, value="", *args, **kwargs):
-        return wx.TextCtrl(self, -1, value, *args, **kwargs)
+    def TextCtrl(
+        self, 
+        value="", 
+        pos=wx.DefaultPosition, 
+        size=(150, -1), 
+        style=0, 
+        validator=wx.DefaultValidator, 
+        name=wx.TextCtrlNameStr
+    ):
+        return wx.TextCtrl(self, -1, value, pos, size, style, validator, name)
     
     
     def Choice(self, value, choices, *args, **kwargs):
@@ -124,8 +132,14 @@ class ControlProviderMixin:
         return wx.ComboBox(self, -1, value, pos, size, choices, *args, **kwargs)
 
 
-    def VerticalStaticBoxSizer(self, label, *items):
+    def VStaticBoxSizer(self, label, *items):
         staticBox = wx.StaticBox(self, -1, label)
         sizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
         sizer.AddMany(items)
         return sizer
+    
+    
+    def BoxedGroup(self, *args, **kwargs):
+        return eg.BoxedGroup(self, *args, **kwargs)
+    
+    

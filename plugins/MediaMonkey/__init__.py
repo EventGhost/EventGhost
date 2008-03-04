@@ -1078,10 +1078,12 @@ class GetUniversal(eg.ActionClass):
             TrackOrder = "Track Order"
             VBR = "VBR"
             Year = "Year"
-    def __init__(self):
-        text=self.text
+            
+    @classmethod
+    def OnAddAction(cls):
+        text=cls.text
         txt=text.Properties
-        self.infoList=(
+        cls.infoList=(
             ("AlbumName",txt.AlbumName),
             ("Album.AlbumLength",txt.AlbumLength),
             ("Album.AlbumLengthString",txt.AlbumLengthString),
@@ -1142,6 +1144,7 @@ class GetUniversal(eg.ActionClass):
             ("VBR",txt.VBR),
             ("Year",txt.Year),
         )
+        
     def __call__(self, i):
         return getattr(self.plugin.DispMM().Player.CurrentSong,self.infoList[i][0])
 
@@ -1182,17 +1185,19 @@ class WritingToMM(eg.ActionClass):
             Quality = "Quality"
             Rating = "Rating"
             Tempo = "Tempo"
-    def __init__(self):
-        text=self.text
+            
+    @classmethod
+    def OnAddAction(cls):
+        text=cls.text
         txt=text.Properties
-        self.listCtrl=(
+        cls.listCtrl=(
             "wx.TextCtrl(panel, -1, arrayValue0[%s])",
             (
                 "eg.SpinNumCtrl(panel,-1,arrayValue0[%s],max=100.0,min=0.0,"
                 "fractionWidth=1,increment=10,style=wx.TE_READONLY)"
             )
         )
-        self.infoList=(
+        cls.infoList=(
             ("Tempo",txt.Tempo,0,False),
             ("Mood",txt.Mood,0,False),
             ("Occasion",txt.Occasion,0,False),
@@ -1204,6 +1209,7 @@ class WritingToMM(eg.ActionClass):
             ("Genre",txt.Genre,0,True),
             ("Rating",txt.Rating,1,True),
         )
+        
     def __call__(self, i, arrayValue0, arrayValue1):
         setattr(self.plugin.DispMM().Player.CurrentSong,self.infoList[i][0]\
             ,arrayValue0[i])

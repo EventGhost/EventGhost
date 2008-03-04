@@ -51,7 +51,10 @@ import socket
 class Text:
     port = "TCP/IP Port:"
     password = "Password:"
-    event_prefix = "Event Prefix:"
+    eventPrefix = "Event Prefix:"
+    tcpBox = "TCP/IP Settings"
+    securityBox = "Security"
+    eventGenerationBox = "Event generation"
     
 
 
@@ -221,16 +224,24 @@ class NetworkReceiver(eg.PluginClass):
 
 
     def Configure(self, port=1024, password="", prefix="TCP"):
+        text = self.text
         panel = eg.ConfigPanel(self)
         
         portCtrl = panel.SpinIntCtrl(port, max=65535)
-        panel.AddLine(self.text.port, portCtrl)
-        
         passwordCtrl = panel.TextCtrl(password, style=wx.TE_PASSWORD)
-        panel.AddLine(self.text.password, passwordCtrl)
-        
         eventPrefixCtrl = panel.TextCtrl(prefix)
-        panel.AddLine(self.text.event_prefix, eventPrefixCtrl)
+        st1 = panel.StaticText(text.port)
+        st2 = panel.StaticText(text.password)
+        st3 = panel.StaticText(text.eventPrefix)
+        eg.EqualizeWidths((st1, st2, st3))
+        box1 = panel.BoxedGroup(text.tcpBox, (st1, portCtrl))
+        box2 = panel.BoxedGroup(text.securityBox, (st2, passwordCtrl))
+        box3 = panel.BoxedGroup(text.eventGenerationBox, (st3, eventPrefixCtrl))
+        panel.sizer.AddMany([
+            (box1, 0, wx.EXPAND),
+            (box2, 0, wx.EXPAND|wx.TOP, 10),
+            (box3, 0, wx.EXPAND|wx.TOP, 10),
+        ])
         
         while panel.Affirmed():
             panel.SetResult(

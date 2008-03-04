@@ -127,6 +127,11 @@ class ActionClass(object):
             panel.SetResult()
     
     
+    @classmethod
+    def OnAddAction(cls):
+        pass
+    
+    
     def Compile(self, *args):
         """
         Implementation of pre-compiled parameters.

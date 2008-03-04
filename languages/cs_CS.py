@@ -1891,7 +1891,7 @@ class Plugin:
     class NetworkReceiver:
         name = u'S\xed\u0165ov\xfd p\u0159ij\xedma\u010d ud\xe1lost\xed'
         description = u'P\u0159ij\xedm\xe1 ud\xe1losti od pluginu "S\xed\u0165ov\xfd vys\xedla\u010d ud\xe1lost\xed"'
-        event_prefix = u'Prefix ud\xe1losti:'
+        eventPrefix = u'Prefix ud\xe1losti:'
         password = u'Heslo:'
         port = u'Port:'
     class NetworkSender:

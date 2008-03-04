@@ -47,7 +47,7 @@ class AddActionGroup(eg.UndoHandler.NewItem):
                         macroItem,
                         text = "%s.%s()" % (
                             action.plugin.info.evalName, 
-                            action.__class__.__name__
+                            action.__name__
                         ),
                     )
             return folderItem

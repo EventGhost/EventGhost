@@ -546,6 +546,7 @@ class MainDialog(wx.Dialog):
             choices = ("Make Update", "Make Full Installer"),
             style = wx.RA_SPECIFY_ROWS
         )
+        self.makeUpdateRadioBox.SetSelection(1)
         self.url = url
         okButton = wx.Button(self, wx.ID_OK)
         okButton.Bind(wx.EVT_BUTTON, self.OnOk)

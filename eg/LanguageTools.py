@@ -20,7 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import new
+from types import InstanceType
 
 from Utils import SetClass
 
@@ -176,7 +176,7 @@ def LoadStrings(language):
             del dict["__module__"]
             class EmptyTextBunch:
                 pass
-            return new.instance(EmptyTextBunch, dict)
+            return InstanceType(EmptyTextBunch, dict)
     try:
         execfile(
             "Languages\\" + language + ".py", 

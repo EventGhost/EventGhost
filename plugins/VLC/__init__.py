@@ -210,17 +210,38 @@ class VLC(eg.PluginClass):
 
     def Configure(self, host="localhost", port=1234, feedback_events=True): 
         panel = eg.ConfigPanel(self)
-        hostEdit = panel.TextCtrl(host)
-        portEdit = panel.SpinIntCtrl(port)
+        hostCtrl = panel.TextCtrl(host)
+        portCtrl = panel.SpinIntCtrl(port)
         checkBox = panel.CheckBox(feedback_events, "Show VLC feedback events")
-        panel.AddLine("TCP Control Host:", hostEdit)
-        panel.AddLine("TCP Control Port:", portEdit)
-        panel.AddLine()
-        panel.AddLine(checkBox)
+        tcpBox = panel.BoxedGroup(
+            "TCP/IP Settings",
+            ("Host:", hostCtrl),
+            ("Port:", portCtrl),
+        )
+        eg.EqualizeWidths(tcpBox.GetColumnItems(0))
+        eventBox = panel.BoxedGroup(
+            "Event generation",
+            checkBox,
+        )
+        panel.sizer.Add(tcpBox, 0, wx.EXPAND)
+        panel.sizer.Add(eventBox, 0, wx.TOP|wx.EXPAND, 10)
+#        tcpBox = panel.VStaticBoxSizer(
+#            "TCP/IP Settings",
+#            eg.HBoxSizer(
+#                (panel.StaticText("Host:"), 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5), 
+#                (hostCtrl, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5), 
+#            ),
+#            eg.HBoxSizer(
+#                (panel.StaticText("Port:"), 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5), 
+#                (portCtrl, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5), 
+#            ),
+#        )
+#        panel.sizer.Add(tcpBox, 0, wx.EXPAND)
+#        panel.sizer.Add(checkBox, 0, wx.TOP|wx.EXPAND, 10)
         while panel.Affirmed():
             panel.SetResult(
-                hostEdit.GetValue(), 
-                portEdit.GetValue(), 
+                hostCtrl.GetValue(), 
+                portCtrl.GetValue(), 
                 checkBox.GetValue()
             )
    

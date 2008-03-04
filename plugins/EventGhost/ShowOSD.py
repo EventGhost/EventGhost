@@ -256,7 +256,8 @@ class ShowOSD(eg.ActionClass):
         wait2 = "seconds (0 = never)"
 
     
-    def __init__(self):
+    @classmethod
+    def OnAddAction(self):
         def makeOSD():
             self.osdFrame = OSDFrame(None)
             def closeOSD():

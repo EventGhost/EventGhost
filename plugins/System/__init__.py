@@ -402,7 +402,7 @@ class OpenDriveTray(eg.ActionClass):
             drive = ''
         if not choice.SetStringSelection(drive):
             choice.SetSelection(0)
-        mySizer = eg.HorizontalBoxSizer(
+        mySizer = eg.HBoxSizer(
             (panel.StaticText(text.driveLabel), 0, wx.ALIGN_CENTER_VERTICAL),
             ((5,5)),
             (choice),
@@ -851,7 +851,7 @@ class SetMasterVolume(eg.ActionClass):
         panel = eg.ConfigPanel(self)
         deviceCtrl = panel.Choice(deviceId, SoundMixer.GetMixerDevices())
         valueCtrl = panel.SpinNumCtrl(value, min=0, max=100)
-        sizer = eg.HorizontalBoxSizer(
+        sizer = eg.HBoxSizer(
             (panel.StaticText(self.text.text1), 0, wx.ALIGN_CENTER_VERTICAL),
             (valueCtrl, 0, wx.LEFT|wx.RIGHT, 5),
             (panel.StaticText(self.text.text2), 0, wx.ALIGN_CENTER_VERTICAL),
@@ -891,7 +891,7 @@ class ChangeMasterVolumeBy(eg.ActionClass):
         panel = eg.ConfigPanel(self)
         deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
         valueCtrl = panel.SpinNumCtrl(value, min=-100, max=100)
-        sizer = eg.HorizontalBoxSizer(
+        sizer = eg.HBoxSizer(
             (panel.StaticText(self.text.text1), 0, wx.ALIGN_CENTER_VERTICAL),
             (valueCtrl, 0, wx.LEFT|wx.RIGHT, 5),
             (panel.StaticText(self.text.text2), 0, wx.ALIGN_CENTER_VERTICAL),
@@ -989,10 +989,6 @@ class ShowPicture(eg.ActionClass):
         allImageFiles = 'All Image Files'
         allFiles = "All files"
     
-    def __init__(self):
-        def DoIt():
-            self.pictureFrame = ShowPictureFrame()
-        wx.CallAfter(DoIt)
         
     
     def __call__(self, imageFile='', display=0):
@@ -1027,6 +1023,10 @@ class ShowPicture(eg.ActionClass):
 
         while panel.Affirmed():
             panel.SetResult(filepathCtrl.GetValue(), displayChoice.GetValue())
+        
+def _CreateShowPictureFrame():
+    ShowPicture.pictureFrame = ShowPictureFrame()
+wx.CallAfter(_CreateShowPictureFrame)
         
         
         

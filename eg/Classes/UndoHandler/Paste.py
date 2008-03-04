@@ -22,6 +22,7 @@
 
 
 import xml.etree.cElementTree as ElementTree
+from functools import partial
 
 class Paste:
     name = eg.text.MainFrame.Menu.Paste.replace("&", "")
@@ -95,7 +96,9 @@ class Paste:
                     pos = before.parent.childs.index(before)
                     if pos + 1 == len(before.parent.childs):
                         pos = -1
-                obj = eg.actionThread.CallWait(childCls, targetObj, childXmlNode)
+                obj = eg.actionThread.CallWait(
+                    partial(childCls, targetObj, childXmlNode)
+                )
                 obj.RestoreState()
                 targetObj.AddChild(obj, pos)
                 self.items.append(obj.GetPositionData())
