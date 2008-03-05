@@ -84,6 +84,7 @@ from DeviceChangeNotifier import DeviceChangeNotifier
 from PowerBroadcastNotifier import PowerBroadcastNotifier
 import Registry
 
+
 class Text:
     name = "System"
     
@@ -246,11 +247,11 @@ class System(eg.PluginClass):
                 vistaVolumeDll.SetMasterVolume((old * 100.0 + value) / 100.0)
                 return vistaVolumeDll.GetMasterVolume() * 100.0
             
-            self.info.actions["MuteOn"].__class__.__call__ = MuteOn2
-            self.info.actions["MuteOff"].__class__.__call__ = MuteOff2
-            self.info.actions["ToggleMute"].__class__.__call__ = ToggleMute2
-            self.info.actions["SetMasterVolume"].__class__.__call__ = SetMasterVolume2
-            self.info.actions["ChangeMasterVolumeBy"].__class__.__call__ = ChangeMasterVolumeBy2          
+            self.info.actions["MuteOn"].__call__ = MuteOn2
+            self.info.actions["MuteOff"].__call__ = MuteOff2
+            self.info.actions["ToggleMute"].__call__ = ToggleMute2
+            self.info.actions["SetMasterVolume"].__call__ = SetMasterVolume2
+            self.info.actions["ChangeMasterVolumeBy"].__call__ = ChangeMasterVolumeBy2          
                         
                 
     @eg.LogItWithReturn

@@ -2,6 +2,22 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+OptionsList = (
+    ("Create Source Archive", "createSourceArchive", False),
+    ("Create Imports", "createImports", False),
+    ("Create Lib", "createLib", False),
+    ("SVN Commit", "commitSvn", True),
+    ("Upload", "upload", True),
+    ("Include 'noinclude' plugins", "includeNoIncludePlugins", False),
+    ("Create Update", "createUpdate", False),
+)
+
+class Options:
+    pass
+
+for label, name, default in OptionsList:
+    setattr(Options, name, default)
+
 import wx
 import sys
 import tempfile
@@ -25,7 +41,6 @@ tmpDir = tempfile.mkdtemp()
 toolsDir = abspath(dirname(sys.argv[0]))
 trunkDir = abspath(join(toolsDir, ".."))
 outDir = abspath(join(trunkDir, ".."))
-includeNoIncludes = False
 
 SourcePattern = [
     "*.py", 
@@ -75,19 +90,17 @@ def GetSetupFiles():
     return GetFiles(files, SourcePattern + ["*.dll"])
     
 
-def UpdateVersionFile(commitSvn):
+def UpdateVersionFile():
     data = {}
     versionFilePath = join(trunkDir, "eg", "Version.py")
     execfile(versionFilePath, data, data)
-    data['buildNum'] += 1
-    data['compileTime'] = time.time()
     fd = file(versionFilePath, "wt")
-    fd.write("version = " + repr(data['version']) + "\n")
-    fd.write("buildNum = " + repr(data['buildNum']) + "\n")
-    fd.write("compileTime = " + repr(data['compileTime']) + "\n")
-    fd.write("svnRevision = int('$LastChangedRevision$'.split()[1])")
+    fd.write("version = %r\n" % data['version'])
+    fd.write("buildNum = %r\n" % (data['buildNum'] + 1))
+    fd.write("compileTime = %r\n" % time.time())
+    fd.write("svnRevision = int('$LastChangedRevision$'.split()[1])\n")
     fd.close()    
-    if commitSvn:
+    if Options.commitSvn:
         def ssl_server_trust_prompt(trust_dict):
             return True, 0, True
         svn = pysvn.Client()
@@ -125,7 +138,7 @@ def locate(patterns, root=os.curdir):
                 if (
                     dir.startswith("_") 
                     or dir == ".svn"
-                    or (not includeNoIncludes and exists(join(path, dir, "noinclude")))
+                    or (not Options.includeNoIncludePlugins and exists(join(path, dir, "noinclude")))
                 )
         ]
         for dir in ignoreDirs:
@@ -156,33 +169,6 @@ def RemoveDirectory(path):
     except:
         pass
 
-
-def GetDir(theDir, extension=None):
-    list = os.listdir(theDir)
-    x2 = []
-    for x in list:
-        if extension:
-            if os.path.splitext(x)[1] != extension:
-                continue
-        x2.append(theDir + x)
-    return x2
-
-#os.chdir(main_dir)
-#
-#bases = ("eg", "plugins", "Languages")
-#for base in ("eg", "plugins", "Languages"):
-#    for filename in locate("*.py", base):
-#        #print filename
-#        data = open(filename, "rb").read()
-#        if '\0' in data:
-#            print "Binary!", filename
-#            continue
-#        newdata = re.sub("\r?\n", "\r\n", data)
-#        if newdata != data:
-#            f = open(filename, "wb")
-#            f.write(newdata)
-#            f.close()
-#
 
 
 # The manifest will be inserted as resource into the exe.  This
@@ -387,7 +373,7 @@ def InstallPy2exePatch():
 
 def CompileInnoScript(innoScriptPath):
     """
-    Return command line to compile the Inno Script File
+    Execute command line to compile the Inno Script File
     """
     key = _winreg.OpenKey(
         _winreg.HKEY_LOCAL_MACHINE, 
@@ -417,8 +403,8 @@ def MakeSourceArchive(outFile):
     archive.close()
 
 
-def MakeInstaller(isUpdate, makeLib, makeSourceArchive, commitSvn):
-    templateOptions = UpdateVersionFile(commitSvn)
+def MakeInstaller():
+    templateOptions = UpdateVersionFile()
     UpdateChangeLog(templateOptions)
     VersionStr = templateOptions['version'] + '_build_' + str(templateOptions['buildNum'])
     templateOptions['VersionStr'] = VersionStr
@@ -439,11 +425,11 @@ def MakeInstaller(isUpdate, makeLib, makeSourceArchive, commitSvn):
     installDelete = "\n".join(installDeleteDirs)
     templateOptions["INSTALL_DELETE"] = installDelete
     
-    if makeSourceArchive:
+    if Options.createSourceArchive:
         print "Creating source ZIP file"
         MakeSourceArchive(join(outDir, "EventGhost_%s_Source.zip" % VersionStr))
         
-    if makeLib:
+    if Options.createLib:
         RemoveDirectory(join(trunkDir, "lib"))
         from distutils.core import setup
         import py2exe
@@ -455,7 +441,7 @@ def MakeInstaller(isUpdate, makeLib, makeSourceArchive, commitSvn):
         copy(join(pythonDir, "msvcp71.dll"), trunkDir)
     
     installFiles = []
-    if isUpdate:
+    if Options.createUpdate:
         for file in GetUpdateFiles():
             installFiles.append(
                 'Source: "' + join(trunkDir, file) + '"; DestDir: "{app}\\' + dirname(file) + '"; Flags: ignoreversion'
@@ -530,26 +516,20 @@ def UploadFile(filename, url):
 
 
 class MainDialog(wx.Dialog):
+    class Ctrls:
+        pass
     
     def __init__(self, url=""):
-        
         wx.Dialog.__init__(self, None, title="Make EventGhost Installer")
         
         # create controls
-        self.createSourceCB = wx.CheckBox(self, -1, "Create Source Archive")
-        self.createImportsCB = wx.CheckBox(self, -1, "Create Imports")
-        self.createLib = wx.CheckBox(self, -1, "Create Lib")
-        self.uploadCB = wx.CheckBox(self, -1, "Upload")
-        self.uploadCB.SetValue(bool(url))
-        self.commitCB = wx.CheckBox(self, -1, "SVN Commit")
-        self.commitCB.SetValue(True)
-        self.includeNoIncludesCB = wx.CheckBox(self, -1, "Include 'noinclude' plugins")
-        self.makeUpdateRadioBox = wx.RadioBox(
-            self, 
-            choices = ("Make Update", "Make Full Installer"),
-            style = wx.RA_SPECIFY_ROWS
-        )
-        self.makeUpdateRadioBox.SetSelection(1)
+        ctrls = []
+        for label, name, default in OptionsList:
+            ctrl = wx.CheckBox(self, -1, label)
+            ctrl.SetValue(default)
+            ctrls.append(ctrl)
+            setattr(self.Ctrls, name, ctrl)
+        
         self.url = url
         okButton = wx.Button(self, wx.ID_OK)
         okButton.Bind(wx.EVT_BUTTON, self.OnOk)
@@ -563,22 +543,19 @@ class MainDialog(wx.Dialog):
         btnSizer.Realize()
         
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.createSourceCB, 0, wx.ALL, 10)
-        sizer.Add(self.createImportsCB, 0, wx.ALL, 10)
-        sizer.Add(self.createLib, 0, wx.ALL, 10)
-        sizer.Add(self.uploadCB, 0, wx.ALL, 10)
-        sizer.Add(self.commitCB, 0, wx.ALL, 10)
-        sizer.Add(self.includeNoIncludesCB, 0, wx.ALL, 10)
-        sizer.Add(self.makeUpdateRadioBox, 0, wx.ALL, 10)
-        sizer.Add(btnSizer)
-
+        for ctrl in ctrls:
+            sizer.Add(ctrl, 0, wx.ALL, 10)
+        sizer.Add(btnSizer, 0, wx.ALL, 10)
         self.SetSizerAndFit(sizer)
         
         
     def OnOk(self, event):
         self.Show(False)
-        if self.createImportsCB.GetValue():
+        for label, name, default in OptionsList:
+            setattr(Options, name, getattr(self.Ctrls, name).GetValue())
+        if Options.createImports:
             import MakeImports
+<<<<<<< HEAD
         isUpdate = self.makeUpdateRadioBox.GetSelection() == 0
         makeLib = self.createLib.GetValue()
         makeSourceArchive = self.createSourceCB.GetValue()
@@ -587,6 +564,11 @@ class MainDialog(wx.Dialog):
         includeNoIncludes = self.includeNoIncludesCB.GetValue()
         filename = MakeInstaller(isUpdate, makeLib, makeSourceArchive, commitSvn)
         if self.uploadCB.GetValue():
+=======
+        filename = MakeInstaller()
+        print filename
+        if Options.upload:
+>>>>>>> cd94e21... Created installer for 0.3.6.1292
             UploadFile(filename, self.url)
         app.ExitMainLoop()
         

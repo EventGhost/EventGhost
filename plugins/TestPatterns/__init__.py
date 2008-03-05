@@ -871,10 +871,8 @@ class Geometry(TestPatternAction):
         text = self.plugin.text
         panel = eg.ConfigPanel(self)
         aspectCtrl = panel.Choice(aspectRatio, text.aspectRatios)
-        test = eg.TimeSpin(panel)
         
         panel.AddLine(text.aspectRatio, aspectCtrl)
-        panel.AddLine(test)
         while panel.Affirmed():
             panel.SetResult(aspectCtrl.GetValue())
 
