@@ -94,9 +94,10 @@ def UpdateVersionFile():
     data = {}
     versionFilePath = join(trunkDir, "eg", "Version.py")
     execfile(versionFilePath, data, data)
+    data['buildNum'] += 1
     fd = file(versionFilePath, "wt")
     fd.write("version = %r\n" % data['version'])
-    fd.write("buildNum = %r\n" % (data['buildNum'] + 1))
+    fd.write("buildNum = %r\n" % (data['buildNum']))
     fd.write("compileTime = %r\n" % time.time())
     fd.write("svnRevision = int('$LastChangedRevision$'.split()[1])\n")
     fd.close()    
