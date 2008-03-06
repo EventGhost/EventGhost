@@ -75,7 +75,7 @@ class TaskBarIcon(wx.TaskBarIcon):
 
     def SetIcons(self, state):
         if self.alive:
-            self.SetIcon(self.stateIcons[state])
+            self.SetIcon(self.stateIcons[state], eg.APP_NAME)
             if eg.document.frame:
                 eg.document.frame.statusBar.SetState(state)
         

@@ -3,7 +3,9 @@ eg.RegisterPlugin(
     author = "Dexter",
     version = "1.0." + "$LastChangedRevision: 304 $".split()[1],
     description = (
-        "This plugin allows you to set virtually any control available on your soundcard."
+        "This plugin allows you to set virtually any control available on "
+        "your soundcard.\n\n<p>"
+        "Doesn't work under Windows Vista currently.</p>"
     ),
     kind = "other",
 )
