@@ -59,6 +59,7 @@ class AutostartItem(MacroItem):
         for child in self.childs:
             if child.__class__ == self.document.PluginItem:
                 child.info.Close()
+                child.info.RemovePluginInstance()
     
     
     def DropTest(self, cls):

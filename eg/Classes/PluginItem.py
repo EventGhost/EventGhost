@@ -112,7 +112,12 @@ class PluginItem(ActionItem):
 
 
     def _Delete(self):
-        eg.actionThread.Call(self.info.Close)
+        info = self.info
+        def DoIt():
+            info.Close()
+            info.instance.OnDelete()
+            info.RemovePluginInstance()
+        eg.actionThread.Call(DoIt)
         ActionItem._Delete(self)
         self.executable = None
         self.info = None

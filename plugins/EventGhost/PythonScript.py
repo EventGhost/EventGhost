@@ -61,6 +61,7 @@ class PythonScript(eg.ActionClass):
         idCounter = 0
         scriptDict = weakref.WeakValueDictionary()
 
+        @eg.LogIt
         def __init__(self, sourceCode=""):
             id = self.__class__.idCounter
             self.__class__.idCounter += 1

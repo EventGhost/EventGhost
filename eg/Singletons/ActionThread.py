@@ -62,8 +62,9 @@ class ActionThread(eg.ThreadWorker):
         eg.document.autostartMacro.UnloadPlugins()
         for pluginIdent in eg.CORE_PLUGINS:
             try:
-                plugin = getattr(eg.plugins, pluginIdent).plugin
-                plugin.info.Close()
+                pluginInfo = getattr(eg.plugins, pluginIdent).plugin.info
+                pluginInfo.Close()
+                pluginInfo.RemovePluginInstance()
             except:
                 eg.PrintTraceback()
         

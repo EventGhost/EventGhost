@@ -43,6 +43,7 @@ class Configure:
         self.name = eg.text.MainFrame.Menu.Edit.replace("&", "")
         
         wasApplied = False
+        wasTested = False
         lastArgs = oldArgs
         gr = None
         while True:
@@ -63,7 +64,7 @@ class Configure:
                         gr.switch()
                     item.openConfigDialog.Destroy()
                     del item.openConfigDialog
-                    if wasApplied:
+                    if wasApplied or wasTested:
                         item.SetArgs(oldArgs)
                         item.Refresh()
                     return False
@@ -83,7 +84,6 @@ class Configure:
                     def Do():
                         item.SetArgs(newArgs)
                         item.Execute()
-                        item.SetArgs(lastArgs)
                     eg.actionThread.Call(Do)
                     continue
             elif newArgs is None:

@@ -276,3 +276,18 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
                 sizer.SetItemSpan(ctrl, (1, columns - colNum + 1))
         self.SetSizer(sizer)
         
+
+    def EnableButtons(self, flag=True):
+        """
+        Enables/Disables the OK, Apply and Test buttons.
+        
+        Useful if you want to temporarily disable them, because the current
+        settings have no valid state and later re-enable them.
+        """
+        buttonRow = self.dialog.buttonRow
+        buttonRow.okButton.Enable(flag)
+        buttonRow.testButton.Enable(flag)
+        if flag and self.isDirty:
+            buttonRow.applyButton.Enable(True)
+        else:
+            buttonRow.applyButton.Enable(False)

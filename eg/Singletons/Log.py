@@ -33,7 +33,7 @@ from time import time, strftime
 _oldStdOut = sys.stdout
 _oldStdErr = sys.stderr
 
-oldStdOut = _oldStdOut #codecs.lookup("ascii").streamwriter(_oldStdOut, 'backslashreplace')
+oldStdOut = codecs.lookup("ascii").streamwriter(_oldStdOut, 'backslashreplace')
 oldStdErr = codecs.lookup("ascii").streamwriter(_oldStdErr, 'backslashreplace')
 
 INFO_ICON = eg.Icons.INFO_ICON

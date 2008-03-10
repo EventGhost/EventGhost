@@ -253,10 +253,23 @@ class PluginClass(object):
     
     
     def OnComputerSuspend(self, suspendType):
-        """Prepares the plugin for suspension of the computer."""
+        """
+        Prepares the plugin for suspension of the computer.
+        """
         pass
     
     
     def OnComputerResume(self, suspendType):
-        """Prepares the plugin for resumption of the computer."""
+        """
+        Prepares the plugin for resumption of the computer.
+        """
         pass
+    
+    
+    def OnDelete(self):
+        """
+        Will be called if the user deletes the plugin instance from his
+        configuration.
+        """
+        pass
+        

@@ -345,6 +345,12 @@ class PluginInfo(object):
     def Close(self):
         if self.isStarted:
             self.Stop()
+        if not self.initFailed:
+             self.instance.__close__()
+
+    
+    @eg.LogIt
+    def RemovePluginInstance(self):
         plugin = self.instance
         def DeleteActionListItems(actionList):
             if actionList is not None:
@@ -356,8 +362,6 @@ class PluginInfo(object):
                         item.plugin = None
                 del actionList
                 
-        if not self.initFailed:
-            plugin.__close__()
         delattr(eg.plugins, self.evalName)
         eg.pluginList.remove(plugin)
         DeleteActionListItems(self.actionList)
@@ -368,5 +372,4 @@ class PluginInfo(object):
         self.instances.remove(self)
         self.instance = None
         plugin.AddAction = None
-    
-
+       
