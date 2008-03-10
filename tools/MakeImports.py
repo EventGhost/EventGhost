@@ -195,6 +195,7 @@ win32ts
 win32ui 
 win32uiole 
 win32wnet 
+win32netcon
 #wincerapi 
 winxpgui 
 """

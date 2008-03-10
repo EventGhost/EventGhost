@@ -930,4 +930,5 @@ import win32ts
 import win32ui
 import win32uiole
 import win32wnet
+import win32netcon
 import winxpgui
