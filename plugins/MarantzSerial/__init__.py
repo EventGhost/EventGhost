@@ -74,9 +74,9 @@ commandsList = (
 ('InputmodeDigital', 'Inputmode digital', 'Sets inputmode to digital', '/inputmode digital', '@INP:2'))),
 
 ('7.1 Channel Input',
-(('71ChannelInputOn', '7.1 channel input on', 'Sets the 7.1 channel input on', None, '@71C:2'),
-('71ChannelInputOff', '7.1 channel input off', 'Sets the 7.1 channel input off', None, '@71C:1'),
-('71ChannelInputToggle', '7.1 channel input toggle', 'Toggles the 7.1 channel input', None, '@71C:0'))),
+(('ChannelInput71On', '7.1 channel input on', 'Sets the 7.1 channel input on', None, '@71C:2'),
+('ChannelInput71Off', '7.1 channel input off', 'Sets the 7.1 channel input off', None, '@71C:1'),
+('ChannelInput71Toggle', '7.1 channel input toggle', 'Toggles the 7.1 channel input', None, '@71C:0'))),
 
 ('Surround mode',
 (('SurroundAuto', 'Select Auto surround mode', None, '/surround auto', '@SUR:00'),
