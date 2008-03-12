@@ -34,6 +34,7 @@
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)/hook.dll"
 				LinkIncremental="2"
+				ModuleDefinitionFile="hook.def"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/hook.pdb"
 				SubSystem="2"
@@ -80,8 +81,10 @@
 			<Tool
 				Name="VCLinkerTool"
 				OutputFile="$(ProjectDir)..\hook.dll"
+				Version="1.0"
 				LinkIncremental="1"
 				IgnoreAllDefaultLibraries="FALSE"
+				ModuleDefinitionFile="hook.def"
 				GenerateDebugInformation="TRUE"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -144,6 +147,9 @@
 				RelativePath=".\hook.h">
 			</File>
 			<File
+				RelativePath=".\resource.h">
+			</File>
+			<File
 				RelativePath=".\stdafx.h">
 			</File>
 		</Filter>
@@ -151,6 +157,9 @@
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}">
+			<File
+				RelativePath=".\hook.rc">
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

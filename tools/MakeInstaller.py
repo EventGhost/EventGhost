@@ -445,7 +445,7 @@ def MakeInstaller():
     if Options.createUpdate:
         for file in GetUpdateFiles():
             installFiles.append(
-                'Source: "' + join(trunkDir, file) + '"; DestDir: "{app}\\' + dirname(file) + '"; Flags: ignoreversion'
+                'Source: "' + join(trunkDir, file) + '"; DestDir: "{app}\\' + dirname(file) + '";'
             )
         innoScriptPath = abspath(join(tmpDir, "Update.iss"))
         template = inno_update
@@ -453,7 +453,7 @@ def MakeInstaller():
     else:
         for file in GetSetupFiles():
             installFiles.append(
-                'Source: "' + join(trunkDir, file) + '"; DestDir: "{app}\\' + dirname(file) + '"; Flags: ignoreversion'
+                'Source: "' + join(trunkDir, file) + '"; DestDir: "{app}\\' + dirname(file) + '";'
             )
         innoScriptPath = abspath(join(tmpDir, "Setup.iss"))
         template = inno_script
