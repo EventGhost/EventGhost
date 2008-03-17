@@ -556,21 +556,12 @@ class MainDialog(wx.Dialog):
             setattr(Options, name, getattr(self.Ctrls, name).GetValue())
         if Options.createImports:
             import MakeImports
-<<<<<<< HEAD
-        isUpdate = self.makeUpdateRadioBox.GetSelection() == 0
-        makeLib = self.createLib.GetValue()
-        makeSourceArchive = self.createSourceCB.GetValue()
-        commitSvn = self.commitCB.GetValue()
-        global includeNoIncludes
-        includeNoIncludes = self.includeNoIncludesCB.GetValue()
-        filename = MakeInstaller(isUpdate, makeLib, makeSourceArchive, commitSvn)
-        if self.uploadCB.GetValue():
-=======
+            MakeImports.Main()
         filename = MakeInstaller()
-        print filename
         if Options.upload:
 >>>>>>> cd94e21... Created installer for 0.3.6.1292
             UploadFile(filename, self.url)
+        print filename
         app.ExitMainLoop()
         
         

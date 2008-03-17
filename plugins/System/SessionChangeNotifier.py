@@ -72,7 +72,8 @@ class SessionChangeNotifier:
             raise SystemError("WTSRegisterSessionNotification", errorNum)
             #return
         else:
-            raise SystemError("WTSRegisterSessionNotification timeout")
+            eg.PrintError("WTSRegisterSessionNotification timeout")
+            return
             
         
         self.TriggerEvent = plugin.TriggerEvent

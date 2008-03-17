@@ -44,19 +44,15 @@ eg.RegisterPlugin(
 )
 
 
-import os
-from os.path import abspath, join, dirname
-
-import win32api
+from os.path import abspath, join, dirname, basename, splitext
 from win32gui import GetWindowLong, EnumWindows, GetDesktopWindow 
 from win32api import RegisterWindowMessage, OpenProcess, CloseHandle
-from win32process import GetWindowThreadProcessId, GetModuleFileNameEx
+from win32process import GetModuleFileNameEx
 from win32con import WM_APP
-
-import ctypes
-
-RegisterShellHookWindow = ctypes.windll.user32.RegisterShellHookWindow
-DeregisterShellHookWindow = ctypes.windll.user32.DeregisterShellHookWindow
+from ctypes.dynamic import (
+    DWORD, CDLL, byref, GetWindowThreadProcessId,
+    RegisterShellHookWindow, DeregisterShellHookWindow,
+)
 
 WM_SHELLHOOKMESSAGE = RegisterWindowMessage("SHELLHOOK")
 
@@ -77,7 +73,9 @@ WS_VISIBLE = 0x10000000
 
 
 def GetWindowProcessName(hwnd):
-    _, processId = GetWindowThreadProcessId(hwnd)
+    dwProcessId = DWORD()
+    dwThreadId = GetWindowThreadProcessId(hwnd, byref(dwProcessId))
+    processId = dwProcessId.value
     if processId == 0:
         return "Desktop"
     try:
@@ -93,13 +91,10 @@ def GetWindowProcessName(hwnd):
     except:
         CloseHandle(hProcess)
         return None
-    fstr = os.path.basename(fstr)
-    fstr, _ = os.path.splitext(fstr)
     CloseHandle(hProcess)
-    return fstr
+    return splitext(basename(fstr))[0]
     
     
-
 
 class Task(eg.PluginClass):
     
@@ -123,8 +118,7 @@ class Task(eg.PluginClass):
         eg.messageReceiver.AddHandler(WM_APP+1, self.FocusWndProc)
         eg.messageReceiver.AddHandler(WM_APP+2, self.FatalWndProc)
         RegisterShellHookWindow(eg.messageReceiver.hwnd)
-        if self.hookDll is None:
-            self.hookDll = ctypes.CDLL(abspath(join(dirname(__file__), "hook.dll")))
+        self.hookDll = CDLL(abspath(join(dirname(__file__), "hook.dll")))
         self.hookDll.StartHook()
         
         
@@ -134,12 +128,6 @@ class Task(eg.PluginClass):
         eg.messageReceiver.RemoveHandler(WM_SHELLHOOKMESSAGE, self.MyWndProc)
         eg.messageReceiver.RemoveHandler(WM_APP+1, self.FocusWndProc)
         eg.messageReceiver.RemoveHandler(WM_APP+2, self.FatalWndProc)
-        #handle = self.hookDll._handle
-        del self.hookDll
-        #res = win32api.FreeLibrary(handle)
-        #if not res:
-        #    err = win32api.GetLastError()
-         #   eg.PrintDebugNotice("FreeLibrary:", err, win32api.FormatMessage(err))
         
         
     @eg.LogIt

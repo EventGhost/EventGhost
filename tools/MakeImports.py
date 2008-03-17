@@ -1,22 +1,75 @@
+
+PACKAGES_TO_ADD = [
+    "wx",
+    "PIL",
+    "comtypes",
+    "pywin32",
+    "pythoncom",
+    "isapi",
+    "win32com",
+]
+
+MODULES_TO_IGNORE = [
+    "idlelib", 
+    "gopherlib",
+    "Tix",
+    "test",
+    "Tkinter",
+    "_tkinter",
+    "distutils.command.bdist_packager",
+    "distutils.mwerkscompiler",
+    "curses",
+    
+    "wx.lib.vtk",
+    "wx.tools.Editra",
+    "wx.tools.XRCed",
+    "wx.lib.plot", # needs NumPy
+    "wx.lib.floatcanvas", # needs NumPy
+    
+    "ImageGL",
+    "ImageQt",
+    "WalImageFile", # odd syntax error in file
+    
+    "win32com.gen_py",
+    "win32com.demos",
+    "win32com.axdebug",
+    "win32com.axscript",
+    "pywin",
+]
+
+HEADER = """\
+#-----------------------------------------------------------------------------
+# This file is automatically created by the MakeImports.py script.
+# Don't try to edit this file yourself.
+#-----------------------------------------------------------------------------
+
+"""
+
 import os
 import sys
+import string
 from os.path import join
 import warnings
 
 warnings.simplefilter('error', DeprecationWarning)
 
-skipModules = [
-    "wx.lib.vtk",
-    "wx.tools.Editra",
-]
+gPythonDir = os.path.dirname(sys.executable)
+gSitePackagePath = join(gPythonDir, "Lib", "site-packages")
+
 
 class DummyStdOut:
     def write(self, data):
         pass
+
+dummyStdOut = DummyStdOut()
     
 def TestImport(moduleName):
+    """
+    Test if the given module can be imported without error.
+    """
+    #print "Testing", moduleName
     oldStdOut = sys.stdout
-    sys.stdout = DummyStdOut()
+    sys.stdout = dummyStdOut
     try:
         __import__(moduleName)
         return (True, "", "")
@@ -32,7 +85,30 @@ def TestImport(moduleName):
         sys.stdout = oldStdOut
     
     
-def ScanPath(path, prefix, skipPath=[]):
+def ShouldBeIgnored(moduleName):
+    """
+    Return True if the supplied module should be ignored, because it is a
+    module or submodule in MODULES_TO_IGNORE.
+    """ 
+    moduleParts = moduleName.split(".")
+    modulePartsLength = len(moduleParts)
+    for module in MODULES_TO_IGNORE:
+        ignoreParts = module.split(".")
+        ignorePartsLength = len(ignoreParts)
+        if ignorePartsLength > modulePartsLength:
+            continue
+        if moduleParts[:ignorePartsLength] == ignoreParts:
+            return True
+    return False
+    
+    
+def FindModulesInPath(path, prefix=""):
+    """
+    Find modules and packages for a given filesystem path.
+    """
+    if prefix:
+        prefix += "."
+    print "Scanning:", path
     modules = []
     for root, dirs, files in os.walk(path):
         package = root[len(path) + 1:].replace("\\", ".")
@@ -41,9 +117,10 @@ def ScanPath(path, prefix, skipPath=[]):
         for dir in dirs[:]:
             if not os.path.exists(join(root, dir, "__init__.py")):
                 dirs.remove(dir)
-            if package + "." + dir in skipPath:
+                continue
+            if ShouldBeIgnored(package + "." + dir):
                 dirs.remove(dir)
-        if package in skipPath:
+        if ShouldBeIgnored(package):
             continue
         if package.rfind(".test") > 0:
             continue
@@ -60,148 +137,103 @@ def ScanPath(path, prefix, skipPath=[]):
             ):
                 continue
             moduleName = package + name
-            print "Testing:", moduleName,
+            if ShouldBeIgnored(moduleName):
+                continue
+            if moduleName.endswith(".__init__"):
+                continue
+            #print "Testing:", moduleName,
             ok, eType, eMesg = TestImport(moduleName)
             if ok:
-                print "Ok"
                 modules.append(moduleName)
             else:
-                print "Error", eType, eMesg
+                if not eType == "DeprecationWarning":
+                    print "   ", moduleName, eType, eMesg
     return modules
 
+
 def ReadGlobalModuleIndex():
+    """
+    Read the global module index file (created by copy&paste from the python
+    documentation) and sort out all modules that are not available on Windows.
+    """
     modules = []
+    badModules = []
     inFile = open("Global Module Index.txt", "rt")
     for line in inFile.readlines():
         parts = line.strip().split(" ", 1)
         if len(parts) > 1:
             if parts[1].find("Windows") < 0:
+                badModules.append(parts[0])
                 continue
         modules.append(parts[0])
     inFile.close()
-    return modules
+    return modules, badModules
     
-import SimpleHTTPServer
-ignoreModules = [
-    "idlelib", 
-    "test",
-    "test.test_support",
-    "Tix",
-    "Tkinter",
-    "distutils.command.bdist_packager",
-    "distutils.mwerkscompiler",
-]
-
-result = ScanPath(os.path.dirname(SimpleHTTPServer.__file__), "", ignoreModules)
-for module in sys.builtin_module_names:
-    result.append(module)
-print
-for module in ReadGlobalModuleIndex():
-    if module in ignoreModules:
-        continue
-    if module not in result:
-        print "Not in global index:", module
-        result.append(module)
-
-fd = open("imports.py", "wt")
-fd.write("""\
-#-----------------------------------------------------------------------------
-# This file is automatically created by the MakeImports.py script.
-# Don't try to edit this file yourself.
-#-----------------------------------------------------------------------------
-
-""")
-#result.sort()
-for module in result:
-    fd.write("import %s\n" % module)
-
-
-import wx
-fd.write("\nimport wx\n")
-for module in ScanPath(os.path.dirname(wx.__file__), "wx.", skipModules):
-    fd.write("import %s\n" % module)
-fd.write("\n")
-
-import Image
-for module in ScanPath(os.path.dirname(Image.__file__), ""):
-    fd.write("import %s\n" % module)
     
-import comtypes
-fd.write("\nimport comtypes\n")
-for module in ScanPath(os.path.dirname(comtypes.__file__), "comtypes.", ["comtypes.gen"]):
-    fd.write("import %s\n" % module)
-    
-fd.write("""
-import win32com
-import win32com.server
-import win32com.server.factory
-import win32com.server.util
-import win32com.server.register
-import win32com.client
-import win32com.shell
-import win32com.shell.shellcon
-from win32com.shell.shellcon import *
-from win32com.shell import shell
-from win32com.shell import shellcon
-""")
+def ReadPth(path):
+    """
+    Read a .PTH file and return the pathes inside as a list
+    """
+    result = []
+    pthFile = open(path, "rt")
+    for line in pthFile:
+        if line.strip().startswith("#"):
+            continue
+        result.append(join(os.path.dirname(path), line.strip()))
+    return result
 
-win32 = """\
-_winxptheme 
-win32com.adsi 
-win32com.axcontrol 
-win32com.axdebug 
-win32com.axscript 
-dde 
-win32com.directsound 
-#exchange 
-#exchdapi 
-win32com.internet 
-isapi 
-isapi.install 
-isapi.isapicon 
-isapi.simple 
-isapi.threaded_extension 
-win32com.mapi 
-odbc 
-perfmon 
-pythoncom 
-pywintypes 
-servicemanager 
-win32com.shell 
-sspi 
-win2kras 
-win32api 
-win32clipboard 
-win32com.authorization.authorization 
-win32console 
-win32crypt 
-win32event 
-win32evtlog 
-win32file 
-win32gui 
-win32help 
-win32inet 
-win32job 
-win32lz 
-win32net 
-win32pdh 
-win32pipe 
-win32print 
-win32process 
-win32ras 
-win32security 
-win32service 
-win32ts 
-win32ui 
-win32uiole 
-win32wnet 
-win32netcon
-#wincerapi 
-winxpgui 
-"""
-for line in win32.splitlines():
-    line = line.strip()
-    if line and line[0] != "#":
-        fd.write("import %s\n" % line)
+
+def Main():
+    global MODULES_TO_IGNORE
     
-fd.close()
+    globalModuleIndex, badModules = ReadGlobalModuleIndex()
+    MODULES_TO_IGNORE += badModules
+    
+    stdLibModules = FindModulesInPath(join(gPythonDir, "DLLs"))
+    stdLibModules += FindModulesInPath(join(gPythonDir, "lib"))
+    
+    print
+    print "Modules found in global module index but not in scan:"
+    for module in globalModuleIndex:
+        if module in stdLibModules:
+            continue
+        if module in sys.builtin_module_names:
+            continue
+        if ShouldBeIgnored(module):
+            continue
+        print "   ", module
+        #result.append(module)
+    
+    #print "Modules found in scan but not in global module index:"
+    #for module in stdLibModules:
+    #    if module not in globalModuleIndex:
+    #        print "   ", module
+    
+    fd = open("imports.py", "wt")
+    fd.write(HEADER)
+    for module in stdLibModules:
+        fd.write("import %s\n" % module)
+    for moduleName in PACKAGES_TO_ADD:
+        fd.write("\n# modules found for package '%s'\n" % moduleName)
+        pthPath = join(gSitePackagePath, moduleName) + ".pth"
+        moduleList = []
+        if os.path.exists(pthPath):
+            for path in ReadPth(pthPath):
+                moduleList += FindModulesInPath(path)
+        else:
+            mod = __import__(moduleName)
+            fd.write("import %s\n" % moduleName)
+            if hasattr(mod, "__path__"):
+                pathes = mod.__path__
+            else:
+                pathes = [os.path.dirname(mod.__file__)]
+            for path in pathes:
+                moduleList += FindModulesInPath(path, moduleName)
+        for module in moduleList:
+            fd.write("import %s\n" % module)
+    
+    fd.close()
+    
+    
+if __name__ == "__main__":
+    Main()

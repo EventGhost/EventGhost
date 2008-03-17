@@ -273,7 +273,7 @@ class X10(eg.PluginClass):
         
         
     def __stop__(self):
-        self.workerThread.Stop()
+        self.workerThread.Stop(10)
             
             
     def GetLabel(self, remoteType=None, ids=None, prefix=None):
