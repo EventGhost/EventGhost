@@ -36,7 +36,7 @@ class PluginProxy(object):
         
     
     def __getattr__(self, name):
-        return self.actions[name]
+        return self.actions[name]()
         
         
         

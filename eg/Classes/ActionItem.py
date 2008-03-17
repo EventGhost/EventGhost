@@ -81,8 +81,10 @@ class ActionItem(TreeItem):
         objStr, remainder = text.split('(', 1)
         objStr = gPatches.get(objStr, objStr)                
         argString, _ = remainder.rsplit(')', 1)
+        pluginStr, actionStr = objStr.split(".", 1)
+        plugin = getattr(eg.plugins, pluginStr).plugin
         try:
-            action = eval(objStr, eg.plugins.__dict__)
+            action = plugin.info.actions[actionStr]
         except:
             eg.PrintError("Can't find action: " + text)
             action = None

@@ -48,8 +48,8 @@ class ThreadWorkerAction:
         self.processed = Event()
         self.raiseException = raiseException
         self.exceptionInfo = None
-        
-        
+               
+               
     def __call__(self):
         try:
             self.returnValue = self.func()
