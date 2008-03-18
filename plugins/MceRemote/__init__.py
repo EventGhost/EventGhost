@@ -134,7 +134,7 @@ KEY_MAP = {
     0x7ba4: "Red", 0x7ba5: "Teletext", 0x7baf: "Radio", 0x7bb1: "Print",
     0x7bb5: "Videos", 0x7bb6: "Pictures", 0x7bb7: "Recorded_TV",
     0x7bb8: "Music", 0x7bb9: "TV", 0x7bd9: "Guide", 0x7bda: "LiveTV",
-    0x7bdb: "DVD_Menu", 0x7bdc: "Back", 0x7bdd: "Ok", 0x7bde: "Right",
+    0x7bdb: "DVDMenu", 0x7bdc: "Back", 0x7bdd: "Ok", 0x7bde: "Right",
     0x7bdf: "Left", 0x7be0: "Down", 0x7be1: "Up", 0x7be2: "Star",
     0x7be3: "Pound", 0x7be4: "Replay", 0x7be5: "Skip", 0x7be6: "Stop",
     0x7be7: "Pause", 0x7be8: "Record", 0x7be9: "Play", 0x7bea: "Rewind",
@@ -144,6 +144,8 @@ KEY_MAP = {
     0x7bf5: "Escape", 0x7bf6: "Num9", 0x7bf7: "Num8", 0x7bf8: "Num7",
     0x7bf9: "Num6", 0x7bfa: "Num5", 0x7bfb: "Num4", 0x7bfc: "Num3",
     0x7bfd: "Num2", 0x7bfe: "Num1", 0x7bff: "Num0",
+    # Only available on the MCE Keyboard:
+    0x7b96: "Messenger",
 }
 
 

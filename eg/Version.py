@@ -1,4 +1,4 @@
 version = '0.3.6'
-buildNum = 1325
-compileTime = 1205786466.921
+buildNum = 1326
+compileTime = 1205881366.0929999
 svnRevision = int('$LastChangedRevision$'.split()[1])
