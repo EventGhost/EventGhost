@@ -86,7 +86,7 @@ class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             if len(p) < 2:
                 return
             a = p[1].split('&')
-            event = a[0]
+            event = urllib.unquote_plus(a[0]).decode("latin1")
             withoutRelease = False
             payload = None
             if len(a) > 1:
@@ -97,7 +97,7 @@ class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 if len(a) > startPos:
                     payload = []
                     for i in range(startPos, len(a)):
-                        payload.append(a[i])
+                        payload.append(urllib.unquote_plus(a[i]).decode("latin1"))
             if event.strip() == "ButtonReleased":
                 self.EndLastEvent()
             elif withoutRelease:

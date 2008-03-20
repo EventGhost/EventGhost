@@ -36,11 +36,10 @@ class ContainerItem(TreeItem):
     
     def __init__(self, parent, node):
         TreeItem.__init__(self, parent, node)
-        self.childs = []
-        for childNode in node:
-            cls = self.document.XMLTag2ClassDict[childNode.tag]
-            child = cls(self, childNode)
-            self.childs.append(child)
+        tagDict = self.document.XMLTag2ClassDict
+        self.childs = [
+            tagDict[childNode.tag](self, childNode) for childNode in node
+        ]
         self.isExpanded = node.attrib.get("expanded") == "True"
         
             

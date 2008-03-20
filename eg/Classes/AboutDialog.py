@@ -85,6 +85,7 @@ SPECIAL_THANKS_DATA = (
             ('damdy-cash', 'PayPal'),
             ('krambriw', 'PayPal'),
             ('loomy', 'PayPal'),
+            ('specter333', 'PayPal'),
             ('some anonymous people', 'PayPal'),
             ('Stoffel', 'remote'),
             (

@@ -81,11 +81,9 @@ class TreeItem(object):
     def __init__(self, parent, node):
         self.parent = parent
         self.id = None
-        attrib = node.attrib
-        for key, value in node.items():
-            del attrib[key] 
-            attrib[key.lower()] = value
-        get = attrib.get
+        # convert all attribute names to lowercase
+        node.attrib = dict([(k.lower(), v) for k, v in node.attrib.items()])
+        get = node.attrib.get
         self.name = get("name", "")
         if type(self.name) == type(""):
             self.name = unicode(self.name, "utf8")
@@ -120,12 +118,11 @@ class TreeItem(object):
 
     def GetXmlString(self, write, indentStr="", pretty=True):
         attr, text, childs = self.WriteToXML()
-        write(indentStr)
-        write("<")
-        write(self.xmlTag)
-        for key, value in attr:
-            write(' %s=%s' % (key, quoteattr(unicode(value)).encode("UTF-8")))
-        write(">")
+        attribStrs = [
+            '%s=%s' % (k, quoteattr(unicode(v)).encode("UTF-8")) 
+            for k, v in attr
+        ]
+        write("%s<%s %s>" % (indentStr, self.xmlTag, " ".join(attribStrs)))
         if pretty:
             newIndentStr = indentStr + "    "
         else:
