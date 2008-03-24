@@ -101,7 +101,14 @@ class TreeItem(object):
         pass
     
     
-    def WriteToXML(self):
+    def GetData(self):
+        """
+        This method returns the needed data to construct its XML representation.
+        
+        The return values should be:
+            1. a list of (name, value) tuples of the attributes
+            2. the text of the node
+        """
         attr = []
         if self.name:
             attr.append(('Name', self.name))
@@ -109,32 +116,27 @@ class TreeItem(object):
             attr.append(('id', self.xmlId))
         if not self.isEnabled:
             attr.append(('Enabled', 'False'))
-        if self.childs:
-            childs = self.childs
-        else:
-            childs = None
-        return attr, None, childs
+        return attr, None
 
 
-    def GetXmlString(self, write, indentStr="", pretty=True):
-        attr, text, childs = self.WriteToXML()
-        attribStrs = [
-            '%s=%s' % (k, quoteattr(unicode(v)).encode("UTF-8")) 
-            for k, v in attr
-        ]
-        write("%s<%s %s>" % (indentStr, self.xmlTag, " ".join(attribStrs)))
-        if pretty:
-            newIndentStr = indentStr + "    "
-        else:
-            newIndentStr = indentStr
-        if text is not None:
-            write(newIndentStr)
-            write(escape(text).encode("UTF-8"))
-        if childs:
-            for child in childs:
-                child.GetXmlString(write, newIndentStr, pretty)
-        write(indentStr)
-        write("</%s>" % self.xmlTag)
+    def GetXmlString(self, write, indent="", pretty=True):
+        def WriteNode(node, indent):
+            attr, text = node.GetData()
+            attribStrs = [
+                ' %s=%s' % (k, quoteattr(unicode(v)).encode("UTF-8")) 
+                for k, v in attr
+            ]
+            write("%s<%s%s>" % (indent, node.xmlTag, "".join(attribStrs)))
+            if pretty:
+                newIndent = indent + "    "
+            else:
+                newIndent = indent
+            if text is not None:
+                write(newIndent + escape(text).encode("UTF-8"))
+            for child in node.childs:
+                WriteNode(child, newIndent)
+            write(indent + "</%s>" % node.xmlTag)
+        WriteNode(self, indent)
                 
                 
     def CreateTreeItem(self, tree, parentId):

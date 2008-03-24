@@ -9,6 +9,7 @@ _ole32 = WinDLL("ole32")
 _gdi32 = WinDLL("Gdi32")
 _winmm = WinDLL("Winmm")
 _shell32 = WinDLL("shell32")
+_Psapi = WinDLL("Psapi")
 import sys
 if not hasattr(sys, "frozen"): # detect py2exe
     try:
@@ -26,6 +27,8 @@ if not hasattr(sys, "frozen"): # detect py2exe
                 "#include <objbase.h>\n"
                 "#include <Mmsystem.h>\n"
                 "#include <shlobj.h>\n"
+                "#include <Psapi.h>\n"
+                "#include <tlhelp32.h>\n"
             )       
         except WindowsError:
             print "GCC_XML most likely not installed"
@@ -857,3 +860,32 @@ RegisterShellHookWindow.argtypes = [HWND]
 DeregisterShellHookWindow = _user32.DeregisterShellHookWindow
 DeregisterShellHookWindow.restype = BOOL
 DeregisterShellHookWindow.argtypes = [HWND]
+GetModuleFileNameExW = _Psapi.GetModuleFileNameExW
+GetModuleFileNameExW.restype = DWORD
+GetModuleFileNameExW.argtypes = [HANDLE, HMODULE, LPWSTR, DWORD]
+TH32CS_SNAPPROCESS = 2 # Variable c_int
+CreateToolhelp32Snapshot = _kernel32.CreateToolhelp32Snapshot
+CreateToolhelp32Snapshot.restype = HANDLE
+CreateToolhelp32Snapshot.argtypes = [DWORD, DWORD]
+class tagPROCESSENTRY32(Structure):
+    pass
+PROCESSENTRY32 = tagPROCESSENTRY32
+tagPROCESSENTRY32._fields_ = [
+    ('dwSize', DWORD),
+    ('cntUsage', DWORD),
+    ('th32ProcessID', DWORD),
+    ('th32DefaultHeapID', ULONG_PTR),
+    ('th32ModuleID', DWORD),
+    ('cntThreads', DWORD),
+    ('th32ParentProcessID', DWORD),
+    ('pcPriClassBase', LONG),
+    ('dwFlags', DWORD),
+    ('szExeFile', CHAR * 260),
+]
+LPPROCESSENTRY32 = POINTER(PROCESSENTRY32)
+Process32First = _kernel32.Process32First
+Process32First.restype = BOOL
+Process32First.argtypes = [HANDLE, LPPROCESSENTRY32]
+Process32Next = _kernel32.Process32Next
+Process32Next.restype = BOOL
+Process32Next.argtypes = [HANDLE, LPPROCESSENTRY32]

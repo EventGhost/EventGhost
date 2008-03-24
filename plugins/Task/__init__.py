@@ -89,8 +89,9 @@ def GetWindowProcessName(hwnd):
     try:
         fstr = GetModuleFileNameEx(hProcess, 0)
     except:
+        from eg.WinAPI.Utils import Test
         CloseHandle(hProcess)
-        return None
+        return splitext(Test(processId))[0]
     CloseHandle(hProcess)
     return splitext(basename(fstr))[0]
     

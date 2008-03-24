@@ -34,19 +34,14 @@ class RootItem(ContainerItem):
     isDeactivatable = False
     isRenameable = False            
     
-    def WriteToXML(self):
-        attr, text, childs = ContainerItem.WriteToXML(self)
-        autostartMacro = self.document.autostartMacro
-        childs = [autostartMacro]
-        for child in self.childs:
-            if child is not autostartMacro:
-                childs.append(child)
-        attr.append(('Version', str(eg.buildNum)))
+    def GetData(self):
+        attr, text = ContainerItem.GetData(self)
         self.guid = str(pythoncom.CreateGuid())
-        attr.append(('Guid', self.guid))
         self.time = str(time.time())
+        attr.append(('Version', str(eg.buildNum)))
+        attr.append(('Guid', self.guid))
         attr.append(('Time', self.time))
-        return attr, text, childs
+        return attr, text
 
 
     def __init__(self, parent, node):

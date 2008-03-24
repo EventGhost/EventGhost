@@ -285,19 +285,44 @@ def GetHwndChildren(hwnd, invisible):
 
     
 from win32api import OpenProcess, CloseHandle
-from win32process import GetModuleFileNameEx, EnumProcesses
+from win32process import GetModuleFileNameEx, EnumProcesses, EnumProcessModules
 
 
+def Test(pid):
+    from ctypes.dynamic import (
+        byref, sizeof,
+        PROCESSENTRY32, TH32CS_SNAPPROCESS, CreateToolhelp32Snapshot,
+        Process32First, Process32Next, CloseHandle,
+    )
+    
+    # See http://msdn2.microsoft.com/en-us/library/ms686701.aspx
+    hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)
+    pe32 = PROCESSENTRY32()
+    pe32.dwSize = sizeof(PROCESSENTRY32)
+    if Process32First(hProcessSnap, byref(pe32)) == 0:
+        print >> sys.stderr, "Failed getting first process."
+        return "<not found>"
+    while True:
+        if pe32.th32ProcessID == pid:
+            CloseHandle(hProcessSnap)
+            return pe32.szExeFile
+        if Process32Next(hProcessSnap, byref(pe32)) == 0:
+            break
+    CloseHandle(hProcessSnap)
+    return "<not found>"
+
+    
+    
 def GetNameOfPID(pid):
     try:
         # 1040 = PROCESS_QUERY_INFORMATION|PROCESS_VM_READ
         hProcess = OpenProcess(1040, False, pid)
-    except:
+    except Exception, exc:
         return ""
     try:
         return GetModuleFileNameEx(hProcess, 0)
-    except:
-        return ""
+    except Exception, exc:
+        return Test(pid)
     finally:
         CloseHandle(hProcess)
     
@@ -309,12 +334,12 @@ def GetHwndProcessName(hwnd):
     try:
         # 1040 = PROCESS_QUERY_INFORMATION|PROCESS_VM_READ
         hProcess = OpenProcess(1040, False, pid)
-    except:
+    except Exception, exc:
         return ""
     try:
         return basename(GetModuleFileNameEx(hProcess, 0))
-    except:
-        return ""
+    except Exception, exc:
+        return Test(pid)
     finally:
         CloseHandle(hProcess)
     

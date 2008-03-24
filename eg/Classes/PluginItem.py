@@ -34,13 +34,13 @@ class PluginItem(ActionItem):
     isRenameable = False            
     info = None
     
-    def WriteToXML(self):
-        attr, text, childs = TreeItem.WriteToXML(self)
+    def GetData(self):
+        attr, text = TreeItem.GetData(self)
         del attr[0]
         attr.append(('File', self.pluginFile))
         attr.append(('Identifier', self.executable.info.evalName))
         text = base64.b64encode(pickle.dumps(self.info.args, 2))
-        return attr, text, childs
+        return attr, text
     
     
     def __init__(self, parent, node):

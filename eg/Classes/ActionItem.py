@@ -59,15 +59,15 @@ class ActionItem(TreeItem):
     shouldSelectOnExecute = False
 
 
-    def WriteToXML(self):
-        attr, text, childs = TreeItem.WriteToXML(self)
+    def GetData(self):
+        attr, text = TreeItem.GetData(self)
         action = self.executable
         text = "%s.%s(%s)" % (
             action.plugin.info.evalName,
             action.__class__.__name__,
             ", ".join([repr(arg) for arg in self.args])
         )
-        return attr, text, None
+        return attr, text
 
 
     def __init__(self, parent, node):
