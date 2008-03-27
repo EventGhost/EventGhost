@@ -602,14 +602,14 @@ class TreeCtrl(wx.TreeCtrl):
         id = self.GetSelection()
         obj = self.GetPyData(id)
         buffer = StringIO()
-        buffer.write('<?xml version="1.0" encoding="UTF-8" ?>')
+        buffer.write('<?xml version="1.0" encoding="UTF-8" ?>\r\n')
         if obj == self.root:
-            obj.GetXmlString(buffer.write, "\r\n", True)
+            obj.GetXmlString(buffer.write)
         else:
             buildStr = str(eg.buildNum)
-            buffer.write('\r\n<EventGhost Version="%s">' % buildStr)
-            obj.GetXmlString(buffer.write, "\r\n    ", True)
-            buffer.write('\r\n</EventGhost>')
+            buffer.write('<EventGhost Version="%s">\r\n' % buildStr)
+            obj.GetXmlString(buffer.write, "    ")
+            buffer.write('</EventGhost>')
         data = buffer.getvalue()
         buffer.close()
         return data

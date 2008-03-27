@@ -195,9 +195,9 @@ class Document(object):
         fd, tmpPath = mkstemp(".xml", "$", os.path.dirname(filePath))
         os.close(fd)
         try:
-            fd = file(tmpPath, "w+")
-            fd.write('<?xml version="1.0" encoding="UTF-8" ?>')
-            self.root.GetXmlString(fd.write, "", False)
+            fd = file(tmpPath, "wb+")
+            fd.write('<?xml version="1.0" encoding="UTF-8" ?>\r\n')
+            self.root.GetXmlString(fd.write)
             fd.close()
             try:
                 os.remove(filePath)

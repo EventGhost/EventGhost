@@ -58,7 +58,7 @@ class TreeItem(object):
     def GetFullXml(self):
         TreeLink.StartUndo()
         output = StringIO()
-        self.GetXmlString(output.write, "", False)
+        self.GetXmlString(output.write)
         data = output.getvalue()
         output.close()
         TreeLink.StopUndo()
@@ -119,23 +119,25 @@ class TreeItem(object):
         return attr, None
 
 
-    def GetXmlString(self, write, indent="", pretty=True):
+    def GetXmlString(self, write, indent=""):
         def WriteNode(node, indent):
             attr, text = node.GetData()
             attribStrs = [
                 ' %s=%s' % (k, quoteattr(unicode(v)).encode("UTF-8")) 
                 for k, v in attr
             ]
-            write("%s<%s%s>" % (indent, node.xmlTag, "".join(attribStrs)))
-            if pretty:
-                newIndent = indent + "    "
+            write("%s<%s%s" % (indent, node.xmlTag, "".join(attribStrs)))
+            if not text and len(node.childs) == 0:
+                write(" />\r\n")
             else:
-                newIndent = indent
-            if text is not None:
-                write(newIndent + escape(text).encode("UTF-8"))
-            for child in node.childs:
-                WriteNode(child, newIndent)
-            write(indent + "</%s>" % node.xmlTag)
+                write(">\r\n")
+                newIndent = indent + "    "
+                if text is not None:
+                    write(newIndent + escape(text).encode("UTF-8"))
+                    write("\r\n")
+                for child in node.childs:
+                    WriteNode(child, newIndent)
+                write(indent + "</%s>\r\n" % node.xmlTag)
         WriteNode(self, indent)
                 
                 
