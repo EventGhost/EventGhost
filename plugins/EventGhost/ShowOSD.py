@@ -309,11 +309,13 @@ class OSDFrame(wx.Frame):
         bmp = wx.BitmapFromImage(subImage)
         memDC.DrawBitmap(bmp, leftSize, topSize)
         
+        memDC.SelectObject(wx.NullBitmap)
+        bitmap.SetMask(wx.Mask(bitmap, (255, 0, 0)))
+        memDC.SelectObject(bitmap)
         memDC.SetTextForeground(textColour)
         memDC.SetTextBackground(textColour)
         memDC.DrawText(text, xMargin, yMargin)
         memDC.SelectObject(wx.NullBitmap)
-        bitmap.SetMask(wx.Mask(bitmap, (255, 0, 0)))
         return bitmap
     
     
