@@ -95,11 +95,7 @@ class EventGhost(object):
         import Utils
         for name in Utils.__all__:
             setattr(eg, name, getattr(Utils, name))
-        
-        import WinAPI
-        sys.modules["eg.WinApi"] = WinAPI
-        eg.WinApi = WinAPI
-        
+                
         #self.document = None
         eg.result = None
         eg.event = None
