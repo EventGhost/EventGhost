@@ -22,12 +22,20 @@
 
 from time import sleep
 from os.path import basename
-from win32gui import EnumWindows, EnumChildWindows, IsWindowVisible
-from win32gui import GetWindowText, GetClassName
-from win32process import GetWindowThreadProcessId
 
-from ctypes.dynamic import GetAncestor, GA_ROOT, GA_PARENT
-from eg.WinAPI.Utils import GetNameOfPID
+from eg.WinApi.Dynamic import (
+    GetAncestor, 
+    GA_ROOT, 
+    GA_PARENT
+)
+from eg.WinApi import (
+    GetProcessName, 
+    GetWindowText, 
+    GetClassName, 
+    GetWindowThreadProcessId,
+    GetTopLevelWindowList, 
+    GetWindowChildsList,
+)
 
         
 
@@ -383,8 +391,8 @@ class FindWindow(eg.ActionClass):
             matchNum, 
             includeInvisible,
         )()
-        if matchNum is not None and len(hwnds) >= matchNum:
-            self.lastHwnd = hwnds[matchNum-1]
+        if matchNum is not None and len(hwnds):
+            self.lastHwnd = hwnds[0]
             tree.SelectHwnd(self.lastHwnd)
         if searchOnlyFrontmost:
             cbOnlyFrontmost.SetValue(True)
@@ -428,7 +436,7 @@ class FindWindow(eg.ActionClass):
             return
         self.lastPid = pid
         self.lastHwnd = hwnd
-        exe = basename(GetNameOfPID(pid))
+        exe = GetProcessName(pid)
         
         def SetOption(flag, option, value):                
             checkBox, textCtrl = option
@@ -436,29 +444,6 @@ class FindWindow(eg.ActionClass):
             textCtrl.SetValue(value)
             textCtrl.Enable(flag)
         
-        data = [0]
-        def EnumChildProc(hwnd, data):
-            if not tree.includeInvisible and not IsWindowVisible(hwnd):
-                return True
-            if GetClassName(hwnd) != targetWinClass:
-                return True
-            if GetWindowText(hwnd) != targetWinName:
-                return True
-            data[0] += 1
-            return hwnd != search_hwnd
-
-        def EnumWindowsProc(hwnd, data):
-            if not tree.includeInvisible and not IsWindowVisible(hwnd):
-                return True
-            if GetClassName(hwnd) != targetWinClass:
-                return True
-            if GetWindowText(hwnd) != targetWinName:
-                return True
-            if GetWindowThreadProcessId(hwnd)[1] != pid:
-                return True
-            data[0] += 1
-            return hwnd != rootHwnd
-
         rootHwnd = None
         options = self.options
         SetOption(bool(exe), options[0], exe)
@@ -477,20 +462,34 @@ class FindWindow(eg.ActionClass):
             SetOption(True, options[3], targetWinName)
             SetOption(True, options[4], targetWinClass)
             search_hwnd = hwnd
+            data = [
+                child 
+                for child in GetWindowChildsList(rootHwnd, tree.includeInvisible)
+                    if (
+                        GetClassName(child) == targetWinClass and
+                        GetWindowText(child) == targetWinName
+                    )
+            ]
             try:
-                EnumChildWindows(rootHwnd, EnumChildProc, data)
+                count = data.index(search_hwnd) + 1
             except:
-                pass
+                count = 0
         else:
             SetOption(False, options[3], "")
             SetOption(False, options[4], "")
             if rootHwnd is not None:
-                try:
-                    EnumWindows(EnumWindowsProc, data)
-                except:
-                    pass
-                    
-        count = data[0]
+                data = [
+                    hwnd 
+                    for hwnd in GetTopLevelWindowList(tree.includeInvisible)
+                        if (
+                            GetClassName(hwnd) == targetWinClass and
+                            GetWindowText(hwnd) != targetWinName and
+                            GetWindowThreadProcessId(hwnd)[1] == pid
+                        )
+                ]
+                count = len(data)
+            else:
+                count = 0
         SetOption(count > 0, options[5], count or 1)
         
             

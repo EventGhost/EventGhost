@@ -25,11 +25,20 @@ from threading import Event, Thread, Lock
 from functools import partial
 from collections import deque
 from time import clock
-from pythoncom import PumpWaitingMessages
-from ctypes.dynamic import (
+from eg.WinApi.Dynamic import (
     CreateEvent, SetEvent, WAIT_OBJECT_0, WAIT_TIMEOUT, QS_ALLINPUT, 
-    MsgWaitForMultipleObjects, byref, HANDLE, CoInitialize, CoUninitialize
+    MsgWaitForMultipleObjects, byref, HANDLE, CoInitialize, CoUninitialize,
+    MSG, PeekMessage, DispatchMessage, PM_REMOVE, WM_QUIT
 )
+
+def PumpWaitingMessages():
+    msg = MSG()
+    # PM_REMOVE = 0x0001
+    while PeekMessage(byref(msg), 0, 0, 0, PM_REMOVE):
+        if msg.message == WM_QUIT:
+            return 1
+        DispatchMessage(byref(msg))
+
 
 class ThreadWorkerAction:
     """ 
@@ -37,7 +46,11 @@ class ThreadWorkerAction:
     executed there.
     """
     __slots__ = [
-        "time", "func", "returnValue", "processed", "exceptionInfo", 
+        "time", 
+        "func", 
+        "returnValue", 
+        "processed", 
+        "exceptionInfo", 
         "raiseException"
     ]
     
@@ -166,30 +179,33 @@ class ThreadWorker:
             
             
     def __DoOneEvent(self):
-        rc = MsgWaitForMultipleObjects(
-            1,
-            self.__events, 
-            0, 
-            10000, 
-            QS_ALLINPUT
-        )
-        if rc == WAIT_OBJECT_0:
-            while 1:
-                try:
-                    action = self.__queue.popleft()
-                except IndexError:
-                    break
-                self.HandleAction(action)
-        elif rc == WAIT_OBJECT_0+1:
-            if PumpWaitingMessages():
-                eg.PrintDebugNotice("Got WM_QUIT")
-                self.__alive = False
-                return
-        elif rc == WAIT_TIMEOUT:
-            # Our timeout has elapsed.
-            self.Poll()
-        else:
-            raise RuntimeError("unexpected win32wait return value")
+        try:
+            rc = MsgWaitForMultipleObjects(
+                1,
+                self.__events, 
+                0, 
+                10000, 
+                QS_ALLINPUT
+            )
+            if rc == WAIT_OBJECT_0:
+                while 1:
+                    try:
+                        action = self.__queue.popleft()
+                    except IndexError:
+                        break
+                    self.HandleAction(action)
+            elif rc == WAIT_OBJECT_0+1:
+                if PumpWaitingMessages():
+                    eg.PrintDebugNotice("Got WM_QUIT")
+                    self.__alive = False
+                    return
+            elif rc == WAIT_TIMEOUT:
+                # Our timeout has elapsed.
+                self.Poll()
+            else:
+                raise RuntimeError("unexpected win32wait return value")
+        except:
+            eg.PrintTraceback()
         
             
     def HandleAction(self, action):

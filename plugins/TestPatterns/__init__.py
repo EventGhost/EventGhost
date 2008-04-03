@@ -39,9 +39,9 @@ import colorsys
 from math import sqrt, sin, cos
 import math
 from threading import Timer
-from eg.WinAPI.Utils import GetMonitorDimensions, BringHwndToFront
 import cStringIO
 from base64 import b64decode
+from eg.WinApi.Utils import GetMonitorDimensions, BringHwndToFront
 
 class Text:
     foregroundColour = "Foreground colour:"

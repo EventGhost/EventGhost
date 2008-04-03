@@ -21,15 +21,11 @@
 # $LastChangedBy$
 
 import time
-import ctypes
-from win32ts import (
-    WTSUnRegisterSessionNotification,
-    WTSQuerySessionInformation,
-    WTSUserName,
-    WTS_CURRENT_SERVER_HANDLE,
-    NOTIFY_FOR_ALL_SESSIONS,
+from eg.WinApi.Dynamic import (
+    GetLastError, WTSRegisterSessionNotification, WTSUserName, WTSFreeMemory,
+    WTSUnRegisterSessionNotification, WTS_CURRENT_SERVER_HANDLE, 
+    NOTIFY_FOR_ALL_SESSIONS, byref, WTSQuerySessionInformation, LPTSTR, DWORD,
 )
-import win32api
 
 WM_WTSSESSION_CHANGE = 0x02B1
 
@@ -50,10 +46,6 @@ class SessionChangeNotifier:
     inited = False
     
     def __init__(self, plugin):
-        # WTSRegisterSessionNotification seems to have an odd bug (throwing an
-        # exception at an unexpected location). Therefor we use the ctypes
-        # version
-        WTSRegisterSessionNotification = ctypes.windll.WtsApi32.WTSRegisterSessionNotification
         for tries in range(60):
             success = WTSRegisterSessionNotification(
                 eg.messageReceiver.hwnd, 
@@ -61,7 +53,7 @@ class SessionChangeNotifier:
             )
             if success:
                 break
-            errorNum = win32api.GetLastError()
+            errorNum = GetLastError()
             # if we get the error RPC_S_INVALID_BINDING (1702), the system
             # hasn't started all needed services. For this reason we wait some
             # time and try it again.
@@ -98,10 +90,17 @@ class SessionChangeNotifier:
     def OnSessionChange(self, hwnd, msg, wparam, lparam):
         eventstring = WTS_WPARAM_DICT.get(wparam, None)
         if eventstring is not None:
-            userName = WTSQuerySessionInformation(
+            pBuffer = LPTSTR()
+            bytesReturned = DWORD()
+            WTSQuerySessionInformation(
                 WTS_CURRENT_SERVER_HANDLE, 
                 lparam, 
-                WTSUserName)
+                WTSUserName,
+                byref(pBuffer),
+                byref(bytesReturned)
+            )
+            userName = pBuffer.value
+            WTSFreeMemory(pBuffer)
             self.TriggerEvent(eventstring, [userName])
         return 1
     

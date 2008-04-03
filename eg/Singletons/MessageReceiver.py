@@ -21,7 +21,7 @@
 # $LastChangedBy$
 
 
-from ctypes.dynamic import (
+from eg.WinApi.Dynamic import (
     WM_SIZE, CW_USEDEFAULT, WS_OVERLAPPEDWINDOW, GetModuleHandle, WNDCLASS,
     RegisterClass, CreateWindowEx, byref, WNDPROC, WinError, DefWindowProc,
 )

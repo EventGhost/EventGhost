@@ -21,11 +21,14 @@
 # $LastChangedBy$
 
 
-from win32api import FormatMessage
-from win32event import WaitForSingleObject, INFINITE
-from win32process import STARTUPINFO, CreateProcess
 from os.path import basename, dirname, abspath
 
+from eg.WinApi.Dynamic import (
+    byref, sizeof, CreateProcess, WaitForSingleObject, FormatError,
+    CloseHandle, create_unicode_buffer, 
+    STARTUPINFO, PROCESS_INFORMATION, TCHAR, 
+    CREATE_NEW_CONSOLE, STARTF_USESHOWWINDOW, INFINITE
+)
 
 WINSTATE_FLAGS = (
     1, # SW_SHOWNORMAL
@@ -85,28 +88,32 @@ class Execute(eg.ActionClass):
         if not workingDir:
             workingDir = dirname(abspath(pathname))
         arguments = eg.ParseString(arguments)
-        commandLine = '"%s" %s' % (pathname, arguments)
+        commandLine = create_unicode_buffer('"%s" %s' % (pathname, arguments))
         startupInfo = STARTUPINFO()
-        startupInfo.dwFlags = 1 # STARTF_USESHOWWINDOW
+        startupInfo.cb = sizeof(STARTUPINFO)
+        startupInfo.dwFlags = STARTF_USESHOWWINDOW
         startupInfo.wShowWindow = WINSTATE_FLAGS[winState]
         priorityFlag = PRIORITY_FLAGS[priority]
-        try:
-            hProcess, _, _, _ = CreateProcess(
-                None,         # AppName
-                commandLine,  # Command line
-                None,         # Process Security
-                None,         # ThreadSecurity
-                0,            # Inherit Handles?
-                priorityFlag | 16, # priorityFlag | CREATE_NEW_CONSOLE
-                None,         # New environment
-                workingDir,   # Current directory
-                startupInfo   # startup info
-            )
-        except:
-            raise self.Exception(FormatMessage(0).strip())
+        processInformation = PROCESS_INFORMATION()
+        res = CreateProcess(
+            None,              # lpApplicationName
+            commandLine,       # lpCommandLine
+            None,              # lpProcessAttributes
+            None,              # lpThreadAttributes
+            False,             # bInheritHandles
+            priorityFlag|CREATE_NEW_CONSOLE, # dwCreationFlags
+            None,              # lpEnvironment
+            workingDir,        # lpCurrentDirectory
+            startupInfo,       # lpStartupInfo
+            processInformation # lpProcessInformation
+        )    
+        if res == 0:
+            raise self.Exception(FormatError().strip())
         if waitForCompletion:
-            WaitForSingleObject(hProcess, INFINITE)
-    
+            WaitForSingleObject(processInformation.hProcess, INFINITE)
+        CloseHandle(processInformation.hProcess)
+        CloseHandle(processInformation.hThread)
+        
     
     def GetLabel(
         self, 

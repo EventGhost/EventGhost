@@ -86,7 +86,7 @@ class PluginInfo(object):
     # icon might be an instance of a PIL icon, that the plugin developer
     # has supplied
     icon = eg.Icons.PLUGIN_ICON
-
+    defaultActionIcon = eg.Icons.ACTION_ICON
     
     evalName = None
     instances = None
@@ -165,7 +165,10 @@ class PluginInfo(object):
             iconPath = join(pluginPath, "icon.png")
             if exists(iconPath):
                 info.icon = eg.Icons.PathIcon(iconPath)
-        
+        if info.icon is not eg.Icons.PLUGIN_ICON:
+            defaultActionIcon = eg.Icons.IconBase()
+            defaultActionIcon.pil = eg.Icons.GetIconOnTop(info.icon, eg.Icons.ACTION_ICON)
+            info.defaultActionIcon = defaultActionIcon
         info.actionClassList = []
         return info
     

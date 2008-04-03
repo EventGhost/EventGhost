@@ -21,7 +21,7 @@
 # $LastChangedBy$
 
 
-from ctypes.dynamic import (
+from eg.WinApi.Dynamic import (
     byref, 
     sizeof, 
     pointer,
@@ -255,7 +255,7 @@ class SoundMixerTree(wx.TreeCtrl):
             mixerline.dwDestination = i
             if mixerGetLineInfo(mixerHandle, byref(mixerline), MIXER_GETLINEINFOF_DESTINATION):
                 continue
-            destItem = self.AppendItem(root, mixerline.szName.decode("mbcs") + ": %i" % mixerline.cChannels)
+            destItem = self.AppendItem(root, mixerline.szName + ": %i" % mixerline.cChannels)
             self.AddControls(destItem, mixerline)
             for n in range(mixerline.cConnections):
                 mixerline.cbStruct = sizeof(MIXERLINE)
@@ -265,7 +265,7 @@ class SoundMixerTree(wx.TreeCtrl):
                     continue
                 sourceItem = self.AppendItem(
                     destItem, 
-                    mixerline.szName.decode("mbcs") + ": %i" % mixerline.cChannels
+                    mixerline.szName + ": %i" % mixerline.cChannels
                 )
                 self.AddControls(sourceItem, mixerline)
             
@@ -290,7 +290,7 @@ class SoundMixerTree(wx.TreeCtrl):
             mixerControl = mixerControlArray[i]
             ctrlItem = self.AppendItem(
                 parentItem, 
-                mixerControl.szName.decode("mbcs")
+                mixerControl.szName
             )
             self.SetPyData(ctrlItem, mixerControl.dwControlID)
             
@@ -323,10 +323,10 @@ class SoundMixerTree(wx.TreeCtrl):
             print "error", err
             return
         
-        idCtrl = wx.StaticText(panel, -1, "Name: " + mixerControl.szName.decode("mbcs"))
+        idCtrl = wx.StaticText(panel, -1, "Name: " + mixerControl.szName)
         sizer.Add(idCtrl)
         
-        idCtrl = wx.StaticText(panel, -1, "Short Name: " + mixerControl.szShortName.decode("mbcs"))
+        idCtrl = wx.StaticText(panel, -1, "Short Name: " + mixerControl.szShortName)
         sizer.Add(idCtrl)
         
         dwControlType = mixerControl.dwControlType
@@ -402,5 +402,5 @@ class SoundMixerTree(wx.TreeCtrl):
                 MIXER_GETCONTROLDETAILSF_LISTTEXT
             )
             for i in range(cChannels * numMultipleItems):
-                print labels[i].szName.decode("mbcs")
+                print labels[i].szName
         panel.SetSizerAndFit(sizer)

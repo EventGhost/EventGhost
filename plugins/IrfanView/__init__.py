@@ -85,7 +85,7 @@ from ConfigParser import SafeConfigParser
 import _winreg
 import win32api
 import locale
-from eg.WinAPI.Utils import CloseHwnd
+from eg.WinApi.Utils import CloseHwnd
 myEncoding = locale.getdefaultlocale()[1]
 
 Actions =((#Tuple 0 - most important actions

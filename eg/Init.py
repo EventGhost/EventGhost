@@ -92,12 +92,13 @@ class EventGhost(object):
         import GifImagePlugin
         Image._initialized = 2  
         
-        import WinAPI.cTypes
-        sys.modules["ctypes.dynamic"] = WinAPI.cTypes
-        
         import Utils
         for name in Utils.__all__:
             setattr(eg, name, getattr(Utils, name))
+        
+        import WinAPI
+        sys.modules["eg.WinApi"] = WinAPI
+        eg.WinApi = WinAPI
         
         #self.document = None
         eg.result = None
@@ -157,22 +158,23 @@ class EventGhost(object):
         eg.Greenlet = greenlet
         eg.mainGreenlet = greenlet.getcurrent()
         
-        # replace builtin input and raw_input with a small dialog
+        # replace builtin raw_input with a small dialog
         def raw_input(prompt=None):
             return eg.CallWait(
                 partial(eg.SimpleInputDialog.CreateModal, prompt)
             )
         __builtin__.raw_input = raw_input
 
+        # replace builtin input with a small dialog
         def input(prompt=None):
             return eval(raw_input(prompt))
         __builtin__.input = input
         
         # TODO: make this lazy imports
-        from eg.WinAPI.serial import Serial
+        from eg.WinApi.serial import Serial
         eg.SerialPort = Serial
         
-        from eg.WinAPI.SendKeys import SendKeys
+        from eg.WinApi.SendKeys import SendKeys
         eg.SendKeys = SendKeys
         
         if args.translate:
@@ -208,7 +210,7 @@ class EventGhost(object):
         eg.RestartAsyncore()
         threading.Thread(target=asyncore.loop, name="AsyncoreThread").start()
 
-        import eg.WinAPI.COMServer
+        import eg.WinApi.COMServer
         
         self.scheduler.start()
         self.messageReceiver.Start()

@@ -27,6 +27,10 @@ eg.RegisterPlugin(
     ),
 )
 
+# changelog:
+# 0.1 by jorel1969
+#     - initial version
+
 
 import win32gui
 

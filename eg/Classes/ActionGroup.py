@@ -72,7 +72,7 @@ class ActionGroup:
                 (actionCls, ActionClass), 
                 {}
             )
-        icon = pluginInfo.icon
+        icon = pluginInfo.defaultActionIcon
         if actionCls.iconFile:
             try:
                 path = pluginInfo.path + actionCls.iconFile + ".png"

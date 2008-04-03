@@ -27,7 +27,6 @@ import re
 
 import wx.aui
 
-from eg.WinAPI.Utils import BringHwndToFront
 from eg import (
     EventItem, 
     ActionItem, 
@@ -35,6 +34,7 @@ from eg import (
     FolderItem, 
     RootItem, 
 )
+from eg.WinApi.Utils import BringHwndToFront
 
 # local imports
 from LogCtrl import LogCtrl

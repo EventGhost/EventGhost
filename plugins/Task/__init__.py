@@ -44,31 +44,20 @@ eg.RegisterPlugin(
 )
 
 
-from os.path import abspath, join, dirname, basename, splitext
-from win32gui import GetWindowLong, EnumWindows, GetDesktopWindow 
-from win32api import RegisterWindowMessage, OpenProcess, CloseHandle
-from win32process import GetModuleFileNameEx
-from win32con import WM_APP
-from ctypes.dynamic import (
-    DWORD, CDLL, byref, GetWindowThreadProcessId,
-    RegisterShellHookWindow, DeregisterShellHookWindow,
+from os.path import abspath, join, dirname, splitext
+from eg.WinApi.Dynamic import (
+    DWORD, CDLL, byref, GetWindowThreadProcessId, RegisterWindowMessage,
+    RegisterShellHookWindow, DeregisterShellHookWindow, GetWindowLong,
+    EnumWindows, WM_APP, WINFUNCTYPE, BOOL, HWND, LPARAM, GWL_STYLE, 
+    HSHELL_WINDOWCREATED, HSHELL_WINDOWDESTROYED, HSHELL_WINDOWACTIVATED,
+    WS_VISIBLE, 
 )
+from eg.WinApi.Utils import GetProcessName
+
+EnumWindowsProc = WINFUNCTYPE(BOOL, HWND, LPARAM)
+EnumWindows.argtypes = [EnumWindowsProc, LPARAM]
 
 WM_SHELLHOOKMESSAGE = RegisterWindowMessage("SHELLHOOK")
-
-HSHELL_WINDOWCREATED       = 1
-HSHELL_WINDOWDESTROYED     = 2
-HSHELL_ACTIVATESHELLWINDOW = 3
-HSHELL_WINDOWACTIVATED     = 4
-HSHELL_GETMINRECT          = 5
-HSHELL_REDRAW              = 6
-HSHELL_TASKMAN             = 7
-HSHELL_LANGUAGE            = 8
-
-PROCESS_VM_READ = 16
-PROCESS_QUERY_INFORMATION = 1024
-GWL_STYLE = -16
-WS_VISIBLE = 0x10000000
 
 
 
@@ -78,22 +67,7 @@ def GetWindowProcessName(hwnd):
     processId = dwProcessId.value
     if processId == 0:
         return "Desktop"
-    try:
-        hProcess = OpenProcess(
-            PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,
-            False, 
-            processId
-        )
-    except:
-        return "Desktop"
-    try:
-        fstr = GetModuleFileNameEx(hProcess, 0)
-    except:
-        from eg.WinAPI.Utils import Test
-        CloseHandle(hProcess)
-        return splitext(Test(processId))[0]
-    CloseHandle(hProcess)
-    return splitext(basename(fstr))[0]
+    return splitext(GetProcessName(processId))[0]
     
     
 
@@ -114,7 +88,8 @@ class Task(eg.PluginClass):
         def MyEnumFunc(hwnd, lParam):
             if (GetWindowLong(hwnd, GWL_STYLE) & WS_VISIBLE) > 0:
                 windowList[hwnd] = 1
-        EnumWindows(MyEnumFunc, None)
+            return 1
+        EnumWindows(EnumWindowsProc(MyEnumFunc), 0)
         eg.messageReceiver.AddHandler(WM_SHELLHOOKMESSAGE, self.MyWndProc)
         eg.messageReceiver.AddHandler(WM_APP+1, self.FocusWndProc)
         eg.messageReceiver.AddHandler(WM_APP+2, self.FatalWndProc)

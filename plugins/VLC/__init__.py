@@ -226,19 +226,6 @@ class VLC(eg.PluginClass):
         )
         panel.sizer.Add(tcpBox, 0, wx.EXPAND)
         panel.sizer.Add(eventBox, 0, wx.TOP|wx.EXPAND, 10)
-#        tcpBox = panel.VStaticBoxSizer(
-#            "TCP/IP Settings",
-#            eg.HBoxSizer(
-#                (panel.StaticText("Host:"), 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5), 
-#                (hostCtrl, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5), 
-#            ),
-#            eg.HBoxSizer(
-#                (panel.StaticText("Port:"), 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5), 
-#                (portCtrl, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5), 
-#            ),
-#        )
-#        panel.sizer.Add(tcpBox, 0, wx.EXPAND)
-#        panel.sizer.Add(checkBox, 0, wx.TOP|wx.EXPAND, 10)
         while panel.Affirmed():
             panel.SetResult(
                 hostCtrl.GetValue(), 

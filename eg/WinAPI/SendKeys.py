@@ -287,26 +287,20 @@ vkCodes = (
 )
 
 
-from win32process import GetWindowThreadProcessId
-from win32event import WaitForInputIdle
-from win32api import (
-    GetCurrentThreadId, 
-    OpenProcess, 
-    CloseHandle, 
-    MAKELONG,
-)
-from ctypes.dynamic import (
-    SendInput, INPUT, INPUT_KEYBOARD, KEYEVENTF_KEYUP,
+from eg.WinApi.Dynamic import (
+    SendInput, OpenProcess, CloseHandle, WaitForInputIdle, GetKeyboardState,
+    SetTimer, GetCurrentThreadId, GetWindowThreadProcessId, SetKeyboardState, 
+    INPUT, INPUT_KEYBOARD, KEYEVENTF_KEYUP,
     GetGUIThreadInfo, GUITHREADINFO, PROCESS_QUERY_INFORMATION, VK_SHIFT,
     VK_LSHIFT, VK_CONTROL, VK_LCONTROL, VK_MENU, VK_LMENU, VK_RMENU,
-    WM_TIMER, WM_SYSKEYDOWN, WM_KEYDOWN, WM_SYSKEYUP, WM_KEYUP,
+    WM_TIMER, WM_SYSKEYDOWN, WM_KEYDOWN, WM_SYSKEYUP, WM_KEYUP, DWORD, LPBYTE,
     AttachThreadInput, VkKeyScanW, TCHAR, MapVirtualKey, GetMessage, 
-    PostMessage, MSG, byref, sizeof, pointer, c_char, c_ubyte, _user32, 
+    PostMessage, MSG, byref, sizeof, pointer, c_ubyte, 
     GetFocus, GetForegroundWindow,
 )
-GetKeyboardState = _user32.GetKeyboardState
-SetKeyboardState = _user32.SetKeyboardState
-SetTimer = _user32.SetTimer
+del GetKeyboardState.argtypes
+del SetKeyboardState.argtypes
+del SetTimer.argtypes
 
 PBYTE256 = c_ubyte * 256
 
@@ -353,10 +347,9 @@ class SendKeysParser:
             hwnd = GetForegroundWindow()
             needGetFocus = True
 
-        try:
-            threadID, processID = GetWindowThreadProcessId(hwnd)
-        except:
-            threadID = None
+        dwProcessId = DWORD()
+        threadID = GetWindowThreadProcessId(hwnd, byref(dwProcessId))
+        processID = dwProcessId.value
         ourThreadID = GetCurrentThreadId()
 
         # If not, attach our thread's 'input' to the foreground thread's
@@ -448,19 +441,16 @@ class SendKeysParser:
             for virtualKey in block:
                 vk = virtualKey & 0xFF
                 highBits = virtualKey & 0xFF00
-                lparam = MAKELONG(
-                    0, 
-                    MapVirtualKey(vk, 0) | highBits
-                ) | 1
+                lparam = ((MapVirtualKey(vk, 0) | highBits) << 16) | 1
                 
-                keyboardStateBuffer[vk] |= 129  
+                keyboardStateBuffer[vk] |= 128 
                 
                 if vk == VK_LSHIFT:
-                    keyboardStateBuffer[VK_SHIFT] |= 129
+                    keyboardStateBuffer[VK_SHIFT] |= 128
                 #elif vk == VK_MENU:
                 #    self.isSysKey = True
                 elif vk == VK_CONTROL:
-                    keyboardStateBuffer[VK_LCONTROL] |= 129
+                    keyboardStateBuffer[VK_LCONTROL] |= 128
                 
                 if self.isSysKey:
                     mesg = WM_SYSKEYDOWN
@@ -475,20 +465,16 @@ class SendKeysParser:
             for virtualKey in reversed(block):
                 vk = virtualKey & 0xFF
                 highBits = virtualKey & 0xFF00
-                lparam = MAKELONG(
-                    0,
-                    MapVirtualKey(vk, 0) | highBits
-                )
-                lparam |= 0xC0000001
+                lparam = ((MapVirtualKey(vk, 0) | highBits) << 16) | 0xC0000001
                 
-                keyboardStateBuffer[vk] &= ~129
+                keyboardStateBuffer[vk] &= ~128
                 
                 if vk == VK_LSHIFT:
-                    keyboardStateBuffer[VK_SHIFT] &= 129
+                    keyboardStateBuffer[VK_SHIFT] &= ~128
                 #elif vk == VK_MENU:
                 #    self.isSysKey = False
                 elif vk == VK_CONTROL:
-                    keyboardStateBuffer[VK_LCONTROL] &= 129
+                    keyboardStateBuffer[VK_LCONTROL] &= ~128
                 
                 if self.isSysKey:
                     mesg = WM_SYSKEYUP

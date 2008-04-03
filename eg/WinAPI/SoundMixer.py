@@ -20,7 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-from ctypes.dynamic import (
+from eg.WinApi.Dynamic import (
     byref, sizeof, addressof, pointer,
     HMIXER, 
     MIXERCAPS,
@@ -265,7 +265,7 @@ def GetDeviceLines(deviceId=0):
         mixerline.dwDestination = i
         if mixerGetLineInfo(hmixer, byref(mixerline), MIXER_GETLINEINFOF_DESTINATION):
             continue
-        print "Destination:", i, mixerline.szName.decode("mbcs")
+        print "Destination:", i, mixerline.szName
         for name in GetControls(hmixer, mixerline):
             print "        Control:", name
         for n in range(mixerline.cConnections):
@@ -274,12 +274,12 @@ def GetDeviceLines(deviceId=0):
             mixerline.dwSource = n
             if mixerGetLineInfo(hmixer, byref(mixerline), MIXER_GETLINEINFOF_SOURCE):
                 continue
-            print "    Source:", n, mixerline.szName.decode("mbcs")
+            print "    Source:", n, mixerline.szName
             for name in GetControls(hmixer, mixerline):
                 print "            Control:", name
             
             
-from ctypes.dynamic import (
+from Dynamic import (
     MIXERCONTROL_CT_CLASS_MASK,
     
     MIXERCONTROL_CT_CLASS_FADER,
@@ -426,7 +426,7 @@ def GetControls(hmixer, mixerline):
             flagNames.append("Uniform")
         result.append(
             (
-                mixerControl.szName.decode("mbcs"), 
+                mixerControl.szName,
                 controlClass["name"], 
                 controlClassTypeName,
                 ", ".join(flagNames)

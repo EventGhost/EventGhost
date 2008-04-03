@@ -45,7 +45,7 @@ import Queue
 import time
 import binascii
 import string
-from eg.WinAPI.SerialPort import SerialPort
+from eg.WinApi.SerialPort import SerialPort
 
 SAMPLE_TIME = 0.00005
 MyDecoder = eg.IrDecoder(SAMPLE_TIME)

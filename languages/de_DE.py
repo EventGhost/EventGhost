@@ -198,6 +198,16 @@ class Plugin:
         class FlushEvents:
             name = u'Verwerfe alle ausstehenden Ereignisse'
             description = u'Diese Aktion verwirft alle Ereignisse die sich momentan in der Verarbeitungsschlange befinden.\n\nDieses ist n\xfctzlich, wenn ein Makro eine ziemlich lange Zeit zum Verarbeiten braucht und sich Ereignisse innherhalb dieser Zeit angesammelt haben, die nicht verarbeitet werden sollen.\n\n<p><b>Beispiel:</b> Sie haben ein lang andauerndes "Starte System" Makro, welches ca. 90 Sekunden braucht um z.B. einen Projektor anzuschalten und dann verschiedene Programme zu starten. Der Benutzer wird von dieser Ausf\xfchrung nichts sehen, bis endlich der Projektor ein Bild zeigt und daher u.U. aus Ungeduld die ausl\xf6sende Taste mehrfach dr\xfccken, was dazu f\xfchren w\xfcrde, dass diese lange Verarbeitung wieder und wieder gestartet wird. Um dieses zu verhindern, k\xf6nnen Sie die "Verwerfe alle ausstehenden Ereignisse" Aktion an das Ende Ihres Makros stellen, wodurch die \xfcberfl\xfcssigen Tastendruck-Wiederholungen entfernt werden.'
+        class JumpIf:
+            name = u'Springe wenn'
+            description = u'Springt zu einem anderen Makro, wenn die angegebene Python-Bedingung zutrifft.'
+            label1 = u'Wenn %s, springe zu %s'
+            label2 = u'Wenn %s, springe zu %s und kehre zur\xfcck'
+            mesg1 = u'Makro w\xe4hlen...'
+            mesg2 = u'Bitte w\xe4hlen Sie das Makro aus, welches ausgef\xfchrt werden soll, wenn die Bedingung zutrifft.'
+            text1 = u'Wenn:'
+            text2 = u'Gehe zu:'
+            text3 = u'Kehere zur\xfcck nach Ausf\xfchrung'
         class JumpIfLongPress:
             name = u'Wenn langer Tastendruck'
             description = u'Springt zu einem anderen Makro, wenn die ausl\xf6sende Taste l\xe4nger als die eingestellte Zeit gedr\xfcckt wird.'
@@ -256,6 +266,7 @@ class Plugin:
             osdColour = u'OSD Farbe:'
             osdFont = u'OSD Zeichensatz:'
             outlineFont = u'Umrandungsfarbe'
+            skin = u'Benutze Skin'
             wait1 = u'Blende OSD nach'
             wait2 = u'Sekunden automatisch aus. (0 = nicht ausblenden)'
             xOffset = u'Horizontaler Versatz X:'
@@ -288,7 +299,7 @@ class Plugin:
             colourDepth = u'Farbtiefe:'
             display = u'Bildschirm:'
             frequency = u'Bildschirmfrequenz:'
-            includeAll = u'Modi anzeigen, die von dieser Monitor unter Umst\xe4nden nicht angezeigt werden.'
+            includeAll = u'Modi anzeigen, die von dieser Monitor unter Umst\xe4nden nicht unterst\xfctzt werden.'
             label = u'Setze Anzeige %d auf %dx%d@%d Hz'
             resolution = u'Aufl\xf6sung:'
             storeInRegistry = u'Speichere Einstellung in der Registry.'
@@ -330,6 +341,7 @@ class Plugin:
             description = u'Dieser Befehl sendet eine Anforderung and das System den Bildschirm zu sperren. Den Computer zu sperren sch\xfctzt ihn vor unbefugtem Zugriff. Dieser Befehl f\xfchrt zu dem gleichen Ergebnis wie das Dr\xfccken von Ctrl+Alt+Del und das anschlie\xdfende Klicken auf "Computer sperren".'
         class LogOff:
             name = u'Benutzer abmelden'
+            description = u'Beendet alle Programme in der aktuellen Benutzeranmeldung. Anschlie\xdfend wird der Benutzer abgemeldet.'
         class MonitorGroup:
             name = u'Bildschirm'
             description = u'Diese Befehle steuern verschiedene Eigenschaften des Bildschirms.'
@@ -362,6 +374,7 @@ class Plugin:
             optionsLabel = u'W\xe4hle Aktion'
         class PlaySound:
             name = u'Audiodatei abspielen'
+            description = u'Spielt eine Audiodatei ab.'
             fileMask = u'WAV-Dateien (*.WAV)|*.wav|Alle Dateien (*.*)|*.*'
             text1 = u'Pfad zur Audiodatei:'
             text2 = u'Warte auf Beendigung'

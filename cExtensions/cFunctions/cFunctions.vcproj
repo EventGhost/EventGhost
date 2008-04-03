@@ -64,7 +64,7 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="Release"
-			IntermediateDirectory="Release"
+			IntermediateDirectory="C:\Intermediate\$(SolutionName)\$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="2">
 			<Tool
@@ -135,6 +135,9 @@
 			<File
 				RelativePath=".\utils.c">
 			</File>
+			<File
+				RelativePath=".\win_funcs.c">
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -148,6 +151,9 @@
 			</File>
 			<File
 				RelativePath=".\utils.h">
+			</File>
+			<File
+				RelativePath=".\win_funcs.h">
 			</File>
 		</Filter>
 		<Filter

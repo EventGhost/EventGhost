@@ -88,10 +88,8 @@ MyActionList = (
 )
 
 
-from win32gui import SendMessageTimeout 
-from win32con import SMTO_ABORTIFHUNG, SMTO_NORMAL
+from eg.WinApi import SendMessageTimeout
 
-SMTO_FLAGS = SMTO_ABORTIFHUNG | SMTO_NORMAL
 MyWindowMatcher = eg.WindowMatcher(
     u'dvbdream.exe', None, u'Tfmain', None, None, None, True, 0.0, 0
 ) 
@@ -104,7 +102,7 @@ class MyActionTemplate(eg.ActionClass):
             raise self.Exceptions.ProgramNotRunning
         try:
     	    for hwnd in hwnds:           
-            	SendMessageTimeout(hwnd, 1347, 0, self.value, SMTO_FLAGS, 1000)	
+            	SendMessageTimeout(hwnd, 1347, 0, self.value)	
         except:
             raise self.Exceptions.ProgramNotRunning
     

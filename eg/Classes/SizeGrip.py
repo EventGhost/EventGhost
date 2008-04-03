@@ -21,9 +21,10 @@
 # $LastChangedBy$
 
 
-from ctypes.dynamic import (
+from eg.WinApi.Dynamic import (
+    GetSystemMetrics, GetModuleHandle, CreateWindowEx,
     WS_CHILD, WS_VISIBLE, SBS_SIZEGRIP, SBS_SIZEBOXTOPLEFTALIGN,
-    SM_CYHSCROLL, SM_CXVSCROLL, GetSystemMetrics, GetModuleHandle, CreateWindowEx
+    SM_CYHSCROLL, SM_CXVSCROLL, 
 )
 FLAGS = WS_CHILD|WS_VISIBLE|SBS_SIZEGRIP|SBS_SIZEBOXTOPLEFTALIGN
 
@@ -32,10 +33,9 @@ class SizeGrip(wx.PyWindow):
     
     def __init__(self, parent, id=-1):
         wx.PyWindow.__init__(self, parent, id)
-        w = GetSystemMetrics(SM_CYHSCROLL)
-        h = GetSystemMetrics(SM_CXVSCROLL)
-        self.SetMinSize((w, h))
-        self.SetMaxSize((w, h))
+        size = GetSystemMetrics(SM_CYHSCROLL), GetSystemMetrics(SM_CXVSCROLL)
+        self.SetMinSize(size)
+        self.SetMaxSize(size)
 
         self.sizeGripHandle = CreateWindowEx(
             0,

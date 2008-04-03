@@ -22,8 +22,8 @@
 
 import sys
 import wx.lib.mixins.listctrl as listmix
-from eg.WinAPI.Utils import GetHwndIcon, GetHwndProcessName
-from win32gui import GetWindowText, GetClassName
+from eg.WinApi import GetWindowText, GetClassName
+from eg.WinApi.Utils import GetHwndIcon, GetWindowProcessName
 
 
 class WindowList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
@@ -43,7 +43,7 @@ class WindowList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             icon = GetHwndIcon(hwnd)
             if icon:
                 imageIdx = imageList.AddIcon(icon)
-            idx = self.InsertImageStringItem(sys.maxint, GetHwndProcessName(hwnd), imageIdx)
+            idx = self.InsertImageStringItem(sys.maxint, GetWindowProcessName(hwnd), imageIdx)
             self.SetStringItem(idx, 1, GetWindowText(hwnd))
             self.SetStringItem(idx, 2, GetClassName(hwnd))
             self.SetStringItem(idx, 3, str(hwnd))

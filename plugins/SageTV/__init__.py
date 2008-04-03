@@ -1,9 +1,10 @@
 eg.RegisterPlugin(
     name = "SageTV",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.2." + "$LastChangedRevision$".split()[1],
     kind = "program",
     createMacrosOnAdd = True,
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=795",
     description = (
         'Adds actions to control the <a href="http://www.sagetv.com/">'
         'SageTV Media Center</a>.'
@@ -32,11 +33,18 @@ eg.RegisterPlugin(
 # Plugin implements the description from here: 
 # http://www.sage.tv/2_papers/SageTVWindowsMessages.txt
 
-from win32gui import FindWindow, SendMessageTimeout
-from win32con import SMTO_BLOCK, SMTO_ABORTIFHUNG
+# changelog:
+# 1.2 by bitmonster
+#     - changed code to use new AddActionsFromList
+#     - uses new eg.WinApi calls for SendMessage
+# 1.1 by eruji
+#     - added actions from 90 to 104
+# 1.0 by bitmonster
+#     - initial version
 
 
-COMMANDS = (
+
+ACTIONS = (
     ("Left", "Left", 2),
     ("Right", "Right", 3),
     ("Up", "Up", 4),
@@ -125,7 +133,39 @@ COMMANDS = (
     ("PictureLibrary", "Picture Library", 87),
     ("VideoLibrary", "Video Library", 88),
     ("Stop", "Stop", 89),
+    ("Eject", "Eject", 90),
+    ("StopEject", "Stop/Eject", 91),
+    ("Input", "Input", 92),
+    ("SmoothFF", "Smooth FF", 93),
+    ("SmoothRew", "Smooth Rew", 94),
+    ("AspectRatioToggle", "Aspect Ratio Toggle", 96),
+    ("FullScreenOn", "Full Screen On", 97),
+    ("FullScreenOff", "Full Screen Off", 98),
+    ("RightSkipFwd", "Right Skip Fwd", 99),
+    ("LeftSkipBkwd", "Left Skip Bkwd", 100),
+    ("UpVolUp", "Left Vol Up", 101),
+    ("DownVolDown", "Down Vol Down", 102),
+    ("Online", "Online", 103),
+    ("VideoOutput", "Video Output", 104),
 )
+
+
+from eg.WinApi import SendMessageTimeout, FindWindow
+
+
+class ActionPrototype(eg.ActionClass):
+    
+    def __call__(self):
+        """
+        Find SageTV's message window and send it a message with 
+        SendMessageTimeout.
+        """
+        try:
+            hwnd = FindWindow(self.plugin.targetClass, "SageWin")
+            # WM_USER + 234 = 1258
+            return SendMessageTimeout(hwnd, 1258, self.value, self.value)
+        except:
+            raise self.Exceptions.ProgramNotRunning
 
 
 
@@ -133,12 +173,7 @@ class SageTV(eg.PluginClass):
     
     def __init__(self):
         self.targetClass = "SageApp"
-        for cmdFuncName, cmdName, cmdValue in COMMANDS:
-            class Action(SageTvAction):
-                name = cmdName
-                value = cmdValue
-            Action.__name__ = cmdFuncName
-            self.AddAction(Action)
+        self.AddActionsFromList(ACTIONS, ActionPrototype)
             
     
     def __start__(self, useClient=False):
@@ -147,7 +182,6 @@ class SageTV(eg.PluginClass):
         else:
             self.targetClass = "SageApp"
             
-        
         
     def Configure(self, useClient=False):
         panel = eg.ConfigPanel(self)
@@ -163,25 +197,4 @@ class SageTV(eg.PluginClass):
             panel.SetResult(useClientCtrl.GetSelection())
 
 
-
-class SageTvAction(eg.ActionClass):
-    
-    def __call__(self):
-        """
-        Find SageTV's message window and send it a message with 
-        SendMessageTimeout.
-        """
-        try:
-            hwnd = FindWindow(self.plugin.targetClass, "SageWin")
-            _, result = SendMessageTimeout(
-                hwnd,
-                1258, # WM_USER + 234
-                self.value, 
-                self.value, 
-                SMTO_BLOCK|SMTO_ABORTIFHUNG,
-                2000 # wait at most 2 seconds
-            )
-            return result
-        except:
-            self.PrintError("SageTV is not running")
 

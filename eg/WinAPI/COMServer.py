@@ -54,7 +54,7 @@ win32com.client.gencache.is_readonly = False
 # Support for the COM-Server of the program
 if hasattr(sys, "frozen"):
     pythoncom.frozen = 1
-#from WinAPI.COMServer import EventGhostCom
+
 from win32com.server.register import RegisterClasses
 import pywintypes
 try:

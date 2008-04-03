@@ -36,12 +36,51 @@ eg.RegisterPlugin(
 import os
 import threading
 
-import win32file
-import win32con
-import win32event
-import pywintypes
+from eg.WinApi.Dynamic import (
+# functions:
+    FormatError, byref, cast, addressof, wstring_at, sizeof,
+    CreateEvent,
+    PulseEvent,
+    CreateFile,
+    CloseHandle,
+    MsgWaitForMultipleObjects,
+    ReadDirectoryChangesW,
+    GetOverlappedResult,
+# types:
+    c_byte,
+    DWORD,
+    WCHAR,
+    HANDLE,
+    OVERLAPPED,
+    FILE_NOTIFY_INFORMATION,
+    LPOVERLAPPED_COMPLETION_ROUTINE,
+    FILE_NOTIFY_INFORMATION,
+# constants:
+    INFINITE,
+    INVALID_HANDLE_VALUE,
+    QS_ALLINPUT,
+    WAIT_OBJECT_0,
+    OPEN_EXISTING,
+    FILE_SHARE_READ,
+    FILE_SHARE_WRITE,
+    FILE_FLAG_BACKUP_SEMANTICS,
+    FILE_FLAG_OVERLAPPED,
+    FILE_NOTIFY_CHANGE_FILE_NAME,
+    FILE_NOTIFY_CHANGE_DIR_NAME,
+    FILE_NOTIFY_CHANGE_ATTRIBUTES,
+    FILE_NOTIFY_CHANGE_SIZE,
+    FILE_NOTIFY_CHANGE_LAST_WRITE,
+    FILE_NOTIFY_CHANGE_SECURITY,
+    FILE_LIST_DIRECTORY,
+    FILE_ACTION_ADDED,
+    FILE_ACTION_REMOVED,
+    FILE_ACTION_MODIFIED,
+    FILE_ACTION_RENAMED_OLD_NAME,
+    FILE_ACTION_RENAMED_NEW_NAME,
+)
 
-FILE_LIST_DIRECTORY = 0x0001
+BUFSIZE = 8192
+WCHAR_SIZE = sizeof(WCHAR)
 
 class Text:
     watchPath = "Watch path:"
@@ -53,7 +92,7 @@ class DirectoryWatcher(eg.PluginClass):
     text = Text
     
     def __start__(self, path, includeSubdirs):
-        self.stopEvent = win32event.CreateEvent(None, 1, 0, None)
+        self.stopEvent = CreateEvent(None, 1, 0, None)
         self.path = path
         self.startException = None
         self.includeSubdirs = includeSubdirs
@@ -62,109 +101,92 @@ class DirectoryWatcher(eg.PluginClass):
         self.thread.start()
         startupEvent.wait(3)
         if self.startException is not None:
-            raise self.Exception(self.startException[2])
+            raise self.Exception(self.startException)
         
         
     def __stop__(self):
         if self.thread is not None:
-            win32event.PulseEvent(self.stopEvent)
+            PulseEvent(self.stopEvent)
             self.thread.join(5.0)
-        
-        
-    def TestFile(self, path):
-        try:
-            handle = win32file.CreateFile(
-                path,
-                win32file.GENERIC_READ,
-                0,
-                None,
-                win32con.OPEN_EXISTING,
-                0,
-                None
-            )
-            win32file.CloseHandle(handle)
-            return True
-        except:
-            return False
         
         
     def ThreadLoop(self, startupEvent):
         try:
-            from win32event import (
-                INFINITE, 
-                QS_ALLINPUT, 
-                WAIT_OBJECT_0,
-                MsgWaitForMultipleObjects
+            hDir = CreateFile(
+                self.path,
+                FILE_LIST_DIRECTORY,
+                FILE_SHARE_READ|FILE_SHARE_WRITE,
+                None,
+                OPEN_EXISTING,
+                FILE_FLAG_BACKUP_SEMANTICS|FILE_FLAG_OVERLAPPED,
+                0
             )
-            from win32file import (
-                ReadDirectoryChangesW, 
-                GetOverlappedResult,
-                FILE_NOTIFY_INFORMATION
-            )
-                
-            try:
-                hDir = win32file.CreateFile(
-                    self.path,
-                    FILE_LIST_DIRECTORY,
-                    win32con.FILE_SHARE_READ|win32con.FILE_SHARE_WRITE,
-                    None,
-                    win32con.OPEN_EXISTING,
-                    (
-                        win32con.FILE_FLAG_BACKUP_SEMANTICS
-                        |win32con.FILE_FLAG_OVERLAPPED
-                    ),
-                    None
-                )
-            except pywintypes.error, e:
-                self.startException = e
+            if hDir == INVALID_HANDLE_VALUE:
+                self.startException = FormatError()
                 startupEvent.set()
                 return
-            overlapped = win32file.OVERLAPPED()
-            overlapped.hEvent = win32event.CreateEvent(None, 1, 0, None)
-            buffer = win32file.AllocateReadBuffer(1024)
-            events = (overlapped.hEvent, self.stopEvent)
+            overlapped = OVERLAPPED()
+            overlapped.hEvent = CreateEvent(None, 1, 0, None)
+            buffer = (c_byte * BUFSIZE )()
+            events = (HANDLE * 2)(overlapped.hEvent, self.stopEvent)
             flags = (
-                win32con.FILE_NOTIFY_CHANGE_FILE_NAME |
-                win32con.FILE_NOTIFY_CHANGE_DIR_NAME |
-                win32con.FILE_NOTIFY_CHANGE_ATTRIBUTES |
-                win32con.FILE_NOTIFY_CHANGE_SIZE |
-                win32con.FILE_NOTIFY_CHANGE_LAST_WRITE |
-                win32con.FILE_NOTIFY_CHANGE_SECURITY
+                FILE_NOTIFY_CHANGE_FILE_NAME |
+                FILE_NOTIFY_CHANGE_DIR_NAME |
+                FILE_NOTIFY_CHANGE_ATTRIBUTES |
+                FILE_NOTIFY_CHANGE_SIZE |
+                FILE_NOTIFY_CHANGE_LAST_WRITE |
+                FILE_NOTIFY_CHANGE_SECURITY
             )
             includeSubdirs = self.includeSubdirs
             renamePath = None
+            bytesReturned = DWORD()
+            noneCallback = cast(None, LPOVERLAPPED_COMPLETION_ROUTINE)
             startupEvent.set()
             while 1:
                 ReadDirectoryChangesW(
                     hDir,
                     buffer,
+                    BUFSIZE,
                     includeSubdirs,
                     flags,
-                    overlapped,
+                    byref(bytesReturned),
+                    byref(overlapped),
+                    noneCallback
                 )
-                rc = MsgWaitForMultipleObjects(events, 0, INFINITE, QS_ALLINPUT)
+                rc = MsgWaitForMultipleObjects(
+                    2, events, 0, INFINITE, QS_ALLINPUT
+                )
                 if rc == WAIT_OBJECT_0:    
-                    size = GetOverlappedResult(hDir, overlapped, 1)
-                    results = FILE_NOTIFY_INFORMATION(buffer, size)
-                    for action, file in results:
-                        fullFilename = os.path.join(self.path, file)
-                        if action ==  1: 
+                    res = GetOverlappedResult(
+                        hDir, byref(overlapped), byref(bytesReturned), 1
+                    )
+                    address = addressof(buffer)
+                    while True:
+                        fni = FILE_NOTIFY_INFORMATION.from_address(address)
+                        length = fni.FileNameLength / WCHAR_SIZE
+                        fileName = wstring_at(address + 12, length)
+                        action = fni.Action
+                        fullFilename = os.path.join(self.path, fileName)
+                        if action == FILE_ACTION_ADDED: 
                             self.TriggerEvent("Created", (fullFilename,))
-                        elif action ==  2: 
+                        elif action == FILE_ACTION_REMOVED: 
                             self.TriggerEvent("Deleted", (fullFilename,))
-                        elif action ==  3: 
+                        elif action == FILE_ACTION_MODIFIED: 
                             self.TriggerEvent("Updated", (fullFilename,))
-                        elif action == 4:
+                        elif action == FILE_ACTION_RENAMED_OLD_NAME:
                             renamePath = fullFilename
-                        elif action == 5:
+                        elif action == FILE_ACTION_RENAMED_NEW_NAME:
                             self.TriggerEvent(
                                 "Renamed", 
                                 (renamePath, fullFilename)
                             )
                             renamePath = None
+                        if fni.NextEntryOffset == 0:
+                            break
+                        address += fni.NextEntryOffset
                 elif rc == WAIT_OBJECT_0+1:
                     break
-            win32file.CloseHandle(hDir)
+            CloseHandle(hDir)
         except:
             self.thread = None
             raise

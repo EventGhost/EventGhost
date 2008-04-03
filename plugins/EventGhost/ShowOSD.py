@@ -21,12 +21,10 @@
 # $LastChangedBy$
 
 import threading
-import win32gui
-import win32con
-import win32event
+import os
 
-from eg.WinAPI.Utils import GetMonitorDimensions
-
+from eg.WinApi.Utils import GetMonitorDimensions
+from eg.WinApi.Dynamic import BringWindowToTop, CreateEvent, SetEvent 
     
 
 class OSDFrame(wx.Frame):
@@ -45,14 +43,6 @@ class OSDFrame(wx.Frame):
                 |wx.FRAME_NO_TASKBAR
                 |wx.STAY_ON_TOP
         )
-#        hwnd = self.GetHandle()
-#        lExStyle = win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE)
-#        win32gui.SetWindowLong(
-#            hwnd, 
-#            win32con.GWL_EXSTYLE, 
-#            lExStyle | win32con.WS_EX_LAYERED | win32con.WS_EX_TRANSPARENT
-#        )
-#        win32gui.SetLayeredWindowAttributes(hwnd, 0, 255, win32con.LWA_ALPHA)
         self.bitmap = wx.EmptyBitmap(0,0)
         self.timer = threading.Timer(
             0.0,
@@ -68,94 +58,110 @@ class OSDFrame(wx.Frame):
         self, 
         osdText="", 
         fontInfo=None,
-        foregroundColour=(255,255,255), 
-        backgroundColour=(0,0,0),
+        foregroundColour=(255, 255, 255), 
+        outlineColour=(0, 0, 0),
         alignment=0, 
-        offset=(0,0), 
+        offset=(0, 0), 
         displayNumber=0, 
         timeout=3.0, 
-        event=None
+        event=None,
+        skin=None,
     ):        
-        self.osdText = osdText
+        self.timer.cancel()
         if osdText.strip() == "":
             w = 0
             h = 0
-            bitmap = wx.EmptyBitmap(0,0)
-        else:
-            # make sure the mask colour is not used by foreground or 
-            # background colour
-            maskColour = (255,0,255)
+            self.bitmap = wx.EmptyBitmap(0, 0)
+            self.SetPosition((-10000, -10000))
+            self.Hide()
+            SetEvent(event)
+            return
+
+        #self.Freeze()
+        # make sure the mask colour is not used by foreground or 
+        # background colour
+        maskColour = (255, 0, 255)
+        if (
+            maskColour == foregroundColour 
+            or maskColour == outlineColour
+        ):
+            maskColour = (0, 0, 2)
             if (
                 maskColour == foregroundColour 
-                or maskColour == backgroundColour
+                or maskColour == outlineColour
             ):
-                maskColour = (0,0,2)
-                if (
-                    maskColour == foregroundColour 
-                    or maskColour == backgroundColour
-                ):
-                    maskColour = (0,0,3)
-            brush = wx.Brush(maskColour, wx.SOLID)
-            memoryDC = wx.MemoryDC()
-            font = wx.Font(18, wx.SWISS, wx.NORMAL, wx.BOLD)
-            if fontInfo:
-                nativeFontInfo = wx.NativeFontInfo()
-                nativeFontInfo.FromString(fontInfo)
-                font.SetNativeFontInfo(nativeFontInfo)
-            memoryDC.SetFont(font)
+                maskColour = (0, 0, 3)
+        maskBrush = wx.Brush(maskColour, wx.SOLID)
+        memoryDC = wx.MemoryDC()
+        font = wx.Font(18, wx.SWISS, wx.NORMAL, wx.BOLD)
+        if fontInfo:
+            nativeFontInfo = wx.NativeFontInfo()
+            nativeFontInfo.FromString(fontInfo)
+            font.SetNativeFontInfo(nativeFontInfo)
+        memoryDC.SetFont(font)
+        memoryDC.SetBackground(maskBrush)
+        
+        if skin:
+            bitmap = self.GetSkinnedBitmap(osdText, fontInfo, foregroundColour)
+            w, h = bitmap.GetSize()
+        elif outlineColour is None:
+            w, h = memoryDC.GetTextExtent(osdText + "M")
+            bitmap = wx.EmptyBitmap(w, h)
+            memoryDC.SelectObject(bitmap)
+
+            # fill the DC background with the maskColour
+            memoryDC.Clear() 
             
-            if backgroundColour is None:
-                w, h = memoryDC.GetTextExtent(self.osdText + "M")
-                bitmap = wx.EmptyBitmap(w, h)
-                memoryDC.SetTextForeground(foregroundColour)
-                memoryDC.SetBackground(brush)
-                memoryDC.SelectObject(bitmap)
-                memoryDC.Clear()
-                memoryDC.DrawText(self.osdText, 0, 0) 
-                memoryDC.SelectObject(wx.NullBitmap)
-                bitmap.SetMask(wx.Mask(bitmap, maskColour))
-                memoryDC.SetBackground(wx.Brush(foregroundColour, wx.SOLID))
-                memoryDC.SelectObject(bitmap)
-                memoryDC.Clear()
-            else:
-                w, h = memoryDC.GetTextExtent(self.osdText)
-                w += 5 + memoryDC.GetTextExtent("M")[0]
-                h += 5
-                outlineBitmap = wx.EmptyBitmap(w, h, 1)
-                memoryDC.SelectObject(outlineBitmap)
-                memoryDC.Clear()
-                memoryDC.SetBackgroundMode(wx.SOLID)
-                memoryDC.DrawText(self.osdText, 0, 0) 
-                memoryDC.SelectObject(wx.NullBitmap)
-                outlineBitmap.SetMask(wx.Mask(outlineBitmap))
-                memoryDC.SelectObject(outlineBitmap)
+            # draw the text with the foregorund colour
+            memoryDC.SetTextForeground(foregroundColour)
+            memoryDC.DrawText(osdText, 0, 0) 
+            
+            # mask the bitmap, so we can use it to get the needed
+            # region of the window
+            memoryDC.SelectObject(wx.NullBitmap)
+            bitmap.SetMask(wx.Mask(bitmap, maskColour))
+            
+            # fill the anti-aliased pixels of the text with the foreground
+            # colour, because the region of the window will add these
+            # half filled pixels also. Otherwise we would get an ugly 
+            # border with mask-coloured pixels.
+            memoryDC.SetBackground(wx.Brush(foregroundColour, wx.SOLID))
+            memoryDC.SelectObject(bitmap)
+            memoryDC.Clear()
+            memoryDC.SelectObject(wx.NullBitmap)
+        else:
+            w, h = memoryDC.GetTextExtent(osdText)
+            w += 5 + memoryDC.GetTextExtent("M")[0]
+            h += 5
+            outlineBitmap = wx.EmptyBitmap(w, h, 1)
+            outlineDC = wx.MemoryDC()
+            outlineDC.SetFont(font)
+            outlineDC.SelectObject(outlineBitmap)
+            outlineDC.Clear()
+            outlineDC.SetBackgroundMode(wx.SOLID)
+            outlineDC.DrawText(osdText, 0, 0) 
+            outlineDC.SelectObject(wx.NullBitmap)
+            outlineBitmap.SetMask(wx.Mask(outlineBitmap))
+            outlineDC.SelectObject(outlineBitmap)
+            
+            bitmap = wx.EmptyBitmap(w, h)
+            memoryDC.SetTextForeground(outlineColour)
+            memoryDC.SelectObject(bitmap)
+            memoryDC.Clear()
+            
+            Blit = memoryDC.Blit
+            WX_COPY = wx.COPY
+            for x in xrange(5):
+                for y in xrange(5):
+                    Blit(x, y, w, h, outlineDC, 0, 0, WX_COPY, True)
+            outlineDC.SelectObject(wx.NullBitmap)
+            memoryDC.SetTextForeground(foregroundColour)
+            memoryDC.DrawText(osdText, 2, 2) 
+            memoryDC.SelectObject(wx.NullBitmap)
+            bitmap.SetMask(wx.Mask(bitmap, maskColour))
                 
-                bitmap = wx.EmptyBitmap(w, h)
-                memoryDC2 = wx.MemoryDC()
-                memoryDC2.SetFont(font)
-                memoryDC2.SetBackground(brush)
-                memoryDC2.SetTextForeground(backgroundColour)
-                memoryDC2.SetTextBackground(maskColour)
-                memoryDC2.SelectObject(bitmap)
-                memoryDC2.Clear()
-                Blit = memoryDC2.Blit
-                WX_COPY = wx.COPY
-                for x in xrange(5):
-                    for y in xrange(5):
-                        Blit(x, y, w, h, memoryDC, 0, 0, WX_COPY, True)
-                memoryDC2.SetTextForeground(foregroundColour)
-                memoryDC2.SetTextBackground(backgroundColour)
-                memoryDC2.DrawText(self.osdText, 2, 2) 
-                memoryDC2.SelectObject(wx.NullBitmap)
-                memoryDC.SelectObject(wx.NullBitmap)
-                bitmap.SetMask(wx.Mask(bitmap, maskColour))
-        
-        self.SetPosition((-10000, -10000))
-        self.SetClientSize((w, h))
-        
         region = wx.RegionFromBitmap(bitmap)
         _,_,w,_ = region.GetBox()
-        self.hasShape = self.SetShape(region)
         self.bitmap = bitmap
         monitorDimensions = GetMonitorDimensions()
         try:
@@ -199,25 +205,129 @@ class OSDFrame(wx.Frame):
             # Right Center
             x = d.x + d.width - xOffset - w
             y = d.y + ((d.height - h) / 2) + yOffset
+            
+        self.SetClientSize((w, h))
+        self.SetShape(region)
         self.Show()
-        win32gui.BringWindowToTop(self.GetHandle())
-        self.Refresh()
+        BringWindowToTop(self.GetHandle())
         self.SetPosition((x, y))
-        #self.Raise()
+        dc = wx.ClientDC(self)
+        dc.DrawBitmap(self.bitmap, 0, 0, False)
+
         if timeout > 0.0:
             self.timer = threading.Timer(timeout, self.OnTimeout)
             self.timer.start()
-        win32event.SetEvent(event)
+        wx.Yield()
+        SetEvent(event)
         
 
+    def GetSkinnedBitmap(self, text, fontInfo, textColour):
+        xMargin = 8
+        yMargin = 8
+        minWidth = 20
+        minHeight = 26
+        
+        topSize = 13
+        bottomSize = 8
+        leftSize = 8
+        rightSize = 7
+        
+        font = wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD)
+        if fontInfo:
+            nativeFontInfo = wx.NativeFontInfo()
+            nativeFontInfo.FromString(fontInfo)
+            font.SetNativeFontInfo(nativeFontInfo)
+        memDC = wx.MemoryDC()
+        memDC.SetFont(font)
+        textWidth, textHeight = memDC.GetTextExtent(text)
+        
+        quality = wx.IMAGE_QUALITY_HIGH 
+        
+        newWidth, newHeight = memDC.GetTextExtent(text)
+        newWidth = textWidth + 2 * xMargin
+        if newWidth < minWidth:
+            newWidth = minWidth
+        newHeight = textHeight + 2 * yMargin
+        if newHeight < minHeight:
+            newHeight = minHeight
+        
+        image = wx.Image(os.path.abspath(os.path.split(__file__)[0]) + "\\ShowOSDSkin.png")
+        w, h = image.GetSize()
+        middleHeight = h - (topSize + bottomSize)
+        middleWidth = w - (leftSize + rightSize)
+        
+        bitmap = wx.EmptyBitmap(newWidth, newHeight)
+        memDC.SelectObject(bitmap)
+
+        # top left corner
+        subImage = image.GetSubImage((0, 0, leftSize, topSize))
+        bmp = wx.BitmapFromImage(subImage)
+        memDC.DrawBitmap(bmp, 0, 0)
+        
+        # top right corner
+        subImage = image.GetSubImage((w - rightSize, 0, rightSize, topSize))
+        bmp = wx.BitmapFromImage(subImage)
+        memDC.DrawBitmap(bmp, newWidth - rightSize, 0)
+        
+        # bottom left corner
+        subImage = image.GetSubImage((0, h - bottomSize, leftSize, bottomSize))
+        bmp = wx.BitmapFromImage(subImage)
+        memDC.DrawBitmap(bmp, 0, newHeight - bottomSize)
+                
+        # bottom right corner
+        subImage = image.GetSubImage((w - rightSize, h - bottomSize, rightSize, bottomSize))
+        bmp = wx.BitmapFromImage(subImage)
+        memDC.DrawBitmap(bmp, newWidth - rightSize, newHeight - bottomSize)
+
+        # left border
+        subImage = image.GetSubImage((0, topSize, leftSize, middleHeight))
+        subImage.Rescale(leftSize, newHeight - (topSize + bottomSize), quality)
+        bmp = wx.BitmapFromImage(subImage)
+        memDC.DrawBitmap(bmp, 0, topSize)
+        
+        # top border
+        subImage = image.GetSubImage((leftSize, 0, middleWidth, topSize))
+        subImage.Rescale(newWidth - (rightSize + leftSize), topSize, quality)
+        bmp = wx.BitmapFromImage(subImage)
+        memDC.DrawBitmap(bmp, leftSize, 0)
+
+        # bottom border
+        subImage = image.GetSubImage((leftSize, h - bottomSize, middleWidth, bottomSize))
+        subImage.Rescale(newWidth - (leftSize + rightSize), bottomSize, quality)
+        bmp = wx.BitmapFromImage(subImage)
+        memDC.DrawBitmap(bmp, leftSize, newHeight - bottomSize)
+        
+        # right border
+        subImage = image.GetSubImage((w - rightSize, topSize, rightSize, middleHeight))
+        subImage.Rescale(rightSize, newHeight - (topSize + bottomSize), quality)
+        bmp = wx.BitmapFromImage(subImage)
+        memDC.DrawBitmap(bmp, newWidth - rightSize, topSize)
+            
+        # the middle border
+        subImage = image.GetSubImage((leftSize, topSize, middleWidth, middleHeight))
+        subImage.Rescale(newWidth - (leftSize + rightSize), newHeight - (topSize + bottomSize), quality)
+        bmp = wx.BitmapFromImage(subImage)
+        memDC.DrawBitmap(bmp, leftSize, topSize)
+        
+        memDC.SetTextForeground(textColour)
+        memDC.SetTextBackground(textColour)
+        memDC.DrawText(text, xMargin, yMargin)
+        memDC.SelectObject(wx.NullBitmap)
+        bitmap.SetMask(wx.Mask(bitmap, (255, 0, 0)))
+        return bitmap
+    
+    
     def OnTimeout(self):
         self.SetPosition((-10000, -10000))
         self.Hide()
         
         
+    @eg.LogIt
     def OnPaint(self, evt=None):
-        dc = wx.PaintDC(self)
-        dc.DrawBitmap(self.bitmap, 0, 0, False)
+        pass
+        wx.BufferedPaintDC(self, self.bitmap)
+        #dc = wx.PaintDC(self)
+        #dc.DrawBitmap(self.bitmap, 0, 0, False)
 
 
     if eg.debugLevel:
@@ -234,8 +344,8 @@ class ShowOSD(eg.ActionClass):
     class text:
         label = "Show OSD: %s"
         editText = "Text to display:"
-        osdFont = "OSD Font:"
-        osdColour = "OSD Colour:"
+        osdFont = "Text Font:"
+        osdColour = "Text Colour:"
         outlineFont = "Outline OSD"
         alignment = "Alignment:"
         alignmentChoices = [
@@ -254,6 +364,7 @@ class ShowOSD(eg.ActionClass):
         yOffset = "Vertical offset Y:"
         wait1 = "Autohide OSD after"
         wait2 = "seconds (0 = never)"
+        skin = "Use skin"
 
     
     @classmethod
@@ -283,12 +394,13 @@ class ShowOSD(eg.ActionClass):
         alignment=0, 
         offset=(0,0), 
         displayNumber=0, 
-        timeout=3.0
+        timeout=3.0,
+        skin=None
     ):
                 
         self.osdFrame.timer.cancel()
         osdText = eg.ParseString(osdText)
-        event = win32event.CreateEvent(None, 0, 0, None)
+        event = CreateEvent(None, 0, 0, None)
         wx.CallAfter(
             self.osdFrame.ShowOSD, 
             osdText, 
@@ -299,7 +411,8 @@ class ShowOSD(eg.ActionClass):
             offset, 
             displayNumber, 
             timeout, 
-            event
+            event,
+            skin
         )
         eg.actionThread.WaitOnEvent(event)
 
@@ -317,7 +430,8 @@ class ShowOSD(eg.ActionClass):
         alignment=0, 
         offset=(0, 0), 
         displayNumber=0, 
-        timeout=3.0
+        timeout=3.0,
+        skin=None,
     ):                   
         panel = eg.ConfigPanel(self)
         text = self.text
@@ -341,7 +455,8 @@ class ShowOSD(eg.ActionClass):
         backgroundColourButton = panel.ColourSelectButton(tmpColour)
         if backgroundColour is None:
             backgroundColourButton.Enable(False)
-                
+        skinCtrl = panel.CheckBox(bool(skin), text.skin)
+        
         sizer = wx.GridBagSizer(5, 5)
         EXP = wx.EXPAND
         ACV = wx.ALIGN_CENTER_VERTICAL
@@ -357,6 +472,7 @@ class ShowOSD(eg.ActionClass):
 
         Add(outlineCheckBox, (3, 3), flag=EXP)
         Add(backgroundColourButton, (3, 4))
+        Add(skinCtrl, (4, 3))
         
         Add(panel.StaticText(text.alignment), (1, 0), flag=ACV)
         Add(alignmentChoice, (1, 1), flag=EXP)
@@ -395,7 +511,8 @@ class ShowOSD(eg.ActionClass):
                 alignmentChoice.GetValue(),
                 (xOffsetCtrl.GetValue(), yOffsetCtrl.GetValue()),
                 displayChoice.GetValue(),
-                timeCtrl.GetValue()
+                timeCtrl.GetValue(),
+                skinCtrl.GetValue()
             )
         
         

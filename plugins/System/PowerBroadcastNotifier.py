@@ -21,22 +21,26 @@
 # $LastChangedBy$
 
 
-import win32con
-
+from eg.WinApi.Dynamic import (
+    WM_POWERBROADCAST, PBT_APMSUSPEND, PBT_APMRESUMEAUTOMATIC, 
+    PBT_APMBATTERYLOW, PBT_APMOEMEVENT, PBT_APMPOWERSTATUSCHANGE, 
+    PBT_APMQUERYSUSPEND, PBT_APMQUERYSUSPENDFAILED, PBT_APMRESUMECRITICAL,
+    PBT_APMRESUMESUSPEND, 
+)
 
 PBT_POWERSETTINGCHANGE = 0x8013
 
 PbtMessages = {
-    win32con.PBT_APMBATTERYLOW: "BatteryLow", # not in vista, use 
-                                              # PBT_APMPOWERSTATUSCHANGE instead
-    win32con.PBT_APMOEMEVENT: "OemEvent",
-    win32con.PBT_APMPOWERSTATUSCHANGE: "PowerStatusChange",
-    win32con.PBT_APMQUERYSUSPEND: "QuerySuspend",
-    win32con.PBT_APMQUERYSUSPENDFAILED: "QuerySuspendFailed",
-    win32con.PBT_APMRESUMEAUTOMATIC: "ResumeAutomatic",
-    win32con.PBT_APMRESUMECRITICAL: "ResumeCritical",
-    win32con.PBT_APMRESUMESUSPEND: "Resume",
-    win32con.PBT_APMSUSPEND: "Suspend",
+    PBT_APMBATTERYLOW: "BatteryLow", # not in vista, use 
+                                     # PBT_APMPOWERSTATUSCHANGE instead
+    PBT_APMOEMEVENT: "OemEvent",
+    PBT_APMPOWERSTATUSCHANGE: "PowerStatusChange",
+    PBT_APMQUERYSUSPEND: "QuerySuspend",
+    PBT_APMQUERYSUSPENDFAILED: "QuerySuspendFailed",
+    PBT_APMRESUMEAUTOMATIC: "ResumeAutomatic",
+    PBT_APMRESUMECRITICAL: "ResumeCritical",
+    PBT_APMRESUMESUSPEND: "Resume",
+    PBT_APMSUSPEND: "Suspend",
     PBT_POWERSETTINGCHANGE: "PowerSettingsChange",
 }
 
@@ -45,22 +49,16 @@ class PowerBroadcastNotifier:
     
     def __init__(self, plugin):
         self.plugin = plugin
-        eg.messageReceiver.AddHandler(
-            win32con.WM_POWERBROADCAST, 
-            self.OnPowerBroadcast
-        )
+        eg.messageReceiver.AddHandler(WM_POWERBROADCAST, self.OnPowerBroadcast)
 
 
     def Close(self):
-        eg.messageReceiver.RemoveHandler(
-            win32con.WM_POWERBROADCAST, 
-            self.OnPowerBroadcast
-        )
+        eg.messageReceiver.RemoveHandler(WM_POWERBROADCAST, self.OnPowerBroadcast)
         
         
     @eg.LogIt
     def OnPowerBroadcast(self, hwnd, msg, wparam, lparam):
-        if wparam == win32con.PBT_APMRESUMEAUTOMATIC:
+        if wparam == PBT_APMRESUMEAUTOMATIC:
             eg.actionThread.CallWait(eg.actionThread.OnComputerResume)
         msg = PbtMessages.get(wparam, None)
         if msg is not None:
@@ -69,6 +67,6 @@ class PowerBroadcastNotifier:
                 prefix="System", 
                 source=self.plugin
             )
-        if wparam == win32con.PBT_APMSUSPEND:
+        if wparam == PBT_APMSUSPEND:
             eg.actionThread.CallWait(eg.actionThread.OnComputerSuspend)
         return 1

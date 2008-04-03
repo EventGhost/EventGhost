@@ -50,9 +50,15 @@ eg.RegisterPlugin(
     url = "http://www.eventghost.org/forum/viewtopic.php?t=694"
 )
     
-    
-MyActionList = (
-('Main controls', None, (
+# changelog:
+# 1.1 by bitmonster
+#     - changed code to use new AddActionsFromList
+# 1.0 by MonsterMagnet
+#     - initial version
+
+
+ACTIONS = (
+(eg.ActionGroup, 'Main controls', None, (
     ('Exit', 'Quit Application', None, 816),
     ('PlayPause', 'Play/Pause', None, 889),
     ('Play', 'Play', None, 887),
@@ -86,7 +92,7 @@ MyActionList = (
     ('AudioDelayAdd10ms', 'Audio Delay +10ms', None, 905),
     ('AudioDelaySub10ms', 'Audio Delay -10ms', None, 906),
 )),
-('View modes', None, (
+(eg.ActionGroup, 'View modes', None, (
     ('Fullscreen', 'Fullscreen', None, 830),
     ('FullscreenWOR', 'Fullscreen without resolution change', None, 831),
     ('PnSIncSize', 'Pan & Scan Increase Size', None, 862),
@@ -125,7 +131,7 @@ MyActionList = (
     ('PnSRotateAddZ', 'Pan & Scan Rotate Z+', None, 881),
     ('PnSRotateSubZ', 'Pan & Scan Rotate Z-', None, 882),
 )),
-('DVD controls', None, (
+(eg.ActionGroup, 'DVD controls', None, (
     ('DVDTitleMenu', 'DVD Title Menu', None, 922),
     ('DVDRootMenu', 'DVD Root Menu', None, 923),
     ('DVDSubtitleMenu', 'DVD Subtitle Menu', None, 924),
@@ -147,7 +153,7 @@ MyActionList = (
     ('DVDPrevSubtitle', 'DVD Prev Subtitle', None, 965),
     ('DVDOnOffSubtitle', 'DVD On/Off Subtitle', None, 966),
 )),
-('Extended controls', None, (
+(eg.ActionGroup, 'Extended controls', None, (
     ('OpenDevice', 'Open Device', None, 802),
     ('SaveAs', 'Save As', None, 805),
     ('SaveImage', 'Save Image', None, 806),
@@ -171,7 +177,7 @@ MyActionList = (
     ('NextSubtitleOGM', 'Next Subtitle OGM', None, 958),
     ('PrevSubtitleOGM', 'Previous Subtitle OGM', None, 959),
 )),
-('Toggle player controls', None, (
+(eg.ActionGroup, 'Toggle player controls', None, (
     ('ToggleCaptionMenu', 'Toggle Caption Menu', None, 817),
     ('ToggleSeeker', 'Toggle Seeker', None, 818),
     ('ToggleControls', 'Toggle Controls', None, 819),
@@ -185,55 +191,22 @@ MyActionList = (
 )),
 )
 
-from win32gui import FindWindow, SendMessageTimeout 
-from win32con import WM_COMMAND, SMTO_ABORTIFHUNG, SMTO_NORMAL
-SMTO_FLAGS = SMTO_ABORTIFHUNG | SMTO_NORMAL
+from eg.WinApi import FindWindow, SendMessageTimeout, WM_COMMAND
 
 
-class MyActionTemplate(eg.ActionClass):
+class ActionPrototype(eg.ActionClass):
     
     def __call__(self):
         try:
-            hWnd = FindWindow("MediaPlayerClassicW", None)
-            _, result = SendMessageTimeout(
-                hWnd, 
-                WM_COMMAND, 
-                self.value, 
-                0, 
-                SMTO_FLAGS, 
-                1000
-            )
-            return result
+            hWnd = FindWindow("MediaPlayerClassicW")
+            return SendMessageTimeout(hWnd, WM_COMMAND, self.value, 0)
         except:
             raise self.Exceptions.ProgramNotRunning
     
 
 
-def ScanListRecursive(theList, group):
-    for parts in theList:
-        if len(parts) == 3:
-            # this is a new sub-group
-            groupName, groupDescription, groupList = parts
-            newGroup = group.AddGroup(groupName, groupDescription)
-            ScanListRecursive(groupList, newGroup)
-        elif len(parts) == 4:
-            # this is a new action
-            tmpClassName, tmpName, tmpDescription, tmpValue = parts
-               
-            class tmpAction(MyActionTemplate):
-                name = tmpName
-                description = tmpDescription
-                value = tmpValue
-                       
-            tmpAction.__name__ = tmpClassName
-            group.AddAction(tmpAction)
-        else:
-            raise Exception("Wrong number of fields in the list")
-
-
-
 class MediaPlayerClassic(eg.PluginClass):
 
     def __init__(self):
-        ScanListRecursive(MyActionList, self)
+        self.AddActionsFromList(ACTIONS, ActionPrototype)
 

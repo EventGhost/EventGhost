@@ -53,10 +53,9 @@ from Queue import Queue
 from threading import Thread
 from math import sin, cos, radians, pi
 from time import sleep, clock
-from win32api import mouse_event, GetCursorPos, SetCursorPos
-from eg.cFunctions import SetMouseCallback
 from eg import HasActiveHandler
-
+from eg.cFunctions import SetMouseCallback
+from eg.WinApi.Dynamic import mouse_event, GetCursorPos, SetCursorPos, POINT
 
 # this is the real worker thread
 class MouseThread(Thread):
@@ -83,6 +82,7 @@ class MouseThread(Thread):
     @eg.LogItWithReturn
     def run(self):
         upTime = 0
+        point = POINT()
         while True:
             self.lastTime = clock()
             if not self.receiveQueue.empty():
@@ -133,8 +133,8 @@ class MouseThread(Thread):
             self.xRemainder = current_x - x
             self.yRemainder = current_y - y
             try:
-                old_x, old_y = GetCursorPos()
-                SetCursorPos((old_x + x, old_y + y))
+                GetCursorPos(point)
+                SetCursorPos(point.x + x, point.y + y)
             except:
                 pass
             if self.speed == 0:
@@ -146,9 +146,6 @@ class MouseThread(Thread):
         
 
 
-#=============================================================================
-# Plugin: Mouse
-#=============================================================================
 class Mouse(eg.PluginClass):
     
     def __init__(self):
@@ -199,9 +196,6 @@ class Mouse(eg.PluginClass):
     
     
         
-#-----------------------------------------------------------------------------
-# Action: Mouse.GoDirection
-#-----------------------------------------------------------------------------
 class GoDirection(eg.ActionClass):
     name = "Start mouse movement in a direction"
     class text:
@@ -230,9 +224,7 @@ class GoDirection(eg.ActionClass):
             panel.SetResult(valueCtrl.GetValue())
 
 
-#-----------------------------------------------------------------------------
-# Action: Mouse.LeftButton
-#-----------------------------------------------------------------------------
+
 class LeftButton(eg.ActionClass):
     name = "Left mouse button"
     
@@ -246,9 +238,6 @@ class LeftButton(eg.ActionClass):
 
 
 
-#-----------------------------------------------------------------------------
-# Action: Mouse.MiddleButton
-#-----------------------------------------------------------------------------
 class MiddleButton(eg.ActionClass):
     name = "Middle mouse button"
     
@@ -260,9 +249,6 @@ class MiddleButton(eg.ActionClass):
         
 
 
-#-----------------------------------------------------------------------------
-# Action: Mouse.RightButton
-#-----------------------------------------------------------------------------
 class RightButton(eg.ActionClass):
     name = "Right mouse button"
     
@@ -274,15 +260,12 @@ class RightButton(eg.ActionClass):
         
         
         
-#-----------------------------------------------------------------------------
-# Action: Mouse.LeftDoubleClick
-#-----------------------------------------------------------------------------
 class LeftDoubleClick(eg.ActionClass):
     name = "Left mouse button double-click"
     
     def __call__(self):
         def UpFunc():
-            mouse_event(0x0004,0,0,0,0)
+            mouse_event(0x0004, 0, 0, 0, 0)
         self.plugin.leftMouseButtonDown = False
         mouse_event(0x0002, 0, 0, 0, 0)
         mouse_event(0x0004, 0, 0, 0, 0)
@@ -291,9 +274,6 @@ class LeftDoubleClick(eg.ActionClass):
 
 
 
-#-----------------------------------------------------------------------------
-# Action: Mouse.RightDoubleClick
-#-----------------------------------------------------------------------------
 class RightDoubleClick(eg.ActionClass):
     name = "Right mouse button double-click"
     
@@ -307,9 +287,6 @@ class RightDoubleClick(eg.ActionClass):
         
         
         
-#-----------------------------------------------------------------------------
-# Action: Mouse.ToggleLeftButton
-#-----------------------------------------------------------------------------
 class ToggleLeftButton(eg.ActionClass):
     name = "Toggle left mouse button"
     
@@ -323,9 +300,6 @@ class ToggleLeftButton(eg.ActionClass):
             
             
             
-#-----------------------------------------------------------------------------
-# Action: Mouse.MoveAbsolute
-#-----------------------------------------------------------------------------
 class MoveAbsolute(eg.ActionClass):
     name = "Move Absolute"
     class text:
@@ -335,14 +309,14 @@ class MoveAbsolute(eg.ActionClass):
         text3 = "Set vertical position Y to"
         text4 = "pixels"
 
-    
     def __call__(self, x, y):
-        cx, cy = GetCursorPos()
+        point = POINT()
+        GetCursorPos(point)
         if x is None:
-            x = cx
+            x = point.x
         if y is None:
-            y = cy
-        SetCursorPos((x, y))
+            y = point.y
+        SetCursorPos(x, y)
             
             
     def GetLabel(self, x, y):
@@ -388,9 +362,8 @@ class MoveAbsolute(eg.ActionClass):
                 y = None
             panel.SetResult(x, y)
 
-#-----------------------------------------------------------------------------
-# Action: Mouse.MoveRelative
-#-----------------------------------------------------------------------------
+
+
 class MoveRelative(eg.ActionClass):
     name = "Move Relative"
     class text:
@@ -399,18 +372,16 @@ class MoveRelative(eg.ActionClass):
         text2 = "pixels"
         text3 = "Change vertical position Y by"
         text4 = "pixels"
-
     
     def __call__(self, x, y):
-        cx, cy = GetCursorPos()
+        point = POINT()
+        GetCursorPos(point)
         if x is None:
             x = 0
         if y is None:
             y = 0
-        
-        SetCursorPos((cx + x, cy + y))
+        SetCursorPos(point.x + x, point.y + y)
 
-         
             
     def GetLabel(self, x, y):
         return self.text.label % (str(x), str(y))
@@ -456,16 +427,13 @@ class MoveRelative(eg.ActionClass):
             panel.SetResult(x, y)
 
 
-#-----------------------------------------------------------------------------
-# Action: Mouse.Wheel
-#-----------------------------------------------------------------------------
+
 class MouseWheel(eg.ActionClass):
     name = "Turn mouse wheel"
     class text:
         label = u"Turn mouse wheel %d clicks"
         text1 = "Turn mouse wheel by"
         text2 = "clicks. (Negative values turn down)"
-    
     
     def __call__(self, direction=0):
         mouse_event(0x0800, 0, 0, direction * 120, 0)

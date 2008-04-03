@@ -52,21 +52,15 @@ eg.RegisterPlugin(
 
 # Now we import some other things we will need later
 import math
-from win32gui import FindWindow, SendMessageTimeout, GetWindowText
-from win32con import WM_COMMAND, WM_USER, SMTO_BLOCK, SMTO_ABORTIFHUNG
+from eg.WinApi import (
+    SendMessageTimeout, 
+    GetWindowText, 
+    FindWindow, 
+    WM_COMMAND, 
+    WM_USER
+)
 
-# Next we define some helper functions:
-
-def FindWinAMPWindow():
-    """
-    Find Winamp's message window.
-    """
-    try:
-        hWnd = FindWindow("Winamp v1.x", None)
-    except:
-        hWnd = None
-    return hWnd
-
+# Next we define a prototype of an action, with some helper methods
 
 class ActionBase(eg.ActionClass):
     
@@ -76,16 +70,8 @@ class ActionBase(eg.ActionClass):
         SendMessageTimeout.
         """
         try:
-            hWinamp = FindWindow('Winamp v1.x', None)
-            _, result = SendMessageTimeout(
-                hWinamp,
-                mesg, 
-                wParam, 
-                lParam, 
-                SMTO_BLOCK|SMTO_ABORTIFHUNG,
-                2000 # wait at most 2 seconds
-            )
-            return result
+            hWinamp = FindWindow('Winamp v1.x')
+            return SendMessageTimeout(hWinamp, mesg, wParam, lParam)
         except:
             raise self.Exceptions.ProgramNotRunning
 
@@ -442,10 +428,11 @@ class GetPlayingSongTitle(ActionBase):
     description = "Gets the currently playing song title."
     
     def __call__(self):         #-- v2.0
-        strWinAmpTitle = ""
-        hWnd = FindWinAMPWindow()
-        if ( hWnd is not None ):
-            strWinAmpTitle = GetWindowText(hWnd)
+        try:
+            hWnd = FindWindow("Winamp v1.x")
+        except:
+            raise self.Exceptions.ProgramNotRunning
+        strWinAmpTitle = GetWindowText(hWnd)
         sx = strWinAmpTitle.split("*** ")
         try:
             strWinAmpTitle = sx[1] + sx[0]
@@ -474,7 +461,7 @@ class GetVolume(ActionBase):
 
 
 
-class SetVolume(eg.ActionWithStringParameter):
+class SetVolume(ActionBase):
     name = "Set Volume Level"
     description = "Sets the volume to a percentage (%)."
     class text:

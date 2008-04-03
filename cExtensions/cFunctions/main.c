@@ -3,6 +3,7 @@
 
 #include "registry_funcs.h"
 #include "keyhook.h"
+#include "win_funcs.h"
 
 
 static PyMethodDef example_methods[] = {
@@ -13,6 +14,11 @@ static PyMethodDef example_methods[] = {
 	{"SetIdleTime", SetIdleTime, 1, ""},
 	{"SetKeyboardCallback", SetKeyboardCallback, 1, ""},
 	{"SetMouseCallback", SetMouseCallback, 1, ""},
+	{"GetTopLevelWindowList", GetTopLevelWindowList, 1, ""},
+	{"GetWindowChildsList", GetWindowChildsList, 1, ""},
+	{"GetProcessName", GetProcessName, 1, ""},
+	{"GetWindowText", PyWin_GetWindowText, 1, ""},
+	{"GetClassName", PyWin_GetClassName, 1, ""},
 	{NULL, NULL}
 };
 

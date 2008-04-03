@@ -50,7 +50,7 @@ eg.RegisterPlugin(
 )
 
 
-CMDS = (
+ACTIONS = (
     ("Left", "Left", "KEY_LEFT"),
     ("Right", "Right", "KEY_RIGHT"),
     ("Up", "Up", "KEY_UP"),             
@@ -123,9 +123,9 @@ class ActionPrototype(eg.ActionClass):
         conn = MyHTTPConnection(self.plugin.host)
         try:
             if self.plugin.useRcem:
-                conn.request("GET", "/control/rcem?" + self.data)
+                conn.request("GET", "/control/rcem?" + self.value)
             else:
-                conn.request("GET", "/control/exec?Y_Tools&rcsim&" + self.data)
+                conn.request("GET", "/control/exec?Y_Tools&rcsim&" + self.value)
         except socket.error, e:
             if isinstance(e.message, socket.timeout):
                 self.PrintError("d-box2 connection attempt timed out!")
@@ -139,12 +139,7 @@ class ActionPrototype(eg.ActionClass):
 class DBox2(eg.PluginClass):
     
     def __init__(self):
-        for tmpName, tmpDescription, tmpKey in CMDS:
-            class TmpAction(ActionPrototype):
-                name = tmpDescription
-                data = tmpKey
-            TmpAction.__name__ = tmpName
-            self.AddAction(TmpAction)
+        self.AddActionsFromList(ACTIONS, ActionPrototype)
         
         
     def __start__(self, host, useRcem=False):

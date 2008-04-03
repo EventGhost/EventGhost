@@ -22,7 +22,7 @@
 
 
 import pythoncom
-from win32com.shell import shell, shellcon
+from win32com.shell import shell
 
 
 class Shortcut:
@@ -86,5 +86,3 @@ class Shortcut:
         self.startIn = sh.GetWorkingDirectory()
         self.icons = sh.GetIconLocation()
         return self
-
-

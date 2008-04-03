@@ -91,14 +91,13 @@ class Tira(eg.RawReceiverPlugin):
     
     def __start__(self, port=2):
         dll = WinDLL(dll_path)
-        
         if dll.tira_init():
-            raise eg.Exception("Tira init failed.")
+            raise self.Exceptions.DeviceInitFailed("Function tira_init failed.")
         if dll.tira_start(port):
-            raise eg.Exception("Tira start failed.")
+            raise self.Exceptions.DeviceInitFailed("Function tira_start failed.")
         self.procHandler = TIRA_SIX_BYTE_CALLBACK(self.MyEventCallback)
         if dll.tira_set_handler(self.procHandler):
-            raise eg.Exception("Tira set handler failed.")
+            raise self.Exceptions.DeviceInitFailed("Function tira_set_handler failed.")
         self.dll = dll
         
 

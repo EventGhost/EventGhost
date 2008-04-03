@@ -20,7 +20,10 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-from ctypes.dynamic import (
+from eg.WinApi.Dynamic import (
+    pointer,
+    sizeof,
+    wstring_at,
     WM_DEVICECHANGE,
     DEV_BROADCAST_HDR,
     DEV_BROADCAST_DEVICEINTERFACE,
@@ -32,9 +35,6 @@ from ctypes.dynamic import (
     CLSIDFromString,
     RegisterDeviceNotification,
     UnregisterDeviceNotification,
-    pointer,
-    sizeof,
-    string_at,
 )
 
 class DEV_BROADCAST_DEVICEINTERFACE(DEV_BROADCAST_DEVICEINTERFACE):
@@ -119,7 +119,7 @@ class DeviceChangeNotifier:
                 for driveLetter in DriveLettersFromMask(dbcv.dbcv_unitmask):
                     self.TriggerEvent("DriveMounted." + driveLetter)
             elif dbch.dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE:
-                deviceName = string_at(lparam + DBD_NAME_OFFSET)
+                deviceName = wstring_at(lparam + DBD_NAME_OFFSET)
                 self.TriggerEvent("DeviceAttached", [deviceName])
         elif wparam == DBT_DEVICEREMOVECOMPLETE:
             dbch = DEV_BROADCAST_HDR.from_address(lparam)
@@ -128,6 +128,6 @@ class DeviceChangeNotifier:
                 for driveLetter in DriveLettersFromMask(dbcv.dbcv_unitmask):
                     self.TriggerEvent("DriveRemoved." + driveLetter)
             elif dbch.dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE:
-                deviceName = string_at(lparam + DBD_NAME_OFFSET)
+                deviceName = wstring_at(lparam + DBD_NAME_OFFSET)
                 self.TriggerEvent("DeviceRemoved", [deviceName])
         return 1

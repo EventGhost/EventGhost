@@ -21,32 +21,46 @@
 # $LastChangedBy$
 
 import sys
-import win32con
-import win32gui
-import win32api
-import win32process
-from win32gui import WindowFromPoint
-from ctypes.dynamic import (
-    AttachThreadInput, GA_ROOT, PtVisible, SaveDC, RestoreDC, SetROP2,
-    GetAncestor, Rectangle, IsWindow, IsIconic, SW_RESTORE,
+from eg.cFunctions import GetProcessName, GetWindowChildsList
+from Dynamic import (
+    byref, sizeof, WinError, 
+    AttachThreadInput, PtVisible, SaveDC, RestoreDC, SetROP2,
+    GetAncestor, Rectangle, IsWindow, IsIconic, GetStockObject, SelectObject,
     ShowWindow, BringWindowToTop, UpdateWindow, GetForegroundWindow, 
-    InvalidateRect, GetCurrentThreadId, GetWindowThreadProcessId, SW_SHOWNA,
-    SendNotifyMessage,
+    InvalidateRect, GetCurrentThreadId, GetWindowThreadProcessId,
+    SendNotifyMessage, GetWindowRect, GetCursorPos, EnumProcesses, 
+    CloseHandle, EnumDisplayMonitors, GetCurrentProcessId, FindWindow,
+    IsWindowVisible, GetParent, GetWindowDC, GetClassLong, EnumChildWindows,
+    ReleaseDC, GetDC, DeleteObject, CreatePen, GetSystemMetrics, 
+    SendMessageTimeout, ScreenToClient, WindowFromPoint, SendMessageTimeout,
+    # types
+    DWORD, RECT, POINT, MONITORENUMPROC, RGB, WINFUNCTYPE,
+    BOOL, HWND, LPARAM,
+    # constants
+    WM_GETICON, ICON_SMALL, ICON_BIG, SMTO_ABORTIFHUNG, GCL_HICONSM, GCL_HICON,
+    R2_NOT, PS_INSIDEFRAME, SM_CXBORDER, NULL_BRUSH, GA_ROOT, SW_RESTORE,
+    WM_SYSCOMMAND, SC_CLOSE, SW_SHOWNA, SMTO_BLOCK, SMTO_ABORTIFHUNG,
 )
 
+EnumChildProc = WINFUNCTYPE(BOOL, HWND, LPARAM)
+EnumChildWindows.argtypes = [HWND, EnumChildProc, LPARAM]
 
-def BringHwndToFront(hwnd, invalidate=True):
-    if hwnd is None:
+_H_BORDERWIDTH = 3 * GetSystemMetrics(SM_CXBORDER)
+_H_BORDERCOLOUR = RGB(255, 0, 0)
+
+
+def BringHwndToFront(hWnd, invalidate=True):
+    if hWnd is None:
         return
-    hwnd = GetAncestor(hwnd, GA_ROOT)
-    if not IsWindow(hwnd):
+    hWnd = GetAncestor(hWnd, GA_ROOT)
+    if not IsWindow(hWnd):
         return
     
     # If the window is in a minimized state, restore now
-    if IsIconic(hwnd):
-        ShowWindow(hwnd, SW_RESTORE)
-        BringWindowToTop(hwnd)
-        UpdateWindow(hwnd)
+    if IsIconic(hWnd):
+        ShowWindow(hWnd, SW_RESTORE)
+        BringWindowToTop(hWnd)
+        UpdateWindow(hWnd)
     
     # Check to see if we are the foreground thread
     h = GetForegroundWindow()
@@ -57,23 +71,18 @@ def BringHwndToFront(hwnd, invalidate=True):
     if foregroundThreadID != ourThreadID:
         AttachThreadInput(foregroundThreadID, ourThreadID, True)
 
-    ShowWindow(hwnd, SW_SHOWNA)
-    BringWindowToTop(hwnd)
+    ShowWindow(hWnd, SW_SHOWNA)
+    BringWindowToTop(hWnd)
     # Force our window to redraw
     if invalidate:
-        InvalidateRect(hwnd, None, True)
+        InvalidateRect(hWnd, None, True)
     if foregroundThreadID != ourThreadID:
         AttachThreadInput(foregroundThreadID, ourThreadID, False)
         
-#def _BringHwndToFront(self):
-#    BringHwndToFront(self.GetHandle())
-#wx.Window.BringHwndToFront = _BringHwndToFront        
 
-def CloseHwnd(hwnd):
-    SendNotifyMessage(hwnd, win32con.WM_SYSCOMMAND, win32con.SC_CLOSE, 0)
+def CloseHwnd(hWnd):
+    SendNotifyMessage(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0)
     
-    
-from ctypes.dynamic import EnumDisplayMonitors, MONITORENUMPROC
 
 def GetMonitorDimensions():
     retval = []
@@ -87,58 +96,19 @@ def GetMonitorDimensions():
 
 
 
-from win32con import (
-    WM_GETICON, 
-    ICON_SMALL, 
-    ICON_BIG, 
-    SMTO_ABORTIFHUNG,
-    GCL_HICONSM, 
-    GCL_HICON
-)
-from win32gui import (
-    SendMessageTimeout,
-    GetClassLong,
-    IsWindowVisible, 
-    EnumChildWindows, 
-    GetParent
-)
-
-
-def _GetAllWindowChildren_EnumProc(hwnd, add):
-    add(hwnd)
-    return True
-
-
-def GetAllWindowChildren(hwnd):
-    """ Return a list of all children of the window 'hwnd' including subchilds
-    """
-    data = []
-    try:
-        EnumChildWindows(hwnd, _GetAllWindowChildren_EnumProc, data.append)
-    except win32gui.error, exception:
-        data = []
-    return data
-
-from win32gui import (UpdateWindow, GetWindowRect, GetWindowDC, SelectObject,
-    ReleaseDC, GetDC, DeleteObject, GetStockObject, ScreenToClient, CreatePen)
-from win32con import R2_NOT, PS_INSIDEFRAME, SM_CXBORDER, NULL_BRUSH
-
-_H_BORDERWIDTH = 3 * win32api.GetSystemMetrics(SM_CXBORDER)
-_H_BORDERCOLOUR = win32api.RGB(255, 0, 0)
-
-
-def HighlightWindow(hwnd):
+def HighlightWindow(hWnd):
     """ 
     Draws an inverted rectange around a window to inform the user about
     the currently selected window.
     """
     
-    UpdateWindow(hwnd)
+    UpdateWindow(hWnd)
     # Retrieve location of window on-screen.
-    left, top, right, bottom = GetWindowRect(hwnd)
+    rect = RECT()
+    GetWindowRect(hWnd, byref(rect))
 
     # Get a device context that allows us to write anywhere within the window.
-    hdc = GetWindowDC(hwnd)
+    hdc = GetWindowDC(hWnd)
 
     # Save the original device context attributes.
     SaveDC(hdc)
@@ -161,11 +131,11 @@ def HighlightWindow(hwnd):
     # Draw the frame. Because the device context is relative to the window,
     # the top-left corner is (0, 0) and the lower right corner is (width of
     # window, height of window).
-    Rectangle(hdc, 0, 0, right - left, bottom - top)
+    Rectangle(hdc, 0, 0, rect.right - rect.left, rect.bottom - rect.top)
 
     # Restore the original attributes and release the device context.
     RestoreDC(hdc, -1)
-    ReleaseDC(hwnd, hdc)
+    ReleaseDC(hWnd, hdc)
 
     # We can destroy the pen only AFTER we have restored the DC because the DC
     # must have valid objects selected into it at all times.
@@ -174,51 +144,54 @@ def HighlightWindow(hwnd):
 
 def BestWindowFromPoint(point):
     x, y = point
-    foundWindow = WindowFromPoint(point)
+    foundWindow = WindowFromPoint(POINT(x, y))
     
-    hwnds = GetAllWindowChildren(GetAncestor(foundWindow, GA_ROOT))
-    if not hwnds:
+    hWnds = GetWindowChildsList(GetAncestor(foundWindow, GA_ROOT), True)
+    if not hWnds:
         return foundWindow
     foundWindowArea = sys.maxint
-    for hwnd in hwnds:
-        left, top, right, bottom = GetWindowRect(hwnd)
-        if x >= left and x <= right and y >= top and y <= bottom:
-            hdc = GetDC(hwnd)
-            x2, y2 = ScreenToClient(hwnd, point)
-            if PtVisible(hdc, x2, y2):
-                area = (right - left) * (bottom - top)
+    rect = RECT()
+    clientPoint = POINT()
+    for hWnd in hWnds:
+        GetWindowRect(hWnd, byref(rect))
+        if x >= rect.left and x <= rect.right and y >= rect.top and y <= rect.bottom:
+            hdc = GetDC(hWnd)
+            clientPoint.x, clientPoint.y = x, y
+            ScreenToClient(hWnd, byref(clientPoint))
+            if PtVisible(hdc, clientPoint.x, clientPoint.y):
+                area = (rect.right - rect.left) * (rect.bottom - rect.top)
                 if area < foundWindowArea:
-                    foundWindow = hwnd
+                    foundWindow = hWnd
                     foundWindowArea = area
-            ReleaseDC(hwnd, hdc)
+            ReleaseDC(hWnd, hdc)
     return foundWindow
 
 
 
-def GetHwndIcon(hwnd):
+def GetHwndIcon(hWnd):
     """ 
     Get a wx.Icon from a window through its hwnd window handle 
     """
-    try:
-        res, hicon = SendMessageTimeout(
-            hwnd, WM_GETICON, ICON_SMALL, 0, SMTO_ABORTIFHUNG, 1000
-        )
-    except:
-        hicon = 0
-    if hicon < 10:
-        hicon = GetClassLong(hwnd, GCL_HICONSM)
-        if hicon == 0:
-            try:
-                res, hicon = SendMessageTimeout(
-                    hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000
-                )
-            except:
-                hicon = 0
-            if hicon < 10:
-                hicon = GetClassLong(hwnd, GCL_HICON)
-    if hicon != 0:
+    hIcon = DWORD()
+    res = SendMessageTimeout(
+        hWnd, WM_GETICON, ICON_SMALL, 0, SMTO_ABORTIFHUNG, 1000, byref(hIcon)
+    )
+    
+    if res == 0:
+        hIcon.value = 0
+    if hIcon.value < 10:
+        hIcon.value = GetClassLong(hWnd, GCL_HICONSM)
+        if hIcon.value == 0:
+            res = SendMessageTimeout(
+                hWnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000, byref(hIcon)
+            )
+            if res == 0:
+                hIcon.value = 0
+            if hIcon.value < 10:
+                hIcon.value = GetClassLong(hWnd, GCL_HICON)
+    if hIcon.value != 0:
         icon = wx.NullIcon
-        icon.SetHandle(hicon)
+        icon.SetHandle(hIcon.value)
         icon.SetSize((16,16))
         return icon
     else:
@@ -226,120 +199,122 @@ def GetHwndIcon(hwnd):
 
 
 
-def _HwndHasChildren_EnumProc1(hwnd, data):
-    data[0] = True
-    return False
-
-
-def _HwndHasChildren_EnumProc2(hwnd, data):
-    if IsWindowVisible(hwnd):
-        data[0] = True
-        return False
-    else:
-        return True
-
-
-def HwndHasChildren(hwnd, invisible):
+def HwndHasChildren(hWnd, invisible):
     """ 
     Return True if the window 'hwnd' has children.
     If 'invisible' is False, don't take invisible windows into account.
     """
     data = [False]
-    try:
-        if invisible:
-            EnumChildWindows(hwnd, _HwndHasChildren_EnumProc1, data)
-        else:
-            EnumChildWindows(hwnd, _HwndHasChildren_EnumProc2, data)
-    except win32gui.error, exception:
-        pass
+    if invisible:
+        def EnumFunc(hWndChild, lParam):
+            data[0] = True
+            return False
+    else:
+        def EnumFunc(hWndChild, lParam):
+            if IsWindowVisible(hWndChild):
+                data[0] = True
+                return False
+            return True
+    EnumChildWindows(hWnd, EnumChildProc(EnumFunc), 0)
     return data[0]
 
 
-def _GetHwndChildren_EnumProc1(hwnd, data):
-    if GetParent(hwnd) == data[0]:
-        data[1].append(hwnd)
-    return True
 
-def _GetHwndChildren_EnumProc2(hwnd, data):
-    if not IsWindowVisible(hwnd):
-        return True
-    if GetParent(hwnd) == data[0]:
-        data[1].append(hwnd)
-    return True
-
-
-def GetHwndChildren(hwnd, invisible):
+def GetHwndChildren(hWnd, invisible):
     """ 
     Return a list of all direct children of the window 'hwnd'.
     """
-
-    data = [hwnd, []]
-    try:
-        if invisible:
-            EnumChildWindows(hwnd, _GetHwndChildren_EnumProc1, data)
-        else:
-            EnumChildWindows(hwnd, _GetHwndChildren_EnumProc2, data)
-    except win32gui.error, exception:
-        data[1] = []
-    return data[1]
-
+    return [
+        childHwnd for childHwnd in GetWindowChildsList(hWnd, invisible)
+        if GetParent(childHwnd) == hWnd
+    ]
     
-from win32api import OpenProcess, CloseHandle
-from win32process import GetModuleFileNameEx, EnumProcesses, EnumProcessModules
-
-
-def Test(pid):
-    from ctypes.dynamic import (
-        byref, sizeof,
-        PROCESSENTRY32, TH32CS_SNAPPROCESS, CreateToolhelp32Snapshot,
-        Process32First, Process32Next, CloseHandle,
-    )
     
-    # See http://msdn2.microsoft.com/en-us/library/ms686701.aspx
-    hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)
-    pe32 = PROCESSENTRY32()
-    pe32.dwSize = sizeof(PROCESSENTRY32)
-    if Process32First(hProcessSnap, byref(pe32)) == 0:
-        print >> sys.stderr, "Failed getting first process."
-        return "<not found>"
+
+#def GetProcessName(pid):
+#    # See http://msdn2.microsoft.com/en-us/library/ms686701.aspx
+#    hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)
+#    pe32 = PROCESSENTRY32()
+#    pe32.dwSize = sizeof(PROCESSENTRY32)
+#    try:
+#        if Process32First(hProcessSnap, byref(pe32)) == 0:
+#            print >> sys.stderr, "Failed getting first process."
+#            return "<not found>"
+#        while True:
+#            if pe32.th32ProcessID == pid:
+#                return pe32.szExeFile
+#            if Process32Next(hProcessSnap, byref(pe32)) == 0:
+#                break
+#        return "<not found>"
+#    finally:
+#        CloseHandle(hProcessSnap)
+
+# now implemented as C function in cFunctions.pyd
+  
+    
+def GetWindowProcessName(hWnd):
+    dwProcessId = DWORD()
+    GetWindowThreadProcessId(hWnd, byref(dwProcessId))
+    return GetProcessName(dwProcessId.value)
+    
+    
+def PyGetWindowThreadProcessId(hWnd):
+    """
+    Retrieves the identifier of the thread and process that created the 
+    specified window.
+
+    int threadId, int processId = GetWindowThreadProcessId(hWnd)
+    """
+    dwProcessId = DWORD()
+    threadId = GetWindowThreadProcessId(hWnd, byref(dwProcessId))
+    return threadId, dwProcessId.value
+
+
+def PyGetCursorPos():
+    """
+    Returns the position of the cursor, in screen co-ordinates.
+    
+    int x, int y = GetCursorPos()
+    """
+    point = POINT()
+    GetCursorPos(point)
+    return point.x, point.y
+
+
+def PyEnumProcesses():
+    size = 1024
+    pBytesReturned = DWORD()
     while True:
-        if pe32.th32ProcessID == pid:
-            CloseHandle(hProcessSnap)
-            return pe32.szExeFile
-        if Process32Next(hProcessSnap, byref(pe32)) == 0:
+        buffer = (DWORD * size)()
+        cb = size * sizeof(DWORD)
+        res = EnumProcesses(buffer, cb, byref(pBytesReturned))
+        if res == 0:
+            raise WinError()
+        if pBytesReturned.value != cb:
             break
-    CloseHandle(hProcessSnap)
-    return "<not found>"
+        size *= 10
+    return buffer[:pBytesReturned.value / sizeof(DWORD)]
+        
 
-    
-    
-def GetNameOfPID(pid):
-    try:
-        # 1040 = PROCESS_QUERY_INFORMATION|PROCESS_VM_READ
-        hProcess = OpenProcess(1040, False, pid)
-    except Exception, exc:
-        return ""
-    try:
-        return GetModuleFileNameEx(hProcess, 0)
-    except Exception, exc:
-        return Test(pid)
-    finally:
-        CloseHandle(hProcess)
-    
-    
-from os.path import basename
+def PySendMessageTimeout(
+    hWnd, 
+    msg, 
+    wParam=0, 
+    lParam=0, 
+    flags=SMTO_BLOCK|SMTO_ABORTIFHUNG, 
+    timeout=2000
+):
+    resultData = DWORD()
+    res = SendMessageTimeout(
+        hWnd, msg, wParam, lParam, flags, timeout, byref(resultData)
+    )
+    if not res:
+        raise WinError()
+    return resultData.value
 
-def GetHwndProcessName(hwnd):
-    pid = win32process.GetWindowThreadProcessId(hwnd)[1]
-    try:
-        # 1040 = PROCESS_QUERY_INFORMATION|PROCESS_VM_READ
-        hProcess = OpenProcess(1040, False, pid)
-    except Exception, exc:
-        return ""
-    try:
-        return basename(GetModuleFileNameEx(hProcess, 0))
-    except Exception, exc:
-        return Test(pid)
-    finally:
-        CloseHandle(hProcess)
-    
+
+def PyFindWindow(className=None, windowName=None):
+    hWnd = FindWindow(className, windowName)
+    if not hWnd:
+        raise WinError()
+    return hWnd

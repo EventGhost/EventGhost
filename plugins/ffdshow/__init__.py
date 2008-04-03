@@ -22,7 +22,7 @@
 
 eg.RegisterPlugin(
     name = "ffdshow",
-    author = "Bitmonster",
+    author = "Bitmonster & Bartman",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "program",
     url = "http://www.eventghost.org/forum/viewtopic.php?t=613",
@@ -54,94 +54,56 @@ eg.RegisterPlugin(
 )
 
 
+from sys import maxint as MAX_INT
+from ctypes import Structure, c_char_p, POINTER, cast, addressof
+from eg.WinApi import FindWindow
+from eg.WinApi.Dynamic import (
+    RegisterWindowMessage,
+    SendMessage, 
+    DWORD,
+    PVOID,
+    COPYDATASTRUCT, 
+    PCOPYDATASTRUCT, 
+    WM_COPYDATA, 
+)
 
-##define FFDSHOW_REMOTE_MESSAGE "ffdshow_remote_message"
-##define FFDSHOW_REMOTE_CLASS "ffdshow_remote_class"
-#
-#//lParam - parameter id to be used by WPRM_PUTPARAM, WPRM_GETPARAM and COPY_PUTPARAMSTR
-##define WPRM_SETPARAM_ID 0
-#
-#//lParam - new value of parameter
-#//returns TRUE or FALSE
-##define WPRM_PUTPARAM    1
-#
-#//lParam - unused
-#//return the value of parameter
-##define WPRM_GETPARAM    2
-#
-#//lParam - parameter id
-##define WPRM_GETPARAM2   3
-#
-##define WPRM_STOP        4
-##define WPRM_RUN         5
-#
-#//returns playback status
-#// -1 - if not available
-#//  0 - stopped
-#//  1 - paused
-#//  2 - running
-##define WPRM_GETSTATE    6
-#
-#//returns movie duration in seconds
-##define WPRM_GETDURATION 7
-#//returns current position in seconds
-##define WPRM_GETCURTIME  8
-#
-##define WPRM_PREVPRESET 11
-##define WPRM_NEXTPRESET 12 
-#
-#//Set current time in seconds
-##define WPRM_SETCURTIME 13
-#
-#
-#
-#
-#//WM_COPYDATA 
-#//COPYDATASTRUCT.dwData=
-##define COPY_PUTPARAMSTR        9 // lpData points to new param value
-##define COPY_SETACTIVEPRESET   10 // lpData points to new preset name
-##define COPY_AVAILABLESUBTITLE_FIRST 11 // lpData points to buffer where first file name will be stored  - if no subtitle file is available, lpData will contain empty string
-##define COPY_AVAILABLESUBTITLE_NEXT  12 // lpData points to buffer where next file name will be stored  - if no subtitle file is available, lpData will contain empty string
-##define COPY_GETPARAMSTR       13 // lpData points to buffer where param value will be stored
-##define COPY_GET_PRESETLIST		14 //Get the list of presets (array of strings)
-##define COPY_GET_SOURCEFILE		15 //Get the filename currently played
+FFDSHOW_REMOTE_MESSAGE = "ffdshow_remote_message"
+FFDSHOW_REMOTE_CLASS = "ffdshow_remote_class"
 
-import sys
-import win32gui
-import win32con
-import ctypes
-from ctypes.wintypes import DWORD
-
-class COPYDATASTRUCT(ctypes.Structure):
-    """This is a mapping to the Win32 COPYDATASTRUCT.
-    
-    typedef struct tagCOPYDATASTRUCT {
-        ULONG_PTR dwData;
-        DWORD cbData;
-        PVOID lpData;
-    } COPYDATASTRUCT, *PCOPYDATASTRUCT;
-    """
-    _fields_ = [ 
-        ('dwData', DWORD), #I think this is right
-        ('cbData', DWORD),
-        ('lpData', ctypes.c_char_p)
-    ]
-
-PCOPYDATASTRUCT = ctypes.POINTER(COPYDATASTRUCT)
-
-
-WPRM_SETPARAM_ID = 0
-WPRM_PUTPARAM = 1
-WPRM_GETPARAM = 2
-WPRM_GETPARAM2 = 3
+WPRM_SETPARAM_ID = 0 # lParam - parameter id to be used by WPRM_PUTPARAM, 
+                     # WPRM_GETPARAM and COPY_PUTPARAMSTR
+WPRM_PUTPARAM = 1    # lParam - new value of parameter, returns TRUE or FALSE
+WPRM_GETPARAM = 2    # lParam - unused, return the value of parameter
+WPRM_GETPARAM2 = 3   # lParam - parameter id
 WPRM_STOP = 4
 WPRM_RUN = 5
+WPRM_GETSTATE = 6    # returns playback status
+                     #  -1 - if not available
+                     #   0 - stopped
+                     #   1 - paused
+                     #   2 - running
+WPRM_GETDURATION = 7 # returns movie duration in seconds
+WPRM_GETCURTIME = 8  # returns current position in seconds
 WPRM_PREVPRESET = 11
 WPRM_NEXTPRESET = 12 
+WPRM_SETCURTIME = 13 # Set current time in seconds
 
-COPY_SETACTIVEPRESET = 10
-COPY_GET_PRESETLIST = 14
-COPY_GET_SOURCEFILE = 15
+# WM_COPYDATA 
+# COPYDATASTRUCT.dwData=
+COPY_PUTPARAMSTR = 9              # lpData points to new param value
+COPY_SETACTIVEPRESET = 10         # lpData points to new preset name
+COPY_AVAILABLESUBTITLE_FIRST = 11 # lpData points to buffer where first file 
+                                  # name will be stored  - if no subtitle file 
+                                  # is available, lpData will contain empty 
+                                  # string
+COPY_AVAILABLESUBTITLE_NEXT = 12  # lpData points to buffer where next file 
+                                  # name will be stored  - if no subtitle file 
+                                  # is available, lpData will contain empty 
+                                  # string
+COPY_GETPARAMSTR = 13             # lpData points to buffer where param value 
+                                  # will be stored
+COPY_GET_PRESETLIST = 14          # Get the list of presets (array of strings)
+COPY_GET_SOURCEFILE = 15          # Get the filename currently played
 
 
 class WParamAction(eg.ActionClass):
@@ -155,11 +117,11 @@ class GetIntAction(eg.ActionClass):
     
     def __call__(self):
         try:
-            hwnd = win32gui.FindWindow("ffdshow_remote_class", None)
+            hwnd = FindWindow(FFDSHOW_REMOTE_CLASS, None)
         except:
             raise self.Exceptions.ProgramNotRunning
 
-        return win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
+        return SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
     
     
     
@@ -168,20 +130,20 @@ class SetIntAction(eg.ActionClass):
     
     def __call__(self, value=0):
         try:
-            hwnd = win32gui.FindWindow("ffdshow_remote_class", None)
+            hwnd = FindWindow(FFDSHOW_REMOTE_CLASS, None)
         except:
             raise self.Exceptions.ProgramNotRunning
 
-        win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
-        win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, value)
+        SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
+        SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, value)
     
     
     def Configure(self, value=0):
         panel = eg.ConfigPanel(self)
         valueCtrl = panel.SpinIntCtrl(
             value, 
-            min = -sys.maxint - 1, 
-            max = sys.maxint, 
+            min = -MAX_INT - 1, 
+            max = MAX_INT, 
         )
         panel.AddLine(self.parameterDescription, valueCtrl)
         while panel.Affirmed():
@@ -194,14 +156,14 @@ class ChangeIntAction(SetIntAction):
     
     def __call__(self, value=0):
         try:
-            hwnd = win32gui.FindWindow("ffdshow_remote_class", None)
+            hwnd = FindWindow(FFDSHOW_REMOTE_CLASS, None)
         except:
             raise self.Exceptions.ProgramNotRunning
 
-        oldValue = win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
+        oldValue = SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
         newValue = oldValue + value
-        win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
-        win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, newValue)
+        SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
+        SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, newValue)
         return newValue
 
 
@@ -210,24 +172,24 @@ class ToggleAction(eg.ActionClass):
     def __call__(self, action):
         #0: disable, 1: enable, 2: toggle, 3: getStatus
         try:
-            hwnd = win32gui.FindWindow("ffdshow_remote_class", None)
+            hwnd = FindWindow(FFDSHOW_REMOTE_CLASS, None)
         except:
             raise self.Exceptions.ProgramNotRunning
             
         if action == 0 or action == 1:
-            win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
-            win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, action)
+            SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
+            SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, action)
             return action
             
-        oldValue = win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
+        oldValue = SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
         
         if action == 2:
             if oldValue:
                 newValue = 0
             else:
                 newValue = 1
-            win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
-            win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, newValue)
+            SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
+            SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, newValue)
             return newValue
             
         if action == 3:
@@ -269,25 +231,25 @@ class ToggleAction(eg.ActionClass):
 
 class IntegerAction(eg.ActionClass):
     #min, max, showSlider, scaleFactor
-    options = (-sys.maxint - 1, sys.maxint, False, 1)
+    options = (-MAX_INT - 1, MAX_INT, False, 1)
     def __call__(self, action, value):
         #0: set to, 1: change by, 2: get value
         try:
-            hwnd = win32gui.FindWindow("ffdshow_remote_class", None)
+            hwnd = FindWindow(FFDSHOW_REMOTE_CLASS, None)
         except:
             raise self.Exceptions.ProgramNotRunning            
 
         if action == 2:
-            return win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)    
+            return SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)    
             
         if action == 1:
-            value += win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
+            value += SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
             
         value = max(self.options[0], value)
         value = min(self.options[1], value)
         
-        win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
-        win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, value)
+        SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
+        SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, value)
         return value
             
     
@@ -480,15 +442,15 @@ class SelectAction(eg.ActionClass):
         #0: set to, 1: next, 2: previous 3: get value
    
         try:
-            hwnd = win32gui.FindWindow("ffdshow_remote_class", None)
+            hwnd = FindWindow(FFDSHOW_REMOTE_CLASS, None)
         except:
             raise self.Exceptions.ProgramNotRunning            
 
         if action == 3:
-            return win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)    
+            return SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)    
             
         if action == 1 or action == 2:
-            value = win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
+            value = SendMessage(hwnd, self.plugin.mesg, WPRM_GETPARAM2, self.value)
             if self.options.has_key(value):
                 entry = self.options[value]
                 if action == 1:
@@ -502,8 +464,8 @@ class SelectAction(eg.ActionClass):
                     value -= 1
 
             
-        win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
-        win32gui.SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, value)
+        SendMessage(hwnd, self.plugin.mesg, WPRM_SETPARAM_ID, self.value)
+        SendMessage(hwnd, self.plugin.mesg, WPRM_PUTPARAM, value)
         return value
         
 
@@ -518,7 +480,7 @@ class SelectAction(eg.ActionClass):
             return "Get %s setting" % self.name
         return self.name
 
-    def Configure(self, action = 0, value = sys.maxint):
+    def Configure(self, action = 0, value = MAX_INT):
         """ this panel uses to controls
             one for setting and one for changing the value
             the right one is chosen depending on the value of the radiobuttons
@@ -721,24 +683,24 @@ class Ffdshow(eg.PluginClass):
         
         
     def __start__(self):
-        self.mesg = win32gui.RegisterWindowMessage("ffdshow_remote_message")
-        eg.messageReceiver.AddHandler(win32con.WM_COPYDATA, self.Handler)
+        self.mesg = RegisterWindowMessage(FFDSHOW_REMOTE_MESSAGE)
+        eg.messageReceiver.AddHandler(WM_COPYDATA, self.Handler)
         
         
     @eg.LogIt
     def Handler(self, hwnd, mesg, wParam, lParam):
-        cdsPointer = ctypes.cast(lParam, PCOPYDATASTRUCT)
-        #print repr(cdsPointer.contents.lpData)
+        cdsPointer = cast(lParam, PCOPYDATASTRUCT)
+        print cast(cdsPointer.contents.lpData, c_char_p).value
         return True
 
 
     def SendFfdshowMessage(self, wParam, lParam=0):
         try:
-            hwnd = win32gui.FindWindow("ffdshow_remote_class", None)
+            hwnd = FindWindow(FFDSHOW_REMOTE_CLASS, None)
         except:
             raise self.Exceptions.ProgramNotRunning
             
-        return win32gui.SendMessage(hwnd, self.mesg, wParam, lParam)
+        return SendMessage(hwnd, self.mesg, wParam, lParam)
 
 
 
@@ -749,37 +711,28 @@ class SetPreset(eg.ActionWithStringParameter):
         
     def __call__(self, preset):
         try:
-            hwnd = win32gui.FindWindow("ffdshow_remote_class", None)
+            hwnd = FindWindow(FFDSHOW_REMOTE_CLASS, None)
         except:
             raise self.Exceptions.ProgramNotRunning
             
         cds = COPYDATASTRUCT()
         cds.dwData = COPY_SETACTIVEPRESET
-        cds.lpData = ctypes.c_char_p(preset)
+        cds.lpData = cast(c_char_p(preset), PVOID)
         cds.cbData = len(preset) + 1
-        win32gui.SendMessage(
-            hwnd, 
-            win32con.WM_COPYDATA, 
-            eg.messageReceiver.hwnd, 
-            ctypes.addressof(cds)
-        )
+        SendMessage(hwnd, WM_COPYDATA, eg.messageReceiver.hwnd, addressof(cds))
         
         
     
 class GetPresets(eg.ActionClass):
+    name = "Get Presets"
     
     def __call__(self):
         try:
-            hwnd = win32gui.FindWindow("ffdshow_remote_class", None)
+            hwnd = FindWindow(FFDSHOW_REMOTE_CLASS, None)
         except:
             raise self.Exceptions.ProgramNotRunning
         
         cds = COPYDATASTRUCT()
         cds.dwData = COPY_GET_PRESETLIST
-        win32gui.SendMessage(
-            hwnd, 
-            win32con.WM_COPYDATA, 
-            eg.messageReceiver.hwnd, 
-            ctypes.addressof(cds)
-        )
+        SendMessage(hwnd, WM_COPYDATA, eg.messageReceiver.hwnd, addressof(cds))
         

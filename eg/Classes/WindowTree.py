@@ -22,19 +22,27 @@
 
 
 from time import sleep
-from win32api import GetCurrentProcessId
-from win32process import EnumProcesses
 from os.path import basename
-from win32gui import EnumWindows, GetWindowText, GetClassName, IsWindowVisible
-from win32process import GetWindowThreadProcessId
 
-from ctypes.dynamic import GetAncestor, GA_ROOT, GA_PARENT
-from eg.WinAPI.Utils import (
+from eg.WinApi import (
+    GetTopLevelWindowList, 
+    GetWindowText, 
+    GetClassName,
+    GetCurrentProcessId,
+    GetWindowThreadProcessId,
+    GetProcessName, 
+    EnumProcesses,
+)
+from eg.WinApi.Dynamic import (
+    GetAncestor, 
+    GA_ROOT, 
+    GA_PARENT,
+)
+from eg.WinApi.Utils import (
     GetHwndIcon, 
     GetHwndChildren, 
     HwndHasChildren,
     HighlightWindow,
-    GetNameOfPID, 
 )
 
 ourProcessID = GetCurrentProcessId()
@@ -105,17 +113,11 @@ class WindowTree(wx.TreeCtrl):
         for pid in processes:
             self.pids[pid] = []
             
-        hwnds = []
-        def EnumProc(hwnd, data):
-            data.append(hwnd)
-            return True
-        EnumWindows(EnumProc, hwnds)
+        hwnds = GetTopLevelWindowList(self.includeInvisible)
         
         for hwnd in hwnds:
             threadID, pid = GetWindowThreadProcessId(hwnd)
             if pid == ourProcessID:
-                continue
-            if not self.includeInvisible and not IsWindowVisible(hwnd):
                 continue
             self.pids[pid].append(hwnd)
 
@@ -128,7 +130,7 @@ class WindowTree(wx.TreeCtrl):
                 if icon:
                     iconIndex = self.imageList.AddIcon(icon)
                     break
-            exe = basename(GetNameOfPID(pid))
+            exe = GetProcessName(pid)
             item = self.AppendItem(self.root, exe)
             self.SetItemHasChildren(item, True)
             self.SetPyData(item, pid)
@@ -163,11 +165,11 @@ class WindowTree(wx.TreeCtrl):
             
     def AppendChildWindows(self, parentHwnd, item):
         for hwnd in GetHwndChildren(parentHwnd, self.includeInvisible):
-            try:
-                name = GetWindowText(hwnd)
-                className = GetClassName(hwnd)
-            except:
-                continue
+            #try:
+            name = GetWindowText(hwnd)
+            className = GetClassName(hwnd)
+            #except:
+            #    continue
             if name != "":
                 name = "\"" + name + "\" "
             index = self.AppendItem(item, name + className, 0)
@@ -212,7 +214,7 @@ class WindowTree(wx.TreeCtrl):
         if hwnd is None:
             self.Unselect()
             return
-        pid = GetWindowThreadProcessId(hwnd)[1]
+        _, pid = GetWindowThreadProcessId(hwnd)
         item, cookie = self.GetFirstChild(self.root)
         while self.GetPyData(item) != pid:
             item, cookie = self.GetNextChild(self.root, cookie)

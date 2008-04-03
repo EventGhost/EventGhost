@@ -23,9 +23,9 @@
 
 from threading import Thread, Lock, Condition, currentThread
 from time import clock
-from ctypes.dynamic import (
+from eg.WinApi.Dynamic import (
     pointer, sizeof, create_string_buffer, Structure, Union, byref, WinError,
-    HANDLE, DWORD, LPCSTR, CreateFile, CloseHandle, 
+    HANDLE, DWORD, CreateFile, CloseHandle, 
     DCB, OVERLAPPED, COMSTAT, COMMTIMEOUTS, COMMCONFIG, ReadFile, WriteFile,
     GetCommState, SetCommState, ClearCommError, GetDefaultCommConfig,
     EscapeCommFunction, MsgWaitForMultipleObjects, WaitForSingleObject, 
@@ -35,31 +35,6 @@ from ctypes.dynamic import (
     FILE_ATTRIBUTE_NORMAL, FILE_FLAG_OVERLAPPED, DTR_CONTROL_DISABLE, NOPARITY,
     ONESTOPBIT, FormatError, GetLastError, WinError
 )
-
-INDENT = "    "
-def dumps(obj, name=None, indent=""):
-    res = []
-    append = res.append
-    if name is None:
-        name = obj.__class__.__name__
-    #append(indent + obj.__class__.__bases__[0].__name__ + " ")
-    append(name + "(\n")
-    
-    for field in obj._fields_:
-        if len(field) > 2:
-            name, cType, length = field
-            append(indent + INDENT + name + " = " + repr(getattr(obj, name)) + ",\n")
-        else:
-            name, cType = field
-            if issubclass(cType, (Union, Structure)):
-                append(indent + INDENT + name + " = ")
-                append(dumps(getattr(obj, name), indent=indent + INDENT))
-                append(",\n")
-            else:
-                append(indent + INDENT + name + " = " + repr(getattr(obj, name)) + ",\n")
-    append(indent + ")")
-    return "".join(res)
-
 
 
 class SerialException(Exception):
@@ -93,7 +68,7 @@ class SerialThread(Thread):
         lpdwSize = byref(dwSize)
         for i in range(0, 255):
             name = 'COM%d' % (i+1)
-            res = GetDefaultCommConfig(LPCSTR(name), lpCC, lpdwSize)
+            res = GetDefaultCommConfig(name, lpCC, lpdwSize)
             if res == 1 or (res == 0 and GetLastError() == 122):
                 serialPortList.append(i)
         cls._serialPortList = serialPortList
@@ -337,7 +312,8 @@ class SerialThread(Thread):
         r = self.WriteFile(self.hFile, data, len(data), byref(dwWritten), byref(self.osWriter))
         if r != 0:
             return
-        if GetLastError() != ERROR_IO_PENDING:
+        err = GetLastError()
+        if err != 0 and err != ERROR_IO_PENDING:
             raise WinError()
         if not GetOverlappedResult(self.hFile, byref(self.osWriter), byref(dwWritten), 1):
             raise WinError()

@@ -42,7 +42,7 @@ class NewPlugin(eg.UndoHandler.NewItem):
                 if not eg.UndoHandler.Configure().Do(pluginItem, True):
                     pluginItem.Delete()
                     return None
-            eg.actionThread.CallWait(pluginItem.Execute)
+            eg.actionThread.CallWait(pluginItem.Execute, timeout=15)
         self.StoreItem(pluginItem)
         if pluginInfo.createMacrosOnAdd:
             eg.UndoHandler.AddActionGroup().Do(document, pluginItem)

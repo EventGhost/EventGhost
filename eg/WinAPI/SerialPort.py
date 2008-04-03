@@ -20,7 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import win32file, win32con, win32api
+import win32file, win32con
         
         
 def DeviceString(portnum):

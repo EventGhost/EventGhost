@@ -273,3 +273,31 @@ class PluginClass(object):
         """
         pass
         
+    
+    def AddActionsFromList(self, theList, defaultAction=None):
+        def Recurse(theList, group):
+            for parts in theList:
+                length = len(parts)
+                if parts[0] is eg.ActionGroup:
+                    # this is a new sub-group
+                    cls, aName, aDescription, aList = parts
+                    newGroup = group.AddGroup(aName, aDescription)
+                    Recurse(aList, newGroup)
+                    continue
+                elif length == 3:
+                    evalName, tmpName, tmpValue = parts
+                    tmpDescription = None
+                elif length == 4:
+                    # this is a new action
+                    evalName, tmpName, tmpDescription, tmpValue = parts
+                else:
+                    raise Exception("Wrong number of fields in the list")
+                       
+                class NewAction(defaultAction):
+                    name = tmpName
+                    description = tmpDescription
+                    value = tmpValue
+                NewAction.__name__ = evalName
+                group.AddAction(NewAction)
+                
+        Recurse(theList, self)

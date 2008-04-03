@@ -1,7 +1,7 @@
 eg.RegisterPlugin(
     name = "Sound Mixer Ex",
     author = "Dexter",
-    version = "1.0." + "$LastChangedRevision: 304 $".split()[1],
+    version = "1.1." + "$LastChangedRevision$".split()[1],
     description = (
         "This plugin allows you to set virtually any control available on "
         "your soundcard.\n\n<p>"
@@ -10,9 +10,14 @@ eg.RegisterPlugin(
     kind = "other",
 )
 
+# changelog
+# 1.1.x bitmonster 
+#     - removed mbcs decoding everywhere, because eg.WinApi.Dynamic now uses the
+#       unicode versions of all functions as default.
+#     - root node of tree now starts expanded.
 
 
-from ctypes.dynamic import (
+from eg.WinApi.Dynamic import (
     byref, sizeof, addressof, pointer,
     HMIXER, 
     MIXERCAPS,
@@ -290,7 +295,7 @@ class SoundMixerWin32():
             if mixerGetLineInfo(hmixer, byref(mixerline), MIXER_GETLINEINFOF_DESTINATION):
                 continue
 
-            destination = mixerline.szName.decode("mbcs")
+            destination = mixerline.szName
 
             for control in self.GetControls(hmixer, mixerline):
                 result.append((control[0], destination, None, control[1], control[2], control[3]))
@@ -301,7 +306,7 @@ class SoundMixerWin32():
                 mixerline.dwSource = n
                 if mixerGetLineInfo(hmixer, byref(mixerline), MIXER_GETLINEINFOF_SOURCE):
                     continue
-                source = mixerline.szName.decode("mbcs")
+                source = mixerline.szName
 
                 for control in self.GetControls(hmixer, mixerline):
                     result.append((control[0], destination, source, control[1], control[2], control[3]))
@@ -340,7 +345,7 @@ class SoundMixerWin32():
             result.append(
                 (
                     mixerControl.dwControlID,
-                    mixerControl.szName.decode("mbcs"), 
+                    mixerControl.szName, 
                     controlClass["name"], 
                     controlClassTypeName,
                     ", ".join(flagNames)
@@ -430,6 +435,7 @@ class SoundMixerEx(eg.PluginClass):
             if mixerid == mixerSelect and controlid == controlSelect:
                     treeCtrl.SelectItem(item)
 
+        treeCtrl.Expand(rootItem)
         #Return tree
         return treeCtrl
 

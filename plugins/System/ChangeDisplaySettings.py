@@ -21,7 +21,7 @@
 # $LastChangedBy$
 
 
-from eg.WinAPI.Display import GetDisplays
+from eg.WinApi.Display import GetDisplays
 
 gDisplays = GetDisplays()
             

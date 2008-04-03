@@ -24,10 +24,10 @@
 from re import compile, escape
 from types import StringTypes
 from time import clock
-from win32gui import EnumWindows, EnumChildWindows, IsWindowVisible
-from win32gui import GetWindowText, GetClassName
-import pywintypes
-from eg.WinAPI.Utils import GetHwndProcessName
+from eg.WinApi.Utils import GetWindowProcessName
+from eg.cFunctions import (
+    GetTopLevelWindowList, GetWindowChildsList, GetWindowText, GetClassName
+)
 
 
 class MatchSingleChar:
@@ -99,7 +99,7 @@ class WindowMatcher:
     """
     Returns a list of window handles matching a number of criteria.
     
-    An instance of this class can be used as a better win32api.FindWindow
+    An instance of this class can be used as a better win32.FindWindow
     replacement. It allows to confine the windows to find by the process name,
     window name, window class and some other criteria. Wildcards can be used 
     in the search strings. The idea behind this class is to compile the 
@@ -122,15 +122,12 @@ class WindowMatcher:
     ):
         self.timeout = timeout
         self.matchNum = matchNum or 0
-        dummy = (lambda x: True)
-        if not includeInvisible:
-            self.invisibleMatch = IsWindowVisible
-        else:
-            self.invisibleMatch = dummy
+        self.includeInvisible = bool(includeInvisible)
             
+        dummy = (lambda x: True)
         def GetMatcher(value):
             if value is not None:
-                return CompileString(value.encode(eg.systemEncoding)) 
+                return CompileString(value) 
             else:
                 return dummy
             
@@ -155,44 +152,35 @@ class WindowMatcher:
             self.__call__ = self.Enumerate
     
     
-    def EnumWindowsProc(self, hwnd, add):
-        if not self.invisibleMatch(hwnd):
-            return True
-        if not self.winClassMatch(GetClassName(hwnd)):
-            return True
-        if not self.winNameMatch(GetWindowText(hwnd)):
-            return True
-        add(hwnd)
-        return True
-    
-    
-    def EnumChildsProc(self, hwnd, add):
-        if not self.invisibleMatch(hwnd):
-            return True
-        if not self.childClassMatch(GetClassName(hwnd)):
-            return True
-        if not self.childNameMatch(GetWindowText(hwnd)):
-            return True
-        add(hwnd)
-        return True
-        
-        
     def Find(self):
-        topWindowsHwnds = []
-        EnumWindows(self.EnumWindowsProc, topWindowsHwnds.append)
+        winClassMatch = self.winClassMatch
+        winNameMatch = self.winNameMatch
+        programMatch = self.programMatch
+        includeInvisible = self.includeInvisible
+        topWindowsHwnds = [
+            hwnd for hwnd in GetTopLevelWindowList(includeInvisible) 
+                if (
+                    winClassMatch(GetClassName(hwnd)) and
+                    winNameMatch(GetWindowText(hwnd))
+                )
+        ]
         if self.program:
             topWindowsHwnds = [
                 hwnd for hwnd in topWindowsHwnds 
-                    if self.programMatch(GetHwndProcessName(hwnd).upper())
+                    if programMatch(GetWindowProcessName(hwnd).upper())
             ]
         if not self.scanChilds:
             return topWindowsHwnds
-        childHwnds = []
-        for hwnd in topWindowsHwnds:
-            try:
-                EnumChildWindows(hwnd, self.EnumChildsProc, childHwnds.append)
-            except pywintypes.error:
-                pass
+        childClassMatch = self.childClassMatch
+        childNameMatch = self.childNameMatch
+        childHwnds = [
+            childHwnd for parentHwnd in topWindowsHwnds
+                for childHwnd in GetWindowChildsList(parentHwnd, includeInvisible)
+                    if (
+                        childClassMatch(GetClassName(childHwnd)) and
+                        childNameMatch(GetWindowText(childHwnd))
+                    )
+        ]
         return childHwnds
 
 

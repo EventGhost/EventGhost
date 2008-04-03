@@ -35,7 +35,7 @@ import wx.lib.buttons as buttons
 import os
 from base64 import b64decode, b64encode
 from cStringIO import StringIO
-import win32gui
+from eg.WinApi import GetCursorPos
 
 
         
@@ -453,7 +453,7 @@ class RemotePanel(wx.Panel):
         
         
     def OnLeftDown(self, event):
-        x1, y1 = win32gui.GetCursorPos()
+        x1, y1 = GetCursorPos()
         x2, y2 = self.parent.GetScreenPosition()
         self.offset = (x1 - x2, y1 - y2)
         
@@ -470,7 +470,7 @@ class RemotePanel(wx.Panel):
 
 
     def OnDrag(self, event):
-        x1, y1 = win32gui.GetCursorPos()
+        x1, y1 = GetCursorPos()
         x2, y2 = self.offset
         self.parent.SetPosition((x1 - x2, y1 - y2))
         

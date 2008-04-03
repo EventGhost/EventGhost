@@ -54,7 +54,7 @@ eg.RegisterPlugin(
 )
     
 
-CMDS = (
+ACTIONS = (
     ("OSDMenu", "OSD-Menu", 111),
     ("OSDLeft", "OSD-Left", 2000),
     ("OSDRight", "OSD-Right", 2100),
@@ -219,17 +219,15 @@ CMDS = (
 )
 
         
-from win32com.client import Dispatch, DispatchWithEvents
-from win32gui import SendMessageTimeout
-from win32con import SMTO_BLOCK, SMTO_ABORTIFHUNG
 from functools import partial
+from win32com.client import Dispatch, DispatchWithEvents
+from eg.WinApi import SendMessageTimeout
 
 
 class Text:
     interfaceBox = "Interface API"
     useComApi = "COM-API (for DVBViewer Pro)"
     useSendMessage = "SendMessage-API (for DVBViewer GE)"
-    errorNoWindow = "Couldn't find DVBViewer window"
 
 
 class EventHandler:
@@ -304,24 +302,21 @@ class DvbViewerWorkerThread(eg.ThreadWorker):
         self.plugin.workerThread = None
 
 
-MyWindowMatcher = eg.WindowMatcher(
+gWindowMatcher = eg.WindowMatcher(
     'DVBViewer.exe', None, 'TfrmMain', None, None, 1, True, 0.0, 0
 )
-    
-    
+
+
 class DVBViewer(eg.PluginClass):
     text = Text
     
     def __init__(self):
         self.AddAction(Start)
-        for tmpName, tmpDescription, tmpValue in CMDS:
-            class tmpAction(eg.ActionClass):
-                name = tmpDescription
-                value = tmpValue
-                def __call__(self2):
-                    self.SendCommand(self2.value)
-            tmpAction.__name__ = tmpName
-            self.AddAction(tmpAction)
+        
+        class ActionPrototype(eg.ActionClass):
+            def __call__(self2):
+                return self.SendCommand(self2.value)
+        self.AddActionsFromList(ACTIONS, ActionPrototype)
             
         # create a new subclass of the EventHandler with the ability to use 
         # the plugin's TriggerEvent method
@@ -345,19 +340,12 @@ class DVBViewer(eg.PluginClass):
         
         
     def SendCommandThroughSendMessage(self, value):
-        hwnds = MyWindowMatcher()
-        if len(hwnds) == 0:
-            self.PrintError(self.text.errorNoWindow)
-            return
-        _, result = SendMessageTimeout(
-            hwnds[0],
-            45762, 
-            2069, 
-            100 + value, 
-            SMTO_BLOCK|SMTO_ABORTIFHUNG,
-            2000 # wait at most 2 seconds
-        )
-
+        try:
+            hwnd = gWindowMatcher()[0]
+            return SendMessageTimeout(hwnd, 45762, 2069, 100 + value)
+        except:
+            raise self.Exceptions.ProgramNotRunning
+        
         
     def SendCommandThroughCOM(self, value):
         if not self.workerThread:

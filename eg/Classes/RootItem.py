@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import pythoncom
 import time
 from ContainerItem import ContainerItem
 from TreeItem import HINT_NO_DROP, HINT_MOVE_INSIDE
@@ -35,8 +34,9 @@ class RootItem(ContainerItem):
     isRenameable = False            
     
     def GetData(self):
+        from comtypes import GUID
         attr, text = ContainerItem.GetData(self)
-        self.guid = str(pythoncom.CreateGuid())
+        self.guid = str(GUID.create_new())
         self.time = str(time.time())
         attr.append(('Version', str(eg.buildNum)))
         attr.append(('Guid', self.guid))

@@ -34,6 +34,11 @@ eg.RegisterPlugin(
     ),
 )
 
+# changelog:
+# 0.2 by bitmonster
+#     - changed code to use AddActionsFromList and the new WinApi functions.
+# 0.1 by Oystein Hansen
+#     - initial version
 
 
 # This is the list of actions we want to produce:
@@ -57,8 +62,7 @@ ACTIONS = (
 
 
 # Now we import some other things we will need later
-from win32gui import FindWindow, SendMessageTimeout
-from win32con import WM_COMMAND, SMTO_BLOCK, SMTO_ABORTIFHUNG
+from eg.WinApi import FindWindow, SendMessageTimeout, WM_COMMAND
 
 
 # Next we define a prototype for all actions, because they all work the same
@@ -73,17 +77,9 @@ class ActionPrototype(eg.ActionClass):
         """
         try:
             hWMP = FindWindow('WMPlayerApp', None)
-            _, result = SendMessageTimeout(
-                hWMP, # the window handle
-                WM_COMMAND, # the message number
-                self.data, # the wParam value
-                0, # the lParam value
-                SMTO_BLOCK|SMTO_ABORTIFHUNG,
-                2000 # wait at most 2 seconds
-            )
-            return result
+            return SendMessageTimeout(hWMP, WM_COMMAND, self.value, 0)
         except:
-            self.PrintError("Windows Media Player is not running")
+            raise self.Exceptions.ProgramNotRunning
 
 
 # And now we define the actual plugin:
@@ -91,11 +87,5 @@ class ActionPrototype(eg.ActionClass):
 class WMPlayer(eg.PluginClass):
          
     def __init__(self):
-        for clsName, actionName, actionDescription, actionData in ACTIONS:
-            class TmpAction(ActionPrototype):
-                name = actionName
-                description = actionDescription
-                data = actionData
-            TmpAction.__name__ = clsName
-            self.AddAction(TmpAction)
+        self.AddActionsFromList(ACTIONS, ActionPrototype)
         

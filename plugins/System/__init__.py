@@ -47,33 +47,33 @@ eg.RegisterPlugin(
 import time
 import sys
 import os
-import os.path
 import thread
+import _winreg
 from threading import Timer
 
-from win32con import (
+from eg.WinApi.Dynamic import (
+    # functions:
+    GetDriveType, SendMessage, SetThreadExecutionState, GetCurrentProcess, 
+    InitiateSystemShutdown, CreateFile, CloseHandle, DeviceIoControl,
+    SystemParametersInfo, ExitWindowsEx, OpenProcessToken, GetForegroundWindow,
+    LookupPrivilegeValue, AdjustTokenPrivileges, c_buffer, byref, sizeof,
+    
+    # types:
+    DWORD, HANDLE, LUID, TOKEN_PRIVILEGES,
+    
+    # constants:
     GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, WM_SYSCOMMAND, SC_SCREENSAVE,
     SC_MONITORPOWER, TOKEN_ADJUST_PRIVILEGES, TOKEN_QUERY, SE_SHUTDOWN_NAME,
     SE_PRIVILEGE_ENABLED, EWX_LOGOFF, SPI_SETDESKWALLPAPER, SPIF_SENDCHANGE,
-    SPIF_UPDATEINIFILE, HKEY_CURRENT_USER, REG_SZ
-)
-import win32api
-import win32gui
-import win32file
-import win32process
-import win32clipboard
-from win32security import (
-    OpenProcessToken, 
-    LookupPrivilegeValue, 
-    AdjustTokenPrivileges,
+    SPIF_UPDATEINIFILE, INVALID_HANDLE_VALUE
 )
 
 import ctypes
 import Image
 
-import eg.WinAPI.SoundMixer as SoundMixer
-from eg.WinAPI.Utils import BringHwndToFront
-from eg.WinAPI.Utils import GetMonitorDimensions
+import eg.WinApi.SoundMixer as SoundMixer
+from eg.WinApi.Utils import BringHwndToFront
+from eg.WinApi.Utils import GetMonitorDimensions
 from eg.cFunctions import RegisterKeyhook, UnregisterKeyhook
 from eg.cFunctions import ResetIdleTimer as HookResetIdleTimer
 from eg.cFunctions import SetIdleTime as HookSetIdleTime
@@ -101,11 +101,11 @@ class Text:
 
     class PowerGroup:
         name = "Power Management"
-        description = \
-            "These actions suspends, hibernates, reboots or shutsdown "\
-            "the computer. Can also lock the workstation and logoff the "\
+        description = (
+            "These actions suspends, hibernates, reboots or shutsdown "
+            "the computer. Can also lock the workstation and logoff the "
             "current user."
-        
+        )
     forced   = "Forced: %s"
     forcedCB = "Force close of all programs"
     
@@ -193,7 +193,7 @@ class System(eg.PluginClass):
         cdDrives = []
         letters = [l + ':' for l in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ']
         for drive in letters:
-            if win32file.GetDriveType(drive)==5:
+            if GetDriveType(drive)==5:
                 cdDrives.append(drive)
         self.cdDrives = cdDrives
         
@@ -320,10 +320,10 @@ class OpenDriveTray(eg.ActionClass):
     def __call__(self, drive=None, action=0):
         drive = drive or self.cdDrives[0]
 
-        def EjectMedia():
+        def SendCodeToDrive(code):
             device = getDeviceHandle(drive)
             try:
-                hdevice = win32file.CreateFile(
+                hDevice = CreateFile(
                     device, 
                     GENERIC_READ,
                     FILE_SHARE_READ, 
@@ -332,47 +332,37 @@ class OpenDriveTray(eg.ActionClass):
                     0, 
                     0
                 )
-            except:
+            except Exception, exc:
                 self.PrintError(
                     "Couldn't find drive %s:" % drive[:1].upper()
                 )
                 return 
-            win32file.DeviceIoControl(hdevice, 2967560, "", 0, None)
-            win32file.CloseHandle(hdevice)
-    
-        def LoadMedia():
-            device = getDeviceHandle(drive)
-            try:
-                hdevice = win32file.CreateFile(
-                    device, 
-                    GENERIC_READ,
-                    FILE_SHARE_READ, 
-                    None, 
-                    OPEN_EXISTING, 
-                    0, 
-                    0
-                )
-            except:
-                self.PrintError(
-                    "Couldn't find drive %s:" % drive[:1].upper()
-                )
-                return 
-            win32file.DeviceIoControl(hdevice, 2967564, "", 0, None)
-            win32file.CloseHandle(hdevice)
+            bytesReturned = DWORD()
+            DeviceIoControl(
+                hDevice, # handle to the device
+                code,    # control code for the operation
+                None,    # pointer to the input buffer
+                0,       # size of the input buffer
+                None,    # pointer to the output buffer
+                0,       # size of the output buffer
+                byref(bytesReturned), 
+                None     # pointer to an OVERLAPPED structure
+            )
+            CloseHandle(hDevice)
     
         def ToggleMedia():
             start = time.clock()
-            EjectMedia()
+            SendCodeToDrive(2967560)
             end = time.clock()
             if end - start < 0.1:
-                LoadMedia()
+                SendCodeToDrive(2967564)
     
         if action is 0:
             thread.start_new_thread(ToggleMedia, ())
         elif action is 1:
-            thread.start_new_thread(EjectMedia, ())
+            thread.start_new_thread(SendCodeToDrive, (2967560, ))
         elif action is 2:
-            thread.start_new_thread(LoadMedia, ())
+            thread.start_new_thread(SendCodeToDrive, (2967564, ))
             
             
     def GetLabel(self, drive, action):
@@ -395,7 +385,7 @@ class OpenDriveTray(eg.ActionClass):
         cdDrives = []
         letters = [letter + ':' for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ']
         for driveLetter in letters:
-            if win32file.GetDriveType(driveLetter) == 5:
+            if GetDriveType(driveLetter) == 5:
                 cdDrives.append(driveLetter)
 
         choice = wx.Choice(panel, -1, choices=cdDrives)
@@ -472,10 +462,6 @@ class SetClipboard(eg.ActionWithStringParameter):
             wx.TheClipboard.Close()
             wx.TheClipboard.Flush()
             eg.app.clipboardEvent.Fire()
-#        if None == win32clipboard.OpenClipboard(0):
-#            win32clipboard.EmptyClipboard()
-#            win32clipboard.SetClipboardText(self.clipboardString)
-#            win32clipboard.CloseClipboard()
         else:
             PrintError(self.text.error)
     
@@ -487,12 +473,7 @@ class StartScreenSaver(eg.ActionClass):
     iconFile = "icons/StartScreenSaver"
         
     def __call__(self):
-        win32api.SendMessage(
-            win32gui.GetForegroundWindow(),
-            WM_SYSCOMMAND, 
-            SC_SCREENSAVE, 
-            0
-        )
+        SendMessage(GetForegroundWindow(), WM_SYSCOMMAND, SC_SCREENSAVE, 0)
 
 
 
@@ -502,12 +483,7 @@ class MonitorStandby(eg.ActionClass):
     iconFile = "icons/Display"
         
     def __call__(self):
-        win32api.SendMessage(
-            win32gui.GetForegroundWindow(),
-            WM_SYSCOMMAND, 
-            SC_MONITORPOWER, 
-            1
-        )
+        SendMessage(GetForegroundWindow(), WM_SYSCOMMAND, SC_MONITORPOWER, 1)
 
 
 
@@ -519,18 +495,10 @@ class MonitorPowerOff(eg.ActionClass):
     iconFile = "icons/Display"
         
     def __call__(self):
-        win32api.SendMessage(
-            win32gui.GetForegroundWindow(),
-            WM_SYSCOMMAND, 
-            SC_MONITORPOWER, 
-            2
-        )
+        SendMessage(GetForegroundWindow(), WM_SYSCOMMAND, SC_MONITORPOWER, 2)
 
 
 
-#-----------------------------------------------------------------------------
-# Action: System.MonitorPowerOn
-#-----------------------------------------------------------------------------
 class MonitorPowerOn(eg.ActionClass):
     name = "Re-enable monitor"
     description = \
@@ -539,18 +507,10 @@ class MonitorPowerOn(eg.ActionClass):
     iconFile = "icons/Display"
         
     def __call__(self):
-        win32api.SendMessage(
-            win32gui.GetForegroundWindow(),
-            WM_SYSCOMMAND, 
-            SC_MONITORPOWER, 
-            -1
-        )
+        SendMessage(GetForegroundWindow(), WM_SYSCOMMAND, SC_MONITORPOWER, -1)
             
             
             
-#-----------------------------------------------------------------------------
-# Action: System.PowerDown
-#-----------------------------------------------------------------------------
 class __ComputerPowerAction(eg.ActionClass):
     iconFile = "icons/Shutdown"
     
@@ -571,48 +531,59 @@ class __ComputerPowerAction(eg.ActionClass):
     
             
             
+def AdjustPrivileges():
+    """
+    Adjust privileges to allow power down and reboot.
+    """
+    hToken = HANDLE()
+    luid = LUID()
+    OpenProcessToken(
+        GetCurrentProcess(),
+        TOKEN_ADJUST_PRIVILEGES|TOKEN_QUERY,
+        byref(hToken)
+    )
+    LookupPrivilegeValue(None, SE_SHUTDOWN_NAME, byref(luid))
+    newState = TOKEN_PRIVILEGES()
+    newState.PrivilegeCount = 1
+    newState.Privileges[0].Luid = luid
+    newState.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED
+    AdjustTokenPrivileges(
+        hToken,           # TokenHandle
+        0,                # DisableAllPrivileges
+        newState,         # NewState
+        sizeof(newState), # BufferLength
+        None,             # PreviousState
+        None              # ReturnLength
+    )
+    
+    
+            
 class PowerDown(__ComputerPowerAction):   
-    name = "Power down computer"
+    name = "Turn Off Computer"
     description = \
         "Shuts down the system and turns off the power. The system "\
         "must support the power-off feature."
     iconFile = "icons/PowerDown"
     
     def __call__(self, bForceClose=False):
-        hToken = OpenProcessToken(  
-            win32api.GetCurrentProcess(),
-            TOKEN_ADJUST_PRIVILEGES|TOKEN_QUERY
-        )
-        Luid = LookupPrivilegeValue(None, SE_SHUTDOWN_NAME)
-        AdjustTokenPrivileges(hToken, False, [(Luid, SE_PRIVILEGE_ENABLED)])
-        win32api.InitiateSystemShutdown(None, None, 0, bForceClose, False)
+        AdjustPrivileges()
+        InitiateSystemShutdown(None, None, 0, bForceClose, False)
         
         
         
-#-----------------------------------------------------------------------------
-# Action: System.Reboot
-#-----------------------------------------------------------------------------
 class Reboot(__ComputerPowerAction):       
-    name = "Reboot computer"
+    name = "Reboot Computer"
     description = "Shuts down the system and then restarts the system."
     iconFile = "icons/Reboot"
 
     def __call__(self, bForceClose=False):
-        hToken = OpenProcessToken(  
-            win32api.GetCurrentProcess(),
-            TOKEN_ADJUST_PRIVILEGES|TOKEN_QUERY
-        )
-        Luid = LookupPrivilegeValue(None, SE_SHUTDOWN_NAME)
-        AdjustTokenPrivileges(hToken, False, [(Luid, SE_PRIVILEGE_ENABLED)])
-        win32api.InitiateSystemShutdown(None, None, 0, bForceClose, True)
+        AdjustPrivileges()
+        InitiateSystemShutdown(None, None, 0, bForceClose, True)
 
 
 
-#-----------------------------------------------------------------------------
-# Action: System.Standby
-#-----------------------------------------------------------------------------
 class Standby(__ComputerPowerAction):
-    name = "Put computer into standby mode"
+    name = "Stand By"
     description = \
         "This function suspends the system by shutting power down "\
         "and enters a suspend (sleep) state."
@@ -626,11 +597,8 @@ class Standby(__ComputerPowerAction):
         
         
         
-#-----------------------------------------------------------------------------
-# Action: System.Hibernate
-#-----------------------------------------------------------------------------
 class Hibernate(__ComputerPowerAction):  
-    name = "Hibernate computer"
+    name = "Hibernate Computer"
     description = \
         "This function suspends the system by shutting power down "\
         "and enters a hibernation (S4) state."
@@ -644,9 +612,6 @@ class Hibernate(__ComputerPowerAction):
         
         
         
-#-----------------------------------------------------------------------------
-# Action: System.LogOff
-#-----------------------------------------------------------------------------
 class LogOff(eg.ActionClass):   
     name = "Log-off current user"
     description = "Shuts down all processes running in the current "\
@@ -659,15 +624,12 @@ class LogOff(eg.ActionClass):
         #SHTDN_REASON_FLAG_PLANNED          = 0x80000000
         #                                     ----------
         #                                     0x80020003
-        ctypes.windll.user32.ExitWindowsEx(EWX_LOGOFF, 0x80020003)
+        ExitWindowsEx(EWX_LOGOFF, 0x80020003)
             
             
             
-#-----------------------------------------------------------------------------
-# Action: System.LockWorkstation
-#-----------------------------------------------------------------------------
 class LockWorkstation(eg.ActionClass):   
-    name = "Lock workstation"
+    name = "Lock Workstation"
     description = \
         "This function submits a request to lock the workstation's "\
         "display. Locking a workstation protects it from "\
@@ -680,9 +642,6 @@ class LockWorkstation(eg.ActionClass):
         
         
         
-#-----------------------------------------------------------------------------
-# Action: System.SetWallpaper
-#-----------------------------------------------------------------------------
 class SetWallpaper(eg.ActionWithStringParameter):   
     name = "Change Wallpaper"
     iconFile = "icons/SetWallpaper"
@@ -703,31 +662,30 @@ class SetWallpaper(eg.ActionWithStringParameter):
             imageFileName = eg.folderPath.RoamingAppData + '\\Microsoft\\Wallpaper1.bmp'
             image.SaveFile(imageFileName, wx.BITMAP_TYPE_BMP)
         tile, wstyle = (("0", "0"), ("1", "0"), ("0", "2"))[style]
-        hKey = win32api.RegCreateKey(
-            HKEY_CURRENT_USER,
+        hKey = _winreg.CreateKey(
+            _winreg.HKEY_CURRENT_USER, 
             "Control Panel\\Desktop"
         )
-        win32api.RegSetValueEx(
+        _winreg.SetValueEx(
             hKey, 
             "TileWallpaper", 
             0, 
-            REG_SZ, 
+            _winreg.REG_SZ, 
             tile
         )
-        win32api.RegSetValueEx(
+        _winreg.SetValueEx(
             hKey, 
             "WallpaperStyle", 
             0, 
-            REG_SZ, 
+            _winreg.REG_SZ, 
             wstyle
         )
-        win32api.RegCloseKey(hKey)
+        _winreg.CloseKey(hKey)
         
-        cs = ctypes.c_buffer(imageFileName)
-        ok = ctypes.windll.user32.SystemParametersInfoA(
+        ok = SystemParametersInfo(
             SPI_SETDESKWALLPAPER, 
             0, 
-            cs, 
+            c_buffer(imageFileName), 
             SPIF_SENDCHANGE|SPIF_UPDATEINIFILE
         )
 
@@ -981,7 +939,7 @@ class ShowPictureFrame(wx.Frame):
         
         
 class ShowPicture(eg.ActionClass):
-    name = "Show picture"
+    name = "Show Picture"
     description = "Shows a picture on the screen."
     iconFile = "icons/ShowPicture"
     class text:
@@ -1043,7 +1001,7 @@ class SetDisplayPreset(eg.ActionClass):
         
         
     def __call__(self, *args):
-        eg.WinAPI.Display.SetDisplayModes(*args)
+        eg.WinApi.Display.SetDisplayModes(*args)
         
     
     def GetLabel(self, *args):
@@ -1056,7 +1014,7 @@ class SetDisplayPreset(eg.ActionClass):
         panel.dialog.buttonRow.okButton.Enable(False)
         panel.dialog.buttonRow.applyButton.Enable(False)
         def OnButton(event):
-            FillList(eg.WinAPI.Display.GetDisplayModes())
+            FillList(eg.WinApi.Display.GetDisplayModes())
             panel.dialog.buttonRow.okButton.Enable(True)
             panel.dialog.buttonRow.applyButton.Enable(True)
         
@@ -1150,10 +1108,9 @@ class WakeOnLan(eg.ActionClass):
 #-----------------------------------------------------------------------------
 # Action: System.SetSystemIdleTimer
 #-----------------------------------------------------------------------------
-from ctypes.dynamic import SetThreadExecutionState
 
 class SetSystemIdleTimer(eg.ActionClass):
-    name = "Set system idle timer"
+    name = "Set System Idle Timer"
     class text:
         text = "Choose option:"
         choices = [

@@ -31,11 +31,17 @@ eg.RegisterPlugin(
 import time
 import os
 from functools import partial
-from ctypes import byref, c_char_p, Structure, POINTER, windll
-from ctypes.wintypes import DWORD
-import win32file
-import win32con
 import wx.lib.masked as masked
+from eg.WinApi.Dynamic import (
+    byref, 
+    windll,
+    DWORD,
+    GENERIC_READ,
+    GENERIC_WRITE,
+    OPEN_EXISTING,
+    FILE_ATTRIBUTE_NORMAL,
+    FILE_FLAG_OVERLAPPED,
+)
 
 FT_OPEN_BY_DESCRIPTION = 2
 
@@ -69,11 +75,11 @@ class Fhz1000Pc(eg.PluginClass):
             )
         self.ftHandle = d2xx.FT_W32_CreateFile(
             'ELV FHZ 1000 PC',
-            win32con.GENERIC_READ|win32con.GENERIC_WRITE,
+            GENERIC_READ|GENERIC_WRITE,
             0, # exclusive access
             0, # no security
-            win32con.OPEN_EXISTING,
-            win32con.FILE_ATTRIBUTE_NORMAL|win32con.FILE_FLAG_OVERLAPPED|FT_OPEN_BY_DESCRIPTION,
+            OPEN_EXISTING,
+            FILE_ATTRIBUTE_NORMAL|FILE_FLAG_OVERLAPPED|FT_OPEN_BY_DESCRIPTION,
             0
         )
         self.receiveThread = eg.SerialThread(self.ftHandle)
@@ -166,9 +172,11 @@ class Fhz1000Pc(eg.PluginClass):
         
         
     def ReadFhz(self):
-        startByte = ord(self.Read(1))
-        if startByte != 0x81:
-            raise FhzException("Wrong start byte.")
+        startByte = self.Read(1)
+        if startByte != "\x81":
+            self.PrintError("Wrong start byte.")
+            return None
+            # raise FhzException("Wrong start byte.")
         length = ord(self.Read(1))
         data = [ord(c) for c in self.Read(length)]
         telegramType = data[0]

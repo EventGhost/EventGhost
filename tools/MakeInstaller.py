@@ -27,8 +27,6 @@ import fnmatch
 import time
 import zipfile
 import subprocess
-import win32process
-import win32con
 import _winreg
 import locale
 from ftplib import FTP
@@ -279,9 +277,9 @@ AppName=EventGhost
 AppVerName=EventGhost %(version)s build %(buildNum)s
 DefaultDirName={pf}\EventGhost
 DefaultGroupName=EventGhost
-Compression=lzma/max
+Compression=lzma/ultra
 SolidCompression=yes
-InternalCompressLevel=max
+InternalCompressLevel=ultra
 OutputDir=%(OUT_DIR)s
 OutputBaseFilename=%(OUT_FILE_BASE)s
 LicenseFile=%(TOOLS_DIR)s\LICENSE.RTF
@@ -298,6 +296,9 @@ Source: "%(TRUNK)s\*.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "%(TRUNK)s\lib\*.*"; DestDir: "{app}\lib"; Flags: ignoreversion recursesubdirs
 %(INSTALL_FILES)s
 Source: "%(TRUNK)s\Example.xml"; DestDir: "{userappdata}\EventGhost"; DestName: "MyConfig.xml"; Flags: onlyifdoesntexist uninsneveruninstall
+Source: "%(TRUNK)s\WebSite.url"; DestName: "EventGhost Web Site.url"; DestDir: "{group}"
+Source: "%(TRUNK)s\WebForums.url"; DestName: "EventGhost Forums.url"; DestDir: "{group}"
+Source: "%(TRUNK)s\WebWiki.url"; DestName: "EventGhost Wiki.url"; DestDir: "{group}"
 
 [Run]
 Filename: "{app}\EventGhost.exe"; Parameters: "-install"

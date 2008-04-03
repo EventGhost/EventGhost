@@ -39,16 +39,20 @@ eg.RegisterPlugin(
 )
 
 
-import win32gui
-import win32api
-import win32con
-import os
-import string
-
-from eg.WinAPI.Utils import BringHwndToFront, CloseHwnd
-from ctypes.dynamic import SendNotifyMessage, GetAncestor, GA_ROOT
-from ctypes.dynamic import PostMessage as Win32_PostMessage
-from ctypes.dynamic import SendMessage as Win32_SendMessage
+from eg.WinApi.Utils import BringHwndToFront, CloseHwnd
+from eg.WinApi.Dynamic import (
+    # functions:
+    SendNotifyMessage, GetAncestor, GetWindowLong, ShowWindow, GetWindowRect,
+    GetForegroundWindow, MoveWindow, IsWindow, SetWindowPos, PostMessage,
+    SendMessage, byref,
+    
+    # types:
+    RECT, 
+    
+    # constants:
+    GA_ROOT, SW_MAXIMIZE, SW_MINIMIZE, SW_RESTORE, WM_COMMAND, GWL_EXSTYLE,
+    WS_EX_TOPMOST, SWP_NOMOVE, SWP_NOSIZE, HWND_TOPMOST, HWND_NOTOPMOST,
+)
 
 # imports local to plugin
 from FindWindow import FindWindow
@@ -58,14 +62,14 @@ from SendKeys import SendKeys
 def GetTargetWindows():
     hwnds = eg.lastFoundWindows
     if not hwnds:
-        return [win32gui.GetForegroundWindow()]
+        return [GetForegroundWindow()]
     return hwnds
 
 
 def GetTopLevelOfTargetWindows():
     hwnds = eg.lastFoundWindows
     if not hwnds:
-        return [win32gui.GetForegroundWindow()]
+        return [GetForegroundWindow()]
     return list(set([GetAncestor(hwnd, GA_ROOT) for hwnd in hwnds]))
 
 
@@ -109,13 +113,14 @@ class MoveTo(eg.ActionClass):
 
     
     def __call__(self, x, y):
+        r = RECT()
         for hwnd in GetTopLevelOfTargetWindows():
-            left, top, right, bottom = win32gui.GetWindowRect(hwnd)
+            GetWindowRect(hwnd, byref(r))
             if x is None:
-                x = left
+                x = r.left
             if y is None:
-                y = top
-            win32gui.MoveWindow(hwnd, x, y, right - left, bottom - top, 1)
+                y = r.top
+            MoveWindow(hwnd, x, y, r.right - r.left, r.bottom - r.top, 1)
             
             
     def GetLabel(self, x, y):
@@ -165,13 +170,14 @@ class Resize(MoveTo):
 
     
     def __call__(self, width=None, height=None):
+        r = RECT()
         for hwnd in GetTopLevelOfTargetWindows():
-            left, top, right, bottom = win32gui.GetWindowRect(hwnd)
+            GetWindowRect(hwnd, byref(r))
             if width is None:
-                width = right - left - 1
+                width = r.right - r.left - 1
             if height is None:
-                height = bottom - top - 1
-            win32gui.MoveWindow(hwnd, left, top, width+1, height+1, 1)
+                height = r.bottom - r.top - 1
+            MoveWindow(hwnd, r.left, r.top, width+1, height+1, 1)
         
         
     def GetLabel(self, x, y):
@@ -184,7 +190,7 @@ class Maximize(eg.ActionClass):
     
     def __call__(self):
         for hwnd in GetTopLevelOfTargetWindows():
-            win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
+            ShowWindow(hwnd, SW_MAXIMIZE)
 
 
 
@@ -193,7 +199,7 @@ class Minimize(eg.ActionClass):
     
     def __call__(self):
         for hwnd in GetTopLevelOfTargetWindows():
-            win32gui.ShowWindow(hwnd, win32con.SW_MINIMIZE)
+            ShowWindow(hwnd, SW_MINIMIZE)
 
 
 
@@ -202,7 +208,7 @@ class Restore(eg.ActionClass):
     
     def __call__(self):
         for hwnd in GetTopLevelOfTargetWindows():
-            win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+            ShowWindow(hwnd, SW_RESTORE)
 
 
 
@@ -238,9 +244,9 @@ class SendMessage(eg.ActionClass):
         result = None
         for hwnd in GetTargetWindows():
             if kind == 0:
-                result = Win32_SendMessage(hwnd, mesg, wParam, lParam)
+                result = SendMessage(hwnd, mesg, wParam, lParam)
             else:
-                result = Win32_PostMessage(hwnd, mesg, wParam, lParam)
+                result = PostMessage(hwnd, mesg, wParam, lParam)
         return result
     
             
@@ -252,7 +258,7 @@ class SendMessage(eg.ActionClass):
         )
             
             
-    def Configure(self, mesg=win32con.WM_COMMAND, wParam=0, lParam=0, kind=0):
+    def Configure(self, mesg=WM_COMMAND, wParam=0, lParam=0, kind=0):
         mesgValues, mesgNames = zip(*self.msgConstants)
         mesgValues, mesgNames = list(mesgValues), list(mesgNames)
         try:
@@ -308,21 +314,17 @@ class SetAlwaysOnTop(eg.ActionClass):
     
     def __call__(self, action=2):
         for hwnd in GetTargetWindows():
-            if not win32gui.IsWindow(hwnd):
+            if not IsWindow(hwnd):
                 self.PrintError("Not a window")
                 continue
-            isAlwaysOnTop = win32api.GetWindowLong(
-                hwnd,
-                win32con.GWL_EXSTYLE
-            ) & win32con.WS_EX_TOPMOST != 0
+            style = GetWindowLong(hwnd, GWL_EXSTYLE) 
+            isAlwaysOnTop = (style & WS_EX_TOPMOST) != 0
             if action == 1 or (action == 2 and not isAlwaysOnTop):
-                flag = win32con.HWND_TOPMOST
+                flag = HWND_TOPMOST
             else:
-                flag = win32con.HWND_NOTOPMOST
+                flag = HWND_NOTOPMOST
                 
-            win32gui.SetWindowPos(
-                hwnd, flag, 0, 0, 0, 0, win32con.SWP_NOMOVE|win32con.SWP_NOSIZE
-            )
+            SetWindowPos(hwnd, flag, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE)
 
 
     def GetLabel(self, action):

@@ -22,9 +22,12 @@
 
 import traceback
 import time
-import win32api
-from win32process import SetProcessWorkingSetSize, GetCurrentProcess
 from functools import partial
+from eg.WinApi.Dynamic import (
+    GetTickCount, 
+    SetProcessWorkingSetSize, 
+    GetCurrentProcess
+)
 
 EventGhostEvent = eg.EventGhostEvent
 
@@ -100,7 +103,7 @@ class EventThread(eg.ThreadWorker):
         )
         
         self.TriggerEvent("OnInit")
-        boottime = time.time() - win32api.GetTickCount() / 1000.0
+        boottime = time.time() - GetTickCount() / 1000.0
         if boottime > int(eg.config.storedBootTime) + 10:
             eg.config.storedBootTime = boottime
             eg.config.Save()

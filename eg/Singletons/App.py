@@ -22,15 +22,10 @@
 
 import sys
 import time
-import pythoncom
 import threading
-from win32process import (
-    ExitProcess,
-    SetProcessShutdownParameters,
-    SetPriorityClass, 
-    GetCurrentProcess
+from eg.WinApi.Dynamic import (
+    WM_QUERYENDSESSION, WM_ENDSESSION, SetProcessShutdownParameters
 )
-from win32con import REALTIME_PRIORITY_CLASS, WM_QUERYENDSESSION, WM_ENDSESSION
 
 
 
@@ -42,7 +37,6 @@ class App(wx.App):
     
     #@eg.LogIt
     def OnInit(self):
-        #SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS)
         self.SetAppName(eg.APP_NAME)
         self.SetExitOnFrameDelete(False)
         
@@ -120,15 +114,14 @@ class App(wx.App):
             egEvent = eg.eventThread.TriggerEvent("OnClose")
             while not egEvent.isEnded:
                 self.Yield()
-            eg.PrintDebugNotice("Calling exit funcs")    
                 
+            eg.PrintDebugNotice("Calling exit funcs")    
             for func in self.onExitFuncs:
                 eg.PrintDebugNotice(func)
                 func()
+                
             eg.PrintDebugNotice("Calling eg.DeInit()")    
             eg.DeInit()
-        
-        eg.PrintDebugNotice("COM interface count: %s" % pythoncom._GetInterfaceCount())
         
         eg.PrintDebugNotice("Threads:")
         for t in threading.enumerate():

@@ -1,4 +1,3 @@
-
 # Plugins/Foobar2000/__init__.py
 #
 # Copyright (C) 2006 MonsterMagnet
@@ -27,7 +26,7 @@
 eg.RegisterPlugin(
     name = "Foobar2000",
     author = "MonsterMagnet",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.1." + "$LastChangedRevision$".split()[1],
     kind = "program",
     description = (
         'Adds actions to control the <a href="http://www.foobar2000.org/">'
@@ -55,6 +54,12 @@ eg.RegisterPlugin(
     ),
 )
 
+# changelog:
+# 1.1 by bitmonster
+#     - changed code to use new AddActionsFromList method
+# 1.0 by MonsterMagnet
+#     - initial version
+
 
 # Now import some other modules that are needed for the special purpose of
 # this plugin.
@@ -74,7 +79,7 @@ from win32api import ShellExecute
 #      it is the parameter that will be used for a commandline that calls
 #      Foobar2000.
 
-fnList = (
+ACTIONS = (
     (
         "Play",
         "Play", 
@@ -264,46 +269,26 @@ fnList = (
 )
 
 
+class ActionPrototype(eg.ActionClass):
+
+    # Every action needs a workhorse.
+    def __call__(self):
+        # This one is quite simple. It just calls ShellExecute.
+        try:
+            head, tail = os.path.split(self.plugin.foobar2000Path)
+            return ShellExecute(0, None, tail, self.value, head, 1)
+        except:
+            # Some error-checking is always fine.
+            raise self.Exceptions.ProgramNotFound
+
+
 # Now we can start to define the plugin by subclassing eg.PluginClass
 class Foobar2000(eg.PluginClass):
     foobar2000Path = None
     
     def __init__(self):
         foobar2000Path = ""
-        # And now begins the tricky part. We will loop through every tuple in
-        # our list to get the needed values.
-        for tmpClassName, tmpName, tmpDescription, tmpParameter in fnList:
-            # Then we will create a subclass of eg.ActionClass on every
-            # iteration and assign the values to the class-variables.
-            class tmpActionClass(eg.ActionClass):
-                name = tmpName
-                description = tmpDescription
-                parameter = tmpParameter
-                
-                # Every action needs a workhorse.
-                def __call__(self):
-                    # This one is quite simple. It just calls ShellExecute.
-                    try:
-                        head, tail = os.path.split(self.plugin.foobar2000Path)
-                        return ShellExecute(
-                            0, 
-                            None, 
-                            tail,
-                            self.parameter, 
-                            head, 
-                            1
-                        )
-                    except:
-                        # Some error-checking is always fine.
-                        self.PrintError("Foobar2000 not found!")
-            
-            # We also have to change the classname of the action to a unique
-            # value, otherwise we would overwrite our newly created action
-            # on the next iteration.
-            tmpActionClass.__name__ = tmpClassName
-            
-            # Finally we cann add the new ActionClass to our plugin
-            self.AddAction(tmpActionClass)
+        self.AddActionsFromList(ACTIONS, ActionPrototype)
 
 
     def __start__(self, foobar2000Path=None):

@@ -36,7 +36,7 @@ eg.RegisterPlugin(
 )
 
 import os
-from ctypes.dynamic import (
+from eg.WinApi.Dynamic import (
     cdll, DWORD, POINTER, ULONG, HANDLE, BYTE, c_void_p, c_int, CFUNCTYPE
 )
 

@@ -64,7 +64,7 @@ eg.RegisterPlugin(
         
 
 from win32com.client import Dispatch
-from eg.WinAPI.Utils import CloseHwnd
+from eg.WinApi.Utils import CloseHwnd
 import time
 import datetime
 import wx.lib.masked as masked

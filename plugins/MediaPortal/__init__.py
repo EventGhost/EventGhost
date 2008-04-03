@@ -70,6 +70,7 @@ ACTIONS = [
     ("NumPad8", "NumPad 8", None, 8),
     ("NumPad9", "NumPad 9", None, 9),
     ("Enter", "Enter", None, 11),
+    ("Power1", "Power1", None, 165),
     ("Power2", "Power2", None, 12),
     ("Start", "Start", None, 13),
     ("Info", "Info", None, 15),
@@ -106,42 +107,26 @@ ACTIONS = [
     ("Blue", "Blue", None, 94),
     ("PowerTV", "PowerTV", None, 101),
     ("Messenger", "Messenger", None, 105),
-    ("Power1", "Power1", None, 165),
 ]
 
-from win32gui import SendMessageTimeout
-from win32con import SMTO_ABORTIFHUNG, SMTO_NORMAL
+from eg.WinApi import SendMessageTimeout
 
-MyWindowMatcher = eg.WindowMatcher("MediaPortal.exe")
-
+gWindowMatcher = eg.WindowMatcher("MediaPortal.exe")
 
 
 class ActionPrototype(eg.ActionClass):
     
     def __call__(self):
         try:
-            hwnd = MyWindowMatcher()[0]
-            return SendMessageTimeout(
-                hwnd, 
-                32768, 
-                24, 
-                self.data, 
-                SMTO_ABORTIFHUNG|SMTO_NORMAL, 
-                1000
-            )[1]
+            hwnd = gWindowMatcher()[0]
+            return SendMessageTimeout(hwnd, 32768, 24, self.value)
         except:
-            raise self.Excpetions.ProgramNotRunning
+            raise self.Exceptions.ProgramNotRunning
 
 
 
 class MediaPortal(eg.PluginClass):
     
     def __init__(self):
-        for clsName, actionName, actionDescription, actionData in ACTIONS:
-            class TmpAction(ActionPrototype):
-                name = actionName
-                description = actionDescription
-                data = actionData
-            TmpAction.__name__ = clsName
-            self.AddAction(TmpAction)
+        self.AddActionsFromList(ACTIONS, ActionPrototype)
 

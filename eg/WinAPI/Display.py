@@ -20,8 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-from ctypes.dynamic import (
-    sizeof, pointer, c_char_p, LPCSTR,
+from eg.WinApi.Dynamic import (
+    sizeof, pointer, c_char_p,
     ENUM_CURRENT_SETTINGS, EDS_RAWMODE, EnumDisplayDevices,
     EnumDisplaySettingsEx, ChangeDisplaySettingsEx, DISPLAY_DEVICE, DEVMODE, 
     DISPLAY_DEVICE_MIRRORING_DRIVER, DISPLAY_DEVICE_PRIMARY_DEVICE,
@@ -31,18 +31,6 @@ from ctypes.dynamic import (
 )
 
 
-class DISPLAY_DEVICE(DISPLAY_DEVICE):
-    def __init__(self):
-        self.cb = sizeof(DISPLAY_DEVICE)
-
-
-    
-class DEVMODE(DEVMODE):
-    def __init__(self):
-        self.dmSize = sizeof(DEVMODE)
-        
-        
-
 class Display(object):
     
     def __init__(self, iDevNum, displayDevice):
@@ -51,12 +39,12 @@ class Display(object):
         self.DeviceString = displayDevice.DeviceString
         self.isPrimary = bool(displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE)
         self.dm = DEVMODE()
+        self.dm.dmSize = sizeof(DEVMODE)
         self.dmp = pointer(self.dm)
-        self.lpszDeviceName = LPCSTR(self.DeviceName)
     
     
     def Refresh(self):
-        name = self.lpszDeviceName
+        name = self.DeviceName
         dmp = self.dmp
         EnumDisplaySettingsEx(name, 0, dmp, 0)
         EnumDisplaySettingsEx(name, ENUM_CURRENT_SETTINGS, dmp, 0)
@@ -70,15 +58,15 @@ class Display(object):
     
     
     def GetDisplayModes(self, all=False):
-        name = LPCSTR(self.DeviceName)
         dm = DEVMODE()
+        dm.dmSize = sizeof(DEVMODE)
         modes = {}
         if all:
             flag = EDS_RAWMODE
         else:
             flag = 0
         iModeNum = 0
-        while 0 != EnumDisplaySettingsEx(name, iModeNum, pointer(dm), flag):
+        while 0 != EnumDisplaySettingsEx(self.DeviceName, iModeNum, pointer(dm), flag):
             iModeNum += 1
             resolution = (dm.dmPelsWidth, dm.dmPelsHeight)
             deepth_dict = modes.setdefault(resolution, {})
@@ -89,6 +77,7 @@ class Display(object):
 
     def SetDisplayMode(self, size, frequency, bitdepth, flags=0):
         dm = DEVMODE()
+        dm.dmSize = sizeof(DEVMODE)
         dm.dmPelsWidth = size[0]
         dm.dmPelsHeight = size[1]
         dm.dmBitsPerPel = bitdepth
@@ -99,7 +88,7 @@ class Display(object):
             |DM_PELSHEIGHT
             |DM_DISPLAYFREQUENCY
         )
-        ChangeDisplaySettingsEx(self.lpszDeviceName, pointer(dm), 0, flags, 0)
+        ChangeDisplaySettingsEx(self.DeviceName, pointer(dm), 0, flags, 0)
 
 
     def GetCurrentMode(self):
@@ -121,6 +110,7 @@ class Display(object):
 def GetDisplays():
     res = []
     displayDevice = DISPLAY_DEVICE()
+    displayDevice.cb = sizeof(DISPLAY_DEVICE)
     iDevNum = 0
     while True:
         if EnumDisplayDevices(None, iDevNum, pointer(displayDevice), 0) == 0:
@@ -130,6 +120,7 @@ def GetDisplays():
             disp = Display(iDevNum, displayDevice)
             res.append(disp)
             displayDevice = DISPLAY_DEVICE()
+            displayDevice.cb = sizeof(DISPLAY_DEVICE)
         iDevNum += 1
     return res
 
@@ -137,7 +128,9 @@ def GetDisplays():
 def GetDisplayModes():
     res = []
     displayDevice = DISPLAY_DEVICE()
+    displayDevice.cb = sizeof(DISPLAY_DEVICE)
     devMode = DEVMODE()
+    devMode.dmSize = sizeof(DEVMODE)
     iDevNum = 0
     while True:
         if EnumDisplayDevices(None, iDevNum, pointer(displayDevice), 0) == 0:
@@ -169,7 +162,7 @@ def GetDisplayModes():
 
 def SetDisplayModes(*args):
     for (
-        lpszDeviceName, 
+        deviceName, 
         x, 
         y, 
         width, 
@@ -181,6 +174,7 @@ def SetDisplayModes(*args):
         displayFlags
     ) in args:
         devMode = DEVMODE()
+        devMode.dmSize = sizeof(DEVMODE)
         if isAttached:
             devMode.dmPosition.x = x
             devMode.dmPosition.y = y
@@ -200,7 +194,7 @@ def SetDisplayModes(*args):
         flags = (CDS_UPDATEREGISTRY | CDS_NORESET)
         if isPrimary:
             flags |= CDS_SET_PRIMARY
-        ChangeDisplaySettingsEx(lpszDeviceName, pointer(devMode), 0, flags, 0)
+        ChangeDisplaySettingsEx(deviceName, pointer(devMode), 0, flags, 0)
     ChangeDisplaySettingsEx(None, None, 0, 0, 0)          
     
     

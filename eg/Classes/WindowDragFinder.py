@@ -21,10 +21,13 @@
 # $LastChangedBy$
 
 
-from eg.WinAPI.Utils import HighlightWindow, BestWindowFromPoint
-from win32api import GetCurrentProcessId
-from win32gui import GetCursorPos
-from win32process import GetWindowThreadProcessId
+from eg.WinApi import (
+    HighlightWindow, 
+    BestWindowFromPoint, 
+    GetCurrentProcessId, 
+    GetWindowThreadProcessId,
+    GetCursorPos,
+)
 
 ourProcessID = GetCurrentProcessId()
 

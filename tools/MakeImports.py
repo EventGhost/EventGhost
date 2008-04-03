@@ -19,6 +19,7 @@ MODULES_TO_IGNORE = [
     "distutils.command.bdist_packager",
     "distutils.mwerkscompiler",
     "curses",
+    #"ctypes.macholib", # seems to be for Apple
     
     "wx.lib.vtk",
     "wx.tools.Editra",

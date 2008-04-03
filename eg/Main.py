@@ -23,6 +23,7 @@
 import os
 import sys
 import locale
+import ctypes
 
 encoding = locale.getdefaultlocale()[1]
 locale.setlocale(locale.LC_ALL, '')
@@ -114,14 +115,12 @@ while True:
 
 if (not args.allowMultiLoad) and (not args.translate):
     # check if another instance of the program is running
-    from win32process import ExitProcess
-    import win32event, win32api
-    appMutex = win32event.CreateMutex(
+    appMutex = ctypes.windll.kernel32.CreateMutexA(
         None, 
         0, 
         "EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B"
     )
-    if win32api.GetLastError() != 0:
+    if ctypes.GetLastError() != 0:
         # another instance of EventGhost is running
         import win32com.client
         e = win32com.client.Dispatch("{7EB106DC-468D-4345-9CFE-B0021039114B}")
@@ -129,10 +128,10 @@ if (not args.allowMultiLoad) and (not args.translate):
             e.TriggerEvent(args.startupEvent[0], args.startupEvent[1])
         else:
             e.BringToFront()
-        ExitProcess(0)		
+        ctypes.windll.kernel32.ExitProcess(0)		
     
 
 from Init import EventGhost
 eg = EventGhost(args)
 eg.app.MainLoop()
-ExitProcess(0)
+ctypes.windll.kernel32.ExitProcess(0)
