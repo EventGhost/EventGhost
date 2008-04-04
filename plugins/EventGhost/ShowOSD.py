@@ -22,10 +22,12 @@
 
 import threading
 import os
-
+from os.path import join
 from eg.WinApi.Utils import GetMonitorDimensions
 from eg.WinApi.Dynamic import BringWindowToTop, CreateEvent, SetEvent 
     
+gSkinDir = join(os.path.abspath(os.path.split(__file__)[0]), "OsdSkins")
+
 
 class OSDFrame(wx.Frame):
     """ A shaped frame to display the OSD. """
@@ -102,10 +104,10 @@ class OSDFrame(wx.Frame):
         memoryDC.SetBackground(maskBrush)
         
         if skin:
-            bitmap = self.GetSkinnedBitmap(osdText, fontInfo, foregroundColour)
+            bitmap = self.GetSkinnedBitmap(osdText, fontInfo, foregroundColour, "Default")
             w, h = bitmap.GetSize()
         elif outlineColour is None:
-            w, h = memoryDC.GetTextExtent(osdText + "M")
+            w, h = memoryDC.GetTextExtent(osdText)# + "M")
             bitmap = wx.EmptyBitmap(w, h)
             memoryDC.SelectObject(bitmap)
 
@@ -161,7 +163,9 @@ class OSDFrame(wx.Frame):
             bitmap.SetMask(wx.Mask(bitmap, maskColour))
                 
         region = wx.RegionFromBitmap(bitmap)
+        self.SetClientSize((w, h))
         _,_,w,_ = region.GetBox()
+        self.SetShape(region)
         self.bitmap = bitmap
         monitorDimensions = GetMonitorDimensions()
         try:
@@ -206,8 +210,6 @@ class OSDFrame(wx.Frame):
             x = d.x + d.width - xOffset - w
             y = d.y + ((d.height - h) / 2) + yOffset
             
-        self.SetClientSize((w, h))
-        self.SetShape(region)
         self.Show()
         BringWindowToTop(self.GetHandle())
         self.SetPosition((x, y))
@@ -221,17 +223,7 @@ class OSDFrame(wx.Frame):
         SetEvent(event)
         
 
-    def GetSkinnedBitmap(self, text, fontInfo, textColour):
-        xMargin = 8
-        yMargin = 8
-        minWidth = 20
-        minHeight = 26
-        
-        topSize = 13
-        bottomSize = 8
-        leftSize = 8
-        rightSize = 7
-        
+    def GetSkinnedBitmap(self, text, fontInfo, textColour, skinName):
         font = wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD)
         if fontInfo:
             nativeFontInfo = wx.NativeFontInfo()
@@ -239,82 +231,46 @@ class OSDFrame(wx.Frame):
             font.SetNativeFontInfo(nativeFontInfo)
         memDC = wx.MemoryDC()
         memDC.SetFont(font)
-        textWidth, textHeight = memDC.GetTextExtent(text)
         
-        quality = wx.IMAGE_QUALITY_HIGH 
+        image = wx.Image(join(gSkinDir, skinName + ".png"))        
+        o = eg.Bunch()
         
-        newWidth, newHeight = memDC.GetTextExtent(text)
-        newWidth = textWidth + 2 * xMargin
-        if newWidth < minWidth:
-            newWidth = minWidth
-        newHeight = textHeight + 2 * yMargin
-        if newHeight < minHeight:
-            newHeight = minHeight
-        
-        image = wx.Image(os.path.abspath(os.path.split(__file__)[0]) + "\\ShowOSDSkin.png")
-        w, h = image.GetSize()
-        middleHeight = h - (topSize + bottomSize)
-        middleWidth = w - (leftSize + rightSize)
-        
-        bitmap = wx.EmptyBitmap(newWidth, newHeight)
-        memDC.SelectObject(bitmap)
-
-        # top left corner
-        subImage = image.GetSubImage((0, 0, leftSize, topSize))
-        bmp = wx.BitmapFromImage(subImage)
-        memDC.DrawBitmap(bmp, 0, 0)
-        
-        # top right corner
-        subImage = image.GetSubImage((w - rightSize, 0, rightSize, topSize))
-        bmp = wx.BitmapFromImage(subImage)
-        memDC.DrawBitmap(bmp, newWidth - rightSize, 0)
-        
-        # bottom left corner
-        subImage = image.GetSubImage((0, h - bottomSize, leftSize, bottomSize))
-        bmp = wx.BitmapFromImage(subImage)
-        memDC.DrawBitmap(bmp, 0, newHeight - bottomSize)
-                
-        # bottom right corner
-        subImage = image.GetSubImage((w - rightSize, h - bottomSize, rightSize, bottomSize))
-        bmp = wx.BitmapFromImage(subImage)
-        memDC.DrawBitmap(bmp, newWidth - rightSize, newHeight - bottomSize)
-
-        # left border
-        subImage = image.GetSubImage((0, topSize, leftSize, middleHeight))
-        subImage.Rescale(leftSize, newHeight - (topSize + bottomSize), quality)
-        bmp = wx.BitmapFromImage(subImage)
-        memDC.DrawBitmap(bmp, 0, topSize)
-        
-        # top border
-        subImage = image.GetSubImage((leftSize, 0, middleWidth, topSize))
-        subImage.Rescale(newWidth - (rightSize + leftSize), topSize, quality)
-        bmp = wx.BitmapFromImage(subImage)
-        memDC.DrawBitmap(bmp, leftSize, 0)
-
-        # bottom border
-        subImage = image.GetSubImage((leftSize, h - bottomSize, middleWidth, bottomSize))
-        subImage.Rescale(newWidth - (leftSize + rightSize), bottomSize, quality)
-        bmp = wx.BitmapFromImage(subImage)
-        memDC.DrawBitmap(bmp, leftSize, newHeight - bottomSize)
-        
-        # right border
-        subImage = image.GetSubImage((w - rightSize, topSize, rightSize, middleHeight))
-        subImage.Rescale(rightSize, newHeight - (topSize + bottomSize), quality)
-        bmp = wx.BitmapFromImage(subImage)
-        memDC.DrawBitmap(bmp, newWidth - rightSize, topSize)
+        def Setup(minWidth, minHeight, xMargin, yMargin, transparentColour):
+            width, height = memDC.GetTextExtent(text)
+            width = width + 2 * xMargin
+            if width < minWidth:
+                width = minWidth
+            height = height + 2 * yMargin
+            if height < minHeight:
+                height = minHeight
+            o.xMargin = xMargin
+            o.yMargin = yMargin
+            o.transparentColour = transparentColour
+            bitmap = wx.EmptyBitmap(width, height)
+            o.bitmap = bitmap
+            memDC.SelectObject(bitmap)
+            return width, height
             
-        # the middle border
-        subImage = image.GetSubImage((leftSize, topSize, middleWidth, middleHeight))
-        subImage.Rescale(newWidth - (leftSize + rightSize), newHeight - (topSize + bottomSize), quality)
-        bmp = wx.BitmapFromImage(subImage)
-        memDC.DrawBitmap(bmp, leftSize, topSize)
+        def Copy(x, y, w, h, toX, toY):
+            bmp = wx.BitmapFromImage(image.GetSubImage((x, y, w, h)))
+            memDC.DrawBitmap(bmp, toX, toY)
+            
+        def Scale(x, y, w, h, toX, toY, toW, toH):
+            subImage = image.GetSubImage((x, y, w, h))
+            subImage.Rescale(toW, toH, wx.IMAGE_QUALITY_HIGH)
+            bmp = wx.BitmapFromImage(subImage)
+            memDC.DrawBitmap(bmp, toX, toY)
+            
+        scriptGlobals = dict(Setup=Setup, Copy=Copy, Scale=Scale)
+        execfile(join(gSkinDir, skinName + ".py"), scriptGlobals)
         
+        bitmap = o.bitmap
         memDC.SelectObject(wx.NullBitmap)
-        bitmap.SetMask(wx.Mask(bitmap, (255, 0, 0)))
+        bitmap.SetMask(wx.Mask(bitmap, o.transparentColour))
         memDC.SelectObject(bitmap)
         memDC.SetTextForeground(textColour)
         memDC.SetTextBackground(textColour)
-        memDC.DrawText(text, xMargin, yMargin)
+        memDC.DrawText(text, o.xMargin, o.yMargin)
         memDC.SelectObject(wx.NullBitmap)
         return bitmap
     
@@ -326,10 +282,7 @@ class OSDFrame(wx.Frame):
         
     @eg.LogIt
     def OnPaint(self, evt=None):
-        pass
         wx.BufferedPaintDC(self, self.bitmap)
-        #dc = wx.PaintDC(self)
-        #dc.DrawBitmap(self.bitmap, 0, 0, False)
 
 
     if eg.debugLevel:

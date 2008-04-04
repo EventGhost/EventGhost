@@ -383,7 +383,7 @@ def CompileInnoScript(innoScriptPath):
     )
     installPath, _ = _winreg.QueryValueEx(key, "InstallLocation")
     _winreg.CloseKey(key)
-    Execute(join(installPath, "ISCC.exe"), innoScriptPath)
+    return Execute(join(installPath, "ISCC.exe"), innoScriptPath)
     
         
 
@@ -391,7 +391,7 @@ def Execute(*args):
     si = subprocess.STARTUPINFO()
     si.dwFlags = subprocess.STARTF_USESHOWWINDOW
     si.wShowWindow = subprocess.SW_HIDE 
-    subprocess.call(
+    return subprocess.call(
         args, 
         stdout=sys.stdout.fileno(),
         startupinfo=si

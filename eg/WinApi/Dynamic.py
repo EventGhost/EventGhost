@@ -1202,3 +1202,51 @@ tagCOPYDATASTRUCT._fields_ = [
 ]
 WM_COPYDATA = 74 # Variable c_int
 PCOPYDATASTRUCT = POINTER(tagCOPYDATASTRUCT)
+def CreateWindowW(lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam): return CreateWindowExW(0L, lpClassName, lpWindowName, dwStyle, x, y,nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam) # macro
+CreateWindow = CreateWindowW # alias
+DestroyWindow = _user32.DestroyWindow
+DestroyWindow.restype = BOOL
+DestroyWindow.argtypes = [HWND]
+UnregisterClassW = _user32.UnregisterClassW
+UnregisterClassW.restype = BOOL
+UnregisterClassW.argtypes = [LPCWSTR, HINSTANCE]
+UnregisterClass = UnregisterClassW # alias
+LoadCursorW = _user32.LoadCursorW
+LoadCursorW.restype = HCURSOR
+LoadCursorW.argtypes = [HINSTANCE, LPCWSTR]
+LoadCursor = LoadCursorW # alias
+CS_VREDRAW = 1 # Variable c_int
+CS_HREDRAW = 2 # Variable c_int
+WSTRING = c_wchar_p
+IDC_ARROW = 32512 # Variable WSTRING
+COLOR_WINDOW = 5 # Variable c_int
+WS_SYSMENU = 524288 # Variable c_long
+WS_OVERLAPPED = 0 # Variable c_long
+MIXERCONTROL_CONTROLTYPE_CUSTOM = 0 # Variable c_long
+class tMIXERCONTROLDETAILS_SIGNED(Structure):
+    pass
+MIXERCONTROLDETAILS_SIGNED = tMIXERCONTROLDETAILS_SIGNED
+tMIXERCONTROLDETAILS_SIGNED._pack_ = 1
+tMIXERCONTROLDETAILS_SIGNED._fields_ = [
+    ('lValue', LONG),
+]
+class tMIXERCONTROLDETAILS_BOOLEAN(Structure):
+    pass
+MIXERCONTROLDETAILS_BOOLEAN = tMIXERCONTROLDETAILS_BOOLEAN
+tMIXERCONTROLDETAILS_BOOLEAN._pack_ = 1
+tMIXERCONTROLDETAILS_BOOLEAN._fields_ = [
+    ('fValue', LONG),
+]
+class tagMIXERCONTROLDETAILS_LISTTEXTW(Structure):
+    pass
+MIXERCONTROLDETAILS_LISTTEXTW = tagMIXERCONTROLDETAILS_LISTTEXTW
+MIXERCONTROLDETAILS_LISTTEXT = MIXERCONTROLDETAILS_LISTTEXTW
+tagMIXERCONTROLDETAILS_LISTTEXTW._pack_ = 1
+tagMIXERCONTROLDETAILS_LISTTEXTW._fields_ = [
+    ('dwParam1', DWORD),
+    ('dwParam2', DWORD),
+    ('szName', WCHAR * 64),
+]
+MIXER_GETLINECONTROLSF_ONEBYID = 1 # Variable c_long
+MIXER_GETCONTROLDETAILSF_VALUE = 0 # Variable c_long
+MIXER_GETCONTROLDETAILSF_LISTTEXT = 1 # Variable c_long

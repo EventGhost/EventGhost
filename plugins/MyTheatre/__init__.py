@@ -53,30 +53,18 @@ eg.RegisterPlugin(
 )
     
 
-from win32gui import FindWindow, SendMessageTimeout
-from win32con import SMTO_ABORTIFHUNG, SMTO_NORMAL
 import _winreg
+from eg.WinApi import FindWindow, SendMessageTimeout
 from win32api import ShellExecute
-import sys
 
-WORD = (sys.maxint + 1) * 2
 
 class MsgAction(eg.ActionClass):
     def __call__(self):
         try:
             hWnd = FindWindow("TDVBMainForm", "MyTheatre")
-            _, result = SendMessageTimeout(
-                hWnd,
-                3025,
-                int(self.value - (self.value > sys.maxint) * WORD),
-                0,
-                SMTO_ABORTIFHUNG|SMTO_NORMAL,
-                2000
-            )
-            return result
+            return SendMessageTimeout(hWnd, 3025, self.value, 0)
         except:
-            eg.PrintError("MyTheatre is not running!")
-            return None
+            raise self.Exceptions.ProgramNotRunning
 
 
 
@@ -93,8 +81,7 @@ class ExeAction(eg.ActionClass):
             )
             return True
         except:
-            eg.PrintError("MyTheatre not found!")
-            return None
+            raise self.Exceptions.ProgramNotFound
 
 
 MyActionList = (

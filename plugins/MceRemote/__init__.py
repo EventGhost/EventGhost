@@ -60,11 +60,24 @@ eg.RegisterPlugin(
 
 import os
 from threading import Timer
-import win32api
-import win32gui
-import win32con
 from msvcrt import get_osfhandle
-from ctypes import WinDLL
+
+from eg.WinApi.Dynamic import (
+    WinDLL,
+    byref,
+    WinError,
+    GetModuleHandle,
+    CreateWindowEx,
+    DestroyWindow,
+    RegisterClass,
+    UnregisterClass,
+    LoadCursor,
+    WNDCLASS,
+    WNDPROC,
+    WM_USER,
+    WS_OVERLAPPEDWINDOW,
+    CW_USEDEFAULT,
+)
 
 #BOOL WINAPI MceIrRegisterEvents(HWND hWnd)
 #------------------------------------------
@@ -166,29 +179,29 @@ class MceMessageReceiver(eg.ThreadWorker):
         self.timer = Timer(0, self.OnTimeOut)
         self.lastEvent = eg.EventGhostEvent()
         
-        wc = win32gui.WNDCLASS()
-        wc.hInstance = win32api.GetModuleHandle(None)
+        wc = WNDCLASS()
+        wc.hInstance = GetModuleHandle(None)
         wc.lpszClassName = "HiddenMceMessageReceiver"
-        wc.style = win32con.CS_VREDRAW|win32con.CS_HREDRAW;
-        wc.hCursor = win32gui.LoadCursor(0, win32con.IDC_ARROW)
-        wc.hbrBackground = win32con.COLOR_WINDOW
-        wc.lpfnWndProc = self.MyWndProc
-        classAtom = win32gui.RegisterClass(wc)
-        self.hwnd = win32gui.CreateWindow(
-            classAtom,
-            "MCE Remote Message Receiver",
-            win32con.WS_OVERLAPPED|win32con.WS_SYSMENU,
-            0, 
+        wc.lpfnWndProc = WNDPROC(self.MyWndProc)
+        if not RegisterClass(byref(wc)):
+            raise WinError()
+        self.hwnd = CreateWindowEx(
             0,
-            win32con.CW_USEDEFAULT, 
-            win32con.CW_USEDEFAULT,
+            wc.lpszClassName,
+            "MCE Remote Message Receiver",
+            WS_OVERLAPPEDWINDOW,
+            CW_USEDEFAULT, 
+            CW_USEDEFAULT,
+            CW_USEDEFAULT, 
+            CW_USEDEFAULT,
             0, 
             0,
             wc.hInstance, 
             None
         )
+        if not self.hwnd:
+            raise WinError()
         self.wc = wc
-        self.classAtom = classAtom
         self.hinst = wc.hInstance
         
         self.dll = WinDLL(dllPath)
@@ -204,14 +217,14 @@ class MceMessageReceiver(eg.ThreadWorker):
         be called if the thread exits through an exception.
         """        
         self.dll.MceIrUnregisterEvents()
-        win32gui.DestroyWindow(self.hwnd)
-        win32gui.UnregisterClass(self.classAtom, self.hinst)
+        DestroyWindow(self.hwnd)
+        UnregisterClass(self.wc.lpszClassName, self.hinst)
         self.Stop() # is this needed?
         
         
     #@eg.LogIt
     def MyWndProc(self, hwnd, mesg, wParam, lParam):
-        if mesg == win32con.WM_USER:
+        if mesg == WM_USER:
             self.timer.cancel()
             key = lParam & 0xFFFF
             repeatCounter = (lParam >> 16)     

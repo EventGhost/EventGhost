@@ -284,10 +284,8 @@ class ActionPrototype(eg.ActionClass):
 
 # Now we can start to define the plugin by subclassing eg.PluginClass
 class Foobar2000(eg.PluginClass):
-    foobar2000Path = None
     
     def __init__(self):
-        foobar2000Path = ""
         self.AddActionsFromList(ACTIONS, ActionPrototype)
 
 
