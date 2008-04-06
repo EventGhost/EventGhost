@@ -41,7 +41,16 @@ eg.RegisterPlugin(
 #     - initial version
 
 
-# This is the list of actions we want to produce:
+# Here we define a list of actions we want to produce.
+# Every line consists of a tuple with the following items:
+#   1. The Python name of the action. (no spaces or special characters, except
+#      underscore, must begin with a letter)
+#   2. The name of the actions as it is shown to the user.
+#   3. A description of the action or None if no descriptions is available.
+#   4. Some data that is later assigned to the self.value member of the action.
+#      In this case it is an integer value, that is used as the wParam value
+#      for the SendMessage function.
+
 ACTIONS = (
     ("TogglePlay", "Toggle Play", "Simulate a press on the play / pause button.", 18808),
     ("Stop", "Stop", "Simulate a press on the stop button.", 18809),
@@ -69,6 +78,11 @@ from eg.WinApi import FindWindow, SendMessageTimeout, WM_COMMAND
 # way
 
 class ActionPrototype(eg.ActionClass):
+    """
+    Boilerplate for all actions of this plugin.
+    """ 
+    # The class attributes 'name', 'description' and 'value' will later be 
+    # setup by the AddActionsFromList method of the plugin.
 
     def __call__(self):
         """
@@ -87,5 +101,6 @@ class ActionPrototype(eg.ActionClass):
 class WMPlayer(eg.PluginClass):
          
     def __init__(self):
+        # Add all actions of our list
         self.AddActionsFromList(ACTIONS, ActionPrototype)
         
