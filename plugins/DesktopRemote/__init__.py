@@ -465,7 +465,7 @@ class RemotePanel(wx.Panel):
         # and call Skip in for handling focus events etc.
         event.ResumePropagation(wx.EVENT_PROPAGATE_MAX)
         event.Skip()
-        # start capturing the mouse exclusivly
+        # start capturing the mouse exclusively
         self.CaptureMouse()
 
 
@@ -476,7 +476,7 @@ class RemotePanel(wx.Panel):
         
         
     def OnDragEnd(self, event):
-        # unbind the unneded events
+        # unbind the unneeded events
         self.Unbind(wx.EVT_MOTION)
         self.Unbind(wx.EVT_LEFT_UP)
 

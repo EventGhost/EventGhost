@@ -114,7 +114,7 @@ class OSDFrame(wx.Frame):
             # fill the DC background with the maskColour
             memoryDC.Clear() 
             
-            # draw the text with the foregorund colour
+            # draw the text with the foreground colour
             memoryDC.SetTextForeground(foregroundColour)
             memoryDC.DrawText(osdText, 0, 0) 
             

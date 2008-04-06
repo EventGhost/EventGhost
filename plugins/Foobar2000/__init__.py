@@ -76,7 +76,7 @@ from win32api import ShellExecute
 #   2. A value for the 'name' member.
 #   3. A value for the 'description' member.
 #   4. A value that is needed by the action to do the actual work. This time
-#      it is the parameter that will be used for a commandline that calls
+#      it is the parameter that will be used for a command line that calls
 #      Foobar2000.
 
 ACTIONS = (
@@ -282,7 +282,7 @@ class ActionPrototype(eg.ActionClass):
             raise self.Exceptions.ProgramNotFound
 
 
-# Now we can start to define the plugin by subclassing eg.PluginClass
+# Now we can start to define the plugin by sub-classing eg.PluginClass
 class Foobar2000(eg.PluginClass):
     
     def __init__(self):
@@ -325,8 +325,8 @@ class Foobar2000(eg.PluginClass):
         
     def GetFoobar2000Path(self):
         """
-        Get the path of Foobar2000's install-dir through querying the 
-        Windows registry.
+        Get the path of Foobar2000's installation directory through querying 
+        the Windows registry.
         
         Only works for older version of foobar2000.
         """

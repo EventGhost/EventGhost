@@ -76,7 +76,7 @@ pythoncom.CoResumeClassObjects()
 try:
     e = win32com.client.Dispatch("EventGhost")   
 except:
-    eg.PrintError("Unable to establish COM disptach!")    
+    sys.stderr.write("Unable to establish COM dispatch!\n")    
 
 
 def DeInit():

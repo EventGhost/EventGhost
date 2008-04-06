@@ -33,7 +33,10 @@ from ftplib import FTP
 from urlparse import urlparse
 from shutil import copy2 as copy
 from os.path import basename, dirname, abspath, join, exists
-import pysvn
+try:
+    import pysvn
+except:
+    pass
 
 tmpDir = tempfile.mkdtemp()
 toolsDir = abspath(dirname(sys.argv[0]))
@@ -438,9 +441,9 @@ def MakeInstaller():
         InstallPy2exePatch()
         setup(**py2exeOptions)
         pythonDir = dirname(sys.executable)
-        copy(join(pythonDir, "MFC71.dll"), trunkDir)
-        copy(join(pythonDir, "msvcr71.dll"), trunkDir)
-        copy(join(pythonDir, "msvcp71.dll"), trunkDir)
+        #copy(join(pythonDir, "MFC71.dll"), trunkDir)
+        #copy(join(pythonDir, "msvcr71.dll"), trunkDir)
+        #copy(join(pythonDir, "msvcp71.dll"), trunkDir)
     
     installFiles = []
     if Options.createUpdate:

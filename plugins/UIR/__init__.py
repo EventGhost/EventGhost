@@ -126,7 +126,7 @@ class UIR(eg.RawReceiverPlugin):
         
         portCtrl = panel.SerialPortChoice(port)
         byteCountCtrl = panel.SpinIntCtrl(byteCount, min=1, max=32)
-        initSequenceCtrl = panel.CheckBox(initSequence, "Initialise device on start")
+        initSequenceCtrl = panel.CheckBox(initSequence, "Initialize device on start")
 
         panel.AddLine('COM Port:', portCtrl)
         panel.AddLine('Event Byte Count:', byteCountCtrl, '(default=6)')

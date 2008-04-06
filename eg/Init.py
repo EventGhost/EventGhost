@@ -173,10 +173,13 @@ class EventGhost(object):
         from eg.WinApi.SendKeys import SendKeys
         eg.SendKeys = SendKeys
         
-        if args.translate:
-            eg.LanguageEditor()
-        else:
-            eg.StartGui()
+        import eg.WinApi.COMServer
+        if not args.install:
+
+            if args.translate:
+                eg.LanguageEditor()
+            else:
+                eg.StartGui()
 
         
     def StartGui(self):

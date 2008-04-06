@@ -205,6 +205,7 @@ class ThreadWorker:
             else:
                 raise RuntimeError("unexpected win32wait return value")
         except:
+            eg.PrintDebugNotice("Exception in __DoOneEvent")
             eg.PrintTraceback()
         
             

@@ -85,8 +85,9 @@ ACTIONS = (
     ("Num9", "Number 9", "KEY_9"),
 )
 
-    
-# stolen from the standart library and added a timeout to the socket
+TIMEOUT = 1.5
+
+# stolen from the standard library and added a timeout to the socket
 import socket
 from httplib import HTTPConnection
 
@@ -100,7 +101,7 @@ class MyHTTPConnection(HTTPConnection):
             af, socktype, proto, canonname, sa = res
             try:
                 self.sock = socket.socket(af, socktype, proto)
-                self.sock.settimeout(2.0)
+                self.sock.settimeout(TIMEOUT)
                 if self.debuglevel > 0:
                     print "connect: (%s, %s)" % (self.host, self.port)
                 self.sock.connect(sa)
@@ -122,14 +123,10 @@ class ActionPrototype(eg.ActionClass):
     def __call__(self):
         conn = MyHTTPConnection(self.plugin.host)
         try:
-            if self.plugin.useRcem:
-                conn.request("GET", "/control/rcem?" + self.value)
-            else:
-                conn.request("GET", "/control/exec?Y_Tools&rcsim&" + self.value)
+            conn.request("GET", self.plugin.connectString % self.value)
         except socket.error, e:
             if isinstance(e.message, socket.timeout):
-                self.PrintError("d-box2 connection attempt timed out!")
-                return
+                raise self.Exceptions.DeviceNotFound
             raise
         conn.getresponse()
         conn.close()
@@ -144,10 +141,14 @@ class DBox2(eg.PluginClass):
         
     def __start__(self, host, useRcem=False):
         self.host = host
-        self.useRcem = useRcem
+        if useRcem:
+            self.connectString = "/control/rcem?%s"
+        else:
+            self.connectString = "/control/exec?Y_Tools&rcsim&%s"
+            
         
         
-    def Configure(self, host="127.0.0.1", useRcem=False):
+    def Configure(self, host="127.0.0.1", useRcem=True):
         panel = eg.ConfigPanel(self)
         hostCtrl = panel.TextCtrl(host)
         useRcemCtrl = panel.CheckBox(useRcem, 'Use "rcem" instead of "rcsim"')
