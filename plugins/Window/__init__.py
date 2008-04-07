@@ -53,6 +53,8 @@ from eg.WinApi.Dynamic import (
     GA_ROOT, SW_MAXIMIZE, SW_MINIMIZE, SW_RESTORE, WM_COMMAND, GWL_EXSTYLE,
     WS_EX_TOPMOST, SWP_NOMOVE, SWP_NOSIZE, HWND_TOPMOST, HWND_NOTOPMOST,
 )
+from eg.WinApi.Dynamic import SendMessage as WinApiSendMessage
+from eg.WinApi.Dynamic import PostMessage as WinApiPostMessage
 
 # imports local to plugin
 from FindWindow import FindWindow
@@ -244,9 +246,9 @@ class SendMessage(eg.ActionClass):
         result = None
         for hwnd in GetTargetWindows():
             if kind == 0:
-                result = SendMessage(hwnd, mesg, wParam, lParam)
+                result = WinApiSendMessage(hwnd, mesg, wParam, lParam)
             else:
-                result = PostMessage(hwnd, mesg, wParam, lParam)
+                result = WinApiPostMessage(hwnd, mesg, wParam, lParam)
         return result
     
             

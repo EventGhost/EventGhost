@@ -23,7 +23,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 eg.RegisterPlugin(
-    name = "DScaler",
+    name = "DScaler 4",
     author = "Lee Woolf",
     version = "1.1" + "$LastChangedRevision: 374 $".split()[1],
     kind = "program",

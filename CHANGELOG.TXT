@@ -1,3 +1,6 @@
+Version 0.3.6.1371 (04/06/2008)
++ DScaler 4 plugin from incubi.
+
 Version 0.3.6.1353 (04/03/2008)
 + Spanish translation from karl.
 + First version of a CyberLink PowerDVD plugin.

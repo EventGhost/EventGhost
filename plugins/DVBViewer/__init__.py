@@ -221,6 +221,7 @@ ACTIONS = (
         
 from functools import partial
 from win32com.client import Dispatch, DispatchWithEvents
+from win32com.client.gencache import EnsureDispatch
 from eg.WinApi import SendMessageTimeout
 
 
@@ -288,7 +289,7 @@ class DvbViewerWorkerThread(eg.ThreadWorker):
         This will be called inside the thread at the beginning.
         """
         self.plugin = plugin
-        self.dvbviewer = Dispatch("DVBViewerServer.DVBViewer")
+        self.dvbviewer = EnsureDispatch("DVBViewerServer.DVBViewer")
         comEvents = self.dvbviewer.Events
         self.comObj = DispatchWithEvents(comEvents, self.plugin.EventHandler)
             
