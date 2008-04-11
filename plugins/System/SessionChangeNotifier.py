@@ -46,40 +46,43 @@ class SessionChangeNotifier:
     inited = False
     
     def __init__(self, plugin):
-        for tries in range(60):
-            success = WTSRegisterSessionNotification(
-                eg.messageReceiver.hwnd, 
-                NOTIFY_FOR_ALL_SESSIONS
-            )
-            if success:
-                break
-            errorNum = GetLastError()
-            # if we get the error RPC_S_INVALID_BINDING (1702), the system
-            # hasn't started all needed services. For this reason we wait some
-            # time and try it again.
-            if errorNum == 1702:
-                time.sleep(1.0)
-                continue
-            # some other error has happened
-            raise SystemError("WTSRegisterSessionNotification", errorNum)
-            #return
-        else:
-            eg.PrintError("WTSRegisterSessionNotification timeout")
-            return
-            
-        
         self.TriggerEvent = plugin.TriggerEvent
+        self.retryCount = 0
         eg.messageReceiver.AddHandler(
             WM_WTSSESSION_CHANGE, 
             self.OnSessionChange
         )
-        self.inited = True
+        eg.scheduler.AddTask(0, self.Register)
     
+    
+    @eg.LogIt
+    def Register(self):
+        success = WTSRegisterSessionNotification(
+            eg.messageReceiver.hwnd, 
+            NOTIFY_FOR_ALL_SESSIONS
+        )
+        if success:
+            self.inited = True
+            return
+        errorNum = GetLastError()
+        # if we get the error RPC_S_INVALID_BINDING (1702), the system
+        # hasn't started all needed services. For this reason we wait some
+        # time and try it again.
+        if errorNum == 1702:
+            self.retryCount += 1
+            if self.retryCount > 60:
+                # if we tried it to often, give up
+                eg.PrintError("WTSRegisterSessionNotification timeout")
+                return
+            eg.scheduler.AddTask(2.0, self.Register)
+            return
+        # some other error has happened
+        raise SystemError("WTSRegisterSessionNotification", errorNum)
+        
     
     def Close(self):
-        if not self.inited:
-            return
-        WTSUnRegisterSessionNotification(eg.messageReceiver.hwnd)
+        if self.inited:
+            WTSUnRegisterSessionNotification(eg.messageReceiver.hwnd)
         eg.messageReceiver.RemoveHandler(
             WM_WTSSESSION_CHANGE, 
             self.OnSessionChange

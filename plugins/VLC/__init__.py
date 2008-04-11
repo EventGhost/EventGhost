@@ -195,8 +195,8 @@ class VLC(eg.PluginClass):
 
     def push(self, data):
         if not self.dispatcher_running:
-            self.dispatcher = VLC_Session(self, (self.host, self.port))
             self.connectedevent = data
+            self.dispatcher = VLC_Session(self, (self.host, self.port))
             self.dispatcher_running = True
         try:
             if self.dispatcher.connected:

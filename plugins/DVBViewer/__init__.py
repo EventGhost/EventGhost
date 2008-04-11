@@ -290,6 +290,8 @@ class DvbViewerWorkerThread(eg.ThreadWorker):
         """
         self.plugin = plugin
         self.dvbviewer = EnsureDispatch("DVBViewerServer.DVBViewer")
+        # try if we can get an attribute from the COM instance
+        self.dvbviewer.CurrentChannelNr
         comEvents = self.dvbviewer.Events
         self.comObj = DispatchWithEvents(comEvents, self.plugin.EventHandler)
             

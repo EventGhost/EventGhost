@@ -175,6 +175,27 @@ class StringIcon(IconBase):
 
 
 
+class PilIcon(IconBase):
+    
+    def __new__(cls, pil):
+        """ If an instance of this data is already in the cache, returns the 
+        cached instance. Otherwise creates a new instance and adds it to the 
+        cache.
+        """
+        if _gIconCache.has_key(pil):
+            return _gIconCache[pil]
+        self = super(PilIcon, cls).__new__(cls)
+        _gIconCache[pil] = self
+        self.key = pil
+        return self
+    
+    
+    def _pil(self):
+        """ Return a PIL image of the icon. """
+        return self.key
+    
+    
+    
 def ClearImageList():
     """ Delete the global wxImageList and replace it with a new empty one. """
     global gImageList

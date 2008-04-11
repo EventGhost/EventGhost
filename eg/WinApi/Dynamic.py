@@ -1268,3 +1268,6 @@ GW_OWNER = 4 # Variable c_int
 WS_EX_APPWINDOW = 262144 # Variable c_long
 WS_EX_NOACTIVATE = 134217728 # Variable c_long
 WS_EX_TOOLWINDOW = 128 # Variable c_long
+IsWindowEnabled = _user32.IsWindowEnabled
+IsWindowEnabled.restype = BOOL
+IsWindowEnabled.argtypes = [HWND]

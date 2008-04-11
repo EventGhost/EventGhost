@@ -29,6 +29,8 @@ import zipfile
 import subprocess
 import _winreg
 import locale
+import ConfigParser
+
 from ftplib import FTP
 from urlparse import urlparse
 from shutil import copy2 as copy
@@ -271,51 +273,51 @@ Name: "desktopicon"; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:
 
 [Languages]
 Name: "en"; MessagesFile: "compiler:Default.isl"
-Name: Deutsch; MessagesFile: "compiler:Languages\German.isl"
-Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
+Name: Deutsch; MessagesFile: "compiler:Languages\\German.isl"
+Name: "fr"; MessagesFile: "compiler:Languages\\French.isl"
 
 [Setup]
 ShowLanguageDialog=auto
 AppName=EventGhost
-AppVerName=EventGhost %(version)s build %(buildNum)s
-DefaultDirName={pf}\EventGhost
+AppVerName=EventGhost %(version)s.%(buildNum)s
+DefaultDirName={pf}\\EventGhost
 DefaultGroupName=EventGhost
 Compression=lzma/ultra
 SolidCompression=yes
 InternalCompressLevel=ultra
 OutputDir=%(OUT_DIR)s
 OutputBaseFilename=%(OUT_FILE_BASE)s
-LicenseFile=%(TOOLS_DIR)s\LICENSE.RTF
+LicenseFile=%(TOOLS_DIR)s\\LICENSE.RTF
 DisableReadyPage=yes
 AppMutex=EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B
 
 [InstallDelete]
-Type: filesandordirs; Name: "{app}\eg"
+Type: filesandordirs; Name: "{app}\\eg"
 %(INSTALL_DELETE)s
 
 [Files]
-Source: "%(TRUNK)s\*.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "%(TRUNK)s\*.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "%(TRUNK)s\lib\*.*"; DestDir: "{app}\lib"; Flags: ignoreversion recursesubdirs
+Source: "%(TRUNK)s\\*.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "%(TRUNK)s\\*.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "%(TRUNK)s\\lib\\*.*"; DestDir: "{app}\\lib"; Flags: ignoreversion recursesubdirs
 %(INSTALL_FILES)s
-Source: "%(TRUNK)s\Example.xml"; DestDir: "{userappdata}\EventGhost"; DestName: "MyConfig.xml"; Flags: onlyifdoesntexist uninsneveruninstall
-Source: "%(TRUNK)s\WebSite.url"; DestName: "EventGhost Web Site.url"; DestDir: "{group}"
-Source: "%(TRUNK)s\WebForums.url"; DestName: "EventGhost Forums.url"; DestDir: "{group}"
-Source: "%(TRUNK)s\WebWiki.url"; DestName: "EventGhost Wiki.url"; DestDir: "{group}"
+Source: "%(TRUNK)s\\Example.xml"; DestDir: "{userappdata}\\EventGhost"; DestName: "MyConfig.xml"; Flags: onlyifdoesntexist uninsneveruninstall
+Source: "%(TRUNK)s\\tools\\WebSite.url"; DestName: "EventGhost Web Site.url"; DestDir: "{group}"
+Source: "%(TRUNK)s\\tools\\WebForums.url"; DestName: "EventGhost Forums.url"; DestDir: "{group}"
+Source: "%(TRUNK)s\\tools\\WebWiki.url"; DestName: "EventGhost Wiki.url"; DestDir: "{group}"
 
 [Run]
-Filename: "{app}\EventGhost.exe"; Parameters: "-install"
+Filename: "{app}\\EventGhost.exe"; Parameters: "-install"
 
 [UninstallRun]
-Filename: "{app}\EventGhost.exe"; Parameters: "-uninstall"
+Filename: "{app}\\EventGhost.exe"; Parameters: "-uninstall"
 
 [Run] 
-Filename: "{app}\EventGhost.exe"; Flags: postinstall nowait skipifsilent 
+Filename: "{app}\\EventGhost.exe"; Flags: postinstall nowait skipifsilent 
 
 [Icons]
-Name: "{group}\EventGhost"; Filename: "{app}\EventGhost.exe"
-Name: "{group}\Uninstall EventGhost"; Filename: "{uninstallexe}"
-Name: "{userdesktop}\EventGhost"; Filename: "{app}\EventGhost.exe"; Tasks: desktopicon
+Name: "{group}\\EventGhost"; Filename: "{app}\\EventGhost.exe"
+Name: "{group}\\Uninstall EventGhost"; Filename: "{uninstallexe}"
+Name: "{userdesktop}\\EventGhost"; Filename: "{app}\\EventGhost.exe"; Tasks: desktopicon
 """
 
 inno_update = """
@@ -411,7 +413,7 @@ def MakeSourceArchive(outFile):
 def MakeInstaller():
     templateOptions = UpdateVersionFile()
     UpdateChangeLog(templateOptions)
-    VersionStr = templateOptions['version'] + '_build_' + str(templateOptions['buildNum'])
+    VersionStr = templateOptions['version'] + '.' + str(templateOptions['buildNum'])
     templateOptions['VersionStr'] = VersionStr
     templateOptions["PYTHON_DIR"] = dirname(sys.executable)
     templateOptions["OUT_DIR"] = outDir
@@ -425,7 +427,7 @@ def MakeInstaller():
             continue
         if os.path.isdir(join(trunkDir, "plugins", item)):
             installDeleteDirs.append(
-                'Type: filesandordirs; Name: "{app}\plugins\%s"' % item
+                'Type: filesandordirs; Name: "{app}\\plugins\\%s"' % item
             )
     installDelete = "\n".join(installDeleteDirs)
     templateOptions["INSTALL_DELETE"] = installDelete
@@ -477,30 +479,89 @@ def MakeInstaller():
     return join(outDir, outFileBase + ".exe")
 
 
+
+class Speedometer:
+    
+    def __init__(self):
+        self.period = 15
+        self.Reset()
+        
+    def Reset(self):
+        now = time.clock()
+        self.start = now
+        self.lastSecond = now
+        self.rate = 0
+        self.lastBytes = 0
+        
+    def Add(self, b):
+        now = time.clock()
+        if b == 0 and (now - self.lastSecond) < 0.1:
+            return
+        
+        if self.rate == 0:
+            self.Reset()
+            
+        div = self.period * 1.0
+        if self.start > now:
+            self.start = now
+        if now < self.lastSecond:
+            self.lastSecond = now
+            
+        timePassedSinceStart = now - self.start
+        timePassed = now - self.lastSecond
+        if timePassedSinceStart < div:
+            div = timePassedSinceStart
+        if div < 1:
+            div = 1.0
+            
+        self.rate *= 1 - timePassed / div
+        self.rate += b / div
+        
+        self.lastSecond = now
+        if b > 0:
+            self.lastBytes = now
+        if self.rate < 0:
+            self.rate = 0
+        
+        
 def UploadFile(filename, url):
     aborted = False
+    speedo = Speedometer()
+    
     class progress:
         def __init__(self, filepath):
             self.size = os.path.getsize(filepath)
             self.fd = open(filepath, "rb")
             self.pos = 0
+            self.startTime = time.clock()
             
         def read(self, size):
-            print self.pos, int(round(100.0 * self.pos / self.size))
+            if size + self.pos > self.size:
+                size = self.size - self.pos
+            speedo.Add(size)
+            remaining = (self.size - self.pos + size) / speedo.rate
+            percent = 100.0 * self.pos / self.size
+            print "%d%%" % percent, "%0.2f KiB/s" % (speedo.rate / 1024), "%0.2fs" % remaining
             self.pos += size
             return self.fd.read(size)
         
         def close(self):
             self.fd.close()
-
+            elapsed = (time.clock() - self.startTime)
+            print "File uploaded in %0.2f seconds" % elapsed
+            print "Average speed: %0.2f KiB/s" % (self.size / (elapsed * 1024))
+            
     urlComponents = urlparse(url)
     fd = progress(filename)
+    print "Connecting: %s" % urlComponents.hostname
     ftp = FTP(
         urlComponents.hostname, 
         urlComponents.username, 
         urlComponents.password
     )
+    print "Changing path to: %s" % urlComponents.path
     ftp.cwd(urlComponents.path)
+    print "Getting filelist."
     try:
         fileList = ftp.nlst()
     except:
@@ -509,14 +570,38 @@ def UploadFile(filename, url):
         tempFileName = "tmp%06d" % i
         if tempFileName not in fileList:
             break
-    ftp.storbinary("STOR " + tempFileName, fd)
+    print "Starting upload."
+    ftp.storbinary("STOR " + tempFileName, fd, 64 * 1024)
+    fd.close()
     if aborted:
         ftp.delete(tempFileName)
     else:
         ftp.rename(tempFileName, basename(filename))
     ftp.quit()
-    fd.close()
     print "Upload done!"
+    
+    
+def SaveSettings():
+    config = ConfigParser.ConfigParser()
+    config.add_section("settings")
+    for label, ident, value in OptionsList:
+        value = getattr(Options, ident)
+        config.set("settings", ident, value)
+    fd = open(join(toolsDir, "MakeInstaller.ini"), "w")
+    config.write(fd)
+    fd.close()
+    
+
+def LoadSettings():
+    global OptionsList
+    config = ConfigParser.ConfigParser()
+    config.read(join(toolsDir, "MakeInstaller.ini"))
+    newOptionsList = []
+    for label, ident, value in OptionsList:
+        if config.has_option("settings", ident):
+            value = config.getboolean("settings", ident)
+        newOptionsList.append((label, ident, value))
+    OptionsList = newOptionsList
     
 
 
@@ -526,6 +611,7 @@ class MainDialog(wx.Dialog):
     
     def __init__(self, url=""):
         wx.Dialog.__init__(self, None, title="Make EventGhost Installer")
+        LoadSettings()
         
         # create controls
         ctrls = []
@@ -558,6 +644,7 @@ class MainDialog(wx.Dialog):
         self.Show(False)
         for label, name, default in OptionsList:
             setattr(Options, name, getattr(self.Ctrls, name).GetValue())
+        SaveSettings()
         if Options.createImports:
             import MakeImports
             MakeImports.Main()
@@ -571,6 +658,7 @@ class MainDialog(wx.Dialog):
         
     def OnCancel(self, event):
         app.ExitMainLoop()
+     
      
 #print vars(pysvn.Client().info(trunkDir))
 app = wx.App(0)

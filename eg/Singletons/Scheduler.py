@@ -39,7 +39,11 @@ class Scheduler(threading.Thread):
         self.event = threading.Event()
         self.lock = threading.Lock()
         self.heap = [(time() + 100000000, None, None, None)]
-        threading.Thread.__init__(self, target=self.MainLoop)
+        threading.Thread.__init__(
+            self, 
+            target=self.MainLoop, 
+            name="SchedulerThread"
+        )
         
         
     def AddTask(self, waitTime, func, *args, **kwargs):

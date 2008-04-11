@@ -166,9 +166,9 @@ class PluginInfo(object):
             if exists(iconPath):
                 info.icon = eg.Icons.PathIcon(iconPath)
         if info.icon is not eg.Icons.PLUGIN_ICON:
-            defaultActionIcon = eg.Icons.IconBase()
-            defaultActionIcon.pil = eg.Icons.GetIconOnTop(info.icon, eg.Icons.ACTION_ICON)
-            info.defaultActionIcon = defaultActionIcon
+            info.defaultActionIcon = eg.Icons.PilIcon(
+                eg.Icons.GetIconOnTop(info.icon, eg.Icons.ACTION_ICON)
+            )
         info.actionClassList = []
         return info
     
