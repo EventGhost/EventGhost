@@ -54,7 +54,9 @@ class PluginItem(ActionItem):
         self.pluginFile = pluginStr
         self.info = info = eg.PluginInfo.Open(pluginStr, ident, args, self)
         self.name = eg.text.General.pluginLabel % info.label
-        self.icon = info.icon
+        if info.icon != self.icon:
+            self.icon = eg.Icons.PluginSubIcon(info.icon)
+        #self.icon = info.icon
         self.executable = info.instance
 
 

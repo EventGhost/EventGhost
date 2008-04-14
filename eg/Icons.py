@@ -32,9 +32,10 @@ import Image
 
 
 gImageList = wx.ImageList(16, 16)
-_gIconCache = {}
 _gDisabledImage = Image.open("images/disabled.png")
 _gFolderImage = Image.open("images/folder.png").convert("RGBA")
+_gPluginImage = Image.open("images/plugin.png")
+_gActionImage = Image.open("images/action.png").convert("RGBA")
 
 
 def PilToBitmap(pil):
@@ -52,7 +53,7 @@ def GetIcon(filePath):
     return PilToBitmap(Image.open(filePath).convert("RGBA"))
     
     
-def GetIconOnTop(foregroundIcon, backgroundIcon, size=(10, 10)):
+def GetIconOnTop(foregroundIcon, backgroundIcon, size=(12, 12)):
     small = foregroundIcon.pil.resize(size, Image.BICUBIC)
     image = backgroundIcon.pil.copy()
     image.paste(small, (16 - size[0], 16 - size[1]), small)
@@ -68,6 +69,21 @@ class IconBase(object):
     the first time, the object will load the underlying resource through the 
     method self._pil() and store the result into self.pil for further requests.
     """
+    
+    cache = {}
+    
+    def __new__(cls, key):
+        """ If an instance of this data is already in the cache, returns the 
+        cached instance. Otherwise creates a new instance and adds it to the 
+        cache.
+        """
+        if cls.cache.has_key(key):
+            return cls.cache[key]
+        self = super(IconBase, cls).__new__(cls)
+        cls.cache[key] = self
+        self.key = key
+        return self
+    
     
     def _pil(self):
         """ Return a PIL image of the icon.
@@ -127,6 +143,32 @@ class IconBase(object):
         setattr(self, name, result)
         return result
         
+
+
+class ActionSubIcon(IconBase): 
+    
+    @eg.LogIt
+    def _pil(self):
+        """ Return a PIL image of the icon. """
+        small = self.key.pil.resize((12,12), Image.BICUBIC)
+        image = _gActionImage.copy()
+        image.paste(small, (4, 4), small)
+        return image
+
+ActionSubIcon.cache = {}               
+        
+        
+class PluginSubIcon(IconBase): 
+    
+    @eg.LogIt
+    def _pil(self):
+        """ Return a PIL image of the icon. """
+        small = self.key.pil.resize((12,12), Image.BICUBIC)
+        image = _gPluginImage.copy()
+        image.paste(small, (4, 4), small)
+        return image
+               
+PluginSubIcon.cache = {}               
         
         
 class PathIcon(IconBase):
@@ -136,13 +178,7 @@ class PathIcon(IconBase):
         cached instance. Otherwise creates a new instance and adds it to the 
         cache.
         """
-        key = abspath(path)
-        if _gIconCache.has_key(key):
-            return _gIconCache[key]
-        self = super(PathIcon, cls).__new__(cls)
-        _gIconCache[key] = self
-        self.key = key
-        return self
+        return super(PathIcon, cls).__new__(cls, abspath(path))
     
     
     def _pil(self):
@@ -152,19 +188,6 @@ class PathIcon(IconBase):
         
         
 class StringIcon(IconBase):
-    
-    def __new__(cls, key):
-        """ If an instance of this data is already in the cache, returns the 
-        cached instance. Otherwise creates a new instance and adds it to the 
-        cache.
-        """
-        if _gIconCache.has_key(key):
-            return _gIconCache[key]
-        self = super(StringIcon, cls).__new__(cls)
-        _gIconCache[key] = self
-        self.key = key
-        return self
-    
     
     def _pil(self):
         """ Return a PIL image of the icon. """
@@ -176,19 +199,6 @@ class StringIcon(IconBase):
 
 
 class PilIcon(IconBase):
-    
-    def __new__(cls, pil):
-        """ If an instance of this data is already in the cache, returns the 
-        cached instance. Otherwise creates a new instance and adds it to the 
-        cache.
-        """
-        if _gIconCache.has_key(pil):
-            return _gIconCache[pil]
-        self = super(PilIcon, cls).__new__(cls)
-        _gIconCache[pil] = self
-        self.key = pil
-        return self
-    
     
     def _pil(self):
         """ Return a PIL image of the icon. """
@@ -202,8 +212,9 @@ def ClearImageList():
     gImageList.RemoveAll()
     gImageList = wx.ImageList(16, 16)
     # clear out all instance variables for all icons, except the key variable
-    for icon in _gIconCache.itervalues():
-        icon.__dict__ = {"key": icon.key}
+    for clsType in (IconBase, ActionSubIcon, PluginSubIcon):
+        for icon in clsType.cache.itervalues():
+            icon.__dict__ = {"key": icon.key}
         
         
 # setup some commonly used icons
@@ -216,5 +227,4 @@ PLUGIN_ICON = PathIcon("images/plugin.png")
 EVENT_ICON = PathIcon("images/event.png")
 ACTION_ICON = PathIcon("images/action.png")
 MACRO_ICON = PathIcon("images/macro.png")
-
 

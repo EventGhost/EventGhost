@@ -145,7 +145,7 @@ class TreeItem(object):
         id = tree.AppendItem(
             parentId,
             self.GetLabel(), 
-            self.icon.index if self.isEnabled else self.icon.disabledIndex, 
+            self.icon.index if self.isEnabled else self.icon.disabledIndex,  
             -1, 
             wx.TreeItemData(self)
         )
@@ -392,7 +392,7 @@ class TreeItem(object):
         if self.HasValidId():
             self.tree.SetItemImage(
                 self.id,
-                self.icon.index if enable else self.icon.disabledIndex, 
+                self.icon.index if self.isEnabled else self.icon.disabledIndex, 
                 wx.TreeItemIcon_Normal
             )
             if self.document.selection == self:

@@ -100,8 +100,8 @@ class AddPluginDialog(eg.Dialog):
         for info in eg.pluginManager.GetPluginInfoList():
             if info.kind in ("hidden", "core"):
                 continue
-            if info.icon:
-                idx = imageList.Add(info.icon.GetBitmap())
+            if info.icon and info.icon != eg.Icons.PLUGIN_ICON:
+                idx = imageList.Add(eg.Icons.PluginSubIcon(info.icon).GetBitmap())
             else:
                 idx = 0
 

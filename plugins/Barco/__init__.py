@@ -64,6 +64,7 @@ ACTIONS = (
     ("SharpnessDown", "Sharpness Down", None, (0x37, )),
 )
 
+from time import sleep, clock
 
 STX = 0x02
 ACK = chr(0x06)
@@ -463,13 +464,7 @@ class WritePotentiometer(ActionBase):
 class Barco(eg.PluginClass):
     
     def __init__(self):
-        for evalName, tmpName, tmpDescription, tmpValue in ACTIONS:
-            class TmpAction(ActionBase):
-                name = tmpName
-                description = tmpDescription
-                value = tmpValue
-            TmpAction.__name__ = evalName
-            self.AddAction(TmpAction)
+        self.AddActionsFromList(ACTIONS, ActionBase)
         group = self.AddGroup("Unfinished")
         group.AddAction(SetText)
         group.AddAction(RequestShape)

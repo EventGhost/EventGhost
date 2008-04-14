@@ -72,7 +72,7 @@ class ActionGroup:
                 (actionCls, ActionClass), 
                 {}
             )
-        icon = pluginInfo.defaultActionIcon
+        icon = pluginInfo.icon
         if actionCls.iconFile:
             try:
                 path = pluginInfo.path + actionCls.iconFile + ".png"
@@ -81,7 +81,11 @@ class ActionGroup:
                 eg.PrintError(
                     "Error while loading icon file %s" % actionCls.iconFile
                 )
-    
+        if icon == eg.Icons.PLUGIN_ICON:
+            icon = eg.Icons.ACTION_ICON
+        else:
+            icon = eg.Icons.ActionSubIcon(icon)
+        
         text = actionCls.text
         if text is None:
             text = getattr(plugin.text, actionCls.__name__, None)
