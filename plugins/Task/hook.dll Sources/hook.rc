@@ -27,8 +27,8 @@ LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 1,0,0,2
+ PRODUCTVERSION 1,0,0,2
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -45,12 +45,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "EventGhost.org"
             VALUE "FileDescription", "hook Dynamic Link Library"
-            VALUE "FileVersion", "1, 0, 0, 1"
+            VALUE "FileVersion", "1, 0, 0, 2"
             VALUE "InternalName", "hook"
             VALUE "LegalCopyright", "Copyright (C) 2008"
             VALUE "OriginalFilename", "hook.dll"
             VALUE "ProductName", " hook Dynamic Link Library"
-            VALUE "ProductVersion", "1, 0, 0, 1"
+            VALUE "ProductVersion", "1, 0, 0, 2"
         END
     END
     BLOCK "VarFileInfo"

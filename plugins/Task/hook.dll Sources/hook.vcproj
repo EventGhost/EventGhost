@@ -64,14 +64,15 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="Release"
-			IntermediateDirectory="Release"
+			IntermediateDirectory="C:\Intermediate\$(SolutionName)\$(ConfigurationName)"
 			ConfigurationType="2"
+			UseOfMFC="0"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="3"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;HOOK_EXPORTS"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				UsePrecompiledHeader="3"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
