@@ -31,9 +31,10 @@ class TaskBarIcon(wx.TaskBarIcon):
             wx.Icon("images\\Tray3.png", wx.BITMAP_TYPE_PNG),
             wx.Icon("images\\Tray2.png", wx.BITMAP_TYPE_PNG),
         )
+        self.tooltip = eg.APP_NAME + " " + eg.versionStr
         wx.TaskBarIcon.__init__(self)
         self.iconTime = 0
-        self.SetIcon(self.stateIcons[0], eg.APP_NAME)
+        self.SetIcon(self.stateIcons[0], self.tooltip)
         self.currentEvent = None
         self.processingEvent = None
         self.currentState = 0
@@ -75,15 +76,16 @@ class TaskBarIcon(wx.TaskBarIcon):
 
     def SetIcons(self, state):
         if self.alive:
-            self.SetIcon(self.stateIcons[state], eg.APP_NAME)
+            self.SetIcon(self.stateIcons[state], self.tooltip)
             if eg.document.frame:
                 eg.document.frame.statusBar.SetState(state)
         
         
-    def SetIconsDummy(self, state):
-        pass
+    def SetToolTip(self, tooltip):
+        self.tooltip = tooltip
+        wx.CallAfter(self.SetIcons, self.currentState)
         
-        
+    
     def SetProcessingState(self, state, event):
         self.reentrantLock.acquire()
         try:
