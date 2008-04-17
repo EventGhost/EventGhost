@@ -55,7 +55,9 @@ class Configure:
                 else:
                     newArgs = gr.switch()
             except:
-                eg.PrintError("Error while configuring: %s", item.GetLabel())
+                eg.PrintError(eg.text.Error.configureError % item.GetLabel())
+                if item.openConfigDialog is not None:
+                    item.openConfigDialog.Destroy()
                 raise
             if item.openConfigDialog is not None:
                 userAction = item.openConfigDialog.result
@@ -70,7 +72,13 @@ class Configure:
                     return False
                 elif userAction == wx.ID_OK:
                     if not gr.dead:
-                        gr.switch(wx.ID_CANCEL)
+                        try:
+                            gr.switch(wx.ID_CANCEL)
+                        except:
+                            eg.PrintTraceback(
+                                eg.text.Error.configureError % item.GetLabel(), 
+                                source=item
+                            )
                     item.openConfigDialog.Destroy()
                     del item.openConfigDialog
                     break

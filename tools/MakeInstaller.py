@@ -443,9 +443,9 @@ def MakeInstaller():
         InstallPy2exePatch()
         setup(**py2exeOptions)
         pythonDir = dirname(sys.executable)
-        #copy(join(pythonDir, "MFC71.dll"), trunkDir)
-        #copy(join(pythonDir, "msvcr71.dll"), trunkDir)
-        #copy(join(pythonDir, "msvcp71.dll"), trunkDir)
+        copy(join(pythonDir, "MFC71.dll"), trunkDir)
+        copy(join(pythonDir, "msvcr71.dll"), trunkDir)
+        copy(join(pythonDir, "msvcp71.dll"), trunkDir)
     
     installFiles = []
     if Options.createUpdate:

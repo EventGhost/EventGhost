@@ -89,6 +89,7 @@ class MainFrame:
 class Error:
     FileNotFound = u'Datei "%s" konnte nicht gefunden werden.'
     InAction = u'Fehler in Befehl: "%s"'
+    configureError = u'Fehler beim Konfigurieren von:'
     pluginLoadError = u'Fehler beim Laden der Plugin-Datei %s.'
     pluginNotActivated = u'Plugin "%s" ist nicht aktiviert'
     pluginStartError = u'Fehler beim Start des Plugins: %s'

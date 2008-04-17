@@ -82,8 +82,8 @@ class ThreadWorker:
     def __init__(self, *args, **kwargs):
         self.__startupExceptionInfo = None
         self.__alive = True
-        self.__timeout = 120.0
         self.__queue = deque()
+        self.__Setup = partial(self.Setup, *args, **kwargs)
         self.__wakeEvent = CreateEvent(None, 0, 0, None)
         self.__dummyEvent = CreateEvent(None, 0, 0, None)
         self.__events = (HANDLE * 1)(self.__wakeEvent)
@@ -91,8 +91,6 @@ class ThreadWorker:
             group=None, 
             target=self.__MainLoop, 
             name=self.__class__.__name__,
-            args=args,
-            kwargs=kwargs
         )
         
         
@@ -128,19 +126,16 @@ class ThreadWorker:
         """
         if timeout is None:
             timeout = eg.config.defaultThreadStartTimeout
-        self.__timeout = timeout
         if timeout > 0.0:
-            startupEvent = Event()
-            self.Call(startupEvent.set)
-            self.__startupExceptionInfo = None
             self.__thread.start()
-            startupEvent.wait(timeout)
-            if self.__startupExceptionInfo:
-                excType, excValue, excTraceback = self.__startupExceptionInfo
-                raise excType, excValue, excTraceback
-            return startupEvent.isSet()
+            try:
+                self.CallWait(self.__Setup, timeout)
+            except:
+                self.Stop()
+                raise
         else:
             self.__thread.start()
+            self.Call(self.__Setup)
             return True
         
         
@@ -158,23 +153,17 @@ class ThreadWorker:
         
         
     @eg.LogItWithReturn
-    def __MainLoop(self, *args, **kwargs):
+    def __MainLoop(self):
         """
         Mainloop of the new thread.
         """
         CoInitialize(None)
         PumpWaitingMessages()
         try:
-            try:
-                self.Setup(*args, **kwargs)
-            except Exception, exc:
-                self.__startupExceptionInfo = exc_info() 
-                if self.__timeout is None:
-                    raise exc
             while self.__alive:
                 self.__DoOneEvent()
         finally:
-            CoUninitialize()
+            CoUninitialize() # why I haven't put this as last statement? Must have a reason.
             self.Finish()
             
             
