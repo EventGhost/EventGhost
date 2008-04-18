@@ -68,7 +68,7 @@ class PythonScript(eg.ActionClass):
             self.mod = mod
             self.sourceCode = sourceCode
             try:
-                self.code = compile(sourceCode + "\n", str(id), "exec")
+                self.code = compile(sourceCode + "\n", str(id), "exec", 0, 1)
             except:
                 self.code = None
                 eg.PrintError("Error compiling script.")

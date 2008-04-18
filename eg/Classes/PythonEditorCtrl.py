@@ -46,6 +46,7 @@ class PythonEditorCtrl(StyledTextCtrl):
         value="",
     ):
         StyledTextCtrl.__init__(self, parent, ID, pos, size, style)
+        self.SetCodePage(STC_CP_UTF8)
         StyleSetSpec = self.StyleSetSpec
         
         self.CmdKeyAssign(ord('B'), STC_SCMOD_CTRL, STC_CMD_ZOOMIN)

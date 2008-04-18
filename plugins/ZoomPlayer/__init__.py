@@ -704,6 +704,11 @@ class ZoomPlayer(eg.PluginClass):
             self.zpEvents = self.zpEvents1
         
     
+    def __stop__(self):
+        if self.isSessionRunning:
+            self.session.close()
+    
+    
     zpEvents1 = {
         "1201": "OSDClosed",
         "1300": {

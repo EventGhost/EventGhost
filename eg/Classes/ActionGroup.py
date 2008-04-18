@@ -65,10 +65,11 @@ class ActionGroup:
     @classmethod
     def CreateAction(cls, actionCls, plugin):
         pluginInfo = plugin.info
+        actionClsName = actionCls.__name__
         if not issubclass(actionCls, ActionClass):
             eg.PrintDebugNotice("creating new action class from " + str(actionCls))
             actionCls = ClassType(
-                actionCls.__name__,
+                actionClsName,
                 (actionCls, ActionClass), 
                 {}
             )
@@ -88,41 +89,41 @@ class ActionGroup:
         
         text = actionCls.text
         if text is None:
-            text = getattr(plugin.text, actionCls.__name__, None)
+            text = getattr(plugin.text, actionClsName, None)
             if text is None:
                 class text:
                     pass
                 text = text()
-                setattr(plugin.text, actionCls.__name__, text)
+                setattr(plugin.text, actionClsName, text)
         elif type(text) == ClassType:        
-            translation = getattr(plugin.text, actionCls.__name__, None)
+            translation = getattr(plugin.text, actionClsName, None)
             if translation is None:
                 translation = text()
             SetClass(translation, text)
             text = translation
-            setattr(plugin.text, actionCls.__name__, text)
+            setattr(plugin.text, actionClsName, text)
         textCls = text.__class__
         if not hasattr(textCls, "name"):
             name = actionCls.name
-            textCls.name = actionCls.__name__ if name is None else name
+            textCls.name = actionClsName if name is None else name
         
         if not hasattr(textCls, "description"):
             description = actionCls.description
             textCls.description = textCls.name if description is None else description
             
         actionCls = ClassType(
-            actionCls.__name__,
+            actionClsName,
             (actionCls, ), 
             dict(
-                name = text.name,
-                description = text.description,
-                plugin = plugin,
-                info = ActionInfo(icon),
-                text = text,
-                Exceptions = eg.Exceptions
+                name=text.name,
+                description=text.description,
+                plugin=plugin,
+                info=ActionInfo(icon),
+                text=text,
+                Exceptions=eg.Exceptions
             )
         )
-        pluginInfo.actions[actionCls.__name__] = actionCls
+        pluginInfo.actions[actionClsName] = actionCls
         actionCls.OnAddAction()
         return actionCls
     

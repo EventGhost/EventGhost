@@ -524,7 +524,7 @@ class SendKeysParser:
                     words = key2.split("+")
                     for word in words:
                         if word not in self.keywords:
-                            res = str(eval(key, {}, eg.globals.__dict__))
+                            res = unicode(eval(key, {}, eg.globals.__dict__))
                             self.ParseText(res)
                             break
                     else:

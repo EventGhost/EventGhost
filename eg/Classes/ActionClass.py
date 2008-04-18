@@ -43,7 +43,7 @@ class ActionClass(object):
         plugin's folder. Only specify the name of the file without extension.
      
     :cvar text: 
-        Assign a class with text strings to this field to get them localized.
+        Assign a class with text strings to this field to get them localised.
 
      :ivar plugin:      
         This will be set from PluginClass.AddAction() for convenience, so every 
@@ -114,7 +114,7 @@ class ActionClass(object):
         a configuration dialog.
         
         When the action is freshly added by the user to the configuration tree
-        there are no "args" and you must therefor supply sufficent
+        there are no "args" and you must therefore supply sufficient
         default arguments.
         If the action is reconfigured by the user, this method will be called
         with the same arguments as the __call__ method.
@@ -138,16 +138,16 @@ class ActionClass(object):
 
         An ActionClass will only override the "Compile" method, if it uses a 
         special way to implement its action. An action receives a call to 
-        Compile everytime their parameters change (the user has reconfigured 
+        Compile every time their parameters change (the user has reconfigured 
         the action) or in the moment the configuration file is loaded and an 
         action of this type is created because it was saved in the tree. 
         The Compile method should return a "callable" object, that will be 
         called without any arguments. This "callable" will then be called 
         instead of the the actions __call__ method.
         This way actions can be build that need considerable time to compute
-        somthing out of the parameters but need less time for the actual 
+        something out of the parameters but need less time for the actual 
         execution of the action. One example of such action is the 
-        PythonScript action, that compiles the Python source everytime it 
+        PythonScript action, that compiles the Python source every time it 
         changes and then this compiled code object gets called instead of 
         doing compile&run in the __call__ method.
         """
