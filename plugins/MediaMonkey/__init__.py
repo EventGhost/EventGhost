@@ -1,4 +1,4 @@
-version="0.1.6"
+version="0.1.7"
 
 # Plugins/MediaMonkey/__init__.py
 #
@@ -20,7 +20,7 @@ version="0.1.6"
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2008-03-18 10:59
+#Last change: 2008-04-25 21:15
 
 eg.RegisterPlugin(
     name = "MediaMonkey",
@@ -110,6 +110,9 @@ class MediaMonkey(eg.PluginClass):
         group.AddAction(Next)
         group.AddAction(Previous)
         group.AddAction(LoadPlaylist)
+        group.AddAction(AddCurrentSongToPlaylist)
+        group.AddAction(RemoveCurrentSongFromPlaylist)        
+        group.AddAction(RemoveCurrentSongFromNowPlaying)        
         group.AddAction(LoadPlaylistByFilter)
         
         group = self.AddGroup(
@@ -1591,6 +1594,198 @@ class LoadPlaylist(eg.ActionClass):
                 shuffleChkBoxCtrl.Get3StateValue(),
                 crossfadeChkBoxCtrl.Get3StateValue()
             )  
+
+            
+class AddCurrentSongToPlaylist(eg.ActionClass):
+    name = "Add current playing song to Playlist"
+    description = "Adds current playing song to Playlist."
+    class text:
+        playlistName = "Playlist name:"
+        skip = "Skip to next track"
+        radiobox = "Result mode"
+        verboseON = "Verbose"
+        verboseOFF = "Numeric"
+        res0 = "Track added to playlist %s"
+        res1 = "Track already exist in playlist %s"
+        res2 = "Playlist %s not exist"
+        forToolTip = "for case"
+         
+    def __call__(self, plString, skip, verbose):
+        MMobj = self.plugin.DispMM()
+        idSong=MMobj.Player.CurrentSong.ID
+        IDPlaylist=MMobj.PlaylistByTitle(plString).ID
+        if IDPlaylist <> 0:
+            sql="SELECT COUNT(*) FROM PlaylistSongs WHERE PlaylistSongs.IDSong="+\
+                str(idSong)+" AND PlaylistSongs.IDPlaylist="+str(IDPlaylist)
+            if MMobj.Database.OpenSQL(sql).ValueByIndex(0) == "0":
+                MMobj.PlaylistByTitle(plString).AddTrackById(idSong)
+                res = 0
+            else:
+                res = 1
+        else:
+            res = 2
+        if skip:
+            MMobj.Player.Next()
+        verbres = eval("self.text.res"+str(res)) 
+        return res if verbose==1 else verbres % plString            
+               
+    def Configure(self, plString="", skip=False, verbose = 0):
+        panel = eg.ConfigPanel(self)
+        text = self.text
+        textCtrl = wx.TextCtrl(panel, -1, plString, style=wx.TE_NOHIDESEL)
+        SizerAdd = panel.sizer.Add
+        SizerAdd(wx.StaticText(panel, -1, text.playlistName))
+        SizerAdd(textCtrl, 0, wx.EXPAND)
+        skipChkBoxCtrl = wx.CheckBox(panel, label=self.text.skip)
+        skipChkBoxCtrl.SetValue(skip)
+        SizerAdd(skipChkBoxCtrl,0,wx.TOP,15,)
+        radioBox = wx.RadioBox(
+            panel, 
+            -1, 
+            self.text.radiobox, 
+            choices=[self.text.verboseON, self.text.verboseOFF], 
+            style=wx.RA_SPECIFY_ROWS
+        )
+        radioBox.SetItemToolTip(1, "0 "+self.text.forToolTip+"   "+self.text.res0 % "" +\
+            "\n1 "+self.text.forToolTip+"   "+self.text.res1 % "" +\
+            "\n2 "+self.text.forToolTip+"   "+self.text.res2 % "")
+        radioBox.SetSelection(verbose)
+        SizerAdd(radioBox, 0, wx.EXPAND|wx.TOP,15)
+
+        while panel.Affirmed():
+            panel.SetResult(
+                textCtrl.GetValue(),
+                skipChkBoxCtrl.GetValue(),
+                radioBox.GetSelection(),
+            )  
+          
+            
+class RemoveCurrentSongFromPlaylist(eg.ActionClass):
+    name = "Remove current playing song from Playlist"
+    description = "Remove current playing song from Playlist."
+    class text:
+        playlistName = "Playlist name:"
+        skip = "Skip to next track"
+        now_pl='Remove track from "Now playing" window too'
+        radiobox = "Result mode"
+        verboseON = "Verbose"
+        verboseOFF = "Numeric"
+        res0 = "Track removed from playlist %s"
+        res1 = "Track not exist in playlist %s"
+        res2 = "Playlist %s not exist"
+        forToolTip = "for case"
+        
+    def __call__(self, plString, skip, now_pl, verbose):
+        MMobj = self.plugin.DispMM()
+        Player = MMobj.Player
+        idSong=Player.CurrentSong.ID
+        IDPlaylist=MMobj.PlaylistByTitle(plString).ID
+        if IDPlaylist <> 0:
+            sql=" FROM PlaylistSongs WHERE IDPlaylist="+str(IDPlaylist)+" AND IDSong="+str(idSong)            
+            if MMobj.Database.OpenSQL("SELECT COUNT(*)"+sql).ValueByIndex(0) == "1":
+                MMobj.Database.ExecSQL("DELETE"+sql)
+                MMobj.MainTracksWindow.Refresh()
+                indx=Player.CurrentSongIndex
+                if idSong==Player.PlaylistItems(indx).ID:
+                    if now_pl:
+                        Player.PlaylistDelete(indx)                        
+                res = 0
+            else:
+                res = 1
+        else:
+            res = 2
+        if skip:
+            Player.Next()
+        verbres = eval("self.text.res"+str(res)) 
+        return res if verbose==1 else verbres % plString
+                            
+    def Configure(self, plString="", skip=False, now_pl=False, verbose = 0):
+        panel = eg.ConfigPanel(self)
+        text = self.text
+        textCtrl = wx.TextCtrl(panel, -1, plString, style=wx.TE_NOHIDESEL)
+        SizerAdd = panel.sizer.Add
+        SizerAdd(wx.StaticText(panel, -1, text.playlistName))
+        SizerAdd(textCtrl, 0, wx.EXPAND)
+        skipChkBoxCtrl = wx.CheckBox(panel, label=self.text.skip)
+        skipChkBoxCtrl.SetValue(skip)
+        SizerAdd(skipChkBoxCtrl,0,wx.TOP,15,)
+        now_plChkBoxCtrl = wx.CheckBox(panel, label=self.text.now_pl)
+        now_plChkBoxCtrl.SetValue(now_pl)
+        SizerAdd(now_plChkBoxCtrl,0,wx.TOP,15,)
+        radioBox = wx.RadioBox(
+            panel, 
+            -1, 
+            self.text.radiobox, 
+            choices=[self.text.verboseON, self.text.verboseOFF], 
+            style=wx.RA_SPECIFY_ROWS
+        )
+        radioBox.SetItemToolTip(1, "0 "+self.text.forToolTip+"   "+self.text.res0 % "" +\
+            "\n1 "+self.text.forToolTip+"   "+self.text.res1 % "" +\
+            "\n2 "+self.text.forToolTip+"   "+self.text.res2 % "")
+        radioBox.SetSelection(verbose)
+        SizerAdd(radioBox, 0, wx.EXPAND|wx.TOP,15)
+
+        while panel.Affirmed():
+            panel.SetResult(
+                textCtrl.GetValue(),
+                skipChkBoxCtrl.GetValue(),
+                now_plChkBoxCtrl.GetValue(),
+                radioBox.GetSelection(),
+            )  
+            
+            
+class RemoveCurrentSongFromNowPlaying(eg.ActionClass):
+    name = "Remove current playing song from Now playing window"
+    description = "Remove current playing song from Now playing window."
+    class text:
+        skip = "Skip to next track"        
+        radiobox = "Result mode"
+        verboseON = "Verbose"
+        verboseOFF = "Numeric"
+        res0 = "Track removed from Now playing window"
+        res1 = "Track not removed from Now playing window"
+        forToolTip = "for case"
+
+    def __call__(self, skip, verbose):
+        MMobj = self.plugin.DispMM()
+        Player = MMobj.Player
+        idSong=Player.CurrentSong.ID
+        indx=Player.CurrentSongIndex
+        if idSong==Player.PlaylistItems(indx).ID:
+            Player.PlaylistDelete(indx)
+            res = 0
+        else:
+            res = 1
+        if skip:
+            Player.Next()
+        verbres = eval("self.text.res"+str(res)) 
+        return res if verbose==1 else verbres
+       
+    def Configure(self, skip=False, verbose=0):
+        panel = eg.ConfigPanel(self)
+        text = self.text
+        SizerAdd = panel.sizer.Add
+        skipChkBoxCtrl = wx.CheckBox(panel, label=self.text.skip)
+        skipChkBoxCtrl.SetValue(skip)
+        SizerAdd(skipChkBoxCtrl,0,wx.TOP,15,)		
+        radioBox = wx.RadioBox(
+            panel, 
+            -1, 
+            self.text.radiobox, 
+            choices=[self.text.verboseON, self.text.verboseOFF], 
+            style=wx.RA_SPECIFY_ROWS
+        )
+        radioBox.SetItemToolTip(1, "0 "+self.text.forToolTip+"   "+self.text.res0+\
+            "\n1 "+self.text.forToolTip+"   "+self.text.res1)
+        radioBox.SetSelection(verbose)
+        SizerAdd(radioBox, 0, wx.EXPAND|wx.TOP,15)        
+
+        while panel.Affirmed():
+            panel.SetResult(
+                skipChkBoxCtrl.GetValue(),
+                radioBox.GetSelection(),
+            )  
+
 
             
 class LoadPlaylistByFilter(eg.ActionClass):
