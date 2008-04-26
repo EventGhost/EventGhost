@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+__docformat__ = 'reStructuredText'
+
 """ Definition of the abstract PluginClass. """
 
 from PluginMetaClass import PluginMetaClass

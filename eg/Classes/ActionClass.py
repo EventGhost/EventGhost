@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+__docformat__ = 'reStructuredText'
 
 
 class ActionClass(object):
@@ -108,7 +109,7 @@ class ActionClass(object):
         eg.PrintError(msg)
         
         
-    def Configure(self): #, *args):
+    def Configure(self, *args):
         """
         This should be overridden in a subclass, if the action wants to have 
         a configuration dialog.

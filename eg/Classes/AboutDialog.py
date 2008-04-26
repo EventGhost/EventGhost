@@ -65,6 +65,8 @@ SPECIAL_THANKS_DATA = (
             ("townkat", "DVB Dream"),
             ("Thierry Couquillou", "PlayStation 3 Bluetooth Remote"),
             ("Dean Owens", "X10 CM15A"),
+            ("incubi", "DScaler 4"),
+            ("Prinz", "Hauppauge IR"),
         ),
     ),
     (
@@ -73,6 +75,7 @@ SPECIAL_THANKS_DATA = (
         (
             ("Lubo&scaron; R&uuml;ckl", "Czech"),
             ("Fredrik Jacobsson", "Swedish"),
+            ("karlr", "Spanish"),            
         ),
     ),
     (
@@ -87,6 +90,7 @@ SPECIAL_THANKS_DATA = (
             ('loomy', 'PayPal'),
             ('specter333', 'PayPal'),
             ('Argofanatic', 'PayPal'),
+            ('bskchaos', 'PayPal'),
             ('some anonymous people', 'PayPal'),
             ('Stoffel', 'remote'),
             (

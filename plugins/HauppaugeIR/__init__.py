@@ -43,7 +43,7 @@ eg.RegisterPlugin(
                     'of this dll must be at least 2.45.<br><br>'
                     'The Hauppauge program "Ir.exe" should not be started anymore.'
     ),
-
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=821",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAaElEQVR42mNkoBAwYhH7"
         "DyIcHBwYDhw4AKdxqWfEphlmAAwgGYChB6cBxLoawwCYzQ8ePGBQUFCA00guwW9AQ0MD"

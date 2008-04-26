@@ -1,3 +1,6 @@
+Version 0.3.6.1387 (04/26/2008)
++ Hauppauge IR plugin from Prinz.
+
 Version 0.3.6.1371 (04/06/2008)
 + DScaler 4 plugin from incubi.
 
