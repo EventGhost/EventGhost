@@ -585,7 +585,6 @@ class TreeCtrl(wx.TreeCtrl):
             if data != "" and wx.TheClipboard.Open():
                 wx.TheClipboard.SetData(wx.TextDataObject(data))
                 wx.TheClipboard.Close()
-                eg.app.clipboardEvent.Fire()
             self.clipboardData = data
 
 

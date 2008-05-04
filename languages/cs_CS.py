@@ -1,2052 +1,2039 @@
-# -*- coding: UTF-8 -*-
+﻿# -*- coding: UTF-8 -*-
 class General:
-    apply = u'Pou\u017e\xedt'
-    autostartItem = u'Automatick\xfd start'
-    browse = u'Proch\xe1zet...'
-    cancel = u'Storno'
-    choose = u'Volba'
-    configTree = u'Konfigura\u010dn\xed strom'
-    deleteLinkedItems = u'Alespo\u0148 jedna polo\u017eka mimo v\xe1\u0161 v\xfdb\u011br odkazuje na polo\u017eku uvnit\u0159 va\u0161eho v\xfdb\u011bru. Jestli\u017ee p\u0159esto budete v odstran\u011bn\xed v\xfdb\u011bru pokra\u010dovat, odkazuj\xedc\xed polo\u017eka nebude moci d\xe1le spr\xe1vn\u011b pracovat.\n\nJste si jist\xfd, \u017ee chcete v\xfdb\u011br odstranit?'
-    deleteManyQuestion = u'Tento element m\xe1 %s subelement(y,\u016f).\nJsi si jist\xfd, \u017ee chcete odstranit v\u0161echny ?'
-    deletePlugin = u'Tento plugin je pou\u017eit n\u011bkterou akc\xed ve va\u0161\xed konfiguraci.\nNem\u016f\u017eete ho odstranit, dokud neodstran\xedte v\u0161echny akce, kter\xe9 ho pou\u017e\xedvaj\xed.'
-    deleteQuestion = u'Jste si jist\xfd, \u017ee chcete odstranit tuto polo\u017eku?'
-    help = u'&Pomoc'
-    moreHelp = u'V\xedce...'
-    moreTag = u'v\xedce...'
-    noOptionsAction = u'Tato akce nem\xe1 \u017e\xe1dn\xe9 mo\u017enosti nastaven\xed.'
-    noOptionsPlugin = u'Tento plugin nem\xe1 \u017e\xe1dn\xe9 mo\u017enosti nastaven\xed.'
-    ok = u'OK'
-    pluginLabel = u'Plugin: %s'
-    unnamedEvent = u'<nepojmenovan\xe1 ud\xe1lost>'
-    unnamedFile = u'<nepojmenovan\xfd soubor>'
-    unnamedFolder = u'<nepojmenovan\xe1 slo\u017eka>'
-    unnamedMacro = u'<nepojmenovan\xe9 makro>'
+    apply = u"Použít"
+    autostartItem = u"Automatický start"
+    browse = u"Procházet..."
+    cancel = u"Storno"
+    choose = u"Volba"
+    configTree = u"Konfigurační strom"
+    deleteLinkedItems = u"Alespoň jedna položka mimo váš výběr odkazuje na položku uvnitř vašeho výběru. Jestliže přesto budete v odstranění výběru pokračovat, odkazující položka nebude moci dále správně pracovat.\n\nJste si jistý, že chcete výběr odstranit?"
+    deleteManyQuestion = u"Tento element má %s subelement(y,ů).\nJsi si jistý, že chcete odstranit všechny ?"
+    deletePlugin = u"Tento plugin je použit některou akcí ve vaší konfiguraci.\nNemůžete ho odstranit, dokud neodstraníte všechny akce, které ho používají."
+    deleteQuestion = u"Jste si jistý, že chcete odstranit tuto položku?"
+    help = u"&Pomoc"
+    moreTag = u"více..."
+    noOptionsAction = u"Tato akce nemá žádné možnosti nastavení."
+    noOptionsPlugin = u"Tento plugin nemá žádné možnosti nastavení."
+    ok = u"OK"
+    pluginLabel = u"Plugin: %s"
+    unnamedEvent = u"<nepojmenovaná událost>"
+    unnamedFile = u"<nepojmenovaný soubor>"
+    unnamedFolder = u"<nepojmenovaná složka>"
+    unnamedMacro = u"<nepojmenované makro>"
 class MainFrame:
-    onlyLogAssigned = u'Zaznamen\xe1vat pouze p\u0159i\u0159azen\xe9 a aktivn\xed ud\xe1losti'
+    onlyLogAssigned = u"Zaznamenávat pouze přiřazené a aktivní události"
     class Logger:
-        caption = u'Zapisova\u010d ud\xe1lost\xed (Logger)'
-        descriptionHeader = u'Z\xe1znam'
-        timeHeader = u'\u010cas'
-        welcomeText = u'-->V\xedt\xe1m v\xe1s v aplikaci EventGhost<--'
+        caption = u"Zapisovač událostí (Logger)"
+        descriptionHeader = u"Záznam"
+        timeHeader = u"Čas"
+        welcomeText = u"-->Vítám vás v aplikaci EventGhost<--"
     class Menu:
-        About = u'&O aplikaci EventGhost...'
-        AddPlugin = u'Vlo\u017eit Plugin...'
-        Apply = u'Pou\u017e\xedt'
-        CheckUpdate = u'Vyhledat nov\u011bj\u0161\xed verzi...'
-        ClearLog = u'Vy\u010distit'
-        Close = u'&Zav\u0159\xedt'
-        CollapseAll = u'&Sbalit v\u0161e'
-        ConfigurationMenu = u'&Konfigurace'
-        Copy = u'&Kop\xedrovat'
-        Cut = u'&Vyjmout'
-        Delete = u'O&dstranit'
-        Disabled = u'Zak\xe1zat polo\u017eku'
-        Edit = u'Konfigurovat polo\u017eku...'
-        EditMenu = u'&Editovat'
-        Execute = u'&Spustit polo\u017eku'
-        Exit = u'&Konec'
-        ExpandAll = u'&Rozbalit v\u0161e'
-        ExpandOnEvents = u'Rozbalit p\u0159i &ud\xe1losti'
-        ExpandTillMacro = u'Rozbalit pouze do \xfarovn\u011b &makra'
-        Export = u'Export...'
-        FileMenu = u'&Soubor'
-        Find = u'&Naj\xedt...'
-        FindNext = u'Na&j\xedt dal\u0161\xed'
-        HelpMenu = u'&Pomoc'
-        HideShowToolbar = u'Panel n\xe1stroj\u016f'
-        Import = u'Import...'
-        LogActions = u'Logovat &akce'
-        LogMacros = u'Logovat &makra'
-        LogTime = u'&Logovat \u010das'
-        New = u'&Nov\xfd'
-        NewAction = u'Vlo\u017eit akci...'
-        NewEvent = u'Vlo\u017eit ud\xe1lost'
-        NewFolder = u'Vlo\u017eit slo\u017eku'
-        NewMacro = u'Vlo\u017eit makro'
-        Open = u'&Otev\u0159\xedt...'
-        Options = u'&Mo\u017enosti...'
-        Paste = u'V&lo\u017eit'
-        Redo = u'&Odvolat zp\u011bt (Redo)'
-        Rename = u'P\u0159ejmenovat polo\u017eku'
-        Reset = u'Reset'
-        Save = u'&Ulo\u017eit'
-        SaveAs = u'Ulo\u017eit &jako...'
-        SelectAll = u'&Vybrat v\u0161e'
-        Undo = u'&Zp\u011bt (Undo)'
-        ViewMenu = u'&Zobrazit'
-        WebForum = u'Internetov\xe1 diskuse'
-        WebHomepage = u'Domovsk\xe1 str\xe1nka aplikace EventGhost'
-        WebWiki = u'Wikipedie'
+        About = u"&O aplikaci EventGhost..."
+        AddPlugin = u"Vložit Plugin..."
+        Apply = u"Použít"
+        CheckUpdate = u"Vyhledat novější verzi..."
+        ClearLog = u"Vyčistit"
+        Close = u"&Zavřít"
+        CollapseAll = u"&Sbalit vše"
+        ConfigurationMenu = u"&Konfigurace"
+        Copy = u"&Kopírovat"
+        Cut = u"&Vyjmout"
+        Delete = u"O&dstranit"
+        Disabled = u"Zakázat položku"
+        Edit = u"Konfigurovat položku..."
+        EditMenu = u"&Editovat"
+        Execute = u"&Spustit položku"
+        Exit = u"&Konec"
+        ExpandAll = u"&Rozbalit vše"
+        ExpandOnEvents = u"Rozbalit při &události"
+        ExpandTillMacro = u"Rozbalit pouze do úrovně &makra"
+        Export = u"Export..."
+        FileMenu = u"&Soubor"
+        Find = u"&Najít..."
+        FindNext = u"Na&jít další"
+        HelpMenu = u"&Pomoc"
+        HideShowToolbar = u"Panel nástrojů"
+        Import = u"Import..."
+        LogActions = u"Logovat &akce"
+        LogMacros = u"Logovat &makra"
+        LogTime = u"&Logovat čas"
+        New = u"&Nový"
+        NewAction = u"Vložit akci..."
+        NewEvent = u"Vložit událost"
+        NewFolder = u"Vložit složku"
+        NewMacro = u"Vložit makro"
+        Open = u"&Otevřít..."
+        Options = u"&Možnosti..."
+        Paste = u"V&ložit"
+        Redo = u"&Odvolat zpět (Redo)"
+        Rename = u"Přejmenovat položku"
+        Reset = u"Reset"
+        Save = u"&Uložit"
+        SaveAs = u"Uložit &jako..."
+        SelectAll = u"&Vybrat vše"
+        Undo = u"&Zpět (Undo)"
+        ViewMenu = u"&Zobrazit"
+        WebForum = u"Internetová diskuse"
+        WebHomepage = u"Domovská stránka aplikace EventGhost"
+        WebWiki = u"Wikipedie"
     class SaveChanges:
-        mesg = u'Konfigura\u010dn\xed soubor byl zm\u011bn\u011bn.\n\nChcete zm\u011bny ulo\u017eit ?'
-        title = u'Ulo\u017eit zm\u011bny ?'
+        mesg = u"Konfigurační soubor byl změněn.\n\nChcete změny uložit ?"
+        title = u"Uložit změny ?"
     class TaskBarMenu:
-        Exit = u'Ukon\u010dit EventGhost'
-        Hide = u'Skr\xfdt okno aplikace EventGhost'
-        Show = u'Otev\u0159\xedt okno aplikace EventGhost'
+        Exit = u"Ukončit EventGhost"
+        Hide = u"Skrýt okno aplikace EventGhost"
+        Show = u"Otevřít okno aplikace EventGhost"
     class Tree:
-        caption = u'Konfigurace'
+        caption = u"Konfigurace"
 class Error:
     FileNotFound = u'Soubor "%s" nebyl nalezen.'
     InAction = u'Chyba v akci: "%s"'
-    InScript = u'Chyba ve skriptu: "%s"'
-    pluginInfoPyError = u'Chyba p\u0159i \u010dten\xed souboru __info__.py pro plugin %s'
-    pluginLoadError = u'Chyba p\u0159i zav\xe1d\u011bn\xed pluginu %s.'
-    pluginNotActivated = u'Plugin "%s" nebyl aktivov\xe1n'
-    pluginNotFound = u'Plugin %s nenalezen.'
-    pluginStartError = u'Chyba p\u0159i spu\u0161t\u011bn\xed pluginu: %s'
+    pluginLoadError = u"Chyba při zavádění pluginu %s."
+    pluginNotActivated = u'Plugin "%s" nebyl aktivován'
+    pluginStartError = u"Chyba při spuštění pluginu: %s"
 class CheckUpdate:
-    ManErrorMesg = u'Nebylo mo\u017en\xe9 z\xedskat informace z webov\xe9 str\xe1nky EventGhost.\n\nPros\xedm, zkuste to znovu pozd\u011bji.'
-    ManErrorTitle = u'Chyba p\u0159i pokusu o update'
-    ManOkMesg = u'Tato verze aplikace EventGhost je nejnov\u011bj\u0161\xed.'
-    ManOkTitle = u'\u017d\xe1dn\xe1 nov\u011bj\u0161\xed verze nen\xed k dispozici'
-    downloadButton = u'Nav\u0161t\xedvit str\xe1nku stahov\xe1n\xed'
-    newVersionMesg = u'Byla vyd\xe1na nov\u011bj\u0161\xed verze aplikace EventGhost.\n\n\tVa\u0161e verze:\t%s\n\tPosledn\xed verze:\t%s\n\nChcete nav\u0161t\xedvit str\xe1nku stahov\xe1n\xed hned?'
-    title = u'Nov\xe1 verze aplikace EventGhost je k dispozici...'
-    waitMesg = u'Pros\xedm \u010dekejte, dokud EventGhost nez\xedsk\xe1 pot\u0159ebn\xe9 informace.'
+    ManErrorMesg = u"Nebylo možné získat informace z webové stránky EventGhost.\n\nProsím, zkuste to znovu později."
+    ManErrorTitle = u"Chyba při pokusu o update"
+    ManOkMesg = u"Tato verze aplikace EventGhost je nejnovější."
+    ManOkTitle = u"Žádná novější verze není k dispozici"
+    downloadButton = u"Navštívit stránku stahování"
+    newVersionMesg = u"Byla vydána novější verze aplikace EventGhost.\n\n	Vaše verze:	%s\n	Poslední verze:	%s\n\nChcete navštívit stránku stahování hned?"
+    title = u"Nová verze aplikace EventGhost je k dispozici..."
+    waitMesg = u"Prosím čekejte, dokud EventGhost nezíská potřebné informace."
 class AddActionDialog:
-    descriptionLabel = u'Popis'
-    title = u'V\xfdb\u011br akce ke vlo\u017een\xed...'
+    descriptionLabel = u"Popis"
+    title = u"Výběr akce ke vložení..."
 class AddPluginDialog:
-    author = u'Autor:'
-    descriptionBox = u'Popis'
-    externalPlugins = u'Ovl\xe1d\xe1n\xed extern\xedho HW'
-    noInfo = u'\u017d\xe1dn\xe1 informace nen\xed k dispozici.'
-    noMultiload = u'Tento plugin nepodporuje v\xedce sou\u010dasn\xfdch instanc\xed a vy u\u017e m\xe1te jednu instanci tohoto pluginu ve sv\xe9 konfiguraci.'
-    noMultiloadTitle = u'Nen\xed mo\u017en\xfd soub\u011bh v\xedce instanc\xed'
-    otherPlugins = u'Ostatn\xed'
-    programPlugins = u'Ovl\xe1dan\xe9 programy'
-    remotePlugins = u'P\u0159ij\xedma\u010de d\xe1lkov\xfdch povel\u016f'
-    title = u'V\xfdb\u011br pluginu ke vlo\u017een\xed...'
-    version = u'Verze:'
+    author = u"Autor:"
+    descriptionBox = u"Popis"
+    externalPlugins = u"Ovládání externího HW"
+    noInfo = u"Žádná informace není k dispozici."
+    noMultiload = u"Tento plugin nepodporuje více současných instancí a vy už máte jednu instanci tohoto pluginu ve své konfiguraci."
+    noMultiloadTitle = u"Není možný souběh více instancí"
+    otherPlugins = u"Ostatní"
+    programPlugins = u"Ovládané programy"
+    remotePlugins = u"Přijímače dálkových povelů"
+    title = u"Výběr pluginu ke vložení..."
+    version = u"Verze:"
 class AddActionGroupDialog:
-    caption = u'Vlo\u017eit akce ?'
-    message = u'EventGhost m\u016f\u017ee vlo\u017eit slo\u017eku se v\u0161emi akcemi tohoto pluginu do konfigura\u010dn\xedho stromu. Jestli\u017ee si to p\u0159ejete, zvolte m\xedsto pro vkl\xe1danou slo\u017eku a stiskn\u011bte tla\u010d\xedtko OK.\n\nJinak stiskn\u011bte tla\u010d\xedtko Storno.'
+    caption = u"Vložit akce ?"
+    message = u"EventGhost může vložit složku se všemi akcemi tohoto pluginu do konfiguračního stromu. Jestliže si to přejete, zvolte místo pro vkládanou složku a stiskněte tlačítko OK.\n\nJinak stiskněte tlačítko Storno."
 class OptionsDialog:
-    CheckUpdate = u'Kontrolovat existenci nov\u011bj\u0161\xed verze p\u0159i spu\u0161t\u011bn\xed'
-    HideOnClose = u'Skr\xfdt hlavn\xed okno aplikace p\u0159i stisknut\xed zav\xedrac\xedho tla\u010d\xedtka'
-    HideOnStartup = u'Skr\xfdt p\u0159i spu\u0161t\u011bn\xed'
-    LanguageGroup = u'Jazyk'
-    StartGroup = u'P\u0159i spu\u0161t\u011bn\xed'
-    StartWithWindows = u'Spustit p\u0159i startu Windows'
-    Tab1 = u'V\u0161eobecn\xe9'
-    Title = u'Mo\u017enosti'
-    UseAutoloadFile = u'Automatick\xe9 spu\u0161t\u011bn\xed souboru'
-    Warning = u'Zm\u011bna jazyka se projev\xed a\u017e po nov\xe9m spu\u0161t\u011bn\xed aplikace.'
-    confirmDelete = u'Potvrdit odstran\u011bn\xed polo\u017eky stromu'
-    limitMemory1 = u'Limit spot\u0159eby pam\u011bti p\u0159i minimalizaci'
-    limitMemory2 = u'MB'
+    CheckUpdate = u"Kontrolovat existenci novější verze při spuštění"
+    HideOnClose = u"Skrýt hlavní okno aplikace při stisknutí zavíracího tlačítka"
+    HideOnStartup = u"Skrýt při spuštění"
+    LanguageGroup = u"Jazyk"
+    StartGroup = u"Při spuštění"
+    StartWithWindows = u"Spustit při startu Windows"
+    Tab1 = u"Všeobecné"
+    Title = u"Možnosti"
+    UseAutoloadFile = u"Automatické spuštění souboru"
+    Warning = u"Změna jazyka se projeví až po novém spuštění aplikace."
+    confirmDelete = u"Potvrdit odstranění položky stromu"
+    limitMemory1 = u"Limit spotřeby paměti při minimalizaci"
+    limitMemory2 = u"MB"
 class FindDialog:
-    caseSensitive = u'&Rozli\u0161ovat velikost'
-    direction = u'Sm\u011br'
-    down = u'&Dol\u016f'
-    findButton = u'Na&j\xedt dal\u0161\xed'
+    caseSensitive = u"&Rozlišovat velikost"
+    direction = u"Směr"
+    down = u"&Dolů"
+    findButton = u"Na&jít další"
     notFoundMesg = u'"%s" nenalezeno.'
-    searchLabel = u'&Naj\xedt:'
-    searchParameters = u'&Hledat i v parametrech akc\xed'
-    title = u'Hled\xe1n\xed'
-    up = u'Nahor&u'
-    wholeWordsOnly = u'&Pouze cel\xe1 slova'
+    searchLabel = u"&Najít:"
+    searchParameters = u"&Hledat i v parametrech akcí"
+    title = u"Hledání"
+    up = u"Nahor&u"
+    wholeWordsOnly = u"&Pouze celá slova"
 class AboutDialog:
-    Author = u'Autor: %s'
-    CreationDate = u'%a, %d %b %Y %H:%M:%S'
-    Title = u'O aplikaci EventGhost'
-    Version = u'Verze: %s (build %s)'
-    tabAbout = u'O aplikaci'
-    tabLicense = u'Licen\u010dn\xed ujedn\xe1n\xed'
-    tabSpecialThanks = u'Zvl\xe1\u0161tn\xed pod\u011bkov\xe1n\xed'
-    tabSystemInfo = u'Syst\xe9mov\xe9 informace'
+    Author = u"Autor: %s"
+    CreationDate = u"%a, %d %b %Y %H:%M:%S"
+    Title = u"O aplikaci EventGhost"
+    Version = u"Verze: %s (build %s)"
+    tabAbout = u"O aplikaci"
+    tabLicense = u"Licenční ujednání"
+    tabSpecialThanks = u"Zvláštní poděkování"
+    tabSystemInfo = u"Systémové informace"
 class Plugin:
     class EventGhost:
-        name = u'EventGhost'
-        description = u'Zde jsou akce, kter\xe9 slou\u017e\xed p\u0159ev\xe1\u017en\u011b k \u0159\xedzen\xed funkce j\xe1dra aplikace EventGhost.'
+        name = u"EventGhost"
+        description = u"Zde jsou akce, které slouží převážně k řízení funkce jádra aplikace EventGhost."
         class AutoRepeat:
-            name = u'Automaticky opakovat makro'
-            description = u'Makro, ve kter\xe9m je tento element pou\u017eit, bude automaticky opakovan\u011b spou\u0161t\u011bno.\n\n<p><b>POZOR:</b> Tato funkce je pou\u017eiteln\xe1 pouze pro makra, jejich\u017e d\xe9lka prov\xe1d\u011bn\xed je d\xe1na n\u011bjak\xfdm extern\xedm podn\u011btem (nap\u0159\xedklad dlouh\xfdm dr\u017een\xedm tla\u010d\xedtka d\xe1lkov\xe9ho ovlada\u010de). Element "Automatick\xe9 opakov\xe1n\xed makra" by m\u011bl b\xfdt um\xedst\u011bn na konci makra.'
-            seconds = u'sec.'
-            text1 = u'Prvn\xed opakov\xe1n\xed za\u010d\xedt po'
-            text2 = u'a opakovat ka\u017ed\xfdch'
-            text3 = u'Modifikovat \u010detnost opakov\xe1n\xed po'
-            text4 = u's opakov\xe1n\xedm ka\u017ed\xfdch'
+            name = u"Automaticky opakovat makro"
+            description = u'Makro, ve kterém je tento element použit, bude automaticky opakovaně spouštěno.\n\n<p><b>POZOR:</b> Tato funkce je použitelná pouze pro makra, jejichž délka provádění je dána nějakým externím podnětem (například dlouhým držením tlačítka dálkového ovladače). Element "Automatické opakování makra" by měl být umístěn na konci makra.'
+            seconds = u"sec."
+            text1 = u"První opakování začít po"
+            text2 = u"a opakovat každých"
+            text3 = u"Modifikovat četnost opakování po"
+            text4 = u"s opakováním každých"
         class Comment:
-            name = u'Koment\xe1\u0159'
-            description = u'Akce bez \xfa\u010dinku. M\u016f\u017ee b\xfdt pou\u017eita pro komentov\xe1n\xed va\u0161\xed konfigurace.'
+            name = u"Komentář"
+            description = u"Akce bez účinku. Může být použita pro komentování vaší konfigurace."
         class DisableItem:
-            name = u'Zak\xe1zat polo\u017eku'
-            description = u'Zak\xe1\u017ee polo\u017eku'
-            label = u'Zak\xe1zat: %s'
-            text1 = u'Pros\xedm vyberte polo\u017eku, kter\xe1 m\xe1 b\xfdt zak\xe1z\xe1na:'
+            name = u"Zakázat položku"
+            description = u"Zakáže položku"
+            label = u"Zakázat: %s"
+            text1 = u"Prosím vyberte položku, která má být zakázána:"
         class EnableExclusive:
-            name = u'V\xfdhradn\u011b povolit slo\u017eku/makro'
-            description = u'Povol\xed ur\u010ditou slo\u017eku nebo makro ve va\u0161\xed konfiguraci. Z\xe1rove\u0148 ale zak\xe1\u017ee v\u0161echny ostatn\xed slo\u017eky nebo makra, kter\xe9 maj\xed stejnou \xfarove\u0148 (slo\u017eka nebo makro) a jsou na stejn\xe9 v\u011btvi konfigura\u010dn\xedho stromu.'
-            label = u'V\xfdhradn\u011b povolit: %s'
-            text1 = u'Pros\xedm vyberte slo\u017eku/makro, kter\xe1/-\xe9 m\xe1 b\xfdt povolena/-o:'
+            name = u"Výhradně povolit složku/makro"
+            description = u"Povolí určitou složku nebo makro ve vaší konfiguraci. Zároveň ale zakáže všechny ostatní složky nebo makra, které mají stejnou úroveň (složka nebo makro) a jsou na stejné větvi konfiguračního stromu."
+            label = u"Výhradně povolit: %s"
+            text1 = u"Prosím vyberte složku/makro, která/-é má být povolena/-o:"
         class EnableItem:
-            name = u'Povolit polo\u017eku'
-            description = u'Povol\xed polo\u017eku ve stromu.'
-            label = u'Povolit: %s'
-            text1 = u'Pros\xedm vyberte polo\u017eku, kter\xe1 m\xe1 b\xfdt povolena:'
+            name = u"Povolit položku"
+            description = u"Povolí položku ve stromu."
+            label = u"Povolit: %s"
+            text1 = u"Prosím vyberte položku, která má být povolena:"
         class FlushEvents:
-            name = u'Zahodit ud\xe1losti'
-            description = u'Akce "Zahodit ud\xe1losti" m\xe1 za n\xe1sledek vypr\xe1zdn\u011bn\xed pracovn\xed fronty. To je u\u017eite\u010dn\xe9 v p\u0159\xedpad\u011b, \u017ee n\u011bjak\xe9 makro se zpracov\xe1v\xe1 ur\u010ditou dobu a ud\xe1losti, kter\xe9 se nahromad\xed b\u011bhem jeho zpracov\xe1n\xed, by nem\u011bly b\xfdt zpracov\xe1ny.\n\n<p><b>P\u0159\xedklad:</b> M\xe1te zdlouhav\xe9 makro "start syst\xe9mu", jeho\u017e zpracov\xe1n\xed trv\xe1 okolo 90 sekund. Koncov\xfd u\u017eivatel nebude nic vid\u011bt, dokud se nerozsv\xedt\xed projektor. To trv\xe1 asi 60 sekund. Je velmi pravd\u011bpodobn\xe9, \u017ee u\u017eivatel bude opakovan\u011b ma\u010dkat tla\u010d\xedtko d\xe1lkov\xe9ho ovlada\u010de, kter\xe9 startuje makro (v domn\u011bn\xed, \u017ee se nic ned\u011bje). Pokud na konec makra um\xedst\xedte p\u0159\xedkaz "Zahodit ud\xe1losti", v\u0161echna nadbyte\u010dn\xe1 stisknut\xed tla\u010d\xedtka budou z fronty vymaz\xe1na.'
+            name = u"Zahodit události"
+            description = u'Akce "Zahodit události" má za následek vyprázdnění pracovní fronty. To je užitečné v případě, že nějaké makro se zpracovává určitou dobu a události, které se nahromadí během jeho zpracování, by neměly být zpracovány.\n\n<p><b>Příklad:</b> Máte zdlouhavé makro "start systému", jehož zpracování trvá okolo 90 sekund. Koncový uživatel nebude nic vidět, dokud se nerozsvítí projektor. To trvá asi 60 sekund. Je velmi pravděpodobné, že uživatel bude opakovaně mačkat tlačítko dálkového ovladače, které startuje makro (v domnění, že se nic neděje). Pokud na konec makra umístíte příkaz "Zahodit události", všechna nadbytečná stisknutí tlačítka budou z fronty vymazána.'
         class JumpIfLongPress:
-            name = u'Sko\u010dit p\u0159i dlouh\xe9m stisku'
-            description = u'Sko\u010d\xed na jin\xe9 makro, pokud tla\u010d\xedtko na d\xe1lkov\xe9m ovlada\u010di je stisknut\xe9 d\xe9le, ne\u017e je nastaven\xfd \u010das.'
-            label = u'Je-li tla\u010d\xedtko stisknut\xe9 %s sec, sko\u010dit na: %s'
-            text1 = u'Je-li tla\u010d\xedtko stisknut\xe9 d\xe9le ne\u017e'
-            text2 = u'sekund,'
-            text3 = u'sko\u010dit na:'
-            text4 = u'Vyberte makro, na kter\xe9 se m\xe1 sko\u010dit...'
-            text5 = u'Pros\xedm vyberte makro, kter\xe9 by m\u011blo b\xfdt spu\u0161t\u011bno,\npokud je dosa\u017eeno nastaven\xe9 d\xe9lky stisknut\xed tla\u010d\xedtka.'
+            name = u"Skočit při dlouhém stisku"
+            description = u"Skočí na jiné makro, pokud tlačítko na dálkovém ovladači je stisknuté déle, než je nastavený čas."
+            label = u"Je-li tlačítko stisknuté %s sec, skočit na: %s"
+            text1 = u"Je-li tlačítko stisknuté déle než"
+            text2 = u"sekund,"
+            text3 = u"skočit na:"
+            text4 = u"Vyberte makro, na které se má skočit..."
+            text5 = u"Prosím vyberte makro, které by mělo být spuštěno,\npokud je dosaženo nastavené délky stisknutí tlačítka."
         class NewJumpIf:
-            name = u'Sko\u010dit'
-            description = u'Sko\u010d\xed na jin\xe9 makro, pokud v\xfdsledek ur\u010dit\xe9 akce odpov\xedd\xe1 podm\xednce.'
+            name = u"Skočit"
+            description = u"Skočí na jiné makro, pokud výsledek určité akce odpovídá podmínce."
             choices = [
-                u'posledn\xed akce byla \xfasp\u011b\u0161n\xe1',
-                u'posledn\xed akce byla ne\xfasp\u011b\u0161n\xe1',
-                u'v\u017edy',
+                u"poslední akce byla úspěšná",
+                u"poslední akce byla neúspěšná",
+                u"vždy",
             ]
             labels = [
-                u'P\u0159i \xfasp\u011bchu sko\u010dit na "%s"',
-                u'P\u0159i ne\xfasp\u011bchu sko\u010dit na "%s"',
-                u'Sko\u010dit na "%s"',
-                u'P\u0159i \xfasp\u011bchu sko\u010dit na "%s" a vr\xe1tit se',
-                u'P\u0159i ne\xfasp\u011bchu sko\u010dit na "%s" a vr\xe1tit se',
-                u'Sko\u010dit na "%s" a vr\xe1tit se',
+                u'Při úspěchu skočit na "%s"',
+                u'Při neúspěchu skočit na "%s"',
+                u'Skočit na "%s"',
+                u'Při úspěchu skočit na "%s" a vrátit se',
+                u'Při neúspěchu skočit na "%s" a vrátit se',
+                u'Skočit na "%s" a vrátit se',
             ]
-            mesg1 = u'V\xfdb\u011br makra...'
-            mesg2 = u'Pros\xedm vyberte makro, kter\xe9 by m\u011blo b\xfdt spu\u0161t\u011bno,\npokud v\xfdsledek ur\u010dit\xe9 akce odpov\xedd\xe1 podm\xednce.'
-            text1 = u'Jestli\u017ee:'
-            text2 = u'Sko\u010dit na:'
-            text3 = u'a vr\xe1tit se po vykon\xe1n\xed'
+            mesg1 = u"Výběr makra..."
+            mesg2 = u"Prosím vyberte makro, které by mělo být spuštěno,\npokud výsledek určité akce odpovídá podmínce."
+            text1 = u"Jestliže:"
+            text2 = u"Skočit na:"
+            text3 = u"a vrátit se po vykonání"
         class PythonCommand:
-            name = u'P\u0159\xedkaz jazyka Python'
-            description = u'Provede zadan\xfd jednoduch\xfd p\u0159\xedkaz jazyka Python.'
-            parameterDescription = u'P\u0159\xedkaz jazyka Python:'
+            name = u"Příkaz jazyka Python"
+            description = u"Provede zadaný jednoduchý příkaz jazyka Python."
+            parameterDescription = u"Příkaz jazyka Python:"
         class PythonScript:
-            name = u'Skript jazyka Python'
-            description = u'Vykon\xe1 plnohodnotn\xfd skript jazyka Python.'
+            name = u"Skript jazyka Python"
+            description = u"Vykoná plnohodnotný skript jazyka Python."
         class ShowOSD:
-            name = u'Zobrazit OSD'
-            description = u'Zobraz\xed jednoduch\xfd OSD.'
-            alignment = u'Um\xedst\u011bn\xed:'
+            name = u"Zobrazit OSD"
+            description = u"Zobrazí jednoduchý OSD."
+            alignment = u"Umístění:"
             alignmentChoices = [
-                u'Naho\u0159e vlevo',
-                u'Naho\u0159e vpravo',
-                u'Dole vlevo',
-                u'Dole vpravo',
-                u'Uprost\u0159ed',
-                u'Dole uprost\u0159ed',
-                u'Naho\u0159e uprost\u0159ed',
-                u'Vlevo uprost\u0159ed',
-                u'Vpravo uprost\u0159ed',
+                u"Nahoře vlevo",
+                u"Nahoře vpravo",
+                u"Dole vlevo",
+                u"Dole vpravo",
+                u"Uprostřed",
+                u"Dole uprostřed",
+                u"Nahoře uprostřed",
+                u"Vlevo uprostřed",
+                u"Vpravo uprostřed",
             ]
-            display = u'Zobrazit na:'
-            editText = u'Text k zobrazen\xed:'
-            label = u'Zobrazit OSD: %s'
-            osdColour = u'Barva OSD:'
-            osdFont = u'OSD p\xedsmo:'
-            outlineFont = u'Obrys OSD'
-            wait1 = u'Automaticky skr\xfdt OSD po'
-            wait2 = u'sekund\xe1ch (0 = nikdy)'
-            xOffset = u'Vodorovn\xfd ofset X:'
-            yOffset = u'Svisl\xfd ofset Y:'
+            display = u"Zobrazit na:"
+            editText = u"Text k zobrazení:"
+            label = u"Zobrazit OSD: %s"
+            osdColour = u"Barva OSD:"
+            osdFont = u"OSD písmo:"
+            outlineFont = u"Obrys OSD"
+            wait1 = u"Automaticky skrýt OSD po"
+            wait2 = u"sekundách (0 = nikdy)"
+            xOffset = u"Vodorovný ofset X:"
+            yOffset = u"Svislý ofset Y:"
         class StopProcessing:
-            name = u'Zastavit zpracov\xe1n\xed t\xe9to ud\xe1losti'
-            description = u'Zastav\xed zpracov\xe1n\xed t\xe9to ud\xe1losti'
+            name = u"Zastavit zpracování této události"
+            description = u"Zastaví zpracování této události"
         class TriggerEvent:
-            name = u'Vyvolat ud\xe1lost'
-            description = u'Vyvol\xe1 po\u017eadovanou ud\xe1lost (voliteln\u011b po ur\u010dit\xe9m \u010dase).'
-            labelWithTime = u'Vyvolat ud\xe1lost "%s" po %.2f sekund\xe1ch'
-            labelWithoutTime = u'Vyvolat ud\xe1lost "%s"'
-            text1 = u'Identifikace generovan\xe9 ud\xe1losti:'
-            text2 = u'Prodleva p\u0159ed uvoln\u011bn\xedm ud\xe1losti:'
-            text3 = u'sekund. (0 = uvolnit okam\u017eit\u011b)'
+            name = u"Vyvolat událost"
+            description = u"Vyvolá požadovanou událost (volitelně po určitém čase)."
+            labelWithTime = u'Vyvolat událost "%s" po %.2f sekundách'
+            labelWithoutTime = u'Vyvolat událost "%s"'
+            text1 = u"Identifikace generované události:"
+            text2 = u"Prodleva před uvolněním události:"
+            text3 = u"sekund. (0 = uvolnit okamžitě)"
         class Wait:
-            name = u'\u010cekat danou dobu'
-            description = u'\u010cek\xe1 danou dobu'
-            label = u'\u010cekat: %s sec'
-            seconds = u'sekund'
-            wait = u'\u010cekat'
+            name = u"Čekat danou dobu"
+            description = u"Čeká danou dobu"
+            label = u"Čekat: %s sec"
+            seconds = u"sekund"
+            wait = u"Čekat"
     class System:
-        name = u'Syst\xe9m'
-        description = u'Syst\xe9m'
-        forced = u'Nucen\xe9: %s'
-        forcedCB = u'Nucen\u011b zav\u0159e v\u0161echny programy'
+        name = u"Systém"
+        description = u"Systém"
+        forced = u"Nucené: %s"
+        forcedCB = u"Nuceně zavře všechny programy"
         class ChangeDisplaySettings:
-            name = u'Zm\u011bnit nastaven\xed displeje'
-            description = u'Zm\u011bn\xed nastaven\xed displeje'
+            name = u"Změnit nastavení displeje"
+            description = u"Změní nastavení displeje"
         class ChangeMasterVolumeBy:
-            name = u'Zm\u011bnit hlavn\xed hlasitost'
-            description = u'Zm\u011bn\xed hlavn\xed hlasitost'
-            text1 = u'Zm\u011bnit hlavn\xed hlasitost o'
-            text2 = u'procent.'
+            name = u"Změnit hlavní hlasitost"
+            description = u"Změní hlavní hlasitost"
+            text1 = u"Změnit hlavní hlasitost o"
+            text2 = u"procent."
         class Execute:
-            name = u'Spustit aplikaci'
-            description = u'Spust\xed program.'
-            FilePath = u'Cesta ke spustiteln\xe9mu souboru:'
-            Parameters = u'Parametry p\u0159\xedkazov\xe9 \u0159\xe1dky:'
+            name = u"Spustit aplikaci"
+            description = u"Spustí program."
+            FilePath = u"Cesta ke spustitelnému souboru:"
+            Parameters = u"Parametry příkazové řádky:"
             ProcessOptions = (
-                u'Re\xe1ln\xfd \u010das',
-                u'Nadpr\u016fm\u011brn\xe1',
-                u'Norm\xe1ln\xed',
-                u'Podpr\u016fm\u011brn\xe1',
-                u'N\xedzk\xe1',
+                u"Reálný čas",
+                u"Nadprůměrná",
+                u"Normální",
+                u"Podprůměrná",
+                u"Nízká",
             )
-            ProcessOptionsDesc = u'Priorita procesu:'
-            WaitCheckbox = u'\u010cekat na dokon\u010den\xed'
+            ProcessOptionsDesc = u"Priorita procesu:"
+            WaitCheckbox = u"Čekat na dokončení"
             WindowOptions = (
-                u'Norm\xe1ln\xed',
-                u'Minimalizovan\xe9',
-                u'Maximalizovan\xe9',
-                u'Neviditeln\xe9',
+                u"Normální",
+                u"Minimalizované",
+                u"Maximalizované",
+                u"Neviditelné",
             )
-            WindowOptionsDesc = u'Velikost okna:'
-            WorkingDir = u'Pracovn\xed slo\u017eka:'
-            browseExecutableDialogTitle = u'Volba spustiteln\xe9ho souboru'
-            browseWorkingDirDialogTitle = u'Volba pracovn\xed slo\u017eky'
-            label = u'Spustit program: %s'
+            WindowOptionsDesc = u"Velikost okna:"
+            WorkingDir = u"Pracovní složka:"
+            browseExecutableDialogTitle = u"Volba spustitelného souboru"
+            browseWorkingDirDialogTitle = u"Volba pracovní složky"
+            label = u"Spustit program: %s"
         class Hibernate:
-            name = u'Uspat po\u010d\xedta\u010d'
-            description = u'Tato funkce zastav\xed syst\xe9m, vypne nap\xe1jen\xed a zavede re\u017eim sp\xe1nku.'
+            name = u"Uspat počítač"
+            description = u"Tato funkce zastaví systém, vypne napájení a zavede režim spánku."
         class LockWorkstation:
-            name = u'Zamknout pracovn\xed stanici'
-            description = u'Tato funkce po\u017e\xe1d\xe1 o zamknut\xed displeje pracovn\xed stanice. Zamknut\xed chr\xe1n\xed stanici p\u0159ed neautorizovan\xfdm pou\u017eit\xedm. Funkce m\xe1 stejn\xfd v\xfdsledek jako stisknut\xed kombinace Ctrl+Alt+Del a klepnut\xed na Zamknout pracovn\xed stanici (XP Professional).'
+            name = u"Zamknout pracovní stanici"
+            description = u"Tato funkce požádá o zamknutí displeje pracovní stanice. Zamknutí chrání stanici před neautorizovaným použitím. Funkce má stejný výsledek jako stisknutí kombinace Ctrl+Alt+Del a klepnutí na Zamknout pracovní stanici (XP Professional)."
         class LogOff:
-            name = u'Odhl\xe1sit aktu\xe1ln\xedho u\u017eivatele'
-            description = u'Zastav\xed v\u0161echny procesy, b\u011b\u017e\xedc\xed v \xfa\u010dtu aktu\xe1ln\u011b p\u0159ihl\xe1\u0161en\xe9ho u\u017eivatele. Pak u\u017eivatele odhl\xe1s\xed.'
+            name = u"Odhlásit aktuálního uživatele"
+            description = u"Zastaví všechny procesy, běžící v účtu aktuálně přihlášeného uživatele. Pak uživatele odhlásí."
         class MonitorGroup:
-            name = u'Displej'
-            description = u'Tyto akce \u0159\xedd\xed nap\xe1jen\xed displeje po\u010d\xedta\u010de.'
+            name = u"Displej"
+            description = u"Tyto akce řídí napájení displeje počítače."
         class MonitorPowerOff:
-            name = u'P\u0159epnout monitor do stavu power-off'
-            description = u'P\u0159epne displej do stavu power-off. To podporuje v\u011bt\u0161ina re\u017eim\u016f, \u0161et\u0159\xedc\xedch energii.'
+            name = u"Přepnout monitor do stavu power-off"
+            description = u"Přepne displej do stavu power-off. To podporuje většina režimů, šetřících energii."
         class MonitorPowerOn:
-            name = u'Znovu povolit monitor'
-            description = u'Zapne displej, pokud byl v re\u017eimu power-off nebo n\xedzk\xe9 spot\u0159eby. Tak\xe9 zastav\xed \u0161et\u0159i\u010d obrazovky.'
+            name = u"Znovu povolit monitor"
+            description = u"Zapne displej, pokud byl v režimu power-off nebo nízké spotřeby. Také zastaví šetřič obrazovky."
         class MonitorStandby:
-            name = u'P\u0159epnout monitor do re\u017eimu stand-by'
-            description = u'Nastav\xed re\u017eim n\xedzk\xe9 spot\u0159eby displeje.'
+            name = u"Přepnout monitor do režimu stand-by"
+            description = u"Nastaví režim nízké spotřeby displeje."
         class MuteOff:
-            name = u'Zru\u0161it re\u017eim Ztlumit v\u0161e'
-            description = u'Zru\u0161\xed re\u017eim Ztlumit v\u0161e'
+            name = u"Zrušit režim Ztlumit vše"
+            description = u"Zruší režim Ztlumit vše"
         class MuteOn:
-            name = u'Nastavit re\u017eim Ztlumit v\u0161e'
-            description = u'Nastav\xed re\u017eim Ztlumit v\u0161e'
+            name = u"Nastavit režim Ztlumit vše"
+            description = u"Nastaví režim Ztlumit vše"
         class OpenDriveTray:
-            name = u'Vysunout/zasunout dv\xed\u0159ka mechaniky'
-            description = u'\u0158\xedd\xed dv\xed\u0159ka CD/DVD-ROM mechaniky.'
-            driveLabel = u'Mechanika:'
+            name = u"Vysunout/zasunout dvířka mechaniky"
+            description = u"Řídí dvířka CD/DVD-ROM mechaniky."
+            driveLabel = u"Mechanika:"
             labels = [
-                u'P\u0159esunout dv\xed\u0159ka mechaniky: %s',
-                u'Vysunout dv\xed\u0159ka mechaniky: %s',
-                u'Zasunout dv\xed\u0159ka mechaniky: %s',
+                u"Přesunout dvířka mechaniky: %s",
+                u"Vysunout dvířka mechaniky: %s",
+                u"Zasunout dvířka mechaniky: %s",
             ]
             options = [
-                u'Vysunout nebo zasunout dv\xed\u0159ka mechaniky (podle aktu\xe1ln\xedho stavu)',
-                u'Pouze vysunout dv\xed\u0159ka mechaniky',
-                u'Pouze zasunout dv\xed\u0159ka mechaniky',
+                u"Vysunout nebo zasunout dvířka mechaniky (podle aktuálního stavu)",
+                u"Pouze vysunout dvířka mechaniky",
+                u"Pouze zasunout dvířka mechaniky",
             ]
-            optionsLabel = u'Volba akce'
+            optionsLabel = u"Volba akce"
         class PlaySound:
-            name = u'P\u0159ehr\xe1t zvuk'
-            description = u'P\u0159ehraje zvuk'
-            fileMask = u'Soubory wav (*.WAV)|*.wav|V\u0161echny soubory (*.*)|*.*'
-            text1 = u'Cesta ke zvukov\xe9mu souboru:'
-            text2 = u'\u010cekat na dokon\u010den\xed'
+            name = u"Přehrát zvuk"
+            description = u"Přehraje zvuk"
+            fileMask = u"Soubory wav (*.WAV)|*.wav|Všechny soubory (*.*)|*.*"
+            text1 = u"Cesta ke zvukovému souboru:"
+            text2 = u"Čekat na dokončení"
         class PowerDown:
-            name = u'Vypnout po\u010d\xedta\u010d'
-            description = u'Zastav\xed syst\xe9m a vypne nap\xe1jen\xed. Syst\xe9m mus\xed podporovat funkci power-off.'
+            name = u"Vypnout počítač"
+            description = u"Zastaví systém a vypne napájení. Systém musí podporovat funkci power-off."
         class PowerGroup:
-            name = u'\u0158\xedzen\xed nap\xe1jen\xed'
-            description = u'Tyto akce zastavuj\xed, usp\xe1vaj\xed, restartuj\xed nebo vyp\xednaj\xed po\u010d\xedta\u010d. Mohou tak\xe9 zamknout pracovn\xed stanici a odhl\xe1sit aktu\xe1ln\xedho u\u017eivatele.'
+            name = u"Řízení napájení"
+            description = u"Tyto akce zastavují, uspávají, restartují nebo vypínají počítač. Mohou také zamknout pracovní stanici a odhlásit aktuálního uživatele."
         class Reboot:
-            name = u'Restartovat po\u010d\xedta\u010d'
-            description = u'Zastav\xed syst\xe9m a restartuje po\u010d\xedta\u010d.'
+            name = u"Restartovat počítač"
+            description = u"Zastaví systém a restartuje počítač."
         class RegistryChange:
-            name = u'Zm\u011bnit hodnotu v registru'
-            description = u'Zm\u011bn\xed hodnoty v registru windows'
+            name = u"Změnit hodnotu v registru"
+            description = u"Změní hodnoty v registru windows"
             actions = (
-                u'vytvo\u0159it nebo zm\u011bnit',
-                u'zm\u011bnit pouze existuje-li',
-                u'odstranit',
+                u"vytvořit nebo změnit",
+                u"změnit pouze existuje-li",
+                u"odstranit",
             )
             labels = (
-                u'Zm\u011bnit "%s" na %s',
-                u'Zm\u011bnit "%s" na %s pouze existuje-li',
+                u'Změnit "%s" na %s',
+                u'Změnit "%s" na %s pouze existuje-li',
                 u'Odstranit "%s"',
             )
         class RegistryGroup:
-            name = u'Registry'
-            description = u'Vyhled\xe1v\xe1 nebo m\u011bn\xed hodnoty v registru windows.'
-            actionText = u'Akce:'
-            chooseText = u'Volba registrov\xe9ho kl\xed\u010de:'
-            defaultText = u'(V\xfdchoz\xed)'
-            keyOpenError = u'Chyba otev\u0159en\xed registrov\xe9ho kl\xed\u010de'
-            keyText = u'Kl\xed\u010d:'
-            keyText2 = u'Kl\xed\u010d'
-            newValue = u'Nov\xe1 hodnota:'
-            noKeyError = u'Kl\xed\u010d neexistuje'
-            noNewValueError = u'Nov\xe1 hodnota neexistuje'
-            noSubkeyError = u'Podkl\xed\u010d neexistuje'
-            noTypeError = u'Typ neexistuje'
-            noValueNameError = u'N\xe1zev hodnoty neexistuje'
-            noValueText = u'hodnota nenalezena'
-            oldType = u'Aktu\xe1ln\xed typ:'
-            oldValue = u'Aktu\xe1ln\xed hodnota:'
-            typeText = u'Typ:'
-            valueChangeError = u'Chyba p\u0159i zm\u011bn\u011b hodnoty'
-            valueName = u'N\xe1zev hodnoty:'
-            valueText = u'Hodnota:'
+            name = u"Registry"
+            description = u"Vyhledává nebo mění hodnoty v registru windows."
+            actionText = u"Akce:"
+            chooseText = u"Volba registrového klíče:"
+            defaultText = u"(Výchozí)"
+            keyOpenError = u"Chyba otevření registrového klíče"
+            keyText = u"Klíč:"
+            keyText2 = u"Klíč"
+            newValue = u"Nová hodnota:"
+            noKeyError = u"Klíč neexistuje"
+            noNewValueError = u"Nová hodnota neexistuje"
+            noSubkeyError = u"Podklíč neexistuje"
+            noTypeError = u"Typ neexistuje"
+            noValueNameError = u"Název hodnoty neexistuje"
+            noValueText = u"hodnota nenalezena"
+            oldType = u"Aktuální typ:"
+            oldValue = u"Aktuální hodnota:"
+            typeText = u"Typ:"
+            valueChangeError = u"Chyba při změně hodnoty"
+            valueName = u"Název hodnoty:"
+            valueText = u"Hodnota:"
         class RegistryQuery:
-            name = u'Dotaz registru'
-            description = u'Vyhled\xe1 \xfadaj v registru windows a vr\xe1t\xed nebo porovn\xe1 hodnoty'
+            name = u"Dotaz registru"
+            description = u"Vyhledá údaj v registru windows a vrátí nebo porovná hodnoty"
             actions = (
-                u'kontrola existuje-li',
-                u'vr\xe1t\xed v\xfdsledek',
-                u'porovn\xe1 s',
+                u"kontrola existuje-li",
+                u"vrátí výsledek",
+                u"porovná s",
             )
             labels = (
                 u'Zkontroluj, existuje-li "%s"',
-                u'Vra\u0165 "%s" jako v\xfdsledek',
+                u'Vrať "%s" jako výsledek',
                 u'Porovnej "%s" s %s',
             )
         class ResetIdleTimer:
-            name = u'Resetovat dobu ne\u010dinnosti'
-            description = u'Resetuje dobu ne\u010dinnosti'
+            name = u"Resetovat dobu nečinnosti"
+            description = u"Resetuje dobu nečinnosti"
         class SetClipboard:
-            name = u'Zkop\xedrovat \u0159et\u011bzec do schr\xe1nky'
-            description = u'Zkop\xedruje \u0159et\u011bzec znak\u016f do syst\xe9mov\xe9 schr\xe1nky.'
-            error = u'Nemohu otev\u0159\xedt schr\xe1nku'
+            name = u"Zkopírovat řetězec do schránky"
+            description = u"Zkopíruje řetězec znaků do systémové schránky."
+            error = u"Nemohu otevřít schránku"
         class SetDisplayPreset:
-            name = u'Nastavit p\u0159edvolby displeje'
-            description = u'Nastav\xed p\u0159edvolby displeje'
+            name = u"Nastavit předvolby displeje"
+            description = u"Nastaví předvolby displeje"
             fields = (
-                u'Za\u0159\xedzen\xed',
-                u'Vlevo',
-                u'Naho\u0159e',
-                u'\u0160\xed\u0159ka',
-                u'V\xfd\u0161ka',
-                u'Kmito\u010det',
-                u'Kvalita barev',
-                u'P\u0159ipojeno',
-                u'Prim\xe1rn\xed',
-                u'Vlajky',
+                u"Zařízení",
+                u"Vlevo",
+                u"Nahoře",
+                u"Šířka",
+                u"Výška",
+                u"Kmitočet",
+                u"Kvalita barev",
+                u"Připojeno",
+                u"Primární",
+                u"Vlajky",
             )
-            query = u'Zjitit aktu\xe1ln\xed nastaven\xed displeje'
+            query = u"Zjitit aktuální nastavení displeje"
         class SetIdleTime:
-            name = u'Nastavit dobu pro ne\u010dinnost'
-            description = u'Nastav\xed dobu pro generov\xe1n\xed ud\xe1losti ne\u010dinnost'
-            label1 = u'\u010cekat'
-            label2 = u'sekund p\u0159ed generov\xe1n\xedm ud\xe1losti ne\u010dinnost.'
+            name = u"Nastavit dobu pro nečinnost"
+            description = u"Nastaví dobu pro generování události nečinnost"
+            label1 = u"Čekat"
+            label2 = u"sekund před generováním události nečinnost."
         class SetMasterVolume:
-            name = u'Nastavit hlavn\xed hlasitost'
-            description = u'Nastav\xed hlavn\xed hlasitost'
-            text1 = u'Nastavit hlavn\xed hlasitost na'
-            text2 = u'procent.'
+            name = u"Nastavit hlavní hlasitost"
+            description = u"Nastaví hlavní hlasitost"
+            text1 = u"Nastavit hlavní hlasitost na"
+            text2 = u"procent."
         class SetSystemIdleTimer:
-            name = u'Nastavit syst\xe9mov\xfd \u010dasova\u010d doby ne\u010dinnosti'
-            description = u'Nastav\xed syst\xe9mov\xfd \u010dasova\u010d doby ne\u010dinnosti'
+            name = u"Nastavit systémový časovač doby nečinnosti"
+            description = u"Nastaví systémový časovač doby nečinnosti"
             choices = [
-                u'Z\xe1kaz syst\xe9mov\xe9ho \u010dasova\u010de doby ne\u010dinnosti',
-                u'Povolen\xed syst\xe9mov\xe9ho \u010dasova\u010de doby ne\u010dinnosti',
+                u"Zákaz systémového časovače doby nečinnosti",
+                u"Povolení systémového časovače doby nečinnosti",
             ]
-            text = u'Zvolte mo\u017enost:'
+            text = u"Zvolte možnost:"
         class SetWallpaper:
-            name = u'Zm\u011bnit tapetu'
-            description = u'Zm\u011bn\xed tapetu'
+            name = u"Změnit tapetu"
+            description = u"Změní tapetu"
             choices = (
-                u'Na st\u0159ed',
-                u'Vedle sebe',
-                u'Rozt\xe1hnout',
+                u"Na střed",
+                u"Vedle sebe",
+                u"Roztáhnout",
             )
-            fileMask = u'V\u0161echny soubory obr\xe1zk\u016f|*.jpg;*.bmp;*.gif|V\u0161echny soubory (*.*)|*.*'
-            text1 = u'Cesta k souboru s obr\xe1zkem:'
-            text2 = u'Pozice:'
+            fileMask = u"Všechny soubory obrázků|*.jpg;*.bmp;*.gif|Všechny soubory (*.*)|*.*"
+            text1 = u"Cesta k souboru s obrázkem:"
+            text2 = u"Pozice:"
         class ShowPicture:
-            name = u'Zobrazit obr\xe1zek'
-            description = u'Zobraz\xed obr\xe1zek'
-            allFiles = u'V\u0161echny soubory'
-            allImageFiles = u'V\u0161echny soubory typu obr\xe1zek'
-            display = u'Monitor'
-            path = u'Cesta k obr\xe1zku (pro vymaz\xe1n\xed pou\u017eijte pr\xe1zdnou cestu):'
+            name = u"Zobrazit obrázek"
+            description = u"Zobrazí obrázek"
+            allFiles = u"Všechny soubory"
+            allImageFiles = u"Všechny soubory typu obrázek"
+            display = u"Monitor"
+            path = u"Cesta k obrázku (pro vymazání použijte prázdnou cestu):"
         class SoundGroup:
-            name = u'Zvukov\xe1 karta'
-            description = u'Tyto akce ovl\xe1daj\xed zvukovou kartu va\u0161eho po\u010d\xedta\u010de.'
+            name = u"Zvuková karta"
+            description = u"Tyto akce ovládají zvukovou kartu vašeho počítače."
         class Standby:
-            name = u'Uv\xe9st po\u010d\xedta\u010d do re\u017eimu standby'
-            description = u'Tato funkce usp\xed syst\xe9m vypnut\xedm nap\xe1jen\xed a uveden\xedm do stavu sp\xe1nku.'
+            name = u"Uvést počítač do režimu standby"
+            description = u"Tato funkce uspí systém vypnutím napájení a uvedením do stavu spánku."
         class StartScreenSaver:
-            name = u'Spustit \u0161et\u0159i\u010d obrazovky'
-            description = u'Spust\xed \u0161et\u0159i\u010d obrazovky, vybran\xfd v nastaven\xed windows.'
+            name = u"Spustit šetřič obrazovky"
+            description = u"Spustí šetřič obrazovky, vybraný v nastavení windows."
         class ToggleMute:
-            name = u'Nastavit/zru\u0161it re\u017eim Ztlumit v\u0161e'
-            description = u'Nastav\xed/zru\u0161\xed re\u017eim Ztlumit v\u0161e'
+            name = u"Nastavit/zrušit režim Ztlumit vše"
+            description = u"Nastaví/zruší režim Ztlumit vše"
         class WakeOnLan:
-            name = u'Probudit po\u010d\xedta\u010d po s\xedti'
-            description = u'Probud\xed po\u010d\xedta\u010d vysl\xe1n\xedm speci\xe1ln\xedho s\xed\u0165ov\xe9ho paketu. \n\nJe t\u0159eba uv\xe9st MAC adresu po\u010d\xedta\u010de ve tvaru:<p><i>00-13-D4-9A-2F-04</i> nebo<br><i>00:13:D4:9A:2F:04</i> '
-            parameterDescription = u'MAC adresa po\u010d\xedta\u010de, kter\xfd m\xe1 b\xfdt probuzen:'
+            name = u"Probudit počítač po síti"
+            description = u"Probudí počítač vysláním speciálního síťového paketu. \n\nJe třeba uvést MAC adresu počítače ve tvaru:<p><i>00-13-D4-9A-2F-04</i> nebo<br><i>00:13:D4:9A:2F:04</i> "
+            parameterDescription = u"MAC adresa počítače, který má být probuzen:"
     class Window:
-        name = u'Okno'
-        description = u'Akce spojen\xe9 s \u0159\xedzen\xedm okna na obrazovce, jako nalezen\xed ur\u010dit\xe9ho okna, p\u0159esun, zm\u011bna velikosti a odesl\xe1n\xed stisk\u016f kl\xe1ves k ur\u010dit\xe9mu oknu.'
+        name = u"Okno"
+        description = u"Akce spojené s řízením okna na obrazovce, jako nalezení určitého okna, přesun, změna velikosti a odeslání stisků kláves k určitému oknu."
         class BringToFront:
-            name = u'P\u0159en\xe9st do pop\u0159ed\xed'
-            description = u'P\u0159enese ur\u010den\xe9 okno do pop\u0159ed\xed.'
+            name = u"Přenést do popředí"
+            description = u"Přenese určené okno do popředí."
         class Close:
-            name = u'Zav\u0159\xedt'
-            description = u'Zav\u0159e okno aplikace'
+            name = u"Zavřít"
+            description = u"Zavře okno aplikace"
         class FindWindow:
-            name = u'Naj\xedt okno'
-            description = u'Najde uveden\xe9 okno.'
-            drag1 = u'P\u0159et\xe1hn\u011bte m\u011b\ndo okna.'
-            drag2 = u'Te\u010f m\u011b p\u0159esu\u0148te\ndo okna.'
-            hide_box = u'Skr\xfdt EventGhost b\u011bhem p\u0159esouv\xe1n\xed'
-            invisible_box = u'Hledat tak\xe9 neviditeln\xe9 polo\u017eky'
-            label = u'Naj\xedt okno: %s'
-            label2 = u'Naj\xedt okno, kter\xe9 je nejv\xedce v pop\u0159ed\xed'
-            matchNum1 = u'Vr\xe1tit pouze'
-            matchNum2 = u'. nalezen\xe9 okno'
-            onlyForground = u'Pouze okno, kter\xe9 je nejv\xedce v pop\u0159ed\xed'
+            name = u"Najít okno"
+            description = u"Najde uvedené okno."
+            drag1 = u"Přetáhněte mě\ndo okna."
+            drag2 = u"Teď mě přesuňte\ndo okna."
+            hide_box = u"Skrýt EventGhost během přesouvání"
+            invisible_box = u"Hledat také neviditelné položky"
+            label = u"Najít okno: %s"
+            label2 = u"Najít okno, které je nejvíce v popředí"
+            matchNum1 = u"Vrátit pouze"
+            matchNum2 = u". nalezené okno"
             options = (
-                u'Aplikace:',
-                u'Jm\xe9no okna:',
-                u'T\u0159\xedda okna:',
-                u'Jm\xe9no potomka:',
-                u'T\u0159\xedda potomka:',
+                u"Aplikace:",
+                u"Jméno okna:",
+                u"Třída okna:",
+                u"Jméno potomka:",
+                u"Třída potomka:",
             )
-            refresh_btn = u'&Aktualizovat'
+            refresh_btn = u"&Aktualizovat"
             stopMacro = [
-                u'Zastavit makro, jestli\u017ee c\xedl nen\xed nalezen',
-                u'Zastavit makro, jestli\u017ee c\xedl je nalezen',
-                u'Nikdy nezastavovat makro',
+                u"Zastavit makro, jestliže cíl není nalezen",
+                u"Zastavit makro, jestliže cíl je nalezen",
+                u"Nikdy nezastavovat makro",
             ]
-            testButton = u'Test'
-            wait1 = u'\u010cekat a\u017e'
-            wait2 = u'sekund na objeven\xed se okna.'
+            testButton = u"Test"
+            wait1 = u"Čekat až"
+            wait2 = u"sekund na objevení se okna."
         class Maximize:
-            name = u'Maximalizovat'
-            description = u'Maximalizuje okno'
+            name = u"Maximalizovat"
+            description = u"Maximalizuje okno"
         class Minimize:
-            name = u'Minimalizovat'
-            description = u'Minimalizuje okno'
+            name = u"Minimalizovat"
+            description = u"Minimalizuje okno"
         class MoveTo:
-            name = u'P\u0159esunout absolutn\u011b'
-            description = u'P\u0159esune okno na dan\xe9 m\xedsto'
-            label = u'P\u0159esunout okno na %s'
-            text1 = u'Nastavit horizont\xe1ln\xed pozici X na'
-            text2 = u'pixel\u016f'
-            text3 = u'Nastavit vertik\xe1ln\xed pozici Y na'
-            text4 = u'pixel\u016f'
+            name = u"Přesunout absolutně"
+            description = u"Přesune okno na dané místo"
+            label = u"Přesunout okno na %s"
+            text1 = u"Nastavit horizontální pozici X na"
+            text2 = u"pixelů"
+            text3 = u"Nastavit vertikální pozici Y na"
+            text4 = u"pixelů"
         class Resize:
-            name = u'Zm\u011bnit velikost'
-            description = u'Zm\u011bn\xed velikost okna.'
-            label = u'Zm\u011bnit velikost okna na %s, %s'
-            text1 = u'Nastavit \u0161\xed\u0159ku na'
-            text2 = u'pixel\u016f'
-            text3 = u'Nastavit v\xfd\u0161ku na'
-            text4 = u'pixel\u016f'
+            name = u"Změnit velikost"
+            description = u"Změní velikost okna."
+            label = u"Změnit velikost okna na %s, %s"
+            text1 = u"Nastavit šířku na"
+            text2 = u"pixelů"
+            text3 = u"Nastavit výšku na"
+            text4 = u"pixelů"
         class Restore:
-            name = u'Obnovit'
-            description = u'Obnov\xed okno'
+            name = u"Obnovit"
+            description = u"Obnoví okno"
         class SendKeys:
-            name = u'Emulovat stisk kl\xe1ves'
-            description = u'Tato akce emuluje stisk kl\xe1ves pro ovl\xe1d\xe1n\xed ostatn\xedch program\u016f.\nZnaky, kter\xe9 jsou k ovl\xe1d\xe1n\xed pot\u0159eba, napi\u0161te do edita\u010dn\xedho pole.\n\n<p>\nPro emulov\xe1n\xed speci\xe1ln\xedch kl\xe1ves je t\u0159eba pou\u017e\xedt kl\xed\u010dov\xe1 slova a uzav\u0159\xedt je\ndo slo\u017een\xfdch z\xe1vorek. Nap\u0159\xedklad chcete-li pou\u017e\xedt kl\xe1vesu "\u0161ipka nahoru",\nnapi\u0161te <b>{Up}</b>. Pro zkombinov\xe1n\xed v\xedce kl\xe1ves m\u016f\u017eete kombinovat\nv\xedce kl\xed\u010dov\xfdch slov (znak\u016f) pomoc\xed znam\xe9nka plus jako: <b>{Shift+Ctrl+F1}</b>\nnebo <b>{Ctrl+V}</b>. P\u0159i z\xe1pisu kl\xed\u010dov\xfdch slov nez\xe1le\u017e\xed na velikosti pou\u017eit\xfdch\nznak\u016f, tak\u017ee m\u016f\u017eete napsat tak\xe9 {SHIFT+ctrl+F1}, pokud se v\xe1m to l\xedb\xed.\n<p>\nPokud je u n\u011bkter\xfdch kl\xe1ves t\u0159eba rozli\u0161ovat mezi kl\xe1vesou na lev\xe9 a prav\xe9 stran\u011b\nkl\xe1vesnice (jako t\u0159eba u kl\xe1vesy s logem Windows), mohou b\xfdt kl\xed\u010dov\xe1 slova\nozna\u010dena p\u0159edponou "L" nebo "R":\n<br><b>{Win}</b> nebo <b>{LWin}</b> nebo <b>{RWin}</b>\n<p>\nA tady je seznam zbytku kl\xed\u010dov\xfdch slov, ker\xfdm EventGhost rozum\xed:<br>\n<b>{Ctrl}</b> nebo <b>{Control}<br>\n{Shift}<br>\n{Alt}<br>\n{Return}</b> nebo <b>{Enter}<br>\n{Back}</b> nebo <b>{Backspace}<br>\n{Tab}</b> nebo <b>{Tabulator}<br>\n{Esc}</b> nebo <b>{Escape}<br>\n{Spc}</b> nebo <b>{Space}<br>\n{Up}<br>\n{Down}<br>\n{Left}<br>\n{Right}<br>\n{PgUp}</b> nebo <b>{PageUp}<br>\n{PgDown}</b> nebo <b>{PageDown}<br>\n{Home}<br>\n{End}<br>\n{Ins}</b> nebo <b>{Insert}<br>\n{Del}</b> nebo <b>{Delete}<br>\n{Pause}<br>{Capslock}<br>\n{Numlock}<br>\n{Scrolllock}<br>\n{F1}, {F2}, ... , {F24}<br>\n{Apps}</b> (To je kl\xe1vesa kontextov\xe9 nab\xeddky)<b><br>\n<br>\n</b>Toto bude emulovat kl\xe1vesy numerick\xe9 kl\xe1vesnice:<b><br>\n{Divide}<br>\n{Multiply}<br>\n{Subtract}<br>\n{Add}<br>\n{Decimal}<br>\n{Numpad0}, {Numpad1}, ... , {Numpad9}</b>'
-            insertButton = u'&Vlo\u017eit'
-            specialKeyTool = u'N\xe1stroj pro zvl\xe1\u0161tn\xed kl\xe1vesy'
-            textToType = u'Text k emulov\xe1n\xed:'
-            useAlternativeMethod = u'Pou\u017e\xedt alternativn\xed metodu emulov\xe1n\xed stisknut\xfdch kl\xe1ves'
+            name = u"Emulovat stisk kláves"
+            description = u'Tato akce emuluje stisk kláves pro ovládání ostatních programů.\nZnaky, které jsou k ovládání potřeba, napište do editačního pole.\n\n<p>\nPro emulování speciálních kláves je třeba použít klíčová slova a uzavřít je\ndo složených závorek. Například chcete-li použít klávesu "šipka nahoru",\nnapište <b>{Up}</b>. Pro zkombinování více kláves můžete kombinovat\nvíce klíčových slov (znaků) pomocí znaménka plus jako: <b>{Shift+Ctrl+F1}</b>\nnebo <b>{Ctrl+V}</b>. Při zápisu klíčových slov nezáleží na velikosti použitých\nznaků, takže můžete napsat také {SHIFT+ctrl+F1}, pokud se vám to líbí.\n<p>\nPokud je u některých kláves třeba rozlišovat mezi klávesou na levé a pravé straně\nklávesnice (jako třeba u klávesy s logem Windows), mohou být klíčová slova\noznačena předponou "L" nebo "R":\n<br><b>{Win}</b> nebo <b>{LWin}</b> nebo <b>{RWin}</b>\n<p>\nA tady je seznam zbytku klíčových slov, kerým EventGhost rozumí:<br>\n<b>{Ctrl}</b> nebo <b>{Control}<br>\n{Shift}<br>\n{Alt}<br>\n{Return}</b> nebo <b>{Enter}<br>\n{Back}</b> nebo <b>{Backspace}<br>\n{Tab}</b> nebo <b>{Tabulator}<br>\n{Esc}</b> nebo <b>{Escape}<br>\n{Spc}</b> nebo <b>{Space}<br>\n{Up}<br>\n{Down}<br>\n{Left}<br>\n{Right}<br>\n{PgUp}</b> nebo <b>{PageUp}<br>\n{PgDown}</b> nebo <b>{PageDown}<br>\n{Home}<br>\n{End}<br>\n{Ins}</b> nebo <b>{Insert}<br>\n{Del}</b> nebo <b>{Delete}<br>\n{Pause}<br>{Capslock}<br>\n{Numlock}<br>\n{Scrolllock}<br>\n{F1}, {F2}, ... , {F24}<br>\n{Apps}</b> (To je klávesa kontextové nabídky)<b><br>\n<br>\n</b>Toto bude emulovat klávesy numerické klávesnice:<b><br>\n{Divide}<br>\n{Multiply}<br>\n{Subtract}<br>\n{Add}<br>\n{Decimal}<br>\n{Numpad0}, {Numpad1}, ... , {Numpad9}</b>'
+            insertButton = u"&Vložit"
+            specialKeyTool = u"Nástroj pro zvláštní klávesy"
+            textToType = u"Text k emulování:"
+            useAlternativeMethod = u"Použít alternativní metodu emulování stisknutých kláves"
             class Keys:
-                backspace = u'Kl\xe1vesa maz\xe1n\xed (Backspace)'
-                context = u'Kl\xe1vesa kontextov\xe9 nab\xeddky'
-                delete = u'Delete'
-                down = u'\u0160ipka dol\u016f'
-                end = u'End'
-                enter = u'Enter (na num. kl\xe1vesnici)'
-                escape = u'Escape'
-                home = u'Home'
-                insert = u'Insert'
-                left = u'\u0160ipka vlevo'
-                num0 = u'0 na numerick\xe9 kl\xe1vesnici'
-                num1 = u'1 na numerick\xe9 kl\xe1vesnici'
-                num2 = u'2 na numerick\xe9 kl\xe1vesnici'
-                num3 = u'3 na numerick\xe9 kl\xe1vesnici'
-                num4 = u'4 na numerick\xe9 kl\xe1vesnici'
-                num5 = u'5 na numerick\xe9 kl\xe1vesnici'
-                num6 = u'6 na numerick\xe9 kl\xe1vesnici'
-                num7 = u'7 na numerick\xe9 kl\xe1vesnici'
-                num8 = u'8 na numerick\xe9 kl\xe1vesnici'
-                num9 = u'9 na numerick\xe9 kl\xe1vesnici'
-                numAdd = u'+ na numerick\xe9 kl\xe1vesnici'
-                numDecimal = u'Te\u010dka na numerick\xe9 kl\xe1vesnici'
-                numDivide = u'/ na numerick\xe9 kl\xe1vesnici'
-                numMultiply = u'* na numerick\xe9 kl\xe1vesnici'
-                numSubtract = u'- na numerick\xe9 kl\xe1vesnici'
-                pageDown = u'Page Down'
-                pageUp = u'Page Up'
-                returnKey = u'Enter'
-                right = u'\u0160ipka vpravo'
-                space = u'Mezern\xedk'
-                tabulator = u'Tabel\xe1tor'
-                up = u'\u0160ipka nahoru'
-                win = u'Kl\xe1vesa s logem Windows'
+                backspace = u"Klávesa mazání (Backspace)"
+                context = u"Klávesa kontextové nabídky"
+                delete = u"Delete"
+                down = u"Šipka dolů"
+                end = u"End"
+                enter = u"Enter (na num. klávesnici)"
+                escape = u"Escape"
+                home = u"Home"
+                insert = u"Insert"
+                left = u"Šipka vlevo"
+                num0 = u"0 na numerické klávesnici"
+                num1 = u"1 na numerické klávesnici"
+                num2 = u"2 na numerické klávesnici"
+                num3 = u"3 na numerické klávesnici"
+                num4 = u"4 na numerické klávesnici"
+                num5 = u"5 na numerické klávesnici"
+                num6 = u"6 na numerické klávesnici"
+                num7 = u"7 na numerické klávesnici"
+                num8 = u"8 na numerické klávesnici"
+                num9 = u"9 na numerické klávesnici"
+                numAdd = u"+ na numerické klávesnici"
+                numDecimal = u"Tečka na numerické klávesnici"
+                numDivide = u"/ na numerické klávesnici"
+                numMultiply = u"* na numerické klávesnici"
+                numSubtract = u"- na numerické klávesnici"
+                pageDown = u"Page Down"
+                pageUp = u"Page Up"
+                returnKey = u"Enter"
+                right = u"Šipka vpravo"
+                space = u"Mezerník"
+                tabulator = u"Tabelátor"
+                up = u"Šipka nahoru"
+                win = u"Klávesa s logem Windows"
         class SendMessage:
-            name = u'Poslat zpr\xe1vu'
-            description = u'Pou\u017eije Windows-API funkci "SendMessage" pro odesl\xe1n\xed speci\xe1ln\xed zpr\xe1vy oknu. M\u016f\u017ee tak\xe9 pou\u017e\xedt "PostMessage", je-li to po\u017eadov\xe1no.'
-            text1 = u'Pou\u017e\xedt PostMessage m\xedsto SendMessage'
+            name = u"Poslat zprávu"
+            description = u'Použije Windows-API funkci "SendMessage" pro odeslání speciální zprávy oknu. Může také použít "PostMessage", je-li to požadováno.'
+            text1 = u"Použít PostMessage místo SendMessage"
         class SetAlwaysOnTop:
-            name = u'Nastavit vlastnost "V\u017edy na vrchu"'
-            description = u'Nastav\xed vlastnost "V\u017edy na vrchu"'
+            name = u'Nastavit vlastnost "Vždy na vrchu"'
+            description = u'Nastaví vlastnost "Vždy na vrchu"'
             actions = (
-                u'Zru\u0161it vlastnost "V\u017edy na vrchu"',
-                u'Nastavit vlastnost "V\u017edy na vrchu"',
-                u'Nastavit/zru\u0161it vlastnost "V\u017edy na vrchu"',
+                u'Zrušit vlastnost "Vždy na vrchu"',
+                u'Nastavit vlastnost "Vždy na vrchu"',
+                u'Nastavit/zrušit vlastnost "Vždy na vrchu"',
             )
-            radioBox = u'Zvolte akci:'
+            radioBox = u"Zvolte akci:"
     class Mouse:
-        name = u'My\u0161'
-        description = u'Akce k \u0159\xedzen\xed ukazatele my\u0161i a emulov\xe1n\xed ud\xe1lost\xed, generovan\xfdch my\u0161\xed.'
+        name = u"Myš"
+        description = u"Akce k řízení ukazatele myši a emulování událostí, generovaných myší."
         class GoDirection:
-            name = u'Spustit pohyb my\u0161i'
-            description = u'Spust\xed pohyb my\u0161i dan\xfdm sm\u011brem'
-            label = u'Spustit pohyb my\u0161i sm\u011brem %.2f\xb0'
-            text1 = u'Spustit pohyb ukazatele my\u0161i pod \xfahlem'
-            text2 = u'stup\u0148\u016f. (0-360)'
+            name = u"Spustit pohyb myši"
+            description = u"Spustí pohyb myši daným směrem"
+            label = u"Spustit pohyb myši směrem %.2f°"
+            text1 = u"Spustit pohyb ukazatele myši pod úhlem"
+            text2 = u"stupňů. (0-360)"
         class LeftButton:
-            name = u'Lev\xe9 tla\u010d\xedtko my\u0161i'
-            description = u'Lev\xe9 tla\u010d\xedtko my\u0161i'
+            name = u"Levé tlačítko myši"
+            description = u"Levé tlačítko myši"
         class LeftDoubleClick:
-            name = u'Poklepat lev\xfdm tla\u010d\xedtkem my\u0161i'
-            description = u'Emuluje poklep\xe1n\xed lev\xfdm tla\u010d\xedtkem my\u0161i'
+            name = u"Poklepat levým tlačítkem myši"
+            description = u"Emuluje poklepání levým tlačítkem myši"
         class MiddleButton:
-            name = u'Prost\u0159edn\xed tla\u010d\xedtko my\u0161i'
-            description = u'Prost\u0159edn\xed tla\u010d\xedtko my\u0161i'
+            name = u"Prostřední tlačítko myši"
+            description = u"Prostřední tlačítko myši"
         class MouseWheel:
-            name = u'Emulovat pohyb kole\u010dka my\u0161i'
-            description = u'Emuluje pohyb kole\u010dka my\u0161i'
-            label = u'Kole\u010dkem my\u0161i oto\u010dit o %d zoubk\u016f'
-            text1 = u'Oto\u010dit kole\u010dkem my\u0161i o'
-            text2 = u'zoubk\u016f. (Z\xe1porn\xe1 hodnota znamen\xe1 sm\u011br dol\u016f)'
+            name = u"Emulovat pohyb kolečka myši"
+            description = u"Emuluje pohyb kolečka myši"
+            label = u"Kolečkem myši otočit o %d zoubků"
+            text1 = u"Otočit kolečkem myši o"
+            text2 = u"zoubků. (Záporná hodnota znamená směr dolů)"
         class MoveAbsolute:
-            name = u'Absolutn\u011b p\u0159esunout'
-            description = u'P\u0159esune ukazatel my\u0161i na absolutn\u011b udan\xe9 sou\u0159adnice'
-            label = u'P\u0159esunout my\u0161 na x:%s, y:%s'
-            text1 = u'Nastavit horizont\xe1ln\xed pozici X na'
-            text2 = u'pixel\u016f'
-            text3 = u'Nastavit vertik\xe1ln\xed pozici Y na'
-            text4 = u'pixel\u016f'
+            name = u"Absolutně přesunout"
+            description = u"Přesune ukazatel myši na absolutně udané souřadnice"
+            label = u"Přesunout myš na x:%s, y:%s"
+            text1 = u"Nastavit horizontální pozici X na"
+            text2 = u"pixelů"
+            text3 = u"Nastavit vertikální pozici Y na"
+            text4 = u"pixelů"
         class RightButton:
-            name = u'Prav\xe9 tla\u010d\xedtko my\u0161i'
-            description = u'Prav\xe9 tla\u010d\xedtko my\u0161i'
+            name = u"Pravé tlačítko myši"
+            description = u"Pravé tlačítko myši"
         class RightDoubleClick:
-            name = u'Poklepat prav\xfdm tla\u010d\xedtkem my\u0161i'
-            description = u'Emuluje poklep\xe1n\xed prav\xfdm tla\u010d\xedtkem my\u0161i'
+            name = u"Poklepat pravým tlačítkem myši"
+            description = u"Emuluje poklepání pravým tlačítkem myši"
         class ToggleLeftButton:
-            name = u'Zm\u011bnit stav lev\xe9ho tla\u010d\xedtka my\u0161i'
-            description = u'Zm\u011bn\xed stav lev\xe9ho tla\u010d\xedtka my\u0161i'
+            name = u"Změnit stav levého tlačítka myši"
+            description = u"Změní stav levého tlačítka myši"
     class Billy:
-        name = u'Billy'
-        description = u'P\u0159id\xe1v\xe1 akce k \u0159\xedzen\xed audio p\u0159ehr\xe1va\u010de <a href="http://www.sheepfriends.com/?page=billy">Billy</a>. \n\n<p><BR><B>POZOR !<BR>Spr\xe1vn\u011b pracuje pouze s beta verz\xed 1.04b p\u0159ehr\xe1va\u010de Billy !</B><BR>Se star\u0161\xed verz\xed bude plugin pracovat v omezen\xe9m re\u017eimu !</p>'
-        filemask = u'Billy.exe|Billy.exe|V\u0161echny soubory (*.*)|*.*'
-        grpDescription1 = u'Skupina nejd\u016fle\u017eit\u011bj\u0161\xedch akc\xed k ovl\xe1d\xe1n\xed p\u0159ehr\xe1va\u010de Billy'
-        grpDescription2 = u'Skupina akc\xed pro pr\xe1ci se seznamy audiosoubor\u016f'
-        grpDescription3 = u'Skupina zvl\xe1\u0161tn\xedch akc\xed (nap\u0159. reset mixeru Windows)'
-        grpDescription4 = u'Skupina akc\xed pro pr\xe1ci s Obl\xedben\xfdmi'
-        grpName1 = u'Hlavn\xed'
-        grpName2 = u'Seznamy'
-        grpName3 = u'Zvl\xe1\u0161tn\xed akce'
-        grpName4 = u'Obl\xedben\xe9'
-        label = u'Cesta k souboru Billy.exe:'
-        text1 = u'Nemohu naj\xedt okno p\u0159ehr\xe1va\u010de Billy !'
-        title = u'Napsal Pako podle n\u011bkter\xfdch plugin\u016f od autor\u016f MonsterMagnet a Bitmonster'
-        version = u'Verze: '
+        name = u"Billy"
+        description = u'Přidává akce k řízení audio přehrávače <a href="http://www.sheepfriends.com/?page=billy">Billy</a>. \n\n<p><BR><B>POZOR !<BR>Správně pracuje pouze s beta verzí 1.04b přehrávače Billy !</B><BR>Se starší verzí bude plugin pracovat v omezeném režimu !</p>'
+        filemask = u"Billy.exe|Billy.exe|Všechny soubory (*.*)|*.*"
+        grpDescription1 = u"Skupina nejdůležitějších akcí k ovládání přehrávače Billy"
+        grpDescription2 = u"Skupina akcí pro práci se seznamy audiosouborů"
+        grpDescription3 = u"Skupina zvláštních akcí (např. reset mixeru Windows)"
+        grpDescription4 = u"Skupina akcí pro práci s Oblíbenými"
+        grpName1 = u"Hlavní"
+        grpName2 = u"Seznamy"
+        grpName3 = u"Zvláštní akce"
+        grpName4 = u"Oblíbené"
+        label = u"Cesta k souboru Billy.exe:"
+        text1 = u"Nemohu najít okno přehrávače Billy !"
+        title = u"Napsal Pako podle některých pluginů od autorů MonsterMagnet a Bitmonster"
+        version = u"Verze: "
         class AddFile:
-            name = u'P\u0159idat soubor(y)'
-            description = u'Otev\u0159e dialog pro p\u0159id\xe1n\xed souboru(\u016f).'
+            name = u"Přidat soubor(y)"
+            description = u"Otevře dialog pro přidání souboru(ů)."
         class AddFolder:
-            name = u'P\u0159idat slo\u017eku'
-            description = u'Otev\u0159e dialog pro p\u0159id\xe1n\xed slo\u017eky s audio soubory.'
+            name = u"Přidat složku"
+            description = u"Otevře dialog pro přidání složky s audio soubory."
         class AddPlistToFav:
-            name = u'P\u0159idat seznam k Obl\xedben\xfdm'
-            description = u'P\u0159id\xe1 seznam k Obl\xedben\xfdm.'
+            name = u"Přidat seznam k Oblíbeným"
+            description = u"Přidá seznam k Oblíbeným."
         class AddURL:
-            name = u'P\u0159idat internetov\xe9 radio'
-            description = u'P\u0159id\xe1 internetov\xe9 radio.'
+            name = u"Přidat internetové radio"
+            description = u"Přidá internetové radio."
         class CheckNewFiles:
-            name = u'Zkontrolovat nov\xe9 soubory'
-            description = u'Zkontroluje, zda ve slo\u017ece nejsou nov\xe9 soubory.'
+            name = u"Zkontrolovat nové soubory"
+            description = u"Zkontroluje, zda ve složce nejsou nové soubory."
         class ClearHistory:
-            name = u'Vy\u010distit historii p\u0159ehran\xfdch nebo ozna\u010den\xfdch soubor\u016f'
-            description = u'Odstran\xed ozna\u010den\xed p\u0159ehran\xfdch a do fronty za\u0159azen\xfdch soubor\u016f.'
+            name = u"Vyčistit historii přehraných nebo označených souborů"
+            description = u"Odstraní označení přehraných a do fronty zařazených souborů."
         class ClearList:
-            name = u'Vy\u010distit seznam'
-            description = u'Vy\u010dist\xed seznam.'
+            name = u"Vyčistit seznam"
+            description = u"Vyčistí seznam."
         class CopyEntry:
-            name = u'Kop\xedrovat polo\u017eku seznamu'
-            description = u'Kop\xedruje polo\u017eku seznamu do schr\xe1nky.'
+            name = u"Kopírovat položku seznamu"
+            description = u"Kopíruje položku seznamu do schránky."
         class CropQueued:
-            name = u'Odstranit neozna\u010den\xe9'
-            description = u'"Odst\u0159ihne" ozna\u010den\xe9 polo\u017eky seznamu (neozna\u010den\xe9 odstran\xed).'
+            name = u"Odstranit neoznačené"
+            description = u'"Odstřihne" označené položky seznamu (neoznačené odstraní).'
         class CutEntry:
-            name = u'Vyjmout polo\u017eku seznamu'
-            description = u'Vyjme polo\u017eku seznamu (zkop\xedruje do schr\xe1nky).'
+            name = u"Vyjmout položku seznamu"
+            description = u"Vyjme položku seznamu (zkopíruje do schránky)."
         class Delete:
-            name = u'Hodit soubor do ko\u0161e'
-            description = u'Odstran\xed soubor (do ko\u0161e).'
+            name = u"Hodit soubor do koše"
+            description = u"Odstraní soubor (do koše)."
         class EditEntry:
-            name = u'Editovat polo\u017eku seznamu'
-            description = u'Otev\u0159e dialog pro editaci polo\u017eky seznamu.'
+            name = u"Editovat položku seznamu"
+            description = u"Otevře dialog pro editaci položky seznamu."
         class ExitBilly:
-            name = u'Ukon\u010dit Billy'
-            description = u'Ukon\u010d\xed b\u011bh p\u0159ehr\xe1va\u010de Billy.'
+            name = u"Ukončit Billy"
+            description = u"Ukončí běh přehrávače Billy."
         class Explore:
-            name = u'Otev\u0159\xedt slo\u017eku'
-            description = u'Otev\u0159e slo\u017eku s pr\xe1v\u011b p\u0159ehr\xe1van\xfdm souborem.'
+            name = u"Otevřít složku"
+            description = u"Otevře složku s právě přehrávaným souborem."
         class Find:
-            name = u'Naj\xedt'
-            description = u'Otev\u0159e dialog pro hled\xe1n\xed v aktu\xe1ln\xedm seznamu.'
+            name = u"Najít"
+            description = u"Otevře dialog pro hledání v aktuálním seznamu."
         class LoadFav1:
-            name = u'Zav\xe9st Obl\xedben\xe9 1'
-            description = u'Zavede se seznam Obl\xedben\xe9 1.'
+            name = u"Zavést Oblíbené 1"
+            description = u"Zavede se seznam Oblíbené 1."
         class LoadFav2:
-            name = u'Zav\xe9st Obl\xedben\xe9 2'
-            description = u'Zavede se seznam Obl\xedben\xe9 2.'
+            name = u"Zavést Oblíbené 2"
+            description = u"Zavede se seznam Oblíbené 2."
         class LoadFav3:
-            name = u'Zav\xe9st Obl\xedben\xe9 3'
-            description = u'Zavede se seznam Obl\xedben\xe9 3.'
+            name = u"Zavést Oblíbené 3"
+            description = u"Zavede se seznam Oblíbené 3."
         class LoadFav4:
-            name = u'Zav\xe9st Obl\xedben\xe9 4'
-            description = u'Zavede se seznam Obl\xedben\xe9 4.'
+            name = u"Zavést Oblíbené 4"
+            description = u"Zavede se seznam Oblíbené 4."
         class LoadFav5:
-            name = u'Zav\xe9st Obl\xedben\xe9 5'
-            description = u'Zavede se seznam Obl\xedben\xe9 5.'
+            name = u"Zavést Oblíbené 5"
+            description = u"Zavede se seznam Oblíbené 5."
         class LoadFav6:
-            name = u'Zav\xe9st Obl\xedben\xe9 6'
-            description = u'Zavede se seznam Obl\xedben\xe9 6.'
+            name = u"Zavést Oblíbené 6"
+            description = u"Zavede se seznam Oblíbené 6."
         class LoadFav7:
-            name = u'Zav\xe9st Obl\xedben\xe9 7'
-            description = u'Zavede se seznam Obl\xedben\xe9 7.'
+            name = u"Zavést Oblíbené 7"
+            description = u"Zavede se seznam Oblíbené 7."
         class LoadFav8:
-            name = u'Zav\xe9st Obl\xedben\xe9 8'
-            description = u'Zavede se seznam Obl\xedben\xe9 8.'
+            name = u"Zavést Oblíbené 8"
+            description = u"Zavede se seznam Oblíbené 8."
         class LoadFav9:
-            name = u'Zav\xe9st Obl\xedben\xe9 9'
-            description = u'Zavede se seznam Obl\xedben\xe9 9.'
+            name = u"Zavést Oblíbené 9"
+            description = u"Zavede se seznam Oblíbené 9."
         class Minimize:
-            name = u'Minimalizovat do oznamovac\xed oblasti'
-            description = u'P\u0159ehr\xe1va\u010d se minimalizuje do oznamovac\xed oblasti.'
+            name = u"Minimalizovat do oznamovací oblasti"
+            description = u"Přehrávač se minimalizuje do oznamovací oblasti."
         class Next:
-            name = u'Dal\u0161\xed'
-            description = u'P\u0159esko\u010d\xed na dal\u0161\xed soubor (skladbu).'
+            name = u"Další"
+            description = u"Přeskočí na další soubor (skladbu)."
         class OpenFolder:
-            name = u'Otev\u0159\xedt slo\u017eku'
-            description = u'Otev\u0159e slo\u017eku s audiosoubory.'
+            name = u"Otevřít složku"
+            description = u"Otevře složku s audiosoubory."
         class OpenPlaylist:
-            name = u'Otev\u0159\xedt seznam'
-            description = u'Otev\u0159e (zavede) seznam.'
+            name = u"Otevřít seznam"
+            description = u"Otevře (zavede) seznam."
         class OrganizeFav:
-            name = u'Organizovat Obl\xedben\xe9'
-            description = u'Otev\u0159e dialog pro organizaci Obl\xedben\xfdch.'
+            name = u"Organizovat Oblíbené"
+            description = u"Otevře dialog pro organizaci Oblíbených."
         class PasteEntry:
-            name = u'Vlo\u017eit polo\u017eku seznamu'
-            description = u'Vlo\u017e\xed polo\u017eku seznamu ze schr\xe1nky.'
+            name = u"Vložit položku seznamu"
+            description = u"Vloží položku seznamu ze schránky."
         class PausePlay:
-            name = u'Pozastavit/P\u0159ehr\xe1t'
-            description = u'Pozastav\xed/spust\xed p\u0159ehr\xe1v\xe1n\xed.'
+            name = u"Pozastavit/Přehrát"
+            description = u"Pozastaví/spustí přehrávání."
         class Play:
-            name = u'P\u0159ehr\xe1t'
-            description = u'Spust\xed p\u0159ehr\xe1v\xe1n\xed.'
+            name = u"Přehrát"
+            description = u"Spustí přehrávání."
         class Previous:
-            name = u'P\u0159edchoz\xed'
-            description = u'P\u0159esko\xed na p\u0159edchoz\xed soubor (skladbu).'
+            name = u"Předchozí"
+            description = u"Přeskoí na předchozí soubor (skladbu)."
         class Properties:
-            name = u'Vlastnosti'
-            description = u'Otev\u0159e dialog pro editaci nebo hromadn\xe9 p\u0159ejmenov\xe1n\xed (p\u0159i v\xedcen\xe1sobn\xe9m v\xfdb\u011bru).'
+            name = u"Vlastnosti"
+            description = u"Otevře dialog pro editaci nebo hromadné přejmenování (při vícenásobném výběru)."
         class Queue:
-            name = u'Za\u0159adit do fronty'
-            description = u'Vybran\xfd soubor za\u0159ad\xed do fronty.'
+            name = u"Zařadit do fronty"
+            description = u"Vybraný soubor zařadí do fronty."
         class Record:
-            name = u'Ukl\xe1dat internetov\xe9 radio'
-            description = u'Ukl\xe1dat internetov\xe9 radio do souboru.'
+            name = u"Ukládat internetové radio"
+            description = u"Ukládat internetové radio do souboru."
         class Remove:
-            name = u'Odstranit soubor ze seznamu'
-            description = u'Odstran\xed soubor ze seznamu.'
+            name = u"Odstranit soubor ze seznamu"
+            description = u"Odstraní soubor ze seznamu."
         class ResetMixer:
-            name = u'Resetovat mixer Windows'
-            description = u'Resetuje mixer Windows.'
+            name = u"Resetovat mixer Windows"
+            description = u"Resetuje mixer Windows."
         class Run:
-            name = u'Spustit nebo obnovit'
-            description = u'Spou\u0161t\xed p\u0159ehr\xe1va\u010d Billy s jeho defaultn\xedm nastaven\xedm nebo ho obnov\xed.'
-            text2 = u'Nemohu naj\xedt soubor Billy.exe !'
+            name = u"Spustit nebo obnovit"
+            description = u"Spouští přehrávač Billy s jeho defaultním nastavením nebo ho obnoví."
+            text2 = u"Nemohu najít soubor Billy.exe !"
         class SavePlaylist:
-            name = u'Ulo\u017eit seznam'
-            description = u'Otev\u0159e dialog pro ulo\u017een\xed seznamu.'
+            name = u"Uložit seznam"
+            description = u"Otevře dialog pro uložení seznamu."
         class Settings:
-            name = u'Nastaven\xed'
-            description = u'Otev\u0159e nab\xeddku nastaven\xed p\u0159ehr\xe1va\u010de Billy.'
+            name = u"Nastavení"
+            description = u"Otevře nabídku nastavení přehrávače Billy."
         class Stop:
-            name = u'Zastavit'
-            description = u'Zastav\xed p\u0159ehr\xe1v\xe1n\xed.'
+            name = u"Zastavit"
+            description = u"Zastaví přehrávání."
         class ToStart:
-            name = u'Sko\u010dit na za\u010d\xe1tek souboru'
-            description = u'Sko\u010d\xed na za\u010d\xe1tek p\u0159ehr\xe1van\xe9ho souboru.'
+            name = u"Skočit na začátek souboru"
+            description = u"Skočí na začátek přehrávaného souboru."
         class TogglePlayMode:
-            name = u'Zm\u011bnit re\u017eim p\u0159ehr\xe1v\xe1n\xed'
-            description = u'Zm\u011bn\xed re\u017eim p\u0159ehr\xe1v\xe1n\xed.'
+            name = u"Změnit režim přehrávání"
+            description = u"Změní režim přehrávání."
         class ToggleViewMode:
-            name = u'Zm\u011bnit zp\u016fsob zobrazen\xed'
-            description = u'Zm\u011bn\xed zp\u016fsob zobrazen\xed seznamu.'
+            name = u"Změnit způsob zobrazení"
+            description = u"Změní způsob zobrazení seznamu."
     class DesktopRemote:
-        name = u'Ovlada\u010d na pracovn\xed plo\u0161e'
-        description = u'Na pracovn\xed plo\u0161e vykresl\xed okno v podob\u011b d\xe1lkov\xe9ho ovlada\u010de'
+        name = u"Ovladač na pracovní ploše"
+        description = u"Na pracovní ploše vykreslí okno v podobě dálkového ovladače"
         class AddButton:
-            name = u'P\u0159idat tla\u010d\xedtko'
-            description = u'P\u0159id\xe1 tla\u010d\xedtko'
-            event = u'Ud\xe1lost:'
-            label = u'N\xe1pis:'
+            name = u"Přidat tlačítko"
+            description = u"Přidá tlačítko"
+            event = u"Událost:"
+            label = u"Nápis:"
         class CreateNew:
-            name = u'Vytvo\u0159it nov\xfd ovlada\u010d'
-            description = u'Vytvo\u0159\xed nov\xfd ovlada\u010d'
+            name = u"Vytvořit nový ovladač"
+            description = u"Vytvoří nový ovladač"
         class Show:
-            name = u'Zobrazit'
-            description = u'Zobraz\xed vytvo\u0159en\xfd ovlada\u010d'
+            name = u"Zobrazit"
+            description = u"Zobrazí vytvořený ovladač"
         class StartNewLine:
-            name = u'Za\u010d\xedt nov\xfd \u0159\xe1dek'
-            description = u'Za\u010dne na nov\xe9m \u0159\xe1dku'
+            name = u"Začít nový řádek"
+            description = u"Začne na novém řádku"
     class DirectoryWatcher:
-        name = u'Hl\xedda\u010d slo\u017eky'
-        description = u'Generuje ud\xe1losti, jestli\u017ee soubory v ur\u010den\xe9 slo\u017ece jsou vytvo\u0159eny, smaz\xe1ny\nnebo zm\u011bn\u011bny.'
-        watchPath = u'Hl\xeddan\xe1 slo\u017eka:'
-        watchSubDirs = u'Hl\xeddat i podslo\u017eky'
-    class Egon:
-        name = u'Egon'
-        description = u'Hardwarov\xfd plugin pro IR USB p\u0159ij\xedma\u010d <a href="http://ruckl.wz.cz/egon/egon.html">Egon</a>.\n\n<p><img src="Egon_top.png" /><BR><B><U>Charakteristika:</U></B><BR>Mal\xfd, jednoduch\xfd, minimum sou\u010d\xe1stek, jednostrann\xfd pl. spoj spoj\u016f<BR>Mo\u017enost upgrade firmware pomoc\xed bootloaderu<BR>Konfigurovateln\xfd pomoc\xed termin\xe1lov\xe9ho programu<BR>Aktu\xe1ln\xed verze rozpozn\xe1 17 IR protokol\u016f (nap\u0159. RC5 apod.)<BR>Implementov\xe1n re\u017eim pro anal\xfdzu nezn\xe1m\xe9ho protokolu<BR><BR><I>Konstrukce je zdarma pro nekomer\u010dn\xed pou\u017eit\xed</I>'
-        error = u'Nemohu otev\u0159\xedt virtu\xe1ln\xed s\xe9riov\xfd port'
-        port = u'Virtu\xe1ln\xed s\xe9riov\xfd port:'
+        name = u"Hlídač složky"
+        description = u"Generuje události, jestliže soubory v určené složce jsou vytvořeny, smazány\nnebo změněny."
+        watchPath = u"Hlídaná složka:"
+        watchSubDirs = u"Hlídat i podsložky"
     class Foobar2000:
-        name = u'Foobar2000'
-        description = u'P\u0159id\xe1v\xe1 podporu funkc\xed pro \u0159\xedzen\xed aplikace Foobar2000.\n\n<p><a href="http://www.foobar2000.org/">Domovsk\xe1 str\xe1nka aplikace Foobar2000</a>'
+        name = u"Foobar2000"
+        description = u'Přidává podporu funkcí pro řízení aplikace Foobar2000.\n\n<p><a href="http://www.foobar2000.org/">Domovská stránka aplikace Foobar2000</a>'
         class Exit:
-            name = u'Ukon\u010dit'
-            description = u'Ukon\u010d\xed foobar.'
+            name = u"Ukončit"
+            description = u"Ukončí foobar."
         class Hide:
-            name = u'Skr\xfdt'
-            description = u'Skryje okno aplikace foobar.'
+            name = u"Skrýt"
+            description = u"Skryje okno aplikace foobar."
         class NextTrack:
-            name = u'Dal\u0161\xed stopa'
-            description = u'Emuluje stisk tla\u010d\xedtka Dal\u0161\xed stopa (Next track).'
+            name = u"Další stopa"
+            description = u"Emuluje stisk tlačítka Další stopa (Next track)."
         class Pause:
-            name = u'Pozastavit'
-            description = u'Emuluje stisk tla\u010d\xedtka Pozastavit (Pausa).'
+            name = u"Pozastavit"
+            description = u"Emuluje stisk tlačítka Pozastavit (Pausa)."
         class Play:
-            name = u'P\u0159ehr\xe1t'
-            description = u'Emuluje stisk tla\u010d\xedtka P\u0159ehr\xe1t (Play).'
+            name = u"Přehrát"
+            description = u"Emuluje stisk tlačítka Přehrát (Play)."
         class PlayPause:
-            name = u'Zm\u011bnit stav P\u0159ehr\xe1t/Pozastavit'
-            description = u'Emuluje stisk tla\u010d\xedtka P\u0159ehr\xe1t/Pozastavit (Play/Pausa).'
+            name = u"Změnit stav Přehrát/Pozastavit"
+            description = u"Emuluje stisk tlačítka Přehrát/Pozastavit (Play/Pausa)."
         class PreviousTrack:
-            name = u'P\u0159edchoz\xed stopa'
-            description = u'Emuluje stisk tla\u010d\xedtka P\u0159edchoz\xed stopa (Previous track).'
+            name = u"Předchozí stopa"
+            description = u"Emuluje stisk tlačítka Předchozí stopa (Previous track)."
         class Random:
-            name = u'N\xe1hodn\u011b'
-            description = u'Emuluje stisk tla\u010d\xedtka N\xe1hodn\u011b (Random).'
+            name = u"Náhodně"
+            description = u"Emuluje stisk tlačítka Náhodně (Random)."
         class Run:
-            name = u'Spustit'
-            description = u'Spust\xed foobar s aktu\xe1ln\xedmi p\u0159edvolbami.'
+            name = u"Spustit"
+            description = u"Spustí foobar s aktuálními předvolbami."
         class Show:
-            name = u'Obnovit'
-            description = u'Otev\u0159e okno aplikace foobar.'
+            name = u"Obnovit"
+            description = u"Otevře okno aplikace foobar."
         class Stop:
-            name = u'Zastavit'
-            description = u'Emuluje stisk tla\u010d\xedtka Zastavit (Stop).'
+            name = u"Zastavit"
+            description = u"Emuluje stisk tlačítka Zastavit (Stop)."
     class IgorPlugUSB:
-        name = u'IgorPlug-USB'
-        description = u'Plugin pro IR p\u0159ij\xedma\u010d od Igora \u010ce\u0161ka.\n\n<p><a href="http://www.cesko.host.sk/">Domovsk\xe1 str\xe1nka Igora \u010ce\u0161ka</a></center>'
+        name = u"IgorPlug-USB"
+        description = u'Plugin pro IR přijímač od Igora Češka.\n\n<p><a href="http://www.cesko.host.sk/">Domovská stránka Igora Češka</a></center>'
     class IrfanView:
-        name = u'IrfanView'
-        description = u'P\u0159id\xe1v\xe1 akce k ovl\xe1d\xe1n\xed <a href="http://www.irfanview.com/">IrfanView</a>.'
-        err = u'Nemohu naj\xedt soubor i_view32.exe !'
-        filemask = u'i_view32.exe|i_view32.exe|V\u0161echny soubory (*.*)|*.*'
-        grpDescription1 = u'P\u0159id\xe1v\xe1 nab\xeddku Soubor k ovl\xe1d\xe1n\xed IrfanView.'
-        grpDescription2 = u'P\u0159id\xe1v\xe1 nab\xeddku \xdapravy k ovl\xe1d\xe1n\xed IrfanView.'
-        grpDescription3 = u'P\u0159id\xe1v\xe1 nab\xeddku Obr\xe1zek k ovl\xe1d\xe1n\xed IrfanView.'
-        grpDescription4 = u'P\u0159id\xe1v\xe1 nab\xeddku Nastaven\xed k ovl\xe1d\xe1n\xed IrfanView.'
-        grpDescription5 = u'P\u0159id\xe1v\xe1 nab\xeddku Zobrazit k ovl\xe1d\xe1n\xed IrfanView.'
-        grpDescription6 = u'P\u0159id\xe1v\xe1 ostatn\xed akce k ovl\xe1d\xe1n\xed IrfanView.'
-        grpName1 = u'Soubor'
-        grpName2 = u'\xdapravy'
-        grpName3 = u'Obr\xe1zek'
-        grpName4 = u'Nastaven\xed'
-        grpName5 = u'Zobrazit'
-        grpName6 = u'Ostatn\xed'
-        label = u'Cesta k souboru i_view32.exe:'
-        text1 = u'Nemohu naj\xedt okno IrfanView !'
+        name = u"IrfanView"
+        description = u'Přidává akce k ovládání <a href="http://www.irfanview.com/">IrfanView</a>.'
+        err = u"Nemohu najít soubor i_view32.exe !"
+        filemask = u"i_view32.exe|i_view32.exe|Všechny soubory (*.*)|*.*"
+        grpDescription1 = u"Přidává nabídku Soubor k ovládání IrfanView."
+        grpDescription2 = u"Přidává nabídku Úpravy k ovládání IrfanView."
+        grpDescription3 = u"Přidává nabídku Obrázek k ovládání IrfanView."
+        grpDescription4 = u"Přidává nabídku Nastavení k ovládání IrfanView."
+        grpDescription5 = u"Přidává nabídku Zobrazit k ovládání IrfanView."
+        grpDescription6 = u"Přidává ostatní akce k ovládání IrfanView."
+        grpName1 = u"Soubor"
+        grpName2 = u"Úpravy"
+        grpName3 = u"Obrázek"
+        grpName4 = u"Nastavení"
+        grpName5 = u"Zobrazit"
+        grpName6 = u"Ostatní"
+        label = u"Cesta k souboru i_view32.exe:"
+        text1 = u"Nemohu najít okno IrfanView !"
         class AboutIrfanView:
             name = u'Zobrazit dialog "O programu IrfanView"'
-            description = u'Zobraz\xed dialog "O programu IrfanView".'
+            description = u'Zobrazí dialog "O programu IrfanView".'
         class AcquireBatchScanning:
-            name = u'Skenovat/D\xe1vkov\xe9 skenov\xe1n\xed'
-            description = u'Zobraz\xed dialog Skenovat/D\xe1vkov\xe9 skenov\xe1n\xed.'
+            name = u"Skenovat/Dávkové skenování"
+            description = u"Zobrazí dialog Skenovat/Dávkové skenování."
         class AdobeFiltersDialog:
-            name = u'Filtry Adobe 8BF'
-            description = u'Filtry Adobe 8BF.'
+            name = u"Filtry Adobe 8BF"
+            description = u"Filtry Adobe 8BF."
         class AppendToSlideshow:
-            name = u'P\u0159ipojit k aktu\xe1ln\xed prezentaci'
-            description = u'P\u0159ipoj\xed aktu\xe1ln\xed soubor k aktu\xe1ln\xed prezentaci.'
+            name = u"Připojit k aktuální prezentaci"
+            description = u"Připojí aktuální soubor k aktuální prezentaci."
         class AutoColorCorrection:
-            name = u'Automatick\xe9 p\u0159izp\u016fsoben\xed barev'
-            description = u'Automatick\xe9 p\u0159izp\u016fsoben\xed barev.'
+            name = u"Automatické přizpůsobení barev"
+            description = u"Automatické přizpůsobení barev."
         class BatchConversionRename:
-            name = u'D\xe1vkov\xe1 konverze/p\u0159ejmenov\xe1n\xed'
-            description = u'Zobraz\xed dialog D\xe1vkov\xe1 konverze/p\u0159ejmenov\xe1n\xed.'
+            name = u"Dávková konverze/přejmenování"
+            description = u"Zobrazí dialog Dávková konverze/přejmenování."
         class CaptureDialog:
-            name = u'Zobrazit dialog "Sejmut\xed obrazovky"'
-            description = u'Zobraz\xed dialog "Nastaven\xed zachycen\xed obrazovky".'
+            name = u'Zobrazit dialog "Sejmutí obrazovky"'
+            description = u'Zobrazí dialog "Nastavení zachycení obrazovky".'
         class CloseActualWindow:
-            name = u'Zav\u0159\xedt aktu\xe1ln\xed okno'
-            description = u'Zav\u0159e aktu\xe1ln\xed okno (hlavn\xed okno, prezentaci, celoobrazovkov\xfd re\u017eim, miniatury nebo dialog).'
+            name = u"Zavřít aktuální okno"
+            description = u"Zavře aktuální okno (hlavní okno, prezentaci, celoobrazovkový režim, miniatury nebo dialog)."
         class ControlSwitchThumb:
-            name = u'P\u0159epnout \u0159\xedzen\xed v okn\u011b miniatur'
-            description = u'P\u0159epne \u0159\xedzen\xed v okn\u011b miniatur.'
+            name = u"Přepnout řízení v okně miniatur"
+            description = u"Přepne řízení v okně miniatur."
         class CopyFile:
-            name = u'Kop\xedrovat soubor'
-            description = u'Kop\xedruje soubor.'
+            name = u"Kopírovat soubor"
+            description = u"Kopíruje soubor."
         class CopyFilename:
-            name = u'Kop\xedrovat n\xe1zev souboru do schr\xe1nky'
-            description = u'Kop\xedruje n\xe1zev souboru do schr\xe1nky.'
+            name = u"Kopírovat název souboru do schránky"
+            description = u"Kopíruje název souboru do schránky."
         class CopyToClipboard:
-            name = u'Kop\xedrovat obr\xe1zek do schr\xe1nky'
-            description = u'Kop\xedruje obr\xe1zek do schr\xe1nky.'
+            name = u"Kopírovat obrázek do schránky"
+            description = u"Kopíruje obrázek do schránky."
         class CreateSelection:
-            name = u'Vytvo\u0159it vlastn\xed v\xfdb\u011br'
-            description = u'Vytvo\u0159\xed vlastn\xed v\xfdb\u011br.'
+            name = u"Vytvořit vlastní výběr"
+            description = u"Vytvoří vlastní výběr."
         class CropSelectionRectangle:
-            name = u'O\u0159\xedznout'
-            description = u'O\u0159\xedzne vybran\xfd obd\xe9ln\xedk.'
+            name = u"Oříznout"
+            description = u"Ořízne vybraný obdélník."
         class CutSelectionRectangle:
-            name = u'Vyjmout v\xfdb\u011br'
-            description = u'Vyjme vybran\xfd obd\xe9ln\xedk.'
+            name = u"Vyjmout výběr"
+            description = u"Vyjme vybraný obdélník."
         class DeleteFile:
-            name = u'Odstranit soubor'
-            description = u'Odstran\xed aktu\xe1ln\xed soubor.'
+            name = u"Odstranit soubor"
+            description = u"Odstraní aktuální soubor."
         class DirectPrint:
-            name = u'Tisknout p\u0159\xedmo'
-            description = u'Tiskne obr\xe1zek p\u0159\xedmo - bez otev\u0159en\xed dialogu.'
+            name = u"Tisknout přímo"
+            description = u"Tiskne obrázek přímo - bez otevření dialogu."
         class EditDelete:
-            name = u'Odstranit (Vy\u010distit obrazovku)'
-            description = u'Odstran\xed obr\xe1zek (vy\u010dist\xed obrazovku).'
+            name = u"Odstranit (Vyčistit obrazovku)"
+            description = u"Odstraní obrázek (vyčistí obrazovku)."
         class EditMultipageTif:
-            name = u'Upravit v\xedcestr\xe1nkov\xfd TIF'
-            description = u'\xdaprava v\xedcestr\xe1nkov\xe9ho TIFu.'
+            name = u"Upravit vícestránkový TIF"
+            description = u"Úprava vícestránkového TIFu."
         class EditUndo:
-            name = u'Zp\u011bt (Undo)'
-            description = u'Zp\u011bt (Undo).'
+            name = u"Zpět (Undo)"
+            description = u"Zpět (Undo)."
         class EffectsSetup:
-            name = u'Prohl\xed\u017ee\u010d efekt\u016f'
-            description = u'Prohl\xed\u017ee\u010d efekt\u016f.'
+            name = u"Prohlížeč efektů"
+            description = u"Prohlížeč efektů."
         class EnhanceColors:
-            name = u'Upravit barvy'
-            description = u'\xdaprava barev.'
+            name = u"Upravit barvy"
+            description = u"Úprava barev."
         class Exit:
-            name = u'Konec'
-            description = u'Konec.'
+            name = u"Konec"
+            description = u"Konec."
         class FilterFactoryDialog:
-            name = u'Dialog V\xfdroba filtru'
-            description = u'Zobraz\xed dialog V\xfdroba filtru.'
+            name = u"Dialog Výroba filtru"
+            description = u"Zobrazí dialog Výroba filtru."
         class FullScreen:
-            name = u'Cel\xe1 obrazovka'
-            description = u'Cel\xe1 obrazovka.'
+            name = u"Celá obrazovka"
+            description = u"Celá obrazovka."
         class FullScreenMode1:
-            name = u'Re\u017eim cel\xe1 obrazovka - 1:1'
-            description = u'Re\u017eim cel\xe1 obrazovka: Zobrazit obr\xe1zky/filmy v p\u016fvodn\xed velikosti.'
+            name = u"Režim celá obrazovka - 1:1"
+            description = u"Režim celá obrazovka: Zobrazit obrázky/filmy v původní velikosti."
         class FullScreenMode2:
-            name = u'Re\u017eim cel\xe1 obrazovka - p\u0159izp\u016fsobit pouze velk\xe9'
-            description = u'Re\u017eim cel\xe1 obrazovka: P\u0159izp\u016fsobit obrazovce pouze velk\xe9 obr\xe1zky (doporu\u010deno).'
+            name = u"Režim celá obrazovka - přizpůsobit pouze velké"
+            description = u"Režim celá obrazovka: Přizpůsobit obrazovce pouze velké obrázky (doporučeno)."
         class FullScreenMode3:
-            name = u'Re\u017eim cel\xe1 obrazovka - p\u0159izp\u016fsobit v\u0161echny'
-            description = u'Re\u017eim cel\xe1 obrazovka: P\u0159izp\u016fsobit obrazovce v\u0161echny obr\xe1zky/filmy.'
+            name = u"Režim celá obrazovka - přizpůsobit všechny"
+            description = u"Režim celá obrazovka: Přizpůsobit obrazovce všechny obrázky/filmy."
         class FullScreenMode4:
-            name = u'Re\u017eim cel\xe1 obrazovka - rozt\xe1hnout v\u0161echny'
-            description = u'Re\u017eim cel\xe1 obrazovka: Rozt\xe1hnout v\u0161echny obr\xe1zky/filmy.'
+            name = u"Režim celá obrazovka - roztáhnout všechny"
+            description = u"Režim celá obrazovka: Roztáhnout všechny obrázky/filmy."
         class Help:
-            name = u'Pomoc'
-            description = u'Pomoc.'
+            name = u"Pomoc"
+            description = u"Pomoc."
         class HorizontalFlip:
-            name = u'Horizont\xe1ln\xed p\u0159eklopen\xed'
-            description = u'Horizont\xe1ln\xed p\u0159eklopen\xed.'
+            name = u"Horizontální překlopení"
+            description = u"Horizontální překlopení."
         class InsertText:
-            name = u'Vlo\u017eit text do v\xfdb\u011bru'
-            description = u'Vlo\u017e\xed text do v\xfdb\u011bru.'
+            name = u"Vložit text do výběru"
+            description = u"Vloží text do výběru."
         class JpgLosslessOperations:
-            name = u'JPG bezeztr\xe1tov\xe9 operace'
-            description = u'JPG bezeztr\xe1tov\xe9 operace (PlugIn).'
+            name = u"JPG bezeztrátové operace"
+            description = u"JPG bezeztrátové operace (PlugIn)."
         class JumpIntoToolbar:
-            name = u'Sko\u010dit do edita\u010dn\xedho pole n\xe1strojov\xe9 li\u0161ty'
-            description = u'Sko\u010d\xed do edita\u010dn\xedho pole n\xe1strojov\xe9 li\u0161ty.'
+            name = u"Skočit do editačního pole nástrojové lišty"
+            description = u"Skočí do editačního pole nástrojové lišty."
         class LoadFirstFile:
-            name = u'Prvn\xed soubor v adres\xe1\u0159i'
-            description = u'Prvn\xed soubor v adres\xe1\u0159i.'
+            name = u"První soubor v adresáři"
+            description = u"První soubor v adresáři."
         class LoadLastFile:
-            name = u'Posledn\xed soubor v adres\xe1\u0159i'
-            description = u'Posledn\xed soubor v adres\xe1\u0159i.'
+            name = u"Poslední soubor v adresáři"
+            description = u"Poslední soubor v adresáři."
         class LoadNextFile:
-            name = u'Dal\u0161\xed soubor v adres\xe1\u0159i'
-            description = u'Dal\u0161\xed soubor v adres\xe1\u0159i.'
+            name = u"Další soubor v adresáři"
+            description = u"Další soubor v adresáři."
         class LoadPrevFile:
-            name = u'P\u0159edchoz\xed soubor v adres\xe1\u0159i'
-            description = u'P\u0159edchoz\xed soubor v adres\xe1\u0159i.'
+            name = u"Předchozí soubor v adresáři"
+            description = u"Předchozí soubor v adresáři."
         class MinimizeWindow:
-            name = u'Minimalizovat okno'
-            description = u'Minimalizuje okno ("Boss" tla\u010d\xedtko).'
+            name = u"Minimalizovat okno"
+            description = u'Minimalizuje okno ("Boss" tlačítko).'
         class MoveFile:
-            name = u'P\u0159esunout soubor'
-            description = u'P\u0159esune soubor.'
+            name = u"Přesunout soubor"
+            description = u"Přesune soubor."
         class OpenBrowseDialog:
-            name = u'Zobrazit dialog "Proch\xe1zet-Subadres\xe1\u0159e"'
-            description = u'Zobraz\xed dialog "Proch\xe1zet-Subadres\xe1\u0159e".'
+            name = u'Zobrazit dialog "Procházet-Subadresáře"'
+            description = u'Zobrazí dialog "Procházet-Subadresáře".'
         class OpenDialog:
-            name = u'Zobrazit dialog "Otev\u0159\xedt"'
-            description = u'Zobraz\xed dialog "Otev\u0159\xedt".'
+            name = u'Zobrazit dialog "Otevřít"'
+            description = u'Zobrazí dialog "Otevřít".'
         class OpenInExternal:
-            name = u'Otev\u0159\xedt v extern\xedm prohl\xed\u017ee\u010di'
-            description = u'Otev\u0159e v extern\xedm prohl\xed\u017ee\u010di.'
+            name = u"Otevřít v externím prohlížeči"
+            description = u"Otevře v externím prohlížeči."
         class OpenRandomImage:
-            name = u'Otev\u0159\xedt n\xe1hodn\xfd obr\xe1zek'
-            description = u'Otev\u0159e n\xe1hodn\xfd obr\xe1zek.'
+            name = u"Otevřít náhodný obrázek"
+            description = u"Otevře náhodný obrázek."
         class OriginalSize:
-            name = u'P\u016fvodn\xed velikost'
-            description = u'P\u016fvodn\xed velikost (\u017e\xe1dn\xe9 zv\u011bt\u0161en\xed).'
+            name = u"Původní velikost"
+            description = u"Původní velikost (žádné zvětšení)."
         class PasteFromClipboard:
-            name = u'Vlo\u017eit ze schr\xe1nky'
-            description = u'Vlo\u017e\xed ze schr\xe1nky.'
+            name = u"Vložit ze schránky"
+            description = u"Vloží ze schránky."
         class PreviousWallpaper:
-            name = u'Nastavit jako pozad\xed plochy - p\u016fvodn\xed.'
-            description = u'Nastav\xed p\u016fvodn\xed pozad\xed plochy.'
+            name = u"Nastavit jako pozadí plochy - původní."
+            description = u"Nastaví původní pozadí plochy."
         class PrintDialog:
-            name = u'Zobrazit dialog Tisk'
-            description = u'Zobraz\xed dialog Tisk.'
+            name = u"Zobrazit dialog Tisk"
+            description = u"Zobrazí dialog Tisk."
         class PropertiesDialog:
-            name = u'Zobrazit dialog Vlastnosti'
-            description = u'Zobraz\xed dialog Vlastnosti.'
+            name = u"Zobrazit dialog Vlastnosti"
+            description = u"Zobrazí dialog Vlastnosti."
         class RedEyeReduction:
-            name = u'Zrdukovat \u010derven\xe9 o\u010di (v\xfdb\u011br)'
-            description = u'Provede redukci \u010derven\xfdch o\u010d\xed v aktu\xe1ln\xedm v\xfdb\u011bru.'
+            name = u"Zrdukovat červené oči (výběr)"
+            description = u"Provede redukci červených očí v aktuálním výběru."
         class Refresh:
-            name = u'Obnovit'
-            description = u'Aktualizuje obsah okna.'
+            name = u"Obnovit"
+            description = u"Aktualizuje obsah okna."
         class RenameFile:
-            name = u'P\u0159ejmenovat soubor'
-            description = u'P\u0159ejmenuje soubor.'
+            name = u"Přejmenovat soubor"
+            description = u"Přejmenuje soubor."
         class ReopenFile:
-            name = u'Znovu otev\u0159\xedt'
-            description = u'Znovu otev\u0159e soubor.'
+            name = u"Znovu otevřít"
+            description = u"Znovu otevře soubor."
         class ResampleDialog:
-            name = u'Zobrazit dialog Zm\u011bnit velikost/rozli\u0161en\xed'
-            description = u'Zobraz\xed dialog Zm\u011bnit velikost/rozli\u0161en\xed.'
+            name = u"Zobrazit dialog Změnit velikost/rozlišení"
+            description = u"Zobrazí dialog Změnit velikost/rozlišení."
         class RotateAngle:
-            name = u'U\u017eivatelsk\xe1/jemn\xe1 rotace'
-            description = u'U\u017eivatelsk\xe1/jemn\xe1 rotace (podle zadan\xe9ho \xfahlu).'
+            name = u"Uživatelská/jemná rotace"
+            description = u"Uživatelská/jemná rotace (podle zadaného úhlu)."
         class RotateLeft:
-            name = u'Oto\u010dit vlevo'
-            description = u'Oto\u010d\xed obr\xe1zek o 90\xb0 vlevo.'
+            name = u"Otočit vlevo"
+            description = u"Otočí obrázek o 90° vlevo."
         class RotateRight:
-            name = u'Oto\u010dit vpravo'
-            description = u'Oto\u010d\xed obr\xe1zek o 90\xb0 vpravo.'
+            name = u"Otočit vpravo"
+            description = u"Otočí obrázek o 90° vpravo."
         class RotationLeft:
-            name = u'JPG bezeztr\xe1tov\xe1 rotace vlevo'
-            description = u'JPG bezeztr\xe1tov\xe1 rotace vlevo.'
+            name = u"JPG bezeztrátová rotace vlevo"
+            description = u"JPG bezeztrátová rotace vlevo."
         class RotationRight:
-            name = u'JPG bezeztr\xe1tov\xe1 rotace vpravo'
-            description = u'JPG bezeztr\xe1tov\xe1 rotace vpravo.'
+            name = u"JPG bezeztrátová rotace vpravo"
+            description = u"JPG bezeztrátová rotace vpravo."
         class RunCommandLine:
-            name = u'Spustit s p\u0159\xedkazovou \u0159\xe1dkou'
-            description = u'Spust\xed IrfanView s p\u0159\xedkazovou \u0159\xe1dkou.'
-            cmdline = u'Vlo\u017ete p\u0159\xedkazov\xfd \u0159\xe1dek (nap\u0159. /killmesoftly ):'
-            err = u'Nemohu naj\xedt soubor i_view32.exe !'
-            help = u'Pomoc'
-            label = u'Jmenovka t\xe9to akce:'
+            name = u"Spustit s příkazovou řádkou"
+            description = u"Spustí IrfanView s příkazovou řádkou."
+            cmdline = u"Vložte příkazový řádek (např. /killmesoftly ):"
+            err = u"Nemohu najít soubor i_view32.exe !"
+            help = u"Pomoc"
+            label = u"Jmenovka této akce:"
         class RunDefault:
-            name = u'Spustit s p\u0159ednastaven\xfdmi parametry'
-            description = u'Spust\xed IrfanView s p\u0159ednastaven\xfdmi parametry.'
-            text2 = u'Nemohu naj\xedt soubor i_view32.exe !'
+            name = u"Spustit s přednastavenými parametry"
+            description = u"Spustí IrfanView s přednastavenými parametry."
+            text2 = u"Nemohu najít soubor i_view32.exe !"
         class RunSlideshow:
-            name = u'Spustit prezentaci'
-            description = u'Spust\xed IrfanView a otev\u0159e prezentaci.'
-            alpha = u'Pou\u017e\xedt Alfa prol\xedn\xe1n\xed mezi obr\xe1zky'
-            autoDelay = u'Automaticky po nastaven\xe9m zpo\u017ed\u011bn\xed'
-            autoKeyb = u'Automaticky od vstupu my\u0161i/kl\xe1vesnice'
-            browseTitle = u'Vybran\xe1 slo\u017eka:'
-            close = u'Zav\u0159\xedt IrfanView po posledn\xedm souboru'
-            delay = u'Zpo\u017ed\u011bn\xed [s]:'
-            dirpath = u'Cesta ke slo\u017ece:'
-            displtext = u'Zobrazit text (n\xe1zev souboru ...):'
-            err = u'Nemohu naj\xedt soubor i_view32.exe !'
-            filemask = u'Textov\xe9 soubory (*.txt)|*.txt|Seznamy (*.lst)|*.lst|V\u0161echny soubory (*.*)|*.*'
-            filepath = u'Cesta k souboru s prezentac\xed:'
-            fitAll = u'P\u0159izp\u016fsobit v\u0161echny obr\xe1zky'
-            folder = u'Slo\u017eka'
-            help = u'Pomoc'
-            hideCursor = u'Skr\xfdt kurzor my\u0161i'
-            high = u'V\xfd\u0161ka:'
-            label = u'Jmenovka t\xe9to prezentace:'
-            lineOpt = u'P\u0159\xedkazov\xfd \u0159\xe1dek:'
-            loop = u'Smy\u010dka'
+            name = u"Spustit prezentaci"
+            description = u"Spustí IrfanView a otevře prezentaci."
+            alpha = u"Použít Alfa prolínání mezi obrázky"
+            autoDelay = u"Automaticky po nastaveném zpoždění"
+            autoKeyb = u"Automaticky od vstupu myši/klávesnice"
+            browseTitle = u"Vybraná složka:"
+            close = u"Zavřít IrfanView po posledním souboru"
+            delay = u"Zpoždění [s]:"
+            dirpath = u"Cesta ke složce:"
+            displtext = u"Zobrazit text (název souboru ...):"
+            err = u"Nemohu najít soubor i_view32.exe !"
+            filemask = u"Textové soubory (*.txt)|*.txt|Seznamy (*.lst)|*.lst|Všechny soubory (*.*)|*.*"
+            filepath = u"Cesta k souboru s prezentací:"
+            fitAll = u"Přizpůsobit všechny obrázky"
+            folder = u"Složka"
+            help = u"Pomoc"
+            hideCursor = u"Skrýt kurzor myši"
+            high = u"Výška:"
+            label = u"Jmenovka této prezentace:"
+            lineOpt = u"Příkazový řádek:"
+            loop = u"Smyčka"
             mask = u'Maska pro "zobrazit text":'
-            mode1_1 = u'P\u016fvodn\xed velikost'
-            modeFull = u'Cel\xe1 obrazovka'
-            modeWin = u'Okno uprost\u0159ed obrazovky'
-            monitor = u'Monitor:'
-            noRepeat = u'Neopakovat obr\xe1zky'
-            onlyBig = u'P\u0159izp\u016fsobit pouze velk\xe9 obr\xe1zky'
-            radioboxfit = u'Re\u017eim p\u0159izp\u016fsoben\xed'
-            radioboxmode = u'Re\u017eim prezentace'
-            radioboxprogress = u'Postup sn\xedmk\u016f'
-            radioboxsource = u'Zdroj prezentace'
-            randomDelay = u'N\xe1hodn\u011b po nastaven\xe9m zpo\u017ed\u011bn\xed'
-            randomKeyb = u'N\xe1hodn\u011b od vstupu my\u0161i/kl\xe1vesnice'
-            resample = u'Pou\u017e\xedt funkci "Resample" (pomalej\u0161\xed)'
-            runslideshow = u'Spustit prezentaci'
-            scratchAll = u'Rozt\xe1hnout v\u0161echny obr\xe1zky'
-            soundLoop = u'Smy\u010dka pro MP3 (hudba na pozad\xed)'
-            suppress = u'Potla\u010dit chyby v pr\u016fb\u011bhu p\u0159ehr\xe1v\xe1n\xed'
-            toolTipFile = u'Napi\u0161te n\xe1zev souboru nebo kliknut\xedm na tla\u010d\xedtko otev\u0159ete dialog'
-            toolTipFolder = u'Napi\u0161te n\xe1zev slo\u017eky nebo kliknut\xedm na tla\u010d\xedtko otev\u0159ete dialog'
-            txtFile = u'Soubor s prezentac\xed'
-            width = u'\u0160\xed\u0159ka:'
-            windowSize = u'Velikost okna [pixely]'
+            mode1_1 = u"Původní velikost"
+            modeFull = u"Celá obrazovka"
+            modeWin = u"Okno uprostřed obrazovky"
+            monitor = u"Monitor:"
+            noRepeat = u"Neopakovat obrázky"
+            onlyBig = u"Přizpůsobit pouze velké obrázky"
+            radioboxfit = u"Režim přizpůsobení"
+            radioboxmode = u"Režim prezentace"
+            radioboxprogress = u"Postup snímků"
+            radioboxsource = u"Zdroj prezentace"
+            randomDelay = u"Náhodně po nastaveném zpoždění"
+            randomKeyb = u"Náhodně od vstupu myši/klávesnice"
+            resample = u'Použít funkci "Resample" (pomalejší)'
+            runslideshow = u"Spustit prezentaci"
+            scratchAll = u"Roztáhnout všechny obrázky"
+            soundLoop = u"Smyčka pro MP3 (hudba na pozadí)"
+            suppress = u"Potlačit chyby v průběhu přehrávání"
+            toolTipFile = u"Napište název souboru nebo kliknutím na tlačítko otevřete dialog"
+            toolTipFolder = u"Napište název složky nebo kliknutím na tlačítko otevřete dialog"
+            txtFile = u"Soubor s prezentací"
+            width = u"Šířka:"
+            windowSize = u"Velikost okna [pixely]"
         class RunWithOptions:
-            name = u'Spustit s mo\u017enostmi'
-            description = u'Spust\xed IrfanView s vlastn\xedmi p\u0159edvolbami.'
-            alpha = u'Pou\u017e\xedt Alfa prol\xedn\xe1n\xed mezi obr\xe1zky'
-            caption = u'Z\xe1hlav\xed okna'
-            centerImage = u'Vyst\u0159edit obr\xe1zek v okn\u011b'
-            displtext = u'Zobrazit text (n\xe1zev souboru ...)'
-            err = u'Nemohu naj\xedt soubor i_view32.exe !'
-            filemask = u'JPG soubory (*.jpg)|*.jpg|BMP soubory (*.bmp)|*.bmp|PNG soubory (*.png)|*.png|V\u0161echny soubory (*.*)|*.*'
-            filepath = u'Cesta k souboru:'
-            fitAll = u'P\u0159izp\u016fsobit v\u0161echny obr\xe1zky'
-            fsOptions = u'Mo\u017enosti re\u017eimu Cel\xe1 obrazovka'
-            help = u'Pomoc'
-            hideCursor = u'Skr\xfdt kurzor my\u0161i'
-            high = u'V\xfd\u0161ka:'
-            label = u'Jmenovka t\xe9to akce:'
-            lineOpt = u'Ostatn\xed volby vlo\u017ete do p\u0159\xedkazov\xe9ho \u0159\xe1dku:'
+            name = u"Spustit s možnostmi"
+            description = u"Spustí IrfanView s vlastními předvolbami."
+            alpha = u"Použít Alfa prolínání mezi obrázky"
+            caption = u"Záhlaví okna"
+            centerImage = u"Vystředit obrázek v okně"
+            displtext = u"Zobrazit text (název souboru ...)"
+            err = u"Nemohu najít soubor i_view32.exe !"
+            filemask = u"JPG soubory (*.jpg)|*.jpg|BMP soubory (*.bmp)|*.bmp|PNG soubory (*.png)|*.png|Všechny soubory (*.*)|*.*"
+            filepath = u"Cesta k souboru:"
+            fitAll = u"Přizpůsobit všechny obrázky"
+            fsOptions = u"Možnosti režimu Celá obrazovka"
+            help = u"Pomoc"
+            hideCursor = u"Skrýt kurzor myši"
+            high = u"Výška:"
+            label = u"Jmenovka této akce:"
+            lineOpt = u"Ostatní volby vložte do příkazového řádku:"
             mask = u'Maska pro "Zobrazit text":'
-            menuBar = u'Nab\xeddkov\xe1 li\u0161ta'
-            mode1_1 = u'P\u016fvodn\xed velikost'
-            modeFull = u'Cel\xe1 obrazovka'
-            modeWin = u'Okno'
-            monitor = u'Monitor:'
-            onlyBig = u'P\u0159izp\u016fsobit pouze velk\xe9 obr\xe1zky'
-            posAndSize = u'Startovn\xed pozice a velikost okna'
-            radioboxmode = u'Spustit v re\u017eimu'
-            radioboxwinmode = u'Re\u017eim p\u0159izp\u016fsoben\xed - Okno'
-            radiofullmode = u'Re\u017eim p\u0159izp\u016fsoben\xed - Cel\xe1 obrazovka'
-            resample = u'Pou\u017e\xedt funkci "Resample" (pomalej\u0161\xed)'
-            resample2 = u'Pou\u017e\xedt funkci "Resample"'
-            runwithoption = u'Spustit s mo\u017enostmi'
-            scratchAll = u'Rozt\xe1hnout v\u0161echny obr\xe1zky'
-            statusLine = u'Stavov\xfd \u0159\xe1dek'
-            toolBar = u'N\xe1strojov\xe1 li\u0161ta'
-            toolTipFile = u'Napi\u0161te n\xe1zev souboru nebo kliknut\xedm na tla\u010d\xedtko otev\u0159ete dialog'
-            width = u'\u0160\xed\u0159ka:'
-            winMode1 = u'P\u0159izp\u016fsobit okno obr\xe1zku'
-            winMode2 = u'P\u0159izp\u016fsobit obr\xe1zky oknu'
-            winMode3 = u'P\u0159izp\u016fsobit oknu pouze velk\xe9 obr\xe1zky'
-            winMode4 = u'P\u0159izp\u016fsobit obr\xe1zky pracovn\xed plo\u0161e'
-            winMode5 = u'P\u0159izp\u016fsobit plo\u0161e pouze velk\xe9 obr\xe1zky'
-            winMode6 = u'Nep\u0159izp\u016fsobovat'
-            winMode7 = u'P\u0159izp\u016fsobit obr\xe1zky \u0161\xed\u0159ce prac. plochy'
-            winMode8 = u'P\u0159izp\u016fsobit obr\xe1zky v\xfd\u0161ce prac. plochy'
-            windowHide = u'Skr\xfdt prvky okna (vybr\xe1no=skr\xfdt)'
-            windowOption = u'Mo\u017enosti re\u017eimu Okno'
-            xCoord = u'X sou\u0159adnice:'
-            yCoord = u'Y sou\u0159adnice:'
+            menuBar = u"Nabídková lišta"
+            mode1_1 = u"Původní velikost"
+            modeFull = u"Celá obrazovka"
+            modeWin = u"Okno"
+            monitor = u"Monitor:"
+            onlyBig = u"Přizpůsobit pouze velké obrázky"
+            posAndSize = u"Startovní pozice a velikost okna"
+            radioboxmode = u"Spustit v režimu"
+            radioboxwinmode = u"Režim přizpůsobení - Okno"
+            radiofullmode = u"Režim přizpůsobení - Celá obrazovka"
+            resample = u'Použít funkci "Resample" (pomalejší)'
+            resample2 = u'Použít funkci "Resample"'
+            runwithoption = u"Spustit s možnostmi"
+            scratchAll = u"Roztáhnout všechny obrázky"
+            statusLine = u"Stavový řádek"
+            toolBar = u"Nástrojová lišta"
+            toolTipFile = u"Napište název souboru nebo kliknutím na tlačítko otevřete dialog"
+            width = u"Šířka:"
+            winMode1 = u"Přizpůsobit okno obrázku"
+            winMode2 = u"Přizpůsobit obrázky oknu"
+            winMode3 = u"Přizpůsobit oknu pouze velké obrázky"
+            winMode4 = u"Přizpůsobit obrázky pracovní ploše"
+            winMode5 = u"Přizpůsobit ploše pouze velké obrázky"
+            winMode6 = u"Nepřizpůsobovat"
+            winMode7 = u"Přizpůsobit obrázky šířce prac. plochy"
+            winMode8 = u"Přizpůsobit obrázky výšce prac. plochy"
+            windowHide = u"Skrýt prvky okna (vybráno=skrýt)"
+            windowOption = u"Možnosti režimu Okno"
+            xCoord = u"X souřadnice:"
+            yCoord = u"Y souřadnice:"
         class SaveAs:
-            name = u'Zobrazit dialog "Ulo\u017eit jako"'
-            description = u'Zobraz\xed dialog "Ulo\u017eit jako".'
+            name = u'Zobrazit dialog "Uložit jako"'
+            description = u'Zobrazí dialog "Uložit jako".'
         class SaveDialog:
-            name = u'Zobrazit dialog "Ulo\u017eit"'
-            description = u'Zobraz\xed dialog "Ulo\u017eit".'
+            name = u'Zobrazit dialog "Uložit"'
+            description = u'Zobrazí dialog "Uložit".'
         class ScrollDownOrNext:
-            name = u'Dol\u016f nebo dal\u0161\xed soubor'
-            description = u'Otev\u0159e dal\u0161\xed soubor ve slo\u017ece anebo posune obr\xe1zek dol\u016f.'
+            name = u"Dolů nebo další soubor"
+            description = u"Otevře další soubor ve složce anebo posune obrázek dolů."
         class ScrollImageDown:
-            name = u'Posunout dol\u016f'
-            description = u'Posune obr\xe1zek dol\u016f.'
+            name = u"Posunout dolů"
+            description = u"Posune obrázek dolů."
         class ScrollImageUp:
-            name = u'Posunout nahoru'
-            description = u'Posune obr\xe1zek nahoru.'
+            name = u"Posunout nahoru"
+            description = u"Posune obrázek nahoru."
         class ScrollLeftOrPrevious:
-            name = u'Vlevo nebo p\u0159edchoz\xed soubor'
-            description = u'Posune obr\xe1zek vlevo nebo otev\u0159e p\u0159edchoz\xed soubor.'
+            name = u"Vlevo nebo předchozí soubor"
+            description = u"Posune obrázek vlevo nebo otevře předchozí soubor."
         class ScrollRightOrNext:
-            name = u'Vpravo nebo dal\u0161\xed soubor'
-            description = u'Posune obr\xe1zek vpravo nebo otev\u0159e dal\u0161\xed soubor.'
+            name = u"Vpravo nebo další soubor"
+            description = u"Posune obrázek vpravo nebo otevře další soubor."
         class ScrollToBeginOrFirstFile:
-            name = u'Posunout na za\u010d\xe1tek nebo otev\u0159\xedt prvn\xed soubor'
-            description = u'Posune na za\u010d\xe1tek (horizont\xe1ln\u011b) nebo otev\u0159e prvn\xed soubor ve slo\u017ece.'
+            name = u"Posunout na začátek nebo otevřít první soubor"
+            description = u"Posune na začátek (horizontálně) nebo otevře první soubor ve složce."
         class ScrollToEndOrLastFile:
-            name = u'Posunout na konec nebo otev\u0159\xedt posledn\xed soubor'
-            description = u'Posune na konec (horizont\xe1ln\u011b) nebo otev\u0159e posledn\xed soubor ve slo\u017ece.'
+            name = u"Posunout na konec nebo otevřít poslední soubor"
+            description = u"Posune na konec (horizontálně) nebo otevře poslední soubor ve složce."
         class ScrollUpOrPrevious:
-            name = u'Nahoru nebo p\u0159edchoz\xed soubor'
-            description = u'Otev\u0159e p\u0159edchoz\xed soubor ve slo\u017ece anebo posune obr\xe1zek nahoru.'
+            name = u"Nahoru nebo předchozí soubor"
+            description = u"Otevře předchozí soubor ve složce anebo posune obrázek nahoru."
         class SearchFiles:
-            name = u'Hledat soubory'
-            description = u'Hled\xe1 soubory.'
+            name = u"Hledat soubory"
+            description = u"Hledá soubory."
         class SelectAllThumb:
-            name = u'Vybrat v\u0161echny miniatury'
-            description = u'Vybere v\u0161echny miniatury (v okn\u011b miniatur).'
+            name = u"Vybrat všechny miniatury"
+            description = u"Vybere všechny miniatury (v okně miniatur)."
         class SendByMail:
-            name = u'Poslat obr\xe1zek e-mailem'
-            description = u'Po\u0161le obr\xe1zek e-mailem.'
+            name = u"Poslat obrázek e-mailem"
+            description = u"Pošle obrázek e-mailem."
         class Sharpen:
-            name = u'Zaost\u0159it'
-            description = u'Zaost\u0159\xed obr\xe1zek.'
+            name = u"Zaostřit"
+            description = u"Zaostří obrázek."
         class ShowCommentDialog:
-            name = u'Zobrazit dialog "Koment\xe1\u0159 JPG souboru"'
-            description = u'Zobraz\xed dialog "Koment\xe1\u0159 JPG souboru".'
+            name = u'Zobrazit dialog "Komentář JPG souboru"'
+            description = u'Zobrazí dialog "Komentář JPG souboru".'
         class ShowExifDialog:
             name = u'Zobrazit dialog "EXIF info"'
-            description = u'Zobraz\xed dialog "EXIF info".'
+            description = u'Zobrazí dialog "EXIF info".'
         class ShowInHexViewer:
-            name = u'Zobrazit v HEX prohl\xed\u017ee\u010di'
-            description = u'Otev\u0159e obr\xe1zek v HEX prohl\xed\u017ee\u010di.'
+            name = u"Zobrazit v HEX prohlížeči"
+            description = u"Otevře obrázek v HEX prohlížeči."
         class ShowInformation:
-            name = u'Zobrazit informace o obr\xe1zku'
-            description = u'Zobraz\xed informace o obr\xe1zku.'
+            name = u"Zobrazit informace o obrázku"
+            description = u"Zobrazí informace o obrázku."
         class ShowIptcDialog:
-            name = u'Zobrazit dialog IPTC'
-            description = u'Zobraz\xed dialog IPTC.'
+            name = u"Zobrazit dialog IPTC"
+            description = u"Zobrazí dialog IPTC."
         class ShowNextPgOrFile:
-            name = u'Dal\u0161\xed str\xe1nku nebo soubor'
-            description = u'Zobraz\xed dal\u0161\xed str\xe1nku v\xedcestr\xe1nkov\xe9ho obr\xe1zku nebo otev\u0159e dal\u0161\xed obr\xe1zek ve slo\u017ece.'
+            name = u"Další stránku nebo soubor"
+            description = u"Zobrazí další stránku vícestránkového obrázku nebo otevře další obrázek ve složce."
         class ShowPrevPgOrFile:
-            name = u'P\u0159edchoz\xed str\xe1nku nebo soubor'
-            description = u'Zobraz\xed p\u0159edchoz\xed str\xe1nku v\xedcestr\xe1nkov\xe9ho obr\xe1zku nebo otev\u0159e p\u0159edchoz\xed obr\xe1zek ve slo\u017ece.'
+            name = u"Předchozí stránku nebo soubor"
+            description = u"Zobrazí předchozí stránku vícestránkového obrázku nebo otevře předchozí obrázek ve složce."
         class SlideshowDialog:
-            name = u'Zobrazit dialog Prezentace'
-            description = u'Zobraz\xed dialog Prezentace.'
+            name = u"Zobrazit dialog Prezentace"
+            description = u"Zobrazí dialog Prezentace."
         class StartDirSlideshow:
-            name = u'Spustit prezentaci ve slo\u017ece'
-            description = u'Spust\xed prezentaci ze soubor\u016f aktu\xe1ln\xed slo\u017eky.'
+            name = u"Spustit prezentaci ve složce"
+            description = u"Spustí prezentaci ze souborů aktuální složky."
         class StopAnimation:
-            name = u'Zastavit animaci'
-            description = u'Zastav\xed GIF nebo ANI animaci.'
+            name = u"Zastavit animaci"
+            description = u"Zastaví GIF nebo ANI animaci."
         class SwitchMainThumbnail:
-            name = u'P\u0159epnout okno hlavn\xed/miniatury'
-            description = u'P\u0159epne mezi hlavn\xedm oknem a oknem miniatur (je-li viditeln\xe9).'
+            name = u"Přepnout okno hlavní/miniatury"
+            description = u"Přepne mezi hlavním oknem a oknem miniatur (je-li viditelné)."
         class Thumbnails:
-            name = u'Miniatury'
-            description = u'Miniatury.'
+            name = u"Miniatury"
+            description = u"Miniatury."
         class ToggleAutSlideshow1:
-            name = u'Spustit/zastavit "Prezentaci v okn\u011b"'
-            description = u'Spust\xed/zastav\xed  "Prezentaci v okn\u011b".'
+            name = u'Spustit/zastavit "Prezentaci v okně"'
+            description = u'Spustí/zastaví  "Prezentaci v okně".'
         class ToggleAutSlideshow2:
-            name = u'Zastavit/spustit prezentaci'
-            description = u'Zastav\xed prezentaci. P\u0159i op\u011btovn\xe9m pou\u017eit\xed prezentace pokra\u010duje.'
+            name = u"Zastavit/spustit prezentaci"
+            description = u"Zastaví prezentaci. Při opětovném použití prezentace pokračuje."
         class ToggleCaption:
-            name = u'Zobrazit/skr\xfdt z\xe1hlav\xed okna'
-            description = u'Zobraz\xed/skryje z\xe1hlav\xed okna.'
+            name = u"Zobrazit/skrýt záhlaví okna"
+            description = u"Zobrazí/skryje záhlaví okna."
         class ToggleFit:
-            name = u'P\u0159izp\u016fsobit plo\u0161e/p\u0159izp\u016fsobit obr\xe1zku'
-            description = u'P\u0159ep\xedn\xe1 mezi "P\u0159izp\u016fsobit obr\xe1zky plo\u0161e" a "P\u0159izp\u016fsobit okno obr\xe1zku".'
+            name = u"Přizpůsobit ploše/přizpůsobit obrázku"
+            description = u'Přepíná mezi "Přizpůsobit obrázky ploše" a "Přizpůsobit okno obrázku".'
         class ToggleLockZoom:
-            name = u'Zamknout/odemknout zv\u011bt\u0161en\xed'
-            description = u'Zamkne/odemkne zv\u011bt\u0161en\xed (tak\xe9 v re\u017eimu Cel\xe1 obrazovka).'
+            name = u"Zamknout/odemknout zvětšení"
+            description = u"Zamkne/odemkne zvětšení (také v režimu Celá obrazovka)."
         class ToggleMenuBar:
-            name = u'Zobrazit/skr\xfdt nab\xeddkovou li\u0161tu'
-            description = u'Zobraz\xed/skryje nab\xeddkovou li\u0161tu.'
+            name = u"Zobrazit/skrýt nabídkovou lištu"
+            description = u"Zobrazí/skryje nabídkovou lištu."
         class ToggleSlideshow:
-            name = u'Zobrazit/skr\xfdt text (cel\xe1 obrazovka/prezentace)'
-            description = u'Zobraz\xed/skryje text (v re\u017eimech cel\xe1 obrazovka/prezentace).'
+            name = u"Zobrazit/skrýt text (celá obrazovka/prezentace)"
+            description = u"Zobrazí/skryje text (v režimech celá obrazovka/prezentace)."
         class ToggleStatusBar:
-            name = u'Zobrazit/skr\xfdt stavov\xfd \u0159\xe1dek'
-            description = u'Zobraz\xed/skryje stavov\xfd \u0159\xe1dek.'
+            name = u"Zobrazit/skrýt stavový řádek"
+            description = u"Zobrazí/skryje stavový řádek."
         class ToggleToolbar:
-            name = u'Zobrazit/skr\xfdt n\xe1strojovou li\u0161tu'
-            description = u'Zobraz\xed/skryje n\xe1strojovou li\u0161tu.'
+            name = u"Zobrazit/skrýt nástrojovou lištu"
+            description = u"Zobrazí/skryje nástrojovou lištu."
         class VerticalFlip:
-            name = u'Vertik\xe1ln\xed p\u0159eklopen\xed'
-            description = u'Vertik\xe1ln\xed p\u0159eklopen\xed.'
+            name = u"Vertikální překlopení"
+            description = u"Vertikální překlopení."
         class WallpaperCentered:
-            name = u'Nastavit jako pozad\xed plochy - na st\u0159ed'
-            description = u'Nastav\xed obr\xe1zek jako pozad\xed plochy - na st\u0159ed.'
+            name = u"Nastavit jako pozadí plochy - na střed"
+            description = u"Nastaví obrázek jako pozadí plochy - na střed."
         class WallpaperStretched:
-            name = u'Nastavit jako pozad\xed plochy - rozt\xe1hnout'
-            description = u'Nastav\xed obr\xe1zek jako pozad\xed plochy - rozt\xe1hnout'
+            name = u"Nastavit jako pozadí plochy - roztáhnout"
+            description = u"Nastaví obrázek jako pozadí plochy - roztáhnout"
         class WallpaperTiled:
-            name = u'Nastavit jako pozad\xed plochy - vedle sebe'
-            description = u'Nastav\xed obr\xe1zek jako pozad\xed plochy - vedle sebe'
+            name = u"Nastavit jako pozadí plochy - vedle sebe"
+            description = u"Nastaví obrázek jako pozadí plochy - vedle sebe"
         class ZoomIn:
-            name = u'Zv\u011bt\u0161it'
-            description = u'Zv\u011bt\u0161\xed obr\xe1zek.'
+            name = u"Zvětšit"
+            description = u"Zvětší obrázek."
         class ZoomOut:
-            name = u'Zmen\u0161it'
-            description = u'Zmen\u0161\xed obr\xe1zek.'
+            name = u"Zmenšit"
+            description = u"Zmenší obrázek."
     class Joystick:
-        name = u'P\xe1kov\xfd ovlada\u010d'
-        description = u'Umo\u017e\u0148uje pou\u017e\xedt p\xe1kov\xe9 ovlada\u010de a gamepady jako vstupn\xed za\u0159\xedzen\xed pro EventGhost.'
+        name = u"Pákový ovladač"
+        description = u"Umožňuje použít pákové ovladače a gamepady jako vstupní zařízení pro EventGhost."
     class Keyboard:
-        name = u'Kl\xe1vesnice'
-        description = u'Tento plugin generuje ud\xe1losti stisknut\xedm kl\xe1ves (hork\xe9 kl\xe1vesy).'
+        name = u"Klávesnice"
+        description = u"Tento plugin generuje události stisknutím kláves (horké klávesy)."
     class MediaMonkey:
-        name = u'MediaMonkey'
-        description = u'P\u0159id\xe1v\xe1 podporu funkc\xed pro \u0159\xedzen\xed programu <a href="http://www.MediaMonkey.com/">MediaMonkey</a>.'
-        errorConnect = u'MediaMonkey nen\xed spu\u0161t\u011bn nebo p\u0159ipojen'
-        errorNoWindow = u'Nemohu naj\xedt okno MediaMonkey'
-        extrGrpDescr = u'Zde je akce pro z\xe1pis n\u011bkter\xfdch parametr\u016f do MediaMonkey.'
-        extrGrpName = u'Z\xe1pis do MediaMonkey'
-        infoGrpDescr = u'Zde najdete akce pro z\xedsk\xe1v\xe1n\xed informac\xed z MediaMonkey.'
-        infoGrpName = u'Z\xedsk\xe1v\xe1n\xed informac\xed'
-        levelGrpDescr = u'Zde najdete dal\u0161\xed akce pro \u0159\xedzen\xed MediaMonkey (hlasitost, stereov\xe1ha, posouv\xe1n\xed).'
-        levelGrpName = u'Dal\u0161\xed \u0159\xedzen\xed MediaMonkey'
-        mainGrpDescr = u'Zde najdete akce pro hlavn\xed \u0159\xedzen\xed MediaMonkey.'
-        mainGrpName = u'Hlavn\xed \u0159\xedzen\xed MediaMonkey'
+        name = u"MediaMonkey"
+        description = u'Přidává podporu funkcí pro řízení programu <a href="http://www.MediaMonkey.com/">MediaMonkey</a>.'
+        errorConnect = u"MediaMonkey není spuštěn nebo připojen"
+        errorNoWindow = u"Nemohu najít okno MediaMonkey"
+        extrGrpDescr = u"Zde je akce pro zápis některých parametrů do MediaMonkey."
+        extrGrpName = u"Zápis do MediaMonkey"
+        infoGrpDescr = u"Zde najdete akce pro získávání informací z MediaMonkey."
+        infoGrpName = u"Získávání informací"
+        levelGrpDescr = u"Zde najdete další akce pro řízení MediaMonkey (hlasitost, stereováha, posouvání)."
+        levelGrpName = u"Další řízení MediaMonkey"
+        mainGrpDescr = u"Zde najdete akce pro hlavní řízení MediaMonkey."
+        mainGrpName = u"Hlavní řízení MediaMonkey"
         class BalanceLeft:
-            name = u'Stereov\xe1ha vlevo x%'
-            description = u'Stereov\xe1ha vlevo x%.'
-            label_conf = u'Krok stereov\xe1hy:'
-            label_tree = u'Stereov\xe1hu vlevo o '
+            name = u"Stereováha vlevo x%"
+            description = u"Stereováha vlevo x%."
+            label_conf = u"Krok stereováhy:"
+            label_tree = u"Stereováhu vlevo o "
         class BalanceRight:
-            name = u'Stereov\xe1ha vpravo x%'
-            description = u'Stereov\xe1ha vpravo x%.'
-            label_conf = u'Krok stereov\xe1hy:'
-            label_tree = u'Stereov\xe1hu vpravo o '
+            name = u"Stereováha vpravo x%"
+            description = u"Stereováha vpravo x%."
+            label_conf = u"Krok stereováhy:"
+            label_tree = u"Stereováhu vpravo o "
         class DiscretePause:
-            name = u'\u0160etrn\u011b zastavit'
-            description = u'Hraje-li MediaPlayer, zastav\xed ho. Jinak ned\u011bl\xe1 nic.'
+            name = u"Šetrně zastavit"
+            description = u"Hraje-li MediaPlayer, zastaví ho. Jinak nedělá nic."
         class Exit:
-            name = u'Ukon\u010dit MediaMonkey'
-            description = u'Ukon\u010d\xed MediaMonkey.'
+            name = u"Ukončit MediaMonkey"
+            description = u"Ukončí MediaMonkey."
         class GetBalance:
-            name = u'Z\xedskat stereov\xe1hu'
-            description = u'Z\xedsk\xe1 stereov\xe1hu.'
+            name = u"Získat stereováhu"
+            description = u"Získá stereováhu."
         class GetBasicSongInfo:
-            name = u'Z\xedskat z\xe1kladn\xed informace'
-            description = u'Z\xedsk\xe1 z\xe1kladn\xed informace o aktu\xe1ln\xed skladb\u011b.'
-            album = u'Album'
-            albumartist = u'Interpret alba'
-            artist = u'Interpret'
-            comment = u'Koment\xe1\u0159'
-            filename = u'N\xe1zev souboru'
-            filepath = u'Cesta'
-            genre = u'\u017d\xe1nr'
-            rating = u'Hodnocen\xed'
-            track = u'Skladba \u010d.'
-            tracktitle = u'N\xe1zev'
-            year = u'Rok'
+            name = u"Získat základní informace"
+            description = u"Získá základní informace o aktuální skladbě."
+            album = u"Album"
+            albumartist = u"Interpret alba"
+            artist = u"Interpret"
+            comment = u"Komentář"
+            filename = u"Název souboru"
+            filepath = u"Cesta"
+            genre = u"Žánr"
+            rating = u"Hodnocení"
+            track = u"Skladba č."
+            tracktitle = u"Název"
+            year = u"Rok"
         class GetClassificationInfo:
-            name = u'Z\xedskat klasifikaci'
-            description = u'Z\xedsk\xe1 informace o klasifikaci aktu\xe1ln\xed skladby.'
-            custom1 = u'Vlastn\xed 1'
-            custom2 = u'Vlastn\xed 2'
-            custom3 = u'Vlastn\xed 3'
-            mood = u'N\xe1lada'
-            occasion = u'P\u0159\xedle\u017eitost'
-            quality = u'Kvalita'
-            tempo = u'Tempo'
+            name = u"Získat klasifikaci"
+            description = u"Získá informace o klasifikaci aktuální skladby."
+            custom1 = u"Vlastní 1"
+            custom2 = u"Vlastní 2"
+            custom3 = u"Vlastní 3"
+            mood = u"Nálada"
+            occasion = u"Příležitost"
+            quality = u"Kvalita"
+            tempo = u"Tempo"
         class GetDetailSongInfo:
-            name = u'Z\xedskat detailn\xed informace'
-            description = u'Z\xedsk\xe1 detailn\xed informace o aktu\xe1ln\xed skladb\u011b.'
-            BPM = u'BPM'
-            ISRC = u'ISRC'
-            composer = u'Skladatel'
-            copyright = u'Copyright'
-            encoder = u'Enkod\xe9r'
-            involvedpeople = u'Dal\u0161\xed osoby'
-            lyricist = u'Texta\u0159'
-            originalartist = u'P\u016fvodn\xed interpret'
-            originallyricist = u'P\u016fvodn\xed texta\u0159'
-            originaltitle = u'P\u016fvodn\xed n\xe1zev'
-            originalyear = u'P\u016fvodn\xed rok'
-            publisher = u'Vydavatel'
+            name = u"Získat detailní informace"
+            description = u"Získá detailní informace o aktuální skladbě."
+            BPM = u"BPM"
+            ISRC = u"ISRC"
+            copyright = u"Copyright"
+            encoder = u"Enkodér"
+            involvedpeople = u"Další osoby"
+            lyricist = u"Textař"
+            originalartist = u"Původní interpret"
+            originallyricist = u"Původní textař"
+            originaltitle = u"Původní název"
+            publisher = u"Vydavatel"
         class GetPosition:
-            name = u'Z\xedskat pozici v ms'
-            description = u'Z\xedsk\xe1 pozici v ms.'
+            name = u"Získat pozici v ms"
+            description = u"Získá pozici v ms."
         class GetRepeat:
-            name = u'Z\xedskat nep\u0159etr\u017eit\xe9 hran\xed'
-            description = u'Z\xedsk\xe1 informaci o nastaven\xed funkce nep\u0159etr\u017eit\xe9 hran\xed.'
+            name = u"Získat nepřetržité hraní"
+            description = u"Získá informaci o nastavení funkce nepřetržité hraní."
         class GetShuffle:
-            name = u'Z\xedskat zam\xedchat skladby'
-            description = u'Z\xedsk\xe1 informaci o nastaven\xed funkce zam\xedchat skladby.'
+            name = u"Získat zamíchat skladby"
+            description = u"Získá informaci o nastavení funkce zamíchat skladby."
         class GetStatus:
-            name = u'Z\xedskat stav'
-            description = u'Z\xedsk\xe1 informaci, v jak\xe9m stavu je MediaMonkey (vrac\xed \u0159et\u011bzec Playing, Paused nebo Stoped).'
+            name = u"Získat stav"
+            description = u"Získá informaci, v jakém stavu je MediaMonkey (vrací řetězec Playing, Paused nebo Stoped)."
         class GetTechnicalSongInfo:
-            name = u'Z\xedskat technick\xe9 informace'
-            description = u'Z\xedsk\xe1 technick\xe9 informace o aktu\xe1ln\xed skladb\u011b.'
-            VBR = u'VBR'
-            bitrate = u'Bitrate'
-            counter = u'Po\u010det p\u0159ehr\xe1n\xed'
-            filesize = u'Velikost'
-            frequency = u'Vzorkovac\xed fr.'
-            lastplayed = u'Naposledy hr\xe1no'
-            length = u'D\xe9lka'
-            leveling = u'Vyrovn\xe1n\xed'
-            stereo = u'Stereo'
+            name = u"Získat technické informace"
+            description = u"Získá technické informace o aktuální skladbě."
+            VBR = u"VBR"
+            bitrate = u"Bitrate"
+            counter = u"Počet přehrání"
+            filesize = u"Velikost"
+            frequency = u"Vzorkovací fr."
+            lastplayed = u"Naposledy hráno"
+            length = u"Délka"
+            leveling = u"Vyrovnání"
+            stereo = u"Stereo"
         class GetUniversal:
-            name = u'Z\xedskat univerz\xe1ln\xed informaci'
-            description = u'Z\xedsk\xe1 univerz\xe1ln\xed informaci'
-            get = u'Z\xedskat '
-            label = u'V\xfdb\u011br po\u017eadovan\xe9 informace:'
+            name = u"Získat univerzální informaci"
+            description = u"Získá univerzální informaci"
+            get = u"Získat "
+            label = u"Výběr požadované informace:"
             class Properties:
-                AlbumArtCount = u'Po\u010det obr\xe1zk\u016f alba'
-                AlbumArtistName = u'Jm\xe9no interpreta alba'
-                AlbumLength = u'D\xe9lka alba'
-                AlbumLengthString = u'\u0158et\u011bzec d\xe9lka alba'
-                AlbumName = u'Jm\xe9no alba'
-                ArtistCount = u'Po\u010det intepret\u016f'
-                ArtistName = u'Jm\xe9no interpreta'
-                Author = u'Autor'
-                BPM = u'BPM'
-                Band = u'Skupina/Orchestr'
-                Bitrate = u'Bitrate'
-                Channels = u'Stereo'
-                Comment = u'Koment\xe1\u0159'
-                Conductor = u'Dirigent'
-                Copyright = u'Copyright'
-                Custom1 = u'Vlastn\xed 1'
-                Custom2 = u'Vlastn\xed 2'
-                Custom3 = u'Vlastn\xed 3'
-                DateAdded = u'Datum p\u0159id\xe1n\xed'
-                Encoder = u'Ennkod\xe9r'
-                FileLength = u'D\xe9lka souboru'
-                FileModified = u'Soubor zm\u011bn\u011bn'
-                Genre = u'\u017d\xe1nr'
-                ISRC = u'ISRC'
-                InvolvedPeople = u'Dal\u0161\xed osoby'
-                IsntInDB = u'Nen\xed v datab\xe1zi'
-                LastPlayed = u'Naposledy hr\xe1no'
-                Leveling = u'Vyrovn\xe1n\xed'
-                Lyricist = u'Texta\u0159'
-                Lyrics = u'Text'
-                MediaDriveLetter = u'P\xedsmeno media (disku)'
-                MediaDriveType = u'Typ m\xe9dia'
-                MediaLabel = u'Pojmenov\xe1n\xed m\xe9dia'
-                MediaSerialNumber = u'S\xe9riov\xe9 \u010d\xedslo m\xe9dia'
-                Mood = u'N\xe1lada'
-                MusicComposer = u'Skladatel'
-                Occasion = u'P\u0159\xedle\u017eitost'
-                OriginalArtist = u'P\u016fvodn\xed interpret'
-                OriginalLyricist = u'P\u016fvodn\xed texta\u0159'
-                OriginalTitle = u'P\u016fvodn\xed n\xe1zev'
-                OriginalYear = u'P\u016fvodn\xed rok'
-                Path = u'Cesta'
-                PeakValue = u'Vrcholov\xe1 \xfarove\u0148'
-                PlayCounter = u'Po\u010det p\u0159ehr\xe1n\xed'
-                PlaylistOrder = u'\u010c\xedslo seznamu'
-                Preview = u'N\xe1hled'
-                PreviewPath = u'Cesta n\xe1hledu'
-                Publisher = u'Vydavatel'
-                Quality = u'Kvalita'
-                Rating = u'Hodnocen\xed'
-                RatingString = u'\u0158et\u011bzec hodnocen\xed'
-                SampleRate = u'Vzorkovac\xed fr.'
-                SongLength = u'D\xe9lka skladby'
-                SongLengthString = u'\u0158ez\u011bzec d\xe9lka skladby'
-                Tempo = u'Tempo'
-                Title = u'N\xe1zev'
-                TrackOrder = u'\u010c\xedslo stopy'
-                VBR = u'VBR'
-                Year = u'Rok'
+                AlbumArtCount = u"Počet obrázků alba"
+                AlbumArtistName = u"Jméno interpreta alba"
+                AlbumLength = u"Délka alba"
+                AlbumLengthString = u"Řetězec délka alba"
+                AlbumName = u"Jméno alba"
+                ArtistCount = u"Počet intepretů"
+                ArtistName = u"Jméno interpreta"
+                Author = u"Autor"
+                BPM = u"BPM"
+                Band = u"Skupina/Orchestr"
+                Bitrate = u"Bitrate"
+                Channels = u"Stereo"
+                Comment = u"Komentář"
+                Conductor = u"Dirigent"
+                Copyright = u"Copyright"
+                Custom1 = u"Vlastní 1"
+                Custom2 = u"Vlastní 2"
+                Custom3 = u"Vlastní 3"
+                DateAdded = u"Datum přidání"
+                Encoder = u"Ennkodér"
+                FileLength = u"Délka souboru"
+                FileModified = u"Soubor změněn"
+                Genre = u"Žánr"
+                ISRC = u"ISRC"
+                InvolvedPeople = u"Další osoby"
+                IsntInDB = u"Není v databázi"
+                LastPlayed = u"Naposledy hráno"
+                Leveling = u"Vyrovnání"
+                Lyricist = u"Textař"
+                Lyrics = u"Text"
+                MediaDriveLetter = u"Písmeno media (disku)"
+                MediaDriveType = u"Typ média"
+                MediaLabel = u"Pojmenování média"
+                MediaSerialNumber = u"Sériové číslo média"
+                Mood = u"Nálada"
+                MusicComposer = u"Skladatel"
+                Occasion = u"Příležitost"
+                OriginalArtist = u"Původní interpret"
+                OriginalLyricist = u"Původní textař"
+                OriginalTitle = u"Původní název"
+                OriginalYear = u"Původní rok"
+                Path = u"Cesta"
+                PeakValue = u"Vrcholová úroveň"
+                PlayCounter = u"Počet přehrání"
+                PlaylistOrder = u"Číslo seznamu"
+                Preview = u"Náhled"
+                PreviewPath = u"Cesta náhledu"
+                Publisher = u"Vydavatel"
+                Quality = u"Kvalita"
+                Rating = u"Hodnocení"
+                RatingString = u"Řetězec hodnocení"
+                SampleRate = u"Vzorkovací fr."
+                SongLength = u"Délka skladby"
+                SongLengthString = u"Řezězec délka skladby"
+                Tempo = u"Tempo"
+                Title = u"Název"
+                TrackOrder = u"Číslo stopy"
+                VBR = u"VBR"
+                Year = u"Rok"
         class GetVolume:
-            name = u'Z\xedskat hlasitost'
-            description = u'Z\xedsk\xe1 hlasitost.'
+            name = u"Získat hlasitost"
+            description = u"Získá hlasitost."
         class Next:
-            name = u'Dal\u0161\xed'
-            description = u'Sko\u010d\xed na dal\u0161\xed skladbu'
+            name = u"Další"
+            description = u"Skočí na další skladbu"
         class Play:
-            name = u'Hr\xe1t'
-            description = u'Spust\xed p\u0159ehr\xe1v\xe1n\xed.'
+            name = u"Hrát"
+            description = u"Spustí přehrávání."
         class Previous:
-            name = u'P\u0159edchoz\xed'
-            description = u'Sko\u010d\xed na p\u0159edchoz\xed skladbu'
+            name = u"Předchozí"
+            description = u"Skočí na předchozí skladbu"
         class Seek:
-            name = u'Sko\u010dit vp\u0159ed nebo vzad o x%'
-            description = u'Sko\u010d\xed vp\u0159ed nebo vzad o x%.'
-            btnBackward = u'Vzad'
-            btnForward = u'Vp\u0159ed'
-            label = u'D\xe9lka skoku (%):'
-            radiobox = u'Sm\u011br posouv\xe1n\xed'
-            tree_lab1 = u'Sko\u010dit '
-            tree_lab2 = u'vzad'
-            tree_lab3 = u'vp\u0159ed'
+            name = u"Skočit vpřed nebo vzad o x%"
+            description = u"Skočí vpřed nebo vzad o x%."
+            btnBackward = u"Vzad"
+            btnForward = u"Vpřed"
+            label = u"Délka skoku (%):"
+            radiobox = u"Směr posouvání"
+            tree_lab1 = u"Skočit "
+            tree_lab2 = u"vzad"
+            tree_lab3 = u"vpřed"
         class SetBalance:
-            name = u'Nastavit stereov\xe1hu'
-            description = u'Nastav\xed stereov\xe1hu.'
-            label_conf = u'Streov\xe1ha (-100 ... 100):'
-            label_tree = u'Nastavit stereov\xe1hu na '
+            name = u"Nastavit stereováhu"
+            description = u"Nastaví stereováhu."
+            label_conf = u"Streováha (-100 ... 100):"
+            label_tree = u"Nastavit stereováhu na "
         class SetVolume:
-            name = u'Nastavit hlasitost'
-            description = u'Nastav\xed hlasitost na dan\xe9 procento (%).'
-            label_conf = u'\xdarove\u0148 hlasitosti:'
-            label_tree = u'Nastavit \xfarove\u0148 hlasitosti '
+            name = u"Nastavit hlasitost"
+            description = u"Nastaví hlasitost na dané procento (%)."
+            label_conf = u"Úroveň hlasitosti:"
+            label_tree = u"Nastavit úroveň hlasitosti "
         class Start:
-            name = u'Spustit nebo p\u0159ipojit MediaMonkey'
-            description = u'Spust\xed nebo p\u0159ipoj\xed MediaMonkey pomoc\xed COM-API.'
-            error = u'Nemohu se p\u0159ipojit k MediaMonkey'
+            name = u"Spustit nebo připojit MediaMonkey"
+            description = u"Spustí nebo připojí MediaMonkey pomocí COM-API."
+            error = u"Nemohu se připojit k MediaMonkey"
         class Stop:
-            name = u'Stop'
-            description = u'Simuluje stisk tla\u010d\xedtka Stop.'
+            name = u"Stop"
+            description = u"Simuluje stisk tlačítka Stop."
         class ToggleMute:
-            name = u'Uml\u010det/Obnovit'
-            description = u'Uml\u010d\xed nebo obnov\xed p\u016fvodn\xed hlasitost.'
+            name = u"Umlčet/Obnovit"
+            description = u"Umlčí nebo obnoví původní hlasitost."
         class TogglePlay:
-            name = u'Hr\xe1t/Pozastavit'
-            description = u'Spou\u0161t\xed anebo pozastavuje p\u0159ehr\xe1v\xe1n\xed.'
+            name = u"Hrát/Pozastavit"
+            description = u"Spouští anebo pozastavuje přehrávání."
         class VolumeDown:
-            name = u'Sn\xed\u017eit hlasitost'
-            description = u'Sn\xed\u017e\xed hlasitost o x%.'
-            label_conf = u'Krok v %:'
-            label_tree = u'Sn\xed\u017eit hlasitost o '
+            name = u"Snížit hlasitost"
+            description = u"Sníží hlasitost o x%."
+            label_conf = u"Krok v %:"
+            label_tree = u"Snížit hlasitost o "
         class VolumeUp:
-            name = u'Zv\xfd\u0161it hlasitost'
-            description = u'Zv\xfd\u0161\xed hlasitost o x%.'
-            label_conf = u'Krok v %:'
-            label_tree = u'Zv\xfd\u0161it hlasitost o '
+            name = u"Zvýšit hlasitost"
+            description = u"Zvýší hlasitost o x%."
+            label_conf = u"Krok v %:"
+            label_tree = u"Zvýšit hlasitost o "
         class WritingToMM:
-            name = u'Zapsat do datab\xe1ze MM'
-            description = u'Z\xe1pis n\u011bkter\xfdch parametr\u016f do datab\xe1ze MediaMonkey.'
-            checkboxlabel = u'Zapsat tak\xe9 do ID3 tagu'
-            label = u'V\xfdb\u011br po\u017eadovan\xe9 vlastnosti:'
-            set = u'Nastavit '
+            name = u"Zapsat do databáze MM"
+            description = u"Zápis některých parametrů do databáze MediaMonkey."
+            checkboxlabel = u"Zapsat také do ID3 tagu"
+            label = u"Výběr požadované vlastnosti:"
+            set = u"Nastavit "
             class Properties:
-                Comment = u'Koment\xe1\u0159'
-                Custom1 = u'Vlastn\xed 1'
-                Custom2 = u'Vlastn\xed 2'
-                Custom3 = u'Vlastn\xed 3'
-                Genre = u'\u017d\xe1nr'
-                Mood = u'N\xe1lada'
-                Occasion = u'P\u0159\xedle\u017eitost'
-                Quality = u'Kvalita'
-                Rating = u'Hodnocen\xed'
-                Tempo = u'Tempo'
+                Comment = u"Komentář"
+                Custom1 = u"Vlastní 1"
+                Custom2 = u"Vlastní 2"
+                Custom3 = u"Vlastní 3"
+                Genre = u"Žánr"
+                Mood = u"Nálada"
+                Occasion = u"Příležitost"
+                Quality = u"Kvalita"
+                Rating = u"Hodnocení"
+                Tempo = u"Tempo"
     class MediaPlayerClassic:
-        name = u'Media Player Classic'
-        description = u'P\u0159id\xe1v\xe1 podporu funkc\xed k ovl\xe1d\xe1n\xed aplikace  Media Player Classic.\n\n<p>Pouze pro verzi <b>6.4.8.9</b> nebo nov\u011bj\u0161\xed.</p>\n<p>Plugin nebude pracovat se star\u0161\xedmi verzemi MPC !</p>\n<p>\n<a href=http://www.eventghost.org/forum/viewtopic.php?t=17>Hl\xe1\u0161en\xed o chyb\xe1ch</a></p>\n<p><a href=http://sourceforge.net/projects/guliverkli/>\nMedia Player Classic SourceForge Project</a></p>'
+        name = u"Media Player Classic"
+        description = u"Přidává podporu funkcí k ovládání aplikace  Media Player Classic.\n\n<p>Pouze pro verzi <b>6.4.8.9</b> nebo novější.</p>\n<p>Plugin nebude pracovat se staršími verzemi MPC !</p>\n<p>\n<a href=http://www.eventghost.org/forum/viewtopic.php?t=17>Hlášení o chybách</a></p>\n<p><a href=http://sourceforge.net/projects/guliverkli/>\nMedia Player Classic SourceForge Project</a></p>"
         class AlwaysOnTop:
-            name = u'V\u017edy na vrchu'
-            description = u'V\u017edy na vrchu'
+            name = u"Vždy na vrchu"
+            description = u"Vždy na vrchu"
         class AudioDelayAdd10ms:
-            name = u'Zpo\u017ed\u011bn\xed zvuku +10ms'
-            description = u'Zpo\u017ed\u011bn\xed zvuku +10ms'
+            name = u"Zpoždění zvuku +10ms"
+            description = u"Zpoždění zvuku +10ms"
         class AudioDelaySub10ms:
-            name = u'Zpo\u017ed\u011bn\xed zvuku -10ms'
-            description = u'Zpo\u017ed\u011bn\xed zvuku -10ms'
+            name = u"Zpoždění zvuku -10ms"
+            description = u"Zpoždění zvuku -10ms"
         class BossKey:
-            name = u'Tla\u010d\xedtko "\u0160\xe9f" (Boss)'
-            description = u'Tla\u010d\xedtko "\u0160\xe9f" (Boss)'
+            name = u'Tlačítko "Šéf" (Boss)'
+            description = u'Tlačítko "Šéf" (Boss)'
         class Close:
-            name = u'Zav\u0159\xedt soubor'
-            description = u'Zav\u0159e soubor'
+            name = u"Zavřít soubor"
+            description = u"Zavře soubor"
         class DVDAngleMenu:
-            name = u'DVD nab\xeddka \xfahl\u016f pohledu'
-            description = u'DVD nab\xeddka \xfahl\u016f pohledu'
+            name = u"DVD nabídka úhlů pohledu"
+            description = u"DVD nabídka úhlů pohledu"
         class DVDAudioMenu:
-            name = u'DVD nab\xeddka - zvuk'
-            description = u'DVD nab\xeddka - zvuk'
+            name = u"DVD nabídka - zvuk"
+            description = u"DVD nabídka - zvuk"
         class DVDChapterMenu:
-            name = u'DVD nab\xeddka - kapitola'
-            description = u'DVD nab\xeddka - kapitola'
+            name = u"DVD nabídka - kapitola"
+            description = u"DVD nabídka - kapitola"
         class DVDMenuActivate:
-            name = u'DVD - aktivace nab\xeddky'
-            description = u'DVD - aktivace nab\xeddky'
+            name = u"DVD - aktivace nabídky"
+            description = u"DVD - aktivace nabídky"
         class DVDMenuBack:
-            name = u'DVD nab\xeddka - zp\u011bt'
-            description = u'DVD nab\xeddka - zp\u011bt'
+            name = u"DVD nabídka - zpět"
+            description = u"DVD nabídka - zpět"
         class DVDMenuDown:
-            name = u'DVD nab\xeddka - dol\u016f'
-            description = u'DVD nab\xeddka - dol\u016f'
+            name = u"DVD nabídka - dolů"
+            description = u"DVD nabídka - dolů"
         class DVDMenuLeave:
-            name = u'DVD nab\xeddka - opu\u0161t\u011bn\xed'
-            description = u'DVD nab\xeddka - opu\u0161t\u011bn\xed'
+            name = u"DVD nabídka - opuštění"
+            description = u"DVD nabídka - opuštění"
         class DVDMenuLeft:
-            name = u'DVD nab\xeddka - vlevo'
-            description = u'DVD nab\xeddka - vlevo'
+            name = u"DVD nabídka - vlevo"
+            description = u"DVD nabídka - vlevo"
         class DVDMenuRight:
-            name = u'DVD nab\xeddka - vpravo'
-            description = u'DVD nab\xeddka - vpravo'
+            name = u"DVD nabídka - vpravo"
+            description = u"DVD nabídka - vpravo"
         class DVDMenuUp:
-            name = u'DVD nab\xeddka - nahoru'
-            description = u'DVD nab\xeddka - nahoru'
+            name = u"DVD nabídka - nahoru"
+            description = u"DVD nabídka - nahoru"
         class DVDNextAngle:
-            name = u'DVD - dal\u0161\xed \xfahel pohledu'
-            description = u'DVD - dal\u0161\xed \xfahel pohledu'
+            name = u"DVD - další úhel pohledu"
+            description = u"DVD - další úhel pohledu"
         class DVDNextAudio:
-            name = u'DVD - dal\u0161\xed zvukov\xe1 stopa'
-            description = u'DVD - dal\u0161\xed zvukov\xe1 stopa'
+            name = u"DVD - další zvuková stopa"
+            description = u"DVD - další zvuková stopa"
         class DVDNextSubtitle:
-            name = u'DVD - dal\u0161\xed titulky'
-            description = u'DVD - dal\u0161\xed titulky'
+            name = u"DVD - další titulky"
+            description = u"DVD - další titulky"
         class DVDOnOffSubtitle:
-            name = u'DVD - zapnout/vypnout titulky'
-            description = u'DVD - zapne/vypne titulky'
+            name = u"DVD - zapnout/vypnout titulky"
+            description = u"DVD - zapne/vypne titulky"
         class DVDPrevAngle:
-            name = u'DVD - p\u0159edchoz\xed \xfahel pohledu'
-            description = u'DVD - p\u0159edchoz\xed \xfahel pohledu'
+            name = u"DVD - předchozí úhel pohledu"
+            description = u"DVD - předchozí úhel pohledu"
         class DVDPrevAudio:
-            name = u'DVD - p\u0159edchoz\xed zvukov\xe1 stopa'
-            description = u'DVD - p\u0159edchoz\xed zvukov\xe1 stopa'
+            name = u"DVD - předchozí zvuková stopa"
+            description = u"DVD - předchozí zvuková stopa"
         class DVDPrevSubtitle:
-            name = u'DVD - p\u0159edchoz\xed titulky'
-            description = u'DVD - p\u0159edchoz\xed titulky'
+            name = u"DVD - předchozí titulky"
+            description = u"DVD - předchozí titulky"
         class DVDRootMenu:
-            name = u'DVD - hlavn\xed nab\xeddka'
-            description = u'DVD - hlavn\xed nab\xeddka'
+            name = u"DVD - hlavní nabídka"
+            description = u"DVD - hlavní nabídka"
         class DVDSubtitleMenu:
-            name = u'DVD - nab\xeddka titulk\u016f'
-            description = u'DVD - nab\xeddka titulk\u016f'
+            name = u"DVD - nabídka titulků"
+            description = u"DVD - nabídka titulků"
         class DVDTitleMenu:
-            name = u'DVD - \xfavodn\xed nab\xeddka'
-            description = u'DVD - \xfavodn\xed nab\xeddka'
+            name = u"DVD - úvodní nabídka"
+            description = u"DVD - úvodní nabídka"
         class DecreaseRate:
-            name = u'Sn\xed\u017eit rychlost'
-            description = u'Sn\xed\u017een\xed rychlosti'
+            name = u"Snížit rychlost"
+            description = u"Snížení rychlosti"
         class Exit:
-            name = u'Ukon\u010dit aplikaci'
-            description = u'Ukon\u010d\xed aplikaci'
+            name = u"Ukončit aplikaci"
+            description = u"Ukončí aplikaci"
         class FiltersMenu:
-            name = u'Nab\xeddka filtr\u016f'
-            description = u'Nab\xeddka filtr\u016f'
+            name = u"Nabídka filtrů"
+            description = u"Nabídka filtrů"
         class FrameStep:
-            name = u'O sn\xedmek vp\u0159ed'
-            description = u'O sn\xedmek vp\u0159ed'
+            name = u"O snímek vpřed"
+            description = u"O snímek vpřed"
         class FrameStepBack:
-            name = u'O sn\xedmek vzad'
-            description = u'O sn\xedmek vzad'
+            name = u"O snímek vzad"
+            description = u"O snímek vzad"
         class Fullscreen:
-            name = u'Na celou obrazovku'
-            description = u'Na celou obrazovku'
+            name = u"Na celou obrazovku"
+            description = u"Na celou obrazovku"
         class FullscreenWOR:
-            name = u'Na celou obrazovku beze zm\u011bny rozli\u0161en\xed'
-            description = u'Na celou obrazovku beze zm\u011bny rozli\u0161en\xed'
+            name = u"Na celou obrazovku beze změny rozlišení"
+            description = u"Na celou obrazovku beze změny rozlišení"
         class GoTo:
-            name = u'P\u0159ej\xedt na'
-            description = u'P\u0159ej\xedt na'
+            name = u"Přejít na"
+            description = u"Přejít na"
         class IncreaseRate:
-            name = u'Zv\xfd\u0161it rychlost'
-            description = u'Zv\xfd\u0161en\xed rychlosti'
+            name = u"Zvýšit rychlost"
+            description = u"Zvýšení rychlosti"
         class JumpBackwardKeyframe:
-            name = u'Skok dozadu - kl\xed\u010dov\xe9 pol\xed\u010dko'
-            description = u'Skok dozadu - kl\xed\u010dov\xe9 pol\xed\u010dko'
+            name = u"Skok dozadu - klíčové políčko"
+            description = u"Skok dozadu - klíčové políčko"
         class JumpBackwardLarge:
-            name = u'Skok dozadu - velk\xfd'
-            description = u'Skok dozadu - velk\xfd'
+            name = u"Skok dozadu - velký"
+            description = u"Skok dozadu - velký"
         class JumpBackwardMedium:
-            name = u'Skok dozadu - st\u0159edn\xed'
-            description = u'Skok dozadu - st\u0159edn\xed'
+            name = u"Skok dozadu - střední"
+            description = u"Skok dozadu - střední"
         class JumpBackwardSmall:
-            name = u'Skok dozadu - mal\xfd'
-            description = u'Skok dozadu - mal\xfd'
+            name = u"Skok dozadu - malý"
+            description = u"Skok dozadu - malý"
         class JumpForwardKeyframe:
-            name = u'Skok dop\u0159edu - kl\xed\u010dov\xe9 pol\xed\u010dko'
-            description = u'Skok dop\u0159edu - kl\xed\u010dov\xe9 pol\xed\u010dko'
+            name = u"Skok dopředu - klíčové políčko"
+            description = u"Skok dopředu - klíčové políčko"
         class JumpForwardLarge:
-            name = u'Skok dop\u0159edu - velk\xfd'
-            description = u'Skok dop\u0159edu - velk\xfd'
+            name = u"Skok dopředu - velký"
+            description = u"Skok dopředu - velký"
         class JumpForwardMedium:
-            name = u'Skok dop\u0159edu - st\u0159edn\xed'
-            description = u'Skok dop\u0159edu - st\u0159edn\xed'
+            name = u"Skok dopředu - střední"
+            description = u"Skok dopředu - střední"
         class JumpForwardSmall:
-            name = u'Skok dop\u0159edu - mal\xfd'
-            description = u'Skok dop\u0159edu - mal\xfd'
+            name = u"Skok dopředu - malý"
+            description = u"Skok dopředu - malý"
         class LoadSubTitle:
-            name = u'Na\u010d\xedst titulky'
-            description = u'Na\u010dten\xed titulk\u016f'
+            name = u"Načíst titulky"
+            description = u"Načtení titulků"
         class Next:
-            name = u'Dal\u0161\xed'
-            description = u'Dal\u0161\xed'
+            name = u"Další"
+            description = u"Další"
         class NextAudio:
-            name = u'Dal\u0161\xed zvukov\xe1 stopa'
-            description = u'Dal\u0161\xed zvukov\xe1 stopa'
+            name = u"Další zvuková stopa"
+            description = u"Další zvuková stopa"
         class NextAudioOGM:
-            name = u'Dal\u0161\xed zvukov\xe1 stopa OGM'
-            description = u'Dal\u0161\xed zvukov\xe1 stopa OGM'
+            name = u"Další zvuková stopa OGM"
+            description = u"Další zvuková stopa OGM"
         class NextPlaylistItem:
-            name = u'Dal\u0161\xed polo\u017eka playlistu'
-            description = u'Dal\u0161\xed polo\u017eka playlistu'
+            name = u"Další položka playlistu"
+            description = u"Další položka playlistu"
         class NextSubtitle:
-            name = u'Dal\u0161\xed titulky'
-            description = u'Dal\u0161\xed titulky'
+            name = u"Další titulky"
+            description = u"Další titulky"
         class NextSubtitleOGM:
-            name = u'Dal\u0161\xed tituky OGM'
-            description = u'Dal\u0161\xed tituky OGM'
+            name = u"Další tituky OGM"
+            description = u"Další tituky OGM"
         class OnOffSubtitle:
-            name = u'Zapnout/Vypnout titulky'
-            description = u'Zapnout/Vypnout titulky'
+            name = u"Zapnout/Vypnout titulky"
+            description = u"Zapnout/Vypnout titulky"
         class OpenDVD:
-            name = u'Otev\u0159\xedt DVD'
-            description = u'Otev\u0159e DVD'
+            name = u"Otevřít DVD"
+            description = u"Otevře DVD"
         class OpenDevice:
-            name = u'Otev\u0159\xedt za\u0159\xedzen\xed'
-            description = u'Otev\u0159e za\u0159\xedzen\xed'
+            name = u"Otevřít zařízení"
+            description = u"Otevře zařízení"
         class OpenFile:
-            name = u'Otev\u0159\xedt soubor'
-            description = u'Otev\u0159e soubor'
+            name = u"Otevřít soubor"
+            description = u"Otevře soubor"
         class Options:
-            name = u'Mo\u017enosti'
-            description = u'Mo\u017enosti'
+            name = u"Možnosti"
+            description = u"Možnosti"
         class Pause:
-            name = u'Pozastavit'
-            description = u'Pozastav\xed p\u0159ehr\xe1v\xe1n\xed'
+            name = u"Pozastavit"
+            description = u"Pozastaví přehrávání"
         class Play:
-            name = u'P\u0159ehr\xe1t'
-            description = u'Spust\xed p\u0159ehr\xe1v\xe1n\xed'
+            name = u"Přehrát"
+            description = u"Spustí přehrávání"
         class PlayPause:
-            name = u'P\u0159ehr\xe1t/Pozastavit'
-            description = u'Spust\xed/pozastav\xed p\u0159ehr\xe1v\xe1n\xed'
+            name = u"Přehrát/Pozastavit"
+            description = u"Spustí/pozastaví přehrávání"
         class PlayerMenuLong:
-            name = u'Nab\xeddka p\u0159ehr\xe1va\u010de - dlouh\xe1'
-            description = u'Nab\xeddka p\u0159ehr\xe1va\u010de - dlouh\xe1'
+            name = u"Nabídka přehrávače - dlouhá"
+            description = u"Nabídka přehrávače - dlouhá"
         class PlayerMenuShort:
-            name = u'Nab\xeddka p\u0159ehr\xe1va\u010de - kr\xe1tk\xe1'
-            description = u'Nab\xeddka p\u0159ehr\xe1va\u010de - kr\xe1tk\xe1'
+            name = u"Nabídka přehrávače - krátká"
+            description = u"Nabídka přehrávače - krátká"
         class PnSCenter:
-            name = u'Pan & Scan - vycentrovat'
-            description = u'Pan & Scan - vycentruje'
+            name = u"Pan & Scan - vycentrovat"
+            description = u"Pan & Scan - vycentruje"
         class PnSDecHeight:
-            name = u'Pan & Scan - zmen\u0161it v\xfd\u0161ku'
-            description = u'Pan & Scan - zmen\u0161\xed v\xfd\u0161ku'
+            name = u"Pan & Scan - zmenšit výšku"
+            description = u"Pan & Scan - zmenší výšku"
         class PnSDecSize:
-            name = u'Pan & Scan - zmen\u0161it velikost'
-            description = u'Pan & Scan - zmen\u0161\xed velikost'
+            name = u"Pan & Scan - zmenšit velikost"
+            description = u"Pan & Scan - zmenší velikost"
         class PnSDecWidth:
-            name = u'Pan & Scan - zmen\u0161it \u0161\xed\u0159ku'
-            description = u'Pan & Scan - zmen\u0161\xed \u0161\xed\u0159ku'
+            name = u"Pan & Scan - zmenšit šířku"
+            description = u"Pan & Scan - zmenší šířku"
         class PnSDown:
-            name = u'Pan & Scan - posunout dol\u016f'
-            description = u'Pan & Scan - posune dol\u016f'
+            name = u"Pan & Scan - posunout dolů"
+            description = u"Pan & Scan - posune dolů"
         class PnSDownLeft:
-            name = u'Pan & Scan - posunout dol\u016f/doleva'
-            description = u'Pan & Scan - posune dol\u016f/doleva'
+            name = u"Pan & Scan - posunout dolů/doleva"
+            description = u"Pan & Scan - posune dolů/doleva"
         class PnSDownRight:
-            name = u'Pan & Scan - posunout dol\u016f/doprava'
-            description = u'Pan & Scan - posune dol\u016f/doprava'
+            name = u"Pan & Scan - posunout dolů/doprava"
+            description = u"Pan & Scan - posune dolů/doprava"
         class PnSIncHeight:
-            name = u'Pan & Scan - zv\u011bt\u0161it v\xfd\u0161ku'
-            description = u'Pan & Scan - zv\u011bt\u0161\xed v\xfd\u0161ku'
+            name = u"Pan & Scan - zvětšit výšku"
+            description = u"Pan & Scan - zvětší výšku"
         class PnSIncSize:
-            name = u'Pan & Scan - zv\u011bt\u0161it velikost'
-            description = u'Pan & Scan - zv\u011bt\u0161\xed velikost'
+            name = u"Pan & Scan - zvětšit velikost"
+            description = u"Pan & Scan - zvětší velikost"
         class PnSIncWidth:
-            name = u'Pan & Scan - zv\u011bt\u0161it \u0161\xed\u0159ku'
-            description = u'Pan & Scan - zv\u011bt\u0161\xed \u0161\xed\u0159ku'
+            name = u"Pan & Scan - zvětšit šířku"
+            description = u"Pan & Scan - zvětší šířku"
         class PnSLeft:
-            name = u'Pan & Scan - posunout doleva'
-            description = u'Pan & Scan - posune doleva'
+            name = u"Pan & Scan - posunout doleva"
+            description = u"Pan & Scan - posune doleva"
         class PnSReset:
-            name = u'Pan & Scan - v\xfdchoz\xed nastaven\xed'
-            description = u'Pan & Scan - v\xfdchoz\xed nastaven\xed'
+            name = u"Pan & Scan - výchozí nastavení"
+            description = u"Pan & Scan - výchozí nastavení"
         class PnSRight:
-            name = u'Pan & Scan - posunout doprava'
-            description = u'Pan & Scan - posune doprava'
+            name = u"Pan & Scan - posunout doprava"
+            description = u"Pan & Scan - posune doprava"
         class PnSRotateAddX:
-            name = u'Pan & Scan - rotovat X+'
-            description = u'Pan & Scan - rotuje X+'
+            name = u"Pan & Scan - rotovat X+"
+            description = u"Pan & Scan - rotuje X+"
         class PnSRotateAddY:
-            name = u'Pan & Scan - rotovat Y+'
-            description = u'Pan & Scan - rotuje Y+'
+            name = u"Pan & Scan - rotovat Y+"
+            description = u"Pan & Scan - rotuje Y+"
         class PnSRotateAddZ:
-            name = u'Pan & Scan - rotovat Z+'
-            description = u'Pan & Scan - rotuje Z+'
+            name = u"Pan & Scan - rotovat Z+"
+            description = u"Pan & Scan - rotuje Z+"
         class PnSRotateSubX:
-            name = u'Pan & Scan - rotovat X-'
-            description = u'Pan & Scan - rotuje X-'
+            name = u"Pan & Scan - rotovat X-"
+            description = u"Pan & Scan - rotuje X-"
         class PnSRotateSubZ:
-            name = u'Pan & Scan - rotovat Z-'
-            description = u'Pan & Scan - rotuje Z-'
+            name = u"Pan & Scan - rotovat Z-"
+            description = u"Pan & Scan - rotuje Z-"
         class PnSUp:
-            name = u'Pan & Scan - posunout nahoru'
-            description = u'Pan & Scan - posune nahoru'
+            name = u"Pan & Scan - posunout nahoru"
+            description = u"Pan & Scan - posune nahoru"
         class PnSUpLeft:
-            name = u'Pan & Scan - posunout nahoru/doleva'
-            description = u'Pan & Scan - posune nahoru/doleva'
+            name = u"Pan & Scan - posunout nahoru/doleva"
+            description = u"Pan & Scan - posune nahoru/doleva"
         class PnSUpRight:
-            name = u'Pan & Scan - posunout nahoru/doprava'
-            description = u'Pan & Scan - posune nahoru/doprava'
+            name = u"Pan & Scan - posunout nahoru/doprava"
+            description = u"Pan & Scan - posune nahoru/doprava"
         class PnsRotateSubY:
-            name = u'Pan & Scan - rotovat Y-'
-            description = u'Pan & Scan - rotuje Y-'
+            name = u"Pan & Scan - rotovat Y-"
+            description = u"Pan & Scan - rotuje Y-"
         class PrevAudio:
-            name = u'P\u0159edchoz\xed zvukov\xe1 stopa'
-            description = u'P\u0159edchoz\xed zvukov\xe1 stopa'
+            name = u"Předchozí zvuková stopa"
+            description = u"Předchozí zvuková stopa"
         class PrevAudioOGM:
-            name = u'P\u0159edchoz\xed zvukov\xe1 stopa OGM'
-            description = u'P\u0159edchoz\xed zvukov\xe1 stopa OGM'
+            name = u"Předchozí zvuková stopa OGM"
+            description = u"Předchozí zvuková stopa OGM"
         class PrevSubtitle:
-            name = u'P\u0159edchoz\xed titulky'
-            description = u'P\u0159edchoz\xed titulky'
+            name = u"Předchozí titulky"
+            description = u"Předchozí titulky"
         class PrevSubtitleOGM:
-            name = u'P\u0159edchoz\xed titulky OGM'
-            description = u'P\u0159edchoz\xed titulky OGM'
+            name = u"Předchozí titulky OGM"
+            description = u"Předchozí titulky OGM"
         class Previous:
-            name = u'P\u0159edchoz\xed'
-            description = u'P\u0159edchoz\xed'
+            name = u"Předchozí"
+            description = u"Předchozí"
         class PreviousPlaylistItem:
-            name = u'P\u0159edchoz\xed polo\u017eka playlistu'
-            description = u'P\u0159edchoz\xed polo\u017eka playlistu'
+            name = u"Předchozí položka playlistu"
+            description = u"Předchozí položka playlistu"
         class Properties:
-            name = u'Vlastnosti'
-            description = u'Vlastnosti'
+            name = u"Vlastnosti"
+            description = u"Vlastnosti"
         class QuickOpen:
-            name = u'Rychle otev\u0159\xedt soubor'
-            description = u'Dialog pro rychl\xe9 otev\u0159en\xed souboru'
+            name = u"Rychle otevřít soubor"
+            description = u"Dialog pro rychlé otevření souboru"
         class ReloadSubtitles:
-            name = u'Znovu na\u010d\xedst titulky'
-            description = u'Nov\xe9 na\u010dten\xed titulk\u016f'
+            name = u"Znovu načíst titulky"
+            description = u"Nové načtení titulků"
         class ResetRate:
-            name = u'V\xfdchoz\xed rychlost'
-            description = u'V\xfdchoz\xed rychlost'
+            name = u"Výchozí rychlost"
+            description = u"Výchozí rychlost"
         class SaveAs:
-            name = u'Ulo\u017eit jako'
-            description = u'Ulo\u017eit jako'
+            name = u"Uložit jako"
+            description = u"Uložit jako"
         class SaveImage:
-            name = u'Ulo\u017eit obr\xe1zek'
-            description = u'Ulo\u017e\xed obr\xe1zek'
+            name = u"Uložit obrázek"
+            description = u"Uloží obrázek"
         class SaveImageAuto:
-            name = u'Ulo\u017eit miniatury'
-            description = u'Aktivuje ukl\xe1d\xe1n\xed miniatur'
+            name = u"Uložit miniatury"
+            description = u"Aktivuje ukládání miniatur"
         class SaveSubtitle:
-            name = u'Ulo\u017eit titulky'
-            description = u'Ulo\u017e\xed titulky'
+            name = u"Uložit titulky"
+            description = u"Uloží titulky"
         class Stop:
-            name = u'Zastavit'
-            description = u'Zastav\xed p\u0159ehr\xe1v\xe1n\xed'
+            name = u"Zastavit"
+            description = u"Zastaví přehrávání"
         class ToggleCaptionMenu:
-            name = u'Skr\xfdt/Zobrazit z\xe1hlav\xed okna a hlavn\xed nab\xeddku'
-            description = u'Skryje/zobraz\xed z\xe1hlav\xed okna a hlavn\xed nab\xeddku'
+            name = u"Skrýt/Zobrazit záhlaví okna a hlavní nabídku"
+            description = u"Skryje/zobrazí záhlaví okna a hlavní nabídku"
         class ToggleCaptureBar:
-            name = u'Skr\xfdt/Zobrazit panel z\xe1znamu (Record)'
-            description = u'Skryje/zobraz\xed panel z\xe1znamu (Record)'
+            name = u"Skrýt/Zobrazit panel záznamu (Record)"
+            description = u"Skryje/zobrazí panel záznamu (Record)"
         class ToggleControls:
-            name = u'Skr\xfdt/Zobrazit li\u0161tu ovl\xe1d\xe1n\xed'
-            description = u'Skryje/zobraz\xed li\u0161tu ovl\xe1d\xe1n\xed'
+            name = u"Skrýt/Zobrazit lištu ovládání"
+            description = u"Skryje/zobrazí lištu ovládání"
         class ToggleInformation:
-            name = u'Skr\xfdt/Zobrazit panel  informac\xed'
-            description = u'Skryje/zobraz\xed panel  informac\xed'
+            name = u"Skrýt/Zobrazit panel  informací"
+            description = u"Skryje/zobrazí panel  informací"
         class TogglePlaylistBar:
-            name = u'Skr\xfdt/Zobrazit okno playlistu'
-            description = u'Skryje/zobraz\xed okno playlistu'
+            name = u"Skrýt/Zobrazit okno playlistu"
+            description = u"Skryje/zobrazí okno playlistu"
         class ToggleSeeker:
-            name = u'Skr\xfdt/Zobrazit panel hled\xe1n\xed (posuvn\xedk)'
-            description = u'Skryje/zobraz\xed panel hled\xe1n\xed (posuvn\xedk)'
+            name = u"Skrýt/Zobrazit panel hledání (posuvník)"
+            description = u"Skryje/zobrazí panel hledání (posuvník)"
         class ToggleShaderEditorBar:
-            name = u'Skr\xfdt/Zobrazit panel editoru st\xednov\xe1n\xed'
-            description = u'Skryje/zobraz\xed panel editoru st\xednov\xe1n\xed'
+            name = u"Skrýt/Zobrazit panel editoru stínování"
+            description = u"Skryje/zobrazí panel editoru stínování"
         class ToggleStatistics:
-            name = u'Skr\xfdt/Zobrazit panel statistik'
-            description = u'Skryje/zobraz\xed panel statistik'
+            name = u"Skrýt/Zobrazit panel statistik"
+            description = u"Skryje/zobrazí panel statistik"
         class ToggleStatus:
-            name = u'Skr\xfdt/Zobrazit stavov\xfd \u0159\xe1dek'
-            description = u'Skryje/zobraz\xed stavov\xfd \u0159\xe1dek'
+            name = u"Skrýt/Zobrazit stavový řádek"
+            description = u"Skryje/zobrazí stavový řádek"
         class ToggleSubresyncBar:
-            name = u'Skr\xfdt/Zobrazit li\u0161tu subresync'
-            description = u'Skryje/zobraz\xed li\u0161tu subresync'
+            name = u"Skrýt/Zobrazit lištu subresync"
+            description = u"Skryje/zobrazí lištu subresync"
         class VidFrmDouble:
-            name = u'V\xfd\u0159ez videa - dvojn\xe1sobn\xe1 velikost'
-            description = u'V\xfd\u0159ez videa - dvojn\xe1sobn\xe1 velikost'
+            name = u"Výřez videa - dvojnásobná velikost"
+            description = u"Výřez videa - dvojnásobná velikost"
         class VidFrmHalf:
-            name = u'V\xfd\u0159ez videa - polovi\u010dn\xed velikost'
-            description = u'V\xfd\u0159ez videa - polovi\u010dn\xed velikost'
+            name = u"Výřez videa - poloviční velikost"
+            description = u"Výřez videa - poloviční velikost"
         class VidFrmInside:
-            name = u'V\xfd\u0159ez videa - dotknout se okna zevnit\u0159'
-            description = u'V\xfd\u0159ez videa - dotknout se okna zevnit\u0159'
+            name = u"Výřez videa - dotknout se okna zevnitř"
+            description = u"Výřez videa - dotknout se okna zevnitř"
         class VidFrmNormal:
-            name = u'V\xfd\u0159ez videa - standardn\xed velikost'
-            description = u'V\xfd\u0159ez videa - standardn\xed velikost'
+            name = u"Výřez videa - standardní velikost"
+            description = u"Výřez videa - standardní velikost"
         class VidFrmOutside:
-            name = u'V\xfd\u0159ez videa - dotknout se okna zven\u010d\xed'
-            description = u'V\xfd\u0159ez videa - dotknout se okna zven\u010d\xed'
+            name = u"Výřez videa - dotknout se okna zvenčí"
+            description = u"Výřez videa - dotknout se okna zvenčí"
         class VidFrmStretch:
-            name = u'V\xfd\u0159ez videa - rozt\xe1hnout do okna'
-            description = u'V\xfd\u0159ez videa - rozt\xe1hnout do okna'
+            name = u"Výřez videa - roztáhnout do okna"
+            description = u"Výřez videa - roztáhnout do okna"
         class ViewCompact:
-            name = u'P\u0159edvolby - vzhled kompaktn\xed'
-            description = u'P\u0159edvolby - vzhled kompaktn\xed'
+            name = u"Předvolby - vzhled kompaktní"
+            description = u"Předvolby - vzhled kompaktní"
         class ViewMinimal:
-            name = u'P\u0159edvolby - vzhled minim\xe1ln\xed'
-            description = u'P\u0159edvolby - vzhled minim\xe1ln\xed'
+            name = u"Předvolby - vzhled minimální"
+            description = u"Předvolby - vzhled minimální"
         class ViewNormal:
-            name = u'P\u0159edvolby - vzhled norm\xe1ln\xed'
-            description = u'P\u0159edvolby - vzhled norm\xe1ln\xed'
+            name = u"Předvolby - vzhled normální"
+            description = u"Předvolby - vzhled normální"
         class VolumeDown:
-            name = u'Hlasitost - sn\xed\u017eit'
-            description = u'Hlasitost - sn\xed\u017eit'
+            name = u"Hlasitost - snížit"
+            description = u"Hlasitost - snížit"
         class VolumeMute:
-            name = u'Hlasitost - ztlumit'
-            description = u'Hlasitost - ztlumit'
+            name = u"Hlasitost - ztlumit"
+            description = u"Hlasitost - ztlumit"
         class VolumeUp:
-            name = u'Hlasitost - zv\xfd\u0161it'
-            description = u'Hlasitost - zv\xfd\u0161it'
+            name = u"Hlasitost - zvýšit"
+            description = u"Hlasitost - zvýšit"
         class Zoom100:
-            name = u'Velikost - 100%'
-            description = u'Velikost - 100%'
+            name = u"Velikost - 100%"
+            description = u"Velikost - 100%"
         class Zoom200:
-            name = u'Velikost - 200%'
-            description = u'Velikost - 200%'
+            name = u"Velikost - 200%"
+            description = u"Velikost - 200%"
         class Zoom50:
-            name = u'Velikost - 50%'
-            description = u'Velikost - 50%'
+            name = u"Velikost - 50%"
+            description = u"Velikost - 50%"
     class NetworkReceiver:
-        name = u'S\xed\u0165ov\xfd p\u0159ij\xedma\u010d ud\xe1lost\xed'
-        description = u'P\u0159ij\xedm\xe1 ud\xe1losti od pluginu "S\xed\u0165ov\xfd vys\xedla\u010d ud\xe1lost\xed"'
-        eventPrefix = u'Prefix ud\xe1losti:'
-        password = u'Heslo:'
-        port = u'Port:'
+        name = u"Síťový přijímač událostí"
+        description = u'Přijímá události od pluginu "Síťový vysílač událostí"'
+        eventPrefix = u"Prefix události:"
+        password = u"Heslo:"
+        port = u"Port:"
     class NetworkSender:
-        name = u'S\xed\u0165ov\xfd vys\xedla\u010d ud\xe1lost\xed'
-        description = u'Prost\u0159ednictv\xedm TCP/IP vys\xedl\xe1 ud\xe1losti k pluginu "S\xed\u0165ov\xfd p\u0159ij\xedma\u010d ud\xe1lost\xed".'
-        host = u'Hostitel:'
-        password = u'Heslo:'
-        port = u'Port:'
+        name = u"Síťový vysílač událostí"
+        description = u'Prostřednictvím TCP/IP vysílá události k pluginu "Síťový přijímač událostí".'
+        host = u"Hostitel:"
+        password = u"Heslo:"
+        port = u"Port:"
         class Map:
-            name = u'Odeslat'
-            description = u'Odes\xedlan\xe1 ud\xe1lost'
-            parameterDescription = u'Identifik\xe1tor odes\xedlan\xe9 ud\xe1losti:'
+            name = u"Odeslat"
+            description = u"Odesílaná událost"
+            parameterDescription = u"Identifikátor odesílané události:"
     class Serial:
-        name = u'S\xe9riov\xfd port'
-        description = u'Libovoln\xe1 komunikace p\u0159es s\xe9riov\xfd port.\n<br>Voliteln\u011b m\u016f\u017ee generovat ud\xe1losti.\n\n<p><b>Termin\xe1tor</b> je \u0159et\u011bzec znak\u016f, podle kter\xe9ho p\u0159i generov\xe1n\xed ud\xe1losti plugin identifikuje konec p\u0159ijat\xfdch dat.'
-        baudrate = u'Bit\u016f za sekundu:'
-        bytesize = u'Datov\xfdch bit\u016f:'
+        name = u"Sériový port"
+        description = u"Libovolná komunikace přes sériový port.\n<br>Volitelně může generovat události.\n\n<p><b>Terminátor</b> je řetězec znaků, podle kterého při generování události plugin identifikuje konec přijatých dat."
+        baudrate = u"Bitů za sekundu:"
+        bytesize = u"Datových bitů:"
         codecChoices = [
-            u'Syst\xe9mov\xe1 k\xf3dov\xe1 str\xe1nka',
-            u'HEX',
-            u'Latin-1',
-            u'UTF-8',
-            u'UTF-16',
-            u'Python escape \u0159et\u011bzec',
+            u"Systémová kódová stránka",
+            u"HEX",
+            u"Latin-1",
+            u"UTF-8",
+            u"UTF-16",
+            u"Python escape řetězec",
         ]
-        encoding = u'K\xf3dov\xe1n\xed:'
-        eventPrefix = u'Prefix ud\xe1losti:'
-        flowcontrol = u'\u0158\xedzen\xed toku:'
-        generateEvents = u'Generovat ud\xe1losti z p\u0159\xedchoz\xedch dat'
+        encoding = u"Kódování:"
+        eventPrefix = u"Prefix události:"
+        flowcontrol = u"Řízení toku:"
+        generateEvents = u"Generovat události z příchozích dat"
         handshakes = [
-            u'\u017d\xe1dn\xe9',
-            u'Xon / Xoff',
-            u'Hardwarov\xe9',
+            u"Žádné",
+            u"Xon / Xoff",
+            u"Hardwarové",
         ]
         parities = [
-            u'\u017d\xe1dn\xe1',
-            u'Lich\xe1',
-            u'Sud\xe1',
+            u"Žádná",
+            u"Lichá",
+            u"Sudá",
         ]
-        parity = u'Parita:'
-        port = u'Port:'
-        stopbits = u'Po\u010det stop-bit\u016f:'
-        terminator = u'Termin\xe1tor:'
+        parity = u"Parita:"
+        port = u"Port:"
+        stopbits = u"Počet stop-bitů:"
+        terminator = u"Terminátor:"
         class Read:
-            name = u'P\u0159\xedjem dat'
-            description = u'P\u0159\xedjem dat'
-            read_all = u'P\u0159ijme tolik byt\u016f, kolik jich je pr\xe1v\u011b k dispozici'
-            read_some = u'P\u0159ijme p\u0159esn\u011b tento po\u010det byt\u016f:'
-            read_time = u'a po\u010dk\xe1 na n\u011b tento maxim\xe1ln\xed po\u010det milisekund:'
+            name = u"Příjem dat"
+            description = u"Příjem dat"
+            read_all = u"Přijme tolik bytů, kolik jich je právě k dispozici"
+            read_some = u"Přijme přesně tento počet bytů:"
+            read_time = u"a počká na ně tento maximální počet milisekund:"
         class Write:
-            name = u'Vys\xedl\xe1n\xed dat'
-            description = u'Vys\xedl\xe1n\xed dat'
+            name = u"Vysílání dat"
+            description = u"Vysílání dat"
     class Speech:
-        name = u'Hlas'
-        description = u'Pou\u017eije slu\u017ebu p\u0159evod textu na \u0159e\u010d Microsoft Speech API (SAPI)'
+        name = u"Hlas"
+        description = u"Použije službu převod textu na řeč Microsoft Speech API (SAPI)"
         class TextToSpeech:
-            name = u'P\u0159evod textu na \u0159e\u010d'
-            description = u'Pou\u017e\xedv\xe1 Microsoft Speech API (SAPI) k p\u0159evodu textu na \u0159e\u010d.'
-            buttonInsertDate = u'Vlo\u017eit aktu\xe1ln\xed datum'
-            buttonInsertTime = u'Vlo\u017eit aktu\xe1ln\xed \u010das'
-            buttonPlayback = u'P\u0159ehr\xe1t'
-            errorCreate = u'Nemohu vytvo\u0159it hlasov\xfd objekt'
-            errorNoVoice = u'Hlas se jm\xe9nem %s nen\xed dostupn\xfd'
-            fast = u'Rychle'
-            label = u'Vyslovit: %s'
-            labelRate = u'Rychlost:'
-            labelVoice = u'Hlas:'
-            labelVolume = u'Hlasitost:'
-            loud = u'Nahlas'
-            normal = u'Norm\xe1ln\u011b'
-            silent = u'Ti\u0161e'
-            slow = u'Pomalu'
-            textBoxLabel = u'Text'
-            voiceProperties = u'Vlastnosti hlasu'
+            name = u"Převod textu na řeč"
+            description = u"Používá Microsoft Speech API (SAPI) k převodu textu na řeč."
+            buttonInsertDate = u"Vložit aktuální datum"
+            buttonInsertTime = u"Vložit aktuální čas"
+            errorCreate = u"Nemohu vytvořit hlasový objekt"
+            errorNoVoice = u"Hlas se jménem %s není dostupný"
+            fast = u"Rychle"
+            label = u"Vyslovit: %s"
+            labelRate = u"Rychlost:"
+            labelVoice = u"Hlas:"
+            labelVolume = u"Hlasitost:"
+            loud = u"Nahlas"
+            normal = u"Normálně"
+            silent = u"Tiše"
+            slow = u"Pomalu"
+            textBoxLabel = u"Text"
+            voiceProperties = u"Vlastnosti hlasu"
     class SysTrayMenu:
-        name = u'Nab\xeddka v oznamovac\xed oblasti'
-        description = u'Umo\u017e\u0148uje p\u0159idat u\u017eivatelskou nab\xeddku do syst\xe9mov\xe9 nab\xeddky EventGhost (SysTrayMenu).'
-        addBox = u'P\u0159idat:'
-        addItemButton = u'Polo\u017eka nab\xeddky'
-        addSeparatorButton = u'Odd\u011blova\u010d'
-        deleteButton = u'Odstranit'
-        editEvent = u'Editovat:'
-        editLabel = u'N\xe1pis:'
-        eventHeader = u'Ud\xe1lost'
-        labelHeader = u'N\xe1pis'
-        unnamedEvent = u'Ud\xe1lost_%s'
-        unnamedLabel = u'Nov\xe1 polo\u017eka %s'
+        name = u"Nabídka v oznamovací oblasti"
+        description = u"Umožňuje přidat uživatelskou nabídku do systémové nabídky EventGhost (SysTrayMenu)."
+        addBox = u"Přidat:"
+        addItemButton = u"Položka nabídky"
+        addSeparatorButton = u"Oddělovač"
+        deleteButton = u"Odstranit"
+        editEvent = u"Editovat:"
+        editLabel = u"Nápis:"
+        eventHeader = u"Událost"
+        labelHeader = u"Nápis"
+        unnamedEvent = u"Událost_%s"
+        unnamedLabel = u"Nová položka %s"
         class Disable:
-            name = u'Zak\xe1zat polo\u017eku'
-            description = u'Zak\xe1\u017ee polo\u017eku nab\xeddky.'
+            name = u"Zakázat položku"
+            description = u"Zakáže položku nabídky."
         class Enable:
-            name = u'Povolit polo\u017eku'
-            description = u'Povol\xed polo\u017eku nab\xeddky.'
+            name = u"Povolit položku"
+            description = u"Povolí položku nabídky."
     class Task:
-        name = u'Spr\xe1vce \xfaloh'
-        description = u'Generuje ud\xe1losti, souvisej\xedc\xed se spr\xe1vou \xfaloh syst\xe9mu Windows.'
+        name = u"Správce úloh"
+        description = u"Generuje události, související se správou úloh systému Windows."
     class Timer:
-        name = u'\u010casova\u010d'
-        description = u'Generuje ud\xe1losti po nastaviteln\xe9 dob\u011b a opakuje je v dan\xe9m intervalu.\nOpakov\xe1n\xed m\u016f\u017ee b\xfdt nekone\u010dn\xe9 anebo je mo\u017en\xe9 zadat po\u010det opakov\xe1n\xed.'
+        name = u"Časovač"
+        description = u"Generuje události po nastavitelné době a opakuje je v daném intervalu.\nOpakování může být nekonečné anebo je možné zadat počet opakování."
         colLabels = (
-            u'N\xe1zev \u010dasova\u010de',
-            u'\u010cas spu\u0161t\u011bn\xed',
-            u'P\u0159\xed\u0161t\xed ud\xe1lost',
-            u'ID ud\xe1losti',
-            u'Opakov\xe1no/zb\xfdv\xe1',
-            u'Opakovat',
-            u'Interval',
+            u"Název časovače",
+            u"Čas spuštění",
+            u"Příští událost",
+            u"ID události",
+            u"Opakováno/zbývá",
+            u"Opakovat",
+            u"Interval",
         )
-        listhl = u'Pr\xe1v\u011b te\u010f aktivn\xed \u010dasova\u010de:'
-        stopped = u'Plugin zastaven'
-        timerFinished = u'\u010casova\u010d ukon\u010den'
+        listhl = u"Právě teď aktivní časovače:"
+        stopped = u"Plugin zastaven"
+        timerFinished = u"Časovač ukončen"
         class TimerAction:
-            name = u'Spu\u0161t\u011bn\xed nov\xe9ho nebo zm\u011bna b\u011b\u017e\xedc\xedho \u010dasova\u010de'
-            description = u'Umo\u017e\u0148uje spustit, zastavit nebo resetovat \u010dasova\u010de, kter\xe9 mohou generovat ud\xe1losti po nastaven\xe9 dob\u011b'
+            name = u"Spuštění nového nebo změna běžícího časovače"
+            description = u"Umožňuje spustit, zastavit nebo resetovat časovače, které mohou generovat události po nastavené době"
             actions = (
-                u'Restartovat \u010dasova\u010d se sou\u010dasn\xfdm nastaven\xedm',
-                u'Restartovat \u010dasova\u010d (pouze pokud b\u011b\u017e\xed)',
-                u'Vynulovat po\u010d\xedtadlo',
-                u'Zru\u0161it \u010dasova\u010d',
+                u"Restartovat časovač se současným nastavením",
+                u"Restartovat časovač (pouze pokud běží)",
+                u"Vynulovat počítadlo",
+                u"Zrušit časovač",
             )
-            addCounterToName = u'p\u0159ipojit stav po\u010d\xedtadla k ID ud\xe1losti'
-            eventName = u'ID ud\xe1losti:'
-            interval1 = u'Interval:'
-            interval2 = u'sekund'
-            labelStart = u'Spustit \u010dasova\u010d "%s" (%s opakov\xe1n\xed, interval %.2f sekund)'
-            labelStartOneTime = u'Spustit \u010dasova\u010d "%s"'
-            labelStartUnlimited = u'Spustit \u010dasova\u010d "%s" (nekone\u010dn\xe9 opakov\xe1n\xed, interval %.2f sekund)'
+            addCounterToName = u"připojit stav počítadla k ID události"
+            eventName = u"ID události:"
+            interval1 = u"Interval:"
+            interval2 = u"sekund"
+            labelStart = u'Spustit časovač "%s" (%s opakování, interval %.2f sekund)'
+            labelStartOneTime = u'Spustit časovač "%s"'
+            labelStartUnlimited = u'Spustit časovač "%s" (nekonečné opakování, interval %.2f sekund)'
             labels = (
-                u'Restartovat \u010dasova\u010d "%s"',
-                u'Restartovat \u010dasova\u010d "%s" pouze pokud b\u011b\u017e\xed',
-                u'Resetovat po\u010d\xedtadlo \u010dasova\u010de "%s"',
-                u'Zru\u0161it \u010dasova\u010d "%s"',
+                u'Restartovat časovač "%s"',
+                u'Restartovat časovač "%s" pouze pokud běží',
+                u'Resetovat počítadlo časovače "%s"',
+                u'Zrušit časovač "%s"',
             )
-            loop1 = u'Opakov\xe1n\xed:'
-            loop2 = u'(0 = nekone\u010dn\xe9)'
-            showRemaingLoopsText = u'po\u010d\xedtadlo ukazuje zb\xfdvaj\xedc\xed po\u010det opakov\xe1n\xed'
-            start = u'Spustit nov\xfd \u010dasova\u010d (pr\xe1v\u011b b\u011b\u017e\xedc\xed \u010dasova\u010d se stejn\xfdm n\xe1zvem bude zru\u0161en)'
-            startTime = u'Spustit:'
+            loop1 = u"Opakování:"
+            loop2 = u"(0 = nekonečné)"
+            showRemaingLoopsText = u"počítadlo ukazuje zbývající počet opakování"
+            start = u"Spustit nový časovač (právě běžící časovač se stejným názvem bude zrušen)"
+            startTime = u"Spustit:"
             startTimeTypes = (
-                u'okam\u017eit\u011b',
-                u'po uplynut\xed doby intervalu',
-                u'p\u0159esn\u011b v tento \u010das (HH:MM:SS)',
-                u'po uplynut\xed t\xe9to doby (HH:MM:SS)',
-                u'v p\u0159\xed\u0161t\xed cel\xe9 minut\u011b',
-                u'v p\u0159\xed\u0161t\xed cel\xe9 5-minut\u011b',
-                u'v p\u0159\xed\u0161t\xed cel\xe9 \u010dtvthodin\u011b',
-                u'v p\u0159\xed\u0161t\xed cel\xe9 p\u016flhodin\u011b',
-                u'v p\u0159\xed\u0161t\xed cel\xe9 hodin\u011b',
+                u"okamžitě",
+                u"po uplynutí doby intervalu",
+                u"přesně v tento čas (HH:MM:SS)",
+                u"po uplynutí této doby (HH:MM:SS)",
+                u"v příští celé minutě",
+                u"v příští celé 5-minutě",
+                u"v příští celé čtvthodině",
+                u"v příští celé půlhodině",
+                u"v příští celé hodině",
             )
-            timerName = u'N\xe1zev \u010dasova\u010de:'
+            timerName = u"Název časovače:"
     class UIR:
-        description = u'Hardwarov\xfd plugin pro IR p\u0159ij\xedma\u010de <a href="http://fly.cc.fer.hr/~mozgic/UIR/">Universal Infrared Receiver V1 (UIR)</a> a <a href="http://www.evation.com/irman/index.html">Irman</a>.\n\n<p><center><img src="irman_front.jpg" alt="Irman" /></a></center>'
+        description = u'Hardwarový plugin pro IR přijímače <a href="http://fly.cc.fer.hr/~mozgic/UIR/">Universal Infrared Receiver V1 (UIR)</a> a <a href="http://www.evation.com/irman/index.html">Irman</a>.\n\n<p><center><img src="irman_front.jpg" alt="Irman" /></a></center>'
     class Webserver:
-        name = u'Webov\xfd server'
-        description = u'Implementuje mal\xfd webov\xfd server, kter\xfd m\u016f\u017ee b\xfdt pou\u017eit pro generov\xe1n\xed\nud\xe1lost\xed prost\u0159ednictv\xedm HTML-str\xe1nek.'
-        documentRoot = u'Ko\u0159enov\xfd adres\xe1\u0159 HTML dokumentu:'
-        eventPrefix = u'Prefix ud\xe1losti:'
-        port = u'Port:'
+        name = u"Webový server"
+        description = u"Implementuje malý webový server, který může být použit pro generování\nudálostí prostřednictvím HTML-stránek."
+        documentRoot = u"Kořenový adresář HTML dokumentu:"
+        eventPrefix = u"Prefix události:"
+        port = u"Port:"

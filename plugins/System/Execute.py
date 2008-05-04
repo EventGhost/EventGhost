@@ -108,7 +108,7 @@ class Execute(eg.ActionClass):
             processInformation # lpProcessInformation
         )    
         if res == 0:
-            raise self.Exception(FormatError().strip())
+            raise self.Exception(FormatError().decode('mbcs').strip())
         if waitForCompletion:
             WaitForSingleObject(processInformation.hProcess, INFINITE)
         CloseHandle(processInformation.hProcess)

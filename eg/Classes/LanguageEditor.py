@@ -56,6 +56,15 @@ def ExpandKeyname(key):
 def ExpandKeyname(key):
     return key
 
+def MyRepr(s):
+    s = s.replace("\n", "\\n")
+    if s.count("'") < s.count('"'):
+        s = s.replace("'", "\\'")
+        return "u'%s'" % s
+    else:
+        s = s.replace('"', '\\"')
+        return 'u"%s"' % s
+
 
 class Text:
     class Menu:
@@ -426,15 +435,16 @@ class LanguageEditor(wx.Frame):
                         return ""
                     if type(transValue) == type(""):
                         transValue = transValue.decode("latin-1")
-                    Add(INDENT * indent + repr(unicode(transValue)) + ",\n")
+                    Add(INDENT * indent + MyRepr(transValue) + ",\n")
                 elif transValue is not UnassignedValue and transValue != "":
                     #if type(transValue) == type(""):
                     #    transValue = transValue.decode("latin-1")
-                    Add(INDENT * indent + key + " = " + repr(unicode(transValue)) + "\n")
+                    #Add(INDENT * indent + key + " = " + repr(unicode(transValue)) + "\n")
+                    Add(INDENT * indent + key + ' = %s\n' % MyRepr(transValue))
                 item, cookie = tree.GetNextChild(id, cookie)
             return "".join(res)
         
-        fd = codecs.open("Languages\\%s.py" % self.config.language, "w", "UTF-8")
+        fd = codecs.open("Languages\\%s.py" % self.config.language, "wt", "utf_8_sig")
         fd.write("# -*- coding: UTF-8 -*-\n")
         fd.write(Traverse(tree.GetRootItem()))
         fd.close()

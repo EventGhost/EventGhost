@@ -64,10 +64,10 @@ class App(wx.App):
         
         self.onExitFuncs = []
         self.clipboardEvent = eg.EventHook()
-        def FireClipboardEvent(event):
-            if event.GetActive():
-                self.clipboardEvent.Fire()
-        self.Bind(wx.EVT_ACTIVATE_APP, FireClipboardEvent)
+#        def FireClipboardEvent(event):
+#            if event.GetActive():
+#                self.clipboardEvent.Fire()
+#        self.Bind(wx.EVT_ACTIVATE_APP, FireClipboardEvent)
         
         return True
     

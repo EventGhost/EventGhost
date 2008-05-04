@@ -171,7 +171,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         customData.SetData(text.encode("utf-8"))
 
         # And finally, create the drop source and begin the drag
-        # and drop opperation
+        # and drop operation
         dropSource = wx.DropSource(self)
         dropSource.SetData(customData)
         result = dropSource.DoDragDrop(wx.Drag_AllowMove)
@@ -232,7 +232,6 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             wx.TheClipboard.SetData(dataObjectComposite)
             wx.TheClipboard.Close()
             wx.TheClipboard.Flush()
-            eg.app.clipboardEvent.Fire()
             
             
     def OnCmdClearLog(self, event):

@@ -20,3 +20,4 @@ from Dynamic import (
     WM_COMMAND,
     WM_USER,
 )
+import Clipboard

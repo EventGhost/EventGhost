@@ -63,12 +63,12 @@ class RootItem(ContainerItem):
         font1 = tree.GetItemFont(self.id)
         tree.normalfont = font1
         tree.Delete(item)
-        item = tree.AppendItem(self.id, '')
+        item = tree.AppendItem(self.id, 'a')
         tree.SetItemHasChildren(self.id, True)
         # evil workaround to get another font
         font2 = tree.GetItemFont(item)
-        tree.Delete(item)
         font2.SetStyle(wx.FONTSTYLE_ITALIC)
+        tree.Delete(item)
         tree.italicfont = font2
         #for child in self.childs:
         #    child.CreateTreeItem(tree, self.id)

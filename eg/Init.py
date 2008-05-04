@@ -347,13 +347,12 @@ class EventGhost(object):
                 else:
                     self.programCounter = None
                 
-            if self.programCounter is None:
+            while self.programCounter is None and self.programReturnStack:
                 # we have no next item in this level. So look in the return 
                 # stack if any return has to be executed
-                if self.programReturnStack:
-                    item, idx = self.programReturnStack.pop()
-                    self.programCounter = item.parent.GetNextChild(idx)
-                    
+                item, idx = self.programReturnStack.pop()
+                self.programCounter = item.parent.GetNextChild(idx)
+
 
     def StopMacro(self, ignoreReturn=False):
         self.programCounter = None

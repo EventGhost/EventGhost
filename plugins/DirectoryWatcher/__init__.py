@@ -122,7 +122,7 @@ class DirectoryWatcher(eg.PluginClass):
                 0
             )
             if hDir == INVALID_HANDLE_VALUE:
-                self.startException = FormatError()
+                self.startException = FormatError().decode('mbcs')
                 startupEvent.set()
                 return
             overlapped = OVERLAPPED()

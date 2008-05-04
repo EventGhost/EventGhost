@@ -289,7 +289,6 @@ class SystemInfoPanel(HtmlPanel):
             wx.TheClipboard.SetData(tdata)
             wx.TheClipboard.Close()
             wx.TheClipboard.Flush()
-            eg.app.clipboardEvent.Fire()
                     
 
      

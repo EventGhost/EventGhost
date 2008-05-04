@@ -24,8 +24,12 @@
 from eg.WinApi.Dynamic import (
     WM_SIZE, CW_USEDEFAULT, WS_OVERLAPPEDWINDOW, GetModuleHandle, WNDCLASS,
     RegisterClass, CreateWindowEx, byref, WNDPROC, WinError, DefWindowProc,
+    SetClipboardViewer,
+    ChangeClipboardChain,
+    WM_CHANGECBCHAIN,
+    WM_DRAWCLIPBOARD,
+    SendMessage,
 )
-
 
 class MessageReceiver(eg.ThreadWorker):
     """
@@ -64,6 +68,9 @@ class MessageReceiver(eg.ThreadWorker):
             raise WinError()
         self.wc = wndclass
         self.hinst = wndclass.hInstance
+        self.AddHandler(WM_CHANGECBCHAIN, self.OnChangeClipboardChain)
+        self.hwndNextViewer = SetClipboardViewer(self.hwnd)
+        self.AddHandler(WM_DRAWCLIPBOARD, self.OnDrawClipboard)
         
         
     def AddHandler(self, mesg, handler):
@@ -91,9 +98,26 @@ class MessageReceiver(eg.ThreadWorker):
                 return 0
         return 1
     
+
+    @eg.LogIt
+    def OnChangeClipboardChain(self, hwnd, mesg, wParam, lParam):
+        # if the next clipboard viewer window is closing, repair the chain.
+        if wParam == self.hwndNextViewer:
+            self.hwndNextViewer = lParam
+        elif self.hwndNextView:
+            SendMessage(self.hwndNextViewer, mesg, wParam, lParam); 
+        return 0
         
+        
+    def OnDrawClipboard(self, hwnd, mesg, wParam, lParam):
+        # pass the message to the next window in the clipboard viewer chain
+        wx.CallAfter(eg.app.clipboardEvent.Fire)
+        SendMessage(self.hwndNextViewer, mesg, wParam, lParam)
+    
+    
     @eg.LogIt
     def Close(self):
+        ChangeClipboardChain(self.hwnd, self.hwndNextViewer)
         self.hwnd = None
         self.Stop()
         

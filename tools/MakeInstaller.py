@@ -2,6 +2,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+ROOT_DLLS = ["MFC71.dll", "msvcr71.dll", "msvcp71.dll"]
+
 OptionsList = (
     ("Create Source Archive", "createSourceArchive", False),
     ("Create Imports", "createImports", False),
@@ -11,6 +13,16 @@ OptionsList = (
     ("Include 'noinclude' plugins", "includeNoIncludePlugins", False),
     ("Create Update", "createUpdate", False),
 )
+
+import py2exe
+from py2exe.build_exe import isSystemDLL
+origIsSystemDLL = isSystemDLL
+def newIsSystemDLL(pathname):
+    res = origIsSystemDLL(pathname)
+    if not res:
+        print pathname, res
+    return res
+py2exe.build_exe.isSystemDLL = newIsSystemDLL
 
 class Options:
     pass
@@ -216,11 +228,7 @@ py2exeOptions = dict(
             compressed = 0,
             includes = [
                 "encodings",
-                "encodings.latin_1",
-                "encodings.cp1252",
-                "encodings.utf_8",
-                "encodings.ascii",
-                "encodings.idna",
+                "encodings.*",
             ],
             excludes = [
                 "pywin",
@@ -249,7 +257,6 @@ py2exeOptions = dict(
         )
     ),
     # The lib directory contains everything except the executables and the python dll.
-    #zipfile = r"lib\shardlib",
     zipfile = r"lib\python25.zip",
     windows = [
         dict(
@@ -443,9 +450,9 @@ def MakeInstaller():
         InstallPy2exePatch()
         setup(**py2exeOptions)
         pythonDir = dirname(sys.executable)
-        copy(join(pythonDir, "MFC71.dll"), trunkDir)
-        copy(join(pythonDir, "msvcr71.dll"), trunkDir)
-        copy(join(pythonDir, "msvcp71.dll"), trunkDir)
+        for dll in ROOT_DLLS:
+            if not os.path.exists(join(trunkDir, dll)):
+                copy(join(pythonDir, dll), trunkDir)
     
     installFiles = []
     if Options.createUpdate:

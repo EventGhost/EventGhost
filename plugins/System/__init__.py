@@ -49,6 +49,8 @@ import sys
 import os
 import thread
 import _winreg
+import ctypes
+import Image
 from threading import Timer
 
 from eg.WinApi.Dynamic import (
@@ -57,6 +59,7 @@ from eg.WinApi.Dynamic import (
     InitiateSystemShutdown, CreateFile, CloseHandle, DeviceIoControl,
     SystemParametersInfo, ExitWindowsEx, OpenProcessToken, GetForegroundWindow,
     LookupPrivilegeValue, AdjustTokenPrivileges, c_buffer, byref, sizeof,
+    GetClipboardOwner,
     
     # types:
     DWORD, HANDLE, LUID, TOKEN_PRIVILEGES,
@@ -68,10 +71,8 @@ from eg.WinApi.Dynamic import (
     SPIF_UPDATEINIFILE, INVALID_HANDLE_VALUE
 )
 
-import ctypes
-import Image
-
 import eg.WinApi.SoundMixer as SoundMixer
+from eg.WinApi import GetCurrentProcessId, GetWindowThreadProcessId
 from eg.WinApi.Utils import BringHwndToFront
 from eg.WinApi.Utils import GetMonitorDimensions
 from eg.cFunctions import RegisterKeyhook, UnregisterKeyhook
@@ -84,6 +85,7 @@ from DeviceChangeNotifier import DeviceChangeNotifier
 from PowerBroadcastNotifier import PowerBroadcastNotifier
 import Registry
 
+ourProcessId = GetCurrentProcessId()
 
 class Text:
     name = "System"
@@ -188,6 +190,8 @@ class System(eg.PluginClass):
         
         
     def __start__(self):
+        eg.app.clipboardEvent.Bind(self.OnClipboardChange)
+        
         #Assign all available cd drives to self.drives. If CdRom.drive
         #is not already set, the first drive returned becomes the default.
         cdDrives = []
@@ -256,6 +260,7 @@ class System(eg.PluginClass):
                 
     @eg.LogItWithReturn
     def __stop__(self):
+        eg.app.clipboardEvent.Unbind(self.OnClipboardChange)
         self.deviceChangeNotifier.Close()
         self.powerBroadcastNotifier.Close()
         UnregisterKeyhook()
@@ -267,6 +272,12 @@ class System(eg.PluginClass):
         
     def UnIdleCallback(self):
         self.TriggerEvent("UnIdle")
+        
+        
+    def OnClipboardChange(self):
+        ownerHwnd = GetClipboardOwner()
+        if GetWindowThreadProcessId(ownerHwnd)[1] != ourProcessId:
+            self.TriggerEvent("ClipboardChanged")
         
         
         
@@ -461,7 +472,6 @@ class SetClipboard(eg.ActionWithStringParameter):
             wx.TheClipboard.SetData(tdata)
             wx.TheClipboard.Close()
             wx.TheClipboard.Flush()
-            eg.app.clipboardEvent.Fire()
         else:
             PrintError(self.text.error)
     
