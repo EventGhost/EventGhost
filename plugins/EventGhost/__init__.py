@@ -353,7 +353,10 @@ class Wait(eg.ActionClass):
 
 class StopProcessing(eg.ActionClass):
     name = "Stop processing this event"
-    description = "Stop processing this event"
+    description = (
+        "After this action, EventGhost will no further search for matching "
+        "macros of the currently processed event."
+    )
     iconFile = 'icons/StopProcessing'
 
     def __call__(self):

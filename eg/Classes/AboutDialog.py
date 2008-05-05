@@ -79,19 +79,26 @@ SPECIAL_THANKS_DATA = (
         ),
     ),
     (
-        'Donators:',
+        "PayPal Donators:",
+        0,
+        (
+            "dlandrum",
+            "Steve Ingamells",
+            "damdy-cash",
+            "krambriw",
+            "loomy",
+            "specter333",        # 20. Jan 2008
+            "Argofanatic",       # 24. Mar 2008
+            "bskchaos",          #  8. Apr 2008
+            "Warren Hatch",      # 26. Apr 2008
+            "Daniel Henriksson", #  3. May 2008
+        ),
+    ),
+    (
+        'Other Donators:',
         2,
         (
             ('TomB', 'MCE remote'),
-            ('dlandrum', 'PayPal'),
-            ('Steve Ingamells', 'PayPal'),
-            ('damdy-cash', 'PayPal'),
-            ('krambriw', 'PayPal'),
-            ('loomy', 'PayPal'),
-            ('specter333', 'PayPal'),
-            ('Argofanatic', 'PayPal'),
-            ('bskchaos', 'PayPal'),
-            ('some anonymous people', 'PayPal'),
             ('Stoffel', 'remote'),
             (
                 'Jon Rhees, <a href="http://www.usbuirt.com/">USB-UIRT</a>', 
@@ -105,7 +112,7 @@ SPECIAL_THANKS_DATA = (
         ),
     ),
     (
-        'Others:',
+        'Other Contributions:',
         2,
         (
             (
@@ -210,7 +217,12 @@ class SpecialThanksPanel(HtmlPanel):
             write('<TR><TD COLSPAN="2" ALIGN=CENTER><h5><i><u>')
             write(group)
             write('</h5></i></u></TD></TR>')
-            if cols == 1:
+            if cols == 0:
+                write('<TR><TD ALIGN=CENTER WIDTH="50%" COLSPAN="2"><B>')
+                persons = [name.replace(" ", "&nbsp;") for name in persons]
+                write(", ".join(persons))
+                write(' and&nbsp;some&nbsp;anonymous&nbsp;people.</B></RIGHT></TD></TR>')
+            elif cols == 1:
                 for name, descr in persons:
                     write('<TR><TD ALIGN=CENTER WIDTH="50%" COLSPAN="2"><B>')
                     write(name)
