@@ -21,11 +21,51 @@
 # $LastChangedBy$
 
 import time
-from eg.WinApi.Dynamic import (
-    GetLastError, WTSRegisterSessionNotification, WTSUserName, WTSFreeMemory,
-    WTSUnRegisterSessionNotification, WTS_CURRENT_SERVER_HANDLE, 
-    NOTIFY_FOR_ALL_SESSIONS, byref, WTSQuerySessionInformation, LPTSTR, DWORD,
-)
+
+from ctypes import WinDLL, POINTER, c_void_p, c_int, byref, GetLastError
+from ctypes.wintypes import BOOL, HWND, DWORD, HANDLE, LPWSTR
+
+PVOID = c_void_p
+LPTSTR = LPWSTR
+
+_WtsApi32 = WinDLL("WtsApi32")
+
+WTSRegisterSessionNotification = _WtsApi32.WTSRegisterSessionNotification
+WTSRegisterSessionNotification.restype = BOOL
+WTSRegisterSessionNotification.argtypes = [HWND, DWORD]
+WTSUserName = 5
+WTSFreeMemory = _WtsApi32.WTSFreeMemory
+WTSFreeMemory.restype = None
+WTSFreeMemory.argtypes = [PVOID]
+WTSUnRegisterSessionNotification = _WtsApi32.WTSUnRegisterSessionNotification
+WTSUnRegisterSessionNotification.restype = BOOL
+WTSUnRegisterSessionNotification.argtypes = [HWND]
+WTS_CURRENT_SERVER_HANDLE = 0 # Variable c_void_p
+NOTIFY_FOR_ALL_SESSIONS = 1 # Variable c_int
+
+# values for enumeration '_WTS_INFO_CLASS'
+WTSInitialProgram = 0
+WTSApplicationName = 1
+WTSWorkingDirectory = 2
+WTSOEMId = 3
+WTSSessionId = 4
+WTSWinStationName = 6
+WTSDomainName = 7
+WTSConnectState = 8
+WTSClientBuildNumber = 9
+WTSClientName = 10
+WTSClientDirectory = 11
+WTSClientProductId = 12
+WTSClientHardwareId = 13
+WTSClientAddress = 14
+WTSClientDisplay = 15
+WTSClientProtocolType = 16
+_WTS_INFO_CLASS = c_int # enum
+WTS_INFO_CLASS = _WTS_INFO_CLASS
+WTSQuerySessionInformationW = _WtsApi32.WTSQuerySessionInformationW
+WTSQuerySessionInformationW.restype = BOOL
+WTSQuerySessionInformationW.argtypes = [HANDLE, DWORD, WTS_INFO_CLASS, POINTER(LPWSTR), POINTER(DWORD)]
+WTSQuerySessionInformation = WTSQuerySessionInformationW # alias
 
 WM_WTSSESSION_CHANGE = 0x02B1
 

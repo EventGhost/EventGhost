@@ -39,7 +39,7 @@ class Configure:
             return False
         
         self.oldArgumentString = item.GetArgumentString()
-        oldArgs = item.args
+        oldArgs = item.GetArgs()
         self.name = eg.text.MainFrame.Menu.Edit.replace("&", "")
         
         wasApplied = False

@@ -26,6 +26,7 @@ from eg.Utils import SetClass
 
 ActionClass = eg.ActionClass
 
+
 class ActionInfo(object):
     __slots__ = ["icon"]
     
@@ -34,8 +35,10 @@ class ActionInfo(object):
             
     
                 
-class ActionGroup:
-    __slots__ = ["plugin", "name", "description", "icon", "actionList"]
+class ActionGroup(object):
+    __slots__ = [
+        "plugin", "name", "description", "icon", "actionList", "expanded"
+    ]
     
     def __init__(self, plugin, name=None, description=None, iconFile=None):
         self.plugin = plugin

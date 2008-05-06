@@ -209,7 +209,6 @@ class HtmlPanel(wx.Panel):
 class SpecialThanksPanel(HtmlPanel):
     
     def __init__(self, parent):        
-
         output = StringIO()
         write = output.write
         write('<TABLE COLS=2 WIDTH="100%">')
@@ -221,7 +220,8 @@ class SpecialThanksPanel(HtmlPanel):
                 write('<TR><TD ALIGN=CENTER WIDTH="50%" COLSPAN="2"><B>')
                 persons = [name.replace(" ", "&nbsp;") for name in persons]
                 write(", ".join(persons))
-                write(' and&nbsp;some&nbsp;anonymous&nbsp;people.</B></RIGHT></TD></TR>')
+                write(' and&nbsp;some&nbsp;anonymous&nbsp;people.')
+                write('</B></RIGHT></TD></TR>')
             elif cols == 1:
                 for name, descr in persons:
                     write('<TR><TD ALIGN=CENTER WIDTH="50%" COLSPAN="2"><B>')

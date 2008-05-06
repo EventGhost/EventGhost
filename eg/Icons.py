@@ -147,7 +147,6 @@ class IconBase(object):
 
 class ActionSubIcon(IconBase): 
     
-    @eg.LogIt
     def _pil(self):
         """ Return a PIL image of the icon. """
         small = self.key.pil.resize((12,12), Image.BICUBIC)
@@ -160,7 +159,6 @@ ActionSubIcon.cache = {}
         
 class PluginSubIcon(IconBase): 
     
-    @eg.LogIt
     def _pil(self):
         """ Return a PIL image of the icon. """
         small = self.key.pil.resize((12,12), Image.BICUBIC)

@@ -1,3 +1,4 @@
+Version 0.3.6.1394 (05/06/2008)
 + System.ClipboardChanged event, that fires if an external application has changed the clipboard content.
 
 Version 0.3.6.1387 (04/26/2008)

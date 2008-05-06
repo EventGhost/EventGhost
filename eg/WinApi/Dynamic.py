@@ -11,7 +11,6 @@ _winmm = WinDLL("Winmm")
 _shell32 = WinDLL("shell32")
 _Psapi = WinDLL("Psapi")
 _Advapi32 = WinDLL("Advapi32")
-_WtsApi32 = WinDLL("WtsApi32")
 import sys
 if not hasattr(sys, "frozen"): # detect py2exe
     try:
@@ -32,7 +31,6 @@ if not hasattr(sys, "frozen"): # detect py2exe
                 "#include <shlobj.h>\n"
                 "#include <Psapi.h>\n"
                 "#include <tlhelp32.h>\n"
-                "#include <WtsApi32.h>\n"
                 "#include <objidl.h>\n"
             )       
         except WindowsError:
@@ -930,42 +928,6 @@ PBT_APMQUERYSUSPEND = 0 # Variable c_int
 PBT_APMQUERYSUSPENDFAILED = 2 # Variable c_int
 PBT_APMRESUMECRITICAL = 6 # Variable c_int
 PBT_APMRESUMESUSPEND = 7 # Variable c_int
-WTSRegisterSessionNotification = _WtsApi32.WTSRegisterSessionNotification
-WTSRegisterSessionNotification.restype = BOOL
-WTSRegisterSessionNotification.argtypes = [HWND, DWORD]
-WTSUserName = 5
-WTSFreeMemory = _WtsApi32.WTSFreeMemory
-WTSFreeMemory.restype = None
-WTSFreeMemory.argtypes = [PVOID]
-WTSUnRegisterSessionNotification = _WtsApi32.WTSUnRegisterSessionNotification
-WTSUnRegisterSessionNotification.restype = BOOL
-WTSUnRegisterSessionNotification.argtypes = [HWND]
-WTS_CURRENT_SERVER_HANDLE = 0 # Variable c_void_p
-NOTIFY_FOR_ALL_SESSIONS = 1 # Variable c_int
-
-# values for enumeration '_WTS_INFO_CLASS'
-WTSInitialProgram = 0
-WTSApplicationName = 1
-WTSWorkingDirectory = 2
-WTSOEMId = 3
-WTSSessionId = 4
-WTSWinStationName = 6
-WTSDomainName = 7
-WTSConnectState = 8
-WTSClientBuildNumber = 9
-WTSClientName = 10
-WTSClientDirectory = 11
-WTSClientProductId = 12
-WTSClientHardwareId = 13
-WTSClientAddress = 14
-WTSClientDisplay = 15
-WTSClientProtocolType = 16
-_WTS_INFO_CLASS = c_int # enum
-WTS_INFO_CLASS = _WTS_INFO_CLASS
-WTSQuerySessionInformationW = _WtsApi32.WTSQuerySessionInformationW
-WTSQuerySessionInformationW.restype = BOOL
-WTSQuerySessionInformationW.argtypes = [HANDLE, DWORD, WTS_INFO_CLASS, POINTER(LPWSTR), POINTER(DWORD)]
-WTSQuerySessionInformation = WTSQuerySessionInformationW # alias
 LPTSTR = LPWSTR
 GetWindowLongW = _user32.GetWindowLongW
 GetWindowLongW.restype = LONG
