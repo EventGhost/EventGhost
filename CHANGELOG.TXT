@@ -1,0 +1,59 @@
+* The "Show OSD" action now supports multiline text.
+
+Version 0.3.6.1394 (05/06/2008)
++ System.ClipboardChanged event, that fires if an external application has changed the clipboard content.
+
+Version 0.3.6.1387 (04/26/2008)
++ Hauppauge IR plugin from Prinz.
+
+Version 0.3.6.1371 (04/06/2008)
++ DScaler 4 plugin from incubi.
+
+Version 0.3.6.1353 (04/03/2008)
++ Spanish translation from karl.
++ First version of a CyberLink PowerDVD plugin.
++ Some Internet shortcuts to the project get added to the Startmenu folder.
++ Member eruji added some more actions to the SageTV plugin.
++ The ShowOSD action now has a new option "Use Skin". It will draw a skinned background to the OSD. Currently there is only one skin, but I hope more will be added in the future. 
+
+Version 0.3.6.1285 (03/04/2008)
++ Sound Mixer Ex plugin from Dexter.
++ Marantz Serial plugin from Dexter.
++ X10 CM15A plugin from Dean Owens.
+* Now using Python 2.5.2.
+
+Version 0.3.6.1255 (12/13/2007)
++ Volume and seek actions for the foobar2000 plugin.
++ Replaced Python's built-in input() and raw_input() with a function that shows a simple input dialog. It has no real use-cases in EventGhost, but this way you can experiment with nearly every example code from typical Python tutorials.
++ FindWindow now shows a list of the found windows if the test button is pressed.
++ PlayStation 3 Bluetooth Remote plugin from Thierry Couquillou.
+
+Version 0.3.6.1248 (12/10/2007)
++ The apply button of all action/plugin configuration dialogs now stays disabled till the user actually has changed a control in the dialog.
+- Some more plugins had problem with suspend/resume of the computer.
+- It was possible that some dialogs opened outside the visible desktop area if the user had changed his display settings while EventGhost is running.
+
+Version 0.3.6.1242 (12/08/2007)
+* Now using wxPython 2.8.7.1
+* The PythonScript action now uses the same configuration panel as all other actions.
+- TechnoTrend USB-IR plugin was not functional after a supend/resume of the system.
+
+Version 0.3.6.1238 (12/05/2007)
+* The Test Pattern/Geometry action now takes the aspect ratio into account. For ITU-R BT.601 aspect ratios it also shows the "non active" pixels at the sides.
+* The Test Pattern/Bars action can now also make double bars.
+- If you reopened the window after you have cleared the log, the whole log was shown again.
+
+Version 0.3.6.1223 (12/01/2007)
+* Many enhancements to the ffdshow plugin by Bartman.
+- Better handling of colours if the user has changed the colours in his desktop theme.
+
+Version 0.3.6.1218 (11/28/2007)
++ First version of a plugin for Barco CRT projectors.
++ All action configuration dialogs now have a "Test" button, that will execute the current settings just like it would if you confirm the dialog and press execute in the toolbar. The difference is, that changes you've made are not stored until you confirm the dialog with the ok button. So you can cancel your changes even if you have pressed the test button.
+
+Version 0.3.6.1190 (11/25/2007)
++ DVB Dream plugin from townkat.
++ Changelog tab in the about dialog.
++ If a plugin gets into error state, it will now try to restart itself on execute, disable/enable or pressing ok or apply in the configuration dialog.
++ eg.Exceptions class for generic translatable error messages.
+* Czech language file, MediaMonkey and IrfanView

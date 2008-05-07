@@ -1,0 +1,17 @@
+1.2.2 (2008-03-26)
+==================
+
+- Added action "Bell".
+- Added action "Dim".
+- Only devices supporting the action is shown in the list for each action.
+
+1.0.1 (2007-07-04)
+==================
+
+- Compatible fixes for EventGhost 0.3.6-branch
+
+
+1.0.0 (2007-06-28)
+==================
+
+First initial release

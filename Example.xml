@@ -1,0 +1,644 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<EventGhost Name="Configuration Tree" Version="1392" Guid="{7AD4EBCE-2775-4417-B088-C62BBFEF3F01}" Time="1209908057.33">
+    <Autostart Name="Autostart">
+        <Plugin File="X10" Identifier="X10">
+            gAJLAl1xAChLAUsCSwNLBEsFSwZLB0sISwlLCksLSwxLDUsOSw9LEGVYAwAAAFgxMHEBh3ECLg==
+        </Plugin>
+        <Plugin File="ZoomPlayer" Identifier="ZoomPlayer">
+            gAIoWAkAAABsb2NhbGhvc3RxAE2hEoiJdHEBLg==
+        </Plugin>
+        <Plugin File="Winamp" Identifier="Winamp">
+            gAIpLg==
+        </Plugin>
+        <Plugin File="Task" Identifier="Task">
+            gAIpLg==
+        </Plugin>
+        <Action>
+            EventGhost.EnableExclusive(XmlIdLink(218))
+        </Action>
+    </Autostart>
+    <Macro Name="Start Zoom Player">
+        <Event Name="DVD" />
+        <Action>
+            EventGhost.JumpIfLongPress(3.0, XmlIdLink(134))
+        </Action>
+        <Action>
+            System.Execute(u'{eg.folderPath.ProgramFiles}\\Zoom Player\\zplayer.exe', u'/TCP: 4769', 0, False, 2, u'')
+        </Action>
+        <Action>
+            ZoomPlayer.fnBringToFront()
+        </Action>
+    </Macro>
+    <Macro Name="Start Winamp">
+        <Event Name="Music" />
+        <Action>
+            System.Execute(u'{eg.folderPath.ProgramFiles}\\Winamp\\winamp.exe', u'', 0, False, 2, u'')
+        </Action>
+    </Macro>
+    <Macro Name="Switch to mode: Zoom Player">
+        <Event Name="Task.Activated.zplayer" />
+        <Action>
+            EventGhost.EnableExclusive(XmlIdLink(31))
+        </Action>
+    </Macro>
+    <Macro Name="Switch to mode: Winamp">
+        <Event Name="Task.Activated.winamp" />
+        <Action>
+            EventGhost.EnableExclusive(XmlIdLink(136))
+        </Action>
+    </Macro>
+    <Macro Name="Switch to mode: Mouse Emulation">
+        <Event Name="Setup" />
+        <Action>
+            EventGhost.EnableExclusive(XmlIdLink(183))
+        </Action>
+    </Macro>
+    <Macro Name="Switch to mode: Keyboard Emulation">
+        <Event Name="TXT" />
+        <Event Name="Task.Deactivated.zplayer" />
+        <Event Name="Task.Deactivated.winamp" />
+        <Action>
+            EventGhost.EnableExclusive(XmlIdLink(218))
+        </Action>
+    </Macro>
+    <Folder Name="Context Folder">
+        <Folder Name="Zoom Player" id="31" Enabled="False">
+            <Macro Name="Context Navigator">
+                <Event Name="X10.Rename" />
+                <Event Name="Menu" />
+                <Action>
+                    ZoomPlayer.fnContextNav()
+                </Action>
+            </Macro>
+            <Macro Name="Cursor Up">
+                <Event Name="Up" />
+                <Action>
+                    ZoomPlayer.Up()
+                </Action>
+                <Action>
+                    EventGhost.AutoRepeat()
+                </Action>
+            </Macro>
+            <Macro Name="Cursor Down">
+                <Event Name="Down" />
+                <Action>
+                    ZoomPlayer.Down()
+                </Action>
+                <Action>
+                    EventGhost.AutoRepeat()
+                </Action>
+            </Macro>
+            <Macro Name="Cursor Left">
+                <Event Name="Left" />
+                <Action>
+                    ZoomPlayer.Left()
+                </Action>
+                <Action>
+                    EventGhost.AutoRepeat()
+                </Action>
+            </Macro>
+            <Macro Name="Cursor Right">
+                <Event Name="Right" />
+                <Action>
+                    ZoomPlayer.Right()
+                </Action>
+                <Action>
+                    EventGhost.AutoRepeat()
+                </Action>
+            </Macro>
+            <Macro Name="Ok">
+                <Event Name="Ok" />
+                <Action>
+                    ZoomPlayer.Enter()
+                </Action>
+            </Macro>
+            <Macro Name="Play">
+                <Event Name="Play" />
+                <Action>
+                    ZoomPlayer.fnPlay()
+                </Action>
+            </Macro>
+            <Macro Name="Pause">
+                <Event Name="Pause" />
+                <Action>
+                    ZoomPlayer.fnPause()
+                </Action>
+            </Macro>
+            <Macro Name="Stop">
+                <Event Name="Stop" />
+                <Action>
+                    ZoomPlayer.fnStop()
+                </Action>
+            </Macro>
+            <Macro Name="Fast Forward">
+                <Event Name="Forward" />
+                <Action>
+                    ZoomPlayer.fnFastForward()
+                </Action>
+            </Macro>
+            <Macro Name="Fast Rewind">
+                <Event Name="Rewind" />
+                <Action>
+                    ZoomPlayer.fnRewind()
+                </Action>
+            </Macro>
+            <Macro Name="Num1">
+                <Event Name="Num1" />
+                <Action>
+                    ZoomPlayer.exDVDNumPad(u'1')
+                </Action>
+            </Macro>
+            <Macro Name="Num2">
+                <Event Name="Num2" />
+                <Action>
+                    ZoomPlayer.exDVDNumPad(u'2')
+                </Action>
+            </Macro>
+            <Macro Name="Num3">
+                <Event Name="Num3" />
+                <Action>
+                    ZoomPlayer.exDVDNumPad(u'3')
+                </Action>
+            </Macro>
+            <Macro Name="Num4">
+                <Event Name="Num4" />
+                <Action>
+                    ZoomPlayer.exDVDNumPad(u'4')
+                </Action>
+            </Macro>
+            <Macro Name="Num5">
+                <Event Name="Num5" />
+                <Action>
+                    ZoomPlayer.exDVDNumPad(u'5')
+                </Action>
+            </Macro>
+            <Macro Name="Num6">
+                <Event Name="Num6" />
+                <Action>
+                    ZoomPlayer.exDVDNumPad(u'6')
+                </Action>
+            </Macro>
+            <Macro Name="Num7">
+                <Event Name="Num7" />
+                <Action>
+                    ZoomPlayer.exDVDNumPad(u'7')
+                </Action>
+            </Macro>
+            <Macro Name="Num8">
+                <Event Name="Num8" />
+                <Action>
+                    ZoomPlayer.exDVDNumPad(u'8')
+                </Action>
+            </Macro>
+            <Macro Name="Num9">
+                <Event Name="Num9" />
+                <Action>
+                    ZoomPlayer.exDVDNumPad(u'9')
+                </Action>
+            </Macro>
+            <Macro Name="Num0">
+                <Event Name="Num0" />
+                <Action>
+                    ZoomPlayer.exDVDNumPad(u'0')
+                </Action>
+            </Macro>
+            <Macro Name="Next Track">
+                <Event Name="NextTrack" />
+                <Action>
+                    ZoomPlayer.fnNextTrack()
+                </Action>
+            </Macro>
+            <Macro Name="Previous Track">
+                <Event Name="PreviousTrack" />
+                <Action>
+                    ZoomPlayer.fnPrevTrack()
+                </Action>
+            </Macro>
+            <Macro Name="DVD Menu">
+                <Event Name="DVDMenu" />
+                <Action Name="because not every DVD has a title menu">
+                    EventGhost.Comment()
+                </Action>
+                <Action Name="and we want to do it with just one key">
+                    EventGhost.Comment()
+                </Action>
+                <Action Name="we simply use both actions. One of it will ">
+                    EventGhost.Comment()
+                </Action>
+                <Action Name="succeed everytime.">
+                    EventGhost.Comment()
+                </Action>
+                <Action>
+                    ZoomPlayer.fnDVDRootMenu()
+                </Action>
+                <Action>
+                    ZoomPlayer.fnDVDTitleMenu()
+                </Action>
+            </Macro>
+            <Macro Name="DVD Audio">
+                <Event Name="DVDAudio" />
+                <Action>
+                    ZoomPlayer.fnDVDAudioMenu()
+                </Action>
+            </Macro>
+            <Macro Name="Zoom In">
+                <Event Name="ChannelUp" />
+                <Action>
+                    ZoomPlayer.fnZoomIn()
+                </Action>
+                <Action>
+                    EventGhost.AutoRepeat()
+                </Action>
+            </Macro>
+            <Macro Name="Zoom Out">
+                <Event Name="ChannelDown" />
+                <Action>
+                    ZoomPlayer.fnZoomOut()
+                </Action>
+                <Action>
+                    EventGhost.AutoRepeat()
+                </Action>
+            </Macro>
+            <Macro Name="Toggle Controlbar">
+                <Event Name="EditImage" />
+                <Action>
+                    ZoomPlayer.fnBar()
+                </Action>
+            </Macro>
+            <Macro Name="Toggle Fullscreen">
+                <Event Name="Fullscreen" />
+                <Action>
+                    ZoomPlayer.fnFullScreen()
+                </Action>
+            </Macro>
+            <Macro Name="Exit Zoom Player">
+                <Event Name="Power" />
+                <Action>
+                    ZoomPlayer.fnExit()
+                </Action>
+            </Macro>
+            <Macro Name="Forced Restart" id="134">
+                <Action Name="Taskkill ZoomPlayer">
+                    System.Execute(u'{eg.folderPath.System}\\taskkill.exe', u'/F /IM zplayer.exe /T', 1, True, 2, u'')
+                </Action>
+            </Macro>
+        </Folder>
+        <Folder Name="Winamp" id="136" Enabled="False">
+            <Macro Name="Play">
+                <Event Name="Play" />
+                <Event Name="Ok" />
+                <Action>
+                    Winamp.TogglePlay()
+                </Action>
+            </Macro>
+            <Macro Name="Stop">
+                <Event Name="Stop" />
+                <Action>
+                    Winamp.Stop()
+                </Action>
+            </Macro>
+            <Macro Name="Pause">
+                <Event Name="Pause" />
+                <Action>
+                    Winamp.Pause()
+                </Action>
+            </Macro>
+            <Macro Name="Cursor Up">
+                <Event Name="Up" />
+                <Action>
+                    Winamp.PreviousTrack()
+                </Action>
+                <Action>
+                    EventGhost.AutoRepeat()
+                </Action>
+            </Macro>
+            <Macro Name="Cursor Down">
+                <Event Name="Down" />
+                <Action>
+                    Winamp.NextTrack()
+                </Action>
+                <Action>
+                    EventGhost.AutoRepeat()
+                </Action>
+            </Macro>
+            <Macro Name="Cursor Left">
+                <Event Name="Left" />
+                <Action>
+                    Winamp.FastRewind()
+                </Action>
+                <Action>
+                    EventGhost.AutoRepeat()
+                </Action>
+            </Macro>
+            <Macro Name="Cursor Right">
+                <Event Name="Right" />
+                <Action>
+                    Winamp.FastForward()
+                </Action>
+                <Action>
+                    EventGhost.AutoRepeat()
+                </Action>
+            </Macro>
+            <Macro Name="Next Track">
+                <Event Name="NextTrack" />
+                <Action>
+                    Winamp.NextTrack()
+                </Action>
+            </Macro>
+            <Macro Name="Previous Track">
+                <Event Name="PreviousTrack" />
+                <Action>
+                    Winamp.PreviousTrack()
+                </Action>
+            </Macro>
+            <Macro Name="Visualization">
+                <Event Name="Fullscreen" />
+                <Action>
+                    Winamp.ExVis()
+                </Action>
+            </Macro>
+            <Macro Name="Exit">
+                <Event Name="Power" />
+                <Action>
+                    Winamp.Exit()
+                </Action>
+            </Macro>
+            <Macro Name="Volume Up">
+                <Event Name="VolumeUp" />
+                <Action>
+                    Winamp.VolumeUp()
+                </Action>
+                <Action>
+                    EventGhost.AutoRepeat(0.33000000000000002, 0.050000000000000003, 0.050000000000000003, 3.0)
+                </Action>
+            </Macro>
+            <Macro Name="Volume Down">
+                <Event Name="VolumeDown" />
+                <Action>
+                    Winamp.VolumeDown()
+                </Action>
+                <Action>
+                    EventGhost.AutoRepeat(0.33000000000000002, 0.050000000000000003, 0.050000000000000003, 3.0)
+                </Action>
+            </Macro>
+        </Folder>
+        <Folder Name="Mouse Emulation" id="183" Enabled="False">
+            <Macro Name="Mouse Move Up">
+                <Event Name="Up" />
+                <Event Name="Num2" />
+                <Action>
+                    Mouse.GoDirection(0)
+                </Action>
+            </Macro>
+            <Macro Name="Mouse Move RightUp">
+                <Event Name="Num3" />
+                <Action>
+                    Mouse.GoDirection(45)
+                </Action>
+            </Macro>
+            <Macro Name="Mouse Move Right">
+                <Event Name="Right" />
+                <Event Name="Num6" />
+                <Action>
+                    Mouse.GoDirection(90)
+                </Action>
+            </Macro>
+            <Macro Name="Mouse Move RightDown">
+                <Event Name="Num9" />
+                <Action>
+                    Mouse.GoDirection(u'135')
+                </Action>
+            </Macro>
+            <Macro Name="Mouse Move Down">
+                <Event Name="Down" />
+                <Event Name="Num8" />
+                <Action>
+                    Mouse.GoDirection(u'180')
+                </Action>
+            </Macro>
+            <Macro Name="Mouse Move LeftDown">
+                <Event Name="Num7" />
+                <Action>
+                    Mouse.GoDirection(225)
+                </Action>
+            </Macro>
+            <Macro Name="Mouse Move Left">
+                <Event Name="Left" />
+                <Event Name="Num4" />
+                <Action>
+                    Mouse.GoDirection(270)
+                </Action>
+            </Macro>
+            <Macro Name="Mouse Move LeftUp">
+                <Event Name="Num1" />
+                <Action>
+                    Mouse.GoDirection(315)
+                </Action>
+            </Macro>
+            <Macro Name="Left Mouse Button">
+                <Event Name="X10.Rename" />
+                <Action>
+                    Mouse.LeftButton()
+                </Action>
+            </Macro>
+            <Macro Name="Right Mouse Button">
+                <Event Name="X10.Snapshot" />
+                <Action>
+                    Mouse.RightButton()
+                </Action>
+            </Macro>
+        </Folder>
+        <Folder Name="Keyboard Emulation" id="218">
+            <Macro Name="Up">
+                <Event Name="Up" />
+                <Action>
+                    Window.SendKeys(u'{Up}')
+                </Action>
+                <Action>
+                    EventGhost.AutoRepeat(0.59999999999999998, 0.29999999999999999, 0.01, 3.0)
+                </Action>
+            </Macro>
+            <Macro Name="Down">
+                <Event Name="Down" />
+                <Action>
+                    Window.SendKeys(u'{Down}')
+                </Action>
+                <Action>
+                    EventGhost.AutoRepeat(0.59999999999999998, 0.29999999999999999, 0.01, 3.0)
+                </Action>
+            </Macro>
+            <Macro Name="Right">
+                <Event Name="Right" />
+                <Action>
+                    Window.SendKeys(u'{Right}')
+                </Action>
+                <Action>
+                    EventGhost.AutoRepeat(0.59999999999999998, 0.29999999999999999, 0.01, 3.0)
+                </Action>
+            </Macro>
+            <Macro Name="Left">
+                <Event Name="Left" />
+                <Action>
+                    Window.SendKeys(u'{Left}')
+                </Action>
+                <Action>
+                    EventGhost.AutoRepeat(0.59999999999999998, 0.29999999999999999, 0.01, 3.0)
+                </Action>
+            </Macro>
+            <Macro Name="Ok -&gt; Enter Key">
+                <Event Name="Ok" />
+                <Action>
+                    Window.SendKeys(u'{Enter}')
+                </Action>
+            </Macro>
+            <Macro Name="Delete -&gt; Escape Key">
+                <Event Name="Delete" />
+                <Action>
+                    Window.SendKeys(u'{Esc}')
+                </Action>
+            </Macro>
+            <Macro Name="Power -&gt; Alt+F4">
+                <Event Name="Power" />
+                <Action>
+                    Window.SendKeys(u'{Alt+F4}')
+                </Action>
+            </Macro>
+            <Macro Name="Forward -&gt; Tabulator">
+                <Event Name="Forward" />
+                <Action>
+                    Window.SendKeys(u'{Tab}')
+                </Action>
+            </Macro>
+            <Macro Name="Rewind -&gt; Shift+Tabulator">
+                <Event Name="Rewind" />
+                <Action>
+                    Window.SendKeys(u'{Shift+Tab}')
+                </Action>
+            </Macro>
+            <Macro Name="ChannelUp -&gt; Plus">
+                <Event Name="ChannelUp" />
+                <Action>
+                    Window.SendKeys(u'+')
+                </Action>
+            </Macro>
+            <Macro Name="ChannelDown -&gt; Minus">
+                <Event Name="ChannelDown" />
+                <Action>
+                    Window.SendKeys(u'-')
+                </Action>
+            </Macro>
+            <Macro Name="Rename -&gt; Start Menu">
+                <Event Name="Rename" />
+                <Action>
+                    Window.SendKeys(u'{Win}')
+                </Action>
+            </Macro>
+            <Macro Name="Play -&gt; Space">
+                <Event Name="Play" />
+                <Action>
+                    Window.SendKeys(u'{Space}')
+                </Action>
+            </Macro>
+        </Folder>
+    </Folder>
+    <Folder Name="Volume Control">
+        <Macro Name="Mute Volume">
+            <Event Name="Mute" />
+            <Action>
+                System.ToggleMute()
+            </Action>
+        </Macro>
+        <Macro Name="Decrease Volume">
+            <Event Name="VolumeDown" />
+            <Action>
+                System.ChangeMasterVolumeBy(-2.0)
+            </Action>
+            <Action>
+                EventGhost.AutoRepeat(0.59999999999999998, 0.29999999999999999, 0.01, 3.0)
+            </Action>
+        </Macro>
+        <Macro Name="Increase Volume">
+            <Event Name="VolumeUp" />
+            <Action>
+                System.ChangeMasterVolumeBy(2.0)
+            </Action>
+            <Action>
+                EventGhost.AutoRepeat(0.59999999999999998, 0.29999999999999999, 0.01, 3.0)
+            </Action>
+        </Macro>
+    </Folder>
+    <Folder Name="Other Examples">
+        <Folder Name="State Folder Example">
+            <Folder Name="Folder1" id="276">
+                <Macro Name="Enable other Folder">
+                    <Event Name="Blue" />
+                    <Action>
+                        EventGhost.EnableExclusive(XmlIdLink(281))
+                    </Action>
+                </Macro>
+            </Folder>
+            <Folder Name="Folder2" id="281" Enabled="False">
+                <Macro Name="Enable other Folder">
+                    <Event Name="Blue" />
+                    <Action>
+                        EventGhost.EnableExclusive(XmlIdLink(286))
+                    </Action>
+                </Macro>
+            </Folder>
+            <Folder Name="Folder3" id="286" Enabled="False">
+                <Macro Name="Enable other Folder">
+                    <Event Name="Blue" />
+                    <Action>
+                        EventGhost.EnableExclusive(XmlIdLink(276))
+                    </Action>
+                </Macro>
+            </Folder>
+        </Folder>
+        <Folder Name="State Macro Example">
+            <Macro Name="State1" id="292" Enabled="False">
+                <Event Name="Green" />
+                <Action>
+                    EventGhost.DisableItem(XmlIdLink(292))
+                </Action>
+                <Action>
+                    EventGhost.EnableItem(XmlIdLink(298))
+                </Action>
+                <Action Enabled="False">
+                    System.MonitorPowerOff()
+                </Action>
+            </Macro>
+            <Macro Name="State2" id="298">
+                <Event Name="Green" />
+                <Action>
+                    EventGhost.EnableItem(XmlIdLink(292))
+                </Action>
+                <Action>
+                    EventGhost.DisableItem(XmlIdLink(298))
+                </Action>
+                <Action>
+                    System.MonitorPowerOn()
+                </Action>
+            </Macro>
+        </Folder>
+        <Folder Name="State Macro Example 2">
+            <Macro Name="Macro1" id="305" Enabled="False">
+                <Event Name="Yellow" />
+                <Action>
+                    EventGhost.EnableExclusive(XmlIdLink(309))
+                </Action>
+            </Macro>
+            <Macro Name="Macro2" id="309">
+                <Event Name="Yellow" />
+                <Action>
+                    EventGhost.EnableExclusive(XmlIdLink(313))
+                </Action>
+            </Macro>
+            <Macro Name="Macro3" id="313" Enabled="False">
+                <Event Name="Yellow" />
+                <Action>
+                    EventGhost.EnableExclusive(XmlIdLink(305))
+                </Action>
+            </Macro>
+        </Folder>
+    </Folder>
+</EventGhost>
