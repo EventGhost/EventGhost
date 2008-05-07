@@ -1,3 +1,5 @@
+* The "Show OSD" action now supports multiline text.
+
 Version 0.3.6.1394 (05/06/2008)
 + System.ClipboardChanged event, that fires if an external application has changed the clipboard content.
 

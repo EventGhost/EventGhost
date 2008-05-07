@@ -26,9 +26,22 @@ from os.path import join
 from eg.WinApi.Utils import GetMonitorDimensions
 from eg.WinApi.Dynamic import BringWindowToTop, CreateEvent, SetEvent 
     
-gSkinDir = join(os.path.abspath(os.path.split(__file__)[0]), "OsdSkins")
+SKIN_DIR = join(os.path.abspath(os.path.split(__file__)[0]), "OsdSkins")
+DEFAULT_FONT_INFO = wx.Font(
+    18, 
+    wx.SWISS, 
+    wx.NORMAL, 
+    wx.BOLD
+).GetNativeFontInfoDesc()
 
 
+def DrawTextLines(dc, textLines, textHeights, xOffset=0, yOffset=0):
+    for i, textLine in enumerate(textLines):
+        dc.DrawText(textLine, xOffset, yOffset)
+        yOffset += textHeights[i]
+        
+        
+         
 class OSDFrame(wx.Frame):
     """ A shaped frame to display the OSD. """
     
@@ -82,32 +95,40 @@ class OSDFrame(wx.Frame):
         #self.Freeze()
         # make sure the mask colour is not used by foreground or 
         # background colour
+        forbiddenColours = (foregroundColour, outlineColour)
         maskColour = (255, 0, 255)
-        if (
-            maskColour == foregroundColour 
-            or maskColour == outlineColour
-        ):
+        if maskColour in forbiddenColours:
             maskColour = (0, 0, 2)
-            if (
-                maskColour == foregroundColour 
-                or maskColour == outlineColour
-            ):
+            if maskColour in forbiddenColours:
                 maskColour = (0, 0, 3)
         maskBrush = wx.Brush(maskColour, wx.SOLID)
         memoryDC = wx.MemoryDC()
-        font = wx.Font(18, wx.SWISS, wx.NORMAL, wx.BOLD)
-        if fontInfo:
-            nativeFontInfo = wx.NativeFontInfo()
-            nativeFontInfo.FromString(fontInfo)
-            font.SetNativeFontInfo(nativeFontInfo)
+        if fontInfo is None:
+            fontInfo = DEFAULT_FONT_INFO
+        font = wx.FontFromNativeInfoString(fontInfo)
         memoryDC.SetFont(font)
         memoryDC.SetBackground(maskBrush)
         
+        textLines = osdText.splitlines()
+        sizes = [memoryDC.GetTextExtent(line or " ") for line in textLines]
+        textWidths, textHeights = zip(*sizes)
+        textWidth = max(textWidths)
+        textHeight = sum(textHeights)
+        
         if skin:
-            bitmap = self.GetSkinnedBitmap(osdText, fontInfo, foregroundColour, "Default")
+            bitmap = self.GetSkinnedBitmap(
+                textLines, 
+                textWidths, 
+                textHeights, 
+                textWidth,
+                textHeight,
+                memoryDC, 
+                foregroundColour, 
+                "Default"
+            )
             w, h = bitmap.GetSize()
         elif outlineColour is None:
-            w, h = memoryDC.GetTextExtent(osdText)# + "M")
+            w, h = textWidth, textHeight
             bitmap = wx.EmptyBitmap(w, h)
             memoryDC.SelectObject(bitmap)
 
@@ -116,8 +137,8 @@ class OSDFrame(wx.Frame):
             
             # draw the text with the foreground colour
             memoryDC.SetTextForeground(foregroundColour)
-            memoryDC.DrawText(osdText, 0, 0) 
-            
+            DrawTextLines(memoryDC, textLines, textHeights)
+
             # mask the bitmap, so we can use it to get the needed
             # region of the window
             memoryDC.SelectObject(wx.NullBitmap)
@@ -132,16 +153,14 @@ class OSDFrame(wx.Frame):
             memoryDC.Clear()
             memoryDC.SelectObject(wx.NullBitmap)
         else:
-            w, h = memoryDC.GetTextExtent(osdText)
-            w += 5 + memoryDC.GetTextExtent("M")[0]
-            h += 5
+            w, h = textWidth + 5, textHeight + 5
             outlineBitmap = wx.EmptyBitmap(w, h, 1)
             outlineDC = wx.MemoryDC()
             outlineDC.SetFont(font)
             outlineDC.SelectObject(outlineBitmap)
             outlineDC.Clear()
             outlineDC.SetBackgroundMode(wx.SOLID)
-            outlineDC.DrawText(osdText, 0, 0) 
+            DrawTextLines(outlineDC, textLines, textHeights)
             outlineDC.SelectObject(wx.NullBitmap)
             outlineBitmap.SetMask(wx.Mask(outlineBitmap))
             outlineDC.SelectObject(outlineBitmap)
@@ -158,7 +177,7 @@ class OSDFrame(wx.Frame):
                     Blit(x, y, w, h, outlineDC, 0, 0, WX_COPY, True)
             outlineDC.SelectObject(wx.NullBitmap)
             memoryDC.SetTextForeground(foregroundColour)
-            memoryDC.DrawText(osdText, 2, 2) 
+            DrawTextLines(memoryDC, textLines, textHeights, 2, 2)
             memoryDC.SelectObject(wx.NullBitmap)
             bitmap.SetMask(wx.Mask(bitmap, maskColour))
                 
@@ -223,24 +242,25 @@ class OSDFrame(wx.Frame):
         SetEvent(event)
         
 
-    def GetSkinnedBitmap(self, text, fontInfo, textColour, skinName):
-        font = wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD)
-        if fontInfo:
-            nativeFontInfo = wx.NativeFontInfo()
-            nativeFontInfo.FromString(fontInfo)
-            font.SetNativeFontInfo(nativeFontInfo)
-        memDC = wx.MemoryDC()
-        memDC.SetFont(font)
-        
-        image = wx.Image(join(gSkinDir, skinName + ".png"))        
+    def GetSkinnedBitmap(
+        self, 
+        textLines,                 
+        textWidths, 
+        textHeights, 
+        textWidth,
+        textHeight,
+        memoryDC, 
+        textColour, 
+        skinName
+    ):
+        image = wx.Image(join(SKIN_DIR, skinName + ".png"))        
         o = eg.Bunch()
         
         def Setup(minWidth, minHeight, xMargin, yMargin, transparentColour):
-            width, height = memDC.GetTextExtent(text)
-            width = width + 2 * xMargin
+            width = textWidth + 2 * xMargin
             if width < minWidth:
                 width = minWidth
-            height = height + 2 * yMargin
+            height = textHeight + 2 * yMargin
             if height < minHeight:
                 height = minHeight
             o.xMargin = xMargin
@@ -248,30 +268,30 @@ class OSDFrame(wx.Frame):
             o.transparentColour = transparentColour
             bitmap = wx.EmptyBitmap(width, height)
             o.bitmap = bitmap
-            memDC.SelectObject(bitmap)
+            memoryDC.SelectObject(bitmap)
             return width, height
             
         def Copy(x, y, w, h, toX, toY):
             bmp = wx.BitmapFromImage(image.GetSubImage((x, y, w, h)))
-            memDC.DrawBitmap(bmp, toX, toY)
+            memoryDC.DrawBitmap(bmp, toX, toY)
             
         def Scale(x, y, w, h, toX, toY, toW, toH):
             subImage = image.GetSubImage((x, y, w, h))
             subImage.Rescale(toW, toH, wx.IMAGE_QUALITY_HIGH)
             bmp = wx.BitmapFromImage(subImage)
-            memDC.DrawBitmap(bmp, toX, toY)
+            memoryDC.DrawBitmap(bmp, toX, toY)
             
         scriptGlobals = dict(Setup=Setup, Copy=Copy, Scale=Scale)
-        execfile(join(gSkinDir, skinName + ".py"), scriptGlobals)
+        execfile(join(SKIN_DIR, skinName + ".py"), scriptGlobals)
         
         bitmap = o.bitmap
-        memDC.SelectObject(wx.NullBitmap)
+        memoryDC.SelectObject(wx.NullBitmap)
         bitmap.SetMask(wx.Mask(bitmap, o.transparentColour))
-        memDC.SelectObject(bitmap)
-        memDC.SetTextForeground(textColour)
-        memDC.SetTextBackground(textColour)
-        memDC.DrawText(text, o.xMargin, o.yMargin)
-        memDC.SelectObject(wx.NullBitmap)
+        memoryDC.SelectObject(bitmap)
+        memoryDC.SetTextForeground(textColour)
+        memoryDC.SetTextBackground(textColour)
+        DrawTextLines(memoryDC, textLines, textHeights, o.xMargin, o.yMargin)
+        memoryDC.SelectObject(wx.NullBitmap)
         return bitmap
     
     
@@ -344,10 +364,10 @@ class ShowOSD(eg.ActionClass):
         self, 
         osdText="", 
         fontInfo=None,
-        foregroundColour=(255,255,255), 
-        backgroundColour=(0,0,0),
+        foregroundColour=(255, 255, 255), 
+        backgroundColour=(0, 0, 0),
         alignment=0, 
-        offset=(0,0), 
+        offset=(0, 0), 
         displayNumber=0, 
         timeout=3.0,
         skin=None
@@ -355,6 +375,7 @@ class ShowOSD(eg.ActionClass):
                 
         self.osdFrame.timer.cancel()
         osdText = eg.ParseString(osdText)
+        osdText = osdText.decode('string_escape')
         event = CreateEvent(None, 0, 0, None)
         wx.CallAfter(
             self.osdFrame.ShowOSD, 
@@ -373,31 +394,35 @@ class ShowOSD(eg.ActionClass):
 
 
     def GetLabel(self, osdText, *args):
-        return self.text.label % osdText
+        return self.text.label % osdText.replace("\n", r"\n")
     
     
     def Configure(
         self, 
         osdText="", 
         fontInfo=None,
-        foregroundColour=(255,255,255), 
-        backgroundColour=(0,0,0),
+        foregroundColour=(255, 255, 255), 
+        backgroundColour=(0, 0, 0),
         alignment=0, 
         offset=(0, 0), 
         displayNumber=0, 
         timeout=3.0,
         skin=None,
     ):                   
+        if fontInfo is None:
+            fontInfo = DEFAULT_FONT_INFO
         panel = eg.ConfigPanel(self)
         text = self.text
-        editTextCtrl = panel.TextCtrl(osdText)
+        editTextCtrl = panel.TextCtrl("\n\n", style=wx.TE_MULTILINE)
+        w, h = editTextCtrl.GetBestSize()
+        editTextCtrl.ChangeValue(osdText)
+        editTextCtrl.SetMinSize((-1, h))
         alignmentChoice = panel.Choice(alignment, choices=text.alignmentChoices)
         displayChoice = eg.DisplayChoice(panel, displayNumber)
         xOffsetCtrl = panel.SpinIntCtrl(offset[0], -32000, 32000)
         yOffsetCtrl = panel.SpinIntCtrl(offset[1], -32000, 32000)
         timeCtrl = panel.SpinNumCtrl(timeout)
         
-
         fontButton = panel.FontSelectButton(fontInfo)
         foregroundColourButton = panel.ColourSelectButton(foregroundColour)
         
