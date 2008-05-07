@@ -1,3 +1,4 @@
+Version 0.3.6.1397 (05/07/2008)
 * The "Show OSD" action now supports multiline text.
 
 Version 0.3.6.1394 (05/06/2008)

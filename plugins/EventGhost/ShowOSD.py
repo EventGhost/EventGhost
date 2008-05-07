@@ -35,13 +35,38 @@ DEFAULT_FONT_INFO = wx.Font(
 ).GetNativeFontInfoDesc()
 
 
+def AlignLeft(width, offset):
+    return offset
+
+
+def AlignCenter(width, offset):
+    return (width / 2) + offset
+
+
+def AlignRight(width, offset):
+    return width - offset
+
+         
+ALIGNMENT_FUNCS = (
+    (AlignLeft, AlignLeft), # Top Left
+    (AlignRight, AlignLeft), # Top Right
+    (AlignLeft, AlignRight), # Bottom Left
+    (AlignRight, AlignRight), # Bottom Right
+    (AlignCenter, AlignCenter), # Screen Center
+    (AlignCenter, AlignRight), # Bottom Center
+    (AlignCenter, AlignLeft), # Top Center
+    (AlignLeft, AlignCenter), # Left Center
+    (AlignRight, AlignCenter), # Right Center
+)
+
+
 def DrawTextLines(dc, textLines, textHeights, xOffset=0, yOffset=0):
     for i, textLine in enumerate(textLines):
         dc.DrawText(textLine, xOffset, yOffset)
         yOffset += textHeights[i]
         
         
-         
+
 class OSDFrame(wx.Frame):
     """ A shaped frame to display the OSD. """
     
@@ -73,7 +98,7 @@ class OSDFrame(wx.Frame):
         self, 
         osdText="", 
         fontInfo=None,
-        foregroundColour=(255, 255, 255), 
+        textColour=(255, 255, 255), 
         outlineColour=(0, 0, 0),
         alignment=0, 
         offset=(0, 0), 
@@ -93,21 +118,23 @@ class OSDFrame(wx.Frame):
             return
 
         #self.Freeze()
+        memoryDC = wx.MemoryDC()
+
         # make sure the mask colour is not used by foreground or 
         # background colour
-        forbiddenColours = (foregroundColour, outlineColour)
+        forbiddenColours = (textColour, outlineColour)
         maskColour = (255, 0, 255)
         if maskColour in forbiddenColours:
             maskColour = (0, 0, 2)
             if maskColour in forbiddenColours:
                 maskColour = (0, 0, 3)
         maskBrush = wx.Brush(maskColour, wx.SOLID)
-        memoryDC = wx.MemoryDC()
+        memoryDC.SetBackground(maskBrush)
+
         if fontInfo is None:
             fontInfo = DEFAULT_FONT_INFO
         font = wx.FontFromNativeInfoString(fontInfo)
         memoryDC.SetFont(font)
-        memoryDC.SetBackground(maskBrush)
         
         textLines = osdText.splitlines()
         sizes = [memoryDC.GetTextExtent(line or " ") for line in textLines]
@@ -123,7 +150,7 @@ class OSDFrame(wx.Frame):
                 textWidth,
                 textHeight,
                 memoryDC, 
-                foregroundColour, 
+                textColour, 
                 "Default"
             )
             w, h = bitmap.GetSize()
@@ -136,7 +163,7 @@ class OSDFrame(wx.Frame):
             memoryDC.Clear() 
             
             # draw the text with the foreground colour
-            memoryDC.SetTextForeground(foregroundColour)
+            memoryDC.SetTextForeground(textColour)
             DrawTextLines(memoryDC, textLines, textHeights)
 
             # mask the bitmap, so we can use it to get the needed
@@ -148,7 +175,7 @@ class OSDFrame(wx.Frame):
             # colour, because the region of the window will add these
             # half filled pixels also. Otherwise we would get an ugly 
             # border with mask-coloured pixels.
-            memoryDC.SetBackground(wx.Brush(foregroundColour, wx.SOLID))
+            memoryDC.SetBackground(wx.Brush(textColour, wx.SOLID))
             memoryDC.SelectObject(bitmap)
             memoryDC.Clear()
             memoryDC.SelectObject(wx.NullBitmap)
@@ -176,7 +203,7 @@ class OSDFrame(wx.Frame):
                 for y in xrange(5):
                     Blit(x, y, w, h, outlineDC, 0, 0, WX_COPY, True)
             outlineDC.SelectObject(wx.NullBitmap)
-            memoryDC.SetTextForeground(foregroundColour)
+            memoryDC.SetTextForeground(textColour)
             DrawTextLines(memoryDC, textLines, textHeights, 2, 2)
             memoryDC.SelectObject(wx.NullBitmap)
             bitmap.SetMask(wx.Mask(bitmap, maskColour))
@@ -188,47 +215,13 @@ class OSDFrame(wx.Frame):
         self.bitmap = bitmap
         monitorDimensions = GetMonitorDimensions()
         try:
-            d = monitorDimensions[displayNumber]
+            displayRect = monitorDimensions[displayNumber]
         except IndexError:
-            d = monitorDimensions[0]
+            displayRect = monitorDimensions[0]
         xOffset, yOffset = offset
-        if alignment == 0: 
-            # Top Left
-            x = d.x + xOffset
-            y = yOffset
-        elif alignment == 1: 
-            # Top Right
-            x = d.x + d.width - xOffset - w
-            y = yOffset
-        elif alignment == 2: 
-            # Bottom Left
-            x = d.x + xOffset
-            y = d.y + d.height - yOffset - h
-        elif alignment == 3: 
-            # Bottom Right
-            x = d.x + d.width - xOffset - w
-            y = d.y + d.height - yOffset - h
-        elif alignment == 4: 
-            # Screen Center
-            x = d.x + ((d.width - w) / 2) + xOffset
-            y = d.y + ((d.height - h) / 2) + yOffset
-        elif alignment == 5:
-            # Bottom Center
-            x = d.x + ((d.width - w) / 2) + xOffset
-            y = d.y + d.height - yOffset - h
-        elif alignment == 6:
-            # Top Center
-            x = d.x + ((d.width - w) / 2) + xOffset
-            y = yOffset
-        elif alignment == 7:
-            # Left Center
-            x = d.x + xOffset
-            y = d.y + ((d.height - h) / 2) + yOffset 
-        elif alignment == 8:
-            # Right Center
-            x = d.x + d.width - xOffset - w
-            y = d.y + ((d.height - h) / 2) + yOffset
-            
+        xFunc, yFunc = ALIGNMENT_FUNCS[alignment]
+        x = displayRect.x + xFunc((displayRect.width - w), xOffset)
+        y = displayRect.y + yFunc((displayRect.height - h), yOffset)
         self.Show()
         BringWindowToTop(self.GetHandle())
         self.SetPosition((x, y))
@@ -242,6 +235,47 @@ class OSDFrame(wx.Frame):
         SetEvent(event)
         
 
+    def GetOutlinedBitmap(
+        self, 
+        textLines,                 
+        textWidths, 
+        textHeights, 
+        textWidth,
+        textHeight,
+        memoryDC,
+        textColour, 
+        outlineColour, 
+    ):
+        w, h = textWidth + 5, textHeight + 5
+        outlineBitmap = wx.EmptyBitmap(w, h, 1)
+        outlineDC = wx.MemoryDC()
+        outlineDC.SetFont(font)
+        outlineDC.SelectObject(outlineBitmap)
+        outlineDC.Clear()
+        outlineDC.SetBackgroundMode(wx.SOLID)
+        DrawTextLines(outlineDC, textLines, textHeights)
+        outlineDC.SelectObject(wx.NullBitmap)
+        outlineBitmap.SetMask(wx.Mask(outlineBitmap))
+        outlineDC.SelectObject(outlineBitmap)
+        
+        bitmap = wx.EmptyBitmap(w, h)
+        memoryDC.SetTextForeground(outlineColour)
+        memoryDC.SelectObject(bitmap)
+        memoryDC.Clear()
+        
+        Blit = memoryDC.Blit
+        WX_COPY = wx.COPY
+        for x in xrange(5):
+            for y in xrange(5):
+                Blit(x, y, w, h, outlineDC, 0, 0, WX_COPY, True)
+        outlineDC.SelectObject(wx.NullBitmap)
+        memoryDC.SetTextForeground(textColour)
+        DrawTextLines(memoryDC, textLines, textHeights, 2, 2)
+        memoryDC.SelectObject(wx.NullBitmap)
+        bitmap.SetMask(wx.Mask(bitmap, maskColour))
+        return bitmap
+    
+    
     def GetSkinnedBitmap(
         self, 
         textLines,                 
