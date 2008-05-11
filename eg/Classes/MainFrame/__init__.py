@@ -35,6 +35,7 @@ from eg import (
     RootItem, 
 )
 from eg.WinApi.Utils import BringHwndToFront
+from eg.Icons import CreateBitmapOnTopOfIcon
 
 # local imports
 from LogCtrl import LogCtrl
@@ -43,22 +44,11 @@ from StatusBar import StatusBar
 
 
 ADD_ICON = eg.Icons.PathIcon('images/add.png')
-
-ADD_PLUGIN_ICON = eg.Icons.PilToBitmap(
-    eg.Icons.GetIconOnTop(ADD_ICON, eg.Icons.PLUGIN_ICON)
-)
-ADD_FOLDER_ICON = eg.Icons.PilToBitmap(
-    eg.Icons.GetIconOnTop(ADD_ICON, eg.Icons.FOLDER_ICON)
-)
-ADD_MACRO_ICON = eg.Icons.PilToBitmap(
-    eg.Icons.GetIconOnTop(ADD_ICON, eg.Icons.MACRO_ICON)
-)
-ADD_EVENT_ICON = eg.Icons.PilToBitmap(
-    eg.Icons.GetIconOnTop(ADD_ICON, eg.Icons.EVENT_ICON)
-)
-ADD_ACTION_ICON = eg.Icons.PilToBitmap(
-    eg.Icons.GetIconOnTop(ADD_ICON, eg.Icons.ACTION_ICON)
-)
+ADD_PLUGIN_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.PLUGIN_ICON)
+ADD_FOLDER_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.FOLDER_ICON)
+ADD_MACRO_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.MACRO_ICON)
+ADD_EVENT_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.EVENT_ICON)
+ADD_ACTION_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.ACTION_ICON)
 RESET_ICON = eg.Icons.PathIcon('images/error.png').GetBitmap()
 
 Text = eg.text.MainFrame
@@ -92,6 +82,7 @@ class MainFrame(wx.Frame):
         self.document = document
         self.aboutDialog = None
         self.optionsDialog = None
+        self.openDialogs = []
         self.menuState = menuState = eg.Bunch()
         menuState.newEvent = False
         menuState.newAction = False
@@ -99,7 +90,16 @@ class MainFrame(wx.Frame):
         menuState.execute = False
         menuState.rename = False
         menuState.disable = False
-
+        self.style=(
+            wx.MINIMIZE_BOX
+            |wx.MAXIMIZE_BOX
+            |wx.RESIZE_BORDER
+            |wx.SYSTEM_MENU
+            |wx.CAPTION
+            |wx.CLOSE_BOX
+            |wx.CLIP_CHILDREN
+            |wx.TAB_TRAVERSAL
+        )
         wx.Frame.__init__(
             self, 
             None, 
@@ -107,14 +107,7 @@ class MainFrame(wx.Frame):
             eg.APP_NAME, 
             pos=config.position, 
             size=(1, 1), 
-            style=wx.MINIMIZE_BOX
-                |wx.MAXIMIZE_BOX
-                |wx.RESIZE_BORDER
-                |wx.SYSTEM_MENU
-                |wx.CAPTION
-                |wx.CLOSE_BOX
-                |wx.CLIP_CHILDREN
-                |wx.TAB_TRAVERSAL
+            style=self.style
         )
         document.frame = self
         auiManager = wx.aui.AuiManager()
@@ -504,11 +497,13 @@ class MainFrame(wx.Frame):
     @eg.LogIt
     def OnClose(self, event):
         '''Handle wx.EVT_CLOSE'''
-        event.Veto()
-        if config.hideOnClose:
-            self.document.HideFrame()
+        if len(self.openDialogs) == 0:
+            if config.hideOnClose:
+                self.document.HideFrame()
+            else:
+                eg.app.Exit()
         else:
-            eg.app.Exit()
+            self.RequestUserAttention()
 
 
     @eg.LogIt
@@ -546,6 +541,20 @@ class MainFrame(wx.Frame):
         toolBarButtons.Paste.Enable(canPaste)
         
         
+    def AddDialog(self, dialog):
+        self.openDialogs.append(dialog)
+        dialog.Bind(wx.EVT_WINDOW_DESTROY, self.OnDialogDestroy)
+        self.SetWindowStyleFlag(~(wx.MINIMIZE_BOX|wx.CLOSE_BOX) & self.style)
+        
+        
+    @eg.LogIt
+    def OnDialogDestroy(self, event):
+        dialog = event.GetWindow()
+        self.openDialogs.remove(dialog)
+        if len(self.openDialogs) == 0:
+            self.SetWindowStyleFlag(self.style)
+    
+
     def GetEditCmdState(self, focus):
         if focus is None:
             return (False, False, False, False)

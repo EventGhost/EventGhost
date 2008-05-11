@@ -23,8 +23,9 @@
 """
 :var gImageList: The global wx.ImageList of the module.
 
-:undocumented: gIconCache, gDisabledImage, _gFolderImage
+:undocumented: gIconCache, DISABLED_PIL, FOLDER_PIL, PLUGIN_PIL, ACTION_PIL
 """
+
 from os.path import abspath
 from base64 import b64decode
 from cStringIO import StringIO
@@ -32,16 +33,15 @@ import Image
 
 
 gImageList = wx.ImageList(16, 16)
-_gDisabledImage = Image.open("images/disabled.png")
-_gFolderImage = Image.open("images/folder.png").convert("RGBA")
-_gPluginImage = Image.open("images/plugin.png")
-_gActionImage = Image.open("images/action.png").convert("RGBA")
+DISABLED_PIL = Image.open("images/disabled.png")
+FOLDER_PIL = Image.open("images/folder.png").convert("RGBA")
+PLUGIN_PIL = Image.open("images/plugin.png")
+ACTION_PIL = Image.open("images/action.png").convert("RGBA")
 
 
 def PilToBitmap(pil):
     """ Convert a PIL image to a wx.Bitmap (with alpha channel support). """
     return wx.BitmapFromBufferRGBA(pil.size[0], pil.size[1], pil.tostring())
-
 
 
 def GetIcon(filePath):
@@ -52,12 +52,12 @@ def GetIcon(filePath):
     """
     return PilToBitmap(Image.open(filePath).convert("RGBA"))
     
-    
-def GetIconOnTop(foregroundIcon, backgroundIcon, size=(12, 12)):
+
+def CreateBitmapOnTopOfIcon(foregroundIcon, backgroundIcon, size=(12, 12)):
     small = foregroundIcon.pil.resize(size, Image.BICUBIC)
-    image = backgroundIcon.pil.copy()
-    image.paste(small, (16 - size[0], 16 - size[1]), small)
-    return image
+    pil = backgroundIcon.pil.copy()
+    pil.paste(small, (16 - size[0], 16 - size[1]), small)
+    return wx.BitmapFromBufferRGBA(pil.size[0], pil.size[1], pil.tostring())
     
     
 class IconBase(object):
@@ -103,7 +103,7 @@ class IconBase(object):
         returns its index inside the global wx.ImageList.
         """
         image = self.pil.copy()
-        image.paste(_gDisabledImage, None, _gDisabledImage)
+        image.paste(DISABLED_PIL, None, DISABLED_PIL)
         return gImageList.Add(PilToBitmap(image))
     
     
@@ -112,7 +112,7 @@ class IconBase(object):
         returns its index inside the global wx.ImageList. 
         """
         small = self.pil.resize((12,12), Image.BICUBIC)
-        image = _gFolderImage.copy()
+        image = FOLDER_PIL.copy()
         image.paste(small, (4, 4), small)
         return gImageList.Add(PilToBitmap(image))
     
@@ -150,7 +150,7 @@ class ActionSubIcon(IconBase):
     def _pil(self):
         """ Return a PIL image of the icon. """
         small = self.key.pil.resize((12,12), Image.BICUBIC)
-        image = _gActionImage.copy()
+        image = ACTION_PIL.copy()
         image.paste(small, (4, 4), small)
         return image
 
@@ -162,7 +162,7 @@ class PluginSubIcon(IconBase):
     def _pil(self):
         """ Return a PIL image of the icon. """
         small = self.key.pil.resize((12,12), Image.BICUBIC)
-        image = _gPluginImage.copy()
+        image = PLUGIN_PIL.copy()
         image.paste(small, (4, 4), small)
         return image
                

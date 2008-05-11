@@ -115,7 +115,7 @@ class EventGhost(object):
         eg.pluginList = []
         eg.actionList = []
                 
-        from Version import version, buildNum
+        from eg.Version import version, buildNum
         eg.version = version
         eg.buildNum = buildNum
         eg.versionStr = "%s.%s" % (version, buildNum)
@@ -124,8 +124,7 @@ class EventGhost(object):
         # exists, we simply create it first
         eg.app
                 
-        import Icons
-        self.Icons = Icons
+        import eg.Icons
         
         eg.Print = self.log.Print
         eg.PrintError = self.log.PrintError
@@ -175,7 +174,6 @@ class EventGhost(object):
         
         import eg.WinApi.COMServer
         if not args.install:
-
             if args.translate:
                 eg.LanguageEditor()
             else:

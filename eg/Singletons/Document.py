@@ -307,8 +307,9 @@ class Document(object):
         # we create the MainFrame.
         if self.reentrantLock.acquire(False):
             if self.frame is not None:
-                self.frame.Destroy()
-                self.frame = None
+                if len(self.frame.openDialogs) == 0:
+                    self.frame.Destroy()
+                    self.frame = None
             self.reentrantLock.release()
         else:
             wx.CallLater(100, self.HideFrame)
