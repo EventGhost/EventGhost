@@ -38,10 +38,10 @@ class Text(eg.TranslatableStrings):
 
 
 
-class FindDialog(eg.Dialog):
+class FindDialog(wx.Dialog):
     
     def __init__(self, parent, document):
-        eg.Dialog.__init__(
+        wx.Dialog.__init__(
             self, 
             parent, 
             -1,
@@ -69,7 +69,7 @@ class FindDialog(eg.Dialog):
         
         ACV = wx.ALIGN_CENTER_VERTICAL
         upperLeftSizer = eg.HBoxSizer(
-            (self.StaticText(Text.searchLabel), 0, ACV|wx.RIGHT, 5),
+            (wx.StaticText(self, -1, Text.searchLabel), 0, ACV|wx.RIGHT, 5),
             (textCtrl, 1, wx.EXPAND),
         )
         cbSizer = eg.VBoxSizer(
@@ -108,16 +108,23 @@ class FindDialog(eg.Dialog):
         self.searchParametersCb = searchParametersCb
         self.directionRb = directionRb
         self.searchButton = searchButton
+        #self.Bind(wx.EVT_CLOSE, self.OnCancel)
+        #cancelButton.Bind(wx.EVT_BUTTON, self.OnCancel)
 
 
     def Show(self):
         eg.Utils.EnsureVisible(self)
-        eg.Dialog.Show(self)
+        wx.Dialog.Show(self)
         self.Raise()
         self.textCtrl.SetSelection(-1, -1)
         self.textCtrl.SetFocus()
 
 
+    @eg.LogIt
+    def OnCancel(self, event):
+        self.Destroy()
+        
+    
     def OnFindButton(self, event=None):
         tree = self.document.tree
         item = tree.GetPyData(tree.GetSelection())

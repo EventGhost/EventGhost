@@ -28,7 +28,16 @@ class Dialog(wx.Dialog, eg.ControlProviderMixin):
     
     def __init__(self, *args, **kwargs):
         wx.Dialog.__init__(self, *args, **kwargs)
+        if self.GetParent() == eg.document.frame:
+            eg.document.frame.AddDialog(self)
+        
+#    @eg.LogIt
+#    def Destroy(self):
+#        if self.GetParent() == eg.document.frame:
+#            eg.document.frame.RemoveDialog(self)
+#        wx.Dialog.Destroy(self)
 
+    
     @classmethod
     @eg.LogItWithReturn
     def GetModalResult(cls, *args, **kwargs):
