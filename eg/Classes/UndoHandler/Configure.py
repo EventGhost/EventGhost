@@ -46,7 +46,6 @@ class Configure:
         wasTested = False
         lastArgs = oldArgs
         gr = None
-        document = item.document
         while True:
             eg.currentConfigureItem = item
             try:
@@ -59,7 +58,6 @@ class Configure:
                 eg.PrintError(eg.text.Error.configureError % item.GetLabel())
                 if item.openConfigDialog is not None:
                     item.openConfigDialog.Destroy()
-                    
                 raise
             if item.openConfigDialog is not None:
                 userAction = item.openConfigDialog.result
