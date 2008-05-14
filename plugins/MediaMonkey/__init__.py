@@ -1,4 +1,4 @@
-version="0.1.7"
+version="0.1.8"
 
 # Plugins/MediaMonkey/__init__.py
 #
@@ -20,7 +20,7 @@ version="0.1.7"
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2008-04-25 21:15
+#Last change: 2008-05-14 16:41
 
 eg.RegisterPlugin(
     name = "MediaMonkey",
@@ -151,6 +151,7 @@ class MediaMonkey(eg.PluginClass):
         group.AddAction(GetCrossfade)
         group.AddAction(GetPosition)
         group.AddAction(GetBasicSongInfo)
+        group.AddAction(GetBasicSongInfoNextTrack)
         group.AddAction(GetDetailSongInfo)
         group.AddAction(GetClassificationInfo)
         group.AddAction(GetTechnicalSongInfo)
@@ -768,9 +769,11 @@ class GetBasicSongInfo(eg.ActionClass):
         composer = "Composer"
         conductor = "Conductor"
         comment = "Comment"
+        seqNum = 'Sequence number in "Now playing" window'
 
     def __call__(self,arrayInfo):
-        path=self.plugin.DispMM().Player.CurrentSong.Path
+        player=self.plugin.DispMM().Player
+        path=player.CurrentSong.Path
         indx=path.rfind("\\")+1
         result=path[:indx]+"," if arrayInfo[0] else ""
         result+=path[indx:]+"," if arrayInfo[1] else ""
@@ -808,11 +811,14 @@ class GetBasicSongInfo(eg.ActionClass):
         )
         for propert,cond,numeric in zip(listPropert,arrayInfo[2:],listNum):
             if numeric:
-                result+=str(getattr(self.plugin.DispMM().Player.CurrentSong,propert))\
+                result+=str(getattr(player.CurrentSong,propert))\
                     +"," if cond else ""
             else:
-                result+=getattr(self.plugin.DispMM().Player.CurrentSong,propert)\
+                result+=getattr(player.CurrentSong,propert)\
                     +"," if cond else ""
+        if arrayInfo[16]:
+            result+=str(player.CurrentSongIndex+1)+","
+                    
         return result[:-1]        
 
 
@@ -824,7 +830,7 @@ class GetBasicSongInfo(eg.ActionClass):
 
     def Configure(
         self,
-        arrayInfo=[False]*16
+        arrayInfo=[False]*17
     ):
         text=self.text
         panel = eg.ConfigPanel(self)
@@ -860,6 +866,8 @@ class GetBasicSongInfo(eg.ActionClass):
         conductorCtrl.SetValue(arrayInfo[14])
         commentCtrl = wx.CheckBox(panel, -1, self.text.comment)
         commentCtrl.SetValue(arrayInfo[15])
+        seqNumCtrl = wx.CheckBox(panel, -1, self.text.seqNum)
+        seqNumCtrl.SetValue(arrayInfo[16])
 
         mainSizer=wx.FlexGridSizer(2,2)
         leftSizer=wx.BoxSizer(wx.VERTICAL)
@@ -873,6 +881,7 @@ class GetBasicSongInfo(eg.ActionClass):
         leftSizer.Add(groupingCtrl,0,wx.TOP,10)
         leftSizer.Add(composerCtrl,0,wx.TOP,10)
         leftSizer.Add(conductorCtrl,0,wx.TOP,10)
+        leftSizer.Add(seqNumCtrl,0,wx.TOP,10)
         rightSizer.Add(filepathCtrl,0)
         rightSizer.Add(filenameCtrl,0,wx.TOP,10)
         rightSizer.Add(yearCtrl,0,wx.TOP,10)
@@ -905,7 +914,198 @@ class GetBasicSongInfo(eg.ActionClass):
                 origDateCtrl.GetValue(),
                 composerCtrl.GetValue(),
                 conductorCtrl.GetValue(),
-                commentCtrl.GetValue()
+                commentCtrl.GetValue(),
+                seqNumCtrl.GetValue()
+            ]
+            panel.SetResult(arrayInfo)
+
+#====================================================================
+class GetBasicSongInfoNextTrack(GetBasicSongInfo):
+    name = "Get basic song info of next track"
+    description = "Get basic song info of next track."
+    NextSong = None
+    class text:
+        filepath = "File path"
+        filename = "File name"
+        tracktitle = "Track title"
+        artist = "Artist"
+        genre = "Genre"
+        rating = "Rating"
+        album = "Album"
+        disc = "Disc #"
+        track = "Track #"
+        albumartist = "Album artist"
+        year = "Year"
+        grouping = "Grouping"
+        origDate = "Original year"
+        composer = "Composer"
+        conductor = "Conductor"
+        comment = "Comment"
+        seqNum = 'Sequence number in "Now playing" window'
+        endList = "End of playlist"
+        shuffleMode = "Shuffle tracks mode"
+
+    def __call__(self,arrayInfo):
+        player = self.plugin.DispMM().Player
+        index = player.CurrentSongIndex+1
+        #flag=True
+        if index==player.PlaylistCount:
+            if player.isRepeat:
+                index=0
+            else:
+                #flag=False
+                return self.text.endList
+        if player.isShuffle:
+            return self.text.shuffleMode
+       
+                
+        print player.PlaylistCount
+        print "index="+str(index)
+        self.NextSong=player.PlaylistItems(index)
+
+        path=self.NextSong.Path
+        indx=path.rfind("\\")+1
+        result=path[:indx]+"," if arrayInfo[0] else ""
+        result+=path[indx:]+"," if arrayInfo[1] else ""
+        listPropert=(
+            "Title",
+            "ArtistName",
+            "Genre",
+            "Rating",
+            "AlbumName",
+            "DiscNumber",
+            "TrackOrder",
+            "AlbumArtistName",
+            "Year",
+            "Grouping",
+            "OriginalYear",
+            "MusicComposer",
+            "Conductor",
+            "Comment",
+        )
+        listNum=(
+            False,
+            False,
+            False,
+            True,
+            False,
+            True,
+            True,
+            False,
+            True,
+            False,
+            True,
+            False,
+            False,
+            False,
+        )
+        for propert,cond,numeric in zip(listPropert,arrayInfo[2:],listNum):
+            if numeric:
+                result+=str(getattr(self.NextSong,propert))\
+                    +"," if cond else ""
+            else:
+                result+=getattr(self.NextSong,propert)\
+                    +"," if cond else ""
+        if arrayInfo[16]:
+            result+=str(index+1)+","
+
+        return result[:-1]        
+
+
+    def GetLabel(self, arrayInfo):
+        result=""
+        for condition in arrayInfo:
+            result+="X" if condition else "_"
+        return result
+
+    def Configure(
+        self,
+        arrayInfo=[False]*17
+    ):
+        text=self.text
+        panel = eg.ConfigPanel(self)
+        filepathCtrl = wx.CheckBox(panel, -1, self.text.filepath)
+        filepathCtrl.SetValue(arrayInfo[0])
+        filenameCtrl = wx.CheckBox(panel, -1, self.text.filename)
+        filenameCtrl.SetValue(arrayInfo[1])
+        tracktitleCtrl = wx.CheckBox(panel, -1, self.text.tracktitle)
+        tracktitleCtrl.SetValue(arrayInfo[2])
+        artistCtrl = wx.CheckBox(panel, -1, self.text.artist)
+        artistCtrl.SetValue(arrayInfo[3])
+        genreCtrl = wx.CheckBox(panel, -1, self.text.genre)
+        genreCtrl.SetValue(arrayInfo[4])
+        ratingCtrl = wx.CheckBox(panel, -1, self.text.rating)
+        ratingCtrl.SetValue(arrayInfo[5])
+        albumCtrl = wx.CheckBox(panel, -1, self.text.album)
+        albumCtrl.SetValue(arrayInfo[6])
+        discCtrl = wx.CheckBox(panel, -1, self.text.disc)
+        discCtrl.SetValue(arrayInfo[7])
+        trackCtrl = wx.CheckBox(panel, -1, self.text.track)
+        trackCtrl.SetValue(arrayInfo[8])
+        albumartistCtrl = wx.CheckBox(panel, -1, self.text.albumartist)
+        albumartistCtrl.SetValue(arrayInfo[9])
+        yearCtrl = wx.CheckBox(panel, -1, self.text.year)
+        yearCtrl.SetValue(arrayInfo[10])
+        groupingCtrl = wx.CheckBox(panel, -1, self.text.grouping)
+        groupingCtrl.SetValue(arrayInfo[11])
+        origDateCtrl = wx.CheckBox(panel, -1, self.text.origDate)
+        origDateCtrl.SetValue(arrayInfo[12])
+        composerCtrl = wx.CheckBox(panel, -1, self.text.composer)
+        composerCtrl.SetValue(arrayInfo[13])
+        conductorCtrl = wx.CheckBox(panel, -1, self.text.conductor)
+        conductorCtrl.SetValue(arrayInfo[14])
+        commentCtrl = wx.CheckBox(panel, -1, self.text.comment)
+        commentCtrl.SetValue(arrayInfo[15])
+        seqNumCtrl = wx.CheckBox(panel, -1, self.text.seqNum)
+        seqNumCtrl.SetValue(arrayInfo[16])
+
+        mainSizer=wx.FlexGridSizer(2,2)
+        leftSizer=wx.BoxSizer(wx.VERTICAL)
+        rightSizer=wx.BoxSizer(wx.VERTICAL)
+
+        leftSizer.Add(tracktitleCtrl,0)
+        leftSizer.Add(artistCtrl,0,wx.TOP,10)
+        leftSizer.Add(genreCtrl,0,wx.TOP,10)
+        leftSizer.Add(albumCtrl,0,wx.TOP,10)
+        leftSizer.Add(albumartistCtrl,0,wx.TOP,10)
+        leftSizer.Add(groupingCtrl,0,wx.TOP,10)
+        leftSizer.Add(composerCtrl,0,wx.TOP,10)
+        leftSizer.Add(conductorCtrl,0,wx.TOP,10)
+        leftSizer.Add(seqNumCtrl,0,wx.TOP,10)
+        rightSizer.Add(filepathCtrl,0)
+        rightSizer.Add(filenameCtrl,0,wx.TOP,10)
+        rightSizer.Add(yearCtrl,0,wx.TOP,10)
+        rightSizer.Add(origDateCtrl,0,wx.TOP,10)
+        rightSizer.Add(discCtrl,0,wx.TOP,10)
+        rightSizer.Add(trackCtrl,0,wx.TOP,10)
+        rightSizer.Add(ratingCtrl,0,wx.TOP,10)
+        rightSizer.Add(commentCtrl,0,wx.TOP,10)
+        mainSizer.Add((200,1))
+        mainSizer.Add((200,1))
+        mainSizer.Add(leftSizer,0)
+        mainSizer.Add(rightSizer,0)
+        panel.AddCtrl(mainSizer)
+
+
+        while panel.Affirmed():
+            arrayInfo=[
+                filepathCtrl.GetValue(),
+                filenameCtrl.GetValue(),
+                tracktitleCtrl.GetValue(),
+                artistCtrl.GetValue(),
+                genreCtrl.GetValue(),
+                ratingCtrl.GetValue(),
+                albumCtrl.GetValue(),
+                discCtrl.GetValue(),
+                trackCtrl.GetValue(),
+                albumartistCtrl.GetValue(),
+                yearCtrl.GetValue(),
+                groupingCtrl.GetValue(),
+                origDateCtrl.GetValue(),
+                composerCtrl.GetValue(),
+                conductorCtrl.GetValue(),
+                commentCtrl.GetValue(),
+                seqNumCtrl.GetValue()
             ]
             panel.SetResult(arrayInfo)
 
