@@ -77,6 +77,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         else:
             value += 0.2
         r, g, b = colorsys.hsv_to_rgb(hue, saturation, value)
+        
         self.attr1 = wx.ListItemAttr()
         self.attr1.BackgroundColour = (
             int(round(r * 255.0)), 

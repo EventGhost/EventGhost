@@ -30,14 +30,14 @@ if hasattr(sys, "frozen"):
     programPath = dirname(unicode(sys.executable, sys.getfilesystemencoding()))
 else:
     programPath = dirname(unicode(__file__, sys.getfilesystemencoding()))
-   
-imp.load_source("Main", join(programPath, "eg", "Main.py").encode('mbcs'))
+mainFilePath = join(programPath, "eg", "Main.py").encode('mbcs')
+imp.load_source("__main__", mainFilePath)
 
-print "should never come here"
 # The "imports" module file is created by the tools/MakeImports.py script
 # and is located in the "tools" directory also.
 # It includes all modules the program might need. This way we force py2exe
 # to include them in the distribution.
-import greenlet
-import imports
+if False:
+    import greenlet
+    import imports
 

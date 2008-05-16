@@ -266,10 +266,37 @@ py2exeOptions = dict(
                 (RT_MANIFEST, 1, manifest_template % dict(prog=shortpgm))
             ],
             dest_base = shortpgm
-        )
+        ),
     ],
     # use out build_installer class as extended py2exe build command
     #cmdclass = {"py2exe": py2exe.run},
+    verbose = 0,
+)
+
+consoleOptions = dict(
+    options = dict(
+        build = dict(
+            build_base = join(tmpDir, "build")
+        ),
+        py2exe = dict(
+            compressed = 0,
+            dist_dir = trunkDir,
+            dll_excludes = ["w9xpopen.exe"],
+        )
+    ),
+    zipfile = r"lib\python25.zip",
+    windows = [
+        dict(
+            script = join(toolsDir, "py.py"),
+            dest_base = "pyw"
+        )
+    ],
+    console = [
+        dict(
+            script = join(toolsDir, "py.py"),
+            dest_base = "py"
+        )
+    ],
     verbose = 0,
 )
 
@@ -448,12 +475,13 @@ def MakeInstaller():
         from distutils.core import setup
         import py2exe
         InstallPy2exePatch()
+        setup(**consoleOptions)
         setup(**py2exeOptions)
         pythonDir = dirname(sys.executable)
         for dll in ROOT_DLLS:
             if not os.path.exists(join(trunkDir, dll)):
                 copy(join(pythonDir, dll), trunkDir)
-    
+                    
     installFiles = []
     if Options.createUpdate:
         for file in GetUpdateFiles():

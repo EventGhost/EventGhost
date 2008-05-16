@@ -409,7 +409,6 @@ class ShowOSD(eg.ActionClass):
                 
         self.osdFrame.timer.cancel()
         osdText = eg.ParseString(osdText)
-        osdText = osdText.decode('string_escape')
         event = CreateEvent(None, 0, 0, None)
         wx.CallAfter(
             self.osdFrame.ShowOSD, 

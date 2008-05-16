@@ -26,7 +26,7 @@
 eg.RegisterPlugin(
     name = "Foobar2000",
     author = "MonsterMagnet",
-    version = "1.1." + "$LastChangedRevision$".split()[1],
+    version = "1.2." + "$LastChangedRevision$".split()[1],
     kind = "program",
     description = (
         'Adds actions to control the <a href="http://www.foobar2000.org/">'
@@ -55,6 +55,8 @@ eg.RegisterPlugin(
 )
 
 # changelog:
+# 1.2 by CHeitkamp
+#     - changed code to get path from uninstall information
 # 1.1 by bitmonster
 #     - changed code to use new AddActionsFromList method
 # 1.0 by MonsterMagnet
@@ -332,11 +334,12 @@ class Foobar2000(eg.PluginClass):
         """
         try:
             fb = _winreg.OpenKey(
-                _winreg.HKEY_CURRENT_USER,
-                "Software\\foobar2000"
+                _winreg.HKEY_LOCAL_MACHINE,
+                "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\foobar2000"
             )
-            foobar2000Path, dummy =_winreg.QueryValueEx(fb, "InstallDir")
+            foobar2000Path, dummy =_winreg.QueryValueEx(fb, "UninstallString")
             _winreg.CloseKey(fb)
+            foobar2000Path = os.path.dirname(foobar2000Path)
             foobar2000Path = os.path.join(foobar2000Path, "foobar2000.exe")
         except WindowsError:
             foobar2000Path = None
