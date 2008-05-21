@@ -22,7 +22,7 @@
 eg.RegisterPlugin(
     name = "DVB Dream",
     author = "townkat",
-    version = "4" ,
+    version = "4.1" + "$LastChangedRevision$".split()[1],
     kind = "program",
     url = "http://www.eventghost.org/forum/viewtopic.php?t=612",
     createMacrosOnAdd = True,
@@ -35,9 +35,13 @@ eg.RegisterPlugin(
         'Options->Remote->RemoteControlType->Native'
     ),
 )
+
+# changelog
+# 4.1 by bitmonster 
+#     - changed code to use PluginClass.AddActionsFromList
+
     
-    
-MyActionList = (
+ACTIONS = (
     ('Power', 'Power', None, 1),
     ('Mute', 'Mute', None, 2),
     ('Zero', 'Zero', None, 3),
@@ -108,31 +112,8 @@ class MyActionTemplate(eg.ActionClass):
     
 
 
-def ScanListRecursive(theList, group):
-    for parts in theList:
-        if len(parts) == 3:
-            # this is a new sub-group
-            groupName, groupDescription, groupList = parts
-            newGroup = group.AddGroup(groupName, groupDescription)
-            ScanListRecursive(groupList, newGroup)
-        elif len(parts) == 4:
-            # this is a new action
-            tmpClassName, tmpName, tmpDescription, tmpValue = parts
-               
-            class tmpAction(MyActionTemplate):
-                name = tmpName
-                description = tmpDescription
-                value = tmpValue
-                       
-            tmpAction.__name__ = tmpClassName
-            group.AddAction(tmpAction)
-        else:
-            raise Exception("Wrong number of fields in the list")
-
-
-
 class DVBDream(eg.PluginClass):
 
     def __init__(self):
-        ScanListRecursive(MyActionList, self)
+        self.AddActionsFromList(ACTIONS, MyActionTemplate)
 
