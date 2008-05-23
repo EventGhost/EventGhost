@@ -16,9 +16,9 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate: 2007-12-12 21:48:49 +0100 (Mi, 12 Dez 2007) $
-# $LastChangedRevision: 314 $
-# $LastChangedBy: bitmonster $
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
 
 from time import sleep
 from eg.WinApi.Dynamic import (

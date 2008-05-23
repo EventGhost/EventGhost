@@ -20,15 +20,15 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate: 2008-04-19 10:11:41 +0200  $
-# $LastChangedRevision: 382 $
-# $LastChangedBy: bitmonster $
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
 
 
 eg.RegisterPlugin(
     name        = "Hauppauge IR",
     author      = "Stefan Gollmer",
-    version     = "1.02." + "$LastChangedRevision: 382 $".split()[1],
+    version     = "1.02." + "$LastChangedRevision$".split()[1],
     kind        = "remote",
     description = (
                     'Hardware plugin for the '

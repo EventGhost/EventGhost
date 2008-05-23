@@ -16,9 +16,9 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate: 2008-04-03 18:53:37 +0200 (Do, 03 Apr 2008) $
-# $LastChangedRevision: 374 $
-# $LastChangedBy: bitmonster $
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
 
 
 class Version:
@@ -26,7 +26,7 @@ class Version:
     minor = 3
     micro = 6
     releaselevel = 'beta'
-    buildNum = 1425
-    buildTime = 1211550656.86
-    svnRevision = int('$LastChangedRevision: 412 $'.split()[1])
+    buildNum = 1427
+    buildTime = 1211553715.95
+    svnRevision = int('$LastChangedRevision$'.split()[1])
     string = "%s.%s.%s.%s" % (major, minor, micro, buildNum)
