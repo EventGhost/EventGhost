@@ -16,9 +16,9 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate: 2008-03-04 12:06:42 +0100 (Di, 04 Mrz 2008) $
-# $LastChangedRevision: 348 $
-# $LastChangedBy: bitmonster $
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
 
 
 eg.RegisterPlugin(
@@ -26,7 +26,7 @@ eg.RegisterPlugin(
     description="Adds actions to control CyberLink PowerDVD 7.",
     kind="program",
     author="Bitmonster",
-    version="1.0." + "$LastChangedRevision: 348 $".split()[1],  
+    version="1.0." + "$LastChangedRevision$".split()[1],  
     createMacrosOnAdd = True,  
 )
 

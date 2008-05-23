@@ -23,7 +23,7 @@
 eg.RegisterPlugin(
     name = "GOM Player",
     author = "CHeitkamp",
-    version = "1.0." + "$LastChangedRevision: 0 $".split()[1],
+    version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "program",
     createMacrosOnAdd = True,
     description = (

@@ -25,7 +25,7 @@
 eg.RegisterPlugin(
     name = "DScaler 4",
     author = "Lee Woolf",
-    version = "1.1" + "$LastChangedRevision: 374 $".split()[1],
+    version = "1.1" + "$LastChangedRevision$".split()[1],
     kind = "program",
     description = (
         'Adds support functions for '
