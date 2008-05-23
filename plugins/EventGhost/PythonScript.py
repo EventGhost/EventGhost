@@ -97,7 +97,8 @@ class PythonScript(eg.ActionClass):
 
 
         def PrintTraceback(self):
-            eg.PrintError("Traceback (most recent call last):")
+            treeItem = eg.currentItem
+            treeItem.PrintError("Traceback (most recent call last):")
             lines = self.sourceCode.splitlines()
             tb_type, tb_value, tb_traceback = sys.exc_info() 
             for entry in traceback.extract_tb(tb_traceback)[1:]:
@@ -107,23 +108,23 @@ class PythonScript(eg.ActionClass):
                 except:
                     filenum = None
                 if source is None and filenum is not None:
-                    eg.PrintError(
+                    treeItem.PrintError(
                         '  Python script "%s", line %d, in %s' % (
                             file, linenum, func
                         )
                     )
                     lines = self.scriptDict[int(file)].sourceCode.splitlines()
-                    eg.PrintError('    ' + lines[linenum-1].lstrip())
+                    treeItem.PrintError('    ' + lines[linenum-1].lstrip())
                 else:
-                    eg.PrintError(
+                    treeItem.PrintError(
                         '  File "%s", line %d, in %s' % (
                             file, linenum, func
                         )
                     )
                     if source is not None:
-                        eg.PrintError('    ' + source.lstrip())
+                        treeItem.PrintError('    ' + source.lstrip())
             name = tb_type if type(tb_type) == type("") else tb_type.__name__
-            eg.PrintError(str(name) + ': ' + str(tb_value))
+            treeItem.PrintError(str(name) + ': ' + str(tb_value))
                 
             
         @eg.LogIt

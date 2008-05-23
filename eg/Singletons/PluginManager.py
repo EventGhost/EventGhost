@@ -143,7 +143,7 @@ class PluginManager:
         Save the database to disc.
         """
         with file(self.databasePath, "wb") as databaseFile:
-            pickle.dump(eg.versionStr, databaseFile, -1)
+            pickle.dump(eg.Version.string, databaseFile, -1)
             pickle.dump(self.database, databaseFile, -1)
         
     
@@ -156,7 +156,7 @@ class PluginManager:
         with file(self.databasePath, "rb") as databaseFile:
             try:
                 version = pickle.load(databaseFile)
-                if version != eg.versionStr:
+                if version != eg.Version.string:
                     eg.PrintDebugNotice("pluginManager version mismatch")
                     return
                 self.database = pickle.load(databaseFile)

@@ -64,8 +64,8 @@ class Log:
             
             class StdErr:
                 def write(self2, data):
-                    #self.Write(data, 1)
                     oldStdErr.write(data.decode("mbcs"))
+                    #self.Write(data, ERROR_ICON)
         else:
             class StdOut:
                 def write(self2, data):
@@ -88,13 +88,8 @@ class Log:
             self.PrintDebugNotice("----------------------------------------")
             self.PrintDebugNotice("        EventGhost started")
             self.PrintDebugNotice("----------------------------------------")
-            self.PrintDebugNotice("Version:", eg.versionStr)
+            self.PrintDebugNotice("Version:", eg.Version.string)
 
-    
-    @eg.LogIt
-    def Destroy(self):
-        return wx.ListCtrl.Destroy(self)
-    
     
     def SetCtrl(self, logCtrl):
         if logCtrl is not None:
@@ -133,32 +128,40 @@ class Log:
                 data.popleft()
 
         
-    def Print(self, text):
-        self.Write(text + "\n", INFO_ICON, None)
+    def _Print(self, args, sep=" ", end="\n", icon=INFO_ICON, source=None):
+        if source is not None:
+            source = ref(source)
+        strs = [unicode(arg) for arg in args]
+        self.Write(sep.join(strs) + end, icon, source)
+
+
+    def Print(self, *args, **kwargs):
+        self._Print(args, **kwargs)
+    
+        
+    def PrintError(self, *args, **kwargs):
+        kwargs.setdefault("icon", ERROR_ICON)
+        self._Print(args, **kwargs)
+
+#        def convert(s):
+#            if type(s) == type(u""):
+#                return s
+#            else:
+#                return str(s)
+#        text = " ".join([convert(arg) for arg in args])
+#        self.Write(text + "\n", ERROR_ICON, None)
         
         
-    def PrintError(self, *args):
-        def convert(s):
-            if type(s) == type(u""):
-                return s
-            else:
-                return str(s)
-        text = " ".join([convert(arg) for arg in args])
-        self.Write(text + "\n", ERROR_ICON, None)
+    def PrintNotice(self, *args, **kwargs):
+        kwargs.setdefault("icon", NOTICE_ICON)
+        self._Print(args, **kwargs)
+#        text = " ".join([str(arg) for arg in args])
+#        self.Write(text + "\n", NOTICE_ICON, None)
         
         
-    def PrintNotice(self, *args):
-        text = " ".join([str(arg) for arg in args])
-        self.Write(text + "\n", NOTICE_ICON, None)
-        
-        
-    def PrintItem(self, text, icon, item):
-        self.Write(text + "\n", icon, ref(item))        
-            
-            
     def PrintTraceback(self, msg=None, skip=0, source=None):
         if msg:
-            self.PrintError(msg)
+            self.PrintError(msg, source=source)
         tbType, tbValue, tbTraceback = sys.exc_info() 
         list = ['Traceback (most recent call last) (%d):\n' % eg.buildNum]
         if tbTraceback:

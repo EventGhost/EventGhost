@@ -106,29 +106,38 @@ def GetSetupFiles():
     
 
 def UpdateVersionFile():
-    data = {}
-    versionFilePath = join(trunkDir, "eg", "Version.py")
-    execfile(versionFilePath, data, data)
-    data['buildNum'] += 1
+    versionFilePath = join(trunkDir, "eg", "Classes", "Version.py")
+    fd = file(versionFilePath, "rt")
+    lines = fd.readlines()
+    fd.close()
     fd = file(versionFilePath, "wt")
-    fd.write("version = %r\n" % data['version'])
-    fd.write("buildNum = %r\n" % (data['buildNum']))
-    fd.write("compileTime = %r\n" % time.time())
-    fd.write("svnRevision = int('$LastChangedRevision$'.split()[1])\n")
-    fd.close()    
+    # update buildNum and buildTime in eg/Classes/Version.py
+    for line in lines:
+        if line.strip().startswith("buildNum"):
+            parts = line.split("=")
+            value = int(parts[1].strip())
+            fd.write(parts[0] + "= " + str(value+1) + "\n")
+        elif line.strip().startswith("buildTime"):
+            parts = line.split("=")
+            fd.write(parts[0] + "= " + str(time.time()) + "\n")
+        else:
+            fd.write(line)
+    fd.close()
+    data = {}
+    execfile(versionFilePath, data, data)
+    versionCls = data["Version"]
     if Options.commitSvn:
         def ssl_server_trust_prompt(trust_dict):
             return True, 0, True
         svn = pysvn.Client()
         svn.callback_ssl_server_trust_prompt = ssl_server_trust_prompt
-        svn.checkin([trunkDir], "Created installer for %s.%i" % (data['version'], data['buildNum']))    return data
+        svn.checkin([trunkDir], "Created installer for %s" % versionCls.string)    return versionCls
     
     
-def UpdateChangeLog(templateOptions):    
+def UpdateChangeLog(namespace):    
     path = join(trunkDir, "CHANGELOG.TXT")
-    s1 = "Version %s.%s (%s)\n" % (
-        templateOptions['version'], 
-        templateOptions['buildNum'],
+    s1 = "Version %s (%s)\n" % (
+        namespace.VERSION, 
         time.strftime("%m/%d/%Y"),
     )
     fd = open(path, "r")
@@ -217,6 +226,22 @@ manifest_template = '''
 
 RT_MANIFEST = 24
 shortpgm = "EventGhost"
+PY2EXE_EXCLUDES = [
+    "pywin",
+    "pywin.dialogs",
+    "pywin.dialogs.list",
+    "_ssl",
+    # no TCL
+    "Tkconstants", 
+    "Tkinter", 
+    "tcl",
+    # and no TCL through PIL
+    "_imagingtk", 
+    "PIL._imagingtk", 
+    "ImageTk", 
+    "PIL.ImageTk", 
+    "FixTk",
+]
 
 
 py2exeOptions = dict(
@@ -230,22 +255,7 @@ py2exeOptions = dict(
                 "encodings",
                 "encodings.*",
             ],
-            excludes = [
-                "pywin",
-                "pywin.dialogs",
-                "pywin.dialogs.list",
-                "_ssl",
-                # no TCL
-                "Tkconstants", 
-                "Tkinter", 
-                "tcl",
-                # and no TCL through PIL
-                "_imagingtk", 
-                "PIL._imagingtk", 
-                "ImageTk", 
-                "PIL.ImageTk", 
-                "FixTk",
-            ],
+            excludes = PY2EXE_EXCLUDES,
             dll_excludes = [
                 "DINPUT8.dll", 
                 "w9xpopen.exe", 
@@ -276,11 +286,12 @@ py2exeOptions = dict(
 consoleOptions = dict(
     options = dict(
         build = dict(
-            build_base = join(tmpDir, "build")
+            build_base = join(tmpDir, "build2")
         ),
         py2exe = dict(
             compressed = 0,
             dist_dir = trunkDir,
+            excludes = PY2EXE_EXCLUDES,
             dll_excludes = ["w9xpopen.exe"],
         )
     ),
@@ -301,7 +312,7 @@ consoleOptions = dict(
 )
 
 
-inno_script = """
+INNO_SCRIPT_TEMPLATE = """
 [Tasks]
 Name: "desktopicon"; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:AdditionalIcons}
 
@@ -313,7 +324,7 @@ Name: "fr"; MessagesFile: "compiler:Languages\\French.isl"
 [Setup]
 ShowLanguageDialog=auto
 AppName=EventGhost
-AppVerName=EventGhost %(version)s.%(buildNum)s
+AppVerName=EventGhost %(VERSION)s
 DefaultDirName={pf}\\EventGhost
 DefaultGroupName=EventGhost
 Compression=lzma/ultra
@@ -438,22 +449,43 @@ def Execute(*args):
 
 
 def MakeSourceArchive(outFile):
-    archive = zipfile.ZipFile(outFile, "w", zipfile.ZIP_DEFLATED)
-    for filename in GetSourceFiles():
-        archive.write(join(trunkDir, filename), filename)
-    archive.close()
+    svn = pysvn.Client()
+    
+    def ssl_server_trust_prompt(trust_dict):
+        return True, 0, True
+    svn.callback_ssl_server_trust_prompt = ssl_server_trust_prompt
+    
+    def callback_notify(event_dict):
+        print event_dict["path"][len(tmpDir)+1:]
+    svn.callback_notify = callback_notify
+    
+    svn.checkout(trunkDir, tmpDir)
+    zipFile = zipfile.ZipFile(outFile, "w", zipfile.ZIP_DEFLATED)
+    for root, dirs, files in os.walk(tmpDir):
+        if '.svn' in dirs:
+            dirs.remove('.svn')
+        if "noinclude" in files:
+            continue
+        for file in files:
+            filename = os.path.join(root, file)
+            arcname = filename[len(tmpDir)+1:]
+            zipFile.write(filename, arcname)
+            print "compressing", arcname
+    zipFile.close()
+    svn.cleanup(tmpDir)
+    RemoveDirectory(tmpDir)
 
 
 def MakeInstaller():
-    templateOptions = UpdateVersionFile()
-    UpdateChangeLog(templateOptions)
-    VersionStr = templateOptions['version'] + '.' + str(templateOptions['buildNum'])
-    templateOptions['VersionStr'] = VersionStr
-    templateOptions["PYTHON_DIR"] = dirname(sys.executable)
-    templateOptions["OUT_DIR"] = outDir
-    templateOptions["TRUNK"] = trunkDir
-    templateOptions["TOOLS_DIR"] = toolsDir
-    templateOptions["DIST"] = join(tmpDir, "dist")
+    version = UpdateVersionFile()
+    class namespace:
+        PYTHON_DIR = dirname(sys.executable)
+        OUT_DIR = outDir
+        TRUNK = trunkDir
+        TOOLS_DIR = toolsDir
+        DIST = join(tmpDir, "dist")
+        VERSION = version.string
+    UpdateChangeLog(namespace)
     
     installDeleteDirs = []
     for item in os.listdir(join(trunkDir, "plugins")):
@@ -464,17 +496,15 @@ def MakeInstaller():
                 'Type: filesandordirs; Name: "{app}\\plugins\\%s"' % item
             )
     installDelete = "\n".join(installDeleteDirs)
-    templateOptions["INSTALL_DELETE"] = installDelete
+    namespace.INSTALL_DELETE = installDelete
     
     if Options.createSourceArchive:
-        print "Creating source ZIP file"
-        MakeSourceArchive(join(outDir, "EventGhost_%s_Source.zip" % VersionStr))
+        MakeSourceArchive(join(outDir, "EventGhost_%s_Source.zip" % namespace.VERSION))
         
     if Options.createLib:
-        RemoveDirectory(join(trunkDir, "lib"))
         from distutils.core import setup
-        import py2exe
         InstallPy2exePatch()
+        RemoveDirectory(join(trunkDir, "lib"))
         setup(**consoleOptions)
         setup(**py2exeOptions)
         pythonDir = dirname(sys.executable)
@@ -490,28 +520,27 @@ def MakeInstaller():
             )
         innoScriptPath = abspath(join(tmpDir, "Update.iss"))
         template = inno_update
-        outFileBase = "EventGhost_%s_Update" % VersionStr
+        namespace.OUT_FILE_BASE = "EventGhost_%s_Update" % namespace.VERSION
     else:
         for file in GetSetupFiles():
             installFiles.append(
                 'Source: "' + join(trunkDir, file) + '"; DestDir: "{app}\\' + dirname(file) + '";'
             )
         innoScriptPath = abspath(join(tmpDir, "Setup.iss"))
-        template = inno_script
-        outFileBase = "EventGhost_%s_Setup" % VersionStr
+        template = INNO_SCRIPT_TEMPLATE
+        namespace.OUT_FILE_BASE = "EventGhost_%s_Setup" % namespace.VERSION
         
-    templateOptions["INSTALL_FILES"] = "\n".join(installFiles)  
-    templateOptions["OUT_FILE_BASE"] = outFileBase
+    namespace.INSTALL_FILES = "\n".join(installFiles)  
     
     fd = open(innoScriptPath, "w")
-    fd.write(template % templateOptions)
+    fd.write(template % namespace.__dict__)
     fd.close()
     
     print "Calling Inno Setup Compiler"
     CompileInnoScript(innoScriptPath)
     print "Building installer done!"
     RemoveDirectory(tmpDir)
-    return join(outDir, outFileBase + ".exe")
+    return join(outDir, namespace.OUT_FILE_BASE + ".exe")
 
 
 
@@ -616,37 +645,14 @@ def UploadFile(filename, url):
     print "Upload done!"
     
     
-def SaveSettings():
-    config = ConfigParser.ConfigParser()
-    config.add_section("settings")
-    for label, ident, value in OptionsList:
-        value = getattr(Options, ident)
-        config.set("settings", ident, value)
-    fd = open(join(toolsDir, "MakeInstaller.ini"), "w")
-    config.write(fd)
-    fd.close()
     
-
-def LoadSettings():
-    global OptionsList
-    config = ConfigParser.ConfigParser()
-    config.read(join(toolsDir, "MakeInstaller.ini"))
-    newOptionsList = []
-    for label, ident, value in OptionsList:
-        if config.has_option("settings", ident):
-            value = config.getboolean("settings", ident)
-        newOptionsList.append((label, ident, value))
-    OptionsList = newOptionsList
-    
-
-
 class MainDialog(wx.Dialog):
     class Ctrls:
         pass
     
-    def __init__(self, url=""):
+    def __init__(self):
         wx.Dialog.__init__(self, None, title="Make EventGhost Installer")
-        LoadSettings()
+        self.LoadSettings()
         
         # create controls
         ctrls = []
@@ -655,8 +661,8 @@ class MainDialog(wx.Dialog):
             ctrl.SetValue(default)
             ctrls.append(ctrl)
             setattr(self.Ctrls, name, ctrl)
+        self.Ctrls.upload.Enable(self.url != "")
         
-        self.url = url
         okButton = wx.Button(self, wx.ID_OK)
         okButton.Bind(wx.EVT_BUTTON, self.OnOk)
         cancelButton = wx.Button(self, wx.ID_CANCEL)
@@ -675,11 +681,40 @@ class MainDialog(wx.Dialog):
         self.SetSizerAndFit(sizer)
         
         
+    def SaveSettings(self):
+        config = ConfigParser.ConfigParser()
+        # make ConfigParser case-sensitive
+        config.optionxform = str
+        config.add_section("Settings")
+        for label, ident, value in OptionsList:
+            value = getattr(Options, ident)
+            config.set("Settings", ident, value)
+        fd = open(join(toolsDir, "MakeInstaller.ini"), "w")
+        config.write(fd)
+        fd.close()
+        
+    
+    def LoadSettings(self):
+        global OptionsList
+        config = ConfigParser.ConfigParser()
+        config.read(join(toolsDir, "MakeInstaller.ini"))
+        if config.has_option("Settings", "ftpUrl"):
+            self.url = config.get("Settings", "ftpUrl")
+        else:
+            self.url = ""
+        newOptionsList = []
+        for label, ident, value in OptionsList:
+            if config.has_option("Settings", ident):
+                value = config.getboolean("Settings", ident)
+            newOptionsList.append((label, ident, value))
+        OptionsList = newOptionsList
+        
+
     def OnOk(self, event):
         self.Show(False)
         for label, name, default in OptionsList:
             setattr(Options, name, getattr(self.Ctrls, name).GetValue())
-        SaveSettings()
+        self.SaveSettings()
         if Options.createImports:
             import MakeImports
             MakeImports.Main()
@@ -694,16 +729,10 @@ class MainDialog(wx.Dialog):
         app.ExitMainLoop()
      
      
-#print vars(pysvn.Client().info(trunkDir))
+sys.argv.append("py2exe")
 app = wx.App(0)
 app.SetExitOnFrameDelete(False)
-if len(sys.argv) == 1:
-    sys.argv.append("py2exe")
-    url = ""
-else:
-    url = sys.argv[1]
-    sys.argv[1] = "py2exe"
-mainDialog = MainDialog(url)
+mainDialog = MainDialog()
 mainDialog.Show()
 app.MainLoop()
 

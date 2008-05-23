@@ -29,7 +29,7 @@ class NewFolder(eg.UndoHandler.NewItem):
     
     @eg.LogIt
     def Do(self, document):
-        self.name = eg.text.MainFrame.Menu.NewFolder.replace("&", "")
+        self.name = eg.text.MainFrame.Menu.AddFolder.replace("&", "")
         obj = document.selection
         if isinstance(obj, (document.MacroItem, document.AutostartItem)):
             parentObj = obj.parent

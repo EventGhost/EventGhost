@@ -22,9 +22,6 @@
 
 from types import ClassType
 
-gLastSelected = None
-
-
 class DefaultConfig:
     position = None
     size = (550, 400)
@@ -40,10 +37,11 @@ class Text(eg.TranslatableStrings):
 
 
 class AddActionDialog(eg.Dialog):
+    lastSelectedDataItem = None
     
     def Process(self, parent):
-        global gLastSelected
         self.resultData = None
+        self.lastSelectedTreeItem = None
         eg.Dialog.__init__(
             self, 
             parent, 
@@ -63,17 +61,15 @@ class AddActionDialog(eg.Dialog):
 
         style = wx.TR_DEFAULT_STYLE|wx.TR_HIDE_ROOT|wx.TR_FULL_ROW_HIGHLIGHT
         tree = wx.TreeCtrl(splitterWindow, -1, style=style)
-        tree.SetMinSize((100,100))
-        tree.SetImageList(eg.Icons.gImageList)
-        self.tree = tree
-        
+        tree.SetMinSize((100, 100))
         tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
         tree.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnActivated)
         tree.Bind(wx.EVT_TREE_ITEM_COLLAPSED, self.OnCollapsed)
         tree.Bind(wx.EVT_TREE_ITEM_EXPANDED, self.OnExpanded)
-       
-        rightPanel = self.rightPanel = wx.Panel(splitterWindow)
-        rightSizer = self.rightSizer = wx.BoxSizer(wx.VERTICAL)
+        self.tree = tree
+               
+        rightPanel = wx.Panel(splitterWindow)
+        rightSizer = wx.BoxSizer(wx.VERTICAL)
         rightPanel.SetSizer(rightSizer)
         rightPanel.SetAutoLayout(True)
         
@@ -88,6 +84,8 @@ class AddActionDialog(eg.Dialog):
         self.docText = eg.HtmlWindow(rightPanel)
         self.docText.SetBorders(2)
         
+        self.buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL), True)
+        
         staticBoxSizer.Add(self.docText, 1, wx.EXPAND)
         rightSizer.Add(staticBoxSizer, 1, wx.EXPAND, 5)
         
@@ -95,8 +93,6 @@ class AddActionDialog(eg.Dialog):
         splitterWindow.SetMinimumPaneSize(60)
         splitterWindow.UpdateSize()
 
-        self.buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL), True)
-        
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         mainSizer.Add(splitterWindow, 1, wx.EXPAND|wx.ALL, 5)
         mainSizer.Add(self.buttonRow.sizer, 0, wx.EXPAND)
@@ -106,106 +102,107 @@ class AddActionDialog(eg.Dialog):
         self.SetMinSize(minSize)
         self.SetSize(config.size)
         splitterWindow.SetSashPosition(config.splitPosition)
+        self.FillTree()
         if config.position is not None:
             self.SetPosition(config.position)
-        self.ReloadTree()
         while self.Affirmed():
             self.SetResult(self.resultData)
         
         item = self.tree.GetSelection()
-        gLastSelected = tree.GetPyData(item)        
+        self.__class__.lastSelectedDataItem = self.tree.GetPyData(item)        
         config.size = self.GetSizeTuple()
         config.position = self.GetPositionTuple()
         config.splitPosition = splitterWindow.GetSashPosition()
         
 
-
-    def FillTree(self, item, data):
+    def FillTree(self):
+        """
+        Fills the action-picker tree with data.
+        """
         tree = self.tree
-        for i in data:
-            if isinstance(i, type) and issubclass(i, eg.ActionClass):
-                iconIndex = i.info.icon.index
-                actionList = None
-                name = i.name
-            elif isinstance(i, eg.PluginClass):
-                i = i.info
-                actionList = i.actionList
-                if not len(actionList):
-                    continue
-                iconIndex = i.icon.folderIndex
-                name = i.label
-            elif isinstance(i, eg.ActionGroup):
-                iconIndex = i.icon.folderIndex
-                actionList = i.actionList
-                name = i.name
-            else:
-                raise Exception("unknown type in FillTree", i)
-            tmp = tree.AppendItem(item, name)
-            tree.SetPyData(tmp, i)
-            tree.SetItemImage(tmp, iconIndex)
-            if actionList:
-                self.FillTree(tmp, actionList)
-                if i.expanded:
-                    tree.Expand(tmp)
-            if i == gLastSelected:
-                self.lastSelectedTreeItem = tmp
-    
-    
-    def ReloadTree(self):
-        tree = self.tree
-        tree.DeleteAllItems()
-        self.root = tree.AddRoot("Functions")
+        tree.SetImageList(eg.Icons.gImageList)
+        
+        root = tree.AddRoot("Root")
         self.lastSelectedTreeItem = None
-        self.FillTree(self.root, eg.actionList)
+        self.RecurseActionGroup(eg.actionGroup, tree, root)
         
         if self.lastSelectedTreeItem:
-            item = self.lastSelectedTreeItem
+            treeItem = self.lastSelectedTreeItem
             while True:
-                item = tree.GetItemParent(item)
-                if item == self.root:
+                treeItem = tree.GetItemParent(treeItem)
+                if treeItem == root:
                     break
-                tree.EnsureVisible(item)
+                tree.EnsureVisible(treeItem)
             tree.SelectItem(self.lastSelectedTreeItem)
+    
         
-        
+    def RecurseActionGroup(self, actionGroup, tree, parentTreeItem):
+        """
+        Recurses an eg.ActionGroup and adds the items to the TreeCtrl.
+        """
+        for dataItem in actionGroup.items:
+            if isinstance(dataItem, eg.ActionGroup):
+                # the dataItem is an eg.ActionGroup instance
+                isActionGroup = True
+                if not len(dataItem.items):
+                    # don't add empty ActionGroups
+                    continue
+                iconIndex = dataItem.icon.folderIndex
+            else:
+                # the dataItem is an action
+                isActionGroup = False
+                iconIndex = dataItem.info.icon.index
+            newTreeItem = tree.AppendItem(parentTreeItem, dataItem.name)
+            tree.SetPyData(newTreeItem, dataItem)
+            tree.SetItemImage(newTreeItem, iconIndex)
+            if isActionGroup:
+                self.RecurseActionGroup(dataItem, tree, newTreeItem)
+                if dataItem.expanded:
+                    tree.Expand(newTreeItem)
+            if dataItem == self.lastSelectedDataItem:
+                self.lastSelectedTreeItem = newTreeItem
+    
+    
     def OnSelectionChanged(self, event):
-        item = event.GetItem()
-        if not item.IsOk():
+        """
+        Process wx.EVT_TREE_SEL_CHANGED events.
+        """
+        treeItem = event.GetItem()
+        if not treeItem.IsOk():
             return
-        data = self.tree.GetPyData(item)
-        if isinstance(data, type) and issubclass(data, eg.ActionClass):
-            self.resultData = data
-            self.buttonRow.okButton.Enable(True)
-            info = data.plugin.info
-        else:
+        itemData = self.tree.GetPyData(treeItem)
+        if isinstance(itemData, eg.ActionGroup):
             self.resultData = None
             self.buttonRow.okButton.Enable(False)
-            if isinstance(data, eg.ActionGroup):
-                info = data.plugin.info
-            else:
-                info = data
-        self.nameText.SetLabel(data.name)
-        self.docText.SetBasePath(info.path)
-        self.docText.SetPage(data.description)
+        else:
+            self.resultData = itemData
+            self.buttonRow.okButton.Enable(True)
+        self.nameText.SetLabel(itemData.name)
+        self.docText.SetBasePath(itemData.plugin.info.path)
+        self.docText.SetPage(itemData.description)
         
         
     def OnCollapsed(self, event):
+        """
+        Process wx.EVT_TREE_ITEM_COLLAPSED events.
+        """
         self.tree.GetPyData(event.GetItem()).expanded = False
         
         
     def OnExpanded(self, event):
+        """
+        Process wx.EVT_TREE_ITEM_EXPANDED events.
+        """
         self.tree.GetPyData(event.GetItem()).expanded = True
         
         
     def OnActivated(self, event):
-        item = self.tree.GetSelection()
-        data = self.tree.GetPyData(item)
-        if isinstance(data, type) and issubclass(data, eg.ActionClass):
-            self.OnOK()
-        else:
+        """
+        Process wx.EVT_TREE_ITEM_ACTIVATED events.
+        """
+        treeItem = self.tree.GetSelection()
+        itemData = self.tree.GetPyData(treeItem)
+        if isinstance(itemData, eg.ActionGroup):
             event.Skip()
-
-        
-        
-
-
+        else:
+            self.OnOK()

@@ -113,12 +113,9 @@ class EventGhost(object):
         eg.lastFoundWindows = []
         eg.currentConfigureItem = None
         eg.pluginList = []
-        eg.actionList = []
-                
-        from eg.Version import version, buildNum
-        eg.version = version
-        eg.buildNum = buildNum
-        eg.versionStr = "%s.%s" % (version, buildNum)
+        eg.actionGroup = eg.Bunch()
+        eg.actionGroup.items = []
+        eg.buildNum = eg.Version.buildNum
 
         # because some functions are only available if a wxApp instance
         # exists, we simply create it first
@@ -386,8 +383,7 @@ class EventGhost(object):
     class Exception(Exception):
         
         def __unicode__(self):
-            res = [unicode(arg) for arg in self.args]
-            return "\n".join(res)
+            return "\n".join([unicode(arg) for arg in self.args])
 
 
     class StopException(Exception):

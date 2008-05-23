@@ -174,7 +174,7 @@ class AddPluginDialog(eg.Dialog):
         splitterWindow.SetSashPosition(config.splitPosition)
         if config.position:
             self.SetPosition(config.position)
-        treeCtrl.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelect)
+        treeCtrl.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
         treeCtrl.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnItemActivated)
         treeCtrl.SelectItem(itemToSelect)
         while self.Affirmed():
@@ -189,7 +189,10 @@ class AddPluginDialog(eg.Dialog):
         config.expandDict = expandDict   
 
 
-    def OnSelect(self, event):
+    def OnSelectionChanged(self, event):
+        """
+        Handle the wx.EVT_TREE_SEL_CHANGED events.
+        """
         item = event.GetItem()
         self.resultData = info = self.treeCtrl.GetPyData(item)       
         if info is None:

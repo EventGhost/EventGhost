@@ -88,8 +88,6 @@ import Registry
 ourProcessId = GetCurrentProcessId()
 
 class Text:
-    name = "System"
-    
     class MonitorGroup:
         name = "Display"
         description = \
@@ -129,9 +127,7 @@ EVENT_LIST = (
     ("DeviceRemoved", None),
 )
     
-#=============================================================================
-# Plugin: System
-#=============================================================================
+
 class System(eg.PluginClass):
     text = Text
     
@@ -147,46 +143,52 @@ class System(eg.PluginClass):
         self.AddAction(SetIdleTime)
         self.AddAction(ResetIdleTimer)
         
-        subgroup = self.AddGroup(
+        group = self.AddGroup(
             text.SoundGroup.name, 
             text.SoundGroup.description,
             "icons/SoundCard"
         )
-        subgroup.AddAction(MuteOn)
-        subgroup.AddAction(MuteOff)
-        subgroup.AddAction(ToggleMute)
-        subgroup.AddAction(SetMasterVolume)
-        subgroup.AddAction(ChangeMasterVolumeBy)
-        subgroup.AddAction(PlaySound)
+        group.AddAction(MuteOn)
+        group.AddAction(MuteOff)
+        group.AddAction(ToggleMute)
+        group.AddAction(SetMasterVolume)
+        group.AddAction(ChangeMasterVolumeBy)
+        group.AddAction(PlaySound)
         
-        subgroup = self.AddGroup(
+        group = self.AddGroup(
             text.MonitorGroup.name,
             text.MonitorGroup.description,
             "icons/Display"
         )
-        subgroup.AddAction(StartScreenSaver)
-        subgroup.AddAction(MonitorStandby)
-        subgroup.AddAction(MonitorPowerOff)
-        subgroup.AddAction(MonitorPowerOn)
-        subgroup.AddAction(ChangeDisplaySettings)
-        subgroup.AddAction(ShowPicture)
-        subgroup.AddAction(SetWallpaper)
-        subgroup.AddAction(SetDisplayPreset)
+        group.AddAction(StartScreenSaver)
+        group.AddAction(MonitorStandby)
+        group.AddAction(MonitorPowerOff)
+        group.AddAction(MonitorPowerOn)
+        group.AddAction(ChangeDisplaySettings)
+        group.AddAction(ShowPicture)
+        group.AddAction(SetWallpaper)
+        group.AddAction(SetDisplayPreset)
 
-        subgroup = self.AddGroup(
+        group = self.AddGroup(
             text.PowerGroup.name,
             text.PowerGroup.description,
             "icons/Shutdown"
         )
-        subgroup.AddAction(PowerDown)
-        subgroup.AddAction(Reboot)
-        subgroup.AddAction(Standby)
-        subgroup.AddAction(Hibernate)
-        subgroup.AddAction(LogOff)
-        subgroup.AddAction(LockWorkstation)
-        subgroup.AddAction(SetSystemIdleTimer)
+        group.AddAction(PowerDown)
+        group.AddAction(Reboot)
+        group.AddAction(Standby)
+        group.AddAction(Hibernate)
+        group.AddAction(LogOff)
+        group.AddAction(LockWorkstation)
+        group.AddAction(SetSystemIdleTimer)
         
-        Registry.Init(self)
+        group = self.AddGroup(
+            text.RegistryGroup.name,
+            text.RegistryGroup.description,
+            "icons/Registry"
+        )
+        group.AddAction(Registry.RegistryQuery)
+        group.AddAction(Registry.RegistryChange)
         
         
     def __start__(self):

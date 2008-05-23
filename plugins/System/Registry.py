@@ -60,20 +60,8 @@ class DefaultConfig:
     lastSubkeySelected = "Software"
     lastValueNameSelected = None
     
-    
-    
-def Init(plugin):
-    subgroup = plugin.AddGroup(
-        plugin.text.RegistryGroup.name,
-        plugin.text.RegistryGroup.description,
-        "icons/Registry"
-    )
-    subgroup.AddAction(RegistryQuery)
-    subgroup.AddAction(RegistryChange)
-    config = eg.GetConfig("plugins.System.RegistryGroup", DefaultConfig)
-    RegistryQuery.config = config
-    RegistryChange.config = config
-    
+config = eg.GetConfig("plugins.System.RegistryGroup", DefaultConfig)
+        
 
 
 class RegistryLazyTree(wx.TreeCtrl):
@@ -561,7 +549,6 @@ class RegistryQuery(eg.ActionClass):
     ):
         text = self.text
         text2 = self.text2
-        config = self.config
 
         if key == None:
             key = config.lastKeySelected
@@ -585,7 +572,7 @@ class RegistryQuery(eg.ActionClass):
         )
 
         def updateLastSelectedKeys(event):
-            #print "updateLastSelectedKeys", self.config.lastKeySelected, self.config.lastSubkeySelected, self.config.lastValueNameSelected, "Ctrl", regChooserCtrl.GetValue()
+            #print "updateLastSelectedKeys", config.lastKeySelected, config.lastSubkeySelected, config.lastValueNameSelected, "Ctrl", regChooserCtrl.GetValue()
             a, b, c = regChooserCtrl.tree.GetValue()
             config.lastKeySelected = a
             config.lastSubkeySelected = b
@@ -759,7 +746,6 @@ class RegistryChange(eg.ActionClass):
     ):
         text = self.text
         text2 = self.text2
-        config = self.config
        
         if key == None:
             key = config.lastKeySelected

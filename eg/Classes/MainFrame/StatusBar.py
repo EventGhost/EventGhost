@@ -37,11 +37,13 @@ class StatusBar(wx.StatusBar):
         ]
         self.icon = wx.StaticBitmap(self, -1, self.icons[0], (0,0), (16,16))
         rect = self.GetFieldRect(0)
-        self.cb = cb = wx.CheckBox(self, -1, eg.text.MainFrame.onlyLogAssigned)
-        cb.SetBackgroundColour(wx.SystemSettings_GetColour(wx.SYS_COLOUR_MENUBAR))
-        cb.SetValue(eg.config.onlyLogAssigned)
-        cb.Bind(wx.EVT_CHECKBOX, self.OnCheckBox)
-        cb.SetPosition((rect.x + 2, rect.y + 2))
+        checkBox = wx.CheckBox(self, -1, eg.text.MainFrame.onlyLogAssigned)
+        colour = wx.SystemSettings_GetColour(wx.SYS_COLOUR_MENUBAR)
+        checkBox.SetBackgroundColour(colour)
+        checkBox.SetValue(eg.config.onlyLogAssigned)
+        checkBox.Bind(wx.EVT_CHECKBOX, self.OnCheckBox)
+        checkBox.SetPosition((rect.x + 2, rect.y + 2))
+        self.checkBox = checkBox
         self.Reposition()
 
     if eg.debugLevel:
@@ -77,7 +79,7 @@ class StatusBar(wx.StatusBar):
         
     @eg.LogIt
     def OnCheckBox(self, event):
-        eg.config.onlyLogAssigned = self.cb.GetValue()
+        eg.config.onlyLogAssigned = self.checkBox.GetValue()
         
         
     def SetState(self, flag):

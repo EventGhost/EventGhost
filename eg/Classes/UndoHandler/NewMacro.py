@@ -29,7 +29,7 @@ class NewMacro(eg.UndoHandler.NewItem):
     
     @eg.AsGreenlet
     def Do(self, document):
-        self.name = eg.text.MainFrame.Menu.NewMacro.replace("&", "")
+        self.name = eg.text.MainFrame.Menu.AddMacro.replace("&", "")
         obj = document.selection
         if isinstance(obj, (document.MacroItem, document.AutostartItem)):
             parentObj = obj.parent

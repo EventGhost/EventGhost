@@ -20,8 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg.Version
-
 import time
 import sys
 import platform
@@ -67,6 +65,8 @@ SPECIAL_THANKS_DATA = (
             ("Dean Owens", "X10 CM15A"),
             ("incubi", "DScaler 4"),
             ("Prinz", "Hauppauge IR"),
+            ("junius", "BT8x8 Remotes"),
+            ("CHeitkamp", "GOM Player"),
         ),
     ),
     (
@@ -92,6 +92,7 @@ SPECIAL_THANKS_DATA = (
             "bskchaos",          #  8. Apr 2008
             "Warren Hatch",      # 26. Apr 2008
             "Daniel Henriksson", #  3. May 2008
+            "skyanchor",         # 13. May 2008
         ),
     ),
     (
@@ -252,14 +253,14 @@ class LicensePanel(HtmlPanel):
 class SystemInfoPanel(HtmlPanel):
     
     def __init__(self, parent):
-        compileTime = time.strftime(
+        buildTime = time.strftime(
             Text.CreationDate, 
-            time.gmtime(eg.Version.compileTime)
+            time.gmtime(eg.Version.buildTime)
         )
         self.sysInfos = (
-            ("EventGhost Version", eg.versionStr),
+            ("EventGhost Version", eg.Version.string),
             ("SVN Revision", eg.Version.svnRevision),
-            ("Compile Time", compileTime),
+            ("Build Time", buildTime),
             ("Python Version", "%d.%d.%d %s %d" % sys.version_info),
             ("wxPython Version", wx.VERSION_STRING),
             ("PIL Version", Image.VERSION),

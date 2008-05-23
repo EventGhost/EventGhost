@@ -37,7 +37,7 @@ class ActionInfo(object):
                 
 class ActionGroup(object):
     __slots__ = [
-        "plugin", "name", "description", "icon", "actionList", "expanded"
+        "plugin", "name", "description", "icon", "items", "expanded"
     ]
     
     def __init__(self, plugin, name=None, description=None, iconFile=None):
@@ -49,33 +49,30 @@ class ActionGroup(object):
             self.icon = plugin.info.icon
         else:
             self.icon = eg.Icons.PathIcon(plugin.info.path + iconFile + ".png")
-        self.actionList = []
+        self.items = []
         
         
     def AddGroup(self, name=None, description=None, iconFile=None):
+        """
+        Create and add a new sub-group.
+        """
         group = ActionGroup(self.plugin, name, description, iconFile)
-        self.actionList.append(group)
+        self.items.append(group)
         return group
-    
-    
-    def AddAction(self, actionClass, hidden=False):
-        action = self.CreateAction(actionClass, self.plugin)
-        if not hidden:
-            self.actionList.append(action)
-        return action
-    
+        
 
-    @classmethod
-    def CreateAction(cls, actionCls, plugin):
+    def AddAction(self, actionCls, clsName=None, name=None, description=None, value=None, hidden=False):
+        if not issubclass(actionCls, ActionClass):
+            raise Exception("Actions must be subclasses of eg.ActionClass")
+        if clsName is not None:
+            actionCls = ClassType(
+                clsName,
+                (actionCls, ),
+                dict(name=name, description=description, value=value),
+            )
+        plugin = self.plugin
         pluginInfo = plugin.info
         actionClsName = actionCls.__name__
-        if not issubclass(actionCls, ActionClass):
-            eg.PrintDebugNotice("creating new action class from " + str(actionCls))
-            actionCls = ClassType(
-                actionClsName,
-                (actionCls, ActionClass), 
-                {}
-            )
         icon = pluginInfo.icon
         if actionCls.iconFile:
             try:
@@ -128,5 +125,39 @@ class ActionGroup(object):
         )
         pluginInfo.actions[actionClsName] = actionCls
         actionCls.OnAddAction()
+        if not hidden:
+            self.items.append(actionCls)
         return actionCls
     
+
+    def AddActionsFromList(self, theList, defaultAction=None):
+        def Recurse(theList, group):
+            for parts in theList:
+                if isinstance(parts, type):
+                    group.AddAction(parts)
+                    continue
+                length = len(parts)
+                if parts[0] is eg.ActionGroup:
+                    # this is a new sub-group
+                    aList = parts[-1]
+                    cls, name, description = parts[0:3]
+                    if len(parts) == 5:
+                        iconFile = parts[3]
+                    else:
+                        iconFile = None
+                    newGroup = group.AddGroup(name, description, iconFile)
+                    Recurse(aList, newGroup)
+                    continue
+                if length == 4:
+                    # this is a new default action
+                    actionCls = defaultAction
+                    clsName, name, description, value = parts
+                elif length == 5:
+                    # this is a new sub-action
+                    actionCls, clsName, name, description, value = parts
+                else:
+                    raise Exception("Wrong number of fields in the list", parts)
+                       
+                group.AddAction(actionCls, clsName, name, description, value)
+                
+        Recurse(theList, self)

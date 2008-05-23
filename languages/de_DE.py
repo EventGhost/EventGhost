@@ -41,7 +41,7 @@ class MainFrame:
         Cut = u"&Ausschneiden"
         Delete = u"&Löschen"
         Disabled = u"Element &deaktivieren"
-        Edit = u"Element &konfigurieren"
+        Configure = u"Element &konfigurieren"
         EditMenu = u"&Bearbeiten"
         Execute = u"Element &ausführen"
         Exit = u"&Beenden"
@@ -59,10 +59,10 @@ class MainFrame:
         LogMacros = u"Auch Makros aufzeichnen"
         LogTime = u"Auch Zeiten aufzeichnen"
         New = u"&Neu"
-        NewAction = u"&Befehl hinzufügen"
-        NewEvent = u"&Ereignis hinzufügen"
-        NewFolder = u"&Ordner hinzufügen"
-        NewMacro = u"&Makro hinzufügen"
+        AddAction = u"&Befehl hinzufügen"
+        AddEvent = u"&Ereignis hinzufügen"
+        AddFolder = u"&Ordner hinzufügen"
+        AddMacro = u"&Makro hinzufügen"
         Open = u"Ö&ffnen..."
         Options = u"&Einstellungen..."
         Paste = u"E&infügen"
@@ -89,7 +89,7 @@ class MainFrame:
 class Error:
     FileNotFound = u'Datei "%s" konnte nicht gefunden werden.'
     InAction = u'Fehler in Befehl: "%s"'
-    configureError = u"Fehler beim Konfigurieren von:"
+    configureError = u"Fehler beim Konfigurieren von: %s"
     pluginLoadError = u"Fehler beim Laden der Plugin-Datei %s."
     pluginNotActivated = u'Plugin "%s" ist nicht aktiviert'
     pluginStartError = u"Fehler beim Start des Plugins: %s"

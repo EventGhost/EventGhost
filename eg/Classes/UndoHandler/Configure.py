@@ -40,7 +40,7 @@ class Configure:
         
         self.oldArgumentString = item.GetArgumentString()
         oldArgs = item.GetArgs()
-        self.name = eg.text.MainFrame.Menu.Edit.replace("&", "")
+        self.name = eg.text.MainFrame.Menu.Configure.replace("&", "")
         
         wasApplied = False
         wasTested = False

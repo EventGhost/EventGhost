@@ -448,9 +448,15 @@ class TreeItem(object):
         return None
         
         
+    def Print(self, *args, **kwargs):
+        kwargs.setdefault("source", self)
+        kwargs.setdefault("icon", self.icon)
+        eg.Print(*args, **kwargs)
         
-    def Print(self, text):
-        eg.log.PrintItem(text, self.icon, self)
+    
+    def PrintError(self, *args, **kwargs):
+        kwargs.setdefault("source", self)
+        eg.PrintError(*args, **kwargs)
         
     
     def DropTest(self, cls):

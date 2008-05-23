@@ -73,7 +73,7 @@ class ActionThread(eg.ThreadWorker):
         try:
             action()
         except eg.PluginClass.Exception, e:
-            eg.log.PrintItem(e.message, eg.Icons.ERROR_ICON, e.obj.info.treeItem)
+            eg.PrintError(e.message, source=e.obj.info.treeItem)
             e.obj.info.lastException = e
             e.obj.info.treeItem.SetErrorState()
             

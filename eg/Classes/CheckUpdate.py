@@ -48,7 +48,7 @@ class MessageDialog(eg.Dialog):
     
     def __init__(self, version, url):
         self.url = url
-        currentVersion = eg.version
+        currentVersion = eg.Version.string
         eg.Dialog.__init__(self, None, -1, Text.title)
         bmp = wx.ArtProvider.GetBitmap(
             wx.ART_INFORMATION, 
@@ -140,8 +140,9 @@ def _checkUpdate(manually=False):
         conn.close()
         newVersion = data[0]
         newVersionTuple = newVersion.split(".")
-        currentVersionTuple = eg.version.split(".")
-        for i in xrange(0, len(currentVersionTuple)):
+        currentVersionTuple = eg.Version.string.split(".")
+        numParts = min(len(newVersionTuple), len(currentVersionTuple))
+        for i in range(numParts):
             if newVersionTuple[i] > currentVersionTuple[i]:
                 wx.CallAfter(MessageDialog, newVersion, data[1])
                 return

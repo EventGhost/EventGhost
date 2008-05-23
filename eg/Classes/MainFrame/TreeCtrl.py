@@ -266,7 +266,7 @@ class TreeCtrl(wx.TreeCtrl):
         Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
         Bind(wx.EVT_TREE_ITEM_MENU, self.OnContextMenu)
         Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
-        Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDClick)
+        Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDoubleClick)
         if eg.debugLevel:
             Bind(wx.EVT_TREE_ITEM_GETTOOLTIP, self.OnToolTip)
         Bind(wx.EVT_TREE_ITEM_EXPANDED, self.OnExpanded)
@@ -296,7 +296,7 @@ class TreeCtrl(wx.TreeCtrl):
         
         
     @eg.LogIt
-    def OnLeftDClick(self, event):
+    def OnLeftDoubleClick(self, event):
         treeItem, flags = self.HitTest(event.GetPosition())
         if treeItem.IsOk():
             if isinstance(self.document.selection, eg.ActionItem):
@@ -361,7 +361,7 @@ class TreeCtrl(wx.TreeCtrl):
     @eg.LogIt
     def OnContextMenu(self, event):
         self.SetFocus()
-        self.frame.SetupEditMenu(self.frame.popupMenuItems)
+        self.frame.SetupEditMenu(self.frame.popupMenu)
         self.PopupMenu(self.frame.popupMenu, event.GetPoint())
 
     
@@ -552,12 +552,12 @@ class TreeCtrl(wx.TreeCtrl):
 
 
     def GetTopLevelWindow(self):
-        win1 = self
+        result = self
         while True:
-            win2 = win1.GetParent()
-            if win2 is None:
-                return win1
-            win1 = win2
+            parent = result.GetParent()
+            if parent is None:
+                return result
+            result = parent
             
         
     def OnDragTimer(self, event):

@@ -35,7 +35,6 @@ class Menu(wx.Menu):
         name, 
         func = None, 
         hotkey = "", 
-        enabled = True, 
         kind = wx.ITEM_NORMAL, 
         image = None
     ):
@@ -43,19 +42,19 @@ class Menu(wx.Menu):
         if image is not None:
             tmp.SetBitmap(image)
         wx.Menu.AppendItem(self, tmp)
-        tmp.Enable(enabled)
         return tmp
 
 
     def AddItem(
         self, 
-        name, 
-        enabled = True, 
+        name = None, 
         kind = wx.ITEM_NORMAL, 
         image = None,
         hotkey = "",
         func = None
     ):
+        if name is None:
+            return self.AppendSeparator()
         if func is None:
             FuncWrapper = getattr(self.parent, "OnCmd" + name)
         else:
@@ -67,32 +66,14 @@ class Menu(wx.Menu):
             menuname, 
             FuncWrapper, 
             hotkey, 
-            enabled, 
             kind, 
             image
         )
-        setattr(self, name, menuitem)
+        ident = name[0].lower() + name[1:]
+        setattr(self, ident, menuitem)
         return menuitem
     
     
-    def Item(self, *args, **kwargs):
-        return self.AddItem(*args, **kwargs)
-    
-    
-    def CheckItem(self, name, checked=False, enabled=True, image=None, hotkey=""):
-        item = self.AddItem(name, enabled, wx.ITEM_CHECK, image, hotkey)
-        item.Check(checked)
-        return item
-    
-    
-    def Separator(self):
-        wx.Menu.AppendSeparator(self)
-
-
-    def AddSeparator(self):
-        wx.Menu.AppendSeparator(self)
-
-
 
 class MenuItem(wx.MenuItem):
     
@@ -111,8 +92,17 @@ class MenuItem(wx.MenuItem):
         if self.hotkey:
             name += " \t" + self.hotkey
         wx.MenuItem.SetText(self, name)
+        return self
         
+    
+    def Check(self, check=True):
+        wx.MenuItem.Check(self, check)
+        return self
         
+    
+    def Enable(self, enable=True):
+        wx.MenuItem.Enable(self, enable)
+        return self
         
         
         

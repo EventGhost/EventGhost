@@ -29,7 +29,7 @@ class NewAction(eg.UndoHandler.NewItem):
     
     @eg.LogIt
     def Do(self, document, action):
-        self.name = eg.text.MainFrame.Menu.NewAction.replace("&", "")
+        self.name = eg.text.MainFrame.Menu.AddAction.replace("&", "")
         # find the right insert position
         selection = document.selection
         if isinstance(selection, (document.MacroItem, document.AutostartItem)):
