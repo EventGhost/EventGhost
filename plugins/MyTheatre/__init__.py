@@ -1,7 +1,6 @@
 #
 # plugins/MyTheatre/__init__.py
 #
-#
 # This file is a plugin for EventGhost.
 #
 # EventGhost is free software; you can redistribute it and/or modify
@@ -23,7 +22,7 @@ import eg
 eg.RegisterPlugin(
     name = "MyTheatre",
     author = "Milbrot",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.1." + "$LastChangedRevision$".split()[1],
     kind = "program",
     createMacrosOnAdd = True,
     description = (
@@ -52,6 +51,14 @@ eg.RegisterPlugin(
     ),
 )
     
+# Changelog:
+# ----------
+# 2006-08-14 Milbrot
+#     * initial version
+# 2008-05-03 bitmonster
+#     * removed ScanListRecursive. Now uses AddActionsFromList.
+#     * increased version to 1.1
+
 
 import _winreg
 from eg.WinApi import FindWindow, SendMessageTimeout
@@ -85,7 +92,7 @@ class ExeAction(eg.ActionClass):
 
 
 MyActionList = (
-('Common Functions', None,
+(eg.ActionGroup, 'Common Functions', None,
   (
     (MsgAction, 'Number0', 'Number 0', None, 2399142008), #SHORTCUT_0
     (MsgAction, 'Number1', 'Number 1', None, 2399142009), #SHORTCUT_1
@@ -124,7 +131,7 @@ MyActionList = (
     (MsgAction, 'BackgroundMode', 'Background Mode', None, 2399142029), #SHORTCUT_BKGMODE
   )
 ),
-('Live Mode Functions', None,
+(eg.ActionGroup, 'Live Mode Functions', None,
   (
     (MsgAction, 'SideChannelList', 'Side Channel List', None, 2399142089), #SHORTCUT_SIDECLIST
     (MsgAction, 'OsdFavoritChannelList', 'OSD Favorit Channel List', None, 2399142090), #SHORTCUT_OSDCHLIST
@@ -155,7 +162,7 @@ MyActionList = (
     (MsgAction, 'CiConsole', 'CI Console', None, 2399142116), #SHORTCUT_CICONSOLE
   )
 ),
-('File Mode', None,
+(eg.ActionGroup, 'File Mode', None,
   (
     (MsgAction, 'SideFileList', 'Side File List', None, 2399142189), #SHORTCUT_SIDEFILST
     (MsgAction, 'OsdFileList', 'OSD File List', None, 2399142190), #SHORTCUT_OSDFLIST
@@ -163,7 +170,7 @@ MyActionList = (
     (MsgAction, 'PreviousFile', 'Previous File', None, 2399142191), #SHORTCUT_PREVFILE
   )
 ),
-('DVD Mode', None,
+(eg.ActionGroup, 'DVD Mode', None,
   (
     (MsgAction, 'DvdSubtitles', 'DVD Subtitles', None, 2399142291), #SHORTCUT_DVDSUBS
     (MsgAction, 'NextChapter', 'Next Chapter', None, 2399142293), #SHORTCUT_NEXTCHAP
@@ -178,7 +185,7 @@ MyActionList = (
     (MsgAction, 'DvdSelect', 'DVD Select', None, 2399142299), #SHORTCUT_DVDMSELECT
   )
 ),
-('OSD', None,
+(eg.ActionGroup, 'OSD', None,
   (
     (MsgAction, 'OsdUp', 'OSD Up', None, 2399142389), #SHORTCUT_OSDUP
     (MsgAction, 'OsdDown', 'OSD Down', None, 2399142390), #SHORTCUT_OSDDN
@@ -190,7 +197,7 @@ MyActionList = (
     (MsgAction, 'EventInfo', 'Event Info', None, 2399142397), #SHORTCUT_EVINFO
   )
 ),
-('Side Channel/File List Functions', None,
+(eg.ActionGroup, 'Side Channel/File List Functions', None,
   (
     (MsgAction, 'SideChannelFileUp', 'Side Channel File Up', None, 2399142489), #SHORTCUT_SCFUP
     (MsgAction, 'SideChannelFileDown', 'Side Channel File Down', None, 2399142490), #SHORTCUT_SCFDN
@@ -204,7 +211,7 @@ MyActionList = (
     (MsgAction, 'SideChannelFileAll', 'Side Channel File All', None, 2399142498), #SHORTCUT_SCFALL
   )
 ),
-('EPG Window Mode', None,
+(eg.ActionGroup, 'EPG Window Mode', None,
   (
     (MsgAction, 'EpgWindowUp', 'EPG Window Up', None, 2399142589), #SHORTCUT_EPGWUP
     (MsgAction, 'EpgWindowDown', 'EPG Window Down', None, 2399142590), #SHORTCUT_EPGWDN
@@ -217,7 +224,7 @@ MyActionList = (
     (MsgAction, 'EpgWindowAllNowNext', 'EPG Window All/Now/Next', None, 2399142597), #SHORTCUT_EPGWANN
   )
 ),
-('Presets', None,
+(eg.ActionGroup, 'Presets', None,
   (
     (MsgAction, 'Preset1', 'Preset 1', None, 2399142689), #SHORTCUT_PRESET1
     (MsgAction, 'Preset2', 'Preset 2', None, 2399142690), #SHORTCUT_PRESET2
@@ -227,7 +234,7 @@ MyActionList = (
     (MsgAction, 'Preset6', 'Preset 6', None, 2399142694), #SHORTCUT_PRESET6
   )
 ),
-('Plugin controls', None,
+(eg.ActionGroup, 'Plugin controls', None,
   (
     (MsgAction, 'PluginUp', 'Plugin Up', None, 2399142789), #SHORTCUT_PLGUP
     (MsgAction, 'PluginDown', 'Plugin Down', None, 2399142790), #SHORTCUT_PLGDN
@@ -241,7 +248,7 @@ MyActionList = (
     (MsgAction, 'PluginTab', 'Plugin Tab', None, 2399142798), #SHORTCUT_PLGTAB
   )
 ),
-('Start MyTheatre', None,
+(eg.ActionGroup, 'Start MyTheatre', None,
   (
     (ExeAction, 'StartLiveMode', 'Start in Live Mode', None, '/remote F9'),
     (ExeAction, 'StartDvdMode', 'Start in DVD Mode', None, '/dvd'),
@@ -251,30 +258,10 @@ MyActionList = (
 )
 
 
-
-def ScanListRecursive(theList, group):
-    for part in theList:
-        if len(part) == 3:
-            # this is a new sub-group
-            groupName, groupDescription, groupList = part
-            newGroup = group.AddGroup(groupName, groupDescription)
-            ScanListRecursive(groupList, newGroup)
-        else:
-            # this is a new action
-            classType, className, actionName, actionDescription, actionValue = part
-            class tmpAction(classType):
-                name = actionName
-                description = actionDescription
-                value = actionValue
-            tmpAction.__name__ = className
-            group.AddAction(tmpAction)
-
-
-
 class MyTheatre(eg.PluginClass):
 
     def __init__(self):
-        ScanListRecursive(MyActionList, self)
+        self.AddActionsFromList(MyActionList)
 
 
     def __start__(self):
