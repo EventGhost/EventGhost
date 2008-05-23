@@ -51,38 +51,38 @@ eg.RegisterPlugin(
 
 
 ACTIONS = (
-    ("Left", "Left", "KEY_LEFT"),
-    ("Right", "Right", "KEY_RIGHT"),
-    ("Up", "Up", "KEY_UP"),             
-    ("Down", "Down", "KEY_DOWN"),
-    ("Ok", "Ok", "KEY_OK"),            
-    ("Mute", "Mute", "KEY_MUTE"),
-    ("Power", "Power", "KEY_POWER"),           
-    ("Red", "Red", "KEY_RED"),
-    ("Green", "Green", "KEY_GREEN"),
-    ("Yellow", "Yellow", "KEY_YELLOW"),         
-    ("Blue", "Blue", "KEY_BLUE"),           
-    ("VolumeUp", "Volume Up", "KEY_VOLUMEUP"),
-    ("VolumeDown", "Volume Down", "KEY_VOLUMEDOWN"),     
-    ("Help", "Help", "KEY_HELP"),
-    ("Setup", "Setup", "KEY_SETUP"),           
-    ("TopLeft", "Top Left", "KEY_TOPLEFT"),
-    ("TopRight", "Top Right", "KEY_TOPRIGHT"),       
-    ("BottomLeft", "Bottom Left", "KEY_BOTTOMLEFT"),
-    ("BottomRight", "Bottom Right", "KEY_BOTTOMRIGHT"),     
-    ("Home", "Home", "KEY_HOME"),
-    ("PageDown", "Page Down", "KEY_PAGEDOWN"),       
-    ("PageUp", "Page Up", "KEY_PAGEUP"),
-    ("Num0", "Number 0", "KEY_0"),               
-    ("Num1", "Number 1", "KEY_1"),
-    ("Num2", "Number 2", "KEY_2"),               
-    ("Num3", "Number 3", "KEY_3"),
-    ("Num4", "Number 4", "KEY_4"),               
-    ("Num5", "Number 5", "KEY_5"),
-    ("Num6", "Number 6", "KEY_6"),               
-    ("Num7", "Number 7", "KEY_7"),
-    ("Num8", "Number 8", "KEY_8"),               
-    ("Num9", "Number 9", "KEY_9"),
+    ("Left", "Left", None, "KEY_LEFT"),
+    ("Right", "Right", None, "KEY_RIGHT"),
+    ("Up", "Up", None, "KEY_UP"),             
+    ("Down", "Down", None, "KEY_DOWN"),
+    ("Ok", "Ok", None, "KEY_OK"),            
+    ("Mute", "Mute", None, "KEY_MUTE"),
+    ("Power", "Power", None, "KEY_POWER"),           
+    ("Red", "Red", None, "KEY_RED"),
+    ("Green", "Green", None, "KEY_GREEN"),
+    ("Yellow", "Yellow", None, "KEY_YELLOW"),         
+    ("Blue", "Blue", None, "KEY_BLUE"),           
+    ("VolumeUp", "Volume Up", None, "KEY_VOLUMEUP"),
+    ("VolumeDown", "Volume Down", None, "KEY_VOLUMEDOWN"),     
+    ("Help", "Help", None, "KEY_HELP"),
+    ("Setup", "Setup", None, "KEY_SETUP"),           
+    ("TopLeft", "Top Left", None, "KEY_TOPLEFT"),
+    ("TopRight", "Top Right", None, "KEY_TOPRIGHT"),       
+    ("BottomLeft", "Bottom Left", None, "KEY_BOTTOMLEFT"),
+    ("BottomRight", "Bottom Right", None, "KEY_BOTTOMRIGHT"),     
+    ("Home", "Home", None, "KEY_HOME"),
+    ("PageDown", "Page Down", None, "KEY_PAGEDOWN"),       
+    ("PageUp", "Page Up", None, "KEY_PAGEUP"),
+    ("Num0", "Number 0", None, "KEY_0"),               
+    ("Num1", "Number 1", None, "KEY_1"),
+    ("Num2", "Number 2", None, "KEY_2"),               
+    ("Num3", "Number 3", None, "KEY_3"),
+    ("Num4", "Number 4", None, "KEY_4"),               
+    ("Num5", "Number 5", None, "KEY_5"),
+    ("Num6", "Number 6", None, "KEY_6"),               
+    ("Num7", "Number 7", None, "KEY_7"),
+    ("Num8", "Number 8", None, "KEY_8"),               
+    ("Num9", "Number 9", None, "KEY_9"),
 )
 
 TIMEOUT = 1.5
@@ -137,8 +137,8 @@ class DBox2(eg.PluginClass):
     
     def __init__(self):
         self.AddActionsFromList(ACTIONS, ActionPrototype)
-        
-        
+
+
     def __start__(self, host, useRcem=False):
         self.host = host
         if useRcem:
@@ -146,7 +146,6 @@ class DBox2(eg.PluginClass):
         else:
             self.connectString = "/control/exec?Y_Tools&rcsim&%s"
             
-        
         
     def Configure(self, host="127.0.0.1", useRcem=True):
         panel = eg.ConfigPanel(self)
