@@ -30,7 +30,6 @@ class Paste:
     def __init__(self, document):
         tree = document.tree
         self.items = []
-        is_internal_paste = False
         selectionObj = tree.GetPyData(tree.GetSelection())
         if not wx.TheClipboard.Open():
             return
@@ -48,7 +47,6 @@ class Paste:
             if not wx.TheClipboard.GetData(dataObj):
                 return
             clipboardData = dataObj.GetText()
-            is_internal_paste = (clipboardData == tree.clipboardData)
             xmlTree = ElementTree.fromstring(clipboardData.encode("utf-8"))
             for childXmlNode in xmlTree:
                 targetObj = selectionObj
