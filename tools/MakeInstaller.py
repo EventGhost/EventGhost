@@ -685,7 +685,9 @@ class MainDialog(wx.Dialog):
         config = ConfigParser.ConfigParser()
         # make ConfigParser case-sensitive
         config.optionxform = str
-        config.add_section("Settings")
+        config.read(join(toolsDir, "MakeInstaller.ini"))
+        if not config.has_section("Settings"):
+            config.add_section("Settings")
         for label, ident, value in OptionsList:
             value = getattr(Options, ident)
             config.set("Settings", ident, value)

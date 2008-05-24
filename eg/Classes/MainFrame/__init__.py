@@ -570,7 +570,10 @@ class MainFrame(wx.Frame):
     @eg.LogIt
     def OnDialogDestroy(self, event):
         dialog = event.GetWindow()
-        self.openDialogs.remove(dialog)
+        try:
+            self.openDialogs.remove(dialog)
+        except:
+            pass
         if len(self.openDialogs) == 0:
             self.SetWindowStyleFlag(self.style)
     
