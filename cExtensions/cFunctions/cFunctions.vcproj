@@ -124,10 +124,16 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
+				RelativePath=".\hooks.c">
+			</File>
+			<File
 				RelativePath=".\keyhook.c">
 			</File>
 			<File
 				RelativePath=".\main.c">
+			</File>
+			<File
+				RelativePath=".\mousehook.c">
 			</File>
 			<File
 				RelativePath=".\registry_funcs.c">
@@ -144,7 +150,13 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
+				RelativePath=".\hooks.h">
+			</File>
+			<File
 				RelativePath=".\keyhook.h">
+			</File>
+			<File
+				RelativePath=".\mousehook.h">
 			</File>
 			<File
 				RelativePath=".\registry_funcs.h">

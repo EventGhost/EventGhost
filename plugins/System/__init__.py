@@ -75,7 +75,7 @@ import eg.WinApi.SoundMixer as SoundMixer
 from eg.WinApi import GetCurrentProcessId, GetWindowThreadProcessId
 from eg.WinApi.Utils import BringHwndToFront
 from eg.WinApi.Utils import GetMonitorDimensions
-from eg.cFunctions import RegisterKeyhook, UnregisterKeyhook
+from eg.cFunctions import StartHooks, StopHooks
 from eg.cFunctions import ResetIdleTimer as HookResetIdleTimer
 from eg.cFunctions import SetIdleTime as HookSetIdleTime
 
@@ -216,12 +216,14 @@ class System(eg.PluginClass):
             self.sessionChangeNotifier = SessionChangeNotifier(self)
 
         try:
-            RegisterKeyhook(
+            StartHooks(
                 self.IdleCallback, 
                 self.UnIdleCallback, 
             )
         except:
             eg.PrintTraceback()
+        eg.Bind("System.SessionLock", self.OnSessionLock)
+        eg.Bind("System.SessionUnlock", self.OnSessionUnlock)
         
         # Use VistaVolume.dll from stridger for sound volume control on Vista
         if majorVersion > 5:
@@ -262,10 +264,12 @@ class System(eg.PluginClass):
                 
     @eg.LogItWithReturn
     def __stop__(self):
+        eg.Unbind("System.SessionLock", self.OnSessionLock)
+        eg.Unbind("System.SessionUnlock", self.OnSessionUnlock)
         eg.app.clipboardEvent.Unbind(self.OnClipboardChange)
         self.deviceChangeNotifier.Close()
         self.powerBroadcastNotifier.Close()
-        UnregisterKeyhook()
+        StopHooks()
         
         
     def IdleCallback(self):
@@ -276,6 +280,20 @@ class System(eg.PluginClass):
         self.TriggerEvent("UnIdle")
         
         
+    def OnSessionLock(self, event=None):
+        StopHooks()
+    
+    
+    def OnSessionUnlock(self, event=None):
+        try:
+            StartHooks(
+                self.IdleCallback, 
+                self.UnIdleCallback, 
+            )
+        except:
+            eg.PrintTraceback()
+    
+    
     def OnClipboardChange(self):
         ownerHwnd = GetClipboardOwner()
         if GetWindowThreadProcessId(ownerHwnd)[1] != ourProcessId:

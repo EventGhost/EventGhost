@@ -2,14 +2,16 @@
 
 
 #include "registry_funcs.h"
+#include "hooks.h"
 #include "keyhook.h"
+#include "mousehook.h"
 #include "win_funcs.h"
 
 
 static PyMethodDef example_methods[] = {
 	{"RegEnumKeysAndValues", RegEnumKeysAndValues, 1, ""},
-	{"RegisterKeyhook", RegisterKeyhook, 1, ""},
-	{"UnregisterKeyhook", UnregisterKeyhook, 1, ""},
+	{"StartHooks", StartHooks, 1, ""},
+	{"StopHooks", StopHooks, 1, ""},
 	{"ResetIdleTimer", ResetIdleTimer, 1, ""},
 	{"SetIdleTime", SetIdleTime, 1, ""},
 	{"SetKeyboardCallback", SetKeyboardCallback, 1, ""},
