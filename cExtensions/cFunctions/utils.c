@@ -46,4 +46,3 @@ void print(const char *fmt, ...)
 	PyGILState_Release(gil);
 	
 }
-
