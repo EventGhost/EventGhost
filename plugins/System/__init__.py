@@ -215,15 +215,9 @@ class System(eg.PluginClass):
             from SessionChangeNotifier import SessionChangeNotifier
             self.sessionChangeNotifier = SessionChangeNotifier(self)
 
-        try:
-            StartHooks(
-                self.IdleCallback, 
-                self.UnIdleCallback, 
-            )
-        except:
-            eg.PrintTraceback()
-        eg.Bind("System.SessionLock", self.OnSessionLock)
-        eg.Bind("System.SessionUnlock", self.OnSessionUnlock)
+        self.StartHookCode()
+        eg.Bind("System.SessionLock", self.StopHookCode)
+        eg.Bind("System.SessionUnlock", self.StartHookCode)
         
         # Use VistaVolume.dll from stridger for sound volume control on Vista
         if majorVersion > 5:
@@ -264,12 +258,20 @@ class System(eg.PluginClass):
                 
     @eg.LogItWithReturn
     def __stop__(self):
-        eg.Unbind("System.SessionLock", self.OnSessionLock)
-        eg.Unbind("System.SessionUnlock", self.OnSessionUnlock)
+        eg.Unbind("System.SessionLock", self.StopHookCode)
+        eg.Unbind("System.SessionUnlock", self.StartHookCode)
         eg.app.clipboardEvent.Unbind(self.OnClipboardChange)
         self.deviceChangeNotifier.Close()
         self.powerBroadcastNotifier.Close()
-        StopHooks()
+        self.StopHookCode()
+        
+        
+    def OnComputerSuspend(self, suspendType):
+        self.StopHookCode()
+        
+        
+    def OnComputerResume(self, suspendType):
+        self.StartHookCode()
         
         
     def IdleCallback(self):
@@ -280,11 +282,7 @@ class System(eg.PluginClass):
         self.TriggerEvent("UnIdle")
         
         
-    def OnSessionLock(self, event=None):
-        StopHooks()
-    
-    
-    def OnSessionUnlock(self, event=None):
+    def StartHookCode(self, event=None):
         try:
             StartHooks(
                 self.IdleCallback, 
@@ -292,6 +290,10 @@ class System(eg.PluginClass):
             )
         except:
             eg.PrintTraceback()
+        
+        
+    def StopHookCode(self, event=None):
+        StopHooks()
     
     
     def OnClipboardChange(self):
