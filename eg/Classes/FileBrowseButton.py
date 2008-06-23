@@ -24,7 +24,7 @@ from wx.lib.filebrowsebutton import FileBrowseButton
 import types
 
 
-def createDialog( self, parent, id, pos, size, style ):
+def createDialog(self, parent, id, pos, size, style):
     """Setup the graphic representation of the dialog"""
     wx.Panel.__init__ (self, parent, id, pos, size, style)
     self.SetMinSize(size) # play nice with sizers
@@ -45,7 +45,7 @@ def createDialog( self, parent, id, pos, size, style ):
     self.SetDimensions(-1, -1, size.width, size.height, wx.SIZE_USE_EXISTING)
 
 
-def createBrowseButton( self):
+def createBrowseButton(self):
     """Create the browse-button control"""
     button = wx.BitmapButton(self, -1, wx.Bitmap("images/searchFolder.png"))
     w, h = button.GetSize()
@@ -61,7 +61,14 @@ def OnChanged(self, evt):
     #ADDED:
     evt.Skip()
 
+
+def Enable(self, enable=True):
+    self.textControl.Enable(enable)
+    return self.browseButton.Enable(enable)
+    
+    
 FileBrowseButton.createDialog = createDialog
 FileBrowseButton.createBrowseButton = createBrowseButton
 FileBrowseButton.OnChanged = OnChanged
+FileBrowseButton.Enable = Enable
 
