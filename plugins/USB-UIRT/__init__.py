@@ -373,7 +373,7 @@ class TransmitIR(eg.ActionClass):
         editCtrl.SetFont(font)
         editCtrl.SetMinSize((-1, 100))
         
-        repeatCtrl = eg.SpinIntCtrl(panel, -1, min=0, max=127)
+        repeatCtrl = eg.SpinIntCtrl(panel, -1, min=1, max=127)
         repeatCtrl.SetInitialSize((50,-1))
         
         infiniteCtrl = wx.CheckBox(panel, -1, text.infinite)

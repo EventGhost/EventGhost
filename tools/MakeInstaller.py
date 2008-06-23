@@ -47,10 +47,7 @@ from ftplib import FTP
 from urlparse import urlparse
 from shutil import copy2 as copy
 from os.path import basename, dirname, abspath, join, exists
-try:
-    import pysvn
-except:
-    pass
+import pysvn
 
 tmpDir = tempfile.mkdtemp()
 toolsDir = abspath(dirname(sys.argv[0]))
@@ -459,6 +456,7 @@ def MakeSourceArchive(outFile):
         print event_dict["path"][len(tmpDir)+1:]
     svn.callback_notify = callback_notify
     
+    print "Checking out trunk"
     svn.checkout(trunkDir, tmpDir)
     zipFile = zipfile.ZipFile(outFile, "w", zipfile.ZIP_DEFLATED)
     for root, dirs, files in os.walk(tmpDir):
@@ -478,6 +476,7 @@ def MakeSourceArchive(outFile):
 
 def MakeInstaller():
     version = UpdateVersionFile()
+    print "Updated Version File"
     class namespace:
         PYTHON_DIR = dirname(sys.executable)
         OUT_DIR = outDir
@@ -486,6 +485,7 @@ def MakeInstaller():
         DIST = join(tmpDir, "dist")
         VERSION = version.string
     UpdateChangeLog(namespace)
+    print "Updated ChangeLog"
     
     installDeleteDirs = []
     for item in os.listdir(join(trunkDir, "plugins")):
