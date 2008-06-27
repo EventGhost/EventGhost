@@ -191,7 +191,11 @@ def GetHwndIcon(hWnd):
                 hIcon.value = GetClassLong(hWnd, GCL_HICON)
     if hIcon.value != 0:
         icon = wx.NullIcon
-        icon.SetHandle(hIcon.value)
+        value = hIcon.value
+        # ugly fix for "OverflowError: long int too large to convert to int"
+        if value & 0x8000000:
+            value = -((value ^ 0xffffffff) + 1) 
+        icon.SetHandle(value)
         icon.SetSize((16,16))
         return icon
     else:

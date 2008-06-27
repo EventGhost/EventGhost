@@ -248,8 +248,8 @@ class USB_UIRT(eg.RawReceiverPlugin):
         
     def Configure(
         self, 
-        ledRx=None, 
-        ledTx=None, 
+        ledRx=True, 
+        ledTx=True, 
         legacyRx=None, 
         repeatStopCodes=False
     ):
@@ -332,7 +332,7 @@ class TransmitIR(eg.ActionClass):
             else:
                 codeFormat = UUIRTDRV_IRFMT_LEARN_FORCESTRUC
         else:
-            repeatCount = 0
+            repeatCount = 1
             codeFormat = UUIRTDRV_IRFMT_PRONTO
             code = ""
         if not self.plugin.dll.UUIRTTransmitIR(
@@ -373,7 +373,7 @@ class TransmitIR(eg.ActionClass):
         editCtrl.SetFont(font)
         editCtrl.SetMinSize((-1, 100))
         
-        repeatCtrl = eg.SpinIntCtrl(panel, -1, min=1, max=127)
+        repeatCtrl = eg.SpinIntCtrl(panel, -1, value=repeatCount, min=1, max=127)
         repeatCtrl.SetInitialSize((50,-1))
         
         infiniteCtrl = wx.CheckBox(panel, -1, text.infinite)
@@ -452,10 +452,10 @@ class TransmitIR(eg.ActionClass):
             else:
                 code = editCtrl.GetValue()
             if infiniteCtrl.GetValue():
-                self.repeatCount = 32767
+                self.__class__.repeatCount = 32767
             else:
-                self.repeatCount = repeatCtrl.GetValue()
-            self.inactivityWaitTime = waitCtrl.GetValue()
+                self.__class__.repeatCount = repeatCtrl.GetValue()
+            self.__class__.inactivityWaitTime = waitCtrl.GetValue()
             panel.SetResult(
                 code,
                 self.repeatCount, 

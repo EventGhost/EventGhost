@@ -780,6 +780,7 @@ import win32ras
 import win32security
 import win32service
 import win32trace
+import win32transaction
 import win32ts
 import win32wnet
 import winxpgui
@@ -792,6 +793,7 @@ import netbios
 import ntsecuritycon
 import pywintypes
 import rasutil
+import regcheck
 import regutil
 import sspi
 import sspicon
@@ -847,7 +849,9 @@ import win32com.client.selecttlb
 import win32com.client.tlbrowse
 import win32com.client.util
 import win32com.makegw
+import win32com.makegw.makegw
 import win32com.makegw.makegwenum
+import win32com.makegw.makegwparse
 import win32com.server
 import win32com.server.connect
 import win32com.server.dispatcher
@@ -870,6 +874,8 @@ import win32com.authorization
 import win32com.authorization.authorization
 import win32com.axcontrol
 import win32com.axcontrol.axcontrol
+import win32com.bits
+import win32com.bits.bits
 import win32com.directsound
 import win32com.directsound.directsound
 import win32com.ifilter
@@ -882,6 +888,8 @@ import win32com.mapi.emsabtags
 import win32com.mapi.mapi
 import win32com.mapi.mapitags
 import win32com.mapi.mapiutil
+import win32com.propsys
+import win32com.propsys.pscon
 import win32com.shell
 import win32com.shell.shell
 import win32com.shell.shellcon
