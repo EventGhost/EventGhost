@@ -158,8 +158,7 @@ SetIdleTime(PyObject *self, PyObject *args)
 
 	if (!PyArg_ParseTuple(args, "l", &gIdleTimeout))
         return NULL;
-	if(PostThreadMessage(gWaitThreadId, WM_USER+1, 0, 0) == 0)
-		RAISE_SYSTEMERR("SetIdleTime:PostThreadMessage");
+	PostThreadMessage(gWaitThreadId, WM_USER+1, 0, 0);
 	Py_RETURN_NONE;
 }
 
@@ -167,8 +166,7 @@ SetIdleTime(PyObject *self, PyObject *args)
 PyObject *
 ResetIdleTimer(PyObject *self, PyObject *args)
 {
-	if(PostThreadMessage(gWaitThreadId, WM_USER+1, 0, 0) == 0)
-		RAISE_SYSTEMERR("ResetIdleTimer:PostThreadMessage");
+	PostThreadMessage(gWaitThreadId, WM_USER+1, 0, 0);
 	Py_RETURN_NONE;
 }
 

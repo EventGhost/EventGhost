@@ -35,6 +35,7 @@ eg.RegisterPlugin(
         You will find this DLL inside:<br>
         <i>{Program&nbsp;Files}</i>\\EventGhost\\Plugins\\AtiRemoteWonder2\\
     """,
+    url="http://www.eventghost.org/forum/viewtopic.php?t=915",
     author="Bitmonster",
     version="1.0." + "$LastChangedRevision: 363 $".split()[1],
     kind="remote",
