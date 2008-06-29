@@ -104,7 +104,7 @@ class MessageReceiver(eg.ThreadWorker):
         # if the next clipboard viewer window is closing, repair the chain.
         if wParam == self.hwndNextViewer:
             self.hwndNextViewer = lParam
-        elif self.hwndNextView:
+        elif self.hwndNextViewer:
             SendMessage(self.hwndNextViewer, mesg, wParam, lParam); 
         return 0
         
