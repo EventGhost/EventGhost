@@ -1,3 +1,6 @@
+Version 0.3.6.1439 (06/29/2008)
++ Added support for the use of multiple USB-UIRT devices.
+
 Version 0.3.6.1408 (05/22/2008)
 + BT8x8 based remotes plugin from junius.
 + GOM Player plugin from CHeitkamp.
