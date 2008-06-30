@@ -1,3 +1,5 @@
++ Sceneo TVcentral plugin
+
 Version 0.3.6.1444 (06/30/2008)
 + ATI Remote Wonder II plugin.
 
