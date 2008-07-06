@@ -22,10 +22,36 @@
 
 eg.RegisterPlugin(
     name="Sceneo TVcentral",
+    description=(
+        'Adds actions to control <a href="http://sceneo.buhl.de/">'
+        'Sceneo TVcentral</a>.'
+    ),
+    help="""
+        <b>Notice:</b> You have to enable "external messages" in TVcentral's
+        remote configuration.
+    """,
     kind="program",
     author="Bitmonster",
+    url="http://www.eventghost.org/forum/viewtopic.php?t=917",
     createMacrosOnAdd = True,
     version="1.0." + "$LastChangedRevision: 420 $".split()[1],
+    icon = (
+        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAC7klEQVR42qWTa0iTYRTH/+/uzuUF"
+        "s6mo4KXSCDTTFLKiQBGkoiXrgwR9qA8lZhfDxLIiTKQiSUtQKFposmDiJWNpJWiZ2QdXXqdOy9wc"
+        "OJ1zbW5urrMxBb/WAz84z3nP8+Phfc5h8J+LWQ8KGhMP+rCE8WwOK4HPFsQJ+NztDpfJ1/LHqnHZ"
+        "ecNm69yI08YZq74woaTyFcK5Ifisee2I9kuB3qSBxabH/NIUjHYtDOZZGG2/YHIOgO0AeFwRfHxY"
+        "qLlkTJ1Vu9R01MwUKZIaSjM/SIW+/puuNqEbQGxooifOlzOokro8cZmSi5/DDnXdFZyh7SBT/ia7"
+        "Jz06J43LESApKgdcNgdq/XvIv53Fjewpz6EShRhlEr0nLmpmsDKLhcd5KKFtO3OvLUMTsy0hsln1"
+        "ABUnhhAetAu3WkPRMTKHrot28ARc1H+SIne/HCaLDnfehiGQhdWbEpSRQM6UtR92sMCDSqvEo5Oj"
+        "CAnYiWe9WWhRKVF1qg8RgfvQPXofB+KuYdKgRE1XFsJFwOUsVJCgnilu2mFehV6gNS6hUjKOYL9Y"
+        "vOjNQOtgJwqPVCMtJg+Tuh7EhKajf/ohmlSFCBHSq2WikgQypvBV8A+ecDlet7SC8mPjEPvHQkaC"
+        "DnUncnafxvG9so0f2/5diq8zr8FewkppLp5S6iVzXR7WwxUupmkXrKjKMdMz+aKx/yg+jrUhOSIB"
+        "5w4NbAga+tIwY+zDIr1yxXmPoJEpqBPd3RqxVmwwWXA1ox/hAckkyMTA7w4Ei3iUs8HusoLH+KC2"
+        "Wwgny4pOGdSKWjwngcLdSEH5T/gt4khXqnnVjjXqr0A/QMQFHBQbqeeYNaqiNggQAMNfoK+9jXbK"
+        "vCO63AIqRXTsHkYSEOxKEUchUkwvxedTng5ZLXAatFjWTmFep4FeO41Zqh8iegnN+iyQG2IizH0j"
+        "IpDY4pW7l51YJhYJA6Ej5gjbxjB554LnlbnhEyzvN/fg2LxDZPMKXZum8V/XX7yzG1mzdIOwAAAA"
+        "AElFTkSuQmCC"
+    ),
 )
 
 ACTIONS = (
@@ -67,10 +93,10 @@ ACTIONS = (
     ("Mute", "Mute", None, 35),
     ("Info", "Info", None, 36),
     ("Home", "Home", None, 37),
-    ("AV", "AV", None, 38),
+    ("AV", "AV", None, 41),
     ("PiP", "PiP", None, 39),
     ("Aspect", "Aspect", None, 40),
-    ("Teletext", "Teletext", None, 41),
+    ("Teletext", "Teletext", None, 38),
     ("Pictures", "Pictures", None, 42),
     ("Videos", "Videos", None, 43),
     ("Music", "Music", None, 44),
@@ -85,6 +111,35 @@ ACTIONS = (
     ("Language", "Language", None, 53),
     ("Shuffle", "Shuffle", None, 54),
     ("Repeat", "Repeat", None, 55),
+    ("Option", "Options", None, 56),
+    ("Vanity", "Vanity", None, 57),
+    ("CD", "CD", None, 58),
+    ("a", "a", None, 60),
+    ("b", "b", None, 61),
+    ("c", "c", None, 62),
+    ("d", "d", None, 63),
+    ("e", "e", None, 64),
+    ("f", "f", None, 65),
+    ("g", "g", None, 66),
+    ("h", "h", None, 67),
+    ("i", "i", None, 68),
+    ("j", "j", None, 69),
+    ("k", "k", None, 70),
+    ("l", "l", None, 71),
+    ("m", "m", None, 72),
+    ("n", "n", None, 73),
+    ("o", "o", None, 74),
+    ("p", "p", None, 75),
+    ("q", "q", None, 76),
+    ("r", "r", None, 77),
+    ("s", "s", None, 78),
+    ("t", "t", None, 79),
+    ("u", "u", None, 80),
+    ("v", "v", None, 81),
+    ("w", "w", None, 82),
+    ("x", "x", None, 83),
+    ("y", "y", None, 84),
+    ("z", "z", None, 85),
 )
 
 

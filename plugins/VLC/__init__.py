@@ -79,7 +79,7 @@ fnList = (
 ('Fullscreen', 'Toggle fullscreen', 'f'),
 ('Next Playlist Item', 'Jump forward to the next item in playlist', 'next'),
 ('Previous Playlist Item', 'Jump backward to the previous playlist item',
-    'previous'),
+    'prev'),
 ('Next Title', 'Next title in current item', 'title_n'),
 ('Previous Title', 'Previous title in current item', 'title_p'),
 ('Next Chapter', 'Next chapter in current item', 'chapter_n'),
