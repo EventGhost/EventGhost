@@ -1,3 +1,4 @@
+Version 0.3.6.1446 (06/30/2008)
 + Sceneo TVcentral plugin
 
 Version 0.3.6.1444 (06/30/2008)
