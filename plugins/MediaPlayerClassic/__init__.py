@@ -58,7 +58,7 @@ eg.RegisterPlugin(
 
 
 ACTIONS = (
-(eg.ActionGroup, 'Main controls', None, (
+(eg.ActionGroup, 'GroupMainControls', 'Main controls', None, (
     ('Exit', 'Quit Application', None, 816),
     ('PlayPause', 'Play/Pause', None, 889),
     ('Play', 'Play', None, 887),
@@ -92,7 +92,7 @@ ACTIONS = (
     ('AudioDelayAdd10ms', 'Audio Delay +10ms', None, 905),
     ('AudioDelaySub10ms', 'Audio Delay -10ms', None, 906),
 )),
-(eg.ActionGroup, 'View modes', None, (
+(eg.ActionGroup, 'GroupViewModes', 'View modes', None, (
     ('Fullscreen', 'Fullscreen', None, 830),
     ('FullscreenWOR', 'Fullscreen without resolution change', None, 831),
     ('PnSIncSize', 'Pan & Scan Increase Size', None, 862),
@@ -131,7 +131,7 @@ ACTIONS = (
     ('PnSRotateAddZ', 'Pan & Scan Rotate Z+', None, 881),
     ('PnSRotateSubZ', 'Pan & Scan Rotate Z-', None, 882),
 )),
-(eg.ActionGroup, 'DVD controls', None, (
+(eg.ActionGroup, 'GroupDvdControls', 'DVD controls', None, (
     ('DVDTitleMenu', 'DVD Title Menu', None, 922),
     ('DVDRootMenu', 'DVD Root Menu', None, 923),
     ('DVDSubtitleMenu', 'DVD Subtitle Menu', None, 924),
@@ -153,7 +153,7 @@ ACTIONS = (
     ('DVDPrevSubtitle', 'DVD Prev Subtitle', None, 965),
     ('DVDOnOffSubtitle', 'DVD On/Off Subtitle', None, 966),
 )),
-(eg.ActionGroup, 'Extended controls', None, (
+(eg.ActionGroup, 'GroupExtendedControls', 'Extended controls', None, (
     ('OpenDevice', 'Open Device', None, 802),
     ('SaveAs', 'Save As', None, 805),
     ('SaveImage', 'Save Image', None, 806),
@@ -177,7 +177,7 @@ ACTIONS = (
     ('NextSubtitleOGM', 'Next Subtitle OGM', None, 958),
     ('PrevSubtitleOGM', 'Previous Subtitle OGM', None, 959),
 )),
-(eg.ActionGroup, 'Toggle player controls', None, (
+(eg.ActionGroup, 'GroupToggleControls', 'Toggle player controls', None, (
     ('ToggleCaptionMenu', 'Toggle Caption Menu', None, 817),
     ('ToggleSeeker', 'Toggle Seeker', None, 818),
     ('ToggleControls', 'Toggle Controls', None, 819),

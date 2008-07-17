@@ -52,11 +52,28 @@ class ActionGroup(object):
         self.items = []
         
         
-    def AddGroup(self, name=None, description=None, iconFile=None):
+    def AddGroup(self, name, description=None, iconFile=None, identifier=None):
         """
         Create and add a new sub-group.
         """
-        group = ActionGroup(self.plugin, name, description, iconFile)
+        plugin = self.plugin
+        if identifier is not None:
+            class Text:
+                pass
+            Text.name = name
+            if description is None:
+                Text.description = name
+            else:
+                Text.description = description
+            text = getattr(plugin.text, identifier, None)
+            if text is None:
+                text = Text()
+            else:        
+                SetClass(text, Text)
+            setattr(plugin.text, identifier, text)
+            name = text.name
+            description = text.description
+        group = ActionGroup(plugin, name, description, iconFile)
         self.items.append(group)
         return group
         
@@ -140,12 +157,12 @@ class ActionGroup(object):
                 if parts[0] is eg.ActionGroup:
                     # this is a new sub-group
                     aList = parts[-1]
-                    cls, name, description = parts[0:3]
-                    if len(parts) == 5:
+                    cls, clsName, name, description = parts[0:4]
+                    if len(parts) == 6:
                         iconFile = parts[3]
                     else:
                         iconFile = None
-                    newGroup = group.AddGroup(name, description, iconFile)
+                    newGroup = group.AddGroup(name, description, iconFile, identifier=clsName)
                     Recurse(aList, newGroup)
                     continue
                 if length == 4:

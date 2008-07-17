@@ -92,7 +92,7 @@ class ExeAction(eg.ActionClass):
 
 
 MyActionList = (
-(eg.ActionGroup, 'Common Functions', None,
+(eg.ActionGroup, 'GroupCommon', 'Common Functions', None,
   (
     (MsgAction, 'Number0', 'Number 0', None, 2399142008), #SHORTCUT_0
     (MsgAction, 'Number1', 'Number 1', None, 2399142009), #SHORTCUT_1
@@ -131,7 +131,7 @@ MyActionList = (
     (MsgAction, 'BackgroundMode', 'Background Mode', None, 2399142029), #SHORTCUT_BKGMODE
   )
 ),
-(eg.ActionGroup, 'Live Mode Functions', None,
+(eg.ActionGroup, 'GroupLiveMode', 'Live Mode Functions', None,
   (
     (MsgAction, 'SideChannelList', 'Side Channel List', None, 2399142089), #SHORTCUT_SIDECLIST
     (MsgAction, 'OsdFavoritChannelList', 'OSD Favorit Channel List', None, 2399142090), #SHORTCUT_OSDCHLIST
@@ -162,7 +162,7 @@ MyActionList = (
     (MsgAction, 'CiConsole', 'CI Console', None, 2399142116), #SHORTCUT_CICONSOLE
   )
 ),
-(eg.ActionGroup, 'File Mode', None,
+(eg.ActionGroup, 'GroupFileMode', 'File Mode', None,
   (
     (MsgAction, 'SideFileList', 'Side File List', None, 2399142189), #SHORTCUT_SIDEFILST
     (MsgAction, 'OsdFileList', 'OSD File List', None, 2399142190), #SHORTCUT_OSDFLIST
@@ -170,7 +170,7 @@ MyActionList = (
     (MsgAction, 'PreviousFile', 'Previous File', None, 2399142191), #SHORTCUT_PREVFILE
   )
 ),
-(eg.ActionGroup, 'DVD Mode', None,
+(eg.ActionGroup, 'GroupDvdMode', 'DVD Mode', None,
   (
     (MsgAction, 'DvdSubtitles', 'DVD Subtitles', None, 2399142291), #SHORTCUT_DVDSUBS
     (MsgAction, 'NextChapter', 'Next Chapter', None, 2399142293), #SHORTCUT_NEXTCHAP
@@ -185,7 +185,7 @@ MyActionList = (
     (MsgAction, 'DvdSelect', 'DVD Select', None, 2399142299), #SHORTCUT_DVDMSELECT
   )
 ),
-(eg.ActionGroup, 'OSD', None,
+(eg.ActionGroup, 'GroupOsd', 'OSD', None,
   (
     (MsgAction, 'OsdUp', 'OSD Up', None, 2399142389), #SHORTCUT_OSDUP
     (MsgAction, 'OsdDown', 'OSD Down', None, 2399142390), #SHORTCUT_OSDDN
@@ -197,7 +197,7 @@ MyActionList = (
     (MsgAction, 'EventInfo', 'Event Info', None, 2399142397), #SHORTCUT_EVINFO
   )
 ),
-(eg.ActionGroup, 'Side Channel/File List Functions', None,
+(eg.ActionGroup, 'GroupSideChannel', 'Side Channel/File List Functions', None,
   (
     (MsgAction, 'SideChannelFileUp', 'Side Channel File Up', None, 2399142489), #SHORTCUT_SCFUP
     (MsgAction, 'SideChannelFileDown', 'Side Channel File Down', None, 2399142490), #SHORTCUT_SCFDN
@@ -211,7 +211,7 @@ MyActionList = (
     (MsgAction, 'SideChannelFileAll', 'Side Channel File All', None, 2399142498), #SHORTCUT_SCFALL
   )
 ),
-(eg.ActionGroup, 'EPG Window Mode', None,
+(eg.ActionGroup, 'GroupEpgWindow', 'EPG Window Mode', None,
   (
     (MsgAction, 'EpgWindowUp', 'EPG Window Up', None, 2399142589), #SHORTCUT_EPGWUP
     (MsgAction, 'EpgWindowDown', 'EPG Window Down', None, 2399142590), #SHORTCUT_EPGWDN
@@ -224,7 +224,7 @@ MyActionList = (
     (MsgAction, 'EpgWindowAllNowNext', 'EPG Window All/Now/Next', None, 2399142597), #SHORTCUT_EPGWANN
   )
 ),
-(eg.ActionGroup, 'Presets', None,
+(eg.ActionGroup, 'GroupPresets', 'Presets', None,
   (
     (MsgAction, 'Preset1', 'Preset 1', None, 2399142689), #SHORTCUT_PRESET1
     (MsgAction, 'Preset2', 'Preset 2', None, 2399142690), #SHORTCUT_PRESET2
@@ -234,7 +234,7 @@ MyActionList = (
     (MsgAction, 'Preset6', 'Preset 6', None, 2399142694), #SHORTCUT_PRESET6
   )
 ),
-(eg.ActionGroup, 'Plugin controls', None,
+(eg.ActionGroup, 'GroupPlugin', 'Plugin controls', None,
   (
     (MsgAction, 'PluginUp', 'Plugin Up', None, 2399142789), #SHORTCUT_PLGUP
     (MsgAction, 'PluginDown', 'Plugin Down', None, 2399142790), #SHORTCUT_PLGDN
@@ -248,7 +248,7 @@ MyActionList = (
     (MsgAction, 'PluginTab', 'Plugin Tab', None, 2399142798), #SHORTCUT_PLGTAB
   )
 ),
-(eg.ActionGroup, 'Start MyTheatre', None,
+(eg.ActionGroup, 'GroupStartMode', 'Start MyTheatre', None,
   (
     (ExeAction, 'StartLiveMode', 'Start in Live Mode', None, '/remote F9'),
     (ExeAction, 'StartDvdMode', 'Start in DVD Mode', None, '/dvd'),
