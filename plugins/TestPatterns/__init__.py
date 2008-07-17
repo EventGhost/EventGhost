@@ -173,6 +173,8 @@ class TestPatterns(eg.PluginClass):
         self.AddAction(Burst)
         self.AddAction(Geometry)
         self.AddAction(PixelCropping)
+        self.AddAction(ZonePlate)
+        self.AddAction(Readability)
         self.AddAction(Close)
 
 
@@ -265,7 +267,6 @@ class Focus(TestPatternAction):
             panel.SetResult(
                 foregroundColourCtrl.GetValue(), 
                 backgroundColourCtrl.GetValue(), 
-                0
             )
         
             
@@ -383,7 +384,6 @@ class Checkerboard(TestPatternAction):
                 backgroundColourCtrl.GetValue(), 
                 hCountCtrl.GetValue(),
                 vCountCtrl.GetValue(),
-                0,
             )
 
 
@@ -532,6 +532,39 @@ class Dots(TestPatternAction):
             )
 
         
+class ZonePlate(TestPatternAction):
+    
+    def Draw(self, dc, scale=128):
+        dc.Clear()
+        width, height = dc.GetSizeTuple()
+        sineTab = [int(127.5 * sin(math.pi * (i - 127.5) / 127.5) + 127.5) for i in range(256)]
+        cx = width / 2
+        cy = height / 2
+        bmp = wx.EmptyBitmap(width, height, 24)
+        pixelData = wx.NativePixelData(bmp)
+        pixels = pixelData.GetPixels()
+        y = -cy
+        for i in range(height):
+            x = -cx
+            for j in range(width):
+                d = ((x * x + y * y) * scale) >> 8
+                val = sineTab[d & 0xFF]
+                pixels.Set(val, val, val)
+                pixels.nextPixel()
+                x += 1
+            y += 1
+            pixels.MoveTo(pixelData, 0, y + cy)
+        dc.DrawBitmap(bmp, 0, 0, False)
+           
+                
+    def Configure(self, scale=128):
+        panel = eg.ConfigPanel(self)
+        scaleCtrl = panel.SpinIntCtrl(scale, min=0)
+        panel.AddLine("Scale:", scaleCtrl)
+        while panel.Affirmed():
+            panel.SetResult(scaleCtrl.GetValue())
+        
+        
         
 class Lines(TestPatternAction):
     
@@ -583,7 +616,6 @@ class Lines(TestPatternAction):
                 backgroundColourCtrl.GetValue(), 
                 lineSizeCtrl.GetValue(),
                 orientationCtrl.GetSelection(),
-                0,
             )
 
 
@@ -770,7 +802,6 @@ class SiemensStar(TestPatternAction):
                 secondColourButton.GetValue(), 
                 beamCountCtrl.GetValue(),
                 radiusCtrl.GetValue(),
-                0,
             )
 
 
@@ -996,7 +1027,72 @@ class PixelCropping(TestPatternAction):
         for line, x, y in data:
             dc.DrawText(line, x, offset + y)
         
+
+
+class Readability(TestPatternAction):
+    
+    def Draw(
+        self, 
+        dc,
+        testText,
+        textColour,
+        backgroundColour,
+        fontStr,
+        offsetLines,
+    ):
+        dc.SetBackground(wx.Brush(backgroundColour))
+        dc.Clear()
+        dc.SetTextForeground(textColour)
+        dc.SetFont(wx.FontFromNativeInfoString(fontStr))
+        tw, th, descent, externalLeading = dc.GetFullTextExtent(testText)
+        if offsetLines:
+            offset = -(tw / 2)
+        else:
+            offset = 0
+        w, h = dc.GetSizeTuple()
+        lineNum = 0
+        y = 0
+        while y < h:
+            if (lineNum % 2):
+                x = offset
+            else:
+                x = 0
+            while x < w:
+                dc.DrawText(testText, x, y)
+                x += tw
+            y += th
+            lineNum += 1
         
+        
+    def Configure(
+        self, 
+        testText="The quick brown fox jumps over the lazy dog. ",
+        textColour=(255, 255, 255),
+        backgroundColour=(0, 0, 0),
+        fontStr='0;-11;0;0;0;400;0;0;0;0;3;2;1;34;Arial',
+        offsetLines=True,
+    ):
+        panel = eg.ConfigPanel(self)
+        textCtrl = panel.TextCtrl(testText, size=(250, -1))
+        textColourCtrl = panel.ColourSelectButton(textColour)
+        backgroundColourCtrl = panel.ColourSelectButton(backgroundColour)
+        fontCtrl = panel.FontSelectButton(fontStr)
+        offsetCtrl = panel.CheckBox(offsetLines, "Offset every second line")
+        panel.AddLine("Test text:", textCtrl)
+        panel.AddLine("Text Colour:", textColourCtrl)
+        panel.AddLine("Background colour:", backgroundColourCtrl)
+        panel.AddLine("Text font:", fontCtrl)
+        panel.AddLine(offsetCtrl)
+        while panel.Affirmed():
+            panel.SetResult(
+                textCtrl.GetValue(),
+                textColourCtrl.GetValue(),
+                backgroundColourCtrl.GetValue(),
+                fontCtrl.GetValue(),
+                offsetCtrl.GetValue()
+            )
+        
+
         
 class Close(eg.ActionClass):
     
