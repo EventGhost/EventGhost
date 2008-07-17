@@ -61,7 +61,7 @@ eg.RegisterPlugin(
 #       deprecated.
 
 ACTIONS = (
-    ( eg.ActionGroup, 'Main controls', None, (
+    ( eg.ActionGroup, 'GroupMainControls', 'Main controls', None, (
         ( 'Exit', 'Quit Application', None, 0x8048 ),
         ( 'PlayPause', 'Play/Pause', None, 0x800C ),
         ( 'Stop', 'Stop', None, 0x8006 ),
@@ -87,7 +87,7 @@ ACTIONS = (
         ( 'AudioDelaySub100ms', 'Audio Delay -100ms', None, 0x827E ),
         ( 'AudioDelayReset', 'Audio Delay Reset', None, 0x8280 ),
     ) ),
-    ( eg.ActionGroup, 'View modes', None, (
+    ( eg.ActionGroup, 'GroupViewModes', 'View modes', None, (
         ( 'Fullscreen', 'Fullscreen', None, 0x8154 ),
         ( 'FullscreenStretched', 'Fullscreen Stretched', None, 0x801C ),
         ( 'AlwaysOnTop', 'Always On Top', None, 0x8044 ),
@@ -98,7 +98,7 @@ ACTIONS = (
         ( 'Zoom200', 'Zoom 200%', None, 0x8020 ),
         ( 'ZoomFit', 'Zoom Fit to Desktop Resolution', None, 0x8021 ),
     ) ),
-    ( eg.ActionGroup, 'DVD controls', None, (
+    ( eg.ActionGroup, 'GroupDvdControls', 'DVD controls', None, (
         ( 'DVDTitleMenu', 'DVD Title Menu', None, 0x8149 ),
         ( 'DVDRootMenu', 'DVD Root Menu', None, 0x814A ),
         ( 'DVDSubtitleMenu', 'DVD Subtitle Menu', None, 0x814B ),
@@ -106,7 +106,7 @@ ACTIONS = (
         ( 'DVDAngleMenu', 'DVD Angle Menu', None, 0x814D ),
         ( 'DVDChapterMenu', 'DVD Chapter Menu', None, 0x814C ),
     ) ),
-    ( eg.ActionGroup, 'Extended controls', None, (
+    ( eg.ActionGroup, 'GroupExtendedControls', 'Extended controls', None, (
         ( 'Close', 'Close File', None, 0x8045 ),
         ( 'Options', 'Options', None, 0x8059 ),
         ( 'OnOffSubtitle', 'On/Off Subtitle', None, 0x8029 ),
