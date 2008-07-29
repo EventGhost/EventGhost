@@ -1,4 +1,4 @@
-version="0.1.3" 
+version="0.1.4" 
 
 # Plugins/ScreamerRadio/__init__.py
 #
@@ -36,29 +36,45 @@ eg.RegisterPlugin(
     createMacrosOnAdd = True,    
     url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=840",
     icon = (
-        "R0lGODlhEAAQAPcAAKQCBPyCBPzGjPzCBNRKDPzSRPS6RLxCVPyiBOzCxPz+RMQmBPzi"
-        "BPxqBPyOJPzixPzKLPzGdPySBMxOJMxmRPyqNKwuPPzehPyyBPzaBPzmbPz65MxybPzW"
-        "XPyuZPz2bPSKBPzGFMQWBPxaBPyqBOzS1MQ2BPx2BPzaZMxeLLQ6TPzqrPz69Pz+dPzW"
-        "hPzGXPyyVPzaPPyaBMxmXPy6BNR6dPyKDPzefPzKBOzKzPzyNPxyBPyaPPzyzPzOPLQ2"
-        "TPzmlNR2dPzeTPy+fPyOBPzGHKQSHMxaFPSuBLw6BPziZMxiPPz+/Pz6fPzSnKQGFPyG"
-        "BPzGDNRODPzSTPS6TLxGVPymBOzGxMQuBPzqBPxuBPyOLPzONPyWBMxWJMxmTLQuPPze"
-        "jPy2BPzWHPzudPz67Mx2bPy2bPz+ZPyKBMweBPTa3Px6BPzabMxiNLQ+VPzyvPz+9Pza"
-        "jPzSVPyyXPyeBMxqXPy+BPz23PziXPzKHMxaHPyuBMQ6BPz+fAAAfNIdgOYAb4EAGXwA"
-        "AJhjAEYAABUAAAAAAErwB+PqAIESAHwAAKBGAHfQAFAmAABbAJgQAEZAYAE4GQAAAGsF"
-        "AAAAAAAAAAAAAJxKAOgTABIAAAAAAAB4AADqAAASAAAAAAiFAPwrABKDAAB8ABgAaO4A"
-        "npAAgHwAfHAA/wUA/5EA/3wA//8AYP8Anv8AgP8AfG0pKgW3AJGSAHx8AEqAKvRvAIAZ"
-        "AHwAAAA0WABk8RWDEgB8AAD//wD//wD//wD//5gAAEYAABUAAAAAAABcpAHq6wASEgAA"
-        "AAA09gBkOACDTAB8AFcIhPT864ASEnwAAIgYd+ruEBKQTwB8AJgAuEa36xWSEgB8AKD/"
-        "NAD/ZAD/gwD/fB+AWgBv7AAZEgAAABE01ABk/wCD/wB8fwSgMADr7AASEgAAAAPngABk"
-        "bwCDGQB8AACINABkZACDgwB8fAABgAAAbwAAGQAAAAQxSgAAEwAAAAAAAAMBAAAAAAAA"
-        "AAAAAAAajQAA4gAARwAAACH5BAAAAAAALAAAAAAQABAABwj/AJkIZLKmxhc3KSiYKTGw"
-        "YZUkSvy0QKNgTB8VDZkYMdBEQ4c5U9oIycDnycADBsig6MCkAxcIPVbgsPKDoIkPKAqw"
-        "YAIByAoxGzrcwZIjSIw8BW4wKQChyA0gJJggsGJniQIfEJgACaEnCg0mXeLU4TNhj447"
-        "eJjciTJgAIYLCOTA6CLlSJYpTAbcaXuHxIsKETykIZCCQRmefDCIwVAngg0nDohM4ECD"
-        "jwsmeGRIkBHgwQgWWgLMKLFAjAwZAumEdsDjTAA1CZi8SYOAyIkhTFjsYGMjgBYwA5+w"
-        "6RKgARsBOwIQ2QEgowoRASQQSSPhNfCMTHLYmUCAwIQZVxoGAQQAOw=="
+        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAADAFBMVEUAAACuEALHOgfL"
+        "WiLTbzX6xmX/337/5m//2Vv/00n+szDXZAf3rFL/2Wn/zSnxoAT/8s7/5JT/xQz/6Kr/"
+        "tQL9vlL/+/T/mQH/15r/hQHWTQL/nDT/umz/jBT2dwDugQAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABhZgQHtjQAF2QA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA+vbaVAAAA"
+        "AXRSTlMAQObYZgAAAAlwSFlzAAALEgAACxIB0t1+/AAAAK1JREFUeNpNj1kShCAMBQE3"
+        "QIOALAbBuf8tJy5TNe+vO6ksjF3housEZ7/wfhgnqfT8Kr5ME0gJ0qz8ZRgtKOWcv01P"
+        "ZWsVjH6TYaaGKJVLYMwIfguZM6GUTM4Y713YdRasM8ZaQh9ADxELKwbSzSHquKBgwrsk"
+        "AyXHox4k+BogbTrnXFttJ+2dQ9bWVmztWGgE7f2s2GraERuez6lnRjwq4stkyokXlr9/"
+        "BeXBL7jEDHFjtSheAAAAAElFTkSuQmCC"
     ),
 )
+
+# Changelog:
+# ==============================================================================
+# 2008-05-06 Pako
+#     * initial version 0.1.0
+# 2008-05-07 Pako
+#     * only little enhancement
+#     * increased version to 0.1.2
+# 2008-05-07 Pako
+#     * fix SetVolume action
+#     * increased version to 0.1.3
+# 2008-07-29 Pako
+#     * now uses AddActionsFromList
+#     * add "On screeen menu" for choice of favorite
+#     * increased version to 0.1.4
+# ==============================================================================
 
 
 class Text:
@@ -69,57 +85,45 @@ class Text:
 
 
 import os
-import win32api
-from win32gui import GetWindowText
 import xml.sax as sax
 from xml.sax.handler import ContentHandler
+from threading import Thread
+from time import sleep
+from win32gui import GetWindowText
+from win32api import ShellExecute,GetSystemMetrics
 from eg.WinApi import SendMessageTimeout
 from eg.WinApi.Dynamic import PostMessage
-from time import sleep
+
 BM_CLICK      = 245
 WM_COMMAND    = 273
 WM_SYSCOMMAND = 274
 TBM_GETPOS    = 1024
-#TBM_SETPOS    = 1029
 SC_MINIMIZE   = 61472
 SC_CLOSE      = 61536
 SC_RESTORE    = 61728
 
-Actions = (
-    ("Play","Play","","Play","Play last playing station."),
-    ("Stop","Stop","","Stop","Stop."),
-    ("PlayStop","Play","Stop","Play/Stop","Play/Stop."),
-    ("Next","Next","","Next stream","Next stream."),
-    ("Prev","Prev","","Previous stream","Previous stream."),
-    ("RecOff","RecOff","","Rec On","Rec On."),
-    ("RecOn","RecOn","","Rec Off","Rec Off."),
-    ("RecOnOff","RecOn","RecOff","Rec On/Off","Rec On/Off."),
-    ("MuteOff","MuteOff","","Mute On","Mute On."),
-    ("MuteOn","MuteOn","","Mute Off","Mute Off."),
-    ("MuteOnOff","MuteOn","MuteOff","Mute On/Off","Mute On/Off."),
-    )
-FindScreamer1 = eg.WindowMatcher(
-    u'screamer.exe',
-    None,
-    u'#32770',
-    None,
-    None,
-    1,
-    True,
-    0.0,
-    0
-)
-FindScreamer2 = eg.WindowMatcher(
-    u'screamer.exe',
-    None,
-    u'#32770',
-    None,
-    None,
-    2,
-    True,
-    0.0,
-    0
-)
+
+def FindWindowFunction(key,case,match):
+    return eg.WindowMatcher(
+                u'screamer.exe',
+                None,
+                u'#32770',
+                key,
+                case,
+                match,
+                True,
+                0.0,
+                0
+            )
+            
+def Handle():
+    FindWindow = FindWindowFunction(None,None,1)
+    hwnds = FindWindow()
+    if len(hwnds) > 0:
+        if GetWindowText(hwnds[0]) == "Screamer Log":
+            FindWindow = FindWindowFunction(None,None,2)
+            hwnds = FindWindow()
+    return hwnds
 
 
 #my xmlhandler1
@@ -134,7 +138,7 @@ class my_xml_handler1(ContentHandler):
         if name=="NotPlaying":
             self.document[name] = self._recent_text.strip()
         for item in Actions:
-            if name==item[0]:
+            if name==item[1]:
                 self.document[name] = self._recent_text.strip()
                 break
         self._recent_text = ''
@@ -145,130 +149,42 @@ class my_xml_handler1(ContentHandler):
     
 #my xmlhandler2
 class my_xml_handler2(ContentHandler):
-    favorite = None
-    item = None
-    first = None
+
     def startDocument(self):
-        self.counter = -1
-        self.temp = None
+        self.favList = ScreamerRadio.favList = []
     
     def startElement(self, name, attrs):  
         if name == "Station":
-            self.temp = attrs.get("title")       
-            self.counter += 1
-            if self.counter==0:
-                self.first=self.temp
-            if self.item == self.counter:
-                self.favorite=self.temp
-        
-        
+            temp = attrs.get("title")
+            self.favList.append(temp)
 
+#===============================================================================
 class ScreamerRadio(eg.PluginClass):
     text=Text
-    ScreamerPath = None
+    ScreamerPath = ""
+    menuDlg = None
+    fav_num = 0
     
+    def PlayFavFromMenu(self):
+        if self.menuDlg is not None:
+            sel=self.menuDlg.GetSizer().GetChildren()[0].GetWindow().\
+                GetSelection()                
+
+        self.fav_num=sel
+        self.menuDlg.Close()  #self.menuDlg = None -> by OnClose !!!
+        hwnds = Handle()
+        if len(hwnds) > 0:
+            if sel <= len(self.favList)-1:
+                PostMessage(hwnds[0], WM_COMMAND, 9217+sel, 0)
+        else:
+            self.PrintError(self.text.text1)
+        
+
+
     def __init__(self):
         text=Text
-        fav_num=None
-        ScreamerPath = ""
-        self.AddAction(Run)
-        self.AddAction(WindowControl)
-
-        for myTuple in Actions:
-            class tmpActionClass(eg.ActionClass):
-                name = myTuple[3]
-                description = myTuple[4]
-                key1 = myTuple[1]
-                key2 = myTuple[2]
-                if myTuple[0] != "PlayStop":
-                    def __call__(self):
-                        key = eval("self.plugin.dh.document[self.key1]")
-                        FindAction = eg.WindowMatcher(
-                            u'screamer.exe',
-                            None,
-                            u'#32770',
-                            key,
-                            u'Button',
-                            1,
-                            True,
-                            0.0,
-                            0
-                        )
-                        hwnds=FindAction()
-                        if self.key2 != "": #for toggle actions
-                            ret = "0"
-                            if len(hwnds) == 0:
-                                key = eval("self.plugin.dh.document[self.key2]")
-                                FindAction = eg.WindowMatcher(
-                                    u'screamer.exe',
-                                    None,
-                                    u'#32770',
-                                    key,
-                                    u'Button',
-                                    1,
-                                    True,
-                                    0.0,
-                                    0
-                                )
-                                hwnds=FindAction()
-                                ret = "1"
-                        else:
-                            ret = " "
-                        if len(hwnds) != 0:
-                            SendMessageTimeout(hwnds[0], BM_CLICK, 0, 0)
-                            return ret
-                        else:
-                            self.PrintError(self.plugin.text.text1)
-                            return self.plugin.text.text1
-                else:
-                    def __call__(self):
-                        Status = eg.WindowMatcher(
-                            u'screamer.exe',
-                            None,
-                            u'#32770',
-                            self.plugin.dh.document['NotPlaying'],
-                            u'Static',
-                            1,
-                            True,
-                            0.0,
-                            0
-                        )
-                        hwnds = Status()
-                        if len(hwnds) !=0: #Not playing
-                            key = eval("self.plugin.dh.document[self.key1]")
-                            ret = "1"
-                        else:              #Playing
-                            key = eval("self.plugin.dh.document[self.key2]")
-                            ret = "0"
-                        FindAction = eg.WindowMatcher(
-                            u'screamer.exe',
-                            None,
-                            u'#32770',
-                            key,
-                            u'Button',
-                            1,
-                            True,
-                            0.0,
-                            0
-                        )
-                        hwnds=FindAction()
-                        if len(hwnds) != 0:
-                            SendMessageTimeout(hwnds[0], BM_CLICK, 0, 0)
-                            return ret
-                        else:
-                            self.PrintError(self.plugin.text.text1)
-                            return self.plugin.text.text1
-                    
-            tmpActionClass.__name__ = myTuple[0]
-            self.AddAction(tmpActionClass)        
-        self.AddAction(VolumeUp)
-        self.AddAction(VolumeDown)
-        self.AddAction(GetVolume)
-        self.AddAction(SetVolume)
-        self.AddAction(SelectFav)
-        self.AddAction(NextFav)
-        self.AddAction(PreviousFav)
-        self.AddAction(GetPlayingTitle)
+        favList=[]
+        self.AddActionsFromList(Actions)
 
     def __start__(self, ScreamerPath):
         self.ScreamerPath = ScreamerPath
@@ -278,7 +194,6 @@ class ScreamerRadio(eg.PluginClass):
         xmltoparse = self.dh.document['LanguageFile']
         sax.parse(xmltoparse, self.dh)
                    
-
     def Configure(self, ScreamerPath=None):
         if ScreamerPath is None:
             ScreamerPath = os.path.join(
@@ -308,21 +223,22 @@ class ScreamerRadio(eg.PluginClass):
         
         while panel.Affirmed():
             panel.SetResult(filepathCtrl.GetValue())
-
+            
+#===============================================================================
+#cls types for Actions list:
+#===============================================================================
 class Run(eg.ActionClass):
-    name = "Run Screamer"
-    description = "Run Screamer with its default settings."    
     class text:
         text2="Couldn't find file screamer.exe !" 
         play = "Automatic play selected favorite after start"
         label = "Select favorite:"
         over = "Too large number (%s > %s) !"
         alt_ret = "No autostart"
-    def __call__(self, play, fav):
+    def __call__(self, play=False, fav=1):
         flag=True
         try:
             head, tail = os.path.split(self.plugin.ScreamerPath)
-            return win32api.ShellExecute(
+            return ShellExecute(
                 0, 
                 None, 
                 tail,
@@ -337,11 +253,8 @@ class Run(eg.ActionClass):
                 if play:
                     for n in range(50):                
                         sleep(.2)
-                        hwnds = FindScreamer1()
-                        if len(hwnds) != 0:
-                            if GetWindowText(hwnds[0]) == "Screamer Log":
-                                hwnds = FindScreamer2()
-                        if len(hwnds) != 0:
+                        hwnds = Handle()
+                        if len(hwnds) > 0:
                             flag = False
                             break
                     if not flag:
@@ -350,15 +263,15 @@ class Run(eg.ActionClass):
                         xmltoparse = os.path.split(ScreamerPath)[0]+\
                             '\\favorites.xml'
                         self.dh2 = my_xml_handler2()
-                        self.dh2.item=fav-1
+                    #    self.dh2.item=fav-1
                         sax.parse(xmltoparse, self.dh2)
-                        if fav <= self.dh2.counter+1:
+                        if fav <= len(self.plugin.favList):
                             self.plugin.fav_num=fav-1
                             PostMessage(hwnds[0], WM_COMMAND, 9216+fav, 0)
-                            return str(fav)+": "+self.dh2.favorite
+                            return str(fav)+": "+self.plugin.favList[self.plugin.fav_num]
                         else:
                             return self.text.over % (str(fav),\
-                                str(self.dh2.counter+1))
+                                str(len(self.plugin.favList)))
                     else:
                         return self.plugin.text.text1
                 else:
@@ -400,116 +313,94 @@ class Run(eg.ActionClass):
                 favCtrl.GetValue()
             )
                                 
- 
-class VolumeUp(eg.ActionClass):
-    name = "Volume up"
-    description = "Volume up."
+#===============================================================================
+class WindowControl(eg.ActionClass):
+    def __call__(self):
+        hwnds = Handle()
+        if len(hwnds) > 0:
+            SendMessageTimeout(
+                hwnds[0], WM_SYSCOMMAND, self.value, 0)
+        else:
+            self.PrintError(self.plugin.text.text1)
+            return self.plugin.text.text1
+            
+
+#===============================================================================
+class PlayStop(eg.ActionClass):        
+    def __call__(self):
+        key = self.plugin.dh.document['NotPlaying']
+        FindWindow = FindWindowFunction(key,u'Static',1)
+        hwnds = FindWindow()
+        if len(hwnds) > 0: #Not playing
+            key = eval("self.plugin.dh.document[self.value[0]]")
+            ret = "1"
+        else:              #Playing
+            key = eval("self.plugin.dh.document[self.value[1]]")
+            ret = "0"
+        FindWindow = FindWindowFunction(key,u'Button',1)
+        hwnds = FindWindow()
+        if len(hwnds) != 0:
+            SendMessageTimeout(hwnds[0], BM_CLICK, 0, 0)
+            return ret
+        else:
+            self.PrintError(self.plugin.text.text1)
+            return self.plugin.text.text1
+    
+
+#===============================================================================
+class OtherActions(eg.ActionClass):
+    def __call__(self):
+        key = eval("self.plugin.dh.document[self.value[0]]")
+        FindWindow = FindWindowFunction(key,u'Button',1)
+        hwnds = FindWindow()
+        if self.value[1] != "": #for toggle actions
+            ret = "0"
+            if len(hwnds) == 0:
+                key = eval("self.plugin.dh.document[self.value[1]]")
+                FindWindow = FindWindowFunction(key,u'Button',1)
+                hwnds = FindWindow()
+                ret = "1"
+        else:
+            ret = " "
+        if len(hwnds) != 0:
+            SendMessageTimeout(hwnds[0], BM_CLICK, 0, 0)
+            return ret
+        else:
+            self.PrintError(self.plugin.text.text1)
+            return self.plugin.text.text1
+            
+#===============================================================================
+class VolumeUpDown(eg.ActionClass):
     def __call__(self):       
-        FindSlider = eg.WindowMatcher(
-            u'screamer.exe',
-            None,
-            u'#32770',
-            u'Slider1',
-            u'msctls_trackbar32',
-            1,
-            True,
-            0.0,
-            0
-        )
-        hwnds=FindSlider()        
+        FindWindow = FindWindowFunction(u'Slider1',u'msctls_trackbar32',1)
+        hwnds = FindWindow()        
         if len(hwnds) != 0:
             volume=SendMessageTimeout(hwnds[0], TBM_GETPOS, 0, 0)
-            if volume>0:
-                eg.SendKeys(hwnds[0], u'{Up}', False)
+            if eval(self.value[0]):
+                eg.SendKeys(hwnds[0], self.value[1], False)
                 #PostMessage(hwnds[0], TBM_SETPOS, 1, volume-1)
             else:
-                volume=1
-            return 100-5*(volume-1)
+                volume=self.value[2]
+            return 100-5*(volume+self.value[3])
         else:
             self.PrintError(self.plugin.text.text1)
             return self.plugin.text.text1
 
-        
-class VolumeDown(eg.ActionClass):
-    name = "Volume down"
-    description = "Volume down."
-    def __call__(self):       
-        FindSlider = eg.WindowMatcher(
-            u'screamer.exe',
-            None,
-            u'#32770',
-            u'Slider1',
-            u'msctls_trackbar32',
-            1,
-            True,
-            0.0,
-            0
-        )
-        hwnds=FindSlider()        
-        if len(hwnds) != 0:
-            volume=SendMessageTimeout(hwnds[0], TBM_GETPOS, 0, 0)
-            if volume<20:
-                eg.SendKeys(hwnds[0], u'{Down}', False)
-                #PostMessage(hwnds[0], TBM_SETPOS, 1, volume+1)
-            else:
-                volume=19
-            return 100-5*(volume+1)
-        else:
-            self.PrintError(self.plugin.text.text1)
-            return self.plugin.text.text1
-
-            
-class GetVolume(eg.ActionClass):
-    name = "Get volume"
-    description = "Get volume."
-    def __call__(self):       
-        FindSlider = eg.WindowMatcher(
-            u'screamer.exe',
-            None, u'#32770',
-            u'Slider1',
-            u'msctls_trackbar32',
-            1,
-            True,
-            0.0,
-            0
-        )
-        hwnds=FindSlider()        
-        if len(hwnds) != 0:
-            return 100-5*SendMessageTimeout(hwnds[0], TBM_GETPOS, 0, 0)
-        else:
-            self.PrintError(self.plugin.text.text1)
-            return self.plugin.text.text1
-            
+#===============================================================================
 class SetVolume(eg.ActionClass):
-    name = "Set volume"
-    description = "Set volume."
     class text:
         label="Set volume (0-100%):"
         
     def __call__(self,volume):       
-        FindSlider = eg.WindowMatcher(
-            u'screamer.exe',
-            None, u'#32770',
-            u'Slider1',
-            u'msctls_trackbar32',
-            1,
-            True,
-            0.0,
-            0
-        )
-        hwnds=FindSlider()        
+        FindWindow = FindWindowFunction(u'Slider1',u'msctls_trackbar32',1)
+        hwnds = FindWindow()        
         if len(hwnds) != 0:
-            #PostMessage(hwnds[0], TBM_SETPOS, True, 20-volume/5)
             vol=SendMessageTimeout(hwnds[0], TBM_GETPOS, 0, 0)
             step = -20+vol+volume/5
             if step<>0:
                 key = u'{Up}' if step>0 else u'{Down}'
                 for n in range(abs(step)):
-                    #sleep(.1)
                     eg.SendKeys(hwnds[0], key, False)
-            
-
-
         else:
             self.PrintError(self.plugin.text.text1)
             return self.plugin.text.text1
@@ -533,34 +424,45 @@ class SetVolume(eg.ActionClass):
         while panel.Affirmed():
             panel.SetResult(volumeCtrl.GetValue())
 
-class SelectFav(eg.ActionClass):
-    name = "Select favorite"
-    description = "Select favorite by order"    
-    class text:
-        label="Select favorite:"
-        over = "Too large number (%s > %s) !"
-    def __call__(self,fav):
-        hwnds = FindScreamer1()
+            
+#===============================================================================
+class GetVolume(eg.ActionClass):
+    def __call__(self):       
+        FindWindow = FindWindowFunction(u'Slider1',u'msctls_trackbar32',1)
+        hwnds = FindWindow()        
         if len(hwnds) != 0:
-            if GetWindowText(hwnds[0]) == "Screamer Log":
-                hwnds = FindScreamer2()
-        if len(hwnds) != 0:
-            ScreamerPath = self.plugin.ScreamerPath
-            xmltoparse = os.path.split(ScreamerPath)[0]+'\\favorites.xml'
-            self.dh2 = my_xml_handler2()
-            self.dh2.item=fav-1
-            sax.parse(xmltoparse, self.dh2)
-            if fav <= self.dh2.counter+1:
-                self.plugin.fav_num=fav-1
-                PostMessage(hwnds[0], WM_COMMAND, 9216+fav, 0)
-                return str(fav)+": "+self.dh2.favorite
-            else:
-                self.PrintError(
-                    self.text.over % (str(fav),str(self.dh2.counter+1)))
-                return self.text.over % (str(fav),str(self.dh2.counter+1))
+            return 100-5*SendMessageTimeout(hwnds[0], TBM_GETPOS, 0, 0)
         else:
             self.PrintError(self.plugin.text.text1)
             return self.plugin.text.text1
+
+            
+#===============================================================================
+class SelectFav(eg.ActionClass):
+    class text:
+        label="Select favorite:"
+        over = "Too large number (%s > %s) !"
+    def __call__(self,fav=1):
+        hwnds = Handle()
+        if len(hwnds) > 0:
+            ScreamerPath = self.plugin.ScreamerPath
+            xmltoparse = os.path.split(ScreamerPath)[0]+'\\favorites.xml'
+            self.dh2 = my_xml_handler2()
+            sax.parse(xmltoparse, self.dh2)
+            if fav <= len(self.plugin.favList):
+                self.plugin.fav_num=fav-1
+                PostMessage(hwnds[0], WM_COMMAND, 9216+fav, 0)
+                return str(fav)+": "+self.plugin.favList[self.plugin.fav_num]
+            else:
+                self.PrintError(
+                    self.text.over % (str(fav),str(len(self.plugin.favList))))
+                return self.text.over % (str(fav),str(len(self.plugin.favList)))
+        else:
+            self.PrintError(self.plugin.text.text1)
+            return self.plugin.text.text1
+
+    def GetLabel(self, fav):
+        return self.name+' '+str(fav)
             
     def Configure(self, fav=1):
         panel=eg.ConfigPanel(self)
@@ -579,148 +481,444 @@ class SelectFav(eg.ActionClass):
         while panel.Affirmed():
             panel.SetResult(favCtrl.GetValue())
 
-        
-class NextFav(eg.ActionClass):
-    name = "Next favorite"
-    description = "Next favorite"    
-    class text:
-        over = "Too large number (%s > %s) !"
+#===============================================================================
+class NextPrevFav(eg.ActionClass):
     def __call__(self):
-        hwnds = FindScreamer1()
-        if len(hwnds) != 0:
-            if GetWindowText(hwnds[0]) == "Screamer Log":
-                hwnds = FindScreamer2()
-        if len(hwnds) != 0:
+        hwnds = Handle()
+        if len(hwnds) > 0:
             ScreamerPath = self.plugin.ScreamerPath
             xmltoparse = os.path.split(ScreamerPath)[0]+'\\favorites.xml'
             self.dh2 = my_xml_handler2()
-            try:
-                self.dh2.item = self.plugin.fav_num+1
-            except:
-                self.plugin.fav_num=-1
-                self.dh2.item = 1
             sax.parse(xmltoparse, self.dh2)
-            if self.plugin.fav_num <= self.dh2.counter:        
-                self.plugin.fav_num += 1
-                if self.plugin.fav_num == self.dh2.counter+1:
-                    self.plugin.fav_num = 0
-                PostMessage(hwnds[0], WM_COMMAND, 9217+self.plugin.fav_num, 0)
-                return (str(self.plugin.fav_num+1)+\
-                    ": "+self.dh2.favorite) if self.plugin.fav_num >0 else \
-                    "1: "+self.dh2.first
+            if eval(self.value[2]):        
+                self.plugin.fav_num += self.value[0]
             else:
-                self.PrintError(self.text.over % (str(self.plugin.fav_num+1),\
-                    str(self.dh2.counter+1)))
-                self.plugin.fav_num = 0
-                PostMessage(hwnds[0], WM_COMMAND, 9217, 0)
-                return "1: "+self.dh2.first
+                self.plugin.fav_num = eval(self.value[1])
+            PostMessage(hwnds[0], WM_COMMAND, 9217+self.plugin.fav_num, 0)
+            num = self.plugin.fav_num
+            return (str(num+1)+": "+self.plugin.favList[num])
         else:
             self.PrintError(self.plugin.text.text1)
             return self.plugin.text.text1
-        
-        
-class PreviousFav(eg.ActionClass):
-    name = "Previous favorite"
-    description = "Previous favorite"    
-    class text:
-        over = "Too large number (%s > %s) !"
+            
+#===============================================================================
+class GetPlayingTitle(eg.ActionClass):  
     def __call__(self):
-        hwnds = FindScreamer1()
-        if len(hwnds) != 0:
-            if GetWindowText(hwnds[0]) == "Screamer Log":
-                hwnds = FindScreamer2()
-        if len(hwnds) != 0:
-            ScreamerPath = self.plugin.ScreamerPath
-            xmltoparse = os.path.split(ScreamerPath)[0]+'\\favorites.xml'
-            self.dh2 = my_xml_handler2()
-            try:
-                self.dh2.item = self.plugin.fav_num-1
-            except:
-                self.plugin.fav_num=1
-                self.dh2.item = 0
-            sax.parse(xmltoparse, self.dh2)
-            if self.plugin.fav_num <= self.dh2.counter:        
-                self.plugin.fav_num -= 1
-                if self.plugin.fav_num == -1:
-                    self.plugin.fav_num = self.dh2.counter
-                PostMessage(hwnds[0], WM_COMMAND, 9217+self.plugin.fav_num, 0)
-                return (str(self.plugin.fav_num+1)+": "+self.dh2.favorite) if \
-                    self.plugin.fav_num <self.dh2.counter else \
-                    str(self.dh2.counter+1)+": "+self.dh2.temp
-            else:
-                self.PrintError(self.text.over % (str(self.plugin.fav_num+1),\
-                    str(self.dh2.counter+1)))
-                self.plugin.fav_num = 0
-                PostMessage(hwnds[0], WM_COMMAND, 9217, 0)
-                return "1: "+self.dh2.first
+        hwnds = Handle()
+        if len(hwnds) > 0:
+            return GetWindowText(hwnds[0])
         else:
             self.PrintError(self.plugin.text.text1)
             return self.plugin.text.text1
-        
-        
-class GetPlayingTitle(eg.ActionClass):
-    name = "Get currently playing title"
-    description = "Gets the name of currently playing title."    
-    def __call__(self):
-        def GetWinTitle(hwnd):
-            if ( hwnd is not None ):
-                WinTitle = GetWindowText(hwnd[0])
-                return WinTitle
-        hwnd = FindScreamer1()
-        WinTitle=GetWinTitle(hwnd)
-        if WinTitle == "Screamer Log":
-            hwnd = FindScreamer2()
-            return GetWinTitle(hwnd)
-        else:
-            return WinTitle
-
-class WindowControl(eg.ActionClass):
-    name = "Window control"
-    description = "Window control."
-    class text:
-        label="Select action for Screamer window:"
-        win = "Window"
-        class Actions:
-            Minimize = "Minimize"
-            Restore = "Restore"
-            Close = "Close"
 
             
-    def __init__(self):
-        text=self.text
-        self.actionsList=(
-            (SC_MINIMIZE,"Minimize"),
-            (SC_RESTORE,"Restore"),
-            (SC_CLOSE,"Close"),
-        )
+#===============================================================================
+class ShowMenu(eg.ActionClass):
+    panel = None
+    
+    class text:
+        menuPreview = 'On screen menu preview:'
+        menuFont = 'Menu font:'
+        txtColour = 'Text colour'
+        background = 'Background colour'        
         
-        
-    def __call__(self, i):
-        hwnds = FindScreamer1()
-        if len(hwnds) != 0:
-            if GetWindowText(hwnds[0]) == "Screamer Log":
-                hwnds = FindScreamer2()
-        if len(hwnds) != 0:
-            SendMessageTimeout(
-                hwnds[0], WM_SYSCOMMAND, self.actionsList[i][0], 0)
-        else:
-            self.PrintError(self.plugin.text.text1)
-            return self.plugin.text.text1
- 
-    def GetLabel(self, i):
-        return self.text.win+" "+eval(
-            "self.text.Actions."+self.actionsList[i][1])
+#===============================================================================
+    class MenuColourSelectButton(wx.BitmapButton):
 
-    def Configure(self, i=0):
-        choices=[eval("self.text.Actions."+tpl[1]) for tpl in self.actionsList]
-        panel=eg.ConfigPanel(self)
-        panel.sizer.Add(wx.StaticText(panel, -1, self.text.label))
-        actionCtrl=wx.Choice(
-            panel,
-            choices=choices,
-        )
-        actionCtrl.SetSelection(i)
-        panel.sizer.Add(actionCtrl,0,wx.TOP,10)
+        def __init__(
+            self, 
+            id = -1,
+            value=(255, 255, 255),
+            name="ColourSelectButton",
+            pos=wx.DefaultPosition, 
+            size=(40, wx.Button.GetDefaultSize()[1]),
+            style=wx.BU_AUTODRAW, 
+            validator=wx.DefaultValidator, 
+        ):
+            self.id = id
+            self.value = value
+            self.name = name
+            wx.BitmapButton.__init__(
+                self, panel, id, wx.NullBitmap, pos, size, style, validator,name
+            )
+            self.SetValue(value)
+            self.Bind(wx.EVT_BUTTON, self.OnButton)
+
+
+        def OnButton(self, event):
+            colourData = wx.ColourData()
+            colourData.SetChooseFull(True)
+            colourData.SetColour(self.value)
+            for n, colour in enumerate(eg.config.colourPickerCustomColours):
+                colourData.SetCustomColour(n, colour)
+            colourDlg = wx.ColourDialog(self.GetParent(), colourData)
+            colourDlg.SetTitle(self.name)
+            if colourDlg.ShowModal() == wx.ID_OK:
+                colourData = colourDlg.GetColourData()
+                colour=colourData.GetColour().Get()
+                self.SetValue(colour)
+                listBoxCtrl = event.GetEventObject().GetParent().GetSizer().\
+                    GetChildren()[0].GetSizer(). GetChildren()[1].GetWindow()                
+                btnId = event.GetId()
+                if btnId == 1:
+                    listBoxCtrl.SetBackgroundColour(colour)
+                    listBoxCtrl.Refresh()
+                else:
+                    listBoxCtrl.SetForegroundColour(colour)
+                    listBoxCtrl.Refresh()
+                event.Skip()
+            eg.config.colourPickerCustomColours = [
+                colourData.GetCustomColour(n).Get() for n in range(16)
+            ]
+            colourDlg.Destroy()
+
+            
+        def GetValue(self):
+            return self.value
+
+            
+        def SetValue(self, value):
+            self.value = value
+            w, h = self.GetSize()
+            image = wx.EmptyImage(w-10, h-10)
+            image.SetRGBRect((1, 1, w-12, h-12), *value)
+            self.SetBitmapLabel(image.ConvertToBitmap())
         
+#===============================================================================
+    class MenuFontButton(wx.BitmapButton):
+
+        def __init__(
+            self, 
+            fontInfo = None,
+            id=-1,
+            pos=wx.DefaultPosition, 
+            size=(40, wx.Button.GetDefaultSize()[1]),
+            style=wx.BU_AUTODRAW, 
+            validator=wx.DefaultValidator,
+            name="MenuFontButton", 
+        ):
+            self.window = panel
+            self.fontInfo = fontInfo
+            wx.BitmapButton.__init__(
+                self,
+                panel,
+                id,
+                wx.Bitmap("images/font.png"), 
+                pos,
+                size,
+                style,
+                validator,
+                name
+            )
+            self.Bind(wx.EVT_BUTTON, self.OnButton)
+
+
+        def OnButton(self, event):
+            data = wx.FontData()
+            if self.fontInfo is not None:
+                font = wx.FontFromNativeInfoString(self.fontInfo)
+                data.SetInitialFont(font)
+            else:
+                data.SetInitialFont(
+                    wx.SystemSettings_GetFont(wx.SYS_ANSI_VAR_FONT )
+                )
+            dlg = wx.FontDialog(self.window, data)
+            if dlg.ShowModal() == wx.ID_OK:
+                data = dlg.GetFontData()
+                font = data.GetChosenFont()
+                listBoxCtrl = event.GetEventObject().GetParent().GetSizer().\
+                    GetChildren()[0].GetSizer(). GetChildren()[1].GetWindow()                
+                for n in range(10,20):
+                    font.SetPointSize(n)
+                    listBoxCtrl.SetFont(font)
+                    if listBoxCtrl.GetTextExtent('X')[1]>20:
+                        break
+                self.fontInfo = data.GetChosenFont().GetNativeFontInfo().\
+                    ToString()
+                event.Skip()
+            dlg.Destroy()
+
+
+        def GetValue(self):
+            return self.fontInfo
+
+
+        def SetValue(self, fontInfo):
+            self.fontInfo = fontInfo
+
+
+    def __call__(
+        self,
+        fore = (0, 0, 0),
+        back = (255, 255, 255),
+        fontInfo = None
+
+    ):
+        self.Show_OSM(fore,back,fontInfo,False)
+    
+    def Show_OSM(
+        self,
+        fore,
+        back,
+        fontInfo,
+        flag
+    ):
+    
+        if self.plugin.menuDlg is not None:
+            return
+        self.fore = fore
+        self.back = back
+        self.flag = flag
+
+        ScreamerPath = self.plugin.ScreamerPath
+        xmltoparse = os.path.split(ScreamerPath)[0]+'\\favorites.xml'
+        self.dh2 = my_xml_handler2()
+        sax.parse(xmltoparse, self.dh2)
+        choices = self.plugin.favList
+
+        self.plugin.menuDlg = wx.Frame(
+                None, -1, 'OS_Menu', 
+                style=wx.STAY_ON_TOP | wx.SIMPLE_BORDER
+            )
+        favChoiceCtrl=wx.ListBox(
+            self.plugin.menuDlg,
+            choices = choices,
+            style=wx.LB_SINGLE|wx.LB_NEEDED_SB 
+        )
+        
+        if fontInfo is None:
+            font = favChoiceCtrl.GetFont()
+            font.SetPointSize(36)
+            fontInfo = font.GetNativeFontInfoDesc()
+        else:
+            font = wx.FontFromNativeInfoString(fontInfo)        
+        favChoiceCtrl.SetFont(font)
+        # menu height calculation:
+        h=favChoiceCtrl.GetCharHeight()
+        height0 = len(choices)*h+5
+        height1 = h*((GetSystemMetrics (1)-20)/h)+5
+        height = min(height0,height1)
+        # menu width calculation:
+        width_lst=[]
+        for item in choices:
+            width_lst.append(favChoiceCtrl.GetTextExtent(item+' ')[0])
+        width = max(width_lst)+8
+        if height<height0:
+            width += 20 #for vertical scrollbar
+        width = min((width,GetSystemMetrics (0)-50))
+        self.plugin.menuDlg.SetSize((width+6,height+6))
+        favChoiceCtrl.SetDimensions(2,2,width,height,wx.SIZE_AUTO)
+        mainSizer =wx.BoxSizer(wx.VERTICAL)
+        self.plugin.menuDlg.SetSizer(mainSizer)
+        favChoiceCtrl.SetSelection(self.plugin.fav_num)
+        self.plugin.menuDlg.SetBackgroundColour((0,0,0))
+        favChoiceCtrl.SetBackgroundColour(self.back)
+        favChoiceCtrl.SetForegroundColour(self.fore)
+        mainSizer.Add(favChoiceCtrl, 0, wx.EXPAND)
+
+
+        def OnClose(evt):
+            self.plugin.menuDlg = None
+            evt.Skip()
+        self.plugin.menuDlg.Bind(wx.EVT_CLOSE, OnClose)
+               
+
+        def On2Click(evt):
+            if self.plugin.menuDlg is not None:
+                self.plugin.PlayFavFromMenu()
+                evt.Skip()
+        favChoiceCtrl.Bind(wx.EVT_LISTBOX_DCLICK, On2Click)
+        self.plugin.menuDlg.Centre()
+        if self.flag:
+            cm=self.CloseMenu(self.plugin.menuDlg)
+            cm.start()
+        self.plugin.menuDlg.Show()
+#===============================================================================
+    class CloseMenu(Thread):
+
+        def __init__(self,dlg):
+            Thread.__init__(self)
+            self.dlg = dlg
+    
+        def run(self):
+            sleep(5)
+            try:
+                self.dlg.Close() #self.plugin.menuDlg = None -> by OnClose !!!
+            except:
+                pass
+            
+#===============================================================================
+        
+    def GetLabel(
+        self,
+        fore,
+        back,
+        fontInfo,
+    ):
+        return self.name
+        
+        
+    def Configure(
+        self,
+        fore = (0, 0, 0),
+        back = (255, 255, 255),
+        fontInfo = None
+    ):
+
+        ScreamerPath = self.plugin.ScreamerPath
+        xmltoparse = os.path.split(ScreamerPath)[0]+'\\favorites.xml'
+        self.dh2 = my_xml_handler2()
+        sax.parse(xmltoparse, self.dh2)
+        choices = self.plugin.favList
+        self.fore = fore
+        self.back = back
+        self.oldSel=0
+        global panel
+        panel = eg.ConfigPanel(self)
+        mainSizer=wx.BoxSizer(wx.VERTICAL)
+        previewLbl=wx.StaticText(panel, -1, self.text.menuPreview)
+        mainSizer.Add(previewLbl)
+        panel.sizer.Add(mainSizer)
+        listBoxCtrl=wx.ListBox(
+            panel,-1,
+            size=wx.Size(420,120),
+            choices = choices,
+            style=wx.LB_SINGLE|wx.LB_NEEDED_SB 
+        )
+        listBoxCtrl.SetBackgroundColour(self.back)
+        listBoxCtrl.SetForegroundColour(self.fore)
+        
+        if fontInfo is None:
+            font = listBoxCtrl.GetFont()
+            font.SetPointSize(36)
+            fontInfo = font.GetNativeFontInfoDesc()
+        else:
+            font = wx.FontFromNativeInfoString(fontInfo)
+        for n in range(10,20):
+            font.SetPointSize(n)
+            listBoxCtrl.SetFont(font)
+            if listBoxCtrl.GetTextExtent('X')[1]>20:
+                break
+        mainSizer.Add(listBoxCtrl,0,wx.TOP,5)
+        
+        #Font button
+        fontLbl=wx.StaticText(panel, -1, self.text.menuFont)
+        fontButton = self.MenuFontButton(fontInfo)
+        #Button Text Colour
+        foreLbl=wx.StaticText(panel, -1, self.text.txtColour+':')
+        foreColourButton = self.MenuColourSelectButton(
+            0,
+            fore,
+            self.text.txtColour
+        )
+        #Button Background Colour
+        backLbl=wx.StaticText(panel, -1, self.text.background+':')
+        backColourButton = self.MenuColourSelectButton(
+            1,
+            back,
+            self.text.background
+        )
+        
+        bottomSizer = wx.FlexGridSizer(3,3,hgap=0,vgap=3)
+        bottomSizer.Add((140,10))
+        bottomSizer.Add((140,10))
+        bottomSizer.Add((140,10))
+        bottomSizer.Add(fontLbl)
+        bottomSizer.Add(foreLbl)
+        bottomSizer.Add(backLbl)
+        bottomSizer.Add(fontButton)
+        bottomSizer.Add(foreColourButton)
+        bottomSizer.Add(backColourButton)
+        mainSizer.Add(bottomSizer)
+        
+        def OnClick(evt):
+            listBoxCtrl.SetSelection(-1)
+            evt.StopPropagation()
+        listBoxCtrl.Bind(wx.EVT_LISTBOX, OnClick)
+        
+        
+        # re-assign the test button
+        def OnButton(event):
+            self.Show_OSM(
+                foreColourButton.GetValue(),
+                backColourButton.GetValue(),
+                fontButton.GetValue(),
+                True
+            )
+        panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
+ 
+
         while panel.Affirmed():
-            panel.SetResult(actionCtrl.GetSelection())
+            panel.SetResult(
+            foreColourButton.GetValue(),
+            backColourButton.GetValue(),
+            fontButton.GetValue(), 
+            )
+
+
+#===============================================================================
+class MoveCursor(eg.ActionClass):
+
+    def __call__(self):
+        if self.plugin.menuDlg is not None:
+            max=len(self.plugin.favList)
+            if max > 0:
+                sel=self.plugin.menuDlg.GetSizer().GetChildren()[0].\
+                    GetWindow().GetSelection()
+                if sel == eval(self.value[0]):
+                    sel = eval(self.value[1])
+                self.plugin.menuDlg.GetSizer().GetChildren()[0].GetWindow().\
+                    SetSelection(sel+self.value[2])
+                
+#===============================================================================
+class OK_Btn(eg.ActionClass):
+
+    def __call__(self):
+        if self.plugin.menuDlg is not None:
+            self.plugin.PlayFavFromMenu()
+        
+#===============================================================================
+class Cancel_Btn(eg.ActionClass):
+
+    def __call__(self):
+        if self.plugin.menuDlg is not None:
+            self.plugin.menuDlg.Close() 
+        #self.menuDlg = None -> by OnClose !!!
+
+#===============================================================================
+Actions = (
+    (Run,"Run","Run Screamer","Run Screamer with its default settings.",None),
+    (WindowControl,"Minimize","Minimize window","Minimize window.",SC_MINIMIZE),
+    (WindowControl,"Restore","Restore window","Restore window.",SC_RESTORE),
+    (WindowControl,"Close","Close window","Close window.",SC_CLOSE),
+    (OtherActions,"Play","Play","Play last playing station.",("Play","")),
+    (OtherActions,"Stop","Stop","Stop.",("Stop","")),
+    (PlayStop,"PlayStop","Play/Stop","Play/Stop.",("Play","Stop")),
+    (OtherActions,"Next","Next stream","Next stream.",("Next","")),
+    (OtherActions,"Prev","Previous stream","Previous stream.",("Prev","")),
+    (OtherActions,"RecOff","Rec on","Rec on.",("RecOff","")),
+    (OtherActions,"RecOn","Rec off","Rec off.",("RecOn","")),
+    (OtherActions,"RecOnOff","Rec On/Off","Rec On/Off.",("RecOn","RecOff")),
+    (OtherActions,"MuteOff","Mute on","Mute on.",("MuteOff","")),
+    (OtherActions,"MuteOn","Mute off","Mute off.",("MuteOn","")),
+    (OtherActions,"MuteOnOff","Mute On/Off","Mute On/Off.",("MuteOn","MuteOff")),
+    (VolumeUpDown,"VolumeUp","Volume up","Volume up.", ('volume > 0',u'{Up}',1,-1)),
+    (VolumeUpDown,"VolumeDown","Volume down","Volume down.", ('volume < 20',u'{Down}',19,1)),
+    (SetVolume,"SetVolume","Set volume","Set volume.", None),
+    (GetVolume,"GetVolume","Get volume","Get volume.", None),
+    ( eg.ActionGroup, 'Favorites', 'Favorites', 'Favorites',(
+        (SelectFav,"SelectFav","Select favorite","Select favorite by order.", None),
+        (NextPrevFav,"NextFav","Next favorite","Next favorite.", (1, '0', 'self.plugin.fav_num < len(self.plugin.favList)-1')),
+        (NextPrevFav,"PreviousFav","Previous favorite","Previous favorite.", (-1, 'len(self.plugin.favList)-1', 'self.plugin.fav_num < (len(self.plugin.favList)-1) and self.plugin.fav_num>0')),
+        (GetPlayingTitle,"GetPlayingTitle","Get currently playing title","Gets the name of currently playing title.", None),
+        ( eg.ActionGroup, 'Menu', 'Menu', 'Menu',(
+            (ShowMenu, 'ShowMenu', 'Show menu', 'Show on screen menu.', None),
+            (MoveCursor, 'MoveDown', 'Cursor down', 'Cursor down.', ('max-1', '-1', 1)),
+            (MoveCursor, 'MoveUp', 'Cursor up', 'Cursor up.', ('0', 'max', -1)),
+            (OK_Btn, 'OK_Btn', 'OK', 'OK button pressed.', None),
+            (Cancel_Btn, 'Cancel_Btn', 'Cancel', 'Cancel button pressed.', None),
+        )),
+    )),
+)
+  
+
