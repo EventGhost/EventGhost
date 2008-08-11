@@ -19,6 +19,9 @@
 ###
 ###
 ### changelog:
+### v0.7.2      - Inluded the icon in __init__.py and removed obsolete readme
+### 2008-08-11
+###
 ### v0.7.1      - Added fixes/changes as suggested by BitMonster
 ### 2007-12-16  - Moved all strings to the Text -class
 ###             - Fixed some bugs in the Send(eg.ActionClass)'s
@@ -52,7 +55,7 @@
 ###
 name = "LIRC Client"
 kind = "remote"
-version = "0.7.1"
+version = "0.7.2"
 author = "jinxdone"
 description = """\
 Plugin for sending and receiving LIRC eventstrings. Generates EventGhost events 
@@ -105,6 +108,15 @@ eg.RegisterPlugin(
     kind=kind,
     canMultiLoad=True,
     url = "http://www.eventghost.org/forum/viewtopic.php?t=219",
+    icon = (
+      "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBI"
+      "WXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH1wEDFyY0FznCDQAAAP9JREFUeNqVUrGRhDAMXP3Qh9sg"
+      "QzEV0I3tjAqIKUVk0AFkVOAW9AFvY47zHa8Zz2rGXmm1MqEQzjnFl3DOUVUiW2uLRO99yt8WsNZi"
+      "miY8iZ/SBYskZG6yI5d3VXlACwYgAkAONczN7Vn1RGbTNP8fIY1y6eo/K6jrOuUip4nRTxH+w9MH"
+      "iknXdej7HgAwjqPiYRAAtG2LYRiw7zuY+UJW1Y9/oXolqyqICBGJCCJykc3MpwchBBhjYIw5JBEl"
+      "jEVeSflXRl3XUabqkSSMR1WhqvDeo23bi9kVAGzbVuy+rivF+2VZEELAPM+3Ldxmz1ZLueycHAvc"
+      "bM6K0Lc1/gLZfImV1GmwgAAAAABJRU5ErkJggg=="
+    )
 )
 
 import socket, asyncore, time, threading
