@@ -1,4 +1,4 @@
-version="0.1.4" 
+version="0.1.5" 
 
 # Plugins/ScreamerRadio/__init__.py
 #
@@ -74,14 +74,28 @@ eg.RegisterPlugin(
 #     * now uses AddActionsFromList
 #     * add "On screeen menu" for choice of favorite
 #     * increased version to 0.1.4
-# ==============================================================================
+# 2008-09-01 Pako
+#     * add option Start/Stop Event Sender
+#     * increased version to 0.1.5
+#===============================================================================
 
+class MyDirBrowseButton(eg.DirBrowseButton):
+    def GetTextCtrl(self):          #  now I can make build-in textCtrl non-editable !!!
+        return self.textControl     #
+#===============================================================================
 
 class Text:
+    label1 = "Path to screamer.exe:"
+    label2 = "Path to Start_SR_Events.exe and Stop_SR_Events.exe:"
     filemask = "screamer.exe|screamer.exe|All-Files (*.*)|*.*"
-    label = "Path to screamer.exe:"
-    version = "Version: "
     text1 = "Couldn't find Screamer Radio window !"
+    text2 = "Couldn't find file %s !"
+    lbl_start_stop = 'Activate/deactivate event sender by actions "Run or restore/Exit"'
+    browseTitle = "Selected folder:"
+    toolTipFolder = "Press button and browse to select folder ..."
+    boxTitle = 'Folder "%s" is incorrect'
+    boxMessage1 = 'Missing file %s !'
+    boxMessage2 = 'Missing file %s or %s !'
 
 
 import os
@@ -89,7 +103,7 @@ import xml.sax as sax
 from xml.sax.handler import ContentHandler
 from threading import Thread
 from time import sleep
-from win32gui import GetWindowText
+from win32gui import GetWindowText, MessageBox
 from win32api import ShellExecute,GetSystemMetrics
 from eg.WinApi import SendMessageTimeout
 from eg.WinApi.Dynamic import PostMessage
@@ -161,17 +175,33 @@ class my_xml_handler2(ContentHandler):
 #===============================================================================
 class ScreamerRadio(eg.PluginClass):
     text=Text
-    ScreamerPath = ""
+    ScreamerPath = None
+    path2 = None
     menuDlg = None
     fav_num = 0
     
+    def Execute(self, exe, path):
+        try:
+            res = ShellExecute(
+                0, 
+                None, 
+                exe,
+                None, 
+                path, 
+                1
+            )
+        except:
+            res = None
+            self.PrintError(self.text.text2 % exe)
+        return res
+        
     def PlayFavFromMenu(self):
         if self.menuDlg is not None:
             sel=self.menuDlg.GetSizer().GetChildren()[0].GetWindow().\
                 GetSelection()                
 
         self.fav_num=sel
-        self.menuDlg.Close()  #self.menuDlg = None -> by OnClose !!!
+        self.menuDlg.Close()  #
         hwnds = Handle()
         if len(hwnds) > 0:
             if sel <= len(self.favList)-1:
@@ -186,70 +216,154 @@ class ScreamerRadio(eg.PluginClass):
         favList=[]
         self.AddActionsFromList(Actions)
 
-    def __start__(self, ScreamerPath):
+    def __start__(self, ScreamerPath, path2 = None):
         self.ScreamerPath = ScreamerPath
-        xmltoparse = os.path.split(ScreamerPath)[0]+'\\screamer.xml'
+        self.path2 = path2
+        xmltoparse = ScreamerPath+'\\screamer.xml'
         self.dh = my_xml_handler1()
         sax.parse(xmltoparse, self.dh)
         xmltoparse = self.dh.document['LanguageFile']
         sax.parse(xmltoparse, self.dh)
                    
-    def Configure(self, ScreamerPath=None):
-        if ScreamerPath is None:
-            ScreamerPath = os.path.join(
-                eg.folderPath.ProgramFiles, 
-                "Screamer", 
-                "screamer.exe"
-            )
+    def Configure(self, ScreamerPath=None, path2 = None):
         panel = eg.ConfigPanel(self)
-        VersionText = wx.StaticText(
-            panel,
-            -1,
-            self.text.version+version,
-            style=wx.ALIGN_LEFT
-        )
-        filepathCtrl = eg.FileBrowseButton(
+        label1Text = wx.StaticText(panel, -1, self.text.label1)
+        label2Text = wx.StaticText(panel, -1, self.text.label2)
+        filepathCtrl = MyDirBrowseButton(
             panel, 
-            size=(320,-1),
-            initialValue=ScreamerPath, 
-            startDirectory=eg.folderPath.ProgramFiles,
-            fileMask = self.text.filemask,
+            size=(410,-1),
+            toolTip = self.text.toolTipFolder,
+            dialogTitle = self.text.browseTitle,
+            buttonText = eg.text.General.browse
+        )
+        
+        filepathCtrl.GetTextCtrl().SetEditable(False)
+        checkBoxCtrl = wx.CheckBox(panel, label="  "+self.text.lbl_start_stop)
+        if ScreamerPath is None:
+            ScreamerPath = eg.folderPath.ProgramFiles+'\\Screamer'
+            filepathCtrl.SetValue("")
+        else:
+            filepathCtrl.SetValue(ScreamerPath)
+        filepathCtrl.startDirectory = ScreamerPath
+        if path2:
+            checkBoxCtrl.SetValue(True)
+            startDir = path2
+        else:
+        #    checkBoxCtrl.SetValue(False)
+            startDir = ScreamerPath
+        startStopPathCtrl = MyDirBrowseButton(
+            panel, 
+            size=(410,-1),
+
+            toolTip = self.text.toolTipFolder,
+            dialogTitle = self.text.browseTitle,
+            startDirectory=startDir,
             buttonText=eg.text.General.browse
         )
-        panel.sizer.Add(VersionText, 0, wx.EXPAND)
-        panel.sizer.Add((5, 20))
-        panel.AddLabel(self.text.label)
-        panel.AddCtrl(filepathCtrl)
+        startStopPathCtrl.GetTextCtrl().SetEditable(False)
+        startStopPathCtrl.SetValue(startDir)
+        sizerAdd = panel.sizer.Add
+        sizerAdd(label1Text, 0, wx.TOP,15)
+        sizerAdd(filepathCtrl,0,wx.TOP,3)
+        sizerAdd(checkBoxCtrl,0,wx.TOP,30)		
+        sizerAdd(label2Text,0,wx.TOP,15)
+        sizerAdd(startStopPathCtrl,0,wx.TOP,3)
+        def OnCheckBox(event = None):
+            flag = checkBoxCtrl.GetValue()
+            if not flag:
+                startStopPathCtrl.SetValue("")
+                if event:
+                    event.Skip()
+            else:
+                if event:
+                    startStopPathCtrl.OnBrowse() 
+                    if startStopPathCtrl.GetValue() =="":
+                        flag = False
+            checkBoxCtrl.SetValue(flag)
+            label2Text.Enable(flag)
+            startStopPathCtrl.Enable(flag)
+        checkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnCheckBox)
+        OnCheckBox()
+        
+        def OnPathChange(event = None):
+            path = filepathCtrl.GetValue()
+            path2 = startStopPathCtrl.GetValue()
+            flag0 = os.path.exists(path+"\\screamer.exe")
+            if path2 != "":
+                flag1 = os.path.exists(path2+"\\Start_SR_Events.exe")
+                flag2 = os.path.exists(path2+"\\Stop_SR_Events.exe")
+                flag = flag0 and flag1 and flag2
+            else:
+                flag = flag0
+            panel.dialog.buttonRow.okButton.Enable(flag)
+            panel.isDirty = True
+            panel.dialog.buttonRow.applyButton.Enable(flag)
+            if event and not flag0:
+                MessageBox(
+                    panel.GetHandle(),
+                    self.text.boxMessage1 % 'screamer.exe',
+                    self.text.boxTitle % path,
+                        0
+                    )
+            if path != "":
+                filepathCtrl.startDirectory = path            
+        filepathCtrl.Bind(wx.EVT_TEXT,OnPathChange)
+        OnPathChange()
+        
+        def OnPath2Change(event = None):
+            path = filepathCtrl.GetValue()
+            path2 = startStopPathCtrl.GetValue()
+            flag0 = os.path.exists(path+"\\screamer.exe")
+            if checkBoxCtrl.GetValue():
+                flag1 = os.path.exists(path2+"\\Start_SR_Events.exe")
+                flag2 = os.path.exists(path2+"\\Stop_SR_Events.exe")
+                flag = flag1 and flag2
+                if event and not flag:
+                    MessageBox(
+                        panel.GetHandle(),
+                        self.text.boxMessage2 % (
+                            'Start_SR_Events.exe',
+                            'Stop_SR_Events.exe'
+                        ),
+                        self.text.boxTitle % path2,
+                        0
+                    )
+                startStopPathCtrl.startDirectory = path2            
+            else:
+                flag = True
+            flg = flag and flag0
+            panel.dialog.buttonRow.okButton.Enable(flg)
+            panel.isDirty = True
+            panel.dialog.buttonRow.applyButton.Enable(flg)
+        startStopPathCtrl.Bind(wx.EVT_TEXT,OnPath2Change)
+        OnPath2Change()
         
         while panel.Affirmed():
-            panel.SetResult(filepathCtrl.GetValue())
-            
+            if checkBoxCtrl.GetValue():
+                startStopPath = startStopPathCtrl.GetValue()
+            else:
+                startStopPath =None
+            panel.SetResult(filepathCtrl.GetValue(),
+            startStopPath,
+            )           
 #===============================================================================
 #cls types for Actions list:
 #===============================================================================
 class Run(eg.ActionClass):
     class text:
-        text2="Couldn't find file screamer.exe !" 
         play = "Automatic play selected favorite after start"
         label = "Select favorite:"
         over = "Too large number (%s > %s) !"
         alt_ret = "No autostart"
-    def __call__(self, play=False, fav=1):
-        flag=True
-        try:
-            head, tail = os.path.split(self.plugin.ScreamerPath)
-            return ShellExecute(
-                0, 
-                None, 
-                tail,
-                None, 
-                head, 
-                1
-            )
-        except:
-            flag=False
-        finally:
-            if flag:
+
+    def __call__(self, play=False, fav = 1):
+        flag = self.plugin.Execute('screamer.exe',self.plugin.ScreamerPath)                        
+        if self.plugin.path2:
+            self.plugin.Execute('Start_SR_Events.exe',self.plugin.path2)
+
+        if flag:
+                if self.plugin.path2:
+                    self.plugin.Execute('Start_SR_Events.exe',self.plugin.path2)
                 if play:
                     for n in range(50):                
                         sleep(.2)
@@ -260,10 +374,8 @@ class Run(eg.ActionClass):
                     if not flag:
                         sleep(2)
                         ScreamerPath = self.plugin.ScreamerPath
-                        xmltoparse = os.path.split(ScreamerPath)[0]+\
-                            '\\favorites.xml'
+                        xmltoparse = ScreamerPath+'\\favorites.xml'
                         self.dh2 = my_xml_handler2()
-                    #    self.dh2.item=fav-1
                         sax.parse(xmltoparse, self.dh2)
                         if fav <= len(self.plugin.favList):
                             self.plugin.fav_num=fav-1
@@ -276,8 +388,6 @@ class Run(eg.ActionClass):
                         return self.plugin.text.text1
                 else:
                     return self.text.alt_ret                    
-            else:
-                return self.text.text2
             
             
     def Configure(self, play=False, fav=1):
@@ -323,6 +433,20 @@ class WindowControl(eg.ActionClass):
         else:
             self.PrintError(self.plugin.text.text1)
             return self.plugin.text.text1
+            
+
+#===============================================================================
+class Close(eg.ActionClass):
+    def __call__(self):
+        hwnds = Handle()
+        if len(hwnds) > 0:
+            SendMessageTimeout(
+                hwnds[0], WM_SYSCOMMAND, self.value, 0)
+        else:
+            self.PrintError(self.plugin.text.text1)
+            return self.plugin.text.text1
+        if self.plugin.path2:
+            self.plugin.Execute('Stop_SR_Events.exe',self.plugin.path2)
             
 
 #===============================================================================
@@ -446,7 +570,7 @@ class SelectFav(eg.ActionClass):
         hwnds = Handle()
         if len(hwnds) > 0:
             ScreamerPath = self.plugin.ScreamerPath
-            xmltoparse = os.path.split(ScreamerPath)[0]+'\\favorites.xml'
+            xmltoparse = ScreamerPath+'\\favorites.xml'
             self.dh2 = my_xml_handler2()
             sax.parse(xmltoparse, self.dh2)
             if fav <= len(self.plugin.favList):
@@ -487,7 +611,7 @@ class NextPrevFav(eg.ActionClass):
         hwnds = Handle()
         if len(hwnds) > 0:
             ScreamerPath = self.plugin.ScreamerPath
-            xmltoparse = os.path.split(ScreamerPath)[0]+'\\favorites.xml'
+            xmltoparse = ScreamerPath+'\\favorites.xml'
             self.dh2 = my_xml_handler2()
             sax.parse(xmltoparse, self.dh2)
             if eval(self.value[2]):        
@@ -671,7 +795,7 @@ class ShowMenu(eg.ActionClass):
         self.flag = flag
 
         ScreamerPath = self.plugin.ScreamerPath
-        xmltoparse = os.path.split(ScreamerPath)[0]+'\\favorites.xml'
+        xmltoparse = ScreamerPath+'\\favorites.xml'
         self.dh2 = my_xml_handler2()
         sax.parse(xmltoparse, self.dh2)
         choices = self.plugin.favList
@@ -743,7 +867,7 @@ class ShowMenu(eg.ActionClass):
         def run(self):
             sleep(5)
             try:
-                self.dlg.Close() #self.plugin.menuDlg = None -> by OnClose !!!
+                self.dlg.Close() #
             except:
                 pass
             
@@ -766,7 +890,7 @@ class ShowMenu(eg.ActionClass):
     ):
 
         ScreamerPath = self.plugin.ScreamerPath
-        xmltoparse = os.path.split(ScreamerPath)[0]+'\\favorites.xml'
+        xmltoparse = ScreamerPath+'\\favorites.xml'
         self.dh2 = my_xml_handler2()
         sax.parse(xmltoparse, self.dh2)
         choices = self.plugin.favList
@@ -883,14 +1007,13 @@ class Cancel_Btn(eg.ActionClass):
     def __call__(self):
         if self.plugin.menuDlg is not None:
             self.plugin.menuDlg.Close() 
-        #self.menuDlg = None -> by OnClose !!!
 
 #===============================================================================
 Actions = (
     (Run,"Run","Run Screamer","Run Screamer with its default settings.",None),
     (WindowControl,"Minimize","Minimize window","Minimize window.",SC_MINIMIZE),
     (WindowControl,"Restore","Restore window","Restore window.",SC_RESTORE),
-    (WindowControl,"Close","Close window","Close window.",SC_CLOSE),
+    (Close,"Close","Close window","Close window.",SC_CLOSE),
     (OtherActions,"Play","Play","Play last playing station.",("Play","")),
     (OtherActions,"Stop","Stop","Stop.",("Stop","")),
     (PlayStop,"PlayStop","Play/Stop","Play/Stop.",("Play","Stop")),
