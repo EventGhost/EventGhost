@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -59,6 +59,7 @@ import urllib
 import threading
 import httplib
 import mimetypes
+import base64
 
 
 
@@ -66,13 +67,30 @@ class MyServer(BaseHTTPServer.HTTPServer):
     pass
     #def handle_error(self, request, client_address):
     #    eg.PrintError("HTTP Error")
-            
-            
-            
-class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):	
+
+
+
+class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         """Serve a GET request."""
+
+        # First do Basic HTTP-Authentication, if set
+        if self.server.authString != None:
+            authenticated= False
+            auth_header= self.headers.get( 'authorization' )
+            if auth_header is not None:
+                (auth_type, auth_data)= auth_header.split( ' ', 2 )
+                if auth_type.lower() == 'basic':
+                    if base64.decodestring( auth_data ) == self.server.authString:
+                        authenticated= True
+            if not authenticated:
+                self.send_response(401)
+                self.send_header('WWW-Authenticate', 'Basic realm="'+self.server.authRealm+'"')
+                self.end_headers()
+                return
+
+        # Main Handler
         f = None
         try:
             p = self.path.split('?', 1)
@@ -115,12 +133,11 @@ class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 pass
             else:
                 raise
-            
-            
+
+
     def log_message(self, format, *args):
         # supress all messages
         pass
-    
 
     def translate_path(self, path):
         """Translate a /-separated PATH to the local filename syntax.
@@ -164,60 +181,80 @@ class Webserver(eg.PluginClass):
         port = "TCP/IP port:"
         documentRoot = "HTML documents root:"
         eventPrefix = "Event prefix:"
-    
+        authRealm = "Basic Authentication Realm:"
+        authUsername = "Basic Authentication Username:"
+        authPassword = "Basic Authentication Password:"
+
     def __init__(self):
         self.running = False
 
 
-    def __start__(self, prefix=None, port=80, basepath=None):
+    def __start__(self, prefix=None, port=80, basepath=None, authRealm="Eventghost", authUsername="", authPassword=""):
         self.info.eventPrefix = prefix
         self.port = port
         self.basepath = basepath
+        self.authRealm = authRealm
+        self.authUsername = authUsername
+        self.authPassword = authPassword
         self.abort = False
         self.httpd_thread = threading.Thread(target=self.ThreadLoop)
         self.httpd_thread.start()
         self.running = True
-        
-        
+
+
     def __stop__(self):
         if self.running:
             self.abort = True
             conn = httplib.HTTPConnection("localhost:%d" % self.port)
             conn.request("QUIT", "/")
-            conn.getresponse()        
+            conn.getresponse()
             self.httpd_thread = None
             self.running = False
-        
-        
+
+
     def ThreadLoop(self):
         class mySubHandler(MyHTTPRequestHandler):
             TriggerEvent = self.TriggerEvent
             TriggerEnduringEvent = self.TriggerEnduringEvent
             EndLastEvent = self.EndLastEvent
-            
+
         server = MyServer(('', self.port), mySubHandler)
         server.basepath = self.basepath
+
+        server.authRealm = self.authRealm
+        if self.authUsername != '' or self.authPassword != '':
+            server.authString = self.authUsername + ':' + self.authPassword
+        else:
+            server.authString = None
 
         # Handle one request at a time until stopped
         while not self.abort:
             server.handle_request()
 
 
-    def Configure(self, prefix="HTTP", port=80, basepath=""):
+    def Configure(self, prefix="HTTP", port=80, basepath="", authRealm="Eventghost", authUsername="", authPassword=""):
         panel = eg.ConfigPanel(self)
-        
+
         portCtrl = panel.SpinIntCtrl(port, min=1, max=65535)
         filepathCtrl = panel.DirBrowseButton(basepath)
         editCtrl = panel.TextCtrl(prefix)
-        
+        authRealmCtrl = panel.TextCtrl(authRealm)
+        authUsernameCtrl = panel.TextCtrl(authUsername)
+        authPasswordCtrl = panel.TextCtrl(authPassword)
+
         panel.AddLine(self.text.port, portCtrl)
         panel.AddLine(self.text.documentRoot, filepathCtrl)
         panel.AddLine(self.text.eventPrefix, editCtrl)
-        
+        panel.AddLine(self.text.authRealm, authRealmCtrl)
+        panel.AddLine(self.text.authUsername, authUsernameCtrl)
+        panel.AddLine(self.text.authPassword, authPasswordCtrl)
+
         while panel.Affirmed():
             panel.SetResult(
-                editCtrl.GetValue(), 
-                int(portCtrl.GetValue()), 
-                filepathCtrl.GetValue()
+                editCtrl.GetValue(),
+                int(portCtrl.GetValue()),
+                filepathCtrl.GetValue(),
+                authRealmCtrl.GetValue(),
+                authUsernameCtrl.GetValue(),
+                authPasswordCtrl.GetValue()
             )
-
