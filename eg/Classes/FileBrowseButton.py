@@ -24,9 +24,9 @@ from wx.lib.filebrowsebutton import FileBrowseButton
 import types
 
 
-def createDialog(self, parent, id, pos, size, style):
+def createDialog(self, parent, id, pos, size, style, name=""):
     """Setup the graphic representation of the dialog"""
-    wx.Panel.__init__ (self, parent, id, pos, size, style)
+    wx.Panel.__init__ (self, parent, id, pos, size, style, name)
     self.SetMinSize(size) # play nice with sizers
 
     box = wx.BoxSizer(wx.HORIZONTAL)
