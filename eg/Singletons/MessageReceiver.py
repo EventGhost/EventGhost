@@ -104,15 +104,18 @@ class MessageReceiver(eg.ThreadWorker):
         # if the next clipboard viewer window is closing, repair the chain.
         if wParam == self.hwndNextViewer:
             self.hwndNextViewer = lParam
+            if self.hwndNextViewer == self.hwnd:
+                self.hwndNextViewer = None
         elif self.hwndNextViewer:
             SendMessage(self.hwndNextViewer, mesg, wParam, lParam); 
         return 0
         
         
     def OnDrawClipboard(self, hwnd, mesg, wParam, lParam):
-        # pass the message to the next window in the clipboard viewer chain
         wx.CallAfter(eg.app.clipboardEvent.Fire)
-        SendMessage(self.hwndNextViewer, mesg, wParam, lParam)
+        # pass the message to the next window in the clipboard viewer chain
+        if self.hwndNextViewer:
+            SendMessage(self.hwndNextViewer, mesg, wParam, lParam)
     
     
     @eg.LogIt
