@@ -247,7 +247,7 @@ class ActionBase(eg.ActionClass):
         address = 0
         for i in range(12):
             address <<= 2
-            address += (int(addressString[i], 4) - 1)
+            address += int(addressString[i]) - 1
         return address
         
     
