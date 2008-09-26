@@ -91,7 +91,11 @@ class ActionItem(TreeItem):
         if action is None or not issubclass(action, eg.ActionClass):
             action = eg.plugins.EventGhost.PythonCommand
             argString = repr(text)
-        self.executable = action()
+        try:
+            self.executable = action()
+        except:
+            eg.PrintTraceback(msg="Error in action: " + repr(text))
+            
         self.icon = action.info.icon            
         self.SetArgumentString(argString)
     
