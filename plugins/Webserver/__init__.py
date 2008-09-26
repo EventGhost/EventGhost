@@ -77,16 +77,19 @@ class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         # First do Basic HTTP-Authentication, if set
         if self.server.authString != None:
-            authenticated= False
-            auth_header= self.headers.get( 'authorization' )
-            if auth_header is not None:
-                (auth_type, auth_data)= auth_header.split( ' ', 2 )
-                if auth_type.lower() == 'basic':
-                    if base64.decodestring( auth_data ) == self.server.authString:
+            authenticated = False
+            authHeader = self.headers.get('authorization')
+            if authHeader is not None:
+                (authType, authData) = authHeader.split(' ', 2)
+                if authType.lower() == 'basic':
+                    if base64.decodestring(authData) == self.server.authString:
                         authenticated= True
             if not authenticated:
                 self.send_response(401)
-                self.send_header('WWW-Authenticate', 'Basic realm="'+self.server.authRealm+'"')
+                self.send_header(
+                    'WWW-Authenticate', 
+                    'Basic realm="%s"' % self.server.authRealm
+                )
                 self.end_headers()
                 return
 
@@ -115,7 +118,9 @@ class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 if len(a) > startPos:
                     payload = []
                     for i in range(startPos, len(a)):
-                        payload.append(urllib.unquote_plus(a[i]).decode("latin1"))
+                        payload.append(
+                            urllib.unquote_plus(a[i]).decode("latin1")
+                        )
             if event.strip() == "ButtonReleased":
                 self.EndLastEvent()
             elif withoutRelease:
@@ -136,8 +141,9 @@ class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 
     def log_message(self, format, *args):
-        # supress all messages
+        # suppress all messages
         pass
+
 
     def translate_path(self, path):
         """Translate a /-separated PATH to the local filename syntax.
@@ -185,11 +191,20 @@ class Webserver(eg.PluginClass):
         authUsername = "Basic Authentication Username:"
         authPassword = "Basic Authentication Password:"
 
+
     def __init__(self):
         self.running = False
 
 
-    def __start__(self, prefix=None, port=80, basepath=None, authRealm="Eventghost", authUsername="", authPassword=""):
+    def __start__(
+        self, 
+        prefix=None, 
+        port=80, 
+        basepath=None, 
+        authRealm="Eventghost", 
+        authUsername="", 
+        authPassword=""
+    ):
         self.info.eventPrefix = prefix
         self.port = port
         self.basepath = basepath
@@ -232,7 +247,15 @@ class Webserver(eg.PluginClass):
             server.handle_request()
 
 
-    def Configure(self, prefix="HTTP", port=80, basepath="", authRealm="Eventghost", authUsername="", authPassword=""):
+    def Configure(
+        self, 
+        prefix="HTTP", 
+        port=80, 
+        basepath="", 
+        authRealm="Eventghost", 
+        authUsername="", 
+        authPassword=""
+    ):
         panel = eg.ConfigPanel(self)
 
         portCtrl = panel.SpinIntCtrl(port, min=1, max=65535)
