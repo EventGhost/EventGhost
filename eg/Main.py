@@ -120,7 +120,7 @@ if (not args.allowMultiLoad) and (not args.translate):
     appMutex = ctypes.windll.kernel32.CreateMutexA(
         None, 
         0, 
-        "EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B"
+        "Global\\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B"
     )
     if ctypes.GetLastError() != 0:
         # another instance of EventGhost is running
