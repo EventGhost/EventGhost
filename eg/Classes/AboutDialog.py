@@ -66,7 +66,8 @@ SPECIAL_THANKS_DATA = (
             ("incubi", "DScaler 4"),
             ("Prinz", "Hauppauge IR"),
             ("junius", "BT8x8 Remotes"),
-            ("CHeitkamp", "GOM Player"),
+            ("CHeitkamp", "GOM Player and some patches"),
+            ("James Lee", "MCE Remote"),
         ),
     ),
     (
