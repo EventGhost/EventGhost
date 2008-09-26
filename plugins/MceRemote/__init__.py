@@ -27,16 +27,11 @@
 
 eg.RegisterPlugin(
     name = "Microsoft MCE Remote",
-    author = "Bitmonster",
+    author = "Bitmonster & James Lee",
     version = "1.1." + "$LastChangedRevision$".split()[1],
     kind = "remote",
     description = 'Plugin for the Microsoft MCE remote.',
     help = """
-        Will only work, if you have installed the replacement driver for 
-        the MCE remote. You find detailed installation instructions here:
-        <a href="http://www.eventghost.org/wiki/MCE_Remote_FAQ">
-        MCE Remote FAQ</a>
-        
         <center><img src="MCEv2.jpg"/></center>
     """,
     icon = (
@@ -59,6 +54,7 @@ eg.RegisterPlugin(
 
 
 import os
+import _winreg
 from threading import Timer
 from msvcrt import get_osfhandle
 
@@ -81,7 +77,8 @@ from eg.WinApi.Dynamic import (
 
 #BOOL WINAPI MceIrRegisterEvents(HWND hWnd)
 #------------------------------------------
-#To register the window that will receives messages on keystroke events (from MceIr only)
+#To register the window that will receives messages on keystroke events (from 
+#MceIr only)
 #(IR code analysis is automatically suspended during a learning phase)
 #
 #hWnd : handle to the window which will receives WM_USER messages
@@ -99,15 +96,16 @@ from eg.WinApi.Dynamic import (
 #BOOL WINAPI MceIrSetRepeatTimes(DWORD FirstRepeat, DWORD NextRepeats)
 #---------------------------------------------------------------------
 #To specify the repeat rate when a key remains pressed
-#FirstRepeat : Time (in ms) to wait before sending a second WM_USER message (HIWORD(lParam) will be 1)
+#FirstRepeat : Time (in ms) to wait before sending a second WM_USER message 
+#              (HIWORD(lParam) will be 1)
 #NextRepeats : Interval between next messages until the key is released
 #
 #returns TRUE is successfull
 #
 #BOOL WINAPI MceIrRecordToFile(HANDLE hFile, DWORD Timeout)
 #----------------------------------------------------------
-#To record raw IR code (learning function). This function waits for the IR receiver to become silent for 1 second,
-#then enters the recording phase. 
+#To record raw IR code (learning function). This function waits for the IR 
+#receiver to become silent for 1 second, then enters the recording phase. 
 #
 #hFile  : handle to the file in which raw IR codes will be stored
 #        (must be opened previously then closed when function returns)
@@ -126,11 +124,13 @@ from eg.WinApi.Dynamic import (
 #
 #BOOL WINAPI MceIrSuspend()
 #-----------------------------------------------
-#Call this function before entering a suspend power state (WM_POWERBROADCAST + PBT_APMSUSPEND event)
+#Call this function before entering a suspend power state 
+#    (WM_POWERBROADCAST + PBT_APMSUSPEND event)
 #
 #BOOL WINAPI MceIrResume()
 #-----------------------------------------------
-#Call this function on resuming a suspend power state (WM_POWERBROADCAST + PBT_APMRESUMEAUTOMATIC event)
+#Call this function on resuming a suspend power state 
+#    (WM_POWERBROADCAST + PBT_APMRESUMEAUTOMATIC event)
 #
 #BOOL WINAPI MceIrSelectBlaster()
 #-----------------------------------------------
@@ -161,9 +161,12 @@ KEY_MAP = {
     0x7b96: "Messenger",
 }
 
+HID_SUB_KEY = (
+    "SYSTEM\\CurrentControlSet\\Services\\HidIr\\Remotes\\"
+    "745a17a0-74d3-11d0-b6fe-00a0c90f57da"
+)
 
-pluginDir = os.path.abspath(os.path.split(__file__)[0])
-dllPath = os.path.join(pluginDir, "MceIr.dll")
+PLUGIN_DIR = os.path.abspath(os.path.split(__file__)[0])
 
 
 class MceMessageReceiver(eg.ThreadWorker):
@@ -204,7 +207,7 @@ class MceMessageReceiver(eg.ThreadWorker):
         self.wc = wc
         self.hinst = wc.hInstance
         
-        self.dll = WinDLL(dllPath)
+        self.dll = WinDLL(os.path.join(PLUGIN_DIR, "MceIr.dll"))
         if not self.dll.MceIrRegisterEvents(self.hwnd):
             raise self.plugin.Exceptions.DeviceNotFound
         self.dll.MceIrSetRepeatTimes(1,1)
@@ -252,12 +255,21 @@ class MceRemote(eg.PluginClass):
             "(If you get unintended double presses of the buttons, "
             "increase this value.)"
         )
+        disableHid = "Disable HID service for this remote (recommended)"
+        hidDialogCaption = "EventGhost: MCE Remote Plugin"
+        hidDialogMessage = (
+            "The plugin has changed the state of the HID service for this "
+            "remote. To let the changes take effect, you need to manually "
+            "restart the system."
+        )
 
     def __init__(self):
         self.AddAction(TransmitIr)
             
             
-    def __start__(self, waitTime=0.15):
+    @eg.LogIt
+    def __start__(self, waitTime=0.15, disableHid=True):
+        self.CheckHidState(disableHid)
         self.msgThread = MceMessageReceiver(self, waitTime)
         self.msgThread.Start()
 
@@ -276,14 +288,63 @@ class MceRemote(eg.PluginClass):
         self.msgThread.Stop()
         
         
-    def Configure(self, waitTime=0.15):
+    def ShowHidMessage(self):
+        """
+        Informs the user, that the system needs to restart the system to let 
+        the HID registry changes take effect.
+        """
+        dialog = wx.MessageDialog(
+            None, 
+            self.text.hidDialogMessage, 
+            self.text.hidDialogCaption, 
+            wx.OK|wx.ICON_INFORMATION|wx.STAY_ON_TOP
+        )
+        dialog.ShowModal()
+        dialog.Destroy()
+        
+    
+    def CheckHidState(self, disableHid):
+        """
+        Checks and sets the HID registry values and calls self.ShowHidMessage
+        if needed.
+        """
+        key = _winreg.OpenKey(
+            _winreg.HKEY_LOCAL_MACHINE, 
+            HID_SUB_KEY, 
+            0, 
+            _winreg.KEY_ALL_ACCESS
+        )
+        changed = False
+        for i in xrange(4):
+            valueName = 'CodeSetNum%i' % i
+            try:
+                value, valueType = _winreg.QueryValueEx(key, valueName)
+            except WindowsError:
+                value = None
+            if value is not None and disableHid:
+                _winreg.DeleteValue(key, valueName)
+                changed = True
+            elif value is None and not disableHid:
+                _winreg.SetValueEx(key, valueName, 0, _winreg.REG_DWORD, i + 1)
+                changed = True
+        if changed:
+            wx.CallAfter(self.ShowHidMessage)
+            
+        
+    def Configure(self, waitTime=0.15, disableHid=True):
         panel = eg.ConfigPanel(self)
         waitTimeCtrl = panel.SpinNumCtrl(waitTime, integerWidth=3)
+        disableHidCtrl = panel.CheckBox(disableHid, self.text.disableHid)
         panel.AddLine(self.text.buttonTimeout, waitTimeCtrl)
         panel.AddLine(self.text.buttonTimeoutDescr)
+        panel.AddLine()
+        panel.AddLine(disableHidCtrl)
         
         while panel.Affirmed():
-            panel.SetResult(waitTimeCtrl.GetValue())
+            panel.SetResult(
+                waitTimeCtrl.GetValue(),
+                disableHidCtrl.GetValue()
+            )
         
         
         
