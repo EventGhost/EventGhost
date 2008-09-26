@@ -156,6 +156,7 @@ class CreateNew(eg.ActionClass):
         showInTaskbar=True,
         moveOnDrag=True,
         iconizeOnDoubleClick=True,
+        *args
     ):
         plugin = self.plugin
         plugin.data = []
