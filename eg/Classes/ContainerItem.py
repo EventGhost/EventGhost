@@ -27,11 +27,11 @@ from TreeItem import TreeItem
 class ContainerItem(TreeItem):
     xmlTag = "Container"
     
-    def WriteToXML(self):
-        attr, text, childs = TreeItem.WriteToXML(self)
+    def GetData(self):
+        attr, text = TreeItem.GetData(self)
         if self.isExpanded:
             attr.append(("Expanded", "True"))
-        return attr, text, childs
+        return attr, text
     
     
     def __init__(self, parent, node):
