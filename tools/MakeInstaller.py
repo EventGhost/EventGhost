@@ -47,7 +47,10 @@ from ftplib import FTP
 from urlparse import urlparse
 from shutil import copy2 as copy
 from os.path import basename, dirname, abspath, join, exists
-import pysvn
+try:
+    import pysvn
+except ImportError:
+    pass
 
 tmpDir = tempfile.mkdtemp()
 toolsDir = abspath(dirname(sys.argv[0]))
