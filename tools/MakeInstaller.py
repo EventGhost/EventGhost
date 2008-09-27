@@ -50,7 +50,7 @@ from os.path import basename, dirname, abspath, join, exists
 try:
     import pysvn
 except ImportError:
-    pass
+    pysvn = None
 
 tmpDir = tempfile.mkdtemp()
 toolsDir = abspath(dirname(sys.argv[0]))
@@ -241,6 +241,9 @@ PY2EXE_EXCLUDES = [
     "ImageTk", 
     "PIL.ImageTk", 
     "FixTk",
+    "comtypes.gen",
+    "bsddb",
+    "_bsddb",
 ]
 
 
@@ -332,7 +335,7 @@ SolidCompression=yes
 InternalCompressLevel=ultra
 OutputDir=%(OUT_DIR)s
 OutputBaseFilename=%(OUT_FILE_BASE)s
-LicenseFile=%(TOOLS_DIR)s\\LICENSE.RTF
+InfoBeforeFile=%(TOOLS_DIR)s\\LICENSE.RTF
 DisableReadyPage=yes
 AppMutex=EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B
 
@@ -346,9 +349,9 @@ Source: "%(TRUNK)s\\*.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "%(TRUNK)s\\lib\\*.*"; DestDir: "{app}\\lib"; Flags: ignoreversion recursesubdirs
 %(INSTALL_FILES)s
 Source: "%(TRUNK)s\\Example.xml"; DestDir: "{userappdata}\\EventGhost"; DestName: "MyConfig.xml"; Flags: onlyifdoesntexist uninsneveruninstall
-Source: "%(TRUNK)s\\tools\\WebSite.url"; DestName: "EventGhost Web Site.url"; DestDir: "{group}"
-Source: "%(TRUNK)s\\tools\\WebForums.url"; DestName: "EventGhost Forums.url"; DestDir: "{group}"
-Source: "%(TRUNK)s\\tools\\WebWiki.url"; DestName: "EventGhost Wiki.url"; DestDir: "{group}"
+
+[Dirs]
+Name: "{app}\\lib\site-packages"
 
 [Run]
 Filename: "{app}\\EventGhost.exe"; Parameters: "-install"
@@ -361,6 +364,9 @@ Filename: "{app}\\EventGhost.exe"; Flags: postinstall nowait skipifsilent
 
 [Icons]
 Name: "{group}\\EventGhost"; Filename: "{app}\\EventGhost.exe"
+Name: "{group}\\EventGhost Web Site"; Filename: "http://www.eventghost.org/"
+Name: "{group}\\EventGhost Forums"; Filename: "http://www.eventghost.org/forum/"
+Name: "{group}\\EventGhost Wiki"; Filename: "http://www.eventghost.org/wiki/"
 Name: "{group}\\Uninstall EventGhost"; Filename: "{uninstallexe}"
 Name: "{userdesktop}\\EventGhost"; Filename: "{app}\\EventGhost.exe"; Tasks: desktopicon
 """
@@ -665,6 +671,7 @@ class MainDialog(wx.Dialog):
             ctrls.append(ctrl)
             setattr(self.Ctrls, name, ctrl)
         self.Ctrls.upload.Enable(self.url != "")
+        self.Ctrls.commitSvn.Enable(pysvn is not None)
         
         okButton = wx.Button(self, wx.ID_OK)
         okButton.Bind(wx.EVT_BUTTON, self.OnOk)
