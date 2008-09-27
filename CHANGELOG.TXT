@@ -1,3 +1,7 @@
+Version 0.3.6.1459 (09/27/2008)
++ CHeitkamp added basic authentication to the Webserver plugin.
++ James Lee provided a new DLL for the MCE Remote plugin, that works flawlessly without the replacement driver.
+
 Version 0.3.6.1446 (06/30/2008)
 + Sceneo TVcentral plugin
 
