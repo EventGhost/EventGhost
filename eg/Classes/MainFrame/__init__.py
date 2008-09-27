@@ -58,7 +58,7 @@ class DefaultConfig:
     showToolbar = True
     hideOnClose = False
     logTime = False
-    expandOnEvents = True
+    expandOnEvents = False
     expandTillMacro = False
     perspective = None
     perspective2 = None
