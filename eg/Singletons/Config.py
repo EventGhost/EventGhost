@@ -102,7 +102,7 @@ class Config(Section):
         'MyConfig.xml'
     )
     storedBootTime = 0
-    limitMemory = True
+    limitMemory = False
     limitMemorySize = 8
     confirmDelete = True
     lastUpdateCheckDate = None
