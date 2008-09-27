@@ -36,6 +36,7 @@ MODULES_TO_IGNORE = [
     "win32com.axdebug",
     "win32com.axscript",
     "pywin",
+    "comtypes.gen",
 ]
 
 HEADER = """\

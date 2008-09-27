@@ -414,7 +414,6 @@ import encodings.zlib_codec
 import hotshot
 import hotshot.log
 import hotshot.stats
-import hotshot.stones
 import logging
 import logging.config
 import logging.handlers
@@ -500,6 +499,7 @@ import wx.build
 import wx.build.build_options
 import wx.build.config
 import wx.lib
+import wx.lib.activex
 import wx.lib.activexwrapper
 import wx.lib.anchors
 import wx.lib.buttonpanel
@@ -515,11 +515,13 @@ import wx.lib.delayedresult
 import wx.lib.dialogs
 import wx.lib.docview
 import wx.lib.dragscroller
+import wx.lib.embeddedimage
 import wx.lib.evtmgr
 import wx.lib.expando
 import wx.lib.fancytext
 import wx.lib.filebrowsebutton
 import wx.lib.flashwin
+import wx.lib.flashwin_old
 import wx.lib.flatnotebook
 import wx.lib.foldmenu
 import wx.lib.foldpanelbar
@@ -527,6 +529,7 @@ import wx.lib.gestures
 import wx.lib.gridmovers
 import wx.lib.hyperlink
 import wx.lib.iewin
+import wx.lib.iewin_old
 import wx.lib.imagebrowser
 import wx.lib.imageutils
 import wx.lib.infoframe
@@ -537,13 +540,17 @@ import wx.lib.layoutf
 import wx.lib.multisash
 import wx.lib.newevent
 import wx.lib.pdfwin
+import wx.lib.pdfwin_old
+import wx.lib.platebtn
 import wx.lib.popupctl
 import wx.lib.printout
 import wx.lib.pubsub
 import wx.lib.pydocview
 import wx.lib.rcsizer
+import wx.lib.resizewidget
 import wx.lib.scrolledpanel
 import wx.lib.sheet
+import wx.lib.sized_controls
 import wx.lib.splitter
 import wx.lib.statbmp
 import wx.lib.stattext
@@ -673,7 +680,6 @@ import ImagePalette
 import ImagePath
 import ImageSequence
 import ImageStat
-import ImageTk
 import ImageTransform
 import ImageWin
 import ImImagePlugin
@@ -711,7 +717,6 @@ import XVThumbImagePlugin
 import _imaging
 import _imagingft
 import _imagingmath
-import _imagingtk
 import __init__
 
 # modules found for package 'comtypes'
@@ -728,6 +733,7 @@ import comtypes.partial
 import comtypes.persist
 import comtypes.safearray
 import comtypes.typeinfo
+import comtypes.util
 import comtypes._comobject
 import comtypes._meta
 import comtypes._safearray
@@ -735,7 +741,6 @@ import comtypes.client
 import comtypes.client.dynamic
 import comtypes.client._events
 import comtypes.client._generate
-import comtypes.gen
 import comtypes.server
 import comtypes.server.automation
 import comtypes.server.connectionpoints
@@ -780,6 +785,7 @@ import win32ras
 import win32security
 import win32service
 import win32trace
+import win32transaction
 import win32ts
 import win32wnet
 import winxpgui
@@ -792,6 +798,7 @@ import netbios
 import ntsecuritycon
 import pywintypes
 import rasutil
+import regcheck
 import regutil
 import sspi
 import sspicon
@@ -847,7 +854,9 @@ import win32com.client.selecttlb
 import win32com.client.tlbrowse
 import win32com.client.util
 import win32com.makegw
+import win32com.makegw.makegw
 import win32com.makegw.makegwenum
+import win32com.makegw.makegwparse
 import win32com.server
 import win32com.server.connect
 import win32com.server.dispatcher
@@ -870,6 +879,8 @@ import win32com.authorization
 import win32com.authorization.authorization
 import win32com.axcontrol
 import win32com.axcontrol.axcontrol
+import win32com.bits
+import win32com.bits.bits
 import win32com.directsound
 import win32com.directsound.directsound
 import win32com.ifilter
@@ -882,7 +893,10 @@ import win32com.mapi.emsabtags
 import win32com.mapi.mapi
 import win32com.mapi.mapitags
 import win32com.mapi.mapiutil
+import win32com.propsys
+import win32com.propsys.pscon
 import win32com.shell
+import win32com.shell.knownfolders
 import win32com.shell.shell
 import win32com.shell.shellcon
 import win32com.taskscheduler
