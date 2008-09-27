@@ -49,6 +49,7 @@ class EventGhost(object):
         eg = self
         sys.modules["eg"] = self
         self.__path__ = [os.path.abspath("eg")]
+        sys.path.append(os.path.abspath("lib\\site-packages"))
         
         # add 'eg' and 'wx' to the builtin name space of every module
         import __builtin__
@@ -193,7 +194,7 @@ class EventGhost(object):
         comtypes.client.gen_dir = genPath
         import comtypes
         sys.path.insert(0, eg.CONFIG_DIR)
-        sys.modules["comtypes.gen"] = comtypes.gen=__import__("cgen_py", globals(),locals(),[])
+        sys.modules["comtypes.gen"] = comtypes.gen = __import__("cgen_py", globals(),locals(),[])
         del sys.path[0]
         import comtypes.client._generate
         comtypes.client._generate.__verbose__ = False
