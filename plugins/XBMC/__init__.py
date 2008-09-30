@@ -19,13 +19,14 @@
 from xbmcclient import *
 
 # expose some information about the plugin through an eg.PluginInfo subclass
+
 eg.RegisterPlugin(
     name = "XBMC",
     author = "Chris Longo",
-    version = "0.2",
+    version = "0.2." + "$LastChangedRevision: 386 $".split()[1],
     kind = "program",
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=894",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=1005",
     description = "Adds actions to control <a href='http://www.xbmc.org/'>XBMC</a>.",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsRAAALEQF/ZF+RAAAA"
@@ -92,7 +93,7 @@ BUTTONS = (
     ("Power", "Power", "Simulate a press on the power button.", "power"),
 )
 
-# actions above and beyond what the simple remote can do for people with Harmony Remotes, etc
+# actions above and beyond what the simple remote can do for people with Harmony Remotes, etc.
 
 ACTIONS = (   
     ("BigSkipBackward", "Big Skip Backward", "Big skip backward.", "PlayerControl(BigSkipBackWard)"),
@@ -112,12 +113,16 @@ ACTIONS = (
     ("Reset", "Reset Computer", "Reset the computer.", "Reset"),
 )    
 
+# prototype for remote button presses
+
 class ButtonPrototype(eg.ActionClass):
     def __call__(self):
         try:
             self.plugin.xbmc.send_remote_button(self.value)
         except:
             raise self.Exceptions.ProgramNotRunning        
+
+# prototype for actions
 
 class ActionPrototype(eg.ActionClass):
     def __call__(self):
@@ -129,7 +134,6 @@ class ActionPrototype(eg.ActionClass):
 # And now we define the actual plugin:
 
 class XBMC(eg.PluginClass):
-   
     def __init__(self):
         self.AddActionsFromList(BUTTONS, ButtonPrototype)
         self.AddActionsFromList(ACTIONS, ActionPrototype)
