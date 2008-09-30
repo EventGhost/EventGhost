@@ -511,14 +511,14 @@ class XBMCClient:
         self.send_button(map="KB", button=button)
 
 
-    def send_remote_button(self, button=None):
+    def send_remote_button(self, button=None, repeat=1, queue=0):
         """Send a remote control event to XBMC
         Keyword Arguments:
         button -- name of the remote control button to send (same as in Keymap.xml)
         """
         if not button:
             return
-        self.send_button(map="R1", button=button)
+        self.send_button(map="R1", button=button, repeat=repeat, queue=queue)
 
 
     def release_button(self):
@@ -528,7 +528,7 @@ class XBMCClient:
         return
 
 
-    def send_button(self, map="", button="", amount=0):
+    def send_button(self, map="", button="", amount=0, repeat=1, queue=0):
         """Send a button event to XBMC
         Keyword arguments:
         map -- a combination of map_name and button_name refers to a
@@ -546,7 +546,7 @@ class XBMCClient:
                   section in Keymap.xml then, valid buttons include 
                   "printscreen", "minus", "x", etc.
         """
-        packet = PacketBUTTON(map_name=str(map), button_name=str(button), amount=amount)
+        packet = PacketBUTTON(map_name=str(map), button_name=str(button), amount=amount, repeat=repeat, queue=queue)
         packet.send(self.sock, self.addr, self.uid)
         return
 

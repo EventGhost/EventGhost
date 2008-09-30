@@ -118,7 +118,7 @@ ACTIONS = (
 class ButtonPrototype(eg.ActionClass):
     def __call__(self):
         try:
-            self.plugin.xbmc.send_remote_button(self.value)
+            self.plugin.xbmc.send_remote_button(self.value, 0, 1)
         except:
             raise self.Exceptions.ProgramNotRunning        
 
