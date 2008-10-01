@@ -23,7 +23,7 @@ from xbmcclient import *
 eg.RegisterPlugin(
     name = "XBMC",
     author = "Chris Longo",
-    version = "0.2." + "$LastChangedRevision$".split()[1],
+    version = "0.2." + "$LastChangedRevision: 489 $".split()[1],
     kind = "program",
     createMacrosOnAdd = True,
     url = "http://www.eventghost.org/forum/viewtopic.php?t=1005",
