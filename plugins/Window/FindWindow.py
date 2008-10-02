@@ -259,21 +259,14 @@ class FindWindow(eg.ActionClass):
         dragSizer.Add(finderTool, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.BOTTOM, 4)
         dragSizer.Add(cbHideOnDrag)
 
-        topSizer = wx.GridBagSizer(vgap=0, hgap=0)
-        topSizer.AddGrowableCol(2, 100)
-        topSizer.SetEmptyCellSize((0, 0))
-        Add = topSizer.Add
-        Add(cbOnlyFrontmost, (0, 0), (1, 2), wx.ALIGN_CENTER_VERTICAL)
-        Add(cbIncludeInvisible, (1, 0), (1, 2), wx.ALIGN_CENTER_VERTICAL)
-        Add(
-            stopMacroCtrl, 
-            (2, 0), 
-            (1, 2), 
-            wx.TOP|wx.ALIGN_BOTTOM|wx.EXPAND, 
-            3
-        )
-        Add((10,1), (0, 2), (2, 1))
-        Add(dragSizer, (0, 3), (3, 1), wx.ALIGN_TOP)
+        leftTopSizer = wx.BoxSizer(wx.VERTICAL)
+        leftTopSizer.Add(cbOnlyFrontmost, 0, wx.BOTTOM, 5)
+        leftTopSizer.Add(cbIncludeInvisible, 0, wx.BOTTOM, 5)
+        leftTopSizer.Add(stopMacroCtrl, 0, wx.BOTTOM, 5)
+        
+        topSizer = wx.BoxSizer(wx.HORIZONTAL)
+        topSizer.Add(leftTopSizer, 1, wx.EXPAND)
+        topSizer.Add(dragSizer)
         
         sizer1 = wx.GridBagSizer(vgap=4, hgap=4)
         sizer1.AddGrowableCol(2, 100)
