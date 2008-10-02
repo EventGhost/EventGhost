@@ -115,6 +115,11 @@ ACTIONS = (
     ("Favorites", "Show Favorites Screen", "Show Favorites screen.", "ActivateWindow(Favourites)"),
     ("SystemInfo", "Show System Info Screen", "Show System Info screen.", "ActivateWindow(SystemInfo)"),
     ("ShutdownMenu", "Show Shutdown Menu", "Show Shutdown Menu.", "ActivateWindow(ShutdownMenu)"),
+    ("Quit", "Quit XBMC", "Quit XBMC.", "Quit"),
+    ("Shutdown", "Shutdown Computer", "Trigger default shutdown behavior from settings.", "Shutdown"),
+    ("Powerdown", "Powerdown Computer", "Powerdown the computer.", "Powerdown"),
+    ("Suspend", "Suspend Computer", "Suspend the computer.", "Suspend"),
+    ("Hibernate", "Hibernate Computer", "Hibernate the computer.", "Hibernate"),
     ("Reset", "Reset Computer", "Reset the computer.", "Reset"),
 )    
 
