@@ -194,9 +194,9 @@ class MainFrame(wx.Frame):
         # events" checkbox. An awfull hack.
         @eg.LogIt
         def ToggleOnlyLogAssigned(event):
-            cb = self.statusBar.cb
-            flag = not cb.GetValue()
-            cb.SetValue(flag)
+            checkBox = self.statusBar.checkBox
+            flag = not checkBox.GetValue()
+            checkBox.SetValue(flag)
             eg.config.onlyLogAssigned = flag
 
         toggleOnlyLogAssignedId = wx.NewId()
@@ -210,10 +210,15 @@ class MainFrame(wx.Frame):
         else:
             hotKey = "L"
 
-        # create an accelerator for the "Del" key. This way we can temporarly
+        # create an accelerator for the "Del" key. This way we can temporarily
         # disable it while editing a tree label. 
         # (see TreeCtrl.py OnBeginLabelEdit and OnEndLabelEdit)
-        delId = self.menuItems.delete.GetId()
+        
+        delId = wx.NewId()
+        def OnDelKey(event):
+            self.DispatchCommand('Clear', event)
+        wx.EVT_MENU(self, delId, OnDelKey)
+        
         self.acceleratorTable = wx.AcceleratorTable(
             [
                 (wx.ACCEL_NORMAL, wx.WXK_DELETE, delId),
@@ -298,12 +303,7 @@ class MainFrame(wx.Frame):
         menuItems.cut = Add("Cut", hotkey="Ctrl+X")
         menuItems.copy = Add("Copy", hotkey="Ctrl+C")
         menuItems.paste = Add("Paste", hotkey="Ctrl+V")
-        # notice that we add a ascii zero byte at the end of the hotkey.
-        # this way we prevent the normal accelerator to happen. We will later
-        # catch the key ourself.
-        oldLogging = wx.Log.EnableLogging(False) # suppress warning
-        menuItems.delete = Add("Delete", hotkey="Del\x00")
-        wx.Log.EnableLogging(oldLogging)
+        menuItems.delete = Add("Delete", hotkey="Del")
         Add()
         Add("Find", hotkey="Ctrl+F")
         Add("FindNext", hotkey="F3")
@@ -547,10 +547,10 @@ class MainFrame(wx.Frame):
             # avoid programmatic change of the selected item while editing
             self.UpdateViewOptions()
             # temporarily disable the "Del" accelerator
-            self.SetAcceleratorTable(wx.AcceleratorTable([]))
+            #self.SetAcceleratorTable(wx.AcceleratorTable([]))
         elif self.lastFocus == "Edit":
             # restore the "Del" accelerator
-            self.SetAcceleratorTable(self.acceleratorTable)
+            #self.SetAcceleratorTable(self.acceleratorTable)
             self.UpdateViewOptions()
             
         self.lastFocus = focus
@@ -680,7 +680,10 @@ class MainFrame(wx.Frame):
     def DispatchCommand(self, command, event):
         if self.lastFocus == "Edit" and command == "Clear":
             editCtrl = self.treeCtrl.GetEditControl()
-            editCtrl.Remove(*editCtrl.GetSelection())
+            start, end = editCtrl.GetSelection()
+            if end - start == 0:
+                end += 1
+            editCtrl.Remove(start, end)
             return
         focus = self.FindFocus()
         method = getattr(focus, command, None)
