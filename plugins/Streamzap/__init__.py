@@ -32,7 +32,7 @@ eg.RegisterPlugin(
         'Streamzap PC Remote</a>.'
     ),
     help = """
-        <center><a href=http://www.streamzap.com/products/pcremote/>
+        <center><a href="http://www.streamzap.com/products/pcremote/">
         <img src="crr.jpg" alt="Streamzap" /></a></center>
     """,
     icon = (
@@ -44,10 +44,9 @@ eg.RegisterPlugin(
 
 
 import threading
-import time
 import os
 import array
-
+from time import sleep
 from ctypes import cdll, c_ubyte, byref
 from ctypes.wintypes import DWORD
 
@@ -154,26 +153,28 @@ class Streamzap(eg.RawReceiverPlugin):
         
         dwNumBytesRead = DWORD()
         byteIRdata = c_ubyte()
-        ir_data = array.array("B")
+        irData = array.array("B")
         for i in range(0, 512):
-            ir_data.append(0)
+            irData.append(0)
         i = 0
         
         startupEvent.set()
+        sz_ReadFile = dll.sz_ReadFile
+        Decode = MyDecoder.Decode
         while not self.abortThread:
             dll.sz_ReadFile(byref(byteIRdata), byref(dwNumBytesRead))
             val = byteIRdata.value
 
             if dwNumBytesRead.value == 0:
-                time.sleep(0.01)
+                sleep(0.01)
             else:
                 if val > 150 or i == 511:
-                    event = MyDecoder.Decode(ir_data, i)
+                    event = Decode(irData, i)
                     if event is not None:
                         self.TriggerEvent(event)
                     i = 0
                 else:
-                    ir_data[i] = val
+                    irData[i] = val
                     i += 1
                     
         dll.sz_Close()
