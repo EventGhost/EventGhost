@@ -54,7 +54,7 @@ BUTTONS = (
     ("Left", "Left", "Simulate a press on the left button.", "left"),        
     ("Right", "Right", "Simulate a press on the right button.", "right"),        
     ("PageUp", "Page Up", "Simulate a press on the page up button.", "pageplus"),
-    ("Page Down", "Page Down", "Simulate a press on the page down button.", "pageminus"),
+    ("PageDown", "Page Down", "Simulate a press on the page down button.", "pageminus"),
     ("Select", "Select", "Simulate a press on the select button.", "select"),
     ("Back", "Back", "Simulate a press on the back button.", "back"),
     ("Play", "Play", "Simulate a press on the play button.", "play"),
@@ -92,11 +92,16 @@ BUTTONS = (
 # actions above and beyond what the simple remote can do for people with Harmony Remotes, etc.
 
 ACTIONS = (   
+    ("PreviousMenu", "Previous Menu", "Previous menu.", "PreviousMenu"),
+    ("ContextMenu", "Context Menu", "Context menu.", "ContextMenu"),
+    ("ParentDir", "Parent Dir", "Parent directory.", "ParentDir"),
+    ("Repeat", "Repeat", "Repeat.", "PlayerControl(Repeat)"),       
     ("BigSkipBackward", "Big Skip Backward", "Big skip backward.", "PlayerControl(BigSkipBackWard)"),
     ("BigSkipForward", "Big Skip Forward", "Big skip forward.", "PlayerControl(BigSkipForward)"),
     ("SmallSkipBackward", "Small Skip Backward", "Small skip backward.", "PlayerControl(SmallSkipBackward)"),
     ("SmallSkipForward", "Small Skip Forward", "Small skip forward.", "PlayerControl(SmallSkipForward)"),
     ("PartyMode", "Party Mode", "Party mode.", "PlayerControl(PartyMode)"),
+    ("Queue", "Queue", "Queue.", "Queue"),
     ("Random", "Random", "Random.", "PlayerControl(Random)"),
     ("Repeat", "Repeat", "Repeat.", "PlayerControl(Repeat)"),
     ("TakeScreenShot", "Take Screen Shot", "Takes a screen shot.", "TakeScreenshot"),
