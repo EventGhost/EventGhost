@@ -26,7 +26,7 @@ class Version:
     minor = 3
     micro = 6
     releaselevel = 'beta'
-    buildNum = 1477
-    buildTime = 1223018900.78
+    buildNum = 1478
+    buildTime = 1223029604.13
     svnRevision = int('$LastChangedRevision$'.split()[1])
     string = "%s.%s.%s.%s" % (major, minor, micro, buildNum)
