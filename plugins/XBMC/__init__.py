@@ -46,71 +46,47 @@ eg.RegisterPlugin(
     ),
 )
 
-# the physical remote buttons mapped to what is defined in Keymap.xml
-
-BUTTONS = (
-    ("Up", "Up", "Simulate a press on the up button.", "up"),        
-    ("Down", "Down", "Simulate a press on the down button.", "down"),        
-    ("Left", "Left", "Simulate a press on the left button.", "left"),        
-    ("Right", "Right", "Simulate a press on the right button.", "right"),        
-    ("PageUp", "Page Up", "Simulate a press on the page up button.", "pageplus"),
-    ("PageDown", "Page Down", "Simulate a press on the page down button.", "pageminus"),
-    ("Select", "Select", "Simulate a press on the select button.", "select"),
-    ("Back", "Back", "Simulate a press on the back button.", "back"),
-    ("Play", "Play", "Simulate a press on the play button.", "play"),
-    ("Pause", "Pause", "Simulate a press on the pause button.", "pause"),
-    ("Stop", "Stop", "Simulate a press on the stop button.", "stop"),
-    ("FastForward", "Fast Forward", "Simulate a press on the fast-forward button.", "forward"),
-    ("Rewind", "Rewind", "Simulate a press on the rewind button.", "reverse"),
-    ("SkipNext", "Skip Next", "Simulate a press on the skip-next button.", "skipplus"),
-    ("SkipPrevious", "Skip Previous", "Simulate a press on the skip-previous button.", "skipminus"),
-    ("Record", "Record", "Simulate a press on the record button.", "record"),
-    ("VolumeUp", "Volume Up", "Simulate a press on the volume up button.", "volumeplus"),       
-    ("VolumeDown", "Volume Down", "Simulate a press on the volume down button.", "volumeminus"), 
-    ("Mute", "Mute", "Simulate a press on the mute button.", "mute"),
-    ("Zero", "Zero", "Simulate a press on the 0 button.", "zero"),              
-    ("One", "One", "Simulate a press on the 1 button.", "one"),              
-    ("Two", "Two", "Simulate a press on the 2 button.", "two"),              
-    ("Three", "Three", "Simulate a press on the 3 button.", "three"),              
-    ("Four", "Four", "Simulate a press on the 4 button.", "four"),              
-    ("Five", "Five", "Simulate a press on the 5 button.", "five"),              
-    ("Six", "Six", "Simulate a press on the 6 button.", "six"),              
-    ("Seven", "Seven", "Simulate a press on the 7 button.", "seven"),              
-    ("Eight", "Eight", "Simulate a press on the 8 button.", "eight"),              
-    ("Nine", "Nine", "Simulate a press on the 9 button.", "nine"),
-    ("Star", "Star", "Simulate a press on the * button.", "star"),
-    ("Hash", "Hash", "Simulate a press on the # button.", "hash"),
-    ("Menu", "Menu", "Simulate a press on the menu button.", "menu"),
-    ("Display", "Display", "Simulate a press on the display button.", "display"),
-    ("Start", "Start", "Simulate a press on the start button.", "start"),
-    ("Title", "Title", "Simulate a press on the title button.", "title"),
-    ("Info", "Info", "Simulate a press on the info button.", "info"),
-    ("Clear", "Clear", "Simulate a press on the clear button.", "clear"),
-    ("Power", "Power", "Simulate a press on the power button.", "power"),
-)
-
 # actions above and beyond what the simple remote can do for people with Harmony Remotes, etc.
 
 ACTIONS = (   
+    ("Up", "Up", "Moves up in the interface.", "Up"),        
+    ("Down", "Down", "Moves down in the interface.", "Down"),        
+    ("Left", "Left", "Moves left in the interface.", "Left"),        
+    ("Right", "Right", "Moves right in the interface.", "Right"),        
+    ("PageUp", "Page Up", "Moves up a page in the interface.", "PageUp"),
+    ("PageDown", "Page Down", "Moves down a page in the interface.", "PageDown"),
+    ("Select", "Select", "Selects the current element.", "Select"),
     ("PreviousMenu", "Previous Menu", "Previous menu.", "PreviousMenu"),
     ("ContextMenu", "Context Menu", "Context menu.", "ContextMenu"),
-    ("ParentDir", "Parent Dir", "Parent directory.", "ParentDir"),
-    ("Repeat", "Repeat", "Repeat.", "PlayerControl(Repeat)"),       
+    ("Play", "Play", "Toggles play/pause of the current media.", "Play"),
+    ("Pause", "Pause", "Pauses the current media.", "Pause"),
+    ("Stop", "Stop", "Stops playback of the current media.", "Stop"),
+    ("FastForward", "Fast Forward", "Fast-forwards the current media.", "FastForward"),
+    ("Rewind", "Rewind", "Rewinds the current media.", "Rewind"),
+    ("SkipNext", "Skip Next", "Skips to the next media item.", "SkipNext"),
+    ("SkipPrevious", "Skip Previous", "Skips back to the previous media item.", "SkipPrevious"),
     ("BigSkipBackward", "Big Skip Backward", "Big skip backward.", "PlayerControl(BigSkipBackWard)"),
     ("BigSkipForward", "Big Skip Forward", "Big skip forward.", "PlayerControl(BigSkipForward)"),
     ("SmallSkipBackward", "Small Skip Backward", "Small skip backward.", "PlayerControl(SmallSkipBackward)"),
     ("SmallSkipForward", "Small Skip Forward", "Small skip forward.", "PlayerControl(SmallSkipForward)"),
+    ("Record", "Record", "Starts recording.", "Record"),
+    ("FullScreen", "Full Screen", "Display the current media in full screen mode.", "FullScreen"),
+    ("Repeat", "Repeat", "Repeat.", "PlayerControl(Repeat)"),       
     ("PartyMode", "Party Mode", "Party mode.", "PlayerControl(PartyMode)"),
-    ("Queue", "Queue", "Queue.", "Queue"),
+    ("VolumeUp", "Volume Up", "Raises the volume.", "VolumeUp"),       
+    ("VolumeDown", "Volume Down", "Lowers the volume.", "VolumeDown"), 
+    ("Mute", "Mute", "Simulate a press on the mute button.", "Mute"),
+    ("Queue", "Queue", "Queue the current item.", "Queue"),
+    ("Delete", "Delete", "Delete the current item.", "Delete"),
     ("Random", "Random", "Random.", "PlayerControl(Random)"),
     ("Repeat", "Repeat", "Repeat.", "PlayerControl(Repeat)"),
+    ("ParentDir", "Parent Dir", "Parent directory.", "ParentDir"),
+    ("Info", "Info", "Contextual information.", "Info"),
+    ("AspectRatio", "Aspect Ratio", "Display the aspect ratio of the current media.", "AspectRatio"),
+    ("CodecInfo", "Codec Info", "Display the codec information of the current media.", "CodecInfo"),
     ("TakeScreenShot", "Take Screen Shot", "Takes a screen shot.", "TakeScreenshot"),
-    ("LastFMLove", "Last FM Love", "Add the current playing last.fm radio track to the last.fm loved tracks.", "LastFM.Love"),
-    ("LastFMBan", "Last FM Ban", "Ban the current playing last.fm radio track.", "LastFM.Ban"),
     ("EjectTray", "Eject Tray", "Close or open the DVD tray.", "EjectTray"),
     ("PlayDVD", "Play DVD", "Plays the inserted CD or DVD media from the DVD-ROM Drive.", "PlayDVD"),
-    ("UpdateVideoLibrary", "Update Video Library", "Update the video library.", "UpdateLibrary(Video)"),
-    ("UpdateMusicLibrary", "Update Music Library", "Update the music library.", "UpdateLibrary(Music)"),
     ("Home", "Show Home Screen", "Show Home screen.", "ActivateWindow(Home)"),
     ("MyVideos", "Show Videos Screen", "Show Videos screen.", "ActivateWindow(MyVideos)"),
     ("MyMusic", "Show Music Screen", "Show Music screen.", "ActivateWindow(MyMusic)"),
@@ -119,7 +95,11 @@ ACTIONS = (
     ("Settings", "Show Settings Screen", "Show Settings screen.", "ActivateWindow(Settings)"),
     ("Favorites", "Show Favorites Screen", "Show Favorites screen.", "ActivateWindow(Favourites)"),
     ("SystemInfo", "Show System Info Screen", "Show System Info screen.", "ActivateWindow(SystemInfo)"),
-    ("ShutdownMenu", "Show Shutdown Menu", "Show Shutdown Menu.", "ActivateWindow(ShutdownMenu)"),
+    ("LastFMLove", "Last FM Love", "Add the current playing last.fm radio track to the last.fm loved tracks.", "LastFM.Love"),
+    ("LastFMBan", "Last FM Ban", "Ban the current playing last.fm radio track.", "LastFM.Ban"),
+    ("UpdateVideoLibrary", "Update Video Library", "Update the video library.", "UpdateLibrary(Video)"),
+    ("UpdateMusicLibrary", "Update Music Library", "Update the music library.", "UpdateLibrary(Music)"),
+    ("ShutdownMenu", "Show Shutdown Menu", "Show the shutdown Menu.", "ActivateWindow(ShutdownMenu)"),
     ("Quit", "Quit XBMC", "Quit XBMC.", "Quit"),
     ("Shutdown", "Shutdown Computer", "Trigger default shutdown behavior from settings.", "Shutdown"),
     ("Powerdown", "Powerdown Computer", "Powerdown the computer.", "Powerdown"),
@@ -128,21 +108,10 @@ ACTIONS = (
     ("Reset", "Reset Computer", "Reset the computer.", "Reset"),
 )    
 
-# prototype for remote button presses
-
-class ButtonPrototype(eg.ActionClass):
-    def __call__(self):
-        try:
-            self.plugin.xbmc.send_remote_button(self.value, 0, 1)
-        except:
-            raise self.Exceptions.ProgramNotRunning        
-
-# prototype for actions
-
 class ActionPrototype(eg.ActionClass):
     def __call__(self):
         try:
-            self.plugin.xbmc.send_action(self.value)
+            self.plugin.xbmc.send_action(self.value, ACTION_BUTTON)
         except:
             raise self.Exceptions.ProgramNotRunning
 
@@ -150,7 +119,6 @@ class ActionPrototype(eg.ActionClass):
 
 class XBMC(eg.PluginClass):
     def __init__(self):
-        self.AddActionsFromList(BUTTONS, ButtonPrototype)
         self.AddActionsFromList(ACTIONS, ActionPrototype)
         self.xbmc = XBMCClient("EventGhost")
     
