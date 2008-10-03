@@ -19,8 +19,8 @@ from py2exe.build_exe import isSystemDLL
 origIsSystemDLL = isSystemDLL
 def newIsSystemDLL(pathname):
     res = origIsSystemDLL(pathname)
-    if not res:
-        print pathname, res
+    if res:
+        print "system dll", pathname, res
     return res
 py2exe.build_exe.isSystemDLL = newIsSystemDLL
 
@@ -47,6 +47,7 @@ from ftplib import FTP
 from urlparse import urlparse
 from shutil import copy2 as copy
 from os.path import basename, dirname, abspath, join, exists
+from glob import glob
 try:
     import pysvn
 except ImportError:
@@ -263,7 +264,7 @@ py2exeOptions = dict(
                 "DINPUT8.dll", 
                 "w9xpopen.exe", 
                 "gdiplus.dll", 
-                "msvcr71.dll"
+                "msvcr71.dll",
             ],
             dist_dir = trunkDir,
             custom_boot_script=join(trunkDir, "eg", "Py2ExeBootScript.py")
@@ -317,7 +318,7 @@ consoleOptions = dict(
 
 INNO_SCRIPT_TEMPLATE = """
 [Tasks]
-Name: "desktopicon"; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:AdditionalIcons}
+Name: "desktopicon"; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:AdditionalIcons}; Flags: checkedonce 
 
 [Languages]
 Name: "en"; MessagesFile: "compiler:Default.isl"
@@ -517,6 +518,20 @@ def MakeInstaller():
         setup(**consoleOptions)
         setup(**py2exeOptions)
         pythonDir = dirname(sys.executable)
+        # remove unneeded DLLs
+        dllNames = [
+            basename(name) for name in glob(join(trunkDir, "lib", "*.dll"))
+        ]
+        neededDlls = []
+        for path, dirs, files in os.walk(pythonDir):
+            for file in files:
+                if file in dllNames:
+                    neededDlls.append(file)
+        for file in dllNames:
+            if file not in neededDlls:
+                os.remove(join(trunkDir, "lib", file))
+                
+        # copy needed DLLs
         for dll in ROOT_DLLS:
             if not os.path.exists(join(trunkDir, dll)):
                 copy(join(pythonDir, dll), trunkDir)
