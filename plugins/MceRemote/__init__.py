@@ -180,7 +180,7 @@ class MceMessageReceiver(eg.ThreadWorker):
         self.plugin = plugin
         self.waitTime = waitTime
         self.timer = Timer(0, self.OnTimeOut)
-        self.lastEvent = eg.EventGhostEvent()
+        self.lastEvent = None
         
         wc = WNDCLASS()
         wc.hInstance = GetModuleHandle(None)
@@ -235,7 +235,7 @@ class MceMessageReceiver(eg.ThreadWorker):
                 eventString = KEY_MAP[key]
             else:
                 eventString = "%X" % key
-            if repeatCounter == 0:
+            if not self.lastEvent:
                 self.lastEvent = self.plugin.TriggerEnduringEvent(eventString)                
             self.timer = Timer(self.waitTime, self.OnTimeOut)
             self.timer.start()
@@ -243,7 +243,9 @@ class MceMessageReceiver(eg.ThreadWorker):
     
     
     def OnTimeOut(self):
-        self.lastEvent.SetShouldEnd()
+        if self.lastEvent:
+            self.lastEvent.SetShouldEnd()
+        self.lastEvent = None
         
         
 
