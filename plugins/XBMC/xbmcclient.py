@@ -71,6 +71,7 @@ LOGFATAL   = 0x06
 LOGNONE    = 0x07
 
 ACTION_EXECBUILTIN = 0x01
+ACTION_BUTTON      = 0x02
 
 ######################################################################
 # Helper Functions
@@ -333,7 +334,7 @@ class PacketBUTTON (Packet):
         else:
             self.flags |= BT_USE_NAME
             self.code = 0
-        if amount:
+        if (amount != None):
             self.flags |= BT_USE_AMOUNT
             self.amount = int(amount)
         else:
@@ -443,7 +444,8 @@ class PacketACTION (Packet):
 class XBMCClient:
     """An XBMC event client"""
 
-    def __init__(self, name ="", icon_file=None, broadcast=False, uid=UNIQUE_IDENTIFICATION):
+    def __init__(self, name ="", icon_file=None, broadcast=False, uid=UNIQUE_IDENTIFICATION, 
+                 ip="127.0.0.1"):
         """
         Keyword arguments:
         name -- Name of the client
@@ -453,7 +455,7 @@ class XBMCClient:
         self.name = str(name)
         self.icon_file = icon_file
         self.icon_type = self._get_icon_type(icon_file)
-        self.ip = "127.0.0.1"
+        self.ip = ip
         self.port = 9777
         self.sock = socket(AF_INET,SOCK_DGRAM)
         if broadcast:
@@ -511,14 +513,14 @@ class XBMCClient:
         self.send_button(map="KB", button=button)
 
 
-    def send_remote_button(self, button=None, repeat=1, queue=0):
+    def send_remote_button(self, button=None):
         """Send a remote control event to XBMC
         Keyword Arguments:
         button -- name of the remote control button to send (same as in Keymap.xml)
         """
         if not button:
             return
-        self.send_button(map="R1", button=button, repeat=repeat, queue=queue)
+        self.send_button(map="R1", button=button)
 
 
     def release_button(self):
@@ -528,7 +530,7 @@ class XBMCClient:
         return
 
 
-    def send_button(self, map="", button="", amount=0, repeat=1, queue=0):
+    def send_button(self, map="", button="", amount=0):
         """Send a button event to XBMC
         Keyword arguments:
         map -- a combination of map_name and button_name refers to a
@@ -546,7 +548,7 @@ class XBMCClient:
                   section in Keymap.xml then, valid buttons include 
                   "printscreen", "minus", "x", etc.
         """
-        packet = PacketBUTTON(map_name=str(map), button_name=str(button), amount=amount, repeat=repeat, queue=queue)
+        packet = PacketBUTTON(map_name=str(map), button_name=str(button), amount=amount)
         packet.send(self.sock, self.addr, self.uid)
         return
 
