@@ -54,7 +54,7 @@ eg.RegisterPlugin(
 
 
 import os
-import _winreg
+import _winreg as reg
 from threading import Timer
 from msvcrt import get_osfhandle
 
@@ -264,6 +264,10 @@ class MceRemote(eg.PluginClass):
             "remote. To let the changes take effect, you need to manually "
             "restart the system."
         )
+        hidErrorMessage = (
+            "The plugin was not able to change the state of the HID service. "
+            "You must be logged in as Administrator to change the state."
+        )
 
     def __init__(self):
         self.AddAction(TransmitIr)
@@ -290,47 +294,69 @@ class MceRemote(eg.PluginClass):
         self.msgThread.Stop()
         
         
-    def ShowHidMessage(self):
+    def ShowHidMessage(self, disableHid):
         """
         Informs the user, that the system needs to restart the system to let 
         the HID registry changes take effect.
         """
-        dialog = wx.MessageDialog(
-            None, 
-            self.text.hidDialogMessage, 
-            self.text.hidDialogCaption, 
-            wx.OK|wx.ICON_INFORMATION|wx.STAY_ON_TOP
-        )
+        try:
+            self.SetHidState(disableHid)
+        except WindowsError:
+            dialog = wx.MessageDialog(
+                None, 
+                self.text.hidErrorMessage, 
+                self.text.hidDialogCaption, 
+                wx.OK|wx.ICON_ERROR|wx.STAY_ON_TOP
+            )
+        else:
+            dialog = wx.MessageDialog(
+                None, 
+                self.text.hidDialogMessage, 
+                self.text.hidDialogCaption, 
+                wx.OK|wx.ICON_INFORMATION|wx.STAY_ON_TOP
+            )
         dialog.ShowModal()
         dialog.Destroy()
         
     
+    def SetHidState(self, disableHid):
+        """
+        Sets the HID registry values. Will raise WindowsError if not 
+        successful.
+        """
+        key = reg.OpenKey(
+            reg.HKEY_LOCAL_MACHINE, HID_SUB_KEY, 0, reg.KEY_ALL_ACCESS
+        )
+        for i in xrange(4):
+            valueName = 'CodeSetNum%i' % i
+            if disableHid:
+                reg.DeleteValue(key, valueName)
+            else:
+                reg.SetValueEx(key, valueName, 0, reg.REG_DWORD, i + 1)
+            
+        
     def CheckHidState(self, disableHid):
         """
-        Checks and sets the HID registry values and calls self.ShowHidMessage
+        Checks the HID registry values and calls self.ShowHidMessage
         if needed.
         """
-        key = _winreg.OpenKey(
-            _winreg.HKEY_LOCAL_MACHINE, 
-            HID_SUB_KEY, 
-            0, 
-            _winreg.KEY_ALL_ACCESS
+        key = reg.OpenKey(
+            reg.HKEY_LOCAL_MACHINE, HID_SUB_KEY, 0, reg.KEY_READ
         )
-        changed = False
+        needsChange = False
         for i in xrange(4):
             valueName = 'CodeSetNum%i' % i
             try:
-                value, valueType = _winreg.QueryValueEx(key, valueName)
+                value, valueType = reg.QueryValueEx(key, valueName)
+                disabled = False
             except WindowsError:
-                value = None
-            if value is not None and disableHid:
-                _winreg.DeleteValue(key, valueName)
-                changed = True
-            elif value is None and not disableHid:
-                _winreg.SetValueEx(key, valueName, 0, _winreg.REG_DWORD, i + 1)
-                changed = True
-        if changed:
-            wx.CallAfter(self.ShowHidMessage)
+                disabled = True
+            if disableHid != disabled:
+                needsChange = True
+                break
+        reg.CloseKey(key)
+        if needsChange:
+            wx.CallAfter(self.ShowHidMessage, disableHid)
             
         
     def Configure(self, waitTime=0.15, disableHid=True):
