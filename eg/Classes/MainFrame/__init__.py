@@ -170,10 +170,13 @@ class MainFrame(wx.Frame):
             eg.config.buildNum == eg.buildNum 
             and config.perspective is not None
         ):
-            #pass
             auiManager.LoadPerspective(config.perspective, False)
-        auiManager.GetArtProvider().SetMetric(wx.aui.AUI_DOCKART_PANE_BORDER_SIZE, 0)
-        #auiManager.SetFlags(auiManager.GetFlags() ^ wx.aui.AUI_MGR_ALLOW_ACTIVE_PANE)
+        auiManager.GetArtProvider().SetMetric(
+            wx.aui.AUI_DOCKART_PANE_BORDER_SIZE, 0
+        )
+        #auiManager.SetFlags(
+        #    auiManager.GetFlags() ^ wx.aui.AUI_MGR_ALLOW_ACTIVE_PANE
+        #)
         auiManager.GetPane("tree").Caption(" " + Text.Tree.caption)
         self.toolBar.Show(config.showToolbar)
         auiManager.Update()
@@ -219,9 +222,16 @@ class MainFrame(wx.Frame):
             self.DispatchCommand('Clear', event)
         wx.EVT_MENU(self, delId, OnDelKey)
         
+        enterId = wx.NewId()
+        def OnEnterKey(event):
+            if self.lastFocus == "Edit":
+                self.treeCtrl.EndEditLabel(self.treeCtrl.editLabelId, False)
+        wx.EVT_MENU(self, enterId, OnEnterKey)
+        
         self.acceleratorTable = wx.AcceleratorTable(
             [
                 (wx.ACCEL_NORMAL, wx.WXK_DELETE, delId),
+                (wx.ACCEL_NORMAL, wx.WXK_RETURN, enterId),
                 (wx.ACCEL_ALT, ord(hotKey), toggleOnlyLogAssignedId),
             ]
         )        
@@ -338,7 +348,9 @@ class MainFrame(wx.Frame):
         menuItems.rename = Add("Rename", hotkey="F2")
         menuItems.execute = Add("Execute", hotkey="F5")
         Add()
-        menuItems.disabled = Add("Disabled", hotkey="Ctrl+D", kind=wx.ITEM_CHECK)
+        menuItems.disabled = Add(
+            "Disabled", hotkey="Ctrl+D", kind=wx.ITEM_CHECK
+        )
         
         # help menu
         Add = menuBar.AddMenu("Help").AddItem
@@ -579,9 +591,7 @@ class MainFrame(wx.Frame):
     
 
     def GetEditCmdState(self, focus):
-        if focus is None:
-            return (False, False, False, False)
-        elif focus == "Edit":
+        if focus == "Edit":
             editCtrl = self.treeCtrl.GetEditControl()
             start, end = editCtrl.GetSelection()
             return (
@@ -785,7 +795,9 @@ class MainFrame(wx.Frame):
         pluginInfo = result[0][0]
         if pluginInfo is None:
             return
-        eg.Greenlet(eg.UndoHandler.NewPlugin().Do).switch(self.document, pluginInfo)
+        eg.Greenlet(
+            eg.UndoHandler.NewPlugin().Do
+        ).switch(self.document, pluginInfo)
             
             
     def OnCmdAddEvent(self, event):
@@ -807,7 +819,9 @@ class MainFrame(wx.Frame):
         if result is None:
             return None
         action = result[0][0]
-        eg.Greenlet(eg.UndoHandler.NewAction().Do).switch(self.document, action)
+        eg.Greenlet(
+            eg.UndoHandler.NewAction().Do
+        ).switch(self.document, action)
         
     
     def OnCmdRename(self, event):
