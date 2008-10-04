@@ -172,7 +172,6 @@ class SpinNumCtrl(wx.Window):
         numCtrl = self.numCtrl
         numCtrl.SetFocus()
         start, end = numCtrl._FindField(pos)._extent
-        print start, end
         numCtrl.SetInsertionPoint(start)
         numCtrl.SetSelection(start, end)
 
