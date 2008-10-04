@@ -474,6 +474,7 @@ class TreeCtrl(wx.TreeCtrl):
             event.Veto()
             return
         self.isInEditLabel = True
+        self.editLabelId = event.GetItem()
         wx.CallAfter(self.InLabelEdit)
 
 
@@ -483,6 +484,7 @@ class TreeCtrl(wx.TreeCtrl):
         
     def OnEndLabelEdit(self, event):
         self.isInEditLabel = False
+        self.editLabelId = None
         eg.focusEvent.Fire(self)
         id = event.GetItem()
         item = self.GetPyData(id)
