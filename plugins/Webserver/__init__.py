@@ -184,12 +184,14 @@ class Webserver(eg.PluginClass):
     canMultiLoad = True
 
     class text:
+        generalBox = "General Settings"
         port = "TCP/IP port:"
         documentRoot = "HTML documents root:"
         eventPrefix = "Event prefix:"
-        authRealm = "Basic Authentication Realm:"
-        authUsername = "Basic Authentication Username:"
-        authPassword = "Basic Authentication Password:"
+        authBox = "Basic Authentication"
+        authRealm = "Realm:"
+        authUsername = "Username:"
+        authPassword = "Password:"
 
 
     def __init__(self):
@@ -252,10 +254,11 @@ class Webserver(eg.PluginClass):
         prefix="HTTP", 
         port=80, 
         basepath="", 
-        authRealm="Eventghost", 
+        authRealm="EventGhost", 
         authUsername="", 
         authPassword=""
     ):
+        text = self.text
         panel = eg.ConfigPanel(self)
 
         portCtrl = panel.SpinIntCtrl(port, min=1, max=65535)
@@ -265,17 +268,45 @@ class Webserver(eg.PluginClass):
         authUsernameCtrl = panel.TextCtrl(authUsername)
         authPasswordCtrl = panel.TextCtrl(authPassword)
 
-        panel.AddLine(self.text.port, portCtrl)
-        panel.AddLine(self.text.documentRoot, filepathCtrl)
-        panel.AddLine(self.text.eventPrefix, editCtrl)
-        panel.AddLine(self.text.authRealm, authRealmCtrl)
-        panel.AddLine(self.text.authUsername, authUsernameCtrl)
-        panel.AddLine(self.text.authPassword, authPasswordCtrl)
+        labels = (
+            panel.StaticText(text.port),
+            panel.StaticText(text.documentRoot),
+            panel.StaticText(text.eventPrefix),
+            panel.StaticText(text.authRealm),
+            panel.StaticText(text.authUsername),
+            panel.StaticText(text.authPassword),
+        )
+        eg.EqualizeWidths(labels)
+
+        ACV = wx.ALIGN_CENTER_VERTICAL
+        sizer = wx.FlexGridSizer(3, 2, 5, 5)
+        sizer.Add(labels[0], 0, ACV)
+        sizer.Add(portCtrl)
+        sizer.Add(labels[1], 0, ACV)
+        sizer.Add(filepathCtrl)
+        sizer.Add(labels[2], 0, ACV)
+        sizer.Add(editCtrl)
+        staticBox = wx.StaticBox(panel, label=text.generalBox)
+        staticBoxSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
+        staticBoxSizer.Add(sizer, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
+        panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
+        
+        sizer = wx.FlexGridSizer(3, 2, 5, 5)
+        sizer.Add(labels[3], 0, ACV)
+        sizer.Add(authRealmCtrl)
+        sizer.Add(labels[4], 0, ACV)
+        sizer.Add(authUsernameCtrl)
+        sizer.Add(labels[5], 0, ACV)
+        sizer.Add(authPasswordCtrl)
+        staticBox = wx.StaticBox(panel, label=text.authBox)
+        staticBoxSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
+        staticBoxSizer.Add(sizer, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
+        panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND|wx.TOP, 10)
 
         while panel.Affirmed():
             panel.SetResult(
                 editCtrl.GetValue(),
-                int(portCtrl.GetValue()),
+                portCtrl.GetValue(),
                 filepathCtrl.GetValue(),
                 authRealmCtrl.GetValue(),
                 authUsernameCtrl.GetValue(),
