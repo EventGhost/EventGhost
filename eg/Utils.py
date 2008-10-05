@@ -315,9 +315,7 @@ class HBoxSizer(wx.BoxSizer):
         
         
 def EqualizeWidths(ctrls):
-    maxWidth = 0
-    for ctrl in ctrls:
-        maxWidth = max(maxWidth, ctrl.GetBestSize()[0])
+    maxWidth = max((ctrl.GetBestSize()[0] for ctrl in ctrls))
     for ctrl in ctrls:
         ctrl.SetMinSize((maxWidth, -1))
 
