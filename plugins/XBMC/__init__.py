@@ -1,3 +1,4 @@
+
 # Copyright (C) 2008 Chris Longo <cal@chrislongo.net> and Tobias Arrskog (topfs2)
 #
 # This file is a plugin for EventGhost.
@@ -46,7 +47,7 @@ eg.RegisterPlugin(
     ),
 )
 
-# actions above and beyond what the simple remote can do for people with Harmony Remotes, etc.
+# actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs
 
 ACTIONS = (   
     ("Up", "Up", "Moves up in the interface.", "Up"),        
@@ -65,25 +66,43 @@ ACTIONS = (
     ("Rewind", "Rewind", "Rewinds the current media.", "Rewind"),
     ("SkipNext", "Skip Next", "Skips to the next media item.", "SkipNext"),
     ("SkipPrevious", "Skip Previous", "Skips back to the previous media item.", "SkipPrevious"),
+    ("Record", "Record", "Starts recording.", "Record"),
     ("BigSkipBackward", "Big Skip Backward", "Big skip backward.", "PlayerControl(BigSkipBackWard)"),
     ("BigSkipForward", "Big Skip Forward", "Big skip forward.", "PlayerControl(BigSkipForward)"),
     ("SmallSkipBackward", "Small Skip Backward", "Small skip backward.", "PlayerControl(SmallSkipBackward)"),
     ("SmallSkipForward", "Small Skip Forward", "Small skip forward.", "PlayerControl(SmallSkipForward)"),
-    ("Record", "Record", "Starts recording.", "Record"),
+    ("AspectRatio", "Aspect Ratio", "Display the aspect ratio of the current media.", "AspectRatio"),
+    ("CodecInfo", "Codec Info", "Display the codec information of the current media.", "CodecInfo"),
     ("FullScreen", "Full Screen", "Display the current media in full screen mode.", "FullScreen"),
-    ("Repeat", "Repeat", "Repeat.", "PlayerControl(Repeat)"),       
-    ("PartyMode", "Party Mode", "Party mode.", "PlayerControl(PartyMode)"),
+    ("Repeat", "Repeat", "Repeat.", "PlayerControl(Repeat)"),      
+    ("ShowSubtitles", "Show Subtitles", "Toggle subtitles on or off.", "ShowSubtitles"),
+    ("ShowTime", "Show Time", "Show current play time.", "ShowTime"),
     ("VolumeUp", "Volume Up", "Raises the volume.", "VolumeUp"),       
     ("VolumeDown", "Volume Down", "Lowers the volume.", "VolumeDown"), 
     ("Mute", "Mute", "Simulate a press on the mute button.", "Mute"),
+    ("ScrollUp", "Scroll Up", "Scroll up in list.", "ScrollUp"),
+    ("ScrollDown", "Scroll Down", "Scroll down in list.", "ScrollDown"),
+    ("Close", "Close", "Close and open dialog box.", "Close"),
+    ("Number0", "Number 0", "Remote number 0.", "Number0"),
+    ("Number1", "Number 1", "Remote number 1.", "Number1"),
+    ("Number2", "Number 2", "Remote number 2.", "Number2"),
+    ("Number3", "Number 3", "Remote number 3.", "Number3"),
+    ("Number4", "Number 4", "Remote number 4.", "Number4"),
+    ("Number5", "Number 5", "Remote number 5.", "Number5"),
+    ("Number6", "Number 6", "Remote number 6.", "Number6"),
+    ("Number7", "Number 7", "Remote number 7.", "Number7"),
+    ("Number8", "Number 8", "Remote number 8.", "Number8"),
+    ("Number9", "Number 9", "Remote number 9.", "Number9"),
+    ("Playlist", "Playlist", "Shows the current playlist.", "Playlist"),
     ("Queue", "Queue", "Queue the current item.", "Queue"),
+    ("MoveItemUp", "Move Item Up", "Move item up in playlist.", "MoveItemUp"),
+    ("MoveItemDown", "Move Item Down", "Move item down in playlist.", "MoveItemDown"),
     ("Delete", "Delete", "Delete the current item.", "Delete"),
     ("Random", "Random", "Random.", "PlayerControl(Random)"),
     ("Repeat", "Repeat", "Repeat.", "PlayerControl(Repeat)"),
+    ("PartyMode", "Party Mode", "Party mode.", "PlayerControl(PartyMode)"),
     ("ParentDir", "Parent Dir", "Parent directory.", "ParentDir"),
     ("Info", "Info", "Contextual information.", "Info"),
-    ("AspectRatio", "Aspect Ratio", "Display the aspect ratio of the current media.", "AspectRatio"),
-    ("CodecInfo", "Codec Info", "Display the codec information of the current media.", "CodecInfo"),
     ("TakeScreenShot", "Take Screen Shot", "Takes a screen shot.", "TakeScreenshot"),
     ("EjectTray", "Eject Tray", "Close or open the DVD tray.", "EjectTray"),
     ("PlayDVD", "Play DVD", "Plays the inserted CD or DVD media from the DVD-ROM Drive.", "PlayDVD"),
