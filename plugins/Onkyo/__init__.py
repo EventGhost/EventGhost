@@ -67,9 +67,8 @@ eg.RegisterPlugin(
 )
 
 
-import thread
-import time
 import re
+import binascii
 
 
 cmdList = (
@@ -168,7 +167,7 @@ class CmdAction(eg.ActionClass):
     """Base class for all argumentless actions"""
     
     def __call__(self):
-        self.plugin.serial.write(self.cmd + chr(13))
+        self.plugin.serialThread.Write(self.cmd + chr(13))
 
 
     
@@ -176,49 +175,15 @@ class ValueAction(eg.ActionWithStringParameter):
     """Base class for all actions with adjustable argument"""
     
     def __call__(self, data):
-        self.plugin.serial.write(self.cmd + str(data) + chr(13))
-        
-        
-        
-class MasterFade(eg.ActionWithStringParameter):
-    name = "Fade MasterVol To"
-    description = "Fade MasterVol To (actual dB value)"
-    
-    fadeLock = thread.allocate_lock()
-
-    def __call__(self, data):
-        thread.start_new_thread(self.FadeFunc, (data,))        
-    
-
-    def FadeFunc(self, data):
-        destVol = float(data)
-        self.fadeLock.acquire()
-        cv = self.plugin.currentVolume
-        if destVol > cv:
-            steps = (destVol - cv) * 2
-            while steps > 0:
-                self.plugin.serial.write("!1MVLUP\r")
-                time.sleep(0.15)
-                steps -= 1
-        elif cv > destVol:
-            steps = (cv - destVol) * 2
-            while steps > 0:
-                self.plugin.serial.write("!1MVLDOWN\r")
-                time.sleep(0.15)
-                steps -= 1
-        self.fadeLock.release()
-        
+        self.plugin.serialThread.Write(self.cmd + str(data) + chr(13))
         
         
 class Raw(eg.ActionWithStringParameter):
     name = 'Send Raw command'
     
     def __call__(self, data):
-        self.plugin.serial.write("!1" + str(data) + chr(13))
+        self.plugin.serialThread.Write(self.cmd + str(data) + chr(13))
 		
-
-
-
         
 class OnkyoSerial(eg.PluginClass):
 
@@ -256,70 +221,18 @@ class OnkyoSerial(eg.PluginClass):
                 
         group.AddAction(Raw)
 
-
-    # Serial port reader
- # debug   def reader(self):
- # debug       line = ""
- # debug       parmre = re.compile('(.+?)([0-9]{2,3})$')
- # debug       while self.readerkiller is False:
- # debug           ch = self.serial.read()
- # debug           if ch == '\r':
- # debug               m = parmre.match(line)
- # debug               if m is not None:
- # debug        		line = m.group(1).rstrip() + '.' + m.group(2)
- # debug               	line = line.replace(':', '.')
- # debug               	self.TriggerEvent(line)
-                # Is it the master volume spec?
- # debug               if m is not None and m.group(1) == "MVL":
- # debug                   if len(m.group(2)) == 3:
- # debug                       self.currentVolume = float(m.group(2)) / 10
- # debug                   else:
- # debug                       self.currentVolume = float(m.group(2))
- # debug                   if self.currentVolume == 99:
- # debug                       self.currentVolume = -80.5
- # debug                   else:
- # debug                       self.currentVolume -= 80
- #                    self.TriggerEvent("CurrentVol "+str(self.currentVolume));
- # debug               line = ""
- # debug            else:
- # debug               line += ch
- 
- # Serial port reader
-    def reader(self):
-        line=""
-        while self.readerkiller is False:
-            ch=self.serial.read()
-            if ch=='\n':				
-                continue;
-            if ch=='\r':
-                if line != "":
-                    self.TriggerEvent(line)
-                    line=""
-            else:
-                line+=ch
-
-				
     def __start__(self, port):
-        try:
-            self.serial = eg.SerialPort(port)
-        except:
-            raise eg.Exception("Can't open serial port.")
-        self.serial.baudrate = 9600
-        self.serial.timeout = 30.0
-        self.serial.setDTR(1)
-        self.serial.setRTS(1)
-        self.readerkiller = False
-        thread.start_new_thread(self.reader, ());
-        # Do an initial master volume query so we can track it
-        # debug self.serial.write("!1MVLQSTN\r")
+        self.port = port
+        self.serialThread = eg.SerialThread()
+        self.serialThread.SetReadEventCallback(self.OnReceive)
+        self.serialThread.Open(port, 9600)
+        self.serialThread.SetRts()
+        self.serialThread.Start()
         
         
     def __stop__(self):
-        self.readerkiller = True
-        if self.serial is not None:
-            self.serial.close()
-            self.serial = None
-            
+        self.serialThread.Close()
+           
             
     def Configure(self, port=0):
         panel = eg.ConfigPanel(self)
@@ -328,3 +241,8 @@ class OnkyoSerial(eg.PluginClass):
         while panel.Affirmed():
             panel.SetResult(portCtrl.GetValue())
                     
+
+    def OnReceive(self, serial):
+        data = serial.Read(512)
+        self.TriggerEvent(binascii.hexlify(data).upper())
+        
