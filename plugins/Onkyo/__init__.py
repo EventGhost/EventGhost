@@ -175,14 +175,18 @@ class ValueAction(eg.ActionWithStringParameter):
     """Base class for all actions with adjustable argument"""
     
     def __call__(self, data):
+        self.plugin.serialThread.SuspendReadEvents()
         self.plugin.serialThread.Write(self.cmd + str(data) + chr(13))
+        self.plugin.serialThread.ResumeReadEvents()
         
         
 class Raw(eg.ActionWithStringParameter):
     name = 'Send Raw command'
     
     def __call__(self, data):
+        self.plugin.serialThread.SuspendReadEvents()
         self.plugin.serialThread.Write(self.cmd + str(data) + chr(13))
+        self.plugin.serialThread.ResumeReadEvents()
 		
         
 class OnkyoSerial(eg.PluginClass):
