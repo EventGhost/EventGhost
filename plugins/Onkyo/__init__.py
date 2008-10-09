@@ -280,7 +280,7 @@ class OnkyoSerial(eg.PluginClass):
         self.commandDict = {
             'PWR': ('Power', onOffDict),
             'AMT': ('Muting', onOffDict),
-            'LMD': ('Input', listeningModes),
+            'LMD': ('ListeningModes', listeningModes),
             'SLI': ('Input', inputDict)
         }
 
