@@ -90,7 +90,7 @@ class MainFrame(wx.Frame):
             rename = False,
             disable = False,
         )
-        self.style=(
+        self.style = (
             wx.MINIMIZE_BOX
             |wx.MAXIMIZE_BOX
             |wx.RESIZE_BORDER
@@ -217,15 +217,15 @@ class MainFrame(wx.Frame):
         # disable it while editing a tree label. 
         # (see TreeCtrl.py OnBeginLabelEdit and OnEndLabelEdit)
         
-        delId = wx.NewId()
         def OnDelKey(event):
             self.DispatchCommand('Clear', event)
+        delId = wx.NewId()
         wx.EVT_MENU(self, delId, OnDelKey)
         
-        enterId = wx.NewId()
         def OnEnterKey(event):
             if self.lastFocus == "Edit":
                 self.treeCtrl.EndEditLabel(self.treeCtrl.editLabelId, False)
+        enterId = wx.NewId()
         wx.EVT_MENU(self, enterId, OnEnterKey)
         
         self.acceleratorTable = wx.AcceleratorTable(
