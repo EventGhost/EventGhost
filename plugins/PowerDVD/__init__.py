@@ -26,7 +26,7 @@ eg.RegisterPlugin(
     description="Adds actions to control CyberLink PowerDVD 7.",
     kind="program",
     author="Bitmonster",
-    version="1.0." + "$LastChangedRevision$".split()[1],  
+    version="1.1." + "$LastChangedRevision$".split()[1],  
     createMacrosOnAdd = True,  
 )
 
@@ -49,11 +49,16 @@ ACTIONS = [
     ("SayItAgain", "Say-It-Again", "Repeats the last dialog.", "w"),
     ("SeeItAll", "See-It-All", "Activates See-It-All function, refer to Blu-ray Disc Configuration.", "{LCtrl+S}"),
     ("CaptureFrame", "Capture frame", "Captures video content as bitmap image files. (Not supported during HD DVD and Blu-ray Disc playback.)", "c"),
+    ("NavigationUp", "Navigation Up", "Navigates through disc menus.", "{Up}"),
+    ("NavigationDown", "Navigation Down", "Navigates through disc menus.", "{Down}"),
+    ("NavigationLeft", "Navigation Left", "Navigates through disc menus.", "{Left}"),
+    ("NavigationRight", "Navigation Right", "Navigates through disc menus.", "{Right}"),
+    ("NavigationEnter", "Navigation Enter", "Navigates through disc menus. (Has actually the same function as the Play action.)", "{Return}"),
 ]
 
 from eg.WinApi.SendKeys import SendKeys
 
-gWindowMatcher = eg.WindowMatcher('PowerDVD.exe', 'CyberLink PowerDVD')
+gWindowMatcher = eg.WindowMatcher('PowerDVD{*}.exe', 'CyberLink PowerDVD{*}')
 
 
 class ActionPrototype(eg.ActionClass):
