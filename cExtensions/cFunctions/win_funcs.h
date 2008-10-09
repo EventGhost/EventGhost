@@ -11,6 +11,9 @@ extern PyObject *
 GetProcessName(PyObject *self, PyObject *args);
 
 extern PyObject *
+GetProcessDict(PyObject *self, PyObject *args);
+
+extern PyObject *
 PyWin_GetClassName(PyObject *self, PyObject *args);
 
 extern PyObject *

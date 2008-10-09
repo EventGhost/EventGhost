@@ -19,6 +19,7 @@ static PyMethodDef example_methods[] = {
 	{"GetTopLevelWindowList", GetTopLevelWindowList, 1, ""},
 	{"GetWindowChildsList", GetWindowChildsList, 1, ""},
 	{"GetProcessName", GetProcessName, 1, ""},
+	{"GetProcessDict", GetProcessDict, 1, ""},
 	{"GetWindowText", PyWin_GetWindowText, 1, ""},
 	{"GetClassName", PyWin_GetClassName, 1, ""},
 	{NULL, NULL}

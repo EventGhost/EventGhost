@@ -142,3 +142,51 @@ GetProcessName(PyObject *self, PyObject *args)
 	CloseHandle(hProcessSnap);
 	return Py_BuildValue("s", "<not found>");
 }
+
+
+PyObject *
+GetProcessDict(PyObject *self, PyObject *args)
+{
+	HANDLE hProcessSnap;
+	PROCESSENTRY32 pe32;
+	PyObject *pyDict, *pyPid, *pyName;
+
+	if (!PyArg_ParseTuple(args, "")) 
+		return NULL;
+
+	// Take a snapshot of all processes in the system.
+	hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if(hProcessSnap == INVALID_HANDLE_VALUE)
+	{
+		PyErr_SetFromWindowsErrWithFilename(0, "CreateToolhelp32Snapshot");
+		return NULL;
+	}
+
+	// Set the size of the structure before using it.
+	pe32.dwSize = sizeof(PROCESSENTRY32);
+
+	// Retrieve information about the first process,
+	// and exit if unsuccessful
+	if(!Process32First(hProcessSnap, &pe32))
+	{
+		CloseHandle(hProcessSnap);          // clean the snapshot object
+		PyErr_SetFromWindowsErrWithFilename(0, "Process32First");
+		return NULL;
+	}
+
+	// create a dictionary for the results
+	pyDict = PyDict_New();
+
+	// Now walk the snapshot of processes
+	do
+	{
+		pyPid = PyInt_FromLong(pe32.th32ProcessID);
+		pyName = PyUnicode_FromWideChar(pe32.szExeFile, wcslen(pe32.szExeFile));
+		PyDict_SetItem(pyDict, pyPid, pyName);
+		Py_DECREF(pyPid);
+		Py_DECREF(pyName);
+	}while(Process32Next(hProcessSnap, &pe32));
+
+	CloseHandle(hProcessSnap);
+	return pyDict;
+}
