@@ -315,11 +315,6 @@ class OnkyoSerial(eg.PluginClass):
                 command = buffer[2:5]
                 value =  buffer[5:]
 
-                #MasterVolume
-                if command == "MVL":
-                    self.TriggerEvent("MasterVolume", payload = int(value, 16))
-                    return
-
                 #Generic
                 if self.commandDict.has_key(command):
                     eventNameDict = self.commandDict[command][1]
@@ -328,8 +323,22 @@ class OnkyoSerial(eg.PluginClass):
                     self.TriggerEvent(self.commandDict[command][0] + '.' + value)
                     return
 
+                #MasterVolume
+                if command == "MVL":
+                    self.TriggerEvent("MasterVolume", int(value, 16))
+                    return
 
-                self.TriggerEvent(command, payload = value)
+                #Sleep Timer
+                if command == "SLP":
+                    payload = -1
+                    if value == "OFF":
+                        payload = 0
+                    if len(value) == 2:
+                        payload = int(value, 16)
+                    self.TriggerEvent("SleepTimer", payload)
+                    return
+
+                self.TriggerEvent(command + "." + value,)
                 return
             elif b == "":
                 # nothing received inside timeout, possibly indicates erroneous data
