@@ -76,6 +76,7 @@ ACTIONS = (
     ("FullScreen", "Full Screen", "Display the current media in full screen mode.", "FullScreen"),
     ("Repeat", "Repeat", "Repeat.", "PlayerControl(Repeat)"),      
     ("ShowSubtitles", "Show Subtitles", "Toggle subtitles on or off.", "ShowSubtitles"),
+    ("OSD", "Show OSD", "Shows the on-screen display.", "OSD"),
     ("ShowTime", "Show Time", "Show current play time.", "ShowTime"),
     ("VolumeUp", "Volume Up", "Raises the volume.", "VolumeUp"),       
     ("VolumeDown", "Volume Down", "Lowers the volume.", "VolumeDown"), 
