@@ -147,7 +147,7 @@ class EventGhost(object):
 
         eg.Exit = sys.exit
         
-        from eg.greenlet import greenlet
+        from greenlet import greenlet
         eg.Greenlet = greenlet
         eg.mainGreenlet = greenlet.getcurrent()
         
