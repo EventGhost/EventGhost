@@ -16,6 +16,8 @@ MODULES_TO_IGNORE = [
     "test",
     "Tkinter",
     "_tkinter",
+    "turtle", # another Tkinter module
+    
     "distutils.command.bdist_packager",
     "distutils.mwerkscompiler",
     "curses",
@@ -160,13 +162,16 @@ def ReadGlobalModuleIndex():
     """
     modules = []
     badModules = []
-    inFile = open("Global Module Index.txt", "rt")
+    versionStr = "%d.%d" % (sys.version_info[0], sys.version_info[1])
+    inFile = open("Python %s Global Module Index.txt" % versionStr, "rt")
     for line in inFile.readlines():
         parts = line.strip().split(" ", 1)
         if len(parts) > 1:
-            if parts[1].find("Windows") < 0:
+            if parts[1].startswith("(") and parts[1].find("Windows") < 0:
                 badModules.append(parts[0])
                 continue
+#            if parts[1].find("Deprecated:") >= 0:
+#                print line
         modules.append(parts[0])
     inFile.close()
     return modules, badModules
