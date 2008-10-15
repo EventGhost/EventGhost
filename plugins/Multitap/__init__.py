@@ -1,5 +1,5 @@
 #ToDo: OSD
-version = "0.1.1"
+version = "0.1.2"
 # This file is part of EventGhost.
 # Copyright (C) 2008 Pako <lubos.ruckl@quick.cz>
 #
@@ -18,7 +18,7 @@ version = "0.1.1"
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# Last change: 15-10-2008 15:35
+# Last change: 15-10-2008 22:43
 
 
 eg.RegisterPlugin(
@@ -125,17 +125,13 @@ class Key(eg.ActionClass):
         else:
             sep = '.'
         return item[1]+sep+self.listKeys[0]
-  #      return listKs[0]
-#        return 'Test'
 
     def Configure(self, config='',listKs=[]):
         self.config = config
         self.listKeys = listKs[:]
         text = self.text
-     #   self.flag = True
         panel = eg.ConfigPanel(self)
         leftSizer = wx.BoxSizer(wx.VERTICAL)
-#        box = wx.StaticBox(panel,-1,'',size=((50,50)))
         box = wx.StaticBox(panel,-1,'')
         rightSizer = wx.StaticBoxSizer(box,wx.VERTICAL)
         rightSizer.SetMinSize((220,190))
@@ -146,8 +142,6 @@ class Key(eg.ActionClass):
             size=(185,-1),
             choices=[n[0] for n in self.plugin.configs]
         )
-  #      if self.config!='':
-  #          choiceConfig.SetStringSelection(self.config)
         summary = wx.StaticText(panel,
             -1,
             '',
@@ -434,9 +428,6 @@ class Key(eg.ActionClass):
                 rightSizer.Add(dynamicSizer,0,wx.EXPAND)
                 panel.sizer.Layout()
 
-
-#=========================================================================================================
-#End of function onConfigChange() :
             if evt:
                 evt.Skip()
         choiceConfig.Bind(wx.EVT_CHOICE,onConfigChange)
@@ -545,9 +536,9 @@ class Multitap(eg.PluginClass):
                     self.indx=0
         elif self.mode==1: # Numpad mode
             self.timer.cancel()
-            if self.timeout==0:
-                self.timeout=timeout
-                self.evtName = evtName
+#            if self.timeout==0:
+#                self.timeout = item[3]
+#                self.evtName = item[1]
             self.evtString += keys[0]
         else:              # mode Single Key
             if self.oldKeys == '':
