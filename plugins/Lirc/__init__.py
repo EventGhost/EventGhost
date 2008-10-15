@@ -19,6 +19,9 @@
 ###
 ###
 ### changelog:
+### v0.7.3      - Added a checkbox in the configuration dialog to enable/disable
+### 2008-10-15    sending LIST command to the server
+###
 ### v0.7.2      - Inluded the icon in __init__.py and removed obsolete readme
 ### 2008-08-11
 ###
@@ -55,7 +58,7 @@
 ###
 name = "LIRC Client"
 kind = "remote"
-version = "0.7.2"
+version = "0.7.3"
 author = "jinxdone"
 description = """\
 Plugin for sending and receiving LIRC eventstrings. Generates EventGhost events 
@@ -71,6 +74,11 @@ The configurable options are:
 <LI><i>Target Host</i><br>
 The target host and port of the lirc server. For WinLirc running on localhost 
 the default settings should be fine (127.0.0.1:8765)
+<br>
+<LI><i>List remotes from the LIRC server</i><br>
+Attempts to send a 'LIST' command to the server when connecting 
+(It is used to fetch information about configured remotes). 
+Uncheck if your server does not support this command.
 <br>
 <LI><i>Only use the first event</i><br>
 Only one(the first) event per keypress is generated, all subsequent events 
@@ -134,6 +142,7 @@ class Text:
     addrepeat = "Add repeat-tag"
     ignoretime = "Ignoretime after first event (ms)"
     timeout = "Timeout for enduring events (ms)"
+    attemptlist = "List remotes from the LIRC server"
     noremotesfound = "No remotes found! (bad lirc configuration?)"
     disconnected = "Disconnected from the LIRC server!"
     startupexception = (
@@ -315,7 +324,7 @@ class Lirc(eg.RawReceiverPlugin):
 
     def __start__(
         self, host, port, onlyfirst, addremote, 
-        addrepeat, ignoretime, timeout
+        addrepeat, ignoretime, timeout,  attemptlist
     ):
         text = self.text
         self.port = port
@@ -325,6 +334,7 @@ class Lirc(eg.RawReceiverPlugin):
         self.addrepeat = addrepeat
         self.timeout = timeout / 1000.0
         self.ignoretime = ignoretime
+        self.attemptlist = attemptlist
         self.Send.remotes = []
         self.Send.remotelist = []
         self.InitConnection()
@@ -346,23 +356,24 @@ class Lirc(eg.RawReceiverPlugin):
         )
         # Send LIST commands to the server..
         # In order to get remote-names and buttons in response
-        self.reader.sbuffer += "LIST\n"
-        # Have to wait a bit and force asyncore to poll to check for a response
-        time.sleep(0.05)
-        asyncore.poll()
-
-        self.maxsleep = 0
-        while len(self.Send.remotelist) == 0:
-           time.sleep(0.1)
-           if self.maxsleep > 40:
-              print self.text.noremotesfound
-              break
-           self.maxsleep += 1
-
-        if len(self.Send.remotelist) > 0:
-           for self.remote in self.Send.remotelist:
-              self.reader.sbuffer += "LIST " + self.remote + "\n"
+        if self.attemptlist:
+           self.reader.sbuffer += "LIST\n"
+           # Have to wait a bit and force asyncore to poll to check for a response
+           time.sleep(0.05)
            asyncore.poll()
+
+           self.maxsleep = 0
+           while len(self.Send.remotelist) == 0:
+              time.sleep(0.1)
+              if self.maxsleep > 40:
+                 print self.text.noremotesfound
+                 break
+              self.maxsleep += 1
+
+           if len(self.Send.remotelist) > 0:
+              for self.remote in self.Send.remotelist:
+                 self.reader.sbuffer += "LIST " + self.remote + "\n"
+              asyncore.poll()
 
     def HandleException(self, msg):
         raise self.Exception(msg)
@@ -386,6 +397,7 @@ class Lirc(eg.RawReceiverPlugin):
         addrepeat = False,
         ignoretime = 0,
         timeout = 200,
+        attemptlist = True,
     ):
         text = self.text
         panel = eg.ConfigPanel(self)
@@ -394,10 +406,13 @@ class Lirc(eg.RawReceiverPlugin):
         HostCtrl = wx.TextCtrl(panel, -1, host)
         PortText = wx.StaticText(panel, -1, text.port)
         PortCtrl = eg.SpinIntCtrl(panel, -1, port, max=65535)
+        AttemptListCtrl = wx.CheckBox(panel, -1, text.attemptlist)
+        AttemptListCtrl.SetValue(attemptlist)
 
-        HostSizer = wx.FlexGridSizer(cols=2)
+        HostSizer = wx.FlexGridSizer(cols=3)
         HostSizer.Add(HostText, 0, wx.ALL, 5)
         HostSizer.Add(HostCtrl, 0, wx.ALL, 3)
+        HostSizer.Add(AttemptListCtrl, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 30)
         HostSizer.Add(PortText, 0, wx.ALL, 5)
         HostSizer.Add(PortCtrl, 0, wx.ALL, 3)
         HostBox = wx.StaticBox(panel, -1, text.hosttitle)
@@ -445,7 +460,8 @@ class Lirc(eg.RawReceiverPlugin):
                 AddRemoteCtrl.GetValue(), 
                 AddRepeatCtrl.GetValue(), 
                 IgnoreTimeCtrl.GetValue(),
-                TimeoutCtrl.GetValue()
+                TimeoutCtrl.GetValue(),
+                AttemptListCtrl.GetValue()
             )
 
 
