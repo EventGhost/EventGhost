@@ -1,26 +1,26 @@
-version="0.1.8"
+version="0.1.9"
 
 # Plugins/MediaMonkey/__init__.py
 #
 # Copyright (C)  2007 Pako  <lubos.ruckl@quick.cz>
 #
 # This file is part of EventGhost.
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2008-05-14 16:41
+#Last change: 2008-10-16 23:08
 
 eg.RegisterPlugin(
     name = "MediaMonkey",
@@ -36,7 +36,7 @@ eg.RegisterPlugin(
         '<BR>file "EventGhost.vbs" to MediaMonkey/Scripts/Auto folder.'
     ),
     url = "http://www.eventghost.org/forum/viewtopic.php?t=563",
-    icon = (    
+    icon = (
         "R0lGODlhEAAQAPcAADQyNLyaTHRmRJSWlPzGNFxOPGxqbFROVKSGRJyWfOzSlOTCdGRmZ"
         "HReRERCPIRyTNy2dIyCbPzSZMSylExOTFxaXOTe5HxyVOS2ROzCTFxWPIx+ZKSajDw6PP"
         "zinExGTPTSfHR2dFRWVKSOVLyibGxiTExKRISKjNy+lIx6VPzOVKyaZLSqnFRSRJyGTNT"
@@ -61,7 +61,7 @@ eg.RegisterPlugin(
     ),
 )
 
-        
+
 
 from win32com.client import Dispatch
 from eg.WinApi.Utils import CloseHwnd
@@ -73,9 +73,9 @@ from os.path import isfile
 
 #====================================================================
 class Text:
-        
-    errorNoWindow = "Couldn't find MediaMonkey window"    
-    errorConnect = "MediaMonkey is not running or connected"    
+
+    errorNoWindow = "Couldn't find MediaMonkey window"
+    errorConnect = "MediaMonkey is not running or connected"
     mainGrpName = "Main control of MediaMonkey"
     mainGrpDescr = "Here you find actions for main control of MediaMonkey."
     levelGrpName = "Another control of MediaMonkey"
@@ -95,10 +95,10 @@ class Text:
 #====================================================================
 class MediaMonkey(eg.PluginClass):
     text = Text
-    
+
     def __init__(self):
         group = self.AddGroup(
-            self.text.mainGrpName, 
+            self.text.mainGrpName,
             self.text.mainGrpDescr
         )
         group.AddAction(Start)
@@ -111,12 +111,13 @@ class MediaMonkey(eg.PluginClass):
         group.AddAction(Previous)
         group.AddAction(LoadPlaylist)
         group.AddAction(AddCurrentSongToPlaylist)
-        group.AddAction(RemoveCurrentSongFromPlaylist)        
-        group.AddAction(RemoveCurrentSongFromNowPlaying)        
+        group.AddAction(RemoveCurrentSongFromPlaylist)
+        group.AddAction(RemoveCurrentSongFromNowPlaying)
         group.AddAction(LoadPlaylistByFilter)
-        
+        group.AddAction(Jukebox)
+
         group = self.AddGroup(
-            self.text.levelGrpName, 
+            self.text.levelGrpName,
             self.text.levelGrpDescr
         )
         group.AddAction(ToggleMute)
@@ -133,13 +134,13 @@ class MediaMonkey(eg.PluginClass):
         group.AddAction(Seek)
 
         group = self.AddGroup(
-            self.text.extrGrpName, 
+            self.text.extrGrpName,
             self.text.extrGrpDescr
         )
         group.AddAction(WritingToMM)
 
         group = self.AddGroup(
-            self.text.infoGrpName, 
+            self.text.infoGrpName,
             self.text.infoGrpDescr
         )
         group.AddAction(GetVolume)
@@ -161,14 +162,14 @@ class MediaMonkey(eg.PluginClass):
         self.MM=None
         self.volume=None
         self.muted=False
-            
+
     def __stop__(self):
         try:
             if self.MM:
                 del self.MM
         except:
             pass
-            
+
     def DispMM(self):
         if self.MM is None:
             try:
@@ -221,7 +222,7 @@ class Exit(eg.ActionClass):
                 CloseHwnd(hwnds[0])
             else:
                 raise self.Exceptions.ProgramNotRunning
-        
+
     def Configure(self, choice=False):
         panel = eg.ConfigPanel(self)
         choiceCtrl = wx.CheckBox(panel, -1, self.text.choice_label)
@@ -242,7 +243,7 @@ class Play(eg.ActionClass):
 class TogglePlay(eg.ActionClass):
     name = "Toggle Play"
     description = "Toggles between play and pause of MediaMonkey."
-    
+
     def __call__(self):
         if  not self.plugin.DispMM().Player.isPlaying:
             # Play
@@ -258,7 +259,7 @@ class DiscretePause(eg.ActionClass):
         "Pauses MediaMonkey if it is playing, but won't do anything if "
         "MediaMonkey is already paused."
     )
-    
+
     def __call__(self):
         if self.plugin.DispMM().Player.isPlaying:
             if (not self.plugin.DispMM().Player.isPaused):
@@ -268,11 +269,11 @@ class DiscretePause(eg.ActionClass):
 class Stop(eg.ActionClass):
     name = "Stop"
     description = "Simulate a press on the stop button."
-    
+
     def __call__(self):
         return self.plugin.DispMM().Player.Stop()
-        
-        
+
+
 #====================================================================
 class Next(eg.ActionClass):
     name = "Next"
@@ -333,8 +334,8 @@ class SetVolume(eg.ActionClass):
         panel.AddCtrl(volumeCtrl)
         while panel.Affirmed():
             panel.SetResult(volumeCtrl.GetValue())
-            
-            
+
+
 #====================================================================
 class VolumeUp(eg.ActionClass):
     name = "Volume up "
@@ -442,25 +443,25 @@ class SetShuffle(eg.ActionClass):
             self.plugin.DispMM().Player.isShuffle=True
         else: #
             self.plugin.DispMM().Player.isShuffle=False
-            
+
     def GetLabel(self, switch):
         return "Set Shuffle tracks "+("ON" if switch==0 else "OFF")
-        
+
     def Configure(self, switch=0):
         text=Text
         panel = eg.ConfigPanel(self)
         radioBox = wx.RadioBox(
-            panel, 
-            -1, 
-            self.text.radiobox, 
-            choices=[self.text.ShuffleON, self.text.ShuffleOFF], 
+            panel,
+            -1,
+            self.text.radiobox,
+            choices=[self.text.ShuffleON, self.text.ShuffleOFF],
             style=wx.RA_SPECIFY_ROWS
         )
         radioBox.SetSelection(switch)
         panel.sizer.Add(radioBox, 0, wx.EXPAND)
         while panel.Affirmed():
             panel.SetResult(radioBox.GetSelection(),)
-            
+
 #====================================================================
 class SetRepeat(eg.ActionClass):
     name = "Set Continous playback"
@@ -476,18 +477,18 @@ class SetRepeat(eg.ActionClass):
             self.plugin.DispMM().Player.isRepeat=True
         else: #
             self.plugin.DispMM().Player.isRepeat=False
-            
+
     def GetLabel(self, switch):
         return "Set Continous playback "+("ON" if switch==0 else "OFF")
-        
+
     def Configure(self, switch=0):
         text=Text
         panel = eg.ConfigPanel(self)
         radioBox = wx.RadioBox(
-            panel, 
-            -1, 
-            self.text.radiobox, 
-            choices=[self.text.RepeatON, self.text.RepeatOFF], 
+            panel,
+            -1,
+            self.text.radiobox,
+            choices=[self.text.RepeatON, self.text.RepeatOFF],
             style=wx.RA_SPECIFY_ROWS
         )
         radioBox.SetSelection(switch)
@@ -509,18 +510,18 @@ class SetAutoDJ(eg.ActionClass):
             self.plugin.DispMM().Player.isAutoDJ=True
         else: #
             self.plugin.DispMM().Player.isAutoDJ=False
-            
+
     def GetLabel(self, switch):
         return "Set AutoDJ "+("ON" if switch==0 else "OFF")
-        
+
     def Configure(self, switch=0):
         text=Text
         panel = eg.ConfigPanel(self)
         radioBox = wx.RadioBox(
-            panel, 
-            -1, 
-            self.text.radiobox, 
-            choices=[self.text.AutoDJON, self.text.AutoDJOFF], 
+            panel,
+            -1,
+            self.text.radiobox,
+            choices=[self.text.AutoDJON, self.text.AutoDJOFF],
             style=wx.RA_SPECIFY_ROWS
         )
         radioBox.SetSelection(switch)
@@ -542,25 +543,25 @@ class SetCrossfade(eg.ActionClass):
             self.plugin.DispMM().Player.isCrossfade=True
         else: #
             self.plugin.DispMM().Player.isCrossfade=False
-            
+
     def GetLabel(self, switch):
         return "Set Crossfade "+("ON" if switch==0 else "OFF")
-        
+
     def Configure(self, switch=0):
         text=Text
         panel = eg.ConfigPanel(self)
         radioBox = wx.RadioBox(
-            panel, 
-            -1, 
-            self.text.radiobox, 
-            choices=[self.text.CrossfadeON, self.text.CrossfadeOFF], 
+            panel,
+            -1,
+            self.text.radiobox,
+            choices=[self.text.CrossfadeON, self.text.CrossfadeOFF],
             style=wx.RA_SPECIFY_ROWS
         )
         radioBox.SetSelection(switch)
         panel.sizer.Add(radioBox, 0, wx.EXPAND)
         while panel.Affirmed():
             panel.SetResult(radioBox.GetSelection(),)
-            
+
 #====================================================================
 class BalanceRight(eg.ActionClass):
     name = "Balance Right x%"
@@ -650,27 +651,27 @@ class Seek(eg.ActionClass):
                     Player,"PlaybackTime",pos-length*step/100)
             else:
                 self.plugin.DispMM().Player.PlaybackTime=0
-        else:         #Forward   
+        else:         #Forward
             if pos<length-length*step/100:
                 setattr(self.plugin.DispMM().\
                     Player,"PlaybackTime",pos+length*step/100)
             else:
                 setattr(self.plugin.DispMM().Player,"PlaybackTime",length-500)
-            
+
     def GetLabel(self, step, direction):
         return self.text.tree_lab1\
             +(self.text.tree_lab2 if direction else self.text.tree_lab3)\
             +" "+str(int(step))+"%"
-        
+
     def Configure(self, step=10.0, direction=0):
         text=Text
         panel = eg.ConfigPanel(self)
         seekCtrl = eg.SpinNumCtrl(panel, -1, step, max=100.0, fractionWidth=1)
         radioBox = wx.RadioBox(
-            panel, 
-            -1, 
-            self.text.radiobox, 
-            choices=[self.text.btnForward, self.text.btnBackward], 
+            panel,
+            -1,
+            self.text.radiobox,
+            choices=[self.text.btnForward, self.text.btnBackward],
             style=wx.RA_SPECIFY_ROWS
         )
         panel.AddLabel(self.text.label)
@@ -679,7 +680,7 @@ class Seek(eg.ActionClass):
         panel.sizer.Add(radioBox, 0, wx.EXPAND)
         while panel.Affirmed():
             panel.SetResult(seekCtrl.GetValue(),radioBox.GetSelection())
-            
+
 
 #====================================================================
 class GetVolume(eg.ActionClass):
@@ -818,8 +819,8 @@ class GetBasicSongInfo(eg.ActionClass):
                     +"," if cond else ""
         if arrayInfo[16]:
             result+=str(player.CurrentSongIndex+1)+","
-                    
-        return result[:-1]        
+
+        return result[:-1]
 
 
     def GetLabel(self, arrayInfo):
@@ -957,8 +958,8 @@ class GetBasicSongInfoNextTrack(GetBasicSongInfo):
                 return self.text.endList
         if player.isShuffle:
             return self.text.shuffleMode
-       
-                
+
+
         print player.PlaylistCount
         print "index="+str(index)
         self.NextSong=player.PlaylistItems(index)
@@ -1009,7 +1010,7 @@ class GetBasicSongInfoNextTrack(GetBasicSongInfo):
         if arrayInfo[16]:
             result+=str(index+1)+","
 
-        return result[:-1]        
+        return result[:-1]
 
 
     def GetLabel(self, arrayInfo):
@@ -1155,7 +1156,7 @@ class GetDetailSongInfo(eg.ActionClass):
             if numeric:
                 result+=str(getattr(self.plugin.DispMM().Player.CurrentSong,propert))\
                     +"," if cond else ""
-            else:    
+            else:
                 result+=getattr(self.plugin.DispMM().Player.CurrentSong,propert)\
                     +"," if cond else ""
         return result[:-1]
@@ -1513,7 +1514,7 @@ class GetUniversal(eg.ActionClass):
             Year = "Year"
             canCrossfade = "Can Crossfade"
             isShuffleIgnored = "Shuffle Is Ignored"
-            
+
     def __init__(self):
         text=self.text
         self.propertiesList=(
@@ -1582,7 +1583,7 @@ class GetUniversal(eg.ActionClass):
             ("Year","Year"),
             ("canCrossfade","canCrossfade"),
             ("isShuffleIgnored","isShuffleIgnored"),
-        )    
+        )
     def __call__(self, i):
         return getattr(self.plugin.DispMM().Player.CurrentSong,self.propertiesList[i][0])
 
@@ -1655,7 +1656,7 @@ class WritingToMM(eg.ActionClass):
         self.plugin.DispMM().Player.CurrentSong.UpdateDB()
         if arrayValue1[i]:
             self.plugin.DispMM().Player.CurrentSong.WriteTags()
-        
+
     def GetLabel(self, i, arrayValue0, arrayValue1):
         if self.propertiesList[i][2]==0:
 #            result = self.text.set+self.propertiesList[i][1]+"="+arrayValue0[i]
@@ -1665,7 +1666,7 @@ class WritingToMM(eg.ActionClass):
         if arrayValue1[i]:
             result += " (+ID3)"
         return result
-        
+
 
     def Configure(
         self,
@@ -1699,8 +1700,8 @@ class WritingToMM(eg.ActionClass):
         choiceSizer.Add(choiceLbl, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         choiceSizer.Add(choiceCtrl, 0, wx.EXPAND)
         mainSizer.Add(choiceSizer, 0, wx.EXPAND|wx.ALL, 10)
-        dynSizer = wx.GridSizer(rows=1, cols=2, hgap=5, vgap=5) 
-        mainSizer.Add(dynSizer, 0, wx.EXPAND|wx.BOTTOM, 10)        
+        dynSizer = wx.GridSizer(rows=1, cols=2, hgap=5, vgap=5)
+        mainSizer.Add(dynSizer, 0, wx.EXPAND|wx.BOTTOM, 10)
         panel.sizer.Add(mainSizer)
 
         def onChoiceChange(event=None):
@@ -1710,9 +1711,9 @@ class WritingToMM(eg.ActionClass):
                 -1,
                 eval("self.text.Properties."+self.propertiesList[choiceCtrl.GetSelection()][1])+":"
             )
-            
+
             #eval("self.text.set+"+"self.text.Properties."+self.propertiesList[i][1]+"="+arrayValue0[i])
-            
+
             indx=self.propertiesList[choiceCtrl.GetSelection()][2]
             dummy = arrayValue0[0] # otherwise error:
 # >>>  NameError: name 'arrayValue0' is not defined  <<<   ??????????????????????
@@ -1747,10 +1748,10 @@ class LoadPlaylist(eg.ActionClass):
         repeat = "Continous playback"
         shuffle = "Shuffle tracks"
         crossfade = "Crossfade"
-        
+
 
     def __call__(self, plString,repeat,shuffle,crossfade):
-        MMobj = self.plugin.DispMM()                
+        MMobj = self.plugin.DispMM()
         plItems = MMobj.PlaylistByTitle(plString).Tracks
         num = plItems.Count
         if num >0:
@@ -1768,8 +1769,8 @@ class LoadPlaylist(eg.ActionClass):
         else:
             return plString+" "+self.text.noFound
 
-        
-       
+
+
     def Configure(self, plString="",repeat=2,shuffle=2,crossfade=2):
         panel = eg.ConfigPanel(self)
         text = self.text
@@ -1793,9 +1794,9 @@ class LoadPlaylist(eg.ActionClass):
                 repeatChkBoxCtrl.Get3StateValue(),
                 shuffleChkBoxCtrl.Get3StateValue(),
                 crossfadeChkBoxCtrl.Get3StateValue()
-            )  
+            )
 
-            
+
 class AddCurrentSongToPlaylist(eg.ActionClass):
     name = "Add current playing song to Playlist"
     description = "Adds current playing song to Playlist."
@@ -1809,7 +1810,7 @@ class AddCurrentSongToPlaylist(eg.ActionClass):
         res1 = "Track already exist in playlist %s"
         res2 = "Playlist %s not exist"
         forToolTip = "for case"
-         
+
     def __call__(self, plString, skip, verbose):
         MMobj = self.plugin.DispMM()
         idSong=MMobj.Player.CurrentSong.ID
@@ -1826,9 +1827,9 @@ class AddCurrentSongToPlaylist(eg.ActionClass):
             res = 2
         if skip:
             MMobj.Player.Next()
-        verbres = eval("self.text.res"+str(res)) 
-        return res if verbose==1 else verbres % plString            
-               
+        verbres = eval("self.text.res"+str(res))
+        return res if verbose==1 else verbres % plString
+
     def Configure(self, plString="", skip=False, verbose = 0):
         panel = eg.ConfigPanel(self)
         text = self.text
@@ -1840,10 +1841,10 @@ class AddCurrentSongToPlaylist(eg.ActionClass):
         skipChkBoxCtrl.SetValue(skip)
         SizerAdd(skipChkBoxCtrl,0,wx.TOP,15,)
         radioBox = wx.RadioBox(
-            panel, 
-            -1, 
-            self.text.radiobox, 
-            choices=[self.text.verboseON, self.text.verboseOFF], 
+            panel,
+            -1,
+            self.text.radiobox,
+            choices=[self.text.verboseON, self.text.verboseOFF],
             style=wx.RA_SPECIFY_ROWS
         )
         radioBox.SetItemToolTip(1, "0 "+self.text.forToolTip+"   "+self.text.res0 % "" +\
@@ -1857,9 +1858,9 @@ class AddCurrentSongToPlaylist(eg.ActionClass):
                 textCtrl.GetValue(),
                 skipChkBoxCtrl.GetValue(),
                 radioBox.GetSelection(),
-            )  
-          
-            
+            )
+
+
 class RemoveCurrentSongFromPlaylist(eg.ActionClass):
     name = "Remove current playing song from Playlist"
     description = "Remove current playing song from Playlist."
@@ -1874,21 +1875,21 @@ class RemoveCurrentSongFromPlaylist(eg.ActionClass):
         res1 = "Track not exist in playlist %s"
         res2 = "Playlist %s not exist"
         forToolTip = "for case"
-        
+
     def __call__(self, plString, skip, now_pl, verbose):
         MMobj = self.plugin.DispMM()
         Player = MMobj.Player
         idSong=Player.CurrentSong.ID
         IDPlaylist=MMobj.PlaylistByTitle(plString).ID
         if IDPlaylist <> 0:
-            sql=" FROM PlaylistSongs WHERE IDPlaylist="+str(IDPlaylist)+" AND IDSong="+str(idSong)            
+            sql=" FROM PlaylistSongs WHERE IDPlaylist="+str(IDPlaylist)+" AND IDSong="+str(idSong)
             if MMobj.Database.OpenSQL("SELECT COUNT(*)"+sql).ValueByIndex(0) == "1":
                 MMobj.Database.ExecSQL("DELETE"+sql)
                 MMobj.MainTracksWindow.Refresh()
                 indx=Player.CurrentSongIndex
                 if idSong==Player.PlaylistItems(indx).ID:
                     if now_pl:
-                        Player.PlaylistDelete(indx)                        
+                        Player.PlaylistDelete(indx)
                 res = 0
             else:
                 res = 1
@@ -1896,9 +1897,9 @@ class RemoveCurrentSongFromPlaylist(eg.ActionClass):
             res = 2
         if skip:
             Player.Next()
-        verbres = eval("self.text.res"+str(res)) 
+        verbres = eval("self.text.res"+str(res))
         return res if verbose==1 else verbres % plString
-                            
+
     def Configure(self, plString="", skip=False, now_pl=False, verbose = 0):
         panel = eg.ConfigPanel(self)
         text = self.text
@@ -1913,10 +1914,10 @@ class RemoveCurrentSongFromPlaylist(eg.ActionClass):
         now_plChkBoxCtrl.SetValue(now_pl)
         SizerAdd(now_plChkBoxCtrl,0,wx.TOP,15,)
         radioBox = wx.RadioBox(
-            panel, 
-            -1, 
-            self.text.radiobox, 
-            choices=[self.text.verboseON, self.text.verboseOFF], 
+            panel,
+            -1,
+            self.text.radiobox,
+            choices=[self.text.verboseON, self.text.verboseOFF],
             style=wx.RA_SPECIFY_ROWS
         )
         radioBox.SetItemToolTip(1, "0 "+self.text.forToolTip+"   "+self.text.res0 % "" +\
@@ -1931,14 +1932,14 @@ class RemoveCurrentSongFromPlaylist(eg.ActionClass):
                 skipChkBoxCtrl.GetValue(),
                 now_plChkBoxCtrl.GetValue(),
                 radioBox.GetSelection(),
-            )  
-            
-            
+            )
+
+
 class RemoveCurrentSongFromNowPlaying(eg.ActionClass):
     name = "Remove current playing song from Now playing window"
     description = "Remove current playing song from Now playing window."
     class text:
-        skip = "Skip to next track"        
+        skip = "Skip to next track"
         radiobox = "Result mode"
         verboseON = "Verbose"
         verboseOFF = "Numeric"
@@ -1958,40 +1959,40 @@ class RemoveCurrentSongFromNowPlaying(eg.ActionClass):
             res = 1
         if skip:
             Player.Next()
-        verbres = eval("self.text.res"+str(res)) 
+        verbres = eval("self.text.res"+str(res))
         return res if verbose==1 else verbres
-       
+
     def Configure(self, skip=False, verbose=0):
         panel = eg.ConfigPanel(self)
         text = self.text
         SizerAdd = panel.sizer.Add
         skipChkBoxCtrl = wx.CheckBox(panel, label=self.text.skip)
         skipChkBoxCtrl.SetValue(skip)
-        SizerAdd(skipChkBoxCtrl,0,wx.TOP,15,)		
+        SizerAdd(skipChkBoxCtrl,0,wx.TOP,15,)
         radioBox = wx.RadioBox(
-            panel, 
-            -1, 
-            self.text.radiobox, 
-            choices=[self.text.verboseON, self.text.verboseOFF], 
+            panel,
+            -1,
+            self.text.radiobox,
+            choices=[self.text.verboseON, self.text.verboseOFF],
             style=wx.RA_SPECIFY_ROWS
         )
         radioBox.SetItemToolTip(1, "0 "+self.text.forToolTip+"   "+self.text.res0+\
             "\n1 "+self.text.forToolTip+"   "+self.text.res1)
         radioBox.SetSelection(verbose)
-        SizerAdd(radioBox, 0, wx.EXPAND|wx.TOP,15)        
+        SizerAdd(radioBox, 0, wx.EXPAND|wx.TOP,15)
 
         while panel.Affirmed():
             panel.SetResult(
                 skipChkBoxCtrl.GetValue(),
                 radioBox.GetSelection(),
-            )  
+            )
 
 
-            
+
 class LoadPlaylistByFilter(eg.ActionClass):
     name = "Load Playlist by Filter"
     description = "Loads a MediaMonkey playlist defined by filter (SQL query)."
-    
+
     class text:
         radioboxMode = "Select songs ..."
         modeAnd = "Matches all rules (AND)"
@@ -2031,7 +2032,7 @@ class LoadPlaylistByFilter(eg.ActionClass):
         days = "days"
         months = "months"
         years = "years"
-       
+
         class Properties:
             Artist = "Artist"
             Album = "Album"
@@ -2124,8 +2125,8 @@ class LoadPlaylistByFilter(eg.ActionClass):
             WebSource = "Web Source"
             WebUser = "Web User"
             Year = "Year"
-                
-    
+
+
     def __init__(self):
         self.myDirty=None
         text=self.text
@@ -2231,12 +2232,12 @@ class LoadPlaylistByFilter(eg.ActionClass):
             "months",
             "years"
         )
-        
+
         self.trendList=(
             "asc",
             "desc"
         )
-        
+
         self.exprList1=(
             "equal",
             "notEqual",
@@ -2247,7 +2248,7 @@ class LoadPlaylistByFilter(eg.ActionClass):
             "beforeLess",
             "beforeMore",
         )
-        
+
         self.exprList=[
             "equal",
             "notEqual",
@@ -2264,7 +2265,7 @@ class LoadPlaylistByFilter(eg.ActionClass):
             "isEmpty",
             "isNotEmpty",
         ]
-    
+
 
     def __call__(
         self,
@@ -2282,10 +2283,10 @@ class LoadPlaylistByFilter(eg.ActionClass):
         accessible
     ):
         MMobj = self.plugin.DispMM()
-        
-            
+
+
         sql=""
-        op=' AND ' if mode==0 else ' OR '        
+        op=' AND ' if mode==0 else ' OR '
         for rule in listRules:
             i=listRules.index(rule)
             substValues1=(op,self.propertiesList[rule[0]][0],rule[2])
@@ -2294,7 +2295,7 @@ class LoadPlaylistByFilter(eg.ActionClass):
             dateType=self.propertiesList[rule[0]][1]
             emptVal = '""'  if dateType=="T" else '"-1"'
             tuplOper=("=","<>",">",">=","<","<=")
-            
+
             if dateType=="D":
                 if rule[1]<6:
                     for ix in range(0,6):
@@ -2302,7 +2303,7 @@ class LoadPlaylistByFilter(eg.ActionClass):
                             substValues=(op,self.propertiesList[rule[0]][0],tuplOper[ix],rule[2])
                             sql+="%sstrftime('%%Y-%%m-%%d %%H:%%M:%%S',%s+2415018.5)%s'%s'" % substValues
                             break
-                else: 
+                else:
                     substValues=(op,self.propertiesList[rule[0]][0],rule[2][:-1],self.unitList[int(rule[2][-1])])
                     if rule[1]==6:
                         sql+="%s(%s+2415018.5)>julianday('now','-%s %s','localtime')" % substValues
@@ -2325,7 +2326,7 @@ class LoadPlaylistByFilter(eg.ActionClass):
                 elif rule[1]==10:
                     sql+='%sinstr(%s,"%s")' %  substValues1
                 elif rule[1]==11:
-                    sql+='%sNOT (instr(%s,"%s"))' %  substValues1                                       
+                    sql+='%sNOT (instr(%s,"%s"))' %  substValues1
                 elif rule[1]==12:
                     sql+='%s%s=' % substValues3 + emptVal
                 elif rule[1]==13:
@@ -2335,12 +2336,12 @@ class LoadPlaylistByFilter(eg.ActionClass):
             sql+=" order by "+self.propertiesList[crit][0]+" "+self.trendList[trend]
         if limit:
             sql+=" limit "+str(num)
-            
-        #print sql #Debuging        
+
+        #print sql #Debuging
         Total=MMobj.Database.OpenSQL("SELECT COUNT(*) FROM Songs WHERE "+sql).ValueByIndex(0)
-        if Total>0:        
+        if int(Total) > 0:
             MMobj.Player.Stop()
-            MMobj.Player.PlaylistClear()            
+            MMobj.Player.PlaylistClear()
             n=0
             MyTrack = MMobj.Database.QuerySongs(sql)
             while not MyTrack.EOF:
@@ -2350,7 +2351,7 @@ class LoadPlaylistByFilter(eg.ActionClass):
                         n+=1
                 else:
                     MMobj.Player.PlaylistAddTrack(MyTrack.Item)
-                    n+=1                    
+                    n+=1
                 MyTrack.Next()
             if n>0:
                 if repeat<2:
@@ -2363,8 +2364,8 @@ class LoadPlaylistByFilter(eg.ActionClass):
                 return plName+": "+self.text.found % (str(n),str(Total))
             else:
                 return plName+": "+self.text.noFound
-            
-      
+
+
     def Configure(
         self,
         plName="",
@@ -2402,8 +2403,8 @@ class LoadPlaylistByFilter(eg.ActionClass):
                 if not self.myDirty:
                     panel.SetIsDirty(True)
                     myDirty=True
-                panel.EnableButtons(flag)           
-    
+                panel.EnableButtons(flag)
+
         listRules2=[] #working copy (after Cancel flush it)
         for i in range(0,len(listRules)):
             listRules2.append(listRules[i][:])
@@ -2412,20 +2413,20 @@ class LoadPlaylistByFilter(eg.ActionClass):
         panel.sizer.SetMinSize((560, 110+29*maxRules))
         text = self.text
         radioBoxMode = wx.RadioBox(
-            panel, 
-            -1, 
+            panel,
+            -1,
             text.radioboxMode,
             choices=[text.modeAnd, text.modeOr],
             style=wx.RA_SPECIFY_COLS
         )
         radioBoxMode.SetMinSize((556,43))
-        radioBoxMode.SetSelection(mode) 
+        radioBoxMode.SetSelection(mode)
         panel.sizer.Add(radioBoxMode, 0)
         self.mySizer = wx.GridBagSizer(vgap=8,hgap=10)
         self.mySizer.SetMinSize((560, 6+29*maxRules))
         panelAdd = panel.sizer.Add
         panelAdd(self.mySizer, 0,wx.TOP,10)
-        
+
         statBox_1 = wx.StaticBox(panel, -1, "")
         stBsizer_1 = wx.StaticBoxSizer(statBox_1, wx.VERTICAL)
         stBsizer_1.SetMinSize((426,-1))
@@ -2435,8 +2436,8 @@ class LoadPlaylistByFilter(eg.ActionClass):
         nameCtrl = wx.TextCtrl(panel, -1, plName, style=wx.TE_NOHIDESEL,size=(100,22))
         stBsizer_2.Add(wx.StaticText(panel, -1, text.filterName),0,wx.LEFT|wx.TOP,4)
         stBsizer_2.Add(nameCtrl, 0,wx.LEFT|wx.TOP,4)
-        
-        orderSizer=wx.BoxSizer(wx.HORIZONTAL)        
+
+        orderSizer=wx.BoxSizer(wx.HORIZONTAL)
         orderChkBoxCtrl = wx.CheckBox(panel, label="")
         orderChkBoxCtrl.SetValue(order)
         orderSizer.Add(orderChkBoxCtrl,0,wx.TOP,4)
@@ -2445,7 +2446,7 @@ class LoadPlaylistByFilter(eg.ActionClass):
         trends=[eval("self.text."+tpl) for tpl in self.trendList]
         dirCtrl=wx.Choice(panel, -1, choices=trends,size=(-1, -1))
         dirCtrl.SetSelection(trend)
-        orderSizer.Add(dirCtrl,0,wx.LEFT,4)        
+        orderSizer.Add(dirCtrl,0,wx.LEFT,4)
         dirTxt2=wx.StaticText(panel, -1, self.text.order2)
         orderSizer.Add(dirTxt2,0,wx.LEFT|wx.TOP,4)
         criters=[eval("self.text.Properties."+tpl[0]) for tpl in self.propertiesList]
@@ -2453,7 +2454,7 @@ class LoadPlaylistByFilter(eg.ActionClass):
         critCtrl.SetSelection(crit)
         orderSizer.Add(critCtrl,0,wx.LEFT,4)
 
-        limitSizer=wx.BoxSizer(wx.HORIZONTAL)        
+        limitSizer=wx.BoxSizer(wx.HORIZONTAL)
         limitChkBoxCtrl = wx.CheckBox(panel, label="")
         limitChkBoxCtrl.SetValue(limit)
         limitSizer.Add(limitChkBoxCtrl,0,wx.TOP,4)
@@ -2466,10 +2467,10 @@ class LoadPlaylistByFilter(eg.ActionClass):
         limitSizer.Add(numCtrl, 0,wx.LEFT,4)
         limitTxt2=wx.StaticText(panel, -1, self.text.limit2)
         limitSizer.Add(limitTxt2,0,wx.LEFT|wx.TOP,4)
-        
+
         stBsizer_1.Add(orderSizer,0,wx.TOP,4)
         stBsizer_1.Add(limitSizer,0,wx.TOP,8)
-        
+
         middleSizer=wx.BoxSizer(wx.HORIZONTAL)
         middleSizer.Add(stBsizer_1,0)
         middleSizer.Add(stBsizer_2,0,wx.LEFT,10)
@@ -2488,7 +2489,7 @@ class LoadPlaylistByFilter(eg.ActionClass):
         accessibleChkBoxCtrl.SetValue(accessible)
         bottomSizer.Add(accessibleChkBoxCtrl,0)
         panelAdd(bottomSizer,0,wx.TOP,10)
-                
+
         def CreateExprCtrl(row):
 #Call from:	 AddRow,UpdateChoiceExpr
             if self.propertiesList[listRules2[row][0]][1]=="D": # Date & Time
@@ -2499,15 +2500,15 @@ class LoadPlaylistByFilter(eg.ActionClass):
             exprCtrl.SetSelection(listRules2[row][1])
             exprCtrl.Bind(wx.EVT_CHOICE, OnExprChoice)
             self.mySizer.Add(exprCtrl,(row,1))
-            self.mySizer.Layout()    
-            
+            self.mySizer.Layout()
+
         def ConvToWxDt(dt):
 #Call from: CreateStrCtrl, UpdateStr
             """Conversion of data record to wx.DateTime format."""
             wxDttm=wx.DateTime()
             wxDttm.Set(int(dt[8:10]),int(dt[5:7])-1,int(dt[:4]))
             return wxDttm
-            
+
         def CreateStrCtrl(row):
 #Call from: UpdateStr, AddRow
             tp=self.propertiesList[listRules2[row][0]][1]
@@ -2550,12 +2551,12 @@ class LoadPlaylistByFilter(eg.ActionClass):
                     infoSizer.Add(periodCtrl)
                     choicUnit=[eval("self.text."+tpl) for tpl in self.unitList]
                     unitCtrl=wx.Choice(panel, row+200, choices=choicUnit,size=(81, 22))
-                    unitCtrl.SetSelection(int(listRules2[row][2][-1])) 
+                    unitCtrl.SetSelection(int(listRules2[row][2][-1]))
                     unitCtrl.Bind(wx.EVT_CHOICE, OnUnitChoice)
                     infoSizer.Add(unitCtrl,0,wx.LEFT,2)
             self.mySizer.Add(infoSizer,(row,2))
             self.mySizer.Layout()
-                    
+
         def AddRow(x):
 #Call from: OnAddButton, Main
             choices=[eval("self.text.Properties."+tpl[0]) for tpl in self.propertiesList]
@@ -2570,8 +2571,8 @@ class LoadPlaylistByFilter(eg.ActionClass):
             btnRemove.Bind(wx.EVT_BUTTON,OnRemoveButton)
             self.mySizer.Add(btnAdd,(x,3))
             self.mySizer.Add(btnRemove,(x,4),flag=wx.LEFT,border=-10)
-            self.mySizer.Layout()            
-            
+            self.mySizer.Layout()
+
         def UpdateChoiceExpr(row):
 #Call from: updateRow, OnPropertChoice
             cnt=self.mySizer.FindItemAtPosition((row,1)).GetWindow().GetCount()
@@ -2584,11 +2585,11 @@ class LoadPlaylistByFilter(eg.ActionClass):
             else:
                 myWnd.SetSelection(listRules2[row][1])
 
-                
+
         def UpdateStr(row):
 #Call from: updateRow, OnPropertChoice, OnExprChoice
             infoSizer=self.mySizer.FindItemAtPosition((row,2)).GetSizer()
-            lng=len(infoSizer.GetChildren()) # old column 2 type markant          
+            lng=len(infoSizer.GetChildren()) # old column 2 type markant
             tp=self.propertiesList[listRules2[row][0]][1]
             tp2=listRules2[row][1]
             flag=False
@@ -2603,7 +2604,7 @@ class LoadPlaylistByFilter(eg.ActionClass):
                 elif lng==3 and tp2>5:
                     rng=(2,1,0)
                     flag=True
-                    
+
             else: #tp<>"D"
                 if lng==2:
                     rng=(1,0,)
@@ -2611,13 +2612,13 @@ class LoadPlaylistByFilter(eg.ActionClass):
                 elif lng==3:
                     rng=(2,1,0)
                     flag=True
-            if flag: #  update panel and value    
+            if flag: #  update panel and value
                 for indx in rng:
                     wnd=infoSizer.GetChildren()[indx].GetWindow()
                     infoSizer.Detach(wnd)
                     wnd.Destroy()
                 self.mySizer.Detach(infoSizer)
-                infoSizer.Destroy()                
+                infoSizer.Destroy()
                 #Second: Create new Ctrl(s)
                 CreateStrCtrl(row) #Create and update value
             else: # update only value
@@ -2630,7 +2631,7 @@ class LoadPlaylistByFilter(eg.ActionClass):
                         wnd1.Enable(False)
                     else:
                         wnd1.Enable(True)
-                    
+
                 else:
                     if tp2<6: # absolute date/time
                         wnd1.SetValue(ConvToWxDt(val))
@@ -2641,9 +2642,9 @@ class LoadPlaylistByFilter(eg.ActionClass):
         def updateRow(row):
 #Call from: OnAddButton, OnRemoveButton, Main
             wx.FindWindowById(row+50).SetSelection(listRules2[row][0])
-            UpdateChoiceExpr(row)            
-            UpdateStr(row)                                                
-        
+            UpdateChoiceExpr(row)
+            UpdateStr(row)
+
         def OnPropertChoice(evt):
             row=evt.GetId()-50
             listRules2[row][0]=wx.FindWindowById(evt.GetId()).GetSelection()
@@ -2658,7 +2659,7 @@ class LoadPlaylistByFilter(eg.ActionClass):
             elif tp<>"D" and cnt<>14: #change to no date/time (single column) format
                 listRules2[row][2]=""
                 flg=True
-            if flg: # set selection Expr to "no selection"     
+            if flg: # set selection Expr to "no selection"
                 listRules2[row][1]=-1
                 wx.FindWindowById(row+100).SetSelection(-1)
             UpdateChoiceExpr(row)
@@ -2679,32 +2680,32 @@ class LoadPlaylistByFilter(eg.ActionClass):
                     wnd.Enable(True)
             else: # date/time format
                 infoSizer=self.mySizer.FindItemAtPosition((row,2)).GetSizer()
-                lng=len(infoSizer.GetChildren())           
+                lng=len(infoSizer.GetChildren())
                 if lng==2 and value<6:
                     listRules2[row][2]=str(datetime.datetime.today())[:11]+'00:00:00'
                 elif lng==3 and value>5:
                     listRules2[row][2]='13'
                 UpdateStr(row)
             validityCheck()
-            
-        def OnStrChange(evt): 
+
+        def OnStrChange(evt):
             row=evt.GetId()-150
-            listRules2[row][2]=wx.FindWindowById(evt.GetId()).GetValue()            
+            listRules2[row][2]=wx.FindWindowById(evt.GetId()).GetValue()
             validityCheck()
-            
+
         def OnClndrChange(evt):
             """Event handler for date change."""
-            row=evt.GetId()-150            
+            row=evt.GetId()-150
             dt=wx.FindWindowById(evt.GetId()).GetValue()
             listRules2[row][2]=time.strftime('%Y-%m-%d',time.strptime(str(dt),'%d.%m.%Y %H:%M:%S'))+' '+listRules2[row][2][11:]
             validityCheck()
-            
+
         def OnTimeChange(evt):
             """Event handler for time change."""
             row=evt.GetId()-200
             listRules2[row][2]=listRules2[row][2][:11]+wx.FindWindowById(evt.GetId()).GetValue()
-            validityCheck()            
-                            
+            validityCheck()
+
         def OnPeriodChange(evt):
             row=evt.GetId()-150
             wnd=wx.FindWindowById(evt.GetId())
@@ -2712,13 +2713,13 @@ class LoadPlaylistByFilter(eg.ActionClass):
             newVal=wnd.GetValue()
             listRules2[row][2]=str(newVal)+oldVal[-1]
             validityCheck()
-                            
+
         def OnUnitChoice(evt):
             row=evt.GetId()-200
             val=listRules2[row][2]
             listRules2[row][2]=val[:-1]+str(wx.FindWindowById(evt.GetId()).GetSelection())
             validityCheck()
-                                
+
         def OnAddButton(evt):
             """Event handler for the button '+' click."""
             if self.i<maxRules:
@@ -2734,16 +2735,16 @@ class LoadPlaylistByFilter(eg.ActionClass):
                     self.mySizer.FindItemAtPosition((0,4)).GetWindow().Enable(True)
                 if self.i==maxRules:
                     for x in range(0,maxRules):
-                        self.mySizer.FindItemAtPosition((x,3)).GetWindow().Enable(False)                    
+                        self.mySizer.FindItemAtPosition((x,3)).GetWindow().Enable(False)
             panel.EnableButtons(False) #New row is empty => allways not valid
-            
+
         def OnRemoveButton(evt):
             """Event handler for the button '-' click."""
             CheckEnable=False #validityCheck "OFF"
             row=evt.GetId()
             if self.i>1:
                 tp=self.propertiesList[listRules2[self.i-1][0]][1]
-                if tp<>"D":              
+                if tp<>"D":
                     rng=(0,)
                 else:
                     if listRules2[self.i-1][1]>5:
@@ -2775,7 +2776,7 @@ class LoadPlaylistByFilter(eg.ActionClass):
                     updateRow(x)
             CheckEnable=True #validityCheck "ON"
             validityCheck()
-            
+
         def OnOrderSwitch(evt=None):
             enbl=orderChkBoxCtrl.GetValue()
             if enbl and critCtrl.GetSelection()==-1:
@@ -2783,7 +2784,7 @@ class LoadPlaylistByFilter(eg.ActionClass):
             dirCtrl.Enable(enbl)
             dirTxt1.Enable(enbl)
             dirTxt2.Enable(enbl)
-            critCtrl.Enable(enbl)            
+            critCtrl.Enable(enbl)
             if evt is not None:
                 validityCheck()
 
@@ -2794,7 +2795,7 @@ class LoadPlaylistByFilter(eg.ActionClass):
             limitTxt2.Enable(enbl)
             if evt is not None:
                 validityCheck()
-                
+
         def OnEventInterception(evt):
             validityCheck()
         radioBoxMode.Bind(wx.EVT_RADIOBOX, OnEventInterception)
@@ -2803,7 +2804,7 @@ class LoadPlaylistByFilter(eg.ActionClass):
         shuffleChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnEventInterception)
         crossfadeChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnEventInterception)
         accessibleChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnEventInterception)
-        
+
         orderChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnOrderSwitch)
         limitChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnLimitSwitch)
         OnOrderSwitch()
@@ -2825,7 +2826,7 @@ class LoadPlaylistByFilter(eg.ActionClass):
         CheckEnable=True #validityCheck "ON"
         self.myDirty=False
 
-        
+
         while panel.Affirmed():
             panel.SetResult(
             nameCtrl.GetValue(),
@@ -2839,5 +2840,134 @@ class LoadPlaylistByFilter(eg.ActionClass):
             repeatChkBoxCtrl.Get3StateValue(),
             shuffleChkBoxCtrl.Get3StateValue(),
             crossfadeChkBoxCtrl.Get3StateValue(),
-            accessibleChkBoxCtrl.GetValue(),            
+            accessibleChkBoxCtrl.GetValue(),
+            )
+
+class Jukebox(eg.ActionClass):
+    name = "Jukebox"
+    description = "Jukebox."
+    class text():
+        noAlbum = 'No album for ID %s'
+        saveButton = "Export album list to file"
+        saveTitle = "Save file as ..."
+        file = 'File:'
+        msgTitle = 'Warning:'
+        msgMsg = 'Failed to save the file "%s"\nto the folder "%s" !'
+        repeat = "Continous playback"
+        shuffle = "Shuffle tracks"
+        crossfade = "Crossfade"
+        accessible = "Load only accessible tracks"
+        baloonBttn = 'Click to export code, album name and album artist to selected file.\nYou can this file import for example to MS Excel or OOo Calc'
+        
+    def Configure(self,repeat=2,shuffle=2,crossfade=2,accessible=False):
+        txt = self.text
+        panel = eg.ConfigPanel(self)
+        Sizer = panel.sizer
+        exportButton = wx.Button(panel, -1, txt.saveButton)
+        exportButton.SetToolTip(wx.ToolTip(txt.baloonBttn))
+        repeatChkBoxCtrl = wx.CheckBox(panel, label=self.text.repeat,style=wx.CHK_3STATE|wx.CHK_ALLOW_3RD_STATE_FOR_USER)
+        shuffleChkBoxCtrl = wx.CheckBox(panel, label=self.text.shuffle,style=wx.CHK_3STATE|wx.CHK_ALLOW_3RD_STATE_FOR_USER)
+        crossfadeChkBoxCtrl = wx.CheckBox(panel, label=self.text.crossfade,style=wx.CHK_3STATE|wx.CHK_ALLOW_3RD_STATE_FOR_USER)
+        accessibleChkBoxCtrl = wx.CheckBox(panel, label=self.text.accessible)
+        repeatChkBoxCtrl.Set3StateValue(repeat)
+        shuffleChkBoxCtrl.Set3StateValue(shuffle)
+        crossfadeChkBoxCtrl.Set3StateValue(crossfade)
+        accessibleChkBoxCtrl.SetValue(accessible)
+        Sizer.Add(repeatChkBoxCtrl)
+        Sizer.Add(shuffleChkBoxCtrl,0,wx.TOP,10)
+        Sizer.Add(crossfadeChkBoxCtrl,0,wx.TOP,10)
+        Sizer.Add(accessibleChkBoxCtrl,0,wx.TOP,10)
+        Sizer.Add(exportButton,0,wx.TOP,20)
+        def onBtnClick(event):
+            MMobj = self.plugin.DispMM()
+            import os
+            import wx
+            dialog = wx.FileDialog(
+                panel,
+                message=txt.saveTitle,
+                defaultDir=eg.folderPath.Documents,         
+                defaultFile="AlbumListMM",
+                wildcard="CSV files (*.csv)|*.csv|"\
+                    "Text file (*.txt)|*.txt|"\
+                    "All files (*.*)|*.*",
+                style=wx.SAVE
             )            
+            dialog.SetFilterIndex(1)
+            import codecs
+            if dialog.ShowModal() == wx.ID_OK:
+                flag = True
+                try:
+                    filePath = dialog.GetPath()                
+                    albums=MMobj.Database.OpenSQL("SELECT ID,Artist,Album FROM Albums")   
+                    file = codecs.open(filePath,encoding='utf-8', mode='w',errors='replace')
+                    while not albums.EOF:
+                        file.write(','.join((str(albums.ValueByIndex(0)),albums.ValueByIndex(2),albums.ValueByIndex(1))))#Structure = ID, Artist, Album
+                        file.write('\r\n')
+                        albums.Next()
+                    file.close()
+                except:
+                    flag = False
+                dialog.Destroy()
+                if flag:    
+                    file = codecs.open(filePath,encoding='utf-8', mode='r',errors='replace')
+                    msg = file.read()
+                    file.close()
+                    import wx.lib.dialogs
+                    dialog = wx.lib.dialogs.ScrolledMessageDialog(panel,msg,txt.file+' '+filePath)
+                    dialog.ShowModal()
+                    dialog.Destroy()
+                else:
+                    head, tail = os.path.split(filePath)
+                    dialog = wx.MessageDialog(
+                        panel,
+                        txt.msgMsg % (tail,head),
+                        txt.msgTitle,
+                        wx.OK | wx.ICON_WARNING
+                    )
+                    dialog.ShowModal()
+                    dialog.Destroy()
+            event.Skip()
+        exportButton.Bind(wx.EVT_BUTTON, onBtnClick)
+        while panel.Affirmed():
+            panel.SetResult(
+                repeatChkBoxCtrl.Get3StateValue(),
+                shuffleChkBoxCtrl.Get3StateValue(),
+                crossfadeChkBoxCtrl.Get3StateValue(),
+                accessibleChkBoxCtrl.GetValue(),
+            )
+
+    def GetLabel(self,repeat=2,shuffle=2,crossfade=2,accessible=False):
+        return self.__name__
+        
+
+    def __call__(self,repeat=2,shuffle=2,crossfade=2,accessible=False):
+        MMobj = self.plugin.DispMM()
+        ID=eg.event.payload
+        txt = self.text
+        sql = 'IDAlbum="%s"' % ID
+        Total=MMobj.Database.OpenSQL("SELECT COUNT(*) FROM Songs WHERE "+sql).ValueByIndex(0)
+        if int(Total) > 0:
+            MMobj.Player.Stop()
+            MMobj.Player.PlaylistClear()
+            n=0
+            MyTrack = MMobj.Database.QuerySongs(sql)
+            res = (ID,MyTrack.Item.AlbumName,MyTrack.Item.ArtistName)
+            while not MyTrack.EOF:
+                if accessible:
+                    if isfile(MyTrack.Item.Path):
+                        MMobj.Player.PlaylistAddTrack(MyTrack.Item)
+                        n+=1
+                else:
+                    MMobj.Player.PlaylistAddTrack(MyTrack.Item)
+                    n+=1
+                MyTrack.Next()
+            if repeat<2:
+                MMobj.Player.isRepeat=bool(repeat)
+            if crossfade<2:
+                MMobj.Player.isCrossfade=bool(crossfade)
+            if shuffle<2:
+                MMobj.Player.isShuffle=bool(shuffle)
+            MMobj.Player.Play()
+            return '\n'.join(res)
+        else:
+            return txt.noAlbum % ID
