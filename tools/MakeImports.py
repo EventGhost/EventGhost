@@ -7,6 +7,7 @@ PACKAGES_TO_ADD = [
     "pythoncom",
     "isapi",
     "win32com",
+    "greenlet",
 ]
 
 MODULES_TO_IGNORE = [
@@ -162,7 +163,7 @@ def ReadGlobalModuleIndex():
     """
     modules = []
     badModules = []
-    versionStr = "%d.%d" % (sys.version_info[0], sys.version_info[1])
+    versionStr = "%d.%d" % sys.version_info[:2]
     inFile = open("Python %s Global Module Index.txt" % versionStr, "rt")
     for line in inFile.readlines():
         parts = line.strip().split(" ", 1)
@@ -233,6 +234,8 @@ def Main():
             if hasattr(mod, "__path__"):
                 pathes = mod.__path__
             else:
+                if mod.__file__.endswith(".pyd"):
+                    continue
                 pathes = [os.path.dirname(mod.__file__)]
             for path in pathes:
                 moduleList += FindModulesInPath(path, moduleName)
