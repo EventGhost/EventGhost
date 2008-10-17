@@ -9,7 +9,9 @@ setup(
             'cFunctions', 
             [
                 'registry_funcs.c', 
+                'hooks.c',
                 'keyhook.c', 
+                'mousehook.c',
                 'utils.c', 
                 'win_funcs.c', 
                 'main.c'
