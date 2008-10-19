@@ -1,5 +1,4 @@
-#ToDo: OSD
-version = "0.1.2"
+version = "0.1.3"
 # This file is part of EventGhost.
 # Copyright (C) 2008 Pako <lubos.ruckl@quick.cz>
 #
@@ -18,7 +17,7 @@ version = "0.1.2"
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# Last change: 15-10-2008 22:43
+# Last change: 19-10-2008 15:56
 
 
 eg.RegisterPlugin(
@@ -72,7 +71,7 @@ eg.RegisterPlugin(
     ),
     url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1024",
 )
-
+from win32api import GetSystemMetrics
 from threading import Timer
 
 def Move(lst,index,direction):
@@ -92,10 +91,10 @@ def Move(lst,index,direction):
         index2 = index+direction
         tmpList[index] = lst[index2]
         tmpList[index2] = lst[index]
-    #lst=tmpList
     return index2,tmpList
 
 #===============================================================================
+
 class Key(eg.ActionClass):
 
     class text:
@@ -160,7 +159,7 @@ class Key(eg.ActionClass):
         panel.sizer.Add(mainSizer)
         panel.sizer.Layout()
 
-#=========================================================================================================
+#===============================================================================
         def onConfigChange(evt=None):
             self.oldSel = 0
 
@@ -181,7 +180,6 @@ class Key(eg.ActionClass):
                     self.PrintError(self.plugin.text.assignError % cfg)
                     summary.SetLabel('\n '+self.plugin.text.assignError % cfg)
                     summary.SetForegroundColour((255,0,0))
-        #            panel.sizer.Layout()
             if evt:
                 self.listKeys = []
 
@@ -440,8 +438,6 @@ class Key(eg.ActionClass):
                 choiceConfig.GetStringSelection(),
                 self.listKeys,
             )
-            self.listKeys=None
-
 #===============================================================================
 
 class Enter(eg.ActionClass):
@@ -453,7 +449,13 @@ class Enter(eg.ActionClass):
 class Cancel(eg.ActionClass):
 
     def __call__(self):
-        self.plugin.mode=3
+        self.plugin.OnCancel()
+#===============================================================================
+
+class BackSpace(eg.ActionClass):
+
+    def __call__(self):
+        self.plugin.OnBackSpace()
 #===============================================================================
 
 class Shift(eg.ActionClass):
@@ -466,11 +468,13 @@ ACTIONS = (
     (Key, 'Key', 'Key', 'Key.', None),
     (Enter, 'Enter', 'Enter', 'Enter.', None),
     (Cancel, 'Cancel', 'Cancel', 'Cancel.', None),
+    (BackSpace, 'BackSpace', 'Back Space', 'Back Space.', None),
     (Shift, 'Shift', 'Caps Lock', 'Caps Lock.', None),
 )
 #===============================================================================
 class Multitap(eg.PluginClass):
     configs = []
+    osDialog = None
 
     class text:
         label = 'Configuration name:'
@@ -486,13 +490,137 @@ class Multitap(eg.PluginClass):
         labelTimeout2 = "(0 = never timeout)"
         genSuffix = 'Generate as event suffix'
         genPayload = 'Generate as payload'
-        param = "Configuration parameters:"
+        param = "Configuration parameters"
         assignError = 'Configuration "%s" not exists!'
+        ownOSD = "Use own OSD"
+#===============================================================================
+    def showOsDialog(self):
+        if not self.osd:
+            return
+        def setOsDialog():
+            maxlen = (GetSystemMetrics (0)-50)/64
+            fontNum = statTextNum.GetFont()
+            if len(self.evtString) <= maxlen:
+                fontNum.SetPointSize(64)
+            elif len(self.evtString) <= maxlen*2:
+                fontNum.SetPointSize(32)
+            elif len(self.evtString) <= maxlen*4:
+                fontNum.SetPointSize(16)
+            else:
+                fontNum.SetPointSize(10)
+            statTextNum.SetFont(fontNum)
+            statTextEvent.SetLabel(self.evtName)
+            statTextNum.SetLabel(self.evtString)
+            w0,h0 = self.osDialog.GetSize()
+            w1,h1 = statTextEvent.GetTextExtent(self.evtName)
+            w2,h2 = statTextNum.GetTextExtent(self.evtString)
+            wE,hE = statTextNum.GetTextExtent('    ')
+            if self.mode==0 or self.mode==4:
+                w3,h3 = statTextCapsLock.GetTextExtent('Caps Lock')
+                w4a = keysLabel.GetTextExtent('88888888')[0]
+                w4b = keysLabel.GetTextExtent(self.oldKeys)[0]
+                w4 = max(w4a,w4b)
+            else:
+                w3=w4=h3=0
+            w0 = min(wE,w0-16)
+            w = max(w0, w1, w2, w3+w4+20)
+            h = h1+h2+h3+8+16
+            self.osDialog.SetSize((w+16,h))
+            statTextNum.SetPosition((7,7+8+h3+h1))
+            statTextNum.SetSize((w,h2))
+            statTextEvent.SetPosition((7,7+h3))
+            statTextEvent.SetSize((w,h1))
+            if self.mode==0 or self.mode==4:
+                statTextCapsLock.SetPosition((7,7))
+                statTextCapsLock.SetSize((w3,h3))
+                keysLabel.SetPosition((w+7-w4,7))
+                keysLabel.SetSize((w4,h3))
+                if self.shift:
+                    statTextCapsLock.SetForegroundColour(wx.Colour(255,0,0))
+                else:
+                    statTextCapsLock.SetForegroundColour(wx.Colour(100,149,237))
+                frg = keysLabel.GetForegroundColour()
+                bck = keysLabel.GetBackgroundColour()
+                fnt = keysLabel.GetFont()
+                keysLabel.SetValue(self.oldKeys)
+                keysLabel.SetStyle(0, self.indx, wx.TextAttr(frg, bck, fnt))
+                keysLabel.SetStyle(self.indx, self.indx+1, wx.TextAttr(bck, frg, fnt))
+                keysLabel.SetStyle(self.indx+1, len(self.oldKeys)+1, wx.TextAttr(frg, bck, fnt))
+
+        if self.osDialog is not None:
+            sizer = self.osDialog.GetSizer()
+            statTextEvent = sizer.GetChildren()[0].GetWindow()
+            statTextNum = sizer.GetChildren()[1].GetWindow()
+            if self.mode==0 or self.mode==4:
+                statTextCapsLock = sizer.GetChildren()[2].GetWindow()
+                keysLabel = sizer.GetChildren()[3].GetWindow()
+            setOsDialog()
+            self.osDialog.Centre()
+        else:
+            self.osDialog = wx.Frame(
+                None, -1, 'Multitap OSD',
+                style=wx.STAY_ON_TOP | wx.SIMPLE_BORDER
+            )
+            self.osDialog.SetSize((32,-1))
+
+
+            statTextEvent=wx.StaticText(
+                self.osDialog,
+                -1,
+                style = wx.ALIGN_CENTRE | wx.ST_NO_AUTORESIZE
+            )
+
+            statTextNum=wx.StaticText(
+                self.osDialog,
+                -1,
+                style = wx.ALIGN_CENTRE | wx.ST_NO_AUTORESIZE
+            )
+
+            if self.mode==0 or self.mode==4:
+                keysLabel = wx.TextCtrl(
+                    self.osDialog,
+                    -1,
+                    style=wx.TE_RICH2|wx.NO_BORDER|wx.TE_READONLY|wx.TE_RIGHT
+                )
+
+                statTextCapsLock=wx.StaticText(
+                    self.osDialog,
+                    -1,
+                    'Caps Lock',
+                    style = wx.TE_LEFT | wx.ST_NO_AUTORESIZE
+                )
+                fontKeys = keysLabel.GetFont()
+                fontKeys.SetPointSize(20)
+                keysLabel.SetFont(fontKeys)
+                statTextCapsLock.SetFont(fontKeys)
+
+            fontEvent = statTextEvent.GetFont()
+            fontEvent.SetPointSize(32)
+            statTextEvent.SetFont(fontEvent)
+            self.osDialog.SetBackgroundColour(wx.Colour(100,149,237))
+            statTextEvent.SetForegroundColour(wx.Colour(238, 238, 0))
+            statTextNum.SetForegroundColour(wx.Colour(238, 238, 0))
+            statTextNum.SetBackgroundColour(wx.Colour(0, 0, 128))
+            mainSizer =wx.BoxSizer(wx.VERTICAL)
+            self.osDialog.SetSizer(mainSizer)
+            mainSizer.Add(statTextEvent)
+            mainSizer.Add(statTextNum)
+            if self.mode==0 or self.mode==4:
+                mainSizer.Add(statTextCapsLock)
+                mainSizer.Add(keysLabel)
+                keysLabel.SetForegroundColour(wx.Colour(238, 238, 0))
+                keysLabel.SetBackgroundColour(wx.Colour(0, 0, 128))
+                statTextCapsLock.SetBackgroundColour(wx.Colour(0, 0, 128))
+            setOsDialog()
+            self.osDialog.Centre()
+            self.osDialog.Show()
 #===============================================================================
 
+
     def __init__(self):
+        self.osd = True
         self.lenKeys = 0
-        self.evtString = ''
+        self.evtString = '    '
         self.oldKeys = ''
         self.indx = 0
         self.timeout = 0
@@ -506,45 +634,55 @@ class Multitap(eg.PluginClass):
 #===============================================================================
 
     def Multitapper(self,config,keys):
+        self.timer.cancel()
         try:
             indx = [n[0] for n in self.configs].index(config)
             item = self.configs[indx]
         except:
             self.PrintError(self.text.assignError % config)
             return
-        self.timer.cancel()
         if self.mode > 2: #3 = idle, 4 = Shift after idle
-            self.evtString = ''
+            self.evtString = '    '
             self.oldKeys = ''
             self.timeout = item[3]
             self.formatEvent = item[2]
             self.evtName = item[1]
             self.shift = False if self.mode == 3 else True
-            self.mode = item[4]
+            self.osd = item[5]
+        if self.mode == 4 and item[4] != 0: #other then SMS mode after shift ?
+            if self.osDialog is not None:
+                self.osDialog.GetSizer().Clear(True)
+                self.osDialog.Destroy()
+                self.osDialog = None
+        self.mode = item[4]
         if self.mode == 0: # SMS mode
-            set = self.shift
+            set = int(self.shift)
             if self.oldKeys == '':
                 self.oldKeys = keys[set]
                 self.indx = -1
             if keys[set] != self.oldKeys:
+                if self.evtString == '    ':
+                    self.evtString = ''
                 self.evtString+=self.oldKeys[self.indx]
+                self.showOsDialog()
                 self.oldKeys = keys[set]
                 self.indx=0
             else:
                 self.indx+=1
                 if self.indx > len(keys[set])-1:
                     self.indx=0
+            self.showOsDialog()
         elif self.mode==1: # Numpad mode
-            self.timer.cancel()
-#            if self.timeout==0:
-#                self.timeout = item[3]
-#                self.evtName = item[1]
+            if self.evtString == '    ':
+                self.evtString = ''
             self.evtString += keys[0]
+            self.showOsDialog()
         else:              # mode Single Key
             if self.oldKeys == '':
                 self.oldKeys = keys[:]
                 self.indx = -1
             if keys != self.oldKeys: #ERROR or "Enter"?  -> meantime Error
+                self.evtString = '    '
                 self.mode = 3
                 return
             else:
@@ -552,6 +690,7 @@ class Multitap(eg.PluginClass):
                 if self.indx > len(keys)-1:
                     self.indx=0
                 self.evtString = keys[self.indx]
+                self.showOsDialog()
         if self.timeout>0:
             self.timer = Timer(self.timeout, self.OnTimeout)
             self.timer.start()
@@ -562,18 +701,29 @@ class Multitap(eg.PluginClass):
         self.timer.cancel()
         if self.mode == 3:
             self.mode = 4
+            self.evtName = ' '
+            self.showOsDialog()
         elif self.mode == 4:
             self.mode = 3
+            if self.osDialog is not None:
+                self.osDialog.Destroy()
+                self.osDialog = None
         elif self.mode == 0:
             self.shift = not self.shift
             if self.oldKeys != '':
                 self.evtString+=self.oldKeys[self.indx]
+                self.oldKeys = ''
+            self.showOsDialog()
             self.oldKeys = ''
 #===============================================================================
 
     def OnTimeout(self):
         if self.mode==0: #String mode
+            if self.evtString == '    ':
+                self.evtString = ''
             self.evtString+=self.oldKeys[self.indx]
+            self.oldKeys = ''
+            self.showOsDialog()
         else:            # Numpad  and SingleKey mode
             self.GenerateEvent()
         self.oldKeys = ''
@@ -587,6 +737,34 @@ class Multitap(eg.PluginClass):
         self.GenerateEvent()
 #===============================================================================
 
+    def OnCancel(self):
+        self.timer.cancel()
+        if self.osDialog is not None:
+            self.osDialog.Destroy()
+            self.osDialog = None
+        self.mode=3
+        self.evtString = '    '
+#===============================================================================
+
+    def OnBackSpace(self):
+#        if (self.osDialog is not None) and len(self.evtString) > 0:
+        if len(self.evtString) > 0:
+            self.timer.cancel()
+            if self.mode != 2:
+                self.evtString = self.evtString[:-1]
+                self.oldKeys = ''
+                if len(self.evtString) == 0:
+                    self.osDialog.Destroy()
+                    self.osDialog = None
+                    self.mode = 3
+                    self.evtString = '    '
+                else:
+                    self.showOsDialog()
+            if self.timeout > 0 and self.mode ==1:
+                self.timer = Timer(self.timeout, self.OnTimeout)
+                self.timer.start()
+#===============================================================================
+
     def GenerateEvent(self):
         if self.evtString != '':
             if self.formatEvent:
@@ -595,7 +773,11 @@ class Multitap(eg.PluginClass):
                 self.TriggerEvent(
                     self.evtName+'.'+self.evtString if self.evtName !='' else self.evtString
                 )
+        if self.osDialog is not None:
+            self.osDialog.Destroy()
+            self.osDialog = None
         self.mode = 3 #Cleaning
+        self.evtString = '    '
 #===============================================================================
 
     def __start__(
@@ -629,6 +811,7 @@ class Multitap(eg.PluginClass):
             rb1.SetValue(item[2])
             ctrlTimeout.SetValue(item[3])
             choiceMode.SetSelection(item[4])
+            checkBoxCtrl.SetValue(item[5])
 
         text = self.text
         self.configs = configs[:]
@@ -672,16 +855,20 @@ class Multitap(eg.PluginClass):
         timeoutSizer.Add(lblTimeout1,0,wx.TOP,4)
         timeoutSizer.Add(ctrlTimeout,0,wx.LEFT|wx.RIGHT,8)
 
+        checkBoxCtrl = wx.CheckBox(panel, label = text.ownOSD)
+
         box = wx.StaticBox(panel,-1,text.param)
         rightSizer = wx.StaticBoxSizer(box,wx.VERTICAL)
         rightSizer.Add(lblMode)
-        rightSizer.Add(choiceMode,0,wx.TOP|wx.EXPAND,3)
-        rightSizer.Add(eventLbl,0,wx.TOP|wx.EXPAND,12)
-        rightSizer.Add(ctrlEvtName,0,wx.TOP|wx.EXPAND,3)
-        rightSizer.Add(rb0,0,wx.TOP,3)
-        rightSizer.Add(rb1,0,wx.TOP,3)
-        rightSizer.Add(timeoutSizer,0,wx.TOP|wx.EXPAND,16)
-        rightSizer.Add(lblTimeout2,0,wx.TOP,3)
+        rightSizer.Add(choiceMode,0,wx.TOP|wx.EXPAND,1)
+        rightSizer.Add(eventLbl,0,wx.TOP|wx.EXPAND,10)
+        rightSizer.Add(ctrlEvtName,0,wx.TOP|wx.EXPAND,1)
+        rightSizer.Add(rb0,0,wx.TOP,1)
+        rightSizer.Add(rb1,0,wx.TOP,1)
+        rightSizer.Add(timeoutSizer,0,wx.TOP|wx.EXPAND,10)
+        rightSizer.Add(lblTimeout2,0,wx.TOP,1)
+        rightSizer.Add(checkBoxCtrl,0,wx.TOP,10)
+
         leftSizer.Add(previewLbl,0,wx.TOP,5)
         leftSizer.Add((1,1))
         leftSizer.Add(listBoxCtrl,0,wx.TOP,5)
@@ -817,6 +1004,16 @@ class Multitap(eg.PluginClass):
         ctrlTimeout.Bind(wx.EVT_TEXT,onTimeout)
         onTimeout()
 
+        def onCheckbox(event=None):
+            if self.configs<>[]:
+                osd = checkBoxCtrl.GetValue()
+                sel = self.oldSel
+                self.configs[sel][5] = osd
+            if event:
+                event.Skip()
+        checkBoxCtrl.Bind(wx.EVT_CHECKBOX,onCheckbox)
+        onCheckbox()
+
         def onEvtFormat(event=None):
             if self.configs<>[]:
                 format = rb1.GetValue()
@@ -858,7 +1055,7 @@ class Multitap(eg.PluginClass):
             boxEnable(True)
             sel = listBoxCtrl.GetSelection() + 1
             self.oldSel=sel
-            item = ['','',True,1.5,0]
+            item = ['','',True,1.5,0,True]
             self.configs.insert(sel,item)
             listBoxCtrl.Set([n[0] for n in self.configs])
             listBoxCtrl.SetSelection(sel)
