@@ -186,10 +186,11 @@ class TextToSpeech(eg.ActionClass):
             elif s == "TIME":
                 return '</context><context ID="time">' + strftime("%X") + '</context><context>'
             else:
-                return ""
+                return None
                 
         voiceText = eg.ParseString(voiceText, filterFunc)
         voiceObj.Speak("<context>" + voiceText + "</context>", 1)
+        print repr(voiceText)
         if time == 1:
             voiceObj.Speak(strftime("%X"), 1)
         elif time == 2:
