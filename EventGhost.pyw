@@ -38,6 +38,5 @@ imp.load_source("__main__", mainFilePath)
 # It includes all modules the program might need. This way we trick py2exe
 # to include them in the distribution.
 if False:
-    import greenlet
     import imports
 

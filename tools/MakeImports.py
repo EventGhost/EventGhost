@@ -8,6 +8,7 @@ PACKAGES_TO_ADD = [
     "isapi",
     "win32com",
     "greenlet",
+    "cFunctions",
 ]
 
 MODULES_TO_IGNORE = [
