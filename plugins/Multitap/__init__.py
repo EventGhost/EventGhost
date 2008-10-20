@@ -1,4 +1,4 @@
-version = "0.1.3"
+version = "0.1.4"
 # This file is part of EventGhost.
 # Copyright (C) 2008 Pako <lubos.ruckl@quick.cz>
 #
@@ -17,7 +17,7 @@ version = "0.1.3"
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# Last change: 19-10-2008 15:56
+# Last change: 20-10-2008 19:45
 
 
 eg.RegisterPlugin(
@@ -731,10 +731,11 @@ class Multitap(eg.PluginClass):
 
     def OnEnter(self):
         self.timer.cancel()
-        if self.oldKeys != '':
-            if self.mode!=2:
-                self.evtString+=self.oldKeys[self.indx]
-        self.GenerateEvent()
+        if self.mode < 3:
+            if self.oldKeys != '':
+                if self.mode!=2:
+                    self.evtString+=self.oldKeys[self.indx]
+            self.GenerateEvent()
 #===============================================================================
 
     def OnCancel(self):
