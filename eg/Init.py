@@ -50,6 +50,8 @@ class EventGhost(object):
         sys.modules["eg"] = self
         self.__path__ = [os.path.abspath("eg")]
         sys.path.append(os.path.abspath("lib\\site-packages"))
+        if not hasattr(sys, "frozen"):
+            sys.path.append(os.path.abspath("tools\\Python%d%d" % sys.version_info[:2]))
         sys.path.append(os.getcwdu())
         
         import cFunctions

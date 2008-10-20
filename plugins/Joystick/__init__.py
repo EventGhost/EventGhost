@@ -64,8 +64,10 @@ class Joystick(eg.PluginClass):
     def __start__(self):
         self.x = 0
         self.y = 0
-        path = os.path.join(os.path.dirname(__file__), "_dxJoystick.pyd")
-        self._dxJoystick = imp.load_dynamic("_dxJoystick", path)
+        #path = os.path.join(os.path.dirname(__file__), "_dxJoystick26.pyd")
+        #self._dxJoystick = imp.load_dynamic("_dxJoystick", path)
+        import _dxJoystick
+        self._dxJoystick = _dxJoystick
         self._dxJoystick.RegisterEventFunc(self.EventFunc)
         
         
