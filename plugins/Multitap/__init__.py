@@ -1,4 +1,4 @@
-version = "0.1.4"
+version = "0.1.5"
 # This file is part of EventGhost.
 # Copyright (C) 2008 Pako <lubos.ruckl@quick.cz>
 #
@@ -17,7 +17,7 @@ version = "0.1.4"
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# Last change: 20-10-2008 19:45
+# Last change: 20-10-2008 21:18
 
 
 eg.RegisterPlugin(
@@ -494,6 +494,12 @@ class Multitap(eg.PluginClass):
         assignError = 'Configuration "%s" not exists!'
         ownOSD = "Use own OSD"
 #===============================================================================
+
+    def closeOsDialog(self):
+        self.osDialog.Destroy()
+        self.osDialog = None
+#===============================================================================
+
     def showOsDialog(self):
         if not self.osd:
             return
@@ -652,8 +658,7 @@ class Multitap(eg.PluginClass):
         if self.mode == 4 and item[4] != 0: #other then SMS mode after shift ?
             if self.osDialog is not None:
                 self.osDialog.GetSizer().Clear(True)
-                self.osDialog.Destroy()
-                self.osDialog = None
+                wx.CallAfter(self.closeOsDialog)
         self.mode = item[4]
         if self.mode == 0: # SMS mode
             set = int(self.shift)
@@ -664,19 +669,19 @@ class Multitap(eg.PluginClass):
                 if self.evtString == '    ':
                     self.evtString = ''
                 self.evtString+=self.oldKeys[self.indx]
-                self.showOsDialog()
+                wx.CallAfter(self.showOsDialog)
                 self.oldKeys = keys[set]
                 self.indx=0
             else:
                 self.indx+=1
                 if self.indx > len(keys[set])-1:
                     self.indx=0
-            self.showOsDialog()
+            wx.CallAfter(self.showOsDialog)
         elif self.mode==1: # Numpad mode
             if self.evtString == '    ':
                 self.evtString = ''
             self.evtString += keys[0]
-            self.showOsDialog()
+            wx.CallAfter(self.showOsDialog)
         else:              # mode Single Key
             if self.oldKeys == '':
                 self.oldKeys = keys[:]
@@ -690,7 +695,7 @@ class Multitap(eg.PluginClass):
                 if self.indx > len(keys)-1:
                     self.indx=0
                 self.evtString = keys[self.indx]
-                self.showOsDialog()
+                wx.CallAfter(self.showOsDialog)
         if self.timeout>0:
             self.timer = Timer(self.timeout, self.OnTimeout)
             self.timer.start()
@@ -702,18 +707,17 @@ class Multitap(eg.PluginClass):
         if self.mode == 3:
             self.mode = 4
             self.evtName = ' '
-            self.showOsDialog()
+            wx.CallAfter(self.showOsDialog)
         elif self.mode == 4:
             self.mode = 3
             if self.osDialog is not None:
-                self.osDialog.Destroy()
-                self.osDialog = None
+                wx.CallAfter(self.closeOsDialog)
         elif self.mode == 0:
             self.shift = not self.shift
             if self.oldKeys != '':
                 self.evtString+=self.oldKeys[self.indx]
                 self.oldKeys = ''
-            self.showOsDialog()
+            wx.CallAfter(self.showOsDialog)
             self.oldKeys = ''
 #===============================================================================
 
@@ -723,7 +727,7 @@ class Multitap(eg.PluginClass):
                 self.evtString = ''
             self.evtString+=self.oldKeys[self.indx]
             self.oldKeys = ''
-            self.showOsDialog()
+            wx.CallAfter(self.showOsDialog)
         else:            # Numpad  and SingleKey mode
             self.GenerateEvent()
         self.oldKeys = ''
@@ -741,8 +745,7 @@ class Multitap(eg.PluginClass):
     def OnCancel(self):
         self.timer.cancel()
         if self.osDialog is not None:
-            self.osDialog.Destroy()
-            self.osDialog = None
+            wx.CallAfter(self.closeOsDialog)
         self.mode=3
         self.evtString = '    '
 #===============================================================================
@@ -755,12 +758,11 @@ class Multitap(eg.PluginClass):
                 self.evtString = self.evtString[:-1]
                 self.oldKeys = ''
                 if len(self.evtString) == 0:
-                    self.osDialog.Destroy()
-                    self.osDialog = None
+                    wx.CallAfter(self.closeOsDialog)
                     self.mode = 3
                     self.evtString = '    '
                 else:
-                    self.showOsDialog()
+                    wx.CallAfter(self.showOsDialog)
             if self.timeout > 0 and self.mode ==1:
                 self.timer = Timer(self.timeout, self.OnTimeout)
                 self.timer.start()
@@ -775,8 +777,9 @@ class Multitap(eg.PluginClass):
                     self.evtName+'.'+self.evtString if self.evtName !='' else self.evtString
                 )
         if self.osDialog is not None:
-            self.osDialog.Destroy()
-            self.osDialog = None
+            wx.CallAfter(self.closeOsDialog)
+
+
         self.mode = 3 #Cleaning
         self.evtString = '    '
 #===============================================================================
