@@ -235,6 +235,7 @@ import distutils.core
 import distutils.cygwinccompiler
 import distutils.debug
 import distutils.dep_util
+import distutils.dir_util
 import distutils.dist
 import distutils.emxccompiler
 import distutils.errors
@@ -739,6 +740,7 @@ import comtypes._meta
 import comtypes._safearray
 import comtypes.client
 import comtypes.client.dynamic
+import comtypes.client._code_cache
 import comtypes.client._events
 import comtypes.client._generate
 import comtypes.server
@@ -901,3 +903,6 @@ import win32com.shell.shell
 import win32com.shell.shellcon
 import win32com.taskscheduler
 import win32com.taskscheduler.taskscheduler
+
+# modules found for package 'greenlet'
+import greenlet
