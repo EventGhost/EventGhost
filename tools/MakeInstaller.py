@@ -37,9 +37,9 @@ outDir = abspath(join(trunkDir, ".."))
 PYVERSION = str(sys.version_info[0]) + str(sys.version_info[1])
 
 # Add our working dir to the import pathes
-sys.path.append(os.getcwdu())
-sys.path.append(os.path.abspath(u"Python%s" % PYVERSION))
-os.chdir(os.path.abspath(u"Python%s" % PYVERSION))
+sys.path.append(toolsDir)
+sys.path.append(abspath(u"Python%s" % PYVERSION))
+os.chdir(abspath(u"Python%s" % PYVERSION))
 
 
 

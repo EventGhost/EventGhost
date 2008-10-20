@@ -164,8 +164,7 @@ def ReadGlobalModuleIndex():
     """
     modules = []
     badModules = []
-    versionStr = "%d.%d" % sys.version_info[:2]
-    inFile = open("Python %s Global Module Index.txt" % versionStr, "rt")
+    inFile = open("Global Module Index.txt", "rt")
     for line in inFile.readlines():
         parts = line.strip().split(" ", 1)
         if len(parts) > 1:
