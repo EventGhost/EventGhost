@@ -50,6 +50,10 @@ class EventGhost(object):
         sys.modules["eg"] = self
         self.__path__ = [os.path.abspath("eg")]
         sys.path.append(os.path.abspath("lib\\site-packages"))
+        sys.path.append(os.getcwdu())
+        
+        import cFunctions
+        sys.modules["eg.cFunctions"] = cFunctions
         
         # add 'eg' and 'wx' to the builtin name space of every module
         import __builtin__
