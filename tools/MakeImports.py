@@ -1,4 +1,10 @@
 
+import os
+import sys
+import string
+from os.path import join
+import warnings
+
 PACKAGES_TO_ADD = [
     "wx",
     "PIL",
@@ -8,8 +14,15 @@ PACKAGES_TO_ADD = [
     "isapi",
     "win32com",
     "greenlet",
-    "cFunctions",
 ]
+
+# also add every .pyd of the current directory
+for filepath in os.listdir(os.getcwdu()):
+    moduleName, extension = os.path.splitext(os.path.basename(filepath))
+    if extension.lower() == ".pyd":
+        PACKAGES_TO_ADD.append(moduleName)
+    
+    
 
 MODULES_TO_IGNORE = [
     "idlelib", 
@@ -50,12 +63,6 @@ HEADER = """\
 #-----------------------------------------------------------------------------
 
 """
-
-import os
-import sys
-import string
-from os.path import join
-import warnings
 
 warnings.simplefilter('error', DeprecationWarning)
 

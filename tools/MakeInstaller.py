@@ -2,11 +2,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-ROOT_DLLS = [
-    #"MFC71.dll", "msvcr71.dll", "msvcp71.dll"
-]
-
-
 import py2exe
 import wx
 import sys
@@ -40,6 +35,13 @@ PYVERSION = str(sys.version_info[0]) + str(sys.version_info[1])
 sys.path.append(toolsDir)
 sys.path.append(abspath(u"Python%s" % PYVERSION))
 os.chdir(abspath(u"Python%s" % PYVERSION))
+
+if PYVERSION == "25":
+    ROOT_DLLS = ["MFC71.dll", "msvcr71.dll", "msvcp71.dll"]
+elif PYVERSION == "26":
+    ROOT_DLLS = []
+else:
+    raise SystemError("Unknown Python version.")
 
 
 
@@ -262,7 +264,7 @@ PY25_MANIFEST_TEMPLATE = '''
 </assembly>
 '''
 
-MANIFEST_TEMPLATE = """
+PY26_MANIFEST_TEMPLATE = """
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
     <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
         <security>
@@ -299,6 +301,12 @@ MANIFEST_TEMPLATE = """
     </dependency>
 </assembly>"""
 
+if PYVERSION == "25":
+    MANIFEST_TEMPLATE = PY25_MANIFEST_TEMPLATE
+elif PYVERSION == "26":
+    MANIFEST_TEMPLATE = PY26_MANIFEST_TEMPLATE
+
+    
 
 RT_MANIFEST = 24
 shortpgm = "EventGhost"
@@ -362,6 +370,10 @@ py2exeOptions = dict(
     verbose = 0,
 )
 
+if PYVERSION == "26":
+    py2exeOptions["data_files"] = [("lib", ["Microsoft.VC90.CRT.manifest"])]
+    
+    
 consoleOptions = dict(
     options = dict(
         build = dict(

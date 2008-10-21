@@ -1003,3 +1003,6 @@ import greenlet
 
 # modules found for package 'cFunctions'
 import cFunctions
+
+# modules found for package '_dxJoystick'
+import _dxJoystick
