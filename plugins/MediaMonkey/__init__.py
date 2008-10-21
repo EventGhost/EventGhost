@@ -1,4 +1,4 @@
-version="0.1.9"
+version="0.1.10"
 
 # Plugins/MediaMonkey/__init__.py
 #
@@ -20,7 +20,7 @@ version="0.1.9"
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2008-10-16 23:08
+#Last change: 2008-10-21 22:27
 
 eg.RegisterPlugin(
     name = "MediaMonkey",
@@ -1630,9 +1630,9 @@ class WritingToMM(eg.ActionClass):
     def __init__(self):
         text=self.text
         self.listCtrl=(
-            "wx.TextCtrl(panel, -1, arrayValue0[%s])",
+            "wx.TextCtrl(panel, -1, arrayVal0[%s])",
             (
-                "eg.SpinNumCtrl(panel,-1,arrayValue0[%s],max=100.0,min=0.0,"
+                "eg.SpinNumCtrl(panel,-1,arrayVal0[%s],max=100.0,min=0.0,"
                 "fractionWidth=1,increment=10,style=wx.TE_READONLY)"
             )
         )
@@ -1687,6 +1687,8 @@ class WritingToMM(eg.ActionClass):
         ],
         arrayValue1 = [False] * 12
     ):
+        arrayVal0 = arrayValue0[:]
+        arrayVal1 = arrayValue1[:]
         choices=[eval("self.text.Properties."+tpl[1]) for tpl in self.propertiesList]
         panel = eg.ConfigPanel(self)
         choiceLbl=wx.StaticText(panel, -1, self.text.label)
@@ -1712,17 +1714,17 @@ class WritingToMM(eg.ActionClass):
                 eval("self.text.Properties."+self.propertiesList[choiceCtrl.GetSelection()][1])+":"
             )
 
-            #eval("self.text.set+"+"self.text.Properties."+self.propertiesList[i][1]+"="+arrayValue0[i])
+            #eval("self.text.set+"+"self.text.Properties."+self.propertiesList[i][1]+"="+arrayVal0[i])
 
             indx=self.propertiesList[choiceCtrl.GetSelection()][2]
-            dummy = arrayValue0[0] # otherwise error:
-# >>>  NameError: name 'arrayValue0' is not defined  <<<   ??????????????????????
+            dummy = arrayVal0[0] # otherwise error:
+# >>>  NameError: name 'arrayVal0' is not defined  <<<   ??????????????????????
             dynCtrl = eval(self.listCtrl[indx] % str(choiceCtrl.GetSelection()))
             dynSizer.Add(dynLbl, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
             dynSizer.Add(dynCtrl, 0, wx.EXPAND)
             if self.propertiesList[choiceCtrl.GetSelection()][3]:
                 chkBoxCtrl = wx.CheckBox(panel, label=self.text.checkboxlabel)
-                chkBoxCtrl.SetValue(arrayValue1[choiceCtrl.GetSelection()])
+                chkBoxCtrl.SetValue(arrayVal1[choiceCtrl.GetSelection()])
                 dynSizer.Add((5,5))
                 dynSizer.Add(chkBoxCtrl, 0, wx.EXPAND)
             mainSizer.Layout()
@@ -1731,12 +1733,12 @@ class WritingToMM(eg.ActionClass):
         choiceCtrl.Bind(wx.EVT_CHOICE, onChoiceChange)
         onChoiceChange()
         while panel.Affirmed():
-            arrayValue0[choiceCtrl.GetSelection()]=\
+            arrayVal0[choiceCtrl.GetSelection()]=\
                 dynSizer.GetChildren()[1].GetWindow().GetValue()
             if self.propertiesList[choiceCtrl.GetSelection()][3]:
-                arrayValue1[choiceCtrl.GetSelection()]=\
+                arrayVal1[choiceCtrl.GetSelection()]=\
                     dynSizer.GetChildren()[3].GetWindow().GetValue()
-            panel.SetResult(choiceCtrl.GetSelection(),arrayValue0, arrayValue1 )
+            panel.SetResult(choiceCtrl.GetSelection(),arrayVal0, arrayVal1 )
 
 class LoadPlaylist(eg.ActionClass):
     name = "Load Playlist by Name"
