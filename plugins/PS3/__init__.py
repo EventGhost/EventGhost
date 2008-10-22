@@ -65,11 +65,11 @@ This is a Remote issue.
 
 eg.RegisterPlugin(
     name = "PlayStation 3 Bluetooth Remote",
-    author = "Thierry Couquillou (based on the HID code of Bartman)",
+    author = "Thierry Couquillou",
     version = "2.0.1",
     kind = "remote",
     url="http://www.eventghost.org/forum/viewtopic.php?t=640",
-    description = "Hardware plugin for the PS3 Bluetooth Remote",
+    description = "Hardware plugin for the PS3 Bluetooth Remote (based on the HID code of Bartman)",
     help = README,
 )
 
