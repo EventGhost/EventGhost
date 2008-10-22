@@ -998,11 +998,11 @@ import win32com.shell.shellcon
 import win32com.taskscheduler
 import win32com.taskscheduler.taskscheduler
 
-# modules found for package 'greenlet'
-import greenlet
-
 # modules found for package 'cFunctions'
 import cFunctions
+
+# modules found for package 'greenlet'
+import greenlet
 
 # modules found for package '_dxJoystick'
 import _dxJoystick
