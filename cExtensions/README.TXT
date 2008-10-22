@@ -1,13 +1,14 @@
-This directory contains various C-extensions needed by EventGhost.
+This directory contains various C extensions needed by EventGhost.
 
-- cFunctions
+- cFunctions.pyd
     This extension contains different functions needed by the program core.
 
-- _dxJoystick
+- _dxJoystick.pyd
     This extension is solely needed by the Joystick plugin to access the 
-    hardware through Microsoft's Direct Input API.
+    hardware through Microsoft's Direct Input API. To be able to compile it
+    you need the Microsoft DirectX SDK installed.
 
-- greenlet
+- greenlet.pyd
     This extension module is a spin-off of Stackless and was created by
     the codespeal project:
     http://codespeak.net/py/dist/greenlet.html
