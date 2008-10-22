@@ -21,8 +21,8 @@
 # $LastChangedBy$
 
 import socket
-import md5
 import locale
+from hashlib import md5
 
 gEncoding = locale.getdefaultlocale()[1]
 
