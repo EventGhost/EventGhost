@@ -1,4 +1,4 @@
-version = "0.1.5"
+version = "0.1.6"
 # This file is part of EventGhost.
 # Copyright (C) 2008 Pako <lubos.ruckl@quick.cz>
 #
@@ -17,7 +17,7 @@ version = "0.1.5"
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# Last change: 20-10-2008 21:18
+# Last change: 22-10-2008 14:49
 
 
 eg.RegisterPlugin(
@@ -455,7 +455,7 @@ class Cancel(eg.ActionClass):
 class BackSpace(eg.ActionClass):
 
     def __call__(self):
-        self.plugin.OnBackSpace()
+        return self.plugin.OnBackSpace()
 #===============================================================================
 
 class Shift(eg.ActionClass):
@@ -766,6 +766,7 @@ class Multitap(eg.PluginClass):
             if self.timeout > 0 and self.mode ==1:
                 self.timer = Timer(self.timeout, self.OnTimeout)
                 self.timer.start()
+        return self.evtString
 #===============================================================================
 
     def GenerateEvent(self):
