@@ -42,34 +42,37 @@ class Text(eg.TranslatableStrings):
     
 
 
+def GetPluginAuthors():
+    """
+    Returns a list of all plugin authors and the names of their plugins.
+    
+    Every item in the list is a tuple of the author's name and a string
+    containing all plugin names of the author.
+    """
+    pluginAuthors = {}
+    for pluginInfo in eg.pluginManager.database.itervalues():
+        for part in pluginInfo.author.split("&"):
+            author = part.strip()
+            if author.lower() != "bitmonster":
+                break
+        else:
+            continue
+        pluginName = pluginInfo.name.replace(" ", "&nbsp;")
+        if pluginAuthors.has_key(author):
+            pluginAuthors[author].append(pluginName)
+        else:
+            pluginAuthors[author] = [pluginName]
+    tmp = pluginAuthors.items()
+    tmp.sort(key=lambda x: (-len(x[1]), x[0].lower()))
+    authorList = []
+    for author, pluginNames in tmp:
+        pluginNames.sort(key=str.lower)
+        authorList.append((author, ",<BR>".join(pluginNames)))
+    return authorList
+    
+
 SPECIAL_THANKS_DATA = (
-    (
-        "Plugin Developers:",
-        2,
-        (
-            ("Bartman", "Timer, HID, Registry, ffdshow"),
-            ("MonsterMagnet", "Foobar2000, MPC, VLC, Speech"),
-            ("Oliver Wagner", "Denon AV, Optoma H79, JVC HD-1"),
-            ("Lubo&scaron; R&uuml;ckl", "Billy, MediaMonkey, IrfanView"),
-            ("Dexter", "Sound Mixer Ex, Marantz Serial"),
-            ("Milbrot", "MyTheatre"),
-            ("Matthew Jacob Edwards", "Winamp Extensions"),
-            ("jorel1969", "Meedio"),
-            ("Mark Clarkson", "Yamaha RX-V1000 Serial"),
-            ("jinxdone", "LIRC Event Receiver"),
-            ("Micke Prag", "TellStick"),
-            ("oystein", "Windows Media Player"),
-            ("SurFan", "TheaterTek"),
-            ("townkat", "DVB Dream"),
-            ("Thierry Couquillou", "PlayStation 3 Bluetooth Remote"),
-            ("Dean Owens", "X10 CM15A"),
-            ("incubi", "DScaler 4"),
-            ("Prinz", "Hauppauge IR"),
-            ("junius", "BT8x8 Remotes"),
-            ("CHeitkamp", "GOM Player and some patches"),
-            ("James Lee", "MCE Remote"),
-        ),
-    ),
+    ("Plugin Developers:", 2, GetPluginAuthors()),
     (
         "Translators:",
         2,
@@ -94,6 +97,11 @@ SPECIAL_THANKS_DATA = (
             "Warren Hatch",      # 26. Apr 2008
             "Daniel Henriksson", #  3. May 2008
             "skyanchor",         # 13. May 2008
+            "Vlad Skarzhevskyy", # 13. Jun 2008
+            "David Church",      # 17. Aug 2008
+            "Tyson Ward",        # 30. Sep 2008
+            "Glenn Maples",      # 13. Okt 2008
+            "John Leonard",      # 21. Okt 2008
         ),
     ),
     (
@@ -231,7 +239,7 @@ class SpecialThanksPanel(HtmlPanel):
                     write('</B></RIGHT></TD></TR>')
             else:
                 for name, descr in persons:
-                    write('<TR><TD ALIGN=RIGHT WIDTH="50%"><B>')
+                    write('<TR><TD ALIGN=RIGHT VALIGN=TOP WIDTH="50%"><B>')
                     write(name)
                     write('</B></RIGHT></TD><TD WIDTH="50%">')
                     write(descr)
@@ -304,7 +312,6 @@ class SystemInfoPanel(HtmlPanel):
             wx.TheClipboard.Close()
             wx.TheClipboard.Flush()
                     
-
      
         
 class ChangelogPanel(HtmlPanel):
@@ -325,16 +332,21 @@ class ChangelogPanel(HtmlPanel):
             "<TD>%s</TD>"
             "</TR>"
         )
+        tag = None
+        buffer = ""
         for line in fd:
-            if line.startswith("+"):
-                res.append(lineTemplate % ("NEW", line[1:]))
-            elif line.startswith("-"):
-                res.append(lineTemplate % ("FIX", line[1:]))
-            elif line.startswith("*"):
-                res.append(lineTemplate % ("UPD", line[1:]))
-            elif line.strip() == "":
-                pass
-            else:
+            if line.startswith("   "):
+                buffer += line
+                continue    
+            if line.strip == "":
+                continue        
+            if tag:
+                res.append(lineTemplate % (tag, buffer))
+                tag = None
+            if line.startswith("- "):
+                tag = line[2:5]
+                buffer = line[7:]
+            elif line.startswith("Version"):
                 res.append(headerTemplate % line)
         res.append("</TABLE>")
         fd.close()
