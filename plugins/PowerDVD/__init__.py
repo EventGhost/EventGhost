@@ -23,11 +23,11 @@
 
 eg.RegisterPlugin(
     name="CyberLink PowerDVD",
-    description="Adds actions to control CyberLink PowerDVD 7.",
+    description="Adds actions to control CyberLink PowerDVD 7 and 8.",
     kind="program",
     author="Bitmonster",
     version="1.1." + "$LastChangedRevision$".split()[1],  
-    createMacrosOnAdd = True,  
+    createMacrosOnAdd=True,  
 )
 
 ACTIONS = [
