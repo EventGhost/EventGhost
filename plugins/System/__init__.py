@@ -58,8 +58,8 @@ from eg.WinApi.Dynamic import (
     GetDriveType, SendMessage, SetThreadExecutionState, GetCurrentProcess, 
     InitiateSystemShutdown, CreateFile, CloseHandle, DeviceIoControl,
     SystemParametersInfo, ExitWindowsEx, OpenProcessToken, GetForegroundWindow,
-    LookupPrivilegeValue, AdjustTokenPrivileges, c_buffer, byref, sizeof,
-    GetClipboardOwner,
+    LookupPrivilegeValue, AdjustTokenPrivileges, GetClipboardOwner,
+    create_unicode_buffer, byref, sizeof,  
     
     # types:
     DWORD, HANDLE, LUID, TOKEN_PRIVILEGES,
@@ -713,13 +713,15 @@ class SetWallpaper(eg.ActionWithStringParameter):
             wstyle
         )
         _winreg.CloseKey(hKey)
-        
-        ok = SystemParametersInfo(
+        res = SystemParametersInfo(
             SPI_SETDESKWALLPAPER, 
             0, 
-            c_buffer(imageFileName), 
+            create_unicode_buffer(imageFileName), 
             SPIF_SENDCHANGE|SPIF_UPDATEINIFILE
         )
+        if res == 0:
+            self.PrintError(ctypes.FormatError())
+
 
 
     def Configure(self, imageFileName='', style=1):
