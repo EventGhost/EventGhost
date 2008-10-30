@@ -774,7 +774,6 @@ import ImagePalette
 import ImagePath
 import ImageSequence
 import ImageStat
-import ImageTk
 import ImageTransform
 import ImageWin
 import ImImagePlugin
