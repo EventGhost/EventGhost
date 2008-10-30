@@ -13,16 +13,7 @@ PACKAGES_TO_ADD = [
     "pythoncom",
     "isapi",
     "win32com",
-    "greenlet",
 ]
-
-# also add every .pyd of the current directory
-for filepath in os.listdir(os.getcwdu()):
-    moduleName, extension = os.path.splitext(os.path.basename(filepath))
-    if extension.lower() == ".pyd":
-        PACKAGES_TO_ADD.append(moduleName)
-    
-    
 
 MODULES_TO_IGNORE = [
     "idlelib", 
@@ -44,6 +35,7 @@ MODULES_TO_IGNORE = [
     "wx.lib.plot", # needs NumPy
     "wx.lib.floatcanvas", # needs NumPy
     
+    "ImageTk",
     "ImageGL",
     "ImageQt",
     "WalImageFile", # odd syntax error in file
@@ -71,23 +63,24 @@ gSitePackagePath = join(gPythonDir, "Lib", "site-packages")
 
 
 class DummyStdOut:
-    def write(self, data):
+    def write(NS, data):
         pass
 
 dummyStdOut = DummyStdOut()
     
-def TestImport(moduleName):
+def TestImport(moduleName, includeDeprecated=False):
     """
     Test if the given module can be imported without error.
     """
     #print "Testing", moduleName
     oldStdOut = sys.stdout
+    oldStdErr = sys.stderr
     sys.stdout = dummyStdOut
     try:
         __import__(moduleName)
         return (True, "", "")
     except DeprecationWarning, e:
-        return False, "DeprecationWarning", str(e)
+        return includeDeprecated, "DeprecationWarning", str(e)
     except ImportError, e:
         return False, "ImportError", str(e)
     except SyntaxError, e:
@@ -96,6 +89,7 @@ def TestImport(moduleName):
         return False, "Exception", str(e)
     finally:
         sys.stdout = oldStdOut
+        sys.stderr = oldStdErr
     
     
 def ShouldBeIgnored(moduleName):
@@ -156,6 +150,7 @@ def FindModulesInPath(path, prefix=""):
                 continue
             #print "Testing:", moduleName,
             ok, eType, eMesg = TestImport(moduleName)
+            #print ok, eType, eMesg
             if ok:
                 modules.append(moduleName)
             else:
@@ -201,12 +196,18 @@ def ReadPth(path):
 def Main():
     global MODULES_TO_IGNORE
     
+    # also add every .pyd of the current directory
+    for filepath in os.listdir(os.getcwdu()):
+        moduleName, extension = os.path.splitext(os.path.basename(filepath))
+        if extension.lower() == ".pyd":
+            PACKAGES_TO_ADD.append(moduleName)
+    
     globalModuleIndex, badModules = ReadGlobalModuleIndex()
     MODULES_TO_IGNORE += badModules
     
     stdLibModules = FindModulesInPath(join(gPythonDir, "DLLs"))
     stdLibModules += FindModulesInPath(join(gPythonDir, "lib"))
-    
+
     print
     print "Modules found in global module index but not in scan:"
     for module in globalModuleIndex:
