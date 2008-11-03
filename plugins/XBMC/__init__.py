@@ -111,6 +111,8 @@ ACTIONS = (
     ("MyVideos", "Show Videos Screen", "Show Videos screen.", "ActivateWindow(MyVideos)"),
     ("MyMusic", "Show Music Screen", "Show Music screen.", "ActivateWindow(MyMusic)"),
     ("MyPictures", "Show Pictures Screen", "Show Pictures screen.", "ActivateWindow(MyPictures)"),
+	("MyMovies", "Show Movies Screen", "Show Movies screen.", "ActivateWindow(MyVideoLibrary,movietitles,return)"),
+	("MyTVShows", "Show TV Shows Screen", "Show TV Shows screen.", "ActivateWindow(MyVideoLibrary,tvshowtitles,return)"),   
     ("Weather", "Show Weather Screen", "Show Weather screen.", "ActivateWindow(Weather)"),
     ("Settings", "Show Settings Screen", "Show Settings screen.", "ActivateWindow(Settings)"),
     ("Favorites", "Show Favorites Screen", "Show Favorites screen.", "ActivateWindow(Favourites)"),
