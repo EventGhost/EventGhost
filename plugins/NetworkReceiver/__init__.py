@@ -56,12 +56,20 @@ class Text:
     securityBox = "Security"
     eventGenerationBox = "Event generation"
     
+DEBUG = True
 
+if DEBUG:
+    log = eg.Print
+else:
+    def log(mesg):
+        pass
+    
 
 class Server_Handler (asynchat.async_chat):
     """Telnet engine class. Implements command line user interface."""
     
     def __init__ (self, sock, addr, hex_md5, cookie, plugin, server_ref):
+        log("Server Handler inited")
         self.plugin = plugin
         self.server_ref = server_ref
         
@@ -89,9 +97,16 @@ class Server_Handler (asynchat.async_chat):
         """Put data read from socket to a buffer
         """
         # Collect data in input buffer
+        log("<<" + repr(data))
         self.data = self.data + data
 
 
+    if DEBUG:
+        def push(self, data):
+            log(">>", repr(data))
+            asynchat.async_chat.push(self, data)
+    
+    
     def found_terminator (self):
         """
         This method is called by asynchronous engine when it finds
@@ -189,6 +204,7 @@ class Server(asyncore.dispatcher):
     def handle_accept (self):
         """Called by asyncore engine when new connection arrives"""
         # Accept new connection
+        log("handle_accept")
         (sock, addr) = self.accept()
         Server_Handler(
             sock, 
