@@ -77,7 +77,7 @@ class IconBase(object):
         cached instance. Otherwise creates a new instance and adds it to the 
         cache.
         """
-        if cls.cache.has_key(key):
+        if key in cls.cache:
             return cls.cache[key]
         self = super(IconBase, cls).__new__(cls)
         cls.cache[key] = self

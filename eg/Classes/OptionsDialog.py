@@ -154,7 +154,7 @@ class OptionsDialog(eg.Dialog):
         
         while self.Affirmed():
             tmp = startWithWindowsCtrl.GetValue()
-            if tmp <> eg.config.startWithWindows:
+            if tmp != eg.config.startWithWindows:
                 c.startWithWindows = tmp
                 path = os.path.join(eg.folderPath.Startup, eg.APP_NAME)
                 path += ".lnk"
