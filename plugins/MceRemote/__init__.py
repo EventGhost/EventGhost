@@ -340,9 +340,13 @@ class MceRemote(eg.PluginClass):
         Checks the HID registry values and calls self.ShowHidMessage
         if needed.
         """
-        key = reg.OpenKey(
-            reg.HKEY_LOCAL_MACHINE, HID_SUB_KEY, 0, reg.KEY_READ
-        )
+        try:
+            key = reg.OpenKey(
+                reg.HKEY_LOCAL_MACHINE, HID_SUB_KEY, 0, reg.KEY_READ
+            )
+        except WindowsError:
+            raise self.Exception.DeviceNotFound
+            
         needsChange = False
         for i in xrange(4):
             valueName = 'CodeSetNum%i' % i
