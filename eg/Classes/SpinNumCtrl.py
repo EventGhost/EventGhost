@@ -55,14 +55,14 @@ class SpinNumCtrl(wx.Window):
         name = "eg.SpinNumCtrl", 
         **kwargs
     ):
-        if kwargs.has_key("increment"):
+        if "increment" in kwargs:
             self.increment = kwargs["increment"]
             del kwargs["increment"]
         else:
             self.increment = 1
 
         newArgs = self._defaultArgs.copy()
-        if kwargs.has_key("min"):
+        if "min" in kwargs:
             if kwargs["min"] < 0:
                 newArgs["allowNegative"] = True
                 

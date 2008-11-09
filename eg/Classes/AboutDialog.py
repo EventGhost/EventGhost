@@ -58,7 +58,7 @@ def GetPluginAuthors():
         else:
             continue
         pluginName = pluginInfo.name.replace(" ", "&nbsp;")
-        if pluginAuthors.has_key(author):
+        if author in pluginAuthors:
             pluginAuthors[author].append(pluginName)
         else:
             pluginAuthors[author] = [pluginName]
