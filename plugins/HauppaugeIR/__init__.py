@@ -28,7 +28,7 @@
 eg.RegisterPlugin(
     name        = "Hauppauge IR",
     author      = "Stefan Gollmer",
-    version     = "1.02." + "$LastChangedRevision$".split()[1],
+    version     = "1.04." + "$LastChangedRevision$".split()[1],
     kind        = "remote",
     description = (
                     'Hardware plugin for the '
@@ -55,10 +55,10 @@ eg.RegisterPlugin(
 
 import os
 from threading import Timer
+from time import sleep
 from msvcrt import get_osfhandle
 import _winreg
-
-
+from threading import Event
 
 from eg.WinApi.Dynamic import (
     WinDLL,
@@ -72,7 +72,9 @@ from eg.WinApi.Dynamic import (
     c_byte,
     c_void_p,
     c_char_p,
+    c_ulong,
     WNDCLASS,
+    TIMERPROC,
     GetDesktopWindow,
     WNDPROC,
     CreateWindow,
@@ -87,7 +89,8 @@ from eg.WinApi.Dynamic import (
     DestroyWindow,
     UnregisterClass,
     GetTickCount,
-    DWORD
+    DWORD,
+
 )
 
 
@@ -119,6 +122,16 @@ from eg.WinApi.Dynamic import (
 #keyCode    : return value containing the key code (0-99)
 #
 #returns value ==1 if key is pressed
+#------------------------------------------
+#
+#
+#
+#
+# If the HauppaugeIR driver couldn't be initialized, the event ghost event
+#       "HauppaugeIR.InitError"
+# will be fired
+
+
 
 
 HCWClassic = {
@@ -250,24 +263,26 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
     dll = None
     
     @eg.LogIt
-    def Setup(self, plugin, waitTime):
+    def Setup(self, plugin, waitTime, pollTime, useDefaultPollTime, initTime = 15.0 ):
         """
         This will be called inside the thread at the beginning.
         """
         self.plugin = plugin
         self.waitTime = float(waitTime)/1000.0
+        self.pollTime = pollTime
+        self.useDefaultPollTime = useDefaultPollTime
+        self.defaultPollTime = -1
 
         self.LastKeyCode = -1
         
-        self.pollTime = 90
 
         self.RepeatCode = c_int(0)        
         self.systemCode = c_int(0)
         self.keyCode    = c_int(0)
-        
-        self.timer = Timer(0, self.OnTimeOut)
+                
         self.lastEvent = eg.EventGhostEvent()
         self.keyStillPressed = False
+        self.initTerminated = False
 
         # load irremote.dll
         
@@ -287,6 +302,7 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
 
             dllPath = os.path.join(irremoteDir, "irremote.DLL")
 
+
             self.dll = windll.LoadLibrary(dllPath)
             self.dll = WinDLL(dllPath)
 
@@ -299,6 +315,7 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
         self.IR_Open             = WINFUNCTYPE( c_int, HWND, c_int, c_byte, c_int )
         self.IR_Close            = WINFUNCTYPE( c_int, HWND, c_int )
         self.IR_GetSystemKeyCode = WINFUNCTYPE( c_int, POINTER( c_int), POINTER( c_int), POINTER( c_int) )
+        self.TIMERPROC           = WINFUNCTYPE( None, HWND, c_uint, c_uint, DWORD )
         
         self.IR_Open             = self.dll.IR_Open
         self.IR_Close            = self.dll.IR_Close
@@ -328,27 +345,9 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
         self.wc = wc
         self.hinst = wc.hInstance
         
-        regHandle = _winreg.OpenKey(
-                        _winreg.HKEY_LOCAL_MACHINE, 
-                        'SOFTWARE\hauppauge\IR', 
-                        0, 
-                        _winreg.KEY_WRITE | _winreg.KEY_READ
-        )
+        self.timer = Timer( initTime, self.PostInit)        # Init delayed init timer ( in case of standby problems)
+        self.timer.start()
 
-        defaultPollTime = int( _winreg.QueryValueEx(regHandle, 'PollRate')[0] )
-        _winreg.SetValueEx( regHandle, 'PollRate', 0, _winreg.REG_DWORD, int(self.pollTime) )
-
-        returnVal = self.IR_Open(self.hwnd, 0, 0, 0);
-
-        _winreg.SetValueEx( regHandle, 'PollRate', 0, _winreg.REG_DWORD, int(defaultPollTime) )
-
-        _winreg.CloseKey( regHandle )
-
-        if not returnVal:
-            plugin.PrintError("Couldn't create the EventSinkWindow")
-            raise WinError()
-        
-        #print "Irremote is started"
 
 
         
@@ -358,23 +357,35 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
         This will be called inside the thread when it finishes. It will even
         be called if the thread exits through an exception.
         """
-        if self.hwnd:
-            windll.user32.KillTimer(self.hwnd, 1)
         if self.dll:
             self.dll.IR_Close(self.hwnd, 0);
         
         #print "Irremote is stopped"
 
+        self.timer.cancel()
+
         if self.hwnd:
+            windll.user32.KillTimer(self.hwnd, 1)
             DestroyWindow(self.hwnd)
             UnregisterClass(self.wc.lpszClassName, self.hinst)
 
 
-        #self.Stop() # is this needed? No!
+        if self.defaultPollTime != -1 :
+
+            regHandle = _winreg.OpenKey(
+                            _winreg.HKEY_LOCAL_MACHINE, 
+                            'SOFTWARE\hauppauge\IR', 
+                            0, 
+                            _winreg.KEY_WRITE | _winreg.KEY_READ
+            )
+            
+            _winreg.SetValueEx( regHandle, 'PollRate', 0, _winreg.REG_DWORD, int(self.defaultPollTime) )
+
+            _winreg.CloseKey( regHandle )
+
         
         
-    #@eg.LogIt
-    def MyWndProc(self, hwnd, mesg, wParam, lParam):
+    def MyWndProc(self, hwnd, mesg, wParam, lParam) :
         if mesg == WM_TIMER:
             keyHit = self.IR_GetSystemKeyCode(byref(self.RepeatCode), byref(self.systemCode), byref(self.keyCode) );
             if  keyHit == 1:
@@ -396,10 +407,64 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
                 self.timer = Timer(self.waitTime, self.OnTimeOut)
                 self.timer.start()
         return 1
-    
+        
+
     def OnTimeOut(self):
         self.keyStillPressed = False
         self.lastEvent.SetShouldEnd()
+
+
+    @eg.LogIt
+    def PostInit( self ) :    
+        self.timer = Timer( 60.0, self.OnPostInitTimeOut)        # Init timeout timer
+        self.timer.start()
+
+        returnVal = False
+
+        if ( not self.useDefaultPollTime ) :
+
+            regHandle = _winreg.OpenKey(
+                            _winreg.HKEY_LOCAL_MACHINE, 
+                            'SOFTWARE\hauppauge\IR', 
+                            0, 
+                            _winreg.KEY_WRITE | _winreg.KEY_READ
+            )
+
+            self.defaultPollTime = int( _winreg.QueryValueEx(regHandle, 'PollRate')[0] )
+
+            _winreg.SetValueEx( regHandle, 'PollRate', 0, _winreg.REG_DWORD, int(self.pollTime) )
+
+            returnVal = self.IR_Open(self.hwnd, 0, 0, 0);
+
+            _winreg.SetValueEx( regHandle, 'PollRate', 0, _winreg.REG_DWORD, int(self.defaultPollTime) )
+
+            _winreg.CloseKey( regHandle )
+
+            self.defaultPollTime = -1
+
+        else :
+            returnVal = self.IR_Open(self.hwnd, 0, 0, 0);
+
+        self.timer.cancel()
+
+        if not self.initTerminated :
+
+            if not returnVal and not self.initTerminated :
+                self.plugin.PrintError("Couldn't start the Hauppauge remote control")
+                self.Stop()
+                self.plugin.TriggerEvent("InitError")
+            else :
+                #print "Irremote is started"
+                pass
+
+
+
+    @eg.LogIt
+    def OnPostInitTimeOut( self ) :
+        self.initTerminated = True
+        self.plugin.PrintError("Couldn't start the Hauppauge remote control")
+        self.Stop()
+        self.plugin.TriggerEvent("InitError")
 
         
         
@@ -412,31 +477,111 @@ class HauppaugeIR(eg.PluginClass):
             "(If you get unintended double presses of the buttons, "
             "increase this value.)"
         )
+        pollTime       = "Poll time (seconds)"
+        buttonPollTime = "Use default poll time (0.2s)"
+        
+    def __init__( self ) :
+        self.AddAction(Restart)
+        
+        self.waitTime = -1
+        self.pollTime = -1
+        self.useDefaultPollTime = True
+        self.started = False
+        self.config = False
 
-    def __start__(self, waitTime=0.15):
-        self.msgThread = HauppaugeIRMessageReceiver(self, waitTime)
-        self.msgThread.Start()
+
+    def __start__( self, waitTime=-1, pollTime = -1, useDefaultPollTime = True, initTime = 15.0 ):
+        if waitTime != -1 :
+            self.waitTime = waitTime
+            self.pollTime = pollTime
+            self.useDefaultPollTime = useDefaultPollTime
+        
+        if self.config :
+            initTime = 1.0
+            self.config = False
+        self.msgThread = HauppaugeIRMessageReceiver( self, 
+                                self.waitTime, 
+                                self.pollTime,
+                                self.useDefaultPollTime,
+                                initTime )
+        self.msgThread.Start( 15.0 )
+        self.started = True
 
 
     @eg.LogIt
     def OnComputerSuspend(self, suspendType):
-        self.__stop__()
+        if self.started :
+            self.Finish()
     
     
     @eg.LogIt
     def OnComputerResume(self, suspendType):
-        self.__start__()     
+        if self.started :
+            self.__start__()     
           
                         
-    def __stop__(self):
-        self.msgThread.Stop()
+    def Finish(self, timeout = 0.0 ):
+        self.msgThread.Stop( timeout )
+
+
+    def __stop__(self, timeout = 0.0 ):
+        self.started = False
+        self.Finish( timeout )
         
-    def Configure(self, waitTime=300):
+
+        
+    def Configure(self, waitTime=300, pollTime = 90, useDefaultPollTime = True):
         panel = eg.ConfigPanel(self)
+        text = self.text
+        
+        def onCheckBox( event ) :
+            enable = not useDefaultPollTimeCtrl.GetValue()
+            pollTimeCtrl.Enable( enable )
+            event.Skip()
+        
         waitTimeCtrl = panel.SpinNumCtrl(waitTime, min=0, max=999, fractionWidth=0, integerWidth=3)
-        panel.AddLine(self.text.buttonTimeout, waitTimeCtrl)
-        panel.AddLine(self.text.buttonTimeoutDescr)
+
+        useDefaultPollTimeCtrl = wx.CheckBox(panel, -1, text.buttonPollTime)
+        useDefaultPollTimeCtrl.SetValue( useDefaultPollTime )
+        useDefaultPollTimeCtrl.Bind(wx.EVT_CHECKBOX, onCheckBox)
+        
+        pollTimeCtrl = panel.SpinNumCtrl(pollTime, min=0, max=999, fractionWidth=0, integerWidth=3)
+        
+        
+        sizer = wx.GridBagSizer( 5, 5 )
+        sizer.Add( wx.StaticText( panel, -1, text.buttonTimeout ),
+                                         ( 0, 0 ),(1,2), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT )
+        sizer.Add( waitTimeCtrl, ( 0, 2 ), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL )
+        
+        sizer.Add( wx.StaticText( panel, -1, text.buttonTimeoutDescr ),
+                                         ( 1, 0 ),(1,3), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL )
+                                         
+        sizer.Add( useDefaultPollTimeCtrl, ( 3, 0 ), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL )
+
+        sizer.Add( wx.StaticText( panel, -1, text.pollTime ),
+                                         ( 3, 1 ), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT )
+        sizer.Add( pollTimeCtrl, ( 3, 2 ), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL )
+
+
+        panel.sizer.Add( sizer, 0 )
+
+        onCheckBox(wx.CommandEvent())
         
         while panel.Affirmed():
-            panel.SetResult(waitTimeCtrl.GetValue())
         
+            waitTime           = waitTimeCtrl.GetValue()
+            pollTime           = pollTimeCtrl.GetValue()
+            useDefaultPollTime = useDefaultPollTimeCtrl.GetValue()
+            
+            panel.SetResult( waitTime, pollTime, useDefaultPollTime )
+            self.config = True
+            
+        
+
+
+class Restart(eg.ActionClass) :
+
+    @eg.LogIt
+    def __call__( self ) :
+        self.plugin.__stop__(  timeout = 60.0 )
+        self.plugin.__start__( initTime = 1.0 )
