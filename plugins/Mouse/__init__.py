@@ -326,31 +326,24 @@ class MoveAbsolute(eg.ActionClass):
     def Configure(self, x=0, y=0):
         panel = eg.ConfigPanel(self)
         text = self.text
-            
+
         xCB = panel.CheckBox(x is not None, text.text1)
         def HandleXCheckBox(event):
             xCtrl.Enable(event.IsChecked())
+            event.Skip()
         xCB.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)    
 
-        if x is None:
-            x = 0
-            xCtrl = panel.SpinIntCtrl(x, min=-maxint-1, max=maxint)
-            xCtrl.Enable(False)
-        else:
-            xCtrl = panel.SpinIntCtrl(x, min=-maxint-1, max=maxint)
-
-                    
+        xCtrl = panel.SpinIntCtrl(x or 0, min=-maxint-1, max=maxint)
+        xCtrl.Enable(x is not None)
+        
         yCB = panel.CheckBox(y is not None, text.text3)
         def HandleYCheckBox(event):
             yCtrl.Enable(event.IsChecked())  
+            event.Skip()
         yCB.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)    
 
-        if y is None:
-            y = 0
-            yCtrl = panel.SpinIntCtrl(y, min=-maxint-1, max=maxint)
-            yCtrl.Enable(False)
-        else:
-            yCtrl = panel.SpinIntCtrl(y, min=-maxint-1, max=maxint)
+        yCtrl = panel.SpinIntCtrl(y or 0, min=-maxint-1, max=maxint)
+        yCtrl.Enable(y is not None)
         
         panel.AddLine(xCB, xCtrl, text.text2)
         panel.AddLine(yCB, yCtrl, text.text4)
@@ -399,27 +392,21 @@ class MoveRelative(eg.ActionClass):
         xCB = panel.CheckBox(x is not None, text.text1)
         def HandleXCheckBox(event):
             xCtrl.Enable(event.IsChecked())
+            event.Skip()
         xCB.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)    
 
-        if x is None:
-            x = 0
-            xCtrl = panel.SpinIntCtrl(x, min=-maxint-1, max=maxint)
-            xCtrl.Enable(False)
-        else:
-            xCtrl = panel.SpinIntCtrl(x, min=-maxint-1, max=maxint)
-        	
+        xCtrl = panel.SpinIntCtrl(x or 0, min=-maxint-1, max=maxint)
+        xCtrl.Enable(x is not None)
+        
         yCB = panel.CheckBox(y is not None, text.text3)
         def HandleYCheckBox(event):
             yCtrl.Enable(event.IsChecked())  
+            event.Skip()
         yCB.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)    
 
-        if y is None:
-            y = 0
-            yCtrl = panel.SpinIntCtrl(y, min=-maxint-1, max=maxint)
-            yCtrl.Enable(False)
-        else:
-            yCtrl = panel.SpinIntCtrl(y, min=-maxint-1, max=maxint)
-          
+        yCtrl = panel.SpinIntCtrl(y or 0, min=-maxint-1, max=maxint)
+        yCtrl.Enable(y is not None)
+        
         panel.AddLine(xCB, xCtrl, text.text2)
         panel.AddLine(yCB, yCtrl, text.text4)
 
