@@ -326,7 +326,7 @@ class MoveAbsolute(eg.ActionClass):
     def Configure(self, x=0, y=0):
         panel = eg.ConfigPanel(self)
         text = self.text
-
+            
         xCB = panel.CheckBox(x is not None, text.text1)
         def HandleXCheckBox(event):
             xCtrl.Enable(event.IsChecked())
@@ -334,9 +334,12 @@ class MoveAbsolute(eg.ActionClass):
 
         if x is None:
             x = 0
+            xCtrl = panel.SpinIntCtrl(x, min=-maxint-1, max=maxint)
             xCtrl.Enable(False)
-        xCtrl = panel.SpinIntCtrl(x, min=-maxint-1, max=maxint)
-        
+        else:
+            xCtrl = panel.SpinIntCtrl(x, min=-maxint-1, max=maxint)
+
+                    
         yCB = panel.CheckBox(y is not None, text.text3)
         def HandleYCheckBox(event):
             yCtrl.Enable(event.IsChecked())  
@@ -344,8 +347,10 @@ class MoveAbsolute(eg.ActionClass):
 
         if y is None:
             y = 0
+            yCtrl = panel.SpinIntCtrl(y, min=-maxint-1, max=maxint)
             yCtrl.Enable(False)
-        yCtrl = panel.SpinIntCtrl(y, min=-maxint-1, max=maxint)
+        else:
+            yCtrl = panel.SpinIntCtrl(y, min=-maxint-1, max=maxint)
         
         panel.AddLine(xCB, xCtrl, text.text2)
         panel.AddLine(yCB, yCtrl, text.text4)
@@ -398,9 +403,11 @@ class MoveRelative(eg.ActionClass):
 
         if x is None:
             x = 0
+            xCtrl = panel.SpinIntCtrl(x, min=-maxint-1, max=maxint)
             xCtrl.Enable(False)
-        xCtrl = panel.SpinIntCtrl(x, min=-maxint-1, max=maxint)
-        
+        else:
+            xCtrl = panel.SpinIntCtrl(x, min=-maxint-1, max=maxint)
+        	
         yCB = panel.CheckBox(y is not None, text.text3)
         def HandleYCheckBox(event):
             yCtrl.Enable(event.IsChecked())  
@@ -408,9 +415,11 @@ class MoveRelative(eg.ActionClass):
 
         if y is None:
             y = 0
+            yCtrl = panel.SpinIntCtrl(y, min=-maxint-1, max=maxint)
             yCtrl.Enable(False)
-        yCtrl = panel.SpinIntCtrl(y, min=-maxint-1, max=maxint)
-        
+        else:
+            yCtrl = panel.SpinIntCtrl(y, min=-maxint-1, max=maxint)
+          
         panel.AddLine(xCB, xCtrl, text.text2)
         panel.AddLine(yCB, yCtrl, text.text4)
 
