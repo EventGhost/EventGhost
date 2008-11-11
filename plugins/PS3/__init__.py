@@ -35,14 +35,14 @@ and lot of additional NORMAL events for:
 <li>short click on remote, events name end with ".S" eg. "HID.Eject.S"</li>
 <li>long click on remote, events name end with ".L"</li>
 <li>double click on remote, events name end with ".D"</li>
-<li>mixte (double click with second one long), events name end with ".M"</li>
 </ul>
 
 and special selectable or not events:
 
 <ul>
 <li>"Sleep" when remote is not used</li>
-<li>"Hibernate" when remote is not use during a long time</li>
+<li>"Hibernate" when remote is not use during a long time (also puts the remote into low-power mode
+    if using the Widcomm Bluetooth stack)</li>
 <li>"WakeUp" for first event after "Sleep" or "Hibernate"</li>
 <li>"Zone.X" where X is relative to Zone Key in Remote (see Remote paper manual)
   event generated when a new key is pressed in another zone.
@@ -61,19 +61,24 @@ In this case the event code genered is an hexadecimal value.
 
 Note: some keys combination generate the same event. 
 This is a Remote issue.
+
+After the "Hibernate" period expires, the remote will be put into a low-power (SNIFF) mode.
+It may take a few seconds for the first button press to be registered in this mode.
+
+The plugin will also automatically re-detect the PS3 remote after being in standby mode.
 """
 
 eg.RegisterPlugin(
     name = "PlayStation 3 Bluetooth Remote",
-    author = "Thierry Couquillou",
-    version = "2.0.1",
+    author = "Thierry Couquillou, Tim Delaney",
+    version = "3.0.0",
     kind = "remote",
     url="http://www.eventghost.org/forum/viewtopic.php?t=640",
     description = "Hardware plugin for the PS3 Bluetooth Remote (based on the HID code of Bartman)",
     help = README,
 )
 
-
+import itertools
 import time
 import binascii
 import ctypes
@@ -86,9 +91,9 @@ import win32file
 import wx
 import wx.lib.mixins.listctrl as listmix
 
-from ctypes import Structure, Union, c_byte, c_char, c_int, c_long, c_ulong, c_ushort, c_wchar
+from ctypes import Structure, Union, c_byte, c_ubyte, c_char, c_int, c_long, c_ulong, c_ushort, c_wchar
 from ctypes import pointer, byref, sizeof, POINTER
-from ctypes.wintypes import ULONG, BOOLEAN
+from ctypes.wintypes import ULONG, BOOLEAN, BOOL
 
 class Ps3Remote:
     button = {}
@@ -258,6 +263,8 @@ class Text:
     errorMultipleDevices = "Multiple devices found. Don't know which to use."
     errorInvalidDataIndex = "Found data index not defined as button or control value."
     vendorID = "Vendor ID "
+    enteredLowPower = "%s entered low-power mode"
+    exitedLowPower = "%s exited low-power mode"
 
 #structures for ctypes
 class GUID(Structure):
@@ -408,8 +415,90 @@ VENDOR_ID = 1
 VENDOR_STRING = 2
 PRODUCT_ID = 3
 PRODUCT_STRING = 4
-VERSION_NUMBER = MAX_INDEX = 5
+VERSION_NUMBER= 5
+BLUETOOTH_ADDRESS = 6
+BLUETOOTH_LINK_MODE = MAX_INDEX = 7
 
+#link mode
+(
+    LINK_MODE_NORMAL,
+    LINK_MODE_HOLD,
+    LINK_MODE_SNIFF,
+    LINK_MODE_PARK,
+) = xrange(4)
+
+# See if we've got widcomm - if not, we won't be changing the link mode
+ALLOW_CANCEL_SNIFF = True
+
+try:
+    widcommDLL = ctypes.cdll.widcommsdk
+except WindowsError:
+    widcommDLL = None
+else:
+    IsStackServerUp = getattr(widcommDLL, '?IsStackServerUp@CBtIf@@QAEHXZ')
+    IsStackServerUp.restype = BOOL
+
+    if not IsStackServerUp():
+        widcommDLL = None
+
+if widcommDLL is None:
+
+    def set_sniff_mode(bd_addr):
+        return False
+
+    def cancel_sniff_mode(bd_addr):
+        return False
+
+    def read_link_mode(bd_addr):
+        return None
+
+else:
+    SetSniffMode = getattr(widcommDLL, '?SetSniffMode@CBtIf@@SAHQAE@Z')
+    SetSniffMode.restype = BOOL
+    CancelSniffMode = getattr(widcommDLL, '?CancelSniffMode@CBtIf@@SAHQAE@Z')
+    CancelSniffMode.restype = BOOL
+    ReadLinkMode = getattr(widcommDLL, '?ReadLinkMode@CBtIf@@SAHQAEPAE@Z')
+    ReadLinkMode.restype = BOOLEAN
+
+    def set_sniff_mode(bd_addr):
+        result = SetSniffMode(bd_addr)
+        return bool(result)
+
+    def cancel_sniff_mode(bd_addr):
+        if ALLOW_CANCEL_SNIFF:            
+            result = CancelSniffMode(bd_addr)
+            return bool(result)
+
+        return False
+
+    def read_link_mode(bd_addr):
+        mode = c_ubyte(0)
+        result = ReadLinkMode(bd_addr, byref(mode))
+
+        if result:
+            return mode.value
+        
+        return None
+
+def check_link_mode_sniff(device):
+    if device is None:
+        return
+
+    mode = read_link_mode(device[BLUETOOTH_ADDRESS])
+
+    if mode == LINK_MODE_SNIFF and mode != device[BLUETOOTH_LINK_MODE]:
+        device[BLUETOOTH_LINK_MODE] = mode
+        print Text.enteredLowPower % (device_name(device),)
+
+def check_link_mode_no_sniff(device):
+    if device is None:
+        return
+
+    mode = read_link_mode(device[BLUETOOTH_ADDRESS])
+
+    if mode == LINK_MODE_NORMAL and mode != device[BLUETOOTH_LINK_MODE]:
+        device[BLUETOOTH_LINK_MODE] = mode
+        print Text.exitedLowPower % (device_name(device),)
 
 #helper class to iterate, find and open hid devices
 class HIDHelper:
@@ -424,7 +513,7 @@ class HIDHelper:
 
         #dll references
         setupapiDLL = ctypes.windll.setupapi
-        hidDLL =  ctypes.windll.hid
+        hidDLL = ctypes.windll.hid
 
         #prepare Interfacedata
         interfaceInfo = SP_DEVICE_INTERFACE_DATA()
@@ -512,15 +601,16 @@ class HIDHelper:
             #getting device name
             result = hidDLL.HidD_GetProductString(
                 int(hidHandle), byref(infoStr), ctypes.sizeof(infoStr))
+
             if not result or len(infoStr.value) == 0:
                 #getting product name via registry
                 devicePathSplit = device[DEVICE_PATH][4:].split("#")
-                regHandle = _winreg.OpenKey(
-                    _winreg.HKEY_LOCAL_MACHINE,
-                    "SYSTEM\\CurrentControlSet\\Enum\\" + devicePathSplit[0] + \
-                    "\\" + devicePathSplit[1] + "\\" + devicePathSplit[2])
+                regkey = "SYSTEM\\CurrentControlSet\\Enum\\" + devicePathSplit[0] + \
+                    "\\" + devicePathSplit[1] + "\\" + devicePathSplit[2]
+                regHandle = _winreg.OpenKey( _winreg.HKEY_LOCAL_MACHINE, regkey)
                 device[PRODUCT_STRING], regType = _winreg.QueryValueEx(regHandle, "DeviceDesc")
                 _winreg.CloseKey(regHandle)
+            
             else:
                 device[PRODUCT_STRING] = infoStr.value
 
@@ -531,13 +621,82 @@ class HIDHelper:
             self.deviceList.append(device)
 
         #end loop
+
         #destroy deviceinfolist
         setupapiDLL.SetupDiDestroyDeviceInfoList(hinfo)
 
+        # try to find Bluetooth device IDs
+        self.findBluetoothDeviceIds(self.deviceList)
 
-    #gets the devicePath
-    #the devicePath parameter is only used with multiple same devices
-    def GetDevicePath(self,
+    def findBluetoothDeviceIds(self, deviceList):
+        # try to find Bluetooth device ID - we'll check the Widcomm section of the registry
+        regkey = "SYSTEM\\CurrentControlSet\\Enum\\{95C7A0A0-3094-11D7-A202-00508B9D7D5A}"
+        mapping = self.findBluetoothDeviceIdNameMapping(regkey)
+
+        for d in deviceList:
+            devicePathSplit = d[DEVICE_PATH][4:].split("#")
+            parentId = devicePathSplit[2]
+
+            for parentIdPrefix in mapping:
+                if parentId.startswith(parentIdPrefix):
+                    d[BLUETOOTH_ADDRESS] = mapping[parentIdPrefix]
+                    d[BLUETOOTH_LINK_MODE] = read_link_mode(d[BLUETOOTH_ADDRESS])
+                    break
+            else:
+                d[BLUETOOTH_ADDRESS] = None
+                d[BLUETOOTH_LINK_MODE] = None
+
+    def findBluetoothDeviceIdNameMapping(self, regkey, stack=None, mapping=None):
+        # iterate through all the subkeys, looking for the 'ParentIdPrefix' and 'BdAddr'
+        # values. 'LocationInformation' will match the PRODUCT_STRING above.
+        if stack is None:
+            stack = []
+
+        if mapping is None:
+            mapping = {}
+
+        appended_parent = False
+        try:
+            regHandle = _winreg.OpenKey( _winreg.HKEY_LOCAL_MACHINE, regkey)
+        except WindowsError:
+            return mapping
+
+        try:
+            parentIdPrefix, regType = _winreg.QueryValueEx(regHandle, "ParentIdPrefix")
+            stack.append(parentIdPrefix)
+            appended_parent = True
+        except EnvironmentError:
+            pass
+
+        try:
+            bdaddr, regType = _winreg.QueryValueEx(regHandle, "BdAddr")
+
+            if stack:
+                mapping[stack[-1]] = bdaddr
+                
+        except EnvironmentError:
+            pass
+
+        subkeys = []
+
+        try:
+            for i in itertools.count(0):
+                subkeys.append(_winreg.EnumKey(regHandle, i))
+        except EnvironmentError:
+            pass
+
+        _winreg.CloseKey(regHandle)
+
+        for k in subkeys:
+            subkey = regkey + '\\' + k
+            self.findBluetoothDeviceIdNameMapping(subkey, stack, mapping)
+
+        if appended_parent:
+            stack.pop()
+
+        return mapping
+
+    def _get_device(self,
         noOtherPort,
         devicePath,
         vendorID,
@@ -551,7 +710,7 @@ class HIDHelper:
                 #just search for devicepath
                 if item[DEVICE_PATH] == devicePath:
                     #found right device
-                    return devicePath
+                    return item
             else:
                 #find the right vendor and product ids
                 if item[VENDOR_ID] == vendorID \
@@ -560,11 +719,10 @@ class HIDHelper:
                     found = found + 1
                     if item[DEVICE_PATH] == devicePath:
                         #found right device
-                        return devicePath
-                    path = item[DEVICE_PATH]
+                        return item
 
         if found == 1:
-            return path
+            return item
 
         #multiple devices found
         #don't know which to use
@@ -573,7 +731,37 @@ class HIDHelper:
 
         return None
 
+    #gets the devicePath
+    #the devicePath parameter is only used with multiple same devices
+    def GetDevicePath(self,
+        noOtherPort,
+        devicePath,
+        vendorID,
+        productID,
+        versionNumber
+    ):
+        device = self._get_device(noOtherPort, devicePath, vendorID, productID, versionNumber)
 
+        if device is None:
+            return None
+
+        return device[DEVICE_PATH]
+
+    #gets the device bluetooth address
+    #the devicePath parameter is only used with multiple same devices
+    def GetDeviceBTAddress(self,
+        noOtherPort,
+        devicePath,
+        vendorID,
+        productID,
+        versionNumber
+    ):
+        device = self._get_device(noOtherPort, devicePath, vendorID, productID, versionNumber)
+
+        if device is None:
+            return None
+
+        return device[BLUETOOTH_ADDRESS]
 
 
 class TimerThread(threading.Thread):
@@ -583,8 +771,9 @@ class TimerThread(threading.Thread):
         name,
         interval,
         prefix,
-        evtName
+        evtName,
     ):
+        self.start_time = time.time()
         self.plugin = plugin
         self.name = name
         self.interval = interval
@@ -597,8 +786,12 @@ class TimerThread(threading.Thread):
         self.abort = False
 
     def run(self):
-        self.finished.wait(self.interval)
+        now = time.time()
+        elapsed = now - self.start_time
+        remaining = max(0, min(self.interval, self.interval - elapsed))
+        self.finished.wait(remaining)
         self.finished.clear()
+
         if not self.abort:
             eg.TriggerEvent(self.evtName, prefix = self.prefix)
 
@@ -608,7 +801,7 @@ class TimerThread(threading.Thread):
 
 
 
-
+DEVICE = None
 
 class HIDThread(threading.Thread):
 
@@ -630,7 +823,7 @@ class HIDThread(threading.Thread):
         vendorString,
         productID,
         productString,
-        versionNumber
+        versionNumber,
     ):
         self.ps3Remote = Ps3Remote
         self.text = Text
@@ -656,6 +849,7 @@ class HIDThread(threading.Thread):
         )
 
         if not self.devicePath:
+            self.stop_enduring_event()
             eg.PrintError(self.text.errorFind + self.deviceName)
             return
 
@@ -673,6 +867,17 @@ class HIDThread(threading.Thread):
         self.longKeyTime = longKeyTime
         self.sleepTime = sleepTime
         self.hibernateTime = hibernateTime
+
+        global DEVICE
+        DEVICE = helper._get_device(
+            noOtherPort,
+            devicePath,
+            vendorID,
+            productID,
+            versionNumber
+        )
+
+        self.bdAddr = DEVICE[BLUETOOTH_ADDRESS]
         self.start()
 
     def AbortThread(self):
@@ -692,6 +897,7 @@ class HIDThread(threading.Thread):
                 0
             )
         except:
+            self.stop_enduring_event()
             eg.PrintError(self.text.errorOpen + self.deviceName)
             return
 
@@ -786,6 +992,7 @@ class HIDThread(threading.Thread):
                     win32event.INFINITE
                 )
             except:
+                self.stop_enduring_event()
                 eg.PrintError(self.text.errorRead + self.deviceName)
                 self.abort = True
 
@@ -805,33 +1012,14 @@ class HIDThread(threading.Thread):
                         zoneName = "Extended"
                         regularEvent = False
 
+                    # Make sure any time we get a keypress, we come out of low-power mode
+                    cancel_sniff_mode(self.bdAddr)
+
+                    if result:
+                        eg.scheduler.AddTask(1.0, check_link_mode_no_sniff, DEVICE)
+
                     if self.enduringEvents:
-                        try:
-                            if self.Timer1.isAlive():
-                                self.Timer1.stop()
-                        except:
-                            a=1
-                        else:
-                            del self.Timer1
-
-                        try:
-                            if self.Timer2.isAlive():
-                                self.Timer2.stop()
-                        except:
-                            a=1
-                        else:
-                            del self.Timer2
-
-                        try:
-                            if self.Timer3.isAlive():
-                                self.Timer3.stop()
-                        except:
-                            a=1
-                        else:
-                            del self.Timer3
-
-                        self.plugin.EndLastEvent()
-                        
+                        self.stop_enduring_event()                        
                         prefix = self.plugin.info.eventPrefix
 
                         currentTime = time.time()
@@ -932,7 +1120,7 @@ class HIDThread(threading.Thread):
 
         #loop aborted
         if self.enduringEvents:
-            self.plugin.EndLastEvent()
+            self.stop_enduring_event()
 
         win32file.CloseHandle(handle)
 
@@ -941,8 +1129,93 @@ class HIDThread(threading.Thread):
 
         #HID thread finished
 
+    def stop_enduring_event(self):
+        try:
+            enduringEvents = self.enduringEvents
+        except AttributeError:
+            enduringEvents = False
 
+        if enduringEvents:
+            try:
+                if self.Timer1.isAlive():
+                    self.Timer1.stop()
+            except AttributeError:
+                pass
+            else:
+                del self.Timer1
 
+            try:
+                if self.Timer2.isAlive():
+                    self.Timer2.stop()
+            except AttributeError:
+                pass
+            else:
+                del self.Timer2
+
+            try:
+                if self.Timer3.isAlive():
+                    self.Timer3.stop()
+            except AttributeError:
+                pass
+            else:
+                del self.Timer3
+
+            self.plugin.EndLastEvent()
+
+def device_name(device):
+    return device[VENDOR_STRING] + " " + device[PRODUCT_STRING]
+
+def handle_wake_up(event):
+    global ALLOW_CANCEL_SNIFF
+
+    if event.string == 'System.Resume':
+        ALLOW_CANCEL_SNIFF = True
+
+    device = DEVICE
+
+    if device is None:
+        return
+
+    bd_addr = device[BLUETOOTH_ADDRESS]
+    result = cancel_sniff_mode(bd_addr)
+
+    if result:
+        eg.scheduler.AddTask(1.0, check_link_mode_no_sniff, DEVICE)
+
+def handle_sleep(event):
+    device = DEVICE
+
+    if device is None:
+        return
+
+    bd_addr = device[BLUETOOTH_ADDRESS]
+    result = set_sniff_mode(bd_addr)
+
+    if result:
+        eg.scheduler.AddTask(1.0, check_link_mode_sniff, DEVICE)
+
+def handle_init(event):
+    # Put the PS3 remote to sleep if it isn't already
+    handle_sleep(event)
+
+def handle_machine_sleep(event):
+    global ALLOW_CANCEL_SNIFF
+
+    if event.string == 'System.Suspend':
+        ALLOW_CANCEL_SNIFF = False
+
+    return handle_sleep(event)
+
+INSTANCE = None
+
+def handle_device_attached(event):
+    instance = INSTANCE
+
+    if not isinstance(instance, PS3):
+        return
+
+    eg.actionThread.Call(instance.__stop__)
+    eg.actionThread.Call(instance.__start__, *instance.args)
 
 class PS3(eg.PluginClass):
     helper = None
@@ -950,7 +1223,16 @@ class PS3(eg.PluginClass):
     text = Text
     thread = None
 
-    def GetLabel(self,
+    def __start__(self, *args):
+        global INSTANCE
+        INSTANCE = self
+
+        # We store the arguments away so that we can use them again later (i.e. when we resume
+        # from standby and need to restart ourself).
+        self.args = args
+        self.__start(*args)
+
+    def __start(self,
         eventName,
         enduringEvents,
         rawDataEvents,
@@ -967,40 +1249,26 @@ class PS3(eg.PluginClass):
         vendorString,
         productID,
         productString,
-        versionNumber
+        versionNumber,
+
+        # For backwards-compatibility with 2.0.2 and 3.0.0 - if a new config option is added this can just be replaced
+        dummy=None
     ):
-        prefix = "HID: "
-        #one or both strings empty should not happen
-        if not vendorString or not productString:
-            return "HID"
 
-        #productString already contains manufacturer of vendor id only
-        if productString.find(vendorString) != -1 or\
-            vendorString[0:len(self.text.vendorID)] == self.text.vendorID:
-            return prefix + productString
+        # Set up bindings to ensure that we handle power states, etc correctly.
+        eg.Bind('Main.OnInit', handle_init)
 
-        return prefix + vendorString + " " + productString
+        eg.Bind('HID.WakeUp', handle_wake_up)
+        eg.Bind('System.Resume', handle_wake_up)
 
+        eg.Bind('HID.Hibernate', handle_sleep)
+        eg.Bind('System.QuerySuspend', handle_machine_sleep)
+        eg.Bind('System.Suspend', handle_machine_sleep)
 
-    def __start__(self,
-        eventName,
-        enduringEvents,
-        rawDataEvents,
-        ps3DataEvents,
-        ps3Release,
-        ps3Zone,
-        shortKeyTime,
-        longKeyTime,
-        sleepTime,
-        hibernateTime,
-        noOtherPort,
-        devicePath,
-        vendorID,
-        vendorString,
-        productID,
-        productString,
-        versionNumber
-    ):
+        # If we get one of these, we __stop__ and __start__ the plugin so that we
+        # pick up the device (if necessary).
+        eg.Bind('System.DeviceAttached', handle_device_attached)
+
         if eventName:
             self.info.eventPrefix = eventName
         else:
@@ -1012,8 +1280,7 @@ class PS3(eg.PluginClass):
             self.helper.UpdateDeviceList()
 
         #create thread
-        self.thread = HIDThread(
-            self,
+        self.thread = HIDThread(self,
             self.helper,
             enduringEvents,
             rawDataEvents,
@@ -1034,8 +1301,21 @@ class PS3(eg.PluginClass):
         )
 
     def __stop__(self):
+        global INSTANCE
+        INSTANCE = None
+
         self.thread.AbortThread()
 
+        eg.Unbind('Main.OnInit', handle_init)
+
+        eg.Unbind('HID.Hibernate', handle_sleep)
+        eg.Unbind('System.QuerySuspend', handle_machine_sleep)
+        eg.Unbind('System.Suspend', handle_machine_sleep)
+
+        eg.Unbind('HID.Wake', handle_wake_up)
+        eg.Unbind('System.Resume', handle_wake_up)
+
+        eg.Unbind('System.DeviceAttached', handle_device_attached)
 
     def Configure(self,
         eventName = "",
@@ -1054,8 +1334,12 @@ class PS3(eg.PluginClass):
         vendorString = None,
         productID = None,
         productString = None,
-        versionNumber = None
+        versionNumber = None,
+
+        # For backwards-compatibility with 2.0.2 and 3.0.0 - if a new config option is added this can just be replaced
+        dummy=None
     ):
+
         #ensure helper object is up to date
         if not self.helper:
             self.helper = HIDHelper()
@@ -1191,7 +1475,7 @@ class PS3(eg.PluginClass):
             wx.StaticText(panel, -1, self.text.shortKeyTime),
             (3, 0), flag = wx.ALIGN_CENTER_VERTICAL)
         shortKeyTimeCtrl = eg.SpinNumCtrl(
-            panel, -1, shortKeyTime, size=(200,-1), integerWidth=7
+            panel, -1, shortKeyTime, size=(200,-1), integerWidth=7, increment=0.05
         )
         ps3Sizer.Add(shortKeyTimeCtrl, (3, 1), flag = wx.EXPAND)
         ps3Sizer.Add(
@@ -1204,7 +1488,7 @@ class PS3(eg.PluginClass):
             wx.StaticText(panel, -1, self.text.longKeyTime),
             (4, 0), flag = wx.ALIGN_CENTER_VERTICAL)
         longKeyTimeCtrl = eg.SpinNumCtrl(
-            panel, -1, longKeyTime, size=(200,-1), integerWidth=7
+            panel, -1, longKeyTime, size=(200,-1), integerWidth=7, increment=0.05
         )
         ps3Sizer.Add(longKeyTimeCtrl, (4, 1), flag = wx.EXPAND)
         ps3Sizer.Add(
@@ -1217,7 +1501,7 @@ class PS3(eg.PluginClass):
             wx.StaticText(panel, -1, self.text.sleepTime),
             (5, 0), flag = wx.ALIGN_CENTER_VERTICAL)
         sleepTimeCtrl = eg.SpinNumCtrl(
-            panel, -1, sleepTime, size=(200,-1), integerWidth=7
+            panel, -1, sleepTime, size=(200,-1), integerWidth=7, increment=1.00
         )
         ps3Sizer.Add(sleepTimeCtrl, (5, 1), flag = wx.EXPAND)
         ps3Sizer.Add(
@@ -1225,12 +1509,12 @@ class PS3(eg.PluginClass):
             (5, 2), (1, 2),
             flag = wx.ALIGN_CENTER_VERTICAL)
 
-        #short key time
+        #hibernate time
         ps3Sizer.Add(
             wx.StaticText(panel, -1, self.text.hibernateTime),
             (6, 0), flag = wx.ALIGN_CENTER_VERTICAL)
         hibernateTimeCtrl = eg.SpinNumCtrl(
-            panel, -1, hibernateTime, size=(200,-1), integerWidth=7
+            panel, -1, hibernateTime, size=(200,-1), integerWidth=7, increment=1.00
         )
         ps3Sizer.Add(hibernateTimeCtrl, (6, 1), flag = wx.EXPAND)
         ps3Sizer.Add(
