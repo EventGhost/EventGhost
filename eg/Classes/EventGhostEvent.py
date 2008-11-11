@@ -124,14 +124,15 @@ class EventGhostEvent(object):
                 obj = obj.parent
             else:
                 activeHandlers.add(eventHandler)
-        # show the event in the logger
+                
         if config.onlyLogAssigned and len(activeHandlers) == 0:
+            self.SetStarted()
             return
-        else:
-            LogEvent(self)
+
+        # show the event in the logger
+        LogEvent(self)
         
         activeHandlers = sorted(activeHandlers, key=GetItemPath)
-        #print clock()-start, len(eventHandlerList)
         
         eg.SetProcessingState(2, self)
         self.skipEvent = False
