@@ -74,7 +74,6 @@ Type: filesandordirs; Name: "{app}\\eg"
 
 [Files]
 Source: "%(libraryDir)s\\*.*"; DestDir: "{app}\\%(libraryName)s"; Flags: ignoreversion recursesubdirs
-Source: "%(sourceDir)s\\Example.xml"; DestDir: "{userappdata}\\EventGhost"; DestName: "MyConfig.xml"; Flags: onlyifdoesntexist uninsneveruninstall
 
 [Dirs]
 Name: "{app}\\%(libraryName)s\\site-packages"
@@ -84,6 +83,9 @@ Filename: "{app}\\EventGhost.exe"; Parameters: "-install"
 
 [UninstallRun]
 Filename: "{app}\\EventGhost.exe"; Parameters: "-uninstall"
+
+[UninstallDelete]
+Type: filesandordirs; Name: "{userappdata}\\EventGhost"
 
 [Run] 
 Filename: "{app}\\EventGhost.exe"; Flags: postinstall nowait skipifsilent 

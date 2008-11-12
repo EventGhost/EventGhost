@@ -96,11 +96,7 @@ class Config(Section):
     logActions = True
     logMacros = True
     onlyLogAssigned = False
-    useAutoloadFile = True
-    autoloadFilePath = os.path.join(
-        wx.StandardPaths.Get().GetUserDataDir(),
-        'MyConfig.xml'
-    )
+    autoloadFilePath = False
     storedBootTime = 0
     limitMemory = False
     limitMemorySize = 8
@@ -117,8 +113,8 @@ class Config(Section):
         configDir = eg.CONFIG_DIR
         if not os.path.exists(configDir):
             os.makedirs(configDir)
-            import shutil
-            shutil.copy("Example.xml", os.path.join(configDir, "MyConfig.xml"))
+            #import shutil
+            #shutil.copy("Example.xml", os.path.join(configDir, "MyConfig.xml"))
         configFilePath = os.path.join(configDir, "config.py")
         execDict = {"__metaclass__": _MakeSectionMetaClass}
         
