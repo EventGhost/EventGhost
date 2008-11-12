@@ -232,15 +232,18 @@ class EventGhost(object):
         config = self.config
 
         startupFile = self.startupArguments.startupFile
-        autoloadFilePath = config.autoloadFilePath
-        if startupFile is None and config.useAutoloadFile and autoloadFilePath:
-            if not os.path.exists(autoloadFilePath):
-                eg.PrintError(self.text.Error.FileNotFound % autoloadFilePath)
-            else:
-                startupFile = autoloadFilePath
+        if startupFile is None:
+            startupFile = config.autoloadFilePath
+        if startupFile and not os.path.exists(startupFile):
+            eg.PrintError(self.text.Error.FileNotFound % startupFile)
+            startupFile = None
                 
         eg.eventThread.Start()
-        wx.CallAfter(eg.eventThread.Call, eg.eventThread.StartSession, startupFile)
+        wx.CallAfter(
+            eg.eventThread.Call, 
+            eg.eventThread.StartSession, 
+            startupFile
+        )
         if config.checkUpdate:
             # avoid more than one check per day
             today = time.gmtime()[:3]

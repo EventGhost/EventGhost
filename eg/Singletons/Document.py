@@ -156,11 +156,16 @@ class Document(object):
     def Load(self, filePath):
         if self.tree:
             self.tree.DeleteAllItems()
-        if not filePath:
+        if filePath is None:
             return self.LoadEmpty()
         self.ResetUndoState()
         
-        self.SetFilePath(filePath)
+        if filePath is False:
+            filePath = "Example.xml"
+            self.SetFilePath(filePath)
+            self.filePath = False
+        else:
+            self.SetFilePath(filePath)
         eg.TreeLink.StartLoad()
         xmlTree = ElementTree.parse(filePath)
         node = xmlTree.getroot()
@@ -328,7 +333,7 @@ class Document(object):
         returns: wx.ID_OK     if no save was needed
                  wx.ID_YES    if file was saved
                  wx.ID_NO     if file was not saved
-                 wx.ID_CANCEL if user canceled posssible save
+                 wx.ID_CANCEL if user canceled possible save
         """
         if not self.isDirty.get():
             return wx.ID_OK
@@ -368,7 +373,7 @@ class Document(object):
         
     
     def Save(self):
-        if self.filePath is None:
+        if not self.filePath:
             return self.SaveAs()
         self.WriteFile()
         return wx.ID_YES
