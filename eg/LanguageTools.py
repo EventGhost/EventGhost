@@ -179,11 +179,8 @@ def LoadStrings(language):
                 pass
             return InstanceType(EmptyTextBunch, dict)
     try:
-        execfile(
-            "Languages\\" + language + ".py", 
-            {"__metaclass__": MetaClass}, 
-            tmp.__dict__
-        )
+        file = open("Languages\\" + language + ".py")
+        exec file in {"__metaclass__": MetaClass}, tmp.__dict__
     except IOError:
         pass
     return tmp
