@@ -20,6 +20,9 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
+
 
 GetIcon = eg.Icons.GetIcon
 #GetIcon = wx.Bitmap

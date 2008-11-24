@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+#pylint: disable-msg=W0232
 class Text:
     class General:
         configTree = "Configuration Tree"

@@ -20,9 +20,11 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-
+import eg
+import wx
 import string
 from types import StringTypes
+
 
 class Text(eg.TranslatableStrings):
     title = "Find"

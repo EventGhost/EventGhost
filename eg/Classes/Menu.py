@@ -20,6 +20,9 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
+
 
 class Menu(wx.Menu):
     
@@ -103,6 +106,4 @@ class MenuItem(wx.MenuItem):
     def Enable(self, enable=True):
         wx.MenuItem.Enable(self, enable)
         return self
-        
-        
-        
+

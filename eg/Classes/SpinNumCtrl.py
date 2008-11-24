@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
 import locale
 from wx.lib import masked
 

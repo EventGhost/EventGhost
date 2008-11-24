@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+
 
 class AddActionGroup(eg.UndoHandler.NewItem):
     name="Add all actions of plugin"

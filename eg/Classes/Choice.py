@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import wx
+
 
 class Choice(wx.Choice):
     

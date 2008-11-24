@@ -20,7 +20,10 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-        
+import eg
+import wx
+
+  
 kindTags = ["remote", "program", "external", "other"]
 
 class DefaultConfig:

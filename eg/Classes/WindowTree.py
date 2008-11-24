@@ -20,7 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-
+import eg
+import wx
 from time import sleep
 from os.path import basename
 

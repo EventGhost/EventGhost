@@ -20,9 +20,10 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 
-from Utils import SetClass
+SetClass = eg.SetClass
 
 class CustomMetaclass(type):
     def __new__(cls, name, bases, dct):

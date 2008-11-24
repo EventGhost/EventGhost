@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 from threading import Timer
 
 eg._lastDefinedPluginClass = None

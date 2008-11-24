@@ -20,6 +20,10 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
+
+
 PROMPT = "Please type your input..."
 
 class SimpleInputDialog(eg.Dialog):

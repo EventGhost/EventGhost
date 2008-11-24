@@ -20,11 +20,10 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-
+import eg
 from time import clock
 
 EVENT_ICON_INDEX = eg.EventItem.icon.index
-
 
 
 class ActionThread(eg.ThreadWorker):
@@ -96,4 +95,4 @@ class ActionThread(eg.ThreadWorker):
                     plugin.OnComputerResume(None)
                 except:
                     eg.PrintTraceback()
-            
+

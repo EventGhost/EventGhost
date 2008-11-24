@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
 import sys
 import wx.lib.mixins.listctrl as listmix
 from eg.WinApi import GetWindowText, GetClassName

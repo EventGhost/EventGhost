@@ -23,7 +23,6 @@
 import os
 import sys
 import locale
-import ctypes
 from os.path import join, dirname
 
 encoding = locale.getdefaultlocale()[1]
@@ -63,8 +62,8 @@ while True:
         break
     arg = argv[i].lower()
     if arg == "-n" or arg == "-netsend":
-        import NetworkSend
-        NetworkSend.Main(argv[i+1:])
+        import eg.NetworkSend
+        eg.NetworkSend.Main(argv[i+1:])
         sys.exit(0)
     elif arg == '-debug':
         args.debugLevel = 1
@@ -116,6 +115,7 @@ while True:
 
 if (not args.allowMultiLoad) and (not args.translate):
     # check if another instance of the program is running
+    import ctypes
     appMutex = ctypes.windll.kernel32.CreateMutexA(
         None, 
         0, 
@@ -132,8 +132,15 @@ if (not args.allowMultiLoad) and (not args.translate):
         ctypes.windll.kernel32.ExitProcess(0)		
     
 
-from Init import EventGhost
-eg = EventGhost(args)
-if not args.install:
-    eg.app.MainLoop()
+#import Init import EventGhost
+#eg = EventGhost(args)
+#if not args.install:
+#    eg.app.MainLoop()
 #ctypes.windll.kernel32.ExitProcess(0)
+
+def Main():
+    import eg
+    eg.Init(args)
+    if not args.install:
+        eg.app.MainLoop()
+

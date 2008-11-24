@@ -1,3 +1,5 @@
+import eg
+import wx
 import types
 
 class BoxedGroup(wx.StaticBoxSizer):

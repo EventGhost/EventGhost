@@ -21,6 +21,7 @@
 # $LastChangedBy$
 
 from __future__ import with_statement
+import eg
 import os
 import cPickle as pickle
 from os import stat
@@ -227,5 +228,4 @@ class PluginManager:
         infoList.sort(key=lambda x: x.name.lower())
         return infoList
         
-
 

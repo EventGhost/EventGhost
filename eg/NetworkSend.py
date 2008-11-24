@@ -31,10 +31,8 @@ def NetworkSend(host, port, password, eventString, payload=None):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.settimeout(2.0)
-    connected = False
     try:
         sock.connect((host, port))
-        connected = True
         sock.settimeout(1.0)
         # First wake up the server, for security reasons it does not
         # respond by it self it needs this string, why this odd word ?

@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 #import codecs
 import sys
 import traceback
@@ -56,24 +57,25 @@ class Log:
         self.data = deque()
         self.maxlength = 5000
         self.ctrl = DummyLogCtrl()
+        log = self
         if eg.debugLevel:
             class StdOut:
-                def write(self2, data):
-                    self.Write(data, INFO_ICON)
+                def write(self, data):
+                    log.Write(data, INFO_ICON)
                     oldStdOut.write(data)
             
             class StdErr:
-                def write(self2, data):
+                def write(self, data):
                     oldStdErr.write(data.decode("mbcs"))
                     #self.Write(data, ERROR_ICON)
         else:
             class StdOut:
-                def write(self2, data):
-                    self.Write(data, INFO_ICON)
+                def write(self, data):
+                    log.Write(data, INFO_ICON)
             
             class StdErr:
-                def write(self2, data):
-                    self.Write(data, ERROR_ICON)
+                def write(self, data):
+                    log.Write(data, ERROR_ICON)
         
         sys.stdout = StdOut()
         sys.stderr = StdErr()
@@ -163,12 +165,12 @@ class Log:
         if msg:
             self.PrintError(msg, source=source)
         tbType, tbValue, tbTraceback = sys.exc_info() 
-        list = ['Traceback (most recent call last) (%d):\n' % eg.buildNum]
+        slist = ['Traceback (most recent call last) (%d):\n' % eg.buildNum]
         if tbTraceback:
-            list += traceback.format_tb(tbTraceback)[skip:]
-        list += traceback.format_exception_only(tbType, tbValue)
+            slist += traceback.format_tb(tbTraceback)[skip:]
+        slist += traceback.format_exception_only(tbType, tbValue)
         
-        error = "".join(list)
+        error = "".join(slist)
         if source is not None:
             source = ref(source)
         self.Write(error.rstrip() + "\n", ERROR_ICON, source)
@@ -177,9 +179,9 @@ class Log:
             
 
     def PrintStack(self, skip=0):
-        list = ['Stack trace (most recent call last) (%d):\n' % eg.buildNum]
-        list += traceback.format_stack(sys._getframe().f_back)[skip:]
-        error = "".join(list)
+        slist = ['Stack trace (most recent call last) (%d):\n' % eg.buildNum]
+        slist += traceback.format_stack(sys._getframe().f_back)[skip:]
+        error = "".join(slist)
         self.Write(error.rstrip() + "\n", ERROR_ICON)
         if eg.debugLevel:
             sys.stderr.write(error)
@@ -213,5 +215,3 @@ class Log:
             mesg = eventstring
         self.Write(mesg + "\n", eg.EventItem.icon, eventstring)
         
-        
-    

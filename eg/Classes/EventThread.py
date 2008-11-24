@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 import traceback
 import time
 from functools import partial
@@ -126,5 +127,3 @@ class EventThread(eg.ThreadWorker):
         eg.actionThread.CallWait(eg.actionThread.StopSession, 120)
         eg.PrintDebugNotice("StopSession done")
 
-
-    

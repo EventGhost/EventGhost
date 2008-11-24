@@ -20,7 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-
+import wx
 from base64 import b64decode, b64encode
 from cStringIO import StringIO
 

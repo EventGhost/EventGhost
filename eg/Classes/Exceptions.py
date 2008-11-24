@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+
 
 class Text(eg.TranslatableStrings):
     DriverNotFound = "Driver not found!"
@@ -35,7 +37,7 @@ class Text(eg.TranslatableStrings):
     
     
 class Exception(eg.Exception):
-    source = "unknow"
+    source = "unknown"
     
     def __init__(self, *args):
         self.args = args

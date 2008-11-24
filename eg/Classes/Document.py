@@ -20,7 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-
+import eg
+import wx
 from types import ClassType
 import os
 from xml.etree import cElementTree as ElementTree
@@ -58,9 +59,6 @@ class Observable:
     def unset(self):
         self.data = None
 
-gTreeItemTypes = ["TreeItem", "ContainerItem", "EventItem", "ActionItem",
-    "PluginItem", "FolderItem", "MacroItem", "RootItem", "AutostartItem"]    
-
 
 
 class Document(object):
@@ -73,11 +71,22 @@ class Document(object):
         self.ItemMixin = ItemMixin
         itemNamespace = {}
         self.XMLTag2ClassDict = {}
-        for itemType in gTreeItemTypes:
-            baseCls = getattr(eg, itemType)
-            itemCls = ClassType(itemType, (baseCls, ItemMixin), itemNamespace)
-            setattr(self, itemType, itemCls)
-            self.XMLTag2ClassDict[itemCls.xmlTag] = itemCls
+        
+        def MakeCls(name):
+            baseCls = getattr(eg, name)
+            cls = ClassType(name, (ItemMixin, baseCls), itemNamespace)
+            self.XMLTag2ClassDict[cls.xmlTag] = cls
+            return cls
+        
+        self.TreeItem = MakeCls("TreeItem")
+        self.ContainerItem = MakeCls("ContainerItem")
+        self.EventItem = MakeCls("EventItem")
+        self.ActionItem = MakeCls("ActionItem")
+        self.PluginItem = MakeCls("PluginItem")
+        self.FolderItem = MakeCls("FolderItem")
+        self.MacroItem = MakeCls("MacroItem")
+        self.RootItem = MakeCls("RootItem")
+        self.AutostartItem = MakeCls("AutostartItem")
 
         self.stockUndo = []
         self.stockRedo = []
@@ -454,6 +463,4 @@ class Document(object):
             return i
         
         _Traverse(self.root, -1)
-        
-                             
-        
+

@@ -19,29 +19,32 @@
 # $LastChangedDate$
 # $LastChangedRevision$
 # $LastChangedBy$
+""" 
+Definition of the abstract PluginClass. 
+"""
 
-__docformat__ = 'reStructuredText'
-
-""" Definition of the abstract PluginClass. """
-from types import ClassType
-from PluginMetaClass import PluginMetaClass
-AddAction = eg.ActionGroup.AddAction
+import eg
         
        
 class PluginClass(object):
     """ 
     Base class of every EventGhost plugin written in Python 
+        
+    .. attribute:: name
     
-    :sort: name, description, __init__, __start__, __stop__, __close__
-    
-    :ivar name: 
         The (localized) name of the plugin.
-    :ivar description: 
+        
+    .. attribute:: description
+    
         The (localized) description of the plugin.
-    :ivar info: 
+        
+    .. attribute:: info
+        
         Internally used house keeping data. Don't try to manipulate
         this yourself.
-    :cvar text: 
+        
+    .. attribute:: text
+    
         Assign a class with text strings to this field to get them localized.
     """
     
@@ -49,8 +52,13 @@ class PluginClass(object):
     description = None
     info = None
     text = None
-    __metaclass__ = PluginMetaClass 
-
+    __metaclass__ = eg.PluginMetaClass 
+    # used for automatic documentation creation
+    __docsort__ = ( 
+        "__start__, __stop__, __close__, Configure, AddAction, AddGroup, "
+        "TriggerEvent, TriggerEnduringEvent, EndLastEvent"
+    )
+    
     def __init__(self):
         """
         Override this if the plugin needs some code to be executed directly 
@@ -165,12 +173,9 @@ class PluginClass(object):
         """
         Add an action to the AddActionDialog of EventGhost for this plugin.
         
-        :Parameters:
-          `action` : eg.ActionClass subclass
-            The ActionClass to add
-          `hidden` : bool
-            If set to True, the action will not show up in the AddActionDialog
-            but is otherwise fully functional.
+        :param action: The ActionClass to add
+        :param hidden: If set to True, the action will not show up in the 
+            AddActionDialog but is otherwise fully functional.
         """
         # Here it is only defined as an abstract method. 
         # The real AddAction method will be assigned shortly before the plugin
@@ -188,13 +193,10 @@ class PluginClass(object):
         You can also call AddGroup on the returned object to create even 
         deeper nested sub-groups.
         
-        :Parameters:
-            `name` : string
-                Name of the sub-group
-            `description` : string
-                Description of the sub-group. Can include HTML tags.
-            
-        :return: The new sub-group instance
+        :param name: Name of the sub-group
+        :param description: Description of the sub-group. Can include HTML 
+            tags.
+        :returns: The new sub-group instance
         :rtype: eg.ActionGroup instance
             
         """
@@ -204,13 +206,13 @@ class PluginClass(object):
         pass
     
     
-    def GetLabel(self, *args):
+    def GetLabel(self, *dummyArgs):
         """
         Return the label that should be displayed in the configuration tree
         with the current arguments.
         
         This default method simply shows the plugin name. If you want to have 
-        a different behaviour, you can override it.
+        a different behavior, you can override it.
         
         This method gets called with the same parameters as the __start__
         method.
@@ -232,13 +234,13 @@ class PluginClass(object):
         eg.PrintError(msg, source=self.info.treeItem)
         
         
-    def Configure(self, *args):
+    def Configure(self, *dummyArgs):
         """
         This should be overridden in a subclass, if the plugin wants to have 
         a configuration dialog.
         
         When the plugin is freshly added by the user to the configuration tree
-        there are no "args" and you must therefor supply sufficent
+        there are no "args" and you must therefore supply sufficient
         default arguments.
         If the plugin is reconfigured by the user, this method will be called
         with the same arguments as the __start__ method would receive.
@@ -279,3 +281,4 @@ class PluginClass(object):
     
     def AddActionsFromList(self, theList, defaultAction=None):
         self.info.actionGroup.AddActionsFromList(theList, defaultAction)
+

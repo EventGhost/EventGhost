@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
 import time
 from ContainerItem import ContainerItem
 from TreeItem import HINT_NO_DROP, HINT_MOVE_INSIDE

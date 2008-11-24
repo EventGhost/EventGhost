@@ -20,11 +20,15 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
 import sys
 import time
 import threading
 from eg.WinApi.Dynamic import (
-    WM_QUERYENDSESSION, WM_ENDSESSION, SetProcessShutdownParameters
+    WM_QUERYENDSESSION, 
+    WM_ENDSESSION, 
+    SetProcessShutdownParameters,
 )
 
 
@@ -93,8 +97,8 @@ class App(wx.App):
         eg.taskBarIcon.alive = False
         eg.taskBarIcon.Destroy()
         #self.ExitMainLoop()
-    	eg.CallWait(self.OnExit)
-    	return 0
+        eg.CallWait(self.OnExit)
+        return 0
          
         
     @eg.LogIt
@@ -147,4 +151,4 @@ class App(wx.App):
             eg.PrintDebugNotice(" ", t, t.getName())
         eg.PrintDebugNotice("Done!")
         sys.exit(0)
-        
+

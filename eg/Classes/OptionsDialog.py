@@ -20,12 +20,15 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
 import os
 import sys
 
 from wx.combo import BitmapComboBox
 
-from LanguageTools import languageNames
+from eg.LanguageTools import languageNames
+
 
 class Text(eg.TranslatableStrings):
     Title = "Options"

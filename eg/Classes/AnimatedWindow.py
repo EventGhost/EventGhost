@@ -21,14 +21,15 @@
 # $LastChangedBy$
 
 
+import wx
 from math import sin
 import time
  
 
 class AnimatedWindow(wx.PyWindow):
     
-    def __init__(self, parent, id=-1):
-        wx.PyWindow.__init__(self, parent, id)
+    def __init__(self, parent):
+        wx.PyWindow.__init__(self, parent)
         self.font = wx.Font(
             40, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_BOLD
         )
@@ -85,12 +86,10 @@ class AnimatedWindow(wx.PyWindow):
         dc.EndDrawing()
         
         
-    @eg.LogIt
     def AcceptsFocus(self):
         return False
         
         
-    @eg.LogIt
     def AcceptsFocusFromKeyboard(self):
         return False
         

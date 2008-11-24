@@ -26,11 +26,13 @@ __all__ = ["Bunch", "EventHook", "LogIt", "LogItWithReturn",
     "VBoxSizer", "HBoxSizer", "EqualizeWidths", "P",
 ]
     
-
+import eg
+import wx
 import threading
 import time
 import inspect
 from types import ClassType
+
 
 def P(*args, **kwargs):
     return (args, kwargs)
@@ -94,7 +96,7 @@ def GetMyRepresentation(value):
                         
 def GetFuncArgString(func, args, kwargs):
     classname = ""
-    argnames, varargs, varkw, defaults = inspect.getargspec(func)
+    argnames = inspect.getargspec(func)[0]
     start = 0
     if argnames:
         if argnames[0] == "self":
@@ -148,7 +150,7 @@ def TimeIt(func):
         return func
     def TimeItWrapper(*args, **kwargs):
         startTime = time.clock()
-        fname, argString = GetFuncArgString(func, args, kwargs)
+        fname, _ = GetFuncArgString(func, args, kwargs)
         res = func(*args, **kwargs)
         eg.PrintDebugNotice(fname + " :" + repr(time.clock() - startTime))
         return res
@@ -221,7 +223,6 @@ def AsGreenlet(func):
         gr = eg.Greenlet(func)
         return gr.switch(*args, **kwargs)
     return Wrapper
-# TODO: find a better place for EnsureVisible
 
 
 def EnsureVisible(window):
@@ -245,13 +246,13 @@ def EnsureVisible(window):
             return wx.NOT_FOUND
         
     windowRect = window.GetScreenRect()
-    windowTopLeft = windowRect.GetTopLeft()
-    windowBottomRight = windowRect.GetBottomRight()
     
     # if the entire window is contained on the display, take a quick exit
-    if GetDisplayFromPoint(windowTopLeft) != wx.NOT_FOUND:
-        if GetDisplayFromPoint(windowBottomRight) != wx.NOT_FOUND:
-            return
+    if (
+        GetDisplayFromPoint(windowRect.TopLeft) != wx.NOT_FOUND
+        and GetDisplayFromPoint(windowRect.BottomRight) != wx.NOT_FOUND
+    ):
+        return
     
     # get the nearest display
     displayNum = wx.Display.GetFromWindow(window)
@@ -263,43 +264,36 @@ def EnsureVisible(window):
     
     displayRect = displayRects[displayNum]
 
-    displayLeft, displayTop = displayRect.GetTopLeft().Get()
-    displayRight, displayBottom = displayRect.GetBottomRight().Get()
-    
-    windowLeft, windowTop = windowTopLeft.Get()
-    windowRight, windowBottom = windowBottomRight.Get()
-    
     # shift the dialog horizontally into the display area
-    if windowLeft < displayLeft:
-        windowRight += (displayLeft - windowLeft)
-        windowLeft = displayLeft
-        if windowRight > displayRight:
-            windowRight = displayRight
-    elif windowRight > displayRight:
-        windowLeft += (displayRight - windowRight)
-        windowRight = displayRight
-        if windowLeft < displayLeft:
-            windowLeft = displayLeft
+    if windowRect.Left < displayRect.Left:
+        windowRect.Right += (displayRect.Left - windowRect.Left)
+        windowRect.Left = displayRect.Left
+        if windowRect.Right > displayRect.Right:
+            windowRect.Right = displayRect.Right
+    elif windowRect.Right > displayRect.Right:
+        windowRect.Left += (displayRect.Right - windowRect.Right)
+        windowRect.Right = displayRect.Right
+        if windowRect.Left < displayRect.Left:
+            windowRect.Left = displayRect.Left
             
     # shift the dialog vertically into the display area
-    if windowTop < displayTop:
-        windowBottom += (displayTop - windowTop)
-        windowTop = displayTop
-        if windowBottom > displayBottom:
-            windowBottom = displayBottom
-    elif windowBottom > displayBottom:
-        windowTop += (displayBottom - windowBottom)
-        windowBottom = displayBottom
-        if windowTop < displayTop:
-            windowTop = displayTop
+    if windowRect.Top < displayRect.Top:
+        windowRect.Bottom += (displayRect.Top - windowRect.Top)
+        windowRect.Top = displayRect.Top
+        if windowRect.Bottom > displayRect.Bottom:
+            windowRect.Bottom = displayRect.Bottom
+    elif windowRect.Bottom > displayRect.Bottom:
+        windowRect.Top += (displayRect.Bottom - windowRect.Bottom)
+        windowRect.Bottom = displayRect.Bottom
+        if windowRect.Top < displayRect.Top:
+            windowRect.Top = displayRect.Top
             
     # set the new position and size
-    newRect = wx.RectPP((windowLeft, windowTop), (windowRight, windowBottom))
-    window.SetRect(newRect)
+    window.SetRect(windowRect)
 
 
 
-class VBoxSizer(wx.BoxSizer):
+class VBoxSizer(wx.BoxSizer): #IGNORE:R0904
     
     def __init__(self, *items):
         wx.BoxSizer.__init__(self, wx.VERTICAL)
@@ -307,7 +301,7 @@ class VBoxSizer(wx.BoxSizer):
         
         
         
-class HBoxSizer(wx.BoxSizer):
+class HBoxSizer(wx.BoxSizer): #IGNORE:R0904
     
     def __init__(self, *items):
         wx.BoxSizer.__init__(self, wx.HORIZONTAL)
@@ -404,3 +398,4 @@ def namedtuple(typename, field_names, verbose=False):
         result.__module__ = _sys._getframe(1).f_globals['__name__']
 
     return result
+

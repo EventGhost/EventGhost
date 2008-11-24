@@ -26,6 +26,7 @@
 :undocumented: gIconCache, DISABLED_PIL, FOLDER_PIL, PLUGIN_PIL, ACTION_PIL
 """
 
+import wx
 from os.path import abspath
 from base64 import b64decode
 from cStringIO import StringIO
@@ -205,10 +206,8 @@ class PilIcon(IconBase):
     
     
 def ClearImageList():
-    """ Delete the global wxImageList and replace it with a new empty one. """
-    global gImageList
+    """ Clear the global wxImageList. """
     gImageList.RemoveAll()
-    gImageList = wx.ImageList(16, 16)
     # clear out all instance variables for all icons, except the key variable
     for clsType in (IconBase, ActionSubIcon, PluginSubIcon):
         for icon in clsType.cache.itervalues():

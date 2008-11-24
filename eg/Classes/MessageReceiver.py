@@ -20,7 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-
+import eg
+import wx
 from eg.WinApi.Dynamic import (
     WM_SIZE, CW_USEDEFAULT, WS_OVERLAPPEDWINDOW, GetModuleHandle, WNDCLASS,
     RegisterClass, CreateWindowEx, byref, WNDPROC, WinError, DefWindowProc,
@@ -124,3 +125,4 @@ class MessageReceiver(eg.ThreadWorker):
         self.hwnd = None
         self.Stop()
         
+    

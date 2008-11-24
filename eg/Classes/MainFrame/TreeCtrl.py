@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
 from cStringIO import StringIO
 from time import clock, sleep
 
@@ -61,7 +63,7 @@ class EventDropSource(wx.DropSource):
         
 
 
-from Classes.TreeItem import (
+from eg.Classes.TreeItem import (
     HINT_NO_DROP, HINT_MOVE_INSIDE, HINT_MOVE_BEFORE, HINT_MOVE_AFTER,
     HINT_MOVE_BEFORE_OR_AFTER, HINT_MOVE_EVERYWHERE
 )
@@ -425,18 +427,22 @@ class TreeCtrl(wx.TreeCtrl):
         self.Thaw()
         
 
+#    def OnToolTip(self, event):
+#        id = event.GetItem()
+#        item = self.GetPyData(id)
+#        if not item:
+#            return
+#        xmlId = item.xmlId
+#        s = item.GetLabel() + "\n\nxmlId: " + str(xmlId)
+#        if isinstance(item, eg.ContainerItem):
+#            s += "\nchilds: " + str(len(item.childs)) 
+#            s += "\nexpanded:" + str(item.isExpanded)
+#            s += "\nIsExpanded:" + str(self.IsExpanded(id))
+#        event.SetToolTip(s)
+        
+        
     def OnToolTip(self, event):
-        id = event.GetItem()
-        item = self.GetPyData(id)
-        if not item:
-            return
-        xmlId = item.xmlId
-        s = item.GetLabel() + "\n\nxmlId: " + str(xmlId)
-        if isinstance(item, eg.ContainerItem):
-            s += "\nchilds: " + str(len(item.childs)) 
-            s += "\nexpanded:" + str(item.isExpanded)
-            s += "\nIsExpanded:" + str(self.IsExpanded(id))
-        event.SetToolTip(s)
+        pass
         
         
     def SetInsertMark(self, treeItem, after):
@@ -450,10 +456,6 @@ class TreeCtrl(wx.TreeCtrl):
         SendMessageTimeout(self.hwnd, 4378, 0, long(0), 1, 100, 0)
         
 
-    def OnToolTip(self, event):
-        pass
-        
-        
     def OnGetFocus(self, event):
         self.hasFocus = True
         eg.focusEvent.Fire(self)
@@ -532,7 +534,7 @@ class TreeCtrl(wx.TreeCtrl):
         self.SelectItem(dragId)
         dropSource = EventDropSource(self, self.GetItemXml(dragObject))
         dropTarget = self.dropTarget
-        dropTarget.dragCls = dragObject.__class__.__bases__[0]
+        dropTarget.dragCls = dragObject.__class__.__bases__[1]
         dropTarget.dragObject = dragObject
         dropTarget.isExternalDrag = False
         self.dragtimer.Start(50)
@@ -634,7 +636,7 @@ class TreeCtrl(wx.TreeCtrl):
 #                xmlTree = ElementTree.fromstring(data)
 #                xmlTagToClassDict = self.document.XMLTag2ClassDict
 #                for node in xmlTree:
-#                    childCls = xmlTagToClassDict[node.tag].__bases__[0]
+#                    childCls = xmlTagToClassDict[node.tag].__bases__[1]
 #                    if selectionObj.DropTest(childCls) in (1, 5):
 #                        continue
 #                    if selectionObj.parent is None:
@@ -647,3 +649,4 @@ class TreeCtrl(wx.TreeCtrl):
 #            wx.TheClipboard.Close()
 #        return True
 #        
+

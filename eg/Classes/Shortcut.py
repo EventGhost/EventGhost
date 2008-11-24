@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-
 import pythoncom
 from win32com.shell import shell
 

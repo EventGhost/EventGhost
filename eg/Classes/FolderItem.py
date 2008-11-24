@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
 from ContainerItem import ContainerItem
 from TreeItem import HINT_MOVE_EVERYWHERE, HINT_NO_DROP
 

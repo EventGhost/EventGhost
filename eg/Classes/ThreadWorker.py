@@ -19,6 +19,8 @@
 # $LastChangedDate$
 # $LastChangedRevision$
 # $LastChangedBy$
+
+import eg
 import sys
 from sys import exc_info, _getframe
 from threading import Event, Thread, Lock
@@ -314,7 +316,4 @@ class ThreadWorker:
             excType, excValue, excTraceback = action.exceptionInfo
             raise excType, excValue, excTraceback
         return action.returnValue
-    
-    
-    
-        
+
