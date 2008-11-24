@@ -29,7 +29,6 @@ import os
 import time
 import ConfigParser
 import threading
-import shutil
 import imp
 
 from os.path import dirname, join, exists, abspath
@@ -148,6 +147,7 @@ EXCLUDED_MODULES = [
     "win32com.axscript",
     "pywin",
     "comtypes.gen",
+    "eg",
 ]
 
 
