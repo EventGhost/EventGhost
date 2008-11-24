@@ -1,4 +1,5 @@
 
+import eg
 
 eg.RegisterPlugin(
     name = "Advanced IR-Transceiver",
@@ -9,6 +10,7 @@ eg.RegisterPlugin(
     canMultiLoad = True,
 )
 
+import wx
 import threading
 
 ATI_Remote_Table = {
