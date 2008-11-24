@@ -20,8 +20,9 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
 from TreeItem import TreeItem
-
 
 
 class ContainerItem(TreeItem):

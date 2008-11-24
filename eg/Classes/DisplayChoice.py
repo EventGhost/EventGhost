@@ -20,7 +20,10 @@
 # $LastChangedRevision$
 # $LastChangedBy$
            
-            
+import eg
+import wx
+
+
 class DisplayChoice(eg.Choice):
     
     def __init__(self, parent, value, *args, **kwargs):

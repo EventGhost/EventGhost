@@ -20,38 +20,43 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-__docformat__ = 'reStructuredText'
-
+import eg
 from types import ClassType
+
 
 class ActionClass(object):
     """ 
     Base class of every action of a EventGhost plugin written in Python 
     
-    :sort: name, description, iconFile, text, plugin, info
+    .. attribute:: name
     
-    :cvar name:
         Set this to descriptive name in your class definition. 
         It might get translated by PluginClass.AddAction() to the user's 
         language if a translation is found.
     
-    :cvar description:
+    .. attribute:: description
+    
         Set this to descriptive description in your class definition. 
         It might get translated by PluginClass.AddAction() to the user's 
         language if a translation is found.
     
-     :cvar iconFile:
+    .. attribute:: iconFile
+    
         Name of an icon file if any. Use a 16x16-PNG and drop it inside your
         plugin's folder. Only specify the name of the file without extension.
      
-    :cvar text: 
+    .. attribute:: text
+    
         Assign a class with text strings to this field to get them localised.
 
-     :ivar plugin:      
-        This will be set from PluginClass.AddAction() for convenience, so every 
-        action can access its own plugin instance through this member variable.
+    .. attribute:: plugin
+    
+        This will be set from PluginClass.AddAction() for convenience, so 
+        every action can access its own plugin instance through this member 
+        variable.
      
-     :ivar info:      
+    .. attribute:: info
+     
         Internally used house keeping data. Don't try to manipulate
         this yourself.
     """
@@ -103,14 +108,15 @@ class ActionClass(object):
         """
         Print an error message to the logger.
         
-        Prefer to use self.PrintError instead of eg.PrintError, since this
-        method might be enhanced in the future to give the user better
-        information about the source of the error.
+        Prefer to use :meth:`self.PrintError <eg.ActionClass.PrintError>` 
+        instead of eg.PrintError, since this method might be enhanced in the 
+        future to give the user better information about the source of the 
+        error.
         """
         eg.PrintError(msg)
         
         
-    def Configure(self, *args):
+    def Configure(self, *dummyArgs):
         """
         This should be overridden in a subclass, if the action wants to have 
         a configuration dialog.
@@ -131,6 +137,7 @@ class ActionClass(object):
     
     @classmethod
     def OnAddAction(cls):
+        """test"""
         pass
     
     
@@ -162,10 +169,18 @@ class ActionClass(object):
         pass
     
     @classmethod
-    def AddActionFactory(cls, parent, clsName, name, description=None, value=None):
+    def AddActionFactory(
+        cls, 
+        parent, 
+        clsName, 
+        name, 
+        description=None, 
+        value=None
+    ):
         actionCls = ClassType(
             clsName,
             (cls, ),
             dict(name=name, description=description, value=value),
         )
         parent.AddAction(actionCls)
+

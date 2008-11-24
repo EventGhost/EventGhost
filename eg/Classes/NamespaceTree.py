@@ -1,4 +1,5 @@
-
+import eg
+import wx
 import wx.gizmos
 
 class NamespaceTree(wx.gizmos.TreeListCtrl):

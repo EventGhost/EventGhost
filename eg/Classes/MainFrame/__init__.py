@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
 import os
 import re
 
@@ -991,4 +993,3 @@ class MainFrame(wx.Frame):
         #eg.AddEventDialog.GetModalResult(self)
         #eg.NamespaceTree.Test()
 
-        

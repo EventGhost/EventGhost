@@ -20,6 +20,9 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
+
 
 class Text:
     mesg = "Please select the folder you want to export"
@@ -61,4 +64,3 @@ class ExportDialog(eg.Dialog):
             self.SetResult([GetPyData(item) for item in items])
         
         
-    

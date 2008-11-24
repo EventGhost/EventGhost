@@ -20,6 +20,9 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
+
 
 class Dialog(wx.Dialog, eg.ControlProviderMixin):
     __isModal = False

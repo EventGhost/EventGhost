@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import wx
 import thread
 import webbrowser
 import threading

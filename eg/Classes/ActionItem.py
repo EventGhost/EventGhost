@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
 import colorsys
 
 from TreeItem import TreeItem
@@ -255,6 +257,4 @@ class ActionItem(TreeItem):
         if cls == eg.PluginItem and self.parent == self.document.autostartMacro:
             return HINT_MOVE_BEFORE_OR_AFTER
         return HINT_NO_DROP
-
-
 

@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
 from functools import partial
 from xml.sax.saxutils import quoteattr, escape
 from cStringIO import StringIO
@@ -54,7 +56,11 @@ class TreeItem(object):
     # we need this so weakrefs can find out if the item actually lives
     isDeleted = False 
 
-        
+    tree = None
+    document = None
+    root = None
+    icon = None
+    
     def GetFullXml(self):
         TreeLink.StartUndo()
         output = StringIO()
@@ -91,12 +97,6 @@ class TreeItem(object):
         self.xmlId = TreeLink.NewXmlId(int(get('id', -1)), self)
 
         
-    if eg.debugLevel:
-        @eg.LogIt
-        def __del__(self):
-            pass
-    
-    
     def RestoreState(self):
         pass
     
@@ -509,3 +509,4 @@ class TreeItem(object):
         @eg.LogIt
         def __del__(self):
             pass
+

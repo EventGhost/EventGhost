@@ -20,10 +20,9 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 import os
 from types import InstanceType
-
-from Utils import SetClass
 
 
 languageNames = {

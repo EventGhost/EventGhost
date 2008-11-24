@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
 import keyword
 import re
 from wx.stc import *
@@ -387,7 +389,7 @@ class PythonEditorCtrl(StyledTextCtrl):
         for lineNum in xrange(lineCount):
             if self.GetFoldLevel(lineNum) & STC_FOLDLEVELHEADERFLAG:
                 expanding = not self.GetFoldExpanded(lineNum)
-                break;
+                break
 
         lineNum = 0
 
@@ -441,7 +443,7 @@ class PythonEditorCtrl(StyledTextCtrl):
                     else:
                         line = self.Expand(line, False, force, visLevels-1)
             else:
-                line = line + 1;
+                line = line + 1
 
         return line
 

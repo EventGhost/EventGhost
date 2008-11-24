@@ -20,9 +20,11 @@
 # $LastChangedRevision: 344 $
 # $LastChangedBy: bitmonster $
 
-
+import eg
+import wx
 import xml.etree.cElementTree as ElementTree
 from functools import partial
+
 
 class Paste:
     name = eg.text.MainFrame.Menu.Paste.replace("&", "")
@@ -52,7 +54,7 @@ class Paste:
                 targetObj = selectionObj
                 childCls = document.XMLTag2ClassDict[childXmlNode.tag]
                 before = None
-                childClsBase = childCls.__bases__[0]
+                childClsBase = childCls.__bases__[1]
                 insertionHint = targetObj.DropTest(childClsBase)
                 if insertionHint in (1, 5): 
                     # item will move inside

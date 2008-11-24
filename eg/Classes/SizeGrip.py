@@ -20,7 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-
+import eg
+import wx
 from eg.WinApi.Dynamic import (
     GetSystemMetrics, GetModuleHandle, CreateWindowEx,
     WS_CHILD, WS_VISIBLE, SBS_SIZEGRIP, SBS_SIZEBOXTOPLEFTALIGN,

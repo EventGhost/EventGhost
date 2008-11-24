@@ -20,13 +20,14 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
 import time
 import sys
 import platform
 from cStringIO import StringIO
 
 import Image
-
 
 
 class Text(eg.TranslatableStrings):
@@ -395,6 +396,3 @@ class AboutDialog(eg.Dialog):
         self.SetMinSize(self.GetSize())
         self.Affirmed()
     
-        
-        
-        

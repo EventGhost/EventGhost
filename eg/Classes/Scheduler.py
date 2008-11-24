@@ -20,18 +20,21 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-from time import clock, time
+import eg
+from time import time
 from heapq import heappush, heapify, heappop
 import threading
 
 
 
 class Scheduler(threading.Thread):
-    """Sometimes you want to execute some code at a specified time or after a 
+    """
+    Sometimes you want to execute some code at a specified time or after a 
     specified time period. EventGhost includes a small scheduler, that helps 
     you to accomplish this.
     
-    :undocumented: Stop, MainLoop, __init__
+    EventGhost creates a single instance of this class that is accessible as
+    *eg.scheduler*.
     """
 
     def __init__(self):
@@ -50,9 +53,8 @@ class Scheduler(threading.Thread):
         """
         This function will call the callable `func` after `waitTime`
         seconds (expressed as a floating point number) with optional 
-        parameters, by adding it to the scheduler's queue. A little example:
+        parameters, by adding it to the scheduler's queue. A little example::
 
-        .. python::
             def MyTestFunc(myArgument):
                 print "MyTestFunc was called with:", repr(myArgument)
             
@@ -63,17 +65,17 @@ class Scheduler(threading.Thread):
         
             MyTestFunc was called with: 'just some test data'
         
-        The function will also return an object, that you can use as the 
-        `task` identifier for `CancelTask()`.
+        The function will return an object, that you can use as the 
+        `task` identifier for :meth:`CancelTask()`.
 
-        :Parameters:
+        :Arguments:
           waitTime
             The time to wait in floating point seconds.
           func
             The callable to invoke after the time has elapsed.
-          args
+          \*args
             Optional positional arguments for the callable.
-          kwargs
+          \*\*kwargs
             Optional keyword arguments for the callable.
             
         :Returns:
@@ -85,12 +87,11 @@ class Scheduler(threading.Thread):
         
     def AddTaskAbsolute(self, startTime, func, *args, **kwargs):
         """
-        This does the same as `AddTask`, but the `startTime` parameter specifies
-        an absolute time expressed in floating point seconds since the epoch. 
-        Take a look at the documentation of `Python's time module`_, 
-        for more information about this time format. Again a little example:
+        This does the same as :meth:`AddTask`, but the `startTime` parameter 
+        specifies an absolute time expressed in floating point seconds since 
+        the epoch. Take a look at the documentation of `Python's time module`_, 
+        for more information about this time format. Again a little example::
         
-        .. python::
             import time
             startTime = time.mktime((2007, 8, 15, 16, 53, 0, 0, 0, -1))
             eg.scheduler.AddTaskAbsolute(startTime, eg.TriggerEvent, "MyEvent")
@@ -113,8 +114,8 @@ class Scheduler(threading.Thread):
         
     def CancelTask(self, task):
         """
-        This will cancel a task formerly added by `AddTask` or 
-        `AddTaskAbsolute`, if the task hasn't been started yet. 
+        This will cancel a task formerly added by :meth:`AddTask` or 
+        :meth:`AddTaskAbsolute`, if the task hasn't been started yet. 
         
         If the task has already been called or simply wasn't added before, the 
         function will raise an IndexError.
@@ -153,4 +154,4 @@ class Scheduler(threading.Thread):
             self.keepRunning = False
         self.AddTask(-1, func)
         
-        
+    

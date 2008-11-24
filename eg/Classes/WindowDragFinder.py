@@ -21,6 +21,8 @@
 # $LastChangedBy$
 
 
+import eg
+import wx
 from eg.WinApi import (
     HighlightWindow, 
     BestWindowFromPoint, 

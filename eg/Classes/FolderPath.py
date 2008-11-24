@@ -82,9 +82,9 @@ CSIDL = {
     'Windows': 36,
 }
 
-buffer = create_unicode_buffer(MAX_PATH)
-GetTempPathW(MAX_PATH, buffer)
-temporaryFiles = buffer.value[:-1]
+BUFFER = create_unicode_buffer(MAX_PATH)
+GetTempPathW(MAX_PATH, BUFFER)
+temporaryFiles = BUFFER.value[:-1]
 
 
 class FolderPath(object):
@@ -94,16 +94,14 @@ class FolderPath(object):
     
     def __getattr__(self, name):
         csidl = CSIDL[name]
-        rc = SHGetFolderPathW(
+        SHGetFolderPathW(
             0, 
             csidl|CSIDL_FLAG_DONT_VERIFY, 
             0, 
             SHGFP_TYPE_CURRENT, 
-            buffer
+            BUFFER
         )
-        path = buffer.value
+        path = BUFFER.value
         self.__dict__[name] = path
         return path
     
-        
-        

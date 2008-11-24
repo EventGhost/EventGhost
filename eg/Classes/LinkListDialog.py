@@ -20,7 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-
+import wx
 from wx.lib.mixins.listctrl import ListCtrlAutoWidthMixin
 
 

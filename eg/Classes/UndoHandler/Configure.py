@@ -20,6 +20,9 @@
 # $LastChangedRevision: 344 $
 # $LastChangedBy: bitmonster $
 
+import eg
+import wx
+
 
 class Configure:
     

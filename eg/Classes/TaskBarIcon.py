@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
 import threading
 
 
@@ -110,5 +112,4 @@ class TaskBarIcon(wx.TaskBarIcon):
             wx.CallAfter(self.SetIcons, state)
         finally:
             self.reentrantLock.release()
-    
-    
+

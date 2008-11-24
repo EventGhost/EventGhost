@@ -20,7 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-
+import eg
+import wx
 from re import compile, escape
 from types import StringTypes
 from time import clock

@@ -20,9 +20,11 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-from time import strftime, localtime
+import eg
+import wx
 import collections
 import colorsys
+from time import strftime, localtime
 import wx.lib.mixins.listctrl as listmix
 
 
@@ -242,10 +244,10 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.PopupMenu(self.contextMenu)
 
 
-    def OnMouseMotion(self, event):
-        item, flags = self.HitTest(event.GetPosition())
-        if flags & wx.LIST_HITTEST_ONITEM:
-            self.tooltip.SetTip(self.OnGetItemText(item, 0)[1:])
+#    def OnMouseMotion(self, event):
+#        item, flags = self.HitTest(event.GetPosition())
+#        if flags & wx.LIST_HITTEST_ONITEM:
+#            self.tooltip.SetTip(self.OnGetItemText(item, 0)[1:])
         
         
     def OnDoubleClick(self, event):
@@ -263,9 +265,9 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     
     
     def OnGetItemText(self, item, column):
-        raise NotImplementedError 
-    
-    
+        return ""
+        
+        
     def OnGetItemTextNormal(self, item, column):
         return " " + self.data[item][0]
         

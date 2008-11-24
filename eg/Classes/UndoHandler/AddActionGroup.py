@@ -20,6 +20,8 @@
 # $LastChangedRevision: 344 $
 # $LastChangedBy: bitmonster $
 
+import eg
+
 
 class AddActionGroup(eg.UndoHandler.NewItem):
     name="Add all actions of plugin"

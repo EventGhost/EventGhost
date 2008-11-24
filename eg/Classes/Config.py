@@ -20,11 +20,13 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-
+import eg
+import wx
 import os
 import sys
 from os.path import exists
 from types import ClassType, InstanceType
+
 
 configFilePath = ''
 
@@ -139,3 +141,4 @@ class Config(Section):
         fd = open(configFilePath, 'w+')
         RecursivePySave(self, fd.write)
         fd.close()
+

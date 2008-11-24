@@ -20,10 +20,10 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 from types import ClassType
 
-from eg.Utils import SetClass
-
+SetClass = eg.SetClass
 ActionClass = eg.ActionClass
 
 
@@ -78,7 +78,15 @@ class ActionGroup(object):
         return group
         
 
-    def AddAction(self, actionCls, clsName=None, name=None, description=None, value=None, hidden=False):
+    def AddAction(
+        self, 
+        actionCls, 
+        clsName=None, 
+        name=None, 
+        description=None, 
+        value=None, 
+        hidden=False
+    ):
         if not issubclass(actionCls, ActionClass):
             raise Exception("Actions must be subclasses of eg.ActionClass")
         if clsName is not None:
@@ -108,9 +116,9 @@ class ActionGroup(object):
         if text is None:
             text = getattr(plugin.text, actionClsName, None)
             if text is None:
-                class text:
+                class Text:
                     pass
-                text = text()
+                text = Text()
                 setattr(plugin.text, actionClsName, text)
         elif type(text) == ClassType:        
             translation = getattr(plugin.text, actionClsName, None)
@@ -162,7 +170,12 @@ class ActionGroup(object):
                         iconFile = parts[3]
                     else:
                         iconFile = None
-                    newGroup = group.AddGroup(name, description, iconFile, identifier=clsName)
+                    newGroup = group.AddGroup(
+                        name, 
+                        description, 
+                        iconFile, 
+                        identifier=clsName
+                    )
                     Recurse(aList, newGroup)
                     continue
                 if length == 4:
@@ -178,3 +191,4 @@ class ActionGroup(object):
                 group.AddAction(actionCls, clsName, name, description, value)
                 
         Recurse(theList, self)
+

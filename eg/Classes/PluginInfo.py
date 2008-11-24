@@ -20,12 +20,13 @@
 # $LastChangedRevision: 343 $
 # $LastChangedBy: bitmonster $
 
+import eg
 from os.path import exists, join
 
 import sys
 import types
 
-from Utils import SetClass
+SetClass = eg.SetClass
 
 
 class PluginProxy(object):

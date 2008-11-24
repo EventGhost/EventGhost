@@ -20,7 +20,8 @@
 # $LastChangedRevision: 314 $
 # $LastChangedBy: bitmonster $
 
-
+import eg
+import wx
 from time import sleep
 from os.path import basename
 

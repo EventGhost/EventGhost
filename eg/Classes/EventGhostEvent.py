@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 from time import clock
 from threading import Event
 
@@ -29,7 +30,56 @@ RunProgram = eg.RunProgram
 GetItemPath = eg.EventItem.GetPath
 config = eg.config
 
+
 class EventGhostEvent(object):
+    """
+    .. attribute:: string
+    
+        This is the full qualified event string as you see it inside the 
+        logger, with the exception that if the payload field 
+        (that is explained below) is not None the logger will also show it 
+        behind the event string, but this is not a part of the event string 
+        we are talking about here. 
+        
+    .. attribute:: payload
+        
+        A plugin might publish additional data related to this event. 
+        Through payload you can access this data. For example the 'Network 
+        Event Receiver' plugin returns also the IP of the client that has 
+        generated the event. If there is no data, this field is ``None``. 
+        
+    .. attribute:: prefix
+    
+        This is the first part of the event string till the first dot. This 
+        normally identifies the source of the event as a short string. 
+        
+    .. attribute:: suffix
+    
+        This is the part of the event string behind the first dot. So you 
+        could say: 
+        
+        event.string = event.prefix + '.' + event.suffix 
+    
+    .. attribute:: time
+    
+        The time the event was generated as a floating point number in 
+        seconds (as returned by the clock() function of Python's time module). 
+        Since most events are processed very quickly, this is most likely 
+        nearly the current time. But in some situations it might be more 
+        clever to use this time, instead of the current time, since even 
+        small differences might matter (for example if you want to determine 
+        a double-press). 
+    
+    .. attribute:: isEnded
+    
+        This boolean value indicates if the event is an enduring event and is 
+        still active. Some plugins (e.g. most of the remote receiver plugins) 
+        indicate if a button is pressed longer. As long as the button is 
+        pressed, this flag is ``False`` and in the moment the user releases the 
+        button the flag turns to ``True``. So you can poll this flag to see, if 
+        the button is still pressed. 
+
+    """
     
     data = None
 
