@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 eg.RegisterPlugin(
     name = "EventGhost",
@@ -32,6 +33,7 @@ eg.RegisterPlugin(
     version = "1.0." + "$LastChangedRevision$".split()[1],
 )
 
+import wx
 import sys
 import time
 import traceback
@@ -250,12 +252,12 @@ class EnableExclusive(EnableItem):
         eg.actionThread.Call(DoIt)
                 
                 
-    def filterFunc(self, obj):
-        return obj.__class__.__bases__[0] in (FolderItem, MacroItem)
+    def filterFunc(self, item):
+        return isinstance(item, (FolderItem, MacroItem))
     
     
     def IsSelectableItem(self, item):
-        return item.__class__.__bases__[0] is not RootItem
+        return not isinstance(item, RootItem)
     
     
     
