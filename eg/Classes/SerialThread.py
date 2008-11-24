@@ -20,39 +20,109 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-
+import eg
 from threading import Thread, Lock, Condition, currentThread
 from time import clock
 from eg.WinApi.Dynamic import (
-    pointer, sizeof, create_string_buffer, Structure, Union, byref, WinError,
-    HANDLE, DWORD, CreateFile, CloseHandle, 
-    DCB, OVERLAPPED, COMSTAT, COMMTIMEOUTS, COMMCONFIG, ReadFile, WriteFile,
-    GetCommState, SetCommState, ClearCommError, GetDefaultCommConfig,
-    EscapeCommFunction, MsgWaitForMultipleObjects, WaitForSingleObject, 
-    GetOverlappedResult, CreateEvent, SetEvent, ResetEvent, GetLastError,
-    ERROR_IO_PENDING, WAIT_TIMEOUT, WAIT_OBJECT_0, QS_ALLINPUT, INFINITE,
-    SETDTR, CLRDTR, SETRTS, CLRRTS, GENERIC_READ, GENERIC_WRITE, OPEN_EXISTING,
-    FILE_ATTRIBUTE_NORMAL, FILE_FLAG_OVERLAPPED, DTR_CONTROL_DISABLE, NOPARITY,
-    ONESTOPBIT, FormatError, GetLastError, WinError
+    # ctypes stuff
+    pointer, 
+    sizeof, 
+    create_string_buffer, 
+    byref, 
+    FormatError, 
+    WinError,
+    
+    # constants
+    GENERIC_READ, 
+    GENERIC_WRITE, 
+    OPEN_EXISTING,
+    FILE_ATTRIBUTE_NORMAL, 
+    FILE_FLAG_OVERLAPPED, 
+    WAIT_OBJECT_0,
+    WAIT_TIMEOUT,
+    INFINITE,
+    QS_ALLINPUT, 
+    ERROR_IO_PENDING, 
+    NOPARITY,
+    ODDPARITY,
+    EVENPARITY,
+    MARKPARITY,
+    SPACEPARITY,
+    ONESTOPBIT,
+    ONE5STOPBITS,
+    TWOSTOPBITS,
+    SETDTR, 
+    CLRDTR, 
+    SETRTS, 
+    CLRRTS,
+    DTR_CONTROL_DISABLE,
+    
+    # types
+    HANDLE, 
+    DWORD, 
+    OVERLAPPED,
+    DCB, 
+    COMMCONFIG, 
+    COMSTAT, 
+    
+    # functions
+    GetLastError, 
+    CreateEvent, 
+    SetEvent, 
+    ResetEvent, 
+    MsgWaitForMultipleObjects, 
+    WaitForSingleObject, 
+    CreateFile, 
+    CloseHandle, 
+    ReadFile, 
+    WriteFile,
+    GetOverlappedResult, 
+    GetCommState, 
+    SetCommState,
+    EscapeCommFunction,
+    ClearCommError, 
+    GetDefaultCommConfig,
 )
 
 
+# parity string to dcb value dict
+PARITY_S2V_DICT = {
+    'N': NOPARITY,
+    'O': ODDPARITY,
+    'E': EVENPARITY,
+    'M': MARKPARITY,
+    'S': SPACEPARITY,
+}
+# parity dcb value to string dict
+PARITY_V2S_DICT = {
+    NOPARITY: 'N',
+    ODDPARITY: 'O',
+    EVENPARITY: 'E',
+    MARKPARITY: 'M',
+    SPACEPARITY: 'S',
+}
+# stop bits string to dcb value dict
+STOPBITS_S2V_DICT = {'1': ONESTOPBIT, '1.5': ONE5STOPBITS, '2': TWOSTOPBITS}
+# stop bits dcb value to string dict
+STOPBITS_V2S_DICT = {ONESTOPBIT: '1', ONE5STOPBITS: '1.5', TWOSTOPBITS: '2'}
+
+
 class SerialException(Exception):
-    """Base class for serial port related exceptions."""
+    """Base class for SerialThread related exceptions."""
     pass
 
 
 
 class SerialThread(Thread):
-    
-    # These functions a bound to the class, so instances or subclasses 
+    # These functions are bound to the class, so instances or subclasses 
     # can replace them. This is needed for code that uses the FTDI.DLL 
     # driver for example.
-    ReadFile = ReadFile
-    WriteFile = WriteFile
-    ClearCommError = ClearCommError
-    CreateFile = CreateFile
-    CloseHandle = CloseHandle
+    _ReadFile = ReadFile
+    _WriteFile = WriteFile
+    _ClearCommError = ClearCommError
+    _CreateFile = CreateFile
+    _CloseHandle = CloseHandle
+    # Cache list for GetAllPorts
     _serialPortList = None
     
     @classmethod
@@ -95,7 +165,10 @@ class SerialThread(Thread):
         self.buffer = ""
         self.keepAlive = True
         self.stopEvent = CreateEvent(None, 1, 0, None)
-        self.callbackThread = Thread(target=self.CallbackThreadProc, name="SerialReceiveThreadProc")
+        self.callbackThread = Thread(
+            target=self.CallbackThreadProc, 
+            name="SerialReceiveThreadProc"
+        )
         
     
     def __enter__(self):
@@ -103,25 +176,53 @@ class SerialThread(Thread):
         return self
     
     
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, dummyExcType, dummyExcValue, dummyTraceback):
         self.ResumeReadEvents()
         return False
     
     
-    def Open(self, port=0, baudrate=9600):
+    def Open(self, port=0, baudrate=9600, mode="8N1"):
+        """
+        Opens the serial port. After the port is opened, you have to call 
+        :meth:`Start` to start the actual event processing of this class.
+        
+        :Arguments:
+            port
+                The port to open as an integer starting at one (0 = COM1)
+            baudrate
+                The baudrate to use as an integer. Defaults to 9600.
+            mode
+                The serial port mode settings to use. This should be a 
+                string created by the joining of the following parts:
+                
+                #. byte size
+                    '5', '6', '7' or '8'
+                #. parity mode
+                    * 'N' for no parity, 
+                    * 'E' for even parity,
+                    * 'O' for odd parity,
+                    * 'M' for mark parity,
+                    * 'S' for space parity
+                #. stop bits
+                    * '1' for one stop bit
+                    * '1.5' for one and a half stop bit
+                    * '2' for two stop bits
+                    
+                Example values: '8N1' (default), '8E1', '7N1.5'
+        """
         #the "//./COMx" format is required for devices >= 9
-        #not all versions of windows seem to support this propperly
+        #not all versions of windows seem to support this properly
         #so that the first few ports are used with the DOS device name
         if port < 9:
-            deviceStr = 'COM%d' % (port+1) #numbers are transformed to a string
+            deviceStr = 'COM%d' % (port + 1)
         else:
-            deviceStr = '\\\\.\\COM%d' % (port+1)
+            deviceStr = '\\\\.\\COM%d' % (port + 1)
         try:
-            self.hFile = CreateFile(
+            self.hFile = self._CreateFile(
                 deviceStr,
                 GENERIC_READ | GENERIC_WRITE,
                 0, # exclusive access
-                None, # no security
+                None, # default security attributes 
                 OPEN_EXISTING,
                 FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
                 0
@@ -144,15 +245,15 @@ class SerialThread(Thread):
         dcb.fNull = False
         dcb.fRtsControl = False
         dcb.fAbortOnError = False
-        dcb.ByteSize = 8
-        dcb.Parity = NOPARITY
-        dcb.StopBits = ONESTOPBIT
         dcb.BaudRate = baudrate
+        dcb.ByteSize = int(mode[0])
+        dcb.Parity = PARITY_S2V_DICT[mode[1].upper()]
+        dcb.StopBits = STOPBITS_S2V_DICT[mode[2:]]
         SetCommState(self.hFile, byref(dcb))
     
         
     def Close(self):
-        """Close port"""
+        """Closes  the serial port and stops all event processing."""
         self.keepAlive = False
         SetEvent(self.stopEvent)
         if currentThread() != self:
@@ -161,17 +262,23 @@ class SerialThread(Thread):
             #Restore original timeout values:
             #SetCommTimeouts(self.hFile, self._orgTimeouts)
             #Close COM-Port:
-            if not self.CloseHandle(self.hFile):
+            if not self._CloseHandle(self.hFile):
                 print (FormatError(GetLastError())).decode('mbcs')
             self.hFile = None
 
     
     def Start(self):
+        """
+        Starts the event processing of this class.
+        """
         self.callbackThread.start()
         self.start()
 
         
     def Stop(self):
+        """
+        Stops the event processing of this class.
+        """
         self.keepAlive = False
         SetEvent(self.stopEvent)
         if currentThread() != self:
@@ -179,14 +286,32 @@ class SerialThread(Thread):
         
         
     def SetReadEventCallback(self, callback):
+        """
+        Sets a callback function for receive event processing. Should be 
+        called before :meth:`Start`. The callback should have the form::
+            
+            def HandleReceive(serialThread):
+                ...
+                
+        where serialThread will be the instance of this SerialThread class, so
+        you can easily call :meth:`Read` and :meth:`Write` on this object.
+        """
         self.readEventCallback = callback
         
         
     def SuspendReadEvents(self):
+        """
+        Temporarily disables the receive event processing of this class. Call
+        :meth:`ResumeReadEvents` to resume processing.
+        """
         self.readEventLock.acquire()
     
     
     def ResumeReadEvents(self):
+        """
+        Resumes the receive event processing that was disabled before by
+        :meth:`SuspendReadEvents`
+        """
         self.readEventLock.release()
         self.readCondition.acquire()
         self.readCondition.notifyAll()
@@ -205,7 +330,7 @@ class SerialThread(Thread):
             # if no read is outstanding, then issue another one
             if not waitingOnRead:
                 ResetEvent(osReader.hEvent)
-                r = self.ReadFile(
+                r = self._ReadFile(
                     hFile, 
                     lpBuf, 
                     1, # we want to get notified as soon as a byte is available
@@ -225,7 +350,12 @@ class SerialThread(Thread):
 
             rc = MsgWaitForMultipleObjects(2, pHandles, 0, 10000, QS_ALLINPUT)
             if rc == WAIT_OBJECT_0:
-                r = GetOverlappedResult(hFile, byref(osReader), byref(dwRead), 0)
+                r = GetOverlappedResult(
+                    hFile, 
+                    byref(osReader), 
+                    byref(dwRead), 
+                    0
+                )
                 waitingOnRead = False
                 if r and dwRead.value:
                     self.HandleReceive(lpBuf.raw)
@@ -242,7 +372,6 @@ class SerialThread(Thread):
                 
     
     def CallbackThreadProc(self):
-        readCounter = 0
         while self.keepAlive:
             #print "cycle"
             self.readCondition.acquire()
@@ -251,7 +380,7 @@ class SerialThread(Thread):
                     if self.readEventCallback:
                         try:
                             self.readEventCallback(self)
-                        except:
+                        except Exception:
                             eg.PrintTraceback()
                     self.readEventLock.release()
                 else:
@@ -262,7 +391,7 @@ class SerialThread(Thread):
         
     def HandleReceive(self, data):
         # read all data currently available
-        data += self.ReadAllAvailable()
+        data += self._ReadAllAvailable()
         # append the data to the buffer and notify waiting threads
         self.readCondition.acquire()
         self.buffer += data
@@ -270,7 +399,10 @@ class SerialThread(Thread):
         self.readCondition.release()
             
             
-    def Read(self, numBytes=1, timeout=0.0):    
+    def Read(self, numBytes=1, timeout=0.0):
+        """
+        Reads data from the serial port.
+        """
         self.readCondition.acquire()
         startTime = clock()
         endTime = startTime + timeout
@@ -287,35 +419,51 @@ class SerialThread(Thread):
         return data
         
         
-    def ReadAllAvailable(self):
+    def _ReadAllAvailable(self):
         """ 
         Get all bytes currently in the drivers receive buffer.
         Only used internally. 
         """
         errors = DWORD()
-        self.ClearCommError(self.hFile, byref(errors), byref(self.comstat))
+        self._ClearCommError(self.hFile, byref(errors), byref(self.comstat))
         n = self.comstat.cbInQue
         if n == 0:
             return ''
         ResetEvent(self.osReader.hEvent)
         lpBuffer = create_string_buffer(n)
         numberOfBytesRead = DWORD()
-        if self.ReadFile(self.hFile, lpBuffer, n, byref(numberOfBytesRead), byref(self.osReader)):
-            return lpBuffer.raw[:numberOfBytesRead.value]
-        WaitForSingleObject(self.osReader.hEvent, INFINITE)
+        if not self._ReadFile(
+            self.hFile, 
+            lpBuffer, 
+            n, 
+            byref(numberOfBytesRead), 
+            byref(self.osReader)
+        ):
+            WaitForSingleObject(self.osReader.hEvent, INFINITE)
         return lpBuffer.raw[:numberOfBytesRead.value]
          
     
     def Write(self, data):
-        """Writes data to the port."""
+        """Writes a string to the port."""
         dwWritten = DWORD(0)
-        r = self.WriteFile(self.hFile, data, len(data), byref(dwWritten), byref(self.osWriter))
+        r = self._WriteFile(
+            self.hFile, 
+            data, 
+            len(data), 
+            byref(dwWritten), 
+            byref(self.osWriter)
+        )
         if r != 0:
             return
         err = GetLastError()
         if err != 0 and err != ERROR_IO_PENDING:
             raise WinError()
-        if not GetOverlappedResult(self.hFile, byref(self.osWriter), byref(dwWritten), 1):
+        if not GetOverlappedResult(
+            self.hFile, 
+            byref(self.osWriter), 
+            byref(dwWritten), 
+            1
+        ):
             raise WinError()
         if dwWritten.value != len(data):
             raise SerialException("Write timeout")
@@ -330,5 +478,40 @@ class SerialThread(Thread):
         """Sets RTS state."""
         EscapeCommFunction(self.hFile, SETRTS if flag else CLRRTS)
             
-
+            
+    def GetBaudrate(self):
+        """Returns the currently used baud rate as an integer."""
+        return self.dcb.BaudRate
     
+    
+    def SetBaudrate(self, baudrate):
+        """Sets the baud rate to an integer value."""
+        self.dcb.BaudRate = baudrate
+        SetCommState(self.hFile, byref(self.dcb))
+        
+        
+    def GetMode(self):
+        """
+        Returns the currently used serial port mode setting as string.
+        
+        See :meth:`Open` for a complete description of the mode string.
+        """
+        dcb = self.dcb
+        return (
+            str(dcb.ByteSize) 
+            + PARITY_V2S_DICT[dcb.Parity] 
+            + STOPBITS_V2S_DICT[dcb.StopBits]
+        )
+        
+    
+    def SetMode(self, mode):
+        """
+        Sets the serial port mode setting from a string.
+        
+        See :meth:`Open` for a complete description of the mode string.
+        """
+        dcb = self.dcb
+        dcb.ByteSize = int(mode[0])
+        dcb.Parity = PARITY_S2V_DICT[mode[1].upper()]
+        dcb.StopBits = STOPBITS_S2V_DICT[mode[2:]]
+        SetCommState(self.hFile, byref(dcb))
