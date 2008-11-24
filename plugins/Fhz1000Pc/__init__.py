@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 eg.RegisterPlugin(
     name="FHZ 1000 PC",
@@ -28,6 +29,7 @@ eg.RegisterPlugin(
     version = "1.0." + "$LastChangedRevision$".split()[1],    
 )
 
+import wx
 import time
 import os
 from functools import partial
@@ -83,10 +85,10 @@ class Fhz1000Pc(eg.PluginClass):
             0
         )
         self.receiveThread = eg.SerialThread(self.ftHandle)
-        self.receiveThread.WriteFile = d2xx.FT_W32_WriteFile
-        self.receiveThread.ReadFile = d2xx.FT_W32_ReadFile
-        self.receiveThread.ClearCommError = d2xx.FT_W32_ClearCommError
-        self.receiveThread.CloseHandle = d2xx.FT_W32_CloseHandle
+        self.receiveThread._WriteFile = d2xx.FT_W32_WriteFile
+        self.receiveThread._ReadFile = d2xx.FT_W32_ReadFile
+        self.receiveThread._ClearCommError = d2xx.FT_W32_ClearCommError
+        self.receiveThread._CloseHandle = d2xx.FT_W32_CloseHandle
         
         d2xx.FT_SetLatencyTimer(self.ftHandle, 2)
         d2xx.FT_SetBaudRate(self.ftHandle, 9600)
@@ -133,17 +135,18 @@ class Fhz1000Pc(eg.PluginClass):
             self.receiveThread.Close()
         
         
-    def OnComputerSuspend(self, suspendType):
+    def OnComputerSuspend(self, _suspendType):
         self.__stop__()
         
         
-    def OnComputerResume(self, suspendType):
+    def OnComputerResume(self, _suspendType):
         self.__start__()
     
     
     def HandleReceive(self, serial):
         data = serial.Read(512)
-        print "HR: " + " ".join(["%02X" % ord(c) for c in data])
+        if eg.debugLevel:
+            print "HR: " + " ".join(["%02X" % ord(c) for c in data])
         
         
     def WriteFhzNoWait(self, telegramType, *args):
@@ -224,6 +227,7 @@ class Fhz1000Pc(eg.PluginClass):
     
 class ActionBase(eg.ActionClass):
     defaultAddress = 0x094001
+    funccode = None # must be assigned by subclass
     
     def __call__(self, address):
         x, a0 = divmod(address, 256)
@@ -231,7 +235,7 @@ class ActionBase(eg.ActionClass):
         self.plugin.WriteFhz(0x04, 0x02, 0x01, 0x01, a2, a1, a0, self.funccode)
 
 
-    def GetLabel(self, address):
+    def GetLabel(self, _address):
         return self.name
     
     
@@ -375,12 +379,4 @@ class StartProgramTimer(ActionBase):
 class ResetToFactoryDefaults(ActionBase):
     name = "Reset to factory defaults"
     funccode = 0x1b
-    
-    
-    
-    
-    
-    
-        
-        
-        
+
