@@ -27,28 +27,41 @@ from os.path import basename, getsize
 from threading import Thread
 from ftplib import FTP
 from urlparse import urlparse
-import functools
 import locale
 
 locale.setlocale(locale.LC_ALL, '')
-FormatBytes = functools.partial(locale.format, "%d", grouping=True)
 
-def GetTimeStr(t):
-    t, s = divmod(t, 60)
-    h, m = divmod(t, 60)
-    return "%d:%0.2d:%0.2d" % (h, m, s)
+
+def FormatBytes(numBytes):
+    """ Returns a formatted string of a byte count value. """
+    return locale.format("%d" % numBytes, grouping=True)
     
 
+def GetTimeStr(seconds):
+    """ Returns a nicely formatted time string. """
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    return "%d:%0.2d:%0.2d" % (hours, minutes, seconds)
+    
+
+
 class ProgressFile(object):
+    """
+    A proxy to a file, that also holds progress information. 
+    """
     
     def __init__(self, filepath, progressCallback=None):
         self.progressCallback = progressCallback
         
         self.period = 15
+        self.start = 0
+        self.lastSecond = 0
+        self.rate = 0
+        self.lastBytes = 0
         self.Reset()
 
         self.size = getsize(filepath)
-        self.fd = open(filepath, "rb")
+        self.fileObject = open(filepath, "rb")
         self.pos = 0
         self.startTime = clock()
         
@@ -61,7 +74,10 @@ class ProgressFile(object):
         self.lastBytes = 0
         
         
-    def read(self, size):
+    def read(self, size): #IGNORE:C0103 Invalid name "read"
+        """ 
+        Implements a file-like read() but also updates the progress variables.
+        """
         if size + self.pos > self.size:
             size = self.size - self.pos
         self.Add(size)
@@ -77,19 +93,22 @@ class ProgressFile(object):
             if res is False:
                 return ""      
         self.pos += size
-        return self.fd.read(size)
+        return self.fileObject.read(size)
 
 
-    def close(self):
-        self.fd.close()
+    def close(self): #IGNORE:C0103 Invalid name "read"
+        """ 
+        Implements a file-like close()
+        """
+        self.fileObject.close()
         elapsed = (clock() - self.startTime)
         print "File uploaded in %0.2f seconds" % elapsed
         print "Average speed: %0.2f KiB/s" % (self.size / (elapsed * 1024))
 
     
-    def Add(self, b):
+    def Add(self, numBytes):
         now = clock()
-        if b == 0 and (now - self.lastSecond) < 0.1:
+        if numBytes == 0 and (now - self.lastSecond) < 0.1:
             return
         
         if self.rate == 0:
@@ -109,10 +128,10 @@ class ProgressFile(object):
             div = 1.0
             
         self.rate *= 1 - timePassed / div
-        self.rate += b / div
+        self.rate += numBytes / div
         
         self.lastSecond = now
-        if b > 0:
+        if numBytes > 0:
             self.lastBytes = now
         if self.rate < 0:
             self.rate = 0
@@ -122,7 +141,7 @@ class ProgressFile(object):
 def UploadFile(filename, url, dialog):
     log = dialog.messageCtrl.SetLabel
     urlComponents = urlparse(url)
-    fd = ProgressFile(filename, dialog.SetProgress)
+    infile = ProgressFile(filename, dialog.SetProgress)
     log("Connecting to ftp://%s..." % urlComponents.hostname)
     ftp = FTP(
         urlComponents.hostname, 
@@ -131,9 +150,9 @@ def UploadFile(filename, url, dialog):
         #timeout = 10
     )
     ftp.set_debuglevel(0)
-    log("Changing path to: %s" % urlComponents.path)
+    log("Changing path to: %s" % urlComponents.path)  #IGNORE:E1101 
     ftp.sendcmd("TYPE I")
-    ftp.cwd(urlComponents.path)
+    ftp.cwd(urlComponents.path) #IGNORE:E1101 
     log("Getting directory listing...")
     # Some ProFTP versions have a bug when submitting the contents of an
     # empty directory with the NLST command. The command will never return, 
@@ -149,8 +168,8 @@ def UploadFile(filename, url, dialog):
         if tempFileName not in fileList:
             break
     log("Uploading " + basename(filename))
-    ftp.storbinary("STOR " + tempFileName, fd, 32 * 1024)
-    fd.close()
+    ftp.storbinary("STOR " + tempFileName, infile, 32 * 1024)
+    infile.close()
     if dialog.abort:
         ftp.delete(tempFileName)
         ftp.quit()
@@ -163,6 +182,7 @@ def UploadFile(filename, url, dialog):
     
     
 class UploadDialog(wx.Dialog):
+    """ The progress dialog that is shown while the file is uploaded. """
     
     def __init__(self, parent, filename, url):
         self.abort = False
@@ -180,52 +200,49 @@ class UploadDialog(wx.Dialog):
             size=(-1, 15)
         )
         style  = wx.ALIGN_RIGHT|wx.ST_NO_AUTORESIZE
-        self.remainingCtrl = wx.StaticText(self, -1, "0:00:00", style=style)
+
+        def SText(label, *args, **kwargs):
+            """Simpler creation of a wx.StaticText"""
+            return wx.StaticText(self, -1, label, *args, **kwargs)
+        
+        self.remainingCtrl = SText("0:00:00")
         x, y = self.remainingCtrl.GetSizeTuple()
         self.remainingCtrl.SetMinSize((x, y))
         self.remainingCtrl.SetLabel("-")
-        self.speedCtrl = wx.StaticText(self, -1, "-", size=(x, -1), style=style)
-        self.elapsedCtrl = wx.StaticText(self, -1, "-", size=(x, -1), style=style)
-        self.totalTimeCtrl = wx.StaticText(self, -1, "-", size=(x, -1), style=style)
-        self.totalSizeCtrl = wx.StaticText(
-            self, 
-            -1, 
-            FormatBytes(self.fileSize), 
-            style=style
-        )
+        self.speedCtrl = SText("-", size=(x, -1), style=style)
+        self.elapsedCtrl = SText("-", size=(x, -1), style=style)
+        self.totalTimeCtrl = SText("-", size=(x, -1), style=style)
+        self.totalSizeCtrl = SText(FormatBytes(self.fileSize), style=style)
         x, y = self.totalSizeCtrl.GetSizeTuple()
-        self.remainingSizeCtrl = wx.StaticText(self, -1, "-", size=(x, -1), style=style)
-        self.transferedSizeCtrl = wx.StaticText(self, -1, "-", size=(x, -1), style=style)
+        self.remainingSizeCtrl = SText("-", size=(x, -1), style=style)
+        self.transferedSizeCtrl = SText("-", size=(x, -1), style=style)
         
         self.cancelButton = wx.Button(self, wx.ID_CANCEL)
         self.cancelButton.Bind(wx.EVT_BUTTON, self.OnCancel)
 
-        def ST(label, *args, **kwargs):
-            return wx.StaticText(self, -1, label, *args, **kwargs)
-        
         sizer2 = wx.FlexGridSizer(4, 5, 5, 5)
-        sizer2.Add(ST("Upload speed:"), 0, wx.LEFT|wx.ALIGN_RIGHT, 5)
+        sizer2.Add(SText("Upload speed:"), 0, wx.LEFT|wx.ALIGN_RIGHT, 5)
         sizer2.Add(self.speedCtrl)
         sizer2.Add((30, 0))
         sizer2.Add((0, 0))
         sizer2.Add((0, 0))
         
-        sizer2.Add(ST("Elapsed time:"), 0, wx.ALIGN_RIGHT)
+        sizer2.Add(SText("Elapsed time:"), 0, wx.ALIGN_RIGHT)
         sizer2.Add(self.elapsedCtrl)
         sizer2.Add((10, 0))
-        sizer2.Add(ST("Transfered size:"), 0, wx.ALIGN_RIGHT)
+        sizer2.Add(SText("Transfered size:"), 0, wx.ALIGN_RIGHT)
         sizer2.Add(self.transferedSizeCtrl)
         
-        sizer2.Add(ST("Remaining time:"), 0, wx.ALIGN_RIGHT)
+        sizer2.Add(SText("Remaining time:"), 0, wx.ALIGN_RIGHT)
         sizer2.Add(self.remainingCtrl)
         sizer2.Add((10, 0))
-        sizer2.Add(ST("Remaining size:"), 0, wx.ALIGN_RIGHT)
+        sizer2.Add(SText("Remaining size:"), 0, wx.ALIGN_RIGHT)
         sizer2.Add(self.remainingSizeCtrl)
         
-        sizer2.Add(ST("Total time:"), 0, wx.ALIGN_RIGHT)
+        sizer2.Add(SText("Total time:"), 0, wx.ALIGN_RIGHT)
         sizer2.Add(self.totalTimeCtrl)
         sizer2.Add((10, 0))
-        sizer2.Add(ST("Total size:"), 0, wx.ALIGN_RIGHT)
+        sizer2.Add(SText("Total size:"), 0, wx.ALIGN_RIGHT)
         sizer2.Add(self.totalSizeCtrl)
 
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -237,28 +254,31 @@ class UploadDialog(wx.Dialog):
         self.SetSizerAndFit(sizer)
         #self.SetSize((350, -1))
         self.Bind(wx.EVT_CLOSE, self.OnCancel)
-        self.thread = Thread(target=self.ThreadRun, args=(filename, url))
+
         self.startTime = clock()
         self.Bind(wx.EVT_TIMER, self.OnTimer)
         self.timer = wx.Timer(self)
         self.timer.Start(1000)
-        self.thread.start()
+        Thread(target=self.ThreadRun, args=(filename, url)).start()
         self.Show()
        
         
-    def OnTimer(self, event):
+    def OnTimer(self, dummyEvent):
+        """ Called every second to update the progress dialog. """
         elapsedTime = clock() - self.startTime
         self.elapsedCtrl.SetLabel(GetTimeStr(elapsedTime))
         
     
     def ThreadRun(self, filename, url):
+        """ Uploads the file in a separate thread. """
         try:
             UploadFile(filename, url, self)
         finally:
             wx.CallAfter(self.Destroy)
     
     
-    def OnCancel(self, event):
+    def OnCancel(self, dummyEvent):
+        """ Handles a click on the cancel button. """
         self.abort = True
         self.cancelButton.Enable(False)
         self.messageCtrl.SetLabel("Closing connection. Please wait...")
@@ -278,10 +298,16 @@ class UploadDialog(wx.Dialog):
         elapsedTime = clock() - self.startTime
         self.totalTimeCtrl.SetLabel(GetTimeStr(remainingTime + elapsedTime))
         self.transferedSizeCtrl.SetLabel(FormatBytes(transferedSize))
-        self.remainingSizeCtrl.SetLabel(FormatBytes(self.fileSize - transferedSize))
+        self.remainingSizeCtrl.SetLabel(
+            FormatBytes(self.fileSize - transferedSize)
+        )
         
         
-if __name__ == "__main__":
+def Main():
+    """ Main function if called directly from the command line. """
     app = wx.App(0)
     UploadDialog(None, sys.argv[1], sys.argv[2])
     app.MainLoop()
+    
+if __name__ == "__main__":
+    Main()
