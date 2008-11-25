@@ -24,7 +24,6 @@
 This script creates the EventGhost setup installer.
 """
 
-import sys
 import os
 import time
 import ConfigParser
@@ -169,17 +168,18 @@ class MyInstaller(InnoInstaller):
         Add a version header to CHANGELOG.TXT if needed.
         """
         path = join(self.sourceDir, "CHANGELOG.TXT")
-        s1 = "Version %s (%s)\n" % (self.appVersion, time.strftime("%m/%d/%Y"))
-        fd = open(path, "r")
-        s2 = fd.read(100) # read some data from the beginning
-        if s2.strip().startswith("Version "):
+        timeStr = time.strftime("%m/%d/%Y")
+        header = "Version %s (%s)\n" % (self.appVersion, timeStr)
+        infile = open(path, "r")
+        data = infile.read(100) # read some data from the beginning
+        if data.strip().startswith("Version "):
             # no new lines, so skip the addition of a new header
             return
-        s2 += fd.read() # read the remaining contents
-        fd.close()
-        fd = open(path, "w+")
-        fd.write(s1 + s2)
-        fd.close()
+        data += infile.read() # read the remaining contents
+        infile.close()
+        outfile = open(path, "w+")
+        outfile.write(header + data)
+        outfile.close()
         
     
     def UpdateVersionFile(self):
@@ -188,26 +188,23 @@ class MyInstaller(InnoInstaller):
         """
         svnRevision = self.GetSvnRevision()
         versionFilePath = self.sourceDir + "/eg/Classes/Version.py"
-        fd = file(versionFilePath, "rt")
-        lines = fd.readlines()
-        fd.close()
-        fd = file(versionFilePath, "wt")
+        lines = open(versionFilePath, "rt").readlines()
+        outfile = open(versionFilePath, "wt")
         # update buildNum and buildTime in eg/Classes/Version.py
         for line in lines:
             if line.strip().startswith("buildNum"):
                 parts = line.split("=")
                 value = int(parts[1].strip())
-                fd.write(parts[0] + "= " + str(value+1) + "\n")
+                outfile.write(parts[0] + "= " + str(value+1) + "\n")
             elif line.strip().startswith("buildTime"):
                 parts = line.split("=")
-                fd.write(parts[0] + "= " + str(time.time()) + "\n")
+                outfile.write(parts[0] + "= " + str(time.time()) + "\n")
             elif line.strip().startswith("svnRevision"):
                 parts = line.split("=")
-                fd.write("%s= %d\n" % (parts[0], svnRevision))
+                outfile.write("%s= %d\n" % (parts[0], svnRevision))
             else:
-                fd.write(line)
-        fd.close()
-        data = {}
+                outfile.write(line)
+        outfile.close()
         mod = imp.load_source("Version", versionFilePath)
         self.appVersion = mod.Version.string
         
@@ -216,7 +213,7 @@ class MyInstaller(InnoInstaller):
         import MakeImports
         oldCwd = os.getcwdu()
         os.chdir(abspath(u"Python%s" % self.PYVERSION))
-        MakeImports.Main()
+        MakeImports.Main(INCLUDED_MODULES)
         os.chdir(oldCwd)
         
         
@@ -271,23 +268,25 @@ class MyInstaller(InnoInstaller):
         Create and compile the Inno Setup installer script.
         """
         self.outputBaseFilename = self.SETUP_EXE_NAME_TEMPLATE % self
-        for file in self.GetSetupFiles():
-            self.AddFile(join(self.sourceDir, file), dirname(file))
-        for file in glob(join(self.libraryDir, '*.*')):
-            self.AddFile(file, self.libraryName)
+        plugins = {}
+        for filename in self.GetSetupFiles():
+            if filename.startswith("plugins\\"):
+                pluginFolder = filename.split("\\")[1]
+                plugins[pluginFolder] = True
+            self.AddFile(join(self.sourceDir, filename), dirname(filename))
+        for filename in glob(join(self.libraryDir, '*.*')):
+            self.AddFile(filename, self.libraryName)
         self.AddFile(join(self.pyVersionDir, "py.exe"))
         self.AddFile(join(self.pyVersionDir, "pyw.exe"))
-    
+
         # create entries in the [InstallDelete] section of the Inno script to
-        # remove all known plugin directories before installing the new plugins.
-        for item in os.listdir(join(self.sourceDir, "plugins")):
-            if item.startswith("."):
-                continue
-            if os.path.isdir(join(self.sourceDir, "plugins", item)):
-                self.Add(
-                    "InstallDelete", 
-                    'Type: filesandordirs; Name: "{app}\\plugins\\%s"' % item
-                )
+        # remove all known plugin directories before installing the new 
+        # plugins.
+        for plugin in plugins.keys():
+            self.Add(
+                "InstallDelete", 
+                'Type: filesandordirs; Name: "{app}\\plugins\\%s"' % plugin
+            )
         self.ExecuteInnoSetup()
     
     
@@ -347,12 +346,6 @@ class Config(object):
         self._optionsDict = {}
         
         
-    def AddOption(self, name, label, value):
-        option = self.Option(name, label, value)
-        self._options.append(option)
-        self._optionsDict[name] = option
-    
-    
     def __getattr__(self, name):
         return self._optionsDict[name].value
     
@@ -366,6 +359,13 @@ class Config(object):
     
     def __iter__(self):
         return self._options.__iter__()
+    
+    
+    def AddOption(self, name, label, value):
+        """ Adds an option to the configuration. """
+        option = self.Option(name, label, value)
+        self._options.append(option)
+        self._optionsDict[name] = option
     
     
     def LoadSettings(self):
@@ -452,7 +452,8 @@ class MainDialog(wx.Dialog):
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         
         
-    def OnOk(self, event):
+    def OnOk(self, dummyEvent):
+        """ Handles a click on the Ok button. """
         self.okButton.Enable(False)
         self.cancelButton.Enable(False)
         #self.SetWindowStyleFlag(wx.CAPTION|wx.RESIZE_BORDER)
@@ -466,13 +467,15 @@ class MainDialog(wx.Dialog):
         
         
     def OnCancel(self, event):
+        """ Handles a click on the cancel button. """
         event.Skip()
         self.Destroy()
         #app.ExitMainLoop()
         
         
     def OnClose(self, event):
-        app.ExitMainLoop()
+        """ Handles a click on the close box of the frame. """
+        wx.GetApp().ExitMainLoop()
         event.Skip()
      
      
@@ -488,9 +491,12 @@ Options.AddOption("upload", "Upload through FTP", False)
 Options.AddOption("ftpUrl", "", "")
 Options.LoadSettings()
 
-app = wx.App(0)
-app.SetExitOnFrameDelete(True)
-mainDialog = MainDialog()
-mainDialog.Show()
-app.MainLoop()
+def Run():
+    app = wx.App(0)
+    app.SetExitOnFrameDelete(True)
+    mainDialog = MainDialog()
+    mainDialog.Show()
+    app.MainLoop()
+    
+Run()
 
