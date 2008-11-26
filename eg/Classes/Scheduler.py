@@ -34,7 +34,7 @@ class Scheduler(threading.Thread):
     you to accomplish this.
     
     EventGhost creates a single instance of this class that is accessible as
-    *eg.scheduler*.
+    :obj:`eg.scheduler`.
     """
 
     def __init__(self):
@@ -98,7 +98,7 @@ class Scheduler(threading.Thread):
             
         This will trigger the event "Main.MyEvent" at 16:53:00 on 15 August 
         2007. If you run this code after this point of time, the 
-        `eg.TriggerEvent` will be called immediately. 
+        :func:`eg.TriggerEvent` will be called immediately. 
         
         .. _Python's time module: http://docs.python.org/lib/module-time.html
         """

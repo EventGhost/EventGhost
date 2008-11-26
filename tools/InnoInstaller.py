@@ -19,6 +19,9 @@
 # $LastChangedDate: 2008-10-21 16:10:10 +0200 (Di, 21 Okt 2008) $
 # $LastChangedRevision: 547 $
 # $LastChangedBy: bitmonster $
+"""
+Routines to upload a file through FTP with a nice dialog.
+"""
 
 import sys
 import tempfile
@@ -33,18 +36,42 @@ from glob import glob
 
 # third-party module imports
 import pysvn
-import py2exe
+#import py2exe
 
 RT_MANIFEST = 24
 
+def InstallPy2exePatch():
+    """
+    Tricks py2exe to include the win32com module.
+    
+    ModuleFinder can't handle runtime changes to __path__, but win32com 
+    uses them, particularly for people who build from sources.
+    """
+    try:
+        import modulefinder
+        import win32com
+        for path in win32com.__path__[1:]:
+            modulefinder.AddPackagePath("win32com", path)
+        for extra in ["win32com.shell"]:
+            __import__(extra)
+            module = sys.modules[extra]
+            for path in module.__path__[1:]:
+                modulefinder.AddPackagePath(extra, path)
+    except ImportError: #IGNORE:W0704
+        # no build path setup, no worries.
+        pass 
+
 
 class InnoInstaller(object): 
+    """
+    Helper class to create Inno Setup installers more easily.
+    """
+    APP_SHORT_NAME = "Application"
     sourceDir = ".."
     outputDir = "../.."
     libraryName = "lib%d%d" % sys.version_info[:2]
     appVersion = "0.0.0"
     SETUP_EXE_NAME_TEMPLATE = "%(APP_SHORT_NAME)s_%(appVersion)s_Setup"
-    SOURCE_ZIP_NAME_TEMPLATE = "%(APP_SHORT_NAME)s_%(appVersion)s_Source"
     PYVERSION = str(sys.version_info[0]) + str(sys.version_info[1])
     bootScript = "Py2ExeBootScript.py"
     icon = None
@@ -90,8 +117,8 @@ class InnoInstaller(object):
                     custom_boot_script = abspath(self.bootScript),
                 )
             ),
-            # The lib directory contains everything except the executables and the 
-            # python dll.
+            # The lib directory contains everything except the executables and
+            # the python dll.
             zipfile = join(self.libraryName, "python%s.zip" % self.PYVERSION),
             windows = [
                 dict(
@@ -121,12 +148,18 @@ class InnoInstaller(object):
 
         
     def Add(self, section, line):
+        """ 
+        Adds a line to the INI section. 
+        """
         if not section in self.innoSections:
             self.innoSections[section] = []
         self.innoSections[section].append(line)
         
     
     def AddFile(self, source, destDir=""):
+        """ 
+        Adds a file to the [Files] section. 
+        """
         self.Add(
             "Files", 
             'Source: "%s"; DestDir: "{app}\\%s";' % (abspath(source), destDir)
@@ -154,21 +187,32 @@ class InnoInstaller(object):
         """
         Commit all modified files in the working copy to the SVN server.
         """
-        def ssl_server_trust_prompt(trust_dict):
+        def SslServerTrustPromptCallback(dummy):
+            """ 
+            See pysvn documentation for 
+            pysvn.Client.callback_ssl_server_trust_prompt
+            """
             return True, 0, True
         svn = pysvn.Client()
-        svn.callback_ssl_server_trust_prompt = ssl_server_trust_prompt
-        svn.checkin([self.sourceDir], "Created installer for %s" % self.appVersion)
+        svn.callback_ssl_server_trust_prompt = SslServerTrustPromptCallback
+        svn.checkin(
+            [self.sourceDir], 
+            "Created installer for %s" % self.appVersion
+        )
     
 
-    def CreateSourceArchive(self):
+    def CreateSourceArchive(self, filename=None):
         """
         Create a zip archive off all versioned files in the working copy.
         """
-        outFile = join(self.outputDir, self.SOURCE_ZIP_NAME_TEMPLATE % self)
+        if filename is None:
+            filename = join(
+                self.outputDir, 
+                "%(APP_SHORT_NAME)s_%(appVersion)s_Source.zip" % self
+            )
         client = pysvn.Client()
         workingDir = self.sourceDir
-        zipFile = zipfile.ZipFile(outFile + ".zip", "w", zipfile.ZIP_DEFLATED)
+        zipFile = zipfile.ZipFile(filename, "w", zipfile.ZIP_DEFLATED)
         for status in client.status(workingDir, ignore=True):
             if status.is_versioned:
                 path = status.path
@@ -178,48 +222,29 @@ class InnoInstaller(object):
         zipFile.close()
 
 
-    def InstallPy2exePatch(self):
-        # ModuleFinder can't handle runtime changes to __path__, but win32com 
-        # uses them, particularly for people who build from sources.  Hook 
-        # this in.
-        try:
-            import modulefinder
-            import win32com
-            for p in win32com.__path__[1:]:
-                modulefinder.AddPackagePath("win32com", p)
-            for extra in ["win32com.shell"]:#,"win32com.shellcon","win32com.mapi"]:
-                __import__(extra)
-                m = sys.modules[extra]
-                for p in m.__path__[1:]:
-                    modulefinder.AddPackagePath(extra, p)
-        except ImportError:
-            # no build path setup, no worries.
-            pass
-
-
     def CreateLibrary(self):
         """
         Create the library and .exe files with py2exe.
         """
         sys.argv.append("py2exe")
         from distutils.core import setup
-        self.InstallPy2exePatch()
+        InstallPy2exePatch()
+        import py2exe
         if exists(self.libraryDir):
             shutil.rmtree(self.libraryDir)
-        #setup(**consoleOptions)
         setup(**self.py2exeOptions)
         pythonDir = dirname(sys.executable)
         dllNames = [
             basename(name) for name in glob(join(self.libraryDir, "*.dll"))
         ]
         neededDlls = []
-        for path, dirs, files in os.walk(pythonDir):
-            for file in files:
-                if file in dllNames:
-                    neededDlls.append(file)
-        for file in dllNames:
-            if file not in neededDlls:
-                os.remove(join(self.libraryDir, file))
+        for _, _, files in os.walk(pythonDir):
+            for filename in files:
+                if filename in dllNames:
+                    neededDlls.append(filename)
+        for filename in dllNames:
+            if filename not in neededDlls:
+                os.remove(join(self.libraryDir, filename))
                 
 #        for dll in self.ROOT_FILES_TO_ADD:
 #            if not exists(join(self.sourceDir, dll)):
@@ -227,6 +252,10 @@ class InnoInstaller(object):
         
     
     def ExecuteInnoSetup(self):
+        """
+        Finishes the setup, writes the Inno Setup script and calls the 
+        Inno Setup compiler.
+        """
         self.AddFile("../%s.exe" % self.APP_SHORT_NAME)
         if self.PYVERSION == "25":
             self.AddFile("../MFC71.dll")
@@ -250,18 +279,21 @@ class InnoInstaller(object):
 
         key = _winreg.OpenKey(
             _winreg.HKEY_LOCAL_MACHINE, 
-            r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Inno Setup 5_is1"
+            (
+                "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\"
+                "Uninstall\\Inno Setup 5_is1"
+            )
         )
         installPath, _ = _winreg.QueryValueEx(key, "InstallLocation")
         _winreg.CloseKey(key)
     
-        si = subprocess.STARTUPINFO()
-        si.dwFlags = subprocess.STARTF_USESHOWWINDOW
-        si.wShowWindow = subprocess.SW_HIDE 
+        startupInfo = subprocess.STARTUPINFO()
+        startupInfo.dwFlags = subprocess.STARTF_USESHOWWINDOW
+        startupInfo.wShowWindow = subprocess.SW_HIDE 
         errorcode = subprocess.call(
             (join(installPath, "ISCC.exe"), innoScriptPath), 
             stdout=sys.stdout.fileno(),
-            startupinfo=si
+            startupinfo=startupInfo
         )
         if errorcode > 0:
             raise SystemError

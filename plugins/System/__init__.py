@@ -729,8 +729,7 @@ class SetWallpaper(eg.ActionWithStringParameter):
         text = self.text
         filepathCtrl = eg.FileBrowseButton(
             panel, 
-            -1,
-            size = (340,-1),
+            size = (340, -1),
             initialValue = imageFileName,
             labelText = "",
             fileMask = text.fileMask,
@@ -998,7 +997,7 @@ class ShowPicture(eg.ActionClass):
         text = self.text
         filepathCtrl = eg.FileBrowseButton(
             panel, 
-            size=(340,-1),
+            size=(340, -1),
             initialValue=imageFile,
             labelText="",
             fileMask='%s|*.jpg;*.bmp;*.gif;*.png|%s (*.*)|*.*' % (

@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 eg.RegisterPlugin(
     name="CyberLink PowerDVD",
@@ -56,7 +57,6 @@ ACTIONS = [
     ("NavigationEnter", "Navigation Enter", "Navigates through disc menus. (Has actually the same function as the Play action.)", "{Return}"),
 ]
 
-from eg.WinApi.SendKeys import SendKeys
 
 gWindowMatcher = eg.WindowMatcher('PowerDVD{*}.exe', 'CyberLink PowerDVD{*}')
 
@@ -66,7 +66,7 @@ class ActionPrototype(eg.ActionClass):
     def __call__(self):
         hwnds = gWindowMatcher()
         if hwnds:
-            SendKeys(hwnds[0], self.value)
+            eg.SendKeys(hwnds[0], self.value)
         else:
             raise self.Exceptions.ProgramNotRunning
         

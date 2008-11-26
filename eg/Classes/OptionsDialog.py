@@ -27,8 +27,6 @@ import sys
 
 from wx.combo import BitmapComboBox
 
-from eg.LanguageTools import languageNames
-
 
 class Text(eg.TranslatableStrings):
     Title = "Options"
@@ -62,15 +60,14 @@ class OptionsDialog(eg.Dialog):
             style=wx.DEFAULT_DIALOG_STYLE
         )
         
+        languageNames = eg.Translation.languageNames
         languageList = ["en_EN"]
-        for item in os.listdir("Languages"):
+        for item in os.listdir("languages"):
             name, ext = os.path.splitext(item)
             if ext == ".py" and name in languageNames:
                 languageList.append(name)
         languageList.sort()
-        languageNameList = [
-            languageNames[x].decode("UTF-8") for x in languageList
-        ]
+        languageNameList = [languageNames[x] for x in languageList]
         notebook = wx.Notebook(self, -1)
         page1 = eg.Panel(notebook)
         notebook.AddPage(page1, t.Tab1)
@@ -115,21 +112,21 @@ class OptionsDialog(eg.Dialog):
         
         # construction of the layout with sizers
         
-        ACV = wx.ALIGN_CENTER_VERTICAL
+        flags = wx.ALIGN_CENTER_VERTICAL
         memoryLimitSizer = eg.HBoxSizer(
-            (memoryLimitCtrl, 0, ACV),
-            (memoryLimitSpinCtrl, 0, ACV),
-            (page1.StaticText(t.limitMemory2), 0, ACV|wx.LEFT, 2),
+            (memoryLimitCtrl, 0, flags),
+            (memoryLimitSpinCtrl, 0, flags),
+            (page1.StaticText(t.limitMemory2), 0, flags|wx.LEFT, 2),
         )
         
         startGroupSizer = wx.GridSizer(4, 1, 2, 2)
         startGroupSizer.AddMany(
             (
-                (startWithWindowsCtrl, 0, ACV),
-                (hideOnCloseCtrl, 0, ACV),
-                (checkUpdateCtrl, 0, ACV),
-                (memoryLimitSizer, 0, ACV),
-                (confirmDeleteCtrl, 0, ACV),
+                (startWithWindowsCtrl, 0, flags),
+                (hideOnCloseCtrl, 0, flags),
+                (checkUpdateCtrl, 0, flags),
+                (memoryLimitSizer, 0, flags),
+                (confirmDeleteCtrl, 0, flags),
             )
         )
         

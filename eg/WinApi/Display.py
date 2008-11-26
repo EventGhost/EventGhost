@@ -21,7 +21,7 @@
 # $LastChangedBy$
 
 from eg.WinApi.Dynamic import (
-    sizeof, pointer, c_char_p,
+    sizeof, pointer,
     ENUM_CURRENT_SETTINGS, EDS_RAWMODE, EnumDisplayDevices,
     EnumDisplaySettingsEx, ChangeDisplaySettingsEx, DISPLAY_DEVICE, DEVMODE, 
     DISPLAY_DEVICE_MIRRORING_DRIVER, DISPLAY_DEVICE_PRIMARY_DEVICE,

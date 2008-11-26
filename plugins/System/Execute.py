@@ -20,13 +20,14 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-
+import eg
+import wx
 from os.path import basename, dirname, abspath
 
 from eg.WinApi.Dynamic import (
-    byref, sizeof, CreateProcess, WaitForSingleObject, FormatError,
+    sizeof, CreateProcess, WaitForSingleObject, FormatError,
     CloseHandle, create_unicode_buffer, 
-    STARTUPINFO, PROCESS_INFORMATION, TCHAR, 
+    STARTUPINFO, PROCESS_INFORMATION,  
     CREATE_NEW_CONSOLE, STARTF_USESHOWWINDOW, INFINITE
 )
 
@@ -141,74 +142,63 @@ class Execute(eg.ActionClass):
         panel = eg.ConfigPanel(self)
         text = self.text
         waitForCompletion = bool(waitForCompletion)
-        fileText = wx.StaticText(panel, -1, text.FilePath)
-        filepathCtrl = eg.FileBrowseButton(
-            panel, 
-            -1, 
-            size=(320,-1),
-            initialValue=pathname,
-            labelText="",
+        fileText = panel.StaticText(text.FilePath)
+        filepathCtrl = panel.FileBrowseButton(
+            pathname,
             fileMask="*.*",
-            buttonText=eg.text.General.browse,
             dialogTitle=text.browseExecutableDialogTitle
         )
     
-        argumentsText = wx.StaticText(panel, -1, text.Parameters)
-        argumentsCtrl = wx.TextCtrl(panel, -1, arguments)
+        argumentsText = panel.StaticText(text.Parameters)
+        argumentsCtrl = panel.TextCtrl(arguments)
         
-        workingDirText = wx.StaticText(panel, -1, text.WorkingDir)
-        workingDirCtrl = eg.DirBrowseButton(
-            panel, 
-            -1, 
-            size=(320,-1),
-            startDirectory=workingDir,
-            labelText="",
-            buttonText=eg.text.General.browse,
+        workingDirText = panel.StaticText(text.WorkingDir)
+        workingDirCtrl = panel.DirBrowseButton(
+            workingDir,
             dialogTitle=text.browseWorkingDirDialogTitle
         )
-        workingDirCtrl.SetValue(workingDir)
+        #workingDirCtrl.SetValue(workingDir)
         
-        winStateText = wx.StaticText(panel, -1, text.WindowOptionsDesc)
-        winStateChoice = wx.Choice(panel, -1, choices=text.WindowOptions)
-        winStateChoice.SetSelection(winState)
+        winStateText = panel.StaticText(text.WindowOptionsDesc)
+        winStateChoice = panel.Choice(winState, text.WindowOptions)
         
-        prioritiesText = wx.StaticText(panel, -1, text.ProcessOptionsDesc)
-        priorityChoice = wx.Choice(panel, -1, choices=text.ProcessOptions)
-        priorityChoice.SetSelection(4 - priority)
+        prioritiesText = panel.StaticText(text.ProcessOptionsDesc)
+        priorityChoice = panel.Choice(4 - priority, text.ProcessOptions)
     
-        waitCheckBox = wx.CheckBox(panel, -1, text.WaitCheckbox)
-        waitCheckBox.SetValue(waitForCompletion)
+        waitCheckBox = panel.CheckBox(waitForCompletion, text.WaitCheckbox)
         
         lowerSizer = wx.GridBagSizer(0, 0)
         lowerSizer.AddGrowableCol(1)
         lowerSizer.AddGrowableCol(3)
-        Add = lowerSizer.Add
-        Add(winStateText, (0, 0), flag=wx.ALIGN_BOTTOM)
-        Add(winStateChoice, (1, 0))
-        Add((1, 1), (0, 1), flag=wx.EXPAND)
-        Add(prioritiesText, (0, 2), flag=wx.ALIGN_BOTTOM)
-        Add(priorityChoice, (1, 2))
-        Add((1, 1), (0, 3), flag=wx.EXPAND)
+        lowerSizer.AddMany([
+            (winStateText, (0, 0), (1, 1), wx.ALIGN_BOTTOM),
+            (winStateChoice, (1, 0)),
+            ((1, 1), (0, 1), (1, 1), wx.EXPAND),
+            (prioritiesText, (0, 2), (1, 1), wx.ALIGN_BOTTOM),
+            (priorityChoice, (1, 2)),
+            ((1, 1), (0, 3), (1, 1), wx.EXPAND),
+        ])
 
-        Add = panel.sizer.Add
-        Add(fileText)
-        Add(filepathCtrl, 0, wx.EXPAND)
-        Add((10,10))
-        Add(argumentsText)
-        Add(argumentsCtrl, 0, wx.EXPAND)
-        Add((10,10))
-        Add(workingDirText)
-        Add(workingDirCtrl, 0, wx.EXPAND)
-        Add(lowerSizer, 0, wx.EXPAND)
-        Add((10,15))
-        Add(waitCheckBox)
+        panel.sizer.AddMany([
+            (fileText),
+            (filepathCtrl, 0, wx.EXPAND),
+            ((10, 10)),
+            (argumentsText),
+            (argumentsCtrl, 0, wx.EXPAND),
+            ((10, 10)),
+            (workingDirText),
+            (workingDirCtrl, 0, wx.EXPAND),
+            (lowerSizer, 0, wx.EXPAND),
+            ((10, 15)),
+            (waitCheckBox),
+        ])
         
         while panel.Affirmed():
             panel.SetResult(
                 filepathCtrl.GetValue(),
                 argumentsCtrl.GetValue(),
-                winStateChoice.GetSelection(),
-                waitCheckBox.IsChecked(),
-                4 - priorityChoice.GetSelection(),
+                winStateChoice.GetValue(),
+                waitCheckBox.GetValue(),
+                4 - priorityChoice.GetValue(),
                 workingDirCtrl.GetValue()
             )        

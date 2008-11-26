@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 import wx
 
 
@@ -43,7 +42,7 @@ class RadioButtonGrid(wx.Panel):
         sizer.Add((0, 0))
         for column in columns:
             staticText = wx.StaticText(self, -1, column)
-            width, height = staticText.GetBestSize()
+            width = staticText.GetBestSize()[0]
             if width > biggestWidth:
                 biggestWidth = width
             sizer.Add(staticText, 0, wx.ALIGN_CENTER_HORIZONTAL)
@@ -58,7 +57,7 @@ class RadioButtonGrid(wx.Panel):
             ctrlTable.append(ctrlColumn)
 
         biggestWidth += 3
-        width, height= ctrl.GetBestSize()
+        width = ctrl.GetBestSize()[0]
         if width > biggestWidth:
             biggestWidth = width
 

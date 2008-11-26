@@ -162,7 +162,7 @@ class PluginItem(ActionItem):
             self.helpDialog.Raise()
             return
         plugin = self.info.instance
-        self.helpDialog = eg.HTMLDialog(
+        self.helpDialog = eg.HtmlDialog(
             parent,
             eg.text.General.pluginLabel % plugin.name, 
             plugin.description, 

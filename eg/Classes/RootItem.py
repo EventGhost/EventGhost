@@ -93,10 +93,6 @@ class RootItem(ContainerItem):
         pass
             
             
-    def _HasValidId(self):
-        return True
-    
-        
     def CanCut(self):
         return False
     

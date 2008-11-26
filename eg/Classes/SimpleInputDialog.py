@@ -52,3 +52,5 @@ class SimpleInputDialog(eg.Dialog):
     @classmethod
     def CreateModal(cls, prompt=None):
         return cls.GetModalResult(prompt)
+    
+    

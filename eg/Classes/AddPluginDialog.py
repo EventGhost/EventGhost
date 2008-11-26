@@ -24,7 +24,7 @@ import eg
 import wx
 
   
-kindTags = ["remote", "program", "external", "other"]
+KIND_TAGS = ["remote", "program", "external", "other"]
 
 class DefaultConfig:
     position = None
@@ -85,17 +85,17 @@ class AddPluginDialog(eg.Dialog):
         
         treeCtrl.SetMinSize((170, 200))
 
-        imageList = self.imageList = wx.ImageList(16, 16)
+        imageList = wx.ImageList(16, 16)
         imageList.Add(eg.Icons.PLUGIN_ICON.GetBitmap())
         imageList.Add(eg.Icons.FOLDER_ICON.GetBitmap())
         treeCtrl.SetImageList(imageList)
         
         root = treeCtrl.AddRoot("")
         typeIds = {
-            kindTags[0]: treeCtrl.AppendItem(root, Text.remotePlugins, 1),
-            kindTags[1]: treeCtrl.AppendItem(root, Text.programPlugins, 1),
-            kindTags[2]: treeCtrl.AppendItem(root, Text.externalPlugins, 1),
-            kindTags[3]: treeCtrl.AppendItem(root, Text.otherPlugins, 1),
+            KIND_TAGS[0]: treeCtrl.AppendItem(root, Text.remotePlugins, 1),
+            KIND_TAGS[1]: treeCtrl.AppendItem(root, Text.programPlugins, 1),
+            KIND_TAGS[2]: treeCtrl.AppendItem(root, Text.externalPlugins, 1),
+            KIND_TAGS[3]: treeCtrl.AppendItem(root, Text.otherPlugins, 1),
         }
         self.typeIds = typeIds
         itemToSelect = typeIds["remote"]
@@ -104,7 +104,9 @@ class AddPluginDialog(eg.Dialog):
             if info.kind in ("hidden", "core"):
                 continue
             if info.icon and info.icon != eg.Icons.PLUGIN_ICON:
-                idx = imageList.Add(eg.Icons.PluginSubIcon(info.icon).GetBitmap())
+                idx = imageList.Add(
+                    eg.Icons.PluginSubIcon(info.icon).GetBitmap()
+                )
             else:
                 idx = 0
 
@@ -135,7 +137,7 @@ class AddPluginDialog(eg.Dialog):
         nameText.SetFont(wx.Font(14, wx.SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD))
         rightSizer.Add(nameText, 0, wx.EXPAND|wx.LEFT|wx.BOTTOM, 5)
         
-        subSizer = wx.FlexGridSizer(2,2)
+        subSizer = wx.FlexGridSizer(2, 2)
         self.authorLabel = wx.StaticText(rightPanel, label=Text.author)
         subSizer.Add(self.authorLabel)
         self.authorText = wx.StaticText(rightPanel)

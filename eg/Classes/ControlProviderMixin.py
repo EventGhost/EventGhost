@@ -102,10 +102,10 @@ class ControlProviderMixin:
         return dirpathCtrl
     
     
-    def FileBrowseButton(self, value, *args, **kwargs):
+    def FileBrowseButton(self, value, **kwargs):
         filepathCtrl = eg.FileBrowseButton(
             self,
-            size=(320,-1),
+            size=(320, -1),
             initialValue=value, 
             labelText="",
             buttonText=eg.text.General.browse,
@@ -144,5 +144,4 @@ class ControlProviderMixin:
     
     def BoxedGroup(self, *args, **kwargs):
         return eg.BoxedGroup(self, *args, **kwargs)
-    
     

@@ -182,14 +182,12 @@ class TreeItem(object):
     def HasValidId(self):
         if not self.tree:
             return False
-        return self._HasValidId()
-    
-    
-    def _HasValidId(self):
         parent = self.parent
-        if not parent._HasValidId():
-            return False
-        return self.tree.IsExpanded(parent.id)
+        while parent is not None:
+            if not self.tree.IsExpanded(parent.id):
+                return False
+            parent = parent.parent
+        return True
     
     
     @eg.AssertNotMainThread
@@ -241,37 +239,37 @@ class TreeItem(object):
                     s += "  Owner: %r\n" % (link.owner)
                 else:
                     s += "  Owner: %r %s\n" % (link.owner, link.owner.GetLabel())
-        import  wx.lib.dialogs
-        wx.lib.dialogs.ScrolledMessageDialog(None, s, "Info").Show()
+        from wx.lib.dialogs import ScrolledMessageDialog
+        ScrolledMessageDialog(None, s, "Info").Show()
         
     
     
     def GetAllItems(self):
         """
-        Return a list of all nodes including self, by recusively traversing
+        Return a list of all nodes including self, by recursively traversing
         the child nodes.
         """
         result = []
         append = result.append
-        def _RecurseChilds(item):
+        def RecurseChilds(item):
             append(item)
             for child in item.childs:
-                _RecurseChilds(child)
-        _RecurseChilds(self)
+                RecurseChilds(child)
+        RecurseChilds(self)
         return result
     
     
     def GetDependantsOutside(self, allItems):
         result = []
         append = result.append
-        def _RecurseChilds(item):
+        def RecurseChilds(item):
             if item.dependants is not None:
                 for link in item.dependants:
                     if link.owner and link.owner not in allItems:
                         append(link)
             for child in item.childs:
-                _RecurseChilds(child)
-        _RecurseChilds(self)
+                RecurseChilds(child)
+        RecurseChilds(self)
         return result
             
                 
@@ -324,15 +322,15 @@ class TreeItem(object):
                 return False
             try:
                 data = dataObj.GetText().encode("utf-8")
+                tagToCls = self.document.XMLTag2ClassDict
                 for childXmlNode in ElementTree.fromstring(data):
-                    childCls = self.document.XMLTag2ClassDict[childXmlNode.tag].__bases__[0]
+                    childCls = tagToCls[childXmlNode.tag].__bases__[1]
                     if self.DropTest(childCls) in (1, 5):
                         continue
                     if self.parent is None:
                         return False
-                    else:
-                        if self.parent.DropTest(childCls) not in (1, 5):
-                            return False
+                    elif self.parent.DropTest(childCls) not in (1, 5):
+                        return False
             except:
                 return False
         finally:            
