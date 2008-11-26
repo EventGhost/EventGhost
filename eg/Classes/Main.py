@@ -63,8 +63,8 @@ while True:
         break
     arg = argv[i].lower()
     if arg == "-n" or arg == "-netsend":
-        import eg.NetworkSend
-        eg.NetworkSend.Main(argv[i+1:])
+        import NetworkSend
+        NetworkSend.Main(argv[i+1:])
         sys.exit(0)
     elif arg == '-debug':
         args.debugLevel = 1

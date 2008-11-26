@@ -30,9 +30,12 @@ class ImagePicker(wx.Window):
     def __init__(self, parent, label, title="", mesg="", imageString=None):
         self.title = title
         self.mesg = mesg
+        self.imageString = imageString
         wx.Window.__init__(self, parent, -1)
         self.button = wx.Button(self, -1, label)
-        self.imageBox = wx.StaticBitmap(self, -1, size=(10, 10), style=wx.SUNKEN_BORDER)
+        self.imageBox = wx.StaticBitmap(
+            self, -1, size=(10, 10), style=wx.SUNKEN_BORDER
+        )
         self.SetValue(imageString)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(self.button, 0, wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 5)
@@ -44,11 +47,11 @@ class ImagePicker(wx.Window):
         self.Layout()
 
 
-    def OnSetFocus(self, event):
+    def OnSetFocus(self, dummyEvent):
         self.button.SetFocus()
         
         
-    def OnSize(self, event):
+    def OnSize(self, dummyEvent):
         if self.GetAutoLayout():
             self.Layout()
 
@@ -58,14 +61,16 @@ class ImagePicker(wx.Window):
             self.GetParent(), 
             message=self.mesg,
             style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST,
-            wildcard="BMP and GIF files (*.bmp;*.gif)|*.bmp;*.gif|PNG files (*.png)|*.png"
-
+            wildcard=(
+                "BMP and GIF files (*.bmp;*.gif)|*.bmp;*.gif|"
+                "PNG files (*.png)|*.png"
+            )
         )
         if dialog.ShowModal() == wx.ID_OK:
             filePath = dialog.GetPath()
-            fd = open(filePath, "rb")
-            stream = fd.read()
-            fd.close()
+            infile = open(filePath, "rb")
+            stream = infile.read()
+            infile.close()
             self.SetValue(b64encode(stream))
             event.Skip()
             
@@ -78,14 +83,14 @@ class ImagePicker(wx.Window):
             image = wx.ImageFromStream(stream)
             stream.close()
             boxWidth, boxHeight = (10, 10)
-            w, h = image.GetSize()
-            if w > boxWidth:
-                h *= 1.0 * boxWidth / w
-                w = boxWidth
-            if h > boxHeight:
-                w *= 1.0 * boxHeight / h
-                h = boxHeight
-            image.Rescale(w, h)
+            width, height = image.GetSize()
+            if width > boxWidth:
+                height *= 1.0 * boxWidth / width
+                width = boxWidth
+            if height > boxHeight:
+                width *= 1.0 * boxHeight / height
+                height = boxHeight
+            image.Rescale(width, height)
             bmp = wx.BitmapFromImage(image)
             self.imageBox.SetBitmap(bmp)
             self.imageBox.SetSize((30, 30))
@@ -93,3 +98,4 @@ class ImagePicker(wx.Window):
     
     def GetValue(self):
         return self.imageString
+
