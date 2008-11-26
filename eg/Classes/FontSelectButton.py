@@ -34,9 +34,9 @@ class FontSelectButton(wx.BitmapButton):
         style=wx.BU_AUTODRAW, 
         validator=wx.DefaultValidator, 
         name="FontSelectButton", 
-        fontInfo=None
+        value=None
     ):
-        self.fontInfo = fontInfo
+        self.value = value
         wx.BitmapButton.__init__(
             self, 
             parent, 
@@ -52,27 +52,27 @@ class FontSelectButton(wx.BitmapButton):
         
         
     def OnButton(self, event):
-        data = wx.FontData()
-        if self.fontInfo is not None:
-            font = wx.FontFromNativeInfoString(self.fontInfo)  
-            data.SetInitialFont(font)
+        fontData = wx.FontData()
+        if self.value is not None:
+            font = wx.FontFromNativeInfoString(self.value)  
+            fontData.SetInitialFont(font)
         else:
-            data.SetInitialFont(
+            fontData.SetInitialFont(
                 wx.SystemSettings_GetFont(wx.SYS_ANSI_VAR_FONT)
             )
-        dlg = wx.FontDialog(self.GetParent(), data)
-        if dlg.ShowModal() == wx.ID_OK:
-            data = dlg.GetFontData()
-            font = data.GetChosenFont()
-            self.fontInfo = font.GetNativeFontInfo().ToString()
+        dialog = wx.FontDialog(self.GetParent(), fontData)
+        if dialog.ShowModal() == wx.ID_OK:
+            fontData = dialog.GetFontData()
+            font = fontData.GetChosenFont()
+            self.value = font.GetNativeFontInfo().ToString()
             event.Skip()
-        dlg.Destroy()       
+        dialog.Destroy()       
         
         
     def GetValue(self):
-        return self.fontInfo
+        return self.value
     
     
-    def SetValue(self, fontInfo):
-        self.fontInfo = fontInfo
+    def SetValue(self, value):
+        self.value = value
 

@@ -21,60 +21,55 @@
 # $LastChangedBy$
 
 import wx
-import thread
 import webbrowser
-import threading
+from threading import Timer, Thread
 
-from wx.html import HtmlWindow as OriginalHtmlWindow
+from wx.html import HtmlWindow as wxHtmlWindow
 from wx.html import HTML_URL_IMAGE, HTML_OPEN
 
 wx.InitAllImageHandlers()
 
 
-class HtmlWindow(OriginalHtmlWindow):
+class HtmlWindow(wxHtmlWindow):
     basePath = None
     
     def __init__(self, parent, *args, **kwargs):
-        OriginalHtmlWindow.__init__(self, parent, *args, **kwargs)
+        wxHtmlWindow.__init__(self, parent, *args, **kwargs)
         self.SetForegroundColour(parent.GetForegroundColour())
         self.SetBackgroundColour(parent.GetBackgroundColour())
         # bugfix: don't open links to soon, as the event might come from the
         # opening of this window (mouse up event)
         self.waiting = True
-        threading.Timer(0.5, self.OnTimeout).start()
+        Timer(0.5, self.OnTimeout).start()
 
 
     def SetPage(self, html):
-        r1, g1, b1 = self.GetBackgroundColour().Get()
-        r2, g2, b2 = self.GetForegroundColour().Get()
-        OriginalHtmlWindow.SetPage(
+        wxHtmlWindow.SetPage(
             self,
-            '<html><body bgcolor="#%02X%02X%02X" text="#%02X%02X%02X">%s</body></html>' 
-                % (r1, g1, b1, r2, g2, b2, html)
+            '<html><body bgcolor="%s" text="%s">%s</body></html>' % (
+                self.GetBackgroundColour().GetAsString(wx.C2S_HTML_SYNTAX), 
+                self.GetForegroundColour().GetAsString(wx.C2S_HTML_SYNTAX), 
+                html
+            )
         )
         
-    
     
     def OnTimeout(self):
         self.waiting = False
         
     
-    def __open_url(self, URL, NotSameWinIfPossible=0):
-        webbrowser.open(URL, NotSameWinIfPossible)
-    
-    
     def OnLinkClicked(self, link):
         if not self.waiting:
-            thread.start_new_thread(self.__open_url, (link.GetHref(),))
+            Thread(target=webbrowser.open, args=(link.GetHref(), 0)).start()
         
         
     def SetBasePath(self, basePath):
         self.basePath = basePath
         
         
-    def OnOpeningURL(self, type, url):
+    def OnOpeningURL(self, htmlUrlType, url):
         if (
-            type == HTML_URL_IMAGE
+            htmlUrlType == HTML_URL_IMAGE
             and (self.basePath is not None)
             and not url.startswith(self.basePath)
         ):
