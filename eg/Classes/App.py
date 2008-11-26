@@ -128,27 +128,27 @@ class App(wx.App):
             eg.DeInit()
         
         eg.PrintDebugNotice("Threads:")
-        for t in threading.enumerate():
-            eg.PrintDebugNotice(" ", t, t.getName())
+        for thread in threading.enumerate():
+            eg.PrintDebugNotice(" ", thread, thread.getName())
                 
         while self.Pending():
             self.Dispatch()
                 
         # try to wait till all utility threads have ended
         currentThread = threading.currentThread()
-        for t in threading.enumerate():
+        for thread in threading.enumerate():
             if (
-                t is not currentThread 
-                and (t is not eg.messageReceiver._ThreadWorker__thread) 
-                and not t.isDaemon() 
-                and t.isAlive()
+                thread is not currentThread 
+                and (thread is not eg.messageReceiver._ThreadWorker__thread) 
+                and not thread.isDaemon() 
+                and thread.isAlive()
             ):
-                eg.PrintDebugNotice("joining: " + str(t) + repr(t._Thread__target))
-                t.join(5.0)
+                eg.PrintDebugNotice("joining: " + str(thread) + repr(thread._Thread__target))
+                thread.join(5.0)
         
         eg.PrintDebugNotice("Threads:")
-        for t in threading.enumerate():
-            eg.PrintDebugNotice(" ", t, t.getName())
+        for thread in threading.enumerate():
+            eg.PrintDebugNotice(" ", thread, thread.getName())
         eg.PrintDebugNotice("Done!")
         sys.exit(0)
 

@@ -23,9 +23,6 @@
 import eg
 from threading import Timer
 
-eg._lastDefinedPluginClass = None
-
-
 
 class RawReceiverPlugin(eg.PluginClass):
     
@@ -69,7 +66,4 @@ class RawReceiverPlugin(eg.PluginClass):
         
     def Map(self, what, to, timeout=None, repeatCode=None):
         self.mapTable[what] = (to, timeout or self.timeout, repeatCode)
-
-
-
 

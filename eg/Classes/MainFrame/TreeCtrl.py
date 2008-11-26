@@ -617,36 +617,3 @@ class TreeCtrl(wx.TreeCtrl):
         buffer.close()
         return data
             
-            
-#    def CanPaste(self, selectionObj):
-#        if not wx.TheClipboard.Open():
-#            return False
-#        try:
-#            dataObj = wx.CustomDataObject("DragEventItem")
-#            if wx.TheClipboard.GetData(dataObj):
-#                if selectionObj.DropTest(EventItem):
-#                    return True
-#                
-#            dataObj = wx.TextDataObject()
-#            if not wx.TheClipboard.GetData(dataObj):
-#                return False
-#            
-#            try:
-#                data = dataObj.GetText().encode("utf-8")
-#                xmlTree = ElementTree.fromstring(data)
-#                xmlTagToClassDict = self.document.XMLTag2ClassDict
-#                for node in xmlTree:
-#                    childCls = xmlTagToClassDict[node.tag].__bases__[1]
-#                    if selectionObj.DropTest(childCls) in (1, 5):
-#                        continue
-#                    if selectionObj.parent is None:
-#                        return False
-#                    elif selectionObj.parent.DropTest(childCls) not in (1, 5):
-#                        return False
-#            except:
-#                return False
-#        finally:            
-#            wx.TheClipboard.Close()
-#        return True
-#        
-

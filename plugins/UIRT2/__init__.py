@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 eg.RegisterPlugin(
     name = "UIRT2",
@@ -39,7 +40,7 @@ eg.RegisterPlugin(
     ),
 )
 
-
+import wx
 import threading
 import Queue
 import time
@@ -51,7 +52,7 @@ SAMPLE_TIME = 0.00005
 MyDecoder = eg.IrDecoder(SAMPLE_TIME)
 
     
-def calc_checksum(data):
+def CalcChecksum(data):
     checksum = 0
     for i in xrange(len(data)):
         checksum += ord(data[i])
@@ -60,7 +61,7 @@ def calc_checksum(data):
     return chr(checksum)
     
 
-def get_struct_time(code, start):
+def GetStructTime(code, start):
     tvalue = (ord(code[start+1]) * 256) + ord(code[start+2])
     bBits = ord(code[start+3])
     bHdr1 = ord(code[start+4])
@@ -85,7 +86,7 @@ def get_struct_time(code, start):
     return tvalue
 
 
-def calc_time(code):
+def CalcTime(code):
     tvalue = 0
     if code[0] == "\x36":  
         # RAW
@@ -98,14 +99,14 @@ def calc_time(code):
     elif (ord(code[0]) & 0x1F) > 0:
         # REMSTRUCT1
         repeat = ord(code[0]) & 0x1F
-        tvalue = get_struct_time(code, 0) * repeat
+        tvalue = GetStructTime(code, 0) * repeat
         #tvalue -= (ord(code[1]) * 256) + ord(code[2])
 
     else:
         # REMSTRUCT2
-        tvalue = get_struct_time(code, 0)
+        tvalue = GetStructTime(code, 0)
         repeat = ord(code[26]) & 0x1F
-        tvalue = tvalue + (get_struct_time(code, 26) * repeat)
+        tvalue = tvalue + (GetStructTime(code, 26) * repeat)
     return tvalue * SAMPLE_TIME
 
 
@@ -246,7 +247,7 @@ class UIRT2(eg.RawReceiverPlugin):
     
     def __init__(self):
         eg.RawReceiverPlugin.__init__(self)
-        self.AddAction(self.TransmitIR)
+        self.AddAction(TransmitIR)
 
 
     def __start__(self, comport=0):
@@ -266,111 +267,112 @@ class UIRT2(eg.RawReceiverPlugin):
     
     
     
-    class TransmitIR(eg.ActionClass):
-        name = "Transmit IR"
+class TransmitIR(eg.ActionClass):
+    name = "Transmit IR"
+    
+    def __call__(self, code, wait_till_finished=True):
+        event = threading.Event()
+        self.plugin.thread.receiveQueue.put((1, code, event))
+        if wait_till_finished:
+            event.wait(5.0)
+            if not event.isSet():
+                self.PrintError("UIRT2 transmitting timed out")                
         
-        def __call__(self, code, wait_till_finished=True):
-            event = threading.Event()
-            self.plugin.thread.receiveQueue.put((1, code, event))
-            if wait_till_finished:
-                event.wait(5.0)
-                if not event.isSet():
-                    self.PrintError("UIRT2 transmitting timed out")                
-            
 
-        def GetLabel(self, *args):
-            return self.name
-        
-        
-        def Configure(self, code=None, wait_till_finished=True):
-            panel = eg.ConfigPanel(self)
-            code1 = ""
-            code2 = ""
-            repeatCount = 4
+    def GetLabel(self, *args):
+        return self.name
+    
+    
+    def Configure(self, code=None, wait_till_finished=True):
+        panel = eg.ConfigPanel(self)
+        code1 = ""
+        code2 = ""
+        repeatCount = 4
+        carrier = 0
+        if code:
+            code += (48 * "\x00") 
+            if code[0] == "\x36":
+                length = ord(code[1])
+                code1 = "R" + binascii.hexlify(code[2:length]).upper()
+                repeatCount = ord(code[length]) & 0x1F
+                carrier = ord(code[length]) >> 6
+            else:
+                repeatCount = ord(code[0]) & 0x1F
+                if repeatCount > 0:
+                    carrier = ord(code[0]) >> 6
+                    code1 = binascii.hexlify(code[1:26]).upper()
+                else:
+                    repeatCount = ord(code[26]) & 0x1F
+                    carrier = ord(code[0]) >> 6
+                    code1 = binascii.hexlify(code[1:26]).upper()
+                    code2 = binascii.hexlify(code[27:48]).upper()
+        if carrier < 0:
             carrier = 0
-            if code:
-                code += (48 * "\x00") 
-                if code[0] == "\x36":
-                    length = ord(code[1])
-                    code1 = "R" + binascii.hexlify(code[2:length]).upper()
-                    repeatCount = ord(code[length]) & 0x1F
-                    carrier = ord(code[length]) >> 6
-                else:
-                    repeatCount = ord(code[0]) & 0x1F
-                    if repeatCount > 0:
-                        carrier = ord(code[0]) >> 6
-                        code1 = binascii.hexlify(code[1:26]).upper()
-                    else:
-                        repeatCount = ord(code[26]) & 0x1F
-                        carrier = ord(code[0]) >> 6
-                        code1 = binascii.hexlify(code[1:26]).upper()
-                        code2 = binascii.hexlify(code[27:48]).upper()
-            if carrier < 0:
-                carrier = 0
-            elif carrier > 3:
-                carrier = 3
-            if repeatCount < 1:
-                repeatCount = 1
-            elif repeatCount > 31:
-                repeatCount = 31
-            sizer = wx.FlexGridSizer(4,2,5,5)
-            sizer.AddGrowableCol(1)
-            
-            st1 = wx.StaticText(panel, -1, "Code 1:")
-            sizer.Add(st1, 0, wx.ALIGN_CENTER_VERTICAL)
-            code1Ctrl = wx.TextCtrl(panel, -1, code1, size=(325,-1))
-            sizer.Add(code1Ctrl)
-            
-            st2 = wx.StaticText(panel, -1, "Code 2:")
-            sizer.Add(st2, 0, wx.ALIGN_CENTER_VERTICAL)
-            code2Ctrl = wx.TextCtrl(
-                panel, 
-                -1, 
-                code2, 
-                size=(275,-1), 
-                validator=MyHexValidator()
-            )
-            sizer.Add(code2Ctrl)
-            
-            st3 = wx.StaticText(panel, -1, "Repeat:")
-            sizer.Add(st3, 0, wx.ALIGN_CENTER_VERTICAL)
-            repeatCtrl = eg.SpinIntCtrl(panel, -1, repeatCount, 1, 31)
-            repeatCtrl.SetInitialSize((50,-1))
-            sizer.Add(repeatCtrl, 0)
-            
-            st3 = wx.StaticText(panel, -1, "Carrier:")
-            sizer.Add(st3, 0, wx.ALIGN_CENTER_VERTICAL)
-            choices = ('35.7 kHz', '37.0 kHz', '38.4 kHz', '40.0 kHz')
-            carrierCtrl = wx.Choice(panel, -1, choices=choices)
-            carrierCtrl.SetSelection(3 - carrier)
-            sizer.Add(carrierCtrl, 0)
-                        
-            panel.sizer.Add(sizer, 0, wx.EXPAND)
-            
-            panel.sizer.Add((5,5))
-            cb = wx.CheckBox(panel, -1, "Pause till transmission finished")
-            cb.SetValue(wait_till_finished)
-            panel.sizer.Add(cb)
+        elif carrier > 3:
+            carrier = 3
+        if repeatCount < 1:
+            repeatCount = 1
+        elif repeatCount > 31:
+            repeatCount = 31
+        sizer = wx.FlexGridSizer(4,2,5,5)
+        sizer.AddGrowableCol(1)
+        
+        st1 = wx.StaticText(panel, -1, "Code 1:")
+        sizer.Add(st1, 0, wx.ALIGN_CENTER_VERTICAL)
+        code1Ctrl = wx.TextCtrl(panel, -1, code1, size=(325,-1))
+        sizer.Add(code1Ctrl)
+        
+        st2 = wx.StaticText(panel, -1, "Code 2:")
+        sizer.Add(st2, 0, wx.ALIGN_CENTER_VERTICAL)
+        code2Ctrl = wx.TextCtrl(
+            panel, 
+            -1, 
+            code2, 
+            size=(275,-1), 
+            validator=MyHexValidator()
+        )
+        sizer.Add(code2Ctrl)
+        
+        st3 = wx.StaticText(panel, -1, "Repeat:")
+        sizer.Add(st3, 0, wx.ALIGN_CENTER_VERTICAL)
+        repeatCtrl = eg.SpinIntCtrl(panel, -1, repeatCount, 1, 31)
+        repeatCtrl.SetInitialSize((50,-1))
+        sizer.Add(repeatCtrl, 0)
+        
+        st3 = wx.StaticText(panel, -1, "Carrier:")
+        sizer.Add(st3, 0, wx.ALIGN_CENTER_VERTICAL)
+        choices = ('35.7 kHz', '37.0 kHz', '38.4 kHz', '40.0 kHz')
+        carrierCtrl = wx.Choice(panel, -1, choices=choices)
+        carrierCtrl.SetSelection(3 - carrier)
+        sizer.Add(carrierCtrl, 0)
+                    
+        panel.sizer.Add(sizer, 0, wx.EXPAND)
+        
+        panel.sizer.Add((5,5))
+        cb = wx.CheckBox(panel, -1, "Pause till transmission finished")
+        cb.SetValue(wait_till_finished)
+        panel.sizer.Add(cb)
 
-            while panel.Affirmed():
-                code1 = code1Ctrl.GetValue()
-                if len(code1) == 0:
-                    panel.SetResult(None, cb.GetValue())
-                    continue
-                code2 = code2Ctrl.GetValue()
-                repeatCount = repeatCtrl.GetValue()
-                carrier = 3 - carrierCtrl.GetSelection()
-                if code1[0] == "R":
-                    data = binascii.unhexlify(code1[1:])
-                    bCmd = repeatCount | (carrier << 6)
-                    code = "\x36" + chr(len(data) + 2) + data + chr(bCmd)
-                elif len(code2) == 0:
-                    data = binascii.unhexlify(code1)
-                    bCmd = repeatCount | (carrier << 6)
-                    code = chr(bCmd) + data
-                else:
-                    bCmd = 0 | (carrier << 6)
-                    bCmd2 = repeatCount | (carrier << 6)
-                    code = chr(bCmd) + binascii.unhexlify(code1) \
-                           + chr(bCmd2) + binascii.unhexlify(code2)
-                panel.SetResult(code + calc_checksum(code), cb.GetValue())
+        while panel.Affirmed():
+            code1 = code1Ctrl.GetValue()
+            if len(code1) == 0:
+                panel.SetResult(None, cb.GetValue())
+                continue
+            code2 = code2Ctrl.GetValue()
+            repeatCount = repeatCtrl.GetValue()
+            carrier = 3 - carrierCtrl.GetSelection()
+            if code1[0] == "R":
+                data = binascii.unhexlify(code1[1:])
+                bCmd = repeatCount | (carrier << 6)
+                code = "\x36" + chr(len(data) + 2) + data + chr(bCmd)
+            elif len(code2) == 0:
+                data = binascii.unhexlify(code1)
+                bCmd = repeatCount | (carrier << 6)
+                code = chr(bCmd) + data
+            else:
+                bCmd = 0 | (carrier << 6)
+                bCmd2 = repeatCount | (carrier << 6)
+                code = chr(bCmd) + binascii.unhexlify(code1) \
+                       + chr(bCmd2) + binascii.unhexlify(code2)
+            panel.SetResult(code + CalcChecksum(code), cb.GetValue())
+

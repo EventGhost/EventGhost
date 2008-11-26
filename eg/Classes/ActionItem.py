@@ -204,7 +204,7 @@ class ActionItem(TreeItem):
             self.helpDialog.Raise()
             return
         action = self.executable
-        self.helpDialog = eg.HTMLDialog(
+        self.helpDialog = eg.HtmlDialog(
             parent,
             action.name, 
             action.description, 

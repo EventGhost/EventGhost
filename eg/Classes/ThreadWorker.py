@@ -21,11 +21,9 @@
 # $LastChangedBy$
 
 import eg
-import sys
 from sys import exc_info, _getframe
-from threading import Event, Thread, Lock
+from threading import Event, Thread
 from traceback import extract_stack, format_list
-from inspect import stack, currentframe, getouterframes
 from functools import partial
 from collections import deque
 from time import clock
@@ -83,7 +81,8 @@ class ThreadWorkerAction(object):
 
 
 class ThreadWorker:
-    """General purpose message pumping thread, that is used in many places.
+    """
+    General purpose message pumping thread, that is used in many places.
     """
     def __init__(self, *args, **kwargs):
         self.__startupExceptionInfo = None
@@ -175,26 +174,26 @@ class ThreadWorker:
             
     def __DoOneEvent(self):
         try:
-            rc = MsgWaitForMultipleObjects(
+            resultCode = MsgWaitForMultipleObjects(
                 1,
                 self.__events, 
                 0, 
                 10000, 
                 QS_ALLINPUT
             )
-            if rc == WAIT_OBJECT_0:
+            if resultCode == WAIT_OBJECT_0:
                 while 1:
                     try:
                         action = self.__queue.popleft()
                     except IndexError:
                         break
                     self.HandleAction(action)
-            elif rc == WAIT_OBJECT_0+1:
+            elif resultCode == WAIT_OBJECT_0+1:
                 if PumpWaitingMessages():
                     eg.PrintDebugNotice("Got WM_QUIT")
                     self.__alive = False
                     return
-            elif rc == WAIT_TIMEOUT:
+            elif resultCode == WAIT_TIMEOUT:
                 # Our timeout has elapsed.
                 self.Poll()
             else:
@@ -222,22 +221,20 @@ class ThreadWorker:
             
     
     def Wait(self, timeout):
-        otimeout = timeout
-        start = clock()
         endTime = clock() + timeout
         events = (HANDLE * 1)(self.__dummyEvent)
         while True:
-            rc = MsgWaitForMultipleObjects(
+            resultCode = MsgWaitForMultipleObjects(
                 1,
                 events,
                 0,
                 int(timeout * 1000),
                 QS_ALLINPUT
             )
-            if rc == WAIT_OBJECT_0:
+            if resultCode == WAIT_OBJECT_0:
                 # event signalled - should never happen!
                 raise Exception("Got unknown event in ThreadWorker.Wait()")
-            elif rc == WAIT_TIMEOUT:
+            elif resultCode == WAIT_TIMEOUT:
                 # Timeout expired.
                 return
             # must be a message.
@@ -248,21 +245,19 @@ class ThreadWorker:
 
     
     def WaitOnEvent(self, event, timeout=10):
-        otimeout = timeout
-        start = clock()
         endTime = clock() + timeout
         events = (HANDLE * 1)(event)
         while True:
-            rc = MsgWaitForMultipleObjects(
+            resultCode = MsgWaitForMultipleObjects(
                 1,
                 events,
                 0,
                 int(timeout * 1000),
                 QS_ALLINPUT
             )
-            if rc == WAIT_OBJECT_0:
+            if resultCode == WAIT_OBJECT_0:
                 return
-            elif rc == WAIT_TIMEOUT:
+            elif resultCode == WAIT_TIMEOUT:
                 # Timeout expired.
                 return
             # must be a message.

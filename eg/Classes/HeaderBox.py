@@ -20,9 +20,10 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 import wx
+import wx.html
 import re
-import wx.html as html
 
 REPLACE_BR_TAG = re.compile('<br[ \/]*>')
 REMOVE_HTML_PATTERN = re.compile('<([^!>]([^>]|\n)*)>')
@@ -46,9 +47,7 @@ class HeaderBox(wx.PyWindow):
         text = REPLACE_BR_TAG.sub('\n', text)
         text = REMOVE_HTML_PATTERN.sub('', text)
         if text == obj.name:
-            self.text = ""
-        else:
-            self.text = text
+            text = ""
         self.obj = obj
         self.parent = parent
         wx.PyWindow.__init__(self, parent, -1)
@@ -61,12 +60,11 @@ class HeaderBox(wx.PyWindow):
         nameBox.SetFont(font)
         
         if hasAdditionalHelp:
-            self.text += ' <a href="ShowMoreHelp">' + eg.text.General.moreTag + '</a>'
-        r, g, b = self.GetBackgroundColour().Get()
-        r2, g2, b2 = self.GetForegroundColour().Get()
-        self.text = (
-            '<html><body bgcolor="#%02X%02X%02X" text="#%02X%02X%02X">%s</body></html>' 
-                % (r, g, b, r2, g2, b2, self.text)
+            text += ' <a href="ShowMoreHelp">%s</a>' % eg.text.General.moreTag
+        self.text = '<html><body bgcolor="%s" text="%s">%s</body></html>' % (
+            self.GetBackgroundColour().GetAsString(wx.C2S_HTML_SYNTAX), 
+            self.GetForegroundColour().GetAsString(wx.C2S_HTML_SYNTAX), 
+            text
         )
         self.descBox = descBox = wx.html.HtmlWindow(self)
         descBox.SetBorders(1)
@@ -98,13 +96,12 @@ class HeaderBox(wx.PyWindow):
         self.Bind(wx.EVT_SIZE, self.OnSize)
         
         
-    def OnSize(self, event=None):
+    def OnSize(self, dummyEvent=None):
         if self.GetAutoLayout():
             self.Layout()
-            y = self.descBox.GetSize()[0]
             self.descBox.SetPage(self.text)
-            h = self.descBox.GetInternalRepresentation().GetHeight()
-            self.descBox.SetMinSize((-1, h + 4))
+            height = self.descBox.GetInternalRepresentation().GetHeight()
+            self.descBox.SetMinSize((-1, height + 4))
             self.Layout()
 
 
@@ -117,4 +114,4 @@ class HeaderBox(wx.PyWindow):
         
     def AcceptsFocus(self):
         return False
-    
+

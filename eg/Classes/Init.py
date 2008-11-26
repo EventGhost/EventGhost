@@ -48,14 +48,13 @@ class Init(object):
     The eg object/module is EventGhost itself.
     """
     
-    def result_fget(self):
+    def result_fget(self, owner):
         return self._result
     
     
-    def result_fset(self, value):
+    def result_fset(self, owner, value):
         self._result = value
         
-    result = property(result_fget, result_fset)
     
     
     def __init__(self, args=args):
@@ -66,6 +65,7 @@ class Init(object):
                 setattr(eg, name, self.__class__.__dict__[name])
         eg.__doc__ = self.__doc__
         self._result = None
+        eg.__class__.result = property(self.result_fget, self.result_fset)
 #        eg = self
 #        sys.modules["eg"] = self
 #        self.__path__ = [os.path.abspath("eg")]
@@ -167,8 +167,7 @@ class Init(object):
                 sys.stderr.write("Error%d: %s\n" % (level, msg))
         wx.Log.SetActiveTarget(MyLog())
 
-        from eg.LanguageTools import LoadStrings
-        eg.text = LoadStrings(eg.config.language)
+        eg.text = eg.Translation.Load(eg.config.language)
 
         Utils.SetClass(eg.text, eg.Text)
 
@@ -192,8 +191,8 @@ class Init(object):
         from eg.WinApi.serial import Serial
         eg.SerialPort = Serial
         
-        from eg.WinApi.SendKeys import SendKeys
-        eg.SendKeys = SendKeys
+        from eg.WinApi.SendKeys import SendKeysParser
+        eg.SendKeys = SendKeysParser()
         
         import eg.WinApi.COMServer
         if not args.install:

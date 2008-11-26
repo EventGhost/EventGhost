@@ -57,7 +57,9 @@ class FontSelectButton(wx.BitmapButton):
             font = wx.FontFromNativeInfoString(self.fontInfo)  
             data.SetInitialFont(font)
         else:
-            data.SetInitialFont(wx.SystemSettings_GetFont(wx.SYS_ANSI_VAR_FONT))
+            data.SetInitialFont(
+                wx.SystemSettings_GetFont(wx.SYS_ANSI_VAR_FONT)
+            )
         dlg = wx.FontDialog(self.GetParent(), data)
         if dlg.ShowModal() == wx.ID_OK:
             data = dlg.GetFontData()

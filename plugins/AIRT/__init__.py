@@ -13,7 +13,9 @@ eg.RegisterPlugin(
 import wx
 import threading
 
-ATI_Remote_Table = {
+COMSPEED = 115200
+
+ATI_REMOTE_TABLE = {
     0x00: "A",
     0x01: "B",
     0x02: "Power",
@@ -72,7 +74,7 @@ ATI_Remote_Table = {
     0x7E: "RButtonDoubleClick",
     }
 
-Medion_Remote_Table = {
+MEDION_REMOTE_TABLE = {
     0x00: "Mute",
     0x02: "Power",
     0x04: "DVD",
@@ -155,9 +157,6 @@ def hexstring2bin(str):
 
 
 
-COMSPEED = 115200
-
-
 class AIRT(eg.PluginClass):
     
     def __init__(self):
@@ -171,19 +170,15 @@ class AIRT(eg.PluginClass):
         self.remotes = remotes
         self.port = port
         self.lastActionEvent = None
-        try:
-            self.serialPort = eg.SerialPort(port, baudrate=COMSPEED)
-        except:
-            raise self.Exceptions.SerialOpenFailed
-        self.serialThread = eg.SerialThread(self.serialPort.hComPort)
+        self.serialThread = eg.SerialThread()
+        self.serialThread.Open(port, COMSPEED)
         self.serialThread.SetReadEventCallback(self.HandleReceive)
         self.serialThread.Start()
         self.serialThread.Write("\x00\x00\x00")
 
     
     def __stop__(self):
-        self.serialThread.Stop()
-        self.serialPort.close()
+        self.serialThread.Close()
         
         
     def HandleReceive(self, serial):
@@ -204,9 +199,9 @@ class AIRT(eg.PluginClass):
             x10Id = ord(data[4])
             remoteType = self.remotes[x10Id]
             if remoteType == 2:
-                table = ATI_Remote_Table
+                table = ATI_REMOTE_TABLE
             elif remoteType == 1:
-                table = Medion_Remote_Table
+                table = MEDION_REMOTE_TABLE
             elif remoteType == 3:
                 eventString = bin2hexstring(data[4])
                 table = None
@@ -239,7 +234,7 @@ class AIRT(eg.PluginClass):
 
     def Configure(self, port=0, remotes=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]):
         panel = eg.ConfigPanel(self)
-        portCtrl = eg.SerialPortChoice(panel, value=port)
+        portCtrl = panel.SerialPortChoice(port)
         remoteCtrl = eg.RadioButtonGrid(
             panel, 
             rows=["None", "Medion", "ATI", "X10"],
@@ -267,7 +262,9 @@ class SendIR(eg.ActionClass):
         event.data = data[:7] + chr(repeats)
         sp = self.plugin.serialThread
         self.plugin.lastActionEvent = event
+        sp.SuspendReadEvents()
         sp.Write(event.data)
+        sp.ResumeReadEvents()
         if repeats == 0:
             eg.event.AddUpFunc(sp.Write, '\xAB')
         if block and repeats != 0:

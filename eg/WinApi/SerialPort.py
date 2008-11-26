@@ -47,7 +47,7 @@ class SerialPort:
     
     def open(self):
         try:
-            self.fd=win32file.CreateFile(
+            self.fd = win32file.CreateFile(
                 DeviceString(self.port),
                 win32con.GENERIC_READ|win32con.GENERIC_WRITE,
                 0,    # exclusive access
@@ -103,13 +103,6 @@ class SerialPort:
             raise
          
         
-    # change baud rate
-    def baud(self, baud):
-        dcb=win32file.GetCommState(self.fd)
-        dcb.BaudRate=baud
-        self.baudrate=baud
-        win32file.SetCommState(self.fd, dcb)
-        
     def __get_baudrate(self):
         return self.dcb.Baudrate
     
@@ -135,6 +128,7 @@ class SerialPort:
             
 
 
+    @eg.LogIt
     def read(self, n=None):
         """try to read a certain number of characters"""
         try:
@@ -148,6 +142,7 @@ class SerialPort:
         return data
 
 
+    @eg.LogIt
     def write(self, data):
         """write data out the port"""
         try:
@@ -162,11 +157,6 @@ class SerialPort:
         return n
             
 
-    # close port object
-    def __del__(self):
-        self.close()
-            
-            
     def close(self):
         if self.fd:
             win32file.CloseHandle(self.fd)

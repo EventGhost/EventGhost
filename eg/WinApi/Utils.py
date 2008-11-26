@@ -20,10 +20,13 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import wx
 import sys
 from eg.cFunctions import GetProcessName, GetWindowChildsList
 from Dynamic import (
+    # ctypes stuff
     byref, sizeof, WinError, 
+    # functions
     AttachThreadInput, PtVisible, SaveDC, RestoreDC, SetROP2,
     GetAncestor, Rectangle, IsWindow, IsIconic, GetStockObject, SelectObject,
     ShowWindow, BringWindowToTop, UpdateWindow, GetForegroundWindow, 
@@ -63,8 +66,8 @@ def BringHwndToFront(hWnd, invalidate=True):
         UpdateWindow(hWnd)
     
     # Check to see if we are the foreground thread
-    h = GetForegroundWindow()
-    foregroundThreadID = GetWindowThreadProcessId(h, None)
+    foregroundHwnd = GetForegroundWindow()
+    foregroundThreadID = GetWindowThreadProcessId(foregroundHwnd, None)
     ourThreadID = GetCurrentThreadId()
 
     # If not, attach our thread's 'input' to the foreground thread's
@@ -91,7 +94,7 @@ def GetMonitorDimensions():
         rect = wx.Rect(r.left, r.top, r.right - r.left, r.bottom - r.top)
         retval.append(rect)
         return 1
-    temp = EnumDisplayMonitors(0, None, MONITORENUMPROC(MonitorEnumProc), 0)
+    EnumDisplayMonitors(0, None, MONITORENUMPROC(MonitorEnumProc), 0)
     return retval
 
 
@@ -154,7 +157,12 @@ def BestWindowFromPoint(point):
     clientPoint = POINT()
     for hWnd in hWnds:
         GetWindowRect(hWnd, byref(rect))
-        if x >= rect.left and x <= rect.right and y >= rect.top and y <= rect.bottom:
+        if (
+            x >= rect.left 
+            and x <= rect.right 
+            and y >= rect.top 
+            and y <= rect.bottom
+        ):
             hdc = GetDC(hWnd)
             clientPoint.x, clientPoint.y = x, y
             ScreenToClient(hWnd, byref(clientPoint))
@@ -183,7 +191,13 @@ def GetHwndIcon(hWnd):
         hIcon.value = GetClassLong(hWnd, GCL_HICONSM)
         if hIcon.value == 0:
             res = SendMessageTimeout(
-                hWnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000, byref(hIcon)
+                hWnd, 
+                WM_GETICON, 
+                ICON_BIG, 
+                0, 
+                SMTO_ABORTIFHUNG, 
+                1000, 
+                byref(hIcon)
             )
             if res == 0:
                 hIcon.value = 0
@@ -196,7 +210,7 @@ def GetHwndIcon(hWnd):
         if value & 0x80000000:
             value = -((value ^ 0xffffffff) + 1) 
         icon.SetHandle(value)
-        icon.SetSize((16,16))
+        icon.SetSize((16, 16))
         return icon
     else:
         return None

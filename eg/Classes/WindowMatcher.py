@@ -21,7 +21,6 @@
 # $LastChangedBy$
 
 import eg
-import wx
 from re import compile, escape
 from types import StringTypes
 from time import clock
@@ -209,5 +208,4 @@ class WindowMatcher:
         @eg.LogIt
         def __del__(self):
             pass
-                
                 

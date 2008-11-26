@@ -20,7 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-vkCodes = (
+VK_CODES = (
     ('AltGr', 10),
     ('Shift', 16),
     ('LShift', 160),
@@ -286,25 +286,28 @@ vkCodes = (
     ('Return', 13),
 )
 
-
+import eg
 from eg.WinApi.Dynamic import (
     SendInput, OpenProcess, CloseHandle, WaitForInputIdle, GetKeyboardState,
     SetTimer, GetCurrentThreadId, GetWindowThreadProcessId, SetKeyboardState, 
     INPUT, INPUT_KEYBOARD, KEYEVENTF_KEYUP,
     GetGUIThreadInfo, GUITHREADINFO, PROCESS_QUERY_INFORMATION, VK_SHIFT,
-    VK_LSHIFT, VK_CONTROL, VK_LCONTROL, VK_MENU, VK_LMENU, VK_RMENU,
-    WM_TIMER, WM_SYSKEYDOWN, WM_KEYDOWN, WM_SYSKEYUP, WM_KEYUP, DWORD, LPBYTE,
-    AttachThreadInput, VkKeyScanW, TCHAR, MapVirtualKey, GetMessage, 
+    VK_LSHIFT, VK_CONTROL, VK_LCONTROL, VK_MENU,
+    WM_TIMER, WM_SYSKEYDOWN, WM_KEYDOWN, WM_SYSKEYUP, WM_KEYUP, DWORD,
+    AttachThreadInput, VkKeyScanW, MapVirtualKey, GetMessage, 
     PostMessage, MSG, byref, sizeof, pointer, c_ubyte, 
     GetFocus, GetForegroundWindow,
 )
+import wx
+
+
 del GetKeyboardState.argtypes
 del SetKeyboardState.argtypes
 del SetTimer.argtypes
 
 PBYTE256 = c_ubyte * 256
 
-VK_Keys = {
+VK_KEYS = {
     'BACK': 0x08, 
     'TAB': 0x09, 
     'ENTER': 0x0D,
@@ -319,27 +322,83 @@ VK_Keys = {
     'WIN': 0x015B,
 }
 
-for keyword, code in vkCodes:
-    VK_Keys[keyword.upper()] = code
+for keyword, code in VK_CODES:
+    VK_KEYS[keyword.upper()] = code
     
-    
+
+def ParseSingleChar(char):
+    """
+    Translates a single character to the needed key sequence.
+    """
+    vkCode = VkKeyScanW(char) & 0xFFFF
+    if vkCode == 0xFFFF:
+        eg.PrintError(
+            "SendKeys: Can't translate character '%s' to key sequence!" % char
+        )
+        return
+    data = []
+    if vkCode & 0x200:
+        data.append(VK_CONTROL)
+    if vkCode & 0x400:
+        data.append(VK_MENU)
+    if vkCode & 0x100:
+        data.append(VK_LSHIFT)
+    data.append(vkCode)
+    return data
+        
+        
+def ParseText(text):
+    """
+    Translates a string to a key sequence.
+    """
+    data = []
+    i = 0
+    strLen = len(text)
+    while i < strLen:
+        char = text[i]
+        if char == "{":
+            if i+1 < strLen and text[i+1] == "{":
+                i += 2
+                data.append(ParseSingleChar(char))
+            else:
+                end = text.find("}", i+1)
+                if end == -1:
+                    raise SyntaxError("Matching closing brace not found")
+                key = text[i+1:end]
+                i = end + 1
+                key2 = key.replace("_", "+").replace("-", "+").upper()
+                words = key2.split("+")
+                for word in words:
+                    if word not in VK_KEYS:
+                        res = unicode(eval(key, {}, eg.globals.__dict__))
+                        data.append(ParseText(res))
+                        break
+                else:
+                    data.append([VK_KEYS[word] for word in words])
+        else:
+            i += 1
+            data.append(ParseSingleChar(char))
+    return data
+
+        
+        
 class SendKeysParser:
     
     @eg.LogIt
     def __init__(self):        
-        self.dummy_window = wx.Frame(None, -1, "Dummy Window")
-        self.dummy_hwnd = self.dummy_window.GetHandle()
+        self.dummyWindow = wx.Frame(None, -1, "Dummy Window")
+        self.dummyHwnd = self.dummyWindow.GetHandle()
         self.msg = MSG()
-        self.keywords = VK_Keys.keys()
         self.isSysKey = False
         self.sendInputStruct = INPUT()
         self.sendInputStruct.type = INPUT_KEYBOARD
-        self.rawData = []
+        self.keyboardStateBuffer = PBYTE256()
+        self.procHandle = None
+        self.guiTreadInfo = GUITHREADINFO()
+        self.guiTreadInfo.cbSize = sizeof(GUITHREADINFO)
+
         
-        
-    def Parse(self, hwnd, data, useAlternateMethod=False):
-        oldHwnd = hwnd
-        self.text = data
+    def __call__(self, hwnd, keystrokeString, useAlternateMethod=False):
         needGetFocus = False
         sendToFront = False
         if hwnd is None:
@@ -359,35 +418,26 @@ class SendKeysParser:
         if needGetFocus:
             hwnd = GetFocus()
         if not sendToFront:
-            guiTreadInfo = GUITHREADINFO()
-            guiTreadInfo.cbSize = sizeof(GUITHREADINFO)
-            if GetGUIThreadInfo(0, byref(guiTreadInfo)):
-                sendToFront = (guiTreadInfo.hwndFocus == hwnd)
+            if GetGUIThreadInfo(0, byref(self.guiTreadInfo)):
+                sendToFront = (self.guiTreadInfo.hwndFocus == hwnd)
             else:
                 sendToFront = False
-        self.sendToFront = sendToFront
         if not hwnd:
             hwnd = None
-        self.hwnd = hwnd
-        try:
-            self.procHandle = OpenProcess(
+        self.procHandle = OpenProcess(
                 PROCESS_QUERY_INFORMATION, 
                 0, 
                 processID
             )
-        except:
-            self.procHandle = None
         #self.WaitForInputProcessed()
-        self.keyboardStateBuffer = PBYTE256()
         oldKeyboardState = PBYTE256()
         GetKeyboardState(byref(oldKeyboardState))
         
-        del self.rawData[:]
-        self.ParseText(self.text)
+        keyData = ParseText(keystrokeString)
         if sendToFront and not useAlternateMethod:
-            self.SendRawCodes1()
+            self.SendRawCodes1(keyData)
         else:
-            self.SendRawCodes2()
+            self.SendRawCodes2(keyData, hwnd)
 
         SetKeyboardState(byref(oldKeyboardState))
         self.WaitForInputProcessed()
@@ -399,57 +449,56 @@ class SendKeysParser:
         
     def WaitForInputProcessed(self):
         if self.procHandle:
-            try:
-                WaitForInputIdle(self.procHandle, 100)
-            except:
-                pass
+            WaitForInputIdle(self.procHandle, 100)
         def DoIt():
-            SetTimer(self.dummy_hwnd, 1, 0, None)
+            SetTimer(self.dummyHwnd, 1, 0, None)
             self.msg.message = 0
             while self.msg.message != WM_TIMER:
-                GetMessage(byref(self.msg), self.dummy_hwnd, 0, 0)
+                GetMessage(byref(self.msg), self.dummyHwnd, 0, 0)
         eg.CallWait(DoIt)
             
  
-    def SendRawCodes1(self):
-        """Uses the SendInput-API function to send the virtual keycode. Can 
-        only send to the frontmost window."""
-
+    def SendRawCodes1(self, keyData):
+        """
+        Uses the SendInput-API function to send the virtual keycode. 
+        Can only send to the frontmost window.
+        """
         sendInputStruct = self.sendInputStruct
         sendInputStructPointer = pointer(sendInputStruct)
         sendInputStructSize = sizeof(sendInputStruct)
-        ki = sendInputStruct.ki
-        for block in self.rawData:        
-            ki.dwFlags = 0
+        keyboardStruct = sendInputStruct.ki
+        for block in keyData:        
+            keyboardStruct.dwFlags = 0
             for virtualKey in block:
-                ki.wVk = virtualKey & 0xFF
+                keyboardStruct.wVk = virtualKey & 0xFF
                 SendInput(1, sendInputStructPointer, sendInputStructSize)   
                 self.WaitForInputProcessed()
-            ki.dwFlags = KEYEVENTF_KEYUP
+            keyboardStruct.dwFlags = KEYEVENTF_KEYUP
             for virtualKey in reversed(block):
-                ki.wVk = virtualKey & 0xFF
+                keyboardStruct.wVk = virtualKey & 0xFF
                 SendInput(1, sendInputStructPointer, sendInputStructSize)    
                 self.WaitForInputProcessed()
         
         
-    def SendRawCodes2(self):
-        """Uses PostMessage and SetKeyboardState to emulate the the virtual 
-        keycode. Can send to a specified window handle."""
-
+    def SendRawCodes2(self, keyData, hwnd):
+        """
+        Uses PostMessage and SetKeyboardState to emulate the the virtual 
+        keycode. Can send to a specified window handle.
+        """
         keyboardStateBuffer = self.keyboardStateBuffer
-        for block in self.rawData:        
+        for block in keyData:        
             for virtualKey in block:
-                vk = virtualKey & 0xFF
+                keyCode = virtualKey & 0xFF
                 highBits = virtualKey & 0xFF00
-                lparam = ((MapVirtualKey(vk, 0) | highBits) << 16) | 1
+                lparam = ((MapVirtualKey(keyCode, 0) | highBits) << 16) | 1
                 
-                keyboardStateBuffer[vk] |= 128 
+                keyboardStateBuffer[keyCode] |= 128 
                 
-                if vk == VK_LSHIFT:
+                if keyCode == VK_LSHIFT:
                     keyboardStateBuffer[VK_SHIFT] |= 128
-                #elif vk == VK_MENU:
+                #elif keyCode == VK_MENU:
                 #    self.isSysKey = True
-                elif vk == VK_CONTROL:
+                elif keyCode == VK_CONTROL:
                     keyboardStateBuffer[VK_LCONTROL] |= 128
                 
                 if self.isSysKey:
@@ -459,21 +508,23 @@ class SendKeysParser:
                     mesg = WM_KEYDOWN
                     
                 SetKeyboardState(byref(keyboardStateBuffer))
-                PostMessage(self.hwnd, mesg, vk, lparam)
+                PostMessage(hwnd, mesg, keyCode, lparam)
                 self.WaitForInputProcessed()
                 
             for virtualKey in reversed(block):
-                vk = virtualKey & 0xFF
+                keyCode = virtualKey & 0xFF
                 highBits = virtualKey & 0xFF00
-                lparam = ((MapVirtualKey(vk, 0) | highBits) << 16) | 0xC0000001
+                lparam = (
+                    ((MapVirtualKey(keyCode, 0) | highBits) << 16) 
+                    | 0xC0000001
+                )
+                keyboardStateBuffer[keyCode] &= ~128
                 
-                keyboardStateBuffer[vk] &= ~128
-                
-                if vk == VK_LSHIFT:
+                if keyCode == VK_LSHIFT:
                     keyboardStateBuffer[VK_SHIFT] &= ~128
-                #elif vk == VK_MENU:
+                #elif keyCode == VK_MENU:
                 #    self.isSysKey = False
-                elif vk == VK_CONTROL:
+                elif keyCode == VK_CONTROL:
                     keyboardStateBuffer[VK_LCONTROL] &= ~128
                 
                 if self.isSysKey:
@@ -483,58 +534,7 @@ class SendKeysParser:
                     mesg = WM_KEYUP
                     
                 SetKeyboardState(byref(keyboardStateBuffer))
-                PostMessage(self.hwnd, mesg, vk, lparam)
+                PostMessage(hwnd, mesg, keyCode, lparam)
                 self.WaitForInputProcessed()        
 
         
-    def ParseSingleChar(self, ch):
-        data = []
-        key = VkKeyScanW(ch) & 0xFFFF
-        if key == 0xFFFF:
-            eg.PrintError("Cannot translate character '%s' to key sequence!" % ch)
-            return
-        if key & 0x200:
-            data.append(VK_CONTROL)
-        if key & 0x400:
-            data.append(VK_MENU)
-        if key & 0x100:
-            data.append(VK_LSHIFT)
-        data.append(key)
-        self.rawData.append(data)
-        
-        
-    def ParseText(self, text):
-        i = 0
-        strLen = len(text)
-        while i < strLen:
-            ch = text[i]
-            if ch == "{":
-                if i+1 < strLen and text[i+1] == "{":
-                    i += 2
-                    self.ParseSingleChar(ch)
-                else:
-                    end = text.find("}", i+1)
-                    if end == -1:
-                        raise "Matching closing brace not found"
-                    key = text[i+1:end]
-                    i = end + 1
-                    key2 = key.replace("_", "+")
-                    key2 = key2.replace("-", "+")
-                    key2 = key2.upper()
-                    words = key2.split("+")
-                    for word in words:
-                        if word not in self.keywords:
-                            res = unicode(eval(key, {}, eg.globals.__dict__))
-                            self.ParseText(res)
-                            break
-                    else:
-                        data = []
-                        for word in words:
-                            data.append(VK_Keys[word])
-                        self.rawData.append(data)
-            else:
-                i += 1
-                self.ParseSingleChar(ch)
-                
-
-SendKeys = SendKeysParser().Parse
