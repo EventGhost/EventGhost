@@ -67,7 +67,7 @@ class Dialog(wx.Dialog, eg.ControlProviderMixin):
     
     
     def Process(self, *args, **kwargs):
-        raise NotImplemented
+        raise NotImplementedError 
     
     
     def GetResult(self):
