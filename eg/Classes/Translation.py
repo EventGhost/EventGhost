@@ -164,26 +164,4 @@ class Translation:
         "zu_ZU": "Zulu",
     }
     
-        
-    @staticmethod
-    @eg.LogIt
-    def Load(language):   
-        class Text:
-            pass
-        text = Text()
-        class MetaClass(type):
-            def __new__(mcs, dummyName, dummyBases, dct):
-                del dct["__module__"]
-                class EmptyTextBunch:
-                    pass
-                return InstanceType(EmptyTextBunch, dct)
-        try:
-            infile = open("languages\\%s.py" % language)
-            exec infile in {"__metaclass__": MetaClass}, text.__dict__
-        except IOError:
-            pass
-        return text
-    
-        
-        
     

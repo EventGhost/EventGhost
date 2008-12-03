@@ -32,7 +32,7 @@ locale.setlocale(locale.LC_ALL, '')
 if hasattr(sys, "frozen"):
     mainDir = dirname(unicode(sys.executable, sys.getfilesystemencoding()))
 else:
-    mainDir = os.path.abspath(dirname(sys.argv[0]))
+    mainDir = os.path.abspath(join(dirname(__file__), ".."))
 
 # change working directory to program directory
 os.chdir(mainDir)
@@ -41,7 +41,7 @@ os.chdir(mainDir)
 sys.path.append(join(mainDir, "eg"))
 sys.path.append(join(mainDir, "plugins"))
 
-# determine the commadline parameters
+# determine the commandline parameters
 class args:
     hideOnStartup = False
     startupEvent = None
@@ -62,8 +62,8 @@ while True:
         break
     arg = argv[i].lower()
     if arg == "-n" or arg == "-netsend":
-        import NetworkSend
-        NetworkSend.Main(argv[i+1:])
+        from Classes.NetworkSend import Main
+        Main(argv[i+1:])
         sys.exit(0)
     elif arg == '-debug':
         args.debugLevel = 1
@@ -131,16 +131,3 @@ if (not args.allowMultiLoad) and (not args.translate):
             e.BringToFront()
         ctypes.windll.kernel32.ExitProcess(0)		
     
-
-#import Init import EventGhost
-#eg = EventGhost(args)
-#if not args.install:
-#    eg.app.MainLoop()
-#ctypes.windll.kernel32.ExitProcess(0)
-
-def Main():
-    import eg
-    eg.Init(args)
-    if not args.install:
-        eg.app.MainLoop()
-

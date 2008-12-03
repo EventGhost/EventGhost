@@ -152,6 +152,9 @@ class ConfigDialog(eg.Dialog):
     
 
 class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
+    """
+    A panel with some magic.
+    """
     
     def __init__(
         self, 

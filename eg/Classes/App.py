@@ -72,7 +72,6 @@ class App(wx.App):
 #            if event.GetActive():
 #                self.clipboardEvent.Fire()
 #        self.Bind(wx.EVT_ACTIVATE_APP, FireClipboardEvent)
-        
         return True
     
     
@@ -125,7 +124,7 @@ class App(wx.App):
                 func()
                 
             eg.PrintDebugNotice("Calling eg.DeInit()")    
-            eg.DeInit()
+            eg.Init.DeInit()
         
         eg.PrintDebugNotice("Threads:")
         for thread in threading.enumerate():
@@ -143,7 +142,9 @@ class App(wx.App):
                 and not thread.isDaemon() 
                 and thread.isAlive()
             ):
-                eg.PrintDebugNotice("joining: " + str(thread) + repr(thread._Thread__target))
+                eg.PrintDebugNotice(
+                    "joining: " + str(thread) + repr(thread._Thread__target)
+                )
                 thread.join(5.0)
         
         eg.PrintDebugNotice("Threads:")
