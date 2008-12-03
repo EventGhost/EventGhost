@@ -336,7 +336,7 @@ class Start(eg.ActionClass):
         
     def Configure(self, cmdLineArgs=""):
         vlcPath = GetVlcPath()
-        panel = eg.ConfigPanel(self, resizeable=True)
+        panel = eg.ConfigPanel(self)
         cmdLineCtrl = panel.TextCtrl(cmdLineArgs)
         resultCtrl = eg.StaticTextBox(panel)
         def OnTextChange(event=eg.wxDummyEvent):
