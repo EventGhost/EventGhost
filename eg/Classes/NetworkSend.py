@@ -24,7 +24,7 @@ import socket
 import locale
 from hashlib import md5
 
-gEncoding = locale.getdefaultlocale()[1]
+ENCODING = locale.getdefaultlocale()[1]
 
 
 def NetworkSend(host, port, password, eventString, payload=None):
@@ -76,10 +76,10 @@ def NetworkSend(host, port, password, eventString, payload=None):
         # now just pipe those commands to the server
         if (payload is not None) and (len(payload) > 0):
             for pld in payload:
-                sock.sendall("payload " + pld.encode(gEncoding) + "\n")
+                sock.sendall("payload " + pld.encode(ENCODING) + "\n")
 
         # send the eventstring
-        sock.sendall(eventString.encode(gEncoding) + "\n")
+        sock.sendall(eventString.encode(ENCODING) + "\n")
         
         # tell the server that we are done nicely.
         sock.sendall("close\n")
