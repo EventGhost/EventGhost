@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 eg.RegisterPlugin(
     name = "Home Electronics Tira",
@@ -57,7 +58,7 @@ eg.RegisterPlugin(
     ),
 )
     
-    
+import wx
 import time
 import threading
 from os.path import abspath, join, dirname
@@ -74,7 +75,7 @@ from ctypes import (
     addressof
 )
 
-dll_path = abspath(join(dirname(__file__), "Tira2.dll"))
+DLL_PATH = abspath(join(dirname(__file__), "Tira2.dll"))
 
 TIRA_SIX_BYTE_CALLBACK = WINFUNCTYPE(c_int, c_char_p)
 
@@ -90,7 +91,7 @@ class Tira(eg.RawReceiverPlugin):
         
     
     def __start__(self, port=2):
-        dll = WinDLL(dll_path)
+        dll = WinDLL(DLL_PATH)
         if dll.tira_init():
             raise self.Exceptions.DeviceInitFailed("Function tira_init failed.")
         if dll.tira_start(port):
@@ -115,8 +116,8 @@ class Tira(eg.RawReceiverPlugin):
             raise eg.Exception("Tira cleanup failed.")
         
         
-    def MyEventCallback(self, event_ctring):
-        eventsuffix = event_ctring
+    def MyEventCallback(self, eventString):
+        eventsuffix = eventString
         self.TriggerEvent(eventsuffix)
         return 0
         
@@ -135,10 +136,12 @@ class TransmitIR(eg.ActionClass):
     repeatCount = 1
         
     def __call__(self, irData="", repeatCount=1, frequency=-1):
+        if self.plugin.dll is None:
+            raise self.Exceptions.DeviceNotReady
         if self.plugin.dll.tira_transmit(
             repeatCount-1, frequency, c_char_p(irData), len(irData)
         ):
-            raise eg.Exception("Error in tira transmit")
+            raise self.Exception("Error in tira_transmit")
         
         
     def GetLabel(self, *args):
@@ -146,12 +149,12 @@ class TransmitIR(eg.ActionClass):
     
     
     def Configure(self, irData="", repeatCount=1, frequency=-1):
-        def MakeHexString(buffer):
-            return " ".join([("%0.2X" % ord(c)) for c in buffer]) 
+        def MakeHexString(data):
+            return " ".join([("%0.2X" % ord(c)) for c in data]) 
                 
-        def MakeStringFromHex(buffer):
+        def MakeStringFromHex(data):
             result = ""
-            for hexdigit in buffer.split(" "):
+            for hexdigit in data.split(" "):
                 if len(hexdigit) == 2:
                     result += chr(int(hexdigit, 16))
             return result
@@ -166,7 +169,7 @@ class TransmitIR(eg.ActionClass):
             style=style
         )
         panel.sizer.Add(codeBox, 1, wx.EXPAND)
-        panel.sizer.Add((5,5))
+        panel.sizer.Add((5, 5))
         
         lowerSizer = wx.BoxSizer(wx.HORIZONTAL)
         staticText = wx.StaticText(panel, -1, "Repeat count:")
@@ -174,7 +177,7 @@ class TransmitIR(eg.ActionClass):
         
         repeatBox = eg.SpinIntCtrl(panel, min=1, value=repeatCount)
         lowerSizer.Add(repeatBox)
-        lowerSizer.Add((5,5), 1, wx.EXPAND)
+        lowerSizer.Add((5, 5), 1, wx.EXPAND)
         
         def OnCapture(event):
             dlg = IRLearnDialog(panel, self.plugin.dll)
