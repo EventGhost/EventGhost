@@ -42,6 +42,7 @@ eg.RegisterPlugin(
     description = (
         "File Operations (Reading and Writing)."
     ),
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=1011"
 )
 #=========================================================================================================            
 
