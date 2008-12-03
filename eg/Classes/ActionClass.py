@@ -98,10 +98,10 @@ class ActionClass(object):
         This method gets called with the same parameters as the __call__
         method.
         """
-        s = self.name
+        label = self.name
         if args:
-            s += ': ' + unicode(args[0])
-        return s
+            label += ': ' + unicode(args[0])
+        return label
         
         
     def PrintError(self, msg):
