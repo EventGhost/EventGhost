@@ -44,7 +44,7 @@ class PythonScript(eg.ActionClass):
 
 
     def Configure(self, sourceCode=""):
-        panel = eg.ConfigPanel(self, resizeable=True)
+        panel = eg.ConfigPanel(self, resizable=True)
         editCtrl = eg.PythonEditorCtrl(panel, value=sourceCode)
         panel.sizer.Add(editCtrl, 1, wx.EXPAND)
         panel.FinishSetup()

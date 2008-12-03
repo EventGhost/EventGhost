@@ -154,7 +154,7 @@ class EnableItem(eg.ActionClass):
 
 
     def Configure(self, link=None):
-        panel = eg.ConfigPanel(self, resizeable=True)
+        panel = eg.ConfigPanel(self, resizable=True)
         okButton = panel.dialog.buttonRow.okButton
         applyButton = panel.dialog.buttonRow.applyButton
         self.foundId = None
