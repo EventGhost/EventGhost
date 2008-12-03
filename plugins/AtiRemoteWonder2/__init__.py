@@ -23,7 +23,7 @@
 eg.RegisterPlugin(
     name="ATI Remote Wonder II",
     description=(
-        'Plugin for the ATI Remote Wonder<SMALL><SUP>TM</SUP></SMALL> II remote.'
+        'Plugin for the ATI Remote Wonder II remote.'
         '\n\n<p>'
         '<center><img src="picture.jpg" /></a></center>'
     ),
