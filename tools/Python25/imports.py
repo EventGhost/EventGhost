@@ -718,6 +718,7 @@ import XVThumbImagePlugin
 import _imaging
 import _imagingft
 import _imagingmath
+import _imagingtk
 import __init__
 
 # modules found for package 'comtypes'
