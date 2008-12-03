@@ -36,7 +36,7 @@ from glob import glob
 
 # third-party module imports
 import pysvn
-#import py2exe
+import py2exe
 
 RT_MANIFEST = 24
 
