@@ -20,17 +20,25 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import sys
+import Cli
 
-_ORIGINAL_MODULE = sys.modules[__name__]
+# This is only here to make pylint happy. It is never really imported
+if False:
+    from StaticImports import *
+    from Core import *
+    
 
 class _ModuleProxy(object):
     
     def __init__(self):
+        import sys
+        
+        self._ORIGINAL_MODULE = sys.modules[__name__]
+        # let ourself look like a package
         self.__name__ = __name__
-        self.__path__ = _ORIGINAL_MODULE.__path__
-        self.__file__ = _ORIGINAL_MODULE.__file__
-        sys.modules["eg"] = self
+        self.__path__ = __path__
+        self.__file__ = __file__
+        sys.modules[__name__] = self
         
         import __builtin__
         __builtin__.__dict__["eg"] = self
@@ -41,17 +49,19 @@ class _ModuleProxy(object):
         self.__dict__[name] = attr = getattr(mod, name)
         return attr
     
+    
     def __repr__(self):
-        return "eg"
+        return "<eg>"
 
 
-_eg = _ModuleProxy()
+    def Run(self):
+        if not Cli.args.install:
+            eg.Init.InitGui()
+            eg.app.MainLoop()
 
-import os
-if os.path.basename(sys.argv[0]) == "sphinx-build-script.py":
-    _eg.Init()
-    
-# this is only here to make pylint happy
-if False:
-    from StaticImports import *
-    
+
+eg = _ModuleProxy()
+import Utils
+for name in Utils.__all__:
+    setattr(eg, name, getattr(Utils, name))
+import Core

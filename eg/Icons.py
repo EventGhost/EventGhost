@@ -86,7 +86,7 @@ class IconBase(object):
         return self
     
     
-    def _pil(self):
+    def _GetPil(self):
         """ Return a PIL image of the icon.
         
         Abstract method that must be implemented in a subclass.
@@ -94,13 +94,14 @@ class IconBase(object):
         raise NotImplementedError
     
     
-    def _index(self):
+    def _GetIndex(self):
         """ Return the index of this icon inside the global wx.ImageList. """
         return gImageList.Add(PilToBitmap(self.pil))
     
     
-    def _disabledIndex(self):
-        """ Creates a version of the icon with a "disabled" mark overlayed and
+    def _GetDisabledIndex(self):
+        """ 
+        Creates a version of the icon with a "disabled" mark overlayed and
         returns its index inside the global wx.ImageList.
         """
         image = self.pil.copy()
@@ -108,11 +109,12 @@ class IconBase(object):
         return gImageList.Add(PilToBitmap(image))
     
     
-    def _folderIndex(self):
-        """ Creates a folder icon with a small version of the icon overlayed and
+    def _GetFolderIndex(self):
+        """ 
+        Creates a folder icon with a small version of the icon overlayed and
         returns its index inside the global wx.ImageList. 
         """
-        small = self.pil.resize((12,12), Image.BICUBIC)
+        small = self.pil.resize((12, 12), Image.BICUBIC)
         image = FOLDER_PIL.copy()
         image.paste(small, (4, 4), small)
         return gImageList.Add(PilToBitmap(image))
@@ -138,9 +140,10 @@ class IconBase(object):
         the result as 'self.name' (so __getattr__ gets not called again for
         this attribute) and returns the result.
         """
-        if not hasattr(self, "_" + name):
+        funcName = "_Get" + name[0].upper() + name[1:]
+        if not hasattr(self, funcName):
             raise AttributeError
-        result = getattr(self, "_" + name)()
+        result = getattr(self, funcName)()
         setattr(self, name, result)
         return result
         
@@ -148,9 +151,9 @@ class IconBase(object):
 
 class ActionSubIcon(IconBase): 
     
-    def _pil(self):
+    def _GetPil(self):
         """ Return a PIL image of the icon. """
-        small = self.key.pil.resize((12,12), Image.BICUBIC)
+        small = self.key.pil.resize((12, 12), Image.BICUBIC)
         image = ACTION_PIL.copy()
         image.paste(small, (4, 4), small)
         return image
@@ -160,9 +163,9 @@ ActionSubIcon.cache = {}
         
 class PluginSubIcon(IconBase): 
     
-    def _pil(self):
+    def _GetPil(self):
         """ Return a PIL image of the icon. """
-        small = self.key.pil.resize((12,12), Image.BICUBIC)
+        small = self.key.pil.resize((12, 12), Image.BICUBIC)
         image = PLUGIN_PIL.copy()
         image.paste(small, (4, 4), small)
         return image
@@ -180,7 +183,7 @@ class PathIcon(IconBase):
         return super(PathIcon, cls).__new__(cls, abspath(path))
     
     
-    def _pil(self):
+    def _GetPil(self):
         """ Return a PIL image of the icon. """
         return Image.open(self.key).convert("RGBA")
         
@@ -188,18 +191,18 @@ class PathIcon(IconBase):
         
 class StringIcon(IconBase):
     
-    def _pil(self):
+    def _GetPil(self):
         """ Return a PIL image of the icon. """
-        fd = StringIO(b64decode(self.key))
-        pil = Image.open(fd).convert("RGBA")
-        fd.close()
+        stream = StringIO(b64decode(self.key))
+        pil = Image.open(stream).convert("RGBA")
+        stream.close()
         return pil
 
 
 
 class PilIcon(IconBase):
     
-    def _pil(self):
+    def _GetPil(self):
         """ Return a PIL image of the icon. """
         return self.key
     

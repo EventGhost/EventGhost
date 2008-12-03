@@ -20,6 +20,9 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+from types import InstanceType
+
 #pylint: disable-msg=W0232
 class Text:
     class General:
@@ -145,3 +148,24 @@ class Text:
         class Tree:
             caption = "Configuration"
 
+    @classmethod
+    @eg.LogIt
+    def Load(cls, language):   
+        class Text:
+            pass
+        text = Text()
+        class MetaClass(type):
+            def __new__(mcs, dummyName, dummyBases, dct):
+                del dct["__module__"]
+                class EmptyTextBunch:
+                    pass
+                return InstanceType(EmptyTextBunch, dct)
+        try:
+            infile = open("languages\\%s.py" % language)
+            exec infile in {"__metaclass__": MetaClass}, text.__dict__
+        except IOError:
+            pass
+        eg.SetClass(text, cls)
+        return text
+    
+        

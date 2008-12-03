@@ -1,5 +1,5 @@
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2008 Lars-Peter Voss <bitmonster@eventghost.org>
 # 
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,28 +16,8 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# $LastChangedDate: 2008-11-24 19:52:58 +0100 (Mo, 24 Nov 2008) $
+# $LastChangedRevision: 582 $
+# $LastChangedBy: bitmonster $
 
-
-# start the main program
-import sys
-from os.path import dirname, abspath
-
-if hasattr(sys, "frozen"):
-    mainPath = dirname(unicode(sys.executable, sys.getfilesystemencoding()))
-else:
-    mainPath = dirname(unicode(__file__, sys.getfilesystemencoding()))
-sys.path.append(abspath(mainPath))
-
-import eg
-eg.Run()
-
-# The "imports" module file is created by the tools/MakeImports.py script
-# and is located in the "tools" directory.
-# It includes all modules the program might need. This way we trick py2exe
-# to include them in the distribution.
-if False:
-    import imports
-
+from eg.WinApi.serial import Serial as SerialPort

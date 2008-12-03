@@ -36,13 +36,12 @@ class TaskBarIcon(wx.TaskBarIcon):
         self.tooltip = eg.APP_NAME + " " + eg.Version.string
         wx.TaskBarIcon.__init__(self)
         self.iconTime = 0
-        self.SetIcon(self.stateIcons[0], self.tooltip)
         self.currentEvent = None
         self.processingEvent = None
         self.currentState = 0
         self.reentrantLock = threading.Lock()
         self.alive = True
-        #self.SetIcon(self.stateIcons[0])
+        self.SetIcon(self.stateIcons[0], self.tooltip)
 
 #        tmpID = wx.NewId()
 #        self.iconTimer = wx.Timer(self, tmpID)

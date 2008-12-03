@@ -21,6 +21,7 @@
 # $LastChangedBy$
 
 import eg
+import wx
 #import codecs
 import sys
 import traceback
@@ -91,6 +92,15 @@ class Log:
             self.PrintDebugNotice("        EventGhost started")
             self.PrintDebugNotice("----------------------------------------")
             self.PrintDebugNotice("Version:", eg.Version.string)
+            
+        # redirect all wxPython error messages to our log
+        class MyLog(wx.PyLog):
+            def DoLog(self, level, msg, timestamp):
+                if (level >= 6):
+                    return
+                sys.stderr.write("Error%d: %s\n" % (level, msg))
+        wx.Log.SetActiveTarget(MyLog())
+
 
     
     def SetCtrl(self, logCtrl):
@@ -125,7 +135,7 @@ class Log:
         when = time()
         for line in lines[:-1]:
             data.append((line, icon, wRef, when))
-            eg.CallAfter(self._WriteLine, line, icon, wRef, when)
+            wx.CallAfter(self._WriteLine, line, icon, wRef, when)
             if len(data) >= self.maxlength:
                 data.popleft()
 
