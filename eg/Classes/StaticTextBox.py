@@ -20,14 +20,13 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 import wx
 
 
 class StaticTextBox(wx.PyWindow):
     
-    def __init__(self, parent, id=-1, label='', pos=(-1,-1), size=(-1,-1)):
-        wx.Window.__init__(
+    def __init__(self, parent, id=-1, label='', pos=(-1, -1), size=(-1, -1)):
+        wx.PyWindow.__init__(
             self, 
             parent, 
             id, 
@@ -37,10 +36,20 @@ class StaticTextBox(wx.PyWindow):
         )
         self.SetMinSize(self.GetSize())
         sizer = wx.BoxSizer(wx.VERTICAL)
-        textCtrl = wx.StaticText(self, -1, label)
-        sizer.Add((0,0), 1, wx.EXPAND)
-        sizer.Add(textCtrl, 0, wx.EXPAND|wx.ALIGN_CENTER_VERTICAL|wx.LEFT, 5)
-        sizer.Add((0,0), 1, wx.EXPAND)
+        textCtrl = wx.TextCtrl(
+            self, 
+            -1, 
+            label, 
+            style=wx.TE_MULTILINE
+                |wx.TE_NO_VSCROLL
+                |wx.NO_BORDER
+                |wx.TE_AUTO_SCROLL
+                |wx.TE_READONLY
+        )
+        textCtrl.SetBackgroundColour(self.GetBackgroundColour())
+        #sizer.Add((0,0), 1, wx.EXPAND)
+        sizer.Add(textCtrl, 0, wx.EXPAND|wx.ALL, 3)
+        sizer.Add((0, 0), 1, wx.EXPAND)
         self.SetSizer(sizer)
         self.Bind(wx.EVT_SIZE, self.OnSize)
         self.textCtrl = textCtrl
@@ -55,6 +64,15 @@ class StaticTextBox(wx.PyWindow):
         self.textCtrl.SetLabel(label)
 
 
+    def SetValue(self, label):
+        self.textCtrl.SetLabel(label)
+
+
+    def GetValue(self):
+        return self.textCtrl.GetLabel()
+
+
     def AcceptsFocus(self):
         return False
+    
     
