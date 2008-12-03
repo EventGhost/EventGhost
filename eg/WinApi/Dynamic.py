@@ -11,6 +11,7 @@ _winmm = WinDLL("Winmm")
 _shell32 = WinDLL("shell32")
 _Psapi = WinDLL("Psapi")
 _Advapi32 = WinDLL("Advapi32")
+_setupapi = WinDLL("setupapi")
 import sys
 if not hasattr(sys, "frozen"): # detect py2exe
     try:
@@ -32,6 +33,7 @@ if not hasattr(sys, "frozen"): # detect py2exe
                 "#include <Psapi.h>\n"
                 "#include <tlhelp32.h>\n"
                 "#include <objidl.h>\n"
+                "#include <setupapi.h>\n"
             )       
         except WindowsError:
             print "GCC_XML most likely not installed"
@@ -1288,3 +1290,58 @@ MARKPARITY = 3 # Variable c_int
 SPACEPARITY = 4 # Variable c_int
 ONE5STOPBITS = 1 # Variable c_int
 TWOSTOPBITS = 2 # Variable c_int
+HDEVINFO = PVOID
+class _SP_DEVINFO_DATA(Structure):
+    pass
+PSP_DEVINFO_DATA = POINTER(_SP_DEVINFO_DATA)
+class _SP_DEVICE_INTERFACE_DATA(Structure):
+    pass
+PSP_DEVICE_INTERFACE_DATA = POINTER(_SP_DEVICE_INTERFACE_DATA)
+SetupDiEnumDeviceInterfaces = _setupapi.SetupDiEnumDeviceInterfaces
+SetupDiEnumDeviceInterfaces.restype = BOOL
+SetupDiEnumDeviceInterfaces.argtypes = [HDEVINFO, PSP_DEVINFO_DATA, POINTER(GUID), DWORD, PSP_DEVICE_INTERFACE_DATA]
+_SP_DEVINFO_DATA._pack_ = 1
+_SP_DEVINFO_DATA._fields_ = [
+    ('cbSize', DWORD),
+    ('ClassGuid', GUID),
+    ('DevInst', DWORD),
+    ('Reserved', ULONG_PTR),
+]
+_SP_DEVICE_INTERFACE_DATA._pack_ = 1
+_SP_DEVICE_INTERFACE_DATA._fields_ = [
+    ('cbSize', DWORD),
+    ('InterfaceClassGuid', GUID),
+    ('Flags', DWORD),
+    ('Reserved', ULONG_PTR),
+]
+SP_DEVICE_INTERFACE_DATA = _SP_DEVICE_INTERFACE_DATA
+SP_DEVINFO_DATA = _SP_DEVINFO_DATA
+SetupDiDestroyDeviceInfoList = _setupapi.SetupDiDestroyDeviceInfoList
+SetupDiDestroyDeviceInfoList.restype = BOOL
+SetupDiDestroyDeviceInfoList.argtypes = [HDEVINFO]
+WSTRING = c_wchar_p
+PCWSTR = WSTRING
+SetupDiGetClassDevsW = _setupapi.SetupDiGetClassDevsW
+SetupDiGetClassDevsW.restype = HDEVINFO
+SetupDiGetClassDevsW.argtypes = [POINTER(GUID), PCWSTR, HWND, DWORD]
+SetupDiGetClassDevs = SetupDiGetClassDevsW # alias
+class _SP_DEVICE_INTERFACE_DETAIL_DATA_W(Structure):
+    pass
+PSP_DEVICE_INTERFACE_DETAIL_DATA_W = POINTER(_SP_DEVICE_INTERFACE_DETAIL_DATA_W)
+SetupDiGetDeviceInterfaceDetailW = _setupapi.SetupDiGetDeviceInterfaceDetailW
+SetupDiGetDeviceInterfaceDetailW.restype = BOOL
+SetupDiGetDeviceInterfaceDetailW.argtypes = [HDEVINFO, PSP_DEVICE_INTERFACE_DATA, PSP_DEVICE_INTERFACE_DETAIL_DATA_W, DWORD, PDWORD, PSP_DEVINFO_DATA]
+SetupDiGetDeviceInterfaceDetail = SetupDiGetDeviceInterfaceDetailW # alias
+_SP_DEVICE_INTERFACE_DETAIL_DATA_W._pack_ = 1
+_SP_DEVICE_INTERFACE_DETAIL_DATA_W._fields_ = [
+    ('cbSize', DWORD),
+    ('DevicePath', WCHAR * 1),
+]
+SetupDiGetDeviceRegistryPropertyW = _setupapi.SetupDiGetDeviceRegistryPropertyW
+SetupDiGetDeviceRegistryPropertyW.restype = BOOL
+SetupDiGetDeviceRegistryPropertyW.argtypes = [HDEVINFO, PSP_DEVINFO_DATA, DWORD, PDWORD, PBYTE, DWORD, PDWORD]
+SetupDiGetDeviceRegistryProperty = SetupDiGetDeviceRegistryPropertyW # alias
+SP_DEVICE_INTERFACE_DETAIL_DATA_W = _SP_DEVICE_INTERFACE_DETAIL_DATA_W
+SP_DEVICE_INTERFACE_DETAIL_DATA = SP_DEVICE_INTERFACE_DETAIL_DATA_W
+DIGCF_PRESENT = 2 # Variable c_int
+PSP_DEVICE_INTERFACE_DETAIL_DATA = PSP_DEVICE_INTERFACE_DETAIL_DATA_W
