@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 eg.RegisterPlugin(
     name = "X10 Remote",
@@ -56,7 +57,7 @@ eg.RegisterPlugin(
     ),
 )
 
-
+import wx
 from win32com.client import DispatchWithEvents
 
 class Text:
@@ -210,14 +211,15 @@ class X10Events:
         if EKeyState == 3:
             return
         plugin = self.plugin
-        id = (lAddress >> 4) + 1
-        if id not in plugin.ids:
+        remoteId = (lAddress >> 4) + 1
+        if remoteId not in plugin.ids:
             return
         event = str(bszCommand)
         if EKeyState == 1:
             plugin.TriggerEnduringEvent(plugin.mappingTable.get(event, event))
         elif EKeyState == 2:
             plugin.EndLastEvent()
+        
         
     @eg.LogIt
     def __getattr__(self, name):
@@ -232,13 +234,16 @@ class X10Events:
         return handler
         
         
-class X10WorkerThread(eg.ThreadWorker):
+class X10ThreadWorker(eg.ThreadWorker):
     comInstance = None
     
     def Setup(self, plugin, eventHandler):
         self.plugin = plugin
         self.eventHandler = eventHandler
-        self.comInstance = DispatchWithEvents('X10net.X10Control.1', eventHandler)
+        self.comInstance = DispatchWithEvents(
+            'X10net.X10Control.1', 
+            eventHandler
+        )
 
         
     def Finish(self):
@@ -259,9 +264,9 @@ class X10(eg.PluginClass):
         
         class SubX10Events(X10Events):
             plugin = self
-        self.workerThread = X10WorkerThread(self, SubX10Events)
+        self.workerThread = X10ThreadWorker(self, SubX10Events)
         try:
-            self.workerThread.Start()
+            self.workerThread.Start(20)
         except:
             raise self.Exception(self.text.errorMesg)
         
