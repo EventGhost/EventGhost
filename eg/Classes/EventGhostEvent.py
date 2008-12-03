@@ -82,7 +82,8 @@ class EventGhostEvent(object):
     """
     
     data = None
-
+    skipEvent = False
+    
     def __init__(self, suffix="", payload=None, prefix="Main", source=eg):
         self.string = prefix + "." + suffix
         self.prefix = prefix
@@ -185,7 +186,6 @@ class EventGhostEvent(object):
         activeHandlers = sorted(activeHandlers, key=GetItemPath)
         
         eg.SetProcessingState(2, self)
-        self.skipEvent = False
         for eventHandler in activeHandlers:
             try:
                 eg.programCounter = (eventHandler.parent, None)
