@@ -1346,7 +1346,7 @@ class PS3(eg.PluginClass):
         else:
             self.helper.UpdateDeviceList()
 
-        panel = eg.ConfigPanel(self, resizeable=True)
+        panel = eg.ConfigPanel(self, resizable=True)
 
         #building dialog
         hidList = wx.ListCtrl(panel, -1, pos=wx.DefaultPosition,

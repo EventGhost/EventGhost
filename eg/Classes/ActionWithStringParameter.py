@@ -40,7 +40,7 @@ class ActionWithStringParameter(eg.ActionClass):
         """
         if parameter is None:
             parameter = self.defaultParameter
-        panel = eg.ConfigPanel(self, resizeable=True)
+        panel = eg.ConfigPanel(self, resizable=True)
 
         parameterDescription = None
         if self.parameterDescription:

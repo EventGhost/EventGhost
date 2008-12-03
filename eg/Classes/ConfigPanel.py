@@ -27,12 +27,12 @@ import types
 
 class ConfigDialog(eg.Dialog):
 
-    def __init__(self, panel, obj, resizeable=False, showLine=True):
+    def __init__(self, panel, obj, resizable=False, showLine=True):
         self.panel = panel
         self.result = None
         self.gr = eg.Greenlet.getcurrent()
         self.showLine = showLine
-        self.resizeable = resizeable
+        self.resizable = resizable
         
         isPlugin = isinstance(obj, eg.PluginClass)
         if isPlugin:
@@ -46,14 +46,14 @@ class ConfigDialog(eg.Dialog):
         eg.currentConfigureItem.openConfigDialog = self
         
         dialogStyle = wx.CAPTION|wx.CLOSE_BOX|wx.SYSTEM_MENU
-        if resizeable:
+        if resizable:
             dialogStyle |= wx.RESIZE_BORDER|wx.MAXIMIZE_BOX
         eg.Dialog.__init__(self, eg.document.frame, -1, title, style=dialogStyle)
         
         self.buttonRow = eg.ButtonRow(
             self, 
             (wx.ID_OK, wx.ID_CANCEL, wx.ID_APPLY),
-            resizeable
+            resizable
         )
         testButton = None
         if not isPlugin:
@@ -139,7 +139,7 @@ class ConfigDialog(eg.Dialog):
             buttonRow.testButton.MoveAfterInTabOrder(line)
         if not self.showLine:
             line.Hide()
-        if self.resizeable:
+        if self.resizable:
             self.mainSizer.Add(self.buttonRow.sizer, 0, wx.EXPAND, 0)
         else:
             self.mainSizer.Add(self.buttonRow.sizer, 0, wx.EXPAND|wx.RIGHT, 10)
@@ -159,16 +159,16 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
     def __init__(
         self, 
         executable, 
-        resizeable=None, 
+        resizable=None, 
         showLine=True, 
         handleIsDirty=False,
         
     ):
-        #if resizeable is None:
-        #    resizeable = bool(eg.debugLevel)
+        #if resizable is None:
+        #    resizable = bool(eg.debugLevel)
         self.nextResult = None
         self.gr = eg.Greenlet.getcurrent()
-        dialog = ConfigDialog(self, executable, resizeable, showLine)
+        dialog = ConfigDialog(self, executable, resizable, showLine)
         self.dialog = dialog
         wx.PyPanel.__init__(self, dialog, -1)
         self.lines = []

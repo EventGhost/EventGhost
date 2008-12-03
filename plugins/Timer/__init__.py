@@ -312,7 +312,7 @@ class Timer(eg.PluginClass):
 
 
     def Configure(self, *args):
-        panel = eg.ConfigPanel(self, resizeable=True)
+        panel = eg.ConfigPanel(self, resizable=True)
 
         panel.sizer.Add(
             wx.StaticText(panel, -1, self.text.listhl),
