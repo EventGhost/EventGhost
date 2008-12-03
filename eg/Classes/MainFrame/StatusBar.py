@@ -38,15 +38,17 @@ class StatusBar(wx.StatusBar):
             eg.Icons.GetIcon("images\\Tray3.png"),
             eg.Icons.GetIcon("images\\Tray2.png"),
         ]
-        self.icon = wx.StaticBitmap(self, -1, self.icons[0], (0,0), (16,16))
+        self.icon = wx.StaticBitmap(self, -1, self.icons[0], (0, 0), (16, 16))
         rect = self.GetFieldRect(0)
         checkBox = wx.CheckBox(self, -1, eg.text.MainFrame.onlyLogAssigned)
+        self.checkBox = checkBox
         colour = wx.SystemSettings_GetColour(wx.SYS_COLOUR_MENUBAR)
         checkBox.SetBackgroundColour(colour)
+        self.checkBoxColour = checkBox.GetForegroundColour()
         checkBox.SetValue(eg.config.onlyLogAssigned)
+        self.SetCheckBoxColour(eg.config.onlyLogAssigned)
         checkBox.Bind(wx.EVT_CHECKBOX, self.OnCheckBox)
         checkBox.SetPosition((rect.x + 2, rect.y + 2))
-        self.checkBox = checkBox
         self.Reposition()
 
     if eg.debugLevel:
@@ -62,13 +64,12 @@ class StatusBar(wx.StatusBar):
         return wx.StatusBar.Destroy(self)
 
     
-    #@eg.LogIt
-    def OnSize(self, evt):
+    def OnSize(self, event):
         self.Reposition()  # for normal size events
         self.sizeChanged = True
 
 
-    def OnIdle(self, evt):
+    def OnIdle(self, event):
         if self.sizeChanged:
             self.Reposition()
 
@@ -80,9 +81,17 @@ class StatusBar(wx.StatusBar):
         self.sizeChanged = False
                 
         
+    def SetCheckBoxColour(self, value):
+        if value:
+            self.checkBox.SetForegroundColour((255, 0, 0))
+        else:
+            self.checkBox.SetForegroundColour(self.checkBoxColour)
+        
+    
     @eg.LogIt
     def OnCheckBox(self, event):
         eg.config.onlyLogAssigned = self.checkBox.GetValue()
+        self.SetCheckBoxColour(eg.config.onlyLogAssigned)
         
         
     def SetState(self, flag):
