@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 eg.RegisterPlugin(
     name = "Network Event Receiver",
@@ -39,13 +40,12 @@ eg.RegisterPlugin(
     ),
 )
 
-
+import wx
 import asynchat
 import asyncore
 from hashlib import md5
 import random
 import socket
-
 
 
 class Text:
@@ -56,8 +56,8 @@ class Text:
     securityBox = "Security"
     eventGenerationBox = "Event generation"
     
-DEBUG = True
-
+    
+DEBUG = False
 if DEBUG:
     log = eg.Print
 else:
@@ -250,7 +250,9 @@ class NetworkReceiver(eg.PluginClass):
         eg.EqualizeWidths((st1, st2, st3))
         box1 = panel.BoxedGroup(text.tcpBox, (st1, portCtrl))
         box2 = panel.BoxedGroup(text.securityBox, (st2, passwordCtrl))
-        box3 = panel.BoxedGroup(text.eventGenerationBox, (st3, eventPrefixCtrl))
+        box3 = panel.BoxedGroup(
+            text.eventGenerationBox, (st3, eventPrefixCtrl)
+        )
         panel.sizer.AddMany([
             (box1, 0, wx.EXPAND),
             (box2, 0, wx.EXPAND|wx.TOP, 10),

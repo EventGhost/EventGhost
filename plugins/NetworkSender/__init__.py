@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 eg.RegisterPlugin(
     name = "Network Event Sender",
@@ -41,7 +42,7 @@ eg.RegisterPlugin(
     ),
 )
 
-
+import wx
 import socket
 from hashlib import md5
 
@@ -62,7 +63,7 @@ class NetworkSender(eg.PluginClass):
     text = Text
     
     def __init__(self):
-        self.AddAction(self.Map)
+        self.AddAction(Map)
         
         
     def __start__(self, host, port, password):
@@ -156,7 +157,9 @@ class NetworkSender(eg.PluginClass):
             # now just pipe those commands to the server
             if (payload is not None) and (len(payload) > 0):
                 for pld in payload:
-                    sock.sendall("payload " + pld.encode(eg.systemEncoding) + "\n")
+                    sock.sendall(
+                        "payload %s\n" % pld.encode(eg.systemEncoding)
+                    )
 
             sock.sendall("payload withoutRelease\n")
             sock.sendall(eventString.encode(eg.systemEncoding) + "\n")
@@ -178,11 +181,11 @@ class NetworkSender(eg.PluginClass):
         
         
         
-    class Map(eg.ActionWithStringParameter):
+class Map(eg.ActionWithStringParameter):
 
-        def __call__(self, mesg):
-            res = self.plugin.Send(eg.ParseString(mesg))
-            if res:
-                eg.event.AddUpFunc(self.plugin.MapUp, res)
-            return res
+    def __call__(self, mesg):
+        res = self.plugin.Send(eg.ParseString(mesg))
+        if res:
+            eg.event.AddUpFunc(self.plugin.MapUp, res)
+        return res
           
