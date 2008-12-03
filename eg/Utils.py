@@ -23,7 +23,7 @@
 __all__ = ["Bunch", "EventHook", "LogIt", "LogItWithReturn",
     "TimeIt", "AssertNotMainThread", "AssertNotActionThread", "ParseString",
     "SetClass", "EnsureVisible", "namedtuple", "AsGreenlet",
-    "VBoxSizer", "HBoxSizer", "EqualizeWidths", "P",
+    "VBoxSizer", "HBoxSizer", "EqualizeWidths", "P", "wxDummyEvent",
 ]
     
 import eg
@@ -38,7 +38,7 @@ def P(*args, **kwargs):
     return (args, kwargs)
 
 
-class Bunch:
+class Bunch(object):
     """The simple but handy "collector of a bunch of named stuff" class.
     
     Often we want to just collect a bunch of stuff together, naming each 
@@ -92,8 +92,8 @@ def GetMyRepresentation(value):
     if t.startswith("<class 'wx._controls."):
         return "=<wx.%s>" % t[len("<class 'wx._controls."): -2]
     return "=" + repr(value)
-                
-                        
+
+
 def GetFuncArgString(func, args, kwargs):
     classname = ""
     argnames = inspect.getargspec(func)[0]
@@ -312,6 +312,14 @@ def EqualizeWidths(ctrls):
     maxWidth = max((ctrl.GetBestSize()[0] for ctrl in ctrls))
     for ctrl in ctrls:
         ctrl.SetMinSize((maxWidth, -1))
+
+
+class WxDummyEvent(object):
+    
+    def Skip(self, flag=True):
+        pass
+
+wxDummyEvent = WxDummyEvent()
 
 
 from operator import itemgetter as _itemgetter
