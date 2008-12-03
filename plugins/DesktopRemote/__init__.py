@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 eg.RegisterPlugin(
     name = "Desktop Remote",
@@ -31,6 +32,7 @@ eg.RegisterPlugin(
 )
 
 
+import wx
 import wx.lib.buttons as buttons
 import os
 from base64 import b64decode, b64encode
@@ -48,8 +50,11 @@ class Text:
         event = "Event:"
         
         
-class ButtonType: pass
-class LineType: pass
+class ButtonType: 
+    pass
+
+class LineType: 
+    pass
 
 
         
@@ -180,6 +185,7 @@ class CreateNew(eg.ActionClass):
         return self.name
     
     
+    @eg.LogIt
     def Configure(
         self, 
         width=40, 
@@ -196,13 +202,20 @@ class CreateNew(eg.ActionClass):
         showInTaskbar=True,
         moveOnDrag=True,
         iconizeOnDoubleClick=True,
+        *args
     ):
         panel = eg.ConfigPanel(self)
         panel.SetSizerProperty(vgap=2)
         captionCtrl = panel.TextCtrl(caption)
         showInTaskbarCtrl = panel.CheckBox(showInTaskbar, "Show in taskbar")
-        moveOnDragCtrl = panel.CheckBox(moveOnDrag, "Move window on drag click in empty area")
-        iconizeOnDoubleClickCtrl = panel.CheckBox(iconizeOnDoubleClick, "Minimize window on double click in empty area")
+        moveOnDragCtrl = panel.CheckBox(
+            moveOnDrag, 
+            "Move window on drag click in empty area"
+        )
+        iconizeOnDoubleClickCtrl = panel.CheckBox(
+            iconizeOnDoubleClick, 
+            "Minimize window on double click in empty area"
+        )
         choices = [
             "Normal window",
             "Simple border",
@@ -296,11 +309,19 @@ class AddButton(eg.ActionClass):
         eventCtrl = panel.TextCtrl(kwargs.get("event", ""))
         panel.AddLine(text.event, eventCtrl)
         
-        invisibleCtrl = panel.CheckBox(kwargs.get("invisible", False), "Invisible")
+        invisibleCtrl = panel.CheckBox(
+            kwargs.get("invisible", False), 
+            "Invisible"
+        )
         panel.AddLine(invisibleCtrl)
         
-        imageButton = ImageButton(panel, label = "Choose Image")
-        imageBox = wx.StaticBitmap(panel, size=(40, 40), pos=(280, 70), style=wx.SUNKEN_BORDER)
+        imageButton = ImageButton(panel, label="Choose Image")
+        imageBox = wx.StaticBitmap(
+            panel, 
+            size=(40, 40), 
+            pos=(280, 70), 
+            style=wx.SUNKEN_BORDER
+        )
         imageButton.view = imageBox
         
         imageOption = MakeOption(
@@ -379,22 +400,31 @@ class StartNewLine(eg.ActionClass):
 
 class Show(eg.ActionClass):
     
-    def __call__(self, xPos=0, yPos=0):
-        wx.CallAfter(CreateRemote, self.plugin, xPos, yPos)
+    def __call__(self, xPos=0, yPos=0, alwaysOnTop=False):
+        wx.CallAfter(CreateRemote, self.plugin, xPos, yPos, alwaysOnTop)
         
         
-    def GetLabel(self, xPos, yPos):
+    def GetLabel(self, xPos, yPos, *args):
         return "Show at %d,%d" % (xPos, yPos)
     
     
-    def Configure(self, xPos=0, yPos=0):
+    def Configure(self, xPos=0, yPos=0, alwaysOnTop=False):
         panel = eg.ConfigPanel(self)
         xPosCtrl = panel.SpinIntCtrl(xPos, min=-32768, max=32767)
         yPosCtrl = panel.SpinIntCtrl(yPos, min=-32768, max=32767)
+        alwaysOnTopCtrl = panel.CheckBox(
+            alwaysOnTop, 
+            "Keep window always on top"
+        )
         panel.AddLine("Screen horizontal position:", xPosCtrl)
         panel.AddLine("Screen vertical position:", yPosCtrl)
+        panel.AddLine(alwaysOnTopCtrl)
         while panel.Affirmed():
-            panel.SetResult(xPosCtrl.GetValue(), yPosCtrl.GetValue())
+            panel.SetResult(
+                xPosCtrl.GetValue(), 
+                yPosCtrl.GetValue(),
+                alwaysOnTopCtrl.GetValue(),
+            )
         
         
         
@@ -488,7 +518,7 @@ class RemotePanel(wx.Panel):
         
 class RemoteFrame(wx.Frame):
     
-    def __init__(self, plugin, pos):
+    def __init__(self, plugin, pos, alwaysOnTop):
         style = wx.SYSTEM_MENU|wx.MINIMIZE_BOX|wx.CLIP_CHILDREN|wx.CLOSE_BOX
         if not plugin.showInTaskbar:
             style |= wx.FRAME_NO_TASKBAR
@@ -498,28 +528,26 @@ class RemoteFrame(wx.Frame):
             style |= wx.RAISED_BORDER
         elif plugin.windowStyle == 2:
             style |= wx.NO_BORDER|wx.FRAME_SHAPED
-        wx.Frame.__init__(self, None, title=plugin.caption, pos=pos, style=style)
+        if alwaysOnTop:
+            style |= wx.STAY_ON_TOP
+        wx.Frame.__init__(
+            self, 
+            None, 
+            title=plugin.caption, 
+            pos=pos, 
+            style=style
+        )
         self.SetBackgroundColour(plugin.windowColour)
         
         
 
-def CreateRemote(plugin, xPos, yPos):
+def CreateRemote(plugin, xPos, yPos, alwaysOnTop):
     data = plugin.data
     borderSize = plugin.borderSize
     
     if plugin.frame:
         plugin.frame.Destroy()
-    style = wx.SYSTEM_MENU|wx.MINIMIZE_BOX|wx.CLIP_CHILDREN|wx.CLOSE_BOX
-    if not plugin.showInTaskbar:
-        style |= wx.FRAME_NO_TASKBAR
-    if plugin.windowStyle == 0:
-        style |= wx.CAPTION
-    elif plugin.windowStyle == 1:
-        style |= wx.RAISED_BORDER
-    elif plugin.windowStyle == 2:
-        style |= wx.NO_BORDER|wx.FRAME_SHAPED
-        
-    plugin.frame = frame = RemoteFrame(plugin, (xPos, yPos))
+    plugin.frame = frame = RemoteFrame(plugin, (xPos, yPos), alwaysOnTop)
     panel = RemotePanel(frame, plugin)
     mainSizer = wx.BoxSizer(wx.VERTICAL)
     mainSizer.Add((0, borderSize))
@@ -558,7 +586,9 @@ def CreateRemote(plugin, xPos, yPos):
                     button.SetLabel(label)
                 else:
                     button = GenButton(panel, -1, label, size=size)
-                button.SetFont(wx.FontFromNativeInfoString(GetOption("fontInfo")))
+                button.SetFont(
+                    wx.FontFromNativeInfoString(GetOption("fontInfo"))
+                )
                 
                 button.SetBezelWidth(3)
                 button.SetBackgroundColour(GetOption("backgroundColour"))
@@ -576,7 +606,12 @@ def CreateRemote(plugin, xPos, yPos):
             x += 1
         elif itemType is LineType:
             height = args[0]
-            mainSizer.Add(lineSizer, 0, wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL, height + plugin.columnGap)
+            mainSizer.Add(
+                lineSizer, 
+                0, 
+                wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL, 
+                height + plugin.columnGap
+            )
             lineSizer = wx.BoxSizer(wx.HORIZONTAL)
             y += 1
             x = 0            
