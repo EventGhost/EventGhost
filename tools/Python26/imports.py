@@ -138,6 +138,7 @@ import rlcompleter
 import robotparser
 import runpy
 import sched
+import sets
 import sgmllib
 import shelve
 import shlex
