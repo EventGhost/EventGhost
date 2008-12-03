@@ -28,7 +28,7 @@ PROMPT = "Please type your input..."
 
 class SimpleInputDialog(eg.Dialog):
     
-    def __init__(self, prompt=None, initialValue=""):
+    def Process(self, prompt=None, initialValue=""):
         if prompt is None:
             prompt = PROMPT
         eg.Dialog.__init__(
@@ -51,6 +51,6 @@ class SimpleInputDialog(eg.Dialog):
         
     @classmethod
     def CreateModal(cls, prompt=None):
-        return cls.GetModalResult(prompt)
+        return cls.GetModalResult(prompt)[0][0]
     
     
