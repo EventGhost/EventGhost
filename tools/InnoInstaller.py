@@ -105,6 +105,7 @@ class InnoInstaller(object):
                     includes = [
                         "encodings",
                         "encodings.*",
+                        "imports",
                     ],
                     excludes = self.excludes,
                     dll_excludes = [

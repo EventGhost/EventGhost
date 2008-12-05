@@ -23,21 +23,14 @@
 
 # start the main program
 import sys
-from os.path import dirname, abspath
+from os.path import dirname
 
 if hasattr(sys, "frozen"):
-    mainPath = dirname(unicode(sys.executable, sys.getfilesystemencoding()))
+    APP_DIR = dirname(unicode(sys.executable, sys.getfilesystemencoding()))
 else:
-    mainPath = dirname(unicode(__file__, sys.getfilesystemencoding()))
-sys.path.append(abspath(mainPath))
+    APP_DIR = dirname(unicode(__file__, sys.getfilesystemencoding()))
+sys.path.append(APP_DIR)
 
 import eg
 eg.Run()
-
-# The "imports" module file is created by the tools/MakeImports.py script
-# and is located in the "tools" directory.
-# It includes all modules the program might need. This way we trick py2exe
-# to include them in the distribution.
-if False:
-    import imports
 
