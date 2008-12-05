@@ -1,114 +1,173 @@
-Version 0.3.6.1459 (09/27/2008)
-- NEW: CHeitkamp added basic authentication to the Webserver plugin.
-- NEW: James Lee provided a new DLL for the MCE Remote plugin, that works
-       flawlessly without the replacement driver.
+0.3.6.1487 (12/05/2008)
+=======================
+- The "log only assigned and activated events" check box is now 
+  displayed in red if checked.
+- DesktopRemote's "Show" action no has an option to force the window to
+  be always on top of all other desktop windows.
+- Added a "Start" action to the VLC, that helps to start VLC with the 
+  right command line options.
+- The list of plug-in authors in the about dialog is now automatically
+  created from all installed plug-ins.
+- Fixed sticking keys of the Keyboard plug-in after some special events (like
+  Ctrl+Alt+Delete).
+- Many other bugs fixed.
 
-Version 0.3.6.1446 (06/30/2008)
-- NEW: Sceneo TVcentral plugin
 
-Version 0.3.6.1444 (06/30/2008)
-- NEW: ATI Remote Wonder II plugin.
+0.3.6.1459 (09/27/2008)
+=======================
+- CHeitkamp added basic authentication to the Webserver plug-in.
+- James Lee provided a new DLL for the MCE Remote plug-in, that works
+  flawlessly without the replacement driver.
 
-Version 0.3.6.1439 (06/29/2008)
-- NEW: Added support for the use of multiple USB-UIRT devices.
 
-Version 0.3.6.1408 (05/22/2008)
-- NEW: BT8x8 based remotes plugin from junius.
-- NEW: GOM Player plugin from CHeitkamp.
+0.3.6.1446 (06/30/2008)
+=======================
+- Added Sceneo TVcentral plug-in.
 
-Version 0.3.6.1401 (05/16/2008)
-- NEW: Added the executables py.exe and pyw.exe to the installer. These are
-       Python interpreters, that use the EventGhost library files. You can use
-       them to run your own Python code, without the need to install a Python
-       distribution or to start EventGhost. The py.exe executable is a
-       replacement for the python.exe you would normally find in a Python
-       distribution and pyw.exe accordingly for pythonw.exe (that runs code
-       without a console, e.g. for scripts that have their own GUI). They
-       don't support the command line options of a real python interpreter,
-       but they are neverless handy for many tasks.
 
-Version 0.3.6.1397 (05/07/2008)
-- CHG: The "Show OSD" action now supports multiline text.
+0.3.6.1444 (06/30/2008)
+=======================
+- Added ATI Remote Wonder II plug-in.
 
-Version 0.3.6.1394 (05/06/2008)
-- NEW: System.ClipboardChanged event, that fires if an external application
-       has changed the clipboard content.
 
-Version 0.3.6.1387 (04/26/2008)
-- NEW: Hauppauge IR plugin from Prinz.
+0.3.6.1439 (06/29/2008)
+=======================
+- Added support for the use of multiple USB-UIRT devices.
 
-Version 0.3.6.1371 (04/06/2008)
-- NEW: DScaler 4 plugin from incubi.
 
-Version 0.3.6.1353 (04/03/2008)
-- NEW: Spanish translation from karl.
-- NEW: First version of a CyberLink PowerDVD plugin.
-- NEW: Some Internet shortcuts to the project get added to the Startmenu 
-       folder.
-- NEW: Member eruji added some more actions to the SageTV plugin.
-- NEW: The ShowOSD action now has a new option "Use Skin". It will draw a 
-       skinned background to the OSD. Currently there is only one skin, but I 
-       hope more will be added in the future. 
+0.3.6.1408 (05/22/2008)
+=======================
+- Added BT8x8 based remote controls plug-in from junius.
+- Added GOM Player plug-in from CHeitkamp.
 
-Version 0.3.6.1285 (03/04/2008)
-- NEW: Sound Mixer Ex plugin from Dexter.
-- NEW: Marantz Serial plugin from Dexter.
-- NEW: X10 CM15A plugin from Dean Owens.
-- CHG: Now using Python 2.5.2.
 
-Version 0.3.6.1255 (12/13/2007)
-- NEW: Volume and seek actions for the foobar2000 plugin.
-- NEW: Replaced Python's built-in input() and raw_input() with a function that
-       shows a simple input dialog. It has no real use-cases in EventGhost, 
-       but this way you can experiment with nearly every example code from 
-       typical Python tutorials.
-- NEW: FindWindow now shows a list of the found windows if the test button is 
-       pressed.
-- NEW: PlayStation 3 Bluetooth Remote plugin from Thierry Couquillou.
+0.3.6.1401 (05/16/2008)
+=======================
+- Added the executables py.exe and pyw.exe to the installer. These are
+  Python interpreters, that use the EventGhost library files. You can use
+  them to run your own Python code, without the need to install a Python
+  distribution or to start EventGhost. The py.exe executable is a
+  replacement for the python.exe you would normally find in a Python
+  distribution and pyw.exe accordingly for pythonw.exe (that runs code
+  without a console, e.g. for scripts that have their own GUI). They
+  don't support the command line options of a real Python interpreter,
+  but they are anyhow handy for many tasks.
 
-Version 0.3.6.1248 (12/10/2007)
-- NEW: The apply button of all action/plugin configuration dialogs now stays 
-       disabled till the user actually has changed a control in the dialog.
-- BUG: Some more plugins had problem with suspend/resume of the computer.
-- BUG: It was possible that some dialogs opened outside the visible desktop 
-       area if the user had changed his display settings while EventGhost is 
-       running.
 
-Version 0.3.6.1242 (12/08/2007)
-- CHG: Now using wxPython 2.8.7.1
-- CHG: The PythonScript action now uses the same configuration panel as all 
-       other actions.
-- BUG: TechnoTrend USB-IR plugin was not functional after a supend/resume of 
-       the system.
+0.3.6.1397 (05/07/2008)
+=======================
+- The "Show OSD" action now supports multiline text.
 
-Version 0.3.6.1238 (12/05/2007)
-- CHG: The Test Pattern/Geometry action now takes the aspect ratio into 
-       account. For ITU-R BT.601 aspect ratios it also shows the "non active" 
-       pixels at the sides.
-- CHG: The Test Pattern/Bars action can now also make double bars.
-- BUG: If you reopened the window after you have cleared the log, the whole 
-       log was shown again.
 
-Version 0.3.6.1223 (12/01/2007)
-- CHG: Many enhancements to the ffdshow plugin by Bartman.
-- BUG: Better handling of colours if the user has changed the colours in his 
-       desktop theme.
+0.3.6.1394 (05/06/2008)
+=======================
+- New System.ClipboardChanged event, that fires if an external application
+  has changed the clipboard content.
 
-Version 0.3.6.1218 (11/28/2007)
-- NEW: First version of a plugin for Barco CRT projectors.
-- NEW: All action configuration dialogs now have a "Test" button, that will 
-       execute the current settings just like it would if you confirm the 
-       dialog and press execute in the toolbar. The difference is, that 
-       changes you've made are not stored until you confirm the dialog with 
-       the ok button. So you can cancel your changes even if you have pressed 
-       the test button.
 
-Version 0.3.6.1190 (11/25/2007)
-- NEW: DVB Dream plugin from townkat.
-- NEW: Changelog tab in the about dialog.
-- NEW: If a plugin gets into error state, it will now try to restart itself on
-       execute, disable/enable or pressing ok or apply in the configuration 
-       dialog.
-- NEW: eg.Exceptions class for generic translatable error messages.
-- CHG: Czech language file, MediaMonkey and IrfanView
+0.3.6.1387 (04/26/2008)
+=======================
+- Added Hauppauge IR plug-in from Prinz.
+
+
+0.3.6.1371 (04/06/2008)
+=======================
+- Added DScaler 4 plug-in from incubi.
+
+
+0.3.6.1353 (04/03/2008)
+=======================
+- Added Spanish translation from karl.
+- Added first version of a CyberLink PowerDVD plug-in.
+- Some Internet shortcuts to the project get added to the startmenu 
+  folder by the installer.
+- Member eruji added some more actions to the SageTV plug-in.
+- The ShowOSD action now has a new option "Use Skin". It will draw a 
+  skinned background to the OSD. Currently there is only one skin, but I 
+  hope more will be added in the future. 
+
+
+0.3.6.1285 (03/04/2008)
+=======================
+
+- Added Sound Mixer Ex plug-in from Dexter.
+- Added Marantz Serial plug-in from Dexter.
+- Added X10 CM15A plug-in from Dean Owens.
+- EventGhost now uses Python 2.5.2.
+
+
+0.3.6.1255 (12/13/2007)
+=======================
+- Added PlayStation 3 Bluetooth Remote plug-in from Thierry Couquillou.
+- Added volume and seek actions for the foobar2000 plug-in.
+- Replaced Python's built-in input() and raw_input() with a function that
+  shows a simple input dialog. It has no real use-cases in EventGhost, 
+  but this way you can experiment with nearly every example code from 
+  typical Python tutorials.
+- FindWindow now shows a list of the found windows if the test button is 
+  pressed.
+
+
+0.3.6.1248 (12/10/2007)
+=======================
+
+- The apply button of all action/plug-in configuration dialogs now stays 
+  disabled till the user actually has changed a control in the dialog.
+- Fix: Some more plug-ins had problem with suspend/resume of the computer.
+- Fix: It was possible that some dialogs opened outside the visible desktop 
+  area if the user had changed his display settings while EventGhost is 
+  running.
+
+
+0.3.6.1242 (12/08/2007)
+=======================
+
+- Now using wxPython 2.8.7.1
+- The PythonScript action now uses the same configuration panel as all 
+  other actions.
+- Fix: TechnoTrend USB-IR plug-in was not functional after a suspend/resume of 
+  the system.
+
+
+0.3.6.1238 (12/05/2007)
+=======================
+
+- The Test Pattern/Geometry action now takes the aspect ratio into 
+  account. For ITU-R BT.601 aspect ratios it also shows the "non active" 
+  pixels at the sides.
+- The Test Pattern/Bars action can now also make double bars.
+- Fixed issue, that if you reopened the main window after you have cleared the 
+  log, the whole log was shown again.
+
+
+0.3.6.1223 (12/01/2007)
+=======================
+
+- Many enhancements to the ffdshow plug-in by Bartman.
+- Better handling of colours if the user has changed the colours in his 
+  desktop theme.
+
+
+0.3.6.1218 (11/28/2007)
+=======================
+
+- Added a first version of a plug-in for Barco CRT projectors.
+- All action configuration dialogs now have a "Test" button, that will 
+  execute the current settings just like it would if you confirm the 
+  dialog and press execute in the toolbar. The difference is, that 
+  changes you've made are not stored until you confirm the dialog with 
+  the ok button. So you can cancel your changes even if you have pressed 
+  the test button.
+
+
+0.3.6.1190 (11/25/2007)
+=======================
+
+- Added DVB Dream plug-in from townkat.
+- Added Czech language file, MediaMonkey and IrfanView from Pako.
+- Added changelog tab in the about dialog.
+- Added eg.Exceptions class for generic translatable error messages.
+- If a plug-in gets into error state, it will now try to restart itself on
+  execute, disable/enable or pressing ok or apply in the configuration 
+  dialog.
 
