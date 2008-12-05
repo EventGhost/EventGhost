@@ -26,7 +26,7 @@ class Version:
     minor = 3
     micro = 6
     releaselevel = 'beta'
-    buildNum = 1495
-    buildTime = 1227060645.63
-    svnRevision = 580
+    buildNum = 1487
+    buildTime = 1228470674.98
+    svnRevision = 615
     string = "%s.%s.%s.%s" % (major, minor, micro, buildNum)

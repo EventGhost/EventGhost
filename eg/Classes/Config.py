@@ -112,7 +112,7 @@ class Config(Section):
 
     def __init__(self):
         global configFilePath
-        configDir = eg.CONFIG_DIR
+        configDir = eg.configDir
         if not os.path.exists(configDir):
             os.makedirs(configDir)
             #import shutil

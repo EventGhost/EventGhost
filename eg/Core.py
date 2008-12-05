@@ -81,9 +81,9 @@ eg.PROGRAMFILES = eg.folderPath.ProgramFiles
 eg.ValueChangedEvent, eg.EVT_VALUE_CHANGED = NewCommandEvent()
 eg.focusEvent = eg.EventHook()
 if eg.startupArguments.configDir is None:
-    eg.CONFIG_DIR = os.path.join(eg.folderPath.RoamingAppData, eg.APP_NAME)
+    eg.configDir = os.path.join(eg.folderPath.RoamingAppData, eg.APP_NAME)
 else:
-    eg.CONFIG_DIR = eg.startupArguments.configDir
+    eg.configDir = eg.startupArguments.configDir
 Init.InitPathesAndBuiltins()
 Init.InitPil()
 
@@ -230,7 +230,7 @@ class StopException(Exception):
 class HiddenAction:
     pass
 
-# no assign all the functions above to `eg`
+# now assign all the functions above to `eg`
 eg.GetConfig = GetConfig
 eg.RestartAsyncore = RestartAsyncore
 eg.Exit = Exit
@@ -248,8 +248,6 @@ eg.HiddenAction = HiddenAction
 
 eg.messageReceiver = eg.MessageReceiver()
 eg.app = eg.App()
-eg.colour = eg.Colour()
-eg.config = eg.Config()
     
 import Icons # we can't import the Icons module earlier, because wx.App 
              # must exist before
@@ -263,6 +261,8 @@ eg.PrintTraceback = eg.log.PrintTraceback
 eg.PrintDebugNotice = eg.log.PrintDebugNotice
 eg.PrintStack = eg.log.PrintStack
 
+eg.colour = eg.Colour()
+eg.config = eg.Config()
 eg.text = eg.Text.Load(eg.config.language)
 eg.actionThread = eg.ActionThread()
 eg.eventThread = eg.EventThread()
