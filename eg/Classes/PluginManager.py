@@ -75,7 +75,7 @@ class PluginManager:
         
         # load the database file if exists
         self.database = {}
-        self.databasePath = join(eg.CONFIG_DIR, "pluginManager")
+        self.databasePath = join(eg.configDir, "pluginManager")
         if not forceRebuild:
             self.Load()
         database = self.database

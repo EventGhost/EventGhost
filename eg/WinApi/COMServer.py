@@ -43,7 +43,7 @@ class EventGhostCom:
 # application data directory instead of its package directory.
 # When the program runs "frozen" it would not be able to modify
 # the package directory
-genPath = os.path.join(eg.CONFIG_DIR, "gen_py").encode('mbcs')
+genPath = os.path.join(eg.configDir, "gen_py").encode('mbcs')
 if not os.path.exists(genPath):
     os.makedirs(genPath)
 import win32com

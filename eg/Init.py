@@ -44,11 +44,11 @@ def InitPil():
 def InitComTypes():
     #Bit of a dance to force comtypes generated interfaces in to our directory
     import comtypes.client
-    genPath = os.path.join(eg.CONFIG_DIR, "cgen_py").encode('mbcs')
+    genPath = os.path.join(eg.configDir, "cgen_py").encode('mbcs')
     if not os.path.exists(genPath):
         os.makedirs(genPath)
     genInitPath = os.path.join(
-        eg.CONFIG_DIR, 
+        eg.configDir, 
         "cgen_py", "__init__.py"
     ).encode('mbcs')
     if not os.path.exists(genInitPath):
@@ -58,7 +58,7 @@ def InitComTypes():
     
     comtypes.client.gen_dir = genPath
     import comtypes
-    sys.path.insert(0, eg.CONFIG_DIR)
+    sys.path.insert(0, eg.configDir)
     comtypes.gen = __import__("cgen_py", globals(), locals(), [])
     sys.modules["comtypes.gen"] = comtypes.gen
     del sys.path[0]
