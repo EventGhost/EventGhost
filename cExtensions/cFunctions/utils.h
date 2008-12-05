@@ -1,7 +1,12 @@
 extern void ErrorExit(LPTSTR lpszFunction);
-extern void print(const char *fmt, ...);
+extern void dbgprint(const char *fmt, ...);
 
-//#define DEBUG(args) print(args)
-#define DEBUG(args) 
+//#define DEBUG
+
+#ifdef DEBUG
+	#define DBG dbgprint
+#else
+	#define DBG(args) 
+#endif
 
 #define RAISE_SYSTEMERR(msg) {PyErr_SetString(PyExc_SystemError, msg); return NULL;}

@@ -17,4 +17,4 @@ StartHooks(PyObject *self, PyObject *args);
 extern PyObject *
 StopHooks(PyObject *self, PyObject *args);
 
-
+extern DWORD gWaitThreadId;

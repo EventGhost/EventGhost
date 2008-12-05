@@ -3,7 +3,7 @@
 #include "windows.h"
 #include "utils.h"
 #include "hooks.h"
-
+#include "keyhook.h"
 
 #define ALTGR_CODE 10
 
@@ -64,88 +64,85 @@ const BYTE ORDERED_VK_CODES[256] = {192, 13, 14, 21, 15, 16, 17, 193, 22, 23, 0,
 
 PyObject* gPyKeyboardCallback;
 HHOOK gOldKeyHook = NULL;
-int   gNumCurrentKeys;
-BYTE  gCurrentKeys[16];
-BYTE  gKeyStateData[256];
-DWORD gLastVkCode;
-DWORD gLastScanCode;
-DWORD gLastFlags;
-BOOL  gBlocked;
-BYTE  gBlockedWinKey;
-BOOL  gIgnoreNextWinKey;
+KEYHOOK_DATA khData;
 
 
-void 
-ResetKeyboardHook(void)
+void ResetKeyboardHook(void)
 {
-	gNumCurrentKeys = 0;
-	memset(gCurrentKeys, 0, 16);
-	memset(gKeyStateData, 0, 256);
-	gKeyStateData[VK_NUMLOCK] = (GetKeyState(VK_NUMLOCK)&0x0001) ? 0x01 : 0x00;
-	gKeyStateData[VK_CAPITAL] = (GetKeyState(VK_CAPITAL)&0x0001) ? 0x01 : 0x00;
-	gKeyStateData[VK_SCROLL] = (GetKeyState(VK_SCROLL)&0x0001) ? 0x01 : 0x00;
-	gLastVkCode = -1;
-	gLastScanCode = -1;
-	gLastFlags = -1;
-	gBlocked = FALSE;
-	gBlockedWinKey = 0;
-	gIgnoreNextWinKey = FALSE;
+	DWORD dwWaitResult;
+
+	DBG("ResetKeyboardHook");
+	dwWaitResult = WaitForSingleObject(khData.lock, INFINITE);
+	if (dwWaitResult != WAIT_OBJECT_0)
+	{
+		DBG("ERROR: ResetKeyboardHook: dwWaitResult != WAIT_OBJECT_0");
+	}
+	khData.numPressedKeys = 0;
+	memset(khData.pressedKeys, 0, 16);
+	khData.lastVkCode = -1;
+	khData.lastScanCode = -1;
+	khData.lastFlags = -1;
+	khData.lastWasBlocked = FALSE;
+	khData.blockedWinKey = 0;
+	khData.ignoreNextWinKey = FALSE;
+	if (!ReleaseMutex(khData.lock))
+	{
+		// TODO: Handle error.
+		DBG("ERROR: KeyboardProc: ReleaseMutex");
+	}
 }
 
 
-BOOL 
-InsertKey(BYTE key)
+BOOL InsertKey(BYTE key)
 {
 	int i, pos;
 
-	pos = gNumCurrentKeys;
-	for (i=0; i < gNumCurrentKeys; i++)
+	pos = khData.numPressedKeys;
+	for (i=0; i < khData.numPressedKeys; i++)
 	{
-		if (gCurrentKeys[i] == key)
+		if (khData.pressedKeys[i] == key)
 		{
 			// They key is already in. This should never happen, but it happens
 			return FALSE;
 		} 
-		else if (gCurrentKeys[i] > key)
+		else if (khData.pressedKeys[i] > key)
 		{
 			pos = i;
 			break;
 		}
 	}
-	for (i=gNumCurrentKeys; i > pos; i--)
+	for (i=khData.numPressedKeys; i > pos; i--)
 	{
-		gCurrentKeys[i] = gCurrentKeys[i-1];
+		khData.pressedKeys[i] = khData.pressedKeys[i-1];
 	}
-	gCurrentKeys[pos] = key;
-	gNumCurrentKeys++;
-	gCurrentKeys[gNumCurrentKeys] = 0;
+	khData.pressedKeys[pos] = key;
+	khData.numPressedKeys++;
+	khData.pressedKeys[khData.numPressedKeys] = 0;
 	return TRUE;
 }
 
 
-void 
-RemoveKey(BYTE key)
+void RemoveKey(BYTE key)
 {
 	int i, j;
 
-	for (i=0; i < gNumCurrentKeys; i++)
+	for (i=0; i < khData.numPressedKeys; i++)
 	{
-		if (gCurrentKeys[i] == key)
+		if (khData.pressedKeys[i] == key)
 		{
-			gNumCurrentKeys--;
-			for (j=i; j < gNumCurrentKeys; j++)
+			khData.numPressedKeys--;
+			for (j=i; j < khData.numPressedKeys; j++)
 			{
-				gCurrentKeys[j] = gCurrentKeys[j+1];
+				khData.pressedKeys[j] = khData.pressedKeys[j+1];
 			}
 			break;
 		}
 	}
-	gCurrentKeys[gNumCurrentKeys] = 0;
+	khData.pressedKeys[khData.numPressedKeys] = 0;
 }
 
 
-BOOL
-BuildKeyString(char *buffer)
+BOOL BuildKeyString(char *buffer)
 {
 	int i, j;
 	char *destPtr;
@@ -153,9 +150,9 @@ BuildKeyString(char *buffer)
 
 	destPtr = buffer;
 	j = 0;
-	for (i=0; i < gNumCurrentKeys; i++)
+	for (i=0; i < khData.numPressedKeys; i++)
 	{
-		srcPtr = ORDERED_KEY_NAMES[gCurrentKeys[i]];
+		srcPtr = ORDERED_KEY_NAMES[khData.pressedKeys[i]];
 		while (*srcPtr)
 		{
 			*destPtr = *srcPtr;
@@ -167,7 +164,7 @@ BuildKeyString(char *buffer)
 				return FALSE;
 			}
 		}
-		if (i < gNumCurrentKeys - 1)
+		if (i < khData.numPressedKeys - 1)
 		{
 			*destPtr = '+';
 			destPtr++;
@@ -183,8 +180,7 @@ BuildKeyString(char *buffer)
 }
 
 
-BOOL
-CallPyCallback(char *keyString)
+BOOL CallPyCallback(char *keyString)
 {
 	PyObject *arglist, *pyRes;
 	PyGILState_STATE gil;
@@ -206,18 +202,38 @@ CallPyCallback(char *keyString)
 }
 
 
-LRESULT CALLBACK 
-KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) 
+BOOL CheckKeyState(void)
+{
+	int i;
+
+	for (i=0; i < 256; i++)
+	{
+		if (GetAsyncKeyState(i)& 0x8000)
+		{
+			return TRUE;
+		}
+
+	}
+	ResetKeyboardHook();
+	CallPyCallback("");
+	return FALSE;
+}
+
+
+LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) 
 {
 	PKBDLLHOOKSTRUCT kbd;
 	BOOL isAltDown;
 	BOOL isUpKey;
 	BYTE vkCode;
-	//PyObject *arglist, *pyRes;
-	//PyGILState_STATE gil;
 	char keyString[MAX_RES_STRING_CHARS];
+	DWORD dwWaitResult;
 
-	
+	dwWaitResult = WaitForSingleObject(khData.lock, INFINITE);
+	if (dwWaitResult != WAIT_OBJECT_0)
+	{
+		DBG("ERROR: KeyboardProc: dwWaitResult != WAIT_OBJECT_0");
+	}
 	if(nCode != HC_ACTION)
 	{
 		goto callNextHook;
@@ -230,26 +246,30 @@ KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 		goto callNextHook;
 	}
 	
-	//DEBUG("KeyboardProc");
 	kbd = (PKBDLLHOOKSTRUCT)lParam;
 	isAltDown = kbd->flags & LLKHF_ALTDOWN;
 	isUpKey = kbd->flags & LLKHF_UP;
 	vkCode = (BYTE) kbd->vkCode;
 
-	//print("%i %i", vkCode, isUpKey);
-	if (gIgnoreNextWinKey)
+	//DBG("KeyboardProc wParam=%d, lParam=%d", wParam, lParam);
+	//DBG("    isAltDown=%d", isAltDown);
+	//DBG("    isUpKey=%d", isUpKey);
+	//DBG("    vkCode=%d", vkCode);
+	
+
+	if (khData.ignoreNextWinKey)
 	{
 		//print("pre-ignored");
-		gIgnoreNextWinKey = FALSE;
+		khData.ignoreNextWinKey = FALSE;
 		goto callNextHook;
 	}
 
 	// if this message is a just repeating, only awake WaitThread
-	if ((gLastVkCode == kbd->vkCode) 
-		&& (gLastFlags == kbd->flags) 
-		&& (gLastScanCode == kbd->scanCode))
+	if ((khData.lastVkCode == kbd->vkCode) 
+		&& (khData.lastFlags == kbd->flags) 
+		&& (khData.lastScanCode == kbd->scanCode))
 	{
-		if (gBlocked || gBlockedWinKey)
+		if (khData.lastWasBlocked || khData.blockedWinKey)
 		{
 			goto blockThisKey;
 		} else {
@@ -257,10 +277,10 @@ KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 		}
 	}
 
-	gBlocked = FALSE;
-	gLastVkCode = kbd->vkCode;
-	gLastFlags = kbd->flags;
-	gLastScanCode = kbd->scanCode;
+	khData.lastWasBlocked = FALSE;
+	khData.lastVkCode = kbd->vkCode;
+	khData.lastFlags = kbd->flags;
+	khData.lastScanCode = kbd->scanCode;
 
 	// insert or remove the "ordered" code
 	if (isUpKey)
@@ -281,29 +301,46 @@ KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 
 	if (CallPyCallback(keyString))
 	{
-		gBlocked = TRUE;
-		gBlockedWinKey = 0;
+		khData.lastWasBlocked = TRUE;
+		khData.blockedWinKey = 0;
 		goto blockThisKey;
 	}
-	if (gBlockedWinKey)
+	if (khData.blockedWinKey)
 	{
-		gIgnoreNextWinKey = TRUE;
-		keybd_event(gBlockedWinKey, 0, 0, 0);
+		khData.ignoreNextWinKey = TRUE;
+		keybd_event(khData.blockedWinKey, 0, 0, 0);
+		khData.blockedWinKey = 0;
 	}
-	gBlockedWinKey = 0;
 
 	if ((vkCode == 91) || (vkCode == 92))
 	{
 		if (!isUpKey)
 		{
-			gBlockedWinKey = vkCode;
+			khData.blockedWinKey = vkCode;
 			goto blockThisKey;
 		}
 	}
+	if (khData.numPressedKeys)
+	{
+		PostThreadMessage(gWaitThreadId, WM_USER+2, 0, 0);
+	}else
+	{
+		PostThreadMessage(gWaitThreadId, WM_USER+3, 0, 0);
+	}
 
 callNextHook:
+	if (!ReleaseMutex(khData.lock))
+	{
+		// TODO: Handle error.
+		DBG("ERROR: KeyboardProc: ReleaseMutex");
+	}
 	return CallNextHookEx(gOldKeyHook, nCode, wParam, lParam);
 blockThisKey:
+	if (!ReleaseMutex(khData.lock))
+	{
+		// TODO: Handle error.
+		DBG("ERROR: KeyboardProc: ReleaseMutex");
+	}
 	return 42;
 }
 
@@ -342,7 +379,12 @@ void
 SetKeyboardHook(HINSTANCE hMod)
 {
 	ResetKeyboardHook();
-	gOldKeyHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardProc, (HINSTANCE) hMod, 0);
+	gOldKeyHook = SetWindowsHookEx(
+		WH_KEYBOARD_LL, 
+		KeyboardProc, 
+		(HINSTANCE) hMod, 
+		0
+	);
 	if(gOldKeyHook == NULL)
 	{
 		ErrorExit("SetWindowsHookEx");
