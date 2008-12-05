@@ -20,11 +20,13 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
 import types
 import os
 import codecs
 
-from LanguageTools import languageNames
+languageNames = eg.Translation.languageNames
 
 
 class UnassignedValue:
@@ -32,25 +34,25 @@ class UnassignedValue:
 
 
 
-def ExpandKeyname(key):
-    last = key[0].upper()
-    tmp = ""
-    lastWasUpper = key[0].isupper()
-    for c in key[1:]:
-        clsUpper = c.isupper()
-        if lastWasUpper:
-            if clsUpper:
-                tmp += last
-            else:
-                tmp += " " + last
-        else:
-            if clsUpper:
-                tmp += last + " "
-            else:
-                tmp += last
-        last = c
-        lastWasUpper = clsUpper
-    return (tmp + last).lstrip()
+#def ExpandKeyname(key):
+#    last = key[0].upper()
+#    tmp = ""
+#    lastWasUpper = key[0].isupper()
+#    for c in key[1:]:
+#        clsUpper = c.isupper()
+#        if lastWasUpper:
+#            if clsUpper:
+#                tmp += last
+#            else:
+#                tmp += " " + last
+#        else:
+#            if clsUpper:
+#                tmp += last + " "
+#            else:
+#                tmp += last
+#        last = c
+#        lastWasUpper = clsUpper
+#    return (tmp + last).lstrip()
 
 
 def ExpandKeyname(key):
@@ -167,7 +169,7 @@ class LanguageEditor(wx.Frame):
         eg.AddActionGroupDialog
         eg.OptionsDialog
         eg.FindDialog
-        import Classes.Exceptions
+        import Exceptions
         #import MainFrame
         
         for plugin in os.listdir("plugins"):
@@ -191,7 +193,7 @@ class LanguageEditor(wx.Frame):
 #                    "[" + langNames[x] + "]"
 #                )
         try:
-            x = langKeys.index(self.config.language)
+            x = langKeys.index(config.language)
         except:
             x = 0
 
@@ -256,7 +258,7 @@ class LanguageEditor(wx.Frame):
             wx.CHOICEDLG_STYLE
         )
         try:
-            x = self.langKeys.index(self.language)
+            x = self.langKeys.index(self.config.language)
         except:
             x = 0
         dialog.SetSelection(x)
@@ -472,7 +474,6 @@ class LanguageEditor(wx.Frame):
                     print evalPath
                     print "class has no:", key
                     continue
-                    raise
                 firstItems.append((key, value))
             elif key == "description":
                 try:
@@ -482,7 +483,6 @@ class LanguageEditor(wx.Frame):
                     print evalPath
                     print "class has no:", key
                     continue
-                    raise
                 firstItems.append((key, value))
             elif type(getattr(node, key)) in (types.ClassType, types.InstanceType):
                 value = getattr(node, key)
