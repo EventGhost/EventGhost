@@ -2,7 +2,7 @@
 =======================
 - The "log only assigned and activated events" check box is now 
   displayed in red if checked.
-- DesktopRemote's "Show" action no has an option to force the window to
+- DesktopRemote's "Show" action now has an option to force the window to
   be always on top of all other desktop windows.
 - Added a "Start" action to the VLC, that helps to start VLC with the 
   right command line options.
