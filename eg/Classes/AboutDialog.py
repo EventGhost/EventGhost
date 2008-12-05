@@ -266,7 +266,7 @@ class SystemInfoPanel(HtmlPanel):
         buildTime = time.strftime(
             Text.CreationDate, 
             time.gmtime(eg.Version.buildTime)
-        )
+        ).decode(eg.systemEncoding)
         self.sysInfos = (
             ("EventGhost Version", eg.Version.string),
             ("SVN Revision", eg.Version.svnRevision),
