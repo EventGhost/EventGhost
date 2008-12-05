@@ -84,7 +84,7 @@ Filename: "{app}\\EventGhost.exe"; Parameters: "-uninstall"
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{userappdata}\\EventGhost"
-Type: dirifempty; Name: "{app}\\EventGhost"
+Type: dirifempty; Name: "{app}"
 
 [Run] 
 Filename: "{app}\\EventGhost.exe"; Flags: postinstall nowait skipifsilent 
@@ -275,6 +275,11 @@ class MyInstaller(InnoInstaller):
             if filename.startswith("plugins\\"):
                 pluginFolder = filename.split("\\")[1]
                 plugins[pluginFolder] = True
+            if (
+                filename.startswith("lib") 
+                and not filename.startswith("lib%s\\" % self.PYVERSION)
+            ):
+                continue
             self.AddFile(join(self.sourceDir, filename), dirname(filename))
         for filename in glob(join(self.libraryDir, '*.*')):
             self.AddFile(filename, self.libraryName)
@@ -289,6 +294,10 @@ class MyInstaller(InnoInstaller):
                 "InstallDelete", 
                 'Type: filesandordirs; Name: "{app}\\plugins\\%s"' % plugin
             )
+        self.Add(
+            "InstallDelete", 
+            'Type: files; Name: "{app}\\lib%s\\*.*"' % self.PYVERSION
+        )
         self.ExecuteInnoSetup()
     
     
