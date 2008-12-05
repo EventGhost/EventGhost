@@ -55,9 +55,13 @@ class _ModuleProxy(object):
 
 
     def Run(self):
-        if not Cli.args.install:
+        if Cli.args.install:
+            return
+        if Cli.args.translate:
+            eg.LanguageEditor()
+        else:
             eg.Init.InitGui()
-            eg.app.MainLoop()
+        eg.app.MainLoop()
 
 
 eg = _ModuleProxy()
