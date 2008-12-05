@@ -84,6 +84,7 @@ Filename: "{app}\\EventGhost.exe"; Parameters: "-uninstall"
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{userappdata}\\EventGhost"
+Type: dirifempty; Name: "{app}\\EventGhost"
 
 [Run] 
 Filename: "{app}\\EventGhost.exe"; Flags: postinstall nowait skipifsilent 
@@ -169,10 +170,11 @@ class MyInstaller(InnoInstaller):
         """
         path = join(self.sourceDir, "CHANGELOG.TXT")
         timeStr = time.strftime("%m/%d/%Y")
-        header = "Version %s (%s)\n" % (self.appVersion, timeStr)
+        header = "%s (%s)" % (self.appVersion, timeStr)
+        header = header + "\n" + ("=" * len(header)) + "\n"
         infile = open(path, "r")
         data = infile.read(100) # read some data from the beginning
-        if data.strip().startswith("Version "):
+        if not data.strip().startswith("-"):
             # no new lines, so skip the addition of a new header
             return
         data += infile.read() # read the remaining contents
