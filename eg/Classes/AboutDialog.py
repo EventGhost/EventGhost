@@ -319,39 +319,36 @@ class ChangelogPanel(HtmlPanel):
     
     def __init__(self, parent):
         try:
-            fd = open("CHANGELOG.TXT")
+            infile = open("CHANGELOG.TXT")
         except:
             return
-        res = ["<TABLE>"]
-        headerTemplate = (
-            "<TR><TD COLSPAN=2><P><FONT SIZE=+0><B><U>%s"
-            "</U></B></FONT></TD</TR>"
-        )
-        lineTemplate = (
-            "<TR>"
-            "<TD VALIGN=TOP><b>&nbsp;&nbsp;%s</b></TD>"
-            "<TD>%s</TD>"
-            "</TR>"
-        )
-        tag = None
-        buffer = ""
-        for line in fd:
-            if line.startswith("   "):
-                buffer += line
+        out = StringIO()
+        liStarted = False
+        for line in infile:
+            if line.startswith("==="):
+                out.write("<ul>\n")
                 continue    
-            if line.strip == "":
-                continue        
-            if tag:
-                res.append(lineTemplate % (tag, buffer))
-                tag = None
             if line.startswith("- "):
-                tag = line[2:5]
-                buffer = line[7:]
-            elif line.startswith("Version"):
-                res.append(headerTemplate % line)
-        res.append("</TABLE>")
-        fd.close()
-        HtmlPanel.__init__(self, parent, "".join(res))
+                out.write("<li>\n")
+                out.write(line[2:])
+                liStarted = True
+                continue    
+            if line.startswith("  "):
+                out.write(line)
+                continue       
+            if line.strip() != "":
+                out.write("<p>")
+                if liStarted:
+                    liStarted = False
+                    out.write("</li>")
+                out.write("</ul><b><u>")
+                out.write(line)
+                out.write("</u></b>")
+        out.write("</li>\n")
+        out.write("</ul>\n")
+        infile.close()
+        HtmlPanel.__init__(self, parent, out.getvalue())
+        out.close()
 
 
 
