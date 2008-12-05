@@ -276,7 +276,7 @@ def Main(packagesToAdd):
     for module in stdLibModules:
         outfile.write("import %s\n" % module)
     # add every .pyd of the current directory
-    packagesToAdd = packagesToAdd + GetPydFiles(os.getcwdu())
+    #packagesToAdd = packagesToAdd + GetPydFiles(os.getcwdu())
     for package in packagesToAdd:
         outfile.write("\n# modules found for package '%s'\n" % package)
         for module in GetPackageModules(package):

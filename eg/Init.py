@@ -68,9 +68,9 @@ def InitComTypes():
         
 def InitPathesAndBuiltins():
     
-    sys.path.append(os.path.abspath("lib%d%d\\site-packages" % sys.version_info[:2]))
-    if not hasattr(sys, "frozen"):
-        sys.path.append(os.path.abspath("tools\\Python%d%d" % sys.version_info[:2]))
+    sys.path.append(
+        os.path.abspath("lib%d%d\\site-packages" % sys.version_info[:2])
+    )
     sys.path.append(os.getcwdu())
     
     import cFunctions
