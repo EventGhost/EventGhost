@@ -34,7 +34,7 @@ locale.setlocale(locale.LC_ALL, '')
 
 def FormatBytes(numBytes):
     """ Returns a formatted string of a byte count value. """
-    return locale.format("%d" % numBytes, grouping=True)
+    return locale.format("%d", numBytes, grouping=True)
     
 
 def GetTimeStr(seconds):
