@@ -20,7 +20,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="C:\Programme\Python24\include"
+				AdditionalIncludeDirectories="C:\Programme\Python25\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -33,9 +33,10 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="C:\Programme\Python24\libs"
+				AdditionalDependencies="python25.lib"
 				OutputFile="$(OutDir)/cFunctions.exe"
 				LinkIncremental="2"
+				AdditionalLibraryDirectories="C:\Programme\Python25\libs"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/cFunctions.pdb"
 				SubSystem="2"
@@ -94,7 +95,7 @@
 				Name="VCMIDLTool"/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="cmd /C &quot;copy /Y &quot;$(TargetPath)&quot; &quot;$(ProjectDir)..\..\eg\&quot;&quot;
+				CommandLine="cmd /C &quot;copy /Y &quot;$(TargetPath)&quot; &quot;$(ProjectDir)..\..\tools\Python25&quot;&quot;
 
 
 "/>

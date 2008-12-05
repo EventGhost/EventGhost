@@ -25,55 +25,55 @@ LRESULT CALLBACK MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 		switch(wParam)
 		{
 			//case WM_LBUTTONDOWN:
-			//	DEBUG("WM_LBUTTONDOWN");
+			//	DBG("WM_LBUTTONDOWN");
 			//	mouseState[0] = TRUE;
 			//	mesg = "LeftButton";
 			//	buttonNum = 0;
 			//	param = 1;
 			//	break;
 			//case WM_LBUTTONUP:
-			//	DEBUG("WM_LBUTTONUP");
+			//	DBG("WM_LBUTTONUP");
 			//	mouseState[0] = FALSE;
 			//	mesg = "LeftButton";
 			//	buttonNum = 0;
 			//	param = 0;
 			//	break;
 			//case WM_MOUSEMOVE:
-			//	DEBUG("WM_MOUSEMOVE");
+			//	DBG("WM_MOUSEMOVE");
 			//	break;
 			//case WM_MOUSEWHEEL:
-			//	DEBUG("WM_MOUSEWHEEL");
+			//	DBG("WM_MOUSEWHEEL");
 			//	break;
 			case WM_MBUTTONDOWN:
-				DEBUG("WM_MBUTTONDOWN");
+				DBG("WM_MBUTTONDOWN");
 				mouseState[1] = TRUE;
 				mesg = "MiddleButton";
 				buttonNum = 1;
 				param = 1;
 				break;
 			case WM_MBUTTONUP:
-				DEBUG("WM_MBUTTONUP");
+				DBG("WM_MBUTTONUP");
 				mouseState[1] = FALSE;
 				mesg = "MiddleButton";
 				buttonNum = 1;
 				param = 0;
 				break;
 			//case WM_RBUTTONDOWN:
-			//	DEBUG("WM_RBUTTONDOWN");
+			//	DBG("WM_RBUTTONDOWN");
 			//	mouseState[2] = TRUE;
 			//	mesg = "RightButton";
 			//	buttonNum = 2;
 			//	param = 1;
 			//	break;
 			//case WM_RBUTTONUP:
-			//	DEBUG("WM_RBUTTONUP");
+			//	DBG("WM_RBUTTONUP");
 			//	mouseState[2] = FALSE;
 			//	mesg = "RightButton";
 			//	buttonNum = 2;
 			//	param = 0;
 			//	break;
 			case WM_XBUTTONDOWN:
-				DEBUG("WM_XBUTTONDOWN");
+				DBG("WM_XBUTTONDOWN");
 				if (HIWORD(mhs->mouseData) == XBUTTON1)
 				{
 					mouseState[3] = TRUE;
@@ -87,7 +87,7 @@ LRESULT CALLBACK MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 				param = 1;
 				break;
 			case WM_XBUTTONUP:
-				DEBUG("WM_XBUTTONUP");
+				DBG("WM_XBUTTONUP");
 				if (HIWORD(mhs->mouseData) == XBUTTON1)
 				{
 					mouseState[3] = FALSE;
@@ -101,10 +101,10 @@ LRESULT CALLBACK MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 				param = 0;
 				break;
 			//case WM_XBUTTONDBLCLK:
-			//	DEBUG("WM_XBUTTONDBLCLK");
+			//	DBG("WM_XBUTTONDBLCLK");
 			//	break;
 			//default:
-			//	DEBUG("unknown mouse message");
+			//	DBG("unknown mouse message");
 		}
 		if (mesg && gPyMouseCallback)
 		{

@@ -11,3 +11,18 @@ SetKeyboardHook(HINSTANCE hMod);
 extern void 
 UnsetKeyboardHook(void);
 
+extern BOOL CheckKeyState(void);
+
+typedef struct{
+	BYTE numPressedKeys;
+	DWORD lastVkCode;
+	DWORD lastScanCode;
+	DWORD lastFlags;
+	BOOL lastWasBlocked;
+	BOOL ignoreNextWinKey;
+	BYTE blockedWinKey;
+	BYTE pressedKeys[16];
+	HANDLE lock;
+}KEYHOOK_DATA;
+
+extern KEYHOOK_DATA khData;
