@@ -59,6 +59,7 @@ class PluginManager:
     
     def __init__(self):
         eg.RegisterPlugin = self.RegisterPluginDummy
+        self.RegisterPlugin.im_func.__doc__ = self.RegisterPluginDummy.__doc__
         self.Refresh()
     
     
@@ -199,6 +200,21 @@ class PluginManager:
         url = None,
         help = None,
     ):
+        """
+        Registers information about a plug-in to EventGhost.
+        
+        *name* should be a short descriptive string with the name of the 
+        plug-in.
+        *description*
+        *kind* gives a hint about the category the plug-in belongs to. It 
+        should be a string with a value out of "remote" (for remote receiver
+        plug-ins), "program" (for program control plug-ins), "external" (for
+        plug-ins that control external hardware) or "other" (if none of the
+        other categories match).
+        *author* can be set to the name of the developer of the plug-in.
+        *version* can be set to a version string.
+        
+        """
         if name is None:
             name = self.currentInfo.dirname
         if description is None:
@@ -213,7 +229,7 @@ class PluginManager:
         raise RegisterPluginException
         
     
-    def RegisterPluginDummy(self, *args, **kwargs):
+    def RegisterPluginDummy(self, **kwargs):
         pass
     
     
