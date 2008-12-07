@@ -9,6 +9,8 @@ if len(sys.argv) > 1:
     import imp
     imp.load_source("__main__", mainFilePath)
 else:
+    if hasattr(sys, "frozen") and sys.frozen == "windows_exe":
+        sys.exit(1)
     from code import InteractiveConsole
     import site
     shell = InteractiveConsole()
