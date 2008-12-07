@@ -23,7 +23,7 @@
 import os
 import sys
 import locale
-from os.path import join, dirname
+from os.path import join, dirname, splitext
 
 encoding = locale.getdefaultlocale()[1]
 locale.setlocale(locale.LC_ALL, '')
@@ -38,8 +38,8 @@ else:
 os.chdir(mainDir)
 
 # append our pathes to sys.path
-sys.path.append(join(mainDir, "eg"))
-sys.path.append(join(mainDir, "plugins"))
+#sys.path.append(join(mainDir, "eg"))
+#sys.path.append(join(mainDir, "plugins"))
 
 # determine the commandline parameters
 class args:
@@ -113,7 +113,11 @@ while True:
         args.translate = True
 
 
-if (not args.allowMultiLoad) and (not args.translate):
+if (
+    not args.allowMultiLoad
+    and not args.translate
+    and splitext(os.path.basename(sys.argv[0]))[0] == "EventGhost"
+):
     # check if another instance of the program is running
     import ctypes
     appMutex = ctypes.windll.kernel32.CreateMutexA(
