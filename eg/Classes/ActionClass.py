@@ -109,23 +109,23 @@ class ActionClass(object):
         Print an error message to the logger.
         
         Prefer to use :meth:`self.PrintError <eg.ActionClass.PrintError>` 
-        instead of eg.PrintError, since this method might be enhanced in the 
-        future to give the user better information about the source of the 
-        error.
+        instead of :meth:`eg.PrintError`, since this method might be enhanced 
+        in the future to give the user better information about the source of 
+        the error.
         """
         eg.PrintError(msg)
         
         
-    def Configure(self, *dummyArgs):
+    def Configure(self, *args):
         """
         This should be overridden in a subclass, if the action wants to have 
         a configuration dialog.
         
         When the action is freshly added by the user to the configuration tree
-        there are no "args" and you must therefore supply sufficient
+        there are no *args* and you must therefore supply sufficient
         default arguments.
         If the action is reconfigured by the user, this method will be called
-        with the same arguments as the __call__ method.
+        with the same arguments as the :meth:`__call__` method.
         """
         panel = eg.ConfigPanel(self)
         label = panel.StaticText(eg.text.General.noOptionsAction)
@@ -145,8 +145,8 @@ class ActionClass(object):
         """
         Implementation of pre-compiled parameters.
 
-        An ActionClass will only override the "Compile" method, if it uses a 
-        special way to implement its action. An action receives a call to 
+        An ActionClass will only override this method, if it uses a special 
+        way to implement its action. An action receives a call to 
         Compile every time their parameters change (the user has reconfigured 
         the action) or in the moment the configuration file is loaded and an 
         action of this type is created because it was saved in the tree. 
@@ -168,19 +168,3 @@ class ActionClass(object):
     class Exception(eg.Exception):
         pass
     
-    @classmethod
-    def AddActionFactory(
-        cls, 
-        parent, 
-        clsName, 
-        name, 
-        description=None, 
-        value=None
-    ):
-        actionCls = ClassType(
-            clsName,
-            (cls, ),
-            dict(name=name, description=description, value=value),
-        )
-        parent.AddAction(actionCls)
-
