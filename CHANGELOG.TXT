@@ -4,30 +4,30 @@
   displayed in red if checked.
 - DesktopRemote's "Show" action now has an option to force the window to
   be always on top of all other desktop windows.
-- Added a "Start" action to the VLC, that helps to start VLC with the 
+- Added a "Start" action to the VLC plugin, that helps to start VLC with the 
   right command line options.
-- The list of plug-in authors in the about dialog is now automatically
-  created from all installed plug-ins.
-- Fixed sticking keys of the Keyboard plug-in after some special events (like
+- The list of plugin authors in the about dialog is now automatically
+  created from all installed plugins.
+- Fixed sticking keys of the Keyboard plugin after some special events (like
   Ctrl+Alt+Delete).
 - Many other bugs fixed.
 
 
 0.3.6.1459 (09/27/2008)
 =======================
-- CHeitkamp added basic authentication to the Webserver plug-in.
-- James Lee provided a new DLL for the MCE Remote plug-in, that works
+- CHeitkamp added basic authentication to the Webserver plugin.
+- James Lee provided a new DLL for the MCE Remote plugin, that works
   flawlessly without the replacement driver.
 
 
 0.3.6.1446 (06/30/2008)
 =======================
-- Added Sceneo TVcentral plug-in.
+- Added Sceneo TVcentral plugin.
 
 
 0.3.6.1444 (06/30/2008)
 =======================
-- Added ATI Remote Wonder II plug-in.
+- Added ATI Remote Wonder II plugin.
 
 
 0.3.6.1439 (06/29/2008)
@@ -37,8 +37,8 @@
 
 0.3.6.1408 (05/22/2008)
 =======================
-- Added BT8x8 based remote controls plug-in from junius.
-- Added GOM Player plug-in from CHeitkamp.
+- Added BT8x8 based remote controls plugin from junius.
+- Added GOM Player plugin from CHeitkamp.
 
 
 0.3.6.1401 (05/16/2008)
@@ -67,21 +67,21 @@
 
 0.3.6.1387 (04/26/2008)
 =======================
-- Added Hauppauge IR plug-in from Prinz.
+- Added Hauppauge IR plugin from Prinz.
 
 
 0.3.6.1371 (04/06/2008)
 =======================
-- Added DScaler 4 plug-in from incubi.
+- Added DScaler 4 plugin from incubi.
 
 
 0.3.6.1353 (04/03/2008)
 =======================
 - Added Spanish translation from karl.
-- Added first version of a CyberLink PowerDVD plug-in.
+- Added first version of a CyberLink PowerDVD plugin.
 - Some Internet shortcuts to the project get added to the startmenu 
   folder by the installer.
-- Member eruji added some more actions to the SageTV plug-in.
+- Member eruji added some more actions to the SageTV plugin.
 - The ShowOSD action now has a new option "Use Skin". It will draw a 
   skinned background to the OSD. Currently there is only one skin, but I 
   hope more will be added in the future. 
@@ -90,16 +90,16 @@
 0.3.6.1285 (03/04/2008)
 =======================
 
-- Added Sound Mixer Ex plug-in from Dexter.
-- Added Marantz Serial plug-in from Dexter.
-- Added X10 CM15A plug-in from Dean Owens.
+- Added Sound Mixer Ex plugin from Dexter.
+- Added Marantz Serial plugin from Dexter.
+- Added X10 CM15A plugin from Dean Owens.
 - EventGhost now uses Python 2.5.2.
 
 
 0.3.6.1255 (12/13/2007)
 =======================
-- Added PlayStation 3 Bluetooth Remote plug-in from Thierry Couquillou.
-- Added volume and seek actions for the foobar2000 plug-in.
+- Added PlayStation 3 Bluetooth Remote plugin from Thierry Couquillou.
+- Added volume and seek actions for the foobar2000 plugin.
 - Replaced Python's built-in input() and raw_input() with a function that
   shows a simple input dialog. It has no real use-cases in EventGhost, 
   but this way you can experiment with nearly every example code from 
@@ -111,9 +111,9 @@
 0.3.6.1248 (12/10/2007)
 =======================
 
-- The apply button of all action/plug-in configuration dialogs now stays 
+- The apply button of all action/plugin configuration dialogs now stays 
   disabled till the user actually has changed a control in the dialog.
-- Fix: Some more plug-ins had problem with suspend/resume of the computer.
+- Fix: Some more plugins had problem with suspend/resume of the computer.
 - Fix: It was possible that some dialogs opened outside the visible desktop 
   area if the user had changed his display settings while EventGhost is 
   running.
@@ -125,7 +125,7 @@
 - Now using wxPython 2.8.7.1
 - The PythonScript action now uses the same configuration panel as all 
   other actions.
-- Fix: TechnoTrend USB-IR plug-in was not functional after a suspend/resume of 
+- Fix: TechnoTrend USB-IR plugin was not functional after a suspend/resume of 
   the system.
 
 
@@ -143,7 +143,7 @@
 0.3.6.1223 (12/01/2007)
 =======================
 
-- Many enhancements to the ffdshow plug-in by Bartman.
+- Many enhancements to the ffdshow plugin by Bartman.
 - Better handling of colours if the user has changed the colours in his 
   desktop theme.
 
@@ -151,7 +151,7 @@
 0.3.6.1218 (11/28/2007)
 =======================
 
-- Added a first version of a plug-in for Barco CRT projectors.
+- Added a first version of a plugin for Barco CRT projectors.
 - All action configuration dialogs now have a "Test" button, that will 
   execute the current settings just like it would if you confirm the 
   dialog and press execute in the toolbar. The difference is, that 
@@ -163,11 +163,11 @@
 0.3.6.1190 (11/25/2007)
 =======================
 
-- Added DVB Dream plug-in from townkat.
+- Added DVB Dream plugin from townkat.
 - Added Czech language file, MediaMonkey and IrfanView from Pako.
 - Added changelog tab in the about dialog.
 - Added eg.Exceptions class for generic translatable error messages.
-- If a plug-in gets into error state, it will now try to restart itself on
+- If a plugin gets into error state, it will now try to restart itself on
   execute, disable/enable or pressing ok or apply in the configuration 
   dialog.
 
