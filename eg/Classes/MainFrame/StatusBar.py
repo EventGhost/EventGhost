@@ -49,6 +49,7 @@ class StatusBar(wx.StatusBar):
         self.SetCheckBoxColour(eg.config.onlyLogAssigned)
         checkBox.Bind(wx.EVT_CHECKBOX, self.OnCheckBox)
         checkBox.SetPosition((rect.x + 2, rect.y + 2))
+        checkBox.SetToolTipString(eg.text.MainFrame.onlyLogAssignedToolTip)
         self.Reposition()
 
     if eg.debugLevel:
