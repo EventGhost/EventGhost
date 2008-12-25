@@ -75,7 +75,11 @@ class Text:
     
     class MainFrame:
         onlyLogAssigned = "&Log only assigned and activated events"
-        
+        onlyLogAssignedToolTip = (
+            "If checked, the log will only show events, that would actually\n"
+            "execute in the current configuration. So you should *not* check\n"
+            "this, while you want to assign new events."        
+        )
         class TaskBarMenu:
             Show = "Show EventGhost"
             Hide = "Hide EventGhost"
