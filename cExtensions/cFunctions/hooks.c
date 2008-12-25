@@ -89,9 +89,10 @@ WaitThreadProc(HANDLE startupEvent)
             switch(msg.message)
 			{
 				case WM_USER+1: // awake thread
-					DBG("WaitThread: WM_USER+1");
+					DBG("WaitThread: WM_USER+1: awake)");
 					if(gIsInIdle)
 					{
+						DBG("    calling gPyUnIdleCallback");
 						gil = PyGILState_Ensure();
 						PyObject_CallObject(gPyUnIdleCallback, NULL);
 						PyGILState_Release(gil);
@@ -118,10 +119,15 @@ WaitThreadProc(HANDLE startupEvent)
 		if (isKeyDown)
 		{
 			timeout = 100;
-		}else
+		}else if (gIsInIdle)
+		{
+			timeout = INFINITE;
+		}
+		else
 		{
 			timeout = gIdleTimeout - (GetTickCount() - gLastTickCount);
 		}
+		DBG("timeout: %d", timeout);
 		res = MsgWaitForMultipleObjects(
 			1, 
 			pHandles, 
