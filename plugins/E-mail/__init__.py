@@ -1,4 +1,4 @@
-version = "0.1.0"
+version = "0.1.1"
 # This file is part of EventGhost.
 # Copyright (C) 2008 Pako <lubos.ruckl@quick.cz>
 #
@@ -17,7 +17,7 @@ version = "0.1.0"
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# Last change: 24-12-2008 19:17
+# Last change: 25-12-2008 09:01
 
 #===============================================================================
 #Structure of setup/account (one record):
@@ -116,7 +116,7 @@ eg.RegisterPlugin(
     description = (
         "Adds E-mail actions."
     ),
-    url = "http://www.eventghost.org/forum/viewtopic.php?xxxxxxxxxx",
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1168",
 )
 from wx.lib.intctrl import IntCtrl as intCtrl
 from threading import Thread, Event
@@ -126,7 +126,6 @@ import re
 from copy import deepcopy as cpy
 from eg.WinApi.Dynamic import BringWindowToTop, CreateEvent, SetEvent
 import _winreg, os, win32api
-from wx.gizmos import EditableListBox as EdtblLstBx
 import poplib, imaplib, smtplib
 from email.header import decode_header
 from email.Header import Header
@@ -853,7 +852,7 @@ class NotifFrame(wx.MiniFrame):
         wx.Yield()
         SetEvent(event)
 
-    def Disappear(self, close):
+    def Disappear(self, close=False):
         if self.detailsFrame:
             self.detailsFrame.Close()
         if not close:
@@ -2266,12 +2265,12 @@ class WorkThread(Thread):
                         if not self.notifFrame.IsShown():
                             self.notifFrame.Show(True)
                     else:
-                        self.notifFrame.Show(False)
+                        self.notifFrame.Disappear()
             else:
                 val, shift = self.CheckEmails()
                 if self.setup[6]: #Show notification Window
                     if val == 0:
-                        self.notifFrame.Show(False)
+                        self.notifFrame.Disappear()
                     elif shift or self.refresh:
                         self.notifFrame.SetNum(val)
                         if not self.notifFrame.IsShown():
@@ -2596,6 +2595,9 @@ class AbortAllObservations(eg.ActionClass):
 class AbortObservation(eg.ActionClass):
     class text:
         nameObs = 'Observation name:'
+        abortNow = 'Abort now !'
+        tip = 'Abort observation now'
+        
     def __call__(self, observName=''):
         self.plugin.AbortObservation(observName)
 
@@ -2609,6 +2611,14 @@ class AbortObservation(eg.ActionClass):
         mainSizer.Add(nameCtrl,0,wx.EXPAND)
         panel.sizer.Add(mainSizer)
         panel.sizer.Layout()
+        
+        # re-assign the test button
+        def OnTestButton(event):
+            self.plugin.AbortObservation(nameCtrl.GetValue())
+        panel.dialog.buttonRow.testButton.SetLabel(text.abortNow)
+        panel.dialog.buttonRow.testButton.SetToolTipString(text.tip)
+        panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnTestButton)
+        
         while panel.Affirmed():
             panel.SetResult(
                 nameCtrl.GetValue(),
@@ -3051,16 +3061,9 @@ class StartObservation(eg.ActionClass):
             validation()
             accountCtrl.SetSelection(index)    # so that (un)checking also selects (moves the highlight)
         accountCtrl.Bind(wx.EVT_CHECKLISTBOX, onCheckListBox)
-
-        # re-assign the test button
-        def OnTestButton(event):
-            self.startObserv(self.stp)
-        panel.dialog.buttonRow.testButton.SetLabel(text.startNow)
-        panel.dialog.buttonRow.testButton.SetToolTipString(text.tip2)
-        panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnTestButton)
-        EnableEvent2Ctrl()
-
-        while panel.Affirmed():
+        
+        
+        def UpdateConfig():
             choices = accountCtrl.GetStrings()
             tmpList=[]
             for indx in range(len(choices)):
@@ -3083,6 +3086,19 @@ class StartObservation(eg.ActionClass):
             self.stp[12] = evtName2Ctrl.GetValue()
             self.stp[13] = payload2Ctrl.GetSelection()
             self.stp[14] = deleteCtrl.GetValue()
+        
+
+        # re-assign the test button
+        def OnTestButton(event):
+            UpdateConfig()
+            self.startObserv(self.stp)
+        panel.dialog.buttonRow.testButton.SetLabel(text.startNow)
+        panel.dialog.buttonRow.testButton.SetToolTipString(text.tip2)
+        panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnTestButton)
+        EnableEvent2Ctrl()
+
+        while panel.Affirmed():
+            UpdateConfig()
             panel.SetResult(
                 self.stp,
             )
@@ -3233,7 +3249,7 @@ ACTIONS = (
     (StartObservation, 'StartObservation', 'Start observation', 'Start observation.', None),
     (AbortObservation, 'AbortObservation', 'Abort observation', 'Abort observation.', None),
     (AbortAllObservations, 'AbortAllObservations', 'Abort all observations', 'Abort all observations.', None),
-    (SendEmail, 'SendEmail', 'Send email', 'Send email.', None),
+    (SendEmail, 'SendEmail', 'Send e-mail', 'Send e-mail.', None),
 )
 #===============================================================================
 
