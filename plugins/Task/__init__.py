@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 eg.RegisterPlugin(
     name = "Task Create/Switch Events",
@@ -43,14 +44,14 @@ eg.RegisterPlugin(
     ),
 )
 
-
+import wx
 from os.path import abspath, join, dirname, splitext
 from eg.WinApi.Dynamic import (
     DWORD, CDLL, byref, GetWindowThreadProcessId, RegisterWindowMessage,
     RegisterShellHookWindow, DeregisterShellHookWindow, GetWindowLong,
     EnumWindows, WM_APP, WINFUNCTYPE, BOOL, HWND, LPARAM, GWL_STYLE, 
     HSHELL_WINDOWCREATED, HSHELL_WINDOWDESTROYED, HSHELL_WINDOWACTIVATED,
-    WS_VISIBLE, 
+    WS_VISIBLE, GWL_HWNDPARENT
 )
 from eg.WinApi.Utils import GetProcessName
 
@@ -58,97 +59,95 @@ EnumWindowsProc = WINFUNCTYPE(BOOL, HWND, LPARAM)
 EnumWindows.argtypes = [EnumWindowsProc, LPARAM]
 
 WM_SHELLHOOKMESSAGE = RegisterWindowMessage("SHELLHOOK")
-
+DEBUG = 0
 
 
 def GetWindowProcessName(hwnd):
     dwProcessId = DWORD()
-    dwThreadId = GetWindowThreadProcessId(hwnd, byref(dwProcessId))
+    GetWindowThreadProcessId(hwnd, byref(dwProcessId))
     processId = dwProcessId.value
     if processId == 0:
-        return "Desktop"
+        return "explorer"
     return splitext(GetProcessName(processId))[0]
     
     
 
 class Task(eg.PluginClass):
     
-    hookDll = None
-    
-    def __start__(
-        self, 
-        created=True, 
-        destroyed=True,
-        activated=True, 
-        deactivated=True
-    ):
+    def __start__(self, *args):
         self.lastActivated = ""
-        self.lastDestroyed = ""
-        self.windowList = windowList = {}
-        def MyEnumFunc(hwnd, lParam):
+        self.processes = processes = {}
+        def MyEnumFunc(hwnd, dummyLParam):
             if (GetWindowLong(hwnd, GWL_STYLE) & WS_VISIBLE) > 0:
-                windowList[hwnd] = 1
+                if GetWindowLong(hwnd, GWL_HWNDPARENT):
+                    return 1
+                processName = GetWindowProcessName(hwnd)
+                if processName in processes:
+                    processes[processName].append(hwnd)
+                else:
+                    processes[processName] = [hwnd]
             return 1
         EnumWindows(EnumWindowsProc(MyEnumFunc), 0)
-        eg.messageReceiver.AddHandler(WM_SHELLHOOKMESSAGE, self.MyWndProc)
-        eg.messageReceiver.AddHandler(WM_APP+1, self.FocusWndProc)
-        eg.messageReceiver.AddHandler(WM_APP+2, self.FatalWndProc)
-        RegisterShellHookWindow(eg.messageReceiver.hwnd)
+        eg.messageReceiver.AddHandler(WM_APP+1, self.WindowGotFocusProc)
+        eg.messageReceiver.AddHandler(WM_APP+2, self.WindowCreatedProc)
+        eg.messageReceiver.AddHandler(WM_APP+3, self.WindowDestroyedProc)
         self.hookDll = CDLL(abspath(join(dirname(__file__), "hook.dll")))
         self.hookDll.StartHook()
         
         
     def __stop__(self):
         self.hookDll.StopHook()
-        DeregisterShellHookWindow(eg.messageReceiver.hwnd)
-        eg.messageReceiver.RemoveHandler(WM_SHELLHOOKMESSAGE, self.MyWndProc)
-        eg.messageReceiver.RemoveHandler(WM_APP+1, self.FocusWndProc)
-        eg.messageReceiver.RemoveHandler(WM_APP+2, self.FatalWndProc)
+        eg.messageReceiver.RemoveHandler(WM_APP+1, self.WindowGotFocusProc)
+        eg.messageReceiver.RemoveHandler(WM_APP+2, self.WindowCreatedProc)
+        eg.messageReceiver.RemoveHandler(WM_APP+3, self.WindowDestroyedProc)
         
         
-    @eg.LogIt
-    def FatalWndProc(self, hwnd, mesg, wParam, lParam):
-        print "DLL_PROCESS_DETACH", wParam, lParam
+    def WindowCreatedProc(self, dummyHwnd, dummyMesg, hwnd, dummyLParam):
+        processName = GetWindowProcessName(hwnd)
+        if DEBUG:
+            eg.Print("CreateWndProc", processName, hwnd)
+        if processName:
+            if processName in self.processes:
+                self.processes[processName].append(hwnd)
+            else:
+                self.TriggerEvent("Created." + processName)
+                self.processes[processName] = [hwnd]
+            self.TriggerEvent("NewWindow." + processName)
+            
+    
+    def WindowDestroyedProc(self, dummyHwnd, dummyMesg, hwnd, dummyLParam):
+        processName = GetWindowProcessName(hwnd)
+        if DEBUG:
+            eg.Print("DestroyWndProc", processName, hwnd)
+        if processName in self.processes:
+            processEntry = self.processes[processName]
+            if len(processEntry) <= 1:
+                del self.processes[processName]
+                if self.lastActivated == processName:
+                    self.TriggerEvent("Deactivated." + processName)
+                    self.lastActivated = ''
+                self.TriggerEvent("ClosedWindow." + processName)
+                self.TriggerEvent("Destroyed." + processName)
+            else:
+                try:
+                    processEntry.remove(hwnd)
+                except ValueError:
+                    pass
+                self.TriggerEvent("ClosedWindow." + processName)
     
     
-    def FocusWndProc(self, hwnd, mesg, wParam, lParam):
-        if wParam == 0:
-            return
-        fstr = GetWindowProcessName(wParam)
-        if fstr and fstr != self.lastActivated:
+    def WindowGotFocusProc(self, dummyHwnd, dummyMesg, hwnd, dummyLParam):
+        processName = GetWindowProcessName(hwnd)
+        if DEBUG:
+            eg.Print("FocusWndProc", processName, hwnd)
+        if processName and processName != self.lastActivated:
             if self.lastActivated:
                 self.TriggerEvent("Deactivated." + self.lastActivated)
-            self.TriggerEvent("Activated." + fstr)
-            self.lastActivated = fstr
+            if processName not in self.processes:
+                self.processes[processName] = []
+                self.TriggerEvent("Created." + processName)
+                self.TriggerEvent("NewWindow." + processName)
+            self.TriggerEvent("Activated." + processName)
+            self.lastActivated = processName
     
     
-    def MyWndProc(self, hwnd, mesg, wParam, lParam):
-        windowList = self.windowList
-        if wParam == HSHELL_WINDOWCREATED:
-            fstr = GetWindowProcessName(lParam)
-            if fstr:
-                windowList[lParam] = fstr
-                self.TriggerEvent("Created." + fstr)
-                self.lastDestroyed = ""
-        elif wParam == HSHELL_WINDOWDESTROYED:
-            fstr = GetWindowProcessName(lParam)
-            if lParam in windowList and windowList[lParam] != 1:
-                fstr = windowList[lParam]
-                del windowList[lParam]
-            if fstr and fstr != "Desktop" and fstr != "Explorer":
-                if self.lastActivated == fstr:
-                    self.TriggerEvent("Deactivated." + fstr)
-                    self.lastActivated = ''
-                if fstr != self.lastDestroyed:
-                    self.TriggerEvent("Destroyed." + fstr)
-                    self.lastDestroyed = fstr
-        elif wParam == HSHELL_WINDOWACTIVATED or wParam == 0x8004:
-            fstr = GetWindowProcessName(lParam)
-            if fstr and fstr != self.lastActivated:
-                if self.lastActivated:
-                    self.TriggerEvent("Deactivated." + self.lastActivated)
-                self.TriggerEvent("Activated." + fstr)
-                self.lastActivated = fstr
-        return 1
-
-
