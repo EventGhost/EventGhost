@@ -80,7 +80,7 @@ class PythonCommand(eg.ActionWithStringParameter):
     class text:
         parameterDescription = "Python statement:"
 
-    def __call__(self, pythonstring):
+    def __call__(self, pythonstring=""):
         try:
             try:
                 result = eval(pythonstring, {}, eg.globals.__dict__)
