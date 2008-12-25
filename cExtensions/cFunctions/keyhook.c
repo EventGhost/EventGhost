@@ -225,18 +225,21 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 	PKBDLLHOOKSTRUCT kbd;
 	BOOL isAltDown;
 	BOOL isUpKey;
+	BOOL isInjected;
 	BYTE vkCode;
 	char keyString[MAX_RES_STRING_CHARS];
 	DWORD dwWaitResult;
 
+	if(nCode != HC_ACTION)
+	{
+		return CallNextHookEx(gOldKeyHook, nCode, wParam, lParam);
+	}
+
+	// lock the data structure
 	dwWaitResult = WaitForSingleObject(khData.lock, INFINITE);
 	if (dwWaitResult != WAIT_OBJECT_0)
 	{
 		DBG("ERROR: KeyboardProc: dwWaitResult != WAIT_OBJECT_0");
-	}
-	if(nCode != HC_ACTION)
-	{
-		goto callNextHook;
 	}
 
 	AwakeWaitThread();
@@ -249,17 +252,18 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 	kbd = (PKBDLLHOOKSTRUCT)lParam;
 	isAltDown = kbd->flags & LLKHF_ALTDOWN;
 	isUpKey = kbd->flags & LLKHF_UP;
+	isInjected = kbd->flags & LLKHF_INJECTED;
 	vkCode = (BYTE) kbd->vkCode;
 
-	//DBG("KeyboardProc wParam=%d, lParam=%d", wParam, lParam);
-	//DBG("    isAltDown=%d", isAltDown);
-	//DBG("    isUpKey=%d", isUpKey);
-	//DBG("    vkCode=%d", vkCode);
+	DBG("KeyboardProc wParam=%d, lParam=%d", wParam, lParam);
+	DBG("    isAltDown=%d", isAltDown);
+	DBG("    isUpKey=%d", isUpKey);
+	DBG("    isInjected=%d", isInjected);
+	DBG("    vkCode=%d", vkCode);
 	
 
 	if (khData.ignoreNextWinKey)
 	{
-		//print("pre-ignored");
 		khData.ignoreNextWinKey = FALSE;
 		goto callNextHook;
 	}
@@ -299,7 +303,7 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 		goto callNextHook;
 	}
 
-	if (CallPyCallback(keyString))
+	if ((!isInjected) && CallPyCallback(keyString))
 	{
 		khData.lastWasBlocked = TRUE;
 		khData.blockedWinKey = 0;
@@ -311,7 +315,8 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 		keybd_event(khData.blockedWinKey, 0, 0, 0);
 		khData.blockedWinKey = 0;
 	}
-
+	// if this is one of the two Win keys, block it till we know what to 
+	// do with it
 	if ((vkCode == 91) || (vkCode == 92))
 	{
 		if (!isUpKey)
@@ -329,18 +334,22 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 	}
 
 callNextHook:
+	// release data structure
 	if (!ReleaseMutex(khData.lock))
 	{
 		// TODO: Handle error.
 		DBG("ERROR: KeyboardProc: ReleaseMutex");
 	}
+	// let the previous hook process this key
 	return CallNextHookEx(gOldKeyHook, nCode, wParam, lParam);
 blockThisKey:
+	// release data structure
 	if (!ReleaseMutex(khData.lock))
 	{
 		// TODO: Handle error.
 		DBG("ERROR: KeyboardProc: ReleaseMutex");
 	}
+	// just return some useless return value to block this key
 	return 42;
 }
 

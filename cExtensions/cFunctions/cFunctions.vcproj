@@ -95,7 +95,7 @@
 				Name="VCMIDLTool"/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="cmd /C &quot;copy /Y &quot;$(TargetPath)&quot; &quot;$(ProjectDir)..\..\tools\Python25&quot;&quot;
+				CommandLine="cmd /C &quot;copy /Y &quot;$(TargetPath)&quot; &quot;$(ProjectDir)..\..\lib25\site-packages&quot;&quot;
 
 
 "/>
