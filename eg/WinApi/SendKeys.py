@@ -371,7 +371,7 @@ def ParseText(text):
                 for word in words:
                     if word not in VK_KEYS:
                         res = unicode(eval(key, {}, eg.globals.__dict__))
-                        data.append(ParseText(res))
+                        data.extend(ParseText(res))
                         break
                 else:
                     data.append([VK_KEYS[word] for word in words])
