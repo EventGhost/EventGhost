@@ -103,6 +103,7 @@ SPECIAL_THANKS_DATA = (
             "Tyson Ward",        # 30. Sep 2008
             "Glenn Maples",      # 13. Okt 2008
             "John Leonard",      # 21. Okt 2008
+            "Silviu Marghescu",  # 26. Nov 2008
         ),
     ),
     (
@@ -321,6 +322,7 @@ class ChangelogPanel(HtmlPanel):
         try:
             infile = open("CHANGELOG.TXT")
         except:
+            HtmlPanel.__init__(self, parent, "")
             return
         out = StringIO()
         liStarted = False
