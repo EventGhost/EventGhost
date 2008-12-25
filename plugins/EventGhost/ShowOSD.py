@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
 import threading
 import os
 from os.path import join
@@ -90,6 +92,7 @@ class OSDFrame(wx.Frame):
             ((-10000, -10000),)
         )
         self.Bind(wx.EVT_PAINT, self.OnPaint)
+        self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.SetPosition((-10000, -10000))
         
         
@@ -235,47 +238,6 @@ class OSDFrame(wx.Frame):
         SetEvent(event)
         
 
-    def GetOutlinedBitmap(
-        self, 
-        textLines,                 
-        textWidths, 
-        textHeights, 
-        textWidth,
-        textHeight,
-        memoryDC,
-        textColour, 
-        outlineColour, 
-    ):
-        w, h = textWidth + 5, textHeight + 5
-        outlineBitmap = wx.EmptyBitmap(w, h, 1)
-        outlineDC = wx.MemoryDC()
-        outlineDC.SetFont(font)
-        outlineDC.SelectObject(outlineBitmap)
-        outlineDC.Clear()
-        outlineDC.SetBackgroundMode(wx.SOLID)
-        DrawTextLines(outlineDC, textLines, textHeights)
-        outlineDC.SelectObject(wx.NullBitmap)
-        outlineBitmap.SetMask(wx.Mask(outlineBitmap))
-        outlineDC.SelectObject(outlineBitmap)
-        
-        bitmap = wx.EmptyBitmap(w, h)
-        memoryDC.SetTextForeground(outlineColour)
-        memoryDC.SelectObject(bitmap)
-        memoryDC.Clear()
-        
-        Blit = memoryDC.Blit
-        WX_COPY = wx.COPY
-        for x in xrange(5):
-            for y in xrange(5):
-                Blit(x, y, w, h, outlineDC, 0, 0, WX_COPY, True)
-        outlineDC.SelectObject(wx.NullBitmap)
-        memoryDC.SetTextForeground(textColour)
-        DrawTextLines(memoryDC, textLines, textHeights, 2, 2)
-        memoryDC.SelectObject(wx.NullBitmap)
-        bitmap.SetMask(wx.Mask(bitmap, maskColour))
-        return bitmap
-    
-    
     def GetSkinnedBitmap(
         self, 
         textLines,                 
@@ -335,10 +297,16 @@ class OSDFrame(wx.Frame):
         
         
     @eg.LogIt
-    def OnPaint(self, evt=None):
+    def OnPaint(self, dummyEvent=None):
         wx.BufferedPaintDC(self, self.bitmap)
 
 
+    def OnClose(self, dummyEvent=None):
+        # BUGFIX: Just hooking this event makes sure that nothing happens 
+        # when this OSD window is closed
+        pass
+    
+    
     if eg.debugLevel:
         @eg.LogIt
         def __del__(self):
