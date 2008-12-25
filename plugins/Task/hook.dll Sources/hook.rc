@@ -7,7 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include "winresrc.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -27,8 +27,8 @@ LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,2
- PRODUCTVERSION 1,0,0,2
+ FILEVERSION 1,0,0,3
+ PRODUCTVERSION 1,0,0,3
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -44,13 +44,13 @@ BEGIN
         BLOCK "000004b0"
         BEGIN
             VALUE "CompanyName", "EventGhost.org"
-            VALUE "FileDescription", "hook Dynamic Link Library"
-            VALUE "FileVersion", "1, 0, 0, 2"
-            VALUE "InternalName", "hook"
-            VALUE "LegalCopyright", "Copyright (C) 2008"
+            VALUE "FileDescription", "EventGhost Task Hook DLL"
+            VALUE "FileVersion", "1, 0, 0, 3"
+            VALUE "InternalName", "EventGhost Task Hook DLL"
+            VALUE "LegalCopyright", "Copyright (C) 2008 EventGhost Project"
             VALUE "OriginalFilename", "hook.dll"
-            VALUE "ProductName", " hook Dynamic Link Library"
-            VALUE "ProductVersion", "1, 0, 0, 2"
+            VALUE "ProductName", "EventGhost Task Hook DLL"
+            VALUE "ProductVersion", "1, 0, 0, 3"
         END
     END
     BLOCK "VarFileInfo"
@@ -85,7 +85,7 @@ END
 
 2 TEXTINCLUDE 
 BEGIN
-    "#include ""afxres.h""\r\n"
+    "#include ""winresrc.h""\r\n"
     "\0"
 END
 

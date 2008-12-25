@@ -6,7 +6,8 @@
 
 #pragma data_seg(".shared")
 static HWND g_egMessageHwnd = 0;
-static HHOOK hookHandle = NULL;
+static HHOOK cbtHookHandle = NULL;
+static HHOOK shellHookHandle = NULL;
 static HINSTANCE hinstDLL; 
 #pragma data_seg()
 #pragma comment(linker, "/SECTION:.shared,RWS")
@@ -14,28 +15,52 @@ static HINSTANCE hinstDLL;
 
 LRESULT CALLBACK CbtHook(int nCode, WPARAM wParam, LPARAM lParam) 
 {
-	if (nCode == HCBT_SETFOCUS)
+	switch (nCode)
 	{
-		PostMessage(g_egMessageHwnd, WM_APP+1, wParam, lParam);
+		case HCBT_SETFOCUS:
+			PostMessage(g_egMessageHwnd, WM_APP+1, wParam, lParam);
+			break;
+		//case HCBT_CREATEWND:
+		//	PostMessage(g_egMessageHwnd, WM_APP+2, wParam, lParam);
+		//	break;
+		//case HCBT_DESTROYWND:
+		//	PostMessage(g_egMessageHwnd, WM_APP+3, wParam, lParam);
+		//	break;
 	}
-	return CallNextHookEx(hookHandle, nCode, wParam, lParam);
+	return CallNextHookEx(cbtHookHandle, nCode, wParam, lParam);
+}
+
+
+LRESULT CALLBACK ShellHook(int nCode, WPARAM wParam, LPARAM lParam) 
+{
+	switch (nCode)
+	{
+		case HSHELL_WINDOWCREATED:
+			PostMessage(g_egMessageHwnd, WM_APP+2, wParam, lParam);
+			break;
+		case HSHELL_WINDOWDESTROYED:
+			PostMessage(g_egMessageHwnd, WM_APP+3, wParam, lParam);
+			break;
+	}
+	return CallNextHookEx(shellHookHandle, nCode, wParam, lParam);
 }
 
 
 void StartHook()
 {
 	g_egMessageHwnd = FindWindow("HiddenMessageReceiver", "EventGhost Message Receiver");
-	hookHandle = SetWindowsHookEx(WH_CBT, CbtHook, hinstDLL, 0);
+	cbtHookHandle = SetWindowsHookEx(WH_CBT, CbtHook, hinstDLL, 0);
+	shellHookHandle = SetWindowsHookEx(WH_SHELL, ShellHook, hinstDLL, 0);
 }
-
 
 
 void StopHook()
 {
-	UnhookWindowsHookEx(hookHandle);
-	hookHandle = NULL;
+	UnhookWindowsHookEx(cbtHookHandle);
+	cbtHookHandle = NULL;
+	UnhookWindowsHookEx(shellHookHandle);
+	shellHookHandle = NULL;
 }
-
 
 
 BOOL APIENTRY DllMain( HINSTANCE hinst,
