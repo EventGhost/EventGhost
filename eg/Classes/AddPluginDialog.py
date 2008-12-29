@@ -30,8 +30,8 @@ class DefaultConfig:
     position = None
     size = (552, 382)
     splitPosition = 216
-    expandDict = {}
     lastSelection = None
+    collapsed = set()
 
 config = eg.GetConfig("AddPluginDialog", DefaultConfig)
 
@@ -110,17 +110,17 @@ class AddPluginDialog(eg.Dialog):
             else:
                 idx = 0
 
-            id = treeCtrl.AppendItem(typeIds[info.kind], info.name, idx)
-            treeCtrl.SetPyData(id, info)
+            treeId = treeCtrl.AppendItem(typeIds[info.kind], info.name, idx)
+            treeCtrl.SetPyData(treeId, info)
             if info.path == config.lastSelection:
-                itemToSelect = id
+                itemToSelect = treeId
                 
         
         for kind, treeId in typeIds.iteritems():
-            if config.expandDict.get(kind, True):
-                treeCtrl.Expand(typeIds[kind])
+            if kind in config.collapsed:
+                treeCtrl.Collapse(treeId)
             else:
-                treeCtrl.Collapse(typeIds[kind])
+                treeCtrl.Expand(treeId)
         
         treeCtrl.ScrollTo(itemToSelect)
         
@@ -188,11 +188,10 @@ class AddPluginDialog(eg.Dialog):
         config.size = self.GetSizeTuple()
         config.position = self.GetPositionTuple()
         config.splitPosition = splitterWindow.GetSashPosition()
-        expandDict = {}
-        for kind, treeId in typeIds.iteritems():
-            expandDict[kind] = treeCtrl.IsExpanded(treeId)
-        config.expandDict = expandDict   
-
+        config.collapsed = set(
+            kind for kind, treeId in typeIds.iteritems() 
+                if not treeCtrl.IsExpanded(treeId)
+        )
 
     def OnSelectionChanged(self, event):
         """

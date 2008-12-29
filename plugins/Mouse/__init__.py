@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+
 
 ICON = """iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeT
 AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH1QQIDRgEM71mAAAAADV0RVh0Q29tbWVudAAoYy
@@ -35,6 +37,7 @@ ERRAsiBiOy559qBJjVWmMrmyAQtNboYBcmgojQdMrZ8083Anyan5/D8zxaWpqxlEKLoPVOfNd1iZyO
 MDPzDeBHow7efv3yuc9xnGhX10U8z8MAGMPOYchkFlhaygG8bgSoVavVu5MT448mJ8YvA1cadJUBrg
 Jrhy/+AqGrAMOnH86mAAAAAElFTkSuQmCC"""
 
+
 eg.RegisterPlugin(
     name = "Mouse",
     author = "Bitmonster",
@@ -47,7 +50,7 @@ eg.RegisterPlugin(
     icon = ICON,
 )
 
-
+import wx
 from sys import maxint
 from Queue import Queue
 from threading import Thread
@@ -75,7 +78,6 @@ class MouseThread(Thread):
     def __init__(self):
         Thread.__init__(self, name="MouseThread")
         self.receiveQueue = Queue(2048)
-        lastTime = clock()
         self.start()
 
 
@@ -124,14 +126,14 @@ class MouseThread(Thread):
                 self.speed = 0
                 
             factor = self.speed * (ticks / 10)
-            current_x =  sin(self.currentAngle) * factor + self.xRemainder
-            current_y = -1 * cos(self.currentAngle) * factor + self.yRemainder
+            xCurrent =  sin(self.currentAngle) * factor + self.xRemainder
+            yCurrent = -1 * cos(self.currentAngle) * factor + self.yRemainder
 
-            x = int(current_x)
-            y = int(current_y)
+            x = int(xCurrent)
+            y = int(yCurrent)
 
-            self.xRemainder = current_x - x
-            self.yRemainder = current_y - y
+            self.xRemainder = xCurrent - x
+            self.yRemainder = yCurrent - y
             try:
                 GetCursorPos(point)
                 SetCursorPos(point.x + x, point.y + y)
@@ -146,7 +148,7 @@ class MouseThread(Thread):
         
 
 
-class Mouse(eg.PluginClass):
+class Mouse(eg.PluginBase):
     
     def __init__(self):
         self.AddAction(GoDirection)
@@ -196,7 +198,7 @@ class Mouse(eg.PluginClass):
     
     
         
-class GoDirection(eg.ActionClass):
+class GoDirection(eg.ActionBase):
     name = "Start mouse movement in a direction"
     class text:
         label = u"Start mouse movement in direction %.2f\u00B0"
@@ -225,7 +227,7 @@ class GoDirection(eg.ActionClass):
 
 
 
-class LeftButton(eg.ActionClass):
+class LeftButton(eg.ActionBase):
     name = "Left mouse button"
     
     def __call__(self):
@@ -238,7 +240,7 @@ class LeftButton(eg.ActionClass):
 
 
 
-class MiddleButton(eg.ActionClass):
+class MiddleButton(eg.ActionBase):
     name = "Middle mouse button"
     
     def __call__(self):
@@ -249,7 +251,7 @@ class MiddleButton(eg.ActionClass):
         
 
 
-class RightButton(eg.ActionClass):
+class RightButton(eg.ActionBase):
     name = "Right mouse button"
     
     def __call__(self):
@@ -260,7 +262,7 @@ class RightButton(eg.ActionClass):
         
         
         
-class LeftDoubleClick(eg.ActionClass):
+class LeftDoubleClick(eg.ActionBase):
     name = "Left mouse button double-click"
     
     def __call__(self):
@@ -274,7 +276,7 @@ class LeftDoubleClick(eg.ActionClass):
 
 
 
-class RightDoubleClick(eg.ActionClass):
+class RightDoubleClick(eg.ActionBase):
     name = "Right mouse button double-click"
     
     def __call__(self):
@@ -287,7 +289,7 @@ class RightDoubleClick(eg.ActionClass):
         
         
         
-class ToggleLeftButton(eg.ActionClass):
+class ToggleLeftButton(eg.ActionBase):
     name = "Toggle left mouse button"
     
     def __call__(self):
@@ -300,7 +302,7 @@ class ToggleLeftButton(eg.ActionClass):
             
             
             
-class MoveAbsolute(eg.ActionClass):
+class MoveAbsolute(eg.ActionBase):
     name = "Move Absolute"
     class text:
         label = "Move Mouse to x:%s, y:%s"
@@ -362,7 +364,7 @@ class MoveAbsolute(eg.ActionClass):
 
 
 
-class MoveRelative(eg.ActionClass):
+class MoveRelative(eg.ActionBase):
     name = "Move Relative"
     class text:
         label = "Change Mouse position by x:%s, y:%s"
@@ -424,7 +426,7 @@ class MoveRelative(eg.ActionClass):
 
 
 
-class MouseWheel(eg.ActionClass):
+class MouseWheel(eg.ActionBase):
     name = "Turn mouse wheel"
     class text:
         label = u"Turn mouse wheel %d clicks"
@@ -445,6 +447,4 @@ class MouseWheel(eg.ActionClass):
         panel.AddLine(self.text.text1, valueCtrl, self.text.text2)     
         while panel.Affirmed():
             panel.SetResult(valueCtrl.GetValue())
-
-
 

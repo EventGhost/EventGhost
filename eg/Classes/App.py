@@ -32,14 +32,13 @@ from eg.WinApi.Dynamic import (
 )
 
 
-
 class App(wx.App):
     
     def __init__(self):
+        self.onExitFuncs = []
         wx.App.__init__(self, 0)
     
     
-    #@eg.LogIt
     def OnInit(self):
         self.SetAppName(eg.APP_NAME)
         self.SetExitOnFrameDelete(False)
@@ -66,12 +65,6 @@ class App(wx.App):
             self.OnEndSession
         )
         
-        self.onExitFuncs = []
-        self.clipboardEvent = eg.EventHook()
-#        def FireClipboardEvent(event):
-#            if event.GetActive():
-#                self.clipboardEvent.Fire()
-#        self.Bind(wx.EVT_ACTIVATE_APP, FireClipboardEvent)
         return True
     
     

@@ -23,13 +23,11 @@
 import eg
 import wx
 from time import sleep
-from os.path import basename
 
 from eg.WinApi import (
     GetTopLevelWindowList, 
     GetWindowText, 
     GetClassName,
-    GetCurrentProcessId,
     GetWindowThreadProcessId,
     GetProcessName, 
     EnumProcesses,
@@ -46,18 +44,19 @@ from eg.WinApi.Utils import (
     HighlightWindow,
 )
 
-ourProcessID = GetCurrentProcessId()
-
 
 class WindowTree(wx.TreeCtrl):
     
-    def __init__(self, parent, id=-1, includeInvisible=False):
+    def __init__(self, parent, includeInvisible=False):
         self.includeInvisible = includeInvisible
+        self.pids = {}
         wx.TreeCtrl.__init__(
             self, 
             parent, 
             -1, 
-            style=wx.TR_DEFAULT_STYLE|wx.TR_HIDE_ROOT|wx.TR_FULL_ROW_HIGHLIGHT, 
+            style=wx.TR_DEFAULT_STYLE
+                |wx.TR_HIDE_ROOT
+                |wx.TR_FULL_ROW_HIGHLIGHT, 
             size=(-1, 150)
         )
         self.imageList = imageList = wx.ImageList(16, 16)
@@ -71,9 +70,9 @@ class WindowTree(wx.TreeCtrl):
         # tree context menu
         self.contextMenu = eg.Menu(self, "")
         
-        def OnCmdHighlight(event):
+        def OnCmdHighlight(dummyEvent):
             hwnd = self.GetPyData(self.GetSelection())
-            for i in range(10):
+            for _ in range(10):
                 HighlightWindow(hwnd)
                 sleep(0.1)
         self.contextMenu.Append("Highlight", OnCmdHighlight)
@@ -84,7 +83,7 @@ class WindowTree(wx.TreeCtrl):
         self.AppendPrograms()
         
         
-    def OnItemRightClick(self, event):
+    def OnItemRightClick(self, dummyEvent):
         """
         Handles wx.EVT_TREE_ITEM_RIGHT_CLICK events.
         """
@@ -119,7 +118,7 @@ class WindowTree(wx.TreeCtrl):
         
         
     def AppendPrograms(self):
-        self.pids = {}
+        self.pids.clear()
         processes = EnumProcesses()    # get PID list
         for pid in processes:
             self.pids[pid] = []
@@ -127,8 +126,8 @@ class WindowTree(wx.TreeCtrl):
         hwnds = GetTopLevelWindowList(self.includeInvisible)
         
         for hwnd in hwnds:
-            threadID, pid = GetWindowThreadProcessId(hwnd)
-            if pid == ourProcessID:
+            pid = GetWindowThreadProcessId(hwnd)[1]
+            if pid == eg.processId:
                 continue
             self.pids[pid].append(hwnd)
 
@@ -159,28 +158,25 @@ class WindowTree(wx.TreeCtrl):
                 continue
             if name != '':
                 name = '"%s"' % name
-            icon_index = 0
+            iconIndex = 0
             if icon:
-                icon_index = self.imageList.AddIcon(icon)
-            new_item = self.AppendItem(item, name)
-            self.SetPyData(new_item, hwnd)
-            self.SetItemText(new_item, name + className)
+                iconIndex = self.imageList.AddIcon(icon)
+            newItem = self.AppendItem(item, name)
+            self.SetPyData(newItem, hwnd)
+            self.SetItemText(newItem, name + className)
             self.SetItemImage(
-                new_item, 
-                icon_index, 
+                newItem, 
+                iconIndex, 
                 which=wx.TreeItemIcon_Normal
             )
             if HwndHasChildren(hwnd, self.includeInvisible):
-                self.SetItemHasChildren(new_item, True)
+                self.SetItemHasChildren(newItem, True)
             
             
     def AppendChildWindows(self, parentHwnd, item):
         for hwnd in GetHwndChildren(parentHwnd, self.includeInvisible):
-            #try:
             name = GetWindowText(hwnd)
             className = GetClassName(hwnd)
-            #except:
-            #    continue
             if name != "":
                 name = "\"" + name + "\" "
             index = self.AppendItem(item, name + className, 0)

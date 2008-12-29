@@ -35,7 +35,7 @@ class MacroSelectButton(wx.Window):
         self.mesg = mesg
         self.macro = macro
         wx.Window.__init__(self, parent, -1)
-        self.textBox = eg.StaticTextBox(self, -1, macroName, size=(200,-1))
+        self.textBox = eg.StaticTextBox(self, -1, macroName, size=(200, -1))
         self.button = wx.Button(self, -1, label)
         self.Bind(wx.EVT_BUTTON, self.OnButton)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -47,16 +47,16 @@ class MacroSelectButton(wx.Window):
         self.Layout()
 
 
-    def OnSetFocus(self, event):
+    def OnSetFocus(self, dummyEvent):
         self.button.SetFocus()
         
         
-    def OnSize(self, event):
+    def OnSize(self, dummyEvent):
         if self.GetAutoLayout():
             self.Layout()
 
         
-    def OnButton(self, event):
+    def OnButton(self, dummyEvent):
         result = eg.TreeItemBrowseDialog.GetModalResult(
             self.title,
             self.mesg, 
@@ -67,8 +67,11 @@ class MacroSelectButton(wx.Window):
             macro = result[0][0]
             self.textBox.SetLabel(macro.name)
             self.macro = macro
-            self.ProcessEvent(wx.CommandEvent(wx.EVT_TEXT.evtType[0], self.GetId()))
+            self.ProcessEvent(
+                wx.CommandEvent(wx.EVT_TEXT.evtType[0], self.GetId())
+            )
         
             
     def GetValue(self):
         return self.macro
+

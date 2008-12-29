@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 import time
 
 from ctypes import WinDLL, POINTER, c_void_p, c_int, byref, GetLastError
@@ -146,4 +147,5 @@ class SessionChangeNotifier:
             WTSFreeMemory(pBuffer)
             self.TriggerEvent(eventstring, [userName])
         return 1
+    
     

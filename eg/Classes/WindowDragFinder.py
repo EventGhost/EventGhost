@@ -26,12 +26,9 @@ import wx
 from eg.WinApi import (
     HighlightWindow, 
     BestWindowFromPoint, 
-    GetCurrentProcessId, 
     GetWindowThreadProcessId,
     GetCursorPos,
 )
-
-ourProcessID = GetCurrentProcessId()
 
 
 class WindowDragFinder(wx.PyWindow):
@@ -40,9 +37,11 @@ class WindowDragFinder(wx.PyWindow):
         self.startFunc = startFunc
         self.endFunc = endFunc
         
-        self.text = text = eg.plugins.Window.FindWindow.text
+        self.text = eg.plugins.Window.FindWindow.text
         wx.PyWindow.__init__(self, parent, -1, style=wx.SIMPLE_BORDER)
-        self.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW))
+        self.SetBackgroundColour(
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW)
+        )
         self.lastTarget = None
         
         # load images
@@ -99,7 +98,7 @@ class WindowDragFinder(wx.PyWindow):
         self.SetMinSize(self.GetSize())
         
         
-    def OnSize(self, event):
+    def OnSize(self, dummyEvent):
         """
         Handles the wx.EVT_SIZE events.
         """
@@ -153,7 +152,7 @@ class WindowDragFinder(wx.PyWindow):
                 # unhighlight previous window
                 HighlightWindow(self.lastTarget)
             _, pid = GetWindowThreadProcessId(hwnd)
-            if pid == ourProcessID:
+            if pid == eg.processId:
                 self.lastTarget = None
             else:
                 HighlightWindow(hwnd)
@@ -161,8 +160,7 @@ class WindowDragFinder(wx.PyWindow):
         event.Skip()
 
 
-    eg.LogIt
-    def OnDragEnd(self, event):
+    def OnDragEnd(self, dummyEvent):
         # revert box to normal image
         self.dragBoxImage.SetBitmap(self.dragBoxBitmap)
         self.dragBoxText.SetLabel(self.text.drag1)

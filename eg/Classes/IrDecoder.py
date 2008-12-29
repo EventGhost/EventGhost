@@ -159,7 +159,7 @@ class IrDecoder:
             max_high <= self.SHARP_PULSE_MAX and 
             min_low >= self.SHARP_SPACE0_MIN and 
             max_low <= self.SHARP_SPACE1_MAX
-            ):
+        ):
                 code = ShiftInBits(data, 1, 30, self.SHARP_THRESHOLD)
                 if (code & 256):
                     code ^= 0x03ff
@@ -245,3 +245,4 @@ class IrDecoder:
 #                last_mark_time = value
 
         return "U%X" % code
+

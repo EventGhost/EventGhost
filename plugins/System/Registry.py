@@ -2,7 +2,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-
+import eg
+import wx
 import _winreg
 import binascii
 
@@ -81,14 +82,16 @@ class RegistryLazyTree(wx.TreeCtrl):
         text = None
     ):
         self.text = text
-        wx.TreeCtrl.__init__(self, parent, id, pos, size, style, validator, name)
+        wx.TreeCtrl.__init__(
+            self, parent, id, pos, size, style, validator, name
+        )
 
         self.imageList = imageList = wx.ImageList(16, 16)
         rootIcon = imageList.Add(eg.Icons.GetIcon("images/root.png"))
         self.folderIcon = imageList.Add(eg.Icons.GetIcon("images/folder.png"))
         self.valueIcon = imageList.Add(eg.Icons.GetIcon("images/action.png"))
         self.SetImageList(imageList)
-        self.SetMinSize((-1,200))
+        self.SetMinSize((-1, 200))
         self.treeRoot = self.AddRoot(
             "Registry",
             image = rootIcon,
@@ -138,22 +141,26 @@ class RegistryLazyTree(wx.TreeCtrl):
     ):
         #print "onTreeChange", key2Select, subkey2Select, valueName2Select, node
         if not node:
-           node = self.GetSelection()
+            node = self.GetSelection()
 
-        keyHasBeenQueried, fatherKey,\
+        keyHasBeenQueried, fatherKey, \
            fatherSubkey, fatherValueName = self.GetItemData(node).GetData()
         subkey2Find = None
         newItemSelected = False
        
         if not keyHasBeenQueried:#check for subkeys
-            self.SetItemData(node,
-                wx.TreeItemData((True, fatherKey, fatherSubkey, fatherValueName)))
+            self.SetItemData(
+                node,
+                wx.TreeItemData(
+                    (True, fatherKey, fatherSubkey, fatherValueName)
+                )
+            )
            
             #buildung tree
             try:
                 regHandle = _winreg.OpenKey(fatherKey, fatherSubkey)
-            except EnvironmentError, e:
-                eg.PrintError(self.text.keyOpenError + ": " + str(e))
+            except EnvironmentError, exc:
+                eg.PrintError(self.text.keyOpenError + ": " + str(exc))
                 return 0
            
             #query subkeys
@@ -180,8 +187,8 @@ class RegistryLazyTree(wx.TreeCtrl):
             keyNames, valueList = RegEnumKeysAndValues(regHandle.handle)
 
             #sorting
-            keyNames.sort(lambda a,b: cmp(a[0].lower(), b[0].lower()) )
-            valueList.sort(lambda a,b: cmp(a[0].lower(), b[0].lower()) )
+            keyNames.sort(lambda a, b: cmp(a[0].lower(), b[0].lower()))
+            valueList.sort(lambda a, b: cmp(a[0].lower(), b[0].lower()))
            
             #subkeys
             for keyName, numSubKeys, numSubValues in keyNames:
@@ -254,10 +261,10 @@ class RegistryChooser(wx.Window):
         wx.Window.__init__(self, parent, id, pos, size, style)
         sizer = wx.GridBagSizer(5, 5)
         sizer.AddGrowableRow(1)
-        sizer.AddGrowableCol(3,2)
-        sizer.AddGrowableCol(5,1)
+        sizer.AddGrowableCol(3, 2)
+        sizer.AddGrowableCol(5, 1)
        
-        sizer.SetEmptyCellSize((0,0))
+        sizer.SetEmptyCellSize((0, 0))
         sizer.Add(
             wx.StaticText(self, -1, text.chooseText),
             (0, 0),
@@ -273,7 +280,7 @@ class RegistryChooser(wx.Window):
 
         #key
         keyChoice = wx.Choice(self, -1)
-        for i in  range(0,len(regKeys)):
+        for i in  range(0, len(regKeys)):
             keyChoice.Append(regKeys[i][1])
             if regKeys[i][0] == key:
                 keyChoice.SetSelection(i)
@@ -286,7 +293,7 @@ class RegistryChooser(wx.Window):
         )
 
         #subkey
-        subkeyCtrl = wx.TextCtrl(self, -1, subkey, size=(200,-1))
+        subkeyCtrl = wx.TextCtrl(self, -1, subkey, size=(200, -1))
         sizer.Add(subkeyCtrl, (2, 3), flag = wx.EXPAND)
 
         sizer.Add(
@@ -331,7 +338,7 @@ class RegistryChooser(wx.Window):
             valueName = ""
         elif len(valueName) == 0:
             valueName = text.defaultText
-        valueNameCtrl = wx.TextCtrl(self, -1, valueName, size=(100,-1))
+        valueNameCtrl = wx.TextCtrl(self, -1, valueName, size=(100, -1))
         sizer.Add(valueNameCtrl, (2, 5), flag = wx.EXPAND)
 
         self.SetSizer(sizer)
@@ -356,7 +363,7 @@ class RegistryChooser(wx.Window):
             tmp = value.split("\\", 1)
             key = tmp[0].upper() #get first part
             value = tmp[1]
-            for i in  range(0,len(regKeys)):
+            for i in  range(0, len(regKeys)):
                 if regKeys[i][1] == key or regKeys[i][2] == key:
                     self.keyChoice.SetSelection(i)
                     self.subkeyCtrl.SetValue(value)
@@ -374,10 +381,10 @@ class RegistryChooser(wx.Window):
             else:
                 self.valueNameCtrl.SetValue(valueName)
             self.subkeyCtrl.SetValue(subkey)
-            for i in  range(0,len(regKeys)):
-               if regKeys[i][0] == key:
-                   self.keyChoice.SetSelection(i)
-                   break
+            for i in  range(0, len(regKeys)):
+                if regKeys[i][0] == key:
+                    self.keyChoice.SetSelection(i)
+                    break
         self.fillOldValue(key, subkey, valueName)
         event.Skip()
 
@@ -390,11 +397,11 @@ class RegistryChooser(wx.Window):
                 regHandle = _winreg.OpenKey(key, subkey)
                 regValue = _winreg.QueryValueEx(regHandle, valueName)
                 _winreg.CloseKey(regHandle)
-                for i in  range(1,len(regTypes)):
+                for i in  range(1, len(regTypes)):
                     if regTypes[i][0] == regValue[1]:
                         curType = regTypes[i][1]
                         break
-            except EnvironmentError, e:
+            except EnvironmentError:
                 curType = ""
                 curValue = self.text.noValueText
             if len(curType) > 0:
@@ -411,7 +418,7 @@ class RegistryChooser(wx.Window):
         self.oldTypeCtrl.SetValue(curType)
    
 
-    def OnSize(self, event):
+    def OnSize(self, dummyEvent):
         if self.GetAutoLayout():
             self.Layout()
 
@@ -434,15 +441,15 @@ class RegistryChooser(wx.Window):
 
 
 
-def FullKeyName(key, subkey, valueName, maxSubkeyLength = 15):
+def FullKeyName(key, subkey, valueName, maxSubkeyLength=15):
     label = "root"
     if not key:
         return label
        
-    for i in  range(0,len(regKeys)):
-       if regKeys[i][0] == key:
-           label = regKeys[i][2]
-           break
+    for i in  range(0, len(regKeys)):
+        if regKeys[i][0] == key:
+            label = regKeys[i][2]
+            break
 
     if not subkey:
         return label
@@ -465,7 +472,7 @@ def FullKeyName(key, subkey, valueName, maxSubkeyLength = 15):
 
 
 
-class RegistryQuery(eg.ActionClass):
+class RegistryQuery(eg.ActionBase):
     name = "Query Registry"
     description = "Queries the windows registry and return or compares the value"
     iconFile = "icons/Registry"
@@ -484,13 +491,13 @@ class RegistryQuery(eg.ActionClass):
         
     def __call__(self, key, subkey, valueName, action, compareValue):
         if not key:#nothing selected
-           return None
+            return None
 
         success = False
         try:
             regHandle = _winreg.OpenKey(key, subkey)
             success = True
-        except EnvironmentError, e:
+        except EnvironmentError:
             pass
 
         #key does not exist or is not readable
@@ -522,8 +529,7 @@ class RegistryQuery(eg.ActionClass):
                 return value
             elif action == 2:
                 return str(value) == compareValue
-
-        except EnvironmentError, e:
+        except EnvironmentError:
             if action == 0:
                 return False
             elif action == 1:
@@ -571,21 +577,22 @@ class RegistryQuery(eg.ActionClass):
             valueName
         )
 
-        def updateLastSelectedKeys(event):
-            #print "updateLastSelectedKeys", config.lastKeySelected, config.lastSubkeySelected, config.lastValueNameSelected, "Ctrl", regChooserCtrl.GetValue()
+        def UpdateLastSelectedKeys(event):
             a, b, c = regChooserCtrl.tree.GetValue()
             config.lastKeySelected = a
             config.lastSubkeySelected = b
             config.lastValueNameSelected = c
             event.Skip()
 
-        regChooserCtrl.tree.Bind(wx.EVT_TREE_SEL_CHANGED, updateLastSelectedKeys)
+        regChooserCtrl.tree.Bind(
+            wx.EVT_TREE_SEL_CHANGED, UpdateLastSelectedKeys
+        )
 
         panel.sizer.Add(regChooserCtrl, 1,  flag = wx.EXPAND)
-        panel.sizer.Add(wx.Size(5,5))
+        panel.sizer.Add(wx.Size(5, 5))
 
         choices = len(text.actions)
-        rb = range(0,choices)
+        rb = range(0, choices)
         sizer2 = wx.FlexGridSizer(1, choices + 2, 5, 5)
         sizer2.AddGrowableCol(4)
 
@@ -594,7 +601,7 @@ class RegistryQuery(eg.ActionClass):
             flag = wx.ALIGN_CENTER_VERTICAL
         )
 
-        def onRadioButton(event):
+        def OnRadioButton(event):
             flag = rb[2].GetValue()
             compareValueCtrl.Enable(flag)
             event.Skip()
@@ -616,20 +623,20 @@ class RegistryQuery(eg.ActionClass):
         rb[2].SetValue(action == 2)
         sizer2.Add(rb[2], flag = wx.ALIGN_CENTER_VERTICAL)
 
-        compareValueCtrl = wx.TextCtrl(panel, -1, compareValue, size=(200,-1)) #, size=(200,-1)
+        compareValueCtrl = wx.TextCtrl(panel, -1, compareValue, size=(200, -1))
         sizer2.Add(compareValueCtrl, flag = wx.EXPAND)
 
-        onRadioButton(wx.CommandEvent())
-        rb[0].Bind(wx.EVT_RADIOBUTTON, onRadioButton)
-        rb[1].Bind(wx.EVT_RADIOBUTTON, onRadioButton)
-        rb[2].Bind(wx.EVT_RADIOBUTTON, onRadioButton)
+        OnRadioButton(wx.CommandEvent())
+        rb[0].Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
+        rb[1].Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
+        rb[2].Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
        
         panel.sizer.Add(sizer2, flag = wx.EXPAND)
 
         while panel.Affirmed():
             key, subkey, valueName = regChooserCtrl.GetValue()
             compareValue = compareValueCtrl.GetValue()
-            for i in range(0,3):
+            for i in range(0, 3):
                 if rb[i].GetValue():
                     action = i
                     break
@@ -637,7 +644,7 @@ class RegistryQuery(eg.ActionClass):
            
        
            
-class RegistryChange(eg.ActionClass):
+class RegistryChange(eg.ActionBase):
     name = "Change Registry Value"
     description = "Changes a value in the windows registry"
     iconFile = "icons/Registry"
@@ -677,9 +684,9 @@ class RegistryChange(eg.ActionClass):
                     0,
                     _winreg.KEY_WRITE | _winreg.KEY_READ
                 )
-        except EnvironmentError, e:
+        except EnvironmentError, exc:
             if action != 1:
-                eg.PrintError(self.text2.keyOpenError + ": " + str(e))
+                eg.PrintError(self.text2.keyOpenError + ": " + str(exc))
             return 0
        
         #getting old value
@@ -687,7 +694,7 @@ class RegistryChange(eg.ActionClass):
         try:
             regValue = _winreg.QueryValueEx(regHandle, valueName)
             oldType = regValue[1]
-        except EnvironmentError, e:
+        except EnvironmentError, exc:
             #exit because value does not exist
             if (action == 1):
                 _winreg.CloseKey(regHandle)
@@ -703,7 +710,7 @@ class RegistryChange(eg.ActionClass):
                     int(newValue)
                     #is int
                     keyType = _winreg.REG_DWORD
-                except ValueError, e:
+                except ValueError, exc:
                     if newValue.count("%") > 1:
                         keyType = _winreg.REG_EXPAND_SZ
                     else:
@@ -723,8 +730,8 @@ class RegistryChange(eg.ActionClass):
                 #delete value
                 _winreg.DeleteValue(regHandle, valueName)
             return 1
-        except (EnvironmentError, ValueError), e:
-            self.PrintError(self.text2.valueChangeError + ": " + str(e))
+        except (EnvironmentError, ValueError), exc:
+            self.PrintError(self.text2.valueChangeError + ": " + str(exc))
             return 0
 
 
@@ -768,17 +775,17 @@ class RegistryChange(eg.ActionClass):
             valueName
         )
 
-        def updateLastSelectedKeys(event):
+        def UpdateLastSelectedKeys(event):
             a, b, c = regChooserCtrl.tree.GetValue()
             config.lastKeySelected = a
             config.lastSubkeySelected = b
             config.lastValueNameSelected = c
             event.Skip()
 
-        regChooserCtrl.Bind(wx.EVT_TREE_SEL_CHANGED, updateLastSelectedKeys)
+        regChooserCtrl.Bind(wx.EVT_TREE_SEL_CHANGED, UpdateLastSelectedKeys)
 
         panel.sizer.Add(regChooserCtrl, 1,  flag = wx.EXPAND)
-        panel.sizer.Add(wx.Size(5,5))
+        panel.sizer.Add(wx.Size(5, 5))
 
         #Action
         actionSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -791,7 +798,8 @@ class RegistryChange(eg.ActionClass):
             flag = wx.ALIGN_CENTER_VERTICAL
         )
 
-        def onRadioButton(event):#disables elements depending on action selection
+        def OnRadioButton(event):
+            #disables elements depending on action selection
             flag = not rb[2].GetValue()
             newValueCtrl.Enable(flag)
             typeChoice.Enable(flag)
@@ -810,7 +818,7 @@ class RegistryChange(eg.ActionClass):
         actionSizer.Add(rb[2], flag = wx.ALIGN_CENTER_VERTICAL)
 
         panel.sizer.Add(actionSizer)
-        panel.sizer.Add(wx.Size(5,5))
+        panel.sizer.Add(wx.Size(5, 5))
 
         #new Value Input
         newValueSizer = wx.FlexGridSizer(1, 4, 5, 5)
@@ -821,7 +829,7 @@ class RegistryChange(eg.ActionClass):
             flag = wx.ALIGN_CENTER_VERTICAL
         )
 
-        newValueCtrl = wx.TextCtrl(panel, -1, newValue, size=(200,-1))
+        newValueCtrl = wx.TextCtrl(panel, -1, newValue, size=(200, -1))
         newValueSizer.Add(newValueCtrl, flag = wx.EXPAND)
 
         newValueSizer.Add(
@@ -837,10 +845,10 @@ class RegistryChange(eg.ActionClass):
 
         newValueSizer.Add(typeChoice)
 
-        onRadioButton(wx.CommandEvent())
-        rb[0].Bind(wx.EVT_RADIOBUTTON, onRadioButton)
-        rb[1].Bind(wx.EVT_RADIOBUTTON, onRadioButton)
-        rb[2].Bind(wx.EVT_RADIOBUTTON, onRadioButton)
+        OnRadioButton(wx.CommandEvent())
+        rb[0].Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
+        rb[1].Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
+        rb[2].Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
        
         panel.sizer.Add(newValueSizer, flag = wx.EXPAND)
 
@@ -857,4 +865,5 @@ class RegistryChange(eg.ActionClass):
             newValue = newValueCtrl.GetValue()
     
             panel.SetResult(key, subkey, valueName, action, keyType, newValue)
+        
         

@@ -21,23 +21,22 @@
 # $LastChangedBy$
 
 import eg
-from types import ClassType
 
 
-class ActionClass(object):
+class ActionBase(object):
     """ 
     Base class of every action of a EventGhost plugin written in Python 
     
     .. attribute:: name
     
         Set this to descriptive name in your class definition. 
-        It might get translated by PluginClass.AddAction() to the user's 
+        It might get translated by PluginBase.AddAction() to the user's 
         language if a translation is found.
     
     .. attribute:: description
     
         Set this to descriptive description in your class definition. 
-        It might get translated by PluginClass.AddAction() to the user's 
+        It might get translated by PluginBase.AddAction() to the user's 
         language if a translation is found.
     
     .. attribute:: iconFile
@@ -51,7 +50,7 @@ class ActionClass(object):
 
     .. attribute:: plugin
     
-        This will be set from PluginClass.AddAction() for convenience, so 
+        This will be set from PluginBase.AddAction() for convenience, so 
         every action can access its own plugin instance through this member 
         variable.
      
@@ -80,7 +79,7 @@ class ActionClass(object):
         # This Compile call is only here to support calls of pre-compiled 
         # actions (see below) like PythonScript/PythonCommand actions. 
         # Normally all actions will overwrite this __call__ method completely.
-        if self.Compile.im_func != ActionClass.Compile.im_func:
+        if self.Compile.im_func != ActionBase.Compile.im_func:
             self.Compile(*args)()
         else:
             raise NotImplementedError
@@ -103,12 +102,13 @@ class ActionClass(object):
             label += ': ' + unicode(args[0])
         return label
         
-        
-    def PrintError(self, msg):
+    
+    @staticmethod
+    def PrintError(msg):
         """
         Print an error message to the logger.
         
-        Prefer to use :meth:`self.PrintError <eg.ActionClass.PrintError>` 
+        Prefer to use :meth:`self.PrintError <eg.ActionBase.PrintError>` 
         instead of :meth:`eg.PrintError`, since this method might be enhanced 
         in the future to give the user better information about the source of 
         the error.
@@ -116,7 +116,7 @@ class ActionClass(object):
         eg.PrintError(msg)
         
         
-    def Configure(self, *args):
+    def Configure(self, *dummyArgs):
         """
         This should be overridden in a subclass, if the action wants to have 
         a configuration dialog.
@@ -145,7 +145,7 @@ class ActionClass(object):
         """
         Implementation of pre-compiled parameters.
 
-        An ActionClass will only override this method, if it uses a special 
+        An action class will only override this method, if it uses a special 
         way to implement its action. An action receives a call to 
         Compile every time their parameters change (the user has reconfigured 
         the action) or in the moment the configuration file is loaded and an 

@@ -24,7 +24,7 @@ import eg
 from types import ClassType
 
 SetClass = eg.SetClass
-ActionClass = eg.ActionClass
+ActionBase = eg.ActionBase
 
 
 class ActionInfo(object):
@@ -87,8 +87,8 @@ class ActionGroup(object):
         value=None, 
         hidden=False
     ):
-        if not issubclass(actionCls, ActionClass):
-            raise Exception("Actions must be subclasses of eg.ActionClass")
+        if not issubclass(actionCls, ActionBase):
+            raise Exception("Actions must be subclasses of eg.ActionBase")
         if clsName is not None:
             actionCls = ClassType(
                 clsName,
@@ -165,7 +165,7 @@ class ActionGroup(object):
                 if parts[0] is eg.ActionGroup:
                     # this is a new sub-group
                     aList = parts[-1]
-                    cls, clsName, name, description = parts[0:4]
+                    clsName, name, description = parts[1:4]
                     if len(parts) == 6:
                         iconFile = parts[3]
                     else:
@@ -186,7 +186,10 @@ class ActionGroup(object):
                     # this is a new sub-action
                     actionCls, clsName, name, description, value = parts
                 else:
-                    raise Exception("Wrong number of fields in the list", parts)
+                    raise Exception(
+                        "Wrong number of fields in the list", 
+                        parts
+                    )
                        
                 group.AddAction(actionCls, clsName, name, description, value)
                 

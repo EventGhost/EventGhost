@@ -21,7 +21,6 @@
 # $LastChangedBy$
 
 import eg
-import wx
 from TreeItem import TreeItem
 from TreeItem import HINT_NO_DROP, HINT_MOVE_BEFORE_OR_AFTER, HINT_MOVE_AFTER
 
@@ -71,5 +70,4 @@ class EventItem(TreeItem):
         if cls == eg.ActionItem:
             return HINT_MOVE_AFTER
         return HINT_NO_DROP
-
 

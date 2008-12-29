@@ -301,12 +301,12 @@ class SystemInfoPanel(HtmlPanel):
             event.Skip()
 
 
-    def OnRightClick(self, event):
+    def OnRightClick(self, dummyEvent):
         self.PopupMenu(self.contextMenu)
 
 
     @eg.LogIt
-    def OnCmdCopy(self, event):
+    def OnCmdCopy(self, dummyEvent):
         if wx.TheClipboard.Open():
             text = "\r\n".join(["%s: %s" % x for x in self.sysInfos])
             tdata = wx.TextDataObject(text)
@@ -321,9 +321,8 @@ class ChangelogPanel(HtmlPanel):
     def __init__(self, parent):
         try:
             infile = open("CHANGELOG.TXT")
-        except:
-            HtmlPanel.__init__(self, parent, "")
-            return
+        except IOError:
+            infile = ""
         out = StringIO()
         liStarted = False
         for line in infile:
@@ -348,7 +347,6 @@ class ChangelogPanel(HtmlPanel):
                 out.write("</u></b>")
         out.write("</li>\n")
         out.write("</ul>\n")
-        infile.close()
         HtmlPanel.__init__(self, parent, out.getvalue())
         out.close()
 
@@ -356,7 +354,7 @@ class ChangelogPanel(HtmlPanel):
 
 class AboutDialog(eg.Dialog):
 
-    def Process(self, parent):
+    def Process(self, parent): #IGNORE:W0221
         eg.Dialog.__init__(
             self, 
             parent, 

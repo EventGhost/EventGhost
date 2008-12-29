@@ -59,10 +59,9 @@ class Menu(wx.Menu):
         if name is None:
             return self.AppendSeparator()
         if func is None:
-            FuncWrapper = getattr(self.parent, "OnCmd" + name)
-        else:
-            def FuncWrapper(event):
-                func()
+            func = getattr(self.parent, "OnCmd" + name)
+        def FuncWrapper(event):
+            func()
 
         menuname = getattr(self.myStrings, name, name)
         menuitem = self.Append(

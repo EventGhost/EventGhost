@@ -20,13 +20,13 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-from time import sleep
+import eg
+import wx
 from os.path import basename
 
 from eg.WinApi.Dynamic import (
     GetAncestor, 
     GA_ROOT, 
-    GA_PARENT
 )
 from eg.WinApi import (
     GetProcessName, 
@@ -36,9 +36,6 @@ from eg.WinApi import (
     GetTopLevelWindowList, 
     GetWindowChildsList,
 )
-
-        
-
 
 STOP_IF_NOT_FOUND = 0
 STOP_IF_FOUND = 1
@@ -55,7 +52,7 @@ class TestDialog(eg.Dialog):
             size=(500, 350),
             style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER,
         )
-        list = eg.WindowList(self, hwnds)
+        windowList = eg.WindowList(self, hwnds)
         okButton = wx.Button(self, wx.ID_OK)
         btnSizer = eg.HBoxSizer(
             ((0, 0), 1, wx.EXPAND),
@@ -64,7 +61,7 @@ class TestDialog(eg.Dialog):
             (eg.SizeGrip(self), 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT),
         )
         mainSizer = eg.VBoxSizer(
-            (list, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, 5),
+            (windowList, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, 5),
             (btnSizer, 0, wx.EXPAND),
         )
         self.SetSizer(mainSizer)
@@ -80,7 +77,7 @@ def UseForegroundWindowOnly():
     
                 
                 
-class FindWindow(eg.ActionClass):
+class FindWindow(eg.ActionBase):
     name = "Find a window"
     description = (
         'Searches for a window, which is afterwards used as a target for '
@@ -202,9 +199,9 @@ class FindWindow(eg.ActionClass):
             cbIncludeInvisible.Enable(flag)
             stopMacroCtrl.Enable(flag)
             waitCtrl.Enable(flag)
-            for cb, tb in self.options[:-1]:
-                cb.Enable(flag)
-                tb.Enable(flag and cb.GetValue())
+            for checkBox, textCtrl in self.options[:-1]:
+                checkBox.Enable(flag)
+                textCtrl.Enable(flag and checkBox.GetValue())
             self.options[-1][0].Enable(flag)
             self.options[-1][1].Enable(flag)
             event.Skip()
@@ -212,13 +209,13 @@ class FindWindow(eg.ActionClass):
         
         # the IncludeInvisible checkbox
         cbIncludeInvisible = wx.CheckBox(panel, -1, text.invisible_box)
-        def OnCheckbox(event):
-            tmp = self.lastHwnd
-            tree.includeInvisible = cbIncludeInvisible.IsChecked()
-            tree.Refresh()
-            tree.SelectHwnd(tmp)
+        def OnIncludeInvisibleCheckbox(event):
+            hwnd = self.lastHwnd
+            self.tree.includeInvisible = cbIncludeInvisible.IsChecked()
+            self.tree.Refresh()
+            self.tree.SelectHwnd(hwnd)
             event.Skip()
-        cbIncludeInvisible.Bind(wx.EVT_CHECKBOX, OnCheckbox)
+        cbIncludeInvisible.Bind(wx.EVT_CHECKBOX, OnIncludeInvisibleCheckbox)
         
         # the stop-macro choice
         stopMacroCtrl = wx.CheckBox(panel, -1, text.stopMacro[0])
@@ -235,20 +232,20 @@ class FindWindow(eg.ActionClass):
         # the HideOnDrag checkbox
         cbHideOnDrag = wx.CheckBox(panel, -1, text.hide_box)
         cbHideOnDrag.SetValue(self.config.hideOnDrag)
-        def OnCheckbox(event):
+        def OnHideOnDragCheckbox(dummyEvent):
             self.config.hideOnDrag = cbHideOnDrag.IsChecked()     
-        cbHideOnDrag.Bind(wx.EVT_CHECKBOX, OnCheckbox)
+        cbHideOnDrag.Bind(wx.EVT_CHECKBOX, OnHideOnDragCheckbox)
 
         # the tree to display processes and windows
-        tree = self.tree = eg.WindowTree(panel, -1, includeInvisible)
+        self.tree = eg.WindowTree(panel, includeInvisible=includeInvisible)
         cbIncludeInvisible.SetValue(includeInvisible)
                         
         # the refresh button
         refreshButton = wx.Button(panel, -1, text.refresh_btn)
-        def OnButton(event):
-            tmp = self.lastHwnd
-            tree.Refresh()
-            tree.SelectHwnd(tmp)
+        def OnButton(dummyEvent):
+            hwnd = self.lastHwnd
+            self.tree.Refresh()
+            self.tree.SelectHwnd(hwnd)
         refreshButton.Bind(wx.EVT_BUTTON, OnButton)
 
         # construction of the layout with sizers
@@ -272,7 +269,7 @@ class FindWindow(eg.ActionClass):
         sizer1.AddGrowableCol(2, 100)
         sizer1.AddGrowableRow(0, 100)
         sizer1.SetEmptyCellSize((0, 0))
-        sizer1.Add(tree, (0, 0), (1, 5), wx.EXPAND)
+        sizer1.Add(self.tree, (0, 0), (1, 5), wx.EXPAND)
         sizer1.Add(refreshButton, (1, 4), (2, 1), wx.ALIGN_TOP|wx.ALIGN_RIGHT)
         
         self.options = options = []
@@ -347,27 +344,28 @@ class FindWindow(eg.ActionClass):
         # group the main lines together
         Add = panel.sizer.Add
         Add(topSizer, 0, wx.EXPAND)
-        Add((5,5))
+        Add((5, 5))
         Add(sizer1, 1, wx.EXPAND)
 
         # re-assign the test button
-        def OnButton(event):
-            args = GetResult()[:-2] # we don't need timeout and stopMacro parameter
+        def OnTestButton(dummyEvent):
+            args = GetResult()[:-2] # we don't need timeout and stopMacro 
+                                    # parameter
             hwnds = eg.WindowMatcher(*args)()
             dialog = TestDialog(panel.dialog, hwnds)
             dialog.ShowModal()
             dialog.Destroy()
-        panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
+        panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnTestButton)
         
         @eg.LogIt
         def GetResult():
             resultList = []
-            for cb, tb in options:
-                if not cb.IsChecked():
+            for checkBox, textCtrl in options:
+                if not checkBox.IsChecked():
                     resultList.append(None)
                 else:
-                    resultList.append(tb.GetValue())
-            resultList.append(tree.includeInvisible)
+                    resultList.append(textCtrl.GetValue())
+            resultList.append(self.tree.includeInvisible)
             resultList.append(waitCtrl.GetValue())
             if stopMacroCtrl.IsChecked():
                 resultList.append(STOP_IF_NOT_FOUND)
@@ -386,21 +384,22 @@ class FindWindow(eg.ActionClass):
         )()
         if matchNum is not None and len(hwnds):
             self.lastHwnd = hwnds[0]
-            tree.SelectHwnd(self.lastHwnd)
+            self.tree.SelectHwnd(self.lastHwnd)
         if searchOnlyFrontmost:
             cbOnlyFrontmost.SetValue(True)
             OnSearchOnlyFrontmostCheckbox(wx.CommandEvent())
         while True:
-            tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
-            ok = panel.Affirmed()
-            tree.Unbind(wx.EVT_TREE_SEL_CHANGED)
-            if ok:
-                if cbOnlyFrontmost.IsChecked():
-                    panel.SetResult(None, None, None, None, None, None, None, None, None)
-                else:
-                    panel.SetResult(*GetResult())
-            else:
+            self.tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
+            affirmed = panel.Affirmed()
+            self.tree.Unbind(wx.EVT_TREE_SEL_CHANGED)
+            if not affirmed:
                 break
+            if cbOnlyFrontmost.IsChecked():
+                panel.SetResult(
+                    None, None, None, None, None, None, None, None, None
+                )
+            else:
+                panel.SetResult(*GetResult())
     
 
     if eg.debugLevel:
@@ -454,17 +453,20 @@ class FindWindow(eg.ActionClass):
             targetWinClass = GetClassName(hwnd)
             SetOption(True, options[3], targetWinName)
             SetOption(True, options[4], targetWinClass)
-            search_hwnd = hwnd
+            searchHwnd = hwnd
             data = [
                 child 
-                for child in GetWindowChildsList(rootHwnd, tree.includeInvisible)
+                for child in GetWindowChildsList(
+                    rootHwnd, 
+                    tree.includeInvisible
+                )
                     if (
                         GetClassName(child) == targetWinClass and
                         GetWindowText(child) == targetWinName
                     )
             ]
             try:
-                count = data.index(search_hwnd) + 1
+                count = data.index(searchHwnd) + 1
             except:
                 count = 0
         else:
@@ -497,7 +499,7 @@ class FindWindow(eg.ActionClass):
         
         
     @eg.LogIt
-    def OnFinderTool(self, event=None):
+    def OnFinderTool(self, dummyEvent=None):
         if self.config.hideOnDrag:
             eg.document.frame.SetPosition(self.oldFramePosition)
             self.dialog.SetPosition(self.oldDialogPosition)
@@ -506,7 +508,4 @@ class FindWindow(eg.ActionClass):
             self.tree.Unselect()
             self.tree.Refresh()
             self.tree.SelectHwnd(lastTarget)
-
-        
-    
 

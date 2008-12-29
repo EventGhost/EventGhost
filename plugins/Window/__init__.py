@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 eg.RegisterPlugin(
     name = "Window",
@@ -39,12 +40,12 @@ eg.RegisterPlugin(
 )
 
 
+import wx
 from eg.WinApi.Utils import BringHwndToFront, CloseHwnd
 from eg.WinApi.Dynamic import (
     # functions:
     SendNotifyMessage, GetAncestor, GetWindowLong, ShowWindow, GetWindowRect,
-    GetForegroundWindow, MoveWindow, IsWindow, SetWindowPos, PostMessage,
-    SendMessage, byref,
+    GetForegroundWindow, MoveWindow, IsWindow, SetWindowPos, byref,
     
     # types:
     RECT, 
@@ -76,7 +77,7 @@ def GetTopLevelOfTargetWindows():
 
 
 
-class Window(eg.PluginClass):
+class Window(eg.PluginBase):
 
     def __init__(self):
         self.AddAction(FindWindow)
@@ -93,7 +94,7 @@ class Window(eg.PluginClass):
 
 
 
-class BringToFront(eg.ActionClass):
+class BringToFront(eg.ActionBase):
     name = "Bring to front"
     description = "Bring the specified window to front."
     iconFile = "icons/BringToFront"
@@ -104,7 +105,7 @@ class BringToFront(eg.ActionClass):
 
 
 
-class MoveTo(eg.ActionClass):
+class MoveTo(eg.ActionBase):
     name = "Move Absolute"
     class text:
         label = "Move window to %s"
@@ -115,14 +116,16 @@ class MoveTo(eg.ActionClass):
 
     
     def __call__(self, x, y):
-        r = RECT()
+        rect = RECT()
         for hwnd in GetTopLevelOfTargetWindows():
-            GetWindowRect(hwnd, byref(r))
+            GetWindowRect(hwnd, byref(rect))
             if x is None:
-                x = r.left
+                x = rect.left
             if y is None:
-                y = r.top
-            MoveWindow(hwnd, x, y, r.right - r.left, r.bottom - r.top, 1)
+                y = rect.top
+            MoveWindow(
+                hwnd, x, y, rect.right - rect.left, rect.bottom - rect.top, 1
+            )
             
             
     def GetLabel(self, x, y):
@@ -187,7 +190,7 @@ class Resize(MoveTo):
             
 
 
-class Maximize(eg.ActionClass):
+class Maximize(eg.ActionBase):
     name = "Maximize"
     
     def __call__(self):
@@ -196,7 +199,7 @@ class Maximize(eg.ActionClass):
 
 
 
-class Minimize(eg.ActionClass):
+class Minimize(eg.ActionBase):
     name = "Minimize"
     
     def __call__(self):
@@ -205,7 +208,7 @@ class Minimize(eg.ActionClass):
 
 
 
-class Restore(eg.ActionClass):
+class Restore(eg.ActionBase):
     name = "Restore"
     
     def __call__(self):
@@ -214,7 +217,7 @@ class Restore(eg.ActionClass):
 
 
 
-class Close(eg.ActionClass):
+class Close(eg.ActionBase):
     name = "Close"
     description = "Closes application windows"
     
@@ -224,7 +227,7 @@ class Close(eg.ActionClass):
 
 
 
-class SendMessage(eg.ActionClass):
+class SendMessage(eg.ActionBase):
     name = "Send Message"
     description = \
         "Uses the Windows-API SendMessage function to "\
@@ -304,7 +307,7 @@ class SendMessage(eg.ActionClass):
         
 
 
-class SetAlwaysOnTop(eg.ActionClass):
+class SetAlwaysOnTop(eg.ActionBase):
     name = "Set always on top property"
     class text:
         radioBox = "Choose action:"

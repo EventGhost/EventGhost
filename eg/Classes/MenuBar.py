@@ -46,4 +46,3 @@ class MenuBar(wx.MenuBar):
         for menu in self.menus:
             wx.MenuBar.Append(self, menu, menu.mytitle)
 
-

@@ -24,9 +24,9 @@ import eg
 import wx
 import keyword
 import re
-from wx.stc import *
+from wx.stc import * #pylint: disable-msg=W0614,W0401
 
-faces = { 
+FACES = { 
     'times': 'Times New Roman',
     'mono' : 'Courier New',
     'helv' : 'Arial',
@@ -41,50 +41,42 @@ class PythonEditorCtrl(StyledTextCtrl):
     def __init__(
         self, 
         parent, 
-        ID=-1,
         pos=wx.DefaultPosition, 
         size=wx.DefaultSize,
         style=0,
         value="",
     ):
-        StyledTextCtrl.__init__(self, parent, ID, pos, size, style)
+        StyledTextCtrl.__init__(self, parent, -1, pos, size, style)
         self.SetCodePage(STC_CP_UTF8)
-        StyleSetSpec = self.StyleSetSpec
+        StyleSetSpec = self.StyleSetSpec #IGNORE:C0103
         
         self.CmdKeyAssign(ord('B'), STC_SCMOD_CTRL, STC_CMD_ZOOMIN)
         self.CmdKeyAssign(ord('N'), STC_SCMOD_CTRL, STC_CMD_ZOOMOUT)
 
         # Setup a margin to hold fold markers
-        #self.SetFoldFlags(16)  ###  WHAT IS THIS VALUE?  WHAT ARE THE OTHER FLAGS?  DOES IT MATTER?
-        self.SetMarginType(2, STC_MARGIN_SYMBOL)
-        self.SetMarginMask(2, STC_MASK_FOLDERS)
-        self.SetMarginSensitive(2, True)
-        self.SetMarginWidth(2, 12)
-        # line numbers in the margin
-        self.SetMarginType(1, STC_MARGIN_NUMBER)
-        self.SetMarginWidth(1, 25)
+        #self.SetFoldFlags(16)  ### WHAT IS THIS VALUE?  
+                                ### WHAT ARE THE OTHER FLAGS?  DOES IT MATTER?
 
         self.Bind(EVT_STC_UPDATEUI, self.OnUpdateUI)
         self.Bind(EVT_STC_MARGINCLICK, self.OnMarginClick)
         self.Bind(wx.EVT_KEY_DOWN, self.OnKeyPressed)
-        self.Bind(EVT_STC_CHARADDED, self.OnCharAdded)
         # Make some styles,  The lexer defines what each style is used for, we
-        # just have to define what each style looks like.  This set is adapted from
-        # Scintilla sample property files.
+        # just have to define what each style looks like.  This set is adapted 
+        # from Scintilla sample property files.
 
         # Global default styles for all languages
-        StyleSetSpec(STC_STYLE_DEFAULT, "face:%(helv)s,size:%(size)d" % faces)
+        StyleSetSpec(STC_STYLE_DEFAULT, "face:%(helv)s,size:%(size)d" % FACES)
         self.StyleClearAll()  # Reset all to be like the default
 
         # Global default styles for all languages
-        StyleSetSpec(STC_STYLE_DEFAULT, "face:%(helv)s,size:%(size)d" % faces)
-        StyleSetSpec(STC_STYLE_CONTROLCHAR, "face:%(other)s" % faces)
+        StyleSetSpec(STC_STYLE_DEFAULT, "face:%(helv)s,size:%(size)d" % FACES)
+        StyleSetSpec(STC_STYLE_CONTROLCHAR, "face:%(other)s" % FACES)
 
         # Python styles
         # End of line where string is not closed
         StyleSetSpec(
             STC_P_STRINGEOL, 
-            "fore:#000000,face:%(mono)s,back:#E0C0E0,eol,size:%(size)d" % faces
+            "fore:#000000,face:%(mono)s,back:#E0C0E0,eol,size:%(size)d" % FACES
         )
 
         # register some images for use in the AutoComplete box.
@@ -103,7 +95,7 @@ class PythonEditorCtrl(StyledTextCtrl):
         self.SetProperty("tab.timmy.whinge.level", "1")
 
         # Set left and right margins
-        self.SetMargins(2,2)
+        self.SetMargins(2, 2)
 
         # Set up the numbers in the margin for margin #1
         self.SetMarginType(1, STC_MARGIN_NUMBER)
@@ -113,7 +105,8 @@ class PythonEditorCtrl(StyledTextCtrl):
         # Indentation and tab stuff
         self.SetIndent(4)               # Proscribed indent size for wx
         self.SetIndentationGuides(True) # Show indent guides
-        self.SetBackSpaceUnIndents(True)# Backspace unindents rather than delete 1 space
+        self.SetBackSpaceUnIndents(True)# Backspace unindents rather than 
+                                        # delete 1 space
         self.SetTabIndents(True)        # Tab key indents
         self.SetTabWidth(4)             # Proscribed tab size for wx
         self.SetUseTabs(False)          # Use spaces rather than tabs, or
@@ -137,22 +130,37 @@ class PythonEditorCtrl(StyledTextCtrl):
         self.SetMarginWidth(2, 12)
 
         # and now set up the fold markers
-        MarkerDefine = self.MarkerDefine
-        MarkerDefine(STC_MARKNUM_FOLDEREND, STC_MARK_BOXPLUSCONNECTED, "white", "black")
-        MarkerDefine(STC_MARKNUM_FOLDEROPENMID, STC_MARK_BOXMINUSCONNECTED, "white", "black")
-        MarkerDefine(STC_MARKNUM_FOLDERMIDTAIL, STC_MARK_TCORNER, "white", "black")
-        MarkerDefine(STC_MARKNUM_FOLDERTAIL, STC_MARK_LCORNER, "white", "black")
-        MarkerDefine(STC_MARKNUM_FOLDERSUB, STC_MARK_VLINE, "white", "black")
-        MarkerDefine(STC_MARKNUM_FOLDER, STC_MARK_BOXPLUS, "white", "black")
-        MarkerDefine(STC_MARKNUM_FOLDEROPEN, STC_MARK_BOXMINUS, "white", "black")
+        MarkerDefine = self.MarkerDefine #IGNORE:C0103
+        MarkerDefine(
+            STC_MARKNUM_FOLDEREND, STC_MARK_BOXPLUSCONNECTED, "white", "black"
+        )
+        MarkerDefine(
+            STC_MARKNUM_FOLDEROPENMID, 
+            STC_MARK_BOXMINUSCONNECTED, 
+            "white", 
+            "black"
+        )
+        MarkerDefine(
+            STC_MARKNUM_FOLDERMIDTAIL, STC_MARK_TCORNER, "white", "black"
+        )
+        MarkerDefine(
+            STC_MARKNUM_FOLDERTAIL, STC_MARK_LCORNER, "white", "black"
+        )
+        MarkerDefine(
+            STC_MARKNUM_FOLDERSUB, STC_MARK_VLINE, "white", "black"
+        )
+        MarkerDefine(
+            STC_MARKNUM_FOLDER, STC_MARK_BOXPLUS, "white", "black"
+        )
+        MarkerDefine(
+            STC_MARKNUM_FOLDEROPEN, STC_MARK_BOXMINUS, "white", "black"
+        )
 
         # Global default style
-        if wx.Platform == '__WXMSW__':
-            StyleSetSpec(STC_STYLE_DEFAULT, 
-                              'fore:#000000,back:#FFFFFF,face:Courier New,size:9')
-        else:
-            StyleSetSpec(STC_STYLE_DEFAULT, 
-                              'fore:#000000,back:#FFFFFF,face:Courier,size:12')
+        StyleSetSpec(
+            STC_STYLE_DEFAULT, 
+            'fore:#000000,back:#FFFFFF,face:Courier New,size:9'
+        )
 
         # Clear styles and revert to default.
         self.StyleClearAll()
@@ -193,7 +201,7 @@ class PythonEditorCtrl(StyledTextCtrl):
         # Operators
         StyleSetSpec(STC_P_OPERATOR, 'fore:#800000,bold')
         # Identifiers. I leave this as not bold because everything seems
-        # to be an identifier if it doesn't match the above criterae
+        # to be an identifier if it doesn't match the above criteria
         StyleSetSpec(STC_P_IDENTIFIER, 'fore:#000000')
 
         # Caret color
@@ -201,12 +209,21 @@ class PythonEditorCtrl(StyledTextCtrl):
         # Selection background
         self.SetSelBackground(1, '#66CCFF')
 
-        self.SetSelBackground(True, wx.SystemSettings_GetColour(wx.SYS_COLOUR_HIGHLIGHT))
-        self.SetSelForeground(True, wx.SystemSettings_GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT))
+        self.SetSelBackground(
+            True, 
+            wx.SystemSettings_GetColour(wx.SYS_COLOUR_HIGHLIGHT)
+        )
+        self.SetSelForeground(
+            True, 
+            wx.SystemSettings_GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
+        )
         self.UsePopUp(False)
         
         #Keyword Search/Context Sensitive Autoindent.
-        self.rekeyword = re.compile(r"(\sreturn\b)|(\sbreak\b)|(\spass\b)|(\scontinue\b)|(\sraise\b)", re.MULTILINE)
+        self.rekeyword = re.compile(
+            r"(\sreturn\b)|(\sbreak\b)|(\spass\b)|(\scontinue\b)|(\sraise\b)", 
+            re.MULTILINE
+        )
         self.reslash = re.compile(r"\\\Z")
         self.renonwhitespace = re.compile('\S', re.M)
         self.tabwidth = 4
@@ -248,7 +265,7 @@ class PythonEditorCtrl(StyledTextCtrl):
         self.SetText(value)
     
     
-    def OnRightClick(self, event):
+    def OnRightClick(self, dummyEvent):
         self.ValidateEditMenu(self.popupMenu)
         self.PopupMenu(self.popupMenu)
 
@@ -263,31 +280,31 @@ class PythonEditorCtrl(StyledTextCtrl):
         menu.delete.Enable(True)
 
         
-    def OnCmdUndo(self, event):
+    def OnCmdUndo(self):
         self.Undo()
         
         
-    def OnCmdRedo(self, event):
+    def OnCmdRedo(self):
         self.Redo()
         
         
-    def OnCmdCut(self, event):
+    def OnCmdCut(self):
         self.Cut()
         
         
-    def OnCmdCopy(self, event):
+    def OnCmdCopy(self):
         self.Copy()
         
         
-    def OnCmdPaste(self, event):
+    def OnCmdPaste(self):
         self.Paste()
         
         
-    def OnCmdDelete(self, event):
+    def OnCmdDelete(self):
         self.Delete()
         
         
-    def OnCmdSelectAll(self, event):
+    def OnCmdSelectAll(self):
         self.SelectAll()
         
         
@@ -299,31 +316,14 @@ class PythonEditorCtrl(StyledTextCtrl):
         keycode = event.GetKeyCode()
         if (keycode == wx.WXK_RETURN) or (keycode == 372):
             self.CmdKeyExecute(STC_CMD_NEWLINE)
-            self._autoindent()
+            self.AutoIndent()
         elif keycode == wx.WXK_TAB and event.GetModifiers() == wx.MOD_CONTROL:
             self.Navigate()
         else:
             event.Skip()
     
     
-    def OnCharAdded(self, event):
-        event.Skip()
-        return
-        if event.GetKey() == ord('\n') or event.GetKey() == ord('\r'):
-            line = self.GetCurrentLine()                              
-            if line > 0:
-                indent = self.GetLineIndentation(line-1)
-                if indent > 0:
-                    prevline = self.GetLine(line-1)
-                    i = 0
-                    while prevline[i] == ' ' or prevline[i] == '\t':
-                        self.AddText(prevline[i])
-                        i = i+1
-                    if prevline[len(prevline)-2] == '{':
-                        self.AddText('\t')
-
-
-    def OnUpdateUI(self, evt):
+    def OnUpdateUI(self, dummyEvent):
         # check for matching braces
         braceAtCaret = -1
         braceOpposite = -1
@@ -335,15 +335,22 @@ class PythonEditorCtrl(StyledTextCtrl):
             styleBefore = self.GetStyleAt(caretPos - 1)
 
         # check before
-        if charBefore and chr(charBefore) in "[]{}()" and styleBefore == STC_P_OPERATOR:
+        if (
+            charBefore 
+            and chr(charBefore) in "[]{}()" 
+            and styleBefore == STC_P_OPERATOR
+        ):
             braceAtCaret = caretPos - 1
 
         # check after
         if braceAtCaret < 0:
             charAfter = self.GetCharAt(caretPos)
             styleAfter = self.GetStyleAt(caretPos)
-
-            if charAfter and chr(charAfter) in "[]{}()" and styleAfter == STC_P_OPERATOR:
+            if (
+                charAfter 
+                and chr(charAfter) in "[]{}()" 
+                and styleAfter == STC_P_OPERATOR
+            ):
                 braceAtCaret = caretPos
 
         if braceAtCaret >= 0:
@@ -431,24 +438,18 @@ class PythonEditorCtrl(StyledTextCtrl):
 
             if level & STC_FOLDLEVELHEADERFLAG:
                 if force:
-                    if visLevels > 1:
-                        self.SetFoldExpanded(line, True)
-                    else:
-                        self.SetFoldExpanded(line, False)
-
+                    self.SetFoldExpanded(line, visLevels > 1)
                     line = self.Expand(line, doExpand, force, visLevels-1)
                 else:
-                    if doExpand and self.GetFoldExpanded(line):
-                        line = self.Expand(line, True, force, visLevels-1)
-                    else:
-                        line = self.Expand(line, False, force, visLevels-1)
+                    flag = doExpand and self.GetFoldExpanded(line)
+                    line = self.Expand(line, flag, force, visLevels-1)
             else:
                 line = line + 1
 
         return line
 
 
-    def _autoindent(self):
+    def AutoIndent(self):
         pos = self.GetCurrentPos()
         
         #Strip trailing whitespace first.
@@ -457,8 +458,8 @@ class PythonEditorCtrl(StyledTextCtrl):
         if lineendpos > pos:
             self.SetTargetStart(pos)
             self.SetTargetEnd(lineendpos)
-            t = self.GetTextRange(pos, lineendpos)
-            self.ReplaceTarget(t.rstrip())
+            textRange = self.GetTextRange(pos, lineendpos)
+            self.ReplaceTarget(textRange.rstrip())
 
         #Look at last line
         pos = pos - 1
@@ -472,9 +473,12 @@ class PythonEditorCtrl(StyledTextCtrl):
 
         numtabs = self.GetLineIndentation(clinenumber+1) / self.tabwidth
         
-        if self.renonwhitespace.search(self.GetLine(clinenumber+1)) is not None:
-            if self.renonwhitespace.search(self.GetLine(clinenumber)) is None:
-                numtabs += self.GetLineIndentation(clinenumber) / self.tabwidth
+        search = self.renonwhitespace.search
+        if (
+            search(self.GetLine(clinenumber+1)) is not None
+            and search(self.GetLine(clinenumber)) is None
+        ):
+            numtabs += self.GetLineIndentation(clinenumber) / self.tabwidth
         
         if numtabs == 0:
             numtabs = self.GetLineIndentation(linenumber) / self.tabwidth

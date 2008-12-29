@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 from eg.WinApi.Dynamic import (
     pointer,
     sizeof,
@@ -131,3 +132,5 @@ class DeviceChangeNotifier:
                 deviceName = wstring_at(lparam + DBD_NAME_OFFSET)
                 self.TriggerEvent("DeviceRemoved", [deviceName])
         return 1
+    
+    

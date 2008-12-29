@@ -47,7 +47,7 @@ PRIORITY_FLAGS = (
 )
 
 
-class Execute(eg.ActionClass):
+class Execute(eg.ActionBase):
     name = "Start Application"
     description = "Starts an executable file."
     iconFile = "icons/Execute"

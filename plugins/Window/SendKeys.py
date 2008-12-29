@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
 
 description = """\
 This action emulates keystrokes to control other programs. Just type the text 
@@ -71,7 +73,7 @@ And here is the list of the remaining keywords EventGhost understands:<br>
 """
 
     
-class SendKeys(eg.ActionClass):
+class SendKeys(eg.ActionBase):
     name = "Emulate Keystrokes"
     description = description
     iconFile = "icons/SendKeys"

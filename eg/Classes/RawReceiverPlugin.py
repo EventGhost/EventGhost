@@ -24,7 +24,7 @@ import eg
 from threading import Timer
 
 
-class RawReceiverPlugin(eg.PluginClass):
+class RawReceiverPlugin(eg.PluginBase):
     
     def __init__(self):
         self.mapTable = {}

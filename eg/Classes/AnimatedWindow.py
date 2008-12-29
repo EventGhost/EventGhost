@@ -33,7 +33,7 @@ class AnimatedWindow(wx.PyWindow):
         self.font = wx.Font(
             40, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_BOLD
         )
-        self.SetBackgroundColour((255,255,255))
+        self.SetBackgroundColour((255, 255, 255))
         self.logo1 = wx.Bitmap("images/opensource-55x48.png")
         self.logo2 = wx.Bitmap("images/python-powered-w-100x40.png")
         self.logo3 = wx.Bitmap("images/logo2.png")
@@ -51,13 +51,13 @@ class AnimatedWindow(wx.PyWindow):
         
     def MakeBackground(self):
         self.backbuffer = wx.EmptyBitmap(self.width, self.height)
-        dc = wx.MemoryDC()
-        dc.SelectObject(self.backbuffer)
-        dc.BeginDrawing()
-        dc.SetBackground(wx.Brush(self.GetBackgroundColour()))
-        dc.Clear() # make sure you clear the bitmap!
-        dc.SetFont(self.font)
-        dc.SetTextForeground((128, 128, 128))
+        deviceContext = wx.MemoryDC()
+        deviceContext.SelectObject(self.backbuffer)
+        deviceContext.BeginDrawing()
+        deviceContext.SetBackground(wx.Brush(self.GetBackgroundColour()))
+        deviceContext.Clear() # make sure you clear the bitmap!
+        deviceContext.SetFont(self.font)
+        deviceContext.SetTextForeground((128, 128, 128))
         
         w1 = self.logo1.GetWidth()
         w2 = self.logo2.GetWidth()
@@ -65,25 +65,25 @@ class AnimatedWindow(wx.PyWindow):
         h2 = self.logo2.GetHeight()
         h = max(h1, h2)
         
-        dc.DrawBitmap(
+        deviceContext.DrawBitmap(
             self.logo1, 
             self.width - w1 - w2, 
             self.height - h + (h - h1) // 2, 
             True
         )
-        dc.DrawBitmap(
+        deviceContext.DrawBitmap(
             self.logo2, 
             self.width - w2, 
             self.height - h + (h - h2) // 2, 
             True
         )
-        dc.DrawBitmap(
+        deviceContext.DrawBitmap(
             self.logo3, 
             (self.width - self.logo3.GetWidth()) // 2, 
             (self.height - self.logo3.GetHeight()) // 3, 
             True
         )
-        dc.EndDrawing()
+        deviceContext.EndDrawing()
         
         
     def AcceptsFocus(self):
@@ -94,7 +94,7 @@ class AnimatedWindow(wx.PyWindow):
         return False
         
         
-    def OnSize(self, event):
+    def OnSize(self, dummyEvent):
         self.width, self.height = self.GetClientSizeTuple()
         self.dcBuffer = wx.EmptyBitmap(self.width, self.height)
         self.y3 = (self.height - self.bmpHeight) / 4.0
@@ -103,14 +103,14 @@ class AnimatedWindow(wx.PyWindow):
         self.UpdateDrawing()
 
 
-    def UpdateDrawing(self, event=None):
-        dc = wx.BufferedDC(wx.ClientDC(self), self.dcBuffer)
-        self.Draw(dc)
+    def UpdateDrawing(self, dummyEvent=None):
+        deviceContext = wx.BufferedDC(wx.ClientDC(self), self.dcBuffer)
+        self.Draw(deviceContext)
 
 
-    def Draw(self, dc):
-        dc.BeginDrawing()
-        dc.DrawBitmap(self.backbuffer, 0, 0, False)
+    def Draw(self, deviceContext):
+        deviceContext.BeginDrawing()
+        deviceContext.DrawBitmap(self.backbuffer, 0, 0, False)
         t = time.clock() / 2.0
         y3 = self.y3
         x3 = self.x3
@@ -119,7 +119,6 @@ class AnimatedWindow(wx.PyWindow):
         alpha = sin(t) / 2.0 + 0.5
         image = self.image.AdjustChannels(1.0, 1.0, 1.0, alpha)
         bmp = wx.BitmapFromImage(image, 24)
-        dc.DrawBitmap(bmp, x, y, True)
-        dc.EndDrawing()
-
+        deviceContext.DrawBitmap(bmp, x, y, True)
+        deviceContext.EndDrawing()
 

@@ -28,15 +28,17 @@ EVENT_ICON_INDEX = eg.EventItem.icon.index
 
 class ActionThread(eg.ThreadWorker):
     
+    @staticmethod
     @eg.LogItWithReturn
-    def StartSession(self, filename):
+    def StartSession(filename):
         eg.eventTable.clear()
         for pluginIdent in eg.CORE_PLUGINS:
-            try:
+            # pylint: disable-msg=W0702
+            try: 
                 pluginInfo = eg.PluginInfo.Open(pluginIdent, None, ())
                 pluginInfo.instance.__start__()
                 pluginInfo.isStarted = True
-            except:
+            except: 
                 eg.PrintTraceback()
         start = clock()
         eg.document.Load(filename)
@@ -45,7 +47,8 @@ class ActionThread(eg.ThreadWorker):
         eg.RunProgram()
         
             
-    def ExecuteTreeItem(self, obj, event):
+    @staticmethod
+    def ExecuteTreeItem(obj, event):
         eg.SetProcessingState(2, event)
         eg.event = event
         if isinstance(obj, eg.MacroItem):
@@ -56,10 +59,12 @@ class ActionThread(eg.ThreadWorker):
         eg.SetProcessingState(1, event)
         
         
+    @staticmethod
     @eg.LogIt
-    def StopSession(self):
+    def StopSession():
         eg.document.autostartMacro.UnloadPlugins()
         for pluginIdent in eg.CORE_PLUGINS:
+            # pylint: disable-msg=W0702
             try:
                 pluginInfo = getattr(eg.plugins, pluginIdent).plugin.info
                 pluginInfo.Close()
@@ -71,26 +76,30 @@ class ActionThread(eg.ThreadWorker):
     def HandleAction(self, action):
         try:
             action()
-        except eg.PluginClass.Exception, e:
-            eg.PrintError(e.message, source=e.obj.info.treeItem)
-            e.obj.info.lastException = e
-            e.obj.info.treeItem.SetErrorState()
+        except eg.PluginBase.Exception, exc:
+            eg.PrintError(exc.message, source=exc.obj.info.treeItem)
+            exc.obj.info.lastException = exc
+            exc.obj.info.treeItem.SetErrorState()
             
             
-    def OnComputerSuspend(self):
+    @staticmethod
+    def OnComputerSuspend():
         """Calls OnComputerSuspend of every enabled plugin."""
         for plugin in eg.pluginList:
             if plugin.info.isStarted:
+                # pylint: disable-msg=W0702
                 try:
                     plugin.OnComputerSuspend(None)
                 except:
                     eg.PrintTraceback()
             
             
-    def OnComputerResume(self):
+    @staticmethod
+    def OnComputerResume():
         """Calls OnComputerResume of every enabled plugin."""
         for plugin in eg.pluginList:
             if plugin.info.isStarted:
+                # pylint: disable-msg=W0702
                 try:
                     plugin.OnComputerResume(None)
                 except:

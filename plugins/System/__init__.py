@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 eg.RegisterPlugin(
     name = "System",
@@ -43,13 +44,15 @@ eg.RegisterPlugin(
     ),
 )
 
-
+import wx
 import time
 import sys
 import os
 import thread
 import _winreg
 import ctypes
+import socket
+import struct
 import Image
 from threading import Timer
 
@@ -72,7 +75,7 @@ from eg.WinApi.Dynamic import (
 )
 
 import eg.WinApi.SoundMixer as SoundMixer
-from eg.WinApi import GetCurrentProcessId, GetWindowThreadProcessId
+from eg.WinApi import GetWindowThreadProcessId
 from eg.WinApi.Utils import BringHwndToFront
 from eg.WinApi.Utils import GetMonitorDimensions
 from eg.cFunctions import StartHooks, StopHooks
@@ -85,7 +88,7 @@ from DeviceChangeNotifier import DeviceChangeNotifier
 from PowerBroadcastNotifier import PowerBroadcastNotifier
 import Registry
 
-ourProcessId = GetCurrentProcessId()
+
 
 class Text:
     class MonitorGroup:
@@ -128,7 +131,7 @@ EVENT_LIST = (
 )
     
 
-class System(eg.PluginClass):
+class System(eg.PluginBase):
     text = Text
     
     def __init__(self):
@@ -164,9 +167,9 @@ class System(eg.PluginClass):
         group.AddAction(MonitorStandby)
         group.AddAction(MonitorPowerOff)
         group.AddAction(MonitorPowerOn)
-        group.AddAction(ChangeDisplaySettings)
         group.AddAction(ShowPicture)
         group.AddAction(SetWallpaper)
+        group.AddAction(ChangeDisplaySettings)
         group.AddAction(SetDisplayPreset)
 
         group = self.AddGroup(
@@ -192,7 +195,7 @@ class System(eg.PluginClass):
         
         
     def __start__(self):
-        eg.app.clipboardEvent.Bind(self.OnClipboardChange)
+        eg.clipboardEvent.Subscribe(self.OnClipboardChange)
         
         #Assign all available cd drives to self.drives. If CdRom.drive
         #is not already set, the first drive returned becomes the default.
@@ -260,17 +263,17 @@ class System(eg.PluginClass):
     def __stop__(self):
         eg.Unbind("System.SessionLock", self.StopHookCode)
         eg.Unbind("System.SessionUnlock", self.StartHookCode)
-        eg.app.clipboardEvent.Unbind(self.OnClipboardChange)
+        eg.clipboardEvent.UnSubscribe(self.OnClipboardChange)
         self.deviceChangeNotifier.Close()
         self.powerBroadcastNotifier.Close()
         self.StopHookCode()
         
         
-    def OnComputerSuspend(self, suspendType):
+    def OnComputerSuspend(self, dummySuspendType):
         self.StopHookCode()
         
         
-    def OnComputerResume(self, suspendType):
+    def OnComputerResume(self, dummySuspendType):
         self.StartHookCode()
         
         
@@ -296,14 +299,14 @@ class System(eg.PluginClass):
         StopHooks()
     
     
-    def OnClipboardChange(self):
+    def OnClipboardChange(self, value):
         ownerHwnd = GetClipboardOwner()
-        if GetWindowThreadProcessId(ownerHwnd)[1] != ourProcessId:
+        if GetWindowThreadProcessId(ownerHwnd)[1] != eg.processId:
             self.TriggerEvent("ClipboardChanged")
         
         
         
-class SetIdleTime(eg.ActionClass):
+class SetIdleTime(eg.ActionBase):
     class text:
         name = "Set Idle Time"
         label1 = "Wait"
@@ -323,7 +326,7 @@ class SetIdleTime(eg.ActionClass):
         
         
         
-class ResetIdleTimer(eg.ActionClass):
+class ResetIdleTimer(eg.ActionBase):
     name = "Reset Idle Timer"
        
     def __call__(self):
@@ -331,7 +334,7 @@ class ResetIdleTimer(eg.ActionClass):
 
 
 
-class OpenDriveTray(eg.ActionClass):
+class OpenDriveTray(eg.ActionBase):
     name = "Open/close drive tray"
     description = "Controls the tray of a CD/DVD-ROM drive."
     iconFile = "icons/cdrom"
@@ -351,7 +354,7 @@ class OpenDriveTray(eg.ActionClass):
         
 
     def __call__(self, drive=None, action=0):
-        drive = drive or self.cdDrives[0]
+        drive = drive or self.plugin.cdDrives[0]
 
         def SendCodeToDrive(code):
             device = getDeviceHandle(drive)
@@ -495,11 +498,11 @@ class SetClipboard(eg.ActionWithStringParameter):
             wx.TheClipboard.Close()
             wx.TheClipboard.Flush()
         else:
-            PrintError(self.text.error)
+            self.PrintError(self.text.error)
     
 
 
-class StartScreenSaver(eg.ActionClass):
+class StartScreenSaver(eg.ActionBase):
     name = "Start windows screen saver"
     description = "Starts the currently in windows selected screensaver."
     iconFile = "icons/StartScreenSaver"
@@ -509,7 +512,7 @@ class StartScreenSaver(eg.ActionClass):
 
 
 
-class MonitorStandby(eg.ActionClass):
+class MonitorStandby(eg.ActionBase):
     name = "Set monitor into stand-by mode"
     description = "Sets the state of the display to low power mode."
     iconFile = "icons/Display"
@@ -519,7 +522,7 @@ class MonitorStandby(eg.ActionClass):
 
 
 
-class MonitorPowerOff(eg.ActionClass):
+class MonitorPowerOff(eg.ActionBase):
     name = "Set monitor into power-off mode"
     description = \
         "Sets the state of the display to power-off mode. This will "\
@@ -531,7 +534,7 @@ class MonitorPowerOff(eg.ActionClass):
 
 
 
-class MonitorPowerOn(eg.ActionClass):
+class MonitorPowerOn(eg.ActionBase):
     name = "Re-enable monitor"
     description = \
         "Turns on a display, when it is in low power or power-off "\
@@ -543,11 +546,11 @@ class MonitorPowerOn(eg.ActionClass):
             
             
             
-class __ComputerPowerAction(eg.ActionClass):
+class __ComputerPowerAction(eg.ActionBase):
     iconFile = "icons/Shutdown"
     
     def GetLabel(self, bForceClose=False):
-        s = eg.ActionClass.GetLabel(self)
+        s = eg.ActionBase.GetLabel(self)
         if bForceClose:
             return self.plugin.text.forced % s
         else:
@@ -644,7 +647,7 @@ class Hibernate(__ComputerPowerAction):
         
         
         
-class LogOff(eg.ActionClass):   
+class LogOff(eg.ActionBase):   
     name = "Log-off current user"
     description = "Shuts down all processes running in the current "\
         "logon session. Then it logs the user off."
@@ -660,7 +663,7 @@ class LogOff(eg.ActionClass):
             
             
             
-class LockWorkstation(eg.ActionClass):   
+class LockWorkstation(eg.ActionBase):   
     name = "Lock Workstation"
     description = \
         "This function submits a request to lock the workstation's "\
@@ -752,7 +755,7 @@ class SetWallpaper(eg.ActionWithStringParameter):
 # Soundcard actions
 #-----------------------------------------------------------------------------
 
-class MuteOn(eg.ActionClass):
+class MuteOn(eg.ActionBase):
     name = "Turn Mute On"       
     iconFile = "icons/SoundCard"
     
@@ -774,7 +777,7 @@ class MuteOn(eg.ActionClass):
 
 
 
-class MuteOff(eg.ActionClass):
+class MuteOff(eg.ActionBase):
     name = "Turn Mute Off"
     iconFile = "icons/SoundCard"
     
@@ -796,7 +799,7 @@ class MuteOff(eg.ActionClass):
 
 
 
-class ToggleMute(eg.ActionClass):
+class ToggleMute(eg.ActionBase):
     name = "Toggle Mute"
     iconFile = "icons/SoundCard"
     
@@ -817,7 +820,7 @@ class ToggleMute(eg.ActionClass):
 
 
 
-class SetMasterVolume(eg.ActionClass):
+class SetMasterVolume(eg.ActionBase):
     name = "Set Master Volume"
     description = "Sets the master volume to an absolute value."
     iconFile = "icons/SoundCard"
@@ -834,9 +837,9 @@ class SetMasterVolume(eg.ActionClass):
         
     def GetLabel(self, value, deviceId=0):
         if deviceId > 0:
-            return "%s #%i: %.2f %%" % (self.text.name, deviceId+1, value)
+            return "%s #%i: %.2f %%" % (self.name, deviceId+1, value)
         else:
-            return "%s: %.2f %%" % (self.text.name, value)
+            return "%s: %.2f %%" % (self.name, value)
          
         
     def Configure(self, value=0, deviceId=0):
@@ -858,7 +861,7 @@ class SetMasterVolume(eg.ActionClass):
 
 
 
-class ChangeMasterVolumeBy(eg.ActionClass):
+class ChangeMasterVolumeBy(eg.ActionBase):
     name = "Change Master Volume"
     description = "Changes the master volume relative to the current value."
     iconFile = "icons/SoundCard"
@@ -874,14 +877,17 @@ class ChangeMasterVolumeBy(eg.ActionClass):
 
     def GetLabel(self, value, deviceId=0):
         if deviceId > 0:
-            return "%s #%i: %.2f %%" % (self.text.name, deviceId+1, value)
+            return "%s #%i: %.2f %%" % (self.name, deviceId+1, value)
         else:
-            return "%s: %.2f %%" % (self.text.name, value)
+            return "%s: %.2f %%" % (self.name, value)
          
         
     def Configure(self, value=0, deviceId=0):
         panel = eg.ConfigPanel(self)
-        deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
+        deviceCtrl = panel.Choice(
+            deviceId, 
+            choices=SoundMixer.GetMixerDevices()
+        )
         valueCtrl = panel.SpinNumCtrl(value, min=-100, max=100)
         sizer = eg.HBoxSizer(
             (panel.StaticText(self.text.text1), 0, wx.ALIGN_CENTER_VERTICAL),
@@ -898,9 +904,6 @@ class ChangeMasterVolumeBy(eg.ActionClass):
 
 
 
-#-----------------------------------------------------------------------------
-# Action: System.ShowPicture
-#-----------------------------------------------------------------------------
 class ShowPictureFrame(wx.Frame):
     def __init__(self, size=(-1,-1), pic_path=None, display=0):
         wx.Frame.__init__(
@@ -910,40 +913,42 @@ class ShowPictureFrame(wx.Frame):
             "ShowPictureFrame", 
             style=wx.NO_BORDER|wx.FRAME_NO_TASKBAR #| wx.STAY_ON_TOP
         )
-        self.SetBackgroundColour(wx.Colour(0,0,0))
+        self.SetBackgroundColour(wx.Colour(0, 0, 0))
         self.Bind(wx.EVT_LEFT_DCLICK, self.LeftDblClick)
-        bitmap = wx.EmptyBitmap(1,1)
+        bitmap = wx.EmptyBitmap(1, 1)
         self.staticBitmap = wx.StaticBitmap(self, -1, bitmap)
         self.staticBitmap.Bind(wx.EVT_LEFT_DCLICK, self.LeftDblClick)
         self.staticBitmap.Bind(wx.EVT_MOTION, self.ShowCursor)
         self.timer = Timer(2.0, self.HideCursor)
 
         
-    def SetPicture(self, pic_path=None, display=0):
-        if not pic_path:
+    def SetPicture(self, picturePath=None, display=0):
+        if not picturePath:
             return
-        d = GetMonitorDimensions()[display]
-        pil = Image.open(pic_path)
+        dimension = GetMonitorDimensions()[display]
+        pil = Image.open(picturePath)
         width, height = pil.size
-        if (width > d.width) or (height > d.height):
-            xfactor = (width * 1.0 / d.width)
-            yfactor = (height * 1.0 / d.height)
+        if (width > dimension.width) or (height > dimension.height):
+            xfactor = (width * 1.0 / dimension.width)
+            yfactor = (height * 1.0 / dimension.height)
             if xfactor > yfactor:
-                width = d.width
+                width = dimension.width
                 height = int(round(height / xfactor))
             else:
                 width = int(round(width / yfactor))
-                height = d.height
+                height = dimension.height
             pil = pil.resize((width, height), Image.NEAREST)
             
-        bitmap = wx.BitmapFromBuffer(width, height, pil.convert('RGB').tostring())
+        bitmap = wx.BitmapFromBuffer(
+            width, height, pil.convert('RGB').tostring()
+        )
         self.staticBitmap.SetBitmap(bitmap)
-        x = d.x + (d.width - width) / 2
-        y = d.y + (d.height - height) / 2
+        x = dimension.x + (dimension.width - width) / 2
+        y = dimension.y + (dimension.height - height) / 2
         self.SetDimensions(x, y, width, height)
         
         
-    def LeftDblClick(self, evt):
+    def LeftDblClick(self, dummyEvent):
         self.Show(False)
 
 
@@ -971,7 +976,7 @@ class ShowPictureFrame(wx.Frame):
         
         
         
-class ShowPicture(eg.ActionClass):
+class ShowPicture(eg.ActionBase):
     name = "Show Picture"
     description = "Shows a picture on the screen."
     iconFile = "icons/ShowPicture"
@@ -1022,7 +1027,7 @@ wx.CallAfter(_CreateShowPictureFrame)
         
         
         
-class SetDisplayPreset(eg.ActionClass):
+class SetDisplayPreset(eg.ActionBase):
     name = "Set Display Preset"
     iconFile = "icons/Display"
     class text:
@@ -1054,7 +1059,7 @@ class SetDisplayPreset(eg.ActionClass):
         button = wx.Button(panel, -1, self.text.query)
         button.Bind(wx.EVT_BUTTON, OnButton)
         panel.sizer.Add(button)
-        panel.sizer.Add((5,5))
+        panel.sizer.Add((5, 5))
         listCtrl = wx.ListCtrl(panel, style=wx.LC_REPORT)
         fields = self.text.fields
         for col, name in enumerate(fields):
@@ -1079,13 +1084,8 @@ class SetDisplayPreset(eg.ActionClass):
             panel.SetResult(*result[0])
         
         
-#-----------------------------------------------------------------------------
-# Action: System.WakeOnLan
-#-----------------------------------------------------------------------------
-import socket
-import struct
 
-class WakeOnLan(eg.ActionClass):
+class WakeOnLan(eg.ActionBase):
     name = "Wake on LAN"
     description = (
         "Wakes up another computer through sending a special "
@@ -1123,9 +1123,9 @@ class WakeOnLan(eg.ActionClass):
 
 
     def Configure(self, macAddress=""):
-        import wx.lib.masked
+        from wx.lib.masked import TextCtrl
         panel = eg.ConfigPanel(self)
-        macCtrl  = wx.lib.masked.TextCtrl( 
+        macCtrl  = TextCtrl( 
             panel, 
             mask = "##-##-##-##-##-##",
             includeChars = "ABCDEF",
@@ -1138,11 +1138,8 @@ class WakeOnLan(eg.ActionClass):
             panel.SetResult(macCtrl.GetValue())
     
 
-#-----------------------------------------------------------------------------
-# Action: System.SetSystemIdleTimer
-#-----------------------------------------------------------------------------
 
-class SetSystemIdleTimer(eg.ActionClass):
+class SetSystemIdleTimer(eg.ActionBase):
     name = "Set System Idle Timer"
     class text:
         text = "Choose option:"

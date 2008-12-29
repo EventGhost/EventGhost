@@ -20,7 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-
+import eg
 from eg.WinApi.Dynamic import (
     WM_POWERBROADCAST, PBT_APMSUSPEND, PBT_APMRESUMEAUTOMATIC, 
     PBT_APMBATTERYLOW, PBT_APMOEMEVENT, PBT_APMPOWERSTATUSCHANGE, 
@@ -30,7 +30,7 @@ from eg.WinApi.Dynamic import (
 
 PBT_POWERSETTINGCHANGE = 0x8013
 
-PbtMessages = {
+PBT_MESSAGES = {
     PBT_APMBATTERYLOW: "BatteryLow", # not in vista, use 
                                      # PBT_APMPOWERSTATUSCHANGE instead
     PBT_APMOEMEVENT: "OemEvent",
@@ -49,18 +49,24 @@ class PowerBroadcastNotifier:
     
     def __init__(self, plugin):
         self.plugin = plugin
-        eg.messageReceiver.AddHandler(WM_POWERBROADCAST, self.OnPowerBroadcast)
+        eg.messageReceiver.AddHandler(
+            WM_POWERBROADCAST, 
+            self.OnPowerBroadcast
+        )
 
 
     def Close(self):
-        eg.messageReceiver.RemoveHandler(WM_POWERBROADCAST, self.OnPowerBroadcast)
+        eg.messageReceiver.RemoveHandler(
+            WM_POWERBROADCAST, 
+            self.OnPowerBroadcast
+        )
         
         
     @eg.LogIt
-    def OnPowerBroadcast(self, hwnd, msg, wparam, lparam):
+    def OnPowerBroadcast(self, dummyHwnd, msg, wparam, dummyLParam):
         if wparam == PBT_APMRESUMEAUTOMATIC:
             eg.actionThread.CallWait(eg.actionThread.OnComputerResume)
-        msg = PbtMessages.get(wparam, None)
+        msg = PBT_MESSAGES.get(wparam, None)
         if msg is not None:
             eg.eventThread.TriggerEventWait(
                 msg, 

@@ -16,13 +16,37 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# $LastChangedDate: 2008-07-15 18:55:54 +0200 (Di, 15 Jul 2008) $
+# $LastChangedRevision: 452 $
+# $LastChangedBy: bitmonster $
+
+    
+class NotificationHandler(object):
+    __slots__ = ["value", "listeners"]
+    
+    def __init__(self, initialValue=None):
+        self.value = initialValue
+        self.listeners = []
+        
+        
+    def Fire(self, value=None):
+        self.value = value
+        for listener in self.listeners:
+            listener(value)
+        
+        
+    def Subscribe(self, listener):
+        self.listeners.append(listener)
+        return self.value        
+    
+    
+    def UnSubscribe(self, listener):
+        self.listeners.remove(listener)
 
 
-class Version:
-    buildNum = 1490
-    buildTime = 1230498584.19
-    svnRevision = 648
-    string = "0.3.6.%s" % buildNum
+    def GetValue(self):
+        return self.value
+    
+    
+    
+        

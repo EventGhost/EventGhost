@@ -34,10 +34,10 @@ from functools import partial
 def InitPil():
     """Initialize PIL's Image module."""
     import Image
-    import PngImagePlugin
-    import JpegImagePlugin
-    import BmpImagePlugin
-    import GifImagePlugin
+    import PngImagePlugin #IGNORE:W0612
+    import JpegImagePlugin #IGNORE:W0612
+    import BmpImagePlugin #IGNORE:W0612
+    import GifImagePlugin #IGNORE:W0612
     Image._initialized = 2  
         
         
@@ -63,7 +63,7 @@ def InitComTypes():
     sys.modules["comtypes.gen"] = comtypes.gen
     del sys.path[0]
     import comtypes.client._generate
-    comtypes.client._generate.__verbose__ = False
+    comtypes.client._generate.__verbose__ = False #IGNORE:W0212
 
         
 def InitPathesAndBuiltins():
@@ -75,10 +75,10 @@ def InitPathesAndBuiltins():
     
     import cFunctions
     sys.modules["eg.cFunctions"] = cFunctions
+    eg.cFunctions = cFunctions
     
     # add 'wx' to the builtin name space of every module
     import __builtin__
-    import wx
     __builtin__.__dict__["wx"] = wx
         
     # we create a package 'pluginImport' and set its path to the plugin-dir
@@ -88,16 +88,16 @@ def InitPathesAndBuiltins():
     sys.modules["pluginImport"] = pluginPackage
 
     # replace builtin raw_input() with a small dialog
-    def raw_input(prompt=None):
+    def RawInput(prompt=None):
         return eg.CallWait(
             partial(eg.SimpleInputDialog.CreateModal, prompt)
         )
-    __builtin__.raw_input = raw_input
+    __builtin__.raw_input = RawInput
 
     # replace builtin input() with a small dialog
-    def input(prompt=None):
-        return eval(raw_input(prompt))
-    __builtin__.input = input
+    def Input(prompt=None):
+        return eval(RawInput(prompt))
+    __builtin__.input = Input
     
     
 def Init():

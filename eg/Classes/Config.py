@@ -56,10 +56,10 @@ class Section:
 
 
 
-def _MakeSectionMetaClass(name, bases, dict):
-    obj = Section()
-    obj.__dict__ = dict
-    return obj
+def MakeSectionMetaClass(name, bases, dct):
+    section = Section()
+    section.__dict__ = dct
+    return section
 
     
 def RecursivePySave(obj, fileWriter, indent=""):
@@ -106,6 +106,7 @@ class Config(Section):
     lastUpdateCheckDate = None
     defaultThreadStartTimeout = 5.00
     colourPickerCustomColours = [(-1, -1, -1, 255) for n in range(16)]
+
     class plugins:
         pass
 
@@ -118,7 +119,7 @@ class Config(Section):
             #import shutil
             #shutil.copy("Example.xml", os.path.join(configDir, "MyConfig.xml"))
         configFilePath = os.path.join(configDir, "config.py")
-        execDict = {"__metaclass__": _MakeSectionMetaClass}
+        execDict = {"__metaclass__": MakeSectionMetaClass}
         
         # BUG: of the python function 'execfile'. It doesn't handle unicode
         # filenames right.
@@ -138,7 +139,7 @@ class Config(Section):
     def Save(self):
         global configFilePath
         self.buildNum = eg.buildNum
-        fd = open(configFilePath, 'w+')
-        RecursivePySave(self, fd.write)
-        fd.close()
+        configFile = open(configFilePath, 'w+')
+        RecursivePySave(self, configFile.write)
+        configFile.close()
 

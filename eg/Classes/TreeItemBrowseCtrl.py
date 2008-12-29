@@ -60,9 +60,9 @@ class TreeItemBrowseCtrl(wx.TreeCtrl):
         
         self.normalfont = self.GetItemFont(self.root)
         # evil workaround to get another font
-        id = self.AppendItem(self.root, '')
-        self.italicfont = self.GetItemFont(id)
-        self.Delete(id)
+        treeId = self.AppendItem(self.root, '')
+        self.italicfont = self.GetItemFont(treeId)
+        self.Delete(treeId)
         self.italicfont.SetStyle(wx.FONTSTYLE_ITALIC)
 
         self.__collapsing = False
@@ -79,42 +79,45 @@ class TreeItemBrowseCtrl(wx.TreeCtrl):
         while item is not selectItem.tree.root:
             path.append(item)
             item = item.parent
-        id = root
+        treeId = root
         for item in reversed(path):
-            if not self.IsExpanded(id):
-                self.Expand(id)
-            tmp, cookie = self.GetFirstChild(id)
+            if not self.IsExpanded(treeId):
+                self.Expand(treeId)
+            tmp, cookie = self.GetFirstChild(treeId)
             while self.GetPyData(tmp) is not item:
                 tmp, cookie = self.GetNextChild(tmp, cookie)
-            id = tmp
+            treeId = tmp
         self.EnsureVisible(root)
-        self.SelectItem(id)
+        self.SelectItem(treeId)
 
 
     def OnCollapsing(self, event):
         # Be prepared, self.CollapseAndReset below may cause
         # another wx.EVT_TREE_ITEM_COLLAPSING event being triggered.
-        id = event.GetItem()
-        if self.__collapsing or id is self.root:
+        treeId = event.GetItem()
+        if self.__collapsing or treeId is self.root:
             event.Veto()
         else:
             self.__collapsing = True
-            self.CollapseAndReset(id)
-            self.SetItemHasChildren(id)
+            self.CollapseAndReset(treeId)
+            self.SetItemHasChildren(treeId)
             self.__collapsing = False
 
 
     @eg.LogIt
     def OnExpanding(self, event):
-        id = event.GetItem()
-        obj = self.GetPyData(id)
+        treeId = event.GetItem()
+        obj = self.GetPyData(treeId)
         for child in obj.childs:
             if not self.filterFunc(child):
                 continue
             tmp = self.AppendItem(
-                id,
+                treeId,
                 child.GetLabel(),
-                child.icon.index if child.isEnabled else child.icon.disabledIndex,
+                (
+                    child.icon.index if child.isEnabled 
+                        else child.icon.disabledIndex
+                ),
                 -1,
                 wx.TreeItemData(child)
             )
@@ -124,4 +127,3 @@ class TreeItemBrowseCtrl(wx.TreeCtrl):
             child.SetAttributes(self, tmp)
             self.searchFunc(child, tmp)
             
-

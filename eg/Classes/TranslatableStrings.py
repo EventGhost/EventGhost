@@ -45,4 +45,7 @@ class CustomMetaclass(type):
 
 class TranslatableStrings:
     __metaclass__ = CustomMetaclass
+    
+    def __init__(self):
+        pass
         

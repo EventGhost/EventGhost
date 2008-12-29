@@ -71,4 +71,3 @@ class TreePosition:
         return searchParent, self.pos
         
         
-        
