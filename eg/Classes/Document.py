@@ -28,37 +28,14 @@ from xml.etree import cElementTree as ElementTree
 from tempfile import mkstemp
 from threading import Lock
 
+
 class TreeStateData:
     guid = None
     time = None
-
-config = eg.GetConfig("treeStateData", TreeStateData)
-
-
-class Observable:
+    expandState = None # deprecated
+    expanded = None
     
-    def __init__(self, initialValue=None):
-        self.data = initialValue
-        self.callbacks = {}
-
-    def addCallback(self, func):
-        self.callbacks[func] = 1
-
-    def delCallback(self, func):
-        del self.callbacks[func]
-
-    def set(self, data):
-        self.data = data
-        for func in self.callbacks:
-            #eg.PrintDebugNotice(func, data)
-            func(data)
-
-    def get(self):
-        return self.data
-
-    def unset(self):
-        self.data = None
-
+eg.GetConfig("treeStateData", TreeStateData)
 
 
 class Document(object):
@@ -93,12 +70,10 @@ class Document(object):
         self.lastUndoId = 0
         self.undoIdOnSave = 0
         self.listeners = {}
-        self.undoEvent = eg.EventHook()
-        #self.selection = None
-        self.selectionEvent = eg.EventHook()
-        self.isDirty = Observable(False)
+        self.undoEvent = eg.NotificationHandler((False, False, "", ""))
+        self.selectionEvent = eg.NotificationHandler()
+        self.isDirty = eg.NotificationHandler(False)
         self.filePath = None
-        self.TreeLink = eg.TreeLink
         self.root = None
         self.firstVisibleItem = None
         self.frame = None
@@ -111,9 +86,9 @@ class Document(object):
         return self._selection
     
     
-    def SetSelection(self, value):
-        self._selection = value
-        self.selectionEvent.Fire(value)
+    def SetSelection(self, selection):
+        self._selection = selection
+        self.selectionEvent.Fire(selection)
         
     selection = property(fget=GetSelection, fset=SetSelection)
         
@@ -137,7 +112,7 @@ class Document(object):
         del self.stockRedo[:]
         self.undoState = 0
         self.undoStateOnSave = 0
-        self.undoEvent.Fire(False, False, "", "")
+        self.undoEvent.Fire((False, False, "", ""))
 
 
     @eg.LogIt
@@ -153,9 +128,8 @@ class Document(object):
         node = ElementTree.Element("Autostart")
         self.autostartMacro = self.AutostartItem(root, node)
         root.childs.append(self.autostartMacro)
-        self.isInLabelEdit = False
         eg.TreeLink.StopLoad()
-        self.isDirty.set(False)
+        self.isDirty.Fire(False)
         if self.tree:
             wx.CallAfter(self.tree.SetData)
         return root
@@ -183,7 +157,7 @@ class Document(object):
         self.root = root
         self.selection = root
         eg.TreeLink.StopLoad()
-        self.isDirty.set(False)
+        self.isDirty.Fire(False)
         self.AfterLoad()
         if self.tree:
             wx.CallAfter(self.tree.SetData)
@@ -198,32 +172,32 @@ class Document(object):
     def AfterLoad(self):
         tsData = eg.config.treeStateData
         if tsData.guid == self.root.guid and tsData.time == self.root.time:
-            self.SetExpandState(tsData.expandState)
+            self.SetExpandState(tsData.expanded)
             self.selection = self.FindItemWithPath(tsData.selection)
             self.firstVisibleItem = self.FindItemWithPath(
                 tsData.firstVisibleItem
             )
         
-        
+    
     def WriteFile(self, filePath=None):
         if filePath is not None:
             self.SetFilePath(filePath)
         else:
             filePath = self.filePath
         success = False
-        fd, tmpPath = mkstemp(".xml", "$", os.path.dirname(filePath))
-        os.close(fd)
+        tmpFile, tmpPath = mkstemp(".xml", "$", os.path.dirname(filePath))
+        os.close(tmpFile)
         try:
-            fd = file(tmpPath, "wb+")
-            fd.write('<?xml version="1.0" encoding="UTF-8" ?>\r\n')
-            self.root.GetXmlString(fd.write)
-            fd.close()
+            tmpFile = file(tmpPath, "wb+")
+            tmpFile.write('<?xml version="1.0" encoding="UTF-8" ?>\r\n')
+            self.root.GetXmlString(tmpFile.write)
+            tmpFile.close()
             try:
                 os.remove(filePath)
             except:
                 pass
             os.rename(tmpPath, filePath)
-            self.isDirty.set(False)
+            self.isDirty.Fire(False)
             self.undoStateOnSave = self.undoState
             success = True
         except:
@@ -240,7 +214,7 @@ class Document(object):
         stateData = eg.config.treeStateData
         stateData.guid = self.root.guid
         stateData.time = self.root.time
-        stateData.expandState = self.GetExpandState()
+        stateData.expanded = self.GetExpandState()
         stateData.selection = self.selection.GetPath()
         stateData.firstVisibleItem = self.firstVisibleItem.GetPath()
     
@@ -254,8 +228,8 @@ class Document(object):
         self.undoState += 1
         del self.stockRedo[:]
         
-        self.isDirty.set(True)
-        self.undoEvent.Fire(True, False, ": " + handler.name, "")
+        self.isDirty.Fire(True)
+        self.undoEvent.Fire((True, False, ": " + handler.name, ""))
         
         
     def Undo(self):
@@ -264,7 +238,7 @@ class Document(object):
         handler = self.stockUndo.pop()
         handler.Undo(self)
         self.undoState -= 1
-        self.isDirty.set(self.undoState != self.undoStateOnSave)
+        self.isDirty.Fire(self.undoState != self.undoStateOnSave)
         self.stockRedo.append(handler)
         if len(self.stockUndo):
             undoName = ": " + self.stockUndo[-1].name
@@ -272,7 +246,7 @@ class Document(object):
         else:
             undoName = ""
             hasUndo = False
-        self.undoEvent.Fire(hasUndo, True, undoName, ": " + handler.name)
+        self.undoEvent.Fire((hasUndo, True, undoName, ": " + handler.name))
         
         
     @eg.LogIt
@@ -282,7 +256,7 @@ class Document(object):
         handler = self.stockRedo.pop()
         handler.Redo(self)
         self.undoState += 1
-        self.isDirty.set(self.undoState != self.undoStateOnSave)
+        self.isDirty.Fire(self.undoState != self.undoStateOnSave)
         self.stockUndo.append(handler)
         if len(self.stockRedo):
             redoName = ": " + self.stockRedo[-1].name
@@ -290,7 +264,7 @@ class Document(object):
         else:
             redoName = ""
             hasRedo = False
-        self.undoEvent.Fire(True, hasRedo, ": " + handler.name, redoName)
+        self.undoEvent.Fire((True, hasRedo, ": " + handler.name, redoName))
         
         
     def RestoreItem(self, positionData, xmlData):
@@ -320,9 +294,9 @@ class Document(object):
         # NOTICE:
         # If the program is started through a shortcut with "minimize" option
         # set, we get an iconize event while ShowFrame() is executing.
-        # Therefor we have to use this CallLater workaround.
+        # Therefore we have to use this CallLater workaround.
         # TODO:
-        # Find a better way. Preferable detetct the minimize option before
+        # Find a better way. Preferable detect the minimize option before
         # we create the MainFrame.
         if self.reentrantLock.acquire(False):
             if self.frame is not None:
@@ -344,7 +318,7 @@ class Document(object):
                  wx.ID_NO     if file was not saved
                  wx.ID_CANCEL if user canceled possible save
         """
-        if not self.isDirty.get():
+        if not self.isDirty.GetValue():
             return wx.ID_OK
         dialog = wx.MessageDialog(
             None, 
@@ -423,44 +397,40 @@ class Document(object):
         try:
             for pos in path:
                 item = item.childs[pos]
-        except:
+        except IndexError:
             item = self.root
         return item
 
 
     @eg.LogIt
     def GetExpandState(self):
-        vector = []
-        append = vector.append
+        expanded = set()
+        add = expanded.add
         ContainerItem = eg.ContainerItem
-        def _Traverse(item, i):
+        def Traverse(item, i):
             if isinstance(item, ContainerItem):
                 i += 1
                 if item.isExpanded:
-                    append(i)
+                    add(i)
                 for child in item.childs:
-                    i = _Traverse(child, i)
+                    i = Traverse(child, i)
             return i
-        _Traverse(self.root, -1)
-        return vector
+        Traverse(self.root, -1)
+        return expanded
     
     
     #@eg.LogIt
-    def SetExpandState(self, vector):
-        if vector is None:
+    def SetExpandState(self, expanded):
+        if expanded is None:
             return
         ContainerItem = eg.ContainerItem
-        def _Traverse(item, i):
+        def Traverse(item, i):
             if isinstance(item, ContainerItem):
                 i += 1
-                if len(vector) and vector[0] == i:
-                    item.isExpanded = True  
-                    vector.pop(0)
-                else:
-                    item.isExpanded = False
+                item.isExpanded = (i in expanded)
                 for child in item.childs:
-                    i = _Traverse(child, i)
+                    i = Traverse(child, i)
             return i
         
-        _Traverse(self.root, -1)
+        Traverse(self.root, -1)
 

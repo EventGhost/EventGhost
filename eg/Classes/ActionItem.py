@@ -53,6 +53,7 @@ class ActionItem(TreeItem):
     
     icon = eg.Icons.ACTION_ICON
     executable = None
+    compiled = None
     args = None
     isExecutable = True
     isConfigurable = True
@@ -75,7 +76,6 @@ class ActionItem(TreeItem):
     def __init__(self, parent, node):
         TreeItem.__init__(self, parent, node)
         text = node.text
-        self.CmdData = None
         if not text:
             # this should never happen
             return
@@ -90,7 +90,7 @@ class ActionItem(TreeItem):
         except KeyError:
             eg.PrintError("Can't find action: " + text)
             action = None
-        if action is None or not issubclass(action, eg.ActionClass):
+        if action is None or not issubclass(action, eg.ActionBase):
             action = eg.plugins.EventGhost.plugin.info.actions["PythonCommand"]
             argString = repr(text)
         try:
@@ -114,8 +114,8 @@ class ActionItem(TreeItem):
                 'returnArgs(%s)' % argString,
                 eg.globals.__dict__, 
                 dict(
-                    returnArgs = lambda *x: x,
-                    XmlIdLink = lambda id: TreeLink.CreateFromArgument(self, id),
+                    returnArgs=lambda *x: x,
+                    XmlIdLink=lambda id: TreeLink.CreateFromArgument(self, id),
                 )
             )
         except:
@@ -152,20 +152,20 @@ class ActionItem(TreeItem):
         
     def Refresh(self):
         tree = self.tree
-        id = self.id
-        if id is None:
+        treeId = self.id
+        if treeId is None:
             return
-        self.SetAttributes(tree, id)
-        tree.SetItemText(id, self.GetLabel())
+        self.SetAttributes(tree, treeId)
+        tree.SetItemText(treeId, self.GetLabel())
             
             
-    def SetAttributes(self, tree, id):
+    def SetAttributes(self, tree, treeId):
         if self.name:
-            tree.SetItemTextColour(id, gRenamedColour)
-            tree.SetItemFont(id, tree.italicfont)
+            tree.SetItemTextColour(treeId, gRenamedColour)
+            tree.SetItemFont(treeId, tree.italicfont)
         else:
-            tree.SetItemTextColour(id, None)
-            tree.SetItemFont(id, tree.normalfont)
+            tree.SetItemTextColour(treeId, None)
+            tree.SetItemFont(treeId, tree.normalfont)
         
         
     def GetLabel(self):
@@ -192,11 +192,12 @@ class ActionItem(TreeItem):
         """
         # if the Configure method of the executable is overriden, we assume
         # the item wants to be configured after creation
-        im_func = self.executable.Configure.im_func
-        return im_func != eg.ActionClass.Configure.im_func
+        imFunc = self.executable.Configure.im_func
+        return imFunc != eg.ActionBase.Configure.im_func
     
     
-    def IsConfigurable(self):
+    @staticmethod
+    def IsConfigurable():
         return True
     
     
@@ -213,7 +214,7 @@ class ActionItem(TreeItem):
             action.info.icon.GetWxIcon(),
             "plugins/%s/" % action.plugin.__module__
         )
-        def OnClose(event):
+        def OnClose(dummyEvent):
             self.helpDialog.Destroy()
             del self.helpDialog
         self.helpDialog.Bind(wx.EVT_CLOSE, OnClose)
@@ -240,9 +241,9 @@ class ActionItem(TreeItem):
             return
         try:
             eg.result = self.compiled()
-        except eg.Exception, e:
+        except eg.Exception, exc:
             #eg.PrintError(e.message)
-            self.PrintError(unicode(e))
+            self.PrintError(unicode(exc))
         except:
             wx.CallAfter(self.Select)
             label = self.GetLabel()
@@ -256,7 +257,10 @@ class ActionItem(TreeItem):
             return HINT_MOVE_BEFORE
         if cls == eg.ActionItem:
             return HINT_MOVE_BEFORE_OR_AFTER
-        if cls == eg.PluginItem and self.parent == self.document.autostartMacro:
+        if (
+            cls == eg.PluginItem 
+            and self.parent == self.document.autostartMacro
+        ):
             return HINT_MOVE_BEFORE_OR_AFTER
         return HINT_NO_DROP
 

@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 import wx
 
 
@@ -50,8 +49,6 @@ class Slider(wx.Window):
         self.valueLabel = valueLabel
         self.levelCallback = levelCallback
         wx.Window.__init__(self, parent, id, pos, size, style)
-        sizer = wx.GridBagSizer()
-        sizer.AddGrowableCol(1, 1)
         self.slider = wx.Slider(
             self,
             -1,
@@ -60,13 +57,18 @@ class Slider(wx.Window):
             max,
             style = style
         )
-        sizer.Add(self.slider, (0, 0), (1, 3), wx.EXPAND)   
-        st = wx.StaticText(self, -1, minLabel)
-        sizer.Add(st, (1, 0), (1, 1), wx.ALIGN_LEFT)   
+        st1 = wx.StaticText(self, -1, minLabel)
         self.valueLabelCtrl = wx.StaticText(self, -1, valueLabel)
-        sizer.Add(self.valueLabelCtrl, (1, 1), (1, 1), wx.ALIGN_CENTER_HORIZONTAL)   
-        st = wx.StaticText(self, -1, maxLabel)
-        sizer.Add(st, (1, 2), (1, 1), wx.ALIGN_RIGHT)   
+        st2 = wx.StaticText(self, -1, maxLabel)
+
+        sizer = wx.GridBagSizer()
+        sizer.AddGrowableCol(1, 1)
+        sizer.AddMany([
+            (self.slider, (0, 0), (1, 3), wx.EXPAND),
+            (st1, (1, 0), (1, 1), wx.ALIGN_LEFT),
+            (self.valueLabelCtrl, (1, 1), (1, 1), wx.ALIGN_CENTER_HORIZONTAL), 
+            (st2, (1, 2), (1, 1), wx.ALIGN_RIGHT),
+        ])
         self.SetSizer(sizer)
         self.SetAutoLayout(True)
         sizer.Fit(self)
@@ -78,16 +80,16 @@ class Slider(wx.Window):
         self.OnScrollChanged()
 
 
-    def OnSize(self, event):
+    def OnSize(self, dummyEvent):
         if self.GetAutoLayout():
             self.Layout()
 
 
-    def OnSetFocus(self, event):
+    def OnSetFocus(self, dummyEvent):
         self.slider.SetFocus()
         
         
-    def OnScrollChanged(self, event=None):
+    def OnScrollChanged(self, dummyEvent=None):
         value = self.slider.GetValue()
         if self.levelCallback is None:
             self.valueLabelCtrl.SetLabel(self.valueLabel % {"1": value})

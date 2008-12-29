@@ -32,7 +32,7 @@ from Dynamic import (
     ShowWindow, BringWindowToTop, UpdateWindow, GetForegroundWindow, 
     InvalidateRect, GetCurrentThreadId, GetWindowThreadProcessId,
     SendNotifyMessage, GetWindowRect, GetCursorPos, EnumProcesses, 
-    CloseHandle, EnumDisplayMonitors, GetCurrentProcessId, FindWindow,
+    EnumDisplayMonitors, FindWindow,
     IsWindowVisible, GetParent, GetWindowDC, GetClassLong, EnumChildWindows,
     ReleaseDC, GetDC, DeleteObject, CreatePen, GetSystemMetrics, 
     SendMessageTimeout, ScreenToClient, WindowFromPoint, SendMessageTimeout,
@@ -45,8 +45,8 @@ from Dynamic import (
     WM_SYSCOMMAND, SC_CLOSE, SW_SHOWNA, SMTO_BLOCK, SMTO_ABORTIFHUNG,
 )
 
-EnumChildProc = WINFUNCTYPE(BOOL, HWND, LPARAM)
-EnumChildWindows.argtypes = [HWND, EnumChildProc, LPARAM]
+ENUM_CHILD_PROC = WINFUNCTYPE(BOOL, HWND, LPARAM)
+EnumChildWindows.argtypes = [HWND, ENUM_CHILD_PROC, LPARAM]
 
 _H_BORDERWIDTH = 3 * GetSystemMetrics(SM_CXBORDER)
 _H_BORDERCOLOUR = RGB(255, 0, 0)
@@ -89,9 +89,14 @@ def CloseHwnd(hWnd):
 
 def GetMonitorDimensions():
     retval = []
-    def MonitorEnumProc(hMonitor, hdcMonitor, lprcMonitor, dwData):
-        r = lprcMonitor.contents
-        rect = wx.Rect(r.left, r.top, r.right - r.left, r.bottom - r.top)
+    def MonitorEnumProc(dummy1, dummy2, lprcMonitor, dummy3):
+        displayRect = lprcMonitor.contents
+        rect = wx.Rect(
+            displayRect.left, 
+            displayRect.top, 
+            displayRect.right - displayRect.left, 
+            displayRect.bottom - displayRect.top
+        )
         retval.append(rect)
         return 1
     EnumDisplayMonitors(0, None, MONITORENUMPROC(MonitorEnumProc), 0)
@@ -101,7 +106,7 @@ def GetMonitorDimensions():
 
 def HighlightWindow(hWnd):
     """ 
-    Draws an inverted rectange around a window to inform the user about
+    Draws an inverted rectangle around a window to inform the user about
     the currently selected window.
     """
     
@@ -233,7 +238,7 @@ def HwndHasChildren(hWnd, invisible):
                 data[0] = True
                 return False
             return True
-    EnumChildWindows(hWnd, EnumChildProc(EnumFunc), 0)
+    EnumChildWindows(hWnd, ENUM_CHILD_PROC(EnumFunc), 0)
     return data[0]
 
 
@@ -303,15 +308,15 @@ def PyEnumProcesses():
     size = 1024
     pBytesReturned = DWORD()
     while True:
-        buffer = (DWORD * size)()
-        cb = size * sizeof(DWORD)
-        res = EnumProcesses(buffer, cb, byref(pBytesReturned))
+        data = (DWORD * size)()
+        dataSize = size * sizeof(DWORD)
+        res = EnumProcesses(data, dataSize, byref(pBytesReturned))
         if res == 0:
             raise WinError()
-        if pBytesReturned.value != cb:
+        if pBytesReturned.value != dataSize:
             break
         size *= 10
-    return buffer[:pBytesReturned.value / sizeof(DWORD)]
+    return data[:pBytesReturned.value / sizeof(DWORD)]
         
 
 def PySendMessageTimeout(
@@ -336,3 +341,4 @@ def PyFindWindow(className=None, windowName=None):
     if not hWnd:
         raise WinError()
     return hWnd
+

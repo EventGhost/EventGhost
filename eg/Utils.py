@@ -20,10 +20,10 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-__all__ = ["Bunch", "EventHook", "LogIt", "LogItWithReturn",
+__all__ = ["Bunch", "LogIt", "LogItWithReturn",
     "TimeIt", "AssertNotMainThread", "AssertNotActionThread", "ParseString",
     "SetClass", "EnsureVisible", "namedtuple", "AsGreenlet",
-    "VBoxSizer", "HBoxSizer", "EqualizeWidths", "P", "wxDummyEvent",
+    "VBoxSizer", "HBoxSizer", "EqualizeWidths", "wxDummyEvent",
 ]
     
 import eg
@@ -32,14 +32,12 @@ import threading
 import time
 import inspect
 from types import ClassType
-
-
-def P(*args, **kwargs):
-    return (args, kwargs)
+from functools import update_wrapper
 
 
 class Bunch(object):
-    """The simple but handy "collector of a bunch of named stuff" class.
+    """
+    The simple but handy "collector of a bunch of named stuff" class.
     
     Often we want to just collect a bunch of stuff together, naming each 
     item of the bunch; a dictionary's OK for that, but a small do-nothing 
@@ -49,48 +47,18 @@ class Bunch(object):
         self.__dict__.update(kwargs)
     
     
-    #def __call__(self):
-    #    return self.__dict__
-    
-    
-    
-class EventHook(object):
-    __lastValues = ()
-    
-    def __init__(self):
-        self.__handlers = []
-        
-        
-    def Bind(self, handler):
-        self.__handlers.append(handler)
-        
-        
-    def Unbind(self, handler):
-        self.__handlers.remove(handler)
-        
-        
-    def Fire(self, *args):
-        self.__lastValues = args
-        for handler in self.__handlers:
-            handler(*args)
-            
-            
-    def Get(self):
-        return self.__lastValues
 
-
-    
 def GetMyRepresentation(value):
     """
     Give a shorter representation of some wx-objects. Returns normal repr()
     for everything else. Also adds a "=" sign at the beginning to make it
     useful as a "formatvalue" function for inspect.formatargvalues().
     """
-    t = repr(type(value))
-    if t.startswith("<class 'wx._core."):
-        return "=<wx.%s>" % t[len("<class 'wx._core."): -2]
-    if t.startswith("<class 'wx._controls."):
-        return "=<wx.%s>" % t[len("<class 'wx._controls."): -2]
+    typeString = repr(type(value))
+    if typeString.startswith("<class 'wx._core."):
+        return "=<wx.%s>" % typeString[len("<class 'wx._core."): -2]
+    if typeString.startswith("<class 'wx._controls."):
+        return "=<wx.%s>" % typeString[len("<class 'wx._controls."): -2]
     return "=" + repr(value)
 
 
@@ -104,10 +72,10 @@ def GetFuncArgString(func, args, kwargs):
             start = 1
     res = []
     append = res.append
-    for k, v in zip(argnames, args)[start:]:
-        append(str(k) + GetMyRepresentation(v))
-    for k, v in kwargs.items():
-        append(str(k) + GetMyRepresentation(v))
+    for key, value in zip(argnames, args)[start:]:
+        append(str(key) + GetMyRepresentation(value))
+    for key, value in kwargs.items():
+        append(str(key) + GetMyRepresentation(value))
     fname = classname + func.__name__
     return fname, "(" + ", ".join(res) + ")"
 
@@ -121,11 +89,11 @@ def LogIt(func):
         raise TypeError("Can't wrap generator function")
     
     def LogItWrapper(*args, **kwargs):
-        fname, argString = GetFuncArgString(func, args, kwargs)
-        eg.PrintDebugNotice(fname + argString)
+        funcName, argString = GetFuncArgString(func, args, kwargs)
+        eg.PrintDebugNotice(funcName + argString)
         return func(*args, **kwargs)
-    return LogItWrapper
-        
+    return update_wrapper(LogItWrapper, func)
+    
 
 def LogItWithReturn(func):
     """Logs the function call and return, if eg.debugLevel is set."""
@@ -133,13 +101,13 @@ def LogItWithReturn(func):
         return func
     
     def LogItWithReturnWrapper(*args, **kwargs):
-        fname, argString = GetFuncArgString(func, args, kwargs)
-        eg.PrintDebugNotice(fname + argString)
-        res = func(*args, **kwargs)
-        eg.PrintDebugNotice(fname + " => " + repr(res))
-        return res
-    return LogItWithReturnWrapper
-        
+        funcName, argString = GetFuncArgString(func, args, kwargs)
+        eg.PrintDebugNotice(funcName + argString)
+        result = func(*args, **kwargs)
+        eg.PrintDebugNotice(funcName + " => " + repr(result))
+        return result
+    return update_wrapper(LogItWithReturnWrapper, func)
+
 
 def TimeIt(func):
     """ Decorator to measure the execution time of a function.
@@ -150,11 +118,11 @@ def TimeIt(func):
         return func
     def TimeItWrapper(*args, **kwargs):
         startTime = time.clock()
-        fname, _ = GetFuncArgString(func, args, kwargs)
+        funcName, _ = GetFuncArgString(func, args, kwargs)
         res = func(*args, **kwargs)
-        eg.PrintDebugNotice(fname + " :" + repr(time.clock() - startTime))
+        eg.PrintDebugNotice(funcName + " :" + repr(time.clock() - startTime))
         return res
-    return TimeItWrapper
+    return update_wrapper(TimeItWrapper, func)
 
 
 def AssertNotMainThread(func):
@@ -163,7 +131,7 @@ def AssertNotMainThread(func):
     def AssertWrapper(*args, **kwargs):
         assert eg.mainThread == threading.currentThread()
         return func(*args, **kwargs)
-    return AssertWrapper
+    return update_wrapper(AssertWrapper, func)
 
     
 def AssertNotActionThread(func):
@@ -172,7 +140,7 @@ def AssertNotActionThread(func):
     def AssertWrapper(*args, **kwargs):
         assert eg.actionThread == threading.currentThread()
         return func(*args, **kwargs)
-    return AssertWrapper
+    return update_wrapper(AssertNotActionThread, func)
 
     
 def ParseString(text, filterFunc=None):
@@ -207,22 +175,22 @@ def ParseString(text, filterFunc=None):
 
 
 def SetClass(obj, cls):
-    for k, v in cls.__dict__.items():
-        if type(v) == ClassType:
-            if k in obj.__dict__:
-                newValue = getattr(obj, k)
+    for key, value in cls.__dict__.items():
+        if type(value) == ClassType:
+            if key in obj.__dict__:
+                newValue = getattr(obj, key)
             else:
-                newValue = v()
-            SetClass(newValue, v)
-            setattr(obj, k, newValue)
+                newValue = value()
+            SetClass(newValue, value)
+            setattr(obj, key, newValue)
     obj.__class__ = cls
     
     
 def AsGreenlet(func):
     def Wrapper(*args, **kwargs):
-        gr = eg.Greenlet(func)
-        return gr.switch(*args, **kwargs)
-    return Wrapper
+        greenlet = eg.Greenlet(func)
+        return greenlet.switch(*args, **kwargs)
+    return update_wrapper(Wrapper, func)
 
 
 def EnsureVisible(window):

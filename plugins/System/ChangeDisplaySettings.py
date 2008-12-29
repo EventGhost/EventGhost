@@ -20,29 +20,30 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
+from eg.WinApi.Display import GetDisplays, GetDisplay
 
-from eg.WinApi.Display import GetDisplays
 
-gDisplays = GetDisplays()
-            
             
 class DisplayChoice(wx.Choice):
     
     def __init__(self, parent, id=-1, display=0):
+        self.displays = GetDisplays()
         wx.Choice.__init__(self, parent, id)
-        for i, display in enumerate(gDisplays):
-            self.Append("%d: %s" % (i+1, display.DeviceString))
-            self.SetClientData(i, display.DeviceName)
+        for i, display in enumerate(self.displays):
+            self.Append("%d: %s" % (i+1, display.deviceString))
+            self.SetClientData(i, display.deviceName)
         self.SetSelection(0)
         
         
     def GetValue(self):
         pos = wx.Choice.GetSelection(self)
-        return gDisplays[pos]
+        return self.displays[pos]
         
 
 
-class ChangeDisplaySettings(eg.ActionClass):
+class ChangeDisplaySettings(eg.ActionBase):
     name = "Change Display Settings"
     iconFile = "icons/Display"
     
@@ -67,7 +68,9 @@ class ChangeDisplaySettings(eg.ActionClass):
     ):
         # CDS_UPDATEREGISTRY = 1
         flags = int(updateRegistry)
-        gDisplays[displayNum - 1].SetDisplayMode(size, frequency, depth, flags)
+        GetDisplay(displayNum - 1).SetDisplayMode(
+            size, frequency, depth, flags
+        )
     
     
     def GetLabel(
@@ -95,7 +98,7 @@ class ChangeDisplaySettings(eg.ActionClass):
         panel = eg.ConfigPanel(self)                            
         if displayNum is None:
             displayNum = 1
-            size, frequency, depth = gDisplays[0].GetCurrentMode()
+            size, frequency, depth = GetDisplay(0).GetCurrentMode()
             
         displayChoice = DisplayChoice(panel)
         if displayNum is not None and displayNum <= displayChoice.GetCount():
@@ -105,7 +108,9 @@ class ChangeDisplaySettings(eg.ActionClass):
         frequencyChoice = wx.Choice(panel)
         depthChoice = wx.Choice(panel)
         includeAllCheckBox = panel.CheckBox(includeAll, text.includeAll)
-        updateRegistryCheckBox = panel.CheckBox(updateRegistry, text.storeInRegistry)
+        updateRegistryCheckBox = panel.CheckBox(
+            updateRegistry, text.storeInRegistry
+        )
         
         sizer = wx.GridBagSizer(6, 5)
         flag = wx.ALIGN_CENTER_VERTICAL
@@ -123,21 +128,11 @@ class ChangeDisplaySettings(eg.ActionClass):
         panel.sizer.Add(includeAllCheckBox, 0, flag, 10)
         panel.sizer.Add(updateRegistryCheckBox, 0, flag, 10)
         
-#        sizer = eg.Sizer(panel)
-#        sizer.AddLine(text.display, displayChoice)
-#        sizer.AddLine(text.resolution, resolutionChoice)
-#        sizer.AddLine(text.frequency, frequencyChoice)
-#        sizer.AddLine(text.colourDepth, depthChoice)
-#        sizer.AddLine(includeAllCheckBox)
-#        sizer.AddLine(updateRegistryCheckBox)
-#        panel.sizer.Add(sizer)
-        
         settings = eg.Bunch()
         
         def GetClientData(ctrl):
             return ctrl.GetClientData(ctrl.GetSelection())
         
-        @eg.LogIt
         def UpdateResolutions(event=None):
             display = displayChoice.GetValue()
             modes = display.GetDisplayModes(includeAllCheckBox.GetValue())
@@ -156,7 +151,6 @@ class ChangeDisplaySettings(eg.ActionClass):
             if event:
                 event.Skip()
                 
-        @eg.LogIt
         def UpdateDeepth(event=None):
             resolution = GetClientData(resolutionChoice)
             settings.depthDict = depthDict = settings.modes[resolution]
@@ -174,16 +168,16 @@ class ChangeDisplaySettings(eg.ActionClass):
             if event:
                 event.Skip()       
         
-        @eg.LogIt
+        
         def UpdateFrequencies(event=None):
             depth = GetClientData(depthChoice)
             frequencyList = settings.depthDict[depth]
             frequencyChoice.Clear()
             sel = 0
-            for pos, f in enumerate(frequencyList):
-                frequencyChoice.Append("%d Hz" % f)
-                frequencyChoice.SetClientData(pos, f)
-                if f == frequency:
+            for pos, frequency in enumerate(frequencyList):
+                frequencyChoice.Append("%d Hz" % frequency)
+                frequencyChoice.SetClientData(pos, frequency)
+                if frequency == frequency:
                     sel = pos
             frequencyChoice.Select(sel)
             if event:

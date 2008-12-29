@@ -80,7 +80,7 @@ class ThreadWorkerAction(object):
 
 
 
-class ThreadWorker:
+class ThreadWorker(object):
     """
     General purpose message pumping thread, that is used in many places.
     """
@@ -88,7 +88,7 @@ class ThreadWorker:
         self.__startupExceptionInfo = None
         self.__alive = True
         self.__queue = deque()
-        self.__Setup = partial(self.Setup, *args, **kwargs)
+        self.__setupFunc = partial(self.Setup, *args, **kwargs)
         self.__wakeEvent = CreateEvent(None, 0, 0, None)
         self.__dummyEvent = CreateEvent(None, 0, 0, None)
         self.__events = (HANDLE * 1)(self.__wakeEvent)
@@ -134,13 +134,13 @@ class ThreadWorker:
         if timeout > 0.0:
             self.__thread.start()
             try:
-                self.CallWait(self.__Setup, timeout)
+                self.CallWait(self.__setupFunc, timeout)
             except:
                 self.Stop()
                 raise
         else:
             self.__thread.start()
-            self.Call(self.__Setup)
+            self.Call(self.__setupFunc)
             return True
         
         
@@ -148,10 +148,10 @@ class ThreadWorker:
         """
         Call this if the thread should stop.
         """
-        def _stop():
+        def StopCall():
             self.__alive = False
             
-        self.Call(_stop)
+        self.Call(StopCall)
         if timeout > 0.0:
             self.__thread.join(timeout)
             return self.__thread.isAlive()
@@ -168,7 +168,8 @@ class ThreadWorker:
             while self.__alive:
                 self.__DoOneEvent()
         finally:
-            CoUninitialize() # why I haven't put this as last statement? Must have a reason.
+            CoUninitialize() # why I haven't put this as last statement? 
+                             # Must have a reason.
             self.Finish()
             
             
@@ -215,9 +216,7 @@ class ThreadWorker:
             eg.PrintError("".join(lines).rstrip())
             eg.PrintTraceback()
         finally:
-            callersFrame = action.callersFrame
             action.callersFrame = None
-            del callersFrame
             
     
     def Wait(self, timeout):
@@ -306,7 +305,9 @@ class ThreadWorker:
         action.processed.wait(timeout)
         if not action.processed.isSet():
             eg.PrintStack()
-            raise Exception("Timeout in %s.CallWait()" % self.__class__.__name__)
+            raise Exception(
+                "Timeout in %s.CallWait()" % self.__class__.__name__
+            )
         elif action.exceptionInfo is not None:
             excType, excValue, excTraceback = action.exceptionInfo
             raise excType, excValue, excTraceback

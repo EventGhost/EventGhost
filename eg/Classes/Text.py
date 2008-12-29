@@ -34,8 +34,8 @@ class Text:
         )
         deletePlugin = (
             "This plugin is used by actions in your configuration.\n"
-            "You cannot remove it before all actions that are using this plugin "
-            "have been removed."
+            "You cannot remove it before all actions that are using this "
+            "plugin have been removed."
         )
         deleteLinkedItems = (
             "At least one item outside your selection refers to an "
@@ -141,7 +141,10 @@ class Text:
             
         class SaveChanges:
             title = "Save changes?"
-            mesg = "The file was altered.\n\nDo you want to save the changes?\n"
+            mesg = (
+                "The file was altered.\n\n"
+                "Do you want to save the changes?\n"
+            )
 
         class Logger:
             caption = "Log"
@@ -152,12 +155,8 @@ class Text:
         class Tree:
             caption = "Configuration"
 
-    @classmethod
     @eg.LogIt
-    def Load(cls, language):   
-        class Text:
-            pass
-        text = Text()
+    def __init__(self, language):  
         class MetaClass(type):
             def __new__(mcs, dummyName, dummyBases, dct):
                 del dct["__module__"]
@@ -166,10 +165,9 @@ class Text:
                 return InstanceType(EmptyTextBunch, dct)
         try:
             infile = open("languages\\%s.py" % language)
-            exec infile in {"__metaclass__": MetaClass}, text.__dict__
+            exec infile in {"__metaclass__": MetaClass}, self.__dict__
         except IOError:
             pass
-        eg.SetClass(text, cls)
-        return text
+        eg.SetClass(self, self.__class__)
     
         

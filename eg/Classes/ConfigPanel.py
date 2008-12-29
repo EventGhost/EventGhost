@@ -34,7 +34,7 @@ class ConfigDialog(eg.Dialog):
         self.showLine = showLine
         self.resizable = resizable
         
-        isPlugin = isinstance(obj, eg.PluginClass)
+        isPlugin = isinstance(obj, eg.PluginBase)
         if isPlugin:
             title = eg.text.General.pluginLabel % obj.name
             flags = wx.EXPAND|wx.ALL|wx.ALIGN_CENTER
@@ -48,7 +48,9 @@ class ConfigDialog(eg.Dialog):
         dialogStyle = wx.CAPTION|wx.CLOSE_BOX|wx.SYSTEM_MENU
         if resizable:
             dialogStyle |= wx.RESIZE_BORDER|wx.MAXIMIZE_BOX
-        eg.Dialog.__init__(self, eg.document.frame, -1, title, style=dialogStyle)
+        eg.Dialog.__init__(
+            self, eg.document.frame, -1, title, style=dialogStyle
+        )
         
         self.buttonRow = eg.ButtonRow(
             self, 
@@ -296,3 +298,5 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
             buttonRow.applyButton.Enable(True)
         else:
             buttonRow.applyButton.Enable(False)
+            
+            

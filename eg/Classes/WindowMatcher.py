@@ -152,6 +152,10 @@ class WindowMatcher:
             self.__call__ = self.Enumerate
     
     
+    def __call__(self):
+        raise NotImplementedError
+        
+    
     def Find(self):
         winClassMatch = self.winClassMatch
         winNameMatch = self.winNameMatch

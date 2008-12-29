@@ -35,60 +35,63 @@ class Display(object):
     
     def __init__(self, iDevNum, displayDevice):
         self.iDevNum = iDevNum
-        self.DeviceName = displayDevice.DeviceName
-        self.DeviceString = displayDevice.DeviceString
-        self.isPrimary = bool(displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE)
-        self.dm = DEVMODE()
-        self.dm.dmSize = sizeof(DEVMODE)
-        self.dmp = pointer(self.dm)
+        self.deviceName = displayDevice.DeviceName
+        self.deviceString = displayDevice.DeviceString
+        self.isPrimary = bool(
+            displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE
+        )
+        self.devMode = DEVMODE()
+        self.devMode.dmSize = sizeof(DEVMODE)
+        self.dmp = pointer(self.devMode)
     
     
     def Refresh(self):
-        name = self.DeviceName
+        name = self.deviceName
         dmp = self.dmp
         EnumDisplaySettingsEx(name, 0, dmp, 0)
         EnumDisplaySettingsEx(name, ENUM_CURRENT_SETTINGS, dmp, 0)
-        dm = self.dm
-        self.x = dm.dmPosition.x
-        self.y = dm.dmPosition.y
-        self.width = dm.dmPelsWidth
-        self.height = dm.dmPelsHeight
-        self.frequency = dm.dmDisplayFrequency
-        self.bitsPerPixel = dm.dmBitsPerPel        
+        devMode = self.devMode
+        self.x = devMode.dmPosition.x
+        self.y = devMode.dmPosition.y
+        self.width = devMode.dmPelsWidth
+        self.height = devMode.dmPelsHeight
+        self.frequency = devMode.dmDisplayFrequency
+        self.bitsPerPixel = devMode.dmBitsPerPel        
     
     
-    def GetDisplayModes(self, all=False):
-        dm = DEVMODE()
-        dm.dmSize = sizeof(DEVMODE)
+    def GetDisplayModes(self, allModes=False):
+        devMode = DEVMODE()
+        devMode.dmSize = sizeof(DEVMODE)
+        lpDevMode = pointer(devMode)
         modes = {}
-        if all:
+        if allModes:
             flag = EDS_RAWMODE
         else:
             flag = 0
         iModeNum = 0
-        while 0 != EnumDisplaySettingsEx(self.DeviceName, iModeNum, pointer(dm), flag):
+        while 0 != EnumDisplaySettingsEx(self.deviceName, iModeNum, lpDevMode, flag):
             iModeNum += 1
-            resolution = (dm.dmPelsWidth, dm.dmPelsHeight)
-            deepth_dict = modes.setdefault(resolution, {})
-            frequency_list = deepth_dict.setdefault(dm.dmBitsPerPel, [])
-            frequency_list.append(dm.dmDisplayFrequency)
+            resolution = (devMode.dmPelsWidth, devMode.dmPelsHeight)
+            deepthDict = modes.setdefault(resolution, {})
+            frequencyList = deepthDict.setdefault(devMode.dmBitsPerPel, [])
+            frequencyList.append(devMode.dmDisplayFrequency)
         return modes
 
 
     def SetDisplayMode(self, size, frequency, bitdepth, flags=0):
-        dm = DEVMODE()
-        dm.dmSize = sizeof(DEVMODE)
-        dm.dmPelsWidth = size[0]
-        dm.dmPelsHeight = size[1]
-        dm.dmBitsPerPel = bitdepth
-        dm.dmDisplayFrequency = frequency
-        dm.dmFields = (
+        devMode = DEVMODE()
+        devMode.dmSize = sizeof(DEVMODE)
+        devMode.dmPelsWidth = size[0]
+        devMode.dmPelsHeight = size[1]
+        devMode.dmBitsPerPel = bitdepth
+        devMode.dmDisplayFrequency = frequency
+        devMode.dmFields = (
             DM_BITSPERPEL
             |DM_PELSWIDTH
             |DM_PELSHEIGHT
             |DM_DISPLAYFREQUENCY
         )
-        ChangeDisplaySettingsEx(self.DeviceName, pointer(dm), 0, flags, 0)
+        ChangeDisplaySettingsEx(self.deviceName, pointer(devMode), 0, flags, 0)
 
 
     def GetCurrentMode(self):
@@ -107,6 +110,14 @@ class Display(object):
         
         
         
+def GetDisplay(displayNum):
+    displayDevice = DISPLAY_DEVICE()
+    displayDevice.cb = sizeof(DISPLAY_DEVICE)
+    if EnumDisplayDevices(None, displayNum, pointer(displayDevice), 0) == 0:
+        return None
+    return Display(displayNum, displayDevice)
+
+
 def GetDisplays():
     res = []
     displayDevice = DISPLAY_DEVICE()
@@ -152,7 +163,9 @@ def GetDisplayModes():
             devMode.dmPelsHeight,
             devMode.dmDisplayFrequency,
             devMode.dmBitsPerPel,
-            bool(displayDevice.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP),
+            bool(
+                displayDevice.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP
+            ),
             bool(displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE),
             devMode.dmDisplayFlags,
         )

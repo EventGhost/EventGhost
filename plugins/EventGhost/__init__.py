@@ -44,7 +44,7 @@ from ShowOSD import ShowOSD
 from NewJumpIf import NewJumpIf
 
 
-class EventGhost(eg.PluginClass):
+class EventGhost(eg.PluginBase):
     """
     Plugin: EventGhost
     
@@ -59,8 +59,6 @@ class EventGhost(eg.PluginClass):
         self.AddAction(EnableItem)
         self.AddAction(DisableItem)
         self.AddAction(EnableExclusive)
-        #self.AddAction(EnableNextExclusive)
-        #self.AddAction(EnablePreviousExclusive)
         self.AddAction(Wait)
         self.AddAction(StopProcessing)
         self.AddAction(JumpIfLongPress)
@@ -68,8 +66,6 @@ class EventGhost(eg.PluginClass):
         self.AddAction(TriggerEvent)
         self.AddAction(FlushEvents)
         self.AddAction(ShowOSD)
-        self.AddAction(JumpIf, hidden=True)
-        self.AddAction(StopIf, hidden=True)
 
 
 
@@ -96,10 +92,6 @@ class PythonCommand(eg.ActionWithStringParameter):
                 skip=1,
                 source=eg.currentItem
             )
-#            treeItem.PrintError(eg.text.Error.InAction % pythonstring)
-#            errorlines = traceback.format_exc().splitlines()
-#            treeItem.PrintError("\n".join(errorlines[4:]))
-#            return
         
         
     def GetLabel(self, pythonstring=""):
@@ -107,7 +99,7 @@ class PythonCommand(eg.ActionWithStringParameter):
         
             
     
-class Comment(eg.ActionClass):
+class Comment(eg.ActionBase):
     name = "Comment"
     description = \
         "Just a do-nothing action that can be used to comment your "\
@@ -118,10 +110,8 @@ class Comment(eg.ActionClass):
         pass
         
 
-#-----------------------------------------------------------------------------
-# Action: EventGhost.EnableItem
-#-----------------------------------------------------------------------------
-class EnableItem(eg.ActionClass):
+
+class EnableItem(eg.ActionBase):
     name = "Enable an item"
     description = "Enable an item in the tree."  
     iconFile = 'icons/EnableItem'
@@ -145,7 +135,7 @@ class EnableItem(eg.ActionClass):
         return self.text.label % ''
         
         
-    def filterFunc(self, obj):
+    def FilterFunc(self, dummyObj):
         return True
     
     
@@ -157,7 +147,6 @@ class EnableItem(eg.ActionClass):
         panel = eg.ConfigPanel(self, resizable=True)
         okButton = panel.dialog.buttonRow.okButton
         applyButton = panel.dialog.buttonRow.applyButton
-        self.foundId = None
         if link is not None:
             searchItem = link.target
         else:
@@ -166,7 +155,7 @@ class EnableItem(eg.ActionClass):
             
         tree = eg.TreeItemBrowseCtrl(
             panel, 
-            self.filterFunc, 
+            self.FilterFunc, 
             #searchFunc, 
             selectItem=searchItem
         )
@@ -176,9 +165,9 @@ class EnableItem(eg.ActionClass):
             applyButton.Enable(False)
             
         def OnSelectionChanged(event):
-            id = event.GetItem()
-            if id.IsOk():
-                item = tree.GetPyData(id)
+            treeItem = event.GetItem()
+            if treeItem.IsOk():
+                item = tree.GetPyData(treeItem)
                 if self.IsSelectableItem(item):
                     okButton.Enable(True)
                     applyButton.Enable(True)
@@ -192,17 +181,14 @@ class EnableItem(eg.ActionClass):
         panel.sizer.Add(panel.StaticText(self.text.text1), 0, wx.BOTTOM, 5)
         panel.sizer.Add(tree, 1, wx.EXPAND)
         while panel.Affirmed():
-            id = tree.GetSelection()
-            if id.IsOk():
-                obj = tree.GetPyData(id)
+            treeItem = tree.GetSelection()
+            if treeItem.IsOk():
+                obj = tree.GetPyData(treeItem)
                 link.SetTarget(obj)
             panel.SetResult(link)
        
     
     
-#-----------------------------------------------------------------------------
-# Action: EventGhost.DisableItem
-#-----------------------------------------------------------------------------
 class DisableItem(EnableItem):
     name = "Disable an item"
     description = "Disable an item"
@@ -252,7 +238,7 @@ class EnableExclusive(EnableItem):
         eg.actionThread.Call(DoIt)
                 
                 
-    def filterFunc(self, item):
+    def FilterFunc(self, item):
         return isinstance(item, (FolderItem, MacroItem))
     
     
@@ -261,78 +247,7 @@ class EnableExclusive(EnableItem):
     
     
     
-class EnableNextExclusive(EnableExclusive):
-    name = "Exclusive enable next child"
-    class text:
-        label = "Enable next child in: %s"
-        text1 = "Please select the folder/macro which should be enabled:"
-    
-    def __call__(self, link):
-        if not link:
-            return
-        item = link.target
-        if not item:
-            return
-        def DoIt():
-            childs = item.childs
-            for i in range(len(childs)):
-                child = childs[i]
-                if child.isEnabled:
-                    child.isEnabled = False
-                    wx.CallAfter(child.Enable, False)
-                    break
-            i += 1
-            if i >= len(childs):
-                i = 0
-            child = childs[i]
-            child.isEnabled = True
-            wx.CallAfter(child.Enable, True)
-            
-            for n in range(i+1, len(childs)):
-                child = childs[n]
-                child.isEnabled = False
-                wx.CallAfter(child.Enable, False)
-
-        eg.actionThread.Call(DoIt)
-    
-    
-    
-class EnablePreviousExclusive(EnableExclusive):
-    name = "Exclusive enable previous child"
-    class text:
-        label = "Enable previous child in: %s"
-        text1 = "Please select the folder/macro which should be enabled:"
-    
-    def __call__(self, link):
-        if not link:
-            return
-        item = link.target
-        if not item:
-            return
-        def DoIt():
-            childs = item.childs
-            for searchPos in range(len(childs)):
-                child = childs[searchPos]
-                if child.isEnabled:
-                    break
-            searchPos -= 1
-            if searchPos < 0:
-                searchPos = len(childs) - 1
-            child = childs[searchPos]
-            child.isEnabled = True
-            wx.CallAfter(child.Enable, True)
-            
-            for n in range(len(childs)):
-                if n != searchPos:
-                    child = childs[n]
-                    child.isEnabled = False
-                    wx.CallAfter(child.Enable, False)
-
-        eg.actionThread.Call(DoIt)
-    
-    
-    
-class Wait(eg.ActionClass):
+class Wait(eg.ActionBase):
     name = "Wait some time"
     description = "Wait some time"        
     iconFile = "icons/Wait"
@@ -358,7 +273,7 @@ class Wait(eg.ActionClass):
         
 
 
-class StopProcessing(eg.ActionClass):
+class StopProcessing(eg.ActionBase):
     name = "Stop processing this event"
     description = (
         "After this action, EventGhost will no further search for matching "
@@ -371,7 +286,7 @@ class StopProcessing(eg.ActionClass):
 
 
 
-class JumpIfLongPress(eg.ActionClass):
+class JumpIfLongPress(eg.ActionBase):
     name = "Jump if long press"
     description = \
         "Jumps to another macro, if the button on the remote is "\
@@ -391,9 +306,9 @@ class JumpIfLongPress(eg.ActionClass):
     def __call__(self, interval, link):
         eg.event.shouldEnd.wait(interval)
         if not eg.event.shouldEnd.isSet():
-            next = link.target
-            next_id = next.parent.GetChildIndex(next)
-            eg.programCounter = (next, next_id)
+            nextItem = link.target
+            nextIndex = nextItem.parent.GetChildIndex(nextItem)
+            eg.programCounter = (nextItem, nextIndex)
                 
                 
     def GetLabel(self, interval, link):
@@ -420,7 +335,7 @@ class JumpIfLongPress(eg.ActionClass):
             (intervalCtrl, 0, wx.LEFT|wx.RIGHT, 5),
             (panel.StaticText(text.text2), 0, wx.ALIGN_CENTER_VERTICAL),
         )
-        mySizer = wx.FlexGridSizer(2,3,5,5)
+        mySizer = wx.FlexGridSizer(2, 3, 5, 5)
         mySizer.AddGrowableCol(1, 1)
         mySizer.Add(panel.StaticText(text.text3), 0, wx.ALIGN_CENTER_VERTICAL)
         mySizer.Add(macroCtrl, 1, wx.EXPAND)
@@ -432,7 +347,7 @@ class JumpIfLongPress(eg.ActionClass):
 
 
 
-class AutoRepeat(eg.ActionClass):
+class AutoRepeat(eg.ActionBase):
     name = "Autorepeat current macro"
     description = \
         "Makes the macro where this command is added to an "\
@@ -455,20 +370,22 @@ class AutoRepeat(eg.ActionClass):
     ):
         event = eg.event
         if not event.shouldEnd.isSet():
-            x = time.clock() - event.time
-            if x < firstDelay * 0.90:
-                res = firstDelay
+            elapsed = time.clock() - event.time
+            if elapsed < firstDelay * 0.90:
+                delay = firstDelay
             else:
                 if sweepTime > 0.0:
-                    x = x + firstDelay
-                    s = startDelay - endDelay
-                    d = (s / sweepTime) * (sweepTime - x)
-                    if d < 0:
-                        d = 0
-                    res = d + endDelay
+                    elapsed = elapsed + firstDelay
+                    sweepDelay = (
+                        (startDelay - endDelay) * (sweepTime - elapsed) 
+                        / sweepTime
+                    )
+                    if sweepDelay < 0:
+                        sweepDelay = 0
+                    delay = sweepDelay + endDelay
                 else:
-                    res = endDelay
-            event.shouldEnd.wait(res)
+                    delay = endDelay
+            event.shouldEnd.wait(delay)
             #wait_event.wait(res)
             if not event.shouldEnd.isSet():
                 eg.programCounter = (eg.currentItem.parent.childs[0], 0)
@@ -505,7 +422,7 @@ class AutoRepeat(eg.ActionClass):
 
 
 
-class TriggerEvent(eg.ActionClass):
+class TriggerEvent(eg.ActionBase):
     name = "Trigger Event"
     description = \
         "Causes an event to be generated (optionally after some "\
@@ -557,9 +474,9 @@ class TriggerEvent(eg.ActionClass):
                 waitTimeCtrl.GetValue(),
             )
     
-    
 
-class FlushEvents(eg.ActionClass):
+
+class FlushEvents(eg.ActionBase):
     name = "Clear Pending Events"
     description = (
         "The \"Clear Pending Events\" clears all unprocessed events which are "
@@ -583,179 +500,4 @@ class FlushEvents(eg.ActionClass):
     def __call__(self):
         eg.eventThread.ClearPendingEvents()
         eg.actionThread.ClearPendingEvents()
-
-
-
-#-----------------------------------------------------------------------------
-# Action: EventGhost.Jump
-#-----------------------------------------------------------------------------
-class Jump(eg.ActionClass, eg.HiddenAction):
-    name = "Jump"
-    description = \
-        "Jumps unconditionally to another macro and optionally "\
-        "returns from there."        
-    iconFile = 'icons/LongPress'
-    class text:
-        label1 = "Jump to %s"
-        label2 = "Jump to %s and return"
-        text2 = "Jump to:"
-        text3 = "Return after execution"
-        mesg1 = "Select the macro..."
-        mesg2 = "Please select the macro that should be executed:"
-
-    
-    def __call__(self, link, gosub=False):
-        if gosub:
-            eg.programReturnStack.append(eg.programCounter)
-        next = link.target
-        next_id = next.parent.GetChildIndex(next)
-        eg.programCounter = (next, next_id)
-
-
-    def GetLabel(self, link, gosub=False):
-        if gosub:
-            return self.text.label2 % link.target.name
-        else:
-            return self.text.label1 % link.target.name
-        
-        
-    def Configure(self, link=None, gosub=False):
-        panel = eg.ConfigPanel(self)
-        if link is None:
-            link = eg.TreeLink(panel.actionItem)
-        text = self.text
-        label2 = wx.StaticText(panel, -1, text.text2)
-        button = eg.MacroSelectButton(  
-            panel,
-            eg.text.General.choose,
-            text.mesg1,
-            text.mesg2,
-            link.target
-        )
-        gosubCB = wx.CheckBox(panel, -1, text.text3)
-        gosubCB.SetValue(gosub)
-        sizer = wx.FlexGridSizer(2, 2, 5, 5)
-        sizer.AddGrowableCol(1, 1)
-        sizer.AddGrowableRow(1, 1)
-        sizer.Add(label2, 0, wx.ALIGN_CENTER_VERTICAL)
-        sizer.Add(button, 1, wx.EXPAND)
-        sizer.Add((0, 0))
-        sizer.Add(gosubCB, 0, wx.EXPAND)
-        panel.sizer.Add(sizer, 1, wx.EXPAND)
-        
-        while panel.Affirmed():
-            link.SetTarget(button.GetValue())
-            panel.SetResult(link, gosubCB.GetValue())
-    
-    
-    
-#-----------------------------------------------------------------------------
-# Action: EventGhost.JumpIf
-#-----------------------------------------------------------------------------
-class JumpIf(eg.ActionClass, eg.HiddenAction):
-    name = "Jump if"
-    description = \
-        "Jumps to another macro, if the specified python-evaluation "\
-        "returns true."        
-    iconFile = 'icons/LongPress'
-    class text:
-        label1 = "If %s goto %s"
-        label2 = "If %s gosub %s"
-        text1 = "If:"
-        text2 = "Go to:"
-        text3 = "Return after execution"
-        mesg1 = "Select the macro..."
-        mesg2 = \
-            "Please select the macro that should be executed, if the "\
-            "condition is true."
-
-    
-    def __call__(self, evalstr, link, gosub=False):
-        try:
-            result = eval(evalstr, {}, eg.globals.__dict__)
-        except:
-            result = False
-            self.PrintError("Error in evaluating Python expression")
-        if result:
-            if gosub:
-                eg.programReturnStack.append(eg.programCounter)
-            next = link.target
-            next_id = next.parent.GetChildIndex(next)
-            eg.programCounter = (next, next_id)
-        
-        
-    def GetLabel(self, evalstr, link, gosub=False):
-        if gosub:
-            return self.text.label2 % (evalstr, link.target.name)
-        else:
-            return self.text.label1 % (evalstr, link.target.name)
-
-
-    def Configure(
-        self, 
-        evalStr='', 
-        link=None, 
-        gosub=False
-    ):
-        panel = eg.ConfigPanel(self)
-        if link is None:
-            link = eg.TreeLink(panel.actionItem)
-        text = self.text
-        label1 = wx.StaticText(panel, -1, text.text1)
-        evalCtrl = wx.TextCtrl(panel, -1, evalStr)
-        label2 = wx.StaticText(panel, -1, text.text2)
-        button = eg.MacroSelectButton(  
-            panel,
-            eg.text.General.choose,
-            text.mesg1,
-            text.mesg2,
-            link.target
-        )
-        gosubCB = wx.CheckBox(panel, -1, text.text3)
-        gosubCB.SetValue(gosub)
-        sizer = wx.FlexGridSizer(2,2,5,5)
-        sizer.AddGrowableCol(1, 1)
-        sizer.AddGrowableRow(1, 1)
-        sizer.Add(label1, 0, wx.ALIGN_CENTER_VERTICAL)
-        sizer.Add(evalCtrl, 1, wx.EXPAND)
-        sizer.Add(label2, 0, wx.ALIGN_CENTER_VERTICAL)
-        sizer.Add(button, 1, wx.EXPAND)
-        sizer.Add((0,0))
-        sizer.Add(gosubCB, 0, wx.EXPAND)
-        panel.sizer.Add(sizer, 1, wx.EXPAND)
-        
-        while panel.Affirmed():
-            link.SetTarget(button.GetValue())
-            panel.SetResult(evalCtrl.GetValue(), link, gosubCB.GetValue())
-
-
-
-#-----------------------------------------------------------------------------
-# Action: EventGhost.StopIf
-#-----------------------------------------------------------------------------
-class StopIf(eg.ActionWithStringParameter, eg.HiddenAction):
-    name = "Stop if"
-    description = \
-        "Stops executing the current macro, if the specified "\
-        "Python-evaluation returns true."
-    iconFile = 'icons/StopProcessing'
-    class text:
-        label = "Stop if %s"
-        parameterDescription = "Python condition:"
-        
-    
-    def __call__(self, evalstr):
-        try:
-            result = eval(evalstr, {}, eg.globals.__dict__)
-        except:
-            result = False
-            eg.PrintTraceback()
-        if result:
-            eg.programCounter = None
-        return eg.globals.result
-        
-        
-    def GetLabel(self, evalstr):
-        return self.text.label % evalstr
-
 

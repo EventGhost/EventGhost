@@ -146,7 +146,6 @@ class SerialThread(Thread):
 
         
     def __init__(self, hFile=0):
-        self.deviceStr = ""
         Thread.__init__(self, target=self.ReceiveThreadProc)
         self.hFile = int(hFile)
         self.osWriter = OVERLAPPED()
@@ -330,14 +329,14 @@ class SerialThread(Thread):
             # if no read is outstanding, then issue another one
             if not waitingOnRead:
                 ResetEvent(osReader.hEvent)
-                r = self._ReadFile(
+                returnValue = self._ReadFile(
                     hFile, 
                     lpBuf, 
                     1, # we want to get notified as soon as a byte is available
                     byref(dwRead), 
                     byref(osReader)
                 )
-                if not r:
+                if not returnValue:
                     err = GetLastError()
                     if err != 0 and err != ERROR_IO_PENDING:
                         raise WinError()
@@ -348,24 +347,24 @@ class SerialThread(Thread):
                         self.HandleReceive(lpBuf.raw)
                         continue
 
-            rc = MsgWaitForMultipleObjects(2, pHandles, 0, 10000, QS_ALLINPUT)
-            if rc == WAIT_OBJECT_0:
-                r = GetOverlappedResult(
+            ret = MsgWaitForMultipleObjects(2, pHandles, 0, 10000, QS_ALLINPUT)
+            if ret == WAIT_OBJECT_0:
+                returnValue = GetOverlappedResult(
                     hFile, 
                     byref(osReader), 
                     byref(dwRead), 
                     0
                 )
                 waitingOnRead = False
-                if r and dwRead.value:
+                if returnValue and dwRead.value:
                     self.HandleReceive(lpBuf.raw)
-            elif rc == WAIT_OBJECT_0 + 1:
+            elif ret == WAIT_OBJECT_0 + 1:
                 # stop event signaled
                 self.readCondition.acquire()
                 self.readCondition.notifyAll()
                 self.readCondition.release()
                 break
-            elif rc == WAIT_TIMEOUT:
+            elif ret == WAIT_TIMEOUT:
                 pass
             else:
                 raise Exception("unknown message received")
@@ -426,16 +425,16 @@ class SerialThread(Thread):
         """
         errors = DWORD()
         self._ClearCommError(self.hFile, byref(errors), byref(self.comstat))
-        n = self.comstat.cbInQue
-        if n == 0:
+        numBytes = self.comstat.cbInQue
+        if numBytes == 0:
             return ''
         ResetEvent(self.osReader.hEvent)
-        lpBuffer = create_string_buffer(n)
+        lpBuffer = create_string_buffer(numBytes)
         numberOfBytesRead = DWORD()
         if not self._ReadFile(
             self.hFile, 
             lpBuffer, 
-            n, 
+            numBytes, 
             byref(numberOfBytesRead), 
             byref(self.osReader)
         ):
@@ -446,14 +445,14 @@ class SerialThread(Thread):
     def Write(self, data):
         """Writes a string to the port."""
         dwWritten = DWORD(0)
-        r = self._WriteFile(
+        returnValue = self._WriteFile(
             self.hFile, 
             data, 
             len(data), 
             byref(dwWritten), 
             byref(self.osWriter)
         )
-        if r != 0:
+        if returnValue != 0:
             return
         err = GetLastError()
         if err != 0 and err != ERROR_IO_PENDING:
@@ -515,3 +514,5 @@ class SerialThread(Thread):
         dcb.Parity = PARITY_S2V_DICT[mode[1].upper()]
         dcb.StopBits = STOPBITS_S2V_DICT[mode[2:]]
         SetCommState(self.hFile, byref(dcb))
+        
+        

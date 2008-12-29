@@ -69,9 +69,9 @@ class FindDialog(wx.Dialog):
         searchButton.Enable(False)
         cancelButton = wx.Button(self, wx.ID_CANCEL, eg.text.General.cancel)
         
-        ACV = wx.ALIGN_CENTER_VERTICAL
+        acv = wx.ALIGN_CENTER_VERTICAL
         upperLeftSizer = eg.HBoxSizer(
-            (wx.StaticText(self, -1, Text.searchLabel), 0, ACV|wx.RIGHT, 5),
+            (wx.StaticText(self, -1, Text.searchLabel), 0, acv|wx.RIGHT, 5),
             (textCtrl, 1, wx.EXPAND),
         )
         cbSizer = eg.VBoxSizer(
@@ -80,7 +80,7 @@ class FindDialog(wx.Dialog):
             (searchParametersCb, 0, wx.TOP, 5),
         )
         lowerLeftSizer = eg.HBoxSizer(
-            (cbSizer, 0, ACV|wx.RIGHT, 10),
+            (cbSizer, 0, acv|wx.RIGHT, 10),
             (directionRb),
         )
         leftSizer = eg.VBoxSizer(
@@ -190,3 +190,4 @@ class FindDialog(wx.Dialog):
                         if pos != -1 and matchFunc(text, pos):
                             item.Select()
                             return
+

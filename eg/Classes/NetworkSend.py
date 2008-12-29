@@ -38,7 +38,6 @@ def NetworkSend(host, port, password, eventString, payload=None):
         # respond by it self it needs this string, why this odd word ?
         # well if someone is scanning ports "connect" would be very 
         # obvious this one you'd never guess :-) 
-
         sock.sendall("quintessence\n\r")
 
         # The server now returns a cookie, the protocol works like the
@@ -47,7 +46,6 @@ def NetworkSend(host, port, password, eventString, payload=None):
         # if the digests match you are in.
         # We do this so that none can listen in on our password exchange
         # much safer then plain text.
-
         cookie = sock.recv(128)        
 
         # Trim all enters and whitespaces off
@@ -83,9 +81,6 @@ def NetworkSend(host, port, password, eventString, payload=None):
         
         # tell the server that we are done nicely.
         sock.sendall("close\n")
-        
-    #except:
-    #    return False
     finally:
         sock.close()
     

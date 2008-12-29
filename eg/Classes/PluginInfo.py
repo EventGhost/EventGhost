@@ -41,7 +41,7 @@ class PluginProxy(object):
         
         
         
-class UnknownPlugin(eg.PluginClass):
+class UnknownPlugin(eg.PluginBase):
     
     def __init__(self):
         raise self.Exceptions.PluginNotFound
@@ -223,7 +223,7 @@ class PluginInfo(object):
         pluginObj.info = info
 
         # create an unique exception for every plugin instance
-        class _Exception(eg.PluginClass.Exception):
+        class _Exception(eg.PluginBase.Exception):
             obj = pluginObj
         pluginObj.Exception = _Exception
         pluginObj.Exceptions = eg.ExceptionsProvider(pluginObj)
@@ -316,7 +316,7 @@ class PluginInfo(object):
             
     def Stop(self):
         """
-        This is a wrapper for the __stop__ member of a eg.PluginClass.
+        This is a wrapper for the __stop__ member of a eg.PluginBase.
         
         It should only be called from the ActionThread.
         """
@@ -354,7 +354,7 @@ class PluginInfo(object):
         def DeleteActionListItems(items):
             if items is not None:
                 for item in items:
-                    if isinstance(item, type) and issubclass(item, eg.ActionClass):
+                    if isinstance(item, type) and issubclass(item, eg.ActionBase):
                         item.plugin = None
                     else:
                         DeleteActionListItems(item.items)
@@ -371,4 +371,4 @@ class PluginInfo(object):
         self.instances.remove(self)
         self.instance = None
         plugin.AddAction = None
-       
+    

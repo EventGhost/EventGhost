@@ -35,7 +35,9 @@ class Choice(wx.Choice):
         *args, 
         **kwargs
     ):
-        wx.Choice.__init__(self, parent, -1, pos, size, choices, *args, **kwargs)
+        wx.Choice.__init__(
+            self, parent, -1, pos, size, choices, *args, **kwargs
+        )
         self.SetValue(value)
         
         

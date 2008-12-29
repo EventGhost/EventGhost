@@ -76,5 +76,3 @@ class DigitOnlyValidator(wx.PyValidator):
         # gets to the text control
         return
 
-
-        

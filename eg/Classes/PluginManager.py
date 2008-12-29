@@ -175,7 +175,7 @@ class PluginManager:
         self.currentInfo.dirname = pluginDir
         
         try:
-            module = eg.PluginInfo.ImportPlugin(pluginDir)
+            eg.PluginInfo.ImportPlugin(pluginDir)
         # It is expected that the loading will raise RegisterPluginException
         # because RegisterPlugin is called inside the module
         except RegisterPluginException:
@@ -244,4 +244,3 @@ class PluginManager:
         infoList.sort(key=lambda x: x.name.lower())
         return infoList
         
-

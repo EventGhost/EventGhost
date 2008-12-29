@@ -48,8 +48,8 @@ class ColourSelectButton(wx.BitmapButton):
         colourData = wx.ColourData()
         colourData.SetChooseFull(True)
         colourData.SetColour(self.value)
-        for n, colour in enumerate(eg.config.colourPickerCustomColours):
-            colourData.SetCustomColour(n, colour)
+        for i, colour in enumerate(eg.config.colourPickerCustomColours):
+            colourData.SetCustomColour(i, colour)
         dialog = wx.ColourDialog(self.GetParent(), colourData)
         dialog.SetTitle("Colour Picker")
         if dialog.ShowModal() == wx.ID_OK:
@@ -57,7 +57,7 @@ class ColourSelectButton(wx.BitmapButton):
             self.SetValue(colourData.GetColour().Get())
             event.Skip()
         eg.config.colourPickerCustomColours = [
-            colourData.GetCustomColour(n).Get() for n in range(16)
+            colourData.GetCustomColour(i).Get() for i in range(16)
         ]
         dialog.Destroy()
         
@@ -68,8 +68,8 @@ class ColourSelectButton(wx.BitmapButton):
     
     def SetValue(self, value):
         self.value = value
-        w, h = self.GetSize()
-        image = wx.EmptyImage(w-10, h-10)
-        image.SetRGBRect((1, 1, w-12, h-12), *value)
+        width, height = self.GetSize()
+        image = wx.EmptyImage(width-10, height-10)
+        image.SetRGBRect((1, 1, width-12, height-12), *value)
         self.SetBitmapLabel(image.ConvertToBitmap())
         

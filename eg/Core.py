@@ -72,6 +72,7 @@ eg.pluginClassInfo = {}
 eg.mainThread = threading.currentThread()
 eg.stopExecutionFlag = False
 eg.lastFoundWindows = []
+eg.currentItem = None
 eg.currentConfigureItem = None
 eg.actionGroup = eg.Bunch()
 eg.actionGroup.items = []
@@ -79,7 +80,9 @@ eg.folderPath = eg.FolderPath()
 eg.APPDATA = eg.folderPath.RoamingAppData
 eg.PROGRAMFILES = eg.folderPath.ProgramFiles
 eg.ValueChangedEvent, eg.EVT_VALUE_CHANGED = NewCommandEvent()
-eg.focusEvent = eg.EventHook()
+eg.focusChangeEvent = eg.NotificationHandler()
+eg.clipboardEvent = eg.NotificationHandler()
+
 if eg.startupArguments.configDir is None:
     eg.configDir = os.path.join(eg.folderPath.RoamingAppData, eg.APP_NAME)
 else:
@@ -155,10 +158,7 @@ def Unbind(eventString, eventFunc):
     eventTable = eg.eventTable2
     if eventString not in eventTable:
         return
-    try:
-        eventTable[eventString].remove(eventFunc)
-    except:
-        pass
+    eventTable[eventString].remove(eventFunc)
     if len(eventTable[eventString]) == 0:
         del eventTable[eventString]
 
@@ -263,7 +263,7 @@ eg.PrintStack = eg.log.PrintStack
 
 eg.colour = eg.Colour()
 eg.config = eg.Config()
-eg.text = eg.Text.Load(eg.config.language)
+eg.text = eg.Text(eg.config.language)
 eg.actionThread = eg.ActionThread()
 eg.eventThread = eg.EventThread()
 eg.pluginManager = eg.PluginManager()
@@ -271,6 +271,16 @@ eg.scheduler = eg.Scheduler()
 
 eg.TriggerEvent = eg.eventThread.TriggerEvent
 eg.TriggerEnduringEvent = eg.eventThread.TriggerEnduringEvent
+
+from greenlet import greenlet
+eg.Greenlet = greenlet
+eg.mainGreenlet = greenlet.getcurrent()
+
+from eg.WinApi.Dynamic import GetCurrentProcessId
+eg.processId = GetCurrentProcessId()
+
+setattr(eg, "PluginClass", eg.PluginBase)
+setattr(eg, "ActionClass", eg.ActionBase)
 
 eg.Init = Init
 eg.Init.Init()

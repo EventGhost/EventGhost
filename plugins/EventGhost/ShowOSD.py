@@ -62,9 +62,9 @@ ALIGNMENT_FUNCS = (
 )
 
 
-def DrawTextLines(dc, textLines, textHeights, xOffset=0, yOffset=0):
+def DrawTextLines(deviceContext, textLines, textHeights, xOffset=0, yOffset=0):
     for i, textLine in enumerate(textLines):
-        dc.DrawText(textLine, xOffset, yOffset)
+        deviceContext.DrawText(textLine, xOffset, yOffset)
         yOffset += textHeights[i]
         
         
@@ -85,7 +85,7 @@ class OSDFrame(wx.Frame):
                 |wx.FRAME_NO_TASKBAR
                 |wx.STAY_ON_TOP
         )
-        self.bitmap = wx.EmptyBitmap(0,0)
+        self.bitmap = wx.EmptyBitmap(0, 0)
         self.timer = threading.Timer(
             0.0,
             self.SetPosition, 
@@ -112,8 +112,6 @@ class OSDFrame(wx.Frame):
     ):        
         self.timer.cancel()
         if osdText.strip() == "":
-            w = 0
-            h = 0
             self.bitmap = wx.EmptyBitmap(0, 0)
             self.SetPosition((-10000, -10000))
             self.Hide()
@@ -156,10 +154,10 @@ class OSDFrame(wx.Frame):
                 textColour, 
                 "Default"
             )
-            w, h = bitmap.GetSize()
+            width, height = bitmap.GetSize()
         elif outlineColour is None:
-            w, h = textWidth, textHeight
-            bitmap = wx.EmptyBitmap(w, h)
+            width, height = textWidth, textHeight
+            bitmap = wx.EmptyBitmap(width, height)
             memoryDC.SelectObject(bitmap)
 
             # fill the DC background with the maskColour
@@ -183,8 +181,8 @@ class OSDFrame(wx.Frame):
             memoryDC.Clear()
             memoryDC.SelectObject(wx.NullBitmap)
         else:
-            w, h = textWidth + 5, textHeight + 5
-            outlineBitmap = wx.EmptyBitmap(w, h, 1)
+            width, height = textWidth + 5, textHeight + 5
+            outlineBitmap = wx.EmptyBitmap(width, height, 1)
             outlineDC = wx.MemoryDC()
             outlineDC.SetFont(font)
             outlineDC.SelectObject(outlineBitmap)
@@ -195,16 +193,18 @@ class OSDFrame(wx.Frame):
             outlineBitmap.SetMask(wx.Mask(outlineBitmap))
             outlineDC.SelectObject(outlineBitmap)
             
-            bitmap = wx.EmptyBitmap(w, h)
+            bitmap = wx.EmptyBitmap(width, height)
             memoryDC.SetTextForeground(outlineColour)
             memoryDC.SelectObject(bitmap)
             memoryDC.Clear()
             
             Blit = memoryDC.Blit
-            WX_COPY = wx.COPY
+            logicalFunc = wx.COPY
             for x in xrange(5):
                 for y in xrange(5):
-                    Blit(x, y, w, h, outlineDC, 0, 0, WX_COPY, True)
+                    Blit(
+                        x, y, width, height, outlineDC, 0, 0, logicalFunc, True
+                    )
             outlineDC.SelectObject(wx.NullBitmap)
             memoryDC.SetTextForeground(textColour)
             DrawTextLines(memoryDC, textLines, textHeights, 2, 2)
@@ -212,8 +212,8 @@ class OSDFrame(wx.Frame):
             bitmap.SetMask(wx.Mask(bitmap, maskColour))
                 
         region = wx.RegionFromBitmap(bitmap)
-        self.SetClientSize((w, h))
-        _,_,w,_ = region.GetBox()
+        self.SetClientSize((width, height))
+        width = region.GetBox()[2]
         self.SetShape(region)
         self.bitmap = bitmap
         monitorDimensions = GetMonitorDimensions()
@@ -223,13 +223,13 @@ class OSDFrame(wx.Frame):
             displayRect = monitorDimensions[0]
         xOffset, yOffset = offset
         xFunc, yFunc = ALIGNMENT_FUNCS[alignment]
-        x = displayRect.x + xFunc((displayRect.width - w), xOffset)
-        y = displayRect.y + yFunc((displayRect.height - h), yOffset)
+        x = displayRect.x + xFunc((displayRect.width - width), xOffset)
+        y = displayRect.y + yFunc((displayRect.height - height), yOffset)
         self.Show()
         BringWindowToTop(self.GetHandle())
         self.SetPosition((x, y))
-        dc = wx.ClientDC(self)
-        dc.DrawBitmap(self.bitmap, 0, 0, False)
+        deviceContext = wx.ClientDC(self)
+        deviceContext.DrawBitmap(self.bitmap, 0, 0, False)
 
         if timeout > 0.0:
             self.timer = threading.Timer(timeout, self.OnTimeout)
@@ -250,7 +250,7 @@ class OSDFrame(wx.Frame):
         skinName
     ):
         image = wx.Image(join(SKIN_DIR, skinName + ".png"))        
-        o = eg.Bunch()
+        option = eg.Bunch()
         
         def Setup(minWidth, minHeight, xMargin, yMargin, transparentColour):
             width = textWidth + 2 * xMargin
@@ -259,34 +259,36 @@ class OSDFrame(wx.Frame):
             height = textHeight + 2 * yMargin
             if height < minHeight:
                 height = minHeight
-            o.xMargin = xMargin
-            o.yMargin = yMargin
-            o.transparentColour = transparentColour
+            option.xMargin = xMargin
+            option.yMargin = yMargin
+            option.transparentColour = transparentColour
             bitmap = wx.EmptyBitmap(width, height)
-            o.bitmap = bitmap
+            option.bitmap = bitmap
             memoryDC.SelectObject(bitmap)
             return width, height
             
-        def Copy(x, y, w, h, toX, toY):
-            bmp = wx.BitmapFromImage(image.GetSubImage((x, y, w, h)))
+        def Copy(x, y, width, height, toX, toY):
+            bmp = wx.BitmapFromImage(image.GetSubImage((x, y, width, height)))
             memoryDC.DrawBitmap(bmp, toX, toY)
             
-        def Scale(x, y, w, h, toX, toY, toW, toH):
-            subImage = image.GetSubImage((x, y, w, h))
-            subImage.Rescale(toW, toH, wx.IMAGE_QUALITY_HIGH)
+        def Scale(x, y, width, height, toX, toY, toWidth, toHeight):
+            subImage = image.GetSubImage((x, y, width, height))
+            subImage.Rescale(toWidth, toHeight, wx.IMAGE_QUALITY_HIGH)
             bmp = wx.BitmapFromImage(subImage)
             memoryDC.DrawBitmap(bmp, toX, toY)
             
         scriptGlobals = dict(Setup=Setup, Copy=Copy, Scale=Scale)
         execfile(join(SKIN_DIR, skinName + ".py"), scriptGlobals)
         
-        bitmap = o.bitmap
+        bitmap = option.bitmap
         memoryDC.SelectObject(wx.NullBitmap)
-        bitmap.SetMask(wx.Mask(bitmap, o.transparentColour))
+        bitmap.SetMask(wx.Mask(bitmap, option.transparentColour))
         memoryDC.SelectObject(bitmap)
         memoryDC.SetTextForeground(textColour)
         memoryDC.SetTextBackground(textColour)
-        DrawTextLines(memoryDC, textLines, textHeights, o.xMargin, o.yMargin)
+        DrawTextLines(
+            memoryDC, textLines, textHeights, option.xMargin, option.yMargin
+        )
         memoryDC.SelectObject(wx.NullBitmap)
         return bitmap
     
@@ -345,14 +347,14 @@ class ShowOSD(eg.ActionClass):
 
     
     @classmethod
-    def OnAddAction(self):
-        def makeOSD():
-            self.osdFrame = OSDFrame(None)
-            def closeOSD():
-                self.osdFrame.timer.cancel()
-                self.osdFrame.Close()
-            eg.app.onExitFuncs.append(closeOSD)
-        wx.CallAfter(makeOSD)
+    def OnAddAction(cls):
+        def MakeOSD():
+            cls.osdFrame = OSDFrame(None)
+            def CloseOSD():
+                cls.osdFrame.timer.cancel()
+                cls.osdFrame.Close()
+            eg.app.onExitFuncs.append(CloseOSD)
+        wx.CallAfter(MakeOSD)
         
 
     @eg.LogIt
@@ -415,10 +417,12 @@ class ShowOSD(eg.ActionClass):
         panel = eg.ConfigPanel(self)
         text = self.text
         editTextCtrl = panel.TextCtrl("\n\n", style=wx.TE_MULTILINE)
-        w, h = editTextCtrl.GetBestSize()
+        height = editTextCtrl.GetBestSize()[1]
         editTextCtrl.ChangeValue(osdText)
-        editTextCtrl.SetMinSize((-1, h))
-        alignmentChoice = panel.Choice(alignment, choices=text.alignmentChoices)
+        editTextCtrl.SetMinSize((-1, height))
+        alignmentChoice = panel.Choice(
+            alignment, choices=text.alignmentChoices
+        )
         displayChoice = eg.DisplayChoice(panel, displayNumber)
         xOffsetCtrl = panel.SpinIntCtrl(offset[0], -32000, 32000)
         yOffsetCtrl = panel.SpinIntCtrl(offset[1], -32000, 32000)
@@ -428,10 +432,12 @@ class ShowOSD(eg.ActionClass):
         foregroundColourButton = panel.ColourSelectButton(foregroundColour)
         
         if backgroundColour is None:
-            tmpColour = (0,0,0)
+            tmpColour = (0, 0, 0)
         else:
             tmpColour = backgroundColour
-        outlineCheckBox = panel.CheckBox(backgroundColour is not None, text.outlineFont)
+        outlineCheckBox = panel.CheckBox(
+            backgroundColour is not None, text.outlineFont
+        )
         
         backgroundColourButton = panel.ColourSelectButton(tmpColour)
         if backgroundColour is None:
@@ -439,36 +445,30 @@ class ShowOSD(eg.ActionClass):
         skinCtrl = panel.CheckBox(bool(skin), text.skin)
         
         sizer = wx.GridBagSizer(5, 5)
-        EXP = wx.EXPAND
-        ACV = wx.ALIGN_CENTER_VERTICAL
-        Add = sizer.Add
-        Add(wx.StaticText(panel, -1, text.editText), (0, 0), flag=ACV)
-        Add(editTextCtrl, (0, 1), (1, 4), flag=EXP)
-        
-        Add(panel.StaticText(text.osdFont), (1, 3), flag=ACV)
-        Add(fontButton, (1, 4))
-        
-        Add(panel.StaticText(text.osdColour), (2, 3), flag=ACV)
-        Add(foregroundColourButton, (2, 4))
-
-        Add(outlineCheckBox, (3, 3), flag=EXP)
-        Add(backgroundColourButton, (3, 4))
-        Add(skinCtrl, (4, 3))
-        
-        Add(panel.StaticText(text.alignment), (1, 0), flag=ACV)
-        Add(alignmentChoice, (1, 1), flag=EXP)
-        Add(panel.StaticText(text.display), (2, 0), flag=ACV)
-        Add(displayChoice, (2, 1), flag=EXP)
-        
-        Add(panel.StaticText(text.xOffset), (3, 0), flag=ACV)
-        Add(xOffsetCtrl, (3, 1), flag=EXP)
-        
-        Add(panel.StaticText(text.yOffset), (4, 0), flag=ACV)
-        Add(yOffsetCtrl, (4, 1), flag=EXP)
-        
-        Add(panel.StaticText(text.wait1), (5, 0), flag=ACV)
-        Add(timeCtrl, (5, 1), flag=EXP)
-        Add(panel.StaticText(text.wait2), (5, 2), (1, 3), flag=ACV)
+        expand = wx.EXPAND
+        align = wx.ALIGN_CENTER_VERTICAL
+        sizer.AddMany([
+            (panel.StaticText(text.editText), (0, 0), (1, 1), align),
+            (editTextCtrl, (0, 1), (1, 4), expand),
+            (panel.StaticText(text.osdFont), (1, 3), (1, 1), align),
+            (fontButton, (1, 4)),
+            (panel.StaticText(text.osdColour), (2, 3), (1, 1), align),
+            (foregroundColourButton, (2, 4)),
+            (outlineCheckBox, (3, 3), (1, 1), expand),
+            (backgroundColourButton, (3, 4)),
+            (skinCtrl, (4, 3)),
+            (panel.StaticText(text.alignment), (1, 0), (1, 1), align),
+            (alignmentChoice, (1, 1), (1, 1), expand),
+            (panel.StaticText(text.display), (2, 0), (1, 1), align),
+            (displayChoice, (2, 1), (1, 1), expand),
+            (panel.StaticText(text.xOffset), (3, 0), (1, 1), align),
+            (xOffsetCtrl, (3, 1), (1, 1), expand),
+            (panel.StaticText(text.yOffset), (4, 0), (1, 1), align),
+            (yOffsetCtrl, (4, 1), (1, 1), expand),
+            (panel.StaticText(text.wait1), (5, 0), (1, 1), align),
+            (timeCtrl, (5, 1), (1, 1), expand),
+            (panel.StaticText(text.wait2), (5, 2), (1, 3), align),
+        ])
             
         sizer.AddGrowableCol(2)
         panel.sizer.Add(sizer, 1, wx.EXPAND)

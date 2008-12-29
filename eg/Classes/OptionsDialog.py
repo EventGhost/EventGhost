@@ -33,13 +33,13 @@ class Text(eg.TranslatableStrings):
     Tab1 = "General"
     StartGroup = "On Start"
     HideOnStartup = "Hide on startup"
-    HideOnClose = "Send to Systray on Close"
+    HideOnClose = "Minimize to system tray on close"
     UseAutoloadFile = "Autoload file"
     LanguageGroup = "Language"
     Warning = \
         "Language changes only take effect after restarting the application."
-    StartWithWindows = "Launch on Windows startup"
-    CheckUpdate = "Check for newer version at startup"
+    StartWithWindows = "Autostart EventGhost on system startup"
+    CheckUpdate = "Check for newer version on startup"
     limitMemory1 = "Limit memory consumption while minimized to"
     limitMemory2 = "MB"
     confirmDelete = "Confirm delete of tree items"
@@ -49,14 +49,14 @@ class Text(eg.TranslatableStrings):
 class OptionsDialog(eg.Dialog):
     
     def Process(self, parent=None):
-        t = Text
-        c = eg.config
+        text = Text
+        config = eg.config
         
         eg.Dialog.__init__(
             self, 
             parent, 
             -1,
-            t.Title, 
+            text.Title, 
             style=wx.DEFAULT_DIALOG_STYLE
         )
         
@@ -70,30 +70,36 @@ class OptionsDialog(eg.Dialog):
         languageNameList = [languageNames[x] for x in languageList]
         notebook = wx.Notebook(self, -1)
         page1 = eg.Panel(notebook)
-        notebook.AddPage(page1, t.Tab1)
+        notebook.AddPage(page1, text.Tab1)
         
         # page 1 controls        
         startWithWindowsCtrl = page1.CheckBox(
-            c.startWithWindows, 
-            t.StartWithWindows
+            config.startWithWindows, 
+            text.StartWithWindows
         )
         if eg.folderPath.Startup is None:
             startWithWindowsCtrl.Enable(False)
             
-        hideOnCloseCtrl = page1.CheckBox(c.mainFrame.hideOnClose, t.HideOnClose)
-        checkUpdateCtrl = page1.CheckBox(c.checkUpdate, t.CheckUpdate)
-        memoryLimitCtrl = page1.CheckBox(c.limitMemory, t.limitMemory1)
+        hideOnCloseCtrl = page1.CheckBox(
+            config.mainFrame.hideOnClose, 
+            text.HideOnClose
+        )
+        checkUpdateCtrl = page1.CheckBox(config.checkUpdate, text.CheckUpdate)
+        memoryLimitCtrl = page1.CheckBox(config.limitMemory, text.limitMemory1)
         memoryLimitSpinCtrl = page1.SpinIntCtrl(
-            c.limitMemorySize,
+            config.limitMemorySize,
             min=4,
             max=999
         )
-        def OnMemoryLimitCheckBox(event):
+        def OnMemoryLimitCheckBox(dummyEvent):
             memoryLimitSpinCtrl.Enable(memoryLimitCtrl.IsChecked())
         memoryLimitCtrl.Bind(wx.EVT_CHECKBOX, OnMemoryLimitCheckBox)
         OnMemoryLimitCheckBox(None)
         
-        confirmDeleteCtrl = page1.CheckBox(c.confirmDelete, t.confirmDelete)
+        confirmDeleteCtrl = page1.CheckBox(
+            config.confirmDelete, 
+            text.confirmDelete
+        )
 
         languageChoice = BitmapComboBox(page1, style=wx.CB_READONLY)
         for name, code in zip(languageNameList, languageList):
@@ -105,7 +111,7 @@ class OptionsDialog(eg.Dialog):
                 languageChoice.Append(name, bmp)
             else:
                 languageChoice.Append(name)
-        languageChoice.SetSelection(languageList.index(c.language))
+        languageChoice.SetSelection(languageList.index(config.language))
         languageChoice.SetMinSize((150, -1))
 
         buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL, wx.ID_APPLY))
@@ -116,7 +122,7 @@ class OptionsDialog(eg.Dialog):
         memoryLimitSizer = eg.HBoxSizer(
             (memoryLimitCtrl, 0, flags),
             (memoryLimitSpinCtrl, 0, flags),
-            (page1.StaticText(t.limitMemory2), 0, flags|wx.LEFT, 2),
+            (page1.StaticText(text.limitMemory2), 0, flags|wx.LEFT, 2),
         )
         
         startGroupSizer = wx.GridSizer(4, 1, 2, 2)
@@ -131,7 +137,7 @@ class OptionsDialog(eg.Dialog):
         )
         
         langGroupSizer = page1.VStaticBoxSizer(
-            t.LanguageGroup,
+            text.LanguageGroup,
             (languageChoice, 0, wx.LEFT|wx.RIGHT, 18),
         )
         
@@ -155,9 +161,11 @@ class OptionsDialog(eg.Dialog):
         while self.Affirmed():
             tmp = startWithWindowsCtrl.GetValue()
             if tmp != eg.config.startWithWindows:
-                c.startWithWindows = tmp
-                path = os.path.join(eg.folderPath.Startup, eg.APP_NAME)
-                path += ".lnk"
+                config.startWithWindows = tmp
+                path = os.path.join(
+                    eg.folderPath.Startup, 
+                    eg.APP_NAME + ".lnk"
+                )
                 if tmp:
                     # create shortcut in autostart dir
                     eg.Shortcut.Create(
@@ -172,24 +180,23 @@ class OptionsDialog(eg.Dialog):
                     except:
                         pass
                     
-            c.mainFrame.hideOnClose = hideOnCloseCtrl.GetValue()
-            c.checkUpdate = checkUpdateCtrl.GetValue()
-            c.limitMemory = bool(memoryLimitCtrl.GetValue())
-            c.limitMemorySize = memoryLimitSpinCtrl.GetValue()
-            c.confirmDelete = confirmDeleteCtrl.GetValue()
+            config.mainFrame.hideOnClose = hideOnCloseCtrl.GetValue()
+            config.checkUpdate = checkUpdateCtrl.GetValue()
+            config.limitMemory = bool(memoryLimitCtrl.GetValue())
+            config.limitMemorySize = memoryLimitSpinCtrl.GetValue()
+            config.confirmDelete = confirmDeleteCtrl.GetValue()
             
             language = languageList[languageChoice.GetSelection()]
-            if c.language != language:
+            if config.language != language:
                 dlg = wx.MessageDialog(
                     self,
-                    t.Warning, 
+                    text.Warning, 
                     "", 
                     wx.OK|wx.ICON_INFORMATION
                 )
                 dlg.ShowModal()
                 dlg.Destroy()
-            c.language = language
-            c.Save()
+            config.language = language
+            config.Save()
             self.SetResult()
-
 

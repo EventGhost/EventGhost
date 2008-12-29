@@ -154,7 +154,7 @@ class PluginItem(ActionItem):
     
     
     def NeedsStartupConfiguration(self):
-        if self.info.instance.Configure.im_func != eg.PluginClass.Configure.im_func:
+        if self.info.instance.Configure.im_func != eg.PluginBase.Configure.im_func:
             return True
         return False
     

@@ -24,9 +24,9 @@ import eg
 import wx
 
 
-class ActionWithStringParameter(eg.ActionClass):
+class ActionWithStringParameter(eg.ActionBase):
     """
-    Simple ActionClass subclass, that only has a single string parameter.
+    Simple action class, that only has a single string parameter.
     """
     #: Set parameterDescription to a descriptive string of the one and only
     #: parameter this action has.

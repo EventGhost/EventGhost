@@ -21,7 +21,6 @@
 # $LastChangedBy$
 
 import eg
-import wx
 from TreeItem import TreeItem
 
 
@@ -46,22 +45,22 @@ class ContainerItem(TreeItem):
             
     @eg.AssertNotMainThread
     def CreateTreeItem(self, tree, parentId):
-        id = TreeItem.CreateTreeItem(self, tree, parentId)
+        treeId = TreeItem.CreateTreeItem(self, tree, parentId)
         if len(self.childs):
-            tree.SetItemHasChildren(id, True)
+            tree.SetItemHasChildren(treeId, True)
             if self.isExpanded:
                 tree.Expand(self.id)
-        return id
+        return treeId
             
         
     @eg.AssertNotMainThread
     def CreateTreeItemAt(self, tree, parentId, pos):
-        id = TreeItem.CreateTreeItemAt(self, tree, parentId, pos)
+        treeId = TreeItem.CreateTreeItemAt(self, tree, parentId, pos)
         if len(self.childs):
-            tree.SetItemHasChildren(id, True)
+            tree.SetItemHasChildren(treeId, True)
             if self.isExpanded:
                 tree.Expand(self.id)
-        return id
+        return treeId
 
     
     def _Delete(self):
@@ -76,16 +75,16 @@ class ContainerItem(TreeItem):
         childs = self.childs
         tree = self.tree
         isValidId = self.HasValidId()
-        id = self.id
+        treeId = self.id
         if len(childs) == 0 and isValidId:
-            tree.SetItemHasChildren(id)
+            tree.SetItemHasChildren(treeId)
         if pos == -1 or pos >= len(childs):
             childs.append(child)
             pos = -1
         else:
             childs.insert(pos, child)
-        if isValidId and (id == self.root.id or tree.IsExpanded(id)):
-            child.CreateTreeItemAt(tree, id, pos)
+        if isValidId and (treeId == self.root.id or tree.IsExpanded(treeId)):
+            child.CreateTreeItemAt(tree, treeId, pos)
             
             
     @eg.AssertNotMainThread

@@ -150,8 +150,7 @@ class Scheduler(threading.Thread):
             
             
     def Stop(self):
-        def func():
+        def DoIt():
             self.keepRunning = False
-        self.AddTask(-1, func)
+        self.AddTask(-1, DoIt)
         
-    

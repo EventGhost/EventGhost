@@ -35,21 +35,13 @@ ERROR_ICON = eg.Icons.ERROR_ICON
 class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     """Implemention of a ListCtrl with a circular buffer."""
     
-    def __init__(
-        self, 
-        parent, 
-        id=-1, 
-        pos=wx.DefaultPosition, 
-        size=wx.DefaultSize
-    ):
+    def __init__(self, parent):
         self.maxlength = 2000
         self.removeOnMax = 200
+        self.OnGetItemText = self.OnGetItemTextWithTime
         wx.ListCtrl.__init__(
             self, 
             parent, 
-            id, 
-            pos, 
-            size,
             style=(
                 wx.LC_REPORT
                 |wx.LC_VIRTUAL
@@ -74,13 +66,13 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             value -= 0.05
         else:
             value += 0.2
-        r, g, b = colorsys.hsv_to_rgb(hue, saturation, value)
+        red, green, blue = colorsys.hsv_to_rgb(hue, saturation, value)
         
         self.attr1 = wx.ListItemAttr()
         self.attr1.BackgroundColour = (
-            int(round(r * 255.0)), 
-            int(round(g * 255.0)), 
-            int(round(b * 255.0)), 
+            int(round(red * 255.0)), 
+            int(round(green * 255.0)), 
+            int(round(blue * 255.0)), 
         )
         self.attr1.TextColour = sysTextColour
 
@@ -96,7 +88,6 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.attr4.BackgroundColour = sysColour
         self.attr4.TextColour = (255, 0, 0)
         
-        text = self.text = eg.text.MainFrame.Logger
         self.InsertColumn(0, "")
         
         # logger popup menu
@@ -106,16 +97,14 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         menu.AddItem("ClearLog")
         self.contextMenu = menu
         
-        Bind = self.Bind
-        Bind(wx.EVT_RIGHT_UP, self.OnRightUp)
-        Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnRightUp)
-        Bind(wx.EVT_LIST_BEGIN_DRAG, self.OnStartDrag)
-        Bind(wx.EVT_LEFT_DCLICK, self.OnDoubleClick)
-        Bind(wx.EVT_SET_FOCUS, self.OnSetFocus)
-        Bind(wx.EVT_KILL_FOCUS, self.OnKillFocus)
+        self.Bind(wx.EVT_RIGHT_UP, self.OnRightUp)
+        self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnRightUp)
+        self.Bind(wx.EVT_LIST_BEGIN_DRAG, self.OnStartDrag)
+        self.Bind(wx.EVT_LEFT_DCLICK, self.OnDoubleClick)
+        self.Bind(wx.EVT_SET_FOCUS, self.OnSetFocus)
+        self.Bind(wx.EVT_KILL_FOCUS, self.OnKillFocus)
         
         self.logTimes = True
-        self.OnGetItemText = self.OnGetItemTextWithTime
         self.__inSelection = False
         self.isOdd = False
         self.data = collections.deque()
@@ -129,12 +118,12 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         
 
     def OnSetFocus(self, event):
-        eg.focusEvent.Fire(self)
+        eg.focusChangeEvent.Fire(self)
         event.Skip()
         
         
     def OnKillFocus(self, event):
-        eg.focusEvent.Fire(None)
+        eg.focusChangeEvent.Fire(None)
         event.Skip()
 
 
@@ -188,11 +177,11 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         return False
     
     
-    def OnCmdCopy(self, event):
-        self.Copy()
-        
-    
-    def Copy(self, event=None):
+    def Copy(self):
+        self.OnCmdCopy()
+
+
+    def OnCmdCopy(self):
         text = ""
         lines = 1
         firstItem = item = self.GetNextItem(
@@ -231,7 +220,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             wx.TheClipboard.Flush()
             
             
-    def OnCmdClearLog(self, event):
+    def OnCmdClearLog(self):
         self.SetItemCount(0)
         self.DeleteAllItems()
         self.data.clear()
@@ -240,16 +229,10 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.Refresh()
     
     
-    def OnRightUp(self, event):
+    def OnRightUp(self, dummyEvent):
         self.PopupMenu(self.contextMenu)
 
 
-#    def OnMouseMotion(self, event):
-#        item, flags = self.HitTest(event.GetPosition())
-#        if flags & wx.LIST_HITTEST_ONITEM:
-#            self.tooltip.SetTip(self.OnGetItemText(item, 0)[1:])
-        
-        
     def OnDoubleClick(self, event):
         item, flags = self.HitTest(event.GetPosition())
         if flags & wx.LIST_HITTEST_ONITEM:
@@ -268,11 +251,11 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         return ""
         
         
-    def OnGetItemTextNormal(self, item, column):
+    def OnGetItemTextNormal(self, item, dummyColumn):
         return " " + self.data[item][0]
         
         
-    def OnGetItemTextWithTime(self, item, column):
+    def OnGetItemTextWithTime(self, item, dummyColumn):
         line, _, _, when = self.data[item]
         return strftime(" %X", localtime(when)) + "   " + line
         
@@ -298,11 +281,11 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     def WriteLine(self, line, icon, wRef, when):
         data = self.data
         if len(data) >= self.maxlength:
-             self.Freeze()
-             for i in range(self.removeOnMax):
-                 self.DeleteItem(0)
-                 data.popleft()
-             self.Thaw()
+            self.Freeze()
+            for _ in range(self.removeOnMax):
+                self.DeleteItem(0)
+                data.popleft()
+            self.Thaw()
         data.append((line, icon, wRef, when))
         self.SetItemCount(len(data))
         self.ScrollList(0, 1000000)

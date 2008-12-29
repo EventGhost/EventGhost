@@ -29,3 +29,4 @@ class Colour:
     treeItem = windowText
     pluginError = (255, 0, 0)
     
+    
