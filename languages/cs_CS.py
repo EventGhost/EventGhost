@@ -29,6 +29,10 @@ class MainFrame:
         welcomeText = u"-->Vítám vás v aplikaci EventGhost<--"
     class Menu:
         About = u"&O aplikaci EventGhost..."
+        AddAction = u"Vložit akci..."
+        AddEvent = u"Vložit událost"
+        AddFolder = u"Vložit složku"
+        AddMacro = u"Vložit makro"
         AddPlugin = u"Vložit Plugin..."
         Apply = u"Použít"
         CheckUpdate = u"Vyhledat novější verzi..."
@@ -36,11 +40,11 @@ class MainFrame:
         Close = u"&Zavřít"
         CollapseAll = u"&Sbalit vše"
         ConfigurationMenu = u"&Konfigurace"
+        Configure = u"Konfigurovat položku..."
         Copy = u"&Kopírovat"
         Cut = u"&Vyjmout"
         Delete = u"O&dstranit"
         Disabled = u"Zakázat položku"
-        Configure = u"Konfigurovat položku..."
         EditMenu = u"&Editovat"
         Execute = u"&Spustit položku"
         Exit = u"&Konec"
@@ -58,10 +62,6 @@ class MainFrame:
         LogMacros = u"Logovat &makra"
         LogTime = u"&Logovat čas"
         New = u"&Nový"
-        AddAction = u"Vložit akci..."
-        AddEvent = u"Vložit událost"
-        AddFolder = u"Vložit složku"
-        AddMacro = u"Vložit makro"
         Open = u"&Otevřít..."
         Options = u"&Možnosti..."
         Paste = u"V&ložit"
@@ -641,19 +641,7 @@ class Plugin:
     class Billy:
         name = u"Billy"
         description = u'Přidává akce k řízení audio přehrávače <a href="http://www.sheepfriends.com/?page=billy">Billy</a>. \n\n<p><BR><B>POZOR !<BR>Správně pracuje pouze s beta verzí 1.04b přehrávače Billy !</B><BR>Se starší verzí bude plugin pracovat v omezeném režimu !</p>'
-        filemask = u"Billy.exe|Billy.exe|Všechny soubory (*.*)|*.*"
-        grpDescription1 = u"Skupina nejdůležitějších akcí k ovládání přehrávače Billy"
-        grpDescription2 = u"Skupina akcí pro práci se seznamy audiosouborů"
-        grpDescription3 = u"Skupina zvláštních akcí (např. reset mixeru Windows)"
-        grpDescription4 = u"Skupina akcí pro práci s Oblíbenými"
-        grpName1 = u"Hlavní"
-        grpName2 = u"Seznamy"
-        grpName3 = u"Zvláštní akce"
-        grpName4 = u"Oblíbené"
-        label = u"Cesta k souboru Billy.exe:"
         text1 = u"Nemohu najít okno přehrávače Billy !"
-        title = u"Napsal Pako podle některých pluginů od autorů MonsterMagnet a Bitmonster"
-        version = u"Verze: "
         class AddFile:
             name = u"Přidat soubor(y)"
             description = u"Otevře dialog pro přidání souboru(ů)."
@@ -771,7 +759,6 @@ class Plugin:
         class Run:
             name = u"Spustit nebo obnovit"
             description = u"Spouští přehrávač Billy s jeho defaultním nastavením nebo ho obnoví."
-            text2 = u"Nemohu najít soubor Billy.exe !"
         class SavePlaylist:
             name = u"Uložit seznam"
             description = u"Otevře dialog pro uložení seznamu."
@@ -812,6 +799,223 @@ class Plugin:
         description = u"Generuje události, jestliže soubory v určené složce jsou vytvořeny, smazány\nnebo změněny."
         watchPath = u"Hlídaná složka:"
         watchSubDirs = u"Hlídat i podsložky"
+    class E_mail:
+        name = u"E-mail"
+        description = u"Přidává akce, související s elektronickou poštou."
+        accType = u"Typ účtu"
+        accountsList = u"Seznam účtů:"
+        addressLabel = u"E-mailová adresa:"
+        assignError = u'Účet "%s" neexistuje!'
+        buttons = (
+            u"Přerušit",
+            u"Přerušit vše",
+            u"Obnovit",
+            u"Zavřít",
+        )
+        cancel = u"Storno"
+        client = u"E-mailový klient"
+        close = u"Zavřít"
+        colLabels = (
+            u"Jméno sledování",
+            u"Interval",
+            u"Poslední kontrola",
+            u"Celková událost",
+            u"Událost zprávy",
+        )
+        delete = u"Odstranit"
+        deleteServer = u'Server "%s" je použit ve vaší konfiguraci.\nNemůžete ho odstranit.'
+        detTitle = u'Sledování "%s" : %s nových e-mailů'
+        eBoxCase = (
+            u"POP3",
+            u"IMAP",
+        )
+        emailSent = u'E-mail "%s: %s" byl odeslán !'
+        error0 = u"Chyba protokolu POP3:"
+        error1 = u'Není možné připojit se k POP serveru "%s:%i"'
+        error2 = u"Chyba protokolu IMAP:"
+        error3 = u'Není možné připojit se k IMAP serveru "%s:%i"'
+        error4 = u'Není možné přihlásit se k účtu "%s" na serveru "%s:%i"'
+        error5 = u'Server nenalezen "%s", zkouším použít defaultní server "%s".'
+        error6 = u"Chyba protokolu SMTP:"
+        error7 = u'Není možné připojit se k SMTP serveru "%s:%i"'
+        error8 = u"Vaše zpráva nemůže být odeslána !"
+        groupLabel = u"Jméno skupiny:"
+        groupsList = u"Seznam skupin:"
+        groupsTitle = u"Skupiny adresátů pro odchozí e-maily"
+        incPort = u"Port"
+        incServer = u"Příchozí server:"
+        insert = u"Přidat nový"
+        label = u"Jméno účtu:"
+        labelsDetails = (
+            u"Č.",
+            u"Účet",
+            u"Předmět",
+            u"Od",
+        )
+        listhead = u"Právě aktivní sledování:"
+        mailAddress = u"E-mailová adresa:"
+        notifLabel = u"čekající(ch)\nzpráv(a,y)"
+        observStarts = u'Sledování "%s" spuštěno'
+        ok = u"OK"
+        outAddress = u"Seznam e-mailových adres:"
+        outServer = u"Odchozí (SMTP) server:"
+        outServerTitle = u"Nastavení odchozích (SMTP) serverů"
+        outText = u"Text:"
+        param = u"Parametry účtu"
+        popup = (
+            u"Zobrazit",
+            u"Odstranit",
+            u"Obnovit",
+            u"E-mailový klient",
+            u"Zavřít",
+        )
+        refresh = u"Obnovit"
+        replAddress = u"Adresa pro odpověď (nepovinné):"
+        secureConnectChoice1 = (
+            u"Ne",
+            u">>> TLS zatím nepodporován <<<",
+            u">>> TLS zatím nepodporován <<<",
+            u"SSL",
+        )
+        secureConnectChoice2 = (
+            u"Ne",
+            u"TLS, je-li k dispozici",
+            u"TLS",
+            u"SSL",
+        )
+        secureConnectLabel = u"Použít zabezpečené spojení:"
+        servLabel = u"Jméno serveru:"
+        servParam = u"Parametry serveru"
+        serversList = u"Seznam serverů:"
+        show = u"Zobrazit"
+        textsList = u"Seznam textů:"
+        textsTitle = u"Texty pro odchozí e-maily"
+        tip0 = u"Kliknutí pravým tlačítkem - skrytí okna\nDvojklik - zobrazení okna s tabulkou čekajících zpráv\nCTRL+dvojklik - otevření defaultního e-mailového klienta"
+        txtLabel = u"Jméno textu:"
+        useName = u"Použít jména a hesla:"
+        useSecure = u"Použít zabezpečenou autentizaci"
+        userLogin = u"Přihlašovací jméno uživatele:"
+        userName = u"Jméno uživatele (nepovinné):"
+        userPassword = u"Heslo:"
+        viewerTitle = u"Prohlížeč aktivních sledování"
+        warning = u"Při jakékoliv změně konfigurace budou všechna aktivní sledování přerušena !"
+        class AbortAllObservations:
+            name = u"Přerušení všech sledování"
+            description = u"Přeruší všechna sledování."
+        class AbortObservation:
+            name = u"Přerušení sledování"
+            description = u"Přeruší sledování."
+            abortNow = u"Přerušit teď !"
+            nameObs = u"Jméno sledování:"
+            tip = u"Sledování bude přerušeno teď"
+        class SendEmail:
+            name = u"Odeslání e-mailu"
+            description = u"Odešle e-mail."
+            copyLabel = u"Kopie:"
+            fromLabel = u"Od:"
+            outText = u"Text:"
+            outTexts = u"Připojit:"
+            sendNow = u"Odeslat teď !"
+            subjectLabel = u"Předmět:"
+            tip = u"Zde může být také výraz jako {eg.event.payload} !"
+            tip1 = u"Jméno příjemce (není povinné)"
+            tip2 = u"Adresa příjemce (povinné)"
+            tip3 = u"E-mail bude odeslán teď !"
+            toLabel = u"Komu:"
+        class StartObservation:
+            name = u"Spuštění sledování"
+            description = u"Spustí sledování."
+            accounts = u"Účty ke sledování:"
+            backCol = u"Barva pozadí:"
+            delete = u"Odstranit"
+            emailEvent = u"Událost zprávy"
+            evtName = u"Jméno události:"
+            field_1 = (
+                u"Nic",
+                u"Předmět",
+                u"Od",
+                u"Tělo",
+            )
+            field_2 = (
+                u"obsahuje",
+                u"neobsahuje",
+                u"je",
+                u"není",
+                u"začíná",
+                u"končí",
+            )
+            forCol = u"Barva textu:"
+            interval_1 = u"Interval:"
+            interval_2 = u"min."
+            message = u"Zobrazit oznamovací okno"
+            nameObs = u"Jméno sledování:"
+            payload = u"Náklad:"
+            radio_buttons = (
+                u"Celkové sledování bez filtrace",
+                u"Zpráva splňuje všechny následující podmínky",
+                u"Zpráva splňuje některou z následujících podmínek",
+            )
+            startNow = u"Spustit teď !"
+            tip0 = u"Zobrazí se oznamovací okno s počtem čekajích zpráv"
+            tip1 = u"Po spuštění události bude zpráva ze serveru odstraněna"
+            tip2 = u"Spustit sledování teď"
+            tip3 = u"Spustí událost pro každý e-mail"
+            tip4 = u"Spustí událost při každé změně počtu čekajících zpráv"
+            totalEvent = u"Celková událost"
+            totalPayload = (
+                u"Nic",
+                u"Počet",
+            )
+            warning = u"Nebyl nalezen ani jeden účet, odpovídající seznamu %s !"
+    class FileOperations:
+        name = u"Souborové operace"
+        description = u"Práce s textovými soubory (čtení a zápis)."
+        class Read:
+            name = u"Čtení textu ze souboru"
+            description = u"Přečte text z vybraného souboru."
+            FilePath = u"Číst soubor:"
+            TreeLabel = u"Číst soubor: %s"
+            begin = u"od začátku"
+            browseFileDialogTitle = u"Výběr souboru"
+            defaultIn = u"unicode (UTF-8)"
+            end = u"od konce"
+            ignore = u"Ignorovat (přeskočí vadné znaky)"
+            inputPage = u"Kódování vstupních dat:"
+            lineNum = u"Číst od řádku číslo:"
+            listIncluding = u"Řádkové řetězce včetně CR/LF"
+            listNotIncluding = u"Řádkové řetězce bez CR/LF"
+            oneIncluding = u"Řetězec včetně CR/LF"
+            oneNotIncluding = u"Řetězec bez CR/LF"
+            oneString = u"Jeden řetězec (včetně CR/LF)"
+            readAhead = u"Číst"
+            readBehind = u"řádků (0 = celý soubor)"
+            replace = u"Nahradit špatné znaky"
+            strict = u"Vyvolat výjimku"
+            systemPage = u"systémová kódová stránka (%s)"
+            txtDecErrMode = u"Ošetření chyb při dekódování:"
+            txtMode = u"Přečtený(é) řádek(ky) vrátit jako:"
+        class Write:
+            name = u"Zapsat text do souboru"
+            description = u"Zapíše text do vybraného souboru."
+            FilePath = u"Výstupní soubor:"
+            TreeLabel = u"Zapsat %s do souboru: %s"
+            append = u"Připojit k souboru"
+            browseFileDialogTitle = u"Výběr souboru"
+            defaultOut = u"unicode (UTF-8)"
+            hexdump = u"Řetězec zapsat v HexDump formátu"
+            ignore = u"Ignorovat (přeskočí špatné znaky)"
+            inString = u"Vstupní text:"
+            internal = u"interní unicode"
+            logTimes = u"Zapsat časové razítko"
+            newLine = u"Připojit k souboru na nový řádek"
+            outputPage = u"Kódování výstupních dat:"
+            overwrite = u"Soubor přepsat"
+            replace = u"Nahradit špatné znaky"
+            strict = u"Vyvolat výjimku"
+            systemPage = u"systémová kódová stránka (%s)"
+            txtEncErrMode = u"Ošetření chyb při kódování:"
+            txtModeMulti = u"Režim zápisu"
+            writeToLog = u"Zapsat také  do logu EventGhostu"
     class Foobar2000:
         name = u"Foobar2000"
         description = u'Přidává podporu funkcí pro řízení aplikace Foobar2000.\n\n<p><a href="http://www.foobar2000.org/">Domovská stránka aplikace Foobar2000</a>'
@@ -1876,6 +2080,51 @@ class Plugin:
         class Zoom50:
             name = u"Velikost - 50%"
             description = u"Velikost - 50%"
+    class Multitap:
+        name = u"Multitap"
+        description = u"Umožňuje vícenásobné použití tlačítek (jednak obdoba psaní SMS na mobilních telefonech, jednak vlastní nabídky) a zadávání vícemístných čísel."
+        assignError = u'Konfigurace "%s" neexistuje!'
+        delete = u"Odstranit"
+        evtString = u"Jméno a formát události:"
+        genPayload = u"Generovat jako náklad"
+        genSuffix = u"Generovat jako sufix události"
+        insert = u"Přidat novou"
+        label = u"Jméno konfigurace:"
+        labelMode = u"Režim multitaperu:"
+        labelTimeout1 = u"Časový dohled:"
+        labelTimeout2 = u"(0 = bez časového dohledu)"
+        menuPreview = u"Seznam konfigurací:"
+        numpad = u"Numpad (numerický řetězec)"
+        ownOSD = u"Používat OSD"
+        param = u"Konfigurační parametry"
+        singleKey = u"Jednotlačítkový"
+        string = u"Jako SMS"
+        class BackSpace:
+            name = u"Vymazat (backspace)"
+            description = u"Vymaže poslední znak (backspace)."
+        class Cancel:
+            name = u"Storno"
+            description = u"Ukončí (stornuje) akci bez generování události."
+        class Enter:
+            name = u"Enter"
+            description = u"Ukončí zadávání znaků a spouští generování události (bez čekání na timeout)."
+        class Key:
+            name = u"Klávesa (tlačítko)"
+            description = u"Akce po stisknutí klávesy (tlačítka)."
+            configLabel = u"Konfigurace:"
+            delete = u"Odstranit"
+            eventPayload = u"Jméno (náklad) události:"
+            eventSuffix = u"Jméno (sufix) události:"
+            insert = u"Přidat nové"
+            label_1 = u"Znaky při Caps Lock OFF:"
+            label_2 = u"Znaky při Caps Lock ON:"
+            label_3 = u"Číslice:"
+            listEventPayload = u"Nabídka (seznam) :"
+            listEventSuffix = u"Nabídka (seznam) :"
+            warning = u"Není povoleno použít znak MEZERA\nna první nebo poslední pozici řetězce !"
+        class Shift:
+            name = u"Caps Lock"
+            description = u"V režimu SMS přepíná mezi dvěma seznamy znaků."
     class NetworkReceiver:
         name = u"Síťový přijímač událostí"
         description = u'Přijímá události od pluginu "Síťový vysílač událostí"'
