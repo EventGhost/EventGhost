@@ -1,4 +1,4 @@
-version = "0.1.1"
+version = "0.1.2"
 # This file is part of EventGhost.
 # Copyright (C) 2008 Pako <lubos.ruckl@quick.cz>
 #
@@ -17,7 +17,7 @@ version = "0.1.1"
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# Last change: 25-12-2008 09:01
+# Last change: 30-12-2008 17:22
 
 #===============================================================================
 #Structure of setup/account (one record):
@@ -416,6 +416,7 @@ class DetailsFrame(wx.MiniFrame):
         self.SetBackgroundColour(wx.NullColour)
         self.menuFlagS = False
         self.menuFlagD = False
+        self.delFlag = False
 
     
     def ShowDetailsFrame(
@@ -531,6 +532,7 @@ class DetailsFrame(wx.MiniFrame):
         self.Close(True)
         
     def deleteEmails(self, indx, sel, close = False):
+        self.delFlag = True
         if close:
             self.messageFrame.Close()
         else:
@@ -571,7 +573,22 @@ class DetailsFrame(wx.MiniFrame):
         self.deleteButton.Enable(self.menuFlagD)
         if event:
             event.Skip()
-
+            
+    def Disappear(self):
+        if self.delFlag:
+            self.Show(False)
+        else:
+            self.Close()
+            
+            
+    def resDelFlag(self):
+        self.delFlag = False
+        
+            
+    def isCloseReq(self):
+        return self.delFlag and not self.IsShown()
+        
+            
     def Refresh(self, event=None):
         observName = self.setup[0]
         indx = [item[0] for item in self.plugin.tempData].index(observName)
@@ -590,6 +607,7 @@ class DetailsFrame(wx.MiniFrame):
             self.parent.SetNum(row)
         self.Unblock(True)
         self.ListSelection()
+        
         
     def Unblock(self, unblock):
         if unblock:
@@ -815,7 +833,7 @@ class NotifFrame(wx.MiniFrame):
         
         def OnCloseWindow(event):
             if self.detailsFrame:
-                self.detailsFrame.Close()
+                self.detailsFrame.Disappear()
             self.Destroy()
             event.Skip()
         self.Bind(wx.EVT_CLOSE, OnCloseWindow)      
@@ -825,7 +843,7 @@ class NotifFrame(wx.MiniFrame):
                 RunEmailClient()
             else:                 #without CTRL
                 if self.detailsFrame:
-                    wx.CallAfter(self.detailsFrame.Refresh)
+                    #wx.CallAfter(self.detailsFrame.Refresh)
                     BringWindowToTop(self.detailsFrame.GetHandle())
                 else:
                     self.detailsFrame = DetailsFrame(parent = self)
@@ -841,7 +859,7 @@ class NotifFrame(wx.MiniFrame):
 
         def OnRightClick(evt):
             if self.detailsFrame:
-                self.detailsFrame.Close()
+                self.detailsFrame.Disappear()
             self.Show(False)
         self.Bind(wx.EVT_RIGHT_UP, OnRightClick)
         self.label.Bind(wx.EVT_RIGHT_UP, OnRightClick)
@@ -854,7 +872,7 @@ class NotifFrame(wx.MiniFrame):
 
     def Disappear(self, close=False):
         if self.detailsFrame:
-            self.detailsFrame.Close()
+            self.detailsFrame.Disappear()
         if not close:
             self.Show(False)
         else:
@@ -2230,7 +2248,8 @@ class WorkThread(Thread):
         self.refresh=False
         self.threadFlag = Event()
         self.delArgs = None
-        print self.plugin.text.observStarts % self.setup[0]
+        self.text = self.plugin.text
+        print self.text.observStarts % self.setup[0]
         
     def isRunning(self):
         return self.runFlag
@@ -2257,6 +2276,10 @@ class WorkThread(Thread):
             self.runFlag = True
             if self.delArgs is not None:
                 self.delArgs[3].RealizeAction(self.delArgs[0], self.delArgs[1], self.delArgs[2])
+                if self.delArgs[3].isCloseReq():
+                    self.delArgs[3].Close()
+                else:
+                    self.delArgs[3].resDelFlag()
                 self.delArgs = None
                 val, shift = self.CheckEmails()
                 if self.setup[6]: #Show notification Window
@@ -2349,7 +2372,7 @@ class WorkThread(Thread):
                         else:
                             mailbox = poplib.POP3(SERVER,PORT)                        
                     except:
-                        eg.PrintError(text.error0+' '+text.error1 % (SERVER,PORT))
+                        eg.PrintError(self.text.error0+' '+self.text.error1 % (SERVER,PORT))
                     else:
                         #mailbox.set_debuglevel(5)
                         try:
@@ -2374,7 +2397,7 @@ class WorkThread(Thread):
                                 oneRec =  self.CreateOneRecord(data, account[0], nbr, id)
                                 tmpData.append(oneRec)
                         except poplib.error_proto, errmsg:
-                            eg.PrintError(text.error0+' '+str(errmsg))
+                            eg.PrintError(self.text.error0+' '+str(errmsg))
                         mailbox.quit()
                 else:               #IMAP
                     try:
@@ -2383,12 +2406,12 @@ class WorkThread(Thread):
                         else:
                             mailbox = imaplib.IMAP4(SERVER, PORT)
                     except:
-                        eg.PrintError(text.error2+' '+text.error3 % (SERVER,PORT))
+                        eg.PrintError(self.text.error2+' '+self.text.error3 % (SERVER,PORT))
                     else:
                         try:
                             mailbox.login(USER, PASSWORD)
                         except:
-                            eg.PrintError(text.error2+' '+text.error4 % (USER, SERVER, PORT))
+                            eg.PrintError(self.text.error2+' '+self.text.error4 % (USER, SERVER, PORT))
                         else:
                             typ, data = mailbox.select('INBOX') #Folder selection
                             typ, data = mailbox.search(None, 'UNSEEN')
@@ -2482,7 +2505,7 @@ class WorkThread(Thread):
                         else:
                             mailbox = poplib.POP3(SERVER, PORT)
                     except:
-                        eg.PrintError(text.error0+' '+text.error1 % (SERVER,PORT))
+                        eg.PrintError(self.text.error0+' '+self.text.error1 % (SERVER,PORT))
                     else:
                         try:
                             mailbox.user(USER)
@@ -2496,7 +2519,7 @@ class WorkThread(Thread):
                                     data = "\n".join(data)
                                     count, tmpData = processEmail(mailbox, data,idList, account, count, id, tmpData)
                         except poplib.error_proto, errmsg:
-                            eg.PrintError(text.error0+' '+str(errmsg))
+                            eg.PrintError(self.text.error0+' '+str(errmsg))
                         mailbox.quit()
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                 else:               #IMAP
@@ -2506,12 +2529,12 @@ class WorkThread(Thread):
                         else:
                             mailbox = imaplib.IMAP4(SERVER, PORT)
                     except:
-                        eg.PrintError(text.error2+' '+text.error3 % (SERVER,PORT))
+                        eg.PrintError(self.text.error2+' '+self.text.error3 % (SERVER,PORT))
                     else:
                         try:
                             mailbox.login(USER, PASSWORD)
                         except:
-                            eg.PrintError(text.error2+' '+text.error4 % (USER, SERVER, PORT))
+                            eg.PrintError(self.text.error2+' '+self.text.error4 % (USER, SERVER, PORT))
                         else:
                             typ, data = mailbox.select('INBOX') #Folder selection
                             typ, data = mailbox.search(None, 'UNSEEN')
@@ -2651,13 +2674,16 @@ class StartObservation(eg.ActionClass):
             'Message match any of the following rules',
         )
         message = 'Show notification window'
-        colour = "Colours ..."
+        #colour = "Colours ..."
         totalEvent = 'Trigger total event'
         evtName = 'Event name:'
         tip0 = 'Show notification window with count of waiting e-mails'
-        tip1 = 'After event triggering delete email on server'
+        tip1 = 'After event triggering delete e-mail on server'
         tip2 = 'Start observation now'
-        emailEvent = "Trigger event for each email"
+        tip3 = 'Trigger event for each e-mail'
+        tip4 = 'Trigger event in any change in the number of waiting messages'
+        emailEvent = "E-mail event"
+        totalEvent = 'Total event'
         payload = "Payload:"
         totalPayload = ("None", "Count")
         delete = "Delete"
@@ -2829,8 +2855,10 @@ class StartObservation(eg.ActionClass):
         messageCtrl.Enable(not self.stp[14])
         messageCtrl.SetToolTipString(text.tip0)
         eventCtrl = wx.CheckBox(panel, label = text.totalEvent)     
+        eventCtrl.SetToolTipString(text.tip4)
 
         event2Ctrl = wx.CheckBox(panel, label = text.emailEvent)
+        event2Ctrl.SetToolTipString(text.tip3)
         event2Ctrl.SetValue(self.stp[11])
         eventCtrl.SetValue(self.stp[7])
         eventCtrl.Enable(not self.stp[14])
@@ -3113,8 +3141,8 @@ class SendEmail(eg.ActionClass):
         outText = "Text:"
         outTexts = "Append:"
         tip = 'Here can be expression as {eg.event.payload} too !'
-        tip1 = "Recipient's Name (not obligatory)\n"
-        tip2 = "Recipient's Address (obligatory)\n"
+        tip1 = "Recipient's Name (not obligatory)"
+        tip2 = "Recipient's Address (obligatory)"
         tip3 = 'Send your e-mail now !'
         sendNow = 'Send now !'
 
@@ -3177,8 +3205,8 @@ class SendEmail(eg.ActionClass):
         choices.extend([item[0] for item in self.plugin.texts])
         textsCtrl=wx.ComboBox(panel, -1, choices = choices, size = (200,-1))
         textsCtrl.SetValue(Append)
-        toNameCtrl.SetToolTipString(text.tip1+text.tip)
-        toCtrl.SetToolTipString(text.tip2+text.tip)
+        toNameCtrl.SetToolTipString(text.tip1+'.\n'+text.tip)
+        toCtrl.SetToolTipString(text.tip2+'.\n'+text.tip)
         outTextCtrl.SetToolTipString(text.tip)
         subjectCtrl.SetToolTipString(text.tip)
         textsCtrl.SetToolTipString(text.tip)
@@ -3275,7 +3303,7 @@ class E_mail(eg.PluginClass):
         )
         accType = 'Account type'
         userName = 'User name (optional):'
-        user = 'User name:'
+        #user = 'User name:'
         mailAddress = 'E-mail address:'
         replAddress = 'Address for replay (optional):'
         incServer = 'Incoming server:'
@@ -3347,7 +3375,7 @@ class E_mail(eg.PluginClass):
         error1 = 'Cannot connect to POP server "%s:%i"'
         error2 = 'IMAP Protocol Error:'
         error3 = 'Cannot connect to IMAP server "%s:%i"'
-        error4 = 'Cannot log in to account "%s" on server %s:%i"'
+        error4 = 'Cannot log in to account "%s" on server "%s:%i"'
         error5 = 'Cannot found server "%s", try use default server "%s".'
         error6 = 'SMTP Protocol Error:'
         error7 = 'Cannot connect to SMTP server "%s:%i"'
