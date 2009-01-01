@@ -1,4 +1,7 @@
 """
+This file was automatically created by the tools/BuildStaticImports.py script.
+Don't try to edit this file yourself.
+
 This module is not directly used by EventGhost. It only exists to help
 pylint and other tools to read the sources properly, as EventGhost is using
 a lazy import pattern.
@@ -57,8 +60,6 @@ from Classes.License import License
 from Classes.Log import Log
 from Classes.MacroItem import MacroItem
 from Classes.MacroSelectButton import MacroSelectButton
-from Classes.Menu import Menu
-from Classes.MenuBar import MenuBar
 from Classes.MessageReceiver import MessageReceiver
 from Classes.NamespaceTree import NamespaceTree
 from Classes.NetworkSend import NetworkSend
@@ -90,7 +91,6 @@ from Classes.StaticTextBox import StaticTextBox
 from Classes.TaskBarIcon import TaskBarIcon
 from Classes.Text import Text
 from Classes.ThreadWorker import ThreadWorker
-from Classes.ToolBar import ToolBar
 from Classes.TranslatableStrings import TranslatableStrings
 from Classes.Translation import Translation
 from Classes.TreeItem import TreeItem
