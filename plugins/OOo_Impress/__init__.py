@@ -18,8 +18,9 @@
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#Last change: 2008-10-24 11:11
+
+#Last change: 2009-01-01 13:28
+#===============================================================================
 
 eg.RegisterPlugin(
     name = "OOo Impress",
@@ -32,7 +33,7 @@ eg.RegisterPlugin(
         'OOo Impress</a>.'
     ),
     createMacrosOnAdd = True,    
-    url = "http://www.eventghost.org/xxxxx",
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1052",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAGk0lEQVR42pVWW4hdZxX+"
         "/svZ+5w517kkZzIzycyYiylpIjY2aZOaVJGaeEFDBQsFESuiCLUPVdAHiwhC6YM+iaUW"
@@ -71,13 +72,14 @@ eg.RegisterPlugin(
         "TkSuQmCC"
     )
 )
+#===============================================================================
 
 import os
 from time import sleep
-from threading import Timer
+from threading import Thread, Event
 from win32com.client.dynamic import Dispatch
 from win32api import GetSystemMetrics
-from win32gui import SetFocus, SetForegroundWindow, SetActiveWindow
+from win32gui import SetFocus, SetForegroundWindow, SetActiveWindow, IsWindow
 from eg.WinApi import SendMessageTimeout
 from eg.WinApi.Dynamic import PostMessage
 
@@ -89,17 +91,139 @@ WM_KEYUP      = 0x0101
 VK_RETURN     = 0x0D
 
 findPresentation=eg.WindowMatcher(
-    u'SOFFICE.BIN',
-    u'{*} - OpenOffice.org Impress{*}',
+    None,
+    None,
     u'SALTMPSUBFRAME',
     None,
     None,
-    1,
+    None,
     False,
     0.0,
     0
 )
-#====================================================================
+#===============================================================================
+
+class Menu(wx.Frame):
+    
+    def __init__(self):
+        wx.Frame.__init__(
+            self,
+            None,
+            -1,
+            'OS_Menu',
+            style = wx.STAY_ON_TOP|wx.SIMPLE_BORDER
+        )
+        
+    def ShowMenu(
+        self,
+        plugin,
+        choices,
+        fore,
+        back,
+        fontInfo,
+        testFlag
+    ):
+        self.plugin = plugin
+        self.fore = fore
+        self.back = back
+        self.testFlag = testFlag
+    
+        presChoiceCtrl=wx.ListBox(
+            self,
+            choices = [item[0] for item in choices],
+            style=wx.LB_SINGLE|wx.LB_NEEDED_SB 
+        )
+
+        if fontInfo is None:
+            font = presChoiceCtrl.GetFont()
+            font.SetPointSize(36)
+            fontInfo = font.GetNativeFontInfoDesc()
+        else:
+            font = wx.FontFromNativeInfoString(fontInfo)        
+        presChoiceCtrl.SetFont(font)
+        # menu height calculation:
+        items = len(choices)
+        h = presChoiceCtrl.GetCharHeight()
+        height0 = len(choices)*h+5
+        height1 = h*((GetSystemMetrics (1)-20)/h)+5
+        height = min(height0,height1)
+        # menu width calculation:
+        width_lst = []
+        for item in [i[0] for i in choices]:
+            width_lst.append(presChoiceCtrl.GetTextExtent(item+' ')[0])
+        width = max(width_lst)+8
+        if height < height0:
+            width += 20 #for vertical scrollbar
+        width = min((width,GetSystemMetrics (0)-50))
+        self.SetSize((width+6,height+6))
+        presChoiceCtrl.SetDimensions(2,2,width,height,wx.SIZE_AUTO)
+        mainSizer =wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(mainSizer)
+#
+        presChoiceCtrl.SetSelection(0)
+        self.SetBackgroundColour((0,0,0))
+        presChoiceCtrl.SetBackgroundColour(self.back)
+        presChoiceCtrl.SetForegroundColour(self.fore)
+        mainSizer.Add(presChoiceCtrl, 0, wx.EXPAND)
+
+        self.Bind(wx.EVT_CLOSE, self.OnClose)        
+        presChoiceCtrl.Bind(wx.EVT_LISTBOX_DCLICK, self.On2Click)
+        
+        if self.testFlag:
+            cm=self.CloseMenu(self.plugin)
+            cm.start()
+            
+        self.Centre()
+        self.Show(True)
+        
+        
+    def On2Click(self,evt):
+        wx.CallAfter(self.plugin.StartFromMenu)
+        
+        
+    def OnClose(self,evt):
+        self.Destroy()
+#-----------------------------------------
+
+    class CloseMenu(Thread):
+
+        def __init__(self, plugin):
+            Thread.__init__(self)
+            self.plugin = plugin
+    
+        def run(self):
+            sleep(5)
+            try:
+                self.plugin.menuDlg.Close() #
+                self.plugin.menuDlg = None
+            except:
+                pass     
+#===============================================================================
+
+class CloseThread(Thread):
+    def __init__(
+        self,
+        hwnd,
+        hWnd,
+    ):
+        self.threadFlag = Event()
+        self.hwnd = hwnd
+        self.hWnd = hWnd
+        Thread.__init__(self, name='Close Presentation Thread')
+
+    def run(self):
+        while 1:
+            if not IsWindow(self.hwnd):
+                PostMessage(self.hWnd,WM_CLOSE,0,0)
+                break
+            self.threadFlag.clear()
+            self.threadFlag.wait(10)
+#===============================================================================
+
+class MyFileBrowseButton(eg.FileBrowseButton):
+    def GetTextCtrl(self):          #  now I can make build-in textCtrl non-editable !!!
+        return self.textControl     #
+#===============================================================================
 
 #cls types for ACTIONS list:       
 class StartPresentation(eg.ActionClass):
@@ -108,7 +232,8 @@ class StartPresentation(eg.ActionClass):
         pathLabel = 'Path to presentation file:'
         filemask = 'Presentations (*.pps, *.ppt, *.odp)|*.pps; *.ppt;\
             *.odp|All files (*.*)|*.*'
-        toolTipFile = 'Type filename or click browse to choose file'
+        toolTipFile = 'Click browse button to choose file'
+        title = "Choose a file"
 
         
     def __call__(self,url=None):
@@ -125,23 +250,23 @@ class StartPresentation(eg.ActionClass):
             self.text.pathLabel,
             style=wx.ALIGN_LEFT
         )
-        filepathCtrl = eg.FileBrowseButton(
+        filepathCtrl = MyFileBrowseButton(
             panel, 
             size=(370,-1),
             initialValue = url if (url is not None) else '',
             startDirectory=eg.folderPath.Documents,
             fileMask = self.text.filemask,
-            buttonText=eg.text.General.browse,
             toolTip=self.text.toolTipFile,
+            dialogTitle = self.text.title,
         )
-        filepathCtrl.GetTextCtrl.SetEditable(False)
+        filepathCtrl.GetTextCtrl().SetEditable(False)
         panel.AddLabel(self.text.pathLabel)
         panel.sizer.Add((1, 3))
         panel.AddCtrl(filepathCtrl)
         
         while panel.Affirmed():
             panel.SetResult(filepathCtrl.GetValue())
-#====================================================================
+#===============================================================================
 
 #Group Menu :
 class ShowMenu(eg.ActionClass):
@@ -150,7 +275,7 @@ class ShowMenu(eg.ActionClass):
     class text:
         filemask = "Presentations (*.pps, *.ppt, *.odp)|*.pps;*.ppt;\
             *.odp|All files (*.*)|*.*"
-        toolTipFile = 'Type filename or click browse to choose file'
+        toolTipFile = 'Click browse button to choose file'
         label = 'Label:'
         path = 'File:'
         menuPreview = 'On screen menu preview:'
@@ -158,8 +283,9 @@ class ShowMenu(eg.ActionClass):
         insert = 'Insert new'
         menuFont = 'Menu font:'
         txtColour = 'Text colour'
-        background = 'Background colour'        
-#====================================================================
+        background = 'Background colour'
+        title = "Choose a file"
+#===============================================================================
 
     class MenuColourSelectButton(wx.BitmapButton):
 
@@ -215,14 +341,13 @@ class ShowMenu(eg.ActionClass):
         def GetValue(self):
             return self.value
 
-            
         def SetValue(self, value):
             self.value = value
             w, h = self.GetSize()
             image = wx.EmptyImage(w-10, h-10)
             image.SetRGBRect((1, 1, w-12, h-12), *value)
             self.SetBitmapLabel(image.ConvertToBitmap())
-#====================================================================
+#===============================================================================
 
     class MenuFontButton(wx.BitmapButton):
 
@@ -315,14 +440,22 @@ class ShowMenu(eg.ActionClass):
         back,
         fontInfo,
     ):
-        wx.CallAfter(
-            self.plugin.ShowMenu,
+        if self.plugin.menuDlg is not None:
+            return
+        if IsWindow(self.plugin.hwnd):
+            return
+
+        self.plugin.choices=choices
+        self.plugin.menuDlg = Menu()
+        wx.CallAfter(self.plugin.menuDlg.ShowMenu,
+            self.plugin,
             choices,
             fore,
             back,
             fontInfo,
+            False
         )
-
+#===============================================================================
 
     def GetLabel(
         self,
@@ -400,14 +533,15 @@ class ShowMenu(eg.ActionClass):
         labelCtrlSizer.Add(labelCtrl,0,wx.EXPAND)
         bottomSizer.Add(labelCtrlSizer)
         filepathLbl=wx.StaticText(panel, -1, self.text.path)
-        filepathCtrl = eg.FileBrowseButton(
+        filepathCtrl = MyFileBrowseButton(
             panel, 
             size=(370,-1),
             startDirectory=eg.folderPath.Documents,
             fileMask = self.text.filemask,
-            buttonText=eg.text.General.browse,
-            toolTip=self.text.toolTipFile
+            toolTip=self.text.toolTipFile,
+            dialogTitle = self.text.title,
         )
+        filepathCtrl.GetTextCtrl().SetEditable(False)
         bottomSizer.Add(filepathLbl,0,wx.TOP,3)
         bottomSizer.Add(filepathCtrl,0,wx.EXPAND)
         #Button UP
@@ -462,8 +596,8 @@ class ShowMenu(eg.ActionClass):
             filepath = filepathCtrl.GetValue()
             if label.strip()<>"":
                 if os.path.isfile(filepath):
-                    if [n[0] for n in self.choices].count(label)==1:
-                        if [n[1] for n in self.choices].count(filepath)==1:
+                    if [item[0] for item in self.choices].count(label)==1:
+                        if [item[1] for item in self.choices].count(filepath)==1:
                             self.oldSel=sel
                             item = self.choices[sel]
                             labelCtrl.SetValue(item[0])
@@ -476,7 +610,7 @@ class ShowMenu(eg.ActionClass):
 
         def OnButtonUp(evt):
             newSel=self.Move(listBoxCtrl.GetSelection(),-1)
-            listBoxCtrl.Set([n[0] for n in self.choices])
+            listBoxCtrl.Set([item[0] for item in self.choices])
             listBoxCtrl.SetSelection(newSel)
             self.oldSel = newSel
             evt.Skip()
@@ -485,7 +619,7 @@ class ShowMenu(eg.ActionClass):
 
         def OnButtonDown(evt):
             newSel=self.Move(listBoxCtrl.GetSelection(),1)
-            listBoxCtrl.Set([n[0] for n in self.choices])
+            listBoxCtrl.Set([item[0] for item in self.choices])
             listBoxCtrl.SetSelection(newSel)
             self.oldSel = newSel
             evt.Skip()
@@ -516,7 +650,7 @@ class ShowMenu(eg.ActionClass):
                 sel = 0
             self.oldSel = sel
             tmp = self.choices.pop(listBoxCtrl.GetSelection())
-            listBoxCtrl.Set([n[0] for n in self.choices])
+            listBoxCtrl.Set([item[0] for item in self.choices])
             listBoxCtrl.SetSelection(sel)
             item = self.choices[sel]
             labelCtrl.SetValue(item[0])
@@ -525,7 +659,7 @@ class ShowMenu(eg.ActionClass):
         btnDEL.Bind(wx.EVT_BUTTON, OnButtonDelete)
         
         if len(self.choices) > 0:
-            listBoxCtrl.Set([n[0] for n in self.choices])
+            listBoxCtrl.Set([item[0] for item in self.choices])
             listBoxCtrl.SetSelection(0)
             labelCtrl.SetValue(self.choices[0][0])
             filepathCtrl.SetValue(self.choices[0][1])
@@ -549,12 +683,12 @@ class ShowMenu(eg.ActionClass):
                 label = labelCtrl.GetValue()
                 filepath = filepathCtrl.GetValue()
                 self.choices[sel]=(label,filepath)
-                listBoxCtrl.Set([n[0] for n in self.choices])
+                listBoxCtrl.Set([item[0] for item in self.choices])
                 listBoxCtrl.SetSelection(sel)
                 if label.strip()<>"":
                     if os.path.isfile(filepath):
-                        if [n[0] for n in self.choices].count(label)==1:
-                            if [n[1] for n in self.choices].count(filepath)==1:
+                        if [item[0] for item in self.choices].count(label)==1:
+                            if [item[1] for item in self.choices].count(filepath)==1:
                                 flag = True
                 panel.EnableButtons(flag)
                 btnApp.Enable(flag)
@@ -574,7 +708,7 @@ class ShowMenu(eg.ActionClass):
             sel = listBoxCtrl.GetSelection() + 1
             self.oldSel=sel
             self.choices.insert(sel,('',''))
-            listBoxCtrl.Set([n[0] for n in self.choices])
+            listBoxCtrl.Set([item[0] for item in self.choices])
             listBoxCtrl.SetSelection(sel)
             labelCtrl.SetValue('')
             labelCtrl.SetFocus()
@@ -586,8 +720,16 @@ class ShowMenu(eg.ActionClass):
 
         # re-assign the test button
         def OnButton(event):
-            self.plugin.testFlag = True
-            event.Skip()
+            self.plugin.choices = self.choices
+            self.plugin.menuDlg = Menu()
+            self.plugin.menuDlg.ShowMenu(
+                self.plugin,
+                self.choices,
+                foreColourButton.GetValue(),
+                backColourButton.GetValue(),
+                fontButton.GetValue(), 
+                True
+            )
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
 
         while panel.Affirmed():
@@ -610,37 +752,38 @@ class MoveCursor(eg.ActionClass):
                 if sel == eval(self.value[0]):
                     sel = eval(self.value[1])
                 self.plugin.menuDlg.GetSizer().GetChildren()[0].GetWindow().\
-                    SetSelection(sel+self.value[2])
+                    SetSelection(sel+self.value[2])                
 #====================================================================
 
 class OK_Btn(eg.ActionClass):
 
     def __call__(self):
-        self.plugin.timer.cancel()
-        self.plugin.StartFromMenu()       
+        if self.plugin.menuDlg is not None:
+            wx.CallAfter(self.plugin.StartFromMenu)        
 #====================================================================
 
 class Cancel_Btn(eg.ActionClass):
 
     def __call__(self):
-        self.plugin.destroyMenu()
+        if self.plugin.menuDlg is not None:
+            self.plugin.menuDlg.Close()
+            self.plugin.menuDlg = None
+            self.plugin.choices = []
 #======================================================================
- 
+
 #Group GoTo slide ...:
 class DigitAction(eg.ActionClass):
 
     def __call__(self):
-        hwnd = findPresentation()
-        if len(hwnd) != 0:
+        if IsWindow(self.plugin.hwnd):
             self.plugin.number+=self.value
-            wx.CallAfter(self.plugin.ShowSlideNumber)
+            self.plugin.ShowNumLabel()
 #======================================================================
-            
+          
 class Enter(eg.ActionClass):
 
     def __call__(self):
-        hwnd = findPresentation()
-        if len(hwnd) != 0:
+        if IsWindow(self.plugin.hwnd):
             if (self.plugin.numDialog is not None) and (len(self.plugin.number)>0):
                 for vk_num in self.plugin.number:
                     hparam = int(vk_num)+96
@@ -649,11 +792,13 @@ class Enter(eg.ActionClass):
                     else:
                         lparam = int(vk_num)+78-7*((int(vk_num)+2)/3-1)
                     lparam = 1+lparam*65536
-                    PostMessage(hwnd[0], WM_KEYDOWN, hparam, lparam)
-                    PostMessage(hwnd[0], WM_KEYUP, hparam, lparam+0xC0000000)
-                PostMessage(hwnd[0], WM_KEYDOWN, VK_RETURN, 0x001C0001)
-                PostMessage(hwnd[0], WM_KEYUP, VK_RETURN, 0xC01C0001)
-                wx.CallAfter(self.plugin.DestroySlideNumber)
+                    PostMessage(self.plugin.hwnd, WM_KEYDOWN, hparam, lparam)
+                    PostMessage(self.plugin.hwnd, WM_KEYUP, hparam, lparam+0xC0000000)
+                PostMessage(self.plugin.hwnd, WM_KEYDOWN, VK_RETURN, 0x001C0001)
+                PostMessage(self.plugin.hwnd, WM_KEYUP, VK_RETURN, 0xC01C0001)
+                self.plugin.number = ''
+                self.plugin.numDialog.Destroy()
+                self.plugin.numDialog = None
 #======================================================================
 
 class Backspace(eg.ActionClass):
@@ -662,25 +807,27 @@ class Backspace(eg.ActionClass):
         if (self.plugin.numDialog is not None) and (len(self.plugin.number)>0):
                 self.plugin.number = self.plugin.number[:-1]
                 if len(self.plugin.number) == 0:
-                    wx.CallAfter(self.plugin.DestroySlideNumber)
+                    self.plugin.numDialog.Destroy()
+                    self.plugin.numDialog = None
                 else:
-                    wx.CallAfter(self.plugin.ShowSlideNumber)
+                    self.plugin.ShowNumLabel()
 #======================================================================
 
 class Cancel(eg.ActionClass):
 
     def __call__(self):
         if self.plugin.numDialog is not None:
-            wx.CallAfter(self.plugin.DestroySlideNumber)
+            self.plugin.number = ''
+            self.plugin.numDialog.Destroy()
+            self.plugin.numDialog = None
 #======================================================================
 
 class HotKeyAction(eg.ActionClass):                    
 
     def __call__(self):
-        hwnd = findPresentation()
-        if len(hwnd) != 0:
+        if IsWindow(self.plugin.hwnd):
             if self.plugin.numDialog is None and self.plugin.menuDlg is None:
-                eg.SendKeys(hwnd[0], self.value, True) #True is important !!!
+                eg.SendKeys(self.plugin.hwnd, self.value, True) #True is important !!!
 #======================================================================
 
 ACTIONS = (
@@ -734,15 +881,14 @@ class OOo_Impress(eg.PluginClass):
     numDialog = None
     number = ''
     choices = []
-    testFlag = False
+    hwnd = 0
     
     class text:
-        err1 ="Couldn't find file with presentation!"
+        err1 ="Couldn't open file with presentation!"
         err2 ="Couldn't find window with presentation!"
 
     def __init__(self):
         self.AddActionsFromList(ACTIONS)
-        self.timer=Timer(0.0,self.destroyMenu)
 
 
     def StartPresentation(self,url):
@@ -766,31 +912,29 @@ class OOo_Impress(eg.PluginClass):
         presentation.Pause = 1
         presentation.start()
         hwnd = findPresentation()
-        if len(hwnd)>0:
-            SetForegroundWindow(hwnd[0])
-            SetFocus(hwnd[0])
-            SetActiveWindow(hwnd[0])
+        if len(hwnd) > 0:
+            self.hwnd = hwnd[0]
+            t = CloseThread(self.hwnd, hWnd)
+            t.start()
+            SetForegroundWindow(self.hwnd)
+            SetFocus(self.hwnd)
+            SetActiveWindow(self.hwnd)
         else:
             self.PrintError(self.text.err2)
-        PostMessage(hWnd,WM_CLOSE,0,0)
 
         
     def StartFromMenu(self):
         if self.menuDlg is not None:
             sel=self.menuDlg.GetSizer().GetChildren()[0].GetWindow().\
                 GetSelection()
-            pres = self.choices[sel][1]
-            self.destroyMenu()
-            self.StartPresentation(pres)
+#            self.menuDlg.Destroy()
+            self.menuDlg.Close()
+            self.menuDlg = None
+            self.StartPresentation(self.choices[sel][1])
+            self.choices = []
 
-            
-    def DestroySlideNumber(self):
-        self.number = ''
-        self.numDialog.Destroy()
-        self.numDialog = None
-        
 
-    def ShowSlideNumber(self):
+    def ShowNumLabel(self):
         if self.numDialog is not None:
             statText = self.numDialog.GetSizer().GetChildren()[0].GetWindow()
             statText.SetLabel(self.number)
@@ -821,79 +965,5 @@ class OOo_Impress(eg.PluginClass):
             mainSizer.Add(statText, 0, wx.EXPAND)
             self.numDialog.Centre()
             self.numDialog.Show()        
-
-    def ShowMenu(
-        self,
-        choices,
-        fore,
-        back,
-        fontInfo,
-    ):
-        if self.menuDlg is not None:
-            return
-        self.fore=fore
-        self.back=back
-        self.choices=choices
-        self.menuDlg = wx.Frame(
-                None, -1, 'OS_Menu', 
-                style=wx.STAY_ON_TOP | wx.SIMPLE_BORDER
-            )
-
-        presChoiceCtrl=wx.ListBox(
-            self.menuDlg,
-            choices = [n[0] for n in self.choices],
-            style=wx.LB_SINGLE|wx.LB_NEEDED_SB 
-        )
-
-        if fontInfo is None:
-            font = presChoiceCtrl.GetFont()
-            font.SetPointSize(36)
-            fontInfo = font.GetNativeFontInfoDesc()
-        else:
-            font = wx.FontFromNativeInfoString(fontInfo)        
-        presChoiceCtrl.SetFont(font)
-        # menu height calculation:
-        items=len(choices)
-        h=presChoiceCtrl.GetCharHeight()
-        height0 = len(choices)*h+5
-        height1 = h*((GetSystemMetrics (1)-20)/h)+5
-        height = min(height0,height1)
-        # menu width calculation:
-        width_lst=[]
-        for item in [n[0] for n in self.choices]:
-            width_lst.append(presChoiceCtrl.GetTextExtent(item+' ')[0])
-        width = max(width_lst)+8
-        if height<height0:
-            width += 20 #for vertical scrollbar
-        width = min((width,GetSystemMetrics (0)-50))
-        self.menuDlg.SetSize((width+6,height+6))
-        presChoiceCtrl.SetDimensions(2,2,width,height,wx.SIZE_AUTO)
-        mainSizer =wx.BoxSizer(wx.VERTICAL)
-        self.menuDlg.SetSizer(mainSizer)
-#
-        presChoiceCtrl.SetSelection(0)
-        self.menuDlg.SetBackgroundColour((0,0,0))
-        presChoiceCtrl.SetBackgroundColour(self.back)
-        presChoiceCtrl.SetForegroundColour(self.fore)
-        mainSizer.Add(presChoiceCtrl, 0, wx.EXPAND)
-        self.menuDlg.Centre()
-        if self.testFlag:
-            self.timer = Timer(5.0,self.destroyMenu)
-            self.timer.start()
-        self.menuDlg.Show()
-        
-        def On2Click(evt):
-            self.timer.cancel()
-            self.StartFromMenu()
-            evt.StopPropagation()
-        presChoiceCtrl.Bind(wx.EVT_LISTBOX_DCLICK, On2Click)
-        
-    def destroyMenu(self):
-        self.timer.cancel()
-        if self.menuDlg is not None:
-            self.menuDlg.Destroy()
-            self.menuDlg = None
-            self.choices = []
-            self.testFlag = False
-#====================================================================
+#===============================================================================
 
