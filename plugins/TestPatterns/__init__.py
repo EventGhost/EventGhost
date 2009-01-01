@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 eg.RegisterPlugin(
     name = "Test Pattern",
@@ -33,7 +34,7 @@ eg.RegisterPlugin(
     ),
 )
 
-
+import wx
 import threading
 import colorsys
 from math import sqrt, sin, cos
@@ -156,7 +157,7 @@ class DrawingFrame(wx.Frame):
 
 
 
-class TestPatterns(eg.PluginClass):
+class TestPatterns(eg.PluginBase):
     text = Text
     
     def __init__(self):
@@ -184,18 +185,22 @@ class TestPatterns(eg.PluginClass):
 
 
 
-class TestPatternAction(eg.ActionClass):
+class TestPatternAction(eg.ActionBase):
     
     def __call__(self, *args):
         self.plugin.frame.SetDrawing(self.Draw, args)
         
         
-    def GetLabel(self, *args):
+    def Draw(self, *args):
+        raise NotImplemented
+    
+    
+    def GetLabel(self, *dummyArgs):
         return self.name
         
 
 
-class SetDisplay(eg.ActionClass):      
+class SetDisplay(eg.ActionBase):      
     name = "Set Display"
     
     def __call__(self, display=0):
@@ -225,7 +230,7 @@ class Focus(TestPatternAction):
         display=0, # deprecated
     ):
         image = FOCUS_IMAGE.Copy()
-        image.ConvertToMono(255,255,255)
+        image.ConvertToMono(255, 255, 255)
         bmp = wx.BitmapFromImage(image, 1)
         bmpWidth, bmpHeight = bmp.GetSize()
         #bmp.SetMask(None)
@@ -251,8 +256,8 @@ class Focus(TestPatternAction):
     
     def Configure(
         self, 
-        foregroundColour=(255,255,255), 
-        backgroundColour=(0,0,0),
+        foregroundColour=(255, 255, 255), 
+        backgroundColour=(0, 0, 0),
         display=0, #deprecated
     ):
         text = self.plugin.text
@@ -297,8 +302,8 @@ class IreWindow(TestPatternAction):
     
     def Configure(
         self, 
-        foregroundColour=(255,255,255), 
-        backgroundColour=(0,0,0),
+        foregroundColour=(255, 255, 255), 
+        backgroundColour=(0, 0, 0),
         coverage=25.0,
         aspectRatio=0,
         display=0, # deprecated
@@ -331,8 +336,8 @@ class Checkerboard(TestPatternAction):
     def Draw(
         self, 
         dc,
-        foregroundColour=(255,255,255), 
-        backgroundColour=(0,0,0),
+        foregroundColour=(255, 255, 255), 
+        backgroundColour=(0, 0, 0),
         hCount=4, 
         vCount=4,
         display=0, #deprecated
@@ -360,8 +365,8 @@ class Checkerboard(TestPatternAction):
     
     def Configure(
         self, 
-        foregroundColour=(255,255,255), 
-        backgroundColour=(0,0,0),
+        foregroundColour=(255, 255, 255), 
+        backgroundColour=(0, 0, 0),
         hCount=4, 
         vCount=4,
         display=0, #deprecated
@@ -393,8 +398,8 @@ class Grid(TestPatternAction):
     def Draw(
         self, 
         dc,
-        foregroundColour=(255,255,255),
-        backgroundColour=(0,0,0),
+        foregroundColour=(255, 255, 255),
+        backgroundColour=(0, 0, 0),
         hCount=4, 
         vCount=4,
         display=0, # deprecated
@@ -422,8 +427,8 @@ class Grid(TestPatternAction):
     
     def Configure(
         self, 
-        foregroundColour=(255,255,255), 
-        backgroundColour=(0,0,0),
+        foregroundColour=(255, 255, 255), 
+        backgroundColour=(0, 0, 0),
         hCount=16, 
         vCount=9,
         display=0, # deprecated
@@ -456,8 +461,8 @@ class Dots(TestPatternAction):
     def Draw(
         self, 
         dc,
-        foregroundColour=(255,255,255),
-        backgroundColour=(0,0,0),
+        foregroundColour=(255, 255, 255),
+        backgroundColour=(0, 0, 0),
         hCount=4, 
         vCount=4,
         diameter=1,
@@ -537,7 +542,10 @@ class ZonePlate(TestPatternAction):
     def Draw(self, dc, scale=128):
         dc.Clear()
         width, height = dc.GetSizeTuple()
-        sineTab = [int(127.5 * sin(math.pi * (i - 127.5) / 127.5) + 127.5) for i in range(256)]
+        sineTab = [
+            int(127.5 * sin(math.pi * (i - 127.5) / 127.5) + 127.5) 
+            for i in range(256)
+        ]
         cx = width / 2
         cy = height / 2
         bmp = wx.EmptyBitmap(width, height, 24)
@@ -1094,7 +1102,7 @@ class Readability(TestPatternAction):
         
 
         
-class Close(eg.ActionClass):
+class Close(eg.ActionBase):
     
     def __call__(self):
         self.plugin.frame.Show(False)

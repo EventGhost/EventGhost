@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 eg.RegisterPlugin(
     name = "USB-UIRT",
@@ -51,6 +52,14 @@ eg.RegisterPlugin(
         "Kwb6cgAAAABJRU5ErkJggg=="
     ),
 )
+
+import wx
+from ctypes import (
+    c_int, c_uint, c_ulong, byref, c_ubyte, c_char_p, c_void_p, POINTER, 
+    WINFUNCTYPE, Structure, GetLastError, create_string_buffer, WinDLL
+)
+import datetime
+import threading
 
 
 class Text:
@@ -95,13 +104,6 @@ class Text:
                 "2. PRESS and HOLD the desired button on\n"\
                 "your remote until learning is complete..."
 
-
-from ctypes import (
-    c_int, c_uint, c_ulong, byref, c_ubyte, c_char_p, c_void_p, POINTER, 
-    WINFUNCTYPE, Structure, GetLastError, create_string_buffer, WinDLL
-)
-import datetime
-import threading
 
 INVALID_HANDLE_VALUE = -1
 UINT32 = c_uint

@@ -23,7 +23,7 @@
 import eg
 import wx
 
-description = """\
+DESCRIPTION = """\
 This action emulates keystrokes to control other programs. Just type the text 
 you want into the edit-box. 
 
@@ -75,7 +75,7 @@ And here is the list of the remaining keywords EventGhost understands:<br>
     
 class SendKeys(eg.ActionBase):
     name = "Emulate Keystrokes"
-    description = description
+    description = DESCRIPTION
     iconFile = "icons/SendKeys"
     class text:
         useAlternativeMethod = "Use alternate method to emulate keypresses"
@@ -175,7 +175,10 @@ class SendKeys(eg.ActionBase):
         keyLabels += fKeys
         keyWords += fKeys
         textCtrl = panel.TextCtrl(data, style=wx.TE_NOHIDESEL)
-        alternateMethodCB = panel.CheckBox(useAlternateMethod, text.useAlternativeMethod)
+        alternateMethodCB = panel.CheckBox(
+            useAlternateMethod, 
+            text.useAlternativeMethod
+        )
         
         shiftCB = wx.CheckBox(panel, -1, "Shift")
         ctrlCB = wx.CheckBox(panel, -1, "Ctrl")
@@ -183,14 +186,14 @@ class SendKeys(eg.ActionBase):
         keyChoice = wx.Choice(panel, -1, choices=keyLabels)
         keyChoice.SetSelection(0)
         insertButton = wx.Button(panel, -1, text.insertButton)
-        def DummyHandler(event):
+        def DummyHandler(dummyEvent):
             pass # used to prevent propagating of the event to the panel
         shiftCB.Bind(wx.EVT_CHECKBOX, DummyHandler)
         ctrlCB.Bind(wx.EVT_CHECKBOX, DummyHandler)
         altCB.Bind(wx.EVT_CHECKBOX, DummyHandler)
         keyChoice.Bind(wx.EVT_CHOICE, DummyHandler)
         
-        def OnInsert(event):
+        def OnInsert(dummyEvent):
             res = []
             if shiftCB.GetValue():
                 res.append("Shift")
@@ -199,8 +202,7 @@ class SendKeys(eg.ActionBase):
             if altCB.GetValue():
                 res.append("Alt")
             res.append(keyWords[keyChoice.GetSelection()])
-            s = "{%s}" % "+".join(res)
-            textCtrl.WriteText(s)
+            textCtrl.WriteText("{%s}" % "+".join(res))
         insertButton.Bind(wx.EVT_BUTTON, OnInsert)
         
         cbSizer = eg.VBoxSizer(
@@ -231,5 +233,4 @@ class SendKeys(eg.ActionBase):
         
         while panel.Affirmed():
             panel.SetResult(textCtrl.GetValue(), alternateMethodCB.GetValue())
-
 

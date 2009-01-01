@@ -1,5 +1,7 @@
 from __future__ import with_statement
 
+import eg
+
 eg.RegisterPlugin(
     name = "Barco CRT Projector",
     description = "Controls Barco CRT projectors via RS232.",
@@ -64,6 +66,7 @@ ACTIONS = (
     ("SharpnessDown", "Sharpness Down", None, (0x37, )),
 )
 
+import wx
 from time import sleep, clock
 
 STX = 0x02
@@ -73,7 +76,7 @@ BAUDRATES = [110, 150, 300, 600, 1200, 2400, 4800, 9600]
 ALL_BYTE_VALUES = frozenset(range(256))
 
 
-class ActionBase(eg.ActionClass):
+class ActionBase(eg.ActionBase):
     
     def __call__(self):
         with self.plugin.serialThread as serial:
@@ -121,7 +124,7 @@ class ActionBase(eg.ActionClass):
         if cmd != cmde:
             raise self.Exceptions.DeviceNotFound("Wrong command received!")
         if chks != sum(answer[:6]) % 256:
-            raise sself.Exceptions.DeviceNotFound("Wrong checksum received!")
+            raise self.Exceptions.DeviceNotFound("Wrong checksum received!")
         return dat1, dat2, dat3, dat4
     
     
@@ -140,7 +143,10 @@ class SendCustom(ActionBase):
     def Configure(self, cmd=0, dat1=0, dat2=0, dat3=0, dat4=0):
         panel = eg.ConfigPanel(self)
         values = cmd, dat1, dat2, dat3, dat4
-        ctrls = [panel.SpinIntCtrl(values[i], min=0, max=255) for i in range(5)]
+        ctrls = [
+            panel.SpinIntCtrl(values[i], min=0, max=255) 
+            for i in range(5)
+        ]
         hexCtrl = panel.StaticText("")
         def UpdateValue(event):
             res = ["%02X" % ctrl.GetValue() for ctrl in ctrls]
@@ -368,7 +374,7 @@ class RequestShape(ActionBase):
 class LockIr(ActionBase):
     name = "Lock IR"
     description = (
-        "Programs the projector to filter out certain infra red commands."
+        "Programs the projector to filter out certain infrared commands."
     )
     
     def __call__(self, flags=0x7f):
@@ -461,7 +467,7 @@ class WritePotentiometer(ActionBase):
             )
         
         
-class Barco(eg.PluginClass):
+class Barco(eg.PluginBase):
     
     def __init__(self):
         self.AddActionsFromList(ACTIONS, ActionBase)

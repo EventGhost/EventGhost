@@ -342,11 +342,11 @@ class FindWindow(eg.ActionBase):
         #sizer1.SetItemMinSize(options[0][1], 300, -1)
         
         # group the main lines together
-        Add = panel.sizer.Add
-        Add(topSizer, 0, wx.EXPAND)
-        Add((5, 5))
-        Add(sizer1, 1, wx.EXPAND)
-
+        panel.sizer.AddMany([
+            (topSizer, 0, wx.EXPAND),
+            ((5, 5), ),
+            (sizer1, 1, wx.EXPAND),
+        ])
         # re-assign the test button
         def OnTestButton(dummyEvent):
             args = GetResult()[:-2] # we don't need timeout and stopMacro 
@@ -489,7 +489,7 @@ class FindWindow(eg.ActionBase):
         
             
     @eg.LogIt
-    def OnFinderToolLeftClick(self, event=None):
+    def OnFinderToolLeftClick(self, dummyEvent=None):
         self.oldFramePosition = eg.document.frame.GetPosition()
         self.oldDialogPosition = self.dialog.GetPosition()
         if self.config.hideOnDrag:

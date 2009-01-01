@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 eg.RegisterPlugin(
     name = "d-box2 Remote Emulator",
@@ -118,14 +119,14 @@ class MyHTTPConnection(HTTPConnection):
 
 
 
-class ActionPrototype(eg.ActionClass):
+class ActionPrototype(eg.ActionBase):
     
     def __call__(self):
         conn = MyHTTPConnection(self.plugin.host)
         try:
             conn.request("GET", self.plugin.connectString % self.value)
-        except socket.error, e:
-            if isinstance(e.message, socket.timeout):
+        except socket.error, exc:
+            if isinstance(exc.message, socket.timeout):
                 raise self.Exceptions.DeviceNotFound
             raise
         conn.getresponse()
@@ -133,7 +134,7 @@ class ActionPrototype(eg.ActionClass):
         
         
 
-class DBox2(eg.PluginClass):
+class DBox2(eg.PluginBase):
     
     def __init__(self):
         self.AddActionsFromList(ACTIONS, ActionPrototype)

@@ -20,15 +20,15 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import wx
 import sys
-import os
 import imp
 import traceback
-import inspect
 import weakref
 
     
-class PythonScript(eg.ActionClass):
+class PythonScript(eg.ActionBase):
     name = "Python Script"
     description = "Full featured Python script." 
     iconFile = "icons/PythonScript"
@@ -39,7 +39,7 @@ class PythonScript(eg.ActionClass):
     config = eg.GetConfig("plugins.EventGhost.PythonScript", ConfigDefaults)
 
         
-    def GetLabel(self, pythonstring=None):
+    def GetLabel(self, dummySourceCode=""):
         return self.name
 
 
@@ -62,18 +62,20 @@ class PythonScript(eg.ActionClass):
         scriptDict = weakref.WeakValueDictionary()
 
         def __init__(self, sourceCode=""):
-            id = self.__class__.idCounter
+            idCounter = self.__class__.idCounter
             self.__class__.idCounter += 1
-            mod = imp.new_module(str(id))
+            mod = imp.new_module(str(idCounter))
             self.mod = mod
             self.sourceCode = sourceCode
             try:
-                self.code = compile(sourceCode + "\n", str(id), "exec", 0, 1)
+                self.code = compile(
+                    sourceCode + "\n", str(idCounter), "exec", 0, 1
+                )
             except:
                 self.code = None
                 eg.PrintError("Error compiling script.")
                 self.PrintTraceback()
-            self.scriptDict[id] = self
+            self.scriptDict[idCounter] = self
             
             
         def __call__(self):
@@ -85,7 +87,7 @@ class PythonScript(eg.ActionClass):
             oldResult = eg.result
             mod.result = oldResult
             try:
-                exec(self.code, mod.__dict__)
+                exec(self.code, mod.__dict__) # pylint: disable-msg=W0122
             except SystemExit:
                 pass
             except:
@@ -100,33 +102,35 @@ class PythonScript(eg.ActionClass):
             treeItem = eg.currentItem
             treeItem.PrintError("Traceback (most recent call last):")
             lines = self.sourceCode.splitlines()
-            tb_type, tb_value, tb_traceback = sys.exc_info() 
-            for entry in traceback.extract_tb(tb_traceback)[1:]:
-                file, linenum, func, source = entry
+            tbType, tbValue, tbTraceback = sys.exc_info() 
+            for entry in traceback.extract_tb(tbTraceback)[1:]:
+                filename, linenum, funcname, source = entry
                 try:
-                    filenum = int(file)
+                    filenum = int(filename)
                 except:
                     filenum = None
                 if source is None and filenum is not None:
                     treeItem.PrintError(
                         '  Python script "%s", line %d, in %s' % (
-                            file, linenum, func
+                            filename, linenum, funcname
                         )
                     )
-                    lines = self.scriptDict[int(file)].sourceCode.splitlines()
+                    lines = self.scriptDict[filenum].sourceCode.splitlines()
                     treeItem.PrintError('    ' + lines[linenum-1].lstrip())
                 else:
                     treeItem.PrintError(
                         '  File "%s", line %d, in %s' % (
-                            file, linenum, func
+                            filename, linenum, funcname
                         )
                     )
                     if source is not None:
                         treeItem.PrintError('    ' + source.lstrip())
-            name = tb_type if type(tb_type) == type("") else tb_type.__name__
-            treeItem.PrintError(str(name) + ': ' + str(tb_value))
+            name = tbType if type(tbType) == type("") else tbType.__name__
+            treeItem.PrintError(str(name) + ': ' + str(tbValue))
                 
             
         @eg.LogIt
         def __del__(self):
             pass
+        
+        

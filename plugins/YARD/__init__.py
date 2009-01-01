@@ -1,3 +1,4 @@
+import eg
 
 eg.RegisterPlugin(
     name = "Y.A.R.D.",
@@ -19,7 +20,7 @@ eg.RegisterPlugin(
     ),
 )
 
-
+import wx
 import os
 
 from win32api import RegOpenKeyEx, RegQueryValueEx, FormatMessage
@@ -42,7 +43,7 @@ RegisterCLSID(YARDcom.IYardLcd.CLSID, YARDcom.IYardLcd)
 
 
 
-class YARD(eg.PluginClass):
+class YARD(eg.PluginBase):
 
     def __init__(self):
         self.isEnabled = False
@@ -117,14 +118,20 @@ class YARD(eg.PluginClass):
             if eventString[6:8] == "01":
                 i = int(eventString[10:12])
                 self.buttons[i] = True
-                buttons = ["Button%i" % i for i, btn in enumerate(self.buttons) if btn]
+                buttons = [
+                    "Button%i" % i 
+                    for i, btn in enumerate(self.buttons) if btn
+                ]
                 self.TriggerEvent("+".join(buttons))
             elif eventString[6:8] == "03":
                 i = int(eventString[10:12])
                 self.buttons[i] = False
                 self.EndLastEvent()
             elif eventString == "070000001080FF":
-                buttons = ["Button%i" % i for i, btn in enumerate(self.buttons) if btn]
+                buttons = [
+                    "Button%i" % i 
+                    for i, btn in enumerate(self.buttons) if btn
+                ]
                 buttons.append("JogLeft")
                 self.TriggerEvent("+".join(buttons))
             elif eventString == "070000001081FF":
@@ -162,7 +169,9 @@ class YARD(eg.PluginClass):
             if not os.path.exists(path):
                 raise Exception
         except:
-            raise eg.Exception("Please start Yards.exe first and configure it.")
+            raise self.Exception(
+                "Please start Yards.exe first and configure it."
+            )
         
         try:
             hProcess = CreateProcess(
@@ -184,7 +193,7 @@ class YARD(eg.PluginClass):
 #--------------------------------------------------------------------------
 # Action: Yard.SendRemoteKey
 #--------------------------------------------------------------------------
-class SendRemoteKey(eg.ActionClass):
+class SendRemoteKey(eg.ActionBase):
     name = "Sende IR"
     description = "Mit dieser Funktion werden IR-Befehle gesendet, "\
                       "die im YARD-Server konfiguriert wurden."
@@ -275,7 +284,7 @@ class SendRemoteKey(eg.ActionClass):
         
         
         
-class ClearScreen(eg.ActionClass):
+class ClearScreen(eg.ActionBase):
     
     def __call__(self):
         lcd = self.plugin.comObj.GetLcd(0)

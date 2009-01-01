@@ -61,7 +61,7 @@ ACTIONS = [
 gWindowMatcher = eg.WindowMatcher('PowerDVD{*}.exe', 'CyberLink PowerDVD{*}')
 
 
-class ActionPrototype(eg.ActionClass):
+class ActionPrototype(eg.ActionBase):
     
     def __call__(self):
         hwnds = gWindowMatcher()
@@ -72,7 +72,7 @@ class ActionPrototype(eg.ActionClass):
         
         
         
-class PowerDvd(eg.PluginClass):
+class PowerDvd(eg.PluginBase):
     
     def __init__(self):
         self.AddActionsFromList(ACTIONS, ActionPrototype)

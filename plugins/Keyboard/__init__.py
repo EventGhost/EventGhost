@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 eg.RegisterPlugin(
     name = "Keyboard",
@@ -60,9 +61,9 @@ from eg import HasActiveHandler
 from eg.cFunctions import SetKeyboardCallback
 
     
-class Keyboard(eg.PluginClass):
+class Keyboard(eg.PluginBase):
     
-    def __start__(self, *args):
+    def __start__(self, *dummyArgs):
         SetKeyboardCallback(self.KeyboardCallback)
         
         
@@ -78,6 +79,4 @@ class Keyboard(eg.PluginClass):
             self.TriggerEnduringEvent(codes)
             return shouldBlock
                 
-                    
-        
-        
+    
