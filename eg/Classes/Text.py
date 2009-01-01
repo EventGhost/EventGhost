@@ -23,7 +23,7 @@
 import eg
 from types import InstanceType
 
-#pylint: disable-msg=W0232
+
 class Text:
     class General:
         configTree = "Configuration Tree"
@@ -128,6 +128,7 @@ class Text:
             LogActions = "Log Actions"
             LogTime = "Log Times"
             ClearLog = "Clear Log"
+            IndentLog = "Indent Log"
             
             ConfigurationMenu = "&Configuration"
             

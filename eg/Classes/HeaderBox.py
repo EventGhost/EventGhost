@@ -29,7 +29,6 @@ REPLACE_BR_TAG = re.compile('<br[ \/]*>')
 REMOVE_HTML_PATTERN = re.compile('<([^!>]([^>]|\n)*)>')
 
 
-
 class HeaderBox(wx.PyWindow):
     """
     The top description box of every action/plugin configuration dialog.

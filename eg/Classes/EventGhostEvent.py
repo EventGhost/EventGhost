@@ -24,11 +24,14 @@ import eg
 from time import clock
 from threading import Event
 
+# some shortcuts to speed things up
+#pylint: disable-msg=C0103
 actionThread = eg.actionThread
 LogEvent = eg.log.LogEvent
 RunProgram = eg.RunProgram
 GetItemPath = eg.EventItem.GetPath
 config = eg.config
+#pylint: enable-msg=C0103
 
 
 class EventGhostEvent(object):
@@ -81,7 +84,6 @@ class EventGhostEvent(object):
 
     """
     
-    data = None
     skipEvent = False
     
     def __init__(self, suffix="", payload=None, prefix="Main", source=eg):
@@ -189,6 +191,7 @@ class EventGhostEvent(object):
         for eventHandler in activeHandlers:
             try:
                 eg.programCounter = (eventHandler.parent, None)
+                eg.indent = 1
                 RunProgram()
             except:
                 eg.PrintTraceback()
@@ -196,4 +199,4 @@ class EventGhostEvent(object):
                 break
         self.SetStarted()
         eg.SetProcessingState(1, self)
-    
+

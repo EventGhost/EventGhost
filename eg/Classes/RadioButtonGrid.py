@@ -98,6 +98,5 @@ class RadioButtonGrid(wx.Panel):
     def SetValue(self, value):
         for column, val in enumerate(value):
             self.ctrlTable[column][val].SetValue(True)
-            
-            
-            
+    
+    

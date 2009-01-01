@@ -23,7 +23,7 @@
 import os
 import sys
 import locale
-from os.path import join, dirname, splitext
+from os.path import join, dirname, basename, splitext
 
 encoding = locale.getdefaultlocale()[1]
 locale.setlocale(locale.LC_ALL, '')
@@ -52,7 +52,7 @@ class args:
     translate = False
     configDir = None
     install = False
-    
+    isMain = splitext(basename(sys.argv[0]))[0].lower() == "eventghost"
     
 argv = [val.decode(encoding) for val in sys.argv]
 
@@ -114,11 +114,7 @@ while True:
         args.translate = True
 
 
-if (
-    not args.allowMultiLoad
-    and not args.translate
-    and splitext(os.path.basename(sys.argv[0]))[0] == "EventGhost"
-):
+if not args.allowMultiLoad and not args.translate and args.isMain:
     # check if another instance of the program is running
     import ctypes
     appMutex = ctypes.windll.kernel32.CreateMutexA(

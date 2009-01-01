@@ -20,8 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
-from types import InstanceType
 
 class Translation:
     languageNames = {

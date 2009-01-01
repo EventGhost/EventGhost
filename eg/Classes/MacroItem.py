@@ -50,6 +50,7 @@ class MacroItem(ContainerItem):
                 wx.CallAfter(self.Select)
                 
             if self.childs:
+                eg.indent += 1
                 eg.programCounter = (self.childs[0], 0)
             else:
                 eg.programCounter = None

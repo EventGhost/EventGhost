@@ -91,7 +91,7 @@ class Paste:
                     eg.PrintError("Unexpected item in paste.")
                     return
                 if before is None:
-                    pos = -1;
+                    pos = -1
                 else:
                     pos = before.parent.childs.index(before)
                     if pos + 1 == len(before.parent.childs):
@@ -126,6 +126,5 @@ class Paste:
             data.append(positionData)
         item.Select()
         self.items = data
-        
         
         

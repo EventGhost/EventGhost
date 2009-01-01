@@ -68,14 +68,16 @@ class WindowTree(wx.TreeCtrl):
         self.root = self.AddRoot("")
         
         # tree context menu
-        self.contextMenu = eg.Menu(self, "")
-        
-        def OnCmdHighlight(dummyEvent):
+        def OnCmdHighlight(dummyEvent=None):
             hwnd = self.GetPyData(self.GetSelection())
             for _ in range(10):
                 HighlightWindow(hwnd)
                 sleep(0.1)
-        self.contextMenu.Append("Highlight", OnCmdHighlight)
+        menu = wx.Menu()
+        menuId = wx.NewId()
+        menu.Append(menuId, "Highlight")
+        self.Bind(wx.EVT_MENU, OnCmdHighlight, id=menuId)
+        self.contextMenu = menu
         
         self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.OnItemRightClick)
         self.Bind(wx.EVT_TREE_ITEM_EXPANDING, self.OnItemExpanding)

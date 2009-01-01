@@ -24,7 +24,7 @@ import eg
 
 
 class AddActionGroup(eg.UndoHandler.NewItem):
-    name="Add all actions of plugin"
+    name = "Add all actions of plugin"
     
     def Do(self, document, pluginItem):
         parentItem = eg.AddActionGroupDialog.GetModalResult((document.frame))
@@ -53,10 +53,11 @@ class AddActionGroup(eg.UndoHandler.NewItem):
                         ),
                     )
             return folderItem
-        folderItem = Traverse(parentItem, pluginItem.executable.info.actionGroup)
+        folderItem = Traverse(
+            parentItem, 
+            pluginItem.executable.info.actionGroup
+        )
         self.StoreItem(folderItem)
         folderItem.Select()
         folderItem.tree.Expand(folderItem.id)
             
-    
-    

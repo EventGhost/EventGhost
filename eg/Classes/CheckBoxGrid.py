@@ -20,7 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
+
 import wx
 from RadioButtonGrid import RadioButtonGrid
 

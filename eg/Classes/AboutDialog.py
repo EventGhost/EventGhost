@@ -287,8 +287,10 @@ class SystemInfoPanel(HtmlPanel):
         self.htmlWindow.Bind(wx.EVT_RIGHT_DOWN, self.OnRightClick)
         self.htmlWindow.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
         
-        self.contextMenu = eg.Menu(self, "EditMenu", eg.text.MainFrame.Menu)
-        self.contextMenu.AddItem("Copy")
+        contextMenu = wx.Menu()
+        contextMenu.Append(wx.ID_COPY, eg.text.MainFrame.Menu.Copy)
+        self.Bind(wx.EVT_MENU, self.OnCmdCopy, id=wx.ID_COPY)
+        self.contextMenu = contextMenu
         
 
     @eg.LogIt
@@ -313,7 +315,7 @@ class SystemInfoPanel(HtmlPanel):
             wx.TheClipboard.SetData(tdata)
             wx.TheClipboard.Close()
             wx.TheClipboard.Flush()
-                    
+    
      
         
 class ChangelogPanel(HtmlPanel):

@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 from time import sleep
 from eg.WinApi.Dynamic import (
     cast,
@@ -43,7 +44,7 @@ import ctypes
 memcpy = ctypes.cdll.msvcrt.memcpy
 
     
-def SaveOpenClipboard():
+def SafeOpenClipboard():
     # some programs seem to poll the clipboard and therefore OpenClipboard
     # returns FALSE. To increase our chances to get the clipboard lock, we
     # try it ten times with a small delay in-between.
@@ -57,7 +58,7 @@ def SaveOpenClipboard():
     
 
 def GetClipboardText():
-    if not SaveOpenClipboard():
+    if not SafeOpenClipboard():
         return
     text = u""
         
@@ -81,13 +82,13 @@ def GetClipboardText():
 
 
 def SetClipboardText(text):
-    buffer = create_unicode_buffer(text)      
-    bufferSize = sizeof(buffer)
-    hGlobalMem = GlobalAlloc(GHND, bufferSize)
+    charBuffer = create_unicode_buffer(text)      
+    charBufferSize = sizeof(charBuffer)
+    hGlobalMem = GlobalAlloc(GHND, charBufferSize)
     lpGlobalMem = GlobalLock(hGlobalMem)
-    memcpy(lpGlobalMem, buffer, bufferSize) 
+    memcpy(lpGlobalMem, charBuffer, charBufferSize) 
     GlobalUnlock(hGlobalMem)
-    if not SaveOpenClipboard():
+    if not SafeOpenClipboard():
         return
     try:
         EmptyClipboard()

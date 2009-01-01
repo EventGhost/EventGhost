@@ -54,7 +54,7 @@ class AutostartItem(MacroItem):
         # never disable the Autostart item
         pass
     
-    
+        
     @eg.LogIt
     def UnloadPlugins(self):
         for child in self.childs:

@@ -106,10 +106,6 @@ class PluginBase(object):
         pass
         
                             
-    def SetArguments(self, *args):
-        pass
-    
-    
     def RegisterEvents(self, eventList):
         self.info.eventList = eventList
 
@@ -217,7 +213,7 @@ class PluginBase(object):
         Return the label that should be displayed in the configuration tree
         with the current arguments.
         
-        This default method simply shows the plugin name. If you want to have 
+        The default method simply shows the plugin name. If you want to have 
         a different behavior, you can override it.
         
         This method gets called with the same parameters as the __start__
@@ -233,9 +229,7 @@ class PluginBase(object):
         Prefer to use self.PrintError instead of eg.PrintError, since this
         method gives the user better information about the source of the error.
         
-        :Parameters:
-          `msg` : string
-            The error message you want to have printed to the logger
+        :param msg: The error string you want to have printed to the logger
         """
         eg.PrintError(msg, source=self.info.treeItem)
         

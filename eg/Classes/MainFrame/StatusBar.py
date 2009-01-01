@@ -65,12 +65,12 @@ class StatusBar(wx.StatusBar):
         return wx.StatusBar.Destroy(self)
 
     
-    def OnSize(self, event):
+    def OnSize(self, dummyEvent):
         self.Reposition()  # for normal size events
         self.sizeChanged = True
 
 
-    def OnIdle(self, event):
+    def OnIdle(self, dummyEvent):
         if self.sizeChanged:
             self.Reposition()
 
@@ -90,7 +90,7 @@ class StatusBar(wx.StatusBar):
         
     
     @eg.LogIt
-    def OnCheckBox(self, event):
+    def OnCheckBox(self, dummyEvent):
         eg.config.onlyLogAssigned = self.checkBox.GetValue()
         self.SetCheckBoxColour(eg.config.onlyLogAssigned)
         

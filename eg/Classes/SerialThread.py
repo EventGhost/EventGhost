@@ -56,6 +56,7 @@ from eg.WinApi.Dynamic import (
     SETRTS, 
     CLRRTS,
     DTR_CONTROL_DISABLE,
+    INVALID_HANDLE_VALUE,
     
     # types
     HANDLE, 
@@ -107,9 +108,16 @@ STOPBITS_S2V_DICT = {'1': ONESTOPBIT, '1.5': ONE5STOPBITS, '2': TWOSTOPBITS}
 STOPBITS_V2S_DICT = {ONESTOPBIT: '1', ONE5STOPBITS: '1.5', TWOSTOPBITS: '2'}
 
 
-class SerialException(Exception):
+class SerialError(eg.Exception):
     """Base class for SerialThread related exceptions."""
-    pass
+    def __init__(self, msg=None):
+        if msg is None:
+            errno = GetLastError()
+            strerror = FormatError(errno)
+        else:
+            errno = 0
+            strerror = msg
+        eg.Exception.__init__(self, errno, strerror)
 
 
 
@@ -124,7 +132,8 @@ class SerialThread(Thread):
     _CloseHandle = CloseHandle
     # Cache list for GetAllPorts
     _serialPortList = None
-    
+    SerialError = SerialError
+
     @classmethod
     def GetAllPorts(cls):
         serialPortList = cls._serialPortList
@@ -226,9 +235,12 @@ class SerialThread(Thread):
                 FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
                 0
             )
-        except Exception, msg:
+        except Exception, exc:
             self.hFile = None    # cause __del__ is called anyway
-            raise SerialException("could not open port: %s" % msg)
+            raise eg.Exceptions.SerialOpenFailed()
+        if self.hFile == INVALID_HANDLE_VALUE:
+            self.hFile = None
+            raise eg.Exceptions.SerialOpenFailed()
         dcb = self.dcb
         GetCommState(self.hFile, byref(dcb))
         dcb.fBinary = True
@@ -262,8 +274,8 @@ class SerialThread(Thread):
             #SetCommTimeouts(self.hFile, self._orgTimeouts)
             #Close COM-Port:
             if not self._CloseHandle(self.hFile):
-                print (FormatError(GetLastError())).decode('mbcs')
-            self.hFile = None
+                self.hFile = None
+                raise SerialError()
 
     
     def Start(self):
@@ -317,6 +329,7 @@ class SerialThread(Thread):
         self.readCondition.release()
         
     
+    @eg.LogItWithReturn
     def ReceiveThreadProc(self):
         hFile = self.hFile
         osReader = self.osReader
@@ -339,7 +352,7 @@ class SerialThread(Thread):
                 if not returnValue:
                     err = GetLastError()
                     if err != 0 and err != ERROR_IO_PENDING:
-                        raise WinError()
+                        raise SerialError()
                     waitingOnRead = True
                 else:
                     # read completed immediately
@@ -367,7 +380,7 @@ class SerialThread(Thread):
             elif ret == WAIT_TIMEOUT:
                 pass
             else:
-                raise Exception("unknown message received")
+                raise SerialError("Unknown message in ReceiveThreadProc")
                 
     
     def CallbackThreadProc(self):
@@ -456,16 +469,16 @@ class SerialThread(Thread):
             return
         err = GetLastError()
         if err != 0 and err != ERROR_IO_PENDING:
-            raise WinError()
+            raise SerialError()
         if not GetOverlappedResult(
             self.hFile, 
             byref(self.osWriter), 
             byref(dwWritten), 
             1
         ):
-            raise WinError()
+            raise SerialError()
         if dwWritten.value != len(data):
-            raise SerialException("Write timeout")
+            raise self.SerialError("Write timeout")
         
         
     def SetDtr(self, flag=True):

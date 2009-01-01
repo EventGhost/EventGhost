@@ -105,7 +105,9 @@ class PluginItem(ActionItem):
         if self.shouldSelectOnExecute:
             #self.Select()
             wx.CallAfter(self.Select)
+        eg.indent += 1
         self.info.Start()
+        eg.indent -= 1
         eg.result = self.executable
         return None, None
         

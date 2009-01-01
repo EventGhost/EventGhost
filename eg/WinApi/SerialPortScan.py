@@ -37,15 +37,15 @@ SPDRP_HARDWAREID = 1
 SPDRP_FRIENDLYNAME = 12
 ERROR_NO_MORE_ITEMS = 259
 
-def GetComPorts(available_only=True):
+def GetComPorts(availableOnly=True):
     """
     This generator scans the device registry for com ports and yields port, 
     desc, hwid.
-    If available_only is true only return currently existing ports.
+    If availableOnly is true only return currently existing ports.
     """
     stringBuffer = ctypes.create_unicode_buffer(256)
     flags = DIGCF_DEVICEINTERFACE
-    if available_only:
+    if availableOnly:
         flags |= DIGCF_PRESENT
     hdi = SetupDiGetClassDevs(byref(GUID_CLASS_COMPORT), None, NULL, flags)
     #~ for i in range(256):
@@ -96,7 +96,7 @@ def GetComPorts(available_only=True):
             byref(devinfo)
         ):
             raise ctypes.WinError()
-        print idd.DevicePath, sizeof(idd)
+        #print idd.DevicePath, sizeof(idd)
         # hardware ID
         if not SetupDiGetDeviceRegistryProperty(
             hdi,
@@ -139,3 +139,4 @@ if __name__ == '__main__':
         for port, desc, hwid in GetComPorts():
             print "%s: %s" % (port, desc)
         print time.clock() - start
+

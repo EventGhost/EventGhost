@@ -44,14 +44,14 @@ NOTICE_ICON = eg.Icons.NOTICE_ICON
 
 
 
-class DummyLogCtrl:
+class DummyLogCtrl(object):
     
-    def WriteLine(self, line, icon, wRef, when):
+    def WriteLine(self, line, icon, wRef, when, indent):
         oldStdOut.write("%s\n" % line)
     
     
     
-class Log:
+class Log(object):
     
     def __init__(self):
         self.buffer = ""
@@ -81,10 +81,7 @@ class Log:
         sys.stdout = StdOut()
         sys.stderr = StdErr()
         if eg.debugLevel == 2:
-            try:
-                _oldStdErr._displayMessage = False
-            except:
-                pass
+            _oldStdErr._displayMessage = False
         if eg.debugLevel:
             import warnings
             warnings.simplefilter('error', UnicodeWarning)
@@ -95,7 +92,7 @@ class Log:
             
         # redirect all wxPython error messages to our log
         class MyLog(wx.PyLog):
-            def DoLog(self, level, msg, timestamp):
+            def DoLog(self, level, msg, dummyTimestamp):
                 if (level >= 6):
                     return
                 sys.stderr.write("Error%d: %s\n" % (level, msg))
@@ -121,11 +118,11 @@ class Log:
         return data[start:end]
     
     
-    def _WriteLine(self, line, icon, wRef, when):
-        self.ctrl.WriteLine(line, icon, wRef, when)
+    def _WriteLine(self, line, icon, wRef, when, indent):
+        self.ctrl.WriteLine(line, icon, wRef, when, indent)
     
     
-    def Write(self, text, icon, wRef=None):
+    def Write(self, text, icon, wRef=None, indent=0):
         try:
             lines = (self.buffer + text).split("\n")
         except UnicodeDecodeError:
@@ -134,17 +131,19 @@ class Log:
         data = self.data
         when = time()
         for line in lines[:-1]:
-            data.append((line, icon, wRef, when))
-            wx.CallAfter(self._WriteLine, line, icon, wRef, when)
+            data.append((line, icon, wRef, when, eg.indent))
+            wx.CallAfter(self._WriteLine, line, icon, wRef, when, eg.indent)
             if len(data) >= self.maxlength:
                 data.popleft()
 
         
-    def _Print(self, args, sep=" ", end="\n", icon=INFO_ICON, source=None):
+    def _Print(
+        self, args, sep=" ", end="\n", icon=INFO_ICON, source=None, indent=0
+    ):
         if source is not None:
             source = ref(source)
         strs = [unicode(arg) for arg in args]
-        self.Write(sep.join(strs) + end, icon, source)
+        self.Write(sep.join(strs) + end, icon, source, indent)
 
 
     def Print(self, *args, **kwargs):
@@ -189,9 +188,9 @@ class Log:
             
 
     def PrintStack(self, skip=0):
-        slist = ['Stack trace (most recent call last) (%d):\n' % eg.buildNum]
-        slist += traceback.format_stack(sys._getframe().f_back)[skip:]
-        error = "".join(slist)
+        strs = ['Stack trace (most recent call last) (%d):\n' % eg.buildNum]
+        strs += traceback.format_stack(sys._getframe().f_back)[skip:]
+        error = "".join(strs)
         self.Write(error.rstrip() + "\n", ERROR_ICON)
         if eg.debugLevel:
             sys.stderr.write(error)
@@ -200,13 +199,13 @@ class Log:
     if eg.debugLevel:
         def PrintDebugNotice(self, *args):
             """Logs a message if eg.debugLevel is set."""
-            t = currentThread()
-            s = [strftime("%H:%M:%S:")]
-            s.append(str(t.getName()) + ":")
+            threadName = str(currentThread().getName())
+            strs = [strftime("%H:%M:%S:")]
+            strs.append(threadName + ":")
         
             for arg in args:
-                s.append(str(arg))
-            sys.stderr.write(" ".join(s) + "\n")
+                strs.append(str(arg))
+            sys.stderr.write(" ".join(strs) + "\n")
     else:
         def PrintDebugNotice(self, *args):
             pass

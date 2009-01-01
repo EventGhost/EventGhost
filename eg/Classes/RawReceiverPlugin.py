@@ -27,6 +27,7 @@ from threading import Timer
 class RawReceiverPlugin(eg.PluginBase):
     
     def __init__(self):
+        eg.PluginBase.__init__(self)
         self.mapTable = {}
         self.timer = Timer(0, self.OnTimeOut)
         self.lastEventString = ""

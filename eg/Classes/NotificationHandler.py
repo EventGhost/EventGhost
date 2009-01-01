@@ -47,6 +47,3 @@ class NotificationHandler(object):
     def GetValue(self):
         return self.value
     
-    
-    
-        

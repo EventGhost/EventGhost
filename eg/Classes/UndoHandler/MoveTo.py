@@ -20,6 +20,8 @@
 # $LastChangedRevision: 344 $
 # $LastChangedBy: bitmonster $
 
+import eg
+
 
 class MoveTo:
     name = "Move Item"
@@ -58,5 +60,3 @@ class MoveTo:
         
     Redo = Undo
         
-
-

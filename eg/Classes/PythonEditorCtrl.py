@@ -229,16 +229,23 @@ class PythonEditorCtrl(StyledTextCtrl):
         self.tabwidth = 4
         
         # popup menu
-        popupMenu = self.popupMenu = eg.Menu(self, "", eg.text.MainFrame.Menu)
-        popupMenu.AddItem("Undo")
-        popupMenu.AddItem("Redo")
-        popupMenu.AddItem()
-        popupMenu.AddItem("Cut")
-        popupMenu.AddItem("Copy")
-        popupMenu.AddItem("Paste")
-        popupMenu.AddItem("Delete")
-        popupMenu.AddItem()
-        popupMenu.AddItem("SelectAll")
+        menu = wx.Menu()
+        text = eg.text.MainFrame.Menu
+        def AddMenuItem(ident, menuId):
+            self.Bind(wx.EVT_MENU, getattr(self, "OnCmd" + ident), id=menuId)
+            return menu.Append(menuId, getattr(text, ident, ident))
+        
+        AddMenuItem("Undo", wx.ID_UNDO)
+        AddMenuItem("Redo", wx.ID_REDO)
+        menu.AppendSeparator()
+        AddMenuItem("Cut", wx.ID_CUT)
+        AddMenuItem("Copy", wx.ID_COPY)
+        AddMenuItem("Paste", wx.ID_PASTE)
+        AddMenuItem("Delete", wx.ID_DELETE)
+        menu.AppendSeparator()
+        AddMenuItem("SelectAll", wx.ID_SELECTALL)
+        self.popupMenu = menu
+        
         self.Bind(wx.EVT_RIGHT_UP, self.OnRightClick)
         
         self.SetText(value)
@@ -266,45 +273,43 @@ class PythonEditorCtrl(StyledTextCtrl):
     
     
     def OnRightClick(self, dummyEvent):
-        self.ValidateEditMenu(self.popupMenu)
-        self.PopupMenu(self.popupMenu)
-
-
-    def ValidateEditMenu(self, menu):
-        menu.undo.Enable(self.CanUndo())
-        menu.redo.Enable(self.CanRedo())
+        menu = self.popupMenu
         first, last = self.GetSelection()
-        menu.cut.Enable(first != last)
-        menu.copy.Enable(first != last)
-        menu.paste.Enable(self.CanPaste())
-        menu.delete.Enable(True)
+        menu.Enable(wx.ID_UNDO, self.CanUndo())
+        menu.Enable(wx.ID_REDO, self.CanUndo())
+        menu.Enable(wx.ID_CUT, first != last)
+        menu.Enable(wx.ID_COPY, first != last)
+        menu.Enable(wx.ID_PASTE, self.CanPaste())
+        menu.Enable(wx.ID_DELETE, first != last)
+        menu.Enable(wx.ID_SELECTALL, True)
+        self.PopupMenu(menu)
 
         
-    def OnCmdUndo(self):
+    def OnCmdUndo(self, dummyEvent=None):
         self.Undo()
         
         
-    def OnCmdRedo(self):
+    def OnCmdRedo(self, dummyEvent=None):
         self.Redo()
         
         
-    def OnCmdCut(self):
+    def OnCmdCut(self, dummyEvent=None):
         self.Cut()
         
         
-    def OnCmdCopy(self):
+    def OnCmdCopy(self, dummyEvent=None):
         self.Copy()
         
         
-    def OnCmdPaste(self):
+    def OnCmdPaste(self, dummyEvent=None):
         self.Paste()
         
         
-    def OnCmdDelete(self):
+    def OnCmdDelete(self, dummyEvent=None):
         self.Delete()
         
         
-    def OnCmdSelectAll(self):
+    def OnCmdSelectAll(self, dummyEvent=None):
         self.SelectAll()
         
         
@@ -365,19 +370,19 @@ class PythonEditorCtrl(StyledTextCtrl):
             #self.Refresh(False)
 
 
-    def OnMarginClick(self, evt):
+    def OnMarginClick(self, event):
         # fold and unfold as needed
-        if evt.GetMargin() == 2:
-            if evt.GetShift() and evt.GetControl():
+        if event.GetMargin() == 2:
+            if event.GetShift() and event.GetControl():
                 self.FoldAll()
             else:
-                lineClicked = self.LineFromPosition(evt.GetPosition())
+                lineClicked = self.LineFromPosition(event.GetPosition())
 
                 if self.GetFoldLevel(lineClicked) & STC_FOLDLEVELHEADERFLAG:
-                    if evt.GetShift():
+                    if event.GetShift():
                         self.SetFoldExpanded(lineClicked, True)
                         self.Expand(lineClicked, True, True, 1)
-                    elif evt.GetControl():
+                    elif event.GetControl():
                         if self.GetFoldExpanded(lineClicked):
                             self.SetFoldExpanded(lineClicked, False)
                             self.Expand(lineClicked, False, True, 0)

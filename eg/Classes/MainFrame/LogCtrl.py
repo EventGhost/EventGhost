@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
 # 
@@ -33,11 +35,12 @@ ERROR_ICON = eg.Icons.ERROR_ICON
 
 
 class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
-    """Implemention of a ListCtrl with a circular buffer."""
+    """Implementation of a ListCtrl with a circular buffer."""
     
     def __init__(self, parent):
         self.maxlength = 2000
         self.removeOnMax = 200
+        self.indent = ""
         self.OnGetItemText = self.OnGetItemTextWithTime
         wx.ListCtrl.__init__(
             self, 
@@ -67,13 +70,14 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         else:
             value += 0.2
         red, green, blue = colorsys.hsv_to_rgb(hue, saturation, value)
-        
-        self.attr1 = wx.ListItemAttr()
-        self.attr1.BackgroundColour = (
+        oddColour = (
             int(round(red * 255.0)), 
             int(round(green * 255.0)), 
             int(round(blue * 255.0)), 
         )
+        
+        self.attr1 = wx.ListItemAttr()
+        self.attr1.BackgroundColour = oddColour
         self.attr1.TextColour = sysTextColour
 
         self.attr2 = wx.ListItemAttr()
@@ -81,7 +85,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.attr2.TextColour = sysTextColour
         
         self.attr3 = wx.ListItemAttr()
-        self.attr3.BackgroundColour = self.attr1.BackgroundColour
+        self.attr3.BackgroundColour = oddColour
         self.attr3.TextColour = (255, 0, 0)
         
         self.attr4 = wx.ListItemAttr()
@@ -91,11 +95,14 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.InsertColumn(0, "")
         
         # logger popup menu
-        menu = eg.Menu(self, "EditMenu", eg.text.MainFrame.Menu)
-        menu.AddItem("Copy")
-        menu.AddItem()
-        menu.AddItem("ClearLog")
-        self.contextMenu = menu
+        menu = wx.Menu()
+        menu.Append(wx.ID_COPY, eg.text.MainFrame.Menu.Copy)
+        self.Bind(wx.EVT_MENU, self.OnCmdCopy, id=wx.ID_COPY)
+        menu.AppendSeparator()
+        menuId = wx.NewId()
+        menu.Append(menuId, eg.text.MainFrame.Menu.ClearLog)
+        self.Bind(wx.EVT_MENU, self.OnCmdClearLog, id=menuId)
+        self.contextMenu = menu        
         
         self.Bind(wx.EVT_RIGHT_UP, self.OnRightUp)
         self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnRightUp)
@@ -145,6 +152,14 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.Refresh()
         
         
+    def SetIndent(self, shouldIndent):
+        if shouldIndent:
+            self.indent = "   "
+        else:
+            self.indent = ""
+        self.Refresh()
+        
+    
     def OnStartDrag(self, event):
         idx = event.GetIndex()
         itemData = self.GetItemData(idx)
@@ -181,7 +196,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.OnCmdCopy()
 
 
-    def OnCmdCopy(self):
+    def OnCmdCopy(self, dummyEvent=None):
         text = ""
         lines = 1
         firstItem = item = self.GetNextItem(
@@ -209,7 +224,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             dataObjectComposite = wx.DataObjectComposite()
             dataObjectComposite.Add(textDataObject)
             if lines == 1:
-                _, icon, eventstring, _ = self.GetItemData(firstItem)
+                icon, eventstring = self.GetItemData(firstItem)[2:4]
                 if icon == EVENT_ICON:
                     customDataObject = wx.CustomDataObject("DragEventItem")
                     customDataObject.SetData(eventstring.encode("UTF-8"))
@@ -220,7 +235,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             wx.TheClipboard.Flush()
             
             
-    def OnCmdClearLog(self):
+    def OnCmdClearLog(self, dummyEvent=None):
         self.SetItemCount(0)
         self.DeleteAllItems()
         self.data.clear()
@@ -236,7 +251,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     def OnDoubleClick(self, event):
         item, flags = self.HitTest(event.GetPosition())
         if flags & wx.LIST_HITTEST_ONITEM:
-            _, icon, wref, _ = self.GetItemData(item)
+            icon, wref = self.GetItemData(item)[1:3]
             if icon != eg.EventItem.icon and wref is not None:
                 obj = wref()
                 if obj is not None and not obj.isDeleted:
@@ -252,12 +267,17 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         
         
     def OnGetItemTextNormal(self, item, dummyColumn):
-        return " " + self.data[item][0]
+        line, _, _, _, indent = self.data[item]
+        return " " + indent * self.indent + line
         
         
     def OnGetItemTextWithTime(self, item, dummyColumn):
-        line, _, _, when = self.data[item]
-        return strftime(" %X", localtime(when)) + "   " + line
+        line, _, _, when, indent = self.data[item]
+        return (
+            strftime(" %X   ", localtime(when)) 
+            + indent * self.indent 
+            + line
+        )
         
         
     def OnGetItemAttr(self, item):
@@ -278,7 +298,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     
 
     @eg.AssertNotMainThread
-    def WriteLine(self, line, icon, wRef, when):
+    def WriteLine(self, line, icon, wRef, when, indent):
         data = self.data
         if len(data) >= self.maxlength:
             self.Freeze()
@@ -286,7 +306,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
                 self.DeleteItem(0)
                 data.popleft()
             self.Thaw()
-        data.append((line, icon, wRef, when))
+        data.append((line, icon, wRef, when, indent))
         self.SetItemCount(len(data))
         self.ScrollList(0, 1000000)
         self.Update()

@@ -20,7 +20,6 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 import wx
 from eg.WinApi.Dynamic import (
     GetSystemMetrics, GetModuleHandle, CreateWindowEx,
@@ -32,8 +31,8 @@ FLAGS = WS_CHILD|WS_VISIBLE|SBS_SIZEGRIP|SBS_SIZEBOXTOPLEFTALIGN
 
 class SizeGrip(wx.PyWindow):
     
-    def __init__(self, parent, id=-1):
-        wx.PyWindow.__init__(self, parent, id)
+    def __init__(self, parent):
+        wx.PyWindow.__init__(self, parent)
         size = GetSystemMetrics(SM_CYHSCROLL), GetSystemMetrics(SM_CXVSCROLL)
         self.SetMinSize(size)
         self.SetMaxSize(size)

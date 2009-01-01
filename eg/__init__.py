@@ -26,9 +26,11 @@ import Cli
 if False:
     from StaticImports import *
     from Core import *
-    
 
-class _ModuleProxy(object):
+from types import ModuleType
+
+
+class LazyNamespace(ModuleType):
     
     def __init__(self):
         import sys
@@ -41,7 +43,7 @@ class _ModuleProxy(object):
         sys.modules[__name__] = self
         
         import __builtin__
-        __builtin__.__dict__["eg"] = self
+        __builtin__.eg = self
 
         
     def __getattr__(self, name):
@@ -64,7 +66,7 @@ class _ModuleProxy(object):
         eg.app.MainLoop()
 
 
-eg = _ModuleProxy()
+eg = LazyNamespace()
 import Utils
 for name in Utils.__all__:
     setattr(eg, name, getattr(Utils, name))

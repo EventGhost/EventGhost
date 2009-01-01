@@ -182,3 +182,4 @@ class CheckUpdate:
     @classmethod
     def CheckUpdateManually(cls):
         _checkUpdate(manually=True)
+

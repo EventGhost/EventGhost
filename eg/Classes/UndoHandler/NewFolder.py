@@ -20,6 +20,8 @@
 # $LastChangedRevision: 344 $
 # $LastChangedBy: bitmonster $
 
+import eg
+
 
 class NewFolder(eg.UndoHandler.NewItem):
     """
@@ -58,6 +60,4 @@ class NewFolder(eg.UndoHandler.NewItem):
         item.Select()
         item.tree.EditLabel(item.id)
         return item
-    
-    
     
