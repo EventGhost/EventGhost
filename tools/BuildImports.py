@@ -34,42 +34,11 @@ from os.path import join
 import warnings
 
 
-MODULES_TO_IGNORE = [
-    "idlelib", 
-    "gopherlib",
-    "Tix",
-    "test",
-    "Tkinter",
-    "_tkinter",
-    "turtle", # another Tkinter module
-    
-    "distutils.command.bdist_packager",
-    "distutils.mwerkscompiler",
-    "curses",
-    #"ctypes.macholib", # seems to be for Apple
-    
-    "wx.lib.vtk",
-    "wx.tools.Editra",
-    "wx.tools.XRCed",
-    "wx.lib.plot", # needs NumPy
-    "wx.lib.floatcanvas", # needs NumPy
-    
-    "ImageTk",
-    "ImageGL",
-    "ImageQt",
-    "WalImageFile", # odd syntax error in file
-    
-    "win32com.gen_py",
-    "win32com.demos",
-    "win32com.axdebug",
-    "win32com.axscript",
-    "pywin",
-    "comtypes.gen",
-]
+MODULES_TO_IGNORE = []
 
 HEADER = """\
 #-----------------------------------------------------------------------------
-# This file is automatically created by the MakeImports.py script.
+# This file was automatically created by the BuildImports.py script.
 # Don't try to edit this file yourself.
 #-----------------------------------------------------------------------------
 
@@ -242,10 +211,12 @@ def GetPackageModules(package):
     return moduleList
     
     
-def Main(packagesToAdd):    
+def Main(packagesToAdd, packagesToIgnore):    
     """
     Starts the actual work.
     """
+    MODULES_TO_IGNORE.extend(packagesToIgnore)
+    
     globalModuleIndex, badModules = ReadGlobalModuleIndex()
     MODULES_TO_IGNORE.extend(badModules)
     

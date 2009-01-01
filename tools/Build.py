@@ -24,6 +24,7 @@
 This script creates the EventGhost setup installer.
 """
 
+import sys
 import os
 import time
 import ConfigParser
@@ -109,6 +110,7 @@ INCLUDED_MODULES = [
 ]
 
 EXCLUDED_MODULES = [
+    "lib2to3",
     "idlelib", 
     "gopherlib",
     "Tix",
@@ -211,14 +213,6 @@ class MyInstaller(InnoInstaller):
         self.appVersion = mod.Version.string
         
     
-    def CreateImports(self):
-        import MakeImports
-        oldCwd = os.getcwdu()
-        os.chdir(abspath(u"Python%s" % self.PYVERSION))
-        MakeImports.Main(INCLUDED_MODULES)
-        os.chdir(oldCwd)
-        
-        
     def GetSetupFiles(self):
         """
         Return all files needed by the installer.
@@ -301,43 +295,6 @@ class MyInstaller(InnoInstaller):
         self.ExecuteInnoSetup()
     
     
-
-def Main(mainDialog=None):
-    """
-    Main task of the script.
-    """
-    print "--- updating Version.py"
-    NS.UpdateVersionFile()
-    print "--- updating CHANGELOG.TXT"
-    NS.UpdateChangeLog()
-    if Options.createImports:
-        print "--- creating imports.py"
-        NS.CreateImports()
-    if Options.commitSvn:
-        print "--- committing working copy to SVN"
-        NS.CommitSvn()
-    if Options.createSourceArchive:
-        print "--- creating source code archive"
-        NS.CreateSourceArchive()
-    if Options.createLib:
-        print "--- creating library files"
-        NS.CreateLibrary()            
-    if Options.createInstaller:
-        print "--- creating setup.exe"
-        NS.CreateInstaller()
-        filename = join(NS.outputDir, NS.outputBaseFilename + ".exe")
-        if Options.upload and Options.ftpUrl:
-            print "--- uploading setup.exe"
-            import UploadFile
-            wx.CallAfter(
-                UploadFile.UploadDialog, 
-                mainDialog, 
-                filename, 
-                Options.ftpUrl
-            )        
-    print "--- All done!"
-
-
 
 class Config(object):
 
@@ -490,14 +447,78 @@ class MainDialog(wx.Dialog):
         event.Skip()
      
      
+def BuildDocs():
+    oldCwd = os.getcwdu()
+    import BuildDocs
+    os.chdir(oldCwd)
+        
+        
+def BuildStaticImports():
+    oldCwd = os.getcwdu()
+    import BuildStaticImports
+    os.chdir(oldCwd)
+        
+        
+def BuildImports():
+    oldCwd = os.getcwdu()
+    import BuildImports
+    os.chdir(abspath(u"Python%d%d" % sys.version_info[0:2]))
+    BuildImports.Main(INCLUDED_MODULES, EXCLUDED_MODULES)
+    os.chdir(oldCwd)
+        
+        
+def Main(mainDialog=None):
+    """
+    Main task of the script.
+    """
+    print "--- updating Version.py"
+    NS.UpdateVersionFile()
+    print "--- updating CHANGELOG.TXT"
+    NS.UpdateChangeLog()
+    if Options.buildStaticImports:
+        print "--- building StaticImports.py"
+        BuildStaticImports()
+    if Options.buildImports:
+        print "--- building imports.py"
+        BuildImports()
+    if Options.buildDocs:
+        print "--- building docs"
+        BuildDocs()
+    if Options.commitSvn:
+        print "--- committing working copy to SVN"
+        NS.CommitSvn()
+    if Options.buildSourceArchive:
+        print "--- building source code archive"
+        NS.CreateSourceArchive()
+    if Options.buildLib:
+        print "--- building library files"
+        NS.CreateLibrary()            
+    if Options.buildInstaller:
+        print "--- building setup.exe"
+        NS.CreateInstaller()
+        filename = join(NS.outputDir, NS.outputBaseFilename + ".exe")
+        if Options.upload and Options.ftpUrl:
+            print "--- uploading setup.exe"
+            import UploadFile
+            wx.CallAfter(
+                UploadFile.UploadDialog, 
+                mainDialog, 
+                filename, 
+                Options.ftpUrl
+            )        
+    print "--- All done!"
+
+
 NS = MyInstaller()
-Options = Config(join(NS.toolsDir, "MakeInstaller.ini"))
+Options = Config(join(NS.toolsDir, "Build.ini"))
 Options.AddOption("includeNoIncludePlugins", "Include 'noinclude' plugins", False)
-Options.AddOption("createSourceArchive", "Create Source Archive", False)
-Options.AddOption("createImports", "Create Imports", False)
-Options.AddOption("createLib", "Create Lib", False)
-Options.AddOption("createInstaller", "Create Installer", True)
-Options.AddOption("commitSvn", "SVN Commit", False)
+Options.AddOption("buildStaticImports", "Build StaticImports.py", False)
+Options.AddOption("buildImports", "Build imports.py", False)
+Options.AddOption("buildDocs", "Build docs", False)
+Options.AddOption("buildSourceArchive", "Build source archive", False)
+Options.AddOption("buildLib", "Build lib%d%d" %sys.version_info[0:2], False)
+Options.AddOption("buildInstaller", "Build Setup.exe", True)
+Options.AddOption("commitSvn", "SVN commit", False)
 Options.AddOption("upload", "Upload through FTP", False)
 Options.AddOption("ftpUrl", "", "")
 Options.LoadSettings()

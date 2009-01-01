@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------
-# This file is automatically created by the MakeImports.py script.
+# This file was automatically created by the BuildImports.py script.
 # Don't try to edit this file yourself.
 #-----------------------------------------------------------------------------
 
@@ -431,68 +431,6 @@ import json.decoder
 import json.encoder
 import json.scanner
 import json.tool
-import lib2to3
-import lib2to3.fixer_base
-import lib2to3.fixer_util
-import lib2to3.main
-import lib2to3.patcomp
-import lib2to3.pygram
-import lib2to3.pytree
-import lib2to3.refactor
-import lib2to3.fixes
-import lib2to3.fixes.fix_apply
-import lib2to3.fixes.fix_basestring
-import lib2to3.fixes.fix_buffer
-import lib2to3.fixes.fix_callable
-import lib2to3.fixes.fix_dict
-import lib2to3.fixes.fix_except
-import lib2to3.fixes.fix_exec
-import lib2to3.fixes.fix_execfile
-import lib2to3.fixes.fix_filter
-import lib2to3.fixes.fix_funcattrs
-import lib2to3.fixes.fix_future
-import lib2to3.fixes.fix_has_key
-import lib2to3.fixes.fix_idioms
-import lib2to3.fixes.fix_import
-import lib2to3.fixes.fix_imports
-import lib2to3.fixes.fix_imports2
-import lib2to3.fixes.fix_input
-import lib2to3.fixes.fix_intern
-import lib2to3.fixes.fix_itertools
-import lib2to3.fixes.fix_itertools_imports
-import lib2to3.fixes.fix_long
-import lib2to3.fixes.fix_map
-import lib2to3.fixes.fix_metaclass
-import lib2to3.fixes.fix_methodattrs
-import lib2to3.fixes.fix_ne
-import lib2to3.fixes.fix_next
-import lib2to3.fixes.fix_nonzero
-import lib2to3.fixes.fix_numliterals
-import lib2to3.fixes.fix_paren
-import lib2to3.fixes.fix_print
-import lib2to3.fixes.fix_raise
-import lib2to3.fixes.fix_raw_input
-import lib2to3.fixes.fix_renames
-import lib2to3.fixes.fix_repr
-import lib2to3.fixes.fix_standarderror
-import lib2to3.fixes.fix_sys_exc
-import lib2to3.fixes.fix_throw
-import lib2to3.fixes.fix_tuple_params
-import lib2to3.fixes.fix_types
-import lib2to3.fixes.fix_unicode
-import lib2to3.fixes.fix_urllib
-import lib2to3.fixes.fix_ws_comma
-import lib2to3.fixes.fix_xrange
-import lib2to3.fixes.fix_xreadlines
-import lib2to3.fixes.fix_zip
-import lib2to3.pgen2
-import lib2to3.pgen2.driver
-import lib2to3.pgen2.grammar
-import lib2to3.pgen2.literals
-import lib2to3.pgen2.parse
-import lib2to3.pgen2.pgen
-import lib2to3.pgen2.token
-import lib2to3.pgen2.tokenize
 import logging
 import logging.config
 import logging.handlers
@@ -811,7 +749,6 @@ import XVThumbImagePlugin
 import _imaging
 import _imagingft
 import _imagingmath
-import _imagingtk
 import __init__
 
 # modules found for package 'comtypes'
@@ -996,12 +933,3 @@ import win32com.shell.shell
 import win32com.shell.shellcon
 import win32com.taskscheduler
 import win32com.taskscheduler.taskscheduler
-
-# modules found for package 'cFunctions'
-import cFunctions
-
-# modules found for package 'greenlet'
-import greenlet
-
-# modules found for package '_dxJoystick'
-import _dxJoystick
