@@ -28,9 +28,7 @@ from os.path import exists
 from types import ClassType, InstanceType
 
 
-configFilePath = ''
-
-locale = wx.Locale()
+LOCALE = wx.Locale()
 
 
 class Section:
@@ -56,7 +54,7 @@ class Section:
 
 
 
-def MakeSectionMetaClass(name, bases, dct):
+def MakeSectionMetaClass(dummyName, dummyBases, dct):
     section = Section()
     section.__dict__ = dct
     return section
@@ -68,7 +66,7 @@ def RecursivePySave(obj, fileWriter, indent=""):
     keys.sort()
     classKeys = []
     for key in keys:
-        if key.startswith("__"):
+        if key.startswith("_"):
             continue
         value = objDict[key]
         if type(value) == ClassType:
@@ -88,7 +86,7 @@ def RecursivePySave(obj, fileWriter, indent=""):
 
 class Config(Section):
     buildNum = 0
-    if locale.GetLanguageName(locale.GetSystemLanguage()) == 'German':
+    if LOCALE.GetLanguageName(LOCALE.GetSystemLanguage()) == 'German':
         language = 'de_DE'
     else:
         language = 'en_EN'
@@ -107,26 +105,28 @@ class Config(Section):
     defaultThreadStartTimeout = 5.00
     colourPickerCustomColours = [(-1, -1, -1, 255) for n in range(16)]
 
-    class plugins:
+    class plugins: #pylint: disable-msg=C0103
         pass
 
 
     def __init__(self):
-        global configFilePath
+        Section.__init__(self)
         configDir = eg.configDir
         if not os.path.exists(configDir):
             os.makedirs(configDir)
-            #import shutil
-            #shutil.copy("Example.xml", os.path.join(configDir, "MyConfig.xml"))
         configFilePath = os.path.join(configDir, "config.py")
-        execDict = {"__metaclass__": MakeSectionMetaClass}
+        self._configFilePath = configFilePath
         
         # BUG: of the python function 'execfile'. It doesn't handle unicode
         # filenames right.
         configFilePath = configFilePath.encode(sys.getfilesystemencoding())
         if exists(configFilePath):
             try:
-                execfile(configFilePath, execDict, self.__dict__)
+                execfile(
+                    configFilePath, 
+                    {"__metaclass__": MakeSectionMetaClass}, 
+                    self.__dict__
+                )
             except:
                 if eg.debugLevel:
                     raise
@@ -137,9 +137,8 @@ class Config(Section):
     
     
     def Save(self):
-        global configFilePath
         self.buildNum = eg.buildNum
-        configFile = open(configFilePath, 'w+')
+        configFile = open(self._configFilePath, 'w+')
         RecursivePySave(self, configFile.write)
         configFile.close()
 

@@ -1,6 +1,6 @@
 # This file gets automatically extended by ctypeslib.dynamic_module, so don't
 # edit it yourself.
-
+#pylint: disable-msg=C0103,C0301
 from ctypes import *
 from ctypes.wintypes import *
 _user32 = WinDLL("user32")

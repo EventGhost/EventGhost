@@ -55,6 +55,7 @@ class Document(object):
             self.XMLTag2ClassDict[cls.xmlTag] = cls
             return cls
         
+        self.TreeLink = eg.TreeLink
         self.TreeItem = MakeCls("TreeItem")
         self.ContainerItem = MakeCls("ContainerItem")
         self.EventItem = MakeCls("EventItem")

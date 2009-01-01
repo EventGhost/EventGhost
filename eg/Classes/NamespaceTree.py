@@ -38,7 +38,10 @@ class NamespaceTree(wx.gizmos.TreeListCtrl):
             
     @classmethod
     def Test(cls):
-        dialog = eg.Dialog(None, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        dialog = eg.Dialog(
+            None, 
+            style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
+        )
         tree = cls(dialog, eg)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(tree, 1, wx.EXPAND)

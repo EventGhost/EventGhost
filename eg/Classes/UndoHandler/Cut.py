@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+
 
 class Cut:
     name = eg.text.MainFrame.Menu.Cut.replace("&", "")

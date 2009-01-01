@@ -67,6 +67,7 @@ eg.eventTable = {}
 eg.eventTable2 = {}
 eg.programCounter = None
 eg.programReturnStack = []
+eg.indent = 0
 eg.pluginList = []
 eg.pluginClassInfo = {}
 eg.mainThread = threading.currentThread()
@@ -211,9 +212,11 @@ def RunProgram():
         while eg.programCounter is None and eg.programReturnStack:
             # we have no next item in this level. So look in the return 
             # stack if any return has to be executed
+            eg.indent -= 2
             item, idx = eg.programReturnStack.pop()
             eg.programCounter = item.parent.GetNextChild(idx)
-
+    eg.indent = 0
+    
 
 class Exception(Exception):
     
@@ -263,7 +266,10 @@ eg.PrintStack = eg.log.PrintStack
 
 eg.colour = eg.Colour()
 eg.config = eg.Config()
-eg.text = eg.Text(eg.config.language)
+if eg.startupArguments.isMain:
+    eg.text = eg.Text(eg.config.language)
+else:
+    eg.text = eg.Text('en_EN')
 eg.actionThread = eg.ActionThread()
 eg.eventThread = eg.EventThread()
 eg.pluginManager = eg.PluginManager()
@@ -279,8 +285,14 @@ eg.mainGreenlet = greenlet.getcurrent()
 from eg.WinApi.Dynamic import GetCurrentProcessId
 eg.processId = GetCurrentProcessId()
 
+from eg.WinApi.SendKeys import SendKeysParser
+eg.SendKeys = SendKeysParser()
+
 setattr(eg, "PluginClass", eg.PluginBase)
 setattr(eg, "ActionClass", eg.ActionBase)
+
+eg.taskBarIcon = eg.TaskBarIcon()
+eg.SetProcessingState = eg.taskBarIcon.SetProcessingState
 
 eg.Init = Init
 eg.Init.Init()

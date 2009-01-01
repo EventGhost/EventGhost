@@ -21,6 +21,7 @@
 # $LastChangedBy$
 
 import eg
+import wx
 from os.path import exists, join
 
 import sys
@@ -120,6 +121,21 @@ class PluginInfo(object):
         finally:
             del sys.path[0]
         return module
+    
+#    @classmethod
+#    def ImportPlugin(cls, pluginDir):
+#        moduleName = "pluginImport." + pluginDir
+#        if moduleName in sys.modules:
+#            return sys.modules[moduleName]
+#        modulePath = join(eg.PLUGIN_DIR, pluginDir)
+#        module = types.ModuleType(moduleName)
+#        sys.path.insert(0, modulePath)
+#        sys.modules[moduleName] = module
+#        try:
+#            execfile(join(modulePath, "__init__.py"), {}, module.__dict__)
+#        finally:
+#            del sys.path[0]
+#        return module
     
     @classmethod
     def GetPluginInfo(cls, pluginName):
@@ -260,8 +276,8 @@ class PluginInfo(object):
             info.initFailed = False
         except eg.Exceptions.PluginNotFound, exc:
             pass
-        except eg.Exception, e:
-            eg.PrintError(e.message)
+        except eg.Exception, exc:
+            eg.PrintError(exc.message)
         except:
             eg.PrintTraceback()
         
@@ -283,7 +299,6 @@ class PluginInfo(object):
         info = pluginInfoCls.CreatePluginInstance(evalName, treeItem)
         plugin = info.instance
         info.args = args
-        plugin.SetArguments(*args)
         if hasattr(plugin, "Compile"):
             plugin.Compile(*args)
         try:
@@ -309,7 +324,10 @@ class PluginInfo(object):
             self.treeItem.SetErrorState()
         except Exception, exc:
             self.lastException = exc
-            eg.PrintError(eg.text.Error.pluginStartError % self.name)
+            eg.PrintError(
+                eg.text.Error.pluginStartError % self.name, 
+                source=self.treeItem
+            )
             eg.PrintTraceback()
             self.treeItem.SetErrorState()
             
@@ -345,7 +363,7 @@ class PluginInfo(object):
         if self.isStarted:
             self.Stop()
         if not self.initFailed:
-             self.instance.__close__()
+            self.instance.__close__()
 
     
     @eg.LogIt

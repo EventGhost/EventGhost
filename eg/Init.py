@@ -79,7 +79,7 @@ def InitPathesAndBuiltins():
     
     # add 'wx' to the builtin name space of every module
     import __builtin__
-    __builtin__.__dict__["wx"] = wx
+    __builtin__.wx = wx
         
     # we create a package 'pluginImport' and set its path to the plugin-dir
     # so we can simply use __import__ to load a plugin file 
@@ -100,14 +100,7 @@ def InitPathesAndBuiltins():
     __builtin__.input = Input
     
     
-def Init():
-    from greenlet import greenlet
-    eg.Greenlet = greenlet
-    eg.mainGreenlet = greenlet.getcurrent()
-    
-    from WinApi.SendKeys import SendKeysParser
-    eg.SendKeys = SendKeysParser()
-    
+def Init():    
     import WinApi.COMServer
 
     
@@ -125,8 +118,6 @@ def InitGui():
     eg.messageReceiver.Start()
 
     eg.document = eg.Document()
-    eg.taskBarIcon = eg.TaskBarIcon()
-    eg.SetProcessingState = eg.taskBarIcon.SetProcessingState
     
     if not (eg.config.hideOnStartup or eg.startupArguments.hideOnStartup):
         eg.document.ShowFrame()

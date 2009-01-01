@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 import win32file, win32con
         
         
@@ -35,19 +36,20 @@ def DeviceString(portnum):
 
 
 
-class SerialPort:
-    fd = None
+class SerialPort(object):
     
     def __init__(self, port=0, baud=2400):
-        self.port=port
-        self.baudrate=baud
-        self.buffer=win32file.AllocateReadBuffer(512)
-        self.data=""
+        self.port = port
+        self.baudrate = baud
+        self.buffer = win32file.AllocateReadBuffer(512)
+        self.data = ""
+        self.hFile = None
+        self.dcb = None
        
     
     def open(self):
         try:
-            self.fd = win32file.CreateFile(
+            self.hFile = win32file.CreateFile(
                 DeviceString(self.port),
                 win32con.GENERIC_READ|win32con.GENERIC_WRITE,
                 0,    # exclusive access
@@ -56,10 +58,10 @@ class SerialPort:
                 0,
                 None
             )
-            win32file.SetupComm(self.fd,1024,1024)
+            win32file.SetupComm(self.hFile, 1024, 1024)
             # clear any pending I/O
             win32file.PurgeComm(
-                self.fd,
+                self.hFile,
                 (
                     win32file.PURGE_TXABORT
                     |win32file.PURGE_TXCLEAR
@@ -69,7 +71,7 @@ class SerialPort:
             )
     
             # set the port characteristics
-            dcb=win32file.GetCommState(self.fd)
+            dcb = win32file.GetCommState(self.hFile)
             self.dcb = dcb
             dcb.BaudRate = self.baudrate
             dcb.fBinary = True
@@ -92,39 +94,40 @@ class SerialPort:
             dcb.Parity = win32file.NOPARITY
             dcb.StopBits = win32file.ONESTOPBIT
             
-            win32file.SetCommState(self.fd, dcb)
-            win32file.SetCommTimeouts(self.fd, (-1 ,0 ,0,100,100))
+            win32file.SetCommState(self.hFile, dcb)
+            win32file.SetCommTimeouts(self.hFile, (-1, 0, 0, 100, 100))
         except:
             #eg.PrintError("Error opening " + DeviceString(self.port))
             #eg.PrintTraceback()
-            if self.fd:
-                win32file.CloseHandle(self.fd)
-            self.fd = None
+            if self.hFile:
+                win32file.CloseHandle(self.hFile)
+            self.hFile = None
             raise
          
         
-    def __get_baudrate(self):
+    def GetBaudrate(self):
         return self.dcb.Baudrate
     
-    def __set_baudrate(self, baudrate):
+    
+    def SetBaudrate(self, baudrate):
         self.dcb.baudrate = baudrate
-        win32file.SetCommState(self.fd, dcb)
+        win32file.SetCommState(self.hFile, self.dcb)
         
-    baudrate = property(__get_baudrate, __set_baudrate)
+    baudrate = property(GetBaudrate, SetBaudrate)
     
     
     def SetDTR(self, flag=True):
         if flag:
-            win32file.EscapeCommFunction(self.fd, win32file.SETDTR)
+            win32file.EscapeCommFunction(self.hFile, win32file.SETDTR)
         else:
-            win32file.EscapeCommFunction(self.fd, win32file.CLRDTR)
+            win32file.EscapeCommFunction(self.hFile, win32file.CLRDTR)
             
 
     def SetRTS(self, flag=True):
         if flag:
-            win32file.EscapeCommFunction(self.fd, win32file.SETRTS)
+            win32file.EscapeCommFunction(self.hFile, win32file.SETRTS)
         else:
-            win32file.EscapeCommFunction(self.fd, win32file.CLRRTS)
+            win32file.EscapeCommFunction(self.hFile, win32file.CLRRTS)
             
 
 
@@ -132,7 +135,7 @@ class SerialPort:
     def read(self, n=None):
         """try to read a certain number of characters"""
         try:
-            rc, data = win32file.ReadFile(self.fd, self.buffer)
+            rc, data = win32file.ReadFile(self.hFile, self.buffer)
         except:
             eg.PrintTraceback()
             eg.PrintError("I/O Error in read")
@@ -146,20 +149,19 @@ class SerialPort:
     def write(self, data):
         """write data out the port"""
         try:
-            rc, n = win32file.WriteFile(self.fd, data)
-            if rc:
-                raise IOError;
+            errCode, numBytes = win32file.WriteFile(self.hFile, data)
+            if errCode:
+                raise IOError
         except:
             eg.PrintTraceback()
             eg.PrintError("I/O Error:")
             self.close()
             self.open()
-        return n
+        return numBytes
             
 
     def close(self):
-        if self.fd:
-            win32file.CloseHandle(self.fd)
-            self.fd = None
-
+        if self.hFile:
+            win32file.CloseHandle(self.hFile)
+            self.hFile = None
 

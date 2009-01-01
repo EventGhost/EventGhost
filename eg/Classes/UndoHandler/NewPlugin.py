@@ -20,17 +20,18 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+
 
 class NewPlugin(eg.UndoHandler.NewItem):
     """
     Create a new PluginItem if the user has choosen to do so from the menu
     or toolbar.
     """
+    name = eg.text.MainFrame.Menu.AddPlugin.replace("&", "")
     
     def Do(self, document, pluginInfo):
         """ Handle the menu command 'Add Plugin...'. """
-        self.name = eg.text.MainFrame.Menu.AddPlugin.replace("&", "")
-
         pluginItem = document.PluginItem.Create(
             document.autostartMacro,
             -1,
@@ -48,5 +49,4 @@ class NewPlugin(eg.UndoHandler.NewItem):
             eg.UndoHandler.AddActionGroup().Do(document, pluginItem)
         return pluginItem
        
-            
-            
+        

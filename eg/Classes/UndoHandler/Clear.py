@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+
 
 class Clear:
     name = eg.text.MainFrame.Menu.Delete.replace("&", "")
@@ -42,5 +44,3 @@ class Clear:
     def Redo(self, document):
         self.positionData.GetItem().Delete()
 
-
-        

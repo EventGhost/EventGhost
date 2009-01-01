@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+
 
 class ToggleEnable:
     name = eg.text.MainFrame.Menu.Disabled.replace("&", "")
@@ -42,6 +44,4 @@ class ToggleEnable:
         item = self.positionData.GetItem()
         item.Enable(self.state)
         item.Select()
-
-
 

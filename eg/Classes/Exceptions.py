@@ -29,14 +29,14 @@ class Text(eg.TranslatableStrings):
     DeviceNotFound = "Device not found!"
     ProgramNotRunning = "Application is not running!"
     ProgramNotFound = "Application not found!"
-    InitFailed = "Initialization failed!"
-    DeviceInitFailed = "Unable to initalize device!"
+    InitFailed = "Initialisation failed!"
+    DeviceInitFailed = "Unable to initialise device!"
     DeviceNotReady = "Device is not ready!"
     SerialOpenFailed = "Can't open serial port!"
     PluginNotFound = "Plugin not found!"
     
     
-class Exception(eg.Exception):
+class ProgramError(eg.Exception):
     source = "unknown"
     
     def __init__(self, *args):
@@ -50,41 +50,42 @@ class Exception(eg.Exception):
     
 class Exceptions:
     
-    class DriverNotFound(Exception):
+    class DriverNotFound(ProgramError):
         text = Text.DriverNotFound
     
     
-    class DriverNotOpen(Exception):
+    class DriverNotOpen(ProgramError):
         text = Text.DriverNotOpen
     
     
-    class InitFailed(Exception):
+    class InitFailed(ProgramError):
         text = Text.InitFailed
     
     
-    class DeviceInitFailed(Exception):
+    class DeviceInitFailed(ProgramError):
         text = Text.DeviceInitFailed
     
     
-    class DeviceNotFound(Exception):
+    class DeviceNotFound(ProgramError):
         text = Text.DeviceNotFound
     
 
-    class DeviceNotReady(Exception):
+    class DeviceNotReady(ProgramError):
         text = Text.DeviceNotReady
     
 
-    class ProgramNotRunning(Exception):
+    class ProgramNotRunning(ProgramError):
         text = Text.ProgramNotRunning
     
 
-    class ProgramNotFound(Exception):
+    class ProgramNotFound(ProgramError):
         text = Text.ProgramNotFound
     
 
-    class SerialOpenFailed(Exception):
+    class SerialOpenFailed(ProgramError):
         text = Text.SerialOpenFailed
     
 
-    class PluginNotFound(Exception):
+    class PluginNotFound(ProgramError):
         text = Text.PluginNotFound
+

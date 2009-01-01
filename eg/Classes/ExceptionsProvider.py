@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 
 class ExceptionsProvider(object):
@@ -29,10 +30,9 @@ class ExceptionsProvider(object):
         
     def __getattr__(self, name):
         exception = getattr(eg.Exceptions, name)
-        class subException(exception):
+        class SubException(exception):
             source = self.source
-        subException.__name__ = "Sub" + name
-        setattr(self, name, subException)
-        return subException
-    
+        SubException.__name__ = "Sub" + name
+        setattr(self, name, SubException)
+        return SubException
     

@@ -76,8 +76,8 @@ class TreeItem(object):
     def Create(cls, parent, pos=-1, text="", **kwargs):
         node = ElementTree.Element(cls.xmlTag)
         node.text = text
-        for k, v in kwargs.items():
-            node.attrib[k] = v
+        for key, value in kwargs.items():
+            node.attrib[key] = value
         self = eg.actionThread.CallWait(partial(cls, parent, node))
         parent.AddChild(self, pos)
         return self
@@ -361,7 +361,7 @@ class TreeItem(object):
         pass
             
             
-    def SetAttributes(self, tree, id):
+    def SetAttributes(self, tree, treeId):
         pass
     
     
@@ -399,10 +399,6 @@ class TreeItem(object):
 
     def Execute(self):
         return None, None
-    
-    
-    def DoDoubleClick(self, event):
-        return False
     
     
     def GetChildIndex(self, child):
@@ -449,6 +445,8 @@ class TreeItem(object):
     def Print(self, *args, **kwargs):
         kwargs.setdefault("source", self)
         kwargs.setdefault("icon", self.icon)
+        kwargs.setdefault("indent", 1)
+        
         eg.Print(*args, **kwargs)
         
     
@@ -516,7 +514,8 @@ class TreeItem(object):
         lambda self, label: self.RenameTo(label)
     )
     imageIndex = property(
-        lambda self: self.icon.index if self.isEnabled else self.icon.disabledIndex
+        lambda self: 
+            self.icon.index if self.isEnabled else self.icon.disabledIndex
     )
     selectedImageIndex = -1
     isActivatable = property(

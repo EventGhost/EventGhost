@@ -23,6 +23,7 @@
 modGlobals = globals()
 
 class UndoHandler:
+    
     def __getattr__(self, name):
         mod = __import__(name, modGlobals)
         attr = getattr(mod, name)
@@ -30,3 +31,4 @@ class UndoHandler:
         return attr
 
 UndoHandler = UndoHandler()
+

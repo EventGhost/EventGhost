@@ -188,9 +188,9 @@ def GetMasterVolume(deviceId=0):
     # Then get the volume
     value = GetControlValue(hmixer, mixerControl)
     
-    max = mixerControl.Bounds.lMaximum
-    min = mixerControl.Bounds.lMinimum
-    value = 100.0 * (value - min) / (max - min)
+    maximum = mixerControl.Bounds.lMaximum
+    minimum = mixerControl.Bounds.lMinimum
+    value = 100.0 * (value - minimum) / (maximum - minimum)
     return value
     
     
@@ -202,13 +202,13 @@ def SetMasterVolume(value, deviceId=0):
         deviceId
     )
 
-    max = volCtrl.Bounds.lMaximum
-    min = volCtrl.Bounds.lMinimum
-    newValue = int((value / 100.0) * (max - min)) + min
-    if newValue < min:
-        newValue = min
-    elif newValue > max:
-        newValue = max
+    maximum = volCtrl.Bounds.lMaximum
+    minimum = volCtrl.Bounds.lMinimum
+    newValue = int((value / 100.0) * (maximum - minimum)) + minimum
+    if newValue < minimum:
+        newValue = minimum
+    elif newValue > maximum:
+        newValue = maximum
     SetControlValue(hmixer, volCtrl, newValue)
     
     
@@ -223,13 +223,13 @@ def ChangeMasterVolumeBy(value, deviceId=0):
     # Then get the volume
     oldVolume = GetControlValue(hmixer, mixerControl)
     
-    max = mixerControl.Bounds.lMaximum
-    min = mixerControl.Bounds.lMinimum
-    newVolume = int(round((max - min) * value / 100.0)) + oldVolume
-    if newVolume < min:
-        newVolume = min
-    elif newVolume > max:
-        newVolume = max
+    maximum = mixerControl.Bounds.lMaximum
+    minimum = mixerControl.Bounds.lMinimum
+    newVolume = int(round((maximum - minimum) * value / 100.0)) + oldVolume
+    if newVolume < minimum:
+        newVolume = minimum
+    elif newVolume > maximum:
+        newVolume = maximum
     SetControlValue(hmixer, mixerControl, newVolume)
     
     
@@ -260,21 +260,25 @@ def GetDeviceLines(deviceId=0):
     if mixerGetDevCaps(hmixer, byref(mixercaps), sizeof(MIXERCAPS)):
         raise SoundMixerException()
     
-    for i in range(mixercaps.cDestinations):
+    for destinationNum in range(mixercaps.cDestinations):
         mixerline.cbStruct = sizeof(MIXERLINE)
-        mixerline.dwDestination = i
-        if mixerGetLineInfo(hmixer, byref(mixerline), MIXER_GETLINEINFOF_DESTINATION):
+        mixerline.dwDestination = destinationNum
+        if mixerGetLineInfo(
+            hmixer, byref(mixerline), MIXER_GETLINEINFOF_DESTINATION
+        ):
             continue
-        print "Destination:", i, mixerline.szName
+        print "Destination:", destinationNum, mixerline.szName
         for name in GetControls(hmixer, mixerline):
             print "        Control:", name
-        for n in range(mixerline.cConnections):
+        for sourceNum in range(mixerline.cConnections):
             mixerline.cbStruct = sizeof(MIXERLINE)
-            mixerline.dwDestination = i
-            mixerline.dwSource = n
-            if mixerGetLineInfo(hmixer, byref(mixerline), MIXER_GETLINEINFOF_SOURCE):
+            mixerline.dwDestination = destinationNum
+            mixerline.dwSource = sourceNum
+            if mixerGetLineInfo(
+                hmixer, byref(mixerline), MIXER_GETLINEINFOF_SOURCE
+            ):
                 continue
-            print "    Source:", n, mixerline.szName
+            print "    Source:", sourceNum, mixerline.szName
             for name in GetControls(hmixer, mixerline):
                 print "            Control:", name
             
@@ -409,7 +413,9 @@ def GetControls(hmixer, mixerline):
     mixerLineControls.dwLineID = mixerline.dwLineID
     mixerLineControls.pamxctrl = pointer(mixerControlArray[0])
     mixerLineControls.cbmxctrl = sizeof(MIXERCONTROL)
-    mixerGetLineControls(hmixer, byref(mixerLineControls), MIXER_GETLINECONTROLSF_ALL)
+    mixerGetLineControls(
+        hmixer, byref(mixerLineControls), MIXER_GETLINECONTROLSF_ALL
+    )
     result = []
     for i in range(numCtrls):
         mixerControl = mixerControlArray[i]
@@ -440,5 +446,3 @@ def GetControlDetails():
     
 #print GetDeviceLines()
 
-
-        

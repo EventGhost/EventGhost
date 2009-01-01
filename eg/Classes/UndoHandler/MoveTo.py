@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+
 
 class MoveTo:
     name = "Move Item"
@@ -58,5 +60,3 @@ class MoveTo:
         
     Redo = Undo
         
-
-

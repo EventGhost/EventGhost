@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+
 
 class Rename:
     name = eg.text.MainFrame.Menu.Rename.replace("&", "")
@@ -42,6 +44,4 @@ class Rename:
         item = self.positionData.GetItem()
         item.RenameTo(self.text)
         item.Select()
-
-
 

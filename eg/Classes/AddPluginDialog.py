@@ -193,6 +193,7 @@ class AddPluginDialog(eg.Dialog):
                 if not treeCtrl.IsExpanded(treeId)
         )
 
+
     def OnSelectionChanged(self, event):
         """
         Handle the wx.EVT_TREE_SEL_CHANGED events.

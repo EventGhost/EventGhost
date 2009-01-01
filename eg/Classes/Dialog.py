@@ -133,4 +133,3 @@ class Dialog(wx.Dialog, eg.ControlProviderMixin):
         self.__gr.switch(wx.ID_APPLY)
         
         
-    

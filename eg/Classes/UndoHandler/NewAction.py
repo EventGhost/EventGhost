@@ -20,16 +20,18 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+
 
 class NewAction(eg.UndoHandler.NewItem):
     """
     Create a new ActionItem if the user has choosen to do so from the menu
     or toolbar.
     """
+    name = eg.text.MainFrame.Menu.AddAction.replace("&", "")
     
     @eg.LogIt
     def Do(self, document, action):
-        self.name = eg.text.MainFrame.Menu.AddAction.replace("&", "")
         # find the right insert position
         selection = document.selection
         if isinstance(selection, (document.MacroItem, document.AutostartItem)):
@@ -64,4 +66,3 @@ class NewAction(eg.UndoHandler.NewItem):
         return item
     
     
-

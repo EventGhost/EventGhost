@@ -24,7 +24,15 @@ import eg
 import wx
 
 
+def DoExecute(item, newArgs):
+    oldArgs = item.GetArgs()
+    item.SetArgs(newArgs)
+    item.Execute()
+    item.SetArgs(oldArgs)
+
+
 class Configure:
+    name = eg.text.MainFrame.Menu.Configure.replace("&", "")
     
     def Try(self, document):
         item = document.selection
@@ -43,20 +51,18 @@ class Configure:
         
         self.oldArgumentString = item.GetArgumentString()
         oldArgs = item.GetArgs()
-        self.name = eg.text.MainFrame.Menu.Configure.replace("&", "")
         
         wasApplied = False
         wasTested = False
-        lastArgs = oldArgs
-        gr = None
+        greenlet = None
         while True:
             eg.currentConfigureItem = item
             try:
-                if gr is None or gr.dead:
-                    gr = eg.Greenlet(executable.Configure)
-                    newArgs = gr.switch(*item.GetArgs())
+                if greenlet is None or greenlet.dead:
+                    greenlet = eg.Greenlet(executable.Configure)
+                    newArgs = greenlet.switch(*item.GetArgs())
                 else:
-                    newArgs = gr.switch()
+                    newArgs = greenlet.switch()
             except:
                 eg.PrintError(eg.text.Error.configureError % item.GetLabel())
                 if item.openConfigDialog is not None:
@@ -65,8 +71,8 @@ class Configure:
             if item.openConfigDialog is not None:
                 userAction = item.openConfigDialog.result
                 if userAction == wx.ID_CANCEL:
-                    if not gr.dead:
-                        gr.switch()
+                    if not greenlet.dead:
+                        greenlet.switch()
                     item.openConfigDialog.Destroy()
                     del item.openConfigDialog
                     if wasApplied or wasTested:
@@ -74,9 +80,9 @@ class Configure:
                         item.Refresh()
                     return False
                 elif userAction == wx.ID_OK:
-                    if not gr.dead:
+                    if not greenlet.dead:
                         try:
-                            gr.switch(wx.ID_CANCEL)
+                            greenlet.switch(wx.ID_CANCEL)
                         except:
                             eg.PrintTraceback(
                                 eg.text.Error.configureError % item.GetLabel(), 
@@ -86,16 +92,13 @@ class Configure:
                     del item.openConfigDialog
                     break
                 elif userAction == wx.ID_APPLY:
-                    lastArgs = newArgs
                     item.SetArgs(newArgs)
                     item.Refresh()
                     wasApplied = True
                     continue
                 elif userAction == eg.ID_TEST:
-                    def Do():
-                        item.SetArgs(newArgs)
-                        item.Execute()
-                    eg.actionThread.Call(Do)
+                    wasTested = True
+                    eg.actionThread.Call(DoExecute, item, newArgs)
                     continue
             elif newArgs is None:
                 return False
@@ -123,3 +126,4 @@ class Configure:
         item.Select()
 
     Redo = Undo
+

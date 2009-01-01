@@ -29,23 +29,29 @@ from TreeItem import HINT_NO_DROP, HINT_MOVE_BEFORE, HINT_MOVE_BEFORE_OR_AFTER
 from TreeLink import TreeLink
 
 
-gPatches = {
+PATCHES = {
     "Registry.RegistryChange": "System.RegistryChange",
     "Registry.RegistryQuery": "System.RegistryQuery",
 }    
 
 def GetRenamedColor():
-    r, g, b = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOWTEXT).Get()
-    h, s, v = colorsys.rgb_to_hsv(r / 255.0, g / 255.0, b / 255.0)        
-    if v > 0.5:
-        v -= 0.25
+    red, green, blue = wx.SystemSettings_GetColour(
+        wx.SYS_COLOUR_WINDOWTEXT
+    ).Get()
+    hue, saturation, value = colorsys.rgb_to_hsv(
+        red / 255.0, 
+        green / 255.0, 
+        blue / 255.0
+    )        
+    if value > 0.5:
+        value -= 0.25
     else:
-        v += 0.25
-    rgb = colorsys.hsv_to_rgb(h, s, v)
+        value += 0.25
+    rgb = colorsys.hsv_to_rgb(hue, saturation, value)
     return tuple([int(round(c * 255.0)) for c in rgb])
 
 
-gRenamedColour = GetRenamedColor()
+RENAMED_COLOUR = GetRenamedColor()
 
 
 class ActionItem(TreeItem):
@@ -81,7 +87,7 @@ class ActionItem(TreeItem):
             return
         text = text.strip()
         objStr, remainder = text.split('(', 1)
-        objStr = gPatches.get(objStr, objStr)                
+        objStr = PATCHES.get(objStr, objStr)                
         argString, _ = remainder.rsplit(')', 1)
         pluginStr, actionStr = objStr.split(".", 1)
         plugin = getattr(eg.plugins, pluginStr).plugin
@@ -161,7 +167,7 @@ class ActionItem(TreeItem):
             
     def SetAttributes(self, tree, treeId):
         if self.name:
-            tree.SetItemTextColour(treeId, gRenamedColour)
+            tree.SetItemTextColour(treeId, RENAMED_COLOUR)
             tree.SetItemFont(treeId, tree.italicfont)
         else:
             tree.SetItemTextColour(treeId, None)
@@ -234,6 +240,7 @@ class ActionItem(TreeItem):
         action = self.executable
         if not action:
             return
+        eg.indent += 1
         if not action.plugin.info.isStarted:
             self.PrintError(
                 eg.text.Error.pluginNotActivated % action.plugin.name
@@ -250,6 +257,7 @@ class ActionItem(TreeItem):
             eg.PrintTraceback(eg.text.Error.InAction % label, 1, source=self)
         finally:
             pass
+        eg.indent -= 1
 
 
     def DropTest(self, cls):

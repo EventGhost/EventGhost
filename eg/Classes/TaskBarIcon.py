@@ -24,10 +24,14 @@ import eg
 import wx
 import threading
 
+ID_SHOW = wx.NewId()
+ID_HIDE = wx.NewId()
+ID_EXIT = wx.NewId()
+
 
 class TaskBarIcon(wx.TaskBarIcon):
     
-    def __init__(self, parent=None):
+    def __init__(self):
         self.stateIcons = (
             wx.Icon("images\\Tray1.png", wx.BITMAP_TYPE_PNG),
             wx.Icon("images\\Tray3.png", wx.BITMAP_TYPE_PNG),
@@ -35,39 +39,37 @@ class TaskBarIcon(wx.TaskBarIcon):
         )
         self.tooltip = eg.APP_NAME + " " + eg.Version.string
         wx.TaskBarIcon.__init__(self)
-        self.iconTime = 0
         self.currentEvent = None
         self.processingEvent = None
         self.currentState = 0
         self.reentrantLock = threading.Lock()
         self.alive = True
-        self.SetIcon(self.stateIcons[0], self.tooltip)
+        #self.SetIcon(self.stateIcons[0], self.tooltip)
 
-#        tmpID = wx.NewId()
-#        self.iconTimer = wx.Timer(self, tmpID)
-#        wx.EVT_TIMER(self, tmpID, self.ResetIcon2)
-        
-        menu = self.menu = eg.Menu(self, "")
+        menu = self.menu = wx.Menu()
         text = eg.text.MainFrame.TaskBarMenu
-        self.menuShow = menu.Append(text.Show, self.OnCmdShowMainFrame)
-        self.menuHide = menu.Append(text.Hide, self.OnCmdHideMainFrame)
+        menu.Append(ID_SHOW, text.Show)
+        self.Bind(wx.EVT_MENU, self.OnCmdShowMainFrame, id=ID_SHOW)
+        menu.Append(ID_HIDE, text.Hide)
+        self.Bind(wx.EVT_MENU, self.OnCmdHideMainFrame, id=ID_HIDE)
         menu.AppendSeparator()
-        menu.Append(text.Exit, self.OnCmdExit)
+        menu.Append(ID_EXIT, text.Exit)
+        self.Bind(wx.EVT_MENU, self.OnCmdExit, id=ID_EXIT)
     
         self.Bind(wx.EVT_TASKBAR_RIGHT_UP, self.OnTaskBarMenu)
         self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnCmdShowMainFrame)
         
         
-    def OnTaskBarMenu(self, event):
-        self.menuHide.Enable(eg.document.frame is not None)
+    def OnTaskBarMenu(self, dummyEvent):
+        self.menu.Enable(ID_HIDE, eg.document.frame is not None)
         self.PopupMenu(self.menu)
         
         
-    def OnCmdShowMainFrame(self, event=None):
+    def OnCmdShowMainFrame(self, dummyEvent=None):
         eg.document.ShowFrame()
         
         
-    def OnCmdHideMainFrame(self, event):
+    def OnCmdHideMainFrame(self, dummyEvent):
         eg.document.HideFrame()
         
         
@@ -78,6 +80,7 @@ class TaskBarIcon(wx.TaskBarIcon):
     def SetIcons(self, state):
         if self.alive:
             self.SetIcon(self.stateIcons[state], self.tooltip)
+            # TODO: this is not really safe
             if eg.document.frame:
                 eg.document.frame.statusBar.SetState(state)
         

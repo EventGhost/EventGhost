@@ -140,7 +140,7 @@ def AssertNotActionThread(func):
     def AssertWrapper(*args, **kwargs):
         assert eg.actionThread == threading.currentThread()
         return func(*args, **kwargs)
-    return update_wrapper(AssertNotActionThread, func)
+    return update_wrapper(AssertWrapper, func)
 
     
 def ParseString(text, filterFunc=None):

@@ -20,16 +20,18 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+
 
 class NewMacro(eg.UndoHandler.NewItem):
     """
     Create a new MacroItem if the user has choosen to do so from the menu
     or toolbar.
     """
+    name = eg.text.MainFrame.Menu.AddMacro.replace("&", "")
     
     @eg.AsGreenlet
     def Do(self, document):
-        self.name = eg.text.MainFrame.Menu.AddMacro.replace("&", "")
         obj = document.selection
         if isinstance(obj, (document.MacroItem, document.AutostartItem)):
             parentObj = obj.parent

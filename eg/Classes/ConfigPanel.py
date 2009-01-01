@@ -181,8 +181,12 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         self.shown = False
         self.maxRowNum = 0
         self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.args = None
+        self.kwargs = None
         self.isDirty = False
+        self.resultCode = None
         self.dialog.buttonRow.applyButton.Enable(False)
+        
         
     @eg.LogIt
     def SetIsDirty(self, flag=True):
@@ -242,6 +246,7 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         if self.nextResult == wx.ID_CANCEL:
             return False
         resultCode = eg.mainGreenlet.switch()
+        self.resultCode = resultCode
         if resultCode == wx.ID_CANCEL:
             return False
         return resultCode
@@ -250,8 +255,9 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
     def SetResult(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
-        self.dialog.buttonRow.applyButton.Enable(False)
-        self.isDirty = False
+        if self.resultCode != eg.ID_TEST:
+            self.dialog.buttonRow.applyButton.Enable(False)
+            self.isDirty = False
         self.nextResult = self.gr.parent.switch(args)
 
     
@@ -298,5 +304,5 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
             buttonRow.applyButton.Enable(True)
         else:
             buttonRow.applyButton.Enable(False)
-            
+        
             

@@ -24,6 +24,7 @@ import eg
 import wx
 import os
 import re
+from collections import defaultdict
 
 import wx.aui
 from wx.py.crust import CrustFrame
@@ -52,6 +53,22 @@ ADD_EVENT_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.EVENT_ICON)
 ADD_ACTION_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.ACTION_ICON)
 RESET_ICON = eg.Icons.PathIcon('images/error.png').GetBitmap()
 
+ID_DISABLED = wx.NewId()
+ID_EXECUTE = wx.NewId()
+ID_TOOLBAR_EXECUTE = wx.NewId()
+
+ID = defaultdict(wx.NewId, {
+    "Save": wx.ID_SAVE,
+    "Undo": wx.ID_UNDO,
+    "Redo": wx.ID_REDO,
+    "Cut": wx.ID_CUT,
+    "Copy": wx.ID_COPY,
+    "Paste": wx.ID_PASTE,
+    "Delete": wx.ID_DELETE,
+    "Disabled": ID_DISABLED,
+    "Execute": ID_EXECUTE,
+})
+
 Text = eg.text.MainFrame
 
         
@@ -61,6 +78,7 @@ class DefaultConfig:
     showToolbar = True
     hideOnClose = False
     logTime = False
+    indentLog = True
     expandOnEvents = False
     expandTillMacro = False
     perspective = None
@@ -68,6 +86,8 @@ class DefaultConfig:
 
 config = eg.GetConfig("mainFrame", DefaultConfig)
 
+def GetIcon(name):
+    return eg.Icons.GetIcon("images\\" + name + ".png")
 
 
 class MainFrame(wx.Frame):
@@ -84,14 +104,7 @@ class MainFrame(wx.Frame):
         self.iconState = 0
         self.findDialog = None
         self.openDialogs = []
-        self.menuState = eg.Bunch(
-            addEvent = False,
-            ddAction = False,
-            configure = False,
-            execute = False,
-            rename = False,
-            disable = False,
-        )
+        self.lastClickedTool = None
         self.style = (
             wx.MINIMIZE_BOX
             |wx.MAXIMIZE_BOX
@@ -128,8 +141,8 @@ class MainFrame(wx.Frame):
         self.popupMenu = self.CreateTreePopupMenu()
 
         value = document.isDirty.Subscribe(self.OnDocumentDirty)
-        self.toolBar.buttons.save.Enable(value)
-        self.menuBar.File.save.Enable(value)
+        self.toolBar.EnableTool(wx.ID_SAVE, value)
+        #self.menuBar.File.save.Enable(value)
         
         iconBundle = wx.IconBundle()
         iconBundle.AddIcon(eg.taskBarIcon.stateIcons[0])
@@ -138,11 +151,6 @@ class MainFrame(wx.Frame):
         iconBundle.AddIcon(icon)
         self.SetIcons(iconBundle)
         
-        self.editMenus = (
-            self.toolBar.buttons, 
-            self.MenuBar.Edit, 
-            self.popupMenu
-        )
         self.lastFocus = "None"
                 
         self.Bind(wx.EVT_ICONIZE, self.OnIconize)
@@ -157,7 +165,9 @@ class MainFrame(wx.Frame):
         self.SetSize(config.size)
         undoState = document.undoEvent.Subscribe(self.OnUndoEvent)
         self.OnUndoEvent(undoState)
-        selection = document.selectionEvent.Subscribe(self.OnTreeSelectionEvent)
+        selection = document.selectionEvent.Subscribe(
+            self.OnTreeSelectionEvent
+        )
         if selection is not None:
             self.OnTreeSelectionEvent(selection)
         # tell FrameManager to manage this frame
@@ -252,167 +262,220 @@ class MainFrame(wx.Frame):
         """
         Creates the toolbar of the frame.
         """
-        def OnLeftDown(event):
-            self.egEvent = self.document.ExecuteSelected()
-            event.Skip()
-            
-        def OnLeftUp(event):
-            self.egEvent.SetShouldEnd()
-            event.Skip()
-            
-        toolBar = eg.ToolBar(self, style=wx.TB_FLAT)
-        toolBar.SetParams(self, Text.Menu)
+        toolBar = wx.ToolBar(self, style=wx.TB_FLAT)
         toolBar.SetToolBitmapSize((16, 16))
-        Add = toolBar.AddButton
-        Add("New")
-        Add("Open")
-        Add("Save")
-        Add()
-        Add("Cut")
-        Add("Copy")
-        Add("Paste")
-        Add()
-        Add("Undo")
-        Add("Redo")
-        Add()
-        Add("AddPlugin", image=ADD_PLUGIN_ICON)
-        Add("AddFolder", image=ADD_FOLDER_ICON)
-        Add("AddMacro", image=ADD_MACRO_ICON)
-        Add("AddEvent", image=ADD_EVENT_ICON)
-        Add("AddAction", image=ADD_ACTION_ICON)
-        Add()
-        Add("Disabled")
-        Add()
-        Add("Execute", downFunc=OnLeftDown, upFunc=OnLeftUp)
+        text = Text.Menu
+        
+        def Append(ident, image):
+            toolBar.AddSimpleTool(ID[ident], image, getattr(text, ident))
+            
+        Append("New", GetIcon("New"))
+        Append("Open", GetIcon("Open"))
+        Append("Save", GetIcon("Save"))
+        toolBar.AddSeparator()
+        Append("Cut", GetIcon("Cut"))
+        Append("Copy", GetIcon("Copy"))
+        Append("Paste", GetIcon("Paste"))
+        toolBar.AddSeparator()
+        Append("Undo", GetIcon("Undo"))
+        Append("Redo", GetIcon("Redo"))
+        toolBar.AddSeparator()
+        Append("AddPlugin", ADD_PLUGIN_ICON)
+        Append("AddFolder", ADD_FOLDER_ICON)
+        Append("AddMacro", ADD_MACRO_ICON)
+        Append("AddEvent", ADD_EVENT_ICON)
+        Append("AddAction", ADD_ACTION_ICON)
+        toolBar.AddSeparator()
+        Append("Disabled", GetIcon("Disabled"))
+        toolBar.AddSeparator()
+        # the execute button must be added with unique id, because otherwise
+        # the menu command OnCmdExecute will be used in conjunction to 
+        # our special mouse click handlers
+        toolBar.AddSimpleTool(
+            ID_TOOLBAR_EXECUTE, 
+            GetIcon("Execute"), 
+            getattr(text, "Execute")
+        )
         if eg.debugLevel:
-            Add("Reset", image=RESET_ICON)
-
-        self.SetToolBar(toolBar)
+            Append("Reset", GetIcon("error"))
+        
         toolBar.Realize()
+        self.SetToolBar(toolBar)
+
+        toolBar.Bind(wx.EVT_LEFT_DOWN, self.OnToolBarLeftDown)
+        toolBar.Bind(wx.EVT_LEFT_UP, self.OnToolBarLeftUp)
         return toolBar
+    
+                    
+    @eg.LogIt
+    def OnToolBarLeftDown(self, event):
+        """
+        Handles the wx.EVT_LEFT_DOWN events for the toolbar.
+        """
+        x, y = event.GetPosition()
+        item = self.toolBar.FindToolForPosition(x, y)
+        if item and item.GetId() == ID_TOOLBAR_EXECUTE:
+            self.lastClickedTool = item
+            self.egEvent = self.document.ExecuteSelected()
+        event.Skip()
+        
+        
+    @eg.LogIt
+    def OnToolBarLeftUp(self, event):
+        """
+        Handles the wx.EVT_LEFT_UP events for the toolbar.
+        """
+        if self.lastClickedTool:
+            self.lastClickedTool = None
+            self.egEvent.SetShouldEnd()
+        event.Skip()
         
         
     def CreateMenuBar(self):
         """
         Creates the main menu bar and all its menus.
         """
-        menuBar = eg.MenuBar(self, Text.Menu)
-        menuItems = self.menuItems = eg.Bunch()
+        text = Text.Menu
+        menuBar = wx.MenuBar()
+
+        def Append(ident, hotkey="", kind=wx.ITEM_NORMAL, image=None):
+            label = getattr(text, ident, ident)
+            item = wx.MenuItem(menu, ID[ident], label + hotkey, "", kind)
+            if image:
+                item.SetBitmap(image)
+            menu.AppendItem(item)
+            func = getattr(self, "OnCmd" + ident)
+            def FuncWrapper(dummyEvent):
+                func()
+            self.Bind(wx.EVT_MENU, FuncWrapper, item)
+            return item
 
         # file menu
-        Add = menuBar.AddMenu("File").AddItem
-        Add("New", hotkey="Ctrl+N")
-        Add("Open", hotkey="Ctrl+O")
-        Add("Save", hotkey="Ctrl+S").Enable(False)
-        Add("SaveAs")
-        Add()
-        if eg.debugLevel:
-            Add("Export")
-            Add("Import")
-            Add()
-        Add("Options")
-        Add()
-        Add("Exit")
+        menu = wx.Menu()
+        menuBar.Append(menu, text.FileMenu)
+        Append("New", "\tCtrl+N")
+        Append("Open", "\tCtrl+O")
+        Append("Save", "\tCtrl+S").Enable(False)
+        Append("SaveAs")
+        menu.AppendSeparator()
+        Append("Options")
+        menu.AppendSeparator()
+        Append("Exit")
 
         # edit menu        
-        Add = menuBar.AddMenu("Edit").AddItem
-        menuItems.undo = Add("Undo", hotkey="Ctrl+Z")
-        menuItems.redo = Add("Redo", hotkey="Ctrl+Y")
-        Add()
-        menuItems.cut = Add("Cut", hotkey="Ctrl+X")
-        menuItems.copy = Add("Copy", hotkey="Ctrl+C")
-        menuItems.paste = Add("Paste", hotkey="Ctrl+V")
-        menuItems.delete = Add("Delete", hotkey="Del")
-        Add()
-        Add("Find", hotkey="Ctrl+F")
-        Add("FindNext", hotkey="F3")
+        menu = wx.Menu()
+        menuBar.Append(menu, text.EditMenu)
+        Append("Undo", "\tCtrl+Z")
+        Append("Redo", "\tCtrl+Y")
+        menu.AppendSeparator()
+        Append("Cut", "\tCtrl+X")
+        Append("Copy", "\tCtrl+C")
+        Append("Paste", "\tCtrl+V")
+        # notice that we add a ascii zero byte at the end of the hotkey.
+        # this way we prevent the normal accelerator to happen. We will later
+        # catch the key ourself.
+        oldLogging = wx.Log.EnableLogging(False) # suppress warning
+        Append("Delete", "\tDel\x00")
+        wx.Log.EnableLogging(oldLogging)
+        menu.AppendSeparator()
+        Append("Find", "\tCtrl+F")
+        Append("FindNext", "\tF3")
 
         # view menu        
-        Add = menuBar.AddMenu("View").AddItem
-        Add("HideShowToolbar", kind=wx.ITEM_CHECK).Check(config.showToolbar)
-        Add()
-        Add("ExpandAll")
-        Add("CollapseAll")
-        Add()
-        Add("ExpandOnEvents", kind=wx.ITEM_CHECK).Check(config.expandOnEvents)
-        Add("ExpandTillMacro", kind=wx.ITEM_CHECK)\
-            .Check(config.expandTillMacro)\
-            .Enable(config.expandOnEvents)
-        Add()
-        Add("LogMacros", kind=wx.ITEM_CHECK).Check(eg.config.logMacros)
-        Add("LogActions", kind=wx.ITEM_CHECK).Check(eg.config.logActions)
-        Add("LogTime", kind=wx.ITEM_CHECK).Check(config.logTime)
-        Add()
-        Add("ClearLog")
+        menu = wx.Menu()
+        menuBar.Append(menu, text.ViewMenu)
+        Append("HideShowToolbar", kind=wx.ITEM_CHECK).Check(config.showToolbar)
+        menu.AppendSeparator()
+        Append("ExpandAll")
+        Append("CollapseAll")
+        menu.AppendSeparator()
+        item = Append("ExpandOnEvents", kind=wx.ITEM_CHECK)
+        item.Check(config.expandOnEvents)
+        item = Append("ExpandTillMacro", kind=wx.ITEM_CHECK)
+        item.Check(config.expandTillMacro)
+        item.Enable(config.expandOnEvents)
+        menu.AppendSeparator()
+        Append("LogMacros", kind=wx.ITEM_CHECK).Check(eg.config.logMacros)
+        Append("LogActions", kind=wx.ITEM_CHECK).Check(eg.config.logActions)
+        Append("LogTime", kind=wx.ITEM_CHECK).Check(config.logTime)
+        Append("IndentLog", kind=wx.ITEM_CHECK).Check(config.indentLog)
+        menu.AppendSeparator()
+        Append("ClearLog")
                 
         # configuration menu
-        Add = menuBar.AddMenu("Configuration").AddItem
-        menuItems.addPlugin = Add("AddPlugin", image=ADD_PLUGIN_ICON)
-        menuItems.addFolder = Add("AddFolder", image=ADD_FOLDER_ICON)
-        menuItems.addMacro = Add("AddMacro", image=ADD_MACRO_ICON)
-        menuItems.addEvent = Add("AddEvent", image=ADD_EVENT_ICON)
-        menuItems.addAction = Add("AddAction", image=ADD_ACTION_ICON)
-        Add()
-        menuItems.configure = Add("Configure", hotkey="Return")
-        menuItems.rename = Add("Rename", hotkey="F2")
-        menuItems.execute = Add("Execute", hotkey="F5")
-        Add()
-        menuItems.disabled = Add(
-            "Disabled", hotkey="Ctrl+D", kind=wx.ITEM_CHECK
-        )
+        menu = wx.Menu()
+        menuBar.Append(menu, text.ConfigurationMenu)
+        Append("AddPlugin", image=ADD_PLUGIN_ICON)
+        Append("AddFolder", image=ADD_FOLDER_ICON)
+        Append("AddMacro", image=ADD_MACRO_ICON)
+        Append("AddEvent", image=ADD_EVENT_ICON)
+        Append("AddAction", image=ADD_ACTION_ICON)
+        menu.AppendSeparator()
+        Append("Configure", "\tReturn")
+        Append("Rename", "\tF2")
+        Append("Execute", "\tF5")
+        menu.AppendSeparator()
+        Append("Disabled", "\tCtrl+D", kind=wx.ITEM_CHECK)
         
         # help menu
-        Add = menuBar.AddMenu("Help").AddItem
-        Add("WebHomepage")
-        Add("WebForum")
-        Add("WebWiki")
-        Add()
-        Add("CheckUpdate")
-        Add()
-        Add("About")
+        menu = wx.Menu()
+        menuBar.Append(menu, text.HelpMenu)
+        Append("WebHomepage")
+        Append("WebForum")
+        Append("WebWiki")
+        menu.AppendSeparator()
+        Append("CheckUpdate")
+        menu.AppendSeparator()
+        Append("About")
         if eg.debugLevel:
-            Add()
-            Add("Reload")
-            Add("Shell")
-            Add("GetInfo")
-            Add("CollectGarbage")
-            Add("Reset", hotkey="Pause")
-            Add("AddEventDialog")
+            menu = wx.Menu()
+            menuBar.Append(menu, "Debug")
+            Append("Export")
+            Append("Import")
+            menu.AppendSeparator()
+            Append("Reload")
+            Append("Shell")
+            Append("GetInfo")
+            Append("CollectGarbage")
+            Append("Reset", "\tPause")
+            Append("AddEventDialog")
             
-        menuBar.Realize()
+        self.SetMenuBar(menuBar)
         return menuBar
         
         
     def CreateTreePopupMenu(self):
         """
         Creates the pop-up menu for the configuration tree.
-        
-        Since our custom menu code automatically assign events to the window
-        that creates the menu, we create it here and not in the tree control,
-        because most menu commands are handled by the frame.
         """
-        popupMenu = eg.Menu(self, Text.Menu.EditMenu, Text.Menu)
-        Add = popupMenu.AddItem
-        Add("Undo")
-        Add("Redo")
-        Add()
-        Add("Cut")
-        Add("Copy")
-        Add("Paste")
-        Add("Delete")
-        Add()
-        Add("AddPlugin", image=ADD_PLUGIN_ICON)
-        Add("AddFolder", image=ADD_FOLDER_ICON)
-        Add("AddMacro", image=ADD_MACRO_ICON)
-        Add("AddEvent", image=ADD_EVENT_ICON)
-        Add("AddAction", image=ADD_ACTION_ICON)
-        Add()
-        Add("Configure")
-        Add("Rename")
-        Add("Execute")
-        Add()
-        Add("Disabled", kind=wx.ITEM_CHECK)
-        return popupMenu
+        menu = wx.Menu()
+        text = Text.Menu
+        def Append(ident, kind=wx.ITEM_NORMAL, image=wx.NullBitmap):
+            item = wx.MenuItem(menu, ID[ident], getattr(text, ident), "", kind)
+            item.SetBitmap(image)
+            menu.AppendItem(item)
+            return item
+            
+        Append("Undo")
+        Append("Redo")
+        menu.AppendSeparator()
+        Append("Cut")
+        Append("Copy")
+        Append("Paste")
+        Append("Delete")
+        menu.AppendSeparator()
+        Append("AddPlugin", image=ADD_PLUGIN_ICON)
+        Append("AddFolder", image=ADD_FOLDER_ICON)
+        Append("AddMacro", image=ADD_MACRO_ICON)
+        Append("AddEvent", image=ADD_EVENT_ICON)
+        Append("AddAction", image=ADD_ACTION_ICON)
+        menu.AppendSeparator()
+        Append("Configure")
+        Append("Rename")
+        Append("Execute")
+        menu.AppendSeparator()        
+        Append("Disabled", kind=wx.ITEM_CHECK)
+        return menu
     
         
     def CreateTreeCtrl(self):
@@ -440,6 +503,7 @@ class MainFrame(wx.Frame):
         logCtrl.Freeze()
         if not config.logTime:
             logCtrl.SetTimeLogging(False)
+        logCtrl.SetIndent(config.indentLog)
         self.auiManager.AddPane(
             logCtrl, 
             wx.aui.AuiPaneInfo().
@@ -474,9 +538,9 @@ class MainFrame(wx.Frame):
         self.SetTitle("EventGhost %s - %s" % (eg.Version.string, filename))
 
     
-    def OnDocumentDirty(self, dirtyFlag):
-        self.toolBar.buttons.save.Enable(dirtyFlag)
-        self.menuBar.File.save.Enable(dirtyFlag)
+    def OnDocumentDirty(self, isDirty):
+        self.toolBar.EnableTool(wx.ID_SAVE, bool(isDirty))
+        self.menuBar.Enable(wx.ID_SAVE, bool(isDirty))
         
         
     def OnPaneClose(self, event):
@@ -489,7 +553,7 @@ class MainFrame(wx.Frame):
         paneName = event.GetPane().name
         if paneName == "toolBar":
             config.showToolbar = False
-            self.menuBar.View.hideShowToolbar.Check(False)
+            self.menuBar.Check(ID["HideShowToolbar"], False)
             
         
     def OnPaneMaximize(self, dummyEvent):
@@ -538,14 +602,14 @@ class MainFrame(wx.Frame):
 
     def OnMenuOpen(self, dummyEvent):
         """ Handle wx.EVT_MENU_OPEN """
-        self.SetupEditMenu(self.menuItems)            
+        self.SetupEditMenu(self.menuBar)            
             
             
     @eg.LogIt
     def OnClipboardChange(self, dummyValue):
         if self.lastFocus == self.treeCtrl:
             canPaste = self.document.selection.CanPaste()
-            self.toolBar.buttons.paste.Enable(canPaste)
+            self.toolBar.EnableTool(wx.ID_PASTE, canPaste)
     
     
     def OnFocusChange(self, focus):
@@ -562,11 +626,11 @@ class MainFrame(wx.Frame):
             self.UpdateViewOptions()
             
         self.lastFocus = focus
+        toolBar = self.toolBar
         canCut, canCopy, canPaste, canDelete = self.GetEditCmdState()
-        toolBarButtons = self.toolBar.buttons
-        toolBarButtons.cut.Enable(canCut)
-        toolBarButtons.copy.Enable(canCopy)
-        toolBarButtons.paste.Enable(canPaste)
+        toolBar.EnableTool(wx.ID_CUT, canCut)
+        toolBar.EnableTool(wx.ID_COPY, canCopy)
+        toolBar.EnableTool(wx.ID_PASTE, canPaste)
         
         
     def AddDialog(self, dialog):
@@ -580,7 +644,7 @@ class MainFrame(wx.Frame):
         dialog = event.GetWindow()
         try:
             self.openDialogs.remove(dialog)
-        except:
+        except ValueError:
             pass
         if len(self.openDialogs) == 0:
             self.SetWindowStyleFlag(self.style)
@@ -611,57 +675,42 @@ class MainFrame(wx.Frame):
             return (False, False, False, False)
         
     
-    def OnTreeSelectionEvent(self, selection):
-        isFolder = selection.__class__ in (
-            self.document.FolderItem, 
-            self.document.RootItem
-        )
-        menuState = self.menuState
-        menuState.addEvent = bool(selection.DropTest(EventItem))
-        menuState.addAction = not isFolder
-        menuState.configure = selection.isConfigurable
-        menuState.execute = selection.isExecutable and selection.isEnabled
-        menuState.rename = selection.isRenameable
-        menuState.disabled = selection.isDeactivatable
-        
+    def OnTreeSelectionEvent(self, dummySelection):
         canCut, canCopy, canPaste, canDelete = self.GetEditCmdState()
-        toolBarButton = self.toolBar.buttons
-        toolBarButton.cut.Enable(canCut)
-        toolBarButton.copy.Enable(canCopy)
-        toolBarButton.paste.Enable(canPaste)
-        toolBarButton.addAction.Enable(menuState.addAction)
-        toolBarButton.addEvent.Enable(menuState.addEvent)
-        toolBarButton.disabled.Enable(menuState.disabled)
-        toolBarButton.execute.Enable(menuState.execute)
+        self.toolBar.EnableTool(wx.ID_CUT, canCut)
+        self.toolBar.EnableTool(wx.ID_COPY, canCopy)
+        self.toolBar.EnableTool(wx.ID_PASTE, canPaste)
         
     
     def OnUndoEvent(self, undoState):
         hasUndos, hasRedos, undoName, redoName = undoState
         undoName = Text.Menu.Undo + undoName
         redoName = Text.Menu.Redo + redoName
-        for editMenu in self.editMenus:
-            editMenu.undo.Enable(hasUndos)
-            editMenu.undo.SetText(undoName)
-            editMenu.redo.Enable(hasRedos)
-            editMenu.redo.SetText(redoName)
+        
+        self.menuBar.Enable(wx.ID_UNDO, hasUndos)
+        self.menuBar.SetLabel(wx.ID_UNDO, undoName + "\tCtrl+Z")
+        self.menuBar.Enable(wx.ID_REDO, hasRedos)
+        self.menuBar.SetLabel(wx.ID_REDO, redoName + "\tCtrl+Y")
+            
+        self.popupMenu.Enable(wx.ID_UNDO, hasUndos)
+        self.popupMenu.SetLabel(wx.ID_UNDO, undoName)
+        self.popupMenu.Enable(wx.ID_REDO, hasRedos)
+        self.popupMenu.SetLabel(wx.ID_REDO, redoName)
+            
+        self.toolBar.EnableTool(wx.ID_UNDO, hasUndos)
+        self.toolBar.SetToolShortHelp(wx.ID_UNDO, undoName)
+        self.toolBar.EnableTool(wx.ID_REDO, hasRedos)
+        self.toolBar.SetToolShortHelp(wx.ID_REDO, redoName)
         
         
-    def SetupEditMenu(self, menuItems):
+    def SetupEditMenu(self, menu):
         canCut, canCopy, canPaste, canDelete = self.GetEditCmdState()
-        menuItems.cut.Enable(canCut)
-        menuItems.copy.Enable(canCopy)
-        menuItems.paste.Enable(canPaste)
-        menuItems.delete.Enable(canDelete)
-        menuState = self.menuState
-        menuItems.addAction.Enable(menuState.addAction)
-        menuItems.addEvent.Enable(menuState.addEvent)
-        menuItems.configure.Enable(menuState.configure)
-        menuItems.execute.Enable(menuState.execute)
-        menuItems.rename.Enable(menuState.rename)
-        menuItems.disabled.Enable(menuState.disabled)
-        menuItems.disabled.Check(
-            self.document.selection and not self.document.selection.isEnabled
-        )
+        menu.Enable(wx.ID_CUT, canCut)
+        menu.Enable(wx.ID_COPY, canCopy)
+        menu.Enable(wx.ID_PASTE, canPaste)
+        menu.Enable(wx.ID_DELETE, canDelete)
+        selection = self.document.selection
+        menu.Check(ID_DISABLED, selection and not selection.isEnabled)
         
         
     def UpdateViewOptions(self):
@@ -837,33 +886,39 @@ class MainFrame(wx.Frame):
 
     def OnCmdLogMacros(self):
         eg.config.logMacros = not eg.config.logMacros
-        self.menuBar.View.logMacros.Check(eg.config.logMacros)
+        self.menuBar.Check(ID["LogMacros"], eg.config.logMacros)
         
         
     def OnCmdLogActions(self):
         eg.config.logActions = not eg.config.logActions
-        self.menuBar.View.logActions.Check(eg.config.logActions)
+        self.menuBar.Check(ID["LogActions"], eg.config.logActions)
         
         
     def OnCmdExpandOnEvents(self):
         config.expandOnEvents = not config.expandOnEvents
-        self.menuBar.View.expandOnEvents.Check(config.expandOnEvents)
-        self.menuBar.View.expandTillMacro.Enable(config.expandOnEvents)
+        self.menuBar.Check(ID["ExpandOnEvents"], config.expandOnEvents)
+        self.menuBar.Enable(ID["ExpandTillMacro"], config.expandOnEvents)
         self.UpdateViewOptions()
         
         
     def OnCmdExpandTillMacro(self):
         config.expandTillMacro = not config.expandTillMacro
-        self.menuBar.View.expandTillMacro.Check(config.expandTillMacro)
+        self.menuBar.Check(ID["ExpandTillMacro"], config.expandTillMacro)
         self.UpdateViewOptions()
         
         
     def OnCmdLogTime(self):
-        flag = self.menuBar.View.logTime.IsChecked()
+        flag = self.menuBar.IsChecked(ID["LogTime"])
         config.logTime = flag
         self.logCtrl.SetTimeLogging(flag)
     
     
+    def OnCmdIndentLog(self):
+        shouldIndent = self.menuBar.IsChecked(ID["IndentLog"])
+        config.indentLog = shouldIndent
+        self.logCtrl.SetIndent(shouldIndent)
+        
+        
     def OnCmdExpandAll(self):
         self.treeCtrl.OnCmdExpandAll()
     
@@ -878,17 +933,17 @@ class MainFrame(wx.Frame):
     
     def OnCmdWebHomepage(self):
         import webbrowser
-        webbrowser.open("http://www.eventghost.org/", True, True)
+        webbrowser.open("http://www.eventghost.org/", 2, 1)
     
     
     def OnCmdWebForum(self):
         import webbrowser
-        webbrowser.open("http://www.eventghost.org/forum/", True, True)
+        webbrowser.open("http://www.eventghost.org/forum/", 2, 1)
     
     
     def OnCmdWebWiki(self):
         import webbrowser
-        webbrowser.open("http://www.eventghost.org/wiki/", True, True)
+        webbrowser.open("http://www.eventghost.org/wiki/", 2, 1)
     
     
     def OnCmdCheckUpdate(self):
@@ -942,10 +997,10 @@ class MainFrame(wx.Frame):
     
         from pprint import pprint
         print "unreachable object count:", gc.collect()
-        l = gc.garbage[:]
-        for i, o in enumerate(l):
+        garbageList = gc.garbage[:]
+        for i, obj in enumerate(garbageList):
             print "Object Num %d:" % i
-            pprint(o)
+            pprint(obj)
             print "Referrers:"
             #print(gc.get_referrers(o))
             print "Referents:"

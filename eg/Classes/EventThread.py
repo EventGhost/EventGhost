@@ -24,11 +24,7 @@ import eg
 import traceback
 import time
 from functools import partial
-from eg.WinApi.Dynamic import (
-    GetTickCount, 
-    SetProcessWorkingSetSize, 
-    GetCurrentProcess
-)
+from eg.WinApi.Dynamic import GetTickCount, SetProcessWorkingSetSize
 
 EventGhostEvent = eg.EventGhostEvent
 
@@ -40,14 +36,13 @@ class EventThread(eg.ThreadWorker):
         eg.ThreadWorker.__init__(self)
         eg.event = EventGhostEvent("")
         self.startupEvent = None
-        self.currentProcess = GetCurrentProcess()
 
 
     def Poll(self):
         if eg.config.limitMemory and eg.document.frame is None:
             try:
                 SetProcessWorkingSetSize(
-                    self.currentProcess,
+                    eg.processId,
                     3670016,
                     eg.config.limitMemorySize * 1048576
                 )
@@ -103,8 +98,6 @@ class EventThread(eg.ThreadWorker):
     
     @eg.LogIt
     def StartSession(self, filename):
-        self.shouldRun = True
-
         eg.actionThread.CallWait(
             partial(eg.actionThread.StartSession, filename),
             120
