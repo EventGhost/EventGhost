@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------
-# This file is automatically created by the MakeImports.py script.
+# This file was automatically created by the BuildImports.py script.
 # Don't try to edit this file yourself.
 #-----------------------------------------------------------------------------
 
@@ -718,7 +718,6 @@ import XVThumbImagePlugin
 import _imaging
 import _imagingft
 import _imagingmath
-import _imagingtk
 import __init__
 
 # modules found for package 'comtypes'
