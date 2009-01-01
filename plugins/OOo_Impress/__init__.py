@@ -19,7 +19,7 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-#Last change: 2009-01-01 13:28
+#Last change: 2009-01-01 17:00
 #===============================================================================
 
 eg.RegisterPlugin(
@@ -81,7 +81,7 @@ from win32com.client.dynamic import Dispatch
 from win32api import GetSystemMetrics
 from win32gui import SetFocus, SetForegroundWindow, SetActiveWindow, IsWindow
 from eg.WinApi import SendMessageTimeout
-from eg.WinApi.Dynamic import PostMessage
+from eg.WinApi.Dynamic import PostMessage, CreateEvent, SetEvent
 
 WM_CLOSE      = 16
 WM_SYSCOMMAND = 274
@@ -121,7 +121,8 @@ class Menu(wx.Frame):
         fore,
         back,
         fontInfo,
-        testFlag
+        testFlag,
+        event
     ):
         self.plugin = plugin
         self.fore = fore
@@ -175,7 +176,8 @@ class Menu(wx.Frame):
             
         self.Centre()
         self.Show(True)
-        
+        wx.Yield()
+        SetEvent(event)        
         
     def On2Click(self,evt):
         wx.CallAfter(self.plugin.StartFromMenu)
@@ -194,7 +196,7 @@ class Menu(wx.Frame):
         def run(self):
             sleep(5)
             try:
-                self.plugin.menuDlg.Close() #
+                self.plugin.menuDlg.Close()
                 self.plugin.menuDlg = None
             except:
                 pass     
@@ -447,14 +449,17 @@ class ShowMenu(eg.ActionClass):
 
         self.plugin.choices=choices
         self.plugin.menuDlg = Menu()
+        self.event = CreateEvent(None, 0, 0, None)
         wx.CallAfter(self.plugin.menuDlg.ShowMenu,
             self.plugin,
             choices,
             fore,
             back,
             fontInfo,
-            False
+            False,
+            self.event
         )
+        eg.actionThread.WaitOnEvent(self.event)
 #===============================================================================
 
     def GetLabel(
@@ -722,14 +727,17 @@ class ShowMenu(eg.ActionClass):
         def OnButton(event):
             self.plugin.choices = self.choices
             self.plugin.menuDlg = Menu()
-            self.plugin.menuDlg.ShowMenu(
+            self.event = CreateEvent(None, 0, 0, None)
+            wx.CallAfter(self.plugin.menuDlg.ShowMenu,
                 self.plugin,
                 self.choices,
                 foreColourButton.GetValue(),
                 backColourButton.GetValue(),
                 fontButton.GetValue(), 
-                True
+                True,
+                self.event
             )
+            eg.actionThread.WaitOnEvent(self.event)        
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
 
         while panel.Affirmed():
@@ -738,7 +746,7 @@ class ShowMenu(eg.ActionClass):
             foreColourButton.GetValue(),
             backColourButton.GetValue(),
             fontButton.GetValue(), 
-        )
+        )        
 #====================================================================
 
 class MoveCursor(eg.ActionClass):
@@ -927,7 +935,6 @@ class OOo_Impress(eg.PluginClass):
         if self.menuDlg is not None:
             sel=self.menuDlg.GetSizer().GetChildren()[0].GetWindow().\
                 GetSelection()
-#            self.menuDlg.Destroy()
             self.menuDlg.Close()
             self.menuDlg = None
             self.StartPresentation(self.choices[sel][1])
