@@ -84,8 +84,6 @@ class PythonCommand(eg.ActionWithStringParameter):
             except SyntaxError:
                 exec(pythonstring, {}, eg.globals.__dict__)
                 return eg.result
-        #finally:
-        #    pass
         except:
             eg.PrintTraceback(
                 eg.text.Error.InAction % pythonstring,

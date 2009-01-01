@@ -58,7 +58,7 @@ class Text:
     
     
 
-class NetworkSender(eg.PluginClass):
+class NetworkSender(eg.PluginBase):
     canMultiLoad = True
     text = Text
     
@@ -109,10 +109,8 @@ class NetworkSender(eg.PluginClass):
         #self.socket = sock
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.settimeout(2.0)
-        connected = False
         try:
             sock.connect((self.host, self.port))
-            connected = True
             sock.settimeout(1.0)
             # First wake up the server, for security reasons it does not
             # respond by it self it needs this string, why this odd word ?

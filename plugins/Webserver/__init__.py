@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 eg.RegisterPlugin(
     name = "Webserver",
@@ -50,7 +51,7 @@ eg.RegisterPlugin(
     ),
 )
 
-
+import wx
 import BaseHTTPServer
 import SimpleHTTPServer
 import os
@@ -163,7 +164,8 @@ class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         for word in words:
             drive, word = os.path.splitdrive(word)
             head, word = os.path.split(word)
-            if word in (os.curdir, os.pardir): continue
+            if word in (os.curdir, os.pardir): 
+                continue
             path = os.path.join(path, word)
         return path
 
@@ -180,7 +182,7 @@ class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 
 
-class Webserver(eg.PluginClass):
+class Webserver(eg.PluginBase):
     canMultiLoad = True
 
     class text:
@@ -278,13 +280,13 @@ class Webserver(eg.PluginClass):
         )
         eg.EqualizeWidths(labels)
 
-        ACV = wx.ALIGN_CENTER_VERTICAL
+        acv = wx.ALIGN_CENTER_VERTICAL
         sizer = wx.FlexGridSizer(3, 2, 5, 5)
-        sizer.Add(labels[0], 0, ACV)
+        sizer.Add(labels[0], 0, acv)
         sizer.Add(portCtrl)
-        sizer.Add(labels[1], 0, ACV)
+        sizer.Add(labels[1], 0, acv)
         sizer.Add(filepathCtrl)
-        sizer.Add(labels[2], 0, ACV)
+        sizer.Add(labels[2], 0, acv)
         sizer.Add(editCtrl)
         staticBox = wx.StaticBox(panel, label=text.generalBox)
         staticBoxSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
@@ -292,11 +294,11 @@ class Webserver(eg.PluginClass):
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
         
         sizer = wx.FlexGridSizer(3, 2, 5, 5)
-        sizer.Add(labels[3], 0, ACV)
+        sizer.Add(labels[3], 0, acv)
         sizer.Add(authRealmCtrl)
-        sizer.Add(labels[4], 0, ACV)
+        sizer.Add(labels[4], 0, acv)
         sizer.Add(authUsernameCtrl)
-        sizer.Add(labels[5], 0, ACV)
+        sizer.Add(labels[5], 0, acv)
         sizer.Add(authPasswordCtrl)
         staticBox = wx.StaticBox(panel, label=text.authBox)
         staticBoxSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)

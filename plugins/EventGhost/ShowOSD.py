@@ -316,7 +316,7 @@ class OSDFrame(wx.Frame):
         
      
     
-class ShowOSD(eg.ActionClass):
+class ShowOSD(eg.ActionBase):
     name = "Show OSD"
     description = "Shows a simple On Screen Display."
     iconFile = "icons/ShowOSD"
@@ -396,7 +396,7 @@ class ShowOSD(eg.ActionClass):
         eg.actionThread.WaitOnEvent(event)
 
 
-    def GetLabel(self, osdText, *args):
+    def GetLabel(self, osdText, *dummyArgs):
         return self.text.label % osdText.replace("\n", r"\n")
     
     

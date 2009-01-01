@@ -61,17 +61,16 @@ DEBUG = False
 if DEBUG:
     log = eg.Print
 else:
-    def log(mesg):
+    def log(dummyMesg):
         pass
     
 
-class Server_Handler (asynchat.async_chat):
+class ServerHandler(asynchat.async_chat):
     """Telnet engine class. Implements command line user interface."""
     
-    def __init__ (self, sock, addr, hex_md5, cookie, plugin, server_ref):
+    def __init__(self, sock, addr, hex_md5, cookie, plugin, server):
         log("Server Handler inited")
         self.plugin = plugin
-        self.server_ref = server_ref
         
         # Call constructor of the parent class
         asynchat.async_chat.__init__(self, sock)
@@ -93,7 +92,7 @@ class Server_Handler (asynchat.async_chat):
         asynchat.async_chat.handle_close(self)
     
     
-    def collect_incoming_data (self, data):
+    def collect_incoming_data(self, data):
         """Put data read from socket to a buffer
         """
         # Collect data in input buffer
@@ -107,7 +106,7 @@ class Server_Handler (asynchat.async_chat):
             asynchat.async_chat.push(self, data)
     
     
-    def found_terminator (self):
+    def found_terminator(self):
         """
         This method is called by asynchronous engine when it finds
         command terminator in the input stream
@@ -206,7 +205,7 @@ class Server(asyncore.dispatcher):
         # Accept new connection
         log("handle_accept")
         (sock, addr) = self.accept()
-        Server_Handler(
+        ServerHandler(
             sock, 
             addr, 
             self.hex_md5, 
@@ -217,7 +216,7 @@ class Server(asyncore.dispatcher):
 
 
 
-class NetworkReceiver(eg.PluginClass):
+class NetworkReceiver(eg.PluginBase):
     canMultiLoad = True
     text = Text
     

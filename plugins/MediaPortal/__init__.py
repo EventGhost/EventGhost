@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 eg.RegisterPlugin(
     name = "MediaPortal",
@@ -114,7 +115,7 @@ from eg.WinApi import SendMessageTimeout
 gWindowMatcher = eg.WindowMatcher("MediaPortal.exe")
 
 
-class ActionPrototype(eg.ActionClass):
+class ActionPrototype(eg.ActionBase):
     
     def __call__(self):
         try:
@@ -125,7 +126,7 @@ class ActionPrototype(eg.ActionClass):
 
 
 
-class MediaPortal(eg.PluginClass):
+class MediaPortal(eg.PluginBase):
     
     def __init__(self):
         self.AddActionsFromList(ACTIONS, ActionPrototype)

@@ -69,7 +69,7 @@ class Text:
     errorMesg = "No X10 receiver found!"    
 
 
-gRemotes = [
+REMOTES = [
     [
         "ATI Remote Wonder",
         {
@@ -193,49 +193,41 @@ gRemotes = [
 ]
 
 
-gRemotesOrder = [2,0,1,3]
+REMOTES_SORT_ORDER = [2, 0, 1, 3]
 
 
 class X10Events:
+    plugin = None
     
+    @eg.LogIt
     def OnX10Command(
         self, 
         bszCommand, 
         eCommand, 
         lAddress, 
-        EKeyState,
+        eKeyState,
         lSequence, 
         eCommandType, 
         varTimestamp
     ):
-        if EKeyState == 3:
+        if eKeyState == 3:
             return
         plugin = self.plugin
         remoteId = (lAddress >> 4) + 1
         if remoteId not in plugin.ids:
             return
         event = str(bszCommand)
-        if EKeyState == 1:
+        if eKeyState == 1:
             plugin.TriggerEnduringEvent(plugin.mappingTable.get(event, event))
-        elif EKeyState == 2:
+        elif eKeyState == 2:
             plugin.EndLastEvent()
         
-        
-    @eg.LogIt
-    def __getattr__(self, name):
-        "Create event handler methods on demand"
-        if name.startswith("__") and name.endswith("__"):
-            raise AttributeError(name)
-
-        def handler(*args):
-            print args
-            return 0
-
-        return handler
-        
-        
+                
+ 
 class X10ThreadWorker(eg.ThreadWorker):
     comInstance = None
+    plugin = None
+    eventHandler = None
     
     def Setup(self, plugin, eventHandler):
         self.plugin = plugin
@@ -244,7 +236,6 @@ class X10ThreadWorker(eg.ThreadWorker):
             'X10net.X10Control.1', 
             eventHandler
         )
-
         
     def Finish(self):
         if self.comInstance:
@@ -253,14 +244,14 @@ class X10ThreadWorker(eg.ThreadWorker):
         
         
         
-class X10(eg.PluginClass):
+class X10(eg.PluginBase):
     text = Text
     
     def __start__(self, remoteType=None, ids=None, prefix=None):
         self.remoteType = remoteType
         self.ids = ids
         self.info.eventPrefix = prefix
-        self.mappingTable = gRemotes[remoteType][1]
+        self.mappingTable = REMOTES[remoteType][1]
         
         class SubX10Events(X10Events):
             plugin = self
@@ -271,18 +262,12 @@ class X10(eg.PluginClass):
             raise self.Exception(self.text.errorMesg)
         
 
-    def SetArguments(self, remoteType=2, ids=None, prefix=None):
-        eventList = [(name, None) for name in gRemotes[remoteType][1].values()]
-        eventList.sort()
-        self.RegisterEvents(eventList)
-        
-        
     def __stop__(self):
         self.workerThread.Stop(10)
             
             
-    def GetLabel(self, remoteType=None, ids=None, prefix=None):
-        return "X10: " + gRemotes[remoteType][0]
+    def GetLabel(self, remoteType, *dummyArgs):
+        return "X10: " + REMOTES[remoteType][0]
         
         
     def Configure(self, remoteType=2, ids=None, prefix="X10"):
@@ -290,9 +275,9 @@ class X10(eg.PluginClass):
         text = self.text
         fbtypes = []
         selection = 0
-        for i, id in enumerate(gRemotesOrder):
-            fbtypes.append(gRemotes[id][0])
-            if id == remoteType:
+        for i, remoteId in enumerate(REMOTES_SORT_ORDER):
+            fbtypes.append(REMOTES[remoteId][0])
+            if remoteId == remoteType:
                 selection = i
         remoteTypeCtrl = panel.Choice(selection, fbtypes)
         prefixCtrl = panel.TextCtrl(prefix)
@@ -322,7 +307,7 @@ class X10(eg.PluginClass):
 
         rightBtnSizer = eg.VBoxSizer(
             (selectAllButton, 0, wx.EXPAND),
-            ((5,5), 1),
+            ((5, 5), 1),
             (selectNoneButton, 0, wx.EXPAND),
         )
         idSizer = eg.HBoxSizer(
@@ -342,19 +327,18 @@ class X10(eg.PluginClass):
         )
         mainSizer = eg.HBoxSizer(
             (leftSizer),
-            ((0,0), 1, wx.EXPAND),
+            ((0, 0), 1, wx.EXPAND),
             (wx.StaticLine(panel, style=wx.LI_VERTICAL), 0, wx.EXPAND),
-            ((0,0), 1, wx.EXPAND),
+            ((0, 0), 1, wx.EXPAND),
             (rightSizer),
-            ((0,0), 1, wx.EXPAND),
+            ((0, 0), 1, wx.EXPAND),
         )
         panel.sizer.Add(mainSizer, 1, wx.EXPAND)
         
         while panel.Affirmed():
             panel.SetResult(
-                gRemotesOrder[remoteTypeCtrl.GetValue()], 
+                REMOTES_SORT_ORDER[remoteTypeCtrl.GetValue()], 
                 [i+1 for i, button in enumerate(idBtns) if button.GetValue()], 
                 prefixCtrl.GetValue()
             )
-
 

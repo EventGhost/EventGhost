@@ -20,8 +20,11 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-    
-class NewJumpIf(eg.ActionClass):
+import eg
+import wx
+
+
+class NewJumpIf(eg.ActionBase):
     name = "Jump"
     description = (
         "Jumps to another macro, if the specified condition is "
@@ -55,9 +58,10 @@ class NewJumpIf(eg.ActionClass):
         if kind == 2 or (bool(eg.result) != bool(kind)):
             if gosub:
                 eg.programReturnStack.append(eg.programCounter)
-            next = link.target
-            next_id = next.parent.GetChildIndex(next)
-            eg.programCounter = (next, next_id)
+            nextItem = link.target
+            nextIndex = nextItem.parent.GetChildIndex(nextItem)
+            eg.indent += 1
+            eg.programCounter = (nextItem, nextIndex)
         return eg.result
     
         
@@ -87,3 +91,4 @@ class NewJumpIf(eg.ActionClass):
         while panel.Affirmed():
             link.SetTarget(linkCtrl.GetValue())
             panel.SetResult(link, kindCtrl.GetValue(), gosubCtrl.GetValue())
+

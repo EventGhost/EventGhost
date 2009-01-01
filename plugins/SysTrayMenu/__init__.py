@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 eg.RegisterPlugin(
     name = "System Tray Menu",
@@ -44,8 +45,9 @@ class Text:
     unnamedEvent = "Event%s"
     
     
-import types
+import wx
 import wx.gizmos
+import types
 
 class MenuItemData:
     pass
@@ -150,7 +152,7 @@ class MenuTreeListCtrl(wx.gizmos.TreeListCtrl):
         
     
     
-class SysTrayMenu(eg.PluginClass):
+class SysTrayMenu(eg.PluginBase):
     text = Text
     
     def __init__(self):
@@ -217,7 +219,7 @@ class SysTrayMenu(eg.PluginClass):
         root = tree.GetRootItem()
         
         @eg.LogIt
-        def OnSelectionChanged(event):
+        def OnSelectionChanged(dummyEvent):
             itemType = 0
             item = tree.GetSelection()
             if item == root:
@@ -244,7 +246,7 @@ class SysTrayMenu(eg.PluginClass):
         # Delete button
         deleteButton = wx.Button(panel, -1, text.deleteButton)
         deleteButton.Enable(False)
-        def OnDelete(event):
+        def OnDelete(dummyEvent):
             item = tree.GetSelection()
             next = tree.GetNextSibling(item)
             if not next.IsOk():
@@ -260,7 +262,7 @@ class SysTrayMenu(eg.PluginClass):
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_UP, wx.ART_OTHER, (16, 16))
         upButton = wx.BitmapButton(panel, -1, bmp)
         upButton.Enable(False)
-        def OnUp(event):
+        def OnUp(dummyEvent):
             item = tree.GetSelection()
             previous = tree.GetPrevSibling(item)
             if previous.IsOk():
@@ -277,11 +279,11 @@ class SysTrayMenu(eg.PluginClass):
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_DOWN, wx.ART_OTHER, (16, 16))
         downButton = wx.BitmapButton(panel, -1, bmp)
         downButton.Enable(False)
-        def OnDown(event):
+        def OnDown(dummyEvent):
             item = tree.GetSelection()
-            next = tree.GetNext(item)
-            if next is not None:
-                newId = tree.CopyItem(item, tree.GetItemParent(next), next)
+            nextId = tree.GetNext(item)
+            if nextId is not None:
+                newId = tree.CopyItem(item, tree.GetItemParent(nextId), nextId)
                 tree.Delete(item)
                 tree.SelectItem(newId)
                 tree.EnsureVisible(newId)
@@ -290,7 +292,7 @@ class SysTrayMenu(eg.PluginClass):
         # Add menu item button
         addItemButton = wx.Button(panel, -1, text.addItemButton)
         @eg.LogIt
-        def OnAddItem(event):
+        def OnAddItem(dummyEvent):
             numStr = str(tree.GetCount() + 1)
             item = tree.AppendItem(root, text.unnamedLabel % numStr)
             data = ("", "item", "", tree.GetNewMenuId())
@@ -304,7 +306,7 @@ class SysTrayMenu(eg.PluginClass):
         
         # Add separator button
         addSeparatorButton = wx.Button(panel, -1, text.addSeparatorButton)
-        def OnAddSeparator(event):
+        def OnAddSeparator(dummyEvent):
             item = tree.AppendItem(root, "---------")
             tree.SetPyData(item, ("", "separator", "", tree.GetNewMenuId()))
             tree.Expand(tree.GetItemParent(item))
@@ -342,14 +344,12 @@ class SysTrayMenu(eg.PluginClass):
 
         editSizer = wx.FlexGridSizer(2, 2, 5, 5)
         editSizer.AddGrowableCol(1)
-        editSizer.AddMany(
-            (
-                (panel.StaticText(text.editLabel), 0, wx.ALIGN_CENTER_VERTICAL),
-                (labelBox, 0, wx.EXPAND),
-                (panel.StaticText(text.editEvent), 0, wx.ALIGN_CENTER_VERTICAL),
-                (eventBox, 0, wx.EXPAND),
-            )
-        )
+        editSizer.AddMany((
+            (panel.StaticText(text.editLabel), 0, wx.ALIGN_CENTER_VERTICAL),
+            (labelBox, 0, wx.EXPAND),
+            (panel.StaticText(text.editEvent), 0, wx.ALIGN_CENTER_VERTICAL),
+            (eventBox, 0, wx.EXPAND),
+        ))
         
         mainSizer = eg.HBoxSizer(
             (
@@ -372,9 +372,9 @@ class SysTrayMenu(eg.PluginClass):
         )
         panel.sizer.Add(mainSizer, 1, wx.EXPAND)
         
-        next = tree.GetFirstChild(root)[0]
-        if next.IsOk():
-            tree.SelectItem(next)
+        nextId = tree.GetFirstChild(root)[0]
+        if nextId.IsOk():
+            tree.SelectItem(nextId)
         else:
             tree.SelectItem(root)
             
@@ -396,7 +396,7 @@ class SysTrayMenu(eg.PluginClass):
     
     
     
-class Enable(eg.ActionClass):
+class Enable(eg.ActionBase):
     
     class text:
         name = "Enable Item"

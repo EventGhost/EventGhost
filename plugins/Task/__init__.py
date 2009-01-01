@@ -55,8 +55,8 @@ from eg.WinApi.Dynamic import (
 )
 from eg.WinApi.Utils import GetProcessName
 
-EnumWindowsProc = WINFUNCTYPE(BOOL, HWND, LPARAM)
-EnumWindows.argtypes = [EnumWindowsProc, LPARAM]
+ENUM_WINDOWS_PROC_TYPE = WINFUNCTYPE(BOOL, HWND, LPARAM)
+EnumWindows.argtypes = [ENUM_WINDOWS_PROC_TYPE, LPARAM]
 
 WM_SHELLHOOKMESSAGE = RegisterWindowMessage("SHELLHOOK")
 DEBUG = 0
@@ -72,9 +72,9 @@ def GetWindowProcessName(hwnd):
     
     
 
-class Task(eg.PluginClass):
+class Task(eg.PluginBase):
     
-    def __start__(self, *args):
+    def __start__(self, *dummyArgs):
         self.lastActivated = ""
         self.processes = processes = {}
         def MyEnumFunc(hwnd, dummyLParam):
@@ -87,7 +87,7 @@ class Task(eg.PluginClass):
                 else:
                     processes[processName] = [hwnd]
             return 1
-        EnumWindows(EnumWindowsProc(MyEnumFunc), 0)
+        EnumWindows(ENUM_WINDOWS_PROC_TYPE(MyEnumFunc), 0)
         eg.messageReceiver.AddHandler(WM_APP+1, self.WindowGotFocusProc)
         eg.messageReceiver.AddHandler(WM_APP+2, self.WindowCreatedProc)
         eg.messageReceiver.AddHandler(WM_APP+3, self.WindowDestroyedProc)

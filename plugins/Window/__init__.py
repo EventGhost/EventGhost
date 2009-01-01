@@ -175,14 +175,14 @@ class Resize(MoveTo):
 
     
     def __call__(self, width=None, height=None):
-        r = RECT()
+        rect = RECT()
         for hwnd in GetTopLevelOfTargetWindows():
-            GetWindowRect(hwnd, byref(r))
+            GetWindowRect(hwnd, byref(rect))
             if width is None:
-                width = r.right - r.left - 1
+                width = rect.right - rect.left - 1
             if height is None:
-                height = r.bottom - r.top - 1
-            MoveWindow(hwnd, r.left, r.top, width+1, height+1, 1)
+                height = rect.bottom - rect.top - 1
+            MoveWindow(hwnd, rect.left, rect.top, width+1, height+1, 1)
         
         
     def GetLabel(self, x, y):
@@ -256,7 +256,7 @@ class SendMessage(eg.ActionBase):
     
             
     def GetLabel(self, mesg, wParam=0, lParam=0, kind=0):
-        return self.text.name + " %s, %d, %d" % (
+        return self.name + " %s, %d, %d" % (
             self.msgToNameDict.get(mesg, str(mesg)), 
             wParam, 
             lParam
