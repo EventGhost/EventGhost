@@ -101,9 +101,11 @@ SPECIAL_THANKS_DATA = (
             "Vlad Skarzhevskyy", # 13. Jun 2008
             "David Church",      # 17. Aug 2008
             "Tyson Ward",        # 30. Sep 2008
-            "Glenn Maples",      # 13. Okt 2008
-            "John Leonard",      # 21. Okt 2008
+            "Glenn Maples",      # 13. Oct 2008
+            "John Leonard",      # 21. Oct 2008
             "Silviu Marghescu",  # 26. Nov 2008
+            "tireich",           # 05. Dec 2008
+            "Sergio Herculano",  # 30. Dec 2008
         ),
     ),
     (
