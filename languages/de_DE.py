@@ -1,4 +1,4 @@
-﻿# -*- coding: UTF-8 -*-
+# -*- coding: UTF-8 -*-
 class General:
     apply = u"Ü&bernehmen"
     autostartItem = u"Autostart"
@@ -30,6 +30,10 @@ class MainFrame:
         welcomeText = u"---> Willkommen beim EventGhost <---"
     class Menu:
         About = u"&Über EventGhost..."
+        AddAction = u"&Befehl hinzufügen"
+        AddEvent = u"&Ereignis hinzufügen"
+        AddFolder = u"&Ordner hinzufügen"
+        AddMacro = u"&Makro hinzufügen"
         AddPlugin = u"&Plugin hinzufügen"
         Apply = u"Änderungen &anwenden"
         CheckUpdate = u"Auf neuere Version prüfen..."
@@ -37,11 +41,11 @@ class MainFrame:
         Close = u"S&chließen"
         CollapseAll = u"Alle einklappen"
         ConfigurationMenu = u"&Konfiguration"
+        Configure = u"Element &konfigurieren"
         Copy = u"&Kopieren"
         Cut = u"&Ausschneiden"
         Delete = u"&Löschen"
         Disabled = u"Element &deaktivieren"
-        Configure = u"Element &konfigurieren"
         EditMenu = u"&Bearbeiten"
         Execute = u"Element &ausführen"
         Exit = u"&Beenden"
@@ -55,14 +59,11 @@ class MainFrame:
         HelpMenu = u"&Hilfe"
         HideShowToolbar = u"Symbolleiste"
         Import = u"Importieren..."
+        IndentLog = u"Log einrücken"
         LogActions = u"Auch Befehle aufzeichnen"
         LogMacros = u"Auch Makros aufzeichnen"
         LogTime = u"Auch Zeiten aufzeichnen"
         New = u"&Neu"
-        AddAction = u"&Befehl hinzufügen"
-        AddEvent = u"&Ereignis hinzufügen"
-        AddFolder = u"&Ordner hinzufügen"
-        AddMacro = u"&Makro hinzufügen"
         Open = u"Ö&ffnen..."
         Options = u"&Einstellungen..."
         Paste = u"E&infügen"
@@ -199,16 +200,6 @@ class Plugin:
         class FlushEvents:
             name = u"Verwerfe alle ausstehenden Ereignisse"
             description = u'Diese Aktion verwirft alle Ereignisse die sich momentan in der Verarbeitungsschlange befinden.\n\nDieses ist nützlich, wenn ein Makro eine ziemlich lange Zeit zum Verarbeiten braucht und sich Ereignisse innherhalb dieser Zeit angesammelt haben, die nicht verarbeitet werden sollen.\n\n<p><b>Beispiel:</b> Sie haben ein lang andauerndes "Starte System" Makro, welches ca. 90 Sekunden braucht um z.B. einen Projektor anzuschalten und dann verschiedene Programme zu starten. Der Benutzer wird von dieser Ausführung nichts sehen, bis endlich der Projektor ein Bild zeigt und daher u.U. aus Ungeduld die auslösende Taste mehrfach drücken, was dazu führen würde, dass diese lange Verarbeitung wieder und wieder gestartet wird. Um dieses zu verhindern, können Sie die "Verwerfe alle ausstehenden Ereignisse" Aktion an das Ende Ihres Makros stellen, wodurch die überflüssigen Tastendruck-Wiederholungen entfernt werden.'
-        class JumpIf:
-            name = u"Springe wenn"
-            description = u"Springt zu einem anderen Makro, wenn die angegebene Python-Bedingung zutrifft."
-            label1 = u"Wenn %s, springe zu %s"
-            label2 = u"Wenn %s, springe zu %s und kehre zurück"
-            mesg1 = u"Makro wählen..."
-            mesg2 = u"Bitte wählen Sie das Makro aus, welches ausgeführt werden soll, wenn die Bedingung zutrifft."
-            text1 = u"Wenn:"
-            text2 = u"Gehe zu:"
-            text3 = u"Kehere zurück nach Ausführung"
         class JumpIfLongPress:
             name = u"Wenn langer Tastendruck"
             description = u"Springt zu einem anderen Makro, wenn die auslösende Taste länger als die eingestellte Zeit gedrückt wird."
@@ -272,8 +263,6 @@ class Plugin:
             wait2 = u"Sekunden automatisch aus. (0 = nicht ausblenden)"
             xOffset = u"Horizontaler Versatz X:"
             yOffset = u"Vertikaler Versatz Y:"
-        class StopIf:
-            name = u"Stoppe wenn"
         class StopProcessing:
             name = u"Beende Bearbeitung dieses Ereignisses"
             description = u"Wird dieser Befehl ausgeführt, dann sucht EventGhost nicht mehr nach weiteren Makros, die zu dem aktuellen Ereignis passen würden."
@@ -354,6 +343,7 @@ class Plugin:
             name = u"Bildschirm reaktivieren"
         class MonitorStandby:
             name = u"Bildschirm standby"
+            description = u"Schaltet das Anzeigegerät in den Energiesparmodus."
         class MuteOff:
             name = u"Stummschaltung aus"
             description = u"Deaktiviert die Stummschaltung."
@@ -457,6 +447,7 @@ class Plugin:
             text2 = u"Ausrichtung:"
         class ShowPicture:
             name = u"Bild anzeigen"
+            description = u"Zeigt eine Bilddatei auf dem Bildschirm an."
             allFiles = u"Alle Dateien"
             allImageFiles = u"Alle Bilddateien"
             display = u"Monitor:"
@@ -610,259 +601,258 @@ class Plugin:
     class MediaPlayerClassic:
         name = u"Media Player Classic"
         description = u'Fügt Aktionen zur Steuerung des <a href="http://sourceforge.net/projects/guliverkli/">Media Player Classic</a> hinzu'
-        help = u'Nur für Version <b>6.4.8.9</b> oder höher. Dieses Plugin funktioniert nicht mit älteren Versionen des MPC!  <a href=http://www.eventghost.org/forum/viewtopic.php?t=17>Bugreports</a> <p><a href="http://sourceforge.net/projects/guliverkli/">Media Player Classic SourceForge Projekt</a>'
-        class GroupMainControls:
-            name = u"Main Steuerung"
-        class GroupViewModes:
-            name = u"Ansichten Steuerung"
-        class GroupDvdControls:
-            name = u"DVD Steuerung"
-        class GroupExtendedControls:
-            name = u"Erweiterte Steuerung"
-        class GroupToggleControls:
-            name = u"Toggle player controls"
-        class Exit:
-            name = u"Anwendung beenden"
-        class PlayPause:
-            name = u"Wiedergabe/Pause"
-        class Play:
-            name = u"Wiedergabe"
-        class Pause:
-            name = u"Pause"
-        class Stop:
-            name = u"Stopp"
-        class JumpForwardSmall:
-            name = u"Vorwärts springen (gering)"
-        class JumpBackwardSmall:
-            name = u"Rückwärts springen (gering)"
-        class JumpForwardMedium:
-            name = u"Vorwärts springen (mittel)"
-        class JumpBackwardMedium:
-            name = u"Rückwärts springen (mittel)"
-        class JumpForwardLarge:
-            name = u"Vorwärts springen (viel)"
-        class JumpBackwardLarge:
-            name = u"Rückwärts springen (viel)"
-        class JumpForwardKeyframe:
-            name = u"Vorwärts springen (Keyframe)"
-        class JumpBackwardKeyframe:
-            name = u"Rückwärts springen (Keyframe)"
-        class IncreaseRate:
-            name = u"Geschwindigkeit erhöhen"
-        class DecreaseRate:
-            name = u"Geschwindigkeit verringern"
-        class ResetRate:
-            name = u"Geschwindigkeit zurücksetzen"
-        class VolumeUp:
-            name = u"Lautstärke lauter"
-        class VolumeDown:
-            name = u"Lautstärke leiser"
-        class VolumeMute:
-            name = u"Lautstärke Stummschaltung"
-        class BossKey:
-            name = u"Boss-Taste"
-        class Next:
-            name = u"Vorwärts"
-        class Previous:
-            name = u"Zurück"
-        class NextPlaylistItem:
-            name = u"Playlisten Eintrag vorwärts"
-        class PreviousPlaylistItem:
-            name = u"Playlisten Eintrag zurück"
-        class OpenFile:
-            name = u"Datei öffnen"
-        class OpenDVD:
-            name = u"DVD öffnen"
-        class QuickOpen:
-            name = u"Schnelles Datei öffnen"
-        class FrameStep:
-            name = u"Einzelbild vorwärts"
-        class FrameStepBack:
-            name = u"Einzelbild zurück"
-        class GoTo:
-            name = u"Gehe zu"
+        class AlwaysOnTop:
+            name = u"Immer im Vordergrund"
         class AudioDelayAdd10ms:
             name = u"Audio Verzögerung +10ms"
         class AudioDelaySub10ms:
             name = u"Audio Verzögerung -10ms"
-        class Fullscreen:
-            name = u"Vollbild"
-        class FullscreenWOR:
-            name = u"Vollbild (w/o res.change)"
-        class PnSIncSize:
-            name = u"Pan & Scan Increase Größe"
-        class PnSDecSize:
-            name = u"Pan & Scan Decrease Größe"
-        class ViewMinimal:
-            name = u"Anzeige Minimal"
-        class ViewCompact:
-            name = u"Anzeige Kompakt"
-        class ViewNormal:
-            name = u"Anzeige Normal"
-        class AlwaysOnTop:
-            name = u"Immer im Vordergrund"
-        class Zoom50:
-            name = u"Zoom 50%"
-        class Zoom100:
-            name = u"Zoom 100%"
-        class Zoom200:
-            name = u"Zoom 200%"
-        class VidFrmHalf:
-            name = u"Video Frame halb"
-        class VidFrmNormal:
-            name = u"Video Frame normal"
-        class VidFrmDouble:
-            name = u"Video Frame doppelt"
-        class VidFrmStretch:
-            name = u"Video Frame Stretch"
-        class VidFrmInside:
-            name = u"Video Frame Inside"
-        class VidFrmOutside:
-            name = u"Video Frame Outside"
-        class PnSReset:
-            name = u"Pan & Scan Reset"
-        class PnSIncWidth:
-            name = u"Pan & Scan Increase Breite"
-        class PnSIncHeight:
-            name = u"Pan & Scan Increase Höhe"
-        class PnSDecWidth:
-            name = u"Pan & Scan Decrease Breite"
-        class PnSDecHeight:
-            name = u"Pan & Scan Decrease Höhe"
-        class PnSCenter:
-            name = u"Pan & Scan zentrieren"
-        class PnSLeft:
-            name = u"Pan & Scan links"
-        class PnSRight:
-            name = u"Pan & Scan rechts"
-        class PnSUp:
-            name = u"Pan & Scan hoch"
-        class PnSDown:
-            name = u"Pan & Scan runter"
-        class PnSUpLeft:
-            name = u"Pan & Scan hoch/links"
-        class PnSUpRight:
-            name = u"Pan & Scan hoch/rechts"
-        class PnSDownLeft:
-            name = u"Pan & Scan runter/links"
-        class PnSDownRight:
-            name = u"Pan & Scan runter/rechts"
-        class PnSRotateAddX:
-            name = u"Pan & Scan Rotate X+"
-        class PnSRotateSubX:
-            name = u"Pan & Scan Rotate X-"
-        class PnSRotateAddY:
-            name = u"Pan & Scan Rotate Y+"
-        class PnsRotateSubY:
-            name = u"Pan & Scan Rotate Y-"
-        class PnSRotateAddZ:
-            name = u"Pan & Scan Rotate Z+"
-        class PnSRotateSubZ:
-            name = u"Pan & Scan Rotate Z-"
-        class DVDTitleMenu:
-            name = u"DVD Titel-Menü"
-        class DVDRootMenu:
-            name = u"DVD Root-Menü"
-        class DVDSubtitleMenu:
-            name = u"DVD Untertitel-Menü"
-        class DVDAudioMenu:
-            name = u"DVD Audio-Menü"
+        class BossKey:
+            name = u"Boss-Taste"
+        class Close:
+            name = u"Datei schliessen"
         class DVDAngleMenu:
             name = u"DVD Blickwinkel-Menü"
+        class DVDAudioMenu:
+            name = u"DVD Audio-Menü"
         class DVDChapterMenu:
             name = u"DVD Kapitel-Menü"
+        class DVDMenuActivate:
+            name = u"DVD Menü aktivieren"
+        class DVDMenuBack:
+            name = u"DVD Menü zurück"
+        class DVDMenuDown:
+            name = u"DVD Menü runter"
+        class DVDMenuLeave:
+            name = u"DVD Menü verlassen"
         class DVDMenuLeft:
             name = u"DVD Menü links"
         class DVDMenuRight:
             name = u"DVD Menü rechts"
         class DVDMenuUp:
             name = u"DVD Menü hoch"
-        class DVDMenuDown:
-            name = u"DVD Menü runter"
-        class DVDMenuActivate:
-            name = u"DVD Menü aktivieren"
-        class DVDMenuBack:
-            name = u"DVD Menü zurück"
-        class DVDMenuLeave:
-            name = u"DVD Menü verlassen"
         class DVDNextAngle:
             name = u"DVD Blickwinkel vorwärts"
-        class DVDPrevAngle:
-            name = u"DVD Blickwinkel zurück"
         class DVDNextAudio:
             name = u"DVD Audio vorwärts"
-        class DVDPrevAudio:
-            name = u"DVD Audio zurück"
         class DVDNextSubtitle:
             name = u"DVD Untertitel vorwärts"
-        class DVDPrevSubtitle:
-            name = u"DVD Untertitel zurück"
         class DVDOnOffSubtitle:
             name = u"DVD Untertitel An/Aus"
+        class DVDPrevAngle:
+            name = u"DVD Blickwinkel zurück"
+        class DVDPrevAudio:
+            name = u"DVD Audio zurück"
+        class DVDPrevSubtitle:
+            name = u"DVD Untertitel zurück"
+        class DVDRootMenu:
+            name = u"DVD Root-Menü"
+        class DVDSubtitleMenu:
+            name = u"DVD Untertitel-Menü"
+        class DVDTitleMenu:
+            name = u"DVD Titel-Menü"
+        class DecreaseRate:
+            name = u"Geschwindigkeit verringern"
+        class Exit:
+            name = u"Anwendung beenden"
+        class FiltersMenu:
+            name = u"Filter Menü"
+        class FrameStep:
+            name = u"Einzelbild vorwärts"
+        class FrameStepBack:
+            name = u"Einzelbild zurück"
+        class Fullscreen:
+            name = u"Vollbild"
+        class FullscreenWOR:
+            name = u"Vollbild (w/o res.change)"
+        class GoTo:
+            name = u"Gehe zu"
+        class GroupDvdControls:
+            name = u"DVD Steuerung"
+        class GroupExtendedControls:
+            name = u"Erweiterte Steuerung"
+        class GroupMainControls:
+            name = u"Main Steuerung"
+        class GroupToggleControls:
+            name = u"Toggle player controls"
+        class GroupViewModes:
+            name = u"Ansichten Steuerung"
+        class IncreaseRate:
+            name = u"Geschwindigkeit erhöhen"
+        class JumpBackwardKeyframe:
+            name = u"Rückwärts springen (Keyframe)"
+        class JumpBackwardLarge:
+            name = u"Rückwärts springen (viel)"
+        class JumpBackwardMedium:
+            name = u"Rückwärts springen (mittel)"
+        class JumpBackwardSmall:
+            name = u"Rückwärts springen (gering)"
+        class JumpForwardKeyframe:
+            name = u"Vorwärts springen (Keyframe)"
+        class JumpForwardLarge:
+            name = u"Vorwärts springen (viel)"
+        class JumpForwardMedium:
+            name = u"Vorwärts springen (mittel)"
+        class JumpForwardSmall:
+            name = u"Vorwärts springen (gering)"
+        class LoadSubTitle:
+            name = u"Untertitel laden"
+        class Next:
+            name = u"Vorwärts"
+        class NextAudio:
+            name = u"Audio vorwärts"
+        class NextAudioOGM:
+            name = u"Audio vorwärts OGM"
+        class NextPlaylistItem:
+            name = u"Playlisten Eintrag vorwärts"
+        class NextSubtitle:
+            name = u"Untertitel vorwärts"
+        class NextSubtitleOGM:
+            name = u"Untertitel vorwärts OGM"
+        class OnOffSubtitle:
+            name = u"Untertitel An/Aus"
+        class OpenDVD:
+            name = u"DVD öffnen"
         class OpenDevice:
             name = u"Gerät öffnen"
+        class OpenFile:
+            name = u"Datei öffnen"
+        class Options:
+            name = u"Optionen"
+        class Pause:
+            name = u"Pause"
+        class Play:
+            name = u"Wiedergabe"
+        class PlayPause:
+            name = u"Wiedergabe/Pause"
+        class PlayerMenuLong:
+            name = u"Player Menü (lang)"
+        class PlayerMenuShort:
+            name = u"Player Menü (kurz)"
+        class PnSCenter:
+            name = u"Pan & Scan zentrieren"
+        class PnSDecHeight:
+            name = u"Pan & Scan Decrease Höhe"
+        class PnSDecSize:
+            name = u"Pan & Scan Decrease Größe"
+        class PnSDecWidth:
+            name = u"Pan & Scan Decrease Breite"
+        class PnSDown:
+            name = u"Pan & Scan runter"
+        class PnSDownLeft:
+            name = u"Pan & Scan runter/links"
+        class PnSDownRight:
+            name = u"Pan & Scan runter/rechts"
+        class PnSIncHeight:
+            name = u"Pan & Scan Increase Höhe"
+        class PnSIncSize:
+            name = u"Pan & Scan Increase Größe"
+        class PnSIncWidth:
+            name = u"Pan & Scan Increase Breite"
+        class PnSLeft:
+            name = u"Pan & Scan links"
+        class PnSReset:
+            name = u"Pan & Scan Reset"
+        class PnSRight:
+            name = u"Pan & Scan rechts"
+        class PnSRotateAddX:
+            name = u"Pan & Scan Rotate X+"
+        class PnSRotateAddY:
+            name = u"Pan & Scan Rotate Y+"
+        class PnSRotateAddZ:
+            name = u"Pan & Scan Rotate Z+"
+        class PnSRotateSubX:
+            name = u"Pan & Scan Rotate X-"
+        class PnSRotateSubZ:
+            name = u"Pan & Scan Rotate Z-"
+        class PnSUp:
+            name = u"Pan & Scan hoch"
+        class PnSUpLeft:
+            name = u"Pan & Scan hoch/links"
+        class PnSUpRight:
+            name = u"Pan & Scan hoch/rechts"
+        class PnsRotateSubY:
+            name = u"Pan & Scan Rotate Y-"
+        class PrevAudio:
+            name = u"Audio zurück"
+        class PrevAudioOGM:
+            name = u"Audio zurück OGM"
+        class PrevSubtitle:
+            name = u"Untertitel zurück"
+        class PrevSubtitleOGM:
+            name = u"Untertitel zurück OGM"
+        class Previous:
+            name = u"Zurück"
+        class PreviousPlaylistItem:
+            name = u"Playlisten Eintrag zurück"
+        class Properties:
+            name = u"Eigenschaften"
+        class QuickOpen:
+            name = u"Schnelles Datei öffnen"
+        class ReloadSubtitles:
+            name = u"Untertitel erneut laden"
+        class ResetRate:
+            name = u"Geschwindigkeit zurücksetzen"
         class SaveAs:
             name = u"Speichern als"
         class SaveImage:
             name = u"Bild speichern"
         class SaveImageAuto:
             name = u"Bild speichern (auto)"
-        class LoadSubTitle:
-            name = u"Untertitel laden"
         class SaveSubtitle:
             name = u"Untertitel speichern"
-        class Close:
-            name = u"Datei schliessen"
-        class Properties:
-            name = u"Eigenschaften"
-        class PlayerMenuShort:
-            name = u"Player Menü (kurz)"
-        class PlayerMenuLong:
-            name = u"Player Menü (lang)"
-        class FiltersMenu:
-            name = u"Filter Menü"
-        class Options:
-            name = u"Optionen"
-        class NextAudio:
-            name = u"Audio vorwärts"
-        class PrevAudio:
-            name = u"Audio zurück"
-        class NextSubtitle:
-            name = u"Untertitel vorwärts"
-        class PrevSubtitle:
-            name = u"Untertitel zurück"
-        class OnOffSubtitle:
-            name = u"Untertitel An/Aus"
-        class ReloadSubtitles:
-            name = u"Untertitel erneut laden"
-        class NextAudioOGM:
-            name = u"Audio vorwärts OGM"
-        class PrevAudioOGM:
-            name = u"Audio zurück OGM"
-        class NextSubtitleOGM:
-            name = u"Untertitel vorwärts OGM"
-        class PrevSubtitleOGM:
-            name = u"Untertitel zurück OGM"
+        class Stop:
+            name = u"Stopp"
         class ToggleCaptionMenu:
             name = u"Toggle Caption Menu"
-        class ToggleSeeker:
-            name = u"Toggle Seeker"
+        class ToggleCaptureBar:
+            name = u"Toggle Capture Bar"
         class ToggleControls:
             name = u"Toggle Controls"
         class ToggleInformation:
             name = u"Toggle Information"
+        class TogglePlaylistBar:
+            name = u"Toggle Playlist Bar"
+        class ToggleSeeker:
+            name = u"Toggle Seeker"
+        class ToggleShaderEditorBar:
+            name = u"Toggle Shader Editor Bar"
         class ToggleStatistics:
             name = u"Toggle Statistics"
         class ToggleStatus:
             name = u"Toggle Status"
         class ToggleSubresyncBar:
             name = u"Toggle Subresync Bar"
-        class TogglePlaylistBar:
-            name = u"Toggle Playlist Bar"
-        class ToggleCaptureBar:
-            name = u"Toggle Capture Bar"
-        class ToggleShaderEditorBar:
-            name = u"Toggle Shader Editor Bar"
+        class VidFrmDouble:
+            name = u"Video Frame doppelt"
+        class VidFrmHalf:
+            name = u"Video Frame halb"
+        class VidFrmInside:
+            name = u"Video Frame Inside"
+        class VidFrmNormal:
+            name = u"Video Frame normal"
+        class VidFrmOutside:
+            name = u"Video Frame Outside"
+        class VidFrmStretch:
+            name = u"Video Frame Stretch"
+        class ViewCompact:
+            name = u"Anzeige Kompakt"
+        class ViewMinimal:
+            name = u"Anzeige Minimal"
+        class ViewNormal:
+            name = u"Anzeige Normal"
+        class VolumeDown:
+            name = u"Lautstärke leiser"
+        class VolumeMute:
+            name = u"Lautstärke Stummschaltung"
+        class VolumeUp:
+            name = u"Lautstärke lauter"
+        class Zoom100:
+            name = u"Zoom 100%"
+        class Zoom200:
+            name = u"Zoom 200%"
+        class Zoom50:
+            name = u"Zoom 50%"
     class NetworkReceiver:
         name = u"Netzwerk Ereignis Empfänger"
         description = u'Empfängt Ereignisse von einem "Netzwerk Ereignis Sender" Plugin.'
