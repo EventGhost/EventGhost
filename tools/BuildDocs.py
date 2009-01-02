@@ -5,12 +5,14 @@ import re
 import StringIO
 
 MY_DIR = os.path.dirname(__file__)
-DOCS_MAIN_DIR = os.path.abspath(os.path.join(MY_DIR, "..", "docs",))
+MAIN_DIR = os.path.abspath(os.path.join(MY_DIR, ".."))
+DOCS_MAIN_DIR = os.path.join(MAIN_DIR, "docs")
 DOCS_SOURCE_DIR = os.path.join(DOCS_MAIN_DIR, "source")
 DOCS_BUILD_DIR = os.path.join(DOCS_MAIN_DIR, "build")
 
 
 def ImportEg():
+    sys.path.append(MAIN_DIR)
     stderr = sys.stderr
     stdout = sys.stdout
     try:
