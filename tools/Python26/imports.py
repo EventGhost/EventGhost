@@ -764,6 +764,7 @@ import comtypes.messageloop
 import comtypes.partial
 import comtypes.persist
 import comtypes.safearray
+import comtypes.shelllink
 import comtypes.typeinfo
 import comtypes.util
 import comtypes._comobject
@@ -771,6 +772,7 @@ import comtypes._meta
 import comtypes._safearray
 import comtypes.client
 import comtypes.client.dynamic
+import comtypes.client.lazybind
 import comtypes.client._code_cache
 import comtypes.client._events
 import comtypes.client._generate
