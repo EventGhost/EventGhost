@@ -31,6 +31,7 @@ import ConfigParser
 import threading
 import imp
 import _winreg
+import subprocess
 
 from os.path import dirname, join, exists, abspath
 from glob import glob
@@ -132,26 +133,26 @@ def CheckDependencies():
             module = __import__(moduleName)
         except ImportError:
             missing.append((moduleName, wantedVersion, name, url))
+            continue
+        if moduleName == "win32api":
+            # sadly pywin32 has no version variable
+            # But it has a version file in the site-packages directory.
+            versionFilePath = join(
+                sys.prefix, "lib/site-packages/pywin32.version.txt"
+            )
+            version = open(versionFilePath, "rt").readline().strip()
+        elif hasattr(module, "__version__"):
+            version = module.__version__
+        elif hasattr(module, "VERSION"):
+            version = module.VERSION
+        elif hasattr(module, "version"):
+            version = module.version
         else:
-            if moduleName == "win32api":
-                # sadly pywin32 has no version variable
-                # But it has a version file in the site-packages directory.
-                versionFilePath = join(
-                    sys.prefix, "lib", "site-packages", "pywin32.version.txt"
-                )
-                version = open(versionFilePath, "rt").readline().strip()
-            elif hasattr(module, "__version__"):
-                version = module.__version__
-            elif hasattr(module, "VERSION"):
-                version = module.VERSION
-            elif hasattr(module, "version"):
-                version = module.version
-            else:
-                version = "(unknown version)"
-            if type(version) != type(""):
-                version = ".".join(str(x) for x in version)
-            if wantedVersion != version:
-                missing.append((moduleName, wantedVersion, name, url))
+            version = "(unknown version)"
+        if type(version) != type(""):
+            version = ".".join(str(x) for x in version)
+        if wantedVersion != version:
+            missing.append((moduleName, wantedVersion, name, url))
     if missing:
         print "The following dependencies are missing:"
         for moduleName, wantedVersion, name, url in missing:
@@ -220,6 +221,7 @@ Filename: "{app}\\EventGhost.exe"; Parameters: "-uninstall"
 [UninstallDelete]
 Type: filesandordirs; Name: "{userappdata}\\EventGhost"
 Type: dirifempty; Name: "{app}"
+Type: files; Name: "{userstartup}\\EventGhost.lnk"
 
 [Run] 
 Filename: "{app}\\EventGhost.exe"; Flags: postinstall nowait skipifsilent 
@@ -321,29 +323,30 @@ class MyInstaller(InnoInstaller):
         outfile.close()
         
     
-    def UpdateVersionFile(self):
+    def UpdateVersionFile(self, incrementBuildNum):
         """
         Update buildNum, buildTime and svnRevision in eg/Classes/Version.py
         """
         svnRevision = self.GetSvnRevision()
         versionFilePath = self.sourceDir + "/eg/Classes/Version.py"
-        lines = open(versionFilePath, "rt").readlines()
-        outfile = open(versionFilePath, "wt")
-        # update buildNum and buildTime in eg/Classes/Version.py
-        for line in lines:
-            if line.strip().startswith("buildNum"):
-                parts = line.split("=")
-                value = int(parts[1].strip())
-                outfile.write(parts[0] + "= " + str(value+1) + "\n")
-            elif line.strip().startswith("buildTime"):
-                parts = line.split("=")
-                outfile.write(parts[0] + "= " + str(time.time()) + "\n")
-            elif line.strip().startswith("svnRevision"):
-                parts = line.split("=")
-                outfile.write("%s= %d\n" % (parts[0], svnRevision))
-            else:
-                outfile.write(line)
-        outfile.close()
+        if incrementBuildNum:
+            lines = open(versionFilePath, "rt").readlines()
+            outfile = open(versionFilePath, "wt")
+            # update buildNum and buildTime in eg/Classes/Version.py
+            for line in lines:
+                if line.strip().startswith("buildNum"):
+                    parts = line.split("=")
+                    value = int(parts[1].strip())
+                    outfile.write(parts[0] + "= " + str(value+1) + "\n")
+                elif line.strip().startswith("buildTime"):
+                    parts = line.split("=")
+                    outfile.write(parts[0] + "= " + str(time.time()) + "\n")
+                elif line.strip().startswith("svnRevision"):
+                    parts = line.split("=")
+                    outfile.write("%s= %d\n" % (parts[0], svnRevision))
+                else:
+                    outfile.write(line)
+            outfile.close()
         mod = imp.load_source("Version", versionFilePath)
         self.appVersion = mod.Version.string
         
@@ -544,7 +547,7 @@ class MainDialog(wx.Dialog):
         
         sizer1 = wx.BoxSizer(wx.VERTICAL)
         for ctrl in ctrls:
-            sizer1.Add(ctrl, 0, wx.ALL, 10)
+            sizer1.Add(ctrl, 0, wx.ALL, 5)
         sizer2 = wx.BoxSizer(wx.HORIZONTAL)
         sizer2.Add(sizer1)
         #sizer2.Add(self.out, 1, wx.EXPAND|wx.ALL, 10)
@@ -582,17 +585,19 @@ class MainDialog(wx.Dialog):
         event.Skip()
      
      
-def BuildDocs():
-    oldCwd = os.getcwdu()
-    import BuildDocs
-    os.chdir(oldCwd)
-        
-        
-def BuildStaticImports():
-    oldCwd = os.getcwdu()
-    import BuildStaticImports
-    os.chdir(oldCwd)
-        
+def ExecutePy(scriptFilePath):
+    """Spawn a new Python interpreter and let it execute a script file."""
+    startupInfo = subprocess.STARTUPINFO()
+    startupInfo.dwFlags = subprocess.STARTF_USESHOWWINDOW
+    startupInfo.wShowWindow = subprocess.SW_HIDE 
+    errorcode = subprocess.call(
+        (sys.executable, scriptFilePath), 
+        stdout=sys.stdout.fileno(),
+        startupinfo=startupInfo
+    )
+    if errorcode > 0:
+        raise SystemError
+    
         
 def BuildImports():
     oldCwd = os.getcwdu()
@@ -606,25 +611,29 @@ def Main(mainDialog=None):
     """
     Main task of the script.
     """
-    print "--- updating Version.py"
-    NS.UpdateVersionFile()
+    if Options.incrementBuildNum:
+        print "--- updating Version.py"
+    NS.UpdateVersionFile(Options.incrementBuildNum)
     print "--- updating CHANGELOG.TXT"
     NS.UpdateChangeLog()
     if Options.buildStaticImports:
         print "--- building StaticImports.py"
-        BuildStaticImports()
+        ExecutePy("BuildStaticImports.py")
     if Options.buildImports:
         print "--- building imports.py"
         BuildImports()
     if Options.buildDocs:
         print "--- building docs"
-        BuildDocs()
+        ExecutePy("BuildDocs.py")
     if Options.commitSvn:
         print "--- committing working copy to SVN"
         NS.CommitSvn()
     if Options.buildSourceArchive:
         print "--- building source code archive"
         NS.CreateSourceArchive()
+    if Options.buildPyExe:
+        print "--- building py.exe and pyw.exe"
+        ExecutePy("BuildPyExe.py")
     if Options.buildLib:
         print "--- building library files"
         NS.CreateLibrary()            
@@ -642,19 +651,19 @@ def Main(mainDialog=None):
                 Options.ftpUrl
             )        
     print "--- All done!"
-    import threading
-    print threading.enumerate()
-    wx.CallAfter(wx.GetApp().ExitMainLoop)
+    wx.CallAfter(mainDialog.Close)
     
 
 NS = MyInstaller()
 Options = Config(join(NS.toolsDir, "Build.ini"))
 Options.AddOption("includeNoIncludePlugins", "Include 'noinclude' plugins", False)
-Options.AddOption("buildStaticImports", "Build StaticImports.py", False)
-Options.AddOption("buildImports", "Build imports.py", False)
-Options.AddOption("buildDocs", "Build docs", False)
-Options.AddOption("buildSourceArchive", "Build source archive", False)
-Options.AddOption("buildLib", "Build lib%d%d" %sys.version_info[0:2], False)
+Options.AddOption("incrementBuildNum", "Increment build number", False)
+Options.AddOption("buildStaticImports", "Build StaticImports.py", True)
+Options.AddOption("buildImports", "Build imports.py", True)
+Options.AddOption("buildDocs", "Build docs", True)
+Options.AddOption("buildSourceArchive", "Build source archive", True)
+Options.AddOption("buildPyExe", "Build py.exe and pyw.exe", True)
+Options.AddOption("buildLib", "Build lib%d%d" %sys.version_info[0:2], True)
 Options.AddOption("buildInstaller", "Build Setup.exe", True)
 Options.AddOption("commitSvn", "SVN commit", False)
 Options.AddOption("upload", "Upload through FTP", False)
