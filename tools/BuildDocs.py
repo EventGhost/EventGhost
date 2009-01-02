@@ -1,8 +1,7 @@
 import os
 import sys
-import sphinx
 import re
-import StringIO
+import sphinx
 
 MY_DIR = os.path.dirname(__file__)
 MAIN_DIR = os.path.abspath(os.path.join(MY_DIR, ".."))
@@ -20,6 +19,7 @@ def ImportEg():
     finally:
         sys.stderr = stderr
         sys.stdout = stdout
+    return eg
 
 
 def WritePluginList(filepath):
@@ -80,7 +80,7 @@ def WritePluginList(filepath):
     outfile.close()
     
 
-ImportEg()
+eg = ImportEg()
 WritePluginList(os.path.join(DOCS_SOURCE_DIR, "PluginList.rst"))
 
 argv = [
@@ -93,4 +93,4 @@ argv = [
 ]
 sphinx.main(argv)
 import webbrowser
-webbrowser.open(os.path.join(DOCS_BUILD_DIR, "index.html"), 0, 1)
+#webbrowser.open(os.path.join(DOCS_BUILD_DIR, "index.html"), 0, 1)
