@@ -39,32 +39,7 @@ def InitPil():
     import BmpImagePlugin #IGNORE:W0612
     import GifImagePlugin #IGNORE:W0612
     Image._initialized = 2  
-        
-        
-def InitComTypes():
-    #Bit of a dance to force comtypes generated interfaces in to our directory
-    import comtypes.client
-    genPath = os.path.join(eg.configDir, "cgen_py").encode('mbcs')
-    if not os.path.exists(genPath):
-        os.makedirs(genPath)
-    genInitPath = os.path.join(
-        eg.configDir, 
-        "cgen_py", "__init__.py"
-    ).encode('mbcs')
-    if not os.path.exists(genInitPath):
-        ofi = open(genInitPath, "w")
-        ofi.write("# comtypes.gen package, directory for generated files.\n")
-        ofi.close()
     
-    comtypes.client.gen_dir = genPath
-    import comtypes
-    sys.path.insert(0, eg.configDir)
-    comtypes.gen = __import__("cgen_py", globals(), locals(), [])
-    sys.modules["comtypes.gen"] = comtypes.gen
-    del sys.path[0]
-    import comtypes.client._generate
-    comtypes.client._generate.__verbose__ = False #IGNORE:W0212
-
         
 def InitPathesAndBuiltins():
     
@@ -105,7 +80,6 @@ def Init():
 
     
 def InitGui():
-    InitComTypes()
     # create a global asyncore loop thread
     # TODO: Only start if asyncore is requested
     eg.dummyAsyncoreDispatcher = None
