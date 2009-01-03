@@ -23,6 +23,7 @@ class General:
     unnamedMacro = u"<Unbenanntes Makro>"
 class MainFrame:
     onlyLogAssigned = u"Nur &zugewiesene und aktivierte Ereignisse aufzeichnen"
+    onlyLogAssignedToolTip = u"Wenn markiert zeigt das Log nur noch Ereignisse an, die in der momentanen\nKonstellation der Konfiguration ein Makro ausführen werden. Deshalb sollte diese\nOption *nicht* aktiviert werden, wenn man neue Ereignisse zuweisen will."
     class Logger:
         caption = u"Log"
         descriptionHeader = u"Beschreibung"
@@ -56,6 +57,7 @@ class MainFrame:
         FileMenu = u"&Datei"
         Find = u"S&uchen..."
         FindNext = u"&Weitersuchen"
+        HelpContents = u"&Hilfethemen"
         HelpMenu = u"&Hilfe"
         HideShowToolbar = u"Symbolleiste"
         Import = u"Importieren..."
@@ -67,6 +69,7 @@ class MainFrame:
         Open = u"Ö&ffnen..."
         Options = u"&Einstellungen..."
         Paste = u"E&infügen"
+        PythonShell = u"Python Shell"
         Redo = u"&Wiederholen"
         Rename = u"Element &umbenennen"
         Reset = u"Zurücksetzen"
