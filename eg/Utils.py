@@ -290,6 +290,19 @@ class WxDummyEvent(object):
 wxDummyEvent = WxDummyEvent()
 
 
+from docutils.core import publish_parts as ReSTPublishParts
+
+def DecodeReST(source):
+    res = ReSTPublishParts(
+        source=source, 
+        writer_name='html', 
+        #settings_overrides=overrides
+    )['html_body']
+    return res
+
+    
+
+
 from operator import itemgetter as _itemgetter
 from keyword import iskeyword as _iskeyword
 import sys as _sys
