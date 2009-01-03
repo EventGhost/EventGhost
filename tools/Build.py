@@ -247,6 +247,7 @@ INCLUDED_MODULES = [
     "pythoncom",
     "isapi",
     "win32com",
+    "docutils",
 ]
 
 EXCLUDED_MODULES = [
