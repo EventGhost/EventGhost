@@ -2,6 +2,8 @@ import os
 import sys
 import re
 import _winreg
+import subprocess
+import shutil
 
 MY_DIR = os.path.dirname(__file__)
 MAIN_DIR = os.path.abspath(os.path.join(MY_DIR, ".."))
@@ -125,10 +127,8 @@ def Main():
     htmlHelpCompilerPath = GetHtmlHelpCompilerPath()
     if htmlHelpCompilerPath is None:
         raise Exception("HTML Help Workshop command line compiler not found")
-    import subprocess
     hhpPath = os.path.join(DOCS_CHM_BUILD_DIR, "EventGhost.hhp")
     subprocess.call([htmlHelpCompilerPath, hhpPath])
-    import shutil
     shutil.copy(os.path.join(DOCS_CHM_BUILD_DIR, "EventGhost.chm"), MAIN_DIR)
     
     
