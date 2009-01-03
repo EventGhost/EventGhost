@@ -11,6 +11,8 @@
 # All configuration values have a default value; values that are commented out
 # serve to show the default value.
 
+#pylint: disable-msg=C0301, C0103, W0622
+
 import sys, os
 
 # If your extensions are in another directory, add it here. If the directory
@@ -143,7 +145,7 @@ html_last_updated_fmt = '%b %d, %Y'
 #html_file_suffix = ''
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'EventGhost Help'
+htmlhelp_basename = 'EventGhost'
 
 
 # Options for LaTeX output
