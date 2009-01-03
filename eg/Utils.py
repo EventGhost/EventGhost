@@ -289,15 +289,37 @@ class WxDummyEvent(object):
 
 wxDummyEvent = WxDummyEvent()
 
-
+import docutils
 from docutils.core import publish_parts as ReSTPublishParts
+from docutils.writers.html4css1 import Writer
 
+DOC_WRITER_TEMPLATE = """\
+%(head_prefix)s
+%(head)s
+%(stylesheet)s
+%(body_prefix)s
+%(body_pre_docinfo)s
+%(docinfo)s
+%(body)s
+%(body_suffix)s
+"""
+
+class MyHtmlDocWriter(Writer):
+    def apply_template(self):
+        return DOC_WRITER_TEMPLATE % self.interpolation_dict()
+
+
+HTML_DOC_WRITER = MyHtmlDocWriter()
+
+    
 def DecodeReST(source):
+    #print repr(source)
     res = ReSTPublishParts(
         source=source, 
-        writer_name='html', 
-        #settings_overrides=overrides
+        writer=HTML_DOC_WRITER, 
+        settings_overrides={"stylesheet_path": ""}
     )['html_body']
+    #print repr(res)
     return res
 
     
