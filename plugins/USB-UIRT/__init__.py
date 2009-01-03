@@ -20,6 +20,17 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+"""<rst>
+Hardware plugin for the `USB-UIRT <http://www.usbuirt.com/>`_ transceiver.
+
+|
+
+.. image:: picture.jpg
+   :align: center
+   :target: http://www.usbuirt.com/
+"""
+
+
 import eg
 
 eg.RegisterPlugin(
@@ -28,13 +39,14 @@ eg.RegisterPlugin(
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
     canMultiLoad = True,
-    description = (
-        'Hardware plugin for the <a href="http://www.usbuirt.com/">'
-        'USB-UIRT</a> transceiver.'
-        '\n\n<p>'
-        '<a href="http://www.usbuirt.com/"><p>'
-        '<center><img src="picture.jpg" alt="USB-UIRT" /></a></center>'
-    ),
+    description = __doc__,
+#    (
+#        'Hardware plugin for the <a href="http://www.usbuirt.com/">'
+#        'USB-UIRT</a> transceiver.'
+#        '\n\n<p>'
+#        '<a href="http://www.usbuirt.com/"><p>'
+#        '<center><img src="picture.jpg" alt="USB-UIRT" /></a></center>'
+#    ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACbklEQVR42mXTa4hMYRzH"
         "8f9zzoxmsblMJrzYRHgj140XkiG1Vomd1OwoRVHKreSyRWSRvJHSZktKq0E7LvvCFG/k"

@@ -20,62 +20,64 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
-import wx
-
-DESCRIPTION = """\
+"""<rst>
 This action emulates keystrokes to control other programs. Just type the text 
 you want into the edit-box. 
 
-<p>
 To emulate special-keys, you have to enclose a keyword in curly braces. 
-For example if you want to have a cursor-up-key you write <b>{Up}</b>. You
+For example if you want to have a cursor-up-key you write **{Up}**. You
 can combine multiple keywords with the plus sign to get key-combinations like 
-<b>{Shift+Ctrl+F1}</b> or <b>{Ctrl+V}</b>. The keywords are not 
-case-sensitive, so you can write {SHIFT+ctrl+F1} as well if you like. 
-<p>
+**{Shift+Ctrl+F1}** or **{Ctrl+V}**. The keywords are not case-sensitive, so 
+you can write {SHIFT+ctrl+F1} as well if you like. 
+
 Some keys differentiate between the left or the right side of the keyboard 
-and can then be prefixed with an "L" or "R", like the Windows-Key:<br>
-<b>{Win}</b> or <b>{LWin}</b> or <b>{RWin}</b>
-<p>
-And here is the list of the remaining keywords EventGhost understands:<br>
-<b>{Ctrl}</b> or <b>{Control}<br>
-{Shift}<br>
-{Alt}<br>
-{Return}</b> or <b>{Enter}<br>
-{Back}</b> or <b>{Backspace}<br>
-{Tab}</b> or <b>{Tabulator}<br>
-{Esc}</b> or <b>{Escape}<br>
-{Spc}</b> or <b>{Space}<br>
-{Up}<br>
-{Down}<br>
-{Left}<br>
-{Right}<br>
-{PgUp}</b> or <b>{PageUp}<br>
-{PgDown}</b> or <b>{PageDown}<br>
-{Home}<br>
-{End}<br>
-{Ins}</b> or <b>{Insert}<br>
-{Del}</b> or <b>{Delete}<br>
-{Pause}<br>{Capslock}<br>
-{Numlock}<br>
-{Scrolllock}<br>
-{F1}, {F2}, ... , {F24}<br>
-{Apps}</b> (This is the context-menu-key)<b><br>
-<br>
-</b>These will emulate keys from the numpad:<b><br>
-{Divide}<br>
-{Multiply}<br>
-{Subtract}<br>
-{Add}<br>
-{Decimal}<br>
-{Numpad0}, {Numpad1}, ... , {Numpad9}</b>
+and can then be prefixed with an "L" or "R", like the Windows-Key:
+
+**{Win}** or **{LWin}** or **{RWin}**
+
+And here is the list of the remaining keywords EventGhost understands:
+
+    | **{Ctrl}** or **{Control}**
+    | **{Shift}**
+    | **{Alt}**
+    | **{Return}** or **{Enter}**
+    | **{Back}** or **{Backspace}**
+    | **{Tab}** or **{Tabulator}**
+    | **{Esc}** or **{Escape}**
+    | **{Spc}** or **{Space}**
+    | **{Up}**
+    | **{Down}**
+    | **{Left}**
+    | **{Right}**
+    | **{PgUp}** or **{PageUp}**
+    | **{PgDown}** or **{PageDown}**
+    | **{Home}**
+    | **{End}**
+    | **{Ins}** or **{Insert}**
+    | **{Del}** or **{Delete}**
+    | **{Pause}**
+    | **{Capslock}**
+    | **{Numlock}**
+    | **{Scrolllock}**
+    | **{F1}, {F2}, ... , {F24}**
+    | **{Apps}** (This is the context-menu-key)
+    |
+    | These will emulate keys from the numpad:
+    | **{Divide}**
+    | **{Multiply}**
+    | **{Subtract}**
+    | **{Add}**
+    | **{Decimal}**
+    | **{Numpad0}, {Numpad1}, ... , {Numpad9}**
 """
+
+import eg
+import wx
 
     
 class SendKeys(eg.ActionBase):
     name = "Emulate Keystrokes"
-    description = DESCRIPTION
+    description = __doc__ 
     iconFile = "icons/SendKeys"
     class text:
         useAlternativeMethod = "Use alternate method to emulate keypresses"

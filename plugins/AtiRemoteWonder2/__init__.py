@@ -20,21 +20,26 @@
 # $LastChangedRevision: 439 $
 # $LastChangedBy: bitmonster $
 
+r"""<rst>
+Plugin for the ATI Remote Wonder II remote.
+
+.. image:: picture.jpg
+   :align: center
+
+**Notice:** The ATI Remote Wonder software must also run to receive events 
+from this remote and the special "EventGhost.dll" must be imported and enabled 
+inside the ATI Remote Wonder Software.
+
+| You will find this DLL inside:
+| {ProgramFiles}\\EventGhost\\Plugins\\AtiRemoteWonder2\\
+"""
+
+
+import eg
+
 eg.RegisterPlugin(
     name="ATI Remote Wonder II",
-    description=(
-        'Plugin for the ATI Remote Wonder II remote.'
-        '\n\n<p>'
-        '<center><img src="picture.jpg" /></a></center>'
-    ),
-    help = """
-        <b>Notice:</b> The ATI Remote Wonder software must also run to
-        receive events from this remote and the special "EventGhost.dll" 
-        must be imported and enabled inside the ATI Remote Wonder 
-        Software.<p>
-        You will find this DLL inside:<br>
-        <i>{Program&nbsp;Files}</i>\\EventGhost\\Plugins\\AtiRemoteWonder2\\
-    """,
+    description=__doc__,
     url="http://www.eventghost.org/forum/viewtopic.php?t=915",
     author="Bitmonster",
     version="1.0." + "$LastChangedRevision: 363 $".split()[1],
@@ -62,7 +67,7 @@ KEY_MAP = (
 
 MSG_NUM = 0x8123
 
-class AtiRemoteWonder2(eg.PluginClass):
+class AtiRemoteWonder2(eg.PluginBase):
     
     def __start__(self):
         self.info.eventPrefix = "ATI"
@@ -76,7 +81,7 @@ class AtiRemoteWonder2(eg.PluginClass):
             eg.messageReceiver.RemoveHandler(MSG_NUM + i, self.HandleEvent)
         
         
-    def HandleEvent(self, hWnd, mesg, keyCode, keyState):
+    def HandleEvent(self, dummyHWnd, mesg, keyCode, keyState):
         auxNum = mesg - MSG_NUM
         if auxNum != self.auxNum:
             if auxNum == 0:
