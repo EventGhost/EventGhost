@@ -124,11 +124,6 @@ class AddPluginDialog(eg.Dialog):
         
         treeCtrl.ScrollTo(itemToSelect)
         
-        self.htmlTemplate = (
-            '<html><body bgcolor="#%02X%02X%02X">%%s</body></html>' 
-                % self.GetBackgroundColour().Get()
-        )
-
         rightPanel = wx.Panel(splitterWindow)
         rightSizer = wx.BoxSizer(wx.VERTICAL)
         rightPanel.SetSizer(rightSizer)
@@ -219,7 +214,7 @@ class AddPluginDialog(eg.Dialog):
             self.versionText.SetLabel(info.version)
             self.okButton.Enable(True)
         self.nameText.SetLabel(name)
-        self.descrBox.SetPage(self.htmlTemplate % description)
+        self.descrBox.SetPage(description)
 
 
     def CheckMultiload(self):
