@@ -20,6 +20,29 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+"""<rst>
+Hardware plugin for X10 compatible RF remotes.
+
+This includes remotes like:
+
+* `ATI Remote Wonder 
+  <http://www.ati.com/products/remotewonder/index.html>`_
+* `ATI Remote Wonder PLUS 
+  <http://www.ati.com/products/remotewonderplus/index.html>`_
+* `SnapStream Firefly 
+  <http://www.snapstream.com/products/firefly/>`_
+* `NVIDIA Personal Cinema Remote 
+  <http://www.nvidia.com/object/feature_PC_remote.html>`_
+* `Marmitek PC Control 
+  <http://www.marmitek.com/>`_
+* `Pearl Q-Sonic Master Remote 6in1 
+  <http://www.pearl.de/product.jsp?pdid=PE4444&catid=1601&vid=916&curr=DEM>`_
+* `Niveus PC Remote Control 
+  <http://www.niveusmedia.com/>`_
+* Medion RF Remote Control
+* Packard Bell RF MCE Remote Control OR32E
+"""
+
 import eg
 
 eg.RegisterPlugin(
@@ -28,27 +51,7 @@ eg.RegisterPlugin(
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
     canMultiLoad = True,
-    description = 'Hardware plugin for X10 compatible RF remotes.',
-    help = u"""
-        This includes remotes like:
-        <ul>
-        <li><a href="http://www.ati.com/products/remotewonder/index.html">
-        ATI Remote Wonder\u2122</a></li>
-        <li><a href="http://www.ati.com/products/remotewonderplus/index.html">
-        ATI Remote Wonder\u2122 PLUS</a></li>
-        <li><a href="http://www.snapstream.com/">
-        SnapStream Firefly</a></li>
-        <li><a href="http://www.nvidia.com/object/feature_PC_remote.html">
-        NVIDIA Personal Cinema Remote</a></li>
-        <li><a href="http://www.marmitek.com/">
-        Marmitek PC Control</a></li>
-        <li><a href="http://www.pearl.de/product.jsp?pdid=PE4444&catid=1601">
-        Pearl Q-Sonic Master Remote 6in1</a></li>
-        <li><a href="http://www.niveusmedia.com/support/PCremote.htm">
-        Niveus PC Remote Control</a></li>
-        <li>Medion RF Remote Control</li>
-        </ul>
-    """,
+    description = __doc__,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAYklEQVR42mNkoBAwwhgq"
         "uf//k6LxzmRGRrgBpGpGNoSRXM1wL1DFgNuTGBhU8xCCyHx0Ngggq4W7AKYQlwZchqJ4"

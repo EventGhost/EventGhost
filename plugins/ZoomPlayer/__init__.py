@@ -20,41 +20,38 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-__description__ = (
-    'Adds actions to control the famous '
-    '<a href="http://www.inmatrix.com/">Zoom Player</a>.'
-)
+"""<rst>
+Adds actions to control the famous `Zoom Player <http://www.inmatrix.com/>`_.
 
-__help__ = """\
-<b>Notice:</b><br>
+|
+
+**Notice:**
 To make it work, you have to enable TCP control in Zoom Player. Either enable 
 it in the options of Zoom Player under:
 
-<i>Option/Setup => Values & Tools => Interface => Enable External TCP 
-Control</i>
+*Option/Setup => Values & Tools => Interface => Enable External TCP Control*
 
-or call the executable with the option <i>/TCP:[port]</i>
+or call the executable with the option */TCP:[port]*
 
-
-<b>Hint:</b><br>
-Disable scroll acceleration in Zoom Player. Otherweise scrolling in 
+**Hint:**
+Disable scroll acceleration in Zoom Player. Otherwise scrolling in 
 navigators might be jumpy if you use autorepeat in EventGhost (which 
 has a more sophisticated scroll acceleration). You find the setting 
 in Zoom Player under:
 
-<i>Option/Setup => OSD => Navigators => Settings => Disable Scroll 
-Acceleration</i>
+*Option/Setup => OSD => Navigators => Settings => Disable Scroll Acceleration*
 """
-    
+
+import eg
+
 eg.RegisterPlugin(
     name = "Zoom Player",
+    description = __doc__,
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "program",
     canMultiLoad = True,
     createMacrosOnAdd = True,
-    description = __description__,
-    help = __help__,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAA7DAAAOwwHH"
         "b6hkAAAC5ElEQVR4nIWTz08cZRjH5z/YmTnqoZvGm2cPiKEYzSZErTXFNrHUJt68tNmW"
@@ -76,11 +73,13 @@ eg.RegisterPlugin(
     ),
 )
 
-# ===================================================================
-# ZoomPlayer TCP/IP Interface
-# ===================================================================
 
-"""\
+#pylint: disable-msg=C0301
+"""
+===================================================================
+    ZoomPlayer TCP/IP Interface
+===================================================================
+
  When the SendMessage interface is used, the message number is returned
 on the "WParam" value and the message content is returned on the "LParam"
 value.  If the LParam contain a string, it is stored as an ATOM String.
@@ -274,14 +273,7 @@ for example: "5110 exSetAR,1".
 """
 
 
-import asynchat
-import socket
-import asyncore
-import threading
-from types import ClassType
-                
-
-fnList = (
+FN_ACTIONS = (
 ('fnPlay', '<b>All:</b> Starts playback and toggles between Play & Pause states.'),
 ('fnPause', '<b>All:</b> Pauses video and frame advances when already paused.'),
 ('fnStop', '<b>Media:</b> Stops playback and goes to the beginning of the video.<br><b>DVD:</b> Stops playback and closes DVD.'),
@@ -493,7 +485,7 @@ fnList = (
 ('fnDownloadNav', "<b>All:</b> Download Manager Navigator (show/hide)."),
 )
 
-exList = (
+EX_ACTIONS = (
 ('exSetAR', 'Set Aspect Ratio\n<br>value = 0-6'),
 ('exApplyPR', 'Apply Zoom Preset\n<br>value = 0-9'),
 ('exSavePR', 'Save Zoom Preset\n<br>value = 0-9'),
@@ -519,7 +511,7 @@ exList = (
 ('exEnableTCP', 'Enable TCP/IP interface\n<br>value = TCP Port number'),
 )
 
-nvList = (
+NV_ACTIONS = (
 ('Up', 'Navigational Control Up', '38'),
 ('Down', 'Navigational Control Down', '40'),
 ('Left', 'Navigational Control Left', '37'),
@@ -534,7 +526,15 @@ nvList = (
 ('KeyBackspace', 'Navigational Control Backspace', '8'),
 ('KeyEscape', 'Navigational Control Escape', '27'),
 )
+#pylint: enable-msg=C0301
 
+import wx
+import asynchat
+import socket
+import asyncore
+import threading
+from types import ClassType
+                
 
 class Text:
     tcpBox = "TCP/IP Settings"
@@ -615,14 +615,14 @@ class ZoomPlayerSession(asynchat.async_chat):
          
          
          
-class NvAction(eg.ActionClass):
+class NvAction(eg.ActionBase):
     
     def __call__(self):
         self.plugin.DoCommand("5120 " + self.value)
        
        
        
-class FnAction(eg.ActionClass):
+class FnAction(eg.ActionBase):
     
     def __call__(self):
         self.plugin.DoCommand("5100 " + self.value)
@@ -637,7 +637,7 @@ class ExAction(eg.ActionWithStringParameter):
        
        
        
-class ZoomPlayer(eg.PluginClass):
+class ZoomPlayer(eg.PluginBase):
     text = Text
     
     def __init__(self):
@@ -652,32 +652,33 @@ class ZoomPlayer(eg.PluginClass):
         self.lastSubtitleNum = 0
         self.lastSubtitlesEnabled = False
         self.lastAudioTrackNum = 0
+        self.session = None
        
         group = self.AddGroup('Navigational Commands')
-        for className, descr, scancode in nvList:
+        for className, descr, scancode in NV_ACTIONS:
             clsAttributes = dict(name=descr, value=scancode)
             cls = ClassType(className, (NvAction,), clsAttributes)
             group.AddAction(cls)
 
         group = self.AddGroup('Regular Functions')
-        for className, descr in fnList:
+        for className, descr in FN_ACTIONS:
             clsAttributes = dict(
                 name=className[2:], 
                 description=descr, 
                 value=className
             )
             cls = ClassType(className, (FnAction,), clsAttributes)
-            action = group.AddAction(cls)
+            group.AddAction(cls)
 
         group = self.AddGroup('Extended Functions')
-        for className, descr in exList:           
+        for className, descr in EX_ACTIONS:           
             clsAttributes = dict(
                 name=descr.splitlines()[0].strip(), 
                 description=descr, 
                 value=className
             )
             cls = ClassType(className, (ExAction,), clsAttributes)
-            action = group.AddAction(cls)
+            group.AddAction(cls)
             
         self.AddAction(self.MyCommand)
 
