@@ -34,14 +34,20 @@ from os.path import join
 import warnings
 
 
-MODULES_TO_IGNORE = []
+MODULES_TO_IGNORE = [
+    "__phello__.foo",
+    "wx.lib.graphics",
+    "wx.lib.rpcMixin",
+    "wx.lib.wxcairo",
+    "win32com.propsys.propsys",
+]
 
 HEADER = """\
 #-----------------------------------------------------------------------------
 # This file was automatically created by the BuildImports.py script.
 # Don't try to edit this file yourself.
 #-----------------------------------------------------------------------------
-
+#pylint: disable-msg=W0611,W0622,W0402,E0611,F0401
 """
 
 warnings.simplefilter('error', DeprecationWarning)
@@ -102,13 +108,13 @@ def ShouldBeIgnored(moduleName):
     return False
     
     
-def FindModulesInPath(path, prefix=""):
+def FindModulesInPath(path, prefix="", includeDeprecated=False):
     """
     Find modules and packages for a given filesystem path.
     """
     if prefix:
         prefix += "."
-    print "Scanning:", path
+    print "    Scanning:", path
     modules = []
     for root, dirs, files in os.walk(path):
         package = root[len(path) + 1:].replace("\\", ".")
@@ -133,10 +139,12 @@ def FindModulesInPath(path, prefix=""):
             moduleName = package + name
             if ShouldBeIgnored(moduleName) or moduleName.endswith(".__init__"):
                 continue
-            isOk, eType, eMesg = TestImport(moduleName)
+            if moduleName == "MimeWrite":
+                print "found"
+            isOk, eType, eMesg = TestImport(moduleName, includeDeprecated)
             if not isOk:
                 if not eType == "DeprecationWarning":
-                    print "   ", moduleName, eType, eMesg
+                    print "       ", moduleName, eType, eMesg
                 continue
             modules.append(moduleName)
     return modules
@@ -151,6 +159,8 @@ def ReadGlobalModuleIndex():
     badModules = []
     inFile = open("Global Module Index.txt", "rt")
     for line in inFile.readlines():
+        if line.startswith("#"):
+            continue
         parts = line.strip().split(" ", 1)
         if len(parts) > 1:
             if parts[1].startswith("(") and parts[1].find("Windows") < 0:
@@ -221,12 +231,11 @@ def Main(packagesToAdd, packagesToIgnore):
     MODULES_TO_IGNORE.extend(badModules)
     
     stdLibModules = (
-        FindModulesInPath(join(PYTHON_DIR, "DLLs"))
-        + FindModulesInPath(join(PYTHON_DIR, "lib"))
+        FindModulesInPath(join(PYTHON_DIR, "DLLs"), includeDeprecated=True)
+        + FindModulesInPath(join(PYTHON_DIR, "lib"), includeDeprecated=True)
     )
 
-    print
-    print "Modules found in global module index but not in scan:"
+    notFoundModules = []
     for module in globalModuleIndex:
         if module in stdLibModules:
             continue
@@ -234,8 +243,13 @@ def Main(packagesToAdd, packagesToIgnore):
             continue
         if ShouldBeIgnored(module):
             continue
-        print "   ", module
-        #result.append(module)
+        notFoundModules.append(module)
+    if notFoundModules:
+        print "    Modules found in global module index but not in scan:"
+        for module in notFoundModules:
+            print "       ", module
+
+        
     
     #print "Modules found in scan but not in global module index:"
     #for module in stdLibModules:

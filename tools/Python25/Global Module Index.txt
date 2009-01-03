@@ -249,8 +249,9 @@ nntplib
 operator 
 optparse 
 os 
-os.path 
-ossaudiodev (Linux, FreeBSD)  parser 
+# os.path (os.path can't be found, but it anyhow always builtin)
+ossaudiodev (Linux, FreeBSD)  
+parser 
 pdb 
 pickle 
 pickletools 

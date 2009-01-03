@@ -30,11 +30,19 @@ import time
 import ConfigParser
 import threading
 import imp
-import _winreg
 import subprocess
+import warnings
 
 from os.path import dirname, join, exists, abspath
 from glob import glob
+
+# local imports
+from InnoInstaller import InnoInstaller
+
+#disable deprecation warning in py2exe)
+warnings.filterwarnings("ignore", ".*", DeprecationWarning, "py2exe.build_exe")
+
+INI_FILE = os.path.splitext(__file__)[0] + ".ini"
 
 DEPENDENCIES = [
     (
@@ -82,29 +90,6 @@ DEPENDENCIES = [
 ]
 
 
-def CheckInnoSetup():
-    try:
-        key = _winreg.OpenKey(
-            _winreg.HKEY_LOCAL_MACHINE, 
-            (
-                "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\"
-                "Uninstall\\Inno Setup 5_is1"
-            )
-        )
-        installPath = _winreg.QueryValueEx(key, "InstallLocation")[0]
-        _winreg.CloseKey(key)
-        if exists(join(installPath, "ISCC.exe")):
-            return False
-    except WindowsError:
-        pass
-    return (
-        "Inno Setup", 
-        "5.2.3", 
-        "Inno Setup", 
-        "http://www.innosetup.com/isinfo.php"
-    )
-
-
 def CheckComtypes():
     # comtypes 0.6.0 has a bug in client/_code_cache.py
     # path it if needed
@@ -122,12 +107,32 @@ def CheckComtypes():
             break
     
     
+def CompareVersion(actualVersion, wantedVersion):
+    wantedParts = wantedVersion.split(".")
+    actualParts = actualVersion.split(".")
+    numParts = min(len(wantedParts), len(actualParts))
+    for i in range(numParts):
+        wantedPart = wantedParts[i]
+        actualPart = actualParts[i]
+        if wantedPart > actualPart:
+            return -1
+        elif wantedPart < actualPart:
+            return 1
+    return 0
+    
+    
     
 def CheckDependencies():
     missing = []
-    res = CheckInnoSetup()
-    if res:
-        missing.append(res)
+    if not InnoInstaller.GetCompilerPath():
+        missing.append(
+            (
+                "Inno Setup", 
+                "5.2.3", 
+                "Inno Setup", 
+                "http://www.innosetup.com/isinfo.php"
+            )
+        )
     for moduleName, wantedVersion, name, url in DEPENDENCIES:
         try:
             module = __import__(moduleName)
@@ -151,7 +156,7 @@ def CheckDependencies():
             version = "(unknown version)"
         if type(version) != type(""):
             version = ".".join(str(x) for x in version)
-        if wantedVersion != version:
+        if CompareVersion(version, wantedVersion) < 0:
             missing.append((moduleName, wantedVersion, name, url))
     if missing:
         print "The following dependencies are missing:"
@@ -171,9 +176,6 @@ CheckComtypes()
 # third-party module imports
 import pysvn
 import wx
-
-# local imports
-from InnoInstaller import InnoInstaller
 
 
     
@@ -208,6 +210,7 @@ Type: filesandordirs; Name: "{app}\\eg"
 
 [Files]
 Source: "%(libraryDir)s\\*.*"; DestDir: "{app}\\%(libraryName)s"; Flags: ignoreversion recursesubdirs
+Source: "%(sourceDir)s\\EventGhost.chm"; DestDir: "{app}"
 
 [Dirs]
 Name: "{app}\\%(libraryName)s\\site-packages"
@@ -228,6 +231,7 @@ Filename: "{app}\\EventGhost.exe"; Flags: postinstall nowait skipifsilent
 
 [Icons]
 Name: "{group}\\EventGhost"; Filename: "{app}\\EventGhost.exe"
+Name: "{group}\\EventGhost Help"; Filename: "{app}\\EventGhost.chm"
 Name: "{group}\\EventGhost Web Site"; Filename: "http://www.eventghost.org/"
 Name: "{group}\\EventGhost Forums"; Filename: "http://www.eventghost.org/forum/"
 Name: "{group}\\EventGhost Wiki"; Filename: "http://www.eventghost.org/wiki/"
@@ -290,16 +294,14 @@ EXCLUDED_MODULES = [
 
 
 class MyInstaller(InnoInstaller):
-    APP_SHORT_NAME = "EventGhost"
+    appShortName = "EventGhost"
     mainScript = "../EventGhost.pyw"
     icon = "EventGhost.ico"
     excludes = EXCLUDED_MODULES
     innoScriptTemplate = INNO_SCRIPT_TEMPLATE
+    outputBaseFilename = None
     
     def __init__(self):
-        if self.PYVERSION == "26":
-            self.SETUP_EXE_NAME_TEMPLATE = \
-                "%(APP_SHORT_NAME)s_%(appVersion)s_Py26_Setup"
         InnoInstaller.__init__(self)
 
 
@@ -401,7 +403,11 @@ class MyInstaller(InnoInstaller):
         """
         Create and compile the Inno Setup installer script.
         """
-        self.outputBaseFilename = self.SETUP_EXE_NAME_TEMPLATE % self
+        if self.pyVersion == "26":
+            filename = "%(appShortName)s_%(appVersion)s_Py26_Setup" % self
+        else:
+            filename = "%(appShortName)s_%(appVersion)s_Setup" % self
+        self.outputBaseFilename = filename
         plugins = {}
         for filename in self.GetSetupFiles():
             if filename.startswith("plugins\\"):
@@ -409,7 +415,7 @@ class MyInstaller(InnoInstaller):
                 plugins[pluginFolder] = True
             if (
                 filename.startswith("lib") 
-                and not filename.startswith("lib%s\\" % self.PYVERSION)
+                and not filename.startswith("lib%s\\" % self.pyVersion)
             ):
                 continue
             self.AddFile(join(self.sourceDir, filename), dirname(filename))
@@ -428,7 +434,7 @@ class MyInstaller(InnoInstaller):
             )
         self.Add(
             "InstallDelete", 
-            'Type: files; Name: "{app}\\lib%s\\*.*"' % self.PYVERSION
+            'Type: files; Name: "{app}\\lib%s\\*.*"' % self.pyVersion
         )
         self.ExecuteInnoSetup()
     
@@ -509,31 +515,25 @@ class Config(object):
 
 
 class MainDialog(wx.Dialog):
-    class Ctrls:
-        pass
     
-    def __init__(self):
-        wx.Dialog.__init__(self, None, title="Make EventGhost Installer")
+    def __init__(self, options, builder):
+        self.options = options
+        self.builder = builder
+        wx.Dialog.__init__(self, None, title="Build EventGhost Installer")
         
         # create controls
-        ctrls = []
-        for option in list(Options)[:-1]:
+        self.ctrls = {}
+        ctrlsSizer = wx.BoxSizer(wx.VERTICAL)
+        for option in list(options)[:-1]:
             ctrl = wx.CheckBox(self, -1, option.label)
             ctrl.SetValue(bool(option.value))
-            ctrls.append(ctrl)
-            setattr(self.Ctrls, option.name, ctrl)
-        self.Ctrls.upload.Enable(Options.ftpUrl != "")
-        self.Ctrls.commitSvn.Enable(pysvn is not None)
-        
-        #self.out = wx.TextCtrl(
-        #    self, 
-        #    style=wx.TE_MULTILINE|wx.TE_READONLY|wx.HSCROLL 
-        #)
-        #self.out.SetMinSize((400, 100))
-        #sys.stderr = self.out
-        #sys.stdout = self.out
-        #self.out.SetBackgroundColour(self.GetBackgroundColour())
+            ctrlsSizer.Add(ctrl, 0, wx.ALL, 5)
+            self.ctrls[option.name] = ctrl
 
+        self.ctrls["upload"].Enable(options.ftpUrl != "")
+        self.ctrls["commitSvn"].Enable(pysvn is not None)
+
+        
         self.okButton = wx.Button(self, wx.ID_OK)
         self.okButton.Bind(wx.EVT_BUTTON, self.OnOk)
         self.cancelButton = wx.Button(self, wx.ID_CANCEL)
@@ -545,16 +545,13 @@ class MainDialog(wx.Dialog):
         btnSizer.AddButton(self.cancelButton)
         btnSizer.Realize()
         
-        sizer1 = wx.BoxSizer(wx.VERTICAL)
-        for ctrl in ctrls:
-            sizer1.Add(ctrl, 0, wx.ALL, 5)
         sizer2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer2.Add(sizer1)
-        #sizer2.Add(self.out, 1, wx.EXPAND|wx.ALL, 10)
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(sizer2, 1, wx.ALL|wx.EXPAND, 0)
-        sizer.Add(btnSizer, 0, wx.ALL|wx.ALIGN_RIGHT, 10)
-        self.SetSizerAndFit(sizer)
+        sizer2.Add(ctrlsSizer)
+
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        mainSizer.Add(sizer2, 1, wx.ALL|wx.EXPAND, 0)
+        mainSizer.Add(btnSizer, 0, wx.ALL|wx.ALIGN_RIGHT, 10)
+        self.SetSizerAndFit(mainSizer)
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         
         
@@ -563,12 +560,15 @@ class MainDialog(wx.Dialog):
         self.okButton.Enable(False)
         self.cancelButton.Enable(False)
         #self.SetWindowStyleFlag(wx.CAPTION|wx.RESIZE_BORDER)
-        for option in list(Options)[:-1]:
-            ctrl = getattr(self.Ctrls, option.name)
-            setattr(Options, option.name, ctrl.GetValue())
+        for option in list(self.options)[:-1]:
+            ctrl = self.ctrls[option.name]
+            setattr(self.options, option.name, ctrl.GetValue())
             ctrl.Enable(False)
-        Options.SaveSettings()
-        thread = threading.Thread(target=Main, args=(self, ))
+        self.options.SaveSettings()
+        thread = threading.Thread(
+            target=Main, 
+            args=(self.options, self.builder, self)
+        )
         thread.start()
         
         
@@ -579,7 +579,8 @@ class MainDialog(wx.Dialog):
         #app.ExitMainLoop()
         
         
-    def OnClose(self, event):
+    @staticmethod
+    def OnClose(event):
         """ Handles a click on the close box of the frame. """
         wx.GetApp().ExitMainLoop()
         event.Skip()
@@ -599,83 +600,88 @@ def ExecutePy(scriptFilePath):
         raise SystemError
     
         
-def BuildImports():
+def BuildImportsPy():
     oldCwd = os.getcwdu()
     import BuildImports
-    os.chdir(abspath(u"Python%d%d" % sys.version_info[0:2]))
+    os.chdir(abspath(u"Python%d%d" % sys.version_info[:2]))
     BuildImports.Main(INCLUDED_MODULES, EXCLUDED_MODULES)
     os.chdir(oldCwd)
         
         
-def Main(mainDialog=None):
+def Main(options, builder, mainDialog=None):
     """
     Main task of the script.
     """
-    if Options.incrementBuildNum:
+    if options.incrementBuildNum:
         print "--- updating Version.py"
-    NS.UpdateVersionFile(Options.incrementBuildNum)
+    builder.UpdateVersionFile(options.incrementBuildNum)
     print "--- updating CHANGELOG.TXT"
-    NS.UpdateChangeLog()
-    if Options.buildStaticImports:
+    builder.UpdateChangeLog()
+    if options.buildStaticImports:
         print "--- building StaticImports.py"
         ExecutePy("BuildStaticImports.py")
-    if Options.buildImports:
+    if options.buildImports:
         print "--- building imports.py"
-        BuildImports()
-    if Options.buildDocs:
+        BuildImportsPy()
+    if options.buildDocs:
         print "--- building docs"
         ExecutePy("BuildDocs.py")
-    if Options.commitSvn:
+    if options.commitSvn:
         print "--- committing working copy to SVN"
-        NS.CommitSvn()
-    if Options.buildSourceArchive:
+        builder.CommitSvn()
+    if options.buildSourceArchive:
         print "--- building source code archive"
-        NS.CreateSourceArchive()
-    if Options.buildPyExe:
+        builder.CreateSourceArchive()
+    if options.buildPyExe:
         print "--- building py.exe and pyw.exe"
         ExecutePy("BuildPyExe.py")
-    if Options.buildLib:
+    if options.buildLib:
         print "--- building library files"
-        NS.CreateLibrary()            
-    if Options.buildInstaller:
+        builder.CreateLibrary()            
+    if options.buildInstaller:
         print "--- building setup.exe"
-        NS.CreateInstaller()
-        filename = join(NS.outputDir, NS.outputBaseFilename + ".exe")
-        if Options.upload and Options.ftpUrl:
+        builder.CreateInstaller()
+        filename = join(builder.outputDir, builder.outputBaseFilename + ".exe")
+        if options.upload and options.ftpUrl:
             print "--- uploading setup.exe"
             import UploadFile
             wx.CallAfter(
                 UploadFile.UploadDialog, 
                 mainDialog, 
                 filename, 
-                Options.ftpUrl
+                options.ftpUrl
             )        
     print "--- All done!"
     wx.CallAfter(mainDialog.Close)
     
 
-NS = MyInstaller()
-Options = Config(join(NS.toolsDir, "Build.ini"))
-Options.AddOption("includeNoIncludePlugins", "Include 'noinclude' plugins", False)
-Options.AddOption("incrementBuildNum", "Increment build number", False)
-Options.AddOption("buildStaticImports", "Build StaticImports.py", True)
-Options.AddOption("buildImports", "Build imports.py", True)
-Options.AddOption("buildDocs", "Build docs", True)
-Options.AddOption("buildSourceArchive", "Build source archive", True)
-Options.AddOption("buildPyExe", "Build py.exe and pyw.exe", True)
-Options.AddOption("buildLib", "Build lib%d%d" %sys.version_info[0:2], True)
-Options.AddOption("buildInstaller", "Build Setup.exe", True)
-Options.AddOption("commitSvn", "SVN commit", False)
-Options.AddOption("upload", "Upload through FTP", False)
-Options.AddOption("ftpUrl", "", "")
-Options.LoadSettings()
+OPTIONS = (
+    ("includeNoIncludePlugins", "Include 'noinclude' plugins", False),
+    ("incrementBuildNum", "Increment build number", False),
+    ("buildStaticImports", "Build StaticImports.py", True),
+    ("buildImports", "Build imports.py", True),
+    ("buildDocs", "Build docs", True),
+    ("buildSourceArchive", "Build source archive", True),
+    ("buildPyExe", "Build py.exe and pyw.exe", True),
+    ("buildLib", "Build lib%d%d" %sys.version_info[0:2], True),
+    ("buildInstaller", "Build Setup.exe", True),
+    ("commitSvn", "SVN commit", False),
+    ("upload", "Upload through FTP", False),
+    ("ftpUrl", "", ""),
+)
 
-def Run():
+
+def RunGui():
+    builder = MyInstaller()
+    options = Config(INI_FILE)
+    for option in OPTIONS:
+        options.AddOption(*option)
+    options.LoadSettings()
     app = wx.App(0)
     app.SetExitOnFrameDelete(True)
-    mainDialog = MainDialog()
+    mainDialog = MainDialog(options, builder)
     mainDialog.Show()
     app.MainLoop()
     
-Run()
+RunGui()
 

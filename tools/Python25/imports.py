@@ -2,7 +2,7 @@
 # This file was automatically created by the BuildImports.py script.
 # Don't try to edit this file yourself.
 #-----------------------------------------------------------------------------
-
+#pylint: disable-msg=W0611,W0622,W0402,E0611,F0401
 import bz2
 import pyexpat
 import select
