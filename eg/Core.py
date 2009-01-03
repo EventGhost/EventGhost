@@ -83,6 +83,7 @@ eg.PROGRAMFILES = eg.folderPath.ProgramFiles
 eg.ValueChangedEvent, eg.EVT_VALUE_CHANGED = NewCommandEvent()
 eg.focusChangeEvent = eg.NotificationHandler()
 eg.clipboardEvent = eg.NotificationHandler()
+eg.pyCrustFrame = None
 
 if eg.startupArguments.configDir is None:
     eg.configDir = os.path.join(eg.folderPath.RoamingAppData, eg.APP_NAME)

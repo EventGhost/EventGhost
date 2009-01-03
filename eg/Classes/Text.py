@@ -133,11 +133,13 @@ class Text:
             ConfigurationMenu = "&Configuration"
             
             HelpMenu = "&Help"
+            HelpContents= "&Help Contents"
             About = "&About EventGhost..."
-            WebHomepage = "Home Page"
-            WebForum = "Support Forums"
-            WebWiki = "Wiki"
+            WebHomepage = "Home &Page"
+            WebForum = "Support &Forums"
+            WebWiki = "&Wiki"
             CheckUpdate = "Check for updates now..."
+            PythonShell = "Python Shell"
             Reset = "Reset"
             
         class SaveChanges:

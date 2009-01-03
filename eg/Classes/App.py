@@ -94,9 +94,11 @@ class App(wx.App):
          
         
     @eg.LogIt
-    def Exit(self, event=None):
+    def Exit(self, dummyEvent=None):
         if eg.document.CheckFileNeedsSave() == wx.ID_CANCEL:
             return
+        if eg.pyCrustFrame:
+            eg.pyCrustFrame.Close()
         eg.document.Close()
         eg.taskBarIcon.alive = False
         eg.taskBarIcon.Destroy()

@@ -27,7 +27,6 @@ import re
 from collections import defaultdict
 
 import wx.aui
-from wx.py.crust import CrustFrame
 
 from eg import (
     EventItem, 
@@ -86,6 +85,7 @@ class DefaultConfig:
 
 config = eg.GetConfig("mainFrame", DefaultConfig)
 
+
 def GetIcon(name):
     return eg.Icons.GetIcon("images\\" + name + ".png")
 
@@ -105,6 +105,7 @@ class MainFrame(wx.Frame):
         self.findDialog = None
         self.openDialogs = []
         self.lastClickedTool = None
+        self.egEvent = None
         self.style = (
             wx.MINIMIZE_BOX
             |wx.MAXIMIZE_BOX
@@ -180,9 +181,6 @@ class MainFrame(wx.Frame):
         auiManager.GetArtProvider().SetMetric(
             wx.aui.AUI_DOCKART_PANE_BORDER_SIZE, 0
         )
-        #auiManager.SetFlags(
-        #    auiManager.GetFlags() ^ wx.aui.AUI_MGR_ALLOW_ACTIVE_PANE
-        #)
         auiManager.GetPane("tree").Caption(" " + Text.Tree.caption)
         self.toolBar.Show(config.showToolbar)
         auiManager.Update()
@@ -238,7 +236,7 @@ class MainFrame(wx.Frame):
         )        
         self.SetAcceleratorTable(self.acceleratorTable)
         eg.EnsureVisible(self)
-    
+        
     
     @eg.LogItWithReturn
     def Destroy(self):
@@ -420,11 +418,15 @@ class MainFrame(wx.Frame):
         # help menu
         menu = wx.Menu()
         menuBar.Append(menu, text.HelpMenu)
+        Append("HelpContents", "\tF1")
+        menu.AppendSeparator()
         Append("WebHomepage")
         Append("WebForum")
         Append("WebWiki")
         menu.AppendSeparator()
         Append("CheckUpdate")
+        menu.AppendSeparator()
+        Append("PythonShell")
         menu.AppendSeparator()
         Append("About")
         if eg.debugLevel:
@@ -434,7 +436,6 @@ class MainFrame(wx.Frame):
             Append("Import")
             menu.AppendSeparator()
             Append("Reload")
-            Append("Shell")
             Append("GetInfo")
             Append("CollectGarbage")
             Append("Reset", "\tPause")
@@ -627,7 +628,7 @@ class MainFrame(wx.Frame):
             
         self.lastFocus = focus
         toolBar = self.toolBar
-        canCut, canCopy, canPaste, canDelete = self.GetEditCmdState()
+        canCut, canCopy, canPaste = self.GetEditCmdState()[:3]
         toolBar.EnableTool(wx.ID_CUT, canCut)
         toolBar.EnableTool(wx.ID_COPY, canCopy)
         toolBar.EnableTool(wx.ID_PASTE, canPaste)
@@ -676,7 +677,7 @@ class MainFrame(wx.Frame):
         
     
     def OnTreeSelectionEvent(self, dummySelection):
-        canCut, canCopy, canPaste, canDelete = self.GetEditCmdState()
+        canCut, canCopy, canPaste = self.GetEditCmdState()[:3]
         self.toolBar.EnableTool(wx.ID_CUT, canCut)
         self.toolBar.EnableTool(wx.ID_COPY, canCopy)
         self.toolBar.EnableTool(wx.ID_PASTE, canPaste)
@@ -757,17 +758,6 @@ class MainFrame(wx.Frame):
         self.document.SaveAs()
 
 
-    def OnCmdExport(self):
-        result = eg.ExportDialog.GetModalResult()
-        if result is not None:
-            for item in result[0][0]:
-                print item.GetLabel()
-
-
-    def OnCmdImport(self):
-        pass
-    
-    
     @eg.AsGreenlet
     def OnCmdOptions(self):
         if not self.optionsDialog:
@@ -931,6 +921,15 @@ class MainFrame(wx.Frame):
         self.logCtrl.OnCmdClearLog()
         
     
+    def OnCmdHelpContents(self):
+        from eg.WinApi.Dynamic import (
+            HtmlHelp, 
+            HH_DISPLAY_TOPIC, 
+            GetDesktopWindow
+        )
+        HtmlHelp(GetDesktopWindow(), "EventGhost.chm", HH_DISPLAY_TOPIC, 0)
+        
+        
     def OnCmdWebHomepage(self):
         import webbrowser
         webbrowser.open("http://www.eventghost.org/", 2, 1)
@@ -950,6 +949,38 @@ class MainFrame(wx.Frame):
         eg.CheckUpdate.CheckUpdateManually()
     
     
+    def OnCmdPythonShell(self):
+        if eg.pyCrustFrame:
+            eg.pyCrustFrame.Raise()
+            return
+        
+        import wx.py as py
+
+        fileName = os.path.join(eg.configDir, 'PyCrust')
+        pyCrustConfig = wx.FileConfig(localFilename=fileName)
+        pyCrustConfig.SetRecordDefaults(True)
+
+        eg.pyCrustFrame = frame = py.crust.CrustFrame(
+            rootObject=eg.globals.__dict__,
+            #locals=eg.globals.__dict__,
+            rootLabel="eg.globals",
+            config=pyCrustConfig,
+            dataDir=eg.configDir,
+        )
+        tree = frame.crust.filling.tree
+        tree.Expand(tree.GetRootItem())
+        @eg.LogIt
+        def OnPyCrustClose(event):
+            frame.OnClose(event)
+            # I don't know if this is a bug of wxPython, but if we don't 
+            # delete the notebook explicitly, the program crashes on exit.
+            frame.crust.notebook.Destroy()
+            eg.pyCrustFrame = None
+            #event.Skip()
+        frame.Bind(wx.EVT_CLOSE, OnPyCrustClose)
+        frame.Show()
+        
+        
     @eg.AsGreenlet
     def OnCmdAbout(self):
         if self.aboutDialog is None:
@@ -963,30 +994,23 @@ class MainFrame(wx.Frame):
         
     #----- debugging and experimental stuff that will be removed someday -----
     
+    def OnCmdExport(self):
+        result = eg.ExportDialog.GetModalResult()
+        if result is not None:
+            for item in result[0][0]:
+                print item.GetLabel()
+
+
+    def OnCmdImport(self):
+        pass
+    
+    
     def OnCmdReload(self):
         if self.document.CheckFileNeedsSave() == wx.ID_CANCEL:
             return wx.ID_CANCEL
         self.document.StartSession(self.document.filePath)
     
     
-    def OnCmdShell(self):
-        frame = CrustFrame(
-            self, 
-            rootObject=eg.globals.__dict__, 
-            #locals=eg.globals.__dict__, 
-            locals={}, 
-            rootIsNamespace=False
-        )
-        self.pyCrustFrame = frame
-        frame.Show()
-        def OnClose(event):
-            frame.Hide()
-            self.pyCrustFrame = None
-            event.Skip()
-            print "PyCrust Close"
-        frame.Bind(wx.EVT_CLOSE, OnClose)
-        
-        
     def OnCmdGetInfo(self):
         self.document.selection.ShowInfo()
 
