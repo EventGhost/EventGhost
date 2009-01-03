@@ -22,7 +22,7 @@
 
 
 class Version:
-    buildNum = 1518
-    buildTime = 1230832488.97
-    svnRevision = 649
+    buildNum = 1488
+    buildTime = 1230948726.91
+    svnRevision = 669
     string = "0.3.6.%s" % buildNum

@@ -12,6 +12,7 @@ _shell32 = WinDLL("shell32")
 _Psapi = WinDLL("Psapi")
 _Advapi32 = WinDLL("Advapi32")
 _setupapi = WinDLL("setupapi")
+_htmlhelp = WinDLL("hhctrl.ocx")
 import sys
 if not hasattr(sys, "frozen"): # detect py2exe
     try:
@@ -34,6 +35,7 @@ if not hasattr(sys, "frozen"): # detect py2exe
                 "#include <tlhelp32.h>\n"
                 "#include <objidl.h>\n"
                 "#include <setupapi.h>\n"
+                "#include <htmlhelp.h>\n"
             )       
         except WindowsError:
             print "GCC_XML most likely not installed"
@@ -1346,3 +1348,9 @@ SP_DEVICE_INTERFACE_DETAIL_DATA = SP_DEVICE_INTERFACE_DETAIL_DATA_W
 DIGCF_PRESENT = 2 # Variable c_int
 PSP_DEVICE_INTERFACE_DETAIL_DATA = PSP_DEVICE_INTERFACE_DETAIL_DATA_W
 GWL_HWNDPARENT = -8 # Variable c_int
+# HtmlHelp = HtmlHelpW # alias
+HtmlHelpW = _htmlhelp.HtmlHelpW
+HtmlHelpW.restype = HWND
+HtmlHelpW.argtypes = [HWND, LPCWSTR, UINT, DWORD_PTR]
+HtmlHelp = HtmlHelpW # alias
+HH_DISPLAY_TOPIC = 0 # Variable c_int

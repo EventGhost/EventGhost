@@ -60,8 +60,6 @@ class StatusBar(wx.StatusBar):
     
     @eg.LogIt
     def Destroy(self):
-        #self.Unbind(wx.EVT_SIZE)
-        #self.Unbind(wx.EVT_IDLE)
         return wx.StatusBar.Destroy(self)
 
     
