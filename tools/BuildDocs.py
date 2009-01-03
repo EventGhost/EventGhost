@@ -1,13 +1,14 @@
 import os
 import sys
 import re
-import sphinx
+import _winreg
 
 MY_DIR = os.path.dirname(__file__)
 MAIN_DIR = os.path.abspath(os.path.join(MY_DIR, ".."))
 DOCS_MAIN_DIR = os.path.join(MAIN_DIR, "docs")
 DOCS_SOURCE_DIR = os.path.join(DOCS_MAIN_DIR, "source")
-DOCS_BUILD_DIR = os.path.join(DOCS_MAIN_DIR, "build")
+DOCS_HTML_BUILD_DIR = os.path.join(DOCS_MAIN_DIR, "html")
+DOCS_CHM_BUILD_DIR = os.path.join(DOCS_MAIN_DIR, "chm")
 
 
 def ImportEg():
@@ -22,7 +23,23 @@ def ImportEg():
     return eg
 
 
-def WritePluginList(filepath):
+def GetHtmlHelpCompilerPath():
+    """ 
+    Try to find the install location of the HTML Help command line compiler
+    """
+    subkey = r"Software\Microsoft\HTML Help Workshop"
+    try:
+        key = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER, subkey)
+        path = _winreg.QueryValueEx(key, "InstallDir")[0]
+    except WindowsError:
+        path = os.path.join(os.environ["PROGRAMFILES"], "HTML Help Workshop")
+    programPath = os.path.join(path, "hhc.exe")
+    if not os.path.exists(programPath):
+        return None
+    return programPath
+    
+    
+def WritePluginList(eg, filepath):
     kindList = [
         ("core", "Essential (always loaded)"),
         ("remote",  "Remote Receiver"),
@@ -80,17 +97,40 @@ def WritePluginList(filepath):
     outfile.close()
     
 
-eg = ImportEg()
-WritePluginList(os.path.join(DOCS_SOURCE_DIR, "PluginList.rst"))
-
-argv = [
-    None,
-    #"-b", "htmlhelp",
-    #"-E",
-    "-d", os.path.join(DOCS_MAIN_DIR, ".doctree"),
-    DOCS_SOURCE_DIR,
-    DOCS_BUILD_DIR,
-]
-sphinx.main(argv)
-import webbrowser
-#webbrowser.open(os.path.join(DOCS_BUILD_DIR, "index.html"), 0, 1)
+def Main():
+    import sphinx
+    eg = ImportEg()
+    WritePluginList(eg, os.path.join(DOCS_SOURCE_DIR, "PluginList.rst"))
+    
+    sphinx.main([
+        None,
+        "-a",
+        "-b", "html",
+        #"-E",
+        "-d", os.path.join(DOCS_MAIN_DIR, ".doctree"),
+        DOCS_SOURCE_DIR,
+        DOCS_HTML_BUILD_DIR,
+    ])
+    
+    sphinx.main([
+        None,
+        "-a",
+        "-b", "htmlhelp",
+        #"-E",
+        "-d", os.path.join(DOCS_MAIN_DIR, ".doctree"),
+        DOCS_SOURCE_DIR,
+        DOCS_CHM_BUILD_DIR,
+    ])
+    
+    htmlHelpCompilerPath = GetHtmlHelpCompilerPath()
+    if htmlHelpCompilerPath is None:
+        raise Exception("HTML Help Workshop command line compiler not found")
+    import subprocess
+    hhpPath = os.path.join(DOCS_CHM_BUILD_DIR, "EventGhost.hhp")
+    subprocess.call([htmlHelpCompilerPath, hhpPath])
+    import shutil
+    shutil.copy(os.path.join(DOCS_CHM_BUILD_DIR, "EventGhost.chm"), MAIN_DIR)
+    
+    
+if __name__ == "__main__":
+    Main()

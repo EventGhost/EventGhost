@@ -2,7 +2,7 @@
 # This file was automatically created by the BuildImports.py script.
 # Don't try to edit this file yourself.
 #-----------------------------------------------------------------------------
-
+#pylint: disable-msg=W0611,W0622,W0402,E0611,F0401
 import bz2
 import pyexpat
 import select
@@ -98,9 +98,14 @@ import macurl2path
 import mailbox
 import mailcap
 import markupbase
+import md5
+import mhlib
 import mimetools
 import mimetypes
+import MimeWriter
+import mimify
 import modulefinder
+import multifile
 import mutex
 import netrc
 import new
@@ -118,6 +123,7 @@ import pickletools
 import pkgutil
 import platform
 import plistlib
+import popen2
 import poplib
 import posixpath
 import pprint
@@ -140,6 +146,7 @@ import runpy
 import sched
 import sets
 import sgmllib
+import sha
 import shelve
 import shlex
 import shutil
@@ -151,6 +158,7 @@ import smtplib
 import sndhdr
 import socket
 import SocketServer
+import sre
 import sre_compile
 import sre_constants
 import sre_parse
@@ -197,6 +205,7 @@ import weakref
 import webbrowser
 import whichdb
 import xdrlib
+import xmllib
 import xmlrpclib
 import zipfile
 import _abcoll

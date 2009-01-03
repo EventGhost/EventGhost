@@ -34,9 +34,6 @@ import zipfile
 from os.path import basename, dirname, abspath, join, exists
 from glob import glob
 
-# third-party module imports
-import pysvn
-import py2exe
 
 RT_MANIFEST = 24
 
@@ -66,16 +63,20 @@ class InnoInstaller(object):
     """
     Helper class to create Inno Setup installers more easily.
     """
-    APP_SHORT_NAME = "Application"
+    appShortName = "Application"
     sourceDir = ".."
     outputDir = "../.."
     libraryName = "lib%d%d" % sys.version_info[:2]
     appVersion = "0.0.0"
-    SETUP_EXE_NAME_TEMPLATE = "%(APP_SHORT_NAME)s_%(appVersion)s_Setup"
-    PYVERSION = str(sys.version_info[0]) + str(sys.version_info[1])
+    pyVersion = "%d%d" % sys.version_info[:2]
     bootScript = "Py2ExeBootScript.py"
     icon = None
+    excludes = []
     
+    # must be set be subclass
+    mainScript = None
+    innoScriptTemplate = None
+
 
     def __init__(self):
         self.tmpDir = tempfile.mkdtemp()
@@ -85,14 +86,13 @@ class InnoInstaller(object):
         self.outputDir = abspath(self.outputDir)
         self.libraryDir = abspath(join(self.sourceDir, self.libraryName))
         self.innoSections = {}
-        self.pyVersionDir = abspath(u"Python%s" % self.PYVERSION)
+        self.pyVersionDir = abspath(u"Python%s" % self.pyVersion)
         # Add our working dir to the import pathes
         sys.path.append(self.toolsDir)
         sys.path.append(self.pyVersionDir)
-        #self.ROOT_FILES_TO_ADD = ["%s.exe" % self.APP_SHORT_NAME]
-        if self.PYVERSION == "25":
+        if self.pyVersion == "25":
             manifestTemplate = PY25_MANIFEST_TEMPLATE
-        elif self.PYVERSION == "26":
+        elif self.pyVersion == "26":
             manifestTemplate = PY26_MANIFEST_TEMPLATE
         else:
             raise SystemError("Unknown Python version.")
@@ -120,7 +120,7 @@ class InnoInstaller(object):
             ),
             # The lib directory contains everything except the executables and
             # the python dll.
-            zipfile = join(self.libraryName, "python%s.zip" % self.PYVERSION),
+            zipfile = join(self.libraryName, "python%s.zip" % self.pyVersion),
             windows = [
                 dict(
                     script = abspath(self.mainScript),
@@ -128,14 +128,14 @@ class InnoInstaller(object):
                     other_resources = [
                         (RT_MANIFEST, 1, manifestTemplate % self)
                     ],
-                    dest_base = self.APP_SHORT_NAME
+                    dest_base = self.appShortName
                 ),
             ],
             # use out build_installer class as extended py2exe build command
             #cmdclass = {"py2exe": py2exe.run},
             verbose = 3,
         )
-        if self.PYVERSION == "26":
+        if self.pyVersion == "26":
             self.py2exeOptions["data_files"] = [
                 (self.libraryName, [
                     join(self.pyVersionDir, "Microsoft.VC90.CRT.manifest")
@@ -145,7 +145,6 @@ class InnoInstaller(object):
             self.py2exeOptions["windows"][0]["icon_resources"].append(
                 (1, abspath(self.icon))
             )
-        #os.chdir(abspath(u"Python%s" % self.PYVERSION))
 
         
     def Add(self, section, line):
@@ -175,6 +174,7 @@ class InnoInstaller(object):
         """
         Return the highest SVN revision in the working copy.
         """
+        import pysvn
         client = pysvn.Client()
         svnRevision = 0
         for status in client.status(self.sourceDir, ignore=True):
@@ -188,6 +188,8 @@ class InnoInstaller(object):
         """
         Commit all modified files in the working copy to the SVN server.
         """
+        import pysvn
+        
         def SslServerTrustPromptCallback(dummy):
             """ 
             See pysvn documentation for 
@@ -206,10 +208,11 @@ class InnoInstaller(object):
         """
         Create a zip archive off all versioned files in the working copy.
         """
+        import pysvn
         if filename is None:
             filename = join(
                 self.outputDir, 
-                "%(APP_SHORT_NAME)s_%(appVersion)s_Source.zip" % self
+                "%(appShortName)s_%(appVersion)s_Source.zip" % self
             )
         client = pysvn.Client()
         workingDir = self.sourceDir
@@ -230,7 +233,8 @@ class InnoInstaller(object):
         sys.argv.append("py2exe")
         from distutils.core import setup
         InstallPy2exePatch()
-        import py2exe
+        import py2exe # pylint: disable-msg=W0612
+                      # looks like py2exe import is unneeded, but it isn't
         if exists(self.libraryDir):
             for filename in os.listdir(self.libraryDir):
                 path = join(self.libraryDir, filename)
@@ -250,9 +254,25 @@ class InnoInstaller(object):
             if filename not in neededDlls:
                 os.remove(join(self.libraryDir, filename))
                 
-#        for dll in self.ROOT_FILES_TO_ADD:
-#            if not exists(join(self.sourceDir, dll)):
-#                shutil.copy2(join(pythonDir, dll), self.sourceDir)
+    
+    @staticmethod
+    def GetCompilerPath():
+        try:
+            key = _winreg.OpenKey(
+                _winreg.HKEY_LOCAL_MACHINE, 
+                (
+                    "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\"
+                    "Uninstall\\Inno Setup 5_is1"
+                )
+            )
+            installPath = _winreg.QueryValueEx(key, "InstallLocation")[0]
+            _winreg.CloseKey(key)
+        except WindowsError:
+            return None
+        installPath = join(installPath, "ISCC.exe")
+        if not exists(installPath):
+            return None
+        return installPath
         
     
     def ExecuteInnoSetup(self):
@@ -260,13 +280,13 @@ class InnoInstaller(object):
         Finishes the setup, writes the Inno Setup script and calls the 
         Inno Setup compiler.
         """
-        self.AddFile("../%s.exe" % self.APP_SHORT_NAME)
-        if self.PYVERSION == "25":
+        self.AddFile("../%s.exe" % self.appShortName)
+        if self.pyVersion == "25":
             self.AddFile("../MFC71.dll")
             self.AddFile("../msvcr71.dll")
             self.AddFile("../msvcp71.dll")
             self.AddFile("../python25.dll")
-        elif self.PYVERSION == "26":
+        elif self.pyVersion == "26":
             self.AddFile("../msvcr90.dll")
             self.AddFile("../msvcp90.dll")
             self.AddFile("../msvcm90.dll")
@@ -281,21 +301,11 @@ class InnoInstaller(object):
                 issFile.write("%s\n" % line)            
         issFile.close()
 
-        key = _winreg.OpenKey(
-            _winreg.HKEY_LOCAL_MACHINE, 
-            (
-                "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\"
-                "Uninstall\\Inno Setup 5_is1"
-            )
-        )
-        installPath, _ = _winreg.QueryValueEx(key, "InstallLocation")
-        _winreg.CloseKey(key)
-    
         startupInfo = subprocess.STARTUPINFO()
         startupInfo.dwFlags = subprocess.STARTF_USESHOWWINDOW
         startupInfo.wShowWindow = subprocess.SW_HIDE 
         errorcode = subprocess.call(
-            (join(installPath, "ISCC.exe"), innoScriptPath), 
+            (self.GetCompilerPath(), innoScriptPath), 
             stdout=sys.stdout.fileno(),
             startupinfo=startupInfo
         )
@@ -312,10 +322,10 @@ PY25_MANIFEST_TEMPLATE = '''
     <assemblyIdentity
         version="5.0.0.0"
         processorArchitecture="x86"
-        name="%(APP_SHORT_NAME)s"
+        name="%(appShortName)s"
         type="win32"
     />
-    <description>%(APP_SHORT_NAME)s Program</description>
+    <description>%(appShortName)s Program</description>
     <dependency>
         <dependentAssembly>
             <assemblyIdentity

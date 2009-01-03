@@ -260,7 +260,7 @@
  operator Functions corresponding to the standard operators. 
  optparse More convenient, flexible, and powerful command-line parsing library. 
  os Miscellaneous operating system interfaces. 
-     os.path Operations on pathnames. 
+#    os.path Operations on pathnames. 
  ossaudiodev (Linux, FreeBSD) Access to OSS-compatible audio devices. 
  parser Access parse trees for Python source code. 
  pdb The Python debugger for interactive interpreters. 
