@@ -1,3 +1,12 @@
+- The log has a new option to indent items, that should help to detect how
+  the processing of events/macros/actions work.
+- Added a Python shell that you can open through the help menu. A nice
+  toy to experiment with Python.
+- The setup includes a Windows help file now. You can invoke it through the
+  help menu or by pressing F1. The help isn't very complete. It only contains
+  some parts from the Wiki till now.
+  
+
 0.3.6.1487 (12/05/2008)
 =======================
 - The "log only assigned and activated events" check box is now 
