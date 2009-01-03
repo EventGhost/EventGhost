@@ -1,4 +1,4 @@
-﻿version="0.1.6"
+﻿version="0.1.7"
 # plugins/OSM/__init__.py
 #
 # Copyright (C)  2008 Pako  (lubos.ruckl@quick.cz)
@@ -18,8 +18,8 @@
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-#Last change: 2008-10-23 08:50
+#
+#Last change: 2009-01-03 20:52
 
 eg.RegisterPlugin(
     name = "OS Menu",
@@ -30,7 +30,7 @@ eg.RegisterPlugin(
         'Allows you to create custom On Screen Menu.'
     ),
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.org/xxxxx",
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1051",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABoAAAAaCAMAAACelLz8AAADAFBMVEX/////9/f/goL/"
         "z8//x8f//v7/2dn/Kir/gID/c3P/5ub/vb3/TU3/QED/ysr/oqL/7Oz/3t7/rq7/hob/"
@@ -61,12 +61,7 @@ eg.RegisterPlugin(
 
 from threading import Timer
 from win32api import GetSystemMetrics
-
-def ExtractFromList(list,index):
-    tmp=[]
-    for item in list:
-        tmp.append(item[index])
-    return tmp
+from eg.WinApi.Dynamic import CreateEvent, SetEvent
 
 #===============================================================================
 #cls types for ACTIONS list :
@@ -83,8 +78,8 @@ class ShowMenu(eg.ActionClass):
         menuFont = 'Menu font:'
         txtColour = 'Text colour'
         background = 'Background colour'
+#-------------------------------------------------------------------------------
 
-#===============================================================================
     class MenuColourSelectButton(wx.BitmapButton):
 
         def __init__(
@@ -146,7 +141,8 @@ class ShowMenu(eg.ActionClass):
             image = wx.EmptyImage(w-10, h-10)
             image.SetRGBRect((1, 1, w-12, h-12), *value)
             self.SetBitmapLabel(image.ConvertToBitmap())
-#===============================================================================
+#-------------------------------------------------------------------------------
+
     class MenuFontButton(wx.BitmapButton):
 
         def __init__(
@@ -208,7 +204,7 @@ class ShowMenu(eg.ActionClass):
 
         def SetValue(self, fontInfo):
             self.fontInfo = fontInfo
-
+#-------------------------------------------------------------------------------
 
     def Move(self,index,direction):
         tmpList=self.choices[:]
@@ -229,7 +225,7 @@ class ShowMenu(eg.ActionClass):
             tmpList[index2] = self.choices[index]
         self.choices=tmpList
         return index2
-
+#-------------------------------------------------------------------------------
 
     def __call__(
         self,
@@ -238,14 +234,20 @@ class ShowMenu(eg.ActionClass):
         back,
         fontInfo,
     ):
-        wx.CallAfter(
-            self.plugin.ShowMenu,
-            choices,
-            fore,
-            back,
-            fontInfo,
-        )
-#===============================================================================
+        self.plugin.choices = choices
+        if not self.plugin.menuDlg:
+            self.plugin.menuDlg = Menu()
+            self.event = CreateEvent(None, 0, 0, None)
+            wx.CallAfter(self.plugin.menuDlg.ShowMenu,
+                fore,
+                back,
+                fontInfo,
+                False,
+                self.plugin,
+                self.event
+            )
+            eg.actionThread.WaitOnEvent(self.event)
+#-------------------------------------------------------------------------------
 
     def GetLabel(
         self,
@@ -376,7 +378,7 @@ class ShowMenu(eg.ActionClass):
             label = labelCtrl.GetValue()
             event = eventCtrl.GetValue()
             if label.strip()<>"":
-                if ExtractFromList(self.choices,0).count(label)==1:
+                if [item[0] for item in self.choices].count(label)==1:
                     self.oldSel=sel
                     item = self.choices[sel]
                     labelCtrl.SetValue(item[0])
@@ -389,7 +391,7 @@ class ShowMenu(eg.ActionClass):
 
         def OnButtonUp(evt):
             newSel=self.Move(listBoxCtrl.GetSelection(),-1)
-            listBoxCtrl.Set(ExtractFromList(self.choices,0))
+            listBoxCtrl.Set([item[0] for item in self.choices])
             listBoxCtrl.SetSelection(newSel)
             self.oldSel = newSel
             evt.Skip()
@@ -398,7 +400,7 @@ class ShowMenu(eg.ActionClass):
 
         def OnButtonDown(evt):
             newSel=self.Move(listBoxCtrl.GetSelection(),1)
-            listBoxCtrl.Set(ExtractFromList(self.choices,0))
+            listBoxCtrl.Set([item[0] for item in self.choices])
             listBoxCtrl.SetSelection(newSel)
             self.oldSel = newSel
             evt.Skip()
@@ -429,7 +431,7 @@ class ShowMenu(eg.ActionClass):
                 sel = 0
             self.oldSel = sel
             tmp = self.choices.pop(listBoxCtrl.GetSelection())
-            listBoxCtrl.Set(ExtractFromList(self.choices,0))
+            listBoxCtrl.Set([item[0] for item in self.choices])
             listBoxCtrl.SetSelection(sel)
             item = self.choices[sel]
             labelCtrl.SetValue(item[0])
@@ -437,7 +439,7 @@ class ShowMenu(eg.ActionClass):
             evt.Skip()
         btnDEL.Bind(wx.EVT_BUTTON, OnButtonDelete)
         if len(self.choices) > 0:
-            listBoxCtrl.Set(ExtractFromList(self.choices,0))
+            listBoxCtrl.Set([item[0] for item in self.choices])
             listBoxCtrl.SetSelection(0)
             labelCtrl.SetValue(self.choices[0][0])
             eventCtrl.SetValue(self.choices[0][1])
@@ -461,11 +463,11 @@ class ShowMenu(eg.ActionClass):
                 label = labelCtrl.GetValue()
                 event = eventCtrl.GetValue()
                 self.choices[sel]=(label,event)
-                listBoxCtrl.Set(ExtractFromList(self.choices,0))
+                listBoxCtrl.Set([item[0] for item in self.choices])
                 listBoxCtrl.SetSelection(sel)
                 if label.strip()<>"":
                     if event.strip()<>"":
-                        if ExtractFromList(self.choices,0).count(label)==1:
+                        if [item[0] for item in self.choices].count(label)==1:
                             flag = True
                 panel.EnableButtons(flag)
                 btnApp.Enable(flag)
@@ -485,7 +487,7 @@ class ShowMenu(eg.ActionClass):
             sel = listBoxCtrl.GetSelection() + 1
             self.oldSel=sel
             self.choices.insert(sel,('',''))
-            listBoxCtrl.Set(ExtractFromList(self.choices,0))
+            listBoxCtrl.Set([item[0] for item in self.choices])
             listBoxCtrl.SetSelection(sel)
             labelCtrl.SetValue('')
             labelCtrl.SetFocus()
@@ -497,8 +499,19 @@ class ShowMenu(eg.ActionClass):
 
         # re-assign the test button
         def OnButton(event):
-            self.plugin.testFlag = True
-            event.Skip()
+            if not self.plugin.menuDlg:
+                self.plugin.choices = self.choices
+                self.plugin.menuDlg = Menu()
+                self.event = CreateEvent(None, 0, 0, None)
+                wx.CallAfter(self.plugin.menuDlg.ShowMenu,
+                    foreColourButton.GetValue(),
+                    backColourButton.GetValue(),
+                    fontButton.GetValue(), 
+                    True,
+                    self.plugin,
+                    self.event
+                )
+                eg.actionThread.WaitOnEvent(self.event)
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
 
         while panel.Affirmed():
@@ -508,8 +521,8 @@ class ShowMenu(eg.ActionClass):
             backColourButton.GetValue(),
             fontButton.GetValue(),
         )
-
 #===============================================================================
+
 class MoveCursor(eg.ActionClass):
 
     def __call__(self):
@@ -522,21 +535,20 @@ class MoveCursor(eg.ActionClass):
                     sel = eval(self.value[1])
                 self.plugin.menuDlg.GetSizer().GetChildren()[0].GetWindow().\
                     SetSelection(sel+self.value[2])
-
 #===============================================================================
+
 class OK_Btn(eg.ActionClass):
 
     def __call__(self):
-        self.plugin.timer.cancel()
-        self.plugin.SendEvent()
-
+        self.plugin.menuDlg.SendEvent()
 #===============================================================================
+
 class Cancel_Btn(eg.ActionClass):
 
     def __call__(self):
-        self.plugin.destroyMenu()
-
+        self.plugin.menuDlg.destroyMenu()
 #===============================================================================
+
 class Get_Btn (eg.ActionClass):
     class text:
         radiobox = 'Choice of menu attribute'
@@ -546,7 +558,7 @@ class Get_Btn (eg.ActionClass):
         labelGet = 'Get'
 
     def __call__(self,val=0):
-        if self.plugin.menuDlg is not None:
+        if self.plugin.menuDlg:
             sel=self.plugin.menuDlg.GetSizer().GetChildren()[0].GetWindow().\
                 GetSelection()
             if val < 2:
@@ -574,9 +586,8 @@ class Get_Btn (eg.ActionClass):
 
         while panel.Affirmed():
             panel.SetResult(radioBoxItems.GetSelection())
-
-
 #===============================================================================
+
 ACTIONS = (
     (ShowMenu, 'ShowMenu', 'Show menu', 'Show on screen menu.', None),
     (MoveCursor, 'MoveDown', 'Cursor Down', 'Cursor Down.', ('max-1', '-1', 1)),
@@ -585,44 +596,46 @@ ACTIONS = (
     (Cancel_Btn, 'Cancel_Btn', 'Cancel', 'Cancel button pressed.', None),
     (Get_Btn, 'Get_Btn', 'Get value', 'Get value of selected item.', None),
 )
-
 #===============================================================================
+
 class OSM(eg.PluginClass):
 
     menuDlg = None
     choices = []
-    testFlag = False
 
     def __init__(self):
         self.AddActionsFromList(ACTIONS)
-        self.timer=Timer(0.0,self.destroyMenu)
-
-    def SendEvent(self):
-        if self.menuDlg is not None:
-            sel=self.menuDlg.GetSizer().GetChildren()[0].GetWindow().\
-                GetSelection()
-            self.TriggerEvent(self.choices[sel][1])
-            self.destroyMenu()
+#===============================================================================
+            
+class Menu(wx.Frame):
+    def __init__(self):
+        wx.Frame.__init__(
+            self,
+            None,
+            -1,
+            'OS_Menu',
+            style = wx.STAY_ON_TOP|wx.SIMPLE_BORDER
+        )
+#        self.timer=None
 
     def ShowMenu(
         self,
-        choices,
         fore,
         back,
         fontInfo,
+        flag,
+        plugin,
+        event
     ):
-        if self.menuDlg is not None:
-            return
-        self.fore=fore
-        self.back=back
-        self.choices=choices
-        self.menuDlg = wx.Frame(
-                None, -1, 'OS_Menu',
-                style=wx.STAY_ON_TOP | wx.SIMPLE_BORDER
-            )
+        self.fore    = fore
+        self.back    = back
+        self.plugin  = plugin
+        self.choices = self.plugin.choices
+        self.flag    = flag
+
         eventChoiceCtrl=wx.ListBox(
-            self.menuDlg,
-            choices = ExtractFromList(choices,0),
+            self,
+            choices = [item[0] for item in self.choices],
             style=wx.LB_SINGLE|wx.LB_NEEDED_SB
         )
         if fontInfo is None:
@@ -634,44 +647,68 @@ class OSM(eg.PluginClass):
         eventChoiceCtrl.SetFont(font)
         # menu height calculation:
         h=eventChoiceCtrl.GetCharHeight()
-        height0 = len(choices)*h+5
+        height0 = len(self.choices)*h+5
         height1 = h*((GetSystemMetrics (1)-20)/h)+5
         height = min(height0,height1)
         # menu width calculation:
         width_lst=[]
-        for item in ExtractFromList(choices,0):
+        for item in [item[0] for item in self.choices]:
             width_lst.append(eventChoiceCtrl.GetTextExtent(item+' ')[0])
         width = max(width_lst)+8
         if height<height0:
             width += 20 #for vertical scrollbar
         width = min((width,GetSystemMetrics (0)-50))
-        self.menuDlg.SetSize((width+6,height+6))
+        self.SetSize((width+6,height+6))
         eventChoiceCtrl.SetDimensions(2,2,width,height,wx.SIZE_AUTO)
         mainSizer =wx.BoxSizer(wx.VERTICAL)
-        self.menuDlg.SetSizer(mainSizer)
+        self.SetSizer(mainSizer)
         eventChoiceCtrl.SetSelection(0)
-        self.menuDlg.SetBackgroundColour((0,0,0))
+        self.SetBackgroundColour((0,0,0))
         eventChoiceCtrl.SetBackgroundColour(self.back)
         eventChoiceCtrl.SetForegroundColour(self.fore)
         mainSizer.Add(eventChoiceCtrl, 0, wx.EXPAND)
-        self.menuDlg.Centre()
-        if self.testFlag:
-            self.timer = Timer(5.0,self.destroyMenu)
-            self.timer.start()
-        self.menuDlg.Show()
+        
+        self.Bind(wx.EVT_CLOSE, self.onClose)
+        eventChoiceCtrl.Bind(wx.EVT_LISTBOX_DCLICK, self.SendEvent)
+        
+        if self.flag:
+            self.timer=MyTimer(t = 5.0, plugin = self.plugin)
+        
+        self.Centre()
+        self.Show(True)
+        wx.Yield()
+        SetEvent(event)
 
-        def On2Click(evt):
-            self.timer.cancel()
-            self.SendEvent()
-            evt.StopPropagation()
-        eventChoiceCtrl.Bind(wx.EVT_LISTBOX_DCLICK, On2Click)
+    def SendEvent(self, event = None):
+        sel=self.GetSizer().GetChildren()[0].GetWindow().\
+            GetSelection()
+        self.plugin.TriggerEvent(self.choices[sel][1])
+        self.destroyMenu()
 
+    def onClose(self, event):
+        self.Destroy()
+        
     def destroyMenu(self):
-        self.timer.cancel()
-        if self.menuDlg is not None:
-            self.menuDlg.Destroy()
-            self.menuDlg = None
-            self.choices = []
-            self.testFlag = False
+        if self.flag:
+            self.timer.Cancel()
+        self.plugin.choices = []
+        self.Show(False)
+        self.Close()
 #===============================================================================
 
+class MyTimer():
+    def __init__(self, t, plugin):
+        self.timer = Timer(t, self.Run)
+        self.plugin = plugin
+        self.timer.start()
+                
+    def Run(self):
+        try:
+            self.plugin.menuDlg.destroyMenu()
+            self.plugin.menuDlg = None
+        except:
+            pass
+            
+    def Cancel(self):
+        self.timer.cancel()
+#===============================================================================
