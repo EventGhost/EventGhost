@@ -19,7 +19,7 @@ EventGhost runs on MS Windows 2000/XP/Vista or above (older OS versions are
 not supported).
 
 If you want to use EventGhost together with an IR or RF remote, you need a 
-supported hardware receiver. 
+:doc:`supported hardware receiver <SupportedReceivers>`. 
 
 
 License

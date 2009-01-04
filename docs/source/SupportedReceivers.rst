@@ -5,10 +5,11 @@ Supported remote receivers
 Already supported devices
 -------------------------
 
-* HID (Human Interface Device) based remote receivers.
-    * Known working receivers:
-        * Logitech OEM UltraX Media Remote
-        
+* HID (Human Interface Device) based devices: 
+    * Logitech OEM UltraX Media Remote
+    * `Gyration Media Center Remote
+      <http://www.gyration.com/?l=en#productDetail/livingRoom/mediaRemote>`_
+    * And surely a lot more receivers and devices.
 * X10-RF-Receivers that are normally bundled with remotes like:
     * `ATI Remote Wonder 
       <http://www.ati.com/products/remotewonder/index.html>`_
@@ -26,7 +27,6 @@ Already supported devices
       <http://www.niveusmedia.com/>`_
     * Medion RF Remote Control
     * Packard Bell RF MCE Remote Control OR32E
-    
 * `USB-UIRT 
   <http://www.usbuirt.com/>`_ 
   (transmitting IR is also supported)

@@ -259,10 +259,8 @@ usual in the free software HTPC world you have to become your own hardware
 expert to pull off what your striving to do.  This program cannot exceed 
 beyond what the hardware is capable of.  
 
-On a side note, I highly suggest 
-[http://sourceforge.net/project/project_donations.php?group_id=145751 donating] 
-or contributing to this project to ensure its future success.  To find out 
-how, simply check out the [http://www.eventghost.org/forum/ forum].  If your 
+On a side note, I highly suggest :ref:`donating or contributing <contributing>`
+to this project to ensure its future success. If your 
 device is not currently supported just check back at the 
 [[Receivers|supported hardware]] from time to time to see what they're working 
 on.

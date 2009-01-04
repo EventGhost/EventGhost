@@ -15,7 +15,7 @@ And they can do both at the same time.
 
 To write plugins you mostly need to know two classes EventGhost defines:
 
-1. :class:`eg.PluginBase` - This is the base class for all plugins and 
+1. :class:`eg.PluginBase` - This is the base class of all plugins and 
    therefore the most essential.
 2. :class:`eg.ActionBase` - This is the base class of all actions a plugin 
    might want to export to EventGhost. 
@@ -175,9 +175,7 @@ moment you call self.AddAction() in the plugin's __init__() code, your
 action class will be instantiated and will get some additional members 
 set. One of the most important ones is 'self.plugin'. Imagine you want to 
 have a simple plugin that holds a counter variable and you want to access 
-this counter from two actions. The source code might look like this
-
-::
+this counter from two actions. The source code might look like this::
 
     import eg
     
@@ -306,13 +304,13 @@ Nearly all configuration dialogs follow the same scheme.
    many parameters as you need. All parameters must be default parameters, 
    because if the plugin is added freshly, EventGhost can't know what and how 
    many parameters you want.
-#. Then you let EventGhost pre-build a panel with a call to 
-   :class:`eg.ConfigPanel(self)` and give this your plugin instance (self) as 
-   parameter. It will return a special :class:`wx.Panel` object.
-#. Now you create as many wxPython controls as you need and set them up with 
-   the parameters you got through the 
-   :meth:`~eg.PluginBase.Configure` method. In this case we only 
-   have *myString* and use it as value to a :class:`wx.TextCtrl`.
+#. Then let EventGhost pre-build a panel through the creation of a
+   :class:`eg.ConfigPanel` instance and give it your plugin instance (self) as 
+   parameter on instantiation.
+#. Now you create as many wxPython controls as you need and set their initial
+   value with the parameters you got through the 
+   :meth:`~eg.PluginBase.Configure` method. In this case we only have 
+   *myString* and use it as value to a :class:`wx.TextCtrl`.
 #. You now have to add these controls to the wx.Sizer of the panel with 
    panel.sizer.Add(). (Or you have to create a new wx.Sizer and add this sizer 
    to panel.sizer, but therefore you need more knowledge of wx.Sizers.)

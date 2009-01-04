@@ -6,27 +6,35 @@ The EventGhost main executable accepts the following command line arguments:
 .. cmdoption:: -event <eventname> [<payload> ...]
 
     Issues the event <eventname> in the currently running EventGhost instance. 
-
+    Optionally you can specify one or more <payload> strings, that will be 
+    added to the event in the 
+    :data:`eg.event.payload <eg.EventGhostEvent.payload>` field.
 
 .. cmdoption:: -e <eventname> [<payload> ...]
 
-    Same function as the *-event* option.
+    Shorter alias for the :option:`-event` option.
 
 
 .. cmdoption:: -hide
 
-    Starts EventGhost hidden in the system tray. 
+    Starts EventGhost hidden in the system tray. Otherwise it would start in
+    the state it had as it was closed.
 
 
 .. cmdoption:: -h
 
-    Same function as the *-hide* option.
+    Shorter alias for the :option:`-hide` option.
 
 
-.. cmdoption:: -f <filename>, -file <filename>
+.. cmdoption:: -file <filename>
 
-    Opens the XML file <filename> on start-up (instead of the last loaded 
-    file). 
+    Opens the XML configuration file <filename> on start-up (instead of the 
+    last loaded file). 
+
+
+.. cmdoption:: -f <filename>
+
+    Shorter alias for the :option:`-file` option.
 
 
 .. cmdoption:: -n <host>:<port> <password> <eventname> [<payload> ...]
@@ -42,7 +50,7 @@ The EventGhost main executable accepts the following command line arguments:
 
 .. cmdoption:: -translate
 
-    Starts EventGhost's language editor. 
+    Starts EventGhost's translation editor. 
     
 
 .. cmdoption:: -configdir <directory>
