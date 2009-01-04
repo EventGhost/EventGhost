@@ -106,9 +106,10 @@ the same as the above::
     
     class Message2(eg.ActionBase):
         # You can also define directly a nested class, if you name it 'text'.
-        # If the ActionClass has no attribute 'name' or 'description', EventGhost
-        # will look inside the 'text' class and use them if they are defined 
-        # there. So you can piece together everything in the 'text' class.
+        # If the action class has no attribute 'name' or 'description', 
+        # EventGhost will look inside the 'text' class and use them if they 
+        # are defined there. So you can piece together everything in the 
+        # 'text' class.
         class text:
             name = "Print second Message" 
             description = (

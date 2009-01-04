@@ -1,32 +1,19 @@
-Welcome to EventGhost's documentation!
+:tocdepth: 2
+
+EventGhost documentation
 ======================================
 
-End-user documentation:
-=======================
+Welcome! This is the documentation for EventGhost |release|, last updated |today|. 
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   About
-   ShortManual/index
-   Controlling your living room with EventGhost/index
-   SupportedReceivers
-   PluginList
-   CommandLine
-   Scripting
-   FAQ
-   Changelog
-
-Developer documentation:
-========================
-
+   user_docs
+   
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   WritingPlugins
-   Internationalization
-   eg
-   CodingStyle
+   developer_docs
 
 Indices and tables
 ==================

@@ -1,6 +1,8 @@
 FAQ
 ===
 
+.. contents::
+
 Q: Isn't the installer huge for such a tool?
 --------------------------------------------
 

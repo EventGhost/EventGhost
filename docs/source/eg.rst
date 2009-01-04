@@ -30,14 +30,18 @@ Objects
 Classes
 =========
 
-class :class:`eg.PluginBase`
+class:: :class:`eg.PluginBase`
+   The base class of every plugin.
 
 class :class:`eg.ActionBase`
+   The base class of every action.
 
 class :class:`eg.SerialThread`
+   Eased handling of serial port communication.
 
 class :class:`eg.ThreadWorker`
-
+   General purpose message pumping thread, that is used in many places.
+   
 .. autoclass:: eg.Bunch
 
 .. autoclass:: eg.WindowMatcher
