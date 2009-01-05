@@ -21,7 +21,7 @@
 # $LastChangedBy: bitmonster $
 
 r"""<rst>
-Plugin for the ATI Remote Wonder II remote.
+Plugin for the `ATI Remote Wonder II`__ remote.
 
 .. image:: picture.jpg
    :align: center
@@ -32,6 +32,8 @@ inside the ATI Remote Wonder Software.
 
 | You will find this DLL inside:
 | {ProgramFiles}\\EventGhost\\Plugins\\AtiRemoteWonder2\\
+
+__ http://ati.amd.com/products/remotewonder2/index.html
 """
 
 

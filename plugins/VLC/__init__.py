@@ -1,15 +1,5 @@
-# ============================================================================
-# VideoLan Client TCP/IP Interface v.0.3
-# Example VLC parameters:
-# Path     -Skin     --RC Interface --Adress                 --NoDosBox
-# vlc.exe  -I skins2 --extraintf=rc --rc-host=localhost:1234 --rc-quiet
-# ============================================================================
-#
-# Plugins/VLC/__init__.py
-#
-# Copyright (C) 2006 MonsterMagnet
-#
 # This file is a plugin for EventGhost.
+# Copyright (C) 2006 MonsterMagnet
 #
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,6 +15,23 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+"""<rst>
+
+Adds actions to control the `VLC media player`_.
+
+Enable the RC Interface or start VLC with:
+
+**vlc.exe --extraintf=rc --rc-host=localhost:1234 --rc-quiet --rc-show-pos**
+
+If you are using "MyCommand" remember that you can only execute commands that 
+are enabled in VLC!
+
+`Help and bugreports <http://www.eventghost.org/forum/viewtopic.php?t=693>`_
+
+.. _VLC media player: http://www.videolan.org/
+"""
+
+
 import eg
 
 eg.RegisterPlugin(
@@ -34,19 +41,7 @@ eg.RegisterPlugin(
     kind = "program",
     canMultiLoad = True,
     createMacrosOnAdd = True,
-    description = (
-        'Adds actions to control the '
-        '<a href="http://www.videolan.org/">VLC media player</a>.'
-        '\n\n</p>'
-        '<p>Enable the RC Interface or start VLC with:</p>'
-        '<p><b>vlc.exe --extraintf=rc --rc-host=localhost:1234 '
-        '--rc-quiet --rc-show-pos</b></p>'
-        '<p>If you are using "MyCommand" remember that you can only execute '
-        'commands that are enabled in VLC!</p>'
-        '<p><a href=http://www.eventghost.org/forum/viewtopic.php?t=43>'
-        'Help and Bugreport</a></p>'
-        '<p><a href="http://www.videolan.org/">VideoLAN project</a></p>'
-    ),
+    description = __doc__,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACZElEQVR42pXSa0iTURgH"
         "8P/Z+8528TYJp7kPXqZUMOe8RFoRWFlUJKMIjBKDTEO6SBcSKgJBKmrYzchZoV2+CCFd"
@@ -289,7 +284,7 @@ class VlcSession(asynchat.async_chat):
          
          
          
-class ActionPrototype(eg.ActionClass):
+class ActionPrototype(eg.ActionBase):
     value = None # the actual value will be defined through AddActionsFromList
     
     def __call__(self):
@@ -297,7 +292,7 @@ class ActionPrototype(eg.ActionClass):
 
 
 
-class Start(eg.ActionClass):
+class Start(eg.ActionBase):
     description = "Starts VLC with the needed command line arguments."
     
     class text:
@@ -359,7 +354,7 @@ class Start(eg.ActionClass):
             
             
             
-class MyCommand(eg.ActionClass):
+class MyCommand(eg.ActionBase):
     name = "My Command"
     description = (
         "Here you can enter your own command, ie. show a custom text message."
@@ -386,7 +381,7 @@ class MyCommand(eg.ActionClass):
 
 
 
-class VLC(eg.PluginClass):
+class VLC(eg.PluginBase):
     
     class text:
         eventBox = "Event generation"

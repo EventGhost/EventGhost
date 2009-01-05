@@ -20,6 +20,17 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+"""<rst>
+Hardware plugin for the `Home Electronics Tira`__ transceiver.
+
+|
+
+.. image:: tira.png
+   :align: center
+
+__ http://www.home-electro.com/
+"""
+
 import eg
 
 eg.RegisterPlugin(
@@ -27,13 +38,7 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
-    description = (
-        'Hardware plugin for the <a href="http://www.home-electro.com/">'
-        'Home Electronics Tira</a> transceiver.'
-        '\n\n<p>'
-        '<a href=http://www.home-electro.com/><p>'
-        '<center><img src="tira.png" alt="Tira2" /></a></center>'
-    ),
+    description = __doc__,
     url = "http://www.eventghost.org/forum/viewtopic.php?t=569",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAADYUlEQVR42m2Te0yTVxjG"
@@ -93,12 +98,18 @@ class Tira(eg.RawReceiverPlugin):
     def __start__(self, port=2):
         dll = WinDLL(DLL_PATH)
         if dll.tira_init():
-            raise self.Exceptions.DeviceInitFailed("Function tira_init failed.")
+            raise self.Exceptions.DeviceInitFailed(
+                "Function tira_init failed."
+            )
         if dll.tira_start(port):
-            raise self.Exceptions.DeviceInitFailed("Function tira_start failed.")
+            raise self.Exceptions.DeviceInitFailed(
+                "Function tira_start failed."
+            )
         self.procHandler = TIRA_SIX_BYTE_CALLBACK(self.MyEventCallback)
         if dll.tira_set_handler(self.procHandler):
-            raise self.Exceptions.DeviceInitFailed("Function tira_set_handler failed.")
+            raise self.Exceptions.DeviceInitFailed(
+                "Function tira_set_handler failed."
+            )
         self.dll = dll
         
 
@@ -131,7 +142,7 @@ class Tira(eg.RawReceiverPlugin):
         
     
     
-class TransmitIR(eg.ActionClass):
+class TransmitIR(eg.ActionBase):
     name = "Transmit IR"
     repeatCount = 1
         
@@ -144,7 +155,7 @@ class TransmitIR(eg.ActionClass):
             raise self.Exception("Error in tira_transmit")
         
         
-    def GetLabel(self, *args):
+    def GetLabel(self, *dummyArgs):
         return self.name
     
     
@@ -179,7 +190,7 @@ class TransmitIR(eg.ActionClass):
         lowerSizer.Add(repeatBox)
         lowerSizer.Add((5, 5), 1, wx.EXPAND)
         
-        def OnCapture(event):
+        def OnCapture(dummyEvent):
             dlg = IRLearnDialog(panel, self.plugin.dll)
             dlg.ShowModal()
             if dlg.result is not None:
@@ -219,7 +230,7 @@ class IRLearnDialog(wx.Dialog):
             "learning is complete..."
         )
         staticText = wx.StaticText(self, -1, text, style=wx.ST_NO_AUTORESIZE)
-        def OnCancel(event):
+        def OnCancel(dummyEvent):
             self.shouldRun = False
             self.EndModal(wx.OK)
             
@@ -251,20 +262,19 @@ class IRLearnDialog(wx.Dialog):
             return
         dll.tira_start_capture()
         size = c_int()
-        buffer = pointer(c_ubyte())
+        data = pointer(c_ubyte())
         while self.shouldRun:
-            res = dll.tira_get_captured_data(byref(buffer), byref(size))
+            dll.tira_get_captured_data(byref(data), byref(size))
             if size.value != 0:
                 break
             else:
                 time.sleep(0.01)
         if self.shouldRun:
             result = ""
-            for x in buffer[:size.value]:
+            for x in data[:size.value]:
                 result += chr(x)
             self.result = result
-            dll.tira_delete(buffer)
+            dll.tira_delete(data)
         else:
             dll.tira_cancel_capture()
         
-
