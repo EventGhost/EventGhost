@@ -1,0 +1,52 @@
+
+======================================
+The one and all ``eg`` object
+======================================
+.. contents::
+    
+.. module:: eg
+.. currentmodule:: eg
+
+Everything special that is needed from EventGhost for scripting and writing 
+plugins is stuffed into the `eg` object. It includes many functions, 
+variables, classes and objects. You could actually say `eg` is EventGhost 
+itself.
+
+Objects
+=======
+
+.. attribute:: event
+
+    The :class:`eg.EventGhostEvent` instance, that is currently
+    been processed.
+    
+.. attribute:: globals
+
+    Namespace, that holds all global variables used by
+    PythonCommand actions. PythonScripts (and all other code) can access
+    these globals through :obj:`eg.globals`.
+
+.. attribute:: scheduler
+
+    Instance of the single :class:`eg.Scheduler` class.
+    
+
+Classes
+=======
+
+.. include:: classes.txt
+
+
+Functions
+=========
+
+.. autofunction:: eg.Exit
+
+.. autofunction:: eg.StopMacro
+
+.. autofunction:: eg.TriggerEvent
+
+.. autofunction:: eg.RegisterPlugin
+
+.. autofunction:: eg.PrintError
+

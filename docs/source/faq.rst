@@ -1,3 +1,4 @@
+===
 FAQ
 ===
 
@@ -34,15 +35,13 @@ graphics features for 3rd-party developers. GDI+ is distributed as part of
 Windows XP and above, while for other operating systems an additional 
 redistributable file installation is required. Since this file would increase 
 the size of the EventGhost installer by one megabyte and Windows 2000 is not 
-that much used any more, the needed GDIPLUS.dll is only available through an 
-additional installer.
+that much used any more, the needed GDIPLUS.dll is not included in the
+installer.
 
-To install EventGhost on a Windows 2000 machine please follow these steps:
+To install EventGhost on a Windows 2000 machine please follow the steps 
+mentioned in this Microsoft Knowledge Base article:
 
-#. Execute the normal EventGhost installer, but don't let it run EventGhost 
-   on the finish page (it would crash).
-#. Download `this add-on installer 
-   <http://www.eventghost.org/downloads/EventGhost_GDIPLUS_Installer.exe>`_ 
-   and let it install gdiplus.dll into your EventGhost program directory. 
+http://support.microsoft.com/kb/915052
 
-Now you should be able to run EventGhost. 
+After you have followed the above instructions, you should be able to install 
+and run EventGhost. 

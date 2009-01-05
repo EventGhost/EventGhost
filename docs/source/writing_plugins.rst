@@ -1,5 +1,5 @@
 ===============
-Writing plugins
+Writing Plugins
 ===============
 
 Introduction

@@ -1,15 +1,16 @@
-End-user documentation
+End user documentation
 ======================
 
 .. toctree::
 
    about
-   short_manual
-   controlling_your_living_room_with_eventghost
+   features
+   short_manual/index
+   controlling_your_living_room_with_eventghost/index
    supported_receivers
    pluginlist
    scripting
    faq
-   commandLine
+   commandline
    contributing
    changelog

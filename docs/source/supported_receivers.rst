@@ -1,5 +1,7 @@
+:tocdepth: 1
+
 ==========================
-Supported remote receivers
+Supported Remote Receivers
 ==========================
 
 Already supported devices
