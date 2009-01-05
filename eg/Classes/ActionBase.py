@@ -30,14 +30,14 @@ class ActionBase(object):
     .. attribute:: name
     
         Set this to descriptive name in your class definition. 
-        It might get translated by PluginBase.AddAction() to the user's 
-        language if a translation is found.
+        It might get translated by :meth:`eg.PluginBase.AddAction` to the 
+        user's language if a translation is found.
     
     .. attribute:: description
     
         Set this to descriptive description in your class definition. 
-        It might get translated by PluginBase.AddAction() to the user's 
-        language if a translation is found.
+        It might get translated by :meth:`eg.PluginBase.AddAction` to the 
+        user's language if a translation is found.
     
     .. attribute:: iconFile
     
@@ -47,11 +47,13 @@ class ActionBase(object):
     .. attribute:: text
     
         Assign a class with text strings to this field to get them localised.
+        For more information read the section about 
+        :ref:`internationalisation`. 
 
     .. attribute:: plugin
     
-        This will be set from PluginBase.AddAction() for convenience, so 
-        every action can access its own plugin instance through this member 
+        This will be set from :meth:`eg.PluginBase.AddAction` for convenience, 
+        so every action can access its own plugin instance through this member 
         variable.
      
     .. attribute:: info
@@ -71,6 +73,7 @@ class ActionBase(object):
     text = None
     Exceptions = None 
     
+    __docsort__ = "__call__, Configure, GetLabel, Compile, PrintError, Exception"
     
     def __call__(self, *args):
         """
@@ -87,15 +90,15 @@ class ActionBase(object):
     
     def GetLabel(self, *args):
         """
-        Return the label that should be displayed in the configuration tree
+        Returns the label that should be displayed in the configuration tree
         with the current arguments.
         
-        This default method simply shows the action name and
-        the first parameter if there is any. If you want to have a different 
-        behaviour, override it.
+        The default method simply shows the action name and the first 
+        parameter if there is any. If you want to have a different behaviour, 
+        you can override it.
         
-        This method gets called with the same parameters as the __call__
-        method.
+        This method gets called with the same parameters as the 
+        :meth:`!__call__` method.
         """
         label = self.name
         if args:
@@ -103,29 +106,27 @@ class ActionBase(object):
         return label
         
     
-    @staticmethod
-    def PrintError(msg):
+    def PrintError(self, msg):
         """
         Print an error message to the logger.
         
-        Prefer to use :meth:`self.PrintError <eg.ActionBase.PrintError>` 
-        instead of :meth:`eg.PrintError`, since this method might be enhanced 
-        in the future to give the user better information about the source of 
-        the error.
+        Prefer to use :meth:`!self.PrintError` 
+        instead of :meth:`eg.PrintError`, since this method gives the 
+        user better information about the source of the error.
         """
         eg.PrintError(msg)
         
         
-    def Configure(self, *dummyArgs):
+    def Configure(self, *args):
         """
-        This should be overridden in a subclass, if the action wants to have 
-        a configuration dialog.
+        If the action should get a configuration dialog, you should override
+        this method.
         
-        When the action is freshly added by the user to the configuration tree
+        When the action is freshly added by the user to the configuration tree,
         there are no *args* and you must therefore supply sufficient
         default arguments.
         If the action is reconfigured by the user, this method will be called
-        with the same arguments as the :meth:`__call__` method.
+        with the same arguments as the :meth:`!__call__` method.
         """
         panel = eg.ConfigPanel(self)
         label = panel.StaticText(eg.text.General.noOptionsAction)
@@ -147,18 +148,19 @@ class ActionBase(object):
 
         An action class will only override this method, if it uses a special 
         way to implement its action. An action receives a call to 
-        Compile every time their parameters change (the user has reconfigured 
-        the action) or in the moment the configuration file is loaded and an 
-        action of this type is created because it was saved in the tree. 
-        The Compile method should return a "callable" object, that will be 
-        called without any arguments. This "callable" will then be called 
-        instead of the the actions __call__ method.
+        :meth:`!Compile` every time their parameters change (the user has 
+        reconfigured the action) or in the moment the configuration file is 
+        loaded and an action of this type is created because it was saved in 
+        the tree. The :meth:`!Compile` method should return a "callable" 
+        object, that can be called without any arguments. This "callable" will
+        then be called instead of the the actions :meth:`!__call__` method.
+        
         This way actions can be build that need considerable time to compute
         something out of the parameters but need less time for the actual 
         execution of the action. One example of such action is the 
         PythonScript action, that compiles the Python source every time it 
         changes and then this compiled code object gets called instead of 
-        doing compile&run in the __call__ method.
+        doing compile&run in the :meth:`!__call__` method.
         """
         def CallWrapper():
             return self(*args)

@@ -21,6 +21,7 @@
 # $LastChangedBy$
 
 import wx
+from eg.Utils import DecodeReST
 import webbrowser
 from threading import Timer, Thread
 
@@ -46,7 +47,7 @@ class HtmlWindow(wxHtmlWindow):
     def SetPage(self, html):
         pos = html.find("<rst>")
         if pos != -1:
-            html = eg.Utils.DecodeReST(html[pos+5:])
+            html = DecodeReST(html[pos+5:].lstrip())
         wxHtmlWindow.SetPage(
             self,
             '<html><body bgcolor="%s" text="%s">%s</body></html>' % (

@@ -32,11 +32,11 @@ class PluginBase(object):
         
     .. attribute:: name
     
-        The (localized) name of the plugin.
+        The (localised) name of the plugin.
         
     .. attribute:: description
     
-        The (localized) description of the plugin.
+        The (localised) description of the plugin.
         
     .. attribute:: info
         
@@ -45,18 +45,23 @@ class PluginBase(object):
         
     .. attribute:: text
     
-        Assign a class with text strings to this field to get them localized.
+        Assign a class with text strings to this field to get them localised.
+        For more information read the section about 
+        :ref:`internationalisation`. 
     """
     
     name = None
     description = None
     info = None
     text = None
+    Exceptions = None
+    
     __metaclass__ = eg.PluginMetaClass 
+    
     # used for automatic documentation creation
     __docsort__ = ( 
-        "__start__, __stop__, __close__, Configure, AddAction, AddGroup, "
-        "TriggerEvent, TriggerEnduringEvent, EndLastEvent"
+        "__start__, __stop__, __close__, Configure, GetLabel, AddAction, "
+        "AddGroup, TriggerEvent, TriggerEnduringEvent, EndLastEvent"
     )
     
     def __init__(self):
@@ -65,7 +70,7 @@ class PluginBase(object):
         after its instantiation.
         
         This is also the right place to add all actions the plugin wants to 
-        publish with calls to AddAction and AddGroup.
+        publish with calls to :meth:`!AddAction` and :meth:`!AddGroup`.
         """
         pass
         
@@ -75,12 +80,11 @@ class PluginBase(object):
         Start/Enable the plugin.
         
         If your plugin is loaded and enabled by the user, this method will be 
-        called from EventGhost. Plug-ins should start their operation now and
-        should not generate events before they are started this way.
+        called from EventGhost. Plugins should start its operation now.
         
         The plugin will also receive its parameters (if it has any) through 
         this method. To make a plugin that has parameters, you will have to 
-        write a 'Configure' method also (see below).
+        overwrite the :meth:`!Configure` method also.
         """
         pass
         
@@ -91,7 +95,7 @@ class PluginBase(object):
         
         If the user disables the plugin, this method will be called. The 
         plugin should from now on not trigger any events anymore, till it
-        gets another call to its __start__ method.
+        gets another call to its :meth:`!__start__` method.
         """
         pass
         
@@ -121,7 +125,7 @@ class PluginBase(object):
         Keep in mind, that an event generated through this method will also
         automatically be ended immediately. If the plugin wants to generate 
         an event with a longer duration, it has to use 
-        :meth:`TriggerEnduringEvent`.
+        :meth:`!TriggerEnduringEvent`.
         """
         info = self.info
         info.lastEvent.SetShouldEnd()
@@ -134,13 +138,13 @@ class PluginBase(object):
         """
         Trigger an enduring event.
         
-        Does nearly the same as :meth:`TriggerEvent` but the event will not be 
+        Does nearly the same as :meth:`!TriggerEvent` but the event will not be 
         ended immediately. This is used for devices that can have longer 
         enduring events, like a remote, where you can press and hold a button.
         
-        The plugin has to call :meth:`EndLastEvent` to end the event. The last 
+        The plugin has to call :meth:`!EndLastEvent` to end the event. The last 
         event will also be ended, if another event will be generated through
-        :meth:`TriggerEvent` or :meth:`TriggerEnduringEvent`. This will 
+        :meth:`!TriggerEvent` or :meth:`!TriggerEnduringEvent`. This will 
         ensure, that only one event per plugin can be active at the same time.
         """
         info = self.info
@@ -158,7 +162,7 @@ class PluginBase(object):
     def EndLastEvent(self):
         """
         End the last event that was generated through 
-        :meth:`TriggerEnduringEvent`.
+        :meth:`!TriggerEnduringEvent`.
         """
         self.info.lastEvent.SetShouldEnd()
         
@@ -208,16 +212,14 @@ class PluginBase(object):
         pass
     
     
-    def GetLabel(self, *dummyArgs):
+    def GetLabel(self, *args):
         """
-        Return the label that should be displayed in the configuration tree
+        Returns the label that should be displayed in the configuration tree
         with the current arguments.
         
         The default method simply shows the plugin name. If you want to have 
-        a different behavior, you can override it.
-        
-        This method gets called with the same parameters as the __start__
-        method.
+        a different behaviour, you can override it. This method gets called 
+        with the same parameters as the :meth:`!__start__`  method.
         """
         return self.name
         
@@ -234,16 +236,16 @@ class PluginBase(object):
         eg.PrintError(msg, source=self.info.treeItem)
         
         
-    def Configure(self, *dummyArgs):
+    def Configure(self, *args):
         """
         This should be overridden in a subclass, if the plugin wants to have 
         a configuration dialog.
         
         When the plugin is freshly added by the user to the configuration tree
-        there are no "args" and you must therefore supply sufficient
+        there are no *\*args* and you must therefore supply sufficient
         default arguments.
         If the plugin is reconfigured by the user, this method will be called
-        with the same arguments as the __start__ method would receive.
+        with the same arguments as the :meth:`!__start__` method would receive.
         """
         panel = eg.ConfigPanel(self)
         panel.dialog.buttonRow.applyButton.Enable(False)

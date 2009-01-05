@@ -122,6 +122,9 @@ class SerialError(eg.Exception):
 
 
 class SerialThread(Thread):
+    """
+    Eased handling of serial port communication.
+    """
     # These functions are bound to the class, so instances or subclasses 
     # can replace them. This is needed for code that uses the FTDI.DLL 
     # driver for example.
@@ -136,6 +139,9 @@ class SerialThread(Thread):
 
     @classmethod
     def GetAllPorts(cls):
+        """
+        Returns a list with all available serial ports.
+        """
         serialPortList = cls._serialPortList
         if serialPortList is not None:
             return serialPortList

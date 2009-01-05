@@ -27,6 +27,7 @@ import wx
 class ControlProviderMixin:
     
     def StaticText(self, label, *args, **kwargs):
+        """ Returns a wx.StaticText control. """
         return wx.StaticText(self, -1, label, *args, **kwargs)
         
     
@@ -47,6 +48,7 @@ class ControlProviderMixin:
         validator=wx.DefaultValidator, 
         name=wx.TextCtrlNameStr
     ):
+        """ Returns a wx.TextCtrl control. """
         return wx.TextCtrl(self, -1, value, pos, size, style, validator, name)
     
     
