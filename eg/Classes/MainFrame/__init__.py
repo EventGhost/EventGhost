@@ -845,7 +845,7 @@ class MainFrame(wx.Frame):
         
     
     def OnCmdAddAction(self):
-        if not self.document.selection.DropTest(EventItem):
+        if not self.document.selection.DropTest(ActionItem):
             text = Text.ErrorMessages.CantAddAction
             self.DisplayError(
                 text.mesg,
