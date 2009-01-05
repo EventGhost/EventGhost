@@ -205,6 +205,22 @@ InfoBeforeFile=%(toolsDir)s\\LICENSE.RTF
 DisableReadyPage=yes
 AppMutex=EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B
 
+[Code]
+
+function InitializeSetup: Boolean;
+var
+  MS, LS: Cardinal;
+  ErrorCode: integer;
+begin
+  if GetVersionNumbers(ExpandConstant('{sys}\\gdiplus.dll'), MS, LS) then
+    Result := true
+  else
+    begin
+      Result := false;
+      MsgBox('You need to install GDI+ first.'#13#10#13#10 + 'Please visit http://www.eventghost.org/docs/faq.html for instructions.', MBError, MB_OK);
+    end
+end;
+
 [InstallDelete]
 Type: filesandordirs; Name: "{app}\\eg"
 
@@ -587,13 +603,15 @@ class MainDialog(wx.Dialog):
         event.Skip()
      
      
-def ExecutePy(scriptFilePath):
+def ExecutePy(scriptFilePath, *args):
     """Spawn a new Python interpreter and let it execute a script file."""
     startupInfo = subprocess.STARTUPINFO()
     startupInfo.dwFlags = subprocess.STARTF_USESHOWWINDOW
     startupInfo.wShowWindow = subprocess.SW_HIDE 
+    cmdArgs = [sys.executable, scriptFilePath]
+    cmdArgs.extend(args)
     errorcode = subprocess.call(
-        (sys.executable, scriptFilePath), 
+        cmdArgs, 
         stdout=sys.stdout.fileno(),
         startupinfo=startupInfo
     )
@@ -624,9 +642,14 @@ def Main(options, builder, mainDialog=None):
     if options.buildImports:
         print "--- building imports.py"
         BuildImportsPy()
-    if options.buildDocs:
+    if options.buildHtmlDocs or options.buildChmDocs:
         print "--- building docs"
-        ExecutePy("BuildDocs.py")
+        args = ["BuildDocs.py"]
+        if options.buildHtmlDocs:
+            args.append("html")
+        if options.buildChmDocs:
+            args.append("chm")
+        ExecutePy(*args)
     if options.commitSvn:
         print "--- committing working copy to SVN"
         builder.CommitSvn()
@@ -661,7 +684,8 @@ OPTIONS = (
     ("incrementBuildNum", "Increment build number", False),
     ("buildStaticImports", "Build StaticImports.py", True),
     ("buildImports", "Build imports.py", True),
-    ("buildDocs", "Build docs", True),
+    ("buildHtmlDocs", "Build HTML docs", True),
+    ("buildChmDocs", "Build CHM docs", True),
     ("buildSourceArchive", "Build source archive", True),
     ("buildPyExe", "Build py.exe and pyw.exe", True),
     ("buildLib", "Build lib%d%d" %sys.version_info[0:2], True),
