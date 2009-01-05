@@ -24,6 +24,9 @@ import wx
 
 
 class FontSelectButton(wx.BitmapButton):
+    """
+    A button to select a font.
+    """
     
     def __init__(
         self, 

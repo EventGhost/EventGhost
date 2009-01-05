@@ -30,8 +30,9 @@ localedict = locale.localeconv()
 
 
 class SpinNumCtrl(wx.Window):
-    """A wx.Control that shows a fixed width floating point value and spin 
-    buttons to let the user change it.
+    """
+    A wx.Control that shows a fixed width floating point value and spin 
+    buttons to let the user easily input a floating point value.
     """
     
     EVT_NUM = masked.EVT_NUM

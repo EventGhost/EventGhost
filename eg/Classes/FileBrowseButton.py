@@ -21,9 +21,14 @@
 # $LastChangedBy$
 
 import wx
-from wx.lib.filebrowsebutton import FileBrowseButton
+from wx.lib.filebrowsebutton import FileBrowseButton as _FileBrowseButton
 import types
 
+class FileBrowseButton(_FileBrowseButton):
+    """
+    A control to allow the user to type in a filename or browse with the 
+    standard file dialog to select a file.
+    """
 
 def createDialog(self, parent, id, pos, size, style, name=""):
     """Setup the graphic representation of the dialog"""
@@ -68,8 +73,8 @@ def Enable(self, enable=True):
     return self.browseButton.Enable(enable)
     
     
-FileBrowseButton.createDialog = createDialog
-FileBrowseButton.createBrowseButton = createBrowseButton
-FileBrowseButton.OnChanged = OnChanged
-FileBrowseButton.Enable = Enable
+_FileBrowseButton.createDialog = createDialog
+_FileBrowseButton.createBrowseButton = createBrowseButton
+_FileBrowseButton.OnChanged = OnChanged
+_FileBrowseButton.Enable = Enable
 
