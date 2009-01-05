@@ -12,6 +12,7 @@ class General:
     deleteQuestion = u"Soll dieses Element wirklich gelöscht werden?"
     help = u"&Hilfe"
     moreTag = u"mehr..."
+    no = u"&Nein"
     noOptionsAction = u"Diese Aktion hat keine einstellbaren Optionen."
     noOptionsPlugin = u"Dieses Plugin hat keine einstellbaren Optionen."
     ok = u"Ok"
@@ -21,6 +22,7 @@ class General:
     unnamedFile = u"<Unbenannte Datei>"
     unnamedFolder = u"<Unbenannter Ordner>"
     unnamedMacro = u"<Unbenanntes Makro>"
+    yes = u"&Ja"
 class MainFrame:
     onlyLogAssigned = u"Nur &zugewiesene und aktivierte Ereignisse aufzeichnen"
     onlyLogAssignedToolTip = u"Wenn markiert zeigt das Log nur noch Ereignisse an, die in der momentanen\nKonstellation der Konfiguration ein Makro ausführen werden. Deshalb sollte diese\nOption *nicht* aktiviert werden, wenn man neue Ereignisse zuweisen will."

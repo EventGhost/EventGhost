@@ -321,7 +321,7 @@ class Document(object):
         """
         if not self.isDirty.GetValue():
             return wx.ID_OK
-        dialog = wx.MessageDialog(
+        dialog = eg.MessageDialog(
             None, 
             eg.text.MainFrame.SaveChanges.mesg, 
             eg.APP_NAME + ": " + eg.text.MainFrame.SaveChanges.title, 

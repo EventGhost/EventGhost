@@ -651,6 +651,10 @@ class MainFrame(wx.Frame):
             self.SetWindowStyleFlag(self.style)
     
 
+    def DisplayError(self, message, caption="EventGhost Error"):
+        eg.MessageBox(message, caption, wx.ICON_EXCLAMATION|wx.OK, self)
+
+
     def GetEditCmdState(self):
         focus = self.lastFocus
         if focus == "Edit":
@@ -825,7 +829,11 @@ class MainFrame(wx.Frame):
             
             
     def OnCmdAddEvent(self):
-        eg.UndoHandler.NewEvent().Do(self.document)
+        if self.document.selection.DropTest(EventItem):
+            eg.UndoHandler.NewEvent().Do(self.document)
+        else:
+            text = Text.ErrorMessages.CantAddEvent
+            self.DisplayError(text.mesg, text.caption)
                 
                 
     def OnCmdAddFolder(self):
@@ -837,6 +845,13 @@ class MainFrame(wx.Frame):
         
     
     def OnCmdAddAction(self):
+        if not self.document.selection.DropTest(EventItem):
+            text = Text.ErrorMessages.CantAddAction
+            self.DisplayError(
+                text.mesg,
+                text.caption,
+            )
+            return
         # let the user choose an action
         result = eg.AddActionDialog.GetModalResult(self)
         # if user canceled the dialog, take a quick exit
@@ -848,6 +863,7 @@ class MainFrame(wx.Frame):
         ).switch(self.document, action)
         
     
+    @eg.LogIt
     def OnCmdRename(self):
         self.treeCtrl.SetFocus()
         self.treeCtrl.EditLabel(self.treeCtrl.GetSelection())

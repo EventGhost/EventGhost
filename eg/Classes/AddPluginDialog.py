@@ -225,7 +225,7 @@ class AddPluginDialog(eg.Dialog):
             and not info.canMultiLoad 
             and info.instances
         ):
-            wx.MessageBox(
+            eg.MessageBox(
                 Text.noMultiload,
                 Text.noMultiloadTitle, 
                 style=wx.ICON_EXCLAMATION

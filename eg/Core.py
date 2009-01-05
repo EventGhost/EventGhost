@@ -234,6 +234,13 @@ class StopException(Exception):
 class HiddenAction:
     pass
 
+def MessageBox(message, caption="Message", style=wx.OK, parent=None):
+    dialog = eg.MessageDialog(parent, message, caption, style|wx.STAY_ON_TOP)
+    result = dialog.ShowModal()
+    dialog.Destroy()
+    return result
+
+
 # now assign all the functions above to `eg`
 eg.GetConfig = GetConfig
 eg.RestartAsyncore = RestartAsyncore
@@ -249,6 +256,7 @@ eg.RunProgram = RunProgram
 eg.Exception = Exception
 eg.StopException = StopException
 eg.HiddenAction = HiddenAction
+eg.MessageBox = MessageBox
 
 eg.messageReceiver = eg.MessageReceiver()
 eg.app = eg.App()
