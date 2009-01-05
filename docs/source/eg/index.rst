@@ -1,6 +1,6 @@
 
 ======================================
-The one and all ``eg`` object
+The ``eg`` module
 ======================================
 .. contents::
     
@@ -8,8 +8,8 @@ The one and all ``eg`` object
 .. currentmodule:: eg
 
 Everything special that is needed from EventGhost for scripting and writing 
-plugins is stuffed into the `eg` object. It includes many functions, 
-variables, classes and objects. You could actually say `eg` is EventGhost 
+plugins is stuffed into the :mod:`eg` module. It includes many functions, 
+variables, classes and objects. You could actually say :mod:`eg` is EventGhost 
 itself.
 
 Objects
@@ -35,6 +35,12 @@ Classes
 =======
 
 .. include:: classes.txt
+
+
+wxPython additions
+==================
+
+.. include:: gui_classes.txt
 
 
 Functions

@@ -4,6 +4,6 @@ Developer documentation
 .. toctree::
 
    writing_plugins
+   eg/index
    internationalisation
-   eg/eg
    codingstyle

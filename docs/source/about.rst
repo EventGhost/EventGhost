@@ -15,14 +15,14 @@ consumer remote for example.
 Requirements
 ------------
 
-EventGhost runs on Microsoft Windows 2000/XP/Vista or above (older OS versions 
-are not supported).
+EventGhost runs on Microsoft Windows 2000 / XP / Vista (older OS versions are 
+not supported).
 
 
 License
 -------
 
-.. image:: Osi-certified-90x75.png
+.. image:: _static/Osi-certified-90x75.png
    :align: right
    
 EventGhost is released under the `GNU General Public License (GPL), version 2 
