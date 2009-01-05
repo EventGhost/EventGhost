@@ -29,7 +29,7 @@ eg.RegisterPlugin(
     createMacrosOnAdd = True,
     description = (
         'Adds actions to control <a href="http://www.theatertek.com/">TheaterTek</a>.'
-        '\n<p><b>Notice:</b><br>'
+        '\n\n<p><b>Notice:</b><br>'
         'To make it work, you have to enable TCP control in TheaterTek. '
     ),
     url = "http://www.eventghost.org/forum/viewtopic.php?t=559",
