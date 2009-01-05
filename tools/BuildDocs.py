@@ -106,19 +106,7 @@ def GetFirstTextParagraph(text):
     return " ".join(res)
         
         
-def CreateClsDocs():
-    clsNames = [
-        "PluginBase", 
-        "ActionBase", 
-        "SerialThread", 
-        "ThreadWorker",
-        "ConfigPanel",
-        "Bunch",
-        "WindowMatcher",
-        "-EventGhostEvent",
-        "-Scheduler",
-        "-ControlProviderMixin",
-    ]
+def CreateClsDocs(clsNames):
     res = []
     for clsName in clsNames:
         if clsName.startswith("-"):
@@ -146,13 +134,41 @@ def CreateClsDocs():
         outfile.write("\n")
     return "\n".join(res)
 
-        
+
+MAIN_CLASSES = [
+    "PluginBase", 
+    "ActionBase", 
+    "SerialThread", 
+    "ThreadWorker",
+    "ConfigPanel",
+    "Bunch",
+    "WindowMatcher",
+    "-EventGhostEvent",
+    "-Scheduler",
+    "-ControlProviderMixin",
+]
+
+GUI_CLASSES = [
+    "SpinIntCtrl",
+    "SpinNumCtrl",
+    "MessageDialog",
+    "DisplayChoice",
+    "SerialPortChoice",
+    "FileBrowseButton",
+    "DirBrowseButton",
+    "FontSelectButton",
+]
+
 def Main(buildHtml=True, buildChm=False):
     import sphinx
     WritePluginList(join(DOCS_SOURCE_DIR, "pluginlist.rst"))
     filepath = join(DOCS_SOURCE_DIR, "eg", "classes.txt")
     outfile = open(filepath, "wt")
-    outfile.write(CreateClsDocs())
+    outfile.write(CreateClsDocs(MAIN_CLASSES))
+    outfile.close()
+    filepath = join(DOCS_SOURCE_DIR, "eg", "gui_classes.txt")
+    outfile = open(filepath, "wt")
+    outfile.write(CreateClsDocs(GUI_CLASSES))
     outfile.close()
     if buildHtml:
         sphinx.main([
