@@ -140,7 +140,7 @@ class PluginItem(ActionItem):
                     return True
             return None
         if self.root.Traverse(searchFunc) is not None:
-            answer = wx.MessageBox(
+            eg.MessageBox(
                 eg.text.General.deletePlugin,
                 eg.APP_NAME, 
                 wx.NO_DEFAULT|wx.OK|wx.ICON_EXCLAMATION

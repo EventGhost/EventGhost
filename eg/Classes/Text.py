@@ -47,6 +47,8 @@ class Text:
         ok = "OK"
         cancel = "Cancel"
         apply = "Apply"
+        yes = "&Yes"
+        no = "&No"
         help = "&Help"
         choose = "Choose"
         browse = "Browse..."
@@ -157,7 +159,25 @@ class Text:
             
         class Tree:
             caption = "Configuration"
-
+            
+        class ErrorMessages:
+            
+            class CantAddEvent:
+                caption = "Can't add an event item here"
+                mesg = (
+                    "You can't add an event here.\n\n"
+                    "Please select a macro item where "
+                    "you would like the event item be added to."
+                )
+            
+            class CantAddAction:
+                caption = "Can't add an action item here"
+                mesg = (
+                    "You can't add an action here.\n\n"
+                    "Please select a macro item or a location inside a macro "
+                    "item where you would like the event item be added to."
+                )
+            
     @eg.LogIt
     def __init__(self, language):  
         class MetaClass(type):

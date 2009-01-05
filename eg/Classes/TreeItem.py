@@ -282,21 +282,21 @@ class TreeItem(object):
             mesg = eg.text.General.deleteManyQuestion % str(count)
         else:
             mesg = eg.text.General.deleteQuestion
-        answer = wx.MessageBox(
+        answer = eg.MessageBox(
             mesg, 
             eg.APP_NAME,
             wx.NO_DEFAULT|wx.YES_NO|wx.ICON_EXCLAMATION
         )
-        if answer == wx.NO:
+        if answer == wx.ID_NO:
             return False
         dependants = self.GetDependantsOutside(allItems)
         if len(dependants) > 0:
-            answer = wx.MessageBox(
+            answer = eg.MessageBox(
                 eg.text.General.deleteLinkedItems,
                 eg.APP_NAME,
                 wx.NO_DEFAULT|wx.YES_NO|wx.ICON_EXCLAMATION
             )
-            return answer == wx.YES
+            return answer == wx.ID_YES
         return True
     
     
