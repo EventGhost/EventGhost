@@ -24,6 +24,7 @@ import eg
 import wx
 import wx.html
 import re
+from eg.Utils import GetFirstParagraph
 
 REPLACE_BR_TAG = re.compile('<br[ \/]*>')
 REMOVE_HTML_PATTERN = re.compile('<([^!>]([^>]|\n)*)>')
@@ -36,15 +37,11 @@ class HeaderBox(wx.PyWindow):
     
     def __init__(self, parent, obj):
         description = obj.description.strip()
-        text = ""
-        for line in description.splitlines():
-            if line == "":
-                break
-            text += line
+        text = GetFirstParagraph(description)
         
-        hasAdditionalHelp = (description != text)
         text = REPLACE_BR_TAG.sub('\n', text)
-        text = REMOVE_HTML_PATTERN.sub('', text)
+        text = REMOVE_HTML_PATTERN.sub('', text).strip()
+        hasAdditionalHelp = (description != text)
         if text == obj.name:
             text = ""
         self.obj = obj

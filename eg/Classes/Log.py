@@ -151,6 +151,11 @@ class Log(object):
     
         
     def PrintError(self, *args, **kwargs):
+        """
+        Prints an error message to the logger. The message will get a special
+        icon and a red colour, so the user can easily identify it as an error
+        message.
+        """
         kwargs.setdefault("icon", ERROR_ICON)
         self._Print(args, **kwargs)
 

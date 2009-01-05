@@ -37,11 +37,26 @@ from functools import update_wrapper
 
 class Bunch(object):
     """
-    The simple but handy "collector of a bunch of named stuff" class.
+    Universal collection of a bunch of named stuff.
     
     Often we want to just collect a bunch of stuff together, naming each 
-    item of the bunch; a dictionary's OK for that, but a small do-nothing 
-    class is even handier, and prettier to use.
+    item of the bunch. A dictionary is OK for that; however, when names are 
+    constants and to be used just like variables, the dictionary-access syntax 
+    ("if bunch['squared'] > threshold", etc) is not maximally clear. It takes 
+    very little effort to build a little class, as in this 'Bunch', that will 
+    both ease the initialisation task and provide elegant attribute-access 
+    syntax ("if bunch.squared > threshold", etc).    
+    
+    Usage is simple::
+    
+        point = eg.Bunch(x=100, y=200)
+        
+        # and of course you can read/write the named
+        # attributes you just created, add others, del
+        # some of them, etc, etc:
+        point.squared = point.x * point.y
+        if point.squared > threshold:
+            point.isok = True
     """
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
@@ -292,6 +307,7 @@ wxDummyEvent = WxDummyEvent()
 import docutils
 from docutils.core import publish_parts as ReSTPublishParts
 from docutils.writers.html4css1 import Writer
+from docutils.writers import UnfilteredWriter
 
 DOC_WRITER_TEMPLATE = """\
 %(head_prefix)s
@@ -318,11 +334,34 @@ def DecodeReST(source):
         source=source, 
         writer=HTML_DOC_WRITER, 
         settings_overrides={"stylesheet_path": ""}
-    )['html_body']
+    )
     #print repr(res)
-    return res
+    return res['body']
 
+
+def GetFirstParagraph(text):
+    """
+    Return the first paragraph of a description string.
     
+    The string can be encoded in HTML or reStructuredText.
+    The paragraph is returned as HTML.
+    """
+    text = text.lstrip()
+    pos = text.find("<rst>")
+    if pos != -1:
+        text = text[pos+5:].lstrip()
+        text = DecodeReST(text)
+        start = text.find("<p>")
+        end = text.find("</p>")
+        return text[start+3:end]
+    else:
+        result = ""
+        for line in text.splitlines():
+            if line == "":
+                break
+            result += " " + line
+        return result
+
 
 
 from operator import itemgetter as _itemgetter

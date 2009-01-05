@@ -59,7 +59,7 @@ class PluginManager:
     
     def __init__(self):
         eg.RegisterPlugin = self.RegisterPluginDummy
-        self.RegisterPlugin.im_func.__doc__ = self.RegisterPluginDummy.__doc__
+        self.RegisterPluginDummy.__doc__ = self.RegisterPlugin.__doc__
         self.Refresh()
     
     
@@ -201,19 +201,20 @@ class PluginManager:
         help = None,
     ):
         """
-        Registers information about a plug-in to EventGhost.
+        Registers information about a plugin to EventGhost.
         
-        *name* should be a short descriptive string with the name of the 
-        plug-in.
-        *description*
-        *kind* gives a hint about the category the plug-in belongs to. It 
-        should be a string with a value out of "remote" (for remote receiver
-        plug-ins), "program" (for program control plug-ins), "external" (for
-        plug-ins that control external hardware) or "other" (if none of the
-        other categories match).
-        *author* can be set to the name of the developer of the plug-in.
-        *version* can be set to a version string.
-        
+        :param name: should be a short descriptive string with the name of the 
+           plugin.
+        :param description: the description of the plugin.
+        :param kind: gives a hint about the category the plugin belongs to. It 
+           should be a string with a value out of "remote" (for remote receiver
+           plugins), "program" (for program control plugins), "external" (for
+           plugins that control external hardware) or "other" (if none of the
+           other categories match).
+        :param author: can be set to the name of the developer of the plugin.
+        :param version: can be set to a version string.
+        :param canMultiLoad: set this to ``True``, if a configuration can have 
+           more than one instance of this plugin.        
         """
         if name is None:
             name = self.currentInfo.dirname
@@ -229,7 +230,19 @@ class PluginManager:
         raise RegisterPluginException
         
     
-    def RegisterPluginDummy(self, **kwargs):
+    @staticmethod
+    def RegisterPluginDummy(        
+        name = None,
+        description = None,
+        kind = "other",
+        author = "unknown author",
+        version = "unknown version",
+        icon = None,
+        canMultiLoad = False,
+        createMacrosOnAdd = False,
+        url = None,
+        help = None,
+    ):
         pass
     
     

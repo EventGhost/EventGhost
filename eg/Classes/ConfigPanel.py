@@ -239,6 +239,20 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
     
     
     def Affirmed(self):
+        """
+        Returns the user request.
+        
+        If called the first time, it will also finish creation of the panel 
+        and show it to the user, before returning the user request.
+        
+        The return value depends on the button the user has pressed in the
+        panel:
+        
+            | Cancel button => :const:`False`
+            | Ok button => :const:`wx.ID_OK`
+            | Apply button => :const:`wx.ID_APPLY`
+            | Test button => :const:`eg.ID_TEST`
+        """
         if not self.shown:
             self.FinishSetup()
         eg.Utils.EnsureVisible(self.dialog)
@@ -253,6 +267,10 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
 
     
     def SetResult(self, *args, **kwargs):
+        """
+        Notifies the program of the current values of the configuration 
+        controls.
+        """
         self.args = args
         self.kwargs = kwargs
         if self.resultCode != eg.ID_TEST:
