@@ -20,21 +20,26 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+"""<rst>
+
+Hardware plugin for the `Streamzap PC Remote`_.
+
+|
+
+.. image:: crr.jpg
+   :align: center
+
+.. _Streamzap PC Remote: http://www.streamzap.com/products/pcremote/
+"""
+
+import eg
 
 eg.RegisterPlugin(
     name = "Streamzap PC Remote",
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
-    description = (
-        'Hardware plugin for the '
-        '<a href="http://www.streamzap.com/products/pcremote/">'
-        'Streamzap PC Remote</a>.'
-    ),
-    help = """
-        <center><a href="http://www.streamzap.com/products/pcremote/">
-        <img src="crr.jpg" alt="Streamzap" /></a></center>
-    """,
+    description = __doc__,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAOElEQVR42mNkoBAwDl4D"
         "/gMRIxEWMFKimWgD8BnISIlmkg3AZhh9DaBPIBJjK0EDSDFkEOcFYgEAwk8kEWJRdKUA"
@@ -159,7 +164,7 @@ class Streamzap(eg.RawReceiverPlugin):
         i = 0
         
         startupEvent.set()
-        sz_ReadFile = dll.sz_ReadFile
+        szReadFile = dll.sz_ReadFile
         Decode = MyDecoder.Decode
         while not self.abortThread:
             dll.sz_ReadFile(byref(byteIRdata), byref(dwNumBytesRead))
