@@ -26,8 +26,7 @@ import wx
 
 class SerialPortChoice(wx.Choice):
     """
-    This wx.Choice control will be setup with a list of all available serial 
-    ports on the system. 
+    A wx.Choice control that shows all available serial ports on the system. 
     """
     
     def __init__(

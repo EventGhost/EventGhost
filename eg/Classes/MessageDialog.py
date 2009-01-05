@@ -26,8 +26,8 @@ import wx
 
 class MessageDialog(wx.Dialog):
     """
-    A dialog similar to wx.MessageDialog, but with the ability to wrap the
-    text.
+    A replacement for wx.MessageDialog, that wraps the message, if the
+    dialog would get to wide.
     """
     def __init__(
         self, 

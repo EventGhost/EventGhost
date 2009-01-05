@@ -25,8 +25,10 @@
 import FileBrowseButton
 from wx.lib.filebrowsebutton import DirBrowseButton as _DirBrowseButton
 
+
 class DirBrowseButton(_DirBrowseButton):
-    """ A control to allow the user to type in a filename or browse with the 
-    standard file dialog to select directory.
+    """ 
+    A control to allow the user to type in a filename or browse with the 
+    standard file dialog to select a directory.
     """
     pass
