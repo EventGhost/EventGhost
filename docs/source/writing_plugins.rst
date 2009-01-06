@@ -288,7 +288,7 @@ This one is really simple, as it only has a single string option.
     class MyNewPlugin(eg.PluginBase):
     
         def Configure(self, myString=""):
-            panel = eg.ConfigPanel(self)
+            panel = eg.ConfigPanel()
             textControl = wx.TextCtrl(panel, -1, myString)
             panel.sizer.Add(textControl, 1, wx.EXPAND)
             while panel.Affirmed():
@@ -305,8 +305,7 @@ Nearly all configuration dialogs follow the same scheme.
    because if the plugin is added freshly, EventGhost can't know what and how 
    many parameters you want.
 #. Then let EventGhost pre-build a panel through the creation of a
-   :class:`eg.ConfigPanel` instance and give it your plugin instance (self) as 
-   parameter on instantiation.
+   :class:`eg.ConfigPanel` instance.
 #. Now you create as many wxPython controls as you need and set their initial
    value with the parameters you got through the 
    :meth:`~eg.PluginBase.Configure` method. In this case we only have 
@@ -374,7 +373,7 @@ Lets make a simple example where you can explore this::
             print "MyNewPlugin is closed."
     
         def Configure(self, myString=""):
-            panel = eg.ConfigPanel(self)
+            panel = eg.ConfigPanel()
             textControl = wx.TextCtrl(panel, -1, myString)
             panel.sizer.Add(textControl, 1, wx.EXPAND)
             while panel.Affirmed():
@@ -457,7 +456,7 @@ action will receive the parameters directly through the __call__() method.
             print myString
             
         def Configure(self, myString=""):
-            panel = eg.ConfigPanel(self)
+            panel = eg.ConfigPanel()
             textControl = wx.TextCtrl(panel, -1, myString)
             panel.sizer.Add(textControl, 1, wx.EXPAND)
             while panel.Affirmed():
