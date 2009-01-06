@@ -558,6 +558,9 @@ class MainDialog(wx.Dialog):
 
         self.ctrls["upload"].Enable(options.ftpUrl != "")
         self.ctrls["commitSvn"].Enable(pysvn is not None)
+        if not exists(join(builder.sourceDir, "eg", "StaticImports.py")):
+            self.ctrls["buildStaticImports"].Enable(False)
+            self.ctrls["buildStaticImports"].SetValue(True)
         if not exists(join(builder.sourceDir, "EventGhost.chm")):
             self.ctrls["buildChmDocs"].Enable(False)
             self.ctrls["buildChmDocs"].SetValue(True)
