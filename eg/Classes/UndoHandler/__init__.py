@@ -20,12 +20,12 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-modGlobals = globals()
+MODULE_GLOBALS = globals()
 
 class UndoHandler:
     
     def __getattr__(self, name):
-        mod = __import__(name, modGlobals)
+        mod = __import__(name, MODULE_GLOBALS)
         attr = getattr(mod, name)
         self.__dict__[name] = attr
         return attr
