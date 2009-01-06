@@ -177,7 +177,7 @@ class FindWindow(eg.ActionBase):
         timeout=0, 
         stop=STOP_IF_NOT_FOUND
     ):
-        panel = eg.ConfigPanel(self, resizable=True)
+        panel = eg.ConfigPanel(resizable=True)
         text = self.text
         searchOnlyFrontmost = False
         if stop is None:

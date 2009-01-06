@@ -134,7 +134,7 @@ class MoveTo(eg.ActionBase):
         
     def Configure(self, x=0, y=0):
         text = self.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         xCheckBox = panel.CheckBox(x is not None, text.text1)
         xCtrl = panel.SpinIntCtrl(0 if x is None else x, min=-32768, max=32767)
         xCtrl.Enable(x is not None)
@@ -272,7 +272,7 @@ class SendMessage(eg.ActionBase):
         except:
             choice = str(mesg)
 
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         
         mesgCtrl = panel.ComboBox(
             choice, 
@@ -337,7 +337,7 @@ class SetAlwaysOnTop(eg.ActionBase):
     
     
     def Configure(self, action=2):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         radioBox = wx.RadioBox(
             panel,
             -1,

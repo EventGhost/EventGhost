@@ -414,7 +414,7 @@ class ShowOSD(eg.ActionBase):
     ):                   
         if fontInfo is None:
             fontInfo = DEFAULT_FONT_INFO
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         text = self.text
         editTextCtrl = panel.TextCtrl("\n\n", style=wx.TE_MULTILINE)
         height = editTextCtrl.GetBestSize()[1]
