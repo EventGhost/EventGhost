@@ -73,7 +73,7 @@ Text = eg.text.MainFrame
         
 class DefaultConfig:
     position = (50, 50)
-    size = (700, 433)
+    size = (700, 450)
     showToolbar = True
     hideOnClose = False
     logTime = False
@@ -313,8 +313,11 @@ class MainFrame(wx.Frame):
         x, y = event.GetPosition()
         item = self.toolBar.FindToolForPosition(x, y)
         if item and item.GetId() == ID_TOOLBAR_EXECUTE:
-            self.lastClickedTool = item
-            self.egEvent = self.document.ExecuteSelected()
+            if not self.document.selection.isExecutable:
+                self.DisplayError(Text.ErrorMessages.cantExecute)
+            else:
+                self.lastClickedTool = item
+                self.egEvent = self.document.ExecuteSelected()
         event.Skip()
         
         
@@ -651,8 +654,12 @@ class MainFrame(wx.Frame):
             self.SetWindowStyleFlag(self.style)
     
 
-    def DisplayError(self, message, caption="EventGhost Error"):
-        eg.MessageBox(message, caption, wx.ICON_EXCLAMATION|wx.OK, self)
+    def DisplayError(self, errorText):
+        eg.MessageBox(
+            errorText,
+            Text.ErrorMessages.caption, 
+            wx.ICON_EXCLAMATION|wx.OK, self
+        )
 
 
     def GetEditCmdState(self):
@@ -829,12 +836,13 @@ class MainFrame(wx.Frame):
             
             
     def OnCmdAddEvent(self):
-        if self.document.selection.DropTest(EventItem):
-            eg.UndoHandler.NewEvent().Do(self.document)
-        else:
-            text = Text.ErrorMessages.CantAddEvent
-            self.DisplayError(text.mesg, text.caption)
-                
+        if not self.document.selection.DropTest(EventItem):
+            self.DisplayError(Text.ErrorMessages.cantAddEvent)
+            return
+        eg.Greenlet(
+            eg.UndoHandler.NewEvent().Do
+        ).switch(self.document)
+
                 
     def OnCmdAddFolder(self):
         eg.UndoHandler.NewFolder().Do(self.document)
@@ -846,11 +854,7 @@ class MainFrame(wx.Frame):
     
     def OnCmdAddAction(self):
         if not self.document.selection.DropTest(ActionItem):
-            text = Text.ErrorMessages.CantAddAction
-            self.DisplayError(
-                text.mesg,
-                text.caption,
-            )
+            self.DisplayError(Text.ErrorMessages.cantAddAction)
             return
         # let the user choose an action
         result = eg.AddActionDialog.GetModalResult(self)
@@ -865,8 +869,11 @@ class MainFrame(wx.Frame):
     
     @eg.LogIt
     def OnCmdRename(self):
-        self.treeCtrl.SetFocus()
-        self.treeCtrl.EditLabel(self.treeCtrl.GetSelection())
+        if not self.document.selection.isRenameable:
+            self.DisplayError(Text.ErrorMessages.cantRename)
+        else:
+            self.treeCtrl.SetFocus()
+            self.treeCtrl.EditLabel(self.treeCtrl.GetSelection())
 
 
     def OnCmdConfigure(self):
@@ -874,11 +881,17 @@ class MainFrame(wx.Frame):
 
 
     def OnCmdExecute(self):
-        self.document.ExecuteSelected().SetShouldEnd()
+        if not self.document.selection.isExecutable:
+            self.DisplayError(Text.ErrorMessages.cantExecute)
+        else:
+            self.document.ExecuteSelected().SetShouldEnd()
 
 
     def OnCmdDisabled(self):
-        eg.UndoHandler.ToggleEnable(self.document)
+        if not self.document.selection.isDeactivatable:
+            self.DisplayError(Text.ErrorMessages.cantDisable)
+        else:
+            eg.UndoHandler.ToggleEnable(self.document)
 
 
     def OnCmdHideShowToolbar(self):
@@ -1062,6 +1075,11 @@ class MainFrame(wx.Frame):
     
     #@eg.AsGreenlet
     def OnCmdAddEventDialog(self):
+        dialog = eg.AddEventDialog(self)
+        dialog.ShowModal()
+        dialog.Destroy()
+        return
+        
         result = eg.AddEventDialog.GetModalResult(self)
         if result is None:
             return

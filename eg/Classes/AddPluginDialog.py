@@ -28,8 +28,8 @@ KIND_TAGS = ["remote", "program", "external", "other"]
 
 class DefaultConfig:
     position = None
-    size = (552, 382)
-    splitPosition = 216
+    size = (640, 450)
+    splitPosition = 240
     lastSelection = None
     collapsed = set()
 

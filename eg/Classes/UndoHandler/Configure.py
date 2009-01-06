@@ -36,15 +36,13 @@ class Configure:
     
     def Try(self, document):
         item = document.selection
-        if isinstance(item, eg.ActionItem):
+        if isinstance(item, (eg.ActionItem, eg.EventItem)):
             eg.Greenlet(self.Do).switch(item)
         
     
     def Do(self, item, isFirstConfigure=False):
         # TODO: doing the thread ping-pong right
-        executable = item.executable
-        if executable is None:
-            return False
+
         if item.openConfigDialog:
             item.openConfigDialog.Raise()
             return False
@@ -59,7 +57,7 @@ class Configure:
             eg.currentConfigureItem = item
             try:
                 if greenlet is None or greenlet.dead:
-                    greenlet = eg.Greenlet(executable.Configure)
+                    greenlet = eg.Greenlet(item.Configure)
                     newArgs = greenlet.switch(*item.GetArgs())
                 else:
                     newArgs = greenlet.switch()

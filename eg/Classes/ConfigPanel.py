@@ -27,20 +27,24 @@ import types
 
 class ConfigDialog(eg.Dialog):
 
-    def __init__(self, panel, obj, resizable=False, showLine=True):
+    def __init__(self, panel, item, resizable=False, showLine=True):
         self.panel = panel
         self.result = None
-        self.gr = eg.Greenlet.getcurrent()
+        self.greenlet = eg.Greenlet.getcurrent()
         self.showLine = showLine
         self.resizable = resizable
         
-        isPlugin = isinstance(obj, eg.PluginBase)
-        if isPlugin:
-            title = eg.text.General.pluginLabel % obj.name
-            flags = wx.EXPAND|wx.ALL|wx.ALIGN_CENTER
+        addTestButton = False
+        size = (450, 300)
+        if isinstance(item, eg.PluginItem):
+            title = eg.text.General.pluginLabel % item.executable.info.name
+        elif isinstance(item, eg.EventItem):
+            title = "EventItem"
+            size = (450, 150)
         else:
-            title = "%s: %s" % (obj.plugin.info.label, obj.name)
-            flags = wx.EXPAND|wx.ALL|wx.ALIGN_CENTER
+            title = "%s: %s" % (item.executable.plugin.info.label, item.executable.name)
+            addTestButton = True
+        
 
         self.configureItem = eg.currentConfigureItem
         eg.currentConfigureItem.openConfigDialog = self
@@ -58,7 +62,7 @@ class ConfigDialog(eg.Dialog):
             resizable
         )
         testButton = None
-        if not isPlugin:
+        if addTestButton:
             testButton = wx.Button(self, -1, eg.text.General.test)
             self.buttonRow.Add(testButton)
             testButton.Bind(wx.EVT_BUTTON, self.OnTestButton)
@@ -70,19 +74,20 @@ class ConfigDialog(eg.Dialog):
 
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         paramSizer = wx.BoxSizer(wx.VERTICAL)
-        self.headerBox = eg.HeaderBox(self, obj)
-        mainSizer.SetMinSize((450, 300))
+        self.headerBox = eg.HeaderBox(self, item)
+        mainSizer.SetMinSize(size)
+        flags = wx.EXPAND|wx.ALL|wx.ALIGN_CENTER#|wx.ALIGN_CENTER_VERTICAL
         mainSizer.AddMany(
             (
                 (self.headerBox, 0, wx.EXPAND, 0),
                 (wx.StaticLine(self), 0, wx.EXPAND|wx.ALIGN_CENTER, 0),
-                (paramSizer, 1, flags|wx.ALIGN_CENTER_VERTICAL, 15),
+                (paramSizer, 1, flags, 15),
             )
         )
         self.mainSizer = mainSizer
         self.sizer = paramSizer
         
-        def ShowHelp(event):
+        def ShowHelp(dummyEvent):
             self.configureItem.ShowHelp(self)
         wx.EVT_MENU(self, wx.ID_HELP, ShowHelp)
         
@@ -110,23 +115,23 @@ class ConfigDialog(eg.Dialog):
             
     def OnOK(self, event):
         self.result = wx.ID_OK
-        self.gr.switch(wx.ID_OK)
+        self.greenlet.switch(wx.ID_OK)
         
         
     def OnCancel(self, event):
         self.result = wx.ID_CANCEL
-        self.gr.switch(wx.ID_CANCEL)
+        self.greenlet.switch(wx.ID_CANCEL)
         
         
     def OnApply(self, event):
         self.panel.SetFocus()
         self.result = wx.ID_APPLY
-        self.gr.switch(wx.ID_APPLY)
+        self.greenlet.switch(wx.ID_APPLY)
         
         
     def OnTestButton(self, event):
         self.result = eg.ID_TEST
-        self.gr.switch(eg.ID_TEST)
+        self.greenlet.switch(eg.ID_TEST)
         
         
     def FinishSetup(self):
@@ -160,17 +165,17 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
     
     def __init__(
         self, 
-        executable, 
+        executable=None, 
         resizable=None, 
-        showLine=True, 
-        handleIsDirty=False,
-        
+        showLine=True        
     ):
         #if resizable is None:
         #    resizable = bool(eg.debugLevel)
         self.nextResult = None
-        self.gr = eg.Greenlet.getcurrent()
-        dialog = ConfigDialog(self, executable, resizable, showLine)
+        self.greenlet = eg.Greenlet.getcurrent()
+        item = eg.currentConfigureItem
+            
+        dialog = ConfigDialog(self, item, resizable, showLine)
         self.dialog = dialog
         wx.PyPanel.__init__(self, dialog, -1)
         self.lines = []
@@ -223,7 +228,7 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
             self.SetSizerAndFit(self.sizer)
             
         self.dialog.FinishSetup()        
-        def OnEvent(event):
+        def OnEvent(dummyEvent):
             self.SetIsDirty()
         self.Bind(wx.EVT_CHECKBOX, OnEvent)
         self.Bind(wx.EVT_BUTTON, OnEvent)
@@ -276,7 +281,7 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         if self.resultCode != eg.ID_TEST:
             self.dialog.buttonRow.applyButton.Enable(False)
             self.isDirty = False
-        self.nextResult = self.gr.parent.switch(args)
+        self.nextResult = self.greenlet.parent.switch(args)
 
     
     def AddLine(self, *items, **kwargs):
@@ -288,8 +293,8 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         columns = self.maxRowNum
         sizer = wx.GridBagSizer(vgap, hgap)
         sizer.SetFlexibleDirection(wx.HORIZONTAL)
-        RowFlagsGet = self.rowFlags.get
-        ColFlagsGet = self.colFlags.get
+        rowFlagsGet = self.rowFlags.get
+        colFlagsGet = self.colFlags.get
         for rowNum, (row, kwargs) in enumerate(grid):
             if kwargs.get("growable", False):
                 sizer.AddGrowableRow(rowNum)
@@ -299,7 +304,7 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
                 elif type(ctrl) in types.StringTypes:
                     ctrl = wx.StaticText(self, -1, ctrl)
                 
-                flags = RowFlagsGet(rowNum, 0) | ColFlagsGet(colNum, 0)
+                flags = rowFlagsGet(rowNum, 0) | colFlagsGet(colNum, 0)
                 flags |= (wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT)
                 sizer.Add(ctrl, (rowNum, colNum), (1, 1), flags)
                 

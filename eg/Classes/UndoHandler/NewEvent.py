@@ -24,7 +24,7 @@ import eg
 
 
 class NewEvent(eg.UndoHandler.NewItem):
-    name = eg.text.MainFrame.Menu.AddEvent.replace("&", "")
+    name = eg.text.MainFrame.Menu.AddEvent.replace("&", "").replace("...", "")
     
     def Do(self, document, label=None, parent=None, pos=-1):
         if parent is None:
@@ -33,24 +33,27 @@ class NewEvent(eg.UndoHandler.NewItem):
                 parent = obj
             else:
                 parent = obj.parent
-            for pos, obj in enumerate(parent.childs):
-                if isinstance(obj, document.ActionItem):
+            pos = 0
+            for child in parent.childs:
+                if isinstance(child, document.ActionItem):
                     break
+                pos += 1
             else:
                 pos = 0
         if not isinstance(parent, eg.MacroItem):
             return
         if isinstance(parent, eg.AutostartItem):
             return    
-        if label is not None:
-            item = document.EventItem.Create(parent, pos, name=label)
-            item.Select()
-        else:
-            label = eg.text.General.unnamedEvent
-            item = document.EventItem.Create(parent, pos, name=label)
-            item.Select()
-            item.tree.EditLabel(item.id)
+        needsConfigure = False
+        if label is None:
+            label = eg.event.string
+            needsConfigure = True
+        item = document.EventItem.Create(parent, pos, name=label)
+        item.Select()
             
+        if needsConfigure and not eg.UndoHandler.Configure().Do(item, True):
+            item.Delete()
+            return None
         self.StoreItem(item)
         return item
     

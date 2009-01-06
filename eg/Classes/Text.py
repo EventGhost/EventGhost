@@ -108,11 +108,11 @@ class Text:
             Paste = "&Paste"
             Delete = "&Delete"
             SelectAll = "Select &All"
-            AddPlugin = "Add Plugin"
+            AddPlugin = "Add Plugin..."
             AddFolder = "Add Folder"
-            AddMacro = "Add Macro"
-            AddEvent = "Add Event"
-            AddAction = "Add Action"
+            AddMacro = "Add Macro..."
+            AddEvent = "Add Event..."
+            AddAction = "Add Action..."
             Configure = "Configure Item"
             Rename = "Rename Item"
             Disabled = "Disable Item"
@@ -161,22 +161,27 @@ class Text:
             caption = "Configuration"
             
         class ErrorMessages:
-            
-            class CantAddEvent:
-                caption = "Can't add an event item here"
-                mesg = (
-                    "You can't add an event here.\n\n"
-                    "Please select a macro item where "
-                    "you would like the event item be added to."
-                )
-            
-            class CantAddAction:
-                caption = "Can't add an action item here"
-                mesg = (
-                    "You can't add an action here.\n\n"
-                    "Please select a macro item or a location inside a macro "
-                    "item where you would like the event item be added to."
-                )
+            caption = "Operation not possible!"
+            cantAddEvent = (
+                "An event item can't be added here.\n\n"
+                "Please select a macro item where "
+                "you would like the event item to be added to."
+            )
+            cantAddAction = (
+                "An action item can't be added here.\n\n"
+                "Please select a macro item or a location inside a macro "
+                "item where you would like the event item be to added to."
+            )
+            cantDisable = (
+                "The root item and the autostart item can't be disabled."
+            )
+            cantRename = (
+                "Only folders, macros and actions can be renamed."
+            )
+            cantExecute = (
+                "The root item, folder items and event items can't be "
+                "executed."
+            )
             
     @eg.LogIt
     def __init__(self, language):  
