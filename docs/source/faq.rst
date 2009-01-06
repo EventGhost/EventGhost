@@ -1,3 +1,5 @@
+:tocdepth: 1
+
 ===
 FAQ
 ===
@@ -17,9 +19,12 @@ modules for scripting and writing plugins.
 Q: Can I use an IrDA dongle to control my PC with a remote?
 -----------------------------------------------------------
 
-A: No. CIR (consumer IR) that is used by your TV remote for example, is a 
-complete other thing than IrDA. They use different frequencies, encodings and 
-modulation. IrDA is simply not made for the purposes of CIR and vice versa. 
+A: No. `CIR (consumer IR) <http://en.wikipedia.org/wiki/Consumer_IR>`_ that is 
+used by your TV remote for example, is a complete other thing than 
+`IrDA <http://en.wikipedia.org/wiki/Infrared_Data_Association>`_. 
+
+They use different frequencies, encodings and modulation. IrDA is simply not 
+made for the purposes of CIR and vice versa. 
 However there are some IrDA dongles that are advertised to work with CIR. One 
 that I know of is the ACTiSYS IR200L. But other projects have found out, that 
 this device won't work very reliable and therefore the EventGhost project has 
@@ -40,8 +45,7 @@ installer.
 
 To install EventGhost on a Windows 2000 machine please follow the steps 
 mentioned in this Microsoft Knowledge Base article:
-
 http://support.microsoft.com/kb/915052
 
-After you have followed the above instructions, you should be able to install 
+After you have installed the GDIPLUS.dll, you should be able to install 
 and run EventGhost. 

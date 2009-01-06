@@ -37,7 +37,7 @@ Classes
 .. include:: classes.txt
 
 
-wxPython additions
+wxPython Additions
 ==================
 
 .. include:: gui_classes.txt
