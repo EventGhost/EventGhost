@@ -29,25 +29,27 @@ import py2exe
 import tempfile
 import shutil
 import sys
-from os.path import join, dirname
+from os.path import join, dirname, abspath
 
-PYVERSION = str(sys.version_info[0]) + str(sys.version_info[1])
-tmpDir = tempfile.mkdtemp()
+PYVERSION = "%d%d" % sys.version_info[:2]
+PY_BASE_NAME = "py%s" % PYVERSION
+PYW_BASE_NAME = "pyw%s" % PYVERSION
+TEMP_DIR = tempfile.mkdtemp()
 
 sys.argv.append("py2exe")
 setup(
     options=dict(
-        build=dict(build_base=join(tmpDir, "build")),
-        py2exe=dict(compressed=0, dist_dir=join(tmpDir, "dist"))
+        build=dict(build_base=join(TEMP_DIR, "build")),
+        py2exe=dict(compressed=0, dist_dir=join(TEMP_DIR, "dist"))
     ),
     # it is important, that the zipfile argument does match the one from
     # the main installer.
     zipfile="lib%s/python%s.zip" % (PYVERSION, PYVERSION),
-    windows=[dict(script="py.py", dest_base="pyw")],
-    console=[dict(script="py.py", dest_base="py")],
+    windows=[dict(script="py.py", dest_base=PYW_BASE_NAME)],
+    console=[dict(script="py.py", dest_base=PY_BASE_NAME)],
     verbose=0,
 )
-outDir = join(dirname(sys.argv[0]), "Python%s" % PYVERSION)
-shutil.copy(join(tmpDir, "dist", "py.exe"), outDir)
-shutil.copy(join(tmpDir, "dist", "pyw.exe"), outDir)
-shutil.rmtree(tmpDir)
+OUT_DIR = abspath(join(dirname(sys.argv[0]), ".."))
+shutil.copy(join(TEMP_DIR, "dist", PY_BASE_NAME + ".exe"), OUT_DIR)
+shutil.copy(join(TEMP_DIR, "dist", PYW_BASE_NAME + ".exe"), OUT_DIR)
+shutil.rmtree(TEMP_DIR)

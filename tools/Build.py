@@ -210,7 +210,6 @@ AppMutex=EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B
 function InitializeSetup: Boolean;
 var
   MS, LS: Cardinal;
-  ErrorCode: integer;
 begin
   if GetVersionNumbers(ExpandConstant('{sys}\\gdiplus.dll'), MS, LS) then
     Result := true
@@ -319,6 +318,7 @@ class MyInstaller(InnoInstaller):
     outputBaseFilename = None
     
     def __init__(self):
+        self.appShortName += "_Py%d%d" % sys.version_info[:2] 
         InnoInstaller.__init__(self)
 
 
@@ -328,11 +328,10 @@ class MyInstaller(InnoInstaller):
         """
         path = join(self.sourceDir, "CHANGELOG.TXT")
         timeStr = time.strftime("%m/%d/%Y")
-        header = "%s (%s)" % (self.appVersion, timeStr)
-        header = header + "\n" + ("=" * len(header)) + "\n"
+        header = "**%s (%s)**\n\n" % (self.appVersion, timeStr)
         infile = open(path, "r")
         data = infile.read(100) # read some data from the beginning
-        if not data.strip().startswith("-"):
+        if data.strip().startswith("**"):
             # no new lines, so skip the addition of a new header
             return
         data += infile.read() # read the remaining contents
@@ -421,9 +420,9 @@ class MyInstaller(InnoInstaller):
         Create and compile the Inno Setup installer script.
         """
         if self.pyVersion == "26":
-            filename = "%(appShortName)s_%(appVersion)s_Py26_Setup" % self
+            filename = "EventGhost_%(appVersion)s_Py26_Setup" % self
         else:
-            filename = "%(appShortName)s_%(appVersion)s_Setup" % self
+            filename = "EventGhost_%(appVersion)s_Setup" % self
         self.outputBaseFilename = filename
         plugins = {}
         for filename in self.GetSetupFiles():
@@ -438,8 +437,18 @@ class MyInstaller(InnoInstaller):
             self.AddFile(join(self.sourceDir, filename), dirname(filename))
         for filename in glob(join(self.libraryDir, '*.*')):
             self.AddFile(filename, self.libraryName)
-        self.AddFile(join(self.pyVersionDir, "py.exe"))
-        self.AddFile(join(self.pyVersionDir, "pyw.exe"))
+        self.AddFile(
+            join(self.sourceDir, "EventGhost_Py%s.exe" % self.pyVersion), 
+            destName="EventGhost.exe"
+        )
+        self.AddFile(
+            join(self.sourceDir, "py%s.exe" % self.pyVersion), 
+            destName="py.exe"
+        )
+        self.AddFile(
+            join(self.sourceDir, "pyw%s.exe" % self.pyVersion), 
+            destName="pyw.exe"
+        )
 
         # create entries in the [InstallDelete] section of the Inno script to
         # remove all known plugin directories before installing the new 
@@ -549,7 +558,18 @@ class MainDialog(wx.Dialog):
 
         self.ctrls["upload"].Enable(options.ftpUrl != "")
         self.ctrls["commitSvn"].Enable(pysvn is not None)
-
+        if not exists(join(builder.sourceDir, "EventGhost.chm")):
+            self.ctrls["buildChmDocs"].Enable(False)
+            self.ctrls["buildChmDocs"].SetValue(True)
+        if (
+            not exists(join(builder.sourceDir, "py%s.exe" % builder.pyVersion))
+            or not exists(join(builder.sourceDir, "pyw%s.exe" % builder.pyVersion))
+        ):
+            self.ctrls["buildPyExe"].Enable(False)
+            self.ctrls["buildPyExe"].SetValue(True)
+        if not exists(join(builder.sourceDir, builder.appShortName + ".exe")):
+            self.ctrls["buildLib"].Enable(False)
+            self.ctrls["buildLib"].SetValue(True)
         
         self.okButton = wx.Button(self, wx.ID_OK)
         self.okButton.Bind(wx.EVT_BUTTON, self.OnOk)
@@ -684,9 +704,9 @@ OPTIONS = (
     ("incrementBuildNum", "Increment build number", False),
     ("buildStaticImports", "Build StaticImports.py", True),
     ("buildImports", "Build imports.py", True),
+    ("buildSourceArchive", "Build source archive", True),
     ("buildHtmlDocs", "Build HTML docs", True),
     ("buildChmDocs", "Build CHM docs", True),
-    ("buildSourceArchive", "Build source archive", True),
     ("buildPyExe", "Build py.exe and pyw.exe", True),
     ("buildLib", "Build lib%d%d" %sys.version_info[0:2], True),
     ("buildInstaller", "Build Setup.exe", True),

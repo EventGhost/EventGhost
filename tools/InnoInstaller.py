@@ -156,14 +156,14 @@ class InnoInstaller(object):
         self.innoSections[section].append(line)
         
     
-    def AddFile(self, source, destDir=""):
+    def AddFile(self, source, destDir="", destName=None):
         """ 
         Adds a file to the [Files] section. 
         """
-        self.Add(
-            "Files", 
-            'Source: "%s"; DestDir: "{app}\\%s";' % (abspath(source), destDir)
-        )
+        line = 'Source: "%s"; DestDir: "{app}\\%s";' % (abspath(source), destDir)
+        if destName is not None:
+            line += ' DestName: "%s";' % destName
+        self.Add("Files", line)
         
         
     def __getitem__(self, key):
@@ -280,7 +280,6 @@ class InnoInstaller(object):
         Finishes the setup, writes the Inno Setup script and calls the 
         Inno Setup compiler.
         """
-        self.AddFile("../%s.exe" % self.appShortName)
         if self.pyVersion == "25":
             self.AddFile("../MFC71.dll")
             self.AddFile("../msvcr71.dll")
