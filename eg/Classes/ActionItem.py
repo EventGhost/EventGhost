@@ -110,6 +110,18 @@ class ActionItem(TreeItem):
         self.SetArgumentString(argString)
     
     
+    def GetTypeName(self):
+        return self.executable.name
+    
+    
+    def GetDescription(self):
+        return self.executable.description
+    
+    
+    def Configure(self, *args):
+        return self.executable.Configure(*args)
+    
+    
     def GetArgumentString(self):
         return ", ".join([repr(arg) for arg in self.GetArgs()])
     
@@ -200,11 +212,6 @@ class ActionItem(TreeItem):
         # the item wants to be configured after creation
         imFunc = self.executable.Configure.im_func
         return imFunc != eg.ActionBase.Configure.im_func
-    
-    
-    @staticmethod
-    def IsConfigurable():
-        return True
     
     
     @eg.LogIt

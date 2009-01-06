@@ -119,6 +119,14 @@ class TreeItem(object):
         return attr, None
 
 
+    def GetTypeName(self):
+        raise NotImplementedError
+    
+    
+    def GetDescription(self):
+        raise NotImplementedError
+    
+    
     def GetXmlString(self, write, indent=""):
         def WriteNode(node, indent):
             attr, text = node.GetData()
@@ -346,7 +354,7 @@ class TreeItem(object):
         return self.name
     
     
-    @eg.AssertNotMainThread
+    #@eg.AssertNotMainThread
     @eg.LogIt
     def RenameTo(self, newName):
         self.name = newName

@@ -35,23 +35,23 @@ class HeaderBox(wx.PyWindow):
     The top description box of every action/plugin configuration dialog.
     """
     
-    def __init__(self, parent, obj):
-        description = obj.description.strip()
+    def __init__(self, parent, item):
+        name = item.GetTypeName()
+        description = item.GetDescription().strip()
         text = GetFirstParagraph(description)
         
         text = REPLACE_BR_TAG.sub('\n', text)
         text = REMOVE_HTML_PATTERN.sub('', text).strip()
         hasAdditionalHelp = (description != text)
-        if text == obj.name:
+        if text == name:
             text = ""
-        self.obj = obj
         self.parent = parent
         wx.PyWindow.__init__(self, parent, -1)
         self.SetBackgroundColour(
             wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW)
         )
         
-        nameBox = wx.StaticText(self, -1, obj.name)
+        nameBox = wx.StaticText(self, -1, name)
         font = wx.Font(8, wx.SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD )
         nameBox.SetFont(font)
         
@@ -68,7 +68,7 @@ class HeaderBox(wx.PyWindow):
         descBox.Bind(wx.html.EVT_HTML_LINK_CLICKED, self.OnLinkClicked)
         
         staticBitmap = wx.StaticBitmap(self)
-        staticBitmap.SetIcon(obj.info.icon.GetWxIcon())
+        staticBitmap.SetIcon(item.icon.GetWxIcon())
         
         mainSizer = eg.HBoxSizer(
             ((4, 4)),

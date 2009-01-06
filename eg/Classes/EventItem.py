@@ -28,12 +28,56 @@ from TreeItem import HINT_NO_DROP, HINT_MOVE_BEFORE_OR_AFTER, HINT_MOVE_AFTER
 class EventItem(TreeItem):
     xmlTag = "Event"
     icon = eg.Icons.EVENT_ICON
+    isConfigurable = True
+    openConfigDialog = None
+    isRenameable = False
     
     def __init__(self, parent, node):
         TreeItem.__init__(self, parent, node)
         self.RegisterEvent(self.name)        
         
         
+    def GetTypeName(self):
+        return "Event Item"
+    
+    
+    def GetDescription(self):
+        return ""
+    
+    
+    def GetArgumentString(self):
+        return self.name
+    
+    
+    def SetArgumentString(self, argString):
+        self.RenameTo(argString)
+        
+    
+    def GetArgs(self):
+        return (self.name, )
+    
+    
+    def SetArgs(self, args):
+        newName = args[0]
+        self.RenameTo(newName)
+
+    
+    def Configure(self, name):
+        panel = eg.ConfigPanel(self)
+        staticText = panel.StaticText("Event name:")
+        textCtrl = panel.TextCtrl(name, size=(250, -1))
+        staticText2 = panel.StaticText(
+            "Note: You can also drag and drop events from the logger to a "
+            "macro."
+        )
+        panel.sizer.Add(staticText)
+        panel.sizer.Add(textCtrl)
+        panel.sizer.Add((5, 5))
+        panel.sizer.Add(staticText2)
+        while panel.Affirmed():
+            panel.SetResult(textCtrl.GetValue())
+        
+    
     def _Delete(self):
         self.UnRegisterEvent(self.name)
         TreeItem._Delete(self)
