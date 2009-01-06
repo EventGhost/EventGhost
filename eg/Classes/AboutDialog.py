@@ -24,7 +24,9 @@ import eg
 import wx
 import time
 import sys
+import os
 import platform
+import hashlib
 from cStringIO import StringIO
 
 import Image
@@ -322,38 +324,44 @@ class SystemInfoPanel(HtmlPanel):
         
 class ChangelogPanel(HtmlPanel):
     
+    @eg.TimeIt
     def __init__(self, parent):
         try:
             infile = open("CHANGELOG.TXT")
+            text = infile.read()
         except IOError:
-            infile = ""
-        out = StringIO()
-        liStarted = False
-        for line in infile:
-            if line.startswith("==="):
-                out.write("<ul>\n")
-                continue    
-            if line.startswith("- "):
-                out.write("<li>\n")
-                out.write(line[2:])
-                liStarted = True
-                continue    
-            if line.startswith("  "):
-                out.write(line)
-                continue       
-            if line.strip() != "":
-                out.write("<p>")
-                if liStarted:
-                    liStarted = False
-                    out.write("</li>")
-                out.write("</ul><b><u>")
-                out.write(line)
-                out.write("</u></b>")
-        out.write("</li>\n")
-        out.write("</ul>\n")
-        HtmlPanel.__init__(self, parent, out.getvalue())
-        out.close()
+            text = ""
+        
+        # test if the changelog has changed. If not read the changelog.dat
+        # from the config dir, as it is already parsed.
+        digest = hashlib.md5(text).hexdigest()
+        changelogDatPath = os.path.join(eg.configDir, "changelog.dat")
+        if not os.path.exists(changelogDatPath):
+            text = self.UpdateChangelog(changelogDatPath, text, digest)
+        else:
+            changelogDatFile = open(changelogDatPath, "rt")
+            oldDigest = changelogDatFile.readline().strip()
+            if oldDigest != digest:
+                changelogDatFile.close()
+                text = self.UpdateChangelog(changelogDatPath, text, digest)
+            else:
+                text = changelogDatFile.read()
+        HtmlPanel.__init__(self, parent, text)
 
+    
+    @eg.LogIt
+    def UpdateChangelog(self, changelogDatPath, text, digest):
+        """
+        Parses the reStructuredText and stores a copy of the result in the 
+        eg.configDir to speed up loading.
+        """
+        text = eg.Utils.DecodeReST(text)
+        changelogDatFile = open(changelogDatPath, "wt")
+        changelogDatFile.write(digest + "\n")
+        changelogDatFile.write(text)
+        changelogDatFile.close()
+        return text
+    
 
 
 class AboutDialog(eg.Dialog):
