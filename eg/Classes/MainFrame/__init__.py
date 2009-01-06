@@ -120,7 +120,7 @@ class MainFrame(wx.Frame):
             self, 
             None, 
             -1, 
-            eg.APP_NAME, 
+            document.GetTitle(), 
             pos=config.position, 
             size=(1, 1), 
             style=self.style
@@ -190,7 +190,6 @@ class MainFrame(wx.Frame):
         self.OnFocusChange(value)
         
         eg.clipboardEvent.Subscribe(self.OnClipboardChange)
-        self.UpdateTitle(self.document.filePath)
         
         # create an accelerator for the "Log only assigned and activated 
         # events" checkbox. An awfull hack.
@@ -533,14 +532,6 @@ class MainFrame(wx.Frame):
         BringHwndToFront(self.GetHandle())
         wx.Frame.Raise(self)
     
-    
-    def UpdateTitle(self, filePath):
-        if filePath is None:
-            filename = eg.text.General.unnamedFile
-        else:
-            filename = os.path.basename(filePath)
-        self.SetTitle("EventGhost %s - %s" % (eg.Version.string, filename))
-
     
     def OnDocumentDirty(self, isDirty):
         self.toolBar.EnableTool(wx.ID_SAVE, bool(isDirty))
