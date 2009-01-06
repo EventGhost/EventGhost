@@ -177,9 +177,22 @@ class PluginBase(object):
         hidden=False
     ):
         """
-        Adds an action to the AddActionDialog of EventGhost for this plugin.
+        Adds an :class:`eg.ActionBase` subclass to this plugin.
         
-        :param action: The action class to add
+        The action will then be visible in the AddActionDialog of EventGhost 
+        for this plugin (except *hidden* is set to True).
+        
+        Through the usage of the *clsName*, *name* and *description* 
+        parameters, you can add the same action class multiple times with 
+        different names and descriptions. You can then also use the *value* 
+        parameter, to assign some arbitrary data to the action, that the 
+        action can then query through its self.value attribute.
+        
+        :param actionCls: The action class to add
+        :param clsName: Overrides the actions class name with a string
+        :param name: Overrides the actions name with a string
+        :param description: Overrides the actions description with a string
+        :param value: Some data that you would like to assign to the action
         :param hidden: If set to True, the action will not show up in the 
             AddActionDialog but is otherwise fully functional.
         """
@@ -191,7 +204,7 @@ class PluginBase(object):
     
     def AddGroup(self, name=None, description=None, iconFile=None):
         """
-        Add an new sub-group to the AddActionDialog of EventGhost for this
+        Adds a new sub-group to the AddActionDialog of EventGhost for this
         plugin.
         
         This group will appear under the group of the plugin. To add actions
