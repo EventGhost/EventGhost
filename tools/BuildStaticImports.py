@@ -11,7 +11,7 @@ def ScanDir(modName):
     parts = modName.split(".")
     scanDir = join(outDir, *parts)
     if len(parts) > 1:
-        outfile.write("%s = Bunch()\n" % parts[-1])
+        outfile.write("from %s import %s\n" % (modName, parts[-1]))
     files = glob(join(scanDir, "*.py"))
     for filename in files:
         name = os.path.splitext(os.path.basename(filename))[0]
@@ -38,6 +38,7 @@ a lazy import pattern.
 outfile.write("# py" + "lint: disable-msg=W0611,W0614,C0103\n")
 outfile.write("from Utils import * #py" + "lint: disable-msg=W0401\n")
 ScanDir("Classes")
+ScanDir("Classes.MainFrame")
 ScanDir("Classes.UndoHandler")
 outfile.write("\n")
 for name in singletons:
