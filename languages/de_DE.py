@@ -1035,7 +1035,7 @@ class Plugin:
         port = u"TCP/IP Port:"
     class X10:
         name = u"X10 Fernbedienung"
-        description = u'Plugin für X10 kompatible Funkfernbedienungen.\n\nDies beinhaltet Fernbedienungen wie:<br>\n<ul>\n<li><a href="http://www.ati.com/products/remotewonder/index.html">ATI Remote Wonder</a></li>\n<li><a href="http://www.ati.com/products/remotewonderplus/index.html">ATI Remote Wonder™ PLUS</a></li>\n<li><a href="http://www.snapstream.com/">SnapStream Firefly</a></li>\n<li><a href="http://www.nvidia.com/object/feature_PC_remote.html">NVIDIA Personal Cinema Remote</a></li>\n<li><a href="http://www.marmitek.com/">Marmitek PC Control</a></li>\n<li><a href="http://www.pearl.de/product.jsp?pdid=PE4444&catid=1601&vid=916&curr=DEM">Pearl Q-Sonic Master Remote 6in1</a></li>\n<li>Medion RF Remote Control</li>\n</ul>\n'
+        description = u"<rst>\nPlugin für X10 kompatible Funkfernbedienungen.\n\nDies beinhaltet Fernbedienungen wie:\n\n* `ATI Remote Wonder \n  <http://www.ati.com/products/remotewonder/index.html>`_\n* `ATI Remote Wonder PLUS \n  <http://www.ati.com/products/remotewonderplus/index.html>`_\n* `SnapStream Firefly \n  <http://www.snapstream.com/products/firefly/>`_\n* `NVIDIA Personal Cinema Remote \n  <http://www.nvidia.com/object/feature_PC_remote.html>`_\n* `Marmitek PC Control \n  <http://www.marmitek.com/>`_\n* `Pearl Q-Sonic Master Remote 6in1 \n  <http://www.pearl.de/product.jsp?pdid=PE4444&catid=1601&vid=916&curr=DEM>`_\n* `Niveus PC Remote Control \n  <http://www.niveusmedia.com/>`_\n* Medion RF Remote Control\n* Packard Bell RF MCE Remote Control OR32E\n"
         allButton = u"&Alle"
         errorMesg = u"Kein X10 Empfänger gefunden!"
         idBox = u"Aktivierte IDs:"
