@@ -142,7 +142,7 @@ class EnableItem(eg.ActionBase):
 
 
     def Configure(self, link=None):
-        panel = eg.ConfigPanel(self, resizable=True)
+        panel = eg.ConfigPanel(resizable=True)
         okButton = panel.dialog.buttonRow.okButton
         applyButton = panel.dialog.buttonRow.applyButton
         if link is not None:
@@ -263,7 +263,7 @@ class Wait(eg.ActionBase):
 
 
     def Configure(self, waitTime=0.0):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         waitTimeCtrl = panel.SpinNumCtrl(waitTime, integerWidth=3)
         panel.AddLine(self.text.wait, waitTimeCtrl, self.text.seconds)
         while panel.Affirmed():
@@ -314,7 +314,7 @@ class JumpIfLongPress(eg.ActionBase):
 
 
     def Configure(self, interval=2.0, link=None):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         text = self.text
         if link is None:
             link = eg.TreeLink(eg.currentConfigureItem)
@@ -397,7 +397,7 @@ class AutoRepeat(eg.ActionBase):
         sweepTime=3.0
     ):
         text = self.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         firstDelayCtrl = panel.SpinNumCtrl(firstDelay)
         startDelayCtrl = panel.SpinNumCtrl(startDelay)
         sweepTimeCtrl = panel.SpinNumCtrl(sweepTime)
@@ -450,7 +450,7 @@ class TriggerEvent(eg.ActionBase):
         
     
     def Configure(self, eventString="", waitTime=0):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         text = self.text
         
         eventStringCtrl = panel.TextCtrl(eventString, size=(250, -1))

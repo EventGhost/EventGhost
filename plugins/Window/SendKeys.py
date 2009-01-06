@@ -130,7 +130,7 @@ class SendKeys(eg.ActionBase):
         
         
     def Configure(self, data="", useAlternateMethod=False):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         text = self.text
         key = text.Keys
         keyChoices = [

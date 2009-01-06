@@ -73,7 +73,7 @@ class NewJumpIf(eg.ActionBase):
         text = self.text
         if link is None:
             link = eg.TreeLink(eg.currentConfigureItem)
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         kindCtrl = panel.Choice(kind, choices=text.choices)
         linkCtrl = panel.MacroSelectButton(
             eg.text.General.choose,
