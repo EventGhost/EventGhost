@@ -97,9 +97,19 @@ class Document(object):
     def SetFilePath(self, filePath):
         self.filePath = filePath
         if self.frame is not None:
-            self.frame.UpdateTitle(filePath)
+            self.frame.SetTitle(self.GetTitle())
     
     
+    def GetTitle(self):
+        if self.filePath is None:
+            filename = eg.text.General.unnamedFile
+        elif self.filePath is False:
+            filename = "Example.xml"
+        else:
+            filename = os.path.basename(self.filePath)
+        return "EventGhost %s - %s" % (eg.Version.string, filename)
+        
+        
     @eg.LogIt
     def SetTree(self, tree):
         self.tree = tree
