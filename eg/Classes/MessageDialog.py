@@ -79,9 +79,8 @@ class MessageDialog(wx.Dialog):
             yesButton.Bind(wx.EVT_BUTTON, self.OnYesButton)
             noButton.Bind(wx.EVT_BUTTON, self.OnNoButton)
         else:
-            if wx.OK & style:
-                okButton = wx.Button(self, wx.ID_OK, text.ok)
-                buttonSizer.Add(okButton, 0, wx.LEFT|wx.RIGHT, 3)
+            okButton = wx.Button(self, wx.ID_OK, text.ok)
+            buttonSizer.Add(okButton, 0, wx.LEFT|wx.RIGHT, 3)
         if wx.CANCEL & style:
             cancelButton = wx.Button(self, wx.ID_CANCEL, text.cancel)
             buttonSizer.Add(cancelButton, 0, wx.LEFT|wx.RIGHT, 3)
