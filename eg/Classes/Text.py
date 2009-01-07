@@ -46,9 +46,11 @@ class Text:
         )
         ok = "OK"
         cancel = "Cancel"
-        apply = "Apply"
+        apply = "&Apply"
         yes = "&Yes"
         no = "&No"
+        save = "&Save"
+        dontSave = "Do&n't Save"
         help = "&Help"
         choose = "Choose"
         browse = "Browse..."
