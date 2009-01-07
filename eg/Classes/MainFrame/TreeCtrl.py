@@ -246,7 +246,6 @@ class TreeCtrl(wx.TreeCtrl):
         self.root = None
         self.hasFocus = False
         self.editLabelId = None
-        self.inExpanding = False
         self.expandingItemPos = None
         self.expandingItemId = None
 
@@ -257,6 +256,7 @@ class TreeCtrl(wx.TreeCtrl):
             wx.CLIP_CHILDREN
         )
         wx.TreeCtrl.__init__(self, parent, style=style)
+        
         self.SetImageList(eg.Icons.gImageList)
         
         self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
@@ -271,7 +271,6 @@ class TreeCtrl(wx.TreeCtrl):
         self.Bind(wx.EVT_TREE_BEGIN_DRAG, self.OnBeginDrag)
         self.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
         self.Bind(wx.EVT_TREE_ITEM_MENU, self.OnContextMenu)
-        #self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
         self.Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDoubleClick)
         if eg.debugLevel:
             self.Bind(wx.EVT_TREE_ITEM_GETTOOLTIP, self.OnToolTip)
@@ -288,28 +287,28 @@ class TreeCtrl(wx.TreeCtrl):
             pass
     
     
-#    def OnLeftUp(self, event):
-#        event.Skip()
-#        
-        
-    @eg.LogIt
     def OnLeftDoubleClick(self, event):
         treeItem = self.HitTest(event.GetPosition())[0]
         if treeItem.IsOk():
-            if isinstance(self.document.selection, eg.ActionItem):
+            item = self.GetPyData(treeItem)
+            if item.isConfigurable:
+                # we have to wait till the mouse button is up again
                 while wx.GetMouseState().LeftDown():
                     wx.GetApp().Yield()
-                eg.UndoHandler.Configure().Try(self.document)
+                # and use CallLater and don't call Skip(), as otherwise the 
+                # click would go through to the newly opened frame.
+                wx.CallLater(1, eg.UndoHandler.Configure().Try, self.document)
                 return
+        # if we don't call Skip() on all other situations, a expandable item
+        # would not expand
         event.Skip()
-    
+        
     
     @eg.LogIt
     def OnItemActivate(self, event):
         item = event.GetItem()
         if item.IsOk():
             wx.CallAfter(eg.UndoHandler.Configure().Try, self.document)
-            return
         
         
     @eg.AssertNotMainThread
@@ -369,29 +368,12 @@ class TreeCtrl(wx.TreeCtrl):
         event.Skip()
 
     
-    def OnExpanded(self, event):
-        if (
-            self.expandingItemId == event.GetItem() 
-            and self.inExpanding
-        ):
-            self.ScrollTo(self.expandingItemPos)
-            self.Thaw()
-            self.inExpanding = False
-        
-        
-    def OnCollapsed(self, event):
-        itemId = event.GetItem()
-        item = self.GetPyData(itemId)
-        item.isExpanded = False
-        
-        
     #@eg.LogIt
     def OnItemExpanding(self, event):
-        if not self.inExpanding:
+        if self.expandingItemId is None:
             self.expandingItemId = event.GetItem()
-            self.Freeze()
             self.expandingItemPos = self.GetFirstVisibleItem()
-            self.inExpanding = True
+            self.Freeze()
         try:
             itemId = event.GetItem()
             if not self.IsExpanded(itemId):
@@ -402,7 +384,16 @@ class TreeCtrl(wx.TreeCtrl):
         finally:
             pass
     
-    @eg.LogIt
+    
+    #@eg.LogIt
+    def OnExpanded(self, event):
+        if self.expandingItemId == event.GetItem():
+            self.expandingItemId = None
+            self.ScrollTo(self.expandingItemPos)
+            self.Thaw()
+        
+        
+    #@eg.LogIt
     def OnItemCollapsing(self, event):
         itemId = event.GetItem()
         if itemId == self.root.id:
@@ -422,6 +413,13 @@ class TreeCtrl(wx.TreeCtrl):
         self.Thaw()
         
 
+    #@eg.LogIt
+    def OnCollapsed(self, event):
+        itemId = event.GetItem()
+        item = self.GetPyData(itemId)
+        item.isExpanded = False
+        
+        
 #    def OnToolTip(self, event):
 #        id = event.GetItem()
 #        item = self.GetPyData(id)
@@ -466,8 +464,8 @@ class TreeCtrl(wx.TreeCtrl):
         
     @eg.LogIt
     def OnBeginLabelEdit(self, event):
-        obj = self.GetPyData(event.GetItem())
-        if (not obj.isRenameable) or (not self.hasFocus):
+        item = self.GetPyData(event.GetItem())
+        if (not item.isRenameable) or (not self.hasFocus):
             event.Veto()
             return
         self.editLabelId = event.GetItem()
