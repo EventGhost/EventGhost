@@ -49,6 +49,7 @@ class StdErrReplacement(object):
                     prgName,
                     "Log.txt"
                 )
+                #TODO: create the folder if it doesn't exists.
             try:
                 self._file = open(self._logFilePath, 'a')
             except Exception, details:
