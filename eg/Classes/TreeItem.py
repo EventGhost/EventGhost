@@ -150,16 +150,16 @@ class TreeItem(object):
                 
                 
     def CreateTreeItem(self, tree, parentId):
-        id = tree.AppendItem(
+        treeId = tree.AppendItem(
             parentId,
             self.GetLabel(), 
             self.icon.index if self.isEnabled else self.icon.disabledIndex,  
             -1, 
             wx.TreeItemData(self)
         )
-        self.id = id
-        self.SetAttributes(tree, id)
-        return id
+        self.id = treeId
+        self.SetAttributes(tree, treeId)
+        return treeId
         
     
     @eg.LogIt
