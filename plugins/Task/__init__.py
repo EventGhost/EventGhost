@@ -91,12 +91,16 @@ class Task(eg.PluginBase):
         eg.messageReceiver.AddHandler(WM_APP+1, self.WindowGotFocusProc)
         eg.messageReceiver.AddHandler(WM_APP+2, self.WindowCreatedProc)
         eg.messageReceiver.AddHandler(WM_APP+3, self.WindowDestroyedProc)
+        eg.messageReceiver.AddHandler(WM_SHELLHOOKMESSAGE, self.MyWndProc)
+        RegisterShellHookWindow(eg.messageReceiver.hwnd)
         self.hookDll = CDLL(abspath(join(dirname(__file__), "hook.dll")))
         self.hookDll.StartHook()
         
         
     def __stop__(self):
         self.hookDll.StopHook()
+        DeregisterShellHookWindow(eg.messageReceiver.hwnd)
+        eg.messageReceiver.RemoveHandler(WM_SHELLHOOKMESSAGE, self.MyWndProc)
         eg.messageReceiver.RemoveHandler(WM_APP+1, self.WindowGotFocusProc)
         eg.messageReceiver.RemoveHandler(WM_APP+2, self.WindowCreatedProc)
         eg.messageReceiver.RemoveHandler(WM_APP+3, self.WindowDestroyedProc)
@@ -150,4 +154,16 @@ class Task(eg.PluginBase):
             self.TriggerEvent("Activated." + processName)
             self.lastActivated = processName
     
+
+    def MyWndProc(self, hwnd, mesg, wParam, lParam):
+        if wParam == HSHELL_WINDOWACTIVATED or wParam == 0x8004:
+            processName = GetWindowProcessName(lParam)
+            if processName and processName != self.lastActivated:
+                if self.lastActivated:
+                    self.TriggerEvent("Deactivated." + self.lastActivated)
+                self.TriggerEvent("Activated." + processName)
+                self.lastActivated = processName
+        return 1
+
+
     
