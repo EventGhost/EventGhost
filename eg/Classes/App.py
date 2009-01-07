@@ -29,6 +29,7 @@ from eg.WinApi.Dynamic import (
     WM_QUERYENDSESSION, 
     WM_ENDSESSION, 
     SetProcessShutdownParameters,
+    ExitProcess,
 )
 
 
@@ -121,30 +122,43 @@ class App(wx.App):
             eg.PrintDebugNotice("Calling eg.DeInit()")    
             eg.Init.DeInit()
         
-        eg.PrintDebugNotice("Threads:")
-        for thread in threading.enumerate():
-            eg.PrintDebugNotice(" ", thread, thread.getName())
+        currentThread = threading.currentThread()
+#        eg.PrintDebugNotice("Threads:")
+#        for thread in threading.enumerate():
+#            if thread is not currentThread:
+#                eg.PrintDebugNotice(" ", thread, thread.getName())
                 
         while self.Pending():
             self.Dispatch()
                 
         # try to wait till all utility threads have ended
-        currentThread = threading.currentThread()
-        for thread in threading.enumerate():
-            if (
-                thread is not currentThread 
-                and (thread is not eg.messageReceiver._ThreadWorker__thread) 
-                and not thread.isDaemon() 
-                and thread.isAlive()
-            ):
-                eg.PrintDebugNotice(
-                    "joining: " + str(thread) + repr(thread._Thread__target)
+        startTime = time.clock()
+        waitTime = 0
+        while True:
+            threads = [
+                thread for thread in threading.enumerate()
+                if (
+                    thread is not currentThread 
+                    and (thread is not eg.messageReceiver._ThreadWorker__thread) 
+                    and not thread.isDaemon() 
+                    and thread.isAlive()
                 )
-                thread.join(5.0)
-        
-        eg.PrintDebugNotice("Threads:")
-        for thread in threading.enumerate():
-            eg.PrintDebugNotice(" ", thread, thread.getName())
+            ]
+            if len(threads) == 0:
+                break
+            waitTime = time.clock() - startTime
+            if waitTime > 5.0:
+                break
+            while self.Pending():
+                self.Dispatch()
+            time.sleep(0.01)
+        eg.PrintDebugNotice(
+            "Waited for threads shutdown: %f s" % (time.clock() - startTime)
+        )
+        if eg.debugLevel and len(threads):
+            eg.PrintDebugNotice("The following threads did not terminate:")
+            for thread in threads:
+                eg.PrintDebugNotice(" ", thread, thread.getName())
         eg.PrintDebugNotice("Done!")
-        sys.exit(0)
+        ExitProcess(0)
 
