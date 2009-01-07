@@ -58,6 +58,7 @@ class PluginManager:
     currentInfo = None
     
     def __init__(self):
+        self.databasePath = join(eg.configDir, "pluginManager")
         eg.RegisterPlugin = self.RegisterPluginDummy
         self.RegisterPluginDummy.__doc__ = self.RegisterPlugin.__doc__
         self.Refresh()
@@ -76,7 +77,6 @@ class PluginManager:
         
         # load the database file if exists
         self.database = {}
-        self.databasePath = join(eg.configDir, "pluginManager")
         if not forceRebuild:
             self.Load()
         database = self.database
@@ -199,6 +199,7 @@ class PluginManager:
         createMacrosOnAdd = False,
         url = None,
         help = None,
+        **kwargs
     ):
         """
         Registers information about a plugin to EventGhost.
@@ -214,7 +215,9 @@ class PluginManager:
         :param author: can be set to the name of the developer of the plugin.
         :param version: can be set to a version string.
         :param canMultiLoad: set this to ``True``, if a configuration can have 
-           more than one instance of this plugin.        
+           more than one instance of this plugin.     
+        :param \*\*kwargs: just to consume unknown parameters, to make the call
+           backward compatible.
         """
         if name is None:
             name = self.currentInfo.dirname
@@ -225,8 +228,9 @@ class PluginManager:
             help = help.replace("\n\n", "<p>")
             description += "\n\n<p>" + help
         self.currentInfo.__dict__.update(locals())
+        del self.currentInfo.__dict__["self"]
         # we are done with this plugin module, so we can interrupt further 
-        # processing by raising RegisterPluginDone
+        # processing by raising RegisterPluginException
         raise RegisterPluginException
         
     
