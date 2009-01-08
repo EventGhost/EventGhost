@@ -216,7 +216,7 @@ class Webserver(eg.PluginBase):
         self.authUsername = authUsername
         self.authPassword = authPassword
         self.abort = False
-        self.httpd_thread = threading.Thread(target=self.ThreadLoop)
+        self.httpd_thread = threading.Thread(name="WebserverThread", target=self.ThreadLoop)
         self.httpd_thread.start()
         self.running = True
 
