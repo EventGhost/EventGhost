@@ -62,10 +62,11 @@ class HeaderBox(wx.PyWindow):
             self.GetForegroundColour().GetAsString(wx.C2S_HTML_SYNTAX), 
             text
         )
-        self.descBox = descBox = eg.HtmlWindow(self)
+        descBox = eg.HtmlWindow(self, style=wx.html.HW_NO_SELECTION)
         descBox.SetBorders(1)
         descBox.SetFonts("Arial", "Times New Roman", [8, 8, 8, 8, 8, 8, 8])
         descBox.Bind(wx.html.EVT_HTML_LINK_CLICKED, self.OnLinkClicked)
+        self.descBox = descBox
         
         staticBitmap = wx.StaticBitmap(self)
         staticBitmap.SetIcon(item.icon.GetWxIcon())
