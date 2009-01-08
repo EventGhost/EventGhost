@@ -89,7 +89,10 @@ if eg.startupArguments.configDir is None:
     eg.configDir = os.path.join(eg.folderPath.RoamingAppData, eg.APP_NAME)
 else:
     eg.configDir = eg.startupArguments.configDir
+
 Init.InitPathesAndBuiltins()
+from eg.WinApi.Dynamic import GetCurrentProcessId
+eg.processId = GetCurrentProcessId()
 Init.InitPil()
 
 
@@ -290,9 +293,6 @@ eg.TriggerEnduringEvent = eg.eventThread.TriggerEnduringEvent
 from greenlet import greenlet
 eg.Greenlet = greenlet
 eg.mainGreenlet = greenlet.getcurrent()
-
-from eg.WinApi.Dynamic import GetCurrentProcessId
-eg.processId = GetCurrentProcessId()
 
 from eg.WinApi.SendKeys import SendKeysParser
 eg.SendKeys = SendKeysParser()
