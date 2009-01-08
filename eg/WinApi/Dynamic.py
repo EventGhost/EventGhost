@@ -1375,3 +1375,6 @@ GetCommTimeouts.argtypes = [HANDLE, LPCOMMTIMEOUTS]
 SetCommTimeouts = _kernel32.SetCommTimeouts
 SetCommTimeouts.restype = BOOL
 SetCommTimeouts.argtypes = [HANDLE, LPCOMMTIMEOUTS]
+GetShellWindow = _user32.GetShellWindow
+GetShellWindow.restype = HWND
+GetShellWindow.argtypes = []
