@@ -202,7 +202,7 @@ REMOTES_SORT_ORDER = [2, 0, 1, 3]
 class X10Events:
     plugin = None
     
-    @eg.LogIt
+    #@eg.LogIt
     def OnX10Command(
         self, 
         bszCommand, 
@@ -239,6 +239,7 @@ class X10ThreadWorker(eg.ThreadWorker):
             'X10net.X10Control.1', 
             eventHandler
         )
+        
         
     def Finish(self):
         if self.comInstance:
