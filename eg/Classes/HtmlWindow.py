@@ -23,10 +23,12 @@
 import wx
 from eg.Utils import DecodeReST
 import webbrowser
-from threading import Timer, Thread
+from threading import Thread
 
 from wx.html import HtmlWindow as wxHtmlWindow
-from wx.html import HTML_URL_IMAGE, HTML_OPEN
+from wx.html import (
+    HTML_URL_IMAGE, HTML_OPEN, EVT_HTML_LINK_CLICKED, HW_DEFAULT_STYLE
+)
 
 wx.InitAllImageHandlers()
 
@@ -34,15 +36,26 @@ wx.InitAllImageHandlers()
 class HtmlWindow(wxHtmlWindow):
     basePath = None
     
-    def __init__(self, parent, *args, **kwargs):
-        wxHtmlWindow.__init__(self, parent, *args, **kwargs)
+    def __init__(
+        self, 
+        parent, 
+        id=-1, 
+        pos=wx.DefaultPosition, 
+        size=wx.DefaultSize, 
+        style=HW_DEFAULT_STYLE, 
+        name="htmlWindow"
+    ):
+        wxHtmlWindow.__init__(self, parent, id, pos, size, style, name)
         self.SetForegroundColour(parent.GetForegroundColour())
         self.SetBackgroundColour(parent.GetBackgroundColour())
-        # bugfix: don't open links to soon, as the event might come from the
-        # opening of this window (mouse up event)
-        self.waiting = True
-        Timer(0.5, self.OnTimeout).start()
 
+        if wx.html.HW_NO_SELECTION & style:
+            self.Bind(wx.EVT_MOTION, self.OnIdle)
+            self.handCursor = wx.StockCursor(wx.CURSOR_HAND)
+            self.x1, self.y1 = self.GetScrollPixelsPerUnit()
+            self.isSet = False
+        self.Bind(EVT_HTML_LINK_CLICKED, self.OnHtmlLinkClicked)
+        
 
     def SetPage(self, html):
         pos = html.find("<rst>")
@@ -58,13 +71,11 @@ class HtmlWindow(wxHtmlWindow):
         )
         
     
-    def OnTimeout(self):
-        self.waiting = False
-        
-    
-    def OnLinkClicked(self, link):
-        if not self.waiting:
-            Thread(target=webbrowser.open, args=(link.GetHref(), 0)).start()
+    def OnHtmlLinkClicked(self, event):
+        Thread(
+            target=webbrowser.open, 
+            args=(event.GetLinkInfo().GetHref(), 0)
+        ).start()
         
         
     def SetBasePath(self, basePath):
@@ -81,4 +92,24 @@ class HtmlWindow(wxHtmlWindow):
         else:
             return HTML_OPEN
         
+        
+    def OnIdle(self, event):
+        x2, y2 = self.GetViewStart()
+        x3, y3 = event.GetPosition()
+        x = self.x1 * x2 + x3
+        y = self.y1 * y2 + y3
+        cell = self.GetInternalRepresentation().FindCellByPos(x, y)
+        if cell:
+            if cell.GetLink(x, y):
+                if not self.isSet:
+                    self.SetCursor(self.handCursor)
+                    self.isSet = True
+            elif self.isSet:
+                self.SetCursor(wx.STANDARD_CURSOR)
+                self.isSet = False
+        elif self.isSet:
+            self.SetCursor(wx.STANDARD_CURSOR)
+            self.isSet = False
+            
+
         
