@@ -159,7 +159,7 @@ class AboutPanel(wx.Panel):
         hypelink1 = eg.HyperLinkCtrl(
             self, 
             wx.ID_ANY, 
-            eg.text.MainFrame.Menu.WebHomepage, 
+            eg.text.MainFrame.Menu.WebHomepage.replace("&", ""), 
             URL="http://www.eventghost.org/"
         )
         font = hypelink1.GetFont()
@@ -169,14 +169,14 @@ class AboutPanel(wx.Panel):
         hypelink2 = eg.HyperLinkCtrl(
             self,
             wx.ID_ANY, 
-            eg.text.MainFrame.Menu.WebForum,
+            eg.text.MainFrame.Menu.WebForum.replace("&", ""), 
             URL="http://www.eventghost.org/forum/"
         )
         hypelink2.SetFont(font)
         hypelink3 = eg.HyperLinkCtrl(
             self,
             wx.ID_ANY, 
-            eg.text.MainFrame.Menu.WebWiki,
+            eg.text.MainFrame.Menu.WebWiki.replace("&", ""), 
             URL="http://www.eventghost.org/wiki/"
         )
         hypelink3.SetFont(font)
@@ -219,7 +219,7 @@ class HtmlPanel(wx.Panel):
             )
         )
         self.htmlWindow = htmlWindow
-        
+
 
 
 class SpecialThanksPanel(HtmlPanel):
