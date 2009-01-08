@@ -33,6 +33,7 @@ from eg.WinApi.Dynamic import (
     WinError,
     
     # constants
+    MAXDWORD,
     GENERIC_READ, 
     GENERIC_WRITE, 
     OPEN_EXISTING,
@@ -57,6 +58,8 @@ from eg.WinApi.Dynamic import (
     CLRRTS,
     DTR_CONTROL_DISABLE,
     INVALID_HANDLE_VALUE,
+    EV_BREAK, EV_CTS, EV_DSR, EV_ERR, EV_RING, EV_RLSD, EV_RXCHAR, EV_RXFLAG, 
+    EV_TXEMPTY,
     
     # types
     HANDLE, 
@@ -65,6 +68,7 @@ from eg.WinApi.Dynamic import (
     DCB, 
     COMMCONFIG, 
     COMSTAT, 
+    COMMTIMEOUTS,
     
     # functions
     GetLastError, 
@@ -83,6 +87,8 @@ from eg.WinApi.Dynamic import (
     EscapeCommFunction,
     ClearCommError, 
     GetDefaultCommConfig,
+    GetCommTimeouts,
+    SetCommTimeouts,
 )
 
 
@@ -171,6 +177,7 @@ class SerialThread(Thread):
         self.comstat = COMSTAT()
         self.dcb = DCB()
         self.dcb.DCBlength = sizeof(DCB)
+        self.oldCommTimeouts = COMMTIMEOUTS()
         
         self.readCounter = 0
         self.readEventCallback = None
@@ -183,7 +190,7 @@ class SerialThread(Thread):
             target=self.CallbackThreadProc, 
             name="SerialReceiveThreadProc"
         )
-        
+
     
     def __enter__(self):
         self.SuspendReadEvents()
@@ -267,7 +274,10 @@ class SerialThread(Thread):
         dcb.Parity = PARITY_S2V_DICT[mode[1].upper()]
         dcb.StopBits = STOPBITS_S2V_DICT[mode[2:]]
         SetCommState(self.hFile, byref(dcb))
-    
+        GetCommTimeouts(self.hFile, byref(self.oldCommTimeouts))
+        commTimeouts = COMMTIMEOUTS(0, 0, 0, 100, 100)
+        SetCommTimeouts(self.hFile, byref(commTimeouts))
+        
         
     def Close(self):
         """Closes  the serial port and stops all event processing."""
@@ -277,7 +287,7 @@ class SerialThread(Thread):
             self.join(1.0)
         if self.hFile:
             #Restore original timeout values:
-            #SetCommTimeouts(self.hFile, self._orgTimeouts)
+            SetCommTimeouts(self.hFile, self.oldCommTimeouts)
             #Close COM-Port:
             if not self._CloseHandle(self.hFile):
                 self.hFile = None
@@ -345,8 +355,10 @@ class SerialThread(Thread):
         
         waitingOnRead = False
         while self.keepAlive:
+            #print "ReceiveThreadProc"
             # if no read is outstanding, then issue another one
             if not waitingOnRead:
+                #print "ResetEvent"
                 ResetEvent(osReader.hEvent)
                 returnValue = self._ReadFile(
                     hFile, 
@@ -366,7 +378,7 @@ class SerialThread(Thread):
                         self.HandleReceive(lpBuf.raw)
                         continue
 
-            ret = MsgWaitForMultipleObjects(2, pHandles, 0, 10000, QS_ALLINPUT)
+            ret = MsgWaitForMultipleObjects(2, pHandles, 0, 100000, QS_ALLINPUT)
             if ret == WAIT_OBJECT_0:
                 returnValue = GetOverlappedResult(
                     hFile, 
@@ -374,24 +386,28 @@ class SerialThread(Thread):
                     byref(dwRead), 
                     0
                 )
+                #print "GetOverlappedResult", returnValue, dwRead.value
                 waitingOnRead = False
                 if returnValue and dwRead.value:
                     self.HandleReceive(lpBuf.raw)
             elif ret == WAIT_OBJECT_0 + 1:
+                #print "WAIT_OBJECT_1"
                 # stop event signaled
                 self.readCondition.acquire()
                 self.readCondition.notifyAll()
                 self.readCondition.release()
                 break
             elif ret == WAIT_TIMEOUT:
+                #print "WAIT_TIMEOUT"
                 pass
             else:
                 raise SerialError("Unknown message in ReceiveThreadProc")
                 
     
+    @eg.LogItWithReturn
     def CallbackThreadProc(self):
         while self.keepAlive:
-            #print "cycle"
+            #print "CallbackThreadProc"
             self.readCondition.acquire()
             while len(self.buffer):
                 if self.readEventLock.acquire(0):
@@ -407,6 +423,70 @@ class SerialThread(Thread):
             self.readCondition.release()
             
         
+    def StatusCheckLoop(self):
+        hComm = self.hFile
+        waitingOnStat = False
+        dwCommEvent = DWORD()
+        dwOvRes = DWORD()
+        commMask = (
+            EV_BREAK | EV_CTS | EV_DSR | EV_ERR | EV_RING
+            | EV_RLSD | EV_RXCHAR | EV_RXFLAG | EV_TXEMPTY
+        )
+        
+        if not SetCommMask(self.hFile, commMask):
+            raise SerialError("error setting communications mask")
+        
+        osStatus = OVERLAPPED(0)
+        osStatus.hEvent = CreateEvent(None, 1, 0, None)
+        if not osStatus.hEvent:
+            raise SerialError("error creating event")
+        
+        while True:
+            # Issue a status event check if one hasn't been issued already.
+            if not waitingOnStatusHandle:
+                if WaitCommEvent(hComm, byref(dwCommEvent), byref(osStatus)):
+                    # WaitCommEvent returned immediately.
+                    # Deal with status event as appropriate.
+                    self.ReportStatusEvent(dwCommEvent.value)
+                else:
+                    if GetLastError == ERROR_IO_PENDING:
+                        waitingOnStatusHandle = True
+                    else:
+                        raise SerialError("error in WaitCommEvent")
+            
+            # Check on overlapped operation
+            if waitingOnStatusHandle:
+                # Wait a little while for an event to occur.
+                res = WaitForSingleObject(osStatus.hEvent, 1000)
+                if res == WAIT_OBJECT_0:
+                    if GetOverlappedResult(hComm, byref(osStatus), byref(dwOvRes), 0):
+                        # Status event is stored in the event flag
+                        # specified in the original WaitCommEvent call.
+                        # Deal with the status event as appropriate.
+                        self.ReportStatusEvent(dwCommEvent.value)
+                    else:
+                        # An error occurred in the overlapped operation;
+                        # call GetLastError to find out what it was
+                        # and abort if it is fatal.
+                        raise SerialError()
+                    # Set waitingOnStatusHandle flag to indicate that a new
+                    # WaitCommEvent is to be issued.
+                    waitingOnStatusHandle = True
+                elif res == WAIT_TIMEOUT:
+                    print "timeout"
+                else:
+                    # This indicates a problem with the OVERLAPPED structure's
+                    # event handle.
+                    CloseHandle(osStatus.hEvent)
+                    raise SerialError("error in the WaitForSingleObject")
+                
+        CloseHandle(osStatus.hEvent)
+         
+
+    def ReportStatusEvent(self, statusEvent):
+        print statusEvent
+                
+    
     def HandleReceive(self, data):
         # read all data currently available
         data += self._ReadAllAvailable()
