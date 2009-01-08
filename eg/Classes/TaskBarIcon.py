@@ -44,7 +44,10 @@ class TaskBarIcon(wx.TaskBarIcon):
         self.currentState = 0
         self.reentrantLock = threading.Lock()
         self.alive = True
-        #self.SetIcon(self.stateIcons[0], self.tooltip)
+        # don't call SetIcon here, because code might also be imported if 
+        # EventGhost itself should not run.
+        # If this generates problems, find another idea.
+        ##self.SetIcon(self.stateIcons[0], self.tooltip)
 
         menu = self.menu = wx.Menu()
         text = eg.text.MainFrame.TaskBarMenu
