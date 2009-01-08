@@ -62,7 +62,7 @@ class HeaderBox(wx.PyWindow):
             self.GetForegroundColour().GetAsString(wx.C2S_HTML_SYNTAX), 
             text
         )
-        self.descBox = descBox = wx.html.HtmlWindow(self)
+        self.descBox = descBox = eg.HtmlWindow(self)
         descBox.SetBorders(1)
         descBox.SetFonts("Arial", "Times New Roman", [8, 8, 8, 8, 8, 8, 8])
         descBox.Bind(wx.html.EVT_HTML_LINK_CLICKED, self.OnLinkClicked)
