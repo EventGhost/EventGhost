@@ -113,7 +113,7 @@ class Task(eg.PluginBase):
             if GetClassName(hwnd) == "Shell_TrayWnd":
                 trayWindow = hwnd
                 break
-        self.desktopHwnds = (GetShellWindow(), trayWindow, 0)
+        self.desktopHwnds = (GetShellWindow(), trayWindow)
         
         
         
@@ -128,7 +128,7 @@ class Task(eg.PluginBase):
         
     def CheckWindow(self, hwnd):
         hwnd2 = GetAncestor(hwnd, GA_ROOT)
-        if hwnd2 in self.desktopHwnds:
+        if hwnd == 0 or hwnd2 in self.desktopHwnds:
             return "Desktop", 0
         if hwnd != hwnd2:
             return
