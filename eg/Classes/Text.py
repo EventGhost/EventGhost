@@ -142,7 +142,7 @@ class Text:
             WebHomepage = "Home &Page"
             WebForum = "Support &Forums"
             WebWiki = "&Wiki"
-            CheckUpdate = "Check for updates now..."
+            CheckUpdate = "Check for Update..."
             PythonShell = "Python Shell"
             Reset = "Reset"
             
@@ -155,8 +155,6 @@ class Text:
 
         class Logger:
             caption = "Log"
-            timeHeader = "Time"
-            descriptionHeader = "Description"
             welcomeText = "---> Welcome to EventGhost <---"
             
         class Tree:
