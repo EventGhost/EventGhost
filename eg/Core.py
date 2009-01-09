@@ -300,7 +300,9 @@ eg.SendKeys = SendKeysParser()
 setattr(eg, "PluginClass", eg.PluginBase)
 setattr(eg, "ActionClass", eg.ActionBase)
 
-eg.taskBarIcon = eg.TaskBarIcon()
+eg.taskBarIcon = eg.TaskBarIcon(
+    eg.startupArguments.isMain and not eg.startupArguments.translate
+)
 eg.SetProcessingState = eg.taskBarIcon.SetProcessingState
 
 eg.Init = Init
