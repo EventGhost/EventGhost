@@ -28,17 +28,14 @@ import webbrowser
 
 
 class Text(eg.TranslatableStrings):
-    title = "New EventGhost version available..."
     newVersionMesg = \
         "A newer version of EventGhost has been released.\n\n"\
         "\tYour version:\t%s\n"\
-        "\tLatest version:\t%s\n\n"\
+        "\tNewest version:\t%s\n\n"\
         "Do you want to visit the download page now?"
     downloadButton = "Visit download page"
     waitMesg = "Please wait while EventGhost retrieves update information."
-    ManOkTitle = "No newer version available"    
-    ManOkMesg = "This version of EventGhost is the newest."    
-    ManErrorTitle = "Error while checking for update"
+    ManOkMesg = "There is currently no newer version of EventGhost available."    
     ManErrorMesg = \
         "It wasn't possible to get the information from the EventGhost "\
         "website.\n\n"\
@@ -51,7 +48,7 @@ class MessageDialog(eg.Dialog):
     def __init__(self, version, url):
         self.url = url
         currentVersion = eg.Version.string
-        eg.Dialog.__init__(self, None, -1, Text.title)
+        eg.Dialog.__init__(self, None, -1, eg.APP_NAME)
         bmp = wx.ArtProvider.GetBitmap(
             wx.ART_INFORMATION, 
             wx.ART_MESSAGE_BOX, 
@@ -152,7 +149,7 @@ def _checkUpdate(manually=False):
             dialog = wx.MessageDialog(
                 None, 
                 Text.ManOkMesg, 
-                Text.ManOkTitle,
+                eg.APP_NAME,
                 style=wx.OK|wx.ICON_INFORMATION
             )
             dialog.ShowModal()
@@ -164,7 +161,7 @@ def _checkUpdate(manually=False):
             dialog = wx.MessageDialog(
                 None, 
                 Text.ManErrorMesg,
-                Text.ManErrorTitle,
+                eg.APP_NAME,
                 style=wx.OK|wx.ICON_ERROR
             )
             dialog.ShowModal()
