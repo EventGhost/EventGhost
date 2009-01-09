@@ -283,11 +283,11 @@ class SystemInfoPanel(HtmlPanel):
         )
         
         sysInfoTemplate = "".join(
-            ["<tr><td><b>%s:</b></td><td>%s</td></tr>" % sysInfo 
+            ['<tr><td align="right"><b>%s:</b></td><td>%s</td></tr>' % sysInfo 
                 for sysInfo in self.sysInfos]
         )
-            
-        HtmlPanel.__init__(self, parent, "<table>%s</table>" % sysInfoTemplate)
+        page = "<center><table>%s</table></center>" % sysInfoTemplate
+        HtmlPanel.__init__(self, parent, page)
         self.htmlWindow.Bind(wx.EVT_RIGHT_DOWN, self.OnRightClick)
         self.htmlWindow.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
         
