@@ -190,13 +190,14 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         self.kwargs = None
         self.isDirty = False
         self.resultCode = None
+        self.buttonsEnabled = True
         self.dialog.buttonRow.applyButton.Enable(False)
         
         
     @eg.LogIt
     def SetIsDirty(self, flag=True):
         self.isDirty = flag
-        if flag:
+        if flag and self.buttonsEnabled:
             self.dialog.buttonRow.applyButton.Enable(True)
 
 
@@ -320,6 +321,7 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         Useful if you want to temporarily disable them, because the current
         settings have no valid state and later re-enable them.
         """
+        self.buttonsEnabled = flag
         buttonRow = self.dialog.buttonRow
         buttonRow.okButton.Enable(flag)
         buttonRow.testButton.Enable(flag)
