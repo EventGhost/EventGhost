@@ -1378,3 +1378,15 @@ SetCommTimeouts.argtypes = [HANDLE, LPCOMMTIMEOUTS]
 GetShellWindow = _user32.GetShellWindow
 GetShellWindow.restype = HWND
 GetShellWindow.argtypes = []
+GetSysColor = _user32.GetSysColor
+GetSysColor.restype = DWORD
+GetSysColor.argtypes = [c_int]
+COLOR_INACTIVECAPTION = 3 # Variable c_int
+def GetRValue(rgb): return ((BYTE)(rgb)) # macro
+def GetGValue(rgb): return ((BYTE)(((WORD)(rgb)) >> 8)) # macro
+def GetBValue(rgb): return ((BYTE)((rgb)>>16)) # macro
+COLOR_GRADIENTINACTIVECAPTION = 28 # Variable c_int
+COLOR_ACTIVECAPTION = 2 # Variable c_int
+COLOR_GRADIENTACTIVECAPTION = 27 # Variable c_int
+COLOR_INACTIVECAPTIONTEXT = 19 # Variable c_int
+COLOR_CAPTIONTEXT = 9 # Variable c_int
