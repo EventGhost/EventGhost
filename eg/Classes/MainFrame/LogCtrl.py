@@ -57,13 +57,13 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         listmix.ListCtrlAutoWidthMixin.__init__(self)
         self.SetImageList(eg.Icons.gImageList, wx.IMAGE_LIST_SMALL)
 
-        sysColour = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
-        sysTextColour = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOWTEXT)
+        sysColour = eg.colour.windowBackground
+        sysTextColour = eg.colour.windowText
 
         hue, saturation, value = colorsys.rgb_to_hsv(
-            sysColour.Red() / 255.0,
-            sysColour.Green() / 255.0,
-            sysColour.Blue() / 255.0
+            sysColour[0] / 255.0,
+            sysColour[1] / 255.0,
+            sysColour[2] / 255.0
         )
         if value > 0.5:
             value -= 0.05

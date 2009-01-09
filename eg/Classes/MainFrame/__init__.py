@@ -127,8 +127,7 @@ class MainFrame(wx.Frame):
         )
         self.SetMinSize((400, 200))
         document.frame = self
-        auiManager = wx.aui.AuiManager()
-        auiManager.SetManagedWindow(self)
+        auiManager = wx.aui.AuiManager(self, wx.aui.AUI_MGR_DEFAULT)
         self.auiManager = auiManager
         
         self.logCtrl = self.CreateLogCtrl()
@@ -178,8 +177,23 @@ class MainFrame(wx.Frame):
             and config.perspective is not None
         ):
             auiManager.LoadPerspective(config.perspective, False)
-        auiManager.GetArtProvider().SetMetric(
-            wx.aui.AUI_DOCKART_PANE_BORDER_SIZE, 0
+        artProvider = auiManager.GetArtProvider()
+        artProvider.SetMetric(wx.aui.AUI_DOCKART_PANE_BORDER_SIZE, 0)
+        artProvider.SetMetric(
+            wx.aui.AUI_DOCKART_GRADIENT_TYPE, 
+            wx.aui.AUI_GRADIENT_HORIZONTAL
+        )
+        artProvider.SetColour(
+            wx.aui.AUI_DOCKART_INACTIVE_CAPTION_COLOUR, 
+            eg.colour.inactiveCaption
+        )
+        artProvider.SetColour(
+            wx.aui.AUI_DOCKART_INACTIVE_CAPTION_GRADIENT_COLOUR, 
+            eg.colour.inactiveCaptionGradient
+        )
+        artProvider.SetColour(
+            wx.aui.AUI_DOCKART_INACTIVE_CAPTION_TEXT_COLOUR, 
+            eg.colour.inactiveCaptionTextColour
         )
         auiManager.GetPane("tree").Caption(" " + Text.Tree.caption)
         self.toolBar.Show(config.showToolbar)

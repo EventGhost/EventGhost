@@ -35,9 +35,7 @@ PATCHES = {
 }    
 
 def GetRenamedColor():
-    red, green, blue = wx.SystemSettings_GetColour(
-        wx.SYS_COLOUR_WINDOWTEXT
-    ).Get()
+    red, green, blue = eg.colour.windowText
     hue, saturation, value = colorsys.rgb_to_hsv(
         red / 255.0, 
         green / 255.0, 
