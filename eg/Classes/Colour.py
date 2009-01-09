@@ -21,6 +21,19 @@
 # $LastChangedBy$
 
 import wx
+from eg.WinApi.Dynamic import (
+    GetSysColor, 
+    COLOR_ACTIVECAPTION,
+    COLOR_GRADIENTACTIVECAPTION,
+    COLOR_CAPTIONTEXT,
+    COLOR_INACTIVECAPTION, 
+    COLOR_GRADIENTINACTIVECAPTION,
+    COLOR_INACTIVECAPTIONTEXT,
+)
+
+def GetWinSysColour(nIndex):
+    val = GetSysColor(nIndex)
+    return val & 0xFF, (val >> 8) & 0xFF, (val >> 16) & 0xFF
 
 
 class Colour:
@@ -28,5 +41,11 @@ class Colour:
     windowBackground = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW).Get()
     treeItem = windowText
     pluginError = (255, 0, 0)
+    activeCaption = GetWinSysColour(COLOR_ACTIVECAPTION)
+    activeCaptionGradient = GetWinSysColour(COLOR_GRADIENTACTIVECAPTION)
+    activeCaptionTextColour = GetWinSysColour(COLOR_CAPTIONTEXT)
+    inactiveCaption = GetWinSysColour(COLOR_INACTIVECAPTION)
+    inactiveCaptionGradient = GetWinSysColour(COLOR_GRADIENTINACTIVECAPTION)
+    inactiveCaptionTextColour = GetWinSysColour(COLOR_INACTIVECAPTIONTEXT)
     
     
