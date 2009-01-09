@@ -31,7 +31,7 @@ ID_EXIT = wx.NewId()
 
 class TaskBarIcon(wx.TaskBarIcon):
     
-    def __init__(self):
+    def __init__(self, show):
         self.stateIcons = (
             wx.Icon("images\\Tray1.png", wx.BITMAP_TYPE_PNG),
             wx.Icon("images\\Tray3.png", wx.BITMAP_TYPE_PNG),
@@ -39,15 +39,15 @@ class TaskBarIcon(wx.TaskBarIcon):
         )
         self.tooltip = eg.APP_NAME + " " + eg.Version.string
         wx.TaskBarIcon.__init__(self)
+        # SetIcon *must* be called immediately after creation, as otherwise
+        # it won't appear on Vista restricted user accounts. (who knows why?)
+        if show:
+            self.SetIcon(self.stateIcons[0], self.tooltip)
         self.currentEvent = None
         self.processingEvent = None
         self.currentState = 0
         self.reentrantLock = threading.Lock()
         self.alive = True
-        # don't call SetIcon here, because code might also be imported if 
-        # EventGhost itself should not run.
-        # If this generates problems, find another idea.
-        ##self.SetIcon(self.stateIcons[0], self.tooltip)
 
         menu = self.menu = wx.Menu()
         text = eg.text.MainFrame.TaskBarMenu
