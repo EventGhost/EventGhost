@@ -33,7 +33,7 @@ class MessageDialog(wx.Dialog):
         self, 
         parent, 
         message, 
-        caption="Message box", 
+        caption=eg.APP_NAME, 
         style=wx.OK|wx.CANCEL,
         pos=wx.DefaultPosition
     ):
@@ -95,6 +95,9 @@ class MessageDialog(wx.Dialog):
         )
         #mainSizer.Add((10, 10))
         self.SetSizerAndFit(mainSizer)
+        if parent and pos == wx.DefaultPosition:
+            self.CenterOnParent()
+
        
         
     def OnYesButton(self, event):

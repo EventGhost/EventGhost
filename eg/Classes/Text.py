@@ -161,7 +161,6 @@ class Text:
             caption = "Configuration"
             
         class ErrorMessages:
-            caption = "Operation not possible!"
             cantAddEvent = (
                 "An event item can't be added here.\n\n"
                 "Please select a macro item where "
