@@ -237,7 +237,7 @@ class StopException(Exception):
 class HiddenAction:
     pass
 
-def MessageBox(message, caption="Message", style=wx.OK, parent=None):
+def MessageBox(message, caption=eg.APP_NAME, style=wx.OK, parent=None):
     dialog = eg.MessageDialog(parent, message, caption, style|wx.STAY_ON_TOP)
     result = dialog.ShowModal()
     dialog.Destroy()

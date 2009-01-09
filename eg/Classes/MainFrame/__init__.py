@@ -662,8 +662,8 @@ class MainFrame(wx.Frame):
     def DisplayError(self, errorText):
         eg.MessageBox(
             errorText,
-            Text.ErrorMessages.caption, 
-            wx.ICON_EXCLAMATION|wx.OK, self
+            style=wx.ICON_EXCLAMATION|wx.OK, 
+            parent=self
         )
 
 
