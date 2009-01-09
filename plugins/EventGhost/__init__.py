@@ -159,19 +159,13 @@ class EnableItem(eg.ActionBase):
         )
         
         if not searchItem:
-            okButton.Enable(False)
-            applyButton.Enable(False)
+            panel.EnableButtons(False)
             
         def OnSelectionChanged(event):
             treeItem = event.GetItem()
             if treeItem.IsOk():
                 item = tree.GetPyData(treeItem)
-                if self.IsSelectableItem(item):
-                    okButton.Enable(True)
-                    applyButton.Enable(True)
-                else:
-                    okButton.Enable(False)
-                    applyButton.Enable(False)
+                panel.EnableButtons(self.IsSelectableItem(item))
             event.Skip()
         tree.Bind(wx.EVT_TREE_SEL_CHANGED, OnSelectionChanged)
         #tree.SetMinSize((-1,300))
@@ -198,10 +192,10 @@ class DisableItem(EnableItem):
 
     def __call__(self, link):
         if link:
-            obj = link.target
-            if obj:
-                obj.isEnabled = False
-                wx.CallAfter(obj.Enable, False)
+            item = link.target
+            if item and item.isDeactivatable:
+                item.isEnabled = False
+                wx.CallAfter(item.Enable, False)
 
 
 
@@ -230,7 +224,7 @@ class EnableExclusive(EnableItem):
             wx.CallAfter(item.Enable, True)
             autostartMacro = item.document.autostartMacro
             for child in item.parent.childs:
-                if child is not item and child is not autostartMacro:
+                if child is not item and child.isDeactivatable:
                     child.isEnabled = False
                     wx.CallAfter(child.Enable, False)
         eg.actionThread.Call(DoIt)
@@ -241,7 +235,7 @@ class EnableExclusive(EnableItem):
     
     
     def IsSelectableItem(self, item):
-        return not isinstance(item, RootItem)
+        return item.isDeactivatable
     
     
     
