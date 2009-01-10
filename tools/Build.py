@@ -367,6 +367,11 @@ class MyInstaller(InnoInstaller):
             outfile.close()
         mod = imp.load_source("Version", versionFilePath)
         self.appVersion = mod.Version.string
+        if self.pyVersion == "26":
+            filename = "EventGhost_%(appVersion)s_Py26_Setup" % self
+        else:
+            filename = "EventGhost_%(appVersion)s_Setup" % self
+        self.outputBaseFilename = filename
         
     
     def GetSetupFiles(self):
@@ -419,11 +424,7 @@ class MyInstaller(InnoInstaller):
         """
         Create and compile the Inno Setup installer script.
         """
-        if self.pyVersion == "26":
-            filename = "EventGhost_%(appVersion)s_Py26_Setup" % self
-        else:
-            filename = "EventGhost_%(appVersion)s_Setup" % self
-        self.outputBaseFilename = filename
+        filename = self.outputBaseFilename
         plugins = {}
         for filename in self.GetSetupFiles():
             if filename.startswith("plugins\\"):
@@ -619,10 +620,10 @@ class MainDialog(wx.Dialog):
         #app.ExitMainLoop()
         
         
-    @staticmethod
-    def OnClose(event):
+    def OnClose(self, event):
         """ Handles a click on the close box of the frame. """
-        wx.GetApp().ExitMainLoop()
+        #wx.GetApp().ExitMainLoop()
+        self.Destroy()
         event.Skip()
      
      
@@ -688,16 +689,19 @@ def Main(options, builder, mainDialog=None):
     if options.buildInstaller:
         print "--- building setup.exe"
         builder.CreateInstaller()
+    if options.upload and options.ftpUrl:
+        print "--- uploading setup.exe"
         filename = join(builder.outputDir, builder.outputBaseFilename + ".exe")
-        if options.upload and options.ftpUrl:
-            print "--- uploading setup.exe"
-            import UploadFile
-            wx.CallAfter(
-                UploadFile.UploadDialog, 
-                mainDialog, 
-                filename, 
-                options.ftpUrl
-            )        
+        stopEvent = threading.Event()
+        import UploadFile
+        wx.CallAfter(
+            UploadFile.UploadDialog, 
+            mainDialog, 
+            filename, 
+            options.ftpUrl,
+            stopEvent
+        )
+        stopEvent.wait()
     print "--- All done!"
     wx.CallAfter(mainDialog.Close)
     
