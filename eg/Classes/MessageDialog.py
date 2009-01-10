@@ -37,6 +37,8 @@ class MessageDialog(wx.Dialog):
         style=wx.OK|wx.CANCEL,
         pos=wx.DefaultPosition
     ):
+        if parent is None and eg.document.frame:
+            parent = eg.document.frame
         dialogStyle = wx.DEFAULT_DIALOG_STYLE
         if style & wx.STAY_ON_TOP:
             dialogStyle |= wx.STAY_ON_TOP
@@ -87,19 +89,12 @@ class MessageDialog(wx.Dialog):
         
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         mainSizer.Add(sizer)
-        mainSizer.Add(
-            buttonSizer, 
-            0, 
-            wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 
-            12
-        )
-        #mainSizer.Add((10, 10))
+        mainSizer.Add(buttonSizer, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 12)
         self.SetSizerAndFit(mainSizer)
         if parent and pos == wx.DefaultPosition:
             self.CenterOnParent()
 
        
-        
     def OnYesButton(self, event):
         self.EndModal(wx.ID_YES)
         event.Skip()
@@ -110,5 +105,3 @@ class MessageDialog(wx.Dialog):
         event.Skip()
     
         
-        
-    
