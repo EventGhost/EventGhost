@@ -184,7 +184,8 @@ def UploadFile(filename, url, dialog):
 class UploadDialog(wx.Dialog):
     """ The progress dialog that is shown while the file is uploaded. """
     
-    def __init__(self, parent, filename, url):
+    def __init__(self, parent, filename, url, stopEvent):
+        self.stopEvent = stopEvent
         self.abort = False
         self.fileSize = getsize(filename)
         wx.Dialog.__init__(self, parent, title="Upload Progress")
@@ -223,7 +224,8 @@ class UploadDialog(wx.Dialog):
         sizer2 = wx.FlexGridSizer(4, 5, 5, 5)
         sizer2.Add(SText("Upload speed:"), 0, wx.LEFT|wx.ALIGN_RIGHT, 5)
         sizer2.Add(self.speedCtrl)
-        sizer2.Add((30, 0))
+        sizer2.Add(SText("KiB/s"))
+        #sizer2.Add((30, 0))
         sizer2.Add((0, 0))
         sizer2.Add((0, 0))
         
@@ -258,7 +260,7 @@ class UploadDialog(wx.Dialog):
         self.startTime = clock()
         self.Bind(wx.EVT_TIMER, self.OnTimer)
         self.timer = wx.Timer(self)
-        self.timer.Start(1000)
+        self.timer.Start(100)
         Thread(target=self.ThreadRun, args=(filename, url)).start()
         self.Show()
        
@@ -274,6 +276,7 @@ class UploadDialog(wx.Dialog):
         try:
             UploadFile(filename, url, self)
         finally:
+            self.stopEvent.set()
             wx.CallAfter(self.Destroy)
     
     
