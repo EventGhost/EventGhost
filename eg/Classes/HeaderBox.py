@@ -32,7 +32,7 @@ REMOVE_HTML_PATTERN = re.compile('<([^!>]([^>]|\n)*)>')
 
 class HeaderBox(wx.PyWindow):
     """
-    The top description box of every action/plugin configuration dialog.
+    The top description box of every tree item configuration dialog.
     """
     
     def __init__(self, parent, item):
