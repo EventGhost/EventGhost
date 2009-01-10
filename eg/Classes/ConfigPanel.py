@@ -37,12 +37,12 @@ class ConfigDialog(eg.Dialog):
         addTestButton = False
         size = (450, 300)
         if isinstance(item, eg.PluginItem):
-            title = eg.text.General.pluginLabel % item.executable.info.name
+            title = eg.text.General.settingsPluginCaption
         elif isinstance(item, eg.EventItem):
-            title = "EventItem"
+            title = eg.text.General.settingsEventCaption
             size = (450, 150)
         else:
-            title = "%s: %s" % (item.executable.plugin.info.label, item.executable.name)
+            title = eg.text.General.settingsActionCaption
             addTestButton = True
         
 

@@ -42,6 +42,7 @@ def LoadModules():
     eg.OptionsDialog
     eg.FindDialog
     eg.Exceptions
+    eg.EventItem
     #import MainFrame
     # pylint: enable-msg=W0104
     
@@ -257,6 +258,7 @@ class LanguageEditor(wx.Frame):
             "AddActionDialog",
             "AddPluginDialog",
             "AddActionGroupDialog",
+            "EventItem",
             "OptionsDialog",
             "FindDialog",
             "AboutDialog",

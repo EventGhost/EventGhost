@@ -69,6 +69,10 @@ class PluginItem(ActionItem):
         return self.name
         
     
+    def GetTypeName(self):
+        return self.executable.info.name
+    
+    
     @eg.LogIt
     def RestoreState(self):
         if self.isEnabled:
