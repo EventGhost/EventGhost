@@ -49,8 +49,6 @@ class Text:
         apply = "&Apply"
         yes = "&Yes"
         no = "&No"
-        save = "&Save"
-        dontSave = "Do&n't Save"
         help = "&Help"
         choose = "Choose"
         browse = "Browse..."
@@ -62,6 +60,9 @@ class Text:
         unnamedEvent = "<unnamed event>"
         unnamedFile = "<unnamed file>"
         moreTag = "more..."
+        settingsPluginCaption = "Plugin Item Settings"
+        settingsActionCaption = "Action Item Settings"
+        settingsEventCaption = "Event Item Settings"
         noOptionsAction = "This action has no options to configure."
         noOptionsPlugin = "This plugin has no options to configure."
 
@@ -110,6 +111,21 @@ class Text:
             Paste = "&Paste"
             Delete = "&Delete"
             SelectAll = "Select &All"
+            Find = "&Find..."
+            FindNext = "Find &Next"
+
+            ViewMenu = "View"
+            HideShowToolbar = "Toolbar"
+            CollapseAll = "&Collapse All"
+            ExpandAll = "&Expand All"
+            ExpandOnEvents = "Select Tree Item on Execution"
+            LogMacros = "Log Macros"
+            LogActions = "Log Actions"
+            LogTime = "Log Times"
+            ClearLog = "Clear Log"
+            IndentLog = "Indent Log"
+            
+            ConfigurationMenu = "&Configuration"
             AddPlugin = "Add Plugin..."
             AddFolder = "Add Folder"
             AddMacro = "Add Macro..."
@@ -119,25 +135,9 @@ class Text:
             Rename = "Rename Item"
             Disabled = "Disable Item"
             Execute = "Execute Item"
-            Find = "&Find..."
-            FindNext = "Find &Next"
-
-            ViewMenu = "View"
-            HideShowToolbar = "Toolbar"
-            CollapseAll = "&Collapse All"
-            ExpandAll = "&Expand All"
-            ExpandOnEvents = "Autom. highlight on event"
-            ExpandTillMacro = "Autom. expand only till macro"
-            LogMacros = "Log Macros"
-            LogActions = "Log Actions"
-            LogTime = "Log Times"
-            ClearLog = "Clear Log"
-            IndentLog = "Indent Log"
-            
-            ConfigurationMenu = "&Configuration"
             
             HelpMenu = "&Help"
-            HelpContents= "&Help Contents"
+            HelpContents = "&Help Contents"
             About = "&About EventGhost..."
             WebHomepage = "Home &Page"
             WebForum = "Support &Forums"
@@ -147,11 +147,12 @@ class Text:
             Reset = "Reset"
             
         class SaveChanges:
-            title = "Save changes?"
             mesg = (
                 "The file was altered.\n\n"
                 "Do you want to save the changes?\n"
             )
+            saveButton = "&Save"
+            dontSaveButton = "Do&n't Save"
 
         class Logger:
             caption = "Log"
@@ -160,14 +161,14 @@ class Text:
         class Tree:
             caption = "Configuration"
             
-        class ErrorMessages:
+        class Messages:
             cantAddEvent = (
-                "An event item can't be added here.\n\n"
+                "You can't add an event item here.\n\n"
                 "Please select a macro item where "
                 "you would like the event item to be added to."
             )
             cantAddAction = (
-                "An action item can't be added here.\n\n"
+                "You can't add an action item here.\n\n"
                 "Please select a macro item or a location inside a macro "
                 "item where you would like the event item be to added to."
             )
@@ -180,6 +181,10 @@ class Text:
             cantExecute = (
                 "The root item, folder items and event items can't be "
                 "executed."
+            )
+            cantConfigure = (
+                "You can't configure this item.\n\n"
+                "Only action, event and plugin items are configurable."
             )
             
     @eg.LogIt

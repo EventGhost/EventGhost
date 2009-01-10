@@ -17,6 +17,9 @@ class General:
     noOptionsPlugin = u"Dieses Plugin hat keine einstellbaren Optionen."
     ok = u"Ok"
     pluginLabel = u"Plugin: %s"
+    settingsActionCaption = u"Befehls-Element Einstellungen"
+    settingsEventCaption = u"Ereignis-Element Einstellungen"
+    settingsPluginCaption = u"Plugin-Element Einstellungen"
     test = u"&Test"
     unnamedEvent = u"<Unbenanntes Ereignis>"
     unnamedFile = u"<Unbenannte Datei>"
@@ -26,10 +29,15 @@ class General:
 class MainFrame:
     onlyLogAssigned = u"Nur &zugewiesene und aktivierte Ereignisse aufzeichnen"
     onlyLogAssignedToolTip = u"Wenn markiert zeigt das Log nur noch Ereignisse an, die in der momentanen\nKonstellation der Konfiguration ein Makro ausführen werden. Deshalb sollte diese\nOption *nicht* aktiviert werden, wenn man neue Ereignisse zuweisen will."
+    class Messages:
+        cantAddAction = u"Sie können kein Befehls-Element an dieser Stelle hinzufügen.\n\nBitte selektieren sie ein Makro-Element oder ein Element innerhalb eines Makros um ein Befehls-Element hinzuzufügen."
+        cantAddEvent = u"Sie können keinen Ereignis-Element an dieser Stelle hinzufügen.\n\nBitte selektieren sie ein Makro-Element oder ein Element innerhalb eines Makros um ein Ereignis-Element hinzuzufügen."
+        cantConfigure = u"Sie können dieses Element nicht konfigurieren.\n\nNur Befehls-, Ereignis- und Plugin-Elemente sind konfigurierbar."
+        cantDisable = u"Sie können dieses Element nicht deaktivieren.\n\nEine Deaktivierung des Wurzel-Elementes und des Autostart-Elementes sind nicht möglich."
+        cantExecute = u"Sie können dieses Element nicht ausführen.\n\nOrdner-Elemente, Ereignis-Elemente und das Wurzel-Element können nicht ausgeführt werden."
+        cantRename = u"Sie können dieses Element nicht umbenennen.\n\nNur Ordner-, Makro- und Befehls-Elemente können umbenannt werden."
     class Logger:
         caption = u"Log"
-        descriptionHeader = u"Beschreibung"
-        timeHeader = u"Zeit"
         welcomeText = u"---> Willkommen beim EventGhost <---"
     class Menu:
         About = u"&Über EventGhost..."
@@ -44,7 +52,7 @@ class MainFrame:
         Close = u"S&chließen"
         CollapseAll = u"Alle einklappen"
         ConfigurationMenu = u"&Konfiguration"
-        Configure = u"Element &konfigurieren"
+        Configure = u"Element &konfigurieren..."
         Copy = u"&Kopieren"
         Cut = u"&Ausschneiden"
         Delete = u"&Löschen"
@@ -84,8 +92,9 @@ class MainFrame:
         WebHomepage = u"Homepage"
         WebWiki = u"Wiki"
     class SaveChanges:
+        dontSaveButton = u"&Nicht Speichern"
         mesg = u"Die Datei wurde verändert.\n\nAktuelle Änderungen speichern?\n"
-        title = u"Änderungen speichern?"
+        saveButton = u"&Speichern"
     class TaskBarMenu:
         Exit = u"Beenden"
         Hide = u"EventGhost verstecken"
@@ -112,12 +121,9 @@ class Exceptions:
     SerialOpenFailed = u"Kann den seriellen Anschluss nicht öffnen!"
 class CheckUpdate:
     ManErrorMesg = u"Es konnte nicht festgestellt werden, ob es eine neuere Version von EventGhost gibt.\n\nBitte versuchen sie es später noch einmal."
-    ManErrorTitle = u"Fehler bei der Überprüfung"
     ManOkMesg = u"Es ist keine neuere Version von EventGhost verfügbar."
-    ManOkTitle = u"Keine neuere Version verfügbar"
     downloadButton = u"Download-Seite besuchen"
     newVersionMesg = u"Eine neuere Version von EventGhost wurde veröffentlicht.\n\n	Diese Version:		%s\n	Aktuellste Version:	%s\n\nWollen Sie die Download-Seite besuchen?"
-    title = u"Neuere EventGhost-Version verfügbar..."
     waitMesg = u"Bitte warten sie während EventGhost die Update-Informationen bezieht."
 class AddActionDialog:
     descriptionLabel = u"Beschreibung"
@@ -137,6 +143,9 @@ class AddPluginDialog:
 class AddActionGroupDialog:
     caption = u"Befehle hinzufügen?"
     message = u"EventGhost kann einen Ordner mit allen Befehlen dieses Plugins dem Konfigurationsbaum hinzufügen. Wenn Sie dieses wollen, selektieren Sie bitte unten die Stelle an dem dies geschehen soll und drücken die OK-Schaltfläche.\n\nAnsonsten drücken Sie bitte die Abbrechen-Schaltfläche."
+class EventItem:
+    eventName = u"Ereignis Name:"
+    note = u"Hinweis: Sie können auch Ereignis-Elemente vom Log auf ein Makro ziehen um sie dem Makro zuzuweisen."
 class OptionsDialog:
     CheckUpdate = u"Auf neuere Version prüfen beim Programmstart"
     HideOnClose = u"Minimiere wenn Schließen-Schaltfläche gedrückt wird"

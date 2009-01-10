@@ -331,16 +331,17 @@ class Document(object):
         """
         if not self.isDirty.GetValue():
             return wx.ID_OK
-        dialog = eg.MessageDialog(
-            None, 
-            eg.text.MainFrame.SaveChanges.mesg, 
-            eg.APP_NAME + ": " + eg.text.MainFrame.SaveChanges.title, 
-            style = wx.YES_DEFAULT
-                |wx.YES_NO
-                |wx.CANCEL
-                |wx.STAY_ON_TOP
-                |wx.ICON_EXCLAMATION
-        )
+#        dialog = eg.MessageDialog(
+#            None, 
+#            eg.text.MainFrame.SaveChanges.mesg, 
+#            eg.APP_NAME + ": " + eg.text.MainFrame.SaveChanges.title, 
+#            style = wx.YES_DEFAULT
+#                |wx.YES_NO
+#                |wx.CANCEL
+#                |wx.STAY_ON_TOP
+#                |wx.ICON_EXCLAMATION
+#        )
+        dialog = SaveChangesDialog(self.frame)
         result = dialog.ShowModal()
         dialog.Destroy()
         if result == wx.ID_CANCEL:
@@ -445,3 +446,49 @@ class Document(object):
         
         Traverse(self.root, -1)
 
+
+
+class SaveChangesDialog(wx.Dialog):
+    
+    def __init__(self, parent=None):
+        text = eg.text.MainFrame.SaveChanges
+        wx.Dialog.__init__(self, parent, title=eg.APP_NAME)
+        bmp = wx.ArtProvider.GetBitmap(
+            wx.ART_WARNING, wx.ART_CMN_DIALOG, (32, 32)
+        )
+        staticBitmap = wx.StaticBitmap(self, -1, bmp)
+
+        messageCtrl = wx.StaticText(
+            self, -1, eg.text.MainFrame.SaveChanges.mesg
+        )
+        messageCtrl.Wrap(400)
+        saveButton = wx.Button(self, wx.ID_YES, text.saveButton)
+        saveButton.Bind(wx.EVT_BUTTON, self.OnButton)
+        saveButton.SetDefault()
+        saveButton.SetFocus()
+        dontSaveButton = wx.Button(self, wx.ID_NO, text.dontSaveButton)
+        dontSaveButton.Bind(wx.EVT_BUTTON, self.OnButton)
+        cancelButton = wx.Button(self, wx.ID_CANCEL, eg.text.General.cancel)
+        cancelButton.Bind(wx.EVT_BUTTON, self.OnButton)
+        self.SetDefaultItem(saveButton)
+        
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(staticBitmap, 0, wx.ALL, 12)
+        sizer.Add(messageCtrl, 0, wx.ALIGN_CENTER|wx.LEFT|wx.TOP|wx.RIGHT, 6)
+        buttonSizer = wx.BoxSizer(wx.HORIZONTAL)
+        buttonSizer.Add(saveButton, 0, wx.LEFT|wx.RIGHT, 3)
+        buttonSizer.Add(dontSaveButton, 0, wx.LEFT|wx.RIGHT, 3)
+        buttonSizer.Add(cancelButton, 0, wx.LEFT|wx.RIGHT, 3)
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        mainSizer.Add(sizer)
+        mainSizer.Add(buttonSizer, 0, wx.ALIGN_RIGHT|wx.ALL, 12)
+        self.SetSizerAndFit(mainSizer)
+        if parent:
+            self.CenterOnParent()
+        
+        
+    def OnButton(self, event):
+        buttonId = event.GetId()
+        self.EndModal(buttonId)
+        event.Skip()
+        

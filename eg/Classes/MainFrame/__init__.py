@@ -79,7 +79,6 @@ class DefaultConfig:
     logTime = False
     indentLog = True
     expandOnEvents = False
-    expandTillMacro = False
     perspective = None
     perspective2 = None
 
@@ -327,7 +326,7 @@ class MainFrame(wx.Frame):
         item = self.toolBar.FindToolForPosition(x, y)
         if item and item.GetId() == ID_TOOLBAR_EXECUTE:
             if not self.document.selection.isExecutable:
-                self.DisplayError(Text.ErrorMessages.cantExecute)
+                self.DisplayError(Text.Messages.cantExecute)
             else:
                 self.lastClickedTool = item
                 self.egEvent = self.document.ExecuteSelected()
@@ -405,9 +404,6 @@ class MainFrame(wx.Frame):
         menu.AppendSeparator()
         item = Append("ExpandOnEvents", kind=wx.ITEM_CHECK)
         item.Check(config.expandOnEvents)
-        item = Append("ExpandTillMacro", kind=wx.ITEM_CHECK)
-        item.Check(config.expandTillMacro)
-        item.Enable(config.expandOnEvents)
         menu.AppendSeparator()
         Append("LogMacros", kind=wx.ITEM_CHECK).Check(eg.config.logMacros)
         Append("LogActions", kind=wx.ITEM_CHECK).Check(eg.config.logActions)
@@ -736,9 +732,7 @@ class MainFrame(wx.Frame):
             and config.expandOnEvents 
             and (self.treeCtrl and self.treeCtrl.editLabelId is None)
         )
-        ActionItem.shouldSelectOnExecute = (
-            expandOnEvents and not config.expandTillMacro
-        )
+        ActionItem.shouldSelectOnExecute = expandOnEvents
         MacroItem.shouldSelectOnExecute = expandOnEvents
         
         
@@ -842,7 +836,7 @@ class MainFrame(wx.Frame):
             
     def OnCmdAddEvent(self):
         if not self.document.selection.DropTest(EventItem):
-            self.DisplayError(Text.ErrorMessages.cantAddEvent)
+            self.DisplayError(Text.Messages.cantAddEvent)
             return
         eg.Greenlet(
             eg.UndoHandler.NewEvent().Do
@@ -859,7 +853,7 @@ class MainFrame(wx.Frame):
     
     def OnCmdAddAction(self):
         if not self.document.selection.DropTest(ActionItem):
-            self.DisplayError(Text.ErrorMessages.cantAddAction)
+            self.DisplayError(Text.Messages.cantAddAction)
             return
         # let the user choose an action
         result = eg.AddActionDialog.GetModalResult(self)
@@ -875,26 +869,29 @@ class MainFrame(wx.Frame):
     @eg.LogIt
     def OnCmdRename(self):
         if not self.document.selection.isRenameable:
-            self.DisplayError(Text.ErrorMessages.cantRename)
+            self.DisplayError(Text.Messages.cantRename)
         else:
             self.treeCtrl.SetFocus()
             self.treeCtrl.EditLabel(self.treeCtrl.GetSelection())
 
 
     def OnCmdConfigure(self):
-        eg.UndoHandler.Configure().Try(self.document)
+        if not self.document.selection.isConfigurable:
+            self.DisplayError(Text.Messages.cantConfigure)
+        else:
+            eg.UndoHandler.Configure().Try(self.document)
 
 
     def OnCmdExecute(self):
         if not self.document.selection.isExecutable:
-            self.DisplayError(Text.ErrorMessages.cantExecute)
+            self.DisplayError(Text.Messages.cantExecute)
         else:
             self.document.ExecuteSelected().SetShouldEnd()
 
 
     def OnCmdDisabled(self):
         if not self.document.selection.isDeactivatable:
-            self.DisplayError(Text.ErrorMessages.cantDisable)
+            self.DisplayError(Text.Messages.cantDisable)
         else:
             eg.UndoHandler.ToggleEnable(self.document)
 
@@ -921,13 +918,6 @@ class MainFrame(wx.Frame):
     def OnCmdExpandOnEvents(self):
         config.expandOnEvents = not config.expandOnEvents
         self.menuBar.Check(ID["ExpandOnEvents"], config.expandOnEvents)
-        self.menuBar.Enable(ID["ExpandTillMacro"], config.expandOnEvents)
-        self.UpdateViewOptions()
-        
-        
-    def OnCmdExpandTillMacro(self):
-        config.expandTillMacro = not config.expandTillMacro
-        self.menuBar.Check(ID["ExpandTillMacro"], config.expandTillMacro)
         self.UpdateViewOptions()
         
         

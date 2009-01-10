@@ -22,7 +22,6 @@
 
 import eg
 import wx
-import colorsys
 
 from TreeItem import TreeItem
 from TreeItem import HINT_NO_DROP, HINT_MOVE_BEFORE, HINT_MOVE_BEFORE_OR_AFTER
@@ -34,22 +33,7 @@ PATCHES = {
     "Registry.RegistryQuery": "System.RegistryQuery",
 }    
 
-def GetRenamedColor():
-    red, green, blue = eg.colour.windowText
-    hue, saturation, value = colorsys.rgb_to_hsv(
-        red / 255.0, 
-        green / 255.0, 
-        blue / 255.0
-    )        
-    if value > 0.5:
-        value -= 0.25
-    else:
-        value += 0.25
-    rgb = colorsys.hsv_to_rgb(hue, saturation, value)
-    return tuple([int(round(c * 255.0)) for c in rgb])
-
-
-RENAMED_COLOUR = GetRenamedColor()
+RENAMED_COLOUR = eg.colour.GetRenamedColor()
 
 
 class ActionItem(TreeItem):
@@ -109,7 +93,10 @@ class ActionItem(TreeItem):
     
     
     def GetTypeName(self):
-        return self.executable.name
+        return "%s: %s" % (
+            self.executable.plugin.info.label, 
+            self.executable.name
+        )
     
     
     def GetDescription(self):

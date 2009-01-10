@@ -25,7 +25,6 @@
 import eg
 import wx
 import collections
-import colorsys
 from time import strftime, localtime
 import wx.lib.mixins.listctrl as listmix
 
@@ -59,22 +58,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 
         sysColour = eg.colour.windowBackground
         sysTextColour = eg.colour.windowText
-
-        hue, saturation, value = colorsys.rgb_to_hsv(
-            sysColour[0] / 255.0,
-            sysColour[1] / 255.0,
-            sysColour[2] / 255.0
-        )
-        if value > 0.5:
-            value -= 0.05
-        else:
-            value += 0.2
-        red, green, blue = colorsys.hsv_to_rgb(hue, saturation, value)
-        oddColour = (
-            int(round(red * 255.0)), 
-            int(round(green * 255.0)), 
-            int(round(blue * 255.0)), 
-        )
+        oddColour = eg.colour.GetOddLogColour()
         
         self.attr1 = wx.ListItemAttr()
         self.attr1.BackgroundColour = oddColour
@@ -224,7 +208,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             dataObjectComposite = wx.DataObjectComposite()
             dataObjectComposite.Add(textDataObject)
             if lines == 1:
-                icon, eventstring = self.GetItemData(firstItem)[2:4]
+                eventstring, icon = self.GetItemData(firstItem)[:2]
                 if icon == EVENT_ICON:
                     customDataObject = wx.CustomDataObject("DragEventItem")
                     customDataObject.SetData(eventstring.encode("UTF-8"))
