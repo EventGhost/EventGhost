@@ -31,24 +31,24 @@ class ButtonRow(object):
     def __init__(self, parent, buttonIds, resizeGrip=False):
         self.parent = parent
         self.numSpecialCtrls = 0
-        self.stdbtnsizer = stdbtnsizer = wx.StdDialogButtonSizer()
+        buttonSizer = wx.StdDialogButtonSizer()
         defaultButton = None
         text = eg.text.General
         for ctrl in buttonIds:
             if ctrl not in STANDARD_IDS:
-                stdbtnsizer.Add(ctrl)
+                buttonSizer.Add(ctrl)
                 
         if wx.ID_OK in buttonIds:
             okButton = wx.Button(parent, wx.ID_OK, text.ok)
             okButton.Bind(wx.EVT_BUTTON, self.OnOK)
-            stdbtnsizer.AddButton(okButton)
+            buttonSizer.AddButton(okButton)
             defaultButton = okButton
             self.okButton = okButton
             
         if wx.ID_CANCEL in buttonIds:
             cancelButton = wx.Button(parent, wx.ID_CANCEL, text.cancel)
             cancelButton.Bind(wx.EVT_BUTTON, self.OnCancel)
-            stdbtnsizer.AddButton(cancelButton)
+            buttonSizer.AddButton(cancelButton)
             if not defaultButton:
                 defaultButton = cancelButton
             self.cancelButton = cancelButton
@@ -56,7 +56,7 @@ class ButtonRow(object):
         if wx.ID_APPLY in buttonIds:
             applyButton = wx.Button(parent, wx.ID_APPLY, text.apply)
             applyButton.Bind(wx.EVT_BUTTON, self.OnApply)
-            stdbtnsizer.AddButton(applyButton)
+            buttonSizer.AddButton(applyButton)
             if not defaultButton:
                 defaultButton = applyButton
             self.applyButton = applyButton
@@ -64,23 +64,23 @@ class ButtonRow(object):
         if wx.ID_HELP in buttonIds:
             helpButton = wx.Button(parent, wx.ID_HELP, text.help)
             helpButton.Bind(wx.EVT_BUTTON, self.OnHelp)
-            stdbtnsizer.AddButton(helpButton)
+            buttonSizer.AddButton(helpButton)
             if not defaultButton:
                 defaultButton = helpButton
             self.helpButton = helpButton
         
-        stdbtnsizer.Realize()
+        buttonSizer.Realize()
         defaultButton.SetDefault()
         
         self.sizer = sizer = wx.BoxSizer(wx.HORIZONTAL)
         if resizeGrip:
             self.sizeGrip = eg.SizeGrip(parent)
             sizer.Add(self.sizeGrip.GetSize(), 1)
-            sizer.Add(stdbtnsizer, 0, wx.TOP|wx.BOTTOM, 6)
+            sizer.Add(buttonSizer, 0, wx.TOP|wx.BOTTOM, 6)
             sizer.Add(self.sizeGrip, 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT)
         else:
             sizer.Add((3, 3), 1)
-            sizer.Add(stdbtnsizer, 0, wx.TOP|wx.BOTTOM, 6)
+            sizer.Add(buttonSizer, 0, wx.TOP|wx.BOTTOM, 6)
             sizer.Add((2, 2), 0)      
         
         
