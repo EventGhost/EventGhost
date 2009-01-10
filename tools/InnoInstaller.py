@@ -133,7 +133,7 @@ class InnoInstaller(object):
             ],
             # use out build_installer class as extended py2exe build command
             #cmdclass = {"py2exe": py2exe.run},
-            verbose = 3,
+            verbose = 0,
         )
         if self.pyVersion == "26":
             self.py2exeOptions["data_files"] = [
@@ -304,7 +304,7 @@ class InnoInstaller(object):
         startupInfo.dwFlags = subprocess.STARTF_USESHOWWINDOW
         startupInfo.wShowWindow = subprocess.SW_HIDE 
         errorcode = subprocess.call(
-            (self.GetCompilerPath(), innoScriptPath), 
+            (self.GetCompilerPath(), innoScriptPath, "/Q"), 
             stdout=sys.stdout.fileno(),
             startupinfo=startupInfo
         )
