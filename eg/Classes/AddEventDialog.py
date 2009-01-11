@@ -27,12 +27,11 @@ import wx
 gLastSelected = None
 
 
-class DefaultConfig:
+class Config(eg.PersistentData):
     position = None
     size = (550, 400)
     splitPosition = 210
 
-config = eg.GetConfig("AddEventDialog", DefaultConfig)
 
 
 class Text(eg.TranslatableStrings):
@@ -121,19 +120,19 @@ class AddEventDialog(eg.Dialog):
         self.SetSizerAndFit(mainSizer)
         minSize = mainSizer.GetMinSize()
         self.SetMinSize(minSize)
-        self.SetSize(config.size)
-        splitterWindow.SetSashPosition(config.splitPosition)
-        if config.position is not None:
-            self.SetPosition(config.position)
+        self.SetSize(Config.size)
+        splitterWindow.SetSashPosition(Config.splitPosition)
+        if Config.position is not None:
+            self.SetPosition(Config.position)
         self.ReloadTree()
         while self.Affirmed():
             print self.resultData
             self.SetResult(self.resultData)
         item = tree.GetSelection()
         gLastSelected = tree.GetPyData(item)        
-        config.size = self.GetSizeTuple()
-        config.position = self.GetPositionTuple()
-        config.splitPosition = splitterWindow.GetSashPosition()
+        Config.size = self.GetSizeTuple()
+        Config.position = self.GetPositionTuple()
+        Config.splitPosition = splitterWindow.GetSashPosition()
 
 
     def FillTree(self):

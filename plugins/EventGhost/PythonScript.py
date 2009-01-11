@@ -27,18 +27,18 @@ import imp
 import traceback
 import weakref
 
-    
+
+class Config(eg.PersistentData):
+    size = (600, 420)
+    position = (10, 10)
+
+
+
 class PythonScript(eg.ActionBase):
     name = "Python Script"
     description = "Full featured Python script." 
     iconFile = "icons/PythonScript"
 
-    class ConfigDefaults:
-        size = (600, 420)
-        position = (10, 10)
-    config = eg.GetConfig("plugins.EventGhost.PythonScript", ConfigDefaults)
-
-        
     def GetLabel(self, dummySourceCode=""):
         return self.name
 
@@ -48,13 +48,13 @@ class PythonScript(eg.ActionBase):
         editCtrl = eg.PythonEditorCtrl(panel, value=sourceCode)
         panel.sizer.Add(editCtrl, 1, wx.EXPAND)
         panel.FinishSetup()
-        panel.dialog.SetPosition(self.config.position)
-        panel.dialog.SetSize(self.config.size)
+        panel.dialog.SetPosition(Config.position)
+        panel.dialog.SetSize(Config.size)
         while panel.Affirmed():
             panel.SetResult(editCtrl.GetValue())
         if not panel.dialog.IsMaximized():
-            self.config.size = panel.dialog.GetSizeTuple()
-            self.config.position = panel.dialog.GetPositionTuple()
+            Config.size = panel.dialog.GetSizeTuple()
+            Config.position = panel.dialog.GetPositionTuple()
         
 
     class Compile:

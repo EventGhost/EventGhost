@@ -41,6 +41,10 @@ STOP_IF_NOT_FOUND = 0
 STOP_IF_FOUND = 1
 STOP_NEVER = 2
 
+class Config(eg.PersistentData):
+    hideOnDrag = True
+
+
 
 class TestDialog(eg.Dialog):  
     
@@ -114,10 +118,6 @@ class FindWindow(eg.ActionBase):
             "Child Name:", 
             "Child Class:"
         )
-
-    class ConfigDefaults:
-        hideOnDrag = False
-    config = eg.GetConfig("plugins.Window.FindWindow", ConfigDefaults)
             
             
     def Compile(
@@ -231,9 +231,9 @@ class FindWindow(eg.ActionBase):
         
         # the HideOnDrag checkbox
         cbHideOnDrag = wx.CheckBox(panel, -1, text.hide_box)
-        cbHideOnDrag.SetValue(self.config.hideOnDrag)
+        cbHideOnDrag.SetValue(Config.hideOnDrag)
         def OnHideOnDragCheckbox(dummyEvent):
-            self.config.hideOnDrag = cbHideOnDrag.IsChecked()     
+            Config.hideOnDrag = cbHideOnDrag.IsChecked()     
         cbHideOnDrag.Bind(wx.EVT_CHECKBOX, OnHideOnDragCheckbox)
 
         # the tree to display processes and windows
@@ -492,7 +492,7 @@ class FindWindow(eg.ActionBase):
     def OnFinderToolLeftClick(self, dummyEvent=None):
         self.oldFramePosition = eg.document.frame.GetPosition()
         self.oldDialogPosition = self.dialog.GetPosition()
-        if self.config.hideOnDrag:
+        if Config.hideOnDrag:
             eg.document.frame.SetPosition((-32000, -32000))
             self.dialog.SetPosition((-32000, -32000))
         #event.Skip()
@@ -500,7 +500,7 @@ class FindWindow(eg.ActionBase):
         
     @eg.LogIt
     def OnFinderTool(self, dummyEvent=None):
-        if self.config.hideOnDrag:
+        if Config.hideOnDrag:
             eg.document.frame.SetPosition(self.oldFramePosition)
             self.dialog.SetPosition(self.oldDialogPosition)
         lastTarget = self.finderTool.GetValue()

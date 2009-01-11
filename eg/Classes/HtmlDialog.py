@@ -23,11 +23,11 @@
 import eg
 import wx
 
-class DefaultConfig:
+
+class Config(eg.PersistentData):
     position = None
     size = (400, 300)
         
-config = eg.GetConfig("HtmlDialog", DefaultConfig)
 
 
 class HtmlDialog(eg.Dialog):
@@ -56,13 +56,13 @@ class HtmlDialog(eg.Dialog):
             (btnSizer, 0, wx.EXPAND),
         )
         self.SetSizerAndFit(mainSizer)
-        if config.position is not None:
-            self.SetPosition(config.position)
-        self.SetSize(config.size)
+        if Config.position is not None:
+            self.SetPosition(Config.position)
+        self.SetSize(Config.size)
 
 
     def Destroy(self):
-        config.size = self.GetSizeTuple()
-        config.position = self.GetPositionTuple()
+        Config.size = self.GetSizeTuple()
+        Config.position = self.GetPositionTuple()
         eg.Dialog.Destroy(self)
         

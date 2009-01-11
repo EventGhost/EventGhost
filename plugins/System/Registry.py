@@ -56,13 +56,11 @@ regTypes = (
 )
 
 
-class DefaultConfig:
+class Config(eg.PersistentData):
     lastKeySelected = _winreg.HKEY_CURRENT_USER
     lastSubkeySelected = "Software"
     lastValueNameSelected = None
-    
-config = eg.GetConfig("plugins.System.RegistryGroup", DefaultConfig)
-        
+            
 
 
 class RegistryLazyTree(wx.TreeCtrl):
@@ -557,13 +555,13 @@ class RegistryQuery(eg.ActionBase):
         text2 = self.text2
 
         if key == None:
-            key = config.lastKeySelected
-            subkey = config.lastSubkeySelected
-            valueName = config.lastValueNameSelected
+            key = Config.lastKeySelected
+            subkey = Config.lastSubkeySelected
+            valueName = Config.lastValueNameSelected
         else:
-            config.lastKeySelected = key
-            config.lastSubkeySelected = subkey
-            config.lastValueNameSelected = valueName
+            Config.lastKeySelected = key
+            Config.lastSubkeySelected = subkey
+            Config.lastValueNameSelected = valueName
 
         panel = eg.ConfigPanel(self, resizable=True)
        
@@ -579,9 +577,9 @@ class RegistryQuery(eg.ActionBase):
 
         def UpdateLastSelectedKeys(event):
             a, b, c = regChooserCtrl.tree.GetValue()
-            config.lastKeySelected = a
-            config.lastSubkeySelected = b
-            config.lastValueNameSelected = c
+            Config.lastKeySelected = a
+            Config.lastSubkeySelected = b
+            Config.lastValueNameSelected = c
             event.Skip()
 
         regChooserCtrl.tree.Bind(
@@ -755,13 +753,13 @@ class RegistryChange(eg.ActionBase):
         text2 = self.text2
        
         if key == None:
-            key = config.lastKeySelected
-            subkey = config.lastSubkeySelected
-            valueName = config.lastValueNameSelected
+            key = Config.lastKeySelected
+            subkey = Config.lastSubkeySelected
+            valueName = Config.lastValueNameSelected
         else:
-            config.lastKeySelected = key
-            config.lastSubkeySelected = subkey
-            config.lastValueNameSelected = valueName
+            Config.lastKeySelected = key
+            Config.lastSubkeySelected = subkey
+            Config.lastValueNameSelected = valueName
 
         panel = eg.ConfigPanel(self, resizable=True)
        
@@ -777,9 +775,9 @@ class RegistryChange(eg.ActionBase):
 
         def UpdateLastSelectedKeys(event):
             a, b, c = regChooserCtrl.tree.GetValue()
-            config.lastKeySelected = a
-            config.lastSubkeySelected = b
-            config.lastValueNameSelected = c
+            Config.lastKeySelected = a
+            Config.lastSubkeySelected = b
+            Config.lastValueNameSelected = c
             event.Skip()
 
         regChooserCtrl.Bind(wx.EVT_TREE_SEL_CHANGED, UpdateLastSelectedKeys)
