@@ -29,13 +29,6 @@ class General:
 class MainFrame:
     onlyLogAssigned = u"Nur &zugewiesene und aktivierte Ereignisse aufzeichnen"
     onlyLogAssignedToolTip = u"Wenn markiert zeigt das Log nur noch Ereignisse an, die in der momentanen\nKonstellation der Konfiguration ein Makro ausführen werden. Deshalb sollte diese\nOption *nicht* aktiviert werden, wenn man neue Ereignisse zuweisen will."
-    class Messages:
-        cantAddAction = u"Sie können kein Befehls-Element an dieser Stelle hinzufügen.\n\nBitte selektieren sie ein Makro-Element oder ein Element innerhalb eines Makros um ein Befehls-Element hinzuzufügen."
-        cantAddEvent = u"Sie können keinen Ereignis-Element an dieser Stelle hinzufügen.\n\nBitte selektieren sie ein Makro-Element oder ein Element innerhalb eines Makros um ein Ereignis-Element hinzuzufügen."
-        cantConfigure = u"Sie können dieses Element nicht konfigurieren.\n\nNur Befehls-, Ereignis- und Plugin-Elemente sind konfigurierbar."
-        cantDisable = u"Sie können dieses Element nicht deaktivieren.\n\nEine Deaktivierung des Wurzel-Elementes und des Autostart-Elementes sind nicht möglich."
-        cantExecute = u"Sie können dieses Element nicht ausführen.\n\nOrdner-Elemente, Ereignis-Elemente und das Wurzel-Element können nicht ausgeführt werden."
-        cantRename = u"Sie können dieses Element nicht umbenennen.\n\nNur Ordner-, Makro- und Befehls-Elemente können umbenannt werden."
     class Logger:
         caption = u"Log"
         welcomeText = u"---> Willkommen beim EventGhost <---"
@@ -61,8 +54,7 @@ class MainFrame:
         Execute = u"Element &ausführen"
         Exit = u"&Beenden"
         ExpandAll = u"Alle ausklappen"
-        ExpandOnEvents = u"Autom. markieren bei Ereignis"
-        ExpandTillMacro = u"Autom. nur bis Makro ausklappen"
+        ExpandOnEvents = u"Selektiere Elemente bei Ausführung"
         Export = u"Exportieren..."
         FileMenu = u"&Datei"
         Find = u"S&uchen..."
@@ -91,6 +83,13 @@ class MainFrame:
         WebForum = u"Forum"
         WebHomepage = u"Homepage"
         WebWiki = u"Wiki"
+    class Messages:
+        cantAddAction = u"Sie können kein Befehls-Element an dieser Stelle hinzufügen.\n\nBitte selektieren sie ein Makro-Element oder ein Element innerhalb eines Makros um ein Befehls-Element hinzuzufügen."
+        cantAddEvent = u"Sie können keinen Ereignis-Element an dieser Stelle hinzufügen.\n\nBitte selektieren sie ein Makro-Element oder ein Element innerhalb eines Makros um ein Ereignis-Element hinzuzufügen."
+        cantConfigure = u"Sie können dieses Element nicht konfigurieren.\n\nNur Befehls-, Ereignis- und Plugin-Elemente sind konfigurierbar."
+        cantDisable = u"Sie können dieses Element nicht deaktivieren.\n\nEine Deaktivierung des Wurzel-Elementes und des Autostart-Elementes sind nicht möglich."
+        cantExecute = u"Sie können dieses Element nicht ausführen.\n\nOrdner-Elemente, Ereignis-Elemente und das Wurzel-Element können nicht ausgeführt werden."
+        cantRename = u"Sie können dieses Element nicht umbenennen.\n\nNur Ordner-, Makro- und Befehls-Elemente können umbenannt werden."
     class SaveChanges:
         dontSaveButton = u"&Nicht Speichern"
         mesg = u"Die Datei wurde verändert.\n\nAktuelle Änderungen speichern?\n"
@@ -144,8 +143,9 @@ class AddActionGroupDialog:
     caption = u"Befehle hinzufügen?"
     message = u"EventGhost kann einen Ordner mit allen Befehlen dieses Plugins dem Konfigurationsbaum hinzufügen. Wenn Sie dieses wollen, selektieren Sie bitte unten die Stelle an dem dies geschehen soll und drücken die OK-Schaltfläche.\n\nAnsonsten drücken Sie bitte die Abbrechen-Schaltfläche."
 class EventItem:
+    eventItem = u"Ereignis-Element"
     eventName = u"Ereignis Name:"
-    note = u"Hinweis: Sie können auch Ereignis-Elemente vom Log auf ein Makro ziehen um sie dem Makro zuzuweisen."
+    notice = u"Hinweis: Sie können Ereignis-Elemente auch zuweisen, indem Sie es vom Log auf ein Makro-Element ziehen."
 class OptionsDialog:
     CheckUpdate = u"Auf neuere Version prüfen beim Programmstart"
     HideOnClose = u"Minimiere wenn Schließen-Schaltfläche gedrückt wird"
@@ -353,8 +353,10 @@ class Plugin:
             description = u"Diese Befehle steuern verschiedene Eigenschaften des Bildschirms."
         class MonitorPowerOff:
             name = u"Bildschirm ausschalten"
+            description = u"Schaltet das Anzeigegerät in den Power-Off Zustand. Dies ist der energiesparenste Modus, den das Anzeigegerät unterstützt."
         class MonitorPowerOn:
             name = u"Bildschirm reaktivieren"
+            description = u"Schaltet das Anzeigegerät wieder an, wenn es sich im Energeisparmodus oder Power-Off-Modus befindet. Stoppt auch einen eventuell laufenden Bildschirmschoner."
         class MonitorStandby:
             name = u"Bildschirm standby"
             description = u"Schaltet das Anzeigegerät in den Energiesparmodus."
@@ -387,10 +389,12 @@ class Plugin:
             text2 = u"Warte auf Beendigung"
         class PowerDown:
             name = u"Rechner ausschalten"
+            description = u"Fährt das System herunter und schaltet den Rechner aus."
         class PowerGroup:
             name = u"Energieoptionen"
         class Reboot:
             name = u"Rechner neu starten"
+            description = u"Führt einen Neustart des Rechners aus."
         class RegistryChange:
             name = u"Registrierungs-Wert ändern"
             description = u"Verändert einen Wert in der Windows-Registrierung"
@@ -443,6 +447,20 @@ class Plugin:
             name = u"Zeichenkette in die Zwischenablage kopieren"
             description = u"Kopiert eine als Parameter angegebene Zeichenkette in die System-Zwischenablage."
             error = u"Kann Zwischenablage nicht öffnen"
+        class SetDisplayPreset:
+            fields = (
+                u"Gerät",
+                u"Links",
+                u"Oben",
+                u"Breite",
+                u"Höhe",
+                u"Frequenz",
+                u"Farbtiefe",
+                u"angeschlossen",
+                u"primär",
+                u"Flags",
+            )
+            query = u"Abfrage der momentanen Anzeige-Einstellungen"
         class SetMasterVolume:
             name = u"Setze Master-Lautstärke"
             description = u"Setzt die Gesamtlautstärke auf einen absoluten Wert."

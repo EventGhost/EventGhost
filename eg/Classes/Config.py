@@ -95,6 +95,7 @@ class Config(Section):
     checkUpdate = False
     logActions = True
     logMacros = True
+    hideOnClose = False
     onlyLogAssigned = False
     autoloadFilePath = False
     storedBootTime = 0

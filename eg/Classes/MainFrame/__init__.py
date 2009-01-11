@@ -70,19 +70,17 @@ ID = defaultdict(wx.NewId, {
 
 Text = eg.text.MainFrame
 
-        
-class DefaultConfig:
+
+class Config(eg.PersistentData):
     position = (50, 50)
     size = (700, 450)
     showToolbar = True
-    hideOnClose = False
     logTime = False
     indentLog = True
     expandOnEvents = False
     perspective = None
     perspective2 = None
 
-config = eg.GetConfig("mainFrame", DefaultConfig)
 
 
 def GetIcon(name):
@@ -120,7 +118,7 @@ class MainFrame(wx.Frame):
             None, 
             -1, 
             document.GetTitle(), 
-            pos=config.position, 
+            pos=Config.position, 
             size=(1, 1), 
             style=self.style
         )
@@ -161,7 +159,7 @@ class MainFrame(wx.Frame):
         self.Bind(wx.aui.EVT_AUI_PANE_MAXIMIZE, self.OnPaneMaximize)
         self.Bind(wx.aui.EVT_AUI_PANE_RESTORE, self.OnPaneRestore)
         self.UpdateViewOptions()
-        self.SetSize(config.size)
+        self.SetSize(Config.size)
         undoState = document.undoEvent.Subscribe(self.OnUndoEvent)
         self.OnUndoEvent(undoState)
         selection = document.selectionEvent.Subscribe(
@@ -173,9 +171,9 @@ class MainFrame(wx.Frame):
 
         if (
             eg.config.buildNum == eg.buildNum 
-            and config.perspective is not None
+            and Config.perspective is not None
         ):
-            auiManager.LoadPerspective(config.perspective, False)
+            auiManager.LoadPerspective(Config.perspective, False)
         artProvider = auiManager.GetArtProvider()
         artProvider.SetMetric(wx.aui.AUI_DOCKART_PANE_BORDER_SIZE, 0)
         artProvider.SetMetric(
@@ -195,7 +193,7 @@ class MainFrame(wx.Frame):
             eg.colour.inactiveCaptionTextColour
         )
         auiManager.GetPane("tree").Caption(" " + Text.Tree.caption)
-        self.toolBar.Show(config.showToolbar)
+        self.toolBar.Show(Config.showToolbar)
         auiManager.Update()
         auiManager.GetPane("logger").MinSize((100, 100))\
             .Caption(" " + Text.Logger.caption)
@@ -254,7 +252,7 @@ class MainFrame(wx.Frame):
     def Destroy(self):
         self.document.SetTree(None)
         eg.log.SetCtrl(None)
-        config.perspective = self.auiManager.SavePerspective()
+        Config.perspective = self.auiManager.SavePerspective()
         self.SetStatusBar(None)
         self.document.isDirty.UnSubscribe(self.OnDocumentDirty)
         eg.focusChangeEvent.UnSubscribe(self.OnFocusChange)
@@ -397,18 +395,18 @@ class MainFrame(wx.Frame):
         # view menu        
         menu = wx.Menu()
         menuBar.Append(menu, text.ViewMenu)
-        Append("HideShowToolbar", kind=wx.ITEM_CHECK).Check(config.showToolbar)
+        Append("HideShowToolbar", kind=wx.ITEM_CHECK).Check(Config.showToolbar)
         menu.AppendSeparator()
         Append("ExpandAll")
         Append("CollapseAll")
         menu.AppendSeparator()
         item = Append("ExpandOnEvents", kind=wx.ITEM_CHECK)
-        item.Check(config.expandOnEvents)
+        item.Check(Config.expandOnEvents)
         menu.AppendSeparator()
         Append("LogMacros", kind=wx.ITEM_CHECK).Check(eg.config.logMacros)
         Append("LogActions", kind=wx.ITEM_CHECK).Check(eg.config.logActions)
-        Append("LogTime", kind=wx.ITEM_CHECK).Check(config.logTime)
-        Append("IndentLog", kind=wx.ITEM_CHECK).Check(config.indentLog)
+        Append("LogTime", kind=wx.ITEM_CHECK).Check(Config.logTime)
+        Append("IndentLog", kind=wx.ITEM_CHECK).Check(Config.indentLog)
         menu.AppendSeparator()
         Append("ClearLog")
                 
@@ -514,9 +512,9 @@ class MainFrame(wx.Frame):
     def CreateLogCtrl(self):
         logCtrl = LogCtrl(self)
         logCtrl.Freeze()
-        if not config.logTime:
+        if not Config.logTime:
             logCtrl.SetTimeLogging(False)
-        logCtrl.SetIndent(config.indentLog)
+        logCtrl.SetIndent(Config.indentLog)
         self.auiManager.AddPane(
             logCtrl, 
             wx.aui.AuiPaneInfo().
@@ -557,32 +555,32 @@ class MainFrame(wx.Frame):
         """
         paneName = event.GetPane().name
         if paneName == "toolBar":
-            config.showToolbar = False
+            Config.showToolbar = False
             self.menuBar.Check(ID["HideShowToolbar"], False)
             
         
     def OnPaneMaximize(self, dummyEvent):
         """ React to a wx.aui.EVT_AUI_PANE_MAXIMIZE event. """
-        config.perspective2 = self.auiManager.SavePerspective()
+        Config.perspective2 = self.auiManager.SavePerspective()
         
         
     def OnPaneRestore(self, dummyEvent):
         """ React to a wx.aui.EVT_AUI_PANE_RESTORE event. """
-        if config.perspective2 is not None:
-            self.auiManager.LoadPerspective(config.perspective2)
+        if Config.perspective2 is not None:
+            self.auiManager.LoadPerspective(Config.perspective2)
         
         
     def OnSize(self, event):
         """ Handle wx.EVT_SIZE """
         if not self.IsMaximized() and not self.IsIconized():
-            config.size = self.GetSizeTuple()
+            Config.size = self.GetSizeTuple()
         event.Skip()
 
 
     def OnMove(self, event):
         """ Handle wx.EVT_MOVE """
         if not self.IsMaximized() and not self.IsIconized():
-            config.position = self.GetPositionTuple()
+            Config.position = self.GetPositionTuple()
         event.Skip()
         
         
@@ -590,7 +588,7 @@ class MainFrame(wx.Frame):
     def OnClose(self, dummyEvent):
         """ Handle wx.EVT_CLOSE """
         if len(self.openDialogs) == 0:
-            if config.hideOnClose:
+            if eg.config.hideOnClose:
                 self.document.HideFrame()
             else:
                 eg.app.Exit()
@@ -729,7 +727,7 @@ class MainFrame(wx.Frame):
     def UpdateViewOptions(self):
         expandOnEvents = (
             not self.IsIconized()
-            and config.expandOnEvents 
+            and Config.expandOnEvents 
             and (self.treeCtrl and self.treeCtrl.editLabelId is None)
         )
         ActionItem.shouldSelectOnExecute = expandOnEvents
@@ -897,10 +895,10 @@ class MainFrame(wx.Frame):
 
 
     def OnCmdHideShowToolbar(self):
-        config.showToolbar = not config.showToolbar
-        #self.auiManager.GetPane("toolBar").Show(config.showToolbar)
+        Config.showToolbar = not Config.showToolbar
+        #self.auiManager.GetPane("toolBar").Show(Config.showToolbar)
         #self.auiManager.Update()
-        self.toolBar.Show(config.showToolbar)
+        self.toolBar.Show(Config.showToolbar)
         self.Layout()
         self.SendSizeEvent()
 
@@ -916,20 +914,20 @@ class MainFrame(wx.Frame):
         
         
     def OnCmdExpandOnEvents(self):
-        config.expandOnEvents = not config.expandOnEvents
-        self.menuBar.Check(ID["ExpandOnEvents"], config.expandOnEvents)
+        Config.expandOnEvents = not Config.expandOnEvents
+        self.menuBar.Check(ID["ExpandOnEvents"], Config.expandOnEvents)
         self.UpdateViewOptions()
         
         
     def OnCmdLogTime(self):
         flag = self.menuBar.IsChecked(ID["LogTime"])
-        config.logTime = flag
+        Config.logTime = flag
         self.logCtrl.SetTimeLogging(flag)
     
     
     def OnCmdIndentLog(self):
         shouldIndent = self.menuBar.IsChecked(ID["IndentLog"])
-        config.indentLog = shouldIndent
+        Config.indentLog = shouldIndent
         self.logCtrl.SetIndent(shouldIndent)
         
         

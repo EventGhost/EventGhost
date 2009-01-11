@@ -84,6 +84,7 @@ eg.ValueChangedEvent, eg.EVT_VALUE_CHANGED = NewCommandEvent()
 eg.focusChangeEvent = eg.NotificationHandler()
 eg.clipboardEvent = eg.NotificationHandler()
 eg.pyCrustFrame = None
+eg.dummyAsyncoreDispatcher = None
 
 if eg.startupArguments.configDir is None:
     eg.configDir = os.path.join(eg.folderPath.RoamingAppData, eg.APP_NAME)
@@ -96,14 +97,6 @@ eg.processId = GetCurrentProcessId()
 Init.InitPil()
 
 
-def GetConfig(searchPath, defaultCls):
-    config = eg.config
-    parts = searchPath.split(".")
-    for part in parts[:-1]:
-        config = config.SetDefault(part, eg.Bunch)
-    return config.SetDefault(parts[-1], defaultCls)
-            
-            
 def RestartAsyncore():
     """ Informs the asyncore loop of a new socket to handle. """
     oldDispatcher = eg.dummyAsyncoreDispatcher
@@ -112,6 +105,10 @@ def RestartAsyncore():
     eg.dummyAsyncoreDispatcher = dispatcher
     if oldDispatcher:
         oldDispatcher.close()
+    if oldDispatcher is None:
+        # create a global asyncore loop thread
+        threading.Thread(target=asyncore.loop, name="AsyncoreThread").start()
+        
 
 
 def Exit():
@@ -245,7 +242,6 @@ def MessageBox(message, caption=eg.APP_NAME, style=wx.OK, parent=None):
 
 
 # now assign all the functions above to `eg`
-eg.GetConfig = GetConfig
 eg.RestartAsyncore = RestartAsyncore
 eg.Exit = Exit
 eg.Wait = Wait

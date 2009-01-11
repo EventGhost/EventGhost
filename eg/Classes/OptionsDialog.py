@@ -81,7 +81,7 @@ class OptionsDialog(eg.Dialog):
             startWithWindowsCtrl.Enable(False)
             
         hideOnCloseCtrl = page1.CheckBox(
-            config.mainFrame.hideOnClose, 
+            config.hideOnClose, 
             text.HideOnClose
         )
         checkUpdateCtrl = page1.CheckBox(config.checkUpdate, text.CheckUpdate)
@@ -180,7 +180,7 @@ class OptionsDialog(eg.Dialog):
                     except:
                         pass
                     
-            config.mainFrame.hideOnClose = hideOnCloseCtrl.GetValue()
+            config.hideOnClose = hideOnCloseCtrl.GetValue()
             config.checkUpdate = checkUpdateCtrl.GetValue()
             config.limitMemory = bool(memoryLimitCtrl.GetValue())
             config.limitMemorySize = memoryLimitSpinCtrl.GetValue()

@@ -26,6 +26,11 @@ import types
 import os
 import codecs
 
+class Config(eg.PersistentData):
+    position = (50, 50)
+    size = (700, 433)
+    splitPosition = 244
+    language = None
 
 
 class UnassignedValue:
@@ -71,23 +76,17 @@ class LanguageEditor(wx.Frame):
     
     def __init__(self, parent=None):
         self.translationDict = None
-        class DefaultConfig:
-            position = (50, 50)
-            size = (700, 433)
-            splitPosition = 244
-            language = None
 
-        self.config = config = eg.GetConfig("languageEditor", DefaultConfig)
-        if config.language is None:
-            config.language = eg.config.language
+        if Config.language is None:
+            Config.language = eg.config.language
 
         wx.Frame.__init__(
             self, 
             parent, 
             -1, 
             "Language Editor", 
-            pos = config.position, 
-            size = config.size
+            pos = Config.position, 
+            size = Config.size
         )
         self.menuBar = self.CreateMenuBar()
         self.CreateStatusBar()
@@ -149,7 +148,7 @@ class LanguageEditor(wx.Frame):
         splitter.SplitVertically(tree, rightPanel)
         splitter.SetMinimumPaneSize(120)
         splitter.SetSashGravity(0.0)
-        splitter.SetSashPosition(config.splitPosition) #width + 20)
+        splitter.SetSashPosition(Config.splitPosition) #width + 20)
         
         self.isDirty = False
         
@@ -159,7 +158,7 @@ class LanguageEditor(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.Bind(wx.EVT_MENU_OPEN, self.OnValidateMenus)
         
-        self.LoadLanguage(self.config.language)
+        self.LoadLanguage(Config.language)
         self.Show()
         
         
@@ -212,7 +211,7 @@ class LanguageEditor(wx.Frame):
             wx.CHOICEDLG_STYLE
         )
         try:
-            x = self.langKeys.index(self.config.language)
+            x = self.langKeys.index(Config.language)
         except ValueError:
             x = 0
         dialog.SetSelection(x)
@@ -233,7 +232,7 @@ class LanguageEditor(wx.Frame):
         
         
     def LoadLanguage(self, language):
-        self.config.language = language
+        Config.language = language
         self.isDirty = False
         self.SetTitle(
             "EventGhost Language Editor - %s [%s]" % 
@@ -353,9 +352,9 @@ class LanguageEditor(wx.Frame):
         if self.CheckNeedsSave():
             event.Veto()
             return
-        self.config.position = self.GetPositionTuple()
-        self.config.size = self.GetSizeTuple()
-        self.config.splitPosition = self.tree.GetSizeTuple()[0]
+        Config.position = self.GetPositionTuple()
+        Config.size = self.GetSizeTuple()
+        Config.splitPosition = self.tree.GetSizeTuple()[0]
         eg.config.Save()
         wx.GetApp().ExitMainLoop()
             
@@ -404,7 +403,7 @@ class LanguageEditor(wx.Frame):
             return "".join(res)
         
         outFile = codecs.open(
-            "Languages\\%s.py" % self.config.language, 
+            "Languages\\%s.py" % Config.language, 
             "wt", 
             "utf_8"
         )

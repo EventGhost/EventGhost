@@ -25,7 +25,7 @@ from TreeItem import TreeItem
 from TreeItem import HINT_NO_DROP, HINT_MOVE_BEFORE_OR_AFTER, HINT_MOVE_AFTER
 
 class Text(eg.TranslatableStrings):
-    
+    eventItem = "Event Item"
     eventName = "Event Name:"
     notice = (
         "Note: You can also drag and drop events from the logger to a "
@@ -47,7 +47,7 @@ class EventItem(TreeItem):
         
         
     def GetTypeName(self):
-        return "Event Item"
+        return Text.eventItem
     
     
     def GetDescription(self):

@@ -111,7 +111,7 @@ class PluginInfo(object):
     
     @classmethod
     def ImportPlugin(cls, pluginDir):
-        moduleName = "pluginImport." + pluginDir
+        moduleName = "PluginModule." + pluginDir
         if moduleName in sys.modules:
             return sys.modules[moduleName]
         modulePath = join(eg.PLUGIN_DIR, pluginDir)
@@ -124,7 +124,7 @@ class PluginInfo(object):
     
 #    @classmethod
 #    def ImportPlugin(cls, pluginDir):
-#        moduleName = "pluginImport." + pluginDir
+#        moduleName = "PluginModule." + pluginDir
 #        if moduleName in sys.modules:
 #            return sys.modules[moduleName]
 #        modulePath = join(eg.PLUGIN_DIR, pluginDir)

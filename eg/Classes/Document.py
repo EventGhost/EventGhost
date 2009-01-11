@@ -29,13 +29,12 @@ from tempfile import mkstemp
 from threading import Lock
 
 
-class TreeStateData:
+class TreeStateData(eg.PersistentData):
     guid = None
     time = None
     expandState = None # deprecated
     expanded = None
     
-eg.GetConfig("treeStateData", TreeStateData)
 
 
 class Document(object):
@@ -181,12 +180,14 @@ class Document(object):
         
         
     def AfterLoad(self):
-        tsData = eg.config.treeStateData
-        if tsData.guid == self.root.guid and tsData.time == self.root.time:
-            self.SetExpandState(tsData.expanded)
-            self.selection = self.FindItemWithPath(tsData.selection)
+        if (
+            TreeStateData.guid == self.root.guid 
+            and TreeStateData.time == self.root.time
+        ):
+            self.SetExpandState(TreeStateData.expanded)
+            self.selection = self.FindItemWithPath(TreeStateData.selection)
             self.firstVisibleItem = self.FindItemWithPath(
-                tsData.firstVisibleItem
+                TreeStateData.firstVisibleItem
             )
         
     
@@ -222,12 +223,11 @@ class Document(object):
         if self.frame is not None:
             self.frame.Destroy()
         eg.config.autoloadFilePath = self.filePath
-        stateData = eg.config.treeStateData
-        stateData.guid = self.root.guid
-        stateData.time = self.root.time
-        stateData.expanded = self.GetExpandState()
-        stateData.selection = self.selection.GetPath()
-        stateData.firstVisibleItem = self.firstVisibleItem.GetPath()
+        TreeStateData.guid = self.root.guid
+        TreeStateData.time = self.root.time
+        TreeStateData.expanded = self.GetExpandState()
+        TreeStateData.selection = self.selection.GetPath()
+        TreeStateData.firstVisibleItem = self.firstVisibleItem.GetPath()
     
     
     @eg.LogIt
@@ -303,12 +303,11 @@ class Document(object):
     @eg.LogItWithReturn
     def HideFrame(self):
         # NOTICE:
-        # If the program is started through a shortcut with "minimize" option
+        # If the program is started through a shortcut with "minimise" option
         # set, we get an iconize event while ShowFrame() is executing.
         # Therefore we have to use this CallLater workaround.
-        # TODO:
-        # Find a better way. Preferable detect the minimize option before
-        # we create the MainFrame.
+        # TODO: Find a better way. Preferable detect the minimise option 
+        #       before we create the MainFrame.
         if self.reentrantLock.acquire(False):
             if self.frame is not None:
                 if len(self.frame.openDialogs) == 0:
