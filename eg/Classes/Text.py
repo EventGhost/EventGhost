@@ -118,7 +118,7 @@ class Text:
             HideShowToolbar = "Toolbar"
             CollapseAll = "&Collapse All"
             ExpandAll = "&Expand All"
-            ExpandOnEvents = "Select Tree Item on Execution"
+            ExpandOnEvents = "Select Items on Execution"
             LogMacros = "Log Macros"
             LogActions = "Log Actions"
             LogTime = "Log Times"

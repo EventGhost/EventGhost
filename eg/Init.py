@@ -29,6 +29,7 @@ import time
 import threading
 import asyncore
 from functools import partial
+from types import ModuleType
 
 
 def InitPil():
@@ -39,6 +40,22 @@ def InitPil():
     import BmpImagePlugin #IGNORE:W0612
     import GifImagePlugin #IGNORE:W0612
     Image._initialized = 2  
+
+
+
+class LateModule(ModuleType):
+    def __init__(self, name):
+        self.__name__ = name
+        sys.modules[name] = self
+        
+    def __getattr__(self, name):
+        del sys.modules[self.__name__]
+        mod = __import__(self.__name__)
+        import traceback
+        print self.__name__ + " got loaded!", traceback.extract_stack()
+        self.__dict__.update(mod.__dict__)
+        return mod.__dict__[name]
+    
     
         
 def InitPathesAndBuiltins():
@@ -56,11 +73,11 @@ def InitPathesAndBuiltins():
     import __builtin__
     __builtin__.wx = wx
         
-    # we create a package 'pluginImport' and set its path to the plugin-dir
+    # we create a package 'PluginModule' and set its path to the plugin-dir
     # so we can simply use __import__ to load a plugin file 
-    pluginPackage = imp.new_module("pluginImport")
+    pluginPackage = imp.new_module("PluginModule")
     pluginPackage.__path__ = [eg.PLUGIN_DIR]
-    sys.modules["pluginImport"] = pluginPackage
+    sys.modules["PluginModule"] = pluginPackage
 
     # replace builtin raw_input() with a small dialog
     def RawInput(prompt=None):
@@ -80,12 +97,6 @@ def Init():
 
     
 def InitGui():
-    # create a global asyncore loop thread
-    # TODO: Only start if asyncore is requested
-    eg.dummyAsyncoreDispatcher = None
-    eg.RestartAsyncore()
-    threading.Thread(target=asyncore.loop, name="AsyncoreThread").start()
-
     #import eg.WinApi.COMServer
     
     eg.scheduler.start()
@@ -131,9 +142,10 @@ def DeInit():
     eg.scheduler.Stop()
     eg.actionThread.Stop()
     eg.eventThread.Stop()
-    eg.dummyAsyncoreDispatcher.close()
     
     eg.PrintDebugNotice("shutting down")
     eg.config.Save()
     eg.messageReceiver.Close()
+    if eg.dummyAsyncoreDispatcher:
+        eg.dummyAsyncoreDispatcher.close()
 

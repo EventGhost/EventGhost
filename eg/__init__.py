@@ -30,7 +30,7 @@ if False:
 from types import ModuleType
 
 
-class LazyNamespace(ModuleType):
+class LazyModule(ModuleType):
     
     def __init__(self):
         import sys
@@ -66,7 +66,7 @@ class LazyNamespace(ModuleType):
         eg.app.MainLoop()
 
 
-eg = LazyNamespace()
+eg = LazyModule()
 import Utils
 for name in Utils.__all__:
     setattr(eg, name, getattr(Utils, name))

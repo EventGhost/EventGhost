@@ -24,7 +24,7 @@ import eg
 import traceback
 import time
 from functools import partial
-from eg.WinApi.Dynamic import GetTickCount, SetProcessWorkingSetSize
+from eg.WinApi.Dynamic import GetTickCount, OpenProcess, PROCESS_SET_QUOTA, SetProcessWorkingSetSize, FormatError
 
 EventGhostEvent = eg.EventGhostEvent
 
@@ -36,16 +36,19 @@ class EventThread(eg.ThreadWorker):
         eg.ThreadWorker.__init__(self)
         eg.event = EventGhostEvent("")
         self.startupEvent = None
+        self.hHandle = OpenProcess(PROCESS_SET_QUOTA, 0, eg.processId)
 
 
     def Poll(self):
         if eg.config.limitMemory and eg.document.frame is None:
             try:
-                SetProcessWorkingSetSize(
-                    eg.processId,
+                if 0 == SetProcessWorkingSetSize(
+                    self.hHandle,
                     3670016,
                     eg.config.limitMemorySize * 1048576
-                )
+                ):
+                    #TODO: what to do here?
+                    eg.PrintDebugNotice(FormatError())
             except:
                 self.Poll = self.Poll2
                 

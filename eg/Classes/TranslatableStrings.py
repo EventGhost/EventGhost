@@ -23,10 +23,10 @@
 import eg
 
 
-SetClass = eg.SetClass
 
-class CustomMetaclass(type):
-    def __new__(cls, name, bases, dct):
+class TranslatableStringsMeta(type):
+    
+    def __new__(mcs, name, bases, dct):
         if len(bases):
             moduleName = dct["__module__"].split(".")[-1]
             class NewCls:
@@ -37,14 +37,15 @@ class CustomMetaclass(type):
                 class Trans:
                     pass
                 trans = Trans()
-            SetClass(trans, NewCls)
+            eg.SetClass(trans, NewCls)
             setattr(eg.text, moduleName, trans)
             return trans
-        return type.__new__(cls, name, bases, dct)
+        return type.__new__(mcs, name, bases, dct)
+
 
 
 class TranslatableStrings:
-    __metaclass__ = CustomMetaclass
+    __metaclass__ = TranslatableStringsMeta
     
     def __init__(self):
         pass

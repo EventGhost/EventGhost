@@ -192,7 +192,7 @@ class TreeItem(object):
             return False
         parent = self.parent
         while parent is not None:
-            if not self.tree.IsExpanded(parent.id):
+            if parent.id is None or not self.tree.IsExpanded(parent.id):
                 return False
             parent = parent.parent
         return True
