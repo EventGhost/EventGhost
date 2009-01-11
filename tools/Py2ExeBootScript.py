@@ -44,13 +44,11 @@ class StdErrReplacement(object):
             if self._logFilePath is None:
                 import os
                 prgName = os.path.splitext(os.path.basename(sys.executable))[0]
-                self._logFilePath = os.path.join(
-                    os.environ["APPDATA"], 
-                    prgName,
-                    "Log.txt"
-                )
-                #TODO: create the folder if it doesn't exists.
+                prgAppDataPath = os.path.join(os.environ["APPDATA"], prgName)
+                self._logFilePath = os.path.join(prgAppDataPath, "Log.txt")
             try:
+                if not os.path.exists(prgAppDataPath):
+                    os.mkdir(prgAppDataPath)
                 self._file = open(self._logFilePath, 'a')
             except Exception, details:
                 self._error = details
@@ -63,7 +61,7 @@ class StdErrReplacement(object):
                         self._logFilePath, 
                         details
                     ),
-                    "Errors occurred in EventGhost",
+                    "Error occurred in EventGhost",
                     0
                 )
             else:
