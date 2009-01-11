@@ -26,14 +26,13 @@ import wx
   
 KIND_TAGS = ["remote", "program", "external", "other"]
 
-class DefaultConfig:
+class Config(eg.PersistentData):
     position = None
     size = (640, 450)
     splitPosition = 240
     lastSelection = None
     collapsed = set()
 
-config = eg.GetConfig("AddPluginDialog", DefaultConfig)
 
 
 class Text(eg.TranslatableStrings):
@@ -112,12 +111,12 @@ class AddPluginDialog(eg.Dialog):
 
             treeId = treeCtrl.AppendItem(typeIds[info.kind], info.name, idx)
             treeCtrl.SetPyData(treeId, info)
-            if info.path == config.lastSelection:
+            if info.path == Config.lastSelection:
                 itemToSelect = treeId
                 
         
         for kind, treeId in typeIds.iteritems():
-            if kind in config.collapsed:
+            if kind in Config.collapsed:
                 treeCtrl.Collapse(treeId)
             else:
                 treeCtrl.Expand(treeId)
@@ -170,20 +169,20 @@ class AddPluginDialog(eg.Dialog):
         self.SetSizerAndFit(mainSizer)
         #minSize = mainSizer.GetMinSize()
         #self.SetMinSize(minSize)
-        self.SetSize(config.size)
-        splitterWindow.SetSashPosition(config.splitPosition)
-        if config.position:
-            self.SetPosition(config.position)
+        self.SetSize(Config.size)
+        splitterWindow.SetSashPosition(Config.splitPosition)
+        if Config.position:
+            self.SetPosition(Config.position)
         treeCtrl.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
         treeCtrl.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnItemActivated)
         treeCtrl.SelectItem(itemToSelect)
         while self.Affirmed():
             if self.CheckMultiload():
                 self.SetResult(self.resultData)
-        config.size = self.GetSizeTuple()
-        config.position = self.GetPositionTuple()
-        config.splitPosition = splitterWindow.GetSashPosition()
-        config.collapsed = set(
+        Config.size = self.GetSizeTuple()
+        Config.position = self.GetPositionTuple()
+        Config.splitPosition = splitterWindow.GetSashPosition()
+        Config.collapsed = set(
             kind for kind, treeId in typeIds.iteritems() 
                 if not treeCtrl.IsExpanded(treeId)
         )
