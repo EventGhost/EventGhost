@@ -6,10 +6,10 @@ eg.RegisterPlugin(
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
     description = (
-        'Hardware plugin for the <a href="http://www.htpc-news.de/yard/">'
+        'Hardware plugin for the <a href="http://eldo.gotdns.com/yard/">'
         'Y.A.R.D.</a> IR-transceiver from Andre Weber.'
         '\n\n<p>'
-        '<a href="http://www.htpc-news.de/yard/">'
+        '<a href="http://eldo.gotdns.com/yard/">'
         '<img src="logo.png" alt="Y.A.R.D." /></a>'
     ),
     icon = (
