@@ -47,32 +47,37 @@ class TaskBarIcon(wx.TaskBarIcon):
         self.processingEvent = None
         self.currentState = 0
         self.reentrantLock = threading.Lock()
-        self.alive = True
-
+        self.notification = eg.NotificationHandler(0)
+        self.notification.Subscribe(self.OnStateChange)
+        
         menu = self.menu = wx.Menu()
         text = eg.text.MainFrame.TaskBarMenu
         menu.Append(ID_SHOW, text.Show)
-        self.Bind(wx.EVT_MENU, self.OnCmdShowMainFrame, id=ID_SHOW)
         menu.Append(ID_HIDE, text.Hide)
-        self.Bind(wx.EVT_MENU, self.OnCmdHideMainFrame, id=ID_HIDE)
         menu.AppendSeparator()
         menu.Append(ID_EXIT, text.Exit)
+        self.Bind(wx.EVT_MENU, self.OnCmdShow, id=ID_SHOW)
+        self.Bind(wx.EVT_MENU, self.OnCmdHide, id=ID_HIDE)
         self.Bind(wx.EVT_MENU, self.OnCmdExit, id=ID_EXIT)
-    
         self.Bind(wx.EVT_TASKBAR_RIGHT_UP, self.OnTaskBarMenu)
-        self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnCmdShowMainFrame)
+        self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnCmdShow)
         
         
+    def Destroy(self):
+        self.notification.UnSubscribe(self.OnStateChange)
+        wx.TaskBarIcon.Destroy(self)
+        
+    
     def OnTaskBarMenu(self, dummyEvent):
         self.menu.Enable(ID_HIDE, eg.document.frame is not None)
         self.PopupMenu(self.menu)
         
         
-    def OnCmdShowMainFrame(self, dummyEvent=None):
+    def OnCmdShow(self, dummyEvent=None):
         eg.document.ShowFrame()
         
         
-    def OnCmdHideMainFrame(self, dummyEvent):
+    def OnCmdHide(self, dummyEvent):
         eg.document.HideFrame()
         
         
@@ -80,17 +85,13 @@ class TaskBarIcon(wx.TaskBarIcon):
         eg.app.Exit(event)
         
 
-    def SetIcons(self, state):
-        if self.alive:
-            self.SetIcon(self.stateIcons[state], self.tooltip)
-            # TODO: this is not really safe
-            if eg.document.frame:
-                eg.document.frame.statusBar.SetState(state)
-        
+    def OnStateChange(self, state):
+        self.SetIcon(self.stateIcons[state], self.tooltip)
+    
         
     def SetToolTip(self, tooltip):
         self.tooltip = tooltip
-        wx.CallAfter(self.SetIcons, self.currentState)
+        wx.CallAfter(self.SetIcon, self.stateIcons[self.currentState], tooltip)
         
     
     def SetProcessingState(self, state, event):
@@ -114,7 +115,7 @@ class TaskBarIcon(wx.TaskBarIcon):
                 self.currentEvent = event
                 self.processingEvent = event
             self.currentState = state
-            wx.CallAfter(self.SetIcons, state)
+            wx.CallAfter(self.notification.Fire, state)
         finally:
             self.reentrantLock.release()
 

@@ -44,15 +44,15 @@ class App(wx.App):
         self.SetAppName(eg.APP_NAME)
         self.SetExitOnFrameDelete(False)
         
-        # set shutdown priority for this app, so we get 
+        # set shutdown priority for this application, so we get 
         # shutdown last (hopefully)
         SetProcessShutdownParameters(0x0100, 0)
         
         # We don't use wxWindows EVT_QUERY_END_SESSION handling, because we
         # would get an event for every frame the application has and that
-        # would make it hard to distinguish between individual logoff
+        # would make it hard to distinguish between individual log-off
         # requests. So we simply disable the built-in handling by assigning
-        # a dummy function and generate our own event in the hidden
+        # a dummy function and generate our own events in the hidden
         # MessageReceiver window.
         self.Bind(wx.EVT_QUERY_END_SESSION, eg.DummyFunc)
         self.Bind(wx.EVT_END_SESSION, eg.DummyFunc)
@@ -60,12 +60,10 @@ class App(wx.App):
             WM_QUERYENDSESSION, 
             self.OnQueryEndSession
         )
-        
         eg.messageReceiver.AddHandler(
             WM_ENDSESSION, 
             self.OnEndSession
         )
-        
         return True
     
     
@@ -75,7 +73,7 @@ class App(wx.App):
         # This method gets called from MessageReceiver on a
         # WM_QUERYENDSESSION win32 message.
         if eg.document.CheckFileNeedsSave() == wx.ID_CANCEL:
-            eg.PrintDebugNotice("User canceled shutdown in OnQueryEndSession")
+            eg.PrintDebugNotice("User cancelled shutdown in OnQueryEndSession")
             return 0
         return 1
 
@@ -87,9 +85,7 @@ class App(wx.App):
         while not egEvent.isEnded:
             time.sleep(0.01)
         eg.CallWait(eg.document.Close)
-        eg.taskBarIcon.alive = False
-        eg.taskBarIcon.Destroy()
-        #self.ExitMainLoop()
+        eg.CallWait(eg.taskBarIcon.Destroy)
         eg.CallWait(self.OnExit)
         return 0
          
@@ -101,7 +97,6 @@ class App(wx.App):
         if eg.pyCrustFrame:
             eg.pyCrustFrame.Close()
         eg.document.Close()
-        eg.taskBarIcon.alive = False
         eg.taskBarIcon.Destroy()
         self.ExitMainLoop()
         
@@ -114,7 +109,7 @@ class App(wx.App):
             while not egEvent.isEnded:
                 self.Yield()
                 
-            eg.PrintDebugNotice("Calling exit funcs")    
+            eg.PrintDebugNotice("Calling exit functions")    
             for func in self.onExitFuncs:
                 eg.PrintDebugNotice(func)
                 func()
@@ -123,10 +118,6 @@ class App(wx.App):
             eg.Init.DeInit()
         
         currentThread = threading.currentThread()
-#        eg.PrintDebugNotice("Threads:")
-#        for thread in threading.enumerate():
-#            if thread is not currentThread:
-#                eg.PrintDebugNotice(" ", thread, thread.getName())
                 
         while self.Pending():
             self.Dispatch()

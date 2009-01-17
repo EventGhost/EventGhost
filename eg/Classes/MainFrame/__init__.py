@@ -22,19 +22,12 @@
 
 import eg
 import wx
+import wx.aui
 import os
 import re
 from collections import defaultdict
 
-import wx.aui
-
-from eg import (
-    EventItem, 
-    ActionItem, 
-    MacroItem, 
-    FolderItem, 
-    RootItem, 
-)
+from eg.WinApi.Dynamic import HtmlHelp, HH_DISPLAY_TOPIC, GetDesktopWindow
 from eg.WinApi.Utils import BringHwndToFront
 from eg.Icons import CreateBitmapOnTopOfIcon
 
@@ -90,15 +83,12 @@ def GetIcon(name):
 class MainFrame(wx.Frame):
     """ This is the MainFrame of EventGhost """
         
-    aboutDialog = None
-    
     @eg.AssertNotMainThread
     def __init__(self, document):
         """ Create the MainFrame """
         self.document = document
         self.aboutDialog = None
         self.optionsDialog = None
-        self.iconState = 0
         self.findDialog = None
         self.openDialogs = []
         self.lastClickedTool = None
@@ -160,6 +150,7 @@ class MainFrame(wx.Frame):
         self.Bind(wx.aui.EVT_AUI_PANE_RESTORE, self.OnPaneRestore)
         self.UpdateViewOptions()
         self.SetSize(Config.size)
+        eg.dialogCreateEvent.Subscribe(self.OnAddDialog)
         undoState = document.undoEvent.Subscribe(self.OnUndoEvent)
         self.OnUndoEvent(undoState)
         selection = document.selectionEvent.Subscribe(
@@ -254,9 +245,11 @@ class MainFrame(wx.Frame):
         eg.log.SetCtrl(None)
         Config.perspective = self.auiManager.SavePerspective()
         self.SetStatusBar(None)
+        self.statusBar.Destroy()
         self.document.isDirty.UnSubscribe(self.OnDocumentDirty)
         eg.focusChangeEvent.UnSubscribe(self.OnFocusChange)
         eg.clipboardEvent.UnSubscribe(self.OnClipboardChange)
+        eg.dialogCreateEvent.UnSubscribe(self.OnAddDialog)
         self.document.undoEvent.UnSubscribe(self.OnUndoEvent)
         self.document.selectionEvent.UnSubscribe(self.OnTreeSelectionEvent)
         self.logCtrl.Destroy()
@@ -636,7 +629,9 @@ class MainFrame(wx.Frame):
         toolBar.EnableTool(wx.ID_PASTE, canPaste)
         
         
-    def AddDialog(self, dialog):
+    def OnAddDialog(self, dialog):
+        if dialog.GetParent() != self:
+            return
         self.openDialogs.append(dialog)
         dialog.Bind(wx.EVT_WINDOW_DESTROY, self.OnDialogDestroy)
         self.SetWindowStyleFlag(~(wx.MINIMIZE_BOX|wx.CLOSE_BOX) & self.style)
@@ -730,8 +725,8 @@ class MainFrame(wx.Frame):
             and Config.expandOnEvents 
             and (self.treeCtrl and self.treeCtrl.editLabelId is None)
         )
-        ActionItem.shouldSelectOnExecute = expandOnEvents
-        MacroItem.shouldSelectOnExecute = expandOnEvents
+        eg.ActionItem.shouldSelectOnExecute = expandOnEvents
+        eg.MacroItem.shouldSelectOnExecute = expandOnEvents
         
         
     @eg.LogIt
@@ -833,7 +828,7 @@ class MainFrame(wx.Frame):
             
             
     def OnCmdAddEvent(self):
-        if not self.document.selection.DropTest(EventItem):
+        if not self.document.selection.DropTest(eg.EventItem):
             self.DisplayError(Text.Messages.cantAddEvent)
             return
         eg.Greenlet(
@@ -850,7 +845,7 @@ class MainFrame(wx.Frame):
         
     
     def OnCmdAddAction(self):
-        if not self.document.selection.DropTest(ActionItem):
+        if not self.document.selection.DropTest(eg.ActionItem):
             self.DisplayError(Text.Messages.cantAddAction)
             return
         # let the user choose an action
@@ -944,11 +939,6 @@ class MainFrame(wx.Frame):
         
     
     def OnCmdHelpContents(self):
-        from eg.WinApi.Dynamic import (
-            HtmlHelp, 
-            HH_DISPLAY_TOPIC, 
-            GetDesktopWindow
-        )
         HtmlHelp(GetDesktopWindow(), "EventGhost.chm", HH_DISPLAY_TOPIC, 0)
         
         
@@ -1068,10 +1058,10 @@ class MainFrame(wx.Frame):
     
     #@eg.AsGreenlet
     def OnCmdAddEventDialog(self):
-        dialog = eg.AddEventDialog(self)
-        dialog.ShowModal()
-        dialog.Destroy()
-        return
+#        dialog = eg.AddEventDialog(self)
+#        dialog.ShowModal()
+#        dialog.Destroy()
+#        return
         
         result = eg.AddEventDialog.GetModalResult(self)
         if result is None:
