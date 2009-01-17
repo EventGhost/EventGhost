@@ -39,230 +39,14 @@ if not hasattr(sys, "frozen"): # detect py2exe
             )       
         except WindowsError:
             print "GCC_XML most likely not installed"
+INVALID_HANDLE_VALUE = -1
+HWND_TOPMOST = -1
+HWND_NOTOPMOST = -2
 # everything after the following line is automatically created
 #-----------------------------------------------------------------------------#
-WM_QUERYENDSESSION = 17 # Variable c_int
-WM_ENDSESSION = 22 # Variable c_int
-SetProcessShutdownParameters = _kernel32.SetProcessShutdownParameters
-SetProcessShutdownParameters.restype = BOOL
-SetProcessShutdownParameters.argtypes = [DWORD, DWORD]
-WM_SIZE = 5 # Variable c_int
-CW_USEDEFAULT = -2147483648 # Variable c_int
-WS_OVERLAPPEDWINDOW = 13565952 # Variable c_long
-GetModuleHandleW = _kernel32.GetModuleHandleW
-GetModuleHandleW.restype = HMODULE
-GetModuleHandleW.argtypes = [LPCWSTR]
-GetModuleHandle = GetModuleHandleW # alias
-class tagWNDCLASSW(Structure):
-    pass
-WNDCLASSW = tagWNDCLASSW
-WNDCLASS = WNDCLASSW
-LONG_PTR = c_long
-LRESULT = LONG_PTR
-WNDPROC = WINFUNCTYPE(LRESULT, c_void_p, c_uint, c_uint, c_long)
-HCURSOR = HICON
-tagWNDCLASSW._fields_ = [
-    ('style', UINT),
-    ('lpfnWndProc', WNDPROC),
-    ('cbClsExtra', c_int),
-    ('cbWndExtra', c_int),
-    ('hInstance', HINSTANCE),
-    ('hIcon', HICON),
-    ('hCursor', HCURSOR),
-    ('hbrBackground', HBRUSH),
-    ('lpszMenuName', LPCWSTR),
-    ('lpszClassName', LPCWSTR),
-]
-RegisterClassW = _user32.RegisterClassW
-RegisterClassW.restype = ATOM
-RegisterClassW.argtypes = [POINTER(WNDCLASSW)]
-RegisterClass = RegisterClassW # alias
-LPVOID = c_void_p
-CreateWindowExW = _user32.CreateWindowExW
-CreateWindowExW.restype = HWND
-CreateWindowExW.argtypes = [DWORD, LPCWSTR, LPCWSTR, DWORD, c_int, c_int, c_int, c_int, HWND, HMENU, HINSTANCE, LPVOID]
-CreateWindowEx = CreateWindowExW # alias
-DefWindowProcW = _user32.DefWindowProcW
-DefWindowProcW.restype = LRESULT
-DefWindowProcW.argtypes = [HWND, UINT, WPARAM, LPARAM]
-DefWindowProc = DefWindowProcW # alias
-class _SECURITY_ATTRIBUTES(Structure):
-    pass
-LPSECURITY_ATTRIBUTES = POINTER(_SECURITY_ATTRIBUTES)
-CreateEventW = _kernel32.CreateEventW
-CreateEventW.restype = HANDLE
-CreateEventW.argtypes = [LPSECURITY_ATTRIBUTES, BOOL, BOOL, LPCWSTR]
-CreateEvent = CreateEventW # alias
-_SECURITY_ATTRIBUTES._fields_ = [
-    ('nLength', DWORD),
-    ('lpSecurityDescriptor', LPVOID),
-    ('bInheritHandle', BOOL),
-]
-SetEvent = _kernel32.SetEvent
-SetEvent.restype = BOOL
-SetEvent.argtypes = [HANDLE]
-WAIT_OBJECT_0 = 0 # Variable c_ulong
-WAIT_TIMEOUT = 258 # Variable c_long
-QS_ALLINPUT = 255 # Variable c_int
-MsgWaitForMultipleObjects = _user32.MsgWaitForMultipleObjects
-MsgWaitForMultipleObjects.restype = DWORD
-MsgWaitForMultipleObjects.argtypes = [DWORD, POINTER(HANDLE), BOOL, DWORD, DWORD]
-CoInitialize = _ole32.CoInitialize
-CoInitialize.restype = HRESULT
-CoInitialize.argtypes = [LPVOID]
-CoUninitialize = _ole32.CoUninitialize
-CoUninitialize.restype = None
-CoUninitialize.argtypes = []
-LPMSG = POINTER(tagMSG)
-PeekMessageW = _user32.PeekMessageW
-PeekMessageW.restype = BOOL
-PeekMessageW.argtypes = [LPMSG, HWND, UINT, UINT, UINT]
-PeekMessage = PeekMessageW # alias
-TranslateMessage = _user32.TranslateMessage
-TranslateMessage.restype = BOOL
-TranslateMessage.argtypes = [POINTER(MSG)]
-DispatchMessageW = _user32.DispatchMessageW
-DispatchMessageW.restype = LRESULT
-DispatchMessageW.argtypes = [POINTER(MSG)]
-DispatchMessage = DispatchMessageW # alias
-class tagINPUT(Structure):
-    pass
-LPINPUT = POINTER(tagINPUT)
-SendInput = _user32.SendInput
-SendInput.restype = UINT
-SendInput.argtypes = [UINT, LPINPUT, c_int]
-class N8tagINPUT4DOLLAR_70E(Union):
-    pass
-class tagMOUSEINPUT(Structure):
-    pass
-ULONG_PTR = c_ulong
-tagMOUSEINPUT._fields_ = [
-    ('dx', LONG),
-    ('dy', LONG),
-    ('mouseData', DWORD),
-    ('dwFlags', DWORD),
-    ('time', DWORD),
-    ('dwExtraInfo', ULONG_PTR),
-]
-MOUSEINPUT = tagMOUSEINPUT
-class tagKEYBDINPUT(Structure):
-    pass
-tagKEYBDINPUT._fields_ = [
-    ('wVk', WORD),
-    ('wScan', WORD),
-    ('dwFlags', DWORD),
-    ('time', DWORD),
-    ('dwExtraInfo', ULONG_PTR),
-]
-KEYBDINPUT = tagKEYBDINPUT
-class tagHARDWAREINPUT(Structure):
-    pass
-tagHARDWAREINPUT._fields_ = [
-    ('uMsg', DWORD),
-    ('wParamL', WORD),
-    ('wParamH', WORD),
-]
-HARDWAREINPUT = tagHARDWAREINPUT
-N8tagINPUT4DOLLAR_70E._fields_ = [
-    ('mi', MOUSEINPUT),
-    ('ki', KEYBDINPUT),
-    ('hi', HARDWAREINPUT),
-]
-tagINPUT._anonymous_ = ['_0']
-tagINPUT._fields_ = [
-    ('type', DWORD),
-    ('_0', N8tagINPUT4DOLLAR_70E),
-]
-OpenProcess = _kernel32.OpenProcess
-OpenProcess.restype = HANDLE
-OpenProcess.argtypes = [DWORD, BOOL, DWORD]
-CloseHandle = _kernel32.CloseHandle
-CloseHandle.restype = BOOL
-CloseHandle.argtypes = [HANDLE]
-WaitForInputIdle = _user32.WaitForInputIdle
-WaitForInputIdle.restype = DWORD
-WaitForInputIdle.argtypes = [HANDLE, DWORD]
-PBYTE = POINTER(BYTE)
-GetKeyboardState = _user32.GetKeyboardState
-GetKeyboardState.restype = BOOL
-GetKeyboardState.argtypes = [PBYTE]
-UINT_PTR = c_uint
-FARPROC = WINFUNCTYPE(c_int)
-TIMERPROC = FARPROC
-SetTimer = _user32.SetTimer
-SetTimer.restype = UINT_PTR
-SetTimer.argtypes = [HWND, UINT_PTR, UINT, TIMERPROC]
-GetCurrentThreadId = _kernel32.GetCurrentThreadId
-GetCurrentThreadId.restype = DWORD
-GetCurrentThreadId.argtypes = []
-LPDWORD = POINTER(DWORD)
-GetWindowThreadProcessId = _user32.GetWindowThreadProcessId
-GetWindowThreadProcessId.restype = DWORD
-GetWindowThreadProcessId.argtypes = [HWND, LPDWORD]
-LPBYTE = POINTER(BYTE)
-SetKeyboardState = _user32.SetKeyboardState
-SetKeyboardState.restype = BOOL
-SetKeyboardState.argtypes = [LPBYTE]
-INPUT = tagINPUT
-INPUT_KEYBOARD = 1 # Variable c_int
-KEYEVENTF_KEYUP = 2 # Variable c_int
-class tagGUITHREADINFO(Structure):
-    pass
-PGUITHREADINFO = POINTER(tagGUITHREADINFO)
-GetGUIThreadInfo = _user32.GetGUIThreadInfo
-GetGUIThreadInfo.restype = BOOL
-GetGUIThreadInfo.argtypes = [DWORD, PGUITHREADINFO]
-tagGUITHREADINFO._fields_ = [
-    ('cbSize', DWORD),
-    ('flags', DWORD),
-    ('hwndActive', HWND),
-    ('hwndFocus', HWND),
-    ('hwndCapture', HWND),
-    ('hwndMenuOwner', HWND),
-    ('hwndMoveSize', HWND),
-    ('hwndCaret', HWND),
-    ('rcCaret', RECT),
-]
-GUITHREADINFO = tagGUITHREADINFO
-PROCESS_QUERY_INFORMATION = 1024 # Variable c_int
-VK_SHIFT = 16 # Variable c_int
-VK_LSHIFT = 160 # Variable c_int
-VK_CONTROL = 17 # Variable c_int
-VK_LCONTROL = 162 # Variable c_int
-VK_MENU = 18 # Variable c_int
-VK_LMENU = 164 # Variable c_int
-VK_RMENU = 165 # Variable c_int
-WM_TIMER = 275 # Variable c_int
-WM_SYSKEYDOWN = 260 # Variable c_int
-WM_KEYDOWN = 256 # Variable c_int
-WM_SYSKEYUP = 261 # Variable c_int
-WM_KEYUP = 257 # Variable c_int
 AttachThreadInput = _user32.AttachThreadInput
 AttachThreadInput.restype = BOOL
 AttachThreadInput.argtypes = [DWORD, DWORD, BOOL]
-SHORT = c_short
-VkKeyScanW = _user32.VkKeyScanW
-VkKeyScanW.restype = SHORT
-VkKeyScanW.argtypes = [WCHAR]
-TCHAR = WCHAR
-MapVirtualKeyW = _user32.MapVirtualKeyW
-MapVirtualKeyW.restype = UINT
-MapVirtualKeyW.argtypes = [UINT, UINT]
-MapVirtualKey = MapVirtualKeyW # alias
-GetMessageW = _user32.GetMessageW
-GetMessageW.restype = BOOL
-GetMessageW.argtypes = [LPMSG, HWND, UINT, UINT]
-GetMessage = GetMessageW # alias
-PostMessageW = _user32.PostMessageW
-PostMessageW.restype = BOOL
-PostMessageW.argtypes = [HWND, UINT, WPARAM, LPARAM]
-PostMessage = PostMessageW # alias
-GetFocus = _user32.GetFocus
-GetFocus.restype = HWND
-GetFocus.argtypes = []
-GetForegroundWindow = _user32.GetForegroundWindow
-GetForegroundWindow.restype = HWND
-GetForegroundWindow.argtypes = []
 PtVisible = _gdi32.PtVisible
 PtVisible.restype = BOOL
 PtVisible.argtypes = [HDC, c_int, c_int]
@@ -302,9 +86,19 @@ BringWindowToTop.argtypes = [HWND]
 UpdateWindow = _user32.UpdateWindow
 UpdateWindow.restype = BOOL
 UpdateWindow.argtypes = [HWND]
+GetForegroundWindow = _user32.GetForegroundWindow
+GetForegroundWindow.restype = HWND
+GetForegroundWindow.argtypes = []
 InvalidateRect = _user32.InvalidateRect
 InvalidateRect.restype = BOOL
 InvalidateRect.argtypes = [HWND, POINTER(RECT), BOOL]
+GetCurrentThreadId = _kernel32.GetCurrentThreadId
+GetCurrentThreadId.restype = DWORD
+GetCurrentThreadId.argtypes = []
+LPDWORD = POINTER(DWORD)
+GetWindowThreadProcessId = _user32.GetWindowThreadProcessId
+GetWindowThreadProcessId.restype = DWORD
+GetWindowThreadProcessId.argtypes = [HWND, LPDWORD]
 SendNotifyMessageW = _user32.SendNotifyMessageW
 SendNotifyMessageW.restype = BOOL
 SendNotifyMessageW.argtypes = [HWND, UINT, WPARAM, LPARAM]
@@ -313,11 +107,22 @@ LPRECT = POINTER(tagRECT)
 GetWindowRect = _user32.GetWindowRect
 GetWindowRect.restype = BOOL
 GetWindowRect.argtypes = [HWND, LPRECT]
+LPPOINT = POINTER(tagPOINT)
+GetCursorPos = _user32.GetCursorPos
+GetCursorPos.restype = BOOL
+GetCursorPos.argtypes = [LPPOINT]
+EnumProcesses = _Psapi.EnumProcesses
+EnumProcesses.restype = BOOL
+EnumProcesses.argtypes = [POINTER(DWORD), DWORD, LPDWORD]
 LPCRECT = POINTER(RECT)
-MONITORENUMPROC = WINFUNCTYPE(BOOL, c_void_p, c_void_p, POINTER(tagRECT), c_long)
+MONITORENUMPROC = WINFUNCTYPE(BOOL, HMONITOR, HDC, LPRECT, LPARAM)
 EnumDisplayMonitors = _user32.EnumDisplayMonitors
 EnumDisplayMonitors.restype = BOOL
 EnumDisplayMonitors.argtypes = [HDC, LPCRECT, MONITORENUMPROC, LPARAM]
+FindWindowW = _user32.FindWindowW
+FindWindowW.restype = HWND
+FindWindowW.argtypes = [LPCWSTR, LPCWSTR]
+FindWindow = FindWindowW # alias
 IsWindowVisible = _user32.IsWindowVisible
 IsWindowVisible.restype = BOOL
 IsWindowVisible.argtypes = [HWND]
@@ -331,6 +136,7 @@ GetClassLongW = _user32.GetClassLongW
 GetClassLongW.restype = DWORD
 GetClassLongW.argtypes = [HWND, c_int]
 GetClassLong = GetClassLongW # alias
+FARPROC = WINFUNCTYPE(c_int)
 WNDENUMPROC = FARPROC
 EnumChildWindows = _user32.EnumChildWindows
 EnumChildWindows.restype = BOOL
@@ -350,55 +156,321 @@ CreatePen.argtypes = [c_int, c_int, COLORREF]
 GetSystemMetrics = _user32.GetSystemMetrics
 GetSystemMetrics.restype = c_int
 GetSystemMetrics.argtypes = [c_int]
+LONG_PTR = c_long
+LRESULT = LONG_PTR
+ULONG_PTR = c_ulong
 PDWORD_PTR = POINTER(ULONG_PTR)
 SendMessageTimeoutW = _user32.SendMessageTimeoutW
 SendMessageTimeoutW.restype = LRESULT
 SendMessageTimeoutW.argtypes = [HWND, UINT, WPARAM, LPARAM, UINT, UINT, PDWORD_PTR]
 SendMessageTimeout = SendMessageTimeoutW # alias
-LPPOINT = POINTER(tagPOINT)
 ScreenToClient = _user32.ScreenToClient
 ScreenToClient.restype = BOOL
 ScreenToClient.argtypes = [HWND, LPPOINT]
 WindowFromPoint = _user32.WindowFromPoint
 WindowFromPoint.restype = HWND
 WindowFromPoint.argtypes = [POINT]
-WM_GETICON = 127 # Variable c_int
-ICON_SMALL = 0 # Variable c_int
-ICON_BIG = 1 # Variable c_int
-SMTO_ABORTIFHUNG = 2 # Variable c_int
-GCL_HICONSM = -34 # Variable c_int
-GCL_HICON = -14 # Variable c_int
-R2_NOT = 6 # Variable c_int
-PS_INSIDEFRAME = 6 # Variable c_int
-SM_CXBORDER = 5 # Variable c_int
-NULL_BRUSH = 5 # Variable c_int
-GA_ROOT = 2 # Variable c_int
-SW_RESTORE = 9 # Variable c_int
-WM_SYSCOMMAND = 274 # Variable c_int
-SC_CLOSE = 61536 # Variable c_int
-SW_SHOWNA = 8 # Variable c_int
-GetTickCount = _kernel32.GetTickCount
-GetTickCount.restype = DWORD
-GetTickCount.argtypes = []
+WM_GETICON = 127 # Variable c_int '127'
+ICON_SMALL = 0 # Variable c_int '0'
+ICON_BIG = 1 # Variable c_int '1'
+SMTO_ABORTIFHUNG = 2 # Variable c_int '2'
+GCL_HICONSM = -34 # Variable c_int '-0x000000022'
+GCL_HICON = -14 # Variable c_int '-0x00000000e'
+R2_NOT = 6 # Variable c_int '6'
+PS_INSIDEFRAME = 6 # Variable c_int '6'
+SM_CXBORDER = 5 # Variable c_int '5'
+NULL_BRUSH = 5 # Variable c_int '5'
+GA_ROOT = 2 # Variable c_int '2'
+SW_RESTORE = 9 # Variable c_int '9'
+WM_SYSCOMMAND = 274 # Variable c_int '274'
+SC_CLOSE = 61536 # Variable c_int '61536'
+SW_SHOWNA = 8 # Variable c_int '8'
+SMTO_BLOCK = 1 # Variable c_int '1'
+WM_COMMAND = 273 # Variable c_int '273'
+WM_USER = 1024 # Variable c_int '1024'
+OpenClipboard = _user32.OpenClipboard
+OpenClipboard.restype = BOOL
+OpenClipboard.argtypes = [HWND]
+EmptyClipboard = _user32.EmptyClipboard
+EmptyClipboard.restype = BOOL
+EmptyClipboard.argtypes = []
+CloseClipboard = _user32.CloseClipboard
+CloseClipboard.restype = BOOL
+CloseClipboard.argtypes = []
+GetClipboardData = _user32.GetClipboardData
+GetClipboardData.restype = HANDLE
+GetClipboardData.argtypes = [UINT]
+SetClipboardData = _user32.SetClipboardData
+SetClipboardData.restype = HANDLE
+SetClipboardData.argtypes = [UINT, HANDLE]
+LPVOID = c_void_p
+GlobalLock = _kernel32.GlobalLock
+GlobalLock.restype = LPVOID
+GlobalLock.argtypes = [HGLOBAL]
+GlobalUnlock = _kernel32.GlobalUnlock
+GlobalUnlock.restype = BOOL
+GlobalUnlock.argtypes = [HGLOBAL]
 SIZE_T = ULONG_PTR
-SetProcessWorkingSetSize = _kernel32.SetProcessWorkingSetSize
-SetProcessWorkingSetSize.restype = BOOL
-SetProcessWorkingSetSize.argtypes = [HANDLE, SIZE_T, SIZE_T]
-GetCurrentProcess = _kernel32.GetCurrentProcess
-GetCurrentProcess.restype = HANDLE
-GetCurrentProcess.argtypes = []
-GetDriveTypeW = _kernel32.GetDriveTypeW
-GetDriveTypeW.restype = UINT
-GetDriveTypeW.argtypes = [LPCWSTR]
-GetDriveType = GetDriveTypeW # alias
+GlobalAlloc = _kernel32.GlobalAlloc
+GlobalAlloc.restype = HGLOBAL
+GlobalAlloc.argtypes = [UINT, SIZE_T]
+CF_TEXT = 1 # Variable c_int '1'
+CF_UNICODETEXT = 13 # Variable c_int '13'
+GHND = 66 # Variable c_int '66'
+GetCurrentProcessId = _kernel32.GetCurrentProcessId
+GetCurrentProcessId.restype = DWORD
+GetCurrentProcessId.argtypes = []
+WM_SIZE = 5 # Variable c_int '5'
+CW_USEDEFAULT = -2147483648 # Variable c_int '-0x080000000'
+WS_OVERLAPPEDWINDOW = 13565952 # Variable c_long '13565952l'
+GetModuleHandleW = _kernel32.GetModuleHandleW
+GetModuleHandleW.restype = HMODULE
+GetModuleHandleW.argtypes = [LPCWSTR]
+GetModuleHandle = GetModuleHandleW # alias
+class tagWNDCLASSW(Structure):
+    pass
+WNDCLASSW = tagWNDCLASSW
+WNDCLASS = WNDCLASSW
+WNDPROC = WINFUNCTYPE(LRESULT, HWND, UINT, WPARAM, LPARAM)
+HCURSOR = HICON
+tagWNDCLASSW._fields_ = [
+    ('style', UINT),
+    ('lpfnWndProc', WNDPROC),
+    ('cbClsExtra', c_int),
+    ('cbWndExtra', c_int),
+    ('hInstance', HINSTANCE),
+    ('hIcon', HICON),
+    ('hCursor', HCURSOR),
+    ('hbrBackground', HBRUSH),
+    ('lpszMenuName', LPCWSTR),
+    ('lpszClassName', LPCWSTR),
+]
+RegisterClassW = _user32.RegisterClassW
+RegisterClassW.restype = ATOM
+RegisterClassW.argtypes = [POINTER(WNDCLASSW)]
+RegisterClass = RegisterClassW # alias
+CreateWindowExW = _user32.CreateWindowExW
+CreateWindowExW.restype = HWND
+CreateWindowExW.argtypes = [DWORD, LPCWSTR, LPCWSTR, DWORD, c_int, c_int, c_int, c_int, HWND, HMENU, HINSTANCE, LPVOID]
+CreateWindowEx = CreateWindowExW # alias
+DefWindowProcW = _user32.DefWindowProcW
+DefWindowProcW.restype = LRESULT
+DefWindowProcW.argtypes = [HWND, UINT, WPARAM, LPARAM]
+DefWindowProc = DefWindowProcW # alias
+SetClipboardViewer = _user32.SetClipboardViewer
+SetClipboardViewer.restype = HWND
+SetClipboardViewer.argtypes = [HWND]
+ChangeClipboardChain = _user32.ChangeClipboardChain
+ChangeClipboardChain.restype = BOOL
+ChangeClipboardChain.argtypes = [HWND, HWND]
+WM_CHANGECBCHAIN = 781 # Variable c_int '781'
+WM_DRAWCLIPBOARD = 776 # Variable c_int '776'
 SendMessageW = _user32.SendMessageW
 SendMessageW.restype = LRESULT
 SendMessageW.argtypes = [HWND, UINT, WPARAM, LPARAM]
 SendMessage = SendMessageW # alias
+class _SECURITY_ATTRIBUTES(Structure):
+    pass
+LPSECURITY_ATTRIBUTES = POINTER(_SECURITY_ATTRIBUTES)
+CreateEventW = _kernel32.CreateEventW
+CreateEventW.restype = HANDLE
+CreateEventW.argtypes = [LPSECURITY_ATTRIBUTES, BOOL, BOOL, LPCWSTR]
+CreateEvent = CreateEventW # alias
+_SECURITY_ATTRIBUTES._fields_ = [
+    ('nLength', DWORD),
+    ('lpSecurityDescriptor', LPVOID),
+    ('bInheritHandle', BOOL),
+]
+SetEvent = _kernel32.SetEvent
+SetEvent.restype = BOOL
+SetEvent.argtypes = [HANDLE]
+WAIT_OBJECT_0 = 0L # Variable c_ulong '0ul'
+WAIT_TIMEOUT = 258 # Variable c_long '258l'
+QS_ALLINPUT = 255 # Variable c_int '255'
+MsgWaitForMultipleObjects = _user32.MsgWaitForMultipleObjects
+MsgWaitForMultipleObjects.restype = DWORD
+MsgWaitForMultipleObjects.argtypes = [DWORD, POINTER(HANDLE), BOOL, DWORD, DWORD]
+CoInitialize = _ole32.CoInitialize
+CoInitialize.restype = HRESULT
+CoInitialize.argtypes = [LPVOID]
+CoUninitialize = _ole32.CoUninitialize
+CoUninitialize.restype = None
+CoUninitialize.argtypes = []
+LPMSG = POINTER(tagMSG)
+PeekMessageW = _user32.PeekMessageW
+PeekMessageW.restype = BOOL
+PeekMessageW.argtypes = [LPMSG, HWND, UINT, UINT, UINT]
+PeekMessage = PeekMessageW # alias
+DispatchMessageW = _user32.DispatchMessageW
+DispatchMessageW.restype = LRESULT
+DispatchMessageW.argtypes = [POINTER(MSG)]
+DispatchMessage = DispatchMessageW # alias
+PM_REMOVE = 1 # Variable c_int '1'
+WM_QUIT = 18 # Variable c_int '18'
+WM_QUERYENDSESSION = 17 # Variable c_int '17'
+WM_ENDSESSION = 22 # Variable c_int '22'
+SetProcessShutdownParameters = _kernel32.SetProcessShutdownParameters
+SetProcessShutdownParameters.restype = BOOL
+SetProcessShutdownParameters.argtypes = [DWORD, DWORD]
+ExitProcess = _kernel32.ExitProcess
+ExitProcess.restype = None
+ExitProcess.argtypes = [UINT]
+GetSysColor = _user32.GetSysColor
+GetSysColor.restype = DWORD
+GetSysColor.argtypes = [c_int]
+COLOR_ACTIVECAPTION = 2 # Variable c_int '2'
+COLOR_GRADIENTACTIVECAPTION = 27 # Variable c_int '27'
+COLOR_CAPTIONTEXT = 9 # Variable c_int '9'
+COLOR_INACTIVECAPTION = 3 # Variable c_int '3'
+COLOR_GRADIENTINACTIVECAPTION = 28 # Variable c_int '28'
+COLOR_INACTIVECAPTIONTEXT = 19 # Variable c_int '19'
+GetTickCount = _kernel32.GetTickCount
+GetTickCount.restype = DWORD
+GetTickCount.argtypes = []
+OpenProcess = _kernel32.OpenProcess
+OpenProcess.restype = HANDLE
+OpenProcess.argtypes = [DWORD, BOOL, DWORD]
+PROCESS_SET_QUOTA = 256 # Variable c_int '256'
+SetProcessWorkingSetSize = _kernel32.SetProcessWorkingSetSize
+SetProcessWorkingSetSize.restype = BOOL
+SetProcessWorkingSetSize.argtypes = [HANDLE, SIZE_T, SIZE_T]
+class tagINPUT(Structure):
+    pass
+LPINPUT = POINTER(tagINPUT)
+SendInput = _user32.SendInput
+SendInput.restype = UINT
+SendInput.argtypes = [UINT, LPINPUT, c_int]
+class N8tagINPUT5DOLLAR_102E(Union):
+    pass
+class tagMOUSEINPUT(Structure):
+    pass
+tagMOUSEINPUT._fields_ = [
+    ('dx', LONG),
+    ('dy', LONG),
+    ('mouseData', DWORD),
+    ('dwFlags', DWORD),
+    ('time', DWORD),
+    ('dwExtraInfo', ULONG_PTR),
+]
+MOUSEINPUT = tagMOUSEINPUT
+class tagKEYBDINPUT(Structure):
+    pass
+tagKEYBDINPUT._fields_ = [
+    ('wVk', WORD),
+    ('wScan', WORD),
+    ('dwFlags', DWORD),
+    ('time', DWORD),
+    ('dwExtraInfo', ULONG_PTR),
+]
+KEYBDINPUT = tagKEYBDINPUT
+class tagHARDWAREINPUT(Structure):
+    pass
+tagHARDWAREINPUT._fields_ = [
+    ('uMsg', DWORD),
+    ('wParamL', WORD),
+    ('wParamH', WORD),
+]
+HARDWAREINPUT = tagHARDWAREINPUT
+N8tagINPUT5DOLLAR_102E._fields_ = [
+    ('mi', MOUSEINPUT),
+    ('ki', KEYBDINPUT),
+    ('hi', HARDWAREINPUT),
+]
+tagINPUT._anonymous_ = ['_0']
+tagINPUT._fields_ = [
+    ('type', DWORD),
+    ('_0', N8tagINPUT5DOLLAR_102E),
+]
+CloseHandle = _kernel32.CloseHandle
+CloseHandle.restype = BOOL
+CloseHandle.argtypes = [HANDLE]
+WaitForInputIdle = _user32.WaitForInputIdle
+WaitForInputIdle.restype = DWORD
+WaitForInputIdle.argtypes = [HANDLE, DWORD]
+PBYTE = POINTER(BYTE)
+GetKeyboardState = _user32.GetKeyboardState
+GetKeyboardState.restype = BOOL
+GetKeyboardState.argtypes = [PBYTE]
+UINT_PTR = c_uint
+TIMERPROC = FARPROC
+SetTimer = _user32.SetTimer
+SetTimer.restype = UINT_PTR
+SetTimer.argtypes = [HWND, UINT_PTR, UINT, TIMERPROC]
+LPBYTE = POINTER(BYTE)
+SetKeyboardState = _user32.SetKeyboardState
+SetKeyboardState.restype = BOOL
+SetKeyboardState.argtypes = [LPBYTE]
+INPUT = tagINPUT
+INPUT_KEYBOARD = 1 # Variable c_int '1'
+KEYEVENTF_KEYUP = 2 # Variable c_int '2'
+class tagGUITHREADINFO(Structure):
+    pass
+PGUITHREADINFO = POINTER(tagGUITHREADINFO)
+GetGUIThreadInfo = _user32.GetGUIThreadInfo
+GetGUIThreadInfo.restype = BOOL
+GetGUIThreadInfo.argtypes = [DWORD, PGUITHREADINFO]
+tagGUITHREADINFO._fields_ = [
+    ('cbSize', DWORD),
+    ('flags', DWORD),
+    ('hwndActive', HWND),
+    ('hwndFocus', HWND),
+    ('hwndCapture', HWND),
+    ('hwndMenuOwner', HWND),
+    ('hwndMoveSize', HWND),
+    ('hwndCaret', HWND),
+    ('rcCaret', RECT),
+]
+GUITHREADINFO = tagGUITHREADINFO
+PROCESS_QUERY_INFORMATION = 1024 # Variable c_int '1024'
+VK_SHIFT = 16 # Variable c_int '16'
+VK_LSHIFT = 160 # Variable c_int '160'
+VK_CONTROL = 17 # Variable c_int '17'
+VK_LCONTROL = 162 # Variable c_int '162'
+VK_MENU = 18 # Variable c_int '18'
+WM_TIMER = 275 # Variable c_int '275'
+WM_SYSKEYDOWN = 260 # Variable c_int '260'
+WM_KEYDOWN = 256 # Variable c_int '256'
+WM_SYSKEYUP = 261 # Variable c_int '261'
+WM_KEYUP = 257 # Variable c_int '257'
+SHORT = c_short
+VkKeyScanW = _user32.VkKeyScanW
+VkKeyScanW.restype = SHORT
+VkKeyScanW.argtypes = [WCHAR]
+MapVirtualKeyW = _user32.MapVirtualKeyW
+MapVirtualKeyW.restype = UINT
+MapVirtualKeyW.argtypes = [UINT, UINT]
+MapVirtualKey = MapVirtualKeyW # alias
+GetMessageW = _user32.GetMessageW
+GetMessageW.restype = BOOL
+GetMessageW.argtypes = [LPMSG, HWND, UINT, UINT]
+GetMessage = GetMessageW # alias
+PostMessageW = _user32.PostMessageW
+PostMessageW.restype = BOOL
+PostMessageW.argtypes = [HWND, UINT, WPARAM, LPARAM]
+PostMessage = PostMessageW # alias
+GetFocus = _user32.GetFocus
+GetFocus.restype = HWND
+GetFocus.argtypes = []
+DWORD_PTR = ULONG_PTR
+HtmlHelpW = _htmlhelp.HtmlHelpW
+HtmlHelpW.restype = HWND
+HtmlHelpW.argtypes = [HWND, LPCWSTR, UINT, DWORD_PTR]
+HtmlHelp = HtmlHelpW # alias
+HH_DISPLAY_TOPIC = 0 # Variable c_int '0'
+GetDesktopWindow = _user32.GetDesktopWindow
+GetDesktopWindow.restype = HWND
+GetDesktopWindow.argtypes = []
+GetDriveTypeW = _kernel32.GetDriveTypeW
+GetDriveTypeW.restype = UINT
+GetDriveTypeW.argtypes = [LPCWSTR]
+GetDriveType = GetDriveTypeW # alias
 EXECUTION_STATE = DWORD
 SetThreadExecutionState = _kernel32.SetThreadExecutionState
 SetThreadExecutionState.restype = EXECUTION_STATE
 SetThreadExecutionState.argtypes = [EXECUTION_STATE]
+GetCurrentProcess = _kernel32.GetCurrentProcess
+GetCurrentProcess.restype = HANDLE
+GetCurrentProcess.argtypes = []
 InitiateSystemShutdownW = _Advapi32.InitiateSystemShutdownW
 InitiateSystemShutdownW.restype = BOOL
 InitiateSystemShutdownW.argtypes = [LPWSTR, LPWSTR, DWORD, BOOL, BOOL]
@@ -413,25 +485,25 @@ LPOVERLAPPED = POINTER(_OVERLAPPED)
 DeviceIoControl = _kernel32.DeviceIoControl
 DeviceIoControl.restype = BOOL
 DeviceIoControl.argtypes = [HANDLE, DWORD, LPVOID, DWORD, LPVOID, DWORD, LPDWORD, LPOVERLAPPED]
-class N11_OVERLAPPED4DOLLAR_48E(Union):
+class N11_OVERLAPPED4DOLLAR_81E(Union):
     pass
-class N11_OVERLAPPED4DOLLAR_484DOLLAR_49E(Structure):
+class N11_OVERLAPPED4DOLLAR_814DOLLAR_82E(Structure):
     pass
-N11_OVERLAPPED4DOLLAR_484DOLLAR_49E._fields_ = [
+N11_OVERLAPPED4DOLLAR_814DOLLAR_82E._fields_ = [
     ('Offset', DWORD),
     ('OffsetHigh', DWORD),
 ]
 PVOID = c_void_p
-N11_OVERLAPPED4DOLLAR_48E._anonymous_ = ['_0']
-N11_OVERLAPPED4DOLLAR_48E._fields_ = [
-    ('_0', N11_OVERLAPPED4DOLLAR_484DOLLAR_49E),
+N11_OVERLAPPED4DOLLAR_81E._anonymous_ = ['_0']
+N11_OVERLAPPED4DOLLAR_81E._fields_ = [
+    ('_0', N11_OVERLAPPED4DOLLAR_814DOLLAR_82E),
     ('Pointer', PVOID),
 ]
 _OVERLAPPED._anonymous_ = ['_0']
 _OVERLAPPED._fields_ = [
     ('Internal', ULONG_PTR),
     ('InternalHigh', ULONG_PTR),
-    ('_0', N11_OVERLAPPED4DOLLAR_48E),
+    ('_0', N11_OVERLAPPED4DOLLAR_81E),
     ('hEvent', HANDLE),
 ]
 SystemParametersInfoW = _user32.SystemParametersInfoW
@@ -475,23 +547,25 @@ _TOKEN_PRIVILEGES._fields_ = [
     ('PrivilegeCount', DWORD),
     ('Privileges', LUID_AND_ATTRIBUTES * 1),
 ]
+GetClipboardOwner = _user32.GetClipboardOwner
+GetClipboardOwner.restype = HWND
+GetClipboardOwner.argtypes = []
 TOKEN_PRIVILEGES = _TOKEN_PRIVILEGES
-GENERIC_READ = 2147483648L # Variable c_ulong
-FILE_SHARE_READ = 1 # Variable c_int
-OPEN_EXISTING = 3 # Variable c_int
-SC_SCREENSAVE = 61760 # Variable c_int
-SC_MONITORPOWER = 61808 # Variable c_int
-TOKEN_ADJUST_PRIVILEGES = 32 # Variable c_int
-TOKEN_QUERY = 8 # Variable c_int
+GENERIC_READ = 2147483648L # Variable c_ulong '-2147483648ul'
+FILE_SHARE_READ = 1 # Variable c_int '1'
+OPEN_EXISTING = 3 # Variable c_int '3'
+SC_SCREENSAVE = 61760 # Variable c_int '61760'
+SC_MONITORPOWER = 61808 # Variable c_int '61808'
+TOKEN_ADJUST_PRIVILEGES = 32 # Variable c_int '32'
+TOKEN_QUERY = 8 # Variable c_int '8'
 WSTRING = c_wchar_p
-SE_SHUTDOWN_NAME = u'SeShutdownPrivilege' # Variable WSTRING
-SE_PRIVILEGE_ENABLED = 2 # Variable c_long
-EWX_LOGOFF = 0 # Variable c_int
-SPI_SETDESKWALLPAPER = 20 # Variable c_int
-SPIF_SENDWININICHANGE = 2 # Variable c_int
+SE_SHUTDOWN_NAME = u'SeShutdownPrivilege' # Variable WSTRING '(const wchar_t*)"S\\000e\\000S\\000h\\000u\\000t\\000d\\000o\\000w\\000n\\000P\\000r\\000i\\000v\\000i\\000l\\000e\\000g\\000e\\000\\000"'
+SE_PRIVILEGE_ENABLED = 2 # Variable c_long '2l'
+EWX_LOGOFF = 0 # Variable c_int '0'
+SPI_SETDESKWALLPAPER = 20 # Variable c_int '20'
+SPIF_SENDWININICHANGE = 2 # Variable c_int '2'
 SPIF_SENDCHANGE = SPIF_SENDWININICHANGE # alias
-SPIF_UPDATEINIFILE = 1 # Variable c_int
-INVALID_HANDLE_VALUE = 4294967295L # Variable c_void_p
+SPIF_UPDATEINIFILE = 1 # Variable c_int '1'
 HMIXER = HANDLE
 class tagMIXERCAPSW(Structure):
     pass
@@ -511,33 +585,33 @@ class tagMIXERCONTROLW(Structure):
     pass
 MIXERCONTROLW = tagMIXERCONTROLW
 MIXERCONTROL = MIXERCONTROLW
-class N16tagMIXERCONTROLW5DOLLAR_132E(Union):
+class N16tagMIXERCONTROLW5DOLLAR_158E(Union):
     pass
-class N16tagMIXERCONTROLW5DOLLAR_1325DOLLAR_133E(Structure):
+class N16tagMIXERCONTROLW5DOLLAR_1585DOLLAR_159E(Structure):
     pass
-N16tagMIXERCONTROLW5DOLLAR_1325DOLLAR_133E._pack_ = 1
-N16tagMIXERCONTROLW5DOLLAR_1325DOLLAR_133E._fields_ = [
+N16tagMIXERCONTROLW5DOLLAR_1585DOLLAR_159E._pack_ = 1
+N16tagMIXERCONTROLW5DOLLAR_1585DOLLAR_159E._fields_ = [
     ('lMinimum', LONG),
     ('lMaximum', LONG),
 ]
-class N16tagMIXERCONTROLW5DOLLAR_1325DOLLAR_134E(Structure):
+class N16tagMIXERCONTROLW5DOLLAR_1585DOLLAR_160E(Structure):
     pass
-N16tagMIXERCONTROLW5DOLLAR_1325DOLLAR_134E._pack_ = 1
-N16tagMIXERCONTROLW5DOLLAR_1325DOLLAR_134E._fields_ = [
+N16tagMIXERCONTROLW5DOLLAR_1585DOLLAR_160E._pack_ = 1
+N16tagMIXERCONTROLW5DOLLAR_1585DOLLAR_160E._fields_ = [
     ('dwMinimum', DWORD),
     ('dwMaximum', DWORD),
 ]
-N16tagMIXERCONTROLW5DOLLAR_132E._pack_ = 1
-N16tagMIXERCONTROLW5DOLLAR_132E._anonymous_ = ['_0', '_1']
-N16tagMIXERCONTROLW5DOLLAR_132E._fields_ = [
-    ('_0', N16tagMIXERCONTROLW5DOLLAR_1325DOLLAR_133E),
-    ('_1', N16tagMIXERCONTROLW5DOLLAR_1325DOLLAR_134E),
+N16tagMIXERCONTROLW5DOLLAR_158E._pack_ = 1
+N16tagMIXERCONTROLW5DOLLAR_158E._anonymous_ = ['_0', '_1']
+N16tagMIXERCONTROLW5DOLLAR_158E._fields_ = [
+    ('_0', N16tagMIXERCONTROLW5DOLLAR_1585DOLLAR_159E),
+    ('_1', N16tagMIXERCONTROLW5DOLLAR_1585DOLLAR_160E),
     ('dwReserved', DWORD * 6),
 ]
-class N16tagMIXERCONTROLW5DOLLAR_135E(Union):
+class N16tagMIXERCONTROLW5DOLLAR_161E(Union):
     pass
-N16tagMIXERCONTROLW5DOLLAR_135E._pack_ = 1
-N16tagMIXERCONTROLW5DOLLAR_135E._fields_ = [
+N16tagMIXERCONTROLW5DOLLAR_161E._pack_ = 1
+N16tagMIXERCONTROLW5DOLLAR_161E._fields_ = [
     ('cSteps', DWORD),
     ('cbCustomData', DWORD),
     ('dwReserved', DWORD * 6),
@@ -551,17 +625,17 @@ tagMIXERCONTROLW._fields_ = [
     ('cMultipleItems', DWORD),
     ('szShortName', WCHAR * 16),
     ('szName', WCHAR * 64),
-    ('Bounds', N16tagMIXERCONTROLW5DOLLAR_132E),
-    ('Metrics', N16tagMIXERCONTROLW5DOLLAR_135E),
+    ('Bounds', N16tagMIXERCONTROLW5DOLLAR_158E),
+    ('Metrics', N16tagMIXERCONTROLW5DOLLAR_161E),
 ]
 class tagMIXERLINECONTROLSW(Structure):
     pass
 MIXERLINECONTROLSW = tagMIXERLINECONTROLSW
 MIXERLINECONTROLS = MIXERLINECONTROLSW
-class N21tagMIXERLINECONTROLSW5DOLLAR_137E(Union):
+class N21tagMIXERLINECONTROLSW5DOLLAR_163E(Union):
     pass
-N21tagMIXERLINECONTROLSW5DOLLAR_137E._pack_ = 1
-N21tagMIXERLINECONTROLSW5DOLLAR_137E._fields_ = [
+N21tagMIXERLINECONTROLSW5DOLLAR_163E._pack_ = 1
+N21tagMIXERLINECONTROLSW5DOLLAR_163E._fields_ = [
     ('dwControlID', DWORD),
     ('dwControlType', DWORD),
 ]
@@ -571,7 +645,7 @@ tagMIXERLINECONTROLSW._anonymous_ = ['_0']
 tagMIXERLINECONTROLSW._fields_ = [
     ('cbStruct', DWORD),
     ('dwLineID', DWORD),
-    ('_0', N21tagMIXERLINECONTROLSW5DOLLAR_137E),
+    ('_0', N21tagMIXERLINECONTROLSW5DOLLAR_163E),
     ('cControls', DWORD),
     ('cbmxctrl', DWORD),
     ('pamxctrl', LPMIXERCONTROLW),
@@ -580,11 +654,10 @@ class tagMIXERLINEW(Structure):
     pass
 MIXERLINEW = tagMIXERLINEW
 MIXERLINE = MIXERLINEW
-DWORD_PTR = ULONG_PTR
-class N13tagMIXERLINEW5DOLLAR_127E(Structure):
+class N13tagMIXERLINEW5DOLLAR_153E(Structure):
     pass
-N13tagMIXERLINEW5DOLLAR_127E._pack_ = 1
-N13tagMIXERLINEW5DOLLAR_127E._fields_ = [
+N13tagMIXERLINEW5DOLLAR_153E._pack_ = 1
+N13tagMIXERLINEW5DOLLAR_153E._fields_ = [
     ('dwType', DWORD),
     ('dwDeviceID', DWORD),
     ('wMid', WORD),
@@ -606,15 +679,15 @@ tagMIXERLINEW._fields_ = [
     ('cControls', DWORD),
     ('szShortName', WCHAR * 16),
     ('szName', WCHAR * 64),
-    ('Target', N13tagMIXERLINEW5DOLLAR_127E),
+    ('Target', N13tagMIXERLINEW5DOLLAR_153E),
 ]
 class tMIXERCONTROLDETAILS(Structure):
     pass
 MIXERCONTROLDETAILS = tMIXERCONTROLDETAILS
-class N20tMIXERCONTROLDETAILS5DOLLAR_138E(Union):
+class N20tMIXERCONTROLDETAILS5DOLLAR_164E(Union):
     pass
-N20tMIXERCONTROLDETAILS5DOLLAR_138E._pack_ = 1
-N20tMIXERCONTROLDETAILS5DOLLAR_138E._fields_ = [
+N20tMIXERCONTROLDETAILS5DOLLAR_164E._pack_ = 1
+N20tMIXERCONTROLDETAILS5DOLLAR_164E._fields_ = [
     ('hwndOwner', HWND),
     ('cMultipleItems', DWORD),
 ]
@@ -624,7 +697,7 @@ tMIXERCONTROLDETAILS._fields_ = [
     ('cbStruct', DWORD),
     ('dwControlID', DWORD),
     ('cChannels', DWORD),
-    ('_0', N20tMIXERCONTROLDETAILS5DOLLAR_138E),
+    ('_0', N20tMIXERCONTROLDETAILS5DOLLAR_164E),
     ('cbDetails', DWORD),
     ('paDetails', LPVOID),
 ]
@@ -667,56 +740,56 @@ mixerGetLineControls = mixerGetLineControlsW # alias
 mixerSetControlDetails = _winmm.mixerSetControlDetails
 mixerSetControlDetails.restype = MMRESULT
 mixerSetControlDetails.argtypes = [HMIXEROBJ, LPMIXERCONTROLDETAILS, DWORD]
-MIXERLINE_COMPONENTTYPE_DST_SPEAKERS = 4 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_MUTE = 536936450 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_VOLUME = 1342373889 # Variable c_long
-MIXER_GETLINEINFOF_COMPONENTTYPE = 3 # Variable c_long
-MIXER_GETLINECONTROLSF_ONEBYTYPE = 2 # Variable c_long
-MIXER_GETLINECONTROLSF_ALL = 0 # Variable c_long
-MIXER_GETLINEINFOF_DESTINATION = 0 # Variable c_long
-MIXER_GETLINEINFOF_SOURCE = 1 # Variable c_long
-MMSYSERR_NOERROR = 0 # Variable c_int
-MIXERCONTROL_CT_CLASS_MASK = 4026531840L # Variable c_ulong
-MIXERCONTROL_CT_CLASS_FADER = 1342177280 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_BASS = 1342373890 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_TREBLE = 1342373891 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_EQUALIZER = 1342373892 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_FADER = 1342373888 # Variable c_long
-MIXERCONTROL_CT_CLASS_LIST = 1879048192 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_SINGLESELECT = 1879113728 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_MULTIPLESELECT = 1895890944 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_MUX = 1879113729 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_MIXER = 1895890945 # Variable c_long
-MIXERCONTROL_CT_CLASS_METER = 268435456 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_BOOLEANMETER = 268500992 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_PEAKMETER = 268566529 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_SIGNEDMETER = 268566528 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_UNSIGNEDMETER = 268632064 # Variable c_long
-MIXERCONTROL_CT_CLASS_NUMBER = 805306368 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_SIGNED = 805437440 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_UNSIGNED = 805502976 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_PERCENT = 805634048 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_DECIBELS = 805568512 # Variable c_long
-MIXERCONTROL_CT_CLASS_SLIDER = 1073741824 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_SLIDER = 1073872896 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_PAN = 1073872897 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_QSOUNDPAN = 1073872898 # Variable c_long
-MIXERCONTROL_CT_CLASS_SWITCH = 536870912 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_BOOLEAN = 536936448 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_BUTTON = 553713664 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_LOUDNESS = 536936452 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_MONO = 536936451 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_ONOFF = 536936449 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_STEREOENH = 536936453 # Variable c_long
-MIXERCONTROL_CT_CLASS_TIME = 1610612736 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_MICROTIME = 1610809344 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_MILLITIME = 1627586560 # Variable c_long
-MIXERCONTROL_CT_CLASS_CUSTOM = 0 # Variable c_long
-MIXERCONTROL_CONTROLF_DISABLED = 2147483648L # Variable c_ulong
-MIXERCONTROL_CONTROLF_MULTIPLE = 2 # Variable c_long
-MIXERCONTROL_CONTROLF_UNIFORM = 1 # Variable c_long
-ENUM_CURRENT_SETTINGS = 4294967295L # Variable c_ulong
-EDS_RAWMODE = 2 # Variable c_int
+MIXERLINE_COMPONENTTYPE_DST_SPEAKERS = 4 # Variable c_long '4l'
+MIXERCONTROL_CONTROLTYPE_MUTE = 536936450 # Variable c_long '536936450l'
+MIXERCONTROL_CONTROLTYPE_VOLUME = 1342373889 # Variable c_long '1342373889l'
+MIXER_GETLINEINFOF_COMPONENTTYPE = 3 # Variable c_long '3l'
+MIXER_GETLINECONTROLSF_ONEBYTYPE = 2 # Variable c_long '2l'
+MIXER_GETLINECONTROLSF_ALL = 0 # Variable c_long '0l'
+MIXER_GETLINEINFOF_DESTINATION = 0 # Variable c_long '0l'
+MIXER_GETLINEINFOF_SOURCE = 1 # Variable c_long '1l'
+MMSYSERR_NOERROR = 0 # Variable c_int '0'
+MIXERCONTROL_CT_CLASS_MASK = 4026531840L # Variable c_ulong '-268435456ul'
+MIXERCONTROL_CT_CLASS_FADER = 1342177280 # Variable c_long '1342177280l'
+MIXERCONTROL_CONTROLTYPE_BASS = 1342373890 # Variable c_long '1342373890l'
+MIXERCONTROL_CONTROLTYPE_TREBLE = 1342373891 # Variable c_long '1342373891l'
+MIXERCONTROL_CONTROLTYPE_EQUALIZER = 1342373892 # Variable c_long '1342373892l'
+MIXERCONTROL_CONTROLTYPE_FADER = 1342373888 # Variable c_long '1342373888l'
+MIXERCONTROL_CT_CLASS_LIST = 1879048192 # Variable c_long '1879048192l'
+MIXERCONTROL_CONTROLTYPE_SINGLESELECT = 1879113728 # Variable c_long '1879113728l'
+MIXERCONTROL_CONTROLTYPE_MULTIPLESELECT = 1895890944 # Variable c_long '1895890944l'
+MIXERCONTROL_CONTROLTYPE_MUX = 1879113729 # Variable c_long '1879113729l'
+MIXERCONTROL_CONTROLTYPE_MIXER = 1895890945 # Variable c_long '1895890945l'
+MIXERCONTROL_CT_CLASS_METER = 268435456 # Variable c_long '268435456l'
+MIXERCONTROL_CONTROLTYPE_BOOLEANMETER = 268500992 # Variable c_long '268500992l'
+MIXERCONTROL_CONTROLTYPE_PEAKMETER = 268566529 # Variable c_long '268566529l'
+MIXERCONTROL_CONTROLTYPE_SIGNEDMETER = 268566528 # Variable c_long '268566528l'
+MIXERCONTROL_CONTROLTYPE_UNSIGNEDMETER = 268632064 # Variable c_long '268632064l'
+MIXERCONTROL_CT_CLASS_NUMBER = 805306368 # Variable c_long '805306368l'
+MIXERCONTROL_CONTROLTYPE_SIGNED = 805437440 # Variable c_long '805437440l'
+MIXERCONTROL_CONTROLTYPE_UNSIGNED = 805502976 # Variable c_long '805502976l'
+MIXERCONTROL_CONTROLTYPE_PERCENT = 805634048 # Variable c_long '805634048l'
+MIXERCONTROL_CONTROLTYPE_DECIBELS = 805568512 # Variable c_long '805568512l'
+MIXERCONTROL_CT_CLASS_SLIDER = 1073741824 # Variable c_long '1073741824l'
+MIXERCONTROL_CONTROLTYPE_SLIDER = 1073872896 # Variable c_long '1073872896l'
+MIXERCONTROL_CONTROLTYPE_PAN = 1073872897 # Variable c_long '1073872897l'
+MIXERCONTROL_CONTROLTYPE_QSOUNDPAN = 1073872898 # Variable c_long '1073872898l'
+MIXERCONTROL_CT_CLASS_SWITCH = 536870912 # Variable c_long '536870912l'
+MIXERCONTROL_CONTROLTYPE_BOOLEAN = 536936448 # Variable c_long '536936448l'
+MIXERCONTROL_CONTROLTYPE_BUTTON = 553713664 # Variable c_long '553713664l'
+MIXERCONTROL_CONTROLTYPE_LOUDNESS = 536936452 # Variable c_long '536936452l'
+MIXERCONTROL_CONTROLTYPE_MONO = 536936451 # Variable c_long '536936451l'
+MIXERCONTROL_CONTROLTYPE_ONOFF = 536936449 # Variable c_long '536936449l'
+MIXERCONTROL_CONTROLTYPE_STEREOENH = 536936453 # Variable c_long '536936453l'
+MIXERCONTROL_CT_CLASS_TIME = 1610612736 # Variable c_long '1610612736l'
+MIXERCONTROL_CONTROLTYPE_MICROTIME = 1610809344 # Variable c_long '1610809344l'
+MIXERCONTROL_CONTROLTYPE_MILLITIME = 1627586560 # Variable c_long '1627586560l'
+MIXERCONTROL_CT_CLASS_CUSTOM = 0 # Variable c_long '0l'
+MIXERCONTROL_CONTROLF_DISABLED = 2147483648L # Variable c_ulong '-2147483648ul'
+MIXERCONTROL_CONTROLF_MULTIPLE = 2 # Variable c_long '2l'
+MIXERCONTROL_CONTROLF_UNIFORM = 1 # Variable c_long '1l'
+ENUM_CURRENT_SETTINGS = 4294967295L # Variable c_ulong '-1u'
+EDS_RAWMODE = 2 # Variable c_int '2'
 class _DISPLAY_DEVICEW(Structure):
     pass
 PDISPLAY_DEVICEW = POINTER(_DISPLAY_DEVICEW)
@@ -739,35 +812,24 @@ EnumDisplaySettingsExW = _user32.EnumDisplaySettingsExW
 EnumDisplaySettingsExW.restype = BOOL
 EnumDisplaySettingsExW.argtypes = [LPCWSTR, DWORD, LPDEVMODEW, DWORD]
 EnumDisplaySettingsEx = EnumDisplaySettingsExW # alias
-class N12_devicemodeW4DOLLAR_62E(Union):
+class N12_devicemodeW4DOLLAR_95E(Union):
     pass
-class N12_devicemodeW4DOLLAR_624DOLLAR_63E(Structure):
+class N12_devicemodeW4DOLLAR_954DOLLAR_96E(Structure):
     pass
-N12_devicemodeW4DOLLAR_624DOLLAR_63E._fields_ = [
+N12_devicemodeW4DOLLAR_954DOLLAR_96E._fields_ = [
     ('dmOrientation', c_short),
     ('dmPaperSize', c_short),
     ('dmPaperLength', c_short),
     ('dmPaperWidth', c_short),
-    ('dmScale', c_short),
-    ('dmCopies', c_short),
-    ('dmDefaultSource', c_short),
-    ('dmPrintQuality', c_short),
 ]
-class N12_devicemodeW4DOLLAR_624DOLLAR_64E(Structure):
-    pass
-N12_devicemodeW4DOLLAR_624DOLLAR_64E._fields_ = [
+N12_devicemodeW4DOLLAR_95E._anonymous_ = ['_0']
+N12_devicemodeW4DOLLAR_95E._fields_ = [
+    ('_0', N12_devicemodeW4DOLLAR_954DOLLAR_96E),
     ('dmPosition', POINTL),
-    ('dmDisplayOrientation', DWORD),
-    ('dmDisplayFixedOutput', DWORD),
 ]
-N12_devicemodeW4DOLLAR_62E._anonymous_ = ['_0', '_1']
-N12_devicemodeW4DOLLAR_62E._fields_ = [
-    ('_0', N12_devicemodeW4DOLLAR_624DOLLAR_63E),
-    ('_1', N12_devicemodeW4DOLLAR_624DOLLAR_64E),
-]
-class N12_devicemodeW4DOLLAR_65E(Union):
+class N12_devicemodeW4DOLLAR_97E(Union):
     pass
-N12_devicemodeW4DOLLAR_65E._fields_ = [
+N12_devicemodeW4DOLLAR_97E._fields_ = [
     ('dmDisplayFlags', DWORD),
     ('dmNup', DWORD),
 ]
@@ -779,7 +841,11 @@ _devicemodeW._fields_ = [
     ('dmSize', WORD),
     ('dmDriverExtra', WORD),
     ('dmFields', DWORD),
-    ('_0', N12_devicemodeW4DOLLAR_62E),
+    ('_0', N12_devicemodeW4DOLLAR_95E),
+    ('dmScale', c_short),
+    ('dmCopies', c_short),
+    ('dmDefaultSource', c_short),
+    ('dmPrintQuality', c_short),
     ('dmColor', c_short),
     ('dmDuplex', c_short),
     ('dmYResolution', c_short),
@@ -790,7 +856,7 @@ _devicemodeW._fields_ = [
     ('dmBitsPerPel', DWORD),
     ('dmPelsWidth', DWORD),
     ('dmPelsHeight', DWORD),
-    ('_1', N12_devicemodeW4DOLLAR_65E),
+    ('_1', N12_devicemodeW4DOLLAR_97E),
     ('dmDisplayFrequency', DWORD),
     ('dmICMMethod', DWORD),
     ('dmICMIntent', DWORD),
@@ -809,18 +875,18 @@ DISPLAY_DEVICEW = _DISPLAY_DEVICEW
 DISPLAY_DEVICE = DISPLAY_DEVICEW
 DEVMODEW = _devicemodeW
 DEVMODE = DEVMODEW
-DISPLAY_DEVICE_MIRRORING_DRIVER = 8 # Variable c_int
-DISPLAY_DEVICE_PRIMARY_DEVICE = 4 # Variable c_int
-DISPLAY_DEVICE_ATTACHED_TO_DESKTOP = 1 # Variable c_int
-DM_POSITION = 32 # Variable c_long
-DM_BITSPERPEL = 262144 # Variable c_long
-DM_PELSWIDTH = 524288 # Variable c_long
-DM_PELSHEIGHT = 1048576 # Variable c_long
-DM_DISPLAYFLAGS = 2097152 # Variable c_long
-DM_DISPLAYFREQUENCY = 4194304 # Variable c_long
-CDS_UPDATEREGISTRY = 1 # Variable c_int
-CDS_NORESET = 268435456 # Variable c_int
-CDS_SET_PRIMARY = 16 # Variable c_int
+DISPLAY_DEVICE_MIRRORING_DRIVER = 8 # Variable c_int '8'
+DISPLAY_DEVICE_PRIMARY_DEVICE = 4 # Variable c_int '4'
+DISPLAY_DEVICE_ATTACHED_TO_DESKTOP = 1 # Variable c_int '1'
+DM_POSITION = 32 # Variable c_long '32l'
+DM_BITSPERPEL = 262144 # Variable c_long '262144l'
+DM_PELSWIDTH = 524288 # Variable c_long '524288l'
+DM_PELSHEIGHT = 1048576 # Variable c_long '1048576l'
+DM_DISPLAYFLAGS = 2097152 # Variable c_long '2097152l'
+DM_DISPLAYFREQUENCY = 4194304 # Variable c_long '4194304l'
+CDS_UPDATEREGISTRY = 1 # Variable c_int '1'
+CDS_NORESET = 268435456 # Variable c_int '268435456'
+CDS_SET_PRIMARY = 16 # Variable c_int '16'
 class _STARTUPINFOW(Structure):
     pass
 LPSTARTUPINFOW = POINTER(_STARTUPINFOW)
@@ -863,10 +929,10 @@ WaitForSingleObject.argtypes = [HANDLE, DWORD]
 STARTUPINFOW = _STARTUPINFOW
 STARTUPINFO = STARTUPINFOW
 PROCESS_INFORMATION = _PROCESS_INFORMATION
-CREATE_NEW_CONSOLE = 16 # Variable c_int
-STARTF_USESHOWWINDOW = 1 # Variable c_int
-INFINITE = 4294967295L # Variable c_uint
-WM_DEVICECHANGE = 537 # Variable c_int
+CREATE_NEW_CONSOLE = 16 # Variable c_int '16'
+STARTF_USESHOWWINDOW = 1 # Variable c_int '1'
+INFINITE = 4294967295L # Variable c_uint '-1u'
+WM_DEVICECHANGE = 537 # Variable c_int '537'
 class _DEV_BROADCAST_HDR(Structure):
     pass
 DEV_BROADCAST_HDR = _DEV_BROADCAST_HDR
@@ -905,10 +971,10 @@ _DEV_BROADCAST_VOLUME._fields_ = [
     ('dbcv_unitmask', DWORD),
     ('dbcv_flags', WORD),
 ]
-DBT_DEVICEARRIVAL = 32768 # Variable c_int
-DBT_DEVICEREMOVECOMPLETE = 32772 # Variable c_int
-DBT_DEVTYP_VOLUME = 2 # Variable c_int
-DBT_DEVTYP_DEVICEINTERFACE = 5 # Variable c_int
+DBT_DEVICEARRIVAL = 32768 # Variable c_int '32768'
+DBT_DEVICEREMOVECOMPLETE = 32772 # Variable c_int '32772'
+DBT_DEVTYP_VOLUME = 2 # Variable c_int '2'
+DBT_DEVTYP_DEVICEINTERFACE = 5 # Variable c_int '5'
 CLSID = GUID
 LPCLSID = POINTER(CLSID)
 CLSIDFromString = _ole32.CLSIDFromString
@@ -922,17 +988,16 @@ RegisterDeviceNotification = RegisterDeviceNotificationW # alias
 UnregisterDeviceNotification = _user32.UnregisterDeviceNotification
 UnregisterDeviceNotification.restype = BOOL
 UnregisterDeviceNotification.argtypes = [HDEVNOTIFY]
-WM_POWERBROADCAST = 536 # Variable c_int
-PBT_APMSUSPEND = 4 # Variable c_int
-PBT_APMRESUMEAUTOMATIC = 18 # Variable c_int
-PBT_APMBATTERYLOW = 9 # Variable c_int
-PBT_APMOEMEVENT = 11 # Variable c_int
-PBT_APMPOWERSTATUSCHANGE = 10 # Variable c_int
-PBT_APMQUERYSUSPEND = 0 # Variable c_int
-PBT_APMQUERYSUSPENDFAILED = 2 # Variable c_int
-PBT_APMRESUMECRITICAL = 6 # Variable c_int
-PBT_APMRESUMESUSPEND = 7 # Variable c_int
-LPTSTR = LPWSTR
+WM_POWERBROADCAST = 536 # Variable c_int '536'
+PBT_APMSUSPEND = 4 # Variable c_int '4'
+PBT_APMRESUMEAUTOMATIC = 18 # Variable c_int '18'
+PBT_APMBATTERYLOW = 9 # Variable c_int '9'
+PBT_APMOEMEVENT = 11 # Variable c_int '11'
+PBT_APMPOWERSTATUSCHANGE = 10 # Variable c_int '10'
+PBT_APMQUERYSUSPEND = 0 # Variable c_int '0'
+PBT_APMQUERYSUSPENDFAILED = 2 # Variable c_int '2'
+PBT_APMRESUMECRITICAL = 6 # Variable c_int '6'
+PBT_APMRESUMESUSPEND = 7 # Variable c_int '7'
 GetWindowLongW = _user32.GetWindowLongW
 GetWindowLongW.restype = LONG
 GetWindowLongW.argtypes = [HWND, c_int]
@@ -943,25 +1008,80 @@ MoveWindow.argtypes = [HWND, c_int, c_int, c_int, c_int, BOOL]
 SetWindowPos = _user32.SetWindowPos
 SetWindowPos.restype = BOOL
 SetWindowPos.argtypes = [HWND, HWND, c_int, c_int, c_int, c_int, UINT]
-SW_MAXIMIZE = 3 # Variable c_int
-SW_MINIMIZE = 6 # Variable c_int
-WM_COMMAND = 273 # Variable c_int
-GWL_EXSTYLE = -20 # Variable c_int
-WS_EX_TOPMOST = 8 # Variable c_long
-SWP_NOMOVE = 2 # Variable c_int
-SWP_NOSIZE = 1 # Variable c_int
-HWND_TOPMOST = 4294967295L # Variable c_void_p
-HWND_NOTOPMOST = 4294967294L # Variable c_void_p
-GA_PARENT = 1 # Variable c_int
+SW_MAXIMIZE = 3 # Variable c_int '3'
+SW_MINIMIZE = 6 # Variable c_int '6'
+GWL_EXSTYLE = -20 # Variable c_int '-0x000000014'
+WS_EX_TOPMOST = 8 # Variable c_long '8l'
+SWP_NOMOVE = 2 # Variable c_int '2'
+SWP_NOSIZE = 1 # Variable c_int '1'
 mouse_event = _user32.mouse_event
 mouse_event.restype = None
 mouse_event.argtypes = [DWORD, DWORD, DWORD, DWORD, ULONG_PTR]
-GetCursorPos = _user32.GetCursorPos
-GetCursorPos.restype = BOOL
-GetCursorPos.argtypes = [LPPOINT]
 SetCursorPos = _user32.SetCursorPos
 SetCursorPos.restype = BOOL
 SetCursorPos.argtypes = [c_int, c_int]
+RegisterWindowMessageW = _user32.RegisterWindowMessageW
+RegisterWindowMessageW.restype = UINT
+RegisterWindowMessageW.argtypes = [LPCWSTR]
+RegisterWindowMessage = RegisterWindowMessageW # alias
+RegisterShellHookWindow = _user32.RegisterShellHookWindow
+RegisterShellHookWindow.restype = BOOL
+RegisterShellHookWindow.argtypes = [HWND]
+DeregisterShellHookWindow = _user32.DeregisterShellHookWindow
+DeregisterShellHookWindow.restype = BOOL
+DeregisterShellHookWindow.argtypes = [HWND]
+EnumWindows = _user32.EnumWindows
+EnumWindows.restype = BOOL
+EnumWindows.argtypes = [WNDENUMPROC, LPARAM]
+WM_APP = 32768 # Variable c_int '32768'
+GWL_STYLE = -16 # Variable c_int '-0x000000010'
+HSHELL_WINDOWCREATED = 1 # Variable c_int '1'
+HSHELL_WINDOWDESTROYED = 2 # Variable c_int '2'
+HSHELL_WINDOWACTIVATED = 4 # Variable c_int '4'
+WS_VISIBLE = 268435456 # Variable c_long '268435456l'
+GWL_HWNDPARENT = -8 # Variable c_int '-0x000000008'
+GetShellWindow = _user32.GetShellWindow
+GetShellWindow.restype = HWND
+GetShellWindow.argtypes = []
+DestroyWindow = _user32.DestroyWindow
+DestroyWindow.restype = BOOL
+DestroyWindow.argtypes = [HWND]
+UnregisterClassW = _user32.UnregisterClassW
+UnregisterClassW.restype = BOOL
+UnregisterClassW.argtypes = [LPCWSTR, HINSTANCE]
+UnregisterClass = UnregisterClassW # alias
+LoadCursorW = _user32.LoadCursorW
+LoadCursorW.restype = HCURSOR
+LoadCursorW.argtypes = [HINSTANCE, LPCWSTR]
+LoadCursor = LoadCursorW # alias
+MAXDWORD = 4294967295L # Variable c_uint '-1u'
+GENERIC_WRITE = 1073741824 # Variable c_long '1073741824l'
+FILE_ATTRIBUTE_NORMAL = 128 # Variable c_int '128'
+FILE_FLAG_OVERLAPPED = 1073741824 # Variable c_int '1073741824'
+ERROR_IO_PENDING = 997 # Variable c_long '997l'
+NOPARITY = 0 # Variable c_int '0'
+ODDPARITY = 1 # Variable c_int '1'
+EVENPARITY = 2 # Variable c_int '2'
+MARKPARITY = 3 # Variable c_int '3'
+SPACEPARITY = 4 # Variable c_int '4'
+ONESTOPBIT = 0 # Variable c_int '0'
+ONE5STOPBITS = 1 # Variable c_int '1'
+TWOSTOPBITS = 2 # Variable c_int '2'
+SETDTR = 5 # Variable c_int '5'
+CLRDTR = 6 # Variable c_int '6'
+SETRTS = 3 # Variable c_int '3'
+CLRRTS = 4 # Variable c_int '4'
+DTR_CONTROL_DISABLE = 0 # Variable c_int '0'
+EV_BREAK = 64 # Variable c_int '64'
+EV_CTS = 8 # Variable c_int '8'
+EV_DSR = 16 # Variable c_int '16'
+EV_ERR = 128 # Variable c_int '128'
+EV_RING = 256 # Variable c_int '256'
+EV_RLSD = 32 # Variable c_int '32'
+EV_RXCHAR = 1 # Variable c_int '1'
+EV_RXFLAG = 2 # Variable c_int '2'
+EV_TXEMPTY = 4 # Variable c_int '4'
+OVERLAPPED = _OVERLAPPED
 class _DCB(Structure):
     pass
 DCB = _DCB
@@ -995,7 +1115,19 @@ _DCB._fields_ = [
     ('EvtChar', c_char),
     ('wReserved1', WORD),
 ]
-OVERLAPPED = _OVERLAPPED
+class _COMMCONFIG(Structure):
+    pass
+COMMCONFIG = _COMMCONFIG
+_COMMCONFIG._fields_ = [
+    ('dwSize', DWORD),
+    ('wVersion', WORD),
+    ('wReserved', WORD),
+    ('dcb', DCB),
+    ('dwProviderSubType', DWORD),
+    ('dwProviderOffset', DWORD),
+    ('dwProviderSize', DWORD),
+    ('wcProviderData', WCHAR * 1),
+]
 class _COMSTAT(Structure):
     pass
 COMSTAT = _COMSTAT
@@ -1021,19 +1153,9 @@ _COMMTIMEOUTS._fields_ = [
     ('WriteTotalTimeoutMultiplier', DWORD),
     ('WriteTotalTimeoutConstant', DWORD),
 ]
-class _COMMCONFIG(Structure):
-    pass
-COMMCONFIG = _COMMCONFIG
-_COMMCONFIG._fields_ = [
-    ('dwSize', DWORD),
-    ('wVersion', WORD),
-    ('wReserved', WORD),
-    ('dcb', DCB),
-    ('dwProviderSubType', DWORD),
-    ('dwProviderOffset', DWORD),
-    ('dwProviderSize', DWORD),
-    ('wcProviderData', WCHAR * 1),
-]
+ResetEvent = _kernel32.ResetEvent
+ResetEvent.restype = BOOL
+ResetEvent.argtypes = [HANDLE]
 ReadFile = _kernel32.ReadFile
 ReadFile.restype = BOOL
 ReadFile.argtypes = [HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED]
@@ -1041,6 +1163,9 @@ LPCVOID = c_void_p
 WriteFile = _kernel32.WriteFile
 WriteFile.restype = BOOL
 WriteFile.argtypes = [HANDLE, LPCVOID, DWORD, LPDWORD, LPOVERLAPPED]
+GetOverlappedResult = _kernel32.GetOverlappedResult
+GetOverlappedResult.restype = BOOL
+GetOverlappedResult.argtypes = [HANDLE, LPOVERLAPPED, LPDWORD, BOOL]
 LPDCB = POINTER(_DCB)
 GetCommState = _kernel32.GetCommState
 GetCommState.restype = BOOL
@@ -1048,6 +1173,9 @@ GetCommState.argtypes = [HANDLE, LPDCB]
 SetCommState = _kernel32.SetCommState
 SetCommState.restype = BOOL
 SetCommState.argtypes = [HANDLE, LPDCB]
+EscapeCommFunction = _kernel32.EscapeCommFunction
+EscapeCommFunction.restype = BOOL
+EscapeCommFunction.argtypes = [HANDLE, DWORD]
 LPCOMSTAT = POINTER(_COMSTAT)
 ClearCommError = _kernel32.ClearCommError
 ClearCommError.restype = BOOL
@@ -1057,80 +1185,25 @@ GetDefaultCommConfigW = _kernel32.GetDefaultCommConfigW
 GetDefaultCommConfigW.restype = BOOL
 GetDefaultCommConfigW.argtypes = [LPCWSTR, LPCOMMCONFIG, LPDWORD]
 GetDefaultCommConfig = GetDefaultCommConfigW # alias
-EscapeCommFunction = _kernel32.EscapeCommFunction
-EscapeCommFunction.restype = BOOL
-EscapeCommFunction.argtypes = [HANDLE, DWORD]
-GetOverlappedResult = _kernel32.GetOverlappedResult
-GetOverlappedResult.restype = BOOL
-GetOverlappedResult.argtypes = [HANDLE, LPOVERLAPPED, LPDWORD, BOOL]
-ResetEvent = _kernel32.ResetEvent
-ResetEvent.restype = BOOL
-ResetEvent.argtypes = [HANDLE]
-ERROR_IO_PENDING = 997 # Variable c_long
-SETDTR = 5 # Variable c_int
-CLRDTR = 6 # Variable c_int
-SETRTS = 3 # Variable c_int
-CLRRTS = 4 # Variable c_int
-GENERIC_WRITE = 1073741824 # Variable c_long
-FILE_ATTRIBUTE_NORMAL = 128 # Variable c_int
-FILE_FLAG_OVERLAPPED = 1073741824 # Variable c_int
-DTR_CONTROL_DISABLE = 0 # Variable c_int
-NOPARITY = 0 # Variable c_int
-ONESTOPBIT = 0 # Variable c_int
-WS_CHILD = 1073741824 # Variable c_long
-WS_VISIBLE = 268435456 # Variable c_long
-SBS_SIZEGRIP = 16 # Variable c_long
-SBS_SIZEBOXTOPLEFTALIGN = 2 # Variable c_long
-SM_CYHSCROLL = 3 # Variable c_int
-SM_CXVSCROLL = 2 # Variable c_int
-RegisterWindowMessageW = _user32.RegisterWindowMessageW
-RegisterWindowMessageW.restype = UINT
-RegisterWindowMessageW.argtypes = [LPCWSTR]
-RegisterWindowMessage = RegisterWindowMessageW # alias
-RegisterShellHookWindow = _user32.RegisterShellHookWindow
-RegisterShellHookWindow.restype = BOOL
-RegisterShellHookWindow.argtypes = [HWND]
-DeregisterShellHookWindow = _user32.DeregisterShellHookWindow
-DeregisterShellHookWindow.restype = BOOL
-DeregisterShellHookWindow.argtypes = [HWND]
-EnumWindows = _user32.EnumWindows
-EnumWindows.restype = BOOL
-EnumWindows.argtypes = [WNDENUMPROC, LPARAM]
-WM_APP = 32768 # Variable c_int
-GWL_STYLE = -16 # Variable c_int
-HSHELL_WINDOWCREATED = 1 # Variable c_int
-HSHELL_WINDOWDESTROYED = 2 # Variable c_int
-HSHELL_WINDOWACTIVATED = 4 # Variable c_int
-GetCurrentProcessId = _kernel32.GetCurrentProcessId
-GetCurrentProcessId.restype = DWORD
-GetCurrentProcessId.argtypes = []
-GetWindowTextW = _user32.GetWindowTextW
-GetWindowTextW.restype = c_int
-GetWindowTextW.argtypes = [HWND, LPWSTR, c_int]
-GetWindowText = GetWindowTextW # alias
-GetClassNameW = _user32.GetClassNameW
-GetClassNameW.restype = c_int
-GetClassNameW.argtypes = [HWND, LPWSTR, c_int]
-GetClassName = GetClassNameW # alias
-EnumProcesses = _Psapi.EnumProcesses
-EnumProcesses.restype = BOOL
-EnumProcesses.argtypes = [POINTER(DWORD), DWORD, POINTER(DWORD)]
-EnumProcesses = _Psapi.EnumProcesses
-EnumProcesses.restype = BOOL
-EnumProcesses.argtypes = [POINTER(DWORD), DWORD, POINTER(DWORD)]
-# IID_IShellLink = IID_IShellLinkW # alias
-FILE_SHARE_WRITE = 2 # Variable c_int
-FILE_FLAG_BACKUP_SEMANTICS = 33554432 # Variable c_int
-FILE_NOTIFY_CHANGE_FILE_NAME = 1 # Variable c_int
-FILE_NOTIFY_CHANGE_DIR_NAME = 2 # Variable c_int
-FILE_NOTIFY_CHANGE_ATTRIBUTES = 4 # Variable c_int
-FILE_NOTIFY_CHANGE_SIZE = 8 # Variable c_int
-FILE_NOTIFY_CHANGE_LAST_WRITE = 16 # Variable c_int
-FILE_NOTIFY_CHANGE_SECURITY = 256 # Variable c_int
-FILE_LIST_DIRECTORY = 1 # Variable c_int
+LPCOMMTIMEOUTS = POINTER(_COMMTIMEOUTS)
+GetCommTimeouts = _kernel32.GetCommTimeouts
+GetCommTimeouts.restype = BOOL
+GetCommTimeouts.argtypes = [HANDLE, LPCOMMTIMEOUTS]
+SetCommTimeouts = _kernel32.SetCommTimeouts
+SetCommTimeouts.restype = BOOL
+SetCommTimeouts.argtypes = [HANDLE, LPCOMMTIMEOUTS]
+WS_CHILD = 1073741824 # Variable c_long '1073741824l'
+SBS_SIZEGRIP = 16 # Variable c_long '16l'
+SBS_SIZEBOXTOPLEFTALIGN = 2 # Variable c_long '2l'
+SM_CYHSCROLL = 3 # Variable c_int '3'
+SM_CXVSCROLL = 2 # Variable c_int '2'
 PulseEvent = _kernel32.PulseEvent
 PulseEvent.restype = BOOL
 PulseEvent.argtypes = [HANDLE]
+LPOVERLAPPED_COMPLETION_ROUTINE = WINFUNCTYPE(None, DWORD, DWORD, LPOVERLAPPED)
+ReadDirectoryChangesW = _kernel32.ReadDirectoryChangesW
+ReadDirectoryChangesW.restype = BOOL
+ReadDirectoryChangesW.argtypes = [HANDLE, LPVOID, DWORD, BOOL, DWORD, LPDWORD, LPOVERLAPPED, LPOVERLAPPED_COMPLETION_ROUTINE]
 class _FILE_NOTIFY_INFORMATION(Structure):
     pass
 FILE_NOTIFY_INFORMATION = _FILE_NOTIFY_INFORMATION
@@ -1140,24 +1213,20 @@ _FILE_NOTIFY_INFORMATION._fields_ = [
     ('FileNameLength', DWORD),
     ('FileName', WCHAR * 1),
 ]
-LPOVERLAPPED_COMPLETION_ROUTINE = WINFUNCTYPE(None, c_ulong, c_ulong, POINTER(_OVERLAPPED))
-ReadDirectoryChangesW = _kernel32.ReadDirectoryChangesW
-ReadDirectoryChangesW.restype = BOOL
-ReadDirectoryChangesW.argtypes = [HANDLE, LPVOID, DWORD, BOOL, DWORD, LPDWORD, LPOVERLAPPED, LPOVERLAPPED_COMPLETION_ROUTINE]
-FILE_ACTION_ADDED = 1 # Variable c_int
-FILE_ACTION_REMOVED = 2 # Variable c_int
-FILE_ACTION_MODIFIED = 3 # Variable c_int
-FILE_ACTION_RENAMED_OLD_NAME = 4 # Variable c_int
-FILE_ACTION_RENAMED_NEW_NAME = 5 # Variable c_int
-PM_REMOVE = 1 # Variable c_int
-WM_QUIT = 18 # Variable c_int
-SMTO_BLOCK = 1 # Variable c_int
-WM_USER = 1024 # Variable c_int
-FindWindowW = _user32.FindWindowW
-FindWindowW.restype = HWND
-FindWindowW.argtypes = [LPCWSTR, LPCWSTR]
-FindWindow = FindWindowW # alias
-SMTO_BLOCK = 1 # Variable c_int
+FILE_SHARE_WRITE = 2 # Variable c_int '2'
+FILE_FLAG_BACKUP_SEMANTICS = 33554432 # Variable c_int '33554432'
+FILE_NOTIFY_CHANGE_FILE_NAME = 1 # Variable c_int '1'
+FILE_NOTIFY_CHANGE_DIR_NAME = 2 # Variable c_int '2'
+FILE_NOTIFY_CHANGE_ATTRIBUTES = 4 # Variable c_int '4'
+FILE_NOTIFY_CHANGE_SIZE = 8 # Variable c_int '8'
+FILE_NOTIFY_CHANGE_LAST_WRITE = 16 # Variable c_int '16'
+FILE_NOTIFY_CHANGE_SECURITY = 256 # Variable c_int '256'
+FILE_LIST_DIRECTORY = 1 # Variable c_int '1'
+FILE_ACTION_ADDED = 1 # Variable c_int '1'
+FILE_ACTION_REMOVED = 2 # Variable c_int '2'
+FILE_ACTION_MODIFIED = 3 # Variable c_int '3'
+FILE_ACTION_RENAMED_OLD_NAME = 4 # Variable c_int '4'
+FILE_ACTION_RENAMED_NEW_NAME = 5 # Variable c_int '5'
 class tagCOPYDATASTRUCT(Structure):
     pass
 COPYDATASTRUCT = tagCOPYDATASTRUCT
@@ -1166,227 +1235,7 @@ tagCOPYDATASTRUCT._fields_ = [
     ('cbData', DWORD),
     ('lpData', PVOID),
 ]
-WM_COPYDATA = 74 # Variable c_int
 PCOPYDATASTRUCT = POINTER(tagCOPYDATASTRUCT)
+WM_COPYDATA = 74 # Variable c_int '74'
 def CreateWindowW(lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam): return CreateWindowExW(0L, lpClassName, lpWindowName, dwStyle, x, y,nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam) # macro
 CreateWindow = CreateWindowW # alias
-DestroyWindow = _user32.DestroyWindow
-DestroyWindow.restype = BOOL
-DestroyWindow.argtypes = [HWND]
-UnregisterClassW = _user32.UnregisterClassW
-UnregisterClassW.restype = BOOL
-UnregisterClassW.argtypes = [LPCWSTR, HINSTANCE]
-UnregisterClass = UnregisterClassW # alias
-LoadCursorW = _user32.LoadCursorW
-LoadCursorW.restype = HCURSOR
-LoadCursorW.argtypes = [HINSTANCE, LPCWSTR]
-LoadCursor = LoadCursorW # alias
-CS_VREDRAW = 1 # Variable c_int
-CS_HREDRAW = 2 # Variable c_int
-WSTRING = c_wchar_p
-IDC_ARROW = 32512 # Variable WSTRING
-COLOR_WINDOW = 5 # Variable c_int
-WS_SYSMENU = 524288 # Variable c_long
-WS_OVERLAPPED = 0 # Variable c_long
-MIXERCONTROL_CONTROLTYPE_CUSTOM = 0 # Variable c_long
-class tMIXERCONTROLDETAILS_SIGNED(Structure):
-    pass
-MIXERCONTROLDETAILS_SIGNED = tMIXERCONTROLDETAILS_SIGNED
-tMIXERCONTROLDETAILS_SIGNED._pack_ = 1
-tMIXERCONTROLDETAILS_SIGNED._fields_ = [
-    ('lValue', LONG),
-]
-class tMIXERCONTROLDETAILS_BOOLEAN(Structure):
-    pass
-MIXERCONTROLDETAILS_BOOLEAN = tMIXERCONTROLDETAILS_BOOLEAN
-tMIXERCONTROLDETAILS_BOOLEAN._pack_ = 1
-tMIXERCONTROLDETAILS_BOOLEAN._fields_ = [
-    ('fValue', LONG),
-]
-class tagMIXERCONTROLDETAILS_LISTTEXTW(Structure):
-    pass
-MIXERCONTROLDETAILS_LISTTEXTW = tagMIXERCONTROLDETAILS_LISTTEXTW
-MIXERCONTROLDETAILS_LISTTEXT = MIXERCONTROLDETAILS_LISTTEXTW
-tagMIXERCONTROLDETAILS_LISTTEXTW._pack_ = 1
-tagMIXERCONTROLDETAILS_LISTTEXTW._fields_ = [
-    ('dwParam1', DWORD),
-    ('dwParam2', DWORD),
-    ('szName', WCHAR * 64),
-]
-MIXER_GETLINECONTROLSF_ONEBYID = 1 # Variable c_long
-MIXER_GETCONTROLDETAILSF_VALUE = 0 # Variable c_long
-MIXER_GETCONTROLDETAILSF_LISTTEXT = 1 # Variable c_long
-GetWindow = _user32.GetWindow
-GetWindow.restype = HWND
-GetWindow.argtypes = [HWND, UINT]
-GW_HWNDFIRST = 0 # Variable c_int
-GW_HWNDNEXT = 2 # Variable c_int
-HWND_TOP = 0 # Variable c_void_p
-WS_BORDER = 8388608 # Variable c_long
-GetDesktopWindow = _user32.GetDesktopWindow
-GetDesktopWindow.restype = HWND
-GetDesktopWindow.argtypes = []
-GetTopWindow = _user32.GetTopWindow
-GetTopWindow.restype = HWND
-GetTopWindow.argtypes = [HWND]
-WS_DISABLED = 134217728 # Variable c_long
-GW_OWNER = 4 # Variable c_int
-WS_EX_APPWINDOW = 262144 # Variable c_long
-WS_EX_NOACTIVATE = 134217728 # Variable c_long
-WS_EX_TOOLWINDOW = 128 # Variable c_long
-IsWindowEnabled = _user32.IsWindowEnabled
-IsWindowEnabled.restype = BOOL
-IsWindowEnabled.argtypes = [HWND]
-OpenClipboard = _user32.OpenClipboard
-OpenClipboard.restype = BOOL
-OpenClipboard.argtypes = [HWND]
-CloseClipboard = _user32.CloseClipboard
-CloseClipboard.restype = BOOL
-CloseClipboard.argtypes = []
-GetClipboardData = _user32.GetClipboardData
-GetClipboardData.restype = HANDLE
-GetClipboardData.argtypes = [UINT]
-GlobalLock = _kernel32.GlobalLock
-GlobalLock.restype = LPVOID
-GlobalLock.argtypes = [HGLOBAL]
-GlobalUnlock = _kernel32.GlobalUnlock
-GlobalUnlock.restype = BOOL
-GlobalUnlock.argtypes = [HGLOBAL]
-CF_TEXT = 1 # Variable c_int
-CF_UNICODETEXT = 13 # Variable c_int
-SetClipboardViewer = _user32.SetClipboardViewer
-SetClipboardViewer.restype = HWND
-SetClipboardViewer.argtypes = [HWND]
-ChangeClipboardChain = _user32.ChangeClipboardChain
-ChangeClipboardChain.restype = BOOL
-ChangeClipboardChain.argtypes = [HWND, HWND]
-WM_CHANGECBCHAIN = 781 # Variable c_int
-WM_DRAWCLIPBOARD = 776 # Variable c_int
-GetClipboardOwner = _user32.GetClipboardOwner
-GetClipboardOwner.restype = HWND
-GetClipboardOwner.argtypes = []
-GHND = 66 # Variable c_int
-GlobalAlloc = _kernel32.GlobalAlloc
-GlobalAlloc.restype = HGLOBAL
-GlobalAlloc.argtypes = [UINT, SIZE_T]
-EmptyClipboard = _user32.EmptyClipboard
-EmptyClipboard.restype = BOOL
-EmptyClipboard.argtypes = []
-SetClipboardData = _user32.SetClipboardData
-SetClipboardData.restype = HANDLE
-SetClipboardData.argtypes = [UINT, HANDLE]
-GlobalAddAtomW = _kernel32.GlobalAddAtomW
-GlobalAddAtomW.restype = ATOM
-GlobalAddAtomW.argtypes = [LPCWSTR]
-GlobalAddAtom = GlobalAddAtomW # alias
-GlobalGetAtomNameW = _kernel32.GlobalGetAtomNameW
-GlobalGetAtomNameW.restype = UINT
-GlobalGetAtomNameW.argtypes = [ATOM, LPWSTR, c_int]
-GlobalGetAtomName = GlobalGetAtomNameW # alias
-GlobalDeleteAtom = _kernel32.GlobalDeleteAtom
-GlobalDeleteAtom.restype = ATOM
-GlobalDeleteAtom.argtypes = [ATOM]
-ODDPARITY = 1 # Variable c_int
-EVENPARITY = 2 # Variable c_int
-MARKPARITY = 3 # Variable c_int
-SPACEPARITY = 4 # Variable c_int
-ONE5STOPBITS = 1 # Variable c_int
-TWOSTOPBITS = 2 # Variable c_int
-HDEVINFO = PVOID
-class _SP_DEVINFO_DATA(Structure):
-    pass
-PSP_DEVINFO_DATA = POINTER(_SP_DEVINFO_DATA)
-class _SP_DEVICE_INTERFACE_DATA(Structure):
-    pass
-PSP_DEVICE_INTERFACE_DATA = POINTER(_SP_DEVICE_INTERFACE_DATA)
-SetupDiEnumDeviceInterfaces = _setupapi.SetupDiEnumDeviceInterfaces
-SetupDiEnumDeviceInterfaces.restype = BOOL
-SetupDiEnumDeviceInterfaces.argtypes = [HDEVINFO, PSP_DEVINFO_DATA, POINTER(GUID), DWORD, PSP_DEVICE_INTERFACE_DATA]
-_SP_DEVINFO_DATA._pack_ = 1
-_SP_DEVINFO_DATA._fields_ = [
-    ('cbSize', DWORD),
-    ('ClassGuid', GUID),
-    ('DevInst', DWORD),
-    ('Reserved', ULONG_PTR),
-]
-_SP_DEVICE_INTERFACE_DATA._pack_ = 1
-_SP_DEVICE_INTERFACE_DATA._fields_ = [
-    ('cbSize', DWORD),
-    ('InterfaceClassGuid', GUID),
-    ('Flags', DWORD),
-    ('Reserved', ULONG_PTR),
-]
-SP_DEVICE_INTERFACE_DATA = _SP_DEVICE_INTERFACE_DATA
-SP_DEVINFO_DATA = _SP_DEVINFO_DATA
-SetupDiDestroyDeviceInfoList = _setupapi.SetupDiDestroyDeviceInfoList
-SetupDiDestroyDeviceInfoList.restype = BOOL
-SetupDiDestroyDeviceInfoList.argtypes = [HDEVINFO]
-WSTRING = c_wchar_p
-PCWSTR = WSTRING
-SetupDiGetClassDevsW = _setupapi.SetupDiGetClassDevsW
-SetupDiGetClassDevsW.restype = HDEVINFO
-SetupDiGetClassDevsW.argtypes = [POINTER(GUID), PCWSTR, HWND, DWORD]
-SetupDiGetClassDevs = SetupDiGetClassDevsW # alias
-class _SP_DEVICE_INTERFACE_DETAIL_DATA_W(Structure):
-    pass
-PSP_DEVICE_INTERFACE_DETAIL_DATA_W = POINTER(_SP_DEVICE_INTERFACE_DETAIL_DATA_W)
-SetupDiGetDeviceInterfaceDetailW = _setupapi.SetupDiGetDeviceInterfaceDetailW
-SetupDiGetDeviceInterfaceDetailW.restype = BOOL
-SetupDiGetDeviceInterfaceDetailW.argtypes = [HDEVINFO, PSP_DEVICE_INTERFACE_DATA, PSP_DEVICE_INTERFACE_DETAIL_DATA_W, DWORD, PDWORD, PSP_DEVINFO_DATA]
-SetupDiGetDeviceInterfaceDetail = SetupDiGetDeviceInterfaceDetailW # alias
-_SP_DEVICE_INTERFACE_DETAIL_DATA_W._pack_ = 1
-_SP_DEVICE_INTERFACE_DETAIL_DATA_W._fields_ = [
-    ('cbSize', DWORD),
-    ('DevicePath', WCHAR * 1),
-]
-SetupDiGetDeviceRegistryPropertyW = _setupapi.SetupDiGetDeviceRegistryPropertyW
-SetupDiGetDeviceRegistryPropertyW.restype = BOOL
-SetupDiGetDeviceRegistryPropertyW.argtypes = [HDEVINFO, PSP_DEVINFO_DATA, DWORD, PDWORD, PBYTE, DWORD, PDWORD]
-SetupDiGetDeviceRegistryProperty = SetupDiGetDeviceRegistryPropertyW # alias
-SP_DEVICE_INTERFACE_DETAIL_DATA_W = _SP_DEVICE_INTERFACE_DETAIL_DATA_W
-SP_DEVICE_INTERFACE_DETAIL_DATA = SP_DEVICE_INTERFACE_DETAIL_DATA_W
-DIGCF_PRESENT = 2 # Variable c_int
-PSP_DEVICE_INTERFACE_DETAIL_DATA = PSP_DEVICE_INTERFACE_DETAIL_DATA_W
-GWL_HWNDPARENT = -8 # Variable c_int
-# HtmlHelp = HtmlHelpW # alias
-HtmlHelpW = _htmlhelp.HtmlHelpW
-HtmlHelpW.restype = HWND
-HtmlHelpW.argtypes = [HWND, LPCWSTR, UINT, DWORD_PTR]
-HtmlHelp = HtmlHelpW # alias
-HH_DISPLAY_TOPIC = 0 # Variable c_int
-ExitProcess = _kernel32.ExitProcess
-ExitProcess.restype = None
-ExitProcess.argtypes = [UINT]
-PROCESS_SET_QUOTA = 256 # Variable c_int
-MAXDWORD = 4294967295L # Variable c_uint
-EV_BREAK = 64 # Variable c_int
-EV_CTS = 8 # Variable c_int
-EV_DSR = 16 # Variable c_int
-EV_ERR = 128 # Variable c_int
-EV_RING = 256 # Variable c_int
-EV_RLSD = 32 # Variable c_int
-EV_RXCHAR = 1 # Variable c_int
-EV_RXFLAG = 2 # Variable c_int
-EV_TXEMPTY = 4 # Variable c_int
-LPCOMMTIMEOUTS = POINTER(_COMMTIMEOUTS)
-GetCommTimeouts = _kernel32.GetCommTimeouts
-GetCommTimeouts.restype = BOOL
-GetCommTimeouts.argtypes = [HANDLE, LPCOMMTIMEOUTS]
-SetCommTimeouts = _kernel32.SetCommTimeouts
-SetCommTimeouts.restype = BOOL
-SetCommTimeouts.argtypes = [HANDLE, LPCOMMTIMEOUTS]
-GetShellWindow = _user32.GetShellWindow
-GetShellWindow.restype = HWND
-GetShellWindow.argtypes = []
-GetSysColor = _user32.GetSysColor
-GetSysColor.restype = DWORD
-GetSysColor.argtypes = [c_int]
-COLOR_INACTIVECAPTION = 3 # Variable c_int
-def GetRValue(rgb): return ((BYTE)(rgb)) # macro
-def GetGValue(rgb): return ((BYTE)(((WORD)(rgb)) >> 8)) # macro
-def GetBValue(rgb): return ((BYTE)((rgb)>>16)) # macro
-COLOR_GRADIENTINACTIVECAPTION = 28 # Variable c_int
-COLOR_ACTIVECAPTION = 2 # Variable c_int
-COLOR_GRADIENTACTIVECAPTION = 27 # Variable c_int
-COLOR_INACTIVECAPTIONTEXT = 19 # Variable c_int
-COLOR_CAPTIONTEXT = 9 # Variable c_int
