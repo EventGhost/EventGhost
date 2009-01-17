@@ -221,7 +221,9 @@ class Document(object):
     def Close(self):
         eg.config.hideOnStartup = self.frame is None
         if self.frame is not None:
-            self.frame.Destroy()
+            frame = self.frame
+            self.frame = None
+            frame.Destroy()
         eg.config.autoloadFilePath = self.filePath
         TreeStateData.guid = self.root.guid
         TreeStateData.time = self.root.time
