@@ -22,7 +22,6 @@ Q: Can I use an IrDA dongle to control my PC with a remote?
 A: No. `CIR (consumer IR) <http://en.wikipedia.org/wiki/Consumer_IR>`_ that is 
 used by your TV remote for example, is a complete other thing than 
 `IrDA <http://en.wikipedia.org/wiki/Infrared_Data_Association>`_. 
-
 They use different frequencies, encodings and modulation. IrDA is simply not 
 made for the purposes of CIR and vice versa. 
 However there are some IrDA dongles that are advertised to work with CIR. One 
