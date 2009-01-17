@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 eg.RegisterPlugin(
     name = "IgorPlug-USB",
@@ -55,7 +56,7 @@ class IgorPlugUSB(eg.RawReceiverPlugin):
         try:
             self.dll = windll.IgorUSB
         except:
-            raise eg.Exception("No IgorPlug-USB driver installed!")
+            raise self.Exceptions.DriverNotFound
         start_new_thread(self.ReceiveThread, ())
     
     
