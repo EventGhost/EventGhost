@@ -1,4 +1,4 @@
-**0.3.6.1488 (development)**
+**0.3.7.1488 (development)**
 
 - Event items now have a configuration dialog, that is somewhat similar to
   the ones of actions and plugins. If you do an "Add Event...", the dialog 
