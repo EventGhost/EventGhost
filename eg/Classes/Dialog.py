@@ -31,8 +31,7 @@ class Dialog(wx.Dialog, eg.ControlProviderMixin):
     
     def __init__(self, *args, **kwargs):
         wx.Dialog.__init__(self, *args, **kwargs)
-        if self.GetParent() == eg.document.frame:
-            eg.document.frame.AddDialog(self)
+        eg.dialogCreateEvent.Fire(self)
         
 
     @classmethod

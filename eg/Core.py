@@ -83,6 +83,7 @@ eg.PROGRAMFILES = eg.folderPath.ProgramFiles
 eg.ValueChangedEvent, eg.EVT_VALUE_CHANGED = NewCommandEvent()
 eg.focusChangeEvent = eg.NotificationHandler()
 eg.clipboardEvent = eg.NotificationHandler()
+eg.dialogCreateEvent = eg.NotificationHandler()
 eg.pyCrustFrame = None
 eg.dummyAsyncoreDispatcher = None
 
@@ -234,6 +235,7 @@ class StopException(Exception):
 class HiddenAction:
     pass
 
+
 def MessageBox(message, caption=eg.APP_NAME, style=wx.OK, parent=None):
     dialog = eg.MessageDialog(parent, message, caption, style|wx.STAY_ON_TOP)
     result = dialog.ShowModal()
@@ -297,7 +299,9 @@ setattr(eg, "PluginClass", eg.PluginBase)
 setattr(eg, "ActionClass", eg.ActionBase)
 
 eg.taskBarIcon = eg.TaskBarIcon(
-    eg.startupArguments.isMain and not eg.startupArguments.translate
+    eg.startupArguments.isMain 
+    and not eg.startupArguments.translate
+    and not eg.startupArguments.install
 )
 eg.SetProcessingState = eg.taskBarIcon.SetProcessingState
 
