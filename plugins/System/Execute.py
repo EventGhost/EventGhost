@@ -53,12 +53,12 @@ class Execute(eg.ActionBase):
     iconFile = "icons/Execute"
     class text:
         label = "Start Program: %s"
-        FilePath = "Filepath to executable:"
+        FilePath = "Executable:"
         WorkingDir = "Working directory:"
         Parameters = "Command line options:"
         WindowOptionsDesc = "Window options:"
         WindowOptions = (
-            "Normal", 
+            "Normal window", 
             "Minimized", 
             "Maximized", 
             "Hidden"
@@ -71,7 +71,7 @@ class Execute(eg.ActionBase):
             "Below normal", 
             "Idle"
         )
-        WaitCheckbox = "Wait till application is terminated before proceed"
+        WaitCheckbox = "Wait till application is terminated before proceeding"
         browseExecutableDialogTitle = "Choose the executable"
         browseWorkingDirDialogTitle = "Choose the working directory"
 
@@ -116,15 +116,7 @@ class Execute(eg.ActionBase):
         CloseHandle(processInformation.hThread)
         
     
-    def GetLabel(
-        self, 
-        pathname='', 
-        arguments=None, 
-        winState=0,
-        waitForCompletion=False, 
-        priority=2,
-        workingDir=""
-    ):
+    def GetLabel(self, pathname='', *dummyArgs):
         return self.text.label % basename(pathname)
 
 
@@ -137,56 +129,47 @@ class Execute(eg.ActionBase):
         priority=2,
         workingDir=""
     ):
-        if not workingDir:
-            workingDir = ""
         panel = eg.ConfigPanel(self)
         text = self.text
-        waitForCompletion = bool(waitForCompletion)
-        fileText = panel.StaticText(text.FilePath)
         filepathCtrl = panel.FileBrowseButton(
             pathname,
             fileMask="*.*",
             dialogTitle=text.browseExecutableDialogTitle
         )
-    
-        argumentsText = panel.StaticText(text.Parameters)
         argumentsCtrl = panel.TextCtrl(arguments)
-        
-        workingDirText = panel.StaticText(text.WorkingDir)
         workingDirCtrl = panel.DirBrowseButton(
-            workingDir,
+            workingDir or "",
             dialogTitle=text.browseWorkingDirDialogTitle
         )
         #workingDirCtrl.SetValue(workingDir)
-        
-        winStateText = panel.StaticText(text.WindowOptionsDesc)
         winStateChoice = panel.Choice(winState, text.WindowOptions)
-        
-        prioritiesText = panel.StaticText(text.ProcessOptionsDesc)
         priorityChoice = panel.Choice(4 - priority, text.ProcessOptions)
-    
-        waitCheckBox = panel.CheckBox(waitForCompletion, text.WaitCheckbox)
+        waitCheckBox = panel.CheckBox(
+            bool(waitForCompletion), 
+            text.WaitCheckbox
+        )
         
+        SText = panel.StaticText
         lowerSizer = wx.GridBagSizer(0, 0)
         lowerSizer.AddGrowableCol(1)
         lowerSizer.AddGrowableCol(3)
         lowerSizer.AddMany([
-            (winStateText, (0, 0), (1, 1), wx.ALIGN_BOTTOM),
+            (SText(text.WindowOptionsDesc), (0, 0), (1, 1), wx.ALIGN_BOTTOM),
             (winStateChoice, (1, 0)),
             ((1, 1), (0, 1), (1, 1), wx.EXPAND),
-            (prioritiesText, (0, 2), (1, 1), wx.ALIGN_BOTTOM),
+            (SText(text.ProcessOptionsDesc), (0, 2), (1, 1), wx.ALIGN_BOTTOM),
             (priorityChoice, (1, 2)),
             ((1, 1), (0, 3), (1, 1), wx.EXPAND),
         ])
 
         panel.sizer.AddMany([
-            (fileText),
+            (SText(text.FilePath)),
             (filepathCtrl, 0, wx.EXPAND),
             ((10, 10)),
-            (argumentsText),
+            (SText(text.Parameters)),
             (argumentsCtrl, 0, wx.EXPAND),
             ((10, 10)),
-            (workingDirText),
+            (SText(text.WorkingDir)),
             (workingDirCtrl, 0, wx.EXPAND),
             (lowerSizer, 0, wx.EXPAND),
             ((10, 15)),

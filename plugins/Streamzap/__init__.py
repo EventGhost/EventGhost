@@ -167,7 +167,7 @@ class Streamzap(eg.RawReceiverPlugin):
         szReadFile = dll.sz_ReadFile
         Decode = MyDecoder.Decode
         while not self.abortThread:
-            dll.sz_ReadFile(byref(byteIRdata), byref(dwNumBytesRead))
+            szReadFile(byref(byteIRdata), byref(dwNumBytesRead))
             val = byteIRdata.value
 
             if dwNumBytesRead.value == 0:
