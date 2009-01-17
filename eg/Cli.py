@@ -25,18 +25,18 @@ import sys
 import locale
 from os.path import join, dirname, basename, splitext
 
-encoding = locale.getdefaultlocale()[1]
+ENCODING = locale.getdefaultlocale()[1]
 locale.setlocale(locale.LC_ALL, '')
 
 
 # get program directory
 if hasattr(sys, "frozen"):
-    mainDir = dirname(unicode(sys.executable, sys.getfilesystemencoding()))
+    MAIN_DIR = dirname(unicode(sys.executable, sys.getfilesystemencoding()))
 else:
-    mainDir = os.path.abspath(join(dirname(__file__), ".."))
+    MAIN_DIR = os.path.abspath(join(dirname(__file__), ".."))
 
 # change working directory to program directory
-os.chdir(mainDir)
+os.chdir(MAIN_DIR)
 
 # append our pathes to sys.path
 #sys.path.append(join(mainDir, "eg"))
@@ -54,7 +54,7 @@ class args:
     install = False
     isMain = splitext(basename(sys.argv[0]))[0].lower() == "eventghost"
     
-argv = [val.decode(encoding) for val in sys.argv]
+argv = [val.decode(ENCODING) for val in sys.argv]
 
 i = 0
 while True:
@@ -74,10 +74,10 @@ while True:
         args.hideOnStartup = True
     elif arg == '-install':
         import compileall
-        compileall.compile_dir(mainDir)
+        compileall.compile_dir(MAIN_DIR)
         args.install = True
     elif arg == '-uninstall':
-        for root, dirs, files in os.walk(mainDir):
+        for root, dirs, files in os.walk(MAIN_DIR):
             for name in files:
                 if name.lower().endswith(".pyc"):
                     os.remove(join(root, name))
