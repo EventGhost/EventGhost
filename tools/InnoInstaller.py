@@ -135,12 +135,6 @@ class InnoInstaller(object):
             #cmdclass = {"py2exe": py2exe.run},
             verbose = 0,
         )
-        if self.pyVersion == "26":
-            self.py2exeOptions["data_files"] = [
-                (self.libraryName, [
-                    join(self.pyVersionDir, "Microsoft.VC90.CRT.manifest")
-                ])
-            ]
         if self.icon:
             self.py2exeOptions["windows"][0]["icon_resources"].append(
                 (1, abspath(self.icon))
@@ -253,7 +247,9 @@ class InnoInstaller(object):
         for filename in dllNames:
             if filename not in neededDlls:
                 os.remove(join(self.libraryDir, filename))
-                
+        if self.pyVersion == "26":
+            self.RemoveAllManifests()
+    
     
     @staticmethod
     def GetCompilerPath():
@@ -274,6 +270,35 @@ class InnoInstaller(object):
             return None
         return installPath
         
+    
+    def RemoveAllManifests(self):
+        """ 
+        Remove embedded manifest resource for all DLLs ans PYDs. 
+        
+        These seems to be the only way how the setup can run with Python 2.6
+        on Vista.
+        """
+        import ctypes
+        
+        BeginUpdateResource = ctypes.windll.kernel32.BeginUpdateResourceA
+        UpdateResource = ctypes.windll.kernel32.UpdateResourceA
+        EndUpdateResource = ctypes.windll.kernel32.EndUpdateResourceA
+        
+        for (dirpath, dirnames, filenames) in os.walk(self.libraryDir):
+            if '.svn' in dirnames:
+                dirnames.remove('.svn')
+            for name in filenames:
+                ext = os.path.splitext(name)[1].lower()
+                if ext not in (".pyd", ".dll"):
+                    continue
+                path = os.path.join(dirpath, name)
+                handle = BeginUpdateResource(path, 0)
+                if handle == 0:
+                    continue
+                res = UpdateResource(handle, 24, 2, 1033, None, 0)
+                if res:
+                    EndUpdateResource(handle, 0)
+    
     
     def ExecuteInnoSetup(self):
         """
