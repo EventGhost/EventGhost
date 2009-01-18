@@ -13,7 +13,6 @@
 
 # Python code to execute, usually for sys.path manipulation such as
 # pygtk.require().
-#init-hook="import sys;sys.path.append("f:\\eventghost\\trunk\\lib%d%d\\site-packages" % sys.version_info[:2])"
 #init-hook="import sys"
 
 # Profiled execution.
