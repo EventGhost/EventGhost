@@ -282,21 +282,20 @@ class TreeItem(object):
             
                 
     def AskDelete(self):
-        if not eg.config.confirmDelete:
-            return True
         allItems = self.GetAllItems()
-        count = len(allItems) - 1
-        if count > 0:
-            mesg = eg.text.General.deleteManyQuestion % str(count)
-        else:
-            mesg = eg.text.General.deleteQuestion
-        answer = eg.MessageBox(
-            mesg, 
-            eg.APP_NAME,
-            wx.NO_DEFAULT|wx.YES_NO|wx.ICON_EXCLAMATION
-        )
-        if answer == wx.ID_NO:
-            return False
+        if eg.config.confirmDelete:
+            count = len(allItems) - 1
+            if count > 0:
+                mesg = eg.text.General.deleteManyQuestion % str(count)
+            else:
+                mesg = eg.text.General.deleteQuestion
+            answer = eg.MessageBox(
+                mesg, 
+                eg.APP_NAME,
+                wx.NO_DEFAULT|wx.YES_NO|wx.ICON_EXCLAMATION
+            )
+            if answer == wx.ID_NO:
+                return False
         dependants = self.GetDependantsOutside(allItems)
         if len(dependants) > 0:
             answer = eg.MessageBox(
