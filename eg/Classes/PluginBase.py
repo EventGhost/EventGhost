@@ -260,7 +260,7 @@ class PluginBase(object):
         If the plugin is reconfigured by the user, this method will be called
         with the same arguments as the :meth:`!__start__` method would receive.
         """
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         panel.dialog.buttonRow.applyButton.Enable(False)
         label = panel.StaticText(eg.text.General.noOptionsPlugin)
         panel.sizer.Add(label)

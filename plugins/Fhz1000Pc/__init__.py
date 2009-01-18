@@ -259,7 +259,7 @@ class ActionBase(eg.ActionClass):
         if address is None:
             address = self.defaultAddress
             
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
             
         maskedCtrl = masked.TextCtrl(
             parent=panel,
@@ -296,7 +296,7 @@ class Dim(ActionBase):
     def Configure(self, address=None, level=1):       
         if address is None:
             address = self.defaultAddress
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
             
         maskedCtrl = masked.TextCtrl(
             parent=panel,

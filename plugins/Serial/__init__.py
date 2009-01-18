@@ -254,7 +254,7 @@ class Serial(eg.RawReceiverPlugin):
         encodingNum=0,
     ):
         text = self.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         portCtrl = panel.SerialPortChoice(port)
         
         baudrateCtrl = panel.ComboBox(
@@ -358,7 +358,7 @@ class Read(eg.ActionClass):
     
     def Configure(self, count=None, timeout=1.0):
         text = self.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         if count is None:
             count = 1
             flag = False

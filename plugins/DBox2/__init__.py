@@ -149,7 +149,7 @@ class DBox2(eg.PluginBase):
             
         
     def Configure(self, host="127.0.0.1", useRcem=True):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         hostCtrl = panel.TextCtrl(host)
         useRcemCtrl = panel.CheckBox(useRcem, 'Use "rcem" instead of "rcsim"')
         panel.AddLine("d-box2 Host:", hostCtrl)

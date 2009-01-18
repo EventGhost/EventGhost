@@ -364,7 +364,7 @@ class MceRemote(eg.PluginClass):
             
         
     def Configure(self, waitTime=0.15, disableHid=True):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         waitTimeCtrl = panel.SpinNumCtrl(waitTime, integerWidth=3)
         disableHidCtrl = panel.CheckBox(disableHid, self.text.disableHid)
         panel.AddLine(self.text.buttonTimeout, waitTimeCtrl)
@@ -393,7 +393,7 @@ class TransmitIr(eg.ActionClass):
         
         
     def Configure(self, code=""):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         code = ' '.join([("%02X" % ord(c)) for c in code])
             
         editCtrl = wx.TextCtrl(panel, -1, code, style=wx.TE_MULTILINE)

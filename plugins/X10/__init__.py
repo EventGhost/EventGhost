@@ -294,7 +294,7 @@ class X10(eg.PluginBase):
         
         
     def Configure(self, remoteType=2, ids=None, prefix="X10"):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         text = self.text
         fbtypes = []
         selection = 0

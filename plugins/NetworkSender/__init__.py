@@ -74,7 +74,7 @@ class NetworkSender(eg.PluginBase):
 
     def Configure(self, host="127.0.0.1", port=1024, password=""):
         text = self.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         hostCtrl = panel.TextCtrl(host)
         portCtrl = panel.SpinIntCtrl(port, max=65535)
         passwordCtrl = panel.TextCtrl(password, style=wx.TE_PASSWORD)

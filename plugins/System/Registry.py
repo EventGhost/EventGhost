@@ -563,7 +563,7 @@ class RegistryQuery(eg.ActionBase):
             Config.lastSubkeySelected = subkey
             Config.lastValueNameSelected = valueName
 
-        panel = eg.ConfigPanel(self, resizable=True)
+        panel = eg.ConfigPanel(resizable=True)
        
         #keyChooser
         regChooserCtrl = RegistryChooser(
@@ -761,7 +761,7 @@ class RegistryChange(eg.ActionBase):
             Config.lastSubkeySelected = subkey
             Config.lastValueNameSelected = valueName
 
-        panel = eg.ConfigPanel(self, resizable=True)
+        panel = eg.ConfigPanel(resizable=True)
        
         #keyChooser
         regChooserCtrl = RegistryChooser(

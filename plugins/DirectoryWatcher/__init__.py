@@ -197,7 +197,7 @@ class DirectoryWatcher(eg.PluginClass):
                 
             
     def Configure(self, path="", includeSubdirs=False):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         dirpathCtrl = panel.DirBrowseButton(path)
         includeSubdirsCB = panel.CheckBox(includeSubdirs, self.text.watchSubDirs)
         

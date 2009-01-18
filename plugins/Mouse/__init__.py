@@ -218,7 +218,7 @@ class GoDirection(eg.ActionBase):
     
 
     def Configure(self, direction=0):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         direction = float(direction)
         valueCtrl = panel.SpinNumCtrl(float(direction), min=0, max=360)
         panel.AddLine(self.text.text1, valueCtrl, self.text.text2)
@@ -326,7 +326,7 @@ class MoveAbsolute(eg.ActionBase):
 
     
     def Configure(self, x=0, y=0):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         text = self.text
 
         xCB = panel.CheckBox(x is not None, text.text1)
@@ -388,7 +388,7 @@ class MoveRelative(eg.ActionBase):
 
     
     def Configure(self, x=0, y=0):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         text = self.text
 
         xCB = panel.CheckBox(x is not None, text.text1)
@@ -442,7 +442,7 @@ class MouseWheel(eg.ActionBase):
     
 
     def Configure(self, direction=0):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         valueCtrl = panel.SpinIntCtrl(direction, min=-100, max=100)
         panel.AddLine(self.text.text1, valueCtrl, self.text.text2)     
         while panel.Affirmed():

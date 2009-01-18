@@ -318,7 +318,7 @@ class SetIdleTime(eg.ActionBase):
         
         
     def Configure(self, waitTime=60.0):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         waitTimeCtrl = panel.SpinNumCtrl(waitTime, integerWidth=5)
         panel.AddLine(self.text.label1, waitTimeCtrl, self.text.label2)
         while panel.Affirmed():
@@ -406,7 +406,7 @@ class OpenDriveTray(eg.ActionBase):
          
         
     def Configure(self, drive=None, action=0):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         text = self.text
         radiobox = wx.RadioBox(
             panel, 
@@ -464,7 +464,7 @@ class PlaySound(eg.ActionWithStringParameter):
     
     
     def Configure(self, wavfile='', flags=wx.SOUND_ASYNC):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         text = self.text
         filepathCtrl = panel.FileBrowseButton(wavfile, fileMask=text.fileMask)
         waitCheckbox = panel.CheckBox(flags == wx.SOUND_SYNC, text.text2)
@@ -558,7 +558,7 @@ class __ComputerPowerAction(eg.ActionBase):
             
             
     def Configure(self, bForceClose=False):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         checkbox = panel.CheckBox(bForceClose, self.plugin.text.forcedCB)
         panel.sizer.Add(checkbox, 0, wx.ALL, 10)
         while panel.Affirmed():
@@ -728,7 +728,7 @@ class SetWallpaper(eg.ActionWithStringParameter):
 
 
     def Configure(self, imageFileName='', style=1):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         text = self.text
         filepathCtrl = eg.FileBrowseButton(
             panel, 
@@ -769,7 +769,7 @@ class MuteOn(eg.ActionBase):
          
         
     def Configure(self, deviceId=0):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
         panel.AddLine("Device:", deviceCtrl)
         while panel.Affirmed():
@@ -791,7 +791,7 @@ class MuteOff(eg.ActionBase):
          
         
     def Configure(self, deviceId=0):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
         panel.AddLine("Device:", deviceCtrl)
         while panel.Affirmed():
@@ -812,7 +812,7 @@ class ToggleMute(eg.ActionBase):
          
         
     def Configure(self, deviceId=0):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
         panel.AddLine("Device:", deviceCtrl)
         while panel.Affirmed():
@@ -843,7 +843,7 @@ class SetMasterVolume(eg.ActionBase):
          
         
     def Configure(self, value=0, deviceId=0):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         deviceCtrl = panel.Choice(deviceId, SoundMixer.GetMixerDevices())
         valueCtrl = panel.SpinNumCtrl(value, min=0, max=100)
         sizer = eg.HBoxSizer(
@@ -883,7 +883,7 @@ class ChangeMasterVolumeBy(eg.ActionBase):
          
         
     def Configure(self, value=0, deviceId=0):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         deviceCtrl = panel.Choice(
             deviceId, 
             choices=SoundMixer.GetMixerDevices()
@@ -998,7 +998,7 @@ class ShowPicture(eg.ActionBase):
 
 
     def Configure(self, imageFile='', display=0):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         text = self.text
         filepathCtrl = eg.FileBrowseButton(
             panel, 
@@ -1048,7 +1048,7 @@ class SetDisplayPreset(eg.ActionBase):
     
     def Configure(self, *args):
         result = [None]
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         panel.dialog.buttonRow.okButton.Enable(False)
         panel.dialog.buttonRow.applyButton.Enable(False)
         def OnButton(event):
@@ -1124,7 +1124,7 @@ class WakeOnLan(eg.ActionBase):
 
     def Configure(self, macAddress=""):
         from wx.lib.masked import TextCtrl
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         macCtrl  = TextCtrl( 
             panel, 
             mask = "##-##-##-##-##-##",
@@ -1164,7 +1164,7 @@ class SetSystemIdleTimer(eg.ActionBase):
     
     
     def Configure(self, flag=False):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         text = self.text
         radioBox = wx.RadioBox(
             panel, 

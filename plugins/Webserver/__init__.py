@@ -261,7 +261,7 @@ class Webserver(eg.PluginBase):
         authPassword=""
     ):
         text = self.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
 
         portCtrl = panel.SpinIntCtrl(port, min=1, max=65535)
         filepathCtrl = panel.DirBrowseButton(basepath)

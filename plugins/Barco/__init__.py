@@ -141,7 +141,7 @@ class SendCustom(ActionBase):
         
             
     def Configure(self, cmd=0, dat1=0, dat2=0, dat3=0, dat4=0):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         values = cmd, dat1, dat2, dat3, dat4
         ctrls = [
             panel.SpinIntCtrl(values[i], min=0, max=255) 
@@ -345,7 +345,7 @@ class RequestShape(ActionBase):
             ("Vertical bars, switch colour", 0x08),
             ("Horizontal bars, switch colour", 0x09),
         ]
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         shapeCtrl = panel.SpinIntCtrl(shape, max=255)
         xCtrl = panel.SpinIntCtrl(x, max=9)
         yCtrl = panel.SpinIntCtrl(y, max=9)
@@ -383,7 +383,7 @@ class LockIr(ActionBase):
         
         
     def Configure(self, flags=0x7f):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         choices = [
             "Stand by", 
             "Pause", 
@@ -418,7 +418,7 @@ class ReadPotentiometer(ActionBase):
             
         
     def Configure(self, kind=0, x=0, y=0):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         kindCtrl = panel.SpinIntCtrl(kind, max=255)
         xCtrl = panel.SpinIntCtrl(x, max=9)
         yCtrl = panel.SpinIntCtrl(y, max=9)
@@ -443,7 +443,7 @@ class WritePotentiometer(ActionBase):
             
         
     def Configure(self, kind=0, x=0, y=0, value=128, flags=3):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         kindCtrl = panel.SpinIntCtrl(kind, max=255)
         xCtrl = panel.SpinIntCtrl(x, max=9)
         yCtrl = panel.SpinIntCtrl(y, max=9)
@@ -506,7 +506,7 @@ class Barco(eg.PluginBase):
     
     
     def Configure(self, port=0, address=0, baudrate=9600):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         portCtrl = panel.SerialPortChoice(port)
         choices = [str(baudrate) for baudrate in BAUDRATES]
         baudrateCtrl = panel.Choice(BAUDRATES.index(baudrate), choices=choices)

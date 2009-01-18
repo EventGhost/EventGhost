@@ -72,7 +72,7 @@ class EventItem(TreeItem):
 
     
     def Configure(self, name):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         staticText = panel.StaticText(Text.eventName)
         textCtrl = panel.TextCtrl(name, size=(250, -1))
         staticText2 = panel.StaticText(Text.notice)

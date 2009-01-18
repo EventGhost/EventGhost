@@ -388,7 +388,7 @@ class ChangeRepeatStatus(ActionBase):
 
 
     def Configure(self, data=0):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         radioBox = wx.RadioBox(
             panel, 
             label=self.text.radioBoxLabel,
@@ -479,7 +479,7 @@ class SetVolume(ActionBase):
         
         
     def Configure(self, percentage=1.0):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         valueCtrl = panel.SpinNumCtrl(percentage, min=-100, max=100)
         panel.AddLine(self.text.text1, valueCtrl, self.text.text2)
         while panel.Affirmed():
@@ -513,7 +513,7 @@ class ChangeVolume(ActionBase):
         
         
     def Configure(self, percentage=1.0):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         valueCtrl = panel.SpinNumCtrl(percentage, min=-100, max=100)
         panel.AddLine(self.text.text1, valueCtrl, self.text.text2)
         while panel.Affirmed():

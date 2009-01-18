@@ -215,7 +215,7 @@ class SendRemoteKey(eg.ActionBase):
 
 
     def Configure(self, remoteName=None, keyName=None, numRepeats=None):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
             
         remoteName = remoteName or self.remoteName or ""
         keyName = keyName or self.keyName or ""

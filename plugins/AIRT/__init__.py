@@ -233,7 +233,7 @@ class AIRT(eg.PluginClass):
 
 
     def Configure(self, port=0, remotes=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         portCtrl = panel.SerialPortChoice(port)
         remoteCtrl = eg.RadioButtonGrid(
             panel, 
@@ -282,7 +282,7 @@ class SendIR(eg.ActionClass):
         repeats=1, 
         block=False
     ):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         dataCtrl = panel.TextCtrl(bin2hexstring(data))
         panel.sizer.Add(dataCtrl, 0, wx.EXPAND)
         

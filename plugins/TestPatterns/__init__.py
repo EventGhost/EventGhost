@@ -212,7 +212,7 @@ class SetDisplay(eg.ActionBase):
         
     
     def Configure(self, display=0):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         displayChoice = panel.DisplayChoice(display)
         panel.AddLine(self.plugin.text.display, displayChoice)
         while panel.Affirmed():
@@ -261,7 +261,7 @@ class Focus(TestPatternAction):
         display=0, #deprecated
     ):
         text = self.plugin.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         foregroundColourCtrl = panel.ColourSelectButton(foregroundColour)       
         backgroundColourCtrl = panel.ColourSelectButton(backgroundColour)
         
@@ -309,7 +309,7 @@ class IreWindow(TestPatternAction):
         display=0, # deprecated
     ):
         text = self.plugin.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         
         foregroundColourCtrl = panel.ColourSelectButton(foregroundColour)
         backgroundColourCtrl = panel.ColourSelectButton(backgroundColour)
@@ -372,7 +372,7 @@ class Checkerboard(TestPatternAction):
         display=0, #deprecated
     ):
         text = self.plugin.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         foregroundColourCtrl = panel.ColourSelectButton(foregroundColour)
         backgroundColourCtrl = panel.ColourSelectButton(backgroundColour)
         hCountCtrl = panel.SpinIntCtrl(hCount, min=0, max=100)
@@ -434,7 +434,7 @@ class Grid(TestPatternAction):
         display=0, # deprecated
     ):
         text = self.plugin.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
 
         foregroundColourCtrl = panel.ColourSelectButton(foregroundColour)
         backgroundColourCtrl = panel.ColourSelectButton(backgroundColour)
@@ -510,7 +510,7 @@ class Dots(TestPatternAction):
         antialiasing=False
     ):
         text = self.plugin.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
 
         foregroundColourCtrl = panel.ColourSelectButton(foregroundColour)
         backgroundColourCtrl = panel.ColourSelectButton(backgroundColour)
@@ -566,7 +566,7 @@ class ZonePlate(TestPatternAction):
            
                 
     def Configure(self, scale=128):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         scaleCtrl = panel.SpinIntCtrl(scale, min=0)
         panel.AddLine("Scale:", scaleCtrl)
         while panel.Affirmed():
@@ -607,7 +607,7 @@ class Lines(TestPatternAction):
         display=0, # deprecated
     ):
         text = self.plugin.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         orientationCtrl = panel.Choice(orientation, text.orientations)
         foregroundColourCtrl = panel.ColourSelectButton(foregroundColour)
         backgroundColourCtrl = panel.ColourSelectButton(backgroundColour)
@@ -710,7 +710,7 @@ class Bars(TestPatternAction):
         fontStr=u'0;-19;0;0;0;400;0;0;0;0;3;2;1;34;Arial',
     ):
         text = self.plugin.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         orientationCtrl = panel.Choice(orientation, text.orientations)
         firstColourButton = panel.ColourSelectButton(firstColour)
         lastColourButton = panel.ColourSelectButton(lastColour)
@@ -790,7 +790,7 @@ class SiemensStar(TestPatternAction):
         display=0, # deprecated
     ):
         text = self.plugin.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         backgroundColourCtrl = panel.ColourSelectButton(backgroundColour)
         firstColourButton = panel.ColourSelectButton(firstColour)
         secondColourButton = panel.ColourSelectButton(secondColour)
@@ -844,7 +844,7 @@ class Burst(TestPatternAction):
         numBeams=16,
     ):
         text = self.plugin.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         firstColourButton = panel.ColourSelectButton(firstColour)
         secondColourButton = panel.ColourSelectButton(secondColour)
         beamCountCtrl = panel.SpinIntCtrl(numBeams, min=1)
@@ -908,7 +908,7 @@ class Geometry(TestPatternAction):
         aspectRatio=0,
     ):
         text = self.plugin.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         aspectCtrl = panel.Choice(aspectRatio, text.aspectRatios)
         
         panel.AddLine(text.aspectRatio, aspectCtrl)
@@ -1080,7 +1080,7 @@ class Readability(TestPatternAction):
         fontStr='0;-11;0;0;0;400;0;0;0;0;3;2;1;34;Arial',
         offsetLines=True,
     ):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         textCtrl = panel.TextCtrl(testText, size=(250, -1))
         textColourCtrl = panel.ColourSelectButton(textColour)
         backgroundColourCtrl = panel.ColourSelectButton(backgroundColour)

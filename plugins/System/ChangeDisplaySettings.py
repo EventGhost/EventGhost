@@ -95,7 +95,7 @@ class ChangeDisplaySettings(eg.ActionBase):
         updateRegistry=False
     ):
         text = self.text
-        panel = eg.ConfigPanel(self)                            
+        panel = eg.ConfigPanel()                            
         if displayNum is None:
             displayNum = 1
             size, frequency, depth = GetDisplay(0).GetCurrentMode()

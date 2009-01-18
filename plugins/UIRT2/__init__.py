@@ -259,7 +259,7 @@ class UIRT2(eg.RawReceiverPlugin):
 
 
     def Configure(self, comport=0):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         portCtrl = panel.SerialPortChoice(comport)
         panel.AddLine("COM-Port:", portCtrl)
         while panel.Affirmed():
@@ -284,7 +284,7 @@ class TransmitIR(eg.ActionClass):
     
     
     def Configure(self, code=None, wait_till_finished=True):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         code1 = ""
         code2 = ""
         repeatCount = 4

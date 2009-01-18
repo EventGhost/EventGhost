@@ -308,7 +308,7 @@ class Foobar2000(eg.PluginClass):
                     "foobar2000", 
                     "foobar2000.exe"
                 )
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         filepathCtrl = eg.FileBrowseButton(
             panel, 
             size=(320,-1),
