@@ -1239,3 +1239,7 @@ PCOPYDATASTRUCT = POINTER(tagCOPYDATASTRUCT)
 WM_COPYDATA = 74 # Variable c_int '74'
 def CreateWindowW(lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam): return CreateWindowExW(0L, lpClassName, lpWindowName, dwStyle, x, y,nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam) # macro
 CreateWindow = CreateWindowW # alias
+SWP_NOACTIVATE = 16 # Variable c_int '16'
+SWP_NOOWNERZORDER = 512 # Variable c_int '512'
+SWP_SHOWWINDOW = 64 # Variable c_int '64'
+SWP_HIDEWINDOW = 128 # Variable c_int '128'
