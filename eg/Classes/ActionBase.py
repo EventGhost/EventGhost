@@ -128,7 +128,7 @@ class ActionBase(object):
         If the action is reconfigured by the user, this method will be called
         with the same arguments as the :meth:`!__call__` method.
         """
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         label = panel.StaticText(eg.text.General.noOptionsAction)
         panel.dialog.buttonRow.applyButton.Enable(False)
         panel.sizer.Add(label)

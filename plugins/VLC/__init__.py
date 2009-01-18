@@ -331,7 +331,7 @@ class Start(eg.ActionBase):
         
     def Configure(self, cmdLineArgs=""):
         vlcPath = GetVlcPath()
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         cmdLineCtrl = panel.TextCtrl(cmdLineArgs)
         resultCtrl = eg.StaticTextBox(panel)
         def OnTextChange(event=eg.wxDummyEvent):
@@ -369,7 +369,7 @@ class MyCommand(eg.ActionBase):
                
             
     def Configure(self, text="marq-marquee EventGhost"):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         mySizer = wx.FlexGridSizer(rows=3)
         staticText = panel.StaticText(self.text.label)
         textCtrl = panel.TextCtrl(text)
@@ -435,7 +435,7 @@ class VLC(eg.PluginBase):
 
     def Configure(self, host="localhost", port=1234, showFeedbackEvents=True): 
         text = self.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         hostCtrl = panel.TextCtrl(host)
         portCtrl = panel.SpinIntCtrl(port)
         checkBox = panel.CheckBox(showFeedbackEvents, text.showFeedbackEvents)

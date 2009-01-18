@@ -129,7 +129,7 @@ class Execute(eg.ActionBase):
         priority=2,
         workingDir=""
     ):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         text = self.text
         filepathCtrl = panel.FileBrowseButton(
             pathname,

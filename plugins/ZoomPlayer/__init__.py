@@ -961,7 +961,7 @@ class ZoomPlayer(eg.PluginBase):
         useNewEvents=True
     ):
         text = self.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         hostCtrl = panel.TextCtrl(host)       
         portCtrl = panel.SpinIntCtrl(port, max=65535)
         newEventCtrl = panel.CheckBox(useNewEvents, text.useNewEvents)

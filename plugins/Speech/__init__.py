@@ -212,7 +212,7 @@ class TextToSpeech(eg.ActionClass):
         volume=100
     ):
         text = self.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         plugin = self.plugin
             
         textCtrl = wx.TextCtrl(panel, -1, voiceText)           

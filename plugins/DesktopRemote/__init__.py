@@ -204,7 +204,7 @@ class CreateNew(eg.ActionClass):
         iconizeOnDoubleClick=True,
         *args
     ):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         panel.SetSizerProperty(vgap=2)
         captionCtrl = panel.TextCtrl(caption)
         showInTaskbarCtrl = panel.CheckBox(showInTaskbar, "Show in taskbar")
@@ -299,7 +299,7 @@ class AddButton(eg.ActionClass):
                     kwargs[name] = ctrl.GetValue()
             return SetResult
         
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         panel.SetSizerProperty(vgap=2)
         text = self.text
         
@@ -390,7 +390,7 @@ class StartNewLine(eg.ActionClass):
     
     
     def Configure(self, height=0):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         heightCtrl = panel.SpinIntCtrl(height)
         panel.AddLine("Height:", heightCtrl)
         while panel.Affirmed():
@@ -409,7 +409,7 @@ class Show(eg.ActionClass):
     
     
     def Configure(self, xPos=0, yPos=0, alwaysOnTop=False):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         xPosCtrl = panel.SpinIntCtrl(xPos, min=-32768, max=32767)
         yPosCtrl = panel.SpinIntCtrl(yPos, min=-32768, max=32767)
         alwaysOnTopCtrl = panel.CheckBox(

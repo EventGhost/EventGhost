@@ -122,7 +122,7 @@ class UIR(eg.RawReceiverPlugin):
             
         
     def Configure(self, port=0, byteCount=6, initSequence=True):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         
         portCtrl = panel.SerialPortChoice(port)
         byteCountCtrl = panel.SpinIntCtrl(byteCount, min=1, max=32)

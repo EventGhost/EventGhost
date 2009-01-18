@@ -282,7 +282,7 @@ class USB_UIRT(eg.RawReceiverPlugin):
             firmwareVersion = text.notFound
             firmwareDate = text.notFound
             
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         ledRxCheckBox = panel.CheckBox(ledRx, text.blinkRx)
         ledTxCheckBox = panel.CheckBox(ledTx, text.blinkTx)
         legacyRxCheckBox = panel.CheckBox(legacyRx, text.legacyCodes)
@@ -373,7 +373,7 @@ class TransmitIR(eg.ActionClass):
     
     def Configure(self, code='', repeatCount=None, inactivityWaitTime=None):
         text = self.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         if repeatCount is None:
             repeatCount = self.repeatCount
         if inactivityWaitTime is None:

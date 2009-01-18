@@ -40,7 +40,7 @@ class Test(eg.PluginClass):
         
     
     def Configure(self, password=eg.Bunch(data="")):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         passwordCtrl = panel.TextCtrl(password.data, style=wx.TE_PASSWORD)
         panel.sizer.Add(passwordCtrl)
         while panel.Affirmed():

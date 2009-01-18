@@ -361,7 +361,7 @@ class DVBViewer(eg.PluginClass):
             
     def Configure(self, useSendMessage=False):
         text = self.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         radioBox = wx.RadioBox(
             panel, 
             -1, 

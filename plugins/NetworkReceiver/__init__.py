@@ -238,7 +238,7 @@ class NetworkReceiver(eg.PluginBase):
 
     def Configure(self, port=1024, password="", prefix="TCP"):
         text = self.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         
         portCtrl = panel.SpinIntCtrl(port, max=65535)
         passwordCtrl = panel.TextCtrl(password, style=wx.TE_PASSWORD)

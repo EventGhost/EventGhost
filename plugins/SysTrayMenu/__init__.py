@@ -212,7 +212,7 @@ class SysTrayMenu(eg.PluginBase):
     
     def Configure(self, menuData=[]):
         menuData = self.Compile(menuData)
-        panel = eg.ConfigPanel(self, resizable=True)
+        panel = eg.ConfigPanel(resizable=True)
         text = self.text
         
         tree = MenuTreeListCtrl(panel, text, menuData)
@@ -414,7 +414,7 @@ class Enable(eg.ActionBase):
     
     def Configure(self, menuId=None):
         plugin = self.plugin
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         tree = MenuTreeListCtrl(panel, plugin.text, plugin.menuData, menuId)
         panel.sizer.Add(tree, 1, wx.EXPAND)
         while panel.Affirmed():
