@@ -608,7 +608,7 @@ class ZoomPlayerSession(asynchat.async_chat):
         condition set by set_terminator.
         """
         # call the plugins handler method
-        self.plugin.ValueUpdate(self.buffer)
+        self.plugin.ValueUpdate(self.buffer.decode('utf-8'))
         
         # reset the buffer
         self.buffer = ''
@@ -693,6 +693,7 @@ class ZoomPlayer(eg.PluginBase):
     ):
         self.host = host
         self.port = port
+        self.lastHeader = "9999"
         if useNewEvents:
             self.zpEvents = self.zpEvents2
         else:
@@ -765,6 +766,7 @@ class ZoomPlayer(eg.PluginBase):
                 "1": "On"
             },
         ),
+        "1811": "PlaylistCount",
         "2210": (
             "DvdAr",
             {
@@ -774,6 +776,14 @@ class ZoomPlayer(eg.PluginBase):
                 "3": "Anamorphic",
             },
         ),
+        "2710": (
+            "RandomPlayState",
+            {
+                "0": "Disabled",
+                "1": "Enabled",
+            }
+        ),
+        "3000": "ErrorMessage",
         "3100": (
             "NavigatorOpen",
             {
@@ -796,6 +806,8 @@ class ZoomPlayer(eg.PluginBase):
                 "16": "Station",
                 "17": "Confirm",
                 "18": "PlayHistory",
+                "19": "NavigationStyle",
+                "20": "Download",
             },
         ),
         "3110": (
@@ -820,8 +832,17 @@ class ZoomPlayer(eg.PluginBase):
                 "16": "Station",
                 "17": "Confirm",
                 "18": "PlayHistory",
+                "19": "NavigationStyle",
+                "20": "Download",
             },
         ),
+        "3200": (
+            "ScreenSaver",
+            {
+                "0": "Started",
+                "1": "Ended",
+            }
+        )
     }
                 
     def ValueUpdate(self, text):
@@ -830,7 +851,12 @@ class ZoomPlayer(eg.PluginBase):
             self.waitFlag.set()
             return
         header = text[0:4]
-        state = text[5:].decode('utf-8')
+        if not header.isdigit():
+            header = self.lastHeader
+            state = text
+        else:
+            self.lastHeader = header
+            state = text[5:]
         self.lastMessage[header] = state
         zpEvent = self.zpEvents.get(header, None)
         if zpEvent is not None:
@@ -847,7 +873,9 @@ class ZoomPlayer(eg.PluginBase):
                 else:
                     self.TriggerEvent(zpEvent[0] + "." + str(state))
             else:
-                self.TriggerEvent(zpEvent)
+                if not state:
+                    state = None
+                self.TriggerEvent(zpEvent, state)
             return
         if header == "1100":
             self.TriggerEvent("Timeline", [state])
@@ -930,7 +958,7 @@ class ZoomPlayer(eg.PluginBase):
         port=4769,
         dummy1=None,
         dummy2=None,
-        useNewEvents=False
+        useNewEvents=True
     ):
         text = self.text
         panel = eg.ConfigPanel(self)
