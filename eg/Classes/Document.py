@@ -189,6 +189,9 @@ class Document(object):
             self.firstVisibleItem = self.FindItemWithPath(
                 TreeStateData.firstVisibleItem
             )
+        else:
+            self.selection = self.root
+            self.firstVisibleItem = self.root
         
     
     def WriteFile(self, filePath=None):
@@ -220,11 +223,11 @@ class Document(object):
     @eg.LogItWithReturn
     def Close(self):
         eg.config.hideOnStartup = self.frame is None
+        eg.config.autoloadFilePath = self.filePath
         if self.frame is not None:
             frame = self.frame
             self.frame = None
             frame.Destroy()
-        eg.config.autoloadFilePath = self.filePath
         TreeStateData.guid = self.root.guid
         TreeStateData.time = self.root.time
         TreeStateData.expanded = self.GetExpandState()
@@ -407,6 +410,8 @@ class Document(object):
     
     def FindItemWithPath(self, path):
         item = self.root
+        if path is None:
+            return item
         try:
             for pos in path:
                 item = item.childs[pos]
