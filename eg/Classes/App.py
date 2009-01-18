@@ -22,7 +22,6 @@
 
 import eg
 import wx
-import sys
 import time
 import threading
 from eg.WinApi.Dynamic import (
@@ -85,7 +84,7 @@ class App(wx.App):
         while not egEvent.isEnded:
             time.sleep(0.01)
         eg.CallWait(eg.document.Close)
-        eg.CallWait(eg.taskBarIcon.Destroy)
+        eg.CallWait(eg.taskBarIcon.Close)
         eg.CallWait(self.OnExit)
         return 0
          
@@ -97,7 +96,7 @@ class App(wx.App):
         if eg.pyCrustFrame:
             eg.pyCrustFrame.Close()
         eg.document.Close()
-        eg.taskBarIcon.Destroy()
+        eg.taskBarIcon.Close()
         self.ExitMainLoop()
         
         
@@ -130,7 +129,7 @@ class App(wx.App):
                 thread for thread in threading.enumerate()
                 if (
                     thread is not currentThread 
-                    and (thread is not eg.messageReceiver._ThreadWorker__thread) 
+                    and thread is not eg.messageReceiver._ThreadWorker__thread 
                     and not thread.isDaemon() 
                     and thread.isAlive()
                 )
@@ -150,6 +149,9 @@ class App(wx.App):
             eg.PrintDebugNotice("The following threads did not terminate:")
             for thread in threads:
                 eg.PrintDebugNotice(" ", thread, thread.getName())
+        # destroy the TaskBarIcon, as it would otherwise stay as a ghost
+        # icon in the system-tray.
+        wx.TaskBarIcon.Destroy(eg.taskBarIcon)
         eg.PrintDebugNotice("Done!")
         ExitProcess(0)
 

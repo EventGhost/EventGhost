@@ -63,9 +63,8 @@ class TaskBarIcon(wx.TaskBarIcon):
         self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnCmdShow)
         
         
-    def Destroy(self):
+    def Close(self):
         self.notification.UnSubscribe(self.OnStateChange)
-        wx.TaskBarIcon.Destroy(self)
         
     
     def OnTaskBarMenu(self, dummyEvent):
