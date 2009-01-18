@@ -198,6 +198,25 @@ REMOTES = [
 
 REMOTES_SORT_ORDER = [2, 0, 1, 3]
 
+REMOTE_IDS = {
+    192: 1,
+    208: 2,
+    224: 3,
+    240: 4,
+    32: 5,
+    48: 6,
+    0: 7,
+    16: 8,
+    64: 9,
+    80: 10,
+    96: 11,
+    112: 12,
+    160: 13,
+    176: 14,
+    128: 15,
+    144: 16,
+}
+
 
 class X10Events:
     plugin = None
@@ -216,7 +235,7 @@ class X10Events:
         if eKeyState == 3:
             return
         plugin = self.plugin
-        remoteId = (lAddress >> 4) + 1
+        remoteId = REMOTE_IDS[(lAddress / 4) * 4]
         if remoteId not in plugin.ids:
             return
         event = str(bszCommand)
