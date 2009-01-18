@@ -26,8 +26,12 @@ import threading
 import os
 from os.path import join
 from eg.WinApi.Utils import GetMonitorDimensions
-from eg.WinApi.Dynamic import BringWindowToTop, CreateEvent, SetEvent 
-    
+from eg.WinApi.Dynamic import (
+    CreateEvent, SetEvent, SetWindowPos, SWP_HIDEWINDOW,
+    SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOOWNERZORDER, SWP_NOSIZE, SWP_SHOWWINDOW
+)
+
+HWND_FLAGS = SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOSIZE
 SKIN_DIR = join(os.path.abspath(os.path.split(__file__)[0]), "OsdSkins")
 DEFAULT_FONT_INFO = wx.Font(
     18, 
@@ -85,15 +89,12 @@ class OSDFrame(wx.Frame):
                 |wx.FRAME_NO_TASKBAR
                 |wx.STAY_ON_TOP
         )
+        self.hwnd = self.GetHandle()
         self.bitmap = wx.EmptyBitmap(0, 0)
-        self.timer = threading.Timer(
-            0.0,
-            self.SetPosition, 
-            ((-10000, -10000),)
-        )
+        # we need a timer to possibly cancel it
+        self.timer = threading.Timer(0.0, eg.DummyFunc)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_CLOSE, self.OnClose)
-        self.SetPosition((-10000, -10000))
         
         
     @eg.LogIt
@@ -113,8 +114,7 @@ class OSDFrame(wx.Frame):
         self.timer.cancel()
         if osdText.strip() == "":
             self.bitmap = wx.EmptyBitmap(0, 0)
-            self.SetPosition((-10000, -10000))
-            self.Hide()
+            SetWindowPos(self.hwnd, 0, 0, 0, 0, 0, HWND_FLAGS|SWP_HIDEWINDOW)
             SetEvent(event)
             return
 
@@ -225,9 +225,8 @@ class OSDFrame(wx.Frame):
         xFunc, yFunc = ALIGNMENT_FUNCS[alignment]
         x = displayRect.x + xFunc((displayRect.width - width), xOffset)
         y = displayRect.y + yFunc((displayRect.height - height), yOffset)
-        self.Show()
-        BringWindowToTop(self.GetHandle())
         self.SetPosition((x, y))
+        SetWindowPos(self.hwnd, 0, 0, 0, 0, 0, HWND_FLAGS|SWP_SHOWWINDOW)
         deviceContext = wx.ClientDC(self)
         deviceContext.DrawBitmap(self.bitmap, 0, 0, False)
 
@@ -293,9 +292,11 @@ class OSDFrame(wx.Frame):
         return bitmap
     
     
+    @eg.LogIt
     def OnTimeout(self):
-        self.SetPosition((-10000, -10000))
-        self.Hide()
+        wx.CallAfter(
+            SetWindowPos, self.hwnd, 0, 0, 0, 0, 0, HWND_FLAGS|SWP_HIDEWINDOW
+        )
         
         
     @eg.LogIt
