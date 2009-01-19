@@ -228,8 +228,8 @@ class USB_UIRT(eg.RawReceiverPlugin):
             self.dll = None
         
         
-    def OnDeviceRemoved(self, eventstring):
-        if eventstring.payload[0].split("#")[1] == 'Vid_0403&Pid_f850':
+    def OnDeviceRemoved(self, event):
+        if event.payload[0].split("#")[1] == 'Vid_0403&Pid_f850':
             if self.dll:
                 if not self.dll.UUIRTClose(self.hDrvHandle):
                     raise self.Exception("Error calling UUIRTClose")
@@ -237,8 +237,8 @@ class USB_UIRT(eg.RawReceiverPlugin):
             eg.Bind("System.DeviceAttached", self.OnDeviceAttached)
     
     
-    def OnDeviceAttached(self, eventstring):
-        if eventstring.payload[0].split("#")[1] == 'Vid_0403&Pid_f850':
+    def OnDeviceAttached(self, event):
+        if event.payload[0].split("#")[1] == 'Vid_0403&Pid_f850':
             if self.enabled:
                 self.__start__(*self.args)
             eg.Unbind("System.DeviceAttached", self.OnDeviceAttached)
