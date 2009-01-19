@@ -502,7 +502,7 @@ seconds to EventGhost::
         def __start__(self):
             self.stopThreadEvent = Event()
             thread = Thread(
-                target=self.ThreadWorker, 
+                target=self.ThreadLoop, 
                 args=(self.stopThreadEvent, )
             )
             thread.start()
@@ -510,7 +510,7 @@ seconds to EventGhost::
         def __stop__(self):
             self.stopThreadEvent.set()
             
-        def ThreadWorker(self, stopThreadEvent):
+        def ThreadLoop(self, stopThreadEvent):
             while not stopThreadEvent.isSet():
                 self.TriggerEvent("MyTimerEvent")
                 stopThreadEvent.wait(10.0)
