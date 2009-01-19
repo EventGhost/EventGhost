@@ -50,7 +50,7 @@ class StatusBar(wx.StatusBar):
         checkBox.Bind(wx.EVT_CHECKBOX, self.OnCheckBox)
         checkBox.SetPosition((rect.x + 2, rect.y + 2))
         checkBox.SetToolTipString(eg.text.MainFrame.onlyLogAssignedToolTip)
-        eg.taskBarIcon.notification.Subscribe(self.OnStateChange)
+        eg.Bind("ProcessingChange", self.OnProcessingChange)
         self.Reposition()
 
 
@@ -62,7 +62,7 @@ class StatusBar(wx.StatusBar):
     
     @eg.LogIt
     def Destroy(self):
-        eg.taskBarIcon.notification.UnSubscribe(self.OnStateChange)
+        eg.Unbind("ProcessingChange", self.OnProcessingChange)
         return wx.StatusBar.Destroy(self)
 
     
@@ -96,6 +96,6 @@ class StatusBar(wx.StatusBar):
         self.SetCheckBoxColour(eg.config.onlyLogAssigned)
         
         
-    def OnStateChange(self, state):
+    def OnProcessingChange(self, state):
         self.icon.SetBitmap(self.icons[state])
             

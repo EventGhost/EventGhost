@@ -70,9 +70,8 @@ class Document(object):
         self.lastUndoId = 0
         self.undoIdOnSave = 0
         self.listeners = {}
-        self.undoEvent = eg.NotificationHandler((False, False, "", ""))
-        self.selectionEvent = eg.NotificationHandler()
-        self.isDirty = eg.NotificationHandler(False)
+        eg.Notify("UndoChange", (False, False, "", ""))
+        eg.Notify("DocumentChange", False)
         self.filePath = None
         self.root = None
         self.firstVisibleItem = None
@@ -88,7 +87,7 @@ class Document(object):
     
     def SetSelection(self, selection):
         self._selection = selection
-        self.selectionEvent.Fire(selection)
+        eg.Notify("SelectionChange", selection)
         
     selection = property(fget=GetSelection, fset=SetSelection)
         
@@ -122,7 +121,7 @@ class Document(object):
         del self.stockRedo[:]
         self.undoState = 0
         self.undoStateOnSave = 0
-        self.undoEvent.Fire((False, False, "", ""))
+        eg.Notify("UndoChange", (False, False, "", ""))
 
 
     @eg.LogIt
@@ -139,7 +138,7 @@ class Document(object):
         self.autostartMacro = self.AutostartItem(root, node)
         root.childs.append(self.autostartMacro)
         eg.TreeLink.StopLoad()
-        self.isDirty.Fire(False)
+        eg.Notify("DocumentChange", False)
         if self.tree:
             wx.CallAfter(self.tree.SetData)
         return root
@@ -167,7 +166,7 @@ class Document(object):
         self.root = root
         self.selection = root
         eg.TreeLink.StopLoad()
-        self.isDirty.Fire(False)
+        eg.Notify("DocumentChange", False)
         self.AfterLoad()
         if self.tree:
             wx.CallAfter(self.tree.SetData)
@@ -212,7 +211,7 @@ class Document(object):
             except:
                 pass
             os.rename(tmpPath, filePath)
-            self.isDirty.Fire(False)
+            eg.Notify("DocumentChange", False)
             self.undoStateOnSave = self.undoState
             success = True
         except:
@@ -244,8 +243,8 @@ class Document(object):
         self.undoState += 1
         del self.stockRedo[:]
         
-        self.isDirty.Fire(True)
-        self.undoEvent.Fire((True, False, ": " + handler.name, ""))
+        eg.Notify("DocumentChange", True)
+        eg.Notify("UndoChange", (True, False, ": " + handler.name, ""))
         
         
     def Undo(self):
@@ -254,7 +253,7 @@ class Document(object):
         handler = self.stockUndo.pop()
         handler.Undo(self)
         self.undoState -= 1
-        self.isDirty.Fire(self.undoState != self.undoStateOnSave)
+        eg.Notify("DocumentChange", self.undoState != self.undoStateOnSave)
         self.stockRedo.append(handler)
         if len(self.stockUndo):
             undoName = ": " + self.stockUndo[-1].name
@@ -262,7 +261,7 @@ class Document(object):
         else:
             undoName = ""
             hasUndo = False
-        self.undoEvent.Fire((hasUndo, True, undoName, ": " + handler.name))
+        eg.Notify("UndoChange", (hasUndo, True, undoName, ": " + handler.name))
         
         
     @eg.LogIt
@@ -272,7 +271,7 @@ class Document(object):
         handler = self.stockRedo.pop()
         handler.Redo(self)
         self.undoState += 1
-        self.isDirty.Fire(self.undoState != self.undoStateOnSave)
+        eg.Notify("DocumentChange", self.undoState != self.undoStateOnSave)
         self.stockUndo.append(handler)
         if len(self.stockRedo):
             redoName = ": " + self.stockRedo[-1].name
@@ -280,7 +279,7 @@ class Document(object):
         else:
             redoName = ""
             hasRedo = False
-        self.undoEvent.Fire((True, hasRedo, ": " + handler.name, redoName))
+        eg.Notify("UndoChange", (True, hasRedo, ": " + handler.name, redoName))
         
         
     def RestoreItem(self, positionData, xmlData):
@@ -333,18 +332,8 @@ class Document(object):
                  wx.ID_NO     if file was not saved
                  wx.ID_CANCEL if user canceled possible save
         """
-        if not self.isDirty.GetValue():
+        if not eg.notificationHandlers["DocumentChange"].value:
             return wx.ID_OK
-#        dialog = eg.MessageDialog(
-#            None, 
-#            eg.text.MainFrame.SaveChanges.mesg, 
-#            eg.APP_NAME + ": " + eg.text.MainFrame.SaveChanges.title, 
-#            style = wx.YES_DEFAULT
-#                |wx.YES_NO
-#                |wx.CANCEL
-#                |wx.STAY_ON_TOP
-#                |wx.ICON_EXCLAMATION
-#        )
         dialog = SaveChangesDialog(self.frame)
         result = dialog.ShowModal()
         dialog.Destroy()
