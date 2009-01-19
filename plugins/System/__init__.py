@@ -195,8 +195,7 @@ class System(eg.PluginBase):
         
         
     def __start__(self):
-        eg.clipboardEvent.Subscribe(self.OnClipboardChange)
-        
+        eg.Bind("ClipboardChange", self.OnClipboardChange)
         #Assign all available cd drives to self.drives. If CdRom.drive
         #is not already set, the first drive returned becomes the default.
         cdDrives = []
@@ -263,7 +262,7 @@ class System(eg.PluginBase):
     def __stop__(self):
         eg.Unbind("System.SessionLock", self.StopHookCode)
         eg.Unbind("System.SessionUnlock", self.StartHookCode)
-        eg.clipboardEvent.UnSubscribe(self.OnClipboardChange)
+        eg.Unbind("ClipboardChange", self.OnClipboardChange)
         self.deviceChangeNotifier.Close()
         self.powerBroadcastNotifier.Close()
         self.StopHookCode()

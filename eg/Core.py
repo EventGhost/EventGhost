@@ -64,7 +64,7 @@ eg.plugins = eg.Bunch()
 eg.globals = eg.Bunch()
 eg.globals.eg = eg
 eg.eventTable = {}
-eg.eventTable2 = {}
+eg.notificationHandlers = {}
 eg.programCounter = None
 eg.programReturnStack = []
 eg.indent = 0
@@ -81,9 +81,6 @@ eg.folderPath = eg.FolderPath()
 eg.APPDATA = eg.folderPath.RoamingAppData
 eg.PROGRAMFILES = eg.folderPath.ProgramFiles
 eg.ValueChangedEvent, eg.EVT_VALUE_CHANGED = NewCommandEvent()
-eg.focusChangeEvent = eg.NotificationHandler()
-eg.clipboardEvent = eg.NotificationHandler()
-eg.dialogCreateEvent = eg.NotificationHandler()
 eg.pyCrustFrame = None
 eg.dummyAsyncoreDispatcher = None
 
@@ -150,20 +147,28 @@ def HasActiveHandler(eventstring):
     return False
 
 
-def Bind(eventString, eventFunc):
-    eventTable = eg.eventTable2
-    if eventString not in eventTable:
-        eventTable[eventString] = []
-    eventTable[eventString].append(eventFunc)
-
+def Bind(notification, listener):
+    if notification not in eg.notificationHandlers:
+        notificationHandler = eg.NotificationHandler()
+        eg.notificationHandlers[notification] = notificationHandler
+    else:
+        notificationHandler = eg.notificationHandlers[notification]
+    notificationHandler.listeners.append(listener)
+    return notificationHandler.value
             
-def Unbind(eventString, eventFunc):
-    eventTable = eg.eventTable2
-    if eventString not in eventTable:
+            
+def Unbind(notification, listener):
+    eg.notificationHandlers[notification].listeners.remove(listener)
+
+
+def Notify(notification, value=None):
+    if notification not in eg.notificationHandlers:
+        eg.notificationHandlers[notification] = eg.NotificationHandler(value)
         return
-    eventTable[eventString].remove(eventFunc)
-    if len(eventTable[eventString]) == 0:
-        del eventTable[eventString]
+    notificationHandler = eg.notificationHandlers[notification]
+    notificationHandler.value = value
+    for listener in notificationHandler.listeners:
+        listener(value)
 
 
 def StopMacro(ignoreReturn=False):
@@ -250,6 +255,7 @@ eg.Wait = Wait
 eg.HasActiveHandler = HasActiveHandler
 eg.Bind = Bind
 eg.Unbind = Unbind
+eg.Notify = Notify
 eg.StopMacro = StopMacro
 eg.CallWait = CallWait
 eg.DummyFunc = DummyFunc

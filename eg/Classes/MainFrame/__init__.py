@@ -127,9 +127,8 @@ class MainFrame(wx.Frame):
         # tree popup menu
         self.popupMenu = self.CreateTreePopupMenu()
 
-        value = document.isDirty.Subscribe(self.OnDocumentDirty)
-        self.toolBar.EnableTool(wx.ID_SAVE, value)
-        #self.menuBar.File.save.Enable(value)
+        isDirty = eg.Bind("DocumentChange", self.OnDocumentChange)
+        self.toolBar.EnableTool(wx.ID_SAVE, isDirty)
         
         iconBundle = wx.IconBundle()
         iconBundle.AddIcon(eg.taskBarIcon.stateIcons[0])
@@ -150,14 +149,12 @@ class MainFrame(wx.Frame):
         self.Bind(wx.aui.EVT_AUI_PANE_RESTORE, self.OnPaneRestore)
         self.UpdateViewOptions()
         self.SetSize(Config.size)
-        eg.dialogCreateEvent.Subscribe(self.OnAddDialog)
-        undoState = document.undoEvent.Subscribe(self.OnUndoEvent)
-        self.OnUndoEvent(undoState)
-        selection = document.selectionEvent.Subscribe(
-            self.OnTreeSelectionEvent
-        )
+        eg.Bind("DialogCreate", self.OnAddDialog)
+        undoState = eg.Bind("UndoChange", self.OnUndoChange)
+        self.OnUndoChange(undoState)
+        selection = eg.Bind("SelectionChange", self.OnSelectionChange)
         if selection is not None:
-            self.OnTreeSelectionEvent(selection)
+            self.OnSelectionChange(selection)
         # tell FrameManager to manage this frame
 
         if (
@@ -188,10 +185,9 @@ class MainFrame(wx.Frame):
         auiManager.Update()
         auiManager.GetPane("logger").MinSize((100, 100))\
             .Caption(" " + Text.Logger.caption)
-        value = eg.focusChangeEvent.Subscribe(self.OnFocusChange)
-        self.OnFocusChange(value)
-        
-        eg.clipboardEvent.Subscribe(self.OnClipboardChange)
+        lastFocus = eg.Bind("FocusChange", self.OnFocusChange)
+        self.OnFocusChange(lastFocus)
+        eg.Bind("ClipboardChange", self.OnClipboardChange)
         
         # create an accelerator for the "Log only assigned and activated 
         # events" checkbox. An awfull hack.
@@ -246,12 +242,12 @@ class MainFrame(wx.Frame):
         Config.perspective = self.auiManager.SavePerspective()
         self.SetStatusBar(None)
         self.statusBar.Destroy()
-        self.document.isDirty.UnSubscribe(self.OnDocumentDirty)
-        eg.focusChangeEvent.UnSubscribe(self.OnFocusChange)
-        eg.clipboardEvent.UnSubscribe(self.OnClipboardChange)
-        eg.dialogCreateEvent.UnSubscribe(self.OnAddDialog)
-        self.document.undoEvent.UnSubscribe(self.OnUndoEvent)
-        self.document.selectionEvent.UnSubscribe(self.OnTreeSelectionEvent)
+        eg.Unbind("DocumentChange", self.OnDocumentChange)
+        eg.Unbind("FocusChange", self.OnFocusChange)
+        eg.Unbind("ClipboardChange", self.OnClipboardChange)
+        eg.Unbind("DialogCreate", self.OnAddDialog)
+        eg.Unbind("SelectionChange", self.OnSelectionChange)
+        eg.Unbind("UndoChange", self.OnUndoChange)
         self.logCtrl.Destroy()
         self.treeCtrl.Destroy()
         result = wx.Frame.Destroy(self)
@@ -534,7 +530,7 @@ class MainFrame(wx.Frame):
         wx.Frame.Raise(self)
     
     
-    def OnDocumentDirty(self, isDirty):
+    def OnDocumentChange(self, isDirty):
         self.toolBar.EnableTool(wx.ID_SAVE, bool(isDirty))
         self.menuBar.Enable(wx.ID_SAVE, bool(isDirty))
         
@@ -681,14 +677,14 @@ class MainFrame(wx.Frame):
             return (False, False, False, False)
         
     
-    def OnTreeSelectionEvent(self, dummySelection):
+    def OnSelectionChange(self, dummySelection):
         canCut, canCopy, canPaste = self.GetEditCmdState()[:3]
         self.toolBar.EnableTool(wx.ID_CUT, canCut)
         self.toolBar.EnableTool(wx.ID_COPY, canCopy)
         self.toolBar.EnableTool(wx.ID_PASTE, canPaste)
         
     
-    def OnUndoEvent(self, undoState):
+    def OnUndoChange(self, undoState):
         hasUndos, hasRedos, undoName, redoName = undoState
         undoName = Text.Menu.Undo + undoName
         redoName = Text.Menu.Redo + redoName

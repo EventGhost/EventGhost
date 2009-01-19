@@ -401,7 +401,7 @@ class TreeItem(object):
                 wx.TreeItemIcon_Normal
             )
             if self.document.selection == self:
-                self.document.selectionEvent.Fire(self)
+                eg.Notify("SelectionChange", self)
                 
 
     def Execute(self):

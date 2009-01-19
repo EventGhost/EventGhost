@@ -47,9 +47,7 @@ class TaskBarIcon(wx.TaskBarIcon):
         self.processingEvent = None
         self.currentState = 0
         self.reentrantLock = threading.Lock()
-        self.notification = eg.NotificationHandler(0)
-        self.notification.Subscribe(self.OnStateChange)
-        
+        eg.Bind("ProcessingChange", self.OnProcessingChange)
         menu = self.menu = wx.Menu()
         text = eg.text.MainFrame.TaskBarMenu
         menu.Append(ID_SHOW, text.Show)
@@ -64,7 +62,7 @@ class TaskBarIcon(wx.TaskBarIcon):
         
         
     def Close(self):
-        self.notification.UnSubscribe(self.OnStateChange)
+        eg.Unbind("ProcessingChange", self.OnProcessingChange)
         
     
     def OnTaskBarMenu(self, dummyEvent):
@@ -84,7 +82,7 @@ class TaskBarIcon(wx.TaskBarIcon):
         eg.app.Exit(event)
         
 
-    def OnStateChange(self, state):
+    def OnProcessingChange(self, state):
         self.SetIcon(self.stateIcons[state], self.tooltip)
     
         
@@ -114,7 +112,7 @@ class TaskBarIcon(wx.TaskBarIcon):
                 self.currentEvent = event
                 self.processingEvent = event
             self.currentState = state
-            wx.CallAfter(self.notification.Fire, state)
+            wx.CallAfter(eg.Notify, "ProcessingChange", state)
         finally:
             self.reentrantLock.release()
 

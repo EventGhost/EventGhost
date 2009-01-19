@@ -144,10 +144,10 @@ class EventGhostEvent(object):
     def Execute(self):
         #start = clock()
         eventString = self.string
-        eventHandlerList = eg.eventTable2.get(eventString, [])
-        for eventFunc in eventHandlerList:
-            if eventFunc(self) == True:
-                return
+        if eventString in eg.notificationHandlers:
+            for listener in eg.notificationHandlers[eventString].listeners:
+                if listener(self) == True:
+                    return
             
         eg.event = self
         eg.eventString = eventString

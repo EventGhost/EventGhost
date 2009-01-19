@@ -20,7 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-__all__ = ["Bunch", "LogIt", "LogItWithReturn",
+__all__ = ["Bunch", "NotificationHandler", "LogIt", "LogItWithReturn",
     "TimeIt", "AssertNotMainThread", "AssertNotActionThread", "ParseString",
     "SetClass", "EnsureVisible", "AsGreenlet",
     "VBoxSizer", "HBoxSizer", "EqualizeWidths", "wxDummyEvent",
@@ -62,6 +62,15 @@ class Bunch(object):
         self.__dict__.update(kwargs)
     
     
+
+class NotificationHandler(object):
+    __slots__ = ["value", "listeners"]
+    
+    def __init__(self, initialValue=None):
+        self.value = initialValue
+        self.listeners = []
+        
+
 
 def GetMyRepresentation(value):
     """

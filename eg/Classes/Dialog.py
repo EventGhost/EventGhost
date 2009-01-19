@@ -31,7 +31,7 @@ class Dialog(wx.Dialog, eg.ControlProviderMixin):
     
     def __init__(self, *args, **kwargs):
         wx.Dialog.__init__(self, *args, **kwargs)
-        eg.dialogCreateEvent.Fire(self)
+        eg.Notify("DialogCreate", self)
         
 
     @classmethod

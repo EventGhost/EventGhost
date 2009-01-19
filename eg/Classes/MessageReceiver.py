@@ -112,7 +112,7 @@ class MessageReceiver(eg.ThreadWorker):
         
         
     def OnDrawClipboard(self, dummyHwnd, mesg, wParam, lParam):
-        wx.CallAfter(eg.clipboardEvent.Fire)
+        wx.CallAfter(eg.Notify, "ClipboardChange")
         # pass the message to the next window in the clipboard viewer chain
         if self.hwndNextViewer:
             SendMessage(self.hwndNextViewer, mesg, wParam, lParam)
