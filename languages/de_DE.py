@@ -495,6 +495,10 @@ class Plugin:
         class ToggleMute:
             name = u"Stummschaltung umschalten"
             description = u"Wechselt die Stummschaltung von aktiviert auf deaktiviert und umgekehrt."
+        class WakeOnLan:
+            name = u"Wake on LAN"
+            description = u"Sendet ein spezielles Netzwerkpaket um einen ausgeschalteten Computer über die eingebaute Netzwerkkarte zu starten."
+            parameterDescription = u"MAC-Adresse der aufzuweckende Netzwerkkarten :"
     class Window:
         name = u"Fenster"
         class BringToFront:
@@ -555,6 +559,7 @@ class Plugin:
             text4 = u"Pixel"
         class Restore:
             name = u"Fenster wiederherstellen"
+            description = u"Stellt die Größe eines vorher maximierten Fensters wieder her."
         class SendKeys:
             name = u"Emuliere Tastatureingabe"
             description = u'Diese Aktion emuliert Tastatureingaben, die zur Kontrolle von anderen Programmen verwendet werden können. \n\n<p>Geben Sie einfach den zu tippenden Text in die Textbox ein. Um Sondertasten zu emulieren, muss ein Schlüsselwort in geschweifte Klammern gesetzt werden.\n<p>\nFor example if you want to have a cursor-up-key you write <b>{Up}</b>. You \ncan combine multiple keywords with the plus sign to get key-combinations like \n<b>{Shift+Ctrl+F1}</b> or <b>{Ctrl+V}</b>. The keywords are not \ncase-sensitive, so you can write {SHIFT+ctrl+F1} as well if you like. \n<p>\nSome keys differentiate between the left or the right side of the keyboard \nand can then be prefixed with an "L" or "R", like the Windows-Key:<br>\n<b>{Win}</b> or <b>{LWin}</b> or <b>{RWin}</b>\n<p>\nAnd here is the list of the remaining keywords EventGhost understands:<br>\n<b>{Ctrl}</b> or <b>{Control}<br>\n{Shift}<br>\n{Alt}<br>\n{Return}</b> or <b>{Enter}<br>\n{Back}</b> or <b>{Backspace}<br>\n{Tab}</b> or <b>{Tabulator}<br>\n{Esc}</b> or <b>{Escape}<br>\n{Spc}</b> or <b>{Space}<br>\n{Up}<br>\n{Down}<br>\n{Left}<br>\n{Right}<br>\n{PgUp}</b> or <b>{PageUp}<br>\n{PgDown}</b> or <b>{PageDown}<br>\n{Home}<br>\n{End}<br>\n{Ins}</b> or <b>{Insert}<br>\n{Del}</b> or <b>{Delete}<br>\n{Pause}<br>{Capslock}<br>\n{Numlock}<br>\n{Scrolllock}<br>\n{F1}, {F2}, ... , {F24}<br>\n{Apps}</b> (This is the context-menu-key)<b><br>\n<br>\n</b>These will emulate keys from the numpad:<b><br>\n{Divide}<br>{Multiply}<br>\n{Subtract}<br>\n{Add}<br>\n{Decimal}<br>\n{Numpad0}, {Numpad1}, ... , {Numpad9}</b>\n'
