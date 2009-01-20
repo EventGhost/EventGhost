@@ -20,6 +20,9 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+# TODO: Use of eg.SerialThread instead of eg.SerialPort
+
+import eg
 
 eg.RegisterPlugin(
     name = "Serial Port",
@@ -84,6 +87,7 @@ class Text:
         read_time = "and wait this maximum number of milliseconds for them:"
     
 
+import wx
 import threading
 import win32event
 import win32file
@@ -341,7 +345,7 @@ class Write(eg.ActionWithStringParameter):
     
     
     
-class Read(eg.ActionClass):
+class Read(eg.ActionBase):
     
     def __call__(self, count=None, timeout=0.0):
         serial = self.plugin.serial
@@ -353,7 +357,7 @@ class Read(eg.ActionClass):
     
     
     def GetLabel(self, *args):
-        return eg.ActionClass.GetLabel(self)
+        return eg.ActionBase.GetLabel(self)
     
     
     def Configure(self, count=None, timeout=1.0):
