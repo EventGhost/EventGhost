@@ -20,12 +20,13 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+from __future__ import with_statement
 import eg
 
 eg.RegisterPlugin(
     name = "UIRT2",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.1." + "$LastChangedRevision$".split()[1],
     kind = "remote",
     canMultiLoad = True,
     description = (
@@ -41,107 +42,131 @@ eg.RegisterPlugin(
 )
 
 import wx
-import threading
-import Queue
-import time
-import binascii
-import string
-from eg.WinApi.SerialPort import SerialPort
+from threading import Thread, Event
+from time import sleep, clock
+from binascii import hexlify, unhexlify
+from Queue import Queue, Full
+from string import hexdigits
 
 SAMPLE_TIME = 0.00005
-MyDecoder = eg.IrDecoder(SAMPLE_TIME)
+IrDecoder = eg.IrDecoder(SAMPLE_TIME)
 
     
+# currently unused stuff
+
+#def GetStructTime(code, start):
+#    tvalue = (ord(code[start+1]) * 256) + ord(code[start+2])
+#    bBits = ord(code[start+3])
+#    bHdr1 = ord(code[start+4])
+#    bHdr0 = ord(code[start+5])
+#    bOff0 = ord(code[start+6])
+#    bOff1 = ord(code[start+7])
+#    bOn0 = ord(code[start+8])
+#    bOn1 = ord(code[start+9])
+#    tvalue += bHdr1 + bHdr0
+#    for i in range(0, bBits):
+#        bit = (ord(code[start + 10 + (i / 8)]) >> (i % 8)) & 1
+#        if (i % 2) == 0:
+#            if bit:
+#                tvalue += bOn1
+#            else:
+#                tvalue += bOn0
+#        else:
+#            if bit:
+#                tvalue += bOff1
+#            else:
+#                tvalue += bOff0
+#    return tvalue
+#
+#
+#def CalcTime(code):
+#    tvalue = 0
+#    if code[0] == "\x36":  
+#        # RAW
+#        length = ord(code[1])
+#        tvalue = (ord(code[2]) * 256) + ord(code[3])
+#        for i in range(4, length + 4):
+#            tvalue += ord(code[i])
+#        tvalue = tvalue * (ord(code[-2]) & 0x1F)
+#        #tvalue -= (ord(code[2]) * 256) + ord(code[3])
+#    elif (ord(code[0]) & 0x1F) > 0:
+#        # REMSTRUCT1
+#        repeat = ord(code[0]) & 0x1F
+#        tvalue = GetStructTime(code, 0) * repeat
+#        #tvalue -= (ord(code[1]) * 256) + ord(code[2])
+#
+#    else:
+#        # REMSTRUCT2
+#        tvalue = GetStructTime(code, 0)
+#        repeat = ord(code[26]) & 0x1F
+#        tvalue = tvalue + (GetStructTime(code, 26) * repeat)
+#    return tvalue * SAMPLE_TIME
+
+
 def CalcChecksum(data):
     checksum = 0
-    for i in xrange(len(data)):
-        checksum += ord(data[i])
+    for byte in data:
+        checksum += ord(byte)
         checksum %= 256
     checksum = (0x100 - checksum) % 256
     return chr(checksum)
     
 
-def GetStructTime(code, start):
-    tvalue = (ord(code[start+1]) * 256) + ord(code[start+2])
-    bBits = ord(code[start+3])
-    bHdr1 = ord(code[start+4])
-    bHdr0 = ord(code[start+5])
-    bOff0 = ord(code[start+6])
-    bOff1 = ord(code[start+7])
-    bOn0 = ord(code[start+8])
-    bOn1 = ord(code[start+9])
-    tvalue += bHdr1 + bHdr0
-    for i in range(0, bBits):
-        bit = (ord(code[start + 10 + (i / 8)]) >> (i % 8)) & 1
-        if (i % 2) == 0:
-            if bit:
-                tvalue += bOn1
-            else:
-                tvalue += bOn0
-        else:
-            if bit:
-                tvalue += bOff1
-            else:
-                tvalue += bOff0
-    return tvalue
-
-
-def CalcTime(code):
-    tvalue = 0
-    if code[0] == "\x36":  
-        # RAW
-        length = ord(code[1])
-        tvalue = (ord(code[2]) * 256) + ord(code[3])
-        for i in range(4, length + 4):
-            tvalue += ord(code[i])
-        tvalue = tvalue * (ord(code[-2]) & 0x1F)
-        #tvalue -= (ord(code[2]) * 256) + ord(code[3])
-    elif (ord(code[0]) & 0x1F) > 0:
-        # REMSTRUCT1
-        repeat = ord(code[0]) & 0x1F
-        tvalue = GetStructTime(code, 0) * repeat
-        #tvalue -= (ord(code[1]) * 256) + ord(code[2])
-
-    else:
-        # REMSTRUCT2
-        tvalue = GetStructTime(code, 0)
-        repeat = ord(code[26]) & 0x1F
-        tvalue = tvalue + (GetStructTime(code, 26) * repeat)
-    return tvalue * SAMPLE_TIME
-
-
-class MyHexValidator(wx.PyValidator):
-    def __init__(self):
+class HexValidator(wx.PyValidator):
+    
+    def __init__(self, maxLength=100, allowRaw=False):
+        self.maxLength = maxLength
+        self.allowRaw = allowRaw
         wx.PyValidator.__init__(self)
         self.Bind(wx.EVT_CHAR, self.OnChar)
 
+
     def Clone(self):
-        return MyHexValidator()
+        return HexValidator(self.maxLength, self.allowRaw)
+
 
     def TransferToWindow(self):
         return True
         
+        
     def TransferFromWindow(self):
         return True
 
+
+    @eg.LogIt
     def Validate(self, win):
-        tc = self.GetWindow()
-        val = tc.GetValue()
+        val = win.GetValue()
         for x in val:
-            if x not in string.hexdigits:
+            if x not in hexdigits:
                 return False
         return True
 
 
     def OnChar(self, event):
-        key = event.KeyCode()
+        key = event.KeyCode
 
         if key < wx.WXK_SPACE or key == wx.WXK_DELETE or key > 255:
             event.Skip()
             return
 
-        if chr(key) in string.hexdigits:
-            event.Skip()
+        textCtrl = self.GetWindow()
+        startPos, endPos = textCtrl.GetSelection()
+        length = textCtrl.GetLastPosition() - (endPos - startPos)
+        if length >= self.maxLength:
+            if not wx.Validator_IsSilent():
+                wx.Bell()
+            return
+        
+        if(
+            self.allowRaw 
+            and textCtrl.GetInsertionPoint() == 0 
+            and chr(key).upper() == "R"
+        ):
+            textCtrl.WriteText("R")
+            return 
+        
+        if chr(key) in hexdigits:
+            textCtrl.WriteText(chr(key).upper())
             return
 
         if not wx.Validator_IsSilent():
@@ -152,112 +177,88 @@ class MyHexValidator(wx.PyValidator):
         return
 
 
-# Thread class that executes processing
-class UirtThread(threading.Thread):
-    
-    def __init__(self, comport, comspeed, plugin):
-        self.receiveQueue = Queue.Queue(2048)
-        threading.Thread.__init__(self)
-        self._want_abort = False
-        self.comport = comport
-        self.comspeed = comspeed
-        self.plugin = plugin
-        self.start()
-        
-        
-    def run(self):
-        # This is the code executing in the new thread. 
-        lasttime = time.clock()
-        sp = self.sp = SerialPort(self.comport, self.comspeed)
-        try:
-            sp.open()
-        except:
-            self.plugin.PrintError("Can't open COM port.")
-            return 
-        sp.SetRTS()
-        buffer = ""
-        try:
-            success = False
-            for i in range(0, 3):
-                time.sleep(0.05)
-                sp.read()
-                # get version
-                sp.write("\x23\xdd")
-                time.sleep(0.05)
-                response = sp.read()
-                if response != "\x01\x04\xFB":
-                    continue
-                # set raw mode
-                sp.write("\x21\xdf")
-                time.sleep(0.05)
-                response = sp.read()
-                if response != "\x21":
-                    continue
-                success = True
-                break
-            if not success:
-                self.plugin.PrintError("Error connecting to UIRT2")
-                return
-            while not self._want_abort:
-                if not self.receiveQueue.empty():
-                    received_event = self.receiveQueue.get()
-                    if received_event[0] == 1:
-                        n = sp.write(received_event[1])
-                        time.sleep(0.05)
-                        data = sp.read(-1)
-                        if data != " ":
-                            self.plugin.PrintError("Error sending IR code to UIRT2")
-                        data = ""
-                        while data != "\x21" and not self._want_abort:
-                            sp.write("\x21\xdf")
-                            time.sleep(0.05)
-                            data = sp.read(-1)
-                        #time.sleep(calc_time(received_event[1]) + 0.05)
-                        received_event[2].set()
-                data = sp.read(-1)
-                if len(data):
-                    buffer += data
-                    while True:
-                        terminator_pos = buffer.find("\xff")
-                        if terminator_pos < 0:
-                            break
-                        data = []
-                        for c in buffer[2:terminator_pos]:
-                            data.append(ord(c))
-                        buffer = buffer[terminator_pos+1:]
-                        if len(data) < 2:
-                            continue
-                        event = MyDecoder.Decode(data, len(data))
-                        if event:
-                            self.plugin.TriggerEvent(event)
-                else:
-                    time.sleep(0.01)
-        finally:
-            sp.write("\x20\xe0")
-            sp.close()
-            
-
-    def abort(self):
-        self._want_abort = 1
-        self.join(1.0)
-
-
-
 class UIRT2(eg.RawReceiverPlugin):
     
     def __init__(self):
         eg.RawReceiverPlugin.__init__(self)
+        self.buffer = ""
         self.AddAction(TransmitIR)
 
 
     def __start__(self, comport=0):
-        self.thread = UirtThread(comport, 115200, self)
+        serialThread = self.serialThread = eg.SerialThread()
+        serialThread.Open(comport, 115200)
+        serialThread.Start()
+        serialThread.SetRts()
+        for dummyCounter in range(3):
+            sleep(0.05)
+            serialThread.Flush()            
+            serialThread.Write("\x23\xdd") # get version
+            if serialThread.Read(3, 0.2) != "\x01\x04\xFB":
+                continue            
+            serialThread.Write("\x21\xdf") # set RAW mode
+            if serialThread.Read(1, 0.1) != "\x21":
+                continue
+            break
+        else:
+            serialThread.Close()
+            raise self.Exceptions.InitFailed
+        self.buffer = ""
+        serialThread.SetReadEventCallback(self.OnReceive)
+        self.sendQueue = Queue(50)
+        self.alive = True
+        Thread(target=self.SendLoop).start()
 
 
+    @eg.LogIt
     def __stop__(self):
-        self.thread.abort()
+        self.alive = False
+        self.sendQueue.put((StopIteration, None))
+        self.serialThread.SuspendReadEvents()
+        self.serialThread.Write("\x20\xe0")
+        self.serialThread.Close()
 
 
+    @eg.LogIt
+    def OnReceive(self, serialThread):
+        self.buffer += serialThread.Read(1024)
+        while True:
+            terminatorPos = self.buffer.find("\xff")
+            if terminatorPos < 0:
+                break
+            data = [ord(char) for char in self.buffer[2:terminatorPos]]
+            self.buffer = self.buffer[terminatorPos+1:]
+            if len(data) < 2:
+                continue
+            eventString = IrDecoder.Decode(data, len(data))
+            if eventString:
+                self.TriggerEvent(eventString)
+        
+        
+    @eg.LogItWithReturn
+    def SendLoop(self):
+        while self.alive:
+            code, event = self.sendQueue.get()
+            if code == StopIteration:
+                return
+            with self.serialThread as serial:
+                serial.Write(code)
+                sleep(0.05)
+                data = serial.Read(1)
+                if data != " ":
+                    self.PrintError("Error sending IR code to UIRT2")
+                data = ""
+                startTime = clock()
+                while data != "\x21":
+                    if (clock() - startTime) > 5.0:
+                        self.PrintError("Transmitting timed out")
+                        break
+                    serial.Write("\x21\xdf")
+                    sleep(0.05)
+                    data = serial.Read(1)
+            event.set()
+            
+    
     def Configure(self, comport=0):
         panel = eg.ConfigPanel()
         portCtrl = panel.SerialPortChoice(comport)
@@ -267,23 +268,25 @@ class UIRT2(eg.RawReceiverPlugin):
     
     
     
-class TransmitIR(eg.ActionClass):
+class TransmitIR(eg.ActionBase):
     name = "Transmit IR"
     
-    def __call__(self, code, wait_till_finished=True):
-        event = threading.Event()
-        self.plugin.thread.receiveQueue.put((1, code, event))
-        if wait_till_finished:
-            event.wait(5.0)
-            if not event.isSet():
-                self.PrintError("UIRT2 transmitting timed out")                
-        
+    def __call__(self, code, waitUntilFinished=True):
+        finishEvent = Event()
+        try:
+            self.plugin.sendQueue.put((code, finishEvent), False)
+        except Full:
+            self.PrintError("Too many transmissions pending")
+            return
+        if waitUntilFinished:
+            finishEvent.wait(10.0)
+                        
 
-    def GetLabel(self, *args):
+    def GetLabel(self, *dummyArgs):
         return self.name
     
     
-    def Configure(self, code=None, wait_till_finished=True):
+    def Configure(self, code="", waitUntilFinished=True):
         panel = eg.ConfigPanel()
         code1 = ""
         code2 = ""
@@ -293,19 +296,19 @@ class TransmitIR(eg.ActionClass):
             code += (48 * "\x00") 
             if code[0] == "\x36":
                 length = ord(code[1])
-                code1 = "R" + binascii.hexlify(code[2:length]).upper()
+                code1 = "R" + hexlify(code[2:length]).upper()
                 repeatCount = ord(code[length]) & 0x1F
                 carrier = ord(code[length]) >> 6
             else:
                 repeatCount = ord(code[0]) & 0x1F
                 if repeatCount > 0:
                     carrier = ord(code[0]) >> 6
-                    code1 = binascii.hexlify(code[1:26]).upper()
+                    code1 = hexlify(code[1:26]).upper()
                 else:
                     repeatCount = ord(code[26]) & 0x1F
                     carrier = ord(code[0]) >> 6
-                    code1 = binascii.hexlify(code[1:26]).upper()
-                    code2 = binascii.hexlify(code[27:48]).upper()
+                    code1 = hexlify(code[1:26]).upper()
+                    code2 = hexlify(code[27:48]).upper()
         if carrier < 0:
             carrier = 0
         elif carrier > 3:
@@ -314,33 +317,31 @@ class TransmitIR(eg.ActionClass):
             repeatCount = 1
         elif repeatCount > 31:
             repeatCount = 31
-        sizer = wx.FlexGridSizer(4,2,5,5)
+        sizer = wx.FlexGridSizer(4, 2, 5, 5)
         sizer.AddGrowableCol(1)
         
-        st1 = wx.StaticText(panel, -1, "Code 1:")
-        sizer.Add(st1, 0, wx.ALIGN_CENTER_VERTICAL)
-        code1Ctrl = wx.TextCtrl(panel, -1, code1, size=(325,-1))
+        sizer.Add(panel.StaticText("Code 1:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        code1Ctrl = panel.TextCtrl(
+            code1, 
+            size=(325, -1),
+            validator=HexValidator(allowRaw=True),
+        )
         sizer.Add(code1Ctrl)
         
-        st2 = wx.StaticText(panel, -1, "Code 2:")
-        sizer.Add(st2, 0, wx.ALIGN_CENTER_VERTICAL)
-        code2Ctrl = wx.TextCtrl(
-            panel, 
-            -1, 
+        sizer.Add(panel.StaticText("Code 2:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        code2Ctrl = panel.TextCtrl(
             code2, 
-            size=(275,-1), 
-            validator=MyHexValidator()
+            size=(275, -1), 
+            validator=HexValidator()
         )
         sizer.Add(code2Ctrl)
         
-        st3 = wx.StaticText(panel, -1, "Repeat:")
-        sizer.Add(st3, 0, wx.ALIGN_CENTER_VERTICAL)
+        sizer.Add(panel.StaticText("Repeat:"), 0, wx.ALIGN_CENTER_VERTICAL)
         repeatCtrl = eg.SpinIntCtrl(panel, -1, repeatCount, 1, 31)
-        repeatCtrl.SetInitialSize((50,-1))
+        repeatCtrl.SetInitialSize((50, -1))
         sizer.Add(repeatCtrl, 0)
         
-        st3 = wx.StaticText(panel, -1, "Carrier:")
-        sizer.Add(st3, 0, wx.ALIGN_CENTER_VERTICAL)
+        sizer.Add(panel.StaticText("Carrier:"), 0, wx.ALIGN_CENTER_VERTICAL)
         choices = ('35.7 kHz', '37.0 kHz', '38.4 kHz', '40.0 kHz')
         carrierCtrl = wx.Choice(panel, -1, choices=choices)
         carrierCtrl.SetSelection(3 - carrier)
@@ -348,31 +349,36 @@ class TransmitIR(eg.ActionClass):
                     
         panel.sizer.Add(sizer, 0, wx.EXPAND)
         
-        panel.sizer.Add((5,5))
-        cb = wx.CheckBox(panel, -1, "Pause till transmission finished")
-        cb.SetValue(wait_till_finished)
-        panel.sizer.Add(cb)
+        panel.sizer.Add((5, 5))
+        waitUntilFinishedCtrl = panel.CheckBox(
+            waitUntilFinished, 
+            "Pause till transmission is finished"
+        )
+        panel.sizer.Add(waitUntilFinishedCtrl)
 
         while panel.Affirmed():
             code1 = code1Ctrl.GetValue()
             if len(code1) == 0:
-                panel.SetResult(None, cb.GetValue())
+                panel.SetResult("", waitUntilFinishedCtrl.GetValue())
                 continue
             code2 = code2Ctrl.GetValue()
             repeatCount = repeatCtrl.GetValue()
             carrier = 3 - carrierCtrl.GetSelection()
             if code1[0] == "R":
-                data = binascii.unhexlify(code1[1:])
+                data = unhexlify(code1[1:])
                 bCmd = repeatCount | (carrier << 6)
                 code = "\x36" + chr(len(data) + 2) + data + chr(bCmd)
             elif len(code2) == 0:
-                data = binascii.unhexlify(code1)
+                data = unhexlify(code1)
                 bCmd = repeatCount | (carrier << 6)
                 code = chr(bCmd) + data
             else:
                 bCmd = 0 | (carrier << 6)
                 bCmd2 = repeatCount | (carrier << 6)
-                code = chr(bCmd) + binascii.unhexlify(code1) \
-                       + chr(bCmd2) + binascii.unhexlify(code2)
-            panel.SetResult(code + CalcChecksum(code), cb.GetValue())
+                code = chr(bCmd) + unhexlify(code1) \
+                       + chr(bCmd2) + unhexlify(code2)
+            panel.SetResult(
+                code + CalcChecksum(code), 
+                waitUntilFinishedCtrl.GetValue()
+            )
 
