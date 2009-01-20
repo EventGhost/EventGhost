@@ -179,9 +179,9 @@ class SerialThread(Thread):
         self.dcb.DCBlength = sizeof(DCB)
         self.oldCommTimeouts = COMMTIMEOUTS()
         
-        self.readCounter = 0
         self.readEventCallback = None
         self.readEventLock = Lock()
+        self.readEventLock.acquire()
         self.readCondition = Condition()
         self.buffer = ""
         self.keepAlive = True
@@ -324,6 +324,7 @@ class SerialThread(Thread):
         you can easily call :meth:`Read` and :meth:`Write` on this object.
         """
         self.readEventCallback = callback
+        self.readEventLock.release()
         
         
     def SuspendReadEvents(self):
@@ -497,6 +498,12 @@ class SerialThread(Thread):
         self.readCondition.release()
             
             
+    def Flush(self):
+        self.readCondition.acquire()
+        self.buffer = ""
+        self.readCondition.release()
+        
+    
     def Read(self, numBytes=1, timeout=0.0):
         """
         Reads data from the serial port.
@@ -511,7 +518,6 @@ class SerialThread(Thread):
                 break
             self.readCondition.wait(waitTime)
         data = self.buffer[:numBytes]
-        self.readCounter += len(data)
         self.buffer = self.buffer[numBytes:]
         self.readCondition.release()
         return data
