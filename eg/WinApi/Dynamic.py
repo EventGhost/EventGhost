@@ -1,8 +1,10 @@
+#pylint: disable-msg=C0103,C0301,C0302
+
 # This file gets automatically extended by ctypeslib.dynamic_module, so don't
 # edit it yourself.
-#pylint: disable-msg=C0103,C0301
-from ctypes import *
-from ctypes.wintypes import *
+
+from ctypes import * #pylint: disable-msg=W0401,W0614
+from ctypes.wintypes import * #pylint: disable-msg=W0401,W0614
 _user32 = WinDLL("user32")
 _kernel32 = WinDLL("kernel32")
 _ole32 = WinDLL("ole32")
@@ -1243,3 +1245,48 @@ SWP_NOACTIVATE = 16 # Variable c_int '16'
 SWP_NOOWNERZORDER = 512 # Variable c_int '512'
 SWP_SHOWWINDOW = 64 # Variable c_int '64'
 SWP_HIDEWINDOW = 128 # Variable c_int '128'
+GA_PARENT = 1 # Variable c_int '1'
+SetCommMask = _kernel32.SetCommMask
+SetCommMask.restype = BOOL
+SetCommMask.argtypes = [HANDLE, DWORD]
+WaitCommEvent = _kernel32.WaitCommEvent
+WaitCommEvent.restype = BOOL
+WaitCommEvent.argtypes = [HANDLE, LPDWORD, LPOVERLAPPED]
+class _MEMORYSTATUS(Structure):
+    pass
+MEMORYSTATUS = _MEMORYSTATUS
+_MEMORYSTATUS._fields_ = [
+    ('dwLength', DWORD),
+    ('dwMemoryLoad', DWORD),
+    ('dwTotalPhys', SIZE_T),
+    ('dwAvailPhys', SIZE_T),
+    ('dwTotalPageFile', SIZE_T),
+    ('dwAvailPageFile', SIZE_T),
+    ('dwTotalVirtual', SIZE_T),
+    ('dwAvailVirtual', SIZE_T),
+]
+LPMEMORYSTATUS = POINTER(_MEMORYSTATUS)
+GlobalMemoryStatus = _kernel32.GlobalMemoryStatus
+GlobalMemoryStatus.restype = None
+GlobalMemoryStatus.argtypes = [LPMEMORYSTATUS]
+class _MEMORYSTATUSEX(Structure):
+    pass
+MEMORYSTATUSEX = _MEMORYSTATUSEX
+ULONGLONG = c_ulonglong
+DWORDLONG = ULONGLONG
+_MEMORYSTATUSEX._fields_ = [
+    ('dwLength', DWORD),
+    ('dwMemoryLoad', DWORD),
+    ('ullTotalPhys', DWORDLONG),
+    ('ullAvailPhys', DWORDLONG),
+    ('ullTotalPageFile', DWORDLONG),
+    ('ullAvailPageFile', DWORDLONG),
+    ('ullTotalVirtual', DWORDLONG),
+    ('ullAvailVirtual', DWORDLONG),
+    ('ullAvailExtendedVirtual', DWORDLONG),
+]
+LPMEMORYSTATUSEX = POINTER(_MEMORYSTATUSEX)
+GlobalMemoryStatusEx = _kernel32.GlobalMemoryStatusEx
+GlobalMemoryStatusEx.restype = BOOL
+GlobalMemoryStatusEx.argtypes = [LPMEMORYSTATUSEX]
+ERROR_OPERATION_ABORTED = 995 # Variable c_long '995l'
