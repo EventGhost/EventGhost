@@ -22,7 +22,7 @@
 
 import eg
 from threading import Thread, Lock, Condition, currentThread
-from time import clock
+from time import clock, sleep
 from eg.WinApi.Dynamic import (
     # ctypes stuff
     pointer, 
@@ -89,6 +89,8 @@ from eg.WinApi.Dynamic import (
     GetDefaultCommConfig,
     GetCommTimeouts,
     SetCommTimeouts,
+    WaitCommEvent,
+    SetCommMask,
 )
 
 
@@ -418,6 +420,7 @@ class SerialThread(Thread):
                         except Exception:
                             eg.PrintTraceback()
                     self.readEventLock.release()
+                    sleep(0.001)
                 else:
                     break
             self.readCondition.wait()
@@ -426,7 +429,7 @@ class SerialThread(Thread):
         
     def StatusCheckLoop(self):
         hComm = self.hFile
-        waitingOnStat = False
+        waitingOnStatusHandle = False
         dwCommEvent = DWORD()
         dwOvRes = DWORD()
         commMask = (
@@ -450,7 +453,7 @@ class SerialThread(Thread):
                     # Deal with status event as appropriate.
                     self.ReportStatusEvent(dwCommEvent.value)
                 else:
-                    if GetLastError == ERROR_IO_PENDING:
+                    if GetLastError() == ERROR_IO_PENDING:
                         waitingOnStatusHandle = True
                     else:
                         raise SerialError("error in WaitCommEvent")
@@ -494,7 +497,7 @@ class SerialThread(Thread):
         # append the data to the buffer and notify waiting threads
         self.readCondition.acquire()
         self.buffer += data
-        self.readCondition.notifyAll()
+        self.readCondition.notify()
         self.readCondition.release()
             
             
@@ -513,7 +516,7 @@ class SerialThread(Thread):
         endTime = startTime + timeout
         while len(self.buffer) < numBytes:
             waitTime = endTime - clock()
-            if waitTime < 0:
+            if waitTime <= 0:
                 numBytes = len(self.buffer)
                 break
             self.readCondition.wait(waitTime)
@@ -528,12 +531,13 @@ class SerialThread(Thread):
         Get all bytes currently in the drivers receive buffer.
         Only used internally. 
         """
+        sleep(0.001)
         errors = DWORD()
         self._ClearCommError(self.hFile, byref(errors), byref(self.comstat))
         numBytes = self.comstat.cbInQue
         if numBytes == 0:
             return ''
-        ResetEvent(self.osReader.hEvent)
+        #ResetEvent(self.osReader.hEvent)
         lpBuffer = create_string_buffer(numBytes)
         numberOfBytesRead = DWORD()
         if not self._ReadFile(
