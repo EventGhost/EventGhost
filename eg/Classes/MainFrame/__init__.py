@@ -32,9 +32,9 @@ from eg.WinApi.Utils import BringHwndToFront
 from eg.Icons import CreateBitmapOnTopOfIcon
 
 # local imports
-from LogCtrl import LogCtrl
-from TreeCtrl import TreeCtrl
-from StatusBar import StatusBar
+from eg.Classes.MainFrame.LogCtrl import LogCtrl
+from eg.Classes.MainFrame.TreeCtrl import TreeCtrl
+from eg.Classes.MainFrame.StatusBar import StatusBar
 
 
 ADD_ICON = eg.Icons.PathIcon('images/add.png')
