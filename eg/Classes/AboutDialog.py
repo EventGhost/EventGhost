@@ -27,22 +27,11 @@ import sys
 import os
 import platform
 import hashlib
+import _winreg
 from cStringIO import StringIO
-
-import Image
-
-
-class Text(eg.TranslatableStrings):
-    Title = "About EventGhost"
-    Author = "Author: %s"
-    Version = "Version: %s (build %s)"
-    CreationDate = "%a, %d %b %Y %H:%M:%S"
-    tabAbout = "About"
-    tabSpecialThanks = "Special Thanks"
-    tabLicense = "License Agreement"
-    tabSystemInfo = "System Information"
-    tabChangelog = "Changelog"
-    
+from eg.WinApi.Dynamic import (
+    MEMORYSTATUSEX, GlobalMemoryStatusEx, byref, sizeof
+)
 
 
 def GetPluginAuthors():
@@ -108,6 +97,8 @@ SPECIAL_THANKS_DATA = (
             "Silviu Marghescu",  # 26. Nov 2008
             "tireich",           # 05. Dec 2008
             "Sergio Herculano",  # 30. Dec 2008
+            "Cassidy Caid",      # 13. Jan 2009
+            "Beat Horn",         # 20. Jan 2009
         ),
     ),
     (
@@ -149,6 +140,42 @@ SPECIAL_THANKS_DATA = (
     ),
 )
         
+
+def GetRegistryValue(key, value):
+    key, subkey = key.split("\\", 1)
+    handle = _winreg.OpenKey(getattr(_winreg, key), subkey)
+    return _winreg.QueryValueEx(handle, value)[0]
+
+
+def GetCpuName():
+    return GetRegistryValue(
+        r"HKEY_LOCAL_MACHINE\HARDWARE\DESCRIPTION\System\CentralProcessor\0",
+        "ProcessorNameString"
+    )
+
+
+def GetRam():
+    memoryStatus = MEMORYSTATUSEX()
+    memoryStatus.dwLength = sizeof(MEMORYSTATUSEX)
+    GlobalMemoryStatusEx(byref(memoryStatus))
+    return (
+        int(round(memoryStatus.ullTotalPhys / 1048576.0)), 
+        int(round(memoryStatus.ullAvailPhys / 1048576.0)), 
+    )
+    
+    
+class Text(eg.TranslatableStrings):
+    Title = "About EventGhost"
+    Author = "Author: %s"
+    Version = "Version: %s (build %s)"
+    CreationDate = "%a, %d %b %Y %H:%M:%S"
+    tabAbout = "About"
+    tabSpecialThanks = "Special Thanks"
+    tabLicense = "License Agreement"
+    tabSystemInfo = "System Information"
+    tabChangelog = "Changelog"
+    
+
 
 class AboutPanel(wx.Panel):
     
@@ -272,14 +299,19 @@ class SystemInfoPanel(HtmlPanel):
             Text.CreationDate, 
             time.gmtime(eg.Version.buildTime)
         ).decode(eg.systemEncoding)
+        totalMemory, availableMemory = GetRam()
+        totalMemory = "%s MB" % totalMemory
+        availableMemory = "%s MB" % availableMemory
         self.sysInfos = (
             ("EventGhost Version", eg.Version.string),
             ("SVN Revision", eg.Version.svnRevision),
             ("Build Time", buildTime),
             ("Python Version", "%d.%d.%d %s %d" % sys.version_info),
             ("wxPython Version", wx.VERSION_STRING),
-            ("PIL Version", Image.VERSION),
             ("Platform", platform.platform()),
+            ("CPU", GetCpuName()),
+            ("Total RAM", totalMemory),
+            ("Available RAM", availableMemory),
         )
         
         sysInfoTemplate = "".join(
