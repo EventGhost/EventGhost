@@ -49,7 +49,6 @@ from Queue import Queue, Full
 from string import hexdigits
 
 SAMPLE_TIME = 0.00005
-IrDecoder = eg.IrDecoder(SAMPLE_TIME)
 
     
 # currently unused stuff
@@ -183,6 +182,7 @@ class UIRT2(eg.RawReceiverPlugin):
         eg.RawReceiverPlugin.__init__(self)
         self.buffer = ""
         self.AddAction(TransmitIR)
+        self.irDecode = eg.IrDecoder(SAMPLE_TIME).Decode
 
 
     def __start__(self, comport=0):
@@ -219,7 +219,7 @@ class UIRT2(eg.RawReceiverPlugin):
         self.serialThread.Close()
 
 
-    @eg.LogIt
+    #@eg.LogIt
     def OnReceive(self, serialThread):
         self.buffer += serialThread.Read(1024)
         while True:
@@ -230,7 +230,7 @@ class UIRT2(eg.RawReceiverPlugin):
             self.buffer = self.buffer[terminatorPos+1:]
             if len(data) < 2:
                 continue
-            eventString = IrDecoder.Decode(data, len(data))
+            eventString = self.irDecode(data, len(data))
             if eventString:
                 self.TriggerEvent(eventString)
         
