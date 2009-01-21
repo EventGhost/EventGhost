@@ -101,7 +101,7 @@ class Document(object):
     def GetTitle(self):
         if self.filePath is None:
             filename = eg.text.General.unnamedFile
-        elif self.filePath is False:
+        elif not self.filePath:
             filename = "Example.xml"
         else:
             filename = os.path.basename(self.filePath)
@@ -152,7 +152,7 @@ class Document(object):
             return self.LoadEmpty()
         self.ResetUndoState()
         
-        if filePath is False:
+        if not filePath:
             filePath = "Example.xml"
             self.SetFilePath(filePath)
             self.filePath = False
