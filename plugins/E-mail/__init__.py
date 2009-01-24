@@ -1,4 +1,4 @@
-version = "0.1.2"
+version = "0.1.3"
 # This file is part of EventGhost.
 # Copyright (C) 2008 Pako <lubos.ruckl@quick.cz>
 #
@@ -17,7 +17,7 @@ version = "0.1.2"
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# Last change: 30-12-2008 17:22
+# Last change: 2008-01-28 20:15
 
 #===============================================================================
 #Structure of setup/account (one record):
@@ -153,7 +153,8 @@ def DecodeSection(section, coding=None):
     for charset in List:
         try:
             section = section.decode(charset,'strict')
-        except UnicodeError:
+#        except UnicodeError:
+        except:
             pass
         else:
             return section.strip(' "')
@@ -161,7 +162,8 @@ def DecodeSection(section, coding=None):
     for charset in List:
         try:
             section = section.decode(charset,'replace')
-        except UnicodeError:
+#        except UnicodeError:
+        except:
             pass
         else:
             return section.strip(' "')
@@ -2481,7 +2483,7 @@ class WorkThread(Thread):
                                 #        print "deleted !!!"
                     count += 1                                    
                     #show notification window?                    
-                    if self.setup[6]:                                     
+                    if not self.setup[14]:                                     
                         tmpRec = [messId]           #0 ID
                         tmpRec.append(parts[0])     #1 Subject
                         tmpRec.append(parts[1])     #2 From
@@ -3972,7 +3974,7 @@ class E_mail(eg.PluginClass):
             evt.Skip()
         btnApp.Bind(wx.EVT_BUTTON, OnButtonAppend)
 
-        while panel.Affirmed():
+        while panel.Affirmed():        
             passINC.data=panel.passINC
             passSMTP.data=panel.passSMTP
             panel.SetResult(
