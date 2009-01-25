@@ -42,8 +42,7 @@ class RawReceiverPlugin(eg.PluginBase):
             suffix = self.lastEventString
             timeout = self.lastTimeout
         elif suffix in self.mapTable:
-            newEventString, timeout, repeatCode = self.mapTable[suffix]
-            self.repeatCode = repeatCode
+            newEventString, timeout, self.repeatCode = self.mapTable[suffix]
         else:
             if self.disableUnmapped:
                 return
