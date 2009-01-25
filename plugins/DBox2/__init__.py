@@ -106,7 +106,7 @@ class MyHTTPConnection(HTTPConnection):
                 if self.debuglevel > 0:
                     print "connect: (%s, %s)" % (self.host, self.port)
                 self.sock.connect(sa)
-            except socket.error, msg:
+            except socket.error, exc:
                 if self.debuglevel > 0:
                     print 'connect fail:', (self.host, self.port)
                 if self.sock:
@@ -115,7 +115,7 @@ class MyHTTPConnection(HTTPConnection):
                 continue
             break
         if not self.sock:
-            raise socket.error(msg)
+            raise exc
 
 
 
@@ -125,10 +125,8 @@ class ActionPrototype(eg.ActionBase):
         conn = MyHTTPConnection(self.plugin.host)
         try:
             conn.request("GET", self.plugin.connectString % self.value)
-        except socket.error, exc:
-            if isinstance(exc.message, socket.timeout):
-                raise self.Exceptions.DeviceNotFound
-            raise
+        except socket.timeout:
+            raise self.Exceptions.DeviceNotFound
         conn.getresponse()
         conn.close()
         
