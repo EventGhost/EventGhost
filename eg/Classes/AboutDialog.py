@@ -274,9 +274,9 @@ class SpecialThanksPanel(HtmlPanel):
                 for name, descr in persons:
                     write('<TR><TD ALIGN=RIGHT VALIGN=TOP WIDTH="50%"><B>')
                     write(name)
-                    write('</B></RIGHT></TD><TD WIDTH="50%">')
+                    write('</B></RIGHT></TD><TD WIDTH="50%"><I>')
                     write(descr)
-                    write('</RIGHT></TD></TR>')
+                    write('</I></RIGHT></TD></TR>')
         write('</TABLE>')
         contents = output.getvalue()
         output.close()
