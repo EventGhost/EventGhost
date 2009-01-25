@@ -237,11 +237,10 @@ class MainFrame(wx.Frame):
     
     @eg.LogItWithReturn
     def Destroy(self):
+        self.Hide()
         self.document.SetTree(None)
         eg.log.SetCtrl(None)
         Config.perspective = self.auiManager.SavePerspective()
-        self.SetStatusBar(None)
-        self.statusBar.Destroy()
         eg.Unbind("DocumentChange", self.OnDocumentChange)
         eg.Unbind("FocusChange", self.OnFocusChange)
         eg.Unbind("ClipboardChange", self.OnClipboardChange)
@@ -250,6 +249,8 @@ class MainFrame(wx.Frame):
         eg.Unbind("UndoChange", self.OnUndoChange)
         self.logCtrl.Destroy()
         self.treeCtrl.Destroy()
+        self.SetStatusBar(None)
+        self.statusBar.Destroy()
         result = wx.Frame.Destroy(self)
         eg.Icons.ClearImageList()
         return result
