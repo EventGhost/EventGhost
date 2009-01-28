@@ -35,7 +35,7 @@ import eg
 
 eg.RegisterPlugin(
     name = "USB-UIRT",
-    author = "Jon Rhees",
+    author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
     canMultiLoad = True,
@@ -68,8 +68,10 @@ eg.RegisterPlugin(
 import wx
 from ctypes import (
     c_int, c_uint, c_ulong, byref, c_ubyte, c_char_p, c_void_p, POINTER, 
-    WINFUNCTYPE, Structure, GetLastError, create_string_buffer, WinDLL
+    WINFUNCTYPE, Structure, GetLastError, create_string_buffer, WinDLL,
+    string_at, 
 )
+from eg.WinApi.Dynamic import strchr
 import datetime
 import threading
 
@@ -147,21 +149,25 @@ UUIRTDRV_IRFMT_LEARN_FORCESTRUC    = 0x0200
 UUIRTDRV_IRFMT_LEARN_FORCEFREQ = 0x0400
 UUIRTDRV_IRFMT_LEARN_FREQDETECT    = 0x0800
 
-UUCALLBACKPROC = WINFUNCTYPE(c_int, c_char_p, c_void_p)
+
+UUCALLBACKPROC = WINFUNCTYPE(c_int, POINTER(c_ubyte), c_ulong, c_ulong)
 LEARNCALLBACKPROC = WINFUNCTYPE(c_int, c_uint, c_uint, c_ulong, c_void_p)
 
 
-
-class USB_UIRT(eg.RawReceiverPlugin):
+class USB_UIRT(eg.PluginBase):
     text = Text
     
     def __init__(self):
-        eg.RawReceiverPlugin.__init__(self)
         self.dll = None
         self.enabled = False
         self.AddAction(TransmitIR)
+        self.irDecoder = eg.IrDecoder(self, 50.0)
 
 
+    def __close__(self):
+        self.irDecoder.Close()
+        
+        
     def __start__(
         self, 
         ledRX=True, 
@@ -189,8 +195,10 @@ class USB_UIRT(eg.RawReceiverPlugin):
         if hDrvHandle == INVALID_HANDLE_VALUE:
             err = GetLastError()
             if err == UUIRTDRV_ERR_NO_DLL:
+                print "no dll"
                 raise self.Exceptions.DeviceNotFound
             elif err == UUIRTDRV_ERR_NO_DEVICE:
+                print "no device"
                 raise self.Exceptions.DeviceNotFound
             elif err == UUIRTDRV_ERR_NO_RESP:
                 raise self.Exceptions.DeviceInitFailed
@@ -210,7 +218,8 @@ class USB_UIRT(eg.RawReceiverPlugin):
         )
         self.dll = dll
         self.receiveProc = UUCALLBACKPROC(self.ReceiveCallback)
-        if not dll.UUIRTSetReceiveCallback(self.hDrvHandle, self.receiveProc, 0):
+        res = dll.UUIRTSetRawReceiveCallback(self.hDrvHandle, self.receiveProc, 0)
+        if not res:
             self.dll = None
             raise self.Exception("Error calling UUIRTSetReceiveCallback")
 
@@ -259,9 +268,15 @@ class USB_UIRT(eg.RawReceiverPlugin):
             raise self.Exception("Error calling UUIRTSetUUIRTConfig")
 
 
-    def ReceiveCallback(self, eventString, userdata):
-        if self.enabled:
-            self.TriggerEvent(eventString)
+    def ReceiveCallback(self, buf, length, userdata):
+        # TODO: find a more efficient way to find the terminator
+        data = []
+        for i in range(2, 1024):
+            value = buf[i]
+            data.append(value)
+            if value == 255:
+                break
+        self.irDecoder.Decode(data, len(data))
         return 0
     
         
@@ -304,7 +319,7 @@ class USB_UIRT(eg.RawReceiverPlugin):
         infoGroupSizer.Add(infoSizer, 0, wx.LEFT, 5)
         panel.sizer.Add(infoGroupSizer, 0, wx.EXPAND)
         
-        panel.sizer.Add((15,15))
+        panel.sizer.Add((15, 15))
 
         ledGroupSizer = wx.StaticBoxSizer(
             wx.StaticBox(panel, -1, text.redIndicator), 
@@ -314,7 +329,7 @@ class USB_UIRT(eg.RawReceiverPlugin):
         ledGroupSizer.Add(ledTxCheckBox, 0, wx.ALL, 10)
         panel.sizer.Add(ledGroupSizer, 0, wx.EXPAND)
         
-        panel.sizer.Add((15,15))
+        panel.sizer.Add((15, 15))
         receiveGroupSizer = wx.StaticBoxSizer(
             wx.StaticBox(panel, -1, text.irReception), 
             wx.VERTICAL
@@ -393,7 +408,7 @@ class TransmitIR(eg.ActionClass):
         editCtrl.SetMinSize((-1, 100))
         
         repeatCtrl = eg.SpinIntCtrl(panel, -1, value=repeatCount, min=1, max=127)
-        repeatCtrl.SetInitialSize((50,-1))
+        repeatCtrl.SetInitialSize((50, -1))
         
         infiniteCtrl = wx.CheckBox(panel, -1, text.infinite)
         if repeatCount == 32767:
@@ -409,7 +424,7 @@ class TransmitIR(eg.ActionClass):
         infiniteCtrl.Bind(wx.EVT_CHECKBOX, OnInfiniteCtrl)
         
         waitCtrl = panel.SpinIntCtrl(inactivityWaitTime, 0, 500)
-        waitCtrl.SetInitialSize((50,-1))
+        waitCtrl.SetInitialSize((50, -1))
         
         zoneCtrl = panel.Choice(zone, text.zoneChoices)
                 
@@ -419,29 +434,29 @@ class TransmitIR(eg.ActionClass):
             
         panel.sizer.Add(panel.StaticText(text.irCode))
         panel.sizer.Add(editCtrl, 1, wx.EXPAND)
-        panel.sizer.Add((5,5))
+        panel.sizer.Add((5, 5))
 
         stFlags = wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT
-        gridSizer = wx.GridBagSizer(5,5)
-        gridSizer.Add(panel.StaticText(text.repeatCount), (0,0), flag=stFlags)
+        gridSizer = wx.GridBagSizer(5, 5)
+        gridSizer.Add(panel.StaticText(text.repeatCount), (0, 0), flag=stFlags)
         
         tmpSizer = wx.BoxSizer(wx.HORIZONTAL)
         tmpSizer.Add(repeatCtrl)
-        tmpSizer.Add((5,5))
+        tmpSizer.Add((5, 5))
         tmpSizer.Add(infiniteCtrl, 0, wx.ALIGN_CENTER_VERTICAL)
-        gridSizer.Add(tmpSizer, (0,1))
+        gridSizer.Add(tmpSizer, (0, 1))
 
-        gridSizer.Add(panel.StaticText(text.wait1), (1,0), flag=stFlags)
+        gridSizer.Add(panel.StaticText(text.wait1), (1, 0), flag=stFlags)
         
         tmpSizer = wx.BoxSizer(wx.HORIZONTAL)
         tmpSizer.Add(waitCtrl)
-        tmpSizer.Add((5,5))
+        tmpSizer.Add((5, 5))
         tmpSizer.Add(panel.StaticText(text.wait2), 0, wx.ALIGN_CENTER_VERTICAL)
-        gridSizer.Add(tmpSizer, (1,1))
+        gridSizer.Add(tmpSizer, (1, 1))
         
-        gridSizer.Add(panel.StaticText(text.zone), (2,0), flag=stFlags)
-        gridSizer.Add(zoneCtrl, (2,1))
-        gridSizer.AddGrowableCol(4,1)
+        gridSizer.Add(panel.StaticText(text.zone), (2, 0), flag=stFlags)
+        gridSizer.Add(zoneCtrl, (2, 1))
+        gridSizer.AddGrowableCol(4, 1)
         gridSizer.Add(
             learnButton, 
             (0,5), 
@@ -512,7 +527,7 @@ class IRLearnDialog(wx.Dialog):
             self, 
             -1, 
             100, 
-            size=(25,100),
+            size=(25, 100),
             style=wx.GA_VERTICAL|wx.GA_SMOOTH
         )
         self.sigQualityCtrl = sigQualityCtrl
@@ -539,22 +554,22 @@ class IRLearnDialog(wx.Dialog):
         
         leftSizer = wx.BoxSizer(wx.VERTICAL)
         leftSizer.Add(staticText, 0, wx.EXPAND|wx.TOP, 5)
-        leftSizer.Add((5,5), 1)
+        leftSizer.Add((5, 5), 1)
         leftSizer.Add(forceRawCtrl)
         
         rightSizer = wx.BoxSizer(wx.VERTICAL)
-        rightSizer.Add((15,15))
+        rightSizer.Add((15, 15))
         rightSizer.Add(burstButton, 0, wx.EXPAND|wx.ALIGN_RIGHT)
-        rightSizer.Add((5,5))
+        rightSizer.Add((5, 5))
         rightSizer.Add(cancelButton, 0, wx.EXPAND|wx.ALIGN_RIGHT)
-        rightSizer.Add((0,0), 1)
+        rightSizer.Add((0, 0), 1)
         rightSizer.Add(carrierFreqSizer, 0, wx.EXPAND)
                 
         upperRowSizer = wx.BoxSizer(wx.HORIZONTAL)
         upperRowSizer.Add(leftSizer, 1, wx.EXPAND)
-        upperRowSizer.Add((5,5))
+        upperRowSizer.Add((5, 5))
         upperRowSizer.Add(sigQualitySizer, 0, wx.EXPAND)
-        upperRowSizer.Add((5,5))
+        upperRowSizer.Add((5, 5))
         upperRowSizer.Add(rightSizer, 0, wx.EXPAND)
         
         sizer = wx.BoxSizer(wx.VERTICAL)
