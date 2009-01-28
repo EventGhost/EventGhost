@@ -20,43 +20,38 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-from eg.Classes.IrDecoder import IrProtocolBase, DecodeError
+from eg.Classes.IrDecoder import ManchesterCoding1, DecodeError
 
 
-class Sony(IrProtocolBase):
-    """
-    IR decoder for the Sony SIRC protocol.
-    """
+class Motorola(ManchesterCoding1):
     
-    def Decode(self, data):
-        if not (1800 < data[0] < 3000):
-            raise DecodeError("wrong header pulse")
+    def __init__(self, controller):
+        ManchesterCoding1.__init__(self, controller, 500)
         
-        buf = 0
+
+    def Decode(self, data):
+        # Check the header pulse
+        if not (300 < data[0] < 700):
+            raise DecodeError("wrong header pulse")
+        if not (2000 < data[1] < 3000):
+            raise DecodeError("wrong header pause")
+        print data
+        self.SetData(data, 2)
         mask = 1
-        i = 1
-        while True:
-            # Check if the space time is valid.
-            space = data[i]
-            if space < 400:
-                raise DecodeError("space to short %d" % space)
-            if space > 900:
-                if i in (25, 31, 41):
-                    break
-                raise DecodeError("space to long %d" % space)
-            
-            mark = data[i+1]
-            if mark < 250:
-                raise DecodeError("mark to short %d" % mark)
-            elif mark < 1000:
-                pass
-            elif mark < 1400:
-                buf |= mask
-            else:
-                raise DecodeError("mark to long %d" % mark)
+        buf = 0
+        for i in range(20):
+            try:
+                buf |= mask * self.GetBit()
+            except DecodeError:
+                if i < 7:
+                    raise
+                break
             mask <<= 1
-            i += 2
-            
-        return "SIRC%d.%0.4X" % (i / 2, buf)
+        
+        #if data[self.pos] < 10000:
+        #    raise DecodeError("missing end pause")
+#        if buf == 0x7D:
+#            return ""            
+        return "Motorola%d.%04X" % (i, buf >> 1)
     
     
