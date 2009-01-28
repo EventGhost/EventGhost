@@ -56,7 +56,7 @@ class RadioBox(wx.Panel):
         self.Bind(wx.EVT_SIZE, self.OnSize)
 
 
-    def OnSize(self, event):
+    def OnSize(self, dummyEvent):
         if self.GetAutoLayout():
             self.Layout()
 
