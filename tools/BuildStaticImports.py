@@ -48,6 +48,8 @@ for name in singletons:
 outfile.write("""
 del _tmp
 
+from Classes.IrDecoder import IrDecoder
+
 def RegisterPlugin(**dummyKwArgs): 
     pass
 """)
