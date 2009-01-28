@@ -16,9 +16,9 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate: 2008-06-01 17:49:55 +0200 (Sun, 01 Jun 2008) $
-# $LastChangedRevision: 439 $
-# $LastChangedBy: bitmonster $
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
 
 r"""<rst>
 Plugin for the `ATI Remote Wonder II`__ remote.
@@ -44,7 +44,7 @@ eg.RegisterPlugin(
     description=__doc__,
     url="http://www.eventghost.org/forum/viewtopic.php?t=915",
     author="Bitmonster",
-    version="1.0." + "$LastChangedRevision: 363 $".split()[1],
+    version="1.0." + "$LastChangedRevision$".split()[1],
     kind="remote",
 )
 

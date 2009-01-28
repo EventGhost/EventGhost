@@ -16,9 +16,9 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate: 2008-10-09 23:58:28 +0200 (Do, 09 Okt 2008) $
-# $LastChangedRevision: 521 $
-# $LastChangedBy: bitmonster $
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
 
 """
 Create py.exe and pyw.exe for EventGhost

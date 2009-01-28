@@ -16,9 +16,9 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate: 2008-10-21 16:10:10 +0200 (Di, 21 Okt 2008) $
-# $LastChangedRevision: 547 $
-# $LastChangedBy: bitmonster $
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
 """
 Routines to upload a file through FTP with a nice dialog.
 """

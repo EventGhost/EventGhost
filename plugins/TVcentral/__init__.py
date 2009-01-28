@@ -16,9 +16,9 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate: 2008-05-23 16:00:02 +0200 (Fr, 23 Mai 2008) $
-# $LastChangedRevision: 420 $
-# $LastChangedBy: bitmonster $
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
 
 eg.RegisterPlugin(
     name="Sceneo TVcentral",
@@ -34,7 +34,7 @@ eg.RegisterPlugin(
     author="Bitmonster",
     url="http://www.eventghost.org/forum/viewtopic.php?t=917",
     createMacrosOnAdd = True,
-    version="1.0." + "$LastChangedRevision: 420 $".split()[1],
+    version="1.0." + "$LastChangedRevision$".split()[1],
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAC7klEQVR42qWTa0iTYRTH/+/uzuUF"
         "s6mo4KXSCDTTFLKiQBGkoiXrgwR9qA8lZhfDxLIiTKQiSUtQKFposmDiJWNpJWiZ2QdXXqdOy9wc"

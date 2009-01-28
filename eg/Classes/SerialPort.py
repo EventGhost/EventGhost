@@ -16,8 +16,8 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate: 2008-11-24 19:52:58 +0100 (Mo, 24 Nov 2008) $
-# $LastChangedRevision: 582 $
-# $LastChangedBy: bitmonster $
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
 
 from eg.WinApi.serial import Serial as SerialPort
