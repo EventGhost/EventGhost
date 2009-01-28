@@ -25,7 +25,7 @@ import eg
 eg.RegisterPlugin(
     name = "IgorPlug-USB",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.1." + "$LastChangedRevision$".split()[1],
     kind = "remote",
     description = (
         'Plugin for <a href="http://www.cesko.host.sk/">'
@@ -34,71 +34,91 @@ eg.RegisterPlugin(
 )
 
 
-from thread import start_new_thread
-from  ctypes import windll, byref, c_ubyte, c_int, create_string_buffer
-from threading import Timer, Event
-from time import clock, sleep
+from threading import Thread, Event
+from  ctypes import windll, byref, c_ubyte, c_int
+from time import sleep
+from functools import partial
 
 
-SAMPLE_TIME = 0.0000853
-
-
-class IgorPlugUSB(eg.RawReceiverPlugin):
+class IgorPlugUSB(eg.PluginBase):
     
     def __init__(self):
-        eg.RawReceiverPlugin.__init__(self)
-        self.irDecoder = eg.IrDecoder(SAMPLE_TIME)
+        eg.PluginBase.__init__(self)
+        self.irDecoder = eg.IrDecoder(self, 85.3)
+
         
-        
-    def __start__(self):
-        self.dll = None
-        self.threadShouldStop = False
+    def __start__(self, led1=0, led2=0):
+        self.stopEvent = Event()
         try:
             self.dll = windll.IgorUSB
         except:
             raise self.Exceptions.DriverNotFound
-        start_new_thread(self.ReceiveThread, ())
+        self.ledIrOnFlags = 0
+        self.ledIrOffFlags = 0
+        if led1 == 1:
+            self.ledIrOffFlags |= 1
+            self.ledIrOnFlags |= 1
+        elif led1 == 2:
+            self.ledIrOnFlags |= 1
+        if led2 == 1:
+            self.ledIrOffFlags |= 2
+            self.ledIrOnFlags |= 2
+        elif led2 == 2:
+            self.ledIrOnFlags |= 2
+        self.ledTimer = eg.ResettableTimer(
+            partial(self.dll.DoSetOutDataPort, self.ledIrOffFlags)
+        )
+        self.receiveThread = Thread(
+            target=self.ReceiveThread, 
+            args=(self.stopEvent, )
+        )
+        self.receiveThread.start()
     
     
     def __stop__(self):
-        self.threadShouldStop = True
+        self.stopEvent.set()
+        self.ledTimer.Stop()
+        self.receiveThread.join(2.0)
         
         
-    def ReceiveThread(self):
+    def __close__(self):
+        self.irDecoder.Close()
+        
+        
+    def ReceiveThread(self, stopEvent):
         dll = self.dll
+        ledReset = self.ledTimer.Reset
+        ledIrOnFlags = self.ledIrOnFlags
         timeCodeDiagram = (c_ubyte * 256)()
         diagramLength = c_int(0)
         portDirection = c_ubyte()
         dll.DoGetDataPortDirection(byref(portDirection))
         portDirection.value |= 3
         dll.DoSetDataPortDirection(portDirection)
-        dll.DoSetOutDataPort(1)
-        Decode = self.irDecoder.Decode
-        self.flashThreadIsRunning = False
-        while not self.threadShouldStop:
+        dll.DoSetOutDataPort(self.ledIrOffFlags)
+        decode = self.irDecoder.Decode
+        dll.DoGetInfraCode(timeCodeDiagram, 0, byref(diagramLength))
+        while not stopEvent.isSet():
             dll.DoGetInfraCode(timeCodeDiagram, 0, byref(diagramLength))
             if diagramLength.value:
-                self.StartLedFlashing()
-                event = Decode(timeCodeDiagram, diagramLength.value)
-                self.TriggerEvent(event)
+                dll.DoSetOutDataPort(ledIrOnFlags)
+                ledReset(1)
+                timeCodeDiagram[diagramLength.value] = 255
+                decode(timeCodeDiagram, diagramLength.value + 1)
             else:
                 sleep(0.01)
-        dll.DoSetOutDataPort(0)
-        self.dll = None
+        dll.DoSetOutDataPort(self.ledIrOffFlags)
         
         
-    def StartLedFlashing(self):
-        self.ledTimeout = clock() + 0.1
-        if not self.flashThreadIsRunning:
-            self.flashThreadIsRunning = True
-            start_new_thread(self.LedFlashingThread, ())
-            
-            
-    def LedFlashingThread(self):
-        while self.ledTimeout > clock():
-            self.dll.DoSetOutDataPort(3)
-            sleep(0.08)
-            self.dll.DoSetOutDataPort(1)
-            sleep(0.08)
-        self.flashThreadIsRunning = False
+    def Configure(self, led1=2, led2=0):
+        panel = eg.ConfigPanel()
+        choices = ["Always Off", "Always On", "Blink on IR reception"]
+        led1Ctrl = panel.RadioBox(led1, choices=choices)
+        led2Ctrl = panel.RadioBox(led2, choices=choices)
+        group1 = panel.BoxedGroup("LED 1", led1Ctrl)
+        group2 = panel.BoxedGroup("LED 2", led2Ctrl)
+        sizer = eg.HBoxSizer(group1, (15, 15), group2)
+        panel.sizer.Add(sizer)
+        while panel.Affirmed():
+            panel.SetResult(led1Ctrl.GetValue(), led2Ctrl.GetValue())
             
