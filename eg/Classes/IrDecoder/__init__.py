@@ -20,120 +20,240 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
+import os
+from glob import glob
 from collections import deque
-
 
 
 class DecodeError(Exception):
     """ Raised if the code doesn't match the expectation. """
-    
-    
-from Rc5 import Rc5Decoder
-from Rc6 import Rc6Decoder
-from Sharp import SharpDecoder
-from Sony import SonyDecoder
-from Nec import NecDecoder
-from Recs80 import Recs80Decoder
 
 
 
-class IrDecoder:
+class IrProtocolBase(object):
+    lastCode = None
+    timeout = 150
     
-    def __init__(self, sampleTime):
-        self.sampleTime = sampleTime * 1000000
-        self.suppressRc5ToggleBit = True
-        self.decoders = deque([
-            Rc5Decoder().Decode,
-            Rc6Decoder().Decode,
-            SharpDecoder().Decode,
-            SonyDecoder().Decode,
-            NecDecoder().Decode,
-            Recs80Decoder().Decode,
-        ])
+    def __init__(self, controller):
+        self.controller = controller
+        
+    def Decode(self, data):
+        raise NotImplementedError
+    
+
+        
+class ManchesterBase(IrProtocolBase):
+    pos = 0
+    data = None
+    bitState = 0
+    bufferLen = 0
+    halfBitTime = None
+    
+    def __init__(self, controller, halfBitTime):
+        IrProtocolBase.__init__(self, controller)
+        self.halfBitTime = halfBitTime
+        
+        
+    def SetData(self, data, pos=0):
+        self.data = data
+        self.pos = pos
+        self.bufferLen = 0
+        self.bitState = 0
+        
+    
+    def GetSample(self):
+        if self.bufferLen == 0:
+            if self.pos >= len(self.data):
+                raise DecodeError("not enough timings")
+            self.bufferLen = (
+                (self.data[self.pos] + 2*self.halfBitTime/3) / self.halfBitTime
+            )
+            if self.bufferLen == 0:
+                raise DecodeError("duration to short")
+            self.pos += 1
+            self.bitState = self.pos % 2
+        self.bufferLen -= 1
+        return self.bitState
+    
+    
+    def GetBitsLsbFirst(self, numBits=8):
+        """
+        Returns numBits count manchester bits with LSB last order.
+        """
+        data = 0
+        mask = 1
+        for dummyCounter in range(numBits):
+            data |= mask * self.GetBit()
+            mask <<= 1
+        return data
+    
+    
+    def GetBitsLsbLast(self, numBits=8):
+        """
+        Returns numBits count manchester bits with LSB last order.
+        """
+        data = 0
+        for dummyCounter in range(numBits):
+            data <<= 1
+            data |= self.GetBit()
+        return data
+
+    
+    def GetBit(self):
+        raise NotImplementedError
+        
+        
+    def Decode(self, data):
+        raise NotImplementedError
+    
+
+
+class ManchesterCoding1(ManchesterBase):
+    """
+    Manchester coding with falling edge for logic one.
+    """
+    
+    def GetBit(self):
+        sample = self.GetSample() * 2 + self.GetSample()
+        if sample == 1: # binary 01
+            return 0
+        elif sample == 2: # binary 10
+            return 1
+        else:
+            raise DecodeError("wrong bit transition")
+        
+        
+    def Decode(self, data):
+        raise NotImplementedError
+    
+
+    
+class ManchesterCoding2(ManchesterBase):
+    """
+    Manchester coding with raising edge for logic one.
+    """
+    
+    def GetBit(self):
+        sample = self.GetSample() * 2 + self.GetSample()
+        if sample == 1: # binary 01
+            return 1
+        elif sample == 2: # binary 10
+            return 0
+        else:
+            raise DecodeError("wrong bit transition")
+        
+        
+    def Decode(self, data):
+        raise NotImplementedError
+    
+
+            
+def GetBitString(value, numdigits=8):
+    digits = []
+    for dummyCounter in range(numdigits):
+        if value & 1:
+            digits.append("1")
+        else:
+            digits.append("0")
+        value >>= 1
+    return "".join(reversed(digits))
+
+
+def GetDecoders():
+    decoders = []
+    for path in glob(os.path.join(os.path.dirname(__file__), "*.py")):
+        name = os.path.basename(path)
+        moduleName = os.path.splitext(name)[0]
+        if moduleName.startswith("_"):
+            continue
+        module = __import__(moduleName, globals())
+        decoders.append(getattr(module, moduleName))
+    return decoders
+
+
+DECODERS = GetDecoders()
+DEBUG = eg.debugLevel
+from eg.Classes.IrDecoder.Universal import Universal
+    
+    
+class IrDecoder(object):
+    
+    def __init__(self, plugin, sampleTime):
+        self.plugin = plugin
+        self.sampleTime = sampleTime
+        self.lastDecoder = None
+        self.event = None
+        self.decoders = deque()
+        for decoderCls in DECODERS:
+            decoder = decoderCls(self)
+            if decoderCls == Universal:
+                self.universalDecoder = decoder
+                continue
+            self.decoders.append(decoder)
+        self.timer = eg.ResettableTimer(self.OnTimeout)
         
 
-    def Decode(self, data, dataLen):
-        if dataLen < 3:
-            return None
+    def Close(self):
+        self.timer.Stop()
         
-        data2 = [x * self.sampleTime for x in data[:dataLen]]
-        data2.append(10000)
+    
+    def OnTimeout(self):
+        self.lastDecoder.lastCode = None
+        self.event.SetShouldEnd()
+#        if DEBUG:
+#            print "timeout"
+    
+    
+    def Decode(self, data, length=-1):
+        if length < 3:
+            return
+        
+        #print dataLen, repr(data)
+        if isinstance(data, str):
+            data = [int(ord(x) * self.sampleTime) for x in data[:length]]
+        else:
+            data = [int(x * self.sampleTime) for x in data[:length]]
+        #data.append(10000)
 
+        uniCode = None
+        if self.lastDecoder == self.universalDecoder:
+            uniCode = self.universalDecoder.Decode(data)
+            if self.universalDecoder.lastCode == uniCode:
+                self.timer.Reset(self.universalDecoder.timeout)
+                return uniCode
+            
+        #print data
         decoders = self.decoders
+        code = None
         for i, decoder in enumerate(decoders):
             try:
-                code = decoder(data2)
-            except DecodeError, exc:
-                #print decoder.im_self.__class__.__name__, exc
+                code = decoder.Decode(data)
+            except (IndexError, DecodeError), exc:
+                if DEBUG:
+                    print decoder.__class__.__name__ + ": " + str(exc)
                 continue
+            except Exception, exc:
+                print decoder
+                raise exc
+            
             if code is None:
                 continue
             if i != 0:
                 del decoders[i]
                 decoders.appendleft(decoder)
-            return code
-            
-        minHigh = 10000
-        minLow = 10000
-        maxHigh = 0
-        maxLow = 0
-        for i in xrange(2, dataLen):
-            value = data[i]
-            if i % 2:
-                if value > maxLow:
-                    maxLow = value
-                if value < minLow:
-                    minLow = value
+            break
+        if code is None:
+            decoder = self.universalDecoder
+            if uniCode is None:
+                code = decoder.Decode(data)
+                print len(data), data
             else:
-                if value > maxHigh:
-                    maxHigh = value
-                if value < minHigh:
-                    minHigh = value
-                    
-        levelHigh = (minHigh + maxHigh) / 2
-        levelLow = (minLow + maxLow) / 2
-        if (maxHigh - minHigh) < 5:
-            levelHigh += 4
-        if (maxLow - minLow) < 5:
-            levelLow += 4
+                code = uniCode
             
-        code = 3L
-        for i in xrange(0, dataLen):
-            value = data[i]
-            code = code << 1
-            if i % 2:
-                if value > levelLow:
-                    code |= 1
-            else:
-                if value > levelHigh:
-                    code |= 1
-                    
-#        # shift in b'10', so we have an identifiable beginning
-#        code = 3L
-#        
-#        last_mark_time = 0
-#        last_space_time = 0
-#        tolerance = 2
-#        
-#        for i in xrange(0, dataLen):
-#            # get the raw timing
-#            value = data[i]
-#            # make room for next bit
-#            code = code << 1
-#            if i % 2:
-#                if (
-#                    (value >= last_space_time + tolerance) 
-#                    or (value <= last_space_time - tolerance)
-#                ):
-#                    code |= 1
-#                last_space_time = value
-#            else:
-#                if (
-#                    (value >= last_mark_time + tolerance) 
-#                    or (value <= last_mark_time - tolerance)
-#                ):
-#                    code |= 1
-#                last_mark_time = value
-
-        return "U%X" % code
+        self.lastDecoder = decoder
+        if code != decoder.lastCode:
+            self.event = self.plugin.TriggerEnduringEvent(code)
+        decoder.lastCode = code
+        self.timer.Reset(decoder.timeout)
 

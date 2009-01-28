@@ -16,16 +16,56 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate: 2008-12-29 19:13:21 +0100 (Mo, 29 Dez 2008) $
-# $LastChangedRevision: 649 $
-# $LastChangedBy: bitmonster $
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
 
-from eg.Classes.IrDecoder import DecodeError
+from eg.Classes.IrDecoder import IrProtocolBase, DecodeError
+from time import clock
 
 
-class NecDecoder(object):
+class Nec(IrProtocolBase):
+    """
+    IR decoder for the NEC protocol.
+    """
+    timeout = 150
     
+    def __init__(self, controller):
+        IrProtocolBase.__init__(self, controller)
+        self.lastTime = 0
+        
+        
     def Decode(self, data):
-        raise DecodeError
+        pulse = data[0]
+        space = data[1]
+        if not (8000 < pulse < 10000):
+            raise DecodeError("wrong start pulse")
+        if space > 5000:
+            raise DecodeError("start pause to long")
+        if space < 4000:
+            if space > 2000 and self.lastTime + 0.150 > clock():
+                #print "repeat", clock() - self.lastTime, self.lastCode
+                self.lastTime = clock()
+                return self.lastCode
+            raise DecodeError("wrong start pause")
+        buf = 0
+        for i in range(2, 62, 2):
+            pulse = data[i]
+            if pulse > 750:
+                raise DecodeError("mark to long %d %d" % (pulse, i))
+            if pulse < 450:
+                raise DecodeError("mark to short")
+            space = data[i + 1]
+            if space < 350:
+                raise DecodeError("space to short %d %d" % (space, i + 1))
+            elif space < 850:
+                pass
+            elif space < 2000:
+                buf |= 1
+            else:
+                raise DecodeError("space to long %d" % space)
+            buf <<= 1
+        self.lastTime = clock()
+        return "NEC.%08X" % buf
     
     

@@ -20,12 +20,35 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-from eg.Classes.IrDecoder import IrProtocolBase, DecodeError
+from eg.Classes.IrDecoder import ManchesterCoding1, DecodeError
 
 
-class Recs80(IrProtocolBase):
+class Nrc17(ManchesterCoding1):
+    """
+    IR decoder for the Nokia NRC17 protocol.
+    """
+    
+    def __init__(self, controller):
+        ManchesterCoding1.__init__(self, controller, 500)
+        
     
     def Decode(self, data):
-        raise DecodeError("not implemented")
-    
+        self.SetData(data)
+        # Consume the pre-pulse bit
+        self.GetSample()
+        
+        # Check the header pause
+        for dummyCounter in range(5):
+            if self.GetSample():
+                raise DecodeError("pre-space to short %d" % dummyCounter)
+        
+        # Check the start bit
+        if not self.GetBit():
+            raise DecodeError("missing start bit")
+        
+        # Get the actual code bits
+        code = self.GetBitsLsbFirst(16)            
+        if code == 0xFFFE:
+            return ""
+        return "NRC17_%0.4X" % code
     

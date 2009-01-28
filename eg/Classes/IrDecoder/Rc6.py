@@ -16,11 +16,11 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate: 2008-12-29 19:13:21 +0100 (Mo, 29 Dez 2008) $
-# $LastChangedRevision: 649 $
-# $LastChangedBy: bitmonster $
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
 
-from eg.Classes.IrDecoder import DecodeError
+from eg.Classes.IrDecoder import ManchesterCoding1, DecodeError
 
 
 MCE_REMOTE = {
@@ -76,49 +76,16 @@ MCE_REMOTE = {
 }
 
 
-class Rc6Decoder(object):
+class Rc6(ManchesterCoding1):
+    """
+    IR decoder for the Philips RC-6 protocol.
+    """
+    timeout = 150
     
-    def __init__(self):
-        self.pos = 0
-        self.bufferLen = 0
-        self.buffer = 0
-        self.data = None
+    def __init__(self, controller):
+        ManchesterCoding1.__init__(self, controller, 444)
         
         
-    def GetSample(self):
-        if self.bufferLen == 0:
-            if self.pos >= len(self.data):
-                raise DecodeError
-            x = self.data[self.pos]
-            self.pos += 1
-            bit = self.pos % 2
-            if x < 300:
-                raise DecodeError
-            elif x < 600:
-                return bit
-            elif x < 1100:
-                self.bufferLen = 1
-            elif x < 1600:
-                self.bufferLen = 2
-#            else:
-#                raise DecodeError
-            self.buffer = bit
-            return bit
-        self.bufferLen -= 1
-        return self.buffer
-
-            
-        
-    def GetBit(self):
-        sample = self.GetSample() * 2 + self.GetSample()
-        if sample == 1: # binary 01
-            return 0
-        elif sample == 2: # binary 10
-            return 1
-        else:
-            raise DecodeError
-        
-    
     def GetTrailerBit(self):
         sample = (
             self.GetSample() * 8 
@@ -131,48 +98,32 @@ class Rc6Decoder(object):
         elif sample == 12: # binary 1100
             return 1
         else:
-            raise DecodeError
+            raise DecodeError("wrong trailer bit transition")
         
     
     def Decode(self, data):
-        self.data = data
-        
-        # header pulse
+        # Check the leader pulse
         if not (2200 < data[0] < 3300):
-            raise DecodeError
-        if not (700 < data[1] < 1000):
-            raise DecodeError
-        self.pos = 2
+            raise DecodeError("wrong header pulse")
+        if not (700 < data[1] < 1100):
+            raise DecodeError("wrong header pause")
         
-        self.buffer = 0x00
-        self.bufferLen = 0
+        self.SetData(data, 2)
         
-        # start bit
+        # Get the start bit
         if self.GetBit() != 1:
-            raise DecodeError
+            raise DecodeError("missing start bit")
         
-        # mode bits
-        mode = 0
-        for dummyCounter in range(3):
-            mode <<= 1
-            if self.GetBit() == 1:
-                mode += 1
-        
-        # trailer bit
+        mode = self.GetBitsLsbLast(3)
         trailerBit = self.GetTrailerBit()
-        
-        # value bits
-        value = 0
-        for dummyCounter in range(32):
-            value <<= 1
-            if self.GetBit() == 1:
-                value += 1
+        value = self.GetBitsLsbLast(32)
+            
+        # Check for MCE remote
         if mode == 6 and trailerBit == 0:
-            #value &= 0x7FFF
-            value &= 0xFFFF7FFF
-            if value in MCE_REMOTE:
-                return MCE_REMOTE[value]
+            value2 = value & 0xFFFF7FFF
+            if value2 in MCE_REMOTE:
+                return "Mce." + MCE_REMOTE[value2]
 #            else:
-#                print "0x%0.8X" % value
+#                print "0x%0.8X" % value2
 
         return "RC6mode%X_%d_%08X" % (mode, trailerBit, value)
