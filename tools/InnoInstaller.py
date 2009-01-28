@@ -273,7 +273,7 @@ class InnoInstaller(object):
     
     def RemoveAllManifests(self):
         """ 
-        Remove embedded manifest resource for all DLLs ans PYDs. 
+        Remove embedded manifest resource for all DLLs and PYDs. 
         
         These seems to be the only way how the setup can run with Python 2.6
         on Vista.
