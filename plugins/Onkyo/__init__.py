@@ -36,7 +36,7 @@ more useful within EventGhosts's event matching system:
 eg.RegisterPlugin(
     name = "Onkyo AV Serial",
     author = "prostetnic & Bartman",
-    version = "0.1." + "$LastChangedRevision: 348 $".split()[1],
+    version = "0.1." + "$LastChangedRevision$".split()[1],
     kind = "external",
     description = "Control Onkyo A/V Receivers via RS232",
     help = help,

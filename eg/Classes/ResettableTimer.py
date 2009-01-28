@@ -16,9 +16,9 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate: 2009-01-25 12:32:15 +0100 (So, 25 Jan 2009) $
-# $LastChangedRevision: 798 $
-# $LastChangedBy: bitmonster $
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
 
 from threading import Thread, Lock
 from eg.WinApi.Dynamic import (
