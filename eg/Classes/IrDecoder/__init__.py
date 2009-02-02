@@ -247,7 +247,6 @@ class IrDecoder(object):
             decoder = self.universalDecoder
             if uniCode is None:
                 code = decoder.Decode(data)
-                print len(data), data
             else:
                 code = uniCode
             

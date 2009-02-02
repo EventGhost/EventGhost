@@ -147,7 +147,6 @@ class Rc5(ManchesterCoding2):
         
         
     def Decode(self, data):
-        print len(data), data
         self.SetData(data)
         self.bufferLen = 1
         if not self.GetBit():
