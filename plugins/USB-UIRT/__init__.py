@@ -71,7 +71,6 @@ from ctypes import (
     WINFUNCTYPE, Structure, GetLastError, create_string_buffer, WinDLL,
     string_at, 
 )
-from eg.WinApi.Dynamic import strchr
 import datetime
 import threading
 
