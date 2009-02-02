@@ -43,13 +43,14 @@ from eg.WinApi.Dynamic import (
     OPEN_EXISTING,
     FILE_ATTRIBUTE_NORMAL,
     FILE_FLAG_OVERLAPPED,
+    INVALID_HANDLE_VALUE,
 )
 
 FT_OPEN_BY_DESCRIPTION = 2
 
 
 
-class Fhz1000Pc(eg.PluginClass):
+class Fhz1000Pc(eg.PluginBase):
     
     def __init__(self):
         self.AddAction(Off)
@@ -84,6 +85,8 @@ class Fhz1000Pc(eg.PluginClass):
             FILE_ATTRIBUTE_NORMAL|FILE_FLAG_OVERLAPPED|FT_OPEN_BY_DESCRIPTION,
             0
         )
+        if self.ftHandle == INVALID_HANDLE_VALUE:
+            raise self.Exceptions.DriverNotFound
         self.receiveThread = eg.SerialThread(self.ftHandle)
         self.receiveThread._WriteFile = d2xx.FT_W32_WriteFile
         self.receiveThread._ReadFile = d2xx.FT_W32_ReadFile
@@ -225,7 +228,7 @@ class Fhz1000Pc(eg.PluginClass):
 
         
     
-class ActionBase(eg.ActionClass):
+class ActionBase(eg.ActionBase):
     defaultAddress = 0x094001
     funccode = None # must be assigned by subclass
     
