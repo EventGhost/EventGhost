@@ -179,7 +179,7 @@ class Log(object):
         if msg:
             self.PrintError(msg, source=source)
         tbType, tbValue, tbTraceback = sys.exc_info() 
-        slist = ['Traceback (most recent call last) (%d):\n' % eg.buildNum]
+        slist = ['Traceback (most recent call last) (%d):\n' % eg.revision]
         if tbTraceback:
             slist += traceback.format_tb(tbTraceback)[skip:]
         slist += traceback.format_exception_only(tbType, tbValue)
@@ -193,7 +193,7 @@ class Log(object):
             
 
     def PrintStack(self, skip=0):
-        strs = ['Stack trace (most recent call last) (%d):\n' % eg.buildNum]
+        strs = ['Stack trace (most recent call last) (%d):\n' % eg.revision]
         strs += traceback.format_stack(sys._getframe().f_back)[skip:]
         error = "".join(strs)
         self.Write(error.rstrip() + "\n", ERROR_ICON)

@@ -596,7 +596,7 @@ class TreeCtrl(wx.TreeCtrl):
         if obj == self.root:
             obj.GetXmlString(stream.write)
         else:
-            buildStr = str(eg.buildNum)
+            buildStr = str(eg.revision)
             stream.write('<EventGhost Version="%s">\r\n' % buildStr)
             obj.GetXmlString(stream.write, "    ")
             stream.write('</EventGhost>')

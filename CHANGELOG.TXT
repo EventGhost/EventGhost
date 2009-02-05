@@ -1,4 +1,4 @@
-**0.3.7.1488 (development)**
+**0.3.7.dev**
 
 - Event items now have a configuration dialog, that is somewhat similar to
   the ones of actions and plugins. If you do an "Add Event...", the dialog 
@@ -17,6 +17,10 @@
   EventGhost can't complete the action, you get a message telling you why.
 - The title bars of the two panes now has a horizontal gradient and their 
   colours are determined by the appearance settings of Windows. 
+- The version number scheme has changed a little. The last number now shows 
+  the SVN revision number instead of the build number and is prefixed with a
+  small "r". This should make it easier for plugin developers to see if their
+  latest changes are included in the installer.
   
 
 **0.3.6.1487 (12/05/2008)**
