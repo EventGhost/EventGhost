@@ -159,7 +159,7 @@ class MainFrame(wx.Frame):
         # tell FrameManager to manage this frame
 
         if (
-            eg.config.buildNum == eg.buildNum 
+            eg.config.revision == eg.revision 
             and Config.perspective is not None
         ):
             auiManager.LoadPerspective(Config.perspective, False)

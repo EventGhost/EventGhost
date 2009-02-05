@@ -80,7 +80,7 @@ class InnoInstaller(object):
 
     def __init__(self):
         self.tmpDir = tempfile.mkdtemp()
-        atexit.register(shutil.rmtree, self.tmpDir)
+        #atexit.register(shutil.rmtree, self.tmpDir)
         self.toolsDir = abspath(dirname(sys.argv[0]))
         self.sourceDir = abspath(self.sourceDir)
         self.outputDir = abspath(self.outputDir)

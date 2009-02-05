@@ -307,10 +307,34 @@ class MyInstaller(InnoInstaller):
     outputBaseFilename = None
     
     def __init__(self):
-        self.appShortName += "_Py%d%d" % sys.version_info[:2] 
         InnoInstaller.__init__(self)
 
 
+    def UpdateVersionFile(self):
+        """
+        Update buildTime and revision in eg/Classes/Version.py
+        """
+        self.svnRevision = self.GetSvnRevision()
+        versionFilePath = self.sourceDir + "/eg/Classes/Version.py"
+        outFilePath = join(self.tmpDir, "Version.py")
+        lines = open(versionFilePath, "rt").readlines()
+        outfile = open(outFilePath, "wt")
+        # update revision and buildTime in eg/Classes/Version.py
+        for line in lines:
+            if line.strip().startswith("buildTime"):
+                parts = line.split("=")
+                outfile.write(parts[0] + "= " + str(time.time()) + "\n")
+            elif line.strip().startswith("revision"):
+                parts = line.split("=")
+                outfile.write("%s= %d\n" % (parts[0], self.svnRevision))
+            else:
+                outfile.write(line)
+        outfile.close()
+        mod = imp.load_source("Version", outFilePath)
+        self.appVersion = mod.Version.string
+        self.outputBaseFilename = "EventGhost_%(appVersion)s_Setup" % self
+        
+    
     def UpdateChangeLog(self):    
         """
         Add a version header to CHANGELOG.TXT if needed.
@@ -328,39 +352,6 @@ class MyInstaller(InnoInstaller):
         outfile = open(path, "w+")
         outfile.write(header + data)
         outfile.close()
-        
-    
-    def UpdateVersionFile(self, incrementBuildNum):
-        """
-        Update buildNum, buildTime and svnRevision in eg/Classes/Version.py
-        """
-        svnRevision = self.GetSvnRevision()
-        versionFilePath = self.sourceDir + "/eg/Classes/Version.py"
-        if incrementBuildNum:
-            lines = open(versionFilePath, "rt").readlines()
-            outfile = open(versionFilePath, "wt")
-            # update buildNum and buildTime in eg/Classes/Version.py
-            for line in lines:
-                if line.strip().startswith("buildNum"):
-                    parts = line.split("=")
-                    value = int(parts[1].strip())
-                    outfile.write(parts[0] + "= " + str(value+1) + "\n")
-                elif line.strip().startswith("buildTime"):
-                    parts = line.split("=")
-                    outfile.write(parts[0] + "= " + str(time.time()) + "\n")
-                elif line.strip().startswith("svnRevision"):
-                    parts = line.split("=")
-                    outfile.write("%s= %d\n" % (parts[0], svnRevision))
-                else:
-                    outfile.write(line)
-            outfile.close()
-        mod = imp.load_source("Version", versionFilePath)
-        self.appVersion = mod.Version.string
-        if self.pyVersion == "26":
-            filename = "EventGhost_%(appVersion)s_Py26_Setup" % self
-        else:
-            filename = "EventGhost_%(appVersion)s_Setup" % self
-        self.outputBaseFilename = filename
         
     
     def GetSetupFiles(self):
@@ -439,7 +430,11 @@ class MyInstaller(InnoInstaller):
             join(self.sourceDir, "pyw%s.exe" % self.pyVersion), 
             destName="pyw.exe"
         )
-
+        self.AddFile(
+            join(self.tmpDir, "Version.py"), 
+            destDir="eg\\Classes",
+            destName="Version.py"
+        )
         # create entries in the [InstallDelete] section of the Inno script to
         # remove all known plugin directories before installing the new 
         # plugins.
@@ -644,9 +639,7 @@ def Main(options, builder, mainDialog=None):
     """
     Main task of the script.
     """
-    if options.incrementBuildNum:
-        print "--- updating Version.py"
-    builder.UpdateVersionFile(options.incrementBuildNum)
+    builder.UpdateVersionFile()
     print "--- updating CHANGELOG.TXT"
     builder.UpdateChangeLog()
     if options.buildStaticImports:
@@ -697,7 +690,6 @@ def Main(options, builder, mainDialog=None):
 
 OPTIONS = (
     ("includeNoIncludePlugins", "Include 'noinclude' plugins", False),
-    ("incrementBuildNum", "Increment build number", False),
     ("buildStaticImports", "Build StaticImports.py", True),
     ("buildImports", "Build imports.py", True),
     ("buildSourceArchive", "Build source archive", True),

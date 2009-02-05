@@ -304,7 +304,6 @@ class SystemInfoPanel(HtmlPanel):
         availableMemory = "%s MB" % availableMemory
         self.sysInfos = (
             ("EventGhost Version", eg.Version.string),
-            ("SVN Revision", eg.Version.svnRevision),
             ("Build Time", buildTime),
             ("Python Version", "%d.%d.%d %s %d" % sys.version_info),
             ("wxPython Version", wx.VERSION_STRING),

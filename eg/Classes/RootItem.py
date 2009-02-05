@@ -40,7 +40,7 @@ class RootItem(ContainerItem):
         attr, text = ContainerItem.GetData(self)
         self.guid = str(GUID.create_new())
         self.time = str(time.time())
-        attr.append(('Version', str(eg.buildNum)))
+        attr.append(('Version', str(eg.revision)))
         attr.append(('Guid', self.guid))
         attr.append(('Time', self.time))
         return attr, text
