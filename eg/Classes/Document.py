@@ -94,8 +94,7 @@ class Document(object):
         
     def SetFilePath(self, filePath):
         self.filePath = filePath
-        if self.frame is not None:
-            self.frame.SetTitle(self.GetTitle())
+        eg.Notify("DocumentFileChange", filePath)
     
     
     def GetTitle(self):
@@ -154,8 +153,7 @@ class Document(object):
         
         if not filePath:
             filePath = "Example.xml"
-            self.SetFilePath(filePath)
-            self.filePath = False
+            self.SetFilePath(False)
         else:
             self.SetFilePath(filePath)
         eg.TreeLink.StartLoad()
@@ -193,11 +191,7 @@ class Document(object):
             self.firstVisibleItem = self.root
         
     
-    def WriteFile(self, filePath=None):
-        if filePath is not None:
-            self.SetFilePath(filePath)
-        else:
-            filePath = self.filePath
+    def WriteFile(self, filePath):
         success = False
         tmpFile, tmpPath = mkstemp(".xml", "$", os.path.dirname(filePath))
         os.close(tmpFile)
@@ -363,7 +357,7 @@ class Document(object):
     def Save(self):
         if not self.filePath:
             return self.SaveAs()
-        self.WriteFile()
+        self.WriteFile(self.filePath)
         return wx.ID_YES
 
 
@@ -372,6 +366,7 @@ class Document(object):
         if filePath is None:
             return wx.ID_CANCEL
         self.WriteFile(filePath)
+        self.SetFilePath(filePath)
         return wx.ID_YES            
 
 

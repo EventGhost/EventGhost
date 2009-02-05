@@ -127,6 +127,7 @@ class MainFrame(wx.Frame):
         # tree popup menu
         self.popupMenu = self.CreateTreePopupMenu()
 
+        eg.Bind("DocumentFileChange", self.OnDocumentFileChange)
         isDirty = eg.Bind("DocumentChange", self.OnDocumentChange)
         self.toolBar.EnableTool(wx.ID_SAVE, isDirty)
         
@@ -241,6 +242,7 @@ class MainFrame(wx.Frame):
         self.document.SetTree(None)
         eg.log.SetCtrl(None)
         Config.perspective = self.auiManager.SavePerspective()
+        eg.Unbind("DocumentFileChange", self.OnDocumentFileChange)
         eg.Unbind("DocumentChange", self.OnDocumentChange)
         eg.Unbind("FocusChange", self.OnFocusChange)
         eg.Unbind("ClipboardChange", self.OnClipboardChange)
@@ -534,6 +536,10 @@ class MainFrame(wx.Frame):
     def OnDocumentChange(self, isDirty):
         self.toolBar.EnableTool(wx.ID_SAVE, bool(isDirty))
         self.menuBar.Enable(wx.ID_SAVE, bool(isDirty))
+        
+        
+    def OnDocumentFileChange(self, filepath):
+        self.SetTitle(self.document.GetTitle())
         
         
     def OnPaneClose(self, event):
