@@ -20,6 +20,12 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+"""<rst>
+Plugin for `Igor Cesko's USB IR`__ receiver.
+
+__ http://www.cesko.host.sk/
+"""
+
 import eg
 
 eg.RegisterPlugin(
@@ -27,16 +33,12 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.1." + "$LastChangedRevision$".split()[1],
     kind = "remote",
-    description = (
-        'Plugin for <a href="http://www.cesko.host.sk/">'
-        'Igor Cesko\'s USB IR</a> receiver.'
-    ),
+    description = __doc__,
 )
 
 
 from threading import Thread, Event
-from  ctypes import windll, byref, c_ubyte, c_int
-from time import sleep
+from ctypes import windll, byref, c_ubyte, c_int
 from functools import partial
 
 
@@ -106,13 +108,13 @@ class IgorPlugUSB(eg.PluginBase):
                 timeCodeDiagram[diagramLength.value] = 255
                 decode(timeCodeDiagram, diagramLength.value + 1)
             else:
-                sleep(0.01)
+                stopEvent.wait(0.01)
         dll.DoSetOutDataPort(self.ledIrOffFlags)
         
         
     def Configure(self, led1=2, led2=0):
         panel = eg.ConfigPanel()
-        choices = ["Always Off", "Always On", "Blink on IR reception"]
+        choices = ["Always off", "Always on", "Blink on IR reception"]
         led1Ctrl = panel.RadioBox(led1, choices=choices)
         led2Ctrl = panel.RadioBox(led2, choices=choices)
         group1 = panel.BoxedGroup("LED 1", led1Ctrl)
