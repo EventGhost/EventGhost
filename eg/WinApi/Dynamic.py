@@ -1296,3 +1296,7 @@ GetProcessHeap.argtypes = []
 HeapFree = _kernel32.HeapFree
 HeapFree.restype = BOOL
 HeapFree.argtypes = [HANDLE, DWORD, LPVOID]
+GetVolumeInformationW = _kernel32.GetVolumeInformationW
+GetVolumeInformationW.restype = BOOL
+GetVolumeInformationW.argtypes = [LPCWSTR, LPWSTR, DWORD, LPDWORD, LPDWORD, LPDWORD, LPWSTR, DWORD]
+GetVolumeInformation = GetVolumeInformationW # alias
