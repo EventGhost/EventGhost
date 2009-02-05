@@ -82,6 +82,12 @@ DEPENDENCIES = [
         "http://www.pythonware.com/products/pil/"
     ),
     (
+        "Crypto", 
+        "2.0.1", 
+        "PyCrypto (Python Cryptography Toolkit)", 
+        "http://www.dlitz.net/software/pycrypto/"
+    ),
+    (
         "sphinx", 
         "0.5.1", 
         "Sphinx (Python documentation generator)", 
@@ -90,23 +96,6 @@ DEPENDENCIES = [
 ]
 
 
-def CheckComtypes():
-    # comtypes 0.6.0 has a bug in client/_code_cache.py
-    # path it if needed
-    path = join(sys.prefix, "lib/site-packages/comtypes/client/_code_cache.py")
-    lines = open(path, "rt").readlines()
-    for linenum, line in enumerate(lines):
-        if line.strip() == "import ctypes, logging, os, sys, tempfile":
-            print "Needs to be patched:", path 
-            lines[linenum] = \
-                "import ctypes, logging, os, sys, tempfile, types\n"
-            outfile = open(path, "wt")
-            outfile.writelines(lines)
-            outfile.close()
-            print "Patching done!"
-            break
-    
-    
 def CompareVersion(actualVersion, wantedVersion):
     wantedParts = wantedVersion.split(".")
     actualParts = actualVersion.split(".")
@@ -170,7 +159,6 @@ def CheckDependencies():
 
 if not CheckDependencies():
     sys.exit(1)
-CheckComtypes()
 
 
 # third-party module imports
@@ -263,6 +251,7 @@ INCLUDED_MODULES = [
     "isapi",
     "win32com",
     "docutils",
+    "Crypto",
 ]
 
 EXCLUDED_MODULES = [
