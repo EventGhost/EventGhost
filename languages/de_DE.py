@@ -392,6 +392,7 @@ class Plugin:
             description = u"Fährt das System herunter und schaltet den Rechner aus."
         class PowerGroup:
             name = u"Energieoptionen"
+            description = u"Diese Aktionen steuern den Energiestatus des Rechners."
         class Reboot:
             name = u"Rechner neu starten"
             description = u"Führt einen Neustart des Rechners aus."
@@ -489,6 +490,7 @@ class Plugin:
             description = u"Diese Aktionen steuern die Audio-Funktionen des Computers."
         class Standby:
             name = u"Rechner standby"
+            description = u"Versetzt den Rechner in den energiesparenden Standby-Modus, bei dem der Arbeitsspeicher aber weiterhin mit Strom versorgt wird."
         class StartScreenSaver:
             name = u"Starte Bildschirmschoner"
             description = u"Startet den momentan im Betreibssystem ausgewählten Blidschrimschoner."
@@ -704,16 +706,6 @@ class Plugin:
             name = u"Vollbild (w/o res.change)"
         class GoTo:
             name = u"Gehe zu"
-        class GroupDvdControls:
-            name = u"DVD Steuerung"
-        class GroupExtendedControls:
-            name = u"Erweiterte Steuerung"
-        class GroupMainControls:
-            name = u"Main Steuerung"
-        class GroupToggleControls:
-            name = u"Toggle player controls"
-        class GroupViewModes:
-            name = u"Ansichten Steuerung"
         class IncreaseRate:
             name = u"Geschwindigkeit erhöhen"
         class JumpBackwardKeyframe:
