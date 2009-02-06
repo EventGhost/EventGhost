@@ -200,7 +200,8 @@ def Main(buildHtml=True, buildChm=False):
                 "HTML Help Workshop command line compiler not found"
             )
         hhpPath = join(DOCS_CHM_BUILD_DIR, "EventGhost.hhp")
-        subprocess.call([htmlHelpCompilerPath, hhpPath])
+        from InnoInstaller import StartProcess
+        StartProcess(htmlHelpCompilerPath, hhpPath)
         shutil.copy(join(DOCS_CHM_BUILD_DIR, "EventGhost.chm"), MAIN_DIR)
     
     
