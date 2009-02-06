@@ -22,8 +22,8 @@
 
 import eg
 from types import ClassType
+from eg.Utils import SetDefault
 
-SetClass = eg.SetClass
 ActionBase = eg.ActionBase
 
 
@@ -56,24 +56,7 @@ class ActionGroup(object):
         """
         Create and add a new sub-group.
         """
-        plugin = self.plugin
-        if identifier is not None:
-            class Text:
-                pass
-            Text.name = name
-            if description is None:
-                Text.description = name
-            else:
-                Text.description = description
-            text = getattr(plugin.text, identifier, None)
-            if text is None:
-                text = Text()
-            else:        
-                SetClass(text, Text)
-            setattr(plugin.text, identifier, text)
-            name = text.name
-            description = text.description
-        group = ActionGroup(plugin, name, description, iconFile)
+        group = ActionGroup(self.plugin, name, description, iconFile)
         self.items.append(group)
         return group
         
@@ -112,30 +95,7 @@ class ActionGroup(object):
         else:
             icon = eg.Icons.ActionSubIcon(icon)
         
-        text = actionCls.text
-        if text is None:
-            text = getattr(plugin.text, actionClsName, None)
-            if text is None:
-                class Text:
-                    pass
-                text = Text()
-                setattr(plugin.text, actionClsName, text)
-        elif type(text) == ClassType:        
-            translation = getattr(plugin.text, actionClsName, None)
-            if translation is None:
-                translation = text()
-            SetClass(translation, text)
-            text = translation
-            setattr(plugin.text, actionClsName, text)
-        textCls = text.__class__
-        if not hasattr(textCls, "name"):
-            name = actionCls.name
-            textCls.name = actionClsName if name is None else name
-        
-        if not hasattr(textCls, "description"):
-            description = actionCls.description
-            textCls.description = textCls.name if description is None else description
-            
+        text = self.Translate(plugin, actionCls, actionClsName)
         actionCls = ClassType(
             actionClsName,
             (actionCls, ), 
@@ -155,6 +115,29 @@ class ActionGroup(object):
         return actionCls
     
 
+    def Translate(self, plugin, actionCls, actionClsName):
+        defaultText = actionCls.text
+        if defaultText is None:
+            defaultText = ClassType(actionClsName, (), {})
+        translatedText = getattr(plugin.text, actionClsName, None)
+        if translatedText is None:
+            translatedText = ClassType(actionClsName, (), {})
+            setattr(plugin.text, actionClsName, translatedText)
+            
+        SetDefault(translatedText, defaultText)
+        
+        if not hasattr(translatedText, "name"):
+            name = actionCls.name
+            translatedText.name = actionClsName if name is None else name
+        
+        if not hasattr(translatedText, "description"):
+            description = actionCls.description
+            translatedText.description = (
+                translatedText.name if description is None else description
+            )
+        return translatedText
+    
+    
     def AddActionsFromList(self, theList, defaultAction=None):
         def Recurse(theList, group):
             for parts in theList:

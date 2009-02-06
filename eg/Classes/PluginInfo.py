@@ -22,12 +22,12 @@
 
 import eg
 import wx
+from eg.Utils import SetDefault
 from os.path import exists, join
 
 import sys
 import types
 
-SetClass = eg.SetClass
 
 
 class PluginProxy(object):
@@ -204,20 +204,21 @@ class PluginInfo(object):
         pluginInfo.pluginCls = pluginCls
         if getattr(pluginCls, "canMultiLoad", False):
             pluginInfo.canMultiLoad = True
-        text = pluginCls.text
-        if text is None:
-            class text:
+        defaultText = pluginCls.text
+        if defaultText is None:
+            class defaultText:
                 pass
-        if type(text) == types.ClassType:
-            translation = getattr(eg.text.Plugin, pluginCls.__name__, None)
-            if translation is None:
-                translation = text()
-            SetClass(translation, text)
-            text = translation
-                
-        setattr(eg.text.Plugin, pluginCls.__name__, text)
-        text.__class__.name = pluginInfo.englishName
-        text.__class__.description = pluginInfo.englishDescription
+        defaultText.name = pluginInfo.englishName
+        defaultText.description = pluginInfo.englishDescription
+        translationText = getattr(eg.text.Plugin, pluginCls.__name__, None)
+        if translationText is not None:
+            SetDefault(translationText, defaultText)
+            text = translationText
+        else:
+            setattr(eg.text.Plugin, pluginCls.__name__, defaultText)
+            text = defaultText
+        #text.__class__.name = pluginInfo.englishName
+        #text.__class__.description = pluginInfo.englishDescription
         pluginCls.text = text
         pluginCls.name = text.name
         pluginCls.description = text.description

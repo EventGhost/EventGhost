@@ -21,32 +21,27 @@
 # $LastChangedBy$
 
 import eg
-
+from eg.Utils import SetDefault
 
 
 class TranslatableStringsMeta(type):
     
     def __new__(mcs, name, bases, dct):
+        defaultText = type.__new__(mcs, name, bases, dct)
         if len(bases):
             moduleName = dct["__module__"].split(".")[-1]
-            class NewCls:
-                pass
-            NewCls.__dict__ = dct
-            trans = getattr(eg.text, moduleName, None)
-            if trans is None:
-                class Trans:
-                    pass
-                trans = Trans()
-            eg.SetClass(trans, NewCls)
-            setattr(eg.text, moduleName, trans)
-            return trans
-        return type.__new__(mcs, name, bases, dct)
+            translatedText = getattr(eg.text, moduleName, None)
+            if translatedText is None:
+                setattr(eg.text, moduleName, defaultText)
+                return defaultText
+            else:
+                SetDefault(translatedText, defaultText)
+                return translatedText
+        return defaultText
 
 
 
 class TranslatableStrings:
     __metaclass__ = TranslatableStringsMeta
     
-    def __init__(self):
-        pass
         

@@ -20,11 +20,10 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
-from types import InstanceType
+from eg.Utils import SetDefault
 
 
-class Text:
+class Default:
     class General:
         configTree = "Configuration Tree"
         deleteQuestion = "Are you sure you want to delete this item?"
@@ -186,20 +185,16 @@ class Text:
                 "You can't configure this item.\n\n"
                 "Only action, event and plugin items are configurable."
             )
-            
-    @eg.LogIt
-    def __init__(self, language):  
-        class MetaClass(type):
-            def __new__(mcs, dummyName, dummyBases, dct):
-                del dct["__module__"]
-                class EmptyTextBunch:
-                    pass
-                return InstanceType(EmptyTextBunch, dct)
-        try:
-            infile = open("languages\\%s.py" % language)
-            exec infile in {"__metaclass__": MetaClass}, self.__dict__
-        except IOError:
-            pass
-        eg.SetClass(self, self.__class__)
-    
-        
+
+
+def Text(language):
+    class Translation:
+        pass
+    try:
+        infile = open("languages\\%s.py" % language)
+        exec infile in {}, Translation.__dict__
+    except IOError:
+        pass
+    SetDefault(Translation, Default)
+    return Translation
+

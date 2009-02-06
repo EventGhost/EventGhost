@@ -53,7 +53,7 @@ def LoadModules():
     
     for plugin in os.listdir("plugins"):
         if not plugin.startswith("."):
-            eg.PluginInfo.Open(plugin, plugin, ())
+            eg.PluginInfo.Open(plugin, plugin, ()).Close()
         
     
 
@@ -245,7 +245,7 @@ class LanguageEditor(wx.Frame):
         languagePath = "languages\\%s.py" % language
         if os.path.exists(languagePath):
             execfile(languagePath, {}, translation.__dict__)
-        self.translationDict = translation.__dict__.copy()
+        self.translationDict = translation.__dict__
         self.translationDict["__builtins__"] = {}
         
         for name in (
@@ -370,7 +370,7 @@ class LanguageEditor(wx.Frame):
             while item.IsOk():
                 evalPath, value, transValue = tree.GetPyData(item)
                 key = evalPath.split(".")[-1]
-                if type(value) in (types.ClassType, types.InstanceType):
+                if hasattr(value, "__bases__"):
                     tmp = Traverse(item, indent+1)
                     if tmp != "":
                         append(indentString * indent + "class %s:\n" % key)
@@ -394,11 +394,14 @@ class LanguageEditor(wx.Frame):
                         transValue = transValue.decode("latin-1")
                     append(indentString * indent + MyRepr(transValue) + ",\n")
                 elif transValue is not UnassignedValue and transValue != "":
-                    append(
-                        indentString * indent 
-                        + key 
-                        + ' = %s\n' % MyRepr(transValue)
-                    )
+                    try:
+                        append(
+                            indentString * indent 
+                            + key 
+                            + ' = %s\n' % MyRepr(transValue)
+                        )
+                    except:
+                        print value, value.__bases__
                 item, cookie = tree.GetNextChild(treeId, cookie)
             return "".join(res)
         
@@ -428,7 +431,7 @@ class LanguageEditor(wx.Frame):
                 continue
             if key == "name":
                 try:
-                    value = node.__class__.__dict__[key]
+                    value = node.__dict__[key]
                 except KeyError:
                     print node.__dict__
                     print "class has no:", key
@@ -436,7 +439,7 @@ class LanguageEditor(wx.Frame):
                 firstItems.append((key, value))
             elif key == "description":
                 try:
-                    value = node.__class__.__dict__[key]
+                    value = node.__dict__[key]
                 except KeyError:
                     print node.__dict__
                     print "class has no:", key
@@ -450,7 +453,7 @@ class LanguageEditor(wx.Frame):
                 groupItems.append((key, value))
             else:
                 try:
-                    value = node.__class__.__dict__[key]
+                    value = node.__dict__[key]
                 except (KeyError, AttributeError):
                     print "no class item:", node, key
                     continue
