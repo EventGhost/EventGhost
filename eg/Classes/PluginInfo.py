@@ -21,12 +21,9 @@
 # $LastChangedBy$
 
 import eg
-import wx
-from eg.Utils import SetDefault
-from os.path import exists, join
-
 import sys
-import types
+from os.path import exists, join
+from eg.Utils import SetDefault
 
 
 
@@ -51,7 +48,6 @@ class UnknownPlugin(eg.PluginBase):
         raise self.Exceptions.PluginNotFound
     
         
-    
     
 class PluginInfo(object):
     """
@@ -140,9 +136,9 @@ class PluginInfo(object):
     @classmethod
     def GetPluginInfo(cls, pluginName):
         # first look, if we already have cached this plugin class
-        info = eg.pluginClassInfo.get(pluginName, None)
-        if info is not None:
-            return info
+        cachedInfo = eg.pluginClassInfo.get(pluginName, None)
+        if cachedInfo is not None:
+            return cachedInfo
         
         if pluginName not in eg.pluginManager.database:
             #eg.PrintError(eg.text.Error.pluginNotFound % pluginName)
@@ -371,14 +367,15 @@ class PluginInfo(object):
     def RemovePluginInstance(self):
         plugin = self.instance
         def DeleteActionListItems(items):
-            if items is not None:
-                for item in items:
-                    if isinstance(item, type) and issubclass(item, eg.ActionBase):
-                        item.plugin = None
-                    else:
-                        DeleteActionListItems(item.items)
-                        item.plugin = None
-                del items
+            if items is None:
+                return
+            for item in items:
+                if isinstance(item, type) and issubclass(item, eg.ActionBase):
+                    item.plugin = None
+                else:
+                    DeleteActionListItems(item.items)
+                    item.plugin = None
+            del items
                 
         delattr(eg.plugins, self.evalName)
         eg.pluginList.remove(plugin)
