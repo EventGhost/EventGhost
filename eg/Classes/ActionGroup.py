@@ -24,7 +24,6 @@ import eg
 from types import ClassType
 from eg.Utils import SetDefault
 
-ActionBase = eg.ActionBase
 
 
 class ActionInfo(object):
@@ -56,7 +55,22 @@ class ActionGroup(object):
         """
         Create and add a new sub-group.
         """
-        group = ActionGroup(self.plugin, name, description, iconFile)
+        plugin = self.plugin
+        if identifier is not None:
+            description = name if description is None else description
+            defaultText = ClassType(
+                identifier, 
+                (), 
+                {"name": name, "description": description}
+            )
+            translatedText = getattr(plugin.text, identifier, None)
+            if translatedText is None:
+                translatedText = ClassType(identifier, (), {})
+                setattr(plugin.text, identifier, translatedText)
+            SetDefault(translatedText, defaultText)
+            name = translatedText.name
+            description = translatedText.description
+        group = ActionGroup(plugin, name, description, iconFile)
         self.items.append(group)
         return group
         
@@ -70,7 +84,7 @@ class ActionGroup(object):
         value=None, 
         hidden=False
     ):
-        if not issubclass(actionCls, ActionBase):
+        if not issubclass(actionCls, eg.ActionBase):
             raise Exception("Actions must be subclasses of eg.ActionBase")
         if clsName is not None:
             actionCls = ClassType(
@@ -123,13 +137,10 @@ class ActionGroup(object):
         if translatedText is None:
             translatedText = ClassType(actionClsName, (), {})
             setattr(plugin.text, actionClsName, translatedText)
-            
         SetDefault(translatedText, defaultText)
-        
         if not hasattr(translatedText, "name"):
             name = actionCls.name
             translatedText.name = actionClsName if name is None else name
-        
         if not hasattr(translatedText, "description"):
             description = actionCls.description
             translatedText.description = (
