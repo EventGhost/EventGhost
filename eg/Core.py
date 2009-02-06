@@ -282,7 +282,7 @@ eg.PrintStack = eg.log.PrintStack
 
 eg.colour = eg.Colour()
 eg.config = eg.Config()
-if eg.startupArguments.isMain:
+if eg.startupArguments.isMain and not eg.startupArguments.translate:
     eg.text = eg.Text(eg.config.language)
 else:
     eg.text = eg.Text('en_EN')

@@ -22,7 +22,7 @@
 
 __all__ = ["Bunch", "NotificationHandler", "LogIt", "LogItWithReturn",
     "TimeIt", "AssertNotMainThread", "AssertNotActionThread", "ParseString",
-    "SetClass", "EnsureVisible", "AsGreenlet",
+    "SetDefault", "EnsureVisible", "AsGreenlet",
     "VBoxSizer", "HBoxSizer", "EqualizeWidths", "wxDummyEvent",
 ]
     
@@ -198,18 +198,19 @@ def ParseString(text, filterFunc=None):
     return "".join(chunks)
 
 
-def SetClass(obj, cls):
-    for key, value in cls.__dict__.items():
-        if type(value) == ClassType:
-            if key in obj.__dict__:
-                newValue = getattr(obj, key)
-            else:
-                newValue = value()
-            SetClass(newValue, value)
-            setattr(obj, key, newValue)
-    obj.__class__ = cls
-    
-    
+from types import ClassType
+
+USER_CLASSES = (type, ClassType)
+
+def SetDefault(targetCls, defaultCls):
+    targetDict = targetCls.__dict__
+    for defaultKey, defaultValue in defaultCls.__dict__.iteritems():
+        if defaultKey not in targetDict:
+            setattr(targetCls, defaultKey, defaultValue)
+        elif type(defaultValue) in USER_CLASSES:
+            SetDefault(targetDict[defaultKey], defaultValue)
+
+
 def AsGreenlet(func):
     def Wrapper(*args, **kwargs):
         greenlet = eg.Greenlet(func)
