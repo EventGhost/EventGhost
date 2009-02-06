@@ -640,6 +640,14 @@ class Plugin:
     class MediaPlayerClassic:
         name = u"Media Player Classic"
         description = u'Fügt Aktionen zur Steuerung des <a href="http://sourceforge.net/projects/guliverkli/">Media Player Classic</a> hinzu'
+        class GroupDvdControls:
+            name = u"DVD Steuerung"
+        class GroupExtendedControls:
+            name = u"Erweiterte Steuerung"
+        class GroupMainControls:
+            name = u"Main Steuerung"
+        class GroupViewModes:
+            name = u"Ansichten Steuerung"
         class AlwaysOnTop:
             name = u"Immer im Vordergrund"
         class AudioDelayAdd10ms:
