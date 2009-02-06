@@ -33,6 +33,37 @@ import atexit
 import zipfile
 from os.path import basename, dirname, abspath, join, exists
 from glob import glob
+import logging
+
+class StdHandler(object):
+    
+    def __init__(self, oldStream, logger):
+        self.oldStream = oldStream
+        self.buf = ""
+        self.logger = logger
+        self.indent = 0
+        
+    def write(self, data):
+        self.buf += data
+        lines = self.buf.split("\n")
+        for line in self.buf.split("\n")[:-1]:
+            line = (self.indent * 4 * " ") + line.rstrip()
+            self.logger(line)
+            self.oldStream.write(line + "\n")
+        self.buf = lines[-1]
+        
+        
+        
+LOG_FILENAME = 'Build.log'
+logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG,)
+logging.getLogger().setLevel(20)
+sys.stdout = StdHandler(sys.stdout, logging.info)
+sys.stderr = StdHandler(sys.stderr, logging.error)
+
+def SetIndent(level):
+    sys.stderr.indent = level
+    sys.stdout.indent = level
+
 
 
 RT_MANIFEST = 24
@@ -59,6 +90,27 @@ def InstallPy2exePatch():
         pass 
 
 
+def StartProcess(*args):
+    SetIndent(1)
+    startupInfo = subprocess.STARTUPINFO()
+    startupInfo.dwFlags = subprocess.STARTF_USESHOWWINDOW
+    startupInfo.wShowWindow = subprocess.SW_HIDE 
+    process = subprocess.Popen(
+        args, 
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        startupinfo=startupInfo
+    )
+    while process.returncode is None:
+        out, err = process.communicate()
+        if out:
+            sys.stdout.write(out)
+        if err:
+            sys.stderr.write(err)
+    SetIndent(0)
+    return process.returncode
+    
+    
 class InnoInstaller(object): 
     """
     Helper class to create Inno Setup installers more easily.
@@ -325,16 +377,7 @@ class InnoInstaller(object):
                 issFile.write("%s\n" % line)            
         issFile.close()
 
-        startupInfo = subprocess.STARTUPINFO()
-        startupInfo.dwFlags = subprocess.STARTF_USESHOWWINDOW
-        startupInfo.wShowWindow = subprocess.SW_HIDE 
-        errorcode = subprocess.call(
-            (self.GetCompilerPath(), innoScriptPath, "/Q"), 
-            stdout=sys.stdout.fileno(),
-            startupinfo=startupInfo
-        )
-        if errorcode > 0:
-            raise SystemError
+        StartProcess(self.GetCompilerPath(), innoScriptPath, "/Q")
 
 
 

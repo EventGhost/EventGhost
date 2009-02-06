@@ -1,11 +1,11 @@
-singletons = (
-    "document",
-    "taskBarIcon",
-)
-
 import os
 from os.path import join
 from glob import glob
+
+
+SINGLETONS = (
+    "document",
+)
 
 def ScanDir(modName):
     parts = modName.split(".")
@@ -41,7 +41,7 @@ ScanDir("Classes")
 ScanDir("Classes.MainFrame")
 ScanDir("Classes.UndoHandler")
 outfile.write("\n")
-for name in singletons:
+for name in SINGLETONS:
     clsName = name[0].upper() + name[1:]
     outfile.write("%s = %s()\n" % (name, clsName))
     

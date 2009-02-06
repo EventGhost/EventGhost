@@ -23,7 +23,6 @@
 """
 This script creates the EventGhost setup installer.
 """
-
 import sys
 import os
 import time
@@ -613,20 +612,10 @@ class MainDialog(wx.Dialog):
      
 def ExecutePy(scriptFilePath, *args):
     """Spawn a new Python interpreter and let it execute a script file."""
-    startupInfo = subprocess.STARTUPINFO()
-    startupInfo.dwFlags = subprocess.STARTF_USESHOWWINDOW
-    startupInfo.wShowWindow = subprocess.SW_HIDE 
-    cmdArgs = [sys.executable, scriptFilePath]
-    cmdArgs.extend(args)
-    errorcode = subprocess.call(
-        cmdArgs, 
-        stdout=sys.stdout.fileno(),
-        startupinfo=startupInfo
-    )
-    if errorcode > 0:
-        raise SystemError
-    
-        
+    from InnoInstaller import StartProcess
+    return StartProcess(sys.executable, scriptFilePath, *args)
+
+
 def BuildImportsPy():
     oldCwd = os.getcwdu()
     import BuildImports
