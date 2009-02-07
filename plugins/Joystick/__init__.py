@@ -20,6 +20,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 ICON = """iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QArABNAAA01td7
 AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH1QQHDwonssmjmQAAAIx0RVh0Q29tbWVudABNZW
@@ -42,7 +43,9 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
-    description = "Use joysticks and gamepads as input devices for EventGhost.",
+    description = (
+        "Use joysticks and gamepads as input devices for EventGhost."
+    ),
     icon = ICON,
 )
 
@@ -59,13 +62,15 @@ EVT_Z_AXIS          = 5
 
 
 
-class Joystick(eg.PluginClass):
+class Joystick(eg.PluginBase):
+    
+    def __init__(self):
+        self.AddEvents()
+
     
     def __start__(self):
         self.x = 0
         self.y = 0
-        #path = os.path.join(os.path.dirname(__file__), "_dxJoystick26.pyd")
-        #self._dxJoystick = imp.load_dynamic("_dxJoystick", path)
         import _dxJoystick
         self._dxJoystick = _dxJoystick
         self._dxJoystick.RegisterEventFunc(self.EventFunc)

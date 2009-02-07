@@ -76,9 +76,9 @@ class ImageButton(wx.Button):
         )
         if dialog.ShowModal() == wx.ID_OK:
             filePath = dialog.GetPath()
-            fd = open(filePath, "rb")
-            stream = fd.read()
-            fd.close()
+            imageFile = open(filePath, "rb")
+            stream = imageFile.read()
+            imageFile.close()
             self.SetValue(b64encode(stream))
             event.Skip()
         
@@ -90,14 +90,14 @@ class ImageButton(wx.Button):
             image = wx.ImageFromStream(stream)
             stream.close()
             boxWidth, boxHeight = self.view.GetClientSizeTuple()
-            w, h = image.GetSize()
-            if w > boxWidth:
-                h *= 1.0 * boxWidth / w
-                w = boxWidth
-            if h > boxHeight:
-                w *= 1.0 * boxHeight / h
-                h = boxHeight
-            image.Rescale(w, h)
+            width, height = image.GetSize()
+            if width > boxWidth:
+                height *= 1.0 * boxWidth / width
+                width = boxWidth
+            if height > boxHeight:
+                width *= 1.0 * boxHeight / height
+                height = boxHeight
+            image.Rescale(width, height)
             bmp = wx.BitmapFromImage(image)
             self.view.SetBitmap(bmp)
             self.view.SetClientSize((boxWidth, boxHeight))
@@ -108,10 +108,12 @@ class ImageButton(wx.Button):
     
             
         
-class DesktopRemote(eg.PluginClass):
+class DesktopRemote(eg.PluginBase):
     text = Text
     
     def __init__(self):
+        self.AddEvents()
+
         self.AddAction(CreateNew)
         self.AddAction(AddButton)
         self.AddAction(StartNewLine)
@@ -142,7 +144,7 @@ class DesktopRemote(eg.PluginClass):
 
 
 
-class CreateNew(eg.ActionClass):
+class CreateNew(eg.ActionBase):
     name = "Create New Remote"
     
     def __call__(
@@ -267,7 +269,7 @@ class CreateNew(eg.ActionClass):
 
 
 
-class AddButton(eg.ActionClass):
+class AddButton(eg.ActionBase):
     name = "Add Button"
     
     def __call__(self, kwargs):
@@ -378,7 +380,7 @@ class AddButton(eg.ActionClass):
         
         
 
-class StartNewLine(eg.ActionClass):
+class StartNewLine(eg.ActionBase):
     name = "Start New Line"
     
     def __call__(self, height=0):
@@ -398,7 +400,7 @@ class StartNewLine(eg.ActionClass):
 
 
 
-class Show(eg.ActionClass):
+class Show(eg.ActionBase):
     
     def __call__(self, xPos=0, yPos=0, alwaysOnTop=False):
         wx.CallAfter(CreateRemote, self.plugin, xPos, yPos, alwaysOnTop)
@@ -428,7 +430,7 @@ class Show(eg.ActionClass):
         
         
         
-class Close(eg.ActionClass):
+class Close(eg.ActionBase):
     
     def __call__(self):
         if self.plugin.frame:
@@ -573,7 +575,7 @@ def CreateRemote(plugin, xPos, yPos, alwaysOnTop):
             event = kwargs.get("event")
             image = kwargs.get("image", None)
             invisible = kwargs.get("invisible", False)
-            size=(GetOption("width"), GetOption("height"))
+            size =(GetOption("width"), GetOption("height"))
             if invisible:
                 # create a spacer
                 button = size

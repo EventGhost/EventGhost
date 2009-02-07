@@ -110,7 +110,7 @@ class PluginBase(object):
         pass
         
                             
-    def RegisterEvents(self, eventList):
+    def AddEvents(self, *eventList):
         self.info.eventList = eventList
 
             

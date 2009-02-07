@@ -66,6 +66,10 @@ from eg.cFunctions import SetKeyboardCallback
     
 class Keyboard(eg.PluginBase):
     
+    def __init__(self):
+        self.AddEvents()
+        
+    
     def __start__(self, *dummyArgs):
         SetKeyboardCallback(self.KeyboardCallback)
         

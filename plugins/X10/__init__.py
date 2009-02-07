@@ -270,6 +270,10 @@ class X10ThreadWorker(eg.ThreadWorker):
 class X10(eg.PluginBase):
     text = Text
     
+    def __init__(self):
+        self.AddEvents()
+
+    
     def __start__(self, remoteType=None, ids=None, prefix=None):
         self.remoteType = remoteType
         self.ids = ids

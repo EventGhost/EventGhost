@@ -681,7 +681,8 @@ class ZoomPlayer(eg.PluginBase):
             group.AddAction(cls)
             
         self.AddAction(self.MyCommand)
-
+        self.AddEvents()
+        
 
     def __start__(
         self,

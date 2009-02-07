@@ -270,6 +270,7 @@ class MceRemote(eg.PluginClass):
         )
 
     def __init__(self):
+        self.AddEvents()
         self.AddAction(TransmitIr)
             
             

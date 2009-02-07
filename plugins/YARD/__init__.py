@@ -46,6 +46,8 @@ RegisterCLSID(YARDcom.IYardLcd.CLSID, YARDcom.IYardLcd)
 class YARD(eg.PluginBase):
 
     def __init__(self):
+        self.AddEvents()
+
         self.isEnabled = False
         self.mapTable = {}
         self.timer = Timer(0, self.OnTimeOut)

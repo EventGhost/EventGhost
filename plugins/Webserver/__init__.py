@@ -197,6 +197,7 @@ class Webserver(eg.PluginBase):
 
 
     def __init__(self):
+        self.AddEvents()
         self.running = False
 
 

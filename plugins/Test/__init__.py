@@ -33,18 +33,39 @@ eg.RegisterPlugin(
 import wx
 
 
-class Test(eg.PluginClass):
+class Test(eg.PluginBase):
     
     def __init__(self):
-        pass
+        self.AddAction(TestAction)
         
     
-    def Configure(self, password=eg.Bunch(data="")):
+    def __start__(self, password):
+        print "__start__", password.Get()
+        
+    
+    def Configure(self, password=None):
+        password = eg.Password(password)
         panel = eg.ConfigPanel()
-        passwordCtrl = panel.TextCtrl(password.data, style=wx.TE_PASSWORD)
+        passwordCtrl = panel.TextCtrl(password.Get(), style=wx.TE_PASSWORD)
         panel.sizer.Add(passwordCtrl)
         while panel.Affirmed():
-            value = eg.Bunch(data=passwordCtrl.GetValue())
-            panel.SetResult(value)
+            password.Set(passwordCtrl.GetValue())
+            panel.SetResult(password)
             
+            
+            
+class TestAction(eg.ActionBase):
+    
+    def __call__(self, password):
+        print password.Get()
+        
+        
+    def Configure(self, password=None):
+        password = eg.Password(password)
+        panel = eg.ConfigPanel()
+        passwordCtrl = panel.TextCtrl(password.Get(), style=wx.TE_PASSWORD)
+        panel.sizer.Add(passwordCtrl)
+        while panel.Affirmed():
+            password.Set(passwordCtrl.GetValue())
+            panel.SetResult(password)
             
