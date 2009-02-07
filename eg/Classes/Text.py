@@ -191,8 +191,7 @@ def Text(language):
     class Translation(Default):
         pass
     try:
-        infile = open("languages\\%s.py" % language)
-        exec infile in {}, Translation.__dict__
+        execfile("languages\\%s.py" % language, {}, Translation.__dict__)
     except IOError:
         pass
     SetDefault(Translation, Default)
