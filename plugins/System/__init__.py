@@ -137,7 +137,7 @@ class System(eg.PluginBase):
     def __init__(self):
         text = self.text
 
-        self.RegisterEvents(EVENT_LIST)
+        self.AddEvents(*EVENT_LIST)
         
         self.AddAction(Execute)
         self.AddAction(OpenDriveTray)

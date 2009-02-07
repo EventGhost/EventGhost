@@ -153,6 +153,10 @@ def Decode(data):
 
 class Streamzap(eg.PluginBase):
     
+    def __init__(self):
+        self.AddEvents()
+        
+    
     def __start__(self):
         self.timer = eg.ResettableTimer(self.OnTimeout)
         self.lastCode = None

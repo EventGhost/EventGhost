@@ -392,6 +392,8 @@ class VLC(eg.PluginBase):
         
         
     def __init__(self):
+        self.AddEvents()
+        
         self.AddAction(Start)
         self.AddAction(MyCommand)
         self.AddActionsFromList(ACTIONS, ActionPrototype)

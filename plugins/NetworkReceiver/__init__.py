@@ -220,6 +220,9 @@ class NetworkReceiver(eg.PluginBase):
     canMultiLoad = True
     text = Text
     
+    def __init__(self):
+        self.AddEvents()
+    
     def __start__(self, port, password, prefix):
         self.port = port
         self.password = password

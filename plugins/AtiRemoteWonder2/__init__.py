@@ -71,6 +71,10 @@ MSG_NUM = 0x8123
 
 class AtiRemoteWonder2(eg.PluginBase):
     
+    def __init__(self):
+        self.AddEvents()
+
+        
     def __start__(self):
         self.info.eventPrefix = "ATI"
         self.auxNum = -1

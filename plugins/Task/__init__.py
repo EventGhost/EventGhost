@@ -98,6 +98,10 @@ def EnumProcesses():
 
 class Task(eg.PluginBase):
     
+    def __init__(self):
+        self.AddEvents()
+        
+        
     def __start__(self, *dummyArgs):
         self.names, self.hwnds = EnumProcesses()
         self.lastActivated = None

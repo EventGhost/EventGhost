@@ -48,6 +48,10 @@ import win32event
 class UIR(eg.RawReceiverPlugin):
     lastReceivedTime = 0
     
+    def __init__(self):
+        self.AddEvents()
+        
+        
     def __start__(self, port, byteCount=6, initSequence=True):
         self.byteCount = byteCount
         self.serialThread = serialThread = eg.SerialThread()

@@ -162,6 +162,7 @@ class AIRT(eg.PluginClass):
     def __init__(self):
         self.devicename = 'AIRT'
         self.thread = None
+        self.AddEvents()
         self.AddAction(SendIR)
         
         
