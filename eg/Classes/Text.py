@@ -188,7 +188,7 @@ class Default:
 
 
 def Text(language):
-    class Translation:
+    class Translation(Default):
         pass
     try:
         infile = open("languages\\%s.py" % language)
