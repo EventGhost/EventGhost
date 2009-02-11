@@ -1300,3 +1300,4 @@ GetVolumeInformationW = _kernel32.GetVolumeInformationW
 GetVolumeInformationW.restype = BOOL
 GetVolumeInformationW.argtypes = [LPCWSTR, LPWSTR, DWORD, LPDWORD, LPDWORD, LPDWORD, LPWSTR, DWORD]
 GetVolumeInformation = GetVolumeInformationW # alias
+SWP_FRAMECHANGED = 32 # Variable c_int '32'
