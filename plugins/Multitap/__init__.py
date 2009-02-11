@@ -1,4 +1,4 @@
-version = "0.1.6"
+version = "0.1.7"
 # This file is part of EventGhost.
 # Copyright (C) 2008 Pako <lubos.ruckl@quick.cz>
 #
@@ -17,7 +17,7 @@ version = "0.1.6"
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# Last change: 22-10-2008 14:49
+# Last change: 2009-02-11 21:39
 
 
 eg.RegisterPlugin(
@@ -151,7 +151,6 @@ class Key(eg.ActionClass):
         leftSizer.Add(configLbl)
         leftSizer.Add(choiceConfig,0,wx.TOP,5)
         leftSizer.Add(summary,0,wx.TOP,20)
-
 
         mainSizer = wx.BoxSizer(wx.HORIZONTAL)
         mainSizer.Add(leftSizer,0)
@@ -686,16 +685,24 @@ class Multitap(eg.PluginClass):
             if self.oldKeys == '':
                 self.oldKeys = keys[:]
                 self.indx = -1
-            if keys != self.oldKeys: #ERROR or "Enter"?  -> meantime Error
-                self.evtString = '    '
-                self.mode = 3
-                return
-            else:
-                self.indx+=1
-                if self.indx > len(keys)-1:
-                    self.indx=0
-                self.evtString = keys[self.indx]
-                wx.CallAfter(self.showOsDialog)
+            if keys != self.oldKeys: #ERROR or "Enter"?  -> now (2009-02-11) Enter
+                if self.evtString != '':
+                    if self.formatEvent:
+                        self.TriggerEvent(self.evtName, self.evtString)
+                    else:
+                        self.TriggerEvent(
+                            self.evtName+'.'+self.evtString if self.evtName !='' else self.evtString
+                        )
+                self.oldKeys = keys[:]
+                self.indx = -1
+                
+            self.indx+=1
+            if self.indx > len(keys)-1:
+                self.indx=0
+            self.evtString = keys[self.indx]
+            wx.CallAfter(self.showOsDialog)
+                
+                
         if self.timeout>0:
             self.timer = Timer(self.timeout, self.OnTimeout)
             self.timer.start()
@@ -779,7 +786,6 @@ class Multitap(eg.PluginClass):
                 )
         if self.osDialog is not None:
             wx.CallAfter(self.closeOsDialog)
-
 
         self.mode = 3 #Cleaning
         self.evtString = '    '
