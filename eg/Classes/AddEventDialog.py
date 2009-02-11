@@ -73,7 +73,7 @@ class AddEventDialog(eg.Dialog):
 
         style = wx.TR_DEFAULT_STYLE|wx.TR_HIDE_ROOT|wx.TR_FULL_ROW_HIGHLIGHT
         tree = wx.TreeCtrl(splitterWindow, -1, style=style)
-        tree.SetMinSize((100,100))
+        tree.SetMinSize((100, 100))
         tree.SetImageList(eg.Icons.gImageList)
         self.tree = tree
         
@@ -83,11 +83,6 @@ class AddEventDialog(eg.Dialog):
         tree.Bind(wx.EVT_TREE_ITEM_EXPANDED, self.OnExpanded)
         tree.Bind(wx.EVT_TREE_BEGIN_DRAG, self.OnStartDrag)
        
-        self.htmlTemplate = (
-            '<html><body bgcolor="#%02X%02X%02X">%%s</body></html>' 
-                % self.GetBackgroundColour().Get()
-        )
-
         rightPanel = self.rightPanel = wx.Panel(splitterWindow)
         rightSizer = self.rightSizer = wx.BoxSizer(wx.VERTICAL)
         rightPanel.SetSizer(rightSizer)
@@ -181,8 +176,8 @@ class AddEventDialog(eg.Dialog):
             self.resultData = None
             self.buttonRow.okButton.Enable(False)
         self.nameText.SetLabel(data.name)
-        #self.docText.SetBasePath(data.info.path)
-        self.docText.SetPage(self.htmlTemplate % data.description)
+        self.docText.SetBasePath(data.path)
+        self.docText.SetPage(data.description)
         
         
     def OnCollapsed(self, event):
@@ -219,8 +214,3 @@ class AddEventDialog(eg.Dialog):
         if result == wx.DragMove:
             self.Refresh()
             
-
-        
-        
-
-
