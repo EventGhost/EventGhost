@@ -27,11 +27,11 @@ import os
 from os.path import join
 from eg.WinApi.Utils import GetMonitorDimensions
 from eg.WinApi.Dynamic import (
-    CreateEvent, SetEvent, SetWindowPos, SWP_HIDEWINDOW,
-    SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOOWNERZORDER, SWP_NOSIZE, SWP_SHOWWINDOW
+    CreateEvent, SetEvent, SetWindowPos, SWP_HIDEWINDOW, SWP_FRAMECHANGED,
+    SWP_NOACTIVATE, SWP_NOOWNERZORDER, SWP_SHOWWINDOW
 )
 
-HWND_FLAGS = SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOSIZE
+HWND_FLAGS = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_FRAMECHANGED
 SKIN_DIR = join(os.path.abspath(os.path.split(__file__)[0]), "OsdSkins")
 DEFAULT_FONT_INFO = wx.Font(
     18, 
@@ -95,7 +95,7 @@ class OSDFrame(wx.Frame):
         self.timer = threading.Timer(0.0, eg.DummyFunc)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_CLOSE, self.OnClose)
-        
+
         
     @eg.LogIt
     def ShowOSD(
@@ -212,7 +212,6 @@ class OSDFrame(wx.Frame):
             bitmap.SetMask(wx.Mask(bitmap, maskColour))
                 
         region = wx.RegionFromBitmap(bitmap)
-        self.SetClientSize((width, height))
         width = region.GetBox()[2]
         self.SetShape(region)
         self.bitmap = bitmap
@@ -225,10 +224,9 @@ class OSDFrame(wx.Frame):
         xFunc, yFunc = ALIGNMENT_FUNCS[alignment]
         x = displayRect.x + xFunc((displayRect.width - width), xOffset)
         y = displayRect.y + yFunc((displayRect.height - height), yOffset)
-        self.SetPosition((x, y))
-        SetWindowPos(self.hwnd, 0, 0, 0, 0, 0, HWND_FLAGS|SWP_SHOWWINDOW)
         deviceContext = wx.ClientDC(self)
         deviceContext.DrawBitmap(self.bitmap, 0, 0, False)
+        SetWindowPos(self.hwnd, 0, x, y, width, height, HWND_FLAGS|SWP_SHOWWINDOW)
 
         if timeout > 0.0:
             self.timer = threading.Timer(timeout, self.OnTimeout)
