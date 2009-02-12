@@ -359,8 +359,7 @@ class HIDHelper:
             else:
                 #find the right vendor and product ids
                 if item[VENDOR_ID] == vendorID \
-                    and item[PRODUCT_ID] == productID \
-                    and item[VERSION_NUMBER] == versionNumber:
+                    and item[PRODUCT_ID] == productID:
                     found = found + 1
                     if (item[DEVICE_PATH] == devicePath) or (useFirstDevice):
                         #found right device
@@ -711,7 +710,7 @@ class XBCDRC(eg.PluginClass):
         self.vendorString = 'Vendor ID 1118'
         self.productID = 644
         self.productString = ''
-        self.versionNumber = 304
+        self.versionNumber = 0
         self.useFirstDevice = True
 
         if eventName:
