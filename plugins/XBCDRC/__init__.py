@@ -1,14 +1,17 @@
 # Xbox(original) remote control plugin for EventGhost by jinxdone. Based on the Generic HID plugin by Bartman.
 #
 eg.RegisterPlugin(
-    name = "Xbox remote control (XBCDRC / HID)",
-    author = "Bartman / jinxdone",
-    version = "0.1.2." + "$LastChangedRevision: 348 $".split()[1],
+    name = "Xbox remote control",
+    author = "jinxdone / Bartman",
+    version = "0.1.3." + "$LastChangedRevision: 348 $".split()[1],
     kind = "remote",
-    canMultiLoad = True,
+    canMultiLoad = False,
     description = (
-        'Xbox remote control plugin, based on the Generic Human Interface Device (HID) plugin. '
-        'For this plugin to work you need the XBCDRC device drivers by redcl0ud from http://www.redcl0ud.com/xbcd_rc.html'
+        'Xbox remote control plugin, based on the Generic Human Interface Device (HID) plugin.'
+        '<br>'
+        'For this plugin to work you need the <a href="http://www.redcl0ud.com/xbcd_rc.html">XBCDRC drivers</a> by redcl0ud'
+        '<br>'
+        '<center><img src="xbcdrc.png" alt="Xbox remote" /></a></center>'
     ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAeJJREFUOMul"
@@ -51,9 +54,9 @@ class Text:
     multipleDeviceOptions = "Options for multiple same devices"
     noOtherPort = "Use selected device only if connected to current port"
     useFirstDevice = "Use first device found"
-    errorFind = "Error finding an Xbox IR receiver: "
-    errorOpen = "Error opening an Xbox IR receiver: "
-    errorRead = "Error reading an Xbox IR receiver: "
+    errorFind = "Error finding an Xbox IR receiver"
+    errorOpen = "Error opening an Xbox IR receiver"
+    errorRead = "Error reading an Xbox IR receiver"
     errorRetrieval = "Error getting HID device info."
     errorReportLength = "Report length must not be zero for device "
     errorMultipleDevices = "Multiple devices found. Don't know which to use."
@@ -440,7 +443,7 @@ class HIDThread(threading.Thread):
         plugin.devicePath = self.devicePath
 
         if not self.devicePath:
-            plugin.PrintError(self.text.errorFind + self.deviceName)
+            plugin.PrintError(self.text.errorFind)
             self.plugin.status = 2
             return
 			
@@ -470,7 +473,7 @@ class HIDThread(threading.Thread):
                 0
             )
         except:
-            self.plugin.PrintError(self.text.errorOpen + self.deviceName)
+            self.plugin.PrintError(self.text.errorOpen)
             self.plugin.status = 3
             return
 
@@ -577,7 +580,7 @@ class HIDThread(threading.Thread):
                     win32event.INFINITE
                 )
             except:
-                self.plugin.PrintError(self.text.errorRead + self.deviceName)
+                self.plugin.PrintError(self.text.errorRead)
                 self.abort = True
                 #device got disconnected so set status to waiting
                 self.plugin.status = 2
