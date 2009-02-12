@@ -1,4 +1,4 @@
-version = "0.1.7"
+version = "0.1.8"
 # This file is part of EventGhost.
 # Copyright (C) 2008 Pako <lubos.ruckl@quick.cz>
 #
@@ -17,7 +17,7 @@ version = "0.1.7"
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# Last change: 2009-02-11 21:39
+# Last change: 2009-02-12 12:08
 
 
 eg.RegisterPlugin(
@@ -92,7 +92,6 @@ def Move(lst,index,direction):
         tmpList[index] = lst[index2]
         tmpList[index2] = lst[index]
     return index2,tmpList
-
 #===============================================================================
 
 class Key(eg.ActionClass):
@@ -119,11 +118,7 @@ class Key(eg.ActionClass):
         self.cfg=config
         indx = [n[0] for n in self.plugin.configs].index(self.cfg)
         item = self.plugin.configs[indx]
-        if item[2]:
-            sep = ' '
-        else:
-            sep = '.'
-        return item[1]+sep+self.listKeys[0]
+        return self.name+': '+item[1]+': '+', '.join(self.listKeys)
 
     def Configure(self, config='',listKs=[]):
         self.config = config
@@ -158,7 +153,6 @@ class Key(eg.ActionClass):
         panel.sizer.Add(mainSizer)
         panel.sizer.Layout()
 
-#===============================================================================
         def onConfigChange(evt=None):
             self.oldSel = 0
 
@@ -686,13 +680,7 @@ class Multitap(eg.PluginClass):
                 self.oldKeys = keys[:]
                 self.indx = -1
             if keys != self.oldKeys: #ERROR or "Enter"?  -> now (2009-02-11) Enter
-                if self.evtString != '':
-                    if self.formatEvent:
-                        self.TriggerEvent(self.evtName, self.evtString)
-                    else:
-                        self.TriggerEvent(
-                            self.evtName+'.'+self.evtString if self.evtName !='' else self.evtString
-                        )
+                self.TriggerEvt()                        
                 self.oldKeys = keys[:]
                 self.indx = -1
                 
@@ -701,8 +689,7 @@ class Multitap(eg.PluginClass):
                 self.indx=0
             self.evtString = keys[self.indx]
             wx.CallAfter(self.showOsDialog)
-                
-                
+            
         if self.timeout>0:
             self.timer = Timer(self.timeout, self.OnTimeout)
             self.timer.start()
@@ -776,7 +763,7 @@ class Multitap(eg.PluginClass):
         return self.evtString
 #===============================================================================
 
-    def GenerateEvent(self):
+    def TriggerEvt(self):
         if self.evtString != '':
             if self.formatEvent:
                 self.TriggerEvent(self.evtName, self.evtString)
@@ -784,6 +771,10 @@ class Multitap(eg.PluginClass):
                 self.TriggerEvent(
                     self.evtName+'.'+self.evtString if self.evtName !='' else self.evtString
                 )
+#===============================================================================
+
+    def GenerateEvent(self):
+        self.TriggerEvt()
         if self.osDialog is not None:
             wx.CallAfter(self.closeOsDialog)
 
@@ -889,17 +880,17 @@ class Multitap(eg.PluginClass):
         leftSizer.Add(labelCtrl,0,wx.EXPAND)
         leftSizer.Add((1,1))
 
-    #Button UP
+        #Button UP
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_UP, wx.ART_OTHER, (16, 16))
         btnUP = wx.BitmapButton(panel, -1, bmp)
         btnUP.Enable(False)
         topMiddleSizer.Add(btnUP)
-    #Button DOWN
+        #Button DOWN
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_DOWN, wx.ART_OTHER, (16, 16))
         btnDOWN = wx.BitmapButton(panel, -1, bmp)
         btnDOWN.Enable(False)
         topMiddleSizer.Add(btnDOWN,0,wx.TOP,3)
-    #Buttons 'Delete' and 'Insert new'
+        #Buttons 'Delete' and 'Insert new'
         w1 = panel.GetTextExtent(text.delete)[0]
         w2 = panel.GetTextExtent(text.insert)[0]
         if w1 > w2:
@@ -928,7 +919,6 @@ class Multitap(eg.PluginClass):
             panel.dialog.buttonRow.applyButton.Enable(False)
             panel.dialog.buttonRow.okButton.Enable(False)
         panel.sizer.Layout()
-#===============================================================================
 
         def onClick(evt):
             self.flag = False
@@ -945,7 +935,6 @@ class Multitap(eg.PluginClass):
             self.flag = True
         listBoxCtrl.Bind(wx.EVT_LISTBOX, onClick)
 
-
         def onButtonUp(evt):
             newSel,self.configs=Move(self.configs,listBoxCtrl.GetSelection(),-1)
             listBoxCtrl.Set([n[0] for n in self.configs])
@@ -953,7 +942,6 @@ class Multitap(eg.PluginClass):
             self.oldSel = newSel
             evt.Skip()
         btnUP.Bind(wx.EVT_BUTTON, onButtonUp)
-
 
         def onButtonDown(evt):
             newSel,self.configs=Move(self.configs,listBoxCtrl.GetSelection(),1)
@@ -993,7 +981,6 @@ class Multitap(eg.PluginClass):
             evt.Skip()
             self.flag = True
         btnDEL.Bind(wx.EVT_BUTTON, onButtonDelete)
-
 
         def onChoiceMode(event=None):
             if self.configs<>[]:
@@ -1057,7 +1044,6 @@ class Multitap(eg.PluginClass):
         labelCtrl.Bind(wx.EVT_TEXT, OnTxtChange)
         ctrlEvtName.Bind(wx.EVT_TEXT, OnTxtChange)
 
-
         def OnButtonAppend(evt):
             self.flag = False
             if len(self.configs)==1:
@@ -1077,7 +1063,6 @@ class Multitap(eg.PluginClass):
             evt.Skip()
             self.flag = True
         btnApp.Bind(wx.EVT_BUTTON, OnButtonAppend)
-
 
         while panel.Affirmed():
             panel.SetResult(
