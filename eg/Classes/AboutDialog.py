@@ -72,6 +72,9 @@ SPECIAL_THANKS_DATA = (
             ("Lubo&scaron; R&uuml;ckl", "Czech"),
             ("Fredrik Jacobsson", "Swedish"),
             ("karlr", "Spanish"),            
+            ("peter", "Dutch"),            
+            ("noc123", "Polish"),            
+            ("somainit", "Japanese"),            
         ),
     ),
     (
@@ -99,6 +102,9 @@ SPECIAL_THANKS_DATA = (
             "Sergio Herculano",  # 30. Dec 2008
             "Cassidy Caid",      # 13. Jan 2009
             "Beat Horn",         # 20. Jan 2009
+            "",
+            "Davin Roche",       # 11. Feb 2009
+            "",
         ),
     ),
     (
@@ -260,10 +266,21 @@ class SpecialThanksPanel(HtmlPanel):
             write(group)
             write('</h5></i></u></TD></TR>')
             if cols == 0:
-                write('<TR><TD ALIGN=CENTER WIDTH="50%" COLSPAN="2"><B>')
-                persons = [name.replace(" ", "&nbsp;") for name in persons]
-                write(", ".join(persons))
-                write(' and&nbsp;some&nbsp;anonymous&nbsp;people.')
+                write('<TR><TD ALIGN=CENTER WIDTH="100%" COLSPAN="2"><B>')
+                write('<TABLE><TR>')
+                #persons = [name.replace(" ", "&nbsp;") for name in persons]
+                col = 0
+                for name in persons:
+                    name = name.replace(" ", "&nbsp;")
+                    write('<TD WIDTH="33%%"><CENTER>%s</CENTER></TD>' % name)
+                    col += 1
+                    if col == 3:
+                        write("</TR><TR>")
+                        col = 0
+                #write(", ".join(persons))
+                write('</TR><TR><TD COLSPAN=3><CENTER>')
+                write('and&nbsp;some&nbsp;anonymous&nbsp;people')
+                write('</CENTER></TD></TR></TABLE>')
                 write('</B></RIGHT></TD></TR>')
             elif cols == 1:
                 for name, descr in persons:
