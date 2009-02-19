@@ -102,9 +102,9 @@ SPECIAL_THANKS_DATA = (
             "Sergio Herculano",  # 30. Dec 2008
             "Cassidy Caid",      # 13. Jan 2009
             "Beat Horn",         # 20. Jan 2009
-            "",
             "Davin Roche",       # 11. Feb 2009
-            "",
+            "Nico Nordendorf",   # 16. Feb 2009
+            "Mariusz Lon",       # 18. Feb 2009
         ),
     ),
     (
@@ -244,7 +244,7 @@ class HtmlPanel(wx.Panel):
         htmlWindow.SetForegroundColour(eg.colour.windowText)
         htmlWindow.SetBackgroundColour(eg.colour.windowBackground)
         htmlWindow.SetPage(html)
-        htmlWindow.SetMinSize((480, 270))
+        htmlWindow.SetMinSize((490, 270))
         htmlWindow.SetScrollbars(1, 1, 1000, 1000)
         self.SetSizerAndFit(
             eg.VBoxSizer(
@@ -317,8 +317,6 @@ class SystemInfoPanel(HtmlPanel):
             time.gmtime(eg.Version.buildTime)
         ).decode(eg.systemEncoding)
         totalMemory, availableMemory = GetRam()
-        totalMemory = "%s MB" % totalMemory
-        availableMemory = "%s MB" % availableMemory
         self.sysInfos = (
             ("EventGhost Version", eg.Version.string),
             ("Build Time", buildTime),
@@ -326,8 +324,8 @@ class SystemInfoPanel(HtmlPanel):
             ("wxPython Version", wx.VERSION_STRING),
             ("Platform", platform.platform()),
             ("CPU", GetCpuName()),
-            ("Total RAM", totalMemory),
-            ("Available RAM", availableMemory),
+            ("Total RAM", "%s MB" % totalMemory),
+            ("Available RAM", "%s MB" % availableMemory),
         )
         
         sysInfoTemplate = "".join(
