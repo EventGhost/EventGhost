@@ -1,4 +1,4 @@
-version = "0.1.5"
+version = "0.1.6"
 # This file is part of EventGhost.
 # Copyright (C) 2008 Pako <lubos.ruckl@quick.cz>
 #
@@ -17,7 +17,7 @@ version = "0.1.5"
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# Last change: 2009-02-13 16:08
+# Last change: 2009-02-19 21:08
 
 #===============================================================================
 #Structure of setup/account (one record):
@@ -133,7 +133,8 @@ from email.MIMEText import MIMEText
 from email.Utils import parseaddr, formataddr,formatdate
 import email.Parser as parser
 myParser = parser.Parser()
-#==========================================================================================
+#===============================================================================
+
 def SendCfg(
     self,
     panel,
@@ -148,7 +149,6 @@ def SendCfg(
     plugin
     ):
     self.plugin = plugin
-    #text=self.text
     subjectLbl=wx.StaticText(panel, -1, text.subjectLabel)
     subjectCtrl=wx.TextCtrl(panel,-1,sbjct)
     fromLbl=wx.StaticText(panel, -1, text.fromLabel)
@@ -165,9 +165,10 @@ def SendCfg(
     copyCtrl.SetStringSelection(Copy)
     textLbl=wx.StaticText(panel, -1, text.outText)
     outTextCtrl=wx.TextCtrl(
-        panel,-1,Txt,size=(-1, 60),
-        style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER
+        panel,-1,'',size=(-1, 60),
+        style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER|wx.HSCROLL|wx.TE_AUTO_URL|wx.TE_RICH2
     )
+    outTextCtrl.SetValue(Txt)
     textsLbl=wx.StaticText(panel, -1, text.outTexts)
     choices = ['']
     choices.extend([item[0] for item in self.plugin.texts])
@@ -179,26 +180,33 @@ def SendCfg(
     subjectCtrl.SetToolTipString(text.tip)
     textsCtrl.SetToolTipString(text.tip)
 
-    toSizer = wx.BoxSizer(wx.HORIZONTAL)
-    topSizer = wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
+    topSizer = wx.GridBagSizer(5, 5)
     topSizer.AddGrowableCol(1)
-    topSizer.Add(subjectLbl,0,wx.ALIGN_RIGHT)
-    topSizer.Add(subjectCtrl, 0, wx.EXPAND)
-    topSizer.Add(fromLbl,0,wx.ALIGN_RIGHT)
-    topSizer.Add(fromCtrl, 0, wx.EXPAND)
-    topSizer.Add(toLbl,0,wx.ALIGN_RIGHT)
-    toSizer.Add(toNameCtrl, 1, wx.EXPAND)
-    toSizer.Add((5,1))
-    toSizer.Add(toCtrl, 1, wx.EXPAND)
-    topSizer.Add(toSizer, 0, wx.EXPAND)
-    topSizer.Add(copyLbl,0,wx.ALIGN_RIGHT)
-    topSizer.Add(copyCtrl, 0, wx.EXPAND)
-    topSizer.Add(textLbl,0,wx.ALIGN_RIGHT)
-    topSizer.Add(outTextCtrl, 0, wx.EXPAND)
-    topSizer.Add(textsLbl,0,wx.ALIGN_RIGHT)
-    topSizer.Add(textsCtrl, 0, wx.EXPAND)
+    topSizer.AddGrowableCol(2)
+    topSizer.AddGrowableRow(4)
+    topSizer.Add(subjectLbl,(0, 0),flag = wx.ALIGN_RIGHT)
+    topSizer.Add(subjectCtrl, (0, 1), (1, 2), flag = wx.EXPAND)    
+    topSizer.Add(fromLbl,(1, 0),flag = wx.ALIGN_RIGHT)
+    topSizer.Add(fromCtrl, (1, 1), (1, 2), flag = wx.EXPAND)
+    topSizer.Add(toLbl,(2, 0),flag = wx.ALIGN_RIGHT)
+    topSizer.Add(toNameCtrl, (2, 1), flag = wx.EXPAND)
+    topSizer.Add(toCtrl, (2, 2), flag = wx.EXPAND)
+    topSizer.Add(copyLbl,(3, 0),flag = wx.ALIGN_RIGHT)
+    topSizer.Add(copyCtrl, (3, 1), (1, 2), flag = wx.EXPAND)
+    topSizer.Add(textLbl,(4, 0), flag = wx.ALIGN_RIGHT)
+    topSizer.Add(outTextCtrl, (4, 1), (1, 2), flag = wx.EXPAND)
+    topSizer.Add(textsLbl,(5, 0),flag = wx.ALIGN_RIGHT)
+    topSizer.Add(textsCtrl, (5, 1), (1, 2), flag = wx.EXPAND)
     
-    return (subjectCtrl,fromCtrl,toCtrl,copyCtrl,outTextCtrl,textsCtrl,toNameCtrl, topSizer)
+    return (subjectCtrl,
+        fromCtrl,
+        toCtrl,
+        copyCtrl,
+        outTextCtrl,
+        textsCtrl,
+        toNameCtrl,
+        topSizer
+    )
 
 #===============================================================================
 
@@ -243,23 +251,8 @@ def ParseItem(item):
         return DecodeSection(x[0],x[1])
     else:
         return x[0]
-    
-    
-def ParseItemOld(item):
-    x = decode_header(item)[0]
-    if x[1]:
-        return DecodeSection(x[0],x[1])
-    else:
-        x=x[0]
-        if x == '':
-            return ''
-        else:
-            if x[-1]=='>':
-                return DecodeSection(x[:x.rfind('<')])
-            else:
-                return DecodeSection(x)
-                
-                
+
+
 def ParseAddress(item):
     parseAddr = parseaddr(item)
     if parseAddr[0] == '':
@@ -269,7 +262,7 @@ def ParseAddress(item):
         return parseAddr[0]
     else:
         return DecodeSection(decAddr[0], decAddr[1])
-#==========================================================================================
+#===============================================================================
 
 def GetParts(msg, ext = False):
     from email.Iterators import typed_subpart_iterator
@@ -611,7 +604,6 @@ class DetailsFrame(wx.MiniFrame):
         centralSizer.Add(self.refreshButton,(1,4), flag = wx.ALIGN_CENTER_HORIZONTAL)
         centralSizer.Add(self.clientButton,(1,6), flag = wx.ALIGN_CENTER_HORIZONTAL)
         centralSizer.Add(self.closeButton,(1,8), flag = wx.ALIGN_RIGHT)
-
         self.messagesListCtrl.Bind(wx.EVT_COMMAND_RIGHT_CLICK, self.OnRightClick)
         self.messagesListCtrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.ListSelection)
         self.messagesListCtrl.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.ListSelection)
@@ -621,9 +613,7 @@ class DetailsFrame(wx.MiniFrame):
             event.Skip()
 
         self.Refresh()
-
         self.Bind(wx.EVT_SIZE, OnSize)
-
         mainSizer.Add(centralSizer, 1,wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP,10)
         self.SetSizer(mainSizer)
         mainSizer.Fit(self)
@@ -652,7 +642,6 @@ class DetailsFrame(wx.MiniFrame):
         self.SetPosition(position)
         self.Show(True)
 
-
     def onRefresh(self,evt):
         self.Unblock(False)
         indx = [i[0] for i in self.plugin.tempData].index(self.setup[0])
@@ -680,7 +669,6 @@ class DetailsFrame(wx.MiniFrame):
             )
         evt.Skip()
 
-
     def onCloseButton(self, evt):
         self.Close(True)
         
@@ -700,7 +688,6 @@ class DetailsFrame(wx.MiniFrame):
         wt = self.plugin.tempData[indx][3]
         wt.DeleteAction((indx, sel, 0,self))
 
-
     def onDeleteButton(self, evt):        
         item = self.messagesListCtrl.GetFirstSelected()
         sel = []
@@ -712,10 +699,8 @@ class DetailsFrame(wx.MiniFrame):
         self.deleteEmails(indx, sel)
         evt.Skip()
 
-
     def onClientButton(self, evt):
         RunEmailClient(self.text)
-
 
     def ListSelection(self, event=None):
         if self.messageFrame:
@@ -733,15 +718,12 @@ class DetailsFrame(wx.MiniFrame):
         else:
             self.Close()
             
-            
     def resDelFlag(self):
         self.delFlag = False
-        
             
     def isCloseReq(self):
         return self.delFlag and not self.IsShown()
-        
-            
+
     def Refresh(self, event=None):
         observName = self.setup[0]
         indx = [item[0] for item in self.plugin.tempData].index(observName)
@@ -753,15 +735,13 @@ class DetailsFrame(wx.MiniFrame):
             self.messagesListCtrl.SetStringItem(row, 2, item[1])
             self.messagesListCtrl.SetStringItem(row, 3, item[2])
             row += 1
-        self.SetTitle(self.plugin.text.detTitle % (self.setup[0],str(row)))
-        
+        self.SetTitle(self.plugin.text.detTitle % (self.setup[0],str(row)))        
         label = self.parent.GetNum()
         if label != row:
             self.parent.SetNum(row)
         self.Unblock(True)
         self.ListSelection()
-        
-        
+
     def Unblock(self, unblock):
         if unblock:
             colour = self.GetForegroundColour()
@@ -777,7 +757,6 @@ class DetailsFrame(wx.MiniFrame):
         self.Enable(unblock)
         if self.messageFrame:
             self.messageFrame.Unblock(unblock)
-    
 
     def OnRightClick(self, event):
         if not hasattr(self, "popupID1"):
@@ -786,13 +765,11 @@ class DetailsFrame(wx.MiniFrame):
             self.popupID3 = wx.NewId()
             self.popupID4 = wx.NewId()
             self.popupID5 = wx.NewId()
-
             self.Bind(wx.EVT_MENU, self.onShowButton, id=self.popupID1)
             self.Bind(wx.EVT_MENU, self.onDeleteButton, id=self.popupID2)
             self.Bind(wx.EVT_MENU, self.onRefresh, id=self.popupID3)
             self.Bind(wx.EVT_MENU, self.onClientButton, id=self.popupID4)
             self.Bind(wx.EVT_MENU, self.onCloseButton, id=self.popupID5)
-
         # make a menu
         menu = wx.Menu()
         # add some items
@@ -803,12 +780,10 @@ class DetailsFrame(wx.MiniFrame):
         menu.Append(self.popupID3, self.text.popup[2])
         menu.Append(self.popupID4, self.text.popup[3])
         menu.Append(self.popupID5, self.text.popup[4])
-
         # Popup the menu.  If an item is selected then its handler
         # will be called before PopupMenu returns.
         self.PopupMenu(menu)
         menu.Destroy()
-
 
     def RealizeAction(self, indx, sel, mode):
         obsData = self.plugin.tempData[indx][2]
@@ -996,7 +971,6 @@ class NotifFrame(wx.MiniFrame):
                 RunEmailClient(text)
             else:                 #without CTRL
                 if self.detailsFrame:
-                    #wx.CallAfter(self.detailsFrame.Refresh)
                     BringWindowToTop(self.detailsFrame.GetHandle())
                 else:
                     self.detailsFrame = DetailsFrame(parent = self)
@@ -1016,10 +990,8 @@ class NotifFrame(wx.MiniFrame):
             self.Show(False)
         self.Bind(wx.EVT_RIGHT_UP, OnRightClick)
         self.label.Bind(wx.EVT_RIGHT_UP, OnRightClick)
-        label2.Bind(wx.EVT_RIGHT_UP, OnRightClick)
-        
+        label2.Bind(wx.EVT_RIGHT_UP, OnRightClick)        
         BringWindowToTop(self.GetHandle())
-
         wx.Yield()
         SetEvent(event)
 
@@ -1030,7 +1002,6 @@ class NotifFrame(wx.MiniFrame):
             self.Show(False)
         else:
             self.Close()
-    
         
     def GetNum(self):
         return int(self.label.GetLabel())
@@ -1128,16 +1099,13 @@ class outServerDialog(wx.MiniFrame):
         )
         labelLbl=wx.StaticText(self, -1, text.servLabel)
         labelCtrl=wx.TextCtrl(self,-1,'')
-
         box = wx.StaticBox(self,-1,text.servParam)
         rightSizer = wx.StaticBoxSizer(box,wx.VERTICAL)
-#Box content
+        #Box content
         outServerLbl=wx.StaticText(self, -1, text.outServer)
         outServerCtrl=wx.TextCtrl(self,-1,'')
-
         outPortLbl=wx.StaticText(self, -1, text.incPort)
         outPortCtrl=intCtrl(self,-1,25,size=(50,-1))
-
         choiceSecureLbl =wx.StaticText(self, -1, text.secureConnectLabel)
         choiceSecureCtrl = wx.Choice(
             self,
@@ -1152,7 +1120,6 @@ class outServerDialog(wx.MiniFrame):
         passwLbl=wx.StaticText(self, -1, text.userPassword)
         passwCtrl=wx.TextCtrl(self,-1,'',style = wx.TE_PASSWORD)
         passwCtrl.SetMaxSize((194,-1))
-
         serverSizer = wx.BoxSizer(wx.HORIZONTAL)
         serverSizerL = wx.BoxSizer(wx.VERTICAL)
         serverSizerR = wx.BoxSizer(wx.VERTICAL)
@@ -1162,7 +1129,6 @@ class outServerDialog(wx.MiniFrame):
         serverSizerL.Add(outServerCtrl,0,wx.EXPAND)
         serverSizerR.Add(outPortLbl,0,wx.EXPAND|wx.LEFT,3)
         serverSizerR.Add(outPortCtrl,0,wx.EXPAND)
-
         rightSizer.Add(choiceSecureLbl,0,wx.TOP,5)
         rightSizer.Add(choiceSecureCtrl,0,wx.EXPAND|wx.TOP,3)
         rightSizer.Add(serverSizer,0,wx.EXPAND|wx.TOP,10)
@@ -1172,7 +1138,6 @@ class outServerDialog(wx.MiniFrame):
         rightSizer.Add(passwLbl,0,wx.TOP,5)
         rightSizer.Add(passwCtrl,0,wx.EXPAND|wx.TOP|wx.BOTTOM,3)
         rightSizer.Add((1,3))
-#
         leftSizer.Add(previewLbl,0,wx.TOP,5)
         leftSizer.Add((1,1))
         leftSizer.Add(listBoxCtrl,0,wx.TOP,5)
@@ -1181,18 +1146,17 @@ class outServerDialog(wx.MiniFrame):
         leftSizer.Add((1,1))
         leftSizer.Add(labelCtrl,0,wx.EXPAND)
         leftSizer.Add((1,1))
-
-    #Button UP
+        #Button UP
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_UP, wx.ART_OTHER, (16, 16))
         btnUP = wx.BitmapButton(self, -1, bmp)
         btnUP.Enable(False)
         topMiddleSizer.Add(btnUP)
-    #Button DOWN
+        #Button DOWN
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_DOWN, wx.ART_OTHER, (16, 16))
         btnDOWN = wx.BitmapButton(self, -1, bmp)
         btnDOWN.Enable(False)
         topMiddleSizer.Add(btnDOWN,0,wx.TOP,3)
-    #Buttons 'Delete' and 'Insert new'
+        #Buttons 'Delete' and 'Insert new'
         w1 = self.GetTextExtent(text.delete)[0]
         w2 = self.GetTextExtent(text.insert)[0]
         if w1 > w2:
@@ -1208,25 +1172,20 @@ class outServerDialog(wx.MiniFrame):
         mainSizer.Add(leftSizer,0,wx.LEFT,10)
         mainSizer.Add(rightSizer,0,wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP,14)
         sizer.Add(mainSizer,0,wx.TOP,10)
-
         line = wx.StaticLine(self, -1, size=(20,-1),pos = (200,0), style=wx.LI_HORIZONTAL)
         btn1 = wx.Button(self, wx.ID_OK)
         btn1.SetLabel(text.ok)
-        
         btn1.Enable(False)
         btn1.SetDefault()
         btn2 = wx.Button(self, wx.ID_CANCEL)
         btn2.SetLabel(text.cancel)
-
         btnsizer = wx.StdDialogButtonSizer()
         btnsizer.AddButton(btn1)
         btnsizer.AddButton(btn2)
         btnsizer.Realize()
-
         sizer.Add((1,12))
         sizer.Add(line, 0, wx.EXPAND|wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM,5)
         sizer.Add(btnsizer, 0, wx.EXPAND|wx.RIGHT, 10)
-
         self.SetSizer(sizer)
         sizer.Fit(self)
 #===============================================================================
@@ -1276,7 +1235,6 @@ class outServerDialog(wx.MiniFrame):
         labelCtrl.Bind(wx.EVT_TEXT, OnLabelAndPassword)
         passwCtrl.Bind(wx.EVT_TEXT, OnLabelAndPassword)
 
-        
         def onServerName(event):
             if self.servers<>[]:
                 val = outServerCtrl.GetValue().strip()
@@ -1285,7 +1243,6 @@ class outServerDialog(wx.MiniFrame):
                 validation()
             event.Skip()
         outServerCtrl.Bind(wx.EVT_TEXT, onServerName)
-
 
         def onPort(event):
             if self.servers<>[]:
@@ -1333,7 +1290,6 @@ class outServerDialog(wx.MiniFrame):
                 validation()
             event.Skip()
         userCtrl.Bind(wx.EVT_TEXT, onUser)
-
 
         def onClick(evt):
             sel = listBoxCtrl.GetSelection()
@@ -1486,7 +1442,6 @@ class outTextsDialog(wx.MiniFrame):
         )
         labelLbl=wx.StaticText(self, -1, text.txtLabel)
         labelCtrl=wx.TextCtrl(self,-1,'')
-
         rightSizer = wx.BoxSizer(wx.VERTICAL)
         outTextLbl=wx.StaticText(self, -1, text.outText)
         outTextCtrl=wx.TextCtrl(
@@ -1503,18 +1458,17 @@ class outTextsDialog(wx.MiniFrame):
         leftSizer.Add((1,1))
         leftSizer.Add(labelCtrl,0,wx.EXPAND)
         leftSizer.Add((1,1))
-
-    #Button UP
+        #Button UP
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_UP, wx.ART_OTHER, (16, 16))
         btnUP = wx.BitmapButton(self, -1, bmp)
         btnUP.Enable(False)
         topMiddleSizer.Add(btnUP)
-    #Button DOWN
+        #Button DOWN
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_DOWN, wx.ART_OTHER, (16, 16))
         btnDOWN = wx.BitmapButton(self, -1, bmp)
         btnDOWN.Enable(False)
         topMiddleSizer.Add(btnDOWN,0,wx.TOP,3)
-    #Buttons 'Delete' and 'Insert new'
+        #Buttons 'Delete' and 'Insert new'
         w1 = self.GetTextExtent(text.delete)[0]
         w2 = self.GetTextExtent(text.insert)[0]
         if w1 > w2:
@@ -1530,7 +1484,6 @@ class outTextsDialog(wx.MiniFrame):
         mainSizer.Add(leftSizer,0,wx.LEFT,10)
         mainSizer.Add(rightSizer,0,wx.EXPAND|wx.LEFT|wx.RIGHT,14)
         sizer.Add(mainSizer,0,wx.TOP,10)
-
         line = wx.StaticLine(self, -1, size=(20,-1),pos = (200,0), style=wx.LI_HORIZONTAL)
         btn1 = wx.Button(self, wx.ID_OK)
         btn1.SetLabel(text.ok)
@@ -1538,16 +1491,13 @@ class outTextsDialog(wx.MiniFrame):
         btn1.SetDefault()
         btn2 = wx.Button(self, wx.ID_CANCEL)
         btn2.SetLabel(text.cancel)
-
         btnsizer = wx.StdDialogButtonSizer()
         btnsizer.AddButton(btn1)
         btnsizer.AddButton(btn2)
         btnsizer.Realize()
-
         sizer.Add((1,5))
         sizer.Add(line, 0, wx.EXPAND|wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM,5)
         sizer.Add(btnsizer, 0, wx.EXPAND|wx.RIGHT, 10)
-
         self.SetSizer(sizer)
         sizer.Fit(self)
 
@@ -1746,17 +1696,17 @@ class groupsDialog(wx.MiniFrame):
         leftSizer.Add(labelCtrl,0,wx.EXPAND)
         leftSizer.Add((1,1))
 
-    #Button UP
+        #Button UP
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_UP, wx.ART_OTHER, (16, 16))
         btnUP = wx.BitmapButton(self, -1, bmp)
         btnUP.Enable(False)
         topMiddleSizer.Add(btnUP)
-    #Button DOWN
+        #Button DOWN
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_DOWN, wx.ART_OTHER, (16, 16))
         btnDOWN = wx.BitmapButton(self, -1, bmp)
         btnDOWN.Enable(False)
         topMiddleSizer.Add(btnDOWN,0,wx.TOP,3)
-    #Buttons 'Delete' and 'Insert new'
+        #Buttons 'Delete' and 'Insert new'
         w1 = self.GetTextExtent(text.delete)[0]
         w2 = self.GetTextExtent(text.insert)[0]
         w = max(w1,w2)+24
@@ -1782,29 +1732,27 @@ class groupsDialog(wx.MiniFrame):
         rightSizer.Add(labelCtrl2,0,wx.EXPAND)
         rightSizer.Add((1,1))
 
-    #Button UP
+        #Button UP
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_UP, wx.ART_OTHER, (16, 16))
         btnUP2 = wx.BitmapButton(self, -1, bmp)
         btnUP2.Enable(False)
         topMiddleSizer2.Add(btnUP2)
-    #Button DOWN
+        #Button DOWN
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_DOWN, wx.ART_OTHER, (16, 16))
         btnDOWN2 = wx.BitmapButton(self, -1, bmp)
         btnDOWN2.Enable(False)
         topMiddleSizer2.Add(btnDOWN2,0,wx.TOP,3)
-    #Buttons 'Delete' and 'Insert new'
+        #Buttons 'Delete' and 'Insert new'
         btnApp2=wx.Button(self,-1,text.insert,size = (w,-1))
         btnDEL2=wx.Button(self,-1,text.delete,size = (w,-1))
         btnDEL2.Enable(False)
         topMiddleSizer2.Add(btnDEL2,0,wx.TOP,5)
         topMiddleSizer2.Add(btnApp2,0,wx.TOP,5)
-
         mainSizer = wx.GridBagSizer(0, 0)
         mainSizer.AddGrowableCol(1)
         mainSizer.Add(leftSizer,(0,0),flag = wx.ALIGN_LEFT)
         mainSizer.Add(rightSizer,(0,2),flag = wx.ALIGN_RIGHT)        
         sizer.Add(mainSizer,0,wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND,20)
-
         line = wx.StaticLine(self, -1, size=(20,-1),pos = (200,0), style=wx.LI_HORIZONTAL)
         btn1 = wx.Button(self, wx.ID_OK)
         btn1.SetLabel(text.ok)
@@ -1812,16 +1760,13 @@ class groupsDialog(wx.MiniFrame):
         btn1.SetDefault()
         btn2 = wx.Button(self, wx.ID_CANCEL)
         btn2.SetLabel(text.cancel)
-
         btnsizer = wx.StdDialogButtonSizer()
         btnsizer.AddButton(btn1)
         btnsizer.AddButton(btn2)
         btnsizer.Realize()
-
         sizer.Add((1,36))
         sizer.Add(line, 0, wx.EXPAND|wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM,5)
         sizer.Add(btnsizer, 0, wx.EXPAND|wx.RIGHT, 10)
-
         self.SetSizer(sizer)
         sizer.Fit(self)
 
@@ -1834,8 +1779,7 @@ class groupsDialog(wx.MiniFrame):
             btnDOWN2.Enable(False)
             btnApp2.Enable(False)
             btnDEL2.Enable(False)
-                
-            
+
         def setValue(item):
             labelCtrl.ChangeValue (item[0])
             listBoxCtrl2.Set(item[1])
@@ -1850,7 +1794,7 @@ class groupsDialog(wx.MiniFrame):
                 flag = len(item[1]) > 1
                 btnUP2.Enable(flag)
                 btnDOWN2.Enable(flag)
-            
+
         if len(self.groups) > 0:
             listBoxCtrl.Set([n[0] for n in self.groups])
             listBoxCtrl.SetSelection(0)
@@ -2146,31 +2090,23 @@ class observViewerDialog(wx.MiniFrame):
                 colLabel,
                 wx.LIST_FORMAT_RIGHT if (i==1 or i==2) else wx.LIST_FORMAT_LEFT
             )
-
         observListCtrl.InsertStringItem(0, text.colLabels[0])
         observListCtrl.SetStringItem(0, 2, time.strftime("%c"))
-
         size = 0
         for i in range(5):
             observListCtrl.SetColumnWidth(i, wx.LIST_AUTOSIZE_USEHEADER)
             size += observListCtrl.GetColumnWidth(i)
-
         observListCtrl.SetMinSize((size, -1))
-
         centralSizer.Add(observListCtrl, (0,0),(1,5), flag = wx.EXPAND)
-
-
         #buttons
         abortButton = wx.Button(self, -1, text.buttons[0])
         abortAllButton = wx.Button(self, -1, text.buttons[1])
         refreshButton = wx.Button(self, -1, text.buttons[2])
         closeButton = wx.Button(self, -1, text.buttons[3])
-
         centralSizer.Add(abortButton,(1,0), flag = wx.ALIGN_CENTER_HORIZONTAL|wx.BOTTOM, border = 10)
         centralSizer.Add(abortAllButton,(1,1), flag = wx.ALIGN_CENTER_HORIZONTAL)
         centralSizer.Add(refreshButton,(1,2), flag = wx.ALIGN_LEFT)
         centralSizer.Add(closeButton,(1,4), flag = wx.ALIGN_RIGHT)
-
 
         def FillListCtrl (event=None):
             observListCtrl.DeleteAllItems()
@@ -2187,7 +2123,6 @@ class observViewerDialog(wx.MiniFrame):
                     row += 1
             ListSelection()
 
-
         def OnAbortButton(event):
             item = observListCtrl.GetFirstSelected()
             while item != -1:
@@ -2199,7 +2134,6 @@ class observViewerDialog(wx.MiniFrame):
                 item = observListCtrl.GetNextSelected(item)
             FillListCtrl()
             event.Skip()
-
 
         def OnAbortAllButton(event):
             thrds = list(enumerate(self.observThreads))
@@ -2229,7 +2163,6 @@ class observViewerDialog(wx.MiniFrame):
         FillListCtrl()
         self.SetMinSize((size+52,178))
         self.SetSize((size+52,178))
-
         abortButton.Bind(wx.EVT_BUTTON, OnAbortButton)
         abortAllButton.Bind(wx.EVT_BUTTON, OnAbortAllButton)
         refreshButton.Bind(wx.EVT_BUTTON, FillListCtrl)
@@ -2237,7 +2170,6 @@ class observViewerDialog(wx.MiniFrame):
         observListCtrl.Bind(wx.EVT_LIST_ITEM_SELECTED, ListSelection)
         observListCtrl.Bind(wx.EVT_LIST_ITEM_DESELECTED, ListSelection)
         self.Bind(wx.EVT_SIZE, OnSize)
-
         mainSizer.Add(centralSizer, 1,wx.EXPAND|wx.LEFT|wx.RIGHT,10)
         self.SetSizer(mainSizer)
         mainSizer.Layout()
@@ -2317,7 +2249,6 @@ class SendMailThread(Thread):
                 pass
             else:
                 break
-
         sender_name = str(Header(unicode(account[2]), header_charset))
         recipient_name = str(Header(unicode(toName), header_charset))
         msg = MIMEText(body.encode(body_charset), 'plain', body_charset)
@@ -2337,9 +2268,7 @@ class SendMailThread(Thread):
                 msg['References'] = self.messageID+u'\r\n'
             else:
                 msg['References'] = self.references+self.messageID+u'\r\n'
-
         case = server[3] #secure connection ?
-        
         try:
             if case < 3:
                 smtp = smtplib.SMTP(server[1],server[2])
@@ -2371,7 +2300,7 @@ class SendMailThread(Thread):
                 eg.PrintError(text.error6+' '+text.error8)
             else:
                 From = formataddr((account[2], account[3]))
-                print self.plugin.text.emailSent % (From, sbjct)
+                eg.TriggerEvent('Sent', payload = '%s: %s' % (From, sbjct), prefix = 'E-mail')                
             smtp.quit()
 #===============================================================================
 
@@ -2480,8 +2409,7 @@ class WorkThread(Thread):
         self.observName = self.setup[0]
         indx = [item[0] for item in self.plugin.tempData].index(self.observName)
         self.plugin.tempData[indx][1:]=[0,[],None,self.notifFrame]
-            
-            
+
     def CreateOneRecord(self, data, account, nbr, id):
         msg=myParser.parsestr(data)
         if msg.has_key('Message-Id'):
@@ -2495,7 +2423,6 @@ class WorkThread(Thread):
         tmpRec.append(str(nbr))                   #4
         tmpRec.append(id)                         #5
         return tmpRec
-
 
     def CheckEmails(self):
         accList=[n[0] for n in self.configs]
@@ -2713,7 +2640,6 @@ class WorkThread(Thread):
         countOld = self.plugin.tempData[indx][1]
         shift = count != countOld
         countOld = count
-        #print observName+" - end of check"
         self.plugin.tempData[indx][2] = tmpData
         self.plugin.tempData[indx][1] = count
         return count, shift
@@ -2977,7 +2903,6 @@ class StartObservation(eg.ActionClass):
         messageCtrl.SetToolTipString(text.tip0)
         eventCtrl = wx.CheckBox(panel, label = text.totalEvent)     
         eventCtrl.SetToolTipString(text.tip4)
-
         event2Ctrl = wx.CheckBox(panel, label = text.emailEvent)
         event2Ctrl.SetToolTipString(text.tip3)
         event2Ctrl.SetValue(self.stp[11])
@@ -3015,7 +2940,6 @@ class StartObservation(eg.ActionClass):
             if indx0 < 1:
                 fieldCtrl_2.Enable(False)
                 fieldCtrl_3.Enable(False)
-
         horizSizer = wx.BoxSizer(wx.HORIZONTAL)
         leftSizer = wx.BoxSizer(wx.VERTICAL)
         rightSizer = wx.BoxSizer(wx.VERTICAL)
@@ -3023,7 +2947,6 @@ class StartObservation(eg.ActionClass):
         rightSizer.Add(rb1,0,wx.TOP,2)
         rightSizer.Add(rb2,0,wx.TOP,2)
         rightSizer.Add(filterSizer,0,wx.EXPAND|wx.TOP,7)
-
         intervalSizer = wx.BoxSizer(wx.HORIZONTAL)
         horizSizer.Add(leftSizer,0,wx.EXPAND,wx.TOP,0)
         horizSizer.Add(rightSizer,0,wx.LEFT|wx.EXPAND,16)
@@ -3035,22 +2958,17 @@ class StartObservation(eg.ActionClass):
         leftSizer.Add(intervalSizer,0,wx.EXPAND|wx.TOP,15)
         leftSizer.Add(accountLbl,0,wx.TOP,11) #13
         leftSizer.Add(accountCtrl,0,wx.EXPAND)
-
         panel.sizer.Add(horizSizer)
-
         bottomSizer = wx.GridBagSizer(2,10)
         bottomSizer.Add(evtNameLbl,(0,1),wx.DefaultSpan)
         bottomSizer.Add(payloadLbl,(0,2),wx.DefaultSpan)
-        
         bottomSizer.Add(event2Ctrl,(1,0),wx.DefaultSpan,wx.TOP,4)
         bottomSizer.Add(evtName2Ctrl,(1,1),wx.DefaultSpan,wx.EXPAND)
         bottomSizer.Add(payload2Ctrl,(1,2),wx.DefaultSpan,wx.EXPAND)
         bottomSizer.Add(deleteCtrl,(1,3),wx.DefaultSpan,wx.TOP|wx.ALIGN_RIGHT,4)
-        
         bottomSizer.Add(eventCtrl,(2,0),wx.DefaultSpan,wx.TOP,10)
         bottomSizer.Add(evtNameCtrl,(2,1),wx.DefaultSpan,wx.TOP|wx.EXPAND,6)
         bottomSizer.Add(payloadCtrl,(2,2),wx.DefaultSpan,wx.TOP|wx.EXPAND,6)
-        
         bottomSizer.Add(messageCtrl,(3,0),wx.DefaultSpan,wx.TOP,16)
         labelBck = wx.StaticText(panel, -1, text.backCol)
         labelFore = wx.StaticText(panel, -1, text.forCol)
@@ -3065,10 +2983,8 @@ class StartObservation(eg.ActionClass):
         colourSizer.Add(labelFore,(0,3),wx.DefaultSpan,wx.TOP,4)
         colourSizer.Add(foregroundColourButton,(0,4))
         bottomSizer.Add(colourSizer,(3,1),(1,3),wx.TOP|wx.EXPAND,12)
-        
         panel.sizer.Add(bottomSizer,0,wx.EXPAND|wx.TOP,12)
         panel.sizer.Layout()
-
         self.flag2=False
 
         def OnBackgroundColourButton(event):
@@ -3097,8 +3013,7 @@ class StartObservation(eg.ActionClass):
                 event2Ctrl.Enable(True)
             onEvent2Ctrl()
             EnableEventCtrl()
-            
-        
+
         def onRadioBtns(evt=None):
             if self.flag2:
                 return
@@ -3159,8 +3074,7 @@ class StartObservation(eg.ActionClass):
             evt.Skip()
             validation()
         deleteCtrl.Bind(wx.EVT_CHECKBOX, onDeleteCtrl)
-        
-        
+
         def onEventCtrl(evt = None):
             flag = eventCtrl.GetValue()
             evtNameCtrl.Enable(flag)
@@ -3173,7 +3087,6 @@ class StartObservation(eg.ActionClass):
             validation()
         eventCtrl.Bind(wx.EVT_CHECKBOX, onEventCtrl)
 
-        
         def onNameCtrl(evt):
             self.stp[0] = nameCtrl.GetValue()
             evt.Skip()
@@ -3210,8 +3123,7 @@ class StartObservation(eg.ActionClass):
             validation()
             accountCtrl.SetSelection(index)    # so that (un)checking also selects (moves the highlight)
         accountCtrl.Bind(wx.EVT_CHECKLISTBOX, onCheckListBox)
-        
-        
+
         def UpdateConfig():
             choices = accountCtrl.GetStrings()
             tmpList=[]
@@ -3235,7 +3147,6 @@ class StartObservation(eg.ActionClass):
             self.stp[12] = evtName2Ctrl.GetValue()
             self.stp[13] = payload2Ctrl.GetSelection()
             self.stp[14] = deleteCtrl.GetValue()
-        
 
         # re-assign the test button
         def OnTestButton(event):
@@ -3251,7 +3162,6 @@ class StartObservation(eg.ActionClass):
             panel.SetResult(
                 self.stp,
             )
-            
 
     class text:
         nameObs = 'Observation name:'
@@ -3334,7 +3244,7 @@ class SendEmail(eg.ActionClass):
         Append = '',
         toName = ''
     ):
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel(self, resizable=True)
         subjectCtrl,fromCtrl,toCtrl,copyCtrl,outTextCtrl,textsCtrl,toNameCtrl, topSizer = SendCfg(
             self,
             panel,
@@ -3348,8 +3258,7 @@ class SendEmail(eg.ActionClass):
             self.text,
             self.plugin
         )
-        panel.sizer.Add(topSizer,0,wx.EXPAND|wx.LEFT|wx.RIGHT,16)
-        
+        panel.sizer.Add(topSizer,1,wx.EXPAND|wx.LEFT|wx.RIGHT,16)
         text = self.text
         # re-assign the test button
         def OnTestButton(event):
@@ -3378,11 +3287,11 @@ class SendEmail(eg.ActionClass):
                 flag = False
             panel.dialog.buttonRow.applyButton.Enable(flag)
             panel.dialog.buttonRow.okButton.Enable(flag)
-            
+    
         subjectCtrl.Bind(wx.EVT_TEXT, validation)
         toCtrl.Bind(wx.EVT_TEXT, validation)
         validation()
-        panel.sizer.Layout()    
+        panel.sizer.Layout()
         
         while panel.Affirmed():
             panel.SetResult(
@@ -3411,16 +3320,14 @@ class SendEmail(eg.ActionClass):
 #===============================================================================
 
 class SendMailDlg(wx.MiniFrame):
-    
     def __init__(self, parent):
         wx.MiniFrame.__init__(
             self,
             parent,
             -1,
             '',
-#            size = (456, 270),
             size = (360, 270),
-            style = wx.CAPTION,
+            style = wx.CAPTION|wx.RESIZE_BORDER,
             name  = 'Send Email'
         )
         self.SetBackgroundColour(wx.NullColour)
@@ -3439,7 +3346,6 @@ class SendMailDlg(wx.MiniFrame):
         references = None,
         messageID = None
     ):
-#        self.SetTitle(text.outServerTitle)
         self.SetTitle(3*' '+text.replyTitle)
         panel = self
         subjectCtrl,fromCtrl,toCtrl,copyCtrl,outTextCtrl,textsCtrl,toNameCtrl,topSizer = SendCfg(
@@ -3458,16 +3364,14 @@ class SendMailDlg(wx.MiniFrame):
         sizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(sizer)
         sizer.Add((1,10))
-        sizer.Add(topSizer,0,wx.EXPAND|wx.LEFT|wx.RIGHT,16)
+        sizer.Add(topSizer,1,wx.EXPAND|wx.LEFT|wx.RIGHT,16)
         line = wx.StaticLine(self, -1, size=(20,-1),pos = (200,0), style=wx.LI_HORIZONTAL)
         btn1 = wx.Button(self, wx.ID_OK)
         btn1.SetLabel(text.sendNow)
-        
         btn1.Enable(False)
         btn1.SetDefault()
         btn2 = wx.Button(self, wx.ID_CANCEL)
         btn2.SetLabel(plugin.text.cancel)
-
         btnsizer = wx.StdDialogButtonSizer()
         btnsizer.AddButton(btn1)
         btnsizer.AddButton(btn2)
@@ -3476,7 +3380,7 @@ class SendMailDlg(wx.MiniFrame):
         sizer.Add(line, 0, wx.EXPAND|wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM,5)
         sizer.Add(btnsizer, 0, wx.EXPAND|wx.RIGHT, 12)
         sizer.Add((1,5))
-        
+
         def onSomeChange(evt):
             flag = True
             if not validateEmailAddr(toCtrl.GetValue()):
@@ -3486,6 +3390,7 @@ class SendMailDlg(wx.MiniFrame):
             if outTextCtrl.GetValue()=='':
                 flag = False        
             btn1.Enable(flag)
+
         toCtrl.Bind(wx.EVT_TEXT,onSomeChange)
         outTextCtrl.Bind(wx.EVT_TEXT,onSomeChange)
         subjectCtrl.Bind(wx.EVT_TEXT,onSomeChange)
@@ -3513,12 +3418,13 @@ class SendMailDlg(wx.MiniFrame):
                 messageID
             )
             t.start()
-
             self.Close()
-        btn1.Bind(wx.EVT_BUTTON,onSend)
-        
+
+        btn1.Bind(wx.EVT_BUTTON,onSend)        
         sizer.Layout()
         sizer.Fit(self)
+        size = self.GetSize()
+        self.SetMinSize(size)
         self.MakeModal(True)
         self.Centre()
         self.Show()
@@ -3540,21 +3446,17 @@ class E_mail(eg.PluginClass):
     texts = []
     groups = []
 
-
     def __init__(
         self,
     ):
         self.AddActionsFromList(ACTIONS)
         self.observThreads = {}
 
-
     def __stop__(self):
         self.AbortAllObservations(close = True)
 
-
     def __close__(self):
         self.AbortAllObservations(close = True)
-
 
     def __start__(
         self,
@@ -3567,7 +3469,6 @@ class E_mail(eg.PluginClass):
     ):
         self.observThreads = {}
         self.tempData = []
-        
         self.passINC = passINC
         self.passSMTP = passSMTP
         self.servers=servers
@@ -3577,7 +3478,6 @@ class E_mail(eg.PluginClass):
         self.texts = texts
         self.groups = groups
 
-                
     def StartObservation(
         self,
         setup,
@@ -3597,12 +3497,10 @@ class E_mail(eg.PluginClass):
         )
         ot.start()
 
-
     def AbortObservation(self, observName):
         if observName in self.observThreads:
             ot = self.observThreads[observName]
             ot.AbortObservation()
-
 
     def AbortAllObservations(self, close=False):
         thrds = list(enumerate(self.observThreads))
@@ -3610,7 +3508,6 @@ class E_mail(eg.PluginClass):
         for i, item in thrds:
             ot = self.observThreads[item]
             ot.AbortObservation(close)
-
 
     def Configure(
         self,
@@ -3632,12 +3529,10 @@ class E_mail(eg.PluginClass):
         del groups
         panel.passINC = {}
         panel.passSMTP = {}
-    
         for i,item in list(enumerate(passINC.data)):
             panel.passINC[item]=passINC.data[item]
         for i,item in list(enumerate(passSMTP.data)):
             panel.passSMTP[item]=passSMTP.data[item]
-    
         text = self.text
         panel.dialog.buttonRow.okButton.SetToolTipString(text.warning)
 
@@ -3709,8 +3604,8 @@ class E_mail(eg.PluginClass):
             panel.dialog.buttonRow.applyButton.Enable(flag)
             panel.dialog.buttonRow.okButton.Enable(flag)
             btnApp.Enable(flag)
-        panel.validation = validation
 
+        panel.validation = validation
         leftSizer = wx.BoxSizer(wx.VERTICAL)
         topLeftSizer = wx.FlexGridSizer(4,2,2,8)
         leftSizer.Add(topLeftSizer,0,wx.EXPAND)
@@ -3722,8 +3617,7 @@ class E_mail(eg.PluginClass):
             style=wx.LB_SINGLE|wx.LB_NEEDED_SB
         )
         labelLbl=wx.StaticText(panel, -1, text.label)
-        labelCtrl=wx.TextCtrl(panel,-1,'')
-        
+        labelCtrl=wx.TextCtrl(panel,-1,'')        
         choiceType = wx.RadioBox(
             panel, 
             -1, 
@@ -3731,7 +3625,6 @@ class E_mail(eg.PluginClass):
             choices=(text.eBoxCase),
             style=wx.RA_SPECIFY_ROWS
         )
-        
         #Box content
         userNameLbl=wx.StaticText(panel, -1, text.userName)
         userNameCtrl=wx.TextCtrl(panel,-1,'')
@@ -3766,7 +3659,6 @@ class E_mail(eg.PluginClass):
         )
         choiceSecureCtrl.SetMaxSize((194,-1))
         useSecureCtrl = wx.CheckBox(panel, label = text.useSecure)
-
         serverSizer = wx.BoxSizer(wx.HORIZONTAL)
         serverSizerL = wx.BoxSizer(wx.VERTICAL)
         serverSizerL.Add(incServerLbl,0,wx.EXPAND)
@@ -3776,7 +3668,6 @@ class E_mail(eg.PluginClass):
         serverSizerR.Add(incPortCtrl,0,wx.EXPAND)
         serverSizer.Add(serverSizerL,1,wx.EXPAND)
         serverSizer.Add(serverSizerR,0,wx.EXPAND|wx.LEFT,5)
-
         outServSizer = wx.BoxSizer(wx.HORIZONTAL)
         outServSizerL = wx.BoxSizer(wx.VERTICAL)
         outServSizerL.Add(outServerLbl,0,wx.EXPAND|wx.TOP,3)
@@ -3785,7 +3676,6 @@ class E_mail(eg.PluginClass):
         outServSizerR.Add(outServerBtn,0,wx.EXPAND|wx.TOP,15)
         outServSizer.Add(outServSizerL,1,wx.EXPAND)
         outServSizer.Add(outServSizerR,0,wx.EXPAND|wx.LEFT,5)
-
         box = wx.StaticBox(panel,-1,text.param)
         rightSizer = wx.StaticBoxSizer(box,wx.VERTICAL)
         rightSizer.Add(userNameLbl,0,wx.TOP,3)
@@ -3803,7 +3693,6 @@ class E_mail(eg.PluginClass):
         rightSizer.Add(choiceSecureCtrl,0,wx.EXPAND)
         rightSizer.Add(serverSizer,0,wx.EXPAND|wx.TOP,3)
         rightSizer.Add(outServSizer,0,wx.EXPAND|wx.TOP,3)
-
         topLeftSizer.Add(previewLbl,0,wx.TOP,5)
         topLeftSizer.Add((1,1))
         topLeftSizer.Add(listBoxCtrl,0,wx.TOP,5)
@@ -3814,12 +3703,9 @@ class E_mail(eg.PluginClass):
         topLeftSizer.Add((1,1))
         topLeftSizer.Add(choiceType,0,wx.EXPAND|wx.TOP,1)
         topLeftSizer.Add((1,1))
-
         leftSizer.Add(viewerBtn,0,wx.EXPAND|wx.TOP,10)
         leftSizer.Add(panel.txtsBtn,0,wx.EXPAND|wx.TOP,10)
         leftSizer.Add(panel.grpsBtn,0,wx.EXPAND|wx.TOP,10)
-
-
         #Button UP
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_UP, wx.ART_OTHER, (16, 16))
         btnUP = wx.BitmapButton(panel, -1, bmp)
@@ -4088,12 +3974,10 @@ class E_mail(eg.PluginClass):
             listBoxCtrl.SetSelection(sel)
             setValue(item)
             setPort()
-
             choiceSecureCtrl.SetSelection(0)
             panel.outServerCtrl.Clear()
             panel.outServerCtrl.AppendItems(strings=[n[0] for n in panel.servers])
             panel.outServerCtrl.SetSelection(0)
-
             labelCtrl.SetFocus()
             btnApp.Enable(False)
             btnDEL.Enable(True)
@@ -4111,7 +3995,6 @@ class E_mail(eg.PluginClass):
                 passINC,
                 passSMTP
             )
-
 
     class text:
         label = 'Account name:'
@@ -4171,19 +4054,16 @@ class E_mail(eg.PluginClass):
         )
 
         listhead = "Currently active observation:"
-
         show = "Show"
         delete = "Delete"
         refresh = "Refresh"
         client = "E-mail client"
         reply = "Reply"
         close = "Close"
-        
         textsTitle = 'Templates for outgoing e-mails'
         textsList = "List of texts:"
         txtLabel = "Text name:"
         outText = "Text:"
-        
         groupsTitle = 'Recipient groups for outgoing e-mails'
         groupsList = "List of groups:"
         groupLabel = "Group name:"
@@ -4222,10 +4102,7 @@ class E_mail(eg.PluginClass):
             "Refresh",
             "Close",
         )
-        emailSent = 'E-mail "%s: %s" has sent !'
         observStarts = 'Observation "%s" starts'
         warning = 'When any change in the configuration, will all running observations stopped!'
         wrote = '%s wrote:'
 #===============================================================================
-
-
