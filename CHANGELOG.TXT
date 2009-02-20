@@ -1,8 +1,11 @@
-**0.3.7.dev**
-
 - Event items now have a configuration dialog, that is somewhat similar to
   the ones of actions and plugins. If you do an "Add Event...", the dialog 
   presets to the last event that was logged.
+- The IR decoder code is completely rewritten. Currently the IgorPlugUSB,
+  TechnoTrend, UIRT and USB-UIRT plugins are using it. One feature is its
+  ability to decode RC5 and MCE-RC6 commands to human readable events (like
+  Play, Stop and so one). The downside is, that you might need to re-assign 
+  some events to you macros, as some signals are decoded to other strings.
 - The log has a new option to indent items, that should help to detect how
   the processing of events/macros/actions work.
 - Added a Python shell that you can open through the help menu. A nice
@@ -15,13 +18,15 @@
   it, I decided to follow his advise, except for the "File" and "Edit" menus. 
   So now all other menu items stay enabled and if there's some reason 
   EventGhost can't complete the action, you get a message telling you why.
-- The title bars of the two panes now has a horizontal gradient and their 
+- The title bars of the two panes now have a horizontal gradient and their 
   colours are determined by the appearance settings of Windows. 
+- EventGhost now is build with Python 2.6.
 - The version number scheme has changed a little. The last number now shows 
   the SVN revision number instead of the build number and is prefixed with a
   small "r". This should make it easier for plugin developers to see if their
   latest changes are included in the installer.
-  
+- Added Japanese translation from user somainit.
+
 
 **0.3.6.1487 (12/05/2008)**
 
