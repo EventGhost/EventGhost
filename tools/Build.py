@@ -315,7 +315,7 @@ class MyInstaller(InnoInstaller):
         """
         self.svnRevision = self.GetSvnRevision()
         versionFilePath = self.sourceDir + "/eg/Classes/Version.py"
-        outFilePath = join(self.tmpDir, "Version.py")
+        outFilePath = versionFilePath #join(self.tmpDir, "Version.py")
         lines = open(versionFilePath, "rt").readlines()
         outfile = open(outFilePath, "wt")
         # update revision and buildTime in eg/Classes/Version.py
@@ -428,11 +428,6 @@ class MyInstaller(InnoInstaller):
         self.AddFile(
             join(self.sourceDir, "pyw%s.exe" % self.pyVersion), 
             destName="pyw.exe"
-        )
-        self.AddFile(
-            join(self.tmpDir, "Version.py"), 
-            destDir="eg\\Classes",
-            destName="Version.py"
         )
         # create entries in the [InstallDelete] section of the Inno script to
         # remove all known plugin directories before installing the new 

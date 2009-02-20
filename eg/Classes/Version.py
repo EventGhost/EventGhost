@@ -22,6 +22,6 @@
 
 
 class Version:
-    revision = 1488
-    buildTime = 1231560277.42
+    revision = 849
+    buildTime = 1235134265.94
     string = "0.3.7.r%s" % revision
