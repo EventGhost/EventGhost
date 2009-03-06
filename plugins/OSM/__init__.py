@@ -1,7 +1,7 @@
-﻿version="0.1.7"
+﻿version="0.1.8"
 # plugins/OSM/__init__.py
 #
-# Copyright (C)  2008 Pako  (lubos.ruckl@quick.cz)
+# Copyright (C)  2009 Pako  (lubos.ruckl@quick.cz)
 #
 # This file is a plugin for EventGhost.
 #
@@ -19,7 +19,7 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2009-01-03 20:52
+#Last change: 2009-03-06 21:35
 
 eg.RegisterPlugin(
     name = "OS Menu",
@@ -56,7 +56,19 @@ eg.RegisterPlugin(
         "ohPbbJ3oFGNF1Jn7dM3UOdEFxktRV4BrohtTHaJbjHeimoC4wD2gLfAAeBR4GrzTAjwL"
         "vAACAnnAq8AboC/QALyTLtoO/wPQG1wjT26aHonu/ZP5C+O3P/VH+wFJCR8UaaZiYgAA"
         "AABJRU5ErkJggg=="
-    )
+    ),
+    help = """\
+        <P>
+        Plugin OSM has built-in a function <B>"Stop processing this event"</B>,
+        if the menu is shown on the screen. This facilitates<BR>
+        the use of OSM in your configuration. You can use to control<BR>
+        the menu the same events (the same remote buttons)<BR>
+        as elsewhere in the configuration, without having<BR>
+        to explicitly use the <B>"Stop processing this event"</B>,<BR>
+        <B>"Disable an item"</B> or <B>"Exclusive enable a folder / macro"</B>.<BR>
+        Only it is necessary to place the folder with the OSM as high<BR>
+        as possible in the configuration tree.
+    """
 )
 
 from threading import Timer
@@ -78,6 +90,9 @@ class ShowMenu(eg.ActionClass):
         menuFont = 'Menu font:'
         txtColour = 'Text colour'
         background = 'Background colour'
+        prefixLabel = 'Default event prefix:'
+        toolTip_1 = 'If the string contains a dot, will be first part used as\
+                    a event prefix (instead default prefix)'
 #-------------------------------------------------------------------------------
 
     class MenuColourSelectButton(wx.BitmapButton):
@@ -233,6 +248,7 @@ class ShowMenu(eg.ActionClass):
         fore,
         back,
         fontInfo,
+        prefix
     ):
         self.plugin.choices = choices
         if not self.plugin.menuDlg:
@@ -244,7 +260,8 @@ class ShowMenu(eg.ActionClass):
                 fontInfo,
                 False,
                 self.plugin,
-                self.event
+                self.event,
+                prefix
             )
             eg.actionThread.WaitOnEvent(self.event)
 #-------------------------------------------------------------------------------
@@ -255,6 +272,7 @@ class ShowMenu(eg.ActionClass):
         fore,
         back,
         fontInfo,
+        prefix
     ):
         res=self.text.showMenu+' '
         for n in range(0,min(3,len(choices))):
@@ -269,7 +287,8 @@ class ShowMenu(eg.ActionClass):
         choices=[],
         fore = (0, 0, 0),
         back = (255, 255, 255),
-        fontInfo = None
+        fontInfo = None,
+        prefix = 'OSM'
     ):
         self.choices = choices[:]
         self.fore = fore
@@ -280,9 +299,8 @@ class ShowMenu(eg.ActionClass):
         w1 = panel.GetTextExtent(self.text.label)[0]
         w2 = panel.GetTextExtent(self.text.evtString)[0]
         w = max((w1,w2))
-        mainSizer=wx.BoxSizer(wx.VERTICAL)
+        mainSizer = panel.sizer
         topSizer=wx.BoxSizer(wx.HORIZONTAL)
-        bottomSizer=wx.FlexGridSizer(2,2,hgap=5,vgap=5)
         topMiddleSizer=wx.BoxSizer(wx.VERTICAL)
         topRightSizer=wx.BoxSizer(wx.VERTICAL)
         previewLbl=wx.StaticText(panel, -1, self.text.menuPreview)
@@ -291,8 +309,9 @@ class ShowMenu(eg.ActionClass):
         previewLblSizer.Add(previewLbl)
         mainSizer.Add(previewLblSizer)
         mainSizer.Add(topSizer,0,wx.TOP,5)
-        mainSizer.Add(bottomSizer,0,wx.TOP,16)
-        panel.sizer.Add(mainSizer)
+        bottomSizer=wx.GridBagSizer(5, 5)
+        bottomSizer.AddGrowableCol(2)
+        mainSizer.Add(bottomSizer,0,wx.TOP,6)
         listBoxCtrl=wx.ListBox(
             panel,-1,
             size=wx.Size(160,120),
@@ -315,18 +334,25 @@ class ShowMenu(eg.ActionClass):
         topSizer.Add(listBoxCtrl)
         topSizer.Add((10,1))
         topSizer.Add(topMiddleSizer)
-        topSizer.Add((50,1))
+        topSizer.Add((30,1))
         topSizer.Add(topRightSizer)
         labelLbl=wx.StaticText(panel, -1, self.text.label)
         labelCtrl=wx.TextCtrl(panel,-1,'',size=wx.Size(160,-1))
-        bottomSizer.Add(labelLbl,0,wx.TOP,3)
+        eventLbl=wx.StaticText(panel, -1, self.text.evtString)
+        eventLbl.SetToolTipString(self.text.toolTip_1)
+        eventCtrl = wx.TextCtrl(panel,-1,'',size=wx.Size(160,-1))
+        eventCtrl.SetToolTipString(self.text.toolTip_1)
+        prefixLbl=wx.StaticText(panel, -1, self.text.prefixLabel)
+        prefixCtrl = wx.TextCtrl(panel,-1,prefix,size=wx.Size(90,-1))
         labelCtrlSizer = wx.BoxSizer(wx.HORIZONTAL)
         labelCtrlSizer.Add(labelCtrl,0,wx.EXPAND)
-        bottomSizer.Add(labelCtrlSizer)
-        eventLbl=wx.StaticText(panel, -1, self.text.evtString)
-        eventCtrl = wx.TextCtrl(panel,-1,'',size=wx.Size(160,-1))
-        bottomSizer.Add(eventLbl,0,wx.TOP,3)
-        bottomSizer.Add(eventCtrl,0,wx.EXPAND)
+        bottomSizer.Add(labelLbl,(0, 0),flag = wx.TOP,border = 3)
+        bottomSizer.Add(labelCtrlSizer,(0, 1))
+        bottomSizer.Add(prefixLbl,(0, 3),flag = wx.TOP, border = 8)
+        bottomSizer.Add(eventLbl,(1, 0),flag = wx.TOP,border = 3)
+        bottomSizer.Add(eventCtrl,(1, 1),flag = wx.EXPAND)
+        bottomSizer.Add((50,1),(1, 2))
+        bottomSizer.Add(prefixCtrl,(1, 3),flag = wx.EXPAND)
         #Button UP
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_UP, wx.ART_OTHER, (16, 16))
         btnUP = wx.BitmapButton(panel, -1, bmp)
@@ -509,7 +535,8 @@ class ShowMenu(eg.ActionClass):
                     fontButton.GetValue(), 
                     True,
                     self.plugin,
-                    self.event
+                    self.event,
+                    prefixCtrl.GetValue()
                 )
                 eg.actionThread.WaitOnEvent(self.event)
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
@@ -520,13 +547,14 @@ class ShowMenu(eg.ActionClass):
             foreColourButton.GetValue(),
             backColourButton.GetValue(),
             fontButton.GetValue(),
+            prefixCtrl.GetValue()
         )
 #===============================================================================
 
 class MoveCursor(eg.ActionClass):
 
     def __call__(self):
-        if self.plugin.menuDlg is not None:
+        if self.plugin.menuDlg:
             max=len(self.plugin.choices)
             if max > 0:
                 sel=self.plugin.menuDlg.GetSizer().GetChildren()[0].\
@@ -535,18 +563,23 @@ class MoveCursor(eg.ActionClass):
                     sel = eval(self.value[1])
                 self.plugin.menuDlg.GetSizer().GetChildren()[0].GetWindow().\
                     SetSelection(sel+self.value[2])
+            eg.event.skipEvent = True
 #===============================================================================
 
 class OK_Btn(eg.ActionClass):
 
     def __call__(self):
-        self.plugin.menuDlg.SendEvent()
+        if self.plugin.menuDlg:
+            self.plugin.menuDlg.SendEvent()
+            eg.event.skipEvent = True
 #===============================================================================
 
 class Cancel_Btn(eg.ActionClass):
 
     def __call__(self):
-        self.plugin.menuDlg.destroyMenu()
+        if self.plugin.menuDlg:
+            self.plugin.menuDlg.destroyMenu()
+            eg.event.skipEvent = True
 #===============================================================================
 
 class Get_Btn (eg.ActionClass):
@@ -557,9 +590,10 @@ class Get_Btn (eg.ActionClass):
         boxBoth = 'Both'
         labelGet = 'Get'
 
-    def __call__(self,val=0):
+    def __call__(self,val = 0):
         if self.plugin.menuDlg:
-            sel=self.plugin.menuDlg.GetSizer().GetChildren()[0].GetWindow().\
+            eg.event.skipEvent = True
+            sel = self.plugin.menuDlg.GetSizer().GetChildren()[0].GetWindow().\
                 GetSelection()
             if val < 2:
                 return self.plugin.choices[sel][val]
@@ -625,13 +659,15 @@ class Menu(wx.Frame):
         fontInfo,
         flag,
         plugin,
-        event
+        event,
+        prefix
     ):
         self.fore    = fore
         self.back    = back
         self.plugin  = plugin
         self.choices = self.plugin.choices
         self.flag    = flag
+        self.prefix  = prefix
 
         eventChoiceCtrl=wx.ListBox(
             self,
@@ -682,7 +718,12 @@ class Menu(wx.Frame):
     def SendEvent(self, event = None):
         sel=self.GetSizer().GetChildren()[0].GetWindow().\
             GetSelection()
-        self.plugin.TriggerEvent(self.choices[sel][1])
+        evtString = self.choices[sel][1]
+        if '.' in evtString:
+            indx = evtString.index(".")
+            eg.TriggerEvent(evtString[indx+1:], prefix = evtString[:indx])                         
+        else:    
+            eg.TriggerEvent(evtString, prefix = self.prefix)                         
         self.destroyMenu()
 
     def onClose(self, event):
