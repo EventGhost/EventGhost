@@ -1,18 +1,23 @@
 # Xbox(original) remote control plugin for EventGhost by jinxdone. Based on the Generic HID plugin by Bartman.
 #
+"""<rst>
+Xbox remote control plugin, based on the Generic Human Interface Device (HID) plugin.
+
+For this plugin to work you need the `XBCDRC drivers <http://www.redcl0ud.com/xbcd_rc.html>`__ by redcl0ud
+
+|
+
+.. image:: xbcdrc.png
+   :align: center
+"""
+
 eg.RegisterPlugin(
     name = "Xbox remote control",
     author = "jinxdone / Bartman",
     version = "0.1.3." + "$LastChangedRevision: 348 $".split()[1],
     kind = "remote",
     canMultiLoad = False,
-    description = (
-        'Xbox remote control plugin, based on the Generic Human Interface Device (HID) plugin.'
-        '<br>'
-        'For this plugin to work you need the <a href="http://www.redcl0ud.com/xbcd_rc.html">XBCDRC drivers</a> by redcl0ud'
-        '<br>'
-        '<center><img src="xbcdrc.png" alt="Xbox remote" /></a></center>'
-    ),
+    description = __doc__,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAeJJREFUOMul"
         "k09I02EYxz/Pu/e33J80R6UUlEsolDCCYkSJ5S3oD1RCHaJDSEhQEHjpItShSxAU1M2SCCLo0EU6"
@@ -430,7 +435,14 @@ class HIDThread(threading.Thread):
             '006c60a': '9', '00663f5': '9', '006630d': '9',
             '006cf0a': '0', '0066705': '0', '00667fd': '0',
             '0064f0a': 'AUDIO',
-            '006af0a': 'ENT.'
+            '006af0a': 'ENT.',
+            '006d100': 'LT',
+            '006890a': 'LAST',
+            '006c000': 'MUTE',
+            '006e70a': 'A*B',
+            '006f90a': 'EXIT',
+            '0067f0a': 'D',
+            '0068c0a': 'REC'
         }
 
         #getting devicePath
