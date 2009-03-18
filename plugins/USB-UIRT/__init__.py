@@ -153,14 +153,14 @@ UUCALLBACKPROC = WINFUNCTYPE(c_int, POINTER(c_ubyte), c_ulong, c_ulong)
 LEARNCALLBACKPROC = WINFUNCTYPE(c_int, c_uint, c_uint, c_ulong, c_void_p)
 
 
-class USB_UIRT(eg.PluginBase):
+class USB_UIRT(eg.IrDecoderPlugin):
     text = Text
     
     def __init__(self):
+        eg.IrDecoderPlugin.__init__(self, 50.0)
         self.dll = None
         self.enabled = False
         self.AddAction(TransmitIR)
-        self.irDecoder = eg.IrDecoder(self, 50.0)
 
 
     def __close__(self):

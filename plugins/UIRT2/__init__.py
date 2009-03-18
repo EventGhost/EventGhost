@@ -175,14 +175,12 @@ class HexValidator(wx.PyValidator):
         return
 
 
-class UIRT2(eg.RawReceiverPlugin):
+class UIRT2(eg.IrDecoderPlugin):
     
     def __init__(self):
-        eg.RawReceiverPlugin.__init__(self)
+        eg.IrDecoderPlugin.__init__(self, 50.0)
         self.buffer = ""
         self.AddAction(TransmitIR)
-        SAMPLE_TIME = 0.00005
-        self.irDecoder = eg.IrDecoder(self, 50.0)
 
 
     def __start__(self, comport=0):
