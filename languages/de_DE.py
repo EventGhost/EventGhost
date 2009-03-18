@@ -28,7 +28,7 @@ class General:
     yes = u"&Ja"
 class MainFrame:
     onlyLogAssigned = u"Nur &zugewiesene und aktivierte Ereignisse aufzeichnen"
-    onlyLogAssignedToolTip = u"Wenn markiert zeigt das Log nur noch Ereignisse an, die in der momentanen\nKonstellation der Konfiguration ein Makro ausführen werden. Deshalb sollte diese\nOption *nicht* aktiviert werden, wenn man neue Ereignisse zuweisen will."
+    onlyLogAssignedToolTip = u"Wenn markiert, zeigt das Log nur noch Ereignisse an, die in der momentanen\nKonstellation der Konfiguration ein Makro ausführen werden. Deshalb sollte diese\nOption *nicht* aktiviert werden, wenn man neue Ereignisse zuweisen will."
     class Logger:
         caption = u"Log"
         welcomeText = u"---> Willkommen beim EventGhost <---"
@@ -640,14 +640,6 @@ class Plugin:
     class MediaPlayerClassic:
         name = u"Media Player Classic"
         description = u'Fügt Aktionen zur Steuerung des <a href="http://sourceforge.net/projects/guliverkli/">Media Player Classic</a> hinzu'
-        class GroupDvdControls:
-            name = u"DVD Steuerung"
-        class GroupExtendedControls:
-            name = u"Erweiterte Steuerung"
-        class GroupMainControls:
-            name = u"Main Steuerung"
-        class GroupViewModes:
-            name = u"Ansichten Steuerung"
         class AlwaysOnTop:
             name = u"Immer im Vordergrund"
         class AudioDelayAdd10ms:
@@ -714,6 +706,14 @@ class Plugin:
             name = u"Vollbild (w/o res.change)"
         class GoTo:
             name = u"Gehe zu"
+        class GroupDvdControls:
+            name = u"DVD Steuerung"
+        class GroupExtendedControls:
+            name = u"Erweiterte Steuerung"
+        class GroupMainControls:
+            name = u"Main Steuerung"
+        class GroupViewModes:
+            name = u"Ansichten Steuerung"
         class IncreaseRate:
             name = u"Geschwindigkeit erhöhen"
         class JumpBackwardKeyframe:
