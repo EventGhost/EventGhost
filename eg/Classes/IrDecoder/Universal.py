@@ -61,7 +61,7 @@ class Universal(IrProtocolBase):
 #        return "U%X" % code
 
     def Decode(self, data):
-        print data
+        #print data
         lastPause = 0
         lastPulse = 0
         code = 0
