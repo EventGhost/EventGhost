@@ -26,8 +26,6 @@ import sys
 import os
 import imp
 import time
-import threading
-import asyncore
 from functools import partial
 from types import ModuleType
 
@@ -44,6 +42,7 @@ def InitPil():
 
 
 class LateModule(ModuleType):
+    
     def __init__(self, name):
         self.__name__ = name
         sys.modules[name] = self
