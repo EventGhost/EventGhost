@@ -23,9 +23,9 @@
 import eg
 import wx
 import sys
-import imp
 import traceback
 import weakref
+from types import ModuleType
 
 
 class Config(eg.PersistentData):
@@ -63,10 +63,9 @@ class PythonScript(eg.ActionBase):
 
         def __init__(self, sourceCode=""):
             idCounter = self.__class__.idCounter
-            self.__class__.idCounter += 1
-            mod = imp.new_module(str(idCounter))
-            self.mod = mod
+            self.mod = ModuleType(str(idCounter))
             self.sourceCode = sourceCode
+            self.__class__.idCounter += 1
             try:
                 self.code = compile(
                     sourceCode + "\n", str(idCounter), "exec", 0, 1
