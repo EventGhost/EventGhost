@@ -82,10 +82,12 @@ class ActionBase(object):
         # This Compile call is only here to support calls of pre-compiled 
         # actions (see below) like PythonScript/PythonCommand actions. 
         # Normally all actions will overwrite this __call__ method completely.
-        if self.Compile.im_func != ActionBase.Compile.im_func:
+        if self.__class__.Compile != ActionBase.Compile:
             self.Compile(*args)()
         else:
-            raise NotImplementedError
+            raise NotImplementedError(
+                "Action has no __call__ method implemented."
+            )
     
     
     def GetLabel(self, *args):
