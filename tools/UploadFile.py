@@ -22,6 +22,7 @@
 
 import wx
 import sys
+import os
 from time import clock
 from os.path import basename, getsize
 from threading import Thread
@@ -138,9 +139,7 @@ class ProgressFile(object):
         
         
         
-def UploadFile(filename, url, dialog):
-    log = dialog.messageCtrl.SetLabel
-    urlComponents = urlparse(url)
+def UploadWithFtp(urlComponents, filename, dialog, log):
     infile = ProgressFile(filename, dialog.SetProgress)
     log("Connecting to ftp://%s..." % urlComponents.hostname)
     ftp = FTP(
@@ -180,11 +179,92 @@ def UploadFile(filename, url, dialog):
         log("Upload done!")
     
     
+def UploadWithSftp(urlComponents, filename, dialog, log):
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        import paramiko
+    
+    infile = ProgressFile(filename, dialog.SetProgress)
+    log("Connecting to sftp://%s..." % urlComponents.hostname)
+    sshClient = paramiko.SSHClient()
+    sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    try:
+        sshClient.connect(
+            urlComponents.hostname, 
+            urlComponents.port, 
+            urlComponents.username, 
+            urlComponents.password,
+        )
+    except paramiko.SSHException:
+        exit("Error: Couldn't connect to server")
+    except paramiko.AuthenicationException:
+        exit("Error: Authentication Exception")
+    except paramiko.BadHostKeyException:
+        exit("Error: Bad Host Key Exception")
+ 
+    try:
+        client = sshClient.open_sftp()
+    except:
+        exit("Error: Can't create SFTP client")
+    def callback(i, j):
+        print i, j
+    log("Changing path to: %s" % urlComponents.path)  #IGNORE:E1101 
+    client.chdir(urlComponents.path) #IGNORE:E1101 
+    log("Getting directory listing...")
+    fileList = client.listdir(urlComponents.path)
+    log("Creating temp name.")
+    for i in range(0, 999999):
+        tempFileName = "tmp%06d" % i
+        if tempFileName not in fileList:
+            break
+    if urlComponents.path[-1] == "/":
+        remotePath = urlComponents.path
+    else:
+        remotePath = urlComponents.path + "/"
+    tmpPath = remotePath + tempFileName
+    log("Uploading " + basename(filename))
+    
+    file_size = os.stat(filename).st_size 
+    fr = client.file(tmpPath, 'wb') 
+    fr.set_pipelined(True) 
+    while True: 
+        data = infile.read(32768) 
+        if len(data) == 0: 
+            break 
+        fr.write(data) 
+    infile.close() 
+    fr.close() 
+    s = client.stat(tmpPath) 
+    
+    if dialog.abort:
+        client.remove(tmpPath)
+        log("Upload canceled by user.")
+    else:
+        if s.st_size != file_size: 
+            raise IOError('size mismatch in put!  %d != %d' % (s.st_size, file_size)) 
+        client.remove(remotePath + basename(filename))
+        client.rename(tmpPath, basename(filename))
+        log("Upload done!")
+    client.close()
+
+
+
+def UploadFile(filename, url, dialog):
+    log = dialog.messageCtrl.SetLabel
+    urlComponents = urlparse(url)
+    if urlComponents.scheme == "ftp":
+        UploadWithFtp(urlComponents, filename, dialog, log)
+    elif urlComponents.scheme == "sftp":
+        UploadWithSftp(urlComponents, filename, dialog, log)
+    else:
+        log("Unknown upload scheme: %s" % urlComponents.scheme)
+    
     
 class UploadDialog(wx.Dialog):
     """ The progress dialog that is shown while the file is uploaded. """
     
-    def __init__(self, parent, filename, url, stopEvent):
+    def __init__(self, parent, filename, url, stopEvent=None):
         self.stopEvent = stopEvent
         self.abort = False
         self.fileSize = getsize(filename)
@@ -276,7 +356,8 @@ class UploadDialog(wx.Dialog):
         try:
             UploadFile(filename, url, self)
         finally:
-            self.stopEvent.set()
+            if self.stopEvent:
+                self.stopEvent.set()
             wx.CallAfter(self.Destroy)
     
     
@@ -304,6 +385,7 @@ class UploadDialog(wx.Dialog):
         self.remainingSizeCtrl.SetLabel(
             FormatBytes(self.fileSize - transferedSize)
         )
+        
         
         
 def Main():
