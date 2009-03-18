@@ -35,7 +35,7 @@ class Motorola(ManchesterCoding1):
             raise DecodeError("wrong header pulse")
         if not (2000 < data[1] < 3000):
             raise DecodeError("wrong header pause")
-        print data
+        #print data
         self.SetData(data, 2)
         mask = 1
         buf = 0
