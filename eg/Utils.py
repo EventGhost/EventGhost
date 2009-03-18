@@ -23,7 +23,7 @@
 __all__ = ["Bunch", "NotificationHandler", "LogIt", "LogItWithReturn",
     "TimeIt", "AssertNotMainThread", "AssertNotActionThread", "ParseString",
     "SetDefault", "EnsureVisible", "AsGreenlet",
-    "VBoxSizer", "HBoxSizer", "EqualizeWidths", "wxDummyEvent",
+    "VBoxSizer", "HBoxSizer", "EqualizeWidths",
 ]
     
 import eg
@@ -33,6 +33,9 @@ import time
 import inspect
 from types import ClassType
 from functools import update_wrapper
+from docutils.core import publish_parts as ReSTPublishParts
+from docutils.writers.html4css1 import Writer
+
 
 
 class Bunch(object):
@@ -198,7 +201,6 @@ def ParseString(text, filterFunc=None):
     return "".join(chunks)
 
 
-from types import ClassType
 
 USER_CLASSES = (type, ClassType)
 
@@ -306,16 +308,6 @@ def EqualizeWidths(ctrls):
     for ctrl in ctrls:
         ctrl.SetMinSize((maxWidth, -1))
 
-
-class WxDummyEvent(object):
-    
-    def Skip(self, flag=True):
-        pass
-
-wxDummyEvent = WxDummyEvent()
-
-from docutils.core import publish_parts as ReSTPublishParts
-from docutils.writers.html4css1 import Writer
 
 DOC_WRITER_TEMPLATE = """\
 %(head_prefix)s
