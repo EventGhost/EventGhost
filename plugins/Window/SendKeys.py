@@ -27,8 +27,7 @@ you want into the edit-box.
 To emulate special-keys, you have to enclose a keyword in curly braces. 
 For example if you want to have a cursor-up-key you write **{Up}**. You
 can combine multiple keywords with the plus sign to get key-combinations like 
-**{Shift+Ctrl+F1}** or **{Ctrl+V}**. The keywords are not case-sensitive, so 
-you can write {SHIFT+ctrl+F1} as well if you like. 
+**{Shift+Ctrl+F1}** or **{Ctrl+V}**.
 
 Some keys differentiate between the left or the right side of the keyboard 
 and can then be prefixed with an "L" or "R", like the Windows-Key:
