@@ -70,11 +70,10 @@ IRCALLBACKFUNC = CFUNCTYPE(
 )
 
 
-class TTIR(eg.PluginBase):
+class TTIR(eg.IrDecoderPlugin):
     
     def __init__(self):
-        eg.PluginBase.__init__(self)
-        self.irDecoder = eg.IrDecoder(self, 1)
+        eg.IrDecoderPlugin.__init__(self, 1)
 
 
     def __close__(self):

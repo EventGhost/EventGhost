@@ -42,11 +42,10 @@ from ctypes import windll, byref, c_ubyte, c_int
 from functools import partial
 
 
-class IgorPlugUSB(eg.PluginBase):
+class IgorPlugUSB(eg.IrDecoderPlugin):
     
     def __init__(self):
-        eg.PluginBase.__init__(self)
-        self.irDecoder = eg.IrDecoder(self, 85.3)
+        eg.IrDecoderPlugin.__init__(self, 85.3)
 
         
     def __start__(self, led1=0, led2=0):
