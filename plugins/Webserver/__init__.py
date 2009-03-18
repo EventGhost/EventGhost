@@ -225,7 +225,7 @@ class Webserver(eg.PluginBase):
     def __stop__(self):
         if self.running:
             self.abort = True
-            conn = httplib.HTTPConnection("localhost:%d" % self.port)
+            conn = httplib.HTTPConnection("127.0.0.1:%d" % self.port)
             conn.request("QUIT", "/")
             conn.getresponse()
             self.httpd_thread = None
