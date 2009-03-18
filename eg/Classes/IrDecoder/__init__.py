@@ -185,6 +185,7 @@ class IrDecoder(object):
         self.lastDecoder = None
         self.event = None
         self.decoders = deque()
+        self.mapTable = {}
         for decoderCls in DECODERS:
             decoder = decoderCls(self)
             if decoderCls == Universal:
@@ -251,8 +252,13 @@ class IrDecoder(object):
                 code = uniCode
             
         self.lastDecoder = decoder
+        timeout = decoder.timeout
+        if code in self.mapTable:
+            code, timeout2, self.repeatCode = self.mapTable[code]
+            if timeout2 is not None:
+                timeout = timeout2
         if code != decoder.lastCode:
             self.event = self.plugin.TriggerEnduringEvent(code)
         decoder.lastCode = code
-        self.timer.Reset(decoder.timeout)
+        self.timer.Reset(timeout)
 
