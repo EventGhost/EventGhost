@@ -334,11 +334,12 @@ class Start(eg.ActionBase):
         panel = eg.ConfigPanel()
         cmdLineCtrl = panel.TextCtrl(cmdLineArgs)
         resultCtrl = eg.StaticTextBox(panel)
-        def OnTextChange(event=eg.wxDummyEvent):
+        def OnTextChange(event=None):
             cmdLineArgs = cmdLineCtrl.GetValue()
             cmdString = '"%s" %s' % (vlcPath, self.GetCmdLineArgs(cmdLineArgs))
             resultCtrl.SetValue(cmdString)
-            event.Skip()
+            if event:
+                event.Skip()
         OnTextChange()
         cmdLineCtrl.Bind(wx.EVT_TEXT, OnTextChange) 
 
