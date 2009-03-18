@@ -564,7 +564,6 @@ import wx.lib.evtmgr
 import wx.lib.expando
 import wx.lib.fancytext
 import wx.lib.filebrowsebutton
-import wx.lib.flashwin
 import wx.lib.flashwin_old
 import wx.lib.flatnotebook
 import wx.lib.foldmenu
