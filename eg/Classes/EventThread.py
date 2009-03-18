@@ -24,7 +24,13 @@ import eg
 import traceback
 import time
 from functools import partial
-from eg.WinApi.Dynamic import GetTickCount, OpenProcess, PROCESS_SET_QUOTA, SetProcessWorkingSetSize, FormatError
+from eg.WinApi.Dynamic import (
+    GetTickCount, 
+    OpenProcess, 
+    PROCESS_SET_QUOTA, 
+    SetProcessWorkingSetSize, 
+    FormatError,
+)
 
 EventGhostEvent = eg.EventGhostEvent
 
@@ -49,6 +55,7 @@ class EventThread(eg.ThreadWorker):
                 ):
                     #TODO: what to do here?
                     eg.PrintDebugNotice(FormatError())
+                    self.Poll = self.Poll2
             except:
                 self.Poll = self.Poll2
                 
