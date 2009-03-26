@@ -10,9 +10,9 @@ different ways:
 * Write or enhance the documentation for EventGhost. 
 * Write plugins for EventGhost
 * `Translate EventGhost 
-  <http://www.eventghost.org/forum/viewtopic.php?t=171>`_ to your language.
+  </forum/viewtopic.php?t=171>`_ to your language.
 * Help other people on the `EventGhost Forum 
-  <http://www.eventghost.org/forum/>`_.
+  </forum/>`_.
 * Donate money to this project through PayPal. 
 
   .. raw:: html
