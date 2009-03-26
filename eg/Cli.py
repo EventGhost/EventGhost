@@ -35,13 +35,6 @@ if hasattr(sys, "frozen"):
 else:
     MAIN_DIR = os.path.abspath(join(dirname(__file__), ".."))
 
-# change working directory to program directory
-os.chdir(MAIN_DIR)
-
-# append our pathes to sys.path
-#sys.path.append(join(mainDir, "eg"))
-#sys.path.append(join(mainDir, "plugins"))
-
 # determine the commandline parameters
 class args:
     hideOnStartup = False
@@ -132,3 +125,6 @@ if not args.allowMultiLoad and not args.translate and args.isMain:
             e.BringToFront()
         ctypes.windll.kernel32.ExitProcess(0)		
     
+# change working directory to program directory
+os.chdir(MAIN_DIR)
+
