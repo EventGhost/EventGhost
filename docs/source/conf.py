@@ -14,6 +14,8 @@
 #pylint: disable-msg=C0301, C0103, W0622
 
 import sys, os
+import locale
+locale.setlocale(locale.LC_ALL, 'English')
 
 # If your extensions are in another directory, add it here. If the directory
 # is relative to the documentation root, use os.path.abspath to make it
@@ -45,15 +47,15 @@ copyright = u'2008, EventGhost.org'
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '0.3.6'
+version = '0.3.7'
 # The full version, including alpha/beta/rc tags.
 release = version
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
-#today = ''
+today = ''
 # Else, today_fmt is used as the format for a strftime call.
-today_fmt = '%B %d, %Y'
+today_fmt = u'%B %d, %Y'
 
 # List of documents that shouldn't be included in the build.
 #unused_docs = []
