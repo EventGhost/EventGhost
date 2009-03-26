@@ -243,7 +243,8 @@ def UploadWithSftp(urlComponents, filename, dialog, log):
     else:
         if s.st_size != file_size: 
             raise IOError('size mismatch in put!  %d != %d' % (s.st_size, file_size)) 
-        client.remove(remotePath + basename(filename))
+        if basename(filename) in fileList:
+            client.remove(remotePath + basename(filename))
         client.rename(tmpPath, basename(filename))
         log("Upload done!")
     client.close()
