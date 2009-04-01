@@ -1,6 +1,6 @@
-version = "0.1.8"
+version = "0.1.9"
 # This file is part of EventGhost.
-# Copyright (C) 2008 Pako <lubos.ruckl@quick.cz>
+# Copyright (C) 2008, 2009  Pako <lubos.ruckl@quick.cz>
 #
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@ version = "0.1.8"
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# Last change: 2009-02-12 12:08
+# Last change: 2009-04-01 08:25
 
 
 eg.RegisterPlugin(
@@ -514,7 +514,7 @@ class Multitap(eg.PluginClass):
             w1,h1 = statTextEvent.GetTextExtent(self.evtName)
             w2,h2 = statTextNum.GetTextExtent(self.evtString)
             wE,hE = statTextNum.GetTextExtent('    ')
-            if self.mode==0 or self.mode==4:
+            if self.mode==0 or self.mode>=3:
                 w3,h3 = statTextCapsLock.GetTextExtent('Caps Lock')
                 w4a = keysLabel.GetTextExtent('88888888')[0]
                 w4b = keysLabel.GetTextExtent(self.oldKeys)[0]
@@ -529,7 +529,7 @@ class Multitap(eg.PluginClass):
             statTextNum.SetSize((w,h2))
             statTextEvent.SetPosition((7,7+h3))
             statTextEvent.SetSize((w,h1))
-            if self.mode==0 or self.mode==4:
+            if self.mode==0 or self.mode>=3:
                 statTextCapsLock.SetPosition((7,7))
                 statTextCapsLock.SetSize((w3,h3))
                 keysLabel.SetPosition((w+7-w4,7))
@@ -550,7 +550,7 @@ class Multitap(eg.PluginClass):
             sizer = self.osDialog.GetSizer()
             statTextEvent = sizer.GetChildren()[0].GetWindow()
             statTextNum = sizer.GetChildren()[1].GetWindow()
-            if self.mode==0 or self.mode==4:
+            if self.mode==0 or self.mode>=3:
                 statTextCapsLock = sizer.GetChildren()[2].GetWindow()
                 keysLabel = sizer.GetChildren()[3].GetWindow()
             setOsDialog()
@@ -604,7 +604,7 @@ class Multitap(eg.PluginClass):
             self.osDialog.SetSizer(mainSizer)
             mainSizer.Add(statTextEvent)
             mainSizer.Add(statTextNum)
-            if self.mode==0 or self.mode==4:
+            if self.mode==0 or self.mode>=3:
                 mainSizer.Add(statTextCapsLock)
                 mainSizer.Add(keysLabel)
                 keysLabel.SetForegroundColour(wx.Colour(238, 238, 0))
@@ -700,12 +700,13 @@ class Multitap(eg.PluginClass):
         self.timer.cancel()
         if self.mode == 3:
             self.mode = 4
+            self.shift = True
             self.evtName = ' '
             wx.CallAfter(self.showOsDialog)
         elif self.mode == 4:
             self.mode = 3
-            if self.osDialog is not None:
-                wx.CallAfter(self.closeOsDialog)
+            self.shift = False
+            wx.CallAfter(self.showOsDialog)
         elif self.mode == 0:
             self.shift = not self.shift
             if self.oldKeys != '':
