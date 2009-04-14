@@ -56,7 +56,7 @@ class LazyModule(ModuleType):
         return "<eg>"
 
 
-    def Run(self):
+    def Main(self):
         if Cli.args.install:
             return
         if Cli.args.translate:
