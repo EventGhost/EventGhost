@@ -346,7 +346,7 @@ class MceRemote(eg.PluginClass):
                 reg.HKEY_LOCAL_MACHINE, HID_SUB_KEY, 0, reg.KEY_READ
             )
         except WindowsError:
-            raise self.Exception.DeviceNotFound
+            raise self.Exceptions.DeviceNotFound
             
         needsChange = False
         for i in xrange(4):
