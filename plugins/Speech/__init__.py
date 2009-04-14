@@ -114,6 +114,8 @@ class CustomSlider(wx.Window):
     def OnScrollChanged(self, event=None):
         d = {"1": self.slider.GetValue()}
         self.valueLabelCtrl.SetLabel(self.valueLabel % d)
+        if event:
+            wx.PostEvent(self, eg.ValueChangedEvent(self.GetId()))
         
     
     def GetValue(self):
