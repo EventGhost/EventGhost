@@ -324,7 +324,8 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         self.buttonsEnabled = flag
         buttonRow = self.dialog.buttonRow
         buttonRow.okButton.Enable(flag)
-        buttonRow.testButton.Enable(flag)
+        if buttonRow.testButton:
+            buttonRow.testButton.Enable(flag)
         if flag and self.isDirty:
             buttonRow.applyButton.Enable(True)
         else:
