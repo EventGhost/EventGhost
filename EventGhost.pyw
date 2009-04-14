@@ -20,17 +20,13 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-
-# start the main program
 import sys
-from os.path import dirname
 
 if hasattr(sys, "frozen"):
+    from os.path import dirname
     APP_DIR = dirname(unicode(sys.executable, sys.getfilesystemencoding()))
-else:
-    APP_DIR = dirname(unicode(__file__, sys.getfilesystemencoding()))
-sys.path.append(APP_DIR)
+    sys.path.append(APP_DIR)
 
 import eg
-eg.Run()
+eg.Main()
 
