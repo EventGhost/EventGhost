@@ -39,7 +39,7 @@ class EventDropSource(wx.DropSource):
     
         # Now make a data object for the text and also a composite
         # data object holding both of the others.
-        textData = wx.TextDataObject(text)
+        textData = wx.TextDataObject(text.decode("UTF-8"))
         
         data = wx.DataObjectComposite()
         data.Add(textData)
