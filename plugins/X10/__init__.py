@@ -235,7 +235,7 @@ class X10Events:
         if eKeyState == 3:
             return
         plugin = self.plugin
-        remoteId = REMOTE_IDS[(lAddress / 4) * 4]
+        remoteId = REMOTE_IDS[lAddress & 0xF0]
         if remoteId not in plugin.ids:
             return
         event = str(bszCommand)
