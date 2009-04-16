@@ -99,8 +99,6 @@ class Fhz1000Pc(eg.PluginBase):
         d2xx.FT_SetFlowControl(self.ftHandle, 0, 17, 19)
         d2xx.FT_SetTimeouts(self.ftHandle, 1000, 1000)
         
-        self.receiveThread.SuspendReadEvents()
-        self.receiveThread.SetReadEventCallback(self.HandleReceive)
         self.receiveThread.Start()
         # Say hello
         self.WriteFhz(0xC9, 0x02, 0x01, 0x1f, 0x42)
@@ -126,8 +124,7 @@ class Fhz1000Pc(eg.PluginBase):
             self.nextTaskTime, 
             self.TimeScheduleTask
         )
-        self.receiveThread.ResumeReadEvents()
-        
+        self.receiveThread.SetReadEventCallback(self.HandleReceive)
         
         
     def __stop__(self):
@@ -190,7 +187,7 @@ class Fhz1000Pc(eg.PluginBase):
         newCrc = 0xff & sum(data[2:])
         if eg.debugLevel:
             dataStr = " ".join(["%02X" % x for x in data])
-            print ("-> %02X %02X " % (startByte, length)) + dataStr
+            print ("-> %02X %02X " % (ord(startByte), length)) + dataStr
         return telegramType, data[2:]
     
     
