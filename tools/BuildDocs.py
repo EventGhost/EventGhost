@@ -10,7 +10,7 @@ MY_DIR = os.path.dirname(__file__)
 MAIN_DIR = os.path.abspath(join(MY_DIR, ".."))
 DOCS_MAIN_DIR = join(MAIN_DIR, "docs")
 DOCS_SOURCE_DIR = join(DOCS_MAIN_DIR, "source")
-DOCS_HTML_BUILD_DIR = join(DOCS_MAIN_DIR, "html")
+DOCS_HTML_BUILD_DIR = join(DOCS_MAIN_DIR, "../website/docs")
 DOCS_CHM_BUILD_DIR = join(DOCS_MAIN_DIR, "chm")
 
 
