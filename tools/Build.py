@@ -32,6 +32,7 @@ import imp
 import subprocess
 import warnings
 
+from string import digits
 from os.path import dirname, join, exists, abspath
 from glob import glob
 
@@ -102,6 +103,8 @@ def CompareVersion(actualVersion, wantedVersion):
     for i in range(numParts):
         wantedPart = wantedParts[i]
         actualPart = actualParts[i]
+        wantedPart = int(filter(lambda c: c in digits, wantedPart))
+        actualPart = int(filter(lambda c: c in digits, actualPart))
         if wantedPart > actualPart:
             return -1
         elif wantedPart < actualPart:
@@ -190,7 +193,7 @@ OutputDir=%(outputDir)s
 OutputBaseFilename=%(outputBaseFilename)s
 InfoBeforeFile=%(toolsDir)s\\LICENSE.RTF
 DisableReadyPage=yes
-AppMutex=EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B
+AppMutex=Global\\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B
 
 [Code]
 
@@ -298,7 +301,7 @@ EXCLUDED_MODULES = [
 
 
 class MyInstaller(InnoInstaller):
-    appShortName = "EventGhost"
+    appShortName = "EventGhost_Py%d%d" % sys.version_info[:2]
     mainScript = "../EventGhost.pyw"
     icon = "EventGhost.ico"
     excludes = EXCLUDED_MODULES
@@ -418,7 +421,7 @@ class MyInstaller(InnoInstaller):
         for filename in glob(join(self.libraryDir, '*.*')):
             self.AddFile(filename, self.libraryName)
         self.AddFile(
-            join(self.sourceDir, "EventGhost_Py%s.exe" % self.pyVersion), 
+            join(self.sourceDir, self.appShortName + ".exe"), 
             destName="EventGhost.exe"
         )
         self.AddFile(
@@ -529,7 +532,7 @@ class MainDialog(wx.Dialog):
         # create controls
         self.ctrls = {}
         ctrlsSizer = wx.BoxSizer(wx.VERTICAL)
-        for option in list(options)[:-1]:
+        for option in options._options[:-1]:
             ctrl = wx.CheckBox(self, -1, option.label)
             ctrl.SetValue(bool(option.value))
             ctrlsSizer.Add(ctrl, 0, wx.ALL, 5)
@@ -579,7 +582,7 @@ class MainDialog(wx.Dialog):
         self.okButton.Enable(False)
         self.cancelButton.Enable(False)
         #self.SetWindowStyleFlag(wx.CAPTION|wx.RESIZE_BORDER)
-        for option in list(self.options)[:-1]:
+        for option in self.options._options[:-1]:
             ctrl = self.ctrls[option.name]
             setattr(self.options, option.name, ctrl.GetValue())
             ctrl.Enable(False)
