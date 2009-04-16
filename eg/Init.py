@@ -40,29 +40,12 @@ def InitPil():
     Image._initialized = 2  
 
 
-
-class LateModule(ModuleType):
-    
-    def __init__(self, name):
-        self.__name__ = name
-        sys.modules[name] = self
-        
-    def __getattr__(self, name):
-        del sys.modules[self.__name__]
-        mod = __import__(self.__name__)
-        import traceback
-        print self.__name__ + " got loaded!", traceback.extract_stack()
-        self.__dict__.update(mod.__dict__)
-        return mod.__dict__[name]
-    
-    
-        
 def InitPathesAndBuiltins():
-    
+    mainDir = os.path.abspath(os.path.join(os.path.dirname(eg.__file__), ".."))
+    sys.path.append(mainDir)
     sys.path.append(
-        os.path.abspath("lib%d%d\\site-packages" % sys.version_info[:2])
+        os.path.join(mainDir, "lib%d%d" % sys.version_info[:2], "site-packages")
     )
-    sys.path.append(os.getcwdu())
     
     import cFunctions
     sys.modules["eg.cFunctions"] = cFunctions
