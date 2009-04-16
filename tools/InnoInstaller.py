@@ -53,6 +53,9 @@ class StdHandler(object):
         self.buf = lines[-1]
         
         
+    def flush(self):
+        pass
+    
         
 LOG_FILENAME = 'Build.log'
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG,)
@@ -185,7 +188,7 @@ class InnoInstaller(object):
             ],
             # use out build_installer class as extended py2exe build command
             #cmdclass = {"py2exe": py2exe.run},
-            verbose = 0,
+            verbose = 1,
         )
         if self.icon:
             self.py2exeOptions["windows"][0]["icon_resources"].append(
