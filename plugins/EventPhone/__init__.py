@@ -22,7 +22,11 @@
 # EventGhost
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
 #
+# $LastChangedDate: 2009-02-07 20:13:27 +0100 (Sa, 07 Feb 2009) $
+# $LastChangedRevision: 831 $
+# $LastChangedBy: bitmonster $
 
+import eg
 
 eg.RegisterPlugin(
     name = "EventPhone iPhone/iPod Touch Remote",
@@ -61,13 +65,12 @@ eg.RegisterPlugin(
     ),
 )
 
-
+import wx
 import asynchat
 import asyncore
-import md5
+from hashlib import md5
 import random
 import socket
-
 
 
 class Text:
@@ -78,14 +81,21 @@ class Text:
     securityBox = "Security"
     eventGenerationBox = "Event generation"
     
+    
+DEBUG = False
+if DEBUG:
+    log = eg.Print
+else:
+    def log(dummyMesg):
+        pass
+    
 
-
-class Server_Handler (asynchat.async_chat):
+class ServerHandler(asynchat.async_chat):
     """Telnet engine class. Implements command line user interface."""
     
-    def __init__ (self, sock, addr, hex_md5, cookie, plugin, server_ref):
+    def __init__(self, sock, addr, hex_md5, cookie, plugin, server):
+        log("Server Handler inited")
         self.plugin = plugin
-        self.server_ref = server_ref
         
         # Call constructor of the parent class
         asynchat.async_chat.__init__(self, sock)
@@ -107,14 +117,21 @@ class Server_Handler (asynchat.async_chat):
         asynchat.async_chat.handle_close(self)
     
     
-    def collect_incoming_data (self, data):
+    def collect_incoming_data(self, data):
         """Put data read from socket to a buffer
         """
         # Collect data in input buffer
+        log("<<" + repr(data))
         self.data = self.data + data
 
 
-    def found_terminator (self):
+    if DEBUG:
+        def push(self, data):
+            log(">>", repr(data))
+            asynchat.async_chat.push(self, data)
+    
+    
+    def found_terminator(self):
         """
         This method is called by asynchronous engine when it finds
         command terminator in the input stream
@@ -138,6 +155,9 @@ class Server_Handler (asynchat.async_chat):
  
 
     def state1(self, line):
+        """
+        get keyword "iphone\n" and send cookie
+        """
         line = line.strip()
         if line == "iphone":
             self.state = self.state2
@@ -156,7 +176,7 @@ class Server_Handler (asynchat.async_chat):
             self.push("version:" +eg.Version.string+ "\n")
             self.state = self.state3
         else:
-            eg.PrintError("EventPhone Remote MD5 Password Error")
+            eg.PrintError("EventPhone Remote md5 error")
             self.initiate_close()
             
             
@@ -168,11 +188,9 @@ class Server_Handler (asynchat.async_chat):
             self.payload.append(line[8:])
         else:
             if line == "ButtonReleased":
-                eg.PrintError("ButtonReleased")
                 self.plugin.EndLastEvent()
             else:
                 if self.payload[-1] == "withoutRelease":
-                    eg.PrintError("withoutRelease") 
                     self.plugin.TriggerEnduringEvent(line, self.payload)
                 else:
                     self.plugin.TriggerEvent(line, self.payload)
@@ -184,11 +202,9 @@ class Server(asyncore.dispatcher):
     
     def __init__ (self, port, password, handler):
         self.handler = handler
-        m = md5.new()
         self.cookie = hex(random.randrange(65536))
         self.cookie = self.cookie[len(self.cookie) - 4:]
-        m.update(self.cookie + ":" + password)
-        self.hex_md5 = m.hexdigest().upper()
+        self.hex_md5 = md5(self.cookie + ":" + password).hexdigest().upper()
 
         # Call parent class constructor explicitly
         asyncore.dispatcher.__init__(self)
@@ -213,8 +229,9 @@ class Server(asyncore.dispatcher):
     def handle_accept (self):
         """Called by asyncore engine when new connection arrives"""
         # Accept new connection
+        log("handle_accept")
         (sock, addr) = self.accept()
-        Server_Handler(
+        ServerHandler(
             sock, 
             addr, 
             self.hex_md5, 
@@ -225,9 +242,12 @@ class Server(asyncore.dispatcher):
 
 
 
-class EventPhone(eg.PluginClass):
+class EventPhone(eg.PluginBase):
     canMultiLoad = True
     text = Text
+    
+    def __init__(self):
+        self.AddEvents()
     
     def __start__(self, port, password, prefix):
         self.port = port
@@ -247,7 +267,7 @@ class EventPhone(eg.PluginClass):
 
     def Configure(self, port=1025, password="", prefix="Apple"):
         text = self.text
-        panel = eg.ConfigPanel(self)
+        panel = eg.ConfigPanel()
         
         portCtrl = panel.SpinIntCtrl(port, max=65535)
         passwordCtrl = panel.TextCtrl(password, style=wx.TE_PASSWORD)
@@ -258,7 +278,9 @@ class EventPhone(eg.PluginClass):
         eg.EqualizeWidths((st1, st2, st3))
         box1 = panel.BoxedGroup(text.tcpBox, (st1, portCtrl))
         box2 = panel.BoxedGroup(text.securityBox, (st2, passwordCtrl))
-        box3 = panel.BoxedGroup(text.eventGenerationBox, (st3, eventPrefixCtrl))
+        box3 = panel.BoxedGroup(
+            text.eventGenerationBox, (st3, eventPrefixCtrl)
+        )
         panel.sizer.AddMany([
             (box1, 0, wx.EXPAND),
             (box2, 0, wx.EXPAND|wx.TOP, 10),
