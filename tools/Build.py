@@ -314,18 +314,17 @@ class MyInstaller(InnoInstaller):
 
     def UpdateVersionFile(self):
         """
-        Update buildTime and revision in eg/Classes/Version.py
+        Update buildTime and revision for eg/Classes/Version.py
         """
         self.svnRevision = self.GetSvnRevision()
-        versionFilePath = self.sourceDir + "/eg/Classes/Version.py"
-        outFilePath = join(self.tmpDir, "VersionRevision.py")
-        outfile = open(outFilePath, "wt")
+        outfile = open(join(self.tmpDir, "VersionRevision.py"), "wt")
         outfile.write("revision = %r\n" % self.svnRevision)
         outfile.write("buildTime = %f\n" % time.time())
         outfile.close()
+        versionFilePath = join(self.sourceDir, "eg/Classes/Version.py")
         mod = imp.load_source("Version", versionFilePath)
         self.appVersion = mod.Version.base + (".r%s" % self.svnRevision)
-        self.outputBaseFilename = "EventGhost_%(appVersion)s_Setup" % self
+        self.outputBaseFilename = "EventGhost_%s_Setup" % self.appVersion
         
     
     def UpdateChangeLog(self):    
