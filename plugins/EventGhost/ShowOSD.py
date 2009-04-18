@@ -27,8 +27,14 @@ import os
 from os.path import join
 from eg.WinApi.Utils import GetMonitorDimensions
 from eg.WinApi.Dynamic import (
-    CreateEvent, SetEvent, SetWindowPos, SWP_HIDEWINDOW, SWP_FRAMECHANGED,
-    SWP_NOACTIVATE, SWP_NOOWNERZORDER, SWP_SHOWWINDOW
+    CreateEvent, 
+    SetEvent, 
+    SetWindowPos, 
+    SWP_HIDEWINDOW, 
+    SWP_FRAMECHANGED,
+    SWP_NOACTIVATE, 
+    SWP_NOOWNERZORDER, 
+    SWP_SHOWWINDOW
 )
 
 HWND_FLAGS = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_FRAMECHANGED
@@ -212,7 +218,6 @@ class OSDFrame(wx.Frame):
             bitmap.SetMask(wx.Mask(bitmap, maskColour))
                 
         region = wx.RegionFromBitmap(bitmap)
-        width = region.GetBox()[2]
         self.SetShape(region)
         self.bitmap = bitmap
         monitorDimensions = GetMonitorDimensions()
