@@ -31,7 +31,7 @@ class Cut:
             return
 
         self.data = item.GetFullXml()
-        self.positionData = item.GetPositionData()
+        self.positionData = eg.TreePosition(item)
         document.AppendUndoHandler(self)
         document.tree.Copy()
         item.Delete()

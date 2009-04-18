@@ -107,7 +107,7 @@ class Configure:
         newArgumentString = item.GetArgumentString()
         if self.oldArgumentString != newArgumentString:
             if not isFirstConfigure:
-                self.positionData = item.GetPositionData()
+                self.positionData = eg.TreePosition(item)
                 item.document.AppendUndoHandler(self)
             item.Refresh()
         return True

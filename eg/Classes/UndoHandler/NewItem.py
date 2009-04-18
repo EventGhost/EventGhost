@@ -27,8 +27,7 @@ class NewItem:
     """
     
     def StoreItem(self, item):
-        self.positionData = item.GetPositionData()
-        self.cls = item.__class__
+        self.positionData = eg.TreePosition(item)
         item.document.AppendUndoHandler(self)
     
     

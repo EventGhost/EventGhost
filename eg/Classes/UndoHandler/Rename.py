@@ -26,22 +26,22 @@ import eg
 class Rename:
     name = eg.text.MainFrame.Menu.Rename.replace("&", "")
     
-    def __init__(self, document, item, text):
-        self.oldText = item.name
-        self.positionData = item.GetPositionData()
-        self.text = text
-        item.RenameTo(text)
+    def __init__(self, document, item, newName):
+        self.newName = newName
+        self.oldName = item.name
+        self.positionData = eg.TreePosition(item)
+        item.RenameTo(newName)
         document.AppendUndoHandler(self)
         
         
     def Undo(self, document):
         item = self.positionData.GetItem()
-        item.RenameTo(self.oldText)
+        item.RenameTo(self.oldName)
         item.Select()
         
         
     def Redo(self, document):
         item = self.positionData.GetItem()
-        item.RenameTo(self.text)
+        item.RenameTo(self.newName)
         item.Select()
 

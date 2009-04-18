@@ -28,7 +28,7 @@ class ToggleEnable:
     
     def __init__(self, document):
         item = document.selection
-        self.positionData = item.GetPositionData()
+        self.positionData = eg.TreePosition(item)
         self.state = not item.isEnabled
         item.Enable(self.state)
         document.AppendUndoHandler(self)
