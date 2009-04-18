@@ -28,7 +28,6 @@ from cStringIO import StringIO
 import xml.etree.cElementTree as ElementTree
 
 from TreeLink import TreeLink
-from TreePosition import TreePosition
 
 HINT_NO_DROP = None           # item cannot be dropped on it
 HINT_MOVE_INSIDE = 1          # item would be dropped inside
@@ -206,13 +205,6 @@ class TreeItem(object):
             tree.SelectItem(self.id)
         
         
-    def GetPositionData(self):
-        """ 
-        Returns a TreePosition object to the item.
-        """    
-        return TreePosition(self)
-    
-    
     @eg.AssertNotMainThread
     def Delete(self):
         if self.HasValidId():
@@ -453,7 +445,6 @@ class TreeItem(object):
         kwargs.setdefault("source", self)
         kwargs.setdefault("icon", self.icon)
         kwargs.setdefault("indent", 1)
-        
         eg.Print(*args, **kwargs)
         
     
@@ -474,7 +465,6 @@ class TreeItem(object):
         expanded. So this can be used to forward traverse through the tree
         from any starting position.
         """
-        
         if len(self.childs):
             return self.childs[0]
         while True:

@@ -101,7 +101,7 @@ class Paste:
                 )
                 obj.RestoreState()
                 targetObj.AddChild(obj, pos)
-                self.items.append(obj.GetPositionData())
+                self.items.append(eg.TreePosition(obj))
             if len(self.items):
                 obj.Select()
                 document.TreeLink.StopLoad()

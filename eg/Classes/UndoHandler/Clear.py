@@ -31,7 +31,7 @@ class Clear:
             return
 
         self.data = item.GetFullXml()
-        self.positionData = item.GetPositionData()
+        self.positionData = eg.TreePosition(item)
         document.AppendUndoHandler(self)
         item.Delete()
 

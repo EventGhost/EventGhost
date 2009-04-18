@@ -35,7 +35,7 @@ class MoveTo:
         item.MoveItemTo(parent, pos)
         tree.EnsureVisible(tmp)
         self.oldParentPath = oldParent.GetPath()
-        self.newPositionData = item.GetPositionData()
+        self.newPositionData = eg.TreePosition(item)
         item.Select()
         document.AppendUndoHandler(self)
     
@@ -55,7 +55,7 @@ class MoveTo:
                 oldPos += 1
         item.MoveItemTo(parent, oldPos)
         self.oldParentPath = oldParent.GetPath()
-        self.newPositionData = item.GetPositionData()
+        self.newPositionData = eg.TreePosition(item)
         item.Select()
         
     Redo = Undo
