@@ -318,22 +318,13 @@ class MyInstaller(InnoInstaller):
         """
         self.svnRevision = self.GetSvnRevision()
         versionFilePath = self.sourceDir + "/eg/Classes/Version.py"
-        outFilePath = versionFilePath #join(self.tmpDir, "Version.py")
-        lines = open(versionFilePath, "rt").readlines()
+        outFilePath = join(self.tmpDir, "VersionRevision.py")
         outfile = open(outFilePath, "wt")
-        # update revision and buildTime in eg/Classes/Version.py
-        for line in lines:
-            if line.strip().startswith("buildTime"):
-                parts = line.split("=")
-                outfile.write(parts[0] + "= " + str(time.time()) + "\n")
-            elif line.strip().startswith("revision"):
-                parts = line.split("=")
-                outfile.write("%s= %d\n" % (parts[0], self.svnRevision))
-            else:
-                outfile.write(line)
+        outfile.write("revision = %r\n" % self.svnRevision)
+        outfile.write("buildTime = %f\n" % time.time())
         outfile.close()
-        mod = imp.load_source("Version", outFilePath)
-        self.appVersion = mod.Version.string
+        mod = imp.load_source("Version", versionFilePath)
+        self.appVersion = mod.Version.base + (".r%s" % self.svnRevision)
         self.outputBaseFilename = "EventGhost_%(appVersion)s_Setup" % self
         
     
@@ -431,6 +422,10 @@ class MyInstaller(InnoInstaller):
         self.AddFile(
             join(self.sourceDir, "pyw%s.exe" % self.pyVersion), 
             destName="pyw.exe"
+        )
+        self.AddFile(
+            join(self.tmpDir, "VersionRevision.py"), 
+            destDir="eg/Classes"
         )
         # create entries in the [InstallDelete] section of the Inno script to
         # remove all known plugin directories before installing the new 
