@@ -194,10 +194,8 @@ class USB_UIRT(eg.IrDecoderPlugin):
         if hDrvHandle == INVALID_HANDLE_VALUE:
             err = GetLastError()
             if err == UUIRTDRV_ERR_NO_DLL:
-                print "no dll"
-                raise self.Exceptions.DeviceNotFound
+                raise self.Exceptions.DriverNotFound
             elif err == UUIRTDRV_ERR_NO_DEVICE:
-                print "no device"
                 raise self.Exceptions.DeviceNotFound
             elif err == UUIRTDRV_ERR_NO_RESP:
                 raise self.Exceptions.DeviceInitFailed
