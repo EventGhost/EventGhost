@@ -20,19 +20,16 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-try:
-    import VersionRevision
-except ImportError:
-    VersionRevision = None
 
 
 class Version:
     base = "0.3.7"
-    if VersionRevision:
-        revision = VersionRevision.revision
-        buildTime = VersionRevision.buildTime
-        string = base + (".r%s" % revision)
-    else:
+    try:
+        from VersionRevision import revision, buildTime
+        string = base + ".r%s" % revision
+    except ImportError:
         revision = "dev"
         buildTime = 0
         string = base + ".dev"
+    
+
