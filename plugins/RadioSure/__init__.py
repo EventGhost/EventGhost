@@ -62,16 +62,20 @@ eg.RegisterPlugin(
 # ==============================================================================
 # 2009-04-18 Pako
 #     * initial (beta) version 0.1.0
+# 2009-04-20 Pako
+#     * bug fix (action Run)
+#     * version same as above
 #===============================================================================
 
 import os
+import subprocess
 import xml.sax as sax
 from xml.sax.handler import ContentHandler
 from threading import Timer
 from eg.WinApi.Dynamic import CreateEvent, SetEvent
 from time import sleep
 from win32gui import GetWindowText, MessageBox, GetWindow, GetDlgCtrlID, GetDlgItem, GetClassName
-from win32api import ShellExecute, GetSystemMetrics
+from win32api import GetSystemMetrics
 from eg.WinApi.Dynamic import SendMessage
 import _winreg
 from locale import getdefaultlocale as Locale
@@ -92,7 +96,6 @@ class Text:
     label2 = "Folder with RadioSure.xml:"
     filemask = "RadioSure.exe|RadioSure.exe|All-Files (*.*)|*.*"
     text1 = "Couldn't find RadioSure window !"
-    text2 = "Couldn't find file %s !"
     browseTitle = "Selected folder:"
     toolTipFolder = "Press button and browse to select folder ..."
     boxTitle = 'Folder "%s" is incorrect'
@@ -329,44 +332,6 @@ class MenuFontButton(wx.BitmapButton):
     def SetValue(self, fontInfo):
         self.fontInfo = fontInfo
 #===============================================================================
-            
-def HandleRS():
-    FindRS = eg.WindowMatcher(
-                u'RadioSure.exe',
-                None,
-                u'#32770',
-                None,
-                None,
-                None,
-                True,
-                0.0,
-                0
-            )
-    hwnds = FindRS()
-    res = None
-        
-    for hwnd in hwnds:
-        curhw = GetWindow(hwnd,GW_CHILD)
-        while curhw > 0:
-            if GetDlgCtrlID(curhw) == 1016 and GetClassName(curhw) == 'SysListView32':
-                res = hwnd
-                break
-            curhw = GetWindow(curhw,GW_HWNDNEXT)
-        if res:
-            break           
-    return res
-#===============================================================================
-
-def GetCtrlByID(id):
-    res = None
-    hwnd = HandleRS()
-    if hwnd:
-        try:
-            res = GetDlgItem(hwnd,id)
-        except:
-            pass
-    return res
-#===============================================================================
 
 class my_xml_handler(ContentHandler):
     def __init__(
@@ -412,6 +377,57 @@ class my_xml_handler(ContentHandler):
     def characters( self, content):
         self._recent_text += content
 #===============================================================================
+            
+def HandleRS():
+    FindRS = eg.WindowMatcher(
+                u'RadioSure.exe',
+                None,
+                u'#32770',
+                None,
+                None,
+                None,
+                True,
+                0.0,
+                0
+            )
+    hwnds = FindRS()
+    res = None
+        
+    for hwnd in hwnds:
+        curhw = GetWindow(hwnd,GW_CHILD)
+        while curhw > 0:
+            if GetDlgCtrlID(curhw) == 1016 and GetClassName(curhw) == 'SysListView32':
+                res = hwnd
+                break
+            curhw = GetWindow(curhw,GW_HWNDNEXT)
+        if res:
+            break           
+    return res
+#===============================================================================
+
+def GetCtrlByID(id):
+    res = None
+    hwnd = HandleRS()
+    if hwnd:
+        try:
+            res = GetDlgItem(hwnd,id)
+        except:
+            pass
+    return res
+#===============================================================================
+
+def getPathFromReg():
+    try:
+        rs_reg = _winreg.OpenKey(
+            _winreg.HKEY_CURRENT_USER,
+            "Software\\RadioSure"
+        )
+        res = unicode(_winreg.EnumValue(rs_reg,0)[1])
+        _winreg.CloseKey(rs_reg)
+    except:
+        res = None
+    return res
+#===============================================================================
 
 class RadioSure(eg.PluginClass):
     text=Text
@@ -438,21 +454,7 @@ class RadioSure(eg.PluginClass):
             self.HistIx = self.History.index(self.Current)
         else:
             self.HistIx = -1
-            
-    def Execute(self, exe, path):
-        try:
-            res = ShellExecute(
-                0, 
-                None, 
-                exe,
-                None, 
-                path, 
-                1
-            )
-        except:
-            res = None
-            self.PrintError(self.text.text2 % exe)
-        return res
+
         
     def PlayFromMenu(self):
         if self.menuDlg is not None:
@@ -496,24 +498,20 @@ class RadioSure(eg.PluginClass):
             dialogTitle = self.text.browseTitle,
             buttonText = eg.text.General.browse
         )        
-        xmlPathCtrl.GetTextCtrl().SetEditable(False)
+        xmlPathCtrl.GetTextCtrl().SetEditable(False)        
     
         if path is None:
-            try:
-                rs_reg = _winreg.OpenKey(
-                    _winreg.HKEY_CURRENT_USER,
-                    "Software\\RadioSure"
-                )
-                self.RadioSurePath = unicode(_winreg.EnumValue(rs_reg,0)[1])
-                _winreg.CloseKey(rs_reg)
-                self.xmlPath = unicode(eg.folderPath.LocalAppData)+u"\\RadioSure"
+            RSpath = getPathFromReg()
+            if RSpath:
+                self.RadioSurePath = RSpath
+                #self.xmlPath = unicode(eg.folderPath.LocalAppData)+u"\\RadioSure"
                 rsPathCtrl.SetValue(self.RadioSurePath)
-                xmlPathCtrl.SetValue(self.xmlPath)
-            except:
+                #xmlPathCtrl.SetValue(self.xmlPath)
+            else:
                 self.RadioSurePath = unicode(eg.folderPath.ProgramFiles)+"\\RadioSure"
-                self.xmlPath = self.RadioSurePath
+                #self.xmlPath = self.RadioSurePath
                 rsPathCtrl.SetValue("")
-                xmlPathCtrl.SetValue("")
+                #xmlPathCtrl.SetValue("")
 
         else:
             rsPathCtrl.SetValue(path)
@@ -548,6 +546,13 @@ class RadioSure(eg.PluginClass):
                     )
             if path != "":
                 rsPathCtrl.startDirectory = path
+                self.RadioSurePath = path
+                RSpath = getPathFromReg()
+                if RSpath and path == RSpath:
+                    self.xmlPath = unicode(eg.folderPath.LocalAppData)+u"\\RadioSure"
+                else:
+                    self.xmlPath = self.RadioSurePath
+                xmlPathCtrl.SetValue(self.xmlPath)
             Validation()
         rsPathCtrl.Bind(wx.EVT_TEXT,OnPathChange)
         OnPathChange()        
@@ -585,20 +590,25 @@ class Run(eg.ActionClass):
         over = "Too large number (%s > %s) !"
         alt_ret = "Default start"
         alr_run = "RadioSure is already running !"
+        text2 = "Couldn't find file %s !"
+
+
+
 
     def __call__(self, play = False, fav = 1):
-        hwnd = HandleRS()
+        hwnd = HandleRS()        
         if hwnd is None:
-            flag = self.plugin.Execute('RadioSure.exe',self.plugin.RadioSurePath)
-            if flag:
+            rs = self.plugin.RadioSurePath+'\\RadioSure.exe'
+            if os.path.isfile(rs):        
+                wx.CallAfter(subprocess.Popen,[rs])
                 if play:
                     for n in range(50):                
                         sleep(.1)
                         hwnd = HandleRS()
                         if hwnd:
-                            flag = False
+                            flag = True
                             break
-                    if not flag:
+                    if flag:
                         SendMessage(hwnd, WM_COMMAND, 1008, 0) #Stop playing
                         sleep(2.5)
                         self.plugin.RefreshVariables()
@@ -609,9 +619,13 @@ class Run(eg.ActionClass):
                             return self.text.over % (str(fav),\
                                 str(len(self.plugin.Favorites)))
                     else:
+                        self.PrintError(self.plugin.text.text1)
                         return self.plugin.text.text1
                 else:
                     return self.text.alt_ret
+            else:
+                self.PrintError(self.text.text2 % 'RadioSure.exe')
+                return self.text.text2 % 'RadioSure.exe'
         else:
             return self.text.alr_run
                    
@@ -639,14 +653,14 @@ class Run(eg.ActionClass):
         favCtrl.SetValue(fav)
         sizerAdd(favCtrl,0,wx.TOP,5)
         
-        def OnAutostart(evt=None):
+        def onChangeMode(evt=None):
             enbl=rb1.GetValue()
             favLbl.Enable(enbl)
             favCtrl.Enable(enbl)
             if evt is not None:
                 evt.Skip()
-        rb1.Bind(wx.EVT_RADIOBUTTON, OnAutostart)
-        rb2.Bind(wx.EVT_RADIOBUTTON, OnAutostart)
+        rb1.Bind(wx.EVT_RADIOBUTTON, onChangeMode)
+        rb2.Bind(wx.EVT_RADIOBUTTON, onChangeMode)
         OnAutostart()
                 
         while panel.Affirmed():
