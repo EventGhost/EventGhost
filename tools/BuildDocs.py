@@ -176,7 +176,7 @@ def Main(buildHtml=True, buildChm=False):
             #"-a",
             "-b", "html",
             #"-E",
-            "-D", "release=%s" % eg.Version.string,
+            "-D", "release=%s" % eg.Version.base,
             "-d", join(DOCS_MAIN_DIR, ".doctree"),
             DOCS_SOURCE_DIR,
             DOCS_HTML_BUILD_DIR,
@@ -188,12 +188,14 @@ def Main(buildHtml=True, buildChm=False):
             #"-a",
             "-b", "htmlhelp",
             "-E",
-            "-D", "release=%s" % eg.Version.string,
+            "-D", "release=%s" % eg.Version.base,
+            "-D", "templates_path=[]",
             "-d", join(DOCS_MAIN_DIR, ".doctree"),
             DOCS_SOURCE_DIR,
             DOCS_CHM_BUILD_DIR,
         ])
         
+        print "calling HTML Help Workshop compiler"
         htmlHelpCompilerPath = GetHtmlHelpCompilerPath()
         if htmlHelpCompilerPath is None:
             raise Exception(
