@@ -246,6 +246,8 @@ def UploadWithSftp(urlComponents, filename, dialog, log):
         if basename(filename) in fileList:
             client.remove(remotePath + basename(filename))
         client.rename(tmpPath, basename(filename))
+        localStat = os.stat(filename)
+        client.utime(remotePath + basename(filename), (localStat.st_atime, localStat.st_mtime))
         log("Upload done!")
     client.close()
 
