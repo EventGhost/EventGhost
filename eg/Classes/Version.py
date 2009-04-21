@@ -21,14 +21,13 @@
 # $LastChangedBy$
 
 
-
 class Version:
     base = "0.3.7"
     try:
         from VersionRevision import revision, buildTime
         string = base + ".r%s" % revision
     except ImportError:
-        revision = "dev"
+        revision = 0
         buildTime = 0
         string = base + ".dev"
     
