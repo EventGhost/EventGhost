@@ -147,7 +147,7 @@ active after adding the exclusive.
 
 
 .. figure:: CYLRWE_enable_exclusive_config.png
-   :figwidth: image
+   :figwidth: 100%
    :align: center
    
    Just select the folder that you want to make active as a result of the 
