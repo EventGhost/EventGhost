@@ -31,6 +31,9 @@ import _winreg
 import shutil
 import atexit
 import zipfile
+import time
+import subprocess2
+
 from os.path import basename, dirname, abspath, join, exists
 from glob import glob
 import logging
@@ -68,7 +71,6 @@ def SetIndent(level):
     sys.stdout.indent = level
 
 
-
 RT_MANIFEST = 24
 
 def InstallPy2exePatch():
@@ -98,18 +100,26 @@ def StartProcess(*args):
     startupInfo = subprocess.STARTUPINFO()
     startupInfo.dwFlags = subprocess.STARTF_USESHOWWINDOW
     startupInfo.wShowWindow = subprocess.SW_HIDE 
-    process = subprocess.Popen(
+    process = subprocess2.Popen(
         args, 
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        startupinfo=startupInfo
+        startupinfo=startupInfo,
     )
     while process.returncode is None:
-        out, err = process.communicate()
-        if out:
-            sys.stdout.write(out)
-        if err:
-            sys.stderr.write(err)
+        process.poll()
+        errData = process.recv_err()
+        if errData is not None:
+            sys.stderr.write(errData)
+        inData = process.recv()
+        if inData is not None:
+            if inData:
+                sys.stdout.write(inData)
+            else:
+                time.sleep(0.1)
+        else:
+            break
+    process.wait()
     SetIndent(0)
     return process.returncode
     
@@ -188,7 +198,7 @@ class InnoInstaller(object):
             ],
             # use out build_installer class as extended py2exe build command
             #cmdclass = {"py2exe": py2exe.run},
-            verbose = 1,
+            verbose = 0,
         )
         if self.icon:
             self.py2exeOptions["windows"][0]["icon_resources"].append(
@@ -253,6 +263,20 @@ class InnoInstaller(object):
         )
     
 
+    def UpdateSvn(self):
+        import pysvn
+        
+        def SslServerTrustPromptCallback(dummy):
+            """ 
+            See pysvn documentation for 
+            pysvn.Client.callback_ssl_server_trust_prompt
+            """
+            return True, 0, True
+        svn = pysvn.Client()
+        svn.callback_ssl_server_trust_prompt = SslServerTrustPromptCallback
+        svn.update(self.sourceDir)
+        
+    
     def CreateSourceArchive(self, filename=None):
         """
         Create a zip archive off all versioned files in the working copy.
