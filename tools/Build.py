@@ -29,9 +29,8 @@ import time
 import ConfigParser
 import threading
 import imp
-import subprocess
 import warnings
-
+import shutil
 from string import digits
 from os.path import dirname, join, exists, abspath
 from glob import glob
@@ -43,6 +42,7 @@ from InnoInstaller import InnoInstaller
 warnings.filterwarnings("ignore", ".*", DeprecationWarning, "py2exe.build_exe")
 
 INI_FILE = os.path.splitext(__file__)[0] + ".ini"
+WEBSITE_DIR = abspath(join(dirname(__file__), "..", "website"))
 
 DEPENDENCIES = [
     (
@@ -526,13 +526,14 @@ class MainDialog(wx.Dialog):
         # create controls
         self.ctrls = {}
         ctrlsSizer = wx.BoxSizer(wx.VERTICAL)
-        for option in options._options[:-1]:
+        for option in options._options[:-2]:
             ctrl = wx.CheckBox(self, -1, option.label)
             ctrl.SetValue(bool(option.value))
             ctrlsSizer.Add(ctrl, 0, wx.ALL, 5)
             self.ctrls[option.name] = ctrl
 
         self.ctrls["upload"].Enable(options.ftpUrl != "")
+        self.ctrls["updateWebsite"].Enable(options.webUploadUrl != "")
         self.ctrls["commitSvn"].Enable(pysvn is not None)
         if not exists(join(builder.sourceDir, "eg", "StaticImports.py")):
             self.ctrls["buildStaticImports"].Enable(False)
@@ -576,7 +577,7 @@ class MainDialog(wx.Dialog):
         self.okButton.Enable(False)
         self.cancelButton.Enable(False)
         #self.SetWindowStyleFlag(wx.CAPTION|wx.RESIZE_BORDER)
-        for option in self.options._options[:-1]:
+        for option in self.options._options[:-2]:
             ctrl = self.ctrls[option.name]
             setattr(self.options, option.name, ctrl.GetValue())
             ctrl.Enable(False)
@@ -605,7 +606,7 @@ class MainDialog(wx.Dialog):
 def ExecutePy(scriptFilePath, *args):
     """Spawn a new Python interpreter and let it execute a script file."""
     from InnoInstaller import StartProcess
-    return StartProcess(sys.executable, scriptFilePath, *args)
+    return StartProcess(sys.executable, "-u", os.path.abspath(scriptFilePath), *args)
 
 
 def BuildImportsPy():
@@ -620,6 +621,9 @@ def Main(options, builder, mainDialog=None):
     """
     Main task of the script.
     """
+    if options.svnUpdate:
+         print "--- updating working copy from SVN"
+         builder.UpdateSvn()
     builder.UpdateVersionFile()
     print "--- updating CHANGELOG.TXT"
     builder.UpdateChangeLog()
@@ -650,7 +654,7 @@ def Main(options, builder, mainDialog=None):
         print "--- building library files"
         builder.CreateLibrary()            
     if options.buildInstaller:
-        print "--- building setup.exe"
+        print "--- building " + builder.outputBaseFilename
         builder.CreateInstaller()
     if options.upload and options.ftpUrl:
         print "--- uploading setup.exe"
@@ -665,11 +669,17 @@ def Main(options, builder, mainDialog=None):
             stopEvent
         )
         stopEvent.wait()
+        shutil.copyfile(filename, join(WEBSITE_DIR, "downloads", builder.outputBaseFilename + ".exe"))
+        shutil.copystat(filename, join(WEBSITE_DIR, "downloads", builder.outputBaseFilename + ".exe"))
+    if options.updateWebsite:
+        print "--- updating website"
+        ExecutePy("BuildWebsite.py", options.webUploadUrl)
     print "--- All done!"
     wx.CallAfter(mainDialog.Close)
     
 
 OPTIONS = (
+    ("svnUpdate", "Update from SVN", True),
     ("includeNoIncludePlugins", "Include 'noinclude' plugins", False),
     ("buildStaticImports", "Build StaticImports.py", True),
     ("buildImports", "Build imports.py", True),
@@ -681,7 +691,9 @@ OPTIONS = (
     ("buildInstaller", "Build Setup.exe", True),
     ("commitSvn", "SVN commit", False),
     ("upload", "Upload through FTP", False),
+    ("updateWebsite", "Update website", False),
     ("ftpUrl", "", ""),
+    ("webUploadUrl", "", ""),
 )
 
 
