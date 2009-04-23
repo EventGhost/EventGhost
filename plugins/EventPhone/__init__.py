@@ -31,9 +31,9 @@ import eg
 eg.RegisterPlugin(
     name = "EventPhone iPhone/iPod Touch Remote",
     description=(
-        'Plugin for the EventPhone iPhone/Ipod Touch<SMALL><SUP>TM</SUP></SMALL> native application.'
-        '\n\n<p>'
-        '<center><img src="picture.jpg" /></a></center>'
+        u'Plugin for the EventPhone iPhone/Ipod Touch\u2122 native application.'
+        u'\n\n<p>'
+        u'<center><img src="picture.jpg" /></a></center>'
     ),
     version = "1.0."+ "$LastChangedRevision: 1 $".split()[1],
 	kind = "remote",
