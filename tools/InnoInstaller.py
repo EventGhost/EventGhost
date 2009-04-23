@@ -39,12 +39,12 @@ from glob import glob
 import logging
 
 class StdHandler(object):
+    indent = 0
     
     def __init__(self, oldStream, logger):
         self.oldStream = oldStream
         self.buf = ""
         self.logger = logger
-        self.indent = 0
         
     def write(self, data):
         self.buf += data
@@ -67,8 +67,7 @@ sys.stdout = StdHandler(sys.stdout, logging.info)
 sys.stderr = StdHandler(sys.stderr, logging.error)
 
 def SetIndent(level):
-    sys.stderr.indent = level
-    sys.stdout.indent = level
+    StdHandler.indent = level
 
 
 RT_MANIFEST = 24
@@ -155,12 +154,9 @@ class InnoInstaller(object):
         # Add our working dir to the import pathes
         sys.path.append(self.toolsDir)
         sys.path.append(self.pyVersionDir)
-        if self.pyVersion == "25":
-            manifestTemplate = PY25_MANIFEST_TEMPLATE
-        elif self.pyVersion == "26":
-            manifestTemplate = PY26_MANIFEST_TEMPLATE
-        else:
-            raise SystemError("Unknown Python version.")
+        manifest = file(
+            join(self.pyVersionDir, "manifest.template")
+        ).read() % self
 
         self.py2exeOptions = dict(
             options = dict(
@@ -191,7 +187,7 @@ class InnoInstaller(object):
                     script = abspath(self.mainScript),
                     icon_resources = [],
                     other_resources = [
-                        (RT_MANIFEST, 1, manifestTemplate % self)
+                        (RT_MANIFEST, 1, manifest)
                     ],
                     dest_base = self.appShortName
                 ),
@@ -405,71 +401,4 @@ class InnoInstaller(object):
         issFile.close()
 
         StartProcess(self.GetCompilerPath(), innoScriptPath, "/Q")
-
-
-
-# The manifest will be inserted as resource into the exe.  This
-# gives the controls the Windows XP appearance (if run on XP ;-)
-PY25_MANIFEST_TEMPLATE = '''
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-    <assemblyIdentity
-        version="5.0.0.0"
-        processorArchitecture="x86"
-        name="%(appShortName)s"
-        type="win32"
-    />
-    <description>%(appShortName)s Program</description>
-    <dependency>
-        <dependentAssembly>
-            <assemblyIdentity
-                type="win32"
-                name="Microsoft.Windows.Common-Controls"
-                version="6.0.0.0"
-                processorArchitecture="X86"
-                publicKeyToken="6595b64144ccf1df"
-                language="*"
-            />
-        </dependentAssembly>
-    </dependency>
-</assembly>
-'''
-
-PY26_MANIFEST_TEMPLATE = '''
-<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-    <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
-        <security>
-            <requestedPrivileges>
-                <requestedExecutionLevel 
-                    level="asInvoker" 
-                    uiAccess="false"
-                />
-            </requestedPrivileges>
-        </security>
-    </trustInfo>
-    <dependency>
-        <dependentAssembly>
-            <assemblyIdentity 
-                type="win32" 
-                name="Microsoft.VC90.CRT" 
-                version="9.0.21022.8" 
-                processorArchitecture="x86" 
-                publicKeyToken="1fc8b3b9a1e18e3b"
-            />
-        </dependentAssembly>
-    </dependency>
-    <dependency>
-        <dependentAssembly>
-            <assemblyIdentity
-                type="win32"
-                name="Microsoft.Windows.Common-Controls"
-                version="6.0.0.0"
-                processorArchitecture="X86"
-                publicKeyToken="6595b64144ccf1df"
-                language="*"
-            />
-        </dependentAssembly>
-    </dependency>
-</assembly>
-'''
 
