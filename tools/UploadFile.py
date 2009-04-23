@@ -207,8 +207,6 @@ def UploadWithSftp(urlComponents, filename, dialog, log):
         client = sshClient.open_sftp()
     except:
         exit("Error: Can't create SFTP client")
-    def callback(i, j):
-        print i, j
     log("Changing path to: %s" % urlComponents.path)  #IGNORE:E1101 
     client.chdir(urlComponents.path) #IGNORE:E1101 
     log("Getting directory listing...")
