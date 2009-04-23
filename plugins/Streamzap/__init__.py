@@ -154,6 +154,7 @@ def Decode(data):
 class Streamzap(eg.PluginBase):
     
     def __init__(self):
+        eg.PluginBase.__init__(self)
         self.AddEvents()
         
     
@@ -165,11 +166,13 @@ class Streamzap(eg.PluginBase):
         startupEvent = threading.Event()
         self.thread = threading.Thread(
             target=self.ReceiveThread, 
+            name="StreamzapReceiveThread",
             args=(startupEvent,)
         )
         self.thread.start()
         startupEvent.wait(5.0)
         if self.lastException:
+            self.timer.Stop()
             raise self.lastException
         
 
