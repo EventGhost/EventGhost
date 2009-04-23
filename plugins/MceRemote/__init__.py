@@ -24,6 +24,7 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
 eg.RegisterPlugin(
     name = "Microsoft MCE Remote",
@@ -52,7 +53,7 @@ eg.RegisterPlugin(
     ),
 )
 
-
+import wx
 import os
 import _winreg as reg
 from threading import Timer
@@ -226,11 +227,11 @@ class MceMessageReceiver(eg.ThreadWorker):
         
         
     #@eg.LogIt
-    def MyWndProc(self, hwnd, mesg, wParam, lParam):
+    def MyWndProc(self, dummyHwnd, mesg, dummyWParam, lParam):
         if mesg == WM_USER:
             self.timer.cancel()
             key = lParam & 0xFFFF
-            repeatCounter = (lParam >> 16)     
+            #repeatCounter = (lParam >> 16)     
             if key in KEY_MAP:
                 eventString = KEY_MAP[key]
             else:
@@ -249,7 +250,7 @@ class MceMessageReceiver(eg.ThreadWorker):
         
         
 
-class MceRemote(eg.PluginClass):
+class MceRemote(eg.PluginBase):
     
     class text:
         buttonTimeout = "Button release timeout (seconds):"
@@ -282,12 +283,12 @@ class MceRemote(eg.PluginClass):
 
 
     @eg.LogIt
-    def OnComputerSuspend(self, suspendType):
+    def OnComputerSuspend(self, dummySuspendType):
         self.msgThread.CallWait(self.msgThread.dll.MceIrSuspend)
     
     
     @eg.LogIt
-    def OnComputerResume(self, suspendType):
+    def OnComputerResume(self, dummySuspendType):
         self.msgThread.CallWait(self.msgThread.dll.MceIrResume)       
           
                         
@@ -352,7 +353,7 @@ class MceRemote(eg.PluginClass):
         for i in xrange(4):
             valueName = 'CodeSetNum%i' % i
             try:
-                value, valueType = reg.QueryValueEx(key, valueName)
+                dummyValue, dummyValueType = reg.QueryValueEx(key, valueName)
                 disabled = False
             except WindowsError:
                 disabled = True
@@ -381,7 +382,7 @@ class MceRemote(eg.PluginClass):
         
         
         
-class TransmitIr(eg.ActionClass):
+class TransmitIr(eg.ActionBase):
     name = "Transmit IR"
     
     def __call__(self, code=""):
@@ -403,7 +404,7 @@ class TransmitIr(eg.ActionClass):
         editCtrl.SetFont(font)
         editCtrl.SetMinSize((-1, 100))
         
-        def Learn(event):
+        def Learn(dummyEvent):
             tmpFile = os.tmpfile()
             self.plugin.msgThread.dll.MceIrRecordToFile(
                 get_osfhandle(tmpFile.fileno()), 
