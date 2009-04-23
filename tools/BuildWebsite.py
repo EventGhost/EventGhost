@@ -61,7 +61,7 @@ class FileData(object):
         
         
 
-MENU_TABS = (HomePage, ForumPage, DocsPage, WikiPage, DownloadPage)
+MENU_TABS = (HomePage, DocsPage, WikiPage, ForumPage, DownloadPage)
 
 def GetSetupFiles():
     files = []
@@ -87,8 +87,8 @@ for page in MENU_TABS:
     ).render(**GLOBALS)
     open(join(BASE_DIR, page.outfile), "wt").write(content)
 
-import BuildDocs
-BuildDocs.Main(buildHtml=True)
+#import BuildDocs
+#BuildDocs.Main(buildHtml=True)
  
 from SftpSync import SftpSync
 

@@ -67,7 +67,7 @@ def WritePluginList(filepath):
     outfile.write("===============\n\n")
     outfile.write("This is the list of the %d plugins " % numPlugins)
     outfile.write("currently distributed with EventGhost ")
-    outfile.write("%s:\n\n" % eg.Version.string)
+    outfile.write("%s:\n\n" % eg.Version.base)
     replacementId = 1
     for kind, kindDesciption in kindList:
         outfile.write("%s\n" % kindDesciption)

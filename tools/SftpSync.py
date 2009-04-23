@@ -2,7 +2,6 @@ import stat
 import os
 from urlparse import urlparse
 from os.path import join
-from ConfigParser import ConfigParser
 import warnings
 with warnings.catch_warnings():
     warnings.simplefilter("ignore", DeprecationWarning)
@@ -158,7 +157,7 @@ class SftpSync(object):
                 self.sftpClient.put(local, self.remotePath + remote)
         
         
-    def ClearDirectory(self, remotePath, excludes=[]):
+    def ClearDirectory(self, remotePath, excludes=()):
         remotePath = FixRemotePath(remotePath)
         print "clearing all files in %s" % remotePath
         remoteDir = RemoteDirectory(self.sftpClient, remotePath)
