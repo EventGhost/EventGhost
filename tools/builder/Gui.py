@@ -2,7 +2,7 @@ import wx
 import threading
 from os.path import join, exists
 import builder
-import builder.Main
+import builder.Tasks
 
 
 class MainDialog(wx.Dialog):
@@ -14,21 +14,22 @@ class MainDialog(wx.Dialog):
         # create controls
         self.ctrls = {}
         ctrlsSizer = wx.BoxSizer(wx.VERTICAL)
-        for option in options._options[:-2]:
-            ctrl = wx.CheckBox(self, -1, option.label)
-            ctrl.SetValue(bool(option.value))
+        for task in builder.TASKS:
+            if task.option is None:
+                continue
+            ctrl = wx.CheckBox(self, -1, task.description)
+            ctrl.SetValue(bool(getattr(options, task.option)))
             ctrlsSizer.Add(ctrl, 0, wx.ALL, 5)
-            self.ctrls[option.name] = ctrl
+            self.ctrls[task.option] = ctrl
+            if not task.IsEnabled():
+                ctrl.Enable(False)
 
-        self.ctrls["upload"].Enable(options.ftpUrl != "")
-        self.ctrls["updateWebsite"].Enable(options.webUploadUrl != "")
-        #self.ctrls["commitSvn"].Enable(pysvn is not None)
-        if not exists(join(builder.SOURCE_DIR, "eg", "StaticImports.py")):
-            self.ctrls["buildStaticImports"].Enable(False)
-            self.ctrls["buildStaticImports"].SetValue(True)
-        if not exists(join(builder.SOURCE_DIR, "EventGhost.chm")):
-            self.ctrls["buildChmDocs"].Enable(False)
-            self.ctrls["buildChmDocs"].SetValue(True)
+#        if not exists(join(builder.SOURCE_DIR, "eg", "StaticImports.py")):
+#            self.ctrls["buildStaticImports"].Enable(False)
+#            self.ctrls["buildStaticImports"].SetValue(True)
+#        if not exists(join(builder.SOURCE_DIR, "EventGhost.chm")):
+#            self.ctrls["buildChmDocs"].Enable(False)
+#            self.ctrls["buildChmDocs"].SetValue(True)
 #        if (
 #            not exists(join(builder.SOURCE_DIR, "py%s.exe" % builder.pyVersion))
 #            or not exists(join(builder.SOURCE_DIR, "pyw%s.exe" % builder.pyVersion))
@@ -70,24 +71,28 @@ class MainDialog(wx.Dialog):
             setattr(builder.config, option.name, ctrl.GetValue())
             ctrl.Enable(False)
         builder.config.SaveSettings()
-        thread = threading.Thread(
-            target=builder.Main.Main, 
-            args=(self, )
-        )
+        thread = threading.Thread(target=self.DoMain)
         thread.start()
         
         
+    def DoMain(self):
+        builder.Tasks.Main()
+        wx.CallAfter(self.Close)
+    
+    
     def OnCancel(self, event):
         """ Handles a click on the cancel button. """
         event.Skip()
         self.Destroy()
+        wx.GetApp().ExitMainLoop()
         
         
     def OnClose(self, event):
         """ Handles a click on the close box of the frame. """
         self.Destroy()
         event.Skip()
-     
+        wx.GetApp().ExitMainLoop()
+        
      
 def Main():
     #installer = MyInstaller()

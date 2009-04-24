@@ -26,10 +26,8 @@ This script creates the EventGhost setup installer.
 import sys
 import os
 import time
-import threading
 import imp
 import warnings
-import shutil
 from os.path import dirname, join, exists
 from glob import glob
 
@@ -37,23 +35,13 @@ from glob import glob
 import builder
 from builder.CheckDependencies import CheckDependencies
 from builder.InnoSetup import InnoInstaller
-from builder.Utils import ExecutePy
-from builder.Config import Config
-
-#disable deprecation warning in py2exe)
-warnings.filterwarnings("ignore", ".*", DeprecationWarning, "py2exe.build_exe")
-
-INI_FILE = os.path.splitext(__file__)[0] + ".ini"
-
 
 
 if not CheckDependencies():
     sys.exit(1)
 
-
 # third-party module imports
 import pysvn
-import wx
 
 
 INCLUDED_MODULES = [
@@ -117,7 +105,7 @@ builder.EXCLUDED_MODULES = EXCLUDED_MODULES
 
 class MyInstaller(InnoInstaller):
     appShortName = "EventGhost_Py%d%d" % sys.version_info[:2]
-    mainScript = "../EventGhost.pyw"
+    mainScript = "EventGhost.pyw"
     icon = "EventGhost.ico"
     excludes = EXCLUDED_MODULES
 
@@ -133,7 +121,7 @@ class MyInstaller(InnoInstaller):
 
     def UpdateVersionFile(self):
         """
-        Update buildTime and revision for eg/Classes/Version.py
+        Update buildTime and revision for eg/Classes/VersionRevision.py
         """
         self.svnRevision = self.GetSvnRevision()
         outfile = open(join(self.tmpDir, "VersionRevision.py"), "wt")
