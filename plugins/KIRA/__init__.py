@@ -1,7 +1,7 @@
 eg.RegisterPlugin(
     name = 'Keene IR Anywhere',
     author = 'ldobson',
-    version = '1.0.2',
+    version = '1.0.3',
     kind = 'remote',
     description = '''\
         Hardware plugin for the 
@@ -14,6 +14,46 @@ eg.RegisterPlugin(
             <div align="center">
                 <img src="KIRA.jpg"/>
             </div>
+        </p>
+        <p>
+            If you are talking to multiple units it's best to have
+            them all set to different ports and then load this plugin
+            multiple times and set each event prefix to something
+            different. If you load it multiple times and don't
+            have different port numbers then you will be confused as to 
+            which unit you are receiving information from, as only one
+            of the plugin instances will be able to listen on that port
+        </p>
+        <p>
+            Events that can occur (assuming "KIRA" is your event prefix):
+            <ul>
+                <li>
+                    <b>KIRA.Acknowledgment</b> - 
+                    Happens when a unit sends an "ACK" response to an action
+                </li>
+                <li>
+                    <b>KIRA.ReceivedIR</b> - 
+                    Happens when we receive an IR stream from a unit. The 
+                    stream can be found in {eg.ReceivedIR} for use in actions
+                </li>.
+                <li>
+                    <b>KIRA.XXXXXX.DDDDDDDD</b> - 
+                    Also happens when we receive an IR stream, this one
+                    is the decoded IR that can be used to pick up on
+                    subsequent presses of the same button. "XXXXXX" is the
+                    IR protocol (it's not uncommon to see this as "Unknown"
+                    so don't panic!) and "DDDDDDDD" is the code itself.
+                </li>
+            </ul>
+            <p>
+                If you switch on "Log incoming raw IR streams", the IR streams
+                will also be printed in the log window in the format:
+            </p>
+            <p>
+                <div align="center">
+                    <b>KIRA.Raw.XXYY DDDD DDDD DDDD 2000</b>
+                </div>
+            </p>
         </p>
     '''
 )
@@ -46,13 +86,21 @@ class Text:
         </p>
         <p>
             <div align="center">
-                XXYY DDDD DDDD DDDD 2000
+                <b>XXYY DDDD DDDD DDDD 2000</b>
             </div>
         </p>
         <p>
             where "XX" is the frequency, "YY" is the number of 
             following pairs, "DDDD" is the data (there will be an 
             odd number of these chunks), and "2000" is hard-coded
+        </p>
+        <p>
+            You can use "{eg.ReceivedIR}" to use the last IR stream
+            that the plugin has received. This is useful in
+            conjunction with the "KIRA.ReceivedIR" event. Note that
+            if you're sending a stream to the unit it came from then
+            it is advisable to leave a pause of at least 0.2 seconds
+            before the TransmitIR action
         </p>
     '''
     sendToMeDesc = (
@@ -142,6 +190,7 @@ class Transmit(eg.ActionClass):
     description = Text.transmitDesc
 
     def __call__(self, mesg):
+        mesg = eg.ParseString(mesg)
         codes = mesg.split()
         try:
             info = codes.pop(0)
@@ -218,11 +267,12 @@ class Server(asyncore.dispatcher):
             if (codes[0] == 'K'):
                 codes.remove('K')
 
+                eg.ReceivedIR = ' '.join(codes)
+
                 if (self.handler.logRaw):
                     print(
                         self.handler.info.eventPrefix + 
-                        '.Raw.' + 
-                        ' '.join(codes)
+                        '.Raw.' + eg.ReceivedIR
                     )
 
                 try:
@@ -235,7 +285,13 @@ class Server(asyncore.dispatcher):
                         and
                         codes[len(codes) - 1] == '2000'
                     ):
+                        self.socket.sendto(
+                            'ACK', 
+                            (client_addr[0], client_addr[1])
+                        )
+                        self.handler.TriggerEvent('ReceivedIR')
                         self.handler.irDecoder.Decode(data, len(data))
+
                     else:
                         raise self.handler.Exception()
                 except:
