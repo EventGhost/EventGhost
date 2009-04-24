@@ -26,13 +26,12 @@ Routines to upload a file through FTP with a nice dialog.
 import sys
 import tempfile
 import os
-import subprocess
 import _winreg
 import shutil
 import atexit
 import zipfile
-import time
-import subprocess2
+import builder
+from builder.Utils import StartProcess
 
 from os.path import basename, dirname, abspath, join, exists
 from glob import glob
@@ -72,6 +71,25 @@ def SetIndent(level):
 
 RT_MANIFEST = 24
 
+def GetInnoCompilerPath():
+    try:
+        key = _winreg.OpenKey(
+            _winreg.HKEY_LOCAL_MACHINE, 
+            (
+                "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\"
+                "Uninstall\\Inno Setup 5_is1"
+            )
+        )
+        installPath = _winreg.QueryValueEx(key, "InstallLocation")[0]
+        _winreg.CloseKey(key)
+    except WindowsError:
+        return None
+    installPath = join(installPath, "ISCC.exe")
+    if not exists(installPath):
+        return None
+    return installPath
+        
+    
 def InstallPy2exePatch():
     """
     Tricks py2exe to include the win32com module.
@@ -94,35 +112,6 @@ def InstallPy2exePatch():
         pass 
 
 
-def StartProcess(*args):
-    SetIndent(1)
-    startupInfo = subprocess.STARTUPINFO()
-    startupInfo.dwFlags = subprocess.STARTF_USESHOWWINDOW
-    startupInfo.wShowWindow = subprocess.SW_HIDE 
-    process = subprocess2.Popen(
-        args, 
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        startupinfo=startupInfo,
-    )
-    while process.returncode is None:
-        process.poll()
-        errData = process.recv_err()
-        if errData is not None:
-            sys.stderr.write(errData)
-        inData = process.recv()
-        if inData is not None:
-            if inData:
-                sys.stdout.write(inData)
-            else:
-                time.sleep(0.1)
-        else:
-            break
-    process.wait()
-    SetIndent(0)
-    return process.returncode
-    
-    
 class InnoInstaller(object): 
     """
     Helper class to create Inno Setup installers more easily.
@@ -150,7 +139,8 @@ class InnoInstaller(object):
         self.outputDir = abspath(self.outputDir)
         self.libraryDir = abspath(join(self.sourceDir, self.libraryName))
         self.innoSections = {}
-        self.pyVersionDir = abspath(u"Python%s" % self.pyVersion)
+        self.pyVersionDir = builder.PYVERSION_DIR
+        self.dataDir = builder.DATA_DIR
         # Add our working dir to the import pathes
         sys.path.append(self.toolsDir)
         sys.path.append(self.pyVersionDir)
@@ -176,7 +166,7 @@ class InnoInstaller(object):
                         #"msvcr71.dll",
                     ],
                     dist_dir = self.sourceDir,
-                    custom_boot_script = abspath(self.bootScript),
+                    custom_boot_script = join(builder.DATA_DIR, self.bootScript),
                 )
             ),
             # The lib directory contains everything except the executables and
@@ -192,13 +182,11 @@ class InnoInstaller(object):
                     dest_base = self.appShortName
                 ),
             ],
-            # use out build_installer class as extended py2exe build command
-            #cmdclass = {"py2exe": py2exe.run},
             verbose = 0,
         )
         if self.icon:
             self.py2exeOptions["windows"][0]["icon_resources"].append(
-                (1, abspath(self.icon))
+                (1, join(builder.DATA_DIR, self.icon))
             )
 
         
@@ -299,7 +287,6 @@ class InnoInstaller(object):
         """
         Create the library and .exe files with py2exe.
         """
-        sys.argv.append("py2exe")
         from distutils.core import setup
         InstallPy2exePatch()
         import py2exe # pylint: disable-msg=W0612
@@ -309,7 +296,7 @@ class InnoInstaller(object):
                 path = join(self.libraryDir, filename)
                 if not os.path.isdir(path):
                     os.remove(path)
-        setup(**self.py2exeOptions)
+        setup(script_args=["py2exe"], **self.py2exeOptions)
         pythonDir = dirname(sys.executable)
         dllNames = [
             basename(name) for name in glob(join(self.libraryDir, "*.dll"))
@@ -325,26 +312,6 @@ class InnoInstaller(object):
         if self.pyVersion == "26":
             self.RemoveAllManifests()
     
-    
-    @staticmethod
-    def GetCompilerPath():
-        try:
-            key = _winreg.OpenKey(
-                _winreg.HKEY_LOCAL_MACHINE, 
-                (
-                    "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\"
-                    "Uninstall\\Inno Setup 5_is1"
-                )
-            )
-            installPath = _winreg.QueryValueEx(key, "InstallLocation")[0]
-            _winreg.CloseKey(key)
-        except WindowsError:
-            return None
-        installPath = join(installPath, "ISCC.exe")
-        if not exists(installPath):
-            return None
-        return installPath
-        
     
     def RemoveAllManifests(self):
         """ 
@@ -394,11 +361,12 @@ class InnoInstaller(object):
         innoScriptPath = join(self.tmpDir, "Setup.iss")
         issFile = open(innoScriptPath, "w")
         issFile.write(self.innoScriptTemplate % self)
+        #print self.outputBaseFilename
         for section, lines in self.innoSections.iteritems():
             issFile.write("[%s]\n" % section)
             for line in lines:
                 issFile.write("%s\n" % line)            
         issFile.close()
 
-        StartProcess(self.GetCompilerPath(), innoScriptPath, "/Q")
+        StartProcess(GetInnoCompilerPath(), innoScriptPath, "/Q")
 

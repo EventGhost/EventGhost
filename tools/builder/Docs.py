@@ -2,15 +2,16 @@ import os
 import sys
 import re
 import _winreg
-import subprocess
 import shutil
 from os.path import join
+import builder
+from builder.Utils import StartProcess
 
-MY_DIR = os.path.dirname(__file__)
-MAIN_DIR = os.path.abspath(join(MY_DIR, ".."))
+
+MAIN_DIR = builder.SOURCE_DIR
 DOCS_MAIN_DIR = join(MAIN_DIR, "docs")
 DOCS_SOURCE_DIR = join(DOCS_MAIN_DIR, "source")
-DOCS_HTML_BUILD_DIR = join(DOCS_MAIN_DIR, "../website/docs")
+DOCS_HTML_BUILD_DIR = join(MAIN_DIR, "website/docs")
 DOCS_CHM_BUILD_DIR = join(DOCS_MAIN_DIR, "chm")
 
 
@@ -159,7 +160,7 @@ GUI_CLASSES = [
     "FontSelectButton",
 ]
 
-def Main(buildHtml=True, buildChm=False):
+def Main(buildHtml=False, buildChm=False):
     import sphinx
     WritePluginList(join(DOCS_SOURCE_DIR, "pluginlist.rst"))
     filepath = join(DOCS_SOURCE_DIR, "eg", "classes.txt")
@@ -202,7 +203,6 @@ def Main(buildHtml=True, buildChm=False):
                 "HTML Help Workshop command line compiler not found"
             )
         hhpPath = join(DOCS_CHM_BUILD_DIR, "EventGhost.hhp")
-        from InnoInstaller import StartProcess
         StartProcess(htmlHelpCompilerPath, hhpPath)
         shutil.copy(join(DOCS_CHM_BUILD_DIR, "EventGhost.chm"), MAIN_DIR)
     
