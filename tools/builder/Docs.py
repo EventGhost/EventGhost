@@ -5,7 +5,7 @@ import _winreg
 import shutil
 from os.path import join
 import builder
-from builder.Utils import StartProcess
+from builder.Utils import StartProcess, ExecutePy
 
 
 MAIN_DIR = builder.SOURCE_DIR
@@ -207,16 +207,3 @@ def Main(buildHtml=False, buildChm=False):
         shutil.copy(join(DOCS_CHM_BUILD_DIR, "EventGhost.chm"), MAIN_DIR)
     
     
-def Cli(argv):
-    buildHtml = False
-    buildChm = False
-    for arg in argv[1:]:
-        if arg == "chm":
-            buildChm = True
-        elif arg == "html":
-            buildHtml = True
-    Main(buildHtml, buildChm)
-    
-    
-if __name__ == "__main__":
-    Cli(sys.argv)

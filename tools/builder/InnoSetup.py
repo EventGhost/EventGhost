@@ -117,8 +117,6 @@ class InnoInstaller(object):
     Helper class to create Inno Setup installers more easily.
     """
     appShortName = "Application"
-    sourceDir = ".."
-    outputDir = "../.."
     libraryName = "lib%d%d" % sys.version_info[:2]
     appVersion = "0.0.0"
     pyVersion = "%d%d" % sys.version_info[:2]
@@ -134,10 +132,10 @@ class InnoInstaller(object):
     def __init__(self):
         self.tmpDir = tempfile.mkdtemp()
         atexit.register(shutil.rmtree, self.tmpDir)
-        self.toolsDir = abspath(dirname(sys.argv[0]))
-        self.sourceDir = abspath(self.sourceDir)
-        self.outputDir = abspath(self.outputDir)
+        self.sourceDir = builder.SOURCE_DIR
+        self.outputDir = abspath(join(builder.SOURCE_DIR, ".."))
         self.libraryDir = abspath(join(self.sourceDir, self.libraryName))
+        self.toolsDir = abspath(join(builder.SOURCE_DIR, "tools"))
         self.innoSections = {}
         self.pyVersionDir = builder.PYVERSION_DIR
         self.dataDir = builder.DATA_DIR
@@ -297,12 +295,11 @@ class InnoInstaller(object):
                 if not os.path.isdir(path):
                     os.remove(path)
         setup(script_args=["py2exe"], **self.py2exeOptions)
-        pythonDir = dirname(sys.executable)
         dllNames = [
             basename(name) for name in glob(join(self.libraryDir, "*.dll"))
         ]
         neededDlls = []
-        for _, _, files in os.walk(pythonDir):
+        for _, _, files in os.walk(dirname(sys.executable)):
             for filename in files:
                 if filename in dllNames:
                     neededDlls.append(filename)
@@ -347,17 +344,18 @@ class InnoInstaller(object):
         Finishes the setup, writes the Inno Setup script and calls the 
         Inno Setup compiler.
         """
+        srcDir = builder.SOURCE_DIR
         if self.pyVersion == "25":
-            self.AddFile("../MFC71.dll")
-            self.AddFile("../msvcr71.dll")
-            self.AddFile("../msvcp71.dll")
-            self.AddFile("../python25.dll")
+            self.AddFile(join(srcDir, "MFC71.dll"))
+            self.AddFile(join(srcDir, "msvcr71.dll"))
+            self.AddFile(join(srcDir, "msvcp71.dll"))
+            self.AddFile(join(srcDir, "python25.dll"))
         elif self.pyVersion == "26":
-            self.AddFile("../msvcr90.dll")
-            self.AddFile("../msvcp90.dll")
-            self.AddFile("../msvcm90.dll")
-            self.AddFile("../python26.dll")
-            self.AddFile("../Microsoft.VC90.CRT.manifest")
+            self.AddFile(join(srcDir, "msvcr90.dll"))
+            self.AddFile(join(srcDir, "msvcp90.dll"))
+            self.AddFile(join(srcDir, "msvcm90.dll"))
+            self.AddFile(join(srcDir, "python26.dll"))
+            self.AddFile(join(srcDir, "Microsoft.VC90.CRT.manifest"))
         innoScriptPath = join(self.tmpDir, "Setup.iss")
         issFile = open(innoScriptPath, "w")
         issFile.write(self.innoScriptTemplate % self)

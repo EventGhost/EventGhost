@@ -19,8 +19,10 @@ class Config(object):
         self._configFilePath = configFilePath
         self._options = []
         self._optionsDict = {}
-        for option in builder.DEFAULT_OPTIONS:
-            self.AddOption(*option)
+        for task in builder.TASKS:
+            if task.option is None:
+                continue
+            self.AddOption(task.option, task.description, task.default)
         self.LoadSettings()
         
         

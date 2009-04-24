@@ -25,7 +25,7 @@ import sys
 import os
 from time import clock
 from os.path import basename, getsize
-from threading import Thread
+from threading import Thread, Event
 from ftplib import FTP
 from urlparse import urlparse
 import locale
@@ -388,7 +388,18 @@ class UploadDialog(wx.Dialog):
         )
         
         
-        
+def Upload(srcFilePath, remoteDir):
+    stopEvent = Event()
+    wx.CallAfter(
+        UploadDialog, 
+        None, 
+        srcFilePath, 
+        remoteDir,
+        stopEvent
+    )
+    stopEvent.wait()
+
+    
 def Main():
     """ Main function if called directly from the command line. """
     app = wx.App(0)
