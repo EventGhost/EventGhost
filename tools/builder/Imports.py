@@ -33,6 +33,7 @@ import sys
 from os.path import join
 import warnings
 
+import builder
 
 MODULES_TO_IGNORE = [
     "__phello__.foo",
@@ -157,7 +158,7 @@ def ReadGlobalModuleIndex():
     """
     modules = []
     badModules = []
-    inFile = open("Global Module Index.txt", "rt")
+    inFile = open(join(builder.PYVERSION_DIR, "Global Module Index.txt"), "rt")
     for line in inFile.readlines():
         if line.startswith("#"):
             continue
@@ -256,7 +257,7 @@ def Main(packagesToAdd, packagesToIgnore):
     #    if module not in globalModuleIndex:
     #        print "   ", module
     
-    outfile = open("imports.py", "wt")
+    outfile = open(join(builder.PYVERSION_DIR, "imports.py"), "wt")
     outfile.write(HEADER)
     for module in stdLibModules:
         outfile.write("import %s\n" % module)

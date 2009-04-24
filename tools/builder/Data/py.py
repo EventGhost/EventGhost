@@ -9,6 +9,6 @@ if len(sys.argv) > 1:
     import imp
     imp.load_source("__main__", mainFilePath)
 else:
-    if getattr(sys, "frozen", None) != "windows_exe":
+    if getattr(sys, "frozen", None) == "console_exe":
         from code import InteractiveConsole
         InteractiveConsole().interact()

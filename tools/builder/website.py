@@ -1,11 +1,11 @@
 import os
-import sys
 import time
-from os.path import join, dirname, abspath
+from os.path import join, abspath
 from mako.template import Template
 from mako.lookup import TemplateLookup
 
-BASE_DIR = abspath(join(dirname(__file__), "..", "website"))
+import builder
+BASE_DIR = builder.WEBSITE_DIR
 
 class Page(object):
     
@@ -77,31 +77,32 @@ GLOBALS = {
     "files": GetSetupFiles(),
     "MENU_TABS": MENU_TABS
 }
-myLookUp = TemplateLookup(directories=[abspath(join(BASE_DIR, 'templates'))])
 
-for page in MENU_TABS:
-    GLOBALS["CURRENT"] = page
-    content = Template(
-        filename=join(BASE_DIR, "templates", page.template), 
-        lookup=myLookUp
-    ).render(**GLOBALS)
-    open(join(BASE_DIR, page.outfile), "wt").write(content)
-
-#import BuildDocs
-#BuildDocs.Main(buildHtml=True)
- 
-from SftpSync import SftpSync
-
-url = sys.argv[1]
+def Main():
     
-syncer = SftpSync(url)
-addFiles = [
-    (join(BASE_DIR, "index.html"), "index.html"),
-]
-syncer.Sync(BASE_DIR, addFiles)
-syncer.sftpClient.utime(syncer.remotePath + "wiki", None)
-syncer.ClearDirectory(
-    syncer.remotePath + "forum/cache", 
-    excludes=["index.htm", ".htaccess"]
-)
-syncer.Close()
+    myLookUp = TemplateLookup(directories=[abspath(join(BASE_DIR, 'templates'))])
+
+    for page in MENU_TABS:
+        GLOBALS["CURRENT"] = page
+        content = Template(
+            filename=join(BASE_DIR, "templates", page.template), 
+            lookup=myLookUp
+        ).render(**GLOBALS)
+        open(join(BASE_DIR, page.outfile), "wt").write(content)
+    
+    #import BuildDocs
+    #BuildDocs.Main(buildHtml=True)
+     
+    from SftpSync import SftpSync
+    
+    syncer = SftpSync(builder.config.webUploadUrl)
+    addFiles = [
+        (join(BASE_DIR, "index.html"), "index.html"),
+    ]
+    syncer.Sync(BASE_DIR, addFiles)
+    syncer.sftpClient.utime(syncer.remotePath + "wiki", None)
+    syncer.ClearDirectory(
+        syncer.remotePath + "forum/cache", 
+        excludes=["index.htm", ".htaccess"]
+    )
+    syncer.Close()
