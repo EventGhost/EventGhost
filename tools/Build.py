@@ -35,7 +35,7 @@ from glob import glob
 import builder
 from builder.CheckDependencies import CheckDependencies
 from builder.InnoSetup import InnoInstaller
-
+from builder.Utils import GetSvnRevision
 
 if not CheckDependencies():
     sys.exit(1)
@@ -106,29 +106,18 @@ builder.EXCLUDED_MODULES = EXCLUDED_MODULES
 class MyInstaller(InnoInstaller):
     appShortName = "EventGhost_Py%d%d" % sys.version_info[:2]
     mainScript = "EventGhost.pyw"
-    icon = "EventGhost.ico"
-    excludes = EXCLUDED_MODULES
-
     outputBaseFilename = None
     
-    def __init__(self):
-        InnoInstaller.__init__(self)
-        self.innoScriptTemplate = file(
-                join(builder.DATA_DIR, "InnoSetup.template"),
-                "rt"
-        ).read()
-
-
     def UpdateVersionFile(self):
         """
         Update buildTime and revision for eg/Classes/VersionRevision.py
         """
-        self.svnRevision = self.GetSvnRevision()
+        self.svnRevision = GetSvnRevision(builder.SOURCE_DIR)
         outfile = open(join(self.tmpDir, "VersionRevision.py"), "wt")
         outfile.write("revision = %r\n" % self.svnRevision)
         outfile.write("buildTime = %f\n" % time.time())
         outfile.close()
-        versionFilePath = join(self.sourceDir, "eg/Classes/Version.py")
+        versionFilePath = join(builder.SOURCE_DIR, "eg/Classes/Version.py")
         mod = imp.load_source("Version", versionFilePath)
         self.appVersion = mod.Version.base + (".r%s" % self.svnRevision)
         self.outputBaseFilename = "EventGhost_%s_Setup" % self.appVersion
@@ -138,7 +127,7 @@ class MyInstaller(InnoInstaller):
         """
         Add a version header to CHANGELOG.TXT if needed.
         """
-        path = join(self.sourceDir, "CHANGELOG.TXT")
+        path = join(builder.SOURCE_DIR, "CHANGELOG.TXT")
         timeStr = time.strftime("%m/%d/%Y")
         header = "**%s (%s)**\n\n" % (self.appVersion, timeStr)
         infile = open(path, "r")
@@ -166,7 +155,7 @@ class MyInstaller(InnoInstaller):
         
         files = []
         client = pysvn.Client()
-        workingDir = self.sourceDir
+        workingDir = builder.SOURCE_DIR
         props = client.propget("noinstall", workingDir, recurse=True)
         # propget returns the pathes with forward slash as deliminator, but we 
         # need backslashes
@@ -211,22 +200,22 @@ class MyInstaller(InnoInstaller):
                 plugins[pluginFolder] = True
             if (
                 filename.startswith("lib") 
-                and not filename.startswith("lib%s\\" % self.pyVersion)
+                and not filename.startswith("lib%s\\" % builder.PYVERSION_STR)
             ):
                 continue
-            self.AddFile(join(self.sourceDir, filename), dirname(filename))
+            self.AddFile(join(builder.SOURCE_DIR, filename), dirname(filename))
         for filename in glob(join(self.libraryDir, '*.*')):
             self.AddFile(filename, self.libraryName)
         self.AddFile(
-            join(self.sourceDir, self.appShortName + ".exe"), 
+            join(builder.SOURCE_DIR, self.appShortName + ".exe"), 
             destName="EventGhost.exe"
         )
         self.AddFile(
-            join(self.sourceDir, "py%s.exe" % self.pyVersion), 
+            join(builder.SOURCE_DIR, "py%s.exe" % builder.PYVERSION_STR), 
             destName="py.exe"
         )
         self.AddFile(
-            join(self.sourceDir, "pyw%s.exe" % self.pyVersion), 
+            join(builder.SOURCE_DIR, "pyw%s.exe" % builder.PYVERSION_STR), 
             destName="pyw.exe"
         )
         self.AddFile(
@@ -243,7 +232,7 @@ class MyInstaller(InnoInstaller):
             )
         self.Add(
             "InstallDelete", 
-            'Type: files; Name: "{app}\\lib%s\\*.*"' % self.pyVersion
+            'Type: files; Name: "{app}\\lib%s\\*.*"' % builder.PYVERSION_STR
         )
         self.ExecuteInnoSetup()
     
