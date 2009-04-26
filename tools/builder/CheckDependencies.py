@@ -16,12 +16,12 @@ DEPENDENCIES = [
         "pysvn", 
         "http://pysvn.tigris.org/"
     ),
-#    (
-#        "py2exe", 
-#        "0.6.9", 
-#        "py2exe", 
-#        "http://www.py2exe.org/"
-#    ),
+    (
+        "py2exe", 
+        "0.6.9", 
+        "py2exe", 
+        "http://www.py2exe.org/"
+    ),
     (
         "win32api", 
         "212", 

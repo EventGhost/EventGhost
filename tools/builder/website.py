@@ -78,7 +78,7 @@ GLOBALS = {
     "MENU_TABS": MENU_TABS
 }
 
-def Main():
+def Main(url):
     
     myLookUp = TemplateLookup(directories=[abspath(join(BASE_DIR, 'templates'))])
 
@@ -95,7 +95,7 @@ def Main():
      
     from SftpSync import SftpSync
     
-    syncer = SftpSync(builder.config.webUploadUrl)
+    syncer = SftpSync(url)
     addFiles = [
         (join(BASE_DIR, "index.html"), "index.html"),
     ]

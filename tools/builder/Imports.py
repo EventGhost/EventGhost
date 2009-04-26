@@ -222,54 +222,49 @@ def GetPackageModules(package):
     return moduleList
     
     
-class Task(builder.TaskBase):
-    description = "Build imports.py"
-    default = True
-    option = "buildImports"
+def DoTask():    
+    """
+    Starts the actual work.
+    """
+    MODULES_TO_IGNORE.extend(builder.EXCLUDED_MODULES)
     
-    def DoTask(self):    
-        """
-        Starts the actual work.
-        """
-        MODULES_TO_IGNORE.extend(builder.EXCLUDED_MODULES)
-        
-        globalModuleIndex, badModules = ReadGlobalModuleIndex()
-        MODULES_TO_IGNORE.extend(badModules)
-        
-        stdLibModules = (
-            FindModulesInPath(join(PYTHON_DIR, "DLLs"), includeDeprecated=True)
-            + FindModulesInPath(join(PYTHON_DIR, "lib"), includeDeprecated=True)
-        )
+    globalModuleIndex, badModules = ReadGlobalModuleIndex()
+    MODULES_TO_IGNORE.extend(badModules)
     
-        notFoundModules = []
-        for module in globalModuleIndex:
-            if module in stdLibModules:
-                continue
-            if module in sys.builtin_module_names:
-                continue
-            if ShouldBeIgnored(module):
-                continue
-            notFoundModules.append(module)
-        if notFoundModules:
-            print "    Modules found in global module index but not in scan:"
-            for module in notFoundModules:
-                print "       ", module
+    stdLibModules = (
+        FindModulesInPath(join(PYTHON_DIR, "DLLs"), includeDeprecated=True)
+        + FindModulesInPath(join(PYTHON_DIR, "lib"), includeDeprecated=True)
+    )
+
+    notFoundModules = []
+    for module in globalModuleIndex:
+        if module in stdLibModules:
+            continue
+        if module in sys.builtin_module_names:
+            continue
+        if ShouldBeIgnored(module):
+            continue
+        notFoundModules.append(module)
+    if notFoundModules:
+        print "    Modules found in global module index but not in scan:"
+        for module in notFoundModules:
+            print "       ", module
+
+        
     
-            
-        
-        #print "Modules found in scan but not in global module index:"
-        #for module in stdLibModules:
-        #    if module not in globalModuleIndex:
-        #        print "   ", module
-        
-        outfile = open(join(builder.PYVERSION_DIR, "imports.py"), "wt")
-        outfile.write(HEADER)
-        for module in stdLibModules:
+    #print "Modules found in scan but not in global module index:"
+    #for module in stdLibModules:
+    #    if module not in globalModuleIndex:
+    #        print "   ", module
+    
+    outfile = open(join(builder.PYVERSION_DIR, "imports.py"), "wt")
+    outfile.write(HEADER)
+    for module in stdLibModules:
+        outfile.write("import %s\n" % module)
+    # add every .pyd of the current directory
+    for package in builder.INCLUDED_MODULES:
+        outfile.write("\n# modules found for package '%s'\n" % package)
+        for module in GetPackageModules(package):
             outfile.write("import %s\n" % module)
-        # add every .pyd of the current directory
-        for package in builder.INCLUDED_MODULES:
-            outfile.write("\n# modules found for package '%s'\n" % package)
-            for module in GetPackageModules(package):
-                outfile.write("import %s\n" % module)
-        outfile.close()
-        
+    outfile.close()
+    

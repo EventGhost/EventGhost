@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 import subprocess
@@ -39,5 +40,49 @@ def StartProcess(*args):
     
 def ExecutePy(*args):
     return StartProcess(sys.executable, "-u", "-c", "\n".join(args))
+
+
+def GetSvnRevision(workingCopy):
+    """
+    Return the highest SVN revision in the working copy.
+    """
+    import pysvn
+    client = pysvn.Client()
+    svnRevision = 0
+    for status in client.status(workingCopy, ignore=True):
+        if status.is_versioned:
+            if status.entry.revision.number > svnRevision:
+                svnRevision = status.entry.revision.number
+    return svnRevision
+
+
+def RemoveAllManifests(scanDir):
+    """ 
+    Remove embedded manifest resource for all DLLs and PYDs in the supplied
+    path. 
+    
+    These seems to be the only way how the setup can run with Python 2.6
+    on Vista.
+    """
+    import ctypes
+    
+    BeginUpdateResource = ctypes.windll.kernel32.BeginUpdateResourceA
+    UpdateResource = ctypes.windll.kernel32.UpdateResourceA
+    EndUpdateResource = ctypes.windll.kernel32.EndUpdateResourceA
+    
+    for (dirpath, dirnames, filenames) in os.walk(scanDir):
+        if '.svn' in dirnames:
+            dirnames.remove('.svn')
+        for name in filenames:
+            ext = os.path.splitext(name)[1].lower()
+            if ext not in (".pyd", ".dll"):
+                continue
+            path = os.path.join(dirpath, name)
+            handle = BeginUpdateResource(path, 0)
+            if handle == 0:
+                continue
+            res = UpdateResource(handle, 24, 2, 1033, None, 0)
+            if res:
+                EndUpdateResource(handle, 0)
 
 

@@ -8,19 +8,19 @@ import builder.Tasks
 class MainDialog(wx.Dialog):
     
     def __init__(self):
-        options = builder.config
         wx.Dialog.__init__(self, None, title="Build EventGhost Installer")
         
         # create controls
         self.ctrls = {}
         ctrlsSizer = wx.BoxSizer(wx.VERTICAL)
         for task in builder.TASKS:
-            if task.option is None:
+            if task.enabled is None:
                 continue
+            section = task.GetId()
             ctrl = wx.CheckBox(self, -1, task.description)
-            ctrl.SetValue(bool(getattr(options, task.option)))
+            ctrl.SetValue(task.enabled)
             ctrlsSizer.Add(ctrl, 0, wx.ALL, 5)
-            self.ctrls[task.option] = ctrl
+            self.ctrls[section] = ctrl
             if not task.IsEnabled():
                 ctrl.Enable(False)
 
@@ -66,10 +66,12 @@ class MainDialog(wx.Dialog):
         self.okButton.Enable(False)
         self.cancelButton.Enable(False)
         #self.SetWindowStyleFlag(wx.CAPTION|wx.RESIZE_BORDER)
-        for option in builder.config._options[:-2]:
-            ctrl = self.ctrls[option.name]
-            setattr(builder.config, option.name, ctrl.GetValue())
-            ctrl.Enable(False)
+        for task in builder.TASKS:
+            section = task.GetId()
+            if section in self.ctrls:
+                ctrl = self.ctrls[section]
+                task.enabled = ctrl.GetValue()
+                ctrl.Enable(False)
         builder.config.SaveSettings()
         thread = threading.Thread(target=self.DoMain)
         thread.start()

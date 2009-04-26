@@ -19,9 +19,6 @@
 # $LastChangedDate$
 # $LastChangedRevision$
 # $LastChangedBy$
-"""
-Routines to upload a file through FTP with a nice dialog.
-"""
 
 import sys
 import tempfile
@@ -31,7 +28,7 @@ import shutil
 import atexit
 import zipfile
 import builder
-from builder.Utils import StartProcess
+from builder.Utils import StartProcess, RemoveAllManifests
 
 from os.path import basename, dirname, abspath, join, exists
 from glob import glob
@@ -119,73 +116,21 @@ class InnoInstaller(object):
     appShortName = "Application"
     libraryName = "lib%d%d" % sys.version_info[:2]
     appVersion = "0.0.0"
-    pyVersion = "%d%d" % sys.version_info[:2]
     bootScript = "Py2ExeBootScript.py"
-    icon = None
-    excludes = []
     
     # must be set be subclass
     mainScript = None
-    innoScriptTemplate = None
 
 
     def __init__(self):
         self.tmpDir = tempfile.mkdtemp()
         atexit.register(shutil.rmtree, self.tmpDir)
-        self.sourceDir = builder.SOURCE_DIR
         self.outputDir = abspath(join(builder.SOURCE_DIR, ".."))
-        self.libraryDir = abspath(join(self.sourceDir, self.libraryName))
-        self.toolsDir = abspath(join(builder.SOURCE_DIR, "tools"))
+        self.libraryDir = join(builder.SOURCE_DIR, self.libraryName)
         self.innoSections = {}
-        self.pyVersionDir = builder.PYVERSION_DIR
-        self.dataDir = builder.DATA_DIR
         # Add our working dir to the import pathes
-        sys.path.append(self.toolsDir)
-        sys.path.append(self.pyVersionDir)
-        manifest = file(
-            join(self.pyVersionDir, "manifest.template")
-        ).read() % self
-
-        self.py2exeOptions = dict(
-            options = dict(
-                build = dict(build_base = join(self.tmpDir, "build")),
-                py2exe = dict(
-                    compressed = 0,
-                    includes = [
-                        "encodings",
-                        "encodings.*",
-                        "imports",
-                    ],
-                    excludes = self.excludes,
-                    dll_excludes = [
-                        "DINPUT8.dll", 
-                        "w9xpopen.exe", 
-                        #"gdiplus.dll", 
-                        #"msvcr71.dll",
-                    ],
-                    dist_dir = self.sourceDir,
-                    custom_boot_script = join(builder.DATA_DIR, self.bootScript),
-                )
-            ),
-            # The lib directory contains everything except the executables and
-            # the python dll.
-            zipfile = join(self.libraryName, "python%s.zip" % self.pyVersion),
-            windows = [
-                dict(
-                    script = abspath(self.mainScript),
-                    icon_resources = [],
-                    other_resources = [
-                        (RT_MANIFEST, 1, manifest)
-                    ],
-                    dest_base = self.appShortName
-                ),
-            ],
-            verbose = 0,
-        )
-        if self.icon:
-            self.py2exeOptions["windows"][0]["icon_resources"].append(
-                (1, join(builder.DATA_DIR, self.icon))
-            )
+        sys.path.append(join(builder.SOURCE_DIR, "tools"))
+        sys.path.append(builder.PYVERSION_DIR)
 
         
     def Add(self, section, line):
@@ -211,20 +156,6 @@ class InnoInstaller(object):
         return getattr(self, key)
     
     
-    def GetSvnRevision(self):
-        """
-        Return the highest SVN revision in the working copy.
-        """
-        import pysvn
-        client = pysvn.Client()
-        svnRevision = 0
-        for status in client.status(self.sourceDir, ignore=True):
-            if status.is_versioned:
-                if status.entry.revision.number > svnRevision:
-                    svnRevision = status.entry.revision.number
-        return svnRevision
-    
-    
     def CommitSvn(self):
         """
         Commit all modified files in the working copy to the SVN server.
@@ -240,7 +171,7 @@ class InnoInstaller(object):
         svn = pysvn.Client()
         svn.callback_ssl_server_trust_prompt = SslServerTrustPromptCallback
         svn.checkin(
-            [self.sourceDir], 
+            [builder.SOURCE_DIR], 
             "Created installer for %s" % self.appVersion
         )
     
@@ -256,7 +187,7 @@ class InnoInstaller(object):
             return True, 0, True
         svn = pysvn.Client()
         svn.callback_ssl_server_trust_prompt = SslServerTrustPromptCallback
-        svn.update(self.sourceDir)
+        svn.update(builder.SOURCE_DIR)
         
     
     def CreateSourceArchive(self, filename=None):
@@ -270,7 +201,7 @@ class InnoInstaller(object):
                 "%(appShortName)s_%(appVersion)s_Source.zip" % self
             )
         client = pysvn.Client()
-        workingDir = self.sourceDir
+        workingDir = builder.SOURCE_DIR
         zipFile = zipfile.ZipFile(filename, "w", zipfile.ZIP_DEFLATED)
         for status in client.status(workingDir, ignore=True):
             if status.is_versioned:
@@ -289,14 +220,60 @@ class InnoInstaller(object):
         InstallPy2exePatch()
         import py2exe # pylint: disable-msg=W0612
                       # looks like py2exe import is unneeded, but it isn't
-        if exists(self.libraryDir):
-            for filename in os.listdir(self.libraryDir):
-                path = join(self.libraryDir, filename)
+        libraryDir = self.libraryDir
+        if exists(libraryDir):
+            for filename in os.listdir(libraryDir):
+                path = join(libraryDir, filename)
                 if not os.path.isdir(path):
                     os.remove(path)
-        setup(script_args=["py2exe"], **self.py2exeOptions)
+                    
+        manifest = file(
+            join(builder.PYVERSION_DIR, "manifest.template")
+        ).read() % self
+
+        py2exeOptions = dict(
+            options = dict(
+                build = dict(build_base = join(self.tmpDir, "build")),
+                py2exe = dict(
+                    compressed = 0,
+                    includes = [
+                        "encodings",
+                        "encodings.*",
+                        "imports",
+                    ],
+                    excludes = builder.EXCLUDED_MODULES,
+                    dll_excludes = [
+                        "DINPUT8.dll", 
+                        "w9xpopen.exe", 
+                        #"gdiplus.dll", 
+                        #"msvcr71.dll",
+                    ],
+                    dist_dir = builder.SOURCE_DIR,
+                    custom_boot_script = join(builder.DATA_DIR, self.bootScript),
+                )
+            ),
+            # The lib directory contains everything except the executables and
+            # the python dll.
+            zipfile = join(self.libraryName, "python%s.zip" % builder.PYVERSION_STR),
+            windows = [
+                dict(
+                    script = join(builder.SOURCE_DIR, self.mainScript),
+                    icon_resources = [],
+                    other_resources = [(RT_MANIFEST, 1, manifest)],
+                    dest_base = self.appShortName
+                ),
+            ],
+            verbose = 0,
+        )
+        iconPath = join(builder.DATA_DIR, "Main.ico")
+        if exists(iconPath):
+            py2exeOptions["windows"][0]["icon_resources"].append((1, iconPath))
+        #import pprint
+        #pprint.pprint(self.py2exeOptions)
+        setup(script_args=["py2exe"], **py2exeOptions)
+        
         dllNames = [
-            basename(name) for name in glob(join(self.libraryDir, "*.dll"))
+            basename(name) for name in glob(join(libraryDir, "*.dll"))
         ]
         neededDlls = []
         for _, _, files in os.walk(dirname(sys.executable)):
@@ -305,38 +282,9 @@ class InnoInstaller(object):
                     neededDlls.append(filename)
         for filename in dllNames:
             if filename not in neededDlls:
-                os.remove(join(self.libraryDir, filename))
-        if self.pyVersion == "26":
-            self.RemoveAllManifests()
-    
-    
-    def RemoveAllManifests(self):
-        """ 
-        Remove embedded manifest resource for all DLLs and PYDs. 
-        
-        These seems to be the only way how the setup can run with Python 2.6
-        on Vista.
-        """
-        import ctypes
-        
-        BeginUpdateResource = ctypes.windll.kernel32.BeginUpdateResourceA
-        UpdateResource = ctypes.windll.kernel32.UpdateResourceA
-        EndUpdateResource = ctypes.windll.kernel32.EndUpdateResourceA
-        
-        for (dirpath, dirnames, filenames) in os.walk(self.libraryDir):
-            if '.svn' in dirnames:
-                dirnames.remove('.svn')
-            for name in filenames:
-                ext = os.path.splitext(name)[1].lower()
-                if ext not in (".pyd", ".dll"):
-                    continue
-                path = os.path.join(dirpath, name)
-                handle = BeginUpdateResource(path, 0)
-                if handle == 0:
-                    continue
-                res = UpdateResource(handle, 24, 2, 1033, None, 0)
-                if res:
-                    EndUpdateResource(handle, 0)
+                os.remove(join(libraryDir, filename))
+        if builder.PYVERSION_STR == "26":
+            RemoveAllManifests(libraryDir)
     
     
     def ExecuteInnoSetup(self):
@@ -345,20 +293,24 @@ class InnoInstaller(object):
         Inno Setup compiler.
         """
         srcDir = builder.SOURCE_DIR
-        if self.pyVersion == "25":
+        if builder.PYVERSION_STR == "25":
             self.AddFile(join(srcDir, "MFC71.dll"))
             self.AddFile(join(srcDir, "msvcr71.dll"))
             self.AddFile(join(srcDir, "msvcp71.dll"))
             self.AddFile(join(srcDir, "python25.dll"))
-        elif self.pyVersion == "26":
+        elif builder.PYVERSION_STR == "26":
             self.AddFile(join(srcDir, "msvcr90.dll"))
             self.AddFile(join(srcDir, "msvcp90.dll"))
             self.AddFile(join(srcDir, "msvcm90.dll"))
             self.AddFile(join(srcDir, "python26.dll"))
             self.AddFile(join(srcDir, "Microsoft.VC90.CRT.manifest"))
+        innoScriptTemplate = file(
+                join(builder.DATA_DIR, "InnoSetup.template"),
+                "rt"
+        ).read()
         innoScriptPath = join(self.tmpDir, "Setup.iss")
         issFile = open(innoScriptPath, "w")
-        issFile.write(self.innoScriptTemplate % self)
+        issFile.write(innoScriptTemplate % self)
         #print self.outputBaseFilename
         for section, lines in self.innoSections.iteritems():
             issFile.write("[%s]\n" % section)
