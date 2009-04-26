@@ -17,35 +17,36 @@ class HomePage(Page):
     name = "Home"
     target = "/"
     outfile = "index.html"
-    template = "home.html"
+    template = "home.mako"
     
 
 class ForumPage(Page):
     name = "Forum"
     target = "/forum/"
     outfile = "css/header_forum.html"
-    template = "header_only.html"
+    template = "header_only.mako"
     
 
 class DocsPage(Page):
     name = "Documentation"
     target = "/docs/"
     outfile = r"..\docs\source\_templates\header_docs.html"
-    template = "header_only.html"
+    template = "header_only.mako"
     
 
 class WikiPage(Page):
     name = "Wiki"
     target = "/wiki/"
     outfile = "css/header_wiki.html"
-    template = "header_only.html"
+    template = "header_only.mako"
     
 
 class DownloadPage(Page):
     name = "Downloads"
     target = "/downloads/"
     outfile = "downloads/index.html"
-    template = "download.html"
+    template = "download.mako"
+    
     
 
 class FileData(object):
@@ -73,21 +74,31 @@ def GetSetupFiles():
                 files.append(fileData)
     return list(reversed(sorted(files, key=lambda x: x.name)))
 
+from docutils.core import publish_parts
+
+def rst2html(rst):
+    return publish_parts(rst, writer_name="html")["fragment"]
+
+
 GLOBALS = {
     "files": GetSetupFiles(),
-    "MENU_TABS": MENU_TABS
+    "MENU_TABS": MENU_TABS,
+    'rst2html': rst2html,
+
 }
 
 def Main(url):
     
-    myLookUp = TemplateLookup(directories=[abspath(join(BASE_DIR, 'templates'))])
+    myLookUp = TemplateLookup(directories=[abspath(join(builder.DATA_DIR, 'templates'))])
 
     for page in MENU_TABS:
         GLOBALS["CURRENT"] = page
         content = Template(
-            filename=join(BASE_DIR, "templates", page.template), 
+            filename=join(builder.DATA_DIR, "templates", page.template), 
             lookup=myLookUp
         ).render(**GLOBALS)
+#        if os.path.splitext(page.template)[1] == ".rst":
+#            print "is rst"
         open(join(BASE_DIR, page.outfile), "wt").write(content)
     
     #import BuildDocs

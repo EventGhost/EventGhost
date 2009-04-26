@@ -1,6 +1,8 @@
 import sys
+import warnings
 from string import digits
 from os.path import join
+
 from builder.InnoSetup import GetInnoCompilerPath
 
 DEPENDENCIES = [
@@ -84,7 +86,9 @@ def CheckDependencies():
         )
     for moduleName, wantedVersion, name, url in DEPENDENCIES:
         try:
-            module = __import__(moduleName)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                module = __import__(moduleName)
         except ImportError:
             missing.append((moduleName, wantedVersion, name, url))
             continue

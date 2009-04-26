@@ -56,33 +56,61 @@ def GetSvnRevision(workingCopy):
     return svnRevision
 
 
-def RemoveAllManifests(scanDir):
-    """ 
-    Remove embedded manifest resource for all DLLs and PYDs in the supplied
-    path. 
+def UpdateSvn(workingCopy):
+    import pysvn
     
-    These seems to be the only way how the setup can run with Python 2.6
-    on Vista.
+    def SslServerTrustPromptCallback(dummy):
+        """ 
+        See pysvn documentation for 
+        pysvn.Client.callback_ssl_server_trust_prompt
+        """
+        return True, 0, True
+    svn = pysvn.Client()
+    svn.callback_ssl_server_trust_prompt = SslServerTrustPromptCallback
+    svn.update(workingCopy)
+        
+
+def CommitSvn():
     """
-    import ctypes
+    Commit all modified files in the working copy to the SVN server.
+    """
+    import pysvn
     
-    BeginUpdateResource = ctypes.windll.kernel32.BeginUpdateResourceA
-    UpdateResource = ctypes.windll.kernel32.UpdateResourceA
-    EndUpdateResource = ctypes.windll.kernel32.EndUpdateResourceA
+    def SslServerTrustPromptCallback(dummy):
+        """ 
+        See pysvn documentation for 
+        pysvn.Client.callback_ssl_server_trust_prompt
+        """
+        return True, 0, True
+    svn = pysvn.Client()
+    svn.callback_ssl_server_trust_prompt = SslServerTrustPromptCallback
+    svn.checkin(
+        [builder.SOURCE_DIR], 
+        "Created installer for %s" % builder.APP_VERSION
+    )
+
+
+def CreateSourceArchive(filename=None):
+    """
+    Create a zip archive off all versioned files in the working copy.
+    """
+    import pysvn
+    import zipfile
     
-    for (dirpath, dirnames, filenames) in os.walk(scanDir):
-        if '.svn' in dirnames:
-            dirnames.remove('.svn')
-        for name in filenames:
-            ext = os.path.splitext(name)[1].lower()
-            if ext not in (".pyd", ".dll"):
-                continue
-            path = os.path.join(dirpath, name)
-            handle = BeginUpdateResource(path, 0)
-            if handle == 0:
-                continue
-            res = UpdateResource(handle, 24, 2, 1033, None, 0)
-            if res:
-                EndUpdateResource(handle, 0)
+    if filename is None:
+        filename = join(
+            builder.OUT_DIR, 
+            "%(APP_NAME)s_%(APP_VERSION)s_Source.zip" % builder.__dict__
+        )
+    client = pysvn.Client()
+    workingDir = builder.SOURCE_DIR
+    zipFile = zipfile.ZipFile(filename, "w", zipfile.ZIP_DEFLATED)
+    for status in client.status(workingDir, ignore=True):
+        if status.is_versioned:
+            path = status.path
+            if not os.path.isdir(path):
+                arcname = path[len(workingDir) + 1:]
+                zipFile.write(str(path), str(arcname))
+    zipFile.close()
 
 

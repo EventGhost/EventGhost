@@ -13,7 +13,7 @@ class MainDialog(wx.Dialog):
         # create controls
         self.ctrls = {}
         ctrlsSizer = wx.BoxSizer(wx.VERTICAL)
-        for task in builder.TASKS:
+        for task in builder.Tasks.TASKS:
             if task.enabled is None:
                 continue
             section = task.GetId()
@@ -66,7 +66,7 @@ class MainDialog(wx.Dialog):
         self.okButton.Enable(False)
         self.cancelButton.Enable(False)
         #self.SetWindowStyleFlag(wx.CAPTION|wx.RESIZE_BORDER)
-        for task in builder.TASKS:
+        for task in builder.Tasks.TASKS:
             section = task.GetId()
             if section in self.ctrls:
                 ctrl = self.ctrls[section]

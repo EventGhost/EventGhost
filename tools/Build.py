@@ -25,9 +25,6 @@ This script creates the EventGhost setup installer.
 """
 import sys
 import os
-import time
-import imp
-import warnings
 from os.path import dirname, join, exists
 from glob import glob
 
@@ -35,7 +32,6 @@ from glob import glob
 import builder
 from builder.CheckDependencies import CheckDependencies
 from builder.InnoSetup import InnoInstaller
-from builder.Utils import GetSvnRevision
 
 if not CheckDependencies():
     sys.exit(1)
@@ -101,48 +97,15 @@ EXCLUDED_MODULES = [
 
 builder.INCLUDED_MODULES = INCLUDED_MODULES
 builder.EXCLUDED_MODULES = EXCLUDED_MODULES
+builder.APP_NAME = "EventGhost"
+builder.MAIN_SCRIPT = "EventGhost.pyw"
 
 
-class MyInstaller(InnoInstaller):
+class MyInstaller(object):
     appShortName = "EventGhost_Py%d%d" % sys.version_info[:2]
-    mainScript = "EventGhost.pyw"
-    outputBaseFilename = None
     
-    def UpdateVersionFile(self):
-        """
-        Update buildTime and revision for eg/Classes/VersionRevision.py
-        """
-        self.svnRevision = GetSvnRevision(builder.SOURCE_DIR)
-        outfile = open(join(self.tmpDir, "VersionRevision.py"), "wt")
-        outfile.write("revision = %r\n" % self.svnRevision)
-        outfile.write("buildTime = %f\n" % time.time())
-        outfile.close()
-        versionFilePath = join(builder.SOURCE_DIR, "eg/Classes/Version.py")
-        mod = imp.load_source("Version", versionFilePath)
-        self.appVersion = mod.Version.base + (".r%s" % self.svnRevision)
-        self.outputBaseFilename = "EventGhost_%s_Setup" % self.appVersion
-        
-    
-    def UpdateChangeLog(self):    
-        """
-        Add a version header to CHANGELOG.TXT if needed.
-        """
-        path = join(builder.SOURCE_DIR, "CHANGELOG.TXT")
-        timeStr = time.strftime("%m/%d/%Y")
-        header = "**%s (%s)**\n\n" % (self.appVersion, timeStr)
-        infile = open(path, "r")
-        data = infile.read(100) # read some data from the beginning
-        if data.strip().startswith("**"):
-            # no new lines, so skip the addition of a new header
-            return
-        data += infile.read() # read the remaining contents
-        infile.close()
-        outfile = open(path, "w+")
-        outfile.write(header + data)
-        outfile.close()
-        
-    
-    def GetSetupFiles(self):
+    @staticmethod
+    def GetSetupFiles():
         """
         Return all files needed by the installer.
         
@@ -192,7 +155,7 @@ class MyInstaller(InnoInstaller):
         """
         Create and compile the Inno Setup installer script.
         """
-        filename = self.outputBaseFilename
+        inno = InnoInstaller()
         plugins = {}
         for filename in self.GetSetupFiles():
             if filename.startswith("plugins\\"):
@@ -203,38 +166,38 @@ class MyInstaller(InnoInstaller):
                 and not filename.startswith("lib%s\\" % builder.PYVERSION_STR)
             ):
                 continue
-            self.AddFile(join(builder.SOURCE_DIR, filename), dirname(filename))
-        for filename in glob(join(self.libraryDir, '*.*')):
-            self.AddFile(filename, self.libraryName)
-        self.AddFile(
+            inno.AddFile(join(builder.SOURCE_DIR, filename), dirname(filename))
+        for filename in glob(join(builder.LIBRARY_DIR, '*.*')):
+            inno.AddFile(filename, builder.LIBRARY_NAME)
+        inno.AddFile(
             join(builder.SOURCE_DIR, self.appShortName + ".exe"), 
             destName="EventGhost.exe"
         )
-        self.AddFile(
+        inno.AddFile(
             join(builder.SOURCE_DIR, "py%s.exe" % builder.PYVERSION_STR), 
             destName="py.exe"
         )
-        self.AddFile(
+        inno.AddFile(
             join(builder.SOURCE_DIR, "pyw%s.exe" % builder.PYVERSION_STR), 
             destName="pyw.exe"
         )
-        self.AddFile(
-            join(self.tmpDir, "VersionRevision.py"), 
+        inno.AddFile(
+            join(builder.TMP_DIR, "VersionRevision.py"), 
             destDir="eg/Classes"
         )
         # create entries in the [InstallDelete] section of the Inno script to
         # remove all known plugin directories before installing the new 
         # plugins.
         for plugin in plugins.keys():
-            self.Add(
+            inno.Add(
                 "InstallDelete", 
                 'Type: filesandordirs; Name: "{app}\\plugins\\%s"' % plugin
             )
-        self.Add(
+        inno.Add(
             "InstallDelete", 
             'Type: files; Name: "{app}\\lib%s\\*.*"' % builder.PYVERSION_STR
         )
-        self.ExecuteInnoSetup()
+        inno.ExecuteInnoSetup()
     
     
 builder.installer = MyInstaller()

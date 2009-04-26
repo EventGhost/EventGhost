@@ -1,5 +1,5 @@
 import ConfigParser
-import builder
+from builder.Tasks import TASKS
 
 
 class Config(object):
@@ -15,7 +15,7 @@ class Config(object):
         """ 
         configParser = ConfigParser.ConfigParser()
         configParser.read(self._configFilePath)
-        for task in builder.TASKS:
+        for task in TASKS:
             section = task.GetId()
             options = configParser.options(section)
             for option in options:
@@ -33,7 +33,7 @@ class Config(object):
         # make ConfigParser case-sensitive
         config.optionxform = str
         config.read(self._configFilePath)
-        for task in builder.TASKS:
+        for task in TASKS:
             section = task.GetId()
             if not config.has_section(section):
                 config.add_section(section)
