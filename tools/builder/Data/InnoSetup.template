@@ -11,15 +11,15 @@ ShowLanguageDialog=auto
 AppName=EventGhost
 AppPublisher=EventGhost Project
 AppPublisherURL=http://www.eventghost.org/
-AppVerName=EventGhost %(appVersion)s
+AppVerName=EventGhost %(APP_VERSION)s
 DefaultDirName={pf}\EventGhost
 DefaultGroupName=EventGhost
 Compression=lzma/ultra
 SolidCompression=yes
 InternalCompressLevel=ultra
-OutputDir=%(outputDir)s
-OutputBaseFilename=%(outputBaseFilename)s
-InfoBeforeFile=%(dataDir)s\LICENSE.RTF
+OutputDir=%(OUT_DIR)s
+OutputBaseFilename=%(APP_NAME)s_%(APP_VERSION)s_Setup
+InfoBeforeFile=%(DATA_DIR)s\LICENSE.RTF
 DisableReadyPage=yes
 AppMutex=Global\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B
 
@@ -42,11 +42,11 @@ end;
 Type: filesandordirs; Name: "{app}\eg"
 
 [Files]
-Source: "%(libraryDir)s\*.*"; DestDir: "{app}\%(libraryName)s"; Flags: ignoreversion recursesubdirs
-Source: "%(sourceDir)s\EventGhost.chm"; DestDir: "{app}"
+Source: "%(LIBRARY_DIR)s\*.*"; DestDir: "{app}\%(LIBRARY_NAME)s"; Flags: ignoreversion recursesubdirs
+Source: "%(SOURCE_DIR)s\EventGhost.chm"; DestDir: "{app}"
 
 [Dirs]
-Name: "{app}\%(libraryName)s\site-packages"
+Name: "{app}\%(LIBRARY_NAME)s\site-packages"
 
 [Run]
 Filename: "{app}\EventGhost.exe"; Parameters: "-install"

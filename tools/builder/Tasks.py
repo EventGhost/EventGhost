@@ -1,19 +1,36 @@
 import sys
 import shutil
+import time
 from os.path import join
 import builder
 from builder.Utils import ExecutePy
 
+class TaskBase(object):
+    value = None
+    enabled = True
     
-class UpdateSvn(builder.TaskBase):
+    @classmethod
+    def GetId(cls):
+        return cls.__module__ + "." + cls.__name__
+    
+    def IsEnabled(self):
+        return True
+    
+    def DoTask(self):
+        raise NotImplementedError
+    
+    
+    
+class UpdateSvn(TaskBase):
     description = "Update from SVN"
     
     def DoTask(self):
-        builder.installer.UpdateSvn()
+        from builder.Utils import UpdateSvn
+        UpdateSvn(builder.SOURCE_DIR)
 
 
 
-class UpdateVersionFile(builder.TaskBase):
+class UpdateVersionFile(TaskBase):
     """
     Update buildTime and revision for eg/Classes/VersionRevision.py
     """
@@ -21,11 +38,21 @@ class UpdateVersionFile(builder.TaskBase):
     enabled = None
     
     def DoTask(self):
-        builder.installer.UpdateVersionFile()
+        from builder.Utils import GetSvnRevision
+        import imp
+        
+        svnRevision = GetSvnRevision(builder.SOURCE_DIR)
+        outfile = open(join(builder.TMP_DIR, "VersionRevision.py"), "wt")
+        outfile.write("revision = %r\n" % svnRevision)
+        outfile.write("buildTime = %f\n" % time.time())
+        outfile.close()
+        versionFilePath = join(builder.SOURCE_DIR, "eg/Classes/Version.py")
+        mod = imp.load_source("Version", versionFilePath)
+        builder.APP_VERSION = mod.Version.base + (".r%s" % svnRevision)
 
 
 
-class UpdateChangeLog(builder.TaskBase):
+class UpdateChangeLog(TaskBase):
     """
     Add a version header to CHANGELOG.TXT if needed.
     """
@@ -33,11 +60,23 @@ class UpdateChangeLog(builder.TaskBase):
     enabled = None
     
     def DoTask(self):
-        builder.installer.UpdateChangeLog()
+        path = join(builder.SOURCE_DIR, "CHANGELOG.TXT")
+        timeStr = time.strftime("%m/%d/%Y")
+        header = "**%s (%s)**\n\n" % (builder.APP_VERSION, timeStr)
+        infile = open(path, "r")
+        data = infile.read(100) # read some data from the beginning
+        if data.strip().startswith("**"):
+            # no new lines, so skip the addition of a new header
+            return
+        data += infile.read() # read the remaining contents
+        infile.close()
+        outfile = open(path, "w+")
+        outfile.write(header + data)
+        outfile.close()
 
 
 
-class BuildHtml(builder.TaskBase):
+class BuildHtml(TaskBase):
     description = "Build HTML docs"
     
     def DoTask(self):
@@ -47,7 +86,7 @@ class BuildHtml(builder.TaskBase):
         )
         
 
-class BuildChm(builder.TaskBase):
+class BuildChm(TaskBase):
     description = "Build CHM docs"
     
     def DoTask(self):
@@ -57,23 +96,25 @@ class BuildChm(builder.TaskBase):
         )
         
 
-class CreateSourceArchive(builder.TaskBase):
+class CreateSourceArchive(TaskBase):
     description = "Build source archive"
     
     def DoTask(self):
-        builder.installer.CreateSourceArchive()
+        from builder.Utils import CreateSourceArchive
+        CreateSourceArchive()
         
 
 
-class CreateLibrary(builder.TaskBase):
+class CreateLibrary(TaskBase):
     description = "Build lib%d%d" %sys.version_info[0:2]
     
     def DoTask(self):
-        builder.installer.CreateLibrary()
+        import builder.Library
+        builder.Library.CreateLibrary()
         
         
 
-class CreateInstaller(builder.TaskBase):
+class CreateInstaller(TaskBase):
     description = "Build Setup.exe"
     
     def DoTask(self):
@@ -81,7 +122,7 @@ class CreateInstaller(builder.TaskBase):
         
         
 
-class Upload(builder.TaskBase):
+class Upload(TaskBase):
     description = "Upload through FTP"
     options = {"url": ""}
     
@@ -91,16 +132,16 @@ class Upload(builder.TaskBase):
     
     def DoTask(self):
         import builder.Upload
-        installer = builder.installer
-        filename = join(installer.outputDir, installer.outputBaseFilename + ".exe")
-        builder.Upload.Upload(filename, self.options["url"])
-        dst = join(builder.WEBSITE_DIR, "downloads", installer.outputBaseFilename + ".exe")
-        shutil.copyfile(filename, dst)
-        shutil.copystat(filename, dst)
+        filename = builder.APP_NAME + "_" + builder.APP_VERSION + "_Setup.exe"
+        src = join(builder.OUT_DIR, filename)
+        dst = join(builder.WEBSITE_DIR, "downloads", filename)
+        builder.Upload.Upload(src, self.options["url"])
+        shutil.copyfile(src, dst)
+        shutil.copystat(src, dst)
         
 
 
-class UpdateWebsite(builder.TaskBase):
+class UpdateWebsite(TaskBase):
     description = "Update website"
     options = {"url": ""}
     
@@ -114,7 +155,7 @@ class UpdateWebsite(builder.TaskBase):
         
 
 
-class CreateStaticImports(builder.TaskBase):
+class CreateStaticImports(TaskBase):
     description = "Create StaticImports.py"
     
     def DoTask(self):
@@ -123,7 +164,7 @@ class CreateStaticImports(builder.TaskBase):
         
 
 
-class CreateImports(builder.TaskBase):
+class CreateImports(TaskBase):
     description = "Create Imports.py"
     
     def DoTask(self):
@@ -132,7 +173,7 @@ class CreateImports(builder.TaskBase):
         
 
 
-class BuildPyExe(builder.TaskBase):
+class BuildPyExe(TaskBase):
     description = "Build py.exe and pyw.exe"
     
     def DoTask(self):
