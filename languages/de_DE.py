@@ -85,7 +85,7 @@ class MainFrame:
         WebWiki = u"Wiki"
     class Messages:
         cantAddAction = u"Sie können kein Befehls-Element an dieser Stelle hinzufügen.\n\nBitte selektieren sie ein Makro-Element oder ein Element innerhalb eines Makros um ein Befehls-Element hinzuzufügen."
-        cantAddEvent = u"Sie können keinen Ereignis-Element an dieser Stelle hinzufügen.\n\nBitte selektieren sie ein Makro-Element oder ein Element innerhalb eines Makros um ein Ereignis-Element hinzuzufügen."
+        cantAddEvent = u"Sie können kein Ereignis-Element an dieser Stelle hinzufügen.\n\nBitte selektieren sie ein Makro-Element oder ein Element innerhalb eines Makros um ein Ereignis-Element hinzuzufügen."
         cantConfigure = u"Sie können dieses Element nicht konfigurieren.\n\nNur Befehls-, Ereignis- und Plugin-Elemente sind konfigurierbar."
         cantDisable = u"Sie können dieses Element nicht deaktivieren.\n\nEine Deaktivierung des Wurzel-Elementes und des Autostart-Elementes sind nicht möglich."
         cantExecute = u"Sie können dieses Element nicht ausführen.\n\nOrdner-Elemente, Ereignis-Elemente und das Wurzel-Element können nicht ausgeführt werden."
