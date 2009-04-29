@@ -1,7 +1,7 @@
 eg.RegisterPlugin(
     name = 'Keene IR Anywhere',
     author = 'ldobson',
-    version = '1.0.3',
+    version = '1.0.4',
     kind = 'remote',
     description = '''\
         Hardware plugin for the 
@@ -16,42 +16,41 @@ eg.RegisterPlugin(
             </div>
         </p>
         <p>
-            If you are talking to multiple units it's best to have
-            them all set to different ports and then load this plugin
-            multiple times and set each event prefix to something
-            different. If you load it multiple times and don't
-            have different port numbers then you will be confused as to 
-            which unit you are receiving information from, as only one
-            of the plugin instances will be able to listen on that port
+            If you are talking to multiple units and they are using the
+            same port then make sure you only start one server on that
+            port. Otherwise you will be confused as to which unit you are
+            receiving information from, as only one of the plugin instances
+            will be able to listen on that port.
         </p>
         <p>
-            Events that can occur (assuming "KIRA" is your event prefix):
+            The plugin supports one event:
             <ul>
                 <li>
-                    <b>KIRA.Acknowledgment</b> - 
-                    Happens when a unit sends an "ACK" response to an action
-                </li>
-                <li>
-                    <b>KIRA.ReceivedIR</b> - 
-                    Happens when we receive an IR stream from a unit. The 
-                    stream can be found in {eg.ReceivedIR} for use in actions
-                </li>.
-                <li>
                     <b>KIRA.XXXXXX.DDDDDDDD</b> - 
-                    Also happens when we receive an IR stream, this one
+                    (assuming "KIRA" is your event prefix).
+                    Happens when we receive an IR stream, this event name
                     is the decoded IR that can be used to pick up on
                     subsequent presses of the same button. "XXXXXX" is the
                     IR protocol (it's not uncommon to see this as "Unknown"
-                    so don't panic!) and "DDDDDDDD" is the code itself.
+                    so don't panic) and "DDDDDDDD" is the code itself.
                 </li>
             </ul>
             <p>
-                If you switch on "Log incoming raw IR streams", the IR streams
-                will also be printed in the log window in the format:
+                If you switch on "Log incoming raw IR streams", the IR 
+                streams will be printed in the log window in the format:
             </p>
             <p>
                 <div align="center">
                     <b>KIRA.Raw.XXYY DDDD DDDD DDDD 2000</b>
+                </div>
+            </p>
+            <p>
+                When a unit sends an "ACK" response to an action, 
+                then this will appear in the log window:
+            </p>
+            <p>
+                <div align="center">
+                    <b>KIRA.Acknowledgement</b>
                 </div>
             </p>
         </p>
@@ -63,6 +62,7 @@ import asyncore, socket
 class Text:
     host = 'Host:'
     port = 'UDP Port:'
+    svr = 'Start a server on this port'
     eventPrefix = 'Event Prefix:'
     ipBox = 'IP Settings'
     eventBox = 'Event generation'
@@ -95,12 +95,11 @@ class Text:
             odd number of these chunks), and "2000" is hard-coded
         </p>
         <p>
-            You can use "{eg.ReceivedIR}" to use the last IR stream
-            that the plugin has received. This is useful in
-            conjunction with the "KIRA.ReceivedIR" event. Note that
+            You can use "{eg.event.source.ReceivedIR}" to use the 
+            IR stream that triggered the current event. Note that
             if you're sending a stream to the unit it came from then
             it is advisable to leave a pause of at least 0.2 seconds
-            before the TransmitIR action
+            before the Transmit IR action
         </p>
     '''
     sendToMeDesc = (
@@ -126,15 +125,19 @@ class KIRA(eg.PluginClass):
     def __close__(self):
         self.irDecoder.Close()
 
-    def __start__(self, host, port, prefix, logRaw):
+    def __start__(self, host, port, svr, prefix, logRaw):
         self.host = host
         self.port = port
+        self.svr = svr
         self.info.eventPrefix = prefix
         self.logRaw = logRaw
-        try:
-            self.server = Server(self.port, self)
-        except socket.error, exc:
-            raise self.Exception(exc[1])
+        if (self.svr):
+            try:
+                self.server = Server(self.port, self)
+            except socket.error, exc:
+                raise self.Exception(exc[1])
+        else:
+            self.server = None
 
     def __stop__(self):
         if self.server:
@@ -145,6 +148,7 @@ class KIRA(eg.PluginClass):
         self, 
         host = 'standalone', 
         port = 65432, 
+        svr = True, 
         prefix = 'KIRA',
         logRaw = True
     ):
@@ -152,6 +156,7 @@ class KIRA(eg.PluginClass):
         panel = eg.ConfigPanel(self)
         hostCtrl = panel.TextCtrl(host)
         portCtrl = panel.SpinIntCtrl(port, max = 65535)
+        svrCtrl = panel.CheckBox(svr, text.svr)
         eventPrefixCtrl = panel.TextCtrl(prefix)
         logRawCtrl = panel.CheckBox(logRaw, text.logRaw)
 
@@ -163,7 +168,7 @@ class KIRA(eg.PluginClass):
         ipBox = panel.BoxedGroup(
             text.ipBox,
             (st1, hostCtrl),
-            (st2, portCtrl),
+            (st2, portCtrl, svrCtrl),
         )
 
         eventBox = panel.BoxedGroup(
@@ -174,16 +179,34 @@ class KIRA(eg.PluginClass):
         panel.sizer.Add(ipBox, 0, wx.EXPAND)
         panel.sizer.Add(eventBox, 0, wx.TOP|wx.EXPAND, 10)
 
+        eventPrefixCtrl.Enable(svrCtrl.IsChecked())
+        logRawCtrl.Enable(svrCtrl.IsChecked())
+
+        def OnCheckBox(event):
+            eventPrefixCtrl.Enable(svrCtrl.IsChecked())
+            logRawCtrl.Enable(svrCtrl.IsChecked())
+            event.Skip()
+            
+        svrCtrl.Bind(wx.EVT_CHECKBOX, OnCheckBox)
+
         while panel.Affirmed():
             panel.SetResult(
                 hostCtrl.GetValue(), 
                 portCtrl.GetValue(), 
+                svrCtrl.GetValue(), 
                 eventPrefixCtrl.GetValue(), 
                 logRawCtrl.GetValue()
             )
 
     def Send(self, mesg):
-        self.server.sendto(mesg, (self.host, self.port))
+        if (self.svr):
+            self.server.sendto(mesg, (self.host, self.port))
+        else:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind(('', self.port))
+            sock.sendto(mesg, (self.host, self.port))
+            sock.close()
 
 class Transmit(eg.ActionClass):
     name = 'Transmit IR'
@@ -267,12 +290,12 @@ class Server(asyncore.dispatcher):
             if (codes[0] == 'K'):
                 codes.remove('K')
 
-                eg.ReceivedIR = ' '.join(codes)
+                self.handler.ReceivedIR = ' '.join(codes)
 
                 if (self.handler.logRaw):
                     print(
                         self.handler.info.eventPrefix + 
-                        '.Raw.' + eg.ReceivedIR
+                        '.Raw.' + self.handler.ReceivedIR
                     )
 
                 try:
@@ -289,7 +312,6 @@ class Server(asyncore.dispatcher):
                             'ACK', 
                             (client_addr[0], client_addr[1])
                         )
-                        self.handler.TriggerEvent('ReceivedIR')
                         self.handler.irDecoder.Decode(data, len(data))
 
                     else:
@@ -298,7 +320,10 @@ class Server(asyncore.dispatcher):
                     print 'Malformed incoming IR code'
 
             elif (codes[0] == 'ACK'):
-                self.handler.TriggerEvent('Acknowledgement')
+                print(
+                    self.handler.info.eventPrefix + 
+                    '.Acknowledgement'
+                )
                 
         except socket.timeout:
             pass
