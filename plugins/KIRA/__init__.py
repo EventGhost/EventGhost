@@ -1,7 +1,7 @@
 eg.RegisterPlugin(
     name = 'Keene IR Anywhere',
     author = 'ldobson',
-    version = '1.0.4',
+    version = '1.0.5',
     kind = 'remote',
     description = '''\
         Hardware plugin for the 
@@ -78,7 +78,7 @@ class Text:
             (where "KIRA" is your event prefix)
         </p>
         <p>
-            Remove the leading "K " from IR streams that
+            Remove the leading "K " from IR streams that 
             you have learned with the Keene software
         </p>
         <p>
@@ -95,11 +95,15 @@ class Text:
             odd number of these chunks), and "2000" is hard-coded
         </p>
         <p>
-            You can use "{eg.event.source.ReceivedIR}" to use the 
-            IR stream that triggered the current event. Note that
-            if you're sending a stream to the unit it came from then
-            it is advisable to leave a pause of at least 0.2 seconds
-            before the Transmit IR action
+            You can use:
+        </p>
+        <p>
+            <div align="center">
+                <b>{eg.event.payload}</b>
+            </div>
+        </p>
+        <p>
+            to use the IR stream that triggered the current KIRA event
         </p>
     '''
     sendToMeDesc = (
@@ -199,7 +203,7 @@ class KIRA(eg.PluginClass):
             )
 
     def Send(self, mesg):
-        if (self.svr):
+        if (self.server):
             self.server.sendto(mesg, (self.host, self.port))
         else:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -290,12 +294,12 @@ class Server(asyncore.dispatcher):
             if (codes[0] == 'K'):
                 codes.remove('K')
 
-                self.handler.ReceivedIR = ' '.join(codes)
+                rawCode = ' '.join(codes)
 
                 if (self.handler.logRaw):
                     print(
                         self.handler.info.eventPrefix + 
-                        '.Raw.' + self.handler.ReceivedIR
+                        '.Raw.' + rawCode
                     )
 
                 try:
@@ -313,6 +317,7 @@ class Server(asyncore.dispatcher):
                             (client_addr[0], client_addr[1])
                         )
                         self.handler.irDecoder.Decode(data, len(data))
+                        self.handler.irDecoder.event.payload = rawCode
 
                     else:
                         raise self.handler.Exception()
