@@ -72,7 +72,7 @@ class App(wx.App):
         # This method gets called from MessageReceiver on a
         # WM_QUERYENDSESSION win32 message.
         if eg.document.CheckFileNeedsSave() == wx.ID_CANCEL:
-            eg.PrintDebugNotice("User cancelled shutdown in OnQueryEndSession")
+            eg.PrintDebugNotice("User canceled shutdown in OnQueryEndSession")
             return 0
         return 1
 
