@@ -49,6 +49,7 @@ class Text(eg.TranslatableStrings):
 class OptionsDialog(eg.TaskletDialog):
     instance = None
     
+    @eg.LogItWithReturn
     def Configure(self, parent=None):
         if OptionsDialog.instance:
             OptionsDialog.instance.Raise()

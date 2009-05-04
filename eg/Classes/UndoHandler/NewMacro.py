@@ -57,7 +57,7 @@ class NewMacro(eg.UndoHandler.NewItem):
         item.Select()
         self.StoreItem(item)
         # let the user choose an action
-        result = eg.AddActionDialog.GetResult(document.frame)
+        result = eg.AddActionDialog.GetModalResult(document.frame)
         
         # if user canceled the dialog, take a quick exit
         if result is None:

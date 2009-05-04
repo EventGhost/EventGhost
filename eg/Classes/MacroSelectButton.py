@@ -56,12 +56,14 @@ class MacroSelectButton(wx.Window):
             self.Layout()
 
         
+    @eg.AsTasklet
     def OnButton(self, dummyEvent):
-        result = eg.TreeItemBrowseDialog.GetResult(
+        result = eg.TreeItemBrowseDialog.GetModalResult(
             self.title,
             self.mesg, 
             self.macro, 
-            (eg.MacroItem,)
+            (eg.MacroItem,),
+            parent=self
         )
         if result:
             macro = result[0]

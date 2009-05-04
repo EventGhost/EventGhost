@@ -4,9 +4,14 @@ import stackless
 
 
 class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
-
+    __tasklet = None
+    __isModal = False
+    
     @eg.LogItWithReturn
     def __init__(self, *args, **kwargs):
+        self.__lastEventId = None
+        self.__done = False
+        self.setupFinished = False
         wx.Dialog.__init__(self, *args, **kwargs)
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         eg.Notify("DialogCreate", self)
@@ -27,21 +32,25 @@ class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
         
     @eg.LogItWithReturn
     def SetResult(self, *args):
-        if self.lastEventId == wx.ID_OK:
-            self.done = True
-        self.resultsChannel.send((self.lastEventId, args))
+        if self.__isModal:
+            self.__lastEventId = False
+            self.result = args
+            self.EndModal(wx.ID_CANCEL)
+        else:
+            if self.__lastEventId == wx.ID_OK:
+                self.__done = True
+            self.__resultsChannel.send((self.__lastEventId, args))
             
+    
+    def Configure(self, *args):
+        raise NotImplementedError
+    
     
     @eg.LogItWithReturn
     def ProcessingTask(self, *args, **kwargs):
-        self.processingChannel = stackless.channel()
-        self.resultsChannel = stackless.channel()
-        self.setupFinished = False
-        self.lastEventId = None
-        self.done = False
         self.Configure(*args, **kwargs)
-        self.done = True
-        self.resultsChannel.send((None, None))
+        self.__done = True
+        self.__resultsChannel.send((None, None))
         if self.setupFinished:
             self.Destroy()
         
@@ -50,16 +59,35 @@ class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
     @eg.LogItWithReturn
     def Create(cls, *args, **kwargs):
         self = cls.__new__(cls, *args, **kwargs)
-        self.tasklet = eg.Tasklet(self.ProcessingTask)(*args, **kwargs)
-        self.tasklet.run()
+        self.__processingChannel = stackless.channel()
+        self.__resultsChannel = stackless.channel()
+        self.__tasklet = eg.Tasklet(self.ProcessingTask)(*args, **kwargs)
+        self.__tasklet.run()
         return self
                 
     
+    @classmethod
+    @eg.LogItWithReturn
+    def GetModalResult(cls, *args, **kwargs):
+        self = cls.__new__(cls, *args, **kwargs)
+        self.__processingChannel = stackless.channel()
+        self.result = None
+        self.__isModal = True
+        self.__tasklet = eg.Tasklet(self.Configure)(*args, **kwargs)
+        self.__tasklet.run()
+        self.__processingChannel.receive()
+        self.CenterOnParent()
+        eg.Utils.EnsureVisible(self)
+        self.ShowModal()
+        self.Destroy()
+        return self.result
+
+
     @eg.LogItWithReturn
     def GetEvent(self):
-        event, args = self.resultsChannel.receive()
+        event, args = self.__resultsChannel.receive()
         if event is None:
-            self.tasklet.run()
+            self.__tasklet.run()
         return event, args
         
     
@@ -85,46 +113,59 @@ class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
     
         
     @eg.LogItWithReturn
-    def Dispatch(self, eventId):
-        self.lastEventId = eventId
-        if eventId == wx.ID_CANCEL:
-            self.processingChannel.send(None)
-        elif eventId == wx.ID_OK:
-            self.processingChannel.send(wx.ID_OK)
-            if self.done:
-                self.processingChannel.send(None)
+    def DispatchEvent(self, event, eventId):
+        event.Skip()
+        self.__lastEventId = eventId
+        if self.__isModal:
+            if eventId == wx.ID_CANCEL:
+                self.__lastEventId = False
+                self.EndModal(wx.ID_CANCEL)
+            if not self.__tasklet.blocked:
+                self.__tasklet.run()
+            else:
+                self.__processingChannel.receive()
+                self.__tasklet.run()
         else:
-            self.processingChannel.send(eventId)
+            if eventId == wx.ID_CANCEL:
+                self.__processingChannel.send(None)
+            elif eventId == wx.ID_OK:
+                self.__processingChannel.send(wx.ID_OK)
+                if self.__done:
+                    self.__processingChannel.send(None)
+            else:
+                self.__processingChannel.send(eventId)
 
         
     @eg.LogItWithReturn
     def Affirmed(self):
-        if not self.setupFinished:
-            self.FinishSetup()
-        return self.processingChannel.receive()
+        if self.__isModal:
+            if self.__lastEventId is False:
+                return False
+            self.__processingChannel.send("dummy")
+            return self.__lastEventId
+        else:
+            if not self.setupFinished:
+                self.FinishSetup()
+            return self.__processingChannel.receive()
             
     
     @eg.LogItWithReturn
     def OnClose(self, event):
-        self.Dispatch(wx.ID_CANCEL)
-        event.Skip()
+        self.DispatchEvent(event, wx.ID_CANCEL)
         
         
     @eg.LogItWithReturn
     def OnOK(self, event):
-        self.Dispatch(wx.ID_OK)
-        event.Skip()
+        self.DispatchEvent(event, wx.ID_OK)
         
         
     @eg.LogItWithReturn
     def OnCancel(self, event):
-        self.Dispatch(wx.ID_CANCEL)
-        event.Skip()
+        self.DispatchEvent(event, wx.ID_CANCEL)
         
         
     @eg.LogItWithReturn
     def OnApply(self, event):
-        self.Dispatch(wx.ID_APPLY)
-        event.Skip()
+        self.DispatchEvent(event, wx.ID_APPLY)
 
         
