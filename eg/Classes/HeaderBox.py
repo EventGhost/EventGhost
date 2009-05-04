@@ -104,7 +104,8 @@ class HeaderBox(wx.PyWindow):
 
     def OnLinkClicked(self, event):
         if event.GetLinkInfo().GetHref() == "ShowMoreHelp":
-            self.parent.configureItem.ShowHelp(self.GetParent())
+            #self.parent.configureItem.ShowHelp(self.GetParent())
+            self.parent.configureItem.ShowHelp(eg.document.frame)
         else:
             event.Skip()
         

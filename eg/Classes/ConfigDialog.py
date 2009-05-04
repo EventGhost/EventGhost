@@ -116,8 +116,7 @@ class ConfigDialog(eg.TaskletDialog):
         
     
     def OnTestButton(self, event):
-        self.Dispatch(eg.ID_TEST)
-        event.Skip()
+        self.DispatchEvent(event, eg.ID_TEST)
         
         
     @eg.LogItWithReturn

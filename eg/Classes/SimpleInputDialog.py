@@ -51,7 +51,7 @@ class SimpleInputDialog(eg.TaskletDialog):
         
         
     @classmethod
-    def Do(cls, prompt):
+    def RawInput(cls, prompt):
         returnValue = []
         event = threading.Event()
         @eg.AsTasklet

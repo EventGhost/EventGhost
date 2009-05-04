@@ -827,12 +827,9 @@ class MainFrame(wx.Frame):
 
     @eg.AsTasklet
     def OnCmdAddPlugin(self):
-        pluginInfo = None
-        for event, result in eg.AddPluginDialog.Create(self):
-            pluginInfo = result[0]
-            break
-        if pluginInfo:
-            eg.UndoHandler.NewPlugin().Do(self.document, pluginInfo)
+        result = eg.AddPluginDialog.GetModalResult(self)
+        if result:
+            eg.UndoHandler.NewPlugin().Do(self.document, result[0])
             
             
     @eg.AsTasklet
@@ -858,10 +855,10 @@ class MainFrame(wx.Frame):
             self.DisplayError(Text.Messages.cantAddAction)
             return
         # let the user choose an action
-        result = eg.AddActionDialog.GetResult(self)
+        result = eg.AddActionDialog.GetModalResult(self)
+        # if user canceled the dialog, take a quick exit
         if result is None:
             return
-        # if user canceled the dialog, take a quick exit
         eg.UndoHandler.NewAction().Do(self.document, result[0])
         
     

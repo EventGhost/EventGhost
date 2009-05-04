@@ -40,6 +40,7 @@ class Text(eg.TranslatableStrings):
 class AddActionDialog(eg.TaskletDialog):
     lastSelectedDataItem = None
     
+    @eg.LogItWithReturn
     def Configure(self, parent):
         self.resultData = None
         self.lastSelectedTreeItem = None
