@@ -17,9 +17,8 @@ a normal consumer remote. But its possible uses go much beyond this.
 Download
 ~~~~~~~~
 
-EventGhost runs on Microsoft Windows 2000/XP/Vista (older OS versions are
-not supported).
-You can get EventGhost from the `download page <http:///downloads/>`_.
+EventGhost runs on Microsoft Windows 2000/XP/Vista. You can get EventGhost from 
+the `download page </downloads/>`_.
 
 
 License
@@ -33,8 +32,8 @@ So EventGhost is open source software. You can get and use it without charge.
 Support
 ~~~~~~~
 
-* `Documentation <http:///docs/>`_ - please read it!
-* `Wiki <http:///wiki/>`_
-* `Forum <http:///forum/>`_
+* `Documentation </docs/>`_
+* `Wiki </wiki/>`_
+* `Forum </forum/>`_
 </%def>
 ${rst2html(self.content_rst())}

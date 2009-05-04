@@ -18,9 +18,9 @@ Previous Versions:
 Other Downloads:
 ~~~~~~~~~~~~~~~~
 
-* `X10 remote driver (for 32bit Windows) <href="x10drivers_x86.exe">`_
-* `X10 remote driver (for 64bit Windows) <href="x10drivers_x64_x86.exe">`_
-* `Example files for the Webserver plugin <href="Webserver_Demo.zip">`_
+* `X10 remote driver (for 32bit Windows) <x10drivers_x86.exe>`_
+* `X10 remote driver (for 64bit Windows) <x10drivers_x64.exe>`_
+* `Example files for the Webserver plugin <Webserver_Demo.zip>`_
 
 </%def>
 ${rst2html(self.content_rst())}
