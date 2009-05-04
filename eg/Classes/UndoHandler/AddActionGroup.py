@@ -27,10 +27,10 @@ class AddActionGroup(eg.UndoHandler.NewItem):
     name = "Add all actions of plugin"
     
     def Do(self, document, pluginItem):
-        parentItem = eg.AddActionGroupDialog.GetModalResult((document.frame))
-        if parentItem is None:
+        result = eg.AddActionGroupDialog.GetResult((document.frame))
+        if result is None:
             return
-        parentItem = parentItem[0][0]
+        parentItem = result[0]
         
         def Traverse(parentItem, actionGroup):
             folderItem = document.FolderItem.Create(

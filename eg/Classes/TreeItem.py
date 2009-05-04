@@ -504,21 +504,3 @@ class TreeItem(object):
             pass
 
 
-    # These attributes are here to make TreeNodes usable in a eg.VirtualTree
-    # very experimental!!!
-    label = property(
-        lambda self: self.GetLabel(), 
-        lambda self, label: self.RenameTo(label)
-    )
-    imageIndex = property(
-        lambda self: 
-            self.icon.index if self.isEnabled else self.icon.disabledIndex
-    )
-    selectedImageIndex = -1
-    isActivatable = property(
-        lambda self: isinstance(self, eg.ActionItem)
-    )
-    def OnActivate(self):
-        handler = eg.UndoHandler.Configure()
-        eg.Greenlet(handler.Do).switch(self)
-        

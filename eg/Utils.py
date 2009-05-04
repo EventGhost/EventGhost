@@ -22,8 +22,8 @@
 
 __all__ = ["Bunch", "NotificationHandler", "LogIt", "LogItWithReturn",
     "TimeIt", "AssertNotMainThread", "AssertNotActionThread", "ParseString",
-    "SetDefault", "EnsureVisible", "AsGreenlet",
-    "VBoxSizer", "HBoxSizer", "EqualizeWidths",
+    "SetDefault", "EnsureVisible", "VBoxSizer", "HBoxSizer", "EqualizeWidths",
+    "AsTasklet",
 ]
     
 import eg
@@ -169,6 +169,12 @@ def AssertNotActionThread(func):
         return func(*args, **kwargs)
     return update_wrapper(AssertWrapper, func)
 
+
+def AsTasklet(func):
+    def Wrapper(*args, **kwargs):
+        eg.Tasklet(func)(*args, **kwargs).run()
+    return update_wrapper(Wrapper, func)
+    
     
 def ParseString(text, filterFunc=None):
     start = 0
@@ -211,13 +217,6 @@ def SetDefault(targetCls, defaultCls):
             setattr(targetCls, defaultKey, defaultValue)
         elif type(defaultValue) in USER_CLASSES:
             SetDefault(targetDict[defaultKey], defaultValue)
-
-
-def AsGreenlet(func):
-    def Wrapper(*args, **kwargs):
-        greenlet = eg.Greenlet(func)
-        return greenlet.switch(*args, **kwargs)
-    return update_wrapper(Wrapper, func)
 
 
 def EnsureVisible(window):

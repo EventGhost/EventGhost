@@ -205,8 +205,9 @@ class Log(object):
         def PrintDebugNotice(self, *args):
             """Logs a message if eg.debugLevel is set."""
             threadName = str(currentThread().getName())
+            taskletName = str(eg.Tasklet.GetCurrentId())
             strs = [strftime("%H:%M:%S:")]
-            strs.append(threadName + ":")
+            strs.append(taskletName + " " + threadName + ":")
         
             for arg in args:
                 strs.append(str(arg))

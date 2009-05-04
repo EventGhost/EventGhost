@@ -294,10 +294,6 @@ eg.scheduler = eg.Scheduler()
 eg.TriggerEvent = eg.eventThread.TriggerEvent
 eg.TriggerEnduringEvent = eg.eventThread.TriggerEnduringEvent
 
-from greenlet import greenlet
-eg.Greenlet = greenlet
-eg.mainGreenlet = greenlet.getcurrent()
-
 from eg.WinApi.SendKeys import SendKeysParser
 eg.SendKeys = SendKeysParser()
 

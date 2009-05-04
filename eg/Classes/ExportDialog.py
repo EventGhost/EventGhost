@@ -30,12 +30,12 @@ class Text:
 text = Text
 
 
-class ExportDialog(eg.Dialog):
+class ExportDialog(eg.TaskletDialog):
     
-    def Process(self):
+    def Configure(self):
         self.foundId = None
         style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
-        eg.Dialog.__init__(self, None, -1, title="Export", style=style)
+        eg.TaskletDialog.__init__(self, None, -1, title="Export", style=style)
         staticText = wx.StaticText(self, -1, text.mesg)
         
         filterClasses = (eg.FolderItem, )#eg.MacroItem)

@@ -24,9 +24,9 @@ import eg
 import wx
 
 
-class TreeItemBrowseDialog(eg.Dialog):
+class TreeItemBrowseDialog(eg.TaskletDialog):
     
-    def Process(
+    def Configure(
         self, 
         title, 
         text, 
@@ -39,7 +39,7 @@ class TreeItemBrowseDialog(eg.Dialog):
         self.resultClasses = resultClasses
         self.foundId = None
         style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
-        eg.Dialog.__init__(self, parent, -1, title=title, style=style)
+        eg.TaskletDialog.__init__(self, parent, -1, title=title, style=style)
         staticText = wx.StaticText(self, -1, text)
         staticText.Wrap(430)
 

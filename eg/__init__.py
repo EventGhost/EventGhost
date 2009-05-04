@@ -20,20 +20,22 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import sys, os
+from types import ModuleType
+import stackless
+
 import Cli
 
 # This is only here to make pylint happy. It is never really imported
-if False:
+if "pylint" in sys.modules:
     from StaticImports import *
     from Core import *
-
-from types import ModuleType
 
 
 class LazyModule(ModuleType):
     
     def __init__(self):
-        import sys
+        #import sys
         
         self._ORIGINAL_MODULE = sys.modules[__name__]
         # let ourself look like a package
@@ -63,7 +65,10 @@ class LazyModule(ModuleType):
             eg.LanguageEditor()
         else:
             eg.Init.InitGui()
-        eg.app.MainLoop()
+        #eg.app.MainLoop()
+        eg.Tasklet(eg.app.MainLoop)().run()
+        stackless.run()
+        print "mainloop end"
 
 
 eg = LazyModule()

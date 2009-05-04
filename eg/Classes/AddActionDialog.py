@@ -37,13 +37,13 @@ class Text(eg.TranslatableStrings):
 
 
 
-class AddActionDialog(eg.Dialog):
+class AddActionDialog(eg.TaskletDialog):
     lastSelectedDataItem = None
     
-    def Process(self, parent):
+    def Configure(self, parent):
         self.resultData = None
         self.lastSelectedTreeItem = None
-        eg.Dialog.__init__(
+        eg.TaskletDialog.__init__(
             self, 
             parent, 
             -1,
@@ -206,4 +206,4 @@ class AddActionDialog(eg.Dialog):
         if isinstance(itemData, eg.ActionGroup):
             event.Skip()
         else:
-            self.OnOK()
+            self.OnOK(wx.CommandEvent())

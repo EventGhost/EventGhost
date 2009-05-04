@@ -32,7 +32,12 @@ from cStringIO import StringIO
 from eg.WinApi.Dynamic import (
     MEMORYSTATUSEX, GlobalMemoryStatusEx, byref, sizeof
 )
-
+try:
+    import stackless
+    is_stackless = True
+except ImportError:
+    is_stackless = False
+    
 
 def GetPluginAuthors():
     """
@@ -320,10 +325,13 @@ class SystemInfoPanel(HtmlPanel):
             time.gmtime(eg.Version.buildTime)
         ).decode(eg.systemEncoding)
         totalMemory, availableMemory = GetRam()
+        pythonVersion = "%d.%d.%d %s %d" % sys.version_info
+        if is_stackless:
+            pythonVersion = "Stackless Python " + pythonVersion
         self.sysInfos = (
             ("EventGhost Version", eg.Version.string),
             ("Build Time", buildTime),
-            ("Python Version", "%d.%d.%d %s %d" % sys.version_info),
+            ("Python Version", pythonVersion),
             ("wxPython Version", wx.VERSION_STRING),
             ("Platform", platform.platform()),
             ("CPU", GetCpuName()),
@@ -413,15 +421,19 @@ class ChangelogPanel(HtmlPanel):
     
 
 
-class AboutDialog(eg.Dialog):
-
-    def Process(self, parent): #IGNORE:W0221
-        eg.Dialog.__init__(
-            self, 
-            parent, 
-            -1, 
-            Text.Title,
-            style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
+class AboutDialog(eg.TaskletDialog):
+    instance = None
+    
+    @eg.LogItWithReturn
+    def Configure(self, parent): #IGNORE:W0221
+        if AboutDialog.instance:
+            AboutDialog.instance.Raise()
+            return
+        AboutDialog.instance = self
+        eg.TaskletDialog.__init__(
+            self,
+            parent=parent, 
+            title=Text.Title, 
         )
         notebook = wx.Notebook(self)
         notebook.AddPage(AboutPanel(notebook), Text.tabAbout)
@@ -450,7 +462,11 @@ class AboutDialog(eg.Dialog):
             (notebook, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, 5),
             (buttonSizer, 0, wx.EXPAND),
         )
+        #self.SetSizerAndFit(mainSizer)
+        #self.SetMinSize(self.GetSize())
+        #self.Affirmed()
         self.SetSizerAndFit(mainSizer)
         self.SetMinSize(self.GetSize())
-        self.Affirmed()
-    
+        while self.Affirmed():
+            self.SetResult()
+        AboutDialog.instance = None

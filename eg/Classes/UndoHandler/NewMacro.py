@@ -30,7 +30,6 @@ class NewMacro(eg.UndoHandler.NewItem):
     """
     name = eg.text.MainFrame.Menu.AddMacro.replace("&", "")
     
-    @eg.AsGreenlet
     def Do(self, document):
         obj = document.selection
         if isinstance(obj, (document.MacroItem, document.AutostartItem)):
@@ -58,12 +57,12 @@ class NewMacro(eg.UndoHandler.NewItem):
         item.Select()
         self.StoreItem(item)
         # let the user choose an action
-        action = eg.AddActionDialog.GetModalResult(document.frame)
+        result = eg.AddActionDialog.GetResult(document.frame)
         
         # if user canceled the dialog, take a quick exit
-        if action is None:
+        if result is None:
             return item
-        action = action[0][0]
+        action = result[0]
         
         actionObj = eg.UndoHandler.NewAction().Do(document, action)
         if actionObj:
