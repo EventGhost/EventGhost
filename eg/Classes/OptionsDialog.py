@@ -46,18 +46,22 @@ class Text(eg.TranslatableStrings):
     
 
 
-class OptionsDialog(eg.Dialog):
+class OptionsDialog(eg.TaskletDialog):
+    instance = None
     
-    def Process(self, parent=None):
+    def Configure(self, parent=None):
+        if OptionsDialog.instance:
+            OptionsDialog.instance.Raise()
+            return
+        OptionsDialog.instance = self
+        
         text = Text
         config = eg.config
         
-        eg.Dialog.__init__(
-            self, 
-            parent, 
-            -1,
-            text.Title, 
-            style=wx.DEFAULT_DIALOG_STYLE
+        eg.TaskletDialog.__init__(
+            self,
+            parent=parent, 
+            title=text.Title, 
         )
         
         languageNames = eg.Translation.languageNames
@@ -199,4 +203,4 @@ class OptionsDialog(eg.Dialog):
             config.language = language
             config.Save()
             self.SetResult()
-
+        OptionsDialog.instance = None

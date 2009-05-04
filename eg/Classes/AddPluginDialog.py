@@ -23,7 +23,7 @@
 import eg
 import wx
 
-  
+
 KIND_TAGS = ["remote", "program", "external", "other"]
 
 class Config(eg.PersistentData):
@@ -53,13 +53,19 @@ class Text(eg.TranslatableStrings):
     
 
 
-class AddPluginDialog(eg.Dialog):
-
+class AddPluginDialog(eg.TaskletDialog):
+    instance = None
+    
     @eg.LogItWithReturn
-    def Process(self, parent):
+    def Configure(self, parent):
+        if self.__class__.instance:
+            self.__class__.instance.Raise()
+            return
+        self.__class__.instance = self
+        
         self.resultData = None
 
-        eg.Dialog.__init__(
+        eg.TaskletDialog.__init__(
             self, 
             parent, 
             -1, 
@@ -176,6 +182,7 @@ class AddPluginDialog(eg.Dialog):
         treeCtrl.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
         treeCtrl.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnItemActivated)
         treeCtrl.SelectItem(itemToSelect)
+
         while self.Affirmed():
             if self.CheckMultiload():
                 self.SetResult(self.resultData)
@@ -186,7 +193,8 @@ class AddPluginDialog(eg.Dialog):
             kind for kind, treeId in typeIds.iteritems() 
                 if not treeCtrl.IsExpanded(treeId)
         )
-
+        self.__class__.instance = None
+        
 
     def OnSelectionChanged(self, event):
         """
@@ -238,7 +246,8 @@ class AddPluginDialog(eg.Dialog):
         item = self.treeCtrl.GetSelection()
         info = self.treeCtrl.GetPyData(item)
         if info is not None:
-            self.OnOK()
+            #self.SetResult("huhu")
+            self.OnOK(wx.CommandEvent())
             return
         event.Skip()
         

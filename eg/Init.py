@@ -63,9 +63,7 @@ def InitPathesAndBuiltins():
 
     # replace builtin raw_input() with a small dialog
     def RawInput(prompt=None):
-        return eg.CallWait(
-            partial(eg.SimpleInputDialog.CreateModal, prompt)
-        )
+        return eg.SimpleInputDialog.Do(prompt)
     __builtin__.raw_input = RawInput
 
     # replace builtin input() with a small dialog

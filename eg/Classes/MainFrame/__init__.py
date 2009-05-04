@@ -151,6 +151,7 @@ class MainFrame(wx.Frame):
         self.UpdateViewOptions()
         self.SetSize(Config.size)
         eg.Bind("DialogCreate", self.OnAddDialog)
+        eg.Bind("DialogDestroy", self.OnRemoveDialog)
         undoState = eg.Bind("UndoChange", self.OnUndoChange)
         self.OnUndoChange(undoState)
         selection = eg.Bind("SelectionChange", self.OnSelectionChange)
@@ -247,6 +248,7 @@ class MainFrame(wx.Frame):
         eg.Unbind("FocusChange", self.OnFocusChange)
         eg.Unbind("ClipboardChange", self.OnClipboardChange)
         eg.Unbind("DialogCreate", self.OnAddDialog)
+        eg.Unbind("DialogDestroy", self.OnRemoveDialog)
         eg.Unbind("SelectionChange", self.OnSelectionChange)
         eg.Unbind("UndoChange", self.OnUndoChange)
         self.logCtrl.Destroy()
@@ -640,6 +642,15 @@ class MainFrame(wx.Frame):
         self.SetWindowStyleFlag(~(wx.MINIMIZE_BOX|wx.CLOSE_BOX) & self.style)
         
         
+    def OnRemoveDialog(self, dialog):
+        try:
+            self.openDialogs.remove(dialog)
+        except ValueError:
+            pass
+        if len(self.openDialogs) == 0:
+            self.SetWindowStyleFlag(self.style)
+        
+        
     @eg.LogIt
     def OnDialogDestroy(self, event):
         dialog = event.GetWindow()
@@ -764,16 +775,12 @@ class MainFrame(wx.Frame):
         self.document.SaveAs()
 
 
-    @eg.AsGreenlet
+    @eg.AsTasklet
+    @eg.LogItWithReturn
     def OnCmdOptions(self):
-        if not self.optionsDialog:
-            self.optionsDialog = eg.OptionsDialog.Create(self)
-            while self.optionsDialog.GetResult() is not None:
-                pass
-        else:
-            self.optionsDialog.Raise()
+        eg.OptionsDialog.GetResult(self)
             
-        
+
     def OnCmdExit(self):
         eg.app.Exit()
         
@@ -818,48 +825,44 @@ class MainFrame(wx.Frame):
             self.findDialog.OnFindButton()
         
 
+    @eg.AsTasklet
     def OnCmdAddPlugin(self):
-        result = eg.AddPluginDialog.GetModalResult(self)
-        if result is None:
-            return
-        pluginInfo = result[0][0]
-        if pluginInfo is None:
-            return
-        eg.Greenlet(
-            eg.UndoHandler.NewPlugin().Do
-        ).switch(self.document, pluginInfo)
+        pluginInfo = None
+        for event, result in eg.AddPluginDialog.Create(self):
+            pluginInfo = result[0]
+            break
+        if pluginInfo:
+            eg.UndoHandler.NewPlugin().Do(self.document, pluginInfo)
             
             
+    @eg.AsTasklet
     def OnCmdAddEvent(self):
         if not self.document.selection.DropTest(eg.EventItem):
             self.DisplayError(Text.Messages.cantAddEvent)
             return
-        eg.Greenlet(
-            eg.UndoHandler.NewEvent().Do
-        ).switch(self.document)
+        eg.UndoHandler.NewEvent().Do(self.document)
 
                 
     def OnCmdAddFolder(self):
         eg.UndoHandler.NewFolder().Do(self.document)
         
     
+    @eg.AsTasklet
     def OnCmdAddMacro(self):
         eg.UndoHandler.NewMacro().Do(self.document)
         
     
+    @eg.AsTasklet
     def OnCmdAddAction(self):
         if not self.document.selection.DropTest(eg.ActionItem):
             self.DisplayError(Text.Messages.cantAddAction)
             return
         # let the user choose an action
-        result = eg.AddActionDialog.GetModalResult(self)
-        # if user canceled the dialog, take a quick exit
+        result = eg.AddActionDialog.GetResult(self)
         if result is None:
-            return None
-        action = result[0][0]
-        eg.Greenlet(
-            eg.UndoHandler.NewAction().Do
-        ).switch(self.document, action)
+            return
+        # if user canceled the dialog, take a quick exit
+        eg.UndoHandler.NewAction().Do(self.document, result[0])
         
     
     @eg.LogIt
@@ -996,23 +999,19 @@ class MainFrame(wx.Frame):
         frame.Show()
         
         
-    @eg.AsGreenlet
+    @eg.AsTasklet
+    @eg.LogItWithReturn
     def OnCmdAbout(self):
-        if self.aboutDialog is None:
-            self.aboutDialog = eg.AboutDialog.Create(self)
-            self.aboutDialog.GetResult()
-            self.aboutDialog = None
-        else:
-            self.aboutDialog.Raise()
-
+        eg.AboutDialog.GetResult(self)
     
         
     #----- debugging and experimental stuff that will be removed someday -----
     
+    @eg.AsTasklet
     def OnCmdExport(self):
-        result = eg.ExportDialog.GetModalResult()
+        result = eg.ExportDialog.GetResult()
         if result is not None:
-            for item in result[0][0]:
+            for item in result[0]:
                 print item.GetLabel()
 
 
@@ -1059,16 +1058,11 @@ class MainFrame(wx.Frame):
         eg.PrintError("Execution stopped by user")
         
     
-    #@eg.AsGreenlet
+    @eg.AsTasklet
     def OnCmdAddEventDialog(self):
-#        dialog = eg.AddEventDialog(self)
-#        dialog.ShowModal()
-#        dialog.Destroy()
-#        return
-        
-        result = eg.AddEventDialog.GetModalResult(self)
+        result = eg.AddEventDialog.GetResult(self)
         if result is None:
             return
-        label = result[0][0]
+        label = result[0]
         eg.UndoHandler.NewEvent().Do(self.document, label)
 

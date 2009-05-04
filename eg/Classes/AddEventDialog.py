@@ -50,13 +50,13 @@ class EventInfo:
         
         
         
-class AddEventDialog(eg.Dialog):
+class AddEventDialog(eg.TaskletDialog):
     
     @eg.LogItWithReturn
-    def Process(self, parent):
+    def Configure(self, parent):
         global gLastSelected
         self.resultData = None
-        eg.Dialog.__init__(
+        eg.TaskletDialog.__init__(
             self, 
             parent, 
             -1,

@@ -22,16 +22,17 @@
 
 import eg
 import wx
+import threading
 
 
 PROMPT = "Please type your input..."
 
-class SimpleInputDialog(eg.Dialog):
+class SimpleInputDialog(eg.TaskletDialog):
     
-    def Process(self, prompt=None, initialValue=""):
+    def Configure(self, prompt=None, initialValue=""):
         if prompt is None:
             prompt = PROMPT
-        eg.Dialog.__init__(
+        eg.TaskletDialog.__init__(
             self, None, -1, PROMPT, style=wx.RESIZE_BORDER|wx.CAPTION
         )
         textCtrl = self.TextCtrl(initialValue, size=(300, -1))
@@ -50,7 +51,17 @@ class SimpleInputDialog(eg.Dialog):
         
         
     @classmethod
-    def CreateModal(cls, prompt=None):
-        return cls.GetModalResult(prompt)[0][0]
-    
+    def Do(cls, prompt):
+        returnValue = []
+        event = threading.Event()
+        @eg.AsTasklet
+        def Task():
+            result = cls.GetResult(prompt)
+            returnValue.append(result[0])
+            event.set()
+            
+        wx.CallAfter(Task)
+        event.wait()
+        return returnValue[0]
+            
     

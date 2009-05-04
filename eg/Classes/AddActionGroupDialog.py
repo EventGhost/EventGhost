@@ -37,8 +37,8 @@ class Text(eg.TranslatableStrings):
 
 class AddActionGroupDialog(eg.TreeItemBrowseDialog):
     
-    def Process(self, parent=None):
-        eg.TreeItemBrowseDialog.Process(
+    def Configure(self, parent=None):
+        eg.TreeItemBrowseDialog.Configure(
             self, 
             Text.caption,
             Text.message,
