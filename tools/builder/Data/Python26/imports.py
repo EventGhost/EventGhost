@@ -636,6 +636,16 @@ import wx.lib.agw.speedmeter
 import wx.lib.agw.supertooltip
 import wx.lib.agw.thumbnailctrl
 import wx.lib.agw.toasterbox
+import wx.lib.agw.aui
+import wx.lib.agw.aui.auibar
+import wx.lib.agw.aui.auibook
+import wx.lib.agw.aui.aui_constants
+import wx.lib.agw.aui.aui_switcherdialog
+import wx.lib.agw.aui.aui_utilities
+import wx.lib.agw.aui.dockart
+import wx.lib.agw.aui.framemanager
+import wx.lib.agw.aui.tabart
+import wx.lib.agw.aui.tabmdi
 import wx.lib.analogclock
 import wx.lib.analogclock.analogclock
 import wx.lib.analogclock.helpers
@@ -669,6 +679,7 @@ import wx.lib.masked.textctrl
 import wx.lib.masked.timectrl
 import wx.lib.mixins
 import wx.lib.mixins.grid
+import wx.lib.mixins.gridlabelrenderer
 import wx.lib.mixins.imagelist
 import wx.lib.mixins.inspection
 import wx.lib.mixins.listctrl
