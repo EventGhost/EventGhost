@@ -17,6 +17,8 @@ class Config(object):
         configParser.read(self._configFilePath)
         for task in TASKS:
             section = task.GetId()
+            if not configParser.has_section(section):
+                continue
             options = configParser.options(section)
             for option in options:
                 if option == "enabled":
