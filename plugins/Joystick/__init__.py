@@ -49,9 +49,6 @@ eg.RegisterPlugin(
     icon = ICON,
 )
 
-import os
-import imp
-
 
 EVT_DIRECTION       = 0
 EVT_BTN_RELEASED    = 1
