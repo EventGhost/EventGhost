@@ -24,9 +24,7 @@ import eg
 import wx
 import sys
 import os
-import imp
-import time
-from functools import partial
+from time import gmtime
 from types import ModuleType
 
 
@@ -42,8 +40,9 @@ def InitPil():
 
 def InitPathesAndBuiltins():
     mainDir = os.path.abspath(os.path.join(os.path.dirname(eg.__file__), ".."))
-    sys.path.append(mainDir)
-    sys.path.append(
+    sys.path.insert(0, mainDir)
+    sys.path.insert(
+        1,
         os.path.join(mainDir, "lib%d%d" % sys.version_info[:2], "site-packages")
     )
     
@@ -57,7 +56,7 @@ def InitPathesAndBuiltins():
         
     # we create a package 'PluginModule' and set its path to the plugin-dir
     # so we can simply use __import__ to load a plugin file 
-    pluginPackage = imp.new_module("PluginModule")
+    pluginPackage = ModuleType("PluginModule")
     pluginPackage.__path__ = [eg.PLUGIN_DIR]
     sys.modules["PluginModule"] = pluginPackage
 
@@ -108,7 +107,7 @@ def InitGui():
     )
     if config.checkUpdate:
         # avoid more than one check per day
-        today = time.gmtime()[:3]
+        today = gmtime()[:3]
         if config.lastUpdateCheckDate != today:
             config.lastUpdateCheckDate = today
             wx.CallAfter(eg.CheckUpdate.Start)

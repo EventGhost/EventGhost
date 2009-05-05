@@ -26,11 +26,12 @@ import stackless
 
 import Cli
 
-# This is only here to make pylint happy. It is never really imported
-if "pylint" in sys.modules:
-    from StaticImports import *
-    from Core import *
-
+## This is only here to make pylint happy. It is never really imported
+#if "pylint" in sys.modules:
+#    from Classes import *
+#    import Core
+#    import StaticImports
+    
 
 class LazyModule(ModuleType):
     
@@ -73,6 +74,6 @@ class LazyModule(ModuleType):
 
 eg = LazyModule()
 import Utils
-for name in Utils.__all__:
-    setattr(eg, name, getattr(Utils, name))
+for attrName in Utils.__all__:
+    setattr(eg, attrName, getattr(Utils, attrName))
 import Core
