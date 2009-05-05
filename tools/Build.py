@@ -31,10 +31,10 @@ from glob import glob
 # local imports
 import builder
 from builder.CheckDependencies import CheckDependencies
-from builder.InnoSetup import InnoInstaller
-
 if not CheckDependencies():
     sys.exit(1)
+from builder.InnoSetup import InnoInstaller
+
 
 # third-party module imports
 import pysvn

@@ -5,10 +5,10 @@ import subprocess
 from os.path import join
 
 import builder
-from builder.subprocess2 import Popen
 
 
 def StartProcess(*args):
+    from builder.subprocess2 import Popen
     #SetIndent(1)
     startupInfo = subprocess.STARTUPINFO()
     startupInfo.dwFlags = subprocess.STARTF_USESHOWWINDOW

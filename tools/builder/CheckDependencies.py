@@ -56,9 +56,12 @@ class PyWin32Dependency(DependencyBase):
         versionFilePath = join(
             sys.prefix, "lib/site-packages/pywin32.version.txt"
         )
-        version = open(versionFilePath, "rt").readline().strip()
+        try:
+            version = open(versionFilePath, "rt").readline().strip()
+        except IOError:
+            raise Mi
         if CompareVersion(version, self.version) < 0:
-            raise WrongVersion
+            raise MissingDependency
 
 
 
@@ -78,6 +81,7 @@ class StacklessDependency(DependencyBase):
     
 class InnoSetupDependency(DependencyBase):
     name = "Inno Setup"
+    version = "5.2.3"
     url = "http://www.innosetup.com/isinfo.php"
     
     def Check(self):
@@ -151,18 +155,18 @@ def CompareVersion(actualVersion, wantedVersion):
     
     
 def CheckDependencies():
-    first = True
+    isOK = True
     for dependency in DEPENDENCIES:
         try:
             dependency.Check()
         except (WrongVersion, MissingDependency):
-            if first:
+            if isOK:
                 print "The following dependencies are missing:"
-                first = False
+                isOK = False
             print "  *", dependency.name
             print "       Needed version:", dependency.version
             print "       Download URL:", dependency.url
-    if not first:
+    if not isOK:
         print "You need to install them first to run the build process!"
-        
+    return isOK
         
