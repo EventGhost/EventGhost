@@ -83,26 +83,17 @@ def GetIcon(name):
 class MainFrame(wx.Frame):
     """ This is the MainFrame of EventGhost """
         
+    style = (wx.MINIMIZE_BOX | wx.MAXIMIZE_BOX | wx.RESIZE_BORDER | wx.CAPTION
+        | wx.SYSTEM_MENU | wx.CLOSE_BOX | wx.CLIP_CHILDREN | wx.TAB_TRAVERSAL)  
+      
     @eg.AssertNotMainThread
     def __init__(self, document):
         """ Create the MainFrame """
         self.document = document
-        self.aboutDialog = None
-        self.optionsDialog = None
         self.findDialog = None
         self.openDialogs = []
         self.lastClickedTool = None
         self.egEvent = None
-        self.style = (
-            wx.MINIMIZE_BOX
-            |wx.MAXIMIZE_BOX
-            |wx.RESIZE_BORDER
-            |wx.SYSTEM_MENU
-            |wx.CAPTION
-            |wx.CLOSE_BOX
-            |wx.CLIP_CHILDREN
-            |wx.TAB_TRAVERSAL
-        )
         wx.Frame.__init__(
             self, 
             None, 
