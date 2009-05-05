@@ -7,9 +7,9 @@ import sys
 PIPE = subprocess.PIPE
 
 if subprocess.mswindows:
-    from win32file import ReadFile, WriteFile
-    from win32pipe import PeekNamedPipe
-    import msvcrt
+    from msvcrt import get_osfhandle
+    from ctypes import byref, c_ulong, windll
+    PeekNamedPipe = windll.kernel32.PeekNamedPipe
 else:
     import select
     import fcntl
@@ -41,8 +41,7 @@ class Popen(subprocess.Popen):
                 return None
 
             try:
-                x = msvcrt.get_osfhandle(self.stdin.fileno())
-                (errCode, written) = WriteFile(x, input)
+                written = os.write(self.stdin, input)
             except ValueError:
                 return self._close('stdin')
             except (subprocess.pywintypes.error, Exception), why:
@@ -54,16 +53,20 @@ class Popen(subprocess.Popen):
 
         def _recv(self, which, maxsize):
             conn, maxsize = self.get_conn_maxsize(which, maxsize)
+            read = ""
             if conn is None:
                 return None
             
             try:
-                x = msvcrt.get_osfhandle(conn.fileno())
-                (read, nAvail, nMessage) = PeekNamedPipe(x, 0)
+                fd = conn.fileno()
+                handle = get_osfhandle(fd)
+                avail = c_ulong(0)
+                PeekNamedPipe(handle, None, 0, None, byref(avail), None)
+                nAvail = avail.value
                 if maxsize < nAvail:
                     nAvail = maxsize
                 if nAvail > 0:
-                    (errCode, read) = ReadFile(x, nAvail, None)
+                    read = os.read(fd, nAvail)
             except ValueError:
                 return self._close(which)
             except (subprocess.pywintypes.error, Exception), why:
