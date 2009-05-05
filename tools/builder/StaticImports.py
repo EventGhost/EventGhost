@@ -41,6 +41,7 @@ def ScanDir(srcDir, outfile, modName):
                 outfile.write("%s.%s = _tmp\n" % (parts[-1], name))
             else:
                 outfile.write("from %s.%s import %s\n" %(modName, name, name))
+                outfile.write("eg.%s = %s\n" %(name, name))
     
     
 def DoTask():
@@ -48,6 +49,7 @@ def DoTask():
     outfile = open(join(outDir, "StaticImports.py"), "wt")
     outfile.write(HEADER)
     outfile.write("# py" + "lint: disable-msg=W0611,W0614,C0103\n")
+    outfile.write("import eg\n")
     outfile.write("from Utils import * #py" + "lint: disable-msg=W0401\n")
     ScanDir(outDir, outfile, "Classes")
     ScanDir(outDir, outfile, "Classes.MainFrame")
