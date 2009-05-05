@@ -3,7 +3,7 @@ import warnings
 from string import digits
 from os.path import join
 
-from builder.InnoSetup import GetInnoCompilerPath
+from InnoSetup import GetInnoCompilerPath
 
 
 
@@ -59,9 +59,9 @@ class PyWin32Dependency(DependencyBase):
         try:
             version = open(versionFilePath, "rt").readline().strip()
         except IOError:
-            raise Mi
-        if CompareVersion(version, self.version) < 0:
             raise MissingDependency
+        if CompareVersion(version, self.version) < 0:
+            raise WrongVersion
 
 
 
