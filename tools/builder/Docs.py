@@ -5,7 +5,7 @@ import _winreg
 import shutil
 from os.path import join
 import builder
-from builder.Utils import StartProcess, ExecutePy
+from builder.Utils import StartProcess
 
 
 MAIN_DIR = builder.SOURCE_DIR
