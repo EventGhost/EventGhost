@@ -42,6 +42,7 @@ class MainDialog(wx.Dialog):
         
         self.okButton = wx.Button(self, wx.ID_OK)
         self.okButton.Bind(wx.EVT_BUTTON, self.OnOk)
+        self.okButton.SetDefault()
         self.cancelButton = wx.Button(self, wx.ID_CANCEL)
         self.cancelButton.Bind(wx.EVT_BUTTON, self.OnCancel)
         
