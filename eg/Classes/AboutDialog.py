@@ -434,6 +434,7 @@ class AboutDialog(eg.TaskletDialog):
             self,
             parent=parent, 
             title=Text.Title, 
+            style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
         )
         notebook = wx.Notebook(self)
         notebook.AddPage(AboutPanel(notebook), Text.tabAbout)
