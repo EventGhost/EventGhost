@@ -3,6 +3,7 @@ import sys
 import re
 import _winreg
 import shutil
+import codecs
 from os.path import join
 import builder
 from builder.Utils import StartProcess
@@ -61,7 +62,7 @@ def WritePluginList(filepath):
             groups[info.kind] = [info]
         numPlugins += 1
     
-    outfile = open(filepath, "wt")
+    outfile = codecs.open(filepath, "wt", "utf-8")
     outfile.write(".. This file is automatically created. Don't edit it!\n\n")
     outfile.write(".. _pluginlist:\n\n")
     outfile.write("List of Plugins\n")
@@ -85,7 +86,7 @@ def WritePluginList(filepath):
                 outfile.write("|%s Plugin|_\n" % info.name)
             else:
                 outfile.write("**%s**\n" % info.name)
-            outfile.write("   %s\n\n" % description)
+            outfile.write(u"   %s\n\n" % description)
             if info.url:
                 outfile.write(".. |%s Plugin| replace:: **%s**\n" % 
                     (info.name, info.name)
