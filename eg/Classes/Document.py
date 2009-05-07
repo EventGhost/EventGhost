@@ -152,7 +152,7 @@ class Document(object):
         self.ResetUndoState()
 
         if not filePath:
-            filePath = "Example.xml"
+            filePath = os.path.join(eg.MAIN_DIR, "Example.xml")
             self.SetFilePath(False)
         else:
             self.SetFilePath(filePath)
