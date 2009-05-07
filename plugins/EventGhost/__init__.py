@@ -116,7 +116,11 @@ class EnableItem(eg.ActionBase):
     class text:
         label = "Enable: %s"
         text1 = "Please select the item which should be enabled:"
-
+        cantSelect = (
+            "The selected item type can't change its enable state.\n\n"
+            "Please select another item."
+        )
+        
     def __call__(self, link):
         if link:
             obj = link.target
@@ -157,18 +161,6 @@ class EnableItem(eg.ActionBase):
             #searchFunc, 
             selectItem=searchItem
         )
-        
-        if not searchItem:
-            panel.EnableButtons(False)
-            
-        def OnSelectionChanged(event):
-            treeItem = event.GetItem()
-            if treeItem.IsOk():
-                item = tree.GetPyData(treeItem)
-                panel.EnableButtons(self.IsSelectableItem(item))
-            event.Skip()
-        tree.Bind(wx.EVT_TREE_SEL_CHANGED, OnSelectionChanged)
-        #tree.SetMinSize((-1,300))
         tree.SetFocus()
         panel.sizer.Add(panel.StaticText(self.text.text1), 0, wx.BOTTOM, 5)
         panel.sizer.Add(tree, 1, wx.EXPAND)
@@ -176,8 +168,11 @@ class EnableItem(eg.ActionBase):
             treeItem = tree.GetSelection()
             if treeItem.IsOk():
                 obj = tree.GetPyData(treeItem)
-                link.SetTarget(obj)
-            panel.SetResult(link)
+                if self.IsSelectableItem(obj):
+                    link.SetTarget(obj)
+                    panel.SetResult(link)
+                    continue
+            eg.MessageBox(self.text.cantSelect, parent=panel)
        
     
     
