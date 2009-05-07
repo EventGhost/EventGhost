@@ -22,6 +22,7 @@
 
 import eg
 import wx
+from eg.Icons import GetInternalBitmap
 
 
 class StatusBar(wx.StatusBar):
@@ -34,9 +35,9 @@ class StatusBar(wx.StatusBar):
         self.SetFieldsCount(2)
         self.SetStatusWidths([-1, 40])
         self.icons = [
-            eg.Icons.GetIcon("images\\Tray1.png"),
-            eg.Icons.GetIcon("images\\Tray3.png"),
-            eg.Icons.GetIcon("images\\Tray2.png"),
+            GetInternalBitmap("Tray1"),
+            GetInternalBitmap("Tray3"),
+            GetInternalBitmap("Tray2"),
         ]
         self.icon = wx.StaticBitmap(self, -1, self.icons[0], (0, 0), (16, 16))
         rect = self.GetFieldRect(0)

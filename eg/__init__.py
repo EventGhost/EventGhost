@@ -26,11 +26,10 @@ import stackless
 
 import Cli
 
-## This is only here to make pylint happy. It is never really imported
-#if "pylint" in sys.modules:
-#    from Classes import *
-#    import Core
-#    import StaticImports
+# This is only here to make pylint happy. It is never really imported
+if "pylint" in sys.modules:
+    from StaticImports import *
+    from Utils import *
     
 
 class LazyModule(ModuleType):
@@ -66,7 +65,6 @@ class LazyModule(ModuleType):
             eg.LanguageEditor()
         else:
             eg.Init.InitGui()
-        #eg.app.MainLoop()
         eg.Tasklet(eg.app.MainLoop)().run()
         stackless.run()
         print "mainloop end"

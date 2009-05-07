@@ -23,6 +23,8 @@
 import wx
 from wx.lib.filebrowsebutton import FileBrowseButton as _FileBrowseButton
 import types
+from eg.Icons import GetInternalBitmap
+
 
 class FileBrowseButton(_FileBrowseButton):
     """
@@ -53,7 +55,7 @@ def createDialog(self, parent, id, pos, size, style, name=""):
 
 def createBrowseButton(self):
     """Create the browse-button control"""
-    button = wx.BitmapButton(self, -1, wx.Bitmap("images/searchFolder.png"))
+    button = wx.BitmapButton(self, -1, GetInternalBitmap("searchFolder"))
     width, height = button.GetSize()
     button.SetMinSize((width + 8, height))
     button.SetToolTipString(self.toolTip)

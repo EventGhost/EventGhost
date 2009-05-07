@@ -22,8 +22,9 @@
 
 
 import wx
+from time import clock
 from math import sin
-import time
+from eg.Icons import GetInternalBitmap, GetInternalImage
  
 
 class AnimatedWindow(wx.PyWindow):
@@ -34,13 +35,13 @@ class AnimatedWindow(wx.PyWindow):
             40, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_BOLD
         )
         self.SetBackgroundColour((255, 255, 255))
-        self.logo1 = wx.Bitmap("images/opensource-55x48.png")
-        self.logo2 = wx.Bitmap("images/python-powered-w-100x40.png")
-        self.logo3 = wx.Bitmap("images/logo2.png")
-        self.image = wx.Image("images/logo.png", wx.BITMAP_TYPE_PNG)
+        self.logo1 = GetInternalBitmap("opensource-55x48")
+        self.logo2 = GetInternalBitmap("python-powered")
+        self.logo3 = GetInternalBitmap("logo2")
+        self.image = GetInternalImage("logo")
         self.bmpWidth = self.image.GetWidth()
         self.bmpHeight = self.image.GetHeight()
-        self.time = time.clock()
+        self.time = clock()
         self.count = 0
         self.Bind(wx.EVT_SIZE, self.OnSize)
         self.Bind(wx.EVT_TIMER, self.UpdateDrawing)
@@ -59,22 +60,22 @@ class AnimatedWindow(wx.PyWindow):
         deviceContext.SetFont(self.font)
         deviceContext.SetTextForeground((128, 128, 128))
         
-        w1 = self.logo1.GetWidth()
-        w2 = self.logo2.GetWidth()
-        h1 = self.logo1.GetHeight()
-        h2 = self.logo2.GetHeight()
-        h = max(h1, h2)
+        width1 = self.logo1.GetWidth()
+        width2 = self.logo2.GetWidth()
+        height1 = self.logo1.GetHeight()
+        height2 = self.logo2.GetHeight()
+        height = max(height1, height2)
         
         deviceContext.DrawBitmap(
             self.logo1, 
-            self.width - w1 - w2, 
-            self.height - h + (h - h1) // 2, 
+            self.width - width1 - width2, 
+            self.height - height + (height - height1) // 2, 
             True
         )
         deviceContext.DrawBitmap(
             self.logo2, 
-            self.width - w2, 
-            self.height - h + (h - h2) // 2, 
+            self.width - width2, 
+            self.height - height + (height - height2) // 2, 
             True
         )
         deviceContext.DrawBitmap(
@@ -111,7 +112,7 @@ class AnimatedWindow(wx.PyWindow):
     def Draw(self, deviceContext):
         deviceContext.BeginDrawing()
         deviceContext.DrawBitmap(self.backbuffer, 0, 0, False)
-        t = time.clock() / 2.0
+        t = clock() / 2.0
         y3 = self.y3
         x3 = self.x3
         y = (sin(t) + sin(1.8 * t)) * y3 + y3 * 2.0

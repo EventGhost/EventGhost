@@ -81,7 +81,8 @@ class Log(object):
         sys.stdout = StdOut()
         sys.stderr = StdErr()
         if eg.debugLevel == 2:
-            _oldStdErr._displayMessage = False
+            if hasattr(_oldStdErr, "_displayMessage"):
+                _oldStdErr._displayMessage = False
         if eg.debugLevel:
             import warnings
             warnings.simplefilter('error', UnicodeWarning)

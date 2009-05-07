@@ -79,9 +79,9 @@ class PluginItem(ActionItem):
             eg.actionThread.Call(self.info.Start)
             
     
-    def SetAttributes(self, tree, id):
+    def SetAttributes(self, tree, itemId):
         if self.info.lastException or self.info.initFailed:
-            tree.SetItemTextColour(id, eg.colour.pluginError)
+            tree.SetItemTextColour(itemId, eg.colour.pluginError)
     
     
     def _SetColour(self, colour):
@@ -137,13 +137,13 @@ class PluginItem(ActionItem):
         
         
     def AskDelete(self):
-        ActionItem = self.document.ActionItem
-        def searchFunc(obj):
-            if obj.__class__ == ActionItem:
+        actionItemCls = self.document.ActionItem
+        def SearchFunc(obj):
+            if obj.__class__ == actionItemCls:
                 if obj.executable and obj.executable.plugin == self.executable:
                     return True
             return None
-        if self.root.Traverse(searchFunc) is not None:
+        if self.root.Traverse(SearchFunc) is not None:
             eg.MessageBox(
                 eg.text.General.deletePlugin,
                 eg.APP_NAME, 
@@ -176,9 +176,9 @@ class PluginItem(ActionItem):
             eg.text.General.pluginLabel % plugin.name, 
             plugin.description, 
             plugin.info.icon.GetWxIcon(),
-            basePath=plugin.info.path
+            basePath=plugin.info.GetPath()
         )
-        def OnClose(event):
+        def OnClose(dummyEvent):
             self.helpDialog.Destroy()
             del self.helpDialog
         self.helpDialog.Bind(wx.EVT_CLOSE, OnClose)
@@ -215,10 +215,10 @@ class PluginItem(ActionItem):
         """
         Calls Refresh() for all currently visible actions of this plugin.
         """
-        ActionItem = self.document.ActionItem
+        actionItemCls = self.document.ActionItem
         plugin = self.info.instance
         def Traverse(item):
-            if item.__class__ == ActionItem:
+            if item.__class__ == actionItemCls:
                 if item.executable.plugin == plugin:
                     item.Refresh()
             else:

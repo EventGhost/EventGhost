@@ -39,11 +39,10 @@ def InitPil():
 
 
 def InitPathesAndBuiltins():
-    mainDir = os.path.abspath(os.path.join(os.path.dirname(eg.__file__), ".."))
-    sys.path.insert(0, mainDir)
+    sys.path.insert(0, eg.MAIN_DIR)
     sys.path.insert(
         1,
-        os.path.join(mainDir, "lib%d%d" % sys.version_info[:2], "site-packages")
+        os.path.join(eg.MAIN_DIR, "lib%d%d" % sys.version_info[:2], "site-packages")
     )
     
     import cFunctions

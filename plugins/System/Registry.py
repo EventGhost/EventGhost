@@ -85,9 +85,9 @@ class RegistryLazyTree(wx.TreeCtrl):
         )
 
         self.imageList = imageList = wx.ImageList(16, 16)
-        rootIcon = imageList.Add(eg.Icons.GetIcon("images/root.png"))
-        self.folderIcon = imageList.Add(eg.Icons.GetIcon("images/folder.png"))
-        self.valueIcon = imageList.Add(eg.Icons.GetIcon("images/action.png"))
+        rootIcon = imageList.Add(eg.Icons.GetInternalBitmap("root"))
+        self.folderIcon = imageList.Add(eg.Icons.GetInternalBitmap("folder"))
+        self.valueIcon = imageList.Add(eg.Icons.GetInternalBitmap("action"))
         self.SetImageList(imageList)
         self.SetMinSize((-1, 200))
         self.treeRoot = self.AddRoot(

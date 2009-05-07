@@ -24,6 +24,7 @@ import eg
 import wx
 from time import sleep
 
+from eg.Icons import GetInternalBitmap
 from eg.WinApi import (
     GetTopLevelWindowList, 
     GetWindowText, 
@@ -60,10 +61,10 @@ class WindowTree(wx.TreeCtrl):
             size=(-1, 150)
         )
         self.imageList = imageList = wx.ImageList(16, 16)
-        imageList.Add(wx.Bitmap("images/cwindow.png"))
-        imageList.Add(wx.Bitmap("images/cedit.png"))
-        imageList.Add(wx.Bitmap("images/cstatic.png"))
-        imageList.Add(wx.Bitmap("images/cbutton.png"))
+        imageList.Add(GetInternalBitmap("cwindow"))
+        imageList.Add(GetInternalBitmap("cedit"))
+        imageList.Add(GetInternalBitmap("cstatic"))
+        imageList.Add(GetInternalBitmap("cbutton"))
         self.SetImageList(imageList)
         self.root = self.AddRoot("")
         

@@ -6,6 +6,8 @@ import stackless
 class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
     __tasklet = None
     __isModal = False
+    __processingChannel = None
+    __resultsChannel = None
     
     @eg.LogItWithReturn
     def __init__(self, *args, **kwargs):
@@ -76,7 +78,7 @@ class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
         self.__tasklet = eg.Tasklet(self.Configure)(*args, **kwargs)
         self.__tasklet.run()
         self.__processingChannel.receive()
-        self.CenterOnParent()
+        #self.CenterOnParent()
         eg.Utils.EnsureVisible(self)
         self.ShowModal()
         self.Destroy()
@@ -127,7 +129,7 @@ class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
                 self.__tasklet.run()
         else:
             if eventId == wx.ID_CANCEL:
-                self.__processingChannel.send(None)
+                self.__processingChannel.send(False)
             elif eventId == wx.ID_OK:
                 self.__processingChannel.send(wx.ID_OK)
                 if self.__done:

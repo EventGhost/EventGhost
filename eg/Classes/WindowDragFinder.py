@@ -23,6 +23,7 @@
 
 import eg
 import wx
+from eg.Icons import GetInternalBitmap, GetInternalImage
 from eg.WinApi import (
     HighlightWindow, 
     BestWindowFromPoint, 
@@ -45,17 +46,11 @@ class WindowDragFinder(wx.PyWindow):
         self.lastTarget = None
         
         # load images
-        self.dragBoxBitmap = wx.Image(
-            'images/findert.png',
-            wx.BITMAP_TYPE_PNG
-        ).ConvertToBitmap()
-        self.emptyDragBoxBitmap = wx.Image(
-            'images/finderte.png',
-            wx.BITMAP_TYPE_PNG
-        ).ConvertToBitmap()
+        self.dragBoxBitmap = GetInternalBitmap("findert")
+        self.emptyDragBoxBitmap = GetInternalBitmap("finderte")
 
         # make a cursor from an image
-        image = wx.Image('images/findertc.png', wx.BITMAP_TYPE_PNG)
+        image = GetInternalImage('findertc')
         image.SetMaskColour(255, 0, 0)
 
         # since this image didn't come from a .cur file, tell it where the 

@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
+
 """
     eg.Tasklet
     ~~~~~~~~~~
     
     A wrapper around stackless.tasklet
 
-    :copyright: Copyright 2009 by the EventGhost team, see AUTHORS.
-    :license: GPL, see LICENSE for details.
+    :copyright: 2009 by EventGhost team, see AUTHORS.txt for more details.
+    :license: GNU GPL v2, see LICENSE.txt for more details.
 """
 
 import stackless

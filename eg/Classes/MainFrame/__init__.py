@@ -29,7 +29,7 @@ from collections import defaultdict
 
 from eg.WinApi.Dynamic import HtmlHelp, HH_DISPLAY_TOPIC, GetDesktopWindow
 from eg.WinApi.Utils import BringHwndToFront
-from eg.Icons import CreateBitmapOnTopOfIcon
+from eg.Icons import CreateBitmapOnTopOfIcon, GetInternalBitmap
 
 # local imports
 from eg.Classes.MainFrame.LogCtrl import LogCtrl
@@ -37,13 +37,13 @@ from eg.Classes.MainFrame.TreeCtrl import TreeCtrl
 from eg.Classes.MainFrame.StatusBar import StatusBar
 
 
-ADD_ICON = eg.Icons.PathIcon('images/add.png')
+ADD_ICON = eg.Icons.ADD_ICON
 ADD_PLUGIN_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.PLUGIN_ICON)
 ADD_FOLDER_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.FOLDER_ICON)
 ADD_MACRO_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.MACRO_ICON)
 ADD_EVENT_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.EVENT_ICON)
 ADD_ACTION_ICON = CreateBitmapOnTopOfIcon(ADD_ICON, eg.Icons.ACTION_ICON)
-RESET_ICON = eg.Icons.PathIcon('images/error.png').GetBitmap()
+RESET_ICON = eg.Icons.ERROR_ICON.GetBitmap()
 
 ID_DISABLED = wx.NewId()
 ID_EXECUTE = wx.NewId()
@@ -74,10 +74,6 @@ class Config(eg.PersistentData):
     perspective = None
     perspective2 = None
 
-
-
-def GetIcon(name):
-    return eg.Icons.GetIcon("images\\" + name + ".png")
 
 
 class MainFrame(wx.Frame):
@@ -125,7 +121,10 @@ class MainFrame(wx.Frame):
         iconBundle = wx.IconBundle()
         iconBundle.AddIcon(eg.taskBarIcon.stateIcons[0])
         icon = wx.EmptyIcon()
-        icon.LoadFile("images/icon32x32.png", wx.BITMAP_TYPE_PNG)
+        icon.LoadFile(
+            os.path.join(eg.IMAGES_DIR, "icon32x32.png"), 
+            wx.BITMAP_TYPE_PNG
+        )
         iconBundle.AddIcon(icon)
         self.SetIcons(iconBundle)
         
@@ -262,16 +261,16 @@ class MainFrame(wx.Frame):
         def Append(ident, image):
             toolBar.AddSimpleTool(ID[ident], image, getattr(text, ident))
             
-        Append("New", GetIcon("New"))
-        Append("Open", GetIcon("Open"))
-        Append("Save", GetIcon("Save"))
+        Append("New", GetInternalBitmap("New"))
+        Append("Open", GetInternalBitmap("Open"))
+        Append("Save", GetInternalBitmap("Save"))
         toolBar.AddSeparator()
-        Append("Cut", GetIcon("Cut"))
-        Append("Copy", GetIcon("Copy"))
-        Append("Paste", GetIcon("Paste"))
+        Append("Cut", GetInternalBitmap("Cut"))
+        Append("Copy", GetInternalBitmap("Copy"))
+        Append("Paste", GetInternalBitmap("Paste"))
         toolBar.AddSeparator()
-        Append("Undo", GetIcon("Undo"))
-        Append("Redo", GetIcon("Redo"))
+        Append("Undo", GetInternalBitmap("Undo"))
+        Append("Redo", GetInternalBitmap("Redo"))
         toolBar.AddSeparator()
         Append("AddPlugin", ADD_PLUGIN_ICON)
         Append("AddFolder", ADD_FOLDER_ICON)
@@ -279,18 +278,18 @@ class MainFrame(wx.Frame):
         Append("AddEvent", ADD_EVENT_ICON)
         Append("AddAction", ADD_ACTION_ICON)
         toolBar.AddSeparator()
-        Append("Disabled", GetIcon("Disabled"))
+        Append("Disabled", GetInternalBitmap("Disabled"))
         toolBar.AddSeparator()
         # the execute button must be added with unique id, because otherwise
         # the menu command OnCmdExecute will be used in conjunction to 
         # our special mouse click handlers
         toolBar.AddSimpleTool(
             ID_TOOLBAR_EXECUTE, 
-            GetIcon("Execute"), 
+            GetInternalBitmap("Execute"), 
             getattr(text, "Execute")
         )
         if eg.debugLevel:
-            Append("Reset", GetIcon("error"))
+            Append("Reset", GetInternalBitmap("error"))
         
         toolBar.Realize()
         self.SetToolBar(toolBar)
@@ -933,7 +932,12 @@ class MainFrame(wx.Frame):
         
     
     def OnCmdHelpContents(self):
-        HtmlHelp(GetDesktopWindow(), "EventGhost.chm", HH_DISPLAY_TOPIC, 0)
+        HtmlHelp(
+            GetDesktopWindow(), 
+            os.path.join(eg.MAIN_DIR, "EventGhost.chm"), 
+            HH_DISPLAY_TOPIC, 
+            0
+        )
         
         
     def OnCmdWebHomepage(self):

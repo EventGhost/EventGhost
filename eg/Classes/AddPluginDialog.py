@@ -117,7 +117,7 @@ class AddPluginDialog(eg.TaskletDialog):
 
             treeId = treeCtrl.AppendItem(typeIds[info.kind], info.name, idx)
             treeCtrl.SetPyData(treeId, info)
-            if info.path == Config.lastSelection:
+            if info.GetPath() == Config.lastSelection:
                 itemToSelect = treeId
                 
         
@@ -153,7 +153,7 @@ class AddPluginDialog(eg.TaskletDialog):
         )
         
         descrBox = eg.HtmlWindow(rightPanel)
-        descrBox.SetBasePath("/plugins/")
+        descrBox.SetBasePath(eg.PLUGIN_DIR)
         self.descrBox = descrBox
         staticBoxSizer.Add(descrBox, 1, wx.EXPAND)
         
@@ -214,7 +214,7 @@ class AddPluginDialog(eg.TaskletDialog):
         else:
             name = info.name
             description = info.description
-            self.descrBox.SetBasePath(info.path)
+            self.descrBox.SetBasePath(info.GetPath())
             self.authorLabel.SetLabel(Text.author)
             self.authorText.SetLabel(info.author.replace("&", "&&"))
             self.versionLabel.SetLabel(Text.version)
