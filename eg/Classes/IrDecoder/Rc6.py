@@ -24,18 +24,6 @@ from eg.Classes.IrDecoder import ManchesterCoding1, DecodeError
 
 
 MCE_REMOTE = {
-    0x800F0420: "Left",
-    0x800F0421: "Right",
-    0x800F0422: "Ok",
-    0x800F041E: "Up",
-    0x800F041F: "Down",
-    0x800F0423: "Back",
-    0x800F0410: "VolumeUp",
-    0x800F0411: "VolumeDown",
-    0x800F0412: "ChannelUp",
-    0x800F0413: "ChannelDown",
-    0x800F040E: "Mute",
-    0x800F040D: "Start",
     0x800F0400: "Num0",
     0x800F0401: "Num1",
     0x800F0402: "Num2",
@@ -46,36 +34,52 @@ MCE_REMOTE = {
     0x800F0407: "Num7",
     0x800F0408: "Num8",
     0x800F0409: "Num9",
-    0x800F045A: "Teletext",
-    0x800F045B: "Red",
-    0x800F045C: "Green",
-    0x800F045D: "Yellow",
-    0x800F045E: "Blue",
     0x800F040A: "Escape",
     0x800F040B: "Enter",
     0x800F040C: "Power",
+    0x800F040D: "Start",
+    0x800F040E: "Mute",
+    0x800F040F: "Details",
+    0x800F0410: "VolumeUp",
+    0x800F0411: "VolumeDown",
+    0x800F0412: "ChannelUp",
+    0x800F0413: "ChannelDown",
+    0x800F0414: "Forward",
+    0x800F0415: "Rewind",
     0x800F0416: "Play",
     0x800F0417: "Record",
     0x800F0418: "Pause",
     0x800F0419: "Stop",
     0x800F041A: "Skip",
     0x800F041B: "Replay",
-    0x800F0426: "Guide",
-    0x800F0448: "Recorded_TV",
-    0x800F040F: "Details",
-    0x800F0425: "LiveTV",
+    0x800F041C: "Pound",
+    0x800F041D: "Star",
+    0x800F041E: "Up",
+    0x800F041F: "Down",
+    0x800F0420: "Left",
+    0x800F0421: "Right",
+    0x800F0422: "Ok",
+    0x800F0423: "Back",
     0x800F0424: "DVDMenu",
-    0x800F0414: "Forward",
-    0x800F0415: "Rewind",
+    0x800F0425: "LiveTV",
+    0x800F0426: "Guide",
+    0x800F0427: "Aspect",
     0x800F0446: "TV",
     0x800F0447: "Music",
+    0x800F0448: "Recorded_TV",
     0x800F0449: "Pictures",
     0x800F044A: "Videos",
-    0x800F041D: "Star",
-    0x800F041C: "Pound",
+    0x800F044C: "Audio",
+    0x800F044D: "Subtitle",
+    0x800F0450: "Radio",
+    0x800F045A: "Teletext",
+    0x800F045B: "Red",
+    0x800F045C: "Green",
+    0x800F045D: "Yellow",
+    0x800F045E: "Blue",
 }
 
-
+    
 class Rc6(ManchesterCoding1):
     """
     IR decoder for the Philips RC-6 protocol.
@@ -105,7 +109,7 @@ class Rc6(ManchesterCoding1):
         # Check the leader pulse
         if not (2200 < data[0] < 3300):
             raise DecodeError("wrong header pulse")
-        if not (700 < data[1] < 1100):
+        if not (600 < data[1] < 1100):
             raise DecodeError("wrong header pause")
         
         self.SetData(data, 2)
