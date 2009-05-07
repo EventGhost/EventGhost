@@ -44,7 +44,7 @@ import time
 import threading
 import locale
 from wx.lib.newevent import NewCommandEvent
-
+from os.path import dirname, abspath, join
 import eg
 import Init
 import Cli
@@ -52,7 +52,10 @@ import Cli
 
 eg.APP_NAME = "EventGhost"
 eg.CORE_PLUGINS = ("EventGhost", "System", "Window", "Mouse")
-eg.PLUGIN_DIR = os.path.abspath("plugins")
+eg.MAIN_DIR = abspath(join(dirname(__file__), ".."))
+eg.PLUGIN_DIR = join(eg.MAIN_DIR, "plugins")
+eg.IMAGES_DIR = join(eg.MAIN_DIR, "images")
+eg.LANGUAGES_DIR = join(eg.MAIN_DIR, "languages")
 eg.ID_TEST = wx.NewId()
 eg.revision = eg.Version.revision
 eg.startupArguments = Cli.args

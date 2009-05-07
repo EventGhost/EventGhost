@@ -123,8 +123,9 @@ if not args.allowMultiLoad and not args.translate and args.isMain:
             e.TriggerEvent(args.startupEvent[0], args.startupEvent[1])
         else:
             e.BringToFront()
-        ctypes.windll.kernel32.ExitProcess(0)		
+        ctypes.windll.kernel32.ExitProcess(0)
     
 # change working directory to program directory
-os.chdir(MAIN_DIR)
+if args.debugLevel < 2:
+    os.chdir(MAIN_DIR)
 

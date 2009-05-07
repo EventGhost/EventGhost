@@ -67,7 +67,7 @@ class OptionsDialog(eg.TaskletDialog):
         
         languageNames = eg.Translation.languageNames
         languageList = ["en_EN"]
-        for item in os.listdir("languages"):
+        for item in os.listdir(eg.LANGUAGES_DIR):
             name, ext = os.path.splitext(item)
             if ext == ".py" and name in languageNames:
                 languageList.append(name)
@@ -108,7 +108,7 @@ class OptionsDialog(eg.TaskletDialog):
 
         languageChoice = BitmapComboBox(page1, style=wx.CB_READONLY)
         for name, code in zip(languageNameList, languageList):
-            filename = "images/flags/%s.png" % code
+            filename = os.path.join(eg.IMAGES_DIR, "flags", "%s.png" % code)
             if os.path.exists(filename):
                 image = wx.Image(filename)
                 image.Resize((16, 16), (0, 3))

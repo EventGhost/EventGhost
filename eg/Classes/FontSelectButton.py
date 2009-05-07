@@ -21,7 +21,7 @@
 # $LastChangedBy$
 
 import wx
-
+from eg.Icons import GetInternalBitmap
 
 class FontSelectButton(wx.BitmapButton):
     """
@@ -44,7 +44,7 @@ class FontSelectButton(wx.BitmapButton):
             self, 
             parent, 
             id, 
-            wx.Bitmap("images/font.png"), 
+            GetInternalBitmap("font"), 
             pos, 
             size, 
             style,

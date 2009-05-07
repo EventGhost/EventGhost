@@ -22,6 +22,7 @@
 
 import eg
 from types import ClassType
+from os.path import join
 from eg.Utils import SetDefault
 
 
@@ -47,7 +48,9 @@ class ActionGroup(object):
         if iconFile is None:
             self.icon = plugin.info.icon
         else:
-            self.icon = eg.Icons.PathIcon(plugin.info.path + iconFile + ".png")
+            self.icon = eg.Icons.PathIcon(
+                join(plugin.info.GetPath(), iconFile + ".png")
+            )
         self.items = []
         
         
@@ -98,7 +101,7 @@ class ActionGroup(object):
         icon = pluginInfo.icon
         if actionCls.iconFile:
             try:
-                path = pluginInfo.path + actionCls.iconFile + ".png"
+                path = join(pluginInfo.GetPath(), actionCls.iconFile + ".png")
                 icon = eg.Icons.PathIcon(path)
             except:
                 eg.PrintError(

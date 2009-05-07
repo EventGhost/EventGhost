@@ -1,5 +1,5 @@
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 # 
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -384,7 +384,7 @@ class ChangelogPanel(HtmlPanel):
     @eg.TimeIt
     def __init__(self, parent):
         try:
-            infile = open("CHANGELOG.TXT")
+            infile = open(os.path.join(eg.MAIN_DIR, "CHANGELOG.TXT"))
             text = infile.read()
         except IOError:
             text = ""
@@ -463,11 +463,9 @@ class AboutDialog(eg.TaskletDialog):
             (notebook, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, 5),
             (buttonSizer, 0, wx.EXPAND),
         )
-        #self.SetSizerAndFit(mainSizer)
-        #self.SetMinSize(self.GetSize())
-        #self.Affirmed()
         self.SetSizerAndFit(mainSizer)
         self.SetMinSize(self.GetSize())
         while self.Affirmed():
             self.SetResult()
         AboutDialog.instance = None
+

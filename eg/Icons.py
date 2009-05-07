@@ -27,17 +27,18 @@
 """
 
 import wx
-from os.path import abspath
+from os.path import abspath, dirname, join
 from base64 import b64decode
 from cStringIO import StringIO
 import Image
 
+IMAGES_PATH = abspath(join(dirname(__file__), "..", "images"))
 
 gImageList = wx.ImageList(16, 16)
-DISABLED_PIL = Image.open("images/disabled.png")
-FOLDER_PIL = Image.open("images/folder.png").convert("RGBA")
-PLUGIN_PIL = Image.open("images/plugin.png")
-ACTION_PIL = Image.open("images/action.png").convert("RGBA")
+DISABLED_PIL = Image.open(join(IMAGES_PATH, "disabled.png"))
+FOLDER_PIL = Image.open(join(IMAGES_PATH, "folder.png")).convert("RGBA")
+PLUGIN_PIL = Image.open(join(IMAGES_PATH, "plugin.png"))
+ACTION_PIL = Image.open(join(IMAGES_PATH, "action.png")).convert("RGBA")
 
 
 def PilToBitmap(pil):
@@ -45,8 +46,9 @@ def PilToBitmap(pil):
     return wx.BitmapFromBufferRGBA(pil.size[0], pil.size[1], pil.tostring())
 
 
-def GetIcon(filePath):
-    """ Returns a wx.Bitmap loaded from 'filePath'.
+def GetBitmap(filePath):
+    """
+    Returns a wx.Bitmap loaded from 'filePath'.
     
     Uses PIL functions, because this way we have better alpha channel 
     handling.
@@ -54,6 +56,18 @@ def GetIcon(filePath):
     return PilToBitmap(Image.open(filePath).convert("RGBA"))
     
 
+def GetInternalBitmap(name):
+    """ 
+    Same as GetBitmap() but looks for the file in the programs images 
+    folder. Also appends the .png extension to the name.
+    """
+    return GetBitmap(join(IMAGES_PATH, name + ".png"))
+    
+    
+def GetInternalImage(name):
+    return wx.Image(join(eg.IMAGES_DIR, name + ".png"), wx.BITMAP_TYPE_PNG)
+    
+    
 def CreateBitmapOnTopOfIcon(foregroundIcon, backgroundIcon, size=(12, 12)):
     small = foregroundIcon.pil.resize(size, Image.BICUBIC)
     pil = backgroundIcon.pil.copy()
@@ -62,7 +76,8 @@ def CreateBitmapOnTopOfIcon(foregroundIcon, backgroundIcon, size=(12, 12)):
     
     
 class IconBase(object):
-    """ An object representing an icon with some memoization functionality.
+    """ 
+    An object representing an icon with some memoization functionality.
     
     The icon is initialized by a file path (see PathIcon) or by a base64encoded
     string (see StringIcon). The object will not load/convert any data before
@@ -74,7 +89,8 @@ class IconBase(object):
     cache = {}
     
     def __new__(cls, key):
-        """ If an instance of this data is already in the cache, returns the 
+        """ 
+        If an instance of this data is already in the cache, returns the 
         cached instance. Otherwise creates a new instance and adds it to the 
         cache.
         """
@@ -87,7 +103,8 @@ class IconBase(object):
     
     
     def _GetPil(self):
-        """ Return a PIL image of the icon.
+        """ 
+        Return a PIL image of the icon.
         
         Abstract method that must be implemented in a subclass.
         """
@@ -133,7 +150,8 @@ class IconBase(object):
 
 
     def __getattr__(self, name):
-        """ Implements the memoization magic for the icon.
+        """ 
+        Implements the memoization magic for the icon.
         
         Only called if an attribute 'name' does not exist. The code will look 
         if a corresponding method '_name' exists, calls this method and stores
@@ -176,7 +194,8 @@ PluginSubIcon.cache = {}
 class PathIcon(IconBase):
     
     def __new__(cls, path):
-        """ If an instance of this path is already in the cache, returns the 
+        """ 
+        If an instance of this path is already in the cache, returns the 
         cached instance. Otherwise creates a new instance and adds it to the 
         cache.
         """
@@ -218,13 +237,15 @@ def ClearImageList():
         
         
 # setup some commonly used icons
-INFO_ICON = PathIcon("images/info.png")
-ERROR_ICON = PathIcon("images/error.png")
-NOTICE_ICON = PathIcon("images/notice.png")
-FOLDER_ICON = PathIcon("images/folder.png")
-DISABLED_ICON = PathIcon("images/disabled.png")
-PLUGIN_ICON = PathIcon("images/plugin.png")
-EVENT_ICON = PathIcon("images/event.png")
-ACTION_ICON = PathIcon("images/action.png")
-MACRO_ICON = PathIcon("images/macro.png")
-
+INFO_ICON = PathIcon(join(IMAGES_PATH, "info.png"))
+ERROR_ICON = PathIcon(join(IMAGES_PATH, "error.png"))
+NOTICE_ICON = PathIcon(join(IMAGES_PATH, "notice.png"))
+FOLDER_ICON = PathIcon(join(IMAGES_PATH, "folder.png"))
+DISABLED_ICON = PathIcon(join(IMAGES_PATH, "disabled.png"))
+PLUGIN_ICON = PathIcon(join(IMAGES_PATH, "plugin.png"))
+EVENT_ICON = PathIcon(join(IMAGES_PATH, "event.png"))
+ACTION_ICON = PathIcon(join(IMAGES_PATH, "action.png"))
+MACRO_ICON = PathIcon(join(IMAGES_PATH, "macro.png"))
+ADD_ICON = PathIcon(join(IMAGES_PATH, 'add.png'))
+ROOT_ICON = PathIcon(join(IMAGES_PATH, 'root.png'))
+AUTOSTART_ICON = PathIcon(join(IMAGES_PATH, 'Execute.png'))

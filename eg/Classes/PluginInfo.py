@@ -64,8 +64,8 @@ class PluginInfo(object):
     # Most important is to know the class of the plugin we are looking at
     pluginCls = None
     
-    # path holds the directory where the plugin files reside
-    path = None
+    # pluginDir holds the name of the directory where the plugin files reside
+    pluginDir = None
     
     # name and description will hold the fields defined through the class.
     # Keep in mind, that every plugin instance might get a modified name
@@ -145,8 +145,7 @@ class PluginInfo(object):
             return None
         
         infoDict = eg.pluginManager.GetPluginInfo(pluginName).__dict__
-        pluginPath = join("plugins", pluginName)
-            
+        pluginDir = pluginName
         # create a new sublclass of PluginInfo for this plugin class
         class info(cls):
             name = infoDict.get("name", cls.name)
@@ -157,7 +156,7 @@ class PluginInfo(object):
             url = infoDict.get("url", cls.url)
             canMultiLoad = infoDict.get("canMultiLoad", cls.canMultiLoad)
             createMacrosOnAdd = infoDict.get("createMacrosOnAdd", cls.createMacrosOnAdd)
-            path = pluginPath + "/"
+            pluginDir = pluginName
         info.pluginName = pluginName
         info.englishName = info.name
         info.englishDescription = info.description
@@ -173,17 +172,24 @@ class PluginInfo(object):
         if "icon" in infoDict and infoDict["icon"] is not None:
             info.icon = eg.Icons.StringIcon(infoDict["icon"])
         else:
-            iconPath = join(pluginPath, "icon.png")
+            iconPath = join(eg.PLUGIN_DIR, pluginDir, "icon.png")
             if exists(iconPath):
                 info.icon = eg.Icons.PathIcon(iconPath)
         info.actionClassList = []
         return info
-    
-    
 
+    
+    @classmethod
+    def GetPath(cls):
+        """
+        Returns the full path to the plugin directory.
+        """
+        return join(eg.PLUGIN_DIR, cls.pluginDir)
+    
+    
     @classmethod
     def LoadModule(pluginInfo):
-        pathname = join(pluginInfo.path, "__init__.py")
+        pathname = join(eg.PLUGIN_DIR, pluginInfo.pluginDir, "__init__.py")
         if not exists(pathname):
             eg.PrintError("File %s does not exist" % pathname)
             return

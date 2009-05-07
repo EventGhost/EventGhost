@@ -23,6 +23,8 @@
 import eg
 import wx
 import threading
+from os.path import join
+
 
 ID_SHOW = wx.NewId()
 ID_HIDE = wx.NewId()
@@ -33,9 +35,9 @@ class TaskBarIcon(wx.TaskBarIcon):
     
     def __init__(self, show):
         self.stateIcons = (
-            wx.Icon("images\\Tray1.png", wx.BITMAP_TYPE_PNG),
-            wx.Icon("images\\Tray3.png", wx.BITMAP_TYPE_PNG),
-            wx.Icon("images\\Tray2.png", wx.BITMAP_TYPE_PNG),
+            wx.Icon(join(eg.IMAGES_DIR, "Tray1.png"), wx.BITMAP_TYPE_PNG),
+            wx.Icon(join(eg.IMAGES_DIR, "Tray3.png"), wx.BITMAP_TYPE_PNG),
+            wx.Icon(join(eg.IMAGES_DIR, "Tray2.png"), wx.BITMAP_TYPE_PNG),
         )
         self.tooltip = eg.APP_NAME + " " + eg.Version.string
         wx.TaskBarIcon.__init__(self)

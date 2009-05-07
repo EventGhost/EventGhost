@@ -88,7 +88,7 @@ class HtmlWindow(wxHtmlWindow):
             and (self.basePath is not None)
             and not url.startswith(self.basePath)
         ):
-            return self.basePath + url
+            return self.basePath + "/" + url
         else:
             return HTML_OPEN
         

@@ -25,6 +25,7 @@ import sys
 import wx.lib.mixins.listctrl as listmix
 from eg.WinApi import GetWindowText, GetClassName
 from eg.WinApi.Utils import GetHwndIcon, GetWindowProcessName
+from eg.Icons import GetInternalBitmap
 
 
 class WindowList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
@@ -33,7 +34,7 @@ class WindowList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         wx.ListCtrl.__init__(self, parent, style=wx.LC_REPORT|wx.LC_SINGLE_SEL)
         listmix.ListCtrlAutoWidthMixin.__init__(self)
         imageList = wx.ImageList(16, 16)
-        imageList.Add(wx.Bitmap("images/cwindow.png"))
+        imageList.Add(GetInternalBitmap("cwindow"))
         self.AssignImageList(imageList, wx.IMAGE_LIST_SMALL)
         self.InsertColumn(0, "Program")
         self.InsertColumn(1, "Name")

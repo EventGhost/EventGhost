@@ -54,7 +54,7 @@ def WritePluginList(filepath):
     numPlugins = 0
     groups = {}
     for info in eg.pluginManager.GetPluginInfoList():
-        if os.path.exists(info.path + "\\" + "noinclude"):
+        if os.path.exists(join(info.GetPath(), "noinclude")):
             continue
         if info.kind in groups:
             groups[info.kind].append(info)
@@ -70,7 +70,6 @@ def WritePluginList(filepath):
     outfile.write("This is the list of the %d plugins " % numPlugins)
     outfile.write("currently distributed with EventGhost ")
     outfile.write("%s:\n\n" % eg.Version.base)
-    replacementId = 1
     for kind, kindDesciption in kindList:
         outfile.write("%s\n" % kindDesciption)
         outfile.write(79 * "-" + "\n\n")
@@ -94,7 +93,6 @@ def WritePluginList(filepath):
                 outfile.write(".. _%s Plugin: %s\n\n" % 
                     (info.name, info.url)
                 )
-            replacementId += 1
     outfile.close()
     
     

@@ -21,7 +21,7 @@
 # $LastChangedBy$
 
 from eg.Utils import SetDefault
-
+import os
 
 class Default:
     class General:
@@ -190,8 +190,9 @@ class Default:
 def Text(language):
     class Translation(Default):
         pass
+    languagePath = os.path.join(eg.LANGUAGES_DIR, "%s.py" % language)
     try:
-        execfile("languages\\%s.py" % language, {}, Translation.__dict__)
+        execfile(languagePath, {}, Translation.__dict__)
     except IOError:
         pass
     SetDefault(Translation, Default)

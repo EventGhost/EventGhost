@@ -242,7 +242,7 @@ class LanguageEditor(wx.Frame):
         tree.Unbind(wx.EVT_TREE_SEL_CHANGING)
         tree.DeleteChildren(self.rootId)
         translation = eg.Bunch()
-        languagePath = "languages\\%s.py" % language
+        languagePath = os.path.join(eg.LANGUAGES_DIR, "%s.py" % language)
         if os.path.exists(languagePath):
             execfile(languagePath, {}, translation.__dict__)
         self.translationDict = translation.__dict__
@@ -406,7 +406,7 @@ class LanguageEditor(wx.Frame):
             return "".join(res)
         
         outFile = codecs.open(
-            "Languages\\%s.py" % Config.language, 
+            os.path.join(eg.LANGUAGES_DIR, "%s.py" % Config.language),
             "wt", 
             "utf_8"
         )
