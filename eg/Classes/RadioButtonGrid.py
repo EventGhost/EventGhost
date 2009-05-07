@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -26,14 +26,14 @@ import wx
 class RadioButtonGrid(wx.Panel):
     CtrlType = wx.RadioButton
     firstCtrlStyle = wx.RB_GROUP
-    
+
     def __init__(
-        self, 
-        parent, 
-        id = wx.ID_ANY, 
+        self,
+        parent,
+        id = wx.ID_ANY,
         pos = wx.DefaultPosition,
         size = wx.DefaultSize,
-        rows = None, 
+        rows = None,
         columns = None
     ):
         wx.Panel.__init__(self, parent, id, pos, size)
@@ -46,7 +46,7 @@ class RadioButtonGrid(wx.Panel):
             if width > biggestWidth:
                 biggestWidth = width
             sizer.Add(staticText, 0, wx.ALIGN_CENTER_HORIZONTAL)
-                
+
         self.ctrlTable = ctrlTable = []
         for column in columns:
             ctrl = self.CtrlType(self, style=self.firstCtrlStyle)
@@ -67,7 +67,7 @@ class RadioButtonGrid(wx.Panel):
             for x, column in enumerate(columns):
                 ctrl = ctrlTable[x][y]
                 sizer.Add(ctrl, 0, wx.ALIGN_CENTER_HORIZONTAL)
-        
+
         sizer.Add((0, 0))
         for column in columns:
             sizer.Add((biggestWidth, 0))
@@ -78,8 +78,8 @@ class RadioButtonGrid(wx.Panel):
         self.Layout()
         self.SetMinSize(self.GetSize())
         self.Bind(wx.EVT_SIZE, self.OnSize)
-        
-        
+
+
     def OnSize(self, event):
         if self.GetAutoLayout():
             self.Layout()
@@ -93,10 +93,9 @@ class RadioButtonGrid(wx.Panel):
                     break
             result.append(i)
         return result
-            
-            
+
+
     def SetValue(self, value):
         for column, val in enumerate(value):
             self.ctrlTable[column][val].SetValue(True)
-    
-    
+

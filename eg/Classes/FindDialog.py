@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -41,11 +41,11 @@ class Text(eg.TranslatableStrings):
 
 
 class FindDialog(wx.Dialog):
-    
+
     def __init__(self, parent, document):
         wx.Dialog.__init__(
-            self, 
-            parent, 
+            self,
+            parent,
             -1,
             title = Text.title,
             style = wx.DEFAULT_DIALOG_STYLE
@@ -58,9 +58,9 @@ class FindDialog(wx.Dialog):
         searchParametersCb = wx.CheckBox(self, -1, Text.searchParameters)
         searchParametersCb.SetValue(1)
         directionRb = wx.RadioBox(
-            self, 
-            label = Text.direction, 
-            choices = [Text.up, Text.down], 
+            self,
+            label = Text.direction,
+            choices = [Text.up, Text.down],
             style = wx.RA_SPECIFY_ROWS
         )
         directionRb.SetSelection(1)
@@ -68,7 +68,7 @@ class FindDialog(wx.Dialog):
         searchButton.SetDefault()
         searchButton.Enable(False)
         cancelButton = wx.Button(self, wx.ID_CANCEL, eg.text.General.cancel)
-        
+
         acv = wx.ALIGN_CENTER_VERTICAL
         upperLeftSizer = eg.HBoxSizer(
             (wx.StaticText(self, -1, Text.searchLabel), 0, acv|wx.RIGHT, 5),
@@ -97,13 +97,13 @@ class FindDialog(wx.Dialog):
         )
         self.SetSizerAndFit(sizer)
         self.SetMinSize(self.GetSize())
-        
+
         searchButton.Bind(wx.EVT_BUTTON, self.OnFindButton)
         def EnableSearchButton(event):
             enable = textCtrl.GetValue() != ""
             searchButton.Enable(enable)
         textCtrl.Bind(wx.EVT_TEXT, EnableSearchButton)
-        
+
         self.textCtrl = textCtrl
         self.wholeWordsOnlyCb = wholeWordsOnlyCb
         self.caseSensitiveCb = caseSensitiveCb
@@ -125,8 +125,8 @@ class FindDialog(wx.Dialog):
     @eg.LogIt
     def OnCancel(self, event):
         self.Destroy()
-        
-    
+
+
     def OnFindButton(self, event=None):
         tree = self.document.tree
         item = tree.GetPyData(tree.GetSelection())
@@ -138,7 +138,7 @@ class FindDialog(wx.Dialog):
         else:
             convertFunc = string.lower
             key = originalSearchValue.lower()
-        
+
         if self.directionRb.GetSelection():
             iterFunc = eg.TreeItem.GetNextItem
         else:
@@ -148,11 +148,11 @@ class FindDialog(wx.Dialog):
         if self.wholeWordsOnlyCb.GetValue():
             matchFunc = lambda text, pos: (
                 (
-                    pos == 0 
+                    pos == 0
                     or not text[pos - 1].isalnum()
                 )
                 and (
-                    keyLen + pos == len(text) 
+                    keyLen + pos == len(text)
                     or not text[pos + keyLen].isalnum()
                 )
             )
@@ -163,7 +163,7 @@ class FindDialog(wx.Dialog):
             item = iterFunc(item)
             if startItem is item:
                 dlg = wx.MessageDialog(
-                    None, 
+                    None,
                     Text.notFoundMesg % originalSearchValue,
                     eg.APP_NAME,
                     wx.OK | wx.ICON_INFORMATION

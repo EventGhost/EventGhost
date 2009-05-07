@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -33,14 +33,14 @@ def DoExecute(item, newArgs):
 
 class Configure:
     name = eg.text.MainFrame.Menu.Configure.replace("&", "")
-    
+
     @eg.LogItWithReturn
     def Try(self, document):
         item = document.selection
         if isinstance(item, (eg.ActionItem, eg.EventItem)):
             eg.Tasklet(self.Do)(item).run()
-        
-    
+
+
     @eg.LogItWithReturn
     def Do(self, item, isFirstConfigure=False):
         # TODO: doing the thread ping-pong right
@@ -48,7 +48,7 @@ class Configure:
         if item.openConfigDialog:
             item.openConfigDialog.Raise()
             return False
-        
+
         self.oldArgumentString = item.GetArgumentString()
         oldArgs = newArgs = item.GetArgs()
         revertOnCancel = False
@@ -69,7 +69,7 @@ class Configure:
                 item.SetArgs(oldArgs)
                 item.Refresh()
             return False
-            
+
         item.SetArgs(newArgs)
         newArgumentString = item.GetArgumentString()
         if self.oldArgumentString != newArgumentString:
@@ -78,7 +78,7 @@ class Configure:
                 item.document.AppendUndoHandler(self)
             item.Refresh()
         return True
-    
+
 
     def Undo(self, document):
         item = self.positionData.GetItem()

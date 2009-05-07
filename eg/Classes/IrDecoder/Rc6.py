@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -79,22 +79,22 @@ MCE_REMOTE = {
     0x800F045E: "Blue",
 }
 
-    
+
 class Rc6(ManchesterCoding1):
     """
     IR decoder for the Philips RC-6 protocol.
     """
     timeout = 150
-    
+
     def __init__(self, controller):
         ManchesterCoding1.__init__(self, controller, 444)
-        
-        
+
+
     def GetTrailerBit(self):
         sample = (
-            self.GetSample() * 8 
-            + self.GetSample() * 4 
-            + self.GetSample() * 2 
+            self.GetSample() * 8
+            + self.GetSample() * 4
+            + self.GetSample() * 2
             + self.GetSample()
         )
         if sample == 3: # binary 0011
@@ -103,25 +103,25 @@ class Rc6(ManchesterCoding1):
             return 1
         else:
             raise DecodeError("wrong trailer bit transition")
-        
-    
+
+
     def Decode(self, data):
         # Check the leader pulse
         if not (2200 < data[0] < 3300):
             raise DecodeError("wrong header pulse")
         if not (600 < data[1] < 1100):
             raise DecodeError("wrong header pause")
-        
+
         self.SetData(data, 2)
-        
+
         # Get the start bit
         if self.GetBit() != 1:
             raise DecodeError("missing start bit")
-        
+
         mode = self.GetBitsLsbLast(3)
         trailerBit = self.GetTrailerBit()
         value = self.GetBitsLsbLast(32)
-            
+
         # Check for MCE remote
         if mode == 6 and trailerBit == 0:
             value2 = value & 0xFFFF7FFF
@@ -131,3 +131,4 @@ class Rc6(ManchesterCoding1):
 #                print "0x%0.8X" % value2
 
         return "RC6mode%X_%d_%08X" % (mode, trailerBit, value)
+

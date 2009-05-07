@@ -39,7 +39,7 @@ ERROR_NO_MORE_ITEMS = 259
 
 def GetComPorts(availableOnly=True):
     """
-    This generator scans the device registry for com ports and yields port, 
+    This generator scans the device registry for com ports and yields port,
     desc, hwid.
     If availableOnly is true only return currently existing ports.
     """
@@ -63,14 +63,14 @@ def GetComPorts(availableOnly=True):
             if ctypes.GetLastError() != ERROR_NO_MORE_ITEMS:
                 raise ctypes.WinError()
             break
-        
+
         dwNeeded = DWORD()
         # get the size
         if not SetupDiGetDeviceInterfaceDetail(
             hdi,
             byref(did),
-            None, 
-            0, 
+            None,
+            0,
             byref(dwNeeded),
             None
         ):
@@ -90,8 +90,8 @@ def GetComPorts(availableOnly=True):
         if not SetupDiGetDeviceInterfaceDetail(
             hdi,
             byref(did),
-            cast(byref(idd), PSP_DEVICE_INTERFACE_DETAIL_DATA), 
-            dwNeeded, 
+            cast(byref(idd), PSP_DEVICE_INTERFACE_DETAIL_DATA),
+            dwNeeded,
             None,
             byref(devinfo)
         ):
@@ -103,7 +103,7 @@ def GetComPorts(availableOnly=True):
             byref(devinfo),
             SPDRP_HARDWAREID,
             None,
-            cast(stringBuffer, PBYTE), 
+            cast(stringBuffer, PBYTE),
             sizeof(stringBuffer) - 1,
             None
         ):
@@ -118,7 +118,7 @@ def GetComPorts(availableOnly=True):
             byref(devinfo),
             SPDRP_FRIENDLYNAME,
             None,
-            cast(stringBuffer, PBYTE), 
+            cast(stringBuffer, PBYTE),
             sizeof(stringBuffer) - 1,
             None
         ):
@@ -128,7 +128,7 @@ def GetComPorts(availableOnly=True):
         szFriendlyName = stringBuffer.value
         portName = re.search(r"\((.*)\)", szFriendlyName).group(1)
         yield portName, szFriendlyName, szHardwareID
-    
+
     SetupDiDestroyDeviceInfoList(hdi)
 
 

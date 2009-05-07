@@ -30,7 +30,7 @@ def device(portnum):
         return r'\\.\COM%d' % (portnum+1)
 
 class Serial(SerialBase):
-    """Serial port implemenation for Win32. This implemenatation requires a 
+    """Serial port implemenation for Win32. This implemenatation requires a
        win32all installation."""
 
     BAUDRATES = (50,75,110,134,150,200,300,600,1200,1800,2400,4800,9600,
@@ -63,7 +63,7 @@ class Serial(SerialBase):
         self._dtrState = win32file.RTS_CONTROL_ENABLE
 
         self._reconfigurePort()
-        
+
         # Clear buffers:
         # Remove anything that was there
         win32file.PurgeComm(self.hComPort,
@@ -91,12 +91,12 @@ class Serial(SerialBase):
         else:
             timeouts = timeouts[:-2] + (0, int(self._writeTimeout*1000))
         win32file.SetCommTimeouts(self.hComPort, timeouts)
-    
+
     def _reconfigurePort(self):
         """Set commuication parameters on opened port."""
         if not self.hComPort:
             raise SerialException("Can only operate on a valid port handle")
-        
+
         #Set Windows timeout values
         #timeouts is a tuple with the following items:
         #(ReadIntervalTimeout,ReadTotalTimeoutMultiplier,
@@ -152,7 +152,7 @@ class Serial(SerialBase):
             comDCB.StopBits     = win32file.TWOSTOPBITS
         else:
             raise ValueError("Unsupported number of stop bits: %r" % self._stopbits)
-            
+
         comDCB.fBinary          = 1 # Enable Binary Transmission
         # Char. w/ Parity-Err are replaced with 0xff (if fErrorChar is set to TRUE)
         if self._rtscts:
@@ -196,7 +196,7 @@ class Serial(SerialBase):
         return device(port)
 
     #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-    
+
     def inWaiting(self):
         """Return the number of characters currently in the input buffer."""
         flags, comstat = win32file.ClearCommError(self.hComPort)
@@ -238,7 +238,7 @@ class Serial(SerialBase):
                 n = win32file.GetOverlappedResult(self.hComPort, self._overlappedWrite, 1)
                 if n != len(s):
                     raise writeTimeoutError
-                
+
 
     def flushInput(self):
         """Clear input buffer, discarding all that is in the buffer."""
@@ -315,10 +315,10 @@ if __name__ == '__main__':
     print __name__
     s = Serial()
     print s
-    
+
     s = Serial(0)
     print s
-    
+
     s.baudrate = 19200
     s.databits = 7
     s.close()

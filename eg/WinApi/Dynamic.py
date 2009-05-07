@@ -38,7 +38,7 @@ if not hasattr(sys, "frozen"): # detect py2exe
                 "#include <objidl.h>\n"
                 "#include <setupapi.h>\n"
                 "#include <htmlhelp.h>\n"
-            )       
+            )
         except WindowsError:
             print "GCC_XML most likely not installed"
 INVALID_HANDLE_VALUE = -1
@@ -1301,3 +1301,4 @@ GetVolumeInformationW.restype = BOOL
 GetVolumeInformationW.argtypes = [LPCWSTR, LPWSTR, DWORD, LPDWORD, LPDWORD, LPDWORD, LPWSTR, DWORD]
 GetVolumeInformation = GetVolumeInformationW # alias
 SWP_FRAMECHANGED = 32 # Variable c_int '32'
+

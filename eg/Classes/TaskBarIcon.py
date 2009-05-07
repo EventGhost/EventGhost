@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -32,7 +32,7 @@ ID_EXIT = wx.NewId()
 
 
 class TaskBarIcon(wx.TaskBarIcon):
-    
+
     def __init__(self, show):
         self.stateIcons = (
             wx.Icon(join(eg.IMAGES_DIR, "Tray1.png"), wx.BITMAP_TYPE_PNG),
@@ -61,38 +61,38 @@ class TaskBarIcon(wx.TaskBarIcon):
         self.Bind(wx.EVT_MENU, self.OnCmdExit, id=ID_EXIT)
         self.Bind(wx.EVT_TASKBAR_RIGHT_UP, self.OnTaskBarMenu)
         self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnCmdShow)
-        
-        
+
+
     def Close(self):
         eg.Unbind("ProcessingChange", self.OnProcessingChange)
-        
-    
+
+
     def OnTaskBarMenu(self, dummyEvent):
         self.menu.Enable(ID_HIDE, eg.document.frame is not None)
         self.PopupMenu(self.menu)
-        
-        
+
+
     def OnCmdShow(self, dummyEvent=None):
         eg.document.ShowFrame()
-        
-        
+
+
     def OnCmdHide(self, dummyEvent):
         eg.document.HideFrame()
-        
-        
+
+
     def OnCmdExit(self, event):
         eg.app.Exit(event)
-        
+
 
     def OnProcessingChange(self, state):
         self.SetIcon(self.stateIcons[state], self.tooltip)
-    
-        
+
+
     def SetToolTip(self, tooltip):
         self.tooltip = tooltip
         wx.CallAfter(self.SetIcon, self.stateIcons[self.currentState], tooltip)
-        
-    
+
+
     def SetProcessingState(self, state, event):
         self.reentrantLock.acquire()
         try:

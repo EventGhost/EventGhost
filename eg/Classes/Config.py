@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -32,7 +32,7 @@ LOCALE = wx.Locale()
 
 
 class Section:
-    
+
     def __init__(self, defaults=None):
         if defaults:
             for key, value in defaults.__dict__.iteritems():
@@ -40,8 +40,8 @@ class Section:
                     setattr(self, key, Section(value))
                 elif not hasattr(self, key):
                     setattr(self, key, value)
-                    
-                    
+
+
     def SetDefault(self, key, default):
         if key not in self.__dict__:
             setattr(self, key, Section(default))
@@ -59,7 +59,7 @@ def MakeSectionMetaClass(dummyName, dummyBases, dct):
     section.__dict__ = dct
     return section
 
-    
+
 def RecursivePySave(obj, fileWriter, indent=""):
     objDict = obj.__dict__
     keys = objDict.keys()
@@ -75,14 +75,14 @@ def RecursivePySave(obj, fileWriter, indent=""):
             classKeys.append(key)
         else:
             line = indent + key + " = " + repr(value) + "\n"
-            fileWriter(line)        
+            fileWriter(line)
     for key in classKeys:
         value = objDict[key]
         fileWriter(indent + "class " + key + ":\n")
         RecursivePySave(value, fileWriter, indent + "    ")
-        
-        
-    
+
+
+
 
 class Config(Section):
     revision = 0
@@ -117,15 +117,15 @@ class Config(Section):
             os.makedirs(configDir)
         configFilePath = os.path.join(configDir, "config.py")
         self._configFilePath = configFilePath
-        
+
         # BUG: of the python function 'execfile'. It doesn't handle unicode
         # filenames right.
         configFilePath = configFilePath.encode(sys.getfilesystemencoding())
         if exists(configFilePath):
             try:
                 execfile(
-                    configFilePath, 
-                    {"__metaclass__": MakeSectionMetaClass}, 
+                    configFilePath,
+                    {"__metaclass__": MakeSectionMetaClass},
                     self.__dict__
                 )
             except:
@@ -135,8 +135,8 @@ class Config(Section):
             eg.PrintDebugNotice('File "%s" does not exist.' % configFilePath)
         if self.language == "Deutsch":
             self.language = "de_DE"
-    
-    
+
+
     def Save(self):
         self.revision = eg.revision
         configFile = open(self._configFilePath, 'w+')

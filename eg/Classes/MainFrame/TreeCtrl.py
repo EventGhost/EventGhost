@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -29,30 +29,30 @@ from eg.WinApi.Dynamic import SendMessageTimeout
 
 
 class EventDropSource(wx.DropSource):
-    
+
     def __init__(self, win, text):
         wx.DropSource.__init__(self, win)
         # create our own data format and use it in a
         # custom data object
         customData = wx.CustomDataObject("DragItem")
         customData.SetData(text)
-    
+
         # Now make a data object for the text and also a composite
         # data object holding both of the others.
         textData = wx.TextDataObject(text.decode("UTF-8"))
-        
+
         data = wx.DataObjectComposite()
         data.Add(textData)
         data.Add(customData)
-        
+
         # We need to hold a reference to our data object, instead it could
         # be garbage collected
         self.data = data
-    
+
         # And finally, create the drop source and begin the drag
         # and drop operation
-        self.SetData(data)   
-        
+        self.SetData(data)
+
 
 
 from eg.Classes.TreeItem import (
@@ -68,7 +68,7 @@ HITTEST_FLAGS = (
 
 
 class EventDropTarget(wx.PyDropTarget):
-    
+
     def __init__(self, window):
         wx.PyDropTarget.__init__(self)
         self.treeCtrl = window
@@ -88,8 +88,8 @@ class EventDropTarget(wx.PyDropTarget):
         self.position = None
         self.lastDropTime = clock()
         self.lastTargetItem = None
-        
-        
+
+
     def OnDragOver(self, x, y, dragResult):
         tree = self.treeCtrl
         dragCls = self.dragCls
@@ -118,7 +118,7 @@ class EventDropTarget(wx.PyDropTarget):
                 if (
                     self.lastDropTime + 0.6 < clock()
                     and (
-                        obj.__class__ == tree.document.FolderItem 
+                        obj.__class__ == tree.document.FolderItem
                         or insertionHint == HINT_MOVE_INSIDE
                         or insertionHint == HINT_MOVE_EVERYWHERE
                     ) and not tree.IsExpanded(targetItemId)
@@ -127,7 +127,7 @@ class EventDropTarget(wx.PyDropTarget):
             else:
                 self.lastDropTime = clock()
                 self.lastTargetItem = targetItemId
-                
+
             if insertionHint == HINT_MOVE_BEFORE_OR_AFTER:
                 targetRect = tree.GetBoundingRect(targetItemId)
                 if y > targetRect.y + targetRect.height / 2:
@@ -140,9 +140,9 @@ class EventDropTarget(wx.PyDropTarget):
                     insertionHint = HINT_MOVE_BEFORE
                 elif y > targetRect.y + (targetRect.height / 4) * 3:
                     insertionHint = HINT_MOVE_AFTER
-                else: 
+                else:
                     insertionHint = HINT_MOVE_INSIDE
-                
+
             if insertionHint == HINT_NO_DROP:
                 tree.ClearInsertMark()
                 self.position = None
@@ -156,8 +156,8 @@ class EventDropTarget(wx.PyDropTarget):
                     insertionHint = child.DropTest(dragCls)
                     if (
                         insertionHint in (
-                            HINT_MOVE_AFTER, 
-                            HINT_MOVE_BEFORE_OR_AFTER, 
+                            HINT_MOVE_AFTER,
+                            HINT_MOVE_BEFORE_OR_AFTER,
                             HINT_MOVE_EVERYWHERE
                         )
                     ):
@@ -200,7 +200,7 @@ class EventDropTarget(wx.PyDropTarget):
 
     @eg.LogIt
     def OnData(self, dummyX, dummyY, dragResult):
-        # Called when OnDrop returns True.  
+        # Called when OnDrop returns True.
         tree = self.treeCtrl
         tree.ClearInsertMark()
         if self.isExternalDrag and self.position is not None:
@@ -216,17 +216,17 @@ class EventDropTarget(wx.PyDropTarget):
                     self.customData.SetData("")
                     parent, pos = self.position
                     eg.UndoHandler.NewEvent().Do(
-                        tree.document, 
-                        label, 
-                        parent, 
+                        tree.document,
+                        label,
+                        parent,
                         pos
                     )
         # what is returned signals the source what to do
         # with the original data (move, copy, etc.)  In this
         # case we just return the suggested value given to us.
-        return dragResult  
-        
-        
+        return dragResult
+
+
     def OnLeave(self):
         self.treeCtrl.ClearInsertMark()
 
@@ -237,9 +237,9 @@ class EventDropTarget(wx.PyDropTarget):
             pass
 
 
-        
+
 class TreeCtrl(wx.TreeCtrl):
-    
+
     @eg.AssertNotMainThread
     def __init__(self, parent, document=None):
         self.document = document
@@ -256,9 +256,9 @@ class TreeCtrl(wx.TreeCtrl):
             wx.CLIP_CHILDREN
         )
         wx.TreeCtrl.__init__(self, parent, style=style)
-        
+
         self.SetImageList(eg.Icons.gImageList)
-        
+
         self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
         self.Bind(wx.EVT_TREE_ITEM_EXPANDING, self.OnItemExpanding)
         self.Bind(wx.EVT_TREE_ITEM_COLLAPSING, self.OnItemCollapsing)
@@ -279,14 +279,14 @@ class TreeCtrl(wx.TreeCtrl):
         self.dropTarget = EventDropTarget(self)
         self.SetDropTarget(self.dropTarget)
         self.hwnd = self.GetHandle()
-        
-        
+
+
     if eg.debugLevel:
         @eg.LogIt
         def __del__(self):
             pass
-    
-    
+
+
     def OnLeftDoubleClick(self, event):
         treeItem = self.HitTest(event.GetPosition())[0]
         if treeItem.IsOk():
@@ -295,22 +295,22 @@ class TreeCtrl(wx.TreeCtrl):
                 # we have to wait till the mouse button is up again
                 while wx.GetMouseState().LeftDown():
                     wx.GetApp().Yield()
-                # and use CallLater and don't call Skip(), as otherwise the 
+                # and use CallLater and don't call Skip(), as otherwise the
                 # click would go through to the newly opened frame.
                 wx.CallLater(1, eg.UndoHandler.Configure().Try, self.document)
                 return
         # if we don't call Skip() on all other situations, a expandable item
         # would not expand
         event.Skip()
-        
-    
+
+
     @eg.LogIt
     def OnItemActivate(self, event):
         item = event.GetItem()
         if item.IsOk():
             wx.CallAfter(eg.UndoHandler.Configure().Try, self.document)
-        
-        
+
+
     @eg.AssertNotMainThread
     def SetData(self):
         self.Freeze()
@@ -325,7 +325,7 @@ class TreeCtrl(wx.TreeCtrl):
         finally:
             self.Thaw()
 
-    
+
     @eg.AssertNotMainThread
     @eg.LogIt
     def Destroy(self):
@@ -340,7 +340,7 @@ class TreeCtrl(wx.TreeCtrl):
         self.Unbind(wx.EVT_TREE_SEL_CHANGED)
         self.DeleteAllItems()
 
-    
+
     @eg.LogIt
     def OnRightDown(self, event):
         self.EndEditLabel(self.GetSelection(), False)
@@ -350,7 +350,7 @@ class TreeCtrl(wx.TreeCtrl):
         item = self.HitTest(pos)[0]
         if item.IsOk():
             self.SelectItem(item)
-        
+
 
     @eg.LogIt
     def OnContextMenu(self, event):
@@ -359,7 +359,7 @@ class TreeCtrl(wx.TreeCtrl):
         frame.SetupEditMenu(frame.popupMenu)
         self.PopupMenu(frame.popupMenu, event.GetPoint())
 
-    
+
     #@eg.LogIt
     def OnSelectionChanged(self, event):
         itemId = event.GetItem()
@@ -367,7 +367,7 @@ class TreeCtrl(wx.TreeCtrl):
         self.document.selection = item
         event.Skip()
 
-    
+
     #@eg.LogIt
     def OnItemExpanding(self, event):
         if self.expandingItemId is None:
@@ -383,16 +383,16 @@ class TreeCtrl(wx.TreeCtrl):
                     child.CreateTreeItem(self, itemId)
         finally:
             pass
-    
-    
+
+
     #@eg.LogIt
     def OnExpanded(self, event):
         if self.expandingItemId == event.GetItem():
             self.expandingItemId = None
             self.ScrollTo(self.expandingItemPos)
             self.Thaw()
-        
-        
+
+
     #@eg.LogIt
     def OnItemCollapsing(self, event):
         itemId = event.GetItem()
@@ -411,15 +411,15 @@ class TreeCtrl(wx.TreeCtrl):
         if newSelectedItem is not document.selection:
             document.selection = newSelectedItem
         self.Thaw()
-        
+
 
     #@eg.LogIt
     def OnCollapsed(self, event):
         itemId = event.GetItem()
         item = self.GetPyData(itemId)
         item.isExpanded = False
-        
-        
+
+
 #    def OnToolTip(self, event):
 #        id = event.GetItem()
 #        item = self.GetPyData(id)
@@ -428,40 +428,40 @@ class TreeCtrl(wx.TreeCtrl):
 #        xmlId = item.xmlId
 #        s = item.GetLabel() + "\n\nxmlId: " + str(xmlId)
 #        if isinstance(item, eg.ContainerItem):
-#            s += "\nchilds: " + str(len(item.childs)) 
+#            s += "\nchilds: " + str(len(item.childs))
 #            s += "\nexpanded:" + str(item.isExpanded)
 #            s += "\nIsExpanded:" + str(self.IsExpanded(id))
 #        event.SetToolTip(s)
-        
-        
+
+
     def OnToolTip(self, event):
         pass
-        
-        
+
+
     def SetInsertMark(self, treeItem, after):
         # TVM_SETINSERTMARK = 4378
         if treeItem is not None:
             lParam = long(treeItem.m_pItem)
             SendMessageTimeout(self.hwnd, 4378, after, lParam, 1, 100, None)
-    
-    
+
+
     def ClearInsertMark(self):
         SendMessageTimeout(self.hwnd, 4378, 0, long(0), 1, 100, None)
-        
+
 
     def OnGetFocus(self, event):
         self.hasFocus = True
         eg.Notify("FocusChange", self)
         event.Skip(True)
-        
-        
+
+
     def OnKillFocus(self, event):
         self.hasFocus = False
         if self.editLabelId is None:
             eg.Notify("FocusChange", None)
         event.Skip(True)
-        
-        
+
+
     @eg.LogIt
     def OnBeginLabelEdit(self, event):
         item = self.GetPyData(event.GetItem())
@@ -481,8 +481,8 @@ class TreeCtrl(wx.TreeCtrl):
         if not event.IsEditCancelled() and item.GetLabel() != newLabel:
             eg.UndoHandler.Rename(self.document, item, newLabel)
         event.Skip()
-        
-        
+
+
     def OnCmdExpandAll(self):
         self.Freeze()
         def Expand(item):
@@ -510,8 +510,8 @@ class TreeCtrl(wx.TreeCtrl):
                 Collapse(subchild)
             self.CollapseAndReset(child.id)
         self.Thaw()
-    
-    
+
+
     @eg.LogItWithReturn
     def OnBeginDrag(self, event):
         dragId = event.GetItem()
@@ -531,7 +531,7 @@ class TreeCtrl(wx.TreeCtrl):
         dropSource.DoDragDrop(wx.Drag_AllowMove)
         dragTimer.Stop()
         self.Unbind(wx.EVT_TIMER, id=dragTimerId)
-        
+
         dropTarget.dragCls = eg.EventItem
         dropTarget.dragObject = None
         dropTarget.isExternalDrag = True
@@ -540,7 +540,7 @@ class TreeCtrl(wx.TreeCtrl):
         self.ClearInsertMark()
         if dropTarget.lastHighlighted is not None:
             self.SetItemDropHighlight(dropTarget.lastHighlighted, False)
-        
+
         if insertionMarkPos is not None:
             parent, pos = insertionMarkPos
             eg.UndoHandler.MoveTo(self.document, dragObject, parent, pos)
@@ -553,8 +553,8 @@ class TreeCtrl(wx.TreeCtrl):
             if parent is None:
                 return result
             result = parent
-            
-        
+
+
     def OnDragTimer(self, dummyEvent):
         pos = wx.GetMousePosition()
         treeRect = self.GetScreenRect()
@@ -570,8 +570,8 @@ class TreeCtrl(wx.TreeCtrl):
 
     def Cut(self, dummyEvent=None):
         eg.UndoHandler.Cut(self.document, self.document.selection)
-        
-        
+
+
     def Copy(self, dummyEvent=None):
         item = self.GetSelection()
         if item.IsOk():
@@ -584,11 +584,11 @@ class TreeCtrl(wx.TreeCtrl):
 
     def Paste(self, dummyEvent=None):
         eg.UndoHandler.Paste(self.document)
-        
+
 
     def Clear(self, dummyEvent=None):
         eg.UndoHandler.Clear(self.document, self.document.selection)
-                
+
 
     def GetItemXml(self, obj):
         stream = StringIO()
@@ -603,4 +603,4 @@ class TreeCtrl(wx.TreeCtrl):
         data = stream.getvalue()
         stream.close()
         return data
-            
+

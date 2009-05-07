@@ -7,12 +7,12 @@ class Config(object):
     def __init__(self, configFilePath):
         self._configFilePath = configFilePath
         self.LoadSettings()
-        
-        
+
+
     def LoadSettings(self):
         """
         Load the ini file and set all options.
-        """ 
+        """
         configParser = ConfigParser.ConfigParser()
         configParser.read(self._configFilePath)
         for task in TASKS:
@@ -25,8 +25,8 @@ class Config(object):
                     task.enabled = eval(configParser.get(section, "enabled"))
                 else:
                     task.options[option] = configParser.get(section, option)
-            
-            
+
+
     def SaveSettings(self):
         """
         Save all options to the ini file.
@@ -43,6 +43,4 @@ class Config(object):
         configFile = open(self._configFilePath, "w")
         config.write(configFile)
         configFile.close()
-        
-
 

@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -25,12 +25,12 @@ import wx
 
 
 class TreeItemBrowseCtrl(wx.TreeCtrl):
-    
+
     def __init__(
-        self, 
-        parent, 
-        filterFunc=None, 
-        searchFunc=None, 
+        self,
+        parent,
+        filterFunc=None,
+        searchFunc=None,
         selectItem=None,
         multiSelect=False
     ):
@@ -45,7 +45,7 @@ class TreeItemBrowseCtrl(wx.TreeCtrl):
             |wx.NO_FULL_REPAINT_ON_RESIZE
         )
         if multiSelect:
-            style |= wx.TR_MULTIPLE 
+            style |= wx.TR_MULTIPLE
         wx.TreeCtrl.__init__(self, parent, style=style)
         self.SetMinSize((10, 10))
         self.SetImageList(eg.Icons.gImageList)
@@ -57,7 +57,7 @@ class TreeItemBrowseCtrl(wx.TreeCtrl):
         obj = srcTree.GetPyData(srcRoot)
         self.root = root = self.AddRoot(text, image)
         self.SetPyData(root, obj)
-        
+
         self.normalfont = self.GetItemFont(self.root)
         # evil workaround to get another font
         treeId = self.AppendItem(self.root, '')
@@ -115,7 +115,7 @@ class TreeItemBrowseCtrl(wx.TreeCtrl):
                 treeId,
                 child.GetLabel(),
                 (
-                    child.icon.index if child.isEnabled 
+                    child.icon.index if child.isEnabled
                         else child.icon.disabledIndex
                 ),
                 -1,
@@ -126,4 +126,4 @@ class TreeItemBrowseCtrl(wx.TreeCtrl):
                     self.SetItemHasChildren(tmp, True)
             child.SetAttributes(self, tmp)
             self.searchFunc(child, tmp)
-            
+

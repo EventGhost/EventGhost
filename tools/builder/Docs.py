@@ -28,7 +28,7 @@ from eg.Utils import GetFirstParagraph
 
 
 def GetHtmlHelpCompilerPath():
-    """ 
+    """
     Try to find the install location of the HTML Help command line compiler
     """
     subkey = r"Software\Microsoft\HTML Help Workshop"
@@ -41,8 +41,8 @@ def GetHtmlHelpCompilerPath():
     if not os.path.exists(programPath):
         return None
     return programPath
-    
-    
+
+
 def WritePluginList(filepath):
     kindList = [
         ("core", "Essential (always loaded)"),
@@ -61,7 +61,7 @@ def WritePluginList(filepath):
         else:
             groups[info.kind] = [info]
         numPlugins += 1
-    
+
     outfile = codecs.open(filepath, "wt", "utf-8")
     outfile.write(".. This file is automatically created. Don't edit it!\n\n")
     outfile.write(".. _pluginlist:\n\n")
@@ -87,15 +87,15 @@ def WritePluginList(filepath):
                 outfile.write("**%s**\n" % info.name)
             outfile.write(u"   %s\n\n" % description)
             if info.url:
-                outfile.write(".. |%s Plugin| replace:: **%s**\n" % 
+                outfile.write(".. |%s Plugin| replace:: **%s**\n" %
                     (info.name, info.name)
                 )
-                outfile.write(".. _%s Plugin: %s\n\n" % 
+                outfile.write(".. _%s Plugin: %s\n\n" %
                     (info.name, info.url)
                 )
     outfile.close()
-    
-    
+
+
 def GetFirstTextParagraph(text):
     res = []
     for line in text.lstrip().splitlines():
@@ -104,8 +104,8 @@ def GetFirstTextParagraph(text):
             break
         res.append(line)
     return " ".join(res)
-        
-        
+
+
 def CreateClsDocs(clsNames):
     res = []
     for clsName in clsNames:
@@ -136,9 +136,9 @@ def CreateClsDocs(clsNames):
 
 
 MAIN_CLASSES = [
-    "PluginBase", 
-    "ActionBase", 
-    "SerialThread", 
+    "PluginBase",
+    "ActionBase",
+    "SerialThread",
     "ThreadWorker",
     "ConfigPanel",
     "Bunch",
@@ -181,7 +181,7 @@ def Main(buildHtml=False, buildChm=False):
             DOCS_SOURCE_DIR,
             DOCS_HTML_BUILD_DIR,
         ])
-    
+
     if buildChm:
         sphinx.main([
             None,
@@ -194,7 +194,7 @@ def Main(buildHtml=False, buildChm=False):
             DOCS_SOURCE_DIR,
             DOCS_CHM_BUILD_DIR,
         ])
-        
+
         print "calling HTML Help Workshop compiler"
         htmlHelpCompilerPath = GetHtmlHelpCompilerPath()
         if htmlHelpCompilerPath is None:
@@ -204,5 +204,4 @@ def Main(buildHtml=False, buildChm=False):
         hhpPath = join(DOCS_CHM_BUILD_DIR, "EventGhost.hhp")
         StartProcess(htmlHelpCompilerPath, hhpPath)
         shutil.copy(join(DOCS_CHM_BUILD_DIR, "EventGhost.chm"), MAIN_DIR)
-    
-    
+

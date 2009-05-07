@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -25,10 +25,10 @@ import wx
 from time import clock
 from math import sin
 from eg.Icons import GetInternalBitmap, GetInternalImage
- 
+
 
 class AnimatedWindow(wx.PyWindow):
-    
+
     def __init__(self, parent):
         wx.PyWindow.__init__(self, parent)
         self.font = wx.Font(
@@ -48,8 +48,8 @@ class AnimatedWindow(wx.PyWindow):
         self.OnSize(None)
         self.timer = wx.Timer(self)
         self.timer.Start(10)
-        
-        
+
+
     def MakeBackground(self):
         self.backbuffer = wx.EmptyBitmap(self.width, self.height)
         deviceContext = wx.MemoryDC()
@@ -59,42 +59,42 @@ class AnimatedWindow(wx.PyWindow):
         deviceContext.Clear() # make sure you clear the bitmap!
         deviceContext.SetFont(self.font)
         deviceContext.SetTextForeground((128, 128, 128))
-        
+
         width1 = self.logo1.GetWidth()
         width2 = self.logo2.GetWidth()
         height1 = self.logo1.GetHeight()
         height2 = self.logo2.GetHeight()
         height = max(height1, height2)
-        
+
         deviceContext.DrawBitmap(
-            self.logo1, 
-            self.width - width1 - width2, 
-            self.height - height + (height - height1) // 2, 
+            self.logo1,
+            self.width - width1 - width2,
+            self.height - height + (height - height1) // 2,
             True
         )
         deviceContext.DrawBitmap(
-            self.logo2, 
-            self.width - width2, 
-            self.height - height + (height - height2) // 2, 
+            self.logo2,
+            self.width - width2,
+            self.height - height + (height - height2) // 2,
             True
         )
         deviceContext.DrawBitmap(
-            self.logo3, 
-            (self.width - self.logo3.GetWidth()) // 2, 
-            (self.height - self.logo3.GetHeight()) // 3, 
+            self.logo3,
+            (self.width - self.logo3.GetWidth()) // 2,
+            (self.height - self.logo3.GetHeight()) // 3,
             True
         )
         deviceContext.EndDrawing()
-        
-        
+
+
     def AcceptsFocus(self):
         return False
-        
-        
+
+
     def AcceptsFocusFromKeyboard(self):
         return False
-        
-        
+
+
     def OnSize(self, dummyEvent):
         self.width, self.height = self.GetClientSizeTuple()
         self.dcBuffer = wx.EmptyBitmap(self.width, self.height)

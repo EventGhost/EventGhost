@@ -12,3 +12,4 @@ else:
     if getattr(sys, "frozen", None) == "console_exe":
         from code import InteractiveConsole
         InteractiveConsole().interact()
+

@@ -12,9 +12,9 @@ def StartProcess(*args):
     #SetIndent(1)
     startupInfo = subprocess.STARTUPINFO()
     startupInfo.dwFlags = subprocess.STARTF_USESHOWWINDOW
-    startupInfo.wShowWindow = subprocess.SW_HIDE 
+    startupInfo.wShowWindow = subprocess.SW_HIDE
     process = Popen(
-        args, 
+        args,
         cwd=join(builder.SOURCE_DIR, "tools"),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -36,8 +36,8 @@ def StartProcess(*args):
     process.wait()
     #SetIndent(0)
     return process.returncode
-    
-    
+
+
 def ExecutePy(*args):
     return StartProcess(sys.executable, "-u", "-c", "\n".join(args))
 
@@ -58,34 +58,34 @@ def GetSvnRevision(workingCopy):
 
 def UpdateSvn(workingCopy):
     import pysvn
-    
+
     def SslServerTrustPromptCallback(dummy):
-        """ 
-        See pysvn documentation for 
+        """
+        See pysvn documentation for
         pysvn.Client.callback_ssl_server_trust_prompt
         """
         return True, 0, True
     svn = pysvn.Client()
     svn.callback_ssl_server_trust_prompt = SslServerTrustPromptCallback
     svn.update(workingCopy)
-        
+
 
 def CommitSvn():
     """
     Commit all modified files in the working copy to the SVN server.
     """
     import pysvn
-    
+
     def SslServerTrustPromptCallback(dummy):
-        """ 
-        See pysvn documentation for 
+        """
+        See pysvn documentation for
         pysvn.Client.callback_ssl_server_trust_prompt
         """
         return True, 0, True
     svn = pysvn.Client()
     svn.callback_ssl_server_trust_prompt = SslServerTrustPromptCallback
     svn.checkin(
-        [builder.SOURCE_DIR], 
+        [builder.SOURCE_DIR],
         "Created installer for %s" % builder.APP_VERSION
     )
 
@@ -96,10 +96,10 @@ def CreateSourceArchive(filename=None):
     """
     import pysvn
     import zipfile
-    
+
     if filename is None:
         filename = join(
-            builder.OUT_DIR, 
+            builder.OUT_DIR,
             "%(APP_NAME)s_%(APP_VERSION)s_Source.zip" % builder.__dict__
         )
     client = pysvn.Client()
@@ -112,5 +112,4 @@ def CreateSourceArchive(filename=None):
                 arcname = path[len(workingDir) + 1:]
                 zipFile.write(str(path), str(arcname))
     zipFile.close()
-
 

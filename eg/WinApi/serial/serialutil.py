@@ -37,12 +37,12 @@ writeTimeoutError = SerialTimeoutException("Write timeout")
 
 class FileLike(object):
     """An abstract file like class.
-    
+
     This class implements readline and readlines based on read and
     writelines based on write.
     This class is used to provide the above functions for to Serial
     port objects.
-    
+
     Note that when the serial port was opened with _NO_ timeout that
     readline blocks until it sees a newline (or the specified size is
     reached) and that readlines would never return and therefore
@@ -99,7 +99,7 @@ class FileLike(object):
 class SerialBase(FileLike):
     """Serial port base class. Provides __init__ function and properties to
        get/set port settings."""
-    
+
     #default values, may be overriden in subclasses that do not support all values
     BAUDRATES = (50,75,110,134,150,200,300,600,1200,1800,2400,4800,9600,
                  19200,38400,57600,115200,230400,460800,500000,576000,921600,
@@ -107,7 +107,7 @@ class SerialBase(FileLike):
     BYTESIZES = (FIVEBITS, SIXBITS, SEVENBITS, EIGHTBITS)
     PARITIES  = (PARITY_NONE, PARITY_EVEN, PARITY_ODD)
     STOPBITS  = (STOPBITS_ONE, STOPBITS_TWO)
-    
+
     def __init__(self,
                  port = None,           #number of device, numbering starts at
                                         #zero. if everything fails, the user
@@ -139,7 +139,7 @@ class SerialBase(FileLike):
         self._xonxoff  = None           #correct value is assigned below trough properties
         self._rtscts   = None           #correct value is assigned below trough properties
         self._dsrdtr   = None           #correct value is assigned below trough properties
-        
+
         #assign values using get/set methods using the properties feature
         self.port     = port
         self.baudrate = baudrate
@@ -151,7 +151,7 @@ class SerialBase(FileLike):
         self.xonxoff  = xonxoff
         self.rtscts   = rtscts
         self.dsrdtr   = dsrdtr
-        
+
         if port is not None:
             self.open()
 
@@ -163,13 +163,13 @@ class SerialBase(FileLike):
 
     #TODO: these are not realy needed as the is the BAUDRATES etc attribute...
     #maybe i remove them before the final release...
-    
+
     def getSupportedBaudrates(self):
         return [(str(b), b) for b in self.BAUDRATES]
 
     def getSupportedByteSizes(self):
         return [(str(b), b) for b in self.BYTESIZES]
-    
+
     def getSupportedStopbits(self):
         return [(str(b), b) for b in self.STOPBITS]
 
@@ -181,7 +181,7 @@ class SerialBase(FileLike):
     def setPort(self, port):
         """Change the port. The attribute portstr is set to a string that
            contains the name of the port."""
-        
+
         was_open = self._isOpen
         if was_open: self.close()
         if port is not None:
@@ -193,7 +193,7 @@ class SerialBase(FileLike):
             self.portstr = None
         self._port = port
         if was_open: self.open()
-    
+
     def getPort(self):
         """Get the current port setting. The value that was passed on init or using
            setPort() is passed back. See also the attribute portstr which contains
@@ -214,11 +214,11 @@ class SerialBase(FileLike):
             raise ValueError("Not a valid baudrate: %r" % baudrate)
         else:
             if self._isOpen:  self._reconfigurePort()
-        
+
     def getBaudrate(self):
         """Get the current baudrate setting."""
         return self._baudrate
-        
+
     baudrate = property(getBaudrate, setBaudrate, doc="Baudrate setting")
 
 
@@ -227,11 +227,11 @@ class SerialBase(FileLike):
         if bytesize not in self.BYTESIZES: raise ValueError("Not a valid byte size: %r" % bytesize)
         self._bytesize = bytesize
         if self._isOpen: self._reconfigurePort()
-    
+
     def getByteSize(self):
         """Get the current byte size setting."""
         return self._bytesize
-    
+
     bytesize = property(getByteSize, setByteSize, doc="Byte size setting")
 
 
@@ -240,11 +240,11 @@ class SerialBase(FileLike):
         if parity not in self.PARITIES: raise ValueError("Not a valid parity: %r" % parity)
         self._parity = parity
         if self._isOpen: self._reconfigurePort()
-    
+
     def getParity(self):
         """Get the current parity setting."""
         return self._parity
-    
+
     parity = property(getParity, setParity, doc="Parity setting")
 
 
@@ -253,11 +253,11 @@ class SerialBase(FileLike):
         if stopbits not in self.STOPBITS: raise ValueError("Not a valid stopbit size: %r" % stopbits)
         self._stopbits = stopbits
         if self._isOpen: self._reconfigurePort()
-    
+
     def getStopbits(self):
         """Get the current stopbits setting."""
         return self._stopbits
-    
+
     stopbits = property(getStopbits, setStopbits, doc="Stopbits setting")
 
 
@@ -269,14 +269,14 @@ class SerialBase(FileLike):
                 timeout + 1     #test if it's a number, will throw a TypeError if not...
             except TypeError:
                 raise ValueError("Not a valid timeout: %r" % timeout)
-        
+
         self._timeout = timeout
         if self._isOpen: self._reconfigureTimeout()
-    
+
     def getTimeout(self):
         """Get the current timeout setting."""
         return self._timeout
-    
+
     timeout = property(getTimeout, setTimeout, doc="Timeout setting for read()")
 
 
@@ -288,14 +288,14 @@ class SerialBase(FileLike):
                 timeout + 1     #test if it's a number, will throw a TypeError if not...
             except TypeError:
                 raise ValueError("Not a valid timeout: %r" % timeout)
-        
+
         self._writeTimeout = timeout
         if self._isOpen: self._reconfigurePort()
-    
+
     def getWriteTimeout(self):
         """Get the current timeout setting."""
         return self._writeTimeout
-    
+
     writeTimeout = property(getWriteTimeout, setWriteTimeout, doc="Timeout setting for write()")
 
 
@@ -303,22 +303,22 @@ class SerialBase(FileLike):
         """Change XonXoff setting."""
         self._xonxoff = xonxoff
         if self._isOpen: self._reconfigurePort()
-    
+
     def getXonXoff(self):
         """Get the current XonXoff setting."""
         return self._xonxoff
-    
+
     xonxoff = property(getXonXoff, setXonXoff, doc="Xon/Xoff setting")
 
     def setRtsCts(self, rtscts):
         """Change RtsCts flow control setting."""
         self._rtscts = rtscts
         if self._isOpen: self._reconfigurePort()
-    
+
     def getRtsCts(self):
         """Get the current RtsCts flow control setting."""
         return self._rtscts
-    
+
     rtscts = property(getRtsCts, setRtsCts, doc="RTS/CTS flow control setting")
 
     def setDsrDtr(self, dsrdtr=None):
@@ -330,13 +330,13 @@ class SerialBase(FileLike):
             #if defined independently, follow its value
             self._dsrdtr = dsrdtr
         if self._isOpen: self._reconfigurePort()
-    
+
     def getDsrDtr(self):
         """Get the current DsrDtr flow control setting."""
         return self._dsrdtr
-    
+
     dsrdtr = property(getDsrDtr, setDsrDtr, "DSR/DTR flow control setting")
-    
+
     #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
     def __repr__(self):
@@ -364,3 +364,4 @@ if __name__ == '__main__':
     print s.getSupportedParities()
     print s.getSupportedStopbits()
     print s
+

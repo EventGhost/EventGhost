@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -31,7 +31,7 @@ from eg.WinApi.Dynamic import (
 
 class MessageReceiver(eg.ThreadWorker):
     """
-    A thread with a hidden window to receive win32 messages for different 
+    A thread with a hidden window to receive win32 messages for different
     purposes.
     """
     def __init__(self):
@@ -47,8 +47,8 @@ class MessageReceiver(eg.ThreadWorker):
         self.wndclass = wndclass
         self.hwnd = None
         self.hwndNextViewer = None
-        
-        
+
+
     @eg.LogIt
     def Setup(self):
         self.hwnd = CreateWindowEx(
@@ -56,13 +56,13 @@ class MessageReceiver(eg.ThreadWorker):
             self.wndclass.lpszClassName,
             "EventGhost Message Receiver",
             WS_OVERLAPPEDWINDOW,
-            CW_USEDEFAULT, 
             CW_USEDEFAULT,
-            CW_USEDEFAULT, 
             CW_USEDEFAULT,
-            0, 
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
             0,
-            self.wndclass.hInstance, 
+            0,
+            self.wndclass.hInstance,
             None
         )
         if not self.hwnd:
@@ -71,21 +71,21 @@ class MessageReceiver(eg.ThreadWorker):
         self.AddHandler(WM_CHANGECBCHAIN, self.OnChangeClipboardChain)
         self.hwndNextViewer = SetClipboardViewer(self.hwnd)
         self.AddHandler(WM_DRAWCLIPBOARD, self.OnDrawClipboard)
-        
-        
+
+
     def AddHandler(self, mesg, handler):
         if mesg not in self.messageProcs:
             self.messageProcs[mesg] = [handler]
         else:
             self.messageProcs[mesg].append(handler)
-            
-        
+
+
     def RemoveHandler(self, mesg, handler):
         self.messageProcs[mesg].remove(handler)
         if len(self.messageProcs[mesg]) == 0:
             del self.messageProcs[mesg]
-            
-    
+
+
     def MyWndProc(self, hwnd, mesg, wParam, lParam):
         if mesg == WM_SIZE:
             print "MessageReceiver sized"
@@ -97,7 +97,7 @@ class MessageReceiver(eg.ThreadWorker):
             if res == 0:
                 return 0
         return 1
-    
+
 
     @eg.LogIt
     def OnChangeClipboardChain(self, dummyHwnd, mesg, wParam, lParam):
@@ -109,15 +109,15 @@ class MessageReceiver(eg.ThreadWorker):
         elif self.hwndNextViewer:
             SendMessage(self.hwndNextViewer, mesg, wParam, lParam)
         return 0
-        
-        
+
+
     def OnDrawClipboard(self, dummyHwnd, mesg, wParam, lParam):
         wx.CallAfter(eg.Notify, "ClipboardChange")
         # pass the message to the next window in the clipboard viewer chain
         if self.hwndNextViewer:
             SendMessage(self.hwndNextViewer, mesg, wParam, lParam)
-    
-    
+
+
     @eg.LogIt
     def Close(self):
         ChangeClipboardChain(self.hwnd, self.hwndNextViewer)

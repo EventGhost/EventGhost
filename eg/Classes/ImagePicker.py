@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -26,7 +26,7 @@ from cStringIO import StringIO
 
 
 class ImagePicker(wx.Window):
-    
+
     def __init__(self, parent, label, title="", mesg="", imageString=None):
         self.title = title
         self.mesg = mesg
@@ -49,16 +49,16 @@ class ImagePicker(wx.Window):
 
     def OnSetFocus(self, dummyEvent):
         self.button.SetFocus()
-        
-        
+
+
     def OnSize(self, dummyEvent):
         if self.GetAutoLayout():
             self.Layout()
 
-        
+
     def OnButton(self, event):
         dialog = wx.FileDialog(
-            self.GetParent(), 
+            self.GetParent(),
             message=self.mesg,
             style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST,
             wildcard=(
@@ -73,9 +73,9 @@ class ImagePicker(wx.Window):
             infile.close()
             self.SetValue(b64encode(stream))
             event.Skip()
-            
-            
-            
+
+
+
     def SetValue(self, imageString):
         self.imageString = imageString
         if imageString:
@@ -94,8 +94,8 @@ class ImagePicker(wx.Window):
             bmp = wx.BitmapFromImage(image)
             self.imageBox.SetBitmap(bmp)
             self.imageBox.SetSize((30, 30))
-        
-    
+
+
     def GetValue(self):
         return self.imageString
 

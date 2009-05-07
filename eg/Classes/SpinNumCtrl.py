@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -32,10 +32,10 @@ LOCALECONV = locale.localeconv()
 
 class SpinNumCtrl(wx.Window):
     """
-    A wx.Control that shows a fixed width floating point value and spin 
+    A wx.Control that shows a fixed width floating point value and spin
     buttons to let the user easily input a floating point value.
     """
-    
+
     _defaultArgs = {
         "integerWidth": 3,
         "fractionWidth": 2,
@@ -45,17 +45,17 @@ class SpinNumCtrl(wx.Window):
         "groupChar": LOCALECONV['thousands_sep'].decode(ENCODING),
         "decimalChar": LOCALECONV['decimal_point'].decode(ENCODING),
     }
-    
+
     def __init__(
-        self, 
-        parent, 
+        self,
+        parent,
         id=-1,
         value=0.0,
         pos=wx.DefaultPosition,
         size=wx.DefaultSize,
         style=wx.TE_RIGHT,
         validator=wx.DefaultValidator,
-        name="eg.SpinNumCtrl", 
+        name="eg.SpinNumCtrl",
         **kwargs
     ):
         if "increment" in kwargs:
@@ -67,32 +67,32 @@ class SpinNumCtrl(wx.Window):
         tmp = self._defaultArgs.copy()
         tmp.update(kwargs)
         kwargs = tmp
-        
+
         if kwargs["min"] < 0:
             kwargs["allowNegative"] = True
         if "max" not in kwargs:
             kwargs["max"] = (
-                10 ** kwargs["integerWidth"] 
+                10 ** kwargs["integerWidth"]
                 - 10 ** -kwargs["fractionWidth"]
             )
         wx.Window.__init__(self, parent, id, pos, size, 0)
         self.SetThemeEnabled(True)
         numCtrl = masked.NumCtrl(
-            self, 
-            -1, 
+            self,
+            -1,
             0, # Can't set value here, to avoid bug in NumCtrl
-            pos, 
-            size, 
+            pos,
+            size,
             style,
-            validator, 
-            name, 
+            validator,
+            name,
             #**kwargs # Can't set kwargs here, to avoid bug in NumCtrl
         )
         numCtrl.SetParameters(**kwargs) # To avoid bug in NumCtrl
         numCtrl.SetValue(value) # To avoid bug in NumCtrl
-        
+
         self.numCtrl = numCtrl
-        numCtrl.SetCtrlParameters(        
+        numCtrl.SetCtrlParameters(
             validBackgroundColour=GetColour(wx.SYS_COLOUR_WINDOW),
             emptyBackgroundColour=GetColour(wx.SYS_COLOUR_WINDOW),
             foregroundColour=GetColour(wx.SYS_COLOUR_WINDOWTEXT),
@@ -110,7 +110,7 @@ class SpinNumCtrl(wx.Window):
         numCtrl.Bind(wx.EVT_CHAR, self.OnChar)
         spinbutton.Bind(wx.EVT_SPIN_UP, self.OnSpinUp)
         spinbutton.Bind(wx.EVT_SPIN_DOWN, self.OnSpinDown)
-        
+
         sizer = self.sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(numCtrl, 1, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND)
         sizer.Add(spinbutton, 0, wx.ALIGN_CENTER)
@@ -120,7 +120,7 @@ class SpinNumCtrl(wx.Window):
         self.Bind(wx.EVT_SIZE, self.OnSize)
         self.Bind(wx.EVT_SET_FOCUS, self.OnSetFocus)
         wx.CallAfter(numCtrl.SetSelection, -1, -1)
-        
+
 
     def OnSize(self, dummyEvent):
         if self.GetAutoLayout():
@@ -130,18 +130,18 @@ class SpinNumCtrl(wx.Window):
     def OnSetFocus(self, dummyEvent):
         self.numCtrl.SetFocus()
         self.numCtrl.SetSelection(-1, -1)
-        
-        
+
+
     def OnSpinUp(self, dummyEvent):
         value = self.numCtrl.GetValue() + self.increment
         self.SetValue(value)
-        
-        
+
+
     def OnSpinDown(self, dummyEvent):
         value = self.numCtrl.GetValue() - self.increment
         self.SetValue(value)
-        
-    
+
+
     def OnChar(self, event):
         key = event.GetKeyCode()
         if key == wx.WXK_UP:
@@ -151,8 +151,8 @@ class SpinNumCtrl(wx.Window):
             self.OnSpinDown(event)
             return
         event.Skip()
-        
-        
+
+
     def GetValue(self):
         return self.numCtrl.GetValue()
 
@@ -182,5 +182,4 @@ class SpinNumCtrl(wx.Window):
         start, end = numCtrl._FindField(pos)._extent
         numCtrl.SetInsertionPoint(start)
         numCtrl.SetSelection(start, end)
-
 

@@ -19,3 +19,4 @@ atexit.register(shutil.rmtree, TMP_DIR)
 
 from builder.Config import Config
 config = Config(join(DATA_DIR, "Build.ini"))
+

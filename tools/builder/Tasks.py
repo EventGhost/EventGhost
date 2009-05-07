@@ -8,22 +8,22 @@ from builder.Utils import ExecutePy
 class TaskBase(object):
     value = None
     enabled = True
-    
+
     @classmethod
     def GetId(cls):
         return cls.__module__ + "." + cls.__name__
-    
+
     def IsEnabled(self):
         return True
-    
+
     def DoTask(self):
         raise NotImplementedError
-    
-    
-    
+
+
+
 class UpdateSvn(TaskBase):
     description = "Update from SVN"
-    
+
     def DoTask(self):
         from builder.Utils import UpdateSvn
         UpdateSvn(builder.SOURCE_DIR)
@@ -36,11 +36,11 @@ class UpdateVersionFile(TaskBase):
     """
     description = "Update version file"
     enabled = None
-    
+
     def DoTask(self):
         from builder.Utils import GetSvnRevision
         import imp
-        
+
         svnRevision = GetSvnRevision(builder.SOURCE_DIR)
         outfile = open(join(builder.TMP_DIR, "VersionRevision.py"), "wt")
         outfile.write("revision = %r\n" % svnRevision)
@@ -58,7 +58,7 @@ class UpdateChangeLog(TaskBase):
     """
     description = "updating CHANGELOG.TXT"
     enabled = None
-    
+
     def DoTask(self):
         path = join(builder.SOURCE_DIR, "CHANGELOG.TXT")
         timeStr = time.strftime("%m/%d/%Y")
@@ -78,58 +78,58 @@ class UpdateChangeLog(TaskBase):
 
 class BuildHtml(TaskBase):
     description = "Build HTML docs"
-    
+
     def DoTask(self):
         ExecutePy(
             "import builder.Docs",
             "builder.Docs.Main(buildHtml=True)"
         )
-        
+
 
 class BuildChm(TaskBase):
     description = "Build CHM docs"
-    
+
     def DoTask(self):
         ExecutePy(
             "import builder.Docs",
             "builder.Docs.Main(buildChm=True)"
         )
-        
+
 
 class CreateSourceArchive(TaskBase):
     description = "Build source archive"
-    
+
     def DoTask(self):
         from builder.Utils import CreateSourceArchive
         CreateSourceArchive()
-        
+
 
 
 class CreateLibrary(TaskBase):
     description = "Build lib%d%d" %sys.version_info[0:2]
-    
+
     def DoTask(self):
         import builder.Library
         builder.Library.CreateLibrary()
-        
-        
+
+
 
 class CreateInstaller(TaskBase):
     description = "Build Setup.exe"
-    
+
     def DoTask(self):
         builder.installer.CreateInstaller()
-        
-        
+
+
 
 class Upload(TaskBase):
     description = "Upload through FTP"
     options = {"url": ""}
-    
+
     def IsEnabled(self):
         return bool(self.options["url"])
-    
-    
+
+
     def DoTask(self):
         import builder.Upload
         filename = builder.APP_NAME + "_" + builder.APP_VERSION + "_Setup.exe"
@@ -138,48 +138,48 @@ class Upload(TaskBase):
         builder.Upload.Upload(src, self.options["url"])
         shutil.copyfile(src, dst)
         shutil.copystat(src, dst)
-        
+
 
 
 class UpdateWebsite(TaskBase):
     description = "Update website"
     options = {"url": ""}
-    
+
     def IsEnabled(self):
         return bool(self.options["url"])
-    
-    
+
+
     def DoTask(self):
         import builder.website
         builder.website.Main(self.options["url"])
-        
+
 
 
 class CreateStaticImports(TaskBase):
     description = "Create StaticImports.py"
-    
+
     def DoTask(self):
         import builder.StaticImports
         builder.StaticImports.DoTask()
-        
+
 
 
 class CreateImports(TaskBase):
     description = "Create Imports.py"
-    
+
     def DoTask(self):
         import builder.Imports
         builder.Imports.DoTask()
-        
+
 
 
 class BuildPyExe(TaskBase):
     description = "Build py.exe and pyw.exe"
-    
+
     def DoTask(self):
         import builder.PyExe
         builder.PyExe.DoTask()
-        
+
 
 
 TASKS = [
@@ -208,5 +208,4 @@ def Main():
             print "---", task.description
             task.DoTask()
     print "--- All done!"
-    
 

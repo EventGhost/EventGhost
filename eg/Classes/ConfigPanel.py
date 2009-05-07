@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -29,17 +29,17 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
     """
     A panel with some magic.
     """
-    
+
     def __init__(
-        self, 
-        executable=None, 
-        resizable=None, 
-        showLine=True        
+        self,
+        executable=None,
+        resizable=None,
+        showLine=True
     ):
         #if resizable is None:
         #    resizable = bool(eg.debugLevel)
         item = eg.currentConfigureItem
-            
+
         dialog = item.openConfigDialog
         dialog.panel = self
         dialog.__init__(item, resizable, showLine)
@@ -57,8 +57,8 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         self.resultCode = None
         self.buttonsEnabled = True
         self.dialog.buttonRow.applyButton.Enable(False)
-        
-        
+
+
     @eg.LogIt
     def SetIsDirty(self, flag=True):
         self.isDirty = flag
@@ -68,32 +68,32 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
 
     def AddLabel(self, label):
         self.sizer.Add(self.StaticText(label), 0, wx.BOTTOM, 2)
-        
-        
+
+
     def AddCtrl(self, ctrl):
         self.sizer.Add(ctrl, 0, wx.BOTTOM, 10)
-        
-        
+
+
     def SetSizerProperty(self, vgap=6, hgap=5):
         self.sizerProps = (vgap, hgap)
-    
-    
+
+
     def SetRowFlags(self, rowNum, flags):
         self.rowFlags[rowNum] = flags
-        
-    
+
+
     def SetColumnFlags(self, colNum, flags):
         self.colFlags[colNum] = flags
-        
-    
+
+
     def FinishSetup(self):
         self.shown = True
         if self.lines:
             self.AddGrid(self.lines, *self.sizerProps)
         else:
             self.SetSizerAndFit(self.sizer)
-            
-        #self.dialog.FinishSetup()        
+
+        #self.dialog.FinishSetup()
         def OnEvent(dummyEvent):
             self.SetIsDirty()
         self.Bind(wx.EVT_CHECKBOX, OnEvent)
@@ -107,18 +107,18 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         self.Bind(wx.EVT_DATE_CHANGED, OnEvent)
         self.Bind(eg.EVT_VALUE_CHANGED, OnEvent)
         self.Bind(wx.EVT_CHECKLISTBOX, OnEvent)
-    
-    
+
+
     def Affirmed(self):
         """
         Returns the user request.
-        
-        If called the first time, it will also finish creation of the panel 
+
+        If called the first time, it will also finish creation of the panel
         and show it to the user, before returning the user request.
-        
+
         The return value depends on the button the user has pressed in the
         panel:
-        
+
             | Cancel button => :const:`False`
             | Ok button => :const:`wx.ID_OK`
             | Apply button => :const:`wx.ID_APPLY`
@@ -126,10 +126,10 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         """
         return self.dialog.Affirmed()
 
-    
+
     def SetResult(self, *args):
         """
-        Notifies the program of the current values of the configuration 
+        Notifies the program of the current values of the configuration
         controls.
         """
         if self.resultCode != eg.ID_TEST:
@@ -137,7 +137,7 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
             self.isDirty = False
         self.dialog.SetResult(*args)
 
-    
+
     def AddLine(self, *items, **kwargs):
         self.maxRowNum = max(self.maxRowNum, len(items))
         self.lines.append((items, kwargs))
@@ -157,20 +157,20 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
                     ctrl = (1, 1)
                 elif type(ctrl) in types.StringTypes:
                     ctrl = wx.StaticText(self, -1, ctrl)
-                
+
                 flags = rowFlagsGet(rowNum, 0) | colFlagsGet(colNum, 0)
                 flags |= (wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT)
                 sizer.Add(ctrl, (rowNum, colNum), (1, 1), flags)
-                
+
             if colNum < columns - 1:
                 sizer.SetItemSpan(ctrl, (1, columns - colNum + 1))
         self.SetSizer(sizer)
-        
+
 
     def EnableButtons(self, flag=True):
         """
         Enables/Disables the OK, Apply and Test buttons.
-        
+
         Useful if you want to temporarily disable them, because the current
         settings have no valid state and later re-enable them.
         """
@@ -183,5 +183,4 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
             buttonRow.applyButton.Enable(True)
         else:
             buttonRow.applyButton.Enable(False)
-        
-            
+

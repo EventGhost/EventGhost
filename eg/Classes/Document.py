@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -34,11 +34,11 @@ class TreeStateData(eg.PersistentData):
     time = None
     expandState = None # deprecated
     expanded = None
-    
+
 
 
 class Document(object):
-    
+
     def __init__(self):
         class ItemMixin:
             document = self
@@ -47,13 +47,13 @@ class Document(object):
         self.ItemMixin = ItemMixin
         itemNamespace = {}
         self.XMLTag2ClassDict = {}
-        
+
         def MakeCls(name):
             baseCls = getattr(eg, name)
             cls = ClassType(name, (ItemMixin, baseCls), itemNamespace)
             self.XMLTag2ClassDict[cls.xmlTag] = cls
             return cls
-        
+
         self.TreeLink = eg.TreeLink
         self.TreeItem = MakeCls("TreeItem")
         self.ContainerItem = MakeCls("ContainerItem")
@@ -79,24 +79,24 @@ class Document(object):
         self.tree = None
         self._selection = None
         self.reentrantLock = Lock()
-        
-        
+
+
     def GetSelection(self):
         return self._selection
-    
-    
+
+
     def SetSelection(self, selection):
         self._selection = selection
         eg.Notify("SelectionChange", selection)
-        
+
     selection = property(fget=GetSelection, fset=SetSelection)
-        
-        
+
+
     def SetFilePath(self, filePath):
         self.filePath = filePath
         eg.Notify("DocumentFileChange", filePath)
-    
-    
+
+
     def GetTitle(self):
         if self.filePath is None:
             filename = eg.text.General.unnamedFile
@@ -105,8 +105,8 @@ class Document(object):
         else:
             filename = os.path.basename(self.filePath)
         return "EventGhost %s - %s" % (eg.Version.string, filename)
-        
-        
+
+
     @eg.LogIt
     def SetTree(self, tree):
         self.tree = tree
@@ -141,8 +141,8 @@ class Document(object):
         if self.tree:
             wx.CallAfter(self.tree.SetData)
         return root
-        
-    
+
+
     @eg.LogIt
     def Load(self, filePath):
         if self.tree:
@@ -150,7 +150,7 @@ class Document(object):
         if filePath is None:
             return self.LoadEmpty()
         self.ResetUndoState()
-        
+
         if not filePath:
             filePath = "Example.xml"
             self.SetFilePath(False)
@@ -169,16 +169,16 @@ class Document(object):
         if self.tree:
             wx.CallAfter(self.tree.SetData)
         return root
-        
-        
+
+
     def StartSession(self, filePath):
         eg.eventThread.CallWait(eg.eventThread.StopSession)
         eg.eventThread.Call(eg.eventThread.StartSession, filePath)
-        
-        
+
+
     def AfterLoad(self):
         if (
-            TreeStateData.guid == self.root.guid 
+            TreeStateData.guid == self.root.guid
             and TreeStateData.time == self.root.time
         ):
             self.SetExpandState(TreeStateData.expanded)
@@ -189,8 +189,8 @@ class Document(object):
         else:
             self.selection = self.root
             self.firstVisibleItem = self.root
-        
-    
+
+
     def WriteFile(self, filePath):
         success = False
         tmpFile, tmpPath = mkstemp(".xml", "$", os.path.dirname(filePath))
@@ -210,8 +210,8 @@ class Document(object):
             success = True
         except:
             eg.PrintTraceback("Error while saving file")
-        return success    
- 
+        return success
+
 
     @eg.LogItWithReturn
     def Close(self):
@@ -226,8 +226,8 @@ class Document(object):
         TreeStateData.expanded = self.GetExpandState()
         TreeStateData.selection = self.selection.GetPath()
         TreeStateData.firstVisibleItem = self.firstVisibleItem.GetPath()
-    
-    
+
+
     @eg.LogIt
     def AppendUndoHandler(self, handler):
         stockUndo = self.stockUndo
@@ -236,11 +236,11 @@ class Document(object):
         stockUndo.append(handler)
         self.undoState += 1
         del self.stockRedo[:]
-        
+
         eg.Notify("DocumentChange", True)
         eg.Notify("UndoChange", (True, False, ": " + handler.name, ""))
-        
-        
+
+
     def Undo(self):
         if len(self.stockUndo) == 0:
             return
@@ -256,8 +256,8 @@ class Document(object):
             undoName = ""
             hasUndo = False
         eg.Notify("UndoChange", (hasUndo, True, undoName, ": " + handler.name))
-        
-        
+
+
     @eg.LogIt
     def Redo(self):
         if len(self.stockRedo) == 0:
@@ -274,8 +274,8 @@ class Document(object):
             redoName = ""
             hasRedo = False
         eg.Notify("UndoChange", (True, hasRedo, ": " + handler.name, redoName))
-        
-        
+
+
     def RestoreItem(self, positionData, xmlData):
         eg.TreeLink.StartUndo()
         parent, pos = positionData.GetPosition()
@@ -286,8 +286,8 @@ class Document(object):
         eg.TreeLink.StopUndo()
         item.RestoreState()
         return item
-    
-    
+
+
     @eg.LogItWithReturn
     def ShowFrame(self):
         if self.reentrantLock.acquire(False):
@@ -296,15 +296,15 @@ class Document(object):
                 self.frame.Show()
             self.frame.Raise()
             self.reentrantLock.release()
-        
-    
+
+
     @eg.LogItWithReturn
     def HideFrame(self):
         # NOTICE:
         # If the program is started through a shortcut with "minimise" option
         # set, we get an iconize event while ShowFrame() is executing.
         # Therefore we have to use this CallLater workaround.
-        # TODO: Find a better way. Preferable detect the minimise option 
+        # TODO: Find a better way. Preferable detect the minimise option
         #       before we create the MainFrame.
         if self.reentrantLock.acquire(False):
             if self.frame is not None:
@@ -314,13 +314,13 @@ class Document(object):
             self.reentrantLock.release()
         else:
             wx.CallLater(100, self.HideFrame)
-        
-    
+
+
     def CheckFileNeedsSave(self):
         """
-        Checks if the file was changed and if necessary asks the user if he 
+        Checks if the file was changed and if necessary asks the user if he
         wants to save it. If the user affirms, calls Save/SaveAs also.
-        
+
         returns: wx.ID_OK     if no save was needed
                  wx.ID_YES    if file was saved
                  wx.ID_NO     if file was not saved
@@ -337,14 +337,14 @@ class Document(object):
             return self.Save()
         else:
             return wx.ID_NO
-            
+
 
     def New(self):
         if self.CheckFileNeedsSave() == wx.ID_CANCEL:
             return
         self.StartSession(None)
-        
-    
+
+
     def Open(self):
         if self.CheckFileNeedsSave() == wx.ID_CANCEL:
             return wx.ID_CANCEL
@@ -352,8 +352,8 @@ class Document(object):
         if filePath is None:
             return wx.ID_CANCEL
         self.StartSession(filePath)
-        
-    
+
+
     def Save(self):
         if not self.filePath:
             return self.SaveAs()
@@ -367,14 +367,14 @@ class Document(object):
             return wx.ID_CANCEL
         self.WriteFile(filePath)
         self.SetFilePath(filePath)
-        return wx.ID_YES            
+        return wx.ID_YES
 
 
     def AskFile(self, style):
         fileDialog = wx.FileDialog(
-            self.frame, 
-            message="", 
-            wildcard="*.xml", 
+            self.frame,
+            message="",
+            wildcard="*.xml",
             style=style
         )
         result = fileDialog.ShowModal()
@@ -383,15 +383,15 @@ class Document(object):
         filePath = fileDialog.GetPath()
         fileDialog.Destroy()
         return filePath
-        
-    
+
+
     def ExecuteSelected(self):
         item = self.selection
         event = eg.EventGhostEvent("OnCmdExecute")
         eg.actionThread.Call(eg.actionThread.ExecuteTreeItem, item, event)
         return event
 
-    
+
     def FindItemWithPath(self, path):
         item = self.root
         if path is None:
@@ -419,8 +419,8 @@ class Document(object):
             return i
         Traverse(self.root, -1)
         return expanded
-    
-    
+
+
     #@eg.LogIt
     def SetExpandState(self, expanded):
         if expanded is None:
@@ -433,13 +433,13 @@ class Document(object):
                 for child in item.childs:
                     i = Traverse(child, i)
             return i
-        
+
         Traverse(self.root, -1)
 
 
 
 class SaveChangesDialog(wx.Dialog):
-    
+
     def __init__(self, parent=None):
         text = eg.text.MainFrame.SaveChanges
         wx.Dialog.__init__(self, parent, title=eg.APP_NAME)
@@ -461,7 +461,7 @@ class SaveChangesDialog(wx.Dialog):
         cancelButton = wx.Button(self, wx.ID_CANCEL, eg.text.General.cancel)
         cancelButton.Bind(wx.EVT_BUTTON, self.OnButton)
         self.SetDefaultItem(saveButton)
-        
+
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(staticBitmap, 0, wx.ALL, 12)
         sizer.Add(messageCtrl, 0, wx.ALIGN_CENTER|wx.LEFT|wx.TOP|wx.RIGHT, 6)
@@ -475,10 +475,10 @@ class SaveChangesDialog(wx.Dialog):
         self.SetSizerAndFit(mainSizer)
         if parent:
             self.CenterOnParent()
-        
-        
+
+
     def OnButton(self, event):
         buttonId = event.GetId()
         self.EndModal(buttonId)
         event.Skip()
-        
+

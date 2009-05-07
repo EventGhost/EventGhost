@@ -2,17 +2,17 @@
 
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -35,15 +35,15 @@ ERROR_ICON = eg.Icons.ERROR_ICON
 
 class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     """Implementation of a ListCtrl with a circular buffer."""
-    
+
     def __init__(self, parent):
         self.maxlength = 2000
         self.removeOnMax = 200
         self.indent = ""
         self.OnGetItemText = self.OnGetItemTextWithTime
         wx.ListCtrl.__init__(
-            self, 
-            parent, 
+            self,
+            parent,
             style=(
                 wx.LC_REPORT
                 |wx.LC_VIRTUAL
@@ -59,7 +59,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         sysColour = eg.colour.windowBackground
         sysTextColour = eg.colour.windowText
         oddColour = eg.colour.GetOddLogColour()
-        
+
         self.attr1 = wx.ListItemAttr()
         self.attr1.BackgroundColour = oddColour
         self.attr1.TextColour = sysTextColour
@@ -67,17 +67,17 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.attr2 = wx.ListItemAttr()
         self.attr2.BackgroundColour = sysColour
         self.attr2.TextColour = sysTextColour
-        
+
         self.attr3 = wx.ListItemAttr()
         self.attr3.BackgroundColour = oddColour
         self.attr3.TextColour = (255, 0, 0)
-        
+
         self.attr4 = wx.ListItemAttr()
         self.attr4.BackgroundColour = sysColour
         self.attr4.TextColour = (255, 0, 0)
-        
+
         self.InsertColumn(0, "")
-        
+
         # logger popup menu
         menu = wx.Menu()
         menu.Append(wx.ID_COPY, eg.text.MainFrame.Menu.Copy)
@@ -86,33 +86,33 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         menuId = wx.NewId()
         menu.Append(menuId, eg.text.MainFrame.Menu.ClearLog)
         self.Bind(wx.EVT_MENU, self.OnCmdClearLog, id=menuId)
-        self.contextMenu = menu        
-        
+        self.contextMenu = menu
+
         self.Bind(wx.EVT_RIGHT_UP, self.OnRightUp)
         self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnRightUp)
         self.Bind(wx.EVT_LIST_BEGIN_DRAG, self.OnStartDrag)
         self.Bind(wx.EVT_LEFT_DCLICK, self.OnDoubleClick)
         self.Bind(wx.EVT_SET_FOCUS, self.OnSetFocus)
         self.Bind(wx.EVT_KILL_FOCUS, self.OnKillFocus)
-        
+
         self.logTimes = True
         self.__inSelection = False
         self.isOdd = False
         self.data = collections.deque()
         eg.log.SetCtrl(self)
         self.SetData(eg.log.GetData())
-        
-        
+
+
     @eg.LogIt
     def Destroy(self):
         eg.log.SetCtrl(None)
-        
+
 
     def OnSetFocus(self, event):
         eg.Notify("FocusChange", self)
         event.Skip()
-        
-        
+
+
     def OnKillFocus(self, event):
         eg.Notify("FocusChange", None)
         event.Skip()
@@ -126,7 +126,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         #self.Thaw()
         self.ScrollList(0, 1000000)
 
-        
+
     def SetTimeLogging(self, flag):
         self.logTimes = flag
         if flag:
@@ -134,16 +134,16 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         else:
             self.OnGetItemText = self.OnGetItemTextNormal
         self.Refresh()
-        
-        
+
+
     def SetIndent(self, shouldIndent):
         if shouldIndent:
             self.indent = "   "
         else:
             self.indent = ""
         self.Refresh()
-        
-    
+
+
     def OnStartDrag(self, event):
         idx = event.GetIndex()
         itemData = self.GetItemData(idx)
@@ -162,20 +162,20 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         result = dropSource.DoDragDrop(wx.Drag_AllowMove)
         if result == wx.DragMove:
             self.Refresh()
-            
-            
+
+
     def CanCut(self):
         return False
-    
-    
+
+
     def CanCopy(self):
         return self.GetSelectedItemCount() > 0
-    
-    
+
+
     def CanPaste(self):
         return False
-    
-    
+
+
     def Copy(self):
         self.OnCmdCopy()
 
@@ -184,23 +184,23 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         text = ""
         lines = 1
         firstItem = item = self.GetNextItem(
-            -1, 
-            wx.LIST_NEXT_ALL, 
+            -1,
+            wx.LIST_NEXT_ALL,
             wx.LIST_STATE_SELECTED
         )
         if item != -1:
             text = self.OnGetItemText(item, 0)[1:]
             item = self.GetNextItem(
-                item, 
-                wx.LIST_NEXT_ALL, 
+                item,
+                wx.LIST_NEXT_ALL,
                 wx.LIST_STATE_SELECTED
             )
             while item != -1:
                 lines += 1
                 text += "\r\n" + self.OnGetItemText(item, 0)[1:]
                 item = self.GetNextItem(
-                    item, 
-                    wx.LIST_NEXT_ALL, 
+                    item,
+                    wx.LIST_NEXT_ALL,
                     wx.LIST_STATE_SELECTED
                 )
         if text != "" and wx.TheClipboard.Open():
@@ -213,12 +213,12 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
                     customDataObject = wx.CustomDataObject("DragEventItem")
                     customDataObject.SetData(eventstring.encode("UTF-8"))
                     dataObjectComposite.Add(customDataObject)
-            
+
             wx.TheClipboard.SetData(dataObjectComposite)
             wx.TheClipboard.Close()
             wx.TheClipboard.Flush()
-            
-            
+
+
     def OnCmdClearLog(self, dummyEvent=None):
         self.SetItemCount(0)
         self.DeleteAllItems()
@@ -226,8 +226,8 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         eg.log.data.clear()
         self.ScrollList(0, 1000000)
         self.Refresh()
-    
-    
+
+
     def OnRightUp(self, dummyEvent):
         self.PopupMenu(self.contextMenu)
 
@@ -240,30 +240,30 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
                 obj = wref()
                 if obj is not None and not obj.isDeleted:
                     obj.Select()
-        
-        
+
+
     def GetItemData(self, item):
         return self.data[item]
-    
-    
+
+
     def OnGetItemText(self, item, column):
         return ""
-        
-        
+
+
     def OnGetItemTextNormal(self, item, dummyColumn):
         line, _, _, _, indent = self.data[item]
         return " " + indent * self.indent + line
-        
-        
+
+
     def OnGetItemTextWithTime(self, item, dummyColumn):
         line, _, _, when, indent = self.data[item]
         return (
-            strftime(" %X   ", localtime(when)) 
-            + indent * self.indent 
+            strftime(" %X   ", localtime(when))
+            + indent * self.indent
             + line
         )
-        
-        
+
+
     def OnGetItemAttr(self, item):
         if item % 2 == 0:
             if self.data[item][1] != ERROR_ICON:
@@ -279,7 +279,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 
     def OnGetItemImage(self, item):
         return self.data[item][1].index
-    
+
 
     @eg.AssertNotMainThread
     def WriteLine(self, line, icon, wRef, when, indent):
@@ -300,4 +300,4 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         @eg.LogIt
         def __del__(self):
             pass
-                 
+

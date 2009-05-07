@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -37,12 +37,12 @@ try:
     is_stackless = True
 except ImportError:
     is_stackless = False
-    
+
 
 def GetPluginAuthors():
     """
     Returns a list of all plugin authors and the names of their plugins.
-    
+
     Every item in the list is a tuple of the author's name and a string
     containing all plugin names of the author.
     """
@@ -66,7 +66,7 @@ def GetPluginAuthors():
         pluginNames.sort(key=str.lower)
         authorList.append((author, ",<BR>".join(pluginNames)))
     return authorList
-    
+
 
 SPECIAL_THANKS_DATA = (
     ("Plugin Developers:", 2, GetPluginAuthors()),
@@ -76,10 +76,10 @@ SPECIAL_THANKS_DATA = (
         (
             ("Lubo&scaron; R&uuml;ckl", "Czech"),
             ("Fredrik Jacobsson", "Swedish"),
-            ("karlr", "Spanish"),            
-            ("peter", "Dutch"),            
-            ("noc123", "Polish"),            
-            ("somainit", "Japanese"),            
+            ("karlr", "Spanish"),
+            ("peter", "Dutch"),
+            ("noc123", "Polish"),
+            ("somainit", "Japanese"),
         ),
     ),
     (
@@ -122,12 +122,12 @@ SPECIAL_THANKS_DATA = (
             ('TomB', 'MCE remote'),
             ('Stoffel', 'remote'),
             (
-                'Jon Rhees, <a href="http://www.usbuirt.com/">USB-UIRT</a>', 
+                'Jon Rhees, <a href="http://www.usbuirt.com/">USB-UIRT</a>',
                 'USB-UIRT'
             ),
             (
                 'Jonah Peskin, <a href="http://www.streamzap.com/">' \
-                    'Streamzap, Inc.</a>', 
+                    'Streamzap, Inc.</a>',
                 'Streamzap remote'
             ),
         ),
@@ -137,9 +137,9 @@ SPECIAL_THANKS_DATA = (
         2,
         (
             (
-                'Benjamin Webb', 
+                'Benjamin Webb',
                 (
-                    'for the nice <a href="http://www.eventghost.org/wiki/' 
+                    'for the nice <a href="http://www.eventghost.org/wiki/'
                     'Controlling_Your_Living_Room_with_EventGhost">'
                     'wiki article</a>'
                 )
@@ -147,13 +147,13 @@ SPECIAL_THANKS_DATA = (
             ('Oliver Wagner', 'for hosting the website'),
             ('Alf & Metallhuhn', 'for creating the EventGhost logo'),
             (
-                'Mark James', 
+                'Mark James',
                 'for his <a href="http://www.famfamfam.com/">icons</a>'
             ),
         ),
     ),
 )
-        
+
 
 def GetRegistryValue(key, value):
     key, subkey = key.split("\\", 1)
@@ -173,11 +173,11 @@ def GetRam():
     memoryStatus.dwLength = sizeof(MEMORYSTATUSEX)
     GlobalMemoryStatusEx(byref(memoryStatus))
     return (
-        int(round(memoryStatus.ullTotalPhys / 1048576.0)), 
-        int(round(memoryStatus.ullAvailPhys / 1048576.0)), 
+        int(round(memoryStatus.ullTotalPhys / 1048576.0)),
+        int(round(memoryStatus.ullAvailPhys / 1048576.0)),
     )
-    
-    
+
+
 class Text(eg.TranslatableStrings):
     Title = "About EventGhost"
     Author = "Author: %s"
@@ -188,19 +188,19 @@ class Text(eg.TranslatableStrings):
     tabLicense = "License Agreement"
     tabSystemInfo = "System Information"
     tabChangelog = "Changelog"
-    
+
 
 
 class AboutPanel(wx.Panel):
-    
+
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, style=wx.SUNKEN_BORDER)
         backgroundColour = (255, 255, 255)
         self.SetBackgroundColour(backgroundColour)
         hypelink1 = eg.HyperLinkCtrl(
-            self, 
-            wx.ID_ANY, 
-            eg.text.MainFrame.Menu.WebHomepage.replace("&", ""), 
+            self,
+            wx.ID_ANY,
+            eg.text.MainFrame.Menu.WebHomepage.replace("&", ""),
             URL="http://www.eventghost.org/"
         )
         font = hypelink1.GetFont()
@@ -209,22 +209,22 @@ class AboutPanel(wx.Panel):
         hypelink1.SetFont(font)
         hypelink2 = eg.HyperLinkCtrl(
             self,
-            wx.ID_ANY, 
-            eg.text.MainFrame.Menu.WebForum.replace("&", ""), 
+            wx.ID_ANY,
+            eg.text.MainFrame.Menu.WebForum.replace("&", ""),
             URL="http://www.eventghost.org/forum/"
         )
         hypelink2.SetFont(font)
         hypelink3 = eg.HyperLinkCtrl(
             self,
-            wx.ID_ANY, 
-            eg.text.MainFrame.Menu.WebWiki.replace("&", ""), 
+            wx.ID_ANY,
+            eg.text.MainFrame.Menu.WebWiki.replace("&", ""),
             URL="http://www.eventghost.org/wiki/"
         )
         hypelink3.SetFont(font)
-        
+
         animatedWindow = eg.AnimatedWindow(self)
         animatedWindow.SetBackgroundColour(backgroundColour)
-        
+
         sizer = eg.VBoxSizer(
             (eg.HBoxSizer(
                 ((5,5), 1),
@@ -242,11 +242,11 @@ class AboutPanel(wx.Panel):
 
 
 class HtmlPanel(wx.Panel):
-    
+
     def __init__(self, parent, html):
         wx.Panel.__init__(self, parent)
         htmlWindow = eg.HtmlWindow(
-            self, 
+            self,
             style=wx.SUNKEN_BORDER|wx.html.HW_NO_SELECTION
         )
         htmlWindow.SetForegroundColour(eg.colour.windowText)
@@ -264,8 +264,8 @@ class HtmlPanel(wx.Panel):
 
 
 class SpecialThanksPanel(HtmlPanel):
-    
-    def __init__(self, parent):        
+
+    def __init__(self, parent):
         output = StringIO()
         write = output.write
         write('<TABLE COLS=2 WIDTH="100%">')
@@ -306,22 +306,22 @@ class SpecialThanksPanel(HtmlPanel):
         contents = output.getvalue()
         output.close()
         HtmlPanel.__init__(self, parent, contents)
-        
-    
-        
-        
-class LicensePanel(HtmlPanel):        
-    
+
+
+
+
+class LicensePanel(HtmlPanel):
+
     def __init__(self, parent):
         HtmlPanel.__init__(self, parent, eg.License)
-        
+
 
 
 class SystemInfoPanel(HtmlPanel):
-    
+
     def __init__(self, parent):
         buildTime = time.strftime(
-            Text.CreationDate, 
+            Text.CreationDate,
             time.gmtime(eg.Version.buildTime)
         ).decode(eg.systemEncoding)
         totalMemory, availableMemory = GetRam()
@@ -338,26 +338,26 @@ class SystemInfoPanel(HtmlPanel):
             ("Total RAM", "%s MB" % totalMemory),
             ("Available RAM", "%s MB" % availableMemory),
         )
-        
+
         sysInfoTemplate = "".join(
-            ['<tr><td align="right"><b>%s:</b></td><td>%s</td></tr>' % sysInfo 
+            ['<tr><td align="right"><b>%s:</b></td><td>%s</td></tr>' % sysInfo
                 for sysInfo in self.sysInfos]
         )
         page = "<center><table>%s</table></center>" % sysInfoTemplate
         HtmlPanel.__init__(self, parent, page)
         self.htmlWindow.Bind(wx.EVT_RIGHT_DOWN, self.OnRightClick)
         self.htmlWindow.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
-        
+
         contextMenu = wx.Menu()
         contextMenu.Append(wx.ID_COPY, eg.text.MainFrame.Menu.Copy)
         self.Bind(wx.EVT_MENU, self.OnCmdCopy, id=wx.ID_COPY)
         self.contextMenu = contextMenu
-        
+
 
     @eg.LogIt
     def OnKeyDown(self, event):
-        key = event.GetKeyCode() 
-        controlDown = event.ControlDown() 
+        key = event.GetKeyCode()
+        controlDown = event.ControlDown()
         if key == ord('C') and controlDown:
             self.OnCmdCopy(event)
         else:
@@ -376,11 +376,11 @@ class SystemInfoPanel(HtmlPanel):
             wx.TheClipboard.SetData(tdata)
             wx.TheClipboard.Close()
             wx.TheClipboard.Flush()
-    
-     
-        
+
+
+
 class ChangelogPanel(HtmlPanel):
-    
+
     @eg.TimeIt
     def __init__(self, parent):
         try:
@@ -388,7 +388,7 @@ class ChangelogPanel(HtmlPanel):
             text = infile.read()
         except IOError:
             text = ""
-        
+
         # test if the changelog has changed. If not read the changelog.dat
         # from the config dir, as it is already parsed.
         digest = hashlib.md5(text).hexdigest()
@@ -405,11 +405,11 @@ class ChangelogPanel(HtmlPanel):
                 text = changelogDatFile.read()
         HtmlPanel.__init__(self, parent, text)
 
-    
+
     @eg.LogIt
     def UpdateChangelog(self, changelogDatPath, text, digest):
         """
-        Parses the reStructuredText and stores a copy of the result in the 
+        Parses the reStructuredText and stores a copy of the result in the
         eg.configDir to speed up loading.
         """
         text = eg.Utils.DecodeReST(text)
@@ -418,12 +418,12 @@ class ChangelogPanel(HtmlPanel):
         changelogDatFile.write(text)
         changelogDatFile.close()
         return text
-    
+
 
 
 class AboutDialog(eg.TaskletDialog):
     instance = None
-    
+
     @eg.LogItWithReturn
     def Configure(self, parent): #IGNORE:W0221
         if AboutDialog.instance:
@@ -432,8 +432,8 @@ class AboutDialog(eg.TaskletDialog):
         AboutDialog.instance = self
         eg.TaskletDialog.__init__(
             self,
-            parent=parent, 
-            title=Text.Title, 
+            parent=parent,
+            title=Text.Title,
             style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
         )
         notebook = wx.Notebook(self)
@@ -442,17 +442,17 @@ class AboutDialog(eg.TaskletDialog):
         notebook.AddPage(LicensePanel(notebook), Text.tabLicense)
         notebook.AddPage(SystemInfoPanel(notebook), Text.tabSystemInfo)
         notebook.AddPage(ChangelogPanel(notebook), Text.tabChangelog)
-        
+
         def OnPageChanged(event):
             pageNum = event.GetSelection()
             notebook.ChangeSelection(pageNum)
             notebook.GetPage(pageNum).SetFocus()
         notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, OnPageChanged)
-        
+
         okButton = wx.Button(self, wx.ID_OK, eg.text.General.ok)
         okButton.SetDefault()
         okButton.Bind(wx.EVT_BUTTON, self.OnOK)
-        
+
         buttonSizer = eg.HBoxSizer(
             ((0, 0), 1, wx.EXPAND),
             (okButton, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND|wx.ALL, 5),
