@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -45,14 +45,14 @@ NOTICE_ICON = eg.Icons.NOTICE_ICON
 
 
 class DummyLogCtrl(object):
-    
+
     def WriteLine(self, line, icon, wRef, when, indent):
         oldStdOut.write("%s\n" % line)
-    
-    
-    
+
+
+
 class Log(object):
-    
+
     def __init__(self):
         self.buffer = ""
         self.data = deque()
@@ -64,7 +64,7 @@ class Log(object):
                 def write(self, data):
                     log.Write(data, INFO_ICON)
                     oldStdOut.write(data)
-            
+
             class StdErr:
                 def write(self, data):
                     oldStdErr.write(data.decode("mbcs"))
@@ -73,11 +73,11 @@ class Log(object):
             class StdOut:
                 def write(self, data):
                     log.Write(data, INFO_ICON)
-            
+
             class StdErr:
                 def write(self, data):
                     log.Write(data, ERROR_ICON)
-        
+
         sys.stdout = StdOut()
         sys.stderr = StdErr()
         if eg.debugLevel == 2:
@@ -90,7 +90,7 @@ class Log(object):
             self.PrintDebugNotice("        EventGhost started")
             self.PrintDebugNotice("----------------------------------------")
             self.PrintDebugNotice("Version:", eg.Version.string)
-            
+
         # redirect all wxPython error messages to our log
         class MyLog(wx.PyLog):
             def DoLog(self, level, msg, dummyTimestamp):
@@ -100,14 +100,14 @@ class Log(object):
         wx.Log.SetActiveTarget(MyLog())
 
 
-    
+
     def SetCtrl(self, logCtrl):
         if logCtrl is not None:
             self.ctrl = logCtrl
         else:
             self.ctrl = DummyLogCtrl()
-        
-        
+
+
     @eg.LogIt
     def GetData(self, numLines=-1):
         if numLines == -1:
@@ -117,12 +117,12 @@ class Log(object):
             numLines = len(self.data)
         data = list(self.data)
         return data[start:end]
-    
-    
+
+
     def _WriteLine(self, line, icon, wRef, when, indent):
         self.ctrl.WriteLine(line, icon, wRef, when, indent)
-    
-    
+
+
     def Write(self, text, icon, wRef=None, indent=0):
         try:
             lines = (self.buffer + text).split("\n")
@@ -137,7 +137,7 @@ class Log(object):
             if len(data) >= self.maxlength:
                 data.popleft()
 
-        
+
     def _Print(
         self, args, sep=" ", end="\n", icon=INFO_ICON, source=None, indent=0
     ):
@@ -149,8 +149,8 @@ class Log(object):
 
     def Print(self, *args, **kwargs):
         self._Print(args, **kwargs)
-    
-        
+
+
     def PrintError(self, *args, **kwargs):
         """
         Prints an error message to the logger. The message will get a special
@@ -167,31 +167,31 @@ class Log(object):
 #                return str(s)
 #        text = " ".join([convert(arg) for arg in args])
 #        self.Write(text + "\n", ERROR_ICON, None)
-        
-        
+
+
     def PrintNotice(self, *args, **kwargs):
         kwargs.setdefault("icon", NOTICE_ICON)
         self._Print(args, **kwargs)
 #        text = " ".join([str(arg) for arg in args])
 #        self.Write(text + "\n", NOTICE_ICON, None)
-        
-        
+
+
     def PrintTraceback(self, msg=None, skip=0, source=None):
         if msg:
             self.PrintError(msg, source=source)
-        tbType, tbValue, tbTraceback = sys.exc_info() 
+        tbType, tbValue, tbTraceback = sys.exc_info()
         slist = ['Traceback (most recent call last) (%d):\n' % eg.revision]
         if tbTraceback:
             slist += traceback.format_tb(tbTraceback)[skip:]
         slist += traceback.format_exception_only(tbType, tbValue)
-        
+
         error = "".join(slist)
         if source is not None:
             source = ref(source)
         self.Write(error.rstrip() + "\n", ERROR_ICON, source)
         if eg.debugLevel:
             sys.stderr.write(error)
-            
+
 
     def PrintStack(self, skip=0):
         strs = ['Stack trace (most recent call last) (%d):\n' % eg.revision]
@@ -200,7 +200,7 @@ class Log(object):
         self.Write(error.rstrip() + "\n", ERROR_ICON)
         if eg.debugLevel:
             sys.stderr.write(error)
-            
+
 
     if eg.debugLevel:
         def PrintDebugNotice(self, *args):
@@ -209,7 +209,7 @@ class Log(object):
             taskletName = str(eg.Tasklet.GetCurrentId())
             strs = [strftime("%H:%M:%S:")]
             strs.append(taskletName + " " + threadName + ":")
-        
+
             for arg in args:
                 strs.append(str(arg))
             sys.stderr.write(" ".join(strs) + "\n")
@@ -230,4 +230,4 @@ class Log(object):
         else:
             mesg = eventstring
         self.Write(mesg + "\n", eg.EventItem.icon, eventstring)
-        
+

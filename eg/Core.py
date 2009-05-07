@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2008 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -109,20 +109,20 @@ def RestartAsyncore():
     if oldDispatcher is None:
         # create a global asyncore loop thread
         threading.Thread(target=asyncore.loop, name="AsyncoreThread").start()
-        
+
 
 
 def Exit():
     """
-    Sometimes you want to quickly exit a PythonScript, because you don't 
-    want to build deeply nested if-structures for example. eg.Exit() will 
-    exit your PythonScript immediately. 
-    (Note: This is actually a sys.exit() but will not exit EventGhost, 
-    because the SystemExit exception is catched for a PythonScript.) 
+    Sometimes you want to quickly exit a PythonScript, because you don't
+    want to build deeply nested if-structures for example. eg.Exit() will
+    exit your PythonScript immediately.
+    (Note: This is actually a sys.exit() but will not exit EventGhost,
+    because the SystemExit exception is catched for a PythonScript.)
     """
     sys.exit()
-   
-    
+
+
 def Wait(secs, raiseException=True):
     while secs > 0.0:
         if eg.stopExecutionFlag:
@@ -137,7 +137,7 @@ def Wait(secs, raiseException=True):
         secs -= 0.1
     return True
 
-    
+
 def HasActiveHandler(eventstring):
     for eventHandler in eg.eventTable.get(eventstring, []):
         obj = eventHandler
@@ -158,8 +158,8 @@ def Bind(notification, listener):
         notificationHandler = eg.notificationHandlers[notification]
     notificationHandler.listeners.append(listener)
     return notificationHandler.value
-            
-            
+
+
 def Unbind(notification, listener):
     eg.notificationHandlers[notification].listeners.remove(listener)
 
@@ -176,14 +176,14 @@ def Notify(notification, value=None):
 
 def StopMacro(ignoreReturn=False):
     """
-    Instructs EventGhost to stop executing the current macro after the 
-    current action (thus the PythonScript or PythonCommand) has finished. 
+    Instructs EventGhost to stop executing the current macro after the
+    current action (thus the PythonScript or PythonCommand) has finished.
     """
     eg.programCounter = None
     if ignoreReturn:
         del eg.programReturnStack[:]
 
-    
+
 def CallWait(func):
     result = [None]
     event = threading.Event()
@@ -196,14 +196,14 @@ def CallWait(func):
     event.wait()
     return result[0]
 
-        
+
 def DummyFunc(*dummyArgs, **dummyKwargs):
     """
     Just a do-nothing-function, that accepts arbitrary arguments.
     """
     pass
 
-        
+
 def RunProgram():
     eg.stopExecutionFlag = False
     del eg.programReturnStack[:]
@@ -218,18 +218,18 @@ def RunProgram():
                 eg.programCounter = item.parent.GetNextChild(idx)
             else:
                 eg.programCounter = None
-            
+
         while eg.programCounter is None and eg.programReturnStack:
-            # we have no next item in this level. So look in the return 
+            # we have no next item in this level. So look in the return
             # stack if any return has to be executed
             eg.indent -= 2
             item, idx = eg.programReturnStack.pop()
             eg.programCounter = item.parent.GetNextChild(idx)
     eg.indent = 0
-    
+
 
 class Exception(Exception):
-    
+
     def __unicode__(self):
         return "\n".join([unicode(arg) for arg in self.args])
 
@@ -270,8 +270,8 @@ eg.MessageBox = MessageBox
 
 eg.messageReceiver = eg.MessageReceiver()
 eg.app = eg.App()
-    
-import Icons # we can't import the Icons module earlier, because wx.App 
+
+import Icons # we can't import the Icons module earlier, because wx.App
              # must exist before
 eg.Icons = Icons
 
@@ -304,7 +304,7 @@ setattr(eg, "PluginClass", eg.PluginBase)
 setattr(eg, "ActionClass", eg.ActionBase)
 
 eg.taskBarIcon = eg.TaskBarIcon(
-    eg.startupArguments.isMain 
+    eg.startupArguments.isMain
     and not eg.startupArguments.translate
     and not eg.startupArguments.install
 )

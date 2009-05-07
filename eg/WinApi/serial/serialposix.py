@@ -63,7 +63,7 @@ elif plat[:2] == 'hp':       #HP-UX (not tested)
 elif plat[:5] == 'sunos':    #Solaris/SunOS (confirmed)
     def device(port):
         return '/dev/tty%c' % (ord('a')+port)
-        
+
 elif plat[:3] == 'aix':      #aix
     def device(port):
         return '/dev/tty%d' % (port)
@@ -123,7 +123,7 @@ TIOCM_DTR_str = struct.pack('I', TIOCM_DTR)
 
 
 class Serial(SerialBase):
-    """Serial port class POSIX implementation. Serial port configuration is 
+    """Serial port class POSIX implementation. Serial port configuration is
     done with termios and fcntl. Runs on Linux and many other Un*x like
     systems."""
 
@@ -140,17 +140,17 @@ class Serial(SerialBase):
             self.fd = None
             raise SerialException("Could not open port: %s" % msg)
         #~ fcntl.fcntl(self.fd, FCNTL.F_SETFL, 0)  #set blocking
-        
+
         self._reconfigurePort()
         self._isOpen = True
         #~ self.flushInput()
-        
-        
+
+
     def _reconfigurePort(self):
         """Set commuication parameters on opened port."""
         if self.fd is None:
             raise SerialException("Can only operate on a valid port handle")
-            
+
         vmin = vtime = 0                #timeout is done via select
         try:
             iflag, oflag, cflag, lflag, ispeed, ospeed, cc = termios.tcgetattr(self.fd)
@@ -163,14 +163,14 @@ class Serial(SerialBase):
         for flag in ('ECHOCTL', 'ECHOKE'): #netbsd workaround for Erk
             if hasattr(TERMIOS, flag):
                 lflag &= ~getattr(TERMIOS, flag)
-        
+
         oflag &= ~(TERMIOS.OPOST)
         iflag &= ~(TERMIOS.INLCR|TERMIOS.IGNCR|TERMIOS.ICRNL|TERMIOS.IGNBRK)
         if hasattr(TERMIOS, 'IUCLC'):
             iflag &= ~TERMIOS.IUCLC
         if hasattr(TERMIOS, 'PARMRK'):
             iflag &= ~TERMIOS.PARMRK
-        
+
         #setup baudrate
         try:
             ispeed = ospeed = getattr(TERMIOS,'B%s' % (self._baudrate))
@@ -230,7 +230,7 @@ class Serial(SerialBase):
             else:
                 cflag &= ~(TERMIOS.CNEW_RTSCTS)
         #XXX should there be a warning if setting up rtscts (and xonxoff etc) fails??
-        
+
         #buffer
         #vmin "minimal number of characters to be read. = for non blocking"
         if vmin < 0 or vmin > 255:
@@ -404,3 +404,4 @@ if __name__ == '__main__':
     print repr(s.read(5))
     print s.inWaiting()
     del s
+

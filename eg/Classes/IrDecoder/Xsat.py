@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -27,7 +27,7 @@ class Xsat(IrProtocolBase):
     """
     IR decoder for the X-Sat protocol.
     """
-    
+
     def GetByte(self, data, pos):
         buf = 0
         mask = 1
@@ -51,8 +51,8 @@ class Xsat(IrProtocolBase):
         if 250 > pulse > 750:
             raise DecodeError("wrong byte end-pulse")
         return buf
-        
-        
+
+
     def Decode(self, data):
         # Check the header pulse
         if not (7000 < data[0] < 9000):
@@ -61,10 +61,10 @@ class Xsat(IrProtocolBase):
             raise DecodeError("wrong header pause")
         if not (3000 < data[19] < 5000):
             raise DecodeError("wrong middle pause")
-        
+
         addr = self.GetByte(data, 2)
         cmd = self.GetByte(data, 20)
         if data[37] < 10000:
             raise DecodeError("sequence to long")
         return "XSAT.%0.2X%0.2X" % (addr, cmd)
-    
+

@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -43,28 +43,28 @@ class Text(eg.TranslatableStrings):
     limitMemory1 = "Limit memory consumption while minimized to"
     limitMemory2 = "MB"
     confirmDelete = "Confirm delete of tree items"
-    
+
 
 
 class OptionsDialog(eg.TaskletDialog):
     instance = None
-    
+
     @eg.LogItWithReturn
     def Configure(self, parent=None):
         if OptionsDialog.instance:
             OptionsDialog.instance.Raise()
             return
         OptionsDialog.instance = self
-        
+
         text = Text
         config = eg.config
-        
+
         eg.TaskletDialog.__init__(
             self,
-            parent=parent, 
-            title=text.Title, 
+            parent=parent,
+            title=text.Title,
         )
-        
+
         languageNames = eg.Translation.languageNames
         languageList = ["en_EN"]
         for item in os.listdir(eg.LANGUAGES_DIR):
@@ -76,17 +76,17 @@ class OptionsDialog(eg.TaskletDialog):
         notebook = wx.Notebook(self, -1)
         page1 = eg.Panel(notebook)
         notebook.AddPage(page1, text.Tab1)
-        
-        # page 1 controls        
+
+        # page 1 controls
         startWithWindowsCtrl = page1.CheckBox(
-            config.startWithWindows, 
+            config.startWithWindows,
             text.StartWithWindows
         )
         if eg.folderPath.Startup is None:
             startWithWindowsCtrl.Enable(False)
-            
+
         hideOnCloseCtrl = page1.CheckBox(
-            config.hideOnClose, 
+            config.hideOnClose,
             text.HideOnClose
         )
         checkUpdateCtrl = page1.CheckBox(config.checkUpdate, text.CheckUpdate)
@@ -100,9 +100,9 @@ class OptionsDialog(eg.TaskletDialog):
             memoryLimitSpinCtrl.Enable(memoryLimitCtrl.IsChecked())
         memoryLimitCtrl.Bind(wx.EVT_CHECKBOX, OnMemoryLimitCheckBox)
         OnMemoryLimitCheckBox(None)
-        
+
         confirmDeleteCtrl = page1.CheckBox(
-            config.confirmDelete, 
+            config.confirmDelete,
             text.confirmDelete
         )
 
@@ -120,16 +120,16 @@ class OptionsDialog(eg.TaskletDialog):
         languageChoice.SetMinSize((150, -1))
 
         buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL, wx.ID_APPLY))
-        
+
         # construction of the layout with sizers
-        
+
         flags = wx.ALIGN_CENTER_VERTICAL
         memoryLimitSizer = eg.HBoxSizer(
             (memoryLimitCtrl, 0, flags),
             (memoryLimitSpinCtrl, 0, flags),
             (page1.StaticText(text.limitMemory2), 0, flags|wx.LEFT, 2),
         )
-        
+
         startGroupSizer = wx.GridSizer(4, 1, 2, 2)
         startGroupSizer.AddMany(
             (
@@ -140,12 +140,12 @@ class OptionsDialog(eg.TaskletDialog):
                 (confirmDeleteCtrl, 0, flags),
             )
         )
-        
+
         langGroupSizer = page1.VStaticBoxSizer(
             text.LanguageGroup,
             (languageChoice, 0, wx.LEFT|wx.RIGHT, 18),
         )
-        
+
         page1Sizer = eg.VBoxSizer(
             ((15, 7), 1),
             (startGroupSizer, 0, wx.EXPAND|wx.ALL, 5),
@@ -154,7 +154,7 @@ class OptionsDialog(eg.TaskletDialog):
         )
         page1.SetSizer(page1Sizer)
         page1.SetAutoLayout(True)
-        
+
         sizer = eg.VBoxSizer(
             (notebook, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, 5),
             (buttonRow.sizer, 0, wx.EXPAND),
@@ -162,13 +162,13 @@ class OptionsDialog(eg.TaskletDialog):
         self.SetSizerAndFit(sizer)
         self.SetMinSize(self.GetSize())
         notebook.ChangeSelection(0)
-        
+
         while self.Affirmed():
             tmp = startWithWindowsCtrl.GetValue()
             if tmp != eg.config.startWithWindows:
                 config.startWithWindows = tmp
                 path = os.path.join(
-                    eg.folderPath.Startup, 
+                    eg.folderPath.Startup,
                     eg.APP_NAME + ".lnk"
                 )
                 if tmp:
@@ -184,19 +184,19 @@ class OptionsDialog(eg.TaskletDialog):
                         os.remove(path)
                     except:
                         pass
-                    
+
             config.hideOnClose = hideOnCloseCtrl.GetValue()
             config.checkUpdate = checkUpdateCtrl.GetValue()
             config.limitMemory = bool(memoryLimitCtrl.GetValue())
             config.limitMemorySize = memoryLimitSpinCtrl.GetValue()
             config.confirmDelete = confirmDeleteCtrl.GetValue()
-            
+
             language = languageList[languageChoice.GetSelection()]
             if config.language != language:
                 dlg = wx.MessageDialog(
                     self,
-                    text.Warning, 
-                    "", 
+                    text.Warning,
+                    "",
                     wx.OK|wx.ICON_INFORMATION
                 )
                 dlg.ShowModal()
@@ -205,3 +205,4 @@ class OptionsDialog(eg.TaskletDialog):
             config.Save()
             self.SetResult()
         OptionsDialog.instance = None
+

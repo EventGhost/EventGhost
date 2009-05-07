@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -25,16 +25,16 @@ import sys
 from eg.cFunctions import GetProcessName, GetWindowChildsList
 from Dynamic import (
     # ctypes stuff
-    byref, sizeof, WinError, 
+    byref, sizeof, WinError,
     # functions
     AttachThreadInput, PtVisible, SaveDC, RestoreDC, SetROP2,
     GetAncestor, Rectangle, IsWindow, IsIconic, GetStockObject, SelectObject,
-    ShowWindow, BringWindowToTop, UpdateWindow, GetForegroundWindow, 
+    ShowWindow, BringWindowToTop, UpdateWindow, GetForegroundWindow,
     InvalidateRect, GetCurrentThreadId, GetWindowThreadProcessId,
-    SendNotifyMessage, GetWindowRect, GetCursorPos, EnumProcesses, 
+    SendNotifyMessage, GetWindowRect, GetCursorPos, EnumProcesses,
     EnumDisplayMonitors, FindWindow,
     IsWindowVisible, GetParent, GetWindowDC, GetClassLong, EnumChildWindows,
-    ReleaseDC, GetDC, DeleteObject, CreatePen, GetSystemMetrics, 
+    ReleaseDC, GetDC, DeleteObject, CreatePen, GetSystemMetrics,
     SendMessageTimeout, ScreenToClient, WindowFromPoint, SendMessageTimeout,
     # types
     DWORD, RECT, POINT, MONITORENUMPROC, RGB, WINFUNCTYPE,
@@ -58,13 +58,13 @@ def BringHwndToFront(hWnd, invalidate=True):
     hWnd = GetAncestor(hWnd, GA_ROOT)
     if not IsWindow(hWnd):
         return
-    
+
     # If the window is in a minimized state, restore now
     if IsIconic(hWnd):
         ShowWindow(hWnd, SW_RESTORE)
         BringWindowToTop(hWnd)
         UpdateWindow(hWnd)
-    
+
     # Check to see if we are the foreground thread
     foregroundHwnd = GetForegroundWindow()
     foregroundThreadID = GetWindowThreadProcessId(foregroundHwnd, None)
@@ -81,20 +81,20 @@ def BringHwndToFront(hWnd, invalidate=True):
         InvalidateRect(hWnd, None, True)
     if foregroundThreadID != ourThreadID:
         AttachThreadInput(foregroundThreadID, ourThreadID, False)
-        
+
 
 def CloseHwnd(hWnd):
     SendNotifyMessage(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0)
-    
+
 
 def GetMonitorDimensions():
     retval = []
     def MonitorEnumProc(dummy1, dummy2, lprcMonitor, dummy3):
         displayRect = lprcMonitor.contents
         rect = wx.Rect(
-            displayRect.left, 
-            displayRect.top, 
-            displayRect.right - displayRect.left, 
+            displayRect.left,
+            displayRect.top,
+            displayRect.right - displayRect.left,
             displayRect.bottom - displayRect.top
         )
         retval.append(rect)
@@ -105,11 +105,11 @@ def GetMonitorDimensions():
 
 
 def HighlightWindow(hWnd):
-    """ 
+    """
     Draws an inverted rectangle around a window to inform the user about
     the currently selected window.
     """
-    
+
     UpdateWindow(hWnd)
     # Retrieve location of window on-screen.
     rect = RECT()
@@ -153,7 +153,7 @@ def HighlightWindow(hWnd):
 def BestWindowFromPoint(point):
     x, y = point
     foundWindow = WindowFromPoint(POINT(x, y))
-    
+
     hWnds = GetWindowChildsList(GetAncestor(foundWindow, GA_ROOT), True)
     if not hWnds:
         return foundWindow
@@ -163,9 +163,9 @@ def BestWindowFromPoint(point):
     for hWnd in hWnds:
         GetWindowRect(hWnd, byref(rect))
         if (
-            x >= rect.left 
-            and x <= rect.right 
-            and y >= rect.top 
+            x >= rect.left
+            and x <= rect.right
+            and y >= rect.top
             and y <= rect.bottom
         ):
             hdc = GetDC(hWnd)
@@ -182,26 +182,26 @@ def BestWindowFromPoint(point):
 
 
 def GetHwndIcon(hWnd):
-    """ 
-    Get a wx.Icon from a window through its hwnd window handle 
+    """
+    Get a wx.Icon from a window through its hwnd window handle
     """
     hIcon = DWORD()
     res = SendMessageTimeout(
         hWnd, WM_GETICON, ICON_SMALL, 0, SMTO_ABORTIFHUNG, 1000, byref(hIcon)
     )
-    
+
     if res == 0:
         hIcon.value = 0
     if hIcon.value < 10:
         hIcon.value = GetClassLong(hWnd, GCL_HICONSM)
         if hIcon.value == 0:
             res = SendMessageTimeout(
-                hWnd, 
-                WM_GETICON, 
-                ICON_BIG, 
-                0, 
-                SMTO_ABORTIFHUNG, 
-                1000, 
+                hWnd,
+                WM_GETICON,
+                ICON_BIG,
+                0,
+                SMTO_ABORTIFHUNG,
+                1000,
                 byref(hIcon)
             )
             if res == 0:
@@ -213,7 +213,7 @@ def GetHwndIcon(hWnd):
         value = hIcon.value
         # ugly fix for "OverflowError: long int too large to convert to int"
         if value & 0x80000000:
-            value = -((value ^ 0xffffffff) + 1) 
+            value = -((value ^ 0xffffffff) + 1)
         icon.SetHandle(value)
         icon.SetSize((16, 16))
         return icon
@@ -223,7 +223,7 @@ def GetHwndIcon(hWnd):
 
 
 def HwndHasChildren(hWnd, invisible):
-    """ 
+    """
     Return True if the window 'hwnd' has children.
     If 'invisible' is False, don't take invisible windows into account.
     """
@@ -244,15 +244,15 @@ def HwndHasChildren(hWnd, invisible):
 
 
 def GetHwndChildren(hWnd, invisible):
-    """ 
+    """
     Return a list of all direct children of the window 'hwnd'.
     """
     return [
         childHwnd for childHwnd in GetWindowChildsList(hWnd, invisible)
         if GetParent(childHwnd) == hWnd
     ]
-    
-    
+
+
 
 #def GetProcessName(pid):
 #    # See http://msdn2.microsoft.com/en-us/library/ms686701.aspx
@@ -273,17 +273,17 @@ def GetHwndChildren(hWnd, invisible):
 #        CloseHandle(hProcessSnap)
 
 # now implemented as C function in cFunctions.pyd
-  
-    
+
+
 def GetWindowProcessName(hWnd):
     dwProcessId = DWORD()
     GetWindowThreadProcessId(hWnd, byref(dwProcessId))
     return GetProcessName(dwProcessId.value)
-    
-    
+
+
 def PyGetWindowThreadProcessId(hWnd):
     """
-    Retrieves the identifier of the thread and process that created the 
+    Retrieves the identifier of the thread and process that created the
     specified window.
 
     int threadId, int processId = GetWindowThreadProcessId(hWnd)
@@ -296,7 +296,7 @@ def PyGetWindowThreadProcessId(hWnd):
 def PyGetCursorPos():
     """
     Returns the position of the cursor, in screen co-ordinates.
-    
+
     int x, int y = GetCursorPos()
     """
     point = POINT()
@@ -317,14 +317,14 @@ def PyEnumProcesses():
             break
         size *= 10
     return data[:pBytesReturned.value / sizeof(DWORD)]
-        
+
 
 def PySendMessageTimeout(
-    hWnd, 
-    msg, 
-    wParam=0, 
-    lParam=0, 
-    flags=SMTO_BLOCK|SMTO_ABORTIFHUNG, 
+    hWnd,
+    msg,
+    wParam=0,
+    lParam=0,
+    flags=SMTO_BLOCK|SMTO_ABORTIFHUNG,
     timeout=2000
 ):
     resultData = DWORD()

@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -31,7 +31,7 @@ class MacroItem(ContainerItem):
     icon = eg.Icons.MACRO_ICON
     isExecutable = True
     shouldSelectOnExecute = False
-    
+
 
     def GetNextChild(self, index):
         index += 1
@@ -39,8 +39,8 @@ class MacroItem(ContainerItem):
             return self.childs[index], index
         else:
             return None
-        
-        
+
+
     def Execute(self):
         if self.isEnabled:
             del eg.lastFoundWindows[:]
@@ -48,7 +48,7 @@ class MacroItem(ContainerItem):
                 self.Print(self.name)
             if self.shouldSelectOnExecute:
                 wx.CallAfter(self.Select)
-                
+
             if self.childs:
                 eg.indent += 1
                 eg.programCounter = (self.childs[0], 0)

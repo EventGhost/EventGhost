@@ -8,7 +8,7 @@ class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
     __isModal = False
     __processingChannel = None
     __resultsChannel = None
-    
+
     @eg.LogItWithReturn
     def __init__(self, *args, **kwargs):
         self.__lastEventId = None
@@ -17,21 +17,21 @@ class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
         wx.Dialog.__init__(self, *args, **kwargs)
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         eg.Notify("DialogCreate", self)
-    
-    
+
+
     @eg.LogIt
     def Destroy(self):
         eg.Notify("DialogDestroy", self)
         wx.Dialog.Destroy(self)
-        
-        
+
+
     @eg.LogIt
     def FinishSetup(self):
         self.setupFinished = True
         eg.Utils.EnsureVisible(self)
         self.Show()
-            
-        
+
+
     @eg.LogItWithReturn
     def SetResult(self, *args):
         if self.__isModal:
@@ -42,12 +42,12 @@ class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
             if self.__lastEventId == wx.ID_OK:
                 self.__done = True
             self.__resultsChannel.send((self.__lastEventId, args))
-            
-    
+
+
     def Configure(self, *args):
         raise NotImplementedError
-    
-    
+
+
     @eg.LogItWithReturn
     def ProcessingTask(self, *args, **kwargs):
         self.Configure(*args, **kwargs)
@@ -55,8 +55,8 @@ class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
         self.__resultsChannel.send((None, None))
         if self.setupFinished:
             self.Destroy()
-        
-        
+
+
     @classmethod
     @eg.LogItWithReturn
     def Create(cls, *args, **kwargs):
@@ -66,8 +66,8 @@ class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
         self.__tasklet = eg.Tasklet(self.ProcessingTask)(*args, **kwargs)
         self.__tasklet.run()
         return self
-                
-    
+
+
     @classmethod
     @eg.LogItWithReturn
     def GetModalResult(cls, *args, **kwargs):
@@ -91,8 +91,8 @@ class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
         if event is None:
             self.__tasklet.run()
         return event, args
-        
-    
+
+
     def __iter__(self):
         while True:
             event, args = self.GetEvent()
@@ -105,15 +105,15 @@ class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
                     event, args = self.GetEvent()
                     if event is None:
                         return
-    
+
     @classmethod
     def GetResult(cls, *args):
         for event, result in cls.Create(*args):
             if event == wx.ID_OK:
                 return result
         return None
-    
-        
+
+
     @eg.LogItWithReturn
     def DispatchEvent(self, event, eventId):
         event.Skip()
@@ -137,7 +137,7 @@ class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
             else:
                 self.__processingChannel.send(eventId)
 
-        
+
     @eg.LogItWithReturn
     def Affirmed(self):
         if self.__isModal:
@@ -149,25 +149,24 @@ class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
             if not self.setupFinished:
                 self.FinishSetup()
             return self.__processingChannel.receive()
-            
-    
+
+
     @eg.LogItWithReturn
     def OnClose(self, event):
         self.DispatchEvent(event, wx.ID_CANCEL)
-        
-        
+
+
     @eg.LogItWithReturn
     def OnOK(self, event):
         self.DispatchEvent(event, wx.ID_OK)
-        
-        
+
+
     @eg.LogItWithReturn
     def OnCancel(self, event):
         self.DispatchEvent(event, wx.ID_CANCEL)
-        
-        
+
+
     @eg.LogItWithReturn
     def OnApply(self, event):
         self.DispatchEvent(event, wx.ID_APPLY)
 
-        

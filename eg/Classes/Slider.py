@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -24,10 +24,10 @@ import wx
 
 
 class Slider(wx.Window):
-    
+
     def __init__(
-        self, 
-        parent, 
+        self,
+        parent,
         id = -1,
         value = None,
         min = None,
@@ -66,7 +66,7 @@ class Slider(wx.Window):
         sizer.AddMany([
             (self.slider, (0, 0), (1, 3), wx.EXPAND),
             (st1, (1, 0), (1, 1), wx.ALIGN_LEFT),
-            (self.valueLabelCtrl, (1, 1), (1, 1), wx.ALIGN_CENTER_HORIZONTAL), 
+            (self.valueLabelCtrl, (1, 1), (1, 1), wx.ALIGN_CENTER_HORIZONTAL),
             (st2, (1, 2), (1, 1), wx.ALIGN_RIGHT),
         ])
         self.SetSizer(sizer)
@@ -87,22 +87,21 @@ class Slider(wx.Window):
 
     def OnSetFocus(self, dummyEvent):
         self.slider.SetFocus()
-        
-        
+
+
     def OnScrollChanged(self, dummyEvent=None):
         value = self.slider.GetValue()
         if self.levelCallback is None:
             self.valueLabelCtrl.SetLabel(self.valueLabel % {"1": value})
         else:
             self.valueLabelCtrl.SetLabel(self.levelCallback(value))
-        
-    
+
+
     def GetValue(self):
         return self.slider.GetValue()
-        
-        
+
+
     def SetValue(self, value):
         self.slider.SetValue(value)
         self.OnScrollChanged()
-        
-        
+

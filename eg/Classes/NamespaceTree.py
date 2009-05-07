@@ -3,23 +3,23 @@ import wx
 import wx.gizmos
 
 class NamespaceTree(wx.gizmos.TreeListCtrl):
-    
+
     def __init__(self, parent, namespace):
         self.namespace = namespace
         wx.gizmos.TreeListCtrl.__init__(
             self,
-            parent, 
-            style = wx.TR_FULL_ROW_HIGHLIGHT 
+            parent,
+            style = wx.TR_FULL_ROW_HIGHLIGHT
                 |wx.TR_DEFAULT_STYLE
                 |wx.VSCROLL
-                |wx.ALWAYS_SHOW_SB 
+                |wx.ALWAYS_SHOW_SB
                 #|wx.CLIP_CHILDREN
         )
         self.AddColumn("Name")
         self.AddColumn("Type")
         self.AddColumn("Value")
-        
-        
+
+
     def FillTree(self):
         root = self.AddRoot("Root")
         for name, value in self.namespace.__dict__.items():
@@ -34,12 +34,12 @@ class NamespaceTree(wx.gizmos.TreeListCtrl):
             self.SetItemText(item, valueStr, 2)
             self.SetPyData(item, value)
         self.Expand(root)
-            
-            
+
+
     @classmethod
     def Test(cls):
         dialog = eg.Dialog(
-            None, 
+            None,
             style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
         )
         tree = cls(dialog, eg)
@@ -49,6 +49,4 @@ class NamespaceTree(wx.gizmos.TreeListCtrl):
         dialog.SetSizerAndFit(sizer)
         dialog.ShowModal()
         dialog.Destroy()
-        
-        
-        
+

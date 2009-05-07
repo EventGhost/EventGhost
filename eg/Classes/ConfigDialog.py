@@ -10,7 +10,7 @@ class ConfigDialog(eg.TaskletDialog):
         self.result = None
         self.showLine = showLine
         self.resizable = resizable
-        
+
         addTestButton = False
         size = (450, 300)
         if isinstance(item, eg.PluginItem):
@@ -21,20 +21,20 @@ class ConfigDialog(eg.TaskletDialog):
         else:
             title = eg.text.General.settingsActionCaption
             addTestButton = True
-        
+
 
         self.configureItem = eg.currentConfigureItem
         eg.currentConfigureItem.openConfigDialog = self
-        
+
         dialogStyle = wx.CAPTION|wx.CLOSE_BOX|wx.SYSTEM_MENU
         if resizable:
             dialogStyle |= wx.RESIZE_BORDER|wx.MAXIMIZE_BOX
         eg.TaskletDialog.__init__(
             self, eg.document.frame, -1, title, style=dialogStyle
         )
-        
+
         self.buttonRow = eg.ButtonRow(
-            self, 
+            self,
             (wx.ID_OK, wx.ID_CANCEL, wx.ID_APPLY),
             resizable
         )
@@ -43,9 +43,9 @@ class ConfigDialog(eg.TaskletDialog):
             testButton = wx.Button(self, -1, eg.text.General.test)
             self.buttonRow.Add(testButton)
             testButton.Bind(wx.EVT_BUTTON, self.OnTestButton)
-            
+
         self.buttonRow.testButton = testButton
-            
+
         self.Bind(wx.EVT_CLOSE, self.OnCancel)
         self.Bind(wx.EVT_MAXIMIZE, self.OnMaximize)
 
@@ -63,14 +63,14 @@ class ConfigDialog(eg.TaskletDialog):
         )
         self.mainSizer = mainSizer
         self.sizer = paramSizer
-        
+
         def ShowHelp(dummyEvent):
             self.configureItem.ShowHelp(self)
         wx.EVT_MENU(self, wx.ID_HELP, ShowHelp)
-        
+
         self.SetAcceleratorTable(
             wx.AcceleratorTable([(wx.ACCEL_NORMAL, wx.WXK_F1, wx.ID_HELP), ])
-        )        
+        )
 
 
     @eg.LogIt
@@ -79,8 +79,8 @@ class ConfigDialog(eg.TaskletDialog):
             self.buttonRow.sizeGrip.Hide()
         self.Bind(wx.EVT_SIZE, self.OnRestore)
         event.Skip()
-            
-            
+
+
     @eg.LogIt
     def OnRestore(self, event):
         if not self.IsMaximized():
@@ -88,8 +88,8 @@ class ConfigDialog(eg.TaskletDialog):
             if self.buttonRow.sizeGrip:
                 self.buttonRow.sizeGrip.Show()
         event.Skip()
-            
-            
+
+
     def FinishSetup(self):
         # Temporary hack to fix button tabulator ordering problems.
         self.panel.FinishSetup()
@@ -113,18 +113,16 @@ class ConfigDialog(eg.TaskletDialog):
         self.Centre()
         self.panel.SetFocus()
         eg.TaskletDialog.FinishSetup(self)
-        
-    
+
+
     def OnTestButton(self, event):
         self.DispatchEvent(event, eg.ID_TEST)
-        
-        
+
+
     @eg.LogItWithReturn
     def Configure(self, item, *args):
         self.item = item
         item.openConfigDialog = self
         self.item.Configure(*args)
         del item.openConfigDialog
-        
-        
-        
+

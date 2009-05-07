@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -23,7 +23,7 @@
 from eg.WinApi.Dynamic import (
     sizeof, pointer,
     ENUM_CURRENT_SETTINGS, EDS_RAWMODE, EnumDisplayDevices,
-    EnumDisplaySettingsEx, ChangeDisplaySettingsEx, DISPLAY_DEVICE, DEVMODE, 
+    EnumDisplaySettingsEx, ChangeDisplaySettingsEx, DISPLAY_DEVICE, DEVMODE,
     DISPLAY_DEVICE_MIRRORING_DRIVER, DISPLAY_DEVICE_PRIMARY_DEVICE,
     DISPLAY_DEVICE_ATTACHED_TO_DESKTOP, DM_POSITION, DM_BITSPERPEL,
     DM_PELSWIDTH, DM_PELSHEIGHT, DM_DISPLAYFLAGS, DM_DISPLAYFREQUENCY,
@@ -32,7 +32,7 @@ from eg.WinApi.Dynamic import (
 
 
 class Display(object):
-    
+
     def __init__(self, iDevNum, displayDevice):
         self.iDevNum = iDevNum
         self.deviceName = displayDevice.DeviceName
@@ -43,8 +43,8 @@ class Display(object):
         self.devMode = DEVMODE()
         self.devMode.dmSize = sizeof(DEVMODE)
         self.dmp = pointer(self.devMode)
-    
-    
+
+
     def Refresh(self):
         name = self.deviceName
         dmp = self.dmp
@@ -56,9 +56,9 @@ class Display(object):
         self.width = devMode.dmPelsWidth
         self.height = devMode.dmPelsHeight
         self.frequency = devMode.dmDisplayFrequency
-        self.bitsPerPixel = devMode.dmBitsPerPel        
-    
-    
+        self.bitsPerPixel = devMode.dmBitsPerPel
+
+
     def GetDisplayModes(self, allModes=False):
         devMode = DEVMODE()
         devMode.dmSize = sizeof(DEVMODE)
@@ -97,19 +97,19 @@ class Display(object):
     def GetCurrentMode(self):
         self.Refresh()
         return ((self.width, self.height), self.frequency, self.bitsPerPixel)
-        
-        
+
+
     def GetRectangle(self):
         """
         Returns the displays position and size as a tuple.
-        
+
         The fields are: (left, top, width, height)
         """
         self.Refresh()
         return (self.x, self.y, self.width, self.height)
-        
-        
-        
+
+
+
 def GetDisplay(displayNum):
     displayDevice = DISPLAY_DEVICE()
     displayDevice.cb = sizeof(DISPLAY_DEVICE)
@@ -150,9 +150,9 @@ def GetDisplayModes():
         if displayDevice.StateFlags & DISPLAY_DEVICE_MIRRORING_DRIVER:
             continue
         EnumDisplaySettingsEx(
-            displayDevice.DeviceName, 
-            ENUM_CURRENT_SETTINGS, 
-            pointer(devMode), 
+            displayDevice.DeviceName,
+            ENUM_CURRENT_SETTINGS,
+            pointer(devMode),
             0
         )
         displayMode = (
@@ -175,14 +175,14 @@ def GetDisplayModes():
 
 def SetDisplayModes(*args):
     for (
-        deviceName, 
-        x, 
-        y, 
-        width, 
-        height, 
-        freq, 
-        bitdepth, 
-        isAttached, 
+        deviceName,
+        x,
+        y,
+        width,
+        height,
+        freq,
+        bitdepth,
+        isAttached,
         isPrimary,
         displayFlags
     ) in args:
@@ -208,8 +208,9 @@ def SetDisplayModes(*args):
         if isPrimary:
             flags |= CDS_SET_PRIMARY
         ChangeDisplaySettingsEx(deviceName, pointer(devMode), 0, flags, 0)
-    ChangeDisplaySettingsEx(None, None, 0, 0, 0)          
-    
-    
+    ChangeDisplaySettingsEx(None, None, 0, 0, 0)
+
+
 if __name__ == "__main__":
     print GetDisplayModes()
+

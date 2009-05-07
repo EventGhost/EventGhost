@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -30,10 +30,10 @@ class MessageDialog(wx.Dialog):
     dialog would get to wide.
     """
     def __init__(
-        self, 
-        parent, 
-        message, 
-        caption=eg.APP_NAME, 
+        self,
+        parent,
+        message,
+        caption=eg.APP_NAME,
         style=wx.OK|wx.CANCEL,
         pos=wx.DefaultPosition
     ):
@@ -43,7 +43,7 @@ class MessageDialog(wx.Dialog):
         if style & wx.STAY_ON_TOP:
             dialogStyle |= wx.STAY_ON_TOP
         wx.Dialog.__init__(self, parent, -1, caption, pos, style=dialogStyle)
-        
+
         if style & wx.ICON_EXCLAMATION:
             artId = wx.ART_WARNING
         elif style & wx.ICON_HAND:
@@ -56,7 +56,7 @@ class MessageDialog(wx.Dialog):
             artId = wx.ART_INFORMATION
         else:
             artId = None
-            
+
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         if artId is not None:
             bmp = wx.ArtProvider.GetBitmap(artId, wx.ART_CMN_DIALOG, (32, 32))
@@ -86,7 +86,7 @@ class MessageDialog(wx.Dialog):
         if wx.CANCEL & style:
             cancelButton = wx.Button(self, wx.ID_CANCEL, text.cancel)
             buttonSizer.Add(cancelButton, 0, wx.LEFT|wx.RIGHT, 3)
-        
+
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         mainSizer.Add(sizer)
         mainSizer.Add(buttonSizer, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 12)
@@ -94,14 +94,13 @@ class MessageDialog(wx.Dialog):
         if parent and pos == wx.DefaultPosition:
             self.CenterOnParent()
 
-       
+
     def OnYesButton(self, event):
         self.EndModal(wx.ID_YES)
         event.Skip()
-        
-        
+
+
     def OnNoButton(self, event):
         self.EndModal(wx.ID_NO)
         event.Skip()
-    
-        
+

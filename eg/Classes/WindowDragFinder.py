@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -25,26 +25,26 @@ import eg
 import wx
 from eg.Icons import GetInternalBitmap, GetInternalImage
 from eg.WinApi import (
-    HighlightWindow, 
-    BestWindowFromPoint, 
+    HighlightWindow,
+    BestWindowFromPoint,
     GetWindowThreadProcessId,
     GetCursorPos,
 )
 
 
 class WindowDragFinder(wx.PyWindow):
-    
+
     def __init__(self, parent, startFunc, endFunc):
         self.startFunc = startFunc
         self.endFunc = endFunc
-        
+
         self.text = eg.plugins.Window.FindWindow.text
         wx.PyWindow.__init__(self, parent, -1, style=wx.SIMPLE_BORDER)
         self.SetBackgroundColour(
             wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW)
         )
         self.lastTarget = None
-        
+
         # load images
         self.dragBoxBitmap = GetInternalBitmap("findert")
         self.emptyDragBoxBitmap = GetInternalBitmap("finderte")
@@ -53,7 +53,7 @@ class WindowDragFinder(wx.PyWindow):
         image = GetInternalImage('findertc')
         image.SetMaskColour(255, 0, 0)
 
-        # since this image didn't come from a .cur file, tell it where the 
+        # since this image didn't come from a .cur file, tell it where the
         # hotspot is
         image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 15)
         image.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 16)
@@ -68,9 +68,9 @@ class WindowDragFinder(wx.PyWindow):
 
         # some description for the drag target
         dragBoxText = wx.StaticText(
-            self, 
-            -1, 
-            self.text.drag2, 
+            self,
+            -1,
+            self.text.drag2,
             style=wx.ALIGN_CENTRE
         )
         x1, y1 = dragBoxText.GetBestSize()
@@ -79,9 +79,9 @@ class WindowDragFinder(wx.PyWindow):
         dragBoxText.SetMinSize((max(x1, x2), max(y1, y2)))
         #dragBoxText.Bind(wx.EVT_LEFT_DOWN, self.OnDragboxClick)
         self.dragBoxText = dragBoxText
-        
+
         self.Bind(wx.EVT_SIZE, self.OnSize)
-        
+
         # put our drag target together
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(dragBoxImage)
@@ -91,21 +91,21 @@ class WindowDragFinder(wx.PyWindow):
         sizer.Fit(self)
         self.Layout()
         self.SetMinSize(self.GetSize())
-        
-        
+
+
     def OnSize(self, dummyEvent):
         """
         Handles the wx.EVT_SIZE events.
         """
         if self.GetAutoLayout():
-            self.Layout()        
-        
-        
+            self.Layout()
+
+
     @eg.LogIt
     def AcceptsFocusFromKeyboard(self):
         return False
-        
-        
+
+
     @eg.LogIt
     def OnDragboxClick(self, event):
         """ Handle left-click on findtool
@@ -114,12 +114,12 @@ class WindowDragFinder(wx.PyWindow):
             event.Skip()
             return
         self.startFunc()
-        
+
         #nothing targeted in the beginning
         self.lastTarget = None
-        
+
         wx.SetCursor(self.cursor)
-        
+
         # set the box to the empty image
         self.dragBoxImage.SetBitmap(self.emptyDragBoxBitmap)
         self.dragBoxText.SetLabel(self.text.drag2)
@@ -166,15 +166,14 @@ class WindowDragFinder(wx.PyWindow):
 
         # stop processing the mouse capture
         self.ReleaseMouse()
-        
+
         if self.lastTarget is not None:
             # unhighlight last window if we have highlighted one
             HighlightWindow(self.lastTarget)
-            
+
         self.endFunc()
-        
-        
+
+
     def GetValue(self):
         return self.lastTarget
-    
-    
+

@@ -23,7 +23,7 @@ del _tmp
 
 from Classes.IrDecoder import IrDecoder
 
-def RegisterPlugin(**dummyKwArgs): 
+def RegisterPlugin(**dummyKwArgs):
     pass
 """
 
@@ -42,8 +42,8 @@ def ScanDir(srcDir, outfile, modName):
             else:
                 outfile.write("from %s.%s import %s\n" %(modName, name, name))
                 outfile.write("eg.%s = %s\n" %(name, name))
-    
-    
+
+
 def DoTask():
     outDir = join(builder.SOURCE_DIR, "eg")
     outfile = open(join(outDir, "StaticImports.py"), "wt")
@@ -60,4 +60,4 @@ def DoTask():
         outfile.write("%s = %s()\n" % (name, clsName))
     outfile.write(FOOTER)
     outfile.close()
-    
+

@@ -25,7 +25,7 @@ def device(portnumber):
 class Serial(SerialBase):
     """Serial port class, implemented with javax.comm and thus usable with
        jython and the appropriate java extension."""
-    
+
     def open(self):
         """Open port with current settings. This may throw a SerialException
            if the port cannot be opened."""
@@ -49,7 +49,7 @@ class Serial(SerialBase):
         """Set commuication parameters on opened port."""
         if not self.sPort:
             raise SerialException("Can only operate on a valid port handle")
-        
+
         self.sPort.enableReceiveTimeout(30)
         if self._bytesize == FIVEBITS:
             jdatabits = javax.comm.SerialPort.DATABITS_5
@@ -61,7 +61,7 @@ class Serial(SerialBase):
             jdatabits = javax.comm.SerialPort.DATABITS_8
         else:
             raise ValueError("unsupported bytesize: %r" % self._bytesize)
-        
+
         if self._stopbits == STOPBITS_ONE:
             jstopbits = javax.comm.SerialPort.STOPBITS_1
         elif stopbits == STOPBITS_ONE_HALVE:
@@ -91,10 +91,10 @@ class Serial(SerialBase):
         if self._xonxoff:
             jflowin  |=  javax.comm.SerialPort.FLOWCONTROL_XONXOFF_IN
             jflowout |=  javax.comm.SerialPort.FLOWCONTROL_XONXOFF_OUT
-        
+
         self.sPort.setSerialPortParams(baudrate, jdatabits, jstopbits, jparity)
         self.sPort.setFlowControlMode(jflowin | jflowout)
-        
+
         if self._timeout >= 0:
             self.sPort.enableReceiveTimeout(self._timeout*1000)
         else:
@@ -161,7 +161,7 @@ class Serial(SerialBase):
         """Set terminal status line: Request To Send"""
         if not self.sPort: raise portNotOpenError
         self.sPort.setRTS(on)
-        
+
     def setDTR(self,on=1):
         """Set terminal status line: Data Terminal Ready"""
         if not self.sPort: raise portNotOpenError
@@ -207,6 +207,4 @@ if __name__ == '__main__':
     print repr(s.read(5))
     print s.inWaiting()
     del s
-
-
 

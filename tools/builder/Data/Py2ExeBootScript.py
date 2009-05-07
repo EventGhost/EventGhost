@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -38,7 +38,7 @@ class StdErrReplacement(object):
     _error = None
     _logFilePath = None
     _displayMessage = True
-    
+
     def write(self, text):
         if self._file is None and self._error is None:
             if self._logFilePath is None:
@@ -55,10 +55,10 @@ class StdErrReplacement(object):
                 import atexit
                 import ctypes
                 atexit.register(
-                    ctypes.windll.user32.MessageBoxA, 
+                    ctypes.windll.user32.MessageBoxA,
                     0,
                     "The logfile '%s' could not be opened:\n %s" % (
-                        self._logFilePath, 
+                        self._logFilePath,
                         details
                     ),
                     "Error occurred in EventGhost",
@@ -70,13 +70,13 @@ class StdErrReplacement(object):
         if self._file is not None:
             self._file.write(text)
             self._file.flush()
-            
-            
+
+
     def flush(self):
         if self._file is not None:
             self._file.flush()
-            
-            
+
+
     def __DisplayMessage(self):
         if not self._displayMessage:
             return
@@ -95,8 +95,9 @@ class StdErrReplacement(object):
             subprocess.Popen('Notepad.exe "%s"' % self._logFilePath)
 
 
-            
+
 import sys
 sys.stderr = StdErrReplacement()
 del StdErrReplacement
 del sys
+

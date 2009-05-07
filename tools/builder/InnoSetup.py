@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2008 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -31,12 +31,12 @@ import logging
 
 class StdHandler(object):
     indent = 0
-    
+
     def __init__(self, oldStream, logger):
         self.oldStream = oldStream
         self.buf = ""
         self.logger = logger
-        
+
     def write(self, data):
         self.buf += data
         lines = self.buf.split("\n")
@@ -45,12 +45,12 @@ class StdHandler(object):
             self.logger(line)
             self.oldStream.write(line + "\n")
         self.buf = lines[-1]
-        
-        
+
+
     def flush(self):
         pass
-    
-        
+
+
 LOG_FILENAME = 'Build.log'
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG,)
 logging.getLogger().setLevel(20)
@@ -65,7 +65,7 @@ def SetIndent(level):
 def GetInnoCompilerPath():
     try:
         key = _winreg.OpenKey(
-            _winreg.HKEY_LOCAL_MACHINE, 
+            _winreg.HKEY_LOCAL_MACHINE,
             (
                 "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\"
                 "Uninstall\\Inno Setup 5_is1"
@@ -79,9 +79,9 @@ def GetInnoCompilerPath():
     if not exists(installPath):
         return None
     return installPath
-        
-    
-class InnoInstaller(object): 
+
+
+class InnoInstaller(object):
     """
     Helper class to create Inno Setup installers more easily.
     """
@@ -89,29 +89,29 @@ class InnoInstaller(object):
     def __init__(self):
         self.innoSections = {}
 
-        
+
     def Add(self, section, line):
-        """ 
-        Adds a line to the INI section. 
+        """
+        Adds a line to the INI section.
         """
         if not section in self.innoSections:
             self.innoSections[section] = []
         self.innoSections[section].append(line)
-        
-    
+
+
     def AddFile(self, source, destDir="", destName=None):
-        """ 
-        Adds a file to the [Files] section. 
+        """
+        Adds a file to the [Files] section.
         """
         line = 'Source: "%s"; DestDir: "{app}\\%s";' % (abspath(source), destDir)
         if destName is not None:
             line += ' DestName: "%s";' % destName
         self.Add("Files", line)
-        
-        
+
+
     def ExecuteInnoSetup(self):
         """
-        Finishes the setup, writes the Inno Setup script and calls the 
+        Finishes the setup, writes the Inno Setup script and calls the
         Inno Setup compiler.
         """
         srcDir = builder.SOURCE_DIR
@@ -136,7 +136,7 @@ class InnoInstaller(object):
         for section, lines in self.innoSections.iteritems():
             issFile.write("[%s]\n" % section)
             for line in lines:
-                issFile.write("%s\n" % line)            
+                issFile.write("%s\n" % line)
         issFile.close()
 
         StartProcess(GetInnoCompilerPath(), innoScriptPath, "/Q")

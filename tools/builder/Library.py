@@ -8,19 +8,19 @@ import builder
 RT_MANIFEST = 24
 
 def RemoveAllManifests(scanDir):
-    """ 
+    """
     Remove embedded manifest resource for all DLLs and PYDs in the supplied
-    path. 
-    
+    path.
+
     These seems to be the only way how the setup can run with Python 2.6
     on Vista.
     """
     import ctypes
-    
+
     BeginUpdateResource = ctypes.windll.kernel32.BeginUpdateResourceA
     UpdateResource = ctypes.windll.kernel32.UpdateResourceA
     EndUpdateResource = ctypes.windll.kernel32.EndUpdateResourceA
-    
+
     for (dirpath, dirnames, filenames) in os.walk(scanDir):
         if '.svn' in dirnames:
             dirnames.remove('.svn')
@@ -41,8 +41,8 @@ def RemoveAllManifests(scanDir):
 def InstallPy2exePatch():
     """
     Tricks py2exe to include the win32com module.
-    
-    ModuleFinder can't handle runtime changes to __path__, but win32com 
+
+    ModuleFinder can't handle runtime changes to __path__, but win32com
     uses them, particularly for people who build from sources.
     """
     try:
@@ -57,7 +57,7 @@ def InstallPy2exePatch():
                 modulefinder.AddPackagePath(extra, path)
     except ImportError: #IGNORE:W0704
         # no build path setup, no worries.
-        pass 
+        pass
 
 
 
@@ -76,7 +76,7 @@ def CreateLibrary():
             path = join(libraryDir, filename)
             if not os.path.isdir(path):
                 os.remove(path)
-                
+
     manifest = file(
         join(builder.PYVERSION_DIR, "manifest.template")
     ).read() % builder.__dict__
@@ -92,9 +92,9 @@ def CreateLibrary():
                 ],
                 excludes = builder.EXCLUDED_MODULES,
                 dll_excludes = [
-                    "DINPUT8.dll", 
-                    "w9xpopen.exe", 
-                    #"gdiplus.dll", 
+                    "DINPUT8.dll",
+                    "w9xpopen.exe",
+                    #"gdiplus.dll",
                     #"msvcr71.dll",
                 ],
                 dist_dir = builder.SOURCE_DIR,
@@ -120,7 +120,7 @@ def CreateLibrary():
     #import pprint
     #pprint.pprint(py2exeOptions)
     setup(script_args=["py2exe"], **py2exeOptions)
-    
+
     dllNames = [
         basename(name) for name in glob(join(libraryDir, "*.dll"))
     ]
@@ -134,5 +134,4 @@ def CreateLibrary():
             os.remove(join(libraryDir, filename))
 #    if builder.PYVERSION_STR == "26":
 #        RemoveAllManifests(libraryDir)
-
 

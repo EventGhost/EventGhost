@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -34,34 +34,34 @@ class DecodeError(Exception):
 class IrProtocolBase(object):
     lastCode = None
     timeout = 150
-    
+
     def __init__(self, controller):
         self.controller = controller
-        
+
     def Decode(self, data):
         raise NotImplementedError
-    
 
-        
+
+
 class ManchesterBase(IrProtocolBase):
     pos = 0
     data = None
     bitState = 0
     bufferLen = 0
     halfBitTime = None
-    
+
     def __init__(self, controller, halfBitTime):
         IrProtocolBase.__init__(self, controller)
         self.halfBitTime = halfBitTime
-        
-        
+
+
     def SetData(self, data, pos=0):
         self.data = data
         self.pos = pos
         self.bufferLen = 0
         self.bitState = 0
-        
-    
+
+
     def GetSample(self):
         if self.bufferLen == 0:
             if self.pos >= len(self.data):
@@ -75,8 +75,8 @@ class ManchesterBase(IrProtocolBase):
             self.bitState = self.pos % 2
         self.bufferLen -= 1
         return self.bitState
-    
-    
+
+
     def GetBitsLsbFirst(self, numBits=8):
         """
         Returns numBits count manchester bits with LSB last order.
@@ -87,8 +87,8 @@ class ManchesterBase(IrProtocolBase):
             data |= mask * self.GetBit()
             mask <<= 1
         return data
-    
-    
+
+
     def GetBitsLsbLast(self, numBits=8):
         """
         Returns numBits count manchester bits with LSB last order.
@@ -99,21 +99,21 @@ class ManchesterBase(IrProtocolBase):
             data |= self.GetBit()
         return data
 
-    
+
     def GetBit(self):
         raise NotImplementedError
-        
-        
+
+
     def Decode(self, data):
         raise NotImplementedError
-    
+
 
 
 class ManchesterCoding1(ManchesterBase):
     """
     Manchester coding with falling edge for logic one.
     """
-    
+
     def GetBit(self):
         sample = self.GetSample() * 2 + self.GetSample()
         if sample == 1: # binary 01
@@ -122,18 +122,18 @@ class ManchesterCoding1(ManchesterBase):
             return 1
         else:
             raise DecodeError("wrong bit transition")
-        
-        
+
+
     def Decode(self, data):
         raise NotImplementedError
-    
 
-    
+
+
 class ManchesterCoding2(ManchesterBase):
     """
     Manchester coding with raising edge for logic one.
     """
-    
+
     def GetBit(self):
         sample = self.GetSample() * 2 + self.GetSample()
         if sample == 1: # binary 01
@@ -142,13 +142,13 @@ class ManchesterCoding2(ManchesterBase):
             return 0
         else:
             raise DecodeError("wrong bit transition")
-        
-        
+
+
     def Decode(self, data):
         raise NotImplementedError
-    
 
-            
+
+
 def GetBitString(value, numdigits=8):
     digits = []
     for dummyCounter in range(numdigits):
@@ -175,10 +175,10 @@ def GetDecoders():
 DECODERS = GetDecoders()
 DEBUG = eg.debugLevel
 from eg.Classes.IrDecoder.Universal import Universal
-    
-    
+
+
 class IrDecoder(object):
-    
+
     def __init__(self, plugin, sampleTime):
         self.plugin = plugin
         self.sampleTime = sampleTime
@@ -193,23 +193,23 @@ class IrDecoder(object):
                 continue
             self.decoders.append(decoder)
         self.timer = eg.ResettableTimer(self.OnTimeout)
-        
+
 
     def Close(self):
         self.timer.Stop()
-        
-    
+
+
     def OnTimeout(self):
         self.lastDecoder.lastCode = None
         self.event.SetShouldEnd()
 #        if DEBUG:
 #            print "timeout"
-    
-    
+
+
     def Decode(self, data, length=-1):
         if length < 3:
             return
-        
+
         #print dataLen, repr(data)
         if isinstance(data, str):
             data = [int(ord(x) * self.sampleTime) for x in data[:length]]
@@ -223,7 +223,7 @@ class IrDecoder(object):
             if self.universalDecoder.lastCode == uniCode:
                 self.timer.Reset(self.universalDecoder.timeout)
                 return uniCode
-            
+
         #print data
         decoders = self.decoders
         code = None
@@ -237,7 +237,7 @@ class IrDecoder(object):
             except Exception, exc:
                 print decoder
                 raise exc
-            
+
             if code is None:
                 continue
             if i != 0:
@@ -250,7 +250,7 @@ class IrDecoder(object):
                 code = decoder.Decode(data)
             else:
                 code = uniCode
-            
+
         self.lastDecoder = decoder
         timeout = decoder.timeout
         if code in self.mapTable:

@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -23,11 +23,11 @@
 import wx
 import colorsys
 from eg.WinApi.Dynamic import (
-    GetSysColor, 
+    GetSysColor,
     COLOR_ACTIVECAPTION,
     COLOR_GRADIENTACTIVECAPTION,
     COLOR_CAPTIONTEXT,
-    COLOR_INACTIVECAPTION, 
+    COLOR_INACTIVECAPTION,
     COLOR_GRADIENTINACTIVECAPTION,
     COLOR_INACTIVECAPTIONTEXT,
 )
@@ -40,8 +40,8 @@ def GetWinSysColour(nIndex):
 
 class Colour:
     """
-    Holds all colours needed by the program. 
-    
+    Holds all colours needed by the program.
+
     These might get configurable in the future.
     """
     windowText = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOWTEXT).Get()
@@ -54,8 +54,8 @@ class Colour:
     inactiveCaption = GetWinSysColour(COLOR_INACTIVECAPTION)
     inactiveCaptionGradient = GetWinSysColour(COLOR_GRADIENTINACTIVECAPTION)
     inactiveCaptionTextColour = GetWinSysColour(COLOR_INACTIVECAPTIONTEXT)
-    
-    
+
+
     @staticmethod
     def RgbToHsv(colour):
         """
@@ -63,8 +63,8 @@ class Colour:
         """
         red, green, blue = colour
         return colorsys.rgb_to_hsv(red / 255.0, green / 255.0, blue / 255.0)
-      
-    
+
+
     @staticmethod
     def HsvToRgb(hue, saturation, value):
         """
@@ -76,8 +76,8 @@ class Colour:
             int(round(green * 255.0)),
             int(round(blue * 255.0))
         )
-    
-    
+
+
     def GetOddLogColour(self):
         """
         Returns the colour for odd lines in the log.
@@ -100,5 +100,4 @@ class Colour:
         else:
             value += 0.25
         return self.HsvToRgb(hue, saturation, value)
-
 

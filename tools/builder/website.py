@@ -8,49 +8,49 @@ import builder
 BASE_DIR = builder.WEBSITE_DIR
 
 class Page(object):
-    
+
     def __init__(self):
         pass
-    
+
 
 class HomePage(Page):
     name = "Home"
     target = "/"
     outfile = "index.html"
     template = "home.mako"
-    
+
 
 class ForumPage(Page):
     name = "Forum"
     target = "/forum/"
     outfile = "css/header_forum.html"
     template = "header_only.mako"
-    
+
 
 class DocsPage(Page):
     name = "Documentation"
     target = "/docs/"
     outfile = r"..\docs\source\_templates\header_docs.html"
     template = "header_only.mako"
-    
+
 
 class WikiPage(Page):
     name = "Wiki"
     target = "/wiki/"
     outfile = "css/header_wiki.html"
     template = "header_only.mako"
-    
+
 
 class DownloadPage(Page):
     name = "Downloads"
     target = "/downloads/"
     outfile = "downloads/index.html"
     template = "download.mako"
-    
-    
+
+
 
 class FileData(object):
-    
+
     def __init__(self, path):
         self.path = path
         self.target = os.path.basename(path)
@@ -59,8 +59,8 @@ class FileData(object):
         fileStat = os.stat(path)
         self.time = time.strftime("%b %d %Y", time.gmtime(fileStat.st_mtime))
         self.size = "%0.1f MB" % (fileStat.st_size / 1024.0 / 1024)
-        
-        
+
+
 
 MENU_TABS = (HomePage, DocsPage, WikiPage, ForumPage, DownloadPage)
 
@@ -88,24 +88,24 @@ GLOBALS = {
 }
 
 def Main(url):
-    
+
     myLookUp = TemplateLookup(directories=[abspath(join(builder.DATA_DIR, 'templates'))])
 
     for page in MENU_TABS:
         GLOBALS["CURRENT"] = page
         content = Template(
-            filename=join(builder.DATA_DIR, "templates", page.template), 
+            filename=join(builder.DATA_DIR, "templates", page.template),
             lookup=myLookUp
         ).render(**GLOBALS)
 #        if os.path.splitext(page.template)[1] == ".rst":
 #            print "is rst"
         open(join(BASE_DIR, page.outfile), "wt").write(content)
-    
+
     #import BuildDocs
     #BuildDocs.Main(buildHtml=True)
-     
+
     from SftpSync import SftpSync
-    
+
     syncer = SftpSync(url)
     addFiles = [
         (join(BASE_DIR, "index.html"), "index.html"),
@@ -113,7 +113,8 @@ def Main(url):
     syncer.Sync(BASE_DIR, addFiles)
     syncer.sftpClient.utime(syncer.remotePath + "wiki", None)
     syncer.ClearDirectory(
-        syncer.remotePath + "forum/cache", 
+        syncer.remotePath + "forum/cache",
         excludes=["index.htm", ".htaccess"]
     )
     syncer.Close()
+

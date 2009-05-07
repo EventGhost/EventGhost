@@ -1,4 +1,4 @@
-import stat     
+import stat
 import os
 from urlparse import urlparse
 from os.path import join
@@ -12,18 +12,18 @@ def FixRemotePath(remotePath):
     if not remotePath.endswith("/"):
         remotePath += "/"
     return remotePath
-    
-    
+
+
 class Directory(object):
-    
+
     def __init__(self):
         self.dirs = {}
         self.files = {}
-        
+
 
 
 class LocalDirectory(Directory):
-    
+
     def __init__(self, path):
         Directory.__init__(self)
         for name in os.listdir(path):
@@ -32,11 +32,11 @@ class LocalDirectory(Directory):
                 self.dirs[name] = LocalDirectory(fullPath)
             else:
                 self.files[name] = os.stat(fullPath)
-        
-        
-        
+
+
+
 class RemoteDirectory(Directory):
-    
+
     def __init__(self, client, path):
         Directory.__init__(self)
         for entry in client.listdir_attr(path):
@@ -45,11 +45,11 @@ class RemoteDirectory(Directory):
                 self.dirs[name] = RemoteDirectory(client, path + "/" + name)
             else:
                 self.files[name] = entry
-        
-    
+
+
 
 class SftpSync(object):
-    
+
     def __init__(self, url):
         self.url = url
         host = urlparse(url)
@@ -58,14 +58,14 @@ class SftpSync(object):
         self.sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         print "connecting:", host.hostname
         self.sshClient.connect(
-            host.hostname, 
-            host.port, 
-            host.username, 
+            host.hostname,
+            host.port,
+            host.username,
             host.password
         )
         self.sftpClient = self.sshClient.open_sftp()
-        
-        
+
+
     def SyncDirs(self, localPath, remotePath):
         print "getting local directory tree:", localPath
         localDir = LocalDirectory(localPath)
@@ -84,11 +84,11 @@ class SftpSync(object):
                 self.sftpClient.mkdir(remotePath + dirName)
                 remoteDir.dirs[dirName] = Directory()
             self.CreateDirs(
-                localDir.dirs[dirName], 
-                remoteDir.dirs[dirName], 
+                localDir.dirs[dirName],
+                remoteDir.dirs[dirName],
                 remotePath + dirName + "/"
             )
-    
+
 
     def CreateFiles(self, localDir, remoteDir, localPath, remotePath):
         for fileName in localDir.files:
@@ -104,13 +104,13 @@ class SftpSync(object):
             self.sftpClient.utime(remoteFilePath, (localStat.st_atime, localStat.st_mtime))
         for dirName in localDir.dirs:
             self.CreateFiles(
-                localDir.dirs[dirName], 
-                remoteDir.dirs[dirName], 
+                localDir.dirs[dirName],
+                remoteDir.dirs[dirName],
                 join(localPath, dirName),
                 remotePath + dirName + "/"
             )
-            
-            
+
+
     def RemoveFiles(self, localDir, remoteDir, remotePath):
         for fileName in remoteDir.files:
             if fileName not in localDir.files:
@@ -122,12 +122,12 @@ class SftpSync(object):
             else:
                 localSubDir = localDir.dirs[dirName]
             self.RemoveFiles(
-                localSubDir, 
-                remoteDir.dirs[dirName], 
+                localSubDir,
+                remoteDir.dirs[dirName],
                 remotePath + dirName + "/"
             )
-        
-        
+
+
     def RemoveDirs(self, localDir, remoteDir, remotePath):
         for dirName in remoteDir.dirs:
             if dirName not in localDir.dirs:
@@ -135,28 +135,28 @@ class SftpSync(object):
             else:
                 localSubDir = localDir.dirs[dirName]
             self.RemoveDirs(
-                localSubDir, 
-                remoteDir.dirs[dirName], 
+                localSubDir,
+                remoteDir.dirs[dirName],
                 remotePath + dirName + "/"
             )
             if dirName not in localDir.dirs:
                 print "removing directory:", remotePath + dirName + "/"
                 self.sftpClient.rmdir(remotePath + dirName)
-                
-                
-        
+
+
+
     def Sync(self, localPath, additionalFiles=None):
         for name in os.listdir(localPath):
             localDir = join(localPath, name)
             if os.path.isdir(localDir):
                 self.SyncDirs(localDir, self.remotePath + name + "/")
-        
+
         if additionalFiles:
             for local, remote in additionalFiles:
                 print local, self.remotePath + remote
                 self.sftpClient.put(local, self.remotePath + remote)
-        
-        
+
+
     def ClearDirectory(self, remotePath, excludes=()):
         remotePath = FixRemotePath(remotePath)
         print "clearing all files in %s" % remotePath
@@ -166,10 +166,9 @@ class SftpSync(object):
                 self.sftpClient.remove(remotePath + fileName)
             else:
                 print "    skipping file %s because of excludes parameter" % fileName
-    
-    
+
+
     def Close(self):
         self.sftpClient.close()
         self.sshClient.close()
-
 

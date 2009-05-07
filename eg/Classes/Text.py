@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -72,23 +72,23 @@ class Default:
         pluginStartError = "Error starting plugin: %s"
         pluginLoadError = "Error while loading plugin-file %s."
         configureError = "Error while configuring: %s"
-        
+
     class Plugin:
         pass
 
-    
+
     class MainFrame:
         onlyLogAssigned = "&Log only assigned and activated events"
         onlyLogAssignedToolTip = (
             "If checked, the log will only show events, that would actually\n"
             "execute in the current configuration. So you should *not* check\n"
-            "this, while you want to assign new events."        
+            "this, while you want to assign new events."
         )
         class TaskBarMenu:
             Show = "Show EventGhost"
             Hide = "Hide EventGhost"
             Exit = "Exit"
-            
+
         class Menu:
             FileMenu = "&File"
             Apply = "&Apply Changes"
@@ -101,7 +101,7 @@ class Default:
             Close = "&Close"
             Options = "&Options..."
             Exit = "E&xit"
-            
+
             EditMenu = "&Edit"
             Undo = "&Undo"
             Redo = "&Redo"
@@ -123,7 +123,7 @@ class Default:
             LogTime = "Log Times"
             ClearLog = "Clear Log"
             IndentLog = "Indent Log"
-            
+
             ConfigurationMenu = "&Configuration"
             AddPlugin = "Add Plugin..."
             AddFolder = "Add Folder"
@@ -134,7 +134,7 @@ class Default:
             Rename = "Rename Item"
             Disabled = "Disable Item"
             Execute = "Execute Item"
-            
+
             HelpMenu = "&Help"
             HelpContents = "&Help Contents"
             About = "&About EventGhost..."
@@ -144,7 +144,7 @@ class Default:
             CheckUpdate = "Check for Update..."
             PythonShell = "Python Shell"
             Reset = "Reset"
-            
+
         class SaveChanges:
             mesg = (
                 "The file was altered.\n\n"
@@ -156,10 +156,10 @@ class Default:
         class Logger:
             caption = "Log"
             welcomeText = "---> Welcome to EventGhost <---"
-            
+
         class Tree:
             caption = "Configuration"
-            
+
         class Messages:
             cantAddEvent = (
                 "You can't add an event item here.\n\n"

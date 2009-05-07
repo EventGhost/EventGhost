@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2007 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -28,66 +28,66 @@ from os import stat
 from os.path import isdir, join, exists
 
 
-        
+
 class RegisterPluginException(Exception):
     """
-    RegisterPlugin will raise this exception to interrupt the loading 
+    RegisterPlugin will raise this exception to interrupt the loading
     of the plugin module file.
     """
     pass
 
 
-        
+
 class PluginModuleInfo:
     # some informational fields
     name = "unknown name"
     author = "unknown author"
     version = "unknow version"
-    
+
     # kind gives a hint in which group the plugin should be shown in
     # the AddPluginDialog
     kind = "other"
-    
+
     dirname = None
 
-        
-        
+
+
 class PluginManager:
-    
+
     # the PluginInfo currently been processed
     currentInfo = None
-    
+
     def __init__(self):
         self.databasePath = join(eg.configDir, "pluginManager")
         eg.RegisterPlugin = self.RegisterPluginDummy
         self.RegisterPluginDummy.__doc__ = self.RegisterPlugin.__doc__
         self.Refresh()
-    
-    
-    @eg.TimeIt  
+
+
+    @eg.TimeIt
     def Refresh(self, forceRebuild=(eg.debugLevel > 0)):
         """
-        Scans the plugin directory to get all needed information for all 
+        Scans the plugin directory to get all needed information for all
         plugins.
-        
+
         This will use a simple database file to avoid time consuming processing
         of unchanged plugins. If 'forceRebuild' is True, the old database file
         will be ignored and a new one completely rebuild.
         """
-        
+
         # load the database file if exists
         self.database = {}
         if not forceRebuild:
             self.Load()
         database = self.database
-        
+
         # a new database will be created at the end if a plugin has changed
         hasChanged = False
         newDatabase = {}
-        
+
         # prepare the interruption of plugin module import on RegisterPlugin
         eg.RegisterPlugin = self.RegisterPlugin
-        
+
         # scan through all directories in the plugin directory
         for dirname in os.listdir(eg.PLUGIN_DIR):
             # filter out non-plugin names
@@ -98,7 +98,7 @@ class PluginManager:
                 continue
             if not exists(join(pluginDir, "__init__.py")):
                 continue
-            
+
             # get the highest timestamp of all files in that directory
             highestTimestamp = 0
             for dirpath, dirnames, filenames in os.walk(pluginDir):
@@ -110,8 +110,8 @@ class PluginManager:
                 for directory in dirnames[:]:
                     if directory.startswith(".svn"):
                         dirnames.remove(directory)
-                    
-            
+
+
             # if the highest timestamp doesn't differ from the database's one
             # we can use the old entry and skip further processing
             if dirname in database:
@@ -119,7 +119,7 @@ class PluginManager:
                     newDatabase[dirname] = database[dirname]
                     del database[dirname]
                     continue
-            
+
             hasChanged = True
             pluginInfo = self.LoadPluginInfo(dirname)
             if pluginInfo is None:
@@ -128,17 +128,17 @@ class PluginManager:
                 pluginInfo.timestamp = highestTimestamp
                 newDatabase[dirname] = pluginInfo
             #print repr(pluginInfo)
-            
+
         # let RegisterPlugin be a normal (and useless) function again
         eg.RegisterPlugin = self.RegisterPluginDummy
-        
+
         # only save if something has changed
         needsSave = hasChanged or len(database)
         self.database = newDatabase
         if needsSave:
             self.Save()
-                
-        
+
+
     @eg.LogIt
     def Save(self):
         """
@@ -147,8 +147,8 @@ class PluginManager:
         with file(self.databasePath, "wb") as databaseFile:
             pickle.dump(eg.Version.string, databaseFile, -1)
             pickle.dump(self.database, databaseFile, -1)
-        
-    
+
+
     def Load(self):
         """
         Load the database from disc.
@@ -164,16 +164,16 @@ class PluginManager:
                 self.database = pickle.load(databaseFile)
             except:
                 eg.PrintTraceback()
-        
-    
+
+
     def GetPluginInfo(self, pluginName):
         return self.database[pluginName]
-    
-    
+
+
     def LoadPluginInfo(self, pluginDir):
         self.currentInfo = PluginModuleInfo()
         self.currentInfo.dirname = pluginDir
-        
+
         try:
             eg.PluginInfo.ImportPlugin(pluginDir)
         # It is expected that the loading will raise RegisterPluginException
@@ -185,10 +185,10 @@ class PluginManager:
             return
         finally:
             self.currentInfo = None
-        
-        
+
+
     def RegisterPlugin(
-        self, 
+        self,
         name = None,
         description = None,
         kind = "other",
@@ -203,19 +203,19 @@ class PluginManager:
     ):
         """
         Registers information about a plugin to EventGhost.
-        
-        :param name: should be a short descriptive string with the name of the 
+
+        :param name: should be a short descriptive string with the name of the
            plugin.
         :param description: the description of the plugin.
-        :param kind: gives a hint about the category the plugin belongs to. It 
+        :param kind: gives a hint about the category the plugin belongs to. It
            should be a string with a value out of "remote" (for remote receiver
            plugins), "program" (for program control plugins), "external" (for
            plugins that control external hardware) or "other" (if none of the
            other categories match).
         :param author: can be set to the name of the developer of the plugin.
         :param version: can be set to a version string.
-        :param canMultiLoad: set this to ``True``, if a configuration can have 
-           more than one instance of this plugin.     
+        :param canMultiLoad: set this to ``True``, if a configuration can have
+           more than one instance of this plugin.
         :param \*\*kwargs: just to consume unknown parameters, to make the call
            backward compatible.
         """
@@ -229,13 +229,13 @@ class PluginManager:
             description += "\n\n<p>" + help
         self.currentInfo.__dict__.update(locals())
         del self.currentInfo.__dict__["self"]
-        # we are done with this plugin module, so we can interrupt further 
+        # we are done with this plugin module, so we can interrupt further
         # processing by raising RegisterPluginException
         raise RegisterPluginException
-        
-    
+
+
     @staticmethod
-    def RegisterPluginDummy(        
+    def RegisterPluginDummy(
         name = None,
         description = None,
         kind = "other",
@@ -248,16 +248,16 @@ class PluginManager:
         help = None,
     ):
         pass
-    
-    
+
+
     def GetPluginInfoList(self):
         """
         Get a list of all PluginInfo for all plugins in the plugin directory
         """
         infoList = [
-            eg.PluginInfo.GetPluginInfo(pluginName) 
+            eg.PluginInfo.GetPluginInfo(pluginName)
             for pluginName in self.database.iterkeys()
         ]
         infoList.sort(key=lambda x: x.name.lower())
         return infoList
-        
+

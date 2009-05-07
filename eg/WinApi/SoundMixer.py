@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -22,22 +22,22 @@
 
 from eg.WinApi.Dynamic import (
     byref, sizeof, addressof, pointer,
-    HMIXER, 
+    HMIXER,
     MIXERCAPS,
-    MIXERCONTROL, 
-    MIXERLINECONTROLS, 
-    MIXERLINE, 
-    MIXERCONTROL, 
+    MIXERCONTROL,
     MIXERLINECONTROLS,
-    MIXERCONTROLDETAILS, 
-    MIXERCONTROLDETAILS_UNSIGNED, 
-    mixerOpen, 
+    MIXERLINE,
+    MIXERCONTROL,
+    MIXERLINECONTROLS,
+    MIXERCONTROLDETAILS,
+    MIXERCONTROLDETAILS_UNSIGNED,
+    mixerOpen,
     mixerGetNumDevs,
     mixerGetDevCaps,
-    mixerGetControlDetails, 
-    mixerGetLineInfo, 
+    mixerGetControlDetails,
+    mixerGetLineInfo,
     mixerGetLineControls,
-    mixerSetControlDetails, 
+    mixerSetControlDetails,
     MIXERLINE_COMPONENTTYPE_DST_SPEAKERS,
     MIXERCONTROL_CONTROLTYPE_MUTE,
     MIXERCONTROL_CONTROLTYPE_VOLUME,
@@ -48,8 +48,8 @@ from eg.WinApi.Dynamic import (
     MIXER_GETLINEINFOF_SOURCE,
     MMSYSERR_NOERROR,
 )
-    
-    
+
+
 class SoundMixerException(Exception):
     pass
 
@@ -57,7 +57,7 @@ class SoundMixerException(Exception):
 def GetMixerControl(componentType, ctrlType, deviceId=0):
     '''
     Obtains an appropriate pointer and info for the volume control
-    This function attempts to obtain a mixer control. Raises 
+    This function attempts to obtain a mixer control. Raises
     SoundMixerException if not successful.
     '''
     hmixer = HMIXER()
@@ -78,8 +78,8 @@ def GetMixerControl(componentType, ctrlType, deviceId=0):
 
     # Obtain a line corresponding to the component type
     rc = mixerGetLineInfo(
-        hmixer, 
-        byref(mixerLine), 
+        hmixer,
+        byref(mixerLine),
         MIXER_GETLINEINFOF_COMPONENTTYPE
     )
     if rc != MMSYSERR_NOERROR:
@@ -93,8 +93,8 @@ def GetMixerControl(componentType, ctrlType, deviceId=0):
 
     # Get the control
     rc = mixerGetLineControls(
-        hmixer, 
-        byref(mixerLineControls), 
+        hmixer,
+        byref(mixerLineControls),
         MIXER_GETLINECONTROLSF_ONEBYTYPE
     )
     if MMSYSERR_NOERROR != rc:
@@ -121,13 +121,13 @@ def GetControlValue(hmixer, mixerControl):
 
 
 def SetControlValue(hmixer, mixerControl, value):
-    ''' 
+    '''
     Sets the volumne from the pointer of the object passed through
 
-    ' [Note: original source taken from MSDN 
+    ' [Note: original source taken from MSDN
     http://support.microsoft.com/default.aspx?scid=KB;EN-US;Q178456&]
 
-    This function sets the value for a volume control. Returns True if 
+    This function sets the value for a volume control. Returns True if
     successful
     '''
 
@@ -150,19 +150,19 @@ def SetControlValue(hmixer, mixerControl, value):
 def GetMute(deviceId=0):
     # Obtain the volumne control object
     hmixer, mixerControl = GetMixerControl(
-        MIXERLINE_COMPONENTTYPE_DST_SPEAKERS, 
+        MIXERLINE_COMPONENTTYPE_DST_SPEAKERS,
         MIXERCONTROL_CONTROLTYPE_MUTE,
         deviceId
     )
 
     # Then get the volume
-    return GetControlValue(hmixer, mixerControl)    
+    return GetControlValue(hmixer, mixerControl)
 
 
 def SetMute(mute=True, deviceId=0):
     # Obtain the volumne control object
     hmixer, mixerControl = GetMixerControl(
-        MIXERLINE_COMPONENTTYPE_DST_SPEAKERS, 
+        MIXERLINE_COMPONENTTYPE_DST_SPEAKERS,
         MIXERCONTROL_CONTROLTYPE_MUTE,
         deviceId
     )
@@ -180,24 +180,24 @@ def ToggleMute(deviceId=0):
 def GetMasterVolume(deviceId=0):
     # Obtain the volumne control object
     hmixer, mixerControl = GetMixerControl(
-        MIXERLINE_COMPONENTTYPE_DST_SPEAKERS, 
+        MIXERLINE_COMPONENTTYPE_DST_SPEAKERS,
         MIXERCONTROL_CONTROLTYPE_VOLUME,
         deviceId
     )
 
     # Then get the volume
     value = GetControlValue(hmixer, mixerControl)
-    
+
     maximum = mixerControl.Bounds.lMaximum
     minimum = mixerControl.Bounds.lMinimum
     value = 100.0 * (value - minimum) / (maximum - minimum)
     return value
-    
-    
+
+
 def SetMasterVolume(value, deviceId=0):
     # Obtain the volumne control object
     hmixer, volCtrl = GetMixerControl(
-        MIXERLINE_COMPONENTTYPE_DST_SPEAKERS, 
+        MIXERLINE_COMPONENTTYPE_DST_SPEAKERS,
         MIXERCONTROL_CONTROLTYPE_VOLUME,
         deviceId
     )
@@ -210,19 +210,19 @@ def SetMasterVolume(value, deviceId=0):
     elif newValue > maximum:
         newValue = maximum
     SetControlValue(hmixer, volCtrl, newValue)
-    
-    
+
+
 def ChangeMasterVolumeBy(value, deviceId=0):
     # Obtain the volumne control object
     hmixer, mixerControl = GetMixerControl(
-        MIXERLINE_COMPONENTTYPE_DST_SPEAKERS, 
+        MIXERLINE_COMPONENTTYPE_DST_SPEAKERS,
         MIXERCONTROL_CONTROLTYPE_VOLUME,
         deviceId
     )
 
     # Then get the volume
     oldVolume = GetControlValue(hmixer, mixerControl)
-    
+
     maximum = mixerControl.Bounds.lMaximum
     minimum = mixerControl.Bounds.lMinimum
     newVolume = int(round((maximum - minimum) * value / 100.0)) + oldVolume
@@ -231,8 +231,8 @@ def ChangeMasterVolumeBy(value, deviceId=0):
     elif newVolume > maximum:
         newVolume = maximum
     SetControlValue(hmixer, mixerControl, newVolume)
-    
-    
+
+
 def GetMixerDevices():
     """ Returns a list of all mixer device names available on the system."""
     mixcaps = MIXERCAPS()
@@ -245,8 +245,8 @@ def GetMixerDevices():
         # store the name of the device
         result.append(mixcaps.szPname)
     return result
-    
-    
+
+
 def GetDeviceLines(deviceId=0):
     mixercaps = MIXERCAPS()
     mixerline = MIXERLINE()
@@ -259,7 +259,7 @@ def GetDeviceLines(deviceId=0):
 
     if mixerGetDevCaps(hmixer, byref(mixercaps), sizeof(MIXERCAPS)):
         raise SoundMixerException()
-    
+
     for destinationNum in range(mixercaps.cDestinations):
         mixerline.cbStruct = sizeof(MIXERLINE)
         mixerline.dwDestination = destinationNum
@@ -281,11 +281,11 @@ def GetDeviceLines(deviceId=0):
             print "    Source:", sourceNum, mixerline.szName
             for name in GetControls(hmixer, mixerline):
                 print "            Control:", name
-            
-            
+
+
 from Dynamic import (
     MIXERCONTROL_CT_CLASS_MASK,
-    
+
     MIXERCONTROL_CT_CLASS_FADER,
     MIXERCONTROL_CONTROLTYPE_VOLUME,
     MIXERCONTROL_CONTROLTYPE_BASS,
@@ -323,13 +323,13 @@ from Dynamic import (
     MIXERCONTROL_CONTROLTYPE_MICROTIME,
     MIXERCONTROL_CONTROLTYPE_MILLITIME,
     MIXERCONTROL_CT_CLASS_CUSTOM,
-    
+
     MIXERCONTROL_CONTROLF_DISABLED,
     MIXERCONTROL_CONTROLF_MULTIPLE,
     MIXERCONTROL_CONTROLF_UNIFORM,
 )
 
-            
+
 MIXER_CONTROL_CLASSES = {
     MIXERCONTROL_CT_CLASS_FADER: {
         "name": "Fader",
@@ -433,16 +433,16 @@ def GetControls(hmixer, mixerline):
         result.append(
             (
                 mixerControl.szName,
-                controlClass["name"], 
+                controlClass["name"],
                 controlClassTypeName,
                 ", ".join(flagNames)
             )
         )
     return result
-    
+
 
 def GetControlDetails():
     pass
-    
+
 #print GetDeviceLines()
 

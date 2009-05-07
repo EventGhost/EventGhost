@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -25,7 +25,7 @@ import wx
 
 
 class MacroSelectButton(wx.Window):
-    
+
     def __init__(self, parent, label, title, mesg, macro=None):
         if macro is None:
             macroName = ""
@@ -49,19 +49,19 @@ class MacroSelectButton(wx.Window):
 
     def OnSetFocus(self, dummyEvent):
         self.button.SetFocus()
-        
-        
+
+
     def OnSize(self, dummyEvent):
         if self.GetAutoLayout():
             self.Layout()
 
-        
+
     @eg.AsTasklet
     def OnButton(self, dummyEvent):
         result = eg.TreeItemBrowseDialog.GetModalResult(
             self.title,
-            self.mesg, 
-            self.macro, 
+            self.mesg,
+            self.macro,
             (eg.MacroItem,),
             parent=self
         )
@@ -72,8 +72,8 @@ class MacroSelectButton(wx.Window):
             self.ProcessEvent(
                 wx.CommandEvent(wx.EVT_TEXT.evtType[0], self.GetId())
             )
-        
-            
+
+
     def GetValue(self):
         return self.macro
 

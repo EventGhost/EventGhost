@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -29,17 +29,17 @@ from eg.Utils import SetDefault
 
 class ActionInfo(object):
     __slots__ = ["icon"]
-    
+
     def __init__(self, icon):
         self.icon = icon
-            
-    
-                
+
+
+
 class ActionGroup(object):
     __slots__ = [
         "plugin", "name", "description", "icon", "items", "expanded"
     ]
-    
+
     def __init__(self, plugin, name=None, description=None, iconFile=None):
         self.plugin = plugin
         self.expanded = False
@@ -52,8 +52,8 @@ class ActionGroup(object):
                 join(plugin.info.GetPath(), iconFile + ".png")
             )
         self.items = []
-        
-        
+
+
     def AddGroup(self, name, description=None, iconFile=None, identifier=None):
         """
         Create and add a new sub-group.
@@ -62,8 +62,8 @@ class ActionGroup(object):
         if identifier is not None:
             description = name if description is None else description
             defaultText = ClassType(
-                identifier, 
-                (), 
+                identifier,
+                (),
                 {"name": name, "description": description}
             )
             translatedText = getattr(plugin.text, identifier, None)
@@ -76,15 +76,15 @@ class ActionGroup(object):
         group = ActionGroup(plugin, name, description, iconFile)
         self.items.append(group)
         return group
-        
+
 
     def AddAction(
-        self, 
-        actionCls, 
-        clsName=None, 
-        name=None, 
-        description=None, 
-        value=None, 
+        self,
+        actionCls,
+        clsName=None,
+        name=None,
+        description=None,
+        value=None,
         hidden=False
     ):
         if not issubclass(actionCls, eg.ActionBase):
@@ -111,11 +111,11 @@ class ActionGroup(object):
             icon = eg.Icons.ACTION_ICON
         else:
             icon = eg.Icons.ActionSubIcon(icon)
-        
+
         text = self.Translate(plugin, actionCls, actionClsName)
         actionCls = ClassType(
             actionClsName,
-            (actionCls, ), 
+            (actionCls, ),
             dict(
                 name=text.name,
                 description=text.description,
@@ -130,7 +130,7 @@ class ActionGroup(object):
         if not hidden:
             self.items.append(actionCls)
         return actionCls
-    
+
 
     def Translate(self, plugin, actionCls, actionClsName):
         defaultText = actionCls.text
@@ -150,8 +150,8 @@ class ActionGroup(object):
                 translatedText.name if description is None else description
             )
         return translatedText
-    
-    
+
+
     def AddActionsFromList(self, theList, defaultAction=None):
         def Recurse(theList, group):
             for parts in theList:
@@ -168,9 +168,9 @@ class ActionGroup(object):
                     else:
                         iconFile = None
                     newGroup = group.AddGroup(
-                        name, 
-                        description, 
-                        iconFile, 
+                        name,
+                        description,
+                        iconFile,
                         identifier=clsName
                     )
                     Recurse(aList, newGroup)
@@ -184,11 +184,11 @@ class ActionGroup(object):
                     actionCls, clsName, name, description, value = parts
                 else:
                     raise Exception(
-                        "Wrong number of fields in the list", 
+                        "Wrong number of fields in the list",
                         parts
                     )
-                       
+
                 group.AddAction(actionCls, clsName, name, description, value)
-                
+
         Recurse(theList, self)
 

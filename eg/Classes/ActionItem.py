@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -31,14 +31,14 @@ from TreeLink import TreeLink
 PATCHES = {
     "Registry.RegistryChange": "System.RegistryChange",
     "Registry.RegistryQuery": "System.RegistryQuery",
-}    
+}
 
 RENAMED_COLOUR = eg.colour.GetRenamedColor()
 
 
 class ActionItem(TreeItem):
     xmlTag = "Action"
-    
+
     icon = eg.Icons.ACTION_ICON
     executable = None
     compiled = None
@@ -69,7 +69,7 @@ class ActionItem(TreeItem):
             return
         text = text.strip()
         objStr, remainder = text.split('(', 1)
-        objStr = PATCHES.get(objStr, objStr)                
+        objStr = PATCHES.get(objStr, objStr)
         argString, _ = remainder.rsplit(')', 1)
         pluginStr, actionStr = objStr.split(".", 1)
         plugin = getattr(eg.plugins, pluginStr).plugin
@@ -87,35 +87,35 @@ class ActionItem(TreeItem):
             eg.PrintTraceback(msg="Error in action: " + repr(text))
             self.executable = eg.plugins.EventGhost.PythonCommand
             argString = repr(text)
-            
-        self.icon = action.info.icon            
+
+        self.icon = action.info.icon
         self.SetArgumentString(argString)
-    
-    
+
+
     def GetTypeName(self):
         return "%s: %s" % (
-            self.executable.plugin.info.label, 
+            self.executable.plugin.info.label,
             self.executable.name
         )
-    
-    
+
+
     def GetDescription(self):
         return self.executable.description
-    
-    
+
+
     def Configure(self, *args):
         return self.executable.Configure(*args)
-    
-    
+
+
     def GetArgumentString(self):
         return ", ".join([repr(arg) for arg in self.GetArgs()])
-    
-        
+
+
     def SetArgumentString(self, argString):
         try:
             args = eval(
                 'returnArgs(%s)' % argString,
-                eg.globals.__dict__, 
+                eg.globals.__dict__,
                 dict(
                     returnArgs=lambda *x: x,
                     XmlIdLink=lambda id: TreeLink.CreateFromArgument(self, id),
@@ -125,7 +125,7 @@ class ActionItem(TreeItem):
             eg.PrintTraceback()
             args = ()
         self.SetArgs(args)
-            
+
 
     def _Delete(self):
         TreeItem._Delete(self)
@@ -136,11 +136,11 @@ class ActionItem(TreeItem):
                 arg.owner = None
                 arg.target = None
                 del arg
-        
-    
+
+
     def GetArgs(self):
         return self.args
-    
+
 
     def SetArgs(self, args):
         if self.args != args:
@@ -151,8 +151,8 @@ class ActionItem(TreeItem):
                 eg.PrintTraceback(source=self)
                 self.compiled = None
             #self.Refresh()
-        
-        
+
+
     def Refresh(self):
         tree = self.tree
         treeId = self.id
@@ -160,8 +160,8 @@ class ActionItem(TreeItem):
             return
         self.SetAttributes(tree, treeId)
         tree.SetItemText(treeId, self.GetLabel())
-            
-            
+
+
     def SetAttributes(self, tree, treeId):
         if self.name:
             tree.SetItemTextColour(treeId, RENAMED_COLOUR)
@@ -169,8 +169,8 @@ class ActionItem(TreeItem):
         else:
             tree.SetItemTextColour(treeId, None)
             tree.SetItemFont(treeId, tree.normalfont)
-        
-        
+
+
     def GetLabel(self):
         if self.name:
             name = self.name
@@ -197,8 +197,8 @@ class ActionItem(TreeItem):
         # the item wants to be configured after creation
         imFunc = self.executable.Configure.im_func
         return imFunc != eg.ActionBase.Configure.im_func
-    
-    
+
+
     @eg.LogIt
     def ShowHelp(self, parent=None):
         if self.helpDialog:
@@ -207,8 +207,8 @@ class ActionItem(TreeItem):
         action = self.executable
         self.helpDialog = eg.HtmlDialog(
             parent,
-            action.name, 
-            action.description, 
+            action.name,
+            action.description,
             action.info.icon.GetWxIcon(),
             action.plugin.info.GetPath()
         )
@@ -218,8 +218,8 @@ class ActionItem(TreeItem):
         self.helpDialog.Bind(wx.EVT_CLOSE, OnClose)
         self.helpDialog.okButton.Bind(wx.EVT_BUTTON, OnClose)
         self.helpDialog.Show()
-        
-    
+
+
     def Execute(self):
         if not self.isEnabled:
             return
@@ -258,7 +258,7 @@ class ActionItem(TreeItem):
         if cls == eg.ActionItem:
             return HINT_MOVE_BEFORE_OR_AFTER
         if (
-            cls == eg.PluginItem 
+            cls == eg.PluginItem
             and self.parent == self.document.autostartMacro
         ):
             return HINT_MOVE_BEFORE_OR_AFTER

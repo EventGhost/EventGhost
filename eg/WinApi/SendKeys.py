@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -39,11 +39,11 @@ VK_CODES = (
     ('MButton', 4),
     ('XButton1', 5),
     ('XButton2', 6),
-    
+
     ('CapsLock', 20),
     ('NumLock', 144),
     ('ScrollLock', 145),
-    
+
     ('Cancel', 3),
     ('Backspace', 8),
     ('Tabulator', 9),
@@ -151,7 +151,7 @@ VK_CODES = (
     ('F22', 133),
     ('F23', 134),
     ('F24', 135),
-    
+
     ('BrowserBack', 166),
     ('BrowserForward', 167),
     ('BrowserRefresh', 168),
@@ -170,7 +170,7 @@ VK_CODES = (
     ('LaunchMediaSelect', 181),
     ('LaunchApp1', 182),
     ('LaunchApp2', 183),
-    
+
     ('OemPlus', 187),
     ('OemComma', 188),
     ('OemMinus', 189),
@@ -217,7 +217,7 @@ VK_CODES = (
     ('Noname', 252),
     ('PA1', 253),
     ('OemClear', 254),
-    
+
     ('U00', 0),
     ('U07', 7),
     #('Reserved_0A', 10), we use this code as AltGr
@@ -282,20 +282,20 @@ VK_CODES = (
     ('UE0', 224),
     ('UE8', 232),
     ('UFF', 255),
-    
+
     ('Return', 13),
 )
 
 import eg
 from eg.WinApi.Dynamic import (
     SendInput, OpenProcess, CloseHandle, WaitForInputIdle, GetKeyboardState,
-    SetTimer, GetCurrentThreadId, GetWindowThreadProcessId, SetKeyboardState, 
+    SetTimer, GetCurrentThreadId, GetWindowThreadProcessId, SetKeyboardState,
     INPUT, INPUT_KEYBOARD, KEYEVENTF_KEYUP,
     GetGUIThreadInfo, GUITHREADINFO, PROCESS_QUERY_INFORMATION, VK_SHIFT,
     VK_LSHIFT, VK_CONTROL, VK_LCONTROL, VK_MENU,
     WM_TIMER, WM_SYSKEYDOWN, WM_KEYDOWN, WM_SYSKEYUP, WM_KEYUP, DWORD,
-    AttachThreadInput, VkKeyScanW, MapVirtualKey, GetMessage, 
-    PostMessage, MSG, byref, sizeof, pointer, c_ubyte, 
+    AttachThreadInput, VkKeyScanW, MapVirtualKey, GetMessage,
+    PostMessage, MSG, byref, sizeof, pointer, c_ubyte,
     GetFocus, GetForegroundWindow,
 )
 import wx
@@ -308,15 +308,15 @@ del SetTimer.argtypes
 PBYTE256 = c_ubyte * 256
 
 VK_KEYS = {
-    'BACK': 0x08, 
-    'TAB': 0x09, 
+    'BACK': 0x08,
+    'TAB': 0x09,
     'ENTER': 0x0D,
     'CONTROL': 0x11,
     'CAPITAL': 0x14,
-    'ESC': 0x1B, 
+    'ESC': 0x1B,
     'SPC': 0x20,
-    'PGUP': 0x21, 
-    'PGDOWN': 0x22, 
+    'PGUP': 0x21,
+    'PGDOWN': 0x22,
     'INS': 0x012D,
     'DEL': 0x012E,
     'WIN': 0x015B,
@@ -324,7 +324,7 @@ VK_KEYS = {
 
 for keyword, code in VK_CODES:
     VK_KEYS[keyword.upper()] = code
-    
+
 
 def ParseSingleChar(char):
     """
@@ -345,8 +345,8 @@ def ParseSingleChar(char):
         data.append(VK_LSHIFT)
     data.append(vkCode)
     return data
-        
-        
+
+
 def ParseText(text):
     """
     Translates a string to a key sequence.
@@ -380,12 +380,12 @@ def ParseText(text):
             data.append(ParseSingleChar(char))
     return data
 
-        
-        
+
+
 class SendKeysParser:
-    
+
     @eg.LogIt
-    def __init__(self):        
+    def __init__(self):
         self.dummyWindow = wx.Frame(None, -1, "Dummy Window")
         self.dummyHwnd = self.dummyWindow.GetHandle()
         self.msg = MSG()
@@ -397,7 +397,7 @@ class SendKeysParser:
         self.guiTreadInfo = GUITHREADINFO()
         self.guiTreadInfo.cbSize = sizeof(GUITHREADINFO)
 
-        
+
     def __call__(self, hwnd, keystrokeString, useAlternateMethod=False):
         needGetFocus = False
         sendToFront = False
@@ -414,7 +414,7 @@ class SendKeysParser:
         # If not, attach our thread's 'input' to the foreground thread's
         if threadID != ourThreadID:
             AttachThreadInput(threadID, ourThreadID, True)
-            
+
         if needGetFocus:
             hwnd = GetFocus()
         if not sendToFront:
@@ -425,14 +425,14 @@ class SendKeysParser:
         if not hwnd:
             hwnd = None
         self.procHandle = OpenProcess(
-                PROCESS_QUERY_INFORMATION, 
-                0, 
+                PROCESS_QUERY_INFORMATION,
+                0,
                 processID
             )
         #self.WaitForInputProcessed()
         oldKeyboardState = PBYTE256()
         GetKeyboardState(byref(oldKeyboardState))
-        
+
         keyData = ParseText(keystrokeString)
         if sendToFront and not useAlternateMethod:
             self.SendRawCodes1(keyData)
@@ -446,7 +446,7 @@ class SendKeysParser:
         if self.procHandle:
             CloseHandle(self.procHandle)
 
-        
+
     def WaitForInputProcessed(self):
         if self.procHandle:
             WaitForInputIdle(self.procHandle, 100)
@@ -456,85 +456,84 @@ class SendKeysParser:
             while self.msg.message != WM_TIMER:
                 GetMessage(byref(self.msg), self.dummyHwnd, 0, 0)
         eg.CallWait(DoIt)
-            
- 
+
+
     def SendRawCodes1(self, keyData):
         """
-        Uses the SendInput-API function to send the virtual keycode. 
+        Uses the SendInput-API function to send the virtual keycode.
         Can only send to the frontmost window.
         """
         sendInputStruct = self.sendInputStruct
         sendInputStructPointer = pointer(sendInputStruct)
         sendInputStructSize = sizeof(sendInputStruct)
         keyboardStruct = sendInputStruct.ki
-        for block in keyData:        
+        for block in keyData:
             keyboardStruct.dwFlags = 0
             for virtualKey in block:
                 keyboardStruct.wVk = virtualKey & 0xFF
-                SendInput(1, sendInputStructPointer, sendInputStructSize)   
+                SendInput(1, sendInputStructPointer, sendInputStructSize)
                 self.WaitForInputProcessed()
             keyboardStruct.dwFlags = KEYEVENTF_KEYUP
             for virtualKey in reversed(block):
                 keyboardStruct.wVk = virtualKey & 0xFF
-                SendInput(1, sendInputStructPointer, sendInputStructSize)    
+                SendInput(1, sendInputStructPointer, sendInputStructSize)
                 self.WaitForInputProcessed()
-        
-        
+
+
     def SendRawCodes2(self, keyData, hwnd):
         """
-        Uses PostMessage and SetKeyboardState to emulate the the virtual 
+        Uses PostMessage and SetKeyboardState to emulate the the virtual
         keycode. Can send to a specified window handle.
         """
         keyboardStateBuffer = self.keyboardStateBuffer
-        for block in keyData:        
+        for block in keyData:
             for virtualKey in block:
                 keyCode = virtualKey & 0xFF
                 highBits = virtualKey & 0xFF00
                 lparam = ((MapVirtualKey(keyCode, 0) | highBits) << 16) | 1
-                
-                keyboardStateBuffer[keyCode] |= 128 
-                
+
+                keyboardStateBuffer[keyCode] |= 128
+
                 if keyCode == VK_LSHIFT:
                     keyboardStateBuffer[VK_SHIFT] |= 128
                 #elif keyCode == VK_MENU:
                 #    self.isSysKey = True
                 elif keyCode == VK_CONTROL:
                     keyboardStateBuffer[VK_LCONTROL] |= 128
-                
+
                 if self.isSysKey:
                     mesg = WM_SYSKEYDOWN
                     lparam |= 0x20000000
                 else:
                     mesg = WM_KEYDOWN
-                    
+
                 SetKeyboardState(byref(keyboardStateBuffer))
                 PostMessage(hwnd, mesg, keyCode, lparam)
                 self.WaitForInputProcessed()
-                
+
             for virtualKey in reversed(block):
                 keyCode = virtualKey & 0xFF
                 highBits = virtualKey & 0xFF00
                 lparam = (
-                    ((MapVirtualKey(keyCode, 0) | highBits) << 16) 
+                    ((MapVirtualKey(keyCode, 0) | highBits) << 16)
                     | 0xC0000001
                 )
                 keyboardStateBuffer[keyCode] &= ~128
-                
+
                 if keyCode == VK_LSHIFT:
                     keyboardStateBuffer[VK_SHIFT] &= ~128
                 #elif keyCode == VK_MENU:
                 #    self.isSysKey = False
                 elif keyCode == VK_CONTROL:
                     keyboardStateBuffer[VK_LCONTROL] &= ~128
-                
+
                 if self.isSysKey:
                     mesg = WM_SYSKEYUP
                     lparam |= 0x20000000
                 else:
                     mesg = WM_KEYUP
-                    
+
                 SetKeyboardState(byref(keyboardStateBuffer))
                 PostMessage(hwnd, mesg, keyCode, lparam)
-                self.WaitForInputProcessed()        
+                self.WaitForInputProcessed()
 
-        

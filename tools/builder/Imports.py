@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2008 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -23,7 +23,7 @@
 """
 Creates a file that would import all used modules.
 
-This way we trick py2exe to include all standard library files and some more 
+This way we trick py2exe to include all standard library files and some more
 packages and modules.
 """
 
@@ -58,16 +58,16 @@ SITE_PACKAGES_PATH = join(PYTHON_DIR, "Lib", "site-packages")
 
 
 class DummyStdOut: #IGNORE:W0232 class has no __init__ method
-    """ 
-    Just a dummy stdout implementation, that suppresses all output. 
     """
-    
+    Just a dummy stdout implementation, that suppresses all output.
+    """
+
     def write(self, dummyData): #IGNORE:C0103
         """ A do-nothing write. """
         pass
 
 
-    
+
 def TestImport(moduleName, includeDeprecated=False):
     """
     Test if the given module can be imported without error.
@@ -90,13 +90,13 @@ def TestImport(moduleName, includeDeprecated=False):
     finally:
         sys.stdout = oldStdOut
         sys.stderr = oldStdErr
-    
-    
+
+
 def ShouldBeIgnored(moduleName):
     """
     Return True if the supplied module should be ignored, because it is a
     module or submodule in MODULES_TO_IGNORE.
-    """ 
+    """
     moduleParts = moduleName.split(".")
     modulePartsLength = len(moduleParts)
     for module in MODULES_TO_IGNORE:
@@ -107,8 +107,8 @@ def ShouldBeIgnored(moduleName):
         if moduleParts[:ignorePartsLength] == ignoreParts:
             return True
     return False
-    
-    
+
+
 def FindModulesInPath(path, prefix="", includeDeprecated=False):
     """
     Find modules and packages for a given filesystem path.
@@ -172,8 +172,8 @@ def ReadGlobalModuleIndex():
         modules.append(parts[0])
     inFile.close()
     return modules, badModules
-    
-    
+
+
 def ReadPth(path):
     """
     Read a .PTH file and return the pathes inside as a list
@@ -188,8 +188,8 @@ def ReadPth(path):
 
 
 def GetPydFiles(path):
-    """ 
-    Returns a list of all .pyd modules in supplied path. 
+    """
+    Returns a list of all .pyd modules in supplied path.
     """
     files = []
     for filepath in os.listdir(path):
@@ -220,17 +220,17 @@ def GetPackageModules(package):
         for path in pathes:
             moduleList.extend(FindModulesInPath(path, package))
     return moduleList
-    
-    
-def DoTask():    
+
+
+def DoTask():
     """
     Starts the actual work.
     """
     MODULES_TO_IGNORE.extend(builder.EXCLUDED_MODULES)
-    
+
     globalModuleIndex, badModules = ReadGlobalModuleIndex()
     MODULES_TO_IGNORE.extend(badModules)
-    
+
     stdLibModules = (
         FindModulesInPath(join(PYTHON_DIR, "DLLs"), includeDeprecated=True)
         + FindModulesInPath(join(PYTHON_DIR, "lib"), includeDeprecated=True)
@@ -250,13 +250,13 @@ def DoTask():
         for module in notFoundModules:
             print "       ", module
 
-        
-    
+
+
     #print "Modules found in scan but not in global module index:"
     #for module in stdLibModules:
     #    if module not in globalModuleIndex:
     #        print "   ", module
-    
+
     outfile = open(join(builder.PYVERSION_DIR, "imports.py"), "wt")
     outfile.write(HEADER)
     for module in stdLibModules:
@@ -267,4 +267,4 @@ def DoTask():
         for module in GetPackageModules(package):
             outfile.write("import %s\n" % module)
     outfile.close()
-    
+

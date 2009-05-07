@@ -1,16 +1,16 @@
 # This file is part of EventGhost.
 # Copyright (C) 2008 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -43,7 +43,7 @@ from eg.WinApi.Dynamic import (
 import ctypes
 memcpy = ctypes.cdll.msvcrt.memcpy
 
-    
+
 def SafeOpenClipboard():
     # some programs seem to poll the clipboard and therefore OpenClipboard
     # returns FALSE. To increase our chances to get the clipboard lock, we
@@ -55,13 +55,13 @@ def SafeOpenClipboard():
             return False
         sleep(0.01)
     return True
-    
+
 
 def GetClipboardText():
     if not SafeOpenClipboard():
         return
     text = u""
-        
+
     try:
         hClipMem = GetClipboardData(CF_UNICODETEXT)
         if hClipMem:
@@ -75,18 +75,18 @@ def GetClipboardText():
                 text = text.decode(eg.systemEncoding)
     finally:
         CloseClipboard()
-        
+
     # replace CR+LF with \n
     text = text.replace("\r\n", "\n")
     return text
 
 
 def SetClipboardText(text):
-    charBuffer = create_unicode_buffer(text)      
+    charBuffer = create_unicode_buffer(text)
     charBufferSize = sizeof(charBuffer)
     hGlobalMem = GlobalAlloc(GHND, charBufferSize)
     lpGlobalMem = GlobalLock(hGlobalMem)
-    memcpy(lpGlobalMem, charBuffer, charBufferSize) 
+    memcpy(lpGlobalMem, charBuffer, charBufferSize)
     GlobalUnlock(hGlobalMem)
     if not SafeOpenClipboard():
         return
@@ -96,4 +96,3 @@ def SetClipboardText(text):
     finally:
         CloseClipboard()
 
-        
