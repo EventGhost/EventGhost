@@ -32,18 +32,6 @@ class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
         self.Show()
 
 
-    @eg.LogItWithReturn
-    def SetResult(self, *args):
-        if self.__isModal:
-            self.__lastEventId = False
-            self.result = args
-            self.EndModal(wx.ID_CANCEL)
-        else:
-            if self.__lastEventId == wx.ID_OK:
-                self.__done = True
-            self.__resultsChannel.send((self.__lastEventId, args))
-
-
     def Configure(self, *args):
         raise NotImplementedError
 
@@ -116,7 +104,7 @@ class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
 
     @eg.LogItWithReturn
     def DispatchEvent(self, event, eventId):
-        event.Skip()
+        #event.Skip()
         self.__lastEventId = eventId
         if self.__isModal:
             if eventId == wx.ID_CANCEL:
@@ -149,6 +137,18 @@ class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
             if not self.setupFinished:
                 self.FinishSetup()
             return self.__processingChannel.receive()
+
+
+    @eg.LogItWithReturn
+    def SetResult(self, *args):
+        if self.__isModal:
+            self.__lastEventId = False
+            self.result = args
+            self.EndModal(wx.ID_CANCEL)
+        else:
+            if self.__lastEventId == wx.ID_OK:
+                self.__done = True
+            self.__resultsChannel.send((self.__lastEventId, args))
 
 
     @eg.LogItWithReturn
