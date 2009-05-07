@@ -245,7 +245,9 @@ class HiddenAction:
 
 
 def MessageBox(message, caption=eg.APP_NAME, style=wx.OK, parent=None):
-    dialog = eg.MessageDialog(parent, message, caption, style|wx.STAY_ON_TOP)
+    if parent is None:
+        style |= wx.STAY_ON_TOP
+    dialog = eg.MessageDialog(parent, message, caption, style)
     result = dialog.ShowModal()
     dialog.Destroy()
     return result
