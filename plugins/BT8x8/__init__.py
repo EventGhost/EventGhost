@@ -55,14 +55,6 @@ def _GetModulePath():
     return os.path.abspath(os.path.split(__file__)[0])
 
 
-class Error(Exception):
-    """Base exception for the module."""
-
-
-class HardwareError(Error):
-    """Problem accessing the hardware"""
-
-
 class BtRemote(eg.PluginClass):
     """Plugin for generating events from a bt8x8 card"""
     # There are many different vendor/device combinations.
@@ -148,7 +140,7 @@ class BtRemote(eg.PluginClass):
         """Must be called successfully before ReadKey."""
         self._driver = self._regspydll.GetDriver()
         if not self._driver:
-            raise HardwareError("Couldn't open the bt8x8 driver")
+            raise self.Exception("Couldn't open the bt8x8 driver")
         for vendorId, deviceId in self._DEVICES:
             card = self._regspydll.OpenCard(
                     self._driver, vendorId, deviceId, 0)
@@ -159,7 +151,7 @@ class BtRemote(eg.PluginClass):
         else:
             self._regspydll.DeleteDriver(self._driver)
             self._driver = None
-            raise HardwareError("Unable to find open a bt8x8 card.")
+            raise self.Exception("Unable to find open a bt8x8 card.")
 
     def _ReadKey(self):
         """Read a key off the remote.
