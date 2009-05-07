@@ -124,7 +124,8 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
             | Apply button => :const:`wx.ID_APPLY`
             | Test button => :const:`eg.ID_TEST`
         """
-        return self.dialog.Affirmed()
+        self.resultCode = self.dialog.Affirmed()
+        return self.resultCode
 
 
     def SetResult(self, *args):
