@@ -49,6 +49,7 @@ class UIR(eg.RawReceiverPlugin):
     lastReceivedTime = 0
     
     def __init__(self):
+        eg.RawReceiverPlugin.__init__(self)
         self.AddEvents()
         
         
