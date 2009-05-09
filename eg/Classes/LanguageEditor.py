@@ -25,6 +25,8 @@ import wx
 import types
 import os
 import codecs
+from os.path import join
+
 
 class Config(eg.PersistentData):
     position = (50, 50)
@@ -51,7 +53,7 @@ def LoadModules():
     #import MainFrame
     # pylint: enable-msg=W0104
 
-    for plugin in os.listdir("plugins"):
+    for plugin in os.listdir(eg.PLUGIN_DIR):
         if not plugin.startswith("."):
             eg.PluginInfo.Open(plugin, plugin, ()).Close()
 
@@ -95,11 +97,11 @@ class LanguageEditor(wx.Frame):
 
         imageList = wx.ImageList(16, 16)
         for pathName in (
-            "plugins//EventGhost//icons//DisableItem.png",
-            "plugins//EventGhost//icons//EnableItem.png",
-            "images//folder.png",
-            "images//root.png",
-            "images//new.png",
+            join(eg.PLUGIN_DIR, "EventGhost", "icons", "DisableItem.png"),
+            join(eg.PLUGIN_DIR, "EventGhost", "icons", "EnableItem.png"),
+            join(eg.IMAGES_DIR, "folder.png"),
+            join(eg.IMAGES_DIR, "root.png"),
+            join(eg.IMAGES_DIR, "new.png"),
         ):
             imageList.Add(
                 wx.BitmapFromImage(wx.Image(pathName, wx.BITMAP_TYPE_PNG))
@@ -206,7 +208,9 @@ class LanguageEditor(wx.Frame):
         if self.CheckNeedsSave():
             return
         dialog = wx.SingleChoiceDialog(
-            self, 'Choose a language to edit', 'Choose a language',
+            self,
+            'Choose a language to edit',
+            'Choose a language',
             self.langNames,
             wx.CHOICEDLG_STYLE
         )
@@ -224,8 +228,8 @@ class LanguageEditor(wx.Frame):
     def OnCmdAbout(dummyEvent):
         info = wx.AboutDialogInfo()
         info.Name = "EventGhost Language Editor"
-        info.Version = "1.0.1"
-        info.Copyright = "(C) 2006 EventGhost Project"
+        info.Version = "1.0.2"
+        info.Copyright = "(C) 2006-2009 EventGhost Project"
         info.Developers = ["Bitmonster", ]
         info.WebSite = ("http://www.eventghost.org", "EventGhost home page")
         wx.AboutBox(info)
@@ -406,7 +410,7 @@ class LanguageEditor(wx.Frame):
             return "".join(res)
 
         outFile = codecs.open(
-            os.path.join(eg.LANGUAGES_DIR, "%s.py" % Config.language),
+            join(eg.LANGUAGES_DIR, "%s.py" % Config.language),
             "wt",
             "utf_8"
         )
