@@ -22,21 +22,36 @@
 
 import eg
 import wx
+import sys
 import time
 import threading
-from eg.WinApi.Dynamic import (
-    WM_QUERYENDSESSION,
-    WM_ENDSESSION,
-    SetProcessShutdownParameters,
-    ExitProcess,
-)
+from eg.WinApi.Dynamic import SetProcessShutdownParameters, ExitProcess
 
+IS_VISTA = sys.getwindowsversion()[0] > 5
 
+if IS_VISTA:
+    from eg.WinApi.Dynamic import _user32, BOOL, HWND, LPCWSTR
+    ShutdownBlockReasonCreate = _user32.ShutdownBlockReasonCreate
+    ShutdownBlockReasonCreate.restype = BOOL
+    ShutdownBlockReasonCreate.argtypes = [HWND, LPCWSTR]
+    ShutdownBlockReasonDestroy = _user32.ShutdownBlockReasonDestroy
+    ShutdownBlockReasonDestroy.restype = BOOL
+    ShutdownBlockReasonDestroy.argtypes = [HWND]
+else:
+    ShutdownBlockReasonCreate = lambda hwnd, msg: None
+    ShutdownBlockReasonDestroy = lambda hwnd: None
+    
+    
 class App(wx.App):
 
     def __init__(self):
         self.onExitFuncs = []
         wx.App.__init__(self, 0)
+        self.shouldVeto = False
+        self.firstQuery = True
+        self.endSession = False
+        self.frame = wx.Frame(None)
+        self.hwnd = self.frame.GetHandle()
 
 
     def OnInit(self):
@@ -47,48 +62,77 @@ class App(wx.App):
         # shutdown last (hopefully)
         SetProcessShutdownParameters(0x0100, 0)
 
-        # We don't use wxWindows EVT_QUERY_END_SESSION handling, because we
-        # would get an event for every frame the application has and that
-        # would make it hard to distinguish between individual log-off
-        # requests. So we simply disable the built-in handling by assigning
-        # a dummy function and generate our own events in the hidden
-        # MessageReceiver window.
-        self.Bind(wx.EVT_QUERY_END_SESSION, eg.DummyFunc)
-        self.Bind(wx.EVT_END_SESSION, eg.DummyFunc)
-        eg.messageReceiver.AddHandler(
-            WM_QUERYENDSESSION,
-            self.OnQueryEndSession
-        )
-        eg.messageReceiver.AddHandler(
-            WM_ENDSESSION,
-            self.OnEndSession
-        )
+        if IS_VISTA:
+            self.Bind(wx.EVT_QUERY_END_SESSION, self.OnQueryEndSessionVista)
+        else:
+            self.Bind(wx.EVT_QUERY_END_SESSION, self.OnQueryEndSessionXp)
+        self.Bind(wx.EVT_END_SESSION, self.OnEndSession)
+            
         return True
 
 
     @eg.LogItWithReturn
-    def OnQueryEndSession(self, hwnd, msg, wparam, lparam):
-        """System is about to be logged off"""
-        # This method gets called from MessageReceiver on a
-        # WM_QUERYENDSESSION win32 message.
+    def OnQueryEndSessionXp(self, event):
+        if not self.firstQuery:
+            return
+        self.firstQuery = False
         if eg.document.CheckFileNeedsSave() == wx.ID_CANCEL:
-            eg.PrintDebugNotice("User canceled shutdown in OnQueryEndSession")
-            return 0
-        return 1
-
-
+            event.Veto()
+        wx.CallAfter(self.Reset)
+            
+    
     @eg.LogItWithReturn
-    def OnEndSession(self, hwnd, msg, wparam, lparam):
-        """System is logging off"""
+    def OnQueryEndSessionVista(self, event):
+        if self.shouldVeto:
+            event.Veto()
+            return
+        if not self.firstQuery:
+            return
+        if eg.document.IsDirty():
+            self.firstQuery = False
+            self.shouldVeto = True
+            event.Veto(True)
+            ShutdownBlockReasonCreate(self.hwnd, "Unsaved data")
+            res = eg.document.CheckFileNeedsSave()
+            if res == wx.ID_YES:
+                # file was saved, reset everything
+                event.Veto(False)
+                self.Reset()
+                return
+            if res == wx.ID_NO:
+                # file was not saved
+                # if called before shutdownUI, we get a OnEndSession
+                self.shouldVeto = False
+                ShutdownBlockReasonDestroy(self.hwnd)
+                wx.CallAfter(self.OnEndSession, None)
+                return
+            if res == wx.ID_CANCEL:
+                self.shouldVeto = True
+                wx.CallAfter(self.Reset)
+                return
+                
+                
+    @eg.LogItWithReturn
+    def Reset(self):
+        self.shouldVeto = False
+        self.firstQuery = True
+        ShutdownBlockReasonDestroy(self.hwnd)
+        
+        
+    
+    @eg.LogItWithReturn
+    def OnEndSession(self, dummyEvent):
+        if self.endSession:
+            return
+        self.endSession = True
         egEvent = eg.eventThread.TriggerEvent("OnEndSession")
         while not egEvent.isEnded:
-            time.sleep(0.01)
-        eg.CallWait(eg.document.Close)
-        eg.CallWait(eg.taskBarIcon.Close)
-        eg.CallWait(self.OnExit)
-        return 0
+            self.Yield()
+        eg.document.Close()
+        eg.taskBarIcon.Close()
+        self.OnExit()
 
-
+    
     @eg.LogIt
     def Exit(self, dummyEvent=None):
         if eg.document.CheckFileNeedsSave() == wx.ID_CANCEL:
