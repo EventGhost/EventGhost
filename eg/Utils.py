@@ -28,6 +28,7 @@ __all__ = ["Bunch", "NotificationHandler", "LogIt", "LogItWithReturn",
 
 import eg
 import wx
+import sys
 import threading
 import time
 import inspect
@@ -331,12 +332,42 @@ HTML_DOC_WRITER = MyHtmlDocWriter()
 def DecodeReST(source):
     #print repr(source)
     res = ReSTPublishParts(
-        source=source,
+        source=PrepareDocstring(source),
         writer=HTML_DOC_WRITER,
         settings_overrides={"stylesheet_path": ""}
     )
     #print repr(res)
     return res['body']
+
+
+def PrepareDocstring(s):
+    """
+    Convert a docstring into lines of parseable reST.  Return it as a list of
+    lines usable for inserting into a docutils ViewList (used as argument
+    of nested_parse().)  An empty line is added to act as a separator between
+    this docstring and following content.
+    """
+    lines = s.expandtabs().splitlines()
+    # Find minimum indentation of any non-blank lines after first line.
+    margin = sys.maxint
+    for line in lines[1:]:
+        content = len(line.lstrip())
+        if content:
+            indent = len(line) - content
+            margin = min(margin, indent)
+    # Remove indentation.
+    if lines:
+        lines[0] = lines[0].lstrip()
+    if margin < sys.maxint:
+        for i in range(1, len(lines)):
+            lines[i] = lines[i][margin:]
+    # Remove any leading blank lines.
+    while lines and not lines[0]:
+        lines.pop(0)
+    # make sure there is an empty line at the end
+    if lines and lines[-1]:
+        lines.append('')
+    return "\n".join(lines)
 
 
 def GetFirstParagraph(text):
@@ -349,7 +380,7 @@ def GetFirstParagraph(text):
     text = text.lstrip()
     pos = text.find("<rst>")
     if pos != -1:
-        text = text[pos+5:].lstrip()
+        text = text[pos+5:]
         text = DecodeReST(text)
         start = text.find("<p>")
         end = text.find("</p>")
