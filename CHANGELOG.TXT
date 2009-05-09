@@ -1,3 +1,10 @@
+- Added Apple iPhone iPod Touch EventPhone plugin from Melloware.
+- Added KIRA plugin from ldobson.
+- Added new DVBViewer plugin from Prinz.
+- EventGhost now uses `Stackless Python <http://www.stackless.com>`_
+- Updated wxPython to 2.8.10.1 pre-release.
+- Many bugs fixed.
+
 **0.3.7.r851 (02/20/2009)**
 
 - Event items now have a configuration dialog, that is somewhat similar to
