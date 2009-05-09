@@ -49,7 +49,7 @@ class UpdateVersionFile(TaskBase):
         versionFilePath = join(builder.SOURCE_DIR, "eg/Classes/Version.py")
         mod = imp.load_source("Version", versionFilePath)
         builder.APP_VERSION = mod.Version.base + (".r%s" % svnRevision)
-
+        builder.APP_NUMERICAL_VERSION = mod.Version.base + ".%s" % svnRevision
 
 
 class UpdateChangeLog(TaskBase):
