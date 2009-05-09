@@ -88,7 +88,7 @@ class MessageReceiver(eg.ThreadWorker):
 
     def MyWndProc(self, hwnd, mesg, wParam, lParam):
         if mesg == WM_SIZE:
-            print "MessageReceiver sized"
+            #print "MessageReceiver sized"
             return 0
         if not mesg in self.messageProcs:
             return DefWindowProc(hwnd, mesg, wParam, lParam)
