@@ -20,40 +20,43 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+"""<rst>
+    Hardware plugin for the `Universal Infrared Receiver V1 (UIR)`__ and the
+    `Evation.com Irman`__ device.
+    
+    |
+    
+    .. image:: irman_front.jpg
+       :align: center
+       
+    __ http://fly.cc.fer.hr/~mozgic/UIR/
+    __ http://www.evation.com/irman/index.html
+"""
+
 import eg
 
 eg.RegisterPlugin(
     name = "UIR / Irman",
     author = "Bitmonster",
-    version = "1.1." + "$LastChangedRevision$".split()[1],
+    version = "1.2." + "$LastChangedRevision$".split()[1],
     kind = "remote",
     canMultiLoad = True,
-    description = (
-        'Hardware plugin for the <a href="http://fly.cc.fer.hr/~mozgic/UIR/">'
-        'Universal Infrared Receiver V1 (UIR)</a> '
-        'and the <a href="http://www.evation.com/irman/index.html">'
-        'Evation.com Irman</a> '
-        'device.'
-        '\n\n<p><center><img src="irman_front.jpg" alt="Irman" /></a></center>'
-    ),
+    description = __doc__,
 )
 
 
 import wx
 import time
-import threading
-import win32event
 
 
 class UIR(eg.RawReceiverPlugin):
-    lastReceivedTime = 0
     
     def __init__(self):
         eg.RawReceiverPlugin.__init__(self)
         self.AddEvents()
         
         
-    def __start__(self, port, byteCount=6, initSequence=True):
+    def __start__(self, port, byteCount=6, init=True):
         self.byteCount = byteCount
         self.serialThread = serialThread = eg.SerialThread()
         serialThread.Open(port, 9600)
@@ -62,7 +65,7 @@ class UIR(eg.RawReceiverPlugin):
         serialThread.Start()
         time.sleep(0.05)
         serialThread.Flush()
-        if initSequence:
+        if init:
             serialThread.Write("I")
             time.sleep(0.05)
             serialThread.Write("R")
@@ -83,23 +86,19 @@ class UIR(eg.RawReceiverPlugin):
         self.TriggerEvent("".join("%02X" % ord(byte) for byte in data))
             
         
-    def Configure(self, port=0, byteCount=6, initSequence=True):
+    def Configure(self, port=0, byteCount=6, init=True):
         panel = eg.ConfigPanel()
         portCtrl = panel.SerialPortChoice(port)
         byteCountCtrl = panel.SpinIntCtrl(byteCount, min=1, max=32)
-        initSequenceCtrl = panel.CheckBox(
-            initSequence, 
-            "Initialise device on start"
-        )
+        initCtrl = panel.CheckBox(init, "Initialize device on start")
         panel.AddLine('COM Port:', portCtrl)
         panel.AddLine('Event Byte Count:', byteCountCtrl, '(default=6)')
-        panel.AddLine(initSequenceCtrl)
-        
+        panel.AddLine(initCtrl)
         while panel.Affirmed():
             panel.SetResult(
                 portCtrl.GetValue(), 
                 byteCountCtrl.GetValue(), 
-                initSequenceCtrl.GetValue()
+                initCtrl.GetValue()
             )
                     
         

@@ -26,8 +26,8 @@ eg.RegisterPlugin(
     name = "EventGhost",
     author = "Bitmonster",
     description = (
-        "Here you find actions that mainly control the core "
-        "functionality of EventGhost."
+        "Here you find actions that mainly control the core functionality of"
+        "EventGhost."
     ),
     kind = "core",
     version = "1.0." + "$LastChangedRevision$".split()[1],
@@ -196,12 +196,11 @@ class DisableItem(EnableItem):
 
 class EnableExclusive(EnableItem):
     name = "Exclusive enable a folder/macro"
-    description = (
-        "This will enable a specified folder or macro in your "
-        "configuration, but also disable all other folders and "
-        "macros that are siblings on the same level in this "
-        "sub-branch of the tree."
-    )
+    description = """
+        This will enable a specified folder or macro in your configuration,
+        but also disable all other folders and macros that are siblings on the
+        same level in this sub-branch of the tree.
+    """
     iconFile = "icons/EnableExclusive"
     class text:
         label = "Enable exclusive: %s"
@@ -262,10 +261,10 @@ class Wait(eg.ActionBase):
 
 class StopProcessing(eg.ActionBase):
     name = "Stop processing this event"
-    description = (
-        "After this action, EventGhost will no further search for matching "
-        "macros of the currently processed event."
-    )
+    description = """
+        After this action, EventGhost will no further search for matching
+        macros of the currently processed event.
+    """
     iconFile = 'icons/StopProcessing'
 
     def __call__(self):
@@ -275,9 +274,10 @@ class StopProcessing(eg.ActionBase):
 
 class JumpIfLongPress(eg.ActionBase):
     name = "Jump if long press"
-    description = \
-        "Jumps to another macro, if the button on the remote is "\
-        "held down longer than the configured time."
+    description = """
+        Jumps to another macro, if the button on the remote is held down longer
+        than the configured time.
+    """
     iconFile = "icons/LongPress"
     class text:
         label = "If button is held down %s sec, go to: %s"
@@ -337,8 +337,7 @@ class JumpIfLongPress(eg.ActionBase):
 class AutoRepeat(eg.ActionBase):
     name = "Autorepeat current macro"
     description = \
-        "Makes the macro where this command is added to an "\
-        "autorepeating macro."
+        "Makes the macro where this command is added to an autorepeating macro."
     iconFile = "icons/AutoRepeat"
     class text:
         seconds = "seconds"
@@ -412,8 +411,7 @@ class AutoRepeat(eg.ActionBase):
 class TriggerEvent(eg.ActionBase):
     name = "Trigger Event"
     description = \
-        "Causes an event to be generated (optionally after some "\
-        "time)."
+        "Causes an event to be generated (optionally after some time)."
     iconFile = "icons/Plugin"
     class text:
         labelWithTime = 'Trigger event "%s" after %.2f seconds'
@@ -465,23 +463,22 @@ class TriggerEvent(eg.ActionBase):
 
 class FlushEvents(eg.ActionBase):
     name = "Clear Pending Events"
-    description = (
-        "The \"Clear Pending Events\" clears all unprocessed events which are "
-        "currently in the processing queue."
-        "\n\n<p>"
-        "It is useful in case a macro has just some lengthy processing, and "
-        "events have queued up during that processing which should not be "
-        "processed.<p>"
-        "<b>Example:</b> You have a lengthy \"start system\" macro "
-        "which takes about 90 seconds to process. The end user will "
-        "not see anything until the projector lights up, which "
-        "takes 60s. It is very likely that he presses the remote "
-        "button which starts the macro for several times in a row, "
-        "causing all of the lengthy processing to start over and "
-        "over again. If you place a \"Clear Pending Events\" command at the "
-        "end of your macro, all the excessive remote key presses "
-        "will be discarded."
-    )
+    description = """<rst>
+        The "Clear Pending Events" clears all unprocessed events which are
+        currently in the processing queue.
+        
+        It is useful in case a macro has just some lengthy processing, and
+        events have queued up during that processing which should not be
+        processed.
+        
+        **Example:** You have a lengthy "start system" macro which takes about 
+        90 seconds to process. The end user will not see anything until the
+        projector lights up, which takes 60s. It is very likely that he presses
+        the remote button which starts the macro for several times in a row,
+        causing all of the lengthy processing to start over and over again. If
+        you place a "Clear Pending Events" command at the end of your macro, all
+        the excessive remote key presses will be discarded.
+    """
     iconFile = "icons/Plugin"
     
     def __call__(self):
