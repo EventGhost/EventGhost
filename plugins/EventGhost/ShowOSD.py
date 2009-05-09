@@ -236,7 +236,7 @@ class OSDFrame(wx.Frame):
         if timeout > 0.0:
             self.timer = threading.Timer(timeout, self.OnTimeout)
             self.timer.start()
-        wx.Yield()
+        eg.app.Yield(True)
         SetEvent(event)
         
 
