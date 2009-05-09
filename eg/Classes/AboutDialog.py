@@ -110,9 +110,9 @@ SPECIAL_THANKS_DATA = (
             "Davin Roche",       # 11. Feb 2009
             "Nico Nordendorf",   # 16. Feb 2009
             "Mariusz Lon",       # 18. Feb 2009
-            "",
             "Paul Tonkes",       # 22. Feb 2009
-            "",
+            "Ina Henderson",     # 05. May 2009
+            "Kosta Krauth",      # 06. May 2009
         ),
     ),
     (
