@@ -2,12 +2,12 @@
 <%def name="title()">Download EventGhost</%def>
 <%def name="content_rst()" buffered="True"> 
 
-Latest Version:
+Latest release:
 ~~~~~~~~~~~~~~~
 
 * `${files[0].name} <${files[0].target}>`_, ${files[0].size}, ${files[0].time}
 
-Previous Versions:
+Previous releases:
 ~~~~~~~~~~~~~~~~~~
 
 % for fileData in files[1:11]:
@@ -15,7 +15,7 @@ Previous Versions:
 % endfor
 
 
-Other Downloads:
+Other downloads:
 ~~~~~~~~~~~~~~~~
 
 * `X10 remote driver (for 32bit Windows) <x10drivers_x86.exe>`_
