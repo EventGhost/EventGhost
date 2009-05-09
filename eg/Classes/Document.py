@@ -316,6 +316,11 @@ class Document(object):
             wx.CallLater(100, self.HideFrame)
 
 
+    def IsDirty(self):
+        return eg.notificationHandlers["DocumentChange"].value
+    
+    
+    @eg.LogItWithReturn
     def CheckFileNeedsSave(self):
         """
         Checks if the file was changed and if necessary asks the user if he
@@ -326,7 +331,7 @@ class Document(object):
                  wx.ID_NO     if file was not saved
                  wx.ID_CANCEL if user canceled possible save
         """
-        if not eg.notificationHandlers["DocumentChange"].value:
+        if not self.IsDirty():
             return wx.ID_OK
         dialog = SaveChangesDialog(self.frame)
         result = dialog.ShowModal()
@@ -354,6 +359,7 @@ class Document(object):
         self.StartSession(filePath)
 
 
+    @eg.LogItWithReturn
     def Save(self):
         if not self.filePath:
             return self.SaveAs()
@@ -475,6 +481,8 @@ class SaveChangesDialog(wx.Dialog):
         self.SetSizerAndFit(mainSizer)
         if parent:
             self.CenterOnParent()
+        else:
+            self.Center()
 
 
     def OnButton(self, event):
