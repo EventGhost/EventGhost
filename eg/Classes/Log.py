@@ -78,8 +78,9 @@ class Log(object):
                 def write(self, data):
                     log.Write(data, ERROR_ICON)
 
-        sys.stdout = StdOut()
-        sys.stderr = StdErr()
+        if eg.startupArguments.isMain:
+            sys.stdout = StdOut()
+            sys.stderr = StdErr()
         if eg.debugLevel == 2:
             if hasattr(_oldStdErr, "_displayMessage"):
                 _oldStdErr._displayMessage = False
@@ -96,7 +97,7 @@ class Log(object):
             def DoLog(self, level, msg, dummyTimestamp):
                 if (level >= 6):
                     return
-                sys.stderr.write("Error%d: %s\n" % (level, msg))
+                sys.stderr.write("wxError%d: %s\n" % (level, msg))
         wx.Log.SetActiveTarget(MyLog())
 
 

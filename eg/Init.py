@@ -55,27 +55,32 @@ def InitPathesAndBuiltins():
 
     # we create a package 'PluginModule' and set its path to the plugin-dir
     # so we can simply use __import__ to load a plugin file
-    pluginPackage = ModuleType("PluginModule")
+    pluginPackage = ModuleType("eg.PluginModule")
     pluginPackage.__path__ = [eg.PLUGIN_DIR]
-    sys.modules["PluginModule"] = pluginPackage
+    sys.modules["eg.PluginModule"] = pluginPackage
+    eg.PluginModule = pluginPackage
+    
+    
+# replace builtin raw_input() with a small dialog
+def RawInput(prompt=None):
+    return eg.SimpleInputDialog.RawInput(prompt)
 
-    # replace builtin raw_input() with a small dialog
-    def RawInput(prompt=None):
-        return eg.SimpleInputDialog.RawInput(prompt)
-    __builtin__.raw_input = RawInput
-
-    # replace builtin input() with a small dialog
-    def Input(prompt=None):
-        return eval(eg.SimpleInputDialog.RawInput(prompt))
-    __builtin__.input = Input
+# replace builtin input() with a small dialog
+def Input(prompt=None):
+    return eval(eg.SimpleInputDialog.RawInput(prompt))
 
 
 def Init():
-    import WinApi.COMServer
+    if eg.startupArguments.isMain or eg.startupArguments.install:
+        import WinApi.COMServer
 
 
 def InitGui():
     #import eg.WinApi.COMServer
+
+    import __builtin__
+    __builtin__.raw_input = RawInput
+    __builtin__.input = Input
 
     eg.scheduler.start()
     eg.messageReceiver.Start()
