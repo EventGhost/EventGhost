@@ -266,5 +266,6 @@ def DoTask():
         outfile.write("\n# modules found for package '%s'\n" % package)
         for module in GetPackageModules(package):
             outfile.write("import %s\n" % module)
+    outfile.write("\n")
     outfile.close()
 

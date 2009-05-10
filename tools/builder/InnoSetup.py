@@ -49,6 +49,11 @@ class StdHandler(object):
 
     def flush(self):
         pass
+    
+    
+    def isatty(self):
+        return True
+    
 
 
 LOG_FILENAME = 'Build.log'
@@ -105,7 +110,7 @@ class InnoInstaller(object):
         """
         line = 'Source: "%s"; DestDir: "{app}\\%s";' % (abspath(source), destDir)
         if destName is not None:
-            line += ' DestName: "%s";' % destName
+            line += ' DestName: "%s"; Flags: ignoreversion' % destName
         self.Add("Files", line)
 
 

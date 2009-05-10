@@ -3,7 +3,7 @@ import shutil
 import time
 from os.path import join
 import builder
-from builder.Utils import ExecutePy
+
 
 class TaskBase(object):
     value = None
@@ -80,20 +80,18 @@ class BuildHtml(TaskBase):
     description = "Build HTML docs"
 
     def DoTask(self):
-        ExecutePy(
-            "import builder.Docs",
-            "builder.Docs.Main(buildHtml=True)"
-        )
+        import builder.Docs
+        builder.Docs.Main(buildHtml=True)
+
 
 
 class BuildChm(TaskBase):
     description = "Build CHM docs"
 
     def DoTask(self):
-        ExecutePy(
-            "import builder.Docs",
-            "builder.Docs.Main(buildChm=True)"
-        )
+        import builder.Docs
+        builder.Docs.Main(buildChm=True)
+
 
 
 class CreateSourceArchive(TaskBase):
