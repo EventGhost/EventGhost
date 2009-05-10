@@ -126,6 +126,6 @@ if not args.allowMultiLoad and not args.translate and args.isMain:
         ctypes.windll.kernel32.ExitProcess(0)
 
 # change working directory to program directory
-if args.debugLevel < 2:
+if args.debugLevel < 2 and args.isMain:
     os.chdir(MAIN_DIR)
 
