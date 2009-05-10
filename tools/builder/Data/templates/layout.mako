@@ -1,6 +1,6 @@
 <%inherit file="base.mako"/>\
 <%def name="head()">\
-<link rel="stylesheet" type="text/css" charset="utf-8" media="all" href="/css/nav.css">
+    <link rel="stylesheet" type="text/css" charset="utf-8" media="all" href="/css/nav.css">
 </%def>\
 <%def name="menu()">\
 <div id="nav_header">
