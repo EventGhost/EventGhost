@@ -17,13 +17,7 @@ DOCS_CHM_BUILD_DIR = join(DOCS_MAIN_DIR, "chm")
 
 
 sys.path.append(MAIN_DIR)
-STDERR = sys.stderr
-STDOUT = sys.stdout
-try:
-    import eg
-finally:
-    sys.stderr = STDERR
-    sys.stdout = STDOUT
+import eg
 from eg.Utils import GetFirstParagraph
 
 

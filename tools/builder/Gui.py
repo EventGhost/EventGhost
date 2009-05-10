@@ -1,6 +1,8 @@
-import wx
+import sys
 import threading
-from os.path import join, exists
+
+import wx
+
 import builder
 import builder.Tasks
 
@@ -80,9 +82,14 @@ class MainDialog(wx.Dialog):
 
     def DoMain(self):
         builder.Tasks.Main()
-        wx.CallAfter(self.Close)
+        wx.CallAfter(self.OnExit)
+        
 
-
+    def OnExit(self):
+        self.Destroy()
+        sys.exit(0)
+        
+    
     def OnCancel(self, event):
         """ Handles a click on the cancel button. """
         event.Skip()
@@ -92,8 +99,8 @@ class MainDialog(wx.Dialog):
 
     def OnClose(self, event):
         """ Handles a click on the close box of the frame. """
-        self.Destroy()
         event.Skip()
+        self.Destroy()
         wx.GetApp().ExitMainLoop()
 
 
