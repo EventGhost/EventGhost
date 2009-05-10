@@ -3,10 +3,9 @@ End-user documentation
 
 .. toctree::
 
-   about
-   features
-   short_manual/index
    controlling_your_living_room_with_eventghost/index
+   short_manual/index
+   features
    supported_receivers
    pluginlist
    scripting
