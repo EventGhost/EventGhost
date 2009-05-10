@@ -49,7 +49,10 @@ class LazyModule(ModuleType):
 
 
     def __getattr__(self, name):
-        mod = __import__("eg.Classes." + name, None, None, [name], 0)
+        try:
+            mod = __import__("eg.Classes." + name, None, None, [name], 0)
+        except ImportError:
+            raise AttributeError("'eg' object has not attribute '%s'" % name)
         self.__dict__[name] = attr = getattr(mod, name)
         return attr
 
