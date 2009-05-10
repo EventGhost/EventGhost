@@ -1,5 +1,11 @@
 <%inherit file="layout.mako"/>\
 <%def name="title()">Download EventGhost</%def>
+<%def name="head()">\
+    <meta http-equiv="expires" content="Sat, 15 Dec 2001 12:00:00 GMT">
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="pragma" content="no-cache">
+${parent.head()}\
+</%def>\
 <%def name="content_rst()" buffered="True"> 
 
 Latest release:
