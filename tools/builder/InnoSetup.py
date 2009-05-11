@@ -108,9 +108,10 @@ class InnoInstaller(object):
         """
         Adds a file to the [Files] section.
         """
-        line = 'Source: "%s"; DestDir: "{app}\\%s";' % (abspath(source), destDir)
+        line = 'Source: "%s"; DestDir: "{app}\\%s"' % (abspath(source), destDir)
         if destName is not None:
-            line += ' DestName: "%s"; Flags: ignoreversion' % destName
+            line += '; DestName: "%s"' % destName
+        line += '; Flags: ignoreversion'
         self.Add("Files", line)
 
 

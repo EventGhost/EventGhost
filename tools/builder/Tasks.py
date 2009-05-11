@@ -46,7 +46,7 @@ class UpdateVersionFile(TaskBase):
         outfile.write("revision = %r\n" % svnRevision)
         outfile.write("buildTime = %f\n" % time.time())
         outfile.close()
-        versionFilePath = join(builder.SOURCE_DIR, "eg/Classes/Version.py")
+        versionFilePath = join(builder.SOURCE_DIR, "eg", "Classes", "Version.py")
         mod = imp.load_source("Version", versionFilePath)
         builder.APP_VERSION = mod.Version.base + (".r%s" % svnRevision)
         builder.APP_NUMERICAL_VERSION = mod.Version.base + ".%s" % svnRevision
