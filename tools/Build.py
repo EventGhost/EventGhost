@@ -102,7 +102,7 @@ builder.MAIN_SCRIPT = "EventGhost.pyw"
 
 
 class MyInstaller(object):
-    appShortName = "EventGhost_Py%d%d" % sys.version_info[:2]
+    appShortName = "EventGhost"
 
     @staticmethod
     def GetSetupFiles():
@@ -183,7 +183,7 @@ class MyInstaller(object):
         )
         inno.AddFile(
             join(builder.TMP_DIR, "VersionRevision.py"),
-            destDir="eg/Classes"
+            destDir="eg\\Classes"
         )
         # create entries in the [InstallDelete] section of the Inno script to
         # remove all known plugin directories before installing the new
