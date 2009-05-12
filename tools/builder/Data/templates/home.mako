@@ -24,9 +24,10 @@ the `download page </downloads/>`_.
 License
 ~~~~~~~
 
-EventGhost is released under the `GNU GPL, version 2 
+EventGhost is released under the `GNU GPL v2 
 <http://www.gnu.org/licenses/old-licenses/gpl-2.0.html>`_.
-So EventGhost is open source software. You can get and use it without charge.
+So EventGhost is free open source software. You can get and use it without 
+charge.
 
 
 Support
