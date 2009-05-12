@@ -68,12 +68,13 @@ class SpinNumCtrl(wx.Window):
         tmp.update(kwargs)
         kwargs = tmp
 
-        if kwargs["min"] < 0:
+        minValue = kwargs.pop("min")
+        if minValue < 0:
             kwargs["allowNegative"] = True
         if "max" not in kwargs:
             kwargs["max"] = (
-                10 ** kwargs["integerWidth"]
-                - 10 ** -kwargs["fractionWidth"]
+                (10 ** kwargs["integerWidth"])
+                 - (10 ** -kwargs["fractionWidth"])
             )
         wx.Window.__init__(self, parent, id, pos, size, 0)
         self.SetThemeEnabled(True)
@@ -90,7 +91,8 @@ class SpinNumCtrl(wx.Window):
         )
         numCtrl.SetParameters(**kwargs) # To avoid bug in NumCtrl
         numCtrl.SetValue(value) # To avoid bug in NumCtrl
-
+        numCtrl.SetMin(minValue)
+        
         self.numCtrl = numCtrl
         numCtrl.SetCtrlParameters(
             validBackgroundColour=GetColour(wx.SYS_COLOUR_WINDOW),
