@@ -1,4 +1,4 @@
-version="0.1.0" 
+version="0.1.2" 
 # This file is part of EventGhost.
 # Copyright (C)  2008 Pako  (lubos.ruckl@quick.cz)
 # 
@@ -16,7 +16,7 @@ version="0.1.0"
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2008-10-05 17:28
+#Last change: 2009-05-12 16:41
 
 eg.RegisterPlugin(
     name = "File Operations",
@@ -40,37 +40,275 @@ eg.RegisterPlugin(
         "IvwPRDgeVjWDahIAAAAASUVORK5CYII="
     ),
     description = (
-        "File Operations (Reading and Writing)."
+        "File Operations (reading, periodical reading and writing)."
     ),
     url = "http://www.eventghost.org/forum/viewtopic.php?t=1011"
 )
-#=========================================================================================================            
+#===============================================================================
 
+import os
 import time
 import codecs
+from threading import Thread, Event
 
-def String2Hex(string,length='2'):
+def String2Hex(strng, length = '2'):
     tmp = []
-    s2h="%0"+length+"X "
-    for c in string:
+    s2h = "%0" + length + "X "
+    for c in strng:
         tmp.append( s2h % ord( c ) )    
     return ''.join( tmp ).strip()  
-#=========================================================================================================            
+#===============================================================================
+
+class ObservationThread(Thread):
+    def __init__(
+        self,
+        stp,
+    ):
+        self.abort = False
+        self.aborted = False
+        self.lastCheck = 0
+        self.threadFlag = Event()
+        #self.firstRun = True
+        
+        self.inCoding = stp[0]
+        self.fileName = stp[1]
+        self.mode = stp[2]
+        self.errDecMode = stp[3]
+        self.inPage = stp[4]
+        self.fromLine = stp[5]
+        self.direction = stp[6]
+        self.lines = stp[7]
+        self.period = stp[8]
+        self.evtName = stp[9]
+        self.trigger = stp[10]
+        self.oldData = None
+        Thread.__init__(self, name = self.evtName.encode('unicode_escape')+'_Thread')
+
+    def run(self):
+        while 1:
+            errorList = ('strict','ignore','replace')
+            try:
+                input = codecs.open(self.fileName,'r',self.inPage, errorList[self.errDecMode])
+            except:
+                raise  
+            else:
+                if self.lines > 0:
+                    data = input.readlines()
+                    if self.direction == 0: #from beginning
+                        data = data[self.fromLine-1:self.fromLine+self.lines-1]
+                    else:              #from end
+                        if self.fromLine-self.lines < 1:
+                            data = data[-self.fromLine:]
+                        else:
+                            data = data[-self.fromLine:-(self.fromLine-self.lines)]
+                    if self.mode == 2:      #one string
+                        data = ''.join(data)
+                    elif self.mode == 0:    #without CR/LF
+                        tmp = []
+                        for line in data:
+                            tmp.append(line.rstrip())
+                        data = tmp
+                    if self.lines == 1:
+                        if len(data) > 0: #empty file ?
+                            data = data[0]
+                        else:
+                            data = ''
+                else:                  #whole file
+                    data = input.read()
+                try:    
+                    input.close()
+                except:
+                    raise
+                flag = True
+                while True:
+                    if self.trigger == 0:   #always
+                        break
+                    elif self.trigger == 1: #always if not empty
+                        if self.mode == 2:
+                            if data != '':
+                                break
+                        else:
+                            if data != []:
+                                break
+                    elif self.trigger == 2: #only at change
+                        if data != self.oldData:
+                            break
+                    else:                   #only at change and not empty
+                        if data != self.oldData:
+                            if self.mode == 2:
+                                if data != '':
+                                    break
+                            else:
+                                if data != []:
+                                    break
+                    flag = False
+                    break
+                if flag:
+                    eg.TriggerEvent(self.evtName, payload = data, prefix = 'File')
+                self.oldData = data
+  
+            if self.abort:
+                break
+            self.lastCheck = time.time()
+            self.threadFlag.wait(self.period)
+            self.threadFlag.clear()
+        self.aborted = True
+
+
+    def AbortObservation(self, close=False):
+        self.abort = True
+        self.threadFlag.set()
+#===============================================================================
 
 class FileOperations(eg.PluginClass):
     def __init__(self):
         self.AddAction(Read)
+        self.AddAction(ReadPeriodically)
+        self.AddAction(AbortPeriodicalRead)
+        self.AddAction(AbortAllPeriodicalRead)
         self.AddAction(Write)
-#=========================================================================================================            
+        self.observThreads = {}
+        self.observData = []
 
-class Read(eg.ActionClass):
-    name = "Read text from file"
-    description = "Reads text from selected file."
+
+    def StartObservation(
+        self,
+        stp,
+    ):
+        observName = stp[9]
+        if observName in self.observThreads:
+            ot = self.observThreads[observName]
+            if ot.isAlive():
+                ot.AbortObservation()
+            del self.observThreads[observName]
+        ot = ObservationThread(
+            stp,
+        )
+        ot.start()
+        self.observThreads[observName] = ot
+
+    def AbortObservation(self, observName):
+        if observName in self.observThreads:
+            ot = self.observThreads[observName]
+            ot.AbortObservation()
+
+    def AbortAllObservations(self, close=False):
+        thrds = list(enumerate(self.observThreads))
+        thrds.reverse()
+        for i, item in thrds:
+            ot = self.observThreads[item]
+            ot.AbortObservation(close)
+
+
+    def Configure(self, *args):
+        panel = eg.ConfigPanel(self, resizable=True)
+
+        panel.sizer.Add(
+            wx.StaticText(panel, -1, self.text.header),
+            flag = wx.ALIGN_CENTER_VERTICAL
+        )
+
+        mySizer = wx.GridBagSizer(5, 5)
+        mySizer.AddGrowableRow(0)
+        mySizer.AddGrowableCol(2)
+       
+        observListCtrl = wx.ListCtrl(panel, -1, style=wx.LC_REPORT | wx.VSCROLL | wx.HSCROLL)
+       
+        for i, colLabel in enumerate(self.text.colLabels):
+            observListCtrl.InsertColumn(i, colLabel)
+
+        #setting cols width
+        observListCtrl.InsertStringItem(0, 30*"X")
+        observListCtrl.SetStringItem(0, 1, 16*"X")
+        observListCtrl.SetStringItem(0, 2, 16*"X")
+
+        size = 0
+        for i in range(3):
+            observListCtrl.SetColumnWidth(i, wx.LIST_AUTOSIZE_USEHEADER)
+            size += observListCtrl.GetColumnWidth(i)
+       
+        observListCtrl.SetMinSize((size, -1))
+       
+        mySizer.Add(observListCtrl, (0,0), (1, 4), flag = wx.EXPAND)
+
+        #buttons
+        abortButton = wx.Button(panel, -1, "Abort")
+        mySizer.Add(abortButton, (1,0))
+       
+        abortAllButton = wx.Button(panel, -1, "Abort all")
+        mySizer.Add(abortAllButton, (1,1), flag = wx.ALIGN_CENTER_HORIZONTAL)
+              
+        refreshButton = wx.Button(panel, -1, "Refresh")
+        mySizer.Add(refreshButton, (1,3), flag = wx.ALIGN_RIGHT)
+       
+        panel.sizer.Add(mySizer, 1, flag = wx.EXPAND)
+       
+        def PopulateList (event=None):
+            observListCtrl.DeleteAllItems()
+            row = 0
+            for i, item in enumerate(self.observThreads):
+                t = self.observThreads[item]
+                if t.isAlive():
+                    observListCtrl.InsertStringItem(row, os.path.split(t.fileName)[1])
+                    observListCtrl.SetStringItem(row, 1, t.evtName)
+                    observListCtrl.SetStringItem(row, 2, str(t.period) + " sec")
+                    row += 1
+            ListSelection(wx.CommandEvent())
+
+        def OnAbortButton(event):
+            item = observListCtrl.GetFirstSelected()
+            while item != -1:
+                cell = observListCtrl.GetItem(item,1)
+                evtName = cell.GetText()
+                ot = self.observThreads[evtName]
+                self.AbortObservation(evtName)
+                while not ot.aborted:
+                    pass
+                item = observListCtrl.GetNextSelected(item)
+            PopulateList()
+            event.Skip()
+
+        def OnAbortAllButton(event):
+            self.AbortAllObservations()
+            PopulateList()
+            event.Skip()
+
+        def ListSelection(event):
+            flag = observListCtrl.GetFirstSelected() != -1
+            abortButton.Enable(flag)
+            event.Skip()
+           
+        def OnSize(event):
+            observListCtrl.SetColumnWidth(6, wx.LIST_AUTOSIZE_USEHEADER)
+            event.Skip()
+
+        PopulateList()
+       
+        abortButton.Bind(wx.EVT_BUTTON, OnAbortButton)
+        abortAllButton.Bind(wx.EVT_BUTTON, OnAbortAllButton)
+        refreshButton.Bind(wx.EVT_BUTTON, PopulateList)
+        observListCtrl.Bind(wx.EVT_LIST_ITEM_SELECTED, ListSelection)
+        observListCtrl.Bind(wx.EVT_LIST_ITEM_DESELECTED, ListSelection)
+        panel.Bind(wx.EVT_SIZE, OnSize)
+
+        while panel.Affirmed():
+            panel.SetResult(*args)
+            
+    #function to fill the action's Comboboxes
+    def GetObservData(self):
+        self.observData.sort(lambda a,b: cmp(a[1].lower(), b[1].lower()))
+        return self.observData
+
+    #function to collect data for action's Comboboxes
+    def AddObservData(self, stp):
+        item = (os.path.split(stp[1])[1],stp[9])
+        if not item in self.observData:
+            self.observData.append(item)
+
     class text:
-        TreeLabel = "Read file: %s"
         FilePath = "Read file:"
         browseFileDialogTitle = "Choose the file"
-        txtMode = "Learning the line(s) return like as a:"
+        txtMode = "Line(s) return like as a:"
         listNotIncluding = "List of line strings without CR/LF"
         listIncluding = "List of line strings including CR/LF"
         oneNotIncluding = "String without CR/LF"
@@ -88,6 +326,25 @@ class Read(eg.ActionClass):
         end = "from the end"
         readAhead = "Read"
         readBehind = "lines (0 = whole file)"
+        intervalLabel = "Refresh interval (s):"
+        evtNameLabel = "Observation and event name:"
+        triggerLabel = "Event trigger:"
+        triggerChoice = (
+            "always",
+            "always if not empty",
+            "only at changes",
+            "only at changes and if not empty"
+        )        
+        header = "Currently active file observations:"
+        colLabels = (
+            "File",
+            "Event name",
+            "Interval")            
+#===============================================================================
+
+class Read(eg.ActionClass):
+    name = "Read text from file"
+    description = "Reads text from selected file."
     
     def __call__(
         self,
@@ -101,37 +358,40 @@ class Read(eg.ActionClass):
         lines = 1,
     ):
     
-        errorList = ('strict','ignore','replace')
+        errorList = ('strict', 'ignore', 'replace')
         try:
-            input = codecs.open(fileName,'r',inPage, errorList[errDecMode])
-        except:
-            raise            
-        if lines > 0:
-            data = input.readlines()
-            if direction == 0: #from beginning
-                data = data[fromLine-1:fromLine+lines-1]
-            else:              #from end
-                if fromLine-lines < 1:
-                    data = data[-fromLine:]
-                else:
-                    data = data[-fromLine:-(fromLine-lines)]
-            if mode == 2:      #one string
-                data = ''.join(data)
-            elif mode == 0:    #without CR/LF
-                tmp = []
-                for line in data:
-                    tmp.append(line.rstrip())
-                data = tmp
-            if lines == 1:
-                data = data[0]
-        else:                  #whole file
-            data = input.read()
-        try:    
-            input.close()
+            input = codecs.open(fileName, 'r', inPage, errorList[errDecMode])
         except:
             raise
-            
-        return data
+        else:
+            if lines > 0:
+                data = input.readlines()
+                if direction == 0: #from beginning
+                    data = data[fromLine-1:fromLine+lines-1]
+                else:              #from end
+                    if fromLine-lines < 1:
+                        data = data[-fromLine:]
+                    else:
+                        data = data[-fromLine:-(fromLine-lines)]
+                if mode == 2:      #one string
+                    data = ''.join(data)
+                elif mode == 0:    #without CR/LF
+                    tmp = []
+                    for line in data:
+                        tmp.append(line.rstrip())
+                    data = tmp
+                if lines == 1:
+                    if len(data) > 0: #empty file ?
+                        data = data[0]
+                    else:
+                        data = ''
+            else:                  #whole file
+                data = input.read()
+            try:    
+                input.close()
+            except:
+                raise                
+            return data
             
     def GetLabel(
         self,
@@ -144,7 +404,7 @@ class Read(eg.ActionClass):
         direction,
         lines = 1,
     ):
-        return self.text.TreeLabel % (fileName)
+        return '%s: %s' % (str(self.name), os.path.split(fileName)[1])
 
     def Configure(
         self,
@@ -159,7 +419,7 @@ class Read(eg.ActionClass):
     ):
         from codecsList import codecsList
         panel = eg.ConfigPanel(self)
-        text = self.text
+        text = self.plugin.text
         self.mode = mode
     #Controls    
         inPageText = wx.StaticText(panel, -1, text.inputPage)
@@ -291,7 +551,300 @@ class Read(eg.ActionClass):
                 rb1.GetValue(),
                 linesNumCtrl.GetValue(),
             )
-#=========================================================================================================            
+#===============================================================================
+
+class AbortPeriodicalRead(eg.ActionClass):
+    name = "Abort periodical reading"
+    description = "Aborts periodical reading of text from selected file."
+        
+    def __call__(self, observName='', file = ''):
+        self.plugin.AbortObservation(observName)
+    
+    def GetLabel(self, observName, file):
+        return '%s: %s -> %s' % (str(self.name), file, observName)
+
+    def Configure(self, observName='', file = ''):
+        text=self.text
+        panel = eg.ConfigPanel(self)
+        choices = [item[1] for item in self.plugin.GetObservData()]
+        fileLbl = wx.StaticText(panel, -1, '')
+        fileLbl.Enable(False)
+        nameLbl=wx.StaticText(panel, -1, text.nameObs)
+        nameCtrl=wx.ComboBox(panel,-1,choices = choices)
+        nameCtrl.SetStringSelection(observName)
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        mainSizer.Add(fileLbl,0)
+        mainSizer.Add((1,20))
+        mainSizer.Add(nameLbl,0)
+        mainSizer.Add(nameCtrl,0,wx.EXPAND)
+        panel.sizer.Add(mainSizer)
+        panel.sizer.Layout()
+        
+        def onComboBox(event = None):
+            choices = [item[1] for item in self.plugin.GetObservData()]
+            evtName = nameCtrl.GetValue()
+            if evtName in choices:
+                indx = choices.index(evtName)
+                fileName = self.plugin.GetObservData()[indx][0]
+                lbl = text.fileLabel  % fileName
+            else:
+                lbl = ''
+            fileLbl.SetLabel(lbl)
+            if event:
+                event.Skip()
+        onComboBox()
+        nameCtrl.Bind(wx.EVT_COMBOBOX,onComboBox)
+        
+        # re-assign the test button
+        def OnTestButton(event):
+            self.plugin.AbortObservation(nameCtrl.GetValue())
+        panel.dialog.buttonRow.testButton.SetLabel(text.abortNow)
+        panel.dialog.buttonRow.testButton.SetToolTipString(text.tip)
+        panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnTestButton)
+        
+        while panel.Affirmed():
+            lbl = fileLbl.GetLabel()
+            if lbl != '':
+                fileName = lbl[2+lbl.rfind(':'):]
+            else:
+                fileName = ''
+            panel.SetResult(
+                nameCtrl.GetValue(),
+                fileName
+            )
+    class text:
+        nameObs = 'Observation and event name:'
+        abortNow = 'Abort now !'
+        tip = 'Abort observation now'
+        fileLabel = 'File to read: %s'
+#===============================================================================
+    
+class AbortAllPeriodicalRead(eg.ActionClass):
+    name = "Abort all periodical reading"
+    description = "Aborts all periodical reading of text from file."
+    def __call__(self):
+        self.plugin.AbortAllObservations()
+#===============================================================================
+
+class ReadPeriodically(eg.ActionClass):
+    name = "Start periodical reading"
+    description = ("Starts periodical reading of text from selected file. "
+                   "Learning the line(s) return as payload of event.")
+    
+    def startObserv(self, stp):
+        self.plugin.StartObservation(stp)
+        
+    def __call__(self, stp):
+        self.startObserv(stp)            
+
+    def GetLabel(
+        self,
+        stp
+    ):
+        self.plugin.AddObservData(stp)
+        return '%s: %s -> %s' % (str(self.name), os.path.split(stp[1])[1], stp[9])
+        
+    def Configure(
+        self,
+        stp = []
+    ):
+        if stp == []:
+            inCoding = 0
+            fileName = ''
+            mode = 0
+            errDecMode = 0
+            inPage = ""
+            fromLine = 1
+            direction = 0
+            lines = 1
+#            period = 0.1
+            period = 1
+            evtName = ''
+            trigger = 1
+        else:
+            inCoding = stp[0]
+            fileName = stp[1]
+            mode = stp[2]
+            errDecMode = stp[3]
+            inPage = stp[4]
+            fromLine = stp[5]
+            direction = stp[6]
+            lines = stp[7]
+            period = stp[8]
+            evtName = stp[9]
+            trigger = stp[10]
+        
+        from codecsList import codecsList
+        panel = eg.ConfigPanel(self)
+        text = self.plugin.text
+        self.mode = mode
+    #Controls    
+        inPageText = wx.StaticText(panel, -1, text.inputPage)
+        labelMode = wx.StaticText(panel, -1, text.txtMode)
+        labelDecErrMode = wx.StaticText(panel, -1, text.txtDecErrMode)
+        fileText = wx.StaticText(panel, -1, text.FilePath)
+        filepathCtrl = eg.FileBrowseButton(
+            panel, 
+            -1, 
+            initialValue=fileName,
+            labelText="",
+            fileMask="*.*",
+            buttonText=eg.text.General.browse,
+            dialogTitle=text.browseFileDialogTitle
+        )
+        width = labelDecErrMode.GetTextExtent(text.txtDecErrMode)[0]
+        choiceDecErrMode = wx.Choice(
+            panel,
+            -1,
+            size = ((width,-1)),
+            choices=(text.strict, text.ignore, text.replace)
+        )
+        choiceDecErrMode.SetSelection(errDecMode)
+        choices = [text.systemPage % eg.systemEncoding, text.defaultIn]
+        choices.extend(codecsList)
+        inPageCtrl = wx.Choice(panel,-1,choices=choices)
+        inPageCtrl.SetSelection(inCoding)
+        lineNumLbl=wx.StaticText(panel, -1, text.lineNum)
+        fromLineNumCtrl = eg.SpinIntCtrl(
+            panel,
+            -1,
+            fromLine,
+            min = 1,
+            max = 999,
+        )        
+        rb0 = panel.RadioButton(not direction, text.begin, style=wx.RB_GROUP)
+        rb1 = panel.RadioButton(direction, text.end)                            
+        lblAhead = wx.StaticText(panel, -1, text.readAhead)
+        lblBehind = wx.StaticText(panel, -1, text.readBehind)
+        linesNumCtrl = eg.SpinIntCtrl(
+            panel,
+            -1,
+            lines,
+            min = 0,
+            max = 999,
+        )
+        periodNumCtrl = eg.SpinNumCtrl(
+            panel,
+            -1,
+            period,
+            integerWidth = 5,
+            fractionWidth = 1,
+            allowNegative = False,
+            min = 0.1,
+            increment = 0.1,
+        )
+        intervalLbl = wx.StaticText(panel, -1, text.intervalLabel)
+        w0 = inPageCtrl.GetTextExtent(text.listNotIncluding)[0]
+        w1 = inPageCtrl.GetTextExtent(text.listIncluding)[0]
+        w2 = inPageCtrl.GetTextExtent(text.oneNotIncluding)[0]
+        w3 = inPageCtrl.GetTextExtent(text.oneIncluding)[0]
+        w4 = inPageCtrl.GetTextExtent(text.oneString)[0]
+        width = max(w0,w1,w2,w3,w4)+30
+        choiceMode = wx.Choice(panel,-1,size=(width,-1))
+        evtNameCtrl = wx.TextCtrl(panel,-1,evtName)
+        evtNameLbl = wx.StaticText(panel, -1, text.evtNameLabel)
+        triggerCtrl = wx.Choice(panel,-1, choices = text.triggerChoice)
+        triggerCtrl.SetSelection(trigger)
+        triggerLbl = wx.StaticText(panel, -1, text.triggerLabel)
+    #Sizers
+        topSizer = wx.FlexGridSizer(2,0,2,25)
+        topSizer.AddGrowableCol(0,1)
+        topSizer.AddGrowableCol(1,1)
+        topSizer.Add(inPageText,0,wx.EXPAND)
+        topSizer.Add(labelDecErrMode,0,wx.EXPAND)
+        topSizer.Add(inPageCtrl,0,wx.EXPAND)
+        topSizer.Add(choiceDecErrMode,0,wx.EXPAND)
+        fromSizer = wx.BoxSizer(wx.HORIZONTAL)
+        fromSizer.Add(lineNumLbl,0,wx.TOP,4)
+        fromSizer.Add(fromLineNumCtrl,0,wx.LEFT,10)
+        fromSizer.Add(rb0,0,wx.EXPAND|wx.LEFT,20)
+        fromSizer.Add(rb1,0,wx.EXPAND|wx.LEFT,15)
+        linesSizer = wx.BoxSizer(wx.HORIZONTAL)
+        linesSizer.Add(lblAhead,0, flag = wx.TOP, border = 4)
+        linesSizer.Add(linesNumCtrl,0,wx.LEFT|wx.RIGHT,8)
+        linesSizer.Add(lblBehind,0, flag = wx.TOP, border = 4)
+        periodSizer = wx.BoxSizer(wx.HORIZONTAL)
+        periodSizer.Add(intervalLbl,0, wx.TOP|wx.RIGHT, 4)
+        periodSizer.Add(periodNumCtrl,0, wx.RIGHT)
+        
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        mainSizer.Add(fileText,0,wx.EXPAND)
+        mainSizer.Add(filepathCtrl,0,wx.EXPAND)
+        mainSizer.Add(topSizer,0,wx.TOP|wx.EXPAND,5)
+        mainSizer.Add(linesSizer,0,wx.TOP|wx.EXPAND,11)        
+        mainSizer.Add(fromSizer,0,wx.TOP|wx.EXPAND,11)
+        bottomSizer = wx.FlexGridSizer(4,0,2,25)       
+        bottomSizer.AddGrowableCol(0,1)
+        bottomSizer.AddGrowableCol(1,1)
+        bottomSizer.Add(labelMode,0,wx.EXPAND)
+        bottomSizer.Add((1,1))
+        bottomSizer.Add(choiceMode,0,wx.EXPAND)
+        bottomSizer.Add(periodSizer,0,wx.EXPAND|wx.RIGHT,3)
+        bottomSizer.Add(evtNameLbl,0,wx.TOP,8)
+        bottomSizer.Add(triggerLbl,0,wx.TOP,8)
+        bottomSizer.Add(evtNameCtrl,0,wx.EXPAND)
+        bottomSizer.Add(triggerCtrl,0,wx.EXPAND)
+        mainSizer.Add(bottomSizer,0,wx.TOP|wx.EXPAND,11)
+        panel.sizer.Add(mainSizer,0,wx.EXPAND)
+        
+        def onLinesNumCtrl(event=None):
+            flag = False
+            if event:
+                self.mode = choiceMode.GetSelection()
+            if linesNumCtrl.GetValue() == 0:
+                fromLineNumCtrl.SetValue(1)
+                rb0.SetValue(True)
+                rb1.SetValue(False)
+                lineNumLbl.Enable(False)
+                fromLineNumCtrl.Enable(False)
+                rb0.Enable(False)
+                rb1.Enable(False)
+            else:
+                lineNumLbl.Enable(True)                
+                fromLineNumCtrl.Enable(True)
+                rb0.Enable(True)
+                rb1.Enable(True)
+            
+            if linesNumCtrl.GetValue() == 1:
+                choiceMode.Clear()
+                choiceMode.AppendItems(strings=(text.oneNotIncluding,text.oneIncluding))
+            else:
+                if len(choiceMode.GetStrings()) != 3:
+                    choiceMode.Clear()
+                    choiceMode.AppendItems(
+                        strings=(text.listNotIncluding,text.listIncluding,text.oneString)
+                    )    
+                    if self.mode == 2:
+                        flag = True
+            if event:
+                choiceMode.SetSelection(0)
+                event.Skip()
+                if flag:
+                    self.mode = 0
+            choiceMode.SetSelection(self.mode)
+        linesNumCtrl.Bind(wx.EVT_SPIN, onLinesNumCtrl)
+        onLinesNumCtrl()
+            
+        while panel.Affirmed():
+            inCoding = inPageCtrl.GetSelection()
+            pgTpl = (eg.systemEncoding, 'utf8')
+            setup = [
+                inCoding,
+                filepathCtrl.GetValue(),
+                choiceMode.GetSelection(),
+                choiceDecErrMode.GetSelection(),
+                inPageCtrl.GetStringSelection() if inCoding > 1 else pgTpl[inCoding],
+                fromLineNumCtrl.GetValue(),
+                rb1.GetValue(),
+                linesNumCtrl.GetValue(),
+                periodNumCtrl.GetValue(),
+                evtNameCtrl.GetValue(),
+                triggerCtrl.GetSelection()
+            ]
+            panel.SetResult(
+                setup
+            )
+#===============================================================================            
 
 class Write(eg.ActionClass):
     name = "Write text to file"
@@ -329,7 +882,7 @@ class Write(eg.ActionClass):
         hex = False,
         outPage = "",
     ):
-        modeStr='w' if mode==0 else 'a'
+        modeStr = 'w' if mode==0 else 'a'
         stamp = time.strftime('%c')+'  ' if times else ''
         cr = '\r\n' if mode == 2 else ''        
         errorList = ('strict','ignore','replace')
@@ -468,4 +1021,4 @@ class Write(eg.ActionClass):
                 hexCheckBox.IsChecked(),
                 outPageCtrl.GetStringSelection() if outCoding > 2 else pgTpl[outCoding],
             )        
-#=========================================================================================================            
+#===============================================================================
