@@ -383,12 +383,12 @@ class Document(object):
             wildcard="*.xml",
             style=style
         )
-        result = fileDialog.ShowModal()
-        if result == wx.ID_CANCEL:
-            return None
-        filePath = fileDialog.GetPath()
-        fileDialog.Destroy()
-        return filePath
+        try:
+            if fileDialog.ShowModal() == wx.ID_CANCEL:
+                return None
+            return fileDialog.GetPath()
+        finally:
+            fileDialog.Destroy()
 
 
     def ExecuteSelected(self):
