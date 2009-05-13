@@ -166,6 +166,13 @@ class MyInstaller(object):
                 and not filename.startswith("lib%s\\" % builder.PYVERSION_STR)
             ):
                 continue
+            if filename.lower() == r"plugins\task\hook.dll":
+                inno.AddFile(
+                    join(builder.SOURCE_DIR, filename), 
+                    dirname(filename),
+                    ignoreversion=False
+                )
+                continue
             inno.AddFile(join(builder.SOURCE_DIR, filename), dirname(filename))
         for filename in glob(join(builder.LIBRARY_DIR, '*.*')):
             inno.AddFile(filename, builder.LIBRARY_NAME)
