@@ -1,6 +1,7 @@
-<%inherit file="layout.mako"/>\
-<%def name="title()">EventGhost</%def>
-<%def name="content_rst()" buffered="True"> 
+{% extends "layout.tmpl" %}
+{% block title %}EventGhost{% endblock %}
+{% block content %}
+{% filter rst2html %}
 .. image:: /images/screenshot.jpg
    :align: right
 
@@ -36,5 +37,5 @@ Support
 * `Documentation </docs/>`_
 * `Wiki </wiki/>`_
 * `Forum </forum/>`_
-</%def>
-${rst2html(self.content_rst())}
+{% endfilter %}
+{% endblock %}

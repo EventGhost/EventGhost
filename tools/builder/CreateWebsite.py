@@ -1,11 +1,12 @@
 import os
 import time
 from os.path import join, abspath
-from mako.template import Template
-from mako.lookup import TemplateLookup
+
+from jinja2 import Environment, FileSystemLoader
+from docutils.core import publish_parts
 
 import builder
-BASE_DIR = builder.WEBSITE_DIR
+WEBSITE_DIR = builder.WEBSITE_DIR
 
 class Page(object):
 
@@ -17,35 +18,35 @@ class HomePage(Page):
     name = "Home"
     target = "/"
     outfile = "index.html"
-    template = "home.mako"
+    template = "home.tmpl"
 
 
 class ForumPage(Page):
     name = "Forum"
     target = "/forum/"
     outfile = "css/header_forum.html"
-    template = "header_only.mako"
+    template = "header_only.tmpl"
 
 
 class DocsPage(Page):
     name = "Documentation"
     target = "/docs/"
     outfile = r"..\docs\source\_templates\header_docs.html"
-    template = "header_only.mako"
+    template = "header_only.tmpl"
 
 
 class WikiPage(Page):
     name = "Wiki"
     target = "/wiki/"
     outfile = "css/header_wiki.html"
-    template = "header_only.mako"
+    template = "header_only.tmpl"
 
 
 class DownloadPage(Page):
     name = "Downloads"
     target = "/downloads/"
     outfile = "downloads/index.html"
-    template = "download.mako"
+    template = "download.tmpl"
 
 
 
@@ -66,10 +67,10 @@ MENU_TABS = (HomePage, DocsPage, WikiPage, ForumPage, DownloadPage)
 
 def GetSetupFiles():
     files = []
-    for name in os.listdir(join(BASE_DIR, "downloads")):
+    for name in os.listdir(join(WEBSITE_DIR, "downloads")):
         if name.lower().startswith("eventghost_"):
             if name.lower().endswith("_setup.exe"):
-                path = join(BASE_DIR, "downloads", name)
+                path = join(WEBSITE_DIR, "downloads", name)
                 fileData = FileData(path)
                 files.append(fileData)
     return list(reversed(sorted(files, key=lambda x: x.name)))
@@ -87,34 +88,20 @@ GLOBALS = {
 
 }
 
-def Main(url):
-
-    myLookUp = TemplateLookup(directories=[abspath(join(builder.DATA_DIR, 'templates'))])
+def Main():
+    env = Environment(
+        loader=FileSystemLoader(abspath(join(builder.DATA_DIR, 'templates'))),
+        trim_blocks=True
+    )
+    env.globals = {
+        "files": GetSetupFiles(),
+        "MENU_TABS": MENU_TABS,
+        #"pathto": pathto,
+    }
+    env.filters = {'rst2html': rst2html}
 
     for page in MENU_TABS:
-        GLOBALS["CURRENT"] = page
-        content = Template(
-            filename=join(builder.DATA_DIR, "templates", page.template),
-            lookup=myLookUp
-        ).render(**GLOBALS)
-#        if os.path.splitext(page.template)[1] == ".rst":
-#            print "is rst"
-        open(join(BASE_DIR, page.outfile), "wt").write(content)
-
-    #import BuildDocs
-    #BuildDocs.Main(buildHtml=True)
-
-    from SftpSync import SftpSync
-
-    syncer = SftpSync(url)
-    addFiles = [
-        (join(BASE_DIR, "index.html"), "index.html"),
-    ]
-    syncer.Sync(BASE_DIR, addFiles)
-    syncer.sftpClient.utime(syncer.remotePath + "wiki", None)
-    syncer.ClearDirectory(
-        syncer.remotePath + "forum/cache",
-        excludes=["index.htm", ".htaccess"]
-    )
-    syncer.Close()
+        template = env.get_template(page.template)
+        template.stream(CURRENT=page).dump(join(WEBSITE_DIR, page.outfile))
+    
 
