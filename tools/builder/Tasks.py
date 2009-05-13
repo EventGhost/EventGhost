@@ -139,8 +139,17 @@ class Upload(TaskBase):
 
 
 
-class UpdateWebsite(TaskBase):
-    description = "Update website"
+class BuildWebsite(TaskBase):
+    description = "Build website"
+
+    def DoTask(self):
+        import builder.CreateWebsite
+        builder.CreateWebsite.Main()
+
+
+
+class SyncWebsite(TaskBase):
+    description = "Synchronize website"
     options = {"url": ""}
 
     def IsEnabled(self):
@@ -148,8 +157,19 @@ class UpdateWebsite(TaskBase):
 
 
     def DoTask(self):
-        import builder.website
-        builder.website.Main(self.options["url"])
+        from SftpSync import SftpSync
+    
+        syncer = SftpSync(self.options["url"])
+        addFiles = [
+            (join(builder.WEBSITE_DIR, "index.html"), "index.html"),
+        ]
+        syncer.Sync(builder.WEBSITE_DIR, addFiles)
+        syncer.sftpClient.utime(syncer.remotePath + "wiki", None)
+        syncer.ClearDirectory(
+            syncer.remotePath + "forum/cache",
+            excludes=["index.htm", ".htaccess"]
+        )
+        syncer.Close()
 
 
 
@@ -186,6 +206,7 @@ TASKS = [
     UpdateChangeLog(),
     CreateStaticImports(),
     CreateImports(),
+    BuildWebsite(),
     BuildHtml(),
     BuildChm(),
     CreateSourceArchive(),
@@ -193,7 +214,7 @@ TASKS = [
     CreateLibrary(),
     CreateInstaller(),
     Upload(),
-    UpdateWebsite(),
+    SyncWebsite(),
 ]
 
 

@@ -1,8 +1,10 @@
-<%inherit file="base.mako"/>\
-<%def name="head()">\
-    <link rel="stylesheet" type="text/css" charset="utf-8" media="all" href="/css/nav.css">
-</%def>\
-<%def name="menu()">\
+{% extends "base.tmpl" %}
+
+{% block extrahead %}
+    <link rel="stylesheet" type="text/css" charset="utf-8" media="all" href="/css/nav.css" >
+{%- endblock %}
+
+{% block navigation %}
 <div id="nav_header">
     <table>
         <tr>
@@ -30,22 +32,36 @@
                 </form>
             </td>
         </tr>
-	<tr  id="nav_menu_bar">
-	    <td>
-		<ul>
-% for page in MENU_TABS:
-                    <li\
-% if page == CURRENT:
- id="nav_current"\
-% endif
-><a href="${page.target}">${page.name}</a></li>
-% endfor
-                </ul>
-            </td>
-	</tr>
+    <tr id="nav_menu_bar">
+        <td>
+        <ul>
+{% for page in MENU_TABS %}
+            <li{% if page == CURRENT %} id="nav_current"{% endif %}><a href="{{page.target}}">{{page.name}}</a></li>
+{% endfor %}
+        </ul>
+        </td>
+    </tr>
     </table>
 </div>
-</%def>\
-<%def name="footer()">\
-</%def>\
-${next.body()}
+{% endblock %}
+
+{% block content %}{% endblock %}
+
+{% block page %}
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+{{ self.extrahead() }}
+    <title>{% block title %}{% endblock %}</title>
+</head>
+<body id="eg_body">
+{{ self.navigation() }}
+<div id="content">
+{{ self.content() }}
+</div>
+</body>
+</html>
+{% endblock %}
+
+{{ self.page() }}
