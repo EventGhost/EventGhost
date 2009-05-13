@@ -384,12 +384,12 @@ def GetFirstParagraph(text):
         text = DecodeReST(text)
         start = text.find("<p>")
         end = text.find("</p>")
-        return text[start+3:end]
+        return text[start+3:end].replace("\n", " ")
     else:
         result = ""
         for line in text.splitlines():
             if line == "":
                 break
             result += " " + line
-        return result
+        return ' '.join(result.split())
 
