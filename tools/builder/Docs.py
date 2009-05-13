@@ -71,7 +71,7 @@ def WritePluginList(filepath):
         for info in groups[kind]:
             description = GetFirstParagraph(info.description)
             description = re.sub(
-                r'<a\s+.*href=["\']http://(.*?)["\']>\s*((\n|.)+?)\s*</a>',
+                r'<a\s+.*?href=["\']http://(.*?)["\']>\s*((\n|.)+?)\s*</a>',
                 r'`\2 <http://\1>`_',
                 description
             )
@@ -156,14 +156,17 @@ GUI_CLASSES = [
 def Main(buildHtml=False, buildChm=False):
     import sphinx
     WritePluginList(join(DOCS_SOURCE_DIR, "pluginlist.rst"))
+
     filepath = join(DOCS_SOURCE_DIR, "eg", "classes.txt")
     outfile = open(filepath, "wt")
     outfile.write(CreateClsDocs(MAIN_CLASSES))
     outfile.close()
+    
     filepath = join(DOCS_SOURCE_DIR, "eg", "gui_classes.txt")
     outfile = open(filepath, "wt")
     outfile.write(CreateClsDocs(GUI_CLASSES))
     outfile.close()
+    
     if buildHtml:
         sphinx.main([
             None,
