@@ -132,6 +132,6 @@ def CreateLibrary():
     for filename in dllNames:
         if filename not in neededDlls:
             os.remove(join(libraryDir, filename))
-#    if builder.PYVERSION_STR == "26":
-#        RemoveAllManifests(libraryDir)
+    if builder.PYVERSION_STR == "26":
+        RemoveAllManifests(libraryDir)
 
