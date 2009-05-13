@@ -63,8 +63,6 @@ class FileData(object):
 
 
 
-MENU_TABS = (HomePage, DocsPage, WikiPage, ForumPage, DownloadPage)
-
 def GetSetupFiles():
     files = []
     for name in os.listdir(join(WEBSITE_DIR, "downloads")):
@@ -75,18 +73,13 @@ def GetSetupFiles():
                 files.append(fileData)
     return list(reversed(sorted(files, key=lambda x: x.name)))
 
-from docutils.core import publish_parts
+
 
 def rst2html(rst):
     return publish_parts(rst, writer_name="html")["fragment"]
 
 
-GLOBALS = {
-    "files": GetSetupFiles(),
-    "MENU_TABS": MENU_TABS,
-    'rst2html': rst2html,
-
-}
+MENU_TABS = (HomePage, DocsPage, WikiPage, ForumPage, DownloadPage)
 
 def Main():
     env = Environment(
@@ -96,7 +89,6 @@ def Main():
     env.globals = {
         "files": GetSetupFiles(),
         "MENU_TABS": MENU_TABS,
-        #"pathto": pathto,
     }
     env.filters = {'rst2html': rst2html}
 

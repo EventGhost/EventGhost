@@ -164,7 +164,10 @@ class SyncWebsite(TaskBase):
             (join(builder.WEBSITE_DIR, "index.html"), "index.html"),
         ]
         syncer.Sync(builder.WEBSITE_DIR, addFiles)
+        # touch wiki file, to force re-evaluation of the header template
         syncer.sftpClient.utime(syncer.remotePath + "wiki", None)
+        
+        # clear forum cache, to force re-building of the templates
         syncer.ClearDirectory(
             syncer.remotePath + "forum/cache",
             excludes=["index.htm", ".htaccess"]
@@ -206,14 +209,14 @@ TASKS = [
     UpdateChangeLog(),
     CreateStaticImports(),
     CreateImports(),
-    BuildWebsite(),
-    BuildHtml(),
     BuildChm(),
     CreateSourceArchive(),
     BuildPyExe(),
     CreateLibrary(),
     CreateInstaller(),
     Upload(),
+    BuildWebsite(),
+    BuildHtml(),
     SyncWebsite(),
 ]
 

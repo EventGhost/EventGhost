@@ -47,6 +47,10 @@
 
 {% block content %}{% endblock %}
 
+{% block footer %}
+<center>Copyright &copy; 2009 EventGhost Project</center>
+{%- endblock footer %}
+
 {% block page %}
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
@@ -59,6 +63,9 @@
 {{ self.navigation() }}
 <div id="content">
 {{ self.content() }}
+</div>
+<div id="eg_footer">
+{{ self.footer() }}
 </div>
 </body>
 </html>
