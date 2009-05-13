@@ -15,9 +15,9 @@ And they can do both at the same time.
 
 To write plugins you mostly need to know two classes EventGhost defines:
 
-1. :class:`eg.PluginBase` - This is the base class of all plugins and 
+1. `eg.PluginBase` - This is the base class of all plugins and 
    therefore the most essential.
-2. :class:`eg.ActionBase` - This is the base class of all actions a plugin 
+2. `eg.ActionBase` - This is the base class of all actions a plugin 
    might want to export to EventGhost. 
 
 You will need some basic knowledge of Python to understand this, but you don't 
@@ -56,7 +56,7 @@ You should first note, that we use the :mod:`eg` module to access a function.
 This is the same :mod:`eg` that is described by the page about scripting in 
 EventGhost.
 
-The :func:`eg.RegisterPlugin` function understands many parameters. Actually 
+The `eg.RegisterPlugin()` function understands many parameters. Actually 
 every parameter can be omitted, but you should fill out the parameters as 
 completely as you can.
 
@@ -86,16 +86,16 @@ completely as you can.
 
 .. note::
 
-    Don't do anything else before the call to :func:`eg.RegisterPlugin`. 
+    Don't do anything else before the call to `eg.RegisterPlugin()`. 
     It must be the first thing in your file. Do all additional imports and 
     initializations after this statement. The reason is, that EventGhost will 
     import each and every plugin when the user wants to add a plugin, because 
     EventGhost has to show a list of all plugins. But to speed this up, 
     EventGhost will interrupt the loading of the __init__.py, after it has 
-    got the needed information through :func:`eg.RegisterPlugin`.
+    got the needed information through `eg.RegisterPlugin()`.
 
 
-For the rest of this tutorial I will use the call to :func:`eg.RegisterPlugin`
+For the rest of this tutorial I will use the call to `eg.RegisterPlugin()`
 without any parameters to save some space in the source.
 
 Now we can start with the most minimal source code of a complete plugin::
