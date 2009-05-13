@@ -15,6 +15,12 @@ Welcome! This is the documentation for EventGhost |release|, last updated |today
 
    developer_docs
 
+.. toctree::
+   :hidden:
+   :glob:
+   
+   eg/*
+   
 Indices and tables
 ==================
 
