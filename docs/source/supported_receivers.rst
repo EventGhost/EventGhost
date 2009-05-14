@@ -62,11 +62,6 @@ Already supported devices
   <http://www.amazon.com/Sony-PlayStation-3-Blu-ray-Disc-Remote/dp/B000M17AVO>`_
 
 
-Planned devices
----------------
-
-* `IRTrans <http://www.irtrans.de/>`_ (transmitting IR will also be supported)
-
 Not directly supported devices
 --------------------------------
 
