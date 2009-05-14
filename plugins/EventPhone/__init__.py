@@ -29,7 +29,7 @@
 import eg
 
 eg.RegisterPlugin(
-    name = "EventPhone iPhone/iPod Touch Remote",
+    name = "EventPhone Remote",
     description=(
         u'Plugin for the EventPhone iPhone/Ipod Touch\u2122 native application.'
         u'\n\n<p>'
