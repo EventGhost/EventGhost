@@ -35,7 +35,7 @@ Hardware plugin for the `TechnoTrend USB Infrared Receiver
 import eg
 
 eg.RegisterPlugin(
-    name = "TechnoTrend USB Infrared Receiver",
+    name = "TechnoTrend USB IR Receiver",
     author = "Bitmonster",
     version = "1.1." + "$LastChangedRevision$".split()[1],
     kind = "remote",
