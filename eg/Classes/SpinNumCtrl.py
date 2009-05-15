@@ -87,12 +87,13 @@ class SpinNumCtrl(wx.Window):
             style,
             validator,
             name,
+            allowNone=True,
             #**kwargs # Can't set kwargs here, to avoid bug in NumCtrl
         )
         numCtrl.SetParameters(**kwargs) # To avoid bug in NumCtrl
         numCtrl.SetValue(value) # To avoid bug in NumCtrl
         numCtrl.SetMin(minValue)
-        
+
         self.numCtrl = numCtrl
         numCtrl.SetCtrlParameters(
             validBackgroundColour=GetColour(wx.SYS_COLOUR_WINDOW),
@@ -114,7 +115,7 @@ class SpinNumCtrl(wx.Window):
         spinbutton.Bind(wx.EVT_SPIN_DOWN, self.OnSpinDown)
 
         sizer = self.sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(numCtrl, 1, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND)
+        sizer.Add(numCtrl, 1, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND)
         sizer.Add(spinbutton, 0, wx.ALIGN_CENTER)
         self.SetSizerAndFit(sizer)
         self.Layout()
