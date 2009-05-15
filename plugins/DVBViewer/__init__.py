@@ -320,13 +320,14 @@ DVBVIEWER_WINDOWS = {
     2000: "TELETEXT",
 }
 
+DVBVIEWER_CLOSE = ( "Close DVBViewer", 12326)
 
 
 
 ACTIONS = (
     ("OSDMenu",                          "OSD-Menu",                            None,   111),
     ("OSDShowSubtitlemenu",              "OSD-Show Subtitlemenu",               None,  8247),
-    ("OSDShowAudiomenu",                 "OSD-Show Audiomenu",                  None,  8248),
+    ("OSD-Show Audiomenu",               "OSD-Show Audiomenu",                  None,  8248),
     ("OSDLeft",                          "OSD-Left",                            None,  2000),
     ("OSDRight",                         "OSD-Right",                           None,  2100),
     ("OSDUp",                            "OSD-Up",                              None,    78),
@@ -506,7 +507,6 @@ ACTIONS = (
     ("Hibernate",                        "Hibernate",                           None, 12323),
     ("Standby",                          "Standby",                             None, 12324),
     ("Slumbermode",                      "Slumbermode",                         None, 12325),
-    ("CloseDVBViewer",                   "Close DVBViewer",                     None, 12326),
     ("Reboot",                           "Reboot",                              None, 12329),
     ("Shutdown",                         "Shutdown",                            None, 12325),
     ("Exit",                             "Exit",                                None, 12294),
@@ -586,6 +586,10 @@ class Text:
     class Start :
         name = "Start DVBViewer"
         description = "Start DVBViewer through COM-API. For DVBViewer Pro only."
+
+    class CloseDVBViewer :
+        name = DVBVIEWER_CLOSE[0]
+        checkBoxText = "Wait until DVBViewer is terminated"
 
     class StopAllActiveRecordings :
         name = "Stop all active recordings"
@@ -1108,6 +1112,7 @@ class DVBViewer(eg.PluginClass):
     
     def __init__(self):
         self.AddAction(Start)
+        self.AddAction(CloseDVBViewer)
         self.AddAction(StopAllActiveRecordings)
         self.AddAction(GetNumberOfActiveRecordings)
         self.AddAction(IsRecording)
@@ -1998,6 +2003,48 @@ class Start(eg.ActionClass):
     def __call__(self):
         self.plugin.Connect( WAIT_CHECK_START_CONNECT )
         return True
+
+
+
+class CloseDVBViewer( eg.ActionClass ) :
+    
+    def __call__( self, waitForTermination = False ) :
+        if not self.plugin.workerThread and not self.plugin.terminateThread :
+            return False
+        plugin = self.plugin
+        plugin.SendCommand( DVBVIEWER_CLOSE[1] )
+        
+        if not waitForTermination :
+            return True
+        
+        checkTime = 0.1
+        timeout = 1000
+        while ( plugin.workerThread or plugin.terminateThread ) and timeout > 0:
+            sleep( checkTime )
+            timeout -= 1
+        
+        if timeout == 0 :
+            eg.PrintDebugNotice("DVBViewer could not be terminated")
+            plugin.TriggerEvent( "DVBViewerCouldNotBeTerminated" )
+            return False
+        return True
+        
+    def Configure(  self, waitForTermination = False ) :
+
+        plugin = self.plugin
+
+        self.panel = eg.ConfigPanel()
+        panel = self.panel
+
+        checkBox = wx.CheckBox( panel, -1, self.text.checkBoxText )
+        checkBox.SetValue( waitForTermination )
+
+        panel.AddLine( checkBox )
+
+        while panel.Affirmed():
+             waitForTermination      = checkBox.GetValue()
+ 
+             panel.SetResult( waitForTermination )
 
 
 
