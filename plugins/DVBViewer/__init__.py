@@ -327,7 +327,7 @@ DVBVIEWER_CLOSE = ( "Close DVBViewer", 12326)
 ACTIONS = (
     ("OSDMenu",                          "OSD-Menu",                            None,   111),
     ("OSDShowSubtitlemenu",              "OSD-Show Subtitlemenu",               None,  8247),
-    ("OSD-Show Audiomenu",               "OSD-Show Audiomenu",                  None,  8248),
+    ("OSDShowAudiomenu",                 "OSD-Show Audiomenu",                  None,  8248),
     ("OSDLeft",                          "OSD-Left",                            None,  2000),
     ("OSDRight",                         "OSD-Right",                           None,  2100),
     ("OSDUp",                            "OSD-Up",                              None,    78),
