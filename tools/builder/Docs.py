@@ -9,7 +9,7 @@ import builder
 from builder.Utils import StartProcess
 
 
-MAIN_DIR = builder.SOURCE_DIR
+MAIN_DIR = builder.buildSetup.sourceDir
 DOCS_MAIN_DIR = join(MAIN_DIR, "docs")
 DOCS_SOURCE_DIR = join(DOCS_MAIN_DIR, "source")
 DOCS_HTML_BUILD_DIR = join(MAIN_DIR, "website/docs")

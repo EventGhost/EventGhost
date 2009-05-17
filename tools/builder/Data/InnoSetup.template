@@ -14,19 +14,19 @@ AppPublisherURL=http://www.eventghost.org/
 AppSupportURL=http://www.eventghost.org/
 AppUpdatesURL=http://www.eventghost.org/
 AppCopyright=© 2005-2009 EventGhost Project
-AppVerName=EventGhost %(APP_VERSION)s
-AppVersion=%(APP_VERSION)s
-VersionInfoVersion=%(APP_NUMERICAL_VERSION)s
+AppVerName=EventGhost %(appVersion)s
+AppVersion=%(appVersion)s
+VersionInfoVersion=%(appNumericalVersion)s
 VersionInfoDescription=EventGhost Installer
-VersionInfoProductVersion=%(APP_VERSION)s
+VersionInfoProductVersion=%(appVersion)s
 DefaultDirName={pf}\EventGhost
 DefaultGroupName=EventGhost
 Compression=lzma/ultra
 SolidCompression=yes
 InternalCompressLevel=ultra
-OutputDir=%(OUT_DIR)s
-OutputBaseFilename=%(APP_NAME)s_%(APP_VERSION)s_Setup
-InfoBeforeFile=%(DATA_DIR)s\LICENSE.RTF
+OutputDir=%(outDir)s
+OutputBaseFilename=%(appName)s_%(appVersion)s_Setup
+InfoBeforeFile=%(dataDir)s\LICENSE.RTF
 DisableReadyPage=yes
 AppMutex=Global\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B
 
@@ -49,11 +49,11 @@ end;
 Type: filesandordirs; Name: "{app}\eg"
 
 [Files]
-Source: "%(LIBRARY_DIR)s\*.*"; DestDir: "{app}\%(LIBRARY_NAME)s"; Flags: ignoreversion recursesubdirs
-Source: "%(SOURCE_DIR)s\EventGhost.chm"; DestDir: "{app}"
+Source: "%(libraryDir)s\*.*"; DestDir: "{app}\%(libraryName)s"; Flags: ignoreversion recursesubdirs
+Source: "%(sourceDir)s\EventGhost.chm"; DestDir: "{app}"
 
 [Dirs]
-Name: "{app}\%(LIBRARY_NAME)s\site-packages"
+Name: "{app}\%(libraryName)s\site-packages"
 
 [Run]
 Filename: "{app}\EventGhost.exe"; Parameters: "-install"

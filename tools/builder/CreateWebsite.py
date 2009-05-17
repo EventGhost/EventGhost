@@ -6,7 +6,6 @@ from jinja2 import Environment, FileSystemLoader
 from docutils.core import publish_parts
 
 import builder
-WEBSITE_DIR = builder.WEBSITE_DIR
 
 class Page(object):
 
@@ -63,12 +62,12 @@ class FileData(object):
 
 
 
-def GetSetupFiles():
+def GetSetupFiles(srcDir):
     files = []
-    for name in os.listdir(join(WEBSITE_DIR, "downloads")):
+    for name in os.listdir(srcDir):
         if name.lower().startswith("eventghost_"):
             if name.lower().endswith("_setup.exe"):
-                path = join(WEBSITE_DIR, "downloads", name)
+                path = join(srcDir, name)
                 fileData = FileData(path)
                 files.append(fileData)
     return list(reversed(sorted(files, key=lambda x: x.name)))
@@ -79,21 +78,28 @@ def rst2html(rst):
     return publish_parts(rst, writer_name="html")["fragment"]
 
 
-MENU_TABS = (HomePage, DocsPage, WikiPage, ForumPage, DownloadPage)
 
-def Main():
-    env = Environment(
-        loader=FileSystemLoader(abspath(join(builder.DATA_DIR, 'templates'))),
-        trim_blocks=True
-    )
-    env.globals = {
-        "files": GetSetupFiles(),
-        "MENU_TABS": MENU_TABS,
-    }
-    env.filters = {'rst2html': rst2html}
+class CreateWebsite(builder.Task):
+    description = "Build website"
 
-    for page in MENU_TABS:
-        template = env.get_template(page.template)
-        template.stream(CURRENT=page).dump(join(WEBSITE_DIR, page.outfile))
+    def DoTask(self):
+        buildSetup = self.buildSetup
+        menuTabs = (HomePage, DocsPage, WikiPage, ForumPage, DownloadPage)
+        env = Environment(
+            loader=FileSystemLoader(
+                abspath(join(buildSetup.dataDir, 'templates'))
+            ),
+            trim_blocks=True
+        )
+        env.globals = {
+            "files": GetSetupFiles(join(buildSetup.websiteDir, "downloads")),
+            "MENU_TABS": menuTabs,
+        }
+        env.filters = {'rst2html': rst2html}
+        for page in menuTabs:
+            template = env.get_template(page.template)
+            template.stream(CURRENT=page).dump(
+                join(buildSetup.websiteDir, page.outfile)
+            )
+        
     
-

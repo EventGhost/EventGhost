@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 # This file is part of EventGhost.
 # Copyright (C) 2008 Lars-Peter Voss <bitmonster@eventghost.org>
 #
@@ -23,89 +24,78 @@
 """
 This script creates the EventGhost setup installer.
 """
-import sys
 import os
 from os.path import dirname, join, exists
 from glob import glob
 
 # local imports
 import builder
-from builder.CheckDependencies import CheckDependencies
-if not CheckDependencies():
-    sys.exit(1)
-from builder.InnoSetup import InnoInstaller
 
 
-# third-party module imports
-import pysvn
+class MyBuilder(builder.Builder):
+    name = "EventGhost"
+    description = "EventGhost Automation Tool"
+    companyName = "EventGhost Project"
+    copyright = u"Copyright © 2005-2009 EventGhost Project"
+    mainScript = "EventGhost.pyw"
+    
+    includeModules = [
+        "wx",
+        "PIL",
+        "comtypes",
+        "pywin32",
+        "pythoncom",
+        "isapi",
+        "win32com",
+        "docutils",
+        "Crypto",
+        "jinja2",
+    ]
+    excludeModules = [
+        "lib2to3",
+        "idlelib",
+        "gopherlib",
+        "Tix",
+        "test",
+        "Tkinter",
+        "_tkinter",
+        "Tkconstants",
+        "FixTk",
+        "tcl",
+        "turtle", # another Tkinter module
+    
+        "distutils.command.bdist_packager",
+        "distutils.mwerkscompiler",
+        "curses",
+        #"ctypes.macholib", # seems to be for Apple
+    
+        "wx.lib.vtk",
+        "wx.tools.Editra",
+        "wx.tools.XRCed",
+        "wx.lib.plot", # needs NumPy
+        "wx.lib.floatcanvas", # needs NumPy
+    
+        "ImageTk", # py2exe seems to hang if not removed
+        "ImageGL",
+        "ImageQt",
+        "WalImageFile", # odd syntax error in file
+        # and no TCL through PIL
+        "_imagingtk",
+        "PIL._imagingtk",
+        "PIL.ImageTk",
+        "FixTk",
+    
+        "win32com.gen_py",
+        "win32com.demos",
+        "win32com.axdebug",
+        "win32com.axscript",
+        "pywin",
+        "comtypes.gen",
+        "eg",
+    ]
+    
 
-
-INCLUDED_MODULES = [
-    "wx",
-    "PIL",
-    "comtypes",
-    "pywin32",
-    "pythoncom",
-    "isapi",
-    "win32com",
-    "docutils",
-    "Crypto",
-]
-
-EXCLUDED_MODULES = [
-    "lib2to3",
-    "idlelib",
-    "gopherlib",
-    "Tix",
-    "test",
-    "Tkinter",
-    "_tkinter",
-    "Tkconstants",
-    "FixTk",
-    "tcl",
-    "turtle", # another Tkinter module
-
-    "distutils.command.bdist_packager",
-    "distutils.mwerkscompiler",
-    "curses",
-    #"ctypes.macholib", # seems to be for Apple
-
-    "wx.lib.vtk",
-    "wx.tools.Editra",
-    "wx.tools.XRCed",
-    "wx.lib.plot", # needs NumPy
-    "wx.lib.floatcanvas", # needs NumPy
-
-    "ImageTk", # py2exe seems to hang if not removed
-    "ImageGL",
-    "ImageQt",
-    "WalImageFile", # odd syntax error in file
-    # and no TCL through PIL
-    "_imagingtk",
-    "PIL._imagingtk",
-    "PIL.ImageTk",
-    "FixTk",
-
-    "win32com.gen_py",
-    "win32com.demos",
-    "win32com.axdebug",
-    "win32com.axscript",
-    "pywin",
-    "comtypes.gen",
-    "eg",
-]
-
-builder.INCLUDED_MODULES = INCLUDED_MODULES
-builder.EXCLUDED_MODULES = EXCLUDED_MODULES
-builder.APP_NAME = "EventGhost"
-builder.MAIN_SCRIPT = "EventGhost.pyw"
-
-
-class MyInstaller(object):
-    appShortName = "EventGhost"
-
-    @staticmethod
-    def GetSetupFiles():
+    def GetSetupFiles(self):
         """
         Return all files needed by the installer.
 
@@ -115,10 +105,11 @@ class MyInstaller(object):
 
         Plugins with a "noinclude" file are also skipped.
         """
+        import pysvn
 
         files = []
         client = pysvn.Client()
-        workingDir = builder.SOURCE_DIR
+        workingDir = self.sourceDir
         props = client.propget("noinstall", workingDir, recurse=True)
         # propget returns the pathes with forward slash as deliminator, but we
         # need backslashes
@@ -155,7 +146,8 @@ class MyInstaller(object):
         """
         Create and compile the Inno Setup installer script.
         """
-        inno = InnoInstaller()
+        from builder.InnoSetup import InnoInstaller
+        inno = InnoInstaller(self)
         plugins = {}
         for filename in self.GetSetupFiles():
             if filename.startswith("plugins\\"):
@@ -163,33 +155,33 @@ class MyInstaller(object):
                 plugins[pluginFolder] = True
             if (
                 filename.startswith("lib")
-                and not filename.startswith("lib%s\\" % builder.PYVERSION_STR)
+                and not filename.startswith("lib%s\\" % self.pyVersionStr)
             ):
                 continue
             if filename.lower() == r"plugins\task\hook.dll":
                 inno.AddFile(
-                    join(builder.SOURCE_DIR, filename), 
+                    join(self.sourceDir, filename), 
                     dirname(filename),
                     ignoreversion=False
                 )
                 continue
-            inno.AddFile(join(builder.SOURCE_DIR, filename), dirname(filename))
-        for filename in glob(join(builder.LIBRARY_DIR, '*.*')):
-            inno.AddFile(filename, builder.LIBRARY_NAME)
+            inno.AddFile(join(self.sourceDir, filename), dirname(filename))
+        for filename in glob(join(self.libraryDir, '*.*')):
+            inno.AddFile(filename, self.libraryName)
         inno.AddFile(
-            join(builder.SOURCE_DIR, self.appShortName + ".exe"),
+            join(self.sourceDir, self.name + ".exe"),
             destName="EventGhost.exe"
         )
         inno.AddFile(
-            join(builder.SOURCE_DIR, "py%s.exe" % builder.PYVERSION_STR),
+            join(self.sourceDir, "py%s.exe" % self.pyVersionStr),
             destName="py.exe"
         )
         inno.AddFile(
-            join(builder.SOURCE_DIR, "pyw%s.exe" % builder.PYVERSION_STR),
+            join(self.sourceDir, "pyw%s.exe" % self.pyVersionStr),
             destName="pyw.exe"
         )
         inno.AddFile(
-            join(builder.TMP_DIR, "VersionRevision.py"),
+            join(self.tmpDir, "VersionRevision.py"),
             destDir="eg\\Classes"
         )
         # create entries in the [InstallDelete] section of the Inno script to
@@ -202,12 +194,10 @@ class MyInstaller(object):
             )
         inno.Add(
             "InstallDelete",
-            'Type: files; Name: "{app}\\lib%s\\*.*"' % builder.PYVERSION_STR
+            'Type: files; Name: "{app}\\lib%s\\*.*"' % self.pyVersionStr
         )
         inno.ExecuteInnoSetup()
 
 
-builder.installer = MyInstaller()
-import builder.Gui
-builder.Gui.Main()
+MyBuilder().RunGui()
 
