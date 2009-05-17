@@ -1,3 +1,6 @@
+import zipfile
+from os.path import join, isdir
+
 import builder
 
 
@@ -9,7 +12,6 @@ class CreateSourceArchive(builder.Task):
         Create a zip archive off all versioned files in the working copy.
         """
         import pysvn
-        import zipfile
     
         filename = join(
             self.buildSetup.outDir,
@@ -21,7 +23,7 @@ class CreateSourceArchive(builder.Task):
         for status in client.status(workingDir, ignore=True):
             if status.is_versioned:
                 path = status.path
-                if not os.path.isdir(path):
+                if not isdir(path):
                     arcname = path[len(workingDir) + 1:]
                     zipFile.write(str(path), str(arcname))
         zipFile.close()
