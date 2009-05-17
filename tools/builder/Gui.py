@@ -75,7 +75,7 @@ class MainDialog(wx.Dialog):
                 ctrl = self.ctrls[section]
                 task.enabled = ctrl.GetValue()
                 ctrl.Enable(False)
-        builder.config.SaveSettings()
+        builder.buildSetup.config.SaveSettings()
         thread = threading.Thread(target=self.DoMain)
         thread.start()
 
@@ -105,7 +105,6 @@ class MainDialog(wx.Dialog):
 
 
 def Main():
-    #installer = MyInstaller()
     app = wx.App(0)
     app.SetExitOnFrameDelete(True)
     mainDialog = MainDialog()

@@ -15,7 +15,7 @@ def StartProcess(*args):
     startupInfo.wShowWindow = subprocess.SW_HIDE
     process = Popen(
         args,
-        cwd=join(builder.SOURCE_DIR, "tools"),
+        cwd=join(builder.buildSetup.sourceDir, "tools"),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         startupinfo=startupInfo,
@@ -85,31 +85,8 @@ def CommitSvn():
     svn = pysvn.Client()
     svn.callback_ssl_server_trust_prompt = SslServerTrustPromptCallback
     svn.checkin(
-        [builder.SOURCE_DIR],
-        "Created installer for %s" % builder.APP_VERSION
+        [builder.buildSetup.sourceDir],
+        "Created installer for %s" % builder.buildSetup.appVersion
     )
 
-
-def CreateSourceArchive(filename=None):
-    """
-    Create a zip archive off all versioned files in the working copy.
-    """
-    import pysvn
-    import zipfile
-
-    if filename is None:
-        filename = join(
-            builder.OUT_DIR,
-            "%(APP_NAME)s_%(APP_VERSION)s_Source.zip" % builder.__dict__
-        )
-    client = pysvn.Client()
-    workingDir = builder.SOURCE_DIR
-    zipFile = zipfile.ZipFile(filename, "w", zipfile.ZIP_DEFLATED)
-    for status in client.status(workingDir, ignore=True):
-        if status.is_versioned:
-            path = status.path
-            if not os.path.isdir(path):
-                arcname = path[len(workingDir) + 1:]
-                zipFile.write(str(path), str(arcname))
-    zipFile.close()
 

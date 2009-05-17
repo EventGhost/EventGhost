@@ -5,32 +5,17 @@ from os.path import join
 import builder
 
 
-class TaskBase(object):
-    value = None
-    enabled = True
 
-    @classmethod
-    def GetId(cls):
-        return cls.__module__ + "." + cls.__name__
-
-    def IsEnabled(self):
-        return True
-
-    def DoTask(self):
-        raise NotImplementedError
-
-
-
-class UpdateSvn(TaskBase):
+class UpdateSvn(builder.Task):
     description = "Update from SVN"
 
     def DoTask(self):
         from builder.Utils import UpdateSvn
-        UpdateSvn(builder.SOURCE_DIR)
+        UpdateSvn(self.buildSetup.sourceDir)
 
 
 
-class UpdateVersionFile(TaskBase):
+class UpdateVersionFile(builder.Task):
     """
     Update buildTime and revision for eg/Classes/VersionRevision.py
     """
@@ -41,18 +26,18 @@ class UpdateVersionFile(TaskBase):
         from builder.Utils import GetSvnRevision
         import imp
 
-        svnRevision = GetSvnRevision(builder.SOURCE_DIR)
-        outfile = open(join(builder.TMP_DIR, "VersionRevision.py"), "wt")
+        svnRevision = GetSvnRevision(self.buildSetup.sourceDir)
+        outfile = open(join(self.buildSetup.tmpDir, "VersionRevision.py"), "wt")
         outfile.write("revision = %r\n" % svnRevision)
         outfile.write("buildTime = %f\n" % time.time())
         outfile.close()
-        versionFilePath = join(builder.SOURCE_DIR, "eg", "Classes", "Version.py")
+        versionFilePath = join(self.buildSetup.sourceDir, "eg", "Classes", "Version.py")
         mod = imp.load_source("Version", versionFilePath)
-        builder.APP_VERSION = mod.Version.base + (".r%s" % svnRevision)
-        builder.APP_NUMERICAL_VERSION = mod.Version.base + ".%s" % svnRevision
+        self.buildSetup.appVersion = mod.Version.base + (".r%s" % svnRevision)
+        self.buildSetup.appNumericalVersion = mod.Version.base + ".%s" % svnRevision
 
 
-class UpdateChangeLog(TaskBase):
+class UpdateChangeLog(builder.Task):
     """
     Add a version header to CHANGELOG.TXT if needed.
     """
@@ -60,9 +45,9 @@ class UpdateChangeLog(TaskBase):
     enabled = None
 
     def DoTask(self):
-        path = join(builder.SOURCE_DIR, "CHANGELOG.TXT")
+        path = join(self.buildSetup.sourceDir, "CHANGELOG.TXT")
         timeStr = time.strftime("%m/%d/%Y")
-        header = "**%s (%s)**\n\n" % (builder.APP_VERSION, timeStr)
+        header = "**%s (%s)**\n\n" % (self.buildSetup.appVersion, timeStr)
         infile = open(path, "r")
         data = infile.read(100) # read some data from the beginning
         if data.strip().startswith("**"):
@@ -76,7 +61,7 @@ class UpdateChangeLog(TaskBase):
 
 
 
-class BuildHtml(TaskBase):
+class BuildHtml(builder.Task):
     description = "Build HTML docs"
 
     def DoTask(self):
@@ -85,7 +70,7 @@ class BuildHtml(TaskBase):
 
 
 
-class BuildChm(TaskBase):
+class BuildChm(builder.Task):
     description = "Build CHM docs"
 
     def DoTask(self):
@@ -94,33 +79,15 @@ class BuildChm(TaskBase):
 
 
 
-class CreateSourceArchive(TaskBase):
-    description = "Build source archive"
-
-    def DoTask(self):
-        from builder.Utils import CreateSourceArchive
-        CreateSourceArchive()
-
-
-
-class CreateLibrary(TaskBase):
-    description = "Build lib%d%d" %sys.version_info[0:2]
-
-    def DoTask(self):
-        import builder.Library
-        builder.Library.CreateLibrary()
-
-
-
-class CreateInstaller(TaskBase):
+class CreateInstaller(builder.Task):
     description = "Build Setup.exe"
 
     def DoTask(self):
-        builder.installer.CreateInstaller()
+        self.buildSetup.CreateInstaller()
 
 
 
-class Upload(TaskBase):
+class Upload(builder.Task):
     description = "Upload through FTP"
     options = {"url": ""}
 
@@ -130,25 +97,17 @@ class Upload(TaskBase):
 
     def DoTask(self):
         import builder.Upload
-        filename = builder.APP_NAME + "_" + builder.APP_VERSION + "_Setup.exe"
-        src = join(builder.OUT_DIR, filename)
-        dst = join(builder.WEBSITE_DIR, "downloads", filename)
+        buildSetup = self.builder.buildSetup
+        filename = buildSetup.appName + "_" + buildSetup.appVersion + "_Setup.exe"
+        src = join(buildSetup.outDir, filename)
+        dst = join(buildSetup.websiteDir, "downloads", filename)
         builder.Upload.Upload(src, self.options["url"])
         shutil.copyfile(src, dst)
         shutil.copystat(src, dst)
 
 
 
-class BuildWebsite(TaskBase):
-    description = "Build website"
-
-    def DoTask(self):
-        import builder.CreateWebsite
-        builder.CreateWebsite.Main()
-
-
-
-class SyncWebsite(TaskBase):
+class SyncWebsite(builder.Task):
     description = "Synchronize website"
     options = {"url": ""}
 
@@ -161,9 +120,9 @@ class SyncWebsite(TaskBase):
     
         syncer = SftpSync(self.options["url"])
         addFiles = [
-            (join(builder.WEBSITE_DIR, "index.html"), "index.html"),
+            (join(self.buildSetup.websiteDir, "index.html"), "index.html"),
         ]
-        syncer.Sync(builder.WEBSITE_DIR, addFiles)
+        syncer.Sync(self.buildSetup.websiteDir, addFiles)
         # touch wiki file, to force re-evaluation of the header template
         syncer.sftpClient.utime(syncer.remotePath + "wiki", None)
         
@@ -176,32 +135,12 @@ class SyncWebsite(TaskBase):
 
 
 
-class CreateStaticImports(TaskBase):
-    description = "Create StaticImports.py"
-
-    def DoTask(self):
-        import builder.StaticImports
-        builder.StaticImports.DoTask()
-
-
-
-class CreateImports(TaskBase):
-    description = "Create Imports.py"
-
-    def DoTask(self):
-        import builder.Imports
-        builder.Imports.DoTask()
-
-
-
-class BuildPyExe(TaskBase):
-    description = "Build py.exe and pyw.exe"
-
-    def DoTask(self):
-        import builder.PyExe
-        builder.PyExe.DoTask()
-
-
+from builder.CreateStaticImports import CreateStaticImports
+from builder.CreateImports import CreateImports
+from builder.CreateSourceArchive import CreateSourceArchive
+from builder.CreatePyExe import CreatePyExe
+from builder.CreateLibrary import CreateLibrary
+from builder.CreateWebsite import CreateWebsite
 
 TASKS = [
     UpdateSvn(),
@@ -211,11 +150,11 @@ TASKS = [
     CreateImports(),
     BuildChm(),
     CreateSourceArchive(),
-    BuildPyExe(),
+    CreatePyExe(),
     CreateLibrary(),
     CreateInstaller(),
     Upload(),
-    BuildWebsite(),
+    CreateWebsite(),
     BuildHtml(),
     SyncWebsite(),
 ]

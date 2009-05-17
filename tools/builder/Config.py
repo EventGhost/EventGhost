@@ -1,5 +1,4 @@
 import ConfigParser
-from builder.Tasks import TASKS
 
 
 class Config(object):
@@ -13,6 +12,7 @@ class Config(object):
         """
         Load the ini file and set all options.
         """
+        from builder.Tasks import TASKS
         configParser = ConfigParser.ConfigParser()
         configParser.read(self._configFilePath)
         for task in TASKS:
@@ -31,6 +31,7 @@ class Config(object):
         """
         Save all options to the ini file.
         """
+        from builder.Tasks import TASKS
         config = ConfigParser.ConfigParser()
         # make ConfigParser case-sensitive
         config.optionxform = str

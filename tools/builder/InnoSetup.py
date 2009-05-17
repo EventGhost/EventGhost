@@ -24,7 +24,6 @@ import sys
 import _winreg
 from os.path import abspath, join, exists
 
-import builder
 from builder.Utils import StartProcess
 
 import logging
@@ -91,8 +90,9 @@ class InnoInstaller(object):
     Helper class to create Inno Setup installers more easily.
     """
 
-    def __init__(self):
+    def __init__(self, buildSetup):
         self.innoSections = {}
+        self.buildSetup = buildSetup
 
 
     def Add(self, section, line):
@@ -121,25 +121,25 @@ class InnoInstaller(object):
         Finishes the setup, writes the Inno Setup script and calls the
         Inno Setup compiler.
         """
-        srcDir = builder.SOURCE_DIR
-        if builder.PYVERSION_STR == "25":
+        srcDir = self.buildSetup.sourceDir
+        if self.buildSetup.pyVersionStr == "25":
             self.AddFile(join(srcDir, "MFC71.dll"))
             self.AddFile(join(srcDir, "msvcr71.dll"))
             self.AddFile(join(srcDir, "msvcp71.dll"))
             self.AddFile(join(srcDir, "python25.dll"))
-        elif builder.PYVERSION_STR == "26":
+        elif self.buildSetup.pyVersionStr == "26":
             self.AddFile(join(srcDir, "msvcr90.dll"))
             self.AddFile(join(srcDir, "msvcp90.dll"))
             self.AddFile(join(srcDir, "msvcm90.dll"))
             self.AddFile(join(srcDir, "python26.dll"))
             self.AddFile(join(srcDir, "Microsoft.VC90.CRT.manifest"))
         innoScriptTemplate = file(
-                join(builder.DATA_DIR, "InnoSetup.template"),
+                join(self.buildSetup.dataDir, "InnoSetup.template"),
                 "rt"
         ).read()
-        innoScriptPath = join(builder.TMP_DIR, "Setup.iss")
+        innoScriptPath = join(self.buildSetup.tmpDir, "Setup.iss")
         issFile = open(innoScriptPath, "w")
-        issFile.write(innoScriptTemplate % builder.__dict__)
+        issFile.write(innoScriptTemplate % self.buildSetup.__dict__)
         for section, lines in self.innoSections.iteritems():
             issFile.write("[%s]\n" % section)
             for line in lines:
