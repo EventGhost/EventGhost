@@ -52,90 +52,103 @@ eg.RegisterPlugin(
 )
 
 import wx
-import BaseHTTPServer
-import SimpleHTTPServer
 import os
 import posixpath
-import urllib
 import threading
 import httplib
-import mimetypes
 import base64
+from BaseHTTPServer import HTTPServer
+from SimpleHTTPServer import SimpleHTTPRequestHandler
+from urllib import unquote, unquote_plus
 
 
-
-class MyServer(BaseHTTPServer.HTTPServer):
-    pass
+class MyServer(HTTPServer):
+    
+    def __init__(self, address, handler, basepath, authRealm, authString):
+        HTTPServer.__init__(self, address, handler)
+        self.basepath = basepath
+        self.authRealm = authRealm
+        self.authString = authString
+        
     #def handle_error(self, request, client_address):
     #    eg.PrintError("HTTP Error")
 
 
 
-class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 
+    def Authenticate(self):
+        # only authenticate, if set
+        if self.server.authString is None:
+            return True
+        
+        # do Basic HTTP-Authentication
+        authHeader = self.headers.get('authorization')
+        if authHeader is not None:
+            (authType, authData) = authHeader.split(' ', 2)
+            if authType.lower() == 'basic':
+                if base64.decodestring(authData) == self.server.authString:
+                    return True
+                
+        self.send_response(401)
+        self.send_header(
+            'WWW-Authenticate', 
+            'Basic realm="%s"' % self.server.authRealm
+        )
+        self.end_headers()
+        return False
+
+        
     def do_GET(self):
         """Serve a GET request."""
-
         # First do Basic HTTP-Authentication, if set
-        if self.server.authString != None:
-            authenticated = False
-            authHeader = self.headers.get('authorization')
-            if authHeader is not None:
-                (authType, authData) = authHeader.split(' ', 2)
-                if authType.lower() == 'basic':
-                    if base64.decodestring(authData) == self.server.authString:
-                        authenticated= True
-            if not authenticated:
-                self.send_response(401)
-                self.send_header(
-                    'WWW-Authenticate', 
-                    'Basic realm="%s"' % self.server.authRealm
-                )
-                self.end_headers()
-                return
-
+        if not self.Authenticate():
+            return
+        
         # Main Handler
-        f = None
+        infile = None
         try:
-            p = self.path.split('?', 1)
-            self.path = p[0]
-            f = self.send_head()
-            if not f:
+            pathParts = self.path.split('?', 1)
+            self.path = pathParts[0]
+            
+            infile = self.send_head()
+            if not infile:
                 return
-            self.copyfile(f, self.wfile)
-            f.close()
-            f = None
-            if len(p) < 2:
+            self.copyfile(infile, self.wfile)
+            infile.close()
+            infile = None
+            
+            if len(pathParts) < 2:
                 return
-            a = p[1].split('&')
-            event = urllib.unquote_plus(a[0]).decode("latin1")
+            queryParts = [
+                unquote_plus(part).decode("latin1")
+                    for part in pathParts[1].split('&')
+            ]
+            event = queryParts[0]
             withoutRelease = False
             payload = None
-            if len(a) > 1:
+            if len(queryParts) > 1:
                 startPos = 1
-                if a[1] == "withoutRelease":
+                if queryParts[1] == "withoutRelease":
                     withoutRelease = True
                     startPos = 2
-                if len(a) > startPos:
-                    payload = []
-                    for i in range(startPos, len(a)):
-                        payload.append(
-                            urllib.unquote_plus(a[i]).decode("latin1")
-                        )
+                if len(queryParts) > startPos:
+                    payload = queryParts[startPos:]
             if event.strip() == "ButtonReleased":
                 self.EndLastEvent()
             elif withoutRelease:
                 self.TriggerEnduringEvent(event, payload)
             else:
                 self.TriggerEvent(event, payload)
-        except Exception, ex:
+        except Exception, exc:
+            self.EndLastEvent()
             eg.PrintError("Webserver socket error", self.path)
-            eg.PrintError(Exception, ex)
-            if f is not None:
-                f.close()
-            if ex.args[0] == 10053: # Software caused connection abort
+            eg.PrintError(Exception, exc)
+            if infile is not None:
+                infile.close()
+            if exc.args[0] == 10053: # Software caused connection abort
                 pass
-            elif ex.args[0] == 10054: # Connection reset by peer
+            elif exc.args[0] == 10054: # Connection reset by peer
                 pass
             else:
                 raise
@@ -146,6 +159,10 @@ class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         pass
 
 
+    def copyfile(self, src, dst):
+        dst.write(src.read())
+        
+        
     def translate_path(self, path):
         """Translate a /-separated PATH to the local filename syntax.
 
@@ -157,9 +174,8 @@ class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # stolen from SimpleHTTPServer.SimpleHTTPRequestHandler
         # but changed to handle files from a defined basepath instead
         # of os.getcwd()
-        path = posixpath.normpath(urllib.unquote(path))
-        words = path.split('/')
-        words = filter(None, words)
+        path = posixpath.normpath(unquote(path))
+        words = [word for word in path.split('/') if word]
         path = self.server.basepath
         for word in words:
             drive, word = os.path.splitdrive(word)
@@ -169,16 +185,8 @@ class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             path = os.path.join(path, word)
         return path
 
-    extensions_map = mimetypes.types_map.copy()
-    extensions_map.update(
-        {
-            '': 'application/octet-stream', # Default
-            '.py': 'text/plain',
-            '.c': 'text/plain',
-            '.h': 'text/plain',
-            '.ico': 'image/x-icon',
-        }
-    )
+    extensions_map = SimpleHTTPRequestHandler.extensions_map.copy()
+    extensions_map['.ico'] = 'image/x-icon'
 
 
 
@@ -217,8 +225,11 @@ class Webserver(eg.PluginBase):
         self.authUsername = authUsername
         self.authPassword = authPassword
         self.abort = False
-        self.httpd_thread = threading.Thread(name="WebserverThread", target=self.ThreadLoop)
-        self.httpd_thread.start()
+        self.httpdThread = threading.Thread(
+            name="WebserverThread", 
+            target=self.ThreadLoop
+        )
+        self.httpdThread.start()
         self.running = True
 
 
@@ -228,25 +239,27 @@ class Webserver(eg.PluginBase):
             conn = httplib.HTTPConnection("127.0.0.1:%d" % self.port)
             conn.request("QUIT", "/")
             conn.getresponse()
-            self.httpd_thread = None
+            self.httpdThread = None
             self.running = False
 
 
     def ThreadLoop(self):
-        class mySubHandler(MyHTTPRequestHandler):
+        class MySubHandler(MyHTTPRequestHandler):
             TriggerEvent = self.TriggerEvent
             TriggerEnduringEvent = self.TriggerEnduringEvent
             EndLastEvent = self.EndLastEvent
 
-        server = MyServer(('', self.port), mySubHandler)
-        server.basepath = self.basepath
-
-        server.authRealm = self.authRealm
-        if self.authUsername != '' or self.authPassword != '':
-            server.authString = self.authUsername + ':' + self.authPassword
+        if self.authUsername or self.authPassword:
+            authString = self.authUsername + ':' + self.authPassword
         else:
-            server.authString = None
-
+            authString = None
+        server = MyServer(
+            ('', self.port), 
+            MySubHandler,
+            self.basepath,
+            self.authRealm,
+            authString
+        )
         # Handle one request at a time until stopped
         while not self.abort:
             server.handle_request()
