@@ -911,6 +911,10 @@ class DvbViewerWorkerThread(eg.ThreadWorker):
         This will be called inside the thread at the beginning.
         """
         self.plugin = plugin
+        
+        self.dvbviewer = None
+        self.comObj   = None
+        
         self.dvbviewer = EnsureDispatch("DVBViewerServer.DVBViewer")
         # try if we can get an attribute from the COM instance
         self.dvbviewer.CurrentChannelNr
@@ -926,8 +930,10 @@ class DvbViewerWorkerThread(eg.ThreadWorker):
         This will be called inside the thread when it finishes. It will even
         be called if the thread exits through an exception.
         """
-        del self.comObj
-        del self.dvbviewer
+        if self.comObj :
+            del self.comObj
+        if self.dvbviewer :
+            del self.dvbviewer
         self.plugin.workerThread = None
 
 
@@ -2665,11 +2671,11 @@ class TaskScheduler( eg.ActionClass ) :
             triggerIndex, taskTrigger = workItem.CreateTrigger()
             trigger = taskTrigger.GetTrigger()
             trigger.Flags = 0
-            trigger.BeginYear =   int( strftime( '%Y', runTime ) )
-            trigger.BeginMonth =  int( strftime( '%m', runTime ) )
-            trigger.BeginDay =    int( strftime( '%d', runTime ) )
-            trigger.StartMinute = int( strftime( '%M', runTime ) )
-            trigger.StartHour =   int( strftime( '%H', runTime ) )
+            trigger.BeginYear =   runTime.tm_year
+            trigger.BeginMonth =  runTime.tm_mon
+            trigger.BeginDay =    runTime.tm_mday
+            trigger.StartHour =   runTime.tm_hour
+            trigger.StartMinute = runTime.tm_min
 
             trigger.TriggerType = int( taskscheduler.TASK_TIME_TRIGGER_ONCE )
             taskTrigger.SetTrigger( trigger )
