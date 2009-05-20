@@ -58,8 +58,8 @@ from ctypes.wintypes import DWORD
 DLL_PATH = join(abspath(split(__file__)[0]), "irdata.dll")
 
 CODES = {
-    0x0009C272: "OK",
-    0x00204272: "OK",
+    0x0009C272: "Ok",
+    0x00204272: "Ok",
     0x002709C2: "Left",
     0x008109C2: "Left",
     0x002709C8: "Right",
@@ -92,10 +92,10 @@ CODES = {
     0x0009C24E: "Power",
     0x00810938: "Mute",
     0x00270938: "Mute",
-    0x00810924: "ChanelUp",
-    0x00270924: "ChanelUp",
-    0x00810920: "ChanelDown",
-    0x00270920: "ChanelDown",
+    0x00810924: "ChannelUp",
+    0x00270924: "ChannelUp",
+    0x00810920: "ChannelDown",
+    0x00270920: "ChannelDown",
     0x00810926: "VolumeUp",
     0x00270926: "VolumeUp",
     0x02042480: "VolumeDown",
