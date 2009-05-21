@@ -279,6 +279,19 @@ class TreeCtrl(wx.TreeCtrl):
         self.dropTarget = EventDropTarget(self)
         self.SetDropTarget(self.dropTarget)
         self.hwnd = self.GetHandle()
+        normalfont = self.GetFont()
+        italicfont = wx.Font(
+            normalfont.GetPointSize(), 
+            normalfont.GetFamily(), 
+            normalfont.GetStyle(), 
+            normalfont.GetWeight(), 
+            normalfont.GetUnderlined(),
+            normalfont.GetFaceName(),
+            normalfont.GetDefaultEncoding()
+        )
+        italicfont.SetStyle(wx.FONTSTYLE_ITALIC)
+        self.normalfont = normalfont
+        self.italicfont = italicfont
 
 
     if eg.debugLevel:
