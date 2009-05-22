@@ -322,7 +322,9 @@ class TreeCtrl(wx.TreeCtrl):
         item = event.GetItem()
         if item.IsOk():
             wx.CallAfter(eg.UndoHandler.Configure().Try, self.document)
-
+        # if we don't call Skip(), a expandable item would not expand
+        event.Skip()
+        
 
     @eg.AssertNotMainThread
     def SetData(self):
