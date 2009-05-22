@@ -3,6 +3,7 @@ import sys
 import time
 import subprocess
 import re
+import _winreg
 from os.path import join
 
 import builder
@@ -81,4 +82,21 @@ def UpdateSvn(workingCopy):
     svn = pysvn.Client()
     svn.callback_ssl_server_trust_prompt = SslServerTrustPromptCallback
     svn.update(workingCopy)
+
+
+def GetHtmlHelpCompilerPath():
+    """
+    Try to find the install location of the HTML Help command line compiler
+    """
+    subkey = r"Software\Microsoft\HTML Help Workshop"
+    try:
+        key = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER, subkey)
+        path = _winreg.QueryValueEx(key, "InstallDir")[0]
+    except WindowsError:
+        path = join(os.environ["PROGRAMFILES"], "HTML Help Workshop")
+    programPath = join(path, "hhc.exe")
+    if not os.path.exists(programPath):
+        return None
+    return programPath
+
 

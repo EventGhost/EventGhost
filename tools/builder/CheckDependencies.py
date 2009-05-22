@@ -3,7 +3,8 @@ import warnings
 from string import digits
 from os.path import join
 
-from InnoSetup import GetInnoCompilerPath
+from builder.InnoSetup import GetInnoCompilerPath
+from builder.Utils import GetHtmlHelpCompilerPath
 
 
 
@@ -89,6 +90,19 @@ class InnoSetupDependency(DependencyBase):
             raise MissingDependency
 
 
+class HtmlHelpWorkshopDependency(DependencyBase):
+    name = "HTML Help Workshop"
+    version = "1.0"
+    url = (
+        "http://www.microsoft.com/Downloads/details.aspx?"
+        "familyid=00535334-C8A6-452F-9AA0-D597D16580CC&displaylang=en"
+    )
+    
+    def Check(self):
+        if not GetHtmlHelpCompilerPath():
+            raise MissingDependency
+
+
 DEPENDENCIES = [
     ModuleDependency(
         name = "wxPython",
@@ -135,6 +149,7 @@ DEPENDENCIES = [
     PyWin32Dependency(),
     StacklessDependency(),
     InnoSetupDependency(),
+    HtmlHelpWorkshopDependency(),
 ]
 
 
