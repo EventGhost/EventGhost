@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import subprocess
+import re
 from os.path import join
 
 import builder
@@ -42,18 +43,30 @@ def ExecutePy(*args):
     return StartProcess(sys.executable, "-u", "-c", "\n".join(args))
 
 
-def GetSvnRevision(workingCopy):
+def GetSvnRevision(workingCopyPath):
     """
-    Return the highest SVN revision in the working copy.
+    Returns the SVN revision of a directory as an integer.
+
+    Returns None if anything goes wrong, such as an unexpected
+    format of internal SVN files.
     """
-    import pysvn
-    client = pysvn.Client()
-    svnRevision = 0
-    for status in client.status(workingCopy, ignore=True):
-        if status.is_versioned:
-            if status.entry.revision.number > svnRevision:
-                svnRevision = status.entry.revision.number
-    return svnRevision
+    rev = None
+    entriesPath = os.path.join(workingCopyPath, ".svn", "entries")
+    try:
+        entries = open(entriesPath, 'r').read()
+    except IOError:
+        pass
+    else:
+        # Versions >= 7 of the entries file are flat text.  The first line is 
+        # the version number. The next set of digits after 'dir' is the 
+        # revision.
+        if re.match('(\d+)', entries):
+            revMatch = re.search('\d+\s+dir\s+(\d+)', entries)
+            if revMatch:
+                rev = revMatch.groups()[0]
+    if rev:
+        return int(rev)
+    return None
 
 
 def UpdateSvn(workingCopy):
@@ -68,25 +81,4 @@ def UpdateSvn(workingCopy):
     svn = pysvn.Client()
     svn.callback_ssl_server_trust_prompt = SslServerTrustPromptCallback
     svn.update(workingCopy)
-
-
-def CommitSvn():
-    """
-    Commit all modified files in the working copy to the SVN server.
-    """
-    import pysvn
-
-    def SslServerTrustPromptCallback(dummy):
-        """
-        See pysvn documentation for
-        pysvn.Client.callback_ssl_server_trust_prompt
-        """
-        return True, 0, True
-    svn = pysvn.Client()
-    svn.callback_ssl_server_trust_prompt = SslServerTrustPromptCallback
-    svn.checkin(
-        [builder.buildSetup.sourceDir],
-        "Created installer for %s" % builder.buildSetup.appVersion
-    )
-
 
