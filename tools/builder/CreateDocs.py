@@ -5,6 +5,9 @@ import _winreg
 import shutil
 import codecs
 from os.path import join
+
+import sphinx
+
 import builder
 from builder.Utils import StartProcess
 
@@ -153,8 +156,8 @@ GUI_CLASSES = [
     "FontSelectButton",
 ]
 
-def Main(buildHtml=False, buildChm=False):
-    import sphinx
+
+def Prepare():
     WritePluginList(join(DOCS_SOURCE_DIR, "pluginlist.rst"))
 
     filepath = join(DOCS_SOURCE_DIR, "eg", "classes.txt")
@@ -166,8 +169,14 @@ def Main(buildHtml=False, buildChm=False):
     outfile = open(filepath, "wt")
     outfile.write(CreateClsDocs(GUI_CLASSES))
     outfile.close()
-    
-    if buildHtml:
+
+
+
+class CreateHtmlDocs(builder.Task):
+    description = "Build HTML docs"
+
+    def DoTask(self):
+        Prepare()
         sphinx.main([
             None,
             #"-a",
@@ -179,7 +188,13 @@ def Main(buildHtml=False, buildChm=False):
             DOCS_HTML_BUILD_DIR,
         ])
 
-    if buildChm:
+
+
+class CreateChmDocs(builder.Task):
+    description = "Build CHM docs"
+
+    def DoTask(self):
+        Prepare()
         sphinx.main([
             None,
             #"-a",

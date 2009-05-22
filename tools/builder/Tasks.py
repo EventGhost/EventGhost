@@ -1,4 +1,3 @@
-import sys
 import shutil
 import time
 from os.path import join
@@ -61,24 +60,6 @@ class UpdateChangeLog(builder.Task):
 
 
 
-class BuildHtml(builder.Task):
-    description = "Build HTML docs"
-
-    def DoTask(self):
-        import builder.Docs
-        builder.Docs.Main(buildHtml=True)
-
-
-
-class BuildChm(builder.Task):
-    description = "Build CHM docs"
-
-    def DoTask(self):
-        import builder.Docs
-        builder.Docs.Main(buildChm=True)
-
-
-
 class CreateInstaller(builder.Task):
     description = "Build Setup.exe"
 
@@ -97,7 +78,7 @@ class Upload(builder.Task):
 
     def DoTask(self):
         import builder.Upload
-        buildSetup = self.builder.buildSetup
+        buildSetup = self.buildSetup
         filename = buildSetup.appName + "_" + buildSetup.appVersion + "_Setup.exe"
         src = join(buildSetup.outDir, filename)
         dst = join(buildSetup.websiteDir, "downloads", filename)
@@ -141,6 +122,7 @@ from builder.CreateSourceArchive import CreateSourceArchive
 from builder.CreatePyExe import CreatePyExe
 from builder.CreateLibrary import CreateLibrary
 from builder.CreateWebsite import CreateWebsite
+from builder.CreateDocs import CreateHtmlDocs, CreateChmDocs
 
 TASKS = [
     UpdateSvn(),
@@ -148,14 +130,14 @@ TASKS = [
     UpdateChangeLog(),
     CreateStaticImports(),
     CreateImports(),
-    BuildChm(),
+    CreateChmDocs(),
     CreateSourceArchive(),
     CreatePyExe(),
     CreateLibrary(),
     CreateInstaller(),
     Upload(),
     CreateWebsite(),
-    BuildHtml(),
+    CreateHtmlDocs(),
     SyncWebsite(),
 ]
 
