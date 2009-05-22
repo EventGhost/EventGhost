@@ -279,7 +279,7 @@ class MceRemote(eg.PluginBase):
     def __start__(self, waitTime=0.15, disableHid=True):
         self.CheckHidState(disableHid)
         self.msgThread = MceMessageReceiver(self, waitTime)
-        self.msgThread.Start()
+        self.msgThread.Start(10.0)
 
 
     @eg.LogIt
