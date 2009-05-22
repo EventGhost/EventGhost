@@ -9,8 +9,11 @@ import builder.Tasks
 
 class MainDialog(wx.Dialog):
 
-    def __init__(self):
-        wx.Dialog.__init__(self, None, title="Build EventGhost Installer")
+    def __init__(self, buildSetup):
+        self.buildSetup = buildSetup
+        wx.Dialog.__init__(
+            self, None, title="Build %s Installer" % buildSetup.name
+        )
 
         # create controls
         self.ctrls = {}
@@ -75,7 +78,7 @@ class MainDialog(wx.Dialog):
                 ctrl = self.ctrls[section]
                 task.enabled = ctrl.GetValue()
                 ctrl.Enable(False)
-        builder.buildSetup.config.SaveSettings()
+        self.buildSetup.config.SaveSettings()
         thread = threading.Thread(target=self.DoMain)
         thread.start()
 
@@ -104,10 +107,10 @@ class MainDialog(wx.Dialog):
         wx.GetApp().ExitMainLoop()
 
 
-def Main():
+def Main(buildSetup):
     app = wx.App(0)
     app.SetExitOnFrameDelete(True)
-    mainDialog = MainDialog()
+    mainDialog = MainDialog(buildSetup)
     mainDialog.Show()
     app.MainLoop()
 
