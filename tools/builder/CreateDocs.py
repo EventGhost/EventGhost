@@ -1,7 +1,6 @@
 import os
 import sys
 import re
-import _winreg
 import shutil
 import codecs
 from os.path import join
@@ -9,7 +8,7 @@ from os.path import join
 import sphinx
 
 import builder
-from builder.Utils import StartProcess
+from builder.Utils import StartProcess, GetHtmlHelpCompilerPath
 
 
 MAIN_DIR = builder.buildSetup.sourceDir
@@ -23,21 +22,6 @@ sys.path.append(MAIN_DIR)
 import eg
 from eg.Utils import GetFirstParagraph
 
-
-def GetHtmlHelpCompilerPath():
-    """
-    Try to find the install location of the HTML Help command line compiler
-    """
-    subkey = r"Software\Microsoft\HTML Help Workshop"
-    try:
-        key = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER, subkey)
-        path = _winreg.QueryValueEx(key, "InstallDir")[0]
-    except WindowsError:
-        path = join(os.environ["PROGRAMFILES"], "HTML Help Workshop")
-    programPath = join(path, "hhc.exe")
-    if not os.path.exists(programPath):
-        return None
-    return programPath
 
 
 def WritePluginList(filepath):
