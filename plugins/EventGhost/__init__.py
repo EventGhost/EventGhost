@@ -355,26 +355,25 @@ class AutoRepeat(eg.ActionBase):
         sweepTime=3.0
     ):
         event = eg.event
+        if event.shouldEnd.isSet():
+            return
+        elapsed = time.clock() - event.time
+        if elapsed < firstDelay * 0.90:
+            delay = firstDelay
+        elif sweepTime > 0.0:
+            sweepDelay = (
+                (startDelay - endDelay)
+                * (sweepTime - (elapsed + firstDelay)) 
+                / sweepTime
+            )
+            if sweepDelay < 0:
+                sweepDelay = 0
+            delay = sweepDelay + endDelay
+        else:
+            delay = endDelay
+        event.shouldEnd.wait(delay)
         if not event.shouldEnd.isSet():
-            elapsed = time.clock() - event.time
-            if elapsed < firstDelay * 0.90:
-                delay = firstDelay
-            else:
-                if sweepTime > 0.0:
-                    elapsed = elapsed + firstDelay
-                    sweepDelay = (
-                        (startDelay - endDelay) * (sweepTime - elapsed) 
-                        / sweepTime
-                    )
-                    if sweepDelay < 0:
-                        sweepDelay = 0
-                    delay = sweepDelay + endDelay
-                else:
-                    delay = endDelay
-            event.shouldEnd.wait(delay)
-            #wait_event.wait(res)
-            if not event.shouldEnd.isSet():
-                eg.programCounter = (eg.currentItem.parent.childs[0], 0)
+            eg.programCounter = (eg.currentItem.parent.childs[0], 0)
             
             
     def Configure(
