@@ -1,5 +1,5 @@
 
-SUPPORTED_DVBVIEWER_VERSIONS = '4.0.0.0, 4.1.0.0'
+SUPPORTED_DVBVIEWER_VERSIONS = '4.0.0.0, 4.1.x.0, '
 
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
@@ -321,6 +321,33 @@ DVBVIEWER_WINDOWS = {
 }
 
 DVBVIEWER_CLOSE = ( "Close DVBViewer", 12326)
+
+
+EVENT_LIST = (
+    ("Action",                          "Gets fired whenever a new action is processed"),
+    ("Channel",                         "Gets fired on every channelchange"),
+    ("AddRecord",                       "Gets fired whenever a new Timer is added"),
+    ("StartRecord",                     "Gets fired whenever a recording starts"),
+    ("AllActiveRecordingsFinished",     "Gets fired whenever the last active recording finishs"),
+    ("Window",                          "Gets fired whenever a OSD-window is activated"),
+    ("ControlChange",                   "Gets fired whenever an OSD Control gets the focus"),
+    ("SelectedItemChange",              "Gets fired whenever the selectedItem in an OSD list changes"),
+    ("RDS",                             "Gets fired whenever a new RDS Text arrives"),
+    ("Playlist",                        "Gets fired whenever a new playlistitem starts playing"),
+    ("Playbackstart",                   "Gets fired whenever a media playback starts"),
+    ("PlaybackEnd",                     "Gets fired whenever a media playback ends"),
+    ("Close",                           "Gets fired when the DVBViewer is shutting down"),
+    ("EPGUpdateFinished",               "Gets fired whenever the UpdateEPG action finishs"),
+    ("PlaystateChange",                 "Gets fired whenever the play state changes"),
+    ("RatioChange",                     "Gets fired whenever the ratio changes"),
+    ("DisplayChange",                   "Gets fired whenever the display type changes"),
+    ("RenderPlaystateChange",           "Gets fired whenever the internal playstate changes"),
+    ("RendererChange",                  "Gets fired whenever the renderer changes"),
+    ("DVBViewerIsConnected",            "Gets fired when the DVBViewer is connected to the plugin"),
+    ("DVBViewerCouldNotBeTerminated",   "Gets fired when the DVBViewer couldn't terminated by the plugin"),
+    ("DVBViewerCouldNotBeConnected",    "Gets fired when the plugin couldn't connected with the DVBViewer"),
+    ("Close",                           "Gets fired when the DVBViewer is shutting down"),
+)
 
 
 
@@ -1117,6 +1144,7 @@ class DVBViewer(eg.PluginClass):
     text = Text
     
     def __init__(self):
+        self.AddEvents(*EVENT_LIST)
         self.AddAction(Start)
         self.AddAction(CloseDVBViewer)
         self.AddAction(StopAllActiveRecordings)
