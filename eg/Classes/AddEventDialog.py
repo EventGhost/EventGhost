@@ -45,7 +45,10 @@ class EventInfo:
 
     def __init__(self, name, description, info):
         self.name = name
-        self.description = description
+        if description :
+            self.description = description
+        else :
+            self.description = ""
         self.info = info
 
 
@@ -172,11 +175,13 @@ class AddEventDialog(eg.TaskletDialog):
         if isinstance(data, EventInfo):
             self.resultData = data.info.eventPrefix + "." + data.name
             self.buttonRow.okButton.Enable(True)
+            path = data.info.GetPath()
         else:
             self.resultData = None
             self.buttonRow.okButton.Enable(False)
+            path = data.GetPath()
         self.nameText.SetLabel(data.name)
-        self.docText.SetBasePath(data.path)
+        self.docText.SetBasePath(path)
         self.docText.SetPage(data.description)
 
 
