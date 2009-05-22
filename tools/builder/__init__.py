@@ -25,7 +25,7 @@ class Task(object):
 class Builder(object):
     
     def __init__(self):
-        from builder.CheckDependencies import CheckDependencies
+        from CheckDependencies import CheckDependencies
         if not CheckDependencies():
             sys.exit(1)
         global buildSetup
@@ -48,5 +48,5 @@ class Builder(object):
         
     def RunGui(self):
         import builder.Gui
-        builder.Gui.Main()
+        builder.Gui.Main(self)
 
