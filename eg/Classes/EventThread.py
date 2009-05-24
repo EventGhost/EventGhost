@@ -24,6 +24,7 @@ import eg
 import traceback
 import time
 from functools import partial
+from threading import Event
 from eg.WinApi.Dynamic import (
     GetTickCount,
     OpenProcess,
@@ -32,8 +33,11 @@ from eg.WinApi.Dynamic import (
     FormatError,
 )
 
+# some shortcuts
 EventGhostEvent = eg.EventGhostEvent
-
+actionThread = eg.actionThread
+ActionThreadCall = actionThread.Call
+ActionThreadCallWait = actionThread.CallWait
 
 
 class EventThread(eg.ThreadWorker):
@@ -74,7 +78,10 @@ class EventThread(eg.ThreadWorker):
     def TriggerEvent(self, suffix, payload=None, prefix="Main", source=eg):
         '''Trigger an event'''
         event = EventGhostEvent(suffix, payload, prefix, source)
-        self.AppendEvent(event.Trigger)
+        def Transfer():
+            ActionThreadCall(event.Execute)
+            event.SetShouldEnd()
+        self.AppendAction(Transfer)
         return event
 
 
@@ -86,7 +93,9 @@ class EventThread(eg.ThreadWorker):
         source=eg
     ):
         event = EventGhostEvent(suffix, payload, prefix, source)
-        self.AppendEvent(event.TriggerEnduring)
+        def Transfer():
+            ActionThreadCall(event.Execute)
+        self.AppendAction(Transfer)
         return event
 
 
@@ -97,9 +106,21 @@ class EventThread(eg.ThreadWorker):
         prefix="Main",
         source=eg
     ):
-        event = self.TriggerEvent(suffix, payload, prefix, source)
-        event.startProcessed.wait(5.0)
-        if not event.startProcessed.isSet():
+        event = EventGhostEvent(suffix, payload, prefix, source)
+        executed = Event()
+        def Execute():
+            try:
+                event.Execute()
+            finally:
+                executed.set()
+            
+        def Transfer():
+            ActionThreadCall(Execute)
+            event.SetShouldEnd()
+
+        self.AppendAction(Transfer)
+        executed.wait(5.0)
+        if not executed.isSet():
             if eg.debugLevel:
                 eg.PrintDebugNotice("timeout TriggerEventWait")
                 traceback.print_stack()
@@ -108,8 +129,8 @@ class EventThread(eg.ThreadWorker):
 
     @eg.LogIt
     def StartSession(self, filename):
-        eg.actionThread.CallWait(
-            partial(eg.actionThread.StartSession, filename),
+        ActionThreadCallWait(
+            partial(actionThread.StartSession, filename),
             120
         )
 
@@ -127,6 +148,6 @@ class EventThread(eg.ThreadWorker):
 
     @eg.LogIt
     def StopSession(self):
-        eg.actionThread.CallWait(eg.actionThread.StopSession, 120)
+        ActionThreadCallWait(actionThread.StopSession, 120)
         eg.PrintDebugNotice("StopSession done")
 
