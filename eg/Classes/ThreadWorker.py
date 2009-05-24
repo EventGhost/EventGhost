@@ -270,8 +270,8 @@ class ThreadWorker(object):
         pass
 
 
-    def AppendEvent(self, event):
-        self.__queue.append(event)
+    def AppendAction(self, action):
+        self.__queue.append(action)
         SetEvent(self.__wakeEvent)
 
 
