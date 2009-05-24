@@ -93,7 +93,6 @@ class EventGhostEvent(object):
         self.payload = payload
         self.source = source
         self.time = clock()
-        self.startProcessed = Event()
         self.isEnded = False
         self.shouldEnd = Event()
         self.upFuncList = []
@@ -107,7 +106,6 @@ class EventGhostEvent(object):
 
 
     def SetStarted(self):
-        self.startProcessed.set()
         if self.shouldEnd.isSet():
             self.DoUpFuncs()
 
@@ -117,21 +115,6 @@ class EventGhostEvent(object):
             func(*args, **kwargs)
         del self.upFuncList[:]
         self.isEnded = True
-
-
-    def Trigger(self):
-        """
-        Transfer this event from the EventThread to the ActionThread
-        """
-        actionThread.Call(self.Execute)
-        self.SetShouldEnd()
-
-
-    def TriggerEnduring(self):
-        """
-        Transfer this event from the EventThread to the ActionThread
-        """
-        actionThread.Call(self.Execute)
 
 
     def SetShouldEnd(self, dummy=None):
