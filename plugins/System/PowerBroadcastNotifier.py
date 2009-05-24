@@ -35,8 +35,8 @@ PBT_MESSAGES = {
                                      # PBT_APMPOWERSTATUSCHANGE instead
     PBT_APMOEMEVENT: "OemEvent",
     PBT_APMPOWERSTATUSCHANGE: "PowerStatusChange",
-    PBT_APMQUERYSUSPEND: "QuerySuspend",
-    PBT_APMQUERYSUSPENDFAILED: "QuerySuspendFailed",
+    PBT_APMQUERYSUSPEND: "QuerySuspend", # removed in Vista
+    PBT_APMQUERYSUSPENDFAILED: "QuerySuspendFailed", # removed in Vista
     PBT_APMRESUMEAUTOMATIC: "ResumeAutomatic",
     PBT_APMRESUMECRITICAL: "ResumeCritical",
     PBT_APMRESUMESUSPEND: "Resume",
