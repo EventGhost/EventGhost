@@ -567,7 +567,7 @@ from win32com.client.gencache import EnsureDispatch
 from win32com.client import GetObject
 from win32com.taskscheduler import taskscheduler
 from eg.WinApi import SendMessageTimeout
-from threading import Thread, Event, Timer
+from threading import Thread, Event, Timer, Semaphore
 from time import sleep, time, strptime, mktime, ctime, strftime, localtime, asctime
 from eg.WinApi.Dynamic import (
     byref, sizeof, CreateProcess, WaitForSingleObject, FormatError,
@@ -1218,6 +1218,8 @@ class DVBViewer(eg.PluginClass):
         self.scheduledRecordings = []
         self.numberOfScheduledRecordings = -1
         self.updateRecordingsThread = None
+        self.updateRecordingsSemaphore = Semaphore()
+
 
 
         
@@ -1357,13 +1359,26 @@ class DVBViewer(eg.PluginClass):
                 Thread.__init__(self, name="DVBViewerUpdateRecordingsThread")
                 self.plugin = plugin
                 self.ID = ID
+                self.count = 1
 
             @eg.LogItWithReturn
             def run(self) :
                 plugin = self.plugin
-                plugin.UpdateRecordings( self.ID )
+                lock = plugin.updateRecordingsSemaphore
+                lock.acquire()
+                while self.count :
+                    lock.release()
+                    plugin.UpdateRecordings( self.ID )
+                    lock.acquire()
+                    self.count -= 1
                 plugin.updateRecordingsThread = None
+                lock.release()
+                
+            def repeat( self ) :
+                self.count += 1
 
+        lock = self.updateRecordingsSemaphore
+        lock.acquire()
         if ID >= 0 and not self.updateRecordingsThread :
             if ID not in self.firedRecordingsIDs :
                 self.numberOfActiveRecordings += 1
@@ -1372,20 +1387,17 @@ class DVBViewer(eg.PluginClass):
                 if self.newInterface :
                     self.TriggerEvent( "StartRecord", ( ID, self.numberOfActiveRecordings ) )
                 self.firedRecordingsIDs.append( ID )
-      
+            lock.release()
             return True
 
-        timeout = 0
-        while self.updateRecordingsThread and timeout < 1000 :
-            sleep( 0.1 )
-            timeout += 1
-        
-        if timeout >= 1000 :
-            eg.PrintError( "DVBViewer couldn't connected" )
-            eg.PrintDebugNotice( "DVBViewer couldn't connected" )
-            raise
-            
+        if self.updateRecordingsThread :
+            self.updateRecordingsThread.repeat()
+            lock.release()
+            return True
+
         self.updateRecordingsThread = UpdateRecordingsThread( self, ID )    #A thread is necessary in case of a DVBViewer dead lock
+        lock.release()
+            
         self.updateRecordingsThread.start()
         
         return True
@@ -2643,6 +2655,7 @@ class TaskScheduler( eg.ActionClass ) :
             
             
         actuals = []
+        now = time() + leadTime
             
         for date in plugin.scheduledRecordings :
         
@@ -2660,11 +2673,12 @@ class TaskScheduler( eg.ActionClass ) :
                 #print "deleted: ", no
             else :
                 dates[ dates.index(date) ] = -1.0
-                actuals.append( date )
+                if date > now :
+                    actuals.append( date )
 
         for date in dates :
         
-            if date < 0 :
+            if date < 0 or date <= now :
                 continue
         
             actuals.append( date )
@@ -2713,7 +2727,7 @@ class TaskScheduler( eg.ActionClass ) :
             
         actuals.sort()
 
-        if len( dates ) > 0 :
+        if len( actuals ) > 0 :
             nextStartup = "Scheduled next wakeup at " + asctime( localtime( actuals[0] - leadTime ) )
             print nextStartup
             eg.PrintDebugNotice( nextStartup )
