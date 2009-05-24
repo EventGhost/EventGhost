@@ -70,7 +70,13 @@ def GetSetupFiles(srcDir):
                 path = join(srcDir, name)
                 fileData = FileData(path)
                 files.append(fileData)
-    return list(reversed(sorted(files, key=lambda x: x.name)))
+    def Cmp(x, y):
+        x = x.target.split("_")[1].replace("r", "").split(".")
+        y = y.target.split("_")[1].replace("r", "").split(".")
+        x = [int(s) for s in x]
+        y = [int(s) for s in y]
+        return cmp(x, y)
+    return list(reversed(sorted(files, cmp=Cmp)))
 
 
 
