@@ -567,7 +567,7 @@ from win32com.client.gencache import EnsureDispatch
 from win32com.client import GetObject
 from win32com.taskscheduler import taskscheduler
 from eg.WinApi import SendMessageTimeout
-from threading import Thread, Event, Timer, Semaphore
+from threading import Thread, Event, Timer, Lock
 from time import sleep, time, strptime, mktime, ctime, strftime, localtime, asctime
 from eg.WinApi.Dynamic import (
     byref, sizeof, CreateProcess, WaitForSingleObject, FormatError,
@@ -1218,7 +1218,7 @@ class DVBViewer(eg.PluginClass):
         self.scheduledRecordings = []
         self.numberOfScheduledRecordings = -1
         self.updateRecordingsThread = None
-        self.updateRecordingsSemaphore = Semaphore()
+        self.updateRecordingsLock = Lock()
 
 
 
@@ -1364,25 +1364,25 @@ class DVBViewer(eg.PluginClass):
                 Thread.__init__(self, name="DVBViewerUpdateRecordingsThread")
                 self.plugin = plugin
                 self.ID = ID
-                self.count = 1
+                self.update = True
 
             @eg.LogItWithReturn
             def run(self) :
                 plugin = self.plugin
-                lock = plugin.updateRecordingsSemaphore
+                lock = plugin.updateRecordingsLock
                 lock.acquire()
-                while self.count :
+                while self.update :
+                    self.update = False
                     lock.release()
                     plugin.UpdateRecordings( self.ID )
                     lock.acquire()
-                    self.count -= 1
                 plugin.updateRecordingsThread = None
                 lock.release()
                 
             def repeat( self ) :
-                self.count += 1
+                self.update = True
 
-        lock = self.updateRecordingsSemaphore
+        lock = self.updateRecordingsLock
         lock.acquire()
         if ID >= 0 and not self.updateRecordingsThread :
             if ID not in self.firedRecordingsIDs :
