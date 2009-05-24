@@ -919,7 +919,7 @@ class DVBViewerTerminateThread( Thread ) :
             sleep( checkTime )
         del WMI
         CoUninitialize()
-        plugin.TriggerEvent("Close")
+        plugin.DVBViewerIsFinished()
         plugin.terminateThread = None
         
     
@@ -1108,8 +1108,8 @@ class DVBViewerWatchDogThread( Thread ) :
                     eg.PrintDebugNotice( "Termination of DVBViewer detected by watch dog" )
                     if plugin.workerThread.Stop( terminateTimeOut ) :
                         eg.PrintError("Could not terminate DVBViewer thread")
-                    plugin.TriggerEvent("Close")
                     plugin.workerThread = None
+                    plugin.DVBViewerIsFinished()
                 elif started and not plugin.workerThread :
                     eg.PrintDebugNotice( "DVBViewer will be connected by watch dog" )
                     plugin.Connect( CONNECT )
@@ -1329,6 +1329,11 @@ class DVBViewer(eg.PluginClass):
         return True
         
         
+    def DVBViewerIsFinished( self ) :
+        self.UpdateRecordings()
+        self.TriggerEvent( "close" )
+        
+        
 
     def UpdateDisplayMode( self ) :
         windowID = self.actualWindowID
@@ -1407,12 +1412,13 @@ class DVBViewer(eg.PluginClass):
 
             
     def UpdateRecordings( self, ID = -1 ) :
-            
-        recordingsIDs = self.workerThread.CallWait(
-                    partial(self.workerThread.GetRecordingsIDs ),
-                    CALLWAIT_TIMEOUT
-        )
-        
+        if self.workerThread :
+            recordingsIDs = self.workerThread.CallWait(
+                        partial(self.workerThread.GetRecordingsIDs ),
+                        CALLWAIT_TIMEOUT
+            )
+        else :
+            recordingsIDs = []
         numberOfActiveRecordings = len( recordingsIDs )
         
         newRecordingsIDs     = [ ID for ID in recordingsIDs if ID not in self.firedRecordingsIDs ]
@@ -1526,8 +1532,10 @@ class DVBViewer(eg.PluginClass):
 
     
     @eg.LogItWithReturn
-    def Connect( self, connectingMode = 0 ) :
-        #connectOnly = False, checkOnly = false ) :
+    def Connect( self, connectingMode = WAIT_CHECK_START_CONNECT ) :
+        #WAIT_CHECK_START_CONNECT  = 0   #wait for free, check if executing, start if not executing, connect
+        #CONNECT                   = 1   #connect
+        #CHECK_CONNECT             = 2   #connect only, if executing
 
         def WaitForDVBViewerWindow() :
             hwnds = windowDVBViewer()
