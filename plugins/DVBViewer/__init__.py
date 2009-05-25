@@ -1331,7 +1331,7 @@ class DVBViewer(eg.PluginClass):
         
     def DVBViewerIsFinished( self ) :
         self.UpdateRecordings()
-        self.TriggerEvent( "close" )
+        self.TriggerEvent( "Close" )
         
         
 
