@@ -26,8 +26,6 @@ class Builder(object):
     
     def __init__(self):
         from CheckDependencies import CheckDependencies
-        if not CheckDependencies():
-            sys.exit(1)
         global buildSetup
         Task.buildSetup = self
         buildSetup = self
@@ -40,6 +38,8 @@ class Builder(object):
         self.libraryDir = join(self.sourceDir, self.libraryName)
         self.outDir = abspath(join(self.sourceDir, ".."))
         self.tmpDir = tempfile.mkdtemp()
+        if not CheckDependencies(self):
+            sys.exit(1)
         atexit.register(shutil.rmtree, self.tmpDir)
         self.appName = self.name
         from builder.Config import Config
