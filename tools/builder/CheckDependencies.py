@@ -1,11 +1,13 @@
+import os
 import sys
 import warnings
+import shutil
+import glob
 from string import digits
 from os.path import join
 
 from builder.InnoSetup import GetInnoCompilerPath
 from builder.Utils import GetHtmlHelpCompilerPath
-
 
 
 class MissingDependency(Exception):
@@ -14,12 +16,14 @@ class WrongVersion(Exception):
     pass
 
 
+
 class DependencyBase(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
     def Check(self):
         raise NotImplementedError
+
 
 
 class ModuleDependency(DependencyBase):
@@ -80,6 +84,7 @@ class StacklessDependency(DependencyBase):
             raise WrongVersion
 
 
+
 class InnoSetupDependency(DependencyBase):
     name = "Inno Setup"
     version = "5.2.3"
@@ -88,6 +93,7 @@ class InnoSetupDependency(DependencyBase):
     def Check(self):
         if not GetInnoCompilerPath():
             raise MissingDependency
+
 
 
 class HtmlHelpWorkshopDependency(DependencyBase):
@@ -101,6 +107,54 @@ class HtmlHelpWorkshopDependency(DependencyBase):
     def Check(self):
         if not GetHtmlHelpCompilerPath():
             raise MissingDependency
+
+
+
+class DllDependency(DependencyBase):
+    url = (
+        "http://www.microsoft.com/downloads/details.aspx?"
+        "displaylang=en&FamilyID=9b2da534-3e03-4391-8a4d-074b9f2bc1bf"
+    )
+    
+    def Check(self):
+        path = join(self.buildSetup.sourceDir, self.name)
+        wantedVersion = tuple(int(x) for x in self.version.split("."))
+        if self.GetVersion(path) != wantedVersion:
+            self.TryCopy()
+            if self.GetVersion(path) != wantedVersion:
+                raise WrongVersion
+        
+        
+    def GetVersion(self, path):
+        from builder.DllVersionInfo import get_file_version
+
+        try:
+            fInfo = get_file_version(path)
+        except:
+            return None
+        return (
+            fInfo.dwFileVersionMS >> 16,
+            fInfo.dwFileVersionMS & 0xFFFF,
+            fInfo.dwFileVersionLS >> 16,
+            fInfo.dwFileVersionLS & 0xFFFF,
+        )
+
+        
+    def TryCopy(self):
+        winSxsDir = join(
+            os.environ["SystemRoot"], 
+            "WinSxS", 
+            "x86_microsoft.vc90.crt_*_%s_*_*" % self.version, 
+            self.name
+        )
+        pathes = glob.glob(winSxsDir)
+        if len(pathes) < 1:
+            raise MissingDependency
+        src = pathes[0]
+        dst = join(self.buildSetup.sourceDir, self.name)
+        shutil.copyfile(src, dst)
+        shutil.copystat(src, dst)
+
 
 
 DEPENDENCIES = [
@@ -143,13 +197,16 @@ DEPENDENCIES = [
     ModuleDependency(
         name = "Sphinx (Python documentation generator)",
         module = "sphinx",
-        version = "0.5.1",
+        version = "0.6.1",
         url = "http://sphinx.pocoo.org/",
     ),
     PyWin32Dependency(),
     StacklessDependency(),
     InnoSetupDependency(),
     HtmlHelpWorkshopDependency(),
+    DllDependency(name="msvcm90.dll", version="9.0.21022.8"),
+    DllDependency(name="msvcp90.dll", version="9.0.21022.8"),
+    DllDependency(name="msvcr90.dll", version="9.0.21022.8"),
 ]
 
 
@@ -169,9 +226,10 @@ def CompareVersion(actualVersion, wantedVersion):
     return 0
 
 
-def CheckDependencies():
+def CheckDependencies(buildSetup):
     isOK = True
     for dependency in DEPENDENCIES:
+        dependency.buildSetup = buildSetup
         try:
             dependency.Check()
         except (WrongVersion, MissingDependency):
