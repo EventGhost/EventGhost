@@ -4,7 +4,7 @@ import sys
 from glob import glob
 from os.path import exists, join, basename, dirname
 
-from tools.builder import Task
+from builder import Task
 
 
 RT_MANIFEST = 24

@@ -184,7 +184,7 @@ class CreateChmDocs(builder.Task):
     def DoTask(self):
         tmpDir = join(self.buildSetup.tmpDir, "chm")
         Prepare()
-        warnings.simplefilter('ignore', DeprecationWarning)
+        #warnings.simplefilter('ignore', DeprecationWarning)
         sphinx.main([
             None,
             #"-a",
