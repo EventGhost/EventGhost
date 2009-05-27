@@ -30,7 +30,7 @@ class ForumPage(Page):
 class DocsPage(Page):
     name = "Documentation"
     target = "/docs/"
-    outfile = r"..\docs\source\_templates\header_docs.html"
+    outfile = r"..\docs\_templates\header_docs.html"
     template = "header_only.tmpl"
 
 

@@ -3,6 +3,7 @@ import sys
 import re
 import shutil
 import codecs
+import warnings
 from os.path import join
 
 import sphinx
@@ -12,10 +13,7 @@ from builder.Utils import StartProcess, GetHtmlHelpCompilerPath
 
 
 MAIN_DIR = builder.buildSetup.sourceDir
-DOCS_MAIN_DIR = join(MAIN_DIR, "docs")
-DOCS_SOURCE_DIR = join(DOCS_MAIN_DIR, "source")
-DOCS_HTML_BUILD_DIR = join(MAIN_DIR, "website/docs")
-DOCS_CHM_BUILD_DIR = join(DOCS_MAIN_DIR, "chm")
+DOCS_SOURCE_DIR = join(MAIN_DIR, "docs")
 
 
 sys.path.append(MAIN_DIR)
@@ -167,9 +165,9 @@ class CreateHtmlDocs(builder.Task):
             "-b", "html",
             #"-E",
             "-D", "release=%s" % eg.Version.base,
-            "-d", join(DOCS_MAIN_DIR, ".doctree"),
+            "-d", join(self.buildSetup.tmpDir, ".doctree"),
             DOCS_SOURCE_DIR,
-            DOCS_HTML_BUILD_DIR,
+            join(self.buildSetup.sourceDir, "website", "docs"),
         ])
 
 
@@ -177,8 +175,16 @@ class CreateHtmlDocs(builder.Task):
 class CreateChmDocs(builder.Task):
     description = "Build CHM docs"
 
+    def __init__(self, buildSetup):
+        builder.Task.__init__(self, buildSetup)
+        if not os.path.exists(join(buildSetup.sourceDir, "EventGhost.chm")):
+            self.activated = self.enabled = False
+        
+
     def DoTask(self):
+        tmpDir = join(self.buildSetup.tmpDir, "chm")
         Prepare()
+        warnings.simplefilter('ignore', DeprecationWarning)
         sphinx.main([
             None,
             #"-a",
@@ -186,9 +192,9 @@ class CreateChmDocs(builder.Task):
             "-E",
             "-D", "release=%s" % eg.Version.base,
             "-D", "templates_path=[]",
-            "-d", join(DOCS_MAIN_DIR, ".doctree"),
+            "-d", join(self.buildSetup.tmpDir, ".doctree"),
             DOCS_SOURCE_DIR,
-            DOCS_CHM_BUILD_DIR,
+            tmpDir,
         ])
 
         print "calling HTML Help Workshop compiler"
@@ -197,7 +203,7 @@ class CreateChmDocs(builder.Task):
             raise Exception(
                 "HTML Help Workshop command line compiler not found"
             )
-        hhpPath = join(DOCS_CHM_BUILD_DIR, "EventGhost.hhp")
+        hhpPath = join(tmpDir, "EventGhost.hhp")
         StartProcess(htmlHelpCompilerPath, hhpPath)
-        shutil.copy(join(DOCS_CHM_BUILD_DIR, "EventGhost.chm"), MAIN_DIR)
+        shutil.copy(join(tmpDir, "EventGhost.chm"), self.buildSetup.sourceDir)
 

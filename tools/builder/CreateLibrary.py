@@ -4,7 +4,8 @@ import sys
 from glob import glob
 from os.path import exists, join, basename, dirname
 
-import builder
+from tools.builder import Task
+
 
 RT_MANIFEST = 24
 
@@ -33,7 +34,7 @@ def RemoveAllManifests(scanDir):
             handle = BeginUpdateResource(path, 0)
             if handle == 0:
                 continue
-            res = UpdateResource(handle, 24, 2, 1033, None, 0)
+            res = UpdateResource(handle, RT_MANIFEST, 2, 1033, None, 0)
             if res:
                 EndUpdateResource(handle, 0)
 
@@ -81,8 +82,15 @@ class Target:
 
 
 
-class CreateLibrary(builder.Task):
-    description = "Build lib%d%d" %sys.version_info[0:2]
+class CreateLibrary(Task):
+    description = "Build lib%d%d" % sys.version_info[0:2]
+   
+    def __init__(self, buildSetup):
+        Task.__init__(self, buildSetup)
+        self.zipName = "python%s.zip" % buildSetup.pyVersionStr
+        if not exists(join(buildSetup.libraryDir, self.zipName)):
+            self.activated = self.enabled = False
+        
 
     def DoTask(self):
         """
@@ -101,13 +109,11 @@ class CreateLibrary(builder.Task):
                 if not os.path.isdir(path):
                     os.remove(path)
     
-        #import pprint
-        #pprint.pprint(py2exeOptions)
         setup(
             script_args=["py2exe"], 
             windows=[Target(buildSetup)],
             verbose=0,
-            zipfile=join(buildSetup.libraryName, "python%s.zip" % buildSetup.pyVersionStr),
+            zipfile=join(buildSetup.libraryName, self.zipName),
             options = dict(
                 build=dict(build_base=join(buildSetup.tmpDir, "build")),
                 py2exe=dict(
@@ -116,7 +122,9 @@ class CreateLibrary(builder.Task):
                     excludes=buildSetup.excludeModules,
                     dll_excludes = ["DINPUT8.dll", "w9xpopen.exe"],
                     dist_dir = buildSetup.sourceDir,
-                    custom_boot_script=join(buildSetup.dataDir, "Py2ExeBootScript.py"),
+                    custom_boot_script=join(
+                        buildSetup.dataDir, "Py2ExeBootScript.py"
+                    ),
                 )
             )
         )
@@ -127,9 +135,9 @@ class CreateLibrary(builder.Task):
             for filename in files:
                 if filename in dllNames:
                     neededDlls.append(filename)
-        for filename in dllNames:
-            if filename not in neededDlls:
-                os.remove(join(libraryDir, filename))
+        for dllName in dllNames:
+            if dllName not in neededDlls:
+                os.remove(join(libraryDir, dllName))
         if buildSetup.pyVersionStr == "26":
             RemoveAllManifests(libraryDir)
     
