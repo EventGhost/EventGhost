@@ -85,11 +85,11 @@ class Target:
 class CreateLibrary(Task):
     description = "Build lib%d%d" % sys.version_info[0:2]
    
-    def __init__(self, buildSetup):
-        Task.__init__(self, buildSetup)
-        self.zipName = "python%s.zip" % buildSetup.pyVersionStr
-        if not exists(join(buildSetup.libraryDir, self.zipName)):
-            self.activated = self.enabled = False
+    def Setup(self):
+        self.zipName = "python%s.zip" % self.buildSetup.pyVersionStr
+        if not exists(join(self.buildSetup.libraryDir, self.zipName)):
+            self.activated = True
+            self.enabled = False
         
 
     def DoTask(self):
