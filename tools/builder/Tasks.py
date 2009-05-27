@@ -19,7 +19,7 @@ class UpdateVersionFile(builder.Task):
     Update buildTime and revision for eg/Classes/VersionRevision.py
     """
     description = "Update version file"
-    enabled = None
+    visible = False
 
     def DoTask(self):
         from builder.Utils import GetSvnRevision
@@ -41,7 +41,7 @@ class UpdateChangeLog(builder.Task):
     Add a version header to CHANGELOG.TXT if needed.
     """
     description = "updating CHANGELOG.TXT"
-    enabled = None
+    visible = False
 
     def DoTask(self):
         path = join(self.buildSetup.sourceDir, "CHANGELOG.TXT")
@@ -125,29 +125,29 @@ from builder.CreateWebsite import CreateWebsite
 from builder.CreateDocs import CreateHtmlDocs, CreateChmDocs
 
 TASKS = [
-    UpdateSvn(),
-    UpdateVersionFile(),
-    UpdateChangeLog(),
-    CreateStaticImports(),
-    CreateImports(),
-    CreateChmDocs(),
-    CreateSourceArchive(),
-    CreatePyExe(),
-    CreateLibrary(),
-    CreateInstaller(),
-    Upload(),
-    CreateWebsite(),
-    CreateHtmlDocs(),
-    SyncWebsite(),
+    UpdateSvn,
+    UpdateVersionFile,
+    UpdateChangeLog,
+    CreateStaticImports,
+    CreateImports,
+    CreateChmDocs,
+    CreateSourceArchive,
+    CreatePyExe,
+    CreateLibrary,
+    CreateInstaller,
+    Upload,
+    CreateWebsite,
+    CreateHtmlDocs,
+    SyncWebsite,
 ]
 
 
-def Main():
+def Main(buildSetup):
     """
     Main task of the script.
     """
-    for task in TASKS:
-        if task.enabled is not False and task.IsEnabled():
+    for task in buildSetup.tasks:
+        if task.activated:
             print "---", task.description
             task.DoTask()
     print "--- All done!"

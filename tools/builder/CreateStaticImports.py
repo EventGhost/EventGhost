@@ -48,9 +48,15 @@ def ScanDir(srcDir, outfile, modName):
 class CreateStaticImports(builder.Task):
     description = "Create StaticImports.py"
 
+    def __init__(self, buildSetup):
+        builder.Task.__init__(self, buildSetup)
+        self.outFileName = join(buildSetup.sourceDir, "eg", "StaticImports.py")
+        self.activated = self.enabled = os.path.exists(self.outFileName)
+        
+
     def DoTask(self):
         outDir = join(self.buildSetup.sourceDir, "eg")
-        outfile = open(join(outDir, "StaticImports.py"), "wt")
+        outfile = open(self.outFileName, "wt")
         outfile.write(HEADER)
         outfile.write("# py" + "lint: disable-msg=W0611,W0614,C0103\n")
         outfile.write("import eg\n")

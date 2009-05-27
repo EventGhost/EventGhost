@@ -226,6 +226,12 @@ def GetPackageModules(package):
 class CreateImports(builder.Task):
     description = "Create Imports.py"
 
+    def __init__(self, buildSetup):
+        builder.Task.__init__(self, buildSetup)
+        self.outFileName = join(buildSetup.pyVersionDir, "imports.py")
+        self.activated = self.enabled = os.path.exists(self.outFileName)
+        
+
     def DoTask(self):
         """
         Starts the actual work.
@@ -264,7 +270,7 @@ class CreateImports(builder.Task):
         #    if module not in globalModuleIndex:
         #        print "   ", module
     
-        outfile = open(join(buildSetup.pyVersionDir, "imports.py"), "wt")
+        outfile = open(self.outFileName, "wt")
         outfile.write(HEADER)
         for module in stdLibModules:
             outfile.write("import %s\n" % module)

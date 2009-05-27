@@ -7,15 +7,16 @@ from os.path import abspath, dirname, join
 
 class Task(object):
     value = None
+    visible = True
     enabled = True
-    buildSetup = None
+    activated = True
     
+    def __init__(self, buildSetup):
+        self.buildSetup = buildSetup
+
     @classmethod
     def GetId(cls):
         return cls.__module__ + "." + cls.__name__
-
-    def IsEnabled(self):
-        return True
 
     def DoTask(self):
         raise NotImplementedError
@@ -37,16 +38,18 @@ class Builder(object):
         self.libraryName = "lib%s" % self.pyVersionStr
         self.libraryDir = join(self.sourceDir, self.libraryName)
         self.outDir = abspath(join(self.sourceDir, ".."))
-        self.tmpDir = tempfile.mkdtemp()
         if not CheckDependencies(self):
             sys.exit(1)
+        self.tmpDir = tempfile.mkdtemp()
         atexit.register(shutil.rmtree, self.tmpDir)
         self.appName = self.name
-        from builder.Config import Config
-        self.config = Config(join(self.dataDir, "Build.ini"))
         
         
     def RunGui(self):
+        from builder.Tasks import TASKS
+        self.tasks = [task(self) for task in TASKS]
+        from builder.Config import Config
+        self.config = Config(self, join(self.dataDir, "Build.ini"))
         import builder.Gui
         builder.Gui.Main(self)
 
