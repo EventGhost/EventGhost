@@ -189,6 +189,12 @@ DEPENDENCIES = [
         url = "http://sourceforge.net/projects/comtypes/"
     ),
     ModuleDependency(
+        name = "ctypeslib package",
+        module = "ctypeslib",
+        version = "0.5.6",
+        url = "http://pypi.python.org/pypi/ctypeslib/"
+    ),
+    ModuleDependency(
         name = "PyCrypto (Python Cryptography Toolkit)",
         module = "Crypto",
         version = "2.0.1",
