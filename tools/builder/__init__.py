@@ -13,6 +13,9 @@ class Task(object):
     
     def __init__(self, buildSetup):
         self.buildSetup = buildSetup
+        
+    def Setup(self):
+        pass
 
     @classmethod
     def GetId(cls):
@@ -50,6 +53,8 @@ class Builder(object):
         self.tasks = [task(self) for task in TASKS]
         from builder.Config import Config
         self.config = Config(self, join(self.dataDir, "Build.ini"))
+        for task in self.tasks:
+            task.Setup()
         import builder.Gui
         builder.Gui.Main(self)
 

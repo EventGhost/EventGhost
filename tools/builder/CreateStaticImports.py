@@ -48,10 +48,13 @@ def ScanDir(srcDir, outfile, modName):
 class CreateStaticImports(builder.Task):
     description = "Create StaticImports.py"
 
-    def __init__(self, buildSetup):
-        builder.Task.__init__(self, buildSetup)
-        self.outFileName = join(buildSetup.sourceDir, "eg", "StaticImports.py")
-        self.activated = self.enabled = os.path.exists(self.outFileName)
+    def Setup(self):
+        self.outFileName = join(
+            self.buildSetup.sourceDir, "eg", "StaticImports.py"
+        )
+        if not os.path.exists(self.outFileName):
+            self.activated = True
+            self.enabled = False
         
 
     def DoTask(self):

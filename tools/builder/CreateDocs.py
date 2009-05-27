@@ -175,10 +175,10 @@ class CreateHtmlDocs(builder.Task):
 class CreateChmDocs(builder.Task):
     description = "Build CHM docs"
 
-    def __init__(self, buildSetup):
-        builder.Task.__init__(self, buildSetup)
-        if not os.path.exists(join(buildSetup.sourceDir, "EventGhost.chm")):
-            self.activated = self.enabled = False
+    def Setup(self):
+        if not os.path.exists(join(self.buildSetup.sourceDir, "EventGhost.chm")):
+            self.activated = True
+            self.enabled = False
         
 
     def DoTask(self):

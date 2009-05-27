@@ -26,7 +26,7 @@ class Config(object):
                         task.activated = eval(configParser.get(section, "enabled"))
                 else:
                     task.options[option] = configParser.get(section, option)
-
+                    print section, option, configParser.get(section, option)
 
     def SaveSettings(self):
         """

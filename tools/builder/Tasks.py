@@ -72,8 +72,10 @@ class Upload(builder.Task):
     description = "Upload through FTP"
     options = {"url": ""}
 
-    def IsEnabled(self):
-        return bool(self.options["url"])
+    def Setup(self):
+        if not self.options["url"]:
+            self.enabled = False
+            self.activated = False
 
 
     def DoTask(self):
@@ -92,8 +94,10 @@ class SyncWebsite(builder.Task):
     description = "Synchronize website"
     options = {"url": ""}
 
-    def IsEnabled(self):
-        return bool(self.options["url"])
+    def Setup(self):
+        if not self.options["url"]:
+            self.enabled = False
+            self.activated = False
 
 
     def DoTask(self):
