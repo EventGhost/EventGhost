@@ -54,8 +54,8 @@ eg.RegisterPlugin(
 
 
 import os
-from threading import Timer
-from time import sleep
+from threading import Timer, Lock
+from time import sleep, time
 from msvcrt import get_osfhandle
 import _winreg
 from threading import Event
@@ -246,9 +246,48 @@ HCWPVR2 = {
 18: "CHNLPREV",
 }
 
+DSR0112 = {
+0: "0",
+1: "1",
+2: "2",
+3: "3",
+4: "4",
+5: "5",
+6: "6",
+7: "7",
+8: "8",
+9: "9",
+13: "MENU",
+15: "MUTE",
+16: "VOLUP",
+17: "VOLDOWN",
+32: "CHNLUP",
+33: "CHNLDOWN",
+61: "GRNPOWER",
+31: "BACK",
+37: "OK",
+59: "GO",
+55: "REC",
+54: "STOP",
+48: "PAUSE",
+53: "PLAY",
+50: "REWIND",
+52: "FASTFWD",
+30: "SKIPFWD",
+36: "SKIPREV",
+28: "TVNEW",
+22: "NAVLEFT",
+23: "NAVRIGHT",
+20: "NAVUP",
+21: "NAVDOWN",
+10: "TEXT",
+18: "CHNLPREV",
+}
+
 
 HauppaugeIRTable = {
  0:     HCWClassic ,
+29:     DSR0112 ,
 30:     HCWPVR2 ,
 31:     HCWPVR ,
 }
@@ -259,30 +298,46 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
     """
     A thread with a hidden window to receive win32 messages from the driver
     """
-    hwnd = None
-    dll = None
     
     @eg.LogIt
-    def Setup(self, plugin, waitTime, pollTime, useDefaultPollTime, initTime = 15.0 ):
+    def Setup(  self,
+                plugin,
+                waitTime,
+                pollTime,
+                useDefaultPollTime,
+                initTime = 15.0,
+                checkRepeatFlag = False,
+                repeatReleaseTime = 200 ):
         """
         This will be called inside the thread at the beginning.
         """
+        self.lock = Lock()
+        self.abort = False
+
         self.plugin = plugin
         self.waitTime = float(waitTime)/1000.0
+        self.repeatReleaseTime = float(repeatReleaseTime)/1000.0
         self.pollTime = pollTime
         self.useDefaultPollTime = useDefaultPollTime
         self.defaultPollTime = -1
 
         self.LastKeyCode = -1
         
+        self.checkRepeatFlag = checkRepeatFlag        
 
-        self.RepeatCode = c_int(0)        
+        self.repeatCode = c_int(0)        
         self.systemCode = c_int(0)
         self.keyCode    = c_int(0)
                 
         self.lastEvent = eg.EventGhostEvent()
         self.keyStillPressed = False
         self.initTerminated = False
+        
+        self.timerInit = None
+        self.timerKey = None
+        
+        self.hwnd = None
+        self.dll  = None
 
         # load irremote.dll
         
@@ -345,25 +400,30 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
         self.wc = wc
         self.hinst = wc.hInstance
         
-        self.timer = Timer( initTime, self.PostInit)        # Init delayed init timer ( in case of standby problems)
-        self.timer.start()
+        self.timerInit = Timer( initTime, self.PostInit)        # Init delayed init timer ( in case of standby problems)
+        self.timerInit.start()
 
 
 
-        
-    @eg.LogIt
+    @eg.LogItWithReturn
     def Finish(self):
         """
         This will be called inside the thread when it finishes. It will even
         be called if the thread exits through an exception.
         """
+
+        self.abort = True
+        self.lock.acquire()
+
         if self.dll:
             self.dll.IR_Close(self.hwnd, 0);
         
         #print "Irremote is stopped"
 
-        self.timer.cancel()
-
+        if self.timerInit :
+            self.timerInit.cancel()
+            #print "Init aborted"
+            
         if self.hwnd:
             windll.user32.KillTimer(self.hwnd, 1)
             DestroyWindow(self.hwnd)
@@ -383,15 +443,20 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
 
             _winreg.CloseKey( regHandle )
 
-        
-        
+        self.lock.release()
+
+
+
     def MyWndProc(self, hwnd, mesg, wParam, lParam) :
         if mesg == WM_TIMER:
-            keyHit = self.IR_GetSystemKeyCode(byref(self.RepeatCode), byref(self.systemCode), byref(self.keyCode) );
+            keyHit = self.IR_GetSystemKeyCode(byref(self.repeatCode), byref(self.systemCode), byref(self.keyCode) );
             if  keyHit == 1:
-                self.timer.cancel()
-                key = self.keyCode.value
-                if self.LastKeyCode != key or not self.keyStillPressed:
+                #print "RepeatCode = ", self.repeatCode, "  systemCode = ", self.systemCode, "  keyCode = ", self.keyCode, "  time = ", time()
+                if self.timerKey :
+                    self.timerKey.cancel()
+                key    = self.keyCode.value
+                repeat = ( self.repeatCode.value == 0 )
+                if ( not repeat and self.checkRepeatFlag ) or not ( self.keyStillPressed and self.LastKeyCode == key ) :
                     self.LastKeyCode = key
                     
                     if not self.systemCode.value in HauppaugeIRTable:
@@ -404,20 +469,32 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
                     self.lastEvent = self.plugin.TriggerEnduringEvent(eventString)
                     self.keyStillPressed = True
 
-                self.timer = Timer(self.waitTime, self.OnTimeOut)
-                self.timer.start()
+                    releaseTime = self.waitTime
+                else :                    
+                    releaseTime = self.repeatReleaseTime
+
+                self.timerKey = Timer(releaseTime, self.OnTimeOut)
+                self.timerKey.start()
         return 1
-        
+
+
 
     def OnTimeOut(self):
+        #print "Release Key"
         self.keyStillPressed = False
         self.lastEvent.SetShouldEnd()
 
 
+
     @eg.LogIt
-    def PostInit( self ) :    
-        self.timer = Timer( 60.0, self.OnPostInitTimeOut)        # Init timeout timer
-        self.timer.start()
+    def PostInit( self ) :
+    
+        self.lock.acquire()
+        if self.abort :
+            self.lock.release()
+            return
+        self.timerInit = Timer( 60.0, self.OnPostInitTimeOut)        # Init timeout timer
+        self.timerInit.start()
 
         returnVal = False
 
@@ -445,7 +522,7 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
         else :
             returnVal = self.IR_Open(self.hwnd, 0, 0, 0);
 
-        self.timer.cancel()
+        self.timerInit.cancel()
 
         if not self.initTerminated :
 
@@ -456,6 +533,10 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
             else :
                 #print "Irremote is started"
                 pass
+                
+        del self.timerInit
+        self.timerInit = None 
+        self.lock.release()
 
 
 
@@ -466,8 +547,8 @@ class HauppaugeIRMessageReceiver(eg.ThreadWorker):
         self.Stop()
         self.plugin.TriggerEvent("InitError")
 
-        
-        
+
+
 
 class HauppaugeIR(eg.PluginClass):
     
@@ -477,60 +558,93 @@ class HauppaugeIR(eg.PluginClass):
             "(If you get unintended double presses of the buttons, "
             "increase this value.)"
         )
-        pollTime       = "Poll time (seconds)"
-        buttonPollTime = "Use default poll time (0.2s)"
+        repeatReleaseTime = "Button release timeout (seconds) after repeat detected:"
+        pollTime        = "Poll time (seconds)"
+        buttonPollTime  = "Use default poll time (0.2s)"
+        checkRepeatFlag = "Use the repeat flag of the IR"
         
     def __init__( self ) :
         self.AddAction(Restart)
+        self.AddAction(OnComputerSuspend, hidden = True )   # For test only
+        self.AddAction(OnComputerResume, hidden = True )    # For test only
         
         self.waitTime = -1
+        self.repeatReleaseTime = -1
         self.pollTime = -1
+        self.initTime = -1
         self.useDefaultPollTime = True
+        
         self.started = False
         self.config = False
 
 
-    def __start__( self, waitTime=-1, pollTime = -1, useDefaultPollTime = True, initTime = 15.0 ):
+
+    def __start__( self,
+                   waitTime=-1,
+                   pollTime = -1,
+                   useDefaultPollTime = True,
+                   checkRepeatFlag = False,
+                   repeatReleaseTime = 200,
+                   initTime = 15.0 ):
+
         if waitTime != -1 :
             self.waitTime = waitTime
+            self.repeatReleaseTime = repeatReleaseTime
             self.pollTime = pollTime
+            self.initTime = initTime
             self.useDefaultPollTime = useDefaultPollTime
+            self.checkRepeatFlag = checkRepeatFlag
         
         if self.config :
             initTime = 1.0
             self.config = False
+        else :
+            initTime = self.initTime
         self.msgThread = HauppaugeIRMessageReceiver( self, 
                                 self.waitTime, 
                                 self.pollTime,
                                 self.useDefaultPollTime,
-                                initTime )
+                                initTime,
+                                self.checkRepeatFlag,
+                                self.repeatReleaseTime )
         self.msgThread.Start( 15.0 )
         self.started = True
 
 
+
     @eg.LogIt
-    def OnComputerSuspend(self, suspendType):
+    def OnComputerSuspend(self, suspendType = None):
         if self.started :
             self.Finish()
-    
-    
+
+
+
     @eg.LogIt
-    def OnComputerResume(self, suspendType):
+    def OnComputerResume(self, suspendType = None):
         if self.started :
             self.__start__()     
-          
-                        
-    def Finish(self, timeout = 0.0 ):
+
+
+
+    @eg.LogItWithReturn
+    def Finish(self, timeout = 10.0 ):
         self.msgThread.Stop( timeout )
+        return True
 
 
-    def __stop__(self, timeout = 0.0 ):
+
+    def __stop__(self ):
         self.started = False
-        self.Finish( timeout )
-        
+        self.Finish()
 
-        
-    def Configure(self, waitTime=300, pollTime = 90, useDefaultPollTime = True):
+
+
+    def Configure(  self,
+                    waitTime=300,
+                    pollTime = 90,
+                    useDefaultPollTime = True,
+                    checkRepeatFlag = False,
+                    repeatReleaseTime = 200 ):
         panel = eg.ConfigPanel(self)
         text = self.text
         
@@ -540,6 +654,7 @@ class HauppaugeIR(eg.PluginClass):
             event.Skip()
         
         waitTimeCtrl = panel.SpinNumCtrl(waitTime, min=0, max=999, fractionWidth=0, integerWidth=3)
+        repeatReleaseTimeCtrl = panel.SpinNumCtrl(repeatReleaseTime, min=0, max=999, fractionWidth=0, integerWidth=3)
 
         useDefaultPollTimeCtrl = wx.CheckBox(panel, -1, text.buttonPollTime)
         useDefaultPollTimeCtrl.SetValue( useDefaultPollTime )
@@ -547,6 +662,8 @@ class HauppaugeIR(eg.PluginClass):
         
         pollTimeCtrl = panel.SpinNumCtrl(pollTime, min=0, max=999, fractionWidth=0, integerWidth=3)
         
+        checkRepeatFlagCtrl = wx.CheckBox(panel, -1, text.checkRepeatFlag)
+        checkRepeatFlagCtrl.SetValue( checkRepeatFlag )
         
         sizer = wx.GridBagSizer( 5, 5 )
         sizer.Add( wx.StaticText( panel, -1, text.buttonTimeout ),
@@ -556,11 +673,20 @@ class HauppaugeIR(eg.PluginClass):
         sizer.Add( wx.StaticText( panel, -1, text.buttonTimeoutDescr ),
                                          ( 1, 0 ),(1,3), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL )
                                          
-        sizer.Add( useDefaultPollTimeCtrl, ( 3, 0 ), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL )
+
+        sizer.Add( wx.StaticText( panel, -1, text.repeatReleaseTime ),
+                                         ( 3, 0 ),(1,2), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT )
+        sizer.Add( repeatReleaseTimeCtrl, ( 3, 2 ), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL )
+        
+
+
+        sizer.Add( useDefaultPollTimeCtrl, ( 5, 0 ), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL )
 
         sizer.Add( wx.StaticText( panel, -1, text.pollTime ),
-                                         ( 3, 1 ), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT )
-        sizer.Add( pollTimeCtrl, ( 3, 2 ), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL )
+                                         ( 5, 1 ), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT )
+        sizer.Add( pollTimeCtrl, ( 5, 2 ), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL )
+        sizer.Add( checkRepeatFlagCtrl, ( 7, 0 ), flag = wx.LEFT | wx.ALIGN_CENTER_VERTICAL )
+        
 
 
         panel.sizer.Add( sizer, 0 )
@@ -570,18 +696,37 @@ class HauppaugeIR(eg.PluginClass):
         while panel.Affirmed():
         
             waitTime           = waitTimeCtrl.GetValue()
+            repeatReleaseTime  = repeatReleaseTimeCtrl.GetValue()
             pollTime           = pollTimeCtrl.GetValue()
             useDefaultPollTime = useDefaultPollTimeCtrl.GetValue()
+            checkRepeatFlag    = checkRepeatFlagCtrl.GetValue()
             
-            panel.SetResult( waitTime, pollTime, useDefaultPollTime )
+            panel.SetResult( waitTime, pollTime, useDefaultPollTime, checkRepeatFlag, repeatReleaseTime )
             self.config = True
-            
-        
+
+
 
 
 class Restart(eg.ActionClass) :
 
     @eg.LogIt
     def __call__( self ) :
-        self.plugin.__stop__(  timeout = 60.0 )
+        self.plugin.__stop__(  timeout = 10.0 )
         self.plugin.__start__( initTime = 1.0 )
+        return True
+
+
+
+
+class OnComputerSuspend(eg.ActionClass) :
+    def __call__( self ) :
+        self.plugin.OnComputerSuspend()
+        return True
+
+
+
+
+class OnComputerResume(eg.ActionClass) :
+    def __call__( self ) :
+        self.plugin.OnComputerResume()
+        return True
