@@ -183,6 +183,10 @@ class DisableItem(EnableItem):
     class text:
         label = "Disable: %s"
         text1 = "Please select the item which should be disabled:"
+        cantSelect = (
+            "The selected item type can't change its enable state.\n\n"
+            "Please select another item."
+        )
         
 
     def __call__(self, link):
@@ -205,6 +209,10 @@ class EnableExclusive(EnableItem):
     class text:
         label = "Enable exclusive: %s"
         text1 = "Please select the folder/macro which should be enabled:"
+        cantSelect = (
+            "The selected item type can't change its enable state.\n\n"
+            "Please select another item."
+        )
         
     
     def __call__(self, link):
