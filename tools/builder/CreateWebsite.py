@@ -1,5 +1,6 @@
 import os
 import time
+import errno
 from os.path import join, abspath
 
 from jinja2 import Environment, FileSystemLoader
@@ -63,6 +64,8 @@ class FileData(object):
 
 
 def GetSetupFiles(srcDir):
+    if not os.path.exists(srcDir):
+        return []
     files = []
     for name in os.listdir(srcDir):
         if name.lower().startswith("eventghost_"):
@@ -103,9 +106,12 @@ class CreateWebsite(builder.Task):
         }
         env.filters = {'rst2html': rst2html}
         for page in menuTabs:
-            template = env.get_template(page.template)
-            template.stream(CURRENT=page).dump(
-                join(buildSetup.websiteDir, page.outfile)
-            )
+            path = os.path.abspath(join(buildSetup.websiteDir, page.outfile))
+            try:
+                os.makedirs(os.path.dirname(path))
+            except os.error, exc:
+                if exc.errno != errno.EEXIST:
+                    raise
+            env.get_template(page.template).stream(CURRENT=page).dump(path)
         
     
