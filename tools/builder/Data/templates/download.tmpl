@@ -8,7 +8,7 @@
 {%- endblock %}
 {% block content %}
 {% filter rst2html %}
-
+{% if files %}
 Latest release:
 ~~~~~~~~~~~~~~~
 
@@ -20,7 +20,7 @@ Previous releases:
 {% for file in files[1:11]%}
 * `{{file.name}} <{{file.target}}>`_, {{file.size}}, {{file.time}}
 {% endfor %}
-
+{% endif %}
 
 Other downloads:
 ~~~~~~~~~~~~~~~~
