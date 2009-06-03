@@ -61,7 +61,7 @@ class MainDialog(wx.Dialog):
             section = task.GetId()
             if section in self.ctrls:
                 ctrl = self.ctrls[section]
-                task.enabled = ctrl.GetValue()
+                task.activated = ctrl.GetValue()
                 ctrl.Enable(False)
         self.buildSetup.config.SaveSettings()
         thread = threading.Thread(target=self.DoMain)
