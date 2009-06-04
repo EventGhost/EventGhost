@@ -133,6 +133,7 @@ EVENT_LIST = (
 
 class System(eg.PluginBase):
     text = Text
+    hookStarted = False
     
     def __init__(self):
         text = self.text
@@ -285,6 +286,8 @@ class System(eg.PluginBase):
         
         
     def StartHookCode(self, event=None):
+        if self.hookStarted:
+            return
         try:
             StartHooks(
                 self.IdleCallback, 
@@ -292,10 +295,14 @@ class System(eg.PluginBase):
             )
         except:
             eg.PrintTraceback()
+        self.hookStarted = True
         
         
     def StopHookCode(self, event=None):
+        if not self.hookStarted:
+            return
         StopHooks()
+        self.hookStarted = False
     
     
     def OnClipboardChange(self, value):
