@@ -548,7 +548,7 @@ ACTIONS = (
 
 
 windowDVBViewer = eg.WindowMatcher( u'dvbviewer.exe',
-                                    winName=u'DVB Viewer',
+                                    winName=u'DVB Viewer{*}',
                                     timeout=20 )
 
 
