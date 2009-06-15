@@ -23,7 +23,7 @@ eg.RegisterPlugin(
 import wx
 import os
 
-from win32api import RegOpenKeyEx, RegQueryValueEx, FormatMessage
+from win32api import RegOpenKeyEx, RegQueryValueEx
 from win32con import CREATE_NEW_CONSOLE, HKEY_CURRENT_USER
 from win32process import CreateProcess, STARTUPINFO
 from win32event import WaitForInputIdle
@@ -32,17 +32,12 @@ from win32com.client.CLSIDToClass import RegisterCLSID
 from pythoncom import GetActiveObject, com_error
 from threading import Timer
 from wx.lib.intctrl import IntCtrl
+from ctypes import FormatError
 
-import YARDcom
-
-RegisterCLSID(YARDcom.CLSID, YARDcom)
-RegisterCLSID(YARDcom.Yard.CLSID, YARDcom.Yard)
-RegisterCLSID(YARDcom.IYard.CLSID, YARDcom.IYard)
-RegisterCLSID(YARDcom.IYardNotification2.CLSID, YARDcom.IYardNotification2)
-RegisterCLSID(YARDcom.IYardLcd.CLSID, YARDcom.IYardLcd)
+YARD_CLSID = '{9AFE3574-1FAF-437F-A8C5-270ED1C84B2E}'
 
 
-
+    
 class YARD(eg.PluginBase):
 
     def __init__(self):
@@ -84,14 +79,11 @@ class YARD(eg.PluginBase):
         
     def __start__(self):
         try:
-            GetActiveObject(YARDcom.Yard.CLSID)
+            GetActiveObject(YARD_CLSID)
         except com_error:
             self.StartYardServer()
         try:
-            self.comObj = DispatchWithEvents(
-                YARDcom.Yard.CLSID, 
-                self.EventHandler
-            )
+            self.comObj = DispatchWithEvents(YARD_CLSID, self.EventHandler)
         except:
             raise eg.Exception("Can't connect to YARD server!") 
         self.isEnabled = True
@@ -174,7 +166,6 @@ class YARD(eg.PluginBase):
             raise self.Exception(
                 "Please start Yards.exe first and configure it."
             )
-        
         try:
             hProcess = CreateProcess(
                 None, 
@@ -187,18 +178,18 @@ class YARD(eg.PluginBase):
                 None, 
                 STARTUPINFO()
             )[0]
-        except:
-            raise eg.Exception(FormatMessage(0).strip())
+        except Exception, exc:
+            raise eg.Exception(FormatError(exc[0]))
         WaitForInputIdle(hProcess, 10000)
         
         
-#--------------------------------------------------------------------------
-# Action: Yard.SendRemoteKey
-#--------------------------------------------------------------------------
+
 class SendRemoteKey(eg.ActionBase):
     name = "Sende IR"
-    description = "Mit dieser Funktion werden IR-Befehle gesendet, "\
-                      "die im YARD-Server konfiguriert wurden."
+    description = (
+        "Mit dieser Funktion werden IR-Befehle gesendet, die im YARD-Server "
+        "konfiguriert wurden."
+    )
     remoteName = None
     keyName = None
     numRepeats = None
@@ -233,7 +224,7 @@ class SendRemoteKey(eg.ActionBase):
         foundRemoteIndex = 0
         comObj = None
         try:
-            comObj = Dispatch(YARDcom.Yard.CLSID)
+            comObj = Dispatch(YARD_CLSID)
         except:
             pass
         else:
@@ -299,4 +290,4 @@ class Print(eg.ActionWithStringParameter):
     def __call__(self, theString):
         lcd = self.plugin.comObj.GetLcd(0)
         lcd.Print(eg.ParseString(theString))
-        
+
