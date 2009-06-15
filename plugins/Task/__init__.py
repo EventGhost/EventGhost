@@ -113,12 +113,12 @@ class Task(eg.PluginBase):
         self.hookDll = CDLL(abspath(join(dirname(__file__), "hook.dll")))
         self.hookDll.StartHook()
         trayWindow = 0
-        for hwnd in self.names["explorer"].hwnds:
-            if GetClassName(hwnd) == "Shell_TrayWnd":
-                trayWindow = hwnd
-                break
+        if "explorer" in self.names:
+            for hwnd in self.names["explorer"].hwnds:
+                if GetClassName(hwnd) == "Shell_TrayWnd":
+                    trayWindow = hwnd
+                    break
         self.desktopHwnds = (GetShellWindow(), trayWindow)
-        
         
         
     def __stop__(self):
@@ -158,7 +158,6 @@ class Task(eg.PluginBase):
         return name, hwnd
         
         
-        
     def WindowCreatedProc(self, dummyHwnd, dummyMesg, hwnd, dummyLParam):
         self.CheckWindow(hwnd)
             
@@ -191,5 +190,3 @@ class Task(eg.PluginBase):
             self.WindowGotFocusProc(None, None, lParam, None)
         return 1
 
-
-    
