@@ -28,10 +28,8 @@ from win32con import CREATE_NEW_CONSOLE, HKEY_CURRENT_USER
 from win32process import CreateProcess, STARTUPINFO
 from win32event import WaitForInputIdle
 from win32com.client import DispatchWithEvents, Dispatch
-from win32com.client.CLSIDToClass import RegisterCLSID
 from pythoncom import GetActiveObject, com_error
 from threading import Timer
-from wx.lib.intctrl import IntCtrl
 from ctypes import FormatError
 
 YARD_CLSID = '{9AFE3574-1FAF-437F-A8C5-270ED1C84B2E}'
