@@ -342,3 +342,32 @@ def PyFindWindow(className=None, windowName=None):
         raise WinError()
     return hWnd
 
+
+import ctypes
+from ctypes.wintypes import LPWSTR, GetLastError
+FORMAT_MESSAGE_ALLOCATE_BUFFER = 256
+FORMAT_MESSAGE_FROM_SYSTEM = 4096
+
+def FormatError(code=None):
+    """
+    A replacement for ctypes.FormtError, but returns a unicode string.
+    """
+    if code is None:
+        code = GetLastError()
+    _kernel32 = ctypes.kernel32
+    lpMsgBuf = LPWSTR()
+    n = _kernel32.FormatMessageW(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+            None,
+            code,
+            0,
+            byref(lpMsgBuf),
+            0,
+            None
+        )
+    message = lpMsgBuf.value.strip()
+    _kernel32.LocalFree(lpMsgBuf)
+    return message
+
+# Monkey patch the new FormatError into ctypes
+ctypes.FormatError = FormatError
