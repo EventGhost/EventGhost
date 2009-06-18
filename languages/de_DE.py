@@ -115,6 +115,7 @@ class Exceptions:
     DriverNotOpen = u"Kann den Treiber nicht öffnen!"
     InitFailed = u"Initialisierung fehlgeschlagen!"
     PluginNotFound = u"Plugin nicht gefunden!"
+    PluginLoadError = u"Fehler beim Laden des Plugins!"
     ProgramNotFound = u"Programm nicht gefunden!"
     ProgramNotRunning = u"Programm ist nicht gestartet!"
     SerialOpenFailed = u"Kann den seriellen Anschluss nicht öffnen!"
@@ -122,7 +123,7 @@ class CheckUpdate:
     ManErrorMesg = u"Es konnte nicht festgestellt werden, ob es eine neuere Version von EventGhost gibt.\n\nBitte versuchen sie es später noch einmal."
     ManOkMesg = u"Es ist keine neuere Version von EventGhost verfügbar."
     downloadButton = u"Download-Seite besuchen"
-    newVersionMesg = u"Eine neuere Version von EventGhost wurde veröffentlicht.\n\n	Diese Version:		%s\n	Aktuellste Version:	%s\n\nWollen Sie die Download-Seite besuchen?"
+    newVersionMesg = u"Eine neuere Version von EventGhost wurde veröffentlicht.\n\n Diese Version:      %s\n    Aktuellste Version: %s\n\nWollen Sie die Download-Seite besuchen?"
     waitMesg = u"Bitte warten sie während EventGhost die Update-Informationen bezieht."
 class AddActionDialog:
     descriptionLabel = u"Beschreibung"
