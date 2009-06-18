@@ -192,15 +192,15 @@ class PluginInfo(object):
         pathname = join(eg.PLUGIN_DIR, pluginInfo.pluginDir, "__init__.py")
         if not exists(pathname):
             eg.PrintError("File %s does not exist" % pathname)
-            return
+            return False
         try:
             module = pluginInfo.ImportPlugin(pluginInfo.pluginName)
         except:
             eg.PrintTraceback(
-                "Error while loading plugin-file %s." % pluginInfo.path,
+                "Error while loading plugin-file %s." % pluginInfo.pluginName,
                 1
             )
-            return
+            return False
         pluginCls = module.__pluginCls__
         pluginInfo.module = module
         pluginInfo.pluginCls = pluginCls
