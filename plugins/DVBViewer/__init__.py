@@ -1348,10 +1348,17 @@ class DVBViewer(eg.PluginClass):
     class LockWithTimeout :
 
 
-        def __init__( self, timeoutFunc , *args, **kwargs ) :
+        def Timeout( self ) :
+            eg.PrintDebugNotice("DVBViewer plugin lock timeout detected, lock released")
+            eg.PrintError( "Error: Lock released to prevent a dead lock" )
+            self.lock.release()
+            return True
+
+
+        def __init__( self, timeoutFunc = Timeout , *args, **kwargs ) :
             self.timeoutFunc = partial(timeoutFunc, self, *args, **kwargs)
             self.timer = None
-            self.lock     = Lock()
+            self.lock = Lock()
 
 
         def __del__(self) :
@@ -1359,44 +1366,31 @@ class DVBViewer(eg.PluginClass):
                 self.timer.cancel()
                 del self.timer
                 self.timer = None
-                eg.PrintDebugNotice("Warning: Lock object deleted hile lock")
+                eg.PrintDebugNotice("Warning: Lock object deleted while lock")
             del self.lock
-            del self.locklock
-            return True
 
 
-        def Timeout( self ) :
-            eg.PrintDebugNotice("DVBViewer plugin lock timeout detected, lock released")
-            print "Error: Lock released to prevent a dead lock"
-            self.lock.release()
-            return True
-
-
-        def acquire( self, blocking=1, timeout = CALLWAIT_TIMEOUT-10 ) :
+        def acquire( self, blocking=True, timeout = CALLWAIT_TIMEOUT-10 ) :
             #print "Acquire: blocking = ", blocking
-            if blocking :
-                ret = self.lock.acquire()
+            blocked = self.lock.acquire( blocking )
+            if blocked :
                 self.timer = Timer( timeout, self.timeoutFunc )
                 self.timer.start()
-            else :
-                ret = self.lock.acquire( blocking )
-                if ret :
-                    self.timer = Timer( timeout, self.timeoutFunc )
-                    self.timer.start()
             #print "Acquired: blocking = ", blocking, "  retrun = ", ret
-            return ret
+            return blocked
 
 
         def release( self ) :
-            ret = False
-            self.timer.cancel()
-            del self.timer
-            self.timer = None
-            try: 
-                ret =self.lock.release()
-            except :
-                print "Error: unlock lock released"
+            if self.timer :
+                self.timer.cancel()
+                del self.timer
+                self.timer = None
+                self.lock.release()
+                ret = True
+            else :
                 eg.PrintDebugNotice("Error: unlock lock released")
+                eg.PrintError( "Error: unlock lock released" )
+                ret = False
             #print "Released"
             return ret
 
@@ -1480,9 +1474,9 @@ class DVBViewer(eg.PluginClass):
         
         self.updateRecordingsTimer = None
         
-        self.updateRecordingsLock      = self.LockWithTimeout(self.LockWithTimeout.Timeout)
+        self.updateRecordingsLock      = self.LockWithTimeout()
         
-        self.executionStatusChangeLock = self.LockWithTimeout(self.LockWithTimeout.Timeout)
+        self.executionStatusChangeLock = self.LockWithTimeout()
         self.lockedByTerminate = False
         
         def CheckEventHandlingFunc( self, plugin ) :
