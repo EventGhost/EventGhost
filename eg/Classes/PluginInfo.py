@@ -39,6 +39,16 @@ class PluginProxy(object):
 
 
 
+class LoadErrorPlugin(eg.PluginBase):
+
+    def __init__(self):
+        raise self.Exceptions.PluginLoadError
+
+    def __start__(self, *args):
+        raise self.Exceptions.PluginLoadError
+
+
+
 class UnknownPlugin(eg.PluginBase):
 
     def __init__(self):
@@ -298,7 +308,9 @@ class PluginInfo(object):
                 pluginCls = UnknownPlugin
         if pluginInfoCls.pluginCls is None:
             if not pluginInfoCls.LoadModule():
-                return None
+                class pluginInfoCls(PluginInfo):
+                    name = pluginName
+                    pluginCls = LoadErrorPlugin
         info = pluginInfoCls.CreatePluginInstance(evalName, treeItem)
         plugin = info.instance
         info.args = args
