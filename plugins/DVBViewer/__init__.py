@@ -1522,7 +1522,7 @@ class DVBViewer(eg.PluginClass):
 
 
 
-    @eg.LogIt
+    @eg.LogItWithReturn
     def __start__(  self,
                     useSendMessage=False, 
                     oldInterface = True,
@@ -1579,7 +1579,7 @@ class DVBViewer(eg.PluginClass):
 
 
 
-    @eg.LogIt
+    @eg.LogItWithReturn
     def __stop__(self):
         # If the DVBViewer was started by the COM interface, the DVBViewer must be terminated before
         # stopping the DVBViewer Thread. Otherwise the DVBViewer is going into an endless loop.
@@ -2159,9 +2159,12 @@ class DVBViewer(eg.PluginClass):
         sb = wx.StaticBox( panel, -1, text.playStateFormat )
         boxSizer = wx.StaticBoxSizer( sb, wx.VERTICAL )
         boxSizer.Add(wx.Size(0,3))
-        boxSizer.Add(longPlayStateCheckBoxCtrl, 0, wx.EXPAND | wx.ALIGN_CENTER_VERTICAL)
-        boxSizer.Add(wx.Size(0,10))
-        boxSizer.Add(shortPlayStateCheckBoxCtrl, 0, wx.EXPAND | wx.ALIGN_CENTER_VERTICAL)
+        
+        boxSizerI = wx.BoxSizer( wx.HORIZONTAL )
+        boxSizerI.Add(longPlayStateCheckBoxCtrl, 1, wx.EXPAND | wx.ALIGN_CENTER_VERTICAL)
+        boxSizerI.Add(shortPlayStateCheckBoxCtrl, 1, wx.EXPAND | wx.ALIGN_CENTER_VERTICAL)
+        boxSizer.Add(boxSizerI, 1, wx.EXPAND )
+
         
         boxSizerO.Add( boxSizer, 1, wx.EXPAND )
         
@@ -2169,9 +2172,11 @@ class DVBViewer(eg.PluginClass):
         sb = wx.StaticBox( panel, -1, text.displayChangeFormat )
         boxSizer = wx.StaticBoxSizer( sb, wx.VERTICAL )
         boxSizer.Add(wx.Size(0,3))
-        boxSizer.Add( longDisplayCheckBoxCtrl, 0, wx.EXPAND | wx.ALIGN_CENTER_VERTICAL)
-        boxSizer.Add(wx.Size(0,10))
-        boxSizer.Add(shortDisplayCheckBoxCtrl, 0, wx.EXPAND | wx.ALIGN_CENTER_VERTICAL)
+
+        boxSizerI = wx.BoxSizer( wx.HORIZONTAL )
+        boxSizerI.Add( longDisplayCheckBoxCtrl, 1, wx.EXPAND | wx.ALIGN_CENTER_VERTICAL)
+        boxSizerI.Add(shortDisplayCheckBoxCtrl, 1, wx.EXPAND | wx.ALIGN_CENTER_VERTICAL)
+        boxSizer.Add(boxSizerI, 1, wx.EXPAND )
 
         boxSizerO.Add( boxSizer, 1, wx.EXPAND )
 
@@ -2188,7 +2193,7 @@ class DVBViewer(eg.PluginClass):
         boxSizer.Add(wx.Size(0,3))
         boxSizer.Add( useCommandCheckBoxCtrl, 0, wx.EXPAND | wx.ALIGN_CENTER_VERTICAL)
 
-        boxSizer.Add(wx.Size(0,10))
+        boxSizer.Add(wx.Size(0,7))
         boxSizer.Add( wx.StaticText(panel, -1, text.dvbviewerFile), 0, wx.EXPAND | wx.ALIGN_CENTER_VERTICAL)
 
         boxSizer.Add(wx.Size(0,2))
