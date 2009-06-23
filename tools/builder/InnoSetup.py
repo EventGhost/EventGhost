@@ -33,6 +33,7 @@ class StdHandler(object):
 
     def __init__(self, oldStream, logger):
         self.oldStream = oldStream
+        self.encoding = oldStream.encoding
         self.buf = ""
         self.logger = logger
 
