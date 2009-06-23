@@ -121,7 +121,7 @@ class SerialError(eg.Exception):
     def __init__(self, msg=None):
         if msg is None:
             errno = GetLastError()
-            strerror = FormatError(errno).decode("mbcs")
+            strerror = FormatError(errno)
         else:
             errno = 0
             strerror = msg
