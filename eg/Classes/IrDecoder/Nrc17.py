@@ -40,7 +40,7 @@ class Nrc17(ManchesterCoding1):
         # Check the header pause
         for dummyCounter in range(5):
             if self.GetSample():
-                raise DecodeError("pre-space to short %d" % dummyCounter)
+                raise DecodeError("pre-space too short %d" % dummyCounter)
 
         # Check the start bit
         if not self.GetBit():

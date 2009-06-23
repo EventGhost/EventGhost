@@ -52,7 +52,7 @@ class Sharp(IrProtocolBase):
                 raise DecodeError("space too long")
             buf <<= 1
         else:
-            raise DecodeError("sequence to long")
+            raise DecodeError("sequence too long")
         buf >>= 1
         if (buf & 256):
             buf ^= 0x03ff

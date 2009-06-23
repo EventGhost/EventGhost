@@ -44,7 +44,7 @@ class Rcmm(IrProtocolBase):
         elif pause < 861:
             return 3 # binary 11
         else:
-            raise DecodeError("pause to long")
+            raise DecodeError("pause too long")
 
 
     def ShiftInBits(self, numBits):

@@ -39,21 +39,21 @@ class Sony(IrProtocolBase):
             # Check if the space time is valid.
             space = data[i]
             if space < 400:
-                raise DecodeError("space to short %d" % space)
+                raise DecodeError("space too short %d" % space)
             if space > 900:
                 if i in (25, 31, 41):
                     break
-                raise DecodeError("space to long %d" % space)
+                raise DecodeError("space too long %d" % space)
 
             mark = data[i+1]
             if mark < 250:
-                raise DecodeError("mark to short %d" % mark)
+                raise DecodeError("mark too short %d" % mark)
             elif mark < 1000:
                 pass
             elif mark < 1400:
                 buf |= mask
             else:
-                raise DecodeError("mark to long %d" % mark)
+                raise DecodeError("mark too long %d" % mark)
             mask <<= 1
             i += 2
 
