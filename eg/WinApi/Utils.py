@@ -350,13 +350,13 @@ FORMAT_MESSAGE_FROM_SYSTEM = 4096
 
 def FormatError(code=None):
     """
-    A replacement for ctypes.FormtError, but returns a unicode string.
+    A replacement for ctypes.FormtError, but always returns a unicode string.
     """
     if code is None:
         code = GetLastError()
-    _kernel32 = ctypes.kernel32
+    kernel32 = ctypes.windll.kernel32
     lpMsgBuf = LPWSTR()
-    n = _kernel32.FormatMessageW(
+    n = kernel32.FormatMessageW(
             FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
             None,
             code,
@@ -366,8 +366,10 @@ def FormatError(code=None):
             None
         )
     message = lpMsgBuf.value.strip()
-    _kernel32.LocalFree(lpMsgBuf)
+    kernel32.LocalFree(lpMsgBuf)
     return message
 
 # Monkey patch the new FormatError into ctypes
 ctypes.FormatError = FormatError
+import Dynamic
+Dynamic.FormatError = FormatError
