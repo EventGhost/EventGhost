@@ -26,7 +26,7 @@ from eg.WinApi.Dynamic import (
     WM_SIZE, CW_USEDEFAULT, WS_OVERLAPPEDWINDOW, GetModuleHandle, WNDCLASS,
     RegisterClass, CreateWindowEx, byref, WNDPROC, WinError, DefWindowProc,
     SetClipboardViewer, ChangeClipboardChain, WM_CHANGECBCHAIN,
-    WM_DRAWCLIPBOARD, SendMessage,
+    WM_DRAWCLIPBOARD, SendMessage, WM_USER
 )
 
 class MessageReceiver(eg.ThreadWorker):
@@ -47,7 +47,9 @@ class MessageReceiver(eg.ThreadWorker):
         self.wndclass = wndclass
         self.hwnd = None
         self.hwndNextViewer = None
-
+        self.nextWmUserMsg = WM_USER + 1000
+        self.wmUserHandlers = {}
+        self.freeWmUserMsgs = []
 
     @eg.LogIt
     def Setup(self):
@@ -86,6 +88,27 @@ class MessageReceiver(eg.ThreadWorker):
             del self.messageProcs[mesg]
 
 
+    def AddWmUserHandler(self, handler):
+        if len(self.freeWmUserMsgs):
+            msg = self.freeWmUserMsgs.pop()
+        else:
+            msg = self.nextWmUserMsg
+            self.nextWmUserMsg += 1
+            if self.nextWmUserMsg > 0x7FFF:
+                raise Exception("Running out of WM_USER messages")
+        self.wmUserHandlers[handler] = msg
+        self.AddHandler(msg, handler)
+        return msg
+        
+        
+    def RemoveWmUserHandler(self, handler):
+        msg = self.wmUserHandlers[handler]
+        del self.wmUserHandlers[handler]
+        self.freeWmUserMsgs.append(msg)
+        self.RemoveHandler(msg, handler)
+        return msg
+        
+    
     def MyWndProc(self, hwnd, mesg, wParam, lParam):
         if mesg == WM_SIZE:
             #print "MessageReceiver sized"
