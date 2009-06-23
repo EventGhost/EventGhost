@@ -41,7 +41,7 @@ class Nec(IrProtocolBase):
         if not (8000 < pulse < 10000):
             raise DecodeError("wrong start pulse")
         if space > 5000:
-            raise DecodeError("start pause to long")
+            raise DecodeError("start pause too long")
         if space < 4000:
             if space > 2000 and self.lastTime + 0.150 > clock():
                 #print "repeat", clock() - self.lastTime, self.lastCode
@@ -52,18 +52,18 @@ class Nec(IrProtocolBase):
         for i in range(2, 62, 2):
             pulse = data[i]
             if pulse > 750:
-                raise DecodeError("mark to long %d %d" % (pulse, i))
+                raise DecodeError("mark too long %d %d" % (pulse, i))
             if pulse < 450:
-                raise DecodeError("mark to short")
+                raise DecodeError("mark too short")
             space = data[i + 1]
             if space < 350:
-                raise DecodeError("space to short %d %d" % (space, i + 1))
+                raise DecodeError("space too short %d %d" % (space, i + 1))
             elif space < 850:
                 pass
             elif space < 2000:
                 buf |= 1
             else:
-                raise DecodeError("space to long %d" % space)
+                raise DecodeError("space too long %d" % space)
             buf <<= 1
         self.lastTime = clock()
         return "NEC.%08X" % buf

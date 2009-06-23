@@ -45,7 +45,7 @@ class Xsat(IrProtocolBase):
             elif space < 1800:
                 buf |= mask
             else:
-                raise DecodeError("space to long")
+                raise DecodeError("space too long")
             mask <<= 1
         pulse = data[pos]
         if 250 > pulse > 750:
@@ -65,6 +65,6 @@ class Xsat(IrProtocolBase):
         addr = self.GetByte(data, 2)
         cmd = self.GetByte(data, 20)
         if data[37] < 10000:
-            raise DecodeError("sequence to long")
+            raise DecodeError("sequence too long")
         return "XSAT.%0.2X%0.2X" % (addr, cmd)
 

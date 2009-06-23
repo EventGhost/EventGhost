@@ -70,7 +70,7 @@ class ManchesterBase(IrProtocolBase):
                 (self.data[self.pos] + 2*self.halfBitTime/3) / self.halfBitTime
             )
             if self.bufferLen == 0:
-                raise DecodeError("duration to short")
+                raise DecodeError("duration too short")
             self.pos += 1
             self.bitState = self.pos % 2
         self.bufferLen -= 1
