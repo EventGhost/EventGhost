@@ -15,16 +15,16 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-r"""<rst>
+ur"""<rst>
 Plugin for the Logitech UltraX Media Remote.
 
 .. image:: picture.gif
    :align: center
 
-**Notice:** You need a special driver to use this remote. Please `read this 
-wiki page`__ to get the driver installed first.
+**Notice:** You need a special driver to use the remote with this plugin. 
+Please `download it here`__ and install it while the device is connected.
 
-__ http://www.eventghost.org/wiki/WinUsbRemotes
+__ http://www.eventghost.org/downloads/USB-Remote-Driver.exe
 """
 
 
@@ -95,7 +95,7 @@ BUTTON_CODES4 = {
     9: "Language",
     10: "DVDMenu",
     11: "Subtitle",
-    12: "Sap",
+    12: "SAP",
     13: "Teletext",
     14: "LastChannel",
     15: "Repeat",

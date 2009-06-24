@@ -1,3 +1,34 @@
+# This file is part of EventGhost.
+# Copyright (C) 2008 Lars-Peter Voss <bitmonster@eventghost.org>
+# 
+# EventGhost is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# EventGhost is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with EventGhost; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+ur"""<rst>
+Plugin for the TechniSat USB IR Receiver
+
+|
+
+.. image:: technisat.jpg
+   :align: center
+
+**Notice:** You need a special driver to use the remote with this plugin. 
+Please `download it here`__ and install it while the device is connected.
+
+__ http://www.eventghost.org/downloads/USB-Remote-Driver.exe
+"""
+
 import eg
 
 eg.RegisterPlugin(
@@ -5,11 +36,11 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.0.0",
     kind = "remote",
-    description = 'Plugin for the TechniSat USB IR Receiver.',
+    description = __doc__,
 )
 
 CODES = {
-    (1, 0, 8, 0): "Epg",
+    (1, 0, 8, 0): "EPG",
     (1, 0, 9, 0): "Exit",
     (1, 0, 12, 0): "Help",
     (1, 0, 16, 0): "Mute",
@@ -33,7 +64,7 @@ CODES = {
     (1, 0, 63, 0): "Green",
     (1, 0, 64, 0): "Yellow",
     (1, 0, 65, 0): "Blue",
-    (1, 0, 66, 0): "Tv",
+    (1, 0, 66, 0): "TV",
     (1, 0, 79, 0): "Right",
     (1, 0, 80, 0): "Left",
     (1, 0, 81, 0): "Down",
