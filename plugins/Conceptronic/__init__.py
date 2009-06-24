@@ -18,11 +18,16 @@
 ur"""<rst>
 Plugin for the `Conceptronic Remote Control for Windows\u00ae Media Center`__.
 
-**Notice:** You need a special driver to use this remote. Please `read this 
-wiki page`__ to get the driver installed first.
+|
+
+.. image:: picture.jpg
+   :align: center
+
+**Notice:** You need a special driver to use the remote with this plugin. 
+Please `download it here`__ and install it while the device is connected.
 
 __ http://www.conceptronic.net/site/desktopdefault.aspx?tabindex=1&tabid=242&cid=40&gid=4050&pid=CLLRCMCE
-__ http://www.eventghost.org/wiki/WinUsbRemotes
+__ http://www.eventghost.org/downloads/USB-Remote-Driver.exe
 """
 
 import eg
@@ -38,7 +43,7 @@ eg.RegisterPlugin(
 
 BUTTON_CODES = {
     (2,): 'Power',
-    (0, 13): 'WinButton',
+    (0, 13): 'Start',
     (0, 36): 'DVDMenu',
     (0, 37): 'TV',
     (0, 39): 'AspectRatio',
@@ -53,7 +58,7 @@ BUTTON_CODES = {
     (0, 93): 'Yellow',
     (0, 94): 'Blue',
     (0, 0, 0, 1): 'Info',
-    (0, 0, 0, 2): 'TvGuide',
+    (0, 0, 0, 2): 'TVGuide',
     (0, 0, 0, 4): 'Play',
     (0, 0, 0, 8): 'Pause',
     (0, 0, 4, 0): 'Rewind',
