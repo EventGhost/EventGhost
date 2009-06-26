@@ -2579,17 +2579,34 @@ class ShowInfoinTVPic( eg.ActionClass ) :
         plugin = self.plugin
         text = self.text
 
-        self.panel = eg.ConfigPanel()
+        self.panel = eg.ConfigPanel( resizable=True )
         panel = self.panel
         
-        textCtrl = panel.TextCtrl(displayText)
+        textCtrl = panel.TextCtrl("\n", style=wx.TE_MULTILINE)
+        w, h = textCtrl.GetBestSize()
+        textCtrl.ChangeValue(displayText)
+        textCtrl.SetMinSize((-1, h))
+
         timeCtrl = panel.SpinNumCtrl(timeout, min=0, max=999, fractionWidth=0, integerWidth=3)
+
         forceCheckBoxCtrl = wx.CheckBox(panel, -1, text.force)
         forceCheckBoxCtrl.SetValue( force )
         
-        panel.AddLine( text.text, textCtrl )
-        panel.AddLine( text.time, timeCtrl )
-        panel.AddLine( forceCheckBoxCtrl )
+        sizer = wx.GridBagSizer(5, 5)
+
+        rowCount = 0
+        sizer.Add(wx.StaticText(panel, -1, text.text), (rowCount, 0))
+        sizer.Add(textCtrl,                            (rowCount, 1), flag=wx.EXPAND)
+
+        rowCount += 1
+        sizer.Add(wx.StaticText(panel, -1, text.time), (rowCount, 0), flag=wx.ALIGN_CENTER_VERTICAL)
+        sizer.Add(timeCtrl,                            (rowCount, 1) )
+        
+        rowCount += 1
+        sizer.Add(forceCheckBoxCtrl,                   (rowCount, 0), (1,2), flag=wx.EXPAND)
+        
+        sizer.AddGrowableCol(1)
+        panel.sizer.Add(sizer, 0, flag = wx.EXPAND)
 
         while panel.Affirmed():
             displayText = textCtrl.GetValue()
