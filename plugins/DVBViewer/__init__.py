@@ -661,6 +661,9 @@ class Text:
         time  = "Timeinterval [s]: "
         force = "Start DVBViewer if not executing"
 
+    class DeleteInfoinTVPic :
+        name  = "Delete the Infobar in the TVPicture."
+
     class UpdateEPG :
         name = "Update EPG"
         description =   (   
@@ -1411,6 +1414,7 @@ class DVBViewer(eg.PluginClass):
         self.AddAction(TaskScheduler)
         self.AddAction(SendAction)
         self.AddAction(ShowInfoinTVPic)
+        self.AddAction(DeleteInfoinTVPic)
         self.AddAction(GetDVBViewerObject, hidden = True)
         self.AddAction(ExecuteDVBViewerCommandViaCOM, hidden = True)
         
@@ -1498,6 +1502,8 @@ class DVBViewer(eg.PluginClass):
         self.closeWaitLock             = self.LockWithTimeout( WaitForTerminationTimeoutFunc, self )
         self.closeWaitActive  = False
         self.timeout = False
+        
+        self.infoInTVPicTimeout = 0.0
 
 
 
@@ -2543,7 +2549,7 @@ class SendAction( eg.ActionClass ) :
 
 class ShowInfoinTVPic( eg.ActionClass ) :
 
-    def __call__( self, text = "", time = 15.0, force = False ) :
+    def __call__( self, text = "", timeout = 15.0, force = False ) :
         if force :
             connectMode = WAIT_CHECK_START_CONNECT
         else :
@@ -2555,15 +2561,20 @@ class ShowInfoinTVPic( eg.ActionClass ) :
             plugin.workerThread.CallWait(
                                         partial(
                                             plugin.workerThread.ShowInfoinTVPic,
-                                            " "+ text + " ", time
+                                            " "+ text + " ", timeout
                                          ),
                                          CALLWAIT_TIMEOUT
                          )
-        return True
+
+            plugin.infoInTVPicTimeout = time() + timeout
+
+            return True
+
+        return False
 
 
 
-    def Configure( self, displayText = "", time = 15.0, force = False ) :
+    def Configure( self, displayText = "", timeout = 15.0, force = False ) :
         
         plugin = self.plugin
         text = self.text
@@ -2572,7 +2583,7 @@ class ShowInfoinTVPic( eg.ActionClass ) :
         panel = self.panel
         
         textCtrl = panel.TextCtrl(displayText)
-        timeCtrl = panel.SpinNumCtrl(time, min=0, max=999, fractionWidth=0, integerWidth=3)
+        timeCtrl = panel.SpinNumCtrl(timeout, min=0, max=999, fractionWidth=0, integerWidth=3)
         forceCheckBoxCtrl = wx.CheckBox(panel, -1, text.force)
         forceCheckBoxCtrl.SetValue( force )
         
@@ -2582,10 +2593,30 @@ class ShowInfoinTVPic( eg.ActionClass ) :
 
         while panel.Affirmed():
             displayText = textCtrl.GetValue()
-            time        = timeCtrl.GetValue()
+            timeout     = timeCtrl.GetValue()
             force       = forceCheckBoxCtrl.GetValue()
             
-            panel.SetResult( displayText, time, force )
+            panel.SetResult( displayText, timeout, force )
+
+
+
+
+class DeleteInfoinTVPic( eg.ActionClass ) :
+
+    def __call__( self ) :
+
+        plugin = self.plugin
+        if plugin.infoInTVPicTimeout > time() + 0.01 :
+        
+            plugin.infoInTVPicTimeout = 0.0
+
+            if plugin.Connect( CHECK_CONNECT, lock = True ) :
+                plugin.workerThread.CallWait(
+                            partial( plugin.workerThread.ShowInfoinTVPic, " ", 0 ),
+                            CALLWAIT_TIMEOUT
+                         )
+                return True
+        return False
 
 
 
