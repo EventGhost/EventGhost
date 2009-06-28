@@ -356,7 +356,7 @@ def FormatError(code=None):
         code = GetLastError()
     kernel32 = ctypes.windll.kernel32
     lpMsgBuf = LPWSTR()
-    n = kernel32.FormatMessageW(
+    numChars = kernel32.FormatMessageW(
             FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
             None,
             code,
@@ -365,6 +365,8 @@ def FormatError(code=None):
             0,
             None
         )
+    if numChars == 0:
+        raise Exception("FormatMessage failed", GetLastError())
     message = lpMsgBuf.value.strip()
     kernel32.LocalFree(lpMsgBuf)
     return message
