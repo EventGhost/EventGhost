@@ -109,12 +109,12 @@ def InitGui():
         eg.eventThread.StartSession,
         startupFile
     )
-    if config.checkUpdate:
-        # avoid more than one check per day
-        today = gmtime()[:3]
-        if config.lastUpdateCheckDate != today:
-            config.lastUpdateCheckDate = today
-            wx.CallAfter(eg.CheckUpdate.Start)
+#    if config.checkUpdate:
+#        # avoid more than one check per day
+#        today = gmtime()[:3]
+#        if config.lastUpdateCheckDate != today:
+#            config.lastUpdateCheckDate = today
+#            wx.CallAfter(eg.CheckUpdate.Start)
 
     eg.Print(eg.text.MainFrame.Logger.welcomeText)
 

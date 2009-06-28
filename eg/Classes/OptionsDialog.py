@@ -89,7 +89,7 @@ class OptionsDialog(eg.TaskletDialog):
             config.hideOnClose,
             text.HideOnClose
         )
-        checkUpdateCtrl = page1.CheckBox(config.checkUpdate, text.CheckUpdate)
+        #checkUpdateCtrl = page1.CheckBox(config.checkUpdate, text.CheckUpdate)
         memoryLimitCtrl = page1.CheckBox(config.limitMemory, text.limitMemory1)
         memoryLimitSpinCtrl = page1.SpinIntCtrl(
             config.limitMemorySize,
@@ -135,7 +135,7 @@ class OptionsDialog(eg.TaskletDialog):
             (
                 (startWithWindowsCtrl, 0, flags),
                 (hideOnCloseCtrl, 0, flags),
-                (checkUpdateCtrl, 0, flags),
+                #(checkUpdateCtrl, 0, flags),
                 (memoryLimitSizer, 0, flags),
                 (confirmDeleteCtrl, 0, flags),
             )
@@ -186,7 +186,7 @@ class OptionsDialog(eg.TaskletDialog):
                         pass
 
             config.hideOnClose = hideOnCloseCtrl.GetValue()
-            config.checkUpdate = checkUpdateCtrl.GetValue()
+            #config.checkUpdate = checkUpdateCtrl.GetValue()
             config.limitMemory = bool(memoryLimitCtrl.GetValue())
             config.limitMemorySize = memoryLimitSpinCtrl.GetValue()
             config.confirmDelete = confirmDeleteCtrl.GetValue()

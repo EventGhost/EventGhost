@@ -103,7 +103,7 @@ class Document(object):
         elif not self.filePath:
             filename = "Example.xml"
         else:
-            filename = os.path.basename(self.filePath)
+            filename = os.path.splitext(os.path.basename(self.filePath))[0]
         return "EventGhost %s - %s" % (eg.Version.string, filename)
 
 
@@ -215,17 +215,20 @@ class Document(object):
 
     @eg.LogItWithReturn
     def Close(self):
-        eg.config.hideOnStartup = self.frame is None
-        eg.config.autoloadFilePath = self.filePath
-        if self.frame is not None:
-            frame = self.frame
-            self.frame = None
-            frame.Destroy()
-        TreeStateData.guid = self.root.guid
-        TreeStateData.time = self.root.time
-        TreeStateData.expanded = self.GetExpandState()
-        TreeStateData.selection = self.selection.GetPath()
-        TreeStateData.firstVisibleItem = self.firstVisibleItem.GetPath()
+        try:
+            eg.config.hideOnStartup = self.frame is None
+            eg.config.autoloadFilePath = self.filePath
+            if self.frame is not None:
+                frame = self.frame
+                self.frame = None
+                frame.Destroy()
+            TreeStateData.guid = self.root.guid
+            TreeStateData.time = self.root.time
+            TreeStateData.expanded = self.GetExpandState()
+            TreeStateData.selection = self.selection.GetPath()
+            TreeStateData.firstVisibleItem = self.firstVisibleItem.GetPath()
+        except:
+            eg.PrintTraceback()
 
 
     @eg.LogIt
@@ -350,10 +353,21 @@ class Document(object):
         self.StartSession(None)
 
 
-    def Open(self):
+    def Open(self, filePath=None):
+        self.ShowFrame()
+        if filePath is not None:
+            res = wx.MessageBox (
+                "Do you really want to load the tree file:\n%s" % filePath,
+                eg.APP_NAME,
+                wx.YES_NO|wx.CENTRE|wx.ICON_QUESTION,
+                parent = self.frame,
+            )
+            if res == wx.ID_NO:
+                return wx.ID_CANCEL
         if self.CheckFileNeedsSave() == wx.ID_CANCEL:
             return wx.ID_CANCEL
-        filePath = self.AskFile(wx.OPEN)
+        if filePath is None:
+            filePath = self.AskFile(wx.OPEN)
         if filePath is None:
             return wx.ID_CANCEL
         self.StartSession(filePath)
@@ -380,7 +394,7 @@ class Document(object):
         fileDialog = wx.FileDialog(
             self.frame,
             message="",
-            wildcard="*.xml",
+            wildcard="EventGhost Tree|*.xml;*.egtree",
             style=style
         )
         try:
