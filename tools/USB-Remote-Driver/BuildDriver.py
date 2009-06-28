@@ -1,3 +1,7 @@
+OUTFILE_NAME = "USB-Remote-Driver.exe"
+
+DDK_PATH = r"C:\WinDDK\6001.18002"
+
 DEVICES = [
     (
         "Logitech UltraX Media Remote (Keypad)", 
@@ -40,7 +44,7 @@ Signature="$Windows NT$"
 Class=HIDClass
 ClassGuid={745a17a0-74d3-11d0-b6fe-00a0c90f57da}
 Provider=%ProviderName%
-DriverVer=06/23/2009,1.0.0.4
+DriverVer=06/27/2009,1.0.0.7
 DriverPackageDisplayName=%DisplayName%
 
 ; ========== Manufacturer/Models sections ===========
@@ -90,7 +94,7 @@ ErrorControl=1
 ServiceBinary=%12%\WinUSB.sys
 
 [CoInstallers_AddReg]
-HKR,,CoInstallers32,0x00010000,"WdfCoInstaller01007.dll,WdfCoInstaller","WinUSBCoInstaller.dll"
+HKR,,CoInstallers32,0x00010000,"WdfCoInstaller01007.dll,WdfCoInstaller","WinUSBCoInstaller.dll",,"WUDFUpdate_01007.dll"
 
 [CoInstallers_CopyFiles]
 WinUSBCoInstaller.dll
@@ -103,15 +107,14 @@ CoInstallers_CopyFiles=11
 
 [SourceDisksNames]
 1=%DISK_NAME%,,,\x86
-2=%DISK_NAME%,,,\amd64
 
-[SourceDisksFiles.x86]
+[SourceDisksNames.amd64]
+1=%DISK_NAME%,,,\amd64
+
+[SourceDisksFiles]
 WinUSBCoInstaller.dll=1
 WdfCoInstaller01007.dll=1
-
-[SourceDisksFiles.NTamd64]
-WinUSBCoInstaller.dll=2
-WdfCoInstaller01007.dll=2
+WUDFUpdate_01007.dll=1
 
 ; =================== Strings ===================
 
@@ -123,22 +126,32 @@ DisplayName="USB Remote Driver"
 """
 
 CONFIG_7Z = r""";!@Install@!UTF-8!
-Title="USB Remote Driver Installer"
-ExecuteFile="DPInst.exe"
-ExecuteParameters="/f /lm"
-;!@InstallEnd@!
+Title="USB Remote Driver"
+Progress="no"
+ExecuteFile="DPInstSwitcher.exe"
+;!@InstallEnd@!"""
+
+MANIFEST = """\
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+    <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
+         <security>
+           <requestedPrivileges>
+             <requestedExecutionLevel level="requireAdministrator"/>
+           </requestedPrivileges>
+         </security>
+       </trustInfo>
+</assembly>
 """
 
-INCLUDES_7Z = r"""
-DPInst.exe
-driver.inf
-amd64/*
-x86/*
-"""
 
 import os
 import string
 import subprocess
+import shutil
+import ctypes
+
+from os.path import join
 
 outfile = open("driver.inf", "wt")
 outfile.write(HEADER)
@@ -164,20 +177,57 @@ for i, (descr, hardwareId, guid) in enumerate(DEVICES):
 
 outfile.close()
 
+redistFolder = join(DDK_PATH, "redist")
+tmpFolder = os.path.dirname(__file__)
+for osType in ("x86", "amd64"):
+    if not os.path.exists(join(tmpFolder, osType)):
+        os.mkdir(join(tmpFolder, osType))
+    shutil.copy2(
+        join(redistFolder, "DIFx", "DPInst", "MultiLin", osType, "DPInst.exe"),
+        join(tmpFolder, "DPInst_%s.exe" % osType)
+    )
+    shutil.copy2(
+        join(redistFolder, "winusb", osType, "WinUSBCoInstaller.dll"),
+        join(tmpFolder, osType)
+    )
+    shutil.copy2(
+        join(redistFolder, "wdf", osType, "WdfCoInstaller01007.dll"),
+        join(tmpFolder, osType)
+    )
+    shutil.copy2(
+        join(redistFolder, "wdf", osType, "WUDFUpdate_01007.dll"),
+        join(tmpFolder, osType)
+    )
+
 subprocess.call(
     [
         os.environ["ProgramFiles"] + "\\7-zip\\7z.exe", 
         'a', 
         'archive.7z', 
         'driver.inf', 
-        "-i!DPInst.exe",
+        "-i!DPInstSwitcher.exe",
+        "-i!DPInst_x86.exe",
+        "-i!DPInst_amd64.exe",
         "-ir!x86\\*", 
-        "-ir!amd64\\*", 
+        "-ir!amd64\\*",
     ]
 )
 
-outfile = open("USB-Remote-Driver.exe", "wb")
-outfile.write(open("7zS.sfx", "rb").read())
+# start creating the SFX by copying the SFX module
+outfile = open(OUTFILE_NAME, "wb")
+outfile.write(open("7zSD.sfx", "rb").read())
+outfile.close()
+
+# update the manifest of the copied SFX module, so we will run as administrator
+kernel32 = ctypes.windll.kernel32
+handle = kernel32.BeginUpdateResourceA(OUTFILE_NAME, 0)
+if handle == 0:
+    raise
+if kernel32.UpdateResourceA(handle, 24, 1, 1033, MANIFEST, len(MANIFEST)):
+    kernel32.EndUpdateResourceA(handle, 0)
+
+# now append the config and data to the SFX
+outfile = open(OUTFILE_NAME, "ab")
 outfile.write(CONFIG_7Z)
 outfile.write(open("archive.7z", "rb").read())
 outfile.close()
