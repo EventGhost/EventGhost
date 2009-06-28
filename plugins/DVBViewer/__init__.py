@@ -1135,7 +1135,6 @@ class DVBViewerWorkerThread(eg.ThreadWorker):
 
 
 
-    @eg.LogIt
     def GetAllRecordings( self ) :
         timerManager = self.dvbviewer.TimerManager
         return timerManager.GetTimerList()[1]
@@ -1849,7 +1848,6 @@ class DVBViewer(eg.PluginClass):
 
 
 
-    @eg.LogItWithReturn
     def Connect( self, connectingMode = WAIT_CHECK_START_CONNECT, lock = False ) :
         #WAIT_CHECK_START_CONNECT  = 0   #wait for free, check if executing, start if not executing, connect
         #CONNECT                   = 1   #connect
