@@ -29,6 +29,7 @@ OutputBaseFilename=%(appName)s_%(appVersion)s_Setup
 InfoBeforeFile=%(dataDir)s\LICENSE.RTF
 DisableReadyPage=yes
 AppMutex=Global\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B
+ChangesAssociations=yes
 
 [Code]
 
@@ -75,3 +76,14 @@ Name: "{group}\EventGhost Help"; Filename: "{app}\EventGhost.chm"
 Name: "{group}\EventGhost Web Site"; Filename: "http://www.eventghost.org/"
 Name: "{group}\Uninstall EventGhost"; Filename: "{uninstallexe}"
 Name: "{userdesktop}\EventGhost"; Filename: "{app}\EventGhost.exe"; Tasks: desktopicon
+
+[Registry]
+Root: HKCR; Subkey: ".egtree"; ValueType: string; ValueName: ""; ValueData: "EventGhost Tree"; Flags: uninsdeletevalue
+Root: HKCR; Subkey: "EventGhost Tree"; ValueType: string; ValueName: ""; ValueData: "EventGhost Tree"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "EventGhost Tree\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\EventGhost.exe,0"
+Root: HKCR; Subkey: "EventGhost Tree\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\EventGhost.exe"" -f ""%%1""" 
+
+Root: HKCR; Subkey: ".egplugin"; ValueType: string; ValueName: ""; ValueData: "EventGhost Plugin"; Flags: uninsdeletevalue
+Root: HKCR; Subkey: "EventGhost Plugin"; ValueType: string; ValueName: ""; ValueData: "EventGhost Plugin"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "EventGhost Plugin\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\EventGhost.exe,0"
+Root: HKCR; Subkey: "EventGhost Plugin\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\EventGhost.exe"" -p ""%%1""" 

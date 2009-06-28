@@ -26,8 +26,14 @@ import sys
 import atexit
 import pythoncom
 
+
 class EventGhostCom:
-    _public_methods_ = ['TriggerEvent', 'BringToFront']
+    _public_methods_ = [
+        'TriggerEvent', 
+        'BringToFront', 
+        'OpenFile',
+        'InstallPlugin',
+    ]
     _reg_progid_ = "EventGhost"
     _reg_clsid_ = "{7EB106DC-468D-4345-9CFE-B0021039114B}"
     _reg_clsctx_ = pythoncom.CLSCTX_LOCAL_SERVER
@@ -35,9 +41,18 @@ class EventGhostCom:
     def TriggerEvent(self, eventString, payload=None):
         eg.TriggerEvent(eventString, payload)
 
+
     def BringToFront(self):
         eg.document.ShowFrame()
 
+
+    def OpenFile(self, filePath):
+        eg.document.Open(filePath)
+
+
+    def InstallPlugin(self, filePath):
+        pass
+    
 
 # Patch win32com to use the gen_py directory in the programs
 # application data directory instead of its package directory.

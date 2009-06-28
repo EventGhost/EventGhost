@@ -45,7 +45,7 @@ class args:
     configDir = None
     install = False
     isMain = splitext(basename(sys.argv[0]))[0].lower() == "eventghost"
-
+    
 argv = [val.decode(ENCODING) for val in sys.argv]
 
 i = 0
@@ -95,7 +95,7 @@ while True:
         if len(argv) <= i:
             print "missing file string"
             break
-        args.startupFile = argv[i]
+        args.startupFile = os.path.abspath(argv[i])
     elif arg == '-configdir':
         i += 1
         if len(argv) <= i:
@@ -118,6 +118,8 @@ if not args.allowMultiLoad and not args.translate and args.isMain:
         # another instance of EventGhost is running
         import win32com.client
         e = win32com.client.Dispatch("{7EB106DC-468D-4345-9CFE-B0021039114B}")
+        if args.startupFile is not None:
+            e.OpenFile(args.startupFile)
         if args.startupEvent is not None:
             e.TriggerEvent(args.startupEvent[0], args.startupEvent[1])
         else:
@@ -125,6 +127,6 @@ if not args.allowMultiLoad and not args.translate and args.isMain:
         ctypes.windll.kernel32.ExitProcess(0)
 
 # change working directory to program directory
-if args.debugLevel < 2 and args.isMain:
+if args.debugLevel < 1 and args.isMain:
     os.chdir(MAIN_DIR)
 
