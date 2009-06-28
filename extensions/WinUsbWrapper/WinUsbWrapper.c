@@ -79,7 +79,7 @@ BOOL GetDevicePath(IN LPGUID InterfaceGuid, __out_ecount(BufLen) PWCHAR DevicePa
     bResult = SetupDiEnumDeviceInterfaces(HardwareDeviceInfo, 0, InterfaceGuid, 0, &DeviceInterfaceData);
 
     if (bResult == FALSE) {
-		printf("SetupDiEnumDeviceInterfaces failed\n");
+//		printf("SetupDiEnumDeviceInterfaces failed\n");
         SetupDiDestroyDeviceInfoList(HardwareDeviceInfo);
         return FALSE;
     }
