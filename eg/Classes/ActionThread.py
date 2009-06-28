@@ -77,9 +77,10 @@ class ActionThread(eg.ThreadWorker):
         try:
             action()
         except eg.PluginBase.Exception, exc:
-            eg.PrintError(exc.message, source=exc.obj.info.treeItem)
-            exc.obj.info.lastException = exc
-            exc.obj.info.treeItem.SetErrorState()
+            pluginInfo = exc.obj.info
+            eg.PrintError(exc.message, source=pluginInfo.treeItem)
+            pluginInfo.lastException = exc
+            pluginInfo.treeItem.SetErrorState()
 
 
     @staticmethod

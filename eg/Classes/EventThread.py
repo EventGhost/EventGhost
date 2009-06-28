@@ -68,13 +68,6 @@ class EventThread(eg.ThreadWorker):
         pass
 
 
-    def HandleAction(self, action):
-        try:
-            action()
-        except:
-            eg.PrintTraceback()
-
-
     def TriggerEvent(self, suffix, payload=None, prefix="Main", source=eg):
         '''Trigger an event'''
         event = EventGhostEvent(suffix, payload, prefix, source)

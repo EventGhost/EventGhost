@@ -22,7 +22,7 @@
 
 import eg
 from sys import exc_info, _getframe
-from threading import Event, Thread
+from threading import Event, Thread, currentThread
 from traceback import extract_stack, format_list
 from functools import partial
 from collections import deque
@@ -57,14 +57,14 @@ class ThreadWorkerAction(object):
         "callersFrame",
     ]
 
-    def __init__(self, func, raiseException=True, callersFrame=None):
+    def __init__(self, func, raiseException=True):
         self.time = clock()
         self.func = func
         self.returnValue = None
         self.processed = Event()
         self.raiseException = raiseException
         self.exceptionInfo = None
-        self.callersFrame = callersFrame
+        self.callersFrame = _getframe().f_back.f_back
 
 
     def __call__(self):
@@ -77,6 +77,16 @@ class ThreadWorkerAction(object):
                 self.exceptionInfo = exc_info()
         finally:
             self.processed.set()
+
+
+    def PrintUnhandledException(self):
+        lines = [
+            "Unhandled exception in WorkerThread <%s>:\n" % currentThread().name,
+            "Callers stack:\n"
+        ]
+        lines += format_list(extract_stack(self.callersFrame))
+        eg.PrintError("".join(lines).rstrip())
+        eg.PrintTraceback()
 
 
 
@@ -188,7 +198,14 @@ class ThreadWorker(object):
                         action = self.__queue.popleft()
                     except IndexError:
                         break
-                    self.HandleAction(action)
+                    try:
+                        self.HandleAction(action)
+                    except:
+                        action.PrintUnhandledException()
+                    finally:
+                        # if the frame reference would not be removed, the 
+                        # action would never be garbage collected.
+                        action.callersFrame = None
             elif resultCode == WAIT_OBJECT_0+1:
                 if PumpWaitingMessages():
                     eg.PrintDebugNotice("Got WM_QUIT")
@@ -205,18 +222,7 @@ class ThreadWorker(object):
 
 
     def HandleAction(self, action):
-        try:
-            action()
-        except:
-            lines = [
-                "Unhandled exception in WorkerThread <%s>:\n" % self.__thread.getName(),
-                "Callers stack:\n"
-            ]
-            lines += format_list(extract_stack(action.callersFrame))
-            eg.PrintError("".join(lines).rstrip())
-            eg.PrintTraceback()
-        finally:
-            action.callersFrame = None
+        action()
 
 
     def Wait(self, timeout):
@@ -281,14 +287,10 @@ class ThreadWorker(object):
 
     def Call(self, func, *args, **kwargs):
         """
-        Transmit a function and arguments to the thread and let it execute
-        there. Doesn't wait for the completion.
+        Queue a function and its arguments for execution in the ThreadWorker 
+        thread. Doesn't wait for the completion of the function.
         """
-        action = ThreadWorkerAction(
-            partial(func, *args, **kwargs),
-            True,
-            _getframe()
-        )
+        action = ThreadWorkerAction(partial(func, *args, **kwargs), True)
         self.__queue.append(action)
         SetEvent(self.__wakeEvent)
         return action
@@ -296,8 +298,8 @@ class ThreadWorker(object):
 
     def CallWait(self, func, timeout=10.0):
         """
-        Transmit a function and arguments to the thread and let it execute
-        there. Waits for completion and returns the result of the function.
+        Queue a function and its arguments for execution in the ThreadWorker 
+        thread. Waits for completion of the function and returns its result.
         """
         action = ThreadWorkerAction(func, False)
         self.__queue.append(action)
