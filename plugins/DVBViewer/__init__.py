@@ -642,6 +642,12 @@ class Text:
         name   = "Send action to DVBViewer"
         action = "Action: "
 
+    class GetSetupValue :
+        name = "Gets a value from the setup.xml of the DVBViewer."
+        section = "Section: "
+        setupName = "Name: "
+        default = "Default: "
+
     class GetDateOfRecordings :
         name = "Get dates of next recordings"
         description =   (   
@@ -1090,6 +1096,11 @@ class DVBViewerWorkerThread(eg.ThreadWorker):
 
 
 
+    def GetSetupValue( self, section, name, default ) :
+        return self.dvbviewer.GetSetupValue( section, name, default )
+
+
+
     def GetChannelList( self ) :
         channelManager = self.dvbviewer.ChannelManager
         return channelManager.GetChannelList( )
@@ -1415,6 +1426,7 @@ class DVBViewer(eg.PluginClass):
         self.AddAction(SendAction)
         self.AddAction(ShowInfoinTVPic)
         self.AddAction(DeleteInfoinTVPic)
+        self.AddAction(GetSetupValue)
         self.AddAction(GetDVBViewerObject, hidden = True)
         self.AddAction(ExecuteDVBViewerCommandViaCOM, hidden = True)
         
@@ -3003,6 +3015,52 @@ class AddRecording( eg.ActionClass ) :
                              recAction,
                              actionAfterRec,
                              days )
+
+
+
+
+class GetSetupValue( eg.ActionClass ) :
+
+    def __call__( self, section = "", name = "", default = "" ) :
+    
+        plugin = self.plugin
+        if plugin.Connect( WAIT_CHECK_START_CONNECT, lock = True ) :
+            res = plugin.workerThread.CallWait(
+                        partial( plugin.workerThread.GetSetupValue, section, name, default ),
+                        CALLWAIT_TIMEOUT
+                     )
+            return res
+        return default
+
+
+
+    def Configure(  self, section = "", name = "", default = "" ) :
+
+        plugin = self.plugin
+        
+        self.panel = eg.ConfigPanel()
+        panel = self.panel
+
+        sectionCtrl = wx.TextCtrl( panel, size=(200,-1) )
+        sectionCtrl.SetValue( section )
+
+        nameCtrl = wx.TextCtrl( panel, size=(200,-1) )
+        nameCtrl.SetValue( name )
+
+        defaultCtrl = wx.TextCtrl( panel, size=(200,-1) )
+        defaultCtrl.SetValue( default )
+
+        panel.AddLine( self.text.section, sectionCtrl )
+        panel.AddLine( self.text.setupName,    nameCtrl )
+        panel.AddLine( self.text.default, defaultCtrl )
+
+        while panel.Affirmed():
+             section      = sectionCtrl.GetValue()
+             name         =    nameCtrl.GetValue()
+             default      = defaultCtrl.GetValue()
+ 
+             panel.SetResult( section, name, default )
+        
 
 
 
