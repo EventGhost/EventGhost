@@ -44,7 +44,7 @@ Signature="$Windows NT$"
 Class=HIDClass
 ClassGuid={745a17a0-74d3-11d0-b6fe-00a0c90f57da}
 Provider=%ProviderName%
-DriverVer=06/27/2009,1.0.0.7
+DriverVer=07/01/2009,1.0.0.9
 DriverPackageDisplayName=%DisplayName%
 
 ; ========== Manufacturer/Models sections ===========
@@ -77,6 +77,7 @@ AddReg=Dev_AddReg$NR
 
 [Dev_AddReg$NR]
 HKR,,DeviceInterfaceGUIDs,0x10000,"$GUID"
+HKR,,"SystemWakeEnabled",0x00010001,1
 
 """
 
