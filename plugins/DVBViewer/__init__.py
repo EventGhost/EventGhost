@@ -765,7 +765,7 @@ class EventHandler:
         plugin.actualChannel = ChannelNr
         plugin.UpdateDisplayMode()
         if ChannelNr != -1 :
-            if plugin.timerEPG and ChannelNr != self.lastActiveChannelNr and plugin.EPGdisableAV :
+            if plugin.disableAV :
                 #print "DisableAV", ChannelNr
                 disableAVTimer = Timer( 3.0, DisableAV )
                 disableAVTimer.start()
@@ -1244,7 +1244,6 @@ class DVBViewerWatchDogThread( Thread ) :
         self.abort = False
         self.watchDogTime = watchDogTime
         self.started = False
-        self.event = Event()
 
 
 
@@ -1350,7 +1349,6 @@ class DVBViewerWatchDogThread( Thread ) :
         plugin.checkEventHandlingLock.release()
         self.abort = True
         self.started = False
-        self.event.set()
         return True
 
 
@@ -1363,16 +1361,17 @@ class DVBViewer(eg.PluginClass):
 
 
         def Timeout( self ) :
-            eg.PrintDebugNotice("DVBViewer plugin lock timeout detected, lock released")
+            eg.PrintDebugNotice('DVBViewer plugin lock "' + self.name + '" timeout detected, lock released')
             eg.PrintError( "Error: Lock released to prevent a dead lock" )
             self.lock.release()
             return True
 
 
-        def __init__( self, timeoutFunc = Timeout , *args, **kwargs ) :
+        def __init__( self, name, timeoutFunc = Timeout , *args, **kwargs ) :
             self.timeoutFunc = partial(timeoutFunc, self, *args, **kwargs)
             self.timer = None
             self.lock = Lock()
+            self.name = name
 
 
         def __del__(self) :
@@ -1380,7 +1379,7 @@ class DVBViewer(eg.PluginClass):
                 self.timer.cancel()
                 del self.timer
                 self.timer = None
-                eg.PrintDebugNotice("Warning: Lock object deleted while lock")
+                eg.PrintDebugNotice('Warning: Lock object "' + self.name + ' deleted while lock')
             del self.lock
 
 
@@ -1402,7 +1401,7 @@ class DVBViewer(eg.PluginClass):
                 self.lock.release()
                 ret = True
             else :
-                eg.PrintDebugNotice("Error: unlock lock released")
+                eg.PrintDebugNotice('DVBViewer plugin unlocked lock "' + self.name + '" release detected')
                 eg.PrintError( "Error: unlock lock released" )
                 ret = False
             #print "Released"
@@ -1483,8 +1482,8 @@ class DVBViewer(eg.PluginClass):
         self.indexTV    = 0
         self.indexRadio = 0
 
-        self.timerEPG = None
-        self.EPGdisableAV = True
+        self.tuneEPGThread = None
+        self.disableAV = False
         
         self.account  = ""
         self.password = ""
@@ -1494,9 +1493,9 @@ class DVBViewer(eg.PluginClass):
         
         self.updateRecordingsTimer = None
         
-        self.updateRecordingsLock      = self.LockWithTimeout()
+        self.updateRecordingsLock      = self.LockWithTimeout( "UpdateRecordings" )
         
-        self.executionStatusChangeLock = self.LockWithTimeout()
+        self.executionStatusChangeLock = self.LockWithTimeout( "ExecutionStatusChange" )
         self.lockedByTerminate = False
         
         def CheckEventHandlingFunc( self, plugin ) :
@@ -1505,7 +1504,7 @@ class DVBViewer(eg.PluginClass):
             plugin.TriggerEvent( "DVBViewerEventHandlingNotAlive" )
             return False
 
-        self.checkEventHandlingLock    = self.LockWithTimeout( CheckEventHandlingFunc, self )
+        self.checkEventHandlingLock    = self.LockWithTimeout( "CheckEventHandling", CheckEventHandlingFunc, self )
 
         def WaitForTerminationTimeoutFunc( self, plugin ) :
             plugin.closeWaitLock.release()
@@ -1515,7 +1514,7 @@ class DVBViewer(eg.PluginClass):
             plugin.TriggerEvent( "DVBViewerCouldNotBeTerminated" )
             return False
 
-        self.closeWaitLock             = self.LockWithTimeout( WaitForTerminationTimeoutFunc, self )
+        self.closeWaitLock             = self.LockWithTimeout( "CloseWait", WaitForTerminationTimeoutFunc, self )
         self.closeWaitActive  = False
         self.timeout = False
         
@@ -1605,8 +1604,8 @@ class DVBViewer(eg.PluginClass):
     def __stop__(self):
         # If the DVBViewer was started by the COM interface, the DVBViewer must be terminated before
         # stopping the DVBViewer Thread. Otherwise the DVBViewer is going into an endless loop.
-        if self.timerEPG :
-            self.timerEPG.cancel()
+        if self.tuneEPGThread :
+            self.tuneEPGThread.Finish()
         
         if self.watchDogThread :
             self.watchDogThread.Finish()
@@ -2655,65 +2654,84 @@ class DeleteInfoinTVPic( eg.ActionClass ) :
 
 class UpdateEPG( eg.ActionClass ) :
 
-    def __init__(self):
-
-        self.iterator = {}
-        self.timeBetweenChannelChange = 60.0
-        self.channelNr = -1
-        self.repeat = False
-
-
-
     @eg.LogItWithReturn
-    def __call__( self, timeBetweenChannelChange = 60.0, disableAV = True, event = "EPGUpdateFinished" ) :
+    def __call__( self, timeBetweenChannelChange = 60.0, disableAVafterChannelChange = True, event = "EPGUpdateFinished" ) :
     
         plugin = self.plugin
 
-        self.timeBetweenChannelChange = timeBetweenChannelChange
         self.event = event
         
         if not plugin.frequencies :
             if not plugin.Connect( WAIT_CHECK_START_CONNECT, lock = True ) :
-                plugin.TriggerEvent( "EPGUpdateFinished" )
+                plugin.TriggerEvent( event )
                 return False
-                
-        plugin.EPGdisableAV = disableAV
-        
-        self.iterator = plugin.frequencies.itervalues()
-        
-        self.EPGTune()
+                        
+        plugin.tuneEPGThread = self.EPGTuneThread( plugin, timeBetweenChannelChange, event, disableAVafterChannelChange )
+        plugin.tuneEPGThread.start()
         
         return True
 
 
 
-    @eg.LogItWithReturn
-    def EPGTune( self ) :
-        plugin = self.plugin
-        if not self.repeat :
-            try :
-                self.channelNr = self.iterator.next()[0]
-            except StopIteration :
-                plugin.SendCommand( 16383 )  #Stop Graph
-                plugin.TriggerEvent( self.event )
-                plugin.timerEPG = None
-                return True
-
-        #print self.channelNr
+    class EPGTuneThread( Thread ) :
+    
+        def __init__( self, plugin, timeBetweenChannelChange, eventText, disableAVafterChannelChange ) :
         
-        if plugin.TuneChannelIfNotRecording( self.channelNr, "Updating EPG", self.timeBetweenChannelChange ) :
-            self.repeat = False
-        else :
-            self.repeat = True
-                
-        plugin.timerEPG = Timer( self.timeBetweenChannelChange, self.EPGTune )
-        plugin.timerEPG.start()
-
-        return False
+            Thread.__init__(self, name="DVBViewerEPGTuneThread")
+            self.plugin = plugin
+            self.timeBetweenChannelChange = timeBetweenChannelChange
+            self.event = Event()
+            self.eventText = eventText
+            self.disableAVafterChannelChange = disableAVafterChannelChange
 
 
+        @eg.LogItWithReturn
+        def run( self ) :
+            plugin = self.plugin
+            abort = False
+            
+            saveDisableAV = plugin.disableAV
+            
+            CoInitialize()
+            
+            for frequency, channel in plugin.frequencies.iteritems() :
+            
+                changed = False
+            
+                while not changed and not abort:
+            
+                    if plugin.numberOfActiveRecordings == 0 :
+                    
+                        plugin.disableAV = self.disableAVafterChannelChange
+                    
+                        changed =  plugin.TuneChannelIfNotRecording( channel[0], "Updating EPG", self.timeBetweenChannelChange )
+                                        
+                    self.event.wait( self.timeBetweenChannelChange )
+                    
+                    plugin.disableAV = saveDisableAV
+                    
+                    abort = self.event.isSet()
+                    
+                if abort :
+                    break
+                    
+            plugin.SendCommand( 16383 )  #Stop Graph
 
-    def Configure(  self, timeBetweenChannelChange = 60.0, disableAV = True, event = "EPGUpdateFinished" ) :
+            CoUninitialize()
+            plugin.tuneEPGThread = None            
+
+            if not abort :
+                plugin.TriggerEvent( self.eventText )
+
+            return not abort
+
+            
+        def Finish( self ) :
+            self.event.set()
+
+
+
+    def Configure(  self, timeBetweenChannelChange = 60.0, disableAVafterChannelChange = True, event = "EPGUpdateFinished" ) :
         
         plugin = self.plugin
         text = self.text
@@ -2722,7 +2740,7 @@ class UpdateEPG( eg.ActionClass ) :
         panel = self.panel
 
         disableAVCheckBoxCtrl = wx.CheckBox(panel, -1, text.disableAV)
-        disableAVCheckBoxCtrl.SetValue( disableAV )
+        disableAVCheckBoxCtrl.SetValue( disableAVafterChannelChange )
         eventCtrl = panel.TextCtrl( event )
 
 
@@ -2733,11 +2751,11 @@ class UpdateEPG( eg.ActionClass ) :
         panel.AddLine( text.event, eventCtrl )
 
         while panel.Affirmed():
-            disableAV                = disableAVCheckBoxCtrl.GetValue()
+            disableAVafterChannelChange                = disableAVCheckBoxCtrl.GetValue()
             timeBetweenChannelChange = epgTimeCtrl.GetValue()
             event                    = eventCtrl.GetValue()
             
-            panel.SetResult( timeBetweenChannelChange, disableAV, event )
+            panel.SetResult( timeBetweenChannelChange, disableAVafterChannelChange, event )
 
 
 
