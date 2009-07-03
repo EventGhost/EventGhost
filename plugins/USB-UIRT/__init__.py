@@ -228,15 +228,21 @@ class USB_UIRT(eg.IrDecoderPlugin):
     def __stop__(self):
         eg.Unbind("System.DeviceRemoved", self.OnDeviceRemoved)
         self.enabled = False
-        if self.dll:
-            if not self.dll.UUIRTClose(self.hDrvHandle):
-                raise self.Exception("Error calling UUIRTClose")
+        dll = self.dll
+        if dll:
             self.dll = None
+            if not dll.UUIRTClose(self.hDrvHandle):
+                raise self.Exception("Error calling UUIRTClose")
+            
+            # fix for USB-UIRT driver bug, See OnComputerSuspend for details.
+            self.hDrvHandle = dll.UUIRTOpenEx(self.deviceStr, 0, 0, 0)
+            dll.UUIRTSetReceiveCallback(self.hDrvHandle, None, 0)
+            dll.UUIRTClose(self.hDrvHandle)
         
         
     def OnComputerSuspend(self, suspendType):
         # The USB-UIRT driver seems to have a bug, that prevents the wake-up 
-        # from standby feature to work, if UUIRTSetRawReceiveCallback is used.
+        # from standby feature to work, if UUIRTSetRawReceiveCallback was used.
         # To workaround the problem, we re-open the device with 
         # UUIRTSetReceiveCallback just before the system goes into standby and 
         # later do the reverse once the system comes back from standby. 
