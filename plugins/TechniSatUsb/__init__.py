@@ -75,13 +75,12 @@ CODES = {
 
 class TechniSatUsb(eg.PluginBase):
                 
-    @eg.LogIt
     def __start__(self):
         self.usb = eg.WinUsbRemote(
-            "{108E11FA-7EA0-4F13-AA64-1926E14A9C31}",
-            self.Callback,
-            6,
-         )
+            "{108E11FA-7EA0-4F13-AA64-1926E14A9C31}", 
+            self.Callback, 
+            6
+        )
         if not self.usb.IsOk():
             raise self.Exceptions.DeviceNotFound
 
@@ -91,8 +90,8 @@ class TechniSatUsb(eg.PluginBase):
 
 
     def Callback(self, data):
-        #print tuple(data[:4]), data
-        value = tuple(data[:4])
+        #print data
+        value = data[:4]
         if value in CODES:
             self.TriggerEvent(CODES[value])
         else:
