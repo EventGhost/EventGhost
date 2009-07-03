@@ -99,7 +99,6 @@ KEYPAD_CODES = {
 
 class Conceptronic(eg.PluginBase):
                 
-    @eg.LogIt
     def __start__(self):
         self.buffer = []
         self.expectedLength = 0
@@ -149,9 +148,8 @@ class Conceptronic(eg.PluginBase):
 
 
     def KeypadCallback(self, data):
-        data = tuple(data)
         if data == (0, 0, 0, 0, 0, 0, 0, 0):
             self.EndLastEvent()
         else:
-            self.TriggerEnduringEvent(KEYPAD_CODES[tuple(data)])
+            self.TriggerEnduringEvent(KEYPAD_CODES[data])
 
