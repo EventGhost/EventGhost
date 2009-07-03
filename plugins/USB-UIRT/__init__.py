@@ -187,10 +187,10 @@ class USB_UIRT(eg.IrDecoderPlugin):
             raise self.Exception("Invalid uuirtdrv version!")
 
         if self.info.evalName[-1].isdigit():
-            deviceStr = "USB-UIRT-%s" % self.info.evalName[-1]
+            self.deviceStr = "USB-UIRT-%s" % self.info.evalName[-1]
         else:
-            deviceStr = "USB-UIRT"
-        hDrvHandle = dll.UUIRTOpenEx(deviceStr, 0, 0, 0)
+            self.deviceStr = "USB-UIRT"
+        hDrvHandle = dll.UUIRTOpenEx(self.deviceStr, 0, 0, 0)
         if hDrvHandle == INVALID_HANDLE_VALUE:
             err = GetLastError()
             if err == UUIRTDRV_ERR_NO_DLL:
@@ -218,7 +218,7 @@ class USB_UIRT(eg.IrDecoderPlugin):
         res = dll.UUIRTSetRawReceiveCallback(self.hDrvHandle, self.receiveProc, 0)
         if not res:
             self.dll = None
-            raise self.Exception("Error calling UUIRTSetReceiveCallback")
+            raise self.Exception("Error calling UUIRTSetRawReceiveCallback")
 
         self.SetConfig(ledRX, ledTX, legacyRX, repeatStopCodes)
         self.enabled = True
@@ -234,6 +234,30 @@ class USB_UIRT(eg.IrDecoderPlugin):
             self.dll = None
         
         
+    def OnComputerSuspend(self, suspendType):
+        # The USB-UIRT driver seems to have a bug, that prevents the wake-up 
+        # from standby feature to work, if UUIRTSetRawReceiveCallback is used.
+        # To workaround the problem, we re-open the device with 
+        # UUIRTSetReceiveCallback just before the system goes into standby and 
+        # later do the reverse once the system comes back from standby. 
+        dll = self.dll
+        if dll is None:
+            return
+        dll.UUIRTClose(self.hDrvHandle)
+        self.hDrvHandle = dll.UUIRTOpenEx(self.deviceStr, 0, 0, 0)
+        dll.UUIRTSetReceiveCallback(self.hDrvHandle, None, 0)
+        
+        
+    def OnComputerResume(self, suspendType):
+        dll = self.dll
+        if dll is None:
+            return
+        dll.UUIRTClose(self.hDrvHandle)
+        self.hDrvHandle = dll.UUIRTOpenEx(self.deviceStr, 0, 0, 0)
+        dll.UUIRTSetRawReceiveCallback(self.hDrvHandle, self.receiveProc, 0)
+        self.SetConfig(*self.args)
+        
+    
     def OnDeviceRemoved(self, event):
         if event.payload[0].split("#")[1] == 'Vid_0403&Pid_f850':
             if self.dll:
