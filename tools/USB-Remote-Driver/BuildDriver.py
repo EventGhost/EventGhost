@@ -4,33 +4,43 @@ DDK_PATH = r"C:\WinDDK\6001.18002"
 
 DEVICES = [
     (
+        "WinUSB Test Device #1",
+        "USB\\VID_0000&PID_0000",
+        "{5607ED2F-AD3C-4CE8-9DE6-97CD4B0FFEF1}"
+    ),
+    (
+        "WinUSB Test Device #2",
+        "USB\\VID_0000&PID_0000",
+        "{0A51286F-B9A6-471D-BDCA-8C2E68C3916B}"
+    ),
+    (
         "Logitech UltraX Media Remote (Keypad)", 
-        "USB\VID_046D&PID_C101&MI_00", 
+        "USB\\VID_046D&PID_C101&MI_00", 
         "{F73227F9-6CBD-45F9-83C4-A48B3F9F56A4}"
     ),
     (
         "Logitech UltraX Media Remote (Buttons)", 
-        "USB\VID_046D&PID_C101&MI_01", 
+        "USB\\VID_046D&PID_C101&MI_01", 
         "{4C6BCF9C-8F5B-4CEB-8CEA-4713E31B125F}"
     ),
     (
         "Conceptronic CLLRCMCE (Keypad)", 
-        "USB\VID_1784&PID_0004&MI_00", 
+        "USB\\VID_1784&PID_0004&MI_00", 
         "{8C3D8375-AF7B-4AF6-8CD7-463C8E935675}"
     ),
     (
         "Conceptronic CLLRCMCE (Buttons)", 
-        "USB\VID_1784&PID_0004&MI_01", 
+        "USB\\VID_1784&PID_0004&MI_01", 
         "{4228C963-EE0F-4B33-9E5E-D17FB07FB80F}"
     ),
     (
         "TechniSat USB IR Receiver", 
-        "USB\VID_147A&PID_E02D", 
+        "USB\\VID_147A&PID_E02D", 
         "{108E11FA-7EA0-4F13-AA64-1926E14A9C31}"
     ),
     (
         "USB PC Remote Controller", 
-        "USB\VID_06B4&PID_1C70", 
+        "USB\\VID_06B4&PID_1C70", 
         "{72679574-1865-499d-B182-4B099D6D1391}"
     ),
 ]
@@ -156,6 +166,7 @@ from os.path import join
 
 outfile = open("driver.inf", "wt")
 outfile.write(HEADER)
+
 outfile.write("[Remotes.NTx86]\n")
 for i, (descr, hardwareId, guid) in enumerate(DEVICES):
     nr = "%03i" % (i + 1)
