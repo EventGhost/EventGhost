@@ -27,6 +27,7 @@ eg.RegisterPlugin(
     description = "Receives events from Network Event Sender plugins.",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     author = "Bitmonster",
+    canMultiLoad = True,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QAAAAAAAD5Q7t/"
         "AAAACXBIWXMAAAsSAAALEgHS3X78AAAAB3RJTUUH1gIQFgQb1MiCRwAAAVVJREFUOMud"
@@ -217,7 +218,6 @@ class Server(asyncore.dispatcher):
 
 
 class NetworkReceiver(eg.PluginBase):
-    canMultiLoad = True
     text = Text
     
     def __init__(self):
