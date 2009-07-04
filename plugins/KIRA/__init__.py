@@ -3,6 +3,7 @@ eg.RegisterPlugin(
     author = 'ldobson',
     version = '1.0.5',
     kind = 'remote',
+    canMultiLoad = True,
     description = '''\
         Hardware plugin for the 
         <a href="http://www.keene.co.uk/iranywhere">
@@ -115,7 +116,6 @@ class Text:
     standaloneDesc = 'Sets the unit to Stand-alone mode'
 
 class KIRA(eg.PluginClass):
-    canMultiLoad = True
     text = Text
 
     def __init__(self):

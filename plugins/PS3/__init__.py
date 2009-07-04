@@ -75,6 +75,7 @@ eg.RegisterPlugin(
     kind = "remote",
     url="http://www.eventghost.org/forum/viewtopic.php?t=640",
     description = "Hardware plugin for the PS3 Bluetooth Remote (based on the HID code of Bartman)",
+    canMultiLoad = True,
     help = README,
 )
 
@@ -1219,7 +1220,6 @@ def handle_device_attached(event):
 
 class PS3(eg.PluginClass):
     helper = None
-    canMultiLoad = True
     text = Text
     thread = None
 

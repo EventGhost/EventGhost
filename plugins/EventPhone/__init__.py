@@ -37,6 +37,7 @@ eg.RegisterPlugin(
     ),
     version = "1.0."+ "$LastChangedRevision: 1 $".split()[1],
 	kind = "remote",
+    canMultiLoad = True,
     author = "Melloware Inc",
 	url="http://www.melloware.com/products/eventphone",
 	help = """
@@ -243,7 +244,6 @@ class Server(asyncore.dispatcher):
 
 
 class EventPhone(eg.PluginBase):
-    canMultiLoad = True
     text = Text
     
     def __init__(self):

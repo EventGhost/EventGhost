@@ -30,6 +30,7 @@ eg.RegisterPlugin(
         "Implements a small webserver, that you can use to generate events "
         "through HTML-pages."
     ),
+    canMultiLoad = True,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeT"
         "AAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH1gEECzsZ7j1DbAAAAu1JREFUOMul"
@@ -191,7 +192,6 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 
 
 class Webserver(eg.PluginBase):
-    canMultiLoad = True
 
     class text:
         generalBox = "General Settings"

@@ -29,6 +29,7 @@ eg.RegisterPlugin(
     description = (
         "Sends events to an Network Event Receiver plugin through TCP/IP."
     ),
+    canMultiLoad = True,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QAAAAAAAD5Q7t/"
         "AAAACXBIWXMAAAsSAAALEgHS3X78AAAAB3RJTUUH1gIQFgQOuRVmrAAAAVRJREFUOMud"
@@ -59,7 +60,6 @@ class Text:
     
 
 class NetworkSender(eg.PluginBase):
-    canMultiLoad = True
     text = Text
     
     def __init__(self):
