@@ -19,6 +19,7 @@ import os
 import sys
 from os.path import join, exists
 import eg
+from eg.Utils import DecodeReST
 
 class RegisterPluginException(Exception):
     """
@@ -30,11 +31,11 @@ class RegisterPluginException(Exception):
 
 
 class PluginModuleInfo(object):
-    name = "unknown"
-    description = ""
-    author = "unknown author"
-    version = "unknown version"
-    kind = "other"
+    name = u"unknown"
+    description = u""
+    author = u"unknown author"
+    version = u"unknown version"
+    kind = u"other"
     canMultiLoad = False
     createMacrosOnAdd = False
     icon = eg.Icons.PLUGIN_ICON
@@ -120,20 +121,24 @@ class PluginModuleInfo(object):
             name = self.pluginName
         if description is None:
             description = name
+        else:
+            pos = description.find("<rst>")
+            if pos != -1:
+                description = DecodeReST(description[pos+5:])
         if help is not None:
             help = "\n".join([s.strip() for s in help.splitlines()])
             help = help.replace("\n\n", "<p>")
             description += "\n\n<p>" + help
         if guid:
             guid = guid.upper()
-        self.name = self.englishName = name
-        self.description = self.englishDescription = description
-        self.kind = kind
-        self.author = author
-        self.version = version
+        self.name = self.englishName = unicode(name)
+        self.description = self.englishDescription = unicode(description)
+        self.kind = unicode(kind)
+        self.author = unicode(author)
+        self.version = unicode(version)
         self.canMultiLoad = canMultiLoad
         self.createMacrosOnAdd = createMacrosOnAdd
-        self.url = url
+        self.url = unicode(url)
 
         # get the icon if any
         if icon is not None:
