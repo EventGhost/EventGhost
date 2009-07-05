@@ -20,6 +20,8 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import os
+
 import eg
 import wx
 
@@ -117,7 +119,7 @@ class AddPluginDialog(eg.TaskletDialog):
 
             treeId = treeCtrl.AppendItem(typeIds[info.kind], info.name, idx)
             treeCtrl.SetPyData(treeId, info)
-            if info.GetPath() == Config.lastSelection:
+            if info.path == Config.lastSelection:
                 itemToSelect = treeId
 
 
@@ -214,7 +216,7 @@ class AddPluginDialog(eg.TaskletDialog):
         else:
             name = info.name
             description = info.description
-            self.descrBox.SetBasePath(info.GetPath())
+            self.descrBox.SetBasePath(info.path)
             self.authorLabel.SetLabel(Text.author)
             self.authorText.SetLabel(info.author.replace("&", "&&"))
             self.versionLabel.SetLabel(Text.version)
@@ -226,12 +228,15 @@ class AddPluginDialog(eg.TaskletDialog):
 
     def CheckMultiload(self):
         info = self.resultData
-        if (
-            info
-            and info.pluginCls
-            and not info.canMultiLoad
-            and info.instances
-        ):
+        if not info:
+            return True
+        if info.canMultiLoad:
+            return True
+        pluginName = os.path.basename(info.path)
+        info = eg.pluginClassInfo.get(pluginName, None)
+        if not info:
+            return True
+        if info.instances:
             eg.MessageBox(
                 Text.noMultiload,
                 Text.noMultiloadTitle,

@@ -180,7 +180,7 @@ class AddActionDialog(eg.TaskletDialog):
             self.resultData = itemData
             self.buttonRow.okButton.Enable(True)
         self.nameText.SetLabel(itemData.name)
-        self.docText.SetBasePath(itemData.plugin.info.GetPath())
+        self.docText.SetBasePath(itemData.plugin.info.path)
         self.docText.SetPage(itemData.description)
 
 

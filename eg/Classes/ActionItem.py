@@ -210,7 +210,7 @@ class ActionItem(TreeItem):
             action.name,
             action.description,
             action.info.icon.GetWxIcon(),
-            action.plugin.info.GetPath()
+            action.plugin.info.path
         )
         def OnClose(dummyEvent):
             self.helpDialog.Destroy()

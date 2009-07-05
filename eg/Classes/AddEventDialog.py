@@ -175,11 +175,11 @@ class AddEventDialog(eg.TaskletDialog):
         if isinstance(data, EventInfo):
             self.resultData = data.info.eventPrefix + "." + data.name
             self.buttonRow.okButton.Enable(True)
-            path = data.info.GetPath()
+            path = data.info.path
         else:
             self.resultData = None
             self.buttonRow.okButton.Enable(False)
-            path = data.GetPath()
+            path = data.path
         self.nameText.SetLabel(data.name)
         self.docText.SetBasePath(path)
         self.docText.SetPage(data.description)

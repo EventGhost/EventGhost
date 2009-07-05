@@ -434,6 +434,9 @@ class MainFrame(wx.Frame):
             Append("CollectGarbage")
             Append("Reset", "\tPause")
             Append("AddEventDialog")
+            menu.AppendSeparator()
+            Append("PackPlugin")
+            
 
         self.SetMenuBar(menuBar)
         return menuBar
@@ -1058,3 +1061,6 @@ class MainFrame(wx.Frame):
         label = result[0]
         eg.UndoHandler.NewEvent().Do(self.document, label)
 
+    
+    def OnCmdPackPlugin(self):
+        eg.PluginInstall.PackPlugin()

@@ -176,7 +176,7 @@ class PluginItem(ActionItem):
             eg.text.General.pluginLabel % plugin.name,
             plugin.description,
             plugin.info.icon.GetWxIcon(),
-            basePath=plugin.info.GetPath()
+            basePath=plugin.info.path
         )
         def OnClose(dummyEvent):
             self.helpDialog.Destroy()

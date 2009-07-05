@@ -20,9 +20,10 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
-import eg
 import sys
 from os.path import exists, join
+
+import eg
 from eg.Utils import SetDefault
 
 
@@ -74,9 +75,6 @@ class PluginInfo(object):
     # Most important is to know the class of the plugin we are looking at
     pluginCls = None
 
-    # pluginDir holds the name of the directory where the plugin files reside
-    pluginDir = None
-
     # name and description will hold the fields defined through the class.
     # Keep in mind, that every plugin instance might get a modified name
     # because it is instantiated more then once.
@@ -115,113 +113,30 @@ class PluginInfo(object):
     args = ()
     kwargs = {}
 
-    @classmethod
-    def ImportPlugin(cls, pluginDir):
-        moduleName = "eg.PluginModule." + pluginDir
-        if moduleName in sys.modules:
-            return sys.modules[moduleName]
-        modulePath = join(eg.PLUGIN_DIR, pluginDir)
-        sys.path.insert(0, modulePath)
-        try:
-            module = __import__(moduleName, None, None, [''])
-        finally:
-            del sys.path[0]
-        return module
-
-#    @classmethod
-#    def ImportPlugin(cls, pluginDir):
-#        moduleName = "PluginModule." + pluginDir
-#        if moduleName in sys.modules:
-#            return sys.modules[moduleName]
-#        modulePath = join(eg.PLUGIN_DIR, pluginDir)
-#        module = types.ModuleType(moduleName)
-#        sys.path.insert(0, modulePath)
-#        sys.modules[moduleName] = module
-#        try:
-#            execfile(join(modulePath, "__init__.py"), {}, module.__dict__)
-#        finally:
-#            del sys.path[0]
-#        return module
 
     @classmethod
-    def GetPluginInfo(cls, pluginName):
-        # first look, if we already have cached this plugin class
-        cachedInfo = eg.pluginClassInfo.get(pluginName, None)
-        if cachedInfo is not None:
-            return cachedInfo
-
-        if pluginName not in eg.pluginManager.database:
-            #eg.PrintError(eg.text.Error.pluginNotFound % pluginName)
-            return None
-
-        infoDict = eg.pluginManager.GetPluginInfo(pluginName).__dict__
-        pluginDir = pluginName
-        # create a new sublclass of PluginInfo for this plugin class
-        class info(cls):
-            name = infoDict.get("name", cls.name)
-            description = infoDict.get("description", cls.description)
-            author = infoDict.get("author", cls.author)
-            version = infoDict.get("version", cls.version)
-            kind = infoDict.get("kind", cls.kind)
-            url = infoDict.get("url", cls.url)
-            canMultiLoad = infoDict.get("canMultiLoad", cls.canMultiLoad)
-            createMacrosOnAdd = infoDict.get("createMacrosOnAdd", cls.createMacrosOnAdd)
-            pluginDir = pluginName
-        info.pluginName = pluginName
-        info.englishName = info.name
-        info.englishDescription = info.description
-
-        # try to translate name and description
-        textCls = getattr(eg.text.Plugin, pluginName, None)
-        if textCls is not None:
-            info.name = getattr(textCls, "name", info.name)
-            info.description = getattr(textCls, "description", info.description)
-        info.textCls = textCls
-
-        # get the icon if any
-        if "icon" in infoDict and infoDict["icon"] is not None:
-            info.icon = eg.Icons.StringIcon(infoDict["icon"])
-        else:
-            iconPath = join(eg.PLUGIN_DIR, pluginDir, "icon.png")
-            if exists(iconPath):
-                info.icon = eg.Icons.PathIcon(iconPath)
-        info.actionClassList = []
-        return info
-
-
-    @classmethod
-    def GetPath(cls):
-        """
-        Returns the full path to the plugin directory.
-        """
-        return join(eg.PLUGIN_DIR, cls.pluginDir)
-
-
-    @classmethod
-    def LoadModule(pluginInfo):
-        pathname = join(eg.PLUGIN_DIR, pluginInfo.pluginDir, "__init__.py")
+    def LoadModule(cls):
+        pathname = join(cls.path, "__init__.py")
         if not exists(pathname):
             eg.PrintError("File %s does not exist" % pathname)
             return False
         try:
-            module = pluginInfo.ImportPlugin(pluginInfo.pluginName)
+            module = cls.baseInfo.Import()
         except:
             eg.PrintTraceback(
-                "Error while loading plugin-file %s." % pluginInfo.pluginName,
+                "Error while loading plugin-file %s." % cls.pluginName,
                 1
             )
             return False
         pluginCls = module.__pluginCls__
-        pluginInfo.module = module
-        pluginInfo.pluginCls = pluginCls
-        if getattr(pluginCls, "canMultiLoad", False):
-            pluginInfo.canMultiLoad = True
+        cls.module = module
+        cls.pluginCls = pluginCls
         defaultText = pluginCls.text
         if defaultText is None:
             class defaultText:
                 pass
-        defaultText.name = pluginInfo.englishName
-        defaultText.description = pluginInfo.englishDescription
+        defaultText.name = cls.englishName
+        defaultText.description = cls.englishDescription
         translationText = getattr(eg.text.Plugin, pluginCls.__name__, None)
         if translationText is not None:
             SetDefault(translationText, defaultText)
@@ -234,7 +149,7 @@ class PluginInfo(object):
         pluginCls.text = text
         pluginCls.name = text.name
         pluginCls.description = text.description
-        eg.pluginClassInfo[pluginInfo.pluginName] = pluginInfo
+        eg.pluginClassInfo[cls.pluginName] = cls
         return True
 
 
@@ -301,17 +216,17 @@ class PluginInfo(object):
     @classmethod
     @eg.LogIt
     def Open(cls, pluginName, evalName, args, treeItem=None):
-        pluginInfoCls = cls.GetPluginInfo(pluginName)
-        if pluginInfoCls is None:
+        pluginClsInfo = eg.pluginManager.GetPluginInfo(pluginName)
+        if pluginClsInfo is None:
             class pluginInfoCls(PluginInfo):
                 name = pluginName
                 pluginCls = UnknownPlugin
-        if pluginInfoCls.pluginCls is None:
-            if not pluginInfoCls.LoadModule():
+        if pluginClsInfo.pluginCls is None:
+            if not pluginClsInfo.LoadModule():
                 class pluginInfoCls(PluginInfo):
                     name = pluginName
                     pluginCls = LoadErrorPlugin
-        info = pluginInfoCls.CreatePluginInstance(evalName, treeItem)
+        info = pluginClsInfo.CreatePluginInstance(evalName, treeItem)
         plugin = info.instance
         info.args = args
         if hasattr(plugin, "Compile"):

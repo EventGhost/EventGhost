@@ -91,7 +91,7 @@ if eg.startupArguments.configDir is None:
     eg.configDir = os.path.join(eg.folderPath.RoamingAppData, eg.APP_NAME)
 else:
     eg.configDir = eg.startupArguments.configDir
-
+eg.userPluginDir = os.path.join(eg.configDir, "plugins")
 Init.InitPathesAndBuiltins()
 from eg.WinApi.Dynamic import GetCurrentProcessId
 eg.processId = GetCurrentProcessId()
@@ -252,6 +252,42 @@ def MessageBox(message, caption=eg.APP_NAME, style=wx.OK, parent=None):
     dialog.Destroy()
     return result
 
+
+def RegisterPlugin(
+    name = None,
+    description = None,
+    kind = "other",
+    author = "unknown author",
+    version = "unknown version",
+    icon = None,
+    canMultiLoad = False,
+    createMacrosOnAdd = False,
+    url = None,
+    help = None,
+    guid = None,
+    #**kwargs
+):
+    """
+    Registers information about a plugin to EventGhost.
+
+    :param name: should be a short descriptive string with the name of the
+       plugin.
+    :param description: the description of the plugin.
+    :param kind: gives a hint about the category the plugin belongs to. It
+       should be a string with a value out of "remote" (for remote receiver
+       plugins), "program" (for program control plugins), "external" (for
+       plugins that control external hardware) or "other" (if none of the
+       other categories match).
+    :param author: can be set to the name of the developer of the plugin.
+    :param version: can be set to a version string.
+    :param canMultiLoad: set this to ``True``, if a configuration can have
+       more than one instance of this plugin.
+    :param \*\*kwargs: just to consume unknown parameters, to make the call
+       backward compatible.
+    """
+    pass
+
+eg.RegisterPlugin = RegisterPlugin
 
 # now assign all the functions above to `eg`
 eg.RestartAsyncore = RestartAsyncore
