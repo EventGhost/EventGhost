@@ -62,6 +62,8 @@ def InitPathesAndBuiltins():
     
     # we create a package 'PluginModule' and set its path to the plugin-dir
     # so we can simply use __import__ to load a plugin file
+    if not os.path.exists(eg.userPluginDir):
+        os.mkdir(eg.userPluginDir)
     userPluginPackage = ModuleType("eg.UserPluginModule")
     userPluginPackage.__path__ = [eg.userPluginDir]
     sys.modules["eg.UserPluginModule"] = userPluginPackage

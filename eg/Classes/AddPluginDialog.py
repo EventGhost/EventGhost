@@ -52,7 +52,8 @@ class AddPluginDialog(eg.TaskletDialog):
     instance = None
 
     @eg.LogItWithReturn
-    def Configure(self, parent):
+    def Configure(self, parent, checkMultiLoad=True):
+        self.checkMultiLoad = checkMultiLoad
         if self.__class__.instance:
             self.__class__.instance.Raise()
             return
@@ -220,6 +221,8 @@ class AddPluginDialog(eg.TaskletDialog):
 
 
     def CheckMultiload(self):
+        if not self.checkMultiLoad:
+            return True
         info = self.resultData
         if not info:
             return True

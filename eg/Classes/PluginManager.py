@@ -51,10 +51,6 @@ class PluginManager:
 
     def __init__(self):
         self.database = {}
-        if not exists(eg.userPluginDir):
-            os.mkdir(eg.userPluginDir)
-        #print eg.userPluginDir
-        #sys.path.insert(0, eg.userPluginDir)
         self.ScanPlugins()
 
 
