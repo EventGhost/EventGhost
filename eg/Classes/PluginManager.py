@@ -246,6 +246,7 @@ class PluginManager:
         createMacrosOnAdd = False,
         url = None,
         help = None,
+        **kwargs
     ):
         pass
 
