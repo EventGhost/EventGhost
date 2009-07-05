@@ -1,4 +1,4 @@
-version = "0.1.9"
+version = "0.1.10"
 # This file is part of EventGhost.
 # Copyright (C) 2008, 2009  Pako <lubos.ruckl@quick.cz>
 #
@@ -17,7 +17,7 @@ version = "0.1.9"
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# Last change: 2009-04-01 08:25
+# Last change: 2009-07-05 11:04
 
 
 eg.RegisterPlugin(
@@ -107,7 +107,6 @@ class Key(eg.ActionClass):
         label_1 = "Keys for Caps Lock OFF:"
         label_2 = "Keys for Caps Lock ON:"
         label_3 = "Digit:"
-        warning = "Is not allowed to put a character\nSPACE on the first or last position !"
 
 
     def __call__(self,config,listKs):
@@ -198,8 +197,6 @@ class Key(eg.ActionClass):
                         panel.EnableButtons(False)
                     labelLbl_1=wx.StaticText(panel,-1,txt.label_1)
                     labelLbl_2=wx.StaticText(panel,-1,txt.label_2)
-                    labelWarn=wx.StaticText(panel,-1,txt.warning)
-                    labelWarn.Enable(False)
                     ctrlKeys_1=wx.TextCtrl(panel,-1,'')
                     ctrlKeys_2=wx.TextCtrl(panel,-1,'')
                     if self.listKeys == []:
@@ -214,7 +211,6 @@ class Key(eg.ActionClass):
                     dynamicSizer.Add(ctrlKeys_1,0,wx.TOP,8)
                     dynamicSizer.Add(labelLbl_2,0,wx.TOP,24)
                     dynamicSizer.Add(ctrlKeys_2,0,wx.TOP,8)
-                    dynamicSizer.Add(labelWarn,0,wx.TOP,12)
 
                     def onText1Change(evt):
                         tmp = self.listKeys[0]
@@ -424,8 +420,6 @@ class Key(eg.ActionClass):
         choiceConfig.Bind(wx.EVT_CHOICE,onConfigChange)
         onConfigChange()
 
-
-
         while panel.Affirmed():
             panel.SetResult(
                 choiceConfig.GetStringSelection(),
@@ -457,36 +451,33 @@ class Shift(eg.ActionClass):
         self.plugin.OnShift()
 #===============================================================================
 
+class Left(eg.ActionClass):
+
+    def __call__(self):
+        self.plugin.OnLeft()
+#===============================================================================
+
+class Right(eg.ActionClass):
+
+    def __call__(self):
+        self.plugin.OnRight()
+#===============================================================================
+
 ACTIONS = (
     (Key, 'Key', 'Key', 'Key.', None),
     (Enter, 'Enter', 'Enter', 'Enter.', None),
     (Cancel, 'Cancel', 'Cancel', 'Cancel.', None),
     (BackSpace, 'BackSpace', 'Back Space', 'Back Space.', None),
     (Shift, 'Shift', 'Caps Lock', 'Caps Lock.', None),
+    (Left, 'Left', 'Left', 'Left.', None),
+    (Right, 'Right', 'Right', 'Right.', None),
 )
 #===============================================================================
+
 class Multitap(eg.PluginClass):
     configs = []
     osDialog = None
 
-    class text:
-        label = 'Configuration name:'
-        evtString = 'Event name and format:'
-        menuPreview = 'List of configurations:'
-        delete = 'Delete'
-        insert = 'Add new'
-        labelMode = "Mode of Multitapper:"
-        string = "SMS like string"
-        numpad = "Numpad (numerical string)"
-        singleKey = "Single Key"
-        labelTimeout1 = "Timeout:"
-        labelTimeout2 = "(0 = never timeout)"
-        genSuffix = 'Generate as event suffix'
-        genPayload = 'Generate as payload'
-        param = "Configuration parameters"
-        assignError = 'Configuration "%s" not exists!'
-        ownOSD = "Use own OSD"
-#===============================================================================
 
     def closeOsDialog(self):
         self.osDialog.Destroy()
@@ -497,24 +488,33 @@ class Multitap(eg.PluginClass):
         if not self.osd:
             return
         def setOsDialog():
+            frg = ctrlEvtString.GetForegroundColour()
+            bck = ctrlEvtString.GetBackgroundColour()
             maxlen = (GetSystemMetrics (0)-50)/64
-            fontNum = statTextNum.GetFont()
+            ft = ctrlEvtString.GetFont()
             if len(self.evtString) <= maxlen:
-                fontNum.SetPointSize(64)
+                ft.SetPointSize(64)
             elif len(self.evtString) <= maxlen*2:
-                fontNum.SetPointSize(32)
+                ft.SetPointSize(32)
             elif len(self.evtString) <= maxlen*4:
-                fontNum.SetPointSize(16)
+                ft.SetPointSize(16)
             else:
-                fontNum.SetPointSize(10)
-            statTextNum.SetFont(fontNum)
+                ft.SetPointSize(10)
+            ctrlEvtString.SetFont(ft)
             statTextEvent.SetLabel(self.evtName)
-            statTextNum.SetLabel(self.evtString)
+            strEvt = self.evtString + ' '
+            ctrlEvtString.ChangeValue(strEvt)
+            if self.mode != 2 and len(ctrlEvtString.GetValue())>0:
+                ctrlEvtString.SetStyle(0, self.pos, wx.TextAttr(frg, bck, ft))
+                ctrlEvtString.SetStyle(self.pos, self.pos+1, wx.TextAttr(bck, frg, ft))
+                ctrlEvtString.SetStyle(self.pos+1, len(ctrlEvtString.GetValue())+1, wx.TextAttr(frg, bck, ft))
+            else:
+                ctrlEvtString.SetStyle(0, len(ctrlEvtString.GetValue())+1, wx.TextAttr(frg, bck, ft))
             w0,h0 = self.osDialog.GetSize()
             w1,h1 = statTextEvent.GetTextExtent(self.evtName)
-            w2,h2 = statTextNum.GetTextExtent(self.evtString)
-            wE,hE = statTextNum.GetTextExtent('    ')
-            if self.mode==0 or self.mode>=3:
+            w2,h2 = ctrlEvtString.GetTextExtent(strEvt)
+            wE,hE = ctrlEvtString.GetTextExtent(' ')
+            if self.mode == 0 or self.mode >= 3:
                 w3,h3 = statTextCapsLock.GetTextExtent('Caps Lock')
                 w4a = keysLabel.GetTextExtent('88888888')[0]
                 w4b = keysLabel.GetTextExtent(self.oldKeys)[0]
@@ -525,8 +525,8 @@ class Multitap(eg.PluginClass):
             w = max(w0, w1, w2, w3+w4+20)
             h = h1+h2+h3+8+16
             self.osDialog.SetSize((w+16,h))
-            statTextNum.SetPosition((7,7+8+h3+h1))
-            statTextNum.SetSize((w,h2))
+            ctrlEvtString.SetPosition((7,7+8+h3+h1))
+            ctrlEvtString.SetSize((w,h2))
             statTextEvent.SetPosition((7,7+h3))
             statTextEvent.SetSize((w,h1))
             if self.mode==0 or self.mode>=3:
@@ -538,8 +538,6 @@ class Multitap(eg.PluginClass):
                     statTextCapsLock.SetForegroundColour(wx.Colour(255,0,0))
                 else:
                     statTextCapsLock.SetForegroundColour(wx.Colour(100,149,237))
-                frg = keysLabel.GetForegroundColour()
-                bck = keysLabel.GetBackgroundColour()
                 fnt = keysLabel.GetFont()
                 keysLabel.SetValue(self.oldKeys)
                 keysLabel.SetStyle(0, self.indx, wx.TextAttr(frg, bck, fnt))
@@ -549,7 +547,7 @@ class Multitap(eg.PluginClass):
         if self.osDialog is not None:
             sizer = self.osDialog.GetSizer()
             statTextEvent = sizer.GetChildren()[0].GetWindow()
-            statTextNum = sizer.GetChildren()[1].GetWindow()
+            ctrlEvtString = sizer.GetChildren()[1].GetWindow()
             if self.mode==0 or self.mode>=3:
                 statTextCapsLock = sizer.GetChildren()[2].GetWindow()
                 keysLabel = sizer.GetChildren()[3].GetWindow()
@@ -568,11 +566,10 @@ class Multitap(eg.PluginClass):
                 -1,
                 style = wx.ALIGN_CENTRE | wx.ST_NO_AUTORESIZE
             )
-
-            statTextNum=wx.StaticText(
+            ctrlEvtString = wx.TextCtrl(
                 self.osDialog,
                 -1,
-                style = wx.ALIGN_CENTRE | wx.ST_NO_AUTORESIZE
+                style = wx.TE_CENTRE|wx.TE_RICH2|wx.NO_BORDER|wx.TE_READONLY|wx.TE_RIGHT
             )
 
             if self.mode==0 or self.mode==4:
@@ -598,12 +595,12 @@ class Multitap(eg.PluginClass):
             statTextEvent.SetFont(fontEvent)
             self.osDialog.SetBackgroundColour(wx.Colour(100,149,237))
             statTextEvent.SetForegroundColour(wx.Colour(238, 238, 0))
-            statTextNum.SetForegroundColour(wx.Colour(238, 238, 0))
-            statTextNum.SetBackgroundColour(wx.Colour(0, 0, 128))
+            ctrlEvtString.SetForegroundColour(wx.Colour(238, 238, 0))
+            ctrlEvtString.SetBackgroundColour(wx.Colour(0, 0, 128))
             mainSizer =wx.BoxSizer(wx.VERTICAL)
             self.osDialog.SetSizer(mainSizer)
             mainSizer.Add(statTextEvent)
-            mainSizer.Add(statTextNum)
+            mainSizer.Add(ctrlEvtString)
             if self.mode==0 or self.mode>=3:
                 mainSizer.Add(statTextCapsLock)
                 mainSizer.Add(keysLabel)
@@ -619,7 +616,8 @@ class Multitap(eg.PluginClass):
     def __init__(self):
         self.osd = True
         self.lenKeys = 0
-        self.evtString = '    '
+        self.evtString = ''
+        self.pos = 0
         self.oldKeys = ''
         self.indx = 0
         self.timeout = 0
@@ -632,6 +630,12 @@ class Multitap(eg.PluginClass):
                       #4 .. if SMS mode starts by Shift
 #===============================================================================
 
+    def InsertChar(self):
+        tmpList=list(self.evtString)
+        tmpList.insert(self.pos,self.oldKeys[self.indx])
+        self.evtString = "".join(tmpList)
+        self.pos += 1
+
     def Multitapper(self,config,keys):
         self.timer.cancel()
         try:
@@ -641,7 +645,8 @@ class Multitap(eg.PluginClass):
             self.PrintError(self.text.assignError % config)
             return
         if self.mode > 2: #3 = idle, 4 = Shift after idle
-            self.evtString = '    '
+            self.evtString = ''
+            self.pos = 0
             self.oldKeys = ''
             self.timeout = item[3]
             self.formatEvent = item[2]
@@ -659,9 +664,7 @@ class Multitap(eg.PluginClass):
                 self.oldKeys = keys[set]
                 self.indx = -1
             if keys[set] != self.oldKeys:
-                if self.evtString == '    ':
-                    self.evtString = ''
-                self.evtString+=self.oldKeys[self.indx]
+                self.InsertChar()
                 wx.CallAfter(self.showOsDialog)
                 self.oldKeys = keys[set]
                 self.indx=0
@@ -671,9 +674,10 @@ class Multitap(eg.PluginClass):
                     self.indx=0
             wx.CallAfter(self.showOsDialog)
         elif self.mode==1: # Numpad mode
-            if self.evtString == '    ':
-                self.evtString = ''
-            self.evtString += keys[0]
+            tmpList=list(self.evtString)
+            tmpList.insert(self.pos,keys[0])
+            self.evtString = "".join(tmpList)
+            self.pos += 1
             wx.CallAfter(self.showOsDialog)
         else:              # mode Single Key
             if self.oldKeys == '':
@@ -690,7 +694,7 @@ class Multitap(eg.PluginClass):
             self.evtString = keys[self.indx]
             wx.CallAfter(self.showOsDialog)
             
-        if self.timeout>0:
+        if self.timeout > 0:
             self.timer = Timer(self.timeout, self.OnTimeout)
             self.timer.start()
         return self.evtString
@@ -701,7 +705,7 @@ class Multitap(eg.PluginClass):
         if self.mode == 3:
             self.mode = 4
             self.shift = True
-            self.evtName = ' '
+            self.evtString = ''
             wx.CallAfter(self.showOsDialog)
         elif self.mode == 4:
             self.mode = 3
@@ -710,17 +714,37 @@ class Multitap(eg.PluginClass):
         elif self.mode == 0:
             self.shift = not self.shift
             if self.oldKeys != '':
-                self.evtString+=self.oldKeys[self.indx]
+                self.InsertChar()
                 self.oldKeys = ''
             wx.CallAfter(self.showOsDialog)
             self.oldKeys = ''
 #===============================================================================
 
+    def OnLeft(self):
+        self.timer.cancel()
+        if self.mode < 2:
+            if self.pos > 0:
+                self.pos += -1
+                wx.CallAfter(self.showOsDialog)
+        if self.timeout > 0 and self.mode == 1:
+            self.timer = Timer(self.timeout, self.OnTimeout)
+            self.timer.start()
+#===============================================================================
+
+    def OnRight(self):
+        self.timer.cancel()
+        if self.mode < 2:
+            if self.pos < len(self.evtString):
+                self.pos += 1
+                wx.CallAfter(self.showOsDialog)
+        if self.timeout > 0 and self.mode == 1:
+            self.timer = Timer(self.timeout, self.OnTimeout)
+            self.timer.start()
+#===============================================================================
+
     def OnTimeout(self):
         if self.mode==0: #String mode
-            if self.evtString == '    ':
-                self.evtString = ''
-            self.evtString+=self.oldKeys[self.indx]
+            self.InsertChar()
             self.oldKeys = ''
             wx.CallAfter(self.showOsDialog)
         else:            # Numpad  and SingleKey mode
@@ -733,7 +757,7 @@ class Multitap(eg.PluginClass):
         if self.mode < 3:
             if self.oldKeys != '':
                 if self.mode!=2:
-                    self.evtString+=self.oldKeys[self.indx]
+                    self.InsertChar()
             self.GenerateEvent()
 #===============================================================================
 
@@ -742,23 +766,26 @@ class Multitap(eg.PluginClass):
         if self.osDialog is not None:
             wx.CallAfter(self.closeOsDialog)
         self.mode=3
-        self.evtString = '    '
+        self.evtString = ''
 #===============================================================================
 
     def OnBackSpace(self):
-#        if (self.osDialog is not None) and len(self.evtString) > 0:
         if len(self.evtString) > 0:
             self.timer.cancel()
             if self.mode != 2:
-                self.evtString = self.evtString[:-1]
-                self.oldKeys = ''
+                if self.pos > 0:
+                    tmpList=list(self.evtString)
+                    del tmpList[self.pos-1]
+                    self.evtString = "".join(tmpList)
+                    self.pos += -1
+                    self.oldKeys = ''
                 if len(self.evtString) == 0:
                     wx.CallAfter(self.closeOsDialog)
                     self.mode = 3
-                    self.evtString = '    '
+                    self.evtString = ''
                 else:
                     wx.CallAfter(self.showOsDialog)
-            if self.timeout > 0 and self.mode ==1:
+            if self.timeout > 0 and self.mode == 1:
                 self.timer = Timer(self.timeout, self.OnTimeout)
                 self.timer.start()
         return self.evtString
@@ -780,7 +807,7 @@ class Multitap(eg.PluginClass):
             wx.CallAfter(self.closeOsDialog)
 
         self.mode = 3 #Cleaning
-        self.evtString = '    '
+        self.evtString = ''
 #===============================================================================
 
     def __start__(
@@ -1069,6 +1096,25 @@ class Multitap(eg.PluginClass):
             panel.SetResult(
             self.configs,
         )
+#===============================================================================
+
+    class text:
+        label = 'Configuration name:'
+        evtString = 'Event name and format:'
+        menuPreview = 'List of configurations:'
+        delete = 'Delete'
+        insert = 'Add new'
+        labelMode = "Mode of Multitapper:"
+        string = "SMS like string"
+        numpad = "Numpad (numerical string)"
+        singleKey = "Single Key"
+        labelTimeout1 = "Timeout:"
+        labelTimeout2 = "(0 = never timeout)"
+        genSuffix = 'Generate as event suffix'
+        genPayload = 'Generate as payload'
+        param = "Configuration parameters"
+        assignError = 'Configuration "%s" not exists!'
+        ownOSD = "Use own OSD"
 #===============================================================================
 
 
