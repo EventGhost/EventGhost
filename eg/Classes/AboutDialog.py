@@ -63,7 +63,7 @@ def GetPluginAuthors():
     tmp.sort(key=lambda x: (-len(x[1]), x[0].lower()))
     authorList = []
     for author, pluginNames in tmp:
-        pluginNames.sort(key=str.lower)
+        pluginNames.sort(key=unicode.lower)
         authorList.append((author, ",<BR>".join(pluginNames)))
     return authorList
 
@@ -74,7 +74,7 @@ SPECIAL_THANKS_DATA = (
         "Translators:",
         2,
         (
-            ("Lubo&scaron; R&uuml;ckl", "Czech"),
+            ("Pako", "Czech"),
             ("Fredrik Jacobsson", "Swedish"),
             ("karlr", "Spanish"),
             ("peter", "Dutch"),
