@@ -72,7 +72,6 @@ eg.programCounter = None
 eg.programReturnStack = []
 eg.indent = 0
 eg.pluginList = []
-eg.pluginClassInfo = {}
 eg.mainThread = threading.currentThread()
 eg.stopExecutionFlag = False
 eg.lastFoundWindows = []

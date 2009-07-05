@@ -35,7 +35,7 @@ class ActionThread(eg.ThreadWorker):
         for pluginIdent in eg.CORE_PLUGINS:
             # pylint: disable-msg=W0702
             try:
-                pluginInfo = eg.PluginInfo.Open(pluginIdent, None, ())
+                pluginInfo = eg.pluginManager.OpenPlugin(pluginIdent, None, ())
                 pluginInfo.instance.__start__()
                 pluginInfo.isStarted = True
             except:

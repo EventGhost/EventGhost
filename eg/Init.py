@@ -60,6 +60,13 @@ def InitPathesAndBuiltins():
     sys.modules["eg.PluginModule"] = pluginPackage
     eg.PluginModule = pluginPackage
     
+    # we create a package 'PluginModule' and set its path to the plugin-dir
+    # so we can simply use __import__ to load a plugin file
+    userPluginPackage = ModuleType("eg.UserPluginModule")
+    userPluginPackage.__path__ = [eg.userPluginDir]
+    sys.modules["eg.UserPluginModule"] = userPluginPackage
+    eg.UserPluginModule = userPluginPackage
+    
     
 # replace builtin raw_input() with a small dialog
 def RawInput(prompt=None):

@@ -57,7 +57,7 @@ class PluginItem(ActionItem):
         ident = node.attrib.get('identifier', None)
         pluginStr = node.attrib['file']
         self.pluginFile = pluginStr
-        self.info = info = eg.PluginInfo.Open(pluginStr, ident, args, self)
+        self.info = info = eg.pluginManager.OpenPlugin(pluginStr, ident, args, self)
         self.name = eg.text.General.pluginLabel % info.label
         if info.icon != self.icon:
             self.icon = eg.Icons.PluginSubIcon(info.icon)

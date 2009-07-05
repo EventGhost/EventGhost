@@ -1,5 +1,5 @@
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,13 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
-
-import os
 
 import eg
 import wx
@@ -232,11 +225,7 @@ class AddPluginDialog(eg.TaskletDialog):
             return True
         if info.canMultiLoad:
             return True
-        pluginName = os.path.basename(info.path)
-        info = eg.pluginClassInfo.get(pluginName, None)
-        if not info:
-            return True
-        if info.instances:
+        if any((plugin.info.path == info.path) for plugin in eg.pluginList):
             eg.MessageBox(
                 Text.noMultiload,
                 Text.noMultiloadTitle,
