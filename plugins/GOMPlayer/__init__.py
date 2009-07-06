@@ -25,6 +25,7 @@ eg.RegisterPlugin(
     author = "CHeitkamp",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "program",
+    guid = "{A4CF41AC-8813-4920-98E9-576D08711022}",
     createMacrosOnAdd = True,
     description = (
         "Adds support functions to control GOM Player.\n\n"

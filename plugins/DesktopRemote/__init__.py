@@ -26,6 +26,7 @@ eg.RegisterPlugin(
     name = "Desktop Remote",
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
+    guid = "{5DFFBD61-7582-4D6F-8EA9-9CB36284C9CF}",
     canMultiLoad = True,
     url = "http://www.eventghost.org/forum/viewtopic.php?t=513",
     description = "Creates a remote-like desktop window.",

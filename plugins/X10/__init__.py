@@ -50,6 +50,7 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
+    guid = "{C3E96757-E507-4CC3-A2E6-465D48B87D09}",
     canMultiLoad = True,
     description = __doc__,
     url = "http://www.eventghost.org/forum/viewtopic.php?t=1589",

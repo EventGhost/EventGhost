@@ -24,6 +24,7 @@ eg.RegisterPlugin(
     author = "Pako",
     version = version,
     kind = "program",
+    guid = "{12CD9AEB-691F-4EBB-B1F5-10A5FF776429}",
     description = (
         'Adds actions to control the <a href="http://www.sheepfriends.com/?page'
         '=billy">Billy</a> audio player. \n\n<p>'

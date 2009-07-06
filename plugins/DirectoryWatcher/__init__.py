@@ -25,6 +25,7 @@ eg.RegisterPlugin(
     name = "Directory Watcher",
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
+    guid = "{003FABA6-AA6A-4395-9DB6-DC88EB07F5FE}",
     canMultiLoad = True,
     description = (
         "Monitors a directory and generates events if files are created, "

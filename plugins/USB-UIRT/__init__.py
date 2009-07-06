@@ -38,6 +38,7 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
+    guid = "{36FD4F40-653C-4626-97CC-BE363C05F933}",
     canMultiLoad = True,
     description = __doc__,
 #    (

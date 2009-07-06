@@ -9,6 +9,7 @@ eg.RegisterPlugin(
     ),
     url = "http://www.eventghost.org/forum/viewtopic.php?t=748",
     kind = "other",
+    guid = "{B619678F-0C6F-425E-9240-3ADA82360DD2}",
 )
 
 # changelog

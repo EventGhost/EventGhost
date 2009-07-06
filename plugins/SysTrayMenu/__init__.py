@@ -29,6 +29,7 @@ eg.RegisterPlugin(
     ),
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
+    guid = "{842BFFE8-DCB9-4C72-9877-AB2EF49794C5}",
 )
 
 

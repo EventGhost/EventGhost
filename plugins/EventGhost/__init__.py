@@ -31,6 +31,7 @@ eg.RegisterPlugin(
     ),
     kind = "core",
     version = "1.0." + "$LastChangedRevision$".split()[1],
+    guid = "{9D499A2C-72B6-40B0-8C8C-995831B10BB4}",
 )
 
 import wx

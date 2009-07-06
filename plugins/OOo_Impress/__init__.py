@@ -27,6 +27,7 @@ eg.RegisterPlugin(
     author = "Pako",
     version = version,
     kind = "program",
+    guid = "{4E3ED517-6E52-4E64-9B0B-EC9CBFC0ABC4}",
     description = (
         'Adds actions to control the '
         '<a href="http://www.openoffice.org/product/impress.html">'

@@ -23,6 +23,7 @@ eg.RegisterPlugin(
     author = "Pako",
     version = version,
     kind = "other",
+    guid = "{50D933C5-F93B-4A8A-A6CE-95A40F906036}",
     createMacrosOnAdd = False,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAA"

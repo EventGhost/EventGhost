@@ -4,6 +4,7 @@ eg.RegisterPlugin(
     author = "jorel1969",
     version = "0.1." + "$LastChangedRevision$".split()[1],
     kind = "program",
+    guid = "{B20B058A-613D-4695-98F0-D55408555361}",
     createMacrosOnAdd = True,
     description = (
         'Adds actions to control <a href="http://www.meedio.com/">Meedio</a>.'

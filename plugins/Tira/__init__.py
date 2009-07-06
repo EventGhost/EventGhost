@@ -38,6 +38,7 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
+    guid = "{B0E45461-630A-4FFC-BA92-9A8281DC112C}",
     description = __doc__,
     url = "http://www.eventghost.org/forum/viewtopic.php?t=569",
     icon = (

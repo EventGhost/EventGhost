@@ -25,6 +25,7 @@ eg.RegisterPlugin(
     author = "MonsterMagnet",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "program",
+    guid = "{DD75104D-D586-438A-B63D-3AD01A4D4BD3}",
     createMacrosOnAdd = True,
     description = (
         'Adds actions to control '

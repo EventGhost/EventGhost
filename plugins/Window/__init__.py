@@ -32,6 +32,7 @@ eg.RegisterPlugin(
         "them."
     ),
     kind = "core",
+    guid = "{E974D074-B0A3-4D0C-BBD1-992475DDD69D}",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAV0lEQVR42u2TsRGAAAjE"
         "YDJ+NNgMJ0OwUTo5GgvTfJUcDUxLWFVjHQAwFt2d0r0DwOwQ1eNdIALEzLnRtuQWqJOm"

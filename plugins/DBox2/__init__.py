@@ -27,6 +27,7 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "external",
+    guid = "{5002C05A-CDFD-42E9-81FC-A29BBB2D2831}",
     canMultiLoad = True,
     createMacrosOnAdd = True,
     description = "Control your d-box2 set-top box over Ethernet.",

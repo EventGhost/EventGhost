@@ -24,6 +24,7 @@ import eg
 
 eg.RegisterPlugin(
     name="Test",
+    guid="{5533428D-57AB-4DAE-BA11-BB039DE0C4AA}",
     description=(
         "This plugin does nothing useful for end-users. It's purpose is to"
         "show developers some tricks in EventGhost"

@@ -42,6 +42,7 @@ eg.RegisterPlugin(
     author = "Pako",
     version = "0.1.9",
     kind = "other",
+    guid = "{D4DA1CE6-ABC8-494B-8747-AC785CD37542}",
     description =  __doc__,
     createMacrosOnAdd = True,
     url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1051",

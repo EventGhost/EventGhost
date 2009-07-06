@@ -50,6 +50,7 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "program",
+    guid = "{C5E2609E-C1C4-4432-A532-EDA79A7EE41D}",
     canMultiLoad = True,
     createMacrosOnAdd = True,
     icon = (

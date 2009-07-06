@@ -27,6 +27,7 @@ eg.RegisterPlugin(
     kind = "program",
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
+    guid = "{50B10A24-77AC-4248-85E5-16A04983170E}",
     createMacrosOnAdd = True,
     description = (
         "Adds actions to control <a href='http://www.team-mediaportal.com/'>"

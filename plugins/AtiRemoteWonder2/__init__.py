@@ -46,6 +46,7 @@ eg.RegisterPlugin(
     author="Bitmonster",
     version="1.0." + "$LastChangedRevision$".split()[1],
     kind="remote",
+    guid="{51BAF82E-A83C-47BD-AEF1-E9F59C948691}",
 )
 
 

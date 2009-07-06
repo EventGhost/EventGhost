@@ -38,6 +38,7 @@ eg.RegisterPlugin(
     author = "prostetnic & Bartman",
     version = "0.1." + "$LastChangedRevision$".split()[1],
     kind = "external",
+    guid = "{E9EA99CC-40A7-40CC-94D9-01C9F6D25170}",
     description = "Control Onkyo A/V Receivers via RS232",
     help = help,
     canMultiLoad = True,

@@ -31,6 +31,7 @@ eg.RegisterPlugin(
         "graphics card, power management, et cetera."
     ),
     kind = "core",
+    guid = "{A21F443B-221D-44E4-8596-E1ED7100E0A4}",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QAAAAAAAD5Q7t/"
         "AAAACXBIWXMAAAsSAAALEgHS3X78AAAAB3RJTUUH1QsEFTMTHK3EDwAAAUhJREFUOMul"

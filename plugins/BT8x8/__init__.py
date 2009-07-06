@@ -40,6 +40,7 @@ eg.RegisterPlugin(
     author = "Chris B",
     version = "0.0.0",
     kind = "remote",
+    guid = "{D812BA67-8C9A-40F7-AC97-623837DBD9B4}",
     description = ("AverTvStudio remote, may work for other bt8x8 cards. " 
                    "Requires Dscaler to be installed."),
 )

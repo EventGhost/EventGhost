@@ -25,6 +25,7 @@ eg.RegisterPlugin(
     author = "SurFan",
     version = "0.0.1",
     kind = "program",
+    guid = "{EF830DA5-EF08-4050-BAE0-D5FC0057D149}",
     canMultiLoad = True,
     createMacrosOnAdd = True,
     description = (

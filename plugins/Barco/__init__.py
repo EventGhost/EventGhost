@@ -8,6 +8,7 @@ eg.RegisterPlugin(
     kind = "external",
     author = "Bitmonster",
     version = "1.0.0",
+    guid = "{74902850-2F8B-4384-95D0-59E9D96D0BF9}",
     canMultiLoad = True,
     createMacrosOnAdd = True,
     icon = (

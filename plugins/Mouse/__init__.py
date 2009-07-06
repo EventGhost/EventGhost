@@ -47,6 +47,7 @@ eg.RegisterPlugin(
         "mouse events."
     ),
     kind = "core",
+    guid = "{6B1751BF-F94E-4260-AB7E-64C0693FD959}",
     icon = ICON,
 )
 

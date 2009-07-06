@@ -26,6 +26,7 @@ eg.RegisterPlugin(
     author = "Pako",
     version = version,
     kind = "program",
+    guid = "{9593B4E9-5089-4C1F-BCE5-4A0B07F63DEE}",
     description = (
         'Adds actions to control <a href="http://www.irfanview.com/">'
         'IrfanView</a>.'

@@ -26,6 +26,7 @@ eg.RegisterPlugin(
     name = "Network Event Sender",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     author = "Bitmonster",
+    guid = "{B4F0DAFE-2E0B-47F3-A155-ED72C7A4E270}",
     description = (
         "Sends events to an Network Event Receiver plugin through TCP/IP."
     ),

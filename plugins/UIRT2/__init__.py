@@ -28,6 +28,7 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.1." + "$LastChangedRevision$".split()[1],
     kind = "remote",
+    guid = "{DEB2BDB1-F7BD-44B1-B5F7-153B54C3A245}",
     canMultiLoad = True,
     description = (
         'Hardware plugin for the <a href="http://www.fukushima.us/UIRT2/">'

@@ -28,6 +28,7 @@ eg.RegisterPlugin(
     author = "Bitmonster & Matthew Jacob Edwards",
     version = "1.2." + "$LastChangedRevision$".split()[1],
     kind = "program",
+    guid = "{4A22DD6A-5E2C-4500-90B4-47F5C58FD9CA}",
     createMacrosOnAdd = True,
     url = "http://www.eventghost.org/forum/viewtopic.php?t=201",
     description = (

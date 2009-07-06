@@ -25,6 +25,7 @@ eg.RegisterPlugin(
     author = "Bitmonster & Bartman",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "program",
+    guid = "{4CBEB5C8-97E2-4F65-A355-E72FCED4951F}",
     url = "http://www.eventghost.org/forum/viewtopic.php?t=613",
     description = (
         'Adds actions to control the '

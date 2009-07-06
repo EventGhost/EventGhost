@@ -27,6 +27,7 @@ import eg
 eg.RegisterPlugin(
     name = "Serial Port",
     author = "Bitmonster",
+    guid = "{D565171F-1703-4212-972C-B824B55329CB}",
     version = "1.1." + "$LastChangedRevision$".split()[1],
     canMultiLoad = True,
     description = "Arbitrary communication through a serial port.",

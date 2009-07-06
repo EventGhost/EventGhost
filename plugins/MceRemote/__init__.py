@@ -31,6 +31,7 @@ eg.RegisterPlugin(
     author = "Bitmonster & James Lee",
     version = "1.1." + "$LastChangedRevision$".split()[1],
     kind = "remote",
+    guid = "{02181DB1-F29D-4CCB-BF91-7A86EFB0D22C}",
     description = 'Plugin for the Microsoft MCE remote.',
     help = """
         <center><img src="MCEv2.jpg"/></center>

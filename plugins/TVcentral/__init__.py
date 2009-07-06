@@ -35,6 +35,7 @@ eg.RegisterPlugin(
     url="http://www.eventghost.org/forum/viewtopic.php?t=917",
     createMacrosOnAdd = True,
     version="1.0." + "$LastChangedRevision$".split()[1],
+    guid="{D80421DF-8D70-4127-BC80-7B746AD62996}",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAC7klEQVR42qWTa0iTYRTH/+/uzuUF"
         "s6mo4KXSCDTTFLKiQBGkoiXrgwR9qA8lZhfDxLIiTKQiSUtQKFposmDiJWNpJWiZ2QdXXqdOy9wc"

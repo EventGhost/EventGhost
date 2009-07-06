@@ -27,6 +27,7 @@ eg.RegisterPlugin(
     author = "Pako",
     version = version,
     kind = "program",
+    guid = "{50602341-ABC3-47AD-B859-FCB8C03ED4EF}",
     createMacrosOnAdd = True,
     description = (
         'Adds support functions to control '

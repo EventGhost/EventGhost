@@ -27,6 +27,7 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "0.1." + "$LastChangedRevision$".split()[1],
     description = "Plugin to show some test patterns.",
+    guid = "{17BC05D0-C600-4244-ABB1-02C1DA6229A0}",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAV0lEQVR42mNkoBAwgogD"
         "Bw78B9H29g5Qwf/I0gz/GVH5SPKMowaMGkA9A4BK/qNogCpgZECXhvCBFoJpBwcHmAEH"

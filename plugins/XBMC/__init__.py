@@ -26,6 +26,7 @@ eg.RegisterPlugin(
     author = "Chris Longo",
     version = "0.2." + "$LastChangedRevision$".split()[1],
     kind = "program",
+    guid = "{2DD98E35-F060-4444-9F11-168CD8131A6B}",
     createMacrosOnAdd = True,
     url = "http://www.eventghost.org/forum/viewtopic.php?t=1005",
     description = "Adds actions to control <a href='http://www.xbmc.org/'>XBMC</a>.",

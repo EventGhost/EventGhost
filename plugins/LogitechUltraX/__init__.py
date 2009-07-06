@@ -35,6 +35,7 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.0.0",
     kind = "remote",
+    guid = "{5416ED98-E9CF-4658-9135-AB67EF4335DC}",
     description = __doc__,
 )
 

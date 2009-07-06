@@ -26,6 +26,7 @@ eg.RegisterPlugin(
     name = "Webserver",
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
+    guid = "{E4305D8E-A3D3-4672-B06E-4EA1F0F6C673}",
     description = (
         "Implements a small webserver, that you can use to generate events "
         "through HTML-pages."

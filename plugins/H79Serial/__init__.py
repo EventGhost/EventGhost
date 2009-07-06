@@ -27,6 +27,7 @@ eg.RegisterPlugin(
     version = "0.2." + "$LastChangedRevision$".split()[1],
     kind = "external",
     description = "Control an Optoma H79 projector via RS232",
+    guid = "{776F4F93-93E3-4587-875C-6B3817D44329}",
     help = help,
     canMultiLoad = True,
     createMacrosOnAdd = True,

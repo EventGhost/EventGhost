@@ -24,6 +24,7 @@ eg.RegisterPlugin(
     author = "townkat",
     version = "4.1" + "$LastChangedRevision$".split()[1],
     kind = "program",
+    guid = "{9D8E0000-E1BE-4767-A4E5-8EC4687CECE1}",
     url = "http://www.eventghost.org/forum/viewtopic.php?t=612",
     createMacrosOnAdd = True,
     description = (

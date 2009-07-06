@@ -28,6 +28,7 @@ eg.RegisterPlugin(
     author = "MonsterMagnet",
     version = "1.2." + "$LastChangedRevision$".split()[1],
     kind = "program",
+    guid = "{50257196-DB5B-4291-BD62-FF3DE53DDCA2}",
     description = (
         'Adds actions to control the <a href="http://www.foobar2000.org/">'
         'Foobar2000</a> audio player.'

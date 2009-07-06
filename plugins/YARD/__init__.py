@@ -5,6 +5,7 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
+    guid = "{1119068D-44AD-40E0-BDB6-B00D9F88F5A0}",
     description = (
         'Hardware plugin for the <a href="http://eldo.gotdns.com/yard/">'
         'Y.A.R.D.</a> IR-transceiver from Andre Weber.'

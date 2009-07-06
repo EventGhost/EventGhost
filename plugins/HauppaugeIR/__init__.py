@@ -30,6 +30,7 @@ eg.RegisterPlugin(
     author      = "Stefan Gollmer",
     version     = "1.04." + "$LastChangedRevision$".split()[1],
     kind        = "remote",
+    guid        = "{B54E7F32-E117-4C24-A892-9D69BC290568}",
     description = (
                     'Hardware plugin for the '
                     '<a href="http://www.hauppauge.com">'

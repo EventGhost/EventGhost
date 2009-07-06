@@ -37,6 +37,7 @@ eg.RegisterPlugin(
     ),
     version = "1.0."+ "$LastChangedRevision: 1 $".split()[1],
 	kind = "remote",
+    guid = "{BAD86ECC-5B21-4F47-9ADE-9CC8FFF8D191}",
     canMultiLoad = True,
     author = "Melloware Inc",
 	url="http://www.melloware.com/products/eventphone",

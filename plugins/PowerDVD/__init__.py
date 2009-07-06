@@ -27,6 +27,7 @@ eg.RegisterPlugin(
     description="Adds actions to control CyberLink PowerDVD 7 and 8.",
     kind="program",
     author="Bitmonster",
+    guid="{4DBDFFA7-9E47-4782-B843-B196C74DE3EF}",
     version="1.1." + "$LastChangedRevision$".split()[1],  
     createMacrosOnAdd=True,  
 )

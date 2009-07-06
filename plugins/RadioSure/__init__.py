@@ -26,6 +26,7 @@ eg.RegisterPlugin(
     author = "Pako",
     version = version,
     kind = "program",
+    guid = "{84703620-87B4-4982-A9AB-DA1B3F8D22EA}",
     description = (
         'Adds actions to control the <a href="http://www.radiosure.com/">'
         'RadioSure</a>.'

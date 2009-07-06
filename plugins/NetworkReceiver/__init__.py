@@ -27,6 +27,7 @@ eg.RegisterPlugin(
     description = "Receives events from Network Event Sender plugins.",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     author = "Bitmonster",
+    guid = "{8F35AE6D-AF12-4A94-AA91-4B63F0CBBE1C}",
     canMultiLoad = True,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QAAAAAAAD5Q7t/"

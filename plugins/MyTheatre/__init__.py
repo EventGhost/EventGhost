@@ -24,6 +24,7 @@ eg.RegisterPlugin(
     author = "Milbrot",
     version = "1.1." + "$LastChangedRevision$".split()[1],
     kind = "program",
+    guid = "{2347B12C-FB95-4F9E-A89E-61DD72669DB8}",
     createMacrosOnAdd = True,
     description = (
         'Adds actions to control the <a href="http://www.dvbcore.com/">'

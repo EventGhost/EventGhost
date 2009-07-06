@@ -23,6 +23,7 @@
 eg.RegisterPlugin(
     name = "Speech",
     author = "MonsterMagnet",
+    guid = "{76A1638D-1D7D-4582-A726-A17B1A6FC723}",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     description = (
         "Uses the Text-To-Speech service of the Microsoft Speech API (SAPI)."

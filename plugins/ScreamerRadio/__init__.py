@@ -29,6 +29,7 @@ eg.RegisterPlugin(
     author = "Pako",
     version = version,
     kind = "program",
+    guid = "{22D52B5E-D1D9-4352-AC53-A620441C67CC}",
     description = (
         'Adds actions to control the <a href="http://www.screamer-radio.com/">'
         'Screamer radio</a>.'
