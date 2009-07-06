@@ -236,6 +236,9 @@ class USB_UIRT(eg.IrDecoderPlugin):
             
             # fix for USB-UIRT driver bug, See OnComputerSuspend for details.
             self.hDrvHandle = dll.UUIRTOpenEx(self.deviceStr, 0, 0, 0)
+            # without the UUIRTSetUUIRTConfig call, the driver seems to need
+            # much more time to close.
+            self.SetConfig(*self.args)
             dll.UUIRTSetReceiveCallback(self.hDrvHandle, None, 0)
             dll.UUIRTClose(self.hDrvHandle)
         
