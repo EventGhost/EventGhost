@@ -21,6 +21,7 @@ from os.path import join, exists
 import eg
 from eg.Utils import DecodeReST
 
+
 class RegisterPluginException(Exception):
     """
     RegisterPlugin will raise this exception to interrupt the loading
@@ -31,11 +32,14 @@ class RegisterPluginException(Exception):
 
 
 class PluginModuleInfo(object):
+    _guids = {}
+    
     name = u"unknown"
     description = u""
     author = u"unknown author"
     version = u"unknown version"
     kind = u"other"
+    guid = ""
     canMultiLoad = False
     createMacrosOnAdd = False
     icon = eg.Icons.PLUGIN_ICON
@@ -43,7 +47,6 @@ class PluginModuleInfo(object):
     englishName = None
     englishDescription = None
     path = None
-    timestamp = None
     pluginName = None
     
 
@@ -96,41 +99,21 @@ class PluginModuleInfo(object):
         createMacrosOnAdd = False,
         url = None,
         help = None,
-        guid = None,
-        #**kwargs
+        guid = "",
+        **kwargs
     ):
-        """
-        Registers information about a plugin to EventGhost.
-
-        :param name: should be a short descriptive string with the name of the
-           plugin.
-        :param description: the description of the plugin.
-        :param kind: gives a hint about the category the plugin belongs to. It
-           should be a string with a value out of "remote" (for remote receiver
-           plugins), "program" (for program control plugins), "external" (for
-           plugins that control external hardware) or "other" (if none of the
-           other categories match).
-        :param author: can be set to the name of the developer of the plugin.
-        :param version: can be set to a version string.
-        :param canMultiLoad: set this to ``True``, if a configuration can have
-           more than one instance of this plugin.
-        :param \*\*kwargs: just to consume unknown parameters, to make the call
-           backward compatible.
-        """
         if name is None:
             name = self.pluginName
         if description is None:
             description = name
-        else:
-            pos = description.find("<rst>")
-            if pos != -1:
-                description = DecodeReST(description[pos+5:])
+#        else:
+#            pos = description.find("<rst>")
+#            if pos != -1:
+#                description = DecodeReST(description[pos+5:])
         if help is not None:
             help = "\n".join([s.strip() for s in help.splitlines()])
             help = help.replace("\n\n", "<p>")
             description += "\n\n<p>" + help
-        if guid:
-            guid = guid.upper()
         self.name = self.englishName = unicode(name)
         self.description = self.englishDescription = unicode(description)
         self.kind = unicode(kind)
@@ -139,7 +122,14 @@ class PluginModuleInfo(object):
         self.canMultiLoad = canMultiLoad
         self.createMacrosOnAdd = createMacrosOnAdd
         self.url = unicode(url)
-
+        self.guid = guid.upper()
+        if not guid:
+            print "missing guid", self.path
+        else:
+            if guid in self._guids:
+                print "duplicate guid", self.path
+            else:
+                self._guids[guid] = self
         # get the icon if any
         if icon is not None:
             self.icon = eg.Icons.StringIcon(icon)

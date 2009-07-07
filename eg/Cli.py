@@ -45,6 +45,7 @@ class args:
     configDir = None
     install = False
     isMain = splitext(basename(sys.argv[0]))[0].lower() == "eventghost"
+    pluginFile = None
     
 argv = [val.decode(ENCODING) for val in sys.argv]
 
@@ -93,9 +94,15 @@ while True:
     elif arg == '-f' or arg == '-file':
         i += 1
         if len(argv) <= i:
-            print "missing file string"
+            print "missing file path"
             break
         args.startupFile = os.path.abspath(argv[i])
+    elif arg == '-p' or arg == '-plugin':
+        i += 1
+        if len(argv) <= i:
+            print "missing plugin file path"
+            break
+        args.pluginFile = os.path.abspath(argv[i])
     elif arg == '-configdir':
         i += 1
         if len(argv) <= i:
@@ -117,14 +124,18 @@ if not args.allowMultiLoad and not args.translate and args.isMain:
     if ctypes.GetLastError() != 0:
         # another instance of EventGhost is running
         import win32com.client
-        e = win32com.client.Dispatch("{7EB106DC-468D-4345-9CFE-B0021039114B}")
-        if args.startupFile is not None:
-            e.OpenFile(args.startupFile)
-        if args.startupEvent is not None:
-            e.TriggerEvent(args.startupEvent[0], args.startupEvent[1])
-        else:
-            e.BringToFront()
-        ctypes.windll.kernel32.ExitProcess(0)
+        try:
+            e = win32com.client.Dispatch("{7EB106DC-468D-4345-9CFE-B0021039114B}")
+            if args.pluginFile:
+                e.InstallPlugin(args.pluginFile)
+            if args.startupFile is not None:
+                e.OpenFile(args.startupFile)
+            if args.startupEvent is not None:
+                e.TriggerEvent(args.startupEvent[0], args.startupEvent[1])
+            else:
+                e.BringToFront()
+        finally:
+            ctypes.windll.kernel32.ExitProcess(0)
 
 # change working directory to program directory
 if args.debugLevel < 1 and args.isMain:

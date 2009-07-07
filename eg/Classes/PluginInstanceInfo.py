@@ -49,6 +49,9 @@ class PluginInstanceInfo(eg.PluginModuleInfo):
     lastEvent = eg.EventGhostEvent()
     eventList = None
     
+    def __init__(self):
+        pass
+    
     @classmethod
     def FromModuleInfo(cls, moduleInfo):
         self = cls.__new__(cls)
@@ -89,7 +92,7 @@ class PluginInstanceInfo(eg.PluginModuleInfo):
 
 
 
-    def CreateInstance(self, pluginClsInfo, args, evalName, treeItem):
+    def CreateInstance(self, args, evalName, treeItem):
         self.args = args
         self.treeItem = treeItem
         self.actions = {}
@@ -204,15 +207,14 @@ class PluginInstanceInfo(eg.PluginModuleInfo):
             self.treeItem.SetErrorState()
 
 
-    @eg.LogIt
     def Close(self):
+        eg.PrintDebugNotice("closing %s" % self.path)
         if self.isStarted:
             self.Stop()
         if not self.initFailed:
             self.instance.__close__()
 
 
-    @eg.LogIt
     def RemovePluginInstance(self):
         plugin = self.instance
         def DeleteActionListItems(items):

@@ -51,7 +51,8 @@ class EventGhostCom:
 
 
     def InstallPlugin(self, filePath):
-        pass
+        eg.document.ShowFrame()
+        eg.PluginInstall.Import(filePath)
     
 
 # Patch win32com to use the gen_py directory in the programs

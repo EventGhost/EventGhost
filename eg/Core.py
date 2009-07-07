@@ -264,7 +264,7 @@ def RegisterPlugin(
     url = None,
     help = None,
     guid = None,
-    #**kwargs
+    **kwargs
 ):
     """
     Registers information about a plugin to EventGhost.
