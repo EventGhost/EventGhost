@@ -19,7 +19,6 @@ import os
 import sys
 from os.path import join, exists
 import eg
-from eg.Utils import DecodeReST
 
 
 class RegisterPluginException(Exception):
@@ -32,8 +31,13 @@ class RegisterPluginException(Exception):
 
 
 class PluginModuleInfo(object):
-    _guids = {}
+    """
+    Holds information of a plugin module.
     
+    The main purpose of this class is to get the information from the 
+    eg.RegisterPlugin call inside the plugin module. So it imports the main 
+    module, but stops the import immediately after the eg.RegisterPlugin call.
+    """
     name = u"unknown"
     description = u""
     author = u"unknown author"
@@ -55,8 +59,15 @@ class PluginModuleInfo(object):
         self.pluginName = os.path.basename(path)
         originalRegisterPlugin = eg.RegisterPlugin
         eg.RegisterPlugin = self.RegisterPlugin
+        sys.path.insert(0, self.path)
         try:
-            self.Import()
+            if self.path.startswith(eg.PLUGIN_DIR):
+                moduleName = "eg.PluginModule." + self.pluginName
+            else:
+                moduleName = "eg.UserPluginModule." + self.pluginName
+            if moduleName in sys.modules:
+                del sys.modules[moduleName]
+            __import__(moduleName, None, None, [''])
         except RegisterPluginException:
             # It is expected that the loading will raise RegisterPluginException
             # because RegisterPlugin is called inside the module
@@ -64,6 +75,7 @@ class PluginModuleInfo(object):
         except:
             eg.PrintTraceback(eg.text.Error.pluginLoadError % self.path)
         finally:
+            del sys.path[0]
             eg.RegisterPlugin = originalRegisterPlugin
     
     
@@ -74,17 +86,6 @@ class PluginModuleInfo(object):
                     "PluginModuleInfo has no attribute %s" % name
                 )
             object.__setattr__(self, name, value)
-
-
-    def Import(self):
-        if self.path.startswith(eg.PLUGIN_DIR):
-            moduleName = "eg.PluginModule." + self.pluginName
-        else:
-            moduleName = "eg.UserPluginModule." + self.pluginName
-        if moduleName in sys.modules:
-            return sys.modules[moduleName]
-        module = __import__(moduleName, None, None, [''])
-        return module
 
 
     def RegisterPlugin(
@@ -106,10 +107,6 @@ class PluginModuleInfo(object):
             name = self.pluginName
         if description is None:
             description = name
-#        else:
-#            pos = description.find("<rst>")
-#            if pos != -1:
-#                description = DecodeReST(description[pos+5:])
         if help is not None:
             help = "\n".join([s.strip() for s in help.splitlines()])
             help = help.replace("\n\n", "<p>")
@@ -124,12 +121,8 @@ class PluginModuleInfo(object):
         self.url = unicode(url)
         self.guid = guid.upper()
         if not guid:
-            print "missing guid", self.path
-        else:
-            if guid in self._guids:
-                print "duplicate guid", self.path
-            else:
-                self._guids[guid] = self
+            eg.PrintDebugNotice("missing guid in plugin: %s" % self.path)
+            self.guid = self.pluginName
         # get the icon if any
         if icon is not None:
             self.icon = eg.Icons.StringIcon(icon)

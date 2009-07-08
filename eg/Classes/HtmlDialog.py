@@ -34,9 +34,9 @@ class HtmlDialog(eg.Dialog):
 
     def __init__(
         self, 
-        parent, 
-        title, 
-        htmldata, 
+        parent=None, 
+        title=eg.APP_NAME, 
+        source="", 
         icon=None, 
         basePath=None,
         style=wx.OK
@@ -53,7 +53,7 @@ class HtmlDialog(eg.Dialog):
         htmlCtrl = eg.HtmlWindow(self, -1, style=wx.SUNKEN_BORDER)
         htmlCtrl.SetBorders(2)
         htmlCtrl.SetBasePath(basePath)
-        htmlCtrl.SetPage(htmldata)
+        htmlCtrl.SetPage(source)
         buttonIds = []
         if style & wx.OK:
             buttonIds.append(wx.ID_OK)

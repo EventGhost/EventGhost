@@ -32,7 +32,6 @@ class EventGhostCom:
         'TriggerEvent', 
         'BringToFront', 
         'OpenFile',
-        'InstallPlugin',
     ]
     _reg_progid_ = "EventGhost"
     _reg_clsid_ = "{7EB106DC-468D-4345-9CFE-B0021039114B}"
@@ -49,11 +48,6 @@ class EventGhostCom:
     def OpenFile(self, filePath):
         eg.document.Open(filePath)
 
-
-    def InstallPlugin(self, filePath):
-        eg.document.ShowFrame()
-        eg.PluginInstall.Import(filePath)
-    
 
 # Patch win32com to use the gen_py directory in the programs
 # application data directory instead of its package directory.

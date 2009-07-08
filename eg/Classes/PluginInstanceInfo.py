@@ -15,6 +15,7 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+import sys
 from os.path import join, exists
 import eg
 from eg.Utils import SetDefault
@@ -60,8 +61,15 @@ class PluginInstanceInfo(eg.PluginModuleInfo):
         if not exists(pathname):
             eg.PrintError("File %s does not exist" % pathname)
             return False
+        if self.path.startswith(eg.PLUGIN_DIR):
+            moduleName = "eg.PluginModule." + self.pluginName
+        else:
+            moduleName = "eg.UserPluginModule." + self.pluginName
         try:
-            module = self.Import()
+            if moduleName in sys.modules:
+                module = sys.modules[moduleName]
+            else:
+                module = __import__(moduleName, None, None, [''])
         except:
             eg.PrintTraceback(
                 "Error while loading plugin-file %s." % self.path,
@@ -89,7 +97,6 @@ class PluginInstanceInfo(eg.PluginModuleInfo):
         pluginCls.name = text.name
         pluginCls.description = text.description
         return self
-
 
 
     def CreateInstance(self, args, evalName, treeItem):

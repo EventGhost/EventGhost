@@ -41,23 +41,22 @@ class UnknownPlugin(eg.PluginBase):
 
 
 
-
 class PluginManager:
 
     def __init__(self):
         self.database = {}
         self.guidDatabase = {}
-        self.ScanPlugins()
+        self.ScanAllPlugins()
 
 
     @eg.TimeIt
-    def ScanPlugins(self):
+    def ScanAllPlugins(self):
         """
         Scans the plugin directories to get all needed information for all
         plugins.
         """
-        database = self.database
-        guidDatabase = self.guidDatabase
+        self.database.clear()
+        self.guidDatabase.clear()
         
         # scan through all directories in the plugin directory
         for root in (eg.PLUGIN_DIR, eg.userPluginDir):
@@ -75,10 +74,10 @@ class PluginManager:
 
     def AddPlugin(self, pluginDir):
         info = eg.PluginModuleInfo(pluginDir)
-        dirname = os.path.basename(pluginDir)
-        self.database[dirname] = info
         if info.guid:
             self.guidDatabase[info.guid] = info
+        dirname = os.path.basename(pluginDir)
+        self.database[dirname] = info
         
         
     def RemovePlugin(self, pluginInfo):
@@ -94,6 +93,7 @@ class PluginManager:
         """
         Get a list of all PluginInfo for all plugins in the plugin directory
         """
+        self.ScanAllPlugins()
         infoList = self.database.values()
         infoList.sort(key=lambda x: x.name.lower())
         return infoList
@@ -111,6 +111,7 @@ class PluginManager:
         else:
             # we don't have such plugin
             clsInfo = eg.PluginInstanceInfo()
+            clsInfo.guid = guid
             clsInfo.name = pluginName + " not found"
             clsInfo.pluginName = pluginName
             clsInfo.pluginCls = UnknownPlugin

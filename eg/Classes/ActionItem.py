@@ -216,7 +216,7 @@ class ActionItem(TreeItem):
             self.helpDialog.Destroy()
             del self.helpDialog
         self.helpDialog.Bind(wx.EVT_CLOSE, OnClose)
-        self.helpDialog.okButton.Bind(wx.EVT_BUTTON, OnClose)
+        self.helpDialog.buttonRow.okButton.Bind(wx.EVT_BUTTON, OnClose)
         self.helpDialog.Show()
 
 

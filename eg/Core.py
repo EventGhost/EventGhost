@@ -96,7 +96,6 @@ from eg.WinApi.Dynamic import GetCurrentProcessId
 eg.processId = GetCurrentProcessId()
 Init.InitPil()
 
-
 def RestartAsyncore():
     """ Informs the asyncore loop of a new socket to handle. """
     oldDispatcher = eg.dummyAsyncoreDispatcher
@@ -344,6 +343,7 @@ eg.taskBarIcon = eg.TaskBarIcon(
     eg.startupArguments.isMain
     and not eg.startupArguments.translate
     and not eg.startupArguments.install
+    and not eg.startupArguments.pluginFile
 )
 eg.SetProcessingState = eg.taskBarIcon.SetProcessingState
 
