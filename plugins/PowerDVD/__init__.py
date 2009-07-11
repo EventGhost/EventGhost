@@ -42,7 +42,7 @@ ACTIONS = [
     ("StepBackward", "Step backward", "Goes to previous frame.", "e"),
     ("StepForward", "Step forward", "Goes to next frame.", "t"),
     ("ToggleFullscreen", "Toggle fullscreen", "Toggles between fullscreen and window mode.", "z"),
-    ("ToggleMute", "Toggle mute", "Mute volume.", "z"),
+    ("ToggleMute", "Toggle mute", "Mute volume.", "q"),
     ("VolumeUp", "Volume up", "Increase volume.", "+"),
     ("VolumeDown", "Volume down", "Decrease volume.", "-"),
     ("NextAudioStream", "Next audio stream", "Switches among available audio streams.", "h"),
