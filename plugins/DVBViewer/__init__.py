@@ -7,17 +7,17 @@ SUPPORTED_DVBVIEWERSERVICE_VERSIONS = '1.5.0.2'
 
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -31,22 +31,22 @@ README = (
 """
 <table border="0">
     <tr>
-        <td>Supported DVBViewer versions: </td>
+        <td align="right"  valign="top">Supported DVBViewer versions: </td>
 """
-'       <td>' + SUPPORTED_DVBVIEWER_VERSIONS + '</td>'
+'       <td align="left"  valign="top">' + SUPPORTED_DVBVIEWER_VERSIONS + '</td>'
 """
     </tr>
     <tr>
-        <td>Supported DVBViewerService versions: </td>
+        <td align="right"  valign="top">Supported DVBViewerService versions: </td>
 """
-'       <td>' + SUPPORTED_DVBVIEWERSERVICE_VERSIONS +'</td>'
+'       <td align="left"  valign="top">' + SUPPORTED_DVBVIEWERSERVICE_VERSIONS +'</td>'
 """
     </tr>
 </table>
- 
+
 The supported DVBViewer actions are documented in
  <a href="http://wiki.dvbviewer.info/index.php/Actions.ini">this wiki</a>
- 
+
 This plugin supports following additional actions, which are executed via the COM interface of the DVBViewer: 
 <table border="1">
     <tr>
@@ -132,7 +132,7 @@ The plugin supports two types of generation events.
  
 Both types can be used in parallel 
  
-  
+ 
 Following events can be fired:
 <table border="1">
     <tr>
@@ -289,7 +289,6 @@ Following events can be fired:
 </table>
  
  
-
 Follwing table shows the possible RendererTyes and PlaysStates:
 
 <table border="1">
@@ -298,24 +297,24 @@ Follwing table shows the possible RendererTyes and PlaysStates:
         <th align="left">   <b>Type of renderer causing the event</b></th>
     </tr>
     <tr>
-        <td align="right">-1</td>    
-        <td>Ratio changed, PlaysState shows ratio  (only on RenderPlaystateChange event)</td>    
+        <td align="right">-1</td>
+        <td>Ratio changed, PlaysState shows ratio  (only on RenderPlaystateChange event)</td>
     </tr>
     <tr>
-        <td align="right">0</td>    
-        <td>Unknown</td>    
+        <td align="right">0</td>
+        <td>Unknown</td>
     </tr>
     <tr>
-        <td align="right">1</td>    
-        <td>VideoAudioDVD</td>    
+        <td align="right">1</td>
+        <td>VideoAudioDVD</td>
     </tr>
     <tr>
-        <td align="right">2</td>    
-        <td>DVB</td>    
+        <td align="right">2</td>
+        <td>DVB</td>
     </tr>
     <tr>
-        <td align="right">3</td>    
-        <td>MPG2TS</td>    
+        <td align="right">3</td>
+        <td>MPG2TS</td>
     </tr>
 </table>
 
@@ -326,29 +325,29 @@ Follwing table shows the possible RendererTyes and PlaysStates:
         <th align="left">   <b>state changed into</b></th>
     </tr>
     <tr>
-        <td align="right">0</td>    
-        <td>Stop</td>    
+        <td align="right">0</td>
+        <td>Stop</td>
     </tr>
     <tr>
-        <td align="right">1</td>    
-        <td>Pause</td>    
+        <td align="right">1</td>
+        <td>Pause</td>
     </tr>
     <tr>
-        <td align="right">2</td>    
-        <td>Play</td>    
+        <td align="right">2</td>
+        <td>Play</td>
     </tr>
 </table>
 
-This plugin contains a watch dog, which detects if DVBViewer is running
-and is synchronising the number of active recordings with the internal recording counter.
-The watch dog is always enabled and the period time of checking can be modified
-(Default: 60s) in the configuration.
-The Watch-Dog is also responsible for the DVBService monitor. in this case at the beginning
-and end of a recording, an event is fired.
+This plugin contains a watchdog which detects if the DVBViewer is running,
+and synchronize the number of active recording with the internal counter.
+The watchdog is always enabled and the period of checking can be changed in
+the configuration (default: 60s).<br>
+The watchdog is also responsible for monitoring the DVBViewerService. Through
+the watchdog is at the beginning and end of each recording an event fired.
 
 Two different start methods of the DVBViewer are supported and can be selected in the configuration:
 <ol>
-    <li>Via the COM interface (like plugin version 1.2) (Default)</li> 
+    <li>Via the COM interface (like plugin version 1.2) (Default)</li>
     <li>By command line. Solves some DVBViewer plugin problems.</li>
 </ol>
 
@@ -364,7 +363,7 @@ eg.RegisterPlugin(
     createMacrosOnAdd = True,
     description = (
         'Adds support functions to control <a href="http://www.dvbviewer.com/">'
-        'DVBViewer Pro/GE</a> and returns events.'
+        'DVBViewer Pro/GE and DVBViewerService</a> and returns events.'
     ),
     help = README,
     icon = (
@@ -397,8 +396,10 @@ ACCOUNT_CHOICES   = ['DVBService','Task scheduler']
 INDEX_DVBSERVICE  = ACCOUNT_CHOICES.index( 'DVBService' )
 INDEX_SCHEDULER   = ACCOUNT_CHOICES.index( 'Task scheduler' )
 
-
-
+#connectionMode:
+WAIT_CHECK_START_CONNECT  = 0   #wait for free, check if executing, start if not executing, connect
+CONNECT                   = 1   #connect
+CHECK_CONNECT             = 2   #connect only, if executing
 
 DVBVIEWER_WINDOWS = {
     2007: "SLIDESHOW",
@@ -632,7 +633,6 @@ ACTIONS = (
 
 
 
-
 windowDVBViewer = eg.WindowMatcher( u'dvbviewer.exe',
                                     winName=u'DVB Viewer{*}',
                                     timeout=20 )
@@ -657,8 +657,8 @@ from threading import Thread, Event, Timer, Lock
 from time import sleep, time, strptime, mktime, ctime, strftime, localtime, asctime
 from eg.WinApi.Dynamic import (
     byref, sizeof, CreateProcess, WaitForSingleObject, FormatError,
-    CloseHandle, create_unicode_buffer, 
-    STARTUPINFO, PROCESS_INFORMATION, 
+    CloseHandle, create_unicode_buffer,
+    STARTUPINFO, PROCESS_INFORMATION,
     CREATE_NEW_CONSOLE, STARTF_USESHOWWINDOW
 )
 from urllib2 import ( HTTPPasswordMgrWithDefaultRealm, HTTPBasicAuthHandler,
@@ -711,7 +711,7 @@ class Text:
     serviceEnable         = "Enable     "
     serviceAddress        = "Address and Web port"
     serviceEvent          = "Source event name"
-    
+
     serviceDVBViewer      = " By DVBViewer"
     serviceDVBService     = " By DVBViewerService"
     serviceUpdate         = " Update from DVBViewerService"
@@ -721,17 +721,21 @@ class Text:
         name = "Start DVBViewer"
         description = "Start DVBViewer through COM-API. For DVBViewer Pro only."
 
+
     class CloseDVBViewer :
         name = DVBVIEWER_CLOSE[0]
         checkBoxText = "Wait until DVBViewer is terminated"
+
 
     class StopAllActiveRecordings :
         name = "Stop all active recordings"
         description = "Remove all active recordings from the timer list."
 
+
     class SendAction :
         name   = "Send action to DVBViewer"
         action = "Action: "
+
 
     class GetSetupValue :
         name = "Gets a value from the setup.xml of the DVBViewer."
@@ -739,31 +743,36 @@ class Text:
         setupName = "Name: "
         default = "Default: "
 
+
     class GetDateOfRecordings :
         name = "Get dates of next recordings"
-        description =   (   
+        description =   (
                             "Return the date(s) of the recordings as a floating "
                             "point number expressed in seconds since the epoch, in UTC."
                             "The date is negative if no recording is planed."
                         )
         all = "Get dates of all recodings"
 
+
     class GetRecordingsIDs :
         name   = "Get IDs of recordings"
         active = "Get only IDs of active recordings"
-        
+
+
     class ShowInfoinTVPic :
         name  = "Show the Infobar in the TVPicture."
         text  = "Displayed message: "
         time  = "Timeinterval [s]: "
         force = "Start DVBViewer if not executing"
 
+
     class DeleteInfoinTVPic :
         name  = "Delete the Infobar in the TVPicture."
 
+
     class UpdateEPG :
         name = "Update EPG"
-        description =   (   
+        description =   (
                             "For updating, one channel change for each transponder/booklet"
                             "will be done. If a recording is active, the executing of the EPG"
                             "update will be delayed until the recording is finished."
@@ -771,7 +780,8 @@ class Text:
         disableAV             = "Disable AV"
         time  = "Time between channel change: "
         event = "Fired event after update finished: "
-    
+
+
     class AddRecording :
         name = "Add recording to the timer"
         description = (
@@ -801,6 +811,7 @@ class Text:
         actionAfterRecChoices = ( "No action","PowerOff", "Standby", "Hibernate",
                                   "Close", "Playlist", "Slumbermode" )
 
+
     class TaskScheduler :
         name = "Update Windows task scheduler"
         description = (
@@ -816,16 +827,16 @@ class Text:
 
 class EventHandler:
 
-    # The event gets fired whenever a new action is processed. 
+    # The event gets fired whenever a new action is processed.
     # Parameter :
     #       ActionID        ID of the action ( see actions.ini in the DVBViewer folder)
     #
-    
+
     def __init__( self ) :
         self.lastActiveChannelNr = -1
 
 
-    
+
     def OnonAction(self, ActionID):
         plugin = self.plugin
         if ActionID == DUMMY_ACTION :
@@ -867,7 +878,7 @@ class EventHandler:
 
     # The event gets fired whenever a new Timer is added.
     # Parameter :
-    #       ID              ID of the newly added timer. 
+    #       ID              ID of the newly added timer.
     #
     def OnonAddRecord(self, ID):
         plugin = self.plugin
@@ -880,9 +891,9 @@ class EventHandler:
 
 
 
-    # The event gets fired whenever a recording starts. 
+    # The event gets fired whenever a recording starts.
     # Parameter :
-    #       ID                          ID of the timer. 
+    #       ID                          ID of the timer.
     #       numberOfActiveRecordings    Number of recordings which are now active
     #
     @eg.LogIt
@@ -903,7 +914,7 @@ class EventHandler:
 
 
 
-    # The event gets fired whenever a OSD-window is activated. 
+    # The event gets fired whenever a OSD-window is activated.
     # Parameter :
     #       WindowID        ID of the OSD-window.
     #
@@ -919,9 +930,9 @@ class EventHandler:
 
 
 
-    # The event gets fired whenever an OSD Control gets the focus. 
+    # The event gets fired whenever an OSD Control gets the focus.
     # Parameters
-    #       WindowID        ID of the OSD window the control belongs to. 
+    #       WindowID        ID of the OSD window the control belongs to.
     #       ControlID       ID of the OSD-control.
     #
     def OnonControlChange(self, WindowID, ControlID):
@@ -942,7 +953,7 @@ class EventHandler:
 
 
 
-    # The event gets fired whenever a new RDS Text arrives. 
+    # The event gets fired whenever a new RDS Text arrives.
     # Parameters
     #       RDS             The RDS text.
     #
@@ -956,9 +967,9 @@ class EventHandler:
 
 
 
-    # The event gets fired whenever a new playlistitem starts playing. 
+    # The event gets fired whenever a new playlistitem starts playing.
     # Parameter :
-    #       Filename        Filename of the starting playlistitem. 
+    #       Filename        Filename of the starting playlistitem.
     #
     def OnonPlaylist(self, Filename):
         self.TriggerEvent("Playlist", str(Filename))
@@ -983,15 +994,16 @@ class EventHandler:
         return True
 
 
-    # The event gets fired whenever the internal playstate changes. 
+
+    # The event gets fired whenever the internal playstate changes.
     # Parameter :
-    #       RendererType    Type of renderer causing the event. 
+    #       RendererType    Type of renderer causing the event.
     #                       :=  0   Unknown
     #                       :=  1   VideoAudioDVD
     #                       :=  2   DVB
     #                       :=  3   MPG2TS
     #                       := -1   Ratio changed, state shows ratio
-    #   
+    #
     #       State           state changed into.
     #                       :=  0   Stop
     #                       :=  1   Pause
@@ -1034,11 +1046,11 @@ class EventHandler:
     # The event gets fired when the DVBViewer is shutting down.
     @eg.LogIt
     def OnonDVBVClose(self):
-    
+
         self.plugin.lockedByTerminate = self.plugin.executionStatusChangeLock.acquire( blocking = False, timeout = TERMINATE_TIMEOUT )
-    
+
         plugin = self.plugin
-        
+
         if not plugin.closeWaitActive :
             plugin.closeWaitActive = True
             plugin.closeWaitLock.acquire( timeout = TERMINATE_TIMEOUT )
@@ -1053,7 +1065,7 @@ class EventHandler:
 class DVBViewerTerminateThread( Thread ) :
 
     def __init__( self, plugin ) :
-    
+
         Thread.__init__(self, name="DVBViewerTerminateThread")
         self.plugin = plugin
 
@@ -1062,41 +1074,41 @@ class DVBViewerTerminateThread( Thread ) :
     @eg.LogItWithReturn
     def run(self) :
         plugin = self.plugin
-        
+
         plugin.lockedByTerminate |= plugin.executionStatusChangeLock.acquire( blocking = False, timeout = TERMINATE_TIMEOUT )
-        
+
         workerThread = self.plugin.workerThread
-        
+
         if workerThread is None :
             self.plugin.executionStatusChangeLock.release()
             eg.PrintDebugNotice( "DVBViewer is not disconnected by the close event processing" )
             return True
-            
+
         plugin.lockedByTerminate |= plugin.executionStatusChangeLock.acquire( blocking = False, timeout = TERMINATE_TIMEOUT )
 
         plugin.workerThread = None
-        
+
         plugin.lockedByTerminate |= plugin.executionStatusChangeLock.acquire( blocking = False, timeout = TERMINATE_TIMEOUT )
-        
+
         CoInitialize()
-        
+
         plugin.lockedByTerminate |= plugin.executionStatusChangeLock.acquire( blocking = False, timeout = TERMINATE_TIMEOUT )
 
         WMI = GetObject('winmgmts:')
-        
+
         plugin.lockedByTerminate |= plugin.executionStatusChangeLock.acquire( blocking = False, timeout = TERMINATE_TIMEOUT )
-        
+
         events = WMI.ExecNotificationQuery(
                         "SELECT * FROM __InstanceDeletionEvent  WITHIN 1 "
                         "WHERE TargetInstance ISA 'Win32_Process' "
                         "AND TargetInstance.Name='dvbviewer.exe'" )
-                        
+
         plugin.lockedByTerminate |= plugin.executionStatusChangeLock.acquire( blocking = False, timeout = TERMINATE_TIMEOUT )
 
         finished = True
-        
+
         if len( WMI.ExecQuery('select * from Win32_Process where Name="dvbviewer.exe"') ) > 0 :
-        
+
             try :
                 events.NextEvent( TERMINATE_TIMEOUT * 1000 )
 
@@ -1110,9 +1122,9 @@ class DVBViewerTerminateThread( Thread ) :
 
         if finished :
             plugin.DVBViewerIsFinished()
-            
+
         plugin.lockedByTerminate |= plugin.executionStatusChangeLock.acquire( blocking = False, timeout = TERMINATE_TIMEOUT )
-       
+
         if workerThread is not None :
             if workerThread.Stop( TERMINATE_TIMEOUT ) :
                 eg.PrintError("Could not terminate DVBViewer thread")
@@ -1121,19 +1133,19 @@ class DVBViewerTerminateThread( Thread ) :
         plugin.lockedByTerminate |= plugin.executionStatusChangeLock.acquire( blocking = False, timeout = TERMINATE_TIMEOUT )
 
         del events
-        
+
         plugin.lockedByTerminate |= plugin.executionStatusChangeLock.acquire( blocking = False, timeout = TERMINATE_TIMEOUT )
-        
+
         del WMI
-        
+
         plugin.lockedByTerminate |= plugin.executionStatusChangeLock.acquire( blocking = False, timeout = TERMINATE_TIMEOUT )
-        
+
         CoUninitialize()
-        
+
         plugin.lockedByTerminate |= plugin.executionStatusChangeLock.acquire( blocking = False, timeout = TERMINATE_TIMEOUT )
-        
+
         plugin.terminateThread = None
-        
+
         if plugin.lockedByTerminate :
             plugin.executionStatusChangeLock.release()
         return finished
@@ -1145,17 +1157,17 @@ class DVBViewerWorkerThread(eg.ThreadWorker):
     """
     Handles the COM interface in a thread of its ownn
     """
-    
+
     @eg.LogItWithReturn
     def Setup(self, plugin):
         """
         This will be called inside the thread at the beginning.
         """
         self.plugin = plugin
-        
+
         self.dvbviewer                 = None
         self.comObj_IDVBViewerEvents   = None
-        
+
         self.dvbviewer = EnsureDispatch("DVBViewerServer.DVBViewer")
         # try if we can get an attribute from the COM instance
         self.dvbviewer.CurrentChannelNr
@@ -1202,7 +1214,7 @@ class DVBViewerWorkerThread(eg.ThreadWorker):
     def TuneChannelIfNotRecording( self, channelNr, text = "", time = 0.0) :
         dvbviewer = self.dvbviewer
         timerCollection = dvbviewer.TimerManager
-        
+
         if not timerCollection.Recording :
             dvbviewer.CurrentChannelNr = channelNr
             self.ShowInfoinTVPic( text, time + 2 )
@@ -1266,7 +1278,7 @@ class DVBViewerWorkerThread(eg.ThreadWorker):
             plugin.playBackMode = "DVD"
         else :
             plugin.playBackMode = "MEDIA"
-        
+
         if last != plugin.playBackMode :
             if plugin.playBackMode != "NONE" :
                 plugin.TriggerEvent("Playbackstart")
@@ -1284,19 +1296,19 @@ class DVBViewerWorkerThread(eg.ThreadWorker):
 
 
     def AddRecording( self,
-                      channelID, 
+                      channelID,
                       date,                 # dd.mm.yyyy
                       startTime,            # hh:mm
                       endTime,              # hh:mm
                       description = "",
                       disableAV = False,
                       enabled = True,
-                      recAction = 0,        # intern = 0, tune only = 1, 
-                                            # AudioPlugin = 2, Videoplugin = 3 
-                                            
-                      actionAfterRec = 0,   # No action = 0, PowerOff = 1, 
+                      recAction = 0,        # intern = 0, tune only = 1,
+                                            # AudioPlugin = 2, Videoplugin = 3
+
+                      actionAfterRec = 0,   # No action = 0, PowerOff = 1,
                                             # Standby = 2, Hibernate = 3, Close = 4,
-                                            # Playlist = 5, Slumbermode: = 6 
+                                            # Playlist = 5, Slumbermode: = 6
                       days = "-------"
                       ) :
 
@@ -1304,24 +1316,17 @@ class DVBViewerWorkerThread(eg.ThreadWorker):
 
         pStart = PyTime( strptime( startTime, "%H:%M" ) ) #- PyTime( strptime( "00:00", "%H:%M" ) )
         pEnd   = PyTime( strptime( endTime,   "%H:%M" ) ) #- PyTime( strptime( "00:00", "%H:%M" ) )
-        
+
         count = self.dvbviewer.TimerManager.Count
-        
+
         try :
-            timerItem = self.dvbviewer.TimerManager.AddItem( channelID, pDate, pStart, pEnd, 
-                                                             description, disableAV, enabled, 
+            timerItem = self.dvbviewer.TimerManager.AddItem( channelID, pDate, pStart, pEnd,
+                                                             description, disableAV, enabled,
                                                              recAction, actionAfterRec, days )
         except :
             pass        #in case of "this is deprecated and will go away on"
-                                             
+
         return True
-
-
-
-#connectionMode:
-WAIT_CHECK_START_CONNECT  = 0   #wait for free, check if executing, start if not executing, connect
-CONNECT                   = 1   #connect
-CHECK_CONNECT             = 2   #connect only, if executing
 
 
 
@@ -1329,7 +1334,7 @@ CHECK_CONNECT             = 2   #connect only, if executing
 class DVBViewerWatchDogThread( Thread ) :
 
     def __init__( self, plugin, watchDogTime ) :
-    
+
         Thread.__init__(self, name="DVBViewerWatchDogThread")
         self.plugin = plugin
         self.abort = False
@@ -1344,26 +1349,26 @@ class DVBViewerWatchDogThread( Thread ) :
             return False
         plugin = self.plugin
         CoInitialize()
-        
+
         queryTime = 5
-        
+
         if self.watchDogTime < queryTime :
             queryTime = self.watchDogTime
-            
+
         query = (
                 "SELECT * FROM __InstanceOperationEvent  WITHIN " + str( queryTime) +
                 " WHERE TargetInstance ISA 'Win32_Process' "
                 "AND TargetInstance.Name='dvbviewer.exe'" )
-                
+
         WMI = GetObject('winmgmts:')
-        
+
         eventSource = WMI.ExecNotificationQuery( query )
-        
+
         self.started = len( WMI.ExecQuery('select * from Win32_Process where Name="dvbviewer.exe"') ) > 0
 
         nextTimeViewer = time()
         nextTimeService = nextTimeViewer + self.watchDogTime / 2
-        
+
         timeout = True
 
         while not self.abort :
@@ -1386,20 +1391,20 @@ class DVBViewerWatchDogThread( Thread ) :
                 if now < nextTimeViewer :
                     continue
                 timeout = True
-                    
+
             plugin.executionStatusChangeLock.acquire( timeout = TERMINATE_TIMEOUT )
-            
+
             started = len( WMI.ExecQuery('select * from Win32_Process where Name="dvbviewer.exe"') ) > 0
             if self.started == started and not timeout :
                 plugin.executionStatusChangeLock.release()
                 continue
             self.started = started
             timeout = False
-                
+
             #print "started = ", self.started, "  workerThread = ", plugin.workerThread
-                    
+
             nextTimeViewer = time() + self.watchDogTime
-            
+
             if not self.started and plugin.workerThread is not None :
                 #print "WatchDog: Disconnect"
                 eg.PrintDebugNotice( "Termination of DVBViewer detected by watch dog" )
@@ -1412,10 +1417,10 @@ class DVBViewerWatchDogThread( Thread ) :
                 #print "WatchDog: Connect"
                 eg.PrintDebugNotice( "DVBViewer will be connected by watch dog" )
                 plugin.Connect( CONNECT )
-                
+
             if plugin.workerThread is not None and not plugin.closeWaitActive :
                 #print "WatchDog: Update recordings"
-                
+
                 try :
                     plugin.checkEventHandlingLock.acquire( blocking = False, timeout = CALLWAIT_TIMEOUT )
                     if plugin.SendCommand( DUMMY_ACTION, lock = False, connectionMode = CHECK_CONNECT ) :
@@ -1456,7 +1461,7 @@ class DVBViewerWatchDogThread( Thread ) :
 
 class DVBViewer(eg.PluginClass):
     text = Text
-    
+
     class LockWithTimeout :
 
         def Timeout( self ) :
@@ -1527,7 +1532,7 @@ class DVBViewer(eg.PluginClass):
         self.AddAction(GetSetupValue)
         self.AddAction(GetDVBViewerObject, hidden = True)
         self.AddAction(ExecuteDVBViewerCommandViaCOM, hidden = True)
-        
+
         class ActionPrototype(eg.ActionClass):
             def __call__(self2):
                 if self2.value[1] :
@@ -1536,8 +1541,8 @@ class DVBViewer(eg.PluginClass):
                     connectionMode = CHECK_CONNECT
                 return self.SendCommand(self2.value[0], connectionMode = connectionMode )
         self.AddActionsFromList(ACTIONS, ActionPrototype)
-            
-        # create a new subclass of the EventHandler with the ability to use 
+
+        # create a new subclass of the EventHandler with the ability to use
         # the plugin's TriggerEvent method
         class SubEventHandler(EventHandler):
             plugin = self
@@ -1547,15 +1552,15 @@ class DVBViewer(eg.PluginClass):
         self.workerThread    = None
         self.terminateThread = None
         self.watchDogThread  = None
-        
+
         self.oldInterface = False
         self.newInterface = True
         self.startDVBViewerByCOM = False,
         self.pathDVBViewer = ""
-        
+
         #new status variables
         self.DVBViewerStartedByCOM = False
-        
+
         self.numberOfActiveRecordings = 0
         self.actualWindowID = -1
         self.actualDisplayMode=""
@@ -1568,14 +1573,14 @@ class DVBViewer(eg.PluginClass):
         self.playBackMode = "NONE"
         self.lastRatio   = -1
         self.actualRatio = -1
-        
+
         self.tvChannels = []
         self.radioChannels = []
         self.channelIDbyIDList = {}
         self.IDbychannelIDList = {}
 
         self.frequencies = {}
-        
+
         self.completeRecordingsInfo = []
 
         self.indexTV    = 0
@@ -1583,22 +1588,22 @@ class DVBViewer(eg.PluginClass):
 
         self.tuneEPGThread = None
         self.disableAV = False
-        
+
         self.accounts  = self.HandlePasswordFile()
         if self.accounts is None or len( self.accounts ) != len( self.text.accountChoices ) :
             self.accounts  = [('','')]*len( self.text.accountChoices )
-                
+
         self.key = []
         self.scheduledRecordings = []
         self.numberOfScheduledRecordings = -1
-        
+
         self.updateRecordingsTimer = None
-        
+
         self.updateRecordingsLock      = self.LockWithTimeout( "UpdateRecordings" )
-        
+
         self.executionStatusChangeLock = self.LockWithTimeout( "ExecutionStatusChange" )
         self.lockedByTerminate = False
-        
+
         def CheckEventHandlingFunc( self, plugin ) :
             plugin.checkEventHandlingLock.release()
             eg.PrintDebugNotice("DVBViewer event handling not alive")
@@ -1618,12 +1623,11 @@ class DVBViewer(eg.PluginClass):
         self.closeWaitLock             = self.LockWithTimeout( "CloseWait", WaitForTerminationTimeoutFunc, self )
         self.closeWaitActive  = False
         self.timeout = False
-        
+
         self.infoInTVPicTimeout = 0.0
-        
+
         self.DVBViewerService = None
         self.useService = False
-
 
 
 
@@ -1650,7 +1654,7 @@ class DVBViewer(eg.PluginClass):
 
     @eg.LogItWithReturn
     def __start__(  self,
-                    useSendMessage=False, 
+                    useSendMessage=False,
                     oldInterface = True,
                     newInterface = False,
                     startDVBViewerByCOM = True,
@@ -1688,38 +1692,38 @@ class DVBViewer(eg.PluginClass):
         self.shortDisplayEvent     = shortDisplay
         self.longPlayStateEvent    = longPlayState
         self.shortPlayStateEvent   = shortPlayState
-                    
+
         self.schedulerTaskNamePrefix = schedulerTaskNamePrefix
         self.schedulerEventName      = schedulerEventName
         self.schedulerLeadTime       = schedulerLeadTime
         self.scheduleAllRecordings   = scheduleAllRecordings
         self.schedulerEntryHidden    = schedulerEntryHidden
-        
+
         self.scheduledRecordings = []
         self.numberOfScheduledRecordings = -1
-        
+
         self.firedRecordingsIDs = []
-        
+
         eg.PrintDebugNotice( "DVBViewer plugin started on " + strftime("%d %b %Y %H:%M:%S", localtime() ))
-        
+
         self.useService     = useService
         self.serviceAddress = serviceAddress
         self.serviceEvent   = serviceEvent
 
         if not self.useService :
             return True
-            
+
         #DVBViewerService:
-        
+
         self.service = DVBViewerService( self, serviceAddress = self.serviceAddress,
                                          account = self.accounts[INDEX_DVBSERVICE],
                                          serviceEvent = self.serviceEvent )
-        
+
         version = self.service.GetVersion()
-        
+
         if version is not None :
             eg.PrintDebugNotice( "DVBViewerServiceVersion : ", version )
-        
+
         return True
 
 
@@ -1730,7 +1734,7 @@ class DVBViewer(eg.PluginClass):
         # stopping the DVBViewer Thread. Otherwise the DVBViewer is going into an endless loop.
         if self.tuneEPGThread is not None :
             self.tuneEPGThread.Finish()
-        
+
         if self.watchDogThread is not None :
             self.watchDogThread.Finish()
             self.watchDogThread.join()
@@ -1748,10 +1752,10 @@ class DVBViewer(eg.PluginClass):
                 self.executionStatusChangeLock.release()
         else :
             self.executionStatusChangeLock.release()
-            
+
         if self.DVBViewerService is not None :
             del self.DVBViewerService
-        
+
         return True
 
 
@@ -1790,7 +1794,7 @@ class DVBViewer(eg.PluginClass):
 
 
     def UpdateRecordingsByDVBViewerEvent( self ) :
-    
+
         @eg.LogItWithReturn
         def UpdateRecordings(self) :
             plugin = self
@@ -1808,9 +1812,9 @@ class DVBViewer(eg.PluginClass):
 
         self.updateRecordingsTimer = Timer( 1.1, self.UpdateRecordings )  #A thread is necessary in case of a DVBViewer dead lock
         self.updateRecordingsTimer.start()
-        
+
         lock.release()
-        
+
         return True
 
 
@@ -1829,22 +1833,22 @@ class DVBViewer(eg.PluginClass):
             recordingsIDs = [ record[ 4 ] for record in completeRecordingsInfo if record[ 11 ] ]
         else :
             started = False
-            
+
             completeRecordingsInfo = []
             recordingsIDs = []
-            
+
         if lock :
             self.executionStatusChangeLock.release()
-            
+
         numberOfActiveRecordings = len( recordingsIDs )
-        
+
         newRecordingsIDs     = [ ID for ID in recordingsIDs if ID not in self.firedRecordingsIDs ]
         #print "newRecordingsIDs = ", newRecordingsIDs
-        
+
         updatedRecordings = 0
 
         if self.numberOfActiveRecordings != numberOfActiveRecordings or len( newRecordingsIDs ) != 0 :
-        
+
             deletedRecordingsIDs = [ ( count, ID ) for count, ID in enumerate( self.firedRecordingsIDs ) if ID not in recordingsIDs ]
             #print "deletedRecordingsIDs = ", deletedRecordingsIDs
             #print "self.firedRecordingsIDs = ", self.firedRecordingsIDs
@@ -1853,7 +1857,7 @@ class DVBViewer(eg.PluginClass):
             for v in deletedRecordingsIDs :
                 self.numberOfActiveRecordings -= 1
                 if self.oldInterface :
-                    self.TriggerEvent( "EndRecord" )               
+                    self.TriggerEvent( "EndRecord" )
                 if self.newInterface :
                     self.TriggerEvent( "EndRecord", ( v[1], self.numberOfActiveRecordings ) )
                 del self.firedRecordingsIDs[ v[0] - removed ]
@@ -1862,7 +1866,7 @@ class DVBViewer(eg.PluginClass):
             for ID in newRecordingsIDs :
                 self.numberOfActiveRecordings += 1
                 if self.oldInterface :
-                    self.TriggerEvent("StartRecord", str(ID) )               
+                    self.TriggerEvent("StartRecord", str(ID) )
                 if self.newInterface :
                     self.TriggerEvent( "StartRecord", ( ID, self.numberOfActiveRecordings ) )
                 self.firedRecordingsIDs.append( ID )
@@ -1918,10 +1922,10 @@ class DVBViewer(eg.PluginClass):
                 channelIDbyIDList[ id ] = channelID
                 IDbychannelIDList[ channelID ] = id
                 channelList.append( entry[1] )
-            
+
         tvChannels = []
         radioChannels = []
-        
+
         list = self.workerThread.CallWait( partial( self.workerThread.GetChannelList ), CALLWAIT_TIMEOUT )
         channelNr = 0
         for channel in list[1] :
@@ -1940,12 +1944,12 @@ class DVBViewer(eg.PluginClass):
 
         radioChannels.sort( cmp=lambda x,y: cmp(x[1].lower(), y[1].lower()) )
         tvChannels.sort( cmp=lambda x,y: cmp(x[1].lower(), y[1].lower()) )
-        
+
         GetChannelList( tvChannels, True, self.channelIDbyIDList, self.IDbychannelIDList, self.tvChannels )
         GetChannelList( radioChannels, False, self.channelIDbyIDList, self.IDbychannelIDList, self.radioChannels )
-                
+
         #print self.frequencies
-        
+
         return True
 
 
@@ -1967,26 +1971,26 @@ class DVBViewer(eg.PluginClass):
 
 
     def WaitForTermination( self, sendCloseCommand = False, block = True ) :
-    
+
         self.executionStatusChangeLock.acquire()
-    
+
         if block :
             self.closeWaitActive = True
 
         if sendCloseCommand :
             self.SendCommand( DVBVIEWER_CLOSE[1], lock = False )
-        
+
         if block :
             self.closeWaitLock.acquire( timeout = TERMINATE_TIMEOUT )
 
         self.timeout = False
-        
+
         self.executionStatusChangeLock.release()
-        
+
         if block :
             self.closeWaitLock.acquire()
             self.closeWaitLock.release()
-                        
+
         return not self.timeout
 
 
@@ -1999,7 +2003,7 @@ class DVBViewer(eg.PluginClass):
         def WaitForDVBViewerWindow() :
             hwnds = windowDVBViewer()
             return len(hwnds)>0
-            
+
         self.closeWaitLock.acquire()
         self.closeWaitLock.release()
 
@@ -2007,7 +2011,7 @@ class DVBViewer(eg.PluginClass):
             self.executionStatusChangeLock.acquire()
 
         started = False
-        
+
         if self.workerThread is None :
 
             if connectingMode != CONNECT :
@@ -2074,7 +2078,7 @@ class DVBViewer(eg.PluginClass):
                     self.GetChannelLists()
                     #print self.tvChannels
                     #print self.radioChannels
-                    
+
         if lock :
             self.executionStatusChangeLock.release()
 
@@ -2087,54 +2091,53 @@ class DVBViewer(eg.PluginClass):
         def onCheckBox( event ) :
             viewer  =  viewerCheckBoxCtrl.GetValue()
             service = serviceCheckBoxCtrl.GetValue()
-            
+
             if viewer == False and service == False :
                 viewerCheckBoxCtrl.SetValue(  not self.lastEnableDVBViewer )
                 serviceCheckBoxCtrl.SetValue( not self.lastEnableDVBService )
             self.lastEnableDVBViewer  = viewerCheckBoxCtrl.GetValue()
             self.lastEnableDVBService = serviceCheckBoxCtrl.GetValue()
             event.Skip()
-            
+
         def getFlags() :
             return viewerCheckBoxCtrl.GetValue(), serviceCheckBoxCtrl.GetValue(), updateCheckBoxCtrl.GetValue()
 
         if panel is None :
             panel = eg.ConfigPanel()
-        
+
         text = self.text
-        
+
         self.lastEnableDVBViewer  = enableDVBViewer
         self.lastEnableDVBService = enableDVBService
-        
+
         viewerCheckBoxCtrl = wx.CheckBox(panel, -1, text.serviceDVBViewer)
         viewerCheckBoxCtrl.SetValue( enableDVBViewer )
         viewerCheckBoxCtrl.Bind(wx.EVT_CHECKBOX, onCheckBox)
-        
+
         serviceCheckBoxCtrl = wx.CheckBox(panel, -1, text.serviceDVBService)
         serviceCheckBoxCtrl.SetValue( enableDVBService )
         serviceCheckBoxCtrl.Bind(wx.EVT_CHECKBOX, onCheckBox)
-        
+
         updateCheckBoxCtrl = wx.CheckBox(panel, -1, text.serviceUpdate)
         updateCheckBoxCtrl.SetValue( updateDVBService )
-        
+
         panel.sizer.Add( viewerCheckBoxCtrl )
         panel.sizer.Add(wx.Size(0,5))
         panel.sizer.Add( serviceCheckBoxCtrl )
         panel.sizer.Add(wx.Size(0,10))
         panel.sizer.Add( updateCheckBoxCtrl )
-        
-        
-        if affirmed :        
+
+
+        if affirmed :
             while panel.Affirmed():
-            
-                panel.SetResult( 
+
+                panel.SetResult(
                                 viewerCheckBoxCtrl.GetValue(),
                                 serviceCheckBoxCtrl.GetValue(),
                                 updateCheckBoxCtrl.GetValue()
                                )
         else :
             return getFlags
-        
 
 
 
@@ -2167,7 +2170,7 @@ class DVBViewer(eg.PluginClass):
             pro = radioBox.GetSelection() != 1
             for ctrl in enableControls :
                 ctrl.Enable( pro )
-            
+
             if pro :
                 onCommandCheckBox(wx.CommandEvent())
                 onPasswordChange(wx.CommandEvent())
@@ -2187,18 +2190,18 @@ class DVBViewer(eg.PluginClass):
             self.lastOld = old
             self.lastNew = new
             event.Skip()
-            
-       
+
+
         def onCommandCheckBox( event ) :
             enable = useCommandCheckBoxCtrl.GetValue()
-            dvbviewerFileCtrl.Enable( enable )        
+            dvbviewerFileCtrl.Enable( enable )
             argumentsCtrl.Enable( enable )
             event.Skip()
 
 
         def onServiceCheckBox( event ) :
             enable = serviceCheckBoxCtrl.GetValue()
-            serviceAddressCtrl.Enable( enable )        
+            serviceAddressCtrl.Enable( enable )
             serviceEventCtrl.Enable( enable )
             if enable :
                 index = INDEX_DVBSERVICE
@@ -2210,17 +2213,16 @@ class DVBViewer(eg.PluginClass):
 
         def onAccountTypeChange( event ) :
             accountTypeIndex = text.accountChoices.index( accountTypeCtrl.GetValue() )
-            
+
             if self.lastAccountTypeIndex >= 0 :
                 self.accounts[ self.lastAccountTypeIndex ]  = ( accountCtrl.GetValue(), password1Ctrl.GetValue())
-                
+
             accountCtrl.SetValue( self.accounts[ accountTypeIndex ][0] )
             password1Ctrl.SetValue( self.accounts[ accountTypeIndex ][1] )
             password2Ctrl.SetValue( self.accounts[ accountTypeIndex ][1] )
-            
+
             self.lastAccountTypeIndex = accountTypeIndex
             #event.Skip()
-
 
 
         def onPasswordChange( event, forceAccount = -1 ) :
@@ -2241,23 +2243,23 @@ class DVBViewer(eg.PluginClass):
         self.lastPlayStateShort = shortPlayState
         self.lastDisplayLong    = longDisplay
         self.lastDisplayShort = shortDisplay
-        
+
         enableControls = []
 
         text = self.text
         panel = eg.ConfigPanel()
         radioBox = wx.RadioBox(
-            panel, 
-            -1, 
-            text.interfaceBox, 
-            choices=[text.useComApi, text.useSendMessage], 
+            panel,
+            -1,
+            text.interfaceBox,
+            choices=[text.useComApi, text.useSendMessage],
             style=wx.RA_SPECIFY_ROWS
         )
         radioBox.SetSelection(int(useSendMessage))
         radioBox.Bind(wx.EVT_RADIOBOX, onRadioBox)
 
         watchDogTimeCtrl = panel.SpinNumCtrl(watchDogTime, min=0, max=999, fractionWidth=0, integerWidth=3)
-        enableControls.append( watchDogTimeCtrl )        
+        enableControls.append( watchDogTimeCtrl )
 
         oldEventsCheckBoxCtrl = wx.CheckBox(panel, -1, text.useOldEvents)
         oldEventsCheckBoxCtrl.SetValue( oldInterface )
@@ -2289,14 +2291,14 @@ class DVBViewer(eg.PluginClass):
         useCommandCheckBoxCtrl.SetValue( not startDVBViewerByCOM )
         useCommandCheckBoxCtrl.Bind(wx.EVT_CHECKBOX, onCommandCheckBox)
         enableControls.append( useCommandCheckBoxCtrl )
-        
+
         dvbviewerFileCtrl = eg.FileBrowseButton(
-            panel, 
-            -1, 
+            panel,
+            -1,
             size=(320,-1),
             initialValue=pathDVBViewer,
             labelText="",
-            fileMask="*.exe", 
+            fileMask="*.exe",
             dialogTitle=text.dvbviewerBox
         )
         enableControls.append( dvbviewerFileCtrl )
@@ -2304,28 +2306,26 @@ class DVBViewer(eg.PluginClass):
         argumentsCtrl = wx.TextCtrl( panel, size=(200,-1) )
         argumentsCtrl.SetValue( argumentsDVBViewer )
         enableControls.append( argumentsCtrl )
-        
+
         waitTimeBeforeConnectCtrl = panel.SpinNumCtrl(waitTimeBeforeConnect, min=0, max=99, fractionWidth=0, integerWidth=2)
         waitTimeBeforeConnectCtrl.Enable( not startDVBViewerByCOM )
         enableControls.append( waitTimeBeforeConnectCtrl )
-        
-        
+
         serviceCheckBoxCtrl = wx.CheckBox(panel, -1, text.serviceEnable)
         serviceCheckBoxCtrl.SetValue( useService )
         serviceCheckBoxCtrl.Bind(wx.EVT_CHECKBOX, onServiceCheckBox)
         enableControls.append( serviceCheckBoxCtrl )
-        
+
         serviceAddressCtrl = wx.TextCtrl( panel )#, size=(200,-1) )
         serviceAddressCtrl.SetValue( serviceAddress )
         enableControls.append( serviceAddressCtrl )
-        
+
         serviceEventCtrl = wx.TextCtrl( panel , size=(150,-1) )
         serviceEventCtrl.SetValue( serviceEvent )
         enableControls.append( serviceEventCtrl )
-        
 
         self.lastAccountTypeIndex = -1
-        
+
         accountTypeCtrl = wx.ComboBox( panel,
                                     -1,
                                     value=text.accountChoices[INDEX_SCHEDULER],
@@ -2334,48 +2334,48 @@ class DVBViewer(eg.PluginClass):
                                     )
         accountTypeCtrl.Bind(wx.EVT_COMBOBOX, onAccountTypeChange)
         enableControls.append( accountTypeCtrl )
-                                 
+
         accountCtrl = wx.TextCtrl( panel, size=(125,-1) )
         enableControls.append( accountCtrl )
-        
+
         password1Ctrl = wx.TextCtrl( panel, size=(125,-1), style=wx.TE_PASSWORD )
         password1Ctrl.Bind(wx.EVT_TEXT, onPasswordChange)
         enableControls.append( password1Ctrl )
-        
+
         password2Ctrl = wx.TextCtrl( panel, size=(125,-1), style=wx.TE_PASSWORD )
         password2Ctrl.Bind(wx.EVT_TEXT, onPasswordChange)
         enableControls.append( password2Ctrl )
-        
+
         schedulerPrefixCtrl = wx.TextCtrl( panel, size=(125,-1) )
         schedulerPrefixCtrl.SetValue( schedulerTaskNamePrefix )
         enableControls.append( schedulerPrefixCtrl )
-        
+
         schedulerEventCtrl = wx.TextCtrl( panel, size=(125,-1) )
         schedulerEventCtrl.SetValue( schedulerEventName )
         enableControls.append( schedulerEventCtrl )
-        
+
         schedulerLeadCtrl = panel.SpinNumCtrl(schedulerLeadTime, min=0, max=30, fractionWidth=0, integerWidth=2)
         enableControls.append( schedulerLeadCtrl )
-        
+
         scheduleAllCheckBoxCtrl = wx.CheckBox(panel, -1, text.scheduleAllRecordings)
         scheduleAllCheckBoxCtrl.SetValue( scheduleAllRecordings )
         enableControls.append( scheduleAllCheckBoxCtrl )
-        
+
         scheduleHiddenCheckBoxCtrl = wx.CheckBox(panel, -1, text.schedulerEntryHidden)
         scheduleHiddenCheckBoxCtrl.SetValue( schedulerEntryHidden )
         enableControls.append( scheduleHiddenCheckBoxCtrl )
-        
+
         boxSizerO = wx.BoxSizer( wx.HORIZONTAL )
         boxSizerO.Add( radioBox, 1 )
-        
+
         sb = wx.StaticBox( panel, -1, text.watchDog )
         boxSizerI = wx.StaticBoxSizer( sb, wx.VERTICAL )
-        
-        gridBagSizer = wx.GridBagSizer( 2, 10 )        
-        
+
+        gridBagSizer = wx.GridBagSizer( 2, 10 )
+
         gridBagSizer.Add( wx.StaticText(panel, -1, text.watchDogTime), (0, 0), flag =  wx.EXPAND | wx.ALIGN_CENTER_VERTICAL )
         gridBagSizer.Add( watchDogTimeCtrl,        (0, 1), flag =  wx.EXPAND | wx.ALIGN_CENTER_VERTICAL )
-        
+
         boxSizerI.Add(wx.Size(0,4))
         boxSizerI.Add( gridBagSizer )
 
@@ -2400,15 +2400,15 @@ class DVBViewer(eg.PluginClass):
         sb = wx.StaticBox( panel, -1, text.playStateFormat )
         boxSizer = wx.StaticBoxSizer( sb, wx.VERTICAL )
         boxSizer.Add(wx.Size(0,3))
-        
+
         boxSizerI = wx.BoxSizer( wx.HORIZONTAL )
         boxSizerI.Add(longPlayStateCheckBoxCtrl, 1, wx.EXPAND | wx.ALIGN_CENTER_VERTICAL)
         boxSizerI.Add(shortPlayStateCheckBoxCtrl, 1, wx.EXPAND | wx.ALIGN_CENTER_VERTICAL)
         boxSizer.Add(boxSizerI, 1, wx.EXPAND )
 
-        
+
         boxSizerO.Add( boxSizer, 1, wx.EXPAND )
-        
+
 
         sb = wx.StaticBox( panel, -1, text.displayChangeFormat )
         boxSizer = wx.StaticBoxSizer( sb, wx.VERTICAL )
@@ -2430,7 +2430,7 @@ class DVBViewer(eg.PluginClass):
 
         sb = wx.StaticBox( panel, -1, text.dvbViewerStart )
         boxSizer = wx.StaticBoxSizer( sb, wx.VERTICAL )
-        
+
         #boxSizer.Add(wx.Size(0,3))
 
         sizer = wx.GridBagSizer( 0, 0 )
@@ -2440,7 +2440,7 @@ class DVBViewer(eg.PluginClass):
         boxSizerI = wx.BoxSizer( wx.HORIZONTAL )
         boxSizerI.Add( wx.StaticText(panel, -1, text.waitTimeBeforeConnect), 0, wx.ALIGN_CENTER_VERTICAL| wx.ALIGN_RIGHT)
         boxSizerI.Add( waitTimeBeforeConnectCtrl, 1, wx.ALIGN_LEFT)
-        
+
         sizer.Add( boxSizerI,                                         (0,1), flag=wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT )
 
         sizer.Add( wx.Size(0,2),                                      (1,0), flag=wx.EXPAND | wx.ALIGN_CENTER_VERTICAL )
@@ -2456,11 +2456,11 @@ class DVBViewer(eg.PluginClass):
         boxSizer.Add( sizer, 1, wx.EXPAND)
 
         panel.sizer.Add(boxSizer, 0, wx.EXPAND)
-        
+
 
         sb = wx.StaticBox( panel, -1, text.serviceHeader )
         boxSizer = wx.StaticBoxSizer( sb, wx.HORIZONTAL )
-        
+
         boxSizer.Add( serviceCheckBoxCtrl, 0, flag = wx.EXPAND | wx.ALIGN_CENTER_VERTICAL )
 
         boxSizerI = wx.BoxSizer( wx.VERTICAL )
@@ -2484,14 +2484,14 @@ class DVBViewer(eg.PluginClass):
         panel.sizer.Add(wx.Size(0,2))
 
         boxSizer = wx.BoxSizer( wx.HORIZONTAL )
-        
+
         sb = wx.StaticBox( panel, -1, text.accountInfo )
         boxSizerI = wx.StaticBoxSizer( sb, wx.HORIZONTAL )
-        
+
         sizer = wx.GridBagSizer( 0, 0 )
-        
+
         sizer.Add(wx.Size(0,3),                                    (0,0), flag=wx.EXPAND | wx.ALIGN_CENTER_VERTICAL )
-        
+
         sizer.Add( wx.StaticText(panel, -1, text.accountType),     (1,0), flag = wx.ALIGN_CENTER_VERTICAL| wx.ALIGN_RIGHT )
         sizer.Add( accountTypeCtrl,                                (1,1), flag = wx.EXPAND | wx.ALIGN_CENTER_VERTICAL )
 
@@ -2505,7 +2505,7 @@ class DVBViewer(eg.PluginClass):
 
         sizer.Add( wx.StaticText(panel, -1, text.password2),       (5,0), flag = wx.ALIGN_CENTER_VERTICAL| wx.ALIGN_RIGHT )
         sizer.Add( password2Ctrl,                                  (5,1), flag = wx.EXPAND | wx.ALIGN_CENTER_VERTICAL )
-        
+
         boxSizerI.Add( sizer, 0, wx.EXPAND )
         boxSizer.Add( boxSizerI, 1, wx.EXPAND )
 
@@ -2533,13 +2533,13 @@ class DVBViewer(eg.PluginClass):
 
         boxSizerI.Add( sizer, 0, wx.EXPAND )
         boxSizer.Add( boxSizerI, 1, wx.EXPAND )
-                
+
         panel.sizer.Add(boxSizer, 1, wx.EXPAND)
-        
+
         onPasswordChange( wx.CommandEvent() )
         onAccountTypeChange( wx.CommandEvent() )
         onRadioBox( wx.CommandEvent() )
-        
+
         while panel.Affirmed():
             useSendMessage        = radioBox.GetSelection() == 1
             oldInterface          = oldEventsCheckBoxCtrl.GetValue()
@@ -2553,26 +2553,26 @@ class DVBViewer(eg.PluginClass):
             longPlayState         =  longPlayStateCheckBoxCtrl.GetValue()
             shortPlayState        = shortPlayStateCheckBoxCtrl.GetValue()
             watchDogTime          = watchDogTimeCtrl.GetValue()
-            
+
             useService            = serviceCheckBoxCtrl.GetValue()
             serviceAddress        = serviceAddressCtrl.GetValue()
             serviceEvent          = serviceEventCtrl.GetValue()
-            
+
             schedulerTaskNamePrefix = schedulerPrefixCtrl.GetValue()
             schedulerEventName      = schedulerEventCtrl.GetValue()
             schedulerLeadTime       = schedulerLeadCtrl.GetValue()
             scheduleAllRecordings   = scheduleAllCheckBoxCtrl.GetValue()
             schedulerEntryHidden    = scheduleHiddenCheckBoxCtrl.GetValue()
-            
-            
+
+
             if accountCtrl.IsModified() or password1Ctrl.IsModified() :
-            
+
                 onAccountTypeChange( wx.CommandEvent() )
-                        
+
                 self.HandlePasswordFile( write = True,accounts = self.accounts )
-                
+
                 dummy = not dummy
-            
+
             if not oldInterface and not newInterface :
                 newInterface = True
 
@@ -2589,8 +2589,8 @@ class DVBViewer(eg.PluginClass):
                              useService,
                              watchDogTime,
                              schedulerTaskNamePrefix,
-                             schedulerEventName,     
-                             schedulerLeadTime,      
+                             schedulerEventName,
+                             schedulerLeadTime,
                              scheduleAllRecordings,
                              schedulerEntryHidden,
                              waitTimeBeforeConnect,
@@ -2602,11 +2602,11 @@ class DVBViewer(eg.PluginClass):
 
 
     def HandlePasswordFile( self, write = False, accounts=[('','')] ) :
-        
+
         passwordFileName = os.path.join(eg.folderPath.RoamingAppData, eg.APP_NAME, 'DVBViewerAccount.dat')
 
         crypt = self.Crypt
-        
+
         previousAccounts  = []
 
         if not write :
@@ -2627,18 +2627,18 @@ class DVBViewer(eg.PluginClass):
                     previousAccounts.append( ( accountName, password ) )
 
             return ( previousAccounts )
-            
+
         key = ''
         for i in xrange(16):
             r = random.randint(0,255)
             key += '%02x'%r
-            
+
         root = ElementTree.Element( 'Accounts' )
-        
+
         subElement = ElementTree.Element( 'Key' )
         subElement.text = key
         root.append( subElement )
-        
+
         for account in accounts :
             name = account[0]
             password = account[1]
@@ -2647,7 +2647,7 @@ class DVBViewer(eg.PluginClass):
             attributes['Password' ] = "".join( ['%02x'%ord(c) for c in crypt( password, key, True ) ] )
             subElement = ElementTree.Element( 'Account', attributes )
             root.append( subElement )
-            
+
         tree = ElementTree.ElementTree( root )
         tree.write(passwordFileName, sys.getdefaultencoding() )
 
@@ -2663,14 +2663,14 @@ class DVBViewer(eg.PluginClass):
         result = ''
         for index in xrange( len(string) ) :
             if gen :
-                modifier = string[index]               
+                modifier = string[index]
             char = chr(ord(digest[index%16]) ^ ord(string[index]))
             if not gen :
                 modifier = char
             result += char
             m.update(modifier)
             digest = m.digest()
-            
+
         #print result
         return result
 
@@ -2678,7 +2678,7 @@ class DVBViewer(eg.PluginClass):
 
 
 class Start(eg.ActionClass):
-   
+
     def __call__(self):
         self.plugin.Connect( WAIT_CHECK_START_CONNECT, lock = True )
         return True
@@ -2687,14 +2687,14 @@ class Start(eg.ActionClass):
 
 
 class CloseDVBViewer( eg.ActionClass ) :
-    
+
     def __call__( self, waitForTermination = False ) :
         plugin = self.plugin
         if plugin.workerThread is None :
             return False
-        
+
         return plugin.WaitForTermination( sendCloseCommand = True, block = waitForTermination )
-        
+
 
     def Configure(  self, waitForTermination = False ) :
 
@@ -2710,7 +2710,7 @@ class CloseDVBViewer( eg.ActionClass ) :
 
         while panel.Affirmed():
              waitForTermination = checkBox.GetValue()
- 
+
              panel.SetResult( waitForTermination )
         return True
 
@@ -2718,7 +2718,7 @@ class CloseDVBViewer( eg.ActionClass ) :
 
 
 class StopAllActiveRecordings( eg.ActionClass ) :
-    
+
     def __call__( self ) :
         plugin = self.plugin
         plugin.executionStatusChangeLock.acquire()
@@ -2749,15 +2749,15 @@ class GetNumberOfActiveRecordings( eg.ActionClass ) :
                 )
         if enableDVBService :
             count += plugin.service.GetNumberOfActiveRecordings( updateDVBService )
-            
+
         plugin.executionStatusChangeLock.release()
         return count
 
 
-    def Configure(  self, enableDVBViewer = True, enableDVBService = False, updateDVBService = False ) :
-    
-        self.plugin.ServiceConfigure( enableDVBViewer, enableDVBService, updateDVBService )
 
+    def Configure(  self, enableDVBViewer = True, enableDVBService = False, updateDVBService = False ) :
+
+        self.plugin.ServiceConfigure( enableDVBViewer, enableDVBService, updateDVBService )
 
 
 
@@ -2766,21 +2766,21 @@ class GetRecordingsIDs( eg.ActionClass ) :
 
     def __call__( self, active = True, enableDVBViewer = True, enableDVBService = False, updateDVBService = False ) :
         plugin = self.plugin
-        
+
         list = []
 
         if enableDVBService :
-        
+
             plugin.executionStatusChangeLock.acquire()
             recordingIDs = plugin.service.GetRecordingsIDs( updateDVBService )
             if recordingIDs is None :
                 recordingIDs = {}
             plugin.executionStatusChangeLock.release()
-        
+
             for k, v in recordingIDs.iteritems() :
                 if v[0] or not active :
                     list.append( v[2] )
-        
+
         if enableDVBViewer :
             if active :
                 connectionMode = CHECK_CONNECT
@@ -2809,12 +2809,12 @@ class GetRecordingsIDs( eg.ActionClass ) :
 
         panel.sizer.Add( checkBox )
         panel.sizer.Add(wx.Size(0,10))
-        
+
         getFlags = plugin.ServiceConfigure(  enableDVBViewer, enableDVBService, updateDVBService, affirmed = False, panel = panel )
 
         while panel.Affirmed():
              active      = checkBox.GetValue()
- 
+
              enableDVBViewer, enableDVBService, updateDVBService = getFlags()
 
              panel.SetResult( active, enableDVBViewer, enableDVBService, updateDVBService )
@@ -2844,8 +2844,9 @@ class IsRecording( eg.ActionClass ) :
                                                         updateDVBService ) != 0
 
 
+
     def Configure(  self, enableDVBViewer = True, enableDVBService = False, updateDVBService = False ) :
-    
+
         self.plugin.ServiceConfigure( enableDVBViewer, enableDVBService, updateDVBService )
 
 
@@ -2870,7 +2871,7 @@ class SendAction( eg.ActionClass ) :
 
         while panel.Affirmed() :
             action = actionCtrl.GetValue()
-            
+
             panel.SetResult( action )
         return True
 
@@ -2884,9 +2885,9 @@ class ShowInfoinTVPic( eg.ActionClass ) :
             connectMode = WAIT_CHECK_START_CONNECT
         else :
             connectMode = CHECK_CONNECT
-            
+
         plugin = self.plugin
-        
+
         if plugin.Connect( connectMode, lock = True ) :
             plugin.workerThread.CallWait(
                                         partial(
@@ -2905,12 +2906,12 @@ class ShowInfoinTVPic( eg.ActionClass ) :
 
 
     def Configure( self, displayText = "", timeout = 15.0, force = False ) :
-        
+
         plugin = self.plugin
         text = self.text
 
         panel = eg.ConfigPanel( resizable=True )
-        
+
         textCtrl = panel.TextCtrl("\n", style=wx.TE_MULTILINE)
         w, h = textCtrl.GetBestSize()
         textCtrl.ChangeValue(displayText)
@@ -2920,7 +2921,7 @@ class ShowInfoinTVPic( eg.ActionClass ) :
 
         forceCheckBoxCtrl = wx.CheckBox(panel, -1, text.force)
         forceCheckBoxCtrl.SetValue( force )
-        
+
         sizer = wx.GridBagSizer(5, 5)
 
         rowCount = 0
@@ -2930,10 +2931,10 @@ class ShowInfoinTVPic( eg.ActionClass ) :
         rowCount += 1
         sizer.Add(wx.StaticText(panel, -1, text.time), (rowCount, 0), flag=wx.ALIGN_CENTER_VERTICAL)
         sizer.Add(timeCtrl,                            (rowCount, 1) )
-        
+
         rowCount += 1
         sizer.Add(forceCheckBoxCtrl,                   (rowCount, 0), (1,2), flag=wx.EXPAND)
-        
+
         sizer.AddGrowableCol(1)
         panel.sizer.Add(sizer, 0, flag = wx.EXPAND)
 
@@ -2941,7 +2942,7 @@ class ShowInfoinTVPic( eg.ActionClass ) :
             displayText = textCtrl.GetValue()
             timeout     = timeCtrl.GetValue()
             force       = forceCheckBoxCtrl.GetValue()
-            
+
             panel.SetResult( displayText, timeout, force )
 
 
@@ -2953,7 +2954,7 @@ class DeleteInfoinTVPic( eg.ActionClass ) :
 
         plugin = self.plugin
         if plugin.infoInTVPicTimeout > time() + 0.01 :
-        
+
             plugin.infoInTVPicTimeout = 0.0
 
             if plugin.Connect( CHECK_CONNECT, lock = True ) :
@@ -2971,27 +2972,27 @@ class UpdateEPG( eg.ActionClass ) :
 
     @eg.LogItWithReturn
     def __call__( self, timeBetweenChannelChange = 60.0, disableAVafterChannelChange = True, event = "EPGUpdateFinished" ) :
-    
+
         plugin = self.plugin
 
         self.event = event
-        
+
         if not plugin.frequencies :
             if not plugin.Connect( WAIT_CHECK_START_CONNECT, lock = True ) :
                 plugin.TriggerEvent( event )
                 return False
-                        
+
         plugin.tuneEPGThread = self.EPGTuneThread( plugin, timeBetweenChannelChange, event, disableAVafterChannelChange )
         plugin.tuneEPGThread.start()
-        
+
         return True
 
 
 
     class EPGTuneThread( Thread ) :
-    
+
         def __init__( self, plugin, timeBetweenChannelChange, eventText, disableAVafterChannelChange ) :
-        
+
             Thread.__init__(self, name="DVBViewerEPGTuneThread")
             self.plugin = plugin
             self.timeBetweenChannelChange = timeBetweenChannelChange
@@ -3004,50 +3005,50 @@ class UpdateEPG( eg.ActionClass ) :
         def run( self ) :
             plugin = self.plugin
             abort = False
-            
+
             saveDisableAV = plugin.disableAV
-            
+
             CoInitialize()
-            
+
             for frequency, channel in plugin.frequencies.iteritems() :
-            
+
                 changed = False
-            
+
                 while not changed and not abort:
-            
+
                     if plugin.numberOfActiveRecordings == 0 :
-                    
+
                         plugin.disableAV = self.disableAVafterChannelChange
-                    
+
                         changed =  plugin.TuneChannelIfNotRecording( channel[0], "Updating EPG", self.timeBetweenChannelChange )
-                                        
+
                     self.event.wait( self.timeBetweenChannelChange )
-                    
+
                     plugin.disableAV = saveDisableAV
-                    
+
                     abort = self.event.isSet()
-                    
+
                 if abort :
                     break
-                    
+
             plugin.SendCommand( 16383 )  #Stop Graph
 
             CoUninitialize()
-            plugin.tuneEPGThread = None            
+            plugin.tuneEPGThread = None
 
             if not abort :
                 plugin.TriggerEvent( self.eventText )
 
             return not abort
 
-            
+
         def Finish( self ) :
             self.event.set()
 
 
 
     def Configure(  self, timeBetweenChannelChange = 60.0, disableAVafterChannelChange = True, event = "EPGUpdateFinished" ) :
-        
+
         plugin = self.plugin
         text = self.text
 
@@ -3059,7 +3060,7 @@ class UpdateEPG( eg.ActionClass ) :
 
 
         epgTimeCtrl = panel.SpinNumCtrl(timeBetweenChannelChange, min=0, max=999, fractionWidth=0, integerWidth=3)
-        
+
         panel.AddLine( disableAVCheckBoxCtrl )
         panel.AddLine( text.time,  epgTimeCtrl )
         panel.AddLine( text.event, eventCtrl )
@@ -3068,7 +3069,7 @@ class UpdateEPG( eg.ActionClass ) :
             disableAVafterChannelChange                = disableAVCheckBoxCtrl.GetValue()
             timeBetweenChannelChange = epgTimeCtrl.GetValue()
             event                    = eventCtrl.GetValue()
-            
+
             panel.SetResult( timeBetweenChannelChange, disableAVafterChannelChange, event )
 
 
@@ -3078,19 +3079,19 @@ class AddRecording( eg.ActionClass ) :
 
     @eg.LogItWithReturn
     def __call__(self,
-                 channelID, 
+                 channelID,
                  date,                 # dd.mm.yyyy
                  startTime,            # hh:mm
                  endTime,              # hh:mm
                  description = "",
                  disableAV = False,
                  enabled = True,
-                 recAction = 0,        # intern = 0, tune only = 1, 
-                                       # AudioPlugin = 2, Videoplugin = 3 
-                                       
-                 actionAfterRec = 0,   # No action = 0, PowerOff = 1, 
+                 recAction = 0,        # intern = 0, tune only = 1,
+                                       # AudioPlugin = 2, Videoplugin = 3
+
+                 actionAfterRec = 0,   # No action = 0, PowerOff = 1,
                                        # Standby = 2, Hibernate = 3, Close = 4,
-                                       # Playlist = 5, Slumbermode: = 6 
+                                       # Playlist = 5, Slumbermode: = 6
 
                  days = "-------"
                 ) :
@@ -3114,34 +3115,34 @@ class AddRecording( eg.ActionClass ) :
 
 
     def Configure(  self,
-                 channelID   = "", 
+                 channelID   = "",
                  date        = "",     # dd.mm.yyyy
                  startTime   = "",     # hh:mm
                  endTime     = "",     # hh:mm
                  description = "",
                  disableAV   = False,
                  enabled     = True,
-                 recAction   = 0,      # intern = 0, tune only = 1, 
-                                       # AudioPlugin = 2, Videoplugin = 3 
-                                       
-                 actionAfterRec = 0,   # No action = 0, PowerOff = 1, 
+                 recAction   = 0,      # intern = 0, tune only = 1,
+                                       # AudioPlugin = 2, Videoplugin = 3
+
+                 actionAfterRec = 0,   # No action = 0, PowerOff = 1,
                                        # Standby = 2, Hibernate = 3, Close = 4,
-                                       # Playlist = 5, Slumbermode: = 6 
+                                       # Playlist = 5, Slumbermode: = 6
 
                  days = "-------"
                 ) :
-                
+
         plugin = self.plugin
         text = self.text
 
         if len(plugin.tvChannels) == 0 and len(plugin.radioChannels) == 0 :
             plugin.Connect( WAIT_CHECK_START_CONNECT, lock = True )
-            
+
         if plugin.IDbychannelIDList.has_key( channelID ) :
-        
+
             id = plugin.IDbychannelIDList[ channelID ]
             self.tv = id[1]
-            
+
             if ( self.tv ) :
                 self.choices = plugin.tvChannels
             else :
@@ -3155,15 +3156,15 @@ class AddRecording( eg.ActionClass ) :
 
 
         def onRadioButton( event ) :
-        
+
             ix = channelChoiceCtrl.GetSelection()
-        
+
             if ix != wx.NOT_FOUND :
                 if self.tv :
                     plugin.indexTV = ix
                 else :
                     plugin.indexRadio = ix
-            
+
             tvMode = tvCtrl.GetValue()
 
             if tvMode :
@@ -3189,8 +3190,8 @@ class AddRecording( eg.ActionClass ) :
         radioCtrl = wx.RadioButton( panel, -1, text.radioButton )
         radioCtrl.SetValue( not self.tv )
         radioCtrl.Bind(wx.EVT_RADIOBUTTON, onRadioButton )
-        
-        
+
+
 
         channelChoiceCtrl = panel.Choice(ix, choices=plugin.tvChannels + plugin.radioChannels)
         wSize = channelChoiceCtrl.GetSize()
@@ -3198,18 +3199,18 @@ class AddRecording( eg.ActionClass ) :
         channelChoiceCtrl.SetItems( self.choices )
         channelChoiceCtrl.SetSizeHintsSz( wSize )
         channelChoiceCtrl.SetSelection( ix )
-        
+
         wxDate = wx.DateTime()
-        
+
         if date == "" :
             wxDate = wx.DateTime.Now()
         else :
             wxDate.ParseFormat( date, "%d.%m.%Y" )
-        
+
         dateCtrl = wx.DatePickerCtrl( panel, dt = wxDate, style=wx.DP_DEFAULT|wx.DP_DROPDOWN )#|wx.DP_ALLOWNONE )
-        
+
         wxStartTime = wx.DateTime()
-        
+
         if startTime == "" :
             wxStartTime = wx.DateTime.Now()
         else :
@@ -3219,15 +3220,15 @@ class AddRecording( eg.ActionClass ) :
 
 
         wxEndTime = wx.DateTime()
-        
+
         if endTime == "" :
             wxEndTime = wxStartTime
         else :
             wxEndTime.ParseFormat( endTime, "%H:%M" )
 
         endTimeCtrl = masked.timectrl.TimeCtrl( panel, format = "24HHMMSS", value = wxEndTime )
-        
-        
+
+
         descriptionCtrl = wx.TextCtrl( panel, size=(200,-1) )
         descriptionCtrl.SetValue( description )
 
@@ -3243,7 +3244,7 @@ class AddRecording( eg.ActionClass ) :
 
         sb = wx.StaticBox( panel, -1, text.source )
         sBoxSizer = wx.StaticBoxSizer( sb, wx.HORIZONTAL )
-        
+
         sizer = wx.GridSizer(2,2,5,5)
         sizer.Add( tvCtrl,    0, flag = wx.EXPAND | wx.ALIGN_CENTER_VERTICAL)
         sizer.Add( wx.StaticText(panel, -1, text.station), 0, flag = wx.ALIGN_BOTTOM)
@@ -3260,7 +3261,7 @@ class AddRecording( eg.ActionClass ) :
         sb = wx.StaticBox( panel, -1, text.recordingDate )
         sBoxSizer = wx.StaticBoxSizer( sb, wx.VERTICAL )
         sBoxSizer.Add(wx.Size(0,3))
-        
+
         sizer = wx.GridSizer(2,3,5,5)
         sizer.Add( wx.StaticText(panel, -1, text.date), 0, flag = wx.ALIGN_BOTTOM)
         sizer.Add( wx.StaticText(panel, -1, text.start), 0, flag = wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL )
@@ -3272,7 +3273,7 @@ class AddRecording( eg.ActionClass ) :
         sBoxSizer.Add( sizer, 0, flag = wx.EXPAND )
 
         sizer = wx.GridBagSizer( 0,3)
-        
+
         dayCount = 0
         dayCheckBoxCtrl = []
         for day in text.days :
@@ -3294,16 +3295,16 @@ class AddRecording( eg.ActionClass ) :
         sb = wx.StaticBox( panel, -1, "" )
         sBoxSizer = wx.StaticBoxSizer( sb, wx.VERTICAL )
         sBoxSizer.Add(wx.Size(0,10))
-        
+
         sizer = wx.BoxSizer( wx.HORIZONTAL )
         sizer.Add( wx.StaticText(panel, -1, text.recordingDescription), 0, flag = wx.ALIGN_CENTER_VERTICAL )
         sizer.Add(descriptionCtrl, 0, flag = wx.EXPAND )
         sBoxSizer.Add( sizer, 0, flag = wx.EXPAND )
-        
+
         sBoxSizer.Add(wx.Size(0,10))
 
         sizer = wx.GridSizer(2,3,5,5)
-        
+
         sizer.Add(disableAVCheckBoxCtrl, 0 )
         sizer.Add( wx.StaticText(panel, -1, text.mode), 0, flag = wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL )
         sizer.Add(recActionChoiceCtrl, 0 )
@@ -3315,7 +3316,7 @@ class AddRecording( eg.ActionClass ) :
         sBoxSizer.Add( sizer, 0, flag = wx.EXPAND )
 
         panel.sizer.Add(sBoxSizer, 0, flag = wx.EXPAND )
-                
+
         while panel.Affirmed():
             channelID       = plugin.channelIDbyIDList[ ( channelChoiceCtrl.GetValue(), self.tv ) ]
             date            = dateCtrl.GetValue().Format( "%d.%m.%Y" )
@@ -3326,7 +3327,7 @@ class AddRecording( eg.ActionClass ) :
             enabled         = enabledCheckBoxCtrl.GetValue()
             recAction       = recActionChoiceCtrl.GetValue()
             actionAfterRec  = actionAfterRecChoiceCtrl.GetValue()
-            
+
             days = ""
             dayCount = -1
             for checkBox in dayCheckBoxCtrl :
@@ -3335,8 +3336,8 @@ class AddRecording( eg.ActionClass ) :
                     days += "T"
                 else :
                     days += "-"
-                
-            
+
+
             panel.SetResult( channelID,
                              date,
                              startTime,
@@ -3354,7 +3355,7 @@ class AddRecording( eg.ActionClass ) :
 class GetSetupValue( eg.ActionClass ) :
 
     def __call__( self, section = "", name = "", default = "" ) :
-    
+
         plugin = self.plugin
         if plugin.Connect( WAIT_CHECK_START_CONNECT, lock = True ) :
             res = plugin.workerThread.CallWait(
@@ -3369,7 +3370,7 @@ class GetSetupValue( eg.ActionClass ) :
     def Configure(  self, section = "", name = "", default = "" ) :
 
         plugin = self.plugin
-        
+
         self.panel = eg.ConfigPanel()
         panel = self.panel
 
@@ -3390,7 +3391,7 @@ class GetSetupValue( eg.ActionClass ) :
              section      = sectionCtrl.GetValue()
              name         =    nameCtrl.GetValue()
              default      = defaultCtrl.GetValue()
- 
+
              panel.SetResult( section, name, default )
 
 
@@ -3404,27 +3405,27 @@ class GetDateOfRecordings( eg.ActionClass ) :
                   enableDVBService = False,
                   updateDVBService = False
                 ) :
-    
+
         plugin = self.plugin
-        
+
         plugin.executionStatusChangeLock.acquire()
-        
-        readOutSuccessfull = True 
+
+        readOutSuccessfull = True
 
         if enableDVBService :
             recordingDates = plugin.service.GetRecordingDates( update = updateDVBService )
             if recordingDates is None :
                 recordingDates = []
-                readOutSuccessfull = False 
+                readOutSuccessfull = False
         else :
             recordingDates = []
-            
+
         plugin.executionStatusChangeLock.release()
-        
+
         if enableDVBViewer :
-        
+
             plugin.executionStatusChangeLock.acquire()
-            if plugin.Connect( WAIT_CHECK_START_CONNECT ) :       
+            if plugin.Connect( WAIT_CHECK_START_CONNECT ) :
                 recordingList = plugin.workerThread.CallWait( plugin.workerThread.GetAllRecordings, CALLWAIT_TIMEOUT )
                 plugin.executionStatusChangeLock.release()
                 now = time()
@@ -3445,14 +3446,14 @@ class GetDateOfRecordings( eg.ActionClass ) :
                         if not t in recordingDates :
                             recordingDates.append(t)
                         #print "date = ", ctime(t)
-                        
+
                 dvbViewerConnected = True
             else :
                 plugin.executionStatusChangeLock.release()
                 readOutSuccessfull = False
-        
+
         recordingDates.sort()
-                
+
         if allRecordings :
             return ( readOutSuccessfull, recordingDates )
         else :
@@ -3474,14 +3475,14 @@ class GetDateOfRecordings( eg.ActionClass ) :
 
         panel.sizer.Add( checkBox )
         panel.sizer.Add(wx.Size(0,10))
-        
+
         getFlags = plugin.ServiceConfigure(  enableDVBViewer, enableDVBService, updateDVBService, affirmed = False, panel = panel )
 
         while panel.Affirmed():
              allRecordings      = checkBox.GetValue()
-             
+
              enableDVBViewer, enableDVBService, updateDVBService = getFlags()
- 
+
              panel.SetResult( allRecordings, enableDVBViewer, enableDVBService, updateDVBService )
 
 
@@ -3491,21 +3492,21 @@ class TaskScheduler( eg.ActionClass ) :
 
     @eg.LogItWithReturn
     def __call__( self, enableDVBViewer = True, enableDVBService = False, updateDVBService = False ) :
-        
+
         plugin = self.plugin
-    
+
         leadTime = plugin.schedulerLeadTime * 60.0
 
         recordingDates = eg.plugins.DVBViewer.GetDateOfRecordings(
-                                                    allRecordings = plugin.scheduleAllRecordings, 
+                                                    allRecordings = plugin.scheduleAllRecordings,
                                                     enableDVBViewer = enableDVBViewer,
                                                     enableDVBService = enableDVBService,
                                                     updateDVBService = updateDVBService )
-            
+
         if not recordingDates[0] :
             eg.PrintError( "dates not valid" )
             return False
-            
+
 
         if plugin.scheduleAllRecordings :
             dates = recordingDates[1]
@@ -3514,7 +3515,7 @@ class TaskScheduler( eg.ActionClass ) :
                 dates = [ recordingDates[1] ]
             else :
                 dates = []
-        
+
         ts = CoCreateInstance(taskscheduler.CLSID_CTaskScheduler,None,
                               CLSCTX_INPROC_SERVER,
                               taskscheduler.IID_ITaskScheduler)
@@ -3526,20 +3527,20 @@ class TaskScheduler( eg.ActionClass ) :
                 #print task, "    task[0:len(plugin.schedulerTaskNamePrefix)] = ", task[0:len(plugin.schedulerTaskNamePrefix)]
                 if task[0:len(plugin.schedulerTaskNamePrefix)] == plugin.schedulerTaskNamePrefix :
                     ts.Delete( task )
-                    
+
             plugin.scheduledRecordings = []
-            
+
             eg.PrintDebugNotice("All scheduled jobs deleted" )
-            
-            
+
+
         actuals = []
         now = time() + leadTime
-            
+
         for date in plugin.scheduledRecordings :
-        
+
             if date < 0 :
                 continue
-        
+
             if date not in dates :          # remove deleted recordings
                 ix = plugin.scheduledRecordings.index(date)
                 name = plugin.schedulerTaskNamePrefix + "%03d" % ix + ".job"
@@ -3555,10 +3556,10 @@ class TaskScheduler( eg.ActionClass ) :
                     actuals.append( date )
 
         for date in dates :
-        
+
             if date < 0 or date <= now :
                 continue
-        
+
             actuals.append( date )
 
             # get new index
@@ -3573,7 +3574,7 @@ class TaskScheduler( eg.ActionClass ) :
             plugin.numberOfScheduledRecordings += 1
 
             runTime = localtime(date - leadTime )
-            
+
             taskName = plugin.schedulerTaskNamePrefix + "%03d" % ix + ".job"
 
             workItem = ts.NewWorkItem( taskName )
@@ -3585,8 +3586,8 @@ class TaskScheduler( eg.ActionClass ) :
             if plugin.schedulerEntryHidden :
                 flags |= taskscheduler.TASK_FLAG_HIDDEN
             workItem.SetFlags( flags )
-            workItem.SetAccountInformation( 
-                                plugin.accounts[INDEX_SCHEDULER][0], 
+            workItem.SetAccountInformation(
+                                plugin.accounts[INDEX_SCHEDULER][0],
                                 plugin.accounts[INDEX_SCHEDULER][1]
                                 )
             ts.AddWorkItem(taskName, workItem)
@@ -3605,7 +3606,7 @@ class TaskScheduler( eg.ActionClass ) :
 
             persistFile = workItem.QueryInterface( IID_IPersistFile )
             persistFile.Save( None, True )
-            
+
         actuals.sort()
 
         if len( actuals ) > 0 :
@@ -3621,7 +3622,7 @@ class TaskScheduler( eg.ActionClass ) :
 
 
     def Configure(  self, enableDVBViewer = True, enableDVBService = False, updateDVBService = False ) :
-    
+
         self.plugin.ServiceConfigure( enableDVBViewer, enableDVBService, updateDVBService )
 
 
@@ -3662,24 +3663,24 @@ class DVBViewerService() :
     def __init__( self, plugin, serviceAddress = '127.0.0.1:80',
                   account = ( 'admin', 'admin' ),
                   serviceEvent = 'DVBViewerService') :
-        
+
         self.serviceAddress = serviceAddress
         self.account = account
-                  
+
         self.workarround = False
         self.opener = None
-        
+
         self.simulateDVBViewerInterface = True
-        
+
         self.recordingIDs = {}       #Key: ID, Value: Recording
         self.nextPseudoID = 0
         self.numberOfRecordings = 0
         self.recordingDates = None
-        
+
         self.versionDVBViewerService = None
-        
+
         self.serviceEvent = serviceEvent
-        
+
         self.failing = False
 
         self.plugin = plugin
@@ -3692,7 +3693,7 @@ class DVBViewerService() :
 
 
     def GetData( self, interface ) :
-    
+
         def ErrorProcessing( e ) :
             if hasattr(e, 'code') and e.code == 401 :
                 eg.PrintError( "Setup error: DVBViewer Service password not correct" )
@@ -3710,14 +3711,14 @@ class DVBViewerService() :
             else :
                 raise
             return
-    
+
         theurl = (   'http://' + self.serviceAddress
                    + '/API/' + interface.lower() + '.html')
 
         if self.account[0] == "" :
 
             req = Request(theurl)
-            
+
             try :
                 pageHandle = urlopen(req)
                 self.failing = False
@@ -3725,7 +3726,7 @@ class DVBViewerService() :
                 ErrorProcessing( e )
                 return None
         else :
-        
+
             if self.opener is None and not self.workarround:
 
                 passwordMgr = HTTPPasswordMgrWithDefaultRealm()
@@ -3735,11 +3736,11 @@ class DVBViewerService() :
                 authHandler = HTTPBasicAuthHandler( passwordMgr )
 
                 self.opener = build_opener(authHandler)
-            
+
             error = False
 
             try :
-            
+
                 if not self.workarround :
 
                     pageHandle = self.opener.open(theurl)
@@ -3750,7 +3751,7 @@ class DVBViewerService() :
                 del authHandler
                 del passwordMgr
                 self.opener      = None
-                
+
             if self.opener is None :
 
                 req = Request(theurl)
@@ -3759,7 +3760,7 @@ class DVBViewerService() :
                                '%s:%s' % (self.account[0], self.account[1]))[:-1]
                 authheader =  "Basic %s" % base64string
                 req.add_header("Authorization", authheader)
-                        
+
                 try:
                     pagehandle = urlopen(req)
                     self.workarround = True
@@ -3774,28 +3775,28 @@ class DVBViewerService() :
 
 
     def Update( self ) :
-    
+
         def GetID( *args ) :
-        
+
             m = hashlib.md5()
             for arg in args: m.update(arg.encode("utf-8"))
             id = 0
             for c in m.hexdigest() : id = id * 251 + ord(c)
-            
+
             return id
-       
-        
+
+
         def GetText( parent, key, default = '' ) :
-        
+
             element = parent.find( key )
             if element is None :
                 return default
             else :
                 return element.text
 
-               
+
         plugin = self.plugin
-        
+
         if self.versionDVBViewerService is None :
 
             xmlData = self.GetData( 'version' )
@@ -3807,22 +3808,22 @@ class DVBViewerService() :
 
             #<?xml version="1.0" encoding="utf-8" ?>
             #<version>DVBViewer Recording Service 1.5.0.2 (beta) (TOWER2008)</version>
-        
+
             tree = ElementTree.fromstring( xmlData )
-            
+
             matchObject = reSearch( r'(\d+\.\d+\.\d+\.\d+)', tree.text )
-        
+
             self.versionDVBViewerService = matchObject.group(1)
 
         xmlData = self.GetData( 'timerlist.html' )
-        
+
         if xmlData is None :
             xmlData = '<?xml version="1.0" encoding="iso-8859-1"?><Timers/>'
 
         self.recordingDates = []
-        
+
         #print xmlData
-        
+
         """
          EXAMPLE of xmldata:
 
@@ -3858,7 +3859,7 @@ class DVBViewerService() :
         tree = ElementTree.fromstring( xmlData )
 
         now = time()
-        
+
         IDs = {}
 
         for timer in tree.findall("Timer"):
@@ -3876,7 +3877,7 @@ class DVBViewerService() :
             t = mktime( strptime( date + startTime,"%d.%m.%Y%H:%M:%S" ) )
 
             id = GetID( date, startTime, endTime, action, channelID )
-            
+
             if id in self.recordingIDs :
                 pseudoID = self.recordingIDs[ id ][2]
             else :
@@ -3886,13 +3887,13 @@ class DVBViewerService() :
                     self.TriggerEvent( "AddRecord:" + str(pseudoID) )
                 if plugin.newInterface :
                     self.TriggerEvent( "AddRecord", pseudoID )
-            
+
             IDs[ id ] = ( recording != '0', enabled != 0, pseudoID )
 
             #print "ID = ", id, "  recording = ", recording, "  IDs[ id ] = ", IDs[ id ]
 
             if enabled != '0' : #and action == '0' :
-            
+
                 if t < now :
                     continue
                 if not t in self.recordingDates:
@@ -3903,39 +3904,39 @@ class DVBViewerService() :
 
         #print self.recordingDates
         #print "isRecording = ", isRecording
-        
+
         if self.recordingIDs != IDs :
-            
+
             for k, v in self.recordingIDs.iteritems() :
                 g = IDs.get( k )
                 if v[0] and ( g is None or not g[0] ) :    # last query time recording but not now
                     numberOfRecordings -= 1
                     if plugin.oldInterface :
-                        self.TriggerEvent( "EndRecord" )               
+                        self.TriggerEvent( "EndRecord" )
                     if plugin.newInterface :
                         self.TriggerEvent( "EndRecord", ( v[2], numberOfRecordings ) )
-                
-                        
+
+
             for k, v in IDs.iteritems() :
                 g = self.recordingIDs.get( k )
-                
+
                 if v[0] and ( g is None or not g[0] ) :    # last query time not recording but now
                     numberOfRecordings += 1
                     if plugin.oldInterface :
-                        self.TriggerEvent( "StartRecord" )               
+                        self.TriggerEvent( "StartRecord" )
                     if plugin.newInterface :
                         self.TriggerEvent( "StartRecord", ( v[2], numberOfRecordings ) )
-                
+
             self.TriggerEvent( "TimerListUpdated" )
-            
+
             #print "numberOfRecordings = ", numberOfRecordings
-                
+
             if numberOfRecordings == 0 and self.numberOfRecordings != 0 :
 
                 self.TriggerEvent( "AllActiveRecordingsFinished" )
-                
+
             self.numberOfRecordings = numberOfRecordings
-            
+
             self.recordingIDs = IDs
 
         return True
@@ -3945,7 +3946,7 @@ class DVBViewerService() :
     def GetNumberOfActiveRecordings( self, update = True ) :
         if update or self.failing :
             self.Update()
-            
+
         return self.numberOfRecordings
 
 
@@ -3958,7 +3959,7 @@ class DVBViewerService() :
     def GetRecordingDates( self, update = True ) :
         if update or self.failing :
             self.Update()
-            
+
         if self.failing :
             return None
         return self.recordingDates
@@ -3968,7 +3969,7 @@ class DVBViewerService() :
     def GetRecordingsIDs( self, update = True ) :
         if update or self.failing :
             self.Update()
-                        
+
         if self.failing :
             return None
         return self.recordingIDs
