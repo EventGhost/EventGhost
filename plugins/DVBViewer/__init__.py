@@ -3997,7 +3997,7 @@ class DVBViewerService() :
                 self.pseudoIDs = pseudoIDs
 
 
-        if type & UPDATE_STREAM != 0 :
+        if type & UPDATE_STREAM != 0 and self.versionDVBViewerService != '1.5.0.2' :
 
             xmlData = self.GetData( 'clientcount' )
 
