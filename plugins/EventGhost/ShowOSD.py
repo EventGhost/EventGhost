@@ -24,7 +24,8 @@ import eg
 import wx
 import threading
 import os
-from os.path import join
+import sys
+from os.path import join, dirname, abspath
 from eg.WinApi.Utils import GetMonitorDimensions
 from eg.WinApi.Dynamic import (
     CreateEvent, 
@@ -38,7 +39,10 @@ from eg.WinApi.Dynamic import (
 )
 
 HWND_FLAGS = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_FRAMECHANGED
-SKIN_DIR = join(os.path.abspath(os.path.split(__file__)[0]), "OsdSkins")
+SKIN_DIR = join(
+    abspath(dirname(__file__.decode(sys.getfilesystemencoding()))), 
+    "OsdSkins"
+)
 DEFAULT_FONT_INFO = wx.Font(
     18, 
     wx.SWISS, 
@@ -280,7 +284,7 @@ class OSDFrame(wx.Frame):
             memoryDC.DrawBitmap(bmp, toX, toY)
             
         scriptGlobals = dict(Setup=Setup, Copy=Copy, Scale=Scale)
-        execfile(join(SKIN_DIR, skinName + ".py"), scriptGlobals)
+        eg.ExecFile(join(SKIN_DIR, skinName + ".py"), scriptGlobals)
         
         bitmap = option.bitmap
         memoryDC.SelectObject(wx.NullBitmap)

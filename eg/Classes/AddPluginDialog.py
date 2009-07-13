@@ -148,10 +148,8 @@ class AddPluginDialog(eg.TaskletDialog):
             wx.StaticBox(rightPanel, label=Text.descriptionBox)
         )
 
-        descrBox = eg.HtmlWindow(rightPanel)
-        descrBox.SetBasePath(eg.PLUGIN_DIR)
-        self.descrBox = descrBox
-        staticBoxSizer.Add(descrBox, 1, wx.EXPAND)
+        self.descrBox = eg.HtmlWindow(rightPanel)
+        staticBoxSizer.Add(self.descrBox, 1, wx.EXPAND)
 
         rightSizer.Add(staticBoxSizer, 1, wx.EXPAND|wx.LEFT, 5)
 

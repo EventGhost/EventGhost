@@ -177,10 +177,12 @@ class Log(object):
 #        self.Write(text + "\n", NOTICE_ICON, None)
 
 
-    def PrintTraceback(self, msg=None, skip=0, source=None):
+    def PrintTraceback(self, msg=None, skip=0, source=None, excInfo=None):
         if msg:
             self.PrintError(msg, source=source)
-        tbType, tbValue, tbTraceback = sys.exc_info()
+        if excInfo is None:
+            excInfo = sys.exc_info()
+        tbType, tbValue, tbTraceback = excInfo
         slist = ['Traceback (most recent call last) (%d):\n' % eg.revision]
         if tbTraceback:
             slist += traceback.format_tb(tbTraceback)[skip:]

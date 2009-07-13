@@ -53,9 +53,9 @@ def LoadModules():
     #import MainFrame
     # pylint: enable-msg=W0104
 
-    for plugin in os.listdir(eg.PLUGIN_DIR):
+    for plugin in os.listdir(eg.corePluginDir):
         if not plugin.startswith("."):
-            eg.PluginInfo.Open(plugin, plugin, ()).Close()
+            eg.pluginManager.OpenPlugin(plugin, plugin, ()).Close()
 
 
 
@@ -97,11 +97,11 @@ class LanguageEditor(wx.Frame):
 
         imageList = wx.ImageList(16, 16)
         for pathName in (
-            join(eg.PLUGIN_DIR, "EventGhost", "icons", "DisableItem.png"),
-            join(eg.PLUGIN_DIR, "EventGhost", "icons", "EnableItem.png"),
-            join(eg.IMAGES_DIR, "folder.png"),
-            join(eg.IMAGES_DIR, "root.png"),
-            join(eg.IMAGES_DIR, "new.png"),
+            join(eg.corePluginDir, "EventGhost", "icons", "DisableItem.png"),
+            join(eg.corePluginDir, "EventGhost", "icons", "EnableItem.png"),
+            join(eg.imagesDir, "folder.png"),
+            join(eg.imagesDir, "root.png"),
+            join(eg.imagesDir, "new.png"),
         ):
             imageList.Add(
                 wx.BitmapFromImage(wx.Image(pathName, wx.BITMAP_TYPE_PNG))
@@ -246,9 +246,9 @@ class LanguageEditor(wx.Frame):
         tree.Unbind(wx.EVT_TREE_SEL_CHANGING)
         tree.DeleteChildren(self.rootId)
         translation = eg.Bunch()
-        languagePath = os.path.join(eg.LANGUAGES_DIR, "%s.py" % language)
+        languagePath = os.path.join(eg.languagesDir, "%s.py" % language)
         if os.path.exists(languagePath):
-            execfile(languagePath, {}, translation.__dict__)
+            eg.ExecFile(languagePath, {}, translation.__dict__)
         self.translationDict = translation.__dict__
         self.translationDict["__builtins__"] = {}
 
@@ -410,7 +410,7 @@ class LanguageEditor(wx.Frame):
             return "".join(res)
 
         outFile = codecs.open(
-            join(eg.LANGUAGES_DIR, "%s.py" % Config.language),
+            join(eg.languagesDir, "%s.py" % Config.language),
             "wt",
             "utf_8"
         )

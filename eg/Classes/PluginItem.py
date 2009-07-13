@@ -59,14 +59,13 @@ class PluginItem(ActionItem):
         else:
             args = ()
         evalName = node.attrib.get('identifier', None)
-        guid = node.attrib.get('guid', None)
         self.pluginName = node.attrib.get('file', None)
+        guid = node.attrib.get('guid', self.pluginName)
         self.info = info = eg.pluginManager.OpenPlugin(
-            self.pluginName, 
+            guid, 
             evalName, 
             args, 
             self, 
-            guid
         )
         self.name = eg.text.General.pluginLabel % info.label
         if info.icon != self.icon:
@@ -94,21 +93,12 @@ class PluginItem(ActionItem):
             tree.SetItemTextColour(itemId, eg.colour.pluginError)
 
 
-    def _SetColour(self, colour):
-        if self.HasValidId():
-            self.tree.SetItemTextColour(self.id, colour)
-
-
     def SetErrorState(self):
-        wx.CallAfter(self._SetColour, eg.colour.pluginError)
+        wx.CallAfter(eg.Notify, "NodeChanged", self)
 
 
     def ClearErrorState(self):
-        wx.CallAfter(self._SetColour, eg.colour.treeItem)
-
-
-    def Refresh(self):
-        pass
+        wx.CallAfter(eg.Notify, "NodeChanged", self)
 
 
     def Execute(self):
@@ -117,7 +107,6 @@ class PluginItem(ActionItem):
         if eg.config.logActions:
             self.Print(self.name)
         if self.shouldSelectOnExecute:
-            #self.Select()
             wx.CallAfter(self.Select)
         eg.indent += 1
         self.info.Start()
@@ -126,22 +115,22 @@ class PluginItem(ActionItem):
         return None, None
 
 
-    def Enable(self, flag=True):
-        ActionItem.Enable(self, flag)
+    def SetEnable(self, flag=True):
+        ActionItem.SetEnable(self, flag)
         if flag:
             eg.actionThread.Call(self.info.Start)
         else:
             eg.actionThread.Call(self.info.Stop)
 
 
-    def _Delete(self):
+    def Delete(self):
         info = self.info
         def DoIt():
             info.Close()
             info.instance.OnDelete()
             info.RemovePluginInstance()
         eg.actionThread.Call(DoIt)
-        ActionItem._Delete(self)
+        ActionItem.Delete(self)
         self.executable = None
         self.info = None
 
@@ -210,11 +199,7 @@ class PluginItem(ActionItem):
         if label != info.label:
             info.label = label
             self.name = eg.text.General.pluginLabel % label
-            if self.id:
-                self.tree.SetItemText(
-                    self.id,
-                    self.name
-                )
+            #eg.Notify("NodeChanged", self)
         self.RefreshAllVisibleActions()
         if self.isEnabled:
             eg.actionThread.Call(self.info.Stop)
@@ -230,9 +215,10 @@ class PluginItem(ActionItem):
         def Traverse(item):
             if item.__class__ == actionItemCls:
                 if item.executable.plugin == plugin:
-                    item.Refresh()
+                    pass
+                    #eg.Notify("NodeChanged", item)
             else:
-                if item.childs and item.isExpanded:
+                if item.childs and item in item.document.expandedNodes:
                     for child in item.childs:
                         Traverse(child)
         Traverse(self.root)

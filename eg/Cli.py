@@ -20,19 +20,22 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+"""
+Parses the command line arguments of the program.
+"""
+
 import os
 import sys
 import locale
-from os.path import join, dirname, basename, splitext
+from os.path import join, dirname, basename, splitext, abspath
 
 ENCODING = locale.getdefaultlocale()[1]
 locale.setlocale(locale.LC_ALL, '')
+argvIter = (val.decode(ENCODING) for val in sys.argv)
+scriptPath = argvIter.next()
 
 # get program directory
-if hasattr(sys, "frozen"):
-    MAIN_DIR = dirname(unicode(sys.executable, sys.getfilesystemencoding()))
-else:
-    MAIN_DIR = os.path.abspath(join(dirname(__file__), ".."))
+mainDir = abspath(join(dirname(__file__.decode(sys.getfilesystemencoding())), ".."))
 
 # determine the commandline parameters
 class args:
@@ -44,79 +47,54 @@ class args:
     translate = False
     configDir = None
     install = False
-    isMain = splitext(basename(sys.argv[0]))[0].lower() == "eventghost"
+    isMain = splitext(basename(scriptPath))[0].lower() == "eventghost"
     pluginFile = None
     
-argv = [val.decode(ENCODING) for val in sys.argv]
 
-i = 0
-while True:
-    i += 1
-    if len(argv) <= i:
-        break
-    arg = argv[i].lower()
-    if arg == "-n" or arg == "-netsend":
-        from Classes.NetworkSend import Main
-        Main(argv[i+1:])
-        sys.exit(0)
-    elif arg == '-debug':
+for arg in argvIter:
+    arg = arg.lower()
+    if arg.startswith('-debug'):
         args.debugLevel = 1
-    elif arg == '-debug2':
-        args.debugLevel = 2
-    elif arg == '-h' or arg == '-hide':
+        if len(arg) > 6:
+            args.debugLevel = int(arg[6:])
+    elif arg in ("-n", "-netsend"):
+        from Classes.NetworkSend import Main
+        Main(list(argvIter))
+        sys.exit(0)
+    elif arg in ('-h', '-hide'):
         args.hideOnStartup = True
     elif arg == '-install':
         import compileall
-        compileall.compile_dir(MAIN_DIR)
+        compileall.compile_dir(mainDir)
         args.install = True
     elif arg == '-uninstall':
-        for root, dirs, files in os.walk(MAIN_DIR):
+        for root, dirs, files in os.walk(mainDir):
             for name in files:
                 if name.lower().endswith(".pyc"):
                     os.remove(join(root, name))
         sys.exit(0)
-    elif arg == '-m' or arg == '-multiload':
+    elif arg in ('-m', '-multiload'):
         args.allowMultiLoad = True
-    elif arg == '-e' or arg == '-event':
-        i += 1
-        if len(argv) <= i:
-            print "missing event string"
-            break
-        eventstring = argv[i]
-        if len(argv) <= i + 1:
+    elif arg in ('-e', '-event'):
+        eventstring = argvIter.next()
+        payloads = list(argvIter)
+        if len(payloads) == 0:
             payloads = None
-        else:
-            payloads = []
-            while i + 1 < len(argv):
-                i += 1
-                payloads.append(argv[i])
         args.startupEvent = (eventstring, payloads)
-    elif arg == '-f' or arg == '-file':
-        i += 1
-        if len(argv) <= i:
-            print "missing file path"
-            break
-        args.startupFile = os.path.abspath(argv[i])
-    elif arg == '-p' or arg == '-plugin':
-        i += 1
-        if len(argv) <= i:
-            print "missing plugin file path"
-            break
-        args.pluginFile = os.path.abspath(argv[i])
+    elif arg in ('-f', '-file'):
+        args.startupFile = abspath(argvIter.next())
+    elif arg in ('-p', '-plugin'):
+        args.pluginFile = abspath(argvIter.next())
         args.isMain = False
     elif arg == '-configdir':
-        i += 1
-        if len(argv) <= i:
-            print "missing directory string"
-            break
-        args.configDir = argv[i]
+        args.configDir = argvIter.next()
     elif arg == '-translate':
         args.translate = True
 
 
 if (
     not args.allowMultiLoad 
-    and not args.translate 
+    and not args.translate
     and args.isMain
     and not args.pluginFile
 ):
@@ -143,5 +121,5 @@ if (
 
 # change working directory to program directory
 if args.debugLevel < 1 and args.isMain:
-    os.chdir(MAIN_DIR)
+    os.chdir(mainDir)
 

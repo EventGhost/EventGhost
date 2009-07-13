@@ -26,15 +26,14 @@ import eg
 class Cut:
     name = eg.text.MainFrame.Menu.Cut.replace("&", "")
 
-    def __init__(self, document, item):
-        if not item.CanDelete() or not item.AskDelete():
+    def __init__(self, document, selection):
+        if not selection.CanDelete() or not selection.AskDelete():
             return
-
-        self.data = item.GetFullXml()
-        self.positionData = eg.TreePosition(item)
+        self.data = selection.GetFullXml()
+        self.positionData = eg.TreePosition(selection)
         document.AppendUndoHandler(self)
-        document.tree.Copy()
-        item.Delete()
+        selection.OnCmdCopy()
+        selection.Delete()
 
 
     def Undo(self, document):

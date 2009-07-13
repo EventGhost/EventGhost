@@ -22,8 +22,11 @@
 
 import eg
 import os
+import sys
 from glob import glob
 from collections import deque
+
+DECODERS_DIR = os.path.dirname(__file__.decode(sys.getfilesystemencoding()))
 
 
 class DecodeError(Exception):
@@ -162,7 +165,7 @@ def GetBitString(value, numdigits=8):
 
 def GetDecoders():
     decoders = []
-    for path in glob(os.path.join(os.path.dirname(__file__), "*.py")):
+    for path in glob(os.path.join(DECODERS_DIR, "*.py")):
         name = os.path.basename(path)
         moduleName = os.path.splitext(name)[0]
         if moduleName.startswith("_"):

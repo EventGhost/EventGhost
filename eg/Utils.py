@@ -23,7 +23,7 @@
 __all__ = ["Bunch", "NotificationHandler", "LogIt", "LogItWithReturn",
     "TimeIt", "AssertNotMainThread", "AssertNotActionThread", "ParseString",
     "SetDefault", "EnsureVisible", "VBoxSizer", "HBoxSizer", "EqualizeWidths",
-    "AsTasklet",
+    "AsTasklet", "ExecFile",
 ]
 
 import eg
@@ -392,4 +392,16 @@ def GetFirstParagraph(text):
                 break
             result += " " + line
         return ' '.join(result.split())
+
+
+def ExecFile(filename, globals=None, locals=None):
+    """
+    Replacement for the Python built-in execfile() function, but handles
+    unicode filenames right.
+    """
+    return execfile(
+        filename.encode(sys.getfilesystemencoding()),
+        globals,
+        locals
+    )
 

@@ -47,6 +47,7 @@ class EventThread(eg.ThreadWorker):
         eg.event = EventGhostEvent("")
         self.startupEvent = None
         self.hHandle = OpenProcess(PROCESS_SET_QUOTA, 0, eg.processId)
+        self.filters = {}
 
 
     def Poll(self):
@@ -68,9 +69,26 @@ class EventThread(eg.ThreadWorker):
         pass
 
 
+    def AddFilter(self, source, filterFunc):
+        if source in self.filters:
+            self.filters[source].append(filterFunc)
+        else:
+            self.filters[source] = [filterFunc]
+            
+    
+    def RemoveFilter(self, source, filterFunc):
+        self.filters[source].remove(filterFunc)
+        if len(self.filters[source]) == 0:
+            del self.filters[source]
+
+
     def TriggerEvent(self, suffix, payload=None, prefix="Main", source=eg):
         '''Trigger an event'''
         event = EventGhostEvent(suffix, payload, prefix, source)
+        if event.source in self.filters:
+            for filterFunc in self.filters[event.source]:
+                if filterFunc(event) == True:
+                    return event
         def Transfer():
             ActionThreadCall(event.Execute)
             event.SetShouldEnd()
@@ -86,6 +104,10 @@ class EventThread(eg.ThreadWorker):
         source=eg
     ):
         event = EventGhostEvent(suffix, payload, prefix, source)
+        if event.source in self.filters:
+            for filterFunc in self.filters[event.source]:
+                if filterFunc(event) == True:
+                    return event
         def Transfer():
             ActionThreadCall(event.Execute)
         self.AppendAction(Transfer)
@@ -100,6 +122,10 @@ class EventThread(eg.ThreadWorker):
         source=eg
     ):
         event = EventGhostEvent(suffix, payload, prefix, source)
+        if event.source in self.filters:
+            for filterFunc in self.filters[event.source]:
+                if filterFunc(event) == True:
+                    return event
         executed = Event()
         def Execute():
             try:

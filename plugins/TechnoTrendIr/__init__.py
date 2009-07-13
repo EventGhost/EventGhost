@@ -49,7 +49,7 @@ from time import clock, sleep
 from functools import partial
 
 from eg.WinApi.Dynamic import (
-    cdll, DWORD, POINTER, ULONG, HANDLE, BYTE, c_void_p, c_int, CFUNCTYPE
+    cdll, DWORD, POINTER, ULONG, HANDLE, BYTE, c_void_p, c_int, CFUNCTYPE, CDLL
 )
 
 USBIR_MODE_DIV = 2
@@ -85,13 +85,13 @@ class TTIR(eg.IrDecoderPlugin):
         self.dll = None
         self.hOpen = None
         pluginDir = os.path.abspath(os.path.dirname(__file__))
-        dll = cdll.LoadLibrary(os.path.join(pluginDir, "TTUSBIR.dll"))
+        dll = CDLL(os.path.join(pluginDir, "TTUSBIR.dll"))
         self.cCallback = IRCALLBACKFUNC(self.IrCallback)
         self.hOpen = dll.irOpen(0, USBIR_MODE_DIV, self.cCallback, 0)
         if self.hOpen == -1:
             raise self.Exceptions.DeviceNotFound
-        self.irGetUniqueCode = dll.ir_GetUniqueCode
-        self.irGetUniqueCode.restype  = DWORD
+#        self.irGetUniqueCode = dll.ir_GetUniqueCode
+#        self.irGetUniqueCode.restype  = DWORD
         self.dll = dll
         self.data = []
         self.timer = eg.ResettableTimer(self.OnTimeout)
@@ -119,9 +119,13 @@ class TTIR(eg.IrDecoderPlugin):
     def __stop__(self):
         if self.dll is not None:
             self.dll.irClose(self.hOpen)
+            self.dll = None
+            self.hOpen = None
+            self.cCallback = None
         self.timer.Stop()
         self.ledTimer.Stop()
-    
+
+
     def IrCallback(self, context, buf, length, irMode, hOpen, devIdx):
         if irMode == USBIR_MODE_DIV:
             self.dll.irSetPowerLED(self.hOpen, 1)

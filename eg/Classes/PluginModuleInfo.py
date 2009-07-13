@@ -61,8 +61,8 @@ class PluginModuleInfo(object):
         eg.RegisterPlugin = self.RegisterPlugin
         sys.path.insert(0, self.path)
         try:
-            if self.path.startswith(eg.PLUGIN_DIR):
-                moduleName = "eg.PluginModule." + self.pluginName
+            if self.path.startswith(eg.corePluginDir):
+                moduleName = "eg.CorePluginModule." + self.pluginName
             else:
                 moduleName = "eg.UserPluginModule." + self.pluginName
             if moduleName in sys.modules:
@@ -70,7 +70,7 @@ class PluginModuleInfo(object):
             __import__(moduleName, None, None, [''])
         except RegisterPluginException:
             # It is expected that the loading will raise RegisterPluginException
-            # because RegisterPlugin is called inside the module
+            # because eg.RegisterPlugin() is called inside the module
             pass
         except:
             eg.PrintTraceback(eg.text.Error.pluginLoadError % self.path)
@@ -83,7 +83,7 @@ class PluginModuleInfo(object):
         def __setattr__(self, name, value):
             if not hasattr(self.__class__, name):
                 raise AttributeError(
-                    "PluginModuleInfo has no attribute %s" % name
+                    "%s has no attribute %s" % (self.__class__.__name__, name)
                 )
             object.__setattr__(self, name, value)
 

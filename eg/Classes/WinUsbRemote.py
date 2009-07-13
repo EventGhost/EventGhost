@@ -41,12 +41,7 @@ class WinUsbRemote(object):
         self.deviceInterfaceGuid = unicode(deviceInterfaceGuid)
         if self.dll is None:
             self.__class__.dll = WinDLL(
-                join(
-                    eg.MAIN_DIR, 
-                    "lib%d%d" % sys.version_info[:2], 
-                    "site-packages", 
-                    "WinUsbWrapper.dll"
-                )
+                join(eg.sitePackagesDir, "WinUsbWrapper.dll")
             )
         self.Open()
         

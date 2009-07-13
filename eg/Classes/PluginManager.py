@@ -31,7 +31,7 @@ class LoadErrorPlugin(eg.PluginBase):
 
 
 
-class UnknownPlugin(eg.PluginBase):
+class NonexistentPlugin(eg.PluginBase):
 
     def __init__(self):
         raise self.Exceptions.PluginNotFound
@@ -45,7 +45,6 @@ class PluginManager:
 
     def __init__(self):
         self.database = {}
-        self.guidDatabase = {}
         self.ScanAllPlugins()
 
 
@@ -56,10 +55,9 @@ class PluginManager:
         plugins.
         """
         self.database.clear()
-        self.guidDatabase.clear()
         
         # scan through all directories in the plugin directory
-        for root in (eg.PLUGIN_DIR, eg.userPluginDir):
+        for root in (eg.corePluginDir, eg.userPluginDir):
             for dirname in os.listdir(root):
                 # filter out non-plugin names
                 if dirname.startswith(".") or dirname.startswith("_"):
@@ -69,25 +67,9 @@ class PluginManager:
                     continue
                 if not exists(join(pluginDir, "__init__.py")):
                     continue
-                self.AddPlugin(pluginDir)
-
-
-    def AddPlugin(self, pluginDir):
-        info = eg.PluginModuleInfo(pluginDir)
-        if info.guid:
-            self.guidDatabase[info.guid] = info
-        dirname = os.path.basename(pluginDir)
-        self.database[dirname] = info
+                info = eg.PluginModuleInfo(pluginDir)
+                self.database[info.guid] = info
         
-        
-    def RemovePlugin(self, pluginInfo):
-        guid = pluginInfo.guid
-        if guid in self.guidDatabase:
-            del self.guidDatabase[guid]
-        dirname = os.path.basename(pluginInfo.path)
-        if dirname in self.database:
-            del self.database[dirname]
-            
         
     def GetPluginInfoList(self):
         """
@@ -95,26 +77,30 @@ class PluginManager:
         """
         self.ScanAllPlugins()
         infoList = self.database.values()
-        infoList.sort(key=lambda x: x.name.lower())
+        infoList.sort(key=lambda pluginInfo: pluginInfo.name.lower())
         return infoList
 
 
-    def OpenPlugin(self, pluginName, evalName, args, treeItem=None, guid=None):
-        if guid is not None and guid in self.guidDatabase:
-            # loading by GUID is preferred
-            moduleInfo = self.guidDatabase[guid]
-            clsInfo = eg.PluginInstanceInfo.FromModuleInfo(moduleInfo)
-        elif pluginName in self.database:
-            # otherwise get it by folder name
-            moduleInfo = self.database[pluginName]
-            clsInfo = eg.PluginInstanceInfo.FromModuleInfo(moduleInfo)
+    def GetPluginInfo(self, ident):
+        if ident in self.database:
+            return self.database[ident]
         else:
+            for guid, info in self.database.iteritems():
+                if info.pluginName == ident:
+                    return info
+        return None
+    
+    
+    def OpenPlugin(self, ident, evalName, args, treeItem=None):
+        moduleInfo = self.GetPluginInfo(ident)
+        if moduleInfo is None:
             # we don't have such plugin
             clsInfo = eg.PluginInstanceInfo()
-            clsInfo.guid = guid
-            clsInfo.name = pluginName + " not found"
-            clsInfo.pluginName = pluginName
-            clsInfo.pluginCls = UnknownPlugin
-                    
+            clsInfo.guid = ident
+            clsInfo.name = ident + " not found"
+            clsInfo.pluginName = ident
+            clsInfo.pluginCls = NonexistentPlugin
+        else:
+            clsInfo = eg.PluginInstanceInfo.FromModuleInfo(moduleInfo)
         info = clsInfo.CreateInstance(args, evalName, treeItem)
         return info

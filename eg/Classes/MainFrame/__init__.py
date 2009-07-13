@@ -25,6 +25,7 @@ import wx
 import wx.aui
 import os
 import re
+from os.path import join
 from collections import defaultdict
 
 from eg.WinApi.Dynamic import HtmlHelp, HH_DISPLAY_TOPIC, GetDesktopWindow
@@ -121,14 +122,11 @@ class MainFrame(wx.Frame):
         iconBundle = wx.IconBundle()
         iconBundle.AddIcon(eg.taskBarIcon.stateIcons[0])
         icon = wx.EmptyIcon()
-        icon.LoadFile(
-            os.path.join(eg.IMAGES_DIR, "icon32x32.png"),
-            wx.BITMAP_TYPE_PNG
-        )
+        icon.LoadFile(join(eg.imagesDir, "icon32x32.png"), wx.BITMAP_TYPE_PNG)
         iconBundle.AddIcon(icon)
         self.SetIcons(iconBundle)
 
-        self.lastFocus = "None"
+        self.lastFocus = None
 
         self.Bind(wx.EVT_ICONIZE, self.OnIconize)
         self.Bind(wx.EVT_MENU_OPEN, self.OnMenuOpen)
@@ -206,12 +204,12 @@ class MainFrame(wx.Frame):
         # (see TreeCtrl.py OnBeginLabelEdit and OnEndLabelEdit)
 
         def OnDelKey(dummyEvent):
-            self.DispatchCommand('Clear')
+            self.DispatchCommand('OnCmdDelete')
         delId = wx.NewId()
         wx.EVT_MENU(self, delId, OnDelKey)
 
         def OnEnterKey(dummyEvent):
-            if self.lastFocus == "Edit":
+            if self.lastFocus == self.treeCtrl.editControl:
                 self.treeCtrl.EndEditLabel(self.treeCtrl.editLabelId, False)
         enterId = wx.NewId()
         wx.EVT_MENU(self, enterId, OnEnterKey)
@@ -230,7 +228,7 @@ class MainFrame(wx.Frame):
     @eg.LogItWithReturn
     def Destroy(self):
         self.Hide()
-        self.document.SetTree(None)
+        #self.document.SetTree(None)
         eg.log.SetCtrl(None)
         Config.perspective = self.auiManager.SavePerspective()
         eg.Unbind("DocumentFileChange", self.OnDocumentFileChange)
@@ -246,7 +244,8 @@ class MainFrame(wx.Frame):
         self.SetStatusBar(None)
         self.statusBar.Destroy()
         result = wx.Frame.Destroy(self)
-        eg.Icons.ClearImageList()
+        #eg.Icons.ClearImageList()
+        self.popupMenu.Destroy()
         return result
 
 
@@ -307,11 +306,12 @@ class MainFrame(wx.Frame):
         x, y = event.GetPosition()
         item = self.toolBar.FindToolForPosition(x, y)
         if item and item.GetId() == ID_TOOLBAR_EXECUTE:
-            if not self.document.selection.isExecutable:
+            node = self.treeCtrl.GetSelectedNode()
+            if not node.isExecutable:
                 self.DisplayError(Text.Messages.cantExecute)
             else:
                 self.lastClickedTool = item
-                self.egEvent = self.document.ExecuteSelected()
+                self.egEvent = self.document.ExecuteNode(node)
         event.Skip()
 
 
@@ -430,13 +430,12 @@ class MainFrame(wx.Frame):
             Append("Import")
             menu.AppendSeparator()
             Append("Reload")
-            Append("GetInfo")
             Append("CollectGarbage")
             Append("Reset", "\tPause")
             Append("AddEventDialog")
             menu.AppendSeparator()
             Append("ExportPlugin")
-            
+            Append("VirtualTree")
 
         self.SetMenuBar(menuBar)
         return menuBar
@@ -477,8 +476,8 @@ class MainFrame(wx.Frame):
 
 
     def CreateTreeCtrl(self):
-        treeCtrl = TreeCtrl(self, document=self.document)
-        self.document.SetTree(treeCtrl)
+        #treeCtrl = TreeCtrl(self, document=self.document)
+        treeCtrl = eg.VirtualTree(self, document=self.document)
         self.auiManager.AddPane(
             treeCtrl,
             wx.aui.AuiPaneInfo().
@@ -602,19 +601,19 @@ class MainFrame(wx.Frame):
     @eg.LogIt
     def OnClipboardChange(self, dummyValue):
         if self.lastFocus == self.treeCtrl:
-            canPaste = self.document.selection.CanPaste()
+            canPaste = self.treeCtrl.GetSelectedNode().CanPaste()
             self.toolBar.EnableTool(wx.ID_PASTE, canPaste)
 
 
     def OnFocusChange(self, focus):
         if focus == self.lastFocus:
             return
-        if focus == "Edit":
+        if focus == self.treeCtrl.editControl:
             # avoid programmatic change of the selected item while editing
             self.UpdateViewOptions()
             # temporarily disable the "Del" accelerator
             #self.SetAcceleratorTable(wx.AcceleratorTable([]))
-        elif self.lastFocus == "Edit":
+        elif self.lastFocus == self.treeCtrl.editControl:
             # restore the "Del" accelerator
             #self.SetAcceleratorTable(self.acceleratorTable)
             self.UpdateViewOptions()
@@ -665,27 +664,18 @@ class MainFrame(wx.Frame):
 
     def GetEditCmdState(self):
         focus = self.lastFocus
-        if focus == "Edit":
-            editCtrl = self.treeCtrl.GetEditControl()
-            start, end = editCtrl.GetSelection()
+        if focus == self.treeCtrl.editControl:
             return (
-                editCtrl.CanCut(),
-                editCtrl.CanCopy(),
-                editCtrl.CanPaste(),
-                (start != end)
+                focus.CanCut(),
+                focus.CanCopy(),
+                focus.CanPaste(),
+                focus.CanDelete()
             )
         elif focus == self.logCtrl:
             return (False, True, False, False)
-        elif focus == self.treeCtrl and self.document.selection:
-            selection = self.document.selection
-            return (
-                selection.CanCut(),
-                selection.CanCopy(),
-                selection.CanPaste(),
-                selection.CanDelete(),
-            )
-        else:
-            return (False, False, False, False)
+        elif focus == self.treeCtrl:
+            return self.treeCtrl.GetEditCmdState()
+        return (False, False, False, False)
 
 
     def OnSelectionChange(self, dummySelection):
@@ -732,19 +722,12 @@ class MainFrame(wx.Frame):
             and Config.expandOnEvents
             and (self.treeCtrl and self.treeCtrl.editLabelId is None)
         )
-        eg.ActionItem.shouldSelectOnExecute = expandOnEvents
-        eg.MacroItem.shouldSelectOnExecute = expandOnEvents
+        self.document.ActionItem.shouldSelectOnExecute = expandOnEvents
+        self.document.MacroItem.shouldSelectOnExecute = expandOnEvents
 
 
     @eg.LogIt
     def DispatchCommand(self, command):
-        if self.lastFocus == "Edit" and command == "Clear":
-            editCtrl = self.treeCtrl.GetEditControl()
-            start, end = editCtrl.GetSelection()
-            if end - start == 0:
-                end += 1
-            editCtrl.Remove(start, end)
-            return
         focus = self.FindFocus()
         getattr(focus, command)()
 
@@ -787,19 +770,19 @@ class MainFrame(wx.Frame):
 
 
     def OnCmdCut(self):
-        self.DispatchCommand("Cut")
+        self.DispatchCommand("OnCmdCut")
 
 
     def OnCmdCopy(self):
-        self.DispatchCommand("Copy")
+        self.DispatchCommand("OnCmdCopy")
 
 
     def OnCmdPaste(self):
-        self.DispatchCommand("Paste")
+        self.DispatchCommand("OnCmdPaste")
 
 
     def OnCmdDelete(self):
-        self.DispatchCommand("Clear")
+        self.DispatchCommand("OnCmdDelete")
 
 
     def OnCmdFind(self):
@@ -827,24 +810,29 @@ class MainFrame(wx.Frame):
 
     @eg.AsTasklet
     def OnCmdAddEvent(self):
-        if not self.document.selection.DropTest(eg.EventItem):
+        selection = self.treeCtrl.GetSelectedNode()
+        if not selection.DropTest(eg.EventItem):
             self.DisplayError(Text.Messages.cantAddEvent)
             return
-        eg.UndoHandler.NewEvent().Do(self.document)
+        eg.UndoHandler.NewEvent().Do(self.document, selection)
 
 
     def OnCmdAddFolder(self):
-        eg.UndoHandler.NewFolder().Do(self.document)
+        selection = self.treeCtrl.GetSelectedNode()
+        folderNode = eg.UndoHandler.NewFolder().Do(self.document, selection)
+        self.treeCtrl.EditNodeLabel(folderNode)
 
 
     @eg.AsTasklet
     def OnCmdAddMacro(self):
-        eg.UndoHandler.NewMacro().Do(self.document)
+        selection = self.treeCtrl.GetSelectedNode()
+        eg.UndoHandler.NewMacro().Do(self.document, selection)
 
 
     @eg.AsTasklet
     def OnCmdAddAction(self):
-        if not self.document.selection.DropTest(eg.ActionItem):
+        selection = self.treeCtrl.GetSelectedNode()
+        if not selection.DropTest(eg.ActionItem):
             self.DisplayError(Text.Messages.cantAddAction)
             return
         # let the user choose an action
@@ -852,37 +840,24 @@ class MainFrame(wx.Frame):
         # if user canceled the dialog, take a quick exit
         if result is None:
             return
-        eg.UndoHandler.NewAction().Do(self.document, result[0])
+        eg.UndoHandler.NewAction().Do(self.document, selection, result[0])
 
 
     @eg.LogIt
     def OnCmdRename(self):
-        if not self.document.selection.isRenameable:
-            self.DisplayError(Text.Messages.cantRename)
-        else:
-            self.treeCtrl.SetFocus()
-            self.treeCtrl.EditLabel(self.treeCtrl.GetSelection())
+        self.treeCtrl.OnCmdRename()
 
 
     def OnCmdConfigure(self):
-        if not self.document.selection.isConfigurable:
-            self.DisplayError(Text.Messages.cantConfigure)
-        else:
-            eg.UndoHandler.Configure().Try(self.document)
+        self.treeCtrl.OnCmdConfigure()
 
 
     def OnCmdExecute(self):
-        if not self.document.selection.isExecutable:
-            self.DisplayError(Text.Messages.cantExecute)
-        else:
-            self.document.ExecuteSelected().SetShouldEnd()
+        self.treeCtrl.OnCmdExecute()
 
 
     def OnCmdDisabled(self):
-        if not self.document.selection.isDeactivatable:
-            self.DisplayError(Text.Messages.cantDisable)
-        else:
-            eg.UndoHandler.ToggleEnable(self.document)
+        self.treeCtrl.OnCmdToggleEnable()
 
 
     def OnCmdHideShowToolbar(self):
@@ -937,7 +912,7 @@ class MainFrame(wx.Frame):
     def OnCmdHelpContents(self):
         HtmlHelp(
             GetDesktopWindow(),
-            os.path.join(eg.MAIN_DIR, "EventGhost.chm"),
+            join(eg.meinDir, "EventGhost.chm"),
             HH_DISPLAY_TOPIC,
             0
         )
@@ -969,7 +944,7 @@ class MainFrame(wx.Frame):
 
         import wx.py as py
 
-        fileName = os.path.join(eg.configDir, 'PyCrust')
+        fileName = join(eg.configDir, 'PyCrust')
         pyCrustConfig = wx.FileConfig(localFilename=fileName)
         pyCrustConfig.SetRecordDefaults(True)
 
@@ -1020,23 +995,20 @@ class MainFrame(wx.Frame):
         self.document.StartSession(self.document.filePath)
 
 
-    def OnCmdGetInfo(self):
-        self.document.selection.ShowInfo()
-
-
     def OnCmdCollectGarbage(self):
         import gc
-        gc.set_debug(gc.DEBUG_SAVEALL)
-
+        #gc.set_debug(gc.DEBUG_SAVEALL)
+        #gc.set_debug(gc.DEBUG_UNCOLLECTABLE)
         from pprint import pprint
+        print "threshold:", gc.get_threshold()
         print "unreachable object count:", gc.collect()
         garbageList = gc.garbage[:]
         for i, obj in enumerate(garbageList):
             print "Object Num %d:" % i
             pprint(obj)
-            print "Referrers:"
+            #print "Referrers:"
             #print(gc.get_referrers(o))
-            print "Referents:"
+            #print "Referents:"
             #print(gc.get_referents(o))
         print "Done."
         #print "unreachable object count:", gc.collect()
@@ -1059,9 +1031,19 @@ class MainFrame(wx.Frame):
         if result is None:
             return
         label = result[0]
-        eg.UndoHandler.NewEvent().Do(self.document, label)
+        eg.UndoHandler.NewEvent().Do(
+            self.document, 
+            self.treeCtrl.GetSelectedNode(), 
+            label=label
+        )
 
     
     def OnCmdExportPlugin(self):
         eg.PluginInstall.Export()
 
+
+    def OnCmdVirtualTree(self):
+        frame = wx.Frame(None, size=(500, 600))
+        tree = eg.VirtualTree(frame, self.document)
+        frame.Show()
+        

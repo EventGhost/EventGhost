@@ -28,12 +28,9 @@ class MoveTo:
 
     @eg.LogIt
     def __init__(self, document, item, parent, pos):
-        tree = document.tree
-        tmp = tree.GetFirstVisibleItem()
         oldParent = item.parent
         self.oldPos = item.parent.childs.index(item)
         item.MoveItemTo(parent, pos)
-        tree.EnsureVisible(tmp)
         self.oldParentPath = oldParent.GetPath()
         self.newPositionData = eg.TreePosition(item)
         item.Select()
@@ -44,7 +41,7 @@ class MoveTo:
     def Undo(self, document):
         parent1, pos1 = self.newPositionData.GetPosition()
         item = parent1.childs[pos1]
-        parent = item.tree.root
+        parent = item.root
         for parentPos in self.oldParentPath:
             parent = parent.childs[parentPos]
         oldParent = item.parent

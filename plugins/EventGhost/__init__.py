@@ -38,6 +38,7 @@ import wx
 import sys
 import time
 import traceback
+from threading import Event
 from eg import ContainerItem, FolderItem, MacroItem, RootItem, AutostartItem
 
 from PythonScript import PythonScript
@@ -56,13 +57,14 @@ class EventGhost(eg.PluginBase):
         self.AddAction(PythonCommand)
         self.AddAction(PythonScript)
         self.AddAction(Comment)
-        self.AddAction(NewJumpIf)
         self.AddAction(EnableItem)
         self.AddAction(DisableItem)
         self.AddAction(EnableExclusive)
         self.AddAction(Wait)
         self.AddAction(StopProcessing)
+        self.AddAction(NewJumpIf)
         self.AddAction(JumpIfLongPress)
+        self.AddAction(JumpIfDoubleEvent)
         self.AddAction(AutoRepeat)
         self.AddAction(TriggerEvent)
         self.AddAction(FlushEvents)
@@ -124,11 +126,11 @@ class EnableItem(eg.ActionBase):
         
     def __call__(self, link):
         if link:
-            obj = link.target
-            if obj:
-                obj.isEnabled = True
-                wx.CallAfter(obj.Enable, True)
-                return obj
+            node = link.target
+            if node:
+                node.isEnabled = True
+                wx.CallAfter(eg.Notify, "NodeChanged", node)
+                return node
     
     
     def GetLabel(self, link):
@@ -192,11 +194,10 @@ class DisableItem(EnableItem):
 
     def __call__(self, link):
         if link:
-            item = link.target
-            if item and item.isDeactivatable:
-                item.isEnabled = False
-                wx.CallAfter(item.Enable, False)
-
+            node = link.target
+            if node and node.isDeactivatable:
+                node.isEnabled = False
+                wx.CallAfter(eg.Notify, "NodeChanged", node)
 
 
 class EnableExclusive(EnableItem):
@@ -219,17 +220,17 @@ class EnableExclusive(EnableItem):
     def __call__(self, link):
         if not link:
             return
-        item = link.target
-        if not item:
+        node = link.target
+        if not node:
             return
         def DoIt():
-            item.isEnabled = True
-            wx.CallAfter(item.Enable, True)
-            autostartMacro = item.document.autostartMacro
-            for child in item.parent.childs:
-                if child is not item and child.isDeactivatable:
+            node.isEnabled = True
+            wx.CallAfter(eg.Notify, "NodeChanged", node)
+            autostartMacro = node.document.autostartMacro
+            for child in node.parent.childs:
+                if child is not node and child.isDeactivatable:
                     child.isEnabled = False
-                    wx.CallAfter(child.Enable, False)
+                    wx.CallAfter(eg.Notify, "NodeChanged", child)
         eg.actionThread.Call(DoIt)
                 
                 
@@ -312,6 +313,89 @@ class JumpIfLongPress(eg.ActionBase):
 
 
     def Configure(self, interval=2.0, link=None):
+        panel = eg.ConfigPanel()
+        text = self.text
+        if link is None:
+            link = eg.TreeLink(eg.currentConfigureItem)
+        
+        intervalCtrl = panel.SpinNumCtrl(interval)
+        macroCtrl = eg.MacroSelectButton(  
+            panel,
+            eg.text.General.choose,
+            text.text4,
+            text.text5,
+            link.target
+        )
+
+        sizer1 = eg.HBoxSizer(
+            (panel.StaticText(text.text1), 0, wx.ALIGN_CENTER_VERTICAL),
+            (intervalCtrl, 0, wx.LEFT|wx.RIGHT, 5),
+            (panel.StaticText(text.text2), 0, wx.ALIGN_CENTER_VERTICAL),
+        )
+        mySizer = wx.FlexGridSizer(2, 3, 5, 5)
+        mySizer.AddGrowableCol(1, 1)
+        mySizer.Add(panel.StaticText(text.text3), 0, wx.ALIGN_CENTER_VERTICAL)
+        mySizer.Add(macroCtrl, 1, wx.EXPAND)
+                    
+        panel.sizer.AddMany(((sizer1), (mySizer, 1, wx.EXPAND|wx.TOP, 5)))
+        while panel.Affirmed():
+            link.SetTarget(macroCtrl.GetValue())
+            panel.SetResult(intervalCtrl.GetValue(), link)
+
+
+
+class JumpIfDoubleEvent(eg.ActionBase):
+    name = "Jump if double event"
+    description = (
+        "Jumps to another macro, if the same event that has triggered this "
+        "macro, happens twice in a given time."
+    )
+    iconFile = "icons/LongPress"
+    class text:
+        label = "If event arrives twice, go to: %s"
+        text1 = "If event arrives twice within"
+        text2 = "seconds,"
+        text3 = "jump to:"
+        text4 = (
+            "Select the macro that should be executed if the event happens "
+            "twice..."
+        )
+        text5 = (
+            "Please select the macro, which should be triggered "
+            "if the event is a double click."
+        )
+    
+    def __call__(self, interval, link):
+        firstEvent = eg.event
+        # wait for the first event to release
+        firstEvent.shouldEnd.wait(10.0)
+
+        waitEvent = Event()
+        waitEvent.wasSameEvent = False
+        def EventFilter(event):
+            if event.string == firstEvent.string:
+                waitEvent.wasSameEvent = True
+                waitEvent.secondEvent = event
+                waitEvent.set()
+                return True
+            else:
+                waitEvent.set()
+        
+        eg.eventThread.AddFilter(firstEvent.source, EventFilter)
+        waitEvent.wait(interval)
+        eg.eventThread.RemoveFilter(firstEvent.source, EventFilter)
+        if waitEvent.isSet() and waitEvent.wasSameEvent:
+            nextItem = link.target
+            nextIndex = nextItem.parent.GetChildIndex(nextItem)
+            eg.programCounter = (nextItem, nextIndex)
+            eg.event = waitEvent.secondEvent
+
+    
+    def GetLabel(self, interval, link):
+        return self.text.label % (link.target.name)
+
+
+    def Configure(self, interval=0.5, link=None):
         panel = eg.ConfigPanel()
         text = self.text
         if link is None:

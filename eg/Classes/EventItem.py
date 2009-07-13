@@ -84,9 +84,9 @@ class EventItem(TreeItem):
             panel.SetResult(textCtrl.GetValue())
 
 
-    def _Delete(self):
+    def Delete(self):
         self.UnRegisterEvent(self.name)
-        TreeItem._Delete(self)
+        TreeItem.Delete(self)
 
 
     def RenameTo(self, newName):

@@ -17,9 +17,10 @@
 
 import sys
 from os.path import join, exists
+from types import ClassType
 import eg
 from eg.Utils import SetDefault
-
+from PluginModuleInfo import PluginModuleInfo
 
 class PluginProxy(object):
 
@@ -33,7 +34,7 @@ class PluginProxy(object):
 
 
 
-class PluginInstanceInfo(eg.PluginModuleInfo):
+class PluginInstanceInfo(PluginModuleInfo):
     pluginCls = None
     module = None
     treeItem = None
@@ -60,9 +61,9 @@ class PluginInstanceInfo(eg.PluginModuleInfo):
         pathname = join(self.path, "__init__.py")
         if not exists(pathname):
             eg.PrintError("File %s does not exist" % pathname)
-            return False
-        if self.path.startswith(eg.PLUGIN_DIR):
-            moduleName = "eg.PluginModule." + self.pluginName
+            return None
+        if self.path.startswith(eg.corePluginDir):
+            moduleName = "eg.CorePluginModule." + self.pluginName
         else:
             moduleName = "eg.UserPluginModule." + self.pluginName
         try:
@@ -75,23 +76,27 @@ class PluginInstanceInfo(eg.PluginModuleInfo):
                 "Error while loading plugin-file %s." % self.path,
                 1
             )
-            return False
+            return None
         pluginCls = module.__pluginCls__
         self.module = module
         self.pluginCls = pluginCls
-        defaultText = pluginCls.text
-        if defaultText is None:
-            class defaultText:
-                pass
-        defaultText.name = self.englishName
-        defaultText.description = self.englishDescription
-        translationText = getattr(eg.text.Plugin, pluginCls.__name__, None)
-        if translationText is not None:
-            SetDefault(translationText, defaultText)
-            text = translationText
+        
+        englishText = pluginCls.text
+        if englishText is None:
+            englishText = ClassType("EmptyDefaultText", (), {})
+            
+        englishText.name = self.englishName
+        englishText.description = self.englishDescription
+        
+        # TODO: the text class should be referenced by the GUID instead of
+        #       pluginCls.__name__
+        translatedText = getattr(eg.text.Plugin, pluginCls.__name__, None)
+        if translatedText is None:
+            setattr(eg.text.Plugin, pluginCls.__name__, englishText)
+            text = englishText
         else:
-            setattr(eg.text.Plugin, pluginCls.__name__, defaultText)
-            text = defaultText
+            SetDefault(translatedText, englishText)
+            text = translatedText
 
         pluginCls.text = text
         pluginCls.name = text.name
@@ -222,28 +227,36 @@ class PluginInstanceInfo(eg.PluginModuleInfo):
             self.instance.__close__()
 
 
+    def DeleteActionListItems(self, items):
+        if items is None:
+            return
+        for item in items:
+            if isinstance(item, type) and issubclass(item, eg.ActionBase):
+                item.plugin = None
+#                item.info.icon = None
+#                item.info = None
+#                item.text = None
+            else:
+                self.DeleteActionListItems(item.items)
+                item.plugin = None
+        del items
+
+    
     def RemovePluginInstance(self):
         plugin = self.instance
-        def DeleteActionListItems(items):
-            if items is None:
-                return
-            for item in items:
-                if isinstance(item, type) and issubclass(item, eg.ActionBase):
-                    item.plugin = None
-                else:
-                    DeleteActionListItems(item.items)
-                    item.plugin = None
-            del items
-
         delattr(eg.plugins, self.evalName)
         eg.pluginList.remove(plugin)
-        DeleteActionListItems(self.actionGroup.items)
-        try:
-            eg.actionGroup.items.remove(self.actionGroup)
-        except:
-            pass
-        self.instance = None
-        plugin.AddAction = None
-
-
+        self.DeleteActionListItems(self.actionGroup.items)
+        eg.actionGroup.items.remove(self.actionGroup)
+#        self.actions = None
+#        self.instance = None
+#        plugin.info = None
+#        plugin.AddAction = None
+#        plugin.Exceptions.source = None
+#        plugin.Exception.obj = None
+#        plugin.AddGroup = None
+#        plugin.description = None
+#        plugin.name = None
+#        self.actionGroup = None
         
+

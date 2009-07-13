@@ -127,8 +127,8 @@ class ActionItem(TreeItem):
         self.SetArgs(args)
 
 
-    def _Delete(self):
-        TreeItem._Delete(self)
+    def Delete(self):
+        TreeItem.Delete(self)
         for arg in self.GetArgs():
             if isinstance(arg, TreeLink):
                 if arg.target:
@@ -151,15 +151,6 @@ class ActionItem(TreeItem):
                 eg.PrintTraceback(source=self)
                 self.compiled = None
             #self.Refresh()
-
-
-    def Refresh(self):
-        tree = self.tree
-        treeId = self.id
-        if treeId is None:
-            return
-        self.SetAttributes(tree, treeId)
-        tree.SetItemText(treeId, self.GetLabel())
 
 
     def SetAttributes(self, tree, treeId):
@@ -226,7 +217,6 @@ class ActionItem(TreeItem):
         if eg.config.logActions:
             self.Print(self.GetLabel())
         if self.shouldSelectOnExecute:
-            #self.Select()
             wx.CallAfter(self.Select)
         eg.currentItem = self
         action = self.executable
@@ -244,7 +234,6 @@ class ActionItem(TreeItem):
             #eg.PrintError(e.message)
             self.PrintError(unicode(exc))
         except:
-            wx.CallAfter(self.Select)
             label = self.GetLabel()
             eg.PrintTraceback(eg.text.Error.InAction % label, 1, source=self)
         finally:
@@ -253,14 +242,13 @@ class ActionItem(TreeItem):
 
 
     def DropTest(self, cls):
-        if cls == eg.EventItem and self.parent != self.document.autostartMacro:
-            return HINT_MOVE_BEFORE
+        if self.parent == self.document.autostartMacro:
+            if cls == eg.PluginItem:
+                return HINT_MOVE_BEFORE_OR_AFTER
+        else:
+            if cls == eg.EventItem:
+                return HINT_MOVE_BEFORE
         if cls == eg.ActionItem:
-            return HINT_MOVE_BEFORE_OR_AFTER
-        if (
-            cls == eg.PluginItem
-            and self.parent == self.document.autostartMacro
-        ):
             return HINT_MOVE_BEFORE_OR_AFTER
         return HINT_NO_DROP
 

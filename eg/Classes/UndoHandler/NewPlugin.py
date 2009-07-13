@@ -21,15 +21,17 @@
 # $LastChangedBy$
 
 import eg
+from NewItem import NewItem
 
 
-class NewPlugin(eg.UndoHandler.NewItem):
+class NewPlugin(NewItem):
     """
     Create a new PluginItem if the user has choosen to do so from the menu
     or toolbar.
     """
     name = eg.text.MainFrame.Menu.AddPlugin.replace("&", "")
 
+    @eg.LogIt
     def Do(self, document, pluginInfo):
         """ Handle the menu command 'Add Plugin...'. """
         pluginItem = document.PluginItem.Create(

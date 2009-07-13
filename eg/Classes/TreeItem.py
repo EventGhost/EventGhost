@@ -29,18 +29,18 @@ import xml.etree.cElementTree as ElementTree
 
 from TreeLink import TreeLink
 
-HINT_NO_DROP = None           # item cannot be dropped on it
+HINT_NO_DROP = 0              # item cannot be dropped on it
 HINT_MOVE_INSIDE = 1          # item would be dropped inside
 HINT_MOVE_BEFORE = 2          # item would move before
-HINT_MOVE_AFTER = 3           # item would move after
-HINT_MOVE_BEFORE_OR_AFTER = 4 # item can be inserted before or after
-HINT_MOVE_EVERYWHERE = 5      # item can be inserted before or after or dropped inside
+HINT_MOVE_AFTER = 4           # item would move after
+HINT_MOVE_BEFORE_OR_AFTER = 6 # item can be inserted before or after
+HINT_MOVE_EVERYWHERE = 7      # item can be inserted before or after or dropped
+                              # inside
 
 
 
 class TreeItem(object):
     # name
-    # id
     # parent
     # isEnabled
     # xmlId
@@ -55,20 +55,9 @@ class TreeItem(object):
     # we need this so weakrefs can find out if the item actually lives
     isDeleted = False
 
-    tree = None
     document = None
     root = None
     icon = None
-
-    def GetFullXml(self):
-        TreeLink.StartUndo()
-        output = StringIO()
-        self.GetXmlString(output.write)
-        data = output.getvalue()
-        output.close()
-        TreeLink.StopUndo()
-        return data
-
 
     @classmethod
     #@eg.AssertNotMainThread
@@ -85,7 +74,6 @@ class TreeItem(object):
     #@eg.AssertNotActionThread
     def __init__(self, parent, node):
         self.parent = parent
-        self.id = None
         # convert all attribute names to lowercase
         node.attrib = dict([(k.lower(), v) for k, v in node.attrib.items()])
         get = node.attrib.get
@@ -126,93 +114,51 @@ class TreeItem(object):
         raise NotImplementedError
 
 
-    def GetXmlString(self, write, indent=""):
-        def WriteNode(node, indent):
-            attr, text = node.GetData()
-            attribStrs = [
-                ' %s=%s' % (k, quoteattr(unicode(v)).encode("UTF-8"))
-                for k, v in attr
-            ]
-            write("%s<%s%s" % (indent, node.xmlTag, "".join(attribStrs)))
-            if not text and len(node.childs) == 0:
-                write(" />\r\n")
-            else:
-                write(">\r\n")
-                newIndent = indent + "    "
-                if text is not None:
-                    write(newIndent + escape(text).encode("UTF-8"))
-                    write("\r\n")
-                for child in node.childs:
-                    WriteNode(child, newIndent)
-                write(indent + "</%s>\r\n" % node.xmlTag)
-        WriteNode(self, indent)
-
-
-    def CreateTreeItem(self, tree, parentId):
-        treeId = tree.AppendItem(
-            parentId,
-            self.GetLabel(),
-            self.icon.index if self.isEnabled else self.icon.disabledIndex,
-            -1,
-            wx.TreeItemData(self)
-        )
-        self.id = treeId
-        self.SetAttributes(tree, treeId)
-        return treeId
-
-
-    @eg.LogIt
-    def CreateTreeItemAt(self, tree, parentId, pos):
-        if pos == -1 or pos >= len(self.parent.childs):
-            return TreeItem.CreateTreeItem(self, tree, parentId)
+    def WriteXmlString(self, streamWriter, indent=""):
+        attr, text = self.GetData()
+        attribStrs = [
+            ' %s=%s' % (k, quoteattr(unicode(v)).encode("UTF-8"))
+            for k, v in attr
+        ]
+        streamWriter("%s<%s%s" % (indent, self.xmlTag, "".join(attribStrs)))
+        if not text and len(self.childs) == 0:
+            streamWriter(" />\r\n")
         else:
-            id = tree.InsertItemBefore(
-                parentId,
-                pos,
-                self.GetLabel(),
-                self.icon.index if self.isEnabled else self.icon.disabledIndex,
-                -1,
-                wx.TreeItemData(self)
-            )
-            self.SetAttributes(tree, id)
-            self.id = id
-            return id
+            streamWriter(">\r\n")
+            newIndent = indent + "    "
+            if text is not None:
+                streamWriter(newIndent + escape(text).encode("UTF-8"))
+                streamWriter("\r\n")
+            for child in self.childs:
+                child.WriteXmlString(streamWriter, newIndent)
+            streamWriter(indent + "</%s>\r\n" % self.xmlTag)
 
 
-    def EnsureValidId(self, tree):
-        parent = self.parent
-        parent.EnsureValidId(tree)
-        if not tree.IsExpanded(parent.id):
-            tree.Expand(parent.id)
+    def GetFullXml(self):
+        TreeLink.StartUndo()
+        output = StringIO()
+        self.WriteXmlString(output.write)
+        data = output.getvalue()
+        output.close()
+        TreeLink.StopUndo()
+        return data
 
 
-    def HasValidId(self):
-        if not self.tree:
-            return False
-        parent = self.parent
-        while parent is not None:
-            if parent.id is None or not self.tree.IsExpanded(parent.id):
-                return False
-            parent = parent.parent
-        return True
+    def GetXmlString(self):
+        stream = StringIO()
+        stream.write('<?xml version="1.0" encoding="UTF-8" ?>\r\n')
+        if isinstance(self, eg.RootItem):
+            self.WriteXmlString(stream.write)
+        else:
+            stream.write('<EventGhost Version="%s">\r\n' % str(eg.revision))
+            self.WriteXmlString(stream.write, "    ")
+            stream.write('</EventGhost>')
+        data = stream.getvalue()
+        stream.close()
+        return data
 
 
-    @eg.AssertNotMainThread
-    def Select(self):
-        tree = self.tree
-        if tree:
-            self.EnsureValidId(tree)
-            tree.SelectItem(self.id)
-
-
-    @eg.AssertNotMainThread
     def Delete(self):
-        if self.HasValidId():
-            self.tree.Delete(self.id)
-        self._Delete()
-
-
-    def _Delete(self):
         self.isDeleted = True
         if self.dependants is not None:
             TreeLink.RemoveDependants(self)
@@ -222,26 +168,6 @@ class TreeItem(object):
             del TreeLink.id2target[self.xmlId]
         self.parent.RemoveChild(self)
         self.parent = None
-
-
-    def ShowInfo(self):
-        s = "%r " % self
-        s += self.GetLabel() + "\n"
-        s += "Dependant Links:\n"
-        if self.dependants:
-            for i, link in enumerate(self.dependants):
-                s += "%d.\n" % i
-                if link.target is None:
-                    s += "Target: %r\n" % link.target
-                else:
-                    s += "  Target: %r %s\n" % (link.target, link.target.GetLabel())
-                if link.owner is None:
-                    s += "  Owner: %r\n" % (link.owner)
-                else:
-                    s += "  Owner: %r %s\n" % (link.owner, link.owner.GetLabel())
-        from wx.lib.dialogs import ScrolledMessageDialog
-        ScrolledMessageDialog(None, s, "Info").Show()
-
 
 
     def GetAllItems(self):
@@ -323,12 +249,12 @@ class TreeItem(object):
                 data = dataObj.GetText().encode("utf-8")
                 tagToCls = self.document.XMLTag2ClassDict
                 for childXmlNode in ElementTree.fromstring(data):
-                    childCls = tagToCls[childXmlNode.tag].__bases__[1]
-                    if self.DropTest(childCls) in (1, 5):
+                    childCls = tagToCls[childXmlNode.tag.lower()].__bases__[1]
+                    if self.DropTest(childCls) & HINT_MOVE_INSIDE:
                         continue
                     if self.parent is None:
                         return False
-                    elif self.parent.DropTest(childCls) not in (1, 5):
+                    elif not self.parent.DropTest(childCls) & HINT_MOVE_INSIDE:
                         return False
             except:
                 return False
@@ -341,23 +267,25 @@ class TreeItem(object):
         return True
 
 
+    def OnCmdCopy(self):
+        data = self.GetXmlString()
+        if data and wx.TheClipboard.Open():
+            wx.TheClipboard.SetData(wx.TextDataObject(data))
+            wx.TheClipboard.Close()
+
+    
     def GetLabel(self):
         return self.name
 
 
-    #@eg.AssertNotMainThread
+    @eg.AssertNotMainThread
     @eg.LogIt
     def RenameTo(self, newName):
         self.name = newName
-        self.tree.SetItemText(self.id, newName)
-        wx.CallAfter(self.Refresh)
         if self.dependants:
             for link in self.dependants:
-                wx.CallAfter(link.owner.Refresh)
-
-
-    def Refresh(self):
-        pass
+                eg.Notify("NodeChanged", link.owner)
+        eg.Notify("NodeChanged", self)
 
 
     def SetAttributes(self, tree, treeId):
@@ -367,33 +295,25 @@ class TreeItem(object):
     @eg.AssertNotMainThread
     @eg.LogIt
     def MoveItemTo(self, newParentItem, pos):
-        tree = self.tree
-        tree.Freeze()
-        try:
-            oldPos = self.parent.RemoveChild(self)
-            if newParentItem == self.parent:
-                if pos > oldPos:
-                    pos -= 1
-            #if pos >= len(newParentItem.childs):
-            #    pos = -1
-            self.parent = newParentItem
-            newParentItem.AddChild(self, pos)
-        finally:
-            tree.Thaw()
-        return id
+        eg.Notify("NodeMoveBegin")
+        oldPos = self.parent.RemoveChild(self)
+        if newParentItem == self.parent:
+            if pos > oldPos:
+                pos -= 1
+        #if pos >= len(newParentItem.childs):
+        #    pos = -1
+        self.parent = newParentItem
+        newParentItem.AddChild(self, pos)
+        eg.Notify("NodeMoveEnd")
 
 
     @eg.AssertNotMainThread
-    def Enable(self, enable=True):
+    def SetEnable(self, enable=True):
         self.isEnabled = enable
-        if self.HasValidId():
-            self.tree.SetItemImage(
-                self.id,
-                self.icon.index if self.isEnabled else self.icon.disabledIndex,
-                wx.TreeItemIcon_Normal
-            )
-            if self.document.selection == self:
-                eg.Notify("SelectionChange", self)
+
+
+    def Select(self):
+        eg.Notify("NodeSelected", self)
 
 
     def Execute(self):
@@ -497,9 +417,15 @@ class TreeItem(object):
             self = self.childs[-1]
         return self
 
-
-    if eg.debugLevel:
-        @eg.LogIt
-        def __del__(self):
-            pass
-
+    @property
+    def label(self):
+        return self.GetLabel()
+    @property
+    def imageIndex(self):
+        return self.icon.index if self.isEnabled else self.icon.disabledIndex
+    @property
+    def selectedImageIndex(self):
+        return -1
+    @property
+    def canMove(self):
+        return self is not self.document.autostartMacro

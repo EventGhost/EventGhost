@@ -21,34 +21,34 @@
 # $LastChangedBy$
 
 import eg
+from NewItem import NewItem
 
 
-class NewFolder(eg.UndoHandler.NewItem):
+class NewFolder(NewItem):
     """
     Create a new FolderItem if the user has choosen to do so from the menu
     or toolbar.
     """
-
+    name = eg.text.MainFrame.Menu.AddFolder.replace("&", "")
+    
     @eg.LogIt
-    def Do(self, document):
-        self.name = eg.text.MainFrame.Menu.AddFolder.replace("&", "")
-        obj = document.selection
-        if isinstance(obj, (document.MacroItem, document.AutostartItem)):
-            parentObj = obj.parent
-            pos = parentObj.childs.index(obj) + 1
+    def Do(self, document, selection):
+        if isinstance(selection, (document.MacroItem, document.AutostartItem)):
+            parentObj = selection.parent
+            pos = parentObj.childs.index(selection) + 1
             if pos >= len(parentObj.childs):
                 pos = -1
         elif isinstance(
-            obj,
+            selection,
             (document.ActionItem, document.EventItem, document.PluginItem)
         ):
-            obj = obj.parent
-            parentObj = obj.parent
-            pos = parentObj.childs.index(obj) + 1
+            selection = selection.parent
+            parentObj = selection.parent
+            pos = parentObj.childs.index(selection) + 1
             if pos >= len(parentObj.childs):
                 pos = -1
         else:
-            parentObj = obj
+            parentObj = selection
             pos = -1
         item = document.FolderItem.Create(
             parentObj,
@@ -56,8 +56,6 @@ class NewFolder(eg.UndoHandler.NewItem):
             name=eg.text.General.unnamedFolder
         )
         self.StoreItem(item)
-        item.tree.SetFocus()
         item.Select()
-        item.tree.EditLabel(item.id)
         return item
 

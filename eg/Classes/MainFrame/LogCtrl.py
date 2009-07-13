@@ -176,10 +176,6 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         return False
 
 
-    def Copy(self):
-        self.OnCmdCopy()
-
-
     def OnCmdCopy(self, dummyEvent=None):
         text = ""
         lines = 1

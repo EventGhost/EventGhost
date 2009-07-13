@@ -22,6 +22,8 @@
 
 from eg.Utils import SetDefault
 import os
+import sys
+
 
 class Default:
     class General:
@@ -190,9 +192,9 @@ class Default:
 def Text(language):
     class Translation(Default):
         pass
-    languagePath = os.path.join(eg.LANGUAGES_DIR, "%s.py" % language)
+    languagePath = os.path.join(eg.languagesDir, "%s.py" % language)
     try:
-        execfile(languagePath, {}, Translation.__dict__)
+        eg.ExecFile(languagePath, {}, Translation.__dict__)
     except IOError:
         pass
     SetDefault(Translation, Default)

@@ -49,7 +49,7 @@ class TreeItemBrowseCtrl(wx.TreeCtrl):
         wx.TreeCtrl.__init__(self, parent, style=style)
         self.SetMinSize((10, 10))
         self.SetImageList(eg.Icons.gImageList)
-        self.srcTree = srcTree = eg.document.frame.treeCtrl
+        srcTree = eg.document.frame.treeCtrl
 
         srcRoot = srcTree.GetRootItem()
         text = srcTree.GetItemText(srcRoot)
@@ -76,7 +76,7 @@ class TreeItemBrowseCtrl(wx.TreeCtrl):
             return
         item = selectItem
         path = []
-        while item is not selectItem.tree.root:
+        while item is not selectItem.root:
             path.append(item)
             item = item.parent
         treeId = root

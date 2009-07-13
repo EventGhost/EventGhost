@@ -20,12 +20,18 @@
 # $LastChangedRevision$
 # $LastChangedBy$
 
+import eg
 
-class NewItem:
+
+class NewItem(object):
     """
     Abstract class for the creation of new tree items.
     """
 
+    def Do(self, document, selection):
+        raise NotImplementedError
+    
+    
     def StoreItem(self, item):
         self.positionData = eg.TreePosition(item)
         item.document.AppendUndoHandler(self)

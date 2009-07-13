@@ -21,34 +21,31 @@
 # $LastChangedBy$
 
 import eg
+from NewItem import NewItem
 
 
-class NewEvent(eg.UndoHandler.NewItem):
+class NewEvent(NewItem):
     name = eg.text.MainFrame.Menu.AddEvent.replace("&", "").replace("...", "")
 
-    def Do(self, document, label=None, parent=None, pos=-1):
-        if parent is None:
-            obj = document.selection
-            if isinstance(obj, document.MacroItem):
-                parent = obj
-            else:
-                parent = obj.parent
+    def Do(self, document, selection, pos=-1, label=None):
+        if not isinstance(selection, document.MacroItem):
+            selection = selection.parent
+        pos = 0
+        for child in selection.childs:
+            if isinstance(child, document.ActionItem):
+                break
+            pos += 1
+        else:
             pos = 0
-            for child in parent.childs:
-                if isinstance(child, document.ActionItem):
-                    break
-                pos += 1
-            else:
-                pos = 0
-        if not isinstance(parent, eg.MacroItem):
+        if not isinstance(selection, eg.MacroItem):
             return
-        if isinstance(parent, eg.AutostartItem):
+        if isinstance(selection, eg.AutostartItem):
             return
         needsConfigure = False
         if label is None:
             label = eg.event.string
             needsConfigure = True
-        item = document.EventItem.Create(parent, pos, name=label)
+        item = document.EventItem.Create(selection, pos, name=label)
         item.Select()
 
         if needsConfigure and not eg.UndoHandler.Configure().Do(item, True):

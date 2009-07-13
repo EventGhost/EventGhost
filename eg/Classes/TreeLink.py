@@ -21,6 +21,7 @@
 # $LastChangedBy$
 
 import eg
+import wx
 
 
 class TreeLink(object):
@@ -65,7 +66,7 @@ class TreeLink(object):
                     target.dependants = [link]
                 else:
                     target.dependants.append(link)
-                link.owner.Refresh()
+                wx.CallAfter(eg.Notify, "NodeChanged", link.owner)
         del cls.linkList[:]
 
 
@@ -109,7 +110,7 @@ class TreeLink(object):
                     target.dependants = [link]
                 else:
                     target.dependants.append(link)
-                link.owner.Refresh()
+                eg.Notify("NodeChanged", link.owner)
         cls.linkList = notFoundLinks
 
 
@@ -118,7 +119,7 @@ class TreeLink(object):
         for link in target.dependants:
             link.target = None
             if link.owner:
-                link.owner.Refresh()
+                eg.Notify("NodeChanged", link.owner)
         cls.unresolvedIds[target.xmlId] = target.dependants
         #del cls.id2target[target.xmlId] # = None
         target.dependants = None
@@ -144,11 +145,11 @@ class TreeLink(object):
                 target.dependants.append(self)
             self.id = target.xmlId
             self.id2target[target.xmlId] = target
-        self.owner.Refresh()
+        eg.Notify("NodeChanged", self.owner)
 
 
     def Refresh(self):
-        self.owner.Refresh()
+        eg.Notify("NodeChanged", self.owner)
 
 
     def Delete(self):

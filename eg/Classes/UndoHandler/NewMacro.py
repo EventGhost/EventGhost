@@ -21,17 +21,18 @@
 # $LastChangedBy$
 
 import eg
+from NewItem import NewItem
 
 
-class NewMacro(eg.UndoHandler.NewItem):
+class NewMacro(NewItem):
     """
     Create a new MacroItem if the user has choosen to do so from the menu
     or toolbar.
     """
     name = eg.text.MainFrame.Menu.AddMacro.replace("&", "")
 
-    def Do(self, document):
-        obj = document.selection
+    def Do(self, document, selection):
+        obj = selection
         if isinstance(obj, (document.MacroItem, document.AutostartItem)):
             parentObj = obj.parent
             pos = parentObj.childs.index(obj) + 1
@@ -64,7 +65,7 @@ class NewMacro(eg.UndoHandler.NewItem):
             return item
         action = result[0]
 
-        actionObj = eg.UndoHandler.NewAction().Do(document, action)
+        actionObj = eg.UndoHandler.NewAction().Do(document, item, action)
         if actionObj:
             label = actionObj.GetLabel()
             item.RenameTo(label)

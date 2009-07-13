@@ -36,37 +36,48 @@
 """
 
 import wx
-import os
 import sys
 import asyncore
 import socket
 import time
 import threading
 import locale
+from os.path import join
 from wx.lib.newevent import NewCommandEvent
-from os.path import dirname, abspath, join
 import eg
 import Init
 import Cli
 
 
 eg.APP_NAME = "EventGhost"
-eg.CORE_PLUGINS = ("EventGhost", "System", "Window", "Mouse")
-eg.MAIN_DIR = abspath(join(dirname(__file__), ".."))
-eg.PLUGIN_DIR = join(eg.MAIN_DIR, "plugins")
-eg.IMAGES_DIR = join(eg.MAIN_DIR, "images")
-eg.LANGUAGES_DIR = join(eg.MAIN_DIR, "languages")
+eg.CORE_PLUGIN_GUIDS = (
+    "{9D499A2C-72B6-40B0-8C8C-995831B10BB4}", # "EventGhost"
+    "{A21F443B-221D-44E4-8596-E1ED7100E0A4}", # "System"
+    "{E974D074-B0A3-4D0C-BBD1-992475DDD69D}", # "Window"
+    "{6B1751BF-F94E-4260-AB7E-64C0693FD959}", # "Mouse"
+)
 eg.ID_TEST = wx.NewId()
+eg.mainDir = Cli.mainDir
+eg.imagesDir = join(eg.mainDir, "images")
+eg.languagesDir = join(eg.mainDir, "languages")
+eg.sitePackagesDir = join(
+    eg.mainDir, 
+    "lib%d%d" % sys.version_info[:2], 
+    "site-packages"
+)
 eg.revision = eg.Version.revision
 eg.startupArguments = Cli.args
 eg.debugLevel = eg.startupArguments.debugLevel
 eg.systemEncoding = locale.getdefaultlocale()[1]
+eg.document = None
 eg.result = None
-eg.event = None
 eg.plugins = eg.Bunch()
 eg.globals = eg.Bunch()
 eg.globals.eg = eg
+eg.event = None
 eg.eventTable = {}
+eg.eventString = ""
+eg.EventString = "" # eg.EventString is deprecated
 eg.notificationHandlers = {}
 eg.programCounter = None
 eg.programReturnStack = []
@@ -80,17 +91,17 @@ eg.currentConfigureItem = None
 eg.actionGroup = eg.Bunch()
 eg.actionGroup.items = []
 eg.folderPath = eg.FolderPath()
-eg.APPDATA = eg.folderPath.RoamingAppData
-eg.PROGRAMFILES = eg.folderPath.ProgramFiles
 eg.ValueChangedEvent, eg.EVT_VALUE_CHANGED = NewCommandEvent()
 eg.pyCrustFrame = None
 eg.dummyAsyncoreDispatcher = None
 
 if eg.startupArguments.configDir is None:
-    eg.configDir = os.path.join(eg.folderPath.RoamingAppData, eg.APP_NAME)
+    eg.configDir = join(eg.folderPath.RoamingAppData, eg.APP_NAME)
 else:
     eg.configDir = eg.startupArguments.configDir
-eg.userPluginDir = os.path.join(eg.configDir, "plugins")
+eg.userPluginDir = join(eg.configDir, "plugins")
+eg.corePluginDir = join(eg.mainDir, "plugins")
+
 Init.InitPathesAndBuiltins()
 from eg.WinApi.Dynamic import GetCurrentProcessId
 eg.processId = GetCurrentProcessId()
@@ -107,7 +118,6 @@ def RestartAsyncore():
     if oldDispatcher is None:
         # create a global asyncore loop thread
         threading.Thread(target=asyncore.loop, name="AsyncoreThread").start()
-
 
 
 def Exit():
@@ -349,4 +359,13 @@ eg.SetProcessingState = eg.taskBarIcon.SetProcessingState
 
 eg.Init = Init
 eg.Init.Init()
+
+if eg.debugLevel:
+    # if we run in debug mode, we raise an exception, if a new attribute is
+    # assigned to <eg>
+    def __setattr__(self, name, value):
+        if not name in self.__dict__:
+            raise AttributeError("eg has no attribute %s" % name)
+        object.__setattr__(self, name, value)
+    eg.__class__.__setattr__ = __setattr__
 

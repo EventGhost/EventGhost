@@ -27,19 +27,23 @@ EVENT_ICON_INDEX = eg.EventItem.icon.index
 
 
 class ActionThread(eg.ThreadWorker):
-
-    @staticmethod
+    corePluginInfos = None
+    
     @eg.LogItWithReturn
-    def StartSession(filename):
+    def StartSession(self, filename):
         eg.eventTable.clear()
-        for pluginIdent in eg.CORE_PLUGINS:
+        self.corePluginInfos = []
+        for guid in eg.CORE_PLUGIN_GUIDS:
+            # disable warning: No exception type(s) specified
             # pylint: disable-msg=W0702
             try:
-                pluginInfo = eg.pluginManager.OpenPlugin(pluginIdent, None, ())
+                pluginInfo = eg.pluginManager.OpenPlugin(guid, None, ())
                 pluginInfo.instance.__start__()
                 pluginInfo.isStarted = True
+                self.corePluginInfos.append(pluginInfo)
             except:
                 eg.PrintTraceback()
+            # pylint: enable-msg=W0702
         start = clock()
         eg.document.Load(filename)
         eg.PrintDebugNotice("XML loaded in %f seconds." % (clock() - start))
@@ -59,14 +63,13 @@ class ActionThread(eg.ThreadWorker):
         eg.SetProcessingState(1, event)
 
 
-    @staticmethod
     @eg.LogIt
-    def StopSession():
+    def StopSession(self):
         eg.document.autostartMacro.UnloadPlugins()
-        for pluginIdent in eg.CORE_PLUGINS:
+        for pluginInfo in self.corePluginInfos:
+            # disable warning: No exception type(s) specified
             # pylint: disable-msg=W0702
             try:
-                pluginInfo = getattr(eg.plugins, pluginIdent).plugin.info
                 pluginInfo.Close()
                 pluginInfo.RemovePluginInstance()
             except:

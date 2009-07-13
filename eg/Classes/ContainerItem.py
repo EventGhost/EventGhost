@@ -29,7 +29,7 @@ class ContainerItem(TreeItem):
 
     def GetData(self):
         attr, text = TreeItem.GetData(self)
-        if self.isExpanded:
+        if self in self.document.expandedNodes:
             attr.append(("Expanded", "True"))
         return attr, text
 
@@ -38,63 +38,33 @@ class ContainerItem(TreeItem):
         TreeItem.__init__(self, parent, node)
         tagDict = self.document.XMLTag2ClassDict
         self.childs = [
-            tagDict[childNode.tag](self, childNode) for childNode in node
+            tagDict[childNode.tag.lower()](self, childNode) 
+                for childNode in node
         ]
-        self.isExpanded = node.attrib.get("expanded") == "True"
+        if node.attrib.get("expanded", "").lower() == "true":
+            self.document.expandedNodes.add(self)
 
 
-    @eg.AssertNotMainThread
-    def CreateTreeItem(self, tree, parentId):
-        treeId = TreeItem.CreateTreeItem(self, tree, parentId)
-        if len(self.childs):
-            tree.SetItemHasChildren(treeId, True)
-            if self.isExpanded:
-                tree.Expand(self.id)
-        return treeId
-
-
-    @eg.AssertNotMainThread
-    def CreateTreeItemAt(self, tree, parentId, pos):
-        treeId = TreeItem.CreateTreeItemAt(self, tree, parentId, pos)
-        if len(self.childs):
-            tree.SetItemHasChildren(treeId, True)
-            if self.isExpanded:
-                tree.Expand(self.id)
-        return treeId
-
-
-    def _Delete(self):
+    def Delete(self):
         for child in self.childs[:]:
-            child._Delete()
-        TreeItem._Delete(self)
+            child.Delete()
+        TreeItem.Delete(self)
 
 
-    @eg.AssertNotMainThread
     @eg.LogIt
     def AddChild(self, child, pos=-1):
         childs = self.childs
-        tree = self.tree
-        isValidId = self.HasValidId()
-        treeId = self.id
-        if len(childs) == 0 and isValidId:
-            tree.SetItemHasChildren(treeId)
         if pos == -1 or pos >= len(childs):
             childs.append(child)
             pos = -1
         else:
             childs.insert(pos, child)
-        if isValidId and (treeId == self.root.id or tree.IsExpanded(treeId)):
-            child.CreateTreeItemAt(tree, treeId, pos)
+        eg.Notify("NodeAdded", (child, pos))
+        
 
-
-    @eg.AssertNotMainThread
     def RemoveChild(self, child):
         pos = self.childs.index(child)
         del self.childs[pos]
-        tree = self.tree
-        if child.HasValidId():
-            tree.Delete(child.id)
-        if len(self.childs) == 0 and self.HasValidId():
-            tree.SetItemHasChildren(self.id, False)
+        eg.Notify("NodeDeleted", child)
         return pos
 

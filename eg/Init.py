@@ -30,20 +30,17 @@ from types import ModuleType
 
 def InitPil():
     """Initialize PIL's Image module."""
-    import Image
-    import PngImagePlugin #IGNORE:W0612
-    import JpegImagePlugin #IGNORE:W0612
-    import BmpImagePlugin #IGNORE:W0612
-    import GifImagePlugin #IGNORE:W0612
-    Image._initialized = 2
+    import PIL.Image
+    import PIL.PngImagePlugin
+    import PIL.JpegImagePlugin
+    import PIL.BmpImagePlugin
+    import PIL.GifImagePlugin
+    PIL.Image._initialized = 2
 
 
 def InitPathesAndBuiltins():
-    sys.path.insert(0, eg.MAIN_DIR)
-    sys.path.insert(
-        1,
-        os.path.join(eg.MAIN_DIR, "lib%d%d" % sys.version_info[:2], "site-packages")
-    )
+    sys.path.insert(0, eg.mainDir)
+    sys.path.insert(1, eg.sitePackagesDir)
 
     import cFunctions
     sys.modules["eg.cFunctions"] = cFunctions
@@ -55,10 +52,9 @@ def InitPathesAndBuiltins():
 
     # we create a package 'PluginModule' and set its path to the plugin-dir
     # so we can simply use __import__ to load a plugin file
-    pluginPackage = ModuleType("eg.PluginModule")
-    pluginPackage.__path__ = [eg.PLUGIN_DIR]
-    sys.modules["eg.PluginModule"] = pluginPackage
-    eg.PluginModule = pluginPackage
+    corePluginPackage = ModuleType("eg.CorePluginModule")
+    corePluginPackage.__path__ = [eg.corePluginDir]
+    sys.modules["eg.CorePluginModule"] = corePluginPackage
     
     # we create a package 'PluginModule' and set its path to the plugin-dir
     # so we can simply use __import__ to load a plugin file
@@ -67,7 +63,6 @@ def InitPathesAndBuiltins():
     userPluginPackage = ModuleType("eg.UserPluginModule")
     userPluginPackage.__path__ = [eg.userPluginDir]
     sys.modules["eg.UserPluginModule"] = userPluginPackage
-    eg.UserPluginModule = userPluginPackage
     
     
 # replace builtin raw_input() with a small dialog

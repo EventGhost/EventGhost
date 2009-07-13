@@ -25,25 +25,28 @@ import wx
 import xml.etree.cElementTree as ElementTree
 from functools import partial
 
+from eg.Classes.TreeItem import (
+    HINT_MOVE_INSIDE, 
+    HINT_MOVE_BEFORE, 
+    HINT_MOVE_AFTER,
+)
+
 
 class Paste:
     name = eg.text.MainFrame.Menu.Paste.replace("&", "")
 
-    def __init__(self, document):
-        tree = document.tree
+    def __init__(self, document, selection):
         self.items = []
-        selectionObj = tree.GetPyData(tree.GetSelection())
         if not wx.TheClipboard.Open():
             return
         try:
             dataObj = wx.CustomDataObject("DragEventItem")
             if wx.TheClipboard.GetData(dataObj):
-                selectedObj = tree.GetPyData(tree.GetSelection())
-                if selectedObj.DropTest(eg.EventItem):
+                if selection.DropTest(eg.EventItem):
                     label = dataObj.GetData()
-                    parent = selectionObj.parent
-                    pos = parent.childs.index(selectionObj)
-                    eg.UndoHandler.NewEvent().Do(tree.document, label)
+                    parent = selection.parent
+                    pos = parent.childs.index(selection)
+                    eg.UndoHandler.NewEvent().Do(document, parent, label=label)
                 return
             dataObj = wx.TextDataObject()
             if not wx.TheClipboard.GetData(dataObj):
@@ -51,42 +54,41 @@ class Paste:
             clipboardData = dataObj.GetText()
             xmlTree = ElementTree.fromstring(clipboardData.encode("utf-8"))
             for childXmlNode in xmlTree:
-                targetObj = selectionObj
-                childCls = document.XMLTag2ClassDict[childXmlNode.tag]
+                childCls = document.XMLTag2ClassDict[childXmlNode.tag.lower()]
                 before = None
                 childClsBase = childCls.__bases__[1]
-                insertionHint = targetObj.DropTest(childClsBase)
-                if insertionHint in (1, 5):
+                insertionHint = selection.DropTest(childClsBase)
+                if insertionHint & HINT_MOVE_INSIDE:
                     # item will move inside
-                    for i in xrange(len(targetObj.childs)-1, -1, -1):
-                        next = targetObj.childs[i]
+                    for i in xrange(len(selection.childs)-1, -1, -1):
+                        next = selection.childs[i]
                         insertionHint = next.DropTest(childClsBase)
-                        if insertionHint in (3, 4, 5):
+                        if insertionHint & HINT_MOVE_AFTER:
                             break
                         before = next
-                elif insertionHint in (2, 4):
+                elif insertionHint & HINT_MOVE_BEFORE:
                     # item will move before selection
-                    before = targetObj
-                    parent = targetObj.parent
-                    pos = parent.GetChildIndex(targetObj)
+                    before = selection
+                    parent = selection.parent
+                    pos = parent.GetChildIndex(selection)
                     for i in xrange(pos-1, -1, -1):
                         next = parent.childs[i]
                         insertionHint = next.DropTest(childClsBase)
-                        if insertionHint != 2:
+                        if insertionHint != HINT_MOVE_BEFORE:
                             break
                         before = next
-                    targetObj = targetObj.parent
-                elif insertionHint == 3: #in (3, 4):
+                    selection = selection.parent
+                elif insertionHint == HINT_MOVE_AFTER:
                     # item will move after selection
-                    parent = targetObj.parent
-                    pos = parent.GetChildIndex(targetObj)
+                    parent = selection.parent
+                    pos = parent.GetChildIndex(selection)
                     for i in xrange(pos+1, len(parent.childs)):
                         next = parent.childs[i]
                         insertionHint = next.DropTest(childClsBase)
-                        if insertionHint != 3:
+                        if insertionHint != HINT_MOVE_AFTER:
                             before = next
                             break
-                    targetObj = targetObj.parent
+                    selection = selection.parent
                 else:
                     eg.PrintError("Unexpected item in paste.")
                     return
@@ -96,14 +98,14 @@ class Paste:
                     pos = before.parent.childs.index(before)
                     if pos + 1 == len(before.parent.childs):
                         pos = -1
-                obj = eg.actionThread.CallWait(
-                    partial(childCls, targetObj, childXmlNode)
+                newNode = eg.actionThread.CallWait(
+                    partial(childCls, selection, childXmlNode)
                 )
-                obj.RestoreState()
-                targetObj.AddChild(obj, pos)
-                self.items.append(eg.TreePosition(obj))
+                newNode.RestoreState()
+                selection.AddChild(newNode, pos)
+                self.items.append(eg.TreePosition(newNode))
             if len(self.items):
-                obj.Select()
+                newNode.Select()
                 document.TreeLink.StopLoad()
                 document.AppendUndoHandler(self)
         finally:

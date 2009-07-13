@@ -31,8 +31,9 @@ from os.path import abspath, dirname, join
 from base64 import b64decode
 from cStringIO import StringIO
 import Image
+import eg
 
-IMAGES_PATH = abspath(join(dirname(__file__), "..", "images"))
+IMAGES_PATH = eg.imagesDir
 
 gImageList = wx.ImageList(16, 16)
 DISABLED_PIL = Image.open(join(IMAGES_PATH, "disabled.png"))
@@ -65,7 +66,7 @@ def GetInternalBitmap(name):
 
 
 def GetInternalImage(name):
-    return wx.Image(join(eg.IMAGES_DIR, name + ".png"), wx.BITMAP_TYPE_PNG)
+    return wx.Image(join(eg.imagesDir, name + ".png"), wx.BITMAP_TYPE_PNG)
 
 
 def CreateBitmapOnTopOfIcon(foregroundIcon, backgroundIcon, size=(12, 12)):

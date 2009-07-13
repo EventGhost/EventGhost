@@ -140,7 +140,6 @@ class PluginInstall(object):
                     # plugin with same GUID exists in user dir, so delete
                     # the folder first
                     shutil.rmtree(info.path, False)
-                eg.pluginManager.RemovePlugin(info)
             dstDir = os.path.join(eg.userPluginDir, os.path.basename(basePath))
             if os.path.exists(dstDir):
                 # the wanted name is already used by another plugin
@@ -154,7 +153,6 @@ class PluginInstall(object):
                     raise Exception("Can't create directory for plugin")
             shutil.copytree(basePath, dstDir)
             compileall.compile_dir(dstDir, ddir="UserPlugin", quiet=True)
-            eg.pluginManager.AddPlugin(dstDir)
         finally:
             shutil.rmtree(tmpDir, True)
             from eg.WinApi.Dynamic import ExitProcess

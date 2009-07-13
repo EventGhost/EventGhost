@@ -42,7 +42,6 @@ class Document(object):
     def __init__(self):
         class ItemMixin:
             document = self
-            tree = None
             root = None
         self.ItemMixin = ItemMixin
         itemNamespace = {}
@@ -51,12 +50,12 @@ class Document(object):
         def MakeCls(name):
             baseCls = getattr(eg, name)
             cls = ClassType(name, (ItemMixin, baseCls), itemNamespace)
-            self.XMLTag2ClassDict[cls.xmlTag] = cls
+            self.XMLTag2ClassDict[cls.xmlTag.lower()] = cls
             return cls
 
         self.TreeLink = eg.TreeLink
-        self.TreeItem = MakeCls("TreeItem")
-        self.ContainerItem = MakeCls("ContainerItem")
+#        self.TreeItem = MakeCls("TreeItem")
+#        self.ContainerItem = MakeCls("ContainerItem")
         self.EventItem = MakeCls("EventItem")
         self.ActionItem = MakeCls("ActionItem")
         self.PluginItem = MakeCls("PluginItem")
@@ -69,27 +68,14 @@ class Document(object):
         self.stockRedo = []
         self.lastUndoId = 0
         self.undoIdOnSave = 0
-        self.listeners = {}
         eg.Notify("UndoChange", (False, False, "", ""))
         eg.Notify("DocumentChange", False)
         self.filePath = None
         self.root = None
         self.firstVisibleItem = None
         self.frame = None
-        self.tree = None
-        self._selection = None
         self.reentrantLock = Lock()
-
-
-    def GetSelection(self):
-        return self._selection
-
-
-    def SetSelection(self, selection):
-        self._selection = selection
-        eg.Notify("SelectionChange", selection)
-
-    selection = property(fget=GetSelection, fset=SetSelection)
+        self.expandedNodes = set()
 
 
     def SetFilePath(self, filePath):
@@ -107,14 +93,6 @@ class Document(object):
         return "EventGhost %s - %s" % (eg.Version.string, filename)
 
 
-    @eg.LogIt
-    def SetTree(self, tree):
-        self.tree = tree
-        self.ItemMixin.tree = tree
-        if tree and self.root:
-            tree.SetData()
-
-
     def ResetUndoState(self):
         del self.stockUndo[:]
         del self.stockRedo[:]
@@ -126,6 +104,8 @@ class Document(object):
     @eg.LogIt
     def LoadEmpty(self):
         self.ResetUndoState()
+#        if self.root:
+#            self.root.Delete()
         self.SetFilePath(None)
         eg.TreeLink.StartLoad()
         node = ElementTree.Element("EventGhost")
@@ -138,21 +118,19 @@ class Document(object):
         root.childs.append(self.autostartMacro)
         eg.TreeLink.StopLoad()
         eg.Notify("DocumentChange", False)
-        if self.tree:
-            wx.CallAfter(self.tree.SetData)
+        wx.CallAfter(eg.Notify, "DocumentNewRoot", root)
         return root
 
 
     @eg.LogIt
     def Load(self, filePath):
-        if self.tree:
-            self.tree.DeleteAllItems()
         if filePath is None:
             return self.LoadEmpty()
         self.ResetUndoState()
-
+#        if self.root:
+#            self.root.Delete()
         if not filePath:
-            filePath = os.path.join(eg.MAIN_DIR, "Example.xml")
+            filePath = os.path.join(eg.mainDir, "Example.xml")
             self.SetFilePath(False)
         else:
             self.SetFilePath(filePath)
@@ -166,8 +144,7 @@ class Document(object):
         eg.TreeLink.StopLoad()
         eg.Notify("DocumentChange", False)
         self.AfterLoad()
-        if self.tree:
-            wx.CallAfter(self.tree.SetData)
+        wx.CallAfter(eg.Notify, "DocumentNewRoot", root)
         return root
 
 
@@ -198,7 +175,7 @@ class Document(object):
         try:
             tmpFile = file(tmpPath, "wb+")
             tmpFile.write('<?xml version="1.0" encoding="UTF-8" ?>\r\n')
-            self.root.GetXmlString(tmpFile.write)
+            self.root.WriteXmlString(tmpFile.write)
             tmpFile.close()
             try:
                 os.remove(filePath)
@@ -239,7 +216,6 @@ class Document(object):
         stockUndo.append(handler)
         self.undoState += 1
         del self.stockRedo[:]
-
         eg.Notify("DocumentChange", True)
         eg.Notify("UndoChange", (True, False, ": " + handler.name, ""))
 
@@ -283,7 +259,7 @@ class Document(object):
         eg.TreeLink.StartUndo()
         parent, pos = positionData.GetPosition()
         node = ElementTree.fromstring(xmlData)
-        cls = self.XMLTag2ClassDict[node.tag]
+        cls = self.XMLTag2ClassDict[node.tag.lower()]
         item = cls(parent, node)
         parent.AddChild(item, pos)
         eg.TreeLink.StopUndo()
@@ -356,7 +332,7 @@ class Document(object):
     def Open(self, filePath=None):
         self.ShowFrame()
         if filePath is not None:
-            res = wx.MessageBox (
+            res = wx.MessageBox(
                 "Do you really want to load the tree file:\n%s" % filePath,
                 eg.APP_NAME,
                 wx.YES_NO|wx.CENTRE|wx.ICON_QUESTION,
@@ -405,10 +381,9 @@ class Document(object):
             fileDialog.Destroy()
 
 
-    def ExecuteSelected(self):
-        item = self.selection
+    def ExecuteNode(self, node):
         event = eg.EventGhostEvent("OnCmdExecute")
-        eg.actionThread.Call(eg.actionThread.ExecuteTreeItem, item, event)
+        eg.actionThread.Call(eg.actionThread.ExecuteTreeItem, node, event)
         return event
 
 
@@ -432,7 +407,7 @@ class Document(object):
         def Traverse(item, i):
             if isinstance(item, ContainerItem):
                 i += 1
-                if item.isExpanded:
+                if item in self.expandedNodes:
                     add(i)
                 for child in item.childs:
                     i = Traverse(child, i)
@@ -445,16 +420,25 @@ class Document(object):
     def SetExpandState(self, expanded):
         if expanded is None:
             return
+        self.expandedNodes.clear()
         ContainerItem = eg.ContainerItem
         def Traverse(item, i):
             if isinstance(item, ContainerItem):
                 i += 1
-                item.isExpanded = (i in expanded)
+                if i in expanded:
+                    self.expandedNodes.add(item)
                 for child in item.childs:
                     i = Traverse(child, i)
             return i
-
         Traverse(self.root, -1)
+
+
+    def OnCmdConfigure(self, node):
+        eg.UndoHandler.Configure().Try(self, node)
+
+
+    def OnCmdToggleEnable(self, node):
+        eg.UndoHandler.ToggleEnable(self, node)
 
 
 

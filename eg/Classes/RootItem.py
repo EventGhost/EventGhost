@@ -21,7 +21,6 @@
 # $LastChangedBy$
 
 import eg
-import wx
 import time
 from ContainerItem import ContainerItem
 from TreeItem import HINT_NO_DROP, HINT_MOVE_INSIDE
@@ -54,31 +53,10 @@ class RootItem(ContainerItem):
         self.name = eg.text.General.configTree
 
 
-    def CreateTreeItem(self, tree, parentId):
-        self.id = tree.AddRoot(
-            self.name,
-            self.icon.index,
-            -1,
-            wx.TreeItemData(self)
-        )
-        tree.SetItemHasChildren(self.id, True)
-        return id
-
-
-    def _Delete(self):
+    def Delete(self):
         childs = self.childs[:]
         for child in childs:
-            child._Delete()
-
-
-    #@eg.AssertNotMainThread
-    def Select(self):
-        if self.tree:
-            self.tree.SelectItem(self.id)
-
-
-    def EnsureValidId(self, tree):
-        pass
+            child.Delete()
 
 
     def CanCut(self):

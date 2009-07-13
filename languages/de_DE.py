@@ -114,8 +114,8 @@ class Exceptions:
     DriverNotFound = u"Treiber nicht gefunden!"
     DriverNotOpen = u"Kann den Treiber nicht öffnen!"
     InitFailed = u"Initialisierung fehlgeschlagen!"
-    PluginNotFound = u"Plugin nicht gefunden!"
     PluginLoadError = u"Fehler beim Laden des Plugins!"
+    PluginNotFound = u"Plugin nicht gefunden!"
     ProgramNotFound = u"Programm nicht gefunden!"
     ProgramNotRunning = u"Programm ist nicht gestartet!"
     SerialOpenFailed = u"Kann den seriellen Anschluss nicht öffnen!"
@@ -146,7 +146,7 @@ class AddActionGroupDialog:
 class EventItem:
     eventItem = u"Ereignis-Element"
     eventName = u"Ereignis Name:"
-    notice = u"Hinweis: Sie können Ereignis-Elemente auch zuweisen, indem Sie es vom Log auf ein Makro-Element ziehen."
+    notice = u"Hinweis: Sie können ein Ereignis-Element auch zuweisen, indem Sie es vom Log auf ein Makro-Element ziehen."
 class OptionsDialog:
     CheckUpdate = u"Auf neuere Version prüfen beim Programmstart"
     HideOnClose = u"Minimiere wenn Schließen-Schaltfläche gedrückt wird"

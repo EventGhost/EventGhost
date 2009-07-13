@@ -119,8 +119,7 @@ class EventDropTarget(wx.PyDropTarget):
                     self.lastDropTime + 0.6 < clock()
                     and (
                         obj.__class__ == tree.document.FolderItem
-                        or insertionHint == HINT_MOVE_INSIDE
-                        or insertionHint == HINT_MOVE_EVERYWHERE
+                        or insertionHint & HINT_MOVE_INSIDE
                     ) and not tree.IsExpanded(targetItemId)
                 ):
                     tree.Expand(targetItemId)
@@ -154,13 +153,7 @@ class EventDropTarget(wx.PyDropTarget):
                 for i in xrange(len(obj.childs)-1, -1, -1):
                     child = obj.childs[i]
                     insertionHint = child.DropTest(dragCls)
-                    if (
-                        insertionHint in (
-                            HINT_MOVE_AFTER,
-                            HINT_MOVE_BEFORE_OR_AFTER,
-                            HINT_MOVE_EVERYWHERE
-                        )
-                    ):
+                    if insertionHint & HINT_MOVE_AFTER:
                         tree.SetInsertMark(child.id, 1)
                         self.position = (obj, i+1)
                         break
@@ -303,14 +296,14 @@ class TreeCtrl(wx.TreeCtrl):
     def OnLeftDoubleClick(self, event):
         treeItem = self.HitTest(event.GetPosition())[0]
         if treeItem.IsOk():
-            item = self.GetPyData(treeItem)
-            if item.isConfigurable:
+            node = self.GetPyData(treeItem)
+            if node.isConfigurable:
                 # we have to wait till the mouse button is up again
                 while wx.GetMouseState().LeftDown():
                     wx.GetApp().Yield()
                 # and use CallLater and don't call Skip(), as otherwise the
                 # click would go through to the newly opened frame.
-                wx.CallLater(1, eg.UndoHandler.Configure().Try, self.document)
+                wx.CallLater(1, eg.UndoHandler.Configure().Try, self.document, node)
                 return
         # if we don't call Skip() on all other situations, a expandable item
         # would not expand
@@ -321,7 +314,8 @@ class TreeCtrl(wx.TreeCtrl):
     def OnItemActivate(self, event):
         item = event.GetItem()
         if item.IsOk():
-            wx.CallAfter(eg.UndoHandler.Configure().Try, self.document)
+            node = self.GetPyData(item)
+            wx.CallAfter(eg.UndoHandler.Configure().Try, self.document, node)
         # if we don't call Skip(), a expandable item would not expand
         event.Skip()
         
@@ -609,11 +603,11 @@ class TreeCtrl(wx.TreeCtrl):
         stream = StringIO()
         stream.write('<?xml version="1.0" encoding="UTF-8" ?>\r\n')
         if obj == self.root:
-            obj.GetXmlString(stream.write)
+            obj.WriteXmlString(stream.write)
         else:
             buildStr = str(eg.revision)
             stream.write('<EventGhost Version="%s">\r\n' % buildStr)
-            obj.GetXmlString(stream.write, "    ")
+            obj.WriteXmlString(stream.write, "    ")
             stream.write('</EventGhost>')
         data = stream.getvalue()
         stream.close()

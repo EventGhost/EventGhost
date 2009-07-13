@@ -21,9 +21,10 @@
 # $LastChangedBy$
 
 import eg
+from NewItem import NewItem
 
 
-class NewAction(eg.UndoHandler.NewItem):
+class NewAction(NewItem):
     """
     Create a new ActionItem if the user has choosen to do so from the menu
     or toolbar.
@@ -31,9 +32,8 @@ class NewAction(eg.UndoHandler.NewItem):
     name = eg.text.MainFrame.Menu.AddAction.replace("&", "")
 
     @eg.LogIt
-    def Do(self, document, action):
+    def Do(self, document, selection, action):
         # find the right insert position
-        selection = document.selection
         if isinstance(selection, (document.MacroItem, document.AutostartItem)):
             # if a macro is selected, append it as last element of the macro
             parent = selection

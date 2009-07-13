@@ -70,4 +70,4 @@ class ResettableTimer(Thread):
                 self.lock.release()
                 if timeout is StopMessage:
                     break
-
+        self.callback = None

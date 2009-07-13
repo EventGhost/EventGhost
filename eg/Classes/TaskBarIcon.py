@@ -35,9 +35,9 @@ class TaskBarIcon(wx.TaskBarIcon):
 
     def __init__(self, show):
         self.stateIcons = (
-            wx.Icon(join(eg.IMAGES_DIR, "Tray1.png"), wx.BITMAP_TYPE_PNG),
-            wx.Icon(join(eg.IMAGES_DIR, "Tray3.png"), wx.BITMAP_TYPE_PNG),
-            wx.Icon(join(eg.IMAGES_DIR, "Tray2.png"), wx.BITMAP_TYPE_PNG),
+            wx.Icon(join(eg.imagesDir, "Tray1.png"), wx.BITMAP_TYPE_PNG),
+            wx.Icon(join(eg.imagesDir, "Tray3.png"), wx.BITMAP_TYPE_PNG),
+            wx.Icon(join(eg.imagesDir, "Tray2.png"), wx.BITMAP_TYPE_PNG),
         )
         self.tooltip = eg.APP_NAME + " " + eg.Version.string
         wx.TaskBarIcon.__init__(self)

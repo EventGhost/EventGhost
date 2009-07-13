@@ -35,8 +35,7 @@ class Configure:
     name = eg.text.MainFrame.Menu.Configure.replace("&", "")
 
     @eg.LogItWithReturn
-    def Try(self, document):
-        item = document.selection
+    def Try(self, document, item):
         if isinstance(item, (eg.ActionItem, eg.EventItem)):
             eg.Tasklet(self.Do)(item).run()
 
@@ -60,14 +59,14 @@ class Configure:
             elif event == wx.ID_APPLY:
                 revertOnCancel = True
                 item.SetArgs(newArgs)
-                item.Refresh()
+                eg.Notify("NodeChanged", item)
             elif event == eg.ID_TEST:
                 revertOnCancel = True
                 eg.actionThread.Call(DoExecute, item, newArgs)
         else:
             if revertOnCancel:
                 item.SetArgs(oldArgs)
-                item.Refresh()
+                eg.Notify("NodeChanged", item)
             return False
 
         item.SetArgs(newArgs)
@@ -76,7 +75,7 @@ class Configure:
             if not isFirstConfigure:
                 self.positionData = eg.TreePosition(item)
                 item.document.AppendUndoHandler(self)
-            item.Refresh()
+            eg.Notify("NodeChanged", item)
         return True
 
 
@@ -87,7 +86,7 @@ class Configure:
         item.SetArgumentString(self.oldArgumentString)
         eg.TreeLink.StopUndo()
         self.oldArgumentString = argumentString
-        item.Refresh()
+        eg.Notify("NodeChanged", item)
         item.Select()
 
     Redo = Undo
