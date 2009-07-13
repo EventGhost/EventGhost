@@ -3,7 +3,7 @@
 
 
 SUPPORTED_DVBVIEWER_VERSIONS        = '4.0.x, 4.1.x, 4.2.x '
-SUPPORTED_DVBVIEWERSERVICE_VERSIONS = '1.5.0.2'
+SUPPORTED_DVBVIEWERSERVICE_VERSIONS = '1.5.0.2, 1.5.0.21'
 
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
@@ -106,6 +106,12 @@ This plugin supports following additional actions, which are executed via the CO
         <td align="right">DeleteInfoinTVPic</td>
         <td>
             Deletes the Infobar in the TVPicture.
+        </td>
+    </tr>
+    <tr>
+        <td align="right">GetNumberOfClients</td>
+        <td>
+            Get the number of clients connected to the DVBViewerService.
         </td>
     </tr>
     <tr>
@@ -275,6 +281,18 @@ Following events can be fired:
         <td>The event gets fired whenever the renderer changes.</td>
     <tr>
     <tr>
+        <td align="right"> NumberOfClientsChanged</td>
+        <td align="center"></td>
+        <td>Service</td>
+        <td>The event gets fired whenever the number of clients connected to the service change.</td>
+    <tr>
+    <tr>
+        <td align="right"> NoClientActive</td>
+        <td align="center"></td>
+        <td>Service</td>
+        <td>The event gets fired whenever the last client disconnects from the service.</td>
+    <tr>
+    <tr>
         <td align="right"> ServiceNotAlive</td>
         <td align="center"></td>
         <td>Service</td>
@@ -395,6 +413,10 @@ DUMMY_ACTION      = 27536
 ACCOUNT_CHOICES   = ['DVBService','Task scheduler']
 INDEX_DVBSERVICE  = ACCOUNT_CHOICES.index( 'DVBService' )
 INDEX_SCHEDULER   = ACCOUNT_CHOICES.index( 'Task scheduler' )
+
+UPDATE_RECORDINGS = 1
+UPDATE_STREAM     = 2
+UPDATE_ALL        = UPDATE_RECORDINGS | UPDATE_STREAM
 
 #connectionMode:
 WAIT_CHECK_START_CONNECT  = 0   #wait for free, check if executing, start if not executing, connect
@@ -661,7 +683,7 @@ from eg.WinApi.Dynamic import (
     STARTUPINFO, PROCESS_INFORMATION,
     CREATE_NEW_CONSOLE, STARTF_USESHOWWINDOW
 )
-from urllib2 import ( HTTPPasswordMgrWithDefaultRealm, HTTPBasicAuthHandler,
+from urllib2 import ( HTTPPasswordMgrWithDefaultRealm, HTTPPasswordMgr, HTTPBasicAuthHandler,
                       install_opener, urlopen, Request, build_opener
                     )
 from urlparse import urlparse
@@ -821,6 +843,11 @@ class Text:
                     ' encryped in the file "DVBViewerAccount.dat" located in the event ghost user'
                     ' directory.'
                     )
+
+
+    class GetNumberOfClients :
+        name =          "Get the number of connected clients connected to the service"
+        serviceUpdate = " Update from DVBViewerService"
 
 
 
@@ -1249,18 +1276,43 @@ class DVBViewerWorkerThread(eg.ThreadWorker):
 
 
 
-    def GetAllRecordings( self ) :
-        timerManager = self.dvbviewer.TimerManager
-        return timerManager.GetTimerList()[1]
+    def GetRecordings( self, active = True, update = False ) :
 
+        plugin = self.plugin
 
-
-    def GetRecordingsIDs( self, active = True ) :
-        list = self.GetAllRecordings()
-        if active :
-            IDs = [ record[ 4 ] for record in list if record[ 11 ] ]
+        if plugin.useService and self.GetSetupValue( 'Service', 'Timerlist', '0' ) != '0' :
+            recordingsIDsService = plugin.service.GetPseudoIDs( update )
         else :
-            IDs = [ record[ 4 ] for record in list ]
+            recordingsIDsService = {}
+
+        all = self.dvbviewer.TimerManager.GetTimerList()[1]
+
+        if active :
+            list = [ record for record in all if record[ 4 ] not in recordingsIDsService and record[ 11 ] ]
+        else :
+            list = [ record for record in all if record[ 4 ] not in recordingsIDsService ]
+
+        #print "active = ", active, "  list = ", list
+
+        return list
+
+
+
+    def GetRecordingsIDs( self, active = True, update = False ) :
+        plugin = self.plugin
+
+        if plugin.useService and self.GetSetupValue( 'Service', 'Timerlist', '0' ) != '0' :
+            recordingsIDsService = plugin.service.GetPseudoIDs( update )
+        else :
+            recordingsIDsService = {}
+
+        all = self.dvbviewer.TimerManager.GetTimerList()[1]
+
+        if active :
+            IDs = [ record[ 4 ] for record in all if record[ 4 ] not in recordingsIDsService and record[ 11 ] ]
+        else :
+            IDs = [ record[ 4 ] for record in all if record[ 4 ] not in recordingsIDsService ]
+
         return IDs
 
 
@@ -1367,7 +1419,6 @@ class DVBViewerWatchDogThread( Thread ) :
         self.started = len( WMI.ExecQuery('select * from Win32_Process where Name="dvbviewer.exe"') ) > 0
 
         nextTimeViewer = time()
-        nextTimeService = nextTimeViewer + self.watchDogTime / 2
 
         timeout = True
 
@@ -1381,14 +1432,8 @@ class DVBViewerWatchDogThread( Thread ) :
                 elif time() < nextTime :
                     continue
             except :
-                now = time()
                 #print "Timeout"
-                if plugin.useService and now >= nextTimeService :
-                    plugin.executionStatusChangeLock.acquire()
-                    plugin.service.Update()
-                    plugin.executionStatusChangeLock.release()
-                    nextTimeService = now + self.watchDogTime
-                if now < nextTimeViewer :
+                if time() < nextTimeViewer :
                     continue
                 timeout = True
 
@@ -1418,13 +1463,16 @@ class DVBViewerWatchDogThread( Thread ) :
                 eg.PrintDebugNotice( "DVBViewer will be connected by watch dog" )
                 plugin.Connect( CONNECT )
 
+            if plugin.useService :
+                plugin.service.Update( UPDATE_ALL )
+
             if plugin.workerThread is not None and not plugin.closeWaitActive :
                 #print "WatchDog: Update recordings"
 
                 try :
                     plugin.checkEventHandlingLock.acquire( blocking = False, timeout = CALLWAIT_TIMEOUT )
                     if plugin.SendCommand( DUMMY_ACTION, lock = False, connectionMode = CHECK_CONNECT ) :
-                        updatedRecordings = plugin.UpdateRecordings( lock = False )
+                        updatedRecordings = plugin.UpdateRecordings( lock = False, updateService = False )
                     else :
                         plugin.checkEventHandlingLock.acquire( blocking = False )
                         plugin.checkEventHandlingLock.release()
@@ -1530,6 +1578,7 @@ class DVBViewer(eg.PluginClass):
         self.AddAction(ShowInfoinTVPic)
         self.AddAction(DeleteInfoinTVPic)
         self.AddAction(GetSetupValue)
+        self.AddAction(GetNumberOfClients)
         self.AddAction(GetDVBViewerObject, hidden = True)
         self.AddAction(ExecuteDVBViewerCommandViaCOM, hidden = True)
 
@@ -1819,18 +1868,19 @@ class DVBViewer(eg.PluginClass):
 
 
 
-    def UpdateRecordings( self, lock = True ) :
+    def UpdateRecordings( self, lock = True, updateService = False ) :
 
         if lock :
             self.executionStatusChangeLock.acquire()
 
         if self.workerThread is not None :
             completeRecordingsInfo = self.workerThread.CallWait(
-                        partial(self.workerThread.GetAllRecordings ),
+                        partial(self.workerThread.GetRecordings, False, updateService ),
                         CALLWAIT_TIMEOUT
             )
             started = True
             recordingsIDs = [ record[ 4 ] for record in completeRecordingsInfo if record[ 11 ] ]
+
         else :
             started = False
 
@@ -2737,18 +2787,21 @@ class GetNumberOfActiveRecordings( eg.ActionClass ) :
 
     def __call__( self, enableDVBViewer = True, enableDVBService = False, updateDVBService = False ) :
         plugin = self.plugin
-        count = 0
+
+        if enableDVBService :
+            count = plugin.service.GetNumberOfActiveRecordings( updateDVBService )
+        else :
+            count = 0
+
         plugin.executionStatusChangeLock.acquire()
         if enableDVBViewer :
             if plugin.Connect( CHECK_CONNECT ) :
-                count = len(
-                             plugin.workerThread.CallWait(
-                                 partial(plugin.workerThread.GetRecordingsIDs ),
+                list =  plugin.workerThread.CallWait(
+                                 partial(plugin.workerThread.GetRecordingsIDs,
+                                         True, not enableDVBService and updateDVBService ),
                                  CALLWAIT_TIMEOUT
                              )
-                )
-        if enableDVBService :
-            count += plugin.service.GetNumberOfActiveRecordings( updateDVBService )
+                count += len( list )
 
         plugin.executionStatusChangeLock.release()
         return count
@@ -2790,7 +2843,8 @@ class GetRecordingsIDs( eg.ActionClass ) :
             plugin.executionStatusChangeLock.acquire()
             if plugin.Connect( connectionMode ) :
                 list.extend( plugin.workerThread.CallWait(
-                                 partial(plugin.workerThread.GetRecordingsIDs, active ),
+                                 partial(plugin.workerThread.GetRecordingsIDs, active,
+                                         not enableDVBService and updateDVBService ),
                                  CALLWAIT_TIMEOUT
                              ) )
             plugin.executionStatusChangeLock.release()
@@ -3413,7 +3467,7 @@ class GetDateOfRecordings( eg.ActionClass ) :
         readOutSuccessfull = True
 
         if enableDVBService :
-            recordingDates = plugin.service.GetRecordingDates( update = updateDVBService )
+            recordingDates = plugin.service.GetRecordingDates( active = not allRecordings, update = updateDVBService )
             if recordingDates is None :
                 recordingDates = []
                 readOutSuccessfull = False
@@ -3426,7 +3480,10 @@ class GetDateOfRecordings( eg.ActionClass ) :
 
             plugin.executionStatusChangeLock.acquire()
             if plugin.Connect( WAIT_CHECK_START_CONNECT ) :
-                recordingList = plugin.workerThread.CallWait( plugin.workerThread.GetAllRecordings, CALLWAIT_TIMEOUT )
+                recordingList = plugin.workerThread.CallWait( partial( plugin.workerThread.GetRecordings,
+                                                                       not allRecordings,
+                                                                       updateDVBService and not enableDVBService ),
+                                    CALLWAIT_TIMEOUT )
                 plugin.executionStatusChangeLock.release()
                 now = time()
                 for record in recordingList :
@@ -3658,6 +3715,37 @@ class ExecuteDVBViewerCommandViaCOM( eg.ActionClass ) :
 
 
 
+class GetNumberOfClients( eg.ActionClass ) :
+
+    def __call__( self, update = False ) :
+        plugin = self.plugin
+        
+        if not plugin.useService :
+            return -1
+        
+        return self.plugin.service.GetNumberOfClients( update )
+
+
+
+    def Configure( self, updateDVBService = False ) :
+
+        panel = eg.ConfigPanel()
+
+        text = self.text
+
+        updateCheckBoxCtrl = wx.CheckBox(panel, -1, text.serviceUpdate)
+        updateCheckBoxCtrl.SetValue( updateDVBService )
+
+        panel.sizer.Add( updateCheckBoxCtrl )
+
+
+        while panel.Affirmed():
+
+            panel.SetResult(updateCheckBoxCtrl.GetValue() )
+
+
+
+
 class DVBViewerService() :
 
     def __init__( self, plugin, serviceAddress = '127.0.0.1:80',
@@ -3667,15 +3755,13 @@ class DVBViewerService() :
         self.serviceAddress = serviceAddress
         self.account = account
 
-        self.workarround = False
-        self.opener = None
-
         self.simulateDVBViewerInterface = True
 
         self.recordingIDs = {}       #Key: ID, Value: Recording
-        self.nextPseudoID = 0
+        self.pseudoIDs = {}
         self.numberOfRecordings = 0
-        self.recordingDates = None
+        self.recordingDates       = []
+        self.activeRecordingDates = []
 
         self.versionDVBViewerService = None
 
@@ -3684,6 +3770,9 @@ class DVBViewerService() :
         self.failing = False
 
         self.plugin = plugin
+
+        self.numberOfClients = -1
+
 
 
 
@@ -3712,69 +3801,30 @@ class DVBViewerService() :
                 raise
             return
 
+        interface = interface.lower()
+
         theurl = (   'http://' + self.serviceAddress
-                   + '/API/' + interface.lower() + '.html')
+                   + '/API/' + interface + '.html')
 
-        if self.account[0] == "" :
+        req = Request(theurl)
 
-            req = Request(theurl)
+        if self.account[0] != "" :
 
-            try :
-                pageHandle = urlopen(req)
-                self.failing = False
-            except IOError, e :
-                ErrorProcessing( e )
-                return None
-        else :
-
-            if self.opener is None and not self.workarround:
-
-                passwordMgr = HTTPPasswordMgrWithDefaultRealm()
-
-                passwordMgr.add_password(None, theurl, self.account[0], self.account[1])
-
-                authHandler = HTTPBasicAuthHandler( passwordMgr )
-
-                self.opener = build_opener(authHandler)
-
-            error = False
-
-            try :
-
-                if not self.workarround :
-
-                    pageHandle = self.opener.open(theurl)
-
-            except :            # wrong authline (Basic Realm=DVBViewer)
-
-                del self.opener
-                del authHandler
-                del passwordMgr
-                self.opener      = None
-
-            if self.opener is None :
-
-                req = Request(theurl)
-
-                base64string = encodestring64(
-                               '%s:%s' % (self.account[0], self.account[1]))[:-1]
-                authheader =  "Basic %s" % base64string
+                authheader = "Basic " + encodestring64( self.account[0] + ':' + self.account[1])[:-1]
                 req.add_header("Authorization", authheader)
 
-                try:
-                    pagehandle = urlopen(req)
-                    self.workarround = True
-                    self.failing = False
-                except IOError, e:
-                    ErrorProcessing( e )
-                    return None
-                pass
+        try :
+            pageHandle = urlopen(req)
+            self.failing = False
+        except IOError, e :
+            ErrorProcessing( e )
+            return None
 
-        return pagehandle.read()
+        return pageHandle.read()
 
 
 
-    def Update( self ) :
+    def Update( self, type = UPDATE_RECORDINGS ) :
 
         def GetID( *args ) :
 
@@ -3815,160 +3865,207 @@ class DVBViewerService() :
 
             self.versionDVBViewerService = matchObject.group(1)
 
-        xmlData = self.GetData( 'timerlist.html' )
+        if type & UPDATE_RECORDINGS != 0 :
 
-        if xmlData is None :
-            xmlData = '<?xml version="1.0" encoding="iso-8859-1"?><Timers/>'
+            xmlData = self.GetData( 'timerlist' )
 
-        self.recordingDates = []
+            if xmlData is None :
+                xmlData = '<?xml version="1.0" encoding="iso-8859-1"?><Timers/>'
 
-        #print xmlData
+            self.recordingDates = []
+            self.activeRecordingDates = []
 
-        """
-         EXAMPLE of xmldata:
+            #print xmlData
 
-        <?xml version="1.0" encoding="iso-8859-1"?>
-        <Timers>
-           <Timer Type="1" Enabled="0" Priority="50" Date="05.07.2999" Start="23:39:00" End="00:09:00" Action="0">
-               <Descr>Bayerisches FS Süd (deu)</Descr>
-               <Options AdjustPAT="-1" AllAudio="-1" DVBSubs="-1" Teletext="-1"/>
-               <Format>2</Format>
-               <Folder>Auto</Folder>
-               <NameScheme>%event_%date_%time</NameScheme>
-               <Log Enabled="-1" Extended="0"/>
-               <Channel ID="550137291|Bayerisches FS Süd (deu)"/>
-               <Executeable>0</Executeable>
-               <Recording>0</Recording>
-               <ID>0</ID>
-           </Timer>
-           <Timer Type="1" Enabled="-1" Priority="50" Date="05.07.2009" Start="18:35:00" End="19:50:00" Action="0">
-               <Descr>Lindenstrasse</Descr>
-               <Options AdjustPAT="-1"/>
-               <Format>2</Format>
-               <Folder>Auto</Folder>
-               <NameScheme>%event_%date_%time</NameScheme>
-               <Log Enabled="-1" Extended="0"/>
-               <Channel ID="543583690|Das Erste (deu)"/>
-               <Executeable>-1</Executeable>
-               <Recording>-1</Recording>
-               <ID>1</ID>
-           </Timer>
-        </Timers>
-        """
+            """
+             EXAMPLE of xmldata:
 
-        tree = ElementTree.fromstring( xmlData )
+            <?xml version="1.0" encoding="iso-8859-1"?>
+            <Timers>
+               <Timer Type="1" Enabled="0" Priority="50" Date="05.07.2999" Start="23:39:00" End="00:09:00" Action="0">
+                   <Descr>Bayerisches FS Süd (deu)</Descr>
+                   <Options AdjustPAT="-1" AllAudio="-1" DVBSubs="-1" Teletext="-1"/>
+                   <Format>2</Format>
+                   <Folder>Auto</Folder>
+                   <NameScheme>%event_%date_%time</NameScheme>
+                   <Log Enabled="-1" Extended="0"/>
+                   <Channel ID="550137291|Bayerisches FS Süd (deu)"/>
+                   <Executeable>0</Executeable>
+                   <Recording>0</Recording>
+                   <ID>0</ID>
+               </Timer>
+               <Timer Type="1" Enabled="-1" Priority="50" Date="05.07.2009" Start="18:35:00" End="19:50:00" Action="0">
+                   <Descr>Lindenstrasse</Descr>
+                   <Options AdjustPAT="-1"/>
+                   <Format>2</Format>
+                   <Folder>Auto</Folder>
+                   <NameScheme>%event_%date_%time</NameScheme>
+                   <Log Enabled="-1" Extended="0"/>
+                   <Channel ID="543583690|Das Erste (deu)"/>
+                   <Executeable>-1</Executeable>
+                   <Recording>-1</Recording>
+                   <ID>1</ID>
+               </Timer>
+            </Timers>
+            """
 
-        now = time()
+            tree = ElementTree.fromstring( xmlData )
 
-        IDs = {}
+            now = time()
 
-        for timer in tree.findall("Timer"):
+            IDs = {}
+            pseudoIDs = {}
 
-            enabled = timer.get( "Enabled","-1" )
-            action = timer.get( "Action","0" )
+            for timer in tree.findall("Timer"):
 
-            date      = timer.get( "Date","" )
-            startTime = timer.get( "Start","" )
-            endTime = timer.get( "End","" )
-            recording = GetText( timer, "Recording" )
-            channelID = timer.find( "Channel" ).get( "ID","")
-            description = GetText( timer, "Descr" )
+                enabled     = ( timer.get( "Enabled","-1" ) != '0')
+                recording   = ( GetText( timer, "Recording" ) != '0' )
+                action      = timer.get( "Action","0" )
 
-            t = mktime( strptime( date + startTime,"%d.%m.%Y%H:%M:%S" ) )
+                date        = timer.get( "Date","" )
+                startTime   = timer.get( "Start","" )
+                endTime     = timer.get( "End","" )
+                channelID   = timer.find( "Channel" ).get( "ID","")
+                description = GetText( timer, "Descr" )
+                pseudoID    = int( GetText( timer, "ID" ) )
 
-            id = GetID( date, startTime, endTime, action, channelID )
+                t = mktime( strptime( date + startTime,"%d.%m.%Y%H:%M:%S" ) )
 
-            if id in self.recordingIDs :
-                pseudoID = self.recordingIDs[ id ][2]
-            else :
-                pseudoID = self.nextPseudoID
-                self.nextPseudoID += 1
-                if plugin.oldInterface :
-                    self.TriggerEvent( "AddRecord:" + str(pseudoID) )
-                if plugin.newInterface :
-                    self.TriggerEvent( "AddRecord", pseudoID )
+                id = GetID( date, startTime, endTime, action, channelID, str( pseudoID ) )
 
-            IDs[ id ] = ( recording != '0', enabled != 0, pseudoID )
+                pseudoIDs[ pseudoID ] = id
 
-            #print "ID = ", id, "  recording = ", recording, "  IDs[ id ] = ", IDs[ id ]
-
-            if enabled != '0' : #and action == '0' :
-
-                if t < now :
-                    continue
-                if not t in self.recordingDates:
-                    self.recordingDates.append(t)
-                    #print "date = ", ctime(t)
-
-        numberOfRecordings = self.numberOfRecordings
-
-        #print self.recordingDates
-        #print "isRecording = ", isRecording
-
-        if self.recordingIDs != IDs :
-
-            for k, v in self.recordingIDs.iteritems() :
-                g = IDs.get( k )
-                if v[0] and ( g is None or not g[0] ) :    # last query time recording but not now
-                    numberOfRecordings -= 1
+                if id not in self.recordingIDs :
                     if plugin.oldInterface :
-                        self.TriggerEvent( "EndRecord" )
+                        self.TriggerEvent( "AddRecord:" + str(pseudoID) )
                     if plugin.newInterface :
-                        self.TriggerEvent( "EndRecord", ( v[2], numberOfRecordings ) )
+                        self.TriggerEvent( "AddRecord", pseudoID )
+
+                IDs[ id ] = ( recording, enabled, pseudoID )
+
+                #print "ID = ", id, "  recording = ", recording, "  IDs[ id ] = ", IDs[ id ]
+
+                if enabled : #and action == '0' :
+
+                    if t < now :
+                        continue
+                    if not t in self.recordingDates:
+                        self.recordingDates.append(t)
+                        if recording :
+                            self.activeRecordingDates.append(t)
+                        #print "date = ", ctime(t)
+
+            numberOfRecordings = self.numberOfRecordings
+
+            #print self.recordingDates
+            #print "isRecording = ", isRecording
+
+            if self.recordingIDs != IDs :
+
+                for k, v in self.recordingIDs.iteritems() :
+                    g = IDs.get( k )
+                    if v[0] and ( g is None or not g[0] ) :    # last query time recording but not now
+                        numberOfRecordings -= 1
+                        if plugin.oldInterface :
+                            self.TriggerEvent( "EndRecord" )
+                        if plugin.newInterface :
+                            self.TriggerEvent( "EndRecord", ( v[2], numberOfRecordings ) )
 
 
-            for k, v in IDs.iteritems() :
-                g = self.recordingIDs.get( k )
+                for k, v in IDs.iteritems() :
+                    g = self.recordingIDs.get( k )
 
-                if v[0] and ( g is None or not g[0] ) :    # last query time not recording but now
-                    numberOfRecordings += 1
-                    if plugin.oldInterface :
-                        self.TriggerEvent( "StartRecord" )
-                    if plugin.newInterface :
-                        self.TriggerEvent( "StartRecord", ( v[2], numberOfRecordings ) )
+                    if v[0] and ( g is None or not g[0] ) :    # last query time not recording but now
+                        numberOfRecordings += 1
+                        if plugin.oldInterface :
+                            self.TriggerEvent( "StartRecord" )
+                        if plugin.newInterface :
+                            self.TriggerEvent( "StartRecord", ( v[2], numberOfRecordings ) )
 
-            self.TriggerEvent( "TimerListUpdated" )
+                self.TriggerEvent( "TimerListUpdated" )
 
-            #print "numberOfRecordings = ", numberOfRecordings
+                #print "numberOfRecordings = ", numberOfRecordings
 
-            if numberOfRecordings == 0 and self.numberOfRecordings != 0 :
+                if numberOfRecordings == 0 and self.numberOfRecordings != 0 :
 
-                self.TriggerEvent( "AllActiveRecordingsFinished" )
+                    self.TriggerEvent( "AllActiveRecordingsFinished" )
 
-            self.numberOfRecordings = numberOfRecordings
+                self.numberOfRecordings = numberOfRecordings
 
-            self.recordingIDs = IDs
+                self.recordingIDs = IDs
+                self.pseudoIDs = pseudoIDs
+
+
+        if type & UPDATE_STREAM != 0 :
+
+            xmlData = self.GetData( 'clientcount' )
+
+            # EXAMPLE of xmldata:
+
+            #<?xml version="1.0" encoding="utf-8" ?>
+            #<clientcount>0</clientcount>
+
+            if xmlData is None :
+                xmlData = '<?xml version="1.0" encoding="utf-8" ?><clientcount>0</clientcount>'
+
+            tree = ElementTree.fromstring( xmlData )
+
+            numberOfClients = int( tree.text ) - self.numberOfRecordings
+
+            if self.numberOfClients != numberOfClients :
+
+                if numberOfClients != 0 :
+
+                    self.TriggerEvent( "NumberOfClientsChanged", numberOfClients )
+
+                else :
+
+                    self.TriggerEvent( "NoClientActive" )
+
+                self.numberOfClients = numberOfClients
 
         return True
 
 
 
+    def GetNumberOfClients( self, update = True ) :
+        if update or self.failing :
+            self.Update( UPDATE_STREAM )
+
+        return self.numberOfClients
+
+
+
     def GetNumberOfActiveRecordings( self, update = True ) :
         if update or self.failing :
-            self.Update()
+            self.Update( UPDATE_RECORDINGS )
 
         return self.numberOfRecordings
 
 
 
     def IsRecording( self, update = True ) :
-        return GetNumberOfActiveRecordings( update ) != 0
+        return GetNumberOfActiveRecordings( UPDATE_RECORDINGS ) != 0
 
 
 
-    def GetRecordingDates( self, update = True ) :
+    def GetRecordingDates( self, active = True, update = True ) :
         if update or self.failing :
-            self.Update()
+            self.Update( UPDATE_RECORDINGS )
 
         if self.failing :
             return None
-        return self.recordingDates
+
+        if active :
+            return self.activeRecordingDates
+        else :
+            return self.recordingDates
 
 
 
     def GetRecordingsIDs( self, update = True ) :
         if update or self.failing :
-            self.Update()
+            self.Update( UPDATE_RECORDINGS )
 
         if self.failing :
             return None
@@ -3976,8 +4073,18 @@ class DVBViewerService() :
 
 
 
+    def GetPseudoIDs( self, update = True ) :
+        if update or self.failing :
+            self.Update( UPDATE_RECORDINGS )
+
+        if self.failing :
+            return None
+        return self.pseudoIDs
+
+
+
     def GetVersion( self ) :
         if self.versionDVBViewerService is None :
-            self.Update()
+            self.Update( UPDATE_RECORDINGS )
         return self.versionDVBViewerService
 
