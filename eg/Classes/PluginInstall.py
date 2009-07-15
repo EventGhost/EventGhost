@@ -16,29 +16,36 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 import os
-import sys
 import pickle
 import tempfile
 import shutil
 import compileall
-import traceback
 from zipfile import ZipFile, ZIP_DEFLATED
 import wx
 import eg
 from eg.Utils import DecodeReST
+from eg.Classes.Dialog import Dialog
+
 
 TEMPLATE = u"""
 <FONT SIZE=5><b>{name}</b></FONT>
 <p>
 <TABLE CELLSPACING=0 CELLPADDING=0>
     <tr>
-        <td><b>Author:</b>&nbsp;</td><td>{author}</td>
+        <td><b>Author:</b>&nbsp;</td>
+        <td>{author}</td>
     </tr>
     <tr>
-        <td><b>Version:</b>&nbsp;</td><td>{version}</td>
+        <td><b>Version:</b>&nbsp;</td>
+        <td>{version}</td>
     </tr>
     <tr>
-        <td><b>Support:</b>&nbsp;</td><td><a href="http://www.eventghost.org/forum/viewforum.php?f=9">Forum Thread</a></td>
+        <td><b>Support:</b>&nbsp;</td>
+        <td>
+            <a href="http://www.eventghost.org/forum/viewforum.php?f=9">
+                Forum Thread
+            </a>
+        </td>
     </tr>
 </TABLE>
 <P>
@@ -46,9 +53,9 @@ TEMPLATE = u"""
 
 class PluginInstall(object):
     
-    def Export(self):
+    def Export(self, mainFrame=None):
         result = eg.AddPluginDialog.GetModalResult(
-            eg.document.frame,
+            mainFrame,
             checkMultiLoad = False
         )
         if not result:
@@ -68,7 +75,7 @@ class PluginInstall(object):
             "icon": pluginInfo.icon.pil.tostring()
         }
         dialog = InstallDialog(
-            eg.document.frame, 
+            mainFrame, 
             "Plugin Information", 
             pluginData=pluginData,
             basePath=pluginInfo.path,
@@ -79,7 +86,7 @@ class PluginInstall(object):
             return
         filename = pluginInfo.englishName.replace("/", "-")
         dialog = wx.FileDialog(
-            eg.document.frame,
+            mainFrame,
             defaultFile=filename,
             wildcard="EventGhost Plugin (*.egplugin)|*.egplugin",
             style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT 
@@ -156,13 +163,12 @@ class PluginInstall(object):
         finally:
             shutil.rmtree(tmpDir, True)
             from eg.WinApi.Dynamic import ExitProcess
-            import time
             ExitProcess(0)
         
 PluginInstall = PluginInstall()
 
 
-class InstallDialog(eg.Dialog):
+class InstallDialog(Dialog):
 
     def __init__(
         self, 
@@ -171,8 +177,8 @@ class InstallDialog(eg.Dialog):
         basePath=None,
         pluginData=None,
     ):
-        eg.Dialog.__init__(
-            self, 
+        Dialog.__init__(
+            self,
             parent, 
             -1, 
             title, 
@@ -192,8 +198,12 @@ class InstallDialog(eg.Dialog):
         descriptionCtrl.SetBorders(2)
         descriptionCtrl.SetBasePath(basePath)
         descriptionCtrl.SetPage(pluginData['description'])
-        questionCtrl = self.StaticText("Do you really want to install this plugin into EventGhost?")
-        self.buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL), True, True)
+        questionCtrl = self.StaticText(
+            "Do you really want to install this plugin into EventGhost?"
+        )
+        self.buttonRow = eg.ButtonRow(
+            self, (wx.ID_OK, wx.ID_CANCEL), True, True
+        )
         mainSizer = eg.VBoxSizer(
             (headerCtrl, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, 5),
             (wx.StaticLine(self), 0, wx.EXPAND, 0),

@@ -23,7 +23,7 @@
 __all__ = ["Bunch", "NotificationHandler", "LogIt", "LogItWithReturn",
     "TimeIt", "AssertNotMainThread", "AssertNotActionThread", "ParseString",
     "SetDefault", "EnsureVisible", "VBoxSizer", "HBoxSizer", "EqualizeWidths",
-    "AsTasklet", "ExecFile",
+    "AsTasklet", "ExecFile", "GetTopLevelWindow",
 ]
 
 import eg
@@ -218,6 +218,19 @@ def SetDefault(targetCls, defaultCls):
             setattr(targetCls, defaultKey, defaultValue)
         elif type(defaultValue) in USER_CLASSES:
             SetDefault(targetDict[defaultKey], defaultValue)
+
+
+def GetTopLevelWindow(window):
+    """
+    Returns the top level parent window of a wx.Window. This is in most
+    cases a wx.Dialog or wx.Frame.
+    """
+    result = window
+    while True:
+        parent = result.GetParent()
+        if parent is None:
+            return result
+        result = parent
 
 
 def EnsureVisible(window):

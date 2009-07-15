@@ -117,7 +117,7 @@ class EventGhostEvent(object):
         self.isEnded = True
 
 
-    def SetShouldEnd(self, dummy=None):
+    def SetShouldEnd(self):
         if not self.shouldEnd.isSet():
             self.shouldEnd.set()
             eg.SetProcessingState(0, self)

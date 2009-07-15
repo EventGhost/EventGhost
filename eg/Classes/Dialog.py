@@ -22,9 +22,10 @@
 
 import eg
 import wx
+from eg.Classes.ControlProviderMixin import ControlProviderMixin
 
 
-class Dialog(wx.Dialog, eg.ControlProviderMixin):
+class Dialog(wx.Dialog, ControlProviderMixin):
 
     def __init__(self, *args, **kwargs):
         wx.Dialog.__init__(self, *args, **kwargs)

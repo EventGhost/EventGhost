@@ -70,7 +70,7 @@ class AutostartItem(MacroItem):
             return HINT_MOVE_AFTER
         if cls == eg.ActionItem:
             return HINT_MOVE_INSIDE
-        #if cls == eg.PluginItem:
-        #    return HINT_MOVE_INSIDE
+        if cls == eg.PluginItem:
+            return HINT_MOVE_INSIDE
         return HINT_NO_DROP
 

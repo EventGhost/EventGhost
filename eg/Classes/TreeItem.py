@@ -300,8 +300,6 @@ class TreeItem(object):
         if newParentItem == self.parent:
             if pos > oldPos:
                 pos -= 1
-        #if pos >= len(newParentItem.childs):
-        #    pos = -1
         self.parent = newParentItem
         newParentItem.AddChild(self, pos)
         eg.Notify("NodeMoveEnd")
@@ -423,9 +421,6 @@ class TreeItem(object):
     @property
     def imageIndex(self):
         return self.icon.index if self.isEnabled else self.icon.disabledIndex
-    @property
-    def selectedImageIndex(self):
-        return -1
     @property
     def canMove(self):
         return self is not self.document.autostartMacro

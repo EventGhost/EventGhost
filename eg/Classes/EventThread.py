@@ -32,7 +32,7 @@ from eg.WinApi.Dynamic import (
     SetProcessWorkingSetSize,
     FormatError,
 )
-
+from ThreadWorker import ThreadWorker
 # some shortcuts
 EventGhostEvent = eg.EventGhostEvent
 actionThread = eg.actionThread
@@ -40,10 +40,10 @@ ActionThreadCall = actionThread.Call
 ActionThreadCallWait = actionThread.CallWait
 
 
-class EventThread(eg.ThreadWorker):
+class EventThread(ThreadWorker):
 
     def __init__(self):
-        eg.ThreadWorker.__init__(self)
+        ThreadWorker.__init__(self)
         eg.event = EventGhostEvent("")
         self.startupEvent = None
         self.hHandle = OpenProcess(PROCESS_SET_QUOTA, 0, eg.processId)
@@ -60,9 +60,9 @@ class EventThread(eg.ThreadWorker):
                 ):
                     #TODO: what to do here?
                     eg.PrintDebugNotice(FormatError())
-                    self.Poll = self.Poll2
+                    self.__class__.Poll = self.Poll2
             except:
-                self.Poll = self.Poll2
+                self.__class__.Poll = self.Poll2
 
 
     def Poll2(self):
