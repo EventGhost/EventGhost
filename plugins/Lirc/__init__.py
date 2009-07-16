@@ -3,7 +3,7 @@
 ###
 ### EventGhost plugin for receiving Lirc-style events written in python.
 ###
-### This has only been tested with WinLirc (http://winlirc.sourceforge.net/),
+### This plugin has been made to work with WinLirc (http://winlirc.sourceforge.net/),
 ### though it should also work with any version of Lirc (http://www.lirc.org/).
 ###
 ### If you are using WinLirc I'd suggest setting it a higher priority than normal.
@@ -19,6 +19,12 @@
 ###
 ###
 ### changelog:
+### v0.7.4      - Improved error handling that fixes an issue with Lirc
+### 2009-07-16    running on a *nix.
+###             - Changed to mostly using a warning message instead of an exception
+###             - Added a check if the reader has disconnected while waiting for a
+###               list reply during startup
+###
 ### v0.7.3      - Added a checkbox in the configuration dialog to enable/disable
 ### 2008-10-15    sending LIST command to the server
 ###
@@ -58,7 +64,7 @@
 ###
 name = "LIRC Client"
 kind = "remote"
-version = "0.7.3"
+version = "0.7.4"
 author = "jinxdone"
 description = """\
 Plugin for sending and receiving LIRC eventstrings. Generates EventGhost events 
@@ -132,7 +138,7 @@ import socket, asyncore, time, threading
 ############################## BEGIN TEXT CLASS ##############################
 ###
 class Text:
-    version = "0.7.1"
+    version = version
     title = "LIRC Client plugin v" + version + " by jinxdone"
     host = "Host:"
     port = "Port:"
@@ -150,12 +156,12 @@ class Text:
        "Please doublecheck your configuration and that the "
        "LIRC server is reachable"
     )
+    erroneousresponse = "Received an erroneous response from the LIRC-server\nDoes the lirc-server support the LIST command?"
+    malformedresponse = "Received a malformed response from the LIRC-server"
     suspendconnection = "Closing the connection to the LIRC-server.."
     resumeconnection = "Resuming the connection to the LIRC-server.."
 ###
 ############################### END TEXT CLASS ###############################
-
-
 
 
 
@@ -179,6 +185,7 @@ class Lirc_Reader(asyncore.dispatcher):
         eg.RestartAsyncore()
         self.connect((host, port))
         self.buffer = ""
+        self.delimeter = ''
 
     ### Some helper functions..
     ###
@@ -205,7 +212,7 @@ class Lirc_Reader(asyncore.dispatcher):
     def handle_close(self):
         self.handler.reader = None
         self.close()
-        eg.actionThread.Call(self.handler.HandleException, self.text.disconnected)
+        eg.actionThread.Call(self.handler.HandleWarning, self.text.disconnected)
 
 
     ### This will be run if theres a problem opening the connection
@@ -213,7 +220,7 @@ class Lirc_Reader(asyncore.dispatcher):
     def handle_expt(self):
         self.handler.reader = None
         self.close()
-        eg.actionThread.Call(self.handler.HandleException, self.text.startupexception)
+        eg.actionThread.Call(self.handler.HandleWarning, self.text.startupexception)
 
     ### This gets run whenever asyncore detects there is data waiting
     ### for us to be read at the socket, so this is where it's all at..
@@ -221,10 +228,18 @@ class Lirc_Reader(asyncore.dispatcher):
     def handle_read(self):
         # Append data from the socket onto a buffer
         self.buffer += self.recv(4096)
+        # Attempt to detect delimeter used..
+        if self.delimeter == '':
+            if self.buffer.count('\r\n'):
+                self.delimeter = '\r\n'
+            elif self.buffer.count('\n'):
+                self.delimeter = '\n'
+            elif self.buffer.count('\r'):
+                self.delimeter = '\r'
         # (if theres anything on the right of the last linebreak, it must be
         #  some incomplete data caused by tcp/ip fragmenting our strings..)
         # hopefully the rest of it will be there on the next run..
-        self.events = self.buffer.split("\n")
+        self.events = self.buffer.split(self.delimeter)
         self.buffer = self.events.pop()
 
 
@@ -245,38 +260,44 @@ class Lirc_Reader(asyncore.dispatcher):
             # we sent.. so parse it and data following it for useful information
             if self.event == "BEGIN":
                skipit = 1
-               # If our input is is BEGIN,LIST,SUCCESS
-               if self.events[i + 1:i + 3] == ["LIST","SUCCESS"]:
-                  if len(self.events) > int(self.events[i + 4]):
-                     self.handler.Send.remotelist = self.events[i + 5:(int(self.events[i + 4]) + 5)]
+               try:
+                  # If our input is is BEGIN,<any>,ERROR
+                  if self.events[i + 3] == "ERROR":
+                     eg.actionThread.Call(self.handler.HandleWarning, self.text.erroneousresponse)
+                  # If our input is is BEGIN,LIST,SUCCESS
+                  if self.events[i + 1:i + 3] == ["LIST","SUCCESS"]:
+                     if len(self.events) > int(self.events[i + 4]):
+                        self.handler.Send.remotelist = self.events[i + 5:(int(self.events[i + 4]) + 5)]
 
 
-               else:
-                  # If our input is BEING,LIST <remote>,SUCCESS
-                  if [self.events[i + 1].split()[0], self.events[i + 2]] == ["LIST","SUCCESS"]:
-                     self.remote = self.events[i + 1].split()[1]
-                     if self.remote != "":
+                  else:
+                     # If our input is BEGIN,LIST <remote>,SUCCESS
+                     if [self.events[i + 1].split()[0], self.events[i + 2]] == ["LIST","SUCCESS"]:
+                        self.remote = self.events[i + 1].split()[1]
+                        if self.remote != "":
 
-                        # Sanity check.. if there is not enough data skip it..
-                        if len(self.events) > int(self.events[i + 4]):
-                           self.checknum = 0
-                           self.checkmatch = 0
+                           # Sanity check.. if there is not enough data skip it..
+                           if len(self.events) > int(self.events[i + 4]):
+                              self.checknum = 0
+                              self.checkmatch = 0
 
-                           # Check if we want to update an old one or if we have a new remote list
-                           for self.check in self.handler.Send.remotes:
-                              if self.remote == self.check[0]:
-                                 self.handler.Send.remotes[self.checknum] = [
-                                     self.remote,
-                                     self.events[i + 5:(int(self.events[i + 4]) + i + 5)]
-                                 ]
-                                 self.checkmatch = 1
-                           if self.checkmatch == 0:
-                              self.handler.Send.remotes.append(
-                                  [
-                                      self.remote, 
-                                      self.events[i + 5:(int(self.events[i + 4]) + i + 5)]
-                                  ]
-                              )
+                              # Check if we want to update an old one or if we have a new remote list
+                              for self.check in self.handler.Send.remotes:
+                                 if self.remote == self.check[0]:
+                                    self.handler.Send.remotes[self.checknum] = [
+                                        self.remote,
+                                        self.events[i + 5:(int(self.events[i + 4]) + i + 5)]
+                                    ]
+                                    self.checkmatch = 1
+                              if self.checkmatch == 0:
+                                 self.handler.Send.remotes.append(
+                                     [
+                                         self.remote, 
+                                         self.events[i + 5:(int(self.events[i + 4]) + i + 5)]
+                                     ]
+                                 )
+               except IndexError:
+                  eg.actionThread.Call(self.handler.HandleWarning, self.text.malformedresponse)
 
             # split a single event into atoms
             self.event = self.event.split()
@@ -317,6 +338,9 @@ class Lirc_Reader(asyncore.dispatcher):
 ### The EventGhost classes and functions are over here..
 class Lirc(eg.RawReceiverPlugin):
     text = Text
+
+    class LircClientError(Exception):
+        "Lirc Client Error:"
 
     def __init__(self):
         eg.RawReceiverPlugin.__init__(self)
@@ -365,8 +389,12 @@ class Lirc(eg.RawReceiverPlugin):
            self.maxsleep = 0
            while len(self.Send.remotelist) == 0:
               time.sleep(0.1)
+              # If the reader is set to None it has disconnected and closed itself
+              if self.reader == None:
+                 break
+              # If we have not received a list response in 40*100ms stop waiting
               if self.maxsleep > 40:
-                 print self.text.noremotesfound
+                 self.HandleWarning(self.text.noremotesfound)
                  break
               self.maxsleep += 1
 
@@ -375,17 +403,20 @@ class Lirc(eg.RawReceiverPlugin):
                  self.reader.sbuffer += "LIST " + self.remote + "\n"
               asyncore.poll()
 
+    def HandleWarning(self, msg):
+        self.PrintError("Lirc Client: %s" % msg)
+
     def HandleException(self, msg):
-        raise self.Exception(msg)
+        raise self.LircClientError(msg)
     
     def OnComputerSuspend(self, suspendType):
         if self.reader:
             self.reader.handle_close()
-            print self.text.suspendconnection
+            self.HandleWarning(self.text.suspendconnection)
         self.reader = None
 
     def OnComputerResume(self, suspendType):
-        print self.text.resumeconnection
+        self.HandleWarning(self.text.resumeconnection)
         self.InitConnection()
 
     def Configure(
@@ -529,11 +560,14 @@ the LIRC documentation
 
         text = Text
 
+        class LircClientError(Exception):
+            "Lirc Client Error:"
+
 # The workhorse method.. (how tiny)!
         def __call__(self, msg):
             try: self.plugin.reader.sbuffer
             except AttributeError:
-               raise self.Exception(self.text.acterrormsg)
+               raise self.LircClientError(self.text.acterrormsg)
             else:
                self.plugin.reader.sbuffer = msg + "\n"
                asyncore.poll()
@@ -662,4 +696,3 @@ the LIRC documentation
 
             while panel.Affirmed():
                 panel.SetResult(textCtrl.GetValue())
-
