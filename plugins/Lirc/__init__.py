@@ -19,6 +19,13 @@
 ###
 ###
 ### changelog:
+### v0.7.5      - Further improved error handling
+### 2009-07-18  - Getting the remotes list now works in the background
+###               after initial startup
+###             - Added automatic reconnect feature when disconnected and
+###               settings for it in the configuration dialog
+###             - Changed all descriptions to rst format
+###
 ### v0.7.4      - Improved error handling that fixes an issue with Lirc
 ### 2009-07-16    running on a *nix.
 ###             - Changed to mostly using a warning message instead of an exception
@@ -64,52 +71,56 @@
 ###
 name = "LIRC Client"
 kind = "remote"
-version = "0.7.4"
+version = "0.7.5"
 author = "jinxdone"
-description = """\
+description = """<rst>
 Plugin for sending and receiving LIRC eventstrings. Generates EventGhost events 
 based on data received from the LIRC-server.
 
-<br><br>
 For most setups only a slight adjustment of the "Timeout for enduring events" 
 value is recommended.
 
-<br><br>
-The configurable options are:
-<UL>
-<LI><i>Target Host</i><br>
-The target host and port of the lirc server. For WinLirc running on localhost 
-the default settings should be fine (127.0.0.1:8765)
-<br>
-<LI><i>List remotes from the LIRC server</i><br>
-Attempts to send a 'LIST' command to the server when connecting 
-(It is used to fetch information about configured remotes). 
-Uncheck if your server does not support this command.
-<br>
-<LI><i>Only use the first event</i><br>
-Only one(the first) event per keypress is generated, all subsequent events 
-will be discarded.
-<br>(Effectively disables enduring event behaviour)
-<br>
-<LI><i>Add remote-name</i><br>
-Adds the remote-name into the eventstring, use it if you want to distinguish 
-between multiple remotes.
-<br>
-<LI><i>Add repeat-tag</i><br>
-Adds "++" into the eventstring when the event in question is a repeating event.
-<br>
-<LI><i>Ignoretime after first event</i><br>
-You can specify a time during which after a first event any repeat-events are 
-discarded. The value is in milliseconds, set to 0 to disable.
- (Useful if you have problems with buttons you want only to "tap" and not have 
- multiple events by accident)
-<br>
-<LI><i>Timeout for enduring events</i><br>
-Sets the timeout value for enduring events. If you increase it it will work 
-more reliably, but it adds 'lag' to the end of each event, if you set it too 
-low your events may sometimes be interrupted abrubtly.
- (default = 200, recommended between 125-400, depending on your setup)
-</UL>"""
+*The configurable options are:*
+
+- **Target Host**
+  Host and port of the LIRC server. For WinLirc running on localhost 
+  the default settings should be fine (127.0.0.1:8765)
+
+- **Auto-retry settings**
+  If the connection is lost or can not be established, try to (re)connect
+  a number of times with a set interval between retries. Set either 
+  value to 0 to disable.
+
+- **List remotes from the LIRC server**
+  Attempts to send a 'LIST' command to the server when connecting, 
+  which tries to fetch information about configured remotes. 
+  Uncheck if your server does not support this command.
+
+- **Only use the first event**
+  Only the first event from LIRC per keypress is processed, all subsequent events 
+  from the same keypress will be discarded. (Effectively also disables the enduring 
+  event behaviour)
+
+- **Add remote-name**
+  Adds the remote-name into the eventstring, use it if you want to distinguish 
+  between multiple remotes.
+
+- **Add repeat-tag**
+  Adds "++" into the eventstring when the event in question is a repeating event.
+
+- **Ignoretime after first event**
+  You can specify a time during which after a first event any repeat-events are 
+  discarded. The value is in milliseconds, set to 0 to disable. Useful if you 
+  have problems with buttons you want only to trigger once and  not get multiple 
+  events by accident.
+
+- **Timeout for enduring events**
+  Sets the timeout value for enduring events. If you increase it it will work 
+  more reliably, but it adds 'lag' to the end of each event. You will get best 
+  results when set as low as possible, however a value too low will tend to stop 
+  your events abruptly and then immediately start a new one.
+  (default = 200, recommended between 125-400, depending on your setup)
+"""
 ###
 ########################### END PLUGIN DESCRIPTION ###########################
 
@@ -149,15 +160,20 @@ class Text:
     ignoretime = "Ignoretime after first event (ms)"
     timeout = "Timeout for enduring events (ms)"
     attemptlist = "List remotes from the LIRC server"
-    noremotesfound = "No remotes found! (bad lirc configuration?)"
+    retrytitle = "Auto-retry connection if disconnected"
+    maxretries = "Retries"
+    retryinterval = "Interval (s)"
+    noremotesfound = "No remotes found!"
+    noremotesfoundtip = "You can disable sending LIST on connect if it does not work on your setup"
     disconnected = "Disconnected from the LIRC server!"
-    startupexception = (
-       "Could not connect to the LIRC server!\n"
-       "Please doublecheck your configuration and that the "
-       "LIRC server is reachable"
-    )
-    erroneousresponse = "Received an erroneous response from the LIRC-server\nDoes the lirc-server support the LIST command?"
-    malformedresponse = "Received a malformed response from the LIRC-server"
+    disconnectedtip = "Restart the plugin to manually reconnect (Right-click -> Disable, Enable)"
+    reconnect = "Attempting to reconnect to the LIRC-server"
+    reconnectinit = "Attempting to reconnect %i times with %i seconds between attempts"
+    reconnectgiveup = "Giving up reconnection after %i failed retries"
+    reconnected = "Auto-connected successfully after %i attempts"
+    startupexception = "Could not connect to the LIRC server!"
+    erroneousresponse = "Received an erroneous response from the LIRC-server"
+    malformedresponse = "Received an malformed response from the LIRC-server"
     suspendconnection = "Closing the connection to the LIRC-server.."
     resumeconnection = "Resuming the connection to the LIRC-server.."
 ###
@@ -186,6 +202,8 @@ class Lirc_Reader(asyncore.dispatcher):
         self.connect((host, port))
         self.buffer = ""
         self.delimeter = ''
+        self.receivedresponse = 0
+        self.gracefulclose = 0
 
     ### Some helper functions..
     ###
@@ -210,9 +228,14 @@ class Lirc_Reader(asyncore.dispatcher):
     ### or if we want to close it ourselves.
     ###
     def handle_close(self):
+        if self.gracefulclose:
+           #eg.actionThread.Call(self.handler.HandlePrint, self.text.disconnected)
+           self.gracefulclose = 0
+        else:
+           eg.actionThread.Call(self.handler.HandleWarning, self.text.disconnected)
+           self.handler.ReconnectTimer()
         self.handler.reader = None
         self.close()
-        eg.actionThread.Call(self.handler.HandleWarning, self.text.disconnected)
 
 
     ### This will be run if theres a problem opening the connection
@@ -236,6 +259,8 @@ class Lirc_Reader(asyncore.dispatcher):
                 self.delimeter = '\n'
             elif self.buffer.count('\r'):
                 self.delimeter = '\r'
+            else:
+                self.delimeter = '\r\n'
         # (if theres anything on the right of the last linebreak, it must be
         #  some incomplete data caused by tcp/ip fragmenting our strings..)
         # hopefully the rest of it will be there on the next run..
@@ -262,13 +287,19 @@ class Lirc_Reader(asyncore.dispatcher):
                skipit = 1
                try:
                   # If our input is is BEGIN,<any>,ERROR
-                  if self.events[i + 3] == "ERROR":
-                     eg.actionThread.Call(self.handler.HandleWarning, self.text.erroneousresponse)
+                  if self.events[i + 2] == "ERROR":
+                     self.receivedresponse = 1
+                     if len(self.events) > int(self.events[i + 4]) + 4:
+                        eg.actionThread.Call(self.handler.HandleWarning, self.text.erroneousresponse + \
+                        "\nMessage data: " + str(self.events[i + 5:i + int(self.events[i + 4]) + 5]))
+                     else:
+                        eg.actionThread.Call(self.handler.HandleWarning, self.text.erroneousresponse)
                   # If our input is is BEGIN,LIST,SUCCESS
-                  if self.events[i + 1:i + 3] == ["LIST","SUCCESS"]:
-                     if len(self.events) > int(self.events[i + 4]):
+                  if [self.events[i + 1], self.events[i + 2]] == ["LIST","SUCCESS"]:
+                     if len(self.events) > int(self.events[i + 4]) + 4:
                         self.handler.Send.remotelist = self.events[i + 5:(int(self.events[i + 4]) + 5)]
-
+                        for remote in self.handler.Send.remotelist:
+                           self.sbuffer += "LIST " + remote + "\n"
 
                   else:
                      # If our input is BEGIN,LIST <remote>,SUCCESS
@@ -277,18 +308,22 @@ class Lirc_Reader(asyncore.dispatcher):
                         if self.remote != "":
 
                            # Sanity check.. if there is not enough data skip it..
-                           if len(self.events) > int(self.events[i + 4]):
+                           if len(self.events) > int(self.events[i + 4]) + 4:
                               self.checknum = 0
                               self.checkmatch = 0
 
                               # Check if we want to update an old one or if we have a new remote list
                               for self.check in self.handler.Send.remotes:
+                                 # Flush out any N/A remotes (config dialog has been opened before getting a listing)
+                                 if self.check[0] == 'N/A':
+                                    self.handler.Send.remotes = []
                                  if self.remote == self.check[0]:
                                     self.handler.Send.remotes[self.checknum] = [
                                         self.remote,
                                         self.events[i + 5:(int(self.events[i + 4]) + i + 5)]
                                     ]
                                     self.checkmatch = 1
+                                 self.checknum += 1
                               if self.checkmatch == 0:
                                  self.handler.Send.remotes.append(
                                      [
@@ -296,7 +331,8 @@ class Lirc_Reader(asyncore.dispatcher):
                                          self.events[i + 5:(int(self.events[i + 4]) + i + 5)]
                                      ]
                                  )
-               except IndexError:
+               except ZeroDivisionError:
+                  self.receivedresponse = 1
                   eg.actionThread.Call(self.handler.HandleWarning, self.text.malformedresponse)
 
             # split a single event into atoms
@@ -331,7 +367,7 @@ class Lirc_Reader(asyncore.dispatcher):
     ### mandatory, but we won't need these..
     ###
     def handle_connect(self):
-        pass
+       pass
 
 
 
@@ -340,7 +376,7 @@ class Lirc(eg.RawReceiverPlugin):
     text = Text
 
     class LircClientError(Exception):
-        "Lirc Client Error:"
+        "LIRC Client Error:"
 
     def __init__(self):
         eg.RawReceiverPlugin.__init__(self)
@@ -348,7 +384,7 @@ class Lirc(eg.RawReceiverPlugin):
 
     def __start__(
         self, host, port, onlyfirst, addremote, 
-        addrepeat, ignoretime, timeout,  attemptlist
+        addrepeat, ignoretime, timeout,  attemptlist, maxretries, retryinterval
     ):
         text = self.text
         self.port = port
@@ -359,12 +395,19 @@ class Lirc(eg.RawReceiverPlugin):
         self.timeout = timeout / 1000.0
         self.ignoretime = ignoretime
         self.attemptlist = attemptlist
+        self.maxretries = maxretries
+        self.currentattempt = 0
+        self.retryinterval = retryinterval
         self.Send.remotes = []
         self.Send.remotelist = []
         self.InitConnection()
+        # Test if connection is formed succesfully, if not trigger retry
+        if not self.CheckConnection():
+           self.ReconnectTimer()
 
     def __stop__(self):
         if self.reader:
+            self.reader.gracefulclose = 1
             self.reader.handle_close()
         self.reader = None
 
@@ -385,32 +428,29 @@ class Lirc(eg.RawReceiverPlugin):
            # Have to wait a bit and force asyncore to poll to check for a response
            time.sleep(0.05)
            asyncore.poll()
+           self.checkListingTimer = threading.Timer(4, self.CheckListingResults)
+           self.checkListingTimer.start()
+        time.sleep(0.5)
+        asyncore.poll()
 
-           self.maxsleep = 0
-           while len(self.Send.remotelist) == 0:
-              time.sleep(0.1)
-              # If the reader is set to None it has disconnected and closed itself
-              if self.reader == None:
-                 break
-              # If we have not received a list response in 40*100ms stop waiting
-              if self.maxsleep > 40:
-                 self.HandleWarning(self.text.noremotesfound)
-                 break
-              self.maxsleep += 1
 
-           if len(self.Send.remotelist) > 0:
-              for self.remote in self.Send.remotelist:
-                 self.reader.sbuffer += "LIST " + self.remote + "\n"
-              asyncore.poll()
+    def CheckListingResults(self):
+        if len(self.Send.remotes) == 0 or self.Send.remotes == ['N/A', ['N/A']]:
+            self.HandleWarning(self.text.noremotesfound)
+            self.HandlePrint(self.text.noremotesfoundtip)
+
+    def HandlePrint(self, msg):
+        print("LIRC Client: %s" % msg)
 
     def HandleWarning(self, msg):
-        self.PrintError("Lirc Client: %s" % msg)
+        self.PrintError("LIRC Client: %s" % msg)
 
     def HandleException(self, msg):
         raise self.LircClientError(msg)
-    
+
     def OnComputerSuspend(self, suspendType):
         if self.reader:
+            self.reader.gracefulclose = 1
             self.reader.handle_close()
             self.HandleWarning(self.text.suspendconnection)
         self.reader = None
@@ -418,6 +458,52 @@ class Lirc(eg.RawReceiverPlugin):
     def OnComputerResume(self, suspendType):
         self.HandleWarning(self.text.resumeconnection)
         self.InitConnection()
+        # Test if connection is formed succesfully, if not trigger retry
+        if not self.CheckConnection():
+           self.ReconnectTimer()
+
+    def CheckConnection(self):
+        if self.maxretries == 0 or self.retryinterval == 0:
+           return True
+        time.sleep(0.05)
+        if not self.reader:
+           return False
+        try:
+           self.reader.sbuffer = '\n'
+        except:
+           return False
+        time.sleep(0.05)
+        asyncore.poll()
+        if not self.reader.connected:
+           return False
+        return True
+
+    def ReconnectTimer(self):
+        # If the connection drops try to reconnect n times with a pre-set
+        # time between the attempts. Drop conneciton attempts after n failures
+        if self.maxretries == 0 or self.retryinterval == 0:
+           return
+        self.reconnecttimer = threading.Timer(self.retryinterval, self.Reconnect)
+        if self.currentattempt == 0:
+           self.HandlePrint(self.text.reconnectinit % (self.maxretries, self.retryinterval))
+        if self.currentattempt < self.maxretries:
+           self.reconnecttimer.start()
+        else:
+           self.HandlePrint(self.text.reconnectgiveup % self.maxretries)
+
+    def Reconnect(self):
+        # First check if we are connected, if not then retry and check immediately again
+        # if we got connected successfully (asyncore wont seem to update connected status
+        # unless some traffic is sent/received so put one newline in the send buffer and poll it)
+        if self.CheckConnection():
+           return
+        else:
+           self.currentattempt += 1
+           self.InitConnection()
+           if self.CheckConnection():
+              self.HandlePrint(self.text.reconnected % (self.currentattempt - 1))           
+           else:
+              self.ReconnectTimer()
 
     def Configure(
         self,
@@ -429,6 +515,8 @@ class Lirc(eg.RawReceiverPlugin):
         ignoretime = 0,
         timeout = 200,
         attemptlist = True,
+        maxretries = 10,
+        retryinterval = 30,
     ):
         text = self.text
         panel = eg.ConfigPanel(self)
@@ -440,12 +528,25 @@ class Lirc(eg.RawReceiverPlugin):
         AttemptListCtrl = wx.CheckBox(panel, -1, text.attemptlist)
         AttemptListCtrl.SetValue(attemptlist)
 
+        RetryTitle = wx.StaticText(panel, -1, text.retrytitle)
+        MaxRetriesText = wx.StaticText(panel, -1, text.maxretries)
+        MaxRetriesCtrl = eg.SpinIntCtrl(panel, -1, maxretries)
+        RetryIntervalText = wx.StaticText(panel, -1, text.retryinterval)
+        RetryIntervalCtrl = eg.SpinIntCtrl(panel, -1, retryinterval, max=65535)
+        RetryBox = wx.BoxSizer()
+        RetryBox.Add(MaxRetriesCtrl, 0, wx.ALL, 2)
+        RetryBox.Add(MaxRetriesText, 0, wx.ALL, 5)
+        RetryBox.Add(RetryIntervalCtrl, 0, wx.ALL, 2)
+        RetryBox.Add(RetryIntervalText, 0, wx.ALL, 5)
+
         HostSizer = wx.FlexGridSizer(cols=3)
         HostSizer.Add(HostText, 0, wx.ALL, 5)
         HostSizer.Add(HostCtrl, 0, wx.ALL, 3)
-        HostSizer.Add(AttemptListCtrl, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 30)
+        HostSizer.Add(RetryTitle, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 54)
         HostSizer.Add(PortText, 0, wx.ALL, 5)
         HostSizer.Add(PortCtrl, 0, wx.ALL, 3)
+        HostSizer.Add(RetryBox, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 50)
+
         HostBox = wx.StaticBox(panel, -1, text.hosttitle)
         shbSizer = wx.StaticBoxSizer(HostBox)
         shbSizer.Add(HostSizer, 0, wx.ALIGN_CENTER|wx.ALL, 5)
@@ -469,12 +570,14 @@ class Lirc(eg.RawReceiverPlugin):
         TimeoutBox.Add(TimeoutCtrl, 0, wx.ALL, 2)
         TimeoutBox.Add(TimeoutText, 0, wx.ALL, 5)
 
+        FirstLineBox = wx.BoxSizer()
+        FirstLineBox.Add(OnlyFirstCtrl, 0, wx.ALL, 5)
+        FirstLineBox.Add(AttemptListCtrl, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 120)
+
         BoxSizer = wx.BoxSizer(wx.VERTICAL)
-        BoxSizer.Add(OnlyFirstCtrl, 0, wx.ALL, 5)
+        BoxSizer.Add(FirstLineBox, 0, wx.ALL, 0)
         BoxSizer.Add(AddRemoteCtrl, 0, wx.ALL, 5)
         BoxSizer.Add(AddRepeatCtrl, 0, wx.ALL, 5)
-        #BoxSizer.Add(IgnoreTimeText, 0, wx.ALL, 5)
-        #BoxSizer.Add(IgnoreTimeCtrl, 0, wx.ALL, 5)
         BoxSizer.Add(IgnoreBox, 0, wx.ALL, 3)
         BoxSizer.Add(TimeoutBox, 0, wx.ALL, 3)
 
@@ -492,7 +595,9 @@ class Lirc(eg.RawReceiverPlugin):
                 AddRepeatCtrl.GetValue(), 
                 IgnoreTimeCtrl.GetValue(),
                 TimeoutCtrl.GetValue(),
-                AttemptListCtrl.GetValue()
+                AttemptListCtrl.GetValue(),
+                MaxRetriesCtrl.GetValue(),
+                RetryIntervalCtrl.GetValue()
             )
 
 
@@ -504,37 +609,37 @@ class Lirc(eg.RawReceiverPlugin):
 ########################## BEGIN ACTION DESCRIPTION ##########################
 ###
         name = "Send Event"
-        description = """
+        description = """<rst>
 Sends an eventstring to the LIRC-server for transmitting IR signals.
 
-<br><br>
-The plugin fetches information about the available remotes and actions 
-from the LIRC-server with the LIST commands. If no information has been 
+The plugin can fetch information about the available remotes and actions 
+from the LIRC-server with the LIST command. If no information has been 
 available or some other problem occurred the Remote and Action fields will 
 have "N/A" values in them.
-<br><br>
-The configurable options are:
-<UL>
-<LI><i>Command</i><br>
-Command to send. Commands available are SEND_ONCE, SEND_START and SEND_STOP.
-<LI><i>Remote</i><br>
-A List of the available remotes.
-<LI><i>Action</i><br>
-A List of the actions available with the selected remote.
-<LI><i>Repeat</i><br>
-Tells the LIRC-server to repeat the IR code n times.<br
-Only valid for the SEND_ONCE command.
-<br>
-<LI><i>Event String</i><br>
-The actual string to send, you can use either the Command selection or just 
-type in the string you want to send by hand. The actual string to send is 
-always what is in this field regardless of what is selected in the fields above.
-</UL>
-<br><br>
-More information at 
-<a href="http://www.lirc.org/html/technical.html#applications">
-the LIRC documentation
-</a>.
+
+*The configurable options are:*
+
+- **Command**
+  Available commands are SEND_ONCE, SEND_START and SEND_STOP.
+  
+- **Remote**
+  A List of the available remotes.
+  
+- **Action**
+  A List of the actions available with the selected remote.
+
+- **Repeat**
+  Tells the LIRC-server to repeat the IR code n times.
+  Only valid for the SEND_ONCE command.
+
+- **Event String**
+  The actual string to send, you can use either the Command selection or just 
+  type in the string you want to send by hand. The actual string to send is 
+  always what is in this field regardless of what is selected in the fields above.
+
+More information at `the LIRC documentation`__
+
+__ http://www.lirc.org/html/technical.html#applications
 """
 ###
 ########################### END ACTION DESCRIPTION ###########################
@@ -553,7 +658,7 @@ the LIRC documentation
                "You may use the fields in the Command selection to help form a string to send.\n"
                "Or simply just type in the string directly into the field below."
             )
-            acterrormsg = "Error sending event! Send buffer is missing!"
+            acterrormsg = "Error while sending event! Send buffer is missing!"
 ###
 ############################### END TEXT CLASS ###############################
 
@@ -561,13 +666,13 @@ the LIRC documentation
         text = Text
 
         class LircClientError(Exception):
-            "Lirc Client Error:"
+            "LIRC Client Error:"
 
 # The workhorse method.. (how tiny)!
         def __call__(self, msg):
             try: self.plugin.reader.sbuffer
             except AttributeError:
-               raise self.LircClientError(self.text.acterrormsg)
+               self.plugin.HandleWarning(self.text.acterrormsg)
             else:
                self.plugin.reader.sbuffer = msg + "\n"
                asyncore.poll()
@@ -579,14 +684,14 @@ the LIRC documentation
 
         def Configure(self, actionStr=""):
             text = self.text
-            remotes = self.remotes
-            remotelist = self.remotelist
             actionParam = "0"
-            if len(remotes) == 0:
-               remotes.append(["N/A", ['N/A']])
-               remotelist = ["N/A"]
+            if len(self.remotes) == 0:
+               self.remotes.append(["N/A", ['N/A']])
+               self.remotelist = ["N/A"]
             else:
                self.UpdateRemoteList()
+            remotes = self.remotes
+            remotelist = self.remotelist
 
 
             def OnCmdChoice(event):
@@ -604,14 +709,17 @@ the LIRC documentation
                 UpdateActionText()
 
             def UpdateActionText():
+                # Add an empty space at the end of the string to send, atleast
+                # WinLirc seems to require it in the case the repeat value is omitted
                 newstr = " ".join(
                    [cmdlist[cmdCtrl.GetSelection()], 
                    remotelist[remoteCtrl.GetSelection()], 
-                   remotes[remoteCtrl.GetSelection()][1][actionCtrl.GetSelection()]]
+                   remotes[remoteCtrl.GetSelection()][1][actionCtrl.GetSelection()],
+                   '']
                    )
                 if cmdCtrl.GetSelection() == 0:
                    if repeatCtrl.GetValue() != 0:
-                      newstr = newstr + " " + str(repeatCtrl.GetValue())
+                      newstr = newstr + str(repeatCtrl.GetValue())
                 textCtrl.SetValue(newstr)
 
             def UpdateCtrl(string, list, control):
