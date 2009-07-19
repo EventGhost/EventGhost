@@ -331,7 +331,7 @@ class Lirc_Reader(asyncore.dispatcher):
                                          self.events[i + 5:(int(self.events[i + 4]) + i + 5)]
                                      ]
                                  )
-               except ZeroDivisionError:
+               except IndexError:
                   self.receivedresponse = 1
                   eg.actionThread.Call(self.handler.HandleWarning, self.text.malformedresponse)
 
