@@ -730,7 +730,7 @@ class Text:
     schedulerEntryHidden  = "Hidden"
     accountChoices        = ACCOUNT_CHOICES
     accountType           = "Account type: "
-    serviceHeader         = "DVBService"
+    serviceHeader         = "DVBViewerService"
     serviceEnable         = "Enable     "
     serviceAddress        = "Address and Web port"
     serviceEvent          = "Source event name"
@@ -3468,7 +3468,7 @@ class GetDateOfRecordings( eg.ActionClass ) :
         readOutSuccessfull = True
 
         if enableDVBService :
-            recordingDates = plugin.service.GetRecordingDates( active = not allRecordings, update = updateDVBService )
+            recordingDates = plugin.service.GetRecordingDates( False, update = updateDVBService )
             if recordingDates is None :
                 recordingDates = []
                 readOutSuccessfull = False
@@ -3482,7 +3482,7 @@ class GetDateOfRecordings( eg.ActionClass ) :
             plugin.executionStatusChangeLock.acquire()
             if plugin.Connect( WAIT_CHECK_START_CONNECT ) :
                 recordingList = plugin.workerThread.CallWait( partial( plugin.workerThread.GetRecordings,
-                                                                       not allRecordings,
+                                                                       False,
                                                                        updateDVBService and not enableDVBService ),
                                     CALLWAIT_TIMEOUT )
                 plugin.executionStatusChangeLock.release()
@@ -3911,6 +3911,8 @@ class DVBViewerService() :
             """
 
             tree = ElementTree.fromstring( xmlData )
+
+            #tree = ElementTree.parse( "C:\\Dokumente und Einstellungen\\Stefan Gollmer\\Desktop\\timer.xml" )
 
             now = time()
 
