@@ -105,7 +105,7 @@ ErrorControl=1
 ServiceBinary=%12%\WinUSB.sys
 
 [CoInstallers_AddReg]
-HKR,,CoInstallers32,0x00010000,"WdfCoInstaller01007.dll,WdfCoInstaller","WinUSBCoInstaller.dll",,"WUDFUpdate_01007.dll"
+HKR,,CoInstallers32,0x00010000,"WdfCoInstaller01007.dll,WdfCoInstaller","WinUSBCoInstaller.dll","WUDFUpdate_01007.dll"
 
 [CoInstallers_CopyFiles]
 WinUSBCoInstaller.dll
@@ -194,22 +194,26 @@ tmpFolder = os.path.dirname(__file__)
 for osType in ("x86", "amd64"):
     if not os.path.exists(join(tmpFolder, osType)):
         os.mkdir(join(tmpFolder, osType))
-    shutil.copy2(
-        join(redistFolder, "DIFx", "DPInst", "MultiLin", osType, "DPInst.exe"),
-        join(tmpFolder, "DPInst_%s.exe" % osType)
-    )
-    shutil.copy2(
-        join(redistFolder, "winusb", osType, "WinUSBCoInstaller.dll"),
-        join(tmpFolder, osType)
-    )
-    shutil.copy2(
-        join(redistFolder, "wdf", osType, "WdfCoInstaller01007.dll"),
-        join(tmpFolder, osType)
-    )
-    shutil.copy2(
-        join(redistFolder, "wdf", osType, "WUDFUpdate_01007.dll"),
-        join(tmpFolder, osType)
-    )
+        
+    src = join(redistFolder, "DIFx", "DPInst", "MultiLin", osType, "DPInst.exe")
+    dst = join(tmpFolder, "DPInst_%s.exe" % osType)
+    if not os.path.exists(dst):
+        shutil.copy2(src, dst)
+        
+    src = join(redistFolder, "winusb", osType, "WinUSBCoInstaller.dll")
+    dst = join(tmpFolder, osType, "WinUSBCoInstaller.dll")
+    if not os.path.exists(dst):
+        shutil.copy2(src, dst)
+        
+    src = join(redistFolder, "wdf", osType, "WdfCoInstaller01007.dll")
+    dst = join(tmpFolder, osType, "WdfCoInstaller01007.dll")
+    if not os.path.exists(dst):
+        shutil.copy2(src, dst)
+        
+    src = join(redistFolder, "wdf", osType, "WUDFUpdate_01007.dll")
+    dst = join(tmpFolder, osType, "WUDFUpdate_01007.dll")
+    if not os.path.exists(dst):
+        shutil.copy2(src, dst)
 
 subprocess.call(
     [
