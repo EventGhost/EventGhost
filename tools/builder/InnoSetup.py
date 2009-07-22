@@ -24,7 +24,7 @@ import sys
 import _winreg
 from os.path import abspath, join, exists
 
-from builder.Utils import StartProcess
+from builder.Utils import StartProcess, EncodePath
 
 import logging
 
@@ -102,7 +102,7 @@ class InnoInstaller(object):
         """
         if not section in self.innoSections:
             self.innoSections[section] = []
-        self.innoSections[section].append(line)
+        self.innoSections[section].append(EncodePath(line))
 
 
     def AddFile(self, source, destDir="", destName=None, ignoreversion=True):
@@ -140,7 +140,13 @@ class InnoInstaller(object):
         ).read()
         innoScriptPath = join(self.buildSetup.tmpDir, "Setup.iss")
         issFile = open(innoScriptPath, "w")
-        issFile.write(innoScriptTemplate % self.buildSetup.__dict__)
+        templateDict = {}
+        for key, value in  self.buildSetup.__dict__.iteritems():
+            if isinstance(value, unicode):
+                value = EncodePath(value)
+            templateDict[key] = value
+            
+        issFile.write(innoScriptTemplate % templateDict)
         for section, lines in self.innoSections.iteritems():
             issFile.write("[%s]\n" % section)
             for line in lines:

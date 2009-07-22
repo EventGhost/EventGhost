@@ -24,9 +24,29 @@
 """
 This script creates the EventGhost setup installer.
 """
+import sys
+import codecs
+
+
+class StdErr(object):
+    def __init__(self, stream, encoding):
+        self.stream = stream
+        self.encoding = encoding
+        self.filesystemencoding = sys.getfilesystemencoding()
+        
+    def write(self, text):
+        try:
+            text = text.decode(self.filesystemencoding)
+        except:
+            pass
+        self.stream.write(text.encode(self.encoding))
+sys.stderr = StdErr(sys.stderr, sys.stderr.encoding)
+
 import os
+import traceback
 from os.path import dirname, join, exists
 from glob import glob
+import threading
 
 # local imports
 import builder
@@ -112,8 +132,8 @@ class MyBuilder(builder.Builder):
         workingDir = self.sourceDir
         props = client.propget("noinstall", workingDir, recurse=True)
         # propget returns the pathes with forward slash as deliminator, but we
-        # need backslashes
-        props = dict((k.replace("/", "\\"), v) for k, v in props.iteritems())
+        # need backslashes. It also seems to be encoded in UTF-8.
+        props = dict((k.replace("/", "\\").decode("utf8"), v) for k, v in props.iteritems())
         numPathParts = len(workingDir.split("\\"))
         for status in client.status(workingDir, ignore=True):
             # we only want versioned files
@@ -122,7 +142,6 @@ class MyBuilder(builder.Builder):
             if not os.path.exists(status.path):
                 continue
             pathParts = status.path.split("\\")
-
             # don't include plugins that have a 'noinclude' file
             if len(pathParts) > numPathParts + 1:
                 if pathParts[numPathParts].lower() == "plugins":

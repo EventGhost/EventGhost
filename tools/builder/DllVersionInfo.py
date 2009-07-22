@@ -58,38 +58,29 @@ class VS_FIXEDFILEINFO(Structure):
                 ("dwFileDateLS", DWORD)]
 
 def get_file_version(filename):
-    verinfosize = windll.version.GetFileVersionInfoSizeA(filename, 0)
+    verinfosize = windll.version.GetFileVersionInfoSizeW(filename, 0)
     if not verinfosize:
         raise WinError()
-
     buffer = c_string("\000"*verinfosize)
-    windll.version.GetFileVersionInfoA(filename, 0, sizeof(buffer), buffer)
-
-    ffi = VS_FIXEDFILEINFO()
-    uLen = c_int()
-
-    lpffi = POINTER(VS_FIXEDFILEINFO) ()
-##    windll.version.VerQueryValueA.argtypes = [c_string,
-##                                              c_char_p,
-##                                              POINTER(POINTER(VS_FIXEDFILEINFO)),
-##                                              POINTER(c_int)]
-    res = windll.version.VerQueryValueA(buffer,
-                                 "\\",
-                                 pointer(lpffi),
-                                 pointer(uLen))
+    res = windll.version.GetFileVersionInfoW(filename, 0, sizeof(buffer), buffer)
     if not res:
         raise WinError()
 
+    ffi = VS_FIXEDFILEINFO()
+    uLen = c_int()
+    lpffi = POINTER(VS_FIXEDFILEINFO) ()
+    res = windll.version.VerQueryValueW(buffer, u"\\", pointer(lpffi), pointer(uLen))
+    if not res:
+        raise WinError()
     ffi = lpffi.contents
     # ffi shares memory from buffer, so we must keep a reference to it:
     ffi._buffer = buffer
-
     return ffi
 
 if __name__ == '__main__':
     import os.path
-    path = c_string(256)
-    windll.kernel32.GetSystemDirectoryA(path, sizeof(path))
+    path = ctypes.create_unicode_buffer(256)
+    windll.kernel32.GetSystemDirectoryW(path, sizeof(path))
     file = os.path.join(path.value, "notepad.exe")
 
     vsfileinfo = get_file_version(file)

@@ -5,6 +5,7 @@ from glob import glob
 from os.path import exists, join, basename, dirname
 
 from builder import Task
+from builder.Utils import EncodePath
 
 
 RT_MANIFEST = 24
@@ -97,7 +98,7 @@ class CreateLibrary(Task):
         Create the library and .exe files with py2exe.
         """
         buildSetup = self.buildSetup
-        sys.path.append(buildSetup.pyVersionDir)
+        sys.path.append(EncodePath(buildSetup.pyVersionDir))
         from distutils.core import setup
         InstallPy2exePatch()
         import py2exe # pylint: disable-msg=W0612
@@ -113,7 +114,7 @@ class CreateLibrary(Task):
             script_args=["py2exe"], 
             windows=[Target(buildSetup)],
             verbose=0,
-            zipfile=join(buildSetup.libraryName, self.zipName),
+            zipfile=EncodePath(join(buildSetup.libraryName, self.zipName)),
             options = dict(
                 build=dict(build_base=join(buildSetup.tmpDir, "build")),
                 py2exe=dict(
@@ -121,10 +122,10 @@ class CreateLibrary(Task):
                     includes=["encodings", "encodings.*", "imports"],
                     excludes=buildSetup.excludeModules,
                     dll_excludes = ["DINPUT8.dll", "w9xpopen.exe"],
-                    dist_dir = buildSetup.sourceDir,
-                    custom_boot_script=join(
+                    dist_dir = EncodePath(buildSetup.sourceDir),
+                    custom_boot_script=EncodePath(join(
                         buildSetup.dataDir, "Py2ExeBootScript.py"
-                    ),
+                    )),
                 )
             )
         )

@@ -9,6 +9,13 @@ from os.path import join
 import builder
 from builder.subprocess2 import Popen
 
+def EncodePath(path):
+    return path.encode(sys.getfilesystemencoding())
+
+
+def DecodePath(path):
+    return path.decode(sys.getfilesystemencoding())
+
 
 def StartProcess(*args):
     #SetIndent(1)
@@ -17,7 +24,7 @@ def StartProcess(*args):
     startupInfo.wShowWindow = subprocess.SW_HIDE
     process = Popen(
         args,
-        cwd=join(builder.buildSetup.sourceDir, "tools"),
+        cwd=EncodePath(join(builder.buildSetup.sourceDir, "tools")),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         startupinfo=startupInfo,
@@ -98,5 +105,4 @@ def GetHtmlHelpCompilerPath():
     if not os.path.exists(programPath):
         return None
     return programPath
-
 

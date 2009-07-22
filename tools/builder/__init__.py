@@ -3,7 +3,7 @@ import tempfile
 import atexit
 import shutil
 from os.path import abspath, dirname, join
-
+from builder.Utils import DecodePath
 
 class Task(object):
     value = None
@@ -13,7 +13,8 @@ class Task(object):
     
     def __init__(self, buildSetup):
         self.buildSetup = buildSetup
-        
+    
+    
     def Setup(self):
         pass
 
@@ -33,9 +34,10 @@ class Builder(object):
         global buildSetup
         Task.buildSetup = self
         buildSetup = self
-        self.sourceDir = abspath(join(dirname(__file__), "../.."))
+        baseDir = dirname(DecodePath(__file__))
+        self.sourceDir = abspath(join(baseDir, "../.."))
         self.websiteDir = join(self.sourceDir, "website")
-        self.dataDir = abspath(join(dirname(__file__), "Data"))
+        self.dataDir = abspath(join(baseDir, "Data"))
         self.pyVersionStr = "%d%d" % sys.version_info[:2]
         self.pyVersionDir = join(self.dataDir, "Python%s" % self.pyVersionStr)
         self.libraryName = "lib%s" % self.pyVersionStr
@@ -44,7 +46,7 @@ class Builder(object):
         if not CheckDependencies(self):
             sys.exit(1)
         self.tmpDir = tempfile.mkdtemp()
-        atexit.register(shutil.rmtree, self.tmpDir)
+        #atexit.register(shutil.rmtree, self.tmpDir)
         self.appName = self.name
         
         

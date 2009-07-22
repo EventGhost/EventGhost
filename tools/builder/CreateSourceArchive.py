@@ -25,6 +25,6 @@ class CreateSourceArchive(builder.Task):
                 path = status.path
                 if not isdir(path):
                     arcname = path[len(workingDir) + 1:]
-                    zipFile.write(str(path), str(arcname))
+                    zipFile.write(path, arcname)
         zipFile.close()
     

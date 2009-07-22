@@ -9,14 +9,13 @@ from os.path import join
 import sphinx
 
 import builder
-from builder.Utils import StartProcess, GetHtmlHelpCompilerPath
+from builder.Utils import StartProcess, GetHtmlHelpCompilerPath, EncodePath
 
 
 MAIN_DIR = builder.buildSetup.sourceDir
 DOCS_SOURCE_DIR = join(MAIN_DIR, "docs")
 
-
-sys.path.append(MAIN_DIR)
+sys.path.append(EncodePath(MAIN_DIR))
 import eg
 from eg.Utils import GetFirstParagraph
 
@@ -192,8 +191,8 @@ class CreateChmDocs(builder.Task):
             "-E",
             "-D", "release=%s" % eg.Version.base,
             "-D", "templates_path=[]",
-            "-d", join(self.buildSetup.tmpDir, ".doctree"),
-            DOCS_SOURCE_DIR,
+            "-d", EncodePath(join(self.buildSetup.tmpDir, ".doctree")),
+            EncodePath(DOCS_SOURCE_DIR),
             tmpDir,
         ])
 

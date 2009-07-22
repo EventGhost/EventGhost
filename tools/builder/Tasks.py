@@ -1,8 +1,9 @@
+import sys
 import shutil
 import time
 from os.path import join
 import builder
-
+from builder.Utils import EncodePath
 
 
 class UpdateSvn(builder.Task):
@@ -31,7 +32,7 @@ class UpdateVersionFile(builder.Task):
         outfile.write("buildTime = %f\n" % time.time())
         outfile.close()
         versionFilePath = join(self.buildSetup.sourceDir, "eg", "Classes", "Version.py")
-        mod = imp.load_source("Version", versionFilePath)
+        mod = imp.load_source("Version", EncodePath(versionFilePath))
         self.buildSetup.appVersion = mod.Version.base + (".r%s" % svnRevision)
         self.buildSetup.appNumericalVersion = mod.Version.base + ".%s" % svnRevision
 

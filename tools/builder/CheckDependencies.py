@@ -156,7 +156,6 @@ class DllDependency(DependencyBase):
         shutil.copystat(src, dst)
 
 
-
 DEPENDENCIES = [
     ModuleDependency(
         name = "wxPython",
