@@ -329,6 +329,10 @@ eg.PrintTraceback = eg.log.PrintTraceback
 eg.PrintDebugNotice = eg.log.PrintDebugNotice
 eg.PrintStack = eg.log.PrintStack
 
+def TracebackHook(tType, tValue, traceback):
+    eg.log.PrintTraceback(excInfo=(tType, tValue, traceback))
+sys.excepthook = TracebackHook
+
 eg.colour = eg.Colour()
 eg.config = eg.Config()
 if eg.startupArguments.isMain and not eg.startupArguments.translate:
