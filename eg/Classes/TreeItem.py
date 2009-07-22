@@ -248,7 +248,11 @@ class TreeItem(object):
             try:
                 data = dataObj.GetText().encode("utf-8")
                 tagToCls = self.document.XMLTag2ClassDict
-                for childXmlNode in ElementTree.fromstring(data):
+                try:
+                    rootXmlNode = ElementTree.fromstring(data)
+                except SyntaxError:
+                    return False
+                for childXmlNode in rootXmlNode:
                     childCls = tagToCls[childXmlNode.tag.lower()].__bases__[1]
                     if self.DropTest(childCls) & HINT_MOVE_INSIDE:
                         continue
@@ -257,6 +261,8 @@ class TreeItem(object):
                     elif not self.parent.DropTest(childCls) & HINT_MOVE_INSIDE:
                         return False
             except:
+                if eg.debugLevel:
+                    raise
                 return False
         finally:
             wx.TheClipboard.Close()
@@ -362,7 +368,6 @@ class TreeItem(object):
     def Print(self, *args, **kwargs):
         kwargs.setdefault("source", self)
         kwargs.setdefault("icon", self.icon)
-        kwargs.setdefault("indent", 1)
         eg.Print(*args, **kwargs)
 
 
