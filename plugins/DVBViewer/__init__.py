@@ -1440,10 +1440,17 @@ class DVBViewerWatchDogThread( Thread ) :
 
             plugin.executionStatusChangeLock.acquire( timeout = TERMINATE_TIMEOUT )
 
+            if plugin.useService and timeout :
+                plugin.service.Update( UPDATE_ALL )
+
             started = len( WMI.ExecQuery('select * from Win32_Process where Name="dvbviewer.exe"') ) > 0
             if self.started == started and not timeout :
                 plugin.executionStatusChangeLock.release()
                 continue
+                
+            if plugin.closeWaitActive :
+                continue
+                
             self.started = started
             timeout = False
 
@@ -1464,10 +1471,7 @@ class DVBViewerWatchDogThread( Thread ) :
                 eg.PrintDebugNotice( "DVBViewer will be connected by watch dog" )
                 plugin.Connect( CONNECT )
 
-            if plugin.useService :
-                plugin.service.Update( UPDATE_ALL )
-
-            if plugin.workerThread is not None and not plugin.closeWaitActive :
+            if plugin.workerThread is not None :
                 #print "WatchDog: Update recordings"
 
                 try :
