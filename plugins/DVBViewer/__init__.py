@@ -657,8 +657,7 @@ ACTIONS = (
 
 
 windowDVBViewer = eg.WindowMatcher( u'dvbviewer.exe',
-                                    winName=u'DVB Viewer{*}',
-                                    timeout=20 )
+                                    winName=u'DVB Viewer{*}' )
 
 
 
@@ -677,7 +676,7 @@ from win32com.client import GetObject
 from win32com.taskscheduler import taskscheduler
 from eg.WinApi import SendMessageTimeout
 from threading import Thread, Event, Timer, Lock
-from time import sleep, time, strptime, mktime, ctime, strftime, localtime, asctime
+from time import time, strptime, mktime, ctime, strftime, localtime, asctime
 from eg.WinApi.Dynamic import (
     byref, sizeof, CreateProcess, WaitForSingleObject, FormatError,
     CloseHandle, create_unicode_buffer,
@@ -2055,9 +2054,15 @@ class DVBViewer(eg.PluginClass):
         #CONNECT                   = 1   #connect
         #CHECK_CONNECT             = 2   #connect only, if executing
 
-        def WaitForDVBViewerWindow() :
-            hwnds = windowDVBViewer()
-            return len(hwnds)>0
+        def WaitForDVBViewerWindow( timeout ) :
+            end = time() + timeout
+            while True:
+                if len( windowDVBViewer() ) > 0 :
+                    return True
+                elif time() >= end :
+                    return False
+                eg.Wait(0.25)
+
 
         self.closeWaitLock.acquire()
         self.closeWaitLock.release()
@@ -2068,7 +2073,7 @@ class DVBViewer(eg.PluginClass):
         started = False
 
         if self.workerThread is None :
-
+            timeout = 20.0
             if connectingMode != CONNECT :
                 WMI = GetObject('winmgmts:')
                 if len( WMI.ExecQuery('select * from Win32_Process where Name="dvbviewer.exe"') ) > 0 :
@@ -2104,6 +2109,7 @@ class DVBViewer(eg.PluginClass):
                             eg.PrintError( "DVBViewer couldn't started" )
                             return False
                         self.DVBViewerStartedByCOM = False
+                        timeout = 60.0
                     else :
                         self.DVBViewerStartedByCOM = True
                     started = True
@@ -2113,14 +2119,14 @@ class DVBViewer(eg.PluginClass):
                 started = True
             if started :
                 if not self.DVBViewerStartedByCOM :
-                    found = WaitForDVBViewerWindow()
+                    found = WaitForDVBViewerWindow( timeout )
                     if not found:
                         eg.PrintError( "Warning: DVBViewer window not found. Hidden?" )
                         eg.PrintDebugNotice( "DVBViewer window not found. Hidden?" )
-                    sleep( self.waitTimeBeforeConnect )    #  necessary otherwise hang up
+                    eg.Wait( self.waitTimeBeforeConnect )    #  necessary otherwise hang up
                 self.workerThread = DVBViewerWorkerThread(self)
                 try:
-                    self.workerThread.Start(20.0)
+                    self.workerThread.Start( 60.0 )
                 except:
                     self.TriggerEvent( "DVBViewerCouldNotBeConnected" )
                     eg.PrintDebugNotice( "DVBViewer couldn't be connected" )
