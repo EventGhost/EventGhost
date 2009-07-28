@@ -3,7 +3,7 @@
 
 
 SUPPORTED_DVBVIEWER_VERSIONS        = '4.0.x, 4.1.x, 4.2.x '
-SUPPORTED_DVBVIEWERSERVICE_VERSIONS = '1.5.0.2, 1.5.0.21'
+SUPPORTED_DVBVIEWERSERVICE_VERSIONS = '1.5.0.2, 1.5.0.21, 1.5.0.25'
 
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
@@ -125,6 +125,18 @@ This plugin supports following additional actions, which are executed via the CO
         <td>
             Send an action to the DVBViewer
             (Values are defined in the action.ini of the DVBViewer)
+        </td>
+    </tr>
+    <tr>
+        <td align="right">GetNumberOfClients</td>
+        <td>
+            Get the number of clients which are connected with the DVBViewerService
+        </td>
+    </tr>
+    <tr>
+        <td align="right">IsEPGUpdating</td>
+        <td>
+            True while the DVBViewerService is updating the EPG information
         </td>
     </tr>
 </table>
@@ -849,6 +861,11 @@ class Text:
         serviceUpdate = " Update from DVBViewerService"
 
 
+    class IsEPGUpdating :
+        name =          "Get the DVBViewerService EPG update status"
+        serviceUpdate = " Update from DVBViewerService"
+
+
 
 
 class EventHandler:
@@ -1275,6 +1292,29 @@ class DVBViewerWorkerThread(eg.ThreadWorker):
 
 
 
+    def IfMustInList( self, now, record, active, recordingsIDsService ) :
+
+        if record[ 4 ] not in recordingsIDsService :
+
+            tStart = mktime( strptime( str(record[5])+str(record[6]),"%d.%m.%Y 00:00:0030.12.1899 %H:%M:%S" ) )
+
+            if tStart <= now :
+
+                tStop  = mktime( strptime( str(record[5])+str(record[7]),"%d.%m.%Y 00:00:0030.12.1899 %H:%M:%S" ) )
+
+                if tStart > tStop :
+                    tStop = tStop + 24*60*60
+
+                if tStop <= now :
+                    return False
+
+            if active and not record[11] :
+                return False
+            return True
+        return False
+
+
+
     def GetRecordings( self, active = True, update = False ) :
 
         plugin = self.plugin
@@ -1286,10 +1326,9 @@ class DVBViewerWorkerThread(eg.ThreadWorker):
 
         all = self.dvbviewer.TimerManager.GetTimerList()[1]
 
-        if active :
-            list = [ record for record in all if record[ 4 ] not in recordingsIDsService and record[ 11 ] ]
-        else :
-            list = [ record for record in all if record[ 4 ] not in recordingsIDsService ]
+        now = time()
+
+        list = [ record for record in all if self.IfMustInList( now, record, active, recordingsIDsService ) ]
 
         #print "active = ", active, "  list = ", list
 
@@ -1307,10 +1346,10 @@ class DVBViewerWorkerThread(eg.ThreadWorker):
 
         all = self.dvbviewer.TimerManager.GetTimerList()[1]
 
-        if active :
-            IDs = [ record[ 4 ] for record in all if record[ 4 ] not in recordingsIDsService and record[ 11 ] ]
-        else :
-            IDs = [ record[ 4 ] for record in all if record[ 4 ] not in recordingsIDsService ]
+        now = time()
+
+
+        IDs = [ record[ 4 ] for record in all if self.IfMustInList( now, record, active, recordingsIDsService ) ]
 
         return IDs
 
@@ -1445,10 +1484,10 @@ class DVBViewerWatchDogThread( Thread ) :
             if self.started == started and not timeout :
                 plugin.executionStatusChangeLock.release()
                 continue
-                
+
             if plugin.closeWaitActive :
                 continue
-                
+
             self.started = started
             timeout = False
 
@@ -1577,11 +1616,12 @@ class DVBViewer(eg.PluginClass):
         self.AddAction(IsConnected)
         self.AddAction(UpdateEPG)
         self.AddAction(TaskScheduler)
-        self.AddAction(SendAction)
         self.AddAction(ShowInfoinTVPic)
         self.AddAction(DeleteInfoinTVPic)
         self.AddAction(GetSetupValue)
+        self.AddAction(SendAction)
         self.AddAction(GetNumberOfClients)
+        self.AddAction(IsEPGUpdating)
         self.AddAction(GetDVBViewerObject, hidden = True)
         self.AddAction(ExecuteDVBViewerCommandViaCOM, hidden = True)
 
@@ -3729,11 +3769,39 @@ class GetNumberOfClients( eg.ActionClass ) :
 
     def __call__( self, update = False ) :
         plugin = self.plugin
-        
+
         if not plugin.useService :
             return -1
-        
+
         return self.plugin.service.GetNumberOfClients( update )
+
+    def Configure( self, updateDVBService = False ) :
+
+        panel = eg.ConfigPanel()
+
+        text = self.text
+
+        updateCheckBoxCtrl = wx.CheckBox(panel, -1, text.serviceUpdate)
+        updateCheckBoxCtrl.SetValue( updateDVBService )
+
+        panel.sizer.Add( updateCheckBoxCtrl )
+
+
+        while panel.Affirmed():
+
+            panel.SetResult(updateCheckBoxCtrl.GetValue() )
+
+
+
+class IsEPGUpdating( eg.ActionClass ) :
+
+    def __call__( self, update = False ) :
+        plugin = self.plugin
+
+        if not plugin.useService :
+            return False
+
+        return self.plugin.service.IsEPGUpdating( update )
 
 
 
@@ -3782,6 +3850,7 @@ class DVBViewerService() :
         self.plugin = plugin
 
         self.numberOfClients = -1
+        self.updateEPG = False
 
 
 
@@ -3848,8 +3917,16 @@ class DVBViewerService() :
 
         def GetText( parent, key, default = '' ) :
 
-            element = parent.find( key )
+            if parent is None :
+                #print "Parent not found"
+                return default
+
+            if key is None :
+                element = parent
+            else :
+                element = parent.find( key )
             if element is None :
+                #print "Key '", key, "' not found"
                 return default
             else :
                 return element.text
@@ -3983,7 +4060,6 @@ class DVBViewerService() :
                         if plugin.newInterface :
                             self.TriggerEvent( "EndRecord", ( v[2], numberOfRecordings ) )
 
-
                 for k, v in IDs.iteritems() :
                     g = self.recordingIDs.get( k )
 
@@ -4007,22 +4083,42 @@ class DVBViewerService() :
                 self.recordingIDs = IDs
                 self.pseudoIDs = pseudoIDs
 
-
         if type & UPDATE_STREAM != 0 and self.versionDVBViewerService != '1.5.0.2' :
 
-            xmlData = self.GetData( 'clientcount' )
+            if self.versionDVBViewerService == '1.5.0.21' :
+                page = 'clientcount'
+            else :
+                page = 'status'
 
-            # EXAMPLE of xmldata:
+            xmlData = self.GetData( page )
+
+            #print xmlData
+
+            # EXAMPLE of xmldata, Service version 1.5.0.21:
 
             #<?xml version="1.0" encoding="utf-8" ?>
             #<clientcount>0</clientcount>
+
+            # EXAMPLE of xmldata, Service version >=1.5.0.25:
+
+            #<?xml version="1.0" encoding="utf-8" ?>
+            #<status>
+            #   <recordcount>0</recordcount>
+            #   <clientcount>0</clientcount>
+            #   <epgudate>0</epgudate>
+            #</status>
 
             if xmlData is None :
                 xmlData = '<?xml version="1.0" encoding="utf-8" ?><clientcount>0</clientcount>'
 
             tree = ElementTree.fromstring( xmlData )
 
-            numberOfClients = int( tree.text ) - self.numberOfRecordings
+            if self.versionDVBViewerService == '1.5.0.21' :
+                element = tree
+            else :
+                element = tree.find( 'clientcount' )
+
+            numberOfClients = int( GetText( element, None, '0' ) ) - self.numberOfRecordings
 
             if self.numberOfClients != numberOfClients :
 
@@ -4035,6 +4131,15 @@ class DVBViewerService() :
                     self.TriggerEvent( "NoClientActive" )
 
                 self.numberOfClients = numberOfClients
+
+
+            updateEPG = int( GetText( tree, 'epgudate', default = '0' ) ) != 0
+            if self.updateEPG != updateEPG :
+                if updateEPG :
+                    self.TriggerEvent( "UpdateEPGstarted" )
+                else :
+                    self.TriggerEvent( "UpdateEPGfinished" )
+                self.updateEPG = updateEPG
 
         return True
 
@@ -4058,6 +4163,14 @@ class DVBViewerService() :
 
     def IsRecording( self, update = True ) :
         return GetNumberOfActiveRecordings( UPDATE_RECORDINGS ) != 0
+
+
+
+    def IsEPGUpdating( self, update = True ) :
+        if update or self.failing :
+            self.Update( UPDATE_STREAM )
+
+        return self.updateEPG
 
 
 
