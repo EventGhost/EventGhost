@@ -1142,10 +1142,7 @@ class DVBViewerTerminateThread( Thread ) :
 
         plugin.lockedByTerminate |= plugin.executionStatusChangeLock.acquire( blocking = False, timeout = TERMINATE_TIMEOUT )
 
-        events = WMI.ExecNotificationQuery(
-                        "SELECT * FROM __InstanceDeletionEvent  WITHIN 1 "
-                        "WHERE TargetInstance ISA 'Win32_Process' "
-                        "AND TargetInstance.Name='dvbviewer.exe'" )
+        events = WMI.ExecNotificationQuery( "SELECT * FROM Win32_ProcessStopTrace WHERE ProcessName='dvbviewer.exe'" )
 
         plugin.lockedByTerminate |= plugin.executionStatusChangeLock.acquire( blocking = False, timeout = TERMINATE_TIMEOUT )
 
@@ -1441,15 +1438,7 @@ class DVBViewerWatchDogThread( Thread ) :
         plugin = self.plugin
         CoInitialize()
 
-        queryTime = 5
-
-        if self.watchDogTime < queryTime :
-            queryTime = self.watchDogTime
-
-        query = (
-                "SELECT * FROM __InstanceOperationEvent  WITHIN " + str( queryTime) +
-                " WHERE TargetInstance ISA 'Win32_Process' "
-                "AND TargetInstance.Name='dvbviewer.exe'" )
+        query = ( "SELECT * FROM Win32_ProcessTrace WHERE ProcessName='dvbviewer.exe'" )
 
         WMI = GetObject('winmgmts:')
 
@@ -1464,12 +1453,12 @@ class DVBViewerWatchDogThread( Thread ) :
         while not self.abort :
             try :
                 eventType = eventSource.NextEvent( 500 ).Path_.Class
-                if eventType == '__InstanceCreationEvent' and not self.started :
+                if eventType == 'Win32_ProcessStartTrace' and not self.started :
+                    #print "DVBViewer started"
                     eg.PrintDebugNotice("DVBViewer started")
-                elif eventType == '__InstanceDeletionEvent' and self.started:
+                elif eventType == 'Win32_ProcessStopTrace' and self.started:
+                    #print "DVBViewer terminated"
                     eg.PrintDebugNotice("DVBViewer terminated")
-                elif time() < nextTime :
-                    continue
             except :
                 #print "Timeout"
                 if time() < nextTimeViewer :
