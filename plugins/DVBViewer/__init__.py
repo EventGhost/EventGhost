@@ -1316,10 +1316,9 @@ class DVBViewerWorkerThread(eg.ThreadWorker):
 
         plugin = self.plugin
 
+        recordingsIDsService = {}
         if plugin.useService and self.GetSetupValue( 'Service', 'Timerlist', '0' ) != '0' :
             recordingsIDsService = plugin.service.GetPseudoIDs( update )
-        else :
-            recordingsIDsService = {}
 
         all = self.dvbviewer.TimerManager.GetTimerList()[1]
 
@@ -1336,10 +1335,9 @@ class DVBViewerWorkerThread(eg.ThreadWorker):
     def GetRecordingsIDs( self, active = True, update = False ) :
         plugin = self.plugin
 
+        recordingsIDsService = {}
         if plugin.useService and self.GetSetupValue( 'Service', 'Timerlist', '0' ) != '0' :
             recordingsIDsService = plugin.service.GetPseudoIDs( update )
-        else :
-            recordingsIDsService = {}
 
         all = self.dvbviewer.TimerManager.GetTimerList()[1]
 
@@ -1499,6 +1497,8 @@ class DVBViewerWatchDogThread( Thread ) :
 
             if plugin.workerThread is not None :
                 #print "WatchDog: Update recordings"
+                
+                updatedRecordings = 0
 
                 try :
                     plugin.checkEventHandlingLock.acquire( blocking = False, timeout = CALLWAIT_TIMEOUT )
@@ -1577,12 +1577,12 @@ class DVBViewer(eg.PluginClass):
 
 
         def release( self ) :
+            ret = True
             if self.timer is not None :
                 self.timer.cancel()
                 del self.timer
                 self.timer = None
                 self.lock.release()
-                ret = True
             else :
                 eg.PrintDebugNotice('DVBViewer plugin unlocked lock "' + self.name + '" release detected')
                 eg.PrintError( "Error: unlock lock released" )
@@ -1905,19 +1905,19 @@ class DVBViewer(eg.PluginClass):
         if lock :
             self.executionStatusChangeLock.acquire()
 
+        recordingsIDs = []
+        completeRecordingsInfo = []
+        
+        started = False
+
+
         if self.workerThread is not None :
             completeRecordingsInfo = self.workerThread.CallWait(
                         partial(self.workerThread.GetRecordings, False, updateService ),
                         CALLWAIT_TIMEOUT
             )
-            started = True
             recordingsIDs = [ record[ 4 ] for record in completeRecordingsInfo if record[ 11 ] ]
-
-        else :
-            started = False
-
-            completeRecordingsInfo = []
-            recordingsIDs = []
+            started = True
 
         if lock :
             self.executionStatusChangeLock.release()
@@ -2292,10 +2292,9 @@ class DVBViewer(eg.PluginClass):
             enable = serviceCheckBoxCtrl.GetValue()
             serviceAddressCtrl.Enable( enable )
             serviceEventCtrl.Enable( enable )
+            index = INDEX_SCHEDULER
             if enable :
                 index = INDEX_DVBSERVICE
-            else :
-                index = INDEX_SCHEDULER
             onPasswordChange(wx.CommandEvent(), index)
             event.Skip()
 
@@ -2751,11 +2750,10 @@ class DVBViewer(eg.PluginClass):
         digest = m.digest()
         result = ''
         for index in xrange( len(string) ) :
+            char = chr(ord(digest[index%16]) ^ ord(string[index]))
+            modifier = char
             if gen :
                 modifier = string[index]
-            char = chr(ord(digest[index%16]) ^ ord(string[index]))
-            if not gen :
-                modifier = char
             result += char
             m.update(modifier)
             digest = m.digest()
@@ -2827,10 +2825,9 @@ class GetNumberOfActiveRecordings( eg.ActionClass ) :
     def __call__( self, enableDVBViewer = True, enableDVBService = False, updateDVBService = False ) :
         plugin = self.plugin
 
+        count = 0
         if enableDVBService :
             count = plugin.service.GetNumberOfActiveRecordings( updateDVBService )
-        else :
-            count = 0
 
         plugin.executionStatusChangeLock.acquire()
         if enableDVBViewer :
@@ -2874,10 +2871,10 @@ class GetRecordingsIDs( eg.ActionClass ) :
                     list.append( v[2] )
 
         if enableDVBViewer :
+        
+            connectionMode = WAIT_CHECK_START_CONNECT
             if active :
                 connectionMode = CHECK_CONNECT
-            else :
-                connectionMode = WAIT_CHECK_START_CONNECT
 
             plugin.executionStatusChangeLock.acquire()
             if plugin.Connect( connectionMode ) :
@@ -2974,10 +2971,10 @@ class SendAction( eg.ActionClass ) :
 class ShowInfoinTVPic( eg.ActionClass ) :
 
     def __call__( self, text = "", timeout = 15.0, force = False ) :
+    
+        connectMode = CHECK_CONNECT
         if force :
             connectMode = WAIT_CHECK_START_CONNECT
-        else :
-            connectMode = CHECK_CONNECT
 
         plugin = self.plugin
 
@@ -3231,6 +3228,7 @@ class AddRecording( eg.ActionClass ) :
         if len(plugin.tvChannels) == 0 and len(plugin.radioChannels) == 0 :
             plugin.Connect( WAIT_CHECK_START_CONNECT, lock = True )
 
+        ix = 0
         if plugin.IDbychannelIDList.has_key( channelID ) :
 
             id = plugin.IDbychannelIDList[ channelID ]
@@ -3244,7 +3242,6 @@ class AddRecording( eg.ActionClass ) :
             ix = id[0]
         else :
             self.tv = True
-            ix = 0
             self.choices = plugin.tvChannels
 
 
@@ -3505,13 +3502,13 @@ class GetDateOfRecordings( eg.ActionClass ) :
 
         readOutSuccessfull = True
 
+        recordingDates = []
+
         if enableDVBService :
             recordingDates = plugin.service.GetRecordingDates( False, update = updateDVBService )
             if recordingDates is None :
                 recordingDates = []
                 readOutSuccessfull = False
-        else :
-            recordingDates = []
 
         plugin.executionStatusChangeLock.release()
 
@@ -3542,8 +3539,6 @@ class GetDateOfRecordings( eg.ActionClass ) :
                         if not t in recordingDates :
                             recordingDates.append(t)
                         #print "date = ", ctime(t)
-
-                dvbViewerConnected = True
             else :
                 plugin.executionStatusChangeLock.release()
                 readOutSuccessfull = False
@@ -3603,14 +3598,13 @@ class TaskScheduler( eg.ActionClass ) :
             eg.PrintError( "dates not valid" )
             return False
 
+        dates = []
 
         if plugin.scheduleAllRecordings :
             dates = recordingDates[1]
-        else :
-            if recordingDates[1] > 0 :
-                dates = [ recordingDates[1] ]
-            else :
-                dates = []
+
+        elif recordingDates[1] > 0 :
+            dates = [ recordingDates[1] ]
 
         ts = CoCreateInstance(taskscheduler.CLSID_CTaskScheduler,None,
                               CLSCTX_INPROC_SERVER,
@@ -3659,6 +3653,9 @@ class TaskScheduler( eg.ActionClass ) :
             actuals.append( date )
 
             # get new index
+            
+            ix = 0
+            
             if -1.0 in plugin.scheduledRecordings :
                 ix = plugin.scheduledRecordings.index( -1.0 )
                 plugin.scheduledRecordings[ ix ] = date
@@ -3897,9 +3894,11 @@ class DVBViewerService() :
         def GetID( *args ) :
 
             m = hashlib.md5()
-            for arg in args: m.update(arg.encode("utf-8"))
+            for arg in args:
+                m.update(arg.encode("utf-8"))
             id = 0
-            for c in m.hexdigest() : id = id * 251 + ord(c)
+            for c in m.hexdigest() :
+                id = id * 251 + ord(c)
 
             return id
 
@@ -3910,9 +3909,8 @@ class DVBViewerService() :
                 #print "Parent not found"
                 return default
 
-            if key is None :
-                element = parent
-            else :
+            element = parent
+            if key is not None :
                 element = parent.find( key )
             if element is None :
                 #print "Key '", key, "' not found"
@@ -4074,10 +4072,9 @@ class DVBViewerService() :
 
         if type & UPDATE_STREAM != 0 and self.versionDVBViewerService != '1.5.0.2' :
 
+            page = 'status'
             if self.versionDVBViewerService == '1.5.0.21' :
                 page = 'clientcount'
-            else :
-                page = 'status'
 
             xmlData = self.GetData( page )
 
@@ -4102,9 +4099,8 @@ class DVBViewerService() :
 
             tree = ElementTree.fromstring( xmlData )
 
-            if self.versionDVBViewerService == '1.5.0.21' :
-                element = tree
-            else :
+            element = tree
+            if self.versionDVBViewerService != '1.5.0.21' :
                 element = tree.find( 'clientcount' )
 
             numberOfClients = int( GetText( element, None, '0' ) ) - self.numberOfRecordings
@@ -4151,7 +4147,7 @@ class DVBViewerService() :
 
 
     def IsRecording( self, update = True ) :
-        return GetNumberOfActiveRecordings( UPDATE_RECORDINGS ) != 0
+        return GetNumberOfActiveRecordings( update ) != 0
 
 
 
