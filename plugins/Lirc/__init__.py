@@ -469,7 +469,7 @@ class Lirc(eg.RawReceiverPlugin):
         if not self.reader:
            return False
         try:
-           self.reader.sbuffer = '\n'
+           self.reader.sbuffer = 'VERSION\n'
         except:
            return False
         time.sleep(0.05)
