@@ -13,13 +13,7 @@ eg.RegisterPlugin(
 
 import time
 import binascii
-import ctypes
-import _winreg
 import sys
-import threading
-import win32con
-import win32event
-import win32file
 import wx.lib.mixins.listctrl as listmix
 from eg.WinApi.HID import HIDHelper
 from eg.WinApi.HID import HIDThread
@@ -58,11 +52,44 @@ class HID(eg.PluginClass):
     #  2: waiting for device
     #  3: error
 
+    def RawCallback(self, data):
+        self.TriggerEvent(binascii.hexlify(data).upper())
+   
+    def ButtonCallback(self, data):
+        print "ButtonCallback"
+        print data
+    
+    def ValueCallback(self, data):
+        print "ValueCallback"
+        print data
+    
+    def SetupHidThread(self):
+        #create thread
+        self.thread = HIDThread(
+            self,
+            self.helper,
+            self.enduringEvents,
+            self.rawDataEvents,
+            self.noOtherPort,
+            self.devicePath,
+            self.vendorID,
+            self.vendorString,
+            self.productID,
+            self.productString,
+            self.versionNumber,
+            self.useFirstDevice
+        )
+        self.thread.start()
+        if self.rawDataEvents:
+            self.thread.SetRawCallback(self.RawCallback)
+        else:
+            self.thread.SetButtonCallback(self.ButtonCallback)
+            self.thread.SetValueCallback(self.ValueCallback)
     
     def ReconnectDevice(self, event):
         """method to reconnect a disconnect device"""
         if self.status == 2:
-            #updating devicelist
+            #updating device list
             self.helper.UpdateDeviceList()
             
             #check if the right device was connected
@@ -79,22 +106,7 @@ class HID(eg.PluginClass):
                 #wrong device
                 return
             
-            #create thread
-            self.thread = eg.WinApi.HID.HIDThread(
-                self,
-                self.helper,
-                self.enduringEvents,
-                self.rawDataEvents,
-                self.noOtherPort,
-                self.devicePath,
-                self.vendorID,
-                self.vendorString,
-                self.productID,
-                self.productString,
-                self.versionNumber,
-                self.useFirstDevice
-            )
-
+            self.SetupHidThread()
 
     def GetLabel(self,
         eventName,
@@ -155,25 +167,12 @@ class HID(eg.PluginClass):
             self.info.eventPrefix = "HID"
         #ensure helper object is up to date
         if not self.helper:
-            self.helper = eg.WinApi.HID.HIDHelper()
+            self.helper = HIDHelper()
         else:
             self.helper.UpdateDeviceList()
 
-        #create thread
-        self.thread = eg.WinApi.HID.HIDThread(
-            self,
-            self.helper,
-            enduringEvents,
-            rawDataEvents,
-            noOtherPort,
-            devicePath,
-            vendorID,
-            vendorString,
-            productID,
-            productString,
-            versionNumber,
-            useFirstDevice
-        )
+        self.SetupHidThread()
+        
         #Bind plugin to RegisterDeviceNotification message 
         eg.Bind("System.DeviceAttached", self.ReconnectDevice)
 
@@ -201,7 +200,7 @@ class HID(eg.PluginClass):
     ):
         #ensure helper object is up to date
         if not self.helper:
-            self.helper = eg.WinApi.HID.HIDHelper()
+            self.helper = HIDHelper()
         else:
             self.helper.UpdateDeviceList()
 
