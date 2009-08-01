@@ -210,14 +210,17 @@ class HIDThread(threading.Thread):
             plugin.PrintError(self.text.errorFind + self.deviceName)
             self.plugin.status = 2
             return
+        
+        self.RawCallback = None
+        self.ButtonCallback = None
+        self.ValueCallback = None
 
         threading.Thread.__init__(self, name = self.devicePath)
-
+        
         #setting members
         self.helper = helper
         self.enduringEvents = enduringEvents
         self.rawDataEvents = rawDataEvents
-        self.start()
 
 
     def AbortThread(self):
@@ -225,9 +228,18 @@ class HIDThread(threading.Thread):
         win32event.SetEvent(self._overlappedRead.hEvent)
         self.plugin.status = 2
 
+    def SetRawCallback(self, callback):
+        self.RawCallback = callback;
+        
+    def SetButtonCallback(self, callback):
+        self.ButtonCallback = callback
+        
+    def SetValueCallback(self, callback):
+        self.ValueCallback = callback
+
 
     def run(self):
-        #open file/devcice
+        #open file/device
         try:
             handle = win32file.CreateFile(
                 self.devicePath,
@@ -350,10 +362,11 @@ class HIDThread(threading.Thread):
             if len(buf) == n and not self.abort:
                 #raw data events
                 if maxDataL == 0 or self.rawDataEvents:
-                    read = str(buf)
-                    self.plugin.TriggerEvent(
-                        binascii.hexlify(read).upper()
-                    )
+                    if self.RawCallback:
+                        try:
+                            self.RawCallback(buf)
+                        except Exception:
+                            eg.PrintTraceback()
                 else:
                     dataL = c_ulong(maxDataL)
                     result = hidDLL.HidP_GetData(
