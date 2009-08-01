@@ -16,8 +16,10 @@ import time
 import binascii
 import sys
 import wx.lib.mixins.listctrl as listmix
-from eg.WinApi.HID import HIDHelper
 from eg.WinApi.HID import HIDThread
+from eg.WinApi.HID import GetDevicePath
+from eg.WinApi.HID import GetDeviceDescriptions
+from eg.WinApi.HID import DeviceDescription
 
 class Text:
     manufacturer = "Manufacturer"
@@ -41,7 +43,6 @@ class Text:
     vendorID = "Vendor ID "
 
 class HID(eg.PluginClass):
-    helper = None
     text = Text
     thread = None
 
@@ -78,23 +79,24 @@ class HID(eg.PluginClass):
         self.TriggerEvent("Stopped")
         self.thread = None
     
-    def SetupHidThread(self):
-        #getting devicePath
-        self.devicePath = self.helper.GetDevicePath(
-            self.noOtherPort,
+    def GetMyDevicePath(self):
+        if self.useFirstDevice:
+            deviceIndex = 0
+        else:
+            deviceIndex = -1
+            
+        path = GetDevicePath(
             self.devicePath,
             self.vendorID,
             self.productID,
             self.versionNumber,
-            self.useFirstDevice
-        )
-
-        if not self.devicePath:
-            self.PrintError(self.text.errorFind + self.deviceName)
-            return
-
+            deviceIndex,
+            self.noOtherPort)
+        return path;
+    
+    def SetupHidThread(self, newDevicePath):
         #create thread
-        self.thread = HIDThread(self.vendorString + " " + self.productString, self.devicePath)
+        self.thread = HIDThread(self.vendorString + " " + self.productString, newDevicePath)
         self.thread.start()
         self.thread.SetStopCallback(self.StopCallback)
         if self.rawDataEvents:
@@ -107,23 +109,15 @@ class HID(eg.PluginClass):
         """method to reconnect a disconnect device"""
         if self.thread == None:
             #updating device list
-            self.helper.UpdateDeviceList()
             
             #check if the right device was connected
             #getting devicePath
-            self.devicePath = self.helper.GetDevicePath(
-                self.noOtherPort,
-                self.devicePath,
-                self.vendorID,
-                self.productID,
-                self.versionNumber,
-                self.useFirstDevice
-            )
-            if not self.devicePath:
+            newDevicePath = self.GetMyDevicePath()
+            if not newDevicePath:
                 #wrong device
                 return
             
-            self.SetupHidThread()
+            self.SetupHidThread(newDevicePath)
 
     def GetLabel(self,
         eventName,
@@ -182,19 +176,20 @@ class HID(eg.PluginClass):
             self.info.eventPrefix = eventName
         else:
             self.info.eventPrefix = "HID"
-        #ensure helper object is up to date
-        if not self.helper:
-            self.helper = HIDHelper()
-        else:
-            self.helper.UpdateDeviceList()
 
-        self.SetupHidThread()
-        
         #Bind plug in to RegisterDeviceNotification message 
         eg.Bind("System.DeviceAttached", self.ReconnectDevice)
+        
+        newDevicePath = self.GetMyDevicePath()
+        if not newDevicePath:
+            #device not found
+            self.PrintError(Text.errorFind)
+        else:
+            self.SetupHidThread(newDevicePath)
 
     def __stop__(self):
-        self.thread.AbortThread()
+        if self.thread:
+            self.thread.AbortThread()
         
         #unbind from RegisterDeviceNotification message
         eg.Unbind("System.DeviceAttached", self.ReconnectDevice)
@@ -212,12 +207,7 @@ class HID(eg.PluginClass):
         versionNumber = None,
         useFirstDevice = False
     ):
-        #ensure helper object is up to date
-        if not self.helper:
-            self.helper = HIDHelper()
-        else:
-            self.helper.UpdateDeviceList()
-
+        deviceList = GetDeviceDescriptions()
         panel = eg.ConfigPanel(self, resizable=True)
 
         #building dialog
@@ -229,37 +219,45 @@ class HID(eg.PluginClass):
         hidList.InsertColumn(1, self.text.manufacturer)
         hidList.InsertColumn(2, self.text.connected)
 
+        if useFirstDevice:
+            deviceIndex = 0
+        else:
+            deviceIndex = -1
 
-        path = self.helper.GetDevicePath(noOtherPort,
-            devicePath, vendorID, productID, versionNumber, useFirstDevice)
+        path = GetDevicePath(
+            devicePath,
+            vendorID,
+            productID,
+            versionNumber,
+            noOtherPort,
+            deviceIndex,
+            deviceList)
 
         #fill list
         devices = {}
         idx = 0
-        for item in self.helper.deviceList:
-            idx = hidList.InsertStringItem(sys.maxint, item[eg.WinApi.HID.PRODUCT_STRING])
-            hidList.SetStringItem(idx, 1, item[eg.WinApi.HID.VENDOR_STRING])
+        for item in deviceList:
+            idx = hidList.InsertStringItem(sys.maxint, item.productString)
+            hidList.SetStringItem(idx, 1, item.vendorString)
             hidList.SetStringItem(idx, 2, self.text.yes)
-            if item[eg.WinApi.HID.DEVICE_PATH] == path:
+            if item.devicePath == path:
                 hidList.Select(idx)
             devices[idx] = item
 
         #add not connected device to bottom of list
-        if not path:
-            if devicePath:
-                item = {
-                    eg.WinApi.HID.DEVICE_PATH: devicePath,
-                    eg.WinApi.HID.VENDOR_ID: vendorID,
-                    eg.WinApi.HID.VENDOR_STRING: vendorString,
-                    eg.WinApi.HID.PRODUCT_ID: productID,
-                    eg.WinApi.HID.PRODUCT_STRING: productString,
-                    eg.WinApi.HID.VERSION_NUMBER: versionNumber,
-                }
-                idx = hidList.InsertStringItem(sys.maxint, item[eg.WinApi.HID.PRODUCT_STRING])
-                hidList.SetStringItem(idx, 1, item[eg.WinApi.HID.VENDOR_STRING])
-                hidList.SetStringItem(idx, 2, self.text.no)
-                hidList.Select(idx)
-                devices[idx] = item
+        if not path and devicePath:
+            item = DeviceDescription(
+                devicePath,
+                vendorID,
+                vendorString,
+                productID,
+                productString,
+                versionNumber)
+            idx = hidList.InsertStringItem(sys.maxint, item.productString)
+            hidList.SetStringItem(idx, 1, item.vendorString)
+            hidList.SetStringItem(idx, 2, self.text.no)
+            hidList.Select(idx)
+            devices[idx] = item
 
         if hidList.GetFirstSelected() == -1:
             #no device selected, disable ok and apply button
@@ -353,12 +351,12 @@ class HID(eg.PluginClass):
                 enduringEventsCtrl.GetValue(),
                 rawDataEventsCtrl.GetValue(),
                 noOtherPortCtrl.GetValue(),
-                device[eg.WinApi.HID.DEVICE_PATH],
-                device[eg.WinApi.HID.VENDOR_ID],
-                device[eg.WinApi.HID.VENDOR_STRING],
-                device[eg.WinApi.HID.PRODUCT_ID],
-                device[eg.WinApi.HID.PRODUCT_STRING],
-                device[eg.WinApi.HID.VERSION_NUMBER],
+                device.devicePath,
+                device.vendorId,
+                device.vendorString,
+                device.productId,
+                device.productString,
+                device.versionNumber,
                 useFirstDeviceCtrl.GetValue()
             )
 

@@ -165,15 +165,6 @@ DIGCF_ALLCLASSES      = 0x00000004
 DIGCF_PROFILE         = 0x00000008
 DIGCF_DEVICEINTERFACE = 0x00000010
 
-
-#constants to identify the device info
-DEVICE_PATH = 0
-VENDOR_ID = 1
-VENDOR_STRING = 2
-PRODUCT_ID = 3
-PRODUCT_STRING = 4
-VERSION_NUMBER = MAX_INDEX = 5
-
 class HIDThread(threading.Thread):
     def __init__(self, deviceName, devicePath):
         self.text = Text
@@ -378,165 +369,180 @@ class HIDThread(threading.Thread):
                 except Exception:
                     eg.PrintTraceback()
 
-#helper class to iterate, find and open hid devices
-class HIDHelper:
-    text = Text
+class DeviceDescription():
+    def __init__(self, devicePath, vendorId, vendorString, productId, productString, versionNumber):
+        self.devicePath = devicePath
+        self.vendorId = vendorId
+        self.vendorString = vendorString
+        self.productId = productId
+        self.productString = productString
+        self.versionNumber = versionNumber
+        
+def GetDeviceDescriptions():
     deviceList = []
 
-    def __init__(self):
-        self.UpdateDeviceList()
+    #dll references
+    setupapiDLL = ctypes.windll.setupapi
+    hidDLL =  ctypes.windll.hid
 
-    def UpdateDeviceList(self):
-        self.deviceList = []
+    #prepare Interfacedata
+    interfaceInfo = SP_DEVICE_INTERFACE_DATA()
+    interfaceInfo.cbSize = sizeof(interfaceInfo)
 
-        #dll references
-        setupapiDLL = ctypes.windll.setupapi
-        hidDLL =  ctypes.windll.hid
+    #prepare InterfaceDetailData Structure
+    interfaceDetailData = SP_DEVICE_INTERFACE_DETAIL_DATA_A()
+    interfaceDetailData.cbSize = 5
 
-        #prepare Interfacedata
-        interfaceInfo = SP_DEVICE_INTERFACE_DATA()
-        interfaceInfo.cbSize = sizeof(interfaceInfo)
+    #prepare HIDD_ATTRIBUTES
+    hiddAttributes = HIDD_ATTRIBUTES()
+    hiddAttributes.cbSize = sizeof(hiddAttributes)
 
-        #prepare InterfaceDetailData Structure
-        interfaceDetailData = SP_DEVICE_INTERFACE_DETAIL_DATA_A()
-        interfaceDetailData.cbSize = 5
+    #get guid for HID device class
+    g = GUID()
+    hidDLL.HidD_GetHidGuid(byref(g))
 
-        #prepare HIDD_ATTRIBUTES
-        hiddAttributes = HIDD_ATTRIBUTES()
-        hiddAttributes.cbSize = sizeof(hiddAttributes)
+    #get handle to the device information set
+    hinfo = setupapiDLL.SetupDiGetClassDevsA(byref(g), None, None,
+        DIGCF_PRESENT + DIGCF_DEVICEINTERFACE)
 
-        #get guid for HID device class
-        g = GUID()
-        hidDLL.HidD_GetHidGuid(byref(g))
+    #enumerate devices
+    i = 0
+    while setupapiDLL.SetupDiEnumDeviceInterfaces(hinfo,
+        None, byref(g), i, byref(interfaceInfo)):
+        i += 1
 
-        #get handle to the device information set
-        hinfo = setupapiDLL.SetupDiGetClassDevsA(byref(g), None, None,
-            DIGCF_PRESENT + DIGCF_DEVICEINTERFACE)
+        #get the required size
+        requiredSize = c_ulong()
+        setupapiDLL.SetupDiGetDeviceInterfaceDetailA(hinfo,
+            byref(interfaceInfo), None, 0, byref(requiredSize), None)
+        if requiredSize.value > 250:
+            eg.PrintError(self.text.errorRetrieval)
+            continue #prevent a buffer overflow
 
-        #enumerate devices
-        i = 0
-        while setupapiDLL.SetupDiEnumDeviceInterfaces(hinfo,
-            None, byref(g), i, byref(interfaceInfo)):
-            device = {}
-            i += 1
+        #get the actual info
+        setupapiDLL.SetupDiGetDeviceInterfaceDetailA(
+            hinfo,
+            byref(interfaceInfo),
+            byref(interfaceDetailData),
+            requiredSize,
+            pointer(requiredSize),
+            None
+        )
+        devicePath = interfaceDetailData.DevicePath
 
-            #get the required size
-            requiredSize = c_ulong()
-            setupapiDLL.SetupDiGetDeviceInterfaceDetailA(hinfo,
-                byref(interfaceInfo), None, 0, byref(requiredSize), None)
-            if requiredSize.value > 250:
-                eg.PrintError(self.text.errorRetrieval)
-                continue #prevent a buffer overflow
-
-            #get the actual info
-            setupapiDLL.SetupDiGetDeviceInterfaceDetailA(
-                hinfo,
-                byref(interfaceInfo),
-                byref(interfaceDetailData),
-                requiredSize,
-                pointer(requiredSize),
-                None
+        #get handle to HID device
+        try:
+            hidHandle = win32file.CreateFile(
+                devicePath,
+                win32con.GENERIC_READ | win32con.GENERIC_WRITE,
+                win32con.FILE_SHARE_READ | win32con.FILE_SHARE_WRITE,
+                None,
+                win32con.OPEN_EXISTING,
+                0,
+                0
             )
-            device[DEVICE_PATH] = interfaceDetailData.DevicePath
-
-            #get handle to HID device
-            try:
-                hidHandle = win32file.CreateFile(
-                    device[DEVICE_PATH],
-                    win32con.GENERIC_READ | win32con.GENERIC_WRITE,
-                    win32con.FILE_SHARE_READ | win32con.FILE_SHARE_WRITE,
-                    None,
-                    win32con.OPEN_EXISTING,
-                    0,
-                    0
-                )
-                #skipping devices which cannot be opened
-                #(e.g. mice & keyboards, which are opened exclusively by OS)
-                if int(hidHandle) <= 0:
-                    continue
-            except:
+            #skipping devices which cannot be opened
+            #(e.g. mice & keyboards, which are opened exclusively by OS)
+            if int(hidHandle) <= 0:
                 continue
+        except:
+            continue
 
-            #getting additional info
-            hidDLL.HidD_GetAttributes(int(hidHandle), byref(hiddAttributes))
-            device[VENDOR_ID] = hiddAttributes.VendorID
-            device[PRODUCT_ID] = hiddAttributes.ProductID
-            device[VERSION_NUMBER] = hiddAttributes.VersionNumber
+        #getting additional info
+        hidDLL.HidD_GetAttributes(int(hidHandle), byref(hiddAttributes))
 
-            #prepare string buffer for device info strings
-            hidpStringType = c_wchar * 128
-            infoStr = hidpStringType()
+        #prepare string buffer for device info strings
+        hidpStringType = c_wchar * 128
+        infoStr = hidpStringType()
 
-            #getting manufacturer
-            result = hidDLL.HidD_GetManufacturerString(
-                int(hidHandle), byref(infoStr), ctypes.sizeof(infoStr))
-            if not result or len(infoStr.value) == 0:
-                #build a generic ManufacturerString with the vendor ID
-                device[VENDOR_STRING] = self.text.vendorID + str(hiddAttributes.VendorID)
+        #getting manufacturer
+        result = hidDLL.HidD_GetManufacturerString(
+            int(hidHandle), byref(infoStr), ctypes.sizeof(infoStr))
+        if not result or len(infoStr.value) == 0:
+            #build a generic ManufacturerString with the vendor ID
+            vendorString = self.text.vendorID + str(hiddAttributes.VendorID)
+        else:
+            vendorString = infoStr.value
+
+        #getting device name
+        result = hidDLL.HidD_GetProductString(
+            int(hidHandle), byref(infoStr), ctypes.sizeof(infoStr))
+        if not result or len(infoStr.value) == 0:
+            #getting product name via registry
+            devicePathSplit = devicePath[4:].split("#")
+            regHandle = _winreg.OpenKey(
+                _winreg.HKEY_LOCAL_MACHINE,
+                "SYSTEM\\CurrentControlSet\\Enum\\" + devicePathSplit[0] + \
+                "\\" + devicePathSplit[1] + "\\" + devicePathSplit[2])
+            productString, regType = _winreg.QueryValueEx(regHandle, "DeviceDesc")
+            _winreg.CloseKey(regHandle)
+        else:
+            productString = infoStr.value
+
+        #close handle
+        win32file.CloseHandle(hidHandle)
+
+        #create object with all the infos
+        device = DeviceDescription(
+            devicePath,
+            hiddAttributes.VendorID,
+            vendorString,
+            hiddAttributes.ProductID,
+            productString,
+            hiddAttributes.VersionNumber)
+        vendorString
+            
+        #add device to internal list
+        deviceList.append(device)
+
+    #end loop
+    #destroy deviceinfolist
+    setupapiDLL.SetupDiDestroyDeviceInfoList(hinfo)
+    return deviceList;
+
+
+#gets the devicePath
+#the devicePath parameter is only used with multiple same devices
+def GetDevicePath(
+    devicePath,
+    vendorId,
+    productId,
+    versionNumber, #pass None to ignore
+    useDeviceIndex, #use -1 to require the same devicePath if multiple found
+    noOtherPort, #if True the devicePath has to be the same 
+    deviceList = None
+):
+    if not deviceList:
+        deviceList = GetDeviceDescriptions()
+    found = 0
+    device = None
+    for item in deviceList:
+        if noOtherPort:
+            #just search for devicepath
+            if item.devicePath == devicePath:
+                #found right device
+                return devicePath
+        else:
+            #find the right device by vendor and product ids
+            validVendorId = item.vendorId == vendorId
+            validProductId = item.productId == productId
+            if versionNumber == None:
+                validVersionNumber = True
             else:
-                device[VENDOR_STRING] = infoStr.value
-
-            #getting device name
-            result = hidDLL.HidD_GetProductString(
-                int(hidHandle), byref(infoStr), ctypes.sizeof(infoStr))
-            if not result or len(infoStr.value) == 0:
-                #getting product name via registry
-                devicePathSplit = device[DEVICE_PATH][4:].split("#")
-                regHandle = _winreg.OpenKey(
-                    _winreg.HKEY_LOCAL_MACHINE,
-                    "SYSTEM\\CurrentControlSet\\Enum\\" + devicePathSplit[0] + \
-                    "\\" + devicePathSplit[1] + "\\" + devicePathSplit[2])
-                device[PRODUCT_STRING], regType = _winreg.QueryValueEx(regHandle, "DeviceDesc")
-                _winreg.CloseKey(regHandle)
-            else:
-                device[PRODUCT_STRING] = infoStr.value
-
-            #close handle
-            win32file.CloseHandle(hidHandle)
-
-            #add device to internal list
-            self.deviceList.append(device)
-
-        #end loop
-        #destroy deviceinfolist
-        setupapiDLL.SetupDiDestroyDeviceInfoList(hinfo)
-
-
-    #gets the devicePath
-    #the devicePath parameter is only used with multiple same devices
-    def GetDevicePath(self,
-        noOtherPort,
-        devicePath,
-        vendorID,
-        productID,
-        versionNumber,
-        useFirstDevice = False
-    ):
-        found = 0
-        path = ""
-        for item in self.deviceList:
-            if noOtherPort:
-                #just search for devicepath
-                if item[DEVICE_PATH] == devicePath:
+                validVersionNumber = item.versionNumber == versionNumber
+            if validVendorId and validProductId and validVersionNumber:
+                if item.devicePath == devicePath or useDeviceIndex == found:
                     #found right device
-                    return devicePath
-            else:
-                #find the right vendor and product ids
-                if item[VENDOR_ID] == vendorID \
-                    and item[PRODUCT_ID] == productID \
-                    and item[VERSION_NUMBER] == versionNumber:
-                    found = found + 1
-                    if (item[DEVICE_PATH] == devicePath) or (useFirstDevice):
-                        #found right device
-                        return item[DEVICE_PATH]
-                    path = item[DEVICE_PATH]
+                    return item.devicePath
+                found = found + 1
+                device = item
 
-        if found == 1:
-            return path
+    if found == 1:
+        return device.devicePath
 
-        #multiple devices found
-        #don't know which to use
-        if found > 1:
-            eg.PrintError(self.text.errorMultipleDevices)
+    #multiple devices found
+    #don't know which to use
+    if found > 1:
+        eg.PrintError(self.text.errorMultipleDevices)
 
-        return None
+    return None
