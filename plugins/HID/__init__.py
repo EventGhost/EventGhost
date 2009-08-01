@@ -39,14 +39,12 @@ class Text:
     errorInvalidDataIndex = "Found data index not defined as button or control value."
     vendorID = "Vendor ID "
 
-
-
 class HID(eg.PluginClass):
     helper = None
     text = Text
     thread = None
     status = -1
-    # -1: not initizilized
+    # -1: not initialized
     #  0: stopped
     #  1: running
     #  2: waiting for device
@@ -56,20 +54,40 @@ class HID(eg.PluginClass):
         self.TriggerEvent(binascii.hexlify(data).upper())
    
     def ButtonCallback(self, data):
-        print "ButtonCallback"
-        print data
+        if len(data):
+            #one or more buttons pressed
+            btnPressed = []
+            for num in data:
+                btnPressed.append(str(num))
+            evtName = "Button." + "+".join(btnPressed)
+            if self.enduringEvents:
+                self.TriggerEnduringEvent(evtName)
+            else:
+                self.TriggerEvent(evtName)
+        elif self.enduringEvents:
+            #no buttons pressed anymore
+            self.EndLastEvent()
+        else:
+            #trigger event so that releasing all buttons
+            #can get noticed even w/o enduring events
+            self.TriggerEvent("Button.None")
     
     def ValueCallback(self, data):
-        print "ValueCallback"
-        print data
+        for key, value in data.items():
+            if key in self.oldValues and value == self.oldValues[key]:
+                continue
+            self.oldValues[key] = value
+            self.TriggerEvent("Value." + str(key), payload = value)
+        
+    def StopCallback(self):
+        self.TriggerEvent("Stopped")
+        self.oldValues = {}
     
     def SetupHidThread(self):
         #create thread
         self.thread = HIDThread(
             self,
             self.helper,
-            self.enduringEvents,
-            self.rawDataEvents,
             self.noOtherPort,
             self.devicePath,
             self.vendorID,
@@ -160,6 +178,7 @@ class HID(eg.PluginClass):
         self.productString = productString
         self.versionNumber = versionNumber
         self.useFirstDevice = useFirstDevice
+        self.oldValues = {}
 
         if eventName:
             self.info.eventPrefix = eventName
@@ -173,7 +192,7 @@ class HID(eg.PluginClass):
 
         self.SetupHidThread()
         
-        #Bind plugin to RegisterDeviceNotification message 
+        #Bind plug in to RegisterDeviceNotification message 
         eg.Bind("System.DeviceAttached", self.ReconnectDevice)
 
     def __stop__(self):
