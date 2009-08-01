@@ -56,13 +56,15 @@ Commands = {
 }
 
 class FS20PCE(eg.PluginClass):
+    def __init__(self):
+        self.version = None
+    
     def RawCallback(self, data):
         if not data or len(data) != 13 or ord(data[0]) != 2 or ord(data[1]) != 11:
             self.PrintError("invalid data")
             return
         
-        #versionMajor = ord(data[12]) / 16
-        #versionMinor = ord(data[12]) % 16
+        self.version = ord(data[12])
         
         houseCode = binascii.hexlify(data[2:6])
         deviceAddress = binascii.hexlify(data[6:8])
@@ -71,9 +73,27 @@ class FS20PCE(eg.PluginClass):
             commandStr = Commands[command]
         else:
             commandStr = binascii.hexlify(data[8]).upper()
+            
+        validTime = ord(data[9]) > 15
+        if validTime:
+            #parsing time
+            timeStr = binascii.hexlify(data[9:12])
+            timeStr = timeStr[1:]#cut the one
+            time = float(timeStr) * 0.25
 
         self.TriggerEvent(houseCode + "." + deviceAddress + "." + commandStr)
+        #print binascii.hexlify(data)
             
+    def PrintVersion(self):
+        #create the following python command to show version number
+        #eg.plugins.FS20PCE.plugin.PrintVersion()
+        if self.version == None:
+            print "Need to receive data first. Please press a button and try again."
+        else:
+            versionMajor = self.version / 16
+            versionMinor = self.version % 16
+            print "Firmware version %d.%d" % (versionMajor, versionMinor) 
+    
     def StopCallback(self):
         self.TriggerEvent("Stopped")
         self.thread = None
