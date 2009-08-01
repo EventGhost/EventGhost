@@ -11,9 +11,6 @@ eg.RegisterPlugin(
     url = "http://www.eventghost.org/forum/viewtopic.php?t=571",
 )
 
-import eg.WinApi.HIDHelper
-import eg.WinApi.HIDThread
-
 class GameVoice(eg.PluginClass):
     def __start__(self):
         pass
