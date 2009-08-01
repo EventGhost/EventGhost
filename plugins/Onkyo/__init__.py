@@ -1,5 +1,5 @@
 #
-# OnkyoTX-SR875Serial
+# Onkyo Serial
 # ================
 
 # Public Domain
@@ -17,7 +17,7 @@ Developed for TX-SR804, TX-SR805 and TX-SR875, but should work with
 different models."""
 
 eg.RegisterPlugin(
-    name = "Onkyo TX-SR875 AV Serial",
+    name = "Onkyo AV Serial",
     author = "prostetnic (initial), revised by Bartman for 805 and Fiasco for Onkyo 875",
     version = "0.2." + "$LastChangedRevision$".split()[1],
     kind = "external",
