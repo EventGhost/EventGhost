@@ -34,12 +34,6 @@ class Text:
     noOtherPort = "Use selected device only if connected to current port"
     useFirstDevice = "Use first device found"
     errorFind = "Error finding HID device: "
-    errorOpen = "Error opening HID device: "
-    errorRead = "Error reading HID device: "
-    errorRetrieval = "Error getting HID device info."
-    errorReportLength = "Report length must not be zero for device "
-    errorMultipleDevices = "Multiple devices found. Don't know which to use."
-    errorInvalidDataIndex = "Found data index not defined as button or control value."
     vendorID = "Vendor ID "
 
 class HID(eg.PluginClass):
