@@ -6,7 +6,7 @@ eg.RegisterPlugin(
     canMultiLoad = False,
     description = (
         'Allows to recieve events from FS20 remote controls.<br/>'
-        'This plug in also demonstrates how to use EventGhost\'s HID API.'
+        '<a href="http://elv.de/"><img src=\"picture.jpg\"/></a>'
     ),
     url = "http://www.eventghost.org/forum/viewtopic.php?t=571",
 )
