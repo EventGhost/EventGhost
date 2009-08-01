@@ -44,12 +44,6 @@ class HID(eg.PluginClass):
     helper = None
     text = Text
     thread = None
-    status = -1
-    # -1: not initialized
-    #  0: stopped
-    #  1: running
-    #  2: waiting for device
-    #  3: error
 
     def RawCallback(self, data):
         self.TriggerEvent(binascii.hexlify(data).upper())
@@ -82,12 +76,11 @@ class HID(eg.PluginClass):
         
     def StopCallback(self):
         self.TriggerEvent("Stopped")
-        self.oldValues = {}
+        self.thread = None
     
     def SetupHidThread(self):
         #create thread
         self.thread = HIDThread(
-            self,
             self.helper,
             self.noOtherPort,
             self.devicePath,
@@ -99,6 +92,7 @@ class HID(eg.PluginClass):
             self.useFirstDevice
         )
         self.thread.start()
+        self.thread.SetStopCallback(self.StopCallback)
         if self.rawDataEvents:
             self.thread.SetRawCallback(self.RawCallback)
         else:
@@ -107,7 +101,7 @@ class HID(eg.PluginClass):
     
     def ReconnectDevice(self, event):
         """method to reconnect a disconnect device"""
-        if self.status == 2:
+        if self.thread == None:
             #updating device list
             self.helper.UpdateDeviceList()
             
@@ -201,9 +195,6 @@ class HID(eg.PluginClass):
         
         #unbind from RegisterDeviceNotification message
         eg.Unbind("System.DeviceAttached", self.ReconnectDevice)
-        self.status = 0
-        
-
 
     def Configure(self,
         eventName = "",

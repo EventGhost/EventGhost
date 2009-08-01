@@ -176,7 +176,6 @@ VERSION_NUMBER = MAX_INDEX = 5
 
 class HIDThread(threading.Thread):
     def __init__(self,
-        plugin,
         helper,
         noOtherPort,
         devicePath,
@@ -187,7 +186,6 @@ class HIDThread(threading.Thread):
         versionNumber,
         useFirstDevice
     ):
-        self.plugin = plugin
         self.text = Text
         self.deviceName = vendorString + " " + productString
         self.abort = False
@@ -205,8 +203,7 @@ class HIDThread(threading.Thread):
         )
 
         if not self.devicePath:
-            plugin.PrintError(self.text.errorFind + self.deviceName)
-            self.plugin.status = 2
+            eg.PrintError(self.text.errorFind + self.deviceName)
             return
         
         self.RawCallback = None
@@ -222,7 +219,6 @@ class HIDThread(threading.Thread):
     def AbortThread(self):
         self.abort = True
         win32event.SetEvent(self._overlappedRead.hEvent)
-        self.plugin.status = 2
 
     def SetRawCallback(self, callback):
         self.RawCallback = callback;
@@ -250,8 +246,7 @@ class HIDThread(threading.Thread):
                 0
             )
         except:
-            self.plugin.PrintError(self.text.errorOpen + self.deviceName)
-            self.plugin.status = 3
+            eg.PrintError(self.text.errorOpen + self.deviceName)
             return
 
         #getting data to get the right buffer size
@@ -272,7 +267,7 @@ class HIDThread(threading.Thread):
         n = hidpCaps.InputReportByteLength
         if n == 0:
             self.abort = True
-            self.plugin.PrintError(self.text.errorReportLength + self.deviceName)
+            eg.PrintError(self.text.errorReportLength + self.deviceName)
             
         rt = c_int(0)   #report type input
         rl = c_ulong(n)  #report length
@@ -335,78 +330,81 @@ class HIDThread(threading.Thread):
         DataArrayType = HIDP_DATA * maxDataL
         data = DataArrayType()
 
-        #initializing finished. setting status
-        self.plugin.status = 1
-
-        while not self.abort:
-            #try to read and wait for an event to happen
-            try:
-                win32event.ResetEvent(self._overlappedRead.hEvent)
-                rc, buf = win32file.ReadFile(handle, n, self._overlappedRead)
-                #waiting for an event
-                win32event.WaitForSingleObject(
-                    self._overlappedRead.hEvent,
-                    win32event.INFINITE
-                )
-            except:
-                self.plugin.PrintError(self.text.errorRead + self.deviceName)
-                self.abort = True
-                #device got disconnected so set status to waiting
-                self.plugin.status = 2
-
-            #parse data
-            if len(buf) == n and not self.abort:
-                #raw data events
-                if self.RawCallback:
-                    try:
-                        self.RawCallback(buf)
-                    except Exception:
-                        eg.PrintTraceback()
-
-                #handling button presses and values
-                if maxDataL != 0:
-                    dataL = c_ulong(maxDataL)
-                    result = hidDLL.HidP_GetData(
-                        rt,
-                        ctypes.byref(data),
-                        ctypes.byref(dataL),
-                        preparsedData,
-                        ctypes.c_char_p(str(buf)),
-                        rl
+        #initializing finished
+        try:
+            while not self.abort:
+                #try to read and wait for an event to happen
+                try:
+                    win32event.ResetEvent(self._overlappedRead.hEvent)
+                    rc, buf = win32file.ReadFile(handle, n, self._overlappedRead)
+                    #waiting for an event
+                    win32event.WaitForSingleObject(
+                        self._overlappedRead.hEvent,
+                        win32event.INFINITE
                     )
-                    #parse data to trigger events
-                    btnPressed = []
-                    values = {}
-                    for i in range(dataL.value):
-                        tmpIndex = data[i].DataIndex
-                        if dataIndexType[tmpIndex] == 1:#button
-                            #collect buttons pressed
-                            btnPressed.append(tmpIndex)
-                        elif dataIndexType[tmpIndex] == 2:#control value
-                            values[tmpIndex] = int(data[i].Data.RawValue)
-                        else:
-                            self.plugin.PrintError(self.text.errorInvalidDataIndex)
-
-                    #value events
-                    if (self.ValueCallback):
+                except:
+                    eg.PrintError(self.text.errorRead + self.deviceName)
+                    self.abort = True
+                    #device got disconnected so set status to waiting
+    
+                #parse data
+                if len(buf) == n and not self.abort:
+                    #raw data events
+                    if self.RawCallback:
                         try:
-                            self.ValueCallback(values)
+                            self.RawCallback(buf)
                         except Exception:
                             eg.PrintTraceback()
-                    
-                    #button events
-                    if self.ButtonCallback:
-                        try:
-                            self.ButtonCallback(btnPressed)
-                        except Exception:
-                            eg.PrintTraceback()
+    
+                    #handling button presses and values
+                    if maxDataL != 0:
+                        dataL = c_ulong(maxDataL)
+                        result = hidDLL.HidP_GetData(
+                            rt,
+                            ctypes.byref(data),
+                            ctypes.byref(dataL),
+                            preparsedData,
+                            ctypes.c_char_p(str(buf)),
+                            rl
+                        )
+                        #parse data to trigger events
+                        btnPressed = []
+                        values = {}
+                        for i in range(dataL.value):
+                            tmpIndex = data[i].DataIndex
+                            if dataIndexType[tmpIndex] == 1:#button
+                                #collect buttons pressed
+                                btnPressed.append(tmpIndex)
+                            elif dataIndexType[tmpIndex] == 2:#control value
+                                values[tmpIndex] = int(data[i].Data.RawValue)
+                            else:
+                                eg.PrintError(self.text.errorInvalidDataIndex)
+    
+                        #value events
+                        if (self.ValueCallback):
+                            try:
+                                self.ValueCallback(values)
+                            except Exception:
+                                eg.PrintTraceback()
+                        
+                        #button events
+                        if self.ButtonCallback:
+                            try:
+                                self.ButtonCallback(btnPressed)
+                            except Exception:
+                                eg.PrintTraceback()
+        finally:
+            win32file.CloseHandle(handle)
 
-        win32file.CloseHandle(handle)
-
-        #free references
-        hidDLL.HidD_FreePreparsedData(ctypes.byref(preparsedData))
-
-        #HID thread finished
+            #free references
+            hidDLL.HidD_FreePreparsedData(ctypes.byref(preparsedData))
+    
+            #HID thread finished
+            if self.StopCallback:
+                try:
+                    self.StopCallback()
+                except Exception:
+                    eg.PrintTraceback()
 
 #helper class to iterate, find and open hid devices
 class HIDHelper:
