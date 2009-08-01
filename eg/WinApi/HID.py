@@ -175,46 +175,18 @@ PRODUCT_STRING = 4
 VERSION_NUMBER = MAX_INDEX = 5
 
 class HIDThread(threading.Thread):
-    def __init__(self,
-        helper,
-        noOtherPort,
-        devicePath,
-        vendorID,
-        vendorString,
-        productID,
-        productString,
-        versionNumber,
-        useFirstDevice
-    ):
+    def __init__(self, deviceName, devicePath):
         self.text = Text
-        self.deviceName = vendorString + " " + productString
+        self.deviceName = deviceName
+        self.devicePath = devicePath
         self.abort = False
         self._overlappedRead = win32file.OVERLAPPED()
         self._overlappedRead.hEvent = win32event.CreateEvent(None, 1, 0, None)
-
-        #getting devicePath
-        self.devicePath = helper.GetDevicePath(
-            noOtherPort,
-            devicePath,
-            vendorID,
-            productID,
-            versionNumber,
-            useFirstDevice
-        )
-
-        if not self.devicePath:
-            eg.PrintError(self.text.errorFind + self.deviceName)
-            return
-        
         self.RawCallback = None
         self.ButtonCallback = None
         self.ValueCallback = None
         self.StopCallback = None
-
         threading.Thread.__init__(self, name = self.devicePath)
-        
-        #setting members
-        self.helper = helper
 
     def AbortThread(self):
         self.abort = True

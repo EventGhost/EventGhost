@@ -79,18 +79,22 @@ class HID(eg.PluginClass):
         self.thread = None
     
     def SetupHidThread(self):
-        #create thread
-        self.thread = HIDThread(
-            self.helper,
+        #getting devicePath
+        self.devicePath = self.helper.GetDevicePath(
             self.noOtherPort,
             self.devicePath,
             self.vendorID,
-            self.vendorString,
             self.productID,
-            self.productString,
             self.versionNumber,
             self.useFirstDevice
         )
+
+        if not self.devicePath:
+            self.PrintError(self.text.errorFind + self.deviceName)
+            return
+
+        #create thread
+        self.thread = HIDThread(self.vendorString + " " + self.productString, self.devicePath)
         self.thread.start()
         self.thread.SetStopCallback(self.StopCallback)
         if self.rawDataEvents:
@@ -145,7 +149,6 @@ class HID(eg.PluginClass):
             return prefix + productString
 
         return prefix + vendorString + " " + productString
-
 
     def __start__(self,
         eventName,
