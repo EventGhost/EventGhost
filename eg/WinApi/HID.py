@@ -178,8 +178,6 @@ class HIDThread(threading.Thread):
     def __init__(self,
         plugin,
         helper,
-        enduringEvents,
-        rawDataEvents,
         noOtherPort,
         devicePath,
         vendorID,
@@ -214,14 +212,12 @@ class HIDThread(threading.Thread):
         self.RawCallback = None
         self.ButtonCallback = None
         self.ValueCallback = None
+        self.StopCallback = None
 
         threading.Thread.__init__(self, name = self.devicePath)
         
         #setting members
         self.helper = helper
-        self.enduringEvents = enduringEvents
-        self.rawDataEvents = rawDataEvents
-
 
     def AbortThread(self):
         self.abort = True
@@ -236,6 +232,9 @@ class HIDThread(threading.Thread):
         
     def SetValueCallback(self, callback):
         self.ValueCallback = callback
+
+    def SetStopCallback(self, callback):
+        self.StopCallback = callback
 
 
     def run(self):
@@ -306,7 +305,6 @@ class HIDThread(threading.Thread):
         #parsing caps
         # prepare a list to find and store for each index
         # whether it is a button or value
-        oldValues = {}
         dataIndexType = [0] * hidpCaps.NumberInputDataIndices
 
         #list entries depending on caps
@@ -329,17 +327,15 @@ class HIDThread(threading.Thread):
                     vCapsArr[i].Info.Range.DataIndexMax + 1
                 ):
                     dataIndexType[ii] = 2
-                    oldValues[ii] = sys.maxint
             else:
                 ii = vCapsArr[i].Info.NotRange.DataIndex
                 dataIndexType[ii] = 2
-                oldValues[ii] = sys.maxint
 
         #prepare data array with maximum possible length
         DataArrayType = HIDP_DATA * maxDataL
         data = DataArrayType()
 
-        #initiziling finished. setting status
+        #initializing finished. setting status
         self.plugin.status = 1
 
         while not self.abort:
@@ -361,13 +357,14 @@ class HIDThread(threading.Thread):
             #parse data
             if len(buf) == n and not self.abort:
                 #raw data events
-                if maxDataL == 0 or self.rawDataEvents:
-                    if self.RawCallback:
-                        try:
-                            self.RawCallback(buf)
-                        except Exception:
-                            eg.PrintTraceback()
-                else:
+                if self.RawCallback:
+                    try:
+                        self.RawCallback(buf)
+                    except Exception:
+                        eg.PrintTraceback()
+
+                #handling button presses and values
+                if maxDataL != 0:
                     dataL = c_ulong(maxDataL)
                     result = hidDLL.HidP_GetData(
                         rt,
@@ -379,41 +376,30 @@ class HIDThread(threading.Thread):
                     )
                     #parse data to trigger events
                     btnPressed = []
+                    values = {}
                     for i in range(dataL.value):
                         tmpIndex = data[i].DataIndex
                         if dataIndexType[tmpIndex] == 1:#button
                             #collect buttons pressed
-                            btnPressed.append(str(tmpIndex))
+                            btnPressed.append(tmpIndex)
                         elif dataIndexType[tmpIndex] == 2:#control value
-                            newValue = int(data[i].Data.RawValue)
-                            if newValue == oldValues[tmpIndex]:
-                                continue
-                            oldValues[tmpIndex] = newValue
-                            self.plugin.TriggerEvent(
-                                "Value." + str(tmpIndex),
-                                payload = newValue
-                            )
+                            values[tmpIndex] = int(data[i].Data.RawValue)
                         else:
                             self.plugin.PrintError(self.text.errorInvalidDataIndex)
-                    if len(btnPressed):
-                        #one or more buttons pressed
-                        #btnPressed.sort()
-                        evtName = "Button." + "+".join(btnPressed)
-                        if self.enduringEvents:
-                            self.plugin.TriggerEnduringEvent(evtName)
-                        else:
-                            self.plugin.TriggerEvent(evtName)
-                    elif self.enduringEvents:
-                        #no buttons pressed anymore
-                        self.plugin.EndLastEvent()
-                    else:
-                        #trigger event so that releasing all buttons
-                        #can get noticed even w/o enduring events
-                        self.plugin.TriggerEvent("Button.None")
 
-        #loop aborted
-        if self.enduringEvents:
-            self.plugin.EndLastEvent()
+                    #value events
+                    if (self.ValueCallback):
+                        try:
+                            self.ValueCallback(values)
+                        except Exception:
+                            eg.PrintTraceback()
+                    
+                    #button events
+                    if self.ButtonCallback:
+                        try:
+                            self.ButtonCallback(btnPressed)
+                        except Exception:
+                            eg.PrintTraceback()
 
         win32file.CloseHandle(handle)
 
@@ -495,7 +481,7 @@ class HIDHelper:
                     0
                 )
                 #skipping devices which cannot be opened
-                #(e.g. mice & keyboards, which are opened exclusivly by OS)
+                #(e.g. mice & keyboards, which are opened exclusively by OS)
                 if int(hidHandle) <= 0:
                     continue
             except:
