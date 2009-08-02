@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of EventGhost.
-#
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 # 
 # EventGhost is free software; you can redistribute it and/or modify it under
