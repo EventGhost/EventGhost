@@ -13,8 +13,6 @@ eg.RegisterPlugin(
 
 from eg.WinApi.HID import HIDThread
 from eg.WinApi.HID import GetDevicePath
-from eg.WinApi.HID import GetDeviceDescriptions
-from eg.WinApi.HID import DeviceDescription
 
 class Text:
     errorFind = "Error finding Game Voice"
@@ -31,17 +29,17 @@ ButtonMapping = {
 
 class GameVoice(eg.PluginClass):
     def ButtonCallback(self, data):
-        if len(data):
-            #one or more buttons pressed
-            btnPressed = []
-            for num in data:
-                btnPressed.append(ButtonMapping[num])
-            evtName = "Button." + "+".join(btnPressed)
-            self.TriggerEvent(evtName)
+        btnPressed = []
+        for num in data:
+            btnPressed.append(ButtonMapping[num])
+
+        buttonsCount = len(btnPressed)
+        if buttonsCount == 0:
+            self.TriggerEvent("None")
+        elif buttonsCount == 1:
+            self.TriggerEvent(btnPressed[0])
         else:
-            #trigger event so that releasing all buttons
-            #can get noticed even w/o enduring events
-            self.TriggerEvent("Button.None")
+            self.TriggerEvent("+".join(btnPressed))
             
     def StopCallback(self):
         self.TriggerEvent("Stopped")
