@@ -1136,12 +1136,23 @@ class DVBViewerTerminateThread( Thread ) :
         CoInitialize()
 
         plugin.lockedByTerminate |= plugin.executionStatusChangeLock.acquire( blocking = False, timeout = TERMINATE_TIMEOUT )
+        
+        queryA = "SELECT * FROM Win32_ProcessStopTrace WHERE ProcessName='dvbviewer.exe'"
+        queryU = (
+                   "SELECT * FROM __InstanceDeletionEvent  WITHIN 1 "
+                   "WHERE TargetInstance ISA 'Win32_Process' "
+                   "AND TargetInstance.Name='dvbviewer.exe'"
+                 )
 
         WMI = GetObject('winmgmts:')
 
         plugin.lockedByTerminate |= plugin.executionStatusChangeLock.acquire( blocking = False, timeout = TERMINATE_TIMEOUT )
+        events = None
 
-        events = WMI.ExecNotificationQuery( "SELECT * FROM Win32_ProcessStopTrace WHERE ProcessName='dvbviewer.exe'" )
+        try :
+            events = WMI.ExecNotificationQuery( queryA )
+        except :
+            events = WMI.ExecNotificationQuery( queryU )
 
         plugin.lockedByTerminate |= plugin.executionStatusChangeLock.acquire( blocking = False, timeout = TERMINATE_TIMEOUT )
 
@@ -1188,6 +1199,7 @@ class DVBViewerTerminateThread( Thread ) :
 
         if plugin.lockedByTerminate :
             plugin.executionStatusChangeLock.release()
+            plugin.lockedByTerminate = False
         return finished
 
 
@@ -1435,11 +1447,33 @@ class DVBViewerWatchDogThread( Thread ) :
         plugin = self.plugin
         CoInitialize()
 
-        query = ( "SELECT * FROM Win32_ProcessTrace WHERE ProcessName='dvbviewer.exe'" )
+        queryTime = 5
+
+        if self.watchDogTime < queryTime :
+            queryTime = self.watchDogTime
+
+        queryU = (
+                "SELECT * FROM __InstanceOperationEvent  WITHIN " + str( queryTime) +
+                " WHERE TargetInstance ISA 'Win32_Process' "
+                "AND TargetInstance.Name='dvbviewer.exe'" )
+
+        queryA = ( "SELECT * FROM Win32_ProcessTrace WHERE ProcessName='dvbviewer.exe'" )
 
         WMI = GetObject('winmgmts:')
+        
+        eventSource = None
+        startType = 'Win32_ProcessStartTrace'
+        stopType  = 'Win32_ProcessStopTrace'
 
-        eventSource = WMI.ExecNotificationQuery( query )
+        try :
+            eventSource = WMI.ExecNotificationQuery( queryA )
+            #print "Administrator rights"
+        except :
+            eventSource = WMI.ExecNotificationQuery( queryU )
+            startType = '__InstanceCreationEvent'
+            stopType  = '__InstanceDeletionEvent'
+            #print "User rights"
+
 
         self.started = len( WMI.ExecQuery('select * from Win32_Process where Name="dvbviewer.exe"') ) > 0
 
@@ -1450,12 +1484,14 @@ class DVBViewerWatchDogThread( Thread ) :
         while not self.abort :
             try :
                 eventType = eventSource.NextEvent( 500 ).Path_.Class
-                if eventType == 'Win32_ProcessStartTrace' and not self.started :
+                if eventType == startType and not self.started :
                     #print "DVBViewer started"
                     eg.PrintDebugNotice("DVBViewer started")
-                elif eventType == 'Win32_ProcessStopTrace' and self.started:
+                elif eventType == stopType and self.started:
                     #print "DVBViewer terminated"
                     eg.PrintDebugNotice("DVBViewer terminated")
+                elif time() < nextTimeViewer :
+                    continue
             except :
                 #print "Timeout"
                 if time() < nextTimeViewer :
@@ -1467,12 +1503,13 @@ class DVBViewerWatchDogThread( Thread ) :
             if plugin.useService and timeout :
                 plugin.service.Update( UPDATE_ALL )
 
-            started = len( WMI.ExecQuery('select * from Win32_Process where Name="dvbviewer.exe"') ) > 0
-            if self.started == started and not timeout :
+            if plugin.closeWaitActive :
                 plugin.executionStatusChangeLock.release()
                 continue
 
-            if plugin.closeWaitActive :
+            started = len( WMI.ExecQuery('select * from Win32_Process where Name="dvbviewer.exe"') ) > 0
+            if self.started == started and not timeout :
+                plugin.executionStatusChangeLock.release()
                 continue
 
             self.started = started
@@ -1497,7 +1534,7 @@ class DVBViewerWatchDogThread( Thread ) :
 
             if plugin.workerThread is not None :
                 #print "WatchDog: Update recordings"
-                
+
                 updatedRecordings = 0
 
                 try :
@@ -1907,7 +1944,7 @@ class DVBViewer(eg.PluginClass):
 
         recordingsIDs = []
         completeRecordingsInfo = []
-        
+
         started = False
 
 
@@ -2871,7 +2908,7 @@ class GetRecordingsIDs( eg.ActionClass ) :
                     list.append( v[2] )
 
         if enableDVBViewer :
-        
+
             connectionMode = WAIT_CHECK_START_CONNECT
             if active :
                 connectionMode = CHECK_CONNECT
@@ -2971,7 +3008,7 @@ class SendAction( eg.ActionClass ) :
 class ShowInfoinTVPic( eg.ActionClass ) :
 
     def __call__( self, text = "", timeout = 15.0, force = False ) :
-    
+
         connectMode = CHECK_CONNECT
         if force :
             connectMode = WAIT_CHECK_START_CONNECT
@@ -3653,9 +3690,9 @@ class TaskScheduler( eg.ActionClass ) :
             actuals.append( date )
 
             # get new index
-            
+
             ix = 0
-            
+
             if -1.0 in plugin.scheduledRecordings :
                 ix = plugin.scheduledRecordings.index( -1.0 )
                 plugin.scheduledRecordings[ ix ] = date
