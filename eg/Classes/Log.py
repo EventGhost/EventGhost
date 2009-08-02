@@ -18,13 +18,13 @@
 import eg
 import wx
 import sys
-import traceback
 import codecs
-from weakref import ref
-from threading import currentThread
 from collections import deque
-from types import UnicodeType
+from threading import currentThread
 from time import time, strftime
+from traceback import format_exception_only, format_stack, extract_tb
+from types import UnicodeType
+from weakref import ref
 
 _oldStdOut = sys.stdout
 _oldStdErr = sys.stderr
@@ -167,10 +167,14 @@ class Log(object):
         tbType, tbValue, tbTraceback = excInfo
         slist = ['Traceback (most recent call last) (%d):\n' % eg.revision]
         if tbTraceback:
-            #slist += traceback.format_tb(tbTraceback)[skip:]
-            for filename, lineno, funcName, text in traceback.extract_tb(tbTraceback)[skip:]:
-                slist.append(u'  File "%s", line %d, in %s\n    %s\n' % (filename.decode(sys.getfilesystemencoding()), lineno, funcName, text))
-        slist += traceback.format_exception_only(tbType, tbValue)
+            decode = codecs.getdecoder(sys.getfilesystemencoding())
+            for filename, lineno, funcName, text in extract_tb(tbTraceback)[skip:]:
+                slist.append(
+                    u'  File "%s", line %d, in %s\n    %s\n' % (
+                        decode(filename)[0], lineno, funcName, text
+                    )
+                )
+        slist += format_exception_only(tbType, tbValue)
 
         error = "".join(slist)
         if source is not None:
@@ -182,7 +186,7 @@ class Log(object):
 
     def PrintStack(self, skip=0):
         strs = ['Stack trace (most recent call last) (%d):\n' % eg.revision]
-        strs += traceback.format_stack(sys._getframe().f_back)[skip:]
+        strs += format_stack(sys._getframe().f_back)[skip:]
         error = "".join(strs)
         self.Write(error.rstrip() + "\n", ERROR_ICON)
         if eg.debugLevel:
