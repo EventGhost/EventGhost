@@ -907,7 +907,7 @@ class MainFrame(wx.Frame):
     def OnCmdHelpContents(self):
         HtmlHelp(
             GetDesktopWindow(),
-            join(eg.meinDir, "EventGhost.chm"),
+            join(eg.mainDir, "EventGhost.chm"),
             HH_DISPLAY_TOPIC,
             0
         )
