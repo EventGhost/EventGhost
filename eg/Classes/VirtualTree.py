@@ -271,7 +271,6 @@ class DropTarget(wx.PyDropTarget):
 
 
     @eg.AssertNotMainThread
-    @eg.LogIt
     def OnDragTimerEvent(self, dummyEvent):
         """
         Handles wx.EVT_TIMER, while a drag operation is in progress. It is 
@@ -376,7 +375,6 @@ class VirtualTree(wx.TreeCtrl):
         self.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChangedEvent)
         self.visibleNodes = {}
         self.expandedNodes = document.expandedNodes
-        self.rootId = None
         self.dropTarget = DropTarget(self)
         self.SetDropTarget(self.dropTarget)
         eg.Bind("NodeAdded", self.OnNodeAdded)
@@ -497,7 +495,7 @@ class VirtualTree(wx.TreeCtrl):
         Collapses all items in the tree.
         """
         self.Freeze()
-        mainNodes = {self.root: self.rootId}
+        mainNodes = {self.root: self.GetRootItem()}
         for child in self.root.childs:
             itemId = self.visibleNodes[child]
             self.CollapseAndReset(itemId)
@@ -737,8 +735,8 @@ class VirtualTree(wx.TreeCtrl):
                 self.DeleteAllItems()
                 self.visibleNodes.clear()
             self.root = root
-            self.rootId = self.CreateRoot(root)
-            self.Expand(self.rootId)
+            rootId = self.CreateRoot(root)
+            self.Expand(rootId)
             selectedNode = self.document.selection
             if selectedNode in self.visibleNodes:
                 itemId = self.visibleNodes[selectedNode]
