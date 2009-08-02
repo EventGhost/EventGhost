@@ -115,6 +115,7 @@ class FindDialog(wx.Dialog):
 
 
     def Show(self):
+        self.CenterOnParent()
         eg.Utils.EnsureVisible(self)
         wx.Dialog.Show(self)
         self.Raise()

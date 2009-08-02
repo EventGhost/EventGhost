@@ -28,6 +28,7 @@ class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
     @eg.LogIt
     def FinishSetup(self):
         self.setupFinished = True
+        self.Center()
         eg.Utils.EnsureVisible(self)
         self.Show()
 

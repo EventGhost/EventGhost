@@ -233,72 +233,66 @@ def GetTopLevelWindow(window):
         result = parent
 
 
-def EnsureVisible(window):
+def EnsureVisible(window, center=False):
     """
     Ensures the given wx.TopLevelWindow is visible on the screen.
     Moves and resizes it if necessary.
     """
-    # get all display rectangles
-    displayRects = [
-        wx.Display(i).GetClientArea()
-        for i in range(wx.Display.GetCount())
-    ]
+    from eg.WinApi.Dynamic import (
+        GetMonitorInfo, MONITORINFO,
+        sizeof, byref, RECT, MonitorFromRect, MONITOR_DEFAULTTONULL, 
+        GetWindowRect, MONITOR_DEFAULTTONEAREST, MonitorFromWindow
+    )
+    windowRect = RECT()
+    hwnd = window.GetHandle()
+    GetWindowRect(window.GetHandle(), byref(windowRect))
+   # hMonitor = MonitorFromRect(byref(windowRect), MONITOR_DEFAULTTONULL)
+    #if hMonitor:
+    #    return
+    parent = window.GetParent()
+    if parent:
+        hwnd = parent.GetHandle()
+    hMonitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST)
+    
+    monInfo = MONITORINFO()
+    monInfo.cbSize = sizeof(MONITORINFO)
+    
+    GetMonitorInfo(hMonitor, byref(monInfo))
+    displayRect = monInfo.rcWork
+    w = displayRect.right - displayRect.left
+    h = displayRect.bottom - displayRect.top
+    
+    left = windowRect.left
+    right = windowRect.right
+    top = windowRect.top
+    bottom = windowRect.bottom
+    
+    # shift the window horizontally into the display area
+    if left < displayRect.left:
+        right += (displayRect.left - left)
+        left = displayRect.left
+        if right > displayRect.right:
+            right = displayRect.right
+    elif right > displayRect.right:
+        left += (displayRect.right - right)
+        right = displayRect.right
+        if left < displayRect.left:
+            left = displayRect.left
 
-    # wx.Display.GetFromPoint doesn't take GetClientArea into account, so
-    # we have to define our own function
-    def GetDisplayFromPoint(point):
-        for displayNum, displayRect in enumerate(displayRects):
-            if displayRect.Contains(point):
-                return displayNum
-        else:
-            return wx.NOT_FOUND
-
-    windowRect = window.GetScreenRect()
-
-    # if the entire window is contained on the display, take a quick exit
-    if (
-        GetDisplayFromPoint(windowRect.TopLeft) != wx.NOT_FOUND
-        and GetDisplayFromPoint(windowRect.BottomRight) != wx.NOT_FOUND
-    ):
-        return
-
-    # get the nearest display
-    displayNum = wx.Display.GetFromWindow(window)
-    if displayNum == wx.NOT_FOUND:
-        displayNum = 0
-        parent = window.GetParent()
-        if parent:
-            displayNum = wx.Display.GetFromWindow(parent)
-
-    displayRect = displayRects[displayNum]
-
-    # shift the dialog horizontally into the display area
-    if windowRect.Left < displayRect.Left:
-        windowRect.Right += (displayRect.Left - windowRect.Left)
-        windowRect.Left = displayRect.Left
-        if windowRect.Right > displayRect.Right:
-            windowRect.Right = displayRect.Right
-    elif windowRect.Right > displayRect.Right:
-        windowRect.Left += (displayRect.Right - windowRect.Right)
-        windowRect.Right = displayRect.Right
-        if windowRect.Left < displayRect.Left:
-            windowRect.Left = displayRect.Left
-
-    # shift the dialog vertically into the display area
-    if windowRect.Top < displayRect.Top:
-        windowRect.Bottom += (displayRect.Top - windowRect.Top)
-        windowRect.Top = displayRect.Top
-        if windowRect.Bottom > displayRect.Bottom:
-            windowRect.Bottom = displayRect.Bottom
-    elif windowRect.Bottom > displayRect.Bottom:
-        windowRect.Top += (displayRect.Bottom - windowRect.Bottom)
-        windowRect.Bottom = displayRect.Bottom
-        if windowRect.Top < displayRect.Top:
-            windowRect.Top = displayRect.Top
+    # shift the window vertically into the display area
+    if top < displayRect.top:
+        bottom += (displayRect.top - top)
+        top = displayRect.top
+        if bottom > displayRect.bottom:
+            bottom = displayRect.bottom
+    elif bottom > displayRect.bottom:
+        top += (displayRect.bottom - bottom)
+        bottom = displayRect.bottom
+        if top < displayRect.top:
+            top = displayRect.top
 
     # set the new position and size
-    window.SetRect(windowRect)
-
+    window.SetRect((left, top, right - left, bottom - top))
 
 
 class VBoxSizer(wx.BoxSizer): #IGNORE:R0904

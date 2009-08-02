@@ -22,7 +22,6 @@ class ConfigDialog(eg.TaskletDialog):
             title = eg.text.General.settingsActionCaption
             addTestButton = True
 
-
         self.configureItem = eg.currentConfigureItem
         eg.currentConfigureItem.openConfigDialog = self
 
@@ -110,7 +109,7 @@ class ConfigDialog(eg.TaskletDialog):
         self.SetSizerAndFit(self.mainSizer)
         self.Fit() # without the addition Fit(), some dialogs get a bad size
         self.SetMinSize(self.GetSize())
-        self.Centre()
+        self.CentreOnParent()
         self.panel.SetFocus()
         eg.TaskletDialog.FinishSetup(self)
 

@@ -1302,3 +1302,25 @@ GetVolumeInformationW.argtypes = [LPCWSTR, LPWSTR, DWORD, LPDWORD, LPDWORD, LPDW
 GetVolumeInformation = GetVolumeInformationW # alias
 SWP_FRAMECHANGED = 32 # Variable c_int '32'
 
+class tagMONITORINFO(Structure):
+    pass
+LPMONITORINFO = POINTER(tagMONITORINFO)
+GetMonitorInfoW = _user32.GetMonitorInfoW
+GetMonitorInfoW.restype = BOOL
+GetMonitorInfoW.argtypes = [HMONITOR, LPMONITORINFO]
+GetMonitorInfo = GetMonitorInfoW # alias
+tagMONITORINFO._fields_ = [
+    ('cbSize', DWORD),
+    ('rcMonitor', RECT),
+    ('rcWork', RECT),
+    ('dwFlags', DWORD),
+]
+MONITORINFO = tagMONITORINFO
+MonitorFromRect = _user32.MonitorFromRect
+MonitorFromRect.restype = HMONITOR
+MonitorFromRect.argtypes = [LPCRECT, DWORD]
+MONITOR_DEFAULTTONULL = 0 # Variable c_int '0'
+MONITOR_DEFAULTTONEAREST = 2 # Variable c_int '2'
+MonitorFromWindow = _user32.MonitorFromWindow
+MonitorFromWindow.restype = HMONITOR
+MonitorFromWindow.argtypes = [HWND, DWORD]
