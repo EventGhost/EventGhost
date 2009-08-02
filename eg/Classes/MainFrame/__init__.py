@@ -471,7 +471,7 @@ class MainFrame(wx.Frame):
 
     def CreateTreeCtrl(self):
         #treeCtrl = TreeCtrl(self, document=self.document)
-        treeCtrl = eg.VirtualTree(self, document=self.document)
+        treeCtrl = TreeCtrl(self, document=self.document)
         self.auiManager.AddPane(
             treeCtrl,
             wx.aui.AuiPaneInfo().
@@ -1038,6 +1038,6 @@ class MainFrame(wx.Frame):
 
     def OnCmdVirtualTree(self):
         frame = wx.Frame(None, size=(500, 600))
-        eg.VirtualTree(frame, self.document)
+        TreeCtrl(frame, self.document)
         frame.Show()
         
