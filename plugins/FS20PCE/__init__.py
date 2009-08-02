@@ -6,7 +6,7 @@ eg.RegisterPlugin(
     canMultiLoad = False,
     description = (
         'Allows to recieve events from FS20 remote controls.<br/>'
-        '<a href="http://elv.de/"><img src=\"picture.jpg\"/></a>'
+        '<a href="http://www.elv.de/"><img src=\"picture.jpg\"/></a>'
     ),
     url = "http://www.eventghost.org/forum/viewtopic.php?t=571",
 )
@@ -14,8 +14,6 @@ eg.RegisterPlugin(
 import binascii
 from eg.WinApi.HID import HIDThread
 from eg.WinApi.HID import GetDevicePath
-from eg.WinApi.HID import GetDeviceDescriptions
-from eg.WinApi.HID import DeviceDescription
 
 class Text:
     errorFind = "Error finding ELV FS20 PCE"
@@ -45,19 +43,20 @@ Commands = {
     0x21 : "Power.Dim.UpAndDown",
     0x22 : "Program.Time",
     0x23 : "SendStatus",
-    0x24 : "Power.Timed.OffPreviousValue",
-    0x25 : "Power.Timed.OnOff",
-    0x26 : "Power.Timed.PreviousValueOff",
+    0x24 : "Power.OffPreviousValue",
+    0x25 : "Power.OnOff",
+    0x26 : "Power.PreviousValueOff",
     0x27 : "Program.Reset",
     0x28 : "Program.DimUpTime",
     0x29 : "Program.DimDownTime",
-    0x30 : "Power.Timed.OnPreviousState",
-    0x31 : "Power.Timed.PreviousValuePreviousState",
+    0x30 : "Power.OnPreviousState",
+    0x31 : "Power.PreviousValuePreviousState",
 }
 
 class FS20PCE(eg.PluginClass):
     def __init__(self):
         self.version = None
+        self.PendingEvents = {}
     
     def RawCallback(self, data):
         if not data or len(data) != 13 or ord(data[0]) != 2 or ord(data[1]) != 11:
@@ -68,22 +67,62 @@ class FS20PCE(eg.PluginClass):
         
         houseCode = binascii.hexlify(data[2:6])
         deviceAddress = binascii.hexlify(data[6:8])
+        combinedAddress = houseCode + "." + deviceAddress
+        
         command = ord(data[8])
         if command in Commands:
             commandStr = Commands[command]
         else:
             commandStr = binascii.hexlify(data[8]).upper()
             
+        if combinedAddress in self.PendingEvents:
+            #cancel pending events for this device
+            try:
+                timerEntry = self.PendingEvents[combinedAddress]
+                startTime, func, args, kwargs = timerEntry
+                eg.scheduler.CancelTask(timerEntry)
+                self.TriggerEvent(combinedAddress + "." + args[1] + ".Timer.Cancel")
+                del self.PendingEvents[combinedAddress]
+            except KeyError:
+                #may happen due to multithreaded access to self.PendingEvents dict
+                pass
+            except ValueError:
+                #may happen due to multithreaded access to eg.scheduler's internal list
+                pass
+        
         validTime = ord(data[9]) > 15
         if validTime:
-            #parsing time
-            timeStr = binascii.hexlify(data[9:12])
-            timeStr = timeStr[1:]#cut the one
-            time = float(timeStr) * 0.25
-
-        self.TriggerEvent(houseCode + "." + deviceAddress + "." + commandStr)
-        #print binascii.hexlify(data)
+            if (commandStr.startswith("Power.")):
+                #parsing time
+                timeStr = binascii.hexlify(data[9:12])
+                timeStr = timeStr[1:]#cut the one
+                time = float(timeStr) * 0.25
+                if (time > 0):
+                    timerEntry = eg.scheduler.AddTask(time, self.SchedulerCallback, combinedAddress, commandStr)
+                    self.PendingEvents[combinedAddress] = timerEntry
+                    self.TriggerEvent(combinedAddress + "." + commandStr + ".Timer.Start", payload = time)
+                else:
+                    self.TriggerEvent(combinedAddress + "." + commandStr)
+            else:
+                #put the time in the payload 
+                self.TriggerEvent(combinedAddress + "." + commandStr, payload = time)
+        else:
+            self.TriggerEvent(combinedAddress + "." + commandStr)
             
+    def SchedulerCallback(self, combinedAddress, commandStr):
+        if combinedAddress in self.PendingEvents:
+            #cancel pending events for this device
+            try:
+                timerEntry = self.PendingEvents[combinedAddress]
+                startTime, func, args, kwargs = timerEntry
+                if (args[1] == commandStr):
+                    #maybe an old entry if commandStr does not match 
+                    self.TriggerEvent(combinedAddress + "." + commandStr + ".Timer.Finish")
+                    del self.PendingEvents[combinedAddress]
+            except KeyError:
+                #may happen due to multithreaded access to self.PendingEvents dict
+                pass
+        
     def PrintVersion(self):
         #create the following python command to show version number
         #eg.plugins.FS20PCE.plugin.PrintVersion()
