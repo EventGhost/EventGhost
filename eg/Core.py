@@ -46,7 +46,6 @@ from os.path import join
 from wx.lib.newevent import NewCommandEvent
 import eg
 import Init
-import Cli
 
 
 eg.APP_NAME = "EventGhost"
@@ -57,7 +56,7 @@ eg.CORE_PLUGIN_GUIDS = (
     "{6B1751BF-F94E-4260-AB7E-64C0693FD959}", # "Mouse"
 )
 eg.ID_TEST = wx.NewId()
-eg.mainDir = Cli.mainDir
+eg.mainDir = eg.Cli.mainDir
 eg.imagesDir = join(eg.mainDir, "images")
 eg.languagesDir = join(eg.mainDir, "languages")
 eg.sitePackagesDir = join(
@@ -66,7 +65,7 @@ eg.sitePackagesDir = join(
     "site-packages"
 )
 eg.revision = eg.Version.revision
-eg.startupArguments = Cli.args
+eg.startupArguments = eg.Cli.args
 eg.debugLevel = eg.startupArguments.debugLevel
 eg.systemEncoding = locale.getdefaultlocale()[1]
 eg.document = None
@@ -261,6 +260,7 @@ def MessageBox(message, caption=eg.APP_NAME, style=wx.OK, parent=None):
     return result
 
 
+# pylint: disable-msg=W0613
 def RegisterPlugin(
     name = None,
     description = None,
@@ -294,6 +294,7 @@ def RegisterPlugin(
        backward compatible.
     """
     pass
+# pylint: enable-msg=W0613
 
 eg.RegisterPlugin = RegisterPlugin
 
@@ -364,12 +365,4 @@ eg.SetProcessingState = eg.taskBarIcon.SetProcessingState
 eg.Init = Init
 eg.Init.Init()
 
-if eg.debugLevel:
-    # if we run in debug mode, we raise an exception, if a new attribute is
-    # assigned to <eg>
-    def __setattr__(self, name, value):
-        if not name in self.__dict__:
-            raise AttributeError("eg has no attribute %s" % name)
-        object.__setattr__(self, name, value)
-    eg.__class__.__setattr__ = __setattr__
 
