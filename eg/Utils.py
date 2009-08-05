@@ -227,22 +227,25 @@ def GetTopLevelWindow(window):
         result = parent
 
 
-def EnsureVisible(window, center=False):
+def EnsureVisible(window):
     """
     Ensures the given wx.TopLevelWindow is visible on the screen.
     Moves and resizes it if necessary.
     """
     from eg.WinApi.Dynamic import (
-        GetMonitorInfo, MONITORINFO,
-        sizeof, byref, RECT, MonitorFromRect, MONITOR_DEFAULTTONULL, 
-        GetWindowRect, MONITOR_DEFAULTTONEAREST, MonitorFromWindow
+        sizeof, byref, GetMonitorInfo, MonitorFromWindow, GetWindowRect,
+        MONITORINFO, RECT, MONITOR_DEFAULTTONEAREST, 
+        # MonitorFromRect, MONITOR_DEFAULTTONULL, 
     )
-    windowRect = RECT()
+
     hwnd = window.GetHandle()
-    GetWindowRect(window.GetHandle(), byref(windowRect))
+    windowRect = RECT()
+    GetWindowRect(hwnd, byref(windowRect))
+    
    # hMonitor = MonitorFromRect(byref(windowRect), MONITOR_DEFAULTTONULL)
     #if hMonitor:
     #    return
+    
     parent = window.GetParent()
     if parent:
         hwnd = parent.GetHandle()
@@ -250,11 +253,8 @@ def EnsureVisible(window, center=False):
     
     monInfo = MONITORINFO()
     monInfo.cbSize = sizeof(MONITORINFO)
-    
     GetMonitorInfo(hMonitor, byref(monInfo))
     displayRect = monInfo.rcWork
-    w = displayRect.right - displayRect.left
-    h = displayRect.bottom - displayRect.top
     
     left = windowRect.left
     right = windowRect.right
