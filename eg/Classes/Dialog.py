@@ -30,3 +30,15 @@ class Dialog(wx.Dialog, ControlProviderMixin):
     def Destroy(self):
         eg.Notify("DialogDestroy", self)
         wx.Dialog.Destroy(self)
+
+
+    def Show(self, show=True):
+        if show:
+            eg.EnsureVisible(self)
+        wx.Dialog.Show(self, show)
+
+
+    def ShowModal(self):
+        eg.EnsureVisible(self)
+        return wx.Dialog.ShowModal(self)
+
