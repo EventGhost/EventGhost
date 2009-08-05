@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 # 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 # 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 # 
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """<rst>
 Hardware plugin for the `USB-UIRT <http://www.usbuirt.com/>`_ transceiver.
@@ -29,7 +23,6 @@ Hardware plugin for the `USB-UIRT <http://www.usbuirt.com/>`_ transceiver.
    :align: center
    :target: http://www.usbuirt.com/
 """
-
 
 import eg
 
@@ -529,14 +522,14 @@ class TransmitIR(eg.ActionClass):
 
 
 
-class IRLearnDialog(wx.Dialog):
+class IRLearnDialog(eg.Dialog):
     
     def __init__(self, parent, dll, hDrvHandle, text):
         self.dll = dll
         self.hDrvHandle = hDrvHandle
         self.code = None
         self.codeFormat = UUIRTDRV_IRFMT_PRONTO
-        wx.Dialog.__init__(
+        eg.Dialog.__init__(
             self, 
             parent, 
             -1,
