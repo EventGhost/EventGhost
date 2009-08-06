@@ -1136,7 +1136,7 @@ class DVBViewerTerminateThread( Thread ) :
         CoInitialize()
 
         plugin.lockedByTerminate |= plugin.executionStatusChangeLock.acquire( blocking = False, timeout = TERMINATE_TIMEOUT )
-        
+
         queryA = "SELECT * FROM Win32_ProcessStopTrace WHERE ProcessName='dvbviewer.exe'"
         queryU = (
                    "SELECT * FROM __InstanceDeletionEvent  WITHIN 1 "
@@ -1460,7 +1460,7 @@ class DVBViewerWatchDogThread( Thread ) :
         queryA = ( "SELECT * FROM Win32_ProcessTrace WHERE ProcessName='dvbviewer.exe'" )
 
         WMI = GetObject('winmgmts:')
-        
+
         eventSource = None
         startType = 'Win32_ProcessStartTrace'
         stopType  = 'Win32_ProcessStopTrace'
@@ -1501,7 +1501,7 @@ class DVBViewerWatchDogThread( Thread ) :
             plugin.executionStatusChangeLock.acquire( timeout = TERMINATE_TIMEOUT )
 
             if plugin.useService and timeout :
-                plugin.service.Update( UPDATE_ALL )
+                plugin.service.UpdateWithLock( UPDATE_ALL )
 
             if plugin.closeWaitActive :
                 plugin.executionStatusChangeLock.release()
@@ -3875,6 +3875,7 @@ class DVBViewerService() :
         self.numberOfClients = -1
         self.updateEPG = False
 
+        self.serviceInUse = plugin.LockWithTimeout( 'serviceInUse' )
 
 
 
@@ -3922,7 +3923,11 @@ class DVBViewerService() :
             ErrorProcessing( e )
             return None
 
-        return pageHandle.read()
+        xml = pageHandle.read()
+
+        pageHandle.close()
+
+        return xml
 
 
 
@@ -4167,19 +4172,31 @@ class DVBViewerService() :
 
 
 
+    def UpdateWithLock( self, type = UPDATE_RECORDINGS ) :
+        self.serviceInUse.acquire()
+        res = self.Update( type )
+        self.serviceInUse.release()
+        return res
+
+
+
     def GetNumberOfClients( self, update = True ) :
+        self.serviceInUse.acquire()
         if update or self.failing :
             self.Update( UPDATE_STREAM )
-
-        return self.numberOfClients
+        res = self.numberOfClients
+        self.serviceInUse.release()
+        return res
 
 
 
     def GetNumberOfActiveRecordings( self, update = True ) :
+        self.serviceInUse.acquire()
         if update or self.failing :
             self.Update( UPDATE_RECORDINGS )
-
-        return self.numberOfRecordings
+        res = self.numberOfRecordings
+        self.serviceInUse.release()
+        return res
 
 
 
@@ -4189,49 +4206,59 @@ class DVBViewerService() :
 
 
     def IsEPGUpdating( self, update = True ) :
+        self.serviceInUse.acquire()
         if update or self.failing :
             self.Update( UPDATE_STREAM )
-
-        return self.updateEPG
+        res = self.updateEPG
+        self.serviceInUse.release()
+        return res
 
 
 
     def GetRecordingDates( self, active = True, update = True ) :
+        self.serviceInUse.acquire()
         if update or self.failing :
             self.Update( UPDATE_RECORDINGS )
-
-        if self.failing :
-            return None
-
-        if active :
-            return self.activeRecordingDates
-        else :
-            return self.recordingDates
+        res = None
+        if not self.failing :
+            if active :
+                res =  self.activeRecordingDates
+            else :
+                res =  self.recordingDates
+        self.serviceInUse.release()
+        return res
 
 
 
     def GetRecordingsIDs( self, update = True ) :
+        self.serviceInUse.acquire()
         if update or self.failing :
             self.Update( UPDATE_RECORDINGS )
-
-        if self.failing :
-            return None
-        return self.recordingIDs
+        res = None
+        if not self.failing :
+            res = self.recordingIDs
+        self.serviceInUse.release()
+        return res
 
 
 
     def GetPseudoIDs( self, update = True ) :
+        self.serviceInUse.acquire()
         if update or self.failing :
             self.Update( UPDATE_RECORDINGS )
-
-        if self.failing :
-            return None
-        return self.pseudoIDs
+        res = None
+        if not self.failing :
+            res = self.pseudoIDs
+        self.serviceInUse.release()
+        return res
 
 
 
     def GetVersion( self ) :
+        self.serviceInUse.acquire()
         if self.versionDVBViewerService is None :
             self.Update( UPDATE_RECORDINGS )
-        return self.versionDVBViewerService
+        res = self.versionDVBViewerService
+        self.serviceInUse.release()
+        return res
 
