@@ -62,14 +62,18 @@ def get_file_version(filename):
     if not verinfosize:
         raise WinError()
     buffer = c_string("\000"*verinfosize)
-    res = windll.version.GetFileVersionInfoW(filename, 0, sizeof(buffer), buffer)
+    res = windll.version.GetFileVersionInfoW(
+        filename, 0, sizeof(buffer), buffer
+    )
     if not res:
         raise WinError()
 
     ffi = VS_FIXEDFILEINFO()
     uLen = c_int()
     lpffi = POINTER(VS_FIXEDFILEINFO) ()
-    res = windll.version.VerQueryValueW(buffer, u"\\", pointer(lpffi), pointer(uLen))
+    res = windll.version.VerQueryValueW(
+        buffer, u"\\", pointer(lpffi), pointer(uLen)
+    )
     if not res:
         raise WinError()
     ffi = lpffi.contents
@@ -85,3 +89,4 @@ if __name__ == '__main__':
 
     vsfileinfo = get_file_version(file)
     dump(vsfileinfo)
+

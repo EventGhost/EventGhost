@@ -1,3 +1,19 @@
+# -*- coding: utf-8 -*-
+#
+# This file is part of EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 OUTFILE_NAME = "USB-Remote-Driver.exe"
 
 DDK_PATH = r"C:\WinDDK\6001.18002"
@@ -14,33 +30,33 @@ DEVICES = [
         "{0A51286F-B9A6-471D-BDCA-8C2E68C3916B}"
     ),
     (
-        "Logitech UltraX Media Remote (Keypad)", 
-        "USB\\VID_046D&PID_C101&MI_00", 
+        "Logitech UltraX Media Remote (Keypad)",
+        "USB\\VID_046D&PID_C101&MI_00",
         "{F73227F9-6CBD-45F9-83C4-A48B3F9F56A4}"
     ),
     (
-        "Logitech UltraX Media Remote (Buttons)", 
-        "USB\\VID_046D&PID_C101&MI_01", 
+        "Logitech UltraX Media Remote (Buttons)",
+        "USB\\VID_046D&PID_C101&MI_01",
         "{4C6BCF9C-8F5B-4CEB-8CEA-4713E31B125F}"
     ),
     (
-        "Conceptronic CLLRCMCE (Keypad)", 
-        "USB\\VID_1784&PID_0004&MI_00", 
+        "Conceptronic CLLRCMCE (Keypad)",
+        "USB\\VID_1784&PID_0004&MI_00",
         "{8C3D8375-AF7B-4AF6-8CD7-463C8E935675}"
     ),
     (
-        "Conceptronic CLLRCMCE (Buttons)", 
-        "USB\\VID_1784&PID_0004&MI_01", 
+        "Conceptronic CLLRCMCE (Buttons)",
+        "USB\\VID_1784&PID_0004&MI_01",
         "{4228C963-EE0F-4B33-9E5E-D17FB07FB80F}"
     ),
     (
-        "TechniSat USB IR Receiver", 
-        "USB\\VID_147A&PID_E02D", 
+        "TechniSat USB IR Receiver",
+        "USB\\VID_147A&PID_E02D",
         "{108E11FA-7EA0-4F13-AA64-1926E14A9C31}"
     ),
     (
-        "USB PC Remote Controller", 
-        "USB\\VID_06B4&PID_1C70", 
+        "USB PC Remote Controller",
+        "USB\\VID_06B4&PID_1C70",
         "{72679574-1865-499d-B182-4B099D6D1391}"
     ),
 ]
@@ -170,13 +186,17 @@ outfile.write(HEADER)
 outfile.write("[Remotes.NTx86]\n")
 for i, (descr, hardwareId, guid) in enumerate(DEVICES):
     nr = "%03i" % (i + 1)
-    outfile.write("%Device" + nr + ".DeviceDesc%=Install" + nr + "," + hardwareId + "\n")
-        
+    outfile.write(
+        "%Device" + nr + ".DeviceDesc%=Install" + nr + "," + hardwareId + "\n"
+    )
+
 outfile.write("\n[Remotes.NTamd64]\n")
 for i, (descr, hardwareId, guid) in enumerate(DEVICES):
     nr = "%03i" % (i + 1)
-    outfile.write("%Device" + nr + ".DeviceDesc%=Install" + nr + "," + hardwareId + "\n")
-        
+    outfile.write(
+        "%Device" + nr + ".DeviceDesc%=Install" + nr + "," + hardwareId + "\n"
+    )
+
 template = string.Template(DEVICE_SECTION)
 for i, (descr, hardwareId, guid) in enumerate(DEVICES):
     nr = "%03i" % (i + 1)
@@ -194,22 +214,22 @@ tmpFolder = os.path.dirname(__file__)
 for osType in ("x86", "amd64"):
     if not os.path.exists(join(tmpFolder, osType)):
         os.mkdir(join(tmpFolder, osType))
-        
+
     src = join(redistFolder, "DIFx", "DPInst", "MultiLin", osType, "DPInst.exe")
     dst = join(tmpFolder, "DPInst_%s.exe" % osType)
     if not os.path.exists(dst):
         shutil.copy2(src, dst)
-        
+
     src = join(redistFolder, "winusb", osType, "WinUSBCoInstaller.dll")
     dst = join(tmpFolder, osType, "WinUSBCoInstaller.dll")
     if not os.path.exists(dst):
         shutil.copy2(src, dst)
-        
+
     src = join(redistFolder, "wdf", osType, "WdfCoInstaller01007.dll")
     dst = join(tmpFolder, osType, "WdfCoInstaller01007.dll")
     if not os.path.exists(dst):
         shutil.copy2(src, dst)
-        
+
     src = join(redistFolder, "wdf", osType, "WUDFUpdate_01007.dll")
     dst = join(tmpFolder, osType, "WUDFUpdate_01007.dll")
     if not os.path.exists(dst):
@@ -217,14 +237,14 @@ for osType in ("x86", "amd64"):
 
 subprocess.call(
     [
-        os.environ["ProgramFiles"] + "\\7-zip\\7z.exe", 
-        'a', 
-        'archive.7z', 
-        'driver.inf', 
+        os.environ["ProgramFiles"] + "\\7-zip\\7z.exe",
+        'a',
+        'archive.7z',
+        'driver.inf',
         "-i!DPInstSwitcher.exe",
         "-i!DPInst_x86.exe",
         "-i!DPInst_amd64.exe",
-        "-ir!x86\\*", 
+        "-ir!x86\\*",
         "-ir!amd64\\*",
     ]
 )
@@ -251,3 +271,4 @@ outfile.close()
 os.remove("archive.7z")
 
 print "Done!"
+

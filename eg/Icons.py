@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -95,12 +95,12 @@ class IconBase(object):
         cls.cache[key] = self
         self.key = key
         return self
-    
+
 
     def __getnewargs__(self):
         return (self.key,)
-    
-    
+
+
     def _GetPil(self):
         """
         Return a PIL image of the icon.

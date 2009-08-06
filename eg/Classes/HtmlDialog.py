@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -27,19 +27,19 @@ class Config(eg.PersistentData):
 class HtmlDialog(eg.Dialog):
 
     def __init__(
-        self, 
-        parent=None, 
-        title=eg.APP_NAME, 
-        source="", 
-        icon=None, 
+        self,
+        parent=None,
+        title=eg.APP_NAME,
+        source="",
+        icon=None,
         basePath=None,
         style=wx.OK
     ):
         eg.Dialog.__init__(
-            self, 
-            parent, 
-            -1, 
-            title, 
+            self,
+            parent,
+            -1,
+            title,
             style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
         )
         if icon:

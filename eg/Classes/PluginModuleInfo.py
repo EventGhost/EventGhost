@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -32,9 +32,9 @@ class RegisterPluginException(Exception):
 class PluginModuleInfo(object):
     """
     Holds information of a plugin module.
-    
-    The main purpose of this class is to get the information from the 
-    eg.RegisterPlugin call inside the plugin module. So it imports the main 
+
+    The main purpose of this class is to get the information from the
+    eg.RegisterPlugin call inside the plugin module. So it imports the main
     module, but stops the import immediately after the eg.RegisterPlugin call.
     """
     name = u"unknown"
@@ -51,7 +51,7 @@ class PluginModuleInfo(object):
     englishDescription = None
     path = None
     pluginName = None
-    
+
 
     def __init__(self, path):
         self.path = path
@@ -68,16 +68,17 @@ class PluginModuleInfo(object):
                 del sys.modules[moduleName]
             __import__(moduleName, None, None, [''])
         except RegisterPluginException:
-            # It is expected that the loading will raise RegisterPluginException
-            # because eg.RegisterPlugin() is called inside the module
+            # It is expected that the loading will raise
+            # RegisterPluginException because eg.RegisterPlugin() is called
+            # inside the module
             pass
         except:
             eg.PrintTraceback(eg.text.Error.pluginLoadError % self.path)
         finally:
             del sys.path[0]
             eg.RegisterPlugin = originalRegisterPlugin
-    
-    
+
+
     if eg.debugLevel:
         def __setattr__(self, name, value):
             if not hasattr(self.__class__, name):
@@ -129,7 +130,7 @@ class PluginModuleInfo(object):
             iconPath = join(self.path, "icon.png")
             if exists(iconPath):
                 self.icon = eg.Icons.PathIcon(iconPath)
-                
+
         # try to translate name and description
         textCls = getattr(eg.text.Plugin, self.pluginName, None)
         if textCls is not None:

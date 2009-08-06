@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 
@@ -47,10 +41,10 @@ from eg.WinApi.Dynamic import (
     # functions:
     SendNotifyMessage, GetAncestor, GetWindowLong, ShowWindow, GetWindowRect,
     GetForegroundWindow, MoveWindow, IsWindow, SetWindowPos, byref,
-    
+
     # types:
-    RECT, 
-    
+    RECT,
+
     # constants:
     GA_ROOT, SW_MAXIMIZE, SW_MINIMIZE, SW_RESTORE, WM_COMMAND, GWL_EXSTYLE,
     WS_EX_TOPMOST, SWP_NOMOVE, SWP_NOSIZE, HWND_TOPMOST, HWND_NOTOPMOST,
@@ -99,7 +93,7 @@ class BringToFront(eg.ActionBase):
     name = "Bring to front"
     description = "Bring the specified window to front."
     iconFile = "icons/BringToFront"
-    
+
     def __call__(self):
         for hwnd in GetTargetWindows():
             BringHwndToFront(hwnd)
@@ -115,7 +109,7 @@ class MoveTo(eg.ActionBase):
         text3 = "Set vertical position Y to"
         text4 = "pixels"
 
-    
+
     def __call__(self, x, y):
         rect = RECT()
         for hwnd in GetTopLevelOfTargetWindows():
@@ -127,12 +121,12 @@ class MoveTo(eg.ActionBase):
             MoveWindow(
                 hwnd, x, y, rect.right - rect.left, rect.bottom - rect.top, 1
             )
-            
-            
+
+
     def GetLabel(self, x, y):
         return self.text.label % ('X:' + str(x) + ', Y:' + str(y))
-         
-        
+
+
     def Configure(self, x=0, y=0):
         text = self.text
         panel = eg.ConfigPanel()
@@ -142,16 +136,16 @@ class MoveTo(eg.ActionBase):
         yCheckBox = panel.CheckBox(y is not None, text.text3)
         yCtrl = panel.SpinIntCtrl(0 if y is None else y, min=-32768, max=32767)
         yCtrl.Enable(y is not None)
-        
+
         def HandleXCheckBox(event):
             xCtrl.Enable(event.IsChecked())
             event.Skip()
-        xCheckBox.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)    
+        xCheckBox.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)
 
         def HandleYCheckBox(event):
             yCtrl.Enable(event.IsChecked())
             event.Skip()
-        yCheckBox.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)    
+        yCheckBox.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)
 
         panel.AddLine(xCheckBox, xCtrl, text.text2)
         panel.AddLine(yCheckBox, yCtrl, text.text4)
@@ -174,7 +168,7 @@ class Resize(MoveTo):
         text3 = "Set height to"
         text4 = "pixels"
 
-    
+
     def __call__(self, width=None, height=None):
         rect = RECT()
         for hwnd in GetTopLevelOfTargetWindows():
@@ -184,16 +178,16 @@ class Resize(MoveTo):
             if height is None:
                 height = rect.bottom - rect.top - 1
             MoveWindow(hwnd, rect.left, rect.top, width+1, height+1, 1)
-        
-        
+
+
     def GetLabel(self, x, y):
         return self.text.label % (str(x), str(y))
-            
+
 
 
 class Maximize(eg.ActionBase):
     name = "Maximize"
-    
+
     def __call__(self):
         for hwnd in GetTopLevelOfTargetWindows():
             ShowWindow(hwnd, SW_MAXIMIZE)
@@ -202,7 +196,7 @@ class Maximize(eg.ActionBase):
 
 class Minimize(eg.ActionBase):
     name = "Minimize"
-    
+
     def __call__(self):
         for hwnd in GetTopLevelOfTargetWindows():
             ShowWindow(hwnd, SW_MINIMIZE)
@@ -211,7 +205,7 @@ class Minimize(eg.ActionBase):
 
 class Restore(eg.ActionBase):
     name = "Restore"
-    
+
     def __call__(self):
         for hwnd in GetTopLevelOfTargetWindows():
             ShowWindow(hwnd, SW_RESTORE)
@@ -221,7 +215,7 @@ class Restore(eg.ActionBase):
 class Close(eg.ActionBase):
     name = "Close"
     description = "Closes application windows"
-    
+
     def __call__(self):
         for hwnd in GetTopLevelOfTargetWindows():
             CloseHwnd(hwnd)
@@ -236,7 +230,7 @@ class SendMessage(eg.ActionBase):
         "PostMessage if desired."
     class text:
         text1 = "Use PostMessage instead of SendMessage"
-        
+
     msgConstants = (
         (273, "WM_COMMAND"),
         (274, "WM_SYSCOMMAND"),
@@ -244,8 +238,8 @@ class SendMessage(eg.ActionBase):
         (245, "BM_CLICK"),
     )
     msgToNameDict = dict(msgConstants)
-    
-    
+
+
     def __call__(self, mesg, wParam=0, lParam=0, kind=0):
         result = None
         for hwnd in GetTargetWindows():
@@ -254,16 +248,16 @@ class SendMessage(eg.ActionBase):
             else:
                 result = WinApiPostMessage(hwnd, mesg, wParam, lParam)
         return result
-    
-            
+
+
     def GetLabel(self, mesg, wParam=0, lParam=0, kind=0):
         return self.name + " %s, %d, %d" % (
-            self.msgToNameDict.get(mesg, str(mesg)), 
-            wParam, 
+            self.msgToNameDict.get(mesg, str(mesg)),
+            wParam,
             lParam
         )
-            
-            
+
+
     def Configure(self, mesg=WM_COMMAND, wParam=0, lParam=0, kind=0):
         mesgValues, mesgNames = zip(*self.msgConstants)
         mesgValues, mesgNames = list(mesgValues), list(mesgNames)
@@ -274,24 +268,24 @@ class SendMessage(eg.ActionBase):
             choice = str(mesg)
 
         panel = eg.ConfigPanel()
-        
+
         mesgCtrl = panel.ComboBox(
-            choice, 
-            mesgNames, 
+            choice,
+            mesgNames,
             style=wx.CB_DROPDOWN,
             validator=eg.DigitOnlyValidator(mesgNames)
         )
-        
+
         wParamCtrl = panel.SpinIntCtrl(wParam, max=65535)
         lParamCtrl = panel.SpinIntCtrl(lParam, max=4294967295)
         kindCB = panel.CheckBox(kind==1, self.text.text1)
-        
+
         panel.AddLine("Message:", mesgCtrl)
         panel.AddLine("wParam:", wParamCtrl)
         panel.AddLine("lParam:", lParamCtrl)
         #panel.AddLine()
         panel.AddLine(kindCB)
-        
+
         while panel.Affirmed():
             choice = mesgCtrl.GetValue()
             try:
@@ -300,12 +294,12 @@ class SendMessage(eg.ActionBase):
             except:
                 mesg = int(choice)
             panel.SetResult(
-                mesg, 
+                mesg,
                 wParamCtrl.GetValue(),
-                lParamCtrl.GetValue(), 
+                lParamCtrl.GetValue(),
                 1 if kindCB.GetValue() else 0
             )
-        
+
 
 
 class SetAlwaysOnTop(eg.ActionBase):
@@ -313,42 +307,41 @@ class SetAlwaysOnTop(eg.ActionBase):
     class text:
         radioBox = "Choose action:"
         actions = (
-            "Clear always on top", 
-            "Set always on top", 
+            "Clear always on top",
+            "Set always on top",
             "Toggle always on top"
         )
-    
+
     def __call__(self, action=2):
         for hwnd in GetTargetWindows():
             if not IsWindow(hwnd):
                 self.PrintError("Not a window")
                 continue
-            style = GetWindowLong(hwnd, GWL_EXSTYLE) 
+            style = GetWindowLong(hwnd, GWL_EXSTYLE)
             isAlwaysOnTop = (style & WS_EX_TOPMOST) != 0
             if action == 1 or (action == 2 and not isAlwaysOnTop):
                 flag = HWND_TOPMOST
             else:
                 flag = HWND_NOTOPMOST
-                
+
             SetWindowPos(hwnd, flag, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE)
 
 
     def GetLabel(self, action):
         return self.text.actions[action]
-    
-    
+
+
     def Configure(self, action=2):
         panel = eg.ConfigPanel()
         radioBox = wx.RadioBox(
             panel,
             -1,
             self.text.radioBox,
-            choices=self.text.actions, 
+            choices=self.text.actions,
             style=wx.RA_SPECIFY_ROWS
         )
         radioBox.SetSelection(action)
         panel.sizer.Add(radioBox, 0, wx.EXPAND)
         while panel.Affirmed():
             panel.SetResult(radioBox.GetSelection())
-        
-        
+

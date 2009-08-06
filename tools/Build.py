@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -26,7 +26,7 @@ class StdErr(object):
         self.stream = stream
         self.encoding = encoding
         self.filesystemencoding = sys.getfilesystemencoding()
-        
+
     def write(self, text):
         try:
             text = text.decode(self.filesystemencoding)
@@ -51,7 +51,7 @@ class MyBuilder(builder.Builder):
     companyName = "EventGhost Project"
     copyright = u"Copyright © 2005-2009 EventGhost Project"
     mainScript = "EventGhost.pyw"
-    
+
     includeModules = [
         "wx",
         "PIL",
@@ -76,18 +76,18 @@ class MyBuilder(builder.Builder):
         "FixTk",
         "tcl",
         "turtle", # another Tkinter module
-    
+
         "distutils.command.bdist_packager",
         "distutils.mwerkscompiler",
         "curses",
         #"ctypes.macholib", # seems to be for Apple
-    
+
         "wx.lib.vtk",
         "wx.tools.Editra",
         "wx.tools.XRCed",
         "wx.lib.plot", # needs NumPy
         "wx.lib.floatcanvas", # needs NumPy
-    
+
         "ImageTk", # py2exe seems to hang if not removed
         "ImageGL",
         "ImageQt",
@@ -97,7 +97,7 @@ class MyBuilder(builder.Builder):
         "PIL._imagingtk",
         "PIL.ImageTk",
         "FixTk",
-    
+
         "win32com.gen_py",
         "win32com.demos",
         "win32com.axdebug",
@@ -106,7 +106,7 @@ class MyBuilder(builder.Builder):
         "comtypes.gen",
         "eg",
     ]
-    
+
 
     def GetSetupFiles(self):
         """
@@ -126,7 +126,10 @@ class MyBuilder(builder.Builder):
         props = client.propget("noinstall", workingDir, recurse=True)
         # propget returns the pathes with forward slash as deliminator, but we
         # need backslashes. It also seems to be encoded in UTF-8.
-        props = dict((k.replace("/", "\\").decode("utf8"), v) for k, v in props.iteritems())
+        props = dict(
+            (k.replace("/", "\\").decode("utf8"), v)
+                for k, v in props.iteritems()
+        )
         numPathParts = len(workingDir.split("\\"))
         for status in client.status(workingDir, ignore=True):
             # we only want versioned files
@@ -172,7 +175,7 @@ class MyBuilder(builder.Builder):
                 continue
             if filename.lower() == r"plugins\task\hook.dll":
                 inno.AddFile(
-                    join(self.sourceDir, filename), 
+                    join(self.sourceDir, filename),
                     dirname(filename),
                     ignoreversion=False
                 )

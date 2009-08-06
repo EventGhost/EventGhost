@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 import time
@@ -65,7 +59,9 @@ _WTS_INFO_CLASS = c_int # enum
 WTS_INFO_CLASS = _WTS_INFO_CLASS
 WTSQuerySessionInformationW = _WtsApi32.WTSQuerySessionInformationW
 WTSQuerySessionInformationW.restype = BOOL
-WTSQuerySessionInformationW.argtypes = [HANDLE, DWORD, WTS_INFO_CLASS, POINTER(LPWSTR), POINTER(DWORD)]
+WTSQuerySessionInformationW.argtypes = [
+    HANDLE, DWORD, WTS_INFO_CLASS, POINTER(LPWSTR), POINTER(DWORD)
+]
 WTSQuerySessionInformation = WTSQuerySessionInformationW # alias
 
 WM_WTSSESSION_CHANGE = 0x02B1
@@ -85,21 +81,21 @@ WTS_WPARAM_DICT = {
 
 class SessionChangeNotifier:
     inited = False
-    
+
     def __init__(self, plugin):
         self.TriggerEvent = plugin.TriggerEvent
         self.retryCount = 0
         eg.messageReceiver.AddHandler(
-            WM_WTSSESSION_CHANGE, 
+            WM_WTSSESSION_CHANGE,
             self.OnSessionChange
         )
         eg.scheduler.AddTask(0, self.Register)
-    
-    
+
+
     @eg.LogIt
     def Register(self):
         success = WTSRegisterSessionNotification(
-            eg.messageReceiver.hwnd, 
+            eg.messageReceiver.hwnd,
             NOTIFY_FOR_ALL_SESSIONS
         )
         if success:
@@ -119,17 +115,17 @@ class SessionChangeNotifier:
             return
         # some other error has happened
         raise SystemError("WTSRegisterSessionNotification", errorNum)
-        
-    
+
+
     def Close(self):
         if self.inited:
             WTSUnRegisterSessionNotification(eg.messageReceiver.hwnd)
         eg.messageReceiver.RemoveHandler(
-            WM_WTSSESSION_CHANGE, 
+            WM_WTSSESSION_CHANGE,
             self.OnSessionChange
         )
-        
-        
+
+
     @eg.LogIt
     def OnSessionChange(self, hwnd, msg, wparam, lparam):
         eventstring = WTS_WPARAM_DICT.get(wparam, None)
@@ -137,8 +133,8 @@ class SessionChangeNotifier:
             pBuffer = LPTSTR()
             bytesReturned = DWORD()
             WTSQuerySessionInformation(
-                WTS_CURRENT_SERVER_HANDLE, 
-                lparam, 
+                WTS_CURRENT_SERVER_HANDLE,
+                lparam,
                 WTSUserName,
                 byref(pBuffer),
                 byref(bytesReturned)
@@ -147,5 +143,4 @@ class SessionChangeNotifier:
             WTSFreeMemory(pBuffer)
             self.TriggerEvent(eventstring, [userName])
         return 1
-    
-    
+

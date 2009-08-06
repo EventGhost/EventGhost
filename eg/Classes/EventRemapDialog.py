@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -40,17 +40,17 @@ class EventRemapDialog(eg.Dialog):
 
         editSizer = wx.GridSizer(1, 2)
         editSizer.Add(
-            self.StaticText("New event name:"), 
+            self.StaticText("New event name:"),
             wx.ALIGN_CENTER_VERTICAL
         )
         editSizer.Add(newEventCtrl, 0)
         editSizer.Add(
-            self.StaticText("Events:"), 
+            self.StaticText("Events:"),
             wx.ALIGN_CENTER_VERTICAL
         )
         editSizer.Add(eventsCtrl, 0)
         editSizer.Add(
-            self.StaticText("Repeat events:"), 
+            self.StaticText("Repeat events:"),
             wx.ALIGN_CENTER_VERTICAL
         )
         editSizer.Add(repeatEventsCtrl, 0)

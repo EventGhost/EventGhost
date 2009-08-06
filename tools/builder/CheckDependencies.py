@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -119,7 +119,7 @@ class HtmlHelpWorkshopDependency(DependencyBase):
         "http://www.microsoft.com/Downloads/details.aspx?"
         "familyid=00535334-C8A6-452F-9AA0-D597D16580CC&displaylang=en"
     )
-    
+
     def Check(self):
         if not GetHtmlHelpCompilerPath():
             raise MissingDependency
@@ -131,7 +131,7 @@ class DllDependency(DependencyBase):
         "http://www.microsoft.com/downloads/details.aspx?"
         "displaylang=en&FamilyID=9b2da534-3e03-4391-8a4d-074b9f2bc1bf"
     )
-    
+
     def Check(self):
         path = join(self.buildSetup.sourceDir, self.name)
         wantedVersion = tuple(int(x) for x in self.version.split("."))
@@ -139,8 +139,8 @@ class DllDependency(DependencyBase):
             self.TryCopy()
             if self.GetVersion(path) != wantedVersion:
                 raise WrongVersion
-        
-        
+
+
     def GetVersion(self, path):
         from builder.DllVersionInfo import get_file_version
 
@@ -155,12 +155,12 @@ class DllDependency(DependencyBase):
             fInfo.dwFileVersionLS & 0xFFFF,
         )
 
-        
+
     def TryCopy(self):
         winSxsDir = join(
-            os.environ["SystemRoot"], 
-            "WinSxS", 
-            "x86_microsoft.vc90.crt_*_%s_*_*" % self.version, 
+            os.environ["SystemRoot"],
+            "WinSxS",
+            "x86_microsoft.vc90.crt_*_%s_*_*" % self.version,
             self.name
         )
         pathes = glob.glob(winSxsDir)

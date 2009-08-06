@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -167,10 +167,10 @@ class Log(object):
         slist = ['Traceback (most recent call last) (%d):\n' % eg.revision]
         if tbTraceback:
             decode = codecs.getdecoder(sys.getfilesystemencoding())
-            for filename, lno, funcName, text in extract_tb(tbTraceback)[skip:]:
+            for fname, lno, funcName, text in extract_tb(tbTraceback)[skip:]:
                 slist.append(
                     u'  File "%s", line %d, in %s\n    %s\n' % (
-                        decode(filename)[0], lno, funcName, text
+                        decode(fname)[0], lno, funcName, text
                     )
                 )
         slist += format_exception_only(tbType, tbValue)

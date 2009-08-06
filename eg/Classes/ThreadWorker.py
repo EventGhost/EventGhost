@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -198,7 +198,7 @@ class ThreadWorker(object):
                     except:
                         action.PrintUnhandledException()
                     finally:
-                        # if the frame reference would not be removed, the 
+                        # if the frame reference would not be removed, the
                         # action would never be garbage collected.
                         action.callersFrame = None
             elif resultCode == WAIT_OBJECT_0+1:
@@ -282,7 +282,7 @@ class ThreadWorker(object):
 
     def Call(self, func, *args, **kwargs):
         """
-        Queue a function and its arguments for execution in the ThreadWorker 
+        Queue a function and its arguments for execution in the ThreadWorker
         thread. Doesn't wait for the completion of the function.
         """
         action = ThreadWorkerAction(partial(func, *args, **kwargs), True)
@@ -293,7 +293,7 @@ class ThreadWorker(object):
 
     def CallWait(self, func, timeout=10.0):
         """
-        Queue a function and its arguments for execution in the ThreadWorker 
+        Queue a function and its arguments for execution in the ThreadWorker
         thread. Waits for completion of the function and returns its result.
         """
         action = ThreadWorkerAction(func, False)

@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -38,7 +38,7 @@ class PluginItem(ActionItem):
         if guid:
             #attr.append(('File', self.pluginName))
             attr.append(('Guid', guid))
-        attr.append(('File', self.pluginName))            
+        attr.append(('File', self.pluginName))
         text = base64.b64encode(pickle.dumps(self.info.args, 2))
         return attr, text
 
@@ -56,10 +56,10 @@ class PluginItem(ActionItem):
         self.pluginName = node.attrib.get('file', None)
         guid = node.attrib.get('guid', self.pluginName)
         self.info = info = eg.pluginManager.OpenPlugin(
-            guid, 
-            evalName, 
-            args, 
-            self, 
+            guid,
+            evalName,
+            args,
+            self,
         )
         self.name = eg.text.General.pluginLabel % info.label
         if info.icon != self.icon:
@@ -154,7 +154,7 @@ class PluginItem(ActionItem):
 
     def NeedsStartupConfiguration(self):
         if (
-            self.info.instance.Configure.im_func 
+            self.info.instance.Configure.im_func
             != eg.PluginBase.Configure.im_func
         ):
             return True

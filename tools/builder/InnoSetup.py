@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -43,11 +43,11 @@ class StdHandler(object):
 
     def flush(self):
         pass
-    
-    
+
+
     def isatty(self):
         return True
-    
+
 
 
 LOG_FILENAME = 'Build.log'
@@ -103,7 +103,9 @@ class InnoInstaller(object):
         """
         Adds a file to the [Files] section.
         """
-        line = 'Source: "%s"; DestDir: "{app}\\%s"' % (abspath(source), destDir)
+        line = 'Source: "%s"; DestDir: "{app}\\%s"' % (
+            abspath(source), destDir
+        )
         if destName is not None:
             line += '; DestName: "%s"' % destName
         if ignoreversion:
@@ -139,7 +141,7 @@ class InnoInstaller(object):
             if isinstance(value, unicode):
                 value = EncodePath(value)
             templateDict[key] = value
-            
+
         issFile.write(innoScriptTemplate % templateDict)
         for section, lines in self.innoSections.iteritems():
             issFile.write("[%s]\n" % section)

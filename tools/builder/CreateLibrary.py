@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -100,13 +100,13 @@ class Target:
 
 class CreateLibrary(Task):
     description = "Build lib%d%d" % sys.version_info[0:2]
-   
+
     def Setup(self):
         self.zipName = "python%s.zip" % self.buildSetup.pyVersionStr
         if not exists(join(self.buildSetup.libraryDir, self.zipName)):
             self.activated = True
             self.enabled = False
-        
+
 
     def DoTask(self):
         """
@@ -124,9 +124,9 @@ class CreateLibrary(Task):
                 path = join(libraryDir, filename)
                 if not os.path.isdir(path):
                     os.remove(path)
-    
+
         setup(
-            script_args=["py2exe"], 
+            script_args=["py2exe"],
             windows=[Target(buildSetup)],
             verbose=0,
             zipfile=EncodePath(join(buildSetup.libraryName, self.zipName)),
@@ -144,7 +144,7 @@ class CreateLibrary(Task):
                 )
             )
         )
-    
+
         dllNames = [basename(name) for name in glob(join(libraryDir, "*.dll"))]
         neededDlls = []
         for _, _, files in os.walk(dirname(sys.executable)):
@@ -156,4 +156,4 @@ class CreateLibrary(Task):
                 os.remove(join(libraryDir, dllName))
         if buildSetup.pyVersionStr == "26":
             RemoveAllManifests(libraryDir)
-    
+

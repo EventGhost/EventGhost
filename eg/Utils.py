@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -234,33 +234,33 @@ def EnsureVisible(window):
     """
     from eg.WinApi.Dynamic import (
         sizeof, byref, GetMonitorInfo, MonitorFromWindow, GetWindowRect,
-        MONITORINFO, RECT, MONITOR_DEFAULTTONEAREST, 
-        # MonitorFromRect, MONITOR_DEFAULTTONULL, 
+        MONITORINFO, RECT, MONITOR_DEFAULTTONEAREST,
+        # MonitorFromRect, MONITOR_DEFAULTTONULL,
     )
 
     hwnd = window.GetHandle()
     windowRect = RECT()
     GetWindowRect(hwnd, byref(windowRect))
-    
+
    # hMonitor = MonitorFromRect(byref(windowRect), MONITOR_DEFAULTTONULL)
     #if hMonitor:
     #    return
-    
+
     parent = window.GetParent()
     if parent:
         hwnd = parent.GetHandle()
     hMonitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST)
-    
+
     monInfo = MONITORINFO()
     monInfo.cbSize = sizeof(MONITORINFO)
     GetMonitorInfo(hMonitor, byref(monInfo))
     displayRect = monInfo.rcWork
-    
+
     left = windowRect.left
     right = windowRect.right
     top = windowRect.top
     bottom = windowRect.bottom
-    
+
     # shift the window horizontally into the display area
     if left < displayRect.left:
         right += (displayRect.left - left)

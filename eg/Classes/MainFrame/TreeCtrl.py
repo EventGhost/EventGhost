@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -19,11 +19,11 @@ import wx
 import eg
 from eg.WinApi.Dynamic import SendMessageTimeout
 from eg.Classes.TreeItem import (
-    HINT_NO_DROP, 
-    HINT_MOVE_INSIDE, 
-    HINT_MOVE_BEFORE, 
+    HINT_NO_DROP,
+    HINT_MOVE_INSIDE,
+    HINT_MOVE_BEFORE,
     HINT_MOVE_AFTER,
-    HINT_MOVE_BEFORE_OR_AFTER, 
+    HINT_MOVE_BEFORE_OR_AFTER,
     HINT_MOVE_EVERYWHERE
 )
 
@@ -36,7 +36,7 @@ HITTEST_FLAG = (
 
 class DropSource(wx.DropSource):
     """
-    This class represents a source for a drag and drop operation of the 
+    This class represents a source for a drag and drop operation of the
     TreeCtrl.
     """
     @eg.AssertNotMainThread
@@ -67,7 +67,7 @@ class DropSource(wx.DropSource):
 
 class DropTarget(wx.PyDropTarget):
     """
-    This class represents a target for a drag and drop operation of the 
+    This class represents a target for a drag and drop operation of the
     TreeCtrl.
     """
     @eg.AssertNotMainThread
@@ -109,19 +109,19 @@ class DropTarget(wx.PyDropTarget):
         """
         tree = self.treeCtrl
         self.whereToDrop = None
-        
+
         # remove the last drop highlight if any
         if self.lastHighlighted is not None:
             tree.SetItemDropHighlight(self.lastHighlighted, False)
             self.lastHighlighted = None
-            
+
         dstItemId, flags = tree.HitTest((x, y))
         if not (flags & HITTEST_FLAG):
             return wx.DragNone
-        
+
         dstNode = tree.GetPyData(dstItemId)
         srcNode = self.srcNode
-        
+
         # check if dstNode would get a parent of the srcNode
         dstParentNode = dstNode
         while dstParentNode is not None:
@@ -131,7 +131,7 @@ class DropTarget(wx.PyDropTarget):
             dstParentNode = dstParentNode.parent
 
         insertionHint = dstNode.DropTest(self.srcCls)
-        
+
         # expand a container, if the mouse is hold over it for some time
         if dstItemId == self.lastTargetItemId:
             if self.lastDropTime + 0.6 < clock():
@@ -190,8 +190,8 @@ class DropTarget(wx.PyDropTarget):
         else:
             tree.ClearInsertMark()
         return whereToDrop
-        
-        
+
+
     def OnWouldMoveBefore(self, tree, dstNode, dstItemId):
         """
         Handles the situation, that the dragged item would be inserted before
@@ -206,8 +206,8 @@ class DropTarget(wx.PyDropTarget):
                 pos -= 1
         tree.SetInsertMark(dstItemId, 0)
         return (parent, pos)
-        
-        
+
+
     def OnWouldMoveAfter(self, tree, dstNode, dstItemId):
         """
         Handles the situation, that the dragged item would be inserted behind
@@ -222,14 +222,14 @@ class DropTarget(wx.PyDropTarget):
                 pos += 1
         tree.SetInsertMark(dstItemId, 1)
         return (parent, pos + 1)
-    
-    
+
+
     @eg.AssertNotMainThread
     def OnData(self, dummyX, dummyY, dragResult):
         """
         Overrides wx.DropTarget.OnData
-        
-        Called after OnDrop returns true. By default this will usually GetData 
+
+        Called after OnDrop returns true. By default this will usually GetData
         and will return the suggested default.
         """
         self.OnLeave()
@@ -272,7 +272,7 @@ class DropTarget(wx.PyDropTarget):
     @eg.AssertNotMainThread
     def OnDragTimerEvent(self, dummyEvent):
         """
-        Handles wx.EVT_TIMER, while a drag operation is in progress. It is 
+        Handles wx.EVT_TIMER, while a drag operation is in progress. It is
         responsible for the automatic scrolling if the mouse gets on the
         upper or lower bounds of the control.
         """
@@ -288,29 +288,29 @@ class DropTarget(wx.PyDropTarget):
 
 
 class EditControlProxy(object):
-    
+
     def __init__(self, parent):
         self.parent = parent
         self.realControl = None
-        
-    
+
+
     def SetControl(self):
         self.realControl = self.parent.GetEditControl()
         eg.Notify("FocusChange", self)
-        
-    
+
+
     def ClearControl(self):
         self.realControl = None
 
-    
+
     def OnCmdCut(self):
         self.realControl.Cut()
-        
-    
+
+
     def OnCmdCopy(self):
         self.realControl.Copy()
-        
-    
+
+
     def OnCmdPaste(self):
         self.realControl.Paste()
 
@@ -325,24 +325,24 @@ class EditControlProxy(object):
 
     def CanCut(self):
         return self.realControl.CanCut()
-    
-    
+
+
     def CanCopy(self):
         return self.realControl.CanCopy()
 
 
     def CanPaste(self):
         return self.realControl.CanPaste()
-        
-    
+
+
     def CanDelete(self):
         start, end = self.realControl.GetSelection()
         return (start != end)
 
-        
+
 
 class TreeCtrl(wx.TreeCtrl):
-    
+
     @eg.AssertNotMainThread
     def __init__(self, parent, document, size=wx.DefaultSize):
         self.document = document
@@ -398,8 +398,8 @@ class TreeCtrl(wx.TreeCtrl):
         eg.Unbind("NodeMoveBegin", self.OnNodeMoveBegin)
         eg.Unbind("NodeMoveEnd", self.OnNodeMoveEnd)
         eg.Unbind("DocumentNewRoot", self.OnNewRoot)
-        
-    
+
+
     @eg.AssertNotMainThread
     def SetInsertMark(self, treeItem, after):
         # TVM_SETINSERTMARK = 4378
@@ -416,22 +416,22 @@ class TreeCtrl(wx.TreeCtrl):
     @eg.AssertNotMainThread
     def CreateRoot(self, node):
         itemId = self.AddRoot(
-            node.label, 
+            node.label,
             node.imageIndex,
-            -1, 
+            -1,
             wx.TreeItemData(node)
         )
         self.visibleNodes[node] = itemId
         self.SetItemHasChildren(itemId, True)
         self.Expand(itemId)
         return itemId
-        
-    
+
+
     @eg.AssertNotMainThread
     def CreateTreeItem(self, node, parentId):
         itemId = self.AppendItem(
-            parentId, 
-            node.label, 
+            parentId,
+            node.label,
             node.imageIndex,
             -1,
             wx.TreeItemData(node)
@@ -443,8 +443,8 @@ class TreeCtrl(wx.TreeCtrl):
         if node in self.expandedNodes:
             self.Expand(itemId)
         return itemId
-        
-        
+
+
     @eg.AssertNotMainThread
     def CreateTreeItemAt(self, node, parentId, parentNode, pos):
         if pos == -1 or pos >= len(parentNode.childs):
@@ -466,7 +466,7 @@ class TreeCtrl(wx.TreeCtrl):
                 self.Expand(itemId)
             return itemId
 
-        
+
     @eg.AssertNotMainThread
     def TraverseDelete(self, itemId):
         childId, cookie = self.GetFirstChild(itemId)
@@ -538,27 +538,27 @@ class TreeCtrl(wx.TreeCtrl):
         if node is None:
             return (False, False, False, False)
         return (
-            node.CanCut(), 
-            node.CanCopy(), 
-            node.CanPaste(), 
+            node.CanCut(),
+            node.CanCopy(),
+            node.CanPaste(),
             node.CanDelete()
         )
-        
-        
+
+
     def DisplayError(self, ident):
         frame = eg.GetTopLevelWindow(self)
         frame.DisplayError(getattr(eg.text.MainFrame.Messages, ident))
-        
-    
+
+
     #-------------------------------------------------------------------------
     # wx.Event Handlers
     #-------------------------------------------------------------------------
 
-    
+
     @eg.AssertNotMainThread
     def OnGetFocusEvent(self, event):
-        """ 
-        Handles wx.EVT_SET_FOCUS 
+        """
+        Handles wx.EVT_SET_FOCUS
         """
         eg.Notify("FocusChange", self)
         event.Skip(True)
@@ -582,7 +582,7 @@ class TreeCtrl(wx.TreeCtrl):
         eg.Notify("SelectionChange", node)
         event.Skip()
 
-    
+
     @eg.AssertNotMainThread
     def OnItemExpandingEvent(self, event):
         """
@@ -595,8 +595,8 @@ class TreeCtrl(wx.TreeCtrl):
             self.expandedNodes.add(node)
             for subNode in node.childs:
                 self.CreateTreeItem(subNode, itemId)
-    
-    
+
+
     @eg.AssertNotMainThread
     @eg.LogIt
     def OnItemCollapsingEvent(self, event):
@@ -610,7 +610,7 @@ class TreeCtrl(wx.TreeCtrl):
         self.SetItemHasChildren(itemId)
         node = self.GetPyData(itemId)
         self.expandedNodes.discard(node)
-        
+
 
     @eg.AssertNotMainThread
     @eg.LogIt
@@ -623,12 +623,12 @@ class TreeCtrl(wx.TreeCtrl):
             event.Veto()
             return
         self.editLabelId = event.GetItem()
-        # we have to delay the notification, because the listener wants to 
+        # we have to delay the notification, because the listener wants to
         # get the EditControl and it doesn't yet exist
         wx.CallAfter(self.editControl.SetControl)
         event.Skip()
-        
-        
+
+
     @eg.AssertNotMainThread
     @eg.LogIt
     def OnEndLabelEditEvent(self, event):
@@ -643,8 +643,8 @@ class TreeCtrl(wx.TreeCtrl):
         if not event.IsEditCancelled() and node.label != newLabel:
             eg.UndoHandler.Rename(self.document, node, newLabel)
         event.Skip()
-        
-        
+
+
     @eg.AssertNotMainThread
     @eg.LogIt
     def OnItemActivateEvent(self, event):
@@ -658,7 +658,7 @@ class TreeCtrl(wx.TreeCtrl):
                 wx.CallAfter(self.document.OnCmdConfigure, node)
         event.Skip()
 
-        
+
     @eg.AssertNotMainThread
     @eg.LogItWithReturn
     def OnLeftDoubleClickEvent(self, event):
@@ -673,8 +673,8 @@ class TreeCtrl(wx.TreeCtrl):
                     wx.GetApp().Yield()
                 wx.CallLater(1, self.document.OnCmdConfigure, node)
         event.Skip()
-    
-    
+
+
     @eg.AssertNotMainThread
     def OnItemMenuEvent(self, event):
         """
@@ -686,7 +686,7 @@ class TreeCtrl(wx.TreeCtrl):
         self.PopupMenu(frame.popupMenu, event.GetPoint())
         event.Skip()
 
-    
+
     @eg.AssertNotMainThread
     @eg.LogItWithReturn
     def OnBeginDragEvent(self, event):
@@ -703,7 +703,7 @@ class TreeCtrl(wx.TreeCtrl):
         dropTarget.srcCls = srcNode.__class__.__bases__[1]
         dropTarget.srcNode = srcNode
         dropTarget.isExternalDrag = False
-        
+
         dropSource.DoDragDrop(wx.Drag_AllowMove)
 
         dropTarget.srcCls = eg.EventItem
@@ -722,7 +722,7 @@ class TreeCtrl(wx.TreeCtrl):
     # eg.Notify Handlers
     #-------------------------------------------------------------------------
 
-    
+
     @eg.AssertNotMainThread
     def OnNewRoot(self, root):
         """
@@ -747,8 +747,8 @@ class TreeCtrl(wx.TreeCtrl):
                     self.ScrollTo(itemId)
         finally:
             self.Thaw()
-    
-    
+
+
     @eg.AssertNotMainThread
     def OnNodeAdded(self, (node, pos)):
         """
@@ -761,15 +761,15 @@ class TreeCtrl(wx.TreeCtrl):
                 self.SetItemHasChildren(parentId)
             if self.IsExpanded(parentId):
                 self.CreateTreeItemAt(
-                    node, 
-                    parentId, 
-                    parentNode, 
+                    node,
+                    parentId,
+                    parentNode,
                     pos
                 )
             elif parentNode in self.expandedNodes:
                 self.Expand(parentId)
-        
-        
+
+
     @eg.AssertNotMainThread
     def OnNodeDeleted(self, node):
         """
@@ -784,8 +784,8 @@ class TreeCtrl(wx.TreeCtrl):
                 self.SetItemHasChildren(self.visibleNodes[parent], False)
                 self.expandedNodes.discard(parent)
         self.expandedNodes.discard(node)
-        
-        
+
+
     @eg.AssertNotMainThread
     def OnNodeChanged(self, node):
         """
@@ -813,20 +813,20 @@ class TreeCtrl(wx.TreeCtrl):
                 self.Expand(self.visibleNodes[parent])
         self.SelectItem(self.visibleNodes[node])
 
-    
+
     def OnNodeMoveBegin(self, dummyNode):
         self.Freeze()
-        
-    
+
+
     def OnNodeMoveEnd(self, dummyNode):
         self.Thaw()
-        
-    
+
+
     #-------------------------------------------------------------------------
     # Command Handlers
     #-------------------------------------------------------------------------
 
-    
+
     @eg.AssertNotMainThread
     def OnCmdCut(self):
         eg.UndoHandler.Cut(self.document, self.GetSelectedNode())
@@ -855,7 +855,7 @@ class TreeCtrl(wx.TreeCtrl):
             self.SetFocus()
             self.EditLabel(self.GetSelection())
 
-    
+
     def OnCmdConfigure(self):
         selection = self.GetSelectedNode()
         if not selection.isConfigurable:
@@ -878,5 +878,4 @@ class TreeCtrl(wx.TreeCtrl):
             self.DisplayError("cantDisable")
         else:
             self.document.OnCmdToggleEnable(selection)
-
 

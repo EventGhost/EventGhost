@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -46,7 +46,7 @@ class CreatePyExe(builder.Task):
         ):
             self.activated = True
             self.enabled = False
-        
+
 
     def DoTask(self):
         buildSetup = self.buildSetup
@@ -60,8 +60,8 @@ class CreatePyExe(builder.Task):
                 build=dict(build_base=join(tmpDir, "build")),
                 py2exe=dict(compressed=0, dist_dir=join(tmpDir, "dist"))
             ),
-            # it is important, that the zipfile argument does match the one from
-            # the main installer.
+            # it is important, that the zipfile argument does match the one
+            # from the main installer.
             zipfile="lib%s/python%s.zip" % (PYVERSION, PYVERSION),
             windows=[
                 dict(
@@ -79,7 +79,13 @@ class CreatePyExe(builder.Task):
             ],
             verbose=0,
         )
-        shutil.copy(join(tmpDir, "dist", PY_BASE_NAME + ".exe"), buildSetup.sourceDir)
-        shutil.copy(join(tmpDir, "dist", PYW_BASE_NAME + ".exe"), buildSetup.sourceDir)
+        shutil.copy(
+            join(tmpDir, "dist", PY_BASE_NAME + ".exe"),
+            buildSetup.sourceDir
+        )
+        shutil.copy(
+            join(tmpDir, "dist", PYW_BASE_NAME + ".exe"),
+            buildSetup.sourceDir
+        )
         shutil.rmtree(tmpDir)
-    
+

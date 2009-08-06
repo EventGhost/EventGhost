@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -41,16 +41,21 @@ class UpdateVersionFile(builder.Task):
     def DoTask(self):
         from builder.Utils import GetSvnRevision
         import imp
-
-        svnRevision = GetSvnRevision(self.buildSetup.sourceDir)
-        outfile = open(join(self.buildSetup.tmpDir, "VersionRevision.py"), "wt")
+        buildSetup = self.buildSetup
+        svnRevision = GetSvnRevision(buildSetup.sourceDir)
+        outfile = open(
+            join(buildSetup.tmpDir, "VersionRevision.py"),
+            "wt"
+        )
         outfile.write("revision = %r\n" % svnRevision)
         outfile.write("buildTime = %f\n" % time.time())
         outfile.close()
-        versionFilePath = join(self.buildSetup.sourceDir, "eg", "Classes", "Version.py")
+        versionFilePath = join(
+            buildSetup.sourceDir, "eg", "Classes", "Version.py"
+        )
         mod = imp.load_source("Version", EncodePath(versionFilePath))
-        self.buildSetup.appVersion = mod.Version.base + (".r%s" % svnRevision)
-        self.buildSetup.appNumericalVersion = mod.Version.base + ".%s" % svnRevision
+        buildSetup.appVersion = mod.Version.base + (".r%s" % svnRevision)
+        buildSetup.appNumericalVersion = mod.Version.base + ".%s" % svnRevision
 
 
 class UpdateChangeLog(builder.Task):
@@ -98,7 +103,9 @@ class Upload(builder.Task):
     def DoTask(self):
         import builder.Upload
         buildSetup = self.buildSetup
-        filename = buildSetup.appName + "_" + buildSetup.appVersion + "_Setup.exe"
+        filename = (
+            buildSetup.appName + "_" + buildSetup.appVersion + "_Setup.exe"
+        )
         src = join(buildSetup.outDir, filename)
         dst = join(buildSetup.websiteDir, "downloads", filename)
         builder.Upload.Upload(src, self.options["url"])
@@ -119,7 +126,7 @@ class SyncWebsite(builder.Task):
 
     def DoTask(self):
         from SftpSync import SftpSync
-    
+
         syncer = SftpSync(self.options["url"])
         addFiles = [
             (join(self.buildSetup.websiteDir, "index.html"), "index.html"),
@@ -127,7 +134,7 @@ class SyncWebsite(builder.Task):
         syncer.Sync(self.buildSetup.websiteDir, addFiles)
         # touch wiki file, to force re-evaluation of the header template
         syncer.sftpClient.utime(syncer.remotePath + "wiki", None)
-        
+
         # clear forum cache, to force re-building of the templates
         syncer.ClearDirectory(
             syncer.remotePath + "forum/cache",

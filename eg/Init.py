@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -49,7 +49,7 @@ def InitPathesAndBuiltins():
     corePluginPackage = ModuleType("eg.CorePluginModule")
     corePluginPackage.__path__ = [eg.corePluginDir]
     sys.modules["eg.CorePluginModule"] = corePluginPackage
-    
+
     # we create a package 'PluginModule' and set its path to the plugin-dir
     # so we can simply use __import__ to load a plugin file
     if not os.path.exists(eg.userPluginDir):
@@ -57,8 +57,8 @@ def InitPathesAndBuiltins():
     userPluginPackage = ModuleType("eg.UserPluginModule")
     userPluginPackage.__path__ = [eg.userPluginDir]
     sys.modules["eg.UserPluginModule"] = userPluginPackage
-    
-    
+
+
 # replace builtin raw_input() with a small dialog
 def RawInput(prompt=None):
     return eg.SimpleInputDialog.RawInput(prompt)

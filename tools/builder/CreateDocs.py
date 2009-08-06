@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -161,7 +161,7 @@ def Prepare():
     outfile = open(filepath, "wt")
     outfile.write(CreateClsDocs(MAIN_CLASSES))
     outfile.close()
-    
+
     filepath = join(DOCS_SOURCE_DIR, "eg", "gui_classes.txt")
     outfile = open(filepath, "wt")
     outfile.write(CreateClsDocs(GUI_CLASSES))
@@ -191,10 +191,12 @@ class CreateChmDocs(builder.Task):
     description = "Build CHM docs"
 
     def Setup(self):
-        if not os.path.exists(join(self.buildSetup.sourceDir, "EventGhost.chm")):
+        if not os.path.exists(
+            join(self.buildSetup.sourceDir, "EventGhost.chm")
+        ):
             self.activated = True
             self.enabled = False
-        
+
 
     def DoTask(self):
         tmpDir = join(self.buildSetup.tmpDir, "chm")

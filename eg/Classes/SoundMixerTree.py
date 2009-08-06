@@ -2,19 +2,18 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
 
 
@@ -94,51 +93,55 @@ from eg.WinApi.Dynamic import (
     MIXER_GETCONTROLDETAILSF_LISTTEXT,
 )
 
+MCD_UNSIGNED = MIXERCONTROLDETAILS_UNSIGNED
+MCD_SIGNED = MIXERCONTROLDETAILS_SIGNED
+MCD_BOOLEAN = MIXERCONTROLDETAILS_BOOLEAN
+
 MIXERCONTROLDETAILS_NAMES = {
-    MIXERCONTROLDETAILS_UNSIGNED: "Unsigned",
-    MIXERCONTROLDETAILS_SIGNED: "Signed",
-    MIXERCONTROLDETAILS_BOOLEAN: "Boolean",
+    MCD_UNSIGNED: "Unsigned",
+    MCD_SIGNED: "Signed",
+    MCD_BOOLEAN: "Boolean",
 }
 
 CONTROLTYPES = {
     #MIXERCONTROL_CT_CLASS_FADER
-    MIXERCONTROL_CONTROLTYPE_VOLUME: ("Volume", MIXERCONTROLDETAILS_UNSIGNED),
-    MIXERCONTROL_CONTROLTYPE_BASS: ("Bass", MIXERCONTROLDETAILS_UNSIGNED),
-    MIXERCONTROL_CONTROLTYPE_TREBLE: ("Treble", MIXERCONTROLDETAILS_UNSIGNED),
-    MIXERCONTROL_CONTROLTYPE_EQUALIZER: ("Equalizer", MIXERCONTROLDETAILS_UNSIGNED),
-    MIXERCONTROL_CONTROLTYPE_FADER: ("Generic Fader", MIXERCONTROLDETAILS_UNSIGNED),
+    MIXERCONTROL_CONTROLTYPE_VOLUME: ("Volume", MCD_UNSIGNED),
+    MIXERCONTROL_CONTROLTYPE_BASS: ("Bass", MCD_UNSIGNED),
+    MIXERCONTROL_CONTROLTYPE_TREBLE: ("Treble", MCD_UNSIGNED),
+    MIXERCONTROL_CONTROLTYPE_EQUALIZER: ("Equalizer", MCD_UNSIGNED),
+    MIXERCONTROL_CONTROLTYPE_FADER: ("Generic Fader", MCD_UNSIGNED),
 
     #MIXERCONTROL_CT_CLASS_LIST
-    MIXERCONTROL_CONTROLTYPE_SINGLESELECT: ("Single Select", MIXERCONTROLDETAILS_BOOLEAN),
-    MIXERCONTROL_CONTROLTYPE_MULTIPLESELECT: ("Multiple Select", MIXERCONTROLDETAILS_BOOLEAN),
-    MIXERCONTROL_CONTROLTYPE_MUX: ("Mux", MIXERCONTROLDETAILS_BOOLEAN),
-    MIXERCONTROL_CONTROLTYPE_MIXER: ("Mixer", MIXERCONTROLDETAILS_BOOLEAN),
+    MIXERCONTROL_CONTROLTYPE_SINGLESELECT: ("Single Select", MCD_BOOLEAN),
+    MIXERCONTROL_CONTROLTYPE_MULTIPLESELECT: ("Multiple Select", MCD_BOOLEAN),
+    MIXERCONTROL_CONTROLTYPE_MUX: ("Mux", MCD_BOOLEAN),
+    MIXERCONTROL_CONTROLTYPE_MIXER: ("Mixer", MCD_BOOLEAN),
 
     #MIXERCONTROL_CT_CLASS_METER
-    MIXERCONTROL_CONTROLTYPE_BOOLEANMETER: ("Boolean Meter", MIXERCONTROLDETAILS_BOOLEAN),
-    MIXERCONTROL_CONTROLTYPE_PEAKMETER: ("Peak Meter", MIXERCONTROLDETAILS_SIGNED),
-    MIXERCONTROL_CONTROLTYPE_SIGNEDMETER: ("Signed Meter", MIXERCONTROLDETAILS_SIGNED),
-    MIXERCONTROL_CONTROLTYPE_UNSIGNEDMETER: ("Unsigned Meter", MIXERCONTROLDETAILS_UNSIGNED),
+    MIXERCONTROL_CONTROLTYPE_BOOLEANMETER: ("Boolean Meter", MCD_BOOLEAN),
+    MIXERCONTROL_CONTROLTYPE_PEAKMETER: ("Peak Meter", MCD_SIGNED),
+    MIXERCONTROL_CONTROLTYPE_SIGNEDMETER: ("Signed Meter", MCD_SIGNED),
+    MIXERCONTROL_CONTROLTYPE_UNSIGNEDMETER: ("Unsigned Meter", MCD_UNSIGNED),
 
     #MIXERCONTROL_CT_CLASS_NUMBER
-    MIXERCONTROL_CONTROLTYPE_SIGNED: ("Signed", MIXERCONTROLDETAILS_SIGNED),
-    MIXERCONTROL_CONTROLTYPE_UNSIGNED: ("Unsigned", MIXERCONTROLDETAILS_UNSIGNED),
-    MIXERCONTROL_CONTROLTYPE_PERCENT: ("Percent", MIXERCONTROLDETAILS_UNSIGNED),
-    MIXERCONTROL_CONTROLTYPE_DECIBELS: ("Decibels", MIXERCONTROLDETAILS_SIGNED),
+    MIXERCONTROL_CONTROLTYPE_SIGNED: ("Signed", MCD_SIGNED),
+    MIXERCONTROL_CONTROLTYPE_UNSIGNED: ("Unsigned", MCD_UNSIGNED),
+    MIXERCONTROL_CONTROLTYPE_PERCENT: ("Percent", MCD_UNSIGNED),
+    MIXERCONTROL_CONTROLTYPE_DECIBELS: ("Decibels", MCD_SIGNED),
 
     #MIXERCONTROL_CT_CLASS_SLIDER
-    MIXERCONTROL_CONTROLTYPE_SLIDER: ("Slider", MIXERCONTROLDETAILS_SIGNED),
-    MIXERCONTROL_CONTROLTYPE_PAN: ("Pan", MIXERCONTROLDETAILS_SIGNED),
-    MIXERCONTROL_CONTROLTYPE_QSOUNDPAN: ("Qsound Pan", MIXERCONTROLDETAILS_SIGNED),
+    MIXERCONTROL_CONTROLTYPE_SLIDER: ("Slider", MCD_SIGNED),
+    MIXERCONTROL_CONTROLTYPE_PAN: ("Pan", MCD_SIGNED),
+    MIXERCONTROL_CONTROLTYPE_QSOUNDPAN: ("Qsound Pan", MCD_SIGNED),
 
     #MIXERCONTROL_CT_CLASS_SWITCH
-    MIXERCONTROL_CONTROLTYPE_BOOLEAN: ("Boolean", MIXERCONTROLDETAILS_BOOLEAN),
-    MIXERCONTROL_CONTROLTYPE_BUTTON: ("Button", MIXERCONTROLDETAILS_BOOLEAN),
-    MIXERCONTROL_CONTROLTYPE_LOUDNESS: ("Loudness", MIXERCONTROLDETAILS_BOOLEAN),
-    MIXERCONTROL_CONTROLTYPE_MONO: ("Mono", MIXERCONTROLDETAILS_BOOLEAN),
-    MIXERCONTROL_CONTROLTYPE_MUTE: ("Mute", MIXERCONTROLDETAILS_BOOLEAN),
-    MIXERCONTROL_CONTROLTYPE_ONOFF: ("OnOff", MIXERCONTROLDETAILS_BOOLEAN),
-    MIXERCONTROL_CONTROLTYPE_STEREOENH: ("Stereo Enhance", MIXERCONTROLDETAILS_BOOLEAN),
+    MIXERCONTROL_CONTROLTYPE_BOOLEAN: ("Boolean", MCD_BOOLEAN),
+    MIXERCONTROL_CONTROLTYPE_BUTTON: ("Button", MCD_BOOLEAN),
+    MIXERCONTROL_CONTROLTYPE_LOUDNESS: ("Loudness", MCD_BOOLEAN),
+    MIXERCONTROL_CONTROLTYPE_MONO: ("Mono", MCD_BOOLEAN),
+    MIXERCONTROL_CONTROLTYPE_MUTE: ("Mute", MCD_BOOLEAN),
+    MIXERCONTROL_CONTROLTYPE_ONOFF: ("OnOff", MCD_BOOLEAN),
+    MIXERCONTROL_CONTROLTYPE_STEREOENH: ("Stereo Enhance", MCD_BOOLEAN),
 
     #MIXERCONTROL_CT_CLASS_TIME
     MIXERCONTROL_CONTROLTYPE_MICROTIME: "Microseconds",
@@ -156,7 +159,7 @@ MIXER_CONTROL_CLASSES = {
             MIXERCONTROL_CONTROLTYPE_EQUALIZER: "Equalizer",
             MIXERCONTROL_CONTROLTYPE_FADER: "Generic Fader",
         },
-        "valueType": MIXERCONTROLDETAILS_UNSIGNED,
+        "valueType": MCD_UNSIGNED,
     },
     MIXERCONTROL_CT_CLASS_LIST: {
         "name": "List",
@@ -166,7 +169,7 @@ MIXER_CONTROL_CLASSES = {
             MIXERCONTROL_CONTROLTYPE_MUX: "Mux",
             MIXERCONTROL_CONTROLTYPE_MIXER: "Mixer",
         },
-        "valueType": MIXERCONTROLDETAILS_BOOLEAN,
+        "valueType": MCD_BOOLEAN,
     },
     MIXERCONTROL_CT_CLASS_METER: {
         "name": "Meter",
@@ -250,15 +253,21 @@ class SoundMixerTree(wx.TreeCtrl):
         for i in range(mixercaps.cDestinations):
             mixerline.cbStruct = sizeof(MIXERLINE)
             mixerline.dwDestination = i
-            if mixerGetLineInfo(mixerHandle, byref(mixerline), MIXER_GETLINEINFOF_DESTINATION):
+            if mixerGetLineInfo(
+                mixerHandle, byref(mixerline), MIXER_GETLINEINFOF_DESTINATION
+            ):
                 continue
-            destItem = self.AppendItem(root, mixerline.szName + ": %i" % mixerline.cChannels)
+            destItem = self.AppendItem(
+                root, mixerline.szName + ": %i" % mixerline.cChannels
+            )
             self.AddControls(destItem, mixerline)
             for n in range(mixerline.cConnections):
                 mixerline.cbStruct = sizeof(MIXERLINE)
                 mixerline.dwDestination = i
                 mixerline.dwSource = n
-                if mixerGetLineInfo(mixerHandle, byref(mixerline), MIXER_GETLINEINFOF_SOURCE):
+                if mixerGetLineInfo(
+                    mixerHandle, byref(mixerline), MIXER_GETLINEINFOF_SOURCE
+                ):
                     continue
                 sourceItem = self.AppendItem(
                     destItem,
@@ -323,13 +332,19 @@ class SoundMixerTree(wx.TreeCtrl):
         idCtrl = wx.StaticText(panel, -1, "Name: " + mixerControl.szName)
         sizer.Add(idCtrl)
 
-        idCtrl = wx.StaticText(panel, -1, "Short Name: " + mixerControl.szShortName)
+        idCtrl = wx.StaticText(
+            panel, -1, "Short Name: " + mixerControl.szShortName
+        )
         sizer.Add(idCtrl)
 
         dwControlType = mixerControl.dwControlType
 
-        controlClass = MIXER_CONTROL_CLASSES[dwControlType & MIXERCONTROL_CT_CLASS_MASK]
-        idCtrl = wx.StaticText(panel, -1, "Classification: " + controlClass["name"])
+        controlClass = MIXER_CONTROL_CLASSES[
+            dwControlType & MIXERCONTROL_CT_CLASS_MASK
+        ]
+        idCtrl = wx.StaticText(
+            panel, -1, "Classification: " + controlClass["name"]
+        )
         sizer.Add(idCtrl)
 
         controlClassTypeName = controlClass["types"][dwControlType]
@@ -379,19 +394,26 @@ class SoundMixerTree(wx.TreeCtrl):
         )
         values = []
         for i in range(cChannels * numMultipleItems):
-            if valueType == MIXERCONTROLDETAILS_BOOLEAN:
+            if valueType == MCD_BOOLEAN:
                 values.append(details[i].fValue)
-            elif valueType == MIXERCONTROLDETAILS_SIGNED:
+            elif valueType == MCD_SIGNED:
                 values.append(details[i].lValue)
-            elif valueType == MIXERCONTROLDETAILS_UNSIGNED:
+            elif valueType == MCD_UNSIGNED:
                 values.append(details[i].dwValue)
 
         idCtrl = wx.StaticText(panel, -1, "Value: %r" % values)
         sizer.Add(idCtrl)
 
-        if dwControlType & MIXERCONTROL_CT_CLASS_MASK == MIXERCONTROL_CT_CLASS_LIST:
-            labels = (MIXERCONTROLDETAILS_LISTTEXT * (cChannels * numMultipleItems))()
-            mixerControlDetails.cbDetails = sizeof(MIXERCONTROLDETAILS_LISTTEXT)
+        if (
+            dwControlType & MIXERCONTROL_CT_CLASS_MASK
+            == MIXERCONTROL_CT_CLASS_LIST
+        ):
+            labels = (
+                MIXERCONTROLDETAILS_LISTTEXT * (cChannels * numMultipleItems)
+            )()
+            mixerControlDetails.cbDetails = sizeof(
+                MIXERCONTROLDETAILS_LISTTEXT
+            )
             mixerControlDetails.paDetails = cast(pointer(labels), c_void_p)
             mixerGetControlDetails(
                 self.mixerHandle,

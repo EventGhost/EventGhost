@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -26,11 +26,11 @@ class Task(object):
     visible = True
     enabled = True
     activated = True
-    
+
     def __init__(self, buildSetup):
         self.buildSetup = buildSetup
-    
-    
+
+
     def Setup(self):
         pass
 
@@ -44,7 +44,7 @@ class Task(object):
 
 
 class Builder(object):
-    
+
     def __init__(self):
         from CheckDependencies import CheckDependencies
         global buildSetup
@@ -64,8 +64,8 @@ class Builder(object):
         self.tmpDir = tempfile.mkdtemp()
         #atexit.register(shutil.rmtree, self.tmpDir)
         self.appName = self.name
-        
-        
+
+
     def RunGui(self):
         from builder.Tasks import TASKS
         self.tasks = [task(self) for task in TASKS]

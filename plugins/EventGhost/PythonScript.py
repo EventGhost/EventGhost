@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 import wx
@@ -36,7 +30,7 @@ class Config(eg.PersistentData):
 
 class PythonScript(eg.ActionBase):
     name = "Python Script"
-    description = "Full featured Python script." 
+    description = "Full featured Python script."
     iconFile = "icons/PythonScript"
 
     def GetLabel(self, dummySourceCode=""):
@@ -55,7 +49,7 @@ class PythonScript(eg.ActionBase):
         if not panel.dialog.IsMaximized():
             Config.size = panel.dialog.GetSizeTuple()
             Config.position = panel.dialog.GetPositionTuple()
-        
+
 
     class Compile:
         idCounter = 0
@@ -75,8 +69,8 @@ class PythonScript(eg.ActionBase):
                 eg.PrintError("Error compiling script.")
                 self.PrintTraceback()
             self.scriptDict[idCounter] = self
-            
-            
+
+
         def __call__(self):
             if self.code is None:
                 self.__init__(self.sourceCode)
@@ -101,7 +95,7 @@ class PythonScript(eg.ActionBase):
             treeItem = eg.currentItem
             treeItem.PrintError("Traceback (most recent call last):")
             lines = self.sourceCode.splitlines()
-            tbType, tbValue, tbTraceback = sys.exc_info() 
+            tbType, tbValue, tbTraceback = sys.exc_info()
             for entry in traceback.extract_tb(tbTraceback)[1:]:
                 filename, linenum, funcname, source = entry
                 filename = filename.decode(sys.getfilesystemencoding())
@@ -127,10 +121,9 @@ class PythonScript(eg.ActionBase):
                         treeItem.PrintError('    ' + source.lstrip())
             name = tbType if type(tbType) == type("") else tbType.__name__
             treeItem.PrintError(str(name) + ': ' + str(tbValue))
-                
-            
+
+
         @eg.LogIt
         def __del__(self):
             pass
-        
-        
+

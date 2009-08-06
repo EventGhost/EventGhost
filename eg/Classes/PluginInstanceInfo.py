@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -49,10 +49,10 @@ class PluginInstanceInfo(PluginModuleInfo):
     isStarted = False
     lastEvent = eg.EventGhostEvent()
     eventList = None
-    
+
     def __init__(self):
         pass
-    
+
     @classmethod
     def FromModuleInfo(cls, moduleInfo):
         self = cls.__new__(cls)
@@ -79,14 +79,14 @@ class PluginInstanceInfo(PluginModuleInfo):
         pluginCls = module.__pluginCls__
         self.module = module
         self.pluginCls = pluginCls
-        
+
         englishText = pluginCls.text
         if englishText is None:
             englishText = ClassType("EmptyDefaultText", (), {})
-            
+
         englishText.name = self.englishName
         englishText.description = self.englishDescription
-        
+
         # TODO: the text class should be referenced by the GUID instead of
         #       pluginCls.__name__
         translatedText = getattr(eg.text.Plugin, pluginCls.__name__, None)
@@ -141,8 +141,8 @@ class PluginInstanceInfo(PluginModuleInfo):
         plugin.description = self.description
         self.eventPrefix = evalName
         self.actionGroup = eg.ActionGroup(
-            plugin, 
-            plugin.name, 
+            plugin,
+            plugin.name,
             plugin.description
         )
         eg.actionGroup.items.append(self.actionGroup)
@@ -213,7 +213,9 @@ class PluginInstanceInfo(PluginModuleInfo):
             self.treeItem.SetErrorState()
         except Exception, exc:
             self.lastException = exc
-            self.treeItem.PrintError(eg.text.Error.pluginStartError % self.name)
+            self.treeItem.PrintError(
+                eg.text.Error.pluginStartError % self.name
+            )
             eg.PrintTraceback()
             self.treeItem.SetErrorState()
 
@@ -240,7 +242,7 @@ class PluginInstanceInfo(PluginModuleInfo):
                 item.plugin = None
         del items
 
-    
+
     def RemovePluginInstance(self):
         plugin = self.instance
         delattr(eg.plugins, self.evalName)
@@ -257,5 +259,4 @@ class PluginInstanceInfo(PluginModuleInfo):
 #        plugin.description = None
 #        plugin.name = None
 #        self.actionGroup = None
-        
 

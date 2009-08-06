@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -234,12 +234,17 @@ def UploadWithSftp(urlComponents, filename, dialog, log):
         log("Upload canceled by user.")
     else:
         if s.st_size != file_size:
-            raise IOError('size mismatch in put!  %d != %d' % (s.st_size, file_size))
+            raise IOError(
+                'size mismatch in put!  %d != %d' % (s.st_size, file_size)
+            )
         if basename(filename) in fileList:
             client.remove(remotePath + basename(filename))
         client.rename(tmpPath, basename(filename))
         localStat = os.stat(filename)
-        client.utime(remotePath + basename(filename), (localStat.st_atime, localStat.st_mtime))
+        client.utime(
+            remotePath + basename(filename),
+            (localStat.st_atime, localStat.st_mtime)
+        )
         log("Upload done!")
     client.close()
 

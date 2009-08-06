@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 import wx
@@ -26,8 +20,8 @@ from os.path import basename, dirname, abspath
 
 from eg.WinApi.Dynamic import (
     sizeof, CreateProcess, WaitForSingleObject, FormatError,
-    CloseHandle, create_unicode_buffer, 
-    STARTUPINFO, PROCESS_INFORMATION,  
+    CloseHandle, create_unicode_buffer,
+    STARTUPINFO, PROCESS_INFORMATION,
     CREATE_NEW_CONSOLE, STARTF_USESHOWWINDOW, INFINITE
 )
 
@@ -35,7 +29,7 @@ WINSTATE_FLAGS = (
     1, # SW_SHOWNORMAL
     6, # SW_MINIMIZE | SW_HIDE
     3, # SW_SHOWMAXIMIZED
-    0, # SW_HIDE 
+    0, # SW_HIDE
 )
 
 PRIORITY_FLAGS = (
@@ -43,7 +37,7 @@ PRIORITY_FLAGS = (
     16384, # BELOW_NORMAL_PRIORITY_CLASS
     32,    # NORMAL_PRIORITY_CLASS
     32768, # ABOVE_NORMAL_PRIORITY_CLASS
-    256,   # REALTIME_PRIORITY_CLASS 
+    256,   # REALTIME_PRIORITY_CLASS
 )
 
 
@@ -58,31 +52,31 @@ class Execute(eg.ActionBase):
         Parameters = "Command line options:"
         WindowOptionsDesc = "Window options:"
         WindowOptions = (
-            "Normal window", 
-            "Minimized", 
-            "Maximized", 
+            "Normal window",
+            "Minimized",
+            "Maximized",
             "Hidden"
         )
         ProcessOptionsDesc = "Process priority:"
         ProcessOptions = (
-            "Realtime", 
-            "Above normal", 
-            "Normal", 
-            "Below normal", 
+            "Realtime",
+            "Above normal",
+            "Normal",
+            "Below normal",
             "Idle"
         )
         WaitCheckbox = "Wait till application is terminated before proceeding"
         browseExecutableDialogTitle = "Choose the executable"
         browseWorkingDirDialogTitle = "Choose the working directory"
 
-    
+
     def __call__(
-        self, 
-        pathname='', 
-        arguments='', 
+        self,
+        pathname='',
+        arguments='',
         winState=0,
-        waitForCompletion=False, 
-        priority=2, 
+        waitForCompletion=False,
+        priority=2,
         workingDir=""
     ):
         pathname = eg.ParseString(pathname)
@@ -107,25 +101,25 @@ class Execute(eg.ActionBase):
             workingDir,        # lpCurrentDirectory
             startupInfo,       # lpStartupInfo
             processInformation # lpProcessInformation
-        )    
+        )
         if res == 0:
             raise self.Exception(FormatError())
         if waitForCompletion:
             WaitForSingleObject(processInformation.hProcess, INFINITE)
         CloseHandle(processInformation.hProcess)
         CloseHandle(processInformation.hThread)
-        
-    
+
+
     def GetLabel(self, pathname='', *dummyArgs):
         return self.text.label % basename(pathname)
 
 
     def Configure(
-        self, 
-        pathname='', 
-        arguments='', 
-        winState=0, 
-        waitForCompletion=False, 
+        self,
+        pathname='',
+        arguments='',
+        winState=0,
+        waitForCompletion=False,
         priority=2,
         workingDir=""
     ):
@@ -145,10 +139,10 @@ class Execute(eg.ActionBase):
         winStateChoice = panel.Choice(winState, text.WindowOptions)
         priorityChoice = panel.Choice(4 - priority, text.ProcessOptions)
         waitCheckBox = panel.CheckBox(
-            bool(waitForCompletion), 
+            bool(waitForCompletion),
             text.WaitCheckbox
         )
-        
+
         SText = panel.StaticText
         lowerSizer = wx.GridBagSizer(0, 0)
         lowerSizer.AddGrowableCol(1)
@@ -175,7 +169,7 @@ class Execute(eg.ActionBase):
             ((10, 15)),
             (waitCheckBox),
         ])
-        
+
         while panel.Affirmed():
             panel.SetResult(
                 filepathCtrl.GetValue(),
@@ -184,4 +178,5 @@ class Execute(eg.ActionBase):
                 waitCheckBox.GetValue(),
                 4 - priorityChoice.GetValue(),
                 workingDirCtrl.GetValue()
-            )        
+            )
+

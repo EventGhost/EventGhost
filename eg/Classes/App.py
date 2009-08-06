@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -34,8 +34,8 @@ if IS_VISTA:
 else:
     ShutdownBlockReasonCreate = lambda hwnd, msg: None
     ShutdownBlockReasonDestroy = lambda hwnd: None
-    
-    
+
+
 class App(wx.App):
 
     def __init__(self):
@@ -61,7 +61,7 @@ class App(wx.App):
         else:
             self.Bind(wx.EVT_QUERY_END_SESSION, self.OnQueryEndSessionXp)
         self.Bind(wx.EVT_END_SESSION, self.OnEndSession)
-            
+
         return True
 
 
@@ -73,8 +73,8 @@ class App(wx.App):
         if eg.document.CheckFileNeedsSave() == wx.ID_CANCEL:
             event.Veto()
         wx.CallAfter(self.Reset)
-            
-    
+
+
     @eg.LogItWithReturn
     def OnQueryEndSessionVista(self, event):
         if self.shouldVeto:
@@ -104,16 +104,16 @@ class App(wx.App):
                 self.shouldVeto = True
                 wx.CallAfter(self.Reset)
                 return
-                
-                
+
+
     @eg.LogItWithReturn
     def Reset(self):
         self.shouldVeto = False
         self.firstQuery = True
         ShutdownBlockReasonDestroy(self.hwnd)
-        
-        
-    
+
+
+
     @eg.LogItWithReturn
     def OnEndSession(self, dummyEvent):
         if self.endSession:
@@ -126,7 +126,7 @@ class App(wx.App):
         eg.taskBarIcon.Close()
         self.OnExit()
 
-    
+
     @eg.LogIt
     def Exit(self, dummyEvent=None):
         if eg.document.CheckFileNeedsSave() == wx.ID_CANCEL:

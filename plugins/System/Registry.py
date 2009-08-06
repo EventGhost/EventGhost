@@ -1,7 +1,3 @@
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
-
 import eg
 import wx
 import _winreg
@@ -13,7 +9,7 @@ from eg.cFunctions import RegEnumKeysAndValues
 class Text:
     name = "Registry"
     description = "Queries or changes values in the windows registry."
-    
+
     noKeyError = "No key given"
     noSubkeyError = "No subkey given"
     noTypeError = "No type given"
@@ -21,7 +17,7 @@ class Text:
     noValueNameError = "No value name given"
     keyOpenError = "Error opening registry key"
     valueChangeError = "Error while modifying value"
-   
+
     defaultText = "(Default)"
     chooseText = "Choose Registry Key:"
     keyText = "Key:"
@@ -32,10 +28,10 @@ class Text:
     oldValue = "Current value:"
     oldType = "Current Type:"
     typeText = "Type:"
-   
+
     keyText2 = "Key"
     noValueText = "value not found"
-    
+
 
 regKeys = (
     (_winreg.HKEY_CLASSES_ROOT, "HKEY_CLASSES_ROOT", "HKCR"),
@@ -60,11 +56,11 @@ class Config(eg.PersistentData):
     lastKeySelected = _winreg.HKEY_CURRENT_USER
     lastSubkeySelected = "Software"
     lastValueNameSelected = None
-            
+
 
 
 class RegistryLazyTree(wx.TreeCtrl):
-   
+
     def __init__(
         self,
         parent,
@@ -98,7 +94,8 @@ class RegistryLazyTree(wx.TreeCtrl):
         #Adding keys
         for item in regKeys:
             #a tupel of 4 values is assigned to every item
-            #1) stores if the key has yet to be queried for subkey, when selected
+            #1) stores if the key has yet to be queried for subkey, when
+            #   selected
             #2) _winreg.hkey constant
             #3) name of the key
             #4) value name, None if just a key, empty string for default value
@@ -115,7 +112,7 @@ class RegistryLazyTree(wx.TreeCtrl):
         #select old value in tree
         self.onTreeChange(wx.CommandEvent(), key, subkey, valueName)
         self.EnsureVisible(self.GetSelection())
-       
+
         self.Bind(wx.EVT_TREE_SEL_CHANGED, self.onTreeChange)
         self.Bind(wx.EVT_TREE_ITEM_EXPANDING, self.OnExpandNode)
 
@@ -137,7 +134,6 @@ class RegistryLazyTree(wx.TreeCtrl):
         valueName2Select = None,
         node = None
     ):
-        #print "onTreeChange", key2Select, subkey2Select, valueName2Select, node
         if not node:
             node = self.GetSelection()
 
@@ -145,7 +141,7 @@ class RegistryLazyTree(wx.TreeCtrl):
            fatherSubkey, fatherValueName = self.GetItemData(node).GetData()
         subkey2Find = None
         newItemSelected = False
-       
+
         if not keyHasBeenQueried:#check for subkeys
             self.SetItemData(
                 node,
@@ -153,20 +149,20 @@ class RegistryLazyTree(wx.TreeCtrl):
                     (True, fatherKey, fatherSubkey, fatherValueName)
                 )
             )
-           
+
             #buildung tree
             try:
                 regHandle = _winreg.OpenKey(fatherKey, fatherSubkey)
             except EnvironmentError, exc:
                 eg.PrintError(self.text.keyOpenError + ": " + str(exc))
                 return 0
-           
+
             #query subkeys
             if len(fatherSubkey) == 0:
                 parentSubkey = ""
             else:
                 parentSubkey = fatherSubkey + "\\"
-           
+
             #preparing strings to find the subkey2Select key
             if valueName2Select:
                 valueName2Select = valueName2Select.lower()
@@ -187,7 +183,7 @@ class RegistryLazyTree(wx.TreeCtrl):
             #sorting
             keyNames.sort(lambda a, b: cmp(a[0].lower(), b[0].lower()))
             valueList.sort(lambda a, b: cmp(a[0].lower(), b[0].lower()))
-           
+
             #subkeys
             for keyName, numSubKeys, numSubValues in keyNames:
                 hasChildren = bool(numSubKeys + numSubValues > 0)
@@ -205,12 +201,12 @@ class RegistryLazyTree(wx.TreeCtrl):
                 )
                 if subkey2Find == keyName.lower():
                     newItemSelected = True
-                    self.SelectItem(tmp)                 
+                    self.SelectItem(tmp)
                 self.SetItemHasChildren(tmp, hasChildren)
 
             #values
             for valueName, valueType in valueList:
-               
+
                 if len(valueName) == 0:
                     enumValueName = self.text.defaultText
                 else:
@@ -242,7 +238,7 @@ class RegistryLazyTree(wx.TreeCtrl):
 
 
 class RegistryChooser(wx.Window):
-   
+
     def __init__(
         self,
         parent,
@@ -261,7 +257,7 @@ class RegistryChooser(wx.Window):
         sizer.AddGrowableRow(1)
         sizer.AddGrowableCol(3, 2)
         sizer.AddGrowableCol(5, 1)
-       
+
         sizer.SetEmptyCellSize((0, 0))
         sizer.Add(
             wx.StaticText(self, -1, text.chooseText),
@@ -269,7 +265,7 @@ class RegistryChooser(wx.Window):
             (1, 6),
             flag = wx.ALIGN_CENTER_VERTICAL
         )
-       
+
         sizer.Add(
             wx.StaticText(self, -1, text.keyText),
             (2, 0),
@@ -299,7 +295,7 @@ class RegistryChooser(wx.Window):
             (2, 4),
             flag = wx.ALIGN_CENTER_VERTICAL
         )
-       
+
         #old Value
         sizer.Add(
             wx.StaticText(self, -1, text.oldValue),
@@ -344,7 +340,7 @@ class RegistryChooser(wx.Window):
         sizer.Fit(self)
         self.Layout()
         self.SetMinSize(self.GetSize())
-       
+
         self.keyChoice = keyChoice
         self.subkeyCtrl = subkeyCtrl
         self.valueNameCtrl = valueNameCtrl
@@ -411,10 +407,10 @@ class RegistryChooser(wx.Window):
         else:
             curType = self.text.keyText2
             curValue = ""
-           
+
         self.oldValueCtrl.SetValue(str(curValue))
         self.oldTypeCtrl.SetValue(curType)
-   
+
 
     def OnSize(self, dummyEvent):
         if self.GetAutoLayout():
@@ -434,7 +430,7 @@ class RegistryChooser(wx.Window):
             valueName = None
         elif valueName == self.text.defaultText:
             valueName = ""
-       
+
         return key, subkey, valueName
 
 
@@ -443,7 +439,7 @@ def FullKeyName(key, subkey, valueName, maxSubkeyLength=15):
     label = "root"
     if not key:
         return label
-       
+
     for i in  range(0, len(regKeys)):
         if regKeys[i][0] == key:
             label = regKeys[i][2]
@@ -451,7 +447,7 @@ def FullKeyName(key, subkey, valueName, maxSubkeyLength=15):
 
     if not subkey:
         return label
-   
+
     if (
         maxSubkeyLength
         and len(subkey) > maxSubkeyLength
@@ -472,7 +468,9 @@ def FullKeyName(key, subkey, valueName, maxSubkeyLength=15):
 
 class RegistryQuery(eg.ActionBase):
     name = "Query Registry"
-    description = "Queries the windows registry and return or compares the value"
+    description = (
+        "Queries the windows registry and return or compares the value"
+    )
     iconFile = "icons/Registry"
     class text:
         actions = ("check if exists", "return as result", "compare to")
@@ -485,8 +483,8 @@ class RegistryQuery(eg.ActionBase):
     @classmethod
     def OnAddAction(cls):
         cls.text2 = cls.plugin.text.RegistryGroup
-        
-        
+
+
     def __call__(self, key, subkey, valueName, action, compareValue):
         if not key:#nothing selected
             return None
@@ -564,7 +562,7 @@ class RegistryQuery(eg.ActionBase):
             Config.lastValueNameSelected = valueName
 
         panel = eg.ConfigPanel(resizable=True)
-       
+
         #keyChooser
         regChooserCtrl = RegistryChooser(
             panel,
@@ -612,7 +610,7 @@ class RegistryQuery(eg.ActionBase):
         )
         rb[0].SetValue(action == 0)
         sizer2.Add(rb[0], flag = wx.ALIGN_CENTER_VERTICAL)
-       
+
         rb[1] = wx.RadioButton(panel, -1, text.actions[1])
         rb[1].SetValue(action == 1)
         sizer2.Add(rb[1], flag = wx.ALIGN_CENTER_VERTICAL)
@@ -628,7 +626,7 @@ class RegistryQuery(eg.ActionBase):
         rb[0].Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
         rb[1].Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
         rb[2].Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
-       
+
         panel.sizer.Add(sizer2, flag = wx.EXPAND)
 
         while panel.Affirmed():
@@ -639,9 +637,9 @@ class RegistryQuery(eg.ActionBase):
                     action = i
                     break
             panel.SetResult(key, subkey, valueName, action, compareValue)
-           
-       
-           
+
+
+
 class RegistryChange(eg.ActionBase):
     name = "Change Registry Value"
     description = "Changes a value in the windows registry"
@@ -653,12 +651,12 @@ class RegistryChange(eg.ActionBase):
             'Change "%s" to %s if exists only',
             'Delete "%s"'
         )
-    
-    
+
+
     @classmethod
     def OnAddAction(cls):
         cls.text2 = cls.plugin.text.RegistryGroup
-        
+
 
     def __call__(self, key, subkey, valueName, action, keyType, newValue):
         if not key:
@@ -670,7 +668,7 @@ class RegistryChange(eg.ActionBase):
         if not valueName:
             self.PrintError(self.text2.noValueNameError)
             return 0
-       
+
         #try to get handle
         try:
             if action == 0:
@@ -686,7 +684,7 @@ class RegistryChange(eg.ActionBase):
             if action != 1:
                 eg.PrintError(self.text2.keyOpenError + ": " + str(exc))
             return 0
-       
+
         #getting old value
         oldType = None
         try:
@@ -716,7 +714,7 @@ class RegistryChange(eg.ActionBase):
             #if key already exists use the old type
             else:
                 keyType = oldType
-       
+
         #set or delete key
         try:
             if (action == 0) or (action == 1):
@@ -751,7 +749,7 @@ class RegistryChange(eg.ActionBase):
     ):
         text = self.text
         text2 = self.text2
-       
+
         if key == None:
             key = Config.lastKeySelected
             subkey = Config.lastSubkeySelected
@@ -762,7 +760,7 @@ class RegistryChange(eg.ActionBase):
             Config.lastValueNameSelected = valueName
 
         panel = eg.ConfigPanel(resizable=True)
-       
+
         #keyChooser
         regChooserCtrl = RegistryChooser(
             panel,
@@ -787,7 +785,7 @@ class RegistryChange(eg.ActionBase):
 
         #Action
         actionSizer = wx.BoxSizer(wx.HORIZONTAL)
-       
+
         choices = len(text.actions)
         rb = range(0, choices)
 
@@ -806,7 +804,7 @@ class RegistryChange(eg.ActionBase):
         rb[0] = wx.RadioButton(panel, -1, text.actions[0], style = wx.RB_GROUP)
         rb[0].SetValue(action == 0)
         actionSizer.Add(rb[0], flag = wx.ALIGN_CENTER_VERTICAL)
-       
+
         rb[1] = wx.RadioButton(panel, -1, text.actions[1])
         rb[1].SetValue(action == 1)
         actionSizer.Add(rb[1], flag = wx.ALIGN_CENTER_VERTICAL)
@@ -821,7 +819,7 @@ class RegistryChange(eg.ActionBase):
         #new Value Input
         newValueSizer = wx.FlexGridSizer(1, 4, 5, 5)
         newValueSizer.AddGrowableCol(1)
-       
+
         newValueSizer.Add(
             wx.StaticText(panel, -1, text2.newValue),
             flag = wx.ALIGN_CENTER_VERTICAL
@@ -847,21 +845,20 @@ class RegistryChange(eg.ActionBase):
         rb[0].Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
         rb[1].Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
         rb[2].Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
-       
+
         panel.sizer.Add(newValueSizer, flag = wx.EXPAND)
 
         while panel.Affirmed():
             key, subkey, valueName = regChooserCtrl.GetValue()
-    
+
             for i, item in enumerate(rb):
                 if item.GetValue():
                     action = i
                     break
-    
+
             keyType = regTypes[typeChoice.GetSelection()][0]
-    
+
             newValue = newValueCtrl.GetValue()
-    
+
             panel.SetResult(key, subkey, valueName, action, keyType, newValue)
-        
-        
+

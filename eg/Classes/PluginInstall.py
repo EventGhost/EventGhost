@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -51,7 +51,7 @@ TEMPLATE = u"""
 <b>Description:</b>"""
 
 class PluginInstall(object):
-    
+
     def Export(self, mainFrame=None):
         result = eg.AddPluginDialog.GetModalResult(
             mainFrame,
@@ -74,8 +74,8 @@ class PluginInstall(object):
             "icon": pluginInfo.icon.pil.tostring()
         }
         dialog = InstallDialog(
-            mainFrame, 
-            "Plugin Information", 
+            mainFrame,
+            "Plugin Information",
             pluginData=pluginData,
             basePath=pluginInfo.path,
         )
@@ -88,7 +88,7 @@ class PluginInstall(object):
             mainFrame,
             defaultFile=filename,
             wildcard="EventGhost Plugin (*.egplugin)|*.egplugin",
-            style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT 
+            style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT
         )
         try:
             result = dialog.ShowModal()
@@ -107,7 +107,7 @@ class PluginInstall(object):
             for filename in filenames:
                 ext = os.path.splitext(filename)[1]
                 if (
-                    ext.lower() in (".pyc", ".pyo") 
+                    ext.lower() in (".pyc", ".pyo")
                     and filename[:-1] in filenames
                 ):
                     continue
@@ -116,8 +116,8 @@ class PluginInstall(object):
                 print src, dst
                 outfile.write(src, dst)
         outfile.close()
-        
-        
+
+
     def Import(self, filepath):
         tmpDir = tempfile.mkdtemp()
         try:
@@ -133,7 +133,7 @@ class PluginInstall(object):
                     basePath = path
                     break
             dialog = InstallDialog(
-                title="Install EventGhost Plugin", 
+                title="Install EventGhost Plugin",
                 pluginData=pluginData,
                 basePath=basePath,
             )
@@ -166,24 +166,24 @@ class PluginInstall(object):
             shutil.rmtree(tmpDir, True)
             from eg.WinApi.Dynamic import ExitProcess
             ExitProcess(0)
-        
+
 PluginInstall = PluginInstall()
 
 
 class InstallDialog(Dialog):
 
     def __init__(
-        self, 
-        parent=None, 
-        title=eg.APP_NAME, 
+        self,
+        parent=None,
+        title=eg.APP_NAME,
         basePath=None,
         pluginData=None,
     ):
         Dialog.__init__(
             self,
-            parent, 
-            -1, 
-            title, 
+            parent,
+            -1,
+            title,
             size=(400, 300),
             style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
         )
@@ -227,7 +227,7 @@ class InstallDialog(Dialog):
 #        self.Bind(wx.EVT_SIZE, self.OnSize)
 #        self.Layout()
 
-        
+
     def OnSize(self, dummyEvent=None):
         self.Layout()
         #self.headerCtrl.SetPage(self.text)
@@ -237,3 +237,4 @@ class InstallDialog(Dialog):
         #self.headerCtrl.SetSizeHints(self.headerCtrl.GetSize()[0], height)
         self.headerCtrl.SetMinSize((-1, height+4))
         self.Layout()
+

@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -115,9 +115,15 @@ class SftpSync(object):
                     if remoteStat.st_mtime == int(localStat.st_mtime):
                         continue
             remoteFilePath = remotePath + fileName
-            print "uploading:", join(localPath, fileName), "-->", remoteFilePath
+            print "uploading: %s --> %s" % (
+                join(localPath, fileName),
+                remoteFilePath
+            )
             self.sftpClient.put(join(localPath, fileName), remoteFilePath)
-            self.sftpClient.utime(remoteFilePath, (localStat.st_atime, localStat.st_mtime))
+            self.sftpClient.utime(
+                remoteFilePath,
+                (localStat.st_atime, localStat.st_mtime)
+            )
         for dirName in localDir.dirs:
             self.CreateFiles(
                 localDir.dirs[dirName],
@@ -181,7 +187,10 @@ class SftpSync(object):
             if fileName not in excludes:
                 self.sftpClient.remove(remotePath + fileName)
             else:
-                print "    skipping file %s because of excludes parameter" % fileName
+                print (
+                    "    skipping file %s because of excludes parameter"
+                        % fileName
+                )
 
 
     def Close(self):

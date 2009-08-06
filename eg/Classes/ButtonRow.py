@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -76,7 +76,7 @@ class ButtonRow(object):
                 sizer.Add((1, 1), 1, wx.EXPAND)
             else:
                 sizer.Add(self.sizeGrip.GetSize(), 1, wx.EXPAND)
-                sizer.Add(buttonSizer, 0, wx.TOP|wx.BOTTOM, 6)                
+                sizer.Add(buttonSizer, 0, wx.TOP|wx.BOTTOM, 6)
             sizer.Add(self.sizeGrip, 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT)
         else:
             if center:
