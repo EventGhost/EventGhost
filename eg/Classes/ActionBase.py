@@ -67,7 +67,9 @@ class ActionBase(object):
     text = None
     Exceptions = None
 
-    __docsort__ = "__call__, Configure, GetLabel, Compile, PrintError, Exception"
+    __docsort__ = (
+        "__call__, Configure, GetLabel, Compile, PrintError, Exception"
+    )
 
     def __call__(self, *args):
         """

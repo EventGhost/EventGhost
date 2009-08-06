@@ -414,7 +414,9 @@ def GetControls(hmixer, mixerline):
     for i in range(numCtrls):
         mixerControl = mixerControlArray[i]
         dwControlType = mixerControl.dwControlType
-        controlClass = MIXER_CONTROL_CLASSES[dwControlType & MIXERCONTROL_CT_CLASS_MASK]
+        controlClass = MIXER_CONTROL_CLASSES[
+            dwControlType & MIXERCONTROL_CT_CLASS_MASK
+        ]
         controlClassTypeName = controlClass["types"][dwControlType]
         flagNames = []
         fdwControl =  mixerControl.fdwControl

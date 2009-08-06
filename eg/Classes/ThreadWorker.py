@@ -74,8 +74,9 @@ class ThreadWorkerAction(object):
 
 
     def PrintUnhandledException(self):
+        name = currentThread().name
         lines = [
-            "Unhandled exception in WorkerThread <%s>:\n" % currentThread().name,
+            "Unhandled exception in WorkerThread <%s>:\n" % name,
             "Callers stack:\n"
         ]
         lines += format_list(extract_stack(self.callersFrame))

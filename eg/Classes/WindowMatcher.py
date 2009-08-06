@@ -173,7 +173,9 @@ class WindowMatcher:
         childNameMatch = self.childNameMatch
         childHwnds = [
             childHwnd for parentHwnd in topWindowsHwnds
-                for childHwnd in GetWindowChildsList(parentHwnd, includeInvisible)
+                for childHwnd in GetWindowChildsList(
+                    parentHwnd, includeInvisible
+                )
                     if (
                         childClassMatch(GetClassName(childHwnd)) and
                         childNameMatch(GetWindowText(childHwnd))

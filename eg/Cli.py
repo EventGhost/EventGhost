@@ -29,7 +29,9 @@ argvIter = (val.decode(ENCODING) for val in sys.argv)
 scriptPath = argvIter.next()
 
 # get program directory
-mainDir = abspath(join(dirname(__file__.decode(sys.getfilesystemencoding())), ".."))
+mainDir = abspath(
+    join(dirname(__file__.decode(sys.getfilesystemencoding())), "..")
+)
 
 # determine the commandline parameters
 class args:

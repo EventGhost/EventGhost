@@ -167,10 +167,10 @@ class Log(object):
         slist = ['Traceback (most recent call last) (%d):\n' % eg.revision]
         if tbTraceback:
             decode = codecs.getdecoder(sys.getfilesystemencoding())
-            for filename, lineno, funcName, text in extract_tb(tbTraceback)[skip:]:
+            for filename, lno, funcName, text in extract_tb(tbTraceback)[skip:]:
                 slist.append(
                     u'  File "%s", line %d, in %s\n    %s\n' % (
-                        decode(filename)[0], lineno, funcName, text
+                        decode(filename)[0], lno, funcName, text
                     )
                 )
         slist += format_exception_only(tbType, tbValue)

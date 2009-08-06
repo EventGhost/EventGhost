@@ -70,7 +70,9 @@ except pywintypes.error, data:
 sys.coinit_flags = 2
 from win32com.server import factory
 try:
-    __factory_infos = factory.RegisterClassFactories([EventGhostCom._reg_clsid_])
+    __factory_infos = factory.RegisterClassFactories(
+        [EventGhostCom._reg_clsid_]
+    )
 except:
     __factory_infos = []
     eg.PrintError("RegisterClassFactories failed!")

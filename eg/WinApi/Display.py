@@ -63,7 +63,9 @@ class Display(object):
         else:
             flag = 0
         iModeNum = 0
-        while 0 != EnumDisplaySettingsEx(self.deviceName, iModeNum, lpDevMode, flag):
+        while 0 != EnumDisplaySettingsEx(
+            self.deviceName, iModeNum, lpDevMode, flag
+        ):
             iModeNum += 1
             resolution = (devMode.dmPelsWidth, devMode.dmPelsHeight)
             deepthDict = modes.setdefault(resolution, {})

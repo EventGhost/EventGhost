@@ -106,7 +106,10 @@ class PluginInstall(object):
                     dirnames.remove(dirname)
             for filename in filenames:
                 ext = os.path.splitext(filename)[1]
-                if ext.lower() in (".pyc", ".pyo") and filename[:-1] in filenames:
+                if (
+                    ext.lower() in (".pyc", ".pyo") 
+                    and filename[:-1] in filenames
+                ):
                     continue
                 src = os.path.join(dirpath, filename)
                 dst = os.path.join(baseDir, src[len(pluginInfo.path)+1:])

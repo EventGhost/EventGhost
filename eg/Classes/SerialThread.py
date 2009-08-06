@@ -457,7 +457,9 @@ class SerialThread(Thread):
                 # Wait a little while for an event to occur.
                 res = WaitForSingleObject(osStatus.hEvent, 1000)
                 if res == WAIT_OBJECT_0:
-                    if GetOverlappedResult(hComm, byref(osStatus), byref(dwOvRes), 0):
+                    if GetOverlappedResult(
+                        hComm, byref(osStatus), byref(dwOvRes), 0
+                    ):
                         # Status event is stored in the event flag
                         # specified in the original WaitCommEvent call.
                         # Deal with the status event as appropriate.

@@ -60,7 +60,12 @@ class MessageDialog(eg.Dialog):
         sizer2 = eg.HBoxSizer(
             (staticBitmap, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 10),
             ((5, 5), 0),
-            (staticText, 0, wx.TOP|wx.RIGHT|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL, 10),
+            (
+                staticText, 
+                0, 
+                wx.TOP|wx.RIGHT|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL, 
+                10
+            ),
         )
         self.SetSizerAndFit(
             eg.VBoxSizer(

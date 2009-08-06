@@ -139,6 +139,7 @@ class SyncWebsite(builder.Task):
 
 from builder.CreateStaticImports import CreateStaticImports
 from builder.CreateImports import CreateImports
+from builder.CheckSources import CheckSources
 from builder.CreateSourceArchive import CreateSourceArchive
 from builder.CreatePyExe import CreatePyExe
 from builder.CreateLibrary import CreateLibrary
@@ -151,6 +152,7 @@ TASKS = [
     UpdateChangeLog,
     CreateStaticImports,
     CreateImports,
+    CheckSources,
     CreateChmDocs,
     CreateSourceArchive,
     CreatePyExe,
