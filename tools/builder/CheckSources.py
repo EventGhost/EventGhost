@@ -21,15 +21,15 @@ HEADER = """# -*- coding: utf-8 -*-
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
@@ -47,6 +47,7 @@ class CheckSources(builder.Task):
                     if path.startswith(serialDir):
                         continue
                     self.CheckHeader(path)
+                    self.FixTrailingWhitespace(path)
                     self.CheckLineLength(path)
 
 
@@ -70,3 +71,22 @@ class CheckSources(builder.Task):
                 print "line to long", path, line.rstrip()
                 return
 
+
+    def FixTrailingWhitespace(self, path):
+        """
+        Removes trailing whitespace from the source file.
+        """
+        infile = open(path, "rt")
+        oldContent = infile.read()
+        infile.close()
+        lines = [line.rstrip() for line in oldContent.splitlines()]
+        while lines[-1].strip() == "":
+            del lines[-1]
+        lines.append("")
+        lines.append("")
+        newContent = "\n".join(lines)
+        if oldContent != newContent:
+            outfile = open(path, "wt")
+            outfile.write(newContent)
+            outfile.close()
+        
