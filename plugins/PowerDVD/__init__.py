@@ -55,6 +55,7 @@ ACTIONS = [
     ("NavigationLeft", "Navigation Left", "Navigates through disc menus.", "{Left}"),
     ("NavigationRight", "Navigation Right", "Navigates through disc menus.", "{Right}"),
     ("NavigationEnter", "Navigation Enter", "Navigates through disc menus. (Has actually the same function as the Play action.)", "{Return}"),
+    ("Close", "Close", "Close PowerDVD.", "{Ctrl+x}"),
 ]
 
 
