@@ -798,6 +798,10 @@ class TreeCtrl(wx.TreeCtrl):
         self.SetItemImage(itemId, node.imageIndex)
         self.SetItemHasChildren(itemId, bool(node.childs))
         node.SetAttributes(self, itemId)
+        if node in self.expandedNodes:
+            self.Expand(itemId)
+        else:
+            self.Collapse(itemId)
 
 
     @eg.AssertNotMainThread

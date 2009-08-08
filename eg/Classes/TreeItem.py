@@ -315,6 +315,11 @@ class TreeItem(object):
         eg.Notify("NodeSelected", self)
 
 
+    def Expand(self):
+        self.document.expandedNodes.add(self)
+        eg.Notify("NodeChanged", self)
+
+
     def Execute(self):
         return None, None
 

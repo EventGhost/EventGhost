@@ -53,5 +53,5 @@ class AddActionGroup(eg.UndoHandler.NewItem):
         )
         self.StoreItem(folderItem)
         folderItem.Select()
-        document.ExpandNode(folderItem)
+        folderItem.Expand()
 
