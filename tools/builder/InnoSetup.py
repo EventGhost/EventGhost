@@ -32,7 +32,10 @@ class StdHandler(object):
         self.logger = logger
 
     def write(self, data):
-        self.buf += data
+        try:
+            self.buf += data
+        except UnicodeError:
+            self.buf += data.decode(sys.getfilesystemencoding())
         lines = self.buf.split("\n")
         for line in self.buf.split("\n")[:-1]:
             line = (self.indent * 4 * " ") + line.rstrip()
