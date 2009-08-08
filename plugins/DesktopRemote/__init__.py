@@ -1,24 +1,27 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+u"""
+    Name: Desktop Remote
+    Author: Bitmonster
+    Version: 1.0
+    Description: Creates a remote-like desktop window.
+    GUID: {5DFFBD61-7582-4D6F-8EA9-9CB36284C9CF}
+    URL: http://www.eventghost.org/forum/viewtopic.php?t=513
+"""
 
 import eg
 
@@ -41,36 +44,36 @@ from cStringIO import StringIO
 from eg.WinApi import GetCursorPos
 
 
-        
+
 class Text:
     class CreateNew:
         pass
-        
+
     class AddButton:
-        label = "Label:" 
+        label = "Label:"
         event = "Event:"
-        
-        
-class ButtonType: 
+
+
+class ButtonType:
     pass
 
-class LineType: 
+class LineType:
     pass
 
 
-        
+
 class ImageButton(wx.Button):
-    
+
     def __init__(self, parent, value=None, label=""):
         self.value = value
         self.view = None
         wx.Button.__init__(self, parent, label=label)
         self.Bind(wx.EVT_BUTTON, self.OnButton)
-        
-        
+
+
     def OnButton(self, event):
         dialog = wx.FileDialog(
-            self.GetParent(), 
+            self.GetParent(),
             #message=self.mesg,
             style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST,
             wildcard="All image files|*jpg;*.png;*.bmp;*.gif|All files|*.*"
@@ -82,8 +85,8 @@ class ImageButton(wx.Button):
             imageFile.close()
             self.SetValue(b64encode(stream))
             event.Skip()
-        
-        
+
+
     def SetValue(self, value):
         self.value = value
         if value and self.view:
@@ -102,16 +105,16 @@ class ImageButton(wx.Button):
             bmp = wx.BitmapFromImage(image)
             self.view.SetBitmap(bmp)
             self.view.SetClientSize((boxWidth, boxHeight))
-        
-        
+
+
     def GetValue(self):
         return self.value
-    
-            
-        
+
+
+
 class DesktopRemote(eg.PluginBase):
     text = Text
-    
+
     def __init__(self):
         self.AddEvents()
 
@@ -136,8 +139,8 @@ class DesktopRemote(eg.PluginBase):
     def OnButtonUp(self, event):
         event.Skip()
         self.lastEvent.SetShouldEnd()
-    
-    
+
+
     def __stop__(self):
         if self.frame:
             wx.CallAfter(self.frame.Destroy)
@@ -147,13 +150,13 @@ class DesktopRemote(eg.PluginBase):
 
 class CreateNew(eg.ActionBase):
     name = "Create New Remote"
-    
+
     def __call__(
-        self, 
-        width=40, 
-        height=40, 
-        rowGap=3, 
-        columnGap=3, 
+        self,
+        width=40,
+        height=40,
+        rowGap=3,
+        columnGap=3,
         borderSize=4,
         windowColour=(108, 108, 108),
         foregroundColour=(255, 255, 255),
@@ -183,18 +186,18 @@ class CreateNew(eg.ActionBase):
         plugin.moveOnDrag = moveOnDrag
         plugin.iconizeOnDoubleClick = iconizeOnDoubleClick
 
-    
+
     def GetLabel(self, *args):
         return self.name
-    
-    
+
+
     @eg.LogIt
     def Configure(
-        self, 
-        width=40, 
-        height=40, 
-        rowGap=3, 
-        columnGap=3, 
+        self,
+        width=40,
+        height=40,
+        rowGap=3,
+        columnGap=3,
         borderSize=4,
         windowColour=(108, 108, 108),
         foregroundColour=(255, 255, 255),
@@ -212,11 +215,11 @@ class CreateNew(eg.ActionBase):
         captionCtrl = panel.TextCtrl(caption)
         showInTaskbarCtrl = panel.CheckBox(showInTaskbar, "Show in taskbar")
         moveOnDragCtrl = panel.CheckBox(
-            moveOnDrag, 
+            moveOnDrag,
             "Move window on drag click in empty area"
         )
         iconizeOnDoubleClickCtrl = panel.CheckBox(
-            iconizeOnDoubleClick, 
+            iconizeOnDoubleClick,
             "Minimize window on double click in empty area"
         )
         choices = [
@@ -234,7 +237,7 @@ class CreateNew(eg.ActionBase):
         foregroundColourCtrl = panel.ColourSelectButton(foregroundColour)
         backgroundColourCtrl = panel.ColourSelectButton(backgroundColour)
         fontCtrl = panel.FontSelectButton(fontInfo)
-        
+
         panel.AddLine("Caption:", captionCtrl)
         panel.AddLine(showInTaskbarCtrl)
         panel.AddLine(moveOnDragCtrl)
@@ -249,7 +252,7 @@ class CreateNew(eg.ActionBase):
         panel.AddLine("Button foreground colour:", foregroundColourCtrl)
         panel.AddLine("Button background colour:", backgroundColourCtrl)
         panel.AddLine("Button font:", fontCtrl)
-        
+
         while panel.Affirmed():
             panel.SetResult(
                 widthCtrl.GetValue(),
@@ -272,17 +275,17 @@ class CreateNew(eg.ActionBase):
 
 class AddButton(eg.ActionBase):
     name = "Add Button"
-    
+
     def __call__(self, kwargs):
         self.plugin.data.append((ButtonType, kwargs))
 
-    
+
     def GetLabel(self, kwargs):
         return self.name + ": " + kwargs.get("label", "")
-    
-    
+
+
     def Configure(self, kwargs={}):
-        
+
         def MakeOption(name, checkBox, ctrl):
             value = kwargs.get(name, None)
             def OnCheckBox(event):
@@ -301,65 +304,65 @@ class AddButton(eg.ActionBase):
                 if checkBox.GetValue():
                     kwargs[name] = ctrl.GetValue()
             return SetResult
-        
+
         panel = eg.ConfigPanel()
         panel.SetSizerProperty(vgap=2)
         text = self.text
-        
+
         labelCtrl = panel.TextCtrl(kwargs.get("label", ""))
         panel.AddLine(text.label, labelCtrl)
-        
+
         eventCtrl = panel.TextCtrl(kwargs.get("event", ""))
         panel.AddLine(text.event, eventCtrl)
-        
+
         invisibleCtrl = panel.CheckBox(
-            kwargs.get("invisible", False), 
+            kwargs.get("invisible", False),
             "Invisible"
         )
         panel.AddLine(invisibleCtrl)
-        
+
         imageButton = ImageButton(panel, label="Choose Image")
         imageBox = wx.StaticBitmap(
-            panel, 
-            size=(40, 40), 
-            pos=(280, 70), 
+            panel,
+            size=(40, 40),
+            pos=(280, 70),
             style=wx.SUNKEN_BORDER
         )
         imageButton.view = imageBox
-        
+
         imageOption = MakeOption(
-            "image", 
-            panel.CheckBox(label="Use image as label:"), 
+            "image",
+            panel.CheckBox(label="Use image as label:"),
             imageButton
         )
 
         foregroundColour = MakeOption(
-            "foregroundColour", 
-            panel.CheckBox(label="Override foreground colour:"), 
+            "foregroundColour",
+            panel.CheckBox(label="Override foreground colour:"),
             panel.ColourSelectButton()
         )
-        
+
         backgroundColour = MakeOption(
-            "backgroundColour", 
-            panel.CheckBox(label="Override background colour:"), 
+            "backgroundColour",
+            panel.CheckBox(label="Override background colour:"),
             panel.ColourSelectButton()
         )
-        
+
         fontInfo = MakeOption(
-            "fontInfo", 
-            panel.CheckBox(label="Override button font:"), 
+            "fontInfo",
+            panel.CheckBox(label="Override button font:"),
             panel.FontSelectButton()
         )
 
         width = MakeOption(
-            "width", 
-            panel.CheckBox(label="Override width:"), 
+            "width",
+            panel.CheckBox(label="Override width:"),
             panel.SpinIntCtrl()
         )
-        
+
         height = MakeOption(
-            "height", 
-            panel.CheckBox(label="Override height:"), 
+            "height",
+            panel.CheckBox(label="Override height:"),
             panel.SpinIntCtrl()
         )
 
@@ -378,20 +381,20 @@ class AddButton(eg.ActionBase):
                 kwargs["invisible"] = True
             panel.SetResult(kwargs)
 
-        
-        
+
+
 
 class StartNewLine(eg.ActionBase):
     name = "Start New Line"
-    
+
     def __call__(self, height=0):
         self.plugin.data.append((LineType, (height,)))
 
 
     def GetLabel(self, *args):
         return self.name
-    
-    
+
+
     def Configure(self, height=0):
         panel = eg.ConfigPanel()
         heightCtrl = panel.SpinIntCtrl(height)
@@ -402,21 +405,21 @@ class StartNewLine(eg.ActionBase):
 
 
 class Show(eg.ActionBase):
-    
+
     def __call__(self, xPos=0, yPos=0, alwaysOnTop=False):
         wx.CallAfter(CreateRemote, self.plugin, xPos, yPos, alwaysOnTop)
-        
-        
+
+
     def GetLabel(self, xPos, yPos, *args):
         return "Show at %d,%d" % (xPos, yPos)
-    
-    
+
+
     def Configure(self, xPos=0, yPos=0, alwaysOnTop=False):
         panel = eg.ConfigPanel()
         xPosCtrl = panel.SpinIntCtrl(xPos, min=-32768, max=32767)
         yPosCtrl = panel.SpinIntCtrl(yPos, min=-32768, max=32767)
         alwaysOnTopCtrl = panel.CheckBox(
-            alwaysOnTop, 
+            alwaysOnTop,
             "Keep window always on top"
         )
         panel.AddLine("Screen horizontal position:", xPosCtrl)
@@ -424,38 +427,38 @@ class Show(eg.ActionBase):
         panel.AddLine(alwaysOnTopCtrl)
         while panel.Affirmed():
             panel.SetResult(
-                xPosCtrl.GetValue(), 
+                xPosCtrl.GetValue(),
                 yPosCtrl.GetValue(),
                 alwaysOnTopCtrl.GetValue(),
             )
-        
-        
-        
+
+
+
 class Close(eg.ActionBase):
-    
+
     def __call__(self):
         if self.plugin.frame:
             self.plugin.frame.Destroy()
             self.plugin.frame = None
-            
-        
-        
+
+
+
 class GenButton(buttons.GenButton):
-    
+
     def DrawFocusIndicator(self, *args):
         pass
-    
+
 
 
 class GenBitmapButton(buttons.GenBitmapButton):
-    
+
     def DrawFocusIndicator(self, *args):
         pass
-    
-    
-    
+
+
+
 class RemotePanel(wx.Panel):
-    
+
     def __init__(self, parent, plugin):
         self.parent = parent
         wx.Panel.__init__(self, parent)
@@ -464,7 +467,7 @@ class RemotePanel(wx.Panel):
         if plugin.iconizeOnDoubleClick:
             self.Bind(wx.EVT_LEFT_DCLICK, self.OnCmdIconize)
         self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
-        
+
         self.menu = menu = wx.Menu()
         item = wx.MenuItem(menu, wx.NewId(), "Hide")
         menu.AppendItem(item)
@@ -472,25 +475,25 @@ class RemotePanel(wx.Panel):
         item = wx.MenuItem(menu, wx.NewId(),"Close")
         menu.AppendItem(item)
         menu.Bind(wx.EVT_MENU, self.OnCmdClose, item)
-       
-       
+
+
     def OnCmdClose(self, event):
         self.parent.Close()
-        
-        
+
+
     def OnCmdIconize(self, event):
         self.parent.Iconize()
-        
+
 
     def OnRightDown(self, event):
         self.PopupMenu(self.menu)
-        
-        
+
+
     def OnLeftDown(self, event):
         x1, y1 = GetCursorPos()
         x2, y2 = self.parent.GetScreenPosition()
         self.offset = (x1 - x2, y1 - y2)
-        
+
         # from now on we want all mouse motion events
         self.Bind(wx.EVT_MOTION, self.OnDrag)
         # and the left up event
@@ -507,8 +510,8 @@ class RemotePanel(wx.Panel):
         x1, y1 = GetCursorPos()
         x2, y2 = self.offset
         self.parent.SetPosition((x1 - x2, y1 - y2))
-        
-        
+
+
     def OnDragEnd(self, event):
         # unbind the unneeded events
         self.Unbind(wx.EVT_MOTION)
@@ -517,10 +520,10 @@ class RemotePanel(wx.Panel):
         # stop processing the mouse capture
         self.ReleaseMouse()
 
-        
-        
+
+
 class RemoteFrame(wx.Frame):
-    
+
     def __init__(self, plugin, pos, alwaysOnTop):
         style = wx.SYSTEM_MENU|wx.MINIMIZE_BOX|wx.CLIP_CHILDREN|wx.CLOSE_BOX
         if not plugin.showInTaskbar:
@@ -534,20 +537,20 @@ class RemoteFrame(wx.Frame):
         if alwaysOnTop:
             style |= wx.STAY_ON_TOP
         wx.Frame.__init__(
-            self, 
-            None, 
-            title=plugin.caption, 
-            pos=pos, 
+            self,
+            None,
+            title=plugin.caption,
+            pos=pos,
             style=style
         )
         self.SetBackgroundColour(plugin.windowColour)
-        
-        
+
+
 
 def CreateRemote(plugin, xPos, yPos, alwaysOnTop):
     data = plugin.data
     borderSize = plugin.borderSize
-    
+
     if plugin.frame:
         plugin.frame.Destroy()
     plugin.frame = frame = RemoteFrame(plugin, (xPos, yPos), alwaysOnTop)
@@ -557,7 +560,7 @@ def CreateRemote(plugin, xPos, yPos, alwaysOnTop):
     lineSizer = wx.BoxSizer(wx.HORIZONTAL)
     x = 0
     y = 0
-    
+
     def MakeButtonDownFunc(eventstring):
         if not eventstring:
             return
@@ -565,8 +568,8 @@ def CreateRemote(plugin, xPos, yPos, alwaysOnTop):
             event.Skip()
             plugin.lastEvent = plugin.TriggerEnduringEvent(eventstring)
         return OnButtonDown
-    
-    
+
+
     for itemType, args in data:
         if itemType is ButtonType:
             kwargs = args
@@ -592,7 +595,7 @@ def CreateRemote(plugin, xPos, yPos, alwaysOnTop):
                 button.SetFont(
                     wx.FontFromNativeInfoString(GetOption("fontInfo"))
                 )
-                
+
                 button.SetBezelWidth(3)
                 button.SetBackgroundColour(GetOption("backgroundColour"))
                 button.SetForegroundColour(GetOption("foregroundColour"))
@@ -610,20 +613,19 @@ def CreateRemote(plugin, xPos, yPos, alwaysOnTop):
         elif itemType is LineType:
             height = args[0]
             mainSizer.Add(
-                lineSizer, 
-                0, 
-                wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL, 
+                lineSizer,
+                0,
+                wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL,
                 height + plugin.columnGap
             )
             lineSizer = wx.BoxSizer(wx.HORIZONTAL)
             y += 1
-            x = 0            
-            
+            x = 0
+
     mainSizer.Add(lineSizer, 0, wx.LEFT|wx.RIGHT, borderSize)
     mainSizer.Add((0, borderSize))
     panel.SetSizerAndFit(mainSizer)
     frame.SetClientSize(panel.GetSize())
     frame.Show(True)
     frame.Update()
-            
-        
+

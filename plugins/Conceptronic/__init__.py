@@ -1,19 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2008 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 ur"""<rst>
 Plugin for the `Conceptronic Remote Control for Windows\u00ae Media Center`__.
@@ -23,7 +22,7 @@ Plugin for the `Conceptronic Remote Control for Windows\u00ae Media Center`__.
 .. image:: picture.jpg
    :align: center
 
-**Notice:** You need a special driver to use the remote with this plugin. 
+**Notice:** You need a special driver to use the remote with this plugin.
 Please `download it here`__ and install it while the device is connected.
 
 __ http://www.conceptronic.net/site/desktopdefault.aspx?tabindex=1&tabid=242&cid=40&gid=4050&pid=CLLRCMCE
@@ -75,7 +74,7 @@ BUTTON_CODES = {
     (32, 0, 0, 0): 'VolumeUp',
     (64, 0, 0, 0): 'VolumeDown',
 }
-    
+
 KEYPAD_CODES = {
     (0, 0, 30, 0, 0, 0, 0, 0): "Num1",
     (0, 0, 31, 0, 0, 0, 0, 0): "Num2",
@@ -99,7 +98,7 @@ KEYPAD_CODES = {
 
 
 class Conceptronic(eg.PluginBase):
-                
+
     def __start__(self):
         self.buffer = []
         self.expectedLength = 0
@@ -117,7 +116,7 @@ class Conceptronic(eg.PluginBase):
         if not self.usb1.IsOk() or not self.usb2.IsOk():
             raise self.Exceptions.DeviceNotFound
 
-         
+
     def __stop__(self):
         self.usb1.Close()
         self.usb2.Close()
