@@ -35,6 +35,20 @@ HEADER = """# -*- coding: utf-8 -*-
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
+PLUGINS = [
+    "EventGhost",
+    "System",
+    "Window",
+    "Mouse",
+    "AtiRemoteWonder2",
+    "Barco",
+    "Conceptronic",
+    "DBox2",
+    "DesktopRemote",
+    "DirectoryWatcher",
+    "Fhz100Pc",
+]
+
 
 class CheckSources(builder.Task):
     description = "Check source files"
@@ -44,11 +58,9 @@ class CheckSources(builder.Task):
         searchDirs = [
             join(sourceDir, "eg"),
             join(sourceDir, "tools"),
-            join(sourceDir, "plugins", "EventGhost"),
-            join(sourceDir, "plugins", "System"),
-            join(sourceDir, "plugins", "Window"),
-            join(sourceDir, "plugins", "Mouse"),
         ]
+        for plugin in PLUGINS:
+            searchDirs.append(join(sourceDir, "plugins", plugin))
         serialDir = join(sourceDir, "eg", "WinApi", "serial")
         for searchDir in searchDirs:
             for root, dirs, files in os.walk(searchDir):
