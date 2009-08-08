@@ -54,6 +54,7 @@ if not hasattr(sys, "frozen"): # detect py2exe
                 "#include <objidl.h>\n"
                 "#include <setupapi.h>\n"
                 "#include <htmlhelp.h>\n"
+                "#include <shellapi.h>\n"
             )
         except WindowsError:
             print "GCC_XML most likely not installed"
@@ -1341,3 +1342,143 @@ MonitorFromWindow = _user32.MonitorFromWindow
 MonitorFromWindow.restype = HMONITOR
 MonitorFromWindow.argtypes = [HWND, DWORD]
 
+OpenSCManagerW = _Advapi32.OpenSCManagerW
+OpenSCManagerW.restype = SC_HANDLE
+OpenSCManagerW.argtypes = [LPCWSTR, LPCWSTR, DWORD]
+OpenSCManager = OpenSCManagerW # alias
+SC_MANAGER_ALL_ACCESS = 983103 # Variable c_long '983103l'
+CreateServiceW = _Advapi32.CreateServiceW
+CreateServiceW.restype = SC_HANDLE
+CreateServiceW.argtypes = [SC_HANDLE, LPCWSTR, LPCWSTR, DWORD, DWORD, DWORD, DWORD, LPCWSTR, LPCWSTR, LPDWORD, LPCWSTR, LPCWSTR, LPCWSTR]
+CreateService = CreateServiceW # alias
+SERVICE_ALL_ACCESS = 983551 # Variable c_long '983551l'
+SERVICE_WIN32_OWN_PROCESS = 16 # Variable c_int '16'
+SERVICE_DEMAND_START = 3 # Variable c_int '3'
+SERVICE_ERROR_NORMAL = 1 # Variable c_int '1'
+CloseServiceHandle = _Advapi32.CloseServiceHandle
+CloseServiceHandle.restype = BOOL
+CloseServiceHandle.argtypes = [SC_HANDLE]
+DELETE = 65536 # Variable c_long '65536l'
+OpenServiceW = _Advapi32.OpenServiceW
+OpenServiceW.restype = SC_HANDLE
+OpenServiceW.argtypes = [SC_HANDLE, LPCWSTR, DWORD]
+OpenService = OpenServiceW # alias
+DeleteService = _Advapi32.DeleteService
+DeleteService.restype = BOOL
+DeleteService.argtypes = [SC_HANDLE]
+SERVICE_SYSTEM_START = 1 # Variable c_int '1'
+SERVICE_AUTO_START = 2 # Variable c_int '2'
+
+# values for enumeration '_SC_STATUS_TYPE'
+SC_STATUS_PROCESS_INFO = 0
+_SC_STATUS_TYPE = c_int # enum
+SC_STATUS_TYPE = _SC_STATUS_TYPE
+QueryServiceStatusEx = _Advapi32.QueryServiceStatusEx
+QueryServiceStatusEx.restype = BOOL
+QueryServiceStatusEx.argtypes = [SC_HANDLE, SC_STATUS_TYPE, LPBYTE, DWORD, LPDWORD]
+class _SERVICE_STATUS_PROCESS(Structure):
+    pass
+SERVICE_STATUS_PROCESS = _SERVICE_STATUS_PROCESS
+_SERVICE_STATUS_PROCESS._fields_ = [
+    ('dwServiceType', DWORD),
+    ('dwCurrentState', DWORD),
+    ('dwControlsAccepted', DWORD),
+    ('dwWin32ExitCode', DWORD),
+    ('dwServiceSpecificExitCode', DWORD),
+    ('dwCheckPoint', DWORD),
+    ('dwWaitHint', DWORD),
+    ('dwProcessId', DWORD),
+    ('dwServiceFlags', DWORD),
+]
+SERVICE_QUERY_STATUS = 4 # Variable c_int '4'
+SERVICE_STOPPED = 1 # Variable c_int '1'
+SERVICE_STOP_PENDING = 3 # Variable c_int '3'
+Sleep = _kernel32.Sleep
+Sleep.restype = None
+Sleep.argtypes = [DWORD]
+StartServiceW = _Advapi32.StartServiceW
+StartServiceW.restype = BOOL
+StartServiceW.argtypes = [SC_HANDLE, DWORD, POINTER(LPCWSTR)]
+StartService = StartServiceW # alias
+SERVICE_START_PENDING = 2 # Variable c_int '2'
+SERVICE_RUNNING = 4 # Variable c_int '4'
+SERVICE_CONTROL_STOP = 1 # Variable c_int '1'
+class _SERVICE_STATUS(Structure):
+    pass
+LPSERVICE_STATUS = POINTER(_SERVICE_STATUS)
+ControlService = _Advapi32.ControlService
+ControlService.restype = BOOL
+ControlService.argtypes = [SC_HANDLE, DWORD, LPSERVICE_STATUS]
+_SERVICE_STATUS._fields_ = [
+    ('dwServiceType', DWORD),
+    ('dwCurrentState', DWORD),
+    ('dwControlsAccepted', DWORD),
+    ('dwWin32ExitCode', DWORD),
+    ('dwServiceSpecificExitCode', DWORD),
+    ('dwCheckPoint', DWORD),
+    ('dwWaitHint', DWORD),
+]
+SERVICE_ACTIVE = 1 # Variable c_int '1'
+class _ENUM_SERVICE_STATUSW(Structure):
+    pass
+LPENUM_SERVICE_STATUSW = POINTER(_ENUM_SERVICE_STATUSW)
+EnumDependentServicesW = _Advapi32.EnumDependentServicesW
+EnumDependentServicesW.restype = BOOL
+EnumDependentServicesW.argtypes = [SC_HANDLE, DWORD, LPENUM_SERVICE_STATUSW, DWORD, LPDWORD, LPDWORD]
+EnumDependentServices = EnumDependentServicesW # alias
+SERVICE_STATUS = _SERVICE_STATUS
+_ENUM_SERVICE_STATUSW._fields_ = [
+    ('lpServiceName', LPWSTR),
+    ('lpDisplayName', LPWSTR),
+    ('ServiceStatus', SERVICE_STATUS),
+]
+ERROR_MORE_DATA = 234 # Variable c_long '234l'
+class _SHELLEXECUTEINFOW(Structure):
+    pass
+SHELLEXECUTEINFOW = _SHELLEXECUTEINFOW
+SHELLEXECUTEINFO = SHELLEXECUTEINFOW
+class N18_SHELLEXECUTEINFOW5DOLLAR_254E(Union):
+    pass
+N18_SHELLEXECUTEINFOW5DOLLAR_254E._pack_ = 1
+N18_SHELLEXECUTEINFOW5DOLLAR_254E._fields_ = [
+    ('hIcon', HANDLE),
+    ('hMonitor', HANDLE),
+]
+_SHELLEXECUTEINFOW._pack_ = 1
+_SHELLEXECUTEINFOW._anonymous_ = ['_0']
+_SHELLEXECUTEINFOW._fields_ = [
+    ('cbSize', DWORD),
+    ('fMask', DWORD),
+    ('hwnd', HWND),
+    ('lpVerb', LPCWSTR),
+    ('lpFile', LPCWSTR),
+    ('lpParameters', LPCWSTR),
+    ('lpDirectory', LPCWSTR),
+    ('nShow', c_int),
+    ('hInstApp', HINSTANCE),
+    ('lpIDList', LPVOID),
+    ('lpClass', LPCWSTR),
+    ('hkeyClass', HKEY),
+    ('dwHotKey', DWORD),
+    ('_0', N18_SHELLEXECUTEINFOW5DOLLAR_254E),
+    ('hProcess', HANDLE),
+]
+SEE_MASK_NOASYNC = 256 # Variable c_int '256'
+SEE_MASK_FLAG_DDEWAIT = SEE_MASK_NOASYNC # alias
+SEE_MASK_FLAG_NO_UI = 1024 # Variable c_int '1024'
+SW_SHOWNORMAL = 1 # Variable c_int '1'
+SEE_MASK_NOCLOSEPROCESS = 64 # Variable c_int '64'
+SEE_MASK_NOCLOSEPROCESS = 64 # Variable c_int '64'
+ChangeServiceConfig2W = _Advapi32.ChangeServiceConfig2W
+ChangeServiceConfig2W.restype = BOOL
+ChangeServiceConfig2W.argtypes = [SC_HANDLE, DWORD, LPVOID]
+ChangeServiceConfig2 = ChangeServiceConfig2W # alias
+class _SERVICE_DESCRIPTIONW(Structure):
+    pass
+SERVICE_DESCRIPTIONW = _SERVICE_DESCRIPTIONW
+SERVICE_DESCRIPTION = SERVICE_DESCRIPTIONW
+_SERVICE_DESCRIPTIONW._fields_ = [
+    ('lpDescription', LPWSTR),
+]
+SERVICE_CONFIG_DESCRIPTION = 1 # Variable c_int '1'
+SERVICE_CHANGE_CONFIG = 2 # Variable c_int '2'
