@@ -169,10 +169,12 @@ class Log(object):
             decode = codecs.getdecoder(sys.getfilesystemencoding())
             for fname, lno, funcName, text in extract_tb(tbTraceback)[skip:]:
                 slist.append(
-                    u'  File "%s", line %d, in %s\n    %s\n' % (
-                        decode(fname)[0], lno, funcName, text
+                    u'  File "%s", line %d, in %s\n' % (
+                        decode(fname)[0], lno, funcName
                     )
                 )
+                if text:
+                    slist.append("    %s\n" % text)
         slist += format_exception_only(tbType, tbValue)
 
         error = "".join(slist)
