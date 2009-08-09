@@ -90,7 +90,6 @@ class ThreadWorker(object):
     General purpose message pumping thread, that is used in many places.
     """
     def __init__(self, *args, **kwargs):
-        self.__startupExceptionInfo = None
         self.__alive = True
         self.__queue = deque()
         self.__setupFunc = partial(self.Setup, *args, **kwargs)
@@ -232,7 +231,7 @@ class ThreadWorker(object):
                 QS_ALLINPUT
             )
             if resultCode == WAIT_OBJECT_0:
-                # event signalled - should never happen!
+                # event signaled - should never happen!
                 raise Exception("Got unknown event in ThreadWorker.Wait()")
             elif resultCode == WAIT_TIMEOUT:
                 # Timeout expired.
@@ -262,8 +261,7 @@ class ThreadWorker(object):
                 return
             # must be a message.
             PumpWaitingMessages()
-            timeout = endTime - clock()
-            if timeout < 0:
+            if endTime < clock():
                 return
 
 
