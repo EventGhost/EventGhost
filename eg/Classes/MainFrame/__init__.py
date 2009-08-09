@@ -937,6 +937,61 @@ class MainFrame(wx.Frame):
             return
 
         import wx.py as py
+        
+        # The FillingTree of the pyCrustFrame has some bug, that will raise
+        # a UnicodeError if some item has a non-ascii str-representation.
+        # For example a module that resides in a non-ascii file-system path
+        # will trigger that error.
+        # Thus we monkey-path the responsible code here with a bug-fixed 
+        # version.
+        from wx.py.filling import FillingTree
+        def display(self):
+            item = self.item
+            if not item:
+                return
+            if self.IsExpanded(item):
+                self.addChildren(item)
+            self.setText('')
+            obj = self.GetPyData(item)
+            if wx.Platform == '__WXMSW__':
+                if obj is None: # Windows bug fix.
+                    return
+            self.SetItemHasChildren(item, self.objHasChildren(obj))
+            otype = type(obj)
+            text = u''
+            text += self.getFullName(item)
+            text += '\n\nType: ' + str(otype)
+            try:
+                # BUGFIX: Here is the problematic code. We replace str(obj) 
+                #         with unicode(obj) and everything seems to be fine.
+                #value = str(obj)
+                value = unicode(obj)
+            except:
+                value = ''
+            if otype is types.StringType or otype is types.UnicodeType:
+                value = repr(obj)
+            text += '\n\nValue: ' + value
+            if otype not in SIMPLETYPES:
+                try:
+                    text += '\n\nDocstring:\n\n"""' + \
+                            inspect.getdoc(obj).strip() + '"""'
+                except:
+                    pass
+            if otype is types.InstanceType:
+                try:
+                    text += '\n\nClass Definition:\n\n' + \
+                            inspect.getsource(obj.__class__)
+                except:
+                    pass
+            else:
+                try:
+                    text += '\n\nSource Code:\n\n' + \
+                            inspect.getsource(obj)
+                except:
+                    pass
+            self.setText(text)
+        FillingTree.display.im_func.func_code = display.func_code
+        
 
         fileName = join(eg.configDir, 'PyCrust')
         pyCrustConfig = wx.FileConfig(localFilename=fileName)
