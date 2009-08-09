@@ -114,7 +114,7 @@ class TimerObject():
         #at given time (HH:MM:SS)
         elif self.startTimeType == 2:
             hoursStr, minutesStr, secondsStr = self.startTime.split(":")
-            hours = int(hours)
+            hours = int(hoursStr)
             minutes = int(minutesStr)
             seconds = int(secondsStr)
             #check if we have to schedule today or tomorrow
