@@ -142,9 +142,9 @@ class PluginInstall(object):
             if result == wx.ID_CANCEL:
                 return
             guid = pluginData['guid']
-            if guid in eg.pluginManager.guidDatabase:
+            if guid in eg.pluginManager.database:
                 # a plugin with same GUID already exists
-                info = eg.pluginManager.guidDatabase[guid]
+                info = eg.pluginManager.database[guid]
                 if info.path.lower().startswith(eg.userPluginDir.lower()):
                     # plugin with same GUID exists in user dir, so delete
                     # the folder first
