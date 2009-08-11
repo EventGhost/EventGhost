@@ -1302,3 +1302,6 @@ GetVolumeInformationW.argtypes = [LPCWSTR, LPWSTR, DWORD, LPDWORD, LPDWORD, LPDW
 GetVolumeInformation = GetVolumeInformationW # alias
 SWP_FRAMECHANGED = 32 # Variable c_int '32'
 
+GetExitCodeProcess = _kernel32.GetExitCodeProcess
+GetExitCodeProcess.restype = BOOL
+GetExitCodeProcess.argtypes = [HANDLE, LPDWORD]
