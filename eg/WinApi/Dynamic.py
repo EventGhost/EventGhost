@@ -1482,3 +1482,7 @@ _SERVICE_DESCRIPTIONW._fields_ = [
 ]
 SERVICE_CONFIG_DESCRIPTION = 1 # Variable c_int '1'
 SERVICE_CHANGE_CONFIG = 2 # Variable c_int '2'
+
+GetExitCodeProcess = _kernel32.GetExitCodeProcess
+GetExitCodeProcess.restype = BOOL
+GetExitCodeProcess.argtypes = [HANDLE, LPDWORD]
