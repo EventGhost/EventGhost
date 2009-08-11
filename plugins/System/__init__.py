@@ -19,7 +19,7 @@ import eg
 eg.RegisterPlugin(
     name = "System",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.1.0",
     description = (
         "Controls different aspects of your system, like sound card, "
         "graphics card, power management, et cetera."

@@ -19,10 +19,11 @@ import wx
 from os.path import basename, dirname, abspath
 
 from eg.WinApi.Dynamic import (
-    sizeof, CreateProcess, WaitForSingleObject, FormatError,
+    sizeof, byref, CreateProcess, WaitForSingleObject, FormatError,
     CloseHandle, create_unicode_buffer,
     STARTUPINFO, PROCESS_INFORMATION,
-    CREATE_NEW_CONSOLE, STARTF_USESHOWWINDOW, INFINITE
+    CREATE_NEW_CONSOLE, STARTF_USESHOWWINDOW, INFINITE,
+    GetExitCodeProcess, DWORD
 )
 
 WINSTATE_FLAGS = (
@@ -79,6 +80,7 @@ class Execute(eg.ActionBase):
         priority=2,
         workingDir=""
     ):
+        returnValue = None
         pathname = eg.ParseString(pathname)
         if not workingDir:
             workingDir = dirname(abspath(pathname))
@@ -106,8 +108,16 @@ class Execute(eg.ActionBase):
             raise self.Exception(FormatError())
         if waitForCompletion:
             WaitForSingleObject(processInformation.hProcess, INFINITE)
+            exitCode = DWORD()
+            if not GetExitCodeProcess(
+                processInformation.hProcess, 
+                byref(exitCode)
+            ):
+                raise self.Exception(FormatError())
+            returnValue = exitCode.value
         CloseHandle(processInformation.hProcess)
         CloseHandle(processInformation.hThread)
+        return returnValue
 
 
     def GetLabel(self, pathname='', *dummyArgs):
