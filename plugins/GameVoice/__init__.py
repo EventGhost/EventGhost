@@ -28,6 +28,9 @@ ButtonMapping = {
     7 : "Mute" }
 
 class GameVoice(eg.PluginClass):
+    def __init__(self):
+        thread = None
+    
     def ButtonCallback(self, data):
         btnPressed = []
         for num in data:

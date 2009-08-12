@@ -5,7 +5,7 @@ eg.RegisterPlugin(
     kind = "remote",
     canMultiLoad = False,
     description = (
-        'Allows to recieve events from FS20 remote controls.<br/>'
+        'Allows to receive events from FS20 remote controls.<br/>'
         '<a href="http://www.elv.de/"><img src=\"picture.jpg\"/></a>'
     ),
     url = "http://www.eventghost.org/forum/viewtopic.php?t=571",
@@ -56,6 +56,7 @@ Commands = {
 class FS20PCE(eg.PluginClass):
     def __init__(self):
         self.version = None
+        self.thread = None
         self.PendingEvents = {}
     
     def RawCallback(self, data):

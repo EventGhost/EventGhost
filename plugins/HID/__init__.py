@@ -36,8 +36,9 @@ class Text:
     vendorID = "Vendor ID "
 
 class HID(eg.PluginClass):
-    text = Text
-    thread = None
+    def __init__(self):
+        text = Text
+        thread = None
 
     def RawCallback(self, data):
         self.TriggerEvent(binascii.hexlify(data).upper())
