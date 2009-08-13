@@ -38,8 +38,8 @@ Commands = {
     0x16 : "Power.On",
     0x17 : "Power.Previous",
     0x18 : "Power.Toggle",
-    0x19 : "Power.Dim.Up",
-    0x20 : "Power.Dim.Down",
+    0x19 : "Power.Dim.LevelUp",
+    0x20 : "Power.Dim.LevelDown",
     0x21 : "Power.Dim.UpAndDown",
     0x22 : "Program.Time",
     0x23 : "SendStatus",
@@ -93,20 +93,20 @@ class FS20PCE(eg.PluginClass):
         
         validTime = ord(data[9]) > 15
         if validTime:
+            timeStr = binascii.hexlify(data[9:12])
+            timeStr = timeStr[1:]#cut the one
+            eventTime = float(timeStr) * 0.25
             if (commandStr.startswith("Power.")):
                 #parsing time
-                timeStr = binascii.hexlify(data[9:12])
-                timeStr = timeStr[1:]#cut the one
-                time = float(timeStr) * 0.25
-                if (time > 0):
-                    timerEntry = eg.scheduler.AddTask(time, self.SchedulerCallback, combinedAddress, commandStr)
+                if (eventTime > 0):
+                    timerEntry = eg.scheduler.AddTask(eventTime, self.SchedulerCallback, combinedAddress, commandStr)
                     self.PendingEvents[combinedAddress] = timerEntry
-                    self.TriggerEvent(combinedAddress + "." + commandStr + ".Timer.Start", payload = time)
+                    self.TriggerEvent(combinedAddress + "." + commandStr + ".Timer.Start", payload = eventTime)
                 else:
                     self.TriggerEvent(combinedAddress + "." + commandStr)
             else:
                 #put the time in the payload 
-                self.TriggerEvent(combinedAddress + "." + commandStr, payload = time)
+                self.TriggerEvent(combinedAddress + "." + commandStr, payload = eventTime)
         else:
             self.TriggerEvent(combinedAddress + "." + commandStr)
             
