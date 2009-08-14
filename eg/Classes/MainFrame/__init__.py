@@ -937,12 +937,12 @@ class MainFrame(wx.Frame):
             return
 
         import wx.py as py
-        
+
         # The FillingTree of the pyCrustFrame has some bug, that will raise
         # a UnicodeError if some item has a non-ascii str-representation.
         # For example a module that resides in a non-ascii file-system path
         # will trigger that error.
-        # Thus we monkey-path the responsible code here with a bug-fixed 
+        # Thus we monkey-path the responsible code here with a bug-fixed
         # version.
         from wx.py.filling import FillingTree
         def display(self):
@@ -962,7 +962,7 @@ class MainFrame(wx.Frame):
             text += self.getFullName(item)
             text += '\n\nType: ' + str(otype)
             try:
-                # BUGFIX: Here is the problematic code. We replace str(obj) 
+                # BUGFIX: Here is the problematic code. We replace str(obj)
                 #         with unicode(obj) and everything seems to be fine.
                 #value = str(obj)
                 value = unicode(obj)
@@ -991,7 +991,7 @@ class MainFrame(wx.Frame):
                     pass
             self.setText(text)
         FillingTree.display.im_func.func_code = display.func_code
-        
+
 
         fileName = join(eg.configDir, 'PyCrust')
         pyCrustConfig = wx.FileConfig(localFilename=fileName)

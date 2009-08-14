@@ -21,8 +21,8 @@ import math
 
 class SpinIntCtrl(eg.SpinNumCtrl):
     """
-    A wx.Control that shows a integer value and spin buttons to let
-    the easily input an integer value.
+    A wx.Control that shows a integer value and spin buttons to let the user
+    easily input an integer value.
     """
 
     def __init__(
