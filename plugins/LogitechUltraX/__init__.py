@@ -1,19 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2008 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 ur"""<rst>
 Plugin for the Logitech UltraX Media Remote.
@@ -21,7 +20,7 @@ Plugin for the Logitech UltraX Media Remote.
 .. image:: picture.gif
    :align: center
 
-**Notice:** You need a special driver to use the remote with this plugin. 
+**Notice:** You need a special driver to use the remote with this plugin.
 Please `download it here`__ and install it while the device is connected.
 
 __ http://www.eventghost.org/downloads/USB-Remote-Driver.exe
@@ -105,10 +104,10 @@ BUTTON_CODES4 = {
     18: "Rewind",
     19: "Forward",
 }
-        
+
 
 class UltraX(eg.PluginBase):
-                
+
     def __start__(self):
         self.usb1 = eg.WinUsbRemote(
             "{F73227F9-6CBD-45F9-83C4-A48B3F9F56A4}",
@@ -128,7 +127,7 @@ class UltraX(eg.PluginBase):
     def __stop__(self):
         self.usb1.Close()
         self.usb2.Close()
-        
+
 
     def KeypadCallback(self, data):
         #print "key", data
@@ -140,8 +139,8 @@ class UltraX(eg.PluginBase):
             self.TriggerEnduringEvent("+".join(keys))
         else:
             self.EndLastEvent()
-    
-    
+
+
     def ButtonsCallback(self, data):
         #print "button", data
         if data[0] == 3:

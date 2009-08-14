@@ -25,7 +25,8 @@ Plugin for the `Conceptronic Remote Control for Windows\u00ae Media Center`__.
 **Notice:** You need a special driver to use the remote with this plugin.
 Please `download it here`__ and install it while the device is connected.
 
-__ http://www.conceptronic.net/site/desktopdefault.aspx?tabindex=1&tabid=242&cid=40&gid=4050&pid=CLLRCMCE
+__ http://www.conceptronic.net/site/desktopdefault.aspx
+   ?tabindex=1&tabid=242&cid=40&gid=4050&pid=CLLRCMCE
 __ http://www.eventghost.org/downloads/USB-Remote-Driver.exe
 """
 

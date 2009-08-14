@@ -2,15 +2,15 @@
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
-# 
+#
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -29,18 +29,11 @@ import eg
 eg.RegisterPlugin(
     name = "USB-UIRT",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.0",
     kind = "remote",
     guid = "{36FD4F40-653C-4626-97CC-BE363C05F933}",
     canMultiLoad = True,
     description = __doc__,
-#    (
-#        'Hardware plugin for the <a href="http://www.usbuirt.com/">'
-#        'USB-UIRT</a> transceiver.'
-#        '\n\n<p>'
-#        '<a href="http://www.usbuirt.com/"><p>'
-#        '<center><img src="picture.jpg" alt="USB-UIRT" /></a></center>'
-#    ),
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACbklEQVR42mXTa4hMYRzH"
         "8f9zzoxmsblMJrzYRHgj140XkiG1Vomd1OwoRVHKreSyRWSRvJHSZktKq0E7LvvCFG/k"
@@ -61,9 +54,9 @@ eg.RegisterPlugin(
 
 import wx
 from ctypes import (
-    c_int, c_uint, c_ulong, byref, c_ubyte, c_char_p, c_void_p, POINTER, 
+    c_int, c_uint, c_ulong, byref, c_ubyte, c_char_p, c_void_p, POINTER,
     WINFUNCTYPE, Structure, GetLastError, create_string_buffer, WinDLL,
-    string_at, 
+    string_at,
 )
 import datetime
 import threading
@@ -81,7 +74,7 @@ class Text:
     irReception = "IR Reception"
     legacyCodes = "Generate 'legacy' UIRT2-compatible events"
     stopCodes = "Pass short repeat codes as enduring events"
-    
+
     class TransmitIR:
         name = "Transmit IR"
         description = "Transmits an IR code via the USB-UIRT hardware."
@@ -93,10 +86,10 @@ class Text:
         wait2 = "ms of IR inactivity before transmission"
         zone = "Zone:"
         zoneChoices = (
-            "All", 
+            "All",
             "Ext. Jack R-Pin",
-            "Ext. Jack L-Pin", 
-            "Internal Emitter", 
+            "Ext. Jack L-Pin",
+            "Internal Emitter",
         )
         class LearnDialog:
             title = "Learn IR Code"
@@ -149,7 +142,7 @@ LEARNCALLBACKPROC = WINFUNCTYPE(c_int, c_uint, c_uint, c_ulong, c_void_p)
 
 class USB_UIRT(eg.IrDecoderPlugin):
     text = Text
-    
+
     def __init__(self):
         eg.IrDecoderPlugin.__init__(self, 50.0)
         self.dll = None
@@ -159,13 +152,13 @@ class USB_UIRT(eg.IrDecoderPlugin):
 
     def __close__(self):
         self.irDecoder.Close()
-        
-        
+
+
     def __start__(
-        self, 
-        ledRX=True, 
-        ledTX=True, 
-        legacyRX=False, 
+        self,
+        ledRX=True,
+        ledTX=True,
+        legacyRX=False,
         repeatStopCodes=False,
     ):
         self.args = (ledRX, ledTX, legacyRX, repeatStopCodes)
@@ -200,16 +193,26 @@ class USB_UIRT(eg.IrDecoderPlugin):
         puuInfo = UUINFO()
         if not dll.UUIRTGetUUIRTInfo(hDrvHandle, byref(puuInfo)):
             raise self.Exceptions.DeviceInitFailed
-        self.firmwareVersion = str(puuInfo.fwVersion >> 8) + '.' + str(puuInfo.fwVersion & 0xFF)
-        self.protocolVersion = str(puuInfo.protVersion >> 8) + '.' + str(puuInfo.protVersion & 0xFF)
+        self.firmwareVersion = "%d.%d" % (
+            puuInfo.fwVersion >> 8,
+            puuInfo.fwVersion & 0xFF
+        )
+        self.protocolVersion = "%d.%d" % (
+            puuInfo.protVersion >> 8,
+            puuInfo.protVersion & 0xFF
+        )
         self.firmwareDate = datetime.date(
             puuInfo.fwDateYear+2000,
-            puuInfo.fwDateMonth, 
+            puuInfo.fwDateMonth,
             puuInfo.fwDateDay
         )
         self.dll = dll
         self.receiveProc = UUCALLBACKPROC(self.ReceiveCallback)
-        res = dll.UUIRTSetRawReceiveCallback(self.hDrvHandle, self.receiveProc, 0)
+        res = dll.UUIRTSetRawReceiveCallback(
+            self.hDrvHandle,
+            self.receiveProc,
+            0
+        )
         if not res:
             self.dll = None
             raise self.Exception("Error calling UUIRTSetRawReceiveCallback")
@@ -217,8 +220,8 @@ class USB_UIRT(eg.IrDecoderPlugin):
         self.SetConfig(ledRX, ledTX, legacyRX, repeatStopCodes)
         self.enabled = True
         eg.Bind("System.DeviceRemoved", self.OnDeviceRemoved)
-        
-        
+
+
     def __stop__(self):
         eg.Unbind("System.DeviceRemoved", self.OnDeviceRemoved)
         self.enabled = False
@@ -226,7 +229,7 @@ class USB_UIRT(eg.IrDecoderPlugin):
         if dll:
             if not dll.UUIRTClose(self.hDrvHandle):
                 raise self.Exception("Error calling UUIRTClose")
- 
+
             # fix for USB-UIRT driver bug, See OnComputerSuspend for details.
             self.hDrvHandle = dll.UUIRTOpenEx(self.deviceStr, 0, 0, 0)
             # without the UUIRTSetUUIRTConfig call, the driver seems to need
@@ -235,22 +238,22 @@ class USB_UIRT(eg.IrDecoderPlugin):
             dll.UUIRTSetReceiveCallback(self.hDrvHandle, None, 0)
             dll.UUIRTClose(self.hDrvHandle)
             self.dll = None
-        
-        
+
+
     def OnComputerSuspend(self, suspendType):
-        # The USB-UIRT driver seems to have a bug, that prevents the wake-up 
+        # The USB-UIRT driver seems to have a bug, that prevents the wake-up
         # from standby feature to work, if UUIRTSetRawReceiveCallback was used.
-        # To workaround the problem, we re-open the device with 
-        # UUIRTSetReceiveCallback just before the system goes into standby and 
-        # later do the reverse once the system comes back from standby. 
+        # To workaround the problem, we re-open the device with
+        # UUIRTSetReceiveCallback just before the system goes into standby and
+        # later do the reverse once the system comes back from standby.
         dll = self.dll
         if dll is None:
             return
         dll.UUIRTClose(self.hDrvHandle)
         self.hDrvHandle = dll.UUIRTOpenEx(self.deviceStr, 0, 0, 0)
         dll.UUIRTSetReceiveCallback(self.hDrvHandle, None, 0)
-        
-        
+
+
     def OnComputerResume(self, suspendType):
         dll = self.dll
         if dll is None:
@@ -259,8 +262,8 @@ class USB_UIRT(eg.IrDecoderPlugin):
         self.hDrvHandle = dll.UUIRTOpenEx(self.deviceStr, 0, 0, 0)
         dll.UUIRTSetRawReceiveCallback(self.hDrvHandle, self.receiveProc, 0)
         self.SetConfig(*self.args)
-        
-    
+
+
     def OnDeviceRemoved(self, event):
         if event.payload[0].split("#")[1] == 'Vid_0403&Pid_f850':
             if self.dll:
@@ -268,15 +271,15 @@ class USB_UIRT(eg.IrDecoderPlugin):
                     raise self.Exception("Error calling UUIRTClose")
                 self.dll = None
             eg.Bind("System.DeviceAttached", self.OnDeviceAttached)
-    
-    
+
+
     def OnDeviceAttached(self, event):
         if event.payload[0].split("#")[1] == 'Vid_0403&Pid_f850':
             if self.enabled:
                 self.__start__(*self.args)
             eg.Unbind("System.DeviceAttached", self.OnDeviceAttached)
-            
-    
+
+
     def SetConfig(self, ledRX, ledTX, legacyRX, repeatStopCodes=False):
         value = 0
         if ledRX:
@@ -302,13 +305,13 @@ class USB_UIRT(eg.IrDecoderPlugin):
                 break
         self.irDecoder.Decode(data, len(data))
         return 0
-    
-        
+
+
     def Configure(
-        self, 
-        ledRx=True, 
-        ledTx=True, 
-        legacyRx=None, 
+        self,
+        ledRx=True,
+        ledTx=True,
+        legacyRx=None,
         repeatStopCodes=False,
     ):
         text = self.text
@@ -320,7 +323,7 @@ class USB_UIRT(eg.IrDecoderPlugin):
             protocolVersion = text.notFound
             firmwareVersion = text.notFound
             firmwareDate = text.notFound
-            
+
         panel = eg.ConfigPanel()
         ledRxCheckBox = panel.CheckBox(ledRx, text.blinkRx)
         ledTxCheckBox = panel.CheckBox(ledTx, text.blinkTx)
@@ -328,7 +331,7 @@ class USB_UIRT(eg.IrDecoderPlugin):
         stopCodesRxCheckBox = panel.CheckBox(repeatStopCodes, text.stopCodes)
 
         infoGroupSizer = wx.StaticBoxSizer(
-            wx.StaticBox(panel, -1, text.uuInfo), 
+            wx.StaticBox(panel, -1, text.uuInfo),
             wx.VERTICAL
         )
         infoSizer = wx.FlexGridSizer(3, 2)
@@ -342,20 +345,20 @@ class USB_UIRT(eg.IrDecoderPlugin):
         ])
         infoGroupSizer.Add(infoSizer, 0, wx.LEFT, 5)
         panel.sizer.Add(infoGroupSizer, 0, wx.EXPAND)
-        
+
         panel.sizer.Add((15, 15))
 
         ledGroupSizer = wx.StaticBoxSizer(
-            wx.StaticBox(panel, -1, text.redIndicator), 
+            wx.StaticBox(panel, -1, text.redIndicator),
             wx.VERTICAL
         )
         ledGroupSizer.Add(ledRxCheckBox, 0, wx.ALL, 10)
         ledGroupSizer.Add(ledTxCheckBox, 0, wx.ALL, 10)
         panel.sizer.Add(ledGroupSizer, 0, wx.EXPAND)
-        
+
         panel.sizer.Add((15, 15))
         receiveGroupSizer = wx.StaticBoxSizer(
-            wx.StaticBox(panel, -1, text.irReception), 
+            wx.StaticBox(panel, -1, text.irReception),
             wx.VERTICAL
         )
         receiveGroupSizer.Add(legacyRxCheckBox, 0, wx.ALL, 10)
@@ -375,7 +378,7 @@ class USB_UIRT(eg.IrDecoderPlugin):
 class TransmitIR(eg.ActionClass):
     repeatCount = 4
     inactivityWaitTime = 0
-    
+
     def __call__(self, code='', repeatCount=4, inactivityWaitTime=0):
         if not self.plugin.dll:
             raise self.Exceptions.DeviceNotReady
@@ -404,12 +407,12 @@ class TransmitIR(eg.ActionClass):
             0                   # reserved2
         ):
             raise self.Exceptions.DeviceNotReady
-        
-        
+
+
     def GetLabel(self, code='', repeatCount=4, inactivityWaitTime=0):
         return self.name
-    
-    
+
+
     def Configure(self, code='', repeatCount=None, inactivityWaitTime=None):
         text = self.text
         panel = eg.ConfigPanel()
@@ -424,16 +427,16 @@ class TransmitIR(eg.ActionClass):
                 code = code[2:]
         else:
             zone = 0
-        
+
         editCtrl = panel.TextCtrl(code, style=wx.TE_MULTILINE)
         font = editCtrl.GetFont()
         font.SetFaceName("Courier New")
         editCtrl.SetFont(font)
         editCtrl.SetMinSize((-1, 100))
-        
-        repeatCtrl = eg.SpinIntCtrl(panel, -1, value=repeatCount, min=1, max=127)
+
+        repeatCtrl = panel.SpinIntCtrl(value=repeatCount, min=1, max=127)
         repeatCtrl.SetInitialSize((50, -1))
-        
+
         infiniteCtrl = wx.CheckBox(panel, -1, text.infinite)
         if repeatCount == 32767:
             repeatCtrl.SetValue(4)
@@ -441,21 +444,21 @@ class TransmitIR(eg.ActionClass):
             infiniteCtrl.SetValue(True)
         else:
             repeatCtrl.SetValue(repeatCount)
-            
+
         def OnInfiniteCtrl(event):
             repeatCtrl.Enable(not infiniteCtrl.GetValue())
             event.Skip()
         infiniteCtrl.Bind(wx.EVT_CHECKBOX, OnInfiniteCtrl)
-        
+
         waitCtrl = panel.SpinIntCtrl(inactivityWaitTime, 0, 500)
         waitCtrl.SetInitialSize((50, -1))
-        
+
         zoneCtrl = panel.Choice(zone, text.zoneChoices)
-                
-        learnButton = panel.Button(text.learnButton)  
+
+        learnButton = panel.Button(text.learnButton)
         if self.plugin.dll is None:
             learnButton.Enable(False)
-            
+
         panel.sizer.Add(panel.StaticText(text.irCode))
         panel.sizer.Add(editCtrl, 1, wx.EXPAND)
         panel.sizer.Add((5, 5))
@@ -463,7 +466,7 @@ class TransmitIR(eg.ActionClass):
         stFlags = wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT
         gridSizer = wx.GridBagSizer(5, 5)
         gridSizer.Add(panel.StaticText(text.repeatCount), (0, 0), flag=stFlags)
-        
+
         tmpSizer = wx.BoxSizer(wx.HORIZONTAL)
         tmpSizer.Add(repeatCtrl)
         tmpSizer.Add((5, 5))
@@ -471,28 +474,28 @@ class TransmitIR(eg.ActionClass):
         gridSizer.Add(tmpSizer, (0, 1))
 
         gridSizer.Add(panel.StaticText(text.wait1), (1, 0), flag=stFlags)
-        
+
         tmpSizer = wx.BoxSizer(wx.HORIZONTAL)
         tmpSizer.Add(waitCtrl)
         tmpSizer.Add((5, 5))
         tmpSizer.Add(panel.StaticText(text.wait2), 0, wx.ALIGN_CENTER_VERTICAL)
         gridSizer.Add(tmpSizer, (1, 1))
-        
+
         gridSizer.Add(panel.StaticText(text.zone), (2, 0), flag=stFlags)
         gridSizer.Add(zoneCtrl, (2, 1))
         gridSizer.AddGrowableCol(4, 1)
         gridSizer.Add(
-            learnButton, 
-            (0,5), 
+            learnButton,
+            (0,5),
             flag=wx.ALIGN_RIGHT|wx.EXPAND
         )
-        
+
         panel.sizer.Add(gridSizer, 0, wx.EXPAND)
-        
+
         def LearnIR(event):
             learnDialog = IRLearnDialog(
-                None, 
-                self.plugin.dll, 
+                None,
+                self.plugin.dll,
                 self.plugin.hDrvHandle,
                 text.LearnDialog
             )
@@ -502,7 +505,7 @@ class TransmitIR(eg.ActionClass):
             learnDialog.AbortLearnThreadWait()
             learnDialog.Destroy()
         learnButton.Bind(wx.EVT_BUTTON, LearnIR)
-            
+
         while panel.Affirmed():
             zone = zoneCtrl.GetValue()
             if zone > 0:
@@ -516,71 +519,71 @@ class TransmitIR(eg.ActionClass):
             self.__class__.inactivityWaitTime = waitCtrl.GetValue()
             panel.SetResult(
                 code,
-                self.repeatCount, 
+                self.repeatCount,
                 self.inactivityWaitTime
             )
 
 
 
 class IRLearnDialog(eg.Dialog):
-    
+
     def __init__(self, parent, dll, hDrvHandle, text):
         self.dll = dll
         self.hDrvHandle = hDrvHandle
         self.code = None
         self.codeFormat = UUIRTDRV_IRFMT_PRONTO
         eg.Dialog.__init__(
-            self, 
-            parent, 
+            self,
+            parent,
             -1,
             text.title,
             style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
         )
-            
+
         staticText = wx.StaticText(self, -1, text.helpText)
-        
+
         sb = wx.StaticBox(self, -1, text.progress)
         progressSizer = wx.StaticBoxSizer(sb, wx.VERTICAL)
         progressCtrl = wx.Gauge(self, -1, 100, size=(250, 25))
         self.progressCtrl = progressCtrl
         progressSizer.Add(progressCtrl, 0, wx.ALL|wx.EXPAND, 5)
-        
+
         sb = wx.StaticBox(self, -1, text.signalQuality)
         sigQualitySizer = wx.StaticBoxSizer(sb, wx.HORIZONTAL)
         sigQualityCtrl = wx.Gauge(
-            self, 
-            -1, 
-            100, 
+            self,
+            -1,
+            100,
             size=(25, 100),
             style=wx.GA_VERTICAL|wx.GA_SMOOTH
         )
         self.sigQualityCtrl = sigQualityCtrl
         sigQualitySizer.Add(sigQualityCtrl, 0, wx.ALL|wx.EXPAND, 5)
-        
+
         sb = wx.StaticBox(self, -1, text.frequency)
         carrierFreqSizer = wx.StaticBoxSizer(sb, wx.HORIZONTAL)
         carrierFreqCtrl = wx.StaticText(self, -1, "-", style=wx.ALIGN_CENTER)
         self.carrierFreqCtrl = carrierFreqCtrl
         carrierFreqSizer.Add(carrierFreqCtrl, 1, wx.EXPAND|wx.ALL, 5)
-        
+
         forceRawCtrl = wx.CheckBox(self, -1, text.forceRaw)
         forceRawCtrl.Bind(wx.EVT_CHECKBOX, self.OnRawBox)
         self.forceRawCtrl = forceRawCtrl
-        
+
         cancelButton = wx.Button(self, wx.ID_CANCEL, eg.text.General.cancel)
         cancelButton.Bind(wx.EVT_BUTTON, self.OnCancel)
         cancelButton.SetDefault()
-        
+
         burstButton = wx.Button(self, wx.ID_CANCEL, text.acceptBurstButton)
         burstButton.Bind(wx.EVT_BUTTON, self.OnAcceptBurst)
         burstButton.Enable(False)
         self.burstButton = burstButton
-        
+
         leftSizer = wx.BoxSizer(wx.VERTICAL)
         leftSizer.Add(staticText, 0, wx.EXPAND|wx.TOP, 5)
         leftSizer.Add((5, 5), 1)
         leftSizer.Add(forceRawCtrl)
-        
+
         rightSizer = wx.BoxSizer(wx.VERTICAL)
         rightSizer.Add((15, 15))
         rightSizer.Add(burstButton, 0, wx.EXPAND|wx.ALIGN_RIGHT)
@@ -588,18 +591,18 @@ class IRLearnDialog(eg.Dialog):
         rightSizer.Add(cancelButton, 0, wx.EXPAND|wx.ALIGN_RIGHT)
         rightSizer.Add((0, 0), 1)
         rightSizer.Add(carrierFreqSizer, 0, wx.EXPAND)
-                
+
         upperRowSizer = wx.BoxSizer(wx.HORIZONTAL)
         upperRowSizer.Add(leftSizer, 1, wx.EXPAND)
         upperRowSizer.Add((5, 5))
         upperRowSizer.Add(sigQualitySizer, 0, wx.EXPAND)
         upperRowSizer.Add((5, 5))
         upperRowSizer.Add(rightSizer, 0, wx.EXPAND)
-        
+
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(upperRowSizer, 1, wx.EXPAND|wx.ALL, 5)
         sizer.Add(progressSizer, 0, wx.EXPAND|wx.ALL, 5)
-        
+
         self.SetSizer(sizer)
         self.SetAutoLayout(True)
         sizer.Fit(self)
@@ -620,24 +623,24 @@ class IRLearnDialog(eg.Dialog):
         self.bAbortLearn = c_int(0)
         self.learnThread = threading.Thread(target=self.LearnThread)
         self.learnThread.start()
-        
-        
+
+
     def AbortLearnThread(self):
         self.bAbortLearn.value = True
-        
-        
+
+
     def AbortLearnThreadWait(self):
         self.bAbortLearn.value = True
         self.learnThreadAbortEvent.wait(10)
-        
-        
+
+
     def AcceptBurst(self):
         self.bAbortLearn.value = -1
-        
+
 
     def LearnThread(self):
         learnBuffer = create_string_buffer('\000' * 2048)
-        self.dll.UUIRTLearnIR(  
+        self.dll.UUIRTLearnIR(
             self.hDrvHandle,                       # hHandle
             self.codeFormat,                       # codeFormat
             learnBuffer,                           # IRCode buffer
@@ -651,43 +654,42 @@ class IRLearnDialog(eg.Dialog):
         if self.bAbortLearn.value != 1:
             self.OnLearnSuccess(learnBuffer.value)
         self.learnThreadAbortEvent.set()
-        
-        
+
+
     def LearnCallback(self, progress, sigQuality, carrierFreq, userData):
         if progress > 0:
             self.burstButton.Enable(True)
-        self.progressCtrl.SetValue(progress)     
+        self.progressCtrl.SetValue(progress)
         self.sigQualityCtrl.SetValue(sigQuality)
         self.carrierFreqCtrl.SetLabel(
             "%d.%03d kHz" % (carrierFreq / 1000, carrierFreq % 1000)
         )
         return 0
-        
-        
+
+
     def OnLearnSuccess(self, code):
         self.code = code
         self.Close()
-        
-        
+
+
     def OnRawBox(self, event):
         self.AbortLearnThreadWait()
         self.SetRawMode(self.forceRawCtrl.GetValue())
         self.burstButton.Enable(False)
-        self.progressCtrl.SetValue(0)     
+        self.progressCtrl.SetValue(0)
         self.sigQualityCtrl.SetValue(0)
         self.StartLearnIR()
-        
-        
+
+
     def OnAcceptBurst(self, event):
         self.AcceptBurst()
-    
-    
+
+
     def OnClose(self, event):
         self.AbortLearnThread()
         event.Skip()
-        
-        
+
+
     def OnCancel(self, event):
         self.Close()
-        
-    
+

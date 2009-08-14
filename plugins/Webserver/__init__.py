@@ -1,31 +1,25 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 
 eg.RegisterPlugin(
     name = "Webserver",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.0",
     guid = "{E4305D8E-A3D3-4672-B06E-4EA1F0F6C673}",
     description = (
         "Implements a small webserver, that you can use to generate events "
@@ -65,13 +59,13 @@ from urllib import unquote, unquote_plus
 
 
 class MyServer(HTTPServer):
-    
+
     def __init__(self, address, handler, basepath, authRealm, authString):
         HTTPServer.__init__(self, address, handler)
         self.basepath = basepath
         self.authRealm = authRealm
         self.authString = authString
-        
+
     #def handle_error(self, request, client_address):
     #    eg.PrintError("HTTP Error")
 
@@ -83,7 +77,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
         # only authenticate, if set
         if self.server.authString is None:
             return True
-        
+
         # do Basic HTTP-Authentication
         authHeader = self.headers.get('authorization')
         if authHeader is not None:
@@ -91,35 +85,35 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
             if authType.lower() == 'basic':
                 if base64.decodestring(authData) == self.server.authString:
                     return True
-                
+
         self.send_response(401)
         self.send_header(
-            'WWW-Authenticate', 
+            'WWW-Authenticate',
             'Basic realm="%s"' % self.server.authRealm
         )
         self.end_headers()
         return False
 
-        
+
     def do_GET(self):
         """Serve a GET request."""
         # First do Basic HTTP-Authentication, if set
         if not self.Authenticate():
             return
-        
+
         # Main Handler
         infile = None
         try:
             pathParts = self.path.split('?', 1)
             self.path = pathParts[0]
-            
+
             infile = self.send_head()
             if not infile:
                 return
             self.copyfile(infile, self.wfile)
             infile.close()
             infile = None
-            
+
             if len(pathParts) < 2:
                 return
             queryParts = [
@@ -163,8 +157,8 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 
     def copyfile(self, src, dst):
         dst.write(src.read())
-        
-        
+
+
     def translate_path(self, path):
         """Translate a /-separated PATH to the local filename syntax.
 
@@ -182,7 +176,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
         for word in words:
             drive, word = os.path.splitdrive(word)
             head, word = os.path.split(word)
-            if word in (os.curdir, os.pardir): 
+            if word in (os.curdir, os.pardir):
                 continue
             path = os.path.join(path, word)
         return path
@@ -211,12 +205,12 @@ class Webserver(eg.PluginBase):
 
 
     def __start__(
-        self, 
-        prefix=None, 
-        port=80, 
-        basepath=None, 
-        authRealm="Eventghost", 
-        authUsername="", 
+        self,
+        prefix=None,
+        port=80,
+        basepath=None,
+        authRealm="Eventghost",
+        authUsername="",
         authPassword=""
     ):
         self.info.eventPrefix = prefix
@@ -227,7 +221,7 @@ class Webserver(eg.PluginBase):
         self.authPassword = authPassword
         self.abort = False
         self.httpdThread = threading.Thread(
-            name="WebserverThread", 
+            name="WebserverThread",
             target=self.ThreadLoop
         )
         self.httpdThread.start()
@@ -255,7 +249,7 @@ class Webserver(eg.PluginBase):
         else:
             authString = None
         server = MyServer(
-            ('', self.port), 
+            ('', self.port),
             MySubHandler,
             self.basepath,
             self.authRealm,
@@ -267,12 +261,12 @@ class Webserver(eg.PluginBase):
 
 
     def Configure(
-        self, 
-        prefix="HTTP", 
-        port=80, 
-        basepath="", 
-        authRealm="EventGhost", 
-        authUsername="", 
+        self,
+        prefix="HTTP",
+        port=80,
+        basepath="",
+        authRealm="EventGhost",
+        authUsername="",
         authPassword=""
     ):
         text = self.text
@@ -307,7 +301,7 @@ class Webserver(eg.PluginBase):
         staticBoxSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
         staticBoxSizer.Add(sizer, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
-        
+
         sizer = wx.FlexGridSizer(3, 2, 5, 5)
         sizer.Add(labels[3], 0, acv)
         sizer.Add(authRealmCtrl)
@@ -329,3 +323,4 @@ class Webserver(eg.PluginBase):
                 authUsernameCtrl.GetValue(),
                 authPasswordCtrl.GetValue()
             )
+

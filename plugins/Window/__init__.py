@@ -19,7 +19,7 @@ import eg
 eg.RegisterPlugin(
     name = "Window",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.0.0",
     description = (
         "Actions that are related to the control of windows on the desktop, "
         "like finding specific windows, move, resize and send keypresses to "

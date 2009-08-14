@@ -230,7 +230,9 @@ class ReadStatus(ActionBase):
                 print "Orbiting installed:", bool(dat4 & (1 << 0))
                 print "Soft edge installed:", bool(dat4 & (1 << 1))
                 print "Contrast modulation installed:", bool(dat4 & (1 << 2))
-                print "NS is mounted on the convergence:", bool(dat4 & (1 << 3))
+                print "NS is mounted on the convergence:", bool(
+                    dat4 & (1 << 3)
+                )
                 print "Controller with ASIC:", bool(dat4 & (1 << 4))
                 print "IRIS is installed:", bool(dat4 & (1 << 5))
                 print "Dynamic stigmators:", bool(dat4 & (1 << 6))
@@ -245,7 +247,9 @@ class ReadVersion(ActionBase):
             self.SendCommand(serial, 0x4c)
             dat1, dat2, dat3, dat4 = self.GetResponse(serial, 0x4c)
             print "Identifier:", chr(dat1)
-            print "Version: %d%d.%d%d" % (dat2 / 16, dat2 & 0x0f, dat3 / 16, dat3 & 0x0f)
+            print "Version: %d%d.%d%d" % (
+                dat2 / 16, dat2 & 0x0f, dat3 / 16, dat3 & 0x0f
+            )
             print "Model:", dat4
 
 
@@ -292,7 +296,9 @@ class GetInfo(ActionBase):
                 print "Orbiting installed:", bool(dat4 & (1 << 0))
                 print "Soft edge installed:", bool(dat4 & (1 << 1))
                 print "Contrast modulation installed:", bool(dat4 & (1 << 2))
-                print "NS is mounted on the convergence:", bool(dat4 & (1 << 3))
+                print "NS is mounted on the convergence:", bool(
+                    dat4 & (1 << 3)
+                )
                 print "Controller with ASIC:", bool(dat4 & (1 << 4))
                 print "IRIS is installed:", bool(dat4 & (1 << 5))
                 print "Dynamic stigmators:", bool(dat4 & (1 << 6))
@@ -316,7 +322,9 @@ class GetInfo(ActionBase):
             self.SendCommand(serial, 0x4c)
             dat1, dat2, dat3, dat4 = self.GetResponse(serial, 0x4c)
             print "Identifier:", chr(dat1)
-            print "Version: %d%d.%d%d" % (dat2 / 16, dat2 & 0x0f, dat3 / 16, dat3 & 0x0f)
+            print "Version: %d%d.%d%d" % (
+                dat2 / 16, dat2 & 0x0f, dat3 / 16, dat3 & 0x0f
+            )
             print "Model:", dat4
             self.SendCommand(serial, 0x4a)
             dat1, dat2, dat3, dat4 = self.GetResponse(serial, 0x4a)

@@ -1,30 +1,24 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 
 eg.RegisterPlugin(
     name = "Network Event Sender",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.0",
     author = "Bitmonster",
     guid = "{B4F0DAFE-2E0B-47F3-A155-ED72C7A4E270}",
     description = (
@@ -57,16 +51,16 @@ class Text:
     securityBox = "Security"
     class Map:
         parameterDescription = "Event name to send:"
-    
-    
+
+
 
 class NetworkSender(eg.PluginBase):
     text = Text
-    
+
     def __init__(self):
         self.AddAction(Map)
-        
-        
+
+
     def __start__(self, host, port, password):
         self.host = host
         self.port = port
@@ -79,7 +73,7 @@ class NetworkSender(eg.PluginBase):
         hostCtrl = panel.TextCtrl(host)
         portCtrl = panel.SpinIntCtrl(port, max=65535)
         passwordCtrl = panel.TextCtrl(password, style=wx.TE_PASSWORD)
-        
+
         st1 = panel.StaticText(text.host)
         st2 = panel.StaticText(text.port)
         st3 = panel.StaticText(text.password)
@@ -93,14 +87,14 @@ class NetworkSender(eg.PluginBase):
             text.securityBox,
             (st3, passwordCtrl),
         )
-        
+
         panel.sizer.Add(tcpBox, 0, wx.EXPAND)
         panel.sizer.Add(securityBox, 0, wx.TOP|wx.EXPAND, 10)
 
         while panel.Affirmed():
             panel.SetResult(
-                hostCtrl.GetValue(), 
-                portCtrl.GetValue(), 
+                hostCtrl.GetValue(),
+                portCtrl.GetValue(),
                 passwordCtrl.GetValue()
             )
 
@@ -115,8 +109,8 @@ class NetworkSender(eg.PluginBase):
             sock.settimeout(1.0)
             # First wake up the server, for security reasons it does not
             # respond by it self it needs this string, why this odd word ?
-            # well if someone is scanning ports "connect" would be very 
-            # obvious this one you'd never guess :-) 
+            # well if someone is scanning ports "connect" would be very
+            # obvious this one you'd never guess :-)
 
             sock.sendall("quintessence\n\r")
 
@@ -127,7 +121,7 @@ class NetworkSender(eg.PluginBase):
             # We do this so that no one can listen in on our password exchange
             # much safer then plain text.
 
-            cookie = sock.recv(128)		
+            cookie = sock.recv(128)
 
             # Trim all enters and whitespaces off
             cookie = cookie.strip()
@@ -140,8 +134,8 @@ class NetworkSender(eg.PluginBase):
 
             # add the enters
             digest = digest + "\n"
-                    
-            # Send it to the server		
+
+            # Send it to the server
             sock.sendall(digest)
 
             # Get the answer
@@ -164,7 +158,7 @@ class NetworkSender(eg.PluginBase):
             sock.sendall(eventString.encode(eg.systemEncoding) + "\n")
 
             return sock
-        
+
         except:
             if eg.debugLevel:
                 eg.PrintTraceback()
@@ -177,9 +171,9 @@ class NetworkSender(eg.PluginBase):
         # tell the server that we are done nicely.
         sock.sendall("close\n")
         sock.close()
-        
-        
-        
+
+
+
 class Map(eg.ActionWithStringParameter):
 
     def __call__(self, mesg):
@@ -187,4 +181,4 @@ class Map(eg.ActionWithStringParameter):
         if res:
             eg.event.AddUpFunc(self.plugin.MapUp, res)
         return res
-          
+

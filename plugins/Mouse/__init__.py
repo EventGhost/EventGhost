@@ -35,7 +35,7 @@ Jrhy/+AqGrAMOnH86mAAAAAElFTkSuQmCC"""
 eg.RegisterPlugin(
     name = "Mouse",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.0.0",
     description = (
         "Gives you actions to control the mouse pointer and emulation of "
         "mouse events."

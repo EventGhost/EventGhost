@@ -1,31 +1,25 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 
 eg.RegisterPlugin(
     name = "Task Create/Switch Events",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.0",
     guid = "{D1748551-C605-4423-B392-FB77E6842437}",
     description = (
         "Generates events if an application starts, exits or "
@@ -50,7 +44,7 @@ from os.path import abspath, join, dirname, splitext
 from eg.WinApi.Dynamic import (
     DWORD, CDLL, byref, GetWindowThreadProcessId, RegisterWindowMessage,
     RegisterShellHookWindow, DeregisterShellHookWindow, GetWindowLong,
-    EnumWindows, WM_APP, WINFUNCTYPE, BOOL, HWND, LPARAM, GWL_STYLE, 
+    EnumWindows, WM_APP, WINFUNCTYPE, BOOL, HWND, LPARAM, GWL_STYLE,
     HSHELL_WINDOWCREATED, HSHELL_WINDOWDESTROYED, HSHELL_WINDOWACTIVATED,
     WS_VISIBLE, GWL_HWNDPARENT, IsWindowVisible, GetAncestor, GA_ROOT,
     GetShellWindow
@@ -68,15 +62,15 @@ def GetWindowPid(hwnd):
     dwProcessId = DWORD()
     GetWindowThreadProcessId(hwnd, byref(dwProcessId))
     return dwProcessId.value
-    
-    
+
+
 class ProcessInfo(object):
-    
+
     def __init__(self, name):
         self.name = name
         self.hwnds = set()
-        
-        
+
+
 
 def EnumProcesses():
     names = {}
@@ -95,14 +89,14 @@ def EnumProcesses():
         hwnds[hwnd] = processInfo
     return names, hwnds
 
-    
+
 
 class Task(eg.PluginBase):
-    
+
     def __init__(self):
         self.AddEvents()
-        
-        
+
+
     def __start__(self, *dummyArgs):
         self.names, self.hwnds = EnumProcesses()
         self.lastActivated = None
@@ -120,8 +114,8 @@ class Task(eg.PluginBase):
                     trayWindow = hwnd
                     break
         self.desktopHwnds = (GetShellWindow(), trayWindow)
-        
-        
+
+
     def __stop__(self):
         self.hookDll.StopHook()
         DeregisterShellHookWindow(eg.messageReceiver.hwnd)
@@ -129,8 +123,8 @@ class Task(eg.PluginBase):
         eg.messageReceiver.RemoveHandler(WM_APP+1, self.WindowGotFocusProc)
         eg.messageReceiver.RemoveHandler(WM_APP+2, self.WindowCreatedProc)
         eg.messageReceiver.RemoveHandler(WM_APP+3, self.WindowDestroyedProc)
-        
-        
+
+
     def CheckWindow(self, hwnd):
         hwnd2 = GetAncestor(hwnd, GA_ROOT)
         if hwnd == 0 or hwnd2 in self.desktopHwnds:
@@ -141,10 +135,10 @@ class Task(eg.PluginBase):
             return
         if not IsWindowVisible(hwnd):
             return
-        
+
         if hwnd in self.hwnds:
             return self.hwnds[hwnd].name, hwnd
-    
+
         pid = GetWindowPid(hwnd)
         name = splitext(GetProcessName(pid))[0]
         processInfo = self.names.get(name, None)
@@ -152,17 +146,17 @@ class Task(eg.PluginBase):
             processInfo = ProcessInfo(name)
             self.names[name] = processInfo
             self.TriggerEvent("Created." + name)
-            
+
         processInfo.hwnds.add(hwnd)
         self.hwnds[hwnd] = processInfo
         self.TriggerEvent("NewWindow." + name)
         return name, hwnd
-        
-        
+
+
     def WindowCreatedProc(self, dummyHwnd, dummyMesg, hwnd, dummyLParam):
         self.CheckWindow(hwnd)
-            
-    
+
+
     def WindowDestroyedProc(self, dummyHwnd, dummyMesg, hwnd, dummyLParam):
         #hwnd2 = GetAncestor(hwnd, GA_ROOT)
         processInfo = self.hwnds.get(hwnd, None)
@@ -175,8 +169,8 @@ class Task(eg.PluginBase):
             self.TriggerEvent("ClosedWindow." + processInfo.name)
             if len(processInfo.hwnds) == 0:
                 self.TriggerEvent("Destroyed." + processInfo.name)
-    
-    
+
+
     def WindowGotFocusProc(self, dummyHwnd, dummyMesg, hwnd, dummyLParam):
         ident = self.CheckWindow(hwnd)
         if ident and ident != self.lastActivated:
@@ -184,7 +178,7 @@ class Task(eg.PluginBase):
                 self.TriggerEvent("Deactivated." + self.lastActivated[0])
             self.TriggerEvent("Activated." + ident[0])
             self.lastActivated = ident
-    
+
 
     def MyWndProc(self, dummyHwnd, dummyMesg, wParam, lParam):
         if wParam == HSHELL_WINDOWACTIVATED or wParam == 0x8004:

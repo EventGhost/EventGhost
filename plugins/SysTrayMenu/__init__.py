@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 
@@ -28,7 +22,7 @@ eg.RegisterPlugin(
         "Allows you to add custom menu entries to the tray menu of EventGhost."
     ),
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.0",
     guid = "{842BFFE8-DCB9-4C72-9877-AB2EF49794C5}",
 )
 
@@ -44,26 +38,26 @@ class Text:
     deleteButton = "Delete"
     unnamedLabel = "New Menu Item %s"
     unnamedEvent = "Event%s"
-    
-    
+
+
 import wx
 import wx.gizmos
 import types
 
 class MenuItemData:
     pass
-    
+
 class MenuTreeListCtrl(wx.gizmos.TreeListCtrl):
-    
+
     def __init__(self, parent, text, menuData, selectedItem=None):
         self.highestMenuId = 0
         wx.gizmos.TreeListCtrl.__init__(
             self,
-            parent, 
-            style = wx.TR_FULL_ROW_HIGHLIGHT 
+            parent,
+            style = wx.TR_FULL_ROW_HIGHLIGHT
                 |wx.TR_DEFAULT_STYLE
                 |wx.VSCROLL
-                |wx.ALWAYS_SHOW_SB 
+                |wx.ALWAYS_SHOW_SB
                 |wx.CLIP_CHILDREN
         )
         self.SetMinSize((10, 150))
@@ -80,35 +74,35 @@ class MenuTreeListCtrl(wx.gizmos.TreeListCtrl):
             self.SetPyData(item, data)
             if menuId == selectedItem:
                 self.SelectItem(item)
-                
+
         self.SetColumnWidth(0, 200)
         self.ExpandAll(root)
-        
+
         self.__inSizing = False
         self.GetMainWindow().Bind(wx.EVT_SIZE, self.OnSize)
-        
-    
+
+
     def GetNewMenuId(self):
         newMenuId = self.highestMenuId + 1
         self.highestMenuId = newMenuId
         return newMenuId
-    
-        
+
+
     def OnSize(self, event):
         event.Skip()
         if not self.__inSizing:
             self.__inSizing = True
             wx.CallAfter(self.OnSize2)
-        
-        
+
+
     def OnSize2(self):
         w, h = self.GetMainWindow().GetClientSize()
         newWidth = w - self.GetColumnWidth(0)
         if self.GetColumnWidth(1) != newWidth:
             self.SetColumnWidth(1, newWidth)
         self.__inSizing = False
-        
-        
+
+
     def GetPrevious(self, item):
         previous = self.GetPrevSibling(item)
         if previous.IsOk():
@@ -117,8 +111,8 @@ class MenuTreeListCtrl(wx.gizmos.TreeListCtrl):
         if not self.HasChildren(previous):
             return previous
         return self.GetLastChild(previous)[0]
-    
-    
+
+
     def GetNext(self, item):
         if self.HasChildren(item):
             return self.GetFirstChild()
@@ -129,8 +123,8 @@ class MenuTreeListCtrl(wx.gizmos.TreeListCtrl):
             item = self.GetItemParent(item)
             if item == self.GetRootItem():
                 return None
-        
-        
+
+
     def CopyItem(self, item, parent, prev=None):
         text = self.GetItemText(item)
         img = self.GetItemImage(item, wx.TreeItemIcon_Normal)
@@ -139,28 +133,28 @@ class MenuTreeListCtrl(wx.gizmos.TreeListCtrl):
         if prev is None:
             id = self.InsertItemBefore(parent, 0, text, img, selImg)
         else:
-            id = self.InsertItem(parent, prev, text, img, selImg)    
-        self.SetPyData(id, data)            
+            id = self.InsertItem(parent, prev, text, img, selImg)
+        self.SetPyData(id, data)
         self.SetItemText(id, self.GetItemText(item, 1), 1)
         return id
-    
-    
+
+
     def GetSelectedId(self):
         selectedId = self.GetSelection()
         data = self.GetPyData(selectedId)
         if data is not None:
             return data[3]
-        
-    
-    
+
+
+
 class SysTrayMenu(eg.PluginBase):
     text = Text
-    
+
     def __init__(self):
         self.AddAction(Enable)
         self.AddAction(Disable)
-    
-    
+
+
     def Compile(self, menuData=[]):
         self.menuIdToData = {}
         # convert menuData to the new format
@@ -175,8 +169,8 @@ class SysTrayMenu(eg.PluginBase):
             self.menuIdToData[data[3]] = data
         self.menuData = newData
         return newData
-    
-    
+
+
     def __start__(self, dummy=None):
         self.wxIdToData = {}
         self.menuIdToWxItem = {}
@@ -196,29 +190,29 @@ class SysTrayMenu(eg.PluginBase):
                 wxItem = menu.PrependSeparator()
             self.menuIdToWxItem[menuId] = wxItem
             self.menuIdToData[menuId] = data
-                
-        
+
+
     def __stop__(self):
         for item in self.menuIdToWxItem.values():
             eg.taskBarIcon.menu.RemoveItem(item)
         self.menuIdToWxItem.clear()
         self.wxIdToData.clear()
-        
-        
+
+
     @eg.LogIt
     def OnMenuItem(self, event):
         data = self.wxIdToData[event.GetId()]
         self.TriggerEvent(data[2])
-        
-    
+
+
     def Configure(self, menuData=[]):
         menuData = self.Compile(menuData)
         panel = eg.ConfigPanel(resizable=True)
         text = self.text
-        
+
         tree = MenuTreeListCtrl(panel, text, menuData)
         root = tree.GetRootItem()
-        
+
         @eg.LogIt
         def OnSelectionChanged(dummyEvent):
             itemType = 0
@@ -243,7 +237,7 @@ class SysTrayMenu(eg.PluginBase):
             #itemTypeCtrl.SetSelection(itemType)
             #event.Skip()
         tree.Bind(wx.EVT_TREE_SEL_CHANGED, OnSelectionChanged)
-        
+
         # Delete button
         deleteButton = wx.Button(panel, -1, text.deleteButton)
         deleteButton.Enable(False)
@@ -258,7 +252,7 @@ class SysTrayMenu(eg.PluginBase):
             tree.Delete(item)
             tree.EnsureVisible(next)
         deleteButton.Bind(wx.EVT_BUTTON, OnDelete)
-        
+
         # Up button
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_UP, wx.ART_OTHER, (16, 16))
         upButton = wx.BitmapButton(panel, -1, bmp)
@@ -275,7 +269,7 @@ class SysTrayMenu(eg.PluginBase):
                 tree.EnsureVisible(newId)
                 tree.Delete(item)
         upButton.Bind(wx.EVT_BUTTON, OnUp)
-        
+
         # Down button
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_DOWN, wx.ART_OTHER, (16, 16))
         downButton = wx.BitmapButton(panel, -1, bmp)
@@ -304,7 +298,7 @@ class SysTrayMenu(eg.PluginBase):
             tree.EnsureVisible(item)
             tree.Update()
         addItemButton.Bind(wx.EVT_BUTTON, OnAddItem)
-        
+
         # Add separator button
         addSeparatorButton = wx.Button(panel, -1, text.addSeparatorButton)
         def OnAddSeparator(dummyEvent):
@@ -315,7 +309,7 @@ class SysTrayMenu(eg.PluginBase):
             tree.EnsureVisible(item)
             tree.Update()
         addSeparatorButton.Bind(wx.EVT_BUTTON, OnAddSeparator)
-        
+
         # Label edit box
         labelBox = wx.TextCtrl(panel, -1)
         def OnLabelTextChange(event):
@@ -323,7 +317,7 @@ class SysTrayMenu(eg.PluginBase):
             tree.SetItemText(item, labelBox.GetValue(), 0)
             event.Skip()
         labelBox.Bind(wx.EVT_TEXT, OnLabelTextChange)
-        
+
         # Event edit box
         eventBox = wx.TextCtrl(panel, -1)
         def OnEventTextChange(event):
@@ -331,11 +325,11 @@ class SysTrayMenu(eg.PluginBase):
             tree.SetItemText(item, eventBox.GetValue(), 1)
             event.Skip()
         eventBox.Bind(wx.EVT_TEXT, OnEventTextChange)
-        
+
         # Item type control
         #choices = ["Menu item", "Check menu item", "Separator"]
         #itemTypeCtrl = wx.Choice(dialog, choices=choices)
-        
+
         # construction of the dialog with sizers
         staticBox = wx.StaticBox(panel, -1, text.addBox)
         addSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
@@ -351,7 +345,7 @@ class SysTrayMenu(eg.PluginBase):
             (panel.StaticText(text.editEvent), 0, wx.ALIGN_CENTER_VERTICAL),
             (eventBox, 0, wx.EXPAND),
         ))
-        
+
         mainSizer = eg.HBoxSizer(
             (
                 eg.VBoxSizer(
@@ -372,13 +366,13 @@ class SysTrayMenu(eg.PluginBase):
             ),
         )
         panel.sizer.Add(mainSizer, 1, wx.EXPAND)
-        
+
         nextId = tree.GetFirstChild(root)[0]
         if nextId.IsOk():
             tree.SelectItem(nextId)
         else:
             tree.SelectItem(root)
-            
+
         while panel.Affirmed():
             resultList = []
             def Traverse(item):
@@ -394,25 +388,25 @@ class SysTrayMenu(eg.PluginBase):
             Traverse(root)
             self.Compile(resultList)
             panel.SetResult(resultList)
-    
-    
-    
+
+
+
 class Enable(eg.ActionBase):
-    
+
     class text:
         name = "Enable Item"
         description = "Enables a menu item."
-    
+
     def __call__(self, menuId):
         item = self.plugin.menuIdToWxItem.get(menuId, None)
         if item is not None:
             item.Enable(True)
-    
+
 
     def GetLabel(self, menuId):
         return self.name + ": " + self.plugin.menuIdToData[menuId][0]
-    
-    
+
+
     def Configure(self, menuId=None):
         plugin = self.plugin
         panel = eg.ConfigPanel()
@@ -420,19 +414,17 @@ class Enable(eg.ActionBase):
         panel.sizer.Add(tree, 1, wx.EXPAND)
         while panel.Affirmed():
             panel.SetResult(tree.GetSelectedId())
-        
-        
-        
+
+
+
 class Disable(Enable):
-    
+
     class text:
         name = "Disable Item"
         description = "Disables a menu item."
-    
+
     def __call__(self, menuId):
         item = self.plugin.menuIdToWxItem.get(menuId, None)
         if item is not None:
             item.Enable(False)
-    
-        
-        
+
