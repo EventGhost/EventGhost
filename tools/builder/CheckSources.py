@@ -47,6 +47,31 @@ PLUGINS = [
     "DesktopRemote",
     "DirectoryWatcher",
     "Fhz100Pc",
+    "Conceptronic",
+    "LogitechUltraX",
+    "TechniSatUsb",
+    "IgorPlugUSB",
+    "Joystick",
+    "Keyboard",
+    "MediaPortal",
+    "NetworkReceiver",
+    "NetworkSender",
+    "PowerDVD",
+    "Serial",
+    "Streamzap",
+    "SysTrayMenu",
+    "Task",
+    "TechnoTrendIr",
+    "TestPatterns",
+    "Tira",
+    "TVcentral",
+    "UIR",
+    "UIRT2",
+    "USB-UIRT",
+    "Webserver",
+    "X10",
+    "YARD",
+    "ZoomPlayer",
 ]
 
 
@@ -78,27 +103,27 @@ class CheckSources(builder.Task):
         """
         Removes trailing whitespace from the source file.
         """
-        infile = open(path, "rt")
-        oldContent = infile.read()
-        infile.close()
+        sourceFile = open(path, "rt")
+        oldContent = sourceFile.read()
+        sourceFile.close()
         lines = [line.rstrip() for line in oldContent.splitlines()]
-        while lines[-1].strip() == "":
+        while len(lines) and lines[-1].strip() == "":
             del lines[-1]
         lines.append("")
         lines.append("")
         newContent = "\n".join(lines)
         if oldContent != newContent:
-            outfile = open(path, "wt")
-            outfile.write(newContent)
-            outfile.close()
+            sourceFile = open(path, "wt")
+            sourceFile.write(newContent)
+            sourceFile.close()
 
 
     def CheckHeader(self, path):
         """
         Checks if the source file has the right GPLv2 header.
         """
-        fd = open(path, "rt")
-        header = fd.read(len(HEADER))
+        sourceFile = open(path, "rt")
+        header = sourceFile.read(len(HEADER))
         if header != HEADER:
             print "wrong file header:", path
 
@@ -107,8 +132,8 @@ class CheckSources(builder.Task):
         """
         Checks if the source file doesn't exceed the line length.
         """
-        fd = open(path, "rt")
-        for line in fd.readlines():
+        sourceFile = open(path, "rt")
+        for line in sourceFile.readlines():
             if len(line.rstrip()) > 79:
                 print "line to long", path, line.rstrip()
                 return
