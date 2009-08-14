@@ -86,7 +86,25 @@ for arg in argvIter:
         args.configDir = argvIter.next()
     elif arg == '-translate':
         args.translate = True
-
+    elif arg == '-execscript':
+        mainFilePath = argvIter.next().encode(sys.getfilesystemencoding())
+        import imp
+        import wx
+        app = wx.App(0)
+        os.chdir(dirname(mainFilePath))
+        sys.path.insert(0, dirname(mainFilePath))
+        sys.argv = sys.argv[2:]
+        try:
+            imp.load_source("__main__", mainFilePath)
+        except Exception:
+            import traceback
+            msg = traceback.format_exc()
+            import wx.lib.dialogs
+            dlg = wx.lib.dialogs.ScrolledMessageDialog(
+                None, msg, "Information"
+            )
+            dlg.ShowModal()
+            sys.exit(1)
 
 if (
     not args.allowMultiLoad
