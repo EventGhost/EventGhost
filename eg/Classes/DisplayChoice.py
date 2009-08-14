@@ -20,7 +20,7 @@ import wx
 
 class DisplayChoice(eg.Choice):
     """
-    A eg.Choice control, that shows all available displays.
+    A wx.Choice control, that shows all available displays.
     """
     def __init__(self, parent, value, *args, **kwargs):
         numDisplays = wx.Display().GetCount()
