@@ -170,7 +170,7 @@ class OptionsDialog(eg.TaskletDialog):
                     eg.Shortcut.Create(
                         path=path,
                         target=os.path.abspath(sys.executable),
-                        arguments="-hide"
+                        arguments="-h -e OnInitAfterBoot"
                     )
                 else:
                     # remove shortcut from autostart dir

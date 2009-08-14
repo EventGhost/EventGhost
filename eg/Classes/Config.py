@@ -92,7 +92,6 @@ class Config(Section):
     hideOnClose = False
     onlyLogAssigned = False
     autoloadFilePath = False
-    storedBootTime = 0
     limitMemory = False
     limitMemorySize = 8
     confirmDelete = True

@@ -16,11 +16,9 @@
 
 import eg
 import traceback
-import time
 from functools import partial
 from threading import Event
 from eg.WinApi.Dynamic import (
-    GetTickCount,
     OpenProcess,
     PROCESS_SET_QUOTA,
     SetProcessWorkingSetSize,
@@ -146,14 +144,7 @@ class EventThread(ThreadWorker):
             partial(actionThread.StartSession, filename),
             120
         )
-
         self.TriggerEvent("OnInit")
-        boottime = time.time() - GetTickCount() / 1000.0
-        if boottime > int(eg.config.storedBootTime) + 10:
-            eg.config.storedBootTime = boottime
-            eg.config.Save()
-            self.TriggerEvent("OnInitAfterBoot")
-
         if self.startupEvent is not None:
             self.TriggerEvent(self.startupEvent[0], self.startupEvent[1])
             self.startupEvent = None

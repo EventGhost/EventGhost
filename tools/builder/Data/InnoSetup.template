@@ -13,7 +13,7 @@ AppPublisher=EventGhost Project
 AppPublisherURL=http://www.eventghost.org/
 AppSupportURL=http://www.eventghost.org/
 AppUpdatesURL=http://www.eventghost.org/
-AppCopyright=© 2005-2009 EventGhost Project
+AppCopyright=ï¿½ 2005-2009 EventGhost Project
 AppVerName=EventGhost %(appVersion)s
 AppVersion=%(appVersion)s
 VersionInfoVersion=%(appNumericalVersion)s
@@ -76,6 +76,7 @@ Name: "{group}\EventGhost Help"; Filename: "{app}\EventGhost.chm"
 Name: "{group}\EventGhost Web Site"; Filename: "http://www.eventghost.org/"
 Name: "{group}\Uninstall EventGhost"; Filename: "{uninstallexe}"
 Name: "{userdesktop}\EventGhost"; Filename: "{app}\EventGhost.exe"; Tasks: desktopicon
+Name: "{userstartup}\EventGhost"; Filename: "{app}\EventGhost.exe"; Parameters: "-h -e OnInitAfterBoot"; Flags: createonlyiffileexists 
 
 [Registry]
 Root: HKCR; Subkey: ".egtree"; ValueType: string; ValueName: ""; ValueData: "EventGhost Tree"; Flags: uninsdeletevalue
