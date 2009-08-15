@@ -1,38 +1,37 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+"""
+Parses the command line arguments of the program.
+"""
 
 import os
 import sys
 import locale
-from os.path import join, dirname, basename, splitext
+from os.path import join, dirname, basename, splitext, abspath
 
 ENCODING = locale.getdefaultlocale()[1]
 locale.setlocale(locale.LC_ALL, '')
+argvIter = (val.decode(ENCODING) for val in sys.argv)
+scriptPath = argvIter.next()
 
 # get program directory
-if hasattr(sys, "frozen"):
-    MAIN_DIR = dirname(unicode(sys.executable, sys.getfilesystemencoding()))
-else:
-    MAIN_DIR = os.path.abspath(join(dirname(__file__), ".."))
+mainDir = abspath(
+    join(dirname(__file__.decode(sys.getfilesystemencoding())), "..")
+)
 
 # determine the commandline parameters
 class args:
@@ -44,69 +43,60 @@ class args:
     translate = False
     configDir = None
     install = False
-    isMain = splitext(basename(sys.argv[0]))[0].lower() == "eventghost"
-    
-argv = [val.decode(ENCODING) for val in sys.argv]
+    isMain = splitext(basename(scriptPath))[0].lower() == "eventghost"
+    pluginFile = None
+    execScript = None
 
-i = 0
-while True:
-    i += 1
-    if len(argv) <= i:
-        break
-    arg = argv[i].lower()
-    if arg == "-n" or arg == "-netsend":
-        from Classes.NetworkSend import Main
-        Main(argv[i+1:])
-        sys.exit(0)
-    elif arg == '-debug':
+
+for arg in argvIter:
+    arg = arg.lower()
+    if arg.startswith('-debug'):
         args.debugLevel = 1
-    elif arg == '-debug2':
-        args.debugLevel = 2
-    elif arg == '-h' or arg == '-hide':
+        if len(arg) > 6:
+            args.debugLevel = int(arg[6:])
+    elif arg in ("-n", "-netsend"):
+        from Classes.NetworkSend import Main
+        Main(list(argvIter))
+        sys.exit(0)
+    elif arg in ('-h', '-hide'):
         args.hideOnStartup = True
     elif arg == '-install':
         import compileall
-        compileall.compile_dir(MAIN_DIR)
+        compileall.compile_dir(mainDir)
         args.install = True
     elif arg == '-uninstall':
-        for root, dirs, files in os.walk(MAIN_DIR):
+        for root, dirs, files in os.walk(mainDir):
             for name in files:
                 if name.lower().endswith(".pyc"):
                     os.remove(join(root, name))
         sys.exit(0)
-    elif arg == '-m' or arg == '-multiload':
+    elif arg in ('-m', '-multiload'):
         args.allowMultiLoad = True
-    elif arg == '-e' or arg == '-event':
-        i += 1
-        if len(argv) <= i:
-            print "missing event string"
-            break
-        eventstring = argv[i]
-        if len(argv) <= i + 1:
+    elif arg in ('-e', '-event'):
+        eventstring = argvIter.next()
+        payloads = list(argvIter)
+        if len(payloads) == 0:
             payloads = None
-        else:
-            payloads = []
-            while i + 1 < len(argv):
-                i += 1
-                payloads.append(argv[i])
         args.startupEvent = (eventstring, payloads)
-    elif arg == '-f' or arg == '-file':
-        i += 1
-        if len(argv) <= i:
-            print "missing file string"
-            break
-        args.startupFile = os.path.abspath(argv[i])
+    elif arg in ('-f', '-file'):
+        args.startupFile = abspath(argvIter.next())
+    elif arg in ('-p', '-plugin'):
+        args.pluginFile = abspath(argvIter.next())
+        args.isMain = False
     elif arg == '-configdir':
-        i += 1
-        if len(argv) <= i:
-            print "missing directory string"
-            break
-        args.configDir = argv[i]
+        args.configDir = argvIter.next()
     elif arg == '-translate':
         args.translate = True
+    elif arg == '-execscript':
+        args.isMain = False
+        args.execScript = argvIter.next().encode(sys.getfilesystemencoding())
 
-
-if not args.allowMultiLoad and not args.translate and args.isMain:
+if (
+    not args.allowMultiLoad
+    and not args.translate
+    and args.isMain
+    and not args.pluginFile
+):
     # check if another instance of the program is running
     import ctypes
     appMutex = ctypes.windll.kernel32.CreateMutexA(
@@ -116,17 +106,19 @@ if not args.allowMultiLoad and not args.translate and args.isMain:
     )
     if ctypes.GetLastError() != 0:
         # another instance of EventGhost is running
-        import win32com.client
-        e = win32com.client.Dispatch("{7EB106DC-468D-4345-9CFE-B0021039114B}")
-        if args.startupFile is not None:
-            e.OpenFile(args.startupFile)
-        if args.startupEvent is not None:
-            e.TriggerEvent(args.startupEvent[0], args.startupEvent[1])
-        else:
-            e.BringToFront()
-        ctypes.windll.kernel32.ExitProcess(0)
+        from win32com.client import Dispatch
+        try:
+            e = Dispatch("{7EB106DC-468D-4345-9CFE-B0021039114B}")
+            if args.startupFile is not None:
+                e.OpenFile(args.startupFile)
+            if args.startupEvent is not None:
+                e.TriggerEvent(args.startupEvent[0], args.startupEvent[1])
+            else:
+                e.BringToFront()
+        finally:
+            ctypes.windll.kernel32.ExitProcess(0)
 
 # change working directory to program directory
 if args.debugLevel < 1 and args.isMain:
-    os.chdir(MAIN_DIR)
+    os.chdir(mainDir)
 

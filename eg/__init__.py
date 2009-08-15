@@ -1,47 +1,36 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2008 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import sys, os
-from types import ModuleType
 import stackless
 
 import Cli
+from Utils import *
 
 # This is only here to make pylint happy. It is never really imported
 if "pylint" in sys.modules:
     from StaticImports import *
-    from Utils import *
 
 
-class LazyModule(ModuleType):
+class DynamicModule(object):
 
     def __init__(self):
-        #import sys
-
-        self._ORIGINAL_MODULE = sys.modules[__name__]
-        # let ourself look like a package
-        self.__name__ = __name__
-        self.__path__ = __path__
-        self.__file__ = __file__
+        mod = sys.modules[__name__]
+        self.__dict__ = mod.__dict__
+        self.__orignal_module__ = mod
         sys.modules[__name__] = self
 
         import __builtin__
@@ -58,7 +47,47 @@ class LazyModule(ModuleType):
 
 
     def __repr__(self):
-        return "<eg>"
+        return "<dynamic-module '%s'>" % self.__name__
+
+
+    def RaiseAssignments(self):
+        """
+        After this method is called, creation of new attributes will raise
+        AttributeError.
+
+        This is meanly used to find unintended assignments while debugging.
+        """
+        def __setattr__(self, name, value):
+            if not name in self.__dict__:
+                raise AttributeError("Assignment to new attribute %s" % name)
+            object.__setattr__(self, name, value)
+        self.__class__.__setattr__ = __setattr__
+
+
+    def ExecScript(self, mainFilePath):
+        from os.path import dirname, basename, splitext
+        import wx
+        app = wx.App(1)
+        import imp
+        os.chdir(dirname(mainFilePath))
+        sys.path.insert(0, dirname(mainFilePath))
+        sys.argv = sys.argv[2:]
+        moduleName = splitext(basename(mainFilePath))[0]
+        try:
+            module = imp.load_module(
+                "__main__",
+                *imp.find_module(moduleName, [dirname(mainFilePath)])
+            )
+        except Exception:
+            import traceback
+            msg = traceback.format_exc()
+            import wx.lib.dialogs
+            dlg = wx.lib.dialogs.ScrolledMessageDialog(
+                None, msg, "Information"
+            )
+            dlg.ShowModal()
+            sys.exit(1)
+        sys.exit(0)
 
 
     def Main(self):
@@ -66,16 +95,18 @@ class LazyModule(ModuleType):
             return
         if Cli.args.translate:
             eg.LanguageEditor()
+        elif Cli.args.pluginFile:
+            eg.PluginInstall.Import(Cli.args.pluginFile)
+        elif Cli.args.execScript:
+            self.ExecScript(Cli.args.execScript)
         else:
             eg.Init.InitGui()
         eg.Tasklet(eg.app.MainLoop)().run()
         stackless.run()
-        print "mainloop end"
 
 
-eg = LazyModule()
-import Utils
-for attrName in Utils.__all__:
-    setattr(eg, attrName, getattr(Utils, attrName))
+eg = DynamicModule()
 import Core
+#if eg.debugLevel:
+#    eg.RaiseAssignments()
 
