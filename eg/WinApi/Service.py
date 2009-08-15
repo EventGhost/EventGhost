@@ -14,7 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import sys
 from Dynamic import (
     byref,
     sizeof,
@@ -154,7 +153,7 @@ class Service(object):
         if not schService:
             raise FailedFunc("CreateService")
         else:
-            print ("Service installed successfully")
+            #print ("Service installed successfully")
             CloseServiceHandle(schService)
 
 
@@ -243,7 +242,7 @@ class Service(object):
         # Determine whether the service is running.
 
         if ssStatus.dwCurrentState == SERVICE_RUNNING:
-            print "Service started successfully."
+            return True
         else :
             print "Service not started."
             print "  Current State:", ssStatus.dwCurrentState
@@ -361,100 +360,5 @@ class Service(object):
         if self.schService:
             CloseServiceHandle(self.schService)
         if self.schSCManager:
-            print "closing schSCManager"
             CloseServiceHandle(self.schSCManager)
-
-
-from Dynamic import (
-    SHELLEXECUTEINFO,
-    SEE_MASK_FLAG_DDEWAIT,
-    SEE_MASK_FLAG_NO_UI,
-    SEE_MASK_NOCLOSEPROCESS,
-    SW_SHOWNORMAL,
-    WaitForSingleObject,
-    INFINITE,
-)
-import ctypes
-#from eg.WinApi.Dynamic import ShellExecuteExW
-
-def RunAsAdministrator(filePath, *args):
-    sei = SHELLEXECUTEINFO()
-    sei.cbSize = sizeof(SHELLEXECUTEINFO)
-    sei.fMask = (
-        SEE_MASK_FLAG_DDEWAIT | SEE_MASK_FLAG_NO_UI | SEE_MASK_NOCLOSEPROCESS
-    )
-    sei.lpVerb = u"runas"
-    sei.lpFile = filePath
-    sei.lpParameters = " ".join(
-        ['"%s"' % arg.replace('"', '""') for arg in args]
-    )
-    sei.nShow = SW_SHOWNORMAL
-    if not ctypes.windll.shell32.ShellExecuteExW(byref(sei)):
-        raise FailedFunc("ShellExecuteEx")
-    WaitForSingleObject(sei.hProcess, INFINITE)
-    exitCode = DWORD()
-    if not GetExitCodeProcess(
-        sei.hProcess,
-        byref(exitCode)
-    ):
-        raise FailedFunc("GetExitCodeProcess")
-    return exitCode.value
-
-
-
-def DoCommand(commands, serviceName, path=None):
-    for command in commands.split(","):
-        command = command.strip().lower()
-        service = Service(serviceName)
-        if command == "install":
-            print 'Installing service "%s" from location "%s"' % (
-                serviceName,
-                path
-            )
-            service.Install(path)
-        elif command == "uninstall":
-            print 'Uninstalling service "%s"' % serviceName
-            service.Uninstall()
-        elif command == "start":
-            print 'Starting service "%s"' % serviceName
-            service.Start()
-        elif command == "stop":
-            print 'Stopping service "%s"' % serviceName
-            service.Stop()
-        else:
-            raise Exception("Unknown command '%s'" % command)
-
-
-def Do(command, serviceName, path=""):
-    from os.path import join, dirname, abspath, splitext
-    scriptPath = __file__.decode(sys.getfilesystemencoding())
-    exeDir = abspath(join(dirname(scriptPath), "..", ".."))
-    scriptPath = splitext(scriptPath)[0] + ".py"
-    returnCode = RunAsAdministrator(
-        join(exeDir, "EventGhost.exe"),
-        "-execScript",
-        scriptPath,
-        command,
-        serviceName,
-        path
-    )
-    if returnCode == 1:
-        raise TimeOutError()
-    elif returnCode > 1:
-        raise WinError(returnCode)
-
-
-def Main(scriptName, commands, serviceName, path=None):
-    returnCode = 0
-    try:
-        DoCommand(commands, serviceName, path)
-    except TimeOutError:
-        returnCode = 1
-    except FailedFunc, exc:
-        returnCode = exc.errorCode
-    sys.exit(returnCode)
-
-
-if __name__ == "__main__":
-    Main(*sys.argv)
 

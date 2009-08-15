@@ -64,6 +64,32 @@ class DynamicModule(object):
         self.__class__.__setattr__ = __setattr__
 
 
+    def ExecScript(self, mainFilePath):
+        from os.path import dirname, basename, splitext
+        import wx
+        app = wx.App(1)
+        import imp
+        os.chdir(dirname(mainFilePath))
+        sys.path.insert(0, dirname(mainFilePath))
+        sys.argv = sys.argv[2:]
+        moduleName = splitext(basename(mainFilePath))[0]
+        try:
+            module = imp.load_module(
+                "__main__",
+                *imp.find_module(moduleName, [dirname(mainFilePath)])
+            )
+        except Exception:
+            import traceback
+            msg = traceback.format_exc()
+            import wx.lib.dialogs
+            dlg = wx.lib.dialogs.ScrolledMessageDialog(
+                None, msg, "Information"
+            )
+            dlg.ShowModal()
+            sys.exit(1)
+        sys.exit(0)
+
+
     def Main(self):
         if Cli.args.install:
             return
@@ -71,6 +97,8 @@ class DynamicModule(object):
             eg.LanguageEditor()
         elif Cli.args.pluginFile:
             eg.PluginInstall.Import(Cli.args.pluginFile)
+        elif Cli.args.execScript:
+            self.ExecScript(Cli.args.execScript)
         else:
             eg.Init.InitGui()
         eg.Tasklet(eg.app.MainLoop)().run()
