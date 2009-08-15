@@ -18,7 +18,7 @@ different models."""
 
 eg.RegisterPlugin(
     name = "Onkyo AV Serial",
-    author = "prostetnic (initial), revised by Bartman for 805 and Fiasco for Onkyo 875",
+    author = "prostetnic, Bartman and Fiasco",
     version = "0.2." + "$LastChangedRevision$".split()[1],
     kind = "external",
     guid = "{E9EA99CC-40A7-40CC-94D9-01C9F6D25170}",
