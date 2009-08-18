@@ -1525,3 +1525,6 @@ PeekNamedPipe = _kernel32.PeekNamedPipe
 PeekNamedPipe.restype = BOOL
 PeekNamedPipe.argtypes = [HANDLE, LPVOID, DWORD, LPDWORD, LPDWORD, LPDWORD]
 
+WaitForMultipleObjects = _kernel32.WaitForMultipleObjects
+WaitForMultipleObjects.restype = DWORD
+WaitForMultipleObjects.argtypes = [DWORD, POINTER(HANDLE), BOOL, DWORD]
