@@ -37,7 +37,7 @@ class Text:
 
 class HID(eg.PluginClass):
     def __init__(self):
-        text = Text
+        self.text = Text
         thread = None
 
     def RawCallback(self, data):
@@ -253,10 +253,8 @@ class HID(eg.PluginClass):
             hidList.Select(idx)
             devices[idx] = item
 
-        if hidList.GetFirstSelected() == -1:
-            #no device selected, disable ok and apply button
-            panel.dialog.buttonRow.okButton.Enable(False)
-            panel.dialog.buttonRow.applyButton.Enable(False)
+        #no device selected, disable ok and apply button
+        panel.EnableButtons(hidList.GetFirstSelected() != -1)
 
         #layout
         for i in range(hidList.GetColumnCount()):
@@ -308,8 +306,7 @@ class HID(eg.PluginClass):
         panel.sizer.Add(optionsSizer, 0, wx.TOP, 10)
 
         def OnHidListSelect(event):
-            panel.dialog.buttonRow.okButton.Enable(True)
-            panel.dialog.buttonRow.applyButton.Enable(True)
+            panel.EnableButtons(hidList.GetFirstSelected() != -1)
             event.Skip()
 
         def OnRawDataEventsChange(event):
@@ -337,6 +334,7 @@ class HID(eg.PluginClass):
         useFirstDeviceCtrl.Bind(wx.EVT_CHECKBOX, OnUseFirstDeviceCtrlChange)
         noOtherPortCtrl.Bind(wx.EVT_CHECKBOX, OnNoOtherPortChange)
         hidList.Bind(wx.EVT_LIST_ITEM_SELECTED, OnHidListSelect)
+        hidList.Bind(wx.EVT_LIST_ITEM_DESELECTED, OnHidListSelect)
 
         while panel.Affirmed():
             device = devices[hidList.GetFirstSelected()]
