@@ -418,7 +418,7 @@ def GetDeviceDescriptions():
         setupapiDLL.SetupDiGetDeviceInterfaceDetailA(hinfo,
             byref(interfaceInfo), None, 0, byref(requiredSize), None)
         if requiredSize.value > 250:
-            eg.PrintError(self.text.errorRetrieval)
+            eg.PrintError(Text.errorRetrieval)
             continue #prevent a buffer overflow
 
         #get the actual info
@@ -462,7 +462,7 @@ def GetDeviceDescriptions():
             int(hidHandle), byref(infoStr), ctypes.sizeof(infoStr))
         if not result or len(infoStr.value) == 0:
             #build a generic ManufacturerString with the vendor ID
-            vendorString = self.text.vendorID + str(hiddAttributes.VendorID)
+            vendorString = Text.vendorID + str(hiddAttributes.VendorID)
         else:
             vendorString = infoStr.value
 
@@ -545,6 +545,6 @@ def GetDevicePath(
     #multiple devices found
     #don't know which to use
     if found > 1:
-        eg.PrintError(self.text.errorMultipleDevices)
+        eg.PrintError(Text.errorMultipleDevices)
 
     return None
