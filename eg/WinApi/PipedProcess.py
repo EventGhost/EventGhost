@@ -1,6 +1,24 @@
+# -*- coding: utf-8 -*-
+#
+# This file is part of EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 import sys
 import imp
 import ctypes
+import codecs
+from traceback import extract_tb, format_exception_only
 from os.path import join, dirname, abspath, splitext, basename
 from cPickle import dumps, loads
 from Dynamic import (
@@ -8,7 +26,7 @@ from Dynamic import (
     sizeof,
     create_string_buffer,
     DWORD,
-
+    
     CreateNamedPipe,
     ReadFile,
     WriteFile,
@@ -20,7 +38,11 @@ from Dynamic import (
     CloseHandle,
     GetLastError,
     CreateFile,
-
+    FormatError,
+    CreateEvent,
+    WaitForMultipleObjects,
+    
+    OVERLAPPED,
     GENERIC_READ,
     GENERIC_WRITE,
     OPEN_EXISTING,
@@ -34,16 +56,45 @@ from Dynamic import (
     ERROR_MORE_DATA,
     NMPWAIT_USE_DEFAULT_WAIT,
     INVALID_HANDLE_VALUE,
+    FILE_FLAG_OVERLAPPED,
 
     SHELLEXECUTEINFO,
     SEE_MASK_FLAG_DDEWAIT,
     SEE_MASK_FLAG_NO_UI,
     SEE_MASK_NOCLOSEPROCESS,
     SW_SHOWNORMAL,
+    HANDLE,
+    WAIT_OBJECT_0,
+    WAIT_TIMEOUT,
 )
+
+MESSAGE_ARGS = 0
+MESSAGE_STDOUT = 1
+MESSAGE_STDERR = 2
+MESSAGE_RESULT = 3
+MESSAGE_EXCEPTION = 4
 
 BUFSIZE = 4096
 szPipename = "\\\\.\\pipe\\EventGhostPipedProcess"
+
+DEBUG = 0
+if DEBUG:
+    def Msg(msg):
+        print msg
+else:
+    def Msg(dummyMsg):
+        pass
+
+
+class PipeStream(object):
+    
+    def __init__(self, hPipe, code):
+        self.hPipe = hPipe
+        self.code = code
+
+    def write(self, data):
+        WritePipeMessage(self.hPipe, self.code, data)
+
 
 
 def RunAsAdministrator(filePath, *args):
@@ -59,19 +110,12 @@ def RunAsAdministrator(filePath, *args):
     )
     sei.nShow = SW_SHOWNORMAL
     if not ctypes.windll.shell32.ShellExecuteExW(byref(sei)):
-        raise FailedFunc("ShellExecuteEx")
+        err = GetLastError()
+        raise WindowsError(err, "ShellExecuteEx: %s" % FormatError(err))
+    return sei.hProcess
 
 
-class PipeStream(object):
-    def __init__(self, hPipe, code):
-        self.hPipe = hPipe
-        self.code = code
-
-    def write(self, data):
-        WritePipe(self.hPipe, self.code, data)
-
-
-def WritePipe(hPipe, code, data):
+def WritePipeMessage(hPipe, code, data):
     message = dumps((code, data))
     cbWritten = DWORD(0)
     fSuccess = WriteFile(
@@ -81,10 +125,11 @@ def WritePipe(hPipe, code, data):
         byref(cbWritten),
         None
     )
-#    if (not fSuccess) or (len(message) != cbWritten.value):
-#        print "Write File failed"
+    if (not fSuccess) or (len(message) != cbWritten.value):
+        raise Exception("Write File failed")
 
-def ReadPipeData(hPipe):
+
+def ReadPipeMessage(hPipe):
     data = ""
     fSuccess = 0
     chBuf = create_string_buffer(BUFSIZE)
@@ -106,69 +151,121 @@ def ReadPipeData(hPipe):
     return loads(data)
 
 
-
-
 def ExecAsAdministrator(scriptPath, funcName, *args, **kwargs):
+    """
+    Execute some Python code in a process with elevated privileges.
+    
+    This call will only return, after the subprocess has terminated. The 
+    sys.stdout and sys.stderr streams of the subprocess will be directed to 
+    the calling process through a named pipe. All parameters for the function 
+    to call and its return value must be picklable.
+    
+    :param scriptPath: Path to the Python file to load.
+    :param funcName: Name of the function to call inside the Python file
+    :param args: Positional parameters for the function
+    :param kwargs: Keyword parameters for the function
+    :returns: The return value of the function
+    """
+    Msg("creating named pipe")
     hPipe = CreateNamedPipe(
         szPipename,
-        PIPE_ACCESS_DUPLEX,
+        PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
         PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
         PIPE_UNLIMITED_INSTANCES,
         BUFSIZE,
         BUFSIZE,
-        NMPWAIT_USE_DEFAULT_WAIT,
+        0,
         None
     )
     if (hPipe == INVALID_HANDLE_VALUE):
-        print "Error in creating Named Pipe"
-        return 0
-
-    executable = abspath(join(
-        dirname(__file__.decode(sys.getfilesystemencoding())),
-        "..",
-        "..",
-        "EventGhost.exe"
-    ))
-    RunAsAdministrator(
-        executable,
-        "-execscript",
-        __file__.decode(sys.getfilesystemencoding()),
-        "-client",
-        szPipename
-    )
-    fConnected = ConnectNamedPipe(hPipe, None)
-    if fConnected == 0 and GetLastError() == ERROR_PIPE_CONNECTED:
-        fConnected = 1
-    if fConnected != 1:
-        print "Could not connect to the Named Pipe"
+        raise Exception("Error in creating Named Pipe")
+    overlapped = OVERLAPPED()
+    overlapped.hEvent = CreateEvent(None, 1, 0, None)
+    try:
+        Msg("calling ConnectNamedPipe")
+        ConnectNamedPipe(hPipe, byref(overlapped))
+        executable = abspath(join(
+            dirname(__file__.decode(sys.getfilesystemencoding())),
+            "..",
+            "..",
+            "EventGhost.exe"
+        ))
+        Msg("starting subprocess")
+        hProcess = RunAsAdministrator(
+            executable,
+            "-execscript",
+            __file__.decode(sys.getfilesystemencoding()),
+            "-client",
+            szPipename,
+        )
+        Msg("waiting for subprocess to connect")
+        pHandles = (HANDLE * 2)(overlapped.hEvent, hProcess)
+        ret = WaitForMultipleObjects(2, pHandles, 0, 20000)
+        if ret == WAIT_OBJECT_0:
+            # connect event
+            Msg("got connect event")
+        elif ret == WAIT_OBJECT_0 + 1:
+            raise Exception("Unexpected end of subprocess.")
+        elif ret == WAIT_TIMEOUT:
+            raise Exception("Timeout in waiting for subprocess.")
+        else:
+            raise Exception("Unknown return value")
+        
+#        if fConnected == 0 and GetLastError() == ERROR_PIPE_CONNECTED:
+#            fConnected = 1
+#        if fConnected != 1:
+#            raise Exception("Could not connect to the Named Pipe")
+#    
+        Msg("sending startup message")
+        WritePipeMessage(
+            hPipe, 
+            MESSAGE_ARGS, 
+            (scriptPath, funcName, args, kwargs)
+        )
+        chBuf = create_string_buffer(BUFSIZE)
+        cbRead = DWORD(0)
+        while True:
+            fSuccess = ReadFile(hPipe, chBuf, BUFSIZE, byref(cbRead), None)
+            if ((fSuccess == 1) or (cbRead.value != 0)):
+                code, data = loads(chBuf.value)
+                if code == MESSAGE_STDERR:
+                    sys.stderr.write(data)
+                elif code == MESSAGE_STDOUT:
+                    sys.stdout.write(data)
+                elif code == MESSAGE_RESULT:
+                    result = data
+                    break
+                elif code == MESSAGE_EXCEPTION:
+                    break
+                else:
+                    raise Exception("Unknown message type %r" % code)
+        FlushFileBuffers(hPipe)
+        DisconnectNamedPipe(hPipe)
+    finally:
         CloseHandle(hPipe)
-        return
-    WritePipe(hPipe, 0, (scriptPath, funcName, args, kwargs))
-    chBuf = create_string_buffer(BUFSIZE)
-    cbRead = DWORD(0)
-    while True:
-        fSuccess = ReadFile(hPipe, chBuf, BUFSIZE, byref(cbRead), None)
-        if ((fSuccess == 1) or (cbRead.value != 0)):
-            code, data = loads(chBuf.value)
-            if code == 1:
-                sys.stderr.write(data)
-            elif code == 2:
-                sys.stdout.write(data)
-            elif code == 3:
-                result = data
-                break
-            elif code == 4:
-                break
-            else:
-                print code, data
-    FlushFileBuffers(hPipe)
-    DisconnectNamedPipe(hPipe)
-    CloseHandle(hPipe)
-    if code == 4:
+        CloseHandle(overlapped.hEvent)
+    if code == MESSAGE_EXCEPTION:
         raise Exception("Child process raised an exception\n" + data)
     return result
 
 
+def FormatException(excInfo):
+    excType, excValue, excTraceback = excInfo
+    lines = [u'Child process traceback (most recent call last)\n']
+    if excTraceback:
+        decode = codecs.getdecoder(sys.getfilesystemencoding())
+        for filename, lineno, funcname, text in extract_tb(excTraceback):
+            lines.append(
+                u'  File "%s", line %d, in %s\n' % (
+                    decode(filename)[0], lineno, funcname
+                )
+            )
+            if text:
+                lines.append(u"    %s\n" % text)
+    lines += format_exception_only(excType, excValue)
+    return u"".join(lines)
+    
+    
 def Client():
     while 1:
         hPipe = CreateFile(
@@ -188,39 +285,48 @@ def Client():
             print "Could not open pipe"
             return
         elif WaitNamedPipe(szPipename, 20000) == 0:
-            print "Could not open pipe\n"
+            print "Could not open pipe"
             return
 
-
-    dwMode = DWORD(PIPE_READMODE_MESSAGE)
-    fSuccess = SetNamedPipeHandleState(hPipe, byref(dwMode), None, None)
-    if not fSuccess:
-        print "SetNamedPipeHandleState failed"
-        CloseHandle(hPipe)
-        return
-    sys.stderr = PipeStream(hPipe, 1)
-    sys.stdout = PipeStream(hPipe, 2)
-    code, (scriptPath, funcName, args, kwargs) = ReadPipeData(hPipe)
-    moduleName = splitext(basename(scriptPath))[0]
-    module = imp.load_module(
-        moduleName,
-        *imp.find_module(moduleName, [dirname(scriptPath)])
-    )
-    func = getattr(module, funcName)
     try:
-        result = func(*args, **kwargs)
-    except:
-        import traceback
-        WritePipe(hPipe, 4, traceback.format_exc())
-    else:
-        WritePipe(hPipe, 3, result)
-    CloseHandle(hPipe)
-    return
+        dwMode = DWORD(PIPE_READMODE_MESSAGE)
+        fSuccess = SetNamedPipeHandleState(hPipe, byref(dwMode), None, None)
+        if not fSuccess:
+            raise Exception("SetNamedPipeHandleState failed")
+        sys.stderr = PipeStream(hPipe, MESSAGE_STDERR)
+        sys.stdout = PipeStream(hPipe, MESSAGE_STDOUT)
+        Msg("reading startup message")
+        code, (scriptPath, funcName, args, kwargs) = ReadPipeMessage(hPipe)
+        Msg(
+            "got startup message:\n"
+            "  path: %r\n"
+            "  funcName: %r\n"
+            "  args: %r\n"
+            "  kwargs: %r" %
+                (scriptPath, funcName, args, kwargs)
+        )
+        if code != MESSAGE_ARGS:
+            raise Exception("Unexpected message type")
+        try:
+            moduleName = splitext(basename(scriptPath))[0]
+            moduleInfo = imp.find_module(moduleName, [dirname(scriptPath)])
+            module = imp.load_module(moduleName, *moduleInfo)
+            func = getattr(module, funcName)
+            result = func(*args, **kwargs)
+        except:
+            WritePipeMessage(
+                hPipe, 
+                MESSAGE_EXCEPTION, 
+                FormatException(sys.exc_info())
+            )
+        else:
+            WritePipeMessage(hPipe, MESSAGE_RESULT, result)
+    finally:
+        CloseHandle(hPipe)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        if sys.argv[1].lower() == "-client":
-            Client()
-            sys.exit(0)
+    if len(sys.argv) > 1 and sys.argv[1].lower() == "-client":
+        Client()
+        sys.exit(0)
 

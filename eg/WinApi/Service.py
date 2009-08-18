@@ -20,7 +20,6 @@ from Dynamic import (
     cast,
     DWORD,
     LPBYTE,
-    WinError,
     OpenSCManager,
     SC_MANAGER_ALL_ACCESS,
     CreateService,
@@ -60,16 +59,12 @@ from Dynamic import (
 )
 
 
-class FailedFunc(Exception):
-
-    def __init__(self, funcName):
-        Exception.__init__(self)
-        self.funcName = funcName
-        self.errorCode = GetLastError()
-        self.errorMsg = FormatError(self.errorCode)
-
-    def __str__(self):
-        return "%s: (%d) %s" % (self.funcName, self.errorCode, self.errorMsg)
+def FailedFunc(funcName):
+    errCode = GetLastError()
+    return WindowsError(
+        errCode, 
+        "%s: %s" % (funcName, FormatError(errCode))
+    )
 
 
 
@@ -133,6 +128,9 @@ class Service(object):
 
 
     def Install(self, path):
+        """
+        Installs an executable file as service.
+        """
         self.GetServiceControlManager()
         # Create the service
         schService = CreateService(
@@ -158,6 +156,9 @@ class Service(object):
 
 
     def Uninstall(self):
+        """
+        Uninstalls the service.
+        """
         self.GetServiceHandle()
         if not DeleteService(self.schService):
             raise FailedFunc("DeleteService")
@@ -178,6 +179,9 @@ class Service(object):
 
 
     def Start(self):
+        """
+        Starts the service.
+        """
         self.GetServiceHandle()
         # Check the status in case the service is not stopped.
         ssStatus = self.GetStatus()
@@ -253,6 +257,9 @@ class Service(object):
 
 
     def Stop(self):
+        """
+        Stops the service.
+        """
         self.GetServiceHandle()
         # Make sure the service is not already stopped.
         ssStatus = self.GetStatus()
