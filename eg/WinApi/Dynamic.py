@@ -1471,3 +1471,6 @@ SEE_MASK_FLAG_DDEWAIT = SEE_MASK_NOASYNC # alias
 SEE_MASK_FLAG_NO_UI = 1024 # Variable c_int '1024'
 SEE_MASK_NOCLOSEPROCESS = 64 # Variable c_int '64'
 SW_SHOWNORMAL = 1 # Variable c_int '1'
+WaitForMultipleObjects = _kernel32.WaitForMultipleObjects
+WaitForMultipleObjects.restype = DWORD
+WaitForMultipleObjects.argtypes = [DWORD, POINTER(HANDLE), BOOL, DWORD]

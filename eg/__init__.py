@@ -65,25 +65,22 @@ class DynamicModule(object):
 
 
     def ExecScript(self, mainFilePath):
-        from os.path import dirname, basename, splitext
-        import wx
-        app = wx.App(1)
-        import imp
-        os.chdir(dirname(mainFilePath))
-        sys.path.insert(0, dirname(mainFilePath))
-        sys.argv = sys.argv[2:]
-        moduleName = splitext(basename(mainFilePath))[0]
         try:
+            import imp
+            from os.path import dirname, basename, splitext
+            os.chdir(dirname(mainFilePath))
+            sys.path.insert(0, dirname(mainFilePath))
+            sys.argv = sys.argv[2:]
+            moduleName = splitext(basename(mainFilePath))[0]
             module = imp.load_module(
                 "__main__",
                 *imp.find_module(moduleName, [dirname(mainFilePath)])
             )
-        except Exception:
+        except BaseException:
             import traceback
-            msg = traceback.format_exc()
             import wx.lib.dialogs
             dlg = wx.lib.dialogs.ScrolledMessageDialog(
-                None, msg, "Information"
+                None, traceback.format_exc(), "Information"
             )
             dlg.ShowModal()
             sys.exit(1)
