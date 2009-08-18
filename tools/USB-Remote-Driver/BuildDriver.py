@@ -59,6 +59,11 @@ DEVICES = [
         "USB\\VID_06B4&PID_1C70",
         "{72679574-1865-499d-B182-4B099D6D1391}"
     ),
+    (
+        "ASUS PSR-2000",
+        "USB\\VID_147A&PID_E006",
+        "{4365E03A-CA73-4C30-88B8-BA00D6B7E2F5}"
+    ),
 ]
 
 HEADER = r"""
