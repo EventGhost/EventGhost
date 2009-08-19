@@ -64,6 +64,16 @@ DEVICES = [
         "USB\\VID_147A&PID_E006",
         "{4365E03A-CA73-4C30-88B8-BA00D6B7E2F5}"
     ),
+    (
+        "SPEEDLINK SL-6399 Media Remote #1",
+        "USB\VID_1241&PID_E000&MI_00",
+        "{28C08E45-F91D-4E69-9280-E768FA593354}"
+    ),
+    (
+        "SPEEDLINK SL-6399 Media Remote #2",
+        "USB\\VID_1241&PID_E000&MI_01",
+        "{77A6D595-D921-44C7-BE5C-F6304FE97155}"
+    ),
 ]
 
 HEADER = r"""
