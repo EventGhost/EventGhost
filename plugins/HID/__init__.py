@@ -32,7 +32,7 @@ class Text:
     rawDataEvents = "Use raw Data as event name"
     multipleDeviceOptions = "Options for multiple same devices"
     noOtherPort = "Use selected device only if connected to current port"
-    useFirstDevice = "Use first device found"
+    useDeviceIndex = "Use the device with index"
     errorFind = "Error finding HID device: "
     vendorID = "Vendor ID "
 
@@ -75,17 +75,13 @@ class HID(eg.PluginClass):
         self.thread = None
     
     def GetMyDevicePath(self):
-        if self.useFirstDevice:
-            deviceIndex = 0
-        else:
-            deviceIndex = -1
-            
         path = GetDevicePath(
             self.devicePath,
             self.vendorID,
             self.productID,
             self.versionNumber,
-            deviceIndex,
+            self.useDeviceIndex,
+            self.deviceIndex,
             self.noOtherPort)
         return path;
     
@@ -125,7 +121,8 @@ class HID(eg.PluginClass):
         productID,
         productString,
         versionNumber,
-        useFirstDevice = False
+        useDeviceIndex = False,
+        deviceIndex = 0
     ):
         prefix = "HID: "
         #one or both strings empty should not happen
@@ -150,7 +147,8 @@ class HID(eg.PluginClass):
         productID,
         productString,
         versionNumber,
-        useFirstDevice = False
+        useDeviceIndex = False,
+        deviceIndex = 0
     ):
 
         #saving parameters so they can be used to reconnect a device
@@ -164,7 +162,8 @@ class HID(eg.PluginClass):
         self.productID = productID
         self.productString = productString
         self.versionNumber = versionNumber
-        self.useFirstDevice = useFirstDevice
+        self.useDeviceIndex = useDeviceIndex
+        self.deviceIndex = deviceIndex
         self.oldValues = {}
 
         if eventName:
@@ -200,7 +199,8 @@ class HID(eg.PluginClass):
         productID = None,
         productString = None,
         versionNumber = None,
-        useFirstDevice = False
+        useDeviceIndex = False,
+        deviceIndex = 0
     ):
         deviceList = GetDeviceDescriptions()
         panel = eg.ConfigPanel(self, resizable=True)
@@ -214,17 +214,13 @@ class HID(eg.PluginClass):
         hidList.InsertColumn(1, self.text.manufacturer)
         hidList.InsertColumn(2, self.text.connected)
 
-        if useFirstDevice:
-            deviceIndex = 0
-        else:
-            deviceIndex = -1
-
         path = GetDevicePath(
             devicePath,
             vendorID,
             productID,
             versionNumber,
             noOtherPort,
+            useDeviceIndex,
             deviceIndex,
             deviceList)
 
@@ -295,9 +291,13 @@ class HID(eg.PluginClass):
             flag = wx.ALIGN_CENTER_VERTICAL)
         
         #checkbox for use first device
-        useFirstDeviceCtrl = wx.CheckBox(panel, -1, self.text.useFirstDevice)
-        useFirstDeviceCtrl.SetValue(useFirstDevice)
-        optionsSizer.Add(useFirstDeviceCtrl, (4, 0), (1, 3))
+        useDeviceIndexCtrl = wx.CheckBox(panel, -1, self.text.useDeviceIndex)
+        useDeviceIndexCtrl.SetValue(useDeviceIndex)
+        optionsSizer.Add(useDeviceIndexCtrl, (4, 0), (1, 2), flag = wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL)
+        
+        #device index spin control
+        deviceIndexCtrl = eg.SpinIntCtrl(panel, -1, deviceIndex, 0, 99, size=(100,-1))
+        optionsSizer.Add(deviceIndexCtrl, (4, 2), (1, 1))
 
         #checkbox for no other port option
         noOtherPortCtrl = wx.CheckBox(panel, -1, self.text.noOtherPort)
@@ -318,21 +318,23 @@ class HID(eg.PluginClass):
             rawDataEventsCtrl.Enable(not enduringEventsCtrl.GetValue())
             event.Skip()
 
-        def OnUseFirstDeviceCtrlChange(event):
-            noOtherPortCtrl.Enable(not useFirstDeviceCtrl.GetValue())
+        def OnUseDeviceIndexCtrlChange(event):
+            noOtherPortCtrl.Enable(not useDeviceIndexCtrl.GetValue())
+            deviceIndexCtrl.Enable(useDeviceIndexCtrl.GetValue())
             event.Skip()
 
         def OnNoOtherPortChange(event):
-            useFirstDeviceCtrl.Enable(not noOtherPortCtrl.GetValue())
+            useDeviceIndexCtrl.Enable(not noOtherPortCtrl.GetValue())
+            deviceIndexCtrl.Enable(not noOtherPortCtrl.GetValue())
             event.Skip()
 
         OnRawDataEventsChange(wx.CommandEvent())
         OnEnduringEventsChange(wx.CommandEvent())
-        OnUseFirstDeviceCtrlChange(wx.CommandEvent())
+        OnUseDeviceIndexCtrlChange(wx.CommandEvent())
         OnNoOtherPortChange(wx.CommandEvent())
         rawDataEventsCtrl.Bind(wx.EVT_CHECKBOX, OnRawDataEventsChange)
         enduringEventsCtrl.Bind(wx.EVT_CHECKBOX, OnEnduringEventsChange)
-        useFirstDeviceCtrl.Bind(wx.EVT_CHECKBOX, OnUseFirstDeviceCtrlChange)
+        useDeviceIndexCtrl.Bind(wx.EVT_CHECKBOX, OnUseDeviceIndexCtrlChange)
         noOtherPortCtrl.Bind(wx.EVT_CHECKBOX, OnNoOtherPortChange)
         hidList.Bind(wx.EVT_LIST_ITEM_SELECTED, OnHidListSelect)
         hidList.Bind(wx.EVT_LIST_ITEM_DESELECTED, OnHidListSelect)
@@ -350,6 +352,6 @@ class HID(eg.PluginClass):
                 device.productId,
                 device.productString,
                 device.versionNumber,
-                useFirstDeviceCtrl.GetValue()
+                useDeviceIndexCtrl.GetValue(),
             )
 

@@ -510,7 +510,8 @@ def GetDevicePath(
     vendorId,
     productId,
     versionNumber, #pass None to ignore
-    useDeviceIndex, #use -1 to require the same devicePath if multiple found
+    useDeviceIndex, #use True to get a specific device 
+    deviceIndex, #use -1 to require the same devicePath if multiple found
     noOtherPort, #if True the devicePath has to be the same 
     deviceList = None
 ):
@@ -533,7 +534,7 @@ def GetDevicePath(
             else:
                 validVersionNumber = item.versionNumber == versionNumber
             if validVendorId and validProductId and validVersionNumber:
-                if item.devicePath == devicePath or useDeviceIndex == found:
+                if item.devicePath == devicePath or (useDeviceIndex and deviceIndex == found):
                     #found right device
                     return item.devicePath
                 found = found + 1
