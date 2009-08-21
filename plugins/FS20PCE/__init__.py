@@ -145,7 +145,8 @@ class FS20PCE(eg.PluginClass):
             57364,
             None,
             0,
-            False)
+            True,
+            0)
         return path;
     
     def SetupHidThread(self, newDevicePath):

@@ -55,7 +55,8 @@ class GameVoice(eg.PluginClass):
             59,
             None,
             0,
-            False)
+            True,
+            0)
         return path;
     
     def SetupHidThread(self, newDevicePath):
