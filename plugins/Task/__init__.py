@@ -146,7 +146,7 @@ class Task(eg.PluginBase):
             processInfo = ProcessInfo(name)
             self.names[name] = processInfo
             self.TriggerEvent("Created." + name)
-
+        
         processInfo.hwnds.add(hwnd)
         self.hwnds[hwnd] = processInfo
         self.TriggerEvent("NewWindow." + name)
@@ -163,12 +163,14 @@ class Task(eg.PluginBase):
         if processInfo:
             processInfo.hwnds.remove(hwnd)
             del self.hwnds[hwnd]
-            if (processInfo.name, hwnd) == self.lastActivated:
-                self.TriggerEvent("Deactivated." + processInfo.name)
+            name = processInfo.name
+            if (name, hwnd) == self.lastActivated:
+                self.TriggerEvent("Deactivated." + name)
                 self.lastActivated = None
-            self.TriggerEvent("ClosedWindow." + processInfo.name)
+            self.TriggerEvent("ClosedWindow." + name)
             if len(processInfo.hwnds) == 0:
-                self.TriggerEvent("Destroyed." + processInfo.name)
+                self.TriggerEvent("Destroyed." + name)
+                self.names.pop(name, None)
 
 
     def WindowGotFocusProc(self, dummyHwnd, dummyMesg, hwnd, dummyLParam):
