@@ -109,24 +109,27 @@ BUTTON_CODES4 = {
 class UltraX(eg.PluginBase):
 
     def __start__(self):
-        self.usb1 = eg.WinUsbRemote(
+        self.usb = eg.WinUsb()
+        self.usb.AddDevice(
+            "Logitech UltraX Media Remote (Keypad)",
+            "USB\\VID_046D&PID_C101&MI_00",
             "{F73227F9-6CBD-45F9-83C4-A48B3F9F56A4}",
             self.KeypadCallback,
             8,
             True
         )
-        self.usb2 = eg.WinUsbRemote(
+        self.usb.AddDevice(
+            "Logitech UltraX Media Remote (Buttons)",
+            "USB\\VID_046D&PID_C101&MI_01",
             "{4C6BCF9C-8F5B-4CEB-8CEA-4713E31B125F}",
             self.ButtonsCallback,
             4
         )
-        if not self.usb1.IsOk() or not self.usb2.IsOk():
-            raise self.Exceptions.DeviceNotFound
+        self.usb.Open()
 
 
     def __stop__(self):
-        self.usb1.Close()
-        self.usb2.Close()
+        self.usb.Close()
 
 
     def KeypadCallback(self, data):

@@ -35,7 +35,9 @@ eg.RegisterPlugin(
 )
 
 from math import atan2, pi
-from eg.WinApi.Dynamic import mouse_event
+from os.path import dirname, join
+import sys
+from eg.WinApi.Dynamic import mouse_event, WinDLL, DWORD, BOOL, byref, FormatError
 
 BUTTONS = {
     1: "VCR",
@@ -69,18 +71,23 @@ BUTTONS = {
     
 }
 
+DRIVER_PACKAGE_FORCE = 4
+DRIVER_PACKAGE_LEGACY_MODE = 0x10
+
 
 class AsusPsr2000(eg.PluginBase):
 
     def __start__(self):
-        self.usb = eg.WinUsbRemote(
+        self.usb = eg.WinUsb()
+        self.usb.AddDevice(
+            "ASUS PSR-2000",
+            "USB\\VID_147A&PID_E006",
             "{4365E03A-CA73-4C30-88B8-BA00D6B7E2F5}", 
             self.Callback, 
             4,
             #True
         )
-        if not self.usb.IsOk():
-            raise self.Exceptions.DeviceNotFound
+        self.usb.Open()
         self.lastCode = None
         self.lastDirection = None
         self.timer = eg.ResettableTimer(self.OnTimeOut)
@@ -88,7 +95,8 @@ class AsusPsr2000(eg.PluginBase):
         self.rightDown = 0
         self.tick = 0
         self.receiveQueue = eg.plugins.Mouse.plugin.thread.receiveQueue
-         
+
+
     def __stop__(self):
         self.timer.Stop()
         self.usb.Close()
@@ -133,10 +141,8 @@ class AsusPsr2000(eg.PluginBase):
                     self.TriggerEnduringEvent(
                         BUTTONS.get(code[2], "%s" % code[2])
                     )
-                else:
-                    self.EndLastEvent()
-                return
-            print "#1", code
+                    return
+        self.EndLastEvent()
 
 
     def OnTimeOut(self):

@@ -103,24 +103,27 @@ class Conceptronic(eg.PluginBase):
     def __start__(self):
         self.buffer = []
         self.expectedLength = 0
-        self.usb1 = eg.WinUsbRemote(
+        self.usb = eg.WinUsb()
+        self.usb.AddDevice(
+            "Conceptronic CLLRCMCE (Buttons)",
+            "USB\\VID_1784&PID_0004&MI_01",
             "{4228C963-EE0F-4B33-9E5E-D17FB07FB80F}",
             self.ButtonsCallback,
-            1,
-         )
-        self.usb2 = eg.WinUsbRemote(
+            1
+        )
+        self.usb.AddDevice(
+            "Conceptronic CLLRCMCE (Keypad)",
+            "USB\\VID_1784&PID_0004&MI_00",
             "{8C3D8375-AF7B-4AF6-8CD7-463C8E935675}",
             self.KeypadCallback,
             8,
             True
         )
-        if not self.usb1.IsOk() or not self.usb2.IsOk():
-            raise self.Exceptions.DeviceNotFound
+        self.usb.Open()
 
 
     def __stop__(self):
-        self.usb1.Close()
-        self.usb2.Close()
+        self.usb.Close()
 
 
     def ButtonsCallback(self, data):

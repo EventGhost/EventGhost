@@ -76,13 +76,15 @@ CODES = {
 class TechniSatUsb(eg.PluginBase):
 
     def __start__(self):
-        self.usb = eg.WinUsbRemote(
+        self.usb = eg.WinUsb()
+        self.usb.AddDevice(
+            "TechniSat USB IR Receiver",
+            "USB\\VID_147A&PID_E02D",
             "{108E11FA-7EA0-4F13-AA64-1926E14A9C31}",
             self.Callback,
             6
         )
-        if not self.usb.IsOk():
-            raise self.Exceptions.DeviceNotFound
+        self.usb.Open()
 
 
     def __stop__(self):
