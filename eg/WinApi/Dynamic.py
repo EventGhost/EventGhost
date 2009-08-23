@@ -31,6 +31,7 @@ _Psapi = WinDLL("Psapi")
 _Advapi32 = WinDLL("Advapi32")
 _setupapi = WinDLL("setupapi")
 _htmlhelp = WinDLL("hhctrl.ocx")
+_difxapi = WinDLL("DIFxAPI.dll")
 import sys
 if not hasattr(sys, "frozen"): # detect py2exe
     try:
@@ -55,6 +56,7 @@ if not hasattr(sys, "frozen"): # detect py2exe
                 "#include <setupapi.h>\n"
                 "#include <htmlhelp.h>\n"
                 "#include <shellapi.h>\n"
+                "#include <difxapi.h>\n"
             )
         except WindowsError:
             print "GCC_XML most likely not installed"
@@ -1528,3 +1530,44 @@ PeekNamedPipe.argtypes = [HANDLE, LPVOID, DWORD, LPDWORD, LPDWORD, LPDWORD]
 WaitForMultipleObjects = _kernel32.WaitForMultipleObjects
 WaitForMultipleObjects.restype = DWORD
 WaitForMultipleObjects.argtypes = [DWORD, POINTER(HANDLE), BOOL, DWORD]
+
+PCTSTR = LPCWSTR
+LPCTSTR = LPCWSTR
+WSTRING = c_wchar_p
+PCWSTR = WSTRING
+
+# values for enumeration 'DIFXAPI_LOG'
+DIFXAPI_SUCCESS = 0
+DIFXAPI_INFO = 1
+DIFXAPI_WARNING = 2
+DIFXAPI_ERROR = 3
+DIFXAPI_LOG = c_int # enum
+DIFXAPILOGCALLBACK_W = CFUNCTYPE(None, DIFXAPI_LOG, DWORD, PCWSTR, PVOID)
+DIFXAPILOGCALLBACK = DIFXAPILOGCALLBACK_W # alias
+WSTRING = c_wchar_p
+class INSTALLERINFO_W(Structure):
+    pass
+PINSTALLERINFO_W = POINTER(INSTALLERINFO_W)
+PCINSTALLERINFO_W = PINSTALLERINFO_W
+DriverPackageInstallW = _difxapi.DriverPackageInstallW
+DriverPackageInstallW.restype = DWORD
+DriverPackageInstallW.argtypes = [PCWSTR, DWORD, PCINSTALLERINFO_W, POINTER(BOOL)]
+DriverPackageInstall = DriverPackageInstallW # alias
+PWSTR = WSTRING
+INSTALLERINFO_W._fields_ = [
+    ('pApplicationId', PWSTR),
+    ('pDisplayName', PWSTR),
+    ('pProductName', PWSTR),
+    ('pMfgName', PWSTR),
+]
+DIFXLOGCALLBACK_W = WINFUNCTYPE(None, DIFXAPI_LOG, DWORD, PCWSTR, PVOID)
+SetDifxLogCallbackW = _difxapi.SetDifxLogCallbackW
+SetDifxLogCallbackW.restype = None
+SetDifxLogCallbackW.argtypes = [DIFXLOGCALLBACK_W, PVOID]
+SetDifxLogCallback = SetDifxLogCallbackW # alias
+DIFLOGCALLBACK = DIFXLOGCALLBACK_W # alias
+DriverPackageUninstallW = _difxapi.DriverPackageUninstallW
+DriverPackageUninstallW.restype = DWORD
+DriverPackageUninstallW.argtypes = [PCWSTR, DWORD, PCINSTALLERINFO_W, POINTER(BOOL)]
+DriverPackageUninstall = DriverPackageUninstallW # alias
+
