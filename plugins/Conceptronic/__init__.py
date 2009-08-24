@@ -103,7 +103,7 @@ class Conceptronic(eg.PluginBase):
     def __start__(self):
         self.buffer = []
         self.expectedLength = 0
-        self.usb = eg.WinUsb()
+        self.usb = eg.WinUsb(self)
         self.usb.AddDevice(
             "Conceptronic CLLRCMCE (Buttons)",
             "USB\\VID_1784&PID_0004&MI_01",

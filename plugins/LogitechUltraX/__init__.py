@@ -109,7 +109,7 @@ BUTTON_CODES4 = {
 class UltraX(eg.PluginBase):
 
     def __start__(self):
-        self.usb = eg.WinUsb()
+        self.usb = eg.WinUsb(self)
         self.usb.AddDevice(
             "Logitech UltraX Media Remote (Keypad)",
             "USB\\VID_046D&PID_C101&MI_00",

@@ -95,7 +95,7 @@ class Speedlink(eg.PluginBase):
 
     def __start__(self):
         self.info.eventPrefix = "SpeedLink"
-        self.usb = eg.WinUsb()
+        self.usb = eg.WinUsb(self)
         self.usb.AddDevice(
             "SPEEDLINK SL-6399 Media Remote #1",
             "USB\VID_1241&PID_E000&MI_00",

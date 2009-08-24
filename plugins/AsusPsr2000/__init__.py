@@ -78,7 +78,7 @@ DRIVER_PACKAGE_LEGACY_MODE = 0x10
 class AsusPsr2000(eg.PluginBase):
 
     def __start__(self):
-        self.usb = eg.WinUsb()
+        self.usb = eg.WinUsb(self)
         self.usb.AddDevice(
             "ASUS PSR-2000",
             "USB\\VID_147A&PID_E006",
