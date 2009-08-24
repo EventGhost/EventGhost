@@ -1530,44 +1530,104 @@ PeekNamedPipe.argtypes = [HANDLE, LPVOID, DWORD, LPDWORD, LPDWORD, LPDWORD]
 WaitForMultipleObjects = _kernel32.WaitForMultipleObjects
 WaitForMultipleObjects.restype = DWORD
 WaitForMultipleObjects.argtypes = [DWORD, POINTER(HANDLE), BOOL, DWORD]
-
-PCTSTR = LPCWSTR
-LPCTSTR = LPCWSTR
 WSTRING = c_wchar_p
+HDEVINFO = PVOID
 PCWSTR = WSTRING
-
-# values for enumeration 'DIFXAPI_LOG'
-DIFXAPI_SUCCESS = 0
-DIFXAPI_INFO = 1
-DIFXAPI_WARNING = 2
-DIFXAPI_ERROR = 3
-DIFXAPI_LOG = c_int # enum
-DIFXAPILOGCALLBACK_W = CFUNCTYPE(None, DIFXAPI_LOG, DWORD, PCWSTR, PVOID)
-DIFXAPILOGCALLBACK = DIFXAPILOGCALLBACK_W # alias
-WSTRING = c_wchar_p
-class INSTALLERINFO_W(Structure):
+SetupDiGetClassDevsW = _setupapi.SetupDiGetClassDevsW
+SetupDiGetClassDevsW.restype = HDEVINFO
+SetupDiGetClassDevsW.argtypes = [POINTER(GUID), PCWSTR, HWND, DWORD]
+SetupDiGetClassDevs = SetupDiGetClassDevsW # alias
+DIGCF_PRESENT = 2 # Variable c_int '2'
+DIGCF_ALLCLASSES = 4 # Variable c_int '4'
+class _SP_DEVINFO_DATA(Structure):
     pass
-PINSTALLERINFO_W = POINTER(INSTALLERINFO_W)
-PCINSTALLERINFO_W = PINSTALLERINFO_W
-DriverPackageInstallW = _difxapi.DriverPackageInstallW
-DriverPackageInstallW.restype = DWORD
-DriverPackageInstallW.argtypes = [PCWSTR, DWORD, PCINSTALLERINFO_W, POINTER(BOOL)]
-DriverPackageInstall = DriverPackageInstallW # alias
-PWSTR = WSTRING
-INSTALLERINFO_W._fields_ = [
-    ('pApplicationId', PWSTR),
-    ('pDisplayName', PWSTR),
-    ('pProductName', PWSTR),
-    ('pMfgName', PWSTR),
+SP_DEVINFO_DATA = _SP_DEVINFO_DATA
+_SP_DEVINFO_DATA._pack_ = 1
+_SP_DEVINFO_DATA._fields_ = [
+    ('cbSize', DWORD),
+    ('ClassGuid', GUID),
+    ('DevInst', DWORD),
+    ('Reserved', ULONG_PTR),
 ]
-DIFXLOGCALLBACK_W = WINFUNCTYPE(None, DIFXAPI_LOG, DWORD, PCWSTR, PVOID)
-SetDifxLogCallbackW = _difxapi.SetDifxLogCallbackW
-SetDifxLogCallbackW.restype = None
-SetDifxLogCallbackW.argtypes = [DIFXLOGCALLBACK_W, PVOID]
-SetDifxLogCallback = SetDifxLogCallbackW # alias
-DIFLOGCALLBACK = DIFXLOGCALLBACK_W # alias
-DriverPackageUninstallW = _difxapi.DriverPackageUninstallW
-DriverPackageUninstallW.restype = DWORD
-DriverPackageUninstallW.argtypes = [PCWSTR, DWORD, PCINSTALLERINFO_W, POINTER(BOOL)]
-DriverPackageUninstall = DriverPackageUninstallW # alias
+PSP_DEVINFO_DATA = POINTER(_SP_DEVINFO_DATA)
+SetupDiGetDeviceRegistryPropertyW = _setupapi.SetupDiGetDeviceRegistryPropertyW
+SetupDiGetDeviceRegistryPropertyW.restype = BOOL
+SetupDiGetDeviceRegistryPropertyW.argtypes = [HDEVINFO, PSP_DEVINFO_DATA, DWORD, PDWORD, PBYTE, DWORD, PDWORD]
+SetupDiGetDeviceRegistryProperty = SetupDiGetDeviceRegistryPropertyW # alias
+SetupDiEnumDeviceInfo = _setupapi.SetupDiEnumDeviceInfo
+SetupDiEnumDeviceInfo.restype = BOOL
+SetupDiEnumDeviceInfo.argtypes = [HDEVINFO, DWORD, PSP_DEVINFO_DATA]
+SPDRP_DEVICEDESC = 0 # Variable c_int '0'
+ERROR_INSUFFICIENT_BUFFER = 122 # Variable c_long '122l'
+LPTSTR = LPWSTR
+LocalFree = _kernel32.LocalFree
+LocalFree.restype = HLOCAL
+LocalFree.argtypes = [HLOCAL]
+SPDRP_HARDWAREID = 1 # Variable c_int '1'
+ERROR_INVALID_DATA = 13 # Variable c_long '13l'
+SPDRP_DRIVER = 9 # Variable c_int '9'
+class _SP_DRVINFO_DATA_V2_W(Structure):
+    pass
+PSP_DRVINFO_DATA_V2_W = POINTER(_SP_DRVINFO_DATA_V2_W)
+PSP_DRVINFO_DATA_W = PSP_DRVINFO_DATA_V2_W
+SetupDiGetSelectedDriverW = _setupapi.SetupDiGetSelectedDriverW
+SetupDiGetSelectedDriverW.restype = BOOL
+SetupDiGetSelectedDriverW.argtypes = [HDEVINFO, PSP_DEVINFO_DATA, PSP_DRVINFO_DATA_W]
+SetupDiGetSelectedDriver = SetupDiGetSelectedDriverW # alias
+_SP_DRVINFO_DATA_V2_W._pack_ = 1
+_SP_DRVINFO_DATA_V2_W._fields_ = [
+    ('cbSize', DWORD),
+    ('DriverType', DWORD),
+    ('Reserved', ULONG_PTR),
+    ('Description', WCHAR * 256),
+    ('MfgName', WCHAR * 256),
+    ('ProviderName', WCHAR * 256),
+    ('DriverDate', FILETIME),
+    ('DriverVersion', DWORDLONG),
+]
+SP_DRVINFO_DATA_V2_W = _SP_DRVINFO_DATA_V2_W
+SP_DRVINFO_DATA_V2 = SP_DRVINFO_DATA_V2_W
+SP_DRVINFO_DATA = SP_DRVINFO_DATA_V2
+SPDIT_CLASSDRIVER = 1 # Variable c_int '1'
+SetupDiEnumDriverInfoW = _setupapi.SetupDiEnumDriverInfoW
+SetupDiEnumDriverInfoW.restype = BOOL
+SetupDiEnumDriverInfoW.argtypes = [HDEVINFO, PSP_DEVINFO_DATA, DWORD, DWORD, PSP_DRVINFO_DATA_W]
+SetupDiEnumDriverInfo = SetupDiEnumDriverInfoW # alias
+SPDIT_COMPATDRIVER = 2 # Variable c_int '2'
+SetupDiBuildDriverInfoList = _setupapi.SetupDiBuildDriverInfoList
+SetupDiBuildDriverInfoList.restype = BOOL
+SetupDiBuildDriverInfoList.argtypes = [HDEVINFO, PSP_DEVINFO_DATA, DWORD]
+class _SP_DEVINSTALL_PARAMS_W(Structure):
+    pass
+SP_DEVINSTALL_PARAMS_W = _SP_DEVINSTALL_PARAMS_W
+SP_DEVINSTALL_PARAMS = SP_DEVINSTALL_PARAMS_W
+PSP_FILE_CALLBACK_W = WINFUNCTYPE(UINT, PVOID, UINT, UINT_PTR, UINT_PTR)
+HSPFILEQ = PVOID
+_SP_DEVINSTALL_PARAMS_W._pack_ = 1
+_SP_DEVINSTALL_PARAMS_W._fields_ = [
+    ('cbSize', DWORD),
+    ('Flags', DWORD),
+    ('FlagsEx', DWORD),
+    ('hwndParent', HWND),
+    ('InstallMsgHandler', PSP_FILE_CALLBACK_W),
+    ('InstallMsgHandlerContext', PVOID),
+    ('FileQueue', HSPFILEQ),
+    ('ClassInstallReserved', ULONG_PTR),
+    ('Reserved', DWORD),
+    ('DriverPath', WCHAR * 260),
+]
+PSP_DEVINSTALL_PARAMS_W = POINTER(_SP_DEVINSTALL_PARAMS_W)
+SetupDiSetDeviceInstallParamsW = _setupapi.SetupDiSetDeviceInstallParamsW
+SetupDiSetDeviceInstallParamsW.restype = BOOL
+SetupDiSetDeviceInstallParamsW.argtypes = [HDEVINFO, PSP_DEVINFO_DATA, PSP_DEVINSTALL_PARAMS_W]
+SetupDiSetDeviceInstallParams = SetupDiSetDeviceInstallParamsW # alias
+SetupDiGetDeviceInstallParamsW = _setupapi.SetupDiGetDeviceInstallParamsW
+SetupDiGetDeviceInstallParamsW.restype = BOOL
+SetupDiGetDeviceInstallParamsW.argtypes = [HDEVINFO, PSP_DEVINFO_DATA, PSP_DEVINSTALL_PARAMS_W]
+SetupDiGetDeviceInstallParams = SetupDiGetDeviceInstallParamsW # alias
+SetupDiOpenDeviceInfoW = _setupapi.SetupDiOpenDeviceInfoW
+SetupDiOpenDeviceInfoW.restype = BOOL
+SetupDiOpenDeviceInfoW.argtypes = [HDEVINFO, PCWSTR, HWND, DWORD, PSP_DEVINFO_DATA]
+SetupDiOpenDeviceInfo = SetupDiOpenDeviceInfoW # alias
+DIGCF_DEVICEINTERFACE = 16 # Variable c_int '16'
 

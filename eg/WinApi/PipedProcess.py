@@ -26,7 +26,7 @@ from Dynamic import (
     sizeof,
     create_string_buffer,
     DWORD,
-    
+
     CreateNamedPipe,
     ReadFile,
     WriteFile,
@@ -41,7 +41,7 @@ from Dynamic import (
     FormatError,
     CreateEvent,
     WaitForMultipleObjects,
-    
+
     OVERLAPPED,
     GENERIC_READ,
     GENERIC_WRITE,
@@ -87,7 +87,7 @@ else:
 
 
 class PipeStream(object):
-    
+
     def __init__(self, hPipe, code):
         self.hPipe = hPipe
         self.code = code
@@ -154,12 +154,12 @@ def ReadPipeMessage(hPipe):
 def ExecAsAdministrator(scriptPath, funcName, *args, **kwargs):
     """
     Execute some Python code in a process with elevated privileges.
-    
-    This call will only return, after the subprocess has terminated. The 
-    sys.stdout and sys.stderr streams of the subprocess will be directed to 
-    the calling process through a named pipe. All parameters for the function 
+
+    This call will only return, after the subprocess has terminated. The
+    sys.stdout and sys.stderr streams of the subprocess will be directed to
+    the calling process through a named pipe. All parameters for the function
     to call and its return value must be picklable.
-    
+
     :param scriptPath: Path to the Python file to load.
     :param funcName: Name of the function to call inside the Python file
     :param args: Positional parameters for the function
@@ -210,16 +210,16 @@ def ExecAsAdministrator(scriptPath, funcName, *args, **kwargs):
             raise Exception("Timeout in waiting for subprocess.")
         else:
             raise Exception("Unknown return value")
-        
+
 #        if fConnected == 0 and GetLastError() == ERROR_PIPE_CONNECTED:
 #            fConnected = 1
 #        if fConnected != 1:
 #            raise Exception("Could not connect to the Named Pipe")
-#    
+#
         Msg("sending startup message")
         WritePipeMessage(
-            hPipe, 
-            MESSAGE_ARGS, 
+            hPipe,
+            MESSAGE_ARGS,
             (scriptPath, funcName, args, kwargs)
         )
         chBuf = create_string_buffer(BUFSIZE)
@@ -264,8 +264,8 @@ def FormatException(excInfo):
                 lines.append(u"    %s\n" % text)
     lines += format_exception_only(excType, excValue)
     return u"".join(lines)
-    
-    
+
+
 def Client():
     while 1:
         hPipe = CreateFile(
@@ -315,8 +315,8 @@ def Client():
             result = func(*args, **kwargs)
         except:
             WritePipeMessage(
-                hPipe, 
-                MESSAGE_EXCEPTION, 
+                hPipe,
+                MESSAGE_EXCEPTION,
                 FormatException(sys.exc_info())
             )
         else:
@@ -328,5 +328,4 @@ def Client():
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1].lower() == "-client":
         Client()
-        sys.exit(0)
 
