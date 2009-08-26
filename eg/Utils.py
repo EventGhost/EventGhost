@@ -160,7 +160,7 @@ def AssertNotActionThread(func):
     if not eg.debugLevel:
         return func
     def AssertWrapper(*args, **kwargs):
-        assert eg.actionThread == threading.currentThread()
+        assert eg.actionThread._ThreadWorker__thread == threading.currentThread()
         return func(*args, **kwargs)
     return update_wrapper(AssertWrapper, func)
 
