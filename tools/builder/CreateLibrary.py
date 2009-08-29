@@ -138,9 +138,9 @@ class CreateLibrary(Task):
                     excludes=buildSetup.excludeModules,
                     dll_excludes = ["DINPUT8.dll", "w9xpopen.exe"],
                     dist_dir = EncodePath(buildSetup.sourceDir),
-                    custom_boot_script=EncodePath(join(
+                    custom_boot_script=join(
                         buildSetup.dataDir, "Py2ExeBootScript.py"
-                    )),
+                    ),
                 )
             )
         )
