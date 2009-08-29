@@ -62,7 +62,7 @@ from Dynamic import (
 def FailedFunc(funcName):
     errCode = GetLastError()
     return WindowsError(
-        errCode, 
+        errCode,
         "%s: %s" % (funcName, FormatError(errCode))
     )
 
@@ -301,66 +301,66 @@ class Service(object):
                 raise TimeOutError()
 
 
-    def StopDependentServices(self):
-        # Pass a zero-length buffer to get the required buffer size.
-        dwBytesNeeded = DWORD()
-        dwCount = DWORD()
-        if EnumDependentServices(
-            self.schService,
-            SERVICE_ACTIVE,
-            None,
-            0,
-            byref(dwBytesNeeded),
-            byref(dwCount)
-        ):
-            # If the Enum call succeeds, then there are no dependent
-            # services, so do nothing.
-            return True
-        if GetLastError() != ERROR_MORE_DATA:
-            return False # Unexpected error
-
-        # Allocate a buffer for the dependencies.
-        lpDependencies = cast(
-            HeapAlloc(
-                GetProcessHeap(),
-                HEAP_ZERO_MEMORY,
-                dwBytesNeeded
-            ),
-            LPENUM_SERVICE_STATUS
-        )
-
-        if not lpDependencies:
-            return False
-        for i in range(dwCount):
-            #ess = *(lpDependencies + i)
-            # Open the service.
-            hDepService = OpenService(
-                self.schSCManager,
-                ess.lpServiceName,
-                SERVICE_STOP | SERVICE_QUERY_STATUS
-            )
-            if not hDepService:
-               return False
-            try:
-                # Send a stop code.
-                if not ControlService(
-                    hDepService,
-                    SERVICE_CONTROL_STOP,
-                    (LPSERVICE_STATUS) &ssp
-                ):
-                    return False
-                # Wait for the service to stop.
-                while ssStatus.dwCurrentState != SERVICE_STOPPED:
-                    Sleep(ssStatus.dwWaitHint)
-                    ssStatus = self.GetStatus()
-                    if ssStatus.dwCurrentState == SERVICE_STOPPED:
-                        break
-                    if GetTickCount() - dwStartTime > dwTimeout:
-                        return False
-            finally:
-                # Always release the service handle.
-                CloseServiceHandle(hDepService)
-        return True
+#    def StopDependentServices(self):
+#        # Pass a zero-length buffer to get the required buffer size.
+#        dwBytesNeeded = DWORD()
+#        dwCount = DWORD()
+#        if EnumDependentServices(
+#            self.schService,
+#            SERVICE_ACTIVE,
+#            None,
+#            0,
+#            byref(dwBytesNeeded),
+#            byref(dwCount)
+#        ):
+#            # If the Enum call succeeds, then there are no dependent
+#            # services, so do nothing.
+#            return True
+#        if GetLastError() != ERROR_MORE_DATA:
+#            return False # Unexpected error
+#
+#        # Allocate a buffer for the dependencies.
+#        lpDependencies = cast(
+#            HeapAlloc(
+#                GetProcessHeap(),
+#                HEAP_ZERO_MEMORY,
+#                dwBytesNeeded
+#            ),
+#            LPENUM_SERVICE_STATUS
+#        )
+#
+#        if not lpDependencies:
+#            return False
+#        for i in range(dwCount):
+#            #ess = *(lpDependencies + i)
+#            # Open the service.
+#            hDepService = OpenService(
+#                self.schSCManager,
+#                ess.lpServiceName,
+#                SERVICE_STOP | SERVICE_QUERY_STATUS
+#            )
+#            if not hDepService:
+#               return False
+#            try:
+#                # Send a stop code.
+#                if not ControlService(
+#                    hDepService,
+#                    SERVICE_CONTROL_STOP,
+#                    (LPSERVICE_STATUS) &ssp
+#                ):
+#                    return False
+#                # Wait for the service to stop.
+#                while ssStatus.dwCurrentState != SERVICE_STOPPED:
+#                    Sleep(ssStatus.dwWaitHint)
+#                    ssStatus = self.GetStatus()
+#                    if ssStatus.dwCurrentState == SERVICE_STOPPED:
+#                        break
+#                    if GetTickCount() - dwStartTime > dwTimeout:
+#                        return False
+#            finally:
+#                # Always release the service handle.
+#                CloseServiceHandle(hDepService)
+#        return True
 
 
     def __del__(self):

@@ -56,7 +56,12 @@ class Log(object):
             class StdOut:
                 def write(self, data):
                     log.Write(data, INFO_ICON)
-                    oldStdOut.write(data)
+                    try:
+                        oldStdOut.write(data)
+                    except:
+                        oldStdOut.write(
+                            data.decode(sys.getfilesystemencoding())
+                        )
 
             class StdErr:
                 def write(self, data):
@@ -135,8 +140,8 @@ class Log(object):
     def _Print(self, args, sep=" ", end="\n", icon=INFO_ICON, source=None):
         if source is not None:
             source = ref(source)
-        strs = [unicode(arg) for arg in args]
-        self.Write(sep.join(strs) + end, icon, source)
+        #strs = [unicode(arg) for arg in args]
+        self.Write(sep.join(args) + end, icon, source)
 
 
     def Print(self, *args, **kwargs):

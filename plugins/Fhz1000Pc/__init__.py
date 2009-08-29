@@ -217,7 +217,7 @@ class Fhz1000Pc(eg.PluginBase):
         """
         data = self.GetTimeData()
         for i in range(repeats):
-            eg.actionThread.CallWait(partial(self.WriteFhzNoWait, *data))
+            eg.actionThread.Func(self.WriteFhzNoWait)(*data)
         self.nextTaskTime += 60.0
         self.timeTask = eg.scheduler.AddTaskAbsolute(
             self.nextTaskTime, 

@@ -77,7 +77,7 @@ class MainFrame(wx.Frame):
     style = (wx.MINIMIZE_BOX | wx.MAXIMIZE_BOX | wx.RESIZE_BORDER | wx.CAPTION
         | wx.SYSTEM_MENU | wx.CLOSE_BOX | wx.CLIP_CHILDREN | wx.TAB_TRAVERSAL)
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def __init__(self, document):
         """ Create the MainFrame """
         self.document = document
@@ -706,7 +706,7 @@ class MainFrame(wx.Frame):
         menu.Enable(wx.ID_COPY, canCopy)
         menu.Enable(wx.ID_PASTE, canPaste)
         menu.Enable(wx.ID_DELETE, canDelete)
-        selection = self.document.selection
+        selection = self.treeCtrl.GetSelectedNode()
         menu.Check(ID_DISABLED, selection and not selection.isEnabled)
 
 
@@ -795,6 +795,7 @@ class MainFrame(wx.Frame):
             self.findDialog.OnFindButton()
 
 
+    @eg.LogItWithReturn
     @eg.AsTasklet
     def OnCmdAddPlugin(self):
         result = eg.AddPluginDialog.GetModalResult(self)
@@ -814,7 +815,7 @@ class MainFrame(wx.Frame):
     def OnCmdAddFolder(self):
         selection = self.treeCtrl.GetSelectedNode()
         folderNode = eg.UndoHandler.NewFolder().Do(self.document, selection)
-        self.treeCtrl.EditNodeLabel(folderNode)
+        wx.CallAfter(self.treeCtrl.EditNodeLabel, folderNode)
 
 
     @eg.AsTasklet

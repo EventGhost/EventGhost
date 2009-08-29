@@ -118,7 +118,6 @@ class AddEventDialog(eg.TaskletDialog):
             self.SetPosition(Config.position)
         self.ReloadTree()
         while self.Affirmed():
-            print self.resultData
             self.SetResult(self.resultData)
         item = tree.GetSelection()
         gLastSelected = tree.GetPyData(item)

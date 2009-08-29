@@ -186,12 +186,12 @@ def StopMacro(ignoreReturn=False):
         del eg.programReturnStack[:]
 
 
-def CallWait(func):
+def CallWait(func, *args, **kwargs):
     result = [None]
     event = threading.Event()
     def CallWaitWrapper():
         try:
-            result[0] = func()
+            result[0] = func(*args, **kwargs)
         finally:
             event.set()
     wx.CallAfter(CallWaitWrapper)

@@ -119,7 +119,7 @@ def InitGui():
 
 def DeInit():
     eg.PrintDebugNotice("stopping threads")
-    eg.actionThread.CallWait(eg.actionThread.StopSession)
+    eg.actionThread.Func(eg.actionThread.StopSession)()
     eg.scheduler.Stop()
     eg.actionThread.Stop()
     eg.eventThread.Stop()
@@ -129,4 +129,39 @@ def DeInit():
     eg.messageReceiver.Close()
     if eg.dummyAsyncoreDispatcher:
         eg.dummyAsyncoreDispatcher.close()
+
+
+def ImportAll():
+    from os.path import join, basename
+
+    def Traverse(root, moduleRoot):
+        for name in os.listdir(root):
+            path = join(root, name)
+            if os.path.isdir(path):
+                name = basename(path)
+                if name == ".svn":
+                    continue
+                if not os.path.exists(join(path, "__init__.py")):
+                    continue
+                moduleName = moduleRoot + "." + name
+                #print moduleName
+                __import__(moduleName)
+                Traverse(path, moduleName)
+                continue
+            base, ext = os.path.splitext(name)
+            if ext != ".py":
+                continue
+            if base == "__init__":
+                continue
+            moduleName = moduleRoot + "." + base
+            if moduleName in (
+                "eg.StaticImports",
+                "eg.CorePluginModule.EventGhost.OsdSkins.Default",
+            ):
+                continue
+            #print moduleName
+            __import__(moduleName)
+
+    Traverse(join(eg.mainDir, "eg"), "eg")
+    Traverse(eg.corePluginDir, "eg.CorePluginModule")
 

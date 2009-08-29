@@ -113,7 +113,6 @@ class PluginInstall(object):
                     continue
                 src = os.path.join(dirpath, filename)
                 dst = os.path.join(baseDir, src[len(pluginInfo.path)+1:])
-                print src, dst
                 outfile.write(src, dst)
         outfile.close()
 

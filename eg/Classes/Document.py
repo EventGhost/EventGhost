@@ -21,6 +21,7 @@ import os
 from xml.etree import cElementTree as ElementTree
 from tempfile import mkstemp
 from threading import Lock
+from functools import partial
 
 
 class TreeStateData(eg.PersistentData):
@@ -143,7 +144,7 @@ class Document(object):
 
 
     def StartSession(self, filePath):
-        eg.eventThread.CallWait(eg.eventThread.StopSession)
+        eg.eventThread.Func(eg.eventThread.StopSession)()
         eg.eventThread.Call(eg.eventThread.StartSession, filePath)
 
 
@@ -214,11 +215,12 @@ class Document(object):
         eg.Notify("UndoChange", (True, False, ": " + handler.name, ""))
 
 
+    @eg.AssertInMainThread
     def Undo(self):
         if len(self.stockUndo) == 0:
             return
         handler = self.stockUndo.pop()
-        handler.Undo(self)
+        eg.actionThread.Func(handler.Undo)(self)
         self.undoState -= 1
         eg.Notify("DocumentChange", self.undoState != self.undoStateOnSave)
         self.stockRedo.append(handler)
@@ -231,12 +233,13 @@ class Document(object):
         eg.Notify("UndoChange", (hasUndo, True, undoName, ": " + handler.name))
 
 
+    @eg.AssertInMainThread
     @eg.LogIt
     def Redo(self):
         if len(self.stockRedo) == 0:
             return
         handler = self.stockRedo.pop()
-        handler.Redo(self)
+        eg.actionThread.Func(handler.Redo)(self)
         self.undoState += 1
         eg.Notify("DocumentChange", self.undoState != self.undoStateOnSave)
         self.stockUndo.append(handler)
@@ -249,6 +252,7 @@ class Document(object):
         eg.Notify("UndoChange", (True, hasRedo, ": " + handler.name, redoName))
 
 
+    @eg.AssertInActionThread
     def RestoreItem(self, positionData, xmlData):
         eg.TreeLink.StartUndo()
         parent, pos = positionData.GetPosition()
@@ -410,7 +414,7 @@ class Document(object):
         return expanded
 
 
-    #@eg.LogIt
+    @eg.LogIt
     def SetExpandState(self, expanded):
         if expanded is None:
             return
@@ -428,7 +432,7 @@ class Document(object):
 
 
     def OnCmdConfigure(self, node):
-        eg.UndoHandler.Configure().Try(self, node)
+        eg.AsTasklet(eg.UndoHandler.Configure().Do)(node)
 
 
     def OnCmdToggleEnable(self, node):

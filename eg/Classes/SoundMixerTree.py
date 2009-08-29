@@ -17,7 +17,7 @@
 import wx
 
 
-from eg.WinApi.Dynamic import (
+from eg.WinApi.Dynamic.Mmsystem import (
     byref,
     sizeof,
     pointer,

@@ -16,7 +16,7 @@
 
 import eg
 import wx
-from functools import partial
+from threading import currentThread
 from xml.sax.saxutils import quoteattr, escape
 from cStringIO import StringIO
 import xml.etree.cElementTree as ElementTree
@@ -54,18 +54,18 @@ class TreeItem(object):
     icon = None
 
     @classmethod
-    #@eg.AssertNotMainThread
+    @eg.AssertInActionThread
     def Create(cls, parent, pos=-1, text="", **kwargs):
         node = ElementTree.Element(cls.xmlTag)
         node.text = text
         for key, value in kwargs.items():
             node.attrib[key] = value
-        self = eg.actionThread.CallWait(partial(cls, parent, node))
+        self = cls(parent, node)
         parent.AddChild(self, pos)
         return self
 
 
-    #@eg.AssertNotActionThread
+    @eg.AssertInActionThread
     def __init__(self, parent, node):
         self.parent = parent
         # convert all attribute names to lowercase
@@ -133,10 +133,10 @@ class TreeItem(object):
         TreeLink.StartUndo()
         output = StringIO()
         self.WriteXmlString(output.write)
-        data = output.getvalue()
+        xmlString = output.getvalue()
         output.close()
         TreeLink.StopUndo()
-        return data
+        return xmlString
 
 
     def GetXmlString(self):
@@ -148,11 +148,12 @@ class TreeItem(object):
             stream.write('<EventGhost Version="%s">\r\n' % str(eg.revision))
             self.WriteXmlString(stream.write, "    ")
             stream.write('</EventGhost>')
-        data = stream.getvalue()
+        xmlString = stream.getvalue()
         stream.close()
-        return data
+        return xmlString
 
 
+    @eg.AssertInActionThread
     def Delete(self):
         self.isDeleted = True
         if self.dependants is not None:
@@ -279,47 +280,56 @@ class TreeItem(object):
         return self.name
 
 
-    @eg.AssertNotMainThread
-    @eg.LogIt
+    @eg.AssertInActionThread
     def RenameTo(self, newName):
         self.name = newName
         if self.dependants:
             for link in self.dependants:
-                eg.Notify("NodeChanged", link.owner)
-        eg.Notify("NodeChanged", self)
+                wx.CallAfter(eg.Notify, "NodeChanged", link.owner)
+        wx.CallAfter(eg.Notify, "NodeChanged", self)
 
 
     def SetAttributes(self, tree, treeId):
         pass
 
 
-    @eg.AssertNotMainThread
-    @eg.LogIt
+    @eg.AssertInActionThread
     def MoveItemTo(self, newParentItem, pos):
-        eg.Notify("NodeMoveBegin")
+        wx.CallAfter(eg.Notify, "NodeMoveBegin")
         oldPos = self.parent.RemoveChild(self)
+        newPos = pos
         if newParentItem == self.parent:
-            if pos > oldPos:
-                pos -= 1
+            if newPos > oldPos:
+                newPos -= 1
         self.parent = newParentItem
-        newParentItem.AddChild(self, pos)
-        eg.Notify("NodeMoveEnd")
+        newParentItem.AddChild(self, newPos)
+        wx.CallAfter(eg.Notify, "NodeMoveEnd")
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInActionThread
     def SetEnable(self, enable=True):
         self.isEnabled = enable
+        self.Refresh()
+
+
+    @eg.AssertInActionThread
+    def Refresh(self):
+        wx.CallAfter(eg.Notify, "NodeChanged", self)
 
 
     def Select(self):
-        eg.Notify("NodeSelected", self)
+        wx.CallAfter(eg.Notify, "NodeSelected", self)
 
 
+    @eg.AssertInMainThread
     def Expand(self):
-        self.document.expandedNodes.add(self)
-        eg.Notify("NodeChanged", self)
+        def Do():
+            self.document.expandedNodes.add(self)
+            eg.Notify("NodeChanged", self)
+        wx.CallAfter(Do)
 
 
+    @eg.AssertInActionThread
     def Execute(self):
         return None, None
 

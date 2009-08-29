@@ -31,6 +31,7 @@ class NewItem(object):
         item.document.AppendUndoHandler(self)
 
 
+    @eg.AssertInActionThread
     @eg.LogIt
     def Undo(self, document):
         item = self.positionData.GetItem()
@@ -38,6 +39,7 @@ class NewItem(object):
         item.Delete()
 
 
+    @eg.AssertInActionThread
     @eg.LogIt
     def Redo(self, document):
         item = document.RestoreItem(self.positionData, self.data)

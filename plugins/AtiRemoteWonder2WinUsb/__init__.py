@@ -20,13 +20,6 @@ Plugin for the `ATI Remote Wonder II`__ remote.
 .. image:: picture.jpg
    :align: center
 
-**Notice:** The ATI Remote Wonder software must also run to receive events
-from this remote and the special "EventGhost.dll" must be imported and enabled
-inside the ATI Remote Wonder Software.
-
-| You will find this DLL inside:
-| {ProgramFiles}\\EventGhost\\Plugins\\AtiRemoteWonder2\\
-
 __ http://ati.amd.com/products/remotewonder2/index.html
 """
 

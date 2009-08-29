@@ -20,20 +20,23 @@ import eg
 class Rename:
     name = eg.text.MainFrame.Menu.Rename.replace("&", "")
 
+    @eg.AssertInMainThread
     def __init__(self, document, item, newName):
         self.newName = newName
         self.oldName = item.name
         self.positionData = eg.TreePosition(item)
-        item.RenameTo(newName)
+        eg.actionThread.Func(item.RenameTo)(newName)
         document.AppendUndoHandler(self)
 
 
+    @eg.AssertInActionThread
     def Undo(self, document):
         item = self.positionData.GetItem()
         item.RenameTo(self.oldName)
         item.Select()
 
 
+    @eg.AssertInActionThread
     def Redo(self, document):
         item = self.positionData.GetItem()
         item.RenameTo(self.newName)

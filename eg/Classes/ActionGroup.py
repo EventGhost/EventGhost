@@ -181,7 +181,6 @@ class ActionGroup(object):
                         "Wrong number of fields in the list",
                         parts
                     )
-
                 group.AddAction(actionCls, clsName, name, description, value)
 
         Recurse(theList, self)

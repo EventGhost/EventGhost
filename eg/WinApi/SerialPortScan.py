@@ -26,14 +26,16 @@ NULL = 0
 
 from Dynamic import (
     byref, sizeof, cast,
+    DWORD,
+    PBYTE,
+    TCHAR,
+)
+from Dynamic.SetupApi import (
     SetupDiDestroyDeviceInfoList,
     SetupDiEnumDeviceInterfaces,
     SetupDiGetClassDevs,
     SetupDiGetDeviceInterfaceDetail,
     SetupDiGetDeviceRegistryProperty,
-    DWORD,
-    PBYTE,
-    TCHAR,
     GUID,
     SP_DEVINFO_DATA,
     SP_DEVICE_INTERFACE_DATA,
@@ -149,10 +151,6 @@ def GetComPorts(availableOnly=True):
 
 
 if __name__ == '__main__':
-    for i in range(10):
-        import time
-        start = time.clock()
-        for port, desc, hwid in GetComPorts():
-            print "%s: %s" % (port, desc)
-        print time.clock() - start
+    for port, desc, hwid in GetComPorts():
+        print "%s: %s" % (port, desc)
 

@@ -56,11 +56,11 @@ class EventItem(TreeItem):
         self.RenameTo(argString)
 
 
-    def GetArgs(self):
+    def GetArguments(self):
         return (self.name, )
 
 
-    def SetArgs(self, args):
+    def SetArguments(self, args):
         newName = args[0]
         self.RenameTo(newName)
 
@@ -83,6 +83,7 @@ class EventItem(TreeItem):
         TreeItem.Delete(self)
 
 
+    @eg.AssertInActionThread
     def RenameTo(self, newName):
         self.UnRegisterEvent(self.name)
         TreeItem.RenameTo(self, newName)

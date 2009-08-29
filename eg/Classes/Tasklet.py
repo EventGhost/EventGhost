@@ -36,6 +36,7 @@ class Tasklet(stackless.tasklet):
         Tasklet.countTasklets += 1
         self.taskId = Tasklet.countTasklets
 
+
     @classmethod
     def GetCurrentId(cls):
         try:

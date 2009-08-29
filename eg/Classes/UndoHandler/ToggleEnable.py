@@ -20,24 +20,27 @@ import eg
 class ToggleEnable:
     name = eg.text.MainFrame.Menu.Disabled.replace("&", "")
 
+    @eg.AssertInMainThread
     def __init__(self, document, node):
         self.positionData = eg.TreePosition(node)
-        self.state = not node.isEnabled
-        node.SetEnable(self.state)
-        eg.Notify("NodeChanged", node)
+        def ProcessInActionThread():
+            state = not node.isEnabled
+            node.SetEnable(state)
+            return state
+        self.state = eg.actionThread.Func(ProcessInActionThread)()
         document.AppendUndoHandler(self)
 
 
+    @eg.AssertInActionThread
     def Undo(self, document):
         node = self.positionData.GetItem()
         node.SetEnable(not self.state)
-        eg.Notify("NodeChanged", node)
         node.Select()
 
 
+    @eg.AssertInActionThread
     def Redo(self, document):
         node = self.positionData.GetItem()
         node.SetEnable(self.state)
-        eg.Notify("NodeChanged", node)
         node.Select()
 

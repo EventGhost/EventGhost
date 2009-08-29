@@ -173,7 +173,7 @@ class FindDialog(wx.Dialog):
                 item.Select()
                 return
             if searchParameters and isinstance(item, ActionItem):
-                for arg in item.GetArgs():
+                for arg in item.GetArguments():
                     if type(arg) in StringTypes:
                         text = convertFunc(arg)
                         try:

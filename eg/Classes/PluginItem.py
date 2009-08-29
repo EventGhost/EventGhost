@@ -43,6 +43,7 @@ class PluginItem(ActionItem):
         return attr, text
 
 
+    @eg.AssertInActionThread
     def __init__(self, parent, node):
         TreeItem.__init__(self, parent, node)
         if node.text:
@@ -87,14 +88,7 @@ class PluginItem(ActionItem):
             tree.SetItemTextColour(itemId, eg.colour.pluginError)
 
 
-    def SetErrorState(self):
-        wx.CallAfter(eg.Notify, "NodeChanged", self)
-
-
-    def ClearErrorState(self):
-        wx.CallAfter(eg.Notify, "NodeChanged", self)
-
-
+    @eg.AssertInActionThread
     def Execute(self):
         if not self.isEnabled:
             return None, None
@@ -109,14 +103,16 @@ class PluginItem(ActionItem):
         return None, None
 
 
+    @eg.AssertInActionThread
     def SetEnable(self, flag=True):
         ActionItem.SetEnable(self, flag)
         if flag:
-            eg.actionThread.Call(self.info.Start)
+            self.info.Start()
         else:
-            eg.actionThread.Call(self.info.Stop)
+            self.info.Stop()
 
 
+    @eg.AssertInActionThread
     def Delete(self):
         info = self.info
         def DoIt():
@@ -182,12 +178,12 @@ class PluginItem(ActionItem):
         self.helpDialog.Show()
 
 
-    def GetArgs(self):
+    def GetArguments(self):
         return self.info.args
 
 
     @eg.LogIt
-    def SetArgs(self, args):
+    def SetArguments(self, args):
         info = self.info
         if not info.lastException and args == self.info.args:
             return

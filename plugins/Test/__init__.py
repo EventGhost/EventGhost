@@ -33,25 +33,41 @@ eg.RegisterPlugin(
 
 import wx
 
+def CreateStringAction(myParameterDescription, myDefaultParameter):
+    class AnAction(eg.ActionWithStringParameter):
+        parameterDescription = myParameterDescription
+        defaultParameter = myDefaultParameter
+        
+        def __call__(self, value):
+            print "action value:", self.value
+            print "user value:", value
+            
+    return AnAction
+
+ACTIONS = (
+    (CreateStringAction("Please enter value A:", "default A"), "ActionA", "My A action", "This does something", "A"),
+    (CreateStringAction("Please enter value B:", "default B"), "ActionB", "My B action", "This does something", "B"),
+)
 
 class Test(eg.PluginBase):
     
     def __init__(self):
         self.AddAction(TestAction)
+        self.AddActionsFromList(ACTIONS)
         
     
-    def __start__(self, password):
-        print "__start__", password.Get()
-        
-    
-    def Configure(self, password=None):
-        password = eg.Password(password)
-        panel = eg.ConfigPanel()
-        passwordCtrl = panel.TextCtrl(password.Get(), style=wx.TE_PASSWORD)
-        panel.sizer.Add(passwordCtrl)
-        while panel.Affirmed():
-            password.Set(passwordCtrl.GetValue())
-            panel.SetResult(password)
+#    def __start__(self, password):
+#        print "__start__", password.Get()
+#        
+#    
+#    def Configure(self, password=None):
+#        password = eg.Password(password)
+#        panel = eg.ConfigPanel()
+#        passwordCtrl = panel.TextCtrl(password.Get(), style=wx.TE_PASSWORD)
+#        panel.sizer.Add(passwordCtrl)
+#        while panel.Affirmed():
+#            password.Set(passwordCtrl.GetValue())
+#            panel.SetResult(password)
             
             
             

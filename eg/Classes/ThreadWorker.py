@@ -44,6 +44,8 @@ class ThreadWorkerAction(object):
     __slots__ = [
         "time",
         "func",
+        "args",
+        "kwargs",
         "returnValue",
         "processed",
         "exceptionInfo",
@@ -51,9 +53,11 @@ class ThreadWorkerAction(object):
         "callersFrame",
     ]
 
-    def __init__(self, func, raiseException=True):
+    def __init__(self, func, args, kwargs, raiseException=True):
         self.time = clock()
         self.func = func
+        self.args = args
+        self.kwargs = kwargs
         self.returnValue = None
         self.processed = Event()
         self.raiseException = raiseException
@@ -63,7 +67,7 @@ class ThreadWorkerAction(object):
 
     def __call__(self):
         try:
-            self.returnValue = self.func()
+            self.returnValue = self.func(*self.args, **self.kwargs)
         except Exception, exc:
             if self.raiseException:
                 raise
@@ -283,7 +287,7 @@ class ThreadWorker(object):
         Queue a function and its arguments for execution in the ThreadWorker
         thread. Doesn't wait for the completion of the function.
         """
-        action = ThreadWorkerAction(partial(func, *args, **kwargs), True)
+        action = ThreadWorkerAction(func, args, kwargs, True)
         self.__queue.append(action)
         SetEvent(self.__wakeEvent)
         return action
@@ -294,17 +298,21 @@ class ThreadWorker(object):
         Queue a function and its arguments for execution in the ThreadWorker
         thread. Waits for completion of the function and returns its result.
         """
-        action = ThreadWorkerAction(func, False)
-        self.__queue.append(action)
-        SetEvent(self.__wakeEvent)
-        action.processed.wait(timeout)
-        if not action.processed.isSet():
-            eg.PrintStack()
-            raise Exception(
-                "Timeout in %s.CallWait()" % self.__class__.__name__
-            )
-        elif action.exceptionInfo is not None:
-            excType, excValue, excTraceback = action.exceptionInfo
-            raise excType, excValue, excTraceback
-        return action.returnValue
+        return self.Func(func, timeout)()
+
+
+    def Func(self, func, timeout=None):
+        def Wrapper(*args, **kwargs):
+            action = ThreadWorkerAction(func, args, kwargs, False)
+            self.__queue.append(action)
+            SetEvent(self.__wakeEvent)
+            action.processed.wait(timeout)
+            if timeout is not None and not action.processed.isSet():
+                eg.PrintStack()
+                raise Exception("Timeout while calling %s" % func.__name__)
+            if action.exceptionInfo is not None:
+                excType, excValue, excTraceback = action.exceptionInfo
+                raise excType, excValue, excTraceback
+            return action.returnValue
+        return Wrapper
 

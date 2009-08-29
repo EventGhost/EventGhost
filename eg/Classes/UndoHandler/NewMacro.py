@@ -25,30 +25,34 @@ class NewMacro(NewItem):
     """
     name = eg.text.MainFrame.Menu.AddMacro.replace("&", "")
 
+    @eg.AssertInMainThread
     def Do(self, document, selection):
-        obj = selection
-        if isinstance(obj, (document.MacroItem, document.AutostartItem)):
-            parentObj = obj.parent
-            pos = parentObj.childs.index(obj) + 1
-            if pos >= len(parentObj.childs):
+        def ProcessInActionThread():
+            if isinstance(
+                selection,
+                (document.MacroItem, document.AutostartItem)
+            ):
+                parent = selection.parent
+                pos = parent.childs.index(selection) + 1
+                if pos >= len(parent.childs):
+                    pos = -1
+            elif isinstance(
+                selection,
+                (document.ActionItem, document.EventItem, document.PluginItem)
+            ):
+                parent = selection.parent.parent
+                pos = parent.childs.index(selection.parent) + 1
+                if pos >= len(parent.childs):
+                    pos = -1
+            else:
+                parent = selection
                 pos = -1
-        elif isinstance(
-            obj,
-            (document.ActionItem, document.EventItem, document.PluginItem)
-        ):
-            obj = obj.parent
-            parentObj = obj.parent
-            pos = parentObj.childs.index(obj) + 1
-            if pos >= len(parentObj.childs):
-                pos = -1
-        else:
-            parentObj = obj
-            pos = -1
-        item = document.MacroItem.Create(
-            parentObj,
-            pos,
-            name=eg.text.General.unnamedMacro
-        )
+            return document.MacroItem.Create(
+                parent,
+                pos,
+                name=eg.text.General.unnamedMacro
+            )
+        item = eg.actionThread.Func(ProcessInActionThread)()
         item.Select()
         self.StoreItem(item)
         # let the user choose an action
@@ -62,7 +66,7 @@ class NewMacro(NewItem):
         actionObj = eg.UndoHandler.NewAction().Do(document, item, action)
         if actionObj:
             label = actionObj.GetLabel()
-            item.RenameTo(label)
+            eg.actionThread.Func(item.RenameTo)(label)
             item.Select()
         return item
 

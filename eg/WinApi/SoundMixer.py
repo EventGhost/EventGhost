@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from eg.WinApi.Dynamic import (
+from eg.WinApi.Dynamic.Mmsystem import (
     byref, sizeof, addressof, pointer,
     HMIXER,
     MIXERCAPS,
@@ -277,7 +277,7 @@ def GetDeviceLines(deviceId=0):
                 print "            Control:", name
 
 
-from Dynamic import (
+from Dynamic.Mmsystem import (
     MIXERCONTROL_CT_CLASS_MASK,
 
     MIXERCONTROL_CT_CLASS_FADER,

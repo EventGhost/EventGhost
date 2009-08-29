@@ -29,7 +29,6 @@ from ThreadWorker import ThreadWorker
 EventGhostEvent = eg.EventGhostEvent
 actionThread = eg.actionThread
 ActionThreadCall = actionThread.Call
-ActionThreadCallWait = actionThread.CallWait
 
 
 class EventThread(ThreadWorker):
@@ -140,10 +139,7 @@ class EventThread(ThreadWorker):
 
     @eg.LogIt
     def StartSession(self, filename):
-        ActionThreadCallWait(
-            partial(actionThread.StartSession, filename),
-            120
-        )
+        actionThread.Func(actionThread.StartSession, 120)(filename)
         self.TriggerEvent("OnInit")
         if self.startupEvent is not None:
             self.TriggerEvent(self.startupEvent[0], self.startupEvent[1])
@@ -152,6 +148,6 @@ class EventThread(ThreadWorker):
 
     @eg.LogIt
     def StopSession(self):
-        ActionThreadCallWait(actionThread.StopSession, 120)
+        actionThread.Func(actionThread.StopSession, 120)()
         eg.PrintDebugNotice("StopSession done")
 

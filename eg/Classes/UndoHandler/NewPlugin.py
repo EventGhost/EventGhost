@@ -25,10 +25,10 @@ class NewPlugin(NewItem):
     """
     name = eg.text.MainFrame.Menu.AddPlugin.replace("&", "")
 
-    @eg.LogIt
+    @eg.AssertInMainThread
+    @eg.LogItWithReturn
     def Do(self, document, pluginInfo):
-        """ Handle the menu command 'Add Plugin...'. """
-        pluginItem = document.PluginItem.Create(
+        pluginItem = eg.actionThread.Func(document.PluginItem.Create)(
             document.autostartMacro,
             -1,
             file=pluginInfo.pluginName
@@ -37,9 +37,9 @@ class NewPlugin(NewItem):
         if pluginItem.executable:
             if pluginItem.NeedsStartupConfiguration():
                 if not eg.UndoHandler.Configure().Do(pluginItem, True):
-                    pluginItem.Delete()
+                    eg.actionThread.Call(pluginItem.Delete)
                     return None
-            eg.actionThread.CallWait(pluginItem.Execute, timeout=15)
+            eg.actionThread.Call(pluginItem.Execute)
         self.StoreItem(pluginItem)
         if pluginInfo.createMacrosOnAdd:
             eg.UndoHandler.AddActionGroup().Do(document, pluginItem)

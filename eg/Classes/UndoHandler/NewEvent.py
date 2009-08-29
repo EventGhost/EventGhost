@@ -21,29 +21,39 @@ from NewItem import NewItem
 class NewEvent(NewItem):
     name = eg.text.MainFrame.Menu.AddEvent.replace("&", "").replace("...", "")
 
+    @eg.AssertInMainThread
     def Do(self, document, selection, pos=-1, label=None):
-        if not isinstance(selection, document.MacroItem):
-            selection = selection.parent
-        pos = 0
-        for child in selection.childs:
-            if isinstance(child, document.ActionItem):
-                break
-            pos += 1
-        else:
+        def ProcessInActionThread():
+            parent = selection
+            if not isinstance(selection, document.MacroItem):
+                parent = selection.parent
             pos = 0
-        if not isinstance(selection, eg.MacroItem):
+            for child in parent.childs:
+                if isinstance(child, document.ActionItem):
+                    break
+                pos += 1
+            else:
+                pos = 0
+            if not isinstance(parent, eg.MacroItem):
+                return
+            if isinstance(parent, eg.AutostartItem):
+                return
+            needsConfigure = False
+            name = label
+            if label is None:
+                name = eg.event.string
+                needsConfigure = True
+            eventItem = document.EventItem.Create(parent, pos, name=name)
+            eventItem.Select()
+            return eventItem, needsConfigure
+
+        result = eg.actionThread.Func(ProcessInActionThread)()
+        if result is None:
             return
-        if isinstance(selection, eg.AutostartItem):
-            return
-        needsConfigure = False
-        if label is None:
-            label = eg.event.string
-            needsConfigure = True
-        item = document.EventItem.Create(selection, pos, name=label)
-        item.Select()
+        item, needsConfigure = result
 
         if needsConfigure and not eg.UndoHandler.Configure().Do(item, True):
-            item.Delete()
+            eg.actionThread.Call(item.Delete)
             return None
         self.StoreItem(item)
         return item

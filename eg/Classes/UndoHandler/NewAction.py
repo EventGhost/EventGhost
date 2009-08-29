@@ -25,6 +25,7 @@ class NewAction(NewItem):
     """
     name = eg.text.MainFrame.Menu.AddAction.replace("&", "")
 
+    @eg.AssertInMainThread
     @eg.LogIt
     def Do(self, document, selection, action):
         # find the right insert position
@@ -42,19 +43,16 @@ class NewAction(NewItem):
                 pos = -1
 
         # create the ActionItem instance and setup all data
-        item = document.ActionItem.Create(
+        item = eg.actionThread.Func(document.ActionItem.Create)(
             parent,
             pos,
-            text = "%s.%s()" % (
-                action.plugin.info.evalName,
-                action.__name__
-            )
+            text = "%s.%s()" % (action.plugin.info.evalName, action.__name__)
         )
         item.Select()
 
         if item.NeedsStartupConfiguration():
             if not eg.UndoHandler.Configure().Do(item, True):
-                item.Delete()
+                eg.actionThread.Call(item.Delete)
                 return None
         self.StoreItem(item)
         return item

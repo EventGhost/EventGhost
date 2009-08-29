@@ -77,7 +77,7 @@ class ActionThread(eg.ThreadWorker):
             pluginInfo = exc.obj.info
             eg.PrintError(exc.message, source=pluginInfo.treeItem)
             pluginInfo.lastException = exc
-            pluginInfo.treeItem.SetErrorState()
+            pluginInfo.treeItem.Refresh()
 
 
     @staticmethod

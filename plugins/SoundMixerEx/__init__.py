@@ -19,7 +19,7 @@ eg.RegisterPlugin(
 #     - root node of tree now starts expanded.
 
 
-from eg.WinApi.Dynamic import (
+from eg.WinApi.Dynamic.Mmsystem import (
     byref, sizeof, addressof, pointer,
     HMIXER, 
     MIXERCAPS,

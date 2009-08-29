@@ -26,6 +26,7 @@ class AutostartItem(MacroItem):
     isRenameable = False
 
 
+    @eg.AssertInActionThread
     def __init__(self, parent, node):
         MacroItem.__init__(self, parent, node)
         self.name = eg.text.General.autostartItem
@@ -50,6 +51,7 @@ class AutostartItem(MacroItem):
 
 
     @eg.LogIt
+    @eg.AssertInActionThread
     def UnloadPlugins(self):
         for child in self.childs:
             if child.__class__ == self.document.PluginItem:

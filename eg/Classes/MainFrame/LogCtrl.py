@@ -110,7 +110,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         event.Skip()
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def SetData(self, data):
         #self.Freeze()
         self.data = collections.deque(data)
@@ -225,9 +225,9 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         if flags & wx.LIST_HITTEST_ONITEM:
             icon, wref = self.GetItemData(item)[1:3]
             if icon != eg.EventItem.icon and wref is not None:
-                obj = wref()
-                if obj is not None and not obj.isDeleted:
-                    obj.Select()
+                node = wref()
+                if node is not None and not node.isDeleted:
+                    node.Select()
 
 
     def GetItemData(self, item):
@@ -269,7 +269,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         return self.data[item][1].index
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def WriteLine(self, line, icon, wRef, when, indent):
         data = self.data
         if len(data) >= self.maxlength:

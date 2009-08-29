@@ -15,7 +15,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 __all__ = ["Bunch", "NotificationHandler", "LogIt", "LogItWithReturn",
-    "TimeIt", "AssertNotMainThread", "AssertNotActionThread", "ParseString",
+    "TimeIt", "AssertInMainThread", "AssertInActionThread", "ParseString",
     "SetDefault", "EnsureVisible", "VBoxSizer", "HBoxSizer", "EqualizeWidths",
     "AsTasklet", "ExecFile", "GetTopLevelWindow",
 ]
@@ -147,20 +147,27 @@ def TimeIt(func):
     return update_wrapper(TimeItWrapper, func)
 
 
-def AssertNotMainThread(func):
+def AssertInMainThread(func):
     if not eg.debugLevel:
         return func
     def AssertWrapper(*args, **kwargs):
-        assert eg.mainThread == threading.currentThread()
+        if eg.mainThread != threading.currentThread():
+            raise AssertionError("Called outside MainThread: %s in %s" %
+                (func.__name__, func.__module__)
+            )
         return func(*args, **kwargs)
     return update_wrapper(AssertWrapper, func)
 
 
-def AssertNotActionThread(func):
+def AssertInActionThread(func):
     if not eg.debugLevel:
         return func
     def AssertWrapper(*args, **kwargs):
-        assert eg.actionThread._ThreadWorker__thread == threading.currentThread()
+        if eg.actionThread._ThreadWorker__thread != threading.currentThread():
+            raise AssertionError("Called outside ActionThread: %s() in %s" %
+                (func.__name__, func.__module__)
+            )
+        return func(*args, **kwargs)
         return func(*args, **kwargs)
     return update_wrapper(AssertWrapper, func)
 

@@ -25,7 +25,7 @@ from Dynamic import (
     GetAncestor, Rectangle, IsWindow, IsIconic, GetStockObject, SelectObject,
     ShowWindow, BringWindowToTop, UpdateWindow, GetForegroundWindow,
     InvalidateRect, GetCurrentThreadId, GetWindowThreadProcessId,
-    SendNotifyMessage, GetWindowRect, GetCursorPos, EnumProcesses,
+    SendNotifyMessage, GetWindowRect, GetCursorPos,
     EnumDisplayMonitors, FindWindow,
     IsWindowVisible, GetParent, GetWindowDC, GetClassLong, EnumChildWindows,
     ReleaseDC, GetDC, DeleteObject, CreatePen, GetSystemMetrics,
@@ -37,6 +37,9 @@ from Dynamic import (
     WM_GETICON, ICON_SMALL, ICON_BIG, SMTO_ABORTIFHUNG, GCL_HICONSM, GCL_HICON,
     R2_NOT, PS_INSIDEFRAME, SM_CXBORDER, NULL_BRUSH, GA_ROOT, SW_RESTORE,
     WM_SYSCOMMAND, SC_CLOSE, SW_SHOWNA, SMTO_BLOCK, SMTO_ABORTIFHUNG,
+)
+from Dynamic.PsApi import (
+    EnumProcesses,
 )
 
 ENUM_CHILD_PROC = WINFUNCTYPE(BOOL, HWND, LPARAM)
@@ -360,7 +363,7 @@ def FormatError(code=None):
             None
         )
     if numChars == 0:
-        raise Exception("FormatMessage failed", GetLastError())
+        raise Exception("FormatMessage failed on 0x%X" % (code & 0xFFFFFFFF))
     message = lpMsgBuf.value.strip()
     kernel32.LocalFree(lpMsgBuf)
     return message

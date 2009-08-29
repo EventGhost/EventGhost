@@ -55,6 +55,7 @@ class ActionItem(TreeItem):
         return attr, text
 
 
+    @eg.AssertInActionThread
     def __init__(self, parent, node):
         TreeItem.__init__(self, parent, node)
         text = node.text
@@ -101,8 +102,23 @@ class ActionItem(TreeItem):
         return self.executable.Configure(*args)
 
 
+    def GetArguments(self):
+        return self.args
+
+
     def GetArgumentString(self):
-        return ", ".join([repr(arg) for arg in self.GetArgs()])
+        return ", ".join([repr(arg) for arg in self.GetArguments()])
+
+
+    def SetArguments(self, args):
+        if self.args != args:
+            self.args = args
+            try:
+                self.compiled = self.executable.Compile(*args)
+            except:
+                eg.PrintTraceback(source=self)
+                self.compiled = None
+            #self.Refresh()
 
 
     def SetArgumentString(self, argString):
@@ -118,33 +134,19 @@ class ActionItem(TreeItem):
         except:
             eg.PrintTraceback()
             args = ()
-        self.SetArgs(args)
+        self.SetArguments(args)
 
 
+    @eg.AssertInActionThread
     def Delete(self):
         TreeItem.Delete(self)
-        for arg in self.GetArgs():
+        for arg in self.GetArguments():
             if isinstance(arg, TreeLink):
                 if arg.target:
                     arg.target.dependants.remove(arg)
                 arg.owner = None
                 arg.target = None
                 del arg
-
-
-    def GetArgs(self):
-        return self.args
-
-
-    def SetArgs(self, args):
-        if self.args != args:
-            self.args = args
-            try:
-                self.compiled = self.executable.Compile(*args)
-            except:
-                eg.PrintTraceback(source=self)
-                self.compiled = None
-            #self.Refresh()
 
 
     def SetAttributes(self, tree, treeId):
@@ -205,13 +207,14 @@ class ActionItem(TreeItem):
         self.helpDialog.Show()
 
 
+    @eg.AssertInActionThread
     def Execute(self):
         if not self.isEnabled:
             return
         if eg.config.logActions:
             self.Print(self.GetLabel())
         if self.shouldSelectOnExecute:
-            wx.CallAfter(self.Select)
+            self.Select()
         eg.currentItem = self
         action = self.executable
         if not action:

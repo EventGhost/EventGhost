@@ -20,6 +20,7 @@ import eg
 class AddActionGroup(eg.UndoHandler.NewItem):
     name = "Add all actions of plugin"
 
+    @eg.AssertInMainThread
     def Do(self, document, pluginItem):
         result = eg.AddActionGroupDialog.GetResult((document.frame))
         if result is None:
@@ -39,7 +40,7 @@ class AddActionGroup(eg.UndoHandler.NewItem):
                         folderItem,
                         name=item.name
                     )
-                    actionItem = document.ActionItem.Create(
+                    document.ActionItem.Create(
                         macroItem,
                         text = "%s.%s()" % (
                             item.plugin.info.evalName,
@@ -47,7 +48,7 @@ class AddActionGroup(eg.UndoHandler.NewItem):
                         ),
                     )
             return folderItem
-        folderItem = Traverse(
+        folderItem = eg.actionThread.Func(Traverse)(
             parentItem,
             pluginItem.executable.info.actionGroup
         )

@@ -19,21 +19,16 @@ import wx
 
 
 def DoExecute(item, newArgs):
-    oldArgs = item.GetArgs()
-    item.SetArgs(newArgs)
+    oldArgs = item.GetArguments()
+    item.SetArguments(newArgs)
     item.Execute()
-    item.SetArgs(oldArgs)
+    item.SetArguments(oldArgs)
 
 
 class Configure:
     name = eg.text.MainFrame.Menu.Configure.replace("&", "")
 
-    @eg.LogItWithReturn
-    def Try(self, document, item):
-        if isinstance(item, (eg.ActionItem, eg.EventItem)):
-            eg.Tasklet(self.Do)(item).run()
-
-
+    @eg.AssertInMainThread
     @eg.LogItWithReturn
     def Do(self, item, isFirstConfigure=False):
         # TODO: doing the thread ping-pong right
@@ -43,7 +38,7 @@ class Configure:
             return False
 
         self.oldArgumentString = item.GetArgumentString()
-        oldArgs = newArgs = item.GetArgs()
+        oldArgs = newArgs = item.GetArguments()
         revertOnCancel = False
         eg.currentConfigureItem = item
         dialog = eg.ConfigDialog.Create(item, *oldArgs)
@@ -52,18 +47,18 @@ class Configure:
                 break
             elif event == wx.ID_APPLY:
                 revertOnCancel = True
-                item.SetArgs(newArgs)
+                item.SetArguments(newArgs)
                 eg.Notify("NodeChanged", item)
             elif event == eg.ID_TEST:
                 revertOnCancel = True
                 eg.actionThread.Call(DoExecute, item, newArgs)
         else:
             if revertOnCancel:
-                item.SetArgs(oldArgs)
+                item.SetArguments(oldArgs)
                 eg.Notify("NodeChanged", item)
             return False
 
-        item.SetArgs(newArgs)
+        item.SetArguments(newArgs)
         newArgumentString = item.GetArgumentString()
         if self.oldArgumentString != newArgumentString:
             if not isFirstConfigure:
@@ -73,6 +68,7 @@ class Configure:
         return True
 
 
+    @eg.AssertInActionThread
     def Undo(self, document):
         item = self.positionData.GetItem()
         argumentString = item.GetArgumentString()

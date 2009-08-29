@@ -39,7 +39,7 @@ class DropSource(wx.DropSource):
     This class represents a source for a drag and drop operation of the
     TreeCtrl.
     """
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def __init__(self, win, text):
         wx.DropSource.__init__(self, win)
         # create our own data format and use it in a
@@ -70,7 +70,7 @@ class DropTarget(wx.PyDropTarget):
     This class represents a target for a drag and drop operation of the
     TreeCtrl.
     """
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def __init__(self, treeCtrl):
         wx.PyDropTarget.__init__(self)
         self.treeCtrl = treeCtrl
@@ -102,7 +102,7 @@ class DropTarget(wx.PyDropTarget):
         return dragResult
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def OnDragOver(self, x, y, dummyDragResult):
         """
         Called when the mouse is being dragged over the drop target.
@@ -224,7 +224,7 @@ class DropTarget(wx.PyDropTarget):
         return (parent, pos + 1)
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def OnData(self, dummyX, dummyY, dragResult):
         """
         Overrides wx.DropTarget.OnData
@@ -260,7 +260,7 @@ class DropTarget(wx.PyDropTarget):
         return dragResult
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def OnLeave(self):
         """
         Called when the mouse leaves the drop target.
@@ -269,7 +269,7 @@ class DropTarget(wx.PyDropTarget):
         self.autoScrollTimer.Stop()
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def OnDragTimerEvent(self, dummyEvent):
         """
         Handles wx.EVT_TIMER, while a drag operation is in progress. It is
@@ -343,7 +343,7 @@ class EditControlProxy(object):
 
 class TreeCtrl(wx.TreeCtrl):
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def __init__(self, parent, document, size=wx.DefaultSize):
         self.document = document
         self.root = None
@@ -387,7 +387,7 @@ class TreeCtrl(wx.TreeCtrl):
             self.OnNewRoot(root)
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     @eg.LogIt
     def Destroy(self):
         self.document.firstVisibleItem = self.GetFirstVisibleNode()
@@ -400,7 +400,7 @@ class TreeCtrl(wx.TreeCtrl):
         eg.Unbind("DocumentNewRoot", self.OnNewRoot)
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def SetInsertMark(self, treeItem, after):
         # TVM_SETINSERTMARK = 4378
         if treeItem:
@@ -408,12 +408,12 @@ class TreeCtrl(wx.TreeCtrl):
             SendMessageTimeout(self.hwnd, 4378, after, lParam, 1, 100, None)
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def ClearInsertMark(self):
         SendMessageTimeout(self.hwnd, 4378, 0, long(0), 1, 100, None)
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def CreateRoot(self, node):
         itemId = self.AddRoot(
             node.label,
@@ -427,7 +427,7 @@ class TreeCtrl(wx.TreeCtrl):
         return itemId
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def CreateTreeItem(self, node, parentId):
         itemId = self.AppendItem(
             parentId,
@@ -445,7 +445,7 @@ class TreeCtrl(wx.TreeCtrl):
         return itemId
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def CreateTreeItemAt(self, node, parentId, parentNode, pos):
         if pos == -1 or pos >= len(parentNode.childs):
             return self.CreateTreeItem(node, parentId)
@@ -467,7 +467,7 @@ class TreeCtrl(wx.TreeCtrl):
             return itemId
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def TraverseDelete(self, itemId):
         childId, cookie = self.GetFirstChild(itemId)
         while childId.IsOk():
@@ -477,7 +477,7 @@ class TreeCtrl(wx.TreeCtrl):
             childId, cookie = self.GetNextChild(childId, cookie)
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def ExpandAll(self):
         """
         Expands all items in the tree.
@@ -488,7 +488,7 @@ class TreeCtrl(wx.TreeCtrl):
         self.Thaw()
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def CollapseAll(self):
         """
         Collapses all items in the tree.
@@ -506,7 +506,7 @@ class TreeCtrl(wx.TreeCtrl):
         self.Thaw()
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def GetSelectedNode(self):
         """
         Returns the currently selected node.
@@ -517,7 +517,7 @@ class TreeCtrl(wx.TreeCtrl):
         return self.GetPyData(itemId)
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def GetFirstVisibleNode(self):
         """
         Returns the first currently visible node.
@@ -528,11 +528,12 @@ class TreeCtrl(wx.TreeCtrl):
         return self.GetPyData(itemId)
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def EditNodeLabel(self, node):
         self.EditLabel(self.visibleNodes[node])
 
 
+    @eg.AssertInMainThread
     def GetEditCmdState(self):
         node = self.GetSelectedNode()
         if node is None:
@@ -545,6 +546,7 @@ class TreeCtrl(wx.TreeCtrl):
         )
 
 
+    @eg.AssertInMainThread
     def DisplayError(self, ident):
         frame = eg.GetTopLevelWindow(self)
         frame.DisplayError(getattr(eg.text.MainFrame.Messages, ident))
@@ -555,7 +557,7 @@ class TreeCtrl(wx.TreeCtrl):
     #-------------------------------------------------------------------------
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def OnGetFocusEvent(self, event):
         """
         Handles wx.EVT_SET_FOCUS
@@ -564,7 +566,7 @@ class TreeCtrl(wx.TreeCtrl):
         event.Skip(True)
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def OnKillFocusEvent(self, event):
         """
         Handles wx.EVT_KILL_FOCUS
@@ -574,16 +576,18 @@ class TreeCtrl(wx.TreeCtrl):
         event.Skip(True)
 
 
+    @eg.AssertInMainThread
     def OnSelectionChangedEvent(self, event):
         """
         Handles wx.EVT_TREE_SEL_CHANGED
         """
         node = self.GetPyData(event.GetItem())
+        self.document.selection = node
         eg.Notify("SelectionChange", node)
         event.Skip()
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def OnItemExpandingEvent(self, event):
         """
         Handles wx.EVT_TREE_ITEM_EXPANDING
@@ -597,7 +601,7 @@ class TreeCtrl(wx.TreeCtrl):
                 self.CreateTreeItem(subNode, itemId)
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     @eg.LogIt
     def OnItemCollapsingEvent(self, event):
         """
@@ -612,7 +616,7 @@ class TreeCtrl(wx.TreeCtrl):
         self.expandedNodes.discard(node)
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     @eg.LogIt
     def OnBeginLabelEditEvent(self, event):
         """
@@ -629,7 +633,7 @@ class TreeCtrl(wx.TreeCtrl):
         event.Skip()
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     @eg.LogIt
     def OnEndLabelEditEvent(self, event):
         """
@@ -645,7 +649,7 @@ class TreeCtrl(wx.TreeCtrl):
         event.Skip()
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     @eg.LogIt
     def OnItemActivateEvent(self, event):
         """
@@ -659,7 +663,7 @@ class TreeCtrl(wx.TreeCtrl):
         event.Skip()
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     @eg.LogItWithReturn
     def OnLeftDoubleClickEvent(self, event):
         """
@@ -675,7 +679,7 @@ class TreeCtrl(wx.TreeCtrl):
         event.Skip()
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def OnItemMenuEvent(self, event):
         """
         Handles wx.EVT_TREE_ITEM_MENU
@@ -687,7 +691,7 @@ class TreeCtrl(wx.TreeCtrl):
         event.Skip()
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     @eg.LogItWithReturn
     def OnBeginDragEvent(self, event):
         """
@@ -723,7 +727,7 @@ class TreeCtrl(wx.TreeCtrl):
     #-------------------------------------------------------------------------
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def OnNewRoot(self, root):
         """
         Handles eg.Notify("DocumentNewRoot")
@@ -749,7 +753,8 @@ class TreeCtrl(wx.TreeCtrl):
             self.Thaw()
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
+    @eg.LogIt
     def OnNodeAdded(self, (node, pos)):
         """
         Handles eg.Notify("NodeAdded")
@@ -770,12 +775,12 @@ class TreeCtrl(wx.TreeCtrl):
                 self.Expand(parentId)
 
 
-    @eg.AssertNotMainThread
-    def OnNodeDeleted(self, node):
+    @eg.AssertInMainThread
+    @eg.LogIt
+    def OnNodeDeleted(self, (node, parent)):
         """
         Handles eg.Notify("NodeDeleted")
         """
-        parent = node.parent
         if parent in self.visibleNodes:
             if node in self.visibleNodes:
                 itemId = self.visibleNodes.pop(node)
@@ -786,7 +791,7 @@ class TreeCtrl(wx.TreeCtrl):
         self.expandedNodes.discard(node)
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def OnNodeChanged(self, node):
         """
         Handles eg.Notify("NodeChanged")
@@ -804,7 +809,7 @@ class TreeCtrl(wx.TreeCtrl):
             self.Collapse(itemId)
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def OnNodeSelected(self, node):
         """
         Handles eg.Notify("NodeSelected")
@@ -818,10 +823,12 @@ class TreeCtrl(wx.TreeCtrl):
         self.SelectItem(self.visibleNodes[node])
 
 
+    @eg.AssertInMainThread
     def OnNodeMoveBegin(self, dummyNode):
         self.Freeze()
 
 
+    @eg.AssertInMainThread
     def OnNodeMoveEnd(self, dummyNode):
         self.Thaw()
 
@@ -831,26 +838,27 @@ class TreeCtrl(wx.TreeCtrl):
     #-------------------------------------------------------------------------
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def OnCmdCut(self):
         eg.UndoHandler.Cut(self.document, self.GetSelectedNode())
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def OnCmdCopy(self):
         self.GetSelectedNode().OnCmdCopy()
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def OnCmdPaste(self):
         eg.UndoHandler.Paste(self.document, self.GetSelectedNode())
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def OnCmdDelete(self):
         eg.UndoHandler.Clear(self.document, self.GetSelectedNode())
 
 
+    @eg.AssertInMainThread
     def OnCmdRename(self):
         selection = self.GetSelectedNode()
         if not selection.isRenameable:
@@ -860,6 +868,7 @@ class TreeCtrl(wx.TreeCtrl):
             self.EditLabel(self.GetSelection())
 
 
+    @eg.AssertInMainThread
     def OnCmdConfigure(self):
         selection = self.GetSelectedNode()
         if not selection.isConfigurable:
@@ -868,6 +877,7 @@ class TreeCtrl(wx.TreeCtrl):
             self.document.OnCmdConfigure(selection)
 
 
+    @eg.AssertInMainThread
     def OnCmdExecute(self):
         selection = self.GetSelectedNode()
         if not selection.isExecutable:
@@ -876,6 +886,7 @@ class TreeCtrl(wx.TreeCtrl):
             self.document.ExecuteNode(selection).SetShouldEnd()
 
 
+    @eg.AssertInMainThread
     def OnCmdToggleEnable(self):
         selection = self.GetSelectedNode()
         if not selection.isDeactivatable:

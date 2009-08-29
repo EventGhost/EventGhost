@@ -14,23 +14,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import wx
 import eg
 
 
 class MoveTo:
     name = "Move Item"
 
+    @eg.AssertInMainThread
     @eg.LogIt
     def __init__(self, document, item, parent, pos):
         oldParent = item.parent
         self.oldPos = item.parent.childs.index(item)
-        item.MoveItemTo(parent, pos)
+        eg.actionThread.Func(item.MoveItemTo)(parent, pos)
         self.oldParentPath = oldParent.GetPath()
         self.newPositionData = eg.TreePosition(item)
         item.Select()
         document.AppendUndoHandler(self)
 
 
+    @eg.AssertInActionThread
     @eg.LogIt
     def Undo(self, document):
         parent1, pos1 = self.newPositionData.GetPosition()

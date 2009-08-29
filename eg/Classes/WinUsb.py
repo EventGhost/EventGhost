@@ -60,24 +60,12 @@ class INSTALLERINFO(Structure):
     ]
 PCINSTALLERINFO = POINTER(INSTALLERINFO)
 
-_difxapi = WinDLL("DIFxAPI.dll")
-
-DIFLOGCALLBACK = WINFUNCTYPE(None, DIFXAPI_LOG, DWORD, PCWSTR, PVOID)
-SetDifxLogCallback = _difxapi.SetDifxLogCallbackW
-SetDifxLogCallback.restype = None
-SetDifxLogCallback.argtypes = [DIFLOGCALLBACK, PVOID]
-
-DriverPackageInstall = _difxapi.DriverPackageInstallW
-DriverPackageInstall.restype = DWORD
-DriverPackageInstall.argtypes = [PCWSTR, DWORD, PCINSTALLERINFO, POINTER(BOOL)]
-
-
 PUBYTE = POINTER(c_ubyte)
 
 DRIVER_VERSION = "1.0.1.2"
 DRIVER_PROVIDER = "EventGhost"
 
-HEADER = r"""\
+HEADER = r"""
 ; This file is automatically created by the BuildDriver.py script. Don't edit
 ; this file directly.
 
@@ -187,7 +175,7 @@ class UsbDevice(object):
         suppressRepeat
     ):
         self.name = name
-        self.hardwareId = hardwareId
+        self.hardwareId = hardwareId.upper()
         self.guid = unicode(guid)
         self.callback = callback
         self.dataSize = dataSize
@@ -195,7 +183,7 @@ class UsbDevice(object):
         self.threadId = None
 
 
-    def Start(self):
+    def Open(self):
         if self.dll is None:
             self.__class__.dll = WinDLL(
                 join(
@@ -215,7 +203,7 @@ class UsbDevice(object):
             raise Exception("Device did not start")
 
 
-    def Stop(self):
+    def Close(self):
         self.dll.End(self.threadId)
         self.threadId = None
         eg.messageReceiver.RemoveWmUserHandler(self.MsgHandler)
@@ -256,6 +244,7 @@ class WinUsb(object):
         self.devices.append(device)
 
 
+    @eg.LogIt
     def Open(self):
         devices = ListDevices()
         for device in self.devices:
@@ -271,7 +260,7 @@ class WinUsb(object):
                 self.InstallDriver()
                 break
         for device in self.devices:
-            device.Start()
+            device.Open()
 
 
     def Close(self):
@@ -279,6 +268,8 @@ class WinUsb(object):
             device.Close()
 
 
+    @eg.AssertInActionThread
+    @eg.LogIt
     def InstallDriver(self):
         import wx
         res = eg.CallWait(
@@ -347,6 +338,16 @@ class WinUsb(object):
 
 
 def InstallDriver(infPath):
+    _difxapi = WinDLL("DIFxAPI.dll")
+
+    DIFLOGCALLBACK = WINFUNCTYPE(None, DIFXAPI_LOG, DWORD, PCWSTR, PVOID)
+    SetDifxLogCallback = _difxapi.SetDifxLogCallbackW
+    SetDifxLogCallback.restype = None
+    SetDifxLogCallback.argtypes = [DIFLOGCALLBACK, PVOID]
+
+    DriverPackageInstall = _difxapi.DriverPackageInstallW
+    DriverPackageInstall.restype = DWORD
+    DriverPackageInstall.argtypes = [PCWSTR, DWORD, PCINSTALLERINFO, POINTER(BOOL)]
     def Callback(eventType, error, description, context):
         print (eventType, error, description, context)
     difLogCallback = DIFLOGCALLBACK(Callback)
@@ -373,35 +374,38 @@ def FailedFunc(funcName):
 
 
 from eg.WinApi.Dynamic import (
-    sizeof,
-    SetupDiGetClassDevs,
-    DIGCF_PRESENT,
-    DIGCF_ALLCLASSES,
-    SP_DEVINFO_DATA,
-    SetupDiGetDeviceRegistryProperty,
-    SetupDiEnumDeviceInfo,
-    SPDRP_DEVICEDESC,
-    PBYTE,
-    ERROR_INSUFFICIENT_BUFFER,
-    create_unicode_buffer,
-    SPDRP_HARDWAREID,
-    ERROR_INVALID_DATA,
+    GUID,
     INVALID_HANDLE_VALUE,
     CLSIDFromString,
-    GUID,
-    SPDRP_DRIVER,
+    create_unicode_buffer,
+    sizeof,
+    PBYTE,
+
+)
+
+from eg.WinApi.Dynamic.SetupApi import (
+    SetupDiGetClassDevs,
+    SetupDiGetDeviceRegistryProperty,
+    SetupDiEnumDeviceInfo,
     SetupDiGetSelectedDriver,
-    SP_DRVINFO_DATA,
-    SPDIT_CLASSDRIVER,
-    SetupDiEnumDriverInfo,
-    SPDIT_COMPATDRIVER,
-    SetupDiBuildDriverInfoList,
-    SP_DEVINSTALL_PARAMS,
     SetupDiSetDeviceInstallParams,
     SetupDiGetDeviceInstallParams,
-    #DI_FLAGSEX_INSTALLEDDRIVER,
     SetupDiOpenDeviceInfo,
+    SetupDiEnumDriverInfo,
+    SetupDiBuildDriverInfoList,
+    DIGCF_PRESENT,
+    DIGCF_ALLCLASSES,
     DIGCF_DEVICEINTERFACE,
+    SP_DEVINFO_DATA,
+    SP_DRVINFO_DATA,
+    SP_DEVINSTALL_PARAMS,
+    SPDRP_DEVICEDESC,
+    SPDRP_HARDWAREID,
+    SPDRP_DRIVER,
+    SPDIT_CLASSDRIVER,
+    SPDIT_COMPATDRIVER,
+    ERROR_INSUFFICIENT_BUFFER,
+    ERROR_INVALID_DATA,
 )
 DI_FLAGSEX_INSTALLEDDRIVER = 0x04000000
 
@@ -459,7 +463,7 @@ def ListDevices():
             byref(buffersize)
         ):
             raise FailedFunc("SetupDiGetDeviceRegistryProperty")
-        hardwareId = StripRevision(hardwareId.value)
+        hardwareId = StripRevision(hardwareId.value.upper())
         driverInfoData.DriverVersion = 0
         SetupDiGetDeviceInstallParams(
             hDevInfo,
@@ -500,4 +504,14 @@ def ListDevices():
             provider = driverInfoData.ProviderName,
         )
     return devices
+
+
+def IsWin64():
+    from eg.WinApi.Dynamic import _kernel32
+    try:
+        if _kernel32.GetSystemWow64DirectoryW(None, 0) == 0:
+            return False
+    except:
+        return False
+    return True
 

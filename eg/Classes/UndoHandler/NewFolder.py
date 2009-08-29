@@ -25,30 +25,35 @@ class NewFolder(NewItem):
     """
     name = eg.text.MainFrame.Menu.AddFolder.replace("&", "")
 
+    @eg.AssertInMainThread
     @eg.LogIt
     def Do(self, document, selection):
-        if isinstance(selection, (document.MacroItem, document.AutostartItem)):
-            parentObj = selection.parent
-            pos = parentObj.childs.index(selection) + 1
-            if pos >= len(parentObj.childs):
+        def ProcessInActionThread():
+            if isinstance(
+                selection,
+                (document.MacroItem, document.AutostartItem)
+            ):
+                parent = selection.parent
+                pos = parent.childs.index(selection) + 1
+                if pos >= len(parent.childs):
+                    pos = -1
+            elif isinstance(
+                selection,
+                (document.ActionItem, document.EventItem, document.PluginItem)
+            ):
+                parent = selection.parent.parent
+                pos = parent.childs.index(selection.parent) + 1
+                if pos >= len(parent.childs):
+                    pos = -1
+            else:
+                parent = selection
                 pos = -1
-        elif isinstance(
-            selection,
-            (document.ActionItem, document.EventItem, document.PluginItem)
-        ):
-            selection = selection.parent
-            parentObj = selection.parent
-            pos = parentObj.childs.index(selection) + 1
-            if pos >= len(parentObj.childs):
-                pos = -1
-        else:
-            parentObj = selection
-            pos = -1
-        item = document.FolderItem.Create(
-            parentObj,
-            pos,
-            name=eg.text.General.unnamedFolder
-        )
+            return document.FolderItem.Create(
+                parent,
+                pos,
+                name=eg.text.General.unnamedFolder
+            )
+        item = eg.actionThread.Func(ProcessInActionThread)()
         self.StoreItem(item)
         item.Select()
         return item

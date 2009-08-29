@@ -20,9 +20,6 @@ import stackless
 import Cli
 from Utils import *
 
-# This is only here to make pylint happy. It is never really imported
-if "pylint" in sys.modules:
-    from StaticImports import *
 
 
 class DynamicModule(object):
@@ -38,10 +35,7 @@ class DynamicModule(object):
 
 
     def __getattr__(self, name):
-        try:
-            mod = __import__("eg.Classes." + name, None, None, [name], 0)
-        except ImportError:
-            raise AttributeError("'eg' object has not attribute '%s'" % name)
+        mod = __import__("eg.Classes." + name, None, None, [name], 0)
         self.__dict__[name] = attr = getattr(mod, name)
         return attr
 
@@ -98,11 +92,19 @@ class DynamicModule(object):
             self.ExecScript(Cli.args.execScript)
         else:
             eg.Init.InitGui()
+        if eg.debugLevel:
+            eg.Init.ImportAll()
         eg.Tasklet(eg.app.MainLoop)().run()
         stackless.run()
 
 
 eg = DynamicModule()
+# This is only here to make pylint happy. It is never really imported
+if "pylint" in sys.modules:
+    from Init import ImportAll
+    ImportAll()
+    from StaticImports import *
+    from Core import *
 import Core
 if eg.debugLevel:
     eg.RaiseAssignments()

@@ -59,7 +59,7 @@ class PowerBroadcastNotifier:
     @eg.LogIt
     def OnPowerBroadcast(self, dummyHwnd, msg, wparam, dummyLParam):
         if wparam == PBT_APMRESUMEAUTOMATIC:
-            eg.actionThread.CallWait(eg.actionThread.OnComputerResume)
+            eg.actionThread.Func(eg.actionThread.OnComputerResume)()
         msg = PBT_MESSAGES.get(wparam, None)
         if msg is not None:
             eg.eventThread.TriggerEventWait(
@@ -68,6 +68,6 @@ class PowerBroadcastNotifier:
                 source=self.plugin
             )
         if wparam == PBT_APMSUSPEND:
-            eg.actionThread.CallWait(eg.actionThread.OnComputerSuspend)
+            eg.actionThread.Func(eg.actionThread.OnComputerSuspend)()
         return 1
 

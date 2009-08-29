@@ -175,13 +175,13 @@ class PluginInstanceInfo(PluginModuleInfo):
             self.instance.__start__(*self.args)
             self.isStarted = True
             self.lastException = None
-            self.treeItem.ClearErrorState()
+            self.treeItem.Refresh()
         except eg.Exception, exc:
             self.lastException = exc
             msg = eg.text.Error.pluginStartError % self.name
             msg += "\n" + unicode(exc)
             eg.PrintError(msg, source=self.treeItem)
-            self.treeItem.SetErrorState()
+            self.treeItem.Refresh()
         except Exception, exc:
             self.lastException = exc
             eg.PrintError(
@@ -189,7 +189,7 @@ class PluginInstanceInfo(PluginModuleInfo):
                 source=self.treeItem
             )
             eg.PrintTraceback()
-            self.treeItem.SetErrorState()
+            self.treeItem.Refresh()
 
 
     def Stop(self):
@@ -210,14 +210,14 @@ class PluginInstanceInfo(PluginModuleInfo):
             msg = eg.text.Error.pluginStartError % self.name
             msg += "\n" + unicode(exc)
             self.treeItem.PrintError(msg)
-            self.treeItem.SetErrorState()
+            self.treeItem.Refresh()
         except Exception, exc:
             self.lastException = exc
             self.treeItem.PrintError(
                 eg.text.Error.pluginStartError % self.name
             )
             eg.PrintTraceback()
-            self.treeItem.SetErrorState()
+            self.treeItem.Refresh()
 
 
     def Close(self):
