@@ -107,6 +107,15 @@ SPECIAL_THANKS_DATA = (
             "Paul Tonkes",       # 22. Feb 2009
             "Ina Henderson",     # 05. May 2009
             "Kosta Krauth",      # 06. May 2009
+            "Leandre da Silva",  # 15. May 2009
+            "Franz Pentenrieder",# 27. May 2009
+            "David Grenker",     # 30. May 2009
+            "Anthony Field",     # 09. June 2009
+            "Nikhil Kapur",      # 16. June 2009
+            "Tom Browning",      # 02. July 2009
+            "Ludwig Strydom",    # 22. July 2009
+            "",
+            "Christoph Heins",   # 26. August 2009
         ),
     ),
     (
