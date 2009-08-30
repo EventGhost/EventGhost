@@ -22,7 +22,15 @@ class Text:
 VENDOR_ID = 6383
 PRODUCT_ID = 57364
 
-Commands = {
+DirectCommands = {
+    0x22 : "Program.Time",
+    0x23 : "Program.SendStatus",
+    0x27 : "Program.Reset",
+    0x28 : "Program.DimUpTime",
+    0x29 : "Program.DimDownTime",
+}
+
+DelayedCommands = {
     0x00 : "Do.Off",
     0x01 : "Do.Dim.6%",
     0x02 : "Do.Dim.13%", 
@@ -37,24 +45,22 @@ Commands = {
     0x11 : "Do.Dim.69%",
     0x12 : "Do.Dim.75%",
     0x13 : "Do.Dim.81%",
-    0x14 : "Do.Dim.98%",
+    0x14 : "Do.Dim.88%",
     0x15 : "Do.Dim.94%",
     0x16 : "Do.On",
-    0x17 : "Do.Previous",
+    0x17 : "Do.PreviousValue",
     0x18 : "Do.Toggle",
     0x19 : "Do.Dim.LevelUp",
     0x20 : "Do.Dim.LevelDown",
     0x21 : "Do.Dim.UpAndDown",
-    0x22 : "Program.Time",
-    0x23 : "Program.SendStatus",
-    0x24 : "Do.OffPreviousValue",
-    0x25 : "Do.OnOff",
-    0x26 : "Do.PreviousValueOff",
-    0x27 : "Program.Reset",
-    0x28 : "Program.DimUpTime",
-    0x29 : "Program.DimDownTime",
-    0x30 : "Do.OnPreviousState",
-    0x31 : "Do.PreviousValuePreviousState",
+}
+
+DoubleCommands = {
+    0x24 : ("Do.Off", "Do.PreviousValue"),
+    0x25 : ("Do.On", "Do.Off"),
+    0x26 : ("Do.PreviousValue", "Do.Off"),
+    0x30 : ("Do.On", "Do.PreviousState"),
+    0x31 : ("Do.PreviousValue", "Do.PreviousState"),
 }
 
 class FS20PCE(eg.PluginClass):
@@ -73,20 +79,15 @@ class FS20PCE(eg.PluginClass):
         houseCode = binascii.hexlify(data[2:6])
         deviceAddress = binascii.hexlify(data[6:8])
         combinedAddress = houseCode + "." + deviceAddress
-        
         command = ord(data[8])
-        if command in Commands:
-            commandStr = Commands[command]
-        else:
-            commandStr = binascii.hexlify(data[8]).upper()
-            
+        
         if combinedAddress in self.PendingEvents:
             #cancel pending events for this device
             try:
                 timerEntry = self.PendingEvents[combinedAddress]
                 startTime, func, args, kwargs = timerEntry
                 eg.scheduler.CancelTask(timerEntry)
-                self.TriggerEvent(combinedAddress + "." + args[1] + ".Timer.Cancel")
+                self.TriggerEvent(combinedAddress + ".Cancel", payload = args[1])
                 del self.PendingEvents[combinedAddress]
             except KeyError:
                 #may happen due to multithreaded access to self.PendingEvents dict
@@ -100,19 +101,42 @@ class FS20PCE(eg.PluginClass):
             timeStr = binascii.hexlify(data[9:12])
             timeStr = timeStr[1:]#cut the one
             eventTime = float(timeStr) * 0.25
-            if (commandStr.startswith("Do.")):
-                #parsing time
-                if (eventTime > 0):
-                    timerEntry = eg.scheduler.AddTask(eventTime, self.SchedulerCallback, combinedAddress, commandStr)
-                    self.PendingEvents[combinedAddress] = timerEntry
-                    self.TriggerEvent(combinedAddress + "." + commandStr + ".Timer.Start", payload = eventTime)
-                else:
-                    self.TriggerEvent(combinedAddress + "." + commandStr)
-            else:
-                #put the time in the payload 
-                self.TriggerEvent(combinedAddress + "." + commandStr, payload = eventTime)
         else:
-            self.TriggerEvent(combinedAddress + "." + commandStr)
+            eventTime = 0 
+            
+            
+        if command in DirectCommands:
+            commandStr0 = DirectCommands[command]
+            commandStr1 = None
+            payload0 = (eventTime)
+        elif command in DelayedCommands:
+            if (validTime and eventTime):
+                commandStr0 = None
+                commandStr1 = DelayedCommands[command]
+                payload0 = (eventTime, commandStr1)
+            else:
+                commandStr0 = DelayedCommands[command]
+                commandStr1 = None
+                payload0 = None
+        elif command in DoubleCommands:
+            commandStr0, commandStr1 = DoubleCommands[command]
+            payload0 = (eventTime, commandStr1)
+        else:
+            commandStr0 = binascii.hexlify(data[8]).upper()
+            commandStr1 = None
+            payload0 = None
+            
+        if (commandStr0):
+            self.TriggerEvent(combinedAddress + "." + commandStr0, payload = payload0)
+        else:
+            self.TriggerEvent(combinedAddress + ".Timer", payload = payload0)
+            
+        if (commandStr1):
+            if (eventTime > 0):
+                timerEntry = eg.scheduler.AddTask(eventTime, self.SchedulerCallback, combinedAddress, commandStr1)
+                self.PendingEvents[combinedAddress] = timerEntry
+            else:
+                self.TriggerEvent(combinedAddress + "." + commandStr1)
             
     def SchedulerCallback(self, combinedAddress, commandStr):
         if combinedAddress in self.PendingEvents:
@@ -122,7 +146,7 @@ class FS20PCE(eg.PluginClass):
                 startTime, func, args, kwargs = timerEntry
                 if (args[1] == commandStr):
                     #maybe an old entry if commandStr does not match 
-                    self.TriggerEvent(combinedAddress + "." + commandStr + ".Timer.Finish")
+                    self.TriggerEvent(combinedAddress + "." + commandStr)
                     del self.PendingEvents[combinedAddress]
             except KeyError:
                 #may happen due to multithreaded access to self.PendingEvents dict
