@@ -7,9 +7,12 @@ import threading
 import win32con
 import win32event
 import win32file
+import re
 from ctypes import Structure, Union, c_byte, c_char, c_int, c_long, c_ulong, c_ushort, c_wchar
 from ctypes import pointer, byref, sizeof, POINTER
 from ctypes.wintypes import ULONG, BOOLEAN
+
+DeviceRegEx = re.compile(r"\\\\\?\\(\w+)#VID_([0-9a-fA-F]+)\&PID_([0-9a-fA-F]+)#", re.IGNORECASE)
 
 class Text:
     errorFind = "Error finding HID device: "
@@ -381,6 +384,9 @@ class DeviceDescription():
         self.versionNumber = versionNumber
         
 def GetDeviceDescriptions():
+    """
+    gets inforamtions about the available HID as a list of DeviceDescription objects
+    """
     deviceList = []
 
     #dll references
@@ -503,8 +509,19 @@ def GetDeviceDescriptions():
     return deviceList;
 
 
-#gets the devicePath
-#the devicePath parameter is only used with multiple same devices
+def IsDeviceName(deviceNameList, vid, pid):
+    """
+    checks if the given vid and pid are match in the deviceNameList from System.DeviceAttached
+    """
+    if not deviceNameList:
+        return False
+    match = DeviceRegEx.match(deviceNameList[0])
+    if not match:
+        return False
+    deviceClass, vidStr, pidStr = match.groups()
+    return deviceClass == "HID" and pid == int(pidStr, 16)  and vid == int(vidStr, 16)
+
+
 def GetDevicePath(
     devicePath,
     vendorId,
@@ -515,6 +532,10 @@ def GetDevicePath(
     noOtherPort, #if True the devicePath has to be the same 
     deviceList = None
 ):
+    """
+    gets the devicePath
+    the devicePath parameter is only used with multiple same devices
+    """
     if not deviceList:
         deviceList = GetDeviceDescriptions()
     found = 0
