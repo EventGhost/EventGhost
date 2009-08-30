@@ -14,9 +14,13 @@ eg.RegisterPlugin(
 import binascii
 from eg.WinApi.HID import HIDThread
 from eg.WinApi.HID import GetDevicePath
+from eg.WinApi.HID import IsDeviceName
 
 class Text:
     errorFind = "Error finding ELV FS20 PCE"
+
+VENDOR_ID = 6383
+PRODUCT_ID = 57364
 
 Commands = {
     0x00 : "Power.Off",
@@ -141,8 +145,8 @@ class FS20PCE(eg.PluginClass):
     def GetMyDevicePath(self):
         path = GetDevicePath(
             None,
-            6383,
-            57364,
+            VENDOR_ID,
+            PRODUCT_ID,
             None,
             0,
             True,
@@ -159,7 +163,8 @@ class FS20PCE(eg.PluginClass):
     def ReconnectDevice(self, event):
         """method to reconnect a disconnect device"""
         if self.thread == None:
-            #updating device list
+            if not IsDeviceName(event.payload, VENDOR_ID, PRODUCT_ID):
+                return
             
             #check if the right device was connected
             #getting devicePath

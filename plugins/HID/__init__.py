@@ -19,6 +19,7 @@ from eg.WinApi.HID import HIDThread
 from eg.WinApi.HID import GetDevicePath
 from eg.WinApi.HID import GetDeviceDescriptions
 from eg.WinApi.HID import DeviceDescription
+from eg.WinApi.HID import IsDeviceName
 
 class Text:
     manufacturer = "Manufacturer"
@@ -98,8 +99,9 @@ class HID(eg.PluginClass):
     def ReconnectDevice(self, event):
         """method to reconnect a disconnect device"""
         if self.thread == None:
-            #updating device list
-            
+            if not IsDeviceName(event.payload, self.vendorID, self.productID):
+                return
+
             #check if the right device was connected
             #getting devicePath
             newDevicePath = self.GetMyDevicePath()

@@ -13,9 +13,13 @@ eg.RegisterPlugin(
 
 from eg.WinApi.HID import HIDThread
 from eg.WinApi.HID import GetDevicePath
+from eg.WinApi.HID import IsDeviceName
 
 class Text:
     errorFind = "Error finding Game Voice"
+    
+VENDOR_ID = 1118
+PRODUCT_ID = 59
 
 ButtonMapping = {
     0 : "All",
@@ -51,8 +55,8 @@ class GameVoice(eg.PluginClass):
     def GetMyDevicePath(self):
         path = GetDevicePath(
             None,
-            1118,
-            59,
+            VENDOR_ID,
+            PRODUCT_ID,
             None,
             0,
             True,
@@ -69,7 +73,8 @@ class GameVoice(eg.PluginClass):
     def ReconnectDevice(self, event):
         """method to reconnect a disconnect device"""
         if self.thread == None:
-            #updating device list
+            if not IsDeviceName(event.payload, VENDOR_ID, PRODUCT_ID):
+                return
             
             #check if the right device was connected
             #getting devicePath
