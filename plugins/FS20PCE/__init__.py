@@ -23,38 +23,38 @@ VENDOR_ID = 6383
 PRODUCT_ID = 57364
 
 Commands = {
-    0x00 : "Power.Off",
-    0x01 : "Power.Dim.1",
-    0x02 : "Power.Dim.2", 
-    0x03 : "Power.Dim.3",
-    0x04 : "Power.Dim.4",
-    0x05 : "Power.Dim.5",
-    0x06 : "Power.Dim.6",
-    0x07 : "Power.Dim.7",
-    0x08 : "Power.Dim.8",
-    0x09 : "Power.Dim.9",
-    0x10 : "Power.Dim.10",
-    0x11 : "Power.Dim.11",
-    0x12 : "Power.Dim.12",
-    0x13 : "Power.Dim.13",
-    0x14 : "Power.Dim.14",
-    0x15 : "Power.Dim.15",
-    0x16 : "Power.On",
-    0x17 : "Power.Previous",
-    0x18 : "Power.Toggle",
-    0x19 : "Power.Dim.LevelUp",
-    0x20 : "Power.Dim.LevelDown",
-    0x21 : "Power.Dim.UpAndDown",
+    0x00 : "Do.Off",
+    0x01 : "Do.Dim.6%",
+    0x02 : "Do.Dim.13%", 
+    0x03 : "Do.Dim.19%",
+    0x04 : "Do.Dim.25%",
+    0x05 : "Do.Dim.31%",
+    0x06 : "Do.Dim.38%",
+    0x07 : "Do.Dim.44%",
+    0x08 : "Do.Dim.50%",
+    0x09 : "Do.Dim.56%",
+    0x10 : "Do.Dim.63%",
+    0x11 : "Do.Dim.69%",
+    0x12 : "Do.Dim.75%",
+    0x13 : "Do.Dim.81%",
+    0x14 : "Do.Dim.98%",
+    0x15 : "Do.Dim.94%",
+    0x16 : "Do.On",
+    0x17 : "Do.Previous",
+    0x18 : "Do.Toggle",
+    0x19 : "Do.Dim.LevelUp",
+    0x20 : "Do.Dim.LevelDown",
+    0x21 : "Do.Dim.UpAndDown",
     0x22 : "Program.Time",
-    0x23 : "SendStatus",
-    0x24 : "Power.OffPreviousValue",
-    0x25 : "Power.OnOff",
-    0x26 : "Power.PreviousValueOff",
+    0x23 : "Program.SendStatus",
+    0x24 : "Do.OffPreviousValue",
+    0x25 : "Do.OnOff",
+    0x26 : "Do.PreviousValueOff",
     0x27 : "Program.Reset",
     0x28 : "Program.DimUpTime",
     0x29 : "Program.DimDownTime",
-    0x30 : "Power.OnPreviousState",
-    0x31 : "Power.PreviousValuePreviousState",
+    0x30 : "Do.OnPreviousState",
+    0x31 : "Do.PreviousValuePreviousState",
 }
 
 class FS20PCE(eg.PluginClass):
@@ -100,7 +100,7 @@ class FS20PCE(eg.PluginClass):
             timeStr = binascii.hexlify(data[9:12])
             timeStr = timeStr[1:]#cut the one
             eventTime = float(timeStr) * 0.25
-            if (commandStr.startswith("Power.")):
+            if (commandStr.startswith("Do.")):
                 #parsing time
                 if (eventTime > 0):
                     timerEntry = eg.scheduler.AddTask(eventTime, self.SchedulerCallback, combinedAddress, commandStr)
