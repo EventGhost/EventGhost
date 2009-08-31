@@ -1,5 +1,3 @@
-version="0.1.10"
-
 # Plugins/MediaMonkey/__init__.py
 #
 # Copyright (C)  2007 Pako  <lubos.ruckl@quick.cz>
@@ -20,21 +18,33 @@ version="0.1.10"
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2008-10-21 22:27
+#Last change: 2009-08-31 14:48
+
+ur'''<rst>
+Adds support functions to control MediaMonkey_.
+
+**Note:**
+ To make functional event triggering from MediaMonkey_, you must install
+ "EventGhost.vbs" file to *MediaMonkey/Scripts/Auto* folder.
+
+.. _MediaMonkey: http://www.MediaMonkey.com/ 
+'''
+
+from win32com.client import Dispatch
+from eg.WinApi.Utils import CloseHwnd
+import time
+import datetime
+import wx.lib.masked as masked
+from os.path import isfile
+
 
 eg.RegisterPlugin(
     name = "MediaMonkey",
     author = "Pako",
-    version = version,
+    version = "0.1.11",
     kind = "program",
     createMacrosOnAdd = True,
-    description = (
-        'Adds support functions to control '
-        '<a href="http://www.MediaMonkey.com/">MediaMonkey</a>. \n\n<P>'
-        '<BR><B>Note:</B><BR>'
-        'To make functional event triggering from MediaMonkey, you must install'
-        '<BR>file "EventGhost.vbs" to MediaMonkey/Scripts/Auto folder.'
-    ),
+    description = __doc__,
     url = "http://www.eventghost.org/forum/viewtopic.php?t=563",
     icon = (
         "R0lGODlhEAAQAPcAADQyNLyaTHRmRJSWlPzGNFxOPGxqbFROVKSGRJyWfOzSlOTCdGRmZ"
@@ -60,15 +70,6 @@ eg.RegisterPlugin(
         "CwMCADs="
     ),
 )
-
-
-
-from win32com.client import Dispatch
-from eg.WinApi.Utils import CloseHwnd
-import time
-import datetime
-import wx.lib.masked as masked
-from os.path import isfile
 
 
 #====================================================================
@@ -2027,13 +2028,17 @@ class LoadPlaylistByFilter(eg.ActionClass):
         repeat = "Continous playback"
         shuffle = "Shuffle tracks"
         crossfade = "Crossfade"
-        accessible = "Load only accessible tracks (low speed)"
+        accessible = "Load only accessible tracks (low speed !)"
         #seconds = "seconds"
         minutes = "minutes"
         hours = "hours"
         days = "days"
         months = "months"
         years = "years"
+        random = "Order by random (low speed !)"
+        randomToolTip = '''Disadvantage: Low speed
+Advantage:   Action "%s" works properly
+(as opposed to the option "%s")'''
 
         class Properties:
             Artist = "Artist"
@@ -2278,6 +2283,7 @@ class LoadPlaylistByFilter(eg.ActionClass):
         trend,
         crit,
         limit,
+        random,
         num,
         repeat,
         shuffle,
@@ -2334,7 +2340,9 @@ class LoadPlaylistByFilter(eg.ActionClass):
                 elif rule[1]==13:
                     sql+='%s%s<>' % substValues3 + emptVal
         sql=(sql[5:] if mode==0 else sql[4:])
-        if order:
+        if random:
+            sql += " ORDER BY RANDOM()"        
+        elif order:
             sql+=" order by "+self.propertiesList[crit][0]+" "+self.trendList[trend]
         if limit:
             sql+=" limit "+str(num)
@@ -2377,6 +2385,7 @@ class LoadPlaylistByFilter(eg.ActionClass):
         trend=0,
         crit=0,
         limit=False,
+        random=False,
         num="100",
         repeat=2,
         shuffle=2,
@@ -2459,6 +2468,7 @@ class LoadPlaylistByFilter(eg.ActionClass):
         limitSizer=wx.BoxSizer(wx.HORIZONTAL)
         limitChkBoxCtrl = wx.CheckBox(panel, label="")
         limitChkBoxCtrl.SetValue(limit)
+        limitChkBoxCtrl.SetValue(limit)
         limitSizer.Add(limitChkBoxCtrl,0,wx.TOP,4)
         limitTxt1=wx.StaticText(panel, -1, self.text.limit1)
         limitSizer.Add(limitTxt1,0,wx.LEFT|wx.TOP,4)
@@ -2467,11 +2477,15 @@ class LoadPlaylistByFilter(eg.ActionClass):
             min=1,integerWidth=6,
             allowNegative=False,groupDigits=False)
         limitSizer.Add(numCtrl, 0,wx.LEFT,4)
-        limitTxt2=wx.StaticText(panel, -1, self.text.limit2)
+        limitTxt2=wx.StaticText(panel, -1, self.text.limit2+10*' ')
         limitSizer.Add(limitTxt2,0,wx.LEFT|wx.TOP,4)
+        randomChkBoxCtrl = wx.CheckBox(panel,  label=self.text.random)
+        randomChkBoxCtrl.SetToolTip(wx.ToolTip(self.text.randomToolTip % (GetBasicSongInfoNextTrack().name,self.text.shuffle)))
+        randomChkBoxCtrl.SetValue(random)
+        limitSizer.Add(randomChkBoxCtrl,0,wx.TOP,4)
 
-        stBsizer_1.Add(orderSizer,0,wx.TOP,4)
         stBsizer_1.Add(limitSizer,0,wx.TOP,8)
+        stBsizer_1.Add(orderSizer,0,wx.TOP,4)
 
         middleSizer=wx.BoxSizer(wx.HORIZONTAL)
         middleSizer.Add(stBsizer_1,0)
@@ -2778,6 +2792,19 @@ class LoadPlaylistByFilter(eg.ActionClass):
                     updateRow(x)
             CheckEnable=True #validityCheck "ON"
             validityCheck()
+            
+        def OnRandom(evt=None):
+            rnd = randomChkBoxCtrl.GetValue()
+            if rnd:
+                order = False
+                orderChkBoxCtrl.SetValue(False)
+                shuffle = 0
+                shuffleChkBoxCtrl.SetValue(0)
+            OnOrderSwitch()
+            orderChkBoxCtrl.Enable(not rnd)
+            shuffleChkBoxCtrl.Enable(not rnd)
+            if evt is not None:
+                validityCheck()
 
         def OnOrderSwitch(evt=None):
             enbl=orderChkBoxCtrl.GetValue()
@@ -2807,9 +2834,10 @@ class LoadPlaylistByFilter(eg.ActionClass):
         crossfadeChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnEventInterception)
         accessibleChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnEventInterception)
 
+        randomChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnRandom)
         orderChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnOrderSwitch)
         limitChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnLimitSwitch)
-        OnOrderSwitch()
+        OnRandom()
         OnLimitSwitch()
 
 #================================================
@@ -2838,6 +2866,7 @@ class LoadPlaylistByFilter(eg.ActionClass):
             dirCtrl.GetSelection(),
             critCtrl.GetSelection(),
             limitChkBoxCtrl.GetValue(),
+            randomChkBoxCtrl.GetValue(),
             numCtrl.GetValue(),
             repeatChkBoxCtrl.Get3StateValue(),
             shuffleChkBoxCtrl.Get3StateValue(),
