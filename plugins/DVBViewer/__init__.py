@@ -703,6 +703,7 @@ from re import search as reSearch
 from base64 import encodestring as encodestring64
 from xml.etree import cElementTree as ElementTree
 from tempfile import NamedTemporaryFile
+from _winreg import OpenKey, QueryValue, CloseKey, HKEY_LOCAL_MACHINE, KEY_READ
 
 
 
@@ -1794,6 +1795,10 @@ class DVBViewer(eg.PluginClass):
                     serviceEvent = 'DVBViewerService',
                     dummy = False
                     ) :
+
+        if pathDVBViewer.strip() == '' :
+            pathDVBViewer = self.GetDVBViewerPath()   
+
         if useSendMessage:
             self.SendCommand = self.SendCommandThroughSendMessage
         else:
@@ -2267,6 +2272,21 @@ class DVBViewer(eg.PluginClass):
 
 
 
+    def GetDVBViewerPath(  self ) :
+        pathDVBViewer = ''
+        try :
+            regHandle = OpenKey(
+                       HKEY_LOCAL_MACHINE,
+                       'SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths'
+                    )
+            pathDVBViewer = QueryValue(regHandle, 'dvbviewer.exe')
+            CloseKey( regHandle )
+        except :
+            pass
+        return pathDVBViewer
+
+
+
     def Configure(  self,
                     useSendMessage=False,
                     oldInterface = True,
@@ -2368,6 +2388,9 @@ class DVBViewer(eg.PluginClass):
         self.lastPlayStateShort = shortPlayState
         self.lastDisplayLong    = longDisplay
         self.lastDisplayShort = shortDisplay
+
+        if pathDVBViewer.strip() == '' :
+            pathDVBViewer = self.GetDVBViewerPath()   
 
         enableControls = []
 
