@@ -55,7 +55,8 @@ class PluginInstall(object):
     def Export(self, mainFrame=None):
         result = eg.AddPluginDialog.GetModalResult(
             mainFrame,
-            checkMultiLoad = False
+            checkMultiLoad = False,
+            title="Please select the plugin to export",
         )
         if not result:
             return
@@ -73,11 +74,12 @@ class PluginInstall(object):
             "url": pluginInfo.url,
             "icon": pluginInfo.icon.pil.tostring()
         }
-        dialog = InstallDialog(
+        dialog = PluginOverviewDialog(
             mainFrame,
             "Plugin Information",
             pluginData=pluginData,
             basePath=pluginInfo.path,
+            message="Do you want to save this plugin as a plugin file?"
         )
         result = dialog.ShowModal()
         dialog.Destroy()
@@ -131,10 +133,14 @@ class PluginInstall(object):
                 if os.path.isdir(path):
                     basePath = path
                     break
-            dialog = InstallDialog(
+            dialog = PluginOverviewDialog(
                 title="Install EventGhost Plugin",
                 pluginData=pluginData,
                 basePath=basePath,
+                message=(
+                    "Do you really want to install this plugin into "
+                    "EventGhost?"
+                )
             )
             result = dialog.ShowModal()
             dialog.Destroy()
@@ -169,7 +175,7 @@ class PluginInstall(object):
 PluginInstall = PluginInstall()
 
 
-class InstallDialog(Dialog):
+class PluginOverviewDialog(Dialog):
 
     def __init__(
         self,
@@ -177,6 +183,7 @@ class InstallDialog(Dialog):
         title=eg.APP_NAME,
         basePath=None,
         pluginData=None,
+        message="",
     ):
         Dialog.__init__(
             self,
@@ -199,9 +206,7 @@ class InstallDialog(Dialog):
         descriptionCtrl.SetBorders(2)
         descriptionCtrl.SetBasePath(basePath)
         descriptionCtrl.SetPage(pluginData['description'])
-        questionCtrl = self.StaticText(
-            "Do you really want to install this plugin into EventGhost?"
-        )
+        questionCtrl = self.StaticText(message)
         self.buttonRow = eg.ButtonRow(
             self, (wx.ID_OK, wx.ID_CANCEL), True, True
         )

@@ -15,33 +15,34 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
+from eg.Classes.UndoHandler import UndoHandlerBase
 
 
-class NewItem(object):
+class NewItem(UndoHandlerBase):
     """
     Abstract class for the creation of new tree items.
     """
 
-    def Do(self, document, selection):
+    def Do(self, selection):
         raise NotImplementedError
 
 
     def StoreItem(self, item):
-        self.positionData = eg.TreePosition(item)
+        self.treePosition = eg.TreePosition(item)
         item.document.AppendUndoHandler(self)
 
 
     @eg.AssertInActionThread
     @eg.LogIt
-    def Undo(self, document):
-        item = self.positionData.GetItem()
+    def Undo(self):
+        item = self.treePosition.GetItem()
         self.data = item.GetFullXml()
         item.Delete()
 
 
     @eg.AssertInActionThread
     @eg.LogIt
-    def Redo(self, document):
-        item = document.RestoreItem(self.positionData, self.data)
+    def Redo(self):
+        item = self.document.RestoreItem(self.treePosition, self.data)
         item.Select()
 

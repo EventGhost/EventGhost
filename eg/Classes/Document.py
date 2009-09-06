@@ -21,7 +21,6 @@ import os
 from xml.etree import cElementTree as ElementTree
 from tempfile import mkstemp
 from threading import Lock
-from functools import partial
 
 
 class TreeStateData(eg.PersistentData):
@@ -220,7 +219,7 @@ class Document(object):
         if len(self.stockUndo) == 0:
             return
         handler = self.stockUndo.pop()
-        eg.actionThread.Func(handler.Undo)(self)
+        eg.actionThread.Func(handler.Undo)()
         self.undoState -= 1
         eg.Notify("DocumentChange", self.undoState != self.undoStateOnSave)
         self.stockRedo.append(handler)
@@ -239,7 +238,7 @@ class Document(object):
         if len(self.stockRedo) == 0:
             return
         handler = self.stockRedo.pop()
-        eg.actionThread.Func(handler.Redo)(self)
+        eg.actionThread.Func(handler.Redo)()
         self.undoState += 1
         eg.Notify("DocumentChange", self.undoState != self.undoStateOnSave)
         self.stockUndo.append(handler)
@@ -253,9 +252,9 @@ class Document(object):
 
 
     @eg.AssertInActionThread
-    def RestoreItem(self, positionData, xmlData):
+    def RestoreItem(self, treePosition, xmlData):
         eg.TreeLink.StartUndo()
-        parent, pos = positionData.GetPosition()
+        parent, pos = treePosition.GetParentAndPosition()
         node = ElementTree.fromstring(xmlData)
         cls = self.XMLTag2ClassDict[node.tag.lower()]
         item = cls(parent, node)
@@ -278,10 +277,10 @@ class Document(object):
     @eg.LogItWithReturn
     def HideFrame(self):
         # NOTICE:
-        # If the program is started through a shortcut with "minimise" option
+        # If the program is started through a shortcut with "minimize" option
         # set, we get an iconize event while ShowFrame() is executing.
         # Therefore we have to use this CallLater workaround.
-        # TODO: Find a better way. Preferable detect the minimise option
+        # TODO: Find a better way. Preferable detect the minimize option
         #       before we create the MainFrame.
         if self.reentrantLock.acquire(False):
             if self.frame is not None:
@@ -431,12 +430,110 @@ class Document(object):
         Traverse(self.root, -1)
 
 
+    @eg.AssertInMainThread
+    def DisplayError(self, ident):
+        self.frame.DisplayError(getattr(eg.text.MainFrame.Messages, ident))
+
+
     def OnCmdConfigure(self, node):
-        eg.AsTasklet(eg.UndoHandler.Configure().Do)(node)
+        eg.AsTasklet(eg.UndoHandler.Configure(self).Do)(node)
 
 
-    def OnCmdToggleEnable(self, node):
-        eg.UndoHandler.ToggleEnable(self, node)
+    @eg.AssertInMainThread
+    def CmdAddPlugin(self):
+        result = eg.AddPluginDialog.GetModalResult(self.frame)
+        if result:
+            eg.UndoHandler.NewPlugin(self).Do(result[0])
+
+
+    @eg.AssertInMainThread
+    def CmdAddFolder(self):
+        folderNode = eg.UndoHandler.NewFolder(self).Do(self.selection)
+        wx.CallAfter(self.frame.treeCtrl.EditNodeLabel, folderNode)
+
+
+    @eg.AssertInMainThread
+    def CmdAddMacro(self):
+        return eg.UndoHandler.NewMacro(self).Do(self.selection)
+
+
+    @eg.AssertInMainThread
+    def CmdAddAction(self, selection=None, action=None):
+        if selection is None:
+            selection = self.selection
+        if not selection.DropTest(eg.ActionItem):
+            self.DisplayError("cantAddAction")
+            return
+        if action is None:
+            # let the user choose an action
+            result = eg.AddActionDialog.GetModalResult(self.frame)
+            # if user canceled the dialog, take a quick exit
+            if result is None:
+                return
+            action = result[0]
+        return eg.UndoHandler.NewAction(self).Do(selection, action)
+
+
+    @eg.AssertInMainThread
+    def CmdAddEvent(self):
+        if not self.selection.DropTest(eg.EventItem):
+            self.DisplayError("cantAddEvent")
+            return
+        return eg.UndoHandler.NewEvent(self).Do(self.selection)
+
+
+    @eg.AssertInMainThread
+    def CmdConfigure(self, item=None, isFirstConfigure=False):
+        if item is None:
+            item = self.selection
+        if not item.isConfigurable:
+            self.DisplayError("cantConfigure")
+        else:
+            return eg.UndoHandler.Configure(self).Do(item, isFirstConfigure)
+
+
+    @eg.AssertInMainThread
+    def CmdCut(self):
+        eg.UndoHandler.Cut(self).Do(self.selection)
+
+
+    @eg.AssertInMainThread
+    def CmdCopy(self):
+        self.selection.OnCmdCopy()
+
+
+    @eg.AssertInMainThread
+    def CmdPaste(self):
+        eg.UndoHandler.Paste(self).Do(self.selection)
+
+
+    @eg.AssertInMainThread
+    def CmdDelete(self):
+        eg.UndoHandler.Clear(self).Do(self.selection)
+
+
+    @eg.AssertInMainThread
+    def CmdRename(self):
+        if not self.selection.isRenameable:
+            self.DisplayError("cantRename")
+        else:
+            self.frame.treeCtrl.EditNodeLabel(self.selection)
+
+
+    @eg.AssertInMainThread
+    def CmdExecute(self):
+        if not self.selection.isExecutable:
+            self.DisplayError("cantExecute")
+        else:
+            self.ExecuteNode(self.selection).SetShouldEnd()
+
+
+    @eg.AssertInMainThread
+    def CmdToggleEnable(self):
+        if not self.selection.isDeactivatable:
+            self.DisplayError("cantDisable")
+        else:
+            eg.UndoHandler.ToggleEnable(self).Do(self.selection)
 
 
 

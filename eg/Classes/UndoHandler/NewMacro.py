@@ -26,7 +26,8 @@ class NewMacro(NewItem):
     name = eg.text.MainFrame.Menu.AddMacro.replace("&", "")
 
     @eg.AssertInMainThread
-    def Do(self, document, selection):
+    def Do(self, selection):
+        document = self.document
         def ProcessInActionThread():
             if isinstance(
                 selection,
@@ -52,21 +53,13 @@ class NewMacro(NewItem):
                 pos,
                 name=eg.text.General.unnamedMacro
             )
-        item = eg.actionThread.Func(ProcessInActionThread)()
-        item.Select()
-        self.StoreItem(item)
-        # let the user choose an action
-        result = eg.AddActionDialog.GetModalResult(document.frame)
-
-        # if user canceled the dialog, take a quick exit
-        if result is None:
-            return item
-        action = result[0]
-
-        actionObj = eg.UndoHandler.NewAction().Do(document, item, action)
-        if actionObj:
-            label = actionObj.GetLabel()
-            eg.actionThread.Func(item.RenameTo)(label)
-            item.Select()
-        return item
+        macroItem = eg.actionThread.Func(ProcessInActionThread)()
+        macroItem.Select()
+        self.StoreItem(macroItem)
+        actionItem = document.CmdAddAction(macroItem)
+        if actionItem:
+            label = actionItem.GetLabel()
+            eg.actionThread.Func(macroItem.RenameTo)(label)
+            macroItem.Select()
+        return macroItem
 

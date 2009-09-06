@@ -26,8 +26,8 @@ class NewAction(NewItem):
     name = eg.text.MainFrame.Menu.AddAction.replace("&", "")
 
     @eg.AssertInMainThread
-    @eg.LogIt
-    def Do(self, document, selection, action):
+    def Do(self, selection, action):
+        document = self.document
         # find the right insert position
         if isinstance(selection, (document.MacroItem, document.AutostartItem)):
             # if a macro is selected, append it as last element of the macro
@@ -51,7 +51,7 @@ class NewAction(NewItem):
         item.Select()
 
         if item.NeedsStartupConfiguration():
-            if not eg.UndoHandler.Configure().Do(item, True):
+            if not document.CmdConfigure(item, True):
                 eg.actionThread.Call(item.Delete)
                 return None
         self.StoreItem(item)

@@ -21,7 +21,8 @@ class AddActionGroup(eg.UndoHandler.NewItem):
     name = "Add all actions of plugin"
 
     @eg.AssertInMainThread
-    def Do(self, document, pluginItem):
+    def Do(self, pluginItem):
+        document = self.document
         result = eg.AddActionGroupDialog.GetResult((document.frame))
         if result is None:
             return

@@ -18,6 +18,7 @@ from Dynamic import (
     byref,
     cast,
     POINTER,
+    WinError,
     GetLastError,
     OpenThreadToken,
     OpenProcessToken,
@@ -39,15 +40,10 @@ from Dynamic import (
     SID_IDENTIFIER_AUTHORITY,
     EqualSid,
     SID_AND_ATTRIBUTES,
-    FormatError,
     FreeSid,
 )
 
 SECURITY_NT_AUTHORITY = 5
-
-def FailedFunc(funcName):
-    errCode = GetLastError()
-    return WindowsError(errCode, "%s: %s" % (funcName, FormatError(errCode)))
 
 
 def IsAdmin():
@@ -60,15 +56,16 @@ def IsAdmin():
     if not OpenThreadToken(
         GetCurrentThread(), TOKEN_QUERY, 0 , byref(hThread)
     ):
-        if GetLastError() == ERROR_NO_TOKEN:
+        err = GetLastError()
+        if err == ERROR_NO_TOKEN:
             # If the thread does not have an access token, we'll examine the
             # access token associated with the process.
             if not OpenProcessToken(
                 GetCurrentProcess(), TOKEN_QUERY, byref(hThread)
             ):
-                raise FailedFunc("OpenProcessToken")
+                raise WinError()
         else:
-            raise FailedFunc("OpenThreadToken")
+            raise WinError(err)
     # Then we must query the size of the group information associated with
     # the token. Note that we expect a FALSE result from GetTokenInformation
     # because we've given it a NULL buffer. On exit cbTokenGroups will tell
@@ -77,12 +74,13 @@ def IsAdmin():
     if GetTokenInformation(
         hThread, TokenGroups, None, 0, byref(cbTokenGroups)
     ):
-        raise FailedFunc("OpenThreadToken")
+        raise WinError()
 
     # Here we verify that GetTokenInformation failed for lack of a large
     # enough buffer.
-    if GetLastError() != ERROR_INSUFFICIENT_BUFFER:
-        raise FailedFunc("GetTokenInformation")
+    err = GetLastError()
+    if err != ERROR_INSUFFICIENT_BUFFER:
+        raise WinError(err)
 
     # Now we allocate a buffer for the group information.
     ptg = create_string_buffer(cbTokenGroups.value)
@@ -93,7 +91,7 @@ def IsAdmin():
     if not GetTokenInformation(
         hThread, TokenGroups, ptg, cbTokenGroups, byref(cbTokenGroups)
     ):
-        raise FailedFunc("GetTokenInformation")
+        raise WinError()
 
     # Now we must create a System Identifier for the Admin group.
     systemSidAuthority = SID_IDENTIFIER_AUTHORITY()
@@ -107,7 +105,7 @@ def IsAdmin():
             0, 0, 0, 0, 0, 0,
             byref(psidAdmin)
     ):
-        raise FailedFunc("AllocateAndInitializeSid")
+        raise WinError()
 
     # Finally we'll iterate through the list of groups for this access
     # token looking for a match against the SID we created above.

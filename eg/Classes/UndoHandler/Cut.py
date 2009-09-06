@@ -16,35 +16,36 @@
 
 import wx
 import eg
+from eg.Classes.UndoHandler import UndoHandlerBase
 
 
-class Cut:
+class Cut(UndoHandlerBase):
     name = eg.text.MainFrame.Menu.Cut.replace("&", "")
 
     @eg.AssertInMainThread
-    def __init__(self, document, selection):
+    def Do(self, selection):
         if not selection.CanDelete() or not selection.AskDelete():
             return
         def ProcessInActionThread():
             self.data = selection.GetFullXml()
-            self.positionData = eg.TreePosition(selection)
+            self.treePosition = eg.TreePosition(selection)
             data = selection.GetXmlString()
             selection.Delete()
             return data
         data = eg.actionThread.Func(ProcessInActionThread)()
-        document.AppendUndoHandler(self)
+        self.document.AppendUndoHandler(self)
         if data and wx.TheClipboard.Open():
             wx.TheClipboard.SetData(wx.TextDataObject(data))
             wx.TheClipboard.Close()
 
 
     @eg.AssertInActionThread
-    def Undo(self, document):
-        item = document.RestoreItem(self.positionData, self.data)
+    def Undo(self):
+        item = self.document.RestoreItem(self.treePosition, self.data)
         item.Select()
 
 
     @eg.AssertInActionThread
-    def Redo(self, document):
-        self.positionData.GetItem().Delete()
+    def Redo(self):
+        self.treePosition.GetItem().Delete()
 

@@ -24,7 +24,7 @@ class AutostartItem(MacroItem):
     icon = eg.Icons.AUTOSTART_ICON
     isDeactivatable = False
     isRenameable = False
-
+    isMoveable = False
 
     @eg.AssertInActionThread
     def __init__(self, parent, node):

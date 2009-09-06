@@ -16,7 +16,7 @@
 
 import eg
 import wx
-
+from eg.Classes.UndoHandler import UndoHandlerBase
 
 def DoExecute(item, newArgs):
     oldArgs = item.GetArguments()
@@ -25,20 +25,18 @@ def DoExecute(item, newArgs):
     item.SetArguments(oldArgs)
 
 
-class Configure:
+class Configure(UndoHandlerBase):
     name = eg.text.MainFrame.Menu.Configure.replace("&", "")
 
     @eg.AssertInMainThread
     @eg.LogItWithReturn
     def Do(self, item, isFirstConfigure=False):
-        # TODO: doing the thread ping-pong right
-
         if item.openConfigDialog:
             item.openConfigDialog.Raise()
             return False
-
-        self.oldArgumentString = item.GetArgumentString()
-        oldArgs = newArgs = item.GetArguments()
+        ActionThreadFunc = eg.actionThread.Func
+        self.oldArgumentString = ActionThreadFunc(item.GetArgumentString)()
+        oldArgs = newArgs = ActionThreadFunc(item.GetArguments)()
         revertOnCancel = False
         eg.currentConfigureItem = item
         dialog = eg.ConfigDialog.Create(item, *oldArgs)
@@ -47,36 +45,36 @@ class Configure:
                 break
             elif event == wx.ID_APPLY:
                 revertOnCancel = True
-                item.SetArguments(newArgs)
-                eg.Notify("NodeChanged", item)
+                ActionThreadFunc(item.SetArguments)(newArgs)
+                item.Refresh()
             elif event == eg.ID_TEST:
                 revertOnCancel = True
                 eg.actionThread.Call(DoExecute, item, newArgs)
         else:
             if revertOnCancel:
-                item.SetArguments(oldArgs)
-                eg.Notify("NodeChanged", item)
+                ActionThreadFunc(item.SetArguments)(oldArgs)
+                item.Refresh()
             return False
 
-        item.SetArguments(newArgs)
-        newArgumentString = item.GetArgumentString()
+        ActionThreadFunc(item.SetArguments)(newArgs)
+        newArgumentString = ActionThreadFunc(item.GetArgumentString)()
         if self.oldArgumentString != newArgumentString:
             if not isFirstConfigure:
-                self.positionData = eg.TreePosition(item)
+                self.treePosition = eg.TreePosition(item)
                 item.document.AppendUndoHandler(self)
-            eg.Notify("NodeChanged", item)
+            item.Refresh()
         return True
 
 
     @eg.AssertInActionThread
-    def Undo(self, document):
-        item = self.positionData.GetItem()
+    def Undo(self):
+        item = self.treePosition.GetItem()
         argumentString = item.GetArgumentString()
         eg.TreeLink.StartUndo()
         item.SetArgumentString(self.oldArgumentString)
         eg.TreeLink.StopUndo()
         self.oldArgumentString = argumentString
-        eg.Notify("NodeChanged", item)
+        item.Refresh()
         item.Select()
 
     Redo = Undo

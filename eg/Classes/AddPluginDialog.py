@@ -51,7 +51,9 @@ class AddPluginDialog(eg.TaskletDialog):
     instance = None
 
     @eg.LogItWithReturn
-    def Configure(self, parent, checkMultiLoad=True):
+    def Configure(self, parent, checkMultiLoad=True, title=None):
+        if title is None:
+            title = Text.title
         self.checkMultiLoad = checkMultiLoad
         if self.__class__.instance:
             self.__class__.instance.Raise()
@@ -64,7 +66,7 @@ class AddPluginDialog(eg.TaskletDialog):
             self,
             parent,
             -1,
-            Text.title,
+            title,
             style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
         )
 

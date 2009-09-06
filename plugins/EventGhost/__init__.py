@@ -123,7 +123,7 @@ class EnableItem(eg.ActionBase):
             node = link.target
             if node:
                 node.isEnabled = True
-                wx.CallAfter(eg.Notify, "NodeChanged", node)
+                node.Refresh()
                 return node
 
 
@@ -144,8 +144,6 @@ class EnableItem(eg.ActionBase):
 
     def Configure(self, link=None):
         panel = eg.ConfigPanel(resizable=True)
-        okButton = panel.dialog.buttonRow.okButton
-        applyButton = panel.dialog.buttonRow.applyButton
         if link is not None:
             searchItem = link.target
         else:
@@ -191,7 +189,8 @@ class DisableItem(EnableItem):
             node = link.target
             if node and node.isDeactivatable:
                 node.isEnabled = False
-                wx.CallAfter(eg.Notify, "NodeChanged", node)
+                node.Refresh()
+
 
 
 class EnableExclusive(EnableItem):
@@ -219,12 +218,11 @@ class EnableExclusive(EnableItem):
             return
         def DoIt():
             node.isEnabled = True
-            wx.CallAfter(eg.Notify, "NodeChanged", node)
-            autostartMacro = node.document.autostartMacro
+            node.Refresh()
             for child in node.parent.childs:
                 if child is not node and child.isDeactivatable:
                     child.isEnabled = False
-                    wx.CallAfter(eg.Notify, "NodeChanged", child)
+                    child.Refresh()
         eg.actionThread.Call(DoIt)
 
 

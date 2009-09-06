@@ -14,20 +14,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import sys
 import shutil
 import time
 from os.path import join
 import builder
-from builder.Utils import EncodePath
+from builder import EncodePath
 
 
 class UpdateSvn(builder.Task):
     description = "Update from SVN"
 
     def DoTask(self):
-        from builder.Utils import UpdateSvn
-        UpdateSvn(self.buildSetup.sourceDir)
+        builder.UpdateSvn(self.buildSetup.sourceDir)
 
 
 
@@ -39,10 +37,9 @@ class UpdateVersionFile(builder.Task):
     visible = False
 
     def DoTask(self):
-        from builder.Utils import GetSvnRevision
         import imp
         buildSetup = self.buildSetup
-        svnRevision = GetSvnRevision(buildSetup.sourceDir)
+        svnRevision = builder.GetSvnRevision(buildSetup.sourceDir)
         outfile = open(
             join(buildSetup.tmpDir, "VersionRevision.py"),
             "wt"

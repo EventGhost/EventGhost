@@ -26,3 +26,18 @@ class UndoHandler:
 
 UndoHandler = UndoHandler()
 
+
+class UndoHandlerBase(object):
+
+    def __init__(self, document):
+        self.document = document
+
+    def Do(self, *args):
+        raise NotImplementedError
+
+    def Undo(self):
+        raise NotImplementedError
+
+    def Redo(self):
+        raise NotImplementedError
+

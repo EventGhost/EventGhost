@@ -17,7 +17,7 @@
 import eg
 import wx
 import xml.etree.cElementTree as ElementTree
-
+from eg.Classes.UndoHandler import UndoHandlerBase
 from eg.Classes.TreeItem import (
     HINT_MOVE_INSIDE,
     HINT_MOVE_BEFORE,
@@ -25,11 +25,11 @@ from eg.Classes.TreeItem import (
 )
 
 
-class Paste:
+class Paste(UndoHandlerBase):
     name = eg.text.MainFrame.Menu.Paste.replace("&", "")
 
     @eg.AssertInMainThread
-    def __init__(self, document, selection):
+    def Do(self, selection):
         self.items = []
         if not wx.TheClipboard.Open():
             eg.PrintError("Can't open clipboard.")
@@ -37,32 +37,33 @@ class Paste:
         try:
             dataObj = wx.CustomDataObject("DragEventItem")
             if wx.TheClipboard.GetData(dataObj):
-                self.PasteEvent(document, selection, dataObj)
+                self.PasteEvent(selection, dataObj)
                 return
             dataObj = wx.TextDataObject()
             if not wx.TheClipboard.GetData(dataObj):
                 return
             result = eg.actionThread.Func(self.PasteXml)(
-                document, selection, dataObj.GetText()
+                selection,
+                dataObj.GetText()
             )
             if result:
-                document.AppendUndoHandler(self)
+                self.document.AppendUndoHandler(self)
         finally:
             wx.TheClipboard.Close()
 
 
-    def PasteEvent(self, document, selection, dataObj):
+    def PasteEvent(self, selection, dataObj):
         if selection.DropTest(eg.EventItem):
             label = dataObj.GetData()
             parent = selection.parent
             pos = parent.childs.index(selection)
-            eg.UndoHandler.NewEvent().Do(document, parent, label=label)
+            eg.UndoHandler.NewEvent(self.document).Do(parent, label=label)
 
 
-    def PasteXml(self, document, selection, clipboardData):
+    def PasteXml(self, selection, clipboardData):
         xmlTree = ElementTree.fromstring(clipboardData.encode("utf-8"))
         for childXmlNode in xmlTree:
-            childCls = document.XMLTag2ClassDict[childXmlNode.tag.lower()]
+            childCls = self.document.XMLTag2ClassDict[childXmlNode.tag.lower()]
             before = None
             childClsBase = childCls.__bases__[1]
             insertionHint = selection.DropTest(childClsBase)
@@ -112,26 +113,26 @@ class Paste:
             self.items.append(eg.TreePosition(newNode))
         if len(self.items):
             newNode.Select()
-            document.TreeLink.StopLoad()
+            self.document.TreeLink.StopLoad()
             return True
 
 
     @eg.AssertInActionThread
-    def Undo(self, document):
+    def Undo(self):
         data = []
-        for positionData in self.items:
-            item = positionData.GetItem()
-            data.append((positionData, item.GetFullXml()))
+        for treePosition in self.items:
+            item = treePosition.GetItem()
+            data.append((treePosition, item.GetFullXml()))
             item.Delete()
         self.items = data
 
 
     @eg.AssertInActionThread
-    def Redo(self, document):
+    def Redo(self):
         data = []
-        for positionData, xmlString in self.items:
-            item = document.RestoreItem(positionData, xmlString)
-            data.append(positionData)
+        for treePosition, xmlString in self.items:
+            item = self.document.RestoreItem(treePosition, xmlString)
+            data.append(treePosition)
         item.Select()
         self.items = data
 

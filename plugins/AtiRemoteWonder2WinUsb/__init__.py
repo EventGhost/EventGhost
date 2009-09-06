@@ -17,6 +17,8 @@
 r"""<rst>
 Plugin for the `ATI Remote Wonder II`__ remote.
 
+|
+
 .. image:: picture.jpg
    :align: center
 

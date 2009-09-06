@@ -19,9 +19,9 @@ from Utils import PyGetWindowThreadProcessId as GetWindowThreadProcessId
 from Utils import PyEnumProcesses as EnumProcesses
 from Utils import PySendMessageTimeout as SendMessageTimeout
 from Utils import PyFindWindow as FindWindow
-from Utils import HighlightWindow, BestWindowFromPoint
+from Utils import HighlightWindow, BestWindowFromPoint, IsWin64
 
-from eg.cFunctions import (
+from cFunctions import (
     GetWindowText,
     GetClassName,
     GetProcessName,

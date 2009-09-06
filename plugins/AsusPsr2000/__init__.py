@@ -16,11 +16,6 @@
 
 ur"""<rst>
 A plugin for the ASUS PSR-2000 remote.
-
-**Notice:** You need a special driver to use the remote with this plugin.
-Please `download it here`__ and install it while the device is connected.
-
-__ http://www.eventghost.org/downloads/USB-Remote-Driver.exe
 """
 
 import eg
@@ -37,7 +32,9 @@ eg.RegisterPlugin(
 from math import atan2, pi
 from os.path import dirname, join
 import sys
-from eg.WinApi.Dynamic import mouse_event, WinDLL, DWORD, BOOL, byref, FormatError
+from eg.WinApi.Dynamic import (
+    mouse_event, WinDLL, DWORD, BOOL, byref, FormatError
+)
 
 BUTTONS = {
     1: "VCR",
@@ -71,9 +68,6 @@ BUTTONS = {
     
 }
 
-DRIVER_PACKAGE_FORCE = 4
-DRIVER_PACKAGE_LEGACY_MODE = 0x10
-
 
 class AsusPsr2000(eg.PluginBase):
 
@@ -103,6 +97,7 @@ class AsusPsr2000(eg.PluginBase):
 
 
     def Callback(self, code):
+        print code
         if code[0] & 0x88:
             x, y = code[1:3]
             leftDown = code[0] & 0x01

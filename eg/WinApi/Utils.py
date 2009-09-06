@@ -342,19 +342,26 @@ def PyFindWindow(className=None, windowName=None):
 
 import ctypes
 from ctypes.wintypes import LPWSTR, GetLastError
-FORMAT_MESSAGE_ALLOCATE_BUFFER = 256
-FORMAT_MESSAGE_FROM_SYSTEM = 4096
+from eg.WinApi.Dynamic import _kernel32
+
+FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x00000100
+FORMAT_MESSAGE_FROM_SYSTEM = 0x00001000
+FORMAT_MESSAGE_IGNORE_INSERTS = 0x00000200
 
 def FormatError(code=None):
     """
-    A replacement for ctypes.FormtError, but always returns a unicode string.
+    A replacement for ctypes.FormtError, but always returns the string
+    encoded in CP1252 (ANSI Code Page).
     """
     if code is None:
         code = GetLastError()
-    kernel32 = ctypes.windll.kernel32
     lpMsgBuf = LPWSTR()
-    numChars = kernel32.FormatMessageW(
-            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+    numChars = _kernel32.FormatMessageW(
+            (
+                FORMAT_MESSAGE_ALLOCATE_BUFFER
+                | FORMAT_MESSAGE_FROM_SYSTEM
+                | FORMAT_MESSAGE_IGNORE_INSERTS
+            ),
             None,
             code,
             0,
@@ -363,13 +370,23 @@ def FormatError(code=None):
             None
         )
     if numChars == 0:
-        raise Exception("FormatMessage failed on 0x%X" % (code & 0xFFFFFFFF))
+        return "No error message available."
+    #raise Exception("FormatMessage failed on 0x%X with 0x%X" % (code & 0xFFFFFFFF, GetLastError()))
     message = lpMsgBuf.value.strip()
-    kernel32.LocalFree(lpMsgBuf)
-    return message
+    _kernel32.LocalFree(lpMsgBuf)
+    return message.encode("CP1252", 'backslashreplace')
 
 # Monkey patch the new FormatError into ctypes
 ctypes.FormatError = FormatError
 import Dynamic
 Dynamic.FormatError = FormatError
+
+
+def IsWin64():
+    try:
+        if _kernel32.GetSystemWow64DirectoryW(None, 0) == 0:
+            return False
+    except:
+        return False
+    return True
 

@@ -22,12 +22,8 @@ Plugin for the `Conceptronic Remote Control for Windows\u00ae Media Center`__.
 .. image:: picture.jpg
    :align: center
 
-**Notice:** You need a special driver to use the remote with this plugin.
-Please `download it here`__ and install it while the device is connected.
-
 __ http://www.conceptronic.net/site/desktopdefault.aspx
    ?tabindex=1&tabid=242&cid=40&gid=4050&pid=CLLRCMCE
-__ http://www.eventghost.org/downloads/USB-Remote-Driver.exe
 """
 
 import eg
@@ -127,16 +123,16 @@ class Conceptronic(eg.PluginBase):
 
 
     def ButtonsCallback(self, data):
-        c = data[0]
+        value = data[0]
         numReceived = len(self.buffer)
         if self.expectedLength == 0:
-            if c not in (2, 3, 4):
+            if value not in (2, 3, 4):
                 return
-            self.expectedLength = {2: 1, 3: 4, 4: 2}[c]
+            self.expectedLength = {2: 1, 3: 4, 4: 2}[value]
         elif numReceived < self.expectedLength - 1:
-            self.buffer.append(c)
+            self.buffer.append(value)
         elif numReceived == self.expectedLength - 1:
-            self.buffer.append(c)
+            self.buffer.append(value)
             value = tuple(self.buffer)
             if value in BUTTON_CODES:
                 self.TriggerEnduringEvent(BUTTON_CODES[value])

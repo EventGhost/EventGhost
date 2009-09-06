@@ -16,10 +16,10 @@
 
 import eg
 import wx
-import types
 
 
 class ConfigDialog(eg.TaskletDialog):
+    panel = None
 
     def __init__(self, item, resizable=False, showLine=True):
         self.item = item

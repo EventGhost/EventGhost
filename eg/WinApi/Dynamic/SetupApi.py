@@ -35,7 +35,7 @@ if not hasattr(sys, "frozen"): # detect py2exe
                 "#define WIN32_LEAN_AND_MEAN\n"
                 "#define NO_STRICT\n"
                 "#include <windows.h>\n"
-                "#include <setupapi.h>\n"
+                "#include <Setupapi.h>\n"
             )
         except WindowsError:
             print "GCC_XML most likely not installed"

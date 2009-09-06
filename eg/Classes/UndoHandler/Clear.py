@@ -15,29 +15,30 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
+from eg.Classes.UndoHandler import UndoHandlerBase
 
 
-class Clear:
+class Clear(UndoHandlerBase):
     name = eg.text.MainFrame.Menu.Delete.replace("&", "")
 
     @eg.AssertInMainThread
-    def __init__(self, document, item):
+    @eg.LogIt
+    def Do(self, item):
         if not item.CanDelete() or not item.AskDelete():
             return
-
         self.data = item.GetFullXml()
-        self.positionData = eg.TreePosition(item)
+        self.treePosition = eg.TreePosition(item)
         eg.actionThread.Func(item.Delete)()
-        document.AppendUndoHandler(self)
+        self.document.AppendUndoHandler(self)
 
 
     @eg.AssertInActionThread
-    def Undo(self, document):
-        item = document.RestoreItem(self.positionData, self.data)
+    def Undo(self):
+        item = self.document.RestoreItem(self.treePosition, self.data)
         item.Select()
 
 
     @eg.AssertInActionThread
-    def Redo(self, document):
-        self.positionData.GetItem().Delete()
+    def Redo(self):
+        self.treePosition.GetItem().Delete()
 

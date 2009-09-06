@@ -27,7 +27,8 @@ class NewFolder(NewItem):
 
     @eg.AssertInMainThread
     @eg.LogIt
-    def Do(self, document, selection):
+    def Do(self, selection):
+        document = self.document
         def ProcessInActionThread():
             if isinstance(
                 selection,

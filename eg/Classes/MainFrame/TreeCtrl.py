@@ -248,8 +248,7 @@ class DropTarget(wx.PyDropTarget):
                     label = self.customData.GetData()
                     self.customData.SetData("")
                     parent, pos = self.whereToDrop
-                    eg.UndoHandler.NewEvent().Do(
-                        tree.document,
+                    eg.UndoHandler.NewEvent(tree.document).Do(
                         parent,
                         pos,
                         label
@@ -369,6 +368,7 @@ class TreeCtrl(wx.TreeCtrl):
         self.Bind(wx.EVT_TREE_END_LABEL_EDIT, self.OnEndLabelEditEvent)
         self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnItemActivateEvent)
         self.Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDoubleClickEvent)
+        self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.OnRightClickEvent)
         self.Bind(wx.EVT_TREE_ITEM_MENU, self.OnItemMenuEvent)
         self.Bind(wx.EVT_TREE_BEGIN_DRAG, self.OnBeginDragEvent)
         self.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChangedEvent)
@@ -416,7 +416,7 @@ class TreeCtrl(wx.TreeCtrl):
     @eg.AssertInMainThread
     def CreateRoot(self, node):
         itemId = self.AddRoot(
-            node.label,
+            node.GetLabel(),
             node.imageIndex,
             -1,
             wx.TreeItemData(node)
@@ -431,7 +431,7 @@ class TreeCtrl(wx.TreeCtrl):
     def CreateTreeItem(self, node, parentId):
         itemId = self.AppendItem(
             parentId,
-            node.label,
+            node.GetLabel(),
             node.imageIndex,
             -1,
             wx.TreeItemData(node)
@@ -453,7 +453,7 @@ class TreeCtrl(wx.TreeCtrl):
             itemId = self.InsertItemBefore(
                 parentId,
                 pos,
-                node.label,
+                node.GetLabel(),
                 node.imageIndex,
                 -1,
                 wx.TreeItemData(node)
@@ -530,6 +530,7 @@ class TreeCtrl(wx.TreeCtrl):
 
     @eg.AssertInMainThread
     def EditNodeLabel(self, node):
+        self.SetFocus()
         self.EditLabel(self.visibleNodes[node])
 
 
@@ -544,12 +545,6 @@ class TreeCtrl(wx.TreeCtrl):
             node.CanPaste(),
             node.CanDelete()
         )
-
-
-    @eg.AssertInMainThread
-    def DisplayError(self, ident):
-        frame = eg.GetTopLevelWindow(self)
-        frame.DisplayError(getattr(eg.text.MainFrame.Messages, ident))
 
 
     #-------------------------------------------------------------------------
@@ -644,8 +639,8 @@ class TreeCtrl(wx.TreeCtrl):
         itemId = event.GetItem()
         node = self.GetPyData(itemId)
         newLabel = event.GetLabel()
-        if not event.IsEditCancelled() and node.label != newLabel:
-            eg.UndoHandler.Rename(self.document, node, newLabel)
+        if not event.IsEditCancelled() and node.GetLabel() != newLabel:
+            eg.UndoHandler.Rename(self.document).Do(node, newLabel)
         event.Skip()
 
 
@@ -680,6 +675,15 @@ class TreeCtrl(wx.TreeCtrl):
 
 
     @eg.AssertInMainThread
+    def OnRightClickEvent(self, event):
+        """
+        Handles wx.EVT_TREE_ITEM_RIGHT_CLICK
+        """
+        treeId = event.GetItem()
+        self.SelectItem(treeId)
+
+
+    @eg.AssertInMainThread
     def OnItemMenuEvent(self, event):
         """
         Handles wx.EVT_TREE_ITEM_MENU
@@ -699,7 +703,7 @@ class TreeCtrl(wx.TreeCtrl):
         """
         srcItemId = event.GetItem()
         srcNode = self.GetPyData(srcItemId)
-        if not srcNode.canMove:
+        if not srcNode.isMoveable:
             return
         self.SelectItem(srcItemId)
         dropSource = DropSource(self, srcNode.GetXmlString())
@@ -719,7 +723,7 @@ class TreeCtrl(wx.TreeCtrl):
 
         if dropTarget.whereToDrop is not None:
             parentNode, pos = dropTarget.whereToDrop
-            eg.UndoHandler.MoveTo(self.document, srcNode, parentNode, pos)
+            eg.UndoHandler.MoveTo(self.document).Do(srcNode, parentNode, pos)
 
 
     #-------------------------------------------------------------------------
@@ -799,7 +803,7 @@ class TreeCtrl(wx.TreeCtrl):
         if node not in self.visibleNodes:
             return
         itemId = self.visibleNodes[node]
-        self.SetItemText(itemId, node.label)
+        self.SetItemText(itemId, node.GetLabel())
         self.SetItemImage(itemId, node.imageIndex)
         self.SetItemHasChildren(itemId, bool(node.childs))
         node.SetAttributes(self, itemId)
@@ -831,66 +835,4 @@ class TreeCtrl(wx.TreeCtrl):
     @eg.AssertInMainThread
     def OnNodeMoveEnd(self, dummyNode):
         self.Thaw()
-
-
-    #-------------------------------------------------------------------------
-    # Command Handlers
-    #-------------------------------------------------------------------------
-
-
-    @eg.AssertInMainThread
-    def OnCmdCut(self):
-        eg.UndoHandler.Cut(self.document, self.GetSelectedNode())
-
-
-    @eg.AssertInMainThread
-    def OnCmdCopy(self):
-        self.GetSelectedNode().OnCmdCopy()
-
-
-    @eg.AssertInMainThread
-    def OnCmdPaste(self):
-        eg.UndoHandler.Paste(self.document, self.GetSelectedNode())
-
-
-    @eg.AssertInMainThread
-    def OnCmdDelete(self):
-        eg.UndoHandler.Clear(self.document, self.GetSelectedNode())
-
-
-    @eg.AssertInMainThread
-    def OnCmdRename(self):
-        selection = self.GetSelectedNode()
-        if not selection.isRenameable:
-            self.DisplayError("cantRename")
-        else:
-            self.SetFocus()
-            self.EditLabel(self.GetSelection())
-
-
-    @eg.AssertInMainThread
-    def OnCmdConfigure(self):
-        selection = self.GetSelectedNode()
-        if not selection.isConfigurable:
-            self.DisplayError("cantConfigure")
-        else:
-            self.document.OnCmdConfigure(selection)
-
-
-    @eg.AssertInMainThread
-    def OnCmdExecute(self):
-        selection = self.GetSelectedNode()
-        if not selection.isExecutable:
-            self.DisplayError("cantExecute")
-        else:
-            self.document.ExecuteNode(selection).SetShouldEnd()
-
-
-    @eg.AssertInMainThread
-    def OnCmdToggleEnable(self):
-        selection = self.GetSelectedNode()
-        if not selection.isDeactivatable:
-            self.DisplayError("cantDisable")
-        else:
-            self.document.OnCmdToggleEnable(selection)
 

@@ -18,7 +18,7 @@ import eg
 import wx
 import sys
 import os
-from time import gmtime
+#from time import gmtime
 from types import ModuleType
 
 

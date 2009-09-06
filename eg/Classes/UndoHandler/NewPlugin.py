@@ -27,7 +27,8 @@ class NewPlugin(NewItem):
 
     @eg.AssertInMainThread
     @eg.LogItWithReturn
-    def Do(self, document, pluginInfo):
+    def Do(self, pluginInfo):
+        document = self.document
         pluginItem = eg.actionThread.Func(document.PluginItem.Create)(
             document.autostartMacro,
             -1,
@@ -36,12 +37,12 @@ class NewPlugin(NewItem):
         pluginItem.Select()
         if pluginItem.executable:
             if pluginItem.NeedsStartupConfiguration():
-                if not eg.UndoHandler.Configure().Do(pluginItem, True):
+                if not eg.UndoHandler.Configure(document).Do(pluginItem, True):
                     eg.actionThread.Call(pluginItem.Delete)
                     return None
             eg.actionThread.Call(pluginItem.Execute)
         self.StoreItem(pluginItem)
         if pluginInfo.createMacrosOnAdd:
-            eg.UndoHandler.AddActionGroup().Do(document, pluginItem)
+            eg.UndoHandler.AddActionGroup(document).Do(pluginItem)
         return pluginItem
 

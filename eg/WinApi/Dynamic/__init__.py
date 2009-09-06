@@ -57,12 +57,23 @@ if not hasattr(sys, "frozen"): # detect py2exe
                 "#include <htmlhelp.h>\n"
                 "#include <shellapi.h>\n"
                 #"#include <difxapi.h>\n"
+                "#include <AccCtrl.h>\n"
+                "#include <Aclapi.h>\n"
             )
         except WindowsError:
             print "GCC_XML most likely not installed"
 INVALID_HANDLE_VALUE = -1
 HWND_TOPMOST = -1
 HWND_NOTOPMOST = -2
+
+PHANDLE = POINTER(HANDLE)
+OpenThreadToken = _Advapi32.OpenThreadToken
+OpenThreadToken.restype = BOOL
+OpenThreadToken.argtypes = [HANDLE, DWORD, BOOL, PHANDLE]
+OpenProcessToken = _Advapi32.OpenProcessToken
+OpenProcessToken.restype = BOOL
+OpenProcessToken.argtypes = [HANDLE, DWORD, PHANDLE]
+
 # everything after the following line is automatically created
 #-----------------------------------------------------------------------------#
 AttachThreadInput = _user32.AttachThreadInput
@@ -873,13 +884,6 @@ DM_DISPLAYFREQUENCY = 4194304 # Variable c_long '4194304l'
 CDS_UPDATEREGISTRY = 1 # Variable c_int '1'
 CDS_NORESET = 268435456 # Variable c_int '268435456'
 CDS_SET_PRIMARY = 16 # Variable c_int '16'
-PHANDLE = POINTER(HANDLE)
-OpenThreadToken = _kernel32.OpenThreadToken
-OpenThreadToken.restype = BOOL
-OpenThreadToken.argtypes = [HANDLE, DWORD, BOOL, PHANDLE]
-OpenProcessToken = _kernel32.OpenProcessToken
-OpenProcessToken.restype = BOOL
-OpenProcessToken.argtypes = [HANDLE, DWORD, PHANDLE]
 
 # values for enumeration '_TOKEN_INFORMATION_CLASS'
 TokenUser = 1
@@ -1330,4 +1334,110 @@ GWL_EXSTYLE = -20 # Variable c_int '-0x000000014'
 WS_EX_TOPMOST = 8 # Variable c_long '8l'
 SWP_NOMOVE = 2 # Variable c_int '2'
 SWP_NOSIZE = 1 # Variable c_int '1'
+
+ERROR_NO_MORE_ITEMS = 259 # Variable c_long '259l'
+ERROR_NOT_CONNECTED = 2250 # Variable c_long '2250l'
+class _EXPLICIT_ACCESS_W(Structure):
+    pass
+EXPLICIT_ACCESSW = _EXPLICIT_ACCESS_W
+EXPLICIT_ACCESS = EXPLICIT_ACCESSW
+
+# values for enumeration '_ACCESS_MODE'
+NOT_USED_ACCESS = 0
+GRANT_ACCESS = 1
+SET_ACCESS = 2
+DENY_ACCESS = 3
+REVOKE_ACCESS = 4
+SET_AUDIT_SUCCESS = 5
+SET_AUDIT_FAILURE = 6
+_ACCESS_MODE = c_int # enum
+ACCESS_MODE = _ACCESS_MODE
+class _TRUSTEE_W(Structure):
+    pass
+
+# values for enumeration '_MULTIPLE_TRUSTEE_OPERATION'
+NO_MULTIPLE_TRUSTEE = 0
+TRUSTEE_IS_IMPERSONATE = 1
+_MULTIPLE_TRUSTEE_OPERATION = c_int # enum
+MULTIPLE_TRUSTEE_OPERATION = _MULTIPLE_TRUSTEE_OPERATION
+
+# values for enumeration '_TRUSTEE_FORM'
+TRUSTEE_IS_SID = 0
+TRUSTEE_IS_NAME = 1
+TRUSTEE_BAD_FORM = 2
+TRUSTEE_IS_OBJECTS_AND_SID = 3
+TRUSTEE_IS_OBJECTS_AND_NAME = 4
+_TRUSTEE_FORM = c_int # enum
+TRUSTEE_FORM = _TRUSTEE_FORM
+
+# values for enumeration '_TRUSTEE_TYPE'
+TRUSTEE_IS_UNKNOWN = 0
+TRUSTEE_IS_USER = 1
+TRUSTEE_IS_GROUP = 2
+TRUSTEE_IS_DOMAIN = 3
+TRUSTEE_IS_ALIAS = 4
+TRUSTEE_IS_WELL_KNOWN_GROUP = 5
+TRUSTEE_IS_DELETED = 6
+TRUSTEE_IS_INVALID = 7
+TRUSTEE_IS_COMPUTER = 8
+_TRUSTEE_TYPE = c_int # enum
+TRUSTEE_TYPE = _TRUSTEE_TYPE
+_TRUSTEE_W._fields_ = [
+    ('pMultipleTrustee', POINTER(_TRUSTEE_W)),
+    ('MultipleTrusteeOperation', MULTIPLE_TRUSTEE_OPERATION),
+    ('TrusteeForm', TRUSTEE_FORM),
+    ('TrusteeType', TRUSTEE_TYPE),
+    ('ptstrName', LPWSTR),
+]
+TRUSTEE_W = _TRUSTEE_W
+_EXPLICIT_ACCESS_W._fields_ = [
+    ('grfAccessPermissions', DWORD),
+    ('grfAccessMode', ACCESS_MODE),
+    ('grfInheritance', DWORD),
+    ('Trustee', TRUSTEE_W),
+]
+KEY_ALL_ACCESS = 983103 # Variable c_long '983103l'
+NO_INHERITANCE = 0 # Variable c_int '0'
+LPTSTR = LPWSTR
+class _ACL(Structure):
+    pass
+ACL = _ACL
+PACL = POINTER(ACL)
+_ACL._fields_ = [
+    ('AclRevision', BYTE),
+    ('Sbz1', BYTE),
+    ('AclSize', WORD),
+    ('AceCount', WORD),
+    ('Sbz2', WORD),
+]
+PEXPLICIT_ACCESS_W = POINTER(_EXPLICIT_ACCESS_W)
+SetEntriesInAclW = _Advapi32.SetEntriesInAclW
+SetEntriesInAclW.restype = DWORD
+SetEntriesInAclW.argtypes = [DWORD, PEXPLICIT_ACCESS_W, PACL, POINTER(PACL)]
+SetEntriesInAcl = SetEntriesInAclW # alias
+class _SECURITY_DESCRIPTOR(Structure):
+    pass
+SECURITY_DESCRIPTOR = _SECURITY_DESCRIPTOR
+SECURITY_DESCRIPTOR_CONTROL = WORD
+_SECURITY_DESCRIPTOR._fields_ = [
+    ('Revision', BYTE),
+    ('Sbz1', BYTE),
+    ('Control', SECURITY_DESCRIPTOR_CONTROL),
+    ('Owner', PSID),
+    ('Group', PSID),
+    ('Sacl', PACL),
+    ('Dacl', PACL),
+]
+PSECURITY_DESCRIPTOR = PVOID
+SECURITY_DESCRIPTOR_MIN_LENGTH = 20L # Variable c_uint '20u'
+SECURITY_DESCRIPTOR_REVISION = 1 # Variable c_int '1'
+InitializeSecurityDescriptor = _Advapi32.InitializeSecurityDescriptor
+InitializeSecurityDescriptor.restype = BOOL
+InitializeSecurityDescriptor.argtypes = [PSECURITY_DESCRIPTOR, DWORD]
+SetSecurityDescriptorDacl = _Advapi32.SetSecurityDescriptorDacl
+SetSecurityDescriptorDacl.restype = BOOL
+SetSecurityDescriptorDacl.argtypes = [PSECURITY_DESCRIPTOR, BOOL, PACL, BOOL]
+SECURITY_ATTRIBUTES = _SECURITY_ATTRIBUTES
+ERROR_SUCCESS = 0 # Variable c_long '0l'
+DOMAIN_GROUP_RID_USERS = 513 # Variable c_long '513l'
 

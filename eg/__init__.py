@@ -21,7 +21,6 @@ import Cli
 from Utils import *
 
 
-
 class DynamicModule(object):
 
     def __init__(self):
@@ -62,6 +61,9 @@ class DynamicModule(object):
         try:
             import imp
             from os.path import dirname, basename, splitext
+            from StringIO import StringIO
+            sys.stdout = stdout = StringIO()
+            sys.stderr = stderr = StringIO()
             os.chdir(dirname(mainFilePath))
             sys.path.insert(0, dirname(mainFilePath))
             sys.argv = sys.argv[2:]
@@ -72,12 +74,21 @@ class DynamicModule(object):
             )
         except BaseException:
             import traceback
-            import wx.lib.dialogs
-            dlg = wx.lib.dialogs.ScrolledMessageDialog(
-                None, traceback.format_exc(), "Information"
-            )
-            dlg.ShowModal()
-            sys.exit(1)
+            sys.stderr.write(traceback.format_exc())
+        finally:
+            stdoutContent = stdout.getvalue()
+            stderrContent = stderr.getvalue()
+            if stdoutContent or stderrContent:
+                import wx.lib.dialogs
+                dlg = wx.lib.dialogs.ScrolledMessageDialog(
+                    None,
+                    "Std Out:\n%s\n\nStd Err:\n%s\n" % (
+                        stdoutContent, stderrContent
+                    ),
+                    "Information"
+                )
+                dlg.ShowModal()
+
         sys.exit(0)
 
 

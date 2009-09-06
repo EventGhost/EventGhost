@@ -18,7 +18,7 @@ import sys
 import _winreg
 from os.path import abspath, join, exists
 
-from builder.Utils import StartProcess, EncodePath
+from builder import StartProcess, EncodePath
 
 import logging
 

@@ -102,14 +102,19 @@ class ActionItem(TreeItem):
         return self.executable.Configure(*args)
 
 
+    # The Find function calls this from MainThread, so we can't restrict this
+    # to the ActionThread
+    #@eg.AssertInActionThread
     def GetArguments(self):
         return self.args
 
 
+    @eg.AssertInActionThread
     def GetArgumentString(self):
         return ", ".join([repr(arg) for arg in self.GetArguments()])
 
 
+    @eg.AssertInActionThread
     def SetArguments(self, args):
         if self.args != args:
             self.args = args
@@ -121,6 +126,7 @@ class ActionItem(TreeItem):
             #self.Refresh()
 
 
+    @eg.AssertInActionThread
     def SetArgumentString(self, argString):
         try:
             args = eval(
@@ -228,7 +234,6 @@ class ActionItem(TreeItem):
         try:
             eg.result = self.compiled()
         except eg.Exception, exc:
-            #eg.PrintError(e.message)
             self.PrintError(unicode(exc))
         except:
             label = self.GetLabel()

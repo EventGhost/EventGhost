@@ -46,6 +46,7 @@ class TreeItem(object):
     isConfigurable = False
     isRenameable = True
     isExecutable = False
+    isMoveable = True
     # we need this so weakrefs can find out if the item actually lives
     isDeleted = False
 
@@ -312,7 +313,6 @@ class TreeItem(object):
         self.Refresh()
 
 
-    @eg.AssertInActionThread
     def Refresh(self):
         wx.CallAfter(eg.Notify, "NodeChanged", self)
 
@@ -430,13 +430,8 @@ class TreeItem(object):
             self = self.childs[-1]
         return self
 
-    @property
-    def label(self):
-        return self.GetLabel()
+
     @property
     def imageIndex(self):
         return self.icon.index if self.isEnabled else self.icon.disabledIndex
-    @property
-    def canMove(self):
-        return self is not self.document.autostartMacro
 

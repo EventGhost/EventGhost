@@ -178,11 +178,15 @@ class PluginItem(ActionItem):
         self.helpDialog.Show()
 
 
+    # The Find function calls this from MainThread, so we can't restrict this
+    # to the ActionThread
+    #@eg.AssertInActionThread
     def GetArguments(self):
         return self.info.args
 
 
     @eg.LogIt
+    @eg.AssertInActionThread
     def SetArguments(self, args):
         info = self.info
         if not info.lastException and args == self.info.args:

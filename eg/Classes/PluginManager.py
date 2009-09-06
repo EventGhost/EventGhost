@@ -56,7 +56,7 @@ class PluginManager:
         self.database.clear()
 
         # scan through all directories in the plugin directory
-        for root in (eg.corePluginDir, eg.userPluginDir):
+        for root in eg.pluginDirs:
             for dirname in os.listdir(root):
                 # filter out non-plugin names
                 if dirname.startswith(".") or dirname.startswith("_"):

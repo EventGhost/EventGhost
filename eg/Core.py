@@ -95,7 +95,12 @@ else:
     eg.configDir = eg.startupArguments.configDir
 eg.userPluginDir = join(eg.configDir, "plugins")
 eg.corePluginDir = join(eg.mainDir, "plugins")
-
+eg.pluginDirs = [
+    join(eg.mainDir, "plugins"),
+    join(eg.configDir, "plugins"),
+]
+if eg.startupArguments.pluginDir is not None:
+    eg.pluginDirs.append(eg.startupArguments.pluginDir)
 Init.InitPathesAndBuiltins()
 from eg.WinApi.Dynamic import GetCurrentProcessId
 eg.processId = GetCurrentProcessId()

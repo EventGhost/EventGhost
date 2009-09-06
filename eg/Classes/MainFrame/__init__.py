@@ -723,7 +723,10 @@ class MainFrame(wx.Frame):
     @eg.LogIt
     def DispatchCommand(self, command):
         focus = self.FindFocus()
-        getattr(focus, command)()
+        if focus is self.treeCtrl:
+            getattr(self.document, command[2:])()
+        else:
+            getattr(focus, command)()
 
     #-------------------------------------------------------------------------
     #---- Menu Handlers ------------------------------------------------------
@@ -746,7 +749,6 @@ class MainFrame(wx.Frame):
 
 
     @eg.AsTasklet
-    @eg.LogItWithReturn
     def OnCmdOptions(self):
         eg.OptionsDialog.GetResult(self)
 
@@ -795,64 +797,45 @@ class MainFrame(wx.Frame):
             self.findDialog.OnFindButton()
 
 
-    @eg.LogItWithReturn
     @eg.AsTasklet
     def OnCmdAddPlugin(self):
-        result = eg.AddPluginDialog.GetModalResult(self)
-        if result:
-            eg.UndoHandler.NewPlugin().Do(self.document, result[0])
+        self.document.CmdAddPlugin()
 
 
     @eg.AsTasklet
     def OnCmdAddEvent(self):
-        selection = self.treeCtrl.GetSelectedNode()
-        if not selection.DropTest(eg.EventItem):
-            self.DisplayError(Text.Messages.cantAddEvent)
-            return
-        eg.UndoHandler.NewEvent().Do(self.document, selection)
+        self.document.CmdAddEvent()
 
 
     def OnCmdAddFolder(self):
-        selection = self.treeCtrl.GetSelectedNode()
-        folderNode = eg.UndoHandler.NewFolder().Do(self.document, selection)
-        wx.CallAfter(self.treeCtrl.EditNodeLabel, folderNode)
+        self.document.CmdAddFolder()
 
 
     @eg.AsTasklet
     def OnCmdAddMacro(self):
-        selection = self.treeCtrl.GetSelectedNode()
-        eg.UndoHandler.NewMacro().Do(self.document, selection)
+        self.document.CmdAddMacro()
 
 
     @eg.AsTasklet
     def OnCmdAddAction(self):
-        selection = self.treeCtrl.GetSelectedNode()
-        if not selection.DropTest(eg.ActionItem):
-            self.DisplayError(Text.Messages.cantAddAction)
-            return
-        # let the user choose an action
-        result = eg.AddActionDialog.GetModalResult(self)
-        # if user canceled the dialog, take a quick exit
-        if result is None:
-            return
-        eg.UndoHandler.NewAction().Do(self.document, selection, result[0])
+        self.document.CmdAddAction()
 
 
-    @eg.LogIt
     def OnCmdRename(self):
-        self.treeCtrl.OnCmdRename()
+        self.document.CmdRename()
 
 
+    @eg.AsTasklet
     def OnCmdConfigure(self):
-        self.treeCtrl.OnCmdConfigure()
+        self.document.CmdConfigure()
 
 
     def OnCmdExecute(self):
-        self.treeCtrl.OnCmdExecute()
+        self.document.CmdExecute()
 
 
     def OnCmdDisabled(self):
-        self.treeCtrl.OnCmdToggleEnable()
+        self.document.CmdToggleEnable()
 
 
     def OnCmdHideShowToolbar(self):
@@ -1081,8 +1064,7 @@ class MainFrame(wx.Frame):
         if result is None:
             return
         label = result[0]
-        eg.UndoHandler.NewEvent().Do(
-            self.document,
+        eg.UndoHandler.NewEvent(self.document).Do(
             self.treeCtrl.GetSelectedNode(),
             label=label
         )

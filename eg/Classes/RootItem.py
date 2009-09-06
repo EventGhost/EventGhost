@@ -27,6 +27,8 @@ class RootItem(ContainerItem):
     guid = None
     isDeactivatable = False
     isRenameable = False
+    isMoveable = False
+
 
     def GetData(self):
         from comtypes import GUID

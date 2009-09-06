@@ -22,7 +22,8 @@ class NewEvent(NewItem):
     name = eg.text.MainFrame.Menu.AddEvent.replace("&", "").replace("...", "")
 
     @eg.AssertInMainThread
-    def Do(self, document, selection, pos=-1, label=None):
+    def Do(self, selection, pos=-1, label=None):
+        document = self.document
         def ProcessInActionThread():
             parent = selection
             if not isinstance(selection, document.MacroItem):
@@ -52,7 +53,10 @@ class NewEvent(NewItem):
             return
         item, needsConfigure = result
 
-        if needsConfigure and not eg.UndoHandler.Configure().Do(item, True):
+        if (
+            needsConfigure
+            and not eg.UndoHandler.Configure(document).Do(item, True)
+        ):
             eg.actionThread.Call(item.Delete)
             return None
         self.StoreItem(item)

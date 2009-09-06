@@ -32,6 +32,7 @@ class StdErrReplacement(object):
     _error = None
     _logFilePath = None
     _displayMessage = True
+    encoding = "mbcs"
 
     def write(self, text):
         if self._file is None and self._error is None:

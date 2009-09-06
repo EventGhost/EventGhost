@@ -15,30 +15,30 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
+from eg.Classes.UndoHandler import UndoHandlerBase
 
-
-class Rename:
+class Rename(UndoHandlerBase):
     name = eg.text.MainFrame.Menu.Rename.replace("&", "")
 
     @eg.AssertInMainThread
-    def __init__(self, document, item, newName):
+    def Do(self, item, newName):
         self.newName = newName
         self.oldName = item.name
-        self.positionData = eg.TreePosition(item)
+        self.treePosition = eg.TreePosition(item)
         eg.actionThread.Func(item.RenameTo)(newName)
-        document.AppendUndoHandler(self)
+        self.document.AppendUndoHandler(self)
 
 
     @eg.AssertInActionThread
-    def Undo(self, document):
-        item = self.positionData.GetItem()
+    def Undo(self):
+        item = self.treePosition.GetItem()
         item.RenameTo(self.oldName)
         item.Select()
 
 
     @eg.AssertInActionThread
-    def Redo(self, document):
-        item = self.positionData.GetItem()
+    def Redo(self):
+        item = self.treePosition.GetItem()
         item.RenameTo(self.newName)
         item.Select()
 

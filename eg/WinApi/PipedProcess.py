@@ -21,10 +21,14 @@ import codecs
 from traceback import extract_tb, format_exception_only
 from os.path import join, dirname, abspath, splitext, basename
 from cPickle import dumps, loads
+from comtypes import GUID
 from Dynamic import (
     byref,
     sizeof,
     create_string_buffer,
+    cast,
+    WinError,
+    POINTER,
     DWORD,
 
     CreateNamedPipe,
@@ -45,16 +49,17 @@ from Dynamic import (
     OVERLAPPED,
     GENERIC_READ,
     GENERIC_WRITE,
+    FILE_SHARE_READ,
+    FILE_SHARE_WRITE,
     OPEN_EXISTING,
     PIPE_ACCESS_DUPLEX,
     PIPE_TYPE_MESSAGE,
     PIPE_READMODE_MESSAGE,
     PIPE_WAIT,
     PIPE_UNLIMITED_INSTANCES,
-    ERROR_PIPE_CONNECTED,
     ERROR_PIPE_BUSY,
     ERROR_MORE_DATA,
-    NMPWAIT_USE_DEFAULT_WAIT,
+    ERROR_NOT_CONNECTED,
     INVALID_HANDLE_VALUE,
     FILE_FLAG_OVERLAPPED,
 
@@ -67,6 +72,11 @@ from Dynamic import (
     WAIT_OBJECT_0,
     WAIT_TIMEOUT,
 )
+from Dynamic.Winnetwk import (
+    WNetGetUniversalName,
+    UNIVERSAL_NAME_INFO_LEVEL,
+    UNIVERSAL_NAME_INFO
+)
 
 MESSAGE_ARGS = 0
 MESSAGE_STDOUT = 1
@@ -75,9 +85,8 @@ MESSAGE_RESULT = 3
 MESSAGE_EXCEPTION = 4
 
 BUFSIZE = 4096
-szPipename = "\\\\.\\pipe\\EventGhostPipedProcess"
 
-DEBUG = 0
+DEBUG = 1
 if DEBUG:
     def Msg(msg):
         print msg
@@ -97,14 +106,36 @@ class PipeStream(object):
 
 
 
-def RunAsAdministrator(filePath, *args):
+def GetUncPathOf(filePath):
+    BUF_SIZE = 1024
+    buf = create_string_buffer(BUF_SIZE)
+    size = DWORD(BUF_SIZE)
+    err = WNetGetUniversalName(
+        filePath,
+        UNIVERSAL_NAME_INFO_LEVEL,
+        buf,
+        byref(size)
+    )
+    if err == 0:
+        return cast(buf, POINTER(UNIVERSAL_NAME_INFO)).contents.lpUniversalName
+    elif err == ERROR_NOT_CONNECTED:
+        pass
+    else:
+        print "GetUncPathOf Error:", err, FormatError(err)
+    return filePath
+
+
+def RunAs(filePath, asAdministrator, *args):
     sei = SHELLEXECUTEINFO()
     sei.cbSize = sizeof(SHELLEXECUTEINFO)
     sei.fMask = (
         SEE_MASK_FLAG_DDEWAIT | SEE_MASK_FLAG_NO_UI | SEE_MASK_NOCLOSEPROCESS
     )
-    sei.lpVerb = u"runas"
-    sei.lpFile = filePath
+    if asAdministrator:
+        sei.lpVerb = u"runas"
+    else:
+        sei.lpVerb = u""
+    sei.lpFile = GetUncPathOf(filePath)
     sei.lpParameters = " ".join(
         ['"%s"' % arg.replace('"', '""') for arg in args]
     )
@@ -113,6 +144,10 @@ def RunAsAdministrator(filePath, *args):
         err = GetLastError()
         raise WindowsError(err, "ShellExecuteEx: %s" % FormatError(err))
     return sei.hProcess
+
+
+def RunAsAdministrator(filePath, *args):
+    return RunAs(filePath, True, *args)
 
 
 def WritePipeMessage(hPipe, code, data):
@@ -151,33 +186,20 @@ def ReadPipeMessage(hPipe):
     return loads(data)
 
 
-def ExecAsAdministrator(scriptPath, funcName, *args, **kwargs):
-    """
-    Execute some Python code in a process with elevated privileges.
-
-    This call will only return, after the subprocess has terminated. The
-    sys.stdout and sys.stderr streams of the subprocess will be directed to
-    the calling process through a named pipe. All parameters for the function
-    to call and its return value must be picklable.
-
-    :param scriptPath: Path to the Python file to load.
-    :param funcName: Name of the function to call inside the Python file
-    :param args: Positional parameters for the function
-    :param kwargs: Keyword parameters for the function
-    :returns: The return value of the function
-    """
+def ExecAs(scriptPath, asAdministrator, funcName, *args, **kwargs):
+    pipeName = "\\\\.\\pipe\\" + str(GUID.create_new())
     Msg("creating named pipe")
     hPipe = CreateNamedPipe(
-        szPipename,
+        pipeName,
         PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
         PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
         PIPE_UNLIMITED_INSTANCES,
         BUFSIZE,
         BUFSIZE,
         0,
-        None
+        None #byref(sa)
     )
-    if (hPipe == INVALID_HANDLE_VALUE):
+    if hPipe == INVALID_HANDLE_VALUE:
         raise Exception("Error in creating Named Pipe")
     overlapped = OVERLAPPED()
     overlapped.hEvent = CreateEvent(None, 1, 0, None)
@@ -191,16 +213,17 @@ def ExecAsAdministrator(scriptPath, funcName, *args, **kwargs):
             "EventGhost.exe"
         ))
         Msg("starting subprocess")
-        hProcess = RunAsAdministrator(
+        #print GetUncPathOf(__file__.decode(sys.getfilesystemencoding()))
+        hProcess = RunAs(
             executable,
+            asAdministrator,
             "-execscript",
-            __file__.decode(sys.getfilesystemencoding()),
-            "-client",
-            szPipename,
+            GetUncPathOf(__file__.decode(sys.getfilesystemencoding())),
+            pipeName,
         )
         Msg("waiting for subprocess to connect")
         pHandles = (HANDLE * 2)(overlapped.hEvent, hProcess)
-        ret = WaitForMultipleObjects(2, pHandles, 0, 20000)
+        ret = WaitForMultipleObjects(2, pHandles, 0, 25000)
         if ret == WAIT_OBJECT_0:
             # connect event
             Msg("got connect event")
@@ -220,7 +243,7 @@ def ExecAsAdministrator(scriptPath, funcName, *args, **kwargs):
         WritePipeMessage(
             hPipe,
             MESSAGE_ARGS,
-            (scriptPath, funcName, args, kwargs)
+            (GetUncPathOf(scriptPath), funcName, args, kwargs)
         )
         chBuf = create_string_buffer(BUFSIZE)
         cbRead = DWORD(0)
@@ -249,6 +272,24 @@ def ExecAsAdministrator(scriptPath, funcName, *args, **kwargs):
     return result
 
 
+def ExecAsAdministrator(scriptPath, funcName, *args, **kwargs):
+    """
+    Execute some Python code in a process with elevated privileges.
+
+    This call will only return, after the subprocess has terminated. The
+    sys.stdout and sys.stderr streams of the subprocess will be directed to
+    the calling process through a named pipe. All parameters for the function
+    to call and its return value must be picklable.
+
+    :param scriptPath: Path to the Python file to load.
+    :param funcName: Name of the function to call inside the Python file
+    :param args: Positional parameters for the function
+    :param kwargs: Keyword parameters for the function
+    :returns: The return value of the function
+    """
+    return ExecAs(scriptPath, True, funcName, *args, **kwargs)
+
+
 def FormatException(excInfo):
     excType, excValue, excTraceback = excInfo
     lines = [u'Child process traceback (most recent call last)\n']
@@ -266,33 +307,26 @@ def FormatException(excInfo):
     return u"".join(lines)
 
 
-def Client():
-    while 1:
-        hPipe = CreateFile(
-            szPipename,
-            GENERIC_READ | GENERIC_WRITE,
-            0,
-            None,
-            OPEN_EXISTING,
-            0,
-            None
-        )
-        if hPipe != INVALID_HANDLE_VALUE:
-            break
-        else:
-            print "Invalid Handle Value"
-        if GetLastError() != ERROR_PIPE_BUSY:
-            print "Could not open pipe"
-            return
-        elif WaitNamedPipe(szPipename, 20000) == 0:
-            print "Could not open pipe"
-            return
-
+def Client(pipeName):
+    if not WaitNamedPipe(pipeName, 5000):
+        raise WinError()
+    hPipe = CreateFile(
+        pipeName,
+        GENERIC_READ | GENERIC_WRITE,
+        FILE_SHARE_READ | FILE_SHARE_WRITE,
+        None,
+        OPEN_EXISTING,
+        0,
+        None
+    )
+    if hPipe == INVALID_HANDLE_VALUE:
+        raise WinError()
     try:
+        # The pipe connected; change to message-read mode.
         dwMode = DWORD(PIPE_READMODE_MESSAGE)
-        fSuccess = SetNamedPipeHandleState(hPipe, byref(dwMode), None, None)
-        if not fSuccess:
-            raise Exception("SetNamedPipeHandleState failed")
+        if not SetNamedPipeHandleState(hPipe, byref(dwMode), None, None):
+            raise WinError()
+
         sys.stderr = PipeStream(hPipe, MESSAGE_STDERR)
         sys.stdout = PipeStream(hPipe, MESSAGE_STDOUT)
         Msg("reading startup message")
@@ -326,6 +360,6 @@ def Client():
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1].lower() == "-client":
-        Client()
+    if len(sys.argv) == 2:
+        Client(sys.argv[1])
 

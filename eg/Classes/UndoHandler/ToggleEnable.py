@@ -15,32 +15,33 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
+from eg.Classes.UndoHandler import UndoHandlerBase
 
 
-class ToggleEnable:
+class ToggleEnable(UndoHandlerBase):
     name = eg.text.MainFrame.Menu.Disabled.replace("&", "")
 
     @eg.AssertInMainThread
-    def __init__(self, document, node):
-        self.positionData = eg.TreePosition(node)
+    def Do(self, node):
+        self.treePosition = eg.TreePosition(node)
         def ProcessInActionThread():
             state = not node.isEnabled
             node.SetEnable(state)
             return state
         self.state = eg.actionThread.Func(ProcessInActionThread)()
-        document.AppendUndoHandler(self)
+        self.document.AppendUndoHandler(self)
 
 
     @eg.AssertInActionThread
-    def Undo(self, document):
-        node = self.positionData.GetItem()
+    def Undo(self):
+        node = self.treePosition.GetItem()
         node.SetEnable(not self.state)
         node.Select()
 
 
     @eg.AssertInActionThread
-    def Redo(self, document):
-        node = self.positionData.GetItem()
+    def Redo(self):
+        node = self.treePosition.GetItem()
         node.SetEnable(self.state)
         node.Select()
 

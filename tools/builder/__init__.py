@@ -19,7 +19,7 @@ import tempfile
 import atexit
 import shutil
 from os.path import abspath, dirname, join
-from builder.Utils import DecodePath
+from Utils import *
 
 class Task(object):
     value = None
@@ -67,12 +67,12 @@ class Builder(object):
 
 
     def RunGui(self):
-        from builder.Tasks import TASKS
+        from Tasks import TASKS
         self.tasks = [task(self) for task in TASKS]
-        from builder.Config import Config
+        from Config import Config
         self.config = Config(self, join(self.dataDir, "Build.ini"))
         for task in self.tasks:
             task.Setup()
-        import builder.Gui
-        builder.Gui.Main(self)
+        import Gui
+        Gui.Main(self)
 

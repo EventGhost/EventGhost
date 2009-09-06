@@ -14,51 +14,64 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import sys
 import string
 import codecs
+import tempfile
+import shutil
 from os.path import join
 from ctypes import (
-    Structure,
-    WINFUNCTYPE,
+    create_unicode_buffer,
+    sizeof,
     WinDLL,
     c_ubyte,
-    c_int,
-    c_wchar_p,
-    c_void_p,
     byref,
     POINTER,
     cast,
     FormatError,
     GetLastError,
+    WinError,
 )
 from ctypes.wintypes import DWORD, BOOL
 
 import eg
-from eg.WinApi.PipedProcess import ExecAsAdministrator
+from eg.WinApi import IsWin64
+from eg.WinApi.PipedProcess import ExecAs, DEBUG
+from eg.WinApi.IsAdmin import IsAdmin
+from eg.WinApi.Dynamic import (
+    GUID,
+    INVALID_HANDLE_VALUE,
+    CLSIDFromString,
+    PBYTE,
+    ERROR_NO_MORE_ITEMS,
+)
+from eg.WinApi.Dynamic.Difxapi import (
+    DIFLOGCALLBACK,
+    SetDifxLogCallback,
+    DriverPackageInstall,
+    DRIVER_PACKAGE_FORCE,
+    DRIVER_PACKAGE_LEGACY_MODE,
+)
+from eg.WinApi.Dynamic.SetupApi import (
+    SetupDiGetClassDevs,
+    SetupDiGetDeviceRegistryProperty,
+    SetupDiEnumDeviceInfo,
+    SetupDiSetDeviceInstallParams,
+    SetupDiGetDeviceInstallParams,
+    SetupDiEnumDriverInfo,
+    SetupDiBuildDriverInfoList,
+    DIGCF_PRESENT,
+    SP_DEVINFO_DATA,
+    SP_DRVINFO_DATA,
+    SP_DEVINSTALL_PARAMS,
+    SPDRP_HARDWAREID,
+    SPDIT_COMPATDRIVER,
+    ERROR_INSUFFICIENT_BUFFER,
+    ERROR_INVALID_DATA,
+)
+DI_FLAGSEX_INSTALLEDDRIVER = 0x04000000
 
-PCWSTR = c_wchar_p
-PWSTR = c_wchar_p
-PVOID = c_void_p
-
-# values for enumeration 'DIFXAPI_LOG'
-DIFXAPI_SUCCESS = 0
-DIFXAPI_INFO = 1
-DIFXAPI_WARNING = 2
-DIFXAPI_ERROR = 3
-DIFXAPI_LOG = c_int # enum
-
-DRIVER_PACKAGE_FORCE = 4
-DRIVER_PACKAGE_LEGACY_MODE = 0x10
-
-class INSTALLERINFO(Structure):
-    _fields_ = [
-        ('pApplicationId', PWSTR),
-        ('pDisplayName', PWSTR),
-        ('pProductName', PWSTR),
-        ('pMfgName', PWSTR),
-    ]
-PCINSTALLERINFO = POINTER(INSTALLERINFO)
 
 PUBYTE = POINTER(c_ubyte)
 
@@ -146,6 +159,31 @@ CoInstallers_CopyFiles=11
 WinUSBCoInstaller.dll=1
 WdfCoInstaller01007.dll=1
 WUDFUpdate_01007.dll=1
+
+; =================== Strings ===================
+
+[Strings]
+ProviderName="$DRIVER_PROVIDER"
+WinUSB_SvcDesc="WinUSB Driver"
+DISK_NAME="My Install Disk"
+DisplayName="USB Remote Driver"
+"""
+
+FOOTER_VISTA = r"""
+; ========== Global sections ===========
+
+[WinUSB_Install]
+KmdfLibraryVersion=1.7
+
+[WinUSB_ServiceInstall]
+DisplayName=%WinUSB_SvcDesc%
+ServiceType=1
+StartType=3
+ErrorControl=1
+ServiceBinary=%12%\WinUSB.sys
+
+[DestinationDirs]
+CoInstallers_CopyFiles=11
 
 ; =================== Strings ===================
 
@@ -244,7 +282,6 @@ class WinUsb(object):
         self.devices.append(device)
 
 
-    @eg.LogIt
     def Open(self):
         devices = ListDevices()
         for device in self.devices:
@@ -272,6 +309,22 @@ class WinUsb(object):
     @eg.LogIt
     def InstallDriver(self):
         import wx
+        if sys.getwindowsversion()[0] <= 5:
+            # for XP we need the WinUSB add-on DLLs
+            if IsWin64():
+                testPath = join(eg.mainDir, "drivers", "winusb", "amd64")
+            else:
+                testPath = join(eg.mainDir, "drivers", "winusb", "x86")
+            testPath = join(testPath, "WinUSBCoInstaller.dll")
+            if not os.path.exists(testPath):
+                res = eg.CallWait(
+                    eg.MessageBox,
+                    "You need to install the WinUSB Add-on for Windows XP.\n\nhttp://www.eventghost.org/\n",
+                    caption="EventGhost",
+                    style=wx.OK | wx.ICON_QUESTION
+                )
+                raise self.plugin.Exceptions.DriverNotFound
+
         res = eg.CallWait(
             wx.MessageBox,
             (
@@ -283,51 +336,45 @@ class WinUsb(object):
         )
         if res == wx.NO:
             raise self.plugin.Exceptions.DriverNotFound
-        infPath = join(eg.configDir, self.devices[0].guid + ".inf")
-        outfile = codecs.open(
-            infPath,
-            "wt",
-            sys.getfilesystemencoding()
-        )
-        template = string.Template(HEADER)
-        outfile.write(
-            template.substitute(DRIVER_VERSION=DRIVER_VERSION)
-        )
-        outfile.write("[Remotes.NTx86]\n")
-        for i, device in enumerate(self.devices):
-            outfile.write(
-                "%%Device%i.DeviceDesc%%=Install%i,%s\n"
-                    % (i, i, device.hardwareId)
+        def ShowDialog():
+            dialog = wx.Dialog(
+                None,
+                title="EventGhost",
+                style=wx.DIALOG_NO_PARENT|wx.THICK_FRAME|wx.STAY_ON_TOP ,
             )
-        outfile.write("\n[Remotes.NTamd64]\n")
-        for i, device in enumerate(self.devices):
-            outfile.write(
-                "%%Device%i.DeviceDesc%%=Install%i,%s\n"
-                    % (i, i, device.hardwareId)
+            staticText = wx.StaticText(
+                dialog,
+                -1,
+                "Please wait while Windows installs the driver."
             )
-        template = string.Template(DEVICE_SECTION)
-        for i, device in enumerate(self.devices):
-            outfile.write(
-                template.substitute(NR=i, GUID=device.guid, DESCR=device.name)
-            )
-        template = string.Template(FOOTER)
-        outfile.write(
-            template.substitute(DRIVER_PROVIDER=DRIVER_PROVIDER)
-        )
-        for i, device in enumerate(self.devices):
-            outfile.write('Device%i.DeviceDesc="%s"\n' % (i, device.name))
-
-        outfile.close()
+            sizer = wx.BoxSizer(wx.VERTICAL)
+            sizer.Add(staticText, 1, wx.EXPAND|wx.CENTER|wx.ALL, 25)
+            dialog.SetSizerAndFit(sizer)
+            dialog.Show()
+            return dialog
+        dialog = eg.CallWait(ShowDialog)
         try:
-            needsReboot = ExecAsAdministrator(
-                __file__.decode(sys.getfilesystemencoding()),
-                "InstallDriver",
-                infPath
-            )
-        except WindowsError, exc:
-            if exc.winerror == 1223:
-                # user cancelled driver installation
-                raise self.plugin.Exceptions.DriverNotFound
+            devices = [
+                dict(
+                    name=device.name,
+                    guid=device.guid,
+                    hardwareId=device.hardwareId,
+                ) for device in self.devices
+            ]
+            try:
+                needsReboot = ExecAs(
+                    __file__.decode(sys.getfilesystemencoding()),
+                    sys.getwindowsversion()[0] > 5 or not IsAdmin(),
+                    "InstallDriver",
+                    devices
+                )
+            except WindowsError, exc:
+                if exc.winerror == 1223:
+                    # user canceled driver installation
+                    raise self.plugin.Exceptions.DriverNotFound
+                raise
+        finally:
+            eg.CallWait(dialog.Destroy)
 
         if needsReboot:
             eg.CallWait(
@@ -336,78 +383,88 @@ class WinUsb(object):
             )
 
 
+def CreateInf(targetDir, devices):
+    infPath = join(targetDir, "driver.inf")
+    outfile = codecs.open(
+        infPath,
+        "wt",
+        sys.getfilesystemencoding()
+    )
+    template = string.Template(HEADER)
+    outfile.write(
+        template.substitute(DRIVER_VERSION=DRIVER_VERSION)
+    )
+    outfile.write("[Remotes.NTx86]\n")
+    for i, device in enumerate(devices):
+        outfile.write(
+            "%%Device%i.DeviceDesc%%=Install%i,%s\n"
+                % (i, i, device["hardwareId"])
+        )
+    outfile.write("\n[Remotes.NTamd64]\n")
+    for i, device in enumerate(devices):
+        outfile.write(
+            "%%Device%i.DeviceDesc%%=Install%i,%s\n"
+                % (i, i, device["hardwareId"])
+        )
+    template = string.Template(DEVICE_SECTION)
+    for i, device in enumerate(devices):
+        outfile.write(
+            template.substitute(
+                NR=i,
+                GUID=device["guid"],
+                DESCR=device["name"]
+            )
+        )
+    if sys.getwindowsversion()[0] > 5:
+        template = string.Template(FOOTER_VISTA)
+    else:
+        template = string.Template(FOOTER)
+    outfile.write(
+        template.substitute(DRIVER_PROVIDER=DRIVER_PROVIDER)
+    )
+    for i, device in enumerate(devices):
+        outfile.write('Device%i.DeviceDesc="%s"\n' % (i, device["name"]))
 
-def InstallDriver(infPath):
-    _difxapi = WinDLL("DIFxAPI.dll")
+    outfile.close()
+    return infPath
 
-    DIFLOGCALLBACK = WINFUNCTYPE(None, DIFXAPI_LOG, DWORD, PCWSTR, PVOID)
-    SetDifxLogCallback = _difxapi.SetDifxLogCallbackW
-    SetDifxLogCallback.restype = None
-    SetDifxLogCallback.argtypes = [DIFLOGCALLBACK, PVOID]
 
-    DriverPackageInstall = _difxapi.DriverPackageInstallW
-    DriverPackageInstall.restype = DWORD
-    DriverPackageInstall.argtypes = [PCWSTR, DWORD, PCINSTALLERINFO, POINTER(BOOL)]
+def InstallDriver(devices):
     def Callback(eventType, error, description, context):
-        print (eventType, error, description, context)
+        if DEBUG:
+            print (eventType, error, description, context)
     difLogCallback = DIFLOGCALLBACK(Callback)
     SetDifxLogCallback(difLogCallback, None)
     flags = DWORD()
     flags.value = DRIVER_PACKAGE_FORCE | DRIVER_PACKAGE_LEGACY_MODE
     needsReboot = BOOL()
+    tmpDir = tempfile.mkdtemp()
+    infPath = CreateInf(tmpDir, devices)
+    if sys.getwindowsversion()[0] <= 5:
+        # for XP we need to copy the DLLs of the add-on
+        if IsWin64():
+            shutil.copytree(
+                join(eg.mainDir, "drivers", "winusb", "amd64"),
+                join(tmpDir, "amd64")
+            )
+        else:
+            shutil.copytree(
+                join(eg.mainDir, "drivers", "winusb", "x86"),
+                join(tmpDir, "x86")
+            )
     res = DriverPackageInstall(
         infPath,
         flags,
         None,
         byref(needsReboot)
     )
-    print res, FormatError(res)
+    if DEBUG:
+        try:
+            print res, FormatError(res)
+        except:
+            pass
+    shutil.rmtree(tmpDir)
     return needsReboot.value
-
-
-def FailedFunc(funcName):
-    errCode = GetLastError()
-    return WindowsError(
-        errCode,
-        "%s: %s" % (funcName, FormatError(errCode))
-    )
-
-
-from eg.WinApi.Dynamic import (
-    GUID,
-    INVALID_HANDLE_VALUE,
-    CLSIDFromString,
-    create_unicode_buffer,
-    sizeof,
-    PBYTE,
-
-)
-
-from eg.WinApi.Dynamic.SetupApi import (
-    SetupDiGetClassDevs,
-    SetupDiGetDeviceRegistryProperty,
-    SetupDiEnumDeviceInfo,
-    SetupDiGetSelectedDriver,
-    SetupDiSetDeviceInstallParams,
-    SetupDiGetDeviceInstallParams,
-    SetupDiOpenDeviceInfo,
-    SetupDiEnumDriverInfo,
-    SetupDiBuildDriverInfoList,
-    DIGCF_PRESENT,
-    DIGCF_ALLCLASSES,
-    DIGCF_DEVICEINTERFACE,
-    SP_DEVINFO_DATA,
-    SP_DRVINFO_DATA,
-    SP_DEVINSTALL_PARAMS,
-    SPDRP_DEVICEDESC,
-    SPDRP_HARDWAREID,
-    SPDRP_DRIVER,
-    SPDIT_CLASSDRIVER,
-    SPDIT_COMPATDRIVER,
-    ERROR_INSUFFICIENT_BUFFER,
-    ERROR_INVALID_DATA,
-)
-DI_FLAGSEX_INSTALLEDDRIVER = 0x04000000
 
 
 def ListDevices():
@@ -416,12 +473,12 @@ def ListDevices():
     CLSIDFromString("{745a17a0-74d3-11d0-b6fe-00a0c90f57da}", byref(guid))
     hDevInfo = SetupDiGetClassDevs(
         guid,
-        "USB", # Enumerator
+        None,#"USB", # Enumerator
         0,
         DIGCF_PRESENT #| DIGCF_ALLCLASSES
     )
     if hDevInfo == INVALID_HANDLE_VALUE:
-        raise FailedFunc("SetupDiGetClassDevs")
+        raise WinError()
     deviceInfoData = SP_DEVINFO_DATA()
     deviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA)
     driverInfoData = SP_DRVINFO_DATA()
@@ -433,9 +490,15 @@ def ListDevices():
     buffersize.value = 1000
     dataType = DWORD()
     hardwareId = create_unicode_buffer(1000)
-    for i in range(0, 100000):
+    i = 0
+    while True:
         if not SetupDiEnumDeviceInfo(hDevInfo, i, byref(deviceInfoData)):
-            break
+            err = GetLastError()
+            if err == ERROR_NO_MORE_ITEMS:
+                break
+            else:
+                raise WindowsError(err, FormatError(err))
+        i += 1
         if SetupDiGetDeviceRegistryProperty(
             hDevInfo,
             byref(deviceInfoData),
@@ -445,7 +508,7 @@ def ListDevices():
             0,
             byref(buffersize)
         ):
-            raise FailedFunc("SetupDiGetDeviceRegistryProperty")
+            raise WinError()
         err = GetLastError()
         if err == ERROR_INSUFFICIENT_BUFFER:
             hardwareId = create_unicode_buffer(buffersize.value / 2)
@@ -462,7 +525,7 @@ def ListDevices():
             buffersize.value,
             byref(buffersize)
         ):
-            raise FailedFunc("SetupDiGetDeviceRegistryProperty")
+            raise WinError()
         hardwareId = StripRevision(hardwareId.value.upper())
         driverInfoData.DriverVersion = 0
         SetupDiGetDeviceInstallParams(
@@ -504,14 +567,4 @@ def ListDevices():
             provider = driverInfoData.ProviderName,
         )
     return devices
-
-
-def IsWin64():
-    from eg.WinApi.Dynamic import _kernel32
-    try:
-        if _kernel32.GetSystemWow64DirectoryW(None, 0) == 0:
-            return False
-    except:
-        return False
-    return True
 
