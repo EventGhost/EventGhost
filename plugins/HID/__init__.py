@@ -355,5 +355,6 @@ class HID(eg.PluginClass):
                 device.productString,
                 device.versionNumber,
                 useDeviceIndexCtrl.GetValue(),
+                deviceIndexCtrl.GetValue(),
             )
 
