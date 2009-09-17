@@ -884,6 +884,7 @@ class EventHandler:
 
     def OnonAction(self, ActionID):
         plugin = self.plugin
+        plugin.eventHandlingIsAlive = True
         if ActionID == DUMMY_ACTION :
             plugin.checkEventHandlingLock.acquire( blocking = False )
             plugin.checkEventHandlingLock.release()
@@ -908,6 +909,7 @@ class EventHandler:
             self.plugin.SendCommand( 16386 )
             CoUninitialize()
         plugin = self.plugin
+        plugin.eventHandlingIsAlive = True
         self.TriggerEvent("Channel", ChannelNr)
         plugin.actualChannel = ChannelNr
         plugin.UpdateDisplayMode()
@@ -927,6 +929,7 @@ class EventHandler:
     #
     def OnonAddRecord(self, ID):
         plugin = self.plugin
+        plugin.eventHandlingIsAlive = True
         plugin.UpdateRecordingsByDVBViewerEvent()
         if plugin.oldInterface :
             self.TriggerEvent( "AddRecord:" + str(ID) )
@@ -943,6 +946,7 @@ class EventHandler:
     #
     @eg.LogIt
     def OnonStartRecord(self, ID):
+        self.plugin.eventHandlingIsAlive = True
         self.plugin.UpdateRecordingsByDVBViewerEvent()
         return True
 
@@ -954,6 +958,7 @@ class EventHandler:
     #
     @eg.LogIt
     def OnonEndRecord(self):
+        self.plugin.eventHandlingIsAlive = True
         self.plugin.UpdateRecordingsByDVBViewerEvent()
         return True
 
@@ -965,6 +970,7 @@ class EventHandler:
     #
     def OnonOSDWindow(self, WindowID):
         plugin = self.plugin
+        plugin.eventHandlingIsAlive = True
         plugin.actualWindowID = WindowID
         if plugin.oldInterface :
             self.TriggerEvent("Window:" + str(WindowID))
@@ -982,6 +988,7 @@ class EventHandler:
     #
     def OnonControlChange(self, WindowID, ControlID):
         plugin = self.plugin
+        plugin.eventHandlingIsAlive = True
         if plugin.oldInterface :
             self.TriggerEvent("ControlChange:WindID" + str(WindowID) + "ContrID"+ str(ControlID))
         if plugin.newInterface :
@@ -993,6 +1000,7 @@ class EventHandler:
     # The event gets fired whenever the selectedItem in an OSD list changes.
     #
     def OnonSelectedItemChange(self):
+        self.plugin.eventHandlingIsAlive = True
         self.TriggerEvent("SelectedItemChange")
         return True
 
@@ -1004,6 +1012,7 @@ class EventHandler:
     #
     def OnonRDS(self, RDS):
         plugin = self.plugin
+        plugin.eventHandlingIsAlive = True
         if plugin.oldInterface :
             self.TriggerEvent("RDS:" + unicode(RDS))
         if plugin.newInterface :
@@ -1017,6 +1026,7 @@ class EventHandler:
     #       Filename        Filename of the starting playlistitem.
     #
     def OnonPlaylist(self, Filename):
+        self.plugin.eventHandlingIsAlive = True
         self.TriggerEvent("Playlist", str(Filename))
         return True
 
@@ -1025,6 +1035,7 @@ class EventHandler:
     # The event gets fired whenever a media playback starts.
     #
     def OnonPlaybackstart(self):
+        self.plugin.eventHandlingIsAlive = True
         thread = self.plugin.workerThread
         thread.Call( partial( thread.ProcessMediaplayback ) )
         return True
@@ -1034,6 +1045,7 @@ class EventHandler:
     # The event gets fired whenever a media playback ends.
     #
     def OnPlaybackEnd(self):
+        self.plugin.eventHandlingIsAlive = True
         thread = self.plugin.workerThread
         thread.Call( partial( thread.ProcessMediaplayback ) )
         return True
@@ -1056,6 +1068,7 @@ class EventHandler:
     #
     def OnPlaystatechange(self, RendererType, State):
         plugin = self.plugin
+        plugin.eventHandlingIsAlive = True
         if plugin.oldInterface :
             self.TriggerEvent( "Playstatechange:RenderTy" + str(RendererType) + "State"+ str(State) )
         if plugin.newInterface :
@@ -1095,6 +1108,7 @@ class EventHandler:
         self.plugin.lockedByTerminate = self.plugin.executionStatusChangeLock.acquire( blocking = False, timeout = TERMINATE_TIMEOUT )
 
         plugin = self.plugin
+        self.plugin.eventHandlingIsAlive = True
 
         if not plugin.closeWaitActive :
             plugin.closeWaitActive = True
@@ -1505,7 +1519,7 @@ class DVBViewerWatchDogThread( Thread ) :
             if plugin.useService and timeout :
                 plugin.service.UpdateWithLock( UPDATE_ALL )
 
-            if plugin.closeWaitActive :
+            if plugin.closeWaitActive and plugin.eventHandlingIsAlive :
                 plugin.executionStatusChangeLock.release()
                 continue
 
@@ -1546,11 +1560,14 @@ class DVBViewerWatchDogThread( Thread ) :
                     else :
                         plugin.checkEventHandlingLock.acquire( blocking = False )
                         plugin.checkEventHandlingLock.release()
+                        plugin.eventHandlingIsAlive = True
+
                 except :
                     eg.PrintDebugNotice("DVBViewer could not accessed by the Watch Dog Thread")
                     plugin.TriggerEvent( "DVBViewerCouldNotBeConnected" )
                     plugin.checkEventHandlingLock.acquire( blocking = False )
                     plugin.checkEventHandlingLock.release()
+                    plugin.eventHandlingIsAlive = True
                 else :
                     if updatedRecordings > 0 :
                         eg.PrintDebugNotice(    "Number of recordings ("
@@ -1570,6 +1587,7 @@ class DVBViewerWatchDogThread( Thread ) :
         plugin = self.plugin
         plugin.checkEventHandlingLock.acquire( blocking = False )
         plugin.checkEventHandlingLock.release()
+        plugin.eventHandlingIsAlive = True
         self.abort = True
         self.started = False
         return True
@@ -1726,11 +1744,13 @@ class DVBViewer(eg.PluginClass):
 
         def CheckEventHandlingFunc( self, plugin ) :
             plugin.checkEventHandlingLock.release()
+            plugin.eventHandlingIsAlive = False
             eg.PrintDebugNotice("DVBViewer event handling not alive")
             plugin.TriggerEvent( "DVBViewerEventHandlingNotAlive" )
             return False
 
         self.checkEventHandlingLock    = self.LockWithTimeout( "CheckEventHandling", CheckEventHandlingFunc, self )
+        self.eventHandlingIsAlive = True
 
         def WaitForTerminationTimeoutFunc( self, plugin ) :
             plugin.closeWaitLock.release()
@@ -1768,6 +1788,7 @@ class DVBViewer(eg.PluginClass):
         self.actualRatio = -1
         thread.ProcessMediaplayback()
         self.UpdateDisplayMode()
+        self.eventHandlingIsAlive = True
         return True
 
 
@@ -3744,8 +3765,7 @@ class TaskScheduler( eg.ActionClass ) :
                                 plugin.accounts[INDEX_SCHEDULER][0],
                                 plugin.accounts[INDEX_SCHEDULER][1]
                                 )
-            ts.AddWorkItem(taskName, workItem)
-            #runTime = localtime(time() + 300)
+
             triggerIndex, taskTrigger = workItem.CreateTrigger()
             trigger = taskTrigger.GetTrigger()
             trigger.Flags = 0
@@ -3756,10 +3776,22 @@ class TaskScheduler( eg.ActionClass ) :
             trigger.StartMinute = runTime.tm_min
 
             trigger.TriggerType = int( taskscheduler.TASK_TIME_TRIGGER_ONCE )
-            taskTrigger.SetTrigger( trigger )
-
-            persistFile = workItem.QueryInterface( IID_IPersistFile )
-            persistFile.Save( None, True )
+            try :
+                #print "SetTrigger"
+                taskTrigger.SetTrigger( trigger )
+                #print "QueryInterface"
+                persistFile = workItem.QueryInterface( IID_IPersistFile )
+                #print "Save"
+                persistFile.Save( None, True )
+            except Exception, exc:
+                eg.PrintError( 'Error on adding a task scheduler entry' )
+                eg.PrintError( Exception, exc )
+                try :
+                    ts.Delete( taskName )
+                except :
+                    pass
+                actuals = []
+                break
 
         actuals.sort()
 
