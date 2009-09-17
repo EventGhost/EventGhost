@@ -3,7 +3,7 @@
 
 
 SUPPORTED_DVBVIEWER_VERSIONS        = '4.0.x, 4.1.x, 4.2.x '
-SUPPORTED_DVBVIEWERSERVICE_VERSIONS = '1.5.0.2, 1.5.0.21, 1.5.0.25'
+SUPPORTED_DVBVIEWERSERVICE_VERSIONS = '1.5.0.2 ... 1.5.0.31'
 
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
