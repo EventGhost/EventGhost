@@ -11,6 +11,7 @@ eg.RegisterPlugin(
     url = "http://www.eventghost.org/forum/viewtopic.php?t=571",
 )
 
+import re
 import binascii
 from eg.WinApi.HID import HIDThread
 from eg.WinApi.HID import GetDevicePath
@@ -63,11 +64,24 @@ DoubleCommands = {
     0x31 : ("Do.PreviousValue", "Do.PreviousState"),
 }
 
+def GetRegEx(pattern, length):
+    if pattern == "*":
+        return None
+    if (len(pattern) != length):
+        raise ValueError("length must be exactly " + str(length))
+    for char in pattern:
+        if char != '1' and char != '2' and char != '3' and char != '4' and char != '?': 
+            raise ValueError("only 1, 2, 3, 4 and ? are allowed")
+    regExPattern = pattern.replace('?', '.')
+    return re.compile(regExPattern)
+
+
 class FS20PCE(eg.PluginClass):
     def __init__(self):
         self.version = None
         self.thread = None
         self.PendingEvents = {}
+        self.devicePatterns = []
     
     def RawCallback(self, data):
         if not data or len(data) != 13 or ord(data[0]) != 2 or ord(data[1]) != 11:
@@ -77,81 +91,98 @@ class FS20PCE(eg.PluginClass):
         self.version = ord(data[12])
         
         houseCode = binascii.hexlify(data[2:6])
-        deviceAddress = binascii.hexlify(data[6:8])
-        combinedAddress = houseCode + "." + deviceAddress
+        deviceCode = binascii.hexlify(data[6:8])
         command = ord(data[8])
+        names = self.GetDeviceNames(houseCode, deviceCode)
         
-        if combinedAddress in self.PendingEvents:
-            #cancel pending events for this device
-            try:
-                timerEntry = self.PendingEvents[combinedAddress]
-                startTime, func, args, kwargs = timerEntry
-                eg.scheduler.CancelTask(timerEntry)
-                self.TriggerEvent(combinedAddress + ".Cancel", payload = args[1])
-                del self.PendingEvents[combinedAddress]
-            except KeyError:
-                #may happen due to multithreaded access to self.PendingEvents dict
-                pass
-            except ValueError:
-                #may happen due to multithreaded access to eg.scheduler's internal list
-                pass
-        
-        validTime = ord(data[9]) > 15
-        if validTime:
-            timeStr = binascii.hexlify(data[9:12])
-            timeStr = timeStr[1:]#cut the one
-            eventTime = float(timeStr) * 0.25
-        else:
-            eventTime = 0 
+        #cancel pending events
+        for deviceName in names:
+            if deviceName in self.PendingEvents:
+                #cancel pending events for this device
+                try:
+                    timerEntry = self.PendingEvents[deviceName]
+                    startTime, func, args, kwargs = timerEntry
+                    eg.scheduler.CancelTask(timerEntry)
+                    self.TriggerEvent(deviceName + ".Cancel", payload = args[1])
+                    del self.PendingEvents[deviceName]
+                except KeyError:
+                    #may happen due to multithreaded access to self.PendingEvents dict
+                    pass
+                except ValueError:
+                    #may happen due to multithreaded access to eg.scheduler's internal list
+                    pass
             
-            
-        if command in DirectCommands:
-            commandStr0 = DirectCommands[command]
-            commandStr1 = None
-            payload0 = (eventTime)
-        elif command in DelayedCommands:
-            if (validTime and eventTime):
-                commandStr0 = None
-                commandStr1 = DelayedCommands[command]
+            validTime = ord(data[9]) > 15
+            if validTime:
+                timeStr = binascii.hexlify(data[9:12])
+                timeStr = timeStr[1:]#cut the one
+                eventTime = float(timeStr) * 0.25
+            else:
+                eventTime = 0 
+                
+            if command in DirectCommands:
+                commandStr0 = DirectCommands[command]
+                commandStr1 = None
+                payload0 = (eventTime)
+            elif command in DelayedCommands:
+                if (validTime and eventTime):
+                    commandStr0 = None
+                    commandStr1 = DelayedCommands[command]
+                    payload0 = (eventTime, commandStr1)
+                else:
+                    commandStr0 = DelayedCommands[command]
+                    commandStr1 = None
+                    payload0 = None
+            elif command in DoubleCommands:
+                commandStr0, commandStr1 = DoubleCommands[command]
                 payload0 = (eventTime, commandStr1)
             else:
-                commandStr0 = DelayedCommands[command]
+                commandStr0 = binascii.hexlify(data[8]).upper()
                 commandStr1 = None
                 payload0 = None
-        elif command in DoubleCommands:
-            commandStr0, commandStr1 = DoubleCommands[command]
-            payload0 = (eventTime, commandStr1)
-        else:
-            commandStr0 = binascii.hexlify(data[8]).upper()
-            commandStr1 = None
-            payload0 = None
-            
-        if (commandStr0):
-            self.TriggerEvent(combinedAddress + "." + commandStr0, payload = payload0)
-        else:
-            self.TriggerEvent(combinedAddress + ".Timer", payload = payload0)
-            
-        if (commandStr1):
-            if (eventTime > 0):
-                timerEntry = eg.scheduler.AddTask(eventTime, self.SchedulerCallback, combinedAddress, commandStr1)
-                self.PendingEvents[combinedAddress] = timerEntry
+                
+            if (commandStr0):
+                self.TriggerEvent(deviceName + "." + commandStr0, payload = payload0)
             else:
-                self.TriggerEvent(combinedAddress + "." + commandStr1)
+                self.TriggerEvent(deviceName + ".Timer", payload = payload0)
+                
+            if (commandStr1):
+                if (eventTime > 0):
+                    timerEntry = eg.scheduler.AddTask(eventTime, self.SchedulerCallback, deviceName, commandStr1)
+                    self.PendingEvents[deviceName] = timerEntry
+                else:
+                    self.TriggerEvent(deviceName + "." + commandStr1)
             
-    def SchedulerCallback(self, combinedAddress, commandStr):
-        if combinedAddress in self.PendingEvents:
+    def SchedulerCallback(self, deviceName, commandStr):
+        if deviceName in self.PendingEvents:
             #cancel pending events for this device
             try:
-                timerEntry = self.PendingEvents[combinedAddress]
+                timerEntry = self.PendingEvents[deviceName]
                 startTime, func, args, kwargs = timerEntry
                 if (args[1] == commandStr):
                     #maybe an old entry if commandStr does not match 
-                    self.TriggerEvent(combinedAddress + "." + commandStr)
-                    del self.PendingEvents[combinedAddress]
+                    self.TriggerEvent(deviceName + "." + commandStr)
+                    del self.PendingEvents[deviceName]
             except KeyError:
                 #may happen due to multithreaded access to self.PendingEvents dict
                 pass
         
+    def GetDeviceNames(self, houseCode, deviceCode):
+        names = [houseCode + "." + deviceCode]
+        for houseCodeRegEx, deviceCodeRegEx, deviceName in self.devicePatterns:
+            if (deviceName in names):
+                continue
+            houseCodeMatch = houseCodeRegEx == None or houseCodeRegEx.match(houseCode)
+            deviceCodeMatch = deviceCodeRegEx == None or deviceCodeRegEx.match(deviceCode)
+            if (houseCodeMatch and deviceCodeMatch):
+                names.append(deviceName)
+        return names
+    
+    def AddDeviceNamePattern(self, houseCodePattern, deviceCodePattern, deviceName):
+        houseCodeRegEx = GetRegEx(houseCodePattern, 8)
+        deviceCodeRegEx = GetRegEx(deviceCodePattern, 4)
+        self.devicePatterns.append((houseCodeRegEx, deviceCodeRegEx, deviceName))
+            
     def PrintVersion(self):
         #create the following python command to show version number
         #eg.plugins.FS20PCE.plugin.PrintVersion()
