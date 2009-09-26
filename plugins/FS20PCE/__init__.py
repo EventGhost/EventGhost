@@ -75,24 +75,20 @@ DoubleCommands = {
     0x31 : ("Do.PreviousValue", "Do.PreviousState"),
 }
 
-def GetRegEx(pattern, length):
-    if pattern == "*":
-        return None
-    if (len(pattern) != length):
-        raise ValueError("length must be exactly " + str(length))
+def CheckPattern(pattern, value):
+    i = 0
     for char in pattern:
-        if char != '1' and char != '2' and char != '3' and char != '4' and char != '?': 
-            raise ValueError("only 1, 2, 3, 4 and ? are allowed")
-    regExPattern = pattern.replace('?', '.')
-    return re.compile(regExPattern)
-
+        if char != '?' and char != value[i]:
+            return False
+        i += 1
+    return True
 
 class FS20PCE(eg.PluginClass):
     def __init__(self):
         self.version = None
         self.thread = None
         self.PendingEvents = {}
-        self.devicePatterns = []
+        self.mappings = None
     
     def RawCallback(self, data):
         if not data or len(data) != 13 or ord(data[0]) != 2 or ord(data[1]) != 11:
@@ -104,7 +100,7 @@ class FS20PCE(eg.PluginClass):
         houseCode = binascii.hexlify(data[2:6])
         deviceCode = binascii.hexlify(data[6:8])
         command = ord(data[8])
-        names = self.GetDeviceNames(houseCode, deviceCode)
+        names = self.GetGroupNames(houseCode, deviceCode)
         
         #cancel pending events
         for deviceName in names:
@@ -178,22 +174,16 @@ class FS20PCE(eg.PluginClass):
                 #may happen due to multithreaded access to self.PendingEvents dict
                 pass
         
-    def GetDeviceNames(self, houseCode, deviceCode):
+    def GetGroupNames(self, houseCode, deviceCode):
         names = [houseCode + "." + deviceCode]
-        for houseCodeRegEx, deviceCodeRegEx, deviceName in self.devicePatterns:
-            if (deviceName in names):
-                continue
-            houseCodeMatch = houseCodeRegEx == None or houseCodeRegEx.match(houseCode)
-            deviceCodeMatch = deviceCodeRegEx == None or deviceCodeRegEx.match(deviceCode)
-            if (houseCodeMatch and deviceCodeMatch):
-                names.append(deviceName)
+        if self.mappings:
+            for houseCodePattern, deviceCodePattern, deviceName in self.mappings:
+                if (deviceName in names):
+                    continue
+                if CheckPattern(deviceCodePattern, deviceCode) and CheckPattern(houseCodePattern, houseCode):
+                    names.append(deviceName)
         return names
     
-    def AddDeviceNamePattern(self, houseCodePattern, deviceCodePattern, deviceName):
-        houseCodeRegEx = GetRegEx(houseCodePattern, 8)
-        deviceCodeRegEx = GetRegEx(deviceCodePattern, 4)
-        self.devicePatterns.append((houseCodeRegEx, deviceCodeRegEx, deviceName))
-            
     def PrintVersion(self):
         #create the following python command to show version number
         #eg.plugins.FS20PCE.plugin.PrintVersion()
@@ -241,7 +231,9 @@ class FS20PCE(eg.PluginClass):
             
             self.SetupHidThread(newDevicePath)
 
-    def __start__(self, mappings = []):
+    def __start__(self, mappings = None):
+        self.mappings = mappings
+        
         #Bind plug in to RegisterDeviceNotification message 
         eg.Bind("System.DeviceAttached", self.ReconnectDevice)
         
@@ -260,9 +252,8 @@ class FS20PCE(eg.PluginClass):
         eg.Unbind("System.DeviceAttached", self.ReconnectDevice)
         
     def Configure(self,
-        mappings = [],
+        mappings = None,
     ):
-        
         #gui callbacks and helper methods
         def ValidChars(input):
             for char in input:
@@ -407,8 +398,7 @@ class FS20PCE(eg.PluginClass):
         panel.sizer.Add(mappingsList, 1, flag = wx.EXPAND)
         panel.sizer.Add(editSizer)
         panel.sizer.Add(buttonsSizer)
-
-        
+       
         while panel.Affirmed():
             newMappings = []
             for i in range(0, mappingsList.GetItemCount()):
