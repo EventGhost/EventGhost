@@ -16,11 +16,7 @@ import time
 import binascii
 import sys
 import wx.lib.mixins.listctrl as listmix
-from eg.WinApi.HID import HIDThread
-from eg.WinApi.HID import GetDevicePath
-from eg.WinApi.HID import GetDeviceDescriptions
-from eg.WinApi.HID import DeviceDescription
-from eg.WinApi.HID import IsDeviceName
+from eg.WinApi.HID import HIDThread, GetDevicePath, GetDeviceDescriptions, DeviceDescription, IsDeviceName
 
 class Text:
     manufacturer = "Manufacturer"
@@ -39,7 +35,6 @@ class Text:
 
 class HID(eg.PluginClass):
     def __init__(self):
-        self.text = Text
         self.thread = None
 
     def RawCallback(self, data):
@@ -133,7 +128,7 @@ class HID(eg.PluginClass):
 
         #productString already contains manufacturer or vendor id only
         if productString.find(vendorString) != -1 or\
-            vendorString[0:len(self.text.vendorID)] == self.text.vendorID:
+            vendorString[0:len(Text.vendorID)] == Text.vendorID:
             return prefix + productString
 
         return prefix + vendorString + " " + productString
@@ -152,7 +147,6 @@ class HID(eg.PluginClass):
         useDeviceIndex = False,
         deviceIndex = 0
     ):
-
         #saving parameters so they can be used to reconnect a device
         self.eventName = eventName
         self.enduringEvents = enduringEvents
@@ -212,9 +206,9 @@ class HID(eg.PluginClass):
             size=wx.DefaultSize, style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
 
         #create GUI
-        hidList.InsertColumn(0, self.text.deviceName)
-        hidList.InsertColumn(1, self.text.manufacturer)
-        hidList.InsertColumn(2, self.text.connected)
+        hidList.InsertColumn(0, Text.deviceName)
+        hidList.InsertColumn(1, Text.manufacturer)
+        hidList.InsertColumn(2, Text.connected)
 
         path = GetDevicePath(
             devicePath,
@@ -232,7 +226,7 @@ class HID(eg.PluginClass):
         for item in deviceList:
             idx = hidList.InsertStringItem(sys.maxint, item.productString)
             hidList.SetStringItem(idx, 1, item.vendorString)
-            hidList.SetStringItem(idx, 2, self.text.yes)
+            hidList.SetStringItem(idx, 2, Text.yes)
             if item.devicePath == path:
                 hidList.Select(idx)
             devices[idx] = item
@@ -248,7 +242,7 @@ class HID(eg.PluginClass):
                 versionNumber)
             idx = hidList.InsertStringItem(sys.maxint, item.productString)
             hidList.SetStringItem(idx, 1, item.vendorString)
-            hidList.SetStringItem(idx, 2, self.text.no)
+            hidList.SetStringItem(idx, 2, Text.no)
             hidList.Select(idx)
             devices[idx] = item
 
@@ -269,7 +263,7 @@ class HID(eg.PluginClass):
 
         #eventname
         optionsSizer.Add(
-            wx.StaticText(panel, -1, self.text.eventName),
+            wx.StaticText(panel, -1, Text.eventName),
             (0, 0),
             flag = wx.ALIGN_CENTER_VERTICAL)
         eventNameCtrl = wx.TextCtrl(panel, value = eventName)
@@ -277,23 +271,23 @@ class HID(eg.PluginClass):
         optionsSizer.Add(eventNameCtrl, (0, 1), (1, 2), flag = wx.EXPAND)
 
         #checkbox for enduring event option
-        enduringEventsCtrl = wx.CheckBox(panel, -1, self.text.enduringEvents)
+        enduringEventsCtrl = wx.CheckBox(panel, -1, Text.enduringEvents)
         enduringEventsCtrl.SetValue(enduringEvents)
         optionsSizer.Add(enduringEventsCtrl, (1, 0), (1, 3))
 
         #checkbox for raw data events
-        rawDataEventsCtrl = wx.CheckBox(panel, -1, self.text.rawDataEvents)
+        rawDataEventsCtrl = wx.CheckBox(panel, -1, Text.rawDataEvents)
         rawDataEventsCtrl.SetValue(rawDataEvents)
         optionsSizer.Add(rawDataEventsCtrl, (2, 0), (1, 3))
 
         #text
         optionsSizer.Add(
-            wx.StaticText(panel, -1, self.text.multipleDeviceOptions),
+            wx.StaticText(panel, -1, Text.multipleDeviceOptions),
             (3, 0), (1, 3),
             flag = wx.ALIGN_CENTER_VERTICAL)
         
         #checkbox for use first device
-        useDeviceIndexCtrl = wx.CheckBox(panel, -1, self.text.useDeviceIndex)
+        useDeviceIndexCtrl = wx.CheckBox(panel, -1, Text.useDeviceIndex)
         useDeviceIndexCtrl.SetValue(useDeviceIndex)
         optionsSizer.Add(useDeviceIndexCtrl, (4, 0), (1, 2), flag = wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL)
         
@@ -302,7 +296,7 @@ class HID(eg.PluginClass):
         optionsSizer.Add(deviceIndexCtrl, (4, 2), (1, 1))
 
         #checkbox for no other port option
-        noOtherPortCtrl = wx.CheckBox(panel, -1, self.text.noOtherPort)
+        noOtherPortCtrl = wx.CheckBox(panel, -1, Text.noOtherPort)
         noOtherPortCtrl.SetValue(noOtherPort)
         optionsSizer.Add(noOtherPortCtrl, (5, 0), (1, 3))
 
