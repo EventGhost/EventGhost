@@ -13,7 +13,6 @@ eg.RegisterPlugin(
 import time
 
 class Text:
-   
     stopped = "Plugin stopped"
     timerFinished = "Timer finished"
     listhl = "Currently active Timers:"
@@ -24,7 +23,6 @@ class Text:
         "Loop Counter",
         "Loops",
         "Interval")
-
 
     class TimerAction:
         name = "Start new or control running timer"
@@ -67,7 +65,6 @@ class Text:
             'Reset counter of timer "%s"',
             'Abort timer "%s"'
         )
-
 
 class TimerObject():
     def __init__(self,
@@ -237,7 +234,7 @@ class Timer(eg.PluginClass):
             if timer.IsActive():
                 timer.ResetCounter()
             else:
-                eg.PrintError(self.text.timerFinished + timerName)
+                eg.PrintError(Text.timerFinished + timerName)
                 return False
 
     def AbortTimer(self, timerName):
@@ -267,7 +264,7 @@ class Timer(eg.PluginClass):
         panel = eg.ConfigPanel(self, resizable=True)
 
         panel.sizer.Add(
-            wx.StaticText(panel, -1, self.text.listhl),
+            wx.StaticText(panel, -1, Text.listhl),
             flag = wx.ALIGN_CENTER_VERTICAL
         )
 
@@ -279,7 +276,7 @@ class Timer(eg.PluginClass):
        
         timerListCtrl = wx.ListCtrl(panel, -1, style=wx.LC_REPORT | wx.VSCROLL | wx.HSCROLL)
        
-        for i, colLabel in enumerate(self.text.colLabels):
+        for i, colLabel in enumerate(Text.colLabels):
             timerListCtrl.InsertColumn(i, colLabel)
 
         #setting column width to fit label
@@ -401,10 +398,7 @@ class Timer(eg.PluginClass):
         if not timerName in self.timerNames:
             self.timerNames.append(timerName)
 
-
-
 class TimerAction(eg.ActionClass):
-
     def __call__(self,
         timerName,
         action,
@@ -417,7 +411,7 @@ class TimerAction(eg.ActionClass):
         startTime
     ):
         if not self.plugin.started:
-            self.PrintError(self.plugin.text.stopped)
+            self.PrintError(Text.stopped)
             return False
 
         if action == 0:#start
@@ -440,7 +434,6 @@ class TimerAction(eg.ActionClass):
         else:
             raise ValueError("unknown action index")
 
-
     def GetLabel(self,
         timerName,
         action,
@@ -455,12 +448,11 @@ class TimerAction(eg.ActionClass):
         self.plugin.AddTimerName(timerName)
         if action == 0:
             if loops == 0:
-                return self.text.labelStartUnlimited % (timerName, interval)
+                return Text.labelStartUnlimited % (timerName, interval)
             if loops == 1:
-                return self.text.labelStartOneTime % timerName
-            return self.text.labelStart % (timerName, loops, interval)
-        return self.text.labels[action-1] % timerName
-
+                return Text.labelStartOneTime % timerName
+            return Text.labelStart % (timerName, loops, interval)
+        return Text.labels[action-1] % timerName
 
     def Configure(self,
         timerName = None,
@@ -473,7 +465,6 @@ class TimerAction(eg.ActionClass):
         startTimeType = 1,
         startTime = "00:00:00"
     ):
-        text = self.text
         plugin = self.plugin
 
         panel = eg.ConfigPanel(self)
@@ -481,9 +472,8 @@ class TimerAction(eg.ActionClass):
         #name
         nameSizer = wx.BoxSizer(wx.HORIZONTAL)
 
-
         nameSizer.Add(
-            wx.StaticText(panel, -1, self.text.timerName),
+            wx.StaticText(panel, -1, Text.TimerAction.timerName),
             flag = wx.ALIGN_CENTER_VERTICAL
         )
         if not timerName:
@@ -502,10 +492,10 @@ class TimerAction(eg.ActionClass):
         #sizer.SetEmptyCellSize((0,0))
 
        
-        choices = len(text.actions)
+        choices = len(Text.TimerAction.actions)
         rb = range(0, choices + 1)
        
-        rb[0] = wx.RadioButton(panel, -1, text.start, style = wx.RB_GROUP)
+        rb[0] = wx.RadioButton(panel, -1, Text.TimerAction.start, style = wx.RB_GROUP)
         rb[0].SetValue(action == 0)
 
         panel.sizer.Add(wx.Size(5,5))
@@ -519,25 +509,25 @@ class TimerAction(eg.ActionClass):
 
         #loop
         startSettingsSizer.Add(
-            wx.StaticText(panel, -1, self.text.loop1),
+            wx.StaticText(panel, -1, Text.TimerAction.loop1),
             (rowCount, 0), flag = wx.ALIGN_CENTER_VERTICAL)
         loopCtrl = eg.SpinIntCtrl(panel, -1, loops, 0, size=(200,-1))
         startSettingsSizer.Add(loopCtrl, (rowCount, 1), flag = wx.EXPAND)
         startSettingsSizer.Add(
-            wx.StaticText(panel, -1, self.text.loop2),
+            wx.StaticText(panel, -1, Text.TimerAction.loop2),
             (rowCount, 2), (1, 2),
             flag = wx.ALIGN_CENTER_VERTICAL)
 
         #showRemaingLoopsText
         rowCount += 1
-        showRemaingLoopsCtrl = wx.CheckBox(panel, -1, text.showRemaingLoopsText)
+        showRemaingLoopsCtrl = wx.CheckBox(panel, -1, Text.TimerAction.showRemaingLoopsText)
         showRemaingLoopsCtrl.SetValue(showRemainingLoops)
         startSettingsSizer.Add(showRemaingLoopsCtrl, (rowCount, 1), (1, 3))
        
         #intervall
         rowCount += 1
         startSettingsSizer.Add(
-            wx.StaticText(panel, -1, self.text.interval1),
+            wx.StaticText(panel, -1, Text.TimerAction.interval1),
             (rowCount, 0), flag = wx.ALIGN_CENTER_VERTICAL)
         intervalCtrl = eg.SpinNumCtrl(
             panel, -1, interval, size=(200,-1), integerWidth=7
@@ -545,16 +535,16 @@ class TimerAction(eg.ActionClass):
         startSettingsSizer.Add(intervalCtrl, (rowCount, 1), flag = wx.EXPAND)
        
         startSettingsSizer.Add(
-            wx.StaticText(panel, -1, self.text.interval2),
+            wx.StaticText(panel, -1, Text.TimerAction.interval2),
             (rowCount, 2), (1, 2),
             flag = wx.ALIGN_CENTER_VERTICAL)
 
         #startTime
         rowCount += 1
         startSettingsSizer.Add(
-            wx.StaticText(panel, -1, self.text.startTime),
+            wx.StaticText(panel, -1, Text.TimerAction.startTime),
             (rowCount, 0), flag = wx.ALIGN_CENTER_VERTICAL)
-        startTimeTypeCtrl = wx.Choice(panel, -1, choices = text.startTimeTypes)
+        startTimeTypeCtrl = wx.Choice(panel, -1, choices = Text.TimerAction.startTimeTypes)
         startTimeTypeCtrl.SetSelection(startTimeType)
         startSettingsSizer.Add(startTimeTypeCtrl, (rowCount, 1), (1, 2), flag = wx.EXPAND)
        
@@ -568,14 +558,14 @@ class TimerAction(eg.ActionClass):
         #eventName
         rowCount += 1
         startSettingsSizer.Add(
-            wx.StaticText(panel, -1, self.text.eventName),
+            wx.StaticText(panel, -1, Text.TimerAction.eventName),
             (rowCount, 0), flag = wx.ALIGN_CENTER_VERTICAL)
         eventNameCtrl = wx.TextCtrl(panel, -1, eventName, size=(200,-1))
         startSettingsSizer.Add(eventNameCtrl, (rowCount, 1), (1, 3), flag = wx.EXPAND)
        
         #addCounterToName
         rowCount += 1
-        addCounterToNameCtrl = wx.CheckBox(panel, -1, text.addCounterToName)
+        addCounterToNameCtrl = wx.CheckBox(panel, -1, Text.TimerAction.addCounterToName)
         addCounterToNameCtrl.SetValue(addCounterToName)
         startSettingsSizer.Add(addCounterToNameCtrl, (rowCount, 1), (1, 3))
 
@@ -590,7 +580,7 @@ class TimerAction(eg.ActionClass):
        
         for i in range(1, len(rb)):
             rowCount += 1
-            rb[i] = wx.RadioButton(panel, -1, text.actions[i - 1])
+            rb[i] = wx.RadioButton(panel, -1, Text.TimerAction.actions[i - 1])
             rb[i].SetValue(action == i)
             panel.sizer.Add(wx.Size(5,5))
             panel.sizer.Add(rb[i], flag = wx.ALIGN_CENTER_VERTICAL)

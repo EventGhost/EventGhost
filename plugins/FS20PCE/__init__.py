@@ -1,7 +1,7 @@
 eg.RegisterPlugin(
     name = "ELV FS20 PCE",
     author = "Bartman",
-    version = "0.1." + "$LastChangedRevision: 614 $".split()[1],
+    version = "0.9." + "$LastChangedRevision: 614 $".split()[1],
     kind = "remote",
     canMultiLoad = False,
     description = (
@@ -11,7 +11,6 @@ eg.RegisterPlugin(
     url = "http://www.eventghost.org/forum/viewtopic.php?t=571",
 )
 
-import re
 import binascii
 import sys
 import wx.lib.mixins.listctrl as listmix
