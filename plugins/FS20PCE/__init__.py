@@ -1,14 +1,33 @@
+"""<rst>
+Allows to receive events from FS20 remote controls.
+
+|
+
+**Notice:**
+You can use the configuration dialog to build groups or assign a name to a device.
+Allowed characters are 1, 2, 3, 4 and ? which acts as a wild card.
+Setting up groups is optional as events with the house code and device address are always generated.  
+
+|fS20Image|_
+
+`Direct shop link <http://www.elv.de/output/controller.aspx?cid=74&detail=10&detail2=27407>`__
+
+.. |fS20Image| image:: picture.jpg
+.. _fS20Image: http://www.elv.de/ 
+"""
+
 eg.RegisterPlugin(
     name = "ELV FS20 PCE",
     author = "Bartman",
-    version = "0.9." + "$LastChangedRevision: 614 $".split()[1],
+    version = "1.1." + "$LastChangedRevision: 614 $".split()[1],
     kind = "remote",
     canMultiLoad = False,
-    description = (
-        'Allows to receive events from FS20 remote controls.<br/>'
-        '<a href="http://www.elv.de/"><img src=\"picture.jpg\"/></a>'
-    ),
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=571",
+    description = __doc__,
+    #description = (
+    #    'Allows to receive events from FS20 remote controls.<br/>'
+    #    '<a href="http://www.elv.de/"><img src=\"picture.jpg\"/></a>'
+    #),
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1945",
 )
 
 import binascii
@@ -88,7 +107,7 @@ class FS20PCE(eg.PluginClass):
         self.thread = None
         self.PendingEvents = {}
         self.mappings = None
-    
+        
     def RawCallback(self, data):
         if not data or len(data) != 13 or ord(data[0]) != 2 or ord(data[1]) != 11:
             self.PrintError("invalid data")
@@ -366,7 +385,7 @@ class FS20PCE(eg.PluginClass):
         editSizer.Add(houseCodeTextCtrl, 0)
         editSizer.Add(wx.StaticText(panel, -1, Text.deviceAddress + ":"), wx.ALIGN_CENTER_VERTICAL)
         editSizer.Add(deviceAddressTextCtrl, 0)
-        editSizer.Add(wx.StaticText(panel, -1, Text.groupName), wx.ALIGN_CENTER_VERTICAL)
+        editSizer.Add(wx.StaticText(panel, -1, Text.groupName + ":"), wx.ALIGN_CENTER_VERTICAL)
         editSizer.Add(groupNameCtrl, 0)
 
         
