@@ -58,6 +58,7 @@ InputActions = ('Input', 'Input', 'Action to control the input', (0x49, 0x50),
 
 PatternsActions = ('Pattern', 'Test Patterns', 'Show Test Patterns', (0x54, 0x53),
     (
+     ("Get", "Get Test Pattern", REF, ()),
      ("Off", "Test Pattern - Off", OP, (0x30, )),
      ("ColorBars", "Test Pattern - Color Bars", OP, (0x31, )),
      ("StairStep", "Test Pattern - Stair step (black and white)", OP, (0x36, )),
@@ -67,8 +68,9 @@ PatternsActions = ('Pattern', 'Test Patterns', 'Show Test Patterns', (0x54, 0x53
      ("Crosshatch", "Test Pattern - Crosshatch (green)", OP, (0x41, )),
      ))
 
-GammaTableActions = ('GammeTable', 'Gamma Table', '', (0x47, 0x53),
+GammaTableActions = ('GammaTable', 'Gamma Table', '', (0x47, 0x53),
     (
+     ("Get", "Get Gamma Table Value", REF, ()),
      ("Normal", "Gamma - Normal", OP, (0x30, )),
      ("A", "Gamma - A", OP, (0x31, )),
      ("B", "Gamma - B", OP, (0x32, )),
@@ -81,6 +83,7 @@ GammaTableActions = ('GammeTable', 'Gamma Table', '', (0x47, 0x53),
 
 GammaValueActions = ('GammaValue', 'Gamma Value', '', (0x47, 0x50),
     (
+     ("Get", "Get Gamma Correction Value", REF, ()),
      ("18", "Gamma Correction Value - 1.8", OP, (0x30, )),
      ("19", "Gamma Correction Value - 1.9", OP, (0x31, )),
      ("20", "Gamma Correction Value - 2.0", OP, (0x32, )),
@@ -90,11 +93,6 @@ GammaValueActions = ('GammaValue', 'Gamma Value', '', (0x47, 0x50),
      ("24", "Gamma Correction Value - 2.4", OP, (0x36, )),
      ("25", "Gamma Correction Value - 2.5", OP, (0x37, )),
      ("26", "Gamma Correction Value - 2.6", OP, (0x38, )),
-     ))
-
-TestActions = ('Test', 'Test Command', '', (0x00, ),
-    (
-     ("Null", "Null Command (to check communication)", OP, (0x00, )),
      ))
 
 RemoteActions = ('Remote', 'Remote Control Emulation', 'Emulates remote control key presses', (0x52, 0x43, 0x37, 0x33),
@@ -212,7 +210,14 @@ RemoteActions = ('Remote', 'Remote Control Emulation', 'Emulates remote control 
      ("VerticalStretchOn", "Vertical Stretch - On", OP, (0x32, 0x33)),
      ))
 
-ACTIONS = (PowerActions, InputActions, PatternsActions, GammaTableActions, GammaValueActions, RemoteActions)
+TestActions = ('', 'Test Command', '', (),
+    (
+     ("Null", "Check Connection", OP, (0x00, 0x00)),
+     ("GetModel", "Get Model", REF, (0x4d, 0x44)),
+     ("GetSourceState", "Get Source State", REF, (0x53, 0x43)),
+     ))
+
+ACTIONS = (PowerActions, InputActions, PatternsActions, GammaTableActions, GammaValueActions, RemoteActions, TestActions)
             
 class ActionBase(eg.ActionClass):
     
@@ -228,8 +233,8 @@ class ActionBase(eg.ActionClass):
         serial.Write("".join([chr(x) for x in groupData]))
         serial.Write("".join([chr(x) for x in data]))
         serial.Write(END)
-        res = serial.Read(1, 1.0)
-        if res != ACK:
+        res = serial.Read(6, 1.0)
+        if len(res) != 6 or res[0] != ACK or res[5] != END:
             raise self.Exceptions.DeviceNotFound("Got no ACK!")
 
 class JvcDlaSerial(eg.PluginClass):
@@ -264,25 +269,18 @@ class JvcDlaSerial(eg.PluginClass):
         
         
     def OnReceive(self, serial):
-        print "OnReceive"
-        buffer = ""
-        while True:
-            b = serial.Read(1, 1.0)
-            print binascii.hexlify(b)
-            if b == END:
-                return
-            
+        buffer = serial.Read(7, 1.0)
+        if len(buffer) == 7:
+            code = buffer[3:5]
+            if code == "MD":
+                buffer += serial.Read(13, 1.0)
+            if buffer[0] != RESP or buffer[len(buffer) - 1] != END:
+                raise self.Exceptions.DeviceNotReady("Unexpected response " + binascii.hexlify(buffer))
+        else:
+            raise self.Exceptions.DeviceNotReady("Unexpected response " + binascii.hexlify(buffer))
         
-        return;
-        data = serial.Read(1)
-        if data != RESP:
-            return
-        serial.Read(2, 1.0) # Skip unit ID
-        c1 = serial.Read(1, 1.0)
-        c2 = serial.Read(1, 1.0)
-        state = serial.Read(1, 1.0)
-        serial.Read(1, 1.0) # Skip 0x0a
-        if c1 == chr(0x50) and c2 == chr(0x57):
+        state = buffer[5:len(buffer) - 1]
+        if code == "PW":
             if state == chr(0x30):
                 sid ="Standby"
             elif state == chr(0x31):
@@ -294,13 +292,15 @@ class JvcDlaSerial(eg.PluginClass):
             else:
                 sid = "UNKNOWN%02X" % ord(state)
             self.TriggerEvent("PowerState." + sid)
-        elif c1 == chr(0x49) and c2 == chr(0x50):
+        elif code == "IP":
             if state == chr(0x30):
                 sid = "SVideo"
             elif state == chr(0x31):
                 sid = "Video"
             elif state == chr(0x32):
                 sid = "Composite"
+            elif state == chr(0x33):
+                sid = "PC"
             elif state == chr(0x36):
                 sid = "HDMI1"
             elif state == chr(0x37):
@@ -308,9 +308,81 @@ class JvcDlaSerial(eg.PluginClass):
             else:
                 sid = "UNKNOWN%02X" % ord(state)
             self.TriggerEvent("Input." + sid)
+        elif code == "TS":
+            if state == chr(0x30):
+                sid = "Off"
+            elif state == chr(0x31):
+                sid = "ColorBars"
+            elif state == chr(0x36):
+                sid = "StairStep"
+            elif state == chr(0x37):
+                sid = "StairStepRed"
+            elif state == chr(0x38):
+                sid = "StairStepGreen"
+            elif state == chr(0x39):
+                sid = "StairStepBlue"
+            elif state == chr(0x41):
+                sid = "Crosshatch"
+            else:
+                sid = "UNKNOWN%02X" % ord(state)
+            self.TriggerEvent("TestPattern." + sid)
+        elif code == "GS":
+            if state == chr(0x30):
+                sid = "Normal"
+            elif state == chr(0x31):
+                sid = "A"
+            elif state == chr(0x32):
+                sid = "B"
+            elif state == chr(0x33):
+                sid = "C"
+            elif state == chr(0x34):
+                sid = "Custom1"
+            elif state == chr(0x35):
+                sid = "Custom2"
+            elif state == chr(0x36):
+                sid = "Custom3"
+            elif state == chr(0x37):
+                sid = "D"
+            else:
+                sid = "UNKNOWN%02X" % ord(state)
+            self.TriggerEvent("GammaTable." + sid)
+        elif code == "GP":
+            if state == chr(0x30):
+                sid = "18"
+            elif state == chr(0x31):
+                sid = "19"
+            elif state == chr(0x32):
+                sid = "20"
+            elif state == chr(0x33):
+                sid = "21"
+            elif state == chr(0x34):
+                sid = "22"
+            elif state == chr(0x35):
+                sid = "23"
+            elif state == chr(0x36):
+                sid = "24"
+            elif state == chr(0x37):
+                sid = "25"
+            elif state == chr(0x38):
+                sid = "26"
+            else:
+                sid = "UNKNOWN%02X" % ord(state)
+            self.TriggerEvent("GammaValue." + sid)
+        elif code == "SC":
+            if state == chr(0x00):
+                sid = "Logo"
+            elif state == chr(0x30):
+                sid = "NoSignal"
+            elif state == chr(0x31):
+                sid = "SignalOk"
+            else:
+                sid = "UNKNOWN%02X" % ord(state)
+            self.TriggerEvent("SourceState." + sid)
+        elif code == "MD":
+            self.TriggerEvent("Model." + state[11:len(state)])
         else:
-            raise self.Exceptions.DeviceNotReady("Unexpected response %02X%02X" %(ord(c1), ord(c2)))
-            
+            raise self.Exceptions.DeviceNotReady("Unexpected response %02X%02X" %(ord(code[0]), ord(code[1])))
+        
     
     
     def Configure(self, port=0):
