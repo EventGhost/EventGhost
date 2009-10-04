@@ -17,10 +17,10 @@ import binascii
 
 eg.RegisterPlugin(
     name = "JVC DILA Projector",
-    description = "This plugin is for controlling a JVC DILA projectors via RS-232",
+    description = "This plug in is for controlling JVC DILA projectors via RS-232",
     kind = "external",
     author = "Bartman",
-    version = "0.1." + "$LastChangedRevision$".split()[1],
+    version = "0.1.", # + "$LastChangedRevision$".split()[1],
     canMultiLoad = True,
     createMacrosOnAdd = True,
     url = "http://www.eventghost.org/forum/viewtopic.php?t=650",
