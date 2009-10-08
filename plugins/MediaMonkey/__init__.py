@@ -18,7 +18,7 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2009-09-14 08:25
+#Last change: 2009-10-08 12:38
 
 ur'''<rst>
 Adds support functions to control MediaMonkey_.
@@ -44,7 +44,7 @@ from functools import partial
 eg.RegisterPlugin(
     name = "MediaMonkey",
     author = "Pako",
-    version = "0.2.0",
+    version = "0.2.1",
     kind = "program",
     createMacrosOnAdd = True,
     description = __doc__,
@@ -202,118 +202,146 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
         del self.MM
         self.plugin.workerThread = None
         
+    def isRunning(self):
+        flag = True
+        counter = 0
+        try:
+            if self.MM.IsRunning:
+                return True
+        except:
+            pass
+        del self.MM
+        self.MM = Dispatch("SongsDB.SDBApplication")
+        self.MM.ShutdownAfterDisconnect = False
+        while not self.MM.IsRunning:
+            counter += 1
+            if counter >= 1000:
+                flag = False
+                break
+        return flag            
+        
     def DoCommand(self, command):
-        getattr(self.MM.Player, command)()
+        if self.isRunning():
+            getattr(self.MM.Player, command)()
 
     def SetValue(self, command, value):
-        setattr(self.MM.Player,command, value)
+        if self.isRunning():
+            setattr(self.MM.Player,command, value)
         
     def GetValue(self,command):
-        return getattr(self.MM.Player, command)
+        if self.isRunning():
+            return getattr(self.MM.Player, command)
         
     def Previous(self):
-        if self.MM.Player.CurrentSongIndex !=0:
-            self.MM.Player.Previous()
-        elif self.MM.Player.isRepeat:
-            self.MM.Player.CurrentSongIndex = self.MM.Player.PlaylistCount-1
+        if self.isRunning():
+            if self.MM.Player.CurrentSongIndex !=0:
+                self.MM.Player.Previous()
+            elif self.MM.Player.isRepeat:
+                self.MM.Player.CurrentSongIndex = self.MM.Player.PlaylistCount-1
        
     def GetSongData(self,index):
-        repeat = self.MM.Player.isRepeat
-        SongDataDict = dict([(item[2],None) for item in SONG_TABLE_FIELDS if item[2] != ""])
-        curIndx = self.MM.Player.CurrentSongIndex
-        count = self.MM.Player.PlaylistCount
-        if not repeat:
-            if (index == 1 and curIndx == count-1) or (index == -1 and curIndx == 0):
-                return None,None
-        else:
-            if index == 1 and curIndx == count-1:
-                curIndx = -1
-            elif index == -1 and curIndx == 0:
-                curIndx = count    
-        index += curIndx
-        tmpObject = self.MM.Player.PlaylistItems(index)
-        
-        for item in SongDataDict.iterkeys():
-            itm = getattr(tmpObject,item)
-            if type(itm) == unicode:
-                SongDataDict[item] = itm
+        if self.isRunning():
+            repeat = self.MM.Player.isRepeat
+            SongDataDict = dict([(item[2],None) for item in SONG_TABLE_FIELDS if item[2] != ""])
+            curIndx = self.MM.Player.CurrentSongIndex
+            count = self.MM.Player.PlaylistCount
+            if not repeat:
+                if (index == 1 and curIndx == count-1) or (index == -1 and curIndx == 0):
+                    return None,None
             else:
-                SongDataDict[item] = str(itm)
-        return SongDataDict, index+1
+                if index == 1 and curIndx == count-1:
+                    curIndx = -1
+                elif index == -1 and curIndx == 0:
+                    curIndx = count    
+            index += curIndx
+            tmpObject = self.MM.Player.PlaylistItems(index)
+            
+            for item in SongDataDict.iterkeys():
+                itm = getattr(tmpObject,item)
+                if type(itm) == unicode:
+                    SongDataDict[item] = itm
+                else:
+                    SongDataDict[item] = str(itm)
+            return SongDataDict, index+1
 
     def WriteToMMdatabase(self, command, value, flag):
-        setattr(self.MM.Player.CurrentSong,command,value)
-        self.MM.Player.CurrentSong.UpdateDB()
-        if flag:
-            self.MM.Player.CurrentSong.WriteTags()
+        if self.isRunning():
+            setattr(self.MM.Player.CurrentSong,command,value)
+            self.MM.Player.CurrentSong.UpdateDB()
+            if flag:
+                self.MM.Player.CurrentSong.WriteTags()
        
     def LoadPlaylistByTitle(self, plString,repeat,shuffle,crossfade):
-        plItems = self.MM.PlaylistByTitle(plString).Tracks
-        num = plItems.Count
-        if num >0:
-            self.MM.Player.Stop()
-            self.MM.Player.PlaylistClear()
-            self.MM.Player.PlaylistAddTracks(plItems)
-            if repeat<2:
-                self.MM.Player.isRepeat=bool(repeat)
-            if crossfade<2:
-                self.MM.Player.isCrossfade=bool(crossfade)
-            if shuffle<2:
-                self.MM.Player.isShuffle=bool(shuffle)
-            self.MM.Player.Play()
-        return num
+        if self.isRunning():
+            plItems = self.MM.PlaylistByTitle(plString).Tracks
+            num = plItems.Count
+            if num >0:
+                self.MM.Player.Stop()
+                self.MM.Player.PlaylistClear()
+                self.MM.Player.PlaylistAddTracks(plItems)
+                if repeat<2:
+                    self.MM.Player.isRepeat=bool(repeat)
+                if crossfade<2:
+                    self.MM.Player.isCrossfade=bool(crossfade)
+                if shuffle<2:
+                    self.MM.Player.isShuffle=bool(shuffle)
+                self.MM.Player.Play()
+            return num
             
     def AddSongToPlaylist(self, plString, skip):
-        idSong=self.MM.Player.CurrentSong.ID
-        IDPlaylist=self.MM.PlaylistByTitle(plString).ID
-        if IDPlaylist <> 0:
-            sql="SELECT COUNT(*) FROM PlaylistSongs WHERE PlaylistSongs.IDSong="+\
-                str(idSong)+" AND PlaylistSongs.IDPlaylist="+str(IDPlaylist)
-            if self.MM.Database.OpenSQL(sql).ValueByIndex(0) == "0":
-                self.MM.PlaylistByTitle(plString).AddTrackById(idSong)
-                res = 0
+        if self.isRunning():
+            idSong=self.MM.Player.CurrentSong.ID
+            IDPlaylist=self.MM.PlaylistByTitle(plString).ID
+            if IDPlaylist <> 0:
+                sql="SELECT COUNT(*) FROM PlaylistSongs WHERE PlaylistSongs.IDSong="+\
+                    str(idSong)+" AND PlaylistSongs.IDPlaylist="+str(IDPlaylist)
+                if self.MM.Database.OpenSQL(sql).ValueByIndex(0) == "0":
+                    self.MM.PlaylistByTitle(plString).AddTrackById(idSong)
+                    res = 0
+                else:
+                    res = 1
             else:
-                res = 1
-        else:
-            res = 2
-        if skip:
-            self.MM.Player.Next()
-        return res
+                res = 2
+            if skip:
+                self.MM.Player.Next()
+            return res
 
     def RemoveSongFromPlaylist(self, plString, skip, now_pl):
-        Player = self.MM.Player
-        idSong=Player.CurrentSong.ID
-        IDPlaylist=self.MM.PlaylistByTitle(plString).ID
-        if IDPlaylist <> 0:
-            sql=" FROM PlaylistSongs WHERE IDPlaylist="+str(IDPlaylist)+" AND IDSong="+str(idSong)
-            if self.MM.Database.OpenSQL("SELECT COUNT(*)"+sql).ValueByIndex(0) == "1":
-                self.MM.Database.ExecSQL("DELETE"+sql)
-                self.MM.MainTracksWindow.Refresh()
-                indx=Player.CurrentSongIndex
-                if idSong==Player.PlaylistItems(indx).ID:
-                    if now_pl:
-                        Player.PlaylistDelete(indx)
+        if self.isRunning():
+            Player = self.MM.Player
+            idSong=Player.CurrentSong.ID
+            IDPlaylist=self.MM.PlaylistByTitle(plString).ID
+            if IDPlaylist <> 0:
+                sql=" FROM PlaylistSongs WHERE IDPlaylist="+str(IDPlaylist)+" AND IDSong="+str(idSong)
+                if self.MM.Database.OpenSQL("SELECT COUNT(*)"+sql).ValueByIndex(0) == "1":
+                    self.MM.Database.ExecSQL("DELETE"+sql)
+                    self.MM.MainTracksWindow.Refresh()
+                    indx=Player.CurrentSongIndex
+                    if idSong==Player.PlaylistItems(indx).ID:
+                        if now_pl:
+                            Player.PlaylistDelete(indx)
+                    res = 0
+                else:
+                    res = 1
+            else:
+                res = 2
+            if skip:
+                Player.Next()
+            return res
+
+    def RemoveSongFromNowPlaying(self, skip):
+        if self.isRunning():
+            Player = self.MM.Player
+            idSong=Player.CurrentSong.ID
+            indx=Player.CurrentSongIndex
+            if idSong==Player.PlaylistItems(indx).ID:
+                Player.PlaylistDelete(indx)
                 res = 0
             else:
                 res = 1
-        else:
-            res = 2
-        if skip:
-            Player.Next()
-        return res
-
-    def RemoveSongFromNowPlaying(self, skip):
-        Player = self.MM.Player
-        idSong=Player.CurrentSong.ID
-        indx=Player.CurrentSongIndex
-        if idSong==Player.PlaylistItems(indx).ID:
-            Player.PlaylistDelete(indx)
-            res = 0
-        else:
-            res = 1
-        if skip:
-            Player.Next()
-        return res
+            if skip:
+                Player.Next()
+            return res
 
     def LoadFilterPlaylist(
         self,
@@ -332,86 +360,87 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
         unitList,
         trendList
     ):
-        propertiesList = SONG_TABLE_FIELDS
-        sql=""
-        op=' AND ' if mode==0 else ' OR '
-        for rule in listRules:
-            i=listRules.index(rule)
-            substValues1=(op,propertiesList[rule[0]][0],rule[2])
-            substValues2=(op,rule[2],propertiesList[rule[0]][0])
-            substValues3=(op,propertiesList[rule[0]][0])
-            dateType=propertiesList[rule[0]][1]
-            emptVal = '""'  if dateType=="T" else '"-1"'
-            tuplOper=("=","<>",">",">=","<","<=")
+        if self.isRunning():
+            propertiesList = SONG_TABLE_FIELDS
+            sql=""
+            op=' AND ' if mode==0 else ' OR '
+            for rule in listRules:
+                i=listRules.index(rule)
+                substValues1=(op,propertiesList[rule[0]][0],rule[2])
+                substValues2=(op,rule[2],propertiesList[rule[0]][0])
+                substValues3=(op,propertiesList[rule[0]][0])
+                dateType=propertiesList[rule[0]][1]
+                emptVal = '""'  if dateType=="T" else '"-1"'
+                tuplOper=("=","<>",">",">=","<","<=")
 
-            if dateType=="D":
-                if rule[1]<6:
+                if dateType=="D":
+                    if rule[1]<6:
+                        for ix in range(0,6):
+                            if rule[1]==ix:
+                                substValues=(op,propertiesList[rule[0]][0],tuplOper[ix],rule[2])
+                                sql+="%sstrftime('%%Y-%%m-%%d %%H:%%M:%%S',%s+2415018.5)%s'%s'" % substValues
+                                break
+                    else:
+                        substValues=(op,propertiesList[rule[0]][0],rule[2][:-1],unitList[int(rule[2][-1])])
+                        if rule[1]==6:
+                            sql+="%s(%s+2415018.5)>julianday('now','-%s %s','localtime')" % substValues
+                        if rule[1]==7:
+                            sql+="%s(%s+2415018.5)<julianday('now','-%s %s','localtime')" % substValues
+                else: # (No "DateType")
                     for ix in range(0,6):
                         if rule[1]==ix:
                             substValues=(op,propertiesList[rule[0]][0],tuplOper[ix],rule[2])
-                            sql+="%sstrftime('%%Y-%%m-%%d %%H:%%M:%%S',%s+2415018.5)%s'%s'" % substValues
+                            sql+='%s%s%s"%s"' % substValues
                             break
-                else:
-                    substValues=(op,propertiesList[rule[0]][0],rule[2][:-1],unitList[int(rule[2][-1])])
                     if rule[1]==6:
-                        sql+="%s(%s+2415018.5)>julianday('now','-%s %s','localtime')" % substValues
+                        sql+='%slike("%s%%",%s)' % substValues2
                     if rule[1]==7:
-                        sql+="%s(%s+2415018.5)<julianday('now','-%s %s','localtime')" % substValues
-            else: # (No "DateType")
-                for ix in range(0,6):
-                    if rule[1]==ix:
-                        substValues=(op,propertiesList[rule[0]][0],tuplOper[ix],rule[2])
-                        sql+='%s%s%s"%s"' % substValues
-                        break
-                if rule[1]==6:
-                    sql+='%slike("%s%%",%s)' % substValues2
-                if rule[1]==7:
-                    sql+='%sNOT like("%s%%",%s)' % substValues2
-                elif rule[1]==8:
-                    sql+='%slike("%%%s",%s)' % substValues2
-                elif rule[1]==9:
-                    sql+='%sNOT like("%%%s",%s)' % substValues2
-                elif rule[1]==10:
-                    sql+='%sinstr(%s,"%s")' %  substValues1
-                elif rule[1]==11:
-                    sql+='%sNOT (instr(%s,"%s"))' %  substValues1
-                elif rule[1]==12:
-                    sql+='%s%s=' % substValues3 + emptVal
-                elif rule[1]==13:
-                    sql+='%s%s<>' % substValues3 + emptVal
-        sql=(sql[5:] if mode==0 else sql[4:])
-        if random:
-            sql += " ORDER BY RANDOM()"        
-        elif order:
-            sql+=" order by "+propertiesList[crit][0]+" "+trendList[trend]
-        if limit:
-            sql+=" limit "+str(num)
+                        sql+='%sNOT like("%s%%",%s)' % substValues2
+                    elif rule[1]==8:
+                        sql+='%slike("%%%s",%s)' % substValues2
+                    elif rule[1]==9:
+                        sql+='%sNOT like("%%%s",%s)' % substValues2
+                    elif rule[1]==10:
+                        sql+='%sinstr(%s,"%s")' %  substValues1
+                    elif rule[1]==11:
+                        sql+='%sNOT (instr(%s,"%s"))' %  substValues1
+                    elif rule[1]==12:
+                        sql+='%s%s=' % substValues3 + emptVal
+                    elif rule[1]==13:
+                        sql+='%s%s<>' % substValues3 + emptVal
+            sql=(sql[5:] if mode==0 else sql[4:])
+            if random:
+                sql += " ORDER BY RANDOM()"        
+            elif order:
+                sql+=" order by "+propertiesList[crit][0]+" "+trendList[trend]
+            if limit:
+                sql+=" limit "+str(num)
 
-        #print sql #Debuging
-        Total=self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Songs WHERE "+sql).ValueByIndex(0)
-        n=0
-        if int(Total) > 0:
-            self.MM.Player.Stop()
-            self.MM.Player.PlaylistClear()
-            MyTrack = self.MM.Database.QuerySongs(sql)
-            while not MyTrack.EOF:
-                if accessible:
-                    if isfile(MyTrack.Item.Path):
+            #print sql #Debuging
+            Total=self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Songs WHERE "+sql).ValueByIndex(0)
+            n=0
+            if int(Total) > 0:
+                self.MM.Player.Stop()
+                self.MM.Player.PlaylistClear()
+                MyTrack = self.MM.Database.QuerySongs(sql)
+                while not MyTrack.EOF:
+                    if accessible:
+                        if isfile(MyTrack.Item.Path):
+                            self.MM.Player.PlaylistAddTrack(MyTrack.Item)
+                            n+=1
+                    else:
                         self.MM.Player.PlaylistAddTrack(MyTrack.Item)
                         n+=1
-                else:
-                    self.MM.Player.PlaylistAddTrack(MyTrack.Item)
-                    n+=1
-                MyTrack.Next()
-            if n>0:
-                if repeat<2:
-                    self.MM.Player.isRepeat=bool(repeat)
-                if crossfade<2:
-                    self.MM.Player.isCrossfade=bool(crossfade)
-                if shuffle<2:
-                    self.MM.Player.isShuffle=bool(shuffle)
-                self.MM.Player.Play()
-        return n,Total
+                    MyTrack.Next()
+                if n>0:
+                    if repeat<2:
+                        self.MM.Player.isRepeat=bool(repeat)
+                    if crossfade<2:
+                        self.MM.Player.isCrossfade=bool(crossfade)
+                    if shuffle<2:
+                        self.MM.Player.isShuffle=bool(shuffle)
+                    self.MM.Player.Play()
+            return n,Total
 
     def LoadSqlPlaylist(
         self,
@@ -421,24 +450,61 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
         crossfade,
         accessible,
     ):
-
-        #print sql #Debuging
-        Total=self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Songs WHERE "+sql).ValueByIndex(0)
-        n=0
-        if int(Total) > 0:
-            self.MM.Player.Stop()
-            self.MM.Player.PlaylistClear()
-            MyTrack = self.MM.Database.QuerySongs(sql)
-            while not MyTrack.EOF:
-                if accessible:
-                    if isfile(MyTrack.Item.Path):
+        if self.isRunning():
+            #print sql #Debuging
+            Total=self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Songs WHERE "+sql).ValueByIndex(0)
+            n=0
+            if int(Total) > 0:
+                self.MM.Player.Stop()
+                self.MM.Player.PlaylistClear()
+                MyTrack = self.MM.Database.QuerySongs(sql)
+                while not MyTrack.EOF:
+                    if accessible:
+                        if isfile(MyTrack.Item.Path):
+                            self.MM.Player.PlaylistAddTrack(MyTrack.Item)
+                            n+=1
+                    else:
                         self.MM.Player.PlaylistAddTrack(MyTrack.Item)
                         n+=1
-                else:
-                    self.MM.Player.PlaylistAddTrack(MyTrack.Item)
-                    n+=1
-                MyTrack.Next()
-            if n>0:
+                    MyTrack.Next()
+                if n>0:
+                    if repeat<2:
+                        self.MM.Player.isRepeat=bool(repeat)
+                    if crossfade<2:
+                        self.MM.Player.isCrossfade=bool(crossfade)
+                    if shuffle<2:
+                        self.MM.Player.isShuffle=bool(shuffle)
+                    self.MM.Player.Play()
+            return n,Total
+        
+    def GetStatistics(self):
+        if self.isRunning():
+            tracks = self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Songs").ValueByIndex(0)
+            albums = self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Albums").ValueByIndex(0)
+            #artists = self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Artists").ValueByIndex(0)
+            #playlists = self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Playlists").ValueByIndex(0)
+            return tracks,albums #,artists,playlists
+        
+    def Jubox(self,ID,accessible,repeat,shuffle,crossfade):
+        if self.isRunning():
+            sql = 'IDAlbum="%s"' % ID
+            res = None
+            Total=self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Songs WHERE "+sql).ValueByIndex(0)
+            if int(Total) > 0:
+                self.MM.Player.Stop()
+                self.MM.Player.PlaylistClear()
+                n=0
+                MyTrack = self.MM.Database.QuerySongs(sql)
+                res = (ID,MyTrack.Item.AlbumName,MyTrack.Item.ArtistName)
+                while not MyTrack.EOF:
+                    if accessible:
+                        if isfile(MyTrack.Item.Path):
+                            self.MM.Player.PlaylistAddTrack(MyTrack.Item)
+                            n+=1
+                    else:
+                        self.MM.Player.PlaylistAddTrack(MyTrack.Item)
+                        n+=1
+                    MyTrack.Next()
                 if repeat<2:
                     self.MM.Player.isRepeat=bool(repeat)
                 if crossfade<2:
@@ -446,95 +512,63 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                 if shuffle<2:
                     self.MM.Player.isShuffle=bool(shuffle)
                 self.MM.Player.Play()
-        return n,Total
-        
-    def GetStatistics(self):
-        tracks = self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Songs").ValueByIndex(0)
-        albums = self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Albums").ValueByIndex(0)
-        #artists = self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Artists").ValueByIndex(0)
-        #playlists = self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Playlists").ValueByIndex(0)
-        return tracks,albums #,artists,playlists
-        
-    def Jubox(self,ID,accessible,repeat,shuffle,crossfade):
-        sql = 'IDAlbum="%s"' % ID
-        res = None
-        Total=self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Songs WHERE "+sql).ValueByIndex(0)
-        if int(Total) > 0:
-            self.MM.Player.Stop()
-            self.MM.Player.PlaylistClear()
-            n=0
-            MyTrack = self.MM.Database.QuerySongs(sql)
-            res = (ID,MyTrack.Item.AlbumName,MyTrack.Item.ArtistName)
-            while not MyTrack.EOF:
-                if accessible:
-                    if isfile(MyTrack.Item.Path):
-                        self.MM.Player.PlaylistAddTrack(MyTrack.Item)
-                        n+=1
-                else:
-                    self.MM.Player.PlaylistAddTrack(MyTrack.Item)
-                    n+=1
-                MyTrack.Next()
-            if repeat<2:
-                self.MM.Player.isRepeat=bool(repeat)
-            if crossfade<2:
-                self.MM.Player.isCrossfade=bool(crossfade)
-            if shuffle<2:
-                self.MM.Player.isShuffle=bool(shuffle)
-            self.MM.Player.Play()
-        return res, Total
+            return res, Total
 
     def SongJubox(self,ID,accessible):
-        sql = 'ID="%s"' % ID
-        res = None
-        Total=self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Songs WHERE "+sql).ValueByIndex(0)
-        if int(Total) > 0:
-            n=0
-            MyTrack = self.MM.Database.QuerySongs(sql)
-            res = (ID,MyTrack.Item.AlbumName,MyTrack.Item.ArtistName)
-            while not MyTrack.EOF:
-                if accessible:
-                    if isfile(MyTrack.Item.Path):
+        if self.isRunning():
+            sql = 'ID="%s"' % ID
+            res = None
+            Total=self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Songs WHERE "+sql).ValueByIndex(0)
+            if int(Total) > 0:
+                n=0
+                MyTrack = self.MM.Database.QuerySongs(sql)
+                res = (ID,MyTrack.Item.AlbumName,MyTrack.Item.ArtistName)
+                while not MyTrack.EOF:
+                    if accessible:
+                        if isfile(MyTrack.Item.Path):
+                            self.MM.Player.Stop()
+                            self.MM.Player.PlaylistClear()
+                            self.MM.Player.PlaylistAddTrack(MyTrack.Item)
+                            self.MM.Player.Play()
+                            n+=1
+                    else:
                         self.MM.Player.Stop()
                         self.MM.Player.PlaylistClear()
                         self.MM.Player.PlaylistAddTrack(MyTrack.Item)
                         self.MM.Player.Play()
                         n+=1
-                else:
-                    self.MM.Player.Stop()
-                    self.MM.Player.PlaylistClear()
-                    self.MM.Player.PlaylistAddTrack(MyTrack.Item)
-                    self.MM.Player.Play()
-                    n+=1
-                MyTrack.Next()
-        return res, Total
+                    MyTrack.Next()
+            return res, Total
 
     def ExportAlbumList(self,filePath):
-        flag = True
-        try:
-            albums=self.MM.Database.OpenSQL("SELECT ID,Artist,Album FROM Albums")   
-            file = codecs.open(filePath,encoding='utf-8', mode='w',errors='replace')
-            while not albums.EOF:
-                file.write('\t'.join((str(albums.ValueByIndex(0)),albums.ValueByIndex(2),albums.ValueByIndex(1))))#Structure = ID, Artist, Album
-                file.write('\r\n')
-                albums.Next()
-            file.close()
-        except:
-            flag = False
-        return flag
+        if self.isRunning():
+            flag = True
+            try:
+                albums=self.MM.Database.OpenSQL("SELECT ID,Artist,Album FROM Albums")   
+                file = codecs.open(filePath,encoding='utf-8', mode='w',errors='replace')
+                while not albums.EOF:
+                    file.write('\t'.join((str(albums.ValueByIndex(0)),albums.ValueByIndex(2),albums.ValueByIndex(1))))#Structure = ID, Artist, Album
+                    file.write('\r\n')
+                    albums.Next()
+                file.close()
+            except:
+                flag = False
+            return flag
                 
     def ExportSongList(self,filePath):
-        flag = True
-        try:
-            songs=self.MM.Database.QuerySongs("")   
-            file = codecs.open(filePath,encoding='utf-8', mode='w',errors='replace')
-            while not songs.EOF:
-                file.write('\t'.join((str(songs.Item.ID),songs.Item.Title,songs.Item.ArtistName)))
-                file.write('\r\n')
-                songs.Next()
-            file.close()
-        except:
-            flag = False
-        return flag
+        if self.isRunning():
+            flag = True
+            try:
+                songs=self.MM.Database.QuerySongs("")   
+                file = codecs.open(filePath,encoding='utf-8', mode='w',errors='replace')
+                while not songs.EOF:
+                    file.write('\t'.join((str(songs.Item.ID),songs.Item.Title,songs.Item.ArtistName)))
+                    file.write('\r\n')
+                    songs.Next()
+                file.close()
+            except:
+                flag = False
+            return flag
 #====================================================================
 
 class Text:
@@ -756,6 +790,7 @@ class MediaMonkey(eg.PluginBase):
         group.AddAction(GetClassificationInfo)
         group.AddAction(GetTechnicalSongInfo)
         group.AddAction(GetUniversal)
+
 
     def __start__(self):
         self.volume=None
