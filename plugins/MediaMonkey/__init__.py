@@ -18,13 +18,13 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2009-10-08 12:38
+#Last change: 2009-10-11 18:18
 
 ur'''<rst>
 Adds support functions to control MediaMonkey_.
 
 **Note:**
- To make functional event triggering from MediaMonkey_, you must install
+ To trigger events from MediaMonkey_, you must install
  "EventGhost.vbs" file to *MediaMonkey/Scripts/Auto* folder.
 
 .. _MediaMonkey: http://www.MediaMonkey.com/ 
@@ -44,7 +44,7 @@ from functools import partial
 eg.RegisterPlugin(
     name = "MediaMonkey",
     author = "Pako",
-    version = "0.2.1",
+    version = "0.2.2",
     kind = "program",
     createMacrosOnAdd = True,
     description = __doc__,
@@ -573,22 +573,22 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
 
 class Text:
     errorNoWindow = "Couldn't find MediaMonkey window"
-    errorConnect = "MediaMonkey is not running or connected"
+    errorConnect = "MediaMonkey is not running or not connected"
     mainGrpName = "Main control of MediaMonkey"
-    mainGrpDescr = "Here you find actions for main control of MediaMonkey."
+    mainGrpDescr = "Actions for main control of MediaMonkey."
     levelGrpName = "Another control of MediaMonkey"
     levelGrpDescr = (
-        "Here you find further actions for control of MediaMonkey"
+        "More actions for control of MediaMonkey"
         " (volume, balance, seek)."
     )
-    extrGrpName = "Writing to database MM"
+    extrGrpName = "Writing to MM database"
     extrGrpDescr = (
-        "Here is action for writing some one parameters to database MediaMonkey."
+        "Actions for writing various parameters to MediaMonkey's database."
     )
     infoGrpName = "Information retrieval"
     infoGrpDescr = (
-        "Here you find actions for information retrieval"
-        " from MediaMonkey."
+        "Retrieve information about the MM player settings and"
+        " information about songs in the MM playlist."
     )
     labelsA = (
         'ID     ',
@@ -602,12 +602,12 @@ class Text:
     )
     close = "Close"
     popup = "Play now"
-    sepLabel = 'Separator character or string:'
+    sepLabel = 'Character or string to use as delimiter:'
     filepath = "File path"
     filename = "File name"
     
-    sepToolTip = '''Optionally, here you can set your own character
-or string to be used as a separator.
+    sepToolTip = '''Optionally, enter the character
+or string to be used as a delimiter (separator), between items.
 Default is to use the character "\\n" (new line).'''
 
     withoutWaiting = "Call without waiting !"
@@ -616,9 +616,9 @@ Default is to use the character "\\n" (new line).'''
         "Without waiting",
         "With waiting"
     )
-    waitToolTip = '''MediaMonkey is able after perform of this action
-to announce the result. You can choose, whether
-EventGhost will wait for the result, or not.'''
+    waitToolTip = '''MediaMonkey can return information about the
+results of the query (i.e. number of tracks found will be stored in {eg.result}).
+Choose whether EventGhost will wait for the result, or not.'''
     
     verboseON = "With waiting, result verbose"
     verboseOFF = "With waiting, result numerical"
@@ -626,11 +626,10 @@ EventGhost will wait for the result, or not.'''
     shuffle = "Shuffle tracks"
     crossfade = "Crossfade"
     accessible = "Load only accessible tracks (low speed !)"
-    random = "Order by random (low speed !)"
-    randomToolTip = '''Disadvantage: Low speed
-Advantage:   As opposed to the option "%s"
-it is possible to find information about the previous or next track
-(the actions "Get Basic Song Info Of ... Track")'''
+    random = "Order by random"
+    randomToolTip = '''(True Shuffle)  Shuffles the playlist (like cards) before starting playback.
+This allows us to see what song will play next, and what played previously.
+Whereas selecting the "%s" checkbox will cause the player to jump randomly through a playlist.'''
 
     SongTableFields = (
         "Album",
@@ -864,7 +863,7 @@ class Start(eg.ActionBase):
 
 class Exit(eg.ActionBase):
     name = "Exit/Disconnect MediaMonkey"
-    description = "Exit or Disconnect MediaMonkey."
+    description = "Disconnect MediaMonkey, with the option to close it."
     
     def __call__(self,choice=True):
         self.plugin.StopThread()
@@ -898,7 +897,7 @@ class Play(eg.ActionBase):
 
 class TogglePlay(eg.ActionBase):
     name = "Toggle Play"
-    description = "Toggles between play and pause of MediaMonkey."
+    description = "Toggles between play and pause."
 
     def __call__(self):
         if  not self.plugin.GetValue('isPlaying'):
@@ -924,7 +923,7 @@ class DiscretePause(eg.ActionBase):
 
 class Stop(eg.ActionBase):
     name = "Stop"
-    description = "Simulate a press on the stop button."
+    description = "Stop MediaMonkey Playback."
 
     def __call__(self):
         return self.plugin.SendCommand('Stop')
@@ -932,7 +931,7 @@ class Stop(eg.ActionBase):
 
 class Next(eg.ActionBase):
     name = "Next"
-    description = "Next."
+    description = "Play next track."
 
     def __call__(self):
         self.plugin.SendCommand('Next')
@@ -940,7 +939,7 @@ class Next(eg.ActionBase):
 
 class Previous(eg.ActionBase):
     name = "Previous"
-    description = "Previous."
+    description = "Play previous track."
 
     def __call__(self):
         if not self.plugin.workerThread:
@@ -951,7 +950,7 @@ class Previous(eg.ActionBase):
 
 class ToggleMute(eg.ActionBase):
     name = "Toggle Mute"
-    description = "Toggle Mute."
+    description = "Toggle MediaMonkey mute on and off."
 
     def __call__(self):
         if not self.plugin.muted:
@@ -965,7 +964,7 @@ class ToggleMute(eg.ActionBase):
 
 class SetVolume(eg.ActionBase):
     name = "Set Volume Level"
-    description = "Sets the volume to a percentage (%)."
+    description = "Sets the volume to a percentage (%) from 0 to 100."
         
     def __call__(self, volume=50.00):
         self.plugin.SetValue('Volume',volume/100)
@@ -996,7 +995,7 @@ class SetVolume(eg.ActionBase):
 
 class VolumeUp(eg.ActionBase):
     name = "Volume up "
-    description = "Volume up x%."
+    description = "Increase volume by x%."
 
     def __call__(self, step=10.0):
         if step>0:
@@ -1027,7 +1026,7 @@ class VolumeUp(eg.ActionBase):
 
 class VolumeDown(eg.ActionBase):
     name = "Volume down "
-    description = "Volume down x%."
+    description = "Decrease volume by x%."
 
     def __call__(self, step=-10.0):
         volume=self.plugin.GetValue('Volume')
@@ -1092,8 +1091,8 @@ class SetBalance(eg.ActionBase):
 #====================================================================
 
 class SetShuffle(eg.ActionBase):
-    name = "Set Shuffle tracks"
-    description = "Sets the shuffle tracks."
+    name = "Set shuffle tracks"
+    description = "Set shuffle tracks mode to on or off."
 
     def __call__(self, switch=0):
         if switch==0: #
@@ -1102,7 +1101,7 @@ class SetShuffle(eg.ActionBase):
             self.plugin.SetValue('isShuffle',False)
 
     def GetLabel(self, switch):
-        return "Set Shuffle tracks "+("ON" if switch==0 else "OFF")
+        return "Set shuffle tracks "+("ON" if switch==0 else "OFF")
 
     def Configure(self, switch=0):
         text=Text
@@ -1120,14 +1119,14 @@ class SetShuffle(eg.ActionBase):
             panel.SetResult(radioBox.GetSelection(),)
 
     class text:
-        radiobox = "Set Shuffle tracks to state ..."
+        radiobox = "Set shuffle tracks to state ..."
         ShuffleON = "ON"
         ShuffleOFF = "OFF"
 #====================================================================
 
 class SetRepeat(eg.ActionBase):
-    name = "Set Continous playback"
-    description = "Sets the continous playback."
+    name = "Set continous playback"
+    description = "Turn continuous mode on or off"
 
     def __call__(self, switch=0):
         if switch==0: #
@@ -1136,7 +1135,7 @@ class SetRepeat(eg.ActionBase):
             self.plugin.SetValue('isRepeat',False)
 
     def GetLabel(self, switch):
-        return "Set Continous playback "+("ON" if switch==0 else "OFF")
+        return "Set continous playback "+("ON" if switch==0 else "OFF")
 
     def Configure(self, switch=0):
         text=Text
@@ -1154,14 +1153,14 @@ class SetRepeat(eg.ActionBase):
             panel.SetResult(radioBox.GetSelection(),)
 
     class text:
-        radiobox = "Set Continous playback to state ..."
+        radiobox = "Set continous playback to state ..."
         RepeatON = "ON"
         RepeatOFF = "OFF"
 #====================================================================
 
 class SetAutoDJ(eg.ActionBase):
     name = "Set AutoDJ"
-    description = "Sets the AutoDJ."
+    description = "Turn the AutoDJ on or off."
     
     def __call__(self, switch=0):
         if switch==0: #
@@ -1195,7 +1194,7 @@ class SetAutoDJ(eg.ActionBase):
 
 class SetCrossfade(eg.ActionBase):
     name = "Set Crossfade"
-    description = "Sets the crossfade."
+    description = "Sets the crossfade to on or off."
 
     def __call__(self, switch=0):
         if switch==0: #
@@ -1229,7 +1228,7 @@ class SetCrossfade(eg.ActionBase):
 
 class BalanceRight(eg.ActionBase):
     name = "Balance Right x%"
-    description = "Balance Right x%."
+    description = "Shift balance to the right x%."
 
     def __call__(self, step=10.0):
         if step>0:
@@ -1265,7 +1264,7 @@ class BalanceRight(eg.ActionBase):
 
 class BalanceLeft(eg.ActionBase):
     name = "Balance Left x%"
-    description = "Balance Left x%."
+    description = "Shift balance to the left x%."
 
     def __call__(self, step=10.0):
         if step>0:
@@ -1393,16 +1392,22 @@ class GetSomeInfo(eg.ActionBase):
 
 class GetStatus(eg.ActionBase):
     name = "Get Status"
-    description = "Get Status (return string Playing, Paused or Stoped)."
+    description = "Get Player Status (returns string: Playing, Paused or Stopped)."
+    
     def __call__(self):
         playing=self.plugin.GetValue('isPlaying')
         paused=self.plugin.GetValue('isPaused')
         if not playing:
-            return "Stoped"
+            return self.text.stopped
         elif playing and not paused:
-            return "Playing"
+            return self.text.playing
         elif playing and paused:
-            return "Paused"
+            return self.text.paused
+            
+    class text():
+        playing = "Playing"
+        paused = "Paused"
+        stopped = "Stopped"
 #====================================================================
 
 class GetSongInfo(eg.ActionBase):
@@ -1567,8 +1572,8 @@ class GetSongInfo(eg.ActionBase):
 #====================================================================
 
 class GetDetailSongInfo(eg.ActionBase):
-    name = "Get detail song info"
-    description = "Get detail song info."
+    name = "Get detailed song info"
+    description = "Get detailed information about the currently playing song."
 
     def __call__(self, arrayInfo, sep=''):
         SongData,ix = self.plugin.GetSongData(0)
@@ -1684,7 +1689,7 @@ class GetDetailSongInfo(eg.ActionBase):
 
 class GetClassificationInfo(eg.ActionBase):
     name = "Get classification song info"
-    description = "Get classification song info."
+    description = "Get classification song information about the currently playing song."
 
     def __call__(self, arrayInfo, sep=''):
         SongData,ix = self.plugin.GetSongData(0)
@@ -1789,7 +1794,7 @@ class GetClassificationInfo(eg.ActionBase):
 
 class GetTechnicalSongInfo(eg.ActionBase):
     name = "Get technical song info"
-    description = "Get technical song info."
+    description = "Get technical information about the currently playing song. (song length, bitrate, etc.)"
 
     def __call__(self, arrayInfo, sep=''):
         SongData,ix = self.plugin.GetSongData(0)
@@ -1918,7 +1923,7 @@ class GetTechnicalSongInfo(eg.ActionBase):
 
 class GetUniversal(eg.ActionBase):
     name = "Get Universal"
-    description = "Get Universal."
+    description = "Get any one piece of information about the currently playing song."
 
     def __call__(self, field):
         SongData,ix = self.plugin.GetSongData(0)
@@ -1951,8 +1956,8 @@ class GetUniversal(eg.ActionBase):
 #====================================================================
 
 class WritingToMM(eg.ActionBase):
-    name = "Writing to database MM"
-    description = "Writing some one parameters to database MediaMonkey."
+    name = "Write to MM database"
+    description = "Write specific tags (mood etc) to currently playing song."
 
     def __init__(self):
         text=self.text
@@ -2160,8 +2165,8 @@ class LoadPlaylist(eg.ActionBase):
 #====================================================================
 
 class AddCurrentSongToPlaylist(eg.ActionBase):
-    name = "Add current playing song to Playlist"
-    description = "Adds current playing song to Playlist."
+    name = "Add currently playing song to playlist"
+    description = "Adds the currently playing song to a specific playlist."
 
     def __call__(self, plString, skip, verbose):
         if not self.plugin.workerThread:
@@ -2172,7 +2177,7 @@ class AddCurrentSongToPlaylist(eg.ActionBase):
             plString,
             skip
         )
-        if verbres < 2:    
+        if verbose < 2:    
             res = self.plugin.workerThread.CallWait(partial(*args),60)
             verbres = eval("self.text.res"+str(res))
             return res if verbose==1 else verbres % plString
@@ -2215,14 +2220,14 @@ class AddCurrentSongToPlaylist(eg.ActionBase):
         skip = "Skip to next track"
         radiobox = "Result mode"
         res0 = "Track added to playlist %s"
-        res1 = "Track already exist in playlist %s"
-        res2 = "Playlist %s not exist"
+        res1 = "Track already exists in playlist %s"
+        res2 = "Playlist %s does not exist"
         forToolTip = "for case"
 #====================================================================
 
 class RemoveCurrentSongFromPlaylist(eg.ActionBase):
     name = "Remove current playing song from Playlist"
-    description = "Remove current playing song from Playlist."
+    description = "Remove the currently playing song from a specific playlist."
 
     def __call__(self, plString, skip, now_pl, verbose):
         if not self.plugin.workerThread:
@@ -2283,14 +2288,14 @@ class RemoveCurrentSongFromPlaylist(eg.ActionBase):
         now_pl='Remove track from "Now playing" window too'
         radiobox = "Result mode"
         res0 = "Track removed from playlist %s"
-        res1 = "Track not exist in playlist %s"
-        res2 = "Playlist %s not exist"
+        res1 = "Track does not exist in playlist %s"
+        res2 = "Playlist %s does not exist"
         forToolTip = "for case"
 #====================================================================
 
 class RemoveCurrentSongFromNowPlaying(eg.ActionBase):
-    name = "Remove current playing song from Now playing window"
-    description = "Remove current playing song from Now playing window."
+    name = "Remove currently playing song from Now playing window"
+    description = "Remove the currently playing song from Now playing window."
 
     def __call__(self, skip, verbose):
         if not self.plugin.workerThread:
@@ -2949,7 +2954,7 @@ class LoadPlaylistByFilter(eg.ActionBase):
         greatOrEqual = "is greater than or equal to"
         less = "is less than"
         lowerOrEqual = "is less than or equal to"
-        notStartsWith = "not starts with"
+        notStartsWith = "does not start with"
         startsWith = "starts with"
         endsWith = "ends with"
         notEndsWith = "does not end with"
@@ -2979,18 +2984,18 @@ class LoadPlaylistByFilter(eg.ActionBase):
 class LoadPlaylistBySql(eg.ActionBase):
     ur'''<rst>**Loads a MediaMonkey playlist defined by SQL query.** 
 
-This action is for advanced users only. Here you can write directly 
-a SQL query and using it to select specific songs from **MediaMonkey**'s 
-database . Into the text field is usually typed only the *WHERE* clause, 
-but you can also add *ORDER BY* clause and *LIMIT* clause 
+This action is for advanced users only. Here you can write your own SQL
+query and use it to select specific songs from **MediaMonkey**'s 
+database . You need only enter the *WHERE* clause into the text field, 
+but you can also add an *ORDER BY* clause and *LIMIT* clause 
 (I tried the OFFSET clause too, but without success).
 
 The simplest query might look like this: **Artist = "Beatles"**. 
 
 **MediaMonkey**'s database is based on **SQLite**. 
 Its documentation can be found at http://www.sqlite.org/docs.html . 
-If you are beginner to SQL, you might get some help from a SQL tutorial. 
-One hilarious is for example at http://www.firstsql.com/tutor2.htm . 
+If you are new to SQL, you might get some help from a SQL tutorial. 
+A good example can be found at http://www.firstsql.com/tutor2.htm . 
 Pay particular attention to the `WHERE Clause`_ .
 
 .. _`WHERE Clause`: http://www.firstsql.com/tutor2.htm#where
@@ -3132,18 +3137,18 @@ Pay particular attention to the `WHERE Clause`_ .
         limit1 = "Select only the first"
         limit2 = "entry"
         head = "Condition part of SQL statement (WHERE clause):"
-        cols = "Insert field of Songs table:"
+        cols = "Insert typical field from MM Songs table:"
 #====================================================================
 
 class Jukebox(eg.ActionBase):
     u'''<rst>**Album jukebox**.
 
-Thanks to this action, can your PC function as a jukebox. In order to function 
-properly, the event which triggering this action, must be carrying a payload. 
+Thanks to this action, your PC can function like a jukebox. In order to work 
+properly, the event which triggers this action, must be carrying a payload. 
 If this payload is a valid ID of an album, MediaMonkey will immediately start 
 playing this album. 
 
-For triggering an event with a payload you can use the plugin **Multitap** 
+One way to trigger an event with a payload is to use the plugin **Multitap** 
 (Numpad mode).'''
 
     name = "Album jukebox"
@@ -3282,7 +3287,7 @@ For triggering an event with a payload you can use the plugin **Multitap**
             return self.text.noAlbum % ID
             
     class text():
-        noAlbum = 'No album with ID %s'
+        noAlbum = 'No album found with ID %s'
         saveButton = "Export album list to file"
         openButton = "Open album list file"
         saveTitle = "Save file as ..."
@@ -3298,12 +3303,12 @@ For triggering an event with a payload you can use the plugin **Multitap**
 class SongJukebox(eg.ActionBase):
     u'''<rst>**Song jukebox**.
 
-Thanks to this action, can your PC function as a jukebox. In order to function 
-properly, the event which triggering this action, must be carrying a payload. 
-If this payload is a valid ID of an song, MediaMonkey will immediately start 
-playing this song. 
+Thanks to this action, your PC can function like a jukebox. In order to work 
+properly, the event which triggers this action, must be carrying a payload. 
+If this payload is a valid ID of a song, MediaMonkey will immediately start 
+playing the song. 
 
-For triggering an event with a payload you can use the plugin **Multitap** 
+One way to trigger an event with a payload is to use the plugin **Multitap** 
 (Numpad mode).'''
 
     name = "Song jukebox"
@@ -3436,9 +3441,9 @@ class SendKeys(eg.ActionBase):
 Some features of MediaMonkey (for example executing a script) can be controlled 
 from another program only using the hotkeys . On the menu 
 *Tools - Options - General - Hotkeys*, set an appropriate hotkeys 
-(no need to be global !) and here in the text box *"Keystroke to sending"* 
+(you don't need to set the hotkeys as global !) and then in the text box *"Keystroke to send"* 
 type the same (for example *Shift+Alt+E*). In the text box *"Name of hotkey"* 
-you can (for better overview) write appropriate descriptions.'''
+you can label the keystrokes with your own description.'''
 
     name = "Send keys"
     description = __doc__
@@ -3474,7 +3479,7 @@ you can (for better overview) write appropriate descriptions.'''
         
     class Text():
         nameLabel = "Name of hotkey:"
-        keysLabel = "Keystroke to sending:"
+        keysLabel = "Keystroke to send (e.g. Shift+Alt+E):"
        
 #===============================================================================
 
