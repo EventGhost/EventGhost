@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# Last change: 2009-09-24 08:15
+# Last change: 2009-10-15 10:11
 
 u"""<rst>
 Plugin for `Igor \u010Ce\u0161ko's UDP IR`__ receiver.
@@ -33,12 +33,14 @@ __ http://www.cesko.host.sk/IgorPlugUDP/IgorPlug-UDP%20%28AVR%29_eng.htm
 import eg
 from threading import Thread, Event
 from socket import socket, AF_INET, SOCK_DGRAM, SOL_SOCKET, SO_REUSEADDR
-
+from socket import error as socket_error
+import asyncore
+from locale import getdefaultlocale as localeEncoding
 
 eg.RegisterPlugin(
     name = "IgorPlug-UDP",
     author = "Pako/Bitmonster",
-    version = "0.1.0",
+    version = "0.1.1",
     kind = "remote",
     description = __doc__,
     icon = (
@@ -72,6 +74,60 @@ class Text:
     remIP = "IgorPlug-UDP IP address:"
     locPort = "Local UDP port:"
 
+class udpReceiver(asyncore.dispatcher):
+
+    def __init__(self, address, port, plugin):
+        self.irCommand = []
+        self.remAddress=address
+        self.plugin=plugin
+        asyncore.dispatcher.__init__(self)
+        self.create_socket(AF_INET, SOCK_DGRAM)
+        eg.RestartAsyncore()
+        self.bind(('', port))
+        
+    def writable(self):
+        return False  # we don't have anything to send !
+
+    def handle_connect(self):
+        pass
+        
+    def handle_close(self):
+        self.close()
+ 
+    def handle_expt(self):
+        self.close()
+        
+    def handle_read(self):
+        payload, address = self.socket.recvfrom(128)
+        if self.remAddress == address[0]:
+            if len(payload)==44:
+                weight = 1
+                byte = 0
+                flag = True
+                for i in range(4,44,5):
+                    if payload[i] == '\x80':
+                        byte += weight
+                    elif payload[i:i+5] == 5*'\x00':
+                        pass
+                    else:
+                        flag = False
+                        break
+                    weight *= 2
+                if flag:
+                    self.irCommand.append(chr(byte))
+                    if byte == 0xFF:
+                        datagram = ''.join(self.irCommand)
+                        if len(datagram) > 4:
+                            if datagram[:4]==4*"\x00":
+                                datagram = datagram[4:]
+                            if len(datagram) > 4 and ord(datagram[0]) == len(datagram)-4:
+                                self.plugin.irDecoder.Decode(datagram[3:],len(datagram)-3)
+                        self.irCommand = []
+                else:
+                    self.plugin.TriggerEvent('DataError')
+                    self.irCommand = []
+
+
 class IgorPlugUDP(eg.IrDecoderPlugin):
     canMultiLoad = True
     text = Text
@@ -80,63 +136,16 @@ class IgorPlugUDP(eg.IrDecoderPlugin):
         eg.IrDecoderPlugin.__init__(self, 51.2)
 
     def __start__(self, prefix="IgorUDP", locPort=6668, remAddress="192.168.1.7"):
-        self.irCommand = []
-        self.threadFlag = Event()
         self.info.eventPrefix = prefix
-        self.locPort = locPort
-        self.remAddress = remAddress
-        self.receiveThread = Thread(
-            target=self.ReceiveThread, 
-            name="IgorUDP_Thread",
-            args=(self.threadFlag, )
-        )
-        self.receiveThread.start()
-
-
-    def ReceiveThread(self, threadFlag):
-        self.socket = socket(AF_INET, SOCK_DGRAM)
-        self.socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-        self.socket.bind(('', self.locPort))
-
-        decode = self.irDecoder.Decode
-        while not threadFlag.isSet():
-            payload, address = self.socket.recvfrom(128)
-            if self.remAddress == address[0]:
-                if len(payload)==44:
-                    weight = 1
-                    byte = 0
-                    flag = True
-                    for i in range(4,44,5):
-                        if payload[i] == '\x80':
-                            byte += weight
-                        elif payload[i:i+5] == 5*'\x00':
-                            pass
-                        else:
-                            flag = False
-                            break
-                        weight *= 2
-                    if flag:
-                        self.irCommand.append(chr(byte))
-                        if byte == 0xFF:
-                            datagram = ''.join(self.irCommand)
-                            if len(datagram) > 4:
-                                if datagram[:4]==4*"\x00":
-                                    datagram = datagram[4:]
-                                if len(datagram) > 4 and ord(datagram[0]) == len(datagram)-4:
-                                    decode(datagram[3:],len(datagram)-3)
-                            self.irCommand = []
-                    else:
-                        self.TriggerEvent('DataError')
-                        self.irCommand = []
-            else:
-                threadFlag.wait(0.01)
-
+        try:
+            self.receiver = udpReceiver(remAddress, locPort, self)
+        except socket_error, exc:
+            raise self.Exception(exc[1].decode(localeEncoding()[1]))
         
     def __stop__(self):
-        self.threadFlag.set()
-        self.receiveThread.join(2.0)
-        self.socket.close()
-        self.socket = None
+        if self.receiver:
+            self.receiver.close()
+        self.receiver = None
 
     def __close__(self):
         self.irDecoder.Close()
