@@ -18,7 +18,7 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2009-10-17 08:47
+#Last change: 2009-10-17 19:15
 
 u"""<rst>
 Allows you to create custom On Screen Menu.
@@ -37,7 +37,7 @@ as possible in the configuration tree.
 eg.RegisterPlugin(
     name = "OS Menu",
     author = "Pako",
-    version = "0.1.9",
+    version = "0.1.10",
     kind = "other",
     description = __doc__,
     createMacrosOnAdd = True,
@@ -129,8 +129,7 @@ class ShowMenu(eg.ActionClass):
                 colour=colourData.GetColour().Get()
                 self.SetValue(colour)
                 listBoxCtrl = event.GetEventObject().GetParent().GetSizer().\
-                    GetChildren()[0].GetSizer().GetChildren()[1].GetSizer().\
-                    GetChildren()[1].GetWindow()
+                    GetChildren()[1].GetSizer().GetChildren()[1].GetWindow()
                 btnId = event.GetId()
                 if btnId == 1:
                     listBoxCtrl.SetBackgroundColour(colour)
