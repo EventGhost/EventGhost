@@ -1,6 +1,6 @@
 ﻿# plugins/OSM/__init__.py
 #
-# Copyright (C)  2008 Pako  (lubos.ruckl@quick.cz)
+# Copyright (C)  2009 Pako  (lubos.ruckl@quick.cz)
 #
 # This file is a plugin for EventGhost.
 #
@@ -18,11 +18,11 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2009-06-08 15:48
+#Last change: 2009-10-17 08:47
 
-"""
-Allows you to create custom **On Screen Menu**.
-
+u"""<rst>
+Allows you to create custom On Screen Menu.
+        
 Plugin OSM has built-in a function **"Stop processing this event"**,
 if the menu is shown on the screen. This facilitates
 the use of OSM in your configuration. You can use to control
@@ -30,12 +30,9 @@ the menu the same events (the same remote buttons)
 as elsewhere in the configuration, without having
 to explicitly use the **"Stop processing this event"**,
 **"Disable an item"** or **"Exclusive enable a folder / macro"**.
-*Only it is necessary to place the folder with the OSM as high
-as possible in the configuration tree.*
+Only it is necessary to place the folder with the OSM as high
+as possible in the configuration tree.
 """
-
-
-import eg
 
 eg.RegisterPlugin(
     name = "OS Menu",
@@ -43,7 +40,7 @@ eg.RegisterPlugin(
     version = "0.1.9",
     kind = "other",
     guid = "{D4DA1CE6-ABC8-494B-8747-AC785CD37542}",
-    description =  __doc__,
+    description = __doc__,
     createMacrosOnAdd = True,
     url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1051",
     icon = (
@@ -74,11 +71,9 @@ eg.RegisterPlugin(
     ),
 )
 
-
 from threading import Timer
 from win32api import GetSystemMetrics
 from eg.WinApi.Dynamic import CreateEvent, SetEvent
-
 
 #===============================================================================
 #cls types for ACTIONS list :
@@ -95,6 +90,9 @@ class ShowMenu(eg.ActionClass):
         menuFont = 'Menu font:'
         txtColour = 'Text colour'
         background = 'Background colour'
+        prefixLabel = 'Default event prefix:'
+        toolTip_1 = 'If the string contains a dot, will be first part used as\
+                    a event prefix (instead default prefix)'
 #-------------------------------------------------------------------------------
 
     class MenuColourSelectButton(wx.BitmapButton):
@@ -250,9 +248,10 @@ class ShowMenu(eg.ActionClass):
         fore,
         back,
         fontInfo,
+        prefix
     ):
-        self.plugin.choices = choices
         if not self.plugin.menuDlg:
+            self.plugin.choices = choices
             self.plugin.menuDlg = Menu()
             self.event = CreateEvent(None, 0, 0, None)
             wx.CallAfter(self.plugin.menuDlg.ShowMenu,
@@ -261,7 +260,8 @@ class ShowMenu(eg.ActionClass):
                 fontInfo,
                 False,
                 self.plugin,
-                self.event
+                self.event,
+                prefix
             )
             eg.actionThread.WaitOnEvent(self.event)
 #-------------------------------------------------------------------------------
@@ -272,6 +272,7 @@ class ShowMenu(eg.ActionClass):
         fore,
         back,
         fontInfo,
+        prefix
     ):
         res=self.text.showMenu+' '
         for n in range(0,min(3,len(choices))):
@@ -286,7 +287,8 @@ class ShowMenu(eg.ActionClass):
         choices=[],
         fore = (0, 0, 0),
         back = (255, 255, 255),
-        fontInfo = None
+        fontInfo = None,
+        prefix = 'OSM'
     ):
         self.choices = choices[:]
         self.fore = fore
@@ -297,9 +299,8 @@ class ShowMenu(eg.ActionClass):
         w1 = panel.GetTextExtent(self.text.label)[0]
         w2 = panel.GetTextExtent(self.text.evtString)[0]
         w = max((w1,w2))
-        mainSizer=wx.BoxSizer(wx.VERTICAL)
+        mainSizer = panel.sizer
         topSizer=wx.BoxSizer(wx.HORIZONTAL)
-        bottomSizer=wx.FlexGridSizer(2,2,hgap=5,vgap=5)
         topMiddleSizer=wx.BoxSizer(wx.VERTICAL)
         topRightSizer=wx.BoxSizer(wx.VERTICAL)
         previewLbl=wx.StaticText(panel, -1, self.text.menuPreview)
@@ -308,8 +309,9 @@ class ShowMenu(eg.ActionClass):
         previewLblSizer.Add(previewLbl)
         mainSizer.Add(previewLblSizer)
         mainSizer.Add(topSizer,0,wx.TOP,5)
-        mainSizer.Add(bottomSizer,0,wx.TOP,16)
-        panel.sizer.Add(mainSizer)
+        bottomSizer=wx.GridBagSizer(5, 5)
+        bottomSizer.AddGrowableCol(2)
+        mainSizer.Add(bottomSizer,0,wx.TOP,6)
         listBoxCtrl=wx.ListBox(
             panel,-1,
             size=wx.Size(160,120),
@@ -332,18 +334,25 @@ class ShowMenu(eg.ActionClass):
         topSizer.Add(listBoxCtrl)
         topSizer.Add((10,1))
         topSizer.Add(topMiddleSizer)
-        topSizer.Add((50,1))
+        topSizer.Add((30,1))
         topSizer.Add(topRightSizer)
         labelLbl=wx.StaticText(panel, -1, self.text.label)
         labelCtrl=wx.TextCtrl(panel,-1,'',size=wx.Size(160,-1))
-        bottomSizer.Add(labelLbl,0,wx.TOP,3)
+        eventLbl=wx.StaticText(panel, -1, self.text.evtString)
+        eventLbl.SetToolTipString(self.text.toolTip_1)
+        eventCtrl = wx.TextCtrl(panel,-1,'',size=wx.Size(160,-1))
+        eventCtrl.SetToolTipString(self.text.toolTip_1)
+        prefixLbl=wx.StaticText(panel, -1, self.text.prefixLabel)
+        prefixCtrl = wx.TextCtrl(panel,-1,prefix,size=wx.Size(90,-1))
         labelCtrlSizer = wx.BoxSizer(wx.HORIZONTAL)
         labelCtrlSizer.Add(labelCtrl,0,wx.EXPAND)
-        bottomSizer.Add(labelCtrlSizer)
-        eventLbl=wx.StaticText(panel, -1, self.text.evtString)
-        eventCtrl = wx.TextCtrl(panel,-1,'',size=wx.Size(160,-1))
-        bottomSizer.Add(eventLbl,0,wx.TOP,3)
-        bottomSizer.Add(eventCtrl,0,wx.EXPAND)
+        bottomSizer.Add(labelLbl,(0, 0),flag = wx.TOP,border = 3)
+        bottomSizer.Add(labelCtrlSizer,(0, 1))
+        bottomSizer.Add(prefixLbl,(0, 3),flag = wx.TOP, border = 8)
+        bottomSizer.Add(eventLbl,(1, 0),flag = wx.TOP,border = 3)
+        bottomSizer.Add(eventCtrl,(1, 1),flag = wx.EXPAND)
+        bottomSizer.Add((50,1),(1, 2))
+        bottomSizer.Add(prefixCtrl,(1, 3),flag = wx.EXPAND)
         #Button UP
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_UP, wx.ART_OTHER, (16, 16))
         btnUP = wx.BitmapButton(panel, -1, bmp)
@@ -526,7 +535,8 @@ class ShowMenu(eg.ActionClass):
                     fontButton.GetValue(), 
                     True,
                     self.plugin,
-                    self.event
+                    self.event,
+                    prefixCtrl.GetValue()
                 )
                 eg.actionThread.WaitOnEvent(self.event)
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
@@ -537,6 +547,7 @@ class ShowMenu(eg.ActionClass):
             foreColourButton.GetValue(),
             backColourButton.GetValue(),
             fontButton.GetValue(),
+            prefixCtrl.GetValue()
         )
 #===============================================================================
 
@@ -560,14 +571,6 @@ class OK_Btn(eg.ActionClass):
     def __call__(self):
         if self.plugin.menuDlg:
             self.plugin.menuDlg.SendEvent()
-            eg.event.skipEvent = True
-#===============================================================================
-
-class Num_Btn(eg.ActionClass):
-
-    def __call__(self):
-        if self.plugin.menuDlg:
-            self.plugin.menuDlg.SendEventNum(self.value if self.value > 0 else 10)
             eg.event.skipEvent = True
 #===============================================================================
 
@@ -625,23 +628,11 @@ ACTIONS = (
     (MoveCursor, 'MoveUp', 'Cursor Up', 'Cursor Up.', ('0', 'max', -1)),
     (OK_Btn, 'OK_Btn', 'OK', 'OK button pressed.', None),
     (Cancel_Btn, 'Cancel_Btn', 'Cancel', 'Cancel button pressed.', None),
-    ( eg.ActionGroup, 'HotKeys', 'Numeric Hot Keys', 'Numeric Hot Keys ',(
-        (Num_Btn, 'Num_Btn_1', 'Button 1', 'Button 1 pressed.', 1),
-        (Num_Btn, 'Num_Btn_2', 'Button 2', 'Button 2 pressed.', 2),
-        (Num_Btn, 'Num_Btn_3', 'Button 3', 'Button 3 pressed.', 3),
-        (Num_Btn, 'Num_Btn_4', 'Button 4', 'Button 4 pressed.', 4),
-        (Num_Btn, 'Num_Btn_5', 'Button 5', 'Button 5 pressed.', 5),
-        (Num_Btn, 'Num_Btn_6', 'Button 6', 'Button 6 pressed.', 6),
-        (Num_Btn, 'Num_Btn_7', 'Button 7', 'Button 7 pressed.', 7),
-        (Num_Btn, 'Num_Btn_8', 'Button 8', 'Button 8 pressed.', 8),
-        (Num_Btn, 'Num_Btn_9', 'Button 9', 'Button 9 pressed.', 9),
-        (Num_Btn, 'Num_Btn_0', 'Button 0', 'Button 0 pressed.', 0),
-        )),
     (Get_Btn, 'Get_Btn', 'Get value', 'Get value of selected item.', None),
 )
 #===============================================================================
 
-class OSM(eg.PluginBase):
+class OSM(eg.PluginClass):
 
     menuDlg = None
     choices = []
@@ -668,13 +659,15 @@ class Menu(wx.Frame):
         fontInfo,
         flag,
         plugin,
-        event
+        event,
+        prefix
     ):
         self.fore    = fore
         self.back    = back
         self.plugin  = plugin
         self.choices = self.plugin.choices
         self.flag    = flag
+        self.prefix  = prefix
 
         eventChoiceCtrl=wx.ListBox(
             self,
@@ -725,16 +718,17 @@ class Menu(wx.Frame):
     def SendEvent(self, event = None):
         sel=self.GetSizer().GetChildren()[0].GetWindow().\
             GetSelection()
-        self.plugin.TriggerEvent(self.choices[sel][1])
+        evtString = self.choices[sel][1]
         self.destroyMenu()
-
-    def SendEventNum(self, num):
-        if num <= len(self.choices):
-            self.plugin.TriggerEvent(self.choices[num-1][1])
-        self.destroyMenu()
+        if '.' in evtString:
+            indx = evtString.index(".")
+            eg.TriggerEvent(evtString[indx+1:], prefix = evtString[:indx])                         
+        else:    
+            eg.TriggerEvent(evtString, prefix = self.prefix)                         
 
     def onClose(self, event):
         self.Destroy()
+        self.plugin.menuDlg = None
         
     def destroyMenu(self):
         if self.flag:
