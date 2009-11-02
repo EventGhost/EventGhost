@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 
-SUPPORTED_DVBVIEWER_VERSIONS        = '4.0.x, 4.1.x, 4.2.x '
+SUPPORTED_DVBVIEWER_VERSIONS        = '4.0.x, 4.1.x, 4.2.x, 4.3.x '
 SUPPORTED_DVBVIEWERSERVICE_VERSIONS = '1.5.0.2 ... 1.5.0.31'
 
 # This file is part of EventGhost.
@@ -94,6 +94,12 @@ This plugin supports following additional actions, which are executed via the CO
         <td>
             Add the next recording date or all recording dates to the Windows task scheduler
             (The DVBTaskScheduler can be replaced by this method)
+        </td>
+    </tr>
+    <tr>
+        <td align="right">ShowWindow</td>
+        <td>
+            Shows a OSD Window on the screen.
         </td>
     </tr>
     <tr>
@@ -662,7 +668,8 @@ ACTIONS = (
     ("ServiceHibernate",                 "Service Hibernate",                   None,  (8274,True )),
     ("ServiceShutdown",                  "Service Shutdown",                    None,  (8273,True )),
     ("ServiceWakeOnLAN",                 "Service Wake on LAN",                 None,  (8275,True )),
-    ("ServiceGetEPG",                    "Service get EPG",                     None,  (8276,True ))
+    ("ServiceGetEPG",                    "Service get EPG",                     None,  (8276,True )),
+    ("DVBSourceProperties",              "DVB Source Properties",               None,   (134,True ))
 )
 
 
@@ -791,6 +798,11 @@ class Text:
     class GetRecordingsIDs :
         name   = "Get IDs of recordings"
         active = "Get only IDs of active recordings"
+        
+        
+    class ShowWindow :
+        name     = "Shows a OSD Window on the screen."
+        windowID = "WindowID"
 
 
     class ShowInfoinTVPic :
@@ -1299,6 +1311,13 @@ class DVBViewerWorkerThread(eg.ThreadWorker):
 
 
 
+    def ShowWindow( self, windowID ) :
+        dvbviewer = self.dvbviewer
+        dvbviewer.WindowManager.ShowWindow( windowID )
+        return True
+
+
+
     @eg.LogIt
     def StopAllActiveRecordings( self ) :
         timerManager = self.dvbviewer.TimerManager
@@ -1661,6 +1680,7 @@ class DVBViewer(eg.PluginClass):
         self.AddAction(IsConnected)
         self.AddAction(UpdateEPG)
         self.AddAction(TaskScheduler)
+        self.AddAction(ShowWindow)
         self.AddAction(ShowInfoinTVPic)
         self.AddAction(DeleteInfoinTVPic)
         self.AddAction(GetSetupValue)
@@ -1818,7 +1838,7 @@ class DVBViewer(eg.PluginClass):
                     ) :
 
         if pathDVBViewer.strip() == '' :
-            pathDVBViewer = self.GetDVBViewerPath()   
+            pathDVBViewer = self.GetDVBViewerPath()
 
         if useSendMessage:
             self.SendCommand = self.SendCommandThroughSendMessage
@@ -2411,7 +2431,7 @@ class DVBViewer(eg.PluginClass):
         self.lastDisplayShort = shortDisplay
 
         if pathDVBViewer.strip() == '' :
-            pathDVBViewer = self.GetDVBViewerPath()   
+            pathDVBViewer = self.GetDVBViewerPath()
 
         enableControls = []
 
@@ -3044,6 +3064,44 @@ class SendAction( eg.ActionClass ) :
             action = actionCtrl.GetValue()
 
             panel.SetResult( action )
+        return True
+
+
+
+
+class ShowWindow( eg.ActionClass ) :
+
+    def __call__( self, windowID ) :
+
+        plugin = self.plugin
+
+        if plugin.Connect( WAIT_CHECK_START_CONNECT, lock = True ) :
+            plugin.workerThread.CallWait(
+                                        partial(
+                                            plugin.workerThread.ShowWindow,
+                                            windowID
+                                         ),
+                                         CALLWAIT_TIMEOUT
+                         )
+
+            return True
+
+        return False
+
+
+
+
+    def Configure( self, windowID = -1 ) :
+        panel = eg.ConfigPanel()
+        if windowID < 0 :
+            windowID = 0
+        windowIDCtrl = panel.SpinNumCtrl( windowID, min=0, max=999999, fractionWidth=0, integerWidth=6)
+        panel.AddLine( self.text.windowID, windowIDCtrl )
+
+        while panel.Affirmed() :
+            windowID = windowIDCtrl.GetValue()
+
+            panel.SetResult( windowID )
         return True
 
 
