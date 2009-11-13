@@ -188,6 +188,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 
     extensions_map = SimpleHTTPRequestHandler.extensions_map.copy()
     extensions_map['.ico'] = 'image/x-icon'
+    extensions_map['.manifest'] = 'text/cache-manifest'
 
 
 
