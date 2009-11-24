@@ -497,7 +497,7 @@ class SerialThread(Thread):
         # append the data to the buffer and notify waiting threads
         self.readCondition.acquire()
         self.buffer += data
-        self.readCondition.notify()
+        self.readCondition.notifyAll()
         self.readCondition.release()
 
 
