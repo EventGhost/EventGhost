@@ -921,6 +921,7 @@ class ShowPictureFrame(wx.Frame):
         )
         self.SetBackgroundColour(wx.Colour(0, 0, 0))
         self.Bind(wx.EVT_LEFT_DCLICK, self.LeftDblClick)
+        self.Bind(wx.EVT_CLOSE, self.OnClose)
         bitmap = wx.EmptyBitmap(1, 1)
         self.staticBitmap = wx.StaticBitmap(self, -1, bitmap)
         self.staticBitmap.Bind(wx.EVT_LEFT_DCLICK, self.LeftDblClick)
@@ -958,6 +959,10 @@ class ShowPictureFrame(wx.Frame):
         self.Show(False)
 
 
+    def OnClose(self, dummyEvent):
+        self.Hide()
+
+    
     def OnShowMe(self):
         self.Show()
         BringHwndToFront(self.GetHandle())
