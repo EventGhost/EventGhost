@@ -20,14 +20,17 @@ import wx
 
 class MacroSelectButton(wx.Window):
 
-    def __init__(self, parent, label, title, mesg, macro=None):
-        if macro is None:
+    def __init__(self, parent, label, title, mesg, treeLink=None):
+        if treeLink is None:
+            treeLink = eg.TreeLink(eg.currentConfigureItem)
+        self.treeLink = treeLink            
+        self.macro = treeLink.target
+        if self.macro is None:
             macroName = ""
         else:
-            macroName = macro.name
+            macroName = self.macro.name
         self.title = title
         self.mesg = mesg
-        self.macro = macro
         wx.Window.__init__(self, parent, -1)
         self.textBox = eg.StaticTextBox(self, -1, macroName, size=(200, -1))
         self.button = wx.Button(self, -1, label)
@@ -69,5 +72,6 @@ class MacroSelectButton(wx.Window):
 
 
     def GetValue(self):
-        return self.macro
+        self.treeLink.SetTarget(self.macro)
+        return self.treeLink
 

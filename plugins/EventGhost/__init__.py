@@ -307,16 +307,13 @@ class JumpIfLongPress(eg.ActionBase):
     def Configure(self, interval=2.0, link=None):
         panel = eg.ConfigPanel()
         text = self.text
-        if link is None:
-            link = eg.TreeLink(eg.currentConfigureItem)
-
         intervalCtrl = panel.SpinNumCtrl(interval)
         macroCtrl = eg.MacroSelectButton(
             panel,
             eg.text.General.choose,
             text.text4,
             text.text5,
-            link.target
+            link
         )
 
         sizer1 = eg.HBoxSizer(
@@ -331,8 +328,7 @@ class JumpIfLongPress(eg.ActionBase):
 
         panel.sizer.AddMany(((sizer1), (mySizer, 1, wx.EXPAND|wx.TOP, 5)))
         while panel.Affirmed():
-            link.SetTarget(macroCtrl.GetValue())
-            panel.SetResult(intervalCtrl.GetValue(), link)
+            panel.SetResult(intervalCtrl.GetValue(), macroCtrl.GetValue())
 
 
 
@@ -390,16 +386,13 @@ class JumpIfDoubleEvent(eg.ActionBase):
     def Configure(self, interval=0.5, link=None):
         panel = eg.ConfigPanel()
         text = self.text
-        if link is None:
-            link = eg.TreeLink(eg.currentConfigureItem)
-
         intervalCtrl = panel.SpinNumCtrl(interval)
         macroCtrl = eg.MacroSelectButton(
             panel,
             eg.text.General.choose,
             text.text4,
             text.text5,
-            link.target
+            link
         )
 
         sizer1 = eg.HBoxSizer(
@@ -414,8 +407,7 @@ class JumpIfDoubleEvent(eg.ActionBase):
 
         panel.sizer.AddMany(((sizer1), (mySizer, 1, wx.EXPAND|wx.TOP, 5)))
         while panel.Affirmed():
-            link.SetTarget(macroCtrl.GetValue())
-            panel.SetResult(intervalCtrl.GetValue(), link)
+            panel.SetResult(intervalCtrl.GetValue(), macroCtrl.GetValue())
 
 
 

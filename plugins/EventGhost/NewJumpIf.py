@@ -65,15 +65,13 @@ class NewJumpIf(eg.ActionBase):
 
     def Configure(self, link=None, kind=0, gosub=False):
         text = self.text
-        if link is None:
-            link = eg.TreeLink(eg.currentConfigureItem)
         panel = eg.ConfigPanel()
         kindCtrl = panel.Choice(kind, choices=text.choices)
         linkCtrl = panel.MacroSelectButton(
             eg.text.General.choose,
             text.mesg1,
             text.mesg2,
-            link.target
+            link
         )
         gosubCtrl = panel.CheckBox(gosub, text.text3)
 
@@ -83,6 +81,9 @@ class NewJumpIf(eg.ActionBase):
         panel.AddLine(None, gosubCtrl)
 
         while panel.Affirmed():
-            link.SetTarget(linkCtrl.GetValue())
-            panel.SetResult(link, kindCtrl.GetValue(), gosubCtrl.GetValue())
+            panel.SetResult(
+                linkCtrl.GetValue(), 
+                kindCtrl.GetValue(), 
+                gosubCtrl.GetValue()
+            )
 
