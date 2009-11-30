@@ -20,12 +20,8 @@
 # edit it yourself.
 
 import sys
-from eg.WinApi import IsWin64
 from eg.WinApi.Dynamic import *
-if IsWin64():
-    _Difxapi = WinDLL("DIFxAPI64")
-else:
-    _Difxapi = WinDLL("DIFxAPI32")
+_Difxapi = WinDLL("DIFxAPI32")
 if not hasattr(sys, "frozen"): # detect py2exe
     try:
         ctypeslib = __import__("ctypeslib.dynamic_module")
