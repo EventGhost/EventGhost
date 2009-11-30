@@ -336,7 +336,7 @@ cmdList = (
         ('R1CD8',                  '8',                                                          'CCD8',              None),
         ('R1CD9',                  '9',                                                          'CCD9',              None),
         ('R1CD0',                  '0',                                                          'CCD0',              None),
-        ('R1CD10+',                '10+',                                                        'CCD10+',            None),
+        ('R1CD10Plus',             '10+',                                                        'CCD10+',            None),
         ('R1CDDISCF',              'Disc Forward',                                               'CCDDISC.F',         None),
         ('R1CDDISCR',              'Disc Back',                                                  'CCDDISC.R',         None),
         ('R1CDDISC1',              'Disc 1',                                                     'CCDDISC1',          None),
