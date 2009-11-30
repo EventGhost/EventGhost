@@ -180,8 +180,8 @@ class Log(object):
                 )
                 if text:
                     slist.append("    %s\n" % text)
-        slist += format_exception_only(tbType, tbValue)
-
+        for line in format_exception_only(tbType, tbValue):
+            slist.append(decode(line)[0])
         error = "".join(slist)
         if source is not None:
             source = ref(source)
