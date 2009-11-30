@@ -164,7 +164,7 @@ class Fhz1000Pc(eg.PluginBase):
         dwStatus = DWORD()
         while True:
             d2xx.FT_GetModemStatus(self.ftHandle, byref(dwStatus))
-            if dwStatus.value == 48:
+            if dwStatus.value & 0xFF == 48:
                 break
             if time.clock() > maxTime:
                 self.PrintError("FHZ timeout error!")
