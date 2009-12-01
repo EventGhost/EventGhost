@@ -187,7 +187,7 @@ class Log(object):
             source = ref(source)
         self.Write(error.rstrip() + "\n", ERROR_ICON, source)
         if eg.debugLevel:
-            _oldStdErr.write(error.decode(_oldStdErr.encoding))
+            oldStdErr.write(error)
 
 
     def PrintStack(self, skip=0):
