@@ -46,6 +46,8 @@ class ResettableTimer(Thread):
 
     def Reset(self, milliseconds):
         self.lock.acquire()
+        if milliseconds is None:
+            milliseconds = INFINITE
         self.timeout = milliseconds
         SetEvent(self.event)
         self.lock.release()
