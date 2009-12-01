@@ -170,6 +170,7 @@ DIGCF_DEVICEINTERFACE = 0x00000010
 
 class HIDThread(threading.Thread):
     def __init__(self, deviceName, devicePath):
+        self.handle = None
         self.text = Text
         self.deviceName = deviceName
         self.devicePath = devicePath
@@ -198,6 +199,10 @@ class HIDThread(threading.Thread):
     def SetStopCallback(self, callback):
         self.StopCallback = callback
 
+    def Write(self, data):
+        print "Write()", data
+        if self.handle:
+            win32file.WriteFile(self.handle, data, self._overlappedRead)
 
     def run(self):
         #open file/device
@@ -215,7 +220,6 @@ class HIDThread(threading.Thread):
             eg.PrintError(self.text.errorOpen + self.deviceName)
             return
 
-        #getting data to get the right buffer size
         hidDLL =  ctypes.windll.hid
         setupapiDLL = ctypes.windll.setupapi
 
@@ -298,6 +302,7 @@ class HIDThread(threading.Thread):
 
         #initializing finished
         try:
+            self.handle = handle
             while not self.abort:
                 #try to read and wait for an event to happen
                 try:
@@ -373,6 +378,8 @@ class HIDThread(threading.Thread):
                     self.StopCallback()
                 except Exception:
                     eg.PrintTraceback()
+            
+            self.handle = None
 
 class DeviceDescription():
     def __init__(self, devicePath, vendorId, vendorString, productId, productString, versionNumber):
