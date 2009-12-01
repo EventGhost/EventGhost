@@ -53,18 +53,47 @@ import posixpath
 import threading
 import httplib
 import base64
+import time
 from BaseHTTPServer import HTTPServer
 from SimpleHTTPServer import SimpleHTTPRequestHandler
+from SocketServer import ThreadingMixIn
 from urllib import unquote, unquote_plus
+import json
+import jinja2
 
 
-class MyServer(HTTPServer):
+class FileLoader(jinja2.BaseLoader):
+    """Loads templates from the file system."""
+
+    def get_source(self, environment, filename):
+        try:
+            f = open(filename, "rb")
+        except IOError:
+            raise jinja2.TemplateNotFound(filename)
+        try:
+            contents = f.read().decode("utf-8")
+        finally:
+            f.close()
+
+        mtime = os.path.getmtime(filename)
+        def uptodate():
+            try:
+                return os.path.getmtime(filename) == mtime
+            except OSError:
+                return False
+        return contents, filename, uptodate
+
+
+
+class MyServer(ThreadingMixIn, HTTPServer):
 
     def __init__(self, address, handler, basepath, authRealm, authString):
         HTTPServer.__init__(self, address, handler)
         self.basepath = basepath
         self.authRealm = authRealm
         self.authString = authString
+        self.env = jinja2.Environment(loader=FileLoader())
+        self.env.globals = eg.globals.__dict__
 
     #def handle_error(self, request, client_address):
     #    eg.PrintError("HTTP Error")
@@ -88,12 +117,82 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 
         self.send_response(401)
         self.send_header(
-            'WWW-Authenticate',
+            'WWW-Authenticate', 
             'Basic realm="%s"' % self.server.authRealm
         )
         self.end_headers()
         return False
 
+
+    def SendContent(self, path):
+        fsPath = self.translate_path(path)
+        if os.path.isdir(fsPath):
+            if not path.endswith('/'):
+                # redirect browser - doing basically what apache does
+                self.send_response(301)
+                self.send_header("Location", path + "/")
+                self.end_headers()
+                return None
+            for index in "index.html", "index.htm":
+                index = os.path.join(fsPath, index)
+                if os.path.exists(index):
+                    fsPath = index
+                    break
+            else:
+                return self.list_directory(path)
+        extension = posixpath.splitext(fsPath)[1].lower()
+        if extension not in (".htm", ".html"):
+            f = self.send_head()
+            if f:
+                self.wfile.write(f.read())
+                f.close()
+            return
+        try:
+            template = self.server.env.get_template(fsPath)
+        except jinja2.TemplateNotFound:
+            self.send_error(404, "File not found")
+            return
+        content = template.render()
+        self.send_response(200)
+        self.send_header("Content-type", 'text/html')
+        self.send_header("Content-Length", len(content))
+        #self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
+        self.end_headers()
+        self.wfile.write(content)
+
+
+    def do_POST(self):
+        """Serve a POST request."""
+        # First do Basic HTTP-Authentication, if set
+        if not self.Authenticate():
+            return
+        #print self.headers
+        contentLength = int(self.headers.get('content-length'))
+        data = self.rfile.read(contentLength)
+        print data
+        try:
+            data = json.loads(data)
+        except:
+            eg.PrintTraceback()
+            
+        action = data[0]
+        result = None
+        if action == "TriggerEvent":
+            event = data[1][0]
+            self.TriggerEvent(event)
+        elif action == "TriggerEnduringEvent":
+            event = data[1][0]
+            self.TriggerEnduringEvent(event)
+            self.currentTimer.Reset(2000)
+        elif action == "RepeatEnduringEvent":
+            self.currentTimer.Reset(2000)
+        elif action == "EndLastEvent":
+            self.currentTimer.Reset(None)
+            self.EndLastEvent()
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(json.dumps(result))
+        
 
     def do_GET(self):
         """Serve a GET request."""
@@ -185,6 +284,51 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
     extensions_map['.ico'] = 'image/x-icon'
     extensions_map['.manifest'] = 'text/cache-manifest'
 
+import urllib2
+
+class SendEvent(eg.ActionBase):
+    
+    def __call__(self, host, event, user, password):
+        # Create an OpenerDirector with support for Basic HTTP Authentication...
+        auth_handler = urllib2.HTTPBasicAuthHandler()
+        auth_handler.add_password(realm='EventGhost',
+                                  uri="http://" + host + "/",
+                                  user=user,
+                                  passwd=password)
+        opener = urllib2.build_opener(auth_handler)
+        # ...and install it globally so it can be used with urlopen.
+        urllib2.install_opener(opener)
+        data = '["TriggerEnduringEvent",["%s"]]' % event
+        urllib2.urlopen("http://" + host + "/", data, 2)
+        def EndLastEvent():
+            urllib2.urlopen("http://" + host + "/", '["EndLastEvent"]', 2)
+        eg.event.AddUpFunc(EndLastEvent)        
+    
+    
+    def Configure(self, host="", event="", user="", password=""):
+        panel = eg.ConfigPanel(self)
+        hostCtrl = panel.TextCtrl(host)
+        eventCtrl = panel.TextCtrl(event)
+        userCtrl = panel.TextCtrl(user)
+        passwordCtrl = panel.TextCtrl(password)
+        panel.sizer.AddMany([
+            panel.StaticText("Host:"),
+            hostCtrl,
+            panel.StaticText("Event:"),
+            eventCtrl,
+            panel.StaticText("Username:"),
+            userCtrl,
+            panel.StaticText("Password:"),
+            passwordCtrl,
+        ])
+        while panel.Affirmed():
+            panel.SetResult(
+                hostCtrl.GetValue(),
+                eventCtrl.GetValue(),
+                userCtrl.GetValue(),
+                passwordCtrl.GetValue(),
+            )
+
 
 
 class Webserver(eg.PluginBase):
@@ -202,6 +346,7 @@ class Webserver(eg.PluginBase):
 
     def __init__(self):
         self.AddEvents()
+        self.AddAction(SendEvent)
         self.running = False
 
 
@@ -239,12 +384,18 @@ class Webserver(eg.PluginBase):
             self.running = False
 
 
+    def OnTimeout(self):
+        print "OnTimeout"
+        self.EndLastEvent()
+        
+        
     def ThreadLoop(self):
         class MySubHandler(MyHTTPRequestHandler):
             TriggerEvent = self.TriggerEvent
             TriggerEnduringEvent = self.TriggerEnduringEvent
             EndLastEvent = self.EndLastEvent
-
+            currentTimer = eg.ResettableTimer(self.OnTimeout)
+            
         if self.authUsername or self.authPassword:
             authString = self.authUsername + ':' + self.authPassword
         else:
