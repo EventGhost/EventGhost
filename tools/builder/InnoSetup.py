@@ -1,30 +1,24 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2008 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import sys
 import _winreg
 from os.path import abspath, join, exists
 
-from builder.Utils import StartProcess
+from builder import StartProcess, EncodePath
 
 import logging
 
@@ -38,7 +32,10 @@ class StdHandler(object):
         self.logger = logger
 
     def write(self, data):
-        self.buf += data
+        try:
+            self.buf += data
+        except UnicodeError:
+            self.buf += data.decode(sys.getfilesystemencoding())
         lines = self.buf.split("\n")
         for line in self.buf.split("\n")[:-1]:
             line = (self.indent * 4 * " ") + line.rstrip()
@@ -49,11 +46,11 @@ class StdHandler(object):
 
     def flush(self):
         pass
-    
-    
+
+
     def isatty(self):
         return True
-    
+
 
 
 LOG_FILENAME = 'Build.log'
@@ -102,14 +99,16 @@ class InnoInstaller(object):
         """
         if not section in self.innoSections:
             self.innoSections[section] = []
-        self.innoSections[section].append(line)
+        self.innoSections[section].append(EncodePath(line))
 
 
     def AddFile(self, source, destDir="", destName=None, ignoreversion=True):
         """
         Adds a file to the [Files] section.
         """
-        line = 'Source: "%s"; DestDir: "{app}\\%s"' % (abspath(source), destDir)
+        line = 'Source: "%s"; DestDir: "{app}\\%s"' % (
+            abspath(source), destDir
+        )
         if destName is not None:
             line += '; DestName: "%s"' % destName
         if ignoreversion:
@@ -140,7 +139,13 @@ class InnoInstaller(object):
         ).read()
         innoScriptPath = join(self.buildSetup.tmpDir, "Setup.iss")
         issFile = open(innoScriptPath, "w")
-        issFile.write(innoScriptTemplate % self.buildSetup.__dict__)
+        templateDict = {}
+        for key, value in  self.buildSetup.__dict__.iteritems():
+            if isinstance(value, unicode):
+                value = EncodePath(value)
+            templateDict[key] = value
+
+        issFile.write(innoScriptTemplate % templateDict)
         for section, lines in self.innoSections.iteritems():
             issFile.write("[%s]\n" % section)
             for line in lines:

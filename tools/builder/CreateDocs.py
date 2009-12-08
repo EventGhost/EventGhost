@@ -1,3 +1,19 @@
+# -*- coding: utf-8 -*-
+#
+# This file is part of EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 import os
 import sys
 import re
@@ -9,14 +25,13 @@ from os.path import join
 import sphinx
 
 import builder
-from builder.Utils import StartProcess, GetHtmlHelpCompilerPath
+from builder.Utils import StartProcess, GetHtmlHelpCompilerPath, EncodePath
 
 
 MAIN_DIR = builder.buildSetup.sourceDir
 DOCS_SOURCE_DIR = join(MAIN_DIR, "docs")
 
-
-sys.path.append(MAIN_DIR)
+sys.path.append(EncodePath(MAIN_DIR))
 import eg
 from eg.Utils import GetFirstParagraph
 
@@ -33,7 +48,7 @@ def WritePluginList(filepath):
     numPlugins = 0
     groups = {}
     for info in eg.pluginManager.GetPluginInfoList():
-        if os.path.exists(join(info.GetPath(), "noinclude")):
+        if os.path.exists(join(info.path, "noinclude")):
             continue
         if info.kind in groups:
             groups[info.kind].append(info)
@@ -146,7 +161,7 @@ def Prepare():
     outfile = open(filepath, "wt")
     outfile.write(CreateClsDocs(MAIN_CLASSES))
     outfile.close()
-    
+
     filepath = join(DOCS_SOURCE_DIR, "eg", "gui_classes.txt")
     outfile = open(filepath, "wt")
     outfile.write(CreateClsDocs(GUI_CLASSES))
@@ -164,6 +179,7 @@ class CreateHtmlDocs(builder.Task):
             #"-a",
             "-b", "html",
             #"-E",
+            "-P",
             "-D", "release=%s" % eg.Version.base,
             "-d", join(self.buildSetup.tmpDir, ".doctree"),
             DOCS_SOURCE_DIR,
@@ -176,10 +192,12 @@ class CreateChmDocs(builder.Task):
     description = "Build CHM docs"
 
     def Setup(self):
-        if not os.path.exists(join(self.buildSetup.sourceDir, "EventGhost.chm")):
+        if not os.path.exists(
+            join(self.buildSetup.sourceDir, "EventGhost.chm")
+        ):
             self.activated = True
             self.enabled = False
-        
+
 
     def DoTask(self):
         tmpDir = join(self.buildSetup.tmpDir, "chm")
@@ -190,10 +208,11 @@ class CreateChmDocs(builder.Task):
             #"-a",
             "-b", "htmlhelp",
             "-E",
+            "-P",
             "-D", "release=%s" % eg.Version.base,
             "-D", "templates_path=[]",
-            "-d", join(self.buildSetup.tmpDir, ".doctree"),
-            DOCS_SOURCE_DIR,
+            "-d", EncodePath(join(self.buildSetup.tmpDir, ".doctree")),
+            EncodePath(DOCS_SOURCE_DIR),
             tmpDir,
         ])
 

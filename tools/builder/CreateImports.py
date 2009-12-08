@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2008 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
 Creates a file that would import all used modules.
@@ -44,6 +38,22 @@ MODULES_TO_IGNORE = [
 ]
 
 HEADER = """\
+# -*- coding: utf-8 -*-
+#
+# This file is part of EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 #-----------------------------------------------------------------------------
 # This file was automatically created by the CreateImports.py script.
 # Don't try to edit this file yourself.
@@ -231,7 +241,7 @@ class CreateImports(builder.Task):
         if not os.path.exists(self.outFileName):
             self.activated = True
             self.enabled = False
-        
+
 
     def DoTask(self):
         """
@@ -239,17 +249,17 @@ class CreateImports(builder.Task):
         """
         buildSetup = self.buildSetup
         MODULES_TO_IGNORE.extend(buildSetup.excludeModules)
-    
+
         globalModuleIndex, badModules = ReadGlobalModuleIndex(
             join(buildSetup.pyVersionDir, "Global Module Index.txt")
         )
         MODULES_TO_IGNORE.extend(badModules)
-    
+
         stdLibModules = (
-            FindModulesInPath(join(PYTHON_DIR, "DLLs"), includeDeprecated=True)
-            + FindModulesInPath(join(PYTHON_DIR, "lib"), includeDeprecated=True)
+            FindModulesInPath(join(PYTHON_DIR, "DLLs"), "", True)
+            + FindModulesInPath(join(PYTHON_DIR, "lib"), "", True)
         )
-    
+
         notFoundModules = []
         for module in globalModuleIndex:
             if module in stdLibModules:
@@ -263,14 +273,14 @@ class CreateImports(builder.Task):
             print "    Modules found in global module index but not in scan:"
             for module in notFoundModules:
                 print "       ", module
-    
-    
-    
+
+
+
         #print "Modules found in scan but not in global module index:"
         #for module in stdLibModules:
         #    if module not in globalModuleIndex:
         #        print "   ", module
-    
+
         outfile = open(self.outFileName, "wt")
         outfile.write(HEADER)
         for module in stdLibModules:
@@ -282,4 +292,4 @@ class CreateImports(builder.Task):
                 outfile.write("import %s\n" % module)
         outfile.write("\n")
         outfile.close()
-    
+

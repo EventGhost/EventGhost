@@ -1,32 +1,45 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2008 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
 This script creates the EventGhost setup installer.
 """
+import sys
+import codecs
+
+
+class StdErr(object):
+    def __init__(self, stream, encoding):
+        self.stream = stream
+        self.encoding = encoding
+        self.filesystemencoding = sys.getfilesystemencoding()
+
+    def write(self, text):
+        try:
+            text = text.decode(self.filesystemencoding)
+        except:
+            pass
+        self.stream.write(text.encode(self.encoding))
+sys.stderr = StdErr(sys.stderr, sys.stderr.encoding)
+
 import os
+import traceback
 from os.path import dirname, join, exists
 from glob import glob
+import threading
 
 # local imports
 import builder
@@ -38,7 +51,7 @@ class MyBuilder(builder.Builder):
     companyName = "EventGhost Project"
     copyright = u"Copyright © 2005-2009 EventGhost Project"
     mainScript = "EventGhost.pyw"
-    
+
     includeModules = [
         "wx",
         "PIL",
@@ -63,18 +76,18 @@ class MyBuilder(builder.Builder):
         "FixTk",
         "tcl",
         "turtle", # another Tkinter module
-    
+
         "distutils.command.bdist_packager",
         "distutils.mwerkscompiler",
         "curses",
         #"ctypes.macholib", # seems to be for Apple
-    
+
         "wx.lib.vtk",
         "wx.tools.Editra",
         "wx.tools.XRCed",
         "wx.lib.plot", # needs NumPy
         "wx.lib.floatcanvas", # needs NumPy
-    
+
         "ImageTk", # py2exe seems to hang if not removed
         "ImageGL",
         "ImageQt",
@@ -84,7 +97,7 @@ class MyBuilder(builder.Builder):
         "PIL._imagingtk",
         "PIL.ImageTk",
         "FixTk",
-    
+
         "win32com.gen_py",
         "win32com.demos",
         "win32com.axdebug",
@@ -93,7 +106,7 @@ class MyBuilder(builder.Builder):
         "comtypes.gen",
         "eg",
     ]
-    
+
 
     def GetSetupFiles(self):
         """
@@ -112,8 +125,11 @@ class MyBuilder(builder.Builder):
         workingDir = self.sourceDir
         props = client.propget("noinstall", workingDir, recurse=True)
         # propget returns the pathes with forward slash as deliminator, but we
-        # need backslashes
-        props = dict((k.replace("/", "\\"), v) for k, v in props.iteritems())
+        # need backslashes. It also seems to be encoded in UTF-8.
+        props = dict(
+            (k.replace("/", "\\").decode("utf8"), v)
+                for k, v in props.iteritems()
+        )
         numPathParts = len(workingDir.split("\\"))
         for status in client.status(workingDir, ignore=True):
             # we only want versioned files
@@ -122,7 +138,6 @@ class MyBuilder(builder.Builder):
             if not os.path.exists(status.path):
                 continue
             pathParts = status.path.split("\\")
-
             # don't include plugins that have a 'noinclude' file
             if len(pathParts) > numPathParts + 1:
                 if pathParts[numPathParts].lower() == "plugins":
@@ -160,7 +175,7 @@ class MyBuilder(builder.Builder):
                 continue
             if filename.lower() == r"plugins\task\hook.dll":
                 inno.AddFile(
-                    join(self.sourceDir, filename), 
+                    join(self.sourceDir, filename),
                     dirname(filename),
                     ignoreversion=False
                 )

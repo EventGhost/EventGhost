@@ -1,10 +1,26 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
+#
+# This file is part of EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 import os
 import sys
 from glob import glob
 from os.path import exists, join, basename, dirname
 
 from builder import Task
+from builder.Utils import EncodePath
 
 
 RT_MANIFEST = 24
@@ -12,31 +28,32 @@ RT_MANIFEST = 24
 def RemoveAllManifests(scanDir):
     """
     Remove embedded manifest resource for all DLLs and PYDs in the supplied
-    path.
+    directory.
 
-    These seems to be the only way how the setup can run with Python 2.6
-    on Vista.
+    This seems to be the only way how the setup can run with Python 2.6
+    on Vista and above.
     """
     import ctypes
 
-    BeginUpdateResource = ctypes.windll.kernel32.BeginUpdateResourceA
-    UpdateResource = ctypes.windll.kernel32.UpdateResourceA
-    EndUpdateResource = ctypes.windll.kernel32.EndUpdateResourceA
+    BeginUpdateResource = ctypes.windll.kernel32.BeginUpdateResourceW
+    UpdateResource = ctypes.windll.kernel32.UpdateResourceW
+    EndUpdateResource = ctypes.windll.kernel32.EndUpdateResourceW
 
-    for (dirpath, dirnames, filenames) in os.walk(scanDir):
-        if '.svn' in dirnames:
-            dirnames.remove('.svn')
-        for name in filenames:
-            ext = os.path.splitext(name)[1].lower()
-            if ext not in (".pyd", ".dll"):
-                continue
-            path = os.path.join(dirpath, name)
-            handle = BeginUpdateResource(path, 0)
-            if handle == 0:
-                continue
-            res = UpdateResource(handle, RT_MANIFEST, 2, 1033, None, 0)
-            if res:
-                EndUpdateResource(handle, 0)
+    for name in os.listdir(scanDir):
+        path = os.path.join(scanDir, name)
+        if not os.path.isfile(path):
+            continue
+        ext = os.path.splitext(name)[1].lower()
+        if ext not in (".pyd", ".dll"):
+            continue
+        handle = BeginUpdateResource(path, 0)
+        if not handle:
+            raise ctypes.WinError()
+        res = UpdateResource(handle, RT_MANIFEST, 2, 1033, None, 0)
+        if not res:
+            continue
+        if not EndUpdateResource(handle, 0):
+            raise ctypes.WinError()
 
 
 
@@ -84,20 +101,20 @@ class Target:
 
 class CreateLibrary(Task):
     description = "Build lib%d%d" % sys.version_info[0:2]
-   
+
     def Setup(self):
         self.zipName = "python%s.zip" % self.buildSetup.pyVersionStr
         if not exists(join(self.buildSetup.libraryDir, self.zipName)):
             self.activated = True
             self.enabled = False
-        
+
 
     def DoTask(self):
         """
         Create the library and .exe files with py2exe.
         """
         buildSetup = self.buildSetup
-        sys.path.append(buildSetup.pyVersionDir)
+        sys.path.append(EncodePath(buildSetup.pyVersionDir))
         from distutils.core import setup
         InstallPy2exePatch()
         import py2exe # pylint: disable-msg=W0612
@@ -108,12 +125,12 @@ class CreateLibrary(Task):
                 path = join(libraryDir, filename)
                 if not os.path.isdir(path):
                     os.remove(path)
-    
+
         setup(
-            script_args=["py2exe"], 
+            script_args=["py2exe"],
             windows=[Target(buildSetup)],
             verbose=0,
-            zipfile=join(buildSetup.libraryName, self.zipName),
+            zipfile=EncodePath(join(buildSetup.libraryName, self.zipName)),
             options = dict(
                 build=dict(build_base=join(buildSetup.tmpDir, "build")),
                 py2exe=dict(
@@ -121,14 +138,14 @@ class CreateLibrary(Task):
                     includes=["encodings", "encodings.*", "imports"],
                     excludes=buildSetup.excludeModules,
                     dll_excludes = ["DINPUT8.dll", "w9xpopen.exe"],
-                    dist_dir = buildSetup.sourceDir,
+                    dist_dir = EncodePath(buildSetup.sourceDir),
                     custom_boot_script=join(
                         buildSetup.dataDir, "Py2ExeBootScript.py"
                     ),
                 )
             )
         )
-    
+
         dllNames = [basename(name) for name in glob(join(libraryDir, "*.dll"))]
         neededDlls = []
         for _, _, files in os.walk(dirname(sys.executable)):
@@ -140,4 +157,4 @@ class CreateLibrary(Task):
                 os.remove(join(libraryDir, dllName))
         if buildSetup.pyVersionStr == "26":
             RemoveAllManifests(libraryDir)
-    
+
