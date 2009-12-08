@@ -494,14 +494,18 @@ class SetClipboard(eg.ActionWithStringParameter):
 
     def __call__(self, text):
         self.clipboardString = eg.ParseString(text)
-        if wx.TheClipboard.Open():
-            tdata = wx.TextDataObject(self.clipboardString)
-            wx.TheClipboard.SetData(tdata)
-            wx.TheClipboard.Close()
-            wx.TheClipboard.Flush()
-        else:
-            self.PrintError(self.text.error)
-
+        def Do():
+            if wx.TheClipboard.Open():
+                tdata = wx.TextDataObject(self.clipboardString)
+                wx.TheClipboard.SetData(tdata)
+                wx.TheClipboard.Close()
+                wx.TheClipboard.Flush()
+            else:
+                self.PrintError(self.text.error)
+        # We call the hot stuff in the main thread. Otherwise we get
+        # a "CoInitialize not called" error form wxPython (even though we
+        # surely have called CoInitialize for this thread.
+        eg.CallWait(Do)
 
 
 class StartScreenSaver(eg.ActionBase):
@@ -968,7 +972,7 @@ class ShowPictureFrame(wx.Frame):
     def OnClose(self, dummyEvent):
         self.Hide()
 
-    
+
     def OnShowMe(self):
         self.Show()
         BringHwndToFront(self.GetHandle())
