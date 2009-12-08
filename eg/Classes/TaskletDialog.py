@@ -55,7 +55,10 @@ class TaskletDialog(wx.Dialog, eg.ControlProviderMixin):
 
     @eg.LogItWithReturn
     def ProcessingTask(self, *args, **kwargs):
-        self.Configure(*args, **kwargs)
+        try:
+            self.Configure(*args, **kwargs)
+        except:
+            eg.PrintTraceback()
         self.__done = True
         self.__resultsChannel.send((None, None))
         if self.setupFinished:
