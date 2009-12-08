@@ -28,31 +28,32 @@ RT_MANIFEST = 24
 def RemoveAllManifests(scanDir):
     """
     Remove embedded manifest resource for all DLLs and PYDs in the supplied
-    path.
+    directory.
 
-    These seems to be the only way how the setup can run with Python 2.6
-    on Vista.
+    This seems to be the only way how the setup can run with Python 2.6
+    on Vista and above.
     """
     import ctypes
 
-    BeginUpdateResource = ctypes.windll.kernel32.BeginUpdateResourceA
-    UpdateResource = ctypes.windll.kernel32.UpdateResourceA
-    EndUpdateResource = ctypes.windll.kernel32.EndUpdateResourceA
+    BeginUpdateResource = ctypes.windll.kernel32.BeginUpdateResourceW
+    UpdateResource = ctypes.windll.kernel32.UpdateResourceW
+    EndUpdateResource = ctypes.windll.kernel32.EndUpdateResourceW
 
-    for (dirpath, dirnames, filenames) in os.walk(scanDir):
-        if '.svn' in dirnames:
-            dirnames.remove('.svn')
-        for name in filenames:
-            ext = os.path.splitext(name)[1].lower()
-            if ext not in (".pyd", ".dll"):
-                continue
-            path = os.path.join(dirpath, name)
-            handle = BeginUpdateResource(path, 0)
-            if handle == 0:
-                continue
-            res = UpdateResource(handle, RT_MANIFEST, 2, 1033, None, 0)
-            if res:
-                EndUpdateResource(handle, 0)
+    for name in os.listdir(scanDir):
+        path = os.path.join(scanDir, name)
+        if not os.path.isfile(path):
+            continue
+        ext = os.path.splitext(name)[1].lower()
+        if ext not in (".pyd", ".dll"):
+            continue
+        handle = BeginUpdateResource(path, 0)
+        if not handle:
+            raise ctypes.WinError()
+        res = UpdateResource(handle, RT_MANIFEST, 2, 1033, None, 0)
+        if not res:
+            continue
+        if not EndUpdateResource(handle, 0):
+            raise ctypes.WinError()
 
 
 
