@@ -1441,3 +1441,6 @@ SECURITY_ATTRIBUTES = _SECURITY_ATTRIBUTES
 ERROR_SUCCESS = 0 # Variable c_long '0l'
 DOMAIN_GROUP_RID_USERS = 513 # Variable c_long '513l'
 
+CoInitializeEx = _ole32.CoInitializeEx
+CoInitializeEx.restype = HRESULT
+CoInitializeEx.argtypes = [LPVOID, DWORD]

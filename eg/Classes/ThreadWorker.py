@@ -23,7 +23,7 @@ from collections import deque
 from time import clock
 from eg.WinApi.Dynamic import (
     CreateEvent, SetEvent, WAIT_OBJECT_0, WAIT_TIMEOUT, QS_ALLINPUT,
-    MsgWaitForMultipleObjects, byref, HANDLE, CoInitialize, CoUninitialize,
+    MsgWaitForMultipleObjects, byref, HANDLE, CoInitializeEx, CoUninitialize,
     MSG, PeekMessage, DispatchMessage, PM_REMOVE, WM_QUIT
 )
 
@@ -170,7 +170,7 @@ class ThreadWorker(object):
         """
         Mainloop of the new thread.
         """
-        CoInitialize(None)
+        CoInitializeEx(None, 2)
         PumpWaitingMessages()
         try:
             while self.__alive:
