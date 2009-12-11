@@ -24,12 +24,29 @@ from os.path import join
 
 from builder.InnoSetup import GetInnoCompilerPath
 from builder.Utils import GetHtmlHelpCompilerPath
+from builder.DllVersionInfo import GetFileVersion
 
 
 class MissingDependency(Exception):
     pass
 class WrongVersion(Exception):
     pass
+
+
+def CompareVersion(actualVersion, wantedVersion):
+    wantedParts = wantedVersion.split(".")
+    actualParts = actualVersion.split(".")
+    numParts = min(len(wantedParts), len(actualParts))
+    for i in range(numParts):
+        wantedPart = wantedParts[i]
+        actualPart = actualParts[i]
+        wantedPart = int(filter(lambda c: c in digits, wantedPart))
+        actualPart = int(filter(lambda c: c in digits, actualPart))
+        if wantedPart > actualPart:
+            return -1
+        elif wantedPart < actualPart:
+            return 1
+    return 0
 
 
 
@@ -135,25 +152,10 @@ class DllDependency(DependencyBase):
     def Check(self):
         path = join(self.buildSetup.sourceDir, self.name)
         wantedVersion = tuple(int(x) for x in self.version.split("."))
-        if self.GetVersion(path) != wantedVersion:
+        if not os.path.exists(path) or GetFileVersion(path) != wantedVersion:
             self.TryCopy()
-            if self.GetVersion(path) != wantedVersion:
+            if GetFileVersion(path) != wantedVersion:
                 raise WrongVersion
-
-
-    def GetVersion(self, path):
-        from builder.DllVersionInfo import get_file_version
-
-        try:
-            fInfo = get_file_version(path)
-        except:
-            return None
-        return (
-            fInfo.dwFileVersionMS >> 16,
-            fInfo.dwFileVersionMS & 0xFFFF,
-            fInfo.dwFileVersionLS >> 16,
-            fInfo.dwFileVersionLS & 0xFFFF,
-        )
 
 
     def TryCopy(self):
@@ -229,22 +231,6 @@ DEPENDENCIES = [
     DllDependency(name="msvcp90.dll", version="9.0.21022.8"),
     DllDependency(name="msvcr90.dll", version="9.0.21022.8"),
 ]
-
-
-def CompareVersion(actualVersion, wantedVersion):
-    wantedParts = wantedVersion.split(".")
-    actualParts = actualVersion.split(".")
-    numParts = min(len(wantedParts), len(actualParts))
-    for i in range(numParts):
-        wantedPart = wantedParts[i]
-        actualPart = actualParts[i]
-        wantedPart = int(filter(lambda c: c in digits, wantedPart))
-        actualPart = int(filter(lambda c: c in digits, actualPart))
-        if wantedPart > actualPart:
-            return -1
-        elif wantedPart < actualPart:
-            return 1
-    return 0
 
 
 def CheckDependencies(buildSetup):
