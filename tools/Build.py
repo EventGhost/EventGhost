@@ -18,7 +18,6 @@
 This script creates the EventGhost setup installer.
 """
 import sys
-import codecs
 
 
 class StdErr(object):
@@ -36,10 +35,8 @@ class StdErr(object):
 sys.stderr = StdErr(sys.stderr, sys.stderr.encoding)
 
 import os
-import traceback
 from os.path import dirname, join, exists
 from glob import glob
-import threading
 
 # local imports
 import builder
