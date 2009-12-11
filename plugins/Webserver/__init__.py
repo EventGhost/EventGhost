@@ -281,7 +281,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
         except Exception, exc:
             self.plugin.EndLastEvent()
             eg.PrintError("Webserver socket error", self.path)
-            eg.PrintError(Exception, exc)
+            eg.PrintError("Exception", exc)
             if exc.args[0] == 10053: # Software caused connection abort
                 pass
             elif exc.args[0] == 10054: # Connection reset by peer
@@ -524,13 +524,13 @@ class Webserver(eg.PluginBase):
         staticBoxSizer.Add(sizer, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND|wx.TOP, 10)
 
-        def ConfigureTargets(event):
-            dialog = ConfigureTargetsDialog(panel, [])
-            dialog.ShowModal()
-            dialog.Destroy()
-        configureTargetsButton = panel.Button("Configure Targets")
-        configureTargetsButton.Bind(wx.EVT_BUTTON, ConfigureTargets)
-        panel.sizer.Add(configureTargetsButton)
+#        def ConfigureTargets(event):
+#            dialog = ConfigureTargetsDialog(panel, [])
+#            dialog.ShowModal()
+#            dialog.Destroy()
+#        configureTargetsButton = panel.Button("Configure Targets")
+#        configureTargetsButton.Bind(wx.EVT_BUTTON, ConfigureTargets)
+#        panel.sizer.Add(configureTargetsButton)
         while panel.Affirmed():
             panel.SetResult(
                 editCtrl.GetValue(),
