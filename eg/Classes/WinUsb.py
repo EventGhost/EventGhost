@@ -75,7 +75,7 @@ DI_FLAGSEX_INSTALLEDDRIVER = 0x04000000
 
 PUBYTE = POINTER(c_ubyte)
 
-DRIVER_VERSION = "1.0.1.2"
+DRIVER_VERSION = "1.0.1.4"
 DRIVER_PROVIDER = "EventGhost"
 
 HEADER = r"""
@@ -93,7 +93,7 @@ DriverPackageDisplayName=%DisplayName%
 ; ========== Manufacturer/Models sections ===========
 
 [Manufacturer]
-%ProviderName%=Remotes,NTx86,NTamd64
+%ProviderName%=Remotes,NTx86,NTx64
 
 """
 
@@ -138,11 +138,11 @@ ErrorControl=1
 ServiceBinary=%12%\WinUSB.sys
 
 [CoInstallers_AddReg]
-HKR,,CoInstallers32,0x00010000,"WdfCoInstaller01007.dll,WdfCoInstaller","WinUSBCoInstaller.dll","WUDFUpdate_01007.dll"
+HKR,,CoInstallers32,0x00010000,"WdfCoInstaller01009.dll,WdfCoInstaller","WinUSBCoInstaller2.dll","WUDFUpdate_01009.dll"
 
 [CoInstallers_CopyFiles]
-WinUSBCoInstaller.dll
-WdfCoInstaller01007.dll
+WinUSBCoInstaller2.dll
+WdfCoInstaller01009.dll
 
 [DestinationDirs]
 CoInstallers_CopyFiles=11
@@ -152,13 +152,13 @@ CoInstallers_CopyFiles=11
 [SourceDisksNames]
 1=%DISK_NAME%,,,\x86
 
-[SourceDisksNames.amd64]
-1=%DISK_NAME%,,,\amd64
+[SourceDisksNames.x64]
+1=%DISK_NAME%,,,\x64
 
 [SourceDisksFiles]
-WinUSBCoInstaller.dll=1
-WdfCoInstaller01007.dll=1
-WUDFUpdate_01007.dll=1
+WinUSBCoInstaller2.dll=1
+WdfCoInstaller01009.dll=1
+WUDFUpdate_01009.dll=1
 
 ; =================== Strings ===================
 
@@ -312,14 +312,17 @@ class WinUsb(object):
         if sys.getwindowsversion()[0] <= 5:
             # for XP we need the WinUSB add-on DLLs
             if IsWin64():
-                testPath = join(eg.mainDir, "drivers", "winusb", "amd64")
+                testPath = join(eg.mainDir, "drivers", "winusb", "x64")
             else:
                 testPath = join(eg.mainDir, "drivers", "winusb", "x86")
-            testPath = join(testPath, "WinUSBCoInstaller.dll")
+            testPath = join(testPath, "WinUSBCoInstaller2.dll")
             if not os.path.exists(testPath):
                 res = eg.CallWait(
                     eg.MessageBox,
-                    "You need to install the WinUSB Add-on for Windows XP.\n\nhttp://www.eventghost.org/\n",
+                    (
+                        "You need to install the WinUSB Add-on for Windows XP.\n\n"
+                        "http://www.eventghost.org/\n"
+                    ),
                     caption="EventGhost",
                     style=wx.OK | wx.ICON_QUESTION
                 )
@@ -400,7 +403,7 @@ def CreateInf(targetDir, devices):
             "%%Device%i.DeviceDesc%%=Install%i,%s\n"
                 % (i, i, device["hardwareId"])
         )
-    outfile.write("\n[Remotes.NTamd64]\n")
+    outfile.write("\n[Remotes.NTx64]\n")
     for i, device in enumerate(devices):
         outfile.write(
             "%%Device%i.DeviceDesc%%=Install%i,%s\n"
@@ -444,8 +447,8 @@ def InstallDriver(devices):
         # for XP we need to copy the DLLs of the add-on
         if IsWin64():
             shutil.copytree(
-                join(eg.mainDir, "drivers", "winusb", "amd64"),
-                join(tmpDir, "amd64")
+                join(eg.mainDir, "drivers", "winusb", "x64"),
+                join(tmpDir, "x64")
             )
         else:
             shutil.copytree(
