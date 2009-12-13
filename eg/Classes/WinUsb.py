@@ -35,6 +35,7 @@ from ctypes import (
 )
 from ctypes.wintypes import DWORD, BOOL
 
+import wx
 import eg
 from eg.WinApi import IsWin64
 from eg.WinApi.PipedProcess import ExecAs, DEBUG
@@ -76,7 +77,7 @@ DI_FLAGSEX_INSTALLEDDRIVER = 0x04000000
 PUBYTE = POINTER(c_ubyte)
 
 DRIVER_VERSION = "1.0.1.4"
-DRIVER_PROVIDER = "EventGhost"
+DRIVER_PROVIDER = "EventGhost Project"
 
 HEADER = r"""
 ; This file is automatically created by the BuildDriver.py script. Don't edit
@@ -194,6 +195,30 @@ DISK_NAME="My Install Disk"
 DisplayName="USB Remote Driver"
 """
 
+class Text(eg.TranslatableStrings):
+    dialogCaption = "EventGhost Plugin: %s"
+    rebootMsg = (
+        "You need to restart the computer, to complete the driver "
+        "installation."
+    )
+    waitMsg = (
+        "Please wait while EventGhost installs the driver for the\n"
+        "%s plugin."
+    )
+    downloadMsg = (
+        "On Windows XP you need to install the EventGhost WinUSB add-on\n"
+        "before this plugin can install the driver for the remote.\n"
+        "After installation of the add-on, you need to restart EventGhost.\n\n"
+        "Do you want to visit the download page now?\n"
+    )
+    installMsg = (
+        "You need to install the proper driver for this %s device.\n\n"
+        "Should EventGhost install the driver for you now?"
+    )
+    noWinUsbError = "WinUSB add-on is not installed."
+
+
+
 def StripRevision(hardwareId):
     return "&".join(
         part for part in hardwareId.split("&") if not part.startswith("REV_")
@@ -210,9 +235,11 @@ class UsbDevice(object):
         guid,
         callback,
         dataSize,
-        suppressRepeat
+        suppressRepeat,
+        plugin
     ):
         self.name = name
+        self.plugin = plugin
         self.hardwareId = hardwareId.upper()
         self.guid = unicode(guid)
         self.callback = callback
@@ -238,7 +265,7 @@ class UsbDevice(object):
             int(self.suppressRepeat)
         )
         if not self.threadId:
-            raise Exception("Device did not start")
+            raise self.plugin.Exceptions.DriverNotOpen
 
 
     def Close(self):
@@ -250,7 +277,10 @@ class UsbDevice(object):
     def MsgHandler(self, dummyHwnd, dummyMsg, dummyWParam, lParam):
         dataArray = cast(lParam, PUBYTE)
         value = tuple(dataArray[i] for i in range(self.dataSize))
-        self.callback(value)
+        try:
+            self.callback(value)
+        except:
+            eg.PrintTraceback(source=self.plugin)
         return 1
 
 
@@ -277,7 +307,8 @@ class WinUsb(object):
             guid,
             callback,
             dataSize,
-            suppressRepeat
+            suppressRepeat,
+            self.plugin,
         )
         self.devices.append(device)
 
@@ -308,7 +339,6 @@ class WinUsb(object):
     @eg.AssertInActionThread
     @eg.LogIt
     def InstallDriver(self):
-        import wx
         if sys.getwindowsversion()[0] <= 5:
             # for XP we need the WinUSB add-on DLLs
             if IsWin64():
@@ -317,45 +347,18 @@ class WinUsb(object):
                 testPath = join(eg.mainDir, "drivers", "winusb", "x86")
             testPath = join(testPath, "WinUSBCoInstaller2.dll")
             if not os.path.exists(testPath):
-                res = eg.CallWait(
-                    eg.MessageBox,
-                    (
-                        "You need to install the WinUSB Add-on for Windows XP.\n\n"
-                        "http://www.eventghost.org/\n"
-                    ),
-                    caption="EventGhost",
-                    style=wx.OK | wx.ICON_QUESTION
-                )
-                raise self.plugin.Exceptions.DriverNotFound
+                wx.CallAfter(self.ShowDownloadMessage)
+                raise self.plugin.Exception(Text.noWinUsbError)
 
         res = eg.CallWait(
             wx.MessageBox,
-            (
-                "You need to install the proper driver for this %s device.\n\n"
-                "Should EventGhost install the driver for you now?"
-            ) % self.plugin.name,
-            caption="EventGhost",
+            Text.installMsg % self.plugin.name,
+            caption=Text.dialogCaption % self.plugin.name,
             style=wx.YES_NO | wx.ICON_QUESTION
         )
         if res == wx.NO:
             raise self.plugin.Exceptions.DriverNotFound
-        def ShowDialog():
-            dialog = wx.Dialog(
-                None,
-                title="EventGhost",
-                style=wx.DIALOG_NO_PARENT|wx.THICK_FRAME|wx.STAY_ON_TOP ,
-            )
-            staticText = wx.StaticText(
-                dialog,
-                -1,
-                "Please wait while Windows installs the driver."
-            )
-            sizer = wx.BoxSizer(wx.VERTICAL)
-            sizer.Add(staticText, 1, wx.EXPAND|wx.CENTER|wx.ALL, 25)
-            dialog.SetSizerAndFit(sizer)
-            dialog.Show()
-            return dialog
-        dialog = eg.CallWait(ShowDialog)
+        dialog = eg.CallWait(self.ShowWaitInstallMessage)
         try:
             devices = [
                 dict(
@@ -369,7 +372,8 @@ class WinUsb(object):
                     __file__.decode(sys.getfilesystemencoding()),
                     sys.getwindowsversion()[0] > 5 or not IsAdmin(),
                     "InstallDriver",
-                    devices
+                    devices,
+                    eg.debugLevel
                 )
             except WindowsError, exc:
                 if exc.winerror == 1223:
@@ -380,10 +384,38 @@ class WinUsb(object):
             eg.CallWait(dialog.Destroy)
 
         if needsReboot:
-            eg.CallWait(
-                eg.MessageBox,
-                "You need to restart the computer, before the driver will work."
+            eg.CallWait(eg.MessageBox, Text.rebootMsg)
+
+
+    def ShowDownloadMessage(self):
+        if wx.YES == wx.MessageBox(
+            Text.downloadMsg,
+            caption=Text.dialogCaption % self.plugin.name,
+            style=wx.YES_NO | wx.ICON_QUESTION
+        ):
+            import webbrowser
+            webbrowser.open(
+                (
+                    "http://www.eventghost.org/downloads/"
+                    "EventGhost WinUSB Add-on for Windows XP.exe"
+                ),
+                False
             )
+
+
+    def ShowWaitInstallMessage(self):
+        dialog = wx.Dialog(
+            None,
+            title="EventGhost",
+            style=wx.DIALOG_NO_PARENT|wx.THICK_FRAME|wx.STAY_ON_TOP ,
+        )
+        staticText = wx.StaticText(dialog, -1, Text.waitMsg % self.plugin.name)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(staticText, 1, wx.EXPAND|wx.CENTER|wx.ALL, 25)
+        dialog.SetSizerAndFit(sizer)
+        dialog.Show()
+        return dialog
+
 
 
 def CreateInf(targetDir, devices):
@@ -432,9 +464,9 @@ def CreateInf(targetDir, devices):
     return infPath
 
 
-def InstallDriver(devices):
+def InstallDriver(devices, debug=False):
     def Callback(eventType, error, description, context):
-        if DEBUG:
+        if debug:
             print (eventType, error, description, context)
     difLogCallback = DIFLOGCALLBACK(Callback)
     SetDifxLogCallback(difLogCallback, None)
@@ -455,13 +487,8 @@ def InstallDriver(devices):
                 join(eg.mainDir, "drivers", "winusb", "x86"),
                 join(tmpDir, "x86")
             )
-    res = DriverPackageInstall(
-        infPath,
-        flags,
-        None,
-        byref(needsReboot)
-    )
-    if DEBUG:
+    res = DriverPackageInstall(infPath, flags, None, byref(needsReboot))
+    if debug:
         try:
             print res, FormatError(res)
         except:
@@ -500,7 +527,7 @@ def ListDevices():
             if err == ERROR_NO_MORE_ITEMS:
                 break
             else:
-                raise WindowsError(err, FormatError(err))
+                raise WinError(err)
         i += 1
         if SetupDiGetDeviceRegistryProperty(
             hDevInfo,
@@ -518,7 +545,7 @@ def ListDevices():
         elif err == ERROR_INVALID_DATA:
             continue
         else:
-            raise WindowsError(err, FormatError(err))
+            raise WinError(err)
         if not SetupDiGetDeviceRegistryProperty(
             hDevInfo,
             byref(deviceInfoData),
@@ -554,8 +581,7 @@ def ListDevices():
             0,
             byref(driverInfoData)
         ):
-            err = GetLastError()
-            print err, FormatError(err)
+            raise WinError()
         version = driverInfoData.DriverVersion
         versionStr =  "%d.%d.%d.%d" % (
             (version >> 48) & 0xFFFF,
