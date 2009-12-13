@@ -86,7 +86,7 @@ MESSAGE_EXCEPTION = 4
 
 BUFSIZE = 4096
 
-DEBUG = 1
+DEBUG = eg.debugLevel
 if DEBUG:
     def Msg(msg):
         print msg
