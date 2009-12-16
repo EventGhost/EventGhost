@@ -37,35 +37,40 @@ from eg.WinApi.Dynamic import (
 )
 
 BUTTONS = {
-    1: "VCR",
-    2: "DVD",
-    4: "Radio",
-    5: "Red",
-    6: "Green",
-    7: "Yellow",
-    8: "Blue",
-    9: "Rewind",
-    10: "Play",
-    11: "Forward",
-    12: "Record",
-    13: "Stop",
-    15: "VolumeUp",
-    16: "VolumeDown",
-    17: "Mute",
-    18: "ChannelUp",
-    19: "ChannelDown",
-    23: "Num1",
-    24: "Num2",
-    25: "Num3",
-    26: "Num4",
-    27: "Num5",
-    28: "Num6",
-    29: "Num7",
-    30: "Num8",
-    31: "Num9",
-    33: "Num0",
-    35: "Teletext",
-    
+    (64, 0, 1, 15): "VCR",
+    (64, 0, 2, 15): "DVD",
+    (64, 0, 4, 15): "Radio",
+    (64, 0, 5, 15): "Red",
+    (64, 0, 6, 15): "Green",
+    (64, 0, 7, 15): "Yellow",
+    (64, 0, 8, 15): "Blue",
+    (64, 0, 9, 15): "Rewind",
+    (64, 0, 10, 15): "Play",
+    (64, 0, 11, 15): "Forward",
+    (64, 0, 12, 15): "Record",
+    (64, 0, 13, 15): "Stop",
+    (64, 0, 14, 15): "Eject",
+    (64, 0, 15, 15): "VolumeUp",
+    (64, 0, 16, 15): "VolumeDown",
+    (64, 0, 17, 15): "Mute",
+    (64, 0, 18, 15): "ChannelUp",
+    (64, 0, 19, 15): "ChannelDown",
+    (64, 0, 20, 15): "Menu",
+    (64, 0, 21, 15): "Bookmark",
+    (64, 0, 22, 15): "NumLock",
+    (64, 0, 23, 15): "Num1",
+    (64, 0, 24, 15): "Num2",
+    (64, 0, 25, 15): "Num3",
+    (64, 0, 26, 15): "Num4",
+    (64, 0, 27, 15): "Num5",
+    (64, 0, 28, 15): "Num6",
+    (64, 0, 29, 15): "Num7",
+    (64, 0, 30, 15): "Num8",
+    (64, 0, 31, 15): "Num9",
+    (64, 0, 32, 15): "GoUp",
+    (64, 0, 33, 15): "Num0",
+    (64, 0, 35, 15): "Teletext",
+    (64, 0, 36, 15): "GoTo",    
 }
 
 
@@ -97,47 +102,42 @@ class AsusPsr2000(eg.PluginBase):
 
 
     def Callback(self, code):
-        print code
         if code[0] & 0x88:
-            x, y = code[1:3]
-            leftDown = code[0] & 0x01
+            buttonType, x, y, dummy = code
+            leftDown = buttonType & 0x01
             if leftDown != self.leftDown:
                 self.leftDown = leftDown
                 if leftDown:
                     mouse_event(0x0002, 0, 0, 0, 0)
                 else:
                     mouse_event(0x0004, 0, 0, 0, 0)
-            rightDown = code[0] & 0x02
+                    
+            rightDown = buttonType & 0x02
             if rightDown != self.rightDown:
                 self.rightDown = rightDown
                 if rightDown:
                     mouse_event(0x0008, 0, 0, 0, 0)
                 else:
                     mouse_event(0x0010, 0, 0, 0, 0)
+                    
             if x == 0 and y == 0:
                 degree = -2
             else:
                 if x > 127:
-                    x = x - 256
+                    x -= 256
                 if y > 127:
-                    y = y - 256
-                degree = round((atan2(x, y) / pi) * 180)
-                if degree < 0:
-                    degree += 360
+                    y -= 256
+                degree = (round((atan2(x, y) / pi) * 180) + 360) % 360
             if degree != self.lastDirection:
                 self.receiveQueue.put(degree)
                 self.lastDirection = degree
             self.timer.Reset(75)
-            return
-        if code != self.lastCode:
+        elif code != self.lastCode:
             self.lastCode = code
-            if code[0] == 64 and code[3] == 15:
-                if code[1] == 0:
-                    self.TriggerEnduringEvent(
-                        BUTTONS.get(code[2], "%s" % code[2])
-                    )
-                    return
-        self.EndLastEvent()
+            if code in BUTTONS:
+                self.TriggerEnduringEvent(BUTTONS[code])
+            else:
+                self.EndLastEvent()
 
 
     def OnTimeOut(self):
