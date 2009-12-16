@@ -33,26 +33,6 @@ class UnassignedValue:
     pass
 
 
-def LoadModules():
-    # pylint: disable-msg=W0104
-    eg.CheckUpdate
-    eg.AboutDialog
-    eg.AddActionDialog
-    eg.AddPluginDialog
-    eg.AddActionGroupDialog
-    eg.OptionsDialog
-    eg.FindDialog
-    eg.Exceptions
-    eg.EventItem
-    #import MainFrame
-    # pylint: enable-msg=W0104
-
-    for plugin in os.listdir(eg.corePluginDir):
-        if not plugin.startswith("."):
-            eg.pluginManager.OpenPlugin(plugin, plugin, ()).Close()
-
-
-
 def ExpandKeyname(key):
     return key
 
@@ -105,7 +85,11 @@ class LanguageEditor(wx.Frame):
         tree.AssignImageList(imageList)
         self.rootId = tree.AddRoot("Language Strings", 3)
         tree.SetPyData(self.rootId, ["", None, None])
-        LoadModules()
+
+        eg.Init.ImportAll()
+        for plugin in os.listdir(eg.corePluginDir):
+            if not plugin.startswith("."):
+                eg.pluginManager.OpenPlugin(plugin, plugin, ()).Close()
 
         rightPanel = wx.Panel(splitter)
         self.disabledColour = rightPanel.GetBackgroundColour()
@@ -259,6 +243,7 @@ class LanguageEditor(wx.Frame):
             "OptionsDialog",
             "FindDialog",
             "AboutDialog",
+            "WinUsb",
         ):
             newId = tree.AppendItem(self.rootId, name, 2)
             value = getattr(eg.text, name)

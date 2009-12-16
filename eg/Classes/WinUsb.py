@@ -20,6 +20,7 @@ import string
 import codecs
 import tempfile
 import shutil
+import threading
 from os.path import join
 from ctypes import (
     create_unicode_buffer,
@@ -29,16 +30,15 @@ from ctypes import (
     byref,
     POINTER,
     cast,
-    FormatError,
     GetLastError,
     WinError,
 )
-from ctypes.wintypes import DWORD, BOOL
+from ctypes.wintypes import DWORD
 
 import wx
 import eg
 from eg.WinApi import IsWin64
-from eg.WinApi.PipedProcess import ExecAs, DEBUG
+from eg.WinApi.PipedProcess import ExecAs
 from eg.WinApi.IsAdmin import IsAdmin
 from eg.WinApi.Dynamic import (
     GUID,
@@ -46,13 +46,6 @@ from eg.WinApi.Dynamic import (
     CLSIDFromString,
     PBYTE,
     ERROR_NO_MORE_ITEMS,
-)
-from eg.WinApi.Dynamic.Difxapi import (
-    DIFLOGCALLBACK,
-    SetDifxLogCallback,
-    DriverPackageInstall,
-    DRIVER_PACKAGE_FORCE,
-    DRIVER_PACKAGE_LEGACY_MODE,
 )
 from eg.WinApi.Dynamic.SetupApi import (
     SetupDiGetClassDevs,
@@ -76,8 +69,8 @@ DI_FLAGSEX_INSTALLEDDRIVER = 0x04000000
 
 PUBYTE = POINTER(c_ubyte)
 
-DRIVER_VERSION = "1.0.1.4"
-DRIVER_PROVIDER = "EventGhost Project"
+DRIVER_VERSION = "1.0.1.5"
+DRIVER_PROVIDER = "EventGhost"
 
 HEADER = r"""
 ; This file is automatically created by the BuildDriver.py script. Don't edit
@@ -94,7 +87,7 @@ DriverPackageDisplayName=%DisplayName%
 ; ========== Manufacturer/Models sections ===========
 
 [Manufacturer]
-%ProviderName%=Remotes,NTx86,NTx64
+%ProviderName%=Remotes,NTx86,NTamd64
 
 """
 
@@ -129,7 +122,7 @@ FOOTER = r"""
 ; ========== Global sections ===========
 
 [WinUSB_Install]
-KmdfLibraryVersion=1.7
+KmdfLibraryVersion=1.9
 
 [WinUSB_ServiceInstall]
 DisplayName=%WinUSB_SvcDesc%
@@ -151,10 +144,10 @@ CoInstallers_CopyFiles=11
 ; ================= Source Media Section =====================
 
 [SourceDisksNames]
-1=%DISK_NAME%,,,\x86
+1=%DISK_NAME%,,,\dll
 
-[SourceDisksNames.x64]
-1=%DISK_NAME%,,,\x64
+[SourceDisksNames.amd64]
+1=%DISK_NAME%,,,\dll
 
 [SourceDisksFiles]
 WinUSBCoInstaller2.dll=1
@@ -167,55 +160,23 @@ WUDFUpdate_01009.dll=1
 ProviderName="$DRIVER_PROVIDER"
 WinUSB_SvcDesc="WinUSB Driver"
 DISK_NAME="My Install Disk"
-DisplayName="USB Remote Driver"
+DisplayName="$DISPLAY_NAME"
 """
 
-FOOTER_VISTA = r"""
-; ========== Global sections ===========
-
-[WinUSB_Install]
-KmdfLibraryVersion=1.7
-
-[WinUSB_ServiceInstall]
-DisplayName=%WinUSB_SvcDesc%
-ServiceType=1
-StartType=3
-ErrorControl=1
-ServiceBinary=%12%\WinUSB.sys
-
-[DestinationDirs]
-CoInstallers_CopyFiles=11
-
-; =================== Strings ===================
-
-[Strings]
-ProviderName="$DRIVER_PROVIDER"
-WinUSB_SvcDesc="WinUSB Driver"
-DISK_NAME="My Install Disk"
-DisplayName="USB Remote Driver"
-"""
 
 class Text(eg.TranslatableStrings):
     dialogCaption = "EventGhost Plugin: %s"
-    rebootMsg = (
-        "You need to restart the computer, to complete the driver "
-        "installation."
-    )
-    waitMsg = (
-        "Please wait while EventGhost installs the driver for the\n"
-        "%s plugin."
-    )
     downloadMsg = (
-        "On Windows XP you need to install the EventGhost WinUSB add-on\n"
-        "before this plugin can install the driver for the remote.\n"
+        "You need to install the EventGhost WinUSB add-on before this plugin"
+        "can install the driver for the remote.\n"
         "After installation of the add-on, you need to restart EventGhost.\n\n"
         "Do you want to visit the download page now?\n"
     )
     installMsg = (
-        "You need to install the proper driver for this %s device.\n\n"
-        "Should EventGhost install the driver for you now?"
+        "You need to install the proper driver for this %s device and restart "
+        "EventGhost.\n\n"
+        "Should EventGhost start the driver installation for you now?"
     )
-    noWinUsbError = "WinUSB add-on is not installed."
 
 
 
@@ -325,8 +286,8 @@ class WinUsb(object):
                 or deviceInfo.provider != DRIVER_PROVIDER
                 or deviceInfo.name != device.name
             ):
-                self.InstallDriver()
-                break
+                threading.Thread(target=self.InstallDriver).start()
+                raise self.plugin.Exceptions.DriverNotFound
         for device in self.devices:
             device.Open()
 
@@ -336,19 +297,15 @@ class WinUsb(object):
             device.Close()
 
 
-    @eg.AssertInActionThread
     @eg.LogIt
     def InstallDriver(self):
-        if sys.getwindowsversion()[0] <= 5:
-            # for XP we need the WinUSB add-on DLLs
-            if IsWin64():
-                testPath = join(eg.mainDir, "drivers", "winusb", "x64")
-            else:
-                testPath = join(eg.mainDir, "drivers", "winusb", "x86")
-            testPath = join(testPath, "WinUSBCoInstaller2.dll")
-            if not os.path.exists(testPath):
-                wx.CallAfter(self.ShowDownloadMessage)
-                raise self.plugin.Exception(Text.noWinUsbError)
+        platformDir = "x64" if IsWin64() else "x86"
+        testPath = join(
+            eg.mainDir, "drivers", "winusb", platformDir, "dpinst.exe"
+        )
+        if not os.path.exists(testPath):
+            wx.CallAfter(self.ShowDownloadMessage)
+            return
 
         res = eg.CallWait(
             wx.MessageBox,
@@ -357,34 +314,20 @@ class WinUsb(object):
             style=wx.YES_NO | wx.ICON_QUESTION
         )
         if res == wx.NO:
-            raise self.plugin.Exceptions.DriverNotFound
-        dialog = eg.CallWait(self.ShowWaitInstallMessage)
-        try:
-            devices = [
-                dict(
-                    name=device.name,
-                    guid=device.guid,
-                    hardwareId=device.hardwareId,
-                ) for device in self.devices
-            ]
-            try:
-                needsReboot = ExecAs(
-                    __file__.decode(sys.getfilesystemencoding()),
-                    sys.getwindowsversion()[0] > 5 or not IsAdmin(),
-                    "InstallDriver",
-                    devices,
-                    eg.debugLevel
-                )
-            except WindowsError, exc:
-                if exc.winerror == 1223:
-                    # user canceled driver installation
-                    raise self.plugin.Exceptions.DriverNotFound
-                raise
-        finally:
-            eg.CallWait(dialog.Destroy)
-
-        if needsReboot:
-            eg.CallWait(eg.MessageBox, Text.rebootMsg)
+            return
+        devices = [
+            dict(
+                name=device.name,
+                guid=device.guid,
+                hardwareId=device.hardwareId,
+            ) for device in self.devices
+        ]
+        ExecAs(
+            __file__.decode(sys.getfilesystemencoding()),
+            sys.getwindowsversion()[0] > 5 or not IsAdmin(),
+            "InstallDriver",
+            devices
+        )
 
 
     def ShowDownloadMessage(self):
@@ -397,24 +340,10 @@ class WinUsb(object):
             webbrowser.open(
                 (
                     "http://www.eventghost.org/downloads/"
-                    "EventGhost WinUSB Add-on for Windows XP.exe"
+                    "EventGhost WinUSB Add-on.exe"
                 ),
                 False
             )
-
-
-    def ShowWaitInstallMessage(self):
-        dialog = wx.Dialog(
-            None,
-            title="EventGhost",
-            style=wx.DIALOG_NO_PARENT|wx.THICK_FRAME|wx.STAY_ON_TOP ,
-        )
-        staticText = wx.StaticText(dialog, -1, Text.waitMsg % self.plugin.name)
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(staticText, 1, wx.EXPAND|wx.CENTER|wx.ALL, 25)
-        dialog.SetSizerAndFit(sizer)
-        dialog.Show()
-        return dialog
 
 
 
@@ -426,16 +355,14 @@ def CreateInf(targetDir, devices):
         sys.getfilesystemencoding()
     )
     template = string.Template(HEADER)
-    outfile.write(
-        template.substitute(DRIVER_VERSION=DRIVER_VERSION)
-    )
+    outfile.write(template.substitute(DRIVER_VERSION=DRIVER_VERSION))
     outfile.write("[Remotes.NTx86]\n")
     for i, device in enumerate(devices):
         outfile.write(
             "%%Device%i.DeviceDesc%%=Install%i,%s\n"
                 % (i, i, device["hardwareId"])
         )
-    outfile.write("\n[Remotes.NTx64]\n")
+    outfile.write("\n[Remotes.NTamd64]\n")
     for i, device in enumerate(devices):
         outfile.write(
             "%%Device%i.DeviceDesc%%=Install%i,%s\n"
@@ -450,12 +377,12 @@ def CreateInf(targetDir, devices):
                 DESCR=device["name"]
             )
         )
-    if sys.getwindowsversion()[0] > 5:
-        template = string.Template(FOOTER_VISTA)
-    else:
-        template = string.Template(FOOTER)
+    template = string.Template(FOOTER)
     outfile.write(
-        template.substitute(DRIVER_PROVIDER=DRIVER_PROVIDER)
+        template.substitute(
+            DRIVER_PROVIDER=DRIVER_PROVIDER,
+            DISPLAY_NAME=devices[0]["name"],
+        )
     )
     for i, device in enumerate(devices):
         outfile.write('Device%i.DeviceDesc="%s"\n' % (i, device["name"]))
@@ -464,37 +391,19 @@ def CreateInf(targetDir, devices):
     return infPath
 
 
-def InstallDriver(devices, debug=False):
-    def Callback(eventType, error, description, context):
-        if debug:
-            print (eventType, error, description, context)
-    difLogCallback = DIFLOGCALLBACK(Callback)
-    SetDifxLogCallback(difLogCallback, None)
-    flags = DWORD()
-    flags.value = DRIVER_PACKAGE_FORCE | DRIVER_PACKAGE_LEGACY_MODE
-    needsReboot = BOOL()
+def InstallDriver(devices):
+    from subprocess import call
+
+    platformDir = "x64" if IsWin64() else "x86"
     tmpDir = tempfile.mkdtemp()
-    infPath = CreateInf(tmpDir, devices)
-    if sys.getwindowsversion()[0] <= 5:
-        # for XP we need to copy the DLLs of the add-on
-        if IsWin64():
-            shutil.copytree(
-                join(eg.mainDir, "drivers", "winusb", "x64"),
-                join(tmpDir, "x64")
-            )
-        else:
-            shutil.copytree(
-                join(eg.mainDir, "drivers", "winusb", "x86"),
-                join(tmpDir, "x86")
-            )
-    res = DriverPackageInstall(infPath, flags, None, byref(needsReboot))
-    if debug:
-        try:
-            print res, FormatError(res)
-        except:
-            pass
+    shutil.copytree(
+        join(eg.mainDir, "drivers", "winusb", platformDir),
+        join(tmpDir, platformDir)
+    )
+    CreateInf(join(tmpDir, platformDir), devices)
+    res = call('"' + join(tmpDir, platformDir, "dpinst.exe") + '" /f /lm')
     shutil.rmtree(tmpDir)
-    return needsReboot.value
+    return res
 
 
 def ListDevices():
