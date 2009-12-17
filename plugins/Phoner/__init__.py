@@ -18,7 +18,7 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2009-12-15 19:12 GMT+1
+#Last change: 2009-12-17 21:14 GMT+1
 
 import wx
 import _winreg
@@ -49,8 +49,9 @@ SWP_NOACTIVATE = 16
 eg.RegisterPlugin(
     name = "Phoner",
     author = "Pako",
-    version = "0.0.1",
+    version = "0.0.2",
     kind = "program",
+    guid = "{FF763E14-7253-4025-99F2-32D9AC43FA9C}",
     createMacrosOnAdd = True,
 #  ToDo:  description - Add some text about CallID ...,
     description = ur'''<rst>
@@ -177,8 +178,8 @@ class PhonerWorkerThread(eg.ThreadWorker):
             TriggerEvent = self.plugin.TriggerEvent
         self.EventHandler = SubEventHandler
 
-        #self.phoner = None
-        #self.events = None
+        self.phoner = None
+        self.events = None
         self.phoner = Dispatch("Phoner.CPhoner")
         self.events=DispatchWithEvents(self.phoner, self.EventHandler)
 
