@@ -17,11 +17,9 @@
 import os
 import sys
 import string
-import codecs
-import tempfile
-import shutil
 import threading
-from os.path import join
+from os.path import join, dirname
+from StringIO import StringIO
 from ctypes import (
     create_unicode_buffer,
     sizeof,
@@ -167,7 +165,7 @@ DisplayName="$DISPLAY_NAME"
 class Text(eg.TranslatableStrings):
     dialogCaption = "EventGhost Plugin: %s"
     downloadMsg = (
-        "You need to install the EventGhost WinUSB add-on before this plugin"
+        "You need to install the EventGhost WinUSB add-on before this plugin "
         "can install the driver for the remote.\n"
         "After installation of the add-on, you need to restart EventGhost.\n\n"
         "Do you want to visit the download page now?\n"
@@ -300,10 +298,8 @@ class WinUsb(object):
     @eg.LogIt
     def InstallDriver(self):
         platformDir = "x64" if IsWin64() else "x86"
-        testPath = join(
-            eg.mainDir, "drivers", "winusb", platformDir, "dpinst.exe"
-        )
-        if not os.path.exists(testPath):
+        srcDir = join(eg.mainDir, "drivers", "winusb", platformDir)
+        if not os.path.exists(join(srcDir, "dpinst.exe")):
             wx.CallAfter(self.ShowDownloadMessage)
             return
 
@@ -315,18 +311,13 @@ class WinUsb(object):
         )
         if res == wx.NO:
             return
-        devices = [
-            dict(
-                name=device.name,
-                guid=device.guid,
-                hardwareId=device.hardwareId,
-            ) for device in self.devices
-        ]
+        myDir = dirname(__file__.decode(sys.getfilesystemencoding()))
         ExecAs(
-            __file__.decode(sys.getfilesystemencoding()),
+            join(myDir, "WinUsbInstallClient.py"),
             sys.getwindowsversion()[0] > 5 or not IsAdmin(),
             "InstallDriver",
-            devices
+            self.CreateInf(),
+            srcDir
         )
 
 
@@ -346,64 +337,44 @@ class WinUsb(object):
             )
 
 
-
-def CreateInf(targetDir, devices):
-    infPath = join(targetDir, "driver.inf")
-    outfile = codecs.open(
-        infPath,
-        "wt",
-        sys.getfilesystemencoding()
-    )
-    template = string.Template(HEADER)
-    outfile.write(template.substitute(DRIVER_VERSION=DRIVER_VERSION))
-    outfile.write("[Remotes.NTx86]\n")
-    for i, device in enumerate(devices):
-        outfile.write(
-            "%%Device%i.DeviceDesc%%=Install%i,%s\n"
-                % (i, i, device["hardwareId"])
-        )
-    outfile.write("\n[Remotes.NTamd64]\n")
-    for i, device in enumerate(devices):
-        outfile.write(
-            "%%Device%i.DeviceDesc%%=Install%i,%s\n"
-                % (i, i, device["hardwareId"])
-        )
-    template = string.Template(DEVICE_SECTION)
-    for i, device in enumerate(devices):
+    def CreateInf(self):
+        outfile = StringIO()
+        template = string.Template(HEADER)
+        outfile.write(template.substitute(DRIVER_VERSION=DRIVER_VERSION))
+        outfile.write("[Remotes.NTx86]\n")
+        for i, device in enumerate(self.devices):
+            outfile.write(
+                "%%Device%i.DeviceDesc%%=Install%i,%s\n"
+                    % (i, i, device.hardwareId)
+            )
+        outfile.write("\n[Remotes.NTamd64]\n")
+        for i, device in enumerate(self.devices):
+            outfile.write(
+                "%%Device%i.DeviceDesc%%=Install%i,%s\n"
+                    % (i, i, device.hardwareId)
+            )
+        template = string.Template(DEVICE_SECTION)
+        for i, device in enumerate(self.devices):
+            outfile.write(
+                template.substitute(
+                    NR=i,
+                    GUID=device.guid,
+                    DESCR=device.name
+                )
+            )
+        template = string.Template(FOOTER)
         outfile.write(
             template.substitute(
-                NR=i,
-                GUID=device["guid"],
-                DESCR=device["name"]
+                DRIVER_PROVIDER=DRIVER_PROVIDER,
+                DISPLAY_NAME=self.plugin.name,
             )
         )
-    template = string.Template(FOOTER)
-    outfile.write(
-        template.substitute(
-            DRIVER_PROVIDER=DRIVER_PROVIDER,
-            DISPLAY_NAME=devices[0]["name"],
-        )
-    )
-    for i, device in enumerate(devices):
-        outfile.write('Device%i.DeviceDesc="%s"\n' % (i, device["name"]))
-
-    outfile.close()
-    return infPath
-
-
-def InstallDriver(devices):
-    from subprocess import call
-
-    platformDir = "x64" if IsWin64() else "x86"
-    tmpDir = tempfile.mkdtemp()
-    shutil.copytree(
-        join(eg.mainDir, "drivers", "winusb", platformDir),
-        join(tmpDir, platformDir)
-    )
-    CreateInf(join(tmpDir, platformDir), devices)
-    res = call('"' + join(tmpDir, platformDir, "dpinst.exe") + '" /f /lm')
-    shutil.rmtree(tmpDir)
-    return res
+        for i, device in enumerate(self.devices):
+            outfile.write('Device%i.DeviceDesc="%s"\n' % (i, device.name))
+    
+        result = outfile.getvalue()
+        outfile.close()
+        return result
 
 
 def ListDevices():
