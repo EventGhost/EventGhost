@@ -120,7 +120,7 @@ def FormatException(excInfo):
 
 def Main():
     pipeName = sys.argv[1]
-    debug = sys.argv[2]
+    debug = int(sys.argv[2])
     if not WaitNamedPipe(pipeName, 5000):
         raise WinError()
     hPipe = CreateFile(
@@ -178,3 +178,4 @@ def Main():
 
 if __name__ == "__main__":
     Main()
+
