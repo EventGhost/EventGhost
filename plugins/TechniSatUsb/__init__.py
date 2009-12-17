@@ -21,6 +21,11 @@ Plugin for the TechniSat USB IR Receiver
 
 .. image:: technisat.jpg
    :align: center
+
+**Note:**
+This receiver does not deliver the duration of a key press, so advanced 
+features like autorepeat are not working with it. It will also only work with
+a TS 35 or TTS 35 remote from TechniSat.
 """
 
 import eg
