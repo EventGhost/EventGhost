@@ -9,6 +9,7 @@ Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
 [Setup]
 ShowLanguageDialog=auto
 AppName=EventGhost
+AppId=EventGhost
 AppPublisher=EventGhost Project
 AppPublisherURL=http://www.eventghost.org/
 AppSupportURL=http://www.eventghost.org/
