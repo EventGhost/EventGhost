@@ -18,17 +18,7 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2009-10-11 18:18
-
-ur'''<rst>
-Adds support functions to control MediaMonkey_.
-
-**Note:**
- To trigger events from MediaMonkey_, you must install
- "EventGhost.vbs" file to *MediaMonkey/Scripts/Auto* folder.
-
-.. _MediaMonkey: http://www.MediaMonkey.com/ 
-'''
+#Last change: 2009-12-17 20:56  GMT+1
 
 import wx
 from win32com.client import Dispatch
@@ -38,16 +28,26 @@ import datetime
 import wx.lib.masked as masked
 import codecs
 from os.path import isfile
+from os.path import split as path_split
+from os import remove as remove_file
 from functools import partial
 
 
 eg.RegisterPlugin(
     name = "MediaMonkey",
     author = "Pako",
-    version = "0.2.2",
+    version = "0.2.8",
     kind = "program",
+    guid = "{50602341-ABC3-47AD-B859-FCB8C03ED4EF}",
     createMacrosOnAdd = True,
-    description = __doc__,
+    description = ur'''<rst>
+Adds support functions to control MediaMonkey_.
+
+**Note:**
+ To trigger events from MediaMonkey_, you must install
+ "EventGhost.vbs" file to *MediaMonkey/Scripts/Auto* folder.
+
+.. _MediaMonkey: http://www.MediaMonkey.com/ ''',
     url = "http://www.eventghost.org/forum/viewtopic.php?t=563",
     icon = (
         "R0lGODlhEAAQAPcAADQyNLyaTHRmRJSWlPzGNFxOPGxqbFROVKSGRJyWfOzSlOTCdGRmZ"
@@ -75,7 +75,7 @@ eg.RegisterPlugin(
 )
 #====================================================================
 MyWindowMatcher = eg.WindowMatcher(
-    u'MediaMonkey{*}.exe',
+    None,
     u'{*}MediaMonkey{*}',
     u'TFMainWindow{*}',
     None,
@@ -180,6 +180,11 @@ SONG_TABLE_FIELDS=(
     ("WebUser","T",""),
     ("Year","I","Year"),
 )
+#===============================================================================
+
+#class MyFileBrowseButton(eg.FileBrowseButton):
+#    def GetTextCtrl(self):          #  now I can make build-in textCtrl
+#        return self.textControl     #  non-editable !!!
 #====================================================================
 
 class MediaMonkeyWorkerThread(eg.ThreadWorker):
@@ -271,22 +276,55 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
             if flag:
                 self.MM.Player.CurrentSong.WriteTags()
        
-    def LoadPlaylistByTitle(self, plString,repeat,shuffle,crossfade):
+    def LoadPlaylistByTitle(self, plString,repeat,shuffle,crossfade,clear):
         if self.isRunning():
             plItems = self.MM.PlaylistByTitle(plString).Tracks
-            num = plItems.Count
-            if num >0:
-                self.MM.Player.Stop()
-                self.MM.Player.PlaylistClear()
-                self.MM.Player.PlaylistAddTracks(plItems)
-                if repeat<2:
-                    self.MM.Player.isRepeat=bool(repeat)
-                if crossfade<2:
-                    self.MM.Player.isCrossfade=bool(crossfade)
-                if shuffle<2:
-                    self.MM.Player.isShuffle=bool(shuffle)
-                self.MM.Player.Play()
-            return num
+            Total = plItems.Count
+            if Total > 0:
+                if repeat < 2:
+                    self.MM.Player.isRepeat = bool(repeat)
+                if crossfade < 2:
+                    self.MM.Player.isCrossfade = bool(crossfade)
+                if shuffle < 2:
+                    self.MM.Player.isShuffle = bool(shuffle)
+                if clear:
+                    self.MM.Player.PlaylistClear()
+                    self.MM.Player.PlaylistAddTracks(plItems)
+                    self.MM.Player.Stop()
+                else:
+                    self.MM.Player.PlaylistAddTracks(plItems)
+                if self.MM.Player.isPaused or not self.MM.Player.isPlaying:
+                    self.MM.Player.Play()
+            if self.plugin.trigger:
+                self.plugin.TriggerEvent(Text.playlistEvt, (plString, str(Total)))
+                    
+    def GetNotAccessibleTracks(self, filePath):
+        if self.isRunning():
+            count = 0
+            try:
+                MyTracks = self.MM.Database.QuerySongs("")
+                file = codecs.open(filePath,encoding='utf-8', mode='w',errors='replace')
+                while not MyTracks.EOF:
+                    path = MyTracks.Item.Path
+                    if not isfile(path):
+                        count += 1
+                        file.write('\t'.join((
+                            str(MyTracks.Item.ID),
+                            MyTracks.Item.Title,
+                            path,
+                        )))
+                        file.write('\n')
+                    MyTracks.Next()
+                file.close()
+            except:
+                pass
+            self.plugin.TriggerEvent("unaccessible",str(count))
+
+    def DeleteSongFromLibrary(self,ID):
+        if self.isRunning():
+            sql = ' FROM Songs WHERE ID="%s"' % ID
+            self.MM.Database.ExecSQL('DELETE'+sql)
+            return self.MM.Database.OpenSQL('SELECT COUNT(*)'+sql).ValueByIndex(0)
             
     def AddSongToPlaylist(self, plString, skip):
         if self.isRunning():
@@ -304,7 +342,8 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                 res = 2
             if skip:
                 self.MM.Player.Next()
-            return res
+            if self.plugin.trigger:
+                self.plugin.TriggerEvent(self.plugin.text.resAdded[3],self.plugin.text.resAdded[res] % plString)
 
     def RemoveSongFromPlaylist(self, plString, skip, now_pl):
         if self.isRunning():
@@ -317,34 +356,80 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                     self.MM.Database.ExecSQL("DELETE"+sql)
                     self.MM.MainTracksWindow.Refresh()
                     indx=Player.CurrentSongIndex
-                    if idSong==Player.PlaylistItems(indx).ID:
-                        if now_pl:
-                            Player.PlaylistDelete(indx)
-                    res = 0
+                    if indx > -1:
+                        if idSong==Player.PlaylistItems(indx).ID:
+                            if now_pl:
+                                Player.PlaylistDelete(indx)
+                        res = 0
                 else:
                     res = 1
             else:
                 res = 2
             if skip:
                 Player.Next()
-            return res
+            if self.plugin.trigger:
+                self.plugin.TriggerEvent(self.plugin.text.resRemoved[3],self.plugin.text.resRemoved[res] % plString)
 
     def RemoveSongFromNowPlaying(self, skip):
         if self.isRunning():
             Player = self.MM.Player
+            res = 1
             idSong=Player.CurrentSong.ID
             indx=Player.CurrentSongIndex
-            if idSong==Player.PlaylistItems(indx).ID:
-                Player.PlaylistDelete(indx)
-                res = 0
-            else:
-                res = 1
-            if skip:
-                Player.Next()
-            return res
+            if indx > -1:
+                if idSong==Player.PlaylistItems(indx).ID:
+                    Player.PlaylistDelete(indx)
+                    res = 0
+                if skip:
+                    Player.Next()
+            if self.plugin.trigger:
+                self.plugin.TriggerEvent(self.plugin.text.resNowPlay[2],self.plugin.text.resNowPlay[res])
+            
+    def LoadPlaylist(self,sql,repeat,crossfade,shuffle,clear,Total,plName):
+        MyTracks = self.MM.Database.QuerySongs(sql)
+        tmpSongList = self.MM.NewSongList
+        n=0
+        while not MyTracks.EOF:
+            tmpSongList.Add(MyTracks.Item)
+            n+=1
+            if n==10:
+                if clear:
+                    self.MM.Player.PlaylistClear()
+                    self.MM.Player.Stop()
+                self.MM.Player.PlaylistAddTracks(tmpSongList)
+                if repeat<2:
+                    self.MM.Player.isRepeat = bool(repeat)
+                if crossfade<2:
+                    self.MM.Player.isCrossfade = bool(crossfade)
+                if shuffle<2:
+                    self.MM.Player.isShuffle = bool(shuffle)
+                if self.MM.Player.isPaused or not self.MM.Player.isPlaying:
+                    self.MM.Player.Play()
+                del tmpSongList
+                tmpSongList = self.MM.NewSongList
+            MyTracks.Next()
+        if n > 0 and n < 10:
+            if clear:
+                self.MM.Player.PlaylistClear()
+                self.MM.Player.Stop()
+                if repeat<2:
+                    self.MM.Player.isRepeat = bool(repeat)
+                if crossfade<2:
+                    self.MM.Player.isCrossfade = bool(crossfade)
+                if shuffle<2:
+                    self.MM.Player.isShuffle = bool(shuffle)
+            if self.MM.Player.isPaused or not self.MM.Player.isPlaying:
+                self.MM.Player.PlaylistAddTracks(tmpSongList)
+                self.MM.Player.Play()
+        else:
+            self.MM.Player.PlaylistAddTracks(tmpSongList)            
+        if self.plugin.trigger:
+            self.plugin.TriggerEvent(Text.playlistEvt, (plName, str(Total)))
+
 
     def LoadFilterPlaylist(
         self,
+        plName,
         mode,
         listRules,
         order,
@@ -356,32 +441,33 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
         repeat,
         shuffle,
         crossfade,
-        accessible,
+        clear,
         unitList,
         trendList
     ):
         if self.isRunning():
             propertiesList = SONG_TABLE_FIELDS
             sql=""
-            op=' AND ' if mode==0 else ' OR '
+            op=' AND ' if mode == 0 else ' OR '
             for rule in listRules:
+                rule_2 = eg.ParseString(rule[2])
                 i=listRules.index(rule)
-                substValues1=(op,propertiesList[rule[0]][0],rule[2])
-                substValues2=(op,rule[2],propertiesList[rule[0]][0])
+                substValues1=(op,propertiesList[rule[0]][0],rule_2)
+                substValues2=(op,rule_2,propertiesList[rule[0]][0])
                 substValues3=(op,propertiesList[rule[0]][0])
                 dateType=propertiesList[rule[0]][1]
-                emptVal = '""'  if dateType=="T" else '"-1"'
+                emptVal = '""'  if dateType == "T" else '"-1"'
                 tuplOper=("=","<>",">",">=","<","<=")
 
                 if dateType=="D":
                     if rule[1]<6:
                         for ix in range(0,6):
                             if rule[1]==ix:
-                                substValues=(op,propertiesList[rule[0]][0],tuplOper[ix],rule[2])
+                                substValues=(op,propertiesList[rule[0]][0],tuplOper[ix],rule_2)
                                 sql+="%sstrftime('%%Y-%%m-%%d %%H:%%M:%%S',%s+2415018.5)%s'%s'" % substValues
                                 break
                     else:
-                        substValues=(op,propertiesList[rule[0]][0],rule[2][:-1],unitList[int(rule[2][-1])])
+                        substValues=(op,propertiesList[rule[0]][0],rule_2[:-1],unitList[int(rule_2[-1])])
                         if rule[1]==6:
                             sql+="%s(%s+2415018.5)>julianday('now','-%s %s','localtime')" % substValues
                         if rule[1]==7:
@@ -389,7 +475,7 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                 else: # (No "DateType")
                     for ix in range(0,6):
                         if rule[1]==ix:
-                            substValues=(op,propertiesList[rule[0]][0],tuplOper[ix],rule[2])
+                            substValues=(op,propertiesList[rule[0]][0],tuplOper[ix],rule_2)
                             sql+='%s%s%s"%s"' % substValues
                             break
                     if rule[1]==6:
@@ -418,64 +504,25 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
 
             #print sql #Debuging
             Total=self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Songs WHERE "+sql).ValueByIndex(0)
-            n=0
             if int(Total) > 0:
-                self.MM.Player.Stop()
-                self.MM.Player.PlaylistClear()
-                MyTrack = self.MM.Database.QuerySongs(sql)
-                while not MyTrack.EOF:
-                    if accessible:
-                        if isfile(MyTrack.Item.Path):
-                            self.MM.Player.PlaylistAddTrack(MyTrack.Item)
-                            n+=1
-                    else:
-                        self.MM.Player.PlaylistAddTrack(MyTrack.Item)
-                        n+=1
-                    MyTrack.Next()
-                if n>0:
-                    if repeat<2:
-                        self.MM.Player.isRepeat=bool(repeat)
-                    if crossfade<2:
-                        self.MM.Player.isCrossfade=bool(crossfade)
-                    if shuffle<2:
-                        self.MM.Player.isShuffle=bool(shuffle)
-                    self.MM.Player.Play()
-            return n,Total
+                self.LoadPlaylist(sql,repeat,crossfade,shuffle,clear,Total,plName)
 
     def LoadSqlPlaylist(
         self,
+        plName,
         sql,
         repeat,
         shuffle,
         crossfade,
-        accessible,
+        clear,
     ):
         if self.isRunning():
             #print sql #Debuging
+            sql = eg.ParseString(sql)
             Total=self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Songs WHERE "+sql).ValueByIndex(0)
             n=0
             if int(Total) > 0:
-                self.MM.Player.Stop()
-                self.MM.Player.PlaylistClear()
-                MyTrack = self.MM.Database.QuerySongs(sql)
-                while not MyTrack.EOF:
-                    if accessible:
-                        if isfile(MyTrack.Item.Path):
-                            self.MM.Player.PlaylistAddTrack(MyTrack.Item)
-                            n+=1
-                    else:
-                        self.MM.Player.PlaylistAddTrack(MyTrack.Item)
-                        n+=1
-                    MyTrack.Next()
-                if n>0:
-                    if repeat<2:
-                        self.MM.Player.isRepeat=bool(repeat)
-                    if crossfade<2:
-                        self.MM.Player.isCrossfade=bool(crossfade)
-                    if shuffle<2:
-                        self.MM.Player.isShuffle=bool(shuffle)
-                    self.MM.Player.Play()
-            return n,Total
+                self.LoadPlaylist(sql,repeat,crossfade,shuffle,clear,Total,plName)        
         
     def GetStatistics(self):
         if self.isRunning():
@@ -485,90 +532,90 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
             #playlists = self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Playlists").ValueByIndex(0)
             return tracks,albums #,artists,playlists
         
-    def Jubox(self,ID,accessible,repeat,shuffle,crossfade):
+    def Jubox(self,ID,clear,repeat,shuffle,crossfade):
         if self.isRunning():
             sql = 'IDAlbum="%s"' % ID
-            res = None
             Total=self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Songs WHERE "+sql).ValueByIndex(0)
+            tmpSongList = self.MM.NewSongList
             if int(Total) > 0:
-                self.MM.Player.Stop()
-                self.MM.Player.PlaylistClear()
-                n=0
-                MyTrack = self.MM.Database.QuerySongs(sql)
-                res = (ID,MyTrack.Item.AlbumName,MyTrack.Item.ArtistName)
-                while not MyTrack.EOF:
-                    if accessible:
-                        if isfile(MyTrack.Item.Path):
-                            self.MM.Player.PlaylistAddTrack(MyTrack.Item)
-                            n+=1
-                    else:
-                        self.MM.Player.PlaylistAddTrack(MyTrack.Item)
-                        n+=1
-                    MyTrack.Next()
+                if clear:
+                    self.MM.Player.PlaylistClear()
+                MyTracks = self.MM.Database.QuerySongs(sql)
+                res = (MyTracks.Item.AlbumName,MyTracks.Item.ArtistName)
+                while not MyTracks.EOF:
+                    tmpSongList.Add(MyTracks.Item)
+                    MyTracks.Next()
                 if repeat<2:
-                    self.MM.Player.isRepeat=bool(repeat)
+                    self.MM.Player.isRepeat = bool(repeat)
                 if crossfade<2:
-                    self.MM.Player.isCrossfade=bool(crossfade)
+                    self.MM.Player.isCrossfade = bool(crossfade)
                 if shuffle<2:
-                    self.MM.Player.isShuffle=bool(shuffle)
+                    self.MM.Player.isShuffle = bool(shuffle)
+                count = self.MM.Player.PlaylistCount
+                self.MM.Player.PlaylistAddTracks(tmpSongList)
+                self.MM.Player.CurrentSongIndex = count
+                self.MM.Player.Stop()
                 self.MM.Player.Play()
-            return res, Total
+                if self.plugin.trigger:
+                    self.plugin.TriggerEvent(Text.albumEvt, res)
 
-    def SongJubox(self,ID,accessible):
+    def SongJubox(self,ID,clear):
         if self.isRunning():
             sql = 'ID="%s"' % ID
             res = None
             Total=self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Songs WHERE "+sql).ValueByIndex(0)
             if int(Total) > 0:
-                n=0
+                if clear:
+                    self.MM.Player.PlaylistClear()
                 MyTrack = self.MM.Database.QuerySongs(sql)
-                res = (ID,MyTrack.Item.AlbumName,MyTrack.Item.ArtistName)
-                while not MyTrack.EOF:
-                    if accessible:
-                        if isfile(MyTrack.Item.Path):
-                            self.MM.Player.Stop()
-                            self.MM.Player.PlaylistClear()
-                            self.MM.Player.PlaylistAddTrack(MyTrack.Item)
-                            self.MM.Player.Play()
-                            n+=1
-                    else:
-                        self.MM.Player.Stop()
-                        self.MM.Player.PlaylistClear()
-                        self.MM.Player.PlaylistAddTrack(MyTrack.Item)
-                        self.MM.Player.Play()
-                        n+=1
-                    MyTrack.Next()
-            return res, Total
+                res = (MyTrack.Item.Title,MyTrack.Item.AlbumName,MyTrack.Item.ArtistName)
+                count = self.MM.Player.PlaylistCount
+                self.MM.Player.PlaylistAddTrack(MyTrack.Item)
+                self.MM.Player.CurrentSongIndex = count
+                self.MM.Player.Stop()
+                self.MM.Player.Play()
+                if self.plugin.trigger:
+                    self.plugin.TriggerEvent(Text.songEvt, res)
 
     def ExportAlbumList(self,filePath):
         if self.isRunning():
-            flag = True
+            count = 0
             try:
                 albums=self.MM.Database.OpenSQL("SELECT ID,Artist,Album FROM Albums")   
                 file = codecs.open(filePath,encoding='utf-8', mode='w',errors='replace')
-                while not albums.EOF:
-                    file.write('\t'.join((str(albums.ValueByIndex(0)),albums.ValueByIndex(2),albums.ValueByIndex(1))))#Structure = ID, Artist, Album
-                    file.write('\r\n')
+                while not albums.EOF: #Structure = ID, Artist, Album
+                    count += 1
+                    file.write('\t'.join((
+                        str(albums.ValueByIndex(0)),
+                        albums.ValueByIndex(2),
+                        albums.ValueByIndex(1)
+                    )))
+                    file.write('\n')
                     albums.Next()
                 file.close()
             except:
-                flag = False
-            return flag
+                pass
+            self.plugin.TriggerEvent("jukebox", str(count))
                 
     def ExportSongList(self,filePath):
         if self.isRunning():
-            flag = True
+            count = 0
             try:
                 songs=self.MM.Database.QuerySongs("")   
                 file = codecs.open(filePath,encoding='utf-8', mode='w',errors='replace')
                 while not songs.EOF:
-                    file.write('\t'.join((str(songs.Item.ID),songs.Item.Title,songs.Item.ArtistName)))
-                    file.write('\r\n')
+                    count += 1
+                    file.write('\t'.join((
+                        str(songs.Item.ID),
+                        songs.Item.Title,
+                        songs.Item.ArtistName
+                    )))
+                    file.write('\n')
                     songs.Next()
                 file.close()
             except:
-                flag = False
-            return flag
+                pass
+            self.plugin.TriggerEvent("jukebox", str(count))
 #====================================================================
 
 class Text:
@@ -579,7 +626,7 @@ class Text:
     levelGrpName = "Another control of MediaMonkey"
     levelGrpDescr = (
         "More actions for control of MediaMonkey"
-        " (volume, balance, seek)."
+        " (volume, balance, seek, ...)."
     )
     extrGrpName = "Writing to MM database"
     extrGrpDescr = (
@@ -599,33 +646,73 @@ class Text:
         'ID     ',
         'Song title',
         'Artist',
+    )    
+    labelsU = (
+        'ID     ',
+        'Song title',
+        'File path',
     )
+    
+    toolTipFolder = "Press button and browse to select file ..."
+    browseTitle = "Selected file:"
+  
+    please = "Please be patient"
     close = "Close"
     popup = "Play now"
+    popup2 = "Delete from library"
+    refresh = "Refresh"
     sepLabel = 'Character or string to use as delimiter:'
     filepath = "File path"
     filename = "File name"
+    triggerEvents = "Trigger events"
+    triggerEventsToolTip = '''If you select this option, some actions (such as %s
+or %s) will trigger an event upon completion,
+a payload is used to indicate the results of the action. 
+
+The event triggered will be constructed as follows:
+Prefix: MediaMonkey
+Suffix: a string indicating the particular command (e.g. playlist, or track_added)
+Payload: this will depend on the results of the action
+
+For example, if you try to add a track to a playlist 'test' the payload will be either:
+u"Track already exists in playlist test" or u"Track added to playlist test"
+
+Another example: executing 'Load Playlist by Filter', where you choose name
+the filter 'Beatles' the result may be: MediaMonkey.playlist (u'Beatles','220')
+220 indicates that there are 220 tracks in the library that match your query.'''
+
+    playlistEvt = 'playlist'
+    albumEvt = 'album_added'
+    songEvt = 'song_added'
+    
+    resAdded = (
+        "Track added to playlist %s",
+        "Track already exists in playlist %s",
+        "Playlist %s does not exist",
+        "track_added"
+    )
+    
+    resRemoved = (
+        "Track removed from playlist %s",
+        "Track does not exist in playlist %s",
+        "Playlist %s does not exist",
+        "track_removed"
+    )
+    
+    resNowPlay = (
+        "Track removed from Now Playing playlist",
+        "Track not removed from Now Playing playlist",
+        "removed_from_now_playing"
+    )
     
     sepToolTip = '''Optionally, enter the character
 or string to be used as a delimiter (separator), between items.
 Default is to use the character "\\n" (new line).'''
 
-    withoutWaiting = "Call without waiting !"
-    waitLbl = "Call mode:"
-    waitMode = (
-        "Without waiting",
-        "With waiting"
-    )
-    waitToolTip = '''MediaMonkey can return information about the
-results of the query (i.e. number of tracks found will be stored in {eg.result}).
-Choose whether EventGhost will wait for the result, or not.'''
-    
-    verboseON = "With waiting, result verbose"
-    verboseOFF = "With waiting, result numerical"
     repeat = "Continous playback"
     shuffle = "Shuffle tracks"
     crossfade = "Crossfade"
-    accessible = "Load only accessible tracks (low speed !)"
+    clearPlaylist = "Clear the Now Playing playlist before adding new tracks"
     random = "Order by random"
     randomToolTip = '''(True Shuffle)  Shuffles the playlist (like cards) before starting playback.
 This allows us to see what song will play next, and what played previously.
@@ -729,6 +816,7 @@ Whereas selecting the "%s" checkbox will cause the player to jump randomly throu
 
 class MediaMonkey(eg.PluginBase):
     workerThread = None
+    workerThread2 = None
     text = Text
 
     def __init__(self):
@@ -782,6 +870,7 @@ class MediaMonkey(eg.PluginBase):
             self.text.infoGrpDescr
         )
         group.AddAction(GetBasicStatistics)
+        group.AddAction(GetNotAccessibleTracks)
         group.AddActionsFromList(ACTIONS)
         group.AddAction(GetStatus)
         group.AddActionsFromList(ACTIONS2)
@@ -790,67 +879,94 @@ class MediaMonkey(eg.PluginBase):
         group.AddAction(GetTechnicalSongInfo)
         group.AddAction(GetUniversal)
 
-
-    def __start__(self):
+    def __start__(self, trigger = True):
         self.volume=None
         self.muted=False
-            
+        self.trigger = trigger
+        
+    def Configure(self, trigger = True):
+        panel = eg.ConfigPanel(self)
+        triggerEventsCtrl = wx.CheckBox(panel, -1, '  '+Text.triggerEvents)
+        triggerEventsCtrl.SetValue(trigger)
+        #triggerEventsCtrl.SetToolTip(wx.ToolTip(self.text.triggerEventsToolTip % (LoadPlaylist.name,AddCurrentSongToPlaylist.name)))
+        staticToolTip = wx.StaticText(panel,-1,self.text.triggerEventsToolTip % (LoadPlaylist.name,AddCurrentSongToPlaylist.name))
+        #staticToolTip.Enable(False)
+        panel.AddCtrl(triggerEventsCtrl)
+        panel.AddCtrl(staticToolTip)
+
+        while panel.Affirmed():
+            panel.SetResult(triggerEventsCtrl.GetValue(),
+            )
+        
     def SendCommand(self, command):
         if not self.workerThread:
             self.workerThread = MediaMonkeyWorkerThread(self)
             self.workerThread.Start(100.0)
-        self.workerThread.CallWait(partial(self.workerThread.DoCommand, command))
+        self.workerThread.CallWait(partial(self.workerThread.DoCommand, command),1000)
 
     def SetValue(self, command, value):
         if not self.workerThread:
             self.workerThread = MediaMonkeyWorkerThread(self)
             self.workerThread.Start(100.0)
-        self.workerThread.CallWait(partial(self.workerThread.SetValue, command, value))
+        self.workerThread.CallWait(partial(self.workerThread.SetValue, command, value),1000)
             
     def GetValue(self, command):
         if not self.workerThread:
             self.workerThread = MediaMonkeyWorkerThread(self)
             self.workerThread.Start(100.0)
-        return self.workerThread.CallWait(partial(self.workerThread.GetValue, command))
+        return self.workerThread.CallWait(partial(self.workerThread.GetValue, command),1000)
         
     def GetSongData(self,index):    
         if not self.workerThread:
             self.workerThread = MediaMonkeyWorkerThread(self)
             self.workerThread.Start(100.0)
-        return self.workerThread.CallWait(partial(self.workerThread.GetSongData, index))
+        return self.workerThread.CallWait(partial(self.workerThread.GetSongData, index),1000)
         
-    def Jubox(self, ID, accessible=True,repeat=2,shuffle=2,crossfade=2):
+    def Jubox(self, ID, clear=True,repeat=2,shuffle=2,crossfade=2):
         if not self.workerThread:
             self.workerThread = MediaMonkeyWorkerThread(self)
             self.workerThread.Start(100.0)
-        res,Total = self.workerThread.CallWait(partial(
+        self.workerThread.Call(partial(
             self.workerThread.Jubox,
             ID,
-            accessible,
+            clear,
             repeat,
             shuffle,
             crossfade,
         ))
-        return res,Total
 
-    def SongJubox(self, ID,accessible=True):
+    def SongJubox(self, ID,clear=False):
         if not self.workerThread:
             self.workerThread = MediaMonkeyWorkerThread(self)
             self.workerThread.Start(100.0)
-        res,Total = self.workerThread.CallWait(partial(
+        self.workerThread.Call(partial(
             self.workerThread.SongJubox,
             ID,
-            accessible,
+            clear,
         ))
-        return res,Total
+#        return res,Total
+
+    def DeleteSong(self, ID):
+        if not self.workerThread:
+            self.workerThread = MediaMonkeyWorkerThread(self)
+            self.workerThread.Start(100.0)
+        res = self.workerThread.CallWait(partial(
+            self.workerThread.DeleteSongFromLibrary,
+            ID,
+        ),1000)
+        return res
 
     def __stop__(self):
         if self.workerThread:
             self.workerThread.Stop()
+        if self.workerThread2:
+            self.workerThread2.Stop()
 
     def StopThread(self):
         if self.workerThread:
             self.workerThread.Stop()
+        if self.workerThread2:
+            self.workerThread2.Stop()
 #====================================================================
 
 class Start(eg.ActionBase):
@@ -943,7 +1059,7 @@ class Previous(eg.ActionBase):
 
     def __call__(self):
         if not self.plugin.workerThread:
-            self.plugin.workerThread = MediaMonkeyWorkerThread(self)
+            self.plugin.workerThread = MediaMonkeyWorkerThread(self.plugin)
             self.plugin.workerThread.Start(100.0)
         self.plugin.workerThread.Call(partial(self.plugin.workerThread.Previous))
 #====================================================================
@@ -1355,7 +1471,7 @@ class GetBasicStatistics(eg.ActionBase):
 
     def __call__(self,sep=''):
         if not self.plugin.workerThread:
-            self.plugin.workerThread = MediaMonkeyWorkerThread(self)
+            self.plugin.workerThread = MediaMonkeyWorkerThread(self.plugin)
             self.plugin.workerThread.Start(100.0)
         if sep == '':
             sep = '\n'
@@ -1382,7 +1498,78 @@ class GetBasicStatistics(eg.ActionBase):
     class text():
         tracks = '%s tracks'
         albums ='%s albums'
-            
+#====================================================================
+
+class GetNotAccessibleTracks(eg.ActionBase):
+    name = "Show/Edit inaccessible tracks"
+    description = u'''<rst>**Show/Edit tracks that MediaMonkey cannot access.**
+
+ATTENTION !!! This operation may take several minutes !!!
+List of found tracks is exported to selected file.
+For each track is recorded song ID, song title and file path. 
+You can this file import for example to MS Excel or OOo Calc'''
+
+    frameIsOpen = False
+
+    def __call__(self,path=""):
+        if not path:
+            path = eg.folderPath.Documents + '\\UnaccessibleTracks.txt'
+        if not self.frameIsOpen:
+            self.unaccessibleTracksFrame = UnaccessibleTracksFrame(parent = self)
+            wx.CallAfter(
+                self.unaccessibleTracksFrame.ShowUnaccessibleTracksFrame,
+                path,
+            )
+            self.frameIsOpen = True
+        
+    def Configure(self, path=''):
+        txt = self.text
+        panel = eg.ConfigPanel(self)
+        label1Text = wx.StaticText(panel, -1, self.text.label1)
+        if not path:
+            path = eg.folderPath.Documents + '\\UnaccessibleTracks.txt'
+        self.path = path
+        startFolder = path_split(path)[1]
+        filepathCtrl = eg.FileBrowseButton(
+            panel, 
+            size=(410,-1),
+            toolTip = self.plugin.text.toolTipFolder,
+            dialogTitle = self.plugin.text.browseTitle,
+            buttonText = eg.text.General.browse,
+            fileMask="CSV files (*.csv)|*.csv|"\
+                "Text file (*.txt)|*.txt|"\
+                "All files (*.*)|*.*",
+        )
+        filepathCtrl.SetValue(path)        
+        openButton = wx.Button(panel, -1, txt.openButton)
+        openButton.SetToolTip(wx.ToolTip(txt.baloonBttn % path))
+        sizerAdd = panel.sizer.Add
+        sizerAdd(label1Text, 0, wx.TOP,15)
+        sizerAdd(filepathCtrl,0,wx.TOP,3)
+        sizerAdd(openButton,0,wx.TOP,30)
+        
+        def onOpenBtnClick(event):
+            if not self.frameIsOpen:
+                self.unaccessibleTracksFrame = UnaccessibleTracksFrame(parent = self)
+                wx.CallAfter(
+                    self.unaccessibleTracksFrame.ShowUnaccessibleTracksFrame,
+                    filepathCtrl.GetValue(),
+                    False
+                )
+                self.frameIsOpen = True
+            event.Skip()
+
+        openButton.Bind(wx.EVT_BUTTON, onOpenBtnClick)
+        
+        while panel.Affirmed():
+            panel.SetResult(filepathCtrl.GetValue()
+            )    
+
+    class text():
+        label1 = "Target file for export:"
+        openButton = "Open/create track list file"
+        baloonBttn ='''Open dialog to edit file %s.
+If this file does not exist, it will first be created.'''
 #====================================================================
 
 class GetSomeInfo(eg.ActionBase):
@@ -1667,7 +1854,6 @@ class GetDetailSongInfo(eg.ActionBase):
         panelSizer.Add(line,0,wx.TOP,10)
         panelSizer.Add(bottomSizer,0,wx.TOP,10)
 
-
         while panel.Affirmed():
             arrayInfo=[
                 lyricistCtrl.GetValue(),
@@ -1934,7 +2120,10 @@ class GetUniversal(eg.ActionBase):
         return self.text.get % Text.SongTableFields[field]
     
     def Configure(self, field=-1):
-        choices = filter(lambda i: i[0]!="",zip([tpl[2] for tpl in SONG_TABLE_FIELDS], Text.SongTableFields))
+        choices = filter(lambda i: i[0]!="",zip(
+            [tpl[2] for tpl in SONG_TABLE_FIELDS],
+            Text.SongTableFields
+        ))
         choices = [item[1] for item in choices]
         choices.sort()
         panel=eg.ConfigPanel(self)
@@ -1988,20 +2177,23 @@ class WritingToMM(eg.ActionBase):
         tmpList=[]
         attrib = [itm[2] for itm in SONG_TABLE_FIELDS][i]
         if not self.plugin.workerThread:
-            self.plugin.workerThread = MediaMonkeyWorkerThread(self)
+            self.plugin.workerThread = MediaMonkeyWorkerThread(self.plugin)
             self.plugin.workerThread.Start(100.0)
-        self.plugin.workerThread.CallWait(partial(self.plugin.workerThread.WriteToMMdatabase, attrib ,arrayValue0[ndx],arrayValue1[ndx]))
+        self.plugin.workerThread.CallWait(partial(
+            self.plugin.workerThread.WriteToMMdatabase,
+            attrib,
+            arrayValue0[ndx],
+            arrayValue1[ndx]
+        ))
 
     def GetLabel(self, i, arrayValue0, arrayValue1):
         ndx = [itm[0] for itm in self.propertiesList].index([it[0] for it in SONG_TABLE_FIELDS][i])
         lbl = Text.SongTableFields[i]
         itm2 = arrayValue0[ndx] if (self.propertiesList[ndx][1] == 0) else str(int(arrayValue0[ndx]))
         result = self.text.set % (lbl, itm2)
-
         if arrayValue1[ndx]:
             result += " (+ID3)"
         return result
-
 
     def Configure(
         self,
@@ -2094,28 +2286,21 @@ class LoadPlaylist(eg.ActionBase):
     name = "Load Playlist by Name"
     description = "Loads a MediaMonkey playlist defined by name."
 
-    def __call__(self, plString, repeat, shuffle, crossfade, wait):
-        if not self.plugin.workerThread:
-            self.plugin.workerThread = MediaMonkeyWorkerThread(self)
-            self.plugin.workerThread.Start(100.0)
+    def __call__(self, plString, repeat, shuffle, crossfade, clear):
+        if not self.plugin.workerThread2:
+            self.plugin.workerThread2 = MediaMonkeyWorkerThread(self.plugin)
+            self.plugin.workerThread2.Start(100.0)
         args = (
-            self.plugin.workerThread.LoadPlaylistByTitle,
+            self.plugin.workerThread2.LoadPlaylistByTitle,
             plString,
             repeat,
             shuffle,
             crossfade,
+            clear
         )
-        if wait:
-            num = self.plugin.workerThread.CallWait(partial(*args),60)
-            if num:
-                return plString+" "+self.text.found % str(num)
-            else:
-                return plString+" "+self.text.noFound
-        else:
-            self.plugin.workerThread.Call(partial(*args))
-            return Text.withoutWaiting
+        self.plugin.workerThread2.Call(partial(*args))
 
-    def Configure(self, plString="",repeat=2,shuffle=2,crossfade=2, wait = 0):
+    def Configure(self, plString="",repeat=2,shuffle=2,crossfade=2, clear = True):
         panel = eg.ConfigPanel(self)
         text = self.text
         textCtrl = wx.TextCtrl(panel, -1, plString)
@@ -2125,29 +2310,19 @@ class LoadPlaylist(eg.ActionBase):
         shuffleChkBoxCtrl.Set3StateValue(shuffle)
         crossfadeChkBoxCtrl = wx.CheckBox(panel, label=Text.crossfade,style=wx.CHK_3STATE|wx.CHK_ALLOW_3RD_STATE_FOR_USER)
         crossfadeChkBoxCtrl.Set3StateValue(crossfade)
-        waitCtrl = wx.Choice(panel, choices=Text.waitMode)
-        waitCtrl.SetSelection(wait)
-        waitTxt = wx.StaticText(panel, -1, Text.waitLbl)
-        waitTxt.SetToolTip(wx.ToolTip(Text.waitToolTip))
-        waitCtrl.SetToolTip(wx.ToolTip(Text.waitToolTip))
-        statBox = wx.StaticBox(panel, -1, "")
-        stBsizer = wx.StaticBoxSizer(statBox, wx.VERTICAL)
-        stBsizer.Add(waitTxt)
-        stBsizer.Add(waitCtrl,0,wx.TOP,4)
+        clearPlaylistChkBoxCtrl = wx.CheckBox(panel, label=Text.clearPlaylist)
+        clearPlaylistChkBoxCtrl.SetValue(clear)
         SizerAdd = panel.sizer.Add
         SizerAdd(wx.StaticText(panel, -1, text.playlistName))
         SizerAdd(textCtrl, 0, wx.EXPAND)
         leftSizer = wx.BoxSizer(wx.VERTICAL)
-        rightSizer = wx.BoxSizer(wx.VERTICAL)
-        rightSizer.Add((1,100),0,wx.ALIGN_RIGHT)
-        rightSizer.Add(stBsizer,0,wx.ALIGN_RIGHT)
         bottmSizer = wx.BoxSizer(wx.HORIZONTAL)
         bottmSizer.Add(leftSizer,2,wx.EXPAND)
-        bottmSizer.Add(rightSizer,1,wx.ALIGN_RIGHT)
         SizerAdd(bottmSizer,0,wx.EXPAND)
         leftSizer.Add(repeatChkBoxCtrl,0,wx.TOP,15,)
         leftSizer.Add(shuffleChkBoxCtrl,0,wx.TOP,15)
         leftSizer.Add(crossfadeChkBoxCtrl,0,wx.TOP,15)
+        leftSizer.Add(clearPlaylistChkBoxCtrl,0,wx.TOP,15)
         
         while panel.Affirmed():
             panel.SetResult(
@@ -2155,7 +2330,7 @@ class LoadPlaylist(eg.ActionBase):
                 repeatChkBoxCtrl.Get3StateValue(),
                 shuffleChkBoxCtrl.Get3StateValue(),
                 crossfadeChkBoxCtrl.Get3StateValue(),
-                waitCtrl.GetSelection()
+                clearPlaylistChkBoxCtrl.GetValue(),
             )
 
     class text:
@@ -2168,24 +2343,18 @@ class AddCurrentSongToPlaylist(eg.ActionBase):
     name = "Add currently playing song to playlist"
     description = "Adds the currently playing song to a specific playlist."
 
-    def __call__(self, plString, skip, verbose):
+    def __call__(self, plString, skip):
         if not self.plugin.workerThread:
-            self.plugin.workerThread = MediaMonkeyWorkerThread(self)
+            self.plugin.workerThread = MediaMonkeyWorkerThread(self.plugin)
             self.plugin.workerThread.Start(100.0)
         args = (
             self.plugin.workerThread.AddSongToPlaylist,
             plString,
             skip
         )
-        if verbose < 2:    
-            res = self.plugin.workerThread.CallWait(partial(*args),60)
-            verbres = eval("self.text.res"+str(res))
-            return res if verbose==1 else verbres % plString
-        else:
-            self.plugin.workerThread.Call(partial(*args))
-            return Text.withoutWaiting            
+        self.plugin.workerThread.Call(partial(*args))
 
-    def Configure(self, plString="", skip=False, verbose = 0):
+    def Configure(self, plString="", skip=False):
         panel = eg.ConfigPanel(self)
         text = self.text
         textCtrl = wx.TextCtrl(panel, -1, plString)
@@ -2195,43 +2364,25 @@ class AddCurrentSongToPlaylist(eg.ActionBase):
         skipChkBoxCtrl = wx.CheckBox(panel, label=self.text.skip)
         skipChkBoxCtrl.SetValue(skip)
         SizerAdd(skipChkBoxCtrl,0,wx.TOP,15,)
-        radioBox = wx.RadioBox(
-            panel,
-            -1,
-            self.text.radiobox,
-            choices=[Text.verboseON, Text.verboseOFF, Text.waitMode[0]],
-            style=wx.RA_SPECIFY_ROWS
-        )
-        radioBox.SetItemToolTip(1, "0 "+self.text.forToolTip+"   "+self.text.res0 % "" +\
-            "\n1 "+self.text.forToolTip+"   "+self.text.res1 % "" +\
-            "\n2 "+self.text.forToolTip+"   "+self.text.res2 % "")
-        radioBox.SetSelection(verbose)
-        SizerAdd(radioBox, 0, wx.EXPAND|wx.TOP,15)
 
         while panel.Affirmed():
             panel.SetResult(
                 textCtrl.GetValue(),
                 skipChkBoxCtrl.GetValue(),
-                radioBox.GetSelection(),
             )
 
     class text:
         playlistName = "Playlist name:"
         skip = "Skip to next track"
-        radiobox = "Result mode"
-        res0 = "Track added to playlist %s"
-        res1 = "Track already exists in playlist %s"
-        res2 = "Playlist %s does not exist"
-        forToolTip = "for case"
 #====================================================================
 
 class RemoveCurrentSongFromPlaylist(eg.ActionBase):
     name = "Remove current playing song from Playlist"
     description = "Remove the currently playing song from a specific playlist."
 
-    def __call__(self, plString, skip, now_pl, verbose):
+    def __call__(self, plString, skip, now_pl):
         if not self.plugin.workerThread:
-            self.plugin.workerThread = MediaMonkeyWorkerThread(self)
+            self.plugin.workerThread = MediaMonkeyWorkerThread(self.plugin)
             self.plugin.workerThread.Start(100.0)
         args = (
             self.plugin.workerThread.RemoveSongFromPlaylist,
@@ -2239,16 +2390,9 @@ class RemoveCurrentSongFromPlaylist(eg.ActionBase):
             skip,
             now_pl
         )
-        if verbose < 2:
-            res = self.plugin.workerThread.CallWait(partial(*args),60)
-            verbres = eval("self.text.res"+str(res))
-            return res if verbose==1 else verbres % plString
-        else:
-            self.plugin.workerThread.Call(partial(*args))
-            return Text.withoutWaiting
-            
+        self.plugin.workerThread.Call(partial(*args))
 
-    def Configure(self, plString="", skip=False, now_pl=False, verbose = 0):
+    def Configure(self, plString="", skip=False, now_pl=False):
         panel = eg.ConfigPanel(self)
         text = self.text
         textCtrl = wx.TextCtrl(panel, -1, plString)
@@ -2261,85 +2405,48 @@ class RemoveCurrentSongFromPlaylist(eg.ActionBase):
         now_plChkBoxCtrl = wx.CheckBox(panel, label=self.text.now_pl)
         now_plChkBoxCtrl.SetValue(now_pl)
         SizerAdd(now_plChkBoxCtrl,0,wx.TOP,15,)
-        radioBox = wx.RadioBox(
-            panel,
-            -1,
-            self.text.radiobox,
-            choices=[Text.verboseON, Text.verboseOFF, Text.waitMode[0]],
-            style=wx.RA_SPECIFY_ROWS
-        )
-        radioBox.SetItemToolTip(1, "0 "+self.text.forToolTip+"   "+self.text.res0 % "" +\
-            "\n1 "+self.text.forToolTip+"   "+self.text.res1 % "" +\
-            "\n2 "+self.text.forToolTip+"   "+self.text.res2 % "")
-        radioBox.SetSelection(verbose)
-        SizerAdd(radioBox, 0, wx.EXPAND|wx.TOP,15)
 
         while panel.Affirmed():
             panel.SetResult(
                 textCtrl.GetValue(),
                 skipChkBoxCtrl.GetValue(),
                 now_plChkBoxCtrl.GetValue(),
-                radioBox.GetSelection(),
             )
 
     class text:
         playlistName = "Playlist name:"
         skip = "Skip to next track"
         now_pl='Remove track from "Now playing" window too'
-        radiobox = "Result mode"
-        res0 = "Track removed from playlist %s"
-        res1 = "Track does not exist in playlist %s"
-        res2 = "Playlist %s does not exist"
-        forToolTip = "for case"
 #====================================================================
 
 class RemoveCurrentSongFromNowPlaying(eg.ActionBase):
-    name = "Remove currently playing song from Now playing window"
-    description = "Remove the currently playing song from Now playing window."
+    name = "Remove currently playing song from Now Playing playlist"
+    description = "Remove the currently playing song from Now Playing playlist."
 
-    def __call__(self, skip, verbose):
+    def __call__(self, skip):
         if not self.plugin.workerThread:
-            self.plugin.workerThread = MediaMonkeyWorkerThread(self)
+            self.plugin.workerThread = MediaMonkeyWorkerThread(self.plugin)
             self.plugin.workerThread.Start(100.0)
-        if verbose < 2:
-            res = self.plugin.workerThread.CallWait(partial(self.plugin.workerThread.RemoveSongFromNowPlaying, skip),60)
-            verbres = eval("self.text.res"+str(res))
-            return res if verbose==1 else verbres
-        else:
-            self.plugin.workerThread.Call(partial(self.plugin.workerThread.RemoveSongFromNowPlaying, skip))
-            return Text.withoutWaiting
+        self.plugin.workerThread.Call(partial(
+                self.plugin.workerThread.RemoveSongFromNowPlaying,
+                skip
+            ))
             
-    def Configure(self, skip=False, verbose=0):
+    def Configure(self, skip=False):
         panel = eg.ConfigPanel(self)
         text = self.text
         SizerAdd = panel.sizer.Add
         skipChkBoxCtrl = wx.CheckBox(panel, label=self.text.skip)
         skipChkBoxCtrl.SetValue(skip)
         SizerAdd(skipChkBoxCtrl,0,wx.TOP,15,)
-        radioBox = wx.RadioBox(
-            panel,
-            -1,
-            self.text.radiobox,
-            choices=[Text.verboseON, Text.verboseOFF, Text.waitMode[0]],
-            style=wx.RA_SPECIFY_ROWS
-        )
-        radioBox.SetItemToolTip(1, "0 "+self.text.forToolTip+"   "+self.text.res0+\
-            "\n1 "+self.text.forToolTip+"   "+self.text.res1)
-        radioBox.SetSelection(verbose)
-        SizerAdd(radioBox, 0, wx.EXPAND|wx.TOP,15)
 
         while panel.Affirmed():
             panel.SetResult(
                 skipChkBoxCtrl.GetValue(),
-                radioBox.GetSelection(),
             )
 
     class text:
         skip = "Skip to next track"
-        radiobox = "Result mode"
-        res0 = "Track removed from Now playing window"
-        res1 = "Track not removed from Now playing window"
-        forToolTip = "for case"
 #====================================================================
 
 class LoadPlaylistByFilter(eg.ActionBase):
@@ -2391,7 +2498,6 @@ class LoadPlaylistByFilter(eg.ActionBase):
             "isNotEmpty",
         ]
 
-
     def __call__(
         self,
         plName,
@@ -2406,14 +2512,14 @@ class LoadPlaylistByFilter(eg.ActionBase):
         repeat,
         shuffle,
         crossfade,
-        accessible,
-        wait
+        clear,
     ):
-        if not self.plugin.workerThread:
-            self.plugin.workerThread = MediaMonkeyWorkerThread(self)
-            self.plugin.workerThread.Start(100.0)
+        if not self.plugin.workerThread2:
+            self.plugin.workerThread2 = MediaMonkeyWorkerThread(self.plugin)
+            self.plugin.workerThread2.Start(100.0)
         args = (
-            self.plugin.workerThread.LoadFilterPlaylist,
+            self.plugin.workerThread2.LoadFilterPlaylist,
+            plName,
             mode,
             listRules,
             order,
@@ -2425,19 +2531,11 @@ class LoadPlaylistByFilter(eg.ActionBase):
             repeat,
             shuffle,
             crossfade,
-            accessible,
+            clear,
             self.unitList,
             self.trendList
   )
-        if wait:
-            n,Total = self.plugin.workerThread.CallWait(partial(*args),600)
-            if n>0:
-                return plName+": "+self.text.found % (str(n),str(Total))
-            else:
-                return plName+": "+self.text.noFound
-        else:
-            self.plugin.workerThread.Call(partial(*args))
-            return Text.withoutWaiting
+        self.plugin.workerThread2.Call(partial(*args))
 
     def Configure(
         self,
@@ -2453,8 +2551,7 @@ class LoadPlaylistByFilter(eg.ActionBase):
         repeat=2,
         shuffle=2,
         crossfade=2,
-        accessible=False,
-        wait = 0
+        clear=True,
     ):
         text = self.text
         def validityCheck():
@@ -2527,13 +2624,8 @@ class LoadPlaylistByFilter(eg.ActionBase):
         shuffleChkBoxCtrl.Set3StateValue(shuffle)
         crossfadeChkBoxCtrl = wx.CheckBox(panel, label=Text.crossfade,style=wx.CHK_3STATE|wx.CHK_ALLOW_3RD_STATE_FOR_USER)
         crossfadeChkBoxCtrl.Set3StateValue(crossfade)
-        accessibleChkBoxCtrl = wx.CheckBox(panel, label=Text.accessible)
-        accessibleChkBoxCtrl.SetValue(accessible)
-        waitTxt = wx.StaticText(panel, -1, Text.waitLbl)
-        waitCtrl=wx.Choice(panel, choices=Text.waitMode,size=(100,22))
-        waitCtrl.SetSelection(wait)
-        waitTxt.SetToolTip(wx.ToolTip(Text.waitToolTip))
-        waitCtrl.SetToolTip(wx.ToolTip(Text.waitToolTip))
+        clearPlaylistChkBoxCtrl = wx.CheckBox(panel, label=Text.clearPlaylist)
+        clearPlaylistChkBoxCtrl.SetValue(clear)
 
         self.mySizer = wx.GridBagSizer(vgap=8,hgap=10)
         self.mySizer.SetMinSize((560, 6+29*maxRules))
@@ -2547,13 +2639,11 @@ class LoadPlaylistByFilter(eg.ActionBase):
         limitSizer=wx.BoxSizer(wx.HORIZONTAL)        
         leftSizer=wx.BoxSizer(wx.VERTICAL)
         lrSizer =wx.BoxSizer(wx.HORIZONTAL)
-        bottmSizer = wx.GridSizer(rows=2, cols=2, hgap=5, vgap=10)
+        bottmSizer = wx.FlexGridSizer(rows=2, cols=2, vgap=10, hgap=40)
 
         rightSizer.Add(wx.StaticText(panel, -1, text.filterName),0,wx.LEFT|wx.TOP,4)
         rightSizer.Add(nameCtrl, 0,wx.LEFT|wx.TOP,4)
         rightSizer.Add((1,12))
-        rightSizer.Add(waitTxt,0,wx.LEFT|wx.TOP,4)
-        rightSizer.Add(waitCtrl, 0,wx.LEFT|wx.TOP,4)
         orderSizer.Add(orderChkBoxCtrl,0,wx.TOP,4)
         orderSizer.Add(dirTxt1,0,wx.LEFT|wx.TOP,4)
         orderSizer.Add(dirCtrl,0,wx.LEFT,4)
@@ -2569,14 +2659,15 @@ class LoadPlaylistByFilter(eg.ActionBase):
         bottmSizer.Add(repeatChkBoxCtrl,0,wx.LEFT,5)
         bottmSizer.Add(shuffleChkBoxCtrl,0)
         bottmSizer.Add(crossfadeChkBoxCtrl,0,wx.LEFT,5)
-        bottmSizer.Add(accessibleChkBoxCtrl,0)
+        bottmSizer.Add(clearPlaylistChkBoxCtrl,0)
         leftSizer.Add(stBoxSizer,0)
-        leftSizer.Add(bottmSizer,0,wx.TOP,10)
+        #leftSizer.Add(bottmSizer,0,wx.TOP,10)
         lrSizer.Add(leftSizer)
         lrSizer.Add(rightSizer,0,wx.LEFT,10)
         panel.sizer.Add(radioBoxMode, 0)
         panel.sizer.Add(self.mySizer, 0,wx.TOP,10)
         panel.sizer.Add(lrSizer)
+        panel.sizer.Add(bottmSizer,0,wx.TOP,10)
 
         def CreateExprCtrl(row):
 #Called from:	 AddRow,UpdateChoiceExpr
@@ -2690,7 +2781,6 @@ class LoadPlaylistByFilter(eg.ActionBase):
                 elif lng==3 and tp2>5:
                     rng=(2,1,0)
                     flag=True
-
             else: #tp<>"D"
                 if lng==2:
                     rng=(1,0,)
@@ -2724,6 +2814,7 @@ class LoadPlaylistByFilter(eg.ActionBase):
                     else: # relative date/time
                         wnd1.SetValue(int(val[:-1]))
                         wnd2.SetSelection(int(val[-1]))
+
         def updateRow(row):
 #Called from: OnAddButton, OnRemoveButton, Main
             if listRules2[row][0] > -1:
@@ -2903,7 +2994,7 @@ class LoadPlaylistByFilter(eg.ActionBase):
         repeatChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnEventInterception)
         shuffleChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnEventInterception)
         crossfadeChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnEventInterception)
-        accessibleChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnEventInterception)
+        clearPlaylistChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnEventInterception)
 
         randomChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnRandom)
         orderChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnOrderSwitch)
@@ -2940,8 +3031,7 @@ class LoadPlaylistByFilter(eg.ActionBase):
             repeatChkBoxCtrl.Get3StateValue(),
             shuffleChkBoxCtrl.Get3StateValue(),
             crossfadeChkBoxCtrl.Get3StateValue(),
-            accessibleChkBoxCtrl.GetValue(),
-            waitCtrl.GetSelection()
+            clearPlaylistChkBoxCtrl.GetValue(),
             )
 
     class text:
@@ -2982,7 +3072,8 @@ class LoadPlaylistByFilter(eg.ActionBase):
 #====================================================================
 
 class LoadPlaylistBySql(eg.ActionBase):
-    ur'''<rst>**Loads a MediaMonkey playlist defined by SQL query.** 
+    name = "Load Playlist by SQL query"
+    description = ur'''<rst>**Loads a MediaMonkey playlist defined by SQL query.** 
 
 This action is for advanced users only. Here you can write your own SQL
 query and use it to select specific songs from **MediaMonkey**'s 
@@ -2998,10 +3089,7 @@ If you are new to SQL, you might get some help from a SQL tutorial.
 A good example can be found at http://www.firstsql.com/tutor2.htm . 
 Pay particular attention to the `WHERE Clause`_ .
 
-.. _`WHERE Clause`: http://www.firstsql.com/tutor2.htm#where
-'''
-    name = "Load Playlist by SQL query"
-    description = __doc__
+.. _`WHERE Clause`: http://www.firstsql.com/tutor2.htm#where'''
 
     def __init__(self):
         self.myDirty=None
@@ -3014,29 +3102,21 @@ Pay particular attention to the `WHERE Clause`_ .
         repeat,
         shuffle,
         crossfade,
-        accessible,
-        wait
+        clear,
     ):
-        if not self.plugin.workerThread:
-            self.plugin.workerThread = MediaMonkeyWorkerThread(self)
-            self.plugin.workerThread.Start(100.0)
+        if not self.plugin.workerThread2:
+            self.plugin.workerThread2 = MediaMonkeyWorkerThread(self.plugin)
+            self.plugin.workerThread2.Start(100.0)
         args = (
-            self.plugin.workerThread.LoadSqlPlaylist,
+            self.plugin.workerThread2.LoadSqlPlaylist,
+            plName,
             sql,
             repeat,
             shuffle,
             crossfade,
-            accessible,
+            clear,
         )
-        if wait:
-            n,Total = self.plugin.workerThread.CallWait(partial(*args),600)
-            if n > 0:
-                return plName+": "+self.text.found % (str(n),str(Total))
-            else:
-                return plName+": "+self.text.noFound
-        else:
-            self.plugin.workerThread.Call(partial(*args))
-            return Text.withoutWaiting
+        self.plugin.workerThread2.Call(partial(*args))
 
     def Configure(
         self,
@@ -3045,8 +3125,7 @@ Pay particular attention to the `WHERE Clause`_ .
         repeat=2,
         shuffle=2,
         crossfade=2,
-        accessible=False,
-        wait = 0
+        clear = True,
     ):
         tmpDict=dict(zip(Text.SongTableFields,[tpl[0] for tpl in SONG_TABLE_FIELDS]))
         panel = eg.ConfigPanel(self,resizable = True)
@@ -3055,11 +3134,12 @@ Pay particular attention to the `WHERE Clause`_ .
         mySizer.AddGrowableRow(0)
         mySizer.AddGrowableCol(0)
         mySizer.AddGrowableCol(1)
+        mySizer.AddGrowableCol(2)
         sqlTextCtrl=wx.TextCtrl(panel,-1,query,style=wx.TE_MULTILINE)
-        mySizer.Add(sqlTextCtrl, (0,0), (1, 2), flag = wx.EXPAND)
+        mySizer.Add(sqlTextCtrl, (0,0), (1, 3), flag = wx.EXPAND)
         mySizer.Add(
-            wx.StaticText(panel, -1, text.cols),(1,0),(1,1),
-            flag = wx.ALIGN_CENTER_VERTICAL
+            wx.StaticText(panel, -1, text.cols),(1,0),(1,2),
+            flag = wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT
         )
         choices=['']
         choices.extend(Text.SongTableFields)
@@ -3070,21 +3150,12 @@ Pay particular attention to the `WHERE Clause`_ .
         nameSizer = wx.BoxSizer(wx.VERTICAL)
         statBox = wx.StaticBox(panel, -1, "")
         stBsizer = wx.StaticBoxSizer(statBox, wx.HORIZONTAL)
-        stBsizer.SetMinSize((240,-1))
-        stBsizer.Add(callSizer,1,wx.EXPAND)
-        stBsizer.Add((10,1))
+        #stBsizer.SetMinSize((240,-1))
         stBsizer.Add(nameSizer,1,wx.EXPAND)
         nameCtrl = wx.TextCtrl(panel, -1, plName)
-        waitCtrl = wx.Choice(panel, choices=Text.waitMode)
-        waitCtrl.SetSelection(wait)
-        waitTxt = wx.StaticText(panel, -1, Text.waitLbl)
-        waitTxt.SetToolTip(wx.ToolTip(Text.waitToolTip))
-        waitCtrl.SetToolTip(wx.ToolTip(Text.waitToolTip))
-        callSizer.Add(waitTxt,0)
-        callSizer.Add(waitCtrl, 0,wx.TOP,4)
         nameSizer.Add(wx.StaticText(panel, -1, text.filterName),0,wx.LEFT)
         nameSizer.Add(nameCtrl, 0,wx.TOP|wx.EXPAND,4)
-        mySizer.Add(stBsizer, (1,1), (2, 1), flag = wx.ALIGN_RIGHT)
+        mySizer.Add(stBsizer, (1,2), (2, 1), flag = wx.ALIGN_RIGHT)
 
         repeatChkBoxCtrl = wx.CheckBox(panel, label=Text.repeat,style=wx.CHK_3STATE|wx.CHK_ALLOW_3RD_STATE_FOR_USER)
         repeatChkBoxCtrl.Set3StateValue(repeat)
@@ -3092,12 +3163,12 @@ Pay particular attention to the `WHERE Clause`_ .
         shuffleChkBoxCtrl.Set3StateValue(shuffle)
         crossfadeChkBoxCtrl = wx.CheckBox(panel, label=Text.crossfade,style=wx.CHK_3STATE|wx.CHK_ALLOW_3RD_STATE_FOR_USER)
         crossfadeChkBoxCtrl.Set3StateValue(crossfade)
-        accessibleChkBoxCtrl = wx.CheckBox(panel, label=Text.accessible)
-        accessibleChkBoxCtrl.SetValue(accessible)
+        clearPlaylistChkBoxCtrl = wx.CheckBox(panel, label=Text.clearPlaylist)
+        clearPlaylistChkBoxCtrl.SetValue(clear)
         mySizer.Add(repeatChkBoxCtrl,(3,0),(1,1),flag=wx.ALIGN_LEFT)
         mySizer.Add(shuffleChkBoxCtrl,(3,1),(1,1),flag=wx.ALIGN_LEFT)
-        mySizer.Add(accessibleChkBoxCtrl,(4,1),(1,1),flag=wx.RIGHT)
         mySizer.Add(crossfadeChkBoxCtrl,(4,0),(1,1),flag=wx.ALIGN_LEFT)
+        mySizer.Add(clearPlaylistChkBoxCtrl,(4,1),(1,2),flag=wx.RIGHT)
         headLabel = wx.StaticText(panel, -1, text.head)
         panel.sizer.Add(headLabel,flag = wx.ALIGN_CENTER_VERTICAL)
         panel.sizer.Add(mySizer, 1, flag = wx.EXPAND|wx.TOP,border=4)
@@ -3122,8 +3193,7 @@ Pay particular attention to the `WHERE Clause`_ .
             repeatChkBoxCtrl.Get3StateValue(),
             shuffleChkBoxCtrl.Get3StateValue(),
             crossfadeChkBoxCtrl.Get3StateValue(),
-            accessibleChkBoxCtrl.GetValue(),
-            waitCtrl.GetSelection()
+            clearPlaylistChkBoxCtrl.GetValue(),
             )
             
     class text:
@@ -3141,7 +3211,8 @@ Pay particular attention to the `WHERE Clause`_ .
 #====================================================================
 
 class Jukebox(eg.ActionBase):
-    u'''<rst>**Album jukebox**.
+    name = "Album jukebox"
+    description = u'''<rst>**Album jukebox**.
 
 Thanks to this action, your PC can function like a jukebox. In order to work 
 properly, the event which triggers this action, must be carrying a payload. 
@@ -3150,14 +3221,30 @@ playing this album.
 
 One way to trigger an event with a payload is to use the plugin **Multitap** 
 (Numpad mode).'''
-
-    name = "Album jukebox"
-    description = __doc__
         
-    def Configure(self,repeat=2,shuffle=2,crossfade=2,accessible=False,filePath=''):
-        self.filePath = filePath
+    def Configure(self,repeat=2,shuffle=2,crossfade=2,clear = True, filePath=''):
         txt = self.text
+        self.filePath = filePath
         panel = eg.ConfigPanel(self)
+        label1Text = wx.StaticText(panel, -1, self.text.label1)
+        if filePath:
+            startFolder = path_split(filePath)[1]
+        else:
+            startFolder = eg.folderPath.Documents
+        filePathCtrl = eg.FileBrowseButton(
+            panel, 
+            size=(410,-1),
+            toolTip = self.plugin.text.toolTipFolder,
+            dialogTitle = self.plugin.text.browseTitle,
+            buttonText = eg.text.General.browse,
+            initialValue=startFolder+'\\AlbumListMM.txt',
+            fileMask="CSV files (*.csv)|*.csv|"\
+                "Text file (*.txt)|*.txt|"\
+                "All files (*.*)|*.*",
+        )
+        if filePath:
+            filePathCtrl.SetValue(filePath)        
+
         Sizer = panel.sizer
         sizes = []
         sizes.append(panel.GetTextExtent(txt.saveButton)[0])
@@ -3170,93 +3257,54 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
         repeatChkBoxCtrl = wx.CheckBox(panel, label=Text.repeat,style=wx.CHK_3STATE|wx.CHK_ALLOW_3RD_STATE_FOR_USER)
         shuffleChkBoxCtrl = wx.CheckBox(panel, label=Text.shuffle,style=wx.CHK_3STATE|wx.CHK_ALLOW_3RD_STATE_FOR_USER)
         crossfadeChkBoxCtrl = wx.CheckBox(panel, label=Text.crossfade,style=wx.CHK_3STATE|wx.CHK_ALLOW_3RD_STATE_FOR_USER)
-        accessibleChkBoxCtrl = wx.CheckBox(panel, label=Text.accessible)
-        accessibleChkBoxCtrl.SetValue(accessible)
+        clearPlaylistChkBoxCtrl = wx.CheckBox(panel, label=Text.clearPlaylist)
+        clearPlaylistChkBoxCtrl.SetValue(clear)
         repeatChkBoxCtrl.Set3StateValue(repeat)
         shuffleChkBoxCtrl.Set3StateValue(shuffle)
         crossfadeChkBoxCtrl.Set3StateValue(crossfade)
         Sizer.Add(repeatChkBoxCtrl,0)
         Sizer.Add(shuffleChkBoxCtrl,0,wx.TOP,10)
         Sizer.Add(crossfadeChkBoxCtrl,0,wx.TOP,10)
-        Sizer.Add(accessibleChkBoxCtrl,0,wx.TOP,10)
-        Sizer.Add(exportButton,0,wx.TOP,30)
-        Sizer.Add(openButton,0,wx.TOP,20)
-        if isfile(self.filePath):
-            openButton.Enable(True)
-        else:
-            openButton.Enable(False)
+        Sizer.Add(clearPlaylistChkBoxCtrl,0,wx.TOP,10)
+        Sizer.Add(label1Text, 0, wx.TOP,15)
+        Sizer.Add(filePathCtrl,0,wx.TOP,3)
+        Sizer.Add(exportButton,0,wx.TOP,10)
+        Sizer.Add(openButton,0,wx.TOP,10)
             
         def onBtnClick(event):
-            dialog = wx.FileDialog(
-                panel,
-                message=txt.saveTitle,
-                defaultDir=eg.folderPath.Documents,         
-                defaultFile="AlbumListMM",
-                wildcard="CSV files (*.csv)|*.csv|"\
-                    "Text file (*.txt)|*.txt|"\
-                    "All files (*.*)|*.*",
-                style=wx.SAVE
-            )            
-            dialog.SetFilterIndex(1)
-            if dialog.ShowModal() == wx.ID_OK:
-                if not self.plugin.workerThread:
-                    self.plugin.workerThread = MediaMonkeyWorkerThread(self)
-                    self.plugin.workerThread.Start(100.0)
-                ID = eg.event.payload
-                self.filePath = dialog.GetPath()
-                flag = self.plugin.workerThread.CallWait(partial(self.plugin.workerThread.ExportAlbumList,self.filePath),300)
-                dialog.Destroy()
-                if flag:    
-                    file = codecs.open(self.filePath,encoding='utf-8', mode='r',errors='replace')
-                    msg = file.read()
-                    file.close()
-                    self.jukeboxFrame = JukeboxFrame(parent = self)
-                    wx.CallAfter(
-                        self.jukeboxFrame.ShowJukeboxFrame,
-                        'Album',
-                        accessibleChkBoxCtrl.GetValue(),
-                        self.filePath,
-                        repeatChkBoxCtrl.Get3StateValue(),
-                        shuffleChkBoxCtrl.Get3StateValue(),
-                        crossfadeChkBoxCtrl.Get3StateValue(),
-                    )
-                    openButton.Enable(True)
-                else:
-                    openButton.Enable(False)
-                    head, tail = os.path.split(self.filePath)
-                    dialog = wx.MessageDialog(
-                        panel,
-                        txt.msgMsg % (tail,head),
-                        txt.msgTitle,
-                        wx.OK | wx.ICON_WARNING
-                    )
-                    dialog.ShowModal()
-                    dialog.Destroy()
+            self.filePath=filePathCtrl.GetValue()
+            self.jukeboxFrame = JukeboxFrame(parent=self)
+            wx.CallAfter(
+                self.jukeboxFrame.ShowJukeboxFrame,
+                'Album',
+                clearPlaylistChkBoxCtrl.GetValue(),
+                filePathCtrl.GetValue(),
+                True,
+                repeatChkBoxCtrl.Get3StateValue(),
+                shuffleChkBoxCtrl.Get3StateValue(),
+                crossfadeChkBoxCtrl.Get3StateValue(),
+            )
+            openButton.Enable(True)
             event.Skip()
         exportButton.Bind(wx.EVT_BUTTON, onBtnClick)
         
         def onOpenBtnClick(event):
             if isfile(self.filePath):
-                self.jukeboxFrame = JukeboxFrame(parent = self)
-                wx.CallAfter(
-                    self.jukeboxFrame.ShowJukeboxFrame,
-                    'Album',
-                    accessibleChkBoxCtrl.GetValue(),
-                    self.filePath,
-                    repeatChkBoxCtrl.Get3StateValue(),
-                    shuffleChkBoxCtrl.Get3StateValue(),
-                    crossfadeChkBoxCtrl.Get3StateValue(),
-                )
+                flag = False
             else:
-                head, tail = os.path.split(self.filePath)
-                dialog = wx.MessageDialog(
-                    panel,
-                    txt.msgMsg % (tail,head),
-                    txt.msgTitle,
-                    wx.OK | wx.ICON_WARNING
-                )
-                dialog.ShowModal()
-                dialog.Destroy()
+                flag = True
+                self.filePath=filePathCtrl.GetValue()
+            self.jukeboxFrame = JukeboxFrame(parent = self)
+            wx.CallAfter(
+                self.jukeboxFrame.ShowJukeboxFrame,
+                'Album',
+                clearPlaylistChkBoxCtrl.GetValue(),
+                filePathCtrl.GetValue(),
+                flag,
+                repeatChkBoxCtrl.Get3StateValue(),
+                shuffleChkBoxCtrl.Get3StateValue(),
+                crossfadeChkBoxCtrl.Get3StateValue(),
+            )
             event.Skip()
         openButton.Bind(wx.EVT_BUTTON, onOpenBtnClick)
         
@@ -3265,43 +3313,37 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
                 repeatChkBoxCtrl.Get3StateValue(),
                 shuffleChkBoxCtrl.Get3StateValue(),
                 crossfadeChkBoxCtrl.Get3StateValue(),
-                accessibleChkBoxCtrl.GetValue(),
-                self.filePath,
+                clearPlaylistChkBoxCtrl.GetValue(),
+                filePathCtrl.GetValue(),
             )
 
-    def GetLabel(self,repeat,shuffle,crossfade,accessible,filePath):
+    def GetLabel(self,repeat,shuffle,crossfade,clear,filePath):
         return self.name       
 
-    def __call__(self,repeat=2,shuffle=2,crossfade=2,accessible=False,filePath=''):
+    def __call__(self,repeat=2,shuffle=2,crossfade=2,clear=True,filePath=''):
         ID = eg.event.payload
-        res,Total = self.plugin.Jubox(
+        self.plugin.Jubox(
             ID,
-            accessible,
+            clear,
             repeat,
             shuffle,
             crossfade,
         )
-        if int(Total) > 0:
-            return '\n'.join(res)
-        else:
-            return self.text.noAlbum % ID
             
     class text():
-        noAlbum = 'No album found with ID %s'
+        label1 = "Target file to export albums:"
         saveButton = "Export album list to file"
         openButton = "Open album list file"
-        saveTitle = "Save file as ..."
-        file = 'File:'
-        msgTitle = 'Warning:'
-        msgMsg = 'Failed to save the file "%s"\nto the folder "%s" !'
-        baloonBttn = (
-            'ATTENTION !!! This operation may take several minutes !!!\n Click to export code, album name and album artist to selected file.\nYou can this file import for example to MS Excel or OOo Calc',
+        baloonBttn =('''ATTENTION !!! This operation may take several minutes !!!
+Click to export code, album name and album artist to selected file.
+You can this file import for example to MS Excel or OOo Calc''',
             'Open file %s'
         )
 #====================================================================
 
 class SongJukebox(eg.ActionBase):
-    u'''<rst>**Song jukebox**.
+    name = "Song jukebox"
+    description = u'''<rst>**Song jukebox**.
 
 Thanks to this action, your PC can function like a jukebox. In order to work 
 properly, the event which triggers this action, must be carrying a payload. 
@@ -3310,14 +3352,29 @@ playing the song.
 
 One way to trigger an event with a payload is to use the plugin **Multitap** 
 (Numpad mode).'''
-
-    name = "Song jukebox"
-    description = __doc__
         
-    def Configure(self,accessible=False,filePath=''):
+    def Configure(self,clear=False,filePath=''):
         self.filePath = filePath
         txt = self.text
         panel = eg.ConfigPanel(self)
+        label1Text = wx.StaticText(panel, -1, self.text.label1)
+        if filePath:
+            startFolder = path_split(filePath)[1]
+        else:
+            startFolder = eg.folderPath.Documents
+        filePathCtrl = eg.FileBrowseButton(
+            panel, 
+            size=(410,-1),
+            toolTip = self.plugin.text.toolTipFolder,
+            dialogTitle = self.plugin.text.browseTitle,
+            buttonText = eg.text.General.browse,
+            initialValue=startFolder+'\\SongListMM.txt',
+            fileMask="CSV files (*.csv)|*.csv|"\
+                "Text file (*.txt)|*.txt|"\
+                "All files (*.*)|*.*",
+        )
+        if filePath:
+            filePathCtrl.SetValue(filePath)        
         Sizer = panel.sizer
         sizes = []
         sizes.append(panel.GetTextExtent(txt.saveButton)[0])
@@ -3327,116 +3384,75 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
         exportButton.SetToolTip(wx.ToolTip(txt.baloonBttn[0]))
         openButton = wx.Button(panel, -1, txt.openButton, size=((w,-1)))
         openButton.SetToolTip(wx.ToolTip(txt.baloonBttn[1] % self.filePath))
-        accessibleChkBoxCtrl = wx.CheckBox(panel, label=Text.accessible)
-        accessibleChkBoxCtrl.SetValue(accessible)
-        Sizer.Add(accessibleChkBoxCtrl,0,wx.TOP,20)
+        clearPlaylistChkBoxCtrl = wx.CheckBox(panel, label=Text.clearPlaylist)
+        clearPlaylistChkBoxCtrl.SetValue(clear)
+        Sizer.Add(clearPlaylistChkBoxCtrl,0,wx.TOP,20)
+        Sizer.Add(label1Text, 0, wx.TOP,15)
+        Sizer.Add(filePathCtrl,0,wx.TOP,3)
         Sizer.Add(exportButton,0,wx.TOP,20)
         Sizer.Add(openButton,0,wx.TOP,20)
-        if isfile(self.filePath):
-            openButton.Enable(True)
-        else:
-            openButton.Enable(False)
             
         def onBtnClick(event):
-            dialog = wx.FileDialog(
-                panel,
-                message=txt.saveTitle,
-                defaultDir=eg.folderPath.Documents,         
-                defaultFile="SongListMM",
-                wildcard="CSV files (*.csv)|*.csv|"\
-                    "Text file (*.txt)|*.txt|"\
-                    "All files (*.*)|*.*",
-                style=wx.SAVE
-            )            
-            dialog.SetFilterIndex(1)
-            if dialog.ShowModal() == wx.ID_OK:
-                if not self.plugin.workerThread:
-                    self.plugin.workerThread = MediaMonkeyWorkerThread(self)
-                    self.plugin.workerThread.Start(100.0)
-                ID = eg.event.payload
-                self.filePath = dialog.GetPath()
-                flag = self.plugin.workerThread.CallWait(partial(self.plugin.workerThread.ExportSongList,self.filePath),600)
-                dialog.Destroy()
-                openButton.Enable(False)
-                if flag:    
-                    self.jukeboxFrame = JukeboxFrame(parent = self)
-                    wx.CallAfter(
-                        self.jukeboxFrame.ShowJukeboxFrame,
-                        'Song',
-                        accessibleChkBoxCtrl.GetValue(),
-                        self.filePath,
-                    )
-                    openButton.Enable(True)
-                else:
-                    head, tail = os.path.split(self.filePath)
-                    dialog = wx.MessageDialog(
-                        panel,
-                        txt.msgMsg % (tail,head),
-                        txt.msgTitle,
-                        wx.OK | wx.ICON_WARNING
-                    )
-                    dialog.ShowModal()
-                    dialog.Destroy()
+            self.filePath=filePathCtrl.GetValue()
+            self.jukeboxFrame = JukeboxFrame(parent = self)
+            wx.CallAfter(
+                self.jukeboxFrame.ShowJukeboxFrame,
+                'Song',
+                clearPlaylistChkBoxCtrl.GetValue(),
+                filePathCtrl.GetValue(),
+                True,
+            )
+            openButton.Enable(True)
             event.Skip()
         exportButton.Bind(wx.EVT_BUTTON, onBtnClick)
 
         def onOpenBtnClick(event):
             if isfile(self.filePath):
-                self.jukeboxFrame = JukeboxFrame(parent = self)
-                wx.CallAfter(
-                    self.jukeboxFrame.ShowJukeboxFrame,
-                    'Song',
-                    accessibleChkBoxCtrl.GetValue(),
-                    self.filePath,
-                )
+                flag = False
             else:
-                head, tail = os.path.split(self.filePath)
-                dialog = wx.MessageDialog(
-                    panel,
-                    txt.msgMsg % (tail,head),
-                    txt.msgTitle,
-                    wx.OK | wx.ICON_WARNING
-                )
-                dialog.ShowModal()
-                dialog.Destroy()
+                self.filePath=filePathCtrl.GetValue()
+                flag = True
+            self.jukeboxFrame = JukeboxFrame(parent = self)
+            wx.CallAfter(
+                self.jukeboxFrame.ShowJukeboxFrame,
+                'Song',
+                clearPlaylistChkBoxCtrl.GetValue(),
+                filePathCtrl.GetValue(),
+                flag,
+            )
             event.Skip()
         openButton.Bind(wx.EVT_BUTTON, onOpenBtnClick)
+        
         while panel.Affirmed():
             panel.SetResult(
-                accessibleChkBoxCtrl.GetValue(),
-                self.filePath,
+                clearPlaylistChkBoxCtrl.GetValue(),
+                filePathCtrl.GetValue(),
             )
 
-    def GetLabel(self,accessible,filePath):
+    def GetLabel(self,clear,filePath):
         return self.name       
 
-    def __call__(self,accessible=False,filePath=''):
+    def __call__(self,clear=True,filePath=''):
         ID = eg.event.payload
-        res,Total = self.plugin.SongJubox(
+        self.plugin.SongJubox(
             ID,
-            accessible,
+            clear,
         )
-        if int(Total) > 0:
-            return '\n'.join(res)
-        else:
-            return self.text.noSong % ID
             
     class text():
-        noSong = 'No song with ID %s'
+        label1 = "Target file to export albums:"
         saveButton = "Export song list to file"
         openButton = "Open song list file"
-        saveTitle = "Save file as ..."
-        file = 'File:'
-        msgTitle = 'Warning:'
-        msgMsg = 'Failed to save the file "%s"\nto the folder "%s" !'
-        baloonBttn = (
-            'ATTENTION !!! This operation may take several minutes !!!\n Click to export code, song name and song artist to selected file.\nYou can this file import for example to MS Excel or OOo Calc',
+        baloonBttn = ('''ATTENTION !!! This operation may take several minutes !!!
+Click to export code, song name and song artist to selected file.
+You can this file import for example to MS Excel or OOo Calc''',
             'Open file %s'
         )
 #====================================================================
 
 class SendKeys(eg.ActionBase):
-    '''<rst>**Sends keys to MediaMonkey Window**.
+    name = "Send keys"
+    description = '''<rst>**Sends keys to MediaMonkey Window**.
 
 Some features of MediaMonkey (for example executing a script) can be controlled 
 from another program only using the hotkeys . On the menu 
@@ -3444,9 +3460,6 @@ from another program only using the hotkeys . On the menu
 (you don't need to set the hotkeys as global !) and then in the text box *"Keystroke to send"* 
 type the same (for example *Shift+Alt+E*). In the text box *"Name of hotkey"* 
 you can label the keystrokes with your own description.'''
-
-    name = "Send keys"
-    description = __doc__
     
     def __call__(self, descr = "",keys = ""):
         hwnds = MyWindowMatcher()
@@ -3496,22 +3509,27 @@ class JukeboxFrame(wx.Frame):
         )
         self.SetBackgroundColour(wx.NullColour)
         self.menuFlag = False
+        self.parent=parent
 
-    
     def ShowJukeboxFrame(
         self,
         case,
-        accessible,
+        clear,
         filePath,
+        create,
         repeat=None,
         shuffle=None,
         crossfade=None,
     ):
+
+        eg.Bind("MediaMonkey.jukebox",self.CompleteForm)
         self.case = case
+        self.clear = clear
+        self.filePath = filePath
+        self.create = create
         self.repeat = repeat
         self.shuffle = shuffle
         self.crossfade = crossfade
-        self.accessible = accessible
         self.text = self.plugin.text
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         centralSizer = wx.GridBagSizer(10, 10)
@@ -3551,6 +3569,8 @@ class JukeboxFrame(wx.Frame):
         self.SetSizer(mainSizer)
 
         def OnCloseWindow(event):
+            eg.Unbind("MediaMonkey.jukebox",self.CompleteForm)
+            self.Show(False)
             self.MakeModal(False)
             self.Destroy()
             event.Skip()
@@ -3560,25 +3580,49 @@ class JukeboxFrame(wx.Frame):
         self.closeButton.Bind(wx.EVT_BUTTON, self.onCloseButton)
         self.SetMinSize((475,200))
         self.CentreOnParent()
-        self.MakeModal(True)
-        self.SetTitle(filePath)
-        row = 0
-        file = codecs.open(filePath,encoding='utf-8', mode='r',errors='replace')
-        albums = file.readlines()
-        for album in albums:
-            item = album.split('\t')
-            self.itemListCtrl.InsertStringItem(row,item[0])
-            self.itemListCtrl.SetStringItem(row, 1,item[1])
-            self.itemListCtrl.SetStringItem(row, 2, item[2])
-            row += 1
-        file.close()
+        self.SetTitle(self.filePath)
         sizes = (55,200,200)
         for i in range(3):
             self.itemListCtrl.SetColumnWidth(i, sizes[i])
         self.SetDimensions(-1, -1, 504, 400, sizeFlags=wx.SIZE_AUTO)
         self.Bind(wx.EVT_SIZE, OnSize)
+        self.MakeModal(True)
         self.Show(True)
+        self.RefreshList()
         
+    def RefreshList(self):
+        self.patientFrame = None
+        if not self.create:
+            self.CompleteForm()                  
+        else:
+            self.itemListCtrl.DeleteAllItems()
+            self.Update()
+            if not self.plugin.workerThread:
+                self.plugin.workerThread = MediaMonkeyWorkerThread(self.plugin)
+                self.plugin.workerThread.Start(100.0)                
+            self.patientFrame = PatientFrame(self,self.text.please)
+            if self.case=='Album':
+                self.plugin.workerThread.Call(partial(self.plugin.workerThread.ExportAlbumList,self.filePath))
+            else:
+                self.plugin.workerThread.Call(partial(self.plugin.workerThread.ExportSongList,self.filePath))
+            self.Enable(False)
+
+    def CompleteForm(self,evt=None):
+        row = 0
+        file = codecs.open(self.filePath,encoding='utf-8', mode='r',errors='replace')
+        albums = file.readlines()
+        for album in albums:
+            item = album.split('\t')
+            self.itemListCtrl.InsertStringItem(row,item[0])
+            self.itemListCtrl.SetStringItem(row, 1,item[1])
+            self.itemListCtrl.SetStringItem(row, 2, item[2][:-1])
+            row += 1
+        file.close()
+        if self.patientFrame:
+            self.patientFrame.Destroy()
+        self.Enable(True)
+        self.Raise()
+
     def onCloseButton(self, evt):
         self.Close(True)
         #evt.Skip()
@@ -3595,13 +3639,13 @@ class JukeboxFrame(wx.Frame):
         if self.case == 'Album':
             self.plugin.Jubox(
                 ID,
-                self.accessible,
+                self.clear,
                 self.repeat,
                 self.shuffle,
                 self.crossfade,
             )
         else:
-            self.plugin.SongJubox(ID,self.accessible)
+            self.plugin.SongJubox(ID,self.clear)
         evt.Skip()
 
     def OnRightClick(self, event):
@@ -3620,6 +3664,208 @@ class JukeboxFrame(wx.Frame):
         # will be called before PopupMenu returns.
         self.PopupMenu(menu)
         menu.Destroy()
+#===============================================================================
+
+class UnaccessibleTracksFrame(wx.Frame):
+    
+    def __init__(self, parent):
+        self.parent=parent
+        self.plugin = parent.plugin
+        wx.Frame.__init__(
+            self,
+            None,
+            -1,
+            size=(-1, -1),
+            style=wx.CAPTION|wx.RESIZE_BORDER
+        )
+        self.SetBackgroundColour(wx.NullColour)
+        self.menuFlag = False
+
+    def ShowUnaccessibleTracksFrame(
+        self,
+        filePath,
+        mode=True
+    ):
+        eg.Bind("MediaMonkey.unaccessible",self.CompleteForm)
+        self.filePath = filePath
+        self.mode = mode
+        self.text = self.plugin.text
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        centralSizer = wx.GridBagSizer(10, 10)
+        centralSizer.AddGrowableRow(0)
+        centralSizer.AddGrowableCol(1)
+        centralSizer.AddGrowableCol(3)
+        cols = self.text.labelsU
+        self.itemListCtrl = wx.ListCtrl(self, -1, style=wx.LC_REPORT | wx.VSCROLL | wx.HSCROLL)
+        for i, label in enumerate(cols):
+            self.itemListCtrl.InsertColumn(
+                i,
+                label,
+            )
+        centralSizer.Add(self.itemListCtrl, (0,0),(1,5), flag = wx.EXPAND)
+
+        #Buttons
+        self.deleteButton = wx.Button(self, -1, self.text.popup2)
+        self.deleteButton.Enable(False)
+        centralSizer.Add(self.deleteButton,(1,0), flag = wx.ALIGN_LEFT)
+        self.refreshButton = wx.Button(self, -1, self.text.refresh)
+        centralSizer.Add(self.refreshButton,(1,2), flag = wx.ALIGN_CENTER)
+        self.closeButton = wx.Button(self, -1, self.text.close)
+        centralSizer.Add(self.closeButton,(1,4), flag = wx.ALIGN_RIGHT)
+        
+        self.itemListCtrl.Bind(wx.EVT_COMMAND_RIGHT_CLICK, self.OnRightClick)
+        self.itemListCtrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.ListSelection)
+        self.itemListCtrl.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.ListSelection)
+
+        def OnSize(event):
+            w = self.GetSize()[0]/4-26
+            self.itemListCtrl.SetColumnWidth(1, w)
+            self.itemListCtrl.SetColumnWidth(2, 3*w)
+            event.Skip()
+
+        mainSizer.Add(centralSizer, 1,wx.EXPAND|wx.ALL,10)
+        mainSizer.Layout()
+        self.SetSizer(mainSizer)
+
+        def OnCloseWindow(event):
+            eg.Unbind("MediaMonkey.unaccessible",self.CompleteForm)
+            self.Show(False)
+            self.MakeModal(False)
+            self.Destroy()
+            self.parent.frameIsOpen = False
+
+        self.Bind(wx.EVT_CLOSE, OnCloseWindow)
+        self.deleteButton.Bind(wx.EVT_BUTTON, self.onDeleteButton)
+        self.refreshButton.Bind(wx.EVT_BUTTON, self.onRefreshButton)
+        self.closeButton.Bind(wx.EVT_BUTTON, self.onCloseButton)
+        self.SetMinSize((475,200))
+        self.CentreOnParent()
+        self.SetTitle(filePath)
+        row = 0
+        sizes = (55,100,300)
+        for i in range(2):
+            self.itemListCtrl.SetColumnWidth(i, sizes[i])
+        self.SetDimensions(-1, -1, 504, 400, sizeFlags=wx.SIZE_AUTO)
+        self.Bind(wx.EVT_SIZE, OnSize)
+        self.MakeModal(True)
+        self.Show(True)
+        self.onRefreshButton()
+        
+    def onCloseButton(self, evt):
+        self.Close(True)
+
+    def ListSelection(self, event=None):
+        self.menuFlag = self.itemListCtrl.GetSelectedItemCount() > 0
+        self.deleteButton.Enable(self.menuFlag)
+        if event:
+            event.Skip()
+
+    def onDeleteButton(self, evt):
+        item = self.itemListCtrl.GetFirstSelected()
+        tmpList=[]
+        while item != -1:
+            ID = self.itemListCtrl.GetItemText(item)
+            tmpList.append(ID)
+            item = self.itemListCtrl.GetNextSelected(item)
+        for n in range(self.itemListCtrl.GetItemCount()-1,-1,-1):
+            for item in tmpList:
+                if item == self.itemListCtrl.GetItemText(n):
+                    if self.plugin.DeleteSong(item) == "0":
+                        self.itemListCtrl.DeleteItem(n)
+                    break
+        n = self.itemListCtrl.GetItemCount()
+        if n > 0:
+            file = codecs.open(self.filePath,encoding='utf-8', mode='w',errors='replace')
+            for item in range(n):
+                file.write('\t'.join((
+                    self.itemListCtrl.GetItemText(item),
+                    self.itemListCtrl.GetItem(item,1).GetText(),
+                    self.itemListCtrl.GetItem(item,2).GetText(),
+                )))
+                file.write('\n')
+            file.close()
+        elif isfile(self.filePath):
+            remove_file(self.filePath)            
+        evt.Skip()
+        
+    def onRefreshButton(self,evt=None):
+        self.patientFrame = None
+        if not evt and not self.mode and isfile(self.filePath):
+            self.CompleteForm()                  
+        else:
+            self.itemListCtrl.DeleteAllItems()
+            self.Update()
+            if not self.plugin.workerThread:
+                self.plugin.workerThread = MediaMonkeyWorkerThread(self.plugin)
+                self.plugin.workerThread.Start(100.0)                
+            self.patientFrame = PatientFrame(self,self.text.please)
+            self.plugin.workerThread.Call(partial(self.plugin.workerThread.GetNotAccessibleTracks,self.filePath))
+            self.Enable(False)
+        if evt:
+            evt.Skip()
+            
+    def CompleteForm(self,evt=None):
+#        self.MakeModal(True)
+        if isfile(self.filePath):
+            file = codecs.open(self.filePath,encoding='utf-8', mode='r',errors='replace')
+            tracks = file.readlines()
+            row = 0
+            for track in tracks:
+                item = track.split('\t')
+                self.itemListCtrl.InsertStringItem(row,item[0])
+                self.itemListCtrl.SetStringItem(row, 1,item[1])
+                self.itemListCtrl.SetStringItem(row, 2,item[2][:-1])
+                row += 1
+            file.close()
+        if self.patientFrame:
+            self.patientFrame.Destroy()
+        self.Enable(True)
+        self.Raise()
+
+    def OnRightClick(self, event):
+        if not hasattr(self, "popupID1"):
+            self.popupID1 = wx.NewId()
+
+            self.Bind(wx.EVT_MENU, self.onDeleteButton, id=self.popupID1)
+
+        # make a menu
+        menu = wx.Menu()
+        # add some items
+        if self.menuFlag:
+            menu.Append(self.popupID1, self.text.popup2)
+
+        # Popup the menu.  If an item is selected then its handler
+        # will be called before PopupMenu returns.
+        self.PopupMenu(menu)
+        menu.Destroy()
+#===============================================================================
+
+class PatientFrame(wx.Frame):
+    def __init__(
+        self,
+        parent,
+        message,
+    ):
+        if parent is None and eg.document.frame:
+            parent = eg.document.frame
+        wx.Frame.__init__(self, parent, -1, eg.APP_NAME, wx.DefaultPosition, style=wx.RAISED_BORDER| wx.STAY_ON_TOP)
+        self.SetBackgroundColour(wx.NullColour)
+
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        bmp = wx.ArtProvider.GetBitmap(wx.ART_WARNING, wx.ART_CMN_DIALOG, (32, 32))
+        staticBitmap = wx.StaticBitmap(self, -1, bmp)
+        staticBitmap2 = wx.StaticBitmap(self, -1, bmp)
+        staticText = wx.StaticText(self, -1, message)
+        fnt = staticText.GetFont()
+        fnt.SetPointSize(13)
+        staticText.SetFont(fnt)
+        sizer.Add(staticBitmap, 0, wx.ALL, 12)
+        sizer.Add(staticText,0,wx.ALIGN_CENTER)
+        sizer.Add(staticBitmap2, 0, wx.ALL, 12)
+        self.SetSizerAndFit(sizer)
+        self.CenterOnParent()
+        self.Show()
+        self.Update()
 #===============================================================================
 
 ACTIONS = (
