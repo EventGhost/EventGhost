@@ -91,14 +91,14 @@ class PcRemoteController(eg.PluginBase):
             self.usb.AddDevice(
                 "PC Remote Controller",
                 "USB\VID_06B4&PID_1C70",
-                "{864B5995-C8D3-4C5A-8D91-78D89855778A}", 
+                "{72679574-1865-499d-B182-4B099D6D1391}", 
                 self.Callback, 
                 4,
             )
             self.usb.Open()
         else:
             self.usb = eg.WinUsbRemote(
-                "{864B5995-C8D3-4C5A-8D91-78D89855778A}", 
+                "{72679574-1865-499d-B182-4B099D6D1391}", 
                 self.Callback, 
                 4,            
             )
