@@ -18,8 +18,6 @@
 ur"""<rst>
 Plugin for the Speed-Link Media Remote Control (SL-6399)
 
-|
-__ http://www.eventghost.org/downloads/USB-Remote-Driver.exe
 """
 
 import eg

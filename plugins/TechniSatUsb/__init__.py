@@ -21,8 +21,6 @@ Plugin for the TechniSat USB IR Receiver
 
 .. image:: technisat.jpg
    :align: center
-
-__ http://www.eventghost.org/downloads/USB-Remote-Driver.exe
 """
 
 import eg
