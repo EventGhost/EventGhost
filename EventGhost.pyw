@@ -21,6 +21,26 @@ if hasattr(sys, "frozen"):
     APP_DIR = dirname(unicode(sys.executable, sys.getfilesystemencoding()))
     sys.path.append(APP_DIR)
 
-import eg
-eg.Main()
+if len(sys.argv) > 2 and sys.argv[1] == "-execfile":   
+    import imp
+    import os
+    filename = sys.argv[2]
+    # we need a reference to the old module, otherwise we get garbage collected
+    oldMainModule = sys.modules['__main__']
+    # Create a new module to serve as __main__
+    mainModule = imp.new_module('__main__')
+    mainModule.__file__ = filename
+    mainModule.__builtins__ = sys.modules['__builtin__']
+    sys.modules['__main__'] = mainModule
+    # Set sys.argv and the path element properly.
+    sys.argv = sys.argv[2:]
+    sys.path.append(os.path.dirname(filename))
+    try:
+        source = open(filename, 'rU').read()
+    except IOError:
+        raise Exception("No file to run: %r" % filename)
+    exec compile(source, filename, "exec") in mainModule.__dict__
+else:
+    import eg
+    eg.Main()
 

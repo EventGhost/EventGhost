@@ -65,41 +65,6 @@ class DynamicModule(object):
         self.__class__.__setattr__ = __setattr__
 
 
-    def ExecScript(self, mainFilePath):
-        try:
-            import imp
-            from os.path import dirname, basename, splitext
-            from StringIO import StringIO
-            sys.stdout = stdout = StringIO()
-            sys.stderr = stderr = StringIO()
-            os.chdir(dirname(mainFilePath))
-            sys.path.insert(0, dirname(mainFilePath))
-            sys.argv = sys.argv[2:]
-            moduleName = splitext(basename(mainFilePath))[0]
-            module = imp.load_module(
-                "__main__",
-                *imp.find_module(moduleName, [dirname(mainFilePath)])
-            )
-        except BaseException:
-            import traceback
-            sys.stderr.write(traceback.format_exc())
-        finally:
-            stdoutContent = stdout.getvalue()
-            stderrContent = stderr.getvalue()
-            if stdoutContent or stderrContent:
-                import wx.lib.dialogs
-                dlg = wx.lib.dialogs.ScrolledMessageDialog(
-                    None,
-                    "Std Out:\n%s\n\nStd Err:\n%s\n" % (
-                        stdoutContent, stderrContent
-                    ),
-                    "Information"
-                )
-                dlg.ShowModal()
-
-        sys.exit(0)
-
-
     def Main(self):
         if Cli.args.install:
             return
@@ -107,8 +72,6 @@ class DynamicModule(object):
             eg.LanguageEditor()
         elif Cli.args.pluginFile:
             eg.PluginInstall.Import(Cli.args.pluginFile)
-        elif Cli.args.execScript:
-            self.ExecScript(Cli.args.execScript)
         else:
             eg.Init.InitGui()
         if eg.debugLevel:

@@ -46,7 +46,6 @@ class args:
     isMain = splitext(basename(scriptPath))[0].lower() == "eventghost"
     pluginFile = None
     pluginDir = None
-    execScript = None
 
 
 for arg in argvIter:
@@ -90,9 +89,6 @@ for arg in argvIter:
         args.configDir = argvIter.next()
     elif arg == '-translate':
         args.translate = True
-    elif arg == '-execscript':
-        args.isMain = False
-        args.execScript = argvIter.next().encode(sys.getfilesystemencoding())
 
 if (
     not args.allowMultiLoad
