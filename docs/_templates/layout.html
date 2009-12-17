@@ -1,0 +1,9 @@
+{% extends "!layout.html" %}
+{% block extrahead %} 
+    <link rel="stylesheet" href="{{ pathto('../css/nav.css', 1) }}" />
+{% endblock %}
+
+{% block relbar1 %} 
+    {% include 'header_docs.html' %}
+    {{ super() }}
+{% endblock %}
