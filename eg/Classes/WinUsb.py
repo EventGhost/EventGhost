@@ -461,7 +461,17 @@ def ListDevices():
             0,
             byref(driverInfoData)
         ):
-            raise WinError()
+            err = GetLastError()
+            if err == ERROR_NO_MORE_ITEMS:
+                devices[hardwareId] = eg.Bunch(
+                    name = "<unknown name>",
+                    version = "",
+                    hardwareId = hardwareId,
+                    provider = "<unknown provider",
+                )
+                continue
+            else:
+                raise WinError(err)
         version = driverInfoData.DriverVersion
         versionStr =  "%d.%d.%d.%d" % (
             (version >> 48) & 0xFFFF,
