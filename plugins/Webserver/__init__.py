@@ -49,6 +49,7 @@ eg.RegisterPlugin(
 
 import wx
 import os
+import sys
 import posixpath
 import base64
 import time
@@ -96,7 +97,7 @@ class MyServer(ThreadingMixIn, HTTPServer):
         self.abort = False
         for res in socket.getaddrinfo(None, port, socket.AF_UNSPEC,
                               socket.SOCK_STREAM, 0, socket.AI_PASSIVE):
-            print res
+            #print res
             self.address_family = res[0]
             self.socket_type = res[1]
             address = res[4]
@@ -107,8 +108,8 @@ class MyServer(ThreadingMixIn, HTTPServer):
 
     def server_bind(self):
         """Called by constructor to bind the socket."""
-        if socket.has_ipv6:
-            # make it a dual-stack socket
+        if socket.has_ipv6 and sys.getwindowsversion()[0] > 5:
+            # make it a dual-stack socket if OS is Vista/Win7
             IPPROTO_IPV6 = 41
             self.socket.setsockopt(IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
         HTTPServer.server_bind(self)
