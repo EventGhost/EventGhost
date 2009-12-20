@@ -282,7 +282,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
         except Exception, exc:
             self.plugin.EndLastEvent()
             eg.PrintError("Webserver socket error", self.path)
-            eg.PrintError("Exception", exc)
+            eg.PrintError("Exception", unicode(exc))
             if exc.args[0] == 10053: # Software caused connection abort
                 pass
             elif exc.args[0] == 10054: # Connection reset by peer
