@@ -1444,3 +1444,79 @@ DOMAIN_GROUP_RID_USERS = 513 # Variable c_long '513l'
 CoInitializeEx = _ole32.CoInitializeEx
 CoInitializeEx.restype = HRESULT
 CoInitializeEx.argtypes = [LPVOID, DWORD]
+class _OSVERSIONINFOW(Structure):
+    pass
+LPOSVERSIONINFOW = POINTER(_OSVERSIONINFOW)
+GetVersionExW = _kernel32.GetVersionExW
+GetVersionExW.restype = BOOL
+GetVersionExW.argtypes = [LPOSVERSIONINFOW]
+GetVersionEx = GetVersionExW # alias
+_OSVERSIONINFOW._fields_ = [
+    ('dwOSVersionInfoSize', DWORD),
+    ('dwMajorVersion', DWORD),
+    ('dwMinorVersion', DWORD),
+    ('dwBuildNumber', DWORD),
+    ('dwPlatformId', DWORD),
+    ('szCSDVersion', WCHAR * 128),
+]
+class _SYSTEM_INFO(Structure):
+    pass
+LPSYSTEM_INFO = POINTER(_SYSTEM_INFO)
+GetSystemInfo = _kernel32.GetSystemInfo
+GetSystemInfo.restype = None
+GetSystemInfo.argtypes = [LPSYSTEM_INFO]
+class N12_SYSTEM_INFO4DOLLAR_83E(Union):
+    pass
+class N12_SYSTEM_INFO4DOLLAR_834DOLLAR_84E(Structure):
+    pass
+N12_SYSTEM_INFO4DOLLAR_834DOLLAR_84E._fields_ = [
+    ('wProcessorArchitecture', WORD),
+    ('wReserved', WORD),
+]
+N12_SYSTEM_INFO4DOLLAR_83E._anonymous_ = ['_0']
+N12_SYSTEM_INFO4DOLLAR_83E._fields_ = [
+    ('dwOemId', DWORD),
+    ('_0', N12_SYSTEM_INFO4DOLLAR_834DOLLAR_84E),
+]
+_SYSTEM_INFO._anonymous_ = ['_0']
+_SYSTEM_INFO._fields_ = [
+    ('_0', N12_SYSTEM_INFO4DOLLAR_83E),
+    ('dwPageSize', DWORD),
+    ('lpMinimumApplicationAddress', LPVOID),
+    ('lpMaximumApplicationAddress', LPVOID),
+    ('dwActiveProcessorMask', DWORD_PTR),
+    ('dwNumberOfProcessors', DWORD),
+    ('dwProcessorType', DWORD),
+    ('dwAllocationGranularity', DWORD),
+    ('wProcessorLevel', WORD),
+    ('wProcessorRevision', WORD),
+]
+class _OSVERSIONINFOEXW(Structure):
+    pass
+OSVERSIONINFOEXW = _OSVERSIONINFOEXW
+OSVERSIONINFOEX = OSVERSIONINFOEXW
+_OSVERSIONINFOEXW._fields_ = [
+    ('dwOSVersionInfoSize', DWORD),
+    ('dwMajorVersion', DWORD),
+    ('dwMinorVersion', DWORD),
+    ('dwBuildNumber', DWORD),
+    ('dwPlatformId', DWORD),
+    ('szCSDVersion', WCHAR * 128),
+    ('wServicePackMajor', WORD),
+    ('wServicePackMinor', WORD),
+    ('wSuiteMask', WORD),
+    ('wProductType', BYTE),
+    ('wReserved', BYTE),
+]
+SYSTEM_INFO = _SYSTEM_INFO
+VER_PLATFORM_WIN32_NT = 2 # Variable c_int '2'
+VER_NT_WORKSTATION = 1 # Variable c_int '1'
+PRODUCT_ULTIMATE = 1 # Variable c_int '1'
+OSVERSIONINFOW = _OSVERSIONINFOW
+OSVERSIONINFO = OSVERSIONINFOW
+PROCESSOR_ARCHITECTURE_AMD64 = 9 # Variable c_int '9'
+PROCESSOR_ARCHITECTURE_INTEL = 0 # Variable c_int '0'
+VER_SUITE_DATACENTER = 128 # Variable c_int '128'
+VER_SUITE_ENTERPRISE = 2 # Variable c_int '2'
+VER_SUITE_PERSONAL = 512 # Variable c_int '512'
+
