@@ -323,6 +323,7 @@ class LicensePanel(HtmlPanel):
 class SystemInfoPanel(HtmlPanel):
 
     def __init__(self, parent):
+        from eg.WinApi.SystemInformation import GetWindowsVersionString
         buildTime = time.strftime(
             Text.CreationDate,
             time.gmtime(eg.Version.buildTime)
@@ -332,14 +333,14 @@ class SystemInfoPanel(HtmlPanel):
         if is_stackless:
             pythonVersion = "Stackless Python " + pythonVersion
         self.sysInfos = (
-            ("EventGhost Version", eg.Version.string),
-            ("Build Time", buildTime),
-            ("Python Version", pythonVersion),
-            ("wxPython Version", wx.VERSION_STRING),
-            ("Platform", platform.platform()),
+            ("EventGhost&nbsp;Version", eg.Version.string),
+            ("Build&nbsp;Time", buildTime),
+            ("Python&nbsp;Version", pythonVersion),
+            ("wxPython&nbsp;Version", wx.VERSION_STRING),
+            ("Operating&nbsp;System", GetWindowsVersionString()),
             ("CPU", GetCpuName()),
-            ("Total RAM", "%s MB" % totalMemory),
-            ("Available RAM", "%s MB" % availableMemory),
+            ("Total&nbsp;RAM", "%s MB" % totalMemory),
+            ("Available&nbsp;RAM", "%s MB" % availableMemory),
         )
 
         sysInfoTemplate = "".join(
