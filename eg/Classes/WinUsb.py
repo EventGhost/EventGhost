@@ -165,8 +165,8 @@ DisplayName="$DISPLAY_NAME"
 class Text(eg.TranslatableStrings):
     dialogCaption = "EventGhost Plugin: %s"
     downloadMsg = (
-        "You need to install the EventGhost WinUSB add-on before this plugin "
-        "can install the driver for the remote.\n"
+        "You need to install the EventGhost WinUSB add-on (%s) before this "
+        "plugin can install the driver for the remote.\n"
         "After installation of the add-on, you need to restart EventGhost.\n\n"
         "Do you want to visit the download page now?\n"
     )
@@ -300,7 +300,7 @@ class WinUsb(object):
         platformDir = "x64" if IsWin64() else "x86"
         srcDir = join(eg.mainDir, "drivers", "winusb", platformDir)
         if not os.path.exists(join(srcDir, "dpinst.exe")):
-            wx.CallAfter(self.ShowDownloadMessage)
+            wx.CallAfter(self.ShowDownloadMessage, platformDir)
             return
 
         res = eg.CallWait(
@@ -321,9 +321,9 @@ class WinUsb(object):
         )
 
 
-    def ShowDownloadMessage(self):
+    def ShowDownloadMessage(self, platformDir):
         if wx.YES == wx.MessageBox(
-            Text.downloadMsg,
+            Text.downloadMsg % platformDir,
             caption=Text.dialogCaption % self.plugin.name,
             style=wx.YES_NO | wx.ICON_QUESTION
         ):
@@ -331,7 +331,7 @@ class WinUsb(object):
             webbrowser.open(
                 (
                     "http://www.eventghost.org/downloads/"
-                    "EventGhost WinUSB Add-on.exe"
+                    "EventGhost WinUSB Add-on (%s).exe" % platformDir
                 ),
                 False
             )
@@ -371,7 +371,7 @@ class WinUsb(object):
         )
         for i, device in enumerate(self.devices):
             outfile.write('Device%i.DeviceDesc="%s"\n' % (i, device.name))
-    
+
         result = outfile.getvalue()
         outfile.close()
         return result
