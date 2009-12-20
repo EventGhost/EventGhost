@@ -150,11 +150,11 @@ class PluginInstall(object):
             if guid in eg.pluginManager.database:
                 # a plugin with same GUID already exists
                 info = eg.pluginManager.database[guid]
-                if info.path.lower().startswith(eg.userPluginDir.lower()):
+                if info.path.lower().startswith(eg.localPluginDir.lower()):
                     # plugin with same GUID exists in user dir, so delete
                     # the folder first
                     shutil.rmtree(info.path, False)
-            dstDir = os.path.join(eg.userPluginDir, os.path.basename(basePath))
+            dstDir = os.path.join(eg.localPluginDir, os.path.basename(basePath))
             if os.path.exists(dstDir):
                 # the wanted name is already used by another plugin
                 # so we create a new folder name by adding an number
