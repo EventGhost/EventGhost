@@ -65,6 +65,7 @@ Filename: "{app}\EventGhost.exe"; Parameters: "-uninstall"
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{userappdata}\EventGhost"
+Type: filesandordirs; Name: "{commonappdata}\EventGhost"
 Type: filesandordirs; Name: "{app}\drivers"
 Type: dirifempty; Name: "{app}"
 Type: files; Name: "{userstartup}\EventGhost.lnk"
