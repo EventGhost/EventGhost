@@ -72,6 +72,29 @@ PUBYTE = POINTER(c_ubyte)
 DRIVER_VERSION = "1.0.1.5"
 DRIVER_PROVIDER = "EventGhost"
 
+PLATFORM = "x64" if IsWin64() else "x86"
+DOWNLOAD_ROOT = "http://www.eventghost.org/winusb/%s/" % PLATFORM
+INSTALLATION_ROOT = join(
+    eg.folderPath.ProgramData, "eventghost", "drivers", "winusb", PLATFORM
+)
+
+if PLATFORM == "x64":
+    NEEDED_FILES = [
+        ("DPInst.exe", "aa0a91227631a09cd075d315646fb7a9"),
+        ("WdfCoInstaller01009.dll", "4da5da193e0e4f86f6f8fd43ef25329a"),
+        ("WinUSBCoInstaller2.dll", "246900ce6474718730ecd4f873234cf5"),
+        ("WUDFUpdate_01009.dll", "ebf9ee8a7671f3b260ed9b08fcee0cc5"),
+    ]
+else:
+    NEEDED_FILES = [
+        ("DPInst.exe", "e6213cec602f332bf8e868b7b8bf2bb1"),
+        ("WdfCoInstaller01009.dll", "a9970042be512c7981b36e689c5f3f9f"),
+        ("WinUSBCoInstaller2.dll", "8e7b9f81e8823fee2d82f7de3a44300b"),
+        ("WUDFUpdate_01009.dll", "e1bbe9e3568cf54598e9a8d23697b67e"),
+    ]
+
+
+
 HEADER = r"""
 ; This file is automatically created by the EventGhost.
 ; Don't edit this file directly.
@@ -144,10 +167,10 @@ CoInstallers_CopyFiles=11
 ; ================= Source Media Section =====================
 
 [SourceDisksNames]
-1=%DISK_NAME%,,,\x86
+1=%DISK_NAME%,,,
 
 [SourceDisksNames.amd64]
-1=%DISK_NAME%,,,\x64
+1=%DISK_NAME%,,,
 
 [SourceDisksFiles]
 WinUSBCoInstaller2.dll=1
@@ -178,6 +201,9 @@ class Text(eg.TranslatableStrings):
     restartMsg = (
         "Please restart EventGhost now, to allow the %s plugin to use the new "
         "driver!"
+    )
+    downloadFailedMsg = (
+        "The download failed!\n\nPlease try again later."
     )
 
 
@@ -246,35 +272,9 @@ class UsbDevice(object):
         return 1
 
 
-
 class WinUsb(object):
     installLock = threading.Lock()
-    platform = "x64" if IsWin64() else "x86"
-    srcDir = join(eg.folderPath.ProgramData, "eventghost", "drivers", "winusb")
-    downloadRoot = "http://www.eventghost.org/WinUSB Add-on/"
-    neededFiles = [
-        (
-            join(srcDir, "DPInst_%s.exe" % platform),
-            "aa0a91227631a09cd075d315646fb7a9",
-            downloadRoot + "DPInst_%s.exe" % platform
-        ),
-        (
-            join(srcDir, platform, "WdfCoInstaller01009.dll"),
-            "4da5da193e0e4f86f6f8fd43ef25329a",
-            downloadRoot + platform + "/WdfCoInstaller01009.dll"
-        ),
-        (
-            join(srcDir, platform, "WinUSBCoInstaller2.dll"),
-            "246900ce6474718730ecd4f873234cf5",
-            downloadRoot + platform + "/WinUSBCoInstaller2.dll"
-        ),
-        (
-            join(srcDir, platform, "WUDFUpdate_01009.dll"),
-            "ebf9ee8a7671f3b260ed9b08fcee0cc5",
-            downloadRoot + platform + "/WUDFUpdate_01009.dll"
-        ),
-    ]
-    
+
     def __init__(self, plugin):
         self.plugin = plugin
         self.devices = []
@@ -340,27 +340,28 @@ class WinUsb(object):
             self.CreateInf()
             myDir = dirname(__file__.decode(sys.getfilesystemencoding()))
             result = -1
+            print IsAdmin()
             try:
                 result = ExecAs(
                     join(myDir, "WinUsbInstallClient.py"),
                     sys.getwindowsversion()[0] > 5 or not IsAdmin(),
                     "InstallDriver",
-                    join(self.srcDir, "dpinst_%s.exe" % self.platform),
+                    join(INSTALLATION_ROOT, "dpinst.exe"),
                 )
             except WindowsError, exc:
                 #only silence "User abort"
                 if exc.winerror != 1223:
                     raise
             if result == 1:
-                res = eg.CallWait(
+                eg.CallWait(
                     wx.MessageBox,
                     Text.restartMsg % self.plugin.name,
                     caption=Text.dialogCaption % self.plugin.name,
                     style=wx.OK | wx.ICON_EXCLAMATION | wx.STAY_ON_TOP,
                     parent=eg.document.frame
                 )
-                
-            
+
+
 
     def ShowDownloadMessage(self):
         return wx.YES == wx.MessageBox(
@@ -373,17 +374,19 @@ class WinUsb(object):
 
     def GetNeededFiles(self):
         neededFiles = []
-        for path, md5hash, downloadPath in self.neededFiles:
+        for name, md5hash in NEEDED_FILES:
+            path = join(INSTALLATION_ROOT, name)
             if not os.path.exists(path):
-                neededFiles.append((downloadPath, path))
+                neededFiles.append((DOWNLOAD_ROOT + name, path))
                 continue
             m = hashlib.md5()
             m.update(open(path, "rb").read())
+            #print name, m.hexdigest()
             if m.hexdigest() != md5hash:
-                neededFiles.append((downloadPath, path))
+                neededFiles.append((DOWNLOAD_ROOT + name, path))
         return neededFiles
-    
-    
+
+
     def CheckAddOnFiles(self):
         neededFiles = self.GetNeededFiles()
         if len(neededFiles) == 0:
@@ -393,14 +396,21 @@ class WinUsb(object):
         stopEvent = threading.Event()
         wx.CallAfter(eg.TransferDialog, None, neededFiles, stopEvent)
         stopEvent.wait()
-        if self.GetNeededFiles():
-            # TODO: show a message here
+        neededFiles = self.GetNeededFiles()
+        if neededFiles:
+            eg.CallWait(
+                wx.MessageBox,
+                Text.downloadFailedMsg,
+                caption=Text.dialogCaption % self.plugin.name,
+                style=wx.OK | wx.ICON_EXCLAMATION | wx.STAY_ON_TOP,
+                parent=eg.document.frame
+            )
             return False
         return True
-    
-    
+
+
     def CreateInf(self):
-        infPath = join(self.srcDir, "driver.inf")
+        infPath = join(INSTALLATION_ROOT, "driver.inf")
         try:
             os.makedirs(dirname(infPath))
         except:
@@ -441,8 +451,8 @@ class WinUsb(object):
 
         outfile.close()
         return infPath
-    
-    
+
+
 
 def ListDevices():
     devices = {}
