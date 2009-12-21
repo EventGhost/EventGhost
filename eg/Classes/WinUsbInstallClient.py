@@ -14,24 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import tempfile
-import shutil
-import sys
-import codecs
-from os.path import join
 from subprocess import call
 
 
-def InstallDriver(infContent, srcDir):
-    tmpDir = tempfile.mkdtemp()
-    targetDir = join(tmpDir, "driver")
-    shutil.copytree(srcDir, targetDir)
-    infPath = join(targetDir, "driver.inf")
-    outfile = codecs.open(infPath, "wt", sys.getfilesystemencoding())
-    outfile.write(infContent)
-    outfile.close()
-    res = call('"' + join(targetDir, "dpinst.exe") + '" /f /lm')
-    shutil.rmtree(tmpDir)
-    return res
-
+def InstallDriver(dpInstPath):
+    return call('"' + dpInstPath + '" /f /lm')
 
