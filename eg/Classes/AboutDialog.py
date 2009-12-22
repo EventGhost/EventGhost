@@ -143,7 +143,7 @@ SPECIAL_THANKS_DATA = (
                 'Benjamin Webb',
                 (
                     'for the nice <a href="http://www.eventghost.org/wiki/'
-                    'Controlling_Your_Living_Room_with_EventGhost">'
+                    'Controlling%20your%20living%20room%20with%20EventGhost">'
                     'wiki article</a>'
                 )
             ),
