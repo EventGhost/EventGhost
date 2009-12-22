@@ -233,25 +233,37 @@ class TransferDialog(wx.Dialog):
         self.elapsedCtrl.SetLabel(GetTimeStr(elapsedTime))
 
 
+    def CreateActions(self):
+        self.overallSize = 0
+        todo = []
+        for src, dest in self.transfers:
+            root = src.split(":", 1)[0].lower()
+            if root in "abcdefghijklmnopqrstuvwxyz":
+                # local file
+                size = self.LocalGetSize(src)
+                action = self.SftpUpload
+            elif root == "http":
+                urlparts = urlparse.urlsplit(src)
+                urlparts = urlparts._replace(path=urllib.quote(urlparts.path))
+                src = urlparse.urlunsplit(urlparts)
+                size = self.HttpGetSize(src)
+                action = self.HttpDownload
+            todo.append(((action, src, dest, size, self.overallSize)))
+            self.overallSize += size
+        return todo
+
+
     def ThreadRun(self):
         """ Transfers the files in a separate thread. """
         try:
             self.overallSize = 0
             self.transferedSize = 0
-            todo = []
-            for src, dest in self.transfers:
-                urlparts = urlparse.urlsplit(src)
-                urlparts = urlparts._replace(path = urllib.quote(urlparts.path))
-                src = urlparse.urlunsplit(urlparts)
-                testFile = urllib2.urlopen(src)
-                size = int(testFile.info()["Content-Length"])
-                todo.append((src, dest, size, self.overallSize))
-                self.overallSize += size
-            for i, (src, dest, size, transferedSize) in enumerate(todo):
+            todo = self.CreateActions()
+            for i, (action, src, dest, size, transferedSize) in enumerate(todo):
                 self.transferedSize = transferedSize
                 self.currentFileCtrl.SetLabel(basename(dest))
                 self.overallFileCtrl.SetLabel("File %d of %d" % (i+1, len(todo)))
-                self.HttpDownload(src, dest, size)
+                action(src, dest, size)
         finally:
             if self.stopEvent:
                 self.stopEvent.set()
@@ -291,6 +303,11 @@ class TransferDialog(wx.Dialog):
         self.totalSizeCtrl.SetLabel(FormatBytes(self.overallSize))
 
 
+    def HttpGetSize(self, path):
+        testFile = urllib2.urlopen(path)
+        return int(testFile.info()["Content-Length"])
+
+
     def HttpDownload(self, src, dest, size):
         testFile = urllib2.urlopen(src)
         infile = ProgressFile(testFile, size, self.SetProgress, self.speed)
@@ -306,4 +323,82 @@ class TransferDialog(wx.Dialog):
             outfile.write(data)
         infile.close()
         outfile.close()
+
+
+    def LocalGetSize(self, path):
+        return os.stat(path).st_size
+
+
+    def SftpUpload(self, src, dest, size):
+        log = self.messageCtrl.SetLabel
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            import paramiko
+
+        testFile = open(src, "rb")
+        infile = ProgressFile(testFile, size, self.SetProgress)
+
+        urlParts = urlparse.urlparse(dest)
+        log("Connecting to sftp://%statInfo..." % urlParts.hostname)
+        sshClient = paramiko.SSHClient()
+        sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        try:
+            sshClient.connect(
+                urlParts.hostname,
+                urlParts.port,
+                urlParts.username,
+                urlParts.password,
+            )
+        except paramiko.SSHException:
+            exit("Error: Couldn't connect to server")
+        except paramiko.AuthenicationException:
+            exit("Error: Authentication Exception")
+        except paramiko.BadHostKeyException:
+            exit("Error: Bad Host Key Exception")
+
+        try:
+            client = sshClient.open_sftp()
+        except:
+            exit("Error: Can't create SFTP client")
+        destPath = urlParts.path #IGNORE:E1101
+        destDir = dirname(destPath)
+#        log("Changing path to: %s" % destDir)
+#        client.chdir(destDir)
+        log("Getting directory listing...")
+        fileList = client.listdir(destDir)
+        log("Creating temp name.")
+        for i in range(0, 999999):
+            tempFileName = "tmp%06d" % i
+            if tempFileName not in fileList:
+                break
+        if destDir[-1] != "/":
+            destDir += "/"
+        tmpPath = destDir + tempFileName
+        log("Uploading " + basename(src))
+
+        outfile = client.file(tmpPath, 'wb')
+        outfile.set_pipelined(True)
+        while True:
+            data = infile.read(32768)
+            if len(data) == 0:
+                break
+            outfile.write(data)
+        infile.close()
+        outfile.close()
+        rSize = client.stat(tmpPath).st_size
+
+        if self.abort:
+            client.remove(tmpPath)
+            log("Upload canceled by user.")
+        else:
+            if rSize != size:
+                raise IOError('size mismatch in put! %d != %d' % (rSize, size))
+            if basename(destPath) in fileList:
+                client.remove(destPath)
+            client.rename(tmpPath, destPath)
+            localStat = os.stat(src)
+            client.utime(destPath, (localStat.st_atime, localStat.st_mtime))
+            log("Upload done!")
+        client.close()
 
