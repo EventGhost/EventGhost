@@ -160,10 +160,9 @@ def ExecAs(scriptPath, asAdministrator, funcName, *args, **kwargs):
         Msg("calling ConnectNamedPipe")
         ConnectNamedPipe(hPipe, byref(overlapped))
         localPath = dirname(__file__.decode(sys.getfilesystemencoding()))
-        executable = abspath(join(localPath, "..", "..", "EventGhost.exe"))
         Msg("starting subprocess")
         hProcess = RunAs(
-            executable,
+            abspath(join(localPath, "..", "..", "EventGhost.exe")),
             asAdministrator,
             "-execfile",
             GetUncPathOf(join(localPath, "PipedProcessClient.py")),
@@ -232,10 +231,4 @@ def ExecAsAdministrator(scriptPath, funcName, *args, **kwargs):
     :returns: The return value of the function
     """
     return ExecAs(scriptPath, True, funcName, *args, **kwargs)
-
-
-if __name__ == "__main__":
-    if len(sys.argv) == 3:
-        import PipedProcessClient
-        PipedProcessClient.Client(sys.argv[1], sys.argv[2])
 
