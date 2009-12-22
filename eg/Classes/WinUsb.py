@@ -21,7 +21,6 @@ import threading
 import codecs
 import hashlib
 from os.path import join, dirname
-from StringIO import StringIO
 from ctypes import (
     create_unicode_buffer,
     sizeof,
@@ -268,7 +267,7 @@ class UsbDevice(object):
         try:
             self.callback(value)
         except:
-            eg.PrintTraceback(source=self.plugin)
+            eg.PrintTraceback(source=self.plugin.info.treeItem)
         return 1
 
 
@@ -340,7 +339,6 @@ class WinUsb(object):
             self.CreateInf()
             myDir = dirname(__file__.decode(sys.getfilesystemencoding()))
             result = -1
-            print IsAdmin()
             try:
                 result = ExecAs(
                     join(myDir, "WinUsbInstallClient.py"),
@@ -379,10 +377,10 @@ class WinUsb(object):
             if not os.path.exists(path):
                 neededFiles.append((DOWNLOAD_ROOT + name, path))
                 continue
-            m = hashlib.md5()
-            m.update(open(path, "rb").read())
-            #print name, m.hexdigest()
-            if m.hexdigest() != md5hash:
+            md5 = hashlib.md5()
+            md5.update(open(path, "rb").read())
+            #print name, md5.hexdigest()
+            if md5.hexdigest() != md5hash:
                 neededFiles.append((DOWNLOAD_ROOT + name, path))
         return neededFiles
 
