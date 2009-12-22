@@ -38,7 +38,8 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         dialog.panel = self
         dialog.__init__(item, resizable, showLine)
         self.dialog = dialog
-        wx.PyPanel.__init__(self, dialog)
+        wx.PyPanel.__init__(self, dialog.notebook)
+        dialog.notebook.AddPage(self, "Settings")
         self.lines = []
         dialog.sizer.Add(self, 1, wx.EXPAND)
         self.sizerProps = (6, 5)
@@ -82,10 +83,12 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
 
     def FinishSetup(self):
         self.shown = True
+        spaceSizer = wx.BoxSizer(wx.VERTICAL)
+        spaceSizer.Add(self.sizer, 1, wx.EXPAND|wx.ALL, 5)
         if self.lines:
             self.AddGrid(self.lines, *self.sizerProps)
-        else:
-            self.SetSizerAndFit(self.sizer)
+
+        self.SetSizerAndFit(spaceSizer)
 
         #self.dialog.FinishSetup()
         def OnEvent(dummyEvent):
@@ -159,7 +162,7 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
 
             if colNum < columns - 1:
                 sizer.SetItemSpan(ctrl, (1, columns - colNum + 1))
-        self.SetSizer(sizer)
+        self.sizer.Add(sizer, 1, wx.EXPAND)
 
 
     def EnableButtons(self, flag=True):

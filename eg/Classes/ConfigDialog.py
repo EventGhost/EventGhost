@@ -48,6 +48,8 @@ class ConfigDialog(eg.TaskletDialog):
             self, eg.document.frame, -1, title, style=dialogStyle
         )
 
+        self.notebook = wx.Notebook(self)
+
         self.buttonRow = eg.ButtonRow(
             self,
             (wx.ID_OK, wx.ID_CANCEL, wx.ID_APPLY),
@@ -65,7 +67,7 @@ class ConfigDialog(eg.TaskletDialog):
         self.Bind(wx.EVT_MAXIMIZE, self.OnMaximize)
 
         mainSizer = wx.BoxSizer(wx.VERTICAL)
-        paramSizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.headerBox = eg.HeaderBox(self, item)
         mainSizer.SetMinSize(size)
         flags = wx.EXPAND|wx.ALL|wx.ALIGN_CENTER#|wx.ALIGN_CENTER_VERTICAL
@@ -73,12 +75,12 @@ class ConfigDialog(eg.TaskletDialog):
             (
                 (self.headerBox, 0, wx.EXPAND, 0),
                 (wx.StaticLine(self), 0, wx.EXPAND|wx.ALIGN_CENTER, 0),
-                (paramSizer, 1, flags, 15),
+                (self.notebook, 1, flags, 5),
+                #(self.sizer, 1, flags, 15),
             )
         )
         self.mainSizer = mainSizer
-        self.sizer = paramSizer
-
+        self.notebook.SetSizer(self.sizer)
         def ShowHelp(dummyEvent):
             self.configureItem.ShowHelp(self)
         wx.EVT_MENU(self, wx.ID_HELP, ShowHelp)
@@ -105,19 +107,32 @@ class ConfigDialog(eg.TaskletDialog):
         event.Skip()
 
 
+    def CreateHelpPanel(self):
+        helpPanel = wx.Panel(self.notebook)
+        helpPanel.SetBackgroundColour((255,255,255))
+        htmlWindow = eg.HtmlWindow(helpPanel)
+        htmlWindow.SetPage(self.configureItem.GetDescription())
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(htmlWindow, 1, wx.EXPAND)
+        helpPanel.SetSizer(sizer)
+        self.notebook.AddPage(helpPanel, "Description")
+        return helpPanel
+
+
     def FinishSetup(self):
         # Temporary hack to fix button tabulator ordering problems.
         self.panel.FinishSetup()
-        line = wx.StaticLine(self)
-        self.mainSizer.Add(line, 0, wx.EXPAND|wx.ALIGN_CENTER)
+        self.helpPanel = self.CreateHelpPanel()
+        #line = wx.StaticLine(self)
+        #self.mainSizer.Add(line, 0, wx.EXPAND|wx.ALIGN_CENTER)
         buttonRow = self.buttonRow
-        buttonRow.applyButton.MoveAfterInTabOrder(line)
-        buttonRow.cancelButton.MoveAfterInTabOrder(line)
-        buttonRow.okButton.MoveAfterInTabOrder(line)
+        buttonRow.applyButton.MoveAfterInTabOrder(self.notebook)
+        buttonRow.cancelButton.MoveAfterInTabOrder(self.notebook)
+        buttonRow.okButton.MoveAfterInTabOrder(self.notebook)
         if buttonRow.testButton:
-            buttonRow.testButton.MoveAfterInTabOrder(line)
-        if not self.showLine:
-            line.Hide()
+            buttonRow.testButton.MoveAfterInTabOrder(self.notebook)
+#        if not self.showLine:
+#            line.Hide()
         if self.resizable:
             self.mainSizer.Add(self.buttonRow.sizer, 0, wx.EXPAND, 0)
         else:

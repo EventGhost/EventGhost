@@ -18,6 +18,7 @@
 Definition of the abstract plugin class.
 """
 
+import wx
 import eg
 
 
@@ -257,8 +258,13 @@ class PluginBase(object):
         """
         panel = eg.ConfigPanel()
         panel.dialog.buttonRow.applyButton.Enable(False)
-        label = panel.StaticText(eg.text.General.noOptionsPlugin)
-        panel.sizer.Add(label)
+        label = panel.StaticText(
+            eg.text.General.noOptionsPlugin,
+            style=wx.ALIGN_CENTRE|wx.ST_NO_AUTORESIZE
+        )
+        panel.sizer.Add((0, 0), 1, wx.EXPAND)
+        panel.sizer.Add(label, 0, wx.ALIGN_CENTRE)
+        panel.sizer.Add((0, 0), 1, wx.EXPAND)
         while panel.Affirmed():
             panel.SetResult()
 
