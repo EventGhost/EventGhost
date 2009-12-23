@@ -31,20 +31,13 @@ eg.RegisterPlugin(
 )
 
 REMOTE_BUTTONS = {
-    (2, 129, 0, 0, 0, 0, 0, 0): ("Power", 0),
     (1, 4, 0, 61, 0, 0, 0, 0): ("Close", 0),
     (1, 1, 0, 8, 0, 0, 0, 0): ("Video", 0),
-    (1, 3, 0, 23, 0, 0, 0, 0): ("TV", 0),
+    (1, 1, 0, 23, 0, 0, 0, 0): ("TV", 0),
     (1, 1, 0, 4, 0, 0, 0, 0): ("Radio", 0),
     (1, 1, 0, 12, 0, 0, 0, 0): ("Pictures", 0),
     (1, 1, 0, 16, 0, 0, 0, 0): ("Music", 0),
     (1, 3, 0, 16, 0, 0, 0, 0): ("DvdMenu", 0),
-    (4, 180, 0, 0, 0, 0, 0, 0): ("Rewind", 0),
-    (4, 183, 0, 0, 0, 0, 0, 0): ("Stop", 0),
-    (4, 179, 0, 0, 0, 0, 0, 0): ("Forward", 0),
-    (4, 182, 0, 0, 0, 0, 0, 0): ("PreviousTrack", 0),
-    (4, 205, 0, 0, 0, 0, 0, 0): ("Play", 0),
-    (4, 181, 0, 0, 0, 0, 0, 0): ("NextTrack", 0),
     (1, 0, 0, 30, 0, 0, 0, 0): ("Num1", 0),
     (1, 0, 0, 31, 0, 0, 0, 0): ("Num2", 0),
     (1, 0, 0, 32, 0, 0, 0, 0): ("Num3", 0),
@@ -59,14 +52,7 @@ REMOTE_BUTTONS = {
     (1, 2, 0, 32, 0, 0, 0, 0): ("Dash", 0),
     (1, 0, 0, 41, 0, 0, 0, 0): ("Clear", 0),
     (1, 4, 0, 40, 0, 0, 0, 0): ("Fullscreen", 0),
-    (4, 37, 2, 0, 0, 0, 0, 0): ("Next", 0),
-    (4, 36, 2, 0, 0, 0, 0, 0): ("Previous", 0),
     (1, 1, 0, 21, 0, 0, 0, 0): ("Record", 0),
-    (4, 35, 2, 0, 0, 0, 0, 0): ("WWW", 0),
-    (4, 138, 1, 0, 0, 0, 0, 0): ("E-Mail", 0),
-    (4, 233, 0, 0, 0, 0, 0, 0): ("VolumeUp", 1),
-    (4, 234, 0, 0, 0, 0, 0, 0): ("VolumeDown", 1),
-    (4, 226, 0, 0, 0, 0, 0, 0): ("Mute", 0),
     (1, 12, 0, 40, 0, 0, 0, 0): ("Menu", 0),
     (1, 8, 0, 7, 0, 0, 0, 0): ("Desktop", 0),
     (1, 0, 0, 75, 0, 0, 0, 0): ("ChannelUp", 0),
@@ -78,16 +64,31 @@ REMOTE_BUTTONS = {
     (1, 0, 0, 82, 0, 0, 0, 0): ("Up", 1),
     (1, 0, 0, 42, 0, 0, 0, 0): ("Back", 0),
     (1, 0, 0, 101, 0, 0, 0, 0): ("More", 0),
-    (3, 1, 0, 0, 0, 0, 0, 0): ("LeftMouseButton", 0),
-    (3, 2, 0, 0, 0, 0, 0, 0): ("RightMouseButton", 0),
-    
+    (2, 129, 0, 0, 0, 0, 0, 0): ("Power", 0),
+    (3, 1, 0, 0, 0, 0, 0, 0): ("MouseLeftButton", 0),
+    (3, 2, 0, 0, 0, 0, 0, 0): ("MouseRightButton", 0),
+    (4, 35, 2, 0, 0, 0, 0, 0): ("WWW", 0),
+    (4, 36, 2, 0, 0, 0, 0, 0): ("Previous", 0),
+    (4, 37, 2, 0, 0, 0, 0, 0): ("Next", 0),
+    (4, 138, 1, 0, 0, 0, 0, 0): ("E-Mail", 0),
+    (4, 179, 0, 0, 0, 0, 0, 0): ("Forward", 0),
+    (4, 180, 0, 0, 0, 0, 0, 0): ("Rewind", 0),
+    (4, 181, 0, 0, 0, 0, 0, 0): ("NextTrack", 0),
+    (4, 182, 0, 0, 0, 0, 0, 0): ("PreviousTrack", 0),
+    (4, 183, 0, 0, 0, 0, 0, 0): ("Stop", 0),
+    (4, 205, 0, 0, 0, 0, 0, 0): ("Play", 0),
+    (4, 226, 0, 0, 0, 0, 0, 0): ("Mute", 0),
+    (4, 233, 0, 0, 0, 0, 0, 0): ("VolumeUp", 1),
+    (4, 234, 0, 0, 0, 0, 0, 0): ("VolumeDown", 1),
 }
 
 STOP_CODES = set([
     (1, 0, 0, 0, 0, 0, 0, 0),
+    (2, 0, 0, 0, 0, 0, 0, 0),
     (3, 0, 0, 0, 0, 0, 0, 0),
     (4, 0, 0, 0, 0, 0, 0, 0),
 ])
+
 
 class PHX01RN(eg.PluginBase):
 
@@ -102,6 +103,7 @@ class PHX01RN(eg.PluginBase):
         )
         self.usb.Open()
         self.lastButton = None
+        self.lastMouseValue = (0, 0)
         self.timer = eg.ResettableTimer(self.OnTimeOut)
         
 
@@ -112,6 +114,7 @@ class PHX01RN(eg.PluginBase):
 
     def OnTimeOut(self):
         self.lastButton = None
+        self.lastMouseValue = (0, 0)
         self.EndLastEvent()
 
 
@@ -126,8 +129,43 @@ class PHX01RN(eg.PluginBase):
                 self.timer.Reset(None)
                 self.TriggerEvent(suffix)
             self.lastButton = suffix
+            self.lastMouseValue = (0, 0)
         elif data in STOP_CODES:
             self.timer.Reset(175)
+        elif data[0] == 3:
+            isFirst = False
+            lastX, lastY = self.lastMouseValue
+            x, y = data[2:4]
+            if x > 127:
+                x -= 256
+            if y > 127:
+                y -= 256
+            if x > 0:
+                suffix = "MouseRight"
+                if x < lastX or lastX == 0:
+                    isFirst = True
+            elif x < 0:
+                suffix = "MouseLeft"
+                if x > lastX or lastX == 0:
+                    isFirst = True
+            elif y < 0:
+                suffix = "MouseUp"
+                if y > lastY or lastY == 0:
+                    isFirst = True
+            elif y > 0:
+                suffix = "MouseDown"
+                if y < lastY or lastY == 0:
+                    isFirst = True
+            if isFirst:
+                self.TriggerEnduringEvent(suffix)
+                self.timer.Reset(200)
+            else:
+                self.timer.Reset(100)
+            self.lastButton = suffix
+            self.lastMouseValue = (x, y)
         else:
+            self.timer.Reset(None)
             self.EndLastEvent()
+            self.lastButton = None
+            self.lastMouseValue = (0, 0)
             print data
