@@ -281,7 +281,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
             self.SendContent(path)
         except Exception, exc:
             self.plugin.EndLastEvent()
-            eg.PrintError("Webserver socket error", self.path)
+            eg.PrintError("Webserver error", self.path)
             eg.PrintError("Exception", unicode(exc))
             if exc.args[0] == 10053: # Software caused connection abort
                 pass
