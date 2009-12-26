@@ -82,19 +82,26 @@ for arg in argvIter:
         args.startupFile = abspath(argvIter.next())
     elif arg in ('-p', '-plugin'):
         args.pluginFile = abspath(argvIter.next())
-        args.isMain = False
+        #args.isMain = False
     elif arg == '-plugindir':
         args.plugindir = argvIter.next()
     elif arg == '-configdir':
         args.configDir = argvIter.next()
     elif arg == '-translate':
         args.translate = True
+    else:
+        path = abspath(arg)
+        ext = os.path.splitext(path)[1].lower()
+        if ext == ".egplugin":
+            args.pluginFile = path
+        elif ext == ".egtree":
+            args.startupFile = path
 
 if (
     not args.allowMultiLoad
     and not args.translate
     and args.isMain
-    and not args.pluginFile
+    #and not args.pluginFile
 ):
     # check if another instance of the program is running
     import ctypes
@@ -112,6 +119,8 @@ if (
                 e.OpenFile(args.startupFile)
             if args.startupEvent is not None:
                 e.TriggerEvent(args.startupEvent[0], args.startupEvent[1])
+            elif args.pluginFile:
+                e.InstallPlugin(args.pluginFile)
             else:
                 e.BringToFront()
         finally:

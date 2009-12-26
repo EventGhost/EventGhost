@@ -85,9 +85,9 @@ Name: "{userstartup}\EventGhost"; Filename: "{app}\EventGhost.exe"; Parameters: 
 Root: HKCR; Subkey: ".egtree"; ValueType: string; ValueName: ""; ValueData: "EventGhost Tree"; Flags: uninsdeletevalue
 Root: HKCR; Subkey: "EventGhost Tree"; ValueType: string; ValueName: ""; ValueData: "EventGhost Tree"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "EventGhost Tree\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\EventGhost.exe,0"
-Root: HKCR; Subkey: "EventGhost Tree\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\EventGhost.exe"" -f ""%%1""" 
+Root: HKCR; Subkey: "EventGhost Tree\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\EventGhost.exe"" ""%%1""" 
 
 Root: HKCR; Subkey: ".egplugin"; ValueType: string; ValueName: ""; ValueData: "EventGhost Plugin"; Flags: uninsdeletevalue
 Root: HKCR; Subkey: "EventGhost Plugin"; ValueType: string; ValueName: ""; ValueData: "EventGhost Plugin"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "EventGhost Plugin\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\EventGhost.exe,0"
-Root: HKCR; Subkey: "EventGhost Plugin\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\EventGhost.exe"" -p ""%%1""" 
+Root: HKCR; Subkey: "EventGhost Plugin\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\EventGhost.exe"" ""%%1""" 

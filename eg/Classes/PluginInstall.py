@@ -19,6 +19,7 @@ import pickle
 import tempfile
 import shutil
 import compileall
+import base64
 from zipfile import ZipFile, ZIP_DEFLATED
 import wx
 import eg
@@ -50,8 +51,47 @@ TEMPLATE = u"""
 <P>
 <b>Description:</b>"""
 
+import __builtin__
+import ast
+
+class SafeExecParser(object):
+
+    def Visit(self, node, *args):
+        meth = getattr(self, 'Visit' + node.__class__.__name__)
+        return meth(node, *args)
+
+
+    def VisitModule(self, node):
+        mod = {}
+        for child in node.body:
+            self.Visit(child, mod)
+        return mod
+
+
+    def VisitAssign(self, node, parent):
+        value = self.Visit(node.value)
+        for target in node.targets:
+            parent[self.Visit(target)] = value
+
+
+    def VisitName(self, node):
+        if isinstance(node.ctx, ast.Load):
+            if node.id in ("True", "False", "None"):
+                return getattr(__builtin__, node.id)
+        return node.id
+
+
+    def VisitStr(self, node):
+        return node.s
+
+
+def SafeExec(source):
+    return SafeExecParser().Visit(ast.parse(source))
+
+
 class PluginInstall(object):
 
+    @eg.LogItWithReturn
     def Export(self, mainFrame=None):
         result = eg.AddPluginDialog.GetModalResult(
             mainFrame,
@@ -65,19 +105,20 @@ class PluginInstall(object):
         pos = description.find("<rst>")
         if pos != -1:
             description = DecodeReST(description[pos+5:])
-        pluginData = {
-            "guid": pluginInfo.guid,
-            "name": pluginInfo.englishName,
-            "author": pluginInfo.author,
-            "version": pluginInfo.version,
-            "description": description,
-            "url": pluginInfo.url,
-            "icon": pluginInfo.icon.pil.tostring()
-        }
+        iconData = base64.b64encode(pluginInfo.icon.pil.tostring())
+        pluginData = [
+            ("name", pluginInfo.englishName),
+            ("author", pluginInfo.author),
+            ("version", pluginInfo.version),
+            ("url", pluginInfo.url),
+            ("guid", pluginInfo.guid),
+            ("description", description),
+            ("icon", iconData),
+        ]
         dialog = PluginOverviewDialog(
             mainFrame,
             "Plugin Information",
-            pluginData=pluginData,
+            pluginData=dict(pluginData),
             basePath=pluginInfo.path,
             message="Do you want to save this plugin as a plugin file?"
         )
@@ -100,7 +141,8 @@ class PluginInstall(object):
         finally:
             dialog.Destroy()
         outfile = ZipFile(path, "w", ZIP_DEFLATED)
-        outfile.writestr("info.pickle", pickle.dumps(pluginData))
+        source = "\n".join("%s = %r" % item for item in pluginData)
+        outfile.writestr("info.py", source)
         baseDir = os.path.basename(pluginInfo.path)
         for dirpath, dirnames, filenames in os.walk(pluginInfo.path):
             for dirname in dirnames[:]:
@@ -119,14 +161,15 @@ class PluginInstall(object):
         outfile.close()
 
 
+    @eg.LogItWithReturn
     def Import(self, filepath):
         tmpDir = tempfile.mkdtemp()
         try:
             infile = ZipFile(filepath, "r", ZIP_DEFLATED)
             infile.extractall(tmpDir)
             infile.close()
-            infile = open(os.path.join(tmpDir, "info.pickle"), "r")
-            pluginData = pickle.load(infile)
+            infile = open(os.path.join(tmpDir, "info.py"), "r")
+            pluginData = SafeExec(infile.read())
             infile.close()
             for name in os.listdir(tmpDir):
                 path = os.path.join(tmpDir, name)
@@ -169,8 +212,8 @@ class PluginInstall(object):
             compileall.compile_dir(dstDir, ddir="UserPlugin", quiet=True)
         finally:
             shutil.rmtree(tmpDir, True)
-            from eg.WinApi.Dynamic import ExitProcess
-            ExitProcess(0)
+            #from eg.WinApi.Dynamic import ExitProcess
+            #ExitProcess(0)
 
 PluginInstall = PluginInstall()
 
@@ -187,7 +230,7 @@ class PluginOverviewDialog(Dialog):
     ):
         Dialog.__init__(
             self,
-            parent,
+            eg.document.frame,
             -1,
             title,
             size=(400, 300),

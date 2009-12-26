@@ -18,8 +18,8 @@ import sys, os
 import stackless
 
 # the following three import are needed if we are running from source and the
-# Python distribution was not installed by the installer. See the following 
-# link for details: 
+# Python distribution was not installed by the installer. See the following
+# link for details:
 # http://www.voidspace.org.uk/python/movpy/reference/win32ext.html#id10
 import pywintypes
 import pythoncom
@@ -72,6 +72,7 @@ class DynamicModule(object):
             eg.LanguageEditor()
         elif Cli.args.pluginFile:
             eg.PluginInstall.Import(Cli.args.pluginFile)
+            return
         else:
             eg.Init.InitGui()
         if eg.debugLevel:
