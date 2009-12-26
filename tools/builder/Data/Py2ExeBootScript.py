@@ -96,3 +96,12 @@ sys.stderr = StdErrReplacement()
 del StdErrReplacement
 del sys
 
+# py2exe disables linecache.getline() in boot_common.py.
+# py2exe disabls linecache.getline() which is called by
+# traceback.extract_stack() when an exception occurs to try and read
+# the filenames embedded in the packaged python code.
+# We re-enable it here.
+import linecache
+linecache.getline = linecache.orig_getline
+del linecache
+
