@@ -233,7 +233,7 @@ def RunProgram():
 
 
 class Exception(Exception):
-    pass
+
     def __unicode__(self):
         try:
             return "\n".join([unicode(arg) for arg in self.args])

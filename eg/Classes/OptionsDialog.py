@@ -30,8 +30,11 @@ class Text(eg.TranslatableStrings):
     HideOnClose = "Minimize to system tray on close"
     UseAutoloadFile = "Autoload file"
     LanguageGroup = "Language"
-    Warning = \
+    confirmRestart = (
         "Language changes only take effect after restarting the application."
+        "\n\n"
+        "Do you want to restart EventGhost now?"
+    )
     StartWithWindows = "Autostart EventGhost on system startup"
     CheckUpdate = "Check for newer version on startup"
     limitMemory1 = "Limit memory consumption while minimized to"
@@ -113,7 +116,7 @@ class OptionsDialog(eg.TaskletDialog):
         languageChoice.SetSelection(languageList.index(config.language))
         languageChoice.SetMinSize((150, -1))
 
-        buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL, wx.ID_APPLY))
+        buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL))
 
         # construction of the layout with sizers
 
@@ -157,6 +160,7 @@ class OptionsDialog(eg.TaskletDialog):
         self.SetMinSize(self.GetSize())
         notebook.ChangeSelection(0)
 
+        oldLanguage = config.language
         while self.Affirmed():
             tmp = startWithWindowsCtrl.GetValue()
             if tmp != eg.config.startWithWindows:
@@ -185,18 +189,23 @@ class OptionsDialog(eg.TaskletDialog):
             config.limitMemorySize = memoryLimitSpinCtrl.GetValue()
             config.confirmDelete = confirmDeleteCtrl.GetValue()
 
-            language = languageList[languageChoice.GetSelection()]
-            if config.language != language:
-                dlg = wx.MessageDialog(
-                    self,
-                    text.Warning,
-                    "",
-                    wx.OK|wx.ICON_INFORMATION
-                )
-                dlg.ShowModal()
-                dlg.Destroy()
-            config.language = language
+            config.language = languageList[languageChoice.GetSelection()]
             config.Save()
             self.SetResult()
+        if config.language != oldLanguage:
+            wx.CallAfter(self.ShowLanguageWarning)
         OptionsDialog.instance = None
+
+
+    def ShowLanguageWarning(self):
+        dlg = wx.MessageDialog(
+            eg.document.frame,
+            Text.confirmRestart,
+            "",
+            wx.YES_NO|wx.ICON_QUESTION
+        )
+        res = dlg.ShowModal()
+        dlg.Destroy()
+        if res == wx.ID_YES:
+            eg.app.Restart()
 

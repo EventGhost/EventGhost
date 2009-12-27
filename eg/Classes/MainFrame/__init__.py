@@ -430,6 +430,7 @@ class MainFrame(wx.Frame):
             menu.AppendSeparator()
             Append("ExportPlugin")
             Append("VirtualTree")
+            Append("RestartProgram")
 
         self.SetMenuBar(menuBar)
         return menuBar
@@ -1078,4 +1079,8 @@ class MainFrame(wx.Frame):
         frame = wx.Frame(None, size=(500, 600))
         TreeCtrl(frame, self.document)
         frame.Show()
+
+
+    def OnCmdRestartProgram(self):
+        eg.app.Restart()
 

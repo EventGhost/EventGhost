@@ -20,6 +20,7 @@ import string
 import threading
 import codecs
 import hashlib
+import Queue
 from os.path import join, dirname
 from ctypes import (
     create_unicode_buffer,
@@ -198,8 +199,8 @@ class Text(eg.TranslatableStrings):
         "Should EventGhost start the driver installation for you now?"
     )
     restartMsg = (
-        "Please restart EventGhost now, to allow the %s plugin to use the new "
-        "driver!"
+        "EventGhost needs to restart, before it can use the new driver.\n\n"
+        "Do you want to restart EventGhost now?"
     )
     downloadFailedMsg = (
         "The download failed!\n\nPlease try again later."
@@ -272,7 +273,9 @@ class UsbDevice(object):
 
 
 class WinUsb(object):
-    installLock = threading.Lock()
+    installQueue = Queue.Queue()
+    installThreadLock = threading.Lock()
+    installThread = None
 
     def __init__(self, plugin):
         self.plugin = plugin
@@ -312,7 +315,14 @@ class WinUsb(object):
                 or deviceInfo.provider != DRIVER_PROVIDER
                 or deviceInfo.name != device.name
             ):
-                threading.Thread(target=self.InstallDriver).start()
+
+                with self.installThreadLock:
+                    self.installQueue.put(self)
+                    if self.installThread is None:
+                        self.__class__.installThread = threading.Thread(
+                            target=self.InstallDriver
+                        )
+                        self.installThread.start()
                 raise self.plugin.Exceptions.DriverNotFound
         for device in self.devices:
             device.Open()
@@ -323,9 +333,17 @@ class WinUsb(object):
             device.Close()
 
 
-    @eg.LogIt
-    def InstallDriver(self):
-        with self.installLock:
+    @classmethod
+    def InstallDriver(cls):
+        restartNeeded = False
+        while True:
+            with cls.installThreadLock:
+                if cls.installQueue.empty():
+                    cls.installThread = None
+                    if restartNeeded:
+                        wx.CallAfter(self.ShowRestartMessage)
+                    return
+            self = cls.installQueue.get()
             if wx.YES != eg.CallWait(
                 wx.MessageBox,
                 Text.installMsg % self.plugin.name,
@@ -333,9 +351,9 @@ class WinUsb(object):
                 style=wx.YES_NO | wx.ICON_QUESTION | wx.STAY_ON_TOP,
                 parent=eg.document.frame
             ):
-                return
+                continue
             if not self.CheckAddOnFiles():
-                return
+                continue
             self.CreateInf()
             myDir = dirname(__file__.decode(sys.getfilesystemencoding()))
             result = -1
@@ -351,14 +369,19 @@ class WinUsb(object):
                 if exc.winerror != 1223:
                     raise
             if result == 1:
-                eg.CallWait(
-                    wx.MessageBox,
-                    Text.restartMsg % self.plugin.name,
-                    caption=Text.dialogCaption % self.plugin.name,
-                    style=wx.OK | wx.ICON_EXCLAMATION | wx.STAY_ON_TOP,
-                    parent=eg.document.frame
-                )
+                restartNeeded = True
 
+
+
+    def ShowRestartMessage(self):
+        res = wx.MessageBox(
+            Text.restartMsg,
+            caption=eg.APP_NAME,
+            style=wx.YES_NO | wx.ICON_QUESTION | wx.STAY_ON_TOP,
+            parent=eg.document.frame
+        )
+        if res == wx.YES:
+            eg.app.Restart()
 
 
     def ShowDownloadMessage(self):

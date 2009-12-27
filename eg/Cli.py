@@ -34,6 +34,7 @@ mainDir = abspath(
 )
 
 # determine the commandline parameters
+import __main__
 class args:
     hideOnStartup = False
     startupEvent = None
@@ -43,7 +44,7 @@ class args:
     translate = False
     configDir = None
     install = False
-    isMain = splitext(basename(scriptPath))[0].lower() == "eventghost"
+    isMain = hasattr(__main__, "isMain") #splitext(basename(scriptPath))[0].lower() == "eventghost"
     pluginFile = None
     pluginDir = None
 
@@ -89,12 +90,27 @@ for arg in argvIter:
         args.configDir = argvIter.next()
     elif arg == '-translate':
         args.translate = True
+    elif arg == "-restart":
+        import ctypes, time
+        while True:
+            appMutex = ctypes.windll.kernel32.CreateMutexA(
+                None,
+                0,
+                "Global\\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B"
+            )
+            err = ctypes.GetLastError()
+            if appMutex:
+                ctypes.windll.kernel32.CloseHandle(appMutex)
+            if err == 0:
+                break
+            time.sleep(0.1)
+
     else:
         path = abspath(arg)
         ext = os.path.splitext(path)[1].lower()
         if ext == ".egplugin":
             args.pluginFile = path
-        elif ext == ".egtree":
+        elif ext in (".egtree", ".xml"):
             args.startupFile = path
 
 if (

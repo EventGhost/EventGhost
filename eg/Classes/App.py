@@ -113,6 +113,24 @@ class App(wx.App):
         ShutdownBlockReasonDestroy(self.hwnd)
 
 
+    def Restart(self):
+        from eg.WinApi.PipedProcess import RunAs
+        args = []
+        if sys.argv[0] != sys.executable:
+            args.append(sys.argv[0])
+        args.append("-restart")
+        if eg.debugLevel:
+            args.append("-debug")
+            args.append(str(eg.debugLevel))
+        if eg.startupArguments.configDir:
+            args.append("-configdir")
+            args.append(eg.startupArguments.configDir)
+        if self.Exit():
+            RunAs(sys.executable, False, *args)
+            return True
+        else:
+            return False
+
 
     @eg.LogItWithReturn
     def OnEndSession(self, dummyEvent):
@@ -130,12 +148,13 @@ class App(wx.App):
     @eg.LogIt
     def Exit(self, dummyEvent=None):
         if eg.document.CheckFileNeedsSave() == wx.ID_CANCEL:
-            return
+            return False
         if eg.pyCrustFrame:
             eg.pyCrustFrame.Close()
         eg.document.Close()
         eg.taskBarIcon.Close()
         self.ExitMainLoop()
+        return True
 
 
     @eg.LogIt
