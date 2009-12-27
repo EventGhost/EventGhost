@@ -41,6 +41,11 @@ if len(sys.argv) > 2 and sys.argv[1] == "-execfile":
         raise Exception("No file to run: %r" % filename)
     exec compile(source, filename, "exec") in mainModule.__dict__
 else:
-    import eg
-    eg.Main()
+    if __name__ == "__main__":
+        from multiprocessing import freeze_support
+        freeze_support()
+        import __main__
+        __main__.isMain = True
+        import eg
+        eg.Main()
 
