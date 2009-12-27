@@ -114,22 +114,27 @@ class App(wx.App):
 
 
     def Restart(self):
-        from eg.WinApi.PipedProcess import RunAs
-        args = []
-        if sys.argv[0] != sys.executable:
-            args.append(sys.argv[0])
-        args.append("-restart")
-        if eg.debugLevel:
-            args.append("-debug")
-            args.append(str(eg.debugLevel))
-        if eg.startupArguments.configDir:
-            args.append("-configdir")
-            args.append(eg.startupArguments.configDir)
-        if self.Exit():
-            RunAs(sys.executable, False, *args)
-            return True
+        def Do():
+            from eg.WinApi.PipedProcess import RunAs
+            args = []
+            if sys.argv[0] != sys.executable:
+                args.append(sys.argv[0])
+            args.append("-restart")
+            if eg.debugLevel:
+                args.append("-debug")
+                args.append(str(eg.debugLevel))
+            if eg.startupArguments.configDir:
+                args.append("-configdir")
+                args.append(eg.startupArguments.configDir)
+            if self.Exit():
+                RunAs(sys.executable, False, *args)
+                return True
+            else:
+                return False
+        if threading.currentThread() == eg.mainThread:
+            return Do()
         else:
-            return False
+            return eg.CallWait(Do)
 
 
     @eg.LogItWithReturn
