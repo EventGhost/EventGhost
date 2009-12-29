@@ -23,11 +23,8 @@ eg.RegisterPlugin(
     kind = "remote",
     canMultiLoad = False,
     description = __doc__,
-    #description = (
-    #    'Allows to receive events from FS20 remote controls.<br/>'
-    #    '<a href="http://www.elv.de/"><img src=\"picture.jpg\"/></a>'
-    #),
     url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1945",
+    guid = '{5EF0F083-8281-4aec-8399-9675DB0D8C58}'
 )
 
 import binascii

@@ -1,16 +1,11 @@
 """<rst>
-Allows to receive events from FS20 remote controls.
+Allows to send commands to FS20 receivers.
 
 |
 
-**Notice:**
-You can use the configuration dialog to build groups or assign a name to a device.
-Allowed characters are 1, 2, 3, 4 and ? which acts as a wild card.
-Setting up groups is optional as events with the house code and device address are always generated.  
-
 |fS20Image|_
 
-`Direct shop link <http://www.elv.de/output/controller.aspx?cid=74&detail=10&detail2=27407>`__
+`Direct shop link <http://www.elv.de/output/controller.aspx?cid=74&detail=10&detail2=27743>`__
 
 .. |fS20Image| image:: picture.jpg
 .. _fS20Image: http://www.elv.de/ 
@@ -23,11 +18,8 @@ eg.RegisterPlugin(
     kind = "external",
     canMultiLoad = False,
     description = __doc__,
-    #description = (
-    #    'Allows to receive events from FS20 remote controls.<br/>'
-    #    '<a href="http://www.elv.de/"><img src=\"picture.jpg\"/></a>'
-    #),
-    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1945",
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=2147",
+    guid = '{D76A6D18-142A-4f75-8F93-9CDA86DBC310}'
 )
 
 import binascii
@@ -59,26 +51,12 @@ class FS20PCS(eg.PluginClass):
         self.PendingEvents = {}
         self.mappings = None
         
-    def OnComputerSuspend(self, suspendType):
-        if self.thread:
-            self.thread.AbortThread()
-        print "OnComputerSuspend"
-    
-    def OnComputerResume(self, suspendType):
-        newDevicePath = self.GetMyDevicePath()
-        if not newDevicePath:
-            #device not found
-            self.PrintError(Text.errorFind)
-        else:
-            self.SetupHidThread(newDevicePath)
-        print "OnComputerResume"
-        
     def RawCallback(self, data):
         print binascii.hexlify(data)
             
     def PrintVersion(self):
         #create the following python command to show version number
-        #eg.plugins.FS20PCS.plugin.PrintVersion()
+        #eg.plugins.FS20PCE.plugin.PrintVersion()
         if self.version == None:
             print "Need to receive data first. Please press a button and try again."
         else:
