@@ -18,7 +18,7 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2009-12-17 20:56  GMT+1
+#Last change: 2009-12-29 19:22  GMT+1
 
 import wx
 from win32com.client import Dispatch
@@ -36,7 +36,7 @@ from functools import partial
 eg.RegisterPlugin(
     name = "MediaMonkey",
     author = "Pako",
-    version = "0.2.8",
+    version = "0.2.9",
     kind = "program",
     guid = "{50602341-ABC3-47AD-B859-FCB8C03ED4EF}",
     createMacrosOnAdd = True,
@@ -884,6 +884,24 @@ class MediaMonkey(eg.PluginBase):
         self.muted=False
         self.trigger = trigger
         
+    def checkWorkerThread(self):
+        if not self.workerThread:
+            self.workerThread = MediaMonkeyWorkerThread(self)
+            self.workerThread.Start(100.0)
+        else:
+            if not self.workerThread.MM:
+                self.workerThread.Stop()
+                del self.workerThread
+                self.workerThread = MediaMonkeyWorkerThread(self)
+                self.workerThread.Start(100.0)
+        if self.workerThread2 and not self.workerThread2.MM:
+            self.workerThread2.Stop()
+            del self.workerThread2           
+        if self.workerThread:
+            return True
+        else:
+            return False
+        
     def Configure(self, trigger = True):
         panel = eg.ConfigPanel(self)
         triggerEventsCtrl = wx.CheckBox(panel, -1, '  '+Text.triggerEvents)
@@ -899,62 +917,48 @@ class MediaMonkey(eg.PluginBase):
             )
         
     def SendCommand(self, command):
-        if not self.workerThread:
-            self.workerThread = MediaMonkeyWorkerThread(self)
-            self.workerThread.Start(100.0)
-        self.workerThread.CallWait(partial(self.workerThread.DoCommand, command),1000)
+        if self.checkWorkerThread():
+            self.workerThread.CallWait(partial(self.workerThread.DoCommand, command),1000)
 
     def SetValue(self, command, value):
-        if not self.workerThread:
-            self.workerThread = MediaMonkeyWorkerThread(self)
-            self.workerThread.Start(100.0)
-        self.workerThread.CallWait(partial(self.workerThread.SetValue, command, value),1000)
+        if self.checkWorkerThread():
+            self.workerThread.CallWait(partial(self.workerThread.SetValue, command, value),1000)
             
     def GetValue(self, command):
-        if not self.workerThread:
-            self.workerThread = MediaMonkeyWorkerThread(self)
-            self.workerThread.Start(100.0)
-        return self.workerThread.CallWait(partial(self.workerThread.GetValue, command),1000)
+        if self.checkWorkerThread():
+            return self.workerThread.CallWait(partial(self.workerThread.GetValue, command),1000)
         
     def GetSongData(self,index):    
-        if not self.workerThread:
-            self.workerThread = MediaMonkeyWorkerThread(self)
-            self.workerThread.Start(100.0)
-        return self.workerThread.CallWait(partial(self.workerThread.GetSongData, index),1000)
+        if self.checkWorkerThread():
+            return self.workerThread.CallWait(partial(self.workerThread.GetSongData, index),1000)
         
     def Jubox(self, ID, clear=True,repeat=2,shuffle=2,crossfade=2):
-        if not self.workerThread:
-            self.workerThread = MediaMonkeyWorkerThread(self)
-            self.workerThread.Start(100.0)
-        self.workerThread.Call(partial(
-            self.workerThread.Jubox,
-            ID,
-            clear,
-            repeat,
-            shuffle,
-            crossfade,
-        ))
+        if self.checkWorkerThread():
+            self.workerThread.Call(partial(
+                self.workerThread.Jubox,
+                ID,
+                clear,
+                repeat,
+                shuffle,
+                crossfade,
+            ))
 
     def SongJubox(self, ID,clear=False):
-        if not self.workerThread:
-            self.workerThread = MediaMonkeyWorkerThread(self)
-            self.workerThread.Start(100.0)
-        self.workerThread.Call(partial(
-            self.workerThread.SongJubox,
-            ID,
-            clear,
-        ))
+        if self.checkWorkerThread():
+            self.workerThread.Call(partial(
+                self.workerThread.SongJubox,
+                ID,
+                clear,
+            ))
 #        return res,Total
 
     def DeleteSong(self, ID):
-        if not self.workerThread:
-            self.workerThread = MediaMonkeyWorkerThread(self)
-            self.workerThread.Start(100.0)
-        res = self.workerThread.CallWait(partial(
-            self.workerThread.DeleteSongFromLibrary,
-            ID,
-        ),1000)
-        return res
+        if self.checkWorkerThread():
+            res = self.workerThread.CallWait(partial(
+                self.workerThread.DeleteSongFromLibrary,
+                ID,
+            ),1000)
+            return res
 
     def __stop__(self):
         if self.workerThread:
@@ -1058,10 +1062,8 @@ class Previous(eg.ActionBase):
     description = "Play previous track."
 
     def __call__(self):
-        if not self.plugin.workerThread:
-            self.plugin.workerThread = MediaMonkeyWorkerThread(self.plugin)
-            self.plugin.workerThread.Start(100.0)
-        self.plugin.workerThread.Call(partial(self.plugin.workerThread.Previous))
+        if self.plugin.checkWorkerThread():
+            self.plugin.workerThread.Call(partial(self.plugin.workerThread.Previous))
 #====================================================================
 
 class ToggleMute(eg.ActionBase):
@@ -1470,13 +1472,11 @@ class GetBasicStatistics(eg.ActionBase):
     description = "Get Basic Statistics (number of tracks and albums in the database)."
 
     def __call__(self,sep=''):
-        if not self.plugin.workerThread:
-            self.plugin.workerThread = MediaMonkeyWorkerThread(self.plugin)
-            self.plugin.workerThread.Start(100.0)
-        if sep == '':
-            sep = '\n'
-        tracks, albums = self.plugin.workerThread.CallWait(partial(self.plugin.workerThread.GetStatistics),60)
-        return self.text.tracks % tracks+sep+self.text.albums % albums
+        if self.plugin.checkWorkerThread():
+            if sep == '':
+                sep = '\n'
+            tracks, albums = self.plugin.workerThread.CallWait(partial(self.plugin.workerThread.GetStatistics),60)
+            return self.text.tracks % tracks+sep+self.text.albums % albums
         
     def GetLabel(self,sep=''):
         return self.name
@@ -2176,15 +2176,13 @@ class WritingToMM(eg.ActionBase):
         ndx = [itm[0] for itm in self.propertiesList].index([it[0] for it in SONG_TABLE_FIELDS][i])
         tmpList=[]
         attrib = [itm[2] for itm in SONG_TABLE_FIELDS][i]
-        if not self.plugin.workerThread:
-            self.plugin.workerThread = MediaMonkeyWorkerThread(self.plugin)
-            self.plugin.workerThread.Start(100.0)
-        self.plugin.workerThread.CallWait(partial(
-            self.plugin.workerThread.WriteToMMdatabase,
-            attrib,
-            arrayValue0[ndx],
-            arrayValue1[ndx]
-        ))
+        if self.plugin.checkWorkerThread():
+            self.plugin.workerThread.CallWait(partial(
+                self.plugin.workerThread.WriteToMMdatabase,
+                attrib,
+                arrayValue0[ndx],
+                arrayValue1[ndx]
+            ))
 
     def GetLabel(self, i, arrayValue0, arrayValue1):
         ndx = [itm[0] for itm in self.propertiesList].index([it[0] for it in SONG_TABLE_FIELDS][i])
@@ -2298,6 +2296,11 @@ class LoadPlaylist(eg.ActionBase):
             crossfade,
             clear
         )
+        if not self.plugin.workerThread2.MM:
+            self.plugin.workerThread2.Stop()
+            del self.plugin.workerThread2
+            self.plugin.workerThread2 = MediaMonkeyWorkerThread(self.plugin)
+            self.plugin.workerThread2.Start(100.0)
         self.plugin.workerThread2.Call(partial(*args))
 
     def Configure(self, plString="",repeat=2,shuffle=2,crossfade=2, clear = True):
@@ -2344,15 +2347,13 @@ class AddCurrentSongToPlaylist(eg.ActionBase):
     description = "Adds the currently playing song to a specific playlist."
 
     def __call__(self, plString, skip):
-        if not self.plugin.workerThread:
-            self.plugin.workerThread = MediaMonkeyWorkerThread(self.plugin)
-            self.plugin.workerThread.Start(100.0)
-        args = (
-            self.plugin.workerThread.AddSongToPlaylist,
-            plString,
-            skip
-        )
-        self.plugin.workerThread.Call(partial(*args))
+        if self.plugin.checkWorkerThread():
+            args = (
+                self.plugin.workerThread.AddSongToPlaylist,
+                plString,
+                skip
+            )
+            self.plugin.workerThread.Call(partial(*args))
 
     def Configure(self, plString="", skip=False):
         panel = eg.ConfigPanel(self)
@@ -2381,16 +2382,14 @@ class RemoveCurrentSongFromPlaylist(eg.ActionBase):
     description = "Remove the currently playing song from a specific playlist."
 
     def __call__(self, plString, skip, now_pl):
-        if not self.plugin.workerThread:
-            self.plugin.workerThread = MediaMonkeyWorkerThread(self.plugin)
-            self.plugin.workerThread.Start(100.0)
-        args = (
-            self.plugin.workerThread.RemoveSongFromPlaylist,
-            plString,
-            skip,
-            now_pl
-        )
-        self.plugin.workerThread.Call(partial(*args))
+        if self.plugin.checkWorkerThread():
+            args = (
+                self.plugin.workerThread.RemoveSongFromPlaylist,
+                plString,
+                skip,
+                now_pl
+            )
+            self.plugin.workerThread.Call(partial(*args))
 
     def Configure(self, plString="", skip=False, now_pl=False):
         panel = eg.ConfigPanel(self)
@@ -2424,13 +2423,11 @@ class RemoveCurrentSongFromNowPlaying(eg.ActionBase):
     description = "Remove the currently playing song from Now Playing playlist."
 
     def __call__(self, skip):
-        if not self.plugin.workerThread:
-            self.plugin.workerThread = MediaMonkeyWorkerThread(self.plugin)
-            self.plugin.workerThread.Start(100.0)
-        self.plugin.workerThread.Call(partial(
-                self.plugin.workerThread.RemoveSongFromNowPlaying,
-                skip
-            ))
+        if self.plugin.checkWorkerThread():
+            self.plugin.workerThread.Call(partial(
+                    self.plugin.workerThread.RemoveSongFromNowPlaying,
+                    skip
+                ))
             
     def Configure(self, skip=False):
         panel = eg.ConfigPanel(self)
@@ -2535,6 +2532,11 @@ class LoadPlaylistByFilter(eg.ActionBase):
             self.unitList,
             self.trendList
   )
+        if not self.plugin.workerThread2.MM:
+            self.plugin.workerThread2.Stop()
+            del self.plugin.workerThread2
+            self.plugin.workerThread2 = MediaMonkeyWorkerThread(self.plugin)
+            self.plugin.workerThread2.Start(100.0)
         self.plugin.workerThread2.Call(partial(*args))
 
     def Configure(
@@ -3116,6 +3118,11 @@ Pay particular attention to the `WHERE Clause`_ .
             crossfade,
             clear,
         )
+        if not self.plugin.workerThread2.MM:
+            self.plugin.workerThread2.Stop()
+            del self.plugin.workerThread2
+            self.plugin.workerThread2 = MediaMonkeyWorkerThread(self.plugin)
+            self.plugin.workerThread2.Start(100.0)
         self.plugin.workerThread2.Call(partial(*args))
 
     def Configure(
@@ -3597,15 +3604,13 @@ class JukeboxFrame(wx.Frame):
         else:
             self.itemListCtrl.DeleteAllItems()
             self.Update()
-            if not self.plugin.workerThread:
-                self.plugin.workerThread = MediaMonkeyWorkerThread(self.plugin)
-                self.plugin.workerThread.Start(100.0)                
-            self.patientFrame = PatientFrame(self,self.text.please)
-            if self.case=='Album':
-                self.plugin.workerThread.Call(partial(self.plugin.workerThread.ExportAlbumList,self.filePath))
-            else:
-                self.plugin.workerThread.Call(partial(self.plugin.workerThread.ExportSongList,self.filePath))
-            self.Enable(False)
+            if self.plugin.checkWorkerThread():
+                self.patientFrame = PatientFrame(self,self.text.please)
+                if self.case=='Album':
+                    self.plugin.workerThread.Call(partial(self.plugin.workerThread.ExportAlbumList,self.filePath))
+                else:
+                    self.plugin.workerThread.Call(partial(self.plugin.workerThread.ExportSongList,self.filePath))
+                self.Enable(False)
 
     def CompleteForm(self,evt=None):
         row = 0
@@ -3795,12 +3800,10 @@ class UnaccessibleTracksFrame(wx.Frame):
         else:
             self.itemListCtrl.DeleteAllItems()
             self.Update()
-            if not self.plugin.workerThread:
-                self.plugin.workerThread = MediaMonkeyWorkerThread(self.plugin)
-                self.plugin.workerThread.Start(100.0)                
-            self.patientFrame = PatientFrame(self,self.text.please)
-            self.plugin.workerThread.Call(partial(self.plugin.workerThread.GetNotAccessibleTracks,self.filePath))
-            self.Enable(False)
+            if self.plugin.checkWorkerThread():
+                self.patientFrame = PatientFrame(self,self.text.please)
+                self.plugin.workerThread.Call(partial(self.plugin.workerThread.GetNotAccessibleTracks,self.filePath))
+                self.Enable(False)
         if evt:
             evt.Skip()
             
