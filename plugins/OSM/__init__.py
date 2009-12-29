@@ -18,9 +18,17 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2009-10-17 19:15
+#Last change: 2009-12-29 19:41 GMT+1
 
-u"""<rst>
+
+
+eg.RegisterPlugin(
+    name = "OS Menu",
+    author = "Pako",
+    version = "0.1.11",
+    kind = "other",
+    guid = "{FCF3C7A7-FBC1-444D-B768-9477521946DC}",
+    description = u"""<rst>
 Allows you to create custom On Screen Menu.
         
 Plugin OSM has built-in a function **"Stop processing this event"**,
@@ -31,15 +39,7 @@ as elsewhere in the configuration, without having
 to explicitly use the **"Stop processing this event"**,
 **"Disable an item"** or **"Exclusive enable a folder / macro"**.
 Only it is necessary to place the folder with the OSM as high
-as possible in the configuration tree.
-"""
-
-eg.RegisterPlugin(
-    name = "OS Menu",
-    author = "Pako",
-    version = "0.1.10",
-    kind = "other",
-    description = __doc__,
+as possible in the configuration tree.""",
     createMacrosOnAdd = True,
     url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1051",
     icon = (
@@ -71,7 +71,7 @@ eg.RegisterPlugin(
 )
 
 from threading import Timer
-from win32api import GetSystemMetrics
+from eg.WinApi.Utils import GetMonitorDimensions
 from eg.WinApi.Dynamic import CreateEvent, SetEvent
 
 #===============================================================================
@@ -83,6 +83,7 @@ class ShowMenu(eg.ActionClass):
     class text:
         label = 'Label:'
         evtString = 'Event:'
+        osmLabel = 'OSM show on:'
         menuPreview = 'On screen menu preview:'
         delete = 'Delete'
         insert = 'Insert new'
@@ -115,7 +116,6 @@ class ShowMenu(eg.ActionClass):
             self.SetValue(value)
             self.Bind(wx.EVT_BUTTON, self.OnButton)
 
-
         def OnButton(self, event):
             colourData = wx.ColourData()
             colourData.SetChooseFull(True)
@@ -128,8 +128,13 @@ class ShowMenu(eg.ActionClass):
                 colourData = colourDlg.GetColourData()
                 colour=colourData.GetColour().Get()
                 self.SetValue(colour)
-                listBoxCtrl = event.GetEventObject().GetParent().GetSizer().\
-                    GetChildren()[1].GetSizer().GetChildren()[1].GetWindow()
+                if eg.Version.base >= "0.4.0":
+                    listBoxCtrl = event.GetEventObject().GetParent().GetSizer().\
+                        GetChildren()[0].GetSizer().GetChildren()[1].GetSizer().\
+                        GetChildren()[1].GetWindow()
+                else:
+                    listBoxCtrl = event.GetEventObject().GetParent().GetSizer().\
+                        GetChildren()[1].GetSizer().GetChildren()[1].GetWindow()
                 btnId = event.GetId()
                 if btnId == 1:
                     listBoxCtrl.SetBackgroundColour(colour)
@@ -143,10 +148,8 @@ class ShowMenu(eg.ActionClass):
             ]
             colourDlg.Destroy()
 
-
         def GetValue(self):
             return self.value
-
 
         def SetValue(self, value):
             self.value = value
@@ -157,7 +160,6 @@ class ShowMenu(eg.ActionClass):
 #-------------------------------------------------------------------------------
 
     class MenuFontButton(wx.BitmapButton):
-
         def __init__(
             self,
             fontInfo = None,
@@ -183,7 +185,6 @@ class ShowMenu(eg.ActionClass):
             )
             self.Bind(wx.EVT_BUTTON, self.OnButton)
 
-
         def OnButton(self, event):
             data = wx.FontData()
             if self.fontInfo is not None:
@@ -197,9 +198,13 @@ class ShowMenu(eg.ActionClass):
             if dlg.ShowModal() == wx.ID_OK:
                 data = dlg.GetFontData()
                 font = data.GetChosenFont()
-                listBoxCtrl =  self.window.GetSizer().GetChildren()[0].\
-                    GetSizer().GetChildren()[1].GetSizer().GetChildren()[1].\
-                    GetWindow()
+                if eg.Version.base >= "0.4.0":
+                    listBoxCtrl = event.GetEventObject().GetParent().GetSizer().\
+                        GetChildren()[0].GetSizer().GetChildren()[1].GetSizer().\
+                        GetChildren()[1].GetWindow()
+                else:
+                    listBoxCtrl = event.GetEventObject().GetParent().GetSizer().\
+                        GetChildren()[1].GetSizer().GetChildren()[1].GetWindow()
                 for n in range(10,20):
                     font.SetPointSize(n)
                     listBoxCtrl.SetFont(font)
@@ -210,10 +215,8 @@ class ShowMenu(eg.ActionClass):
                 event.Skip()
             dlg.Destroy()
 
-
         def GetValue(self):
             return self.fontInfo
-
 
         def SetValue(self, fontInfo):
             self.fontInfo = fontInfo
@@ -246,7 +249,8 @@ class ShowMenu(eg.ActionClass):
         fore,
         back,
         fontInfo,
-        prefix
+        prefix,
+        monitor=0
     ):
         if not self.plugin.menuDlg:
             self.plugin.choices = choices
@@ -259,7 +263,8 @@ class ShowMenu(eg.ActionClass):
                 False,
                 self.plugin,
                 self.event,
-                prefix
+                prefix,
+                monitor
             )
             eg.actionThread.WaitOnEvent(self.event)
 #-------------------------------------------------------------------------------
@@ -270,7 +275,8 @@ class ShowMenu(eg.ActionClass):
         fore,
         back,
         fontInfo,
-        prefix
+        prefix,
+        monitor
     ):
         res=self.text.showMenu+' '
         for n in range(0,min(3,len(choices))):
@@ -286,7 +292,8 @@ class ShowMenu(eg.ActionClass):
         fore = (0, 0, 0),
         back = (255, 255, 255),
         fontInfo = None,
-        prefix = 'OSM'
+        prefix = 'OSM',
+        monitor = 0
     ):
         self.choices = choices[:]
         self.fore = fore
@@ -344,13 +351,17 @@ class ShowMenu(eg.ActionClass):
         prefixCtrl = wx.TextCtrl(panel,-1,prefix,size=wx.Size(90,-1))
         labelCtrlSizer = wx.BoxSizer(wx.HORIZONTAL)
         labelCtrlSizer.Add(labelCtrl,0,wx.EXPAND)
+        osmLbl = wx.StaticText(panel, -1, self.text.osmLabel)
+        displayChoice = eg.DisplayChoice(panel, monitor)
         bottomSizer.Add(labelLbl,(0, 0),flag = wx.TOP,border = 3)
-        bottomSizer.Add(labelCtrlSizer,(0, 1))
-        bottomSizer.Add(prefixLbl,(0, 3),flag = wx.TOP, border = 8)
+        bottomSizer.Add(labelCtrlSizer,(0, 1),flag = wx.RIGHT,border = 18)
+        bottomSizer.Add(prefixLbl,(0, 2),(1,2),flag = wx.TOP, border = 8)
+        bottomSizer.Add((18,1),(0, 4))
+        bottomSizer.Add(osmLbl,(0, 5),flag = wx.TOP, border = 8)
         bottomSizer.Add(eventLbl,(1, 0),flag = wx.TOP,border = 3)
-        bottomSizer.Add(eventCtrl,(1, 1),flag = wx.EXPAND)
-        bottomSizer.Add((50,1),(1, 2))
-        bottomSizer.Add(prefixCtrl,(1, 3),flag = wx.EXPAND)
+        bottomSizer.Add(eventCtrl,(1, 1),flag = wx.EXPAND|wx.RIGHT,border = 18)
+        bottomSizer.Add(prefixCtrl,(1, 2),flag = wx.EXPAND)
+        bottomSizer.Add(displayChoice,(1, 5),flag = wx.EXPAND)
         #Button UP
         bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_UP, wx.ART_OTHER, (16, 16))
         btnUP = wx.BitmapButton(panel, -1, bmp)
@@ -534,7 +545,8 @@ class ShowMenu(eg.ActionClass):
                     True,
                     self.plugin,
                     self.event,
-                    prefixCtrl.GetValue()
+                    prefixCtrl.GetValue(),
+                    displayChoice.GetSelection()
                 )
                 eg.actionThread.WaitOnEvent(self.event)
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
@@ -545,7 +557,8 @@ class ShowMenu(eg.ActionClass):
             foreColourButton.GetValue(),
             backColourButton.GetValue(),
             fontButton.GetValue(),
-            prefixCtrl.GetValue()
+            prefixCtrl.GetValue(),
+            displayChoice.GetSelection()
         )
 #===============================================================================
 
@@ -631,12 +644,15 @@ ACTIONS = (
 #===============================================================================
 
 class OSM(eg.PluginClass):
-
+    monDim = None
     menuDlg = None
     choices = []
 
     def __init__(self):
         self.AddActionsFromList(ACTIONS)
+
+    def __start__(self):
+        self.monDim = GetMonitorDimensions()
 #===============================================================================
             
 class Menu(wx.Frame):
@@ -658,7 +674,8 @@ class Menu(wx.Frame):
         flag,
         plugin,
         event,
-        prefix
+        prefix,
+        monitor
     ):
         self.fore    = fore
         self.back    = back
@@ -666,7 +683,12 @@ class Menu(wx.Frame):
         self.choices = self.plugin.choices
         self.flag    = flag
         self.prefix  = prefix
-
+        #self.monitor = monitor
+        try:
+            x,y,ws,hs = self.plugin.monDim[monitor]
+        except IndexError:
+            x,y,ws,hs = self.plugin.monDim[0]
+        
         eventChoiceCtrl=wx.ListBox(
             self,
             choices = [item[0] for item in self.choices],
@@ -682,18 +704,21 @@ class Menu(wx.Frame):
         # menu height calculation:
         h=eventChoiceCtrl.GetCharHeight()
         height0 = len(self.choices)*h+5
-        height1 = h*((GetSystemMetrics (1)-20)/h)+5
-        height = min(height0,height1)
+        height1 = h*((hs-20)/h)+5
+        height = min(height0,height1)+6
         # menu width calculation:
         width_lst=[]
         for item in [item[0] for item in self.choices]:
             width_lst.append(eventChoiceCtrl.GetTextExtent(item+' ')[0])
         width = max(width_lst)+8
-        if height<height0:
+        if height-6<height0:
             width += 20 #for vertical scrollbar
-        width = min((width,GetSystemMetrics (0)-50))
-        self.SetSize((width+6,height+6))
-        eventChoiceCtrl.SetDimensions(2,2,width,height,wx.SIZE_AUTO)
+        width = min((width,ws-50))+6
+        #self.SetSize((width+6,height+6))
+        x_pos = x+(ws-width)/2
+        y_pos = y + (hs-height)/2
+        self.SetDimensions(x_pos,y_pos,width,height)
+        eventChoiceCtrl.SetDimensions(2,2,width-6,height-6,wx.SIZE_AUTO)
         mainSizer =wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(mainSizer)
         eventChoiceCtrl.SetSelection(0)
@@ -708,7 +733,7 @@ class Menu(wx.Frame):
         if self.flag:
             self.timer=MyTimer(t = 5.0, plugin = self.plugin)
         
-        self.Centre()
+    #    self.Centre()
         self.Show(True)
         wx.Yield()
         SetEvent(event)
