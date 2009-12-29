@@ -1,4 +1,4 @@
-version = "0.1.10"
+version = "0.1.11"
 # This file is part of EventGhost.
 # Copyright (C) 2008, 2009  Pako <lubos.ruckl@quick.cz>
 #
@@ -17,7 +17,7 @@ version = "0.1.10"
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# Last change: 2009-07-05 11:04
+# Last change: 2009-12-29 13:21 GMT+1
 
 
 eg.RegisterPlugin(
@@ -25,6 +25,7 @@ eg.RegisterPlugin(
     author = "Pako",
     version = version,
     kind = "other",
+    guid = "{1B447D2C-236A-469A-AE5A-640BF902392B}",
     createMacrosOnAdd = False,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAADAFBMVEUAAAAAAICAgIDA"
@@ -71,7 +72,7 @@ eg.RegisterPlugin(
     ),
     url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1024",
 )
-from win32api import GetSystemMetrics
+from eg.WinApi.Utils import GetMonitorDimensions
 from threading import Timer
 
 def Move(lst,index,direction):
@@ -251,7 +252,6 @@ class Key(eg.ActionClass):
                         evt.Skip()
                     ctrlDigit.Bind(wx.EVT_TEXT,onDigitChange)
 
-
                 elif item[4]==2: #Single Key mode
                     previewLbl=wx.StaticText(
                         panel,
@@ -322,7 +322,6 @@ class Key(eg.ActionClass):
                             evt.Skip()
                     labelCtrl.Bind(wx.EVT_TEXT, OnTextChange)
 
-
                     def OnButtonAppend(evt):
                         if len(self.listKeys)==1:
                             btnUP.Enable(True)
@@ -354,7 +353,6 @@ class Key(eg.ActionClass):
                         evt.Skip()
                     listBoxCtrl.Bind(wx.EVT_LISTBOX, OnClick)
 
-
                     def OnButtonUp(evt):
                         newSel,self.listKeys=Move(self.listKeys,listBoxCtrl.GetSelection(),-1)
                         listBoxCtrl.Set(self.listKeys)
@@ -363,7 +361,6 @@ class Key(eg.ActionClass):
                         evt.Skip()
                     btnUP.Bind(wx.EVT_BUTTON, OnButtonUp)
 
-
                     def OnButtonDown(evt):
                         newSel,self.listKeys=Move(self.listKeys,listBoxCtrl.GetSelection(),1)
                         listBoxCtrl.Set(self.listKeys)
@@ -371,7 +368,6 @@ class Key(eg.ActionClass):
                         self.oldSel = newSel
                         evt.Skip()
                     btnDOWN.Bind(wx.EVT_BUTTON, OnButtonDown)
-
 
                     def OnButtonDelete(evt):
                         lngth=len(self.listKeys)
@@ -477,7 +473,8 @@ ACTIONS = (
 class Multitap(eg.PluginClass):
     configs = []
     osDialog = None
-
+    config = 0
+    monDim = None
 
     def closeOsDialog(self):
         self.osDialog.Destroy()
@@ -490,7 +487,12 @@ class Multitap(eg.PluginClass):
         def setOsDialog():
             frg = ctrlEvtString.GetForegroundColour()
             bck = ctrlEvtString.GetBackgroundColour()
-            maxlen = (GetSystemMetrics (0)-50)/64
+            mon = self.configs[self.config][6]
+            try:
+                x,y,ws,hs = self.monDim[mon]
+            except IndexError:
+                x,y,ws,hs = self.monDim[0]
+            maxlen = (ws-50)/64
             ft = ctrlEvtString.GetFont()
             if len(self.evtString) <= maxlen:
                 ft.SetPointSize(64)
@@ -524,7 +526,9 @@ class Multitap(eg.PluginClass):
             w0 = min(wE,w0-16)
             w = max(w0, w1, w2, w3+w4+20)
             h = h1+h2+h3+8+16
-            self.osDialog.SetSize((w+16,h))
+            x_pos = x+(ws-w-16)/2
+            y_pos = y+(hs-h)/2
+            self.osDialog.SetDimensions(x_pos,y_pos,w+16,h)
             ctrlEvtString.SetPosition((7,7+8+h3+h1))
             ctrlEvtString.SetSize((w,h2))
             statTextEvent.SetPosition((7,7+h3))
@@ -552,14 +556,12 @@ class Multitap(eg.PluginClass):
                 statTextCapsLock = sizer.GetChildren()[2].GetWindow()
                 keysLabel = sizer.GetChildren()[3].GetWindow()
             setOsDialog()
-            self.osDialog.Centre()
         else:
             self.osDialog = wx.Frame(
                 None, -1, 'Multitap OSD',
                 style=wx.STAY_ON_TOP | wx.SIMPLE_BORDER
             )
             self.osDialog.SetSize((32,-1))
-
 
             statTextEvent=wx.StaticText(
                 self.osDialog,
@@ -608,10 +610,8 @@ class Multitap(eg.PluginClass):
                 keysLabel.SetBackgroundColour(wx.Colour(0, 0, 128))
                 statTextCapsLock.SetBackgroundColour(wx.Colour(0, 0, 128))
             setOsDialog()
-            self.osDialog.Centre()
             self.osDialog.Show()
 #===============================================================================
-
 
     def __init__(self):
         self.osd = True
@@ -644,6 +644,7 @@ class Multitap(eg.PluginClass):
         except:
             self.PrintError(self.text.assignError % config)
             return
+        self.config = indx
         if self.mode > 2: #3 = idle, 4 = Shift after idle
             self.evtString = ''
             self.pos = 0
@@ -814,7 +815,12 @@ class Multitap(eg.PluginClass):
         self,
         configs=[],
     ):
+        self.monDim = GetMonitorDimensions()
         self.configs=configs
+        #for compatibility with old version:
+        for cfg in self.configs:
+            if len(cfg) == 6:
+                cfg.append(0)
 #===============================================================================
 
     def Configure(
@@ -842,9 +848,14 @@ class Multitap(eg.PluginClass):
             ctrlTimeout.SetValue(item[3])
             choiceMode.SetSelection(item[4])
             checkBoxCtrl.SetValue(item[5])
+            displayChoice.SetSelection(item[6])
 
         text = self.text
         self.configs = configs[:]
+        #for compatibility with old version:
+        for cfg in self.configs:
+            if len(cfg) == 6:
+                cfg.append(0)
         self.oldSel=0
         self.flag = True
         panel = eg.ConfigPanel(self)
@@ -880,13 +891,15 @@ class Multitap(eg.PluginClass):
         )
         rb0 = panel.RadioButton(False,text.genSuffix, style=wx.RB_GROUP)
         rb1 = panel.RadioButton(True,text.genPayload)
-
         timeoutSizer = wx.BoxSizer(wx.HORIZONTAL)
         timeoutSizer.Add(lblTimeout1,0,wx.TOP,4)
-        timeoutSizer.Add(ctrlTimeout,0,wx.LEFT|wx.RIGHT,8)
-
+        timeoutSizer.Add(ctrlTimeout,0,wx.LEFT|wx.RIGHT,5)
+        timeoutSizer.Add(lblTimeout2,0,wx.TOP,4)
         checkBoxCtrl = wx.CheckBox(panel, label = text.ownOSD)
-
+        displayChoice = eg.DisplayChoice(panel, 0)
+        osdSizer = wx.BoxSizer(wx.HORIZONTAL)
+        osdSizer.Add(checkBoxCtrl,0,wx.TOP,4)
+        osdSizer.Add(displayChoice,0,wx.LEFT,30)
         box = wx.StaticBox(panel,-1,text.param)
         rightSizer = wx.StaticBoxSizer(box,wx.VERTICAL)
         rightSizer.Add(lblMode)
@@ -896,9 +909,7 @@ class Multitap(eg.PluginClass):
         rightSizer.Add(rb0,0,wx.TOP,1)
         rightSizer.Add(rb1,0,wx.TOP,1)
         rightSizer.Add(timeoutSizer,0,wx.TOP|wx.EXPAND,10)
-        rightSizer.Add(lblTimeout2,0,wx.TOP,1)
-        rightSizer.Add(checkBoxCtrl,0,wx.TOP,10)
-
+        rightSizer.Add(osdSizer,0,wx.TOP,10)
         leftSizer.Add(previewLbl,0,wx.TOP,5)
         leftSizer.Add((1,1))
         leftSizer.Add(listBoxCtrl,0,wx.TOP,5)
@@ -931,8 +942,8 @@ class Multitap(eg.PluginClass):
         topMiddleSizer.Add(btnDEL,0,wx.TOP,5)
         topMiddleSizer.Add(btnApp,0,wx.TOP,5)
         mainSizer = wx.BoxSizer(wx.HORIZONTAL)
-        mainSizer.Add(leftSizer)
-        mainSizer.Add(rightSizer,0,wx.LEFT|wx.EXPAND,36)
+        mainSizer.Add(leftSizer,0)
+        mainSizer.Add(rightSizer,1,wx.LEFT|wx.EXPAND,10)
         panel.sizer.Add(mainSizer)
         if len(self.configs) > 0:
             listBoxCtrl.Set([n[0] for n in self.configs])
@@ -1030,10 +1041,22 @@ class Multitap(eg.PluginClass):
         ctrlTimeout.Bind(wx.EVT_TEXT,onTimeout)
         onTimeout()
 
+        def onDisplayChoice(event=None):
+            monitor = displayChoice.GetSelection()
+            sel = self.oldSel
+            self.configs[sel][6] = monitor
+            if event:
+                event.Skip()
+        displayChoice.Bind(wx.EVT_CHOICE,onDisplayChoice)
+        onDisplayChoice()
+
         def onCheckbox(event=None):
             if self.configs<>[]:
-                osd = checkBoxCtrl.GetValue()
                 sel = self.oldSel
+                osd = checkBoxCtrl.GetValue()
+                displayChoice.Enable(osd)
+                mon = -1 if not osd else self.configs[sel][6]
+                displayChoice.SetSelection(mon)
                 self.configs[sel][5] = osd
             if event:
                 event.Skip()
@@ -1080,7 +1103,8 @@ class Multitap(eg.PluginClass):
             boxEnable(True)
             sel = listBoxCtrl.GetSelection() + 1
             self.oldSel=sel
-            item = ['','',True,1.5,0,True]
+#config structure = [label,event,format,timeout,mode,osd,monitor]
+            item = ['','',True,1.5,0,True,0]
             self.configs.insert(sel,item)
             listBoxCtrl.Set([n[0] for n in self.configs])
             listBoxCtrl.SetSelection(sel)
@@ -1099,9 +1123,9 @@ class Multitap(eg.PluginClass):
 #===============================================================================
 
     class text:
-        label = 'Configuration name:'
+        label = 'Profile name:'
         evtString = 'Event name and format:'
-        menuPreview = 'List of configurations:'
+        menuPreview = 'List of profiles:'
         delete = 'Delete'
         insert = 'Add new'
         labelMode = "Mode of Multitapper:"
@@ -1112,9 +1136,7 @@ class Multitap(eg.PluginClass):
         labelTimeout2 = "(0 = never timeout)"
         genSuffix = 'Generate as event suffix'
         genPayload = 'Generate as payload'
-        param = "Configuration parameters"
-        assignError = 'Configuration "%s" not exists!'
-        ownOSD = "Use own OSD"
+        param = "Profile parameters"
+        assignError = 'Profile "%s" not exists!'
+        ownOSD = "OSD show on:"
 #===============================================================================
-
-
