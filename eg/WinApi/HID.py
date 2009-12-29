@@ -200,9 +200,10 @@ class HIDThread(threading.Thread):
         self.StopCallback = callback
 
     def Write(self, data):
-        print "Write()", data
         if self.handle:
             win32file.WriteFile(self.handle, data, self._overlappedRead)
+        else:
+            eg.PrintError("invalid handle")
 
     def run(self):
         #open file/device

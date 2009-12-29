@@ -44,6 +44,11 @@ class Text:
 VENDOR_ID = 6383
 PRODUCT_ID = 57365
 
+COMMAND_FIRMWARE = 0xF0
+COMMAND_SEND_ONCE = 0xF1
+COMMAND_SEND_REPEAT = 0xF2
+COMMAND_ABORT = 0xF3
+
 class FS20PCS(eg.PluginClass):
     def __init__(self):
         self.version = None
@@ -52,17 +57,14 @@ class FS20PCS(eg.PluginClass):
         self.mappings = None
         
     def RawCallback(self, data):
-        print binascii.hexlify(data)
+        print "Received", len(data), binascii.hexlify(data)
             
     def PrintVersion(self):
         #create the following python command to show version number
-        #eg.plugins.FS20PCE.plugin.PrintVersion()
-        if self.version == None:
-            print "Need to receive data first. Please press a button and try again."
-        else:
-            versionMajor = self.version / 16
-            versionMinor = self.version % 16
-            print "Firmware version %d.%d" % (versionMajor, versionMinor) 
+        #eg.plugins.FS20PCS.plugin.PrintVersion()
+        versionMajor = self.version / 16
+        versionMinor = self.version % 16
+        print "Firmware version %d.%d" % (versionMajor, versionMinor) 
     
     def StopCallback(self):
         self.TriggerEvent("Stopped")
@@ -79,12 +81,29 @@ class FS20PCS(eg.PluginClass):
             0)
         return path;
     
+    def SendCommand(self, commandId, houseCode, address, extension):
+        pass
+    
+    def SendRawCommand(self, data, timeout):
+        if not self.thread:
+            eg.PrintError("Plug in is not running.")
+            return
+        dataLength = len(data)
+        print "Writing", dataLength, binascii.hexlify(data)
+        newData = data + ((11 - dataLength) * "\x00")
+        self.thread.Write(newData)
+    
+    def RequestVersion(self):
+        data = "\x01\x01\xF0"
+        self.SendRawCommand(data, 1000)
+    
     def SetupHidThread(self, newDevicePath):
         #create thread
         self.thread = HIDThread(self.name, newDevicePath)
-        self.thread.start()
         self.thread.SetStopCallback(self.StopCallback)
         self.thread.SetRawCallback(self.RawCallback)
+        self.thread.start()
+        #self.RequestVersion()
     
     def ReconnectDevice(self, event):
         """method to reconnect a disconnect device"""
