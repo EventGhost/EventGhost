@@ -18,7 +18,7 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2009-12-29 19:22  GMT+1
+#Last change: 2009-12-30 08:32  GMT+1
 
 import wx
 from win32com.client import Dispatch
@@ -36,7 +36,7 @@ from functools import partial
 eg.RegisterPlugin(
     name = "MediaMonkey",
     author = "Pako",
-    version = "0.2.9",
+    version = "0.2.10",
     kind = "program",
     guid = "{50602341-ABC3-47AD-B859-FCB8C03ED4EF}",
     createMacrosOnAdd = True,
@@ -883,24 +883,14 @@ class MediaMonkey(eg.PluginBase):
         self.volume=None
         self.muted=False
         self.trigger = trigger
+        eg.Bind("Main.MM_finishing",self.StopThreads)
+
         
     def checkWorkerThread(self):
         if not self.workerThread:
             self.workerThread = MediaMonkeyWorkerThread(self)
             self.workerThread.Start(100.0)
-        else:
-            if not self.workerThread.MM:
-                self.workerThread.Stop()
-                del self.workerThread
-                self.workerThread = MediaMonkeyWorkerThread(self)
-                self.workerThread.Start(100.0)
-        if self.workerThread2 and not self.workerThread2.MM:
-            self.workerThread2.Stop()
-            del self.workerThread2           
-        if self.workerThread:
-            return True
-        else:
-            return False
+        return True
         
     def Configure(self, trigger = True):
         panel = eg.ConfigPanel(self)
@@ -961,17 +951,17 @@ class MediaMonkey(eg.PluginBase):
             return res
 
     def __stop__(self):
-        if self.workerThread:
-            self.workerThread.Stop()
-        if self.workerThread2:
-            self.workerThread2.Stop()
+        eg.Unbind("Main.MM_finishing",self.StopThreads)
+        self.StopThreads()
 
-    def StopThread(self):
+    def StopThreads(self,event=None):
         if self.workerThread:
             self.workerThread.Stop()
+            self.workerThread = None
         if self.workerThread2:
             self.workerThread2.Stop()
-#====================================================================
+            self.workerThread2 = None
+#===============================================================================
 
 class Start(eg.ActionBase):
     name = "Start/Connect MediaMonkey"
@@ -979,14 +969,14 @@ class Start(eg.ActionBase):
 
     def __call__(self):
         dummy = self.plugin.GetValue('isRepeat')
-#====================================================================
+#===============================================================================
 
 class Exit(eg.ActionBase):
     name = "Exit/Disconnect MediaMonkey"
     description = "Disconnect MediaMonkey, with the option to close it."
     
     def __call__(self,choice=True):
-        self.plugin.StopThread()
+        self.plugin.StopThreads()
         if choice:
             hwnds = MyWindowMatcher()
             if hwnds:
@@ -2296,11 +2286,6 @@ class LoadPlaylist(eg.ActionBase):
             crossfade,
             clear
         )
-        if not self.plugin.workerThread2.MM:
-            self.plugin.workerThread2.Stop()
-            del self.plugin.workerThread2
-            self.plugin.workerThread2 = MediaMonkeyWorkerThread(self.plugin)
-            self.plugin.workerThread2.Start(100.0)
         self.plugin.workerThread2.Call(partial(*args))
 
     def Configure(self, plString="",repeat=2,shuffle=2,crossfade=2, clear = True):
@@ -2532,11 +2517,6 @@ class LoadPlaylistByFilter(eg.ActionBase):
             self.unitList,
             self.trendList
   )
-        if not self.plugin.workerThread2.MM:
-            self.plugin.workerThread2.Stop()
-            del self.plugin.workerThread2
-            self.plugin.workerThread2 = MediaMonkeyWorkerThread(self.plugin)
-            self.plugin.workerThread2.Start(100.0)
         self.plugin.workerThread2.Call(partial(*args))
 
     def Configure(
@@ -3118,11 +3098,6 @@ Pay particular attention to the `WHERE Clause`_ .
             crossfade,
             clear,
         )
-        if not self.plugin.workerThread2.MM:
-            self.plugin.workerThread2.Stop()
-            del self.plugin.workerThread2
-            self.plugin.workerThread2 = MediaMonkeyWorkerThread(self.plugin)
-            self.plugin.workerThread2.Start(100.0)
         self.plugin.workerThread2.Call(partial(*args))
 
     def Configure(
