@@ -22,6 +22,7 @@ eg.RegisterPlugin(
     guid = '{D76A6D18-142A-4f75-8F93-9CDA86DBC310}'
 )
 
+import array
 import binascii
 import sys
 import wx.lib.mixins.listctrl as listmix
@@ -57,7 +58,26 @@ class FS20PCS(eg.PluginClass):
         self.mappings = None
         
     def RawCallback(self, data):
-        print "Received", len(data), binascii.hexlify(data)
+        if len(data) != 5 or data[0:3] != "\x02\x03\xA0":
+            eg.PrintError("data must have a length of 5 and start with 02 03 A0")
+        errorId = ord(data[3:4])
+        if errorId == 0:
+            pass
+            #everything is fine
+        elif errorId == 1:
+            #Firmware version was requested
+            self.version = ord(data[4:5])
+        elif errorId == 2:
+            #Firmware version was requested
+            self.version = ord(data[4:5])
+        elif errorId == 3:
+            eg.PrintError("Unknown command id")
+        elif errorId == 4:
+            eg.PrintError("invalid command length")
+        elif errorId == 5:
+            eg.PrintError("nothing to abort")
+        else:
+            eg.PrintError("Unknown Error")
             
     def PrintVersion(self):
         #create the following python command to show version number
@@ -90,11 +110,11 @@ class FS20PCS(eg.PluginClass):
             return
         dataLength = len(data)
         print "Writing", dataLength, binascii.hexlify(data)
-        newData = data + ((11 - dataLength) * "\x00")
-        self.thread.Write(newData)
+        newData = data + ((11 - dataLength) * '\x00')
+        self.thread.Write(newData, timeout)
     
     def RequestVersion(self):
-        data = "\x01\x01\xF0"
+        data = '\x01\x01\xF0'
         self.SendRawCommand(data, 1000)
     
     def SetupHidThread(self, newDevicePath):
@@ -103,7 +123,7 @@ class FS20PCS(eg.PluginClass):
         self.thread.SetStopCallback(self.StopCallback)
         self.thread.SetRawCallback(self.RawCallback)
         self.thread.start()
-        #self.RequestVersion()
+        self.RequestVersion()
     
     def ReconnectDevice(self, event):
         """method to reconnect a disconnect device"""
