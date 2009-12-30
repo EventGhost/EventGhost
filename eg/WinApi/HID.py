@@ -8,6 +8,7 @@ import win32con
 import win32event
 import win32file
 import re
+
 from ctypes import Structure, Union, c_byte, c_char, c_int, c_long, c_ulong, c_ushort, c_wchar
 from ctypes import pointer, byref, sizeof, POINTER
 from ctypes.wintypes import ULONG, BOOLEAN
@@ -177,6 +178,7 @@ class HIDThread(threading.Thread):
         self.abort = False
         self._overlappedRead = win32file.OVERLAPPED()
         self._overlappedRead.hEvent = win32event.CreateEvent(None, 1, 0, None)
+        self._overlappedWrite = None
         self.RawCallback = None
         self.ButtonCallback = None
         self.ValueCallback = None
@@ -199,11 +201,21 @@ class HIDThread(threading.Thread):
     def SetStopCallback(self, callback):
         self.StopCallback = callback
 
-    def Write(self, data):
+    def Write(self, data, timeout):
         if self.handle:
-            win32file.WriteFile(self.handle, data, self._overlappedRead)
+            if not self._overlappedWrite:
+                self._overlappedWrite = win32file.OVERLAPPED()
+            err, n = win32file.WriteFile(self.handle, data, self._overlappedWrite)
+            if err: #will be ERROR_IO_PENDING:
+                # Wait for the write to complete.
+                n = win32file.GetOverlappedResult(self.handle, self._overlappedWrite, 1)
+                if n != len(data):
+                    eg.PrintError("writeTimeoutError")
+            elif n != len(data):
+                eg.PrintError("could not write full data")
         else:
             eg.PrintError("invalid handle")
+        
 
     def run(self):
         #open file/device
