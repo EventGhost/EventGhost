@@ -359,10 +359,10 @@ class WinUsb(object):
             result = -1
             try:
                 result = ExecAs(
-                    join(myDir, "WinUsbInstallClient.py"),
+                    "subprocess",
                     sys.getwindowsversion()[0] > 5 or not IsAdmin(),
-                    "InstallDriver",
-                    join(INSTALLATION_ROOT, "dpinst.exe"),
+                    "call",
+                    '"%s" /f /lm' % join(INSTALLATION_ROOT, "dpinst.exe"),
                 )
             except WindowsError, exc:
                 #only silence "User abort"
@@ -370,7 +370,6 @@ class WinUsb(object):
                     raise
             if result == 1:
                 restartNeeded = True
-
 
 
     def ShowRestartMessage(self):
