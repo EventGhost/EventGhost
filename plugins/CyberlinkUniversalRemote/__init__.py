@@ -46,9 +46,6 @@ KEY_CODES = {
     (0, 0, 80, 0, 0, 0, 0, 0): "Left",
     (0, 0, 81, 0, 0, 0, 0, 0): "Down",
     (0, 0, 82, 0, 0, 0, 0, 0): "Up",
-}
-
-BUTTON_CODES = {
     (2, 2, 0, 0): "Power",
     (4, 1, 0, 0): "Home",
     (4, 128, 0, 0): "Red",
@@ -79,8 +76,8 @@ BUTTON_CODES = {
     (3, 2, 0, 0): "PreviousTrack",
     (3, 0, 16, 0): "Stop",
     (3, 1, 0, 0): "NextTrack",
-    
 }
+
 
 class CyberlinkUniversalRemote(eg.PluginBase):
 
@@ -92,14 +89,14 @@ class CyberlinkUniversalRemote(eg.PluginBase):
             "CyberLink Universal Remote Control (Keypad)",
             "USB\\VID_0766&PID_0204&MI_00",
             "{EADE53A2-CFB5-4A5D-89B2-316FDBE428A2}",
-            self.KeypadCallback,
+            self.Callback,
             8
         )
         self.usb.AddDevice(
             "CyberLink Universal Remote Control (Buttons)",
             "USB\\VID_0766&PID_0204&MI_01",
             "{5D4C1DAB-E80F-4076-852D-BAB7C175A035}",
-            self.ButtonsCallback,
+            self.Callback,
             4
         )
         self.usb.Open()
@@ -109,14 +106,7 @@ class CyberlinkUniversalRemote(eg.PluginBase):
         self.usb.Close()
 
 
-    def ButtonsCallback(self, data):
-        if data in BUTTON_CODES:
-            self.TriggerEnduringEvent(BUTTON_CODES[data])
-        else:
-            self.EndLastEvent()
-
-
-    def KeypadCallback(self, data):
+    def Callback(self, data):
         if data in KEY_CODES:
             self.TriggerEnduringEvent(KEY_CODES[data])
         else:
