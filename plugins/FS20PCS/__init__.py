@@ -33,14 +33,6 @@ from eg.WinApi.HID import IsDeviceName
 
 class Text:
     errorFind = "Error finding ELV FS20 PCS"
-    help0 = "You can assign a name to a combination of house code and device addresses."
-    help1 = "Use '?' as a wild card to define groups."
-    houseCode = "House code"
-    deviceAddress = "Device address"
-    groupName = "Group name"
-    add = "Add"
-    update = "Update"
-    delete = "Delete"
 
 VENDOR_ID = 6383
 PRODUCT_ID = 57365
@@ -54,12 +46,10 @@ class FS20PCS(eg.PluginClass):
     def __init__(self):
         self.version = None
         self.thread = None
-        self.PendingEvents = {}
-        self.mappings = None
         
     def RawCallback(self, data):
         if len(data) != 5 or data[0:3] != "\x02\x03\xA0":
-            eg.PrintError("data must have a length of 5 and start with 02 03 A0")
+            self.PrintError("data must have a length of 5 and start with 02 03 A0")
         errorId = ord(data[3:4])
         if errorId == 0:
             pass
@@ -71,13 +61,13 @@ class FS20PCS(eg.PluginClass):
             #Firmware version was requested
             self.version = ord(data[4:5])
         elif errorId == 3:
-            eg.PrintError("Unknown command id")
+            self.PrintError("Unknown command id")
         elif errorId == 4:
-            eg.PrintError("invalid command length")
+            self.PrintError("invalid command length")
         elif errorId == 5:
-            eg.PrintError("nothing to abort")
+            self.PrintError("nothing to abort")
         else:
-            eg.PrintError("Unknown Error")
+            self.PrintError("Unknown Error")
             
     def PrintVersion(self):
         #create the following python command to show version number
@@ -106,7 +96,7 @@ class FS20PCS(eg.PluginClass):
     
     def SendRawCommand(self, data, timeout):
         if not self.thread:
-            eg.PrintError("Plug in is not running.")
+            self.PrintError("Plug in is not running.")
             return
         dataLength = len(data)
         print "Writing", dataLength, binascii.hexlify(data)
@@ -140,9 +130,7 @@ class FS20PCS(eg.PluginClass):
             
             self.SetupHidThread(newDevicePath)
 
-    def __start__(self, mappings = None):
-        self.mappings = mappings
-        
+    def __start__(self):
         #Bind plug in to RegisterDeviceNotification message 
         eg.Bind("System.DeviceAttached", self.ReconnectDevice)
         
