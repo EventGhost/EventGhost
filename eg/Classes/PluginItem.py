@@ -149,33 +149,27 @@ class PluginItem(ActionItem):
 
 
     def NeedsStartupConfiguration(self):
-        if (
-            self.info.instance.Configure.im_func
+        """
+        Returns True if the item wants to be configured after creation.
+
+        Overrides ActionItem.NeedsStartupConfiguration()
+        """
+        # if the Configure method of the executable is overriden, we assume
+        # the item wants to be configured after creation
+        return (
+            self.executable.Configure.im_func
             != eg.PluginBase.Configure.im_func
-        ):
-            return True
-        return False
-
-
-    @eg.LogIt
-    def ShowHelp(self, parent=None):
-        if self.helpDialog:
-            self.helpDialog.Raise()
-            return
-        plugin = self.info.instance
-        self.helpDialog = eg.HtmlDialog(
-            parent,
-            eg.text.General.pluginLabel % plugin.name,
-            plugin.description,
-            plugin.info.icon.GetWxIcon(),
-            basePath=plugin.info.path
         )
-        def OnClose(dummyEvent):
-            self.helpDialog.Destroy()
-            del self.helpDialog
-        self.helpDialog.Bind(wx.EVT_CLOSE, OnClose)
-        self.helpDialog.buttonRow.okButton.Bind(wx.EVT_BUTTON, OnClose)
-        self.helpDialog.Show()
+
+
+    def GetBasePath(self):
+        """
+        Returns the filesystem path, where additional files (like pictures)
+        should be found.
+
+        Overrides ActionItem.GetBasePath()
+        """
+        return self.info.path
 
 
     # The Find function calls this from MainThread, so we can't restrict this

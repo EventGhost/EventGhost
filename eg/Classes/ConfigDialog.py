@@ -21,7 +21,7 @@ import wx
 class ConfigDialog(eg.TaskletDialog):
     panel = None
 
-    def __init__(self, item, resizable=False, showLine=True):
+    def __init__(self, item, resizable=True, showLine=True):
         self.item = item
         self.result = None
         self.showLine = showLine
@@ -38,8 +38,8 @@ class ConfigDialog(eg.TaskletDialog):
             title = eg.text.General.settingsActionCaption
             addTestButton = True
 
-        self.configureItem = eg.currentConfigureItem
-        eg.currentConfigureItem.openConfigDialog = self
+#        self.configureItem = eg.currentConfigureItem
+#        self.configureItem.openConfigDialog = self
 
         dialogStyle = wx.CAPTION|wx.CLOSE_BOX|wx.SYSTEM_MENU
         if resizable:
@@ -82,7 +82,7 @@ class ConfigDialog(eg.TaskletDialog):
         self.mainSizer = mainSizer
         self.notebook.SetSizer(self.sizer)
         def ShowHelp(dummyEvent):
-            self.configureItem.ShowHelp(self)
+            self.item.ShowHelp(self)
         wx.EVT_MENU(self, wx.ID_HELP, ShowHelp)
 
         self.SetAcceleratorTable(
@@ -111,7 +111,8 @@ class ConfigDialog(eg.TaskletDialog):
         helpPanel = wx.Panel(self.notebook)
         helpPanel.SetBackgroundColour((255,255,255))
         htmlWindow = eg.HtmlWindow(helpPanel)
-        htmlWindow.SetPage(self.configureItem.GetDescription())
+        htmlWindow.SetBasePath(self.item.GetBasePath())
+        htmlWindow.SetPage(self.item.GetDescription())
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(htmlWindow, 1, wx.EXPAND)
         helpPanel.SetSizer(sizer)

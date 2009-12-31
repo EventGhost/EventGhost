@@ -36,7 +36,7 @@ class HeaderBox(wx.PyWindow):
 
         text = REPLACE_BR_TAG.sub('\n', text)
         text = REMOVE_HTML_PATTERN.sub('', text).strip()
-        hasAdditionalHelp = (description != text)
+#        hasAdditionalHelp = (description != text)
         if text == name:
             text = ""
         self.parent = parent
@@ -49,8 +49,8 @@ class HeaderBox(wx.PyWindow):
         font = wx.Font(8, wx.SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD )
         nameBox.SetFont(font)
 
-        if hasAdditionalHelp:
-            text += ' <a href="ShowMoreHelp">%s</a>' % eg.text.General.moreTag
+#        if hasAdditionalHelp:
+#            text += ' <a href="ShowMoreHelp">%s</a>' % eg.text.General.moreTag
         self.text = '<html><body bgcolor="%s" text="%s">%s</body></html>' % (
             self.GetBackgroundColour().GetAsString(wx.C2S_HTML_SYNTAX),
             self.GetForegroundColour().GetAsString(wx.C2S_HTML_SYNTAX),

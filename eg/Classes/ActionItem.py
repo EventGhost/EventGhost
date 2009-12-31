@@ -188,8 +188,18 @@ class ActionItem(TreeItem):
         """
         # if the Configure method of the executable is overriden, we assume
         # the item wants to be configured after creation
-        imFunc = self.executable.Configure.im_func
-        return imFunc != eg.ActionBase.Configure.im_func
+        return (
+            self.executable.Configure.im_func
+            != eg.ActionBase.Configure.im_func
+        )
+
+
+    def GetBasePath(self):
+        """
+        Returns the filesystem path, where additional files (like pictures)
+        should be found.
+        """
+        return self.executable.plugin.info.path
 
 
     @eg.LogIt
@@ -203,7 +213,7 @@ class ActionItem(TreeItem):
             action.name,
             action.description,
             action.info.icon.GetWxIcon(),
-            action.plugin.info.path
+            self.GetBasePath()
         )
         def OnClose(dummyEvent):
             self.helpDialog.Destroy()

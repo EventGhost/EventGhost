@@ -27,7 +27,7 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
     def __init__(
         self,
         executable=None,
-        resizable=None,
+        resizable=True,
         showLine=True
     ):
         #if resizable is None:
