@@ -118,9 +118,13 @@ def FormatException(excInfo):
     return u"".join(lines)
 
 
-def Main():
-    pipeName = sys.argv[1]
-    debug = int(sys.argv[2])
+def Main(pipeName, debugLevel):
+    if debugLevel:
+        def Debug(msg):
+            sys.stdout.write(msg + "\n")
+    else:
+        def Debug(msg):
+            pass
     if not WaitNamedPipe(pipeName, 5000):
         raise WinError()
     hPipe = CreateFile(
@@ -142,28 +146,36 @@ def Main():
 
         sys.stderr = PipeStream(hPipe, MESSAGE_STDERR)
         sys.stdout = PipeStream(hPipe, MESSAGE_STDOUT)
-        if debug:
-            print "reading startup message"
+        Debug("reading startup message")
         code, (scriptPath, funcName, args, kwargs) = ReadPipeMessage(hPipe)
-        if debug:
-            print (
-                "got startup message:\n"
-                "  path: %r\n"
-                "  funcName: %r\n"
-                "  args: %r\n"
-                "  kwargs: %r" %
-                    (scriptPath, funcName, args, kwargs)
-            )
+        Debug(
+            "got startup message:\n"
+            "  path: %r\n"
+            "  funcName: %r\n"
+            "  args: %r\n"
+            "  kwargs: %r" %
+                (scriptPath, funcName, args, kwargs)
+        )
         if code != MESSAGE_ARGS:
             raise Exception("Unexpected message type")
         try:
             moduleName = splitext(basename(scriptPath))[0]
-            moduleInfo = imp.find_module(moduleName, [dirname(scriptPath)])
-            module = imp.load_module(moduleName, *moduleInfo)
+            try:
+                moduleInfo = imp.find_module(moduleName, [dirname(scriptPath)])
+            except ImportError:
+                import zipimport
+                for entry in sys.path:
+                    if entry.endswith('.zip'):
+                        zipImporter = zipimport.zipimporter(entry)
+                        try:
+                            module = zipImporter.load_module(moduleName)
+                        except zipimport.ZipImportError:
+                            continue
+            else:
+                module = imp.load_module(moduleName, *moduleInfo)
             func = getattr(module, funcName)
             result = func(*args, **kwargs)
-            if debug:
-                print "result: %r" % result
+            Debug("result: %r" % result)
         except:
             WritePipeMessage(
                 hPipe,
@@ -177,5 +189,5 @@ def Main():
 
 
 if __name__ == "__main__":
-    Main()
+    Main(sys.argv[1], int(sys.argv[2]))
 
