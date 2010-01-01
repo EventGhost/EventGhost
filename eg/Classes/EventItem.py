@@ -64,7 +64,17 @@ class EventItem(TreeItem):
         newName = args[0]
         self.RenameTo(newName)
 
-
+    
+    def GetBasePath(self):
+        """
+        Returns the filesystem path, where additional files (like pictures)
+        should be found.
+        """
+        # currently an event item doesn't have any plugin assigned to it,
+        # so we also have no base path
+        return ""
+    
+    
     def Configure(self, name):
         panel = eg.ConfigPanel()
         staticText = panel.StaticText(Text.eventName)
