@@ -34,7 +34,7 @@ from eg.WinApi.Dynamic import (
 
 HWND_FLAGS = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_FRAMECHANGED
 SKIN_DIR = join(
-    abspath(dirname(__file__.decode(sys.getfilesystemencoding()))),
+    abspath(dirname(__file__.decode('mbcs'))),
     "OsdSkins"
 )
 DEFAULT_FONT_INFO = wx.Font(

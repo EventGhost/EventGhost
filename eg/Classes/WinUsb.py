@@ -239,10 +239,7 @@ class UsbDevice(object):
     def Open(self):
         if self.dll is None:
             self.__class__.dll = WinDLL(
-                join(
-                     eg.sitePackagesDir,
-                     "WinUsbWrapper.dll"
-                ).encode(sys.getfilesystemencoding())
+                join(eg.sitePackagesDir, "WinUsbWrapper.dll").encode('mbcs')
             )
         msgId = eg.messageReceiver.AddWmUserHandler(self.MsgHandler)
         self.threadId = self.dll.Start(
@@ -355,14 +352,15 @@ class WinUsb(object):
             if not self.CheckAddOnFiles():
                 continue
             self.CreateInf()
-            myDir = dirname(__file__.decode(sys.getfilesystemencoding()))
+            myDir = dirname(__file__.decode('mbcs'))
             result = -1
+            cmdLine = '"%s" /f /lm' % join(INSTALLATION_ROOT, "dpinst.exe")
             try:
                 result = ExecAs(
                     "subprocess",
                     sys.getwindowsversion()[0] > 5 or not IsAdmin(),
                     "call",
-                    '"%s" /f /lm' % join(INSTALLATION_ROOT, "dpinst.exe"),
+                    cmdLine.encode('mbcs'),
                 )
             except WindowsError, exc:
                 #only silence "User abort"
@@ -435,7 +433,7 @@ class WinUsb(object):
             os.makedirs(dirname(infPath))
         except:
             pass
-        outfile = codecs.open(infPath, "wt", sys.getfilesystemencoding())
+        outfile = codecs.open(infPath, "wt", 'mbcs')
         template = string.Template(HEADER)
         outfile.write(template.substitute(DRIVER_VERSION=DRIVER_VERSION))
         outfile.write("[Remotes.NTx86]\n")

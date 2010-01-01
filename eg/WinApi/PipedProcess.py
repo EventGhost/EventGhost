@@ -159,7 +159,7 @@ def ExecAs(scriptPath, asAdministrator, funcName, *args, **kwargs):
     try:
         Msg("calling ConnectNamedPipe")
         ConnectNamedPipe(hPipe, byref(overlapped))
-        localPath = dirname(__file__.decode(sys.getfilesystemencoding()))
+        localPath = dirname(__file__.decode('mbcs'))
         Msg("starting subprocess")
         hProcess = RunAs(
             abspath(join(localPath, "..", "..", "EventGhost.exe")),

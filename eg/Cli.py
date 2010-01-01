@@ -21,7 +21,8 @@ Parses the command line arguments of the program.
 import os
 import sys
 import locale
-from os.path import join, dirname, basename, splitext, abspath
+import ctypes
+from os.path import join, dirname, abspath
 
 ENCODING = locale.getdefaultlocale()[1]
 locale.setlocale(locale.LC_ALL, '')
@@ -29,9 +30,7 @@ argvIter = (val.decode(ENCODING) for val in sys.argv)
 scriptPath = argvIter.next()
 
 # get program directory
-mainDir = abspath(
-    join(dirname(__file__.decode(sys.getfilesystemencoding())), "..")
-)
+mainDir = abspath(join(dirname(__file__.decode('mbcs')), ".."))
 
 # determine the commandline parameters
 import __main__
@@ -91,7 +90,7 @@ for arg in argvIter:
     elif arg == '-translate':
         args.translate = True
     elif arg == "-restart":
-        import ctypes, time
+        import time
         while True:
             appMutex = ctypes.windll.kernel32.CreateMutexA(
                 None,
@@ -120,7 +119,6 @@ if (
     #and not args.pluginFile
 ):
     # check if another instance of the program is running
-    import ctypes
     appMutex = ctypes.windll.kernel32.CreateMutexA(
         None,
         0,

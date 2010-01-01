@@ -238,7 +238,7 @@ class Exception(Exception):
         try:
             return "\n".join([unicode(arg) for arg in self.args])
         except UnicodeDecodeError:
-            return "\n".join([str(arg).decode(sys.getfilesystemencoding()) for arg in self.args])
+            return "\n".join([str(arg).decode('mbcs') for arg in self.args])
 
 
 class StopException(Exception):

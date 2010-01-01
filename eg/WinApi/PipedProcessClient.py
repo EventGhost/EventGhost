@@ -105,7 +105,7 @@ def FormatException(excInfo):
     excType, excValue, excTraceback = excInfo
     lines = [u'Child process traceback (most recent call last)\n']
     if excTraceback:
-        decode = codecs.getdecoder(sys.getfilesystemencoding())
+        decode = codecs.getdecoder('mbcs')
         for filename, lineno, funcname, text in extract_tb(excTraceback):
             lines.append(
                 u'  File "%s", line %d, in %s\n' % (

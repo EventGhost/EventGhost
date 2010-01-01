@@ -24,7 +24,7 @@ class StdErr(object):
     def __init__(self, stream, encoding):
         self.stream = stream
         self.encoding = encoding
-        self.filesystemencoding = sys.getfilesystemencoding()
+        self.filesystemencoding = 'mbcs'
 
     def write(self, text):
         try:

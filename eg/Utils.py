@@ -348,14 +348,14 @@ def DecodeReST(source):
     return res['body']
 
 
-def PrepareDocstring(s):
+def PrepareDocstring(docstring):
     """
     Convert a docstring into lines of parseable reST.  Return it as a list of
     lines usable for inserting into a docutils ViewList (used as argument
-    of nested_parse().)  An empty line is added to act as a separator between
+    of nested_parse()). An empty line is added to act as a separator between
     this docstring and following content.
     """
-    lines = s.expandtabs().splitlines()
+    lines = docstring.expandtabs().splitlines()
     # Find minimum indentation of any non-blank lines after first line.
     margin = sys.maxint
     for line in lines[1:]:
@@ -407,9 +407,5 @@ def ExecFile(filename, globals=None, locals=None):
     Replacement for the Python built-in execfile() function, but handles
     unicode filenames right.
     """
-    return execfile(
-        filename.encode(sys.getfilesystemencoding()),
-        globals,
-        locals
-    )
+    return execfile(filename.encode('mbcs'), globals, locals)
 

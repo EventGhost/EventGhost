@@ -33,8 +33,8 @@ def InitPil():
 
 
 def InitPathesAndBuiltins():
-    sys.path.insert(0, eg.mainDir.encode(sys.getfilesystemencoding()))
-    sys.path.insert(1, eg.sitePackagesDir.encode(sys.getfilesystemencoding()))
+    sys.path.insert(0, eg.mainDir.encode('mbcs'))
+    sys.path.insert(1, eg.sitePackagesDir.encode('mbcs'))
 
     import cFunctions
     sys.modules["eg.cFunctions"] = cFunctions

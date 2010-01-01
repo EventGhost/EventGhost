@@ -98,7 +98,7 @@ class PythonScript(eg.ActionBase):
             tbType, tbValue, tbTraceback = sys.exc_info()
             for entry in traceback.extract_tb(tbTraceback)[1:]:
                 filename, linenum, funcname, source = entry
-                filename = filename.decode(sys.getfilesystemencoding())
+                filename = filename.decode('mbcs')
                 try:
                     filenum = int(filename)
                 except:

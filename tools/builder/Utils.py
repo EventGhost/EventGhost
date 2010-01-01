@@ -26,11 +26,11 @@ import builder
 from builder.subprocess2 import Popen
 
 def EncodePath(path):
-    return path.encode(sys.getfilesystemencoding())
+    return path.encode('mbcs')
 
 
 def DecodePath(path):
-    return path.decode(sys.getfilesystemencoding())
+    return path.decode('mbcs')
 
 
 def StartProcess(*args):

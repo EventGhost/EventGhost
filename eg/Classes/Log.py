@@ -59,9 +59,7 @@ class Log(object):
                     try:
                         oldStdOut.write(data)
                     except:
-                        oldStdOut.write(
-                            data.decode(sys.getfilesystemencoding())
-                        )
+                        oldStdOut.write(data.decode('mbcs'))
 
             class StdErr:
                 def write(self, data):
@@ -171,7 +169,7 @@ class Log(object):
         tbType, tbValue, tbTraceback = excInfo
         slist = ['Traceback (most recent call last) (%d):\n' % eg.revision]
         if tbTraceback:
-            decode = codecs.getdecoder(sys.getfilesystemencoding())
+            decode = codecs.getdecoder('mbcs')
             for fname, lno, funcName, text in extract_tb(tbTraceback)[skip:]:
                 slist.append(
                     u'  File "%s", line %d, in %s\n' % (

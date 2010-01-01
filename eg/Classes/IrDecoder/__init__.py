@@ -20,7 +20,7 @@ import sys
 from glob import glob
 from collections import deque
 
-DECODERS_DIR = os.path.dirname(__file__.decode(sys.getfilesystemencoding()))
+DECODERS_DIR = os.path.dirname(__file__.decode('mbcs'))
 
 
 class DecodeError(Exception):
