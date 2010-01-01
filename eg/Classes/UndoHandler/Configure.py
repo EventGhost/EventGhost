@@ -38,7 +38,6 @@ class Configure(UndoHandlerBase):
         self.oldArgumentString = ActionThreadFunc(item.GetArgumentString)()
         oldArgs = newArgs = ActionThreadFunc(item.GetArguments)()
         revertOnCancel = False
-        eg.currentConfigureItem = item
         dialog = eg.ConfigDialog.Create(item, *oldArgs)
         for event, newArgs in dialog:
             if event == wx.ID_OK:

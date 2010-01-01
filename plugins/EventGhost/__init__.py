@@ -148,7 +148,7 @@ class EnableItem(eg.ActionBase):
             searchItem = link.target
         else:
             searchItem = None
-        link = eg.TreeLink(eg.currentConfigureItem)
+        link = eg.TreeLink(panel.dialog.treeItem)
 
         tree = eg.TreeItemBrowseCtrl(
             panel,

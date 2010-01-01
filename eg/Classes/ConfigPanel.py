@@ -32,11 +32,9 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
     ):
         #if resizable is None:
         #    resizable = bool(eg.debugLevel)
-        item = eg.currentConfigureItem
-
-        dialog = item.openConfigDialog
+        dialog = eg.ConfigDialog.currentDialog
         dialog.panel = self
-        dialog.__init__(item, resizable, showLine)
+        dialog.__init__(resizable, showLine)
         self.dialog = dialog
         wx.PyPanel.__init__(self, dialog.notebook)
         dialog.notebook.AddPage(self, "Settings")

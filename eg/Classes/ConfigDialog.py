@@ -20,26 +20,23 @@ import wx
 
 class ConfigDialog(eg.TaskletDialog):
     panel = None
-
-    def __init__(self, item, resizable=True, showLine=True):
-        self.item = item
+    currentDialog = None
+    
+    def __init__(self, resizable=True, showLine=True):
         self.result = None
         self.showLine = showLine
         self.resizable = resizable
-
         addTestButton = False
+        treeItem= self.treeItem
         size = (450, 300)
-        if isinstance(item, eg.PluginItem):
+        if isinstance(treeItem, eg.PluginItem):
             title = eg.text.General.settingsPluginCaption
-        elif isinstance(item, eg.EventItem):
+        elif isinstance(treeItem, eg.EventItem):
             title = eg.text.General.settingsEventCaption
             size = (450, 150)
         else:
             title = eg.text.General.settingsActionCaption
             addTestButton = True
-
-#        self.configureItem = eg.currentConfigureItem
-#        self.configureItem.openConfigDialog = self
 
         dialogStyle = wx.CAPTION|wx.CLOSE_BOX|wx.SYSTEM_MENU
         if resizable:
@@ -68,7 +65,7 @@ class ConfigDialog(eg.TaskletDialog):
 
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer = wx.BoxSizer(wx.VERTICAL)
-        self.headerBox = eg.HeaderBox(self, item)
+        self.headerBox = eg.HeaderBox(self, treeItem)
         mainSizer.SetMinSize(size)
         flags = wx.EXPAND|wx.ALL|wx.ALIGN_CENTER#|wx.ALIGN_CENTER_VERTICAL
         mainSizer.AddMany(
@@ -82,7 +79,7 @@ class ConfigDialog(eg.TaskletDialog):
         self.mainSizer = mainSizer
         self.notebook.SetSizer(self.sizer)
         def ShowHelp(dummyEvent):
-            self.item.ShowHelp(self)
+            self.treeItem.ShowHelp(self)
         wx.EVT_MENU(self, wx.ID_HELP, ShowHelp)
 
         self.SetAcceleratorTable(
@@ -111,8 +108,8 @@ class ConfigDialog(eg.TaskletDialog):
         helpPanel = wx.Panel(self.notebook)
         helpPanel.SetBackgroundColour((255,255,255))
         htmlWindow = eg.HtmlWindow(helpPanel)
-        htmlWindow.SetBasePath(self.item.GetBasePath())
-        htmlWindow.SetPage(self.item.GetDescription())
+        htmlWindow.SetBasePath(self.treeItem.GetBasePath())
+        htmlWindow.SetPage(self.treeItem.GetDescription())
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(htmlWindow, 1, wx.EXPAND)
         helpPanel.SetSizer(sizer)
@@ -151,9 +148,10 @@ class ConfigDialog(eg.TaskletDialog):
 
 
     @eg.LogItWithReturn
-    def Configure(self, item, *args):
-        self.item = item
-        item.openConfigDialog = self
-        self.item.Configure(*args)
-        del item.openConfigDialog
+    def Configure(self, treeItem, *args):
+        self.__class__.currentDialog = self
+        self.treeItem = treeItem
+        treeItem.openConfigDialog = self
+        treeItem.Configure(*args)
+        del treeItem.openConfigDialog
 

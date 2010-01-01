@@ -22,7 +22,7 @@ class MacroSelectButton(wx.Window):
 
     def __init__(self, parent, label, title, mesg, treeLink=None):
         if treeLink is None:
-            treeLink = eg.TreeLink(eg.currentConfigureItem)
+            treeLink = eg.TreeLink(eg.Utils.GetTopLevelWindow(parent).treeItem)
         self.treeLink = treeLink            
         self.macro = treeLink.target
         if self.macro is None:

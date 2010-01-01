@@ -81,7 +81,6 @@ eg.mainThread = threading.currentThread()
 eg.stopExecutionFlag = False
 eg.lastFoundWindows = []
 eg.currentItem = None
-eg.currentConfigureItem = None
 eg.actionGroup = eg.Bunch()
 eg.actionGroup.items = []
 eg.folderPath = eg.FolderPath()
