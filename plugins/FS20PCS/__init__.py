@@ -103,10 +103,6 @@ class FS20PCS(eg.PluginClass):
             0)
         return path;
 
-    def SendCommand(self, commandId, houseCode0, houseCode1, address, extension):
-        data = "\x01\x01"
-        SendRawCommand(data, 0)
-
     def SendRawCommand(self, data, timeout):
         if not self.thread:
             self.PrintError("Plug in is not running.")
@@ -169,31 +165,56 @@ class FS20PCS(eg.PluginClass):
         #unbind from RegisterDeviceNotification message
         eg.Unbind("System.DeviceAttached", self.ReconnectDevice)
 
+
+def GetStringFromAddress(address, formatted = False):
+    valueStr = ""
+    for i in range(11, -1, -1):
+        x = (address >> i*2) & 0x03
+        valueStr += str(x + 1)
+        if i == 4 and formatted:
+            valueStr += " - "
+        if i == 8 and formatted:
+            valueStr += " "
+    return valueStr
+
+def GetAddressFromString(addressString):
+    address = 0
+    for i in range(12):
+        address <<= 2
+        address += int(addressString[i]) - 1
+    return address
+
+
 class ActionBase(eg.ActionBase):
     defaultAddress = 0x094001
     funccode = None # must be assigned by subclass
 
     def __call__(self, address, timeCode, repeatCount):
+        
+        if repeatCount == 0:
+            data = "\x01\x06\xf1"
+        else:
+            data = "\x01\x07\xf2"
+            
         x, a0 = divmod(address, 256)
         a2, a1 = divmod(x, 256)
-        self.plugin.SendCommand(self.funccode, a2, a1, a0, None)
+        data += chr(a2)
+        data += chr(a1)
+        data += chr(a0)
+        
+        if timeCode == 0:
+            data += chr(self.funccode)
+            data += "\x00"
+        else:
+            data += chr(self.funccode + 32)
+            data += chr(timeCode);
+        
+        if repeatCount != 0:
+            data += chr(repeatCount)
+        self.plugin.SendRawCommand(data, 0)
 
-    def GetLabel(self, _address, timeCode, repeatCount = 0):
-        return self.name + " " + self.GetStringFromAddress(self, address)
-
-    def GetStringFromAddress(self, address):
-        valueStr = ""
-        for i in range(11, -1, -1):
-            x = (address >> i*2) & 0x03
-            valueStr += str(x + 1)
-        return valueStr
-
-    def GetAddressFromString(self, addressString):
-        address = 0
-        for i in range(12):
-            address <<= 2
-            address += int(addressString[i]) - 1
-        return address
+    def GetLabel(self, address, timeCode, repeatCount):
+        return self.name + " " + GetStringFromAddress(address, True)
 
     def Configure(self, address = None, timeCode = 0, repeatCount = 0):
         if address is None:
@@ -233,7 +254,7 @@ class ActionBase(eg.ActionBase):
             formatcodes="F",
             validRequired=False,
         )
-        maskedCtrl.SetValue(self.GetStringFromAddress(address))
+        maskedCtrl.SetValue(GetStringFromAddress(address))
         
         def TimerCallback(value):
             return timerValues[value][2]
@@ -268,7 +289,7 @@ class ActionBase(eg.ActionBase):
         panel.AddLine("Repeat:", repeatCtrl)
 
         while panel.Affirmed():
-            address = self.GetAddressFromString(maskedCtrl.GetPlainValue())
+            address = GetAddressFromString(maskedCtrl.GetPlainValue())
             ActionBase.defaultAddress = address
             panel.SetResult(address, timerValues[timerCtrl.GetValue()][0], repeatCtrl.GetValue())
             
@@ -299,7 +320,7 @@ class Dim(ActionBase):
             formatcodes="F",
             validRequired=False,
         )
-        maskedCtrl.SetValue(self.GetStringFromAddress(address))
+        maskedCtrl.SetValue(GetStringFromAddress(address))
         
         def LevelCallback(value):
             return "%.02f %%" % (value * 100.00 / 16)
@@ -307,9 +328,9 @@ class Dim(ActionBase):
         levelCtrl = eg.Slider(
             panel, 
             value=level, 
-            min=1, 
+            min=0, 
             max=16, 
-            minLabel="6.25 %",
+            minLabel="0.00 %",
             maxLabel="100.00 %",
             style = wx.SL_AUTOTICKS|wx.SL_TOP,
             size=(300,-1),
@@ -321,7 +342,7 @@ class Dim(ActionBase):
         panel.AddLine("Level:", levelCtrl)
         
         while panel.Affirmed():
-            address = self.GetAddressFromString(maskedCtrl.GetPlainValue())
+            address = GetAddressFromString(maskedCtrl.GetPlainValue())
             ActionBase.defaultAddress = address
             panel.SetResult(
                 address, 
