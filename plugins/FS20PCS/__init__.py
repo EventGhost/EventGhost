@@ -38,11 +38,6 @@ class Text:
 VENDOR_ID = 6383
 PRODUCT_ID = 57365
 
-COMMAND_FIRMWARE = 0xF0
-COMMAND_SEND_ONCE = 0xF1
-COMMAND_SEND_REPEAT = 0xF2
-COMMAND_ABORT = 0xF3
-
 class FS20PCS(eg.PluginClass):
     def __init__(self):
         self.version = None
@@ -56,7 +51,6 @@ class FS20PCS(eg.PluginClass):
         self.AddAction(DimUp)
         self.AddAction(Toggle)
         self.AddAction(Abort)
-
 
     def RawCallback(self, data):
         if eg.debugLevel:
@@ -188,6 +182,31 @@ def GetAddressFromString(addressString):
         address += int(addressString[i]) - 1
     return address
 
+def GetTimeCodeByIndex(index):
+    if index < 16:
+        return index
+    return index + ((index / 8) - 1) * 8
+
+def GetTimeCodeIndex(timeCode):
+    if timeCode < 16:
+        return timeCode
+    return timeCode - (timeCode / 16) * 8
+
+def GetTimeValue(timeCode):
+    return (2**(timeCode / 16)) * 0.25 * (timeCode % 16)
+    
+def FormatTimeValue(timeValue):
+    if timeValue >= 3600:
+        hours = math.floor(timeValue / 3600)
+        minutes = math.floor((timeValue - (hours * 3600)) / 60)
+        seconds = timeValue - (hours * 3600) - minutes * 60
+        return "%0d h %00d m %00d s" % (hours, minutes, seconds)
+    elif timeValue >= 60:
+        minutes = math.floor(timeValue / 60)
+        seconds = timeValue - minutes * 60
+        return "%00d m %00d s" % (minutes, seconds)
+    else:
+        return "%0.02f sec" % timeValue
 
 class ActionBase(eg.ActionBase):
     defaultAddress = 0x094001
@@ -223,30 +242,6 @@ class ActionBase(eg.ActionBase):
         if address is None:
             address = self.defaultAddress
             
-        timerIndex = 0
-        
-        timerValues = []
-        startRange = 0
-        for i in range(0,13):
-            timeFactor = (2**i) * 0.25
-            for j in range(startRange,16):
-                tempTimeCode = (i*16) + j
-                if timeCode == tempTimeCode:
-                    timerIndex = len(timerValues)
-
-                tempTimeValue = timeFactor * j
-                hours = math.floor(tempTimeValue / 3600)
-                minutes = math.floor((tempTimeValue - (hours * 3600)) / 60)
-                seconds = tempTimeValue - (hours * 3600) - minutes * 60
-                if hours > 0:
-                    tempTimeFormatted = "%0d h %00d m %00d s" % (hours, minutes, seconds)
-                elif minutes > 0:
-                    tempTimeFormatted = "%00d m %00d s" % (minutes, seconds)
-                else:
-                    tempTimeFormatted = "%0.02f sec" % tempTimeValue
-                timerValues.append((tempTimeCode, tempTimeValue, tempTimeFormatted))
-            startRange = 8 #prevents duplicate entries
-
         panel = eg.ConfigPanel()
 
         maskedCtrl = masked.TextCtrl(
@@ -260,15 +255,17 @@ class ActionBase(eg.ActionBase):
         maskedCtrl.SetValue(GetStringFromAddress(address))
         
         def TimerCallback(value):
-            return timerValues[value][2]
+            timeCodeForValue = GetTimeCodeByIndex(value)
+            print value, "=>", timeCodeForValue, binascii.hexlify("" + chr(timeCodeForValue)), GetTimeCodeIndex(timeCodeForValue)
+            return FormatTimeValue(GetTimeValue(timeCodeForValue))
         
         timerCtrl = eg.Slider(
             panel, 
-            value=timerIndex, 
+            value=GetTimeCodeIndex(timeCode), 
             min=0, 
-            max=len(timerValues) - 1, 
-            minLabel=timerValues[0][2],
-            maxLabel=timerValues[len(timerValues) - 1][2],
+            max=111, 
+            minLabel=FormatTimeValue(0),
+            maxLabel=FormatTimeValue(15360),
             style = wx.SL_TOP,
             size=(300,-1),
             levelCallback=TimerCallback
@@ -294,7 +291,7 @@ class ActionBase(eg.ActionBase):
         while panel.Affirmed():
             address = GetAddressFromString(maskedCtrl.GetPlainValue())
             ActionBase.defaultAddress = address
-            panel.SetResult(address, timerValues[timerCtrl.GetValue()][0], repeatCtrl.GetValue())
+            panel.SetResult(address, GetTimeCodeByIndex(timerCtrl.GetValue()), repeatCtrl.GetValue())
             
 
 class Dim(ActionBase):
