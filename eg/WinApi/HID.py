@@ -210,12 +210,17 @@ class HIDThread(threading.Thread):
                 # Wait for the write to complete.
                 n = win32file.GetOverlappedResult(self.handle, self._overlappedWrite, 1)
                 if n != len(data):
-                    eg.PrintError("writeTimeoutError")
+                    raise Exception("could not write full data")
             elif n != len(data):
-                eg.PrintError("could not write full data")
+                raise Exception("could not write full data")
+            if timeout:#waits for response from device
+                win32event.ResetEvent(self._overlappedRead.hEvent)
+                res = win32event.WaitForSingleObject(self._overlappedRead.hEvent, timeout)
+                if res == win32event.WAIT_TIMEOUT:
+                    raise Exception("no response from device within timeout")
         else:
-            eg.PrintError("invalid handle")
-        
+            raise Exception("invalid handle")
+            return
 
     def run(self):
         #open file/device

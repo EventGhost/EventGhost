@@ -59,6 +59,9 @@ class FS20PCS(eg.PluginClass):
 
 
     def RawCallback(self, data):
+        if eg.debugLevel:
+            print "FS20PCS RawCallBack", binascii.hexlify(data)
+
         if len(data) != 5 or data[0:3] != "\x02\x03\xA0":
             self.PrintError("data must have a length of 5 and start with 02 03 A0")
         errorId = ord(data[3:4])
@@ -108,11 +111,12 @@ class FS20PCS(eg.PluginClass):
             self.PrintError("Plug in is not running.")
             return
         dataLength = len(data)
-        print "Writing", dataLength, binascii.hexlify(data)
+        if eg.debugLevel:
+            print "FS20PCS SendRawCommand", binascii.hexlify(data)
         newData = data + ((11 - dataLength) * '\x00')
         try:
             self.waitingForResponse = True
-            self.thread.Write(newData, timeout)
+            self.thread.Write(newData, timeout + 1000)#extra seconds to wait for response
         except:
             self.waitingForResponse = False
 
@@ -190,11 +194,10 @@ class ActionBase(eg.ActionBase):
     funccode = None # must be assigned by subclass
 
     def __call__(self, address, timeCode, repeatCount):
-        
-        if repeatCount == 0:
-            data = "\x01\x06\xf1"
-        else:
+        if repeatCount > 1:
             data = "\x01\x07\xf2"
+        else:
+            data = "\x01\x06\xf1"
             
         x, a0 = divmod(address, 256)
         a2, a1 = divmod(x, 256)
@@ -209,14 +212,14 @@ class ActionBase(eg.ActionBase):
             data += chr(self.funccode + 32)
             data += chr(timeCode);
         
-        if repeatCount != 0:
+        if repeatCount > 1:
             data += chr(repeatCount)
-        self.plugin.SendRawCommand(data, 0)
+        self.plugin.SendRawCommand(data, repeatCount * 250)
 
     def GetLabel(self, address, timeCode, repeatCount):
         return self.name + " " + GetStringFromAddress(address, True)
 
-    def Configure(self, address = None, timeCode = 0, repeatCount = 0):
+    def Configure(self, address = None, timeCode = 0, repeatCount = 1):
         if address is None:
             address = self.defaultAddress
             
@@ -275,9 +278,9 @@ class ActionBase(eg.ActionBase):
         repeatCtrl = eg.Slider(
             panel, 
             value=repeatCount, 
-            min=0, 
+            min=1, 
             max=255, 
-            minLabel="0",
+            minLabel="1",
             maxLabel="255",
             style = wx.SL_TOP,
             size=(300,-1),
