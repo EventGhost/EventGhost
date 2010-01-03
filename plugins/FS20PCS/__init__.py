@@ -169,10 +169,11 @@ def GetStringFromAddress(address, formatted = False):
     for i in range(11, -1, -1):
         x = (address >> i*2) & 0x03
         valueStr += str(x + 1)
-        if i == 4 and formatted:
-            valueStr += " - "
-        if i == 8 and formatted:
-            valueStr += " "
+        if formatted:
+            if i == 4:
+                valueStr += " - "
+            if i == 8:
+                valueStr += " "
     return valueStr
 
 def GetAddressFromString(addressString):
@@ -226,24 +227,25 @@ class ActionBase(eg.ActionBase):
         
         if timeCode == 0:
             data += chr(self.funccode)
-            data += "\x00"
         else:
             data += chr(self.funccode + 32)
-            data += chr(timeCode);
+        data += chr(timeCode);
         
         if repeatCount > 1:
             data += chr(repeatCount)
         self.plugin.SendRawCommand(data, repeatCount * 250)
 
     def GetLabel(self, address, timeCode, repeatCount):
-        return self.name + " " + GetStringFromAddress(address, True)
+        label = self.name + " " + GetStringFromAddress(address, True)
+        if timeCode != 0:
+            label += ", Timer value: " + FormatTimeValue(GetTimeValue(timeCode))
+        if repeatCount > 1:
+            label += ", Repeats: " + str(repeatCount)
+        return label
 
-    def Configure(self, address = None, timeCode = 0, repeatCount = 1):
+    def AddAddressControl(self, panel, address):
         if address is None:
             address = self.defaultAddress
-            
-        panel = eg.ConfigPanel()
-
         maskedCtrl = masked.TextCtrl(
             parent=panel,
             mask="#### #### - ####",
@@ -253,10 +255,12 @@ class ActionBase(eg.ActionBase):
             validRequired=False,
         )
         maskedCtrl.SetValue(GetStringFromAddress(address))
-        
+        panel.AddLine("Address:", maskedCtrl)
+        return maskedCtrl
+
+    def AddTimerControl(self, panel, timeCode):
         def TimerCallback(value):
             timeCodeForValue = GetTimeCodeByIndex(value)
-            print value, "=>", timeCodeForValue, binascii.hexlify("" + chr(timeCodeForValue)), GetTimeCodeIndex(timeCodeForValue)
             return FormatTimeValue(GetTimeValue(timeCodeForValue))
         
         timerCtrl = eg.Slider(
@@ -271,7 +275,10 @@ class ActionBase(eg.ActionBase):
             levelCallback=TimerCallback
         )
         timerCtrl.SetMinSize((300, -1))
+        panel.AddLine("Timer value:", timerCtrl)
+        return timerCtrl
 
+    def AddRepeatControl(self, panel, repeatCount):
         repeatCtrl = eg.Slider(
             panel, 
             value=repeatCount, 
@@ -283,45 +290,10 @@ class ActionBase(eg.ActionBase):
             size=(300,-1),
         )
         repeatCtrl.SetMinSize((300, -1))
-
-        panel.AddLine("Address:", maskedCtrl)
-        panel.AddLine("Timer value:", timerCtrl)
         panel.AddLine("Repeat:", repeatCtrl)
+        return repeatCtrl
 
-        while panel.Affirmed():
-            address = GetAddressFromString(maskedCtrl.GetPlainValue())
-            ActionBase.defaultAddress = address
-            panel.SetResult(address, GetTimeCodeByIndex(timerCtrl.GetValue()), repeatCtrl.GetValue())
-            
-
-class Dim(ActionBase):
-    name = "Set dim-level"
-    
-    def __call__(self, address, level):
-        x, a0 = divmod(address, 256)
-        a2, a1 = divmod(x, 256)
-        self.plugin.WriteFhz(0x04, 0x02, 0x01, 0x01, a2, a1, a0, level)
-    
-    
-    def GetLabel(self, address, level):
-        return "Set dim-level to %.02f %%" % (level * 100.00 / 16)
-    
-    
-    def Configure(self, address=None, level=1):       
-        if address is None:
-            address = self.defaultAddress
-        panel = eg.ConfigPanel()
-            
-        maskedCtrl = masked.TextCtrl(
-            parent=panel,
-            mask="#### #### - ####",
-            defaultValue="1111 1111 - 1111",
-            excludeChars="056789",
-            formatcodes="F",
-            validRequired=False,
-        )
-        maskedCtrl.SetValue(GetStringFromAddress(address))
-        
+    def AddLevelControl(self, panel, level):
         def LevelCallback(value):
             return "%.02f %%" % (value * 100.00 / 16)
         
@@ -337,15 +309,66 @@ class Dim(ActionBase):
             levelCallback=LevelCallback
         )
         levelCtrl.SetMinSize((300, -1))
-        
-        panel.AddLine("Address:", maskedCtrl)
         panel.AddLine("Level:", levelCtrl)
+        return levelCtrl
+
+            
+    def Configure(self, address = None, timeCode = 0, repeatCount = 1):
+        panel = eg.ConfigPanel()
+
+        maskedCtrl = self.AddAddressControl(panel, address)
+        timerCtrl = self.AddTimerControl(panel, timeCode)
+        repeatCtrl = self.AddRepeatControl(panel, repeatCount)
+
+        while panel.Affirmed():
+            address = GetAddressFromString(maskedCtrl.GetPlainValue())
+            ActionBase.defaultAddress = address
+            panel.SetResult(address, GetTimeCodeByIndex(timerCtrl.GetValue()), repeatCtrl.GetValue())
+            
+
+class Dim(ActionBase):
+    name = "Set dim-level"
+    
+    def __call__(self, address, timeCode, repeatCount, level):
+        if repeatCount > 1:
+            data = "\x01\x07\xf2"
+        else:
+            data = "\x01\x06\xf1"
+            
+        x, a0 = divmod(address, 256)
+        a2, a1 = divmod(x, 256)
+        data += chr(a2)
+        data += chr(a1)
+        data += chr(a0)
+        
+        if timeCode == 0:
+            data += chr(level)
+        else:
+            data += chr(level + 32)
+        data += chr(timeCode);
+        
+        if repeatCount > 1:
+            data += chr(repeatCount)
+        self.plugin.SendRawCommand(data, repeatCount * 250)
+    
+    
+    def GetLabel(self, address, timeCode, repeatCount, level):
+        return "Set dim-level to %.02f %%" % (level * 100.00 / 16)
+    
+    def Configure(self, address = None, timeCode = 0, repeatCount = 1, level = 8):
+        panel = eg.ConfigPanel()
+        maskedCtrl = self.AddAddressControl(panel, address)
+        levelCtrl = self.AddLevelControl(panel, level)
+        timerCtrl = self.AddTimerControl(panel, timeCode)
+        repeatCtrl = self.AddRepeatControl(panel, repeatCount)
         
         while panel.Affirmed():
             address = GetAddressFromString(maskedCtrl.GetPlainValue())
             ActionBase.defaultAddress = address
             panel.SetResult(
                 address, 
+                GetTimeCodeByIndex(timerCtrl.GetValue()),
+                repeatCtrl.GetValue(),
                 levelCtrl.GetValue(),
             )
 
