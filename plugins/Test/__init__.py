@@ -33,56 +33,37 @@ eg.RegisterPlugin(
 
 import wx
 
-def CreateStringAction(myParameterDescription, myDefaultParameter):
-    class AnAction(eg.ActionWithStringParameter):
-        parameterDescription = myParameterDescription
-        defaultParameter = myDefaultParameter
-        
-        def __call__(self, value):
-            print "action value:", self.value
-            print "user value:", value
-            
-    return AnAction
 
-ACTIONS = (
-    (CreateStringAction("Please enter value A:", "default A"), "ActionA", "My A action", "This does something", "A"),
-    (CreateStringAction("Please enter value B:", "default B"), "ActionB", "My B action", "This does something", "B"),
-)
 
 class Test(eg.PluginBase):
     
     def __init__(self):
         self.AddAction(TestAction)
-        self.AddActionsFromList(ACTIONS)
         
     
-#    def __start__(self, password):
-#        print "__start__", password.Get()
-#        
-#    
-#    def Configure(self, password=None):
-#        password = eg.Password(password)
-#        panel = eg.ConfigPanel()
-#        passwordCtrl = panel.TextCtrl(password.Get(), style=wx.TE_PASSWORD)
-#        panel.sizer.Add(passwordCtrl)
-#        while panel.Affirmed():
-#            password.Set(passwordCtrl.GetValue())
-#            panel.SetResult(password)
+    def __start__(self, password=""):
+        print "__start__", password
+        
+    
+    def Configure(self, password=""):
+        panel = eg.ConfigPanel()
+        passwordCtrl = panel.PasswordCtrl(password)
+        panel.sizer.Add(passwordCtrl)
+        while panel.Affirmed():
+            panel.SetResult(passwordCtrl.GetValue())
             
             
             
 class TestAction(eg.ActionBase):
     
     def __call__(self, password):
-        print password.Get()
+        print repr(unicode(password))
         
         
-    def Configure(self, password=None):
-        password = eg.Password(password)
+    def Configure(self, password=""):
         panel = eg.ConfigPanel()
-        passwordCtrl = panel.TextCtrl(password.Get(), style=wx.TE_PASSWORD)
+        passwordCtrl = panel.PasswordCtrl(password)
         panel.sizer.Add(passwordCtrl)
         while panel.Affirmed():
-            password.Set(passwordCtrl.GetValue())
-            panel.SetResult(password)
+            panel.SetResult(passwordCtrl.GetValue())
             

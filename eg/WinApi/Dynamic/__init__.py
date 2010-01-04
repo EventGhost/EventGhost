@@ -1520,3 +1520,8 @@ VER_SUITE_DATACENTER = 128 # Variable c_int '128'
 VER_SUITE_ENTERPRISE = 2 # Variable c_int '2'
 VER_SUITE_PERSONAL = 512 # Variable c_int '512'
 
+GetVolumeInformationW = _kernel32.GetVolumeInformationW
+GetVolumeInformationW.restype = BOOL
+GetVolumeInformationW.argtypes = [LPCWSTR, LPWSTR, DWORD, LPDWORD, LPDWORD, LPDWORD, LPWSTR, DWORD]
+GetVolumeInformation = GetVolumeInformationW # alias
+

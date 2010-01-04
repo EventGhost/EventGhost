@@ -144,3 +144,7 @@ class ControlProviderMixin:
     def BoxedGroup(self, *args, **kwargs):
         return eg.BoxedGroup(self, *args, **kwargs)
 
+
+    def PasswordCtrl(self, *args, **kwargs):
+        return eg.PasswordCtrl(self, -1, *args, **kwargs)
+

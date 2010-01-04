@@ -38,11 +38,19 @@ class RootItem(ContainerItem):
         attr.append(('Version', str(eg.revision)))
         attr.append(('Guid', self.guid))
         attr.append(('Time', self.time))
+        text = eg.Password.GetDatabaseContent()
+        if not text:
+            text = None
         return attr, text
 
 
     def __init__(self, parent, node):
         parent = None
+        if node.text is None:
+            text = ""
+        else:
+            text = node.text.lstrip()
+        eg.Password.SetDatabaseContent(text)
         ContainerItem.__init__(self, parent, node)
         self.guid = node.attrib.get("guid", "0")
         self.time = node.attrib.get("time", "0")
