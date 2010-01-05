@@ -18,7 +18,7 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2009-12-17 21:14 GMT+1
+#Last change: 2010-01-05 14:27 GMT+1
 
 import wx
 import _winreg
@@ -28,12 +28,16 @@ from time import sleep
 from os.path import isfile, exists
 from functools import partial
 from subprocess import Popen
-from eg.WinApi.Dynamic import SendMessage
+from eg.WinApi.Dynamic import SendMessage,PostMessage
+
 from win32gui import SetWindowPos
 import ctypes
 from time import time as timtim
+from winsound import PlaySound,SND_ASYNC
+
 ShowWindowAsync = ctypes.windll.user32.ShowWindowAsync
 
+WM_COMMAND    = 273
 WM_SYSCOMMAND = 0x0112
 SC_CLOSE = 0xF060
 SW_MINIMIZE = 6
@@ -49,7 +53,7 @@ SWP_NOACTIVATE = 16
 eg.RegisterPlugin(
     name = "Phoner",
     author = "Pako",
-    version = "0.0.2",
+    version = "0.1.0",
     kind = "program",
     guid = "{FF763E14-7253-4025-99F2-32D9AC43FA9C}",
     createMacrosOnAdd = True,
@@ -247,9 +251,8 @@ class PhonerWorkerThread(eg.ThreadWorker):
             self.phoner.SendWAVE(call_id, file)
             
     def SendTTS(self, call_id, msg):
-        print msg
         if self.isRunning():
-            self.phoner.SendWAVE(call_id, msg)
+            self.phoner.SendTTS(call_id, msg)
             
     def SendSMS(self, number, msg):
         if self.isRunning():
@@ -257,12 +260,12 @@ class PhonerWorkerThread(eg.ThreadWorker):
             
     def SendSMSService(self, number, msg, service):
         if self.isRunning():
-            self.phoner.SendSMS(number, msg, service)
+            self.phoner.SendSMSService(number, msg, service)
 #===============================================================================
 
 class Text:
     errorNoWindow = "Couldn't find Phoner window"
-    label1 = "Folder with phoner.exe:"
+    label1 = "Folder containing phoner.exe:"
     filemask = "phoner.exe|phoner.exe|All-Files (*.*)|*.*"
     text1 = "Couldn't find Phoner window !"
     browseTitle = "Selected folder:"
@@ -517,39 +520,60 @@ class Conference(eg.ActionBase):
 #===============================================================================
         
 class SendDTMF(eg.ActionBase):
-    def __call__(self, call_id='', number=""):
+    def __call__(self, call_id='', string=""):
         if eg.event.payload:
             call_id = str(eg.event.payload)
         if PhonerWin():
             if self.plugin.CheckWorkerThread():
-                self.plugin.workerThread.CallWait(partial(
-                    self.plugin.workerThread.SendDTMF,
-                    eg.ParseString(call_id),
-                    number
-                ),1000)
+                for char in string:
+                    self.plugin.workerThread.CallWait(partial(
+                        self.plugin.workerThread.SendDTMF,
+                        eg.ParseString(call_id),
+                        char
+                    ),1000)
+                    sleep(0.2)
         else:
             self.PrintError(self.plugin.text.text1)
             
     def GetLabel(self, call_id, msg):
         return self.name + ": " + msg
 
-    def Configure(self, call_id='', number=""):
+    def Configure(self, call_id='', string=""):
         panel = eg.ConfigPanel()
         labelText = wx.StaticText(panel, -1, self.plugin.text.call_id_label)
         w,h=labelText.GetSize()
         labelDtmf = wx.StaticText(panel, -1, self.text.dtmfLabel)
         textControl = wx.TextCtrl(panel, -1, call_id)
         textControl.SetMinSize((w,-1))
-        textControl2 = wx.TextCtrl(panel, -1, number)
+        textControl2 = wx.TextCtrl(panel, -1, string)
         textControl2.SetMinSize((w,-1))
+        textControl2.SetToolTip(wx.ToolTip(self.text.toolTip))
         panel.sizer.Add(labelText,0,wx.TOP,10)
         panel.sizer.Add(textControl,0,wx.TOP,3)
         panel.sizer.Add(labelDtmf,0,wx.TOP,10)
         panel.sizer.Add(textControl2,0,wx.TOP,3)
+        
+        def onStringChange(evt):
+            val = textControl2.GetValue()
+            cur = textControl2.GetInsertionPoint()
+            lng = len(val)
+            tmp = []
+            for char in val:
+                if char in ["0","1","2","3","4","5","6","7","8","9","A","B","C","D","*","#"]:
+                    tmp.append(char)
+            val = "".join(tmp)
+            textControl2.ChangeValue(val)
+            if len(val) < lng:
+                PlaySound('SystemExclamation',SND_ASYNC)
+                cur += -1
+            textControl2.SetInsertionPoint(cur)
+            evt.Skip()
+        textControl2.Bind(wx.EVT_TEXT,onStringChange)
         while panel.Affirmed():
             panel.SetResult(textControl.GetValue(),textControl2.GetValue())
     class text:
-        dtmfLabel = "DTMF to send (only one character):"
+        dtmfLabel = "DTMF string to send:"
+        toolTip = "Allowed characters: 0,1,2,3,4,5,6,7,8,9,A,B,C,D,*,#"
 #===============================================================================
         
 class SendWAVE(eg.ActionBase):
@@ -675,7 +699,7 @@ class SendSMSService(eg.ActionBase):
         if PhonerWin():
             if self.plugin.CheckWorkerThread():
                 self.plugin.workerThread.CallWait(partial(
-                    self.plugin.workerThread.SendSMS,
+                    self.plugin.workerThread.SendSMSService,
                     number,
                     msg,
                     int(service)
@@ -847,6 +871,13 @@ class SetAnsweringMachineEnabled(eg.ActionBase):
         radioboxtitle = "Set answering machine"
         enable = ("Disabled","Enabled")
 #===============================================================================
+
+class ToggleRecord(eg.ActionBase):
+    def __call__(self):
+        hwnd = PhonerWin()
+        if hwnd:
+            x=SendMessage(hwnd,WM_COMMAND,10,0)
+#===============================================================================
         
 class GetInfo(eg.ActionBase):
     def __call__(self,call_id=""):
@@ -885,12 +916,12 @@ ACTIONS = (
     (eg.ActionGroup, 'Phonercontrols', 'Phoner GUI controls', 'Phoner GUI controls.',(
         (WindowControl,"Minimize","Minimize window","Minimize window.",None),
         (WindowControl,"Restore","Restore window","Restore window.",SW_RESTORE),    
-        (SetWindowEnabled,"SetWindowEnabled","Set window","Set window.",None),    
+        (SetWindowEnabled,"SetWindowEnabled","Set incoming call window","Set incoming call window.",None),    
         (SetAnsweringMachineEnabled,"SetAnsweringMachineEnabled","Set answering machine","Set answering machine.",None),    
 #        (GetVolume,"GetVolume","Get volume","Get volume.", None),
 #        (SetVolume,"SetVolume","Set volume","Set volume.", 0),
 #        (SetVolume,"VolumeUp","Volume up","Volume up.", 1),
-#        (SetVolume,"VolumeDown","Volume down","Volume down.", 2),
+#        (SetVolume,"VolumeDown","Volume down","Volume down.", -1),
     )),
     (eg.ActionGroup, 'CallControl', 'Call and SMS control', 'Call and SMS control.',(
         (MakeCall,"MakeCall","Make call","Make call.", None),
@@ -899,6 +930,7 @@ ACTIONS = (
         (CallFunction,"DisconnectCall","Disconnect call","Disconnect call.", None),
         (Transfer,"Transfer","Transfer","Transfer.", None),
         (Conference,"Conference","Conference","Conference.", None),
+        (ToggleRecord,"ToggleRecord","On/Off record of current call","On/Off record of current call.",None),    
         (SendDTMF,"SendDTMF","Send DTMF","Send DTMF.", None),
         (SendWAVE,"SendWAVE","Send WAVE","Send WAVE.", None),
         (SendTTS,"SendTTS","Send text to speech (TTS)","Send text to speech (TTS).", None),
