@@ -1,4 +1,4 @@
-version = "0.1.11"
+version = "0.1.12"
 # This file is part of EventGhost.
 # Copyright (C) 2008, 2009  Pako <lubos.ruckl@quick.cz>
 #
@@ -17,7 +17,7 @@ version = "0.1.11"
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# Last change: 2009-12-29 13:21 GMT+1
+# Last change: 2010-01-05 13:50 GMT+1
 
 
 eg.RegisterPlugin(
@@ -215,9 +215,9 @@ class Key(eg.ActionClass):
 
                     def onText1Change(evt):
                         tmp = self.listKeys[0]
-                        self.listKeys[0] = ctrlKeys_1.GetValue().strip()
+                        self.listKeys[0] = ctrlKeys_1.GetValue()
                         if tmp == self.listKeys[1]:
-                            self.listKeys[1] = ctrlKeys_1.GetValue().strip()
+                            self.listKeys[1] = ctrlKeys_1.GetValue()
                         if ctrlKeys_1.GetValue() != '':
                             panel.EnableButtons(True)
                         else:
@@ -226,10 +226,10 @@ class Key(eg.ActionClass):
                     ctrlKeys_1.Bind(wx.EVT_TEXT,onText1Change)
 
                     def onText2Change(evt):
-                        if ctrlKeys_2.GetValue().strip() == '':
-                            self.listKeys[1]=ctrlKeys_1.GetValue().strip()
+                        if ctrlKeys_2.GetValue() == '':
+                            self.listKeys[1]=ctrlKeys_1.GetValue()
                         else:
-                            self.listKeys[1]=ctrlKeys_2.GetValue().strip()
+                            self.listKeys[1]=ctrlKeys_2.GetValue()
                         evt.Skip()
                     ctrlKeys_2.Bind(wx.EVT_TEXT,onText2Change)
 
