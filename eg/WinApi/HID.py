@@ -187,6 +187,8 @@ class HIDThread(threading.Thread):
 
     def AbortThread(self):
         self.abort = True
+        if self._overlappedWrite:
+            win32event.SetEvent(self._overlappedWrite.hEvent)
         win32event.SetEvent(self._overlappedRead.hEvent)
 
     def SetRawCallback(self, callback):
@@ -200,6 +202,10 @@ class HIDThread(threading.Thread):
 
     def SetStopCallback(self, callback):
         self.StopCallback = callback
+        
+    def WaitForInit(self):
+        win32event.WaitForSingleObject(self._overlappedRead.hEvent, win32event.INFINITE)
+        
 
     def Write(self, data, timeout):
         if self.handle:
@@ -236,6 +242,7 @@ class HIDThread(threading.Thread):
             )
         except:
             eg.PrintError(self.text.errorOpen + self.deviceName)
+            win32event.SetEvent(self._overlappedRead.hEvent)
             return
 
         hidDLL =  ctypes.windll.hid
@@ -317,6 +324,8 @@ class HIDThread(threading.Thread):
         #prepare data array with maximum possible length
         DataArrayType = HIDP_DATA * maxDataL
         data = DataArrayType()
+        
+        win32event.SetEvent(self._overlappedRead.hEvent)
 
         #initializing finished
         try:
