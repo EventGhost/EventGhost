@@ -417,7 +417,7 @@ class Dim(ActionBase):
         self.plugin.SendRawCommand("\x01\x06\xf1" + GetAddressBytes(address) + chr(level), TIME_OUT)
     
     def GetLabel(self, address, level):
-        return self.labelFormat.format( (level * 100.00 / 16), GetStringFromAddress(address, True))
+        return self.labelFormat.format(GetStringFromAddress(address, True), (level * 100.00 / 16))
     
     def Configure(self, address = None, level = 8):
         panel = eg.ConfigPanel()
@@ -438,8 +438,7 @@ class DimTimer(ActionBase):
         self.plugin.SendRawCommand("\x01\x06\xf1" + GetAddressBytes(address) + chr(level + 32) + chr(timeCode), TIME_OUT)
     
     def GetLabel(self, address, level, timeCode):
-        pass
-        return self.labelFormat.format( (level * 100.00 / 16), GetStringFromAddress(address, True), FormatTimeValue(GetTimeValue(timeCode)))
+        return self.labelFormat.format(GetStringFromAddress(address, True), (level * 100.00 / 16), FormatTimeValue(GetTimeValue(timeCode)))
     
     def Configure(self, address = None, level = 8, timeCode = 0):
         panel = eg.ConfigPanel()
