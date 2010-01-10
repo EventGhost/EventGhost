@@ -10,13 +10,15 @@ Allows to send commands to FS20 receivers.
 .. |fS20Image| image:: picture.jpg
 .. _fS20Image: http://www.elv.de/
 """
+import time
 
 eg.RegisterPlugin(
     name = "ELV FS20 PCS",
     author = "Bartman",
-    version = "0.1." + "$LastChangedRevision: 614 $".split()[1],
+    version = "0.2." + "$LastChangedRevision: 614 $".split()[1],
     kind = "external",
     canMultiLoad = False,
+    createMacrosOnAdd = True,
     description = __doc__,
     url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=2147",
     guid = '{D76A6D18-142A-4f75-8F93-9CDA86DBC310}'
@@ -37,6 +39,7 @@ class Text:
 
 VENDOR_ID = 6383
 PRODUCT_ID = 57365
+TIME_OUT = 250
 
 class FS20PCS(eg.PluginClass):
     def __init__(self):
@@ -45,12 +48,16 @@ class FS20PCS(eg.PluginClass):
         self.waitingForResponse = False
         self.AddAction(Off)
         self.AddAction(On)
-        self.AddAction(Dim)
-        self.AddAction(ToggleDim)
+        self.AddAction(OnPreviousValue)
+        self.AddAction(Toggle)
         self.AddAction(DimDown)
         self.AddAction(DimUp)
-        self.AddAction(Toggle)
-        self.AddAction(Abort)
+        self.AddAction(Dim)
+        self.AddAction(DimTimer)
+        self.AddAction(DimAlternating)
+        self.AddAction(ProgramTimer)
+        self.AddAction(ProgramCode)
+        self.AddAction(ProgramFactoryDefaults)
 
     def RawCallback(self, data):
         if eg.debugLevel:
@@ -164,6 +171,11 @@ class FS20PCS(eg.PluginClass):
         eg.Unbind("System.DeviceAttached", self.ReconnectDevice)
 
 
+def GetAddressBytes(address):
+    x, a0 = divmod(address, 256)
+    a2, a1 = divmod(x, 256)
+    return chr(a2) + chr(a1) + chr(a0) 
+
 def GetStringFromAddress(address, formatted = False):
     valueStr = ""
     for i in range(11, -1, -1):
@@ -212,36 +224,6 @@ def FormatTimeValue(timeValue):
 class ActionBase(eg.ActionBase):
     defaultAddress = 0x094001
     funccode = None # must be assigned by subclass
-
-    def __call__(self, address, timeCode, repeatCount):
-        if repeatCount > 1:
-            data = "\x01\x07\xf2"
-        else:
-            data = "\x01\x06\xf1"
-            
-        x, a0 = divmod(address, 256)
-        a2, a1 = divmod(x, 256)
-        data += chr(a2)
-        data += chr(a1)
-        data += chr(a0)
-        
-        if timeCode == 0:
-            data += chr(self.funccode)
-        else:
-            data += chr(self.funccode + 32)
-        data += chr(timeCode);
-        
-        if repeatCount > 1:
-            data += chr(repeatCount)
-        self.plugin.SendRawCommand(data, repeatCount * 250)
-
-    def GetLabel(self, address, timeCode, repeatCount):
-        label = self.name + " " + GetStringFromAddress(address, True)
-        if timeCode != 0:
-            label += ", Timer value: " + FormatTimeValue(GetTimeValue(timeCode))
-        if repeatCount > 1:
-            label += ", Repeats: " + str(repeatCount)
-        return label
 
     def AddAddressControl(self, panel, address):
         if address is None:
@@ -312,95 +294,163 @@ class ActionBase(eg.ActionBase):
         panel.AddLine("Level:", levelCtrl)
         return levelCtrl
 
-            
-    def Configure(self, address = None, timeCode = 0, repeatCount = 1):
+class SimpleAction(ActionBase):
+    """Base class for all action that only take an address as input 
+    """
+    funcCode = None
+    name = None
+    description = None
+    labelFormat = None
+    
+    def __call__(self, address):
+        self.plugin.SendRawCommand("\x01\x06\xf1" + GetAddressBytes(address) + chr(self.funcCode), TIME_OUT)
+        
+    def GetLabel(self, address):
+        return self.labelFormat.format(GetStringFromAddress(address, True))
+
+    def Configure(self, address = None):
         panel = eg.ConfigPanel()
 
         maskedCtrl = self.AddAddressControl(panel, address)
-        timerCtrl = self.AddTimerControl(panel, timeCode)
-        repeatCtrl = self.AddRepeatControl(panel, repeatCount)
 
         while panel.Affirmed():
             address = GetAddressFromString(maskedCtrl.GetPlainValue())
             ActionBase.defaultAddress = address
-            panel.SetResult(address, GetTimeCodeByIndex(timerCtrl.GetValue()), repeatCtrl.GetValue())
+            panel.SetResult(address)
             
 
+class RepeatAction(ActionBase):
+    """Base class for all action that take an address and repeat Count 
+    """
+    funcCode = None
+    name = None
+    description = None
+    labelFormat = None
+    
+    def __call__(self, address, repeatCount):
+        self.plugin.SendRawCommand("\x01\x07\xf2" + GetAddressBytes(address) +  chr(self.funcCode) + "\x00" + chr(repeatCount), repeatCount * TIME_OUT)
+        
+    def GetLabel(self, address, repeatCount):
+        label = self.labelFormat.format(GetStringFromAddress(address, True))
+        if repeatCount > 1:
+            label = label + " " + str(repeatCount) + " times"
+        return label
+
+    def Configure(self, address = None, repeatCount = 1):
+        panel = eg.ConfigPanel()
+
+        maskedCtrl = self.AddAddressControl(panel, address)
+        repeatCtrl = self.AddRepeatControl(panel, repeatCount)
+        ActionBase.defaultAddress = address
+
+        while panel.Affirmed():
+            address = GetAddressFromString(maskedCtrl.GetPlainValue())
+            ActionBase.defaultAddress = address
+            panel.SetResult(address, repeatCtrl.GetValue())
+
+class Off(SimpleAction):
+    funcCode = 0x00
+    name = "Off"
+    description = "Turns device off (dim to 0%)"
+    labelFormat = "Turn off {0}"
+    
+class On(SimpleAction):
+    funcCode = 0x10
+    name = "On"
+    description = "Turns device on (dim to 100%)"
+    labelFormat = "Turn on {0}"
+
+class OnPreviousValue(SimpleAction):
+    funcCode = 0x11
+    name = "On"
+    description = "Turns device on with previous value"
+    labelFormat = "Turn on {0} with previous value"
+
+class Toggle(SimpleAction):
+    funcCode = 0x12
+    name = "Toggle"
+    description = "Toggles between off and previous value"
+    labelFormat = "Toggle {0} between off and previous value"
+
+class DimUp(RepeatAction):
+    funcCode = 0x13
+    name = "Dim up"
+    description = "Dims up"
+    labelFormat = "Dim up {0}"
+
+class DimDown(RepeatAction):
+    funcCode = 0x14
+    name = "Dim down"
+    description = "Dims down"
+    labelFormat = "Dim down {0}"
+
+class DimAlternating(RepeatAction):
+    funcCode = 0x15
+    name = "Alternating dim"
+    description = "Dims up one level until maximum, then dim down"
+    labelFormat = "Alternating dim {0}"
+
+class ProgramTimer(SimpleAction):
+    funcCode = 0x16
+    name = "Start/stop programming of internal timer"
+    description = "Starts respectively stop programming of the internal timer"
+    labelFormat = "Start/stop programming of internal timer for {0}"
+
+class ProgramCode(SimpleAction):
+    funcCode = 0x17
+    name = "Program address"
+    description = "Learn address"
+    labelFormat = "Learn address {0}"
+
+class ProgramFactoryDefaults(SimpleAction):
+    funcCode = 0x1b
+    name = "Reset to factory defaults"
+    description = "Reset to factory defaults"
+    labelFormat = "Reset {0} to factory defaults"
+
 class Dim(ActionBase):
-    name = "Set dim-level"
+    name = "Dim"
+    description = "Sets dim level immediately"
+    labelFormat = "Set dim-level to {1:.02f} % for {0}"
     
-    def __call__(self, address, timeCode, repeatCount, level):
-        if repeatCount > 1:
-            data = "\x01\x07\xf2"
-        else:
-            data = "\x01\x06\xf1"
-            
-        x, a0 = divmod(address, 256)
-        a2, a1 = divmod(x, 256)
-        data += chr(a2)
-        data += chr(a1)
-        data += chr(a0)
+    def __call__(self, address, level):
+        self.plugin.SendRawCommand("\x01\x06\xf1" + GetAddressBytes(address) + chr(level), TIME_OUT)
+    
+    def GetLabel(self, address, level):
+        return self.labelFormat.format( (level * 100.00 / 16), GetStringFromAddress(address, True))
+    
+    def Configure(self, address = None, level = 8):
+        panel = eg.ConfigPanel()
+        maskedCtrl = self.AddAddressControl(panel, address)
+        levelCtrl = self.AddLevelControl(panel, level)
         
-        if timeCode == 0:
-            data += chr(level)
-        else:
-            data += chr(level + 32)
-        data += chr(timeCode);
-        
-        if repeatCount > 1:
-            data += chr(repeatCount)
-        self.plugin.SendRawCommand(data, repeatCount * 250)
+        while panel.Affirmed():
+            address = GetAddressFromString(maskedCtrl.GetPlainValue())
+            ActionBase.defaultAddress = address
+            panel.SetResult(address, levelCtrl.GetValue())
+
+class DimTimer(ActionBase):
+    name = "Dim in timer value"
+    description = "Sets the dim level in timer value"
+    labelFormat = "Set dim-level to {1:.02f} % for {0} in {2}"
     
+    def __call__(self, address, level, timeCode):
+        self.plugin.SendRawCommand("\x01\x06\xf1" + GetAddressBytes(address) + chr(level + 32) + chr(timeCode), TIME_OUT)
     
-    def GetLabel(self, address, timeCode, repeatCount, level):
-        return "Set dim-level to %.02f %%" % (level * 100.00 / 16)
+    def GetLabel(self, address, level, timeCode):
+        pass
+        return self.labelFormat.format( (level * 100.00 / 16), GetStringFromAddress(address, True), FormatTimeValue(GetTimeValue(timeCode)))
     
-    def Configure(self, address = None, timeCode = 0, repeatCount = 1, level = 8):
+    def Configure(self, address = None, level = 8, timeCode = 0):
         panel = eg.ConfigPanel()
         maskedCtrl = self.AddAddressControl(panel, address)
         levelCtrl = self.AddLevelControl(panel, level)
         timerCtrl = self.AddTimerControl(panel, timeCode)
-        repeatCtrl = self.AddRepeatControl(panel, repeatCount)
         
         while panel.Affirmed():
             address = GetAddressFromString(maskedCtrl.GetPlainValue())
             ActionBase.defaultAddress = address
             panel.SetResult(
                 address, 
-                GetTimeCodeByIndex(timerCtrl.GetValue()),
-                repeatCtrl.GetValue(),
                 levelCtrl.GetValue(),
-            )
-
-class Off(ActionBase):
-    funccode = 0x00
-    
-    
-    
-class On(ActionBase):
-    funccode = 0x10
-
-
-class ToggleDim(ActionBase):
-    name = "Toggle dimming"
-    funccode = 0x15
-
-
-class DimUp(ActionBase):
-    name = "Dim up"
-    funccode = 0x13
-
-
-class DimDown(ActionBase):
-    name = "Dim down"
-    funccode = 0x14
-
-
-class Toggle(ActionBase):
-    funccode = 0x12
-
-class Abort(eg.ActionBase):
-    name = "Abort transmitting"
-    
-    def __call__(self):
-        self.plugin.Abort()
+                GetTimeCodeByIndex(timerCtrl.GetValue()))
