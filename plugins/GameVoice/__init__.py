@@ -69,6 +69,10 @@ class GameVoice(eg.PluginClass):
         self.thread.start()
         self.thread.SetStopCallback(self.StopCallback)
         self.thread.SetButtonCallback(self.ButtonCallback)
+        
+    def SetFeature(self, buffer):
+        if self.thread:
+            self.thread.SetFeature(buffer)
     
     def ReconnectDevice(self, event):
         """method to reconnect a disconnect device"""

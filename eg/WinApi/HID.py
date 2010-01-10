@@ -206,6 +206,12 @@ class HIDThread(threading.Thread):
     def WaitForInit(self):
         win32event.WaitForSingleObject(self._overlappedRead.hEvent, win32event.INFINITE)
         
+    def SetFeature(self, buffer):
+        if self.handle:
+            bufferLength = ULONG(len(buffer))
+            result = ctypes.windll.hid.HidD_SetFeature(int(self.handle), ctypes.create_string_buffer(buffer), bufferLength)
+            if not result:
+                raise Exception("could not set feature")
 
     def Write(self, data, timeout):
         if self.handle:
