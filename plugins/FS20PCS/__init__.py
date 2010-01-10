@@ -18,7 +18,7 @@ eg.RegisterPlugin(
     version = "0.2." + "$LastChangedRevision: 614 $".split()[1],
     kind = "external",
     canMultiLoad = False,
-    createMacrosOnAdd = True,
+    createMacrosOnAdd = False,
     description = __doc__,
     url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=2147",
     guid = '{D76A6D18-142A-4f75-8F93-9CDA86DBC310}'
@@ -45,7 +45,7 @@ class FS20PCS(eg.PluginClass):
     def __init__(self):
         self.version = None
         self.thread = None
-        self.waitingForResponse = False
+        
         self.AddAction(Off)
         self.AddAction(On)
         self.AddAction(PreviousValue)
@@ -53,28 +53,31 @@ class FS20PCS(eg.PluginClass):
         self.AddAction(DimDown)
         self.AddAction(DimUp)
         self.AddAction(Dim)
-        self.AddAction(DimTimer)
         self.AddAction(DimAlternating)
         
-        self.AddAction(OffPreviousValueInternal)
-        self.AddAction(OnOffInternal)
-        self.AddAction(PreviousValueOffInternal)
-        self.AddAction(OnPreviousStateInternal)
-        self.AddAction(PreviousValuePreviousStateInternal)
+        group = self.AddGroup("Timed actions")
+        group.AddAction(DimTimer)
+        group.AddAction(OffPreviousValueInternal)
+        group.AddAction(OffPreviousValueTimer)
+        group.AddAction(OnOffInternal)
+        group.AddAction(OnOffTimer)
+        group.AddAction(PreviousValueOffInternal)
+        group.AddAction(PreviousValueOffTimer)
+        group.AddAction(OnPreviousStateInternal)
+        group.AddAction(OnPreviousStateTimer)
+        group.AddAction(PreviousValuePreviousStateInternal)
+        group.AddAction(PreviousValuePreviousStateTimer)
+        group.AddAction(DimUpOffTimer)
+        group.AddAction(DimDownOffTimer)
+        group.AddAction(DimAlternatingOffTimer)
         
-        self.AddAction(OffPreviousValueTimer)
-        self.AddAction(OnOffTimer)
-        self.AddAction(PreviousValueOffTimer)
-        self.AddAction(OnPreviousStateTimer)
-        self.AddAction(PreviousValuePreviousStateTimer)
-        
-        self.AddAction(ProgramTimer)
-        self.AddAction(ProgramCode)
-        self.AddAction(ProgramFactoryDefaults)
-        
-        self.AddAction(ProgramInternalTimer)
-        self.AddAction(ProgramDimUpRampTimer)
-        self.AddAction(ProgramDimDownRampTimer)
+        group = self.AddGroup("Programming")
+        group.AddAction(ProgramTimer)
+        group.AddAction(ProgramCode)
+        group.AddAction(ProgramFactoryDefaults)
+        group.AddAction(ProgramInternalTimer)
+        group.AddAction(ProgramDimUpRampTimer)
+        group.AddAction(ProgramDimDownRampTimer)
 
     def RawCallback(self, data):
         if eg.debugLevel:
@@ -84,7 +87,7 @@ class FS20PCS(eg.PluginClass):
             self.PrintError("data must have a length of 5 and start with 02 03 A0")
         errorId = ord(data[3:4])
         if errorId == 0:
-            self.waitingForResponse = False
+            pass
             #everything is fine
         elif errorId == 1:
             #Firmware version was requested
@@ -110,7 +113,6 @@ class FS20PCS(eg.PluginClass):
 
     def StopCallback(self):
         self.TriggerEvent("Stopped")
-        self.waitingForResponse = False
         self.thread = None
 
     def GetMyDevicePath(self):
@@ -132,15 +134,10 @@ class FS20PCS(eg.PluginClass):
         if eg.debugLevel:
             print "FS20PCS SendRawCommand", binascii.hexlify(data)
         newData = data + ((11 - dataLength) * '\x00')
-        try:
-            self.waitingForResponse = True
-            self.thread.Write(newData, timeout + 1000)#extra second to wait for response
-        except:
-            self.waitingForResponse = False
+        self.thread.Write(newData, timeout + 1000)#extra second to wait for response
 
     def Abort(self):
-        if self.waitingForResponse:
-            self.SendRawCommand("\x01\x01\xf3")
+        self.SendRawCommand("\x01\x01\xf3")
         
     def RequestVersion(self):
         data = '\x01\x01\xf0'
@@ -238,18 +235,12 @@ def FormatTimeValue(timeValue):
         return "%0.02f sec" % timeValue
 
 class ActionBase(eg.ActionBase):
-    defaultAddress = GetAddressFromString("123412342222") #0x094001
+    defaultAddress = 0 #GetAddressFromString("123412342222")
     
     funcCode = None
     name = None
     description = None
     labelFormat = None
-
-    
-    def GetAddressBytes(self, address):
-        x, a0 = divmod(address, 256)
-        a2, a1 = divmod(x, 256)
-        return chr(a2) + chr(a1) + chr(a0) 
 
     def AddAddressControl(self, panel, address):
         if address is None:
@@ -303,15 +294,15 @@ class ActionBase(eg.ActionBase):
 
     def AddLevelControl(self, panel, level):
         def LevelCallback(value):
-            return "%.02f %%" % (value * 100.00 / 16)
+            return "%.02f%%" % (value * 100.00 / 16)
         
         levelCtrl = eg.Slider(
             panel, 
             value=level, 
             min=0, 
             max=16, 
-            minLabel="0.00 %",
-            maxLabel="100.00 %",
+            minLabel="0.00%",
+            maxLabel="100.00%",
             style = wx.SL_AUTOTICKS|wx.SL_TOP,
             size=(300,-1),
             levelCallback=LevelCallback
@@ -351,7 +342,7 @@ class RepeatAction(ActionBase):
     def GetLabel(self, address, repeatCount):
         label = self.labelFormat.format(GetStringFromAddress(address, True))
         if repeatCount > 1:
-            label = label + " " + str(repeatCount) + " times"
+            label = label + " (" + str(repeatCount) + " times)"
         return label
 
     def Configure(self, address = None, repeatCount = 1):
@@ -359,15 +350,41 @@ class RepeatAction(ActionBase):
 
         maskedCtrl = self.AddAddressControl(panel, address)
         repeatCtrl = self.AddRepeatControl(panel, repeatCount, self.maxRepeatCount)
-        ActionBase.defaultAddress = address
 
         while panel.Affirmed():
             address = GetAddressFromString(maskedCtrl.GetPlainValue())
             ActionBase.defaultAddress = address
             panel.SetResult(address, repeatCtrl.GetValue())
 
+class RepeatTimerValueAction(ActionBase):
+    """Base class for all action that take an address, timer value and repeat Count 
+    """
+    
+    def __call__(self, address, timeCode, repeatCount):
+        self.plugin.SendRawCommand("\x01\x07\xf2" + GetAddressBytes(address) +  chr(self.funcCode) + chr(timeCode) + chr(repeatCount), repeatCount * TIME_OUT)
+        
+    def GetLabel(self, address, timeCode, repeatCount):
+        label = self.labelFormat.format(GetStringFromAddress(address, True), FormatTimeValue(GetTimeValue(timeCode)))
+        if repeatCount > 1:
+            label = label + " (" + str(repeatCount) + " times)"
+        return label
+
+    def Configure(self, address = None, timeCode = 0, repeatCount = 1):
+        panel = eg.ConfigPanel()
+
+        maskedCtrl = self.AddAddressControl(panel, address)
+        timerCtrl = self.AddTimerControl(panel, timeCode)
+        repeatCtrl = self.AddRepeatControl(panel, repeatCount, self.maxRepeatCount)
+
+        while panel.Affirmed():
+            address = GetAddressFromString(maskedCtrl.GetPlainValue())
+            ActionBase.defaultAddress = address
+            panel.SetResult(address, GetTimeCodeByIndex(timerCtrl.GetValue()), repeatCtrl.GetValue())
+
+
+
 class TimerValueAction(ActionBase):
-    """Base class for all action that take an address and repeat Count 
+    """Base class for all action that take an address and timer value 
     """
     
     def __call__(self, address, timeCode):
@@ -381,7 +398,6 @@ class TimerValueAction(ActionBase):
 
         maskedCtrl = self.AddAddressControl(panel, address)
         timerCtrl = self.AddTimerControl(panel, timeCode)
-        ActionBase.defaultAddress = address
 
         while panel.Affirmed():
             address = GetAddressFromString(maskedCtrl.GetPlainValue())
@@ -431,6 +447,27 @@ class DimAlternating(RepeatAction):
     name = "Alternating dim"
     description = "Dims up one level until maximum, then dim down"
     labelFormat = "Alternating dim {0}"
+    maxRepeatCount = 255
+    
+class DimUpOffTimer(RepeatTimerValueAction):
+    funcCode = 0x33
+    name = "Dim up and turn off after timer value"
+    description = "Dims up and turns off after timer value"
+    labelFormat = "Dim up {0} and turn off after {1}"
+    maxRepeatCount = 16
+
+class DimDownOffTimer(RepeatTimerValueAction):
+    funcCode = 0x34
+    name = "Dim down and turn off after timer value"
+    description = "Dims down and turns off after timer value"
+    labelFormat = "Dim down {0} and turn off after {1}"
+    maxRepeatCount = 16
+
+class DimAlternatingOffTimer(RepeatTimerValueAction):
+    funcCode = 0x35
+    name = "Alternating dim and turn off after timer value"
+    description = "Dims up one level until maximum, then dim down and turns off after timer value"
+    labelFormat = "Alternating dim {0} and turn off after {1}"
     maxRepeatCount = 255
 
 class ProgramTimer(SimpleAction):
@@ -556,7 +593,7 @@ class PreviousValuePreviousStateTimer(TimerValueAction):
 class Dim(ActionBase):
     name = "Dim"
     description = "Sets dim level immediately"
-    labelFormat = "Set dim-level to {1:.02f} % for {0}"
+    labelFormat = "Set dim-level to {1:.02f}% for {0}"
     
     def __call__(self, address, level):
         self.plugin.SendRawCommand("\x01\x06\xf1" + GetAddressBytes(address) + chr(level))
@@ -577,7 +614,7 @@ class Dim(ActionBase):
 class DimTimer(ActionBase):
     name = "Dim in timer value"
     description = "Sets the dim level in timer value"
-    labelFormat = "Set dim-level to {1:.02f} % for {0} in {2}"
+    labelFormat = "Set dim-level to {1:.02f}% for {0} in {2}"
     
     def __call__(self, address, level, timeCode):
         self.plugin.SendRawCommand("\x01\x06\xf1" + GetAddressBytes(address) + chr(level + 32) + chr(timeCode))
