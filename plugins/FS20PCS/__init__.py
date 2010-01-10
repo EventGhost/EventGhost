@@ -27,6 +27,7 @@ eg.RegisterPlugin(
 import binascii
 import math
 import sys
+import win32event
 import wx.lib.mixins.listctrl as listmix
 from wx.lib.masked import TextCtrl
 import wx.lib.masked as masked
@@ -145,10 +146,12 @@ class FS20PCS(eg.PluginClass):
 
     def SetupHidThread(self, newDevicePath):
         #create thread
-        self.thread = HIDThread(self.name, newDevicePath)
-        self.thread.SetStopCallback(self.StopCallback)
-        self.thread.SetRawCallback(self.RawCallback)
-        self.thread.start()
+        thread = HIDThread(self.name, newDevicePath)
+        thread.SetStopCallback(self.StopCallback)
+        thread.SetRawCallback(self.RawCallback)
+        thread.start()
+        thread.WaitForInit()
+        self.thread = thread
         self.RequestVersion()
 
     def ReconnectDevice(self, event):
