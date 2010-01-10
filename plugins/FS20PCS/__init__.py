@@ -48,7 +48,7 @@ class FS20PCS(eg.PluginClass):
         self.waitingForResponse = False
         self.AddAction(Off)
         self.AddAction(On)
-        self.AddAction(OnPreviousValue)
+        self.AddAction(PreviousValue)
         self.AddAction(Toggle)
         self.AddAction(DimDown)
         self.AddAction(DimUp)
@@ -62,9 +62,19 @@ class FS20PCS(eg.PluginClass):
         self.AddAction(OnPreviousStateInternal)
         self.AddAction(PreviousValuePreviousStateInternal)
         
+        self.AddAction(OffPreviousValueTimer)
+        self.AddAction(OnOffTimer)
+        self.AddAction(PreviousValueOffTimer)
+        self.AddAction(OnPreviousStateTimer)
+        self.AddAction(PreviousValuePreviousStateTimer)
+        
         self.AddAction(ProgramTimer)
         self.AddAction(ProgramCode)
         self.AddAction(ProgramFactoryDefaults)
+        
+        self.AddAction(ProgramInternalTimer)
+        self.AddAction(ProgramDimUpRampTimer)
+        self.AddAction(ProgramDimDownRampTimer)
 
     def RawCallback(self, data):
         if eg.debugLevel:
@@ -114,7 +124,7 @@ class FS20PCS(eg.PluginClass):
             0)
         return path;
 
-    def SendRawCommand(self, data, timeout):
+    def SendRawCommand(self, data, timeout = 0):
         if not self.thread:
             self.PrintError("Plug in is not running.")
             return
@@ -124,17 +134,17 @@ class FS20PCS(eg.PluginClass):
         newData = data + ((11 - dataLength) * '\x00')
         try:
             self.waitingForResponse = True
-            self.thread.Write(newData, timeout + 1000)#extra seconds to wait for response
+            self.thread.Write(newData, timeout + 1000)#extra second to wait for response
         except:
             self.waitingForResponse = False
 
     def Abort(self):
         if self.waitingForResponse:
-            self.SendRawCommand("\x01\x01\xf3", 0)
+            self.SendRawCommand("\x01\x01\xf3")
         
     def RequestVersion(self):
-        data = '\x01\x01\xF0'
-        self.SendRawCommand(data, 0)
+        data = '\x01\x01\xf0'
+        self.SendRawCommand(data)
 
     def SetupHidThread(self, newDevicePath):
         #create thread
@@ -176,7 +186,6 @@ class FS20PCS(eg.PluginClass):
 
         #unbind from RegisterDeviceNotification message
         eg.Unbind("System.DeviceAttached", self.ReconnectDevice)
-
 
 def GetAddressBytes(address):
     x, a0 = divmod(address, 256)
@@ -229,8 +238,18 @@ def FormatTimeValue(timeValue):
         return "%0.02f sec" % timeValue
 
 class ActionBase(eg.ActionBase):
-    defaultAddress = 0x094001
-    funccode = None # must be assigned by subclass
+    defaultAddress = GetAddressFromString("123412342222") #0x094001
+    
+    funcCode = None
+    name = None
+    description = None
+    labelFormat = None
+
+    
+    def GetAddressBytes(self, address):
+        x, a0 = divmod(address, 256)
+        a2, a1 = divmod(x, 256)
+        return chr(a2) + chr(a1) + chr(a0) 
 
     def AddAddressControl(self, panel, address):
         if address is None:
@@ -267,14 +286,14 @@ class ActionBase(eg.ActionBase):
         panel.AddLine("Timer value:", timerCtrl)
         return timerCtrl
 
-    def AddRepeatControl(self, panel, repeatCount):
+    def AddRepeatControl(self, panel, repeatCount, maxValue):
         repeatCtrl = eg.Slider(
             panel, 
             value=repeatCount, 
             min=1, 
-            max=255, 
+            max=maxValue, 
             minLabel="1",
-            maxLabel="255",
+            maxLabel=str(maxValue),
             style = wx.SL_TOP,
             size=(300,-1),
         )
@@ -304,13 +323,9 @@ class ActionBase(eg.ActionBase):
 class SimpleAction(ActionBase):
     """Base class for all action that only take an address as input 
     """
-    funcCode = None
-    name = None
-    description = None
-    labelFormat = None
-    
+        
     def __call__(self, address):
-        self.plugin.SendRawCommand("\x01\x06\xf1" + GetAddressBytes(address) + chr(self.funcCode), TIME_OUT)
+        self.plugin.SendRawCommand("\x01\x06\xf1" + GetAddressBytes(address) + chr(self.funcCode))
         
     def GetLabel(self, address):
         return self.labelFormat.format(GetStringFromAddress(address, True))
@@ -329,10 +344,6 @@ class SimpleAction(ActionBase):
 class RepeatAction(ActionBase):
     """Base class for all action that take an address and repeat Count 
     """
-    funcCode = None
-    name = None
-    description = None
-    labelFormat = None
     
     def __call__(self, address, repeatCount):
         self.plugin.SendRawCommand("\x01\x07\xf2" + GetAddressBytes(address) +  chr(self.funcCode) + "\x00" + chr(repeatCount), repeatCount * TIME_OUT)
@@ -347,13 +358,35 @@ class RepeatAction(ActionBase):
         panel = eg.ConfigPanel()
 
         maskedCtrl = self.AddAddressControl(panel, address)
-        repeatCtrl = self.AddRepeatControl(panel, repeatCount)
+        repeatCtrl = self.AddRepeatControl(panel, repeatCount, self.maxRepeatCount)
         ActionBase.defaultAddress = address
 
         while panel.Affirmed():
             address = GetAddressFromString(maskedCtrl.GetPlainValue())
             ActionBase.defaultAddress = address
             panel.SetResult(address, repeatCtrl.GetValue())
+
+class TimerValueAction(ActionBase):
+    """Base class for all action that take an address and repeat Count 
+    """
+    
+    def __call__(self, address, timeCode):
+        self.plugin.SendRawCommand("\x01\x06\xf1" + GetAddressBytes(address) +  chr(self.funcCode) + chr(timeCode))
+        
+    def GetLabel(self, address, timeCode):
+        return self.labelFormat.format(GetStringFromAddress(address, True), FormatTimeValue(GetTimeValue(timeCode)))
+
+    def Configure(self, address = None, timeCode = 0):
+        panel = eg.ConfigPanel()
+
+        maskedCtrl = self.AddAddressControl(panel, address)
+        timerCtrl = self.AddTimerControl(panel, timeCode)
+        ActionBase.defaultAddress = address
+
+        while panel.Affirmed():
+            address = GetAddressFromString(maskedCtrl.GetPlainValue())
+            ActionBase.defaultAddress = address
+            panel.SetResult(address, GetTimeCodeByIndex(timerCtrl.GetValue()))
 
 class Off(SimpleAction):
     funcCode = 0x00
@@ -367,9 +400,9 @@ class On(SimpleAction):
     description = "Turns device on (dim to 100%)"
     labelFormat = "Turn on {0}"
 
-class OnPreviousValue(SimpleAction):
+class PreviousValue(SimpleAction):
     funcCode = 0x11
-    name = "On"
+    name = "On with previous value"
     description = "Turns device on with previous value"
     labelFormat = "Turn on {0} with previous value"
 
@@ -384,18 +417,21 @@ class DimUp(RepeatAction):
     name = "Dim up"
     description = "Dims up"
     labelFormat = "Dim up {0}"
+    maxRepeatCount = 16
 
 class DimDown(RepeatAction):
     funcCode = 0x14
     name = "Dim down"
     description = "Dims down"
     labelFormat = "Dim down {0}"
+    maxRepeatCount = 16
 
 class DimAlternating(RepeatAction):
     funcCode = 0x15
     name = "Alternating dim"
     description = "Dims up one level until maximum, then dim down"
     labelFormat = "Alternating dim {0}"
+    maxRepeatCount = 255
 
 class ProgramTimer(SimpleAction):
     funcCode = 0x16
@@ -440,13 +476,82 @@ class OnPreviousStateInternal(SimpleAction):
     labelFormat = "Turn on {0} for internal timer value and return to previous state afterwards"
 
 class PreviousValuePreviousStateInternal(SimpleAction):
-    funcCode = 0x1e
+    funcCode = 0x1f
     name = "Previous value for internal timer value, previous state afterwards"
     description = "Turns on device with previous value for internal timer value and return to previous state afterwards"
     labelFormat = "Turn on {0} with previous value for internal timer value and return to previous state afterwards"
 
+class ProgramInternalTimer(TimerValueAction):
+    funcCode = 0x36
+    name = "Program internal timer value"
+    description = "Program internal timer value"
+    labelFormat = "Program internal timer value for {0} to {1}"
+
+class ProgramDimUpRampTimer(TimerValueAction):
+    funcCode = 0x3c
+    name = "Program dim up ramp timer value"
+    description = "Program dim up ramp timer value"
+    labelFormat = "Program dim up ramp timer value for {0} to {1}"
+
+class ProgramDimDownRampTimer(TimerValueAction):
+    funcCode = 0x3d
+    name = "Program dim down ramp timer value"
+    description = "Program dim down ramp timer value"
+    labelFormat = "Program dim down ramp timer value for {0} to {1}"
+
+class OffTimer(TimerValueAction):
+    funcCode = 0x20
+    name = "Off in timer value"
+    description = "Turns device off (dim to 0%) in timer value"
+    labelFormat = "Turn off {0} in {1}"
     
+class OnTimer(TimerValueAction):
+    funcCode = 0x30
+    name = "On in timer value"
+    description = "Turns device on (dim to 100%) in timer value"
+    labelFormat = "Turn on {0} in {1}"
+
+class PreviousValueTimer(TimerValueAction):
+    funcCode = 0x31
+    name = "On with previous value in timer value"
+    description = "Turns device on with previous value in timer value"
+    labelFormat = "Turn on {0} with previous value in {1}"
+
+class ToggleTimer(TimerValueAction):
+    funcCode = 0x32
+    name = "Toggle in timer value"
+    description = "Toggles between off and previous value in timer value"
+    labelFormat = "Toggle {0} between off and previous value in {1}"
     
+class OffPreviousValueTimer(TimerValueAction):
+    funcCode = 0x38
+    name = "Off for timer value, previous value afterwards"
+    description = "Turns off (dim to 0%) device for timer value and return to previous value afterwards"
+    labelFormat = "Turn off {0} for timer value and return to previous value afterwards"
+
+class OnOffTimer(TimerValueAction):
+    funcCode = 0x39
+    name = "On (dim to 100%) for timer value, off afterwards"
+    description = "Turns on (device dim to 100%) for timer value and turns it off afterwards"
+    labelFormat = "Turn on {0} for timer value and turn off afterwards"
+
+class PreviousValueOffTimer(TimerValueAction):
+    funcCode = 0x3a
+    name = "Previous value for timer value, off afterwards"
+    description = "Turns on device with previous value for timer value and turns it off afterwards"
+    labelFormat = "Turn on {0} with previous value for timer value and turn off afterwards"
+
+class OnPreviousStateTimer(TimerValueAction):
+    funcCode = 0x3e
+    name = "On for timer value, previous state afterwards"
+    description = "Turns on (dim to 100%) device for timer value and return to previous state afterwards"
+    labelFormat = "Turn on {0} for timer value and return to previous state afterwards"
+
+class PreviousValuePreviousStateTimer(TimerValueAction):
+    funcCode = 0x3f
+    name = "Previous value for timer value, previous state afterwards"
+    description = "Turns on device with previous value for timer value and return to previous state afterwards"
+    labelFormat = "Turn on {0} with previous value for timer value and return to previous state afterwards" 
 
 class Dim(ActionBase):
     name = "Dim"
@@ -454,7 +559,7 @@ class Dim(ActionBase):
     labelFormat = "Set dim-level to {1:.02f} % for {0}"
     
     def __call__(self, address, level):
-        self.plugin.SendRawCommand("\x01\x06\xf1" + GetAddressBytes(address) + chr(level), TIME_OUT)
+        self.plugin.SendRawCommand("\x01\x06\xf1" + GetAddressBytes(address) + chr(level))
     
     def GetLabel(self, address, level):
         return self.labelFormat.format(GetStringFromAddress(address, True), (level * 100.00 / 16))
@@ -475,7 +580,7 @@ class DimTimer(ActionBase):
     labelFormat = "Set dim-level to {1:.02f} % for {0} in {2}"
     
     def __call__(self, address, level, timeCode):
-        self.plugin.SendRawCommand("\x01\x06\xf1" + GetAddressBytes(address) + chr(level + 32) + chr(timeCode), TIME_OUT)
+        self.plugin.SendRawCommand("\x01\x06\xf1" + GetAddressBytes(address) + chr(level + 32) + chr(timeCode))
     
     def GetLabel(self, address, level, timeCode):
         return self.labelFormat.format(GetStringFromAddress(address, True), (level * 100.00 / 16), FormatTimeValue(GetTimeValue(timeCode)))
