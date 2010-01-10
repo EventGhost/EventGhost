@@ -55,6 +55,13 @@ class FS20PCS(eg.PluginClass):
         self.AddAction(Dim)
         self.AddAction(DimTimer)
         self.AddAction(DimAlternating)
+        
+        self.AddAction(OffPreviousValueInternal)
+        self.AddAction(OnOffInternal)
+        self.AddAction(PreviousValueOffInternal)
+        self.AddAction(OnPreviousStateInternal)
+        self.AddAction(PreviousValuePreviousStateInternal)
+        
         self.AddAction(ProgramTimer)
         self.AddAction(ProgramCode)
         self.AddAction(ProgramFactoryDefaults)
@@ -402,11 +409,44 @@ class ProgramCode(SimpleAction):
     description = "Learn address"
     labelFormat = "Learn address {0}"
 
+class OffPreviousValueInternal(SimpleAction):
+    funcCode = 0x18
+    name = "Off for internal timer value, previous value afterwards"
+    description = "Turns off (dim to 0%) device for internal timer value and return to previous value afterwards"
+    labelFormat = "Turn off {0} for internal timer value and return to previous value afterwards"
+
+class OnOffInternal(SimpleAction):
+    funcCode = 0x19
+    name = "On (dim to 100%) for internal timer value, off afterwards"
+    description = "Turns on (device dim to 100%) for internal timer value and turns it off afterwards"
+    labelFormat = "Turn on {0} for internal timer value and turn off afterwards"
+
+class PreviousValueOffInternal(SimpleAction):
+    funcCode = 0x1a
+    name = "Previous value for internal timer value, off afterwards"
+    description = "Turns on device with previous value for internal timer value and turns it off afterwards"
+    labelFormat = "Turn on {0} with previous value for internal timer value and turn off afterwards"
+
 class ProgramFactoryDefaults(SimpleAction):
     funcCode = 0x1b
     name = "Reset to factory defaults"
     description = "Reset to factory defaults"
     labelFormat = "Reset {0} to factory defaults"
+
+class OnPreviousStateInternal(SimpleAction):
+    funcCode = 0x1e
+    name = "On for internal timer value, previous state afterwards"
+    description = "Turns on (dim to 100%) device for internal timer value and return to previous state afterwards"
+    labelFormat = "Turn on {0} for internal timer value and return to previous state afterwards"
+
+class PreviousValuePreviousStateInternal(SimpleAction):
+    funcCode = 0x1e
+    name = "Previous value for internal timer value, previous state afterwards"
+    description = "Turns on device with previous value for internal timer value and return to previous state afterwards"
+    labelFormat = "Turn on {0} with previous value for internal timer value and return to previous state afterwards"
+
+    
+    
 
 class Dim(ActionBase):
     name = "Dim"
