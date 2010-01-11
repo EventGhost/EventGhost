@@ -214,7 +214,7 @@ DEPENDENCIES = [
     ModuleDependency(
         name = "PyCrypto (Python Cryptography Toolkit)",
         module = "Crypto",
-        version = "2.0.1",
+        version = "2.1.0",
         url = "http://www.dlitz.net/software/pycrypto/",
     ),
     ModuleDependency(
