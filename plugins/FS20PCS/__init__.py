@@ -56,7 +56,7 @@ class FS20PCS(eg.PluginClass):
         self.AddAction(Dim)
         self.AddAction(DimAlternating)
         
-        group = self.AddGroup("Timed actions")
+        group = self.AddGroup("Timed actions", "Allows controlling FS20 devices with timed parameter.")
         group.AddAction(DimTimer)
         group.AddAction(OffPreviousValueInternal)
         group.AddAction(OffPreviousValueTimer)
@@ -72,7 +72,7 @@ class FS20PCS(eg.PluginClass):
         group.AddAction(DimDownOffTimer)
         group.AddAction(DimAlternatingOffTimer)
         
-        group = self.AddGroup("Programming")
+        group = self.AddGroup("Programming", "Allows programming of FS20 devices. You should prefer timed actions and only use these for initial setup.")
         group.AddAction(ProgramTimer)
         group.AddAction(ProgramCode)
         group.AddAction(ProgramFactoryDefaults)
@@ -280,14 +280,14 @@ class ActionBase(eg.ActionBase):
         panel.AddLine("Timer value:", timerCtrl)
         return timerCtrl
 
-    def AddRepeatControl(self, panel, repeatCount, maxValue):
+    def AddRepeatControl(self, panel, repeatCount):
         repeatCtrl = eg.Slider(
             panel, 
             value=repeatCount, 
             min=1, 
-            max=maxValue, 
+            max=255, 
             minLabel="1",
-            maxLabel=str(maxValue),
+            maxLabel="255",
             style = wx.SL_TOP,
             size=(300,-1),
         )
@@ -352,7 +352,7 @@ class RepeatAction(ActionBase):
         panel = eg.ConfigPanel()
 
         maskedCtrl = self.AddAddressControl(panel, address)
-        repeatCtrl = self.AddRepeatControl(panel, repeatCount, self.maxRepeatCount)
+        repeatCtrl = self.AddRepeatControl(panel, repeatCount)
 
         while panel.Affirmed():
             address = GetAddressFromString(maskedCtrl.GetPlainValue())
@@ -377,7 +377,7 @@ class RepeatTimerValueAction(ActionBase):
 
         maskedCtrl = self.AddAddressControl(panel, address)
         timerCtrl = self.AddTimerControl(panel, timeCode)
-        repeatCtrl = self.AddRepeatControl(panel, repeatCount, self.maxRepeatCount)
+        repeatCtrl = self.AddRepeatControl(panel, repeatCount)
 
         while panel.Affirmed():
             address = GetAddressFromString(maskedCtrl.GetPlainValue())
@@ -436,42 +436,36 @@ class DimUp(RepeatAction):
     name = "Dim up"
     description = "Dims up"
     labelFormat = "Dim up {0}"
-    maxRepeatCount = 16
 
 class DimDown(RepeatAction):
     funcCode = 0x14
     name = "Dim down"
     description = "Dims down"
     labelFormat = "Dim down {0}"
-    maxRepeatCount = 16
 
 class DimAlternating(RepeatAction):
     funcCode = 0x15
     name = "Alternating dim"
     description = "Dims up one level until maximum, then dim down"
     labelFormat = "Alternating dim {0}"
-    maxRepeatCount = 255
     
 class DimUpOffTimer(RepeatTimerValueAction):
     funcCode = 0x33
     name = "Dim up and turn off after timer value"
     description = "Dims up and turns off after timer value"
     labelFormat = "Dim up {0} and turn off after {1}"
-    maxRepeatCount = 16
 
 class DimDownOffTimer(RepeatTimerValueAction):
     funcCode = 0x34
     name = "Dim down and turn off after timer value"
     description = "Dims down and turns off after timer value"
     labelFormat = "Dim down {0} and turn off after {1}"
-    maxRepeatCount = 16
 
 class DimAlternatingOffTimer(RepeatTimerValueAction):
     funcCode = 0x35
     name = "Alternating dim and turn off after timer value"
     description = "Dims up one level until maximum, then dim down and turns off after timer value"
     labelFormat = "Alternating dim {0} and turn off after {1}"
-    maxRepeatCount = 255
 
 class ProgramTimer(SimpleAction):
     funcCode = 0x16
@@ -482,7 +476,7 @@ class ProgramTimer(SimpleAction):
 class ProgramCode(SimpleAction):
     funcCode = 0x17
     name = "Program address"
-    description = "Learn address"
+    description = "Learn address. This is a dummy action which does nothing, but can be used for address learning procedure on some devices."
     labelFormat = "Learn address {0}"
 
 class OffPreviousValueInternal(SimpleAction):
@@ -505,8 +499,8 @@ class PreviousValueOffInternal(SimpleAction):
 
 class ProgramFactoryDefaults(SimpleAction):
     funcCode = 0x1b
-    name = "Reset to factory defaults"
-    description = "Reset to factory defaults"
+    name = "Reset device to factory defaults"
+    description = "Reset device to factory defaults"
     labelFormat = "Reset {0} to factory defaults"
 
 class OnPreviousStateInternal(SimpleAction):
