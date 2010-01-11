@@ -84,6 +84,7 @@ class Exceptions:
     class PluginNotFound(ProgramError):
         text = Text.PluginNotFound
 
+
     class PluginLoadError(ProgramError):
         text = Text.PluginLoadError
 
