@@ -22,6 +22,7 @@ class ExceptionsProvider(object):
     def __init__(self, source):
         self.source = source
 
+
     def __getattr__(self, name):
         exception = getattr(eg.Exceptions, name)
         class SubException(exception):

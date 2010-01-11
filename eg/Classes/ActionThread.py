@@ -28,16 +28,13 @@ class ActionThread(eg.ThreadWorker):
         eg.eventTable.clear()
         self.corePluginInfos = []
         for guid in eg.CORE_PLUGIN_GUIDS:
-            # disable warning: No exception type(s) specified
-            # pylint: disable-msg=W0702
             try:
                 pluginInfo = eg.pluginManager.OpenPlugin(guid, None, ())
                 pluginInfo.instance.__start__()
                 pluginInfo.isStarted = True
                 self.corePluginInfos.append(pluginInfo)
-            except:
+            except: # pylint: disable-msg=W0702
                 eg.PrintTraceback()
-            # pylint: enable-msg=W0702
         start = clock()
         eg.document.Load(filename)
         eg.PrintDebugNotice("XML loaded in %f seconds." % (clock() - start))
@@ -61,12 +58,10 @@ class ActionThread(eg.ThreadWorker):
     def StopSession(self):
         eg.document.autostartMacro.UnloadPlugins()
         for pluginInfo in self.corePluginInfos:
-            # disable warning: No exception type(s) specified
-            # pylint: disable-msg=W0702
             try:
                 pluginInfo.Close()
                 pluginInfo.RemovePluginInstance()
-            except:
+            except: # pylint: disable-msg=W0702
                 eg.PrintTraceback()
 
 
@@ -85,10 +80,9 @@ class ActionThread(eg.ThreadWorker):
         """Calls OnComputerSuspend of every enabled plugin."""
         for plugin in eg.pluginList:
             if plugin.info.isStarted:
-                # pylint: disable-msg=W0702
                 try:
                     plugin.OnComputerSuspend(None)
-                except:
+                except: # pylint: disable-msg=W0702
                     eg.PrintTraceback()
 
 
@@ -97,9 +91,8 @@ class ActionThread(eg.ThreadWorker):
         """Calls OnComputerResume of every enabled plugin."""
         for plugin in eg.pluginList:
             if plugin.info.isStarted:
-                # pylint: disable-msg=W0702
                 try:
                     plugin.OnComputerResume(None)
-                except:
+                except: # pylint: disable-msg=W0702
                     eg.PrintTraceback()
 

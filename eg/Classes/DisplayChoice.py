@@ -25,12 +25,5 @@ class DisplayChoice(eg.Choice):
     def __init__(self, parent, value, *args, **kwargs):
         numDisplays = wx.Display().GetCount()
         choices = ["Monitor %d" % (i+1) for i in range(numDisplays)]
-        eg.Choice.__init__(
-            self,
-            parent,
-            value,
-            choices,
-            *args,
-            **kwargs
-        )
+        eg.Choice.__init__(self, parent, value, choices, *args, **kwargs)
 

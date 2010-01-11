@@ -21,6 +21,7 @@ import eg
 from eg.Utils import SetDefault
 from PluginModuleInfo import PluginModuleInfo
 
+
 class PluginProxy(object):
 
     def __init__(self, plugin):
@@ -168,6 +169,7 @@ class PluginInstanceInfo(PluginModuleInfo):
         return self
 
 
+    @eg.AssertInActionThread
     def Start(self):
         if self.isStarted:
             return
@@ -192,6 +194,7 @@ class PluginInstanceInfo(PluginModuleInfo):
             self.treeItem.Refresh()
 
 
+    @eg.AssertInActionThread
     def Stop(self):
         """
         This is a wrapper for the __stop__ member of a eg.PluginBase.
@@ -220,6 +223,7 @@ class PluginInstanceInfo(PluginModuleInfo):
             self.treeItem.Refresh()
 
 
+    @eg.AssertInActionThread
     def Close(self):
         eg.PrintDebugNotice("closing %s" % self.path)
         if self.isStarted:
@@ -234,9 +238,6 @@ class PluginInstanceInfo(PluginModuleInfo):
         for item in items:
             if isinstance(item, type) and issubclass(item, eg.ActionBase):
                 item.plugin = None
-#                item.info.icon = None
-#                item.info = None
-#                item.text = None
             else:
                 self.DeleteActionListItems(item.items)
                 item.plugin = None
@@ -249,14 +250,4 @@ class PluginInstanceInfo(PluginModuleInfo):
         eg.pluginList.remove(plugin)
         self.DeleteActionListItems(self.actionGroup.items)
         eg.actionGroup.items.remove(self.actionGroup)
-#        self.actions = None
-#        self.instance = None
-#        plugin.info = None
-#        plugin.AddAction = None
-#        plugin.Exceptions.source = None
-#        plugin.Exception.obj = None
-#        plugin.AddGroup = None
-#        plugin.description = None
-#        plugin.name = None
-#        self.actionGroup = None
 
