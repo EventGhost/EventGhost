@@ -15,11 +15,12 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import pickle
 import tempfile
 import shutil
 import compileall
 import base64
+import __builtin__
+import ast
 from zipfile import ZipFile, ZIP_DEFLATED
 import wx
 import eg
@@ -51,8 +52,16 @@ TEMPLATE = u"""
 <P>
 <b>Description:</b>"""
 
-import __builtin__
-import ast
+INFO_FIELDS = [
+    "name",
+    "author",
+    "version",
+    "url",
+    "guid",
+    "description",
+    "icon",
+]
+
 
 class SafeExecParser(object):
 
@@ -85,8 +94,10 @@ class SafeExecParser(object):
         return node.s
 
 
-def SafeExec(source):
-    return SafeExecParser().Visit(ast.parse(source))
+    @classmethod
+    def Parse(cls, source):
+        return cls().Visit(ast.parse(source))
+
 
 
 class PluginInstall(object):
@@ -101,24 +112,11 @@ class PluginInstall(object):
         if not result:
             return
         pluginInfo = result[0]
-        description = pluginInfo.englishDescription
-        pos = description.find("<rst>")
-        if pos != -1:
-            description = DecodeReST(description[pos+5:])
-        iconData = base64.b64encode(pluginInfo.icon.pil.tostring())
-        pluginData = [
-            ("name", pluginInfo.englishName),
-            ("author", pluginInfo.author),
-            ("version", pluginInfo.version),
-            ("url", pluginInfo.url),
-            ("guid", pluginInfo.guid),
-            ("description", description),
-            ("icon", iconData),
-        ]
+        pluginData = self.GetPluginData(pluginInfo)
         dialog = PluginOverviewDialog(
             mainFrame,
             "Plugin Information",
-            pluginData=dict(pluginData),
+            pluginData=pluginData,
             basePath=pluginInfo.path,
             message="Do you want to save this plugin as a plugin file?"
         )
@@ -137,14 +135,38 @@ class PluginInstall(object):
             result = dialog.ShowModal()
             if result == wx.ID_CANCEL:
                 return
-            path = dialog.GetPath()
+            targetPath = dialog.GetPath()
         finally:
             dialog.Destroy()
-        outfile = ZipFile(path, "w", ZIP_DEFLATED)
-        source = "\n".join("%s = %r" % item for item in pluginData)
-        outfile.writestr("info.py", source)
-        baseDir = os.path.basename(pluginInfo.path)
-        for dirpath, dirnames, filenames in os.walk(pluginInfo.path):
+        self.CreatePluginPackage(pluginInfo.path, targetPath, pluginData)
+
+
+    def GetPluginData(self, pluginInfo):
+        description = pluginInfo.englishDescription
+        pos = description.find("<rst>")
+        if pos != -1:
+            description = DecodeReST(description[pos+5:])
+        iconData = base64.b64encode(pluginInfo.icon.pil.tostring())
+        return {
+            "name": pluginInfo.englishName,
+            "author": pluginInfo.author,
+            "version": pluginInfo.version,
+            "url": pluginInfo.url,
+            "guid": pluginInfo.guid,
+            "description": description,
+            "icon": iconData,
+        }
+
+
+    def CreatePluginPackage(self, sourcePath, targetPath, pluginData):
+        zipfile = ZipFile(targetPath, "w", ZIP_DEFLATED)
+        sourceCode = "\n".join(
+            "%s = %r" % (fieldName, pluginData[fieldName])
+                for fieldName in INFO_FIELDS
+        )
+        zipfile.writestr("info.py", sourceCode)
+        baseName = os.path.basename(sourcePath)
+        for dirpath, dirnames, filenames in os.walk(sourcePath):
             for dirname in dirnames[:]:
                 if dirname.startswith("."):
                     dirnames.remove(dirname)
@@ -156,21 +178,21 @@ class PluginInstall(object):
                 ):
                     continue
                 src = os.path.join(dirpath, filename)
-                dst = os.path.join(baseDir, src[len(pluginInfo.path)+1:])
-                outfile.write(src, dst)
-        outfile.close()
+                dst = os.path.join(baseName, src[len(sourcePath)+1:])
+                zipfile.write(src, dst)
+        zipfile.close()
 
 
     @eg.LogItWithReturn
     def Import(self, filepath):
         tmpDir = tempfile.mkdtemp()
         try:
-            infile = ZipFile(filepath, "r", ZIP_DEFLATED)
-            infile.extractall(tmpDir)
-            infile.close()
-            infile = open(os.path.join(tmpDir, "info.py"), "r")
-            pluginData = SafeExec(infile.read())
-            infile.close()
+            zipfile = ZipFile(filepath, "r", ZIP_DEFLATED)
+            zipfile.extractall(tmpDir)
+            zipfile.close()
+            zipfile = open(os.path.join(tmpDir, "info.py"), "r")
+            pluginData = SafeExecParser.Parse(zipfile.read())
+            zipfile.close()
             for name in os.listdir(tmpDir):
                 path = os.path.join(tmpDir, name)
                 if os.path.isdir(path):
