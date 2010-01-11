@@ -38,7 +38,6 @@ class TreeItem(object):
     # parent
     # isEnabled
     # xmlId
-
     xmlTag = "Item"
     dependants = None
     childs = ()
@@ -47,6 +46,7 @@ class TreeItem(object):
     isRenameable = True
     isExecutable = False
     isMoveable = True
+    dropBehaviour = {}
     # we need this so weakrefs can find out if the item actually lives
     isDeleted = False
 
@@ -112,11 +112,11 @@ class TreeItem(object):
 
     def WriteXmlString(self, streamWriter, indent=""):
         attr, text = self.GetData()
-        attribStrs = [
+        attribStrs = "".join(
             ' %s=%s' % (k, quoteattr(unicode(v)).encode("UTF-8"))
             for k, v in attr
-        ]
-        streamWriter("%s<%s%s" % (indent, self.xmlTag, "".join(attribStrs)))
+        )
+        streamWriter("%s<%s%s" % (indent, self.xmlTag, attribStrs))
         if not text and len(self.childs) == 0:
             streamWriter(" />\r\n")
         else:
@@ -250,7 +250,7 @@ class TreeItem(object):
                 except SyntaxError:
                     return False
                 for childXmlNode in rootXmlNode:
-                    childCls = tagToCls[childXmlNode.tag.lower()].__bases__[1]
+                    childCls = tagToCls[childXmlNode.tag.lower()]
                     if self.DropTest(childCls) & HINT_MOVE_INSIDE:
                         continue
                     if self.parent is None:
@@ -369,10 +369,7 @@ class TreeItem(object):
             result = child.TraverseDeepthFirst(func)
             if result is not None:
                 return result
-        result = func(self)
-        if result is not None:
-            return result
-        return None
+        return func(self)
 
 
     def Print(self, *args, **kwargs):
@@ -386,8 +383,8 @@ class TreeItem(object):
         eg.PrintError(*args, **kwargs)
 
 
-    def DropTest(self, cls):
-        return HINT_NO_DROP
+    def DropTest(self, dropNode):
+        return self.dropBehaviour.get(dropNode.xmlTag, HINT_NO_DROP)
 
 
     def GetNextItem(self):

@@ -16,7 +16,7 @@
 
 import eg
 from MacroItem import MacroItem
-from TreeItem import HINT_NO_DROP, HINT_MOVE_INSIDE, HINT_MOVE_AFTER
+from TreeItem import HINT_MOVE_INSIDE, HINT_MOVE_AFTER
 
 
 class AutostartItem(MacroItem):
@@ -25,10 +25,32 @@ class AutostartItem(MacroItem):
     isDeactivatable = False
     isRenameable = False
     isMoveable = False
+    dropBehaviour = {
+        "Folder": HINT_MOVE_AFTER,
+        "Macro": HINT_MOVE_AFTER,
+        "Plugin": HINT_MOVE_INSIDE,
+        "Action": HINT_MOVE_INSIDE,
+    }
 
     @eg.AssertInActionThread
     def __init__(self, parent, node):
-        MacroItem.__init__(self, parent, node)
+        eg.TreeItem.__init__(self, parent, node)
+        tagDict = self.document.XMLTag2ClassDict
+        self.childs = []
+        for childNode in node:
+            childTag = childNode.tag.lower()
+            if childTag == "plugin":
+                child = self.document.PluginItem(self, childNode)
+            else:
+                child = None
+            self.childs.append(child)
+        for i, childNode in enumerate(node):
+            childTag = childNode.tag.lower()
+            if childTag == "plugin":
+                continue
+            self.childs[i] = tagDict[childTag](self, childNode)
+        if node.attrib.get("expanded", "").lower() == "true":
+            self.document.expandedNodes.add(self)
         self.name = eg.text.General.autostartItem
         self.document.autostartMacro = self
 
@@ -57,16 +79,4 @@ class AutostartItem(MacroItem):
             if child.__class__ == self.document.PluginItem:
                 child.info.Close()
                 child.info.RemovePluginInstance()
-
-
-    def DropTest(self, cls):
-        if cls == eg.FolderItem:
-            return HINT_MOVE_AFTER
-        if cls == eg.MacroItem:
-            return HINT_MOVE_AFTER
-        if cls == eg.ActionItem:
-            return HINT_MOVE_INSIDE
-        if cls == eg.PluginItem:
-            return HINT_MOVE_INSIDE
-        return HINT_NO_DROP
 

@@ -17,7 +17,7 @@
 import eg
 import wx
 from ContainerItem import ContainerItem
-from TreeItem import HINT_NO_DROP, HINT_MOVE_INSIDE, HINT_MOVE_BEFORE_OR_AFTER
+from TreeItem import HINT_MOVE_INSIDE, HINT_MOVE_BEFORE_OR_AFTER
 
 
 class MacroItem(ContainerItem):
@@ -25,6 +25,12 @@ class MacroItem(ContainerItem):
     icon = eg.Icons.MACRO_ICON
     isExecutable = True
     shouldSelectOnExecute = False
+    dropBehaviour = {
+        "Event": HINT_MOVE_INSIDE,
+        "Macro": HINT_MOVE_BEFORE_OR_AFTER,
+        "Folder": HINT_MOVE_BEFORE_OR_AFTER,
+        "Action": HINT_MOVE_INSIDE,
+    }
 
 
     def GetNextChild(self, index):
@@ -48,16 +54,4 @@ class MacroItem(ContainerItem):
                 eg.programCounter = (self.childs[0], 0)
             else:
                 eg.programCounter = None
-
-
-    def DropTest(self, cls):
-        if cls == eg.EventItem:
-            return HINT_MOVE_INSIDE
-        if cls == eg.MacroItem:
-            return HINT_MOVE_BEFORE_OR_AFTER
-        if cls == eg.FolderItem:
-            return HINT_MOVE_BEFORE_OR_AFTER
-        if cls == eg.ActionItem:
-            return HINT_MOVE_INSIDE
-        return HINT_NO_DROP
 

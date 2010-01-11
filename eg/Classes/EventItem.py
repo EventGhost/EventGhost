@@ -15,8 +15,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
-from TreeItem import TreeItem
-from TreeItem import HINT_NO_DROP, HINT_MOVE_BEFORE_OR_AFTER, HINT_MOVE_AFTER
+from TreeItem import TreeItem, HINT_MOVE_BEFORE_OR_AFTER, HINT_MOVE_AFTER
 
 class Text(eg.TranslatableStrings):
     eventItem = "Event Item"
@@ -34,6 +33,10 @@ class EventItem(TreeItem):
     isConfigurable = True
     openConfigDialog = None
     isRenameable = False
+    dropBehaviour = {
+        "Event": HINT_MOVE_BEFORE_OR_AFTER,
+        "Action": HINT_MOVE_AFTER,
+    }
 
     def __init__(self, parent, node):
         TreeItem.__init__(self, parent, node)
@@ -64,7 +67,7 @@ class EventItem(TreeItem):
         newName = args[0]
         self.RenameTo(newName)
 
-    
+
     def GetBasePath(self):
         """
         Returns the filesystem path, where additional files (like pictures)
@@ -73,8 +76,8 @@ class EventItem(TreeItem):
         # currently an event item doesn't have any plugin assigned to it,
         # so we also have no base path
         return ""
-    
-    
+
+
     def Configure(self, name):
         panel = eg.ConfigPanel()
         staticText = panel.StaticText(Text.eventName)
@@ -117,12 +120,4 @@ class EventItem(TreeItem):
             pass
         if len(eventTable[eventString]) == 0:
             del eventTable[eventString]
-
-
-    def DropTest(self, cls):
-        if cls == EventItem:
-            return HINT_MOVE_BEFORE_OR_AFTER
-        if cls == eg.ActionItem:
-            return HINT_MOVE_AFTER
-        return HINT_NO_DROP
 

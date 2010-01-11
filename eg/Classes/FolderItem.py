@@ -16,16 +16,13 @@
 
 import eg
 from ContainerItem import ContainerItem
-from TreeItem import HINT_MOVE_EVERYWHERE, HINT_NO_DROP
+from TreeItem import HINT_MOVE_EVERYWHERE
 
 class FolderItem(ContainerItem):
     xmlTag = "Folder"
     icon = eg.Icons.FOLDER_ICON
-
-    def DropTest(self, cls):
-        if cls == eg.MacroItem:
-            return HINT_MOVE_EVERYWHERE
-        if cls == eg.FolderItem:
-            return HINT_MOVE_EVERYWHERE
-        return HINT_NO_DROP
+    dropBehaviour = {
+        "Macro": HINT_MOVE_EVERYWHERE,
+        "Folder": HINT_MOVE_EVERYWHERE,
+    }
 

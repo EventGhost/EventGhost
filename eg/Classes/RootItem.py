@@ -17,7 +17,7 @@
 import eg
 import time
 from ContainerItem import ContainerItem
-from TreeItem import HINT_NO_DROP, HINT_MOVE_INSIDE
+from TreeItem import HINT_MOVE_INSIDE
 
 
 class RootItem(ContainerItem):
@@ -28,7 +28,10 @@ class RootItem(ContainerItem):
     isDeactivatable = False
     isRenameable = False
     isMoveable = False
-
+    dropBehaviour = {
+        "Macro": HINT_MOVE_INSIDE,
+        "Folder": HINT_MOVE_INSIDE,
+    }
 
     def GetData(self):
         from comtypes import GUID
@@ -77,12 +80,4 @@ class RootItem(ContainerItem):
 
     def Enable(self, flag=True):
         pass
-
-
-    def DropTest(self, cls):
-        if cls == eg.MacroItem:
-            return HINT_MOVE_INSIDE
-        if cls == eg.FolderItem:
-            return HINT_MOVE_INSIDE
-        return HINT_NO_DROP
 

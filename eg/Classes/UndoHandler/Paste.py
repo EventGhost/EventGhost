@@ -65,13 +65,12 @@ class Paste(UndoHandlerBase):
         for childXmlNode in xmlTree:
             childCls = self.document.XMLTag2ClassDict[childXmlNode.tag.lower()]
             before = None
-            childClsBase = childCls.__bases__[1]
-            insertionHint = selection.DropTest(childClsBase)
+            insertionHint = selection.DropTest(childCls)
             if insertionHint & HINT_MOVE_INSIDE:
                 # item will move inside
                 for i in xrange(len(selection.childs)-1, -1, -1):
                     next = selection.childs[i]
-                    insertionHint = next.DropTest(childClsBase)
+                    insertionHint = next.DropTest(childCls)
                     if insertionHint & HINT_MOVE_AFTER:
                         break
                     before = next
@@ -82,7 +81,7 @@ class Paste(UndoHandlerBase):
                 pos = parent.GetChildIndex(selection)
                 for i in xrange(pos-1, -1, -1):
                     next = parent.childs[i]
-                    insertionHint = next.DropTest(childClsBase)
+                    insertionHint = next.DropTest(childCls)
                     if insertionHint != HINT_MOVE_BEFORE:
                         break
                     before = next
@@ -93,7 +92,7 @@ class Paste(UndoHandlerBase):
                 pos = parent.GetChildIndex(selection)
                 for i in xrange(pos+1, len(parent.childs)):
                     next = parent.childs[i]
-                    insertionHint = next.DropTest(childClsBase)
+                    insertionHint = next.DropTest(childCls)
                     if insertionHint != HINT_MOVE_AFTER:
                         before = next
                         break

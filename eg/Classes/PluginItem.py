@@ -36,7 +36,6 @@ class PluginItem(ActionItem):
         attr.append(('Identifier', self.executable.info.evalName))
         guid = self.executable.info.guid
         if guid:
-            #attr.append(('File', self.pluginName))
             attr.append(('Guid', guid))
         attr.append(('File', self.pluginName))
         text = base64.b64encode(pickle.dumps(self.info.args, 2))

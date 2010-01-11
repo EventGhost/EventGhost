@@ -32,7 +32,6 @@ RENAMED_COLOUR = eg.colour.GetRenamedColor()
 
 class ActionItem(TreeItem):
     xmlTag = "Action"
-
     icon = eg.Icons.ACTION_ICON
     executable = None
     compiled = None
@@ -42,7 +41,6 @@ class ActionItem(TreeItem):
     openConfigDialog = None
     helpDialog = None
     shouldSelectOnExecute = False
-
 
     def GetData(self):
         attr, text = TreeItem.GetData(self)
@@ -123,7 +121,6 @@ class ActionItem(TreeItem):
             except:
                 eg.PrintTraceback(source=self)
                 self.compiled = None
-            #self.Refresh()
 
 
     @eg.AssertInActionThread
@@ -166,19 +163,19 @@ class ActionItem(TreeItem):
 
     def GetLabel(self):
         if self.name:
-            name = self.name
-        else:
-            # often the GetLabel() method of the executable can't handle
-            # a call without arguments, because suitable default arguments
-            # are missing. So we use a fallback in such cases.
-            executable = self.executable
-            try:
-                name = executable.GetLabel(*self.args)
-            except:
-                name = executable.name
-            pluginInfo = executable.plugin.info
-            if pluginInfo.kind != "core":
-                name = pluginInfo.label + ": " + name
+            return self.name
+
+        # often the GetLabel() method of the executable can't handle
+        # a call without arguments, because suitable default arguments
+        # are missing. So we use a fallback in such cases.
+        executable = self.executable
+        try:
+            name = executable.GetLabel(*self.args)
+        except:
+            name = executable.name
+        pluginInfo = executable.plugin.info
+        if pluginInfo.kind != "core":
+            name = pluginInfo.label + ": " + name
         return name
 
 
@@ -236,31 +233,32 @@ class ActionItem(TreeItem):
         if not action:
             return
         eg.indent += 1
-        if not action.plugin.info.isStarted:
-            self.PrintError(
-                eg.text.Error.pluginNotActivated % action.plugin.name
-            )
-            return
         try:
-            eg.result = self.compiled()
-        except eg.Exception, exc:
-            self.PrintError(unicode(exc))
-        except:
-            label = self.GetLabel()
-            eg.PrintTraceback(eg.text.Error.InAction % label, 1, source=self)
+            if not action.plugin.info.isStarted:
+                self.PrintError(
+                    eg.text.Error.pluginNotActivated % action.plugin.name
+                )
+                return
+            try:
+                eg.result = self.compiled()
+            except eg.Exception, exc:
+                self.PrintError(unicode(exc))
+            except:
+                label = self.GetLabel()
+                eg.PrintTraceback(
+                    eg.text.Error.InAction % label, 1, source=self
+                )
         finally:
-            pass
-        eg.indent -= 1
+            eg.indent -= 1
 
 
-    def DropTest(self, cls):
+    def DropTest(self, dropNode):
         if self.parent == self.document.autostartMacro:
-            if cls == eg.PluginItem:
+            if dropNode.xmlTag == "Plugin":
                 return HINT_MOVE_BEFORE_OR_AFTER
-        else:
-            if cls == eg.EventItem:
-                return HINT_MOVE_BEFORE
-        if cls == eg.ActionItem:
+        elif dropNode.xmlTag == "Event":
+            return HINT_MOVE_BEFORE
+        if dropNode.xmlTag == "Action":
             return HINT_MOVE_BEFORE_OR_AFTER
         return HINT_NO_DROP
 

@@ -74,8 +74,7 @@ class DropTarget(wx.PyDropTarget):
     def __init__(self, treeCtrl):
         wx.PyDropTarget.__init__(self)
         self.treeCtrl = treeCtrl
-        self.srcCls = eg.EventItem
-        self.srcNode = None
+        self.srcNode = eg.EventItem
         # specify the type of data we will accept
         textData = wx.TextDataObject()
         self.customData = wx.CustomDataObject(wx.CustomDataFormat("DragItem"))
@@ -116,6 +115,7 @@ class DropTarget(wx.PyDropTarget):
             self.lastHighlighted = None
 
         dstItemId, flags = tree.HitTest((x, y))
+
         if not (flags & HITTEST_FLAG):
             return wx.DragNone
 
@@ -130,7 +130,7 @@ class DropTarget(wx.PyDropTarget):
                 return wx.DragNone
             dstParentNode = dstParentNode.parent
 
-        insertionHint = dstNode.DropTest(self.srcCls)
+        insertionHint = dstNode.DropTest(srcNode)
 
         # expand a container, if the mouse is hold over it for some time
         if dstItemId == self.lastTargetItemId:
@@ -183,7 +183,7 @@ class DropTarget(wx.PyDropTarget):
         whereToDrop = (dstNode, 0)
         for i in xrange(len(dstNode.childs) - 1, -1, -1):
             child = dstNode.childs[i]
-            if child.DropTest(self.srcCls) & HINT_MOVE_AFTER:
+            if child.DropTest(self.srcNode) & HINT_MOVE_AFTER:
                 tree.SetInsertMark(tree.visibleNodes.get(child, 0), 1)
                 whereToDrop = (dstNode, i + 1)
                 break
@@ -201,7 +201,7 @@ class DropTarget(wx.PyDropTarget):
         pos = parent.GetChildIndex(dstNode)
         for i in xrange(pos - 1, -1, -1):
             child = parent.childs[i]
-            if child.DropTest(self.srcCls) == HINT_MOVE_BEFORE:
+            if child.DropTest(self.srcNode) == HINT_MOVE_BEFORE:
                 dstItemId = tree.visibleNodes[child]
                 pos -= 1
         tree.SetInsertMark(dstItemId, 0)
@@ -217,7 +217,7 @@ class DropTarget(wx.PyDropTarget):
         pos = parent.GetChildIndex(dstNode)
         for i in xrange(pos + 1, len(parent.childs)):
             child = parent.childs[i]
-            if child.DropTest(self.srcCls) == HINT_MOVE_AFTER:
+            if child.DropTest(self.srcNode) == HINT_MOVE_AFTER:
                 dstItemId = tree.visibleNodes[child]
                 pos += 1
         tree.SetInsertMark(dstItemId, 1)
@@ -347,6 +347,7 @@ class TreeCtrl(wx.TreeCtrl):
         self.document = document
         self.root = None
         self.editLabelId = None
+        self.insertionMark = None
         self.editControl = EditControlProxy(self)
         style = (
             wx.TR_HAS_BUTTONS |
@@ -402,15 +403,21 @@ class TreeCtrl(wx.TreeCtrl):
 
     @eg.AssertInMainThread
     def SetInsertMark(self, treeItem, after):
-        # TVM_SETINSERTMARK = 4378
         if treeItem:
             lParam = long(treeItem.m_pItem)
+            if self.insertionMark == (lParam, after):
+                return
+            # TVM_SETINSERTMARK = 4378
             SendMessageTimeout(self.hwnd, 4378, after, lParam, 1, 100, None)
+            self.insertionMark = (lParam, after)
+        else:
+            self.ClearInsertMark()
 
 
     @eg.AssertInMainThread
     def ClearInsertMark(self):
         SendMessageTimeout(self.hwnd, 4378, 0, long(0), 1, 100, None)
+        self.insertionMark = None
 
 
     @eg.AssertInMainThread
@@ -706,16 +713,13 @@ class TreeCtrl(wx.TreeCtrl):
         if not srcNode.isMoveable:
             return
         self.SelectItem(srcItemId)
-        dropSource = DropSource(self, srcNode.GetXmlString())
         dropTarget = self.dropTarget
-        dropTarget.srcCls = srcNode.__class__.__bases__[1]
         dropTarget.srcNode = srcNode
         dropTarget.isExternalDrag = False
 
-        dropSource.DoDragDrop(wx.Drag_AllowMove)
+        DropSource(self, srcNode.GetXmlString()).DoDragDrop(wx.Drag_AllowMove)
 
-        dropTarget.srcCls = eg.EventItem
-        dropTarget.srcNode = None
+        dropTarget.srcNode = eg.EventItem
         dropTarget.isExternalDrag = True
         self.ClearInsertMark()
         if dropTarget.lastHighlighted is not None:
