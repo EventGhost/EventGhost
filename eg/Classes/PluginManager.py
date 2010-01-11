@@ -16,7 +16,6 @@
 
 import os
 from os.path import isdir, join, exists
-
 import eg
 
 
@@ -31,12 +30,44 @@ class LoadErrorPlugin(eg.PluginBase):
 
 
 class NonexistentPlugin(eg.PluginBase):
+    class text:
+        pass
 
     def __init__(self):
         raise self.Exceptions.PluginNotFound
 
     def __start__(self, *dummyArgs):
         raise self.Exceptions.PluginNotFound
+
+    def GetLabel(self, *dummyArgs):
+        return '<Unknown Plugin "%s">' % self.name
+
+
+
+class ActionsMapping(object):
+
+    def __init__(self, info):
+        self.info = info
+        self.actions = {}
+
+    def __getitem__(self, name):
+        if name in self.actions:
+            return self.actions[name]
+        class Action(eg.ActionBase):
+            pass
+        Action.__name__ = name
+        action = self.info.actionGroup.AddAction(Action, hidden=True)
+        self.actions[name] = action
+        return action
+
+
+    def __setitem__(self, name, value):
+        self.actions[name] = value
+
+
+
+class NonexistentPluginInfo(eg.PluginInstanceInfo):
+    pass
 
 
 
@@ -94,13 +125,18 @@ class PluginManager:
         moduleInfo = self.GetPluginInfo(ident)
         if moduleInfo is None:
             # we don't have such plugin
-            clsInfo = eg.PluginInstanceInfo()
+            clsInfo = NonexistentPluginInfo()
             clsInfo.guid = ident
-            clsInfo.name = ident + " not found"
-            clsInfo.pluginName = ident
-            clsInfo.pluginCls = NonexistentPlugin
+            clsInfo.name = evalName
+            clsInfo.pluginName = evalName
+            class Plugin(NonexistentPlugin):
+                pass
+            Plugin.__name__ = evalName
+            clsInfo.pluginCls = Plugin
         else:
             clsInfo = eg.PluginInstanceInfo.FromModuleInfo(moduleInfo)
         info = clsInfo.CreateInstance(args, evalName, treeItem)
+        if moduleInfo is None:
+            info.actions = ActionsMapping(info)
         return info
 
