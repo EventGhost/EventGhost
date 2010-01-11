@@ -43,11 +43,21 @@ PRODUCT_ID = 57365
 TIME_OUT = 250
 
 class FS20PCS(eg.PluginClass):
+    
+    def AddNewAction(self, root, internalName, baseClass, classFuncCode, externalName, classDescription, classLabelFormat):
+        class tmpAction(baseClass):
+            name = externalName
+            description = classDescription
+            labelFormat = classLabelFormat
+            funcCode = classFuncCode
+        tmpAction.__name__ = internalName
+        root.AddAction(tmpAction)
+    
     def __init__(self):
         self.version = None
         self.thread = None
         
-        self.AddAction(Off)
+        self.AddNewAction(self, "Off", SimpleAction, 0x00, "Off", "Turns device off (dim to 0%)", "Turn off {0}")
         self.AddAction(On)
         self.AddAction(PreviousValue)
         self.AddAction(Toggle)
