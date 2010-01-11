@@ -58,37 +58,41 @@ class FS20PCS(eg.PluginClass):
         self.thread = None
         
         self.AddNewAction(self, "Off", SimpleAction, 0x00, "Off", "Turns device off (dim to 0%)", "Turn off {0}")
-        self.AddAction(On)
-        self.AddAction(PreviousValue)
-        self.AddAction(Toggle)
-        self.AddAction(DimDown)
-        self.AddAction(DimUp)
+        self.AddNewAction(self, "On", SimpleAction, 0x10, "On", "Turns device on (dim to 100%)", "Turn on {0}")
+        self.AddNewAction(self, "PreviousValue", SimpleAction, 0x11, "On with previous value", "Turns device on with previous value", "Turn on {0} with previous value")
+        self.AddNewAction(self, "Toggle", SimpleAction, 0x12, "Toggle", "Toggles between off and previous value", "Toggle {0} between off and previous value")
+        self.AddNewAction(self, "DimDown", RepeatAction, 0x14, "Dim down", "Dims down", "Dim down {0}") 
+        self.AddNewAction(self, "DimUp", RepeatAction, 0x13, "Dim up", "Dims up", "Dim up {0}")
         self.AddAction(Dim)
-        self.AddAction(DimAlternating)
+        self.AddNewAction(self, "DimAlternating", RepeatAction, 0x15, "Alternating dim", "Dims up one level until maximum, then dim down", "Alternating dim {0}") 
         
         group = self.AddGroup("Timed actions", "Allows controlling FS20 devices with timed parameter.")
+        self.AddNewAction(group, "OffTimer", TimerValueAction, 0x20, "Off in timer value", "Turns device off (dim to 0%) in timer value", "Turn off {0} in {1}")
+        self.AddNewAction(group, "OnTimer", TimerValueAction, 0x30, "On in timer value", "Turns device on (dim to 100%) in timer value", "Turn on {0} in {1}")
+        self.AddNewAction(group, "PreviousValueTimer", TimerValueAction, 0x31, "On with previous value in timer value", "Turns device on with previous value in timer value", "Turn on {0} with previous value in {1}")
+        self.AddNewAction(group, "ToggleTimer", TimerValueAction, 0x32, "Toggle in timer value", "Toggles between off and previous value in timer value", "Toggle {0} between off and previous value in {1}")
         group.AddAction(DimTimer)
-        group.AddAction(OffPreviousValueInternal)
-        group.AddAction(OffPreviousValueTimer)
-        group.AddAction(OnOffInternal)
-        group.AddAction(OnOffTimer)
-        group.AddAction(PreviousValueOffInternal)
-        group.AddAction(PreviousValueOffTimer)
-        group.AddAction(OnPreviousStateInternal)
-        group.AddAction(OnPreviousStateTimer)
-        group.AddAction(PreviousValuePreviousStateInternal)
-        group.AddAction(PreviousValuePreviousStateTimer)
-        group.AddAction(DimUpOffTimer)
-        group.AddAction(DimDownOffTimer)
-        group.AddAction(DimAlternatingOffTimer)
+        self.AddNewAction(group, "OffPreviousValueInternal", SimpleAction, 0x18, "Off for internal timer value, previous value afterwards", "Turns off (dim to 0%) device for internal timer value and return to previous value afterwards", "Turn off {0} for internal timer value and return to previous value afterwards")
+        self.AddNewAction(group, "OffPreviousValueTimer", TimerValueAction, 0x38, "Off for timer value, previous value afterwards", "Turns off (dim to 0%) device for timer value and return to previous value afterwards", "Turn off {0} for timer value and return to previous value afterwards")
+        self.AddNewAction(group, "OnOffInternal", SimpleAction, 0x19, "On (dim to 100%) for internal timer value, off afterwards", "Turns on (device dim to 100%) for internal timer value and turns it off afterwards", "Turn on {0} for internal timer value and turn off afterwards")
+        self.AddNewAction(group, "OnOffTimer", TimerValueAction, 0x39, "On (dim to 100%) for timer value, off afterwards", "Turns on (device dim to 100%) for timer value and turns it off afterwards", "Turn on {0} for timer value and turn off afterwards")
+        self.AddNewAction(group, "PreviousValueOffInternal", SimpleAction, 0x1a, "Previous value for internal timer value, off afterwards", "Turns on device with previous value for internal timer value and turns it off afterwards", "Turn on {0} with previous value for internal timer value and turn off afterwards")
+        self.AddNewAction(group, "PreviousValueOffTimer", TimerValueAction, 0x3a, "Previous value for timer value, off afterwards", "Turns on device with previous value for timer value and turns it off afterwards", "Turn on {0} with previous value for timer value and turn off afterwards")
+        self.AddNewAction(group, "OnPreviousStateInternal", SimpleAction, 0x1e, "On for internal timer value, previous state afterwards", "Turns on (dim to 100%) device for internal timer value and return to previous state afterwards", "Turn on {0} for internal timer value and return to previous state afterwards")
+        self.AddNewAction(group, "OnPreviousStateTimer", TimerValueAction, 0x3e, "On for timer value, previous state afterwards", "Turns on (dim to 100%) device for timer value and return to previous state afterwards", "Turn on {0} for timer value and return to previous state afterwards")
+        self.AddNewAction(group, "PreviousValuePreviousStateInternal", SimpleAction, 0x1f, "Previous value for internal timer value, previous state afterwards", "Turns on device with previous value for internal timer value and return to previous state afterwards", "Turn on {0} with previous value for internal timer value and return to previous state afterwards")
+        self.AddNewAction(group, "PreviousValuePreviousStateTimer", TimerValueAction, 0x3f, "Previous value for timer value, previous state afterwards", "Turns on device with previous value for timer value and return to previous state afterwards", "Turn on {0} with previous value for timer value and return to previous state afterwards")
+        self.AddNewAction(group, "DimUpOffTimer", RepeatTimerValueAction, 0x33, "Dim up and turn off after timer value", "Dims up and turns off after timer value", "Dim up {0} and turn off after {1}")
+        self.AddNewAction(group, "DimDownOffTimer", RepeatTimerValueAction, 0x34, "Dim down and turn off after timer value", "Dims down and turns off after timer value", "Dim down {0} and turn off after {1}")
+        self.AddNewAction(group, "DimAlternatingOffTimer", RepeatTimerValueAction, 0x35, "Alternating dim and turn off after timer value", "Dims up one level until maximum, then dim down and turns off after timer value", "Alternating dim {0} and turn off after {1}")
         
         group = self.AddGroup("Programming", "Allows programming of FS20 devices. You should prefer timed actions and only use these for initial setup.")
-        group.AddAction(ProgramTimer)
-        group.AddAction(ProgramCode)
-        group.AddAction(ProgramFactoryDefaults)
-        group.AddAction(ProgramInternalTimer)
-        group.AddAction(ProgramDimUpRampTimer)
-        group.AddAction(ProgramDimDownRampTimer)
+        self.AddNewAction(group, "ProgramTimer", SimpleAction, 0x16, "Start/stop programming of internal timer", "Starts respectively stop programming of the internal timer", "Start/stop programming of internal timer for {0}")
+        self.AddNewAction(group, "ProgramCode", SimpleAction, 0x17, "Program address", "Learn address. This is a dummy action which does nothing, but can be used for address learning procedure on some devices.", "Learn address {0}")
+        self.AddNewAction(group, "ProgramFactoryDefaults", SimpleAction, 0x1b, "Reset device to factory defaults", "Reset device to factory defaults", "Reset {0} to factory defaults")
+        self.AddNewAction(group, "ProgramInternalTimer", TimerValueAction, 0x36, "Program internal timer value", "Program internal timer value", "Program internal timer value for {0} to {1}")
+        self.AddNewAction(group, "ProgramDimUpRampTimer", TimerValueAction, 0x3c, "Program dim up ramp timer value", "Program dim up ramp timer value", "Program dim up ramp timer value for {0} to {1}")
+        self.AddNewAction(group, "ProgramDimDownRampTimer", TimerValueAction, 0x3d, "Program dim down ramp timer value", "Program dim down ramp timer value", "Program dim down ramp timer value for {0} to {1}")
 
     def RawCallback(self, data):
         if eg.debugLevel:
@@ -416,186 +420,6 @@ class TimerValueAction(ActionBase):
             address = GetAddressFromString(maskedCtrl.GetPlainValue())
             ActionBase.defaultAddress = address
             panel.SetResult(address, GetTimeCodeByIndex(timerCtrl.GetValue()))
-
-class Off(SimpleAction):
-    funcCode = 0x00
-    name = "Off"
-    description = "Turns device off (dim to 0%)"
-    labelFormat = "Turn off {0}"
-    
-class On(SimpleAction):
-    funcCode = 0x10
-    name = "On"
-    description = "Turns device on (dim to 100%)"
-    labelFormat = "Turn on {0}"
-
-class PreviousValue(SimpleAction):
-    funcCode = 0x11
-    name = "On with previous value"
-    description = "Turns device on with previous value"
-    labelFormat = "Turn on {0} with previous value"
-
-class Toggle(SimpleAction):
-    funcCode = 0x12
-    name = "Toggle"
-    description = "Toggles between off and previous value"
-    labelFormat = "Toggle {0} between off and previous value"
-
-class DimUp(RepeatAction):
-    funcCode = 0x13
-    name = "Dim up"
-    description = "Dims up"
-    labelFormat = "Dim up {0}"
-
-class DimDown(RepeatAction):
-    funcCode = 0x14
-    name = "Dim down"
-    description = "Dims down"
-    labelFormat = "Dim down {0}"
-
-class DimAlternating(RepeatAction):
-    funcCode = 0x15
-    name = "Alternating dim"
-    description = "Dims up one level until maximum, then dim down"
-    labelFormat = "Alternating dim {0}"
-    
-class DimUpOffTimer(RepeatTimerValueAction):
-    funcCode = 0x33
-    name = "Dim up and turn off after timer value"
-    description = "Dims up and turns off after timer value"
-    labelFormat = "Dim up {0} and turn off after {1}"
-
-class DimDownOffTimer(RepeatTimerValueAction):
-    funcCode = 0x34
-    name = "Dim down and turn off after timer value"
-    description = "Dims down and turns off after timer value"
-    labelFormat = "Dim down {0} and turn off after {1}"
-
-class DimAlternatingOffTimer(RepeatTimerValueAction):
-    funcCode = 0x35
-    name = "Alternating dim and turn off after timer value"
-    description = "Dims up one level until maximum, then dim down and turns off after timer value"
-    labelFormat = "Alternating dim {0} and turn off after {1}"
-
-class ProgramTimer(SimpleAction):
-    funcCode = 0x16
-    name = "Start/stop programming of internal timer"
-    description = "Starts respectively stop programming of the internal timer"
-    labelFormat = "Start/stop programming of internal timer for {0}"
-
-class ProgramCode(SimpleAction):
-    funcCode = 0x17
-    name = "Program address"
-    description = "Learn address. This is a dummy action which does nothing, but can be used for address learning procedure on some devices."
-    labelFormat = "Learn address {0}"
-
-class OffPreviousValueInternal(SimpleAction):
-    funcCode = 0x18
-    name = "Off for internal timer value, previous value afterwards"
-    description = "Turns off (dim to 0%) device for internal timer value and return to previous value afterwards"
-    labelFormat = "Turn off {0} for internal timer value and return to previous value afterwards"
-
-class OnOffInternal(SimpleAction):
-    funcCode = 0x19
-    name = "On (dim to 100%) for internal timer value, off afterwards"
-    description = "Turns on (device dim to 100%) for internal timer value and turns it off afterwards"
-    labelFormat = "Turn on {0} for internal timer value and turn off afterwards"
-
-class PreviousValueOffInternal(SimpleAction):
-    funcCode = 0x1a
-    name = "Previous value for internal timer value, off afterwards"
-    description = "Turns on device with previous value for internal timer value and turns it off afterwards"
-    labelFormat = "Turn on {0} with previous value for internal timer value and turn off afterwards"
-
-class ProgramFactoryDefaults(SimpleAction):
-    funcCode = 0x1b
-    name = "Reset device to factory defaults"
-    description = "Reset device to factory defaults"
-    labelFormat = "Reset {0} to factory defaults"
-
-class OnPreviousStateInternal(SimpleAction):
-    funcCode = 0x1e
-    name = "On for internal timer value, previous state afterwards"
-    description = "Turns on (dim to 100%) device for internal timer value and return to previous state afterwards"
-    labelFormat = "Turn on {0} for internal timer value and return to previous state afterwards"
-
-class PreviousValuePreviousStateInternal(SimpleAction):
-    funcCode = 0x1f
-    name = "Previous value for internal timer value, previous state afterwards"
-    description = "Turns on device with previous value for internal timer value and return to previous state afterwards"
-    labelFormat = "Turn on {0} with previous value for internal timer value and return to previous state afterwards"
-
-class ProgramInternalTimer(TimerValueAction):
-    funcCode = 0x36
-    name = "Program internal timer value"
-    description = "Program internal timer value"
-    labelFormat = "Program internal timer value for {0} to {1}"
-
-class ProgramDimUpRampTimer(TimerValueAction):
-    funcCode = 0x3c
-    name = "Program dim up ramp timer value"
-    description = "Program dim up ramp timer value"
-    labelFormat = "Program dim up ramp timer value for {0} to {1}"
-
-class ProgramDimDownRampTimer(TimerValueAction):
-    funcCode = 0x3d
-    name = "Program dim down ramp timer value"
-    description = "Program dim down ramp timer value"
-    labelFormat = "Program dim down ramp timer value for {0} to {1}"
-
-class OffTimer(TimerValueAction):
-    funcCode = 0x20
-    name = "Off in timer value"
-    description = "Turns device off (dim to 0%) in timer value"
-    labelFormat = "Turn off {0} in {1}"
-    
-class OnTimer(TimerValueAction):
-    funcCode = 0x30
-    name = "On in timer value"
-    description = "Turns device on (dim to 100%) in timer value"
-    labelFormat = "Turn on {0} in {1}"
-
-class PreviousValueTimer(TimerValueAction):
-    funcCode = 0x31
-    name = "On with previous value in timer value"
-    description = "Turns device on with previous value in timer value"
-    labelFormat = "Turn on {0} with previous value in {1}"
-
-class ToggleTimer(TimerValueAction):
-    funcCode = 0x32
-    name = "Toggle in timer value"
-    description = "Toggles between off and previous value in timer value"
-    labelFormat = "Toggle {0} between off and previous value in {1}"
-    
-class OffPreviousValueTimer(TimerValueAction):
-    funcCode = 0x38
-    name = "Off for timer value, previous value afterwards"
-    description = "Turns off (dim to 0%) device for timer value and return to previous value afterwards"
-    labelFormat = "Turn off {0} for timer value and return to previous value afterwards"
-
-class OnOffTimer(TimerValueAction):
-    funcCode = 0x39
-    name = "On (dim to 100%) for timer value, off afterwards"
-    description = "Turns on (device dim to 100%) for timer value and turns it off afterwards"
-    labelFormat = "Turn on {0} for timer value and turn off afterwards"
-
-class PreviousValueOffTimer(TimerValueAction):
-    funcCode = 0x3a
-    name = "Previous value for timer value, off afterwards"
-    description = "Turns on device with previous value for timer value and turns it off afterwards"
-    labelFormat = "Turn on {0} with previous value for timer value and turn off afterwards"
-
-class OnPreviousStateTimer(TimerValueAction):
-    funcCode = 0x3e
-    name = "On for timer value, previous state afterwards"
-    description = "Turns on (dim to 100%) device for timer value and return to previous state afterwards"
-    labelFormat = "Turn on {0} for timer value and return to previous state afterwards"
-
-class PreviousValuePreviousStateTimer(TimerValueAction):
-    funcCode = 0x3f
-    name = "Previous value for timer value, previous state afterwards"
-    description = "Turns on device with previous value for timer value and return to previous state afterwards"
-    labelFormat = "Turn on {0} with previous value for timer value and return to previous state afterwards" 
 
 class Dim(ActionBase):
     name = "Dim"
