@@ -130,7 +130,7 @@ class ActionBase(object):
         panel = eg.ConfigPanel()
         panel.dialog.buttonRow.applyButton.Enable(False)
         label = panel.StaticText(
-            eg.text.General.noOptionsPlugin,
+            eg.text.General.noOptionsAction,
             style=wx.ALIGN_CENTRE|wx.ST_NO_AUTORESIZE
         )
         panel.sizer.Add((0, 0), 1, wx.EXPAND)
