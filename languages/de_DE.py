@@ -632,6 +632,20 @@ class Plugin:
             name = u"Rechte Maustaste Doppelklick"
         class ToggleLeftButton:
             name = u"Linke Maustaste umschalten"
+    class FS20PCS:
+        address = u"Adresse:"
+        level = u"Stufe:"
+        repeat = u"Wiederholungen:"
+        timedActionName = u"Zeitgesteuerte Aktionen"
+        timerValue = u"Timerzeit:"
+        class Dim:
+            name = u"Dimmen"
+            description = u"Dimmt sofort auf eine Helligkeitsstufe"
+            labelFormat = u"Dimme {0} auf {1:.02f}%"
+        class DimDown:
+            name = u"Herunterdimmen"
+            description = u"Eine Helligkeitsstufe dunkler dimmen"
+            labelFormat = u"Dimme {0} eine Helligkeitsstufe dunkler"
     class Joystick:
         name = u"Joystick"
         description = u"Dieses Plugin erlaubt es Joysticks und Gamepads als Ereignisquelle zu verwenden."
