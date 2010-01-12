@@ -87,9 +87,12 @@ class LanguageEditor(wx.Frame):
         tree.SetPyData(self.rootId, ["", None, None])
 
         eg.Init.ImportAll()
-        for plugin in os.listdir(eg.corePluginDir):
-            if not plugin.startswith("."):
-                eg.pluginManager.OpenPlugin(plugin, plugin, ()).Close()
+        eg.actionThread.Start()
+        def LoadPlugins():
+            for plugin in os.listdir(eg.corePluginDir):
+                if not plugin.startswith("."):
+                    eg.pluginManager.OpenPlugin(plugin, plugin, ()).Close()
+        eg.actionThread.CallWait(LoadPlugins)
 
         rightPanel = wx.Panel(splitter)
         self.disabledColour = rightPanel.GetBackgroundColour()
@@ -339,6 +342,7 @@ class LanguageEditor(wx.Frame):
         Config.size = self.GetSizeTuple()
         Config.splitPosition = self.tree.GetSizeTuple()[0]
         eg.config.Save()
+        eg.actionThread.Stop()
         wx.GetApp().ExitMainLoop()
 
 
