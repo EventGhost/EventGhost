@@ -17,6 +17,7 @@
 import wx
 from wx.lib.filebrowsebutton import FileBrowseButton as _FileBrowseButton
 import types
+import eg
 from eg.Icons import GetInternalBitmap
 
 
@@ -26,51 +27,47 @@ class FileBrowseButton(_FileBrowseButton):
     standard file dialog to select a file.
     """
 
-def createDialog(self, parent, id, pos, size, style, name=""):
-    """Setup the graphic representation of the dialog"""
-    wx.Panel.__init__ (self, parent, id, pos, size, style, name)
-    self.SetMinSize(size) # play nice with sizers
+    def createDialog(self, parent, id, pos, size, style, name=""):
+        """Setup the graphic representation of the dialog"""
+        wx.Panel.__init__ (self, parent, id, pos, size, style, name)
+        self.SetMinSize(size) # play nice with sizers
 
-    box = wx.BoxSizer(wx.HORIZONTAL)
+        box = wx.BoxSizer(wx.HORIZONTAL)
 
-    self.textControl = self.createTextControl()
-    box.Add(self.textControl, 1, wx.CENTER, 5)
+        self.textControl = self.createTextControl()
+        box.Add(self.textControl, 1, wx.CENTER, 5)
 
-    self.browseButton = self.createBrowseButton()
-    box.Add(self.browseButton, 0, wx.LEFT|wx.CENTER, 5)
+        self.browseButton = self.createBrowseButton()
+        box.Add(self.browseButton, 0, wx.LEFT|wx.CENTER, 5)
 
-    self.SetAutoLayout(True)
-    self.SetSizer(box)
-    self.Layout()
-    if type(size) == types.TupleType:
-        size = apply(wx.Size, size)
-    self.SetDimensions(-1, -1, size.width, size.height, wx.SIZE_USE_EXISTING)
-
-
-def createBrowseButton(self):
-    """Create the browse-button control"""
-    button = wx.BitmapButton(self, -1, GetInternalBitmap("searchFolder"))
-    width, height = button.GetSize()
-    button.SetMinSize((width + 8, height))
-    button.SetToolTipString(self.toolTip)
-    button.Bind(wx.EVT_BUTTON, self.OnBrowse)
-    return button
+        self.SetAutoLayout(True)
+        self.SetSizer(box)
+        self.Layout()
+        if type(size) == types.TupleType:
+            size = apply(wx.Size, size)
+        self.SetDimensions(
+            -1, -1, size.width, size.height, wx.SIZE_USE_EXISTING
+        )
 
 
-def OnChanged(self, evt):
-    if self.callCallback and self.changeCallback:
-        self.changeCallback(evt)
-    #ADDED:
-    evt.Skip()
+    def createBrowseButton(self):
+        """Create the browse-button control"""
+        button = wx.BitmapButton(self, -1, GetInternalBitmap("searchFolder"))
+        width, height = button.GetSize()
+        button.SetMinSize((width + 8, height))
+        button.SetToolTipString(self.toolTip)
+        button.Bind(wx.EVT_BUTTON, self.OnBrowse)
+        return button
 
 
-def Enable(self, enable=True):
-    self.textControl.Enable(enable)
-    return self.browseButton.Enable(enable)
+    def OnChanged(self, evt):
+        if self.callCallback and self.changeCallback:
+            self.changeCallback(evt)
+        #ADDED:
+        evt.Skip()
 
 
-_FileBrowseButton.createDialog = createDialog
-_FileBrowseButton.createBrowseButton = createBrowseButton
-_FileBrowseButton.OnChanged = OnChanged
-_FileBrowseButton.Enable = Enable
+    def Enable(self, enable=True):
+        self.textControl.Enable(enable)
+        return self.browseButton.Enable(enable)
 

@@ -14,16 +14,54 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# this import is needed first, because it applies
-# patches to wx.lib.filebrowsebutton
-import FileBrowseButton
-from wx.lib.filebrowsebutton import DirBrowseButton as _DirBrowseButton
+import wx
+import eg
 
 
-class DirBrowseButton(_DirBrowseButton):
+class DirBrowseButton(eg.FileBrowseButton):
     """
     A control to allow the user to type in a filename or browse with the
     standard file dialog to select a directory.
     """
-    pass
+
+    def __init__(
+        self,
+        parent,
+        id=-1,
+        pos = wx.DefaultPosition,
+        size = wx.DefaultSize,
+        style = wx.TAB_TRAVERSAL,
+        labelText = 'Select a directory:',
+        buttonText = 'Browse',
+        toolTip = 'Type directory name or browse to select',
+        dialogTitle = '',
+        startDirectory = '.',
+        changeCallback = None,
+        dialogClass = wx.DirDialog,
+        newDirectory = False,
+        name = 'dirBrowseButton'
+    ):
+        eg.FileBrowseButton.__init__(self, parent, id, pos, size, style,
+                                  labelText, buttonText, toolTip,
+                                  dialogTitle, startDirectory,
+                                  changeCallback = changeCallback,
+                                  name = name)
+        self.dialogClass = dialogClass
+        self.newDirectory = newDirectory
+
+
+    def OnBrowse(self, event=None):
+        style = 0
+
+        if not self.newDirectory:
+            style |= wx.DD_DIR_MUST_EXIST
+
+        dialog = self.dialogClass(self,
+                                  message = self.dialogTitle,
+                                  defaultPath = self.startDirectory,
+                                  style = style)
+
+        if dialog.ShowModal() == wx.ID_OK:
+            self.SetValue(dialog.GetPath())
+        dialog.Destroy()
 
