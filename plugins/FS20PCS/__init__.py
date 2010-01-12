@@ -48,6 +48,7 @@ class Text:
     timerValue = "Timer value:"
     repeat = "Repeat:"
     level = "Level:"
+    repeatSuffix = "{0} ({1} times)"
         
 class FS20PCS(eg.PluginClass):
     text = Text
@@ -280,7 +281,7 @@ class ActionBase(eg.ActionBase):
             validRequired=False,
         )
         maskedCtrl.SetValue(GetStringFromAddress(address))
-        panel.AddLine(Text.address, maskedCtrl)
+        panel.AddLine(self.plugin.text.address, maskedCtrl)
         return maskedCtrl
 
     def AddTimerControl(self, panel, timeCode):
@@ -300,7 +301,7 @@ class ActionBase(eg.ActionBase):
             levelCallback=TimerCallback
         )
         timerCtrl.SetMinSize((300, -1))
-        panel.AddLine(Text.timerValue, timerCtrl)
+        panel.AddLine(self.plugin.text.timerValue, timerCtrl)
         return timerCtrl
 
     def AddRepeatControl(self, panel, repeatCount):
@@ -315,7 +316,7 @@ class ActionBase(eg.ActionBase):
             size=(300,-1),
         )
         repeatCtrl.SetMinSize((300, -1))
-        panel.AddLine(Text.repeat, repeatCtrl)
+        panel.AddLine(self.plugin.text.repeat, repeatCtrl)
         return repeatCtrl
 
     def AddLevelControl(self, panel, level):
@@ -334,7 +335,7 @@ class ActionBase(eg.ActionBase):
             levelCallback=LevelCallback
         )
         levelCtrl.SetMinSize((300, -1))
-        panel.AddLine(Text.level, levelCtrl)
+        panel.AddLine(self.plugin.text.level, levelCtrl)
         return levelCtrl
 
 class SimpleAction(ActionBase):
@@ -368,7 +369,7 @@ class RepeatAction(ActionBase):
     def GetLabel(self, address, repeatCount):
         label = self.text.labelFormat.format(GetStringFromAddress(address, True))
         if repeatCount > 1:
-            label = label + " (" + str(repeatCount) + " times)"
+            label = self.plugin.text.repeatSuffix.format(label, repeatCount)
         return label
 
     def Configure(self, address = None, repeatCount = 1):
@@ -392,7 +393,7 @@ class RepeatTimerValueAction(ActionBase):
     def GetLabel(self, address, timeCode, repeatCount):
         label = self.text.labelFormat.format(GetStringFromAddress(address, True), FormatTimeValue(GetTimeValue(timeCode)))
         if repeatCount > 1:
-            label = label + " (" + str(repeatCount) + " times)"
+            label = self.plugin.text.repeatSuffix.format(label, repeatCount)
         return label
 
     def Configure(self, address = None, timeCode = 0, repeatCount = 1):
