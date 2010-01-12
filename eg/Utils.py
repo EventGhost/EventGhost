@@ -62,10 +62,9 @@ class Bunch(object):
 
 
 class NotificationHandler(object):
-    __slots__ = ["value", "listeners"]
+    __slots__ = ["listeners"]
 
-    def __init__(self, initialValue=None):
-        self.value = initialValue
+    def __init__(self):
         self.listeners = []
 
 
@@ -400,6 +399,34 @@ def GetFirstParagraph(text):
                 break
             result += " " + line
         return ' '.join(result.split())
+
+
+def SplitFirstParagraph(text):
+    """
+    Split the first paragraph of a description string.
+
+    The string can be encoded in HTML or reStructuredText.
+    The paragraph is returned as HTML.
+    """
+    text = text.lstrip()
+    pos = text.find("<rst>")
+    if pos != -1:
+        text = text[pos+5:]
+        text = DecodeReST(text)
+        start = text.find("<p>")
+        end = text.find("</p>")
+        return text[start+3:end].replace("\n", " "), text[end+4:].replace("\n", " ")
+    else:
+        result = ""
+        remaining = ""
+        firstLine = []
+        lines = text.splitlines()
+        for i, line in enumerate(lines):
+            if line.strip() == "":
+                remaining = " ".join(lines[i:])
+                break
+            result += " " + line
+        return ' '.join(result.split()), remaining
 
 
 def ExecFile(filename, globals=None, locals=None):

@@ -110,8 +110,8 @@ class MainFrame(wx.Frame):
         self.popupMenu = self.CreateTreePopupMenu()
 
         eg.Bind("DocumentFileChange", self.OnDocumentFileChange)
-        isDirty = eg.Bind("DocumentChange", self.OnDocumentChange)
-        self.toolBar.EnableTool(wx.ID_SAVE, isDirty)
+        eg.Bind("DocumentChange", self.OnDocumentChange)
+        self.toolBar.EnableTool(wx.ID_SAVE, document.isDirty)
 
         iconBundle = wx.IconBundle()
         iconBundle.AddIcon(eg.taskBarIcon.stateIcons[0])
@@ -134,11 +134,11 @@ class MainFrame(wx.Frame):
         self.SetSize(Config.size)
         eg.Bind("DialogCreate", self.OnAddDialog)
         eg.Bind("DialogDestroy", self.OnRemoveDialog)
-        undoState = eg.Bind("UndoChange", self.OnUndoChange)
-        self.OnUndoChange(undoState)
-        selection = eg.Bind("SelectionChange", self.OnSelectionChange)
-        if selection is not None:
-            self.OnSelectionChange(selection)
+        eg.Bind("UndoChange", self.OnUndoChange)
+        self.OnUndoChange(document.undoState)
+        eg.Bind("SelectionChange", self.OnSelectionChange)
+        if document.selection is not None:
+            self.OnSelectionChange(document.selection)
         # tell FrameManager to manage this frame
 
         if (
@@ -169,8 +169,9 @@ class MainFrame(wx.Frame):
         auiManager.Update()
         auiManager.GetPane("logger").MinSize((100, 100))\
             .Caption(" " + Text.Logger.caption)
-        lastFocus = eg.Bind("FocusChange", self.OnFocusChange)
-        self.OnFocusChange(lastFocus)
+        eg.Bind("FocusChange", self.OnFocusChange)
+        #lastFocus = eg.Bind("FocusChange", self.OnFocusChange)
+        #self.OnFocusChange(lastFocus)
         eg.Bind("ClipboardChange", self.OnClipboardChange)
 
         # create an accelerator for the "Log only assigned and activated

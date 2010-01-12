@@ -160,7 +160,6 @@ def Bind(notification, listener):
     else:
         notificationHandler = eg.notificationHandlers[notification]
     notificationHandler.listeners.append(listener)
-    return notificationHandler.value
 
 
 def Unbind(notification, listener):
@@ -169,10 +168,9 @@ def Unbind(notification, listener):
 
 def Notify(notification, value=None):
     if notification not in eg.notificationHandlers:
-        eg.notificationHandlers[notification] = eg.NotificationHandler(value)
+        eg.notificationHandlers[notification] = eg.NotificationHandler()
         return
     notificationHandler = eg.notificationHandlers[notification]
-    notificationHandler.value = value
     for listener in notificationHandler.listeners:
         listener(value)
 

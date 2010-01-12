@@ -81,11 +81,12 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
 
     def FinishSetup(self):
         self.shown = True
-        spaceSizer = wx.BoxSizer(wx.VERTICAL)
-        spaceSizer.Add(self.sizer, 1, wx.EXPAND|wx.ALL, 5)
         if self.lines:
             self.AddGrid(self.lines, *self.sizerProps)
-
+        spaceSizer = wx.BoxSizer(wx.HORIZONTAL)
+        spaceSizer.Add((2, 2))
+        spaceSizer.Add(self.sizer, 1, wx.EXPAND|wx.TOP|wx.BOTTOM, 3)
+        spaceSizer.Add((4, 4))
         self.SetSizerAndFit(spaceSizer)
 
         #self.dialog.FinishSetup()

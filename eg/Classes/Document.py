@@ -58,12 +58,13 @@ class Document(object):
         self.RootItem = MakeCls("RootItem")
         self.AutostartItem = MakeCls("AutostartItem")
 
+        self.selection = None
         self.stockUndo = []
         self.stockRedo = []
-        self.lastUndoId = 0
+        self.undoId = 0
         self.undoIdOnSave = 0
-        eg.Notify("UndoChange", (False, False, "", ""))
-        eg.Notify("DocumentChange", False)
+        self.undoState = (False, False, "", "")
+        self.isDirty = False
         self.filePath = None
         self.root = None
         self.firstVisibleItem = None
@@ -77,6 +78,16 @@ class Document(object):
         eg.Notify("DocumentFileChange", filePath)
 
 
+    def SetIsDirty(self, flag=True):
+        self.isDirty = flag
+        eg.Notify("DocumentChange", flag)
+        
+    
+    def SetUndoState(self, undoState):
+        self.undoState = undoState
+        eg.Notify("UndoChange", undoState)
+        
+    
     def GetTitle(self):
         if self.filePath is None:
             filename = eg.text.General.unnamedFile
@@ -90,9 +101,9 @@ class Document(object):
     def ResetUndoState(self):
         del self.stockUndo[:]
         del self.stockRedo[:]
-        self.undoState = 0
-        self.undoStateOnSave = 0
-        eg.Notify("UndoChange", (False, False, "", ""))
+        self.undoId = 0
+        self.undoIdOnSave = 0
+        self.SetUndoState((False, False, "", ""))
 
 
     @eg.LogIt
@@ -111,7 +122,7 @@ class Document(object):
         self.autostartMacro = self.AutostartItem(root, node)
         root.childs.append(self.autostartMacro)
         eg.TreeLink.StopLoad()
-        eg.Notify("DocumentChange", False)
+        self.SetIsDirty(False)
         wx.CallAfter(eg.Notify, "DocumentNewRoot", root)
         return root
 
@@ -136,7 +147,7 @@ class Document(object):
         self.root = root
         self.selection = root
         eg.TreeLink.StopLoad()
-        eg.Notify("DocumentChange", False)
+        self.SetIsDirty(False)
         self.AfterLoad()
         wx.CallAfter(eg.Notify, "DocumentNewRoot", root)
         return root
@@ -176,8 +187,8 @@ class Document(object):
             except:
                 pass
             os.rename(tmpPath, filePath)
-            eg.Notify("DocumentChange", False)
-            self.undoStateOnSave = self.undoState
+            self.SetIsDirty(False)
+            self.undoIdOnSave = self.undoId
             success = True
         except:
             eg.PrintTraceback("Error while saving file")
@@ -208,10 +219,10 @@ class Document(object):
         if len(stockUndo) >= 20:
             del stockUndo[0]
         stockUndo.append(handler)
-        self.undoState += 1
+        self.undoId += 1
         del self.stockRedo[:]
-        eg.Notify("DocumentChange", True)
-        eg.Notify("UndoChange", (True, False, ": " + handler.name, ""))
+        self.SetIsDirty()
+        self.SetUndoState((True, False, ": " + handler.name, ""))
 
 
     @eg.AssertInMainThread
@@ -220,8 +231,8 @@ class Document(object):
             return
         handler = self.stockUndo.pop()
         eg.actionThread.Func(handler.Undo)()
-        self.undoState -= 1
-        eg.Notify("DocumentChange", self.undoState != self.undoStateOnSave)
+        self.undoId -= 1
+        self.SetIsDirty(self.undoId != self.undoIdOnSave)
         self.stockRedo.append(handler)
         if len(self.stockUndo):
             undoName = ": " + self.stockUndo[-1].name
@@ -229,7 +240,7 @@ class Document(object):
         else:
             undoName = ""
             hasUndo = False
-        eg.Notify("UndoChange", (hasUndo, True, undoName, ": " + handler.name))
+        self.SetUndoState((hasUndo, True, undoName, ": " + handler.name))
 
 
     @eg.AssertInMainThread
@@ -239,8 +250,8 @@ class Document(object):
             return
         handler = self.stockRedo.pop()
         eg.actionThread.Func(handler.Redo)()
-        self.undoState += 1
-        eg.Notify("DocumentChange", self.undoState != self.undoStateOnSave)
+        self.undoId += 1
+        self.SetIsDirty(self.undoId != self.undoIdOnSave)
         self.stockUndo.append(handler)
         if len(self.stockRedo):
             redoName = ": " + self.stockRedo[-1].name
@@ -248,7 +259,7 @@ class Document(object):
         else:
             redoName = ""
             hasRedo = False
-        eg.Notify("UndoChange", (True, hasRedo, ": " + handler.name, redoName))
+        self.SetUndoState((True, hasRedo, ": " + handler.name, redoName))
 
 
     @eg.AssertInActionThread
@@ -292,10 +303,6 @@ class Document(object):
             wx.CallLater(100, self.HideFrame)
 
 
-    def IsDirty(self):
-        return eg.notificationHandlers["DocumentChange"].value
-
-
     @eg.LogItWithReturn
     def CheckFileNeedsSave(self):
         """
@@ -307,7 +314,7 @@ class Document(object):
                  wx.ID_NO     if file was not saved
                  wx.ID_CANCEL if user canceled possible save
         """
-        if not self.IsDirty():
+        if not self.isDirty:
             return wx.ID_OK
         dialog = SaveChangesDialog(self.frame)
         result = dialog.ShowModal()

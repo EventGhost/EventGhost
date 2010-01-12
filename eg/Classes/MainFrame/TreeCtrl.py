@@ -383,9 +383,9 @@ class TreeCtrl(wx.TreeCtrl):
         eg.Bind("NodeSelected", self.OnNodeSelected)
         eg.Bind("NodeMoveBegin", self.OnNodeMoveBegin)
         eg.Bind("NodeMoveEnd", self.OnNodeMoveEnd)
-        root = eg.Bind("DocumentNewRoot", self.OnNewRoot)
-        if root:
-            self.OnNewRoot(root)
+        eg.Bind("DocumentNewRoot", self.OnNewRoot)
+        if document.root:
+            self.OnNewRoot(document.root)
 
 
     @eg.AssertInMainThread

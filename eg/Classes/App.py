@@ -82,7 +82,7 @@ class App(wx.App):
             return
         if not self.firstQuery:
             return
-        if eg.document.IsDirty():
+        if eg.document.isDirty:
             self.firstQuery = False
             self.shouldVeto = True
             event.Veto(True)

@@ -18,7 +18,6 @@ import eg
 import wx
 import wx.html
 import re
-from eg.Utils import GetFirstParagraph
 
 REPLACE_BR_TAG = re.compile('<br[ \/]*>')
 REMOVE_HTML_PATTERN = re.compile('<([^!>]([^>]|\n)*)>')
@@ -29,14 +28,9 @@ class HeaderBox(wx.PyWindow):
     The top description box of every tree item configuration dialog.
     """
 
-    def __init__(self, parent, item):
-        name = item.GetTypeName()
-        description = item.GetDescription().strip()
-        text = GetFirstParagraph(description)
-
+    def __init__(self, parent, name="", text="", icon=None):
         text = REPLACE_BR_TAG.sub('\n', text)
         text = REMOVE_HTML_PATTERN.sub('', text).strip()
-#        hasAdditionalHelp = (description != text)
         if text == name:
             text = ""
         self.parent = parent
@@ -49,8 +43,6 @@ class HeaderBox(wx.PyWindow):
         font = wx.Font(8, wx.SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD )
         nameBox.SetFont(font)
 
-#        if hasAdditionalHelp:
-#            text += ' <a href="ShowMoreHelp">%s</a>' % eg.text.General.moreTag
         self.text = '<html><body bgcolor="%s" text="%s">%s</body></html>' % (
             self.GetBackgroundColour().GetAsString(wx.C2S_HTML_SYNTAX),
             self.GetForegroundColour().GetAsString(wx.C2S_HTML_SYNTAX),
@@ -63,7 +55,7 @@ class HeaderBox(wx.PyWindow):
         self.descBox = descBox
 
         staticBitmap = wx.StaticBitmap(self)
-        staticBitmap.SetIcon(item.icon.GetWxIcon())
+        staticBitmap.SetIcon(icon.GetWxIcon())
 
         mainSizer = eg.HBoxSizer(
             ((4, 4)),
@@ -98,7 +90,6 @@ class HeaderBox(wx.PyWindow):
 
     def OnLinkClicked(self, event):
         if event.GetLinkInfo().GetHref() == "ShowMoreHelp":
-            #self.parent.configureItem.ShowHelp(self.GetParent())
             self.parent.configureItem.ShowHelp(eg.document.frame)
         else:
             event.Skip()

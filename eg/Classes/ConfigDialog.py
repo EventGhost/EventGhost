@@ -14,8 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import eg
 import wx
+import eg
+from eg.Utils import SplitFirstParagraph
 
 
 class ConfigDialog(eg.TaskletDialog):
@@ -27,7 +28,11 @@ class ConfigDialog(eg.TaskletDialog):
         self.showLine = showLine
         self.resizable = resizable
         addTestButton = False
-        treeItem= self.treeItem
+        treeItem = self.treeItem
+        name = treeItem.GetTypeName()
+        firstParagraph, self.description = SplitFirstParagraph(
+            treeItem.GetDescription()
+        )
         size = (450, 300)
         if isinstance(treeItem, eg.PluginItem):
             title = eg.text.General.settingsPluginCaption
@@ -65,15 +70,15 @@ class ConfigDialog(eg.TaskletDialog):
 
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer = wx.BoxSizer(wx.VERTICAL)
-        self.headerBox = eg.HeaderBox(self, treeItem)
+        self.headerBox = eg.HeaderBox(
+            self, name, firstParagraph, treeItem.icon
+        )
         mainSizer.SetMinSize(size)
-        flags = wx.EXPAND|wx.ALL|wx.ALIGN_CENTER#|wx.ALIGN_CENTER_VERTICAL
         mainSizer.AddMany(
             (
                 (self.headerBox, 0, wx.EXPAND, 0),
                 (wx.StaticLine(self), 0, wx.EXPAND|wx.ALIGN_CENTER, 0),
-                (self.notebook, 1, flags, 5),
-                #(self.sizer, 1, flags, 15),
+                (self.notebook, 1, wx.EXPAND|wx.ALL|wx.ALIGN_CENTER, 5),
             )
         )
         self.mainSizer = mainSizer
@@ -106,10 +111,10 @@ class ConfigDialog(eg.TaskletDialog):
 
     def CreateHelpPanel(self):
         helpPanel = wx.Panel(self.notebook)
-        helpPanel.SetBackgroundColour((255,255,255))
+        helpPanel.SetBackgroundColour((255, 255, 255))
         htmlWindow = eg.HtmlWindow(helpPanel)
         htmlWindow.SetBasePath(self.treeItem.GetBasePath())
-        htmlWindow.SetPage(self.treeItem.GetDescription())
+        htmlWindow.SetPage(self.description)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(htmlWindow, 1, wx.EXPAND)
         helpPanel.SetSizer(sizer)
@@ -120,7 +125,8 @@ class ConfigDialog(eg.TaskletDialog):
     def FinishSetup(self):
         # Temporary hack to fix button tabulator ordering problems.
         self.panel.FinishSetup()
-        self.helpPanel = self.CreateHelpPanel()
+        if self.description:
+            self.CreateHelpPanel()
         #line = wx.StaticLine(self)
         #self.mainSizer.Add(line, 0, wx.EXPAND|wx.ALIGN_CENTER)
         buttonRow = self.buttonRow
