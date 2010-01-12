@@ -406,7 +406,6 @@ class SerialThread(Thread):
     @eg.LogItWithReturn
     def CallbackThreadProc(self):
         while self.keepAlive:
-            #print "CallbackThreadProc"
             self.readCondition.acquire()
             while len(self.buffer):
                 if self.readEventLock.acquire(0):
