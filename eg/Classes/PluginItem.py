@@ -48,7 +48,7 @@ class PluginItem(ActionItem):
         if node.text:
             try:
                 args = pickle.loads(base64.b64decode(node.text))
-            except AttributeError:
+            except:
                 args = ()
         else:
             args = ()
