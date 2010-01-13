@@ -17,6 +17,14 @@
 import sys, os
 import stackless
 
+# the following three import are needed if we are running from source and the
+# Python distribution was not installed by the installer. See the following
+# link for details:
+# http://www.voidspace.org.uk/python/movpy/reference/win32ext.html#id10
+import pywintypes
+import pythoncom
+import win32api
+
 import Cli
 from Utils import *
 
