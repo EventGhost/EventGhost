@@ -18,30 +18,31 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2010-01-15 19:15 GMT+1
+#Last change: 2010-01-16 20:54 GMT+1
 
 
 
 eg.RegisterPlugin(
     name = "On screen explorer",
     author = "Pako",
-    version = "0.0.1",
+    version = "0.0.2",
     kind = "other",
     guid = "{D3D2DDD1-9BEB-4A26-969B-C82FA8EAB280}",
     description = u"""<rst>
 Allows you to create custom On Screen Explorer.
         
 Plugin OSE has built-in a function **"Stop processing this event"**,
-if the menu is shown on the screen. This facilitates
-the use of OSE in your configuration. You can use to control
-the menu the same events (the same remote buttons)
+if the menu **is shown** on the screen and **"Stop processing this macro"**,
+if the menu **is not shown** on the screen.
+This facilitates the use of OSE in your configuration.
+You can use to control the menu the same events (the same remote buttons)
 as elsewhere in the configuration, without having
 to explicitly use the **"Stop processing this event"**,
 **"Disable an item"** or **"Exclusive enable a folder / macro"**.
 Only it is necessary to place the folder with the OSE as high
 as possible in the configuration tree.""",
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.org/forum/viewtopic.php?..........",
+    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=2194",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAADAFBMVEUAAADT7f+34f+s"
         "2v+n1/+r2P/F4//G5v/F5P/Z7v/e7//e7v/V6/+y1/+t0P/S7P/E5P/f7//Q6f/G5P/D"
@@ -557,6 +558,8 @@ class Execute (eg.ActionClass):
                     self.plugin.menuDlg = None
                 if val&32: #return
                     return filePath
+        else:
+            eg.programCounter = None
 
     def GetLabel(self,val, fileSuff, folderSuff):
         return "%s: %i, %s, %s" % (self.name,val, fileSuff, folderSuff)
