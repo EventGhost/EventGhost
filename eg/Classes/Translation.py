@@ -113,6 +113,7 @@ class Translation:
         "pa_PA": "Punjabi",
         "pl_PL": "Polish",
         "ps_PS": "Pashto/Pushto",
+        "pt_BR": "Brazilian Portuguese",
         "pt_PT": "Portuguese",
         "qu_QU": "Quechua",
         "rm_RM": "Rhaeto-Romance",
