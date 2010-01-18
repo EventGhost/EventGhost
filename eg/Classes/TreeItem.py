@@ -125,9 +125,13 @@ class TreeItem(object):
             if text is not None:
                 streamWriter(newIndent + escape(text).encode("UTF-8"))
                 streamWriter("\r\n")
-            for child in self.childs:
-                child.WriteXmlString(streamWriter, newIndent)
+            self.WriteXmlChilds(streamWriter, newIndent)
             streamWriter(indent + "</%s>\r\n" % self.xmlTag)
+
+
+    def WriteXmlChilds(self, streamWriter, indent):
+        for child in self.childs:
+            child.WriteXmlString(streamWriter, indent)
 
 
     def GetFullXml(self):

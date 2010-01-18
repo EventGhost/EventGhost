@@ -35,29 +35,39 @@ class RootItem(ContainerItem):
 
     def GetData(self):
         from comtypes import GUID
-        attr, text = ContainerItem.GetData(self)
         self.guid = str(GUID.create_new())
         self.time = str(time.time())
+        attr = []
         attr.append(('Version', str(eg.revision)))
         attr.append(('Guid', self.guid))
         attr.append(('Time', self.time))
-        text = eg.Password.GetDatabaseContent()
-        if not text:
-            text = None
-        return attr, text
+        return attr, None
 
 
     def __init__(self, parent, node):
         parent = None
-        if node.text is None:
-            text = ""
+        passwords = node.find("Passwords")
+        if passwords is not None:
+            eg.Password.SetDatabaseContent(passwords.text.decode("base64"))
+            node.remove(passwords)
         else:
-            text = node.text.lstrip()
-        eg.Password.SetDatabaseContent(text)
+            eg.Password.SetDatabaseContent("")
         ContainerItem.__init__(self, parent, node)
         self.guid = node.attrib.get("guid", "0")
         self.time = node.attrib.get("time", "0")
         self.name = eg.text.General.configTree
+        self.expanded = True
+
+
+    def WriteXmlChilds(self, streamWriter, indent):
+        content = eg.Password.GetDatabaseContent()
+        if content:
+            streamWriter("    <Passwords>\r\n")
+            for line in content.encode("base64").splitlines():
+                streamWriter("        %s\r\n" % line)
+            streamWriter("    </Passwords>\r\n")
+        for child in self.childs:
+            child.WriteXmlString(streamWriter, indent)
 
 
     def Delete(self):

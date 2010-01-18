@@ -21,7 +21,6 @@ import ctypes
 import hashlib
 import weakref
 import struct
-from base64 import b64decode, b64encode
 from comtypes import GUID
 from Crypto.Cipher import AES
 from eg.WinApi.Dynamic import GetVolumeInformation, DWORD, byref
@@ -140,8 +139,7 @@ class Password(object):
         length = len(textHash + text) + 4
         padding = ("X" * (32 - length % 32))
         paddedString = textHash + struct.pack("L", length) + text + padding
-        result = AES.new(key, AES.MODE_ECB).encrypt(paddedString)
-        return b64encode(result)
+        return AES.new(key, AES.MODE_ECB).encrypt(paddedString)
 
 
     @classmethod
@@ -150,7 +148,6 @@ class Password(object):
             cls.database = {}
             return
         key = cls.masterkey
-        data = b64decode(data)
         # The length of the key must be a multiple of 16
         key = key + "X" * (16 - (len(key) % 16))
         paddedString = AES.new(key, AES.MODE_ECB).decrypt(data)
@@ -165,5 +162,4 @@ class Password(object):
             cls.database = {}
             return
         cls.database = pickle.loads(plaintext)
-
 
