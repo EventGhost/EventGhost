@@ -610,6 +610,9 @@ class TreeCtrl(wx.TreeCtrl):
         Handles wx.EVT_TREE_ITEM_COLLAPSING
         """
         itemId = event.GetItem()
+        if itemId == self.GetRootItem():
+            event.Veto()
+            return
         self.TraverseDelete(itemId)
         self.Collapse(itemId)
         self.DeleteChildren(itemId)
