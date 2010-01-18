@@ -85,6 +85,8 @@ class MainFrame(wx.Frame):
         self.openDialogs = []
         self.lastClickedTool = None
         self.egEvent = None
+        self.lastFocus = None
+
         wx.Frame.__init__(
             self,
             None,
@@ -109,18 +111,12 @@ class MainFrame(wx.Frame):
         # tree popup menu
         self.popupMenu = self.CreateTreePopupMenu()
 
-        eg.Bind("DocumentFileChange", self.OnDocumentFileChange)
-        eg.Bind("DocumentChange", self.OnDocumentChange)
-        self.toolBar.EnableTool(wx.ID_SAVE, document.isDirty)
-
         iconBundle = wx.IconBundle()
         iconBundle.AddIcon(eg.taskBarIcon.stateIcons[0])
         icon = wx.EmptyIcon()
         icon.LoadFile(join(eg.imagesDir, "icon32x32.png"), wx.BITMAP_TYPE_PNG)
         iconBundle.AddIcon(icon)
         self.SetIcons(iconBundle)
-
-        self.lastFocus = None
 
         self.Bind(wx.EVT_ICONIZE, self.OnIconize)
         self.Bind(wx.EVT_MENU_OPEN, self.OnMenuOpen)
@@ -132,6 +128,8 @@ class MainFrame(wx.Frame):
         self.Bind(wx.aui.EVT_AUI_PANE_RESTORE, self.OnPaneRestore)
         self.UpdateViewOptions()
         self.SetSize(Config.size)
+        eg.Bind("DocumentFileChange", self.OnDocumentFileChange)
+        eg.Bind("DocumentChange", self.OnDocumentChange)
         eg.Bind("DialogCreate", self.OnAddDialog)
         eg.Bind("DialogDestroy", self.OnRemoveDialog)
         eg.Bind("UndoChange", self.OnUndoChange)
@@ -139,8 +137,8 @@ class MainFrame(wx.Frame):
         eg.Bind("SelectionChange", self.OnSelectionChange)
         if document.selection is not None:
             self.OnSelectionChange(document.selection)
-        # tell FrameManager to manage this frame
 
+        # tell FrameManager to manage this frame
         if (
             eg.config.revision == eg.revision
             and Config.perspective is not None
@@ -223,7 +221,6 @@ class MainFrame(wx.Frame):
     @eg.LogItWithReturn
     def Destroy(self):
         self.Hide()
-        #self.document.SetTree(None)
         eg.log.SetCtrl(None)
         Config.perspective = self.auiManager.SavePerspective()
         eg.Unbind("DocumentFileChange", self.OnDocumentFileChange)
@@ -239,7 +236,6 @@ class MainFrame(wx.Frame):
         self.SetStatusBar(None)
         self.statusBar.Destroy()
         result = wx.Frame.Destroy(self)
-        #eg.Icons.ClearImageList()
         self.popupMenu.Destroy()
         return result
 
@@ -285,6 +281,7 @@ class MainFrame(wx.Frame):
         if eg.debugLevel:
             Append("Reset", GetInternalBitmap("error"))
 
+        toolBar.EnableTool(wx.ID_SAVE, self.document.isDirty)
         toolBar.Realize()
         self.SetToolBar(toolBar)
 
