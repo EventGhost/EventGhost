@@ -167,12 +167,9 @@ def Unbind(notification, listener):
 
 
 def Notify(notification, value=None):
-    if notification not in eg.notificationHandlers:
-        eg.notificationHandlers[notification] = eg.NotificationHandler()
-        return
-    notificationHandler = eg.notificationHandlers[notification]
-    for listener in notificationHandler.listeners:
-        listener(value)
+    if notification in eg.notificationHandlers:
+        for listener in eg.notificationHandlers[notification].listeners:
+            listener(value)
 
 
 def StopMacro(ignoreReturn=False):
