@@ -159,7 +159,6 @@ class PluginInstanceInfo(PluginModuleInfo):
         except:
             eg.PrintTraceback()
 
-        #pluginInfoCls.label = pluginObj # ???
         if hasattr(plugin, "Compile"):
             plugin.Compile(*args)
         try:
