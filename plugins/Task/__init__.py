@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2010 Lars-Peter Voss <bitmonster@eventghost.org>
 #
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
@@ -19,7 +19,7 @@ import eg
 eg.RegisterPlugin(
     name = "Task Create/Switch Events",
     author = "Bitmonster",
-    version = "1.0",
+    version = "1.0.2",
     guid = "{D1748551-C605-4423-B392-FB77E6842437}",
     description = (
         "Generates events if an application starts, exits or "
@@ -183,7 +183,9 @@ class Task(eg.PluginBase):
 
 
     def MyWndProc(self, dummyHwnd, dummyMesg, wParam, lParam):
-        if wParam == HSHELL_WINDOWACTIVATED or wParam == 0x8004:
+        if wParam == HSHELL_WINDOWDESTROYED:
+            self.WindowDestroyedProc(None, None, lParam, None)
+        elif wParam == HSHELL_WINDOWACTIVATED or wParam == 0x8004:
             self.WindowGotFocusProc(None, None, lParam, None)
         return 1
 
