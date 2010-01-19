@@ -1,10 +1,10 @@
 # -*- coding: UTF-8 -*-
 class General:
     apply = u"Aplicar"
-    autostartItem = u"Auto Iniciar"
+    autostartItem = u"Iniciar Automaticamente"
     browse = u"Procurar..."
     cancel = u"Cancelar"
-    choose = u"Cancelar"
+    choose = u"Escolher"
     configTree = u"Árvore de Configuração"
     deleteLinkedItems = u"Pelo menos um ponto fora de sua seleção se refere a um item dentro da seleção. Se você continuar a excluir essa seleção, o item referente não irá funcionar corretamente.\n\nTem certeza de que deseja excluir a seleção?"
     deleteManyQuestion = u"%s tem Sub elementos.\nVocê tem certeza que deseja excluir ?"
@@ -49,7 +49,7 @@ class MainFrame:
         Copy = u"&Copiar"
         Cut = u"Reco&rtar"
         Delete = u"&Deletar"
-        Disabled = u"Disabilitar Item"
+        Disabled = u"Desabilitar Item"
         EditMenu = u"&Editar"
         Execute = u"Executar Item"
         Exit = u"S&air"
@@ -108,7 +108,7 @@ class Error:
     pluginNotActivated = u'O plugin "%s" não está ativado.'
     pluginStartError = u"Erro ao iniciar o plugin: %s"
 class Exceptions:
-    DeviceInitFailed = u"Incapaz de iniciar discpositivo!"
+    DeviceInitFailed = u"Incapaz de iniciar dispositivo!"
     DeviceNotFound = u"Dispositivo não encontrado !"
     DeviceNotReady = u"O dispositivo não está pronto!"
     DriverNotFound = u"Driver não encontrado !"
@@ -131,11 +131,11 @@ class AddActionDialog:
 class AddPluginDialog:
     author = u"Autor:"
     descriptionBox = u"Descrição:"
-    externalPlugins = u"Equipamento esterno"
+    externalPlugins = u"Equipamento Externo"
     noInfo = u"Informação não disponivel."
     noMultiload = u"Este plugin já está sendo executado."
     noMultiloadTitle = u"Sem MultiLoad disponivel"
-    otherPlugins = u"Outro"
+    otherPlugins = u"Outros"
     programPlugins = u"Controle de Programas"
     remotePlugins = u"Receptor de Controle Remoto"
     title = u"Selecione um plugin para Adicionar..."
