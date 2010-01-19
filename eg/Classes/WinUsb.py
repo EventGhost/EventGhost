@@ -56,6 +56,7 @@ from eg.WinApi.Dynamic.SetupApi import (
     SetupDiEnumDriverInfo,
     SetupDiBuildDriverInfoList,
     DIGCF_PRESENT,
+    DIGCF_ALLCLASSES,
     SP_DEVINFO_DATA,
     SP_DRVINFO_DATA,
     SP_DEVINSTALL_PARAMS,
@@ -213,6 +214,21 @@ def StripRevision(hardwareId):
     )
 
 
+class DeviceInfo(object):
+            
+    def __init__(self, name, version, hardwareId, provider):
+        self.name = name
+        self.version = version
+        self.hardwareId = hardwareId
+        self.provider = provider
+        
+    def __repr__(self):
+        return "DeviceInfo(%r, %r, %r, %r)" % (
+            self.name, self.version, self.hardwareId, self.provider
+        )
+
+
+
 class UsbDevice(object):
     dll = None
 
@@ -301,7 +317,7 @@ class WinUsb(object):
 
 
     def Open(self):
-        devices = ListDevices()
+        devices = self.ListDevices()
         for device in self.devices:
             hardwareId = StripRevision(device.hardwareId)
             if not hardwareId in devices:
@@ -399,7 +415,6 @@ class WinUsb(object):
                 continue
             md5 = hashlib.md5()
             md5.update(open(path, "rb").read())
-            #print name, md5.hexdigest()
             if md5.hexdigest() != md5hash:
                 neededFiles.append((DOWNLOAD_ROOT + name, path))
         return neededFiles
@@ -471,114 +486,120 @@ class WinUsb(object):
         return infPath
 
 
-
-def ListDevices():
-    devices = {}
-    guid = GUID()
-    CLSIDFromString("{745a17a0-74d3-11d0-b6fe-00a0c90f57da}", byref(guid))
-    hDevInfo = SetupDiGetClassDevs(
-        guid,
-        None,#"USB", # Enumerator
-        0,
-        DIGCF_PRESENT #| DIGCF_ALLCLASSES
-    )
-    if hDevInfo == INVALID_HANDLE_VALUE:
-        raise WinError()
-    deviceInfoData = SP_DEVINFO_DATA()
-    deviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA)
-    driverInfoData = SP_DRVINFO_DATA()
-    driverInfoData.cbSize = sizeof(SP_DRVINFO_DATA)
-    deviceInstallParams = SP_DEVINSTALL_PARAMS()
-    deviceInstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS)
-
-    buffersize = DWORD()
-    buffersize.value = 1000
-    dataType = DWORD()
-    hardwareId = create_unicode_buffer(1000)
-    i = 0
-    while True:
-        if not SetupDiEnumDeviceInfo(hDevInfo, i, byref(deviceInfoData)):
-            err = GetLastError()
-            if err == ERROR_NO_MORE_ITEMS:
-                break
-            else:
-                raise WinError(err)
-        i += 1
-        if SetupDiGetDeviceRegistryProperty(
-            hDevInfo,
-            byref(deviceInfoData),
-            SPDRP_HARDWAREID, #SPDRP_DEVICEDESC,
-            None,
-            None,
+    @staticmethod
+    def ListDevices():
+        devices = {}
+        guid = GUID()
+        #CLSIDFromString("{745a17a0-74d3-11d0-b6fe-00a0c90f57da}", byref(guid))
+        #CLSIDFromString("{36fc9e60-c465-11cf-8056-444553540000}", byref(guid))
+        CLSIDFromString("{A5DCBF10-6530-11D2-901F-00C04FB951ED}", byref(guid))
+        #guid = None
+        hDevInfo = SetupDiGetClassDevs(
+            guid,
+            "USB", # Enumerator
             0,
-            byref(buffersize)
-        ):
+            DIGCF_PRESENT|DIGCF_ALLCLASSES
+        )
+        if hDevInfo == INVALID_HANDLE_VALUE:
             raise WinError()
-        err = GetLastError()
-        if err == ERROR_INSUFFICIENT_BUFFER:
-            hardwareId = create_unicode_buffer(buffersize.value / 2)
-        elif err == ERROR_INVALID_DATA:
-            continue
-        else:
-            raise WinError(err)
-        if not SetupDiGetDeviceRegistryProperty(
-            hDevInfo,
-            byref(deviceInfoData),
-            SPDRP_HARDWAREID, #SPDRP_DEVICEDESC,
-            byref(dataType),
-            cast(hardwareId, PBYTE),
-            buffersize.value,
-            byref(buffersize)
-        ):
-            raise WinError()
-        hardwareId = StripRevision(hardwareId.value.upper())
-        driverInfoData.DriverVersion = 0
-        SetupDiGetDeviceInstallParams(
-            hDevInfo,
-            byref(deviceInfoData),
-            byref(deviceInstallParams)
-        )
-        deviceInstallParams.FlagsEx |= DI_FLAGSEX_INSTALLEDDRIVER
-        SetupDiSetDeviceInstallParams(
-            hDevInfo,
-            byref(deviceInfoData),
-            byref(deviceInstallParams)
-        )
-        SetupDiBuildDriverInfoList(
-            hDevInfo,
-            byref(deviceInfoData),
-            SPDIT_COMPATDRIVER
-        )
-        if not SetupDiEnumDriverInfo(
-            hDevInfo,
-            byref(deviceInfoData),
-            SPDIT_COMPATDRIVER,
-            0,
-            byref(driverInfoData)
-        ):
+        deviceInfoData = SP_DEVINFO_DATA()
+        deviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA)
+        driverInfoData = SP_DRVINFO_DATA()
+        driverInfoData.cbSize = sizeof(SP_DRVINFO_DATA)
+        deviceInstallParams = SP_DEVINSTALL_PARAMS()
+        deviceInstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS)
+    
+        buffersize = DWORD()
+        buffersize.value = 1000
+        dataType = DWORD()
+        hardwareId = create_unicode_buffer(1000)
+        i = 0
+        while True:
+            if not SetupDiEnumDeviceInfo(hDevInfo, i, byref(deviceInfoData)):
+                err = GetLastError()
+                if err == ERROR_NO_MORE_ITEMS:
+                    break
+                else:
+                    continue
+                    raise WinError(err)
+            i += 1
+            if SetupDiGetDeviceRegistryProperty(
+                hDevInfo,
+                byref(deviceInfoData),
+                SPDRP_HARDWAREID, #SPDRP_DEVICEDESC,
+                None,
+                None,
+                0,
+                byref(buffersize)
+            ):
+                raise WinError()
             err = GetLastError()
-            if err == ERROR_NO_MORE_ITEMS:
-                devices[hardwareId] = eg.Bunch(
-                    name = "<unknown name>",
-                    version = "",
-                    hardwareId = hardwareId,
-                    provider = "<unknown provider",
-                )
+            if err == ERROR_INSUFFICIENT_BUFFER:
+                hardwareId = create_unicode_buffer(buffersize.value / 2)
+            elif err == ERROR_INVALID_DATA:
                 continue
             else:
                 raise WinError(err)
-        version = driverInfoData.DriverVersion
-        versionStr =  "%d.%d.%d.%d" % (
-            (version >> 48) & 0xFFFF,
-            (version >> 32) & 0xFFFF,
-            (version >> 16) & 0xFFFF,
-            version & 0xFFFF
-        )
-        devices[hardwareId] = eg.Bunch(
-            name = driverInfoData.Description,
-            version = versionStr,
-            hardwareId = hardwareId,
-            provider = driverInfoData.ProviderName,
-        )
-    return devices
+            if not SetupDiGetDeviceRegistryProperty(
+                hDevInfo,
+                byref(deviceInfoData),
+                SPDRP_HARDWAREID, #SPDRP_DEVICEDESC,
+                byref(dataType),
+                cast(hardwareId, PBYTE),
+                buffersize.value,
+                byref(buffersize)
+            ):
+                raise WinError()
+            hardwareId = StripRevision(hardwareId.value.upper())
+            if hardwareId.startswith("USB\\ROOT_HUB"):
+                continue
+            driverInfoData.DriverVersion = 0
+            SetupDiGetDeviceInstallParams(
+                hDevInfo,
+                byref(deviceInfoData),
+                byref(deviceInstallParams)
+            )
+            deviceInstallParams.FlagsEx |= DI_FLAGSEX_INSTALLEDDRIVER
+            SetupDiSetDeviceInstallParams(
+                hDevInfo,
+                byref(deviceInfoData),
+                byref(deviceInstallParams)
+            )
+            SetupDiBuildDriverInfoList(
+                hDevInfo,
+                byref(deviceInfoData),
+                SPDIT_COMPATDRIVER
+            )
+            if not SetupDiEnumDriverInfo(
+                hDevInfo,
+                byref(deviceInfoData),
+                SPDIT_COMPATDRIVER,
+                0,
+                byref(driverInfoData)
+            ):
+                err = GetLastError()
+                if err == ERROR_NO_MORE_ITEMS:
+                    devices[hardwareId] = DeviceInfo(
+                        name = "<unknown name>",
+                        version = "",
+                        hardwareId = hardwareId,
+                        provider = "<unknown provider",
+                    )
+                    continue
+                else:
+                    raise WinError(err)
+            version = driverInfoData.DriverVersion
+            versionStr =  "%d.%d.%d.%d" % (
+                (version >> 48) & 0xFFFF,
+                (version >> 32) & 0xFFFF,
+                (version >> 16) & 0xFFFF,
+                version & 0xFFFF
+            )
+            devices[hardwareId] = DeviceInfo(
+                driverInfoData.Description,
+                versionStr,
+                hardwareId,
+                driverInfoData.ProviderName,
+            )
+        return devices
 

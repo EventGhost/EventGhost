@@ -19,7 +19,6 @@ import wx
 import time
 import sys
 import os
-import platform
 import hashlib
 import _winreg
 from cStringIO import StringIO
@@ -74,6 +73,7 @@ SPECIAL_THANKS_DATA = (
             ("peter", "Dutch"),
             ("noc123", "Polish"),
             ("somainit", "Japanese"),
+            (" PedroV9", "Portuguese (Brazilian)"),
         ),
     ),
     (
@@ -110,12 +110,18 @@ SPECIAL_THANKS_DATA = (
             "Leandre da Silva",  # 15. May 2009
             "Franz Pentenrieder",# 27. May 2009
             "David Grenker",     # 30. May 2009
-            "Anthony Field",     # 09. June 2009
-            "Nikhil Kapur",      # 16. June 2009
-            "Tom Browning",      # 02. July 2009
-            "Ludwig Strydom",    # 22. July 2009
-            "",
-            "Christoph Heins",   # 26. August 2009
+            "Anthony Field",     # 09. Jun 2009
+            "Nikhil Kapur",      # 16. Jun 2009
+            "Tom Browning",      # 02. Jul 2009
+            "Ludwig Strydom",    # 22. Jul 2009
+            "Christoph Heins",   # 26. Aug 2009
+            "Jeffrey Sonnabend", #  2. Sep 2009
+            "Stephen Evans",     #  6. Sep 2009
+            "Sven Buerger",      #  9. Sep 2009
+            "Erik Josefsson",    # 11. Nov 2009
+            "Harry Hartenstine", #  7. Dec 2009
+            "Mathew Bentley",    #  8. Jan 2010
+            "Jonas Ernst",       # 17. Jan 2010
         ),
     ),
     (
@@ -328,26 +334,34 @@ class SystemInfoPanel(HtmlPanel):
             Text.CreationDate,
             time.gmtime(eg.Version.buildTime)
         ).decode(eg.systemEncoding)
-        totalMemory, availableMemory = GetRam()
+        totalMemory = GetRam()[0]
         pythonVersion = "%d.%d.%d %s %d" % sys.version_info
         if is_stackless:
             pythonVersion = "Stackless Python " + pythonVersion
-        self.sysInfos = (
-            ("EventGhost&nbsp;Version", eg.Version.string),
-            ("Build&nbsp;Time", buildTime),
-            ("Python&nbsp;Version", pythonVersion),
-            ("wxPython&nbsp;Version", wx.VERSION_STRING),
-            ("Operating&nbsp;System", GetWindowsVersionString()),
+        self.sysInfos = [
+            "Software",
+            ("Program Version", eg.Version.string),
+            ("Build Time", buildTime),
+            ("Python Version", pythonVersion),
+            ("wxPython Version", wx.VERSION_STRING),
+            "\nSystem",
+            ("Operating System", GetWindowsVersionString()),
             ("CPU", GetCpuName()),
-            ("Total&nbsp;RAM", "%s MB" % totalMemory),
-            ("Available&nbsp;RAM", "%s MB" % availableMemory),
-        )
-
-        sysInfoTemplate = "".join(
-            ['<tr><td align="right"><b>%s:</b></td><td>%s</td></tr>' % sysInfo
-                for sysInfo in self.sysInfos]
-        )
-        page = "<center><table>%s</table></center>" % sysInfoTemplate
+            ("RAM", "%s MB" % totalMemory),
+            "\nUSB-Devices",
+        ]
+        devices = eg.WinUsb.ListDevices()
+        for hardwareId in sorted(devices.keys()):
+            device = devices[hardwareId]
+            self.sysInfos.append((device.name, device.hardwareId))
+        lines = []
+        for line in self.sysInfos:
+            if isinstance(line, tuple):
+                lines.append('<tr><td>%s:</td><td>%s</td></tr>' % line)
+            else:
+                lines.append('</table><p><b>%s</b><br><table>' % line)
+        lines.append('</table>')
+        page = "\n".join(lines)
         HtmlPanel.__init__(self, parent, page)
         self.htmlWindow.Bind(wx.EVT_RIGHT_DOWN, self.OnRightClick)
         self.htmlWindow.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
@@ -374,12 +388,19 @@ class SystemInfoPanel(HtmlPanel):
 
     @eg.LogIt
     def OnCmdCopy(self, dummyEvent):
-        if wx.TheClipboard.Open():
-            text = "\r\n".join(["%s: %s" % x for x in self.sysInfos])
-            tdata = wx.TextDataObject(text)
-            wx.TheClipboard.SetData(tdata)
-            wx.TheClipboard.Close()
-            wx.TheClipboard.Flush()
+        if not wx.TheClipboard.Open():
+            return
+        lines = []
+        for line in self.sysInfos:
+            if isinstance(line, tuple):
+                lines.append("%s: %s" % line)
+            else:
+                lines.append("%s" % line)
+        text = "\n".join(lines)
+        tdata = wx.TextDataObject(text.replace("\n", "\r\n"))
+        wx.TheClipboard.SetData(tdata)
+        wx.TheClipboard.Close()
+        wx.TheClipboard.Flush()
 
 
 
@@ -445,7 +466,7 @@ class AboutDialog(eg.TaskletDialog):
         notebook.AddPage(SpecialThanksPanel(notebook), Text.tabSpecialThanks)
         notebook.AddPage(LicensePanel(notebook), Text.tabLicense)
         notebook.AddPage(SystemInfoPanel(notebook), Text.tabSystemInfo)
-        notebook.AddPage(ChangelogPanel(notebook), Text.tabChangelog)
+        #notebook.AddPage(ChangelogPanel(notebook), Text.tabChangelog)
 
         def OnPageChanged(event):
             pageNum = event.GetSelection()
