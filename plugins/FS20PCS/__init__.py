@@ -55,7 +55,7 @@ class FS20PCS(eg.PluginClass):
     
     def AddNewAction(self, root, internalName, baseClass, classFuncCode, externalName, classDescription, classLabelFormat):
         class MyText:
-              labelFormat = classLabelFormat
+            labelFormat = classLabelFormat
         class tmpAction(baseClass):
             text = MyText
             name = externalName
