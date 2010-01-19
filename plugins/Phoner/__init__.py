@@ -18,7 +18,7 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2010-01-05 14:27 GMT+1
+#Last change: 2009-12-19 09:41 GMT+1
 
 import wx
 import _winreg
@@ -29,7 +29,6 @@ from os.path import isfile, exists
 from functools import partial
 from subprocess import Popen
 from eg.WinApi.Dynamic import SendMessage,PostMessage
-
 from win32gui import SetWindowPos
 import ctypes
 from time import time as timtim
@@ -53,7 +52,7 @@ SWP_NOACTIVATE = 16
 eg.RegisterPlugin(
     name = "Phoner",
     author = "Pako",
-    version = "0.1.0",
+    version = "0.0.3",
     kind = "program",
     guid = "{FF763E14-7253-4025-99F2-32D9AC43FA9C}",
     createMacrosOnAdd = True,
@@ -265,7 +264,7 @@ class PhonerWorkerThread(eg.ThreadWorker):
 
 class Text:
     errorNoWindow = "Couldn't find Phoner window"
-    label1 = "Folder containing phoner.exe:"
+    label1 = "Folder with phoner.exe:"
     filemask = "phoner.exe|phoner.exe|All-Files (*.*)|*.*"
     text1 = "Couldn't find Phoner window !"
     browseTitle = "Selected folder:"
@@ -276,6 +275,7 @@ class Text:
     exitDescription = """<rst>Exit Phoner.
     
 Beware of setting **X-Button: minimize** (Window menu) !"""
+    enable = ("Disabled","Enabled","Stop","Start")
 #===============================================================================
 
 class Phoner(eg.PluginBase):
@@ -798,31 +798,33 @@ class NumberOfCalls(eg.ActionBase):
             self.PrintError(self.plugin.text.text1)
 #===============================================================================
 
-class GetWindowEnabled(eg.ActionBase):
+class GetInfo2(eg.ActionBase):
     def __call__(self):
         if PhonerWin():
-            return self.plugin.GetValue('WindowEnabled')
+            attrib = self.__class__.__name__[3:]
+            return self.plugin.GetValue(attrib)
         else:
             self.PrintError(self.plugin.text.text1)
 #===============================================================================
         
-class SetWindowEnabled(eg.ActionBase):
-    def __call__(self,enabled=True):
+class SetState(eg.ActionBase):
+    def __call__(self, enabled=True):
         if PhonerWin():
-            return self.plugin.SetValue('WindowEnabled',enabled)
+            attrib = self.__class__.__name__[3:]
+            return self.plugin.SetValue(attrib,enabled)
         else:
             self.PrintError(self.plugin.text.text1)
     
     def GetLabel(self, enabled):
-        return self.text.radioboxtitle + ": " + self.text.enable[int(enabled)]
+        return self.name + ": " + self.plugin.text.enable[int(enabled)+self.value]
         
     def Configure(self, enabled=True):
-        panel = eg.ConfigPanel()
+        panel = eg.ConfigPanel(self)
         radioBox = wx.RadioBox(
             panel, 
             -1, 
-            self.text.radioboxtitle, 
-            choices = self.text.enable, 
+            self.name, 
+            choices = self.plugin.text.enable[self.value:self.value+2], 
             style=wx.RA_SPECIFY_ROWS
         )
         radioBox.SetSelection(enabled)
@@ -830,53 +832,16 @@ class SetWindowEnabled(eg.ActionBase):
         panel.sizer.Add(radioBox)
         while panel.Affirmed():
             panel.SetResult(radioBox.GetSelection())
-    class text:
-        radioboxtitle = "Set window"
-        enable = ("Disabled","Enabled")
 #===============================================================================
 
-class GetAnsweringMachineEnabled(eg.ActionBase):
+class ToggleRecording(eg.ActionBase):
     def __call__(self):
         if PhonerWin():
-            return self.plugin.GetValue('AnsweringMachineEnabled')
+            recState = self.plugin.GetValue("RecordingEnabled")
+            self.plugin.SetValue("RecordingEnabled", not recState)
+            return self.plugin.GetValue("RecordingEnabled")
         else:
             self.PrintError(self.plugin.text.text1)
-#===============================================================================
-        
-class SetAnsweringMachineEnabled(eg.ActionBase):
-    def __call__(self,enabled=True):
-        if PhonerWin():
-            return self.plugin.SetValue('AnsweringMachineEnabled',enabled)
-        else:
-            self.PrintError(self.plugin.text.text1)
-    
-    def GetLabel(self, enabled):
-        return self.text.radioboxtitle + ": " + self.text.enable[int(enabled)]
-        
-    def Configure(self, enabled=True):
-        panel = eg.ConfigPanel()
-        radioBox = wx.RadioBox(
-            panel, 
-            -1, 
-            self.text.radioboxtitle, 
-            choices = self.text.enable, 
-            style=wx.RA_SPECIFY_ROWS
-        )
-        radioBox.SetSelection(enabled)
-        radioBox.SetMinSize((197,65))
-        panel.sizer.Add(radioBox)
-        while panel.Affirmed():
-            panel.SetResult(radioBox.GetSelection())
-    class text:
-        radioboxtitle = "Set answering machine"
-        enable = ("Disabled","Enabled")
-#===============================================================================
-
-class ToggleRecord(eg.ActionBase):
-    def __call__(self):
-        hwnd = PhonerWin()
-        if hwnd:
-            x=SendMessage(hwnd,WM_COMMAND,10,0)
 #===============================================================================
         
 class GetInfo(eg.ActionBase):
@@ -916,12 +881,15 @@ ACTIONS = (
     (eg.ActionGroup, 'Phonercontrols', 'Phoner GUI controls', 'Phoner GUI controls.',(
         (WindowControl,"Minimize","Minimize window","Minimize window.",None),
         (WindowControl,"Restore","Restore window","Restore window.",SW_RESTORE),    
-        (SetWindowEnabled,"SetWindowEnabled","Set incoming call window","Set incoming call window.",None),    
-        (SetAnsweringMachineEnabled,"SetAnsweringMachineEnabled","Set answering machine","Set answering machine.",None),    
+        (SetState,"SetAutoRecordEnabled","Set autorecord","Set Autorecord.",0),    
+        (SetState,"SetRecordingEnabled","Start/stop recording","Start/stop recording.",2),    
+        (SetState,"SetAnsweringMachineEnabled","Set answering machine","Set answering machine.",0),    
+        (SetState,"SetWindowEnabled","Set incoming call window","Set incoming call window.",0),    
+        (ToggleRecording,"ToggleRecording","Toggle recording of current call","Toggle recording of current call.",None),    
 #        (GetVolume,"GetVolume","Get volume","Get volume.", None),
 #        (SetVolume,"SetVolume","Set volume","Set volume.", 0),
 #        (SetVolume,"VolumeUp","Volume up","Volume up.", 1),
-#        (SetVolume,"VolumeDown","Volume down","Volume down.", -1),
+#        (SetVolume,"VolumeDown","Volume down","Volume down.", 2),
     )),
     (eg.ActionGroup, 'CallControl', 'Call and SMS control', 'Call and SMS control.',(
         (MakeCall,"MakeCall","Make call","Make call.", None),
@@ -930,7 +898,6 @@ ACTIONS = (
         (CallFunction,"DisconnectCall","Disconnect call","Disconnect call.", None),
         (Transfer,"Transfer","Transfer","Transfer.", None),
         (Conference,"Conference","Conference","Conference.", None),
-        (ToggleRecord,"ToggleRecord","On/Off record of current call","On/Off record of current call.",None),    
         (SendDTMF,"SendDTMF","Send DTMF","Send DTMF.", None),
         (SendWAVE,"SendWAVE","Send WAVE","Send WAVE.", None),
         (SendTTS,"SendTTS","Send text to speech (TTS)","Send text to speech (TTS).", None),
@@ -946,8 +913,10 @@ ACTIONS = (
         (GetInfo,"GetSUBCallerID","Get ISDN subaddress","Get ISDN subaddress.", None),
         (GetInfo,"GetDirection","Get call direction","Get call direction.", None),
         (DisconnectReason,"DisconnectReason","Get disconnect reason","Get disconnect reason.", None),
-        (GetWindowEnabled,"GetWindowEnabled","Get window enabled state","Get window enabled state.", None),
-        (GetAnsweringMachineEnabled,"GetAnsweringMachineEnabled","Get answering machine enabled state","Get answering machine enabled state.", None),
+        (GetInfo2,"GetWindowEnabled","Get window enabled state","Get window enabled state.", None),
+        (GetInfo2,"GetAutoRecordEnabled","Get autorecord enabled","Get autorecord enabled.", None),
+        (GetInfo2,"GetRecordingEnabled","Get recording enabled","Get recording enabled.", None),
+        (GetInfo2,"GetAnsweringMachineEnabled","Get answering machine enabled state","Get answering machine enabled state.", None),
         (GetInfo,"GetRecordedWAVE","Get recorded wave file","Get recorded wave file.", None),
     )),
 )
