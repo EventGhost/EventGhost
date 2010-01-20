@@ -39,17 +39,13 @@ class ActionThread(eg.ThreadWorker):
         eg.document.Load(filename)
         eg.PrintDebugNotice("XML loaded in %f seconds." % (clock() - start))
 
-        missingIds = (
+        missingHardwareIds = (
             set(eg.WinUsb.ListDevices().iterkeys())
-            - set(
-                item.executable.info.hardwareId
-                    for item in eg.document.autostartMacro.childs
-                        if item.xmlTag == "Plugin"
-            )
+            - set(pluginInfo.info.hardwareId for pluginInfo in eg.pluginList)
         )
         missingPlugins = [
             pluginInfo for pluginInfo in eg.pluginManager.database.itervalues()
-                if pluginInfo.hardwareId in missingIds
+                if pluginInfo.hardwareId in missingHardwareIds
         ]
         if missingPlugins:
             print "EventGhost has found devices on your system, that can be "
