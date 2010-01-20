@@ -18,7 +18,7 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2009-12-30 08:32  GMT+1
+#Last change: 2010-01-20 18:32  GMT+1
 
 import wx
 from win32com.client import Dispatch
@@ -31,12 +31,13 @@ from os.path import isfile
 from os.path import split as path_split
 from os import remove as remove_file
 from functools import partial
+from random import randint
 
 
 eg.RegisterPlugin(
     name = "MediaMonkey",
     author = "Pako",
-    version = "0.2.10",
+    version = "0.2.11",
     kind = "program",
     guid = "{50602341-ABC3-47AD-B859-FCB8C03ED4EF}",
     createMacrosOnAdd = True,
@@ -532,7 +533,7 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
             #playlists = self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Playlists").ValueByIndex(0)
             return tracks,albums #,artists,playlists
         
-    def Jubox(self,ID,clear,repeat,shuffle,crossfade):
+    def Jubox(self,ID,clear,repeat,shuffle,crossfade,stop):
         if self.isRunning():
             sql = 'IDAlbum="%s"' % ID
             Total=self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Songs WHERE "+sql).ValueByIndex(0)
@@ -540,6 +541,9 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
             if int(Total) > 0:
                 if clear:
                     self.MM.Player.PlaylistClear()
+                    count = 0
+                else:
+                    count = self.MM.Player.PlaylistCount
                 MyTracks = self.MM.Database.QuerySongs(sql)
                 res = (MyTracks.Item.AlbumName,MyTracks.Item.ArtistName)
                 while not MyTracks.EOF:
@@ -550,16 +554,22 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                 if crossfade<2:
                     self.MM.Player.isCrossfade = bool(crossfade)
                 if shuffle<2:
-                    self.MM.Player.isShuffle = bool(shuffle)
-                count = self.MM.Player.PlaylistCount
+                    shuffle = bool(shuffle)
+                    self.MM.Player.isShuffle = shuffle
+                else:
+                    shuffle = self.MM.Player.isShuffle
                 self.MM.Player.PlaylistAddTracks(tmpSongList)
-                self.MM.Player.CurrentSongIndex = count
-                self.MM.Player.Stop()
-                self.MM.Player.Play()
+                if stop:
+                    if not shuffle:
+                        self.MM.Player.CurrentSongIndex = count
+                    else:
+                        self.MM.Player.CurrentSongIndex = randint(count,count+int(Total)-1)
+                if self.MM.Player.isPaused or not self.MM.Player.isPlaying:
+                    self.MM.Player.Play()
                 if self.plugin.trigger:
                     self.plugin.TriggerEvent(Text.albumEvt, res)
 
-    def SongJubox(self,ID,clear):
+    def SongJubox(self,ID,clear,stop):
         if self.isRunning():
             sql = 'ID="%s"' % ID
             res = None
@@ -571,9 +581,10 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                 res = (MyTrack.Item.Title,MyTrack.Item.AlbumName,MyTrack.Item.ArtistName)
                 count = self.MM.Player.PlaylistCount
                 self.MM.Player.PlaylistAddTrack(MyTrack.Item)
-                self.MM.Player.CurrentSongIndex = count
-                self.MM.Player.Stop()
-                self.MM.Player.Play()
+                if stop:
+                    self.MM.Player.CurrentSongIndex = count
+                if self.MM.Player.isPaused or not self.MM.Player.isPlaying:
+                    self.MM.Player.Play()
                 if self.plugin.trigger:
                     self.plugin.TriggerEvent(Text.songEvt, res)
 
@@ -658,7 +669,7 @@ class Text:
   
     please = "Please be patient"
     close = "Close"
-    popup = "Play now"
+    popup = "Add now"
     popup2 = "Delete from library"
     refresh = "Refresh"
     sepLabel = 'Character or string to use as delimiter:'
@@ -713,6 +724,7 @@ Default is to use the character "\\n" (new line).'''
     shuffle = "Shuffle tracks"
     crossfade = "Crossfade"
     clearPlaylist = "Clear the Now Playing playlist before adding new tracks"
+    stopPlaying = "Stop playing just sounding songs"
     random = "Order by random"
     randomToolTip = '''(True Shuffle)  Shuffles the playlist (like cards) before starting playback.
 This allows us to see what song will play next, and what played previously.
@@ -922,7 +934,7 @@ class MediaMonkey(eg.PluginBase):
         if self.checkWorkerThread():
             return self.workerThread.CallWait(partial(self.workerThread.GetSongData, index),1000)
         
-    def Jubox(self, ID, clear=True,repeat=2,shuffle=2,crossfade=2):
+    def Jubox(self, ID, clear=True,repeat=2,shuffle=2,crossfade=2,stop = True):
         if self.checkWorkerThread():
             self.workerThread.Call(partial(
                 self.workerThread.Jubox,
@@ -931,14 +943,16 @@ class MediaMonkey(eg.PluginBase):
                 repeat,
                 shuffle,
                 crossfade,
+                stop
             ))
 
-    def SongJubox(self, ID,clear=False):
+    def SongJubox(self, ID,clear=False,stop = True):
         if self.checkWorkerThread():
             self.workerThread.Call(partial(
                 self.workerThread.SongJubox,
                 ID,
                 clear,
+                stop
             ))
 #        return res,Total
 
@@ -3204,7 +3218,7 @@ playing this album.
 One way to trigger an event with a payload is to use the plugin **Multitap** 
 (Numpad mode).'''
         
-    def Configure(self,repeat=2,shuffle=2,crossfade=2,clear = True, filePath=''):
+    def Configure(self,repeat=2,shuffle=2,crossfade=2,clear = True, filePath='', stop = True):
         txt = self.text
         self.filePath = filePath
         panel = eg.ConfigPanel(self)
@@ -3240,7 +3254,9 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
         shuffleChkBoxCtrl = wx.CheckBox(panel, label=Text.shuffle,style=wx.CHK_3STATE|wx.CHK_ALLOW_3RD_STATE_FOR_USER)
         crossfadeChkBoxCtrl = wx.CheckBox(panel, label=Text.crossfade,style=wx.CHK_3STATE|wx.CHK_ALLOW_3RD_STATE_FOR_USER)
         clearPlaylistChkBoxCtrl = wx.CheckBox(panel, label=Text.clearPlaylist)
+        stopChkBoxCtrl = wx.CheckBox(panel, label=Text.stopPlaying)
         clearPlaylistChkBoxCtrl.SetValue(clear)
+        stopChkBoxCtrl.SetValue(stop)
         repeatChkBoxCtrl.Set3StateValue(repeat)
         shuffleChkBoxCtrl.Set3StateValue(shuffle)
         crossfadeChkBoxCtrl.Set3StateValue(crossfade)
@@ -3248,6 +3264,7 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
         Sizer.Add(shuffleChkBoxCtrl,0,wx.TOP,10)
         Sizer.Add(crossfadeChkBoxCtrl,0,wx.TOP,10)
         Sizer.Add(clearPlaylistChkBoxCtrl,0,wx.TOP,10)
+        Sizer.Add(stopChkBoxCtrl,0,wx.TOP,10)
         Sizer.Add(label1Text, 0, wx.TOP,15)
         Sizer.Add(filePathCtrl,0,wx.TOP,3)
         Sizer.Add(exportButton,0,wx.TOP,10)
@@ -3262,6 +3279,7 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
                 clearPlaylistChkBoxCtrl.GetValue(),
                 filePathCtrl.GetValue(),
                 True,
+                stopChkBoxCtrl.GetValue(),
                 repeatChkBoxCtrl.Get3StateValue(),
                 shuffleChkBoxCtrl.Get3StateValue(),
                 crossfadeChkBoxCtrl.Get3StateValue(),
@@ -3283,6 +3301,7 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
                 clearPlaylistChkBoxCtrl.GetValue(),
                 filePathCtrl.GetValue(),
                 flag,
+                stopChkBoxCtrl.GetValue(),
                 repeatChkBoxCtrl.Get3StateValue(),
                 shuffleChkBoxCtrl.Get3StateValue(),
                 crossfadeChkBoxCtrl.Get3StateValue(),
@@ -3297,12 +3316,13 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
                 crossfadeChkBoxCtrl.Get3StateValue(),
                 clearPlaylistChkBoxCtrl.GetValue(),
                 filePathCtrl.GetValue(),
+                stopChkBoxCtrl.GetValue()
             )
 
-    def GetLabel(self,repeat,shuffle,crossfade,clear,filePath):
+    def GetLabel(self,repeat,shuffle,crossfade,clear,filePath,stop):
         return self.name       
 
-    def __call__(self,repeat=2,shuffle=2,crossfade=2,clear=True,filePath=''):
+    def __call__(self,repeat=2,shuffle=2,crossfade=2,clear=True,filePath='',stop=True):
         ID = eg.event.payload
         self.plugin.Jubox(
             ID,
@@ -3310,6 +3330,7 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
             repeat,
             shuffle,
             crossfade,
+            stop,
         )
             
     class text():
@@ -3335,7 +3356,7 @@ playing the song.
 One way to trigger an event with a payload is to use the plugin **Multitap** 
 (Numpad mode).'''
         
-    def Configure(self,clear=False,filePath=''):
+    def Configure(self,clear=False,filePath='',stop = True):
         self.filePath = filePath
         txt = self.text
         panel = eg.ConfigPanel(self)
@@ -3368,7 +3389,10 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
         openButton.SetToolTip(wx.ToolTip(txt.baloonBttn[1] % self.filePath))
         clearPlaylistChkBoxCtrl = wx.CheckBox(panel, label=Text.clearPlaylist)
         clearPlaylistChkBoxCtrl.SetValue(clear)
-        Sizer.Add(clearPlaylistChkBoxCtrl,0,wx.TOP,20)
+        stopChkBoxCtrl = wx.CheckBox(panel, label=Text.stopPlaying)
+        stopChkBoxCtrl.SetValue(stop)
+        Sizer.Add(clearPlaylistChkBoxCtrl,0,wx.TOP,10)
+        Sizer.Add(stopChkBoxCtrl,0,wx.TOP,10)
         Sizer.Add(label1Text, 0, wx.TOP,15)
         Sizer.Add(filePathCtrl,0,wx.TOP,3)
         Sizer.Add(exportButton,0,wx.TOP,20)
@@ -3383,6 +3407,7 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
                 clearPlaylistChkBoxCtrl.GetValue(),
                 filePathCtrl.GetValue(),
                 True,
+                stopChkBoxCtrl.GetValue(),
             )
             openButton.Enable(True)
             event.Skip()
@@ -3401,6 +3426,7 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
                 clearPlaylistChkBoxCtrl.GetValue(),
                 filePathCtrl.GetValue(),
                 flag,
+                stopChkBoxCtrl.GetValue(),
             )
             event.Skip()
         openButton.Bind(wx.EVT_BUTTON, onOpenBtnClick)
@@ -3409,20 +3435,22 @@ One way to trigger an event with a payload is to use the plugin **Multitap**
             panel.SetResult(
                 clearPlaylistChkBoxCtrl.GetValue(),
                 filePathCtrl.GetValue(),
+                stopChkBoxCtrl.GetValue()
             )
 
-    def GetLabel(self,clear,filePath):
+    def GetLabel(self,clear,filePath, stop):
         return self.name       
 
-    def __call__(self,clear=True,filePath=''):
+    def __call__(self,clear=True,filePath='', stop = True):
         ID = eg.event.payload
         self.plugin.SongJubox(
             ID,
             clear,
+            stop
         )
             
     class text():
-        label1 = "Target file to export albums:"
+        label1 = "Target file to export songs:"
         saveButton = "Export song list to file"
         openButton = "Open song list file"
         baloonBttn = ('''ATTENTION !!! This operation may take several minutes !!!
@@ -3499,9 +3527,10 @@ class JukeboxFrame(wx.Frame):
         clear,
         filePath,
         create,
-        repeat=None,
-        shuffle=None,
-        crossfade=None,
+        stop,
+        repeat = None,
+        shuffle = None,
+        crossfade = None,
     ):
 
         eg.Bind("MediaMonkey.jukebox",self.CompleteForm)
@@ -3512,6 +3541,7 @@ class JukeboxFrame(wx.Frame):
         self.repeat = repeat
         self.shuffle = shuffle
         self.crossfade = crossfade
+        self.stop = stop
         self.text = self.plugin.text
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         centralSizer = wx.GridBagSizer(10, 10)
@@ -3623,9 +3653,10 @@ class JukeboxFrame(wx.Frame):
                 self.repeat,
                 self.shuffle,
                 self.crossfade,
+                self.stop
             )
         else:
-            self.plugin.SongJubox(ID,self.clear)
+            self.plugin.SongJubox(ID,self.clear,self.stop)
         evt.Skip()
 
     def OnRightClick(self, event):
