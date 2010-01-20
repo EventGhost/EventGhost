@@ -33,23 +33,15 @@ eg.RegisterPlugin(
     description=__doc__,
     url="http://www.eventghost.org/forum/viewtopic.php?t=915",
     author="Bitmonster",
-    version="1.0.0",
+    version="1.0.2",
     kind="remote",
+    hardwareId = "USB\\VID_0471&PID_0602",
     guid="{74DBFE39-FEF6-41E5-A047-96454512B58D}",
 )
 
-
-KEY_MAP = (
-    "Hand",
-    "LButtonDown", "RButtonDown", "LButtonDoubleClick", "RButtonDoubleClick",
-    "Mouse090", "Mouse000", "Mouse270", "Mouse180",
-    "Mouse045", "Mouse135", "Mouse315", "Mouse225",
-    "Menu", "Setup",
-    "FastForward", "Rewind", 
-    "StopWatch",
-    "Resize", "WebLaunch", "Help", "Info", "Power", "Book",
-    "Ati", "TV", "TV2", "FM", "DVD", "Guide",
-)
+from math import atan2, pi
+from eg.WinApi.Dynamic import mouse_event
+    
 
 CODES = {
     0: "Num0",
@@ -68,12 +60,15 @@ CODES = {
     17: "VolumeDown",
     32: "ChannelUp",
     33: "ChannelDown",
+    40: "FastForward",
+    41: "FastRewind",
     44: "Play",
     48: "Pause",
     49: "Stop",
     55: "Record",
     56: "DVD",
     57: "TV",
+    84: "Setup",
     88: "Up",
     89: "Down",
     90: "Left",
@@ -85,8 +80,21 @@ CODES = {
     123: "D",
     124: "E",
     125: "F",
-    142: "Ati",
-    150: "StopWatch",
+    130: "Checkmark",
+    142: "ATI",
+    150: "Stopwatch",
+    190: "Help",
+    208: "Hand",
+    213: "Resize",
+    249: "Info",
+}
+
+DEVICES = {
+    0: "AUX1",
+    1: "AUX2",
+    2: "AUX3",
+    3: "AUX4",
+    4: "PC",
 }
 
 
@@ -96,39 +104,63 @@ class AtiRemoteWonder2(eg.PluginBase):
         self.usb = eg.WinUsb(self)
         self.usb.AddDevice(
             "ATI Remote Wonder II (Mouse)",
-            "USB\VID_0471&PID_0602&MI_00",
+            "USB\\VID_0471&PID_0602&MI_00",
             "{626E95E1-40B8-4BCD-A9C2-C28D52BB1283}",
             self.Callback1,
             3
         )
         self.usb.AddDevice(
             "ATI Remote Wonder II (Buttons)",
-            "USB\VID_0471&PID_0602&MI_01",
+            "USB\\VID_0471&PID_0602&MI_01",
             "{8D725CF7-AA01-420F-B797-4CD77EC63644}",
             self.Callback2,
             3
         )
         self.usb.Open()
+        self.lastDirection = None
+        self.currentDevice = None
+        self.timer = eg.ResettableTimer(self.OnTimeOut)
+        self.receiveQueue = eg.plugins.Mouse.plugin.thread.receiveQueue
 
 
     def __stop__(self):
+        self.timer.Stop()
         self.usb.Close()
 
 
-    def Callback1(self, data):
-        print "#1", data
+    def Callback1(self, (device, x, y)):
+        if x > 127:
+            x -= 256
+        if y > 127:
+            y -= 256
+        degree = (round((atan2(x, -y) / pi) * 180)) % 360
+        if degree != self.lastDirection:
+            self.receiveQueue.put(degree)
+            self.lastDirection = degree
+        self.timer.Reset(100)
 
 
     def Callback2(self, (device, event, code)):
-        print "#2", (device, event, code)
+        if device != self.currentDevice:
+            self.currentDevice = device
+            self.TriggerEvent(DEVICES[device])
         if event == 1:
-            if code == 63:
-                if device == 4:
-                    self.TriggerEnduringEvent("PC")
-                else:
-                    self.TriggerEnduringEvent("AUX%i" % (device + 1))
-            else:
+            if code == 169:
+                mouse_event(0x0002, 0, 0, 0, 0)
+            elif code == 170:
+                mouse_event(0x0008, 0, 0, 0, 0)
+            elif code != 63:
                 self.TriggerEnduringEvent(CODES.get(code, "%i" % code))
         elif event == 0:
-            self.EndLastEvent()
+            if code == 169:
+                mouse_event(0x0004, 0, 0, 0, 0)
+            elif code == 170:
+                mouse_event(0x0010, 0, 0, 0, 0)
+            else:
+                self.EndLastEvent()
 
+
+    @eg.LogIt
+    def OnTimeOut(self):
+        self.receiveQueue.put(-2)
+        self.lastDirection = None
