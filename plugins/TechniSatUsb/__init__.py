@@ -23,7 +23,7 @@ Plugin for the TechniSat USB IR Receiver
    :align: center
 
 **Note:**
-This receiver does not deliver the duration of a key press, so advanced 
+This receiver does not deliver the duration of a key press, so advanced
 features like autorepeat are not working with it. It will also only work with
 a TS 35 or TTS 35 remote from TechniSat.
 """
@@ -37,6 +37,7 @@ eg.RegisterPlugin(
     kind = "remote",
     guid = "{5ACADFF2-2787-420E-A4CB-296BD1769989}",
     description = __doc__,
+    hardwareId = "USB\\VID_147A&PID_E02D",
 )
 
 CODES = {

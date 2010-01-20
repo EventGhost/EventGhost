@@ -44,6 +44,7 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.0",
     kind = "remote",
+    hardwareId = "USB\\VID_0BC7&PID_0006",
     guid = "{C3E96757-E507-4CC3-A2E6-465D48B87D09}",
     canMultiLoad = True,
     description = __doc__,

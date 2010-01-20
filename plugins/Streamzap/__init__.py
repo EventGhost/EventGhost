@@ -33,6 +33,7 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.1",
     kind = "remote",
+    hardwareId = "USB\\VID_0E9C&PID_0000",
     guid = "{C188351F-44E3-459D-92FC-66F51104B1DB}",
     description = __doc__,
     icon = (

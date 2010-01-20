@@ -38,6 +38,27 @@ class ActionThread(eg.ThreadWorker):
         start = clock()
         eg.document.Load(filename)
         eg.PrintDebugNotice("XML loaded in %f seconds." % (clock() - start))
+
+        missingIds = (
+            set(eg.WinUsb.ListDevices().iterkeys())
+            - set(
+                item.executable.info.hardwareId
+                    for item in eg.document.autostartMacro.childs
+                        if item.xmlTag == "Plugin"
+            )
+        )
+        missingPlugins = [
+            pluginInfo for pluginInfo in eg.pluginManager.database.itervalues()
+                if pluginInfo.hardwareId in missingIds
+        ]
+        if missingPlugins:
+            print "EventGhost has found devices on your system, that can be "
+            print "handled by the following plugins and are not loaded by your"
+            print "current configuration:"
+            for pluginInfo in missingPlugins:
+                print "   -", pluginInfo.name
+            print "If you want to use them, please add the missing plugins."
+
         eg.programCounter = (eg.document.autostartMacro, None)
         eg.RunProgram()
 

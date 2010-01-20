@@ -51,6 +51,7 @@ class PluginModuleInfo(object):
     englishDescription = None
     path = None
     pluginName = None
+    hardwareId = ""
 
 
     def __init__(self, path):
@@ -101,6 +102,7 @@ class PluginModuleInfo(object):
         url = None,
         help = None,
         guid = "",
+        hardwareId = "",
         **kwargs
     ):
         if name is None:
@@ -123,6 +125,7 @@ class PluginModuleInfo(object):
         if not guid:
             eg.PrintDebugNotice("missing guid in plugin: %s" % self.path)
             self.guid = self.pluginName
+        self.hardwareId = hardwareId.upper()
         # get the icon if any
         if icon is not None:
             self.icon = eg.Icons.StringIcon(icon)

@@ -27,6 +27,7 @@ eg.RegisterPlugin(
     kind = "remote",
     guid = "{097D33BE-FD65-43D2-852B-5DA8A3FBC489}",
     description = __doc__,
+    hardwareId = "USB\\VID_0766&PID_0204",
 )
 
 KEY_CODES = {

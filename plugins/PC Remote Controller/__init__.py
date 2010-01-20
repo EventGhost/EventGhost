@@ -32,6 +32,7 @@ eg.RegisterPlugin(
     version = "1.0.0",
     kind = "remote",
     guid = "{401F1F43-58D9-4F99-936A-A9114CE73D7E}",
+    hardwareId = "USB\\VID_06B4&PID_1C70",
 )
 
 from math import atan2, pi
@@ -90,7 +91,7 @@ class PcRemoteController(eg.PluginBase):
             self.usb = eg.WinUsb(self)
             self.usb.AddDevice(
                 "PC Remote Controller",
-                "USB\VID_06B4&PID_1C70",
+                "USB\\VID_06B4&PID_1C70",
                 "{72679574-1865-499d-B182-4B099D6D1391}", 
                 self.Callback, 
                 4,

@@ -27,7 +27,7 @@ eg.RegisterPlugin(
     version="1.0.0",
     kind="remote",
     guid="{0B5511F9-6E8D-447D-9BD7-340E2C3548DD}",
-    usbIds = ["USB\\VID_0755&PID_2626"],
+    hardwareId = "USB\\VID_0755&PID_2626",
 )
 
 REMOTE_BUTTONS = {

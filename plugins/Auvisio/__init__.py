@@ -27,6 +27,7 @@ eg.RegisterPlugin(
     kind = "remote",
     guid = "{96F3D335-C941-4F4E-A196-AAD190E3E255}",
     description = __doc__,
+    hardwareId = "USB\VID_05A4&PID_9881",
 )
 
 from math import atan2, pi
