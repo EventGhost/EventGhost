@@ -56,7 +56,7 @@ def GetPluginAuthors():
     tmp.sort(key=lambda x: (-len(x[1]), x[0].lower()))
     authorList = []
     for author, pluginNames in tmp:
-        pluginNames.sort(key=unicode.lower)
+        pluginNames.sort(key=lambda s: s.lower())
         authorList.append((author, ",<BR>".join(pluginNames)))
     return authorList
 
