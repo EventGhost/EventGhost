@@ -18,14 +18,14 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2009-12-29 19:41 GMT+1
+#Last change: 2010-01-21 17:23 GMT+1
 
 
 
 eg.RegisterPlugin(
     name = "OS Menu",
     author = "Pako",
-    version = "0.1.11",
+    version = "0.1.12",
     kind = "other",
     guid = "{FCF3C7A7-FBC1-444D-B768-9477521946DC}",
     description = u"""<rst>
@@ -644,15 +644,11 @@ ACTIONS = (
 #===============================================================================
 
 class OSM(eg.PluginClass):
-    monDim = None
     menuDlg = None
     choices = []
 
     def __init__(self):
         self.AddActionsFromList(ACTIONS)
-
-    def __start__(self):
-        self.monDim = GetMonitorDimensions()
 #===============================================================================
             
 class Menu(wx.Frame):
@@ -684,10 +680,12 @@ class Menu(wx.Frame):
         self.flag    = flag
         self.prefix  = prefix
         #self.monitor = monitor
+    
+        monDim = GetMonitorDimensions()
         try:
-            x,y,ws,hs = self.plugin.monDim[monitor]
+            x,y,ws,hs = monDim[monitor]
         except IndexError:
-            x,y,ws,hs = self.plugin.monDim[0]
+            x,y,ws,hs = monDim[0]
         
         eventChoiceCtrl=wx.ListBox(
             self,
