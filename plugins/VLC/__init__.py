@@ -39,6 +39,7 @@ eg.RegisterPlugin(
     author = "MonsterMagnet",
     version = "0.4." + "$LastChangedRevision$".split()[1],
     kind = "program",
+    guid = "{02929D1C-7567-414C-84D1-F8D71D6FD7B3}",
     canMultiLoad = True,
     createMacrosOnAdd = True,
     description = __doc__,
@@ -69,150 +70,6 @@ import _winreg
 from win32api import ShellExecute
 
 
-ACTIONS = (
-    (
-        'Play', 
-        'Play', 
-        'Start playing', 
-        'pause'
-    ),
-    (
-        'Pause', 
-        'Pause', 
-        'Toggle play/pause', 
-        'pause'
-    ),
-    (
-        'Stop', 
-        'Stop', 
-        'Stop and close current item', 
-        'stop'
-    ),
-    (
-        'FastForward', 
-        'Fast Forward', 
-        'Skip ~5 sec forward', 
-        'fastforward'
-    ),
-    (
-        'FastRewind', 
-        'Fast Rewind', 
-        'Skip ~5 sec back', 
-        'rewind'
-    ),
-    (
-        'PlayFaster', 
-        'Play Faster', 
-        'Play faster', 
-        'faster'
-    ),
-    (
-        'PlaySlower', 
-        'Play Slower', 
-        'Play slower', 
-        'slower'
-    ),
-    (
-        'PlayNormal', 
-        'Play Normal', 
-        'Play normal', 
-        'normal'
-    ),
-    (
-        'Fullscreen', 
-        'Fullscreen', 
-        'Toggle fullscreen', 
-        'f'
-    ),
-    (
-        'NextPlaylistItem', 
-        'Next Playlist Item', 
-        'Jump forward to the next item in playlist', 
-        'next'
-    ),
-    (
-        'PreviousPlaylistItem', 
-        'Previous Playlist Item', 
-        'Jump backward to the previous playlist item',
-        'prev'
-    ),
-    (
-        'NextTitle', 
-        'Next Title', 
-        'Next title in current item', 
-        'title_n'
-    ),
-    (
-        'PreviousTitle', 
-        'Previous Title', 
-        'Previous title in current item', 
-        'title_p'
-    ),
-    (
-        'NextChapter', 
-        'Next Chapter', 
-        'Next chapter in current item', 
-        'chapter_n'
-    ),
-    (
-        'PreviousChapter', 
-        'Previous Chapter', 
-        'Previous chapter in current item', 
-        'chapter_p'
-    ),
-    (
-        'CurrentPlaylistStatus', 
-        'Current Playlist Status', 
-        'If VLC feedback is enabled in plugin settings, the logger shows '
-            'information about the current playlist status.', 
-        'status'
-    ),
-    (
-        'StreamInfo', 
-        'Stream Info', 
-        'If VLC feedback is enabled in plugin settings, the logger shows '
-            'information about the current stream.', 
-        'info'
-    ),
-    (
-        'ShowPlaylist', 
-        'Show Playlist', 
-        'If VLC feedback is enabled in plugin settings, the logger shows '
-            'information about the current playlist.', 
-        'playlist'
-    ),
-    (
-        'ClearPlaylist', 
-        'Clear Playlist', 
-        'Clear the playlist and close current item', 
-        'clear'
-    ),
-    (
-        'VolumeUp', 
-        'Volume Up', 
-        'Volume up', 
-        'volup'
-    ),
-    (
-        'VolumeDown', 
-        'Volume Down', 
-        'Volume down', 
-        'voldown'
-    ),
-    (
-        'Quit', 
-        'Quit', 
-        'Quit VLC', 
-        'quit'
-    ),
-    (
-        'Help', 
-        'Help', 
-        'If VLC feedback is enabled in plugin settings, the logger shows all '
-            'available commands, use <i>"My Command"</i> to execute them.', 
-        'H'
-    ),
-)
 
 
 def GetVlcPath():
@@ -293,8 +150,7 @@ class ActionPrototype(eg.ActionBase):
 
 
 class Start(eg.ActionBase):
-    description = "Starts VLC with the needed command line arguments."
-    
+   
     class text:
         additionalArgs = "Additional command line arguments:"
         resultingCmdLine = "Resulting command line:"
@@ -356,10 +212,6 @@ class Start(eg.ActionBase):
             
             
 class MyCommand(eg.ActionBase):
-    name = "My Command"
-    description = (
-        "Here you can enter your own command, ie. show a custom text message."
-    )
     class text:
         label = (
             "My Command: (Type 'H' to see a list of all available commands.)"
@@ -381,6 +233,91 @@ class MyCommand(eg.ActionBase):
             panel.SetResult(textCtrl.GetValue())
 
 
+class Seek(eg.ActionBase):
+    class text:
+        label = "Seek value:"
+        unit = "Unit"
+        unitChoice = ("Second","Percent")
+        pos = "Positioning"
+        posChoice = ("Relatively","Absolute")
+        dir = "Direction"
+        dirChoice = ("Forward","Backward")
+        
+    def __call__(self, value, unit = 0, pos = 0, dir = 0):
+        val = eg.ParseString(value)
+        if pos: #Absolute
+            self.plugin.Push("seek %s%s\r\n" % (val,("","%")[unit]))
+        else:
+            self.plugin.seekStatus = 1
+            self.plugin.unit = unit
+            self.plugin.seek = int(val)
+            self.plugin.seek *= (1,-1)[dir]
+            self.plugin.Push("get_length\r\n")
+
+    def GetLabel(self, value, unit, pos, dir):
+        if pos:
+            return "%s: %s%s, %s" % (self.name,value,("","%")[unit],self.text.posChoice[pos])
+        else:
+            return "%s: %s%s, %s, %s" % (self.name,value,("","%")[unit],self.text.posChoice[pos],self.text.dirChoice[dir])
+
+    def Configure(self, value="60", unit = 0, pos = 0, dir = 0):
+        text = self.text
+        panel = eg.ConfigPanel()
+        mySizer = panel.sizer
+        width = 120
+        staticText = panel.StaticText(text.label)
+        textCtrl = panel.TextCtrl(value, size = (2*width+10,-1))
+        unitSizer = wx.StaticBoxSizer(
+            wx.StaticBox(panel, -1, text.unit), 
+            wx.HORIZONTAL
+        )
+        rb1 = panel.RadioButton(not unit, text.unitChoice[0], style=wx.RB_GROUP, size = (width,-1))
+        rb2 = panel.RadioButton(unit, text.unitChoice[1])                            
+        unitSizer.Add(rb1, 1)
+        unitSizer.Add(rb2, 1)
+
+        posSizer = wx.StaticBoxSizer(
+            wx.StaticBox(panel, -1, text.pos), 
+            wx.HORIZONTAL
+        )
+        rb3 = panel.RadioButton(not pos, text.posChoice[0], style=wx.RB_GROUP, size = (width,-1))
+        rb4 = panel.RadioButton(pos, text.posChoice[1])                            
+        posSizer.Add(rb3, 1)
+        posSizer.Add(rb4, 1)
+
+        dirSizer = wx.StaticBoxSizer(
+            wx.StaticBox(panel, -1, text.dir), 
+            wx.HORIZONTAL
+        )
+        rb5 = panel.RadioButton(not dir, text.dirChoice[0], style=wx.RB_GROUP, size = (width,-1))
+        rb6 = panel.RadioButton(dir, text.dirChoice[1])                            
+        dirSizer.Add(rb5, 1)
+        dirSizer.Add(rb6, 1)
+        
+        def OnRadioButton(event=None):
+            flag = rb3.GetValue()
+            mySizer.Show(dirSizer,flag,True)
+            mySizer.Layout()
+            if event:
+                event.Skip()
+        rb3.Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
+        rb4.Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
+
+        mySizer.Add(staticText, 0, wx.TOP, 5)
+        mySizer.Add(textCtrl, 0, wx.TOP, 2)
+        mySizer.Add(unitSizer, 0, wx.TOP, 15)
+        mySizer.Add(posSizer, 0, wx.TOP, 15)
+        mySizer.Add(dirSizer, 0, wx.TOP, 15)
+        OnRadioButton()
+        while panel.Affirmed():
+            panel.SetResult(
+                textCtrl.GetValue(),
+                rb2.GetValue(),
+                rb4.GetValue(),
+                rb6.GetValue(),
+                )
+
+
 
 class VLC(eg.PluginBase):
     
@@ -394,10 +331,7 @@ class VLC(eg.PluginBase):
         
     def __init__(self):
         self.AddEvents()
-        
-        self.AddAction(Start)
-        self.AddAction(MyCommand)
-        self.AddActionsFromList(ACTIONS, ActionPrototype)
+        self.AddActionsFromList(ACTIONS)
                              
                             
     def __start__(self, host="localhost", port=1234, showFeedbackEvents=True): 
@@ -407,6 +341,10 @@ class VLC(eg.PluginBase):
         self.isDispatcherRunning = False
         self.feedback = ""
         self.showFeedbackEvents = showFeedbackEvents
+        self.seekStatus = 0
+        self.length = 0
+        self.seek = 0
+        self.unit = 0
        
     
     def __stop__(self):
@@ -416,8 +354,28 @@ class VLC(eg.PluginBase):
 
     def ValueUpdate(self, text):
         state = text.decode('utf-8')
-        if self.showFeedbackEvents:
-            self.TriggerEvent(state)
+        if not self.seekStatus:
+            if self.showFeedbackEvents:
+                self.TriggerEvent(state)
+        elif self.seekStatus == 1:
+            print "status 1: "+state
+            try:
+                self.length = int(state)+self.seek
+                self.Push("get_time\r\n")
+                self.seekStatus = 2
+            except:
+                pass
+        else: #self.seekStatus == 2
+            print "status 2: "+state
+            try:
+                if not self.unit: #Seconds
+                    pos = int(state)+self.seek
+                else:             #Percents
+                    pos = int(state)+self.seek*(self.length/100)
+                self.Push("seek "+str(pos)+"\r\n")
+                self.seekStatus = 0
+            except:
+                pass
 
 
     def Push(self, data):
@@ -457,5 +415,192 @@ class VLC(eg.PluginBase):
                 portCtrl.GetValue(), 
                 checkBox.GetValue()
             )
-   
-               
+ 
+ACTIONS = (
+    (
+        Start,
+        'Start', 
+        'Start', 
+        'Starts VLC with the needed command line arguments.', 
+        None
+    ),
+    (
+        ActionPrototype,
+        'Quit', 
+        'Quit', 
+        'Quit VLC', 
+        'quit'
+    ),
+    (
+        ActionPrototype,
+        'Play', 
+        'Play', 
+        'Start playing', 
+        'pause'
+    ),
+    (
+        ActionPrototype,
+        'Pause', 
+        'Pause', 
+        'Toggle play/pause', 
+        'pause'
+    ),
+    (
+        ActionPrototype,
+        'Stop', 
+        'Stop', 
+        'Stop and close current item', 
+        'stop'
+    ),
+    (
+        ActionPrototype,
+        'FastForward', 
+        'Fast Forward', 
+        'Skip ~5 sec forward', 
+        'fastforward'
+    ),
+    (
+        ActionPrototype,
+        'FastRewind', 
+        'Fast Rewind', 
+        'Skip ~5 sec back', 
+        'rewind'
+    ),
+    (
+        ActionPrototype,
+        'PlayFaster', 
+        'Play Faster', 
+        'Play faster', 
+        'faster'
+    ),
+    (
+        ActionPrototype,
+        'PlaySlower', 
+        'Play Slower', 
+        'Play slower', 
+        'slower'
+    ),
+    (
+        ActionPrototype,
+        'PlayNormal', 
+        'Play Normal', 
+        'Play normal', 
+        'normal'
+    ),
+    (
+        Seek,
+        'Seek', 
+        'Seek', 
+        'Seek.', 
+        None
+    ),
+    (
+        ActionPrototype,
+        'Fullscreen', 
+        'Fullscreen', 
+        'Toggle fullscreen', 
+        'f'
+    ),
+    (
+        ActionPrototype,
+        'NextPlaylistItem', 
+        'Next Playlist Item', 
+        'Jump forward to the next item in playlist', 
+        'next'
+    ),
+    (
+        ActionPrototype,
+        'PreviousPlaylistItem', 
+        'Previous Playlist Item', 
+        'Jump backward to the previous playlist item',
+        'prev'
+    ),
+    (
+        ActionPrototype,
+        'NextTitle', 
+        'Next Title', 
+        'Next title in current item', 
+        'title_n'
+    ),
+    (
+        ActionPrototype,
+        'PreviousTitle', 
+        'Previous Title', 
+        'Previous title in current item', 
+        'title_p'
+    ),
+    (
+        ActionPrototype,
+        'NextChapter', 
+        'Next Chapter', 
+        'Next chapter in current item', 
+        'chapter_n'
+    ),
+    (
+        ActionPrototype,
+        'PreviousChapter', 
+        'Previous Chapter', 
+        'Previous chapter in current item', 
+        'chapter_p'
+    ),
+    (
+        ActionPrototype,
+        'CurrentPlaylistStatus', 
+        'Current Playlist Status', 
+        'If VLC feedback is enabled in plugin settings, the logger shows '
+            'information about the current playlist status.', 
+        'status'
+    ),
+    (
+        ActionPrototype,
+        'StreamInfo', 
+        'Stream Info', 
+        'If VLC feedback is enabled in plugin settings, the logger shows '
+            'information about the current stream.', 
+        'info'
+    ),
+    (
+        ActionPrototype,
+        'ShowPlaylist', 
+        'Show Playlist', 
+        'If VLC feedback is enabled in plugin settings, the logger shows '
+            'information about the current playlist.', 
+        'playlist'
+    ),
+    (
+        ActionPrototype,
+        'ClearPlaylist', 
+        'Clear Playlist', 
+        'Clear the playlist and close current item', 
+        'clear'
+    ),
+    (
+        ActionPrototype,
+        'VolumeUp', 
+        'Volume Up', 
+        'Volume up', 
+        'volup'
+    ),
+    (
+        ActionPrototype,
+        'VolumeDown', 
+        'Volume Down', 
+        'Volume down', 
+        'voldown'
+    ),
+    (
+        MyCommand,
+        'MyCommand', 
+        'My Command', 
+        'Here you can enter your own command, ie. show a custom text message.',
+        None
+    ),
+    (
+        ActionPrototype,
+        'Help', 
+        'Help', 
+        'If VLC feedback is enabled in plugin settings, the logger shows all '
+            'available commands, use <i>"My Command"</i> to execute them.', 
+        'H'
+    ),
+)
