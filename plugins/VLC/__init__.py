@@ -358,7 +358,6 @@ class VLC(eg.PluginBase):
             if self.showFeedbackEvents:
                 self.TriggerEvent(state)
         elif self.seekStatus == 1:
-            print "status 1: "+state
             try:
                 self.length = int(state)+self.seek
                 self.Push("get_time\r\n")
@@ -366,7 +365,6 @@ class VLC(eg.PluginBase):
             except:
                 pass
         else: #self.seekStatus == 2
-            print "status 2: "+state
             try:
                 if not self.unit: #Seconds
                     pos = int(state)+self.seek
