@@ -18,14 +18,14 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2010-01-16 20:54 GMT+1
+#Last change: 2010-01-22 09:09 GMT+1
 
 
 
 eg.RegisterPlugin(
     name = "On screen explorer",
     author = "Pako",
-    version = "0.0.2",
+    version = "0.0.3",
     kind = "other",
     guid = "{D3D2DDD1-9BEB-4A26-969B-C82FA8EAB280}",
     description = u"""<rst>
@@ -490,6 +490,14 @@ class MoveCursor(eg.ActionClass):
                 )         
 #===============================================================================
 
+class PageUpDown(eg.ActionClass):
+    def __call__(self):
+        if self.plugin.menuDlg:
+            self.plugin.menuDlg.PageUpDown(self.value)
+            eg.event.skipEvent = True
+     
+#===============================================================================
+
 class Cancel(eg.ActionClass):
 
     def __call__(self):
@@ -622,6 +630,8 @@ ACTIONS = (
     (ShowMenu, 'ShowMenu', 'Show explorer', 'Show on screen explorer.', None),
     (MoveCursor, 'MoveUp', 'Cursor Up', 'Cursor Up.', -1),
     (MoveCursor, 'MoveDown', 'Cursor Down', 'Cursor Down.', 1),
+    (PageUpDown, 'PageUp', 'Page Up', 'Page Up.', -1),
+    (PageUpDown, 'PageDown', 'Page Down', 'Page Down.', 1),
     (Execute, 'Execute', 'Execute', 'Execute.', None),
     (Cancel, 'Cancel', 'Cancel', 'Cancel button pressed.', None),
 )
@@ -633,14 +643,10 @@ class Text:
 #===============================================================================    
 
 class OSE(eg.PluginClass):
-    monDim = None
     menuDlg = None
 
     def __init__(self):
         self.AddActionsFromList(ACTIONS)
-
-    def __start__(self):
-        self.monDim = GetMonitorDimensions()
 #===============================================================================
             
 class Menu(wx.Frame):
@@ -707,10 +713,11 @@ class Menu(wx.Frame):
             eventChoiceCtrl.SetForegroundColour(self.fore)            
             if self.flag:
                 self.timer=MyTimer(t = 5.0, plugin = self.plugin)
+        monDim = GetMonitorDimensions()
         try:
-            x,y,ws,hs = self.plugin.monDim[self.monitor]
+            x,y,ws,hs = monDim[self.monitor]
         except IndexError:
-            x,y,ws,hs = self.plugin.monDim[0]
+            x,y,ws,hs = monDim[0]
         # menu height calculation:
         h=eventChoiceCtrl.GetCharHeight()
         height0 = len(self.choices)*h+5
@@ -738,10 +745,32 @@ class Menu(wx.Frame):
         sel = self.GetSizer().GetChildren()[0].GetWindow().GetSelection()
         return os.path.join(self.start,self.choices[sel]),self.prefix,self.suffix
 
+    def PageUpDown(self, direction):
+        max=len(self.choices)
+        if max > 0:
+            choiceCtrl = self.GetSizer().GetChildren()[0].GetWindow()
+            height = choiceCtrl.GetSize()[1]
+            fontH = choiceCtrl.GetTextExtent("X")[1]
+            step = direction * height/fontH
+            sel = choiceCtrl.GetSelection()
+            new = sel + step
+            if new < 0:
+                #new += max
+                new = 0
+            elif new > max - 1:
+                #new -= max
+                new = max - 1
+            choiceCtrl.SetSelection(new)
+            if direction < 0:
+                choiceCtrl.SetFirstItem(new)
+            else:
+                choiceCtrl.SetFirstItem(new-step+1)
+
     def MoveCursor(self,step):
         max=len(self.choices)
         if max > 0:
             choiceCtrl = self.GetSizer().GetChildren()[0].GetWindow()
+            
             sel = choiceCtrl.GetSelection()
             new = sel + step
             if new < 0:
