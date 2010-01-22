@@ -1,4 +1,4 @@
-version = "0.1.12"
+version = "0.1.13"
 # This file is part of EventGhost.
 # Copyright (C) 2008, 2009  Pako <lubos.ruckl@quick.cz>
 #
@@ -17,7 +17,7 @@ version = "0.1.12"
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# Last change: 2010-01-05 13:50 GMT+1
+# Last change: 2010-01-22 09:15 GMT+1
 
 
 eg.RegisterPlugin(
@@ -474,7 +474,6 @@ class Multitap(eg.PluginClass):
     configs = []
     osDialog = None
     config = 0
-    monDim = None
 
     def closeOsDialog(self):
         self.osDialog.Destroy()
@@ -488,10 +487,11 @@ class Multitap(eg.PluginClass):
             frg = ctrlEvtString.GetForegroundColour()
             bck = ctrlEvtString.GetBackgroundColour()
             mon = self.configs[self.config][6]
+            monDim = GetMonitorDimensions()
             try:
-                x,y,ws,hs = self.monDim[mon]
+                x,y,ws,hs = monDim[mon]
             except IndexError:
-                x,y,ws,hs = self.monDim[0]
+                x,y,ws,hs = monDim[0]
             maxlen = (ws-50)/64
             ft = ctrlEvtString.GetFont()
             if len(self.evtString) <= maxlen:
@@ -815,7 +815,6 @@ class Multitap(eg.PluginClass):
         self,
         configs=[],
     ):
-        self.monDim = GetMonitorDimensions()
         self.configs=configs
         #for compatibility with old version:
         for cfg in self.configs:
