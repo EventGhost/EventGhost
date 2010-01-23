@@ -230,6 +230,8 @@ def GetTopLevelWindow(window):
         parent = result.GetParent()
         if parent is None:
             return result
+        elif isinstance(parent, wx.TopLevelWindow):
+            return parent
         result = parent
 
 

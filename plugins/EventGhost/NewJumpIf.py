@@ -75,15 +75,25 @@ class NewJumpIf(eg.ActionBase):
         )
         gosubCtrl = panel.CheckBox(gosub, text.text3)
 
-        panel.SetColumnFlags(1, wx.EXPAND)
-        panel.AddLine(text.text1, kindCtrl)
-        panel.AddLine(text.text2, linkCtrl)
-        panel.AddLine(None, gosubCtrl)
+        labels = (
+            panel.StaticText(text.text1),
+            panel.StaticText(text.text2),
+        )
+        eg.EqualizeWidths(labels)
+        sizer = wx.FlexGridSizer(3, 2, 15, 5)
+        sizer.AddGrowableCol(1, 1)
+        sizer.Add(labels[0], 0, wx.ALIGN_CENTER_VERTICAL)
+        sizer.Add(kindCtrl)
+        sizer.Add(labels[1], 0, wx.ALIGN_CENTER_VERTICAL)
+        sizer.Add(linkCtrl, 1, wx.EXPAND)
+        sizer.Add((0, 0))
+        sizer.Add(gosubCtrl)
+        panel.sizer.Add(sizer, 1, wx.EXPAND, wx.ALIGN_CENTER_VERTICAL)
 
         while panel.Affirmed():
             panel.SetResult(
-                linkCtrl.GetValue(), 
-                kindCtrl.GetValue(), 
+                linkCtrl.GetValue(),
+                kindCtrl.GetValue(),
                 gosubCtrl.GetValue()
             )
 
