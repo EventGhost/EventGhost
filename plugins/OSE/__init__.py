@@ -18,14 +18,14 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2010-01-23 09:22 GMT+1
+#Last change: 2010-01-23 14:45 GMT+1
 
 
 
 eg.RegisterPlugin(
     name = "On screen explorer",
     author = "Pako",
-    version = "0.0.4",
+    version = "0.0.5",
     kind = "other",
     guid = "{D3D2DDD1-9BEB-4A26-969B-C82FA8EAB280}",
     description = u"""<rst>
@@ -74,6 +74,7 @@ import _winreg
 import os
 from win32api import LoadLibrary, LoadString, GetLogicalDriveStrings, GetVolumeInformation
 from fnmatch import fnmatch
+from winsound import PlaySound,SND_ASYNC
 ERROR_NO_ASSOCIATION = 1155
 FOLDER_ID = ">> "
 #===============================================================================
@@ -713,10 +714,13 @@ class Menu(wx.Frame):
         self.prefix   = prefix or self.prefix
         self.suffix   = suffix or self.suffix
         self.monitor  = monitor or self.monitor
-        self.start    = start or self.start
         self.patterns = patterns or self.patterns
-        
-        self.choices  = GetFolderItems(self.start,self.patterns)
+        try:
+            self.choices  = GetFolderItems(start,self.patterns)
+            self.start    = start or self.start
+        except:
+            PlaySound('SystemExclamation',SND_ASYNC)
+            self.choices  = GetFolderItems(self.start,self.patterns)
         sizer = self.GetSizer()
         if sizer:
             eventChoiceCtrl = sizer.GetChildren()[0].GetWindow()
