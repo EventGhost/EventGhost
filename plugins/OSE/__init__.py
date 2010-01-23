@@ -18,14 +18,14 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2010-01-22 09:09 GMT+1
+#Last change: 2010-01-23 09:22 GMT+1
 
 
 
 eg.RegisterPlugin(
     name = "On screen explorer",
     author = "Pako",
-    version = "0.0.3",
+    version = "0.0.4",
     kind = "other",
     guid = "{D3D2DDD1-9BEB-4A26-969B-C82FA8EAB280}",
     description = u"""<rst>
@@ -72,10 +72,15 @@ from eg.WinApi.Utils import GetMonitorDimensions
 from eg.WinApi.Dynamic import CreateEvent, SetEvent
 import _winreg
 import os
-import win32api
+from win32api import LoadLibrary, LoadString, GetLogicalDriveStrings, GetVolumeInformation
 from fnmatch import fnmatch
 ERROR_NO_ASSOCIATION = 1155
 FOLDER_ID = ">> "
+#===============================================================================
+
+class Text:
+    noAssoc = 'Error: No application is associated with the file type "%s" for operation "Open" !'
+    myComp = "My computer"
 #===============================================================================
 
 class MyDirBrowseButton(eg.DirBrowseButton):
@@ -85,14 +90,25 @@ class MyDirBrowseButton(eg.DirBrowseButton):
         self.startDirectory = self.GetValue()
         
 #===============================================================================
+
 def MyComputer():
-    mc_reg = _winreg.OpenKey(
-        _winreg.HKEY_CLASSES_ROOT,
-        "CLSID\\{20D04FE0-3AEA-1069-A2D8-08002B30309D}"
-    )
-    myComputer = unicode(_winreg.EnumValue(mc_reg,0)[1])
-    _winreg.CloseKey(mc_reg)
+    mc_reg = None
+    try:
+        mc_reg = _winreg.OpenKey(
+            _winreg.HKEY_CLASSES_ROOT,
+            "CLSID\\{20D04FE0-3AEA-1069-A2D8-08002B30309D}"
+        )
+        value, type = _winreg.QueryValueEx(mc_reg, "LocalizedString")
+        dll = os.path.split(value.split(",")[0][1:])[1]
+        index = -1*int(value.split(",")[1])
+        myComputer = LoadString(LoadLibrary(dll), index)
+    except:
+        myComputer = Text.myComp
+    if mc_reg:
+        _winreg.CloseKey(mc_reg)
     return myComputer
+    
+MY_COMPUTER = MyComputer()    
 
 def CaseInsensitiveSort(list):
     tmp = [(item.upper(), item) for item in list] # Schwartzian transform
@@ -101,8 +117,7 @@ def CaseInsensitiveSort(list):
 
 def GetFolderItems(folder, patterns):
     patterns = patterns.split(",")
-    myComputer = MyComputer()
-    if folder != myComputer:
+    if folder != MY_COMPUTER:
         ds = [FOLDER_ID+f for f in os.listdir(folder) if os.path.isdir(os.path.join(folder,f))]
         ds = CaseInsensitiveSort(ds)
         fs = ["..",]
@@ -116,11 +131,11 @@ def GetFolderItems(folder, patterns):
         fs.extend(ds)
         return fs
     else: #pseudo-folder "My computer"
-        drives = win32api.GetLogicalDriveStrings().split('\000')[:-1]
+        drives = GetLogicalDriveStrings().split('\000')[:-1]
         drvs = []
         for dr in drives:
             try:
-               name = win32api.GetVolumeInformation(dr)[0]
+               name = GetVolumeInformation(dr)[0]
                drvs.append(FOLDER_ID+"%s (%s)" % (name,dr[:2]))
             except:
                 pass
@@ -145,6 +160,9 @@ class ShowMenu(eg.ActionClass):
         browseTitle = "Selected folder:"
         toolTipFolder = "Press button and browse to select folder ..."
         patterns = "Show only the files corresponding to these patterns:"
+        compBtnToolTip = 'Press this button to set "%s" as start folder'
+        patternsToolTip = '''Here you can enter the patterns of required files, separated by commas.
+For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
 #-------------------------------------------------------------------------------
 
     class MenuColourSelectButton(wx.BitmapButton):
@@ -286,6 +304,8 @@ class ShowMenu(eg.ActionClass):
         patterns = "*.*"
     ):
         if not self.plugin.menuDlg:
+            if not os.path.isdir(start) and start != MY_COMPUTER:
+                start = eg.folderPath.Documents
             self.plugin.menuDlg = Menu()
             self.event = CreateEvent(None, 0, 0, None)
             wx.CallAfter(self.plugin.menuDlg.ShowMenu,
@@ -341,9 +361,10 @@ class ShowMenu(eg.ActionClass):
         )
         if not patterns:
             patterns = "*.*"
-        if start:
-            items = GetFolderItems(start, patterns)
-            listBoxCtrl.Set(items)
+        if not os.path.isdir(start) and start != MY_COMPUTER:
+            start = eg.folderPath.Documents
+        items = GetFolderItems(start, patterns)
+        listBoxCtrl.Set(items)
 
         listBoxCtrl.SetBackgroundColour(self.back)
         listBoxCtrl.SetForegroundColour(self.fore)
@@ -385,18 +406,20 @@ class ShowMenu(eg.ActionClass):
         folderLabel = wx.StaticText(panel, -1, self.text.folder)
         folderCtrl = MyDirBrowseButton(
             panel, 
-            size=(410,-1),
+#            size=(410,-1),
             toolTip = self.text.toolTipFolder,
             dialogTitle = self.text.browseTitle,
             buttonText = eg.text.General.browse,
         )
+        compBtn = wx.Button(panel,-1,MY_COMPUTER)
+        compBtn.SetToolTip(wx.ToolTip(self.text.compBtnToolTip % MY_COMPUTER))
         folderCtrl.GetTextCtrl().SetEditable(False)
-        #if not start:
-        #    start = eg.folderPath.Documents           
         folderCtrl.SetValue(start)
         folderCtrl.SetStartDirectory()
         patternsLabel = wx.StaticText(panel, -1, self.text.patterns)
-        patternsCtrl = wx.TextCtrl(panel,-1,patterns,size=(410,-1))
+#        patternsCtrl = wx.TextCtrl(panel,-1,patterns,size=(410,-1))
+        patternsCtrl = wx.TextCtrl(panel,-1,patterns)
+        patternsCtrl.SetToolTip(wx.ToolTip(self.text.patternsToolTip))
         #Sizers
         mainSizer = panel.sizer
         topSizer=wx.GridBagSizer(2, 30)
@@ -416,10 +439,18 @@ class ShowMenu(eg.ActionClass):
         topSizer.Add(OSElbl,(4, 2),flag = wx.TOP,border = 8)
         topSizer.Add(displayChoice,(5, 2))
         mainSizer.Add(folderLabel,0,wx.TOP,8)
-        mainSizer.Add(folderCtrl,0,wx.TOP,2)
+        folderSizer = wx.BoxSizer(wx.HORIZONTAL)
+        folderSizer.Add(folderCtrl,1,wx.EXPAND)
+        folderSizer.Add(compBtn,0,wx.LEFT,20)
+        mainSizer.Add(folderSizer,0,wx.TOP|wx.EXPAND,2)
         mainSizer.Add(patternsLabel,0,wx.TOP,8)
-        mainSizer.Add(patternsCtrl,0,wx.TOP,2)
+        mainSizer.Add(patternsCtrl,1,wx.TOP|wx.EXPAND,2)
         panel.sizer.Layout()
+        
+        def OnCompBtn(evt):
+            folderCtrl.SetValue(MY_COMPUTER)
+            evt.Skip()
+        compBtn.Bind(wx.EVT_BUTTON, OnCompBtn)
 
         def OnTextChange(evt):
             folder = folderCtrl.GetValue()
@@ -544,7 +575,7 @@ class Execute (eg.ActionClass):
             elif os.path.isdir(filePath):
                 if filePath[-3:] == r"\..":
                     if len(filePath) == 5:
-                        filePath = MyComputer()
+                        filePath = MY_COMPUTER
                     else:                
                         filePath = os.path.split(filePath[:-3])[0]
                 if val&8: #trigger event
@@ -635,11 +666,6 @@ ACTIONS = (
     (Execute, 'Execute', 'Execute', 'Execute.', None),
     (Cancel, 'Cancel', 'Cancel', 'Cancel button pressed.', None),
 )
-#===============================================================================
-
-class Text:
-    noAssoc = 'Error: No application is associated with the file type "%s" for operation "Open" !'
-    
 #===============================================================================    
 
 class OSE(eg.PluginClass):
@@ -787,7 +813,7 @@ class Menu(wx.Frame):
             filePath = filePath[-3:-1]+"\\"
         if filePath[-3:] == r"\..":
             if len(filePath) == 5:
-                filePath = MyComputer()
+                filePath = MY_COMPUTER
             else:                
                 filePath = os.path.split(filePath[:-3])[0]
 
