@@ -31,22 +31,19 @@ eg.RegisterPlugin(
 
 from math import atan2, pi
 
+
 class WinUsbTest(eg.PluginBase):
 
     def __start__(self):
-        self.usb = eg.WinUsb(self)
-        self.usb.AddDevice(
-            "WinUSB Test Device",
-            "USB\\VID_0609&PID_031D",
-            "{F7068BA0-977A-45D6-B488-AF725A604CDC}",
-            self.Callback1,
-            1
+        self.winUsb = eg.WinUsb(self)
+        self.winUsb.Device(self.Callback1, 1).AddHardwareId(
+            "WinUsb Test Device", "USB\\VID_073A&PID_2230"
         )
-        self.usb.Open()
+        self.winUsb.Start()
 
 
     def __stop__(self):
-        self.usb.Close()
+        self.winUsb.Stop()
 
 
     def Callback1(self, data):

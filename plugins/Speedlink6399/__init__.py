@@ -92,26 +92,18 @@ class Speedlink(eg.PluginBase):
 
     def __start__(self):
         self.info.eventPrefix = "SpeedLink"
-        self.usb = eg.WinUsb(self)
-        self.usb.AddDevice(
-            "SPEEDLINK SL-6399 Media Remote #1",
-            "USB\\VID_1241&PID_E000&MI_00",
-            "{28C08E45-F91D-4E69-9280-E768FA593354}", 
-            self.Callback1, 
-            8,        
+        self.winUsb = eg.WinUsb(self)
+        self.winUsb.Device(self.Callback1, 8).AddHardwareId(
+            "SPEEDLINK SL-6399 Media Remote", "USB\\VID_1241&PID_E000&MI_00"
         )
-        self.usb.AddDevice(
-            "SPEEDLINK SL-6399 Media Remote #2",
-            "USB\\VID_1241&PID_E000&MI_01",
-            "{77A6D595-D921-44C7-BE5C-F6304FE97155}", 
-            self.Callback2, 
-            4,        
+        self.winUsb.Device(self.Callback2, 4).AddHardwareId(
+            "SPEEDLINK SL-6399 Media Remote", "USB\\VID_1241&PID_E000&MI_01"
         )
-        self.usb.Open()
+        self.winUsb.Start()
         
          
     def __stop__(self):
-        self.usb.Close()
+        self.winUsb.Stop()
 
 
     def Callback1(self, data):

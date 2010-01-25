@@ -84,27 +84,15 @@ BUTTONS = {
     (6, 129, 0, 0): (0, 'Power'),
 }
 
+
 class PcRemoteController(eg.PluginBase):
 
     def __start__(self):
-        if eg.Version.base >= "0.4.0":
-            self.usb = eg.WinUsb(self)
-            self.usb.AddDevice(
-                "PC Remote Controller",
-                "USB\\VID_06B4&PID_1C70",
-                "{72679574-1865-499d-B182-4B099D6D1391}", 
-                self.Callback, 
-                4,
-            )
-            self.usb.Open()
-        else:
-            self.usb = eg.WinUsbRemote(
-                "{72679574-1865-499d-B182-4B099D6D1391}", 
-                self.Callback, 
-                4,            
-            )
-            if not self.usb.IsOk():
-                raise self.Exceptions.DeviceNotFound
+        self.winUsb = eg.WinUsb(self)
+        self.winUsb.Device(self.Callback, 4).AddHardwareId(
+            "PC Remote Controller", "USB\\VID_06B4&PID_1C70",
+        )
+        self.winUsb.Start()
         self.lastDirection = None
         self.timer = eg.ResettableTimer(self.OnTimeOut)
         self.numIgnoreCodes = 0
@@ -113,7 +101,7 @@ class PcRemoteController(eg.PluginBase):
 
     def __stop__(self):
         self.timer.Stop()
-        self.usb.Close()
+        self.winUsb.Stop()
 
 
     def Callback(self, code):

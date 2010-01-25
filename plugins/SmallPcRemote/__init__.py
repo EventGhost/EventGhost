@@ -180,21 +180,17 @@ class SmallPcRemote(eg.PluginBase):
         self.lastDirection = None
         self.lastMouseState = 0
         self.stopCodeLength = 0
-        self.usb = eg.WinUsb(self)
-        self.usb.AddDevice(
-            "Small PC Remote Controller",
-            "USB\\VID_073A&PID_2230",
-            "{FAC603C0-044F-4766-A5C3-A1DBE493579E}",
-            self.Callback1,
-            1
+        self.winUsb = eg.WinUsb(self)
+        self.winUsb.Device(self.Callback1, 1).AddHardwareId(
+            "Small PC Remote Controller", "USB\\VID_073A&PID_2230"
         )
-        self.usb.Open()
+        self.winUsb.Start()
         self.timer = eg.ResettableTimer(self.OnTimeOut)
 
 
     def __stop__(self):
         self.timer.Stop()
-        self.usb.Close()
+        self.winUsb.Stop()
         
 
     def ResetState(self):

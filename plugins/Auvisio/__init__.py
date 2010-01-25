@@ -81,26 +81,18 @@ BUTTONS2 = {
 class Auvisio(eg.PluginBase):
 
     def __start__(self):
-        self.usb = eg.WinUsb(self)
-        self.usb.AddDevice(
-            "Auvisio PC-Remote (Buttons)",
-            "USB\VID_05A4&PID_9881&MI_00",
-            "{7321D5B7-BD74-4F26-968A-6D17E071F30B}",
-            self.Callback1,
-            8
+        self.winUsb = eg.WinUsb(self)
+        self.winUsb.Device(self.Callback1, 8).AddHardwareId(
+            "Auvisio PC-Remote (Buttons)", "USB\VID_05A4&PID_9881&MI_00"
         )
-        self.usb.AddDevice(
-            "Auvisio PC-Remote (Mousepad)",
-            "USB\VID_05A4&PID_9881&MI_01",
-            "{3BEC6AB2-A378-420D-8380-A08C4BE7E7E0}",
-            self.Callback2,
-            5
+        self.winUsb.Device(self.Callback2, 5).AddHardwareId(
+            "Auvisio PC-Remote (Mousepad)", "USB\VID_05A4&PID_9881&MI_01"
         )
-        self.usb.Open()
+        self.winUsb.Start()
 
 
     def __stop__(self):
-        self.usb.Close()
+        self.winUsb.Stop()
 
 
     def Callback1(self, data):

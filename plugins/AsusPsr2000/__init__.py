@@ -78,16 +78,11 @@ BUTTONS = {
 class AsusPsr2000(eg.PluginBase):
 
     def __start__(self):
-        self.usb = eg.WinUsb(self)
-        self.usb.AddDevice(
-            "ASUS PSR-2000",
-            "USB\\VID_147A&PID_E006",
-            "{4365E03A-CA73-4C30-88B8-BA00D6B7E2F5}", 
-            self.Callback, 
-            4,
-            #True
+        self.winUsb = eg.WinUsb(self)
+        self.winUsb.Device(self.Callback, 4).AddHardwareId(
+            "ASUS PSR-2000", "USB\\VID_147A&PID_E006"
         )
-        self.usb.Open()
+        self.winUsb.Start()
         self.lastCode = None
         self.lastDirection = None
         self.timer = eg.ResettableTimer(self.OnTimeOut)
@@ -99,7 +94,7 @@ class AsusPsr2000(eg.PluginBase):
 
     def __stop__(self):
         self.timer.Stop()
-        self.usb.Close()
+        self.winUsb.Stop()
 
 
     def Callback(self, code):

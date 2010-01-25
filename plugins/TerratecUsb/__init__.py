@@ -81,22 +81,19 @@ REMOTE_BUTTONS = {
     (4, 0, 0, 0, 0, 0, 64, 0): "NextTrack",
 }
 
+
 class TerratecUsb(eg.PluginBase):
 
     def __start__(self):
-        self.usb = eg.WinUsb(self)
-        self.usb.AddDevice(
-            "Terratec USB Receiver",
-            "USB\\VID_0419&PID_0001",
-            "{AB561634-B296-4022-8C5A-107CF2BC2A2E}",
-            self.Callback,
-            8
+        self.winUsb = eg.WinUsb(self)
+        self.winUsb.Device(self.Callback, 8).AddHardwareId(
+            "Terratec USB Receiver", "USB\\VID_0419&PID_0001"
         )
-        self.usb.Open()
+        self.winUsb.Start()
 
 
     def __stop__(self):
-        self.usb.Close()
+        self.winUsb.Stop()
 
 
     def Callback(self, data):

@@ -93,15 +93,11 @@ STOP_CODES = set([
 class PHX01RN(eg.PluginBase):
 
     def __start__(self):
-        self.usb = eg.WinUsb(self)
-        self.usb.AddDevice(
-            "PHX01RN USB Receiver",
-            "USB\\VID_0755&PID_2626",
-            "{7D0541A9-9CF3-439E-BA91-CD4C2A1EBAAA}",
-            self.Callback,
-            8
+        self.winUsb = eg.WinUsb(self)
+        self.winUsb.Device(self.Callback, 8).AddHardwareId(
+            "PHX01RN USB Receiver", "USB\\VID_0755&PID_2626"
         )
-        self.usb.Open()
+        self.winUsb.Start()
         self.lastButton = None
         self.lastMouseValue = (0, 0)
         self.timer = eg.ResettableTimer(self.OnTimeOut)
@@ -109,7 +105,7 @@ class PHX01RN(eg.PluginBase):
 
     def __stop__(self):
         self.timer.Stop()
-        self.usb.Close()
+        self.winUsb.Stop()
 
 
     def OnTimeOut(self):

@@ -101,22 +101,14 @@ DEVICES = {
 class AtiRemoteWonder2(eg.PluginBase):
 
     def __start__(self):
-        self.usb = eg.WinUsb(self)
-        self.usb.AddDevice(
-            "ATI Remote Wonder II (Mouse)",
-            "USB\\VID_0471&PID_0602&MI_00",
-            "{626E95E1-40B8-4BCD-A9C2-C28D52BB1283}",
-            self.Callback1,
-            3
+        self.winUsb = eg.WinUsb(self)
+        self.winUsb.Device(self.Callback1, 3).AddHardwareId(
+            "ATI Remote Wonder II (Mouse)", "USB\\VID_0471&PID_0602&MI_00"
         )
-        self.usb.AddDevice(
-            "ATI Remote Wonder II (Buttons)",
-            "USB\\VID_0471&PID_0602&MI_01",
-            "{8D725CF7-AA01-420F-B797-4CD77EC63644}",
-            self.Callback2,
-            3
+        self.winUsb.Device(self.Callback2, 3).AddHardwareId(
+            "ATI Remote Wonder II (Buttons)", "USB\\VID_0471&PID_0602&MI_01"
         )
-        self.usb.Open()
+        self.winUsb.Start()
         self.lastDirection = None
         self.currentDevice = None
         self.timer = eg.ResettableTimer(self.OnTimeOut)
@@ -124,8 +116,8 @@ class AtiRemoteWonder2(eg.PluginBase):
 
 
     def __stop__(self):
+        self.winUsb.Stop()
         self.timer.Stop()
-        self.usb.Close()
 
 
     def Callback1(self, (device, x, y)):

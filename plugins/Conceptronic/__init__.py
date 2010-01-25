@@ -100,27 +100,25 @@ class Conceptronic(eg.PluginBase):
     def __start__(self):
         self.buffer = []
         self.expectedLength = 0
-        self.usb = eg.WinUsb(self)
-        self.usb.AddDevice(
-            "Conceptronic CLLRCMCE (Buttons)",
-            "USB\\VID_1784&PID_0004&MI_01",
-            "{4228C963-EE0F-4B33-9E5E-D17FB07FB80F}",
-            self.ButtonsCallback,
-            1
+        self.winUsb = eg.WinUsb(self)
+        self.winUsb.Device(self.KeypadCallback, 8, True).AddHardwareId(
+            "Conceptronic CLLRCMCE (Keypad)", "USB\\VID_1784&PID_0004&MI_00"
         )
-        self.usb.AddDevice(
-            "Conceptronic CLLRCMCE (Keypad)",
-            "USB\\VID_1784&PID_0004&MI_00",
-            "{8C3D8375-AF7B-4AF6-8CD7-463C8E935675}",
-            self.KeypadCallback,
-            8,
-            True
+        self.winUsb.Device(self.ButtonsCallback, 1).AddHardwareId(
+            "Conceptronic CLLRCMCE (Buttons)", "USB\\VID_1784&PID_0004&MI_01"
         )
-        self.usb.Open()
+        self.winUsb.Start()
 
 
     def __stop__(self):
-        self.usb.Close()
+        self.winUsb.Stop()
+
+
+    def KeypadCallback(self, data):
+        if data == (0, 0, 0, 0, 0, 0, 0, 0):
+            self.EndLastEvent()
+        else:
+            self.TriggerEnduringEvent(KEYPAD_CODES[data])
 
 
     def ButtonsCallback(self, data):
@@ -146,11 +144,4 @@ class Conceptronic(eg.PluginBase):
             self.buffer = []
             self.expectedLength = 0
             self.EndLastEvent()
-
-
-    def KeypadCallback(self, data):
-        if data == (0, 0, 0, 0, 0, 0, 0, 0):
-            self.EndLastEvent()
-        else:
-            self.TriggerEnduringEvent(KEYPAD_CODES[data])
 
