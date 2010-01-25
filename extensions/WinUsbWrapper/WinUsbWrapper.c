@@ -20,8 +20,6 @@
 #define WHILE(a) \
 while(__pragma(warning(disable:4127)) a __pragma(warning(disable:4127)))
 
-#define MAX_DEVPATH_LENGTH 256
-
 #if defined(BUILT_IN_DDK)
 #define scanf_s scanf
 #endif
@@ -30,7 +28,7 @@ while(__pragma(warning(disable:4127)) a __pragma(warning(disable:4127)))
 static HINSTANCE hInstance = NULL;
 
 typedef struct _ThreadParams {
-	GUID guid;
+	PWCHAR devicePath;
 	HANDLE startEvent;
 	HANDLE endEvent;
 	HANDLE thread;
@@ -59,73 +57,6 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD dwReason, LPVOID lpvReserved)
 }
 
 
-BOOL GetDevicePath(IN LPGUID InterfaceGuid, __out_ecount(BufLen) PWCHAR DevicePath, __in size_t BufLen)
-{
-    HDEVINFO HardwareDeviceInfo;
-    SP_DEVICE_INTERFACE_DATA DeviceInterfaceData;
-    PSP_DEVICE_INTERFACE_DETAIL_DATA DeviceInterfaceDetailData = NULL;
-    ULONG Length, RequiredLength = 0;
-    BOOL bResult;
-    HRESULT hr;
-
-    HardwareDeviceInfo = SetupDiGetClassDevs(InterfaceGuid, NULL, NULL, (DIGCF_PRESENT | DIGCF_DEVICEINTERFACE));
-
-    if (HardwareDeviceInfo == INVALID_HANDLE_VALUE) {
-        printf("SetupDiGetClassDevs failed!\n");
-        return FALSE;
-    }
-
-    DeviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
-    bResult = SetupDiEnumDeviceInterfaces(HardwareDeviceInfo, 0, InterfaceGuid, 0, &DeviceInterfaceData);
-
-    if (bResult == FALSE) {
-//		printf("SetupDiEnumDeviceInterfaces failed\n");
-        SetupDiDestroyDeviceInfoList(HardwareDeviceInfo);
-        return FALSE;
-    }
-
-    SetupDiGetDeviceInterfaceDetail(HardwareDeviceInfo, &DeviceInterfaceData, NULL, 0, &RequiredLength, NULL);
-
-    DeviceInterfaceDetailData = (PSP_DEVICE_INTERFACE_DETAIL_DATA) LocalAlloc(LMEM_FIXED, RequiredLength);
-
-    if (DeviceInterfaceDetailData == NULL) {
-        SetupDiDestroyDeviceInfoList(HardwareDeviceInfo);
-        printf("Failed to allocate memory.\n");
-        return FALSE;
-    }
-
-    DeviceInterfaceDetailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
-
-    Length = RequiredLength;
-
-    bResult = SetupDiGetDeviceInterfaceDetail(
-		HardwareDeviceInfo, 
-		&DeviceInterfaceData, 
-		DeviceInterfaceDetailData, 
-		Length, 
-		&RequiredLength, 
-		NULL
-	);
-
-    if (bResult == FALSE) {
-		printf("Error in SetupDiGetDeviceInterfaceDetail\n");
-        SetupDiDestroyDeviceInfoList(HardwareDeviceInfo);
-        LocalFree(DeviceInterfaceDetailData);
-        return FALSE;
-    }
-
-    hr = StringCchCopy(DevicePath, BufLen, DeviceInterfaceDetailData->DevicePath);
-
-    SetupDiDestroyDeviceInfoList(HardwareDeviceInfo);
-    LocalFree(DeviceInterfaceDetailData);
-
-	if (SUCCEEDED(hr)) 
-		return TRUE;
-    else 
-		return FALSE;
-}
-
-
 ULONG Reader(PThreadParams params)
 {
 	BOOL bResult = FALSE;
@@ -141,16 +72,10 @@ ULONG Reader(PThreadParams params)
 	OVERLAPPED overlapped;
 	HANDLE handles[2];
 	int i;
-    wchar_t completeDeviceName[MAX_DEVPATH_LENGTH];
 
 	params->error = 1;
-	if ( !GetDevicePath((LPGUID) &params->guid, completeDeviceName, MAX_DEVPATH_LENGTH) ) 
-		goto exit;
-
-//	printf("DeviceName = (%S)\n", completeDeviceName);
-
 	deviceHandle = CreateFile(
-		completeDeviceName, 
+		params->devicePath, 
 		GENERIC_WRITE | GENERIC_READ, 
 		FILE_SHARE_WRITE | FILE_SHARE_READ, 
 		NULL, 
@@ -220,7 +145,7 @@ exit:
 }
 
 
-PThreadParams Start(HWND notifyWnd, UINT msg, WCHAR* guidString, UINT chunkSize, BOOL suppressRepeat)
+PThreadParams Start(HWND notifyWnd, UINT msg, WCHAR* devicePath, UINT chunkSize, BOOL suppressRepeat)
 {
 	PThreadParams threadParams;
 	
@@ -230,11 +155,7 @@ PThreadParams Start(HWND notifyWnd, UINT msg, WCHAR* guidString, UINT chunkSize,
 		printf("Start.HeapAlloc failed!");
 		return NULL;
 	}
-	if (IIDFromString(guidString, &threadParams->guid) != S_OK)
-	{
-		printf("Start.IIDFromString failed");
-		goto error_exit;
-	}
+	threadParams->devicePath = devicePath;
 	threadParams->startEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	if (!threadParams->startEvent)
 	{
@@ -272,7 +193,7 @@ error_exit:
 }
 
 
-void End(PThreadParams threadParams)
+void Stop(PThreadParams threadParams)
 {
 	if (!threadParams)
 		return;
