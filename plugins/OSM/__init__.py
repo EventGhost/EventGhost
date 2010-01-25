@@ -18,14 +18,14 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2010-01-21 17:23 GMT+1
+#Last change: 2010-01-25 19:21 GMT+1
 
 
 
 eg.RegisterPlugin(
     name = "OS Menu",
     author = "Pako",
-    version = "0.1.12",
+    version = "0.1.13",
     kind = "other",
     guid = "{FCF3C7A7-FBC1-444D-B768-9477521946DC}",
     description = u"""<rst>
@@ -263,7 +263,7 @@ class ShowMenu(eg.ActionClass):
                 False,
                 self.plugin,
                 self.event,
-                prefix,
+                eg.ParseString(prefix),
                 monitor
             )
             eg.actionThread.WaitOnEvent(self.event)
@@ -348,7 +348,7 @@ class ShowMenu(eg.ActionClass):
         eventCtrl = wx.TextCtrl(panel,-1,'',size=wx.Size(160,-1))
         eventCtrl.SetToolTipString(self.text.toolTip_1)
         prefixLbl=wx.StaticText(panel, -1, self.text.prefixLabel)
-        prefixCtrl = wx.TextCtrl(panel,-1,prefix,size=wx.Size(90,-1))
+        prefixCtrl = wx.TextCtrl(panel,-1,prefix,size=wx.Size(96,-1))
         labelCtrlSizer = wx.BoxSizer(wx.HORIZONTAL)
         labelCtrlSizer.Add(labelCtrl,0,wx.EXPAND)
         osmLbl = wx.StaticText(panel, -1, self.text.osmLabel)
