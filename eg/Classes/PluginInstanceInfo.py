@@ -172,10 +172,10 @@ class PluginInstanceInfo(PluginModuleInfo):
     def Start(self):
         if self.isStarted:
             return
+        self.lastException = None
         try:
             self.instance.__start__(*self.args)
             self.isStarted = True
-            self.lastException = None
             self.treeItem.Refresh()
         except eg.Exception, exc:
             self.lastException = exc
