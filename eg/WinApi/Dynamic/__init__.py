@@ -42,10 +42,11 @@ if not hasattr(sys, "frozen"): # detect py2exe
         try:
             ctypeslib.dynamic_module.include(
                 "#define UNICODE\n"
-                "#define _WIN32_WINNT 0x500\n"
+                "#define _WIN32_WINNT 0x501\n"
                 "#define WIN32_LEAN_AND_MEAN\n"
                 "#define NO_STRICT\n"
                 "#include <windows.h>\n"
+                "#include <winuser.h>\n"
                 "#include <Dbt.h>\n"
                 "#include <objbase.h>\n"
                 #"#include <Mmsystem.h>\n"
@@ -314,13 +315,13 @@ SetEvent.restype = BOOL
 SetEvent.argtypes = [HANDLE]
 WAIT_OBJECT_0 = 0L # Variable c_ulong '0ul'
 WAIT_TIMEOUT = 258 # Variable c_long '258l'
-QS_ALLINPUT = 255 # Variable c_int '255'
+QS_ALLINPUT = 1279 # Variable c_int '1279'
 MsgWaitForMultipleObjects = _user32.MsgWaitForMultipleObjects
 MsgWaitForMultipleObjects.restype = DWORD
 MsgWaitForMultipleObjects.argtypes = [DWORD, POINTER(HANDLE), BOOL, DWORD, DWORD]
-CoInitialize = _ole32.CoInitialize
-CoInitialize.restype = HRESULT
-CoInitialize.argtypes = [LPVOID]
+CoInitializeEx = _ole32.CoInitializeEx
+CoInitializeEx.restype = HRESULT
+CoInitializeEx.argtypes = [LPVOID, DWORD]
 CoUninitialize = _ole32.CoUninitialize
 CoUninitialize.restype = None
 CoUninitialize.argtypes = []
@@ -357,13 +358,17 @@ PROCESS_SET_QUOTA = 256 # Variable c_int '256'
 SetProcessWorkingSetSize = _kernel32.SetProcessWorkingSetSize
 SetProcessWorkingSetSize.restype = BOOL
 SetProcessWorkingSetSize.argtypes = [HANDLE, SIZE_T, SIZE_T]
+PostMessageW = _user32.PostMessageW
+PostMessageW.restype = BOOL
+PostMessageW.argtypes = [HWND, UINT, WPARAM, LPARAM]
+PostMessage = PostMessageW # alias
 class tagINPUT(Structure):
     pass
 LPINPUT = POINTER(tagINPUT)
 SendInput = _user32.SendInput
 SendInput.restype = UINT
 SendInput.argtypes = [UINT, LPINPUT, c_int]
-class N8tagINPUT5DOLLAR_102E(Union):
+class N8tagINPUT5DOLLAR_105E(Union):
     pass
 class tagMOUSEINPUT(Structure):
     pass
@@ -394,7 +399,7 @@ tagHARDWAREINPUT._fields_ = [
     ('wParamH', WORD),
 ]
 HARDWAREINPUT = tagHARDWAREINPUT
-N8tagINPUT5DOLLAR_102E._fields_ = [
+N8tagINPUT5DOLLAR_105E._fields_ = [
     ('mi', MOUSEINPUT),
     ('ki', KEYBDINPUT),
     ('hi', HARDWAREINPUT),
@@ -402,7 +407,7 @@ N8tagINPUT5DOLLAR_102E._fields_ = [
 tagINPUT._anonymous_ = ['_0']
 tagINPUT._fields_ = [
     ('type', DWORD),
-    ('_0', N8tagINPUT5DOLLAR_102E),
+    ('_0', N8tagINPUT5DOLLAR_105E),
 ]
 CloseHandle = _kernel32.CloseHandle
 CloseHandle.restype = BOOL
@@ -466,10 +471,6 @@ GetMessageW = _user32.GetMessageW
 GetMessageW.restype = BOOL
 GetMessageW.argtypes = [LPMSG, HWND, UINT, UINT]
 GetMessage = GetMessageW # alias
-PostMessageW = _user32.PostMessageW
-PostMessageW.restype = BOOL
-PostMessageW.argtypes = [HWND, UINT, WPARAM, LPARAM]
-PostMessage = PostMessageW # alias
 GetFocus = _user32.GetFocus
 GetFocus.restype = HWND
 GetFocus.argtypes = []
@@ -520,6 +521,10 @@ LPMEMORYSTATUSEX = POINTER(_MEMORYSTATUSEX)
 GlobalMemoryStatusEx = _kernel32.GlobalMemoryStatusEx
 GlobalMemoryStatusEx.restype = BOOL
 GlobalMemoryStatusEx.argtypes = [LPMEMORYSTATUSEX]
+GetVolumeInformationW = _kernel32.GetVolumeInformationW
+GetVolumeInformationW.restype = BOOL
+GetVolumeInformationW.argtypes = [LPCWSTR, LPWSTR, DWORD, LPDWORD, LPDWORD, LPDWORD, LPWSTR, DWORD]
+GetVolumeInformation = GetVolumeInformationW # alias
 WaitForSingleObject = _kernel32.WaitForSingleObject
 WaitForSingleObject.restype = DWORD
 WaitForSingleObject.argtypes = [HANDLE, DWORD]
@@ -717,13 +722,6 @@ ConnectNamedPipe.argtypes = [HANDLE, LPOVERLAPPED]
 DisconnectNamedPipe = _kernel32.DisconnectNamedPipe
 DisconnectNamedPipe.restype = BOOL
 DisconnectNamedPipe.argtypes = [HANDLE]
-SetNamedPipeHandleState = _kernel32.SetNamedPipeHandleState
-SetNamedPipeHandleState.restype = BOOL
-SetNamedPipeHandleState.argtypes = [HANDLE, LPDWORD, LPDWORD, LPDWORD]
-WaitNamedPipeW = _kernel32.WaitNamedPipeW
-WaitNamedPipeW.restype = BOOL
-WaitNamedPipeW.argtypes = [LPCWSTR, DWORD]
-WaitNamedPipe = WaitNamedPipeW # alias
 WaitForMultipleObjects = _kernel32.WaitForMultipleObjects
 WaitForMultipleObjects.restype = DWORD
 WaitForMultipleObjects.argtypes = [DWORD, POINTER(HANDLE), BOOL, DWORD]
@@ -732,18 +730,15 @@ PIPE_TYPE_MESSAGE = 4 # Variable c_int '4'
 PIPE_READMODE_MESSAGE = 2 # Variable c_int '2'
 PIPE_WAIT = 0 # Variable c_int '0'
 PIPE_UNLIMITED_INSTANCES = 255 # Variable c_int '255'
-ERROR_PIPE_CONNECTED = 535 # Variable c_long '535l'
-ERROR_PIPE_BUSY = 231 # Variable c_long '231l'
-ERROR_MORE_DATA = 234 # Variable c_long '234l'
-NMPWAIT_USE_DEFAULT_WAIT = 0 # Variable c_int '0'
+ERROR_NOT_CONNECTED = 2250 # Variable c_long '2250l'
 class _SHELLEXECUTEINFOW(Structure):
     pass
 SHELLEXECUTEINFOW = _SHELLEXECUTEINFOW
 SHELLEXECUTEINFO = SHELLEXECUTEINFOW
-class N18_SHELLEXECUTEINFOW5DOLLAR_234E(Union):
+class N18_SHELLEXECUTEINFOW5DOLLAR_249E(Union):
     pass
-N18_SHELLEXECUTEINFOW5DOLLAR_234E._pack_ = 1
-N18_SHELLEXECUTEINFOW5DOLLAR_234E._fields_ = [
+N18_SHELLEXECUTEINFOW5DOLLAR_249E._pack_ = 1
+N18_SHELLEXECUTEINFOW5DOLLAR_249E._fields_ = [
     ('hIcon', HANDLE),
     ('hMonitor', HANDLE),
 ]
@@ -763,7 +758,7 @@ _SHELLEXECUTEINFOW._fields_ = [
     ('lpClass', LPCWSTR),
     ('hkeyClass', HKEY),
     ('dwHotKey', DWORD),
-    ('_0', N18_SHELLEXECUTEINFOW5DOLLAR_234E),
+    ('_0', N18_SHELLEXECUTEINFOW5DOLLAR_249E),
     ('hProcess', HANDLE),
 ]
 SEE_MASK_NOASYNC = 256 # Variable c_int '256'
@@ -771,119 +766,6 @@ SEE_MASK_FLAG_DDEWAIT = SEE_MASK_NOASYNC # alias
 SEE_MASK_FLAG_NO_UI = 1024 # Variable c_int '1024'
 SEE_MASK_NOCLOSEPROCESS = 64 # Variable c_int '64'
 SW_SHOWNORMAL = 1 # Variable c_int '1'
-class _GUID(Structure):
-    pass
-GUID = _GUID
-_GUID._fields_ = [
-    ('Data1', c_ulong),
-    ('Data2', c_ushort),
-    ('Data3', c_ushort),
-    ('Data4', c_ubyte * 8),
-]
-CLSID = GUID
-LPCLSID = POINTER(CLSID)
-CLSIDFromString = _ole32.CLSIDFromString
-CLSIDFromString.restype = HRESULT
-CLSIDFromString.argtypes = [LPOLESTR, LPCLSID]
-ENUM_CURRENT_SETTINGS = 4294967295L # Variable c_ulong '-1u'
-EDS_RAWMODE = 2 # Variable c_int '2'
-class _DISPLAY_DEVICEW(Structure):
-    pass
-PDISPLAY_DEVICEW = POINTER(_DISPLAY_DEVICEW)
-EnumDisplayDevicesW = _user32.EnumDisplayDevicesW
-EnumDisplayDevicesW.restype = BOOL
-EnumDisplayDevicesW.argtypes = [LPCWSTR, DWORD, PDISPLAY_DEVICEW, DWORD]
-EnumDisplayDevices = EnumDisplayDevicesW # alias
-_DISPLAY_DEVICEW._fields_ = [
-    ('cb', DWORD),
-    ('DeviceName', WCHAR * 32),
-    ('DeviceString', WCHAR * 128),
-    ('StateFlags', DWORD),
-    ('DeviceID', WCHAR * 128),
-    ('DeviceKey', WCHAR * 128),
-]
-class _devicemodeW(Structure):
-    pass
-LPDEVMODEW = POINTER(_devicemodeW)
-EnumDisplaySettingsExW = _user32.EnumDisplaySettingsExW
-EnumDisplaySettingsExW.restype = BOOL
-EnumDisplaySettingsExW.argtypes = [LPCWSTR, DWORD, LPDEVMODEW, DWORD]
-EnumDisplaySettingsEx = EnumDisplaySettingsExW # alias
-class N12_devicemodeW4DOLLAR_95E(Union):
-    pass
-class N12_devicemodeW4DOLLAR_954DOLLAR_96E(Structure):
-    pass
-N12_devicemodeW4DOLLAR_954DOLLAR_96E._fields_ = [
-    ('dmOrientation', c_short),
-    ('dmPaperSize', c_short),
-    ('dmPaperLength', c_short),
-    ('dmPaperWidth', c_short),
-]
-N12_devicemodeW4DOLLAR_95E._anonymous_ = ['_0']
-N12_devicemodeW4DOLLAR_95E._fields_ = [
-    ('_0', N12_devicemodeW4DOLLAR_954DOLLAR_96E),
-    ('dmPosition', POINTL),
-]
-class N12_devicemodeW4DOLLAR_97E(Union):
-    pass
-N12_devicemodeW4DOLLAR_97E._fields_ = [
-    ('dmDisplayFlags', DWORD),
-    ('dmNup', DWORD),
-]
-_devicemodeW._anonymous_ = ['_0', '_1']
-_devicemodeW._fields_ = [
-    ('dmDeviceName', WCHAR * 32),
-    ('dmSpecVersion', WORD),
-    ('dmDriverVersion', WORD),
-    ('dmSize', WORD),
-    ('dmDriverExtra', WORD),
-    ('dmFields', DWORD),
-    ('_0', N12_devicemodeW4DOLLAR_95E),
-    ('dmScale', c_short),
-    ('dmCopies', c_short),
-    ('dmDefaultSource', c_short),
-    ('dmPrintQuality', c_short),
-    ('dmColor', c_short),
-    ('dmDuplex', c_short),
-    ('dmYResolution', c_short),
-    ('dmTTOption', c_short),
-    ('dmCollate', c_short),
-    ('dmFormName', WCHAR * 32),
-    ('dmLogPixels', WORD),
-    ('dmBitsPerPel', DWORD),
-    ('dmPelsWidth', DWORD),
-    ('dmPelsHeight', DWORD),
-    ('_1', N12_devicemodeW4DOLLAR_97E),
-    ('dmDisplayFrequency', DWORD),
-    ('dmICMMethod', DWORD),
-    ('dmICMIntent', DWORD),
-    ('dmMediaType', DWORD),
-    ('dmDitherType', DWORD),
-    ('dmReserved1', DWORD),
-    ('dmReserved2', DWORD),
-    ('dmPanningWidth', DWORD),
-    ('dmPanningHeight', DWORD),
-]
-ChangeDisplaySettingsExW = _user32.ChangeDisplaySettingsExW
-ChangeDisplaySettingsExW.restype = LONG
-ChangeDisplaySettingsExW.argtypes = [LPCWSTR, LPDEVMODEW, HWND, DWORD, LPVOID]
-ChangeDisplaySettingsEx = ChangeDisplaySettingsExW # alias
-DISPLAY_DEVICEW = _DISPLAY_DEVICEW
-DISPLAY_DEVICE = DISPLAY_DEVICEW
-DEVMODEW = _devicemodeW
-DEVMODE = DEVMODEW
-DISPLAY_DEVICE_MIRRORING_DRIVER = 8 # Variable c_int '8'
-DISPLAY_DEVICE_PRIMARY_DEVICE = 4 # Variable c_int '4'
-DISPLAY_DEVICE_ATTACHED_TO_DESKTOP = 1 # Variable c_int '1'
-DM_POSITION = 32 # Variable c_long '32l'
-DM_BITSPERPEL = 262144 # Variable c_long '262144l'
-DM_PELSWIDTH = 524288 # Variable c_long '524288l'
-DM_PELSHEIGHT = 1048576 # Variable c_long '1048576l'
-DM_DISPLAYFLAGS = 2097152 # Variable c_long '2097152l'
-DM_DISPLAYFREQUENCY = 4194304 # Variable c_long '4194304l'
-CDS_UPDATEREGISTRY = 1 # Variable c_int '1'
-CDS_NORESET = 268435456 # Variable c_int '268435456'
-CDS_SET_PRIMARY = 16 # Variable c_int '16'
 
 # values for enumeration '_TOKEN_INFORMATION_CLASS'
 TokenUser = 1
@@ -963,6 +845,295 @@ EqualSid.argtypes = [PSID, PSID]
 FreeSid = _Advapi32.FreeSid
 FreeSid.restype = PVOID
 FreeSid.argtypes = [PSID]
+class _GUID(Structure):
+    pass
+GUID = _GUID
+_GUID._fields_ = [
+    ('Data1', c_ulong),
+    ('Data2', c_ushort),
+    ('Data3', c_ushort),
+    ('Data4', c_ubyte * 8),
+]
+CLSID = GUID
+LPCLSID = POINTER(CLSID)
+CLSIDFromString = _ole32.CLSIDFromString
+CLSIDFromString.restype = HRESULT
+CLSIDFromString.argtypes = [LPOLESTR, LPCLSID]
+ERROR_NO_MORE_ITEMS = 259 # Variable c_long '259l'
+ENUM_CURRENT_SETTINGS = 4294967295L # Variable c_ulong '-1u'
+EDS_RAWMODE = 2 # Variable c_int '2'
+class _DISPLAY_DEVICEW(Structure):
+    pass
+PDISPLAY_DEVICEW = POINTER(_DISPLAY_DEVICEW)
+EnumDisplayDevicesW = _user32.EnumDisplayDevicesW
+EnumDisplayDevicesW.restype = BOOL
+EnumDisplayDevicesW.argtypes = [LPCWSTR, DWORD, PDISPLAY_DEVICEW, DWORD]
+EnumDisplayDevices = EnumDisplayDevicesW # alias
+_DISPLAY_DEVICEW._fields_ = [
+    ('cb', DWORD),
+    ('DeviceName', WCHAR * 32),
+    ('DeviceString', WCHAR * 128),
+    ('StateFlags', DWORD),
+    ('DeviceID', WCHAR * 128),
+    ('DeviceKey', WCHAR * 128),
+]
+class _devicemodeW(Structure):
+    pass
+LPDEVMODEW = POINTER(_devicemodeW)
+EnumDisplaySettingsExW = _user32.EnumDisplaySettingsExW
+EnumDisplaySettingsExW.restype = BOOL
+EnumDisplaySettingsExW.argtypes = [LPCWSTR, DWORD, LPDEVMODEW, DWORD]
+EnumDisplaySettingsEx = EnumDisplaySettingsExW # alias
+class N12_devicemodeW4DOLLAR_96E(Union):
+    pass
+class N12_devicemodeW4DOLLAR_964DOLLAR_97E(Structure):
+    pass
+N12_devicemodeW4DOLLAR_964DOLLAR_97E._fields_ = [
+    ('dmOrientation', c_short),
+    ('dmPaperSize', c_short),
+    ('dmPaperLength', c_short),
+    ('dmPaperWidth', c_short),
+    ('dmScale', c_short),
+    ('dmCopies', c_short),
+    ('dmDefaultSource', c_short),
+    ('dmPrintQuality', c_short),
+]
+class N12_devicemodeW4DOLLAR_964DOLLAR_98E(Structure):
+    pass
+N12_devicemodeW4DOLLAR_964DOLLAR_98E._fields_ = [
+    ('dmPosition', POINTL),
+    ('dmDisplayOrientation', DWORD),
+    ('dmDisplayFixedOutput', DWORD),
+]
+N12_devicemodeW4DOLLAR_96E._anonymous_ = ['_0', '_1']
+N12_devicemodeW4DOLLAR_96E._fields_ = [
+    ('_0', N12_devicemodeW4DOLLAR_964DOLLAR_97E),
+    ('_1', N12_devicemodeW4DOLLAR_964DOLLAR_98E),
+]
+class N12_devicemodeW4DOLLAR_99E(Union):
+    pass
+N12_devicemodeW4DOLLAR_99E._fields_ = [
+    ('dmDisplayFlags', DWORD),
+    ('dmNup', DWORD),
+]
+_devicemodeW._anonymous_ = ['_0', '_1']
+_devicemodeW._fields_ = [
+    ('dmDeviceName', WCHAR * 32),
+    ('dmSpecVersion', WORD),
+    ('dmDriverVersion', WORD),
+    ('dmSize', WORD),
+    ('dmDriverExtra', WORD),
+    ('dmFields', DWORD),
+    ('_0', N12_devicemodeW4DOLLAR_96E),
+    ('dmColor', c_short),
+    ('dmDuplex', c_short),
+    ('dmYResolution', c_short),
+    ('dmTTOption', c_short),
+    ('dmCollate', c_short),
+    ('dmFormName', WCHAR * 32),
+    ('dmLogPixels', WORD),
+    ('dmBitsPerPel', DWORD),
+    ('dmPelsWidth', DWORD),
+    ('dmPelsHeight', DWORD),
+    ('_1', N12_devicemodeW4DOLLAR_99E),
+    ('dmDisplayFrequency', DWORD),
+    ('dmICMMethod', DWORD),
+    ('dmICMIntent', DWORD),
+    ('dmMediaType', DWORD),
+    ('dmDitherType', DWORD),
+    ('dmReserved1', DWORD),
+    ('dmReserved2', DWORD),
+    ('dmPanningWidth', DWORD),
+    ('dmPanningHeight', DWORD),
+]
+ChangeDisplaySettingsExW = _user32.ChangeDisplaySettingsExW
+ChangeDisplaySettingsExW.restype = LONG
+ChangeDisplaySettingsExW.argtypes = [LPCWSTR, LPDEVMODEW, HWND, DWORD, LPVOID]
+ChangeDisplaySettingsEx = ChangeDisplaySettingsExW # alias
+DISPLAY_DEVICEW = _DISPLAY_DEVICEW
+DISPLAY_DEVICE = DISPLAY_DEVICEW
+DEVMODEW = _devicemodeW
+DEVMODE = DEVMODEW
+DISPLAY_DEVICE_MIRRORING_DRIVER = 8 # Variable c_int '8'
+DISPLAY_DEVICE_PRIMARY_DEVICE = 4 # Variable c_int '4'
+DISPLAY_DEVICE_ATTACHED_TO_DESKTOP = 1 # Variable c_int '1'
+DM_POSITION = 32 # Variable c_long '32l'
+DM_BITSPERPEL = 262144 # Variable c_long '262144l'
+DM_PELSWIDTH = 524288 # Variable c_long '524288l'
+DM_PELSHEIGHT = 1048576 # Variable c_long '1048576l'
+DM_DISPLAYFLAGS = 2097152 # Variable c_long '2097152l'
+DM_DISPLAYFREQUENCY = 4194304 # Variable c_long '4194304l'
+CDS_UPDATEREGISTRY = 1 # Variable c_int '1'
+CDS_NORESET = 268435456 # Variable c_int '268435456'
+CDS_SET_PRIMARY = 16 # Variable c_int '16'
+SetNamedPipeHandleState = _kernel32.SetNamedPipeHandleState
+SetNamedPipeHandleState.restype = BOOL
+SetNamedPipeHandleState.argtypes = [HANDLE, LPDWORD, LPDWORD, LPDWORD]
+WaitNamedPipeW = _kernel32.WaitNamedPipeW
+WaitNamedPipeW.restype = BOOL
+WaitNamedPipeW.argtypes = [LPCWSTR, DWORD]
+WaitNamedPipe = WaitNamedPipeW # alias
+FILE_SHARE_READ = 1 # Variable c_int '1'
+FILE_SHARE_WRITE = 2 # Variable c_int '2'
+ERROR_MORE_DATA = 234 # Variable c_long '234l'
+class tagRAWINPUTDEVICELIST(Structure):
+    pass
+PRAWINPUTDEVICELIST = POINTER(tagRAWINPUTDEVICELIST)
+PUINT = POINTER(c_uint)
+GetRawInputDeviceList = _user32.GetRawInputDeviceList
+GetRawInputDeviceList.restype = UINT
+GetRawInputDeviceList.argtypes = [PRAWINPUTDEVICELIST, PUINT, UINT]
+tagRAWINPUTDEVICELIST._fields_ = [
+    ('hDevice', HANDLE),
+    ('dwType', DWORD),
+]
+GetRawInputDeviceInfoW = _user32.GetRawInputDeviceInfoW
+GetRawInputDeviceInfoW.restype = UINT
+GetRawInputDeviceInfoW.argtypes = [HANDLE, UINT, LPVOID, PUINT]
+GetRawInputDeviceInfo = GetRawInputDeviceInfoW # alias
+class tagRAWINPUTDEVICE(Structure):
+    pass
+RAWINPUTDEVICE = tagRAWINPUTDEVICE
+PCRAWINPUTDEVICE = POINTER(RAWINPUTDEVICE)
+RegisterRawInputDevices = _user32.RegisterRawInputDevices
+RegisterRawInputDevices.restype = BOOL
+RegisterRawInputDevices.argtypes = [PCRAWINPUTDEVICE, UINT, UINT]
+tagRAWINPUTDEVICE._fields_ = [
+    ('usUsagePage', USHORT),
+    ('usUsage', USHORT),
+    ('dwFlags', DWORD),
+    ('hwndTarget', HWND),
+]
+HRAWINPUT = HANDLE
+GetRawInputData = _user32.GetRawInputData
+GetRawInputData.restype = UINT
+GetRawInputData.argtypes = [HRAWINPUT, UINT, LPVOID, PUINT, UINT]
+class tagRAWINPUTHEADER(Structure):
+    pass
+RAWINPUTHEADER = tagRAWINPUTHEADER
+tagRAWINPUTHEADER._fields_ = [
+    ('dwType', DWORD),
+    ('dwSize', DWORD),
+    ('hDevice', HANDLE),
+    ('wParam', WPARAM),
+]
+class tagRAWINPUT(Structure):
+    pass
+RAWINPUT = tagRAWINPUT
+class N11tagRAWINPUT5DOLLAR_110E(Union):
+    pass
+class tagRAWMOUSE(Structure):
+    pass
+class N11tagRAWMOUSE5DOLLAR_108E(Union):
+    pass
+class N11tagRAWMOUSE5DOLLAR_1085DOLLAR_109E(Structure):
+    pass
+N11tagRAWMOUSE5DOLLAR_1085DOLLAR_109E._fields_ = [
+    ('usButtonFlags', USHORT),
+    ('usButtonData', USHORT),
+]
+N11tagRAWMOUSE5DOLLAR_108E._anonymous_ = ['_0']
+N11tagRAWMOUSE5DOLLAR_108E._fields_ = [
+    ('ulButtons', ULONG),
+    ('_0', N11tagRAWMOUSE5DOLLAR_1085DOLLAR_109E),
+]
+tagRAWMOUSE._anonymous_ = ['_0']
+tagRAWMOUSE._fields_ = [
+    ('usFlags', USHORT),
+    ('_0', N11tagRAWMOUSE5DOLLAR_108E),
+    ('ulRawButtons', ULONG),
+    ('lLastX', LONG),
+    ('lLastY', LONG),
+    ('ulExtraInformation', ULONG),
+]
+RAWMOUSE = tagRAWMOUSE
+class tagRAWKEYBOARD(Structure):
+    pass
+tagRAWKEYBOARD._fields_ = [
+    ('MakeCode', USHORT),
+    ('Flags', USHORT),
+    ('Reserved', USHORT),
+    ('VKey', USHORT),
+    ('Message', UINT),
+    ('ExtraInformation', ULONG),
+]
+RAWKEYBOARD = tagRAWKEYBOARD
+class tagRAWHID(Structure):
+    pass
+tagRAWHID._fields_ = [
+    ('dwSizeHid', DWORD),
+    ('dwCount', DWORD),
+    ('bRawData', BYTE * 1),
+]
+RAWHID = tagRAWHID
+N11tagRAWINPUT5DOLLAR_110E._fields_ = [
+    ('mouse', RAWMOUSE),
+    ('keyboard', RAWKEYBOARD),
+    ('hid', RAWHID),
+]
+tagRAWINPUT._fields_ = [
+    ('header', RAWINPUTHEADER),
+    ('data', N11tagRAWINPUT5DOLLAR_110E),
+]
+RAWINPUTDEVICELIST = tagRAWINPUTDEVICELIST
+class tagRID_DEVICE_INFO(Structure):
+    pass
+RID_DEVICE_INFO = tagRID_DEVICE_INFO
+class N18tagRID_DEVICE_INFO5DOLLAR_111E(Union):
+    pass
+class tagRID_DEVICE_INFO_MOUSE(Structure):
+    pass
+tagRID_DEVICE_INFO_MOUSE._fields_ = [
+    ('dwId', DWORD),
+    ('dwNumberOfButtons', DWORD),
+    ('dwSampleRate', DWORD),
+    ('fHasHorizontalWheel', BOOL),
+]
+RID_DEVICE_INFO_MOUSE = tagRID_DEVICE_INFO_MOUSE
+class tagRID_DEVICE_INFO_KEYBOARD(Structure):
+    pass
+tagRID_DEVICE_INFO_KEYBOARD._fields_ = [
+    ('dwType', DWORD),
+    ('dwSubType', DWORD),
+    ('dwKeyboardMode', DWORD),
+    ('dwNumberOfFunctionKeys', DWORD),
+    ('dwNumberOfIndicators', DWORD),
+    ('dwNumberOfKeysTotal', DWORD),
+]
+RID_DEVICE_INFO_KEYBOARD = tagRID_DEVICE_INFO_KEYBOARD
+class tagRID_DEVICE_INFO_HID(Structure):
+    pass
+tagRID_DEVICE_INFO_HID._fields_ = [
+    ('dwVendorId', DWORD),
+    ('dwProductId', DWORD),
+    ('dwVersionNumber', DWORD),
+    ('usUsagePage', USHORT),
+    ('usUsage', USHORT),
+]
+RID_DEVICE_INFO_HID = tagRID_DEVICE_INFO_HID
+N18tagRID_DEVICE_INFO5DOLLAR_111E._fields_ = [
+    ('mouse', RID_DEVICE_INFO_MOUSE),
+    ('keyboard', RID_DEVICE_INFO_KEYBOARD),
+    ('hid', RID_DEVICE_INFO_HID),
+]
+tagRID_DEVICE_INFO._anonymous_ = ['_0']
+tagRID_DEVICE_INFO._fields_ = [
+    ('cbSize', DWORD),
+    ('dwType', DWORD),
+    ('_0', N18tagRID_DEVICE_INFO5DOLLAR_111E),
+]
+RID_INPUT = 268435459 # Variable c_int '268435459'
+RIDI_PREPARSEDDATA = 536870917 # Variable c_int '536870917'
+RIDI_DEVICENAME = 536870919 # Variable c_int '536870919'
+RIDI_DEVICEINFO = 536870923 # Variable c_int '536870923'
+RIM_TYPEHID = 2 # Variable c_int '2'
+RIM_TYPEKEYBOARD = 1 # Variable c_int '1'
+RIM_TYPEMOUSE = 0 # Variable c_int '0'
+RIM_INPUT = 0 # Variable c_int '0'
+RIDEV_NOLEGACY = 48 # Variable c_int '48'
+RIDEV_INPUTSINK = 256 # Variable c_int '256'
+WM_INPUT = 255 # Variable c_int '255'
+def GET_RAWINPUT_CODE_WPARAM(wParam): return ((wParam) & 0xff) # macro
 TCHAR = WCHAR
 OpenSCManagerW = _Advapi32.OpenSCManagerW
 OpenSCManagerW.restype = SC_HANDLE
@@ -1091,8 +1262,6 @@ _FILE_NOTIFY_INFORMATION._fields_ = [
     ('FileNameLength', DWORD),
     ('FileName', WCHAR * 1),
 ]
-FILE_SHARE_READ = 1 # Variable c_int '1'
-FILE_SHARE_WRITE = 2 # Variable c_int '2'
 FILE_FLAG_BACKUP_SEMANTICS = 33554432 # Variable c_int '33554432'
 FILE_NOTIFY_CHANGE_FILE_NAME = 1 # Variable c_int '1'
 FILE_NOTIFY_CHANGE_DIR_NAME = 2 # Variable c_int '2'
@@ -1334,194 +1503,17 @@ GWL_EXSTYLE = -20 # Variable c_int '-0x000000014'
 WS_EX_TOPMOST = 8 # Variable c_long '8l'
 SWP_NOMOVE = 2 # Variable c_int '2'
 SWP_NOSIZE = 1 # Variable c_int '1'
+PM_QS_POSTMESSAGE = 9961472 # Variable c_int '9961472'
 
-ERROR_NO_MORE_ITEMS = 259 # Variable c_long '259l'
-ERROR_NOT_CONNECTED = 2250 # Variable c_long '2250l'
-class _EXPLICIT_ACCESS_W(Structure):
-    pass
-EXPLICIT_ACCESSW = _EXPLICIT_ACCESS_W
-EXPLICIT_ACCESS = EXPLICIT_ACCESSW
-
-# values for enumeration '_ACCESS_MODE'
-NOT_USED_ACCESS = 0
-GRANT_ACCESS = 1
-SET_ACCESS = 2
-DENY_ACCESS = 3
-REVOKE_ACCESS = 4
-SET_AUDIT_SUCCESS = 5
-SET_AUDIT_FAILURE = 6
-_ACCESS_MODE = c_int # enum
-ACCESS_MODE = _ACCESS_MODE
-class _TRUSTEE_W(Structure):
-    pass
-
-# values for enumeration '_MULTIPLE_TRUSTEE_OPERATION'
-NO_MULTIPLE_TRUSTEE = 0
-TRUSTEE_IS_IMPERSONATE = 1
-_MULTIPLE_TRUSTEE_OPERATION = c_int # enum
-MULTIPLE_TRUSTEE_OPERATION = _MULTIPLE_TRUSTEE_OPERATION
-
-# values for enumeration '_TRUSTEE_FORM'
-TRUSTEE_IS_SID = 0
-TRUSTEE_IS_NAME = 1
-TRUSTEE_BAD_FORM = 2
-TRUSTEE_IS_OBJECTS_AND_SID = 3
-TRUSTEE_IS_OBJECTS_AND_NAME = 4
-_TRUSTEE_FORM = c_int # enum
-TRUSTEE_FORM = _TRUSTEE_FORM
-
-# values for enumeration '_TRUSTEE_TYPE'
-TRUSTEE_IS_UNKNOWN = 0
-TRUSTEE_IS_USER = 1
-TRUSTEE_IS_GROUP = 2
-TRUSTEE_IS_DOMAIN = 3
-TRUSTEE_IS_ALIAS = 4
-TRUSTEE_IS_WELL_KNOWN_GROUP = 5
-TRUSTEE_IS_DELETED = 6
-TRUSTEE_IS_INVALID = 7
-TRUSTEE_IS_COMPUTER = 8
-_TRUSTEE_TYPE = c_int # enum
-TRUSTEE_TYPE = _TRUSTEE_TYPE
-_TRUSTEE_W._fields_ = [
-    ('pMultipleTrustee', POINTER(_TRUSTEE_W)),
-    ('MultipleTrusteeOperation', MULTIPLE_TRUSTEE_OPERATION),
-    ('TrusteeForm', TRUSTEE_FORM),
-    ('TrusteeType', TRUSTEE_TYPE),
-    ('ptstrName', LPWSTR),
-]
-TRUSTEE_W = _TRUSTEE_W
-_EXPLICIT_ACCESS_W._fields_ = [
-    ('grfAccessPermissions', DWORD),
-    ('grfAccessMode', ACCESS_MODE),
-    ('grfInheritance', DWORD),
-    ('Trustee', TRUSTEE_W),
-]
-KEY_ALL_ACCESS = 983103 # Variable c_long '983103l'
-NO_INHERITANCE = 0 # Variable c_int '0'
-LPTSTR = LPWSTR
-class _ACL(Structure):
-    pass
-ACL = _ACL
-PACL = POINTER(ACL)
-_ACL._fields_ = [
-    ('AclRevision', BYTE),
-    ('Sbz1', BYTE),
-    ('AclSize', WORD),
-    ('AceCount', WORD),
-    ('Sbz2', WORD),
-]
-PEXPLICIT_ACCESS_W = POINTER(_EXPLICIT_ACCESS_W)
-SetEntriesInAclW = _Advapi32.SetEntriesInAclW
-SetEntriesInAclW.restype = DWORD
-SetEntriesInAclW.argtypes = [DWORD, PEXPLICIT_ACCESS_W, PACL, POINTER(PACL)]
-SetEntriesInAcl = SetEntriesInAclW # alias
-class _SECURITY_DESCRIPTOR(Structure):
-    pass
-SECURITY_DESCRIPTOR = _SECURITY_DESCRIPTOR
-SECURITY_DESCRIPTOR_CONTROL = WORD
-_SECURITY_DESCRIPTOR._fields_ = [
-    ('Revision', BYTE),
-    ('Sbz1', BYTE),
-    ('Control', SECURITY_DESCRIPTOR_CONTROL),
-    ('Owner', PSID),
-    ('Group', PSID),
-    ('Sacl', PACL),
-    ('Dacl', PACL),
-]
-PSECURITY_DESCRIPTOR = PVOID
-SECURITY_DESCRIPTOR_MIN_LENGTH = 20L # Variable c_uint '20u'
-SECURITY_DESCRIPTOR_REVISION = 1 # Variable c_int '1'
-InitializeSecurityDescriptor = _Advapi32.InitializeSecurityDescriptor
-InitializeSecurityDescriptor.restype = BOOL
-InitializeSecurityDescriptor.argtypes = [PSECURITY_DESCRIPTOR, DWORD]
-SetSecurityDescriptorDacl = _Advapi32.SetSecurityDescriptorDacl
-SetSecurityDescriptorDacl.restype = BOOL
-SetSecurityDescriptorDacl.argtypes = [PSECURITY_DESCRIPTOR, BOOL, PACL, BOOL]
-SECURITY_ATTRIBUTES = _SECURITY_ATTRIBUTES
-ERROR_SUCCESS = 0 # Variable c_long '0l'
-DOMAIN_GROUP_RID_USERS = 513 # Variable c_long '513l'
-
-CoInitializeEx = _ole32.CoInitializeEx
-CoInitializeEx.restype = HRESULT
-CoInitializeEx.argtypes = [LPVOID, DWORD]
-class _OSVERSIONINFOW(Structure):
-    pass
-LPOSVERSIONINFOW = POINTER(_OSVERSIONINFOW)
-GetVersionExW = _kernel32.GetVersionExW
-GetVersionExW.restype = BOOL
-GetVersionExW.argtypes = [LPOSVERSIONINFOW]
-GetVersionEx = GetVersionExW # alias
-_OSVERSIONINFOW._fields_ = [
-    ('dwOSVersionInfoSize', DWORD),
-    ('dwMajorVersion', DWORD),
-    ('dwMinorVersion', DWORD),
-    ('dwBuildNumber', DWORD),
-    ('dwPlatformId', DWORD),
-    ('szCSDVersion', WCHAR * 128),
-]
-class _SYSTEM_INFO(Structure):
-    pass
-LPSYSTEM_INFO = POINTER(_SYSTEM_INFO)
-GetSystemInfo = _kernel32.GetSystemInfo
-GetSystemInfo.restype = None
-GetSystemInfo.argtypes = [LPSYSTEM_INFO]
-class N12_SYSTEM_INFO4DOLLAR_83E(Union):
-    pass
-class N12_SYSTEM_INFO4DOLLAR_834DOLLAR_84E(Structure):
-    pass
-N12_SYSTEM_INFO4DOLLAR_834DOLLAR_84E._fields_ = [
-    ('wProcessorArchitecture', WORD),
-    ('wReserved', WORD),
-]
-N12_SYSTEM_INFO4DOLLAR_83E._anonymous_ = ['_0']
-N12_SYSTEM_INFO4DOLLAR_83E._fields_ = [
-    ('dwOemId', DWORD),
-    ('_0', N12_SYSTEM_INFO4DOLLAR_834DOLLAR_84E),
-]
-_SYSTEM_INFO._anonymous_ = ['_0']
-_SYSTEM_INFO._fields_ = [
-    ('_0', N12_SYSTEM_INFO4DOLLAR_83E),
-    ('dwPageSize', DWORD),
-    ('lpMinimumApplicationAddress', LPVOID),
-    ('lpMaximumApplicationAddress', LPVOID),
-    ('dwActiveProcessorMask', DWORD_PTR),
-    ('dwNumberOfProcessors', DWORD),
-    ('dwProcessorType', DWORD),
-    ('dwAllocationGranularity', DWORD),
-    ('wProcessorLevel', WORD),
-    ('wProcessorRevision', WORD),
-]
-class _OSVERSIONINFOEXW(Structure):
-    pass
-OSVERSIONINFOEXW = _OSVERSIONINFOEXW
-OSVERSIONINFOEX = OSVERSIONINFOEXW
-_OSVERSIONINFOEXW._fields_ = [
-    ('dwOSVersionInfoSize', DWORD),
-    ('dwMajorVersion', DWORD),
-    ('dwMinorVersion', DWORD),
-    ('dwBuildNumber', DWORD),
-    ('dwPlatformId', DWORD),
-    ('szCSDVersion', WCHAR * 128),
-    ('wServicePackMajor', WORD),
-    ('wServicePackMinor', WORD),
-    ('wSuiteMask', WORD),
-    ('wProductType', BYTE),
-    ('wReserved', BYTE),
-]
-SYSTEM_INFO = _SYSTEM_INFO
-VER_PLATFORM_WIN32_NT = 2 # Variable c_int '2'
-VER_NT_WORKSTATION = 1 # Variable c_int '1'
-PRODUCT_ULTIMATE = 1 # Variable c_int '1'
-OSVERSIONINFOW = _OSVERSIONINFOW
-OSVERSIONINFO = OSVERSIONINFOW
-PROCESSOR_ARCHITECTURE_AMD64 = 9 # Variable c_int '9'
-PROCESSOR_ARCHITECTURE_INTEL = 0 # Variable c_int '0'
-VER_SUITE_DATACENTER = 128 # Variable c_int '128'
-VER_SUITE_ENTERPRISE = 2 # Variable c_int '2'
-VER_SUITE_PERSONAL = 512 # Variable c_int '512'
-
-GetVolumeInformationW = _kernel32.GetVolumeInformationW
-GetVolumeInformationW.restype = BOOL
-GetVolumeInformationW.argtypes = [LPCWSTR, LPWSTR, DWORD, LPDWORD, LPDWORD, LPDWORD, LPWSTR, DWORD]
-GetVolumeInformation = GetVolumeInformationW # alias
-
+PM_NOYIELD = 2 # Variable c_int '2'
+WH_KEYBOARD = 2 # Variable c_int '2'
+TranslateMessage = _user32.TranslateMessage
+TranslateMessage.restype = BOOL
+TranslateMessage.argtypes = [POINTER(MSG)]
+ReplyMessage = _user32.ReplyMessage
+ReplyMessage.restype = BOOL
+ReplyMessage.argtypes = [LRESULT]
+InSendMessage = _user32.InSendMessage
+InSendMessage.restype = BOOL
+InSendMessage.argtypes = []
+PM_NOREMOVE = 0 # Variable c_int '0'
