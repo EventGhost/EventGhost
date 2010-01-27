@@ -137,7 +137,9 @@ class MainFrame(wx.Frame):
         eg.Bind("SelectionChange", self.OnSelectionChange)
         if document.selection is not None:
             self.OnSelectionChange(document.selection)
-
+        eg.Bind("FocusChange", self.OnFocusChange)
+        self.OnFocusChange(self.treeCtrl)
+        eg.Bind("ClipboardChange", self.OnClipboardChange)
         # tell FrameManager to manage this frame
         if (
             eg.config.revision == eg.revision
@@ -167,10 +169,6 @@ class MainFrame(wx.Frame):
         auiManager.Update()
         auiManager.GetPane("logger").MinSize((100, 100))\
             .Caption(" " + Text.Logger.caption)
-        eg.Bind("FocusChange", self.OnFocusChange)
-        #lastFocus = eg.Bind("FocusChange", self.OnFocusChange)
-        #self.OnFocusChange(lastFocus)
-        eg.Bind("ClipboardChange", self.OnClipboardChange)
 
         # create an accelerator for the "Log only assigned and activated
         # events" checkbox. An awfull hack.
