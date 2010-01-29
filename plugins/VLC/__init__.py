@@ -218,7 +218,7 @@ class MyCommand(eg.ActionBase):
         )
         
     def __call__(self, text):
-        self.plugin.Push(eg.ParseString(text) + "\r\n")
+        self.plugin.Push(eg.ParseString(text).encode('utf-8') + "\r\n")
                
             
     def Configure(self, text="marq-marquee EventGhost"):
