@@ -21,9 +21,10 @@ eg.RegisterPlugin(
     name = "Raw Input",
 )
 
-
-from os.path import abspath, join, dirname
+import time
 import threading
+import collections
+from os.path import abspath, join, dirname
 from eg.WinApi.SendKeys import VK_CODES
 from eg.WinApi.Dynamic import (
     c_int,
@@ -43,6 +44,8 @@ from eg.WinApi.Dynamic import (
     GetRawInputData,
     DefWindowProc,
     PeekMessage,
+    GetAsyncKeyState,
+    GetMessageTime,
     MSG,
     PM_REMOVE,
     COPYDATASTRUCT,
@@ -68,6 +71,7 @@ from eg.WinApi.Dynamic import (
     RIDEV_INPUTSINK,
     WM_INPUT,
     WM_KEYDOWN,
+    WM_SYSKEYDOWN,
     WM_KEYUP,
     WM_COPYDATA,
     GET_RAWINPUT_CODE_WPARAM,
@@ -95,12 +99,16 @@ class HEVENT(Structure):
     ]
     
 
+class RawKeyboardData(object):
+    pass
+
 
 class RawInput(eg.PluginBase):
     
     def __start__(self):
+        self.buf = collections.deque()
         self.ScanDevices()
-        self.hookDll = CDLL(abspath(join(dirname(__file__), "hook.dll")))
+        self.hookDll = CDLL(abspath(join(dirname(__file__), "RawInputHook.dll")))
         eg.messageReceiver.AddHandler(WM_INPUT, self.OnRawInput)
         eg.messageReceiver.AddHandler(WM_COPYDATA, self.OnCopyData)
         rid = (RAWINPUTDEVICE * 1)()
@@ -109,11 +117,11 @@ class RawInput(eg.PluginBase):
         rid[0].dwFlags = RIDEV_INPUTSINK
         rid[0].hwndTarget = eg.messageReceiver.hwnd
         RegisterRawInputDevices(rid, 1, sizeof(rid[0]))        
-        self.hookDll.SetHook(eg.messageReceiver.hwnd)
+        self.hookDll.Start(eg.messageReceiver.hwnd)
 
 
     def __stop__(self):
-        self.hookDll.RemoveHook()
+        self.hookDll.Stop()
         eg.messageReceiver.RemoveHandler(WM_COPYDATA, self.OnCopyData)
         eg.messageReceiver.RemoveHandler(WM_INPUT, self.OnRawInput)
 
@@ -136,22 +144,19 @@ class RawInput(eg.PluginBase):
         
         cbSize = UINT()
         for i in range(nDevices.value):
-            print "hDevice:", rawInputDeviceList[i].hDevice
-            print "Type:", RIM_TYPES[rawInputDeviceList[i].dwType]
             GetRawInputDeviceInfo(
                 rawInputDeviceList[i].hDevice,
                 RIDI_DEVICENAME,
                 None,
                 byref(cbSize)
             )
-            buf = create_unicode_buffer(cbSize.value)
+            deviceName = create_unicode_buffer(cbSize.value)
             GetRawInputDeviceInfo(
                 rawInputDeviceList[i].hDevice,
                 RIDI_DEVICENAME,
-                byref(buf),
+                byref(deviceName),
                 byref(cbSize)
             )
-            print "DeviceName:", buf.value
             ridDeviceInfo = RID_DEVICE_INFO()
             cbSize.value = ridDeviceInfo.cbSize = sizeof(RID_DEVICE_INFO)
             GetRawInputDeviceInfo(
@@ -160,48 +165,76 @@ class RawInput(eg.PluginBase):
                 byref(ridDeviceInfo),
                 byref(cbSize)
             )
+            if ridDeviceInfo.dwType != RIM_TYPEKEYBOARD:
+                continue
+            print "hDevice:", rawInputDeviceList[i].hDevice
+            print "Type:", RIM_TYPES[rawInputDeviceList[i].dwType]
+            print "DeviceName:", deviceName.value
             if ridDeviceInfo.dwType == RIM_TYPEHID:
-                print "dwVendorId: %04X" % ridDeviceInfo.hid.dwVendorId
-                print "dwProductId: %04X" % ridDeviceInfo.hid.dwProductId
-                print "dwVersionNumber: %04X" % ridDeviceInfo.hid.dwVersionNumber
-                print "usUsagePage:", ridDeviceInfo.hid.usUsagePage
-                print "usUsage:", ridDeviceInfo.hid.usUsage
-            elif ridDeviceInfo.dwType == RIM_TYPEKEYBOARD:
-                print "dwType:", ridDeviceInfo.keyboard.dwType
-                print "dwSubType:", ridDeviceInfo.keyboard.dwSubType
-                print "dwKeyboardMode:", ridDeviceInfo.keyboard.dwKeyboardMode
-                print "dwNumberOfFunctionKeys:", ridDeviceInfo.keyboard.dwNumberOfFunctionKeys
-                print "dwNumberOfIndicators:", ridDeviceInfo.keyboard.dwNumberOfIndicators
-                print "dwNumberOfKeysTotal:", ridDeviceInfo.keyboard.dwNumberOfKeysTotal
-            elif ridDeviceInfo.dwType == RIM_TYPEMOUSE:
-                print "dwId:", ridDeviceInfo.mouse.dwId
-                print "dwNumberOfButtons:", ridDeviceInfo.mouse.dwNumberOfButtons
-                print "dwSampleRate:", ridDeviceInfo.mouse.dwSampleRate
-                print "fHasHorizontalWheel:", ridDeviceInfo.mouse.fHasHorizontalWheel
+                hid = ridDeviceInfo.hid
+                print "dwVendorId: %04X" % hid.dwVendorId
+                print "dwProductId: %04X" % hid.dwProductId
+                print "dwVersionNumber: %04X" % hid.dwVersionNumber
+                print "usUsagePage:", hid.usUsagePage
+                print "usUsage:", hid.usUsage
+            if ridDeviceInfo.dwType == RIM_TYPEKEYBOARD:
+                kbd = ridDeviceInfo.keyboard
+                print "dwType:", kbd.dwType
+                print "dwSubType:", kbd.dwSubType
+                print "dwKeyboardMode:", kbd.dwKeyboardMode
+                print "dwNumberOfFunctionKeys:", kbd.dwNumberOfFunctionKeys
+                print "dwNumberOfIndicators:", kbd.dwNumberOfIndicators
+                print "dwNumberOfKeysTotal:", kbd.dwNumberOfKeysTotal
+            if ridDeviceInfo.dwType == RIM_TYPEMOUSE:
+                mouse = ridDeviceInfo.mouse
+                print "dwId:", mouse.dwId
+                print "dwNumberOfButtons:", mouse.dwNumberOfButtons
+                print "dwSampleRate:", mouse.dwSampleRate
+                print "fHasHorizontalWheel:", mouse.fHasHorizontalWheel
             print
         
 
     def OnRawInput(self, hwnd, mesg, wParam, lParam):
         pcbSize = UINT()
-        GetRawInputData(lParam, RID_INPUT, None, byref(pcbSize), sizeof(RAWINPUTHEADER))
+        GetRawInputData(
+            lParam, RID_INPUT, None, byref(pcbSize), sizeof(RAWINPUTHEADER)
+        )
         buf = create_string_buffer(pcbSize.value)
-        GetRawInputData(lParam, RID_INPUT, buf, byref(pcbSize), sizeof(RAWINPUTHEADER))
-        pb = cast(buf, POINTER(RAWINPUT))
-        keyboard = pb.contents.data.keyboard
+        GetRawInputData(
+            lParam, RID_INPUT, buf, byref(pcbSize), sizeof(RAWINPUTHEADER)
+        )
+        pRawInput = cast(buf, POINTER(RAWINPUT))
+        keyboard = pRawInput.contents.data.keyboard
         if keyboard.VKey == 0xFF:
+            eg.eventThread.Call(eg.Print, "0xFF") 
             return 0
-        #print "Device:" , pb.contents.header.hDevice
-        #print "Scan code:", keyboard.MakeCode
-        print "Vkey:", VK_KEYS[keyboard.VKey],
+         #print "Scan code:", keyboard.MakeCode
+        info = ""
+        mTime = time.clock()
+        info = "%f " % mTime
+        info += "Vkey: %s(%d), " % (VK_KEYS[keyboard.VKey], keyboard.VKey)
+        if GetAsyncKeyState(162): #LCtrl
+            info += "LCtrl "
+        if GetAsyncKeyState(163): #RCtrl
+            info += "RCtrl "
+        info += "Scan: %d, " % keyboard.MakeCode
+        info += "Extra: %d, " % keyboard.ExtraInformation
+        info += "Device: %r, " % pRawInput.contents.header.hDevice
         #print "Flags:", keyboard.Flags
         if keyboard.Message == WM_KEYDOWN:
-            print "Message: WM_KEYDOWN"
+            info += "KEYDOWN"
         elif keyboard.Message == WM_KEYUP:
-            print "Message: WM_KEYUP"
+            info +=  "KEYUP"
         else:
-            print "Message:", keyboard.Message
+            info +=  " %d" % keyboard.Message
+        rawKeyboardData = RawKeyboardData()
+        rawKeyboardData.time = time.clock()
+        rawKeyboardData.vKey = keyboard.VKey
+        rawKeyboardData.state = keyboard.Message in (WM_KEYDOWN, WM_SYSKEYDOWN)
+        rawKeyboardData.device = pRawInput.contents.header.hDevice
+        self.buf.append(rawKeyboardData)
+        eg.eventThread.Call(eg.Print, info) 
         if GET_RAWINPUT_CODE_WPARAM(wParam) == RIM_INPUT:
-            #print "   RIM"
             return DefWindowProc(hwnd, mesg, wParam, lParam)
         return 0
     
@@ -214,23 +247,47 @@ class RawInput(eg.PluginBase):
             and copyData.contents.cbData == sizeof(HEVENT)
             and hEvent.contents.dwHookType == WH_KEYBOARD
         ):
+            eg.eventThread.Call(eg.Print, "return") 
             return
+        mTime = time.clock()
         msg = MSG()
         while PeekMessage(byref(msg), 0, WM_INPUT, WM_INPUT, PM_REMOVE):
             self.OnRawInput(0, msg.message, msg.wParam, msg.lParam)
-        eg.actionThread.Call(
-            eg.Print, 
-            repr(
-                (
-                    VK_KEYS[hEvent.contents.wParam], 
-                    hEvent.contents.nCode, 
-                    hwnd, 
-                    mesg, 
-                    wParam, 
-                    lParam
-                )
-            )
+        vKey = hEvent.contents.wParam
+        repeatCount = hEvent.contents.lParam & 0xFFFF
+        keyState = (hEvent.contents.lParam >> 30) & 0x01
+        extended = (hEvent.contents.lParam >> 24) & 0x01
+        if (hEvent.contents.lParam >> 31) & 0x01:
+            transition = "KEYUP"
+            state = False
+        else:
+            transition = "KEYDOWN"
+            state = True
+        info = "%f    VKey: %s(%d) %s, keyState=%d, extended=%d" % (
+            mTime,
+            VK_KEYS[vKey],
+            hEvent.contents.wParam,
+            transition,
+            keyState,
+            extended,
         )
+        if GetAsyncKeyState(162): #LCtrl
+            info += "LCtrl "
+        if GetAsyncKeyState(163): #RCtrl
+            info += "RCtrl "
+        for i, rawKeyboardData in enumerate(self.buf):
+            if (
+                rawKeyboardData.vKey == vKey
+                and rawKeyboardData.state == state
+            ):
+                del self.buf[i]
+                if rawKeyboardData.device != 65603:
+                    eg.eventThread.Call(eg.Print, "blocked") 
+                    return 1
+                break
+        else:
+            eg.eventThread.Call(eg.Print, "not found") 
+        eg.eventThread.Call(eg.Print, info) 
         return 0
 
         

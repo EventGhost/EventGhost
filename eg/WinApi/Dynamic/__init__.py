@@ -1517,3 +1517,11 @@ InSendMessage = _user32.InSendMessage
 InSendMessage.restype = BOOL
 InSendMessage.argtypes = []
 PM_NOREMOVE = 0 # Variable c_int '0'
+GetAsyncKeyState = _user32.GetAsyncKeyState
+GetAsyncKeyState.restype = SHORT
+GetAsyncKeyState.argtypes = [c_int]
+
+GetMessageTime = _user32.GetMessageTime
+GetMessageTime.restype = LONG
+GetMessageTime.argtypes = []
+
