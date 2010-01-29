@@ -44,6 +44,7 @@ class PythonScript(eg.ActionBase):
         panel.dialog.FinishSetup()
         panel.dialog.SetPosition(Config.position)
         panel.dialog.SetSize(Config.size)
+        eg.Utils.EnsureVisible(panel.dialog)
         while panel.Affirmed():
             panel.SetResult(editCtrl.GetValue())
         if not panel.dialog.IsMaximized():
