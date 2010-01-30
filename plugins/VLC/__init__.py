@@ -32,8 +32,6 @@ are enabled in VLC!
 """
 
 
-import eg
-
 eg.RegisterPlugin(
     name = "VLC media player",
     author = "MonsterMagnet",
@@ -62,13 +60,17 @@ eg.RegisterPlugin(
     url = "http://www.eventghost.org/forum/viewtopic.php?t=693",
 )
 
+
+
+import eg
 import wx
 import os
 import asynchat
 import socket
 import _winreg
 from win32api import ShellExecute
-
+from threading import Event
+from datetime import timedelta
 
 
 
@@ -88,10 +90,10 @@ def GetVlcPath():
             "VideoLAN\\VLC\\vlc.exe"
         )
 
-        
-        
+
+
 class VlcSession(asynchat.async_chat):
-   
+
     def __init__ (self, plugin, address):
         # Call constructor of the parent class
         asynchat.async_chat.__init__(self)
@@ -114,8 +116,8 @@ class VlcSession(asynchat.async_chat):
         # connection succeeded
         self.plugin.TriggerEvent("Connected")
         self.sendall(self.plugin.connectedevent)
-         
-        
+
+
     def handle_expt(self):
         # connection failed
         self.plugin.isDispatcherRunning = False
@@ -138,24 +140,26 @@ class VlcSession(asynchat.async_chat):
     def found_terminator(self):
         self.plugin.ValueUpdate(self.data)
         self.data = ''
-         
-         
-         
+
+
+
 class ActionPrototype(eg.ActionBase):
+
     value = None # the actual value will be defined through AddActionsFromList
-    
+
+
     def __call__(self):
         return self.plugin.Push(self.value + "\r\n")
 
 
 
 class Start(eg.ActionBase):
-   
+
     class text:
         additionalArgs = "Additional command line arguments:"
         resultingCmdLine = "Resulting command line:"
-        
-        
+
+
     def __call__(self, cmdLineArgs=""):
         vlcPath = GetVlcPath()
         return ShellExecute(
@@ -166,8 +170,8 @@ class Start(eg.ActionBase):
             None, #os.path.dirname(vlcPath), 
             1
         )
-    
-    
+
+
     def GetCmdLineArgs(self, cmdLineArgs):
         args = '--extraintf=rc --rc-host=%s:%d --rc-quiet --rc-show-pos' % (
             self.plugin.host, 
@@ -176,15 +180,15 @@ class Start(eg.ActionBase):
         if cmdLineArgs:
             args = args + " " + cmdLineArgs
         return args
-        
-        
+
+
     def GetLabel(self, cmdLineArgs=""):
         if cmdLineArgs:
             return self.name + ": " + cmdLineArgs
         else:
             return self.name
-        
-        
+
+
     def Configure(self, cmdLineArgs=""):
         vlcPath = GetVlcPath()
         panel = eg.ConfigPanel()
@@ -208,19 +212,152 @@ class Start(eg.ActionBase):
         ])
         while panel.Affirmed():
             panel.SetResult(cmdLineCtrl.GetValue())
-            
-            
-            
+
+
+
+class GetSomeInfo(eg.ActionBase):
+
+    class text:
+        label = "Select type of information:"
+        choices = (
+            'Show items currently in playlist',
+            'Current playlist status',
+            'Title in current item', 
+            'Next title in current item', 
+            'Previous title in current item', 
+            'Chapter in current item', 
+            'Next chapter in current item', 
+            'Previous chapter in current item',
+            "Information about stream",
+            "Statistical information",
+            "Elapsed seconds",
+            "Is playing status",
+            "Title of the current stream",
+            "Length of the current stream [s]",
+            'Volume', 
+            'Audio device', 
+            'Audio channels', 
+            'Audio track', 
+            'Video track', 
+            'Video aspect ratio', 
+            'Video crop', 
+            'Video zoom', 
+            'Subtitles track', 
+            'Help message',
+            'Longer help message',
+        )
+
+
+    CHOICES = (
+            'playlist',
+            'status',
+            'title',
+            'title_n',
+            'title_p',
+            'chapter',
+            'chapter_n',
+            'chapter_p',
+            'info',
+            'stats',
+            'get_time',
+            'is_playing',
+            'get_title',
+            'get_length',
+            'volume',
+            'adev',
+            'achan',
+            'atrack',
+            'vtrack',
+            'vratio',
+            'vcrop',
+            'vzoom',
+            'strack',
+            'help',
+            'longhelp',
+    )
+
+
+    def __call__(self, index = 0):
+        if self.plugin.waitFlag.isSet():
+            self.plugin.lastMessage = []
+            self.plugin.waitFlag.clear()
+            self.plugin.Push(self.CHOICES[index] + "\r\n")
+            self.plugin.waitFlag.wait(0.1)
+            self.plugin.waitFlag.set()
+            return self.plugin.lastMessage
+        else:
+            return None
+
+
+    def GetLabel(self, index):
+        return "%s: %s" % (self.name,self.text.choices[index])
+
+
+    def Configure(self, index = 0):
+        panel = eg.ConfigPanel()
+        mySizer = panel.sizer
+        staticText = panel.StaticText(self.text.label)
+        choiceCtrl=wx.Choice(
+            panel,
+            choices=self.text.choices,
+        )
+        choiceCtrl.SetSelection(index)
+        mySizer.Add(staticText, 0, wx.TOP, 15)
+        mySizer.Add(choiceCtrl, 0, wx.TOP, 2)
+        while panel.Affirmed():
+            panel.SetResult(choiceCtrl.GetSelection())
+
+
+class GetTime(eg.ActionBase):
+
+    def __call__(self):
+        if self.plugin.waitFlag.isSet():
+            self.plugin.waitFlag.clear()
+            self.plugin.Push('get_time' + "\r\n")
+            self.plugin.waitFlag.wait(0.05)
+            self.plugin.lastMessage = []
+            self.plugin.waitFlag.clear()
+            self.plugin.Push('get_time' + "\r\n")
+            self.plugin.Push('get_length' + "\r\n")
+            self.plugin.waitFlag.wait(0.1)
+            self.plugin.waitFlag.set()
+            res = self.plugin.lastMessage
+            if len(res) == 2:
+                elaps = timedelta(seconds=int(res[0]))
+                rem   = timedelta(seconds=int(res[1])-int(res[0]))
+                return [str(elaps), str(rem)]
+            else:
+        return None
+
+
+class GetLength(eg.ActionBase):
+
+    def __call__(self):
+        if self.plugin.waitFlag.isSet():
+            self.plugin.lastMessage = []
+            self.plugin.waitFlag.clear()
+            self.plugin.Push('get_length' + "\r\n")
+            self.plugin.waitFlag.wait(0.1)
+            self.plugin.waitFlag.set()
+            res = self.plugin.lastMessage
+            res = res[1] if len(res)==2 else res[0]
+            lngth = timedelta(seconds=int(res))
+            return str(lngth)
+        return None
+
+
 class MyCommand(eg.ActionBase):
+
     class text:
         label = (
             "My Command: (Type 'H' to see a list of all available commands.)"
         )
-        
+
+
     def __call__(self, text):
         self.plugin.Push(eg.ParseString(text).encode('utf-8') + "\r\n")
-               
-            
+
+
     def Configure(self, text="marq-marquee EventGhost"):
         panel = eg.ConfigPanel()
         mySizer = wx.FlexGridSizer(rows=3)
@@ -233,6 +370,7 @@ class MyCommand(eg.ActionBase):
             panel.SetResult(textCtrl.GetValue())
 
 
+
 class Seek(eg.ActionBase):
     class text:
         label = "Seek value:"
@@ -242,23 +380,39 @@ class Seek(eg.ActionBase):
         posChoice = ("Relatively","Absolute")
         dir = "Direction"
         dirChoice = ("Forward","Backward")
-        
+
+
     def __call__(self, value, unit = 0, pos = 0, dir = 0):
         val = eg.ParseString(value)
         if pos: #Absolute
             self.plugin.Push("seek %s%s\r\n" % (val,("","%")[unit]))
-        else:
-            self.plugin.seekStatus = 1
-            self.plugin.unit = unit
-            self.plugin.seek = int(val)
-            self.plugin.seek *= (1,-1)[dir]
-            self.plugin.Push("get_length\r\n")
+        elif self.plugin.waitFlag.isSet():
+            val = int(val)
+            dir = (1,-1)[dir]
+            self.plugin.waitFlag.clear()
+            self.plugin.Push('get_time' + "\r\n")
+            self.plugin.waitFlag.wait(0.05)
+            self.plugin.lastMessage = []
+            self.plugin.waitFlag.clear()
+            self.plugin.Push('get_time' + "\r\n")
+            self.plugin.Push('get_length' + "\r\n")
+            self.plugin.waitFlag.wait(0.1)
+            self.plugin.waitFlag.set()
+            pos = int(self.plugin.lastMessage[0])
+            length = int(self.plugin.lastMessage[1])
+            if not unit: #Seconds
+                pos += dir*val
+            else:        #Percents
+                pos += dir*val*length/100
+            self.plugin.Push("seek %s\r\n" % str(pos))
+
 
     def GetLabel(self, value, unit, pos, dir):
         if pos:
             return "%s: %s%s, %s" % (self.name,value,("","%")[unit],self.text.posChoice[pos])
         else:
             return "%s: %s%s, %s, %s" % (self.name,value,("","%")[unit],self.text.posChoice[pos],self.text.dirChoice[dir])
+
 
     def Configure(self, value="60", unit = 0, pos = 0, dir = 0):
         text = self.text
@@ -293,7 +447,7 @@ class Seek(eg.ActionBase):
         rb6 = panel.RadioButton(dir, text.dirChoice[1])                            
         dirSizer.Add(rb5, 1)
         dirSizer.Add(rb6, 1)
-        
+
         def OnRadioButton(event=None):
             flag = rb3.GetValue()
             mySizer.Show(dirSizer,flag,True)
@@ -320,33 +474,31 @@ class Seek(eg.ActionBase):
 
 
 class VLC(eg.PluginBase):
-    
+
     class text:
         eventBox = "Event generation"
         showFeedbackEvents = "Show VLC feedback events"
         tcpBox = "TCP/IP Settings"
         host = "Host:"
         port = "Port:"
-        
-        
+
+
     def __init__(self):
         self.AddEvents()
         self.AddActionsFromList(ACTIONS)
-                             
-                            
+        self.waitFlag = Event()
+        self.lastMessage = []
+        self.waitFlag.set()
+
+
     def __start__(self, host="localhost", port=1234, showFeedbackEvents=True): 
         self.host = host
         self.port = port
         self.dispatcher = None
         self.isDispatcherRunning = False
-        self.feedback = ""
         self.showFeedbackEvents = showFeedbackEvents
-        self.seekStatus = 0
-        self.length = 0
-        self.seek = 0
-        self.unit = 0
-       
-    
+
+
     def __stop__(self):
         if self.isDispatcherRunning:
             self.dispatcher.close()
@@ -354,26 +506,11 @@ class VLC(eg.PluginBase):
 
     def ValueUpdate(self, text):
         state = text.decode('utf-8')
-        if not self.seekStatus:
-            if self.showFeedbackEvents:
-                self.TriggerEvent(state)
-        elif self.seekStatus == 1:
-            try:
-                self.length = int(state)+self.seek
-                self.Push("get_time\r\n")
-                self.seekStatus = 2
-            except:
-                pass
-        else: #self.seekStatus == 2
-            try:
-                if not self.unit: #Seconds
-                    pos = int(state)+self.seek
-                else:             #Percents
-                    pos = int(state)+self.seek*(self.length/100)
-                self.Push("seek "+str(pos)+"\r\n")
-                self.seekStatus = 0
-            except:
-                pass
+        if not self.waitFlag.isSet():
+            self.lastMessage.append(state)
+            return
+        if self.showFeedbackEvents:
+            self.TriggerEvent(state)
 
 
     def Push(self, data):
@@ -414,12 +551,14 @@ class VLC(eg.PluginBase):
                 checkBox.GetValue()
             )
  
+ 
+ 
 ACTIONS = (
     (
         Start,
         'Start', 
         'Start', 
-        'Starts VLC with the needed command line arguments.', 
+        'Starts VLC with the needed command line arguments.',
         None
     ),
     (
@@ -503,7 +642,7 @@ ACTIONS = (
         ActionPrototype,
         'NextPlaylistItem', 
         'Next Playlist Item', 
-        'Jump forward to the next item in playlist', 
+        'Jump forward to the next item in playlist',
         'next'
     ),
     (
@@ -517,28 +656,28 @@ ACTIONS = (
         ActionPrototype,
         'NextTitle', 
         'Next Title', 
-        'Next title in current item', 
+        'Next title in current item',
         'title_n'
     ),
     (
         ActionPrototype,
         'PreviousTitle', 
         'Previous Title', 
-        'Previous title in current item', 
+        'Previous title in current item',
         'title_p'
     ),
     (
         ActionPrototype,
         'NextChapter', 
         'Next Chapter', 
-        'Next chapter in current item', 
+        'Next chapter in current item',
         'chapter_n'
     ),
     (
         ActionPrototype,
         'PreviousChapter', 
         'Previous Chapter', 
-        'Previous chapter in current item', 
+        'Previous chapter in current item',
         'chapter_p'
     ),
     (
@@ -591,6 +730,27 @@ ACTIONS = (
         'MyCommand', 
         'My Command', 
         'Here you can enter your own command, ie. show a custom text message.',
+        None
+    ),
+    (
+        GetTime,
+        'GetTime', 
+        'Get time', 
+        "Returns elapsed and remaining times.",
+        'get_time'
+    ),
+    (
+        GetLength,
+        'GetLength', 
+        'Get length', 
+        'Returns the length of the current stream.',
+        'get_length'
+    ),
+    (
+        GetSomeInfo,
+        'GetSomeInfo', 
+        'Get some info', 
+        'Returns information whose type is chosen by user.',
         None
     ),
     (
