@@ -326,7 +326,6 @@ class GetTime(eg.ActionBase):
                 elaps = timedelta(seconds=int(res[0]))
                 rem   = timedelta(seconds=int(res[1])-int(res[0]))
                 return [str(elaps), str(rem)]
-            else:
         return None
 
 
