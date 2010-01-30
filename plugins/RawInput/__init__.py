@@ -109,21 +109,22 @@ class RawInput(eg.PluginBase):
         self.buf = collections.deque()
         self.ScanDevices()
         self.hookDll = CDLL(abspath(join(dirname(__file__), "RawInputHook.dll")))
-        eg.messageReceiver.AddHandler(WM_INPUT, self.OnRawInput)
-        eg.messageReceiver.AddHandler(WM_COPYDATA, self.OnCopyData)
+        self.messageReceiver = eg.MessageReceiver("RawInputWindow")
+        self.messageReceiver.AddHandler(WM_INPUT, self.OnRawInput)
+        self.messageReceiver.AddHandler(WM_COPYDATA, self.OnCopyData)
+        self.messageReceiver.Start()
         rid = (RAWINPUTDEVICE * 1)()
         rid[0].usUsagePage = 0x01
         rid[0].usUsage = 0x06
         rid[0].dwFlags = RIDEV_INPUTSINK
-        rid[0].hwndTarget = eg.messageReceiver.hwnd
+        rid[0].hwndTarget = self.messageReceiver.hwnd
         RegisterRawInputDevices(rid, 1, sizeof(rid[0]))        
-        self.hookDll.Start(eg.messageReceiver.hwnd)
+        self.hookDll.Start(self.messageReceiver.hwnd)
 
 
     def __stop__(self):
         self.hookDll.Stop()
-        eg.messageReceiver.RemoveHandler(WM_COPYDATA, self.OnCopyData)
-        eg.messageReceiver.RemoveHandler(WM_INPUT, self.OnRawInput)
+        self.messageReceiver.Stop()
 
 
     def ScanDevices(self):
@@ -281,9 +282,9 @@ class RawInput(eg.PluginBase):
                 and rawKeyboardData.state == state
             ):
                 del self.buf[i]
-                if rawKeyboardData.device != 65603:
-                    eg.eventThread.Call(eg.Print, "blocked") 
-                    return 1
+#                if rawKeyboardData.device != 65603:
+#                    eg.eventThread.Call(eg.Print, "blocked") 
+#                    return 1
                 break
         else:
             eg.eventThread.Call(eg.Print, "not found") 

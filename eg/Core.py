@@ -308,7 +308,7 @@ eg.StopException = StopException
 eg.HiddenAction = HiddenAction
 eg.MessageBox = MessageBox
 
-eg.messageReceiver = eg.MessageReceiver()
+eg.messageReceiver = eg.MainMessageReceiver()
 eg.app = eg.App()
 
 import Icons # we can't import the Icons module earlier, because wx.App

@@ -123,10 +123,9 @@ def DeInit():
     eg.scheduler.Stop()
     eg.actionThread.Stop()
     eg.eventThread.Stop()
-
     eg.PrintDebugNotice("shutting down")
     eg.config.Save()
-    eg.messageReceiver.Close()
+    eg.messageReceiver.Stop()
     if eg.dummyAsyncoreDispatcher:
         eg.dummyAsyncoreDispatcher.close()
 

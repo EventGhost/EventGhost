@@ -1525,3 +1525,4 @@ GetMessageTime = _user32.GetMessageTime
 GetMessageTime.restype = LONG
 GetMessageTime.argtypes = []
 
+LPCTSTR = LPCWSTR
