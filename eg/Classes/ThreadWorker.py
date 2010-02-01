@@ -176,9 +176,8 @@ class ThreadWorker(object):
             while self.__alive:
                 self.__DoOneEvent()
         finally:
-            CoUninitialize() # why I haven't put this as last statement?
-                             # Must have a reason.
             self.Finish()
+            CoUninitialize()
 
 
     def __DoOneEvent(self):
