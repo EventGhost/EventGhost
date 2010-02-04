@@ -157,7 +157,6 @@ class OptionsDialog:
     Tab1 = u"Allgemein"
     Title = u"Einstellungen"
     UseAutoloadFile = u"Lade Datei beim Start:"
-    Warning = u"Änderung der Sprache werden erst nach einem Neustart der Applikation wirksam."
     confirmDelete = u"Zeige Warnhinweis beim Löschen von Elementen"
     limitMemory1 = u"Begrenze Speicherverbrauch wenn minimiert auf"
     limitMemory2 = u"MB"
@@ -635,6 +634,7 @@ class Plugin:
     class FS20PCS:
         description = u"<rst>\nSenden von Befehlen an FS20 Empfänger.\n\n|\n\n|fS20Image|_\n\n`Zum Shop <http://www.elv.de/output/controller.aspx?cid=74&detail=10&detail2=27743>`__\n\n.. |fS20Image| image:: picture.jpg\n.. _fS20Image: http://www.elv.de/\n"
         address = u"Adresse:"
+        errorFind = u"ELV FS20 PCS wurde nicht gefunden"
         level = u"Stufe:"
         repeat = u"Wiederholungen:"
         repeatSuffix = u"{0} ({1} Wiederholungen)"
@@ -645,10 +645,30 @@ class Plugin:
             name = u"Dimmen"
             description = u"Dimmt sofort auf eine Helligkeitsstufe"
             labelFormat = u"Dimme {0} auf {1:.02f}%"
+        class DimAlternating:
+            name = u"Abwechselnd Herauf- bzw. Herunterdimmen"
+            description = u"Heraufdimmen bis Maximum, Pause, Herabdimmen bis Minimum, Pause, usw."
+            labelFormat = u"Dimme {0} abwechselnd herauf- bzw. herunter"
+        class DimAlternatingOffTimer:
+            name = u"Abwechselnd Herauf- bzw. Herunterdimmen und nach Timerzeit ausstellen"
+            description = u"Dimme im Wechsel sofort eine Helligkeitsstufe herauf bzw. herab (bei langem Tastendruck mehrere Helligkeitsstufen herauf bis Maximum und nach kurzer Pause wieder herab bis Minimum usw. - solange Taste gedrückt wird) und schalte nach Timerzeit Aus (im Wechsel)"
+            labelFormat = u"Dimme {0} abwechselnd herauf- bzw. herunter und schalte nach {1} aus"
         class DimDown:
             name = u"Herunterdimmen"
             description = u"Eine Helligkeitsstufe dunkler dimmen"
             labelFormat = u"Dimme {0} eine Helligkeitsstufe dunkler"
+        class DimDownOffTimer:
+            name = u"Herunterdimmen und nach Timerzeit abschalten"
+            description = u"Eine Helligkeitsstufe dunkler dimmen und nach Timerzeit abschalten"
+            labelFormat = u"Dimme {0} eine Helligkeitsstufe dunkler und schalte nach {1} ab"
+        class DimTimer:
+            name = u"In Timerzeit herunterdimmen"
+            description = u"Dimmt in Timerzeit auf eine Helligkeitsstufe"
+            labelFormat = u"Dimme {0} in {2} auf {1:.02f}%"
+        class DimUp:
+            name = u"Heraufdimmen"
+            description = u"Eine Helligkeitsstufe heller dimmen"
+            labelFormat = u"Dimme {0} eine Helligkeitsstufe heller"
     class Joystick:
         name = u"Joystick"
         description = u"Dieses Plugin erlaubt es Joysticks und Gamepads als Ereignisquelle zu verwenden."
