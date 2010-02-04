@@ -1,4 +1,4 @@
-version = "0.1.13"
+version = "0.1.14"
 # This file is part of EventGhost.
 # Copyright (C) 2008, 2009  Pako <lubos.ruckl@quick.cz>
 #
@@ -17,7 +17,7 @@ version = "0.1.13"
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# Last change: 2010-01-22 09:15 GMT+1
+# Last change: 2010-02-04 09:03 GMT+1
 
 
 eg.RegisterPlugin(
@@ -838,6 +838,8 @@ class Multitap(eg.PluginClass):
             ctrlTimeout.Enable(enable)
             rb0.Enable(enable)
             rb1.Enable(enable)
+            checkBoxCtrl.Enable(enable)
+            displayChoice.Enable(enable)
 
         def setValue(item):
             labelCtrl.SetValue(item[0])
@@ -958,6 +960,21 @@ class Multitap(eg.PluginClass):
             panel.dialog.buttonRow.okButton.Enable(False)
         panel.sizer.Layout()
 
+        def onCheckbox(event=None):
+            mon = -1
+            if len(self.configs)>0:
+                sel = self.oldSel
+                osd = checkBoxCtrl.GetValue()
+                displayChoice.Enable(osd)
+                if osd:
+                    mon = self.configs[sel][6]
+                self.configs[sel][5] = osd
+            displayChoice.SetSelection(mon)
+            if event:
+                event.Skip()
+        checkBoxCtrl.Bind(wx.EVT_CHECKBOX,onCheckbox)
+        onCheckbox()
+
         def onClick(evt):
             self.flag = False
             sel = listBoxCtrl.GetSelection()
@@ -968,6 +985,7 @@ class Multitap(eg.PluginClass):
                     item = self.configs[sel]
                     setValue(item)
             listBoxCtrl.SetSelection(self.oldSel)
+            onCheckbox()
             listBoxCtrl.SetFocus()
             evt.Skip()
             self.flag = True
@@ -999,7 +1017,8 @@ class Multitap(eg.PluginClass):
             if lngth == 1:
                 self.configs=[]
                 listBoxCtrl.Set([])
-                item = ['','',True,1.5,0]
+#config structure = [label,event,format,timeout,mode,osd,monitor]
+                item = ['','',True,1.5,0,True,0]
                 setValue(item)
                 boxEnable(False)
                 panel.dialog.buttonRow.applyButton.Enable(False)
@@ -1020,58 +1039,27 @@ class Multitap(eg.PluginClass):
             self.flag = True
         btnDEL.Bind(wx.EVT_BUTTON, onButtonDelete)
 
-        def onChoiceMode(event=None):
-            if self.configs<>[]:
-                mode = choiceMode.GetSelection()
-                sel = self.oldSel
-                self.configs[sel][4] = mode
-            if event:
-                event.Skip()
-        choiceMode.Bind(wx.EVT_CHOICE,onChoiceMode)
-        onChoiceMode()
-
-        def onTimeout(event=None):
-            if self.configs<>[]:
-                timeout = ctrlTimeout.GetValue()
-                sel = self.oldSel
-                self.configs[sel][3] = timeout
-            if event:
-                event.Skip()
-        ctrlTimeout.Bind(wx.EVT_TEXT,onTimeout)
-        onTimeout()
-
-        def onDisplayChoice(event=None):
-            monitor = displayChoice.GetSelection()
+        def onChoiceMode(event):
+            mode = choiceMode.GetSelection()
             sel = self.oldSel
-            self.configs[sel][6] = monitor
-            if event:
-                event.Skip()
-        displayChoice.Bind(wx.EVT_CHOICE,onDisplayChoice)
-        onDisplayChoice()
+            self.configs[sel][4] = mode
+            event.Skip()
+        choiceMode.Bind(wx.EVT_CHOICE,onChoiceMode)
 
-        def onCheckbox(event=None):
-            if self.configs<>[]:
-                sel = self.oldSel
-                osd = checkBoxCtrl.GetValue()
-                displayChoice.Enable(osd)
-                mon = -1 if not osd else self.configs[sel][6]
-                displayChoice.SetSelection(mon)
-                self.configs[sel][5] = osd
-            if event:
-                event.Skip()
-        checkBoxCtrl.Bind(wx.EVT_CHECKBOX,onCheckbox)
-        onCheckbox()
+        def onTimeout(event):
+            timeout = ctrlTimeout.GetValue()
+            sel = self.oldSel
+            self.configs[sel][3] = timeout
+            event.Skip()
+        ctrlTimeout.Bind(wx.EVT_TEXT,onTimeout)
 
-        def onEvtFormat(event=None):
-            if self.configs<>[]:
-                format = rb1.GetValue()
-                sel = self.oldSel
-                self.configs[sel][2] = format
-            if event:
-                event.Skip()
+        def onEvtFormat(event):
+            format = rb1.GetValue()
+            sel = self.oldSel
+            self.configs[sel][2] = format
+            event.Skip()
         rb0.Bind(wx.EVT_RADIOBUTTON,onEvtFormat)
         rb1.Bind(wx.EVT_RADIOBUTTON,onEvtFormat)
-        onEvtFormat()
 
         def OnTxtChange(evt):
             if self.configs<>[] and self.flag:
@@ -1108,12 +1096,20 @@ class Multitap(eg.PluginClass):
             listBoxCtrl.Set([n[0] for n in self.configs])
             listBoxCtrl.SetSelection(sel)
             setValue(item)
+            onCheckbox()
             labelCtrl.SetFocus()
             btnApp.Enable(False)
             btnDEL.Enable(True)
             evt.Skip()
             self.flag = True
         btnApp.Bind(wx.EVT_BUTTON, OnButtonAppend)
+
+        def onDisplayChoice(event):
+            monitor = displayChoice.GetSelection()
+            sel = self.oldSel
+            self.configs[sel][6] = monitor
+            event.Skip()
+        displayChoice.Bind(wx.EVT_CHOICE,onDisplayChoice)
 
         while panel.Affirmed():
             panel.SetResult(
