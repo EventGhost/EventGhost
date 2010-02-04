@@ -1160,6 +1160,22 @@ class Plugin:
             name = u"Anzeige setzen"
         class SiemensStar:
             name = u"Siemensstern"
+    class USBRFID:
+        description = u"<rst>\nEmpfängt Codes ELV USB/RFID-Interface.\n\n|\n\n|productImage|_\n\n`Direct shop link <http://www.elv.de/output/controller.aspx?cid=74&detail=10&detail2=28049>`__\n\n.. |productImage| image:: picture.jpg\n.. _productImage: http://www.elv.de/ "
+        duration = u"Dauer"
+        errorFind = u"USB/RFID-Interface wurde nicht gefunden"
+        class Buzzer:
+            name = u"Piepton"
+            description = u"Piepton einschalten"
+            labelFormat = u"Piepton für {0}0 ms einschalten"
+        class GreenLED:
+            name = u"Grüne LED"
+            description = u"Grüne LED einschalten"
+            labelFormat = u"Grüne LED für {0}0 ms einschalten"
+        class RedLED:
+            name = u"Rote LED"
+            description = u"Rote LED einschalten"
+            labelFormat = u"Rote LED für {0}0 ms einschalten"
     class USB_UIRT:
         name = u"USB-UIRT"
         blinkRx = u"Blinke bei Empfang"
