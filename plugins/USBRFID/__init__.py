@@ -24,19 +24,20 @@ eg.RegisterPlugin(
 
 import binascii
 import sys
-import wx.lib.mixins.listctrl as listmix
 from eg.WinApi.HID import HIDThread
 from eg.WinApi.HID import GetDevicePath
 from eg.WinApi.HID import IsDeviceName
 
 class Text:
     errorFind = "Error finding USB/RFID-Interface"
-    timerValue = "Timer value:"
+    duration = "Duration:"
 
 VENDOR_ID = 6383
 PRODUCT_ID = 57368
 
 class USBRFID(eg.PluginClass):
+    text = Text
+    
     def __init__(self):
         self.version = None
         self.thread = None
@@ -45,7 +46,6 @@ class USBRFID(eg.PluginClass):
         self.AddNewAction("RedLED", 0xf1, "Red LED", "Turn on red LED", "Turn on red LED for {0}0 ms")
         self.AddNewAction("Buzzer", 0xf3, "Buzzer", "Turn on buzzer", "Turn on buzzer for {0}0 ms")
 
-        
     def AddNewAction(self, internalName, classFuncCode, externalName, classDescription, classLabelFormat):
         class MyText:
             labelFormat = classLabelFormat
@@ -152,37 +152,36 @@ class ActionBase(eg.ActionBase):
     name = None
     description = None
     
-    def __call__(self, timerValue):
-        self.plugin.thread.Write("\x01\x02" + self.funcCode + chr(timerValue) + "\x00", 1000)
+    def __call__(self, duration):
+        self.plugin.thread.Write("\x01\x02" + chr(self.funcCode) + chr(duration) + "\x00", 1000)
         
-    def GetLabel(self, timerValue):
-        #print str(timerValue) + "0 ms"
+    def GetLabel(self, duration):
+        #print str(duration) + "0 ms"
         #pass
-        return self.text.labelFormat.format(timerValue)
+        return self.text.labelFormat.format(duration)
 
-    def Configure2(self, timerValue = 100):
-        
+    def Configure(self, duration = 100):
         panel = eg.ConfigPanel()
 
-        def TimerCallback(value):
+        def LevelCallback(value):
             return str(value) + "0 ms"
         
-        timerCtrl = eg.Slider(
+        durationCtrl = eg.Slider(
             panel, 
-            value=timerValue, 
+            value=duration, 
             min=1, 
             max=255, 
             minLabel="10 ms",
             maxLabel="2550 ms",
             style = wx.SL_TOP,
             size=(300,-1),
-            levelCallback=TimerCallback
+            levelCallback=LevelCallback
         )
-        timerCtrl.SetMinSize((300, -1))
+        durationCtrl.SetMinSize((300, -1))
 
-        panel.AddLine(self.plugin.text.timerValue, timerCtrl)
+        panel.AddLine(self.plugin.text.duration, durationCtrl)
         
         while panel.Affirmed():
-            panel.SetResult(timerCtrl.GetValue())
+            panel.SetResult(durationCtrl.GetValue())
 
 
