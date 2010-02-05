@@ -16,15 +16,15 @@
 
 import eg
 from eg.WinApi.Dynamic import (
-    cast, WM_SIZE, CW_USEDEFAULT, WS_OVERLAPPEDWINDOW, GetModuleHandle, 
-    WNDCLASS, RegisterClass, CreateWindowEx, byref, WNDPROC, WinError, 
+    cast, WM_SIZE, CW_USEDEFAULT, WS_OVERLAPPEDWINDOW, GetModuleHandle,
+    WNDCLASS, RegisterClass, CreateWindowEx, byref, WNDPROC, WinError,
     DefWindowProc, WM_USER, UnregisterClass, DestroyWindow, LPCTSTR
 )
 
 
 class MessageReceiver(eg.ThreadWorker):
     """
-    An eg.ThreadWorker with a invisible window to receive win32 messages for 
+    An eg.ThreadWorker with a invisible window to receive win32 messages for
     different purposes.
     """
     def __init__(self, windowName):
@@ -33,11 +33,12 @@ class MessageReceiver(eg.ThreadWorker):
             WM_SIZE: [self.WmSizeHandler],
         }
         eg.ThreadWorker.__init__(self)
-        wndclass = WNDCLASS()
-        wndclass.lpfnWndProc = WNDPROC(self.MyWndProc)
-        wndclass.hInstance = GetModuleHandle(None)
-        wndclass.lpszMenuName = None
-        wndclass.lpszClassName = self.windowName + "MessageReceiver"
+        wndclass = WNDCLASS(
+            lpfnWndProc = WNDPROC(self.WindowProc),
+            hInstance = GetModuleHandle(None),
+            lpszMenuName = None,
+            lpszClassName = self.windowName + "MessageReceiver",
+        )
         self.classAtom = RegisterClass(byref(wndclass))
         if not self.classAtom:
             raise WinError()
@@ -50,6 +51,9 @@ class MessageReceiver(eg.ThreadWorker):
 
     @eg.LogIt
     def Setup(self):
+        """
+        Overrides eg.ThreadWorker.Setup to create the window instance.
+        """
         self.hwnd = CreateWindowEx(
             0,
             self.wndclass.lpszClassName,
@@ -69,11 +73,25 @@ class MessageReceiver(eg.ThreadWorker):
 
 
     def Finish(self):
+        """
+        Overrides eg.ThreadWorker.Finish to destroy the window instance.
+        """
         if not DestroyWindow(self.hwnd):
             raise WinError()
         self.hwnd = None
-        
-        
+
+
+    @eg.LogIt
+    def Stop(self):
+        self.messageProcs.clear()
+        eg.ThreadWorker.Stop(self, 5.0)
+        if not UnregisterClass(
+            cast(self.classAtom, LPCTSTR),
+            GetModuleHandle(None)
+        ):
+            raise WinError()
+
+
     def AddHandler(self, mesg, handler):
         if mesg not in self.messageProcs:
             self.messageProcs[mesg] = [handler]
@@ -111,9 +129,9 @@ class MessageReceiver(eg.ThreadWorker):
     def WmSizeHandler(self, hwnd, mesg, wParam, lParam):
         #print "MessageReceiver sized"
         return 0
-        
-        
-    def MyWndProc(self, hwnd, mesg, wParam, lParam):
+
+
+    def WindowProc(self, hwnd, mesg, wParam, lParam):
         if not mesg in self.messageProcs:
             return DefWindowProc(hwnd, mesg, wParam, lParam)
         for handler in self.messageProcs[mesg]:
@@ -121,15 +139,4 @@ class MessageReceiver(eg.ThreadWorker):
             if res == 0:
                 return 0
         return 1
-
-
-    @eg.LogIt
-    def Stop(self):
-        self.messageProcs.clear()
-        eg.ThreadWorker.Stop(self, 5.0)
-        if not UnregisterClass(
-            cast(self.classAtom, LPCTSTR), 
-            GetModuleHandle(None)
-        ):
-            raise WinError()
 
