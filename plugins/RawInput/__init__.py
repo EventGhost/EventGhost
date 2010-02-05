@@ -98,9 +98,16 @@ class HEVENT(Structure):
         ("lParam", LPARAM),        
     ]
     
+    
 
 class RawKeyboardData(object):
-    pass
+    
+    def __init__(self, vKey, device, state, tick):
+        self.vKey = vKey
+        self.device = device
+        self.state = state
+        self.tick = tick
+
 
 
 class RawInput(eg.PluginBase):
@@ -108,7 +115,9 @@ class RawInput(eg.PluginBase):
     def __start__(self):
         self.buf = collections.deque()
         self.ScanDevices()
-        self.hookDll = CDLL(abspath(join(dirname(__file__), "RawInputHook.dll")))
+        self.hookDll = CDLL(
+            abspath(join(dirname(__file__), "RawInputHook.dll"))
+        )
         self.messageReceiver = eg.MessageReceiver("RawInputWindow")
         self.messageReceiver.AddHandler(WM_INPUT, self.OnRawInput)
         self.messageReceiver.AddHandler(WM_COPYDATA, self.OnCopyData)
@@ -212,8 +221,18 @@ class RawInput(eg.PluginBase):
          #print "Scan code:", keyboard.MakeCode
         info = ""
         mTime = time.clock()
+        if keyboard.Message == WM_KEYDOWN:
+            transition = "KEYDOWN"
+        elif keyboard.Message == WM_KEYUP:
+            transition = "KEYUP"
+        else:
+            transition = " %d" % keyboard.Message
         info = "%f " % mTime
-        info += "Vkey: %s(%d), " % (VK_KEYS[keyboard.VKey], keyboard.VKey)
+        info += "RawI %s: %s(%d), " % (
+            transition, 
+            VK_KEYS[keyboard.VKey], 
+            keyboard.VKey
+        )
         if GetAsyncKeyState(162): #LCtrl
             info += "LCtrl "
         if GetAsyncKeyState(163): #RCtrl
@@ -222,17 +241,12 @@ class RawInput(eg.PluginBase):
         info += "Extra: %d, " % keyboard.ExtraInformation
         info += "Device: %r, " % pRawInput.contents.header.hDevice
         #print "Flags:", keyboard.Flags
-        if keyboard.Message == WM_KEYDOWN:
-            info += "KEYDOWN"
-        elif keyboard.Message == WM_KEYUP:
-            info +=  "KEYUP"
-        else:
-            info +=  " %d" % keyboard.Message
-        rawKeyboardData = RawKeyboardData()
-        rawKeyboardData.time = time.clock()
-        rawKeyboardData.vKey = keyboard.VKey
-        rawKeyboardData.state = keyboard.Message in (WM_KEYDOWN, WM_SYSKEYDOWN)
-        rawKeyboardData.device = pRawInput.contents.header.hDevice
+        rawKeyboardData = RawKeyboardData(
+            keyboard.VKey,
+            pRawInput.contents.header.hDevice,
+            keyboard.Message in (WM_KEYDOWN, WM_SYSKEYDOWN),
+            time.clock()
+        )
         self.buf.append(rawKeyboardData)
         eg.eventThread.Call(eg.Print, info) 
         if GET_RAWINPUT_CODE_WPARAM(wParam) == RIM_INPUT:
@@ -264,11 +278,11 @@ class RawInput(eg.PluginBase):
         else:
             transition = "KEYDOWN"
             state = True
-        info = "%f    VKey: %s(%d) %s, keyState=%d, extended=%d" % (
+        info = "%f Hook %s: %s(%d), keyState=%d, extended=%d" % (
             mTime,
+            transition,
             VK_KEYS[vKey],
             hEvent.contents.wParam,
-            transition,
             keyState,
             extended,
         )
@@ -276,7 +290,13 @@ class RawInput(eg.PluginBase):
             info += "LCtrl "
         if GetAsyncKeyState(163): #RCtrl
             info += "RCtrl "
-        for i, rawKeyboardData in enumerate(self.buf):
+        i = 0
+        while i < len(self.buf):
+            rawKeyboardData = self.buf[i]
+            if rawKeyboardData.tick < time.clock() - 0.2:
+                eg.eventThread.Call(eg.Print, "*** removed to old message")
+                del self.buf[i]
+                continue
             if (
                 rawKeyboardData.vKey == vKey
                 and rawKeyboardData.state == state
@@ -285,10 +305,9 @@ class RawInput(eg.PluginBase):
 #                if rawKeyboardData.device != 65603:
 #                    eg.eventThread.Call(eg.Print, "blocked") 
 #                    return 1
-                break
-        else:
-            eg.eventThread.Call(eg.Print, "not found") 
-        eg.eventThread.Call(eg.Print, info) 
-        return 0
+                eg.eventThread.Call(eg.Print, info) 
+                return 0
+            i += 1
+        eg.eventThread.Call(eg.Print, "not found") 
 
         

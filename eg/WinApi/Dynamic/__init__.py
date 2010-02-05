@@ -1526,3 +1526,6 @@ GetMessageTime.restype = LONG
 GetMessageTime.argtypes = []
 
 LPCTSTR = LPCWSTR
+COINIT_MULTITHREADED = 0
+COINIT_APARTMENTTHREADED = 2
+
