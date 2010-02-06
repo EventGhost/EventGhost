@@ -333,25 +333,26 @@ class HIDThread(threading.Thread):
         
         #initializing finished
         try:
+            self.handle = handle
+            win32event.SetEvent(self._overlappedRead.hEvent) #allows waiting threads to wait
+            rc, newBuf = win32file.ReadFile(handle, n, self._overlappedRead)
+
             while not self.abort:
-                #try to read and wait for an event to happen
-                try:
-                    if not self.handle: #first loop
-                        self.handle = handle
-                        win32event.SetEvent(self._overlappedRead.hEvent) #allows waiting threads to wait
-                        
-                    win32event.ResetEvent(self._overlappedRead.hEvent)
-                    rc, buf = win32file.ReadFile(handle, n, self._overlappedRead)
-                    #waiting for an event
+                if rc == 997: #error_io_pending
                     win32event.WaitForSingleObject(
-                        self._overlappedRead.hEvent,
-                        win32event.INFINITE
-                    )
+                       self._overlappedRead.hEvent,
+                       win32event.INFINITE)
+
+                buf = newBuf
+                try:
+                    
+                    win32event.ResetEvent(self._overlappedRead.hEvent)
+                    rc, newBuf = win32file.ReadFile(handle, n, self._overlappedRead)
                 except:
-                    eg.PrintError(self.text.errorRead + self.deviceName)
-                    self.abort = True
                     #device got disconnected so set status to waiting
-    
+                    self.abort = True
+                    eg.PrintError(self.text.errorRead + self.deviceName)
+
                 #parse data
                 if len(buf) == n and not self.abort:
                     #raw data events
@@ -400,6 +401,10 @@ class HIDThread(threading.Thread):
                                 self.ButtonCallback(btnPressed)
                             except Exception:
                                 eg.PrintTraceback()
+        except:
+            self.abort = True
+            eg.PrintError(self.text.errorRead + self.deviceName)
+
         finally:
             win32file.CloseHandle(handle)
 
