@@ -18,14 +18,14 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2010-01-23 14:45 GMT+1
+#Last change: 2010-02-06 11:56 GMT+1
 
 
 
 eg.RegisterPlugin(
     name = "On screen explorer",
     author = "Pako",
-    version = "0.0.5",
+    version = "0.1.0",
     kind = "other",
     guid = "{D3D2DDD1-9BEB-4A26-969B-C82FA8EAB280}",
     description = u"""<rst>
@@ -67,21 +67,27 @@ as possible in the configuration tree.""",
     ),
 )
 
+import os
+import pythoncom
 from threading import Timer
 from eg.WinApi.Utils import GetMonitorDimensions
 from eg.WinApi.Dynamic import CreateEvent, SetEvent
 import _winreg
-import os
 from win32api import LoadLibrary, LoadString, GetLogicalDriveStrings, GetVolumeInformation
+from win32com.shell import shell 
 from fnmatch import fnmatch
 from winsound import PlaySound,SND_ASYNC
 ERROR_NO_ASSOCIATION = 1155
-FOLDER_ID = ">> "
+#global variables:
+folder_ID   = u">> "
+shortcut_ID = u"|•"
 #===============================================================================
 
 class Text:
-    noAssoc = 'Error: No application is associated with the file type "%s" for operation "Open" !'
-    myComp = "My computer"
+    noAssoc  = 'Error: No application is associated with the file type "%s" for operation "Open" !'
+    myComp   = "My computer"
+    folder   = "Folder identifier string (must not be empty):"
+    shortcut = "Shortcut identifier string (may be empty):"
 #===============================================================================
 
 class MyDirBrowseButton(eg.DirBrowseButton):
@@ -112,22 +118,45 @@ def MyComputer():
 MY_COMPUTER = MyComputer()    
 
 def CaseInsensitiveSort(list):
-    tmp = [(item.upper(), item) for item in list] # Schwartzian transform
+    tmp = [(item[0].upper(), item) for item in list] # Schwartzian transform
     tmp.sort()
     return [item[1] for item in tmp]
 
 def GetFolderItems(folder, patterns):
+    shortcut = pythoncom.CoCreateInstance (
+      shell.CLSID_ShellLink,
+      None,
+      pythoncom.CLSCTX_INPROC_SERVER,
+      shell.IID_IShellLink
+    )
+    persist_file = shortcut.QueryInterface (pythoncom.IID_IPersistFile)
     patterns = patterns.split(",")
     if folder != MY_COMPUTER:
-        ds = [FOLDER_ID+f for f in os.listdir(folder) if os.path.isdir(os.path.join(folder,f))]
-        ds = CaseInsensitiveSort(ds)
-        fs = ["..",]
+        ds = [("%s%s" % (folder_ID,f),"") for f in os.listdir(folder) if os.path.isdir(os.path.join(folder,f))]
+        fs = [("..",""),]
         for f in [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder,f))]:
-            for p in patterns:
-                if fnmatch(f,p.strip()):
-                    if not f in fs:
-                        fs.append(f)
-                    break
+            if os.path.splitext(f)[1].lower() == ".lnk":
+                shortcut_path = os.path.join(folder,f)
+                persist_file.Load (shortcut_path)
+                path = shortcut.GetPath(shell.SLGP_RAWPATH)[0]
+                f = os.path.split(shortcut_path)[1][:-4]
+                if os.path.isdir(path):
+                    if not "%s%s" % (folder_ID,f) in ds:
+                        ds.append(("%s%s%s " % (shortcut_ID,folder_ID,f),path))
+                        continue
+                elif os.path.isfile(path):
+                    for p in patterns:
+                        if fnmatch(os.path.split(path)[1],p.strip()):
+                            if not shortcut_ID+f in fs:
+                                fs.append((shortcut_ID+f,path))
+                            break
+            else:
+                for p in patterns:
+                    if fnmatch(f,p.strip()):
+                        if not f in fs:
+                            fs.append((f,""))
+                        break
+        ds = CaseInsensitiveSort(ds)
         fs = CaseInsensitiveSort(fs)
         fs.extend(ds)
         return fs
@@ -137,7 +166,7 @@ def GetFolderItems(folder, patterns):
         for dr in drives:
             try:
                name = GetVolumeInformation(dr)[0]
-               drvs.append(FOLDER_ID+"%s (%s)" % (name,dr[:2]))
+               drvs.append(("%s%s (%s)" % (folder_ID,name,dr[:2]),""))
             except:
                 pass
         return drvs
@@ -364,7 +393,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
             patterns = "*.*"
         if not os.path.isdir(start) and start != MY_COMPUTER:
             start = eg.folderPath.Documents
-        items = GetFolderItems(start, patterns)
+        items = [item[0] for item in GetFolderItems(start, patterns)]
         listBoxCtrl.Set(items)
 
         listBoxCtrl.SetBackgroundColour(self.back)
@@ -461,7 +490,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
             if folder:
                 folderCtrl.SetStartDirectory()
                 try:
-                    items = GetFolderItems(folder, patterns)
+                    items = [item[0] for item in GetFolderItems(folder, patterns)]
                     listBoxCtrl.Set(items)
                 except:
                     pass
@@ -553,7 +582,7 @@ class Execute (eg.ActionClass):
         if self.plugin.menuDlg:
             eg.event.skipEvent = True
             filePath, prefix, suffix = self.plugin.menuDlg.GetInfo()
-            filePath = filePath.replace(FOLDER_ID,"")
+            filePath = filePath.replace(folder_ID,"")
             if filePath[-2] == ":": #root of drive
                 filePath = filePath[-3:-1]+"\\"
             if os.path.isfile(filePath):
@@ -674,6 +703,29 @@ class OSE(eg.PluginClass):
 
     def __init__(self):
         self.AddActionsFromList(ACTIONS)
+        
+    def __start__(self, fid = u">> ", sid = u"|•"):
+        global shortcut_ID, folder_ID
+        shortcut_ID = sid
+        folder_ID = fid
+        
+    def Configure(self, fid = u">> ", sid = u"|•"):
+        self.text = Text
+        panel = eg.ConfigPanel(self)
+        folderLabel = wx.StaticText(panel, -1, self.text.folder)
+        shortcutLabel = wx.StaticText(panel, -1, self.text.shortcut)
+        folderCtrl = wx.TextCtrl(panel,-1,fid)
+        shortcutCtrl = wx.TextCtrl(panel,-1,sid)
+        Sizer = panel.sizer
+        Sizer.Add(folderLabel,0,wx.TOP,15)
+        Sizer.Add(folderCtrl,0,wx.TOP,2)
+        Sizer.Add(shortcutLabel,0,wx.TOP,15)
+        Sizer.Add(shortcutCtrl,0,wx.TOP,2)
+        while panel.Affirmed():
+            panel.SetResult(
+                folderCtrl.GetValue() or u">> ",
+                shortcutCtrl.GetValue(),
+                )
 #===============================================================================
             
 class Menu(wx.Frame):
@@ -716,11 +768,13 @@ class Menu(wx.Frame):
         self.monitor  = monitor or self.monitor
         self.patterns = patterns or self.patterns
         try:
-            self.choices  = GetFolderItems(start,self.patterns)
-            self.start    = start or self.start
+            items  = GetFolderItems(start, self.patterns)
+            self.start = start
         except:
-            PlaySound('SystemExclamation',SND_ASYNC)
-            self.choices  = GetFolderItems(self.start,self.patterns)
+            PlaySound('SystemExclamation', SND_ASYNC)
+            items  = GetFolderItems(self.start, self.patterns)
+        self.choices = [item[0] for item in items]
+        self.shortcuts = [item[1] for item in items]
         sizer = self.GetSizer()
         if sizer:
             eventChoiceCtrl = sizer.GetChildren()[0].GetWindow()
@@ -773,7 +827,10 @@ class Menu(wx.Frame):
         
     def GetInfo(self):
         sel = self.GetSizer().GetChildren()[0].GetWindow().GetSelection()
-        return os.path.join(self.start,self.choices[sel]),self.prefix,self.suffix
+        fp = unicode(self.shortcuts[sel].decode(eg.systemEncoding))
+        if not fp:
+            fp = os.path.join(self.start,self.choices[sel])
+        return fp, self.prefix, self.suffix
 
     def PageUpDown(self, direction):
         max=len(self.choices)
@@ -799,8 +856,7 @@ class Menu(wx.Frame):
     def MoveCursor(self,step):
         max=len(self.choices)
         if max > 0:
-            choiceCtrl = self.GetSizer().GetChildren()[0].GetWindow()
-            
+            choiceCtrl = self.GetSizer().GetChildren()[0].GetWindow()            
             sel = choiceCtrl.GetSelection()
             new = sel + step
             if new < 0:
@@ -811,15 +867,17 @@ class Menu(wx.Frame):
 
     def DoubleCick(self, evt):
         sel = self.GetSizer().GetChildren()[0].GetWindow().GetSelection()
-        filePath = os.path.join(self.start,self.choices[sel])
-        filePath = filePath.replace(FOLDER_ID,"")
-        if filePath[-2] == ":": #root of drive
-            filePath = filePath[-3:-1]+"\\"
-        if filePath[-3:] == r"\..":
-            if len(filePath) == 5:
-                filePath = MY_COMPUTER
-            else:                
-                filePath = os.path.split(filePath[:-3])[0]
+        filePath = unicode(self.shortcuts[sel].decode(eg.systemEncoding))
+        if not filePath:
+            filePath = os.path.join(self.start,self.choices[sel])
+            filePath = filePath.replace(folder_ID,"")
+            if filePath[-2] == ":": #root of drive
+                filePath = filePath[-3:-1]+"\\"
+            if filePath[-3:] == r"\..":
+                if len(filePath) == 5:
+                    filePath = MY_COMPUTER
+                else:                
+                    filePath = os.path.split(filePath[:-3])[0]
 
         eg.TriggerEvent(prefix = self.prefix, suffix = self.suffix, payload = filePath)
         if os.path.isfile(filePath):
