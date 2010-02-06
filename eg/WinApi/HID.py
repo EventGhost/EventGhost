@@ -331,14 +331,15 @@ class HIDThread(threading.Thread):
         DataArrayType = HIDP_DATA * maxDataL
         data = DataArrayType()
         
-        win32event.SetEvent(self._overlappedRead.hEvent)
-
         #initializing finished
         try:
-            self.handle = handle
             while not self.abort:
                 #try to read and wait for an event to happen
                 try:
+                    if not self.handle: #first loop
+                        self.handle = handle
+                        win32event.SetEvent(self._overlappedRead.hEvent) #allows waiting threads to wait
+                        
                     win32event.ResetEvent(self._overlappedRead.hEvent)
                     rc, buf = win32file.ReadFile(handle, n, self._overlappedRead)
                     #waiting for an event
