@@ -201,6 +201,9 @@ class Timer(eg.PluginClass):
 
     def __close__(self):
         self.AbortAllTimers()
+        
+    def OnComputerSuspend(self, suspendType):
+        self.AbortAllTimers()
 
     #methods to Control timers
     def StartTimer(self,
