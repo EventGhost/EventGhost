@@ -18,14 +18,14 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2010-02-06 11:56 GMT+1
+#Last change: 2010-02-07 17:11 GMT+1
 
 
 
 eg.RegisterPlugin(
     name = "On screen explorer",
     author = "Pako",
-    version = "0.1.0",
+    version = "0.1.1",
     kind = "other",
     guid = "{D3D2DDD1-9BEB-4A26-969B-C82FA8EAB280}",
     description = u"""<rst>
@@ -74,10 +74,15 @@ from eg.WinApi.Utils import GetMonitorDimensions
 from eg.WinApi.Dynamic import CreateEvent, SetEvent
 import _winreg
 from win32api import LoadLibrary, LoadString, GetLogicalDriveStrings, GetVolumeInformation
-from win32com.shell import shell 
+from win32com.shell import shell
+from win32file import GetFileAttributes
 from fnmatch import fnmatch
-from winsound import PlaySound,SND_ASYNC
+from winsound import PlaySound, SND_ASYNC
+
 ERROR_NO_ASSOCIATION = 1155
+FILE_ATTRIBUTE_HIDDEN = 2
+FILE_ATTRIBUTE_SYSTEM = 4
+
 #global variables:
 folder_ID   = u">> "
 shortcut_ID = u"|•"
@@ -95,7 +100,6 @@ class MyDirBrowseButton(eg.DirBrowseButton):
         return self.textControl     #  non-editable !!!
     def SetStartDirectory(self):
         self.startDirectory = self.GetValue()
-        
 #===============================================================================
 
 def MyComputer():
@@ -122,7 +126,7 @@ def CaseInsensitiveSort(list):
     tmp.sort()
     return [item[1] for item in tmp]
 
-def GetFolderItems(folder, patterns):
+def GetFolderItems(folder, patterns, hide):
     shortcut = pythoncom.CoCreateInstance (
       shell.CLSID_ShellLink,
       None,
@@ -132,7 +136,14 @@ def GetFolderItems(folder, patterns):
     persist_file = shortcut.QueryInterface (pythoncom.IID_IPersistFile)
     patterns = patterns.split(",")
     if folder != MY_COMPUTER:
-        ds = [("%s%s" % (folder_ID,f),"") for f in os.listdir(folder) if os.path.isdir(os.path.join(folder,f))]
+#        ds = [("%s%s" % (folder_ID,f),"") for f in os.listdir(folder) if os.path.isdir(os.path.join(folder,f))]
+        ds = []
+        for f in [f for f in os.listdir(folder) if os.path.isdir(os.path.join(folder,f))]:
+            if hide:
+                attr = GetFileAttributes(os.path.join(folder,f))
+                if attr & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM):
+                    continue
+            ds.append(("%s%s" % (folder_ID,f),""))
         fs = [("..",""),]
         for f in [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder,f))]:
             if os.path.splitext(f)[1].lower() == ".lnk":
@@ -140,6 +151,10 @@ def GetFolderItems(folder, patterns):
                 persist_file.Load (shortcut_path)
                 path = shortcut.GetPath(shell.SLGP_RAWPATH)[0]
                 f = os.path.split(shortcut_path)[1][:-4]
+                if hide:
+                    attr = GetFileAttributes(path)
+                    if attr & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM):
+                        continue
                 if os.path.isdir(path):
                     if not "%s%s" % (folder_ID,f) in ds:
                         ds.append(("%s%s%s " % (shortcut_ID,folder_ID,f),path))
@@ -151,6 +166,10 @@ def GetFolderItems(folder, patterns):
                                 fs.append((shortcut_ID+f,path))
                             break
             else:
+                if hide:
+                    attr = GetFileAttributes(os.path.join(folder,f))
+                    if attr & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM):
+                        continue
                 for p in patterns:
                     if fnmatch(f,p.strip()):
                         if not f in fs:
@@ -170,7 +189,6 @@ def GetFolderItems(folder, patterns):
             except:
                 pass
         return drvs
-
 #===============================================================================
 #cls types for ACTIONS list :
 #===============================================================================
@@ -188,6 +206,7 @@ class ShowMenu(eg.ActionClass):
         suffixLabel = 'Default event suffix:'
         folder = "Start folder:"
         browseTitle = "Selected folder:"
+        hide = "Do not display system and hidden files and folders"
         toolTipFolder = "Press button and browse to select folder ..."
         patterns = "Show only the files corresponding to these patterns:"
         compBtnToolTip = 'Press this button to set "%s" as start folder'
@@ -331,7 +350,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         suffix,
         monitor=0,
         start = "",
-        patterns = "*.*"
+        patterns = "*.*",
+        hide = True
     ):
         if not self.plugin.menuDlg:
             if not os.path.isdir(start) and start != MY_COMPUTER:
@@ -363,7 +383,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         suffix,
         monitor,
         start,
-        patterns
+        patterns,
+        hide
     ):
         return "%s: %s, [%s]" % (self.name,start,patterns)
 
@@ -376,7 +397,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         suffix = 'Open',
         monitor = 0,
         start = "",
-        patterns = "*.*"
+        patterns = "*.*",
+        hide = True
     ):
         self.fore = fore
         self.back = back
@@ -393,7 +415,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
             patterns = "*.*"
         if not os.path.isdir(start) and start != MY_COMPUTER:
             start = eg.folderPath.Documents
-        items = [item[0] for item in GetFolderItems(start, patterns)]
+        items = [item[0] for item in GetFolderItems(start, patterns, hide)]
         listBoxCtrl.Set(items)
 
         listBoxCtrl.SetBackgroundColour(self.back)
@@ -450,6 +472,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
 #        patternsCtrl = wx.TextCtrl(panel,-1,patterns,size=(410,-1))
         patternsCtrl = wx.TextCtrl(panel,-1,patterns)
         patternsCtrl.SetToolTip(wx.ToolTip(self.text.patternsToolTip))
+        hideSystem = wx.CheckBox(panel, -1, self.text.hide)
+        hideSystem.SetValue(hide)
         #Sizers
         mainSizer = panel.sizer
         topSizer=wx.GridBagSizer(2, 30)
@@ -475,8 +499,9 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         mainSizer.Add(folderSizer,0,wx.TOP|wx.EXPAND,2)
         mainSizer.Add(patternsLabel,0,wx.TOP,8)
         mainSizer.Add(patternsCtrl,1,wx.TOP|wx.EXPAND,2)
+        mainSizer.Add(hideSystem,0,wx.TOP,10)
         panel.sizer.Layout()
-        
+
         def OnCompBtn(evt):
             folderCtrl.SetValue(MY_COMPUTER)
             evt.Skip()
@@ -485,18 +510,20 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         def OnTextChange(evt):
             folder = folderCtrl.GetValue()
             patterns = patternsCtrl.GetValue()
+            hide = hideSystem.GetValue()
             if not patterns:
                 patterns = "*.*"
             if folder:
                 folderCtrl.SetStartDirectory()
                 try:
-                    items = [item[0] for item in GetFolderItems(folder, patterns)]
+                    items = [item[0] for item in GetFolderItems(folder, patterns, hide)]
                     listBoxCtrl.Set(items)
                 except:
                     pass
             evt.Skip()
         folderCtrl.Bind(wx.EVT_TEXT, OnTextChange)
         patternsCtrl.Bind(wx.EVT_TEXT, OnTextChange)
+        hideSystem.Bind(wx.EVT_CHECKBOX, OnTextChange)
         
         # re-assign the test button
         def OnButton(event):
@@ -528,7 +555,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
             suffixCtrl.GetValue(),
             displayChoice.GetSelection(),
             folderCtrl.GetValue(),
-            patternsCtrl.GetValue()
+            patternsCtrl.GetValue(),
+            hideSystem.GetValue()
         )
 #===============================================================================
 
@@ -556,7 +584,6 @@ class PageUpDown(eg.ActionClass):
         if self.plugin.menuDlg:
             self.plugin.menuDlg.PageUpDown(self.value)
             eg.event.skipEvent = True
-     
 #===============================================================================
 
 class Cancel(eg.ActionClass):
@@ -756,7 +783,8 @@ class Menu(wx.Frame):
         suffix=None,
         monitor=None,
         start=None,
-        patterns=None
+        patterns=None,
+        hide = True
     ):
         self.fore     = fore or self.fore
         self.back     = back or self.back
@@ -768,11 +796,11 @@ class Menu(wx.Frame):
         self.monitor  = monitor or self.monitor
         self.patterns = patterns or self.patterns
         try:
-            items  = GetFolderItems(start, self.patterns)
+            items  = GetFolderItems(start, self.patterns, hide)
             self.start = start
         except:
             PlaySound('SystemExclamation', SND_ASYNC)
-            items  = GetFolderItems(self.start, self.patterns)
+            items  = GetFolderItems(self.start, self.patterns, hide)
         self.choices = [item[0] for item in items]
         self.shortcuts = [item[1] for item in items]
         sizer = self.GetSizer()
@@ -887,7 +915,7 @@ class Menu(wx.Frame):
                 os.startfile(filePath)
             except WindowsError, e:
                 if e.winerror == ERROR_NO_ASSOCIATION:
-                    eg.PrintError(Text.noAssoc % os.path.splitext(filePath)[1])
+                    eg. Error(Text.noAssoc % os.path.splitext(filePath)[1])
                 else:
                     raise
         else:
