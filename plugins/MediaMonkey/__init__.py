@@ -18,7 +18,7 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2010-01-20 18:32  GMT+1
+#Last change: 2010-02-10 12:24  GMT+1
 
 import wx
 from win32com.client import Dispatch
@@ -37,7 +37,7 @@ from random import randint
 eg.RegisterPlugin(
     name = "MediaMonkey",
     author = "Pako",
-    version = "0.2.11",
+    version = "0.2.12",
     kind = "program",
     guid = "{50602341-ABC3-47AD-B859-FCB8C03ED4EF}",
     createMacrosOnAdd = True,
@@ -596,10 +596,14 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                 file = codecs.open(filePath,encoding='utf-8', mode='w',errors='replace')
                 while not albums.EOF: #Structure = ID, Artist, Album
                     count += 1
+                    artist = albums.ValueByIndex(1)
+                    artist = artist if artist else Text.unknArtist
+                    album = albums.ValueByIndex(2)
+                    album = album if album else Text.unknAlbum
                     file.write('\t'.join((
                         str(albums.ValueByIndex(0)),
-                        albums.ValueByIndex(2),
-                        albums.ValueByIndex(1)
+                        album,
+                        artist
                     )))
                     file.write('\n')
                     albums.Next()
@@ -616,10 +620,12 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                 file = codecs.open(filePath,encoding='utf-8', mode='w',errors='replace')
                 while not songs.EOF:
                     count += 1
+                    artist = songs.Item.ArtistName
+                    artist = artist if artist else Text.unknArtist
                     file.write('\t'.join((
                         str(songs.Item.ID),
                         songs.Item.Title,
-                        songs.Item.ArtistName
+                        artist
                     )))
                     file.write('\n')
                     songs.Next()
@@ -630,6 +636,8 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
 #====================================================================
 
 class Text:
+    unknAlbum = "<unknown album>"
+    unknArtist = "<unknown artist>"
     errorNoWindow = "Couldn't find MediaMonkey window"
     errorConnect = "MediaMonkey is not running or not connected"
     mainGrpName = "Main control of MediaMonkey"
