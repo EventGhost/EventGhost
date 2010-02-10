@@ -1,4 +1,4 @@
-version="0.1.2" 
+version="0.1.3" 
 # This file is part of EventGhost.
 # Copyright (C)  2008 Pako  (lubos.ruckl@quick.cz)
 # 
@@ -16,13 +16,14 @@ version="0.1.2"
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2009-05-12 16:41
+#Last change: 2010-02-10 12:47 GMT+1
 
 eg.RegisterPlugin(
     name = "File Operations",
     author = "Pako",
     version = version,
     kind = "other",
+    guid = "{50D933C5-F93B-4A8A-A6CE-95A40F906036}",
     createMacrosOnAdd = False,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAA"
@@ -364,29 +365,30 @@ class Read(eg.ActionClass):
         except:
             raise
         else:
-            if lines > 0:
-                data = input.readlines()
-                if direction == 0: #from beginning
-                    data = data[fromLine-1:fromLine+lines-1]
-                else:              #from end
-                    if fromLine-lines < 1:
-                        data = data[-fromLine:]
-                    else:
-                        data = data[-fromLine:-(fromLine-lines)]
-                if mode == 2:      #one string
-                    data = ''.join(data)
-                elif mode == 0:    #without CR/LF
-                    tmp = []
-                    for line in data:
-                        tmp.append(line.rstrip())
-                    data = tmp
-                if lines == 1:
-                    if len(data) > 0: #empty file ?
-                        data = data[0]
-                    else:
-                        data = ''
-            else:                  #whole file
-                data = input.read()
+            data = input.readlines()
+            if lines == 0:
+                direction = 0
+                lines = len(data)
+                fromLine = 1
+            if direction == 0: #from beginning
+                data = data[fromLine-1:fromLine+lines-1]
+            else:              #from end
+                if fromLine-lines < 1:
+                    data = data[-fromLine:]
+                else:
+                    data = data[-fromLine:-(fromLine-lines)]
+            if mode == 2:      #one string
+                data = ''.join(data)
+            elif mode == 0:    #without CR/LF
+                tmp = []
+                for line in data:
+                    tmp.append(line.rstrip())
+                data = tmp
+            if lines == 1:
+                if len(data) > 0: #empty file ?
+                    data = data[0]
+                else:
+                    data = ''
             try:    
                 input.close()
             except:
