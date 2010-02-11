@@ -1,10 +1,28 @@
+# -*- coding: utf-8 -*-
+#
+# This file is part of EventGhost.
+# Copyright (C) 2005-2010 Lars-Peter Voss <bitmonster@eventghost.org>
+#                         André Weber <WeberAndre@gmx.de>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 import eg
 
 eg.RegisterPlugin(
     name = "Y.A.R.D.",
-    author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    author = u"André Weber & Bitmonster",
+    version = "1.1.0",
     kind = "remote",
+    guid = "{1119068D-44AD-40E0-BDB6-B00D9F88F5A0}",
     description = (
         'Hardware plugin for the <a href="http://eldo.gotdns.com/yard/">'
         'Y.A.R.D.</a> IR-transceiver from Andre Weber.'
@@ -33,76 +51,180 @@ from threading import Timer
 from ctypes import FormatError
 
 YARD_CLSID = '{9AFE3574-1FAF-437F-A8C5-270ED1C84B2E}'
+TERMINATE_TIMEOUT = 120
+
+class EventHandler:
+
+    def OngetName(self):
+        return "EventGhost YARD Plugin"
+            
+
+    def OnShutdown(self):
+        eg.PrintNotice("Y.A.R.D.-Server shutdown")
+        try:
+           self.plugin.workerThread.comobj_yard.close()
+        except:
+           raise eg.Exception("YARD server not found") 
+        del self.plugin.workerThread.comobj_yard
+        del self.plugin.comObj
+        self.plugin.workerThread.comobj_yard = None
+        self.plugin.comObj = None
 
 
-    
+    def OnReceivedKeyEx(self, keyhex, keymapped, keytype, keyevent):
+        self.plugin.HandleEventEx(keyhex, keymapped, keytype, keyevent)
+
+
+    def OnReceivedKey(self, key):
+        self.plugin.HandleEvent(key)
+
+
+
+class YardWorkerThread(eg.ThreadWorker):
+    """
+    Handles the COM interface in a thread of its own
+    """
+    comobj_yard = None
+    plugin = None
+    eventHandler = None
+
+    @eg.LogItWithReturn
+    def Setup(self, plugin, eventHandler):
+        """
+        This will be called inside the thread at the beginning.
+        """
+        self.plugin = plugin
+        self.eventHandler = eventHandler
+        self.comobj_yard = DispatchWithEvents(YARD_CLSID, self.eventHandler)
+
+
+    @eg.LogIt
+    def Finish(self):
+        """
+        This will be called inside the thread when it finishes. It will even
+        be called if the thread exits through an exception.
+        """
+        if self.comobj_yard:
+           self.comobj_yard.close()
+           del self.comobj_yard
+
+
+
 class YARD(eg.PluginBase):
 
     def __init__(self):
         self.AddEvents()
-
         self.isEnabled = False
         self.mapTable = {}
         self.timer = Timer(0, self.OnTimeOut)
         self.lastEvent = ""
         self.timeout = 0.2
+        self.remote_control_timeout = 0.4
         self.disableUnmapped = False
         self.thread = None
         self.comObj = None
+        self.workerThread = None
         self.buttons = [False] * 16
         self.AddAction(SendRemoteKey)
         self.AddAction(ClearScreen)
         self.AddAction(Print)
-        
-        class EventHandler:
-            def __init__(self2):
-                pass
-                
-            def OngetName(self2):
-                return "EventGhost YARD Plugin"
-            
-            def OnShutdown(self2):
-                try:
-                    self.comObj.close()
-                except:
-                    raise eg.Exception("YARD server not found") 
-                del self.comObj
-                self.comObj = None
-            
-            def OnReceivedKey(self2, key):
-                self.HandleEvent(key)
-        self.EventHandler = EventHandler
-        
-        
-        
+
+
     def __start__(self):
         try:
-            GetActiveObject(YARD_CLSID)
+            self.comObj = GetActiveObject(YARD_CLSID)
         except com_error:
             self.StartYardServer()
+            try:
+                self.comObj = GetActiveObject(YARD_CLSID)
+            except:
+                raise
+            if self.comObj:
+                self.comObj = Dispatch(YARD_CLSID)
+
+        class SubEventHandler(EventHandler):
+            plugin = self
+            TriggerEvent = self.TriggerEvent
+
+        self.workerThread = YardWorkerThread(self, SubEventHandler)
         try:
-            self.comObj = DispatchWithEvents(YARD_CLSID, self.EventHandler)
+            self.workerThread.Start( 60.0 )
         except:
-            raise eg.Exception("Can't connect to YARD server!") 
+            self.workerThread = None
+            raise self.Exception( self.text.errorMesg )
+
         self.isEnabled = True
-    
-    
+
+
     def __stop__(self):
         self.isEnabled = False
+
+        if self.workerThread is not None :
+           if self.workerThread.Stop( TERMINATE_TIMEOUT ) :
+              eg.PrintError("Could not terminate YARD thread")
+           self.workerThread = None
+
         if self.comObj:
-            try:
-                self.comObj.close()
-            except:
-                raise eg.Exception("YARD server not found") 
-            del self.comObj
-            self.comObj = None
-    
-    
+           del self.comObj
+           self.comObj = None
+
+
     def OnTimeOut(self):
         self.EndLastEvent()
         self.lastEvent = ""
-        
-        
+
+
+    def HandleEventEx(self, keyhex, keymapped, keytype, keyevent):
+        if not self.isEnabled:
+            return
+        # keytype
+        #  0 = remote control
+        #  1 = rotary encoder
+        #  2 = keypad from keylcd   
+        # keyevent
+        #  0 - a key (without up down detection)
+        #  1 - key down event
+        #  2 - key repeat event
+        #  3 - key up event
+        # keymapped - Yard Mapped keyname (symbolic one)
+        # keyhex - native hex code of the key (just info?)
+
+        if keytype == 0:
+            if keyevent == 0:
+                # 0 up down detection in yards disabled
+                if self.timer:
+                    self.timer.cancel()
+                self.TriggerEnduringEvent(keymapped) 
+                self.timer = Timer(self.remote_control_timeout, self.OnTimeOut)
+                self.timer.start()
+            elif keyevent == 1:  
+                # Yard Received a new key down... 
+                self.TriggerEnduringEvent(keymapped)  
+            elif keyevent == 2:  
+                # Yard Received a repeated key...
+                if self.timer:   
+                    self.timer.cancel()
+                self.timer = Timer(self.remote_control_timeout, self.OnTimeOut)
+                self.timer.start()
+            elif keyevent == 3:
+                # Yard detected a keyup... 
+                if self.timer:   
+                    self.timer.cancel()
+                    self.timer = None 
+                self.EndLastEvent()  
+        elif keytype == 1:
+            self.TriggerEvent(keymapped)   
+        elif keytype == 2:
+            # key pad keylcd
+            if keyevent == 1:
+                self.TriggerEvent(keymapped+".down")  
+            elif keyevent == 2:
+                # +".repeat"
+                self.TriggerEvent(keymapped)   
+            elif keyevent == 3:
+                self.TriggerEvent(keymapped+".up")   
+
+
     def HandleEvent(self, eventString):
         if not self.isEnabled:
             return
