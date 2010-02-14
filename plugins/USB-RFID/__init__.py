@@ -35,7 +35,7 @@ class Text:
 VENDOR_ID = 6383
 PRODUCT_ID = 57368
 
-class USBRFID(eg.PluginClass):
+class USB_RFID(eg.PluginClass):
     text = Text
     
     def __init__(self):
@@ -59,7 +59,7 @@ class USBRFID(eg.PluginClass):
         
     def RawCallback(self, data):
         if eg.debugLevel:
-            print "USBRFID RawCallBack", binascii.hexlify(data)
+            print "USB_RFID RawCallBack", binascii.hexlify(data)
 
         if len(data) != 9 or data[0:3] != "\x02\x07\xA0":
             self.PrintError("data must have a length of 9 and start with 02 07 A0")
@@ -76,13 +76,21 @@ class USBRFID(eg.PluginClass):
         elif errorId == 3:
             self.PrintError("invalid command length")
         elif errorId == 4 or errorId == 5:
-            self.TriggerEvent(binascii.hexlify(data[4:8]).upper())
+            eventstring = binascii.hexlify(data[4:5]).upper() + "." + binascii.hexlify(data[5:]).upper()
+            knownCode = False
+            for eventHandler in eg.eventTable.get(self.info.eventPrefix + "." + eventstring, []):
+                knownCode = True
+                break
+            self.TriggerEvent(eventstring)
+            if not knownCode:
+                self.TriggerEvent("Unknown")
+                
         else:
             self.PrintError("Unknown Error")
     
     def PrintVersion(self):
         #create the following python command to show version number
-        #eg.plugins.USBRFID.plugin.PrintVersion()
+        #eg.plugins.USB-RFID.plugin.PrintVersion()
 		versionMajor = self.version / 16
 		versionMinor = self.version % 16
 		print "Firmware version %d.%d" % (versionMajor, versionMinor) 
