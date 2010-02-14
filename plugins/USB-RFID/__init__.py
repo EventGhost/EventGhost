@@ -14,7 +14,7 @@ Receives events from ELV USB/RFID-Interface.
 eg.RegisterPlugin(
     name = "USB/RFID-Interface",
     author = "Bartman",
-    version = "0.1." + "$LastChangedRevision: 614 $".split()[1],
+    version = "0.1." + "$LastChangedRevision$".split()[1],
     kind = "other",
     canMultiLoad = False,
     description = __doc__,

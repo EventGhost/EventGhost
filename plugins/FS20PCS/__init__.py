@@ -15,7 +15,7 @@ import time
 eg.RegisterPlugin(
     name = "ELV FS20 PCS",
     author = "Bartman",
-    version = "0.2." + "$LastChangedRevision: 614 $".split()[1],
+    version = "0.2." + "$LastChangedRevision$".split()[1],
     kind = "external",
     canMultiLoad = False,
     createMacrosOnAdd = False,
@@ -55,7 +55,7 @@ class FS20PCS(eg.PluginClass):
     
     def AddNewAction(self, root, internalName, baseClass, classFuncCode, externalName, classDescription, classLabelFormat):
         class MyText:
-            labelFormat = classLabelFormat
+              labelFormat = classLabelFormat
         class tmpAction(baseClass):
             text = MyText
             name = externalName
