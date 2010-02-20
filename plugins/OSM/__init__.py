@@ -18,13 +18,13 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2010-02-12 09:35 GMT+1
+#Last change: 2010-02-20 15:39 GMT+1
 
 
 eg.RegisterPlugin(
     name = "OS Menu",
     author = "Pako",
-    version = "0.1.14",
+    version = "0.1.15",
     kind = "other",
     guid = "{FCF3C7A7-FBC1-444D-B768-9477521946DC}",
     description = u"""<rst>
@@ -852,6 +852,13 @@ class MoveCursor(eg.ActionClass):
             eg.event.skipEvent = True
 #===============================================================================
 
+class PageUpDown(eg.ActionClass):
+    def __call__(self):
+        if self.plugin.menuDlg:
+            self.plugin.menuDlg.PageUpDown(self.value)
+            eg.event.skipEvent = True
+#===============================================================================
+
 class OK_Btn(eg.ActionClass):
 
     def __call__(self):
@@ -921,6 +928,8 @@ ACTIONS = (
     (CreateMenuFromList, 'CreateMenuFromList', 'Show menu, created from expression', Text.showMenuExpr, None),
     (MoveCursor, 'MoveDown', 'Cursor Down', 'Cursor Down.', ('max-1', '-1', 1)),
     (MoveCursor, 'MoveUp', 'Cursor Up', 'Cursor Up.', ('0', 'max', -1)),
+    (PageUpDown, 'PageUp', 'Page Up', 'Page Up.', -1),
+    (PageUpDown, 'PageDown', 'Page Down', 'Page Down.', 1),
     (OK_Btn, 'OK_Btn', 'OK', 'OK button pressed.', None),
     (Cancel_Btn, 'Cancel_Btn', 'Cancel', 'Cancel button pressed.', None),
     ( eg.ActionGroup, 'HotKeys', 'Numeric Hot Keys', 'Numeric Hot Keys ',(
@@ -1032,6 +1041,27 @@ class Menu(wx.Frame):
         wx.Yield()
         SetEvent(event)
         
+    def PageUpDown(self, direction):
+        max=len(self.choices)
+        if max > 0:
+            choiceCtrl = self.GetSizer().GetChildren()[0].GetWindow()
+            height = choiceCtrl.GetSize()[1]
+            fontH = choiceCtrl.GetTextExtent("X")[1]
+            step = direction * height/fontH
+            sel = choiceCtrl.GetSelection()
+            new = sel + step
+            if new < 0:
+                #new += max
+                new = 0
+            elif new > max - 1:
+                #new -= max
+                new = max - 1
+            choiceCtrl.SetSelection(new)
+            if direction < 0:
+                choiceCtrl.SetFirstItem(new)
+            else:
+                choiceCtrl.SetFirstItem(new-step+1)
+
     def SendEventSel(self, sel):
         evtString = self.prefix.split(".")
         evtString.extend(self.choices[sel][1].split("."))
