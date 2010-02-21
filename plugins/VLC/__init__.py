@@ -68,6 +68,7 @@ import os
 import asynchat
 import socket
 import _winreg
+import codecs
 from win32api import ShellExecute
 from threading import Event
 from datetime import timedelta
@@ -89,6 +90,19 @@ def GetVlcPath():
             eg.folderPath.ProgramFiles, 
             "VideoLAN\\VLC\\vlc.exe"
         )
+
+def GetChoices():
+    f = codecs.open(eg.folderPath.RoamingAppData+"\\vlc\\vlcrc",'r','utf-8')
+    tmpLst = []
+    for line in f:
+        if line[:4] == "#key" and "=" in line:
+            i = line.find("=")
+            tmpLst.append((prev,line[1:i]))
+        else:
+            i = line.rfind("(")
+            prev = line[1:i]
+    f.close()
+    return tmpLst
 
 
 
@@ -289,17 +303,29 @@ class GetSomeInfo(eg.ActionBase):
             return None
 
 
+class SimulateKey(eg.ActionBase):
+    
+    class text:
+        label = "Select hotkey:"
+
+    def __call__(self, index = 0):
+        choices = GetChoices()
+        self.plugin.Push("key " + choices[index][1] + "\r\n")
+
+
     def GetLabel(self, index):
-        return "%s: %s" % (self.name,self.text.choices[index])
+        choices = GetChoices()
+        return "%s: %s" % (self.name,choices[index][0])
 
 
     def Configure(self, index = 0):
         panel = eg.ConfigPanel()
         mySizer = panel.sizer
         staticText = panel.StaticText(self.text.label)
+        choices = GetChoices()
         choiceCtrl=wx.Choice(
             panel,
-            choices=self.text.choices,
+            choices=[item[0] for item in choices],
         )
         choiceCtrl.SetSelection(index)
         mySizer.Add(staticText, 0, wx.TOP, 15)
@@ -307,6 +333,19 @@ class GetSomeInfo(eg.ActionBase):
         while panel.Affirmed():
             panel.SetResult(choiceCtrl.GetSelection())
 
+
+class SimulKey(eg.ActionBase):
+    
+    def __call__(self, index = 0):
+        self.plugin.Push("key " + self.value + "\r\n")
+
+
+
+class GetHotkeys(eg.ActionBase):
+    
+    def __call__(self):
+        return GetChoices()
+        
 
 class GetTime(eg.ActionBase):
 
@@ -342,6 +381,40 @@ class GetLength(eg.ActionBase):
             res = res[1] if len(res)==2 else res[0]
             lngth = timedelta(seconds=int(res))
             return str(lngth)
+        return None
+
+
+class SwitchTrack(eg.ActionBase):
+
+    def __call__(self):
+        if self.plugin.waitFlag.isSet():
+            self.plugin.lastMessage = []
+            self.plugin.waitFlag.clear()
+            self.plugin.Push(self.value[0] + "\r\n")
+            self.plugin.waitFlag.wait(0.05)
+            self.plugin.lastMessage = []
+            self.plugin.waitFlag.clear()
+            self.plugin.Push(self.value[0] + "\r\n")
+            self.plugin.waitFlag.wait(0.1)
+            self.plugin.waitFlag.set()
+            res = self.plugin.lastMessage
+            menu = []
+            i = 0
+            for item in res:
+                if item[0] == "|":
+                    tmp = item.split(" - ")
+                    if tmp[-1][-1] == "*":
+                        ix = i
+                    i += 1
+                    menu.append(tmp)
+            if len(menu) > 1:
+                ix += self.value[1]
+                if ix == len(menu):
+                    ix = 0
+                elif ix == -1:
+                    ix = len(menu)-1
+                self.plugin.Push(self.value[0]+" %s\r\n" % menu[ix][0][1:])    
+                return " - ".join(menu[ix][1:])
         return None
 
 
@@ -732,6 +805,27 @@ ACTIONS = (
         None
     ),
     (
+        SimulateKey,
+        'SimulateKey', 
+        'Simulate hotkey press', 
+        'Simulates pressing hotkey.',
+        None
+    ),
+    (
+        GetHotkeys,
+        'GetHotkeys', 
+        'Get list of hotkeys', 
+        'Get a list of hotkeys for menu create.',
+        None
+    ),
+    (
+        GetSomeInfo,
+        'GetSomeInfo', 
+        'Get some info', 
+        'Returns information whose type is chosen by user.',
+        None
+    ),
+    (
         GetTime,
         'GetTime', 
         'Get time', 
@@ -746,11 +840,32 @@ ACTIONS = (
         'get_length'
     ),
     (
-        GetSomeInfo,
-        'GetSomeInfo', 
-        'Get some info', 
-        'Returns information whose type is chosen by user.',
-        None
+        SwitchTrack,
+        'NextAtrack', 
+        'Next audiotrack', 
+        'Switch to next audiotrack.',
+        ('atrack',1)
+    ),
+    (
+        SwitchTrack,
+        'PreviousAtrack', 
+        'Previous audiotrack', 
+        'Switch to previous audiotrack.',
+        ('atrack',-1)
+    ),
+    (
+        SwitchTrack,
+        'NextStrack', 
+        'Next subtitles', 
+        'Switch to next subtitles.',
+        ('strack',1)
+    ),
+    (
+        SwitchTrack,
+        'PreviousStrack', 
+        'Previous subtitles', 
+        'Switch to previous subtitles.',
+        ('strack',-1)
     ),
     (
         ActionPrototype,
@@ -759,5 +874,83 @@ ACTIONS = (
         'If VLC feedback is enabled in plugin settings, the logger shows all '
             'available commands, use <i>"My Command"</i> to execute them.', 
         'H'
+    ),
+    (
+        eg.ActionGroup,
+        'DVDmenu',
+        'DVD menu control',
+        'DVD menu control.',
+        (
+            (
+                SimulKey,
+                'KeyDiscMenu',
+                'Go to the DVD menu',
+                'Go to the DVD menu.',
+                "key-disc-menu"
+            ),
+            (
+                SimulKey,
+                'KeyNavUp',
+                'Navigate up',
+                'Navigate up.',
+                "key-nav-up"
+            ),
+            (
+                SimulKey,
+                'KeyNavDown',
+                'Navigate down',
+                'Navigate down.',
+                "key-nav-down"
+            ),
+            (
+                SimulKey, 
+                'KeyNavLeft',
+                'Navigate left',
+                'Navigate left.',
+                "key-nav-left"
+            ),
+            (
+                SimulKey,
+                'KeyNavRight',
+                'Navigate right',
+                'Navigate right.',
+                "key-nav-right"
+            ),
+            (
+                SimulKey,
+                'KeyNavActivate',
+                'Activate',
+                'Activate.',
+                "key-nav-activate"
+            ),
+            #(
+            #    SimulKey,
+            #    'KeyTitlePrev',
+            #    'Select previous DVD title',
+            #    'Select previous DVD title.',
+            #    "key-title-prev"
+            #),
+            #(
+            #    SimulKey,
+            #    'KeyTitleNext',
+            #    'Select next DVD title',
+            #    'Select next DVD title.',
+            #    "key-title-next"
+            #),
+            #(
+            #    SimulKey,
+            #    'KeyChapterPrev',
+            #    'Select prev DVD chapter',
+            #    'Select prev DVD chapter.',
+            #    "key-chapter-prev"
+            #),
+            #(
+            #    SimulKey,
+            #    'KeyChapterNext',
+            #    'Select next DVD chapter',
+            #    'Select next DVD chapter.',
+            #    "key-chapter-next"
+            #),
+        )
     ),
 )
