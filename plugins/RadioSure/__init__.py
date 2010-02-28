@@ -1,4 +1,4 @@
-version="0.1.0" 
+version="0.1.1" 
 
 # Plugins/RadioSure/__init__.py
 #
@@ -19,6 +19,8 @@ version="0.1.0"
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+# Last change: 2010-02-28 07:50 GMT+1
 # ==============================================================================
 
 eg.RegisterPlugin(
@@ -31,7 +33,7 @@ eg.RegisterPlugin(
         'RadioSure</a>.'
     ),
     createMacrosOnAdd = True,    
-    url = "http://www.eventghost.org/forum/viewtopic.php?XXXXXXXXX",
+    #url = "http://www.eventghost.org/forum/viewtopic.php?XXXXXXXXX",
     
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAADAFBMVEUA//+Gh4ju7/Ds"
@@ -58,13 +60,6 @@ eg.RegisterPlugin(
     ),    
 )
 
-# Changelog:
-# ==============================================================================
-# 2009-04-18 Pako
-#     * initial (beta) version 0.1.0
-# 2009-04-20 Pako
-#     * bug fix (action Run)
-#     * version same as above
 #===============================================================================
 
 import os
@@ -78,8 +73,6 @@ from win32gui import GetWindowText, MessageBox, GetWindow, GetDlgCtrlID, GetDlgI
 from win32api import GetSystemMetrics
 from eg.WinApi.Dynamic import SendMessage
 import _winreg
-from locale import getdefaultlocale as Locale
-myEncoding = Locale()[1]
 
 WM_COMMAND    = 273
 WM_SYSCOMMAND = 274
@@ -100,13 +93,77 @@ class Text:
     toolTipFolder = "Press button and browse to select folder ..."
     boxTitle = 'Folder "%s" is incorrect'
     boxMessage1 = 'Missing file %s !'
+    picker = "Colour Picker"
 #===============================================================================
 
 class MyDirBrowseButton(eg.DirBrowseButton):
     def GetTextCtrl(self):          #  now I can make build-in textCtrl
         return self.textControl     #  non-editable !!!
 #===============================================================================        
-            
+
+newEVT_BUTTON_AFTER = wx.NewEventType()
+EVT_BUTTON_AFTER = wx.PyEventBinder(newEVT_BUTTON_AFTER, 1)
+
+
+class EventAfter(wx.PyCommandEvent):
+
+    def __init__(self, evtType, id):
+        wx.PyCommandEvent.__init__(self, evtType, id)
+        self.myVal = None
+        
+    def SetValue(self, val):
+        self.myVal = val
+
+    def GetValue(self):
+        return self.myVal
+#===============================================================================
+        
+class extColourSelectButton(eg.ColourSelectButton):
+
+    def OnButton(self, event):
+        colourData = wx.ColourData()
+        colourData.SetChooseFull(True)
+        colourData.SetColour(self.value)
+        for i, colour in enumerate(eg.config.colourPickerCustomColours):
+            colourData.SetCustomColour(i, colour)
+        dialog = wx.ColourDialog(self.GetParent(), colourData)
+        dialog.SetTitle(Text.picker)
+        if dialog.ShowModal() == wx.ID_OK:
+            colourData = dialog.GetColourData()
+            self.SetValue(colourData.GetColour().Get())
+            event.Skip()
+        eg.config.colourPickerCustomColours = [
+            colourData.GetCustomColour(i).Get() for i in range(16)
+        ]
+        dialog.Destroy()
+        evt = EventAfter(newEVT_BUTTON_AFTER, self.GetId())
+        evt.SetValue(self.GetValue())
+        self.GetEventHandler().ProcessEvent(evt)
+#===============================================================================
+
+class extFontSelectButton(eg.FontSelectButton):
+
+    def OnButton(self, event):
+        fontData = wx.FontData()
+        if self.value is not None:
+            font = wx.FontFromNativeInfoString(self.value)
+            fontData.SetInitialFont(font)
+        else:
+            fontData.SetInitialFont(
+                wx.SystemSettings_GetFont(wx.SYS_ANSI_VAR_FONT)
+            )
+        dialog = wx.FontDialog(self.GetParent(), fontData)
+        if dialog.ShowModal() == wx.ID_OK:
+            fontData = dialog.GetFontData()
+            font = fontData.GetChosenFont()
+            self.value = font.GetNativeFontInfo().ToString()
+            event.Skip()
+        dialog.Destroy()
+        evt = EventAfter(newEVT_BUTTON_AFTER, self.GetId())
+        evt.SetValue(self.GetValue())
+        self.GetEventHandler().ProcessEvent(evt)
+#===============================================================================
+
 class Menu(wx.Frame):
     def __init__(self):
         wx.Frame.__init__(
@@ -207,130 +264,6 @@ class MyTimer():
             
     def Cancel(self):
         self.timer.cancel()
-#===============================================================================
-
-class MenuColourSelectButton(wx.BitmapButton):
-
-    def __init__(
-        self, 
-        id = -1,
-        value=(255, 255, 255),
-        name="ColourSelectButton",
-        pos=wx.DefaultPosition, 
-        size=(40, wx.Button.GetDefaultSize()[1]),
-        style=wx.BU_AUTODRAW, 
-        validator=wx.DefaultValidator, 
-    ):
-        self.id = id
-        self.value = value
-        self.name = name
-        wx.BitmapButton.__init__(
-            self, panel, id, wx.NullBitmap, pos, size, style, validator,name
-        )
-        self.SetValue(value)
-        self.Bind(wx.EVT_BUTTON, self.OnButton)
-
-
-    def OnButton(self, event):
-        colourData = wx.ColourData()
-        colourData.SetChooseFull(True)
-        colourData.SetColour(self.value)
-        for n, colour in enumerate(eg.config.colourPickerCustomColours):
-            colourData.SetCustomColour(n, colour)
-        colourDlg = wx.ColourDialog(self.GetParent(), colourData)
-        colourDlg.SetTitle(self.name)
-        if colourDlg.ShowModal() == wx.ID_OK:
-            colourData = colourDlg.GetColourData()
-            colour=colourData.GetColour().Get()
-            self.SetValue(colour)
-            listBoxCtrl = event.GetEventObject().GetParent().GetSizer().\
-                GetChildren()[0].GetSizer(). GetChildren()[1].GetWindow()                
-            btnId = event.GetId()
-            if btnId == 1:
-                listBoxCtrl.SetBackgroundColour(colour)
-                listBoxCtrl.Refresh()
-            else:
-                listBoxCtrl.SetForegroundColour(colour)
-                listBoxCtrl.Refresh()
-            event.Skip()
-        eg.config.colourPickerCustomColours = [
-            colourData.GetCustomColour(n).Get() for n in range(16)
-        ]
-        colourDlg.Destroy()
-
-        
-    def GetValue(self):
-        return self.value
-
-        
-    def SetValue(self, value):
-        self.value = value
-        w, h = self.GetSize()
-        image = wx.EmptyImage(w-10, h-10)
-        image.SetRGBRect((1, 1, w-12, h-12), *value)
-        self.SetBitmapLabel(image.ConvertToBitmap())
-#===============================================================================
-
-class MenuFontButton(wx.BitmapButton):
-
-    def __init__(
-        self, 
-        fontInfo = None,
-        id=-1,
-        pos=wx.DefaultPosition, 
-        size=(40, wx.Button.GetDefaultSize()[1]),
-        style=wx.BU_AUTODRAW, 
-        validator=wx.DefaultValidator,
-        name="MenuFontButton", 
-    ):
-        self.window = panel
-        self.fontInfo = fontInfo
-        wx.BitmapButton.__init__(
-            self,
-            panel,
-            id,
-            wx.Bitmap("images/font.png"), 
-            pos,
-            size,
-            style,
-            validator,
-            name
-        )
-        self.Bind(wx.EVT_BUTTON, self.OnButton)
-
-
-    def OnButton(self, event):
-        data = wx.FontData()
-        if self.fontInfo is not None:
-            font = wx.FontFromNativeInfoString(self.fontInfo)
-            data.SetInitialFont(font)
-        else:
-            data.SetInitialFont(
-                wx.SystemSettings_GetFont(wx.SYS_ANSI_VAR_FONT )
-            )
-        dlg = wx.FontDialog(self.window, data)
-        if dlg.ShowModal() == wx.ID_OK:
-            data = dlg.GetFontData()
-            font = data.GetChosenFont()
-            listBoxCtrl = event.GetEventObject().GetParent().GetSizer().\
-                GetChildren()[0].GetSizer(). GetChildren()[1].GetWindow()                
-            for n in range(10,20):
-                font.SetPointSize(n)
-                listBoxCtrl.SetFont(font)
-                if listBoxCtrl.GetTextExtent('X')[1]>20:
-                    break
-            self.fontInfo = data.GetChosenFont().GetNativeFontInfo().\
-                ToString()
-            event.Skip()
-        dlg.Destroy()
-
-
-    def GetValue(self):
-        return self.fontInfo
-
-
-    def SetValue(self, fontInfo):
-        self.fontInfo = fontInfo
 #===============================================================================
 
 class my_xml_handler(ContentHandler):
@@ -445,7 +378,7 @@ class RadioSure(eg.PluginClass):
     def RefreshVariables(self):
         xmltoparse = self.xmlPath+u'\\RadioSure.xml'
         dh = my_xml_handler(self)
-        sax.parse(xmltoparse.encode(myEncoding), dh)
+        sax.parse(xmltoparse.encode(eg.systemEncoding), dh)
         if self.Current in self.Favorites:
             self.FavIx = self.Favorites.index(self.Current)
         else:
@@ -674,8 +607,7 @@ class WindowControl(eg.ActionClass):
     def __call__(self):
         hwnd = HandleRS()
         if hwnd:
-            SendMessage(
-                hwnd, WM_SYSCOMMAND, self.value, 0)
+            SendMessage(hwnd, WM_SYSCOMMAND, self.value, 0)
         else:
             self.PrintError(self.plugin.text.text1)
             return self.plugin.text.text1         
@@ -990,22 +922,13 @@ class ShowMenu(eg.ActionClass):
         
         #Font button
         fontLbl=wx.StaticText(panel, -1, self.text.menuFont)
-        fontButton = MenuFontButton(fontInfo)
+        fontButton = extFontSelectButton(panel, value = fontInfo)
         #Button Text Colour
         foreLbl=wx.StaticText(panel, -1, self.text.txtColour+':')
-        foreColourButton = MenuColourSelectButton(
-            0,
-            fore,
-            self.text.txtColour
-        )
+        foreColourButton = extColourSelectButton(panel,fore)
         #Button Background Colour
         backLbl=wx.StaticText(panel, -1, self.text.background+':')
-        backColourButton = MenuColourSelectButton(
-            1,
-            back,
-            self.text.background
-        )
-        
+        backColourButton = extColourSelectButton(panel,back)        
         bottomSizer = wx.FlexGridSizer(3,3,hgap=0,vgap=3)
         bottomSizer.Add((140,10))
         bottomSizer.Add((140,10))
@@ -1018,6 +941,29 @@ class ShowMenu(eg.ActionClass):
         bottomSizer.Add(backColourButton)
         mainSizer.Add(bottomSizer)
         
+        def OnFontBtn(evt):
+            value = evt.GetValue()
+            font = wx.FontFromNativeInfoString(value)
+            for n in range(10,20):
+                font.SetPointSize(n)
+                listBoxCtrl.SetFont(font)
+                if listBoxCtrl.GetTextExtent('X')[1]>20:
+                    break            
+            evt.Skip()
+        fontButton.Bind(EVT_BUTTON_AFTER, OnFontBtn)        
+
+        def OnColourBtn(evt):
+            id = evt.GetId()
+            value = evt.GetValue()
+            if id == foreColourButton.GetId():
+                listBoxCtrl.SetForegroundColour(value)
+            elif id == backColourButton.GetId():
+                listBoxCtrl.SetBackgroundColour(value)
+            listBoxCtrl.Refresh()
+            evt.Skip()
+        foreColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
+        backColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
+
         def OnClick(evt):
             listBoxCtrl.SetSelection(-1)
             evt.StopPropagation()
@@ -1082,13 +1028,14 @@ Actions = (
     (Run,"Run","Run RadioSure","Run RadioSure with its default settings.",None),
     (SendMessageActions,"Minimize","Minimize window","Minimize window.",2),
     (WindowControl,"Restore","Restore window","Restore window.",SC_RESTORE),
+    (SendMessageActions,"MinimRest","Minimize/Restore","Minimize/Restore window.",1075),
     (SendMessageActions,"Close","Close window (exit RadioSure)","Close window (exit RadioSure).",1),
-    (SendMessageActions,"Expand","Toggle window size","Toggle window size.",1076),
+    (SendMessageActions,"Expand","Collapse/Expand window","Collapse/Expand window.",1076),
     (SendMessageActions,"OnTop","Stay on top On/Off","Stay on top On/Off.",1077),
     (SendMessageActions,"PlayStop","Play/Stop","Play/Stop.",1000),
     (SendMessageActions,"MuteOnOff","Mute On/Off","Mute On/Off.",1027),
     (SendMessageActions,"RecOnOff","Record On/Off","Record On/Off.",1051),
-    (Play,"Play","Play","Play last playing station.",None),
+#    (Play,"Play","Play","Play last playing station.",None),
     (SendMessageActions,"Stop","Stop","Stop.",1008),
 #    (SendMessageActions,"RecOn","Rec on","Rec on.",0),
 #    (SendMessageActions,"RecOff","Rec off","Rec off.",0),
