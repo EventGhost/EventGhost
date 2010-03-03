@@ -15,7 +15,7 @@ import time
 eg.RegisterPlugin(
     name = "ELV FS20 PCS",
     author = "Bartman",
-    version = "0.2." + "$LastChangedRevision: 614 $".split()[1],
+    version = "0.2." + "$LastChangedRevision$".split()[1],
     kind = "external",
     canMultiLoad = False,
     createMacrosOnAdd = False,
@@ -84,15 +84,15 @@ class FS20PCS(eg.PluginClass):
         self.AddNewAction(group, "ToggleTimer", TimerValueAction, 0x32, "Toggle in timer value", "Toggles between off and previous value in timer value", "Toggle {0} between off and previous value in {1}")
         group.AddAction(DimTimer)
         self.AddNewAction(group, "OffPreviousValueInternal", SimpleAction, 0x18, "Off for internal timer value, previous value afterwards", "Turns off (dim to 0%) device for internal timer value and return to previous value afterwards", "Turn off {0} for internal timer value and return to previous value afterwards")
-        self.AddNewAction(group, "OffPreviousValueTimer", TimerValueAction, 0x38, "Off for timer value, previous value afterwards", "Turns off (dim to 0%) device for timer value and return to previous value afterwards", "Turn off {0} for timer value and return to previous value afterwards")
+        self.AddNewAction(group, "OffPreviousValueTimer", TimerValueAction, 0x38, "Off for timer value, previous value afterwards", "Turns off (dim to 0%) device for timer value and return to previous value afterwards", "Turn off {0} for {1} and return to previous value afterwards")
         self.AddNewAction(group, "OnOffInternal", SimpleAction, 0x19, "On (dim to 100%) for internal timer value, off afterwards", "Turns on (device dim to 100%) for internal timer value and turns it off afterwards", "Turn on {0} for internal timer value and turn off afterwards")
-        self.AddNewAction(group, "OnOffTimer", TimerValueAction, 0x39, "On (dim to 100%) for timer value, off afterwards", "Turns on (device dim to 100%) for timer value and turns it off afterwards", "Turn on {0} for timer value and turn off afterwards")
+        self.AddNewAction(group, "OnOffTimer", TimerValueAction, 0x39, "On (dim to 100%) for timer value, off afterwards", "Turns on (device dim to 100%) for timer value and turns it off afterwards", "Turn on {0} for {1} and turn off afterwards")
         self.AddNewAction(group, "PreviousValueOffInternal", SimpleAction, 0x1a, "Previous value for internal timer value, off afterwards", "Turns on device with previous value for internal timer value and turns it off afterwards", "Turn on {0} with previous value for internal timer value and turn off afterwards")
-        self.AddNewAction(group, "PreviousValueOffTimer", TimerValueAction, 0x3a, "Previous value for timer value, off afterwards", "Turns on device with previous value for timer value and turns it off afterwards", "Turn on {0} with previous value for timer value and turn off afterwards")
+        self.AddNewAction(group, "PreviousValueOffTimer", TimerValueAction, 0x3a, "Previous value for timer value, off afterwards", "Turns on device with previous value for timer value and turns it off afterwards", "Turn on {0} with previous value for {1} and turn off afterwards")
         self.AddNewAction(group, "OnPreviousStateInternal", SimpleAction, 0x1e, "On for internal timer value, previous state afterwards", "Turns on (dim to 100%) device for internal timer value and return to previous state afterwards", "Turn on {0} for internal timer value and return to previous state afterwards")
-        self.AddNewAction(group, "OnPreviousStateTimer", TimerValueAction, 0x3e, "On for timer value, previous state afterwards", "Turns on (dim to 100%) device for timer value and return to previous state afterwards", "Turn on {0} for timer value and return to previous state afterwards")
+        self.AddNewAction(group, "OnPreviousStateTimer", TimerValueAction, 0x3e, "On for timer value, previous state afterwards", "Turns on (dim to 100%) device for timer value and return to previous state afterwards", "Turn on {0} for {1} and return to previous state afterwards")
         self.AddNewAction(group, "PreviousValuePreviousStateInternal", SimpleAction, 0x1f, "Previous value for internal timer value, previous state afterwards", "Turns on device with previous value for internal timer value and return to previous state afterwards", "Turn on {0} with previous value for internal timer value and return to previous state afterwards")
-        self.AddNewAction(group, "PreviousValuePreviousStateTimer", TimerValueAction, 0x3f, "Previous value for timer value, previous state afterwards", "Turns on device with previous value for timer value and return to previous state afterwards", "Turn on {0} with previous value for timer value and return to previous state afterwards")
+        self.AddNewAction(group, "PreviousValuePreviousStateTimer", TimerValueAction, 0x3f, "Previous value for timer value, previous state afterwards", "Turns on device with previous value for timer value and return to previous state afterwards", "Turn on {0} with previous value for {1} and return to previous state afterwards")
         self.AddNewAction(group, "DimUpOffTimer", RepeatTimerValueAction, 0x33, "Dim up and turn off after timer value", "Dims up and turns off after timer value", "Dim up {0} and turn off after {1}")
         self.AddNewAction(group, "DimDownOffTimer", RepeatTimerValueAction, 0x34, "Dim down and turn off after timer value", "Dims down and turns off after timer value", "Dim down {0} and turn off after {1}")
         self.AddNewAction(group, "DimAlternatingOffTimer", RepeatTimerValueAction, 0x35, "Alternating dim and turn off after timer value", "Dims up one level until maximum, then dim down and turns off after timer value", "Alternating dim {0} and turn off after {1}")
@@ -467,7 +467,7 @@ class DimTimer(ActionBase):
         self.plugin.SendRawCommand("\x01\x06\xf1" + GetAddressBytes(address) + chr(level + 32) + chr(timeCode))
     
     def GetLabel(self, address, level, timeCode):
-        return self.labelFormat.format(GetStringFromAddress(address, True), (level * 100.00 / 16), FormatTimeValue(GetTimeValue(timeCode)))
+        return self.text.labelFormat.format(GetStringFromAddress(address, True), (level * 100.00 / 16), FormatTimeValue(GetTimeValue(timeCode)))
     
     def Configure(self, address = None, level = 8, timeCode = 0):
         panel = eg.ConfigPanel()

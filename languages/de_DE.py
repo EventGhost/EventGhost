@@ -157,7 +157,6 @@ class OptionsDialog:
     Tab1 = u"Allgemein"
     Title = u"Einstellungen"
     UseAutoloadFile = u"Lade Datei beim Start:"
-    Warning = u"Änderung der Sprache werden erst nach einem Neustart der Applikation wirksam."
     confirmDelete = u"Zeige Warnhinweis beim Löschen von Elementen"
     limitMemory1 = u"Begrenze Speicherverbrauch wenn minimiert auf"
     limitMemory2 = u"MB"
@@ -635,6 +634,7 @@ class Plugin:
     class FS20PCS:
         description = u"<rst>\nSenden von Befehlen an FS20 Empfänger.\n\n|\n\n|fS20Image|_\n\n`Zum Shop <http://www.elv.de/output/controller.aspx?cid=74&detail=10&detail2=27743>`__\n\n.. |fS20Image| image:: picture.jpg\n.. _fS20Image: http://www.elv.de/\n"
         address = u"Adresse:"
+        errorFind = u"ELV FS20 PCS wurde nicht gefunden"
         level = u"Stufe:"
         repeat = u"Wiederholungen:"
         repeatSuffix = u"{0} ({1} Wiederholungen)"
@@ -645,10 +645,130 @@ class Plugin:
             name = u"Dimmen"
             description = u"Dimmt sofort auf eine Helligkeitsstufe"
             labelFormat = u"Dimme {0} auf {1:.02f}%"
+        class DimAlternating:
+            name = u"Abwechselnd Herauf- bzw. Herunterdimmen"
+            description = u"Heraufdimmen bis Maximum, Pause, Herabdimmen bis Minimum, Pause, usw."
+            labelFormat = u"Dimme {0} abwechselnd herauf- bzw. herunter"
+        class DimAlternatingOffTimer:
+            name = u"Abwechselnd Herauf- bzw. Herunterdimmen und nach Timerzeit ausstellen"
+            description = u"Dimme im Wechsel sofort eine Helligkeitsstufe herauf bzw. herab (bei langem Tastendruck mehrere Helligkeitsstufen herauf bis Maximum und nach kurzer Pause wieder herab bis Minimum usw. - solange Taste gedrückt wird) und schalte nach Timerzeit Aus (im Wechsel)"
+            labelFormat = u"Dimme {0} abwechselnd herauf- bzw. herunter und schalte nach {1} aus"
         class DimDown:
             name = u"Herunterdimmen"
             description = u"Eine Helligkeitsstufe dunkler dimmen"
             labelFormat = u"Dimme {0} eine Helligkeitsstufe dunkler"
+        class DimDownOffTimer:
+            name = u"Herunterdimmen und nach Timerzeit abschalten"
+            description = u"Eine Helligkeitsstufe dunkler dimmen und nach Timerzeit abschalten"
+            labelFormat = u"Dimme {0} eine Helligkeitsstufe dunkler und schalte nach {1} aus"
+        class DimTimer:
+            name = u"In Timerzeit herunterdimmen"
+            description = u"Dimmt in Timerzeit auf eine Helligkeitsstufe"
+            labelFormat = u"Dimme {0} in {2} auf {1:.02f}%"
+        class DimUp:
+            name = u"Heraufdimmen"
+            description = u"Eine Helligkeitsstufe heller dimmen"
+            labelFormat = u"Dimme {0} eine Helligkeitsstufe heller"
+        class DimUpOffTimer:
+            name = u"Heraufdimmen und nach Timerzeit abschalten"
+            description = u"Eine Helligkeitsstufe heller dimmen und nach Timerzeit ausschalten"
+            labelFormat = u"Dimme {0} eine Helligkeitsstufe heller und schalte nach {1} aus"
+        class Off:
+            name = u"Ausschalten"
+            description = u"Schaltet Gerät aus (dimmt auf 0%)"
+            labelFormat = u"Schalte {0} aus"
+        class OffPreviousValueInternal:
+            name = u"Aus für interne Timerzeit, anschließend alter Wert"
+            description = u"Aus (dimmt auf 0%) für interne Timerzeit, anschließend alter Wert"
+            labelFormat = u"Schalte {0} für interne Timerzeit aus kehre anschließend auf alten Wert zurück"
+        class OffPreviousValueTimer:
+            name = u"Aus für Timerzeit, anschließend alter Wert"
+            description = u"Aus (dimmt auf 0%) für Timerzeit, anschließend alter Wert"
+            labelFormat = u"Schalte {0} für {1} aus kehre anschließend auf alten Wert zurück"
+        class OffTimer:
+            name = u"Aus in Timerzeit"
+            description = u"Schaltet Gerät in Timerzeit aus (dimmt auf 0%)"
+            labelFormat = u"Schalte {0} in {1} aus"
+        class On:
+            name = u"Anschalten"
+            description = u"Schaltet Gerät ein (dimmt auf 100%)"
+            labelFormat = u"Schalte {0} an"
+        class OnOffInternal:
+            name = u"Schalte Gerät für interne Timerzeit an (dimme auf 100%) und schalte anschließend ab"
+            description = u"Schaltet Gerät für interne Timerzeit an (dimmt auf 100%) und schalte anschließend ab"
+            labelFormat = u"Schalte {0} für interne Timerzeit an und schalte anschließend ab"
+        class OnOffTimer:
+            name = u"Schalte Gerät für Timerzeit an (dimme auf 100%) und schalte anschließend ab"
+            description = u"Schaltet Gerät für Timerzeit an (dimmt auf 100%) und schalte anschließend ab"
+            labelFormat = u"Schalte {0} für {0} an und schalte anschließend ab"
+        class OnPreviousStateInternal:
+            name = u"Schalte Gerät für interne Timerzeit an (dimme auf 100%) und kehre anschließend auf alten Zustand"
+            description = u"Schaltet Gerät für interne Timerzeit an (dimmt auf 100%) und kehrt anschließend zum vorherigen Zustand zurück"
+            labelFormat = u"Schalte {0} für interne Timerzeit an und kehre anschließend zum vorherigen Zustand zurück"
+        class OnPreviousStateTimer:
+            name = u"Schalte Gerät für Timerzeit an (dimme auf 100%) und kehre anschließend auf alten Zustand"
+            description = u"Schaltet Gerät für Timerzeit an (dimmt auf 100%) und kehrt anschließend zum vorherigen Zustand zurück"
+            labelFormat = u"Schalte {0} für {1} an und kehre anschließend zum vorherigen Zustand zurück"
+        class OnTimer:
+            name = u"An in Timerzeit"
+            description = u"Schaltet Gerät für Timerzeit ein (dimmt auf 100%)"
+            labelFormat = u"Schalte {0} für {1} an"
+        class PreviousValue:
+            name = u"Mit früherem Wert einschalten"
+            description = u"Schaltet Gerät mit früherem Wert ein"
+            labelFormat = u"Schalte {0} mit früherem Wert ein"
+        class PreviousValueOffInternal:
+            name = u"Mit früherem Wert für interne Timerzeit ein- und anschließend abschalten"
+            description = u"Schaltet Gerät mit früherem Wertfür interne Timerzeit ein und anschließend ab"
+            labelFormat = u"Schalte {0} mit früherem Wert für interne Timerzeit ein und anschließend ab"
+        class PreviousValueOffTimer:
+            name = u"Mit früherem Wert für Timerzeit ein- und anschließend abschalten"
+            description = u"Schaltet Gerät mit früherem Wertfür Timerzeit ein und anschließend ab"
+            labelFormat = u"Schalte {0} mit früherem Wert für {1} ein und anschließend ab"
+        class PreviousValuePreviousStateInternal:
+            name = u"Mit früherem Wert für interne Timerzeit einschalten und anschließend zu altem Zustand zurückkehren"
+            description = u"Schaltet Gerät mit früherem Wert für interne Timerzeit ein und kehrt anschließend zu altem Zustand zurück"
+            labelFormat = u"Schalte {0} mit früherem Wert für interne Timerzeit ein und kehre anschließend zu altem Zustand zurück"
+        class PreviousValuePreviousStateTimer:
+            name = u"Mit früherem Wert für Timerzeit einschalten und anschließend zu altem Zustand zurückkehren"
+            description = u"Schaltet Gerät mit früherem Wert für Timerzeit ein und kehrt anschließend zu altem Zustand zurück"
+            labelFormat = u"Schalte {0} mit früherem Wert für {1} ein und  kehre anschließend zu altem Zustand zurück"
+        class PreviousValueTimer:
+            name = u"In Timerzeit mit altem Wert einschalten"
+            description = u"Schaltet Gerät in Timerzeit mit altem Wert ein"
+            labelFormat = u"Schalte {0} in {1} mit altem Wert ein"
+        class ProgramCode:
+            name = u"Anlernen von Hauscode und Adresse"
+            description = u"Lernt die Hauscode und Adresse ohne eine Aktion auszulösen."
+            labelFormat = u"Adresse {0} anlernen"
+        class ProgramDimDownRampTimer:
+            name = u"Programmierung der internen Rampenzeit für Herabdimmen"
+            description = u"Programmiert die interne Rampenzeit für Herabdimmen"
+            labelFormat = u"Programmiere die internen Rampenzeit für Heraufdimmen von {0} auf {1}"
+        class ProgramDimUpRampTimer:
+            name = u"Programmierung der internen Rampenzeit für Heraufdimmen"
+            description = u"Programmiert die interne Rampenzeit für Heraufdimmen"
+            labelFormat = u"Programmiere die internen Rampenzeit für Herabdimmen von {0} auf {1}"
+        class ProgramFactoryDefaults:
+            name = u"Auf Auslieferzustand zurücksetzen"
+            description = u"Setzt ein Gerät auf den Auslieferzustand zurück.\n(wird nicht von allen FS20-Empfänger unterstützt)"
+            labelFormat = u"Setzt {0} auf Auslieferzustand zurück"
+        class ProgramInternalTimer:
+            name = u"Programmierung der internen Timerzeit"
+            description = u"Programmiert die internen Timerzeit"
+            labelFormat = u"Programmiere die interne Timerzeit von {0} auf {1}"
+        class ProgramTimer:
+            name = u"Programmierung der internen Timerzeit starten bzw. stoppen"
+            description = u"Starte bzw. stoppt die Programmierung der internen Timerzeit"
+            labelFormat = u"Starte bzw. stoppt die Programmierung der internen Timerzeit für {0}"
+        class Toggle:
+            name = u"Umschalten"
+            description = u"Wechselt zwischen „Aus“ und „An, alter Wert“"
+            labelFormat = u"Wechsle {0} zwischen aus und vorherigem Wert"
+        class ToggleTimer:
+            name = u"Umschalten nach Timerzeit"
+            description = u"Wechselt in Timerzeit zwischen „Aus“ und „An, alter Wert“"
+            labelFormat = u"Wechsle {0} zwischen aus und vorherigem Wert in {1}"
     class Joystick:
         name = u"Joystick"
         description = u"Dieses Plugin erlaubt es Joysticks und Gamepads als Ereignisquelle zu verwenden."
@@ -1040,6 +1160,22 @@ class Plugin:
             name = u"Anzeige setzen"
         class SiemensStar:
             name = u"Siemensstern"
+    class USBRFID:
+        description = u"<rst>\nEmpfängt Codes ELV USB/RFID-Interface.\n\n|\n\n|productImage|_\n\n`Direct shop link <http://www.elv.de/output/controller.aspx?cid=74&detail=10&detail2=28049>`__\n\n.. |productImage| image:: picture.jpg\n.. _productImage: http://www.elv.de/ "
+        duration = u"Dauer"
+        errorFind = u"USB/RFID-Interface wurde nicht gefunden"
+        class Buzzer:
+            name = u"Piepton"
+            description = u"Piepton einschalten"
+            labelFormat = u"Piepton für {0}0 ms einschalten"
+        class GreenLED:
+            name = u"Grüne LED"
+            description = u"Grüne LED einschalten"
+            labelFormat = u"Grüne LED für {0}0 ms einschalten"
+        class RedLED:
+            name = u"Rote LED"
+            description = u"Rote LED einschalten"
+            labelFormat = u"Rote LED für {0}0 ms einschalten"
     class USB_UIRT:
         name = u"USB-UIRT"
         blinkRx = u"Blinke bei Empfang"
