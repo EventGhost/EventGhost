@@ -18,19 +18,19 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2010-02-07 17:11 GMT+1
+#Last change: 2010-03-10 18:49 GMT+1
 
 
 
 eg.RegisterPlugin(
     name = "On screen explorer",
     author = "Pako",
-    version = "0.1.1",
+    version = "0.2.1",
     kind = "other",
     guid = "{D3D2DDD1-9BEB-4A26-969B-C82FA8EAB280}",
     description = u"""<rst>
 Allows you to create custom On Screen Explorer.
-        
+
 Plugin OSE has built-in a function **"Stop processing this event"**,
 if the menu **is shown** on the screen and **"Stop processing this macro"**,
 if the menu **is not shown** on the screen.
@@ -82,6 +82,7 @@ from winsound import PlaySound, SND_ASYNC
 ERROR_NO_ASSOCIATION = 1155
 FILE_ATTRIBUTE_HIDDEN = 2
 FILE_ATTRIBUTE_SYSTEM = 4
+SYS_VSCROLL_X = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
 
 #global variables:
 folder_ID   = u">> "
@@ -89,17 +90,161 @@ shortcut_ID = u"|•"
 #===============================================================================
 
 class Text:
-    noAssoc  = 'Error: No application is associated with the file type "%s" for operation "Open" !'
+    noAssoc  = 'Error: No application is associated with the "%s" file type for operation "Open" !'
     myComp   = "My computer"
     folder   = "Folder identifier string (must not be empty):"
     shortcut = "Shortcut identifier string (may be empty):"
+    picker   = "Colour Picker"
+#===============================================================================
+
+newEVT_BUTTON_AFTER = wx.NewEventType()
+EVT_BUTTON_AFTER = wx.PyEventBinder(newEVT_BUTTON_AFTER, 1)
+
+
+class EventAfter(wx.PyCommandEvent):
+
+    def __init__(self, evtType, id):
+        wx.PyCommandEvent.__init__(self, evtType, id)
+        self.myVal = None
+
+
+    def SetValue(self, val):
+        self.myVal = val
+
+
+    def GetValue(self):
+        return self.myVal
+#===============================================================================
+
+class extColourSelectButton(eg.ColourSelectButton):
+
+    def OnButton(self, event):
+        colourData = wx.ColourData()
+        colourData.SetChooseFull(True)
+        colourData.SetColour(self.value)
+        for i, colour in enumerate(eg.config.colourPickerCustomColours):
+            colourData.SetCustomColour(i, colour)
+        dialog = wx.ColourDialog(self.GetParent(), colourData)
+        dialog.SetTitle(Text.picker)
+        if dialog.ShowModal() == wx.ID_OK:
+            colourData = dialog.GetColourData()
+            self.SetValue(colourData.GetColour().Get())
+            event.Skip()
+        eg.config.colourPickerCustomColours = [
+            colourData.GetCustomColour(i).Get() for i in range(16)
+        ]
+        dialog.Destroy()
+        evt = EventAfter(newEVT_BUTTON_AFTER, self.GetId())
+        evt.SetValue(self.GetValue())
+        self.GetEventHandler().ProcessEvent(evt)
+#===============================================================================
+
+class extFontSelectButton(eg.FontSelectButton):
+
+    def OnButton(self, event):
+        fontData = wx.FontData()
+        if self.value is not None:
+            font = wx.FontFromNativeInfoString(self.value)
+            fontData.SetInitialFont(font)
+        else:
+            fontData.SetInitialFont(
+                wx.SystemSettings_GetFont(wx.SYS_ANSI_VAR_FONT)
+            )
+        dialog = wx.FontDialog(self.GetParent(), fontData)
+        if dialog.ShowModal() == wx.ID_OK:
+            fontData = dialog.GetFontData()
+            font = fontData.GetChosenFont()
+            self.value = font.GetNativeFontInfo().ToString()
+            event.Skip()
+        dialog.Destroy()
+        evt = EventAfter(newEVT_BUTTON_AFTER, self.GetId())
+        evt.SetValue(self.GetValue())
+        self.GetEventHandler().ProcessEvent(evt)
 #===============================================================================
 
 class MyDirBrowseButton(eg.DirBrowseButton):
+
     def GetTextCtrl(self):          #  now I can make build-in textCtrl
         return self.textControl     #  non-editable !!!
+
+
     def SetStartDirectory(self):
         self.startDirectory = self.GetValue()
+#===============================================================================
+
+class MenuGrid(wx.grid.Grid):
+
+    def __init__(self, parent, lngth):
+        wx.grid.Grid.__init__(self, parent)
+        self.SetRowLabelSize(0)
+        self.SetColLabelSize(0)
+        self.SetDefaultRowSize(16)
+        self.SetScrollLineX(1)
+        self.SetScrollLineY(1)
+        self.EnableEditing(False)
+        self.EnableDragColSize(False)
+        self.EnableDragRowSize(False)
+        self.EnableDragGridSize(False)
+        self.EnableGridLines(False)
+        attr = wx.grid.GridCellAttr()
+        attr.SetAlignment(wx.ALIGN_LEFT, wx.ALIGN_CENTRE)
+        self.SetColAttr(0,attr)
+        self.CreateGrid(lngth, 1)
+        self.SetSelectionMode(wx.grid.Grid.wxGridSelectRows)
+        self.Bind(wx.grid.EVT_GRID_CMD_SELECT_CELL, self.onGridSelectCell, self)
+
+
+    def SetBackgroundColour(self, colour):
+        self.SetDefaultCellBackgroundColour(colour)
+
+
+    def SetForegroundColour(self, colour):
+        self.SetDefaultCellTextColour(colour)
+
+
+    def SetFont(self, font):
+        self.SetDefaultCellFont(font)
+
+
+    def GetSelection(self):
+        return self.GetSelectedRows()[0]
+
+
+    def SetSelection(self, row):
+        self.SetGridCursor(row, 0)
+        self.SelectRow(row)
+
+
+    def Set(self, choices):
+        oldLen = self.GetNumberRows()
+        newLen = len(choices)
+        h = self.GetDefaultRowSize()
+        if oldLen > newLen:
+            self.DeleteRows(0, oldLen-newLen, False)
+        elif oldLen < newLen:
+            self.AppendRows(newLen-oldLen, False)
+        for i in range(len(choices)):
+            self.SetCellValue(i,0,choices[i])
+            self.SetRowSize(i,h)
+
+
+    def onGridSelectCell(self, event):
+        row = event.GetRow()
+        self.SelectRow(row)
+        if not self.IsVisible(row,0):
+            self.MakeCellVisible(row,0)
+        event.Skip()
+
+
+    def MoveCursor(self, step):
+        max = self.GetNumberRows()
+        sel = self.GetSelectedRows()[0]
+        new = sel + step
+        if new < 0:
+            new += max
+        elif new > max-1:
+            new -= max
+        self.SetSelection(new)
 #===============================================================================
 
 def MyComputer():
@@ -118,13 +263,15 @@ def MyComputer():
     if mc_reg:
         _winreg.CloseKey(mc_reg)
     return myComputer
-    
+
 MY_COMPUTER = MyComputer()    
+
 
 def CaseInsensitiveSort(list):
     tmp = [(item[0].upper(), item) for item in list] # Schwartzian transform
     tmp.sort()
     return [item[1] for item in tmp]
+
 
 def GetFolderItems(folder, patterns, hide):
     shortcut = pythoncom.CoCreateInstance (
@@ -136,7 +283,6 @@ def GetFolderItems(folder, patterns, hide):
     persist_file = shortcut.QueryInterface (pythoncom.IID_IPersistFile)
     patterns = patterns.split(",")
     if folder != MY_COMPUTER:
-#        ds = [("%s%s" % (folder_ID,f),"") for f in os.listdir(folder) if os.path.isdir(os.path.join(folder,f))]
         ds = []
         for f in [f for f in os.listdir(folder) if os.path.isdir(os.path.join(folder,f))]:
             if hide:
@@ -189,6 +335,7 @@ def GetFolderItems(folder, patterns, hide):
             except:
                 pass
         return drvs
+
 #===============================================================================
 #cls types for ACTIONS list :
 #===============================================================================
@@ -202,6 +349,8 @@ class ShowMenu(eg.ActionClass):
         menuFont = 'Font:'
         txtColour = 'Text colour'
         background = 'Background colour'
+        txtColourSel = 'Selected text colour'
+        backgroundSel = 'Selected background colour'
         prefixLabel = 'Event prefix:'
         suffixLabel = 'Default event suffix:'
         folder = "Start folder:"
@@ -212,134 +361,7 @@ class ShowMenu(eg.ActionClass):
         compBtnToolTip = 'Press this button to set "%s" as start folder'
         patternsToolTip = '''Here you can enter the patterns of required files, separated by commas.
 For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
-#-------------------------------------------------------------------------------
 
-    class MenuColourSelectButton(wx.BitmapButton):
-
-        def __init__(
-            self,
-            id = -1,
-            value=(255, 255, 255),
-            name="ColourSelectButton",
-            pos=wx.DefaultPosition,
-            size=(40, wx.Button.GetDefaultSize()[1]),
-            style=wx.BU_AUTODRAW,
-            validator=wx.DefaultValidator,
-        ):
-            self.id = id
-            self.value = value
-            self.name = name
-            wx.BitmapButton.__init__(
-                self, panel, id, wx.NullBitmap, pos, size, style, validator,name
-            )
-            self.SetValue(value)
-            self.Bind(wx.EVT_BUTTON, self.OnButton)
-
-        def OnButton(self, event):
-            colourData = wx.ColourData()
-            colourData.SetChooseFull(True)
-            colourData.SetColour(self.value)
-            for n, colour in enumerate(eg.config.colourPickerCustomColours):
-                colourData.SetCustomColour(n, colour)
-            colourDlg = wx.ColourDialog(self.GetParent(), colourData)
-            colourDlg.SetTitle(self.name)
-            if colourDlg.ShowModal() == wx.ID_OK:
-                colourData = colourDlg.GetColourData()
-                colour=colourData.GetColour().Get()
-                self.SetValue(colour)
-                if eg.Version.base >= "0.4.0":
-                    listBoxCtrl = event.GetEventObject().GetParent().GetSizer().\
-                        GetChildren()[0].GetSizer().GetChildren()[0].GetSizer().\
-                        GetChildren()[1].GetWindow()
-                else:
-                    listBoxCtrl = event.GetEventObject().GetParent().GetSizer().\
-                        GetChildren()[0].GetSizer().GetChildren()[1].GetWindow()
-                btnId = event.GetId()
-                if btnId == 1:
-                    listBoxCtrl.SetBackgroundColour(colour)
-                    listBoxCtrl.Refresh()
-                else:
-                    listBoxCtrl.SetForegroundColour(colour)
-                    listBoxCtrl.Refresh()
-                event.Skip()
-            eg.config.colourPickerCustomColours = [
-                colourData.GetCustomColour(n).Get() for n in range(16)
-            ]
-            colourDlg.Destroy()
-
-        def GetValue(self):
-            return self.value
-
-        def SetValue(self, value):
-            self.value = value
-            w, h = self.GetSize()
-            image = wx.EmptyImage(w-10, h-10)
-            image.SetRGBRect((1, 1, w-12, h-12), *value)
-            self.SetBitmapLabel(image.ConvertToBitmap())
-#-------------------------------------------------------------------------------
-
-    class MenuFontButton(wx.BitmapButton):
-        def __init__(
-            self,
-            fontInfo = None,
-            id=-1,
-            pos=wx.DefaultPosition,
-            size=(40, wx.Button.GetDefaultSize()[1]),
-            style=wx.BU_AUTODRAW,
-            validator=wx.DefaultValidator,
-            name="MenuFontButton",
-        ):
-            self.window = panel
-            self.fontInfo = fontInfo
-            wx.BitmapButton.__init__(
-                self,
-                panel,
-                id,
-                wx.Bitmap("images/font.png"),
-                pos,
-                size,
-                style,
-                validator,
-                name
-            )
-            self.Bind(wx.EVT_BUTTON, self.OnButton)
-
-        def OnButton(self, event):
-            data = wx.FontData()
-            if self.fontInfo is not None:
-                font = wx.FontFromNativeInfoString(self.fontInfo)
-                data.SetInitialFont(font)
-            else:
-                data.SetInitialFont(
-                    wx.SystemSettings_GetFont(wx.SYS_ANSI_VAR_FONT )
-                )
-            dlg = wx.FontDialog(self.window, data)
-            if dlg.ShowModal() == wx.ID_OK:
-                data = dlg.GetFontData()
-                font = data.GetChosenFont()
-                if eg.Version.base >= "0.4.0":
-                    listBoxCtrl = event.GetEventObject().GetParent().GetSizer().\
-                        GetChildren()[0].GetSizer().GetChildren()[0].GetSizer().\
-                        GetChildren()[1].GetWindow()
-                else:
-                    listBoxCtrl = event.GetEventObject().GetParent().GetSizer().\
-                        GetChildren()[0].GetSizer().GetChildren()[1].GetWindow()
-                for n in range(10,20):
-                    font.SetPointSize(n)
-                    listBoxCtrl.SetFont(font)
-                    if listBoxCtrl.GetTextExtent('X')[1]>20:
-                        break
-                self.fontInfo = data.GetChosenFont().GetNativeFontInfo().\
-                    ToString()
-                event.Skip()
-            dlg.Destroy()
-
-        def GetValue(self):
-            return self.fontInfo
-
-        def SetValue(self, fontInfo):
-            self.fontInfo = fontInfo
-#-------------------------------------------------------------------------------
 
     def __call__(
         self,
@@ -351,7 +373,9 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         monitor=0,
         start = "",
         patterns = "*.*",
-        hide = True
+        hide = True,
+        foreSel = (180, 180, 180),
+        backSel = (75, 75, 75)
     ):
         if not self.plugin.menuDlg:
             if not os.path.isdir(start) and start != MY_COMPUTER:
@@ -361,6 +385,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
             wx.CallAfter(self.plugin.menuDlg.ShowMenu,
                 fore,
                 back,
+                foreSel,
+                backSel,
                 fontInfo,
                 False,
                 self.plugin,
@@ -372,7 +398,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
                 patterns
             )
             eg.actionThread.WaitOnEvent(self.event)
-#-------------------------------------------------------------------------------
+
 
     def GetLabel(
         self,
@@ -384,42 +410,51 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         monitor,
         start,
         patterns,
-        hide
+        hide,
+        foreSel,
+        backSel
     ):
         return "%s: %s, [%s]" % (self.name,start,patterns)
 
+
     def Configure(
         self,
-        fore = (0, 0, 0),
-        back = (255, 255, 255),
+        fore = (75, 75, 75),
+        back = (180, 180, 180),
         fontInfo = None,
         prefix = 'OSE',
         suffix = 'Open',
         monitor = 0,
         start = "",
         patterns = "*.*",
-        hide = True
+        hide = True,
+        foreSel = (180, 180, 180),
+        backSel = (75, 75, 75)
     ):
         self.fore = fore
         self.back = back
+        self.foreSel = foreSel
+        self.backSel = backSel
         self.oldSel=0
         global panel
         panel = eg.ConfigPanel(self)
         previewLbl=wx.StaticText(panel, -1, self.text.menuPreview)
-        listBoxCtrl=wx.ListBox(
-            panel,-1,
-            size=wx.Size(160,120),
-            style=wx.LB_SINGLE|wx.LB_NEEDED_SB,
-        )
+        listBoxCtrl = MenuGrid(panel, 1)
+        listBoxCtrl.SetMinSize(wx.Size(160, 439))
+        listBoxCtrl.SetMaxSize(wx.Size(160, 439))
         if not patterns:
             patterns = "*.*"
         if not os.path.isdir(start) and start != MY_COMPUTER:
             start = eg.folderPath.Documents
         items = [item[0] for item in GetFolderItems(start, patterns, hide)]
         listBoxCtrl.Set(items)
-
         listBoxCtrl.SetBackgroundColour(self.back)
         listBoxCtrl.SetForegroundColour(self.fore)
+        listBoxCtrl.SetSelectionBackground(self.backSel)
+        listBoxCtrl.SetSelectionForeground(self.foreSel)
+        #Font button
+        fontLbl=wx.StaticText(panel, -1, self.text.menuFont)
+        fontButton = extFontSelectButton(panel, value = fontInfo)
         if fontInfo is None:
             font = listBoxCtrl.GetFont()
             font.SetPointSize(36)
@@ -428,9 +463,12 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
             font = wx.FontFromNativeInfoString(fontInfo)
         for n in range(10,20):
             font.SetPointSize(n)
-            listBoxCtrl.SetFont(font)
-            if listBoxCtrl.GetTextExtent('X')[1]>20:
+            fontButton.SetFont(font)
+            hght = fontButton.GetTextExtent('X')[1]
+            if hght > 20:
                 break
+        listBoxCtrl.SetDefaultCellFont(font)
+        listBoxCtrl.SetDefaultRowSize(hght+4, True)
         displayChoice = eg.DisplayChoice(panel, monitor)
         w = displayChoice.GetSize()[0]
         prefixLbl=wx.StaticText(panel, -1, self.text.prefixLabel)
@@ -438,27 +476,21 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         suffixLbl=wx.StaticText(panel, -1, self.text.suffixLabel)
         suffixCtrl = wx.TextCtrl(panel,-1,suffix,size=wx.Size(w,-1))
         OSElbl = wx.StaticText(panel, -1, self.text.OSELabel)
-        #Font button
-        fontLbl=wx.StaticText(panel, -1, self.text.menuFont)
-        fontButton = self.MenuFontButton(fontInfo)
         #Button Text Colour
         foreLbl=wx.StaticText(panel, -1, self.text.txtColour+':')
-        foreColourButton = self.MenuColourSelectButton(
-            0,
-            fore,
-            self.text.txtColour
-        )
+        foreColourButton = extColourSelectButton(panel,fore)
         #Button Background Colour
         backLbl=wx.StaticText(panel, -1, self.text.background+':')
-        backColourButton = self.MenuColourSelectButton(
-            1,
-            back,
-            self.text.background
-        )
+        backColourButton = extColourSelectButton(panel,back)
+        #Button Selected Text Colour
+        foreSelLbl=wx.StaticText(panel, -1, self.text.txtColourSel+':')
+        foreSelColourButton = extColourSelectButton(panel,foreSel)
+        #Button Selected Background Colour
+        backSelLbl=wx.StaticText(panel, -1, self.text.backgroundSel+':')
+        backSelColourButton = extColourSelectButton(panel,backSel)
         folderLabel = wx.StaticText(panel, -1, self.text.folder)
         folderCtrl = MyDirBrowseButton(
             panel, 
-#            size=(410,-1),
             toolTip = self.text.toolTipFolder,
             dialogTitle = self.text.browseTitle,
             buttonText = eg.text.General.browse,
@@ -469,7 +501,6 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         folderCtrl.SetValue(start)
         folderCtrl.SetStartDirectory()
         patternsLabel = wx.StaticText(panel, -1, self.text.patterns)
-#        patternsCtrl = wx.TextCtrl(panel,-1,patterns,size=(410,-1))
         patternsCtrl = wx.TextCtrl(panel,-1,patterns)
         patternsCtrl.SetToolTip(wx.ToolTip(self.text.patternsToolTip))
         hideSystem = wx.CheckBox(panel, -1, self.text.hide)
@@ -479,19 +510,23 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         topSizer=wx.GridBagSizer(2, 30)
         mainSizer.Add(topSizer)
         topSizer.Add(previewLbl,(0, 0),flag = wx.TOP,border = 0)
-        topSizer.Add(listBoxCtrl,(1, 0),(5,1),flag = wx.EXPAND)        
+        topSizer.Add(listBoxCtrl,(1, 0),(9, 1),flag = wx.EXPAND)
         topSizer.Add(fontLbl,(0, 1),flag = wx.TOP,border = 0)
         topSizer.Add(fontButton,(1, 1),flag = wx.TOP)
         topSizer.Add(foreLbl,(2, 1),flag = wx.TOP,border = 8)
         topSizer.Add(foreColourButton,(3, 1),flag = wx.TOP)
         topSizer.Add(backLbl,(4, 1),flag = wx.TOP,border = 8)
-        topSizer.Add(backColourButton,(5, 1),flag = wx.TOP,border = 0)        
+        topSizer.Add(backColourButton,(5, 1),flag = wx.TOP,border = 0)
         topSizer.Add(prefixLbl,(0, 2),flag = wx.TOP,border = 0)
         topSizer.Add(prefixCtrl,(1, 2))
         topSizer.Add(suffixLbl,(2, 2),flag = wx.TOP,border = 8)
-        topSizer.Add(suffixCtrl,(3, 2))
-        topSizer.Add(OSElbl,(4, 2),flag = wx.TOP,border = 8)
+        topSizer.Add(suffixCtrl, (3, 2))
+        topSizer.Add(OSElbl,(4, 2), flag = wx.TOP,border = 8)
         topSizer.Add(displayChoice,(5, 2))
+        topSizer.Add(foreSelLbl,(6, 1), (1, 2), flag = wx.TOP,border = 8)
+        topSizer.Add(foreSelColourButton, (7, 1), flag = wx.TOP)
+        topSizer.Add(backSelLbl,(8, 1), (1, 2), flag = wx.TOP,border = 8)
+        topSizer.Add(backSelColourButton, (9, 1), flag = wx.TOP,border = 0)
         mainSizer.Add(folderLabel,0,wx.TOP,8)
         folderSizer = wx.BoxSizer(wx.HORIZONTAL)
         folderSizer.Add(folderCtrl,1,wx.EXPAND)
@@ -501,11 +536,55 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         mainSizer.Add(patternsCtrl,1,wx.TOP|wx.EXPAND,2)
         mainSizer.Add(hideSystem,0,wx.TOP,10)
         panel.sizer.Layout()
+        wdth = 160
+        if (hght+4)*listBoxCtrl.GetNumberRows() > listBoxCtrl.GetSize()[1]: #after Layout() !!!
+            wdth -=  SYS_VSCROLL_X
+        listBoxCtrl.SetColSize(0, wdth)
+
+
+        def OnFontBtn(evt):
+            value = evt.GetValue()
+            font = wx.FontFromNativeInfoString(value)
+            for n in range(10,20):
+                font.SetPointSize(n)
+                fontButton.SetFont(font)
+                hght = fontButton.GetTextExtent('X')[1]
+                if hght > 20:
+                    break
+            listBoxCtrl.SetDefaultCellFont(font)
+            listBoxCtrl.SetDefaultRowSize(hght+4, True)
+            for i in range(listBoxCtrl.GetNumberRows()):
+                listBoxCtrl.SetCellFont(i,0,font)
+            listBoxCtrl.SetFocus()
+            evt.Skip()
+        fontButton.Bind(EVT_BUTTON_AFTER, OnFontBtn)
+
+
+        def OnColourBtn(evt):
+            id = evt.GetId()
+            value = evt.GetValue()
+            if id == foreColourButton.GetId():
+                listBoxCtrl.SetForegroundColour(value)
+            elif id == backColourButton.GetId():
+                listBoxCtrl.SetBackgroundColour(value)
+            elif id == foreSelColourButton.GetId():
+                listBoxCtrl.SetSelectionForeground(value)
+            elif id == backSelColourButton.GetId():
+                listBoxCtrl.SetSelectionBackground(value)
+            listBoxCtrl.Refresh()
+            listBoxCtrl.SetFocus()
+            evt.Skip()
+        foreColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
+        backColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
+        foreSelColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
+        backSelColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
+
 
         def OnCompBtn(evt):
             folderCtrl.SetValue(MY_COMPUTER)
             evt.Skip()
         compBtn.Bind(wx.EVT_BUTTON, OnCompBtn)
+
 
         def OnTextChange(evt):
             folder = folderCtrl.GetValue()
@@ -524,7 +603,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         folderCtrl.Bind(wx.EVT_TEXT, OnTextChange)
         patternsCtrl.Bind(wx.EVT_TEXT, OnTextChange)
         hideSystem.Bind(wx.EVT_CHECKBOX, OnTextChange)
-        
+
+
         # re-assign the test button
         def OnButton(event):
             if not self.plugin.menuDlg:
@@ -533,6 +613,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
                 wx.CallAfter(self.plugin.menuDlg.ShowMenu,
                     foreColourButton.GetValue(),
                     backColourButton.GetValue(),
+                    foreSelColourButton.GetValue(),
+                    backSelColourButton.GetValue(),
                     fontButton.GetValue(), 
                     True,
                     self.plugin,
@@ -547,28 +629,38 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
 
         while panel.Affirmed():
+            fontInfo = fontButton.GetValue()
+            if not fontInfo:
+                font = listBoxCtrl.GetFont()
+                font.SetPointSize(36)
+                fontInfo = font.GetNativeFontInfoDesc()
             panel.SetResult(
             foreColourButton.GetValue(),
             backColourButton.GetValue(),
-            fontButton.GetValue(),
+            fontInfo,
             prefixCtrl.GetValue(),
             suffixCtrl.GetValue(),
             displayChoice.GetSelection(),
             folderCtrl.GetValue(),
             patternsCtrl.GetValue(),
-            hideSystem.GetValue()
+            hideSystem.GetValue(),
+            foreSelColourButton.GetValue(),
+            backSelColourButton.GetValue(),
         )
 #===============================================================================
 
 class MoveCursor(eg.ActionClass):
+
     class text:
         step = "Step size:"
-        
+
+
     def __call__(self, step = 1):
         if self.plugin.menuDlg:
             self.plugin.menuDlg.MoveCursor(step * self.value)
             eg.event.skipEvent = True
-            
+
+
     def Configure(self, step = 1):
         panel = eg.ConfigPanel(self)
         stepCtrl = panel.SpinIntCtrl(step, min=1, max=25)
@@ -576,10 +668,11 @@ class MoveCursor(eg.ActionClass):
         while panel.Affirmed():
             panel.SetResult(
                 stepCtrl.GetValue(),
-                )         
+                )
 #===============================================================================
 
 class PageUpDown(eg.ActionClass):
+
     def __call__(self):
         if self.plugin.menuDlg:
             self.plugin.menuDlg.PageUpDown(self.value)
@@ -596,6 +689,7 @@ class Cancel(eg.ActionClass):
 #===============================================================================
 
 class Execute (eg.ActionClass):
+
     class text:
         fileBoxLabel = "Action with the file"
         folderBoxLabel = "Action with the folder"
@@ -604,6 +698,7 @@ class Execute (eg.ActionClass):
         goIntoFolder = "Go into that folder"
         returnFolder = "Return path to the folder as eg.result"
         triggerEvent = "Trigger event with this suffix:"
+
 
     def __call__(self, val = 54, fileSuff = "", folderSuff = ""):
         if self.plugin.menuDlg:
@@ -629,16 +724,18 @@ class Execute (eg.ActionClass):
                 self.plugin.menuDlg = None
                 if val&4: #return
                     return filePath
+                else:
+                    eg.programCounter = None
             elif os.path.isdir(filePath):
                 if filePath[-3:] == r"\..":
                     if len(filePath) == 5:
                         filePath = MY_COMPUTER
-                    else:                
+                    else:
                         filePath = os.path.split(filePath[:-3])[0]
                 if val&8: #trigger event
                     if folderSuff:
                         suffix = folderSuff
-                    eg.TriggerEvent(prefix = prefix, suffix = suffix, payload = filePath) 
+                    eg.TriggerEvent(prefix = prefix, suffix = suffix, payload = filePath)
                 if val&16: #go to the folder
                     event = CreateEvent(None, 0, 0, None)
                     wx.CallAfter(self.plugin.menuDlg.ShowMenu,
@@ -647,18 +744,22 @@ class Execute (eg.ActionClass):
                         start = filePath,
                         event = event,
                     )
-                    eg.actionThread.WaitOnEvent(event)            
+                    eg.actionThread.WaitOnEvent(event)
                     #os.startfile(filePath)
                 else:
                     self.plugin.menuDlg.destroyMenu()
                     self.plugin.menuDlg = None
                 if val&32: #return
                     return filePath
+                else:
+                    eg.programCounter = None
         else:
             eg.programCounter = None
 
+
     def GetLabel(self,val, fileSuff, folderSuff):
         return "%s: %i, %s, %s" % (self.name,val, fileSuff, folderSuff)
+
 
     def Configure(self, val = 54, fileSuff = "", folderSuff = ""):
         panel = eg.ConfigPanel(self)
@@ -676,16 +777,15 @@ class Execute (eg.ActionClass):
         retFolderCheck.SetValue(val&32)
         suffixFile = wx.TextCtrl(panel,-1,fileSuff,size=wx.Size(80,-1))
         suffixFolder = wx.TextCtrl(panel,-1,folderSuff,size=wx.Size(80,-1))
-
         #Sizers
         mainSizer = panel.sizer
         fileSizer = wx.StaticBoxSizer(
-            wx.StaticBox(panel, -1, self.text.fileBoxLabel), 
+            wx.StaticBox(panel, -1, self.text.fileBoxLabel),
             wx.VERTICAL
         )
         fileSuffSizer = wx.BoxSizer(wx.HORIZONTAL)
         folderSizer = wx.StaticBoxSizer(
-            wx.StaticBox(panel, -1, self.text.folderBoxLabel), 
+            wx.StaticBox(panel, -1, self.text.folderBoxLabel),
             wx.VERTICAL
         )
         folderSuffSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -723,19 +823,21 @@ ACTIONS = (
     (Execute, 'Execute', 'Execute', 'Execute.', None),
     (Cancel, 'Cancel', 'Cancel', 'Cancel button pressed.', None),
 )
-#===============================================================================    
+#===============================================================================
 
 class OSE(eg.PluginClass):
     menuDlg = None
 
     def __init__(self):
         self.AddActionsFromList(ACTIONS)
-        
+
+
     def __start__(self, fid = u">> ", sid = u"|•"):
         global shortcut_ID, folder_ID
         shortcut_ID = sid
         folder_ID = fid
-        
+
+
     def Configure(self, fid = u">> ", sid = u"|•"):
         self.text = Text
         panel = eg.ConfigPanel(self)
@@ -754,9 +856,9 @@ class OSE(eg.PluginClass):
                 shortcutCtrl.GetValue(),
                 )
 #===============================================================================
-            
+
 class Menu(wx.Frame):
-    
+
     def __init__(self):
         wx.Frame.__init__(
             self,
@@ -771,10 +873,13 @@ class Menu(wx.Frame):
         self.suffix = "Open"
         self.patterns = "*.*"
 
+
     def ShowMenu(
         self,
         fore=None,
         back=None,
+        foreSel=None,
+        backSel=None,
         fontInfo=None,
         flag=None,
         plugin=None,
@@ -788,6 +893,8 @@ class Menu(wx.Frame):
     ):
         self.fore     = fore or self.fore
         self.back     = back or self.back
+        self.foreSel  = foreSel or self.foreSel
+        self.backSel  = backSel or self.backSel
         self.fontInfo = fontInfo or self.fontInfo
         self.flag     = flag or self.flag
         self.plugin   = plugin or self.plugin
@@ -805,54 +912,59 @@ class Menu(wx.Frame):
         self.shortcuts = [item[1] for item in items]
         sizer = self.GetSizer()
         if sizer:
-            eventChoiceCtrl = sizer.GetChildren()[0].GetWindow()
-            eventChoiceCtrl.Set(self.choices)
+            self.eventChoiceCtrl.Set(self.choices)
         else:
-            eventChoiceCtrl=wx.ListBox(
-                self,
-                choices = self.choices,
-                style = wx.LB_SINGLE|wx.LB_NEEDED_SB
-            )          
+            self.eventChoiceCtrl = MenuGrid(self,len(self.choices))
             mainSizer = wx.BoxSizer(wx.VERTICAL)
             self.SetSizer(mainSizer)
-            mainSizer.Add(eventChoiceCtrl, 0, wx.EXPAND)
+            mainSizer.Add(self.eventChoiceCtrl, 0, wx.EXPAND)
             self.Bind(wx.EVT_CLOSE, self.onClose)
-            eventChoiceCtrl.Bind(wx.EVT_LISTBOX_DCLICK, self.DoubleCick)
-            font = wx.FontFromNativeInfoString(self.fontInfo)
-            eventChoiceCtrl.SetFont(font)
-            self.SetBackgroundColour((0,0,0))            
-            eventChoiceCtrl.SetBackgroundColour(self.back)
-            eventChoiceCtrl.SetForegroundColour(self.fore)            
+            self.Bind(wx.grid.EVT_GRID_CMD_CELL_LEFT_DCLICK, self.onDoubleClick, self.eventChoiceCtrl)
+            self.Bind(wx.EVT_CHAR_HOOK, self.onFrameCharHook)
+            font = wx.FontFromNativeInfoString(fontInfo)
+            self.eventChoiceCtrl.SetFont(font)
+            self.SetFont(font)
+            self.SetBackgroundColour((0, 0, 0))
+            self.eventChoiceCtrl.SetBackgroundColour(self.back)
+            self.eventChoiceCtrl.SetForegroundColour(self.fore)
+            self.eventChoiceCtrl.SetSelectionBackground(self.backSel)
+            self.eventChoiceCtrl.SetSelectionForeground(self.foreSel)
             if self.flag:
                 self.timer=MyTimer(t = 5.0, plugin = self.plugin)
+        self.eventChoiceCtrl.SetSelection(0)
         monDim = GetMonitorDimensions()
         try:
             x,y,ws,hs = monDim[self.monitor]
         except IndexError:
             x,y,ws,hs = monDim[0]
         # menu height calculation:
-        h=eventChoiceCtrl.GetCharHeight()
-        height0 = len(self.choices)*h+5
-        height1 = h*((hs-20)/h)+5
-        height = min(height0,height1)+6
+        h=self.GetCharHeight()+4
+        for i in range(len(self.choices)):
+            self.eventChoiceCtrl.SetCellValue(i,0,self.choices[i])
+            self.eventChoiceCtrl.SetRowSize(i,h)
+        height0 = len(self.choices)*h
+        height1 = h*((hs-20)/h)
+        height = min(height0, height1)+6
         # menu width calculation:
         width_lst=[]
         for item in self.choices:
-            width_lst.append(eventChoiceCtrl.GetTextExtent(item+' ')[0])
+            width_lst.append(self.GetTextExtent(item+' ')[0])
         width = max(width_lst)+8
-        if height-6 < height0:
-            width += 20 #for vertical scrollbar
+        self.eventChoiceCtrl.SetColSize(0,width)
+        if height1 < height0:
+            width += SYS_VSCROLL_X
         width = min((width,ws-50))+6
         x_pos = x+(ws-width)/2
         y_pos = y + (hs-height)/2
         self.SetDimensions(x_pos,y_pos,width,height)
-        eventChoiceCtrl.SetDimensions(2,2,width-6,height-6,wx.SIZE_AUTO)
-        eventChoiceCtrl.SetSelection(0)
+        self.eventChoiceCtrl.SetDimensions(2,2,width-6,height-6,wx.SIZE_AUTO)
         self.Show(True)
+        self.Raise()
         if event:
             wx.Yield()
             SetEvent(event)
-        
+
+
     def GetInfo(self):
         sel = self.GetSizer().GetChildren()[0].GetWindow().GetSelection()
         fp = unicode(self.shortcuts[sel].decode(eg.systemEncoding))
@@ -860,41 +972,24 @@ class Menu(wx.Frame):
             fp = os.path.join(self.start,self.choices[sel])
         return fp, self.prefix, self.suffix
 
+
+    def MoveCursor(self, step):
+        max=len(self.choices)
+        if max > 0:
+            self.eventChoiceCtrl.MoveCursor(step)
+
+
     def PageUpDown(self, direction):
         max=len(self.choices)
         if max > 0:
-            choiceCtrl = self.GetSizer().GetChildren()[0].GetWindow()
-            height = choiceCtrl.GetSize()[1]
-            fontH = choiceCtrl.GetTextExtent("X")[1]
-            step = direction * height/fontH
-            sel = choiceCtrl.GetSelection()
-            new = sel + step
-            if new < 0:
-                #new += max
-                new = 0
-            elif new > max - 1:
-                #new -= max
-                new = max - 1
-            choiceCtrl.SetSelection(new)
-            if direction < 0:
-                choiceCtrl.SetFirstItem(new)
+            if direction > 0:
+                self.eventChoiceCtrl.MovePageDown()
             else:
-                choiceCtrl.SetFirstItem(new-step+1)
+                self.eventChoiceCtrl.MovePageUp()
 
-    def MoveCursor(self,step):
-        max=len(self.choices)
-        if max > 0:
-            choiceCtrl = self.GetSizer().GetChildren()[0].GetWindow()            
-            sel = choiceCtrl.GetSelection()
-            new = sel + step
-            if new < 0:
-                new += max
-            elif new > max-1:
-                new -= max
-            choiceCtrl.SetSelection(new)                    
 
-    def DoubleCick(self, evt):
-        sel = self.GetSizer().GetChildren()[0].GetWindow().GetSelection()
+    def DefaultAction(self):
+        sel = self.eventChoiceCtrl.GetSelection()
         filePath = unicode(self.shortcuts[sel].decode(eg.systemEncoding))
         if not filePath:
             filePath = os.path.join(self.start,self.choices[sel])
@@ -904,9 +999,8 @@ class Menu(wx.Frame):
             if filePath[-3:] == r"\..":
                 if len(filePath) == 5:
                     filePath = MY_COMPUTER
-                else:                
+                else:
                     filePath = os.path.split(filePath[:-3])[0]
-
         eg.TriggerEvent(prefix = self.prefix, suffix = self.suffix, payload = filePath)
         if os.path.isfile(filePath):
             self.destroyMenu()
@@ -925,9 +1019,31 @@ class Menu(wx.Frame):
                 start = filePath,
             )
 
+
+    def onFrameCharHook(self, event):
+        keyCode = event.GetKeyCode()
+        if keyCode == wx.WXK_RETURN or keyCode == wx.WXK_NUMPAD_ENTER:
+            row = self.eventChoiceCtrl.GetSelection()
+            self.DefaultAction()
+        elif keyCode == wx.WXK_ESCAPE:
+            self.Close()
+        elif keyCode == wx.WXK_UP or keyCode == wx.WXK_NUMPAD_UP:
+            self.MoveCursor(-1)
+        elif keyCode == wx.WXK_DOWN or keyCode == wx.WXK_NUMPAD_DOWN:
+            self.MoveCursor(1)
+        else:
+            event.Skip()
+
+
+    def onDoubleClick(self, event):
+        self.DefaultAction()
+        event.Skip()
+
+
     def onClose(self, event):
         self.Destroy()
-        
+
+
     def destroyMenu(self):
         if self.flag:
             self.timer.Cancel()
@@ -936,18 +1052,21 @@ class Menu(wx.Frame):
 #===============================================================================
 
 class MyTimer():
+
     def __init__(self, t, plugin):
         self.timer = Timer(t, self.Run)
         self.plugin = plugin
         self.timer.start()
-                
+
+
     def Run(self):
         try:
             self.plugin.menuDlg.destroyMenu()
             self.plugin.menuDlg = None
         except:
             pass
-            
+
+
     def Cancel(self):
         self.timer.cancel()
 #===============================================================================
