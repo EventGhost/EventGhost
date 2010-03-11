@@ -18,13 +18,13 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2010-03-09 11:29 GMT+1
+#Last change: 2010-03-10 18:46 GMT+1
 
 
 eg.RegisterPlugin(
     name = "OS Menu",
     author = "Pako",
-    version = "0.2.1",
+    version = "0.2.2",
     kind = "other",
     guid = "{FCF3C7A7-FBC1-444D-B768-9477521946DC}",
     description = u"""<rst>
@@ -249,8 +249,8 @@ class MenuGrid(wx.grid.Grid):
 
 
     def SetSelection(self, row):
+        self.SetGridCursor(row, 0)
         self.SelectRow(row)
-        self.MakeCellVisible(row,0)
 
 
     def Set(self, choices):
@@ -268,10 +268,21 @@ class MenuGrid(wx.grid.Grid):
 
     def onGridSelectCell(self, event):
         row = event.GetRow()
-        self.SetSelection(row)
-        self.MakeCellVisible(row,0)
+        self.SelectRow(row)
+        if not self.IsVisible(row,0):
+            self.MakeCellVisible(row,0)
         event.Skip()
 
+
+    def MoveCursor(self, step):
+        max = self.GetNumberRows()
+        sel = self.GetSelectedRows()[0]
+        new = sel + step
+        if new < 0:
+            new += max
+        elif new > max-1:
+            new -= max
+        self.SetSelection(new)
 #===============================================================================
 #cls types for ACTIONS list :
 #===============================================================================
@@ -327,7 +338,7 @@ class ShowMenu(eg.ActionClass):
         monitor = 0,
         mode = 0,
         foreSel = (180, 180, 180),
-        backSel = (75,75,75),
+        backSel = (75, 75, 75),
     ):
         if not self.plugin.menuDlg:
             self.plugin.menuDlg = Menu()
@@ -373,14 +384,14 @@ class ShowMenu(eg.ActionClass):
     def Configure(
         self,
         choices=[],
-        fore = (75,75,75),
+        fore = (75, 75, 75),
         back = (180, 180, 180),
         fontInfo = None,
         prefix = 'OSM',
         monitor = 0,
         mode = 0,
         foreSel = (180, 180, 180),
-        backSel = (75,75,75),
+        backSel = (75, 75, 75),
     ):
         self.choices = choices[:]
         self.fore = fore
@@ -748,7 +759,7 @@ class CreateMenuFromList(eg.ActionClass):
         monitor=0,
         mode = 0,
         foreSel = (180, 180, 180),
-        backSel = (75,75,75),
+        backSel = (75, 75, 75),
     ):
         if not self.plugin.menuDlg:
             try:
@@ -787,14 +798,14 @@ class CreateMenuFromList(eg.ActionClass):
     def Configure(
         self,
         choices="",
-        fore = (75,75,75),
+        fore = (75, 75, 75),
         back = (180, 180, 180),
         fontInfo = None,
         prefix = 'OSM',
         monitor = 0,
         mode = 0,
         foreSel = (180, 180, 180),
-        backSel = (75,75,75),
+        backSel = (75, 75, 75),
     ):
         self.fore = fore
         self.back = back
@@ -1028,10 +1039,20 @@ class CreateMenuFromList(eg.ActionClass):
 
 class MoveCursor(eg.ActionClass):
 
-    def __call__(self):
+    def __call__(self, step = 1):
         if self.plugin.menuDlg:
-            self.plugin.menuDlg.CursorUpDown(self.value)
+            self.plugin.menuDlg.MoveCursor(step * self.value)
             eg.event.skipEvent = True
+
+
+    def Configure(self, step = 1):
+        panel = eg.ConfigPanel(self)
+        stepCtrl = panel.SpinIntCtrl(step, min=1, max=25)
+        panel.AddLine(self.text.step, stepCtrl)
+        while panel.Affirmed():
+            panel.SetResult(
+                stepCtrl.GetValue(),
+                )
 #===============================================================================
 
 class PageUpDown(eg.ActionClass):
@@ -1176,7 +1197,7 @@ class Menu(wx.Frame):
         self.flag    = flag
         self.prefix  = prefix
         self.mode    = mode
-        self.SetBackgroundColour((0,0,0))
+        self.SetBackgroundColour((0, 0, 0))
         if len(self.choices) == 0:
             return
         monDim = GetMonitorDimensions()
@@ -1242,19 +1263,10 @@ class Menu(wx.Frame):
                 self.eventChoiceCtrl.MovePageUp()
 
 
-    def CursorUpDown(self, direction):
+    def MoveCursor(self, step):
         max=len(self.choices)
         if max > 0:
-            if direction > 0:
-                if self.eventChoiceCtrl.GetSelection() < max-1:
-                    self.eventChoiceCtrl.MoveCursorDown(False)
-                else:
-                    self.eventChoiceCtrl.SetGridCursor(0, 0)
-            else:
-                if self.eventChoiceCtrl.GetSelection() > 0:
-                    self.eventChoiceCtrl.MoveCursorUp(False)
-                else:
-                    self.eventChoiceCtrl.SetGridCursor(max-1, 0)
+            self.eventChoiceCtrl.MoveCursor(step)
 
 
     def GetValue(self):
@@ -1296,9 +1308,9 @@ class Menu(wx.Frame):
         elif keyCode == wx.WXK_ESCAPE:
             self.Close()
         elif keyCode == wx.WXK_UP or keyCode == wx.WXK_NUMPAD_UP:
-            self.CursorUpDown(-1)
+            self.MoveCursor(-1)
         elif keyCode == wx.WXK_DOWN or keyCode == wx.WXK_NUMPAD_DOWN:
-            self.CursorUpDown(1)
+            self.MoveCursor(1)
         else:
             event.Skip()
 
