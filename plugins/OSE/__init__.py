@@ -18,14 +18,14 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2010-03-10 18:49 GMT+1
+#Last change: 2010-03-17 14:07 GMT+1
 
 
 
 eg.RegisterPlugin(
     name = "On screen explorer",
     author = "Pako",
-    version = "0.2.1",
+    version = "0.2.2",
     kind = "other",
     guid = "{D3D2DDD1-9BEB-4A26-969B-C82FA8EAB280}",
     description = u"""<rst>
@@ -68,6 +68,7 @@ as possible in the configuration tree.""",
 )
 
 import os
+import wx.grid
 import pythoncom
 from threading import Timer
 from eg.WinApi.Utils import GetMonitorDimensions
@@ -206,15 +207,6 @@ class MenuGrid(wx.grid.Grid):
         self.SetDefaultCellFont(font)
 
 
-    def GetSelection(self):
-        return self.GetSelectedRows()[0]
-
-
-    def SetSelection(self, row):
-        self.SetGridCursor(row, 0)
-        self.SelectRow(row)
-
-
     def Set(self, choices):
         oldLen = self.GetNumberRows()
         newLen = len(choices)
@@ -244,7 +236,8 @@ class MenuGrid(wx.grid.Grid):
             new += max
         elif new > max-1:
             new -= max
-        self.SetSelection(new)
+        self.SetGridCursor(new, 0)
+        self.SelectRow(new)
 #===============================================================================
 
 def MyComputer():
@@ -691,16 +684,19 @@ class Cancel(eg.ActionClass):
 class Execute (eg.ActionClass):
 
     class text:
-        fileBoxLabel = "Action with the file"
+        fileBoxLabel   = "Action with the file"
         folderBoxLabel = "Action with the folder"
-        returnFile = "Return path to the file as eg.result"
-        openFile = "Open the file in associated application"
-        goIntoFolder = "Go into that folder"
-        returnFolder = "Return path to the folder as eg.result"
-        triggerEvent = "Trigger event with this suffix:"
+        returnFile     = "Return path to the file as eg.result"
+        openFile       = "Open the file in associated application"
+        goIntoFolder   = "Go into that folder"
+        returnFolder   = "Return path to this folder as eg.result"
+        fileSuffix     = "Trigger event with this suffix:"
+        folderSuffix   = "Suffix for folder events:"
+        triggerEvent   = "Trigger event, carried path to this folder as payload"
+        retContents    = "Return the contents of this folder (only files, no folders) as eg.result"
+        triggerEvent2  = "Trigger event, carried contents of this folder (only files, no folders) as payload"
 
-
-    def __call__(self, val = 54, fileSuff = "", folderSuff = ""):
+    def __call__(self, val = 22, fileSuff = "", folderSuff = ""):
         if self.plugin.menuDlg:
             eg.event.skipEvent = True
             filePath, prefix, suffix = self.plugin.menuDlg.GetInfo()
@@ -724,18 +720,37 @@ class Execute (eg.ActionClass):
                 self.plugin.menuDlg = None
                 if val&4: #return
                     return filePath
-                else:
-                    eg.programCounter = None
+                #else:
+                #    eg.programCounter = None
             elif os.path.isdir(filePath):
                 if filePath[-3:] == r"\..":
                     if len(filePath) == 5:
                         filePath = MY_COMPUTER
                     else:
-                        filePath = os.path.split(filePath[:-3])[0]
+                        filePath = os.path.split(filePath[:-3])[0]                
+                if val&(64+128):
+                    items = self.plugin.menuDlg.GetItemsFolder(filePath)
+                    fpList = []
+                    for sel in range(len(items)):
+                        fp = unicode(items[sel][1].decode(eg.systemEncoding))
+                        if not fp:
+                            fp = items[sel][0]
+
+                            #if fp == '..':
+                            #    continue
+
+                            fp = fp.replace(folder_ID,"")
+                            fp = os.path.join(filePath, fp)
+                            if fp[-2] == ":": #root of drive
+                                fp = fp[-3:-1]+"\\"
+                        if os.path.isfile(fp):
+                            fpList.append(fp)
+                if folderSuff:
+                    suffix = folderSuff
                 if val&8: #trigger event
-                    if folderSuff:
-                        suffix = folderSuff
                     eg.TriggerEvent(prefix = prefix, suffix = suffix, payload = filePath)
+                if val&64:
+                    eg.TriggerEvent(prefix = prefix, suffix = suffix, payload = fpList)
                 if val&16: #go to the folder
                     event = CreateEvent(None, 0, 0, None)
                     wx.CallAfter(self.plugin.menuDlg.ShowMenu,
@@ -745,15 +760,19 @@ class Execute (eg.ActionClass):
                         event = event,
                     )
                     eg.actionThread.WaitOnEvent(event)
-                    #os.startfile(filePath)
                 else:
                     self.plugin.menuDlg.destroyMenu()
                     self.plugin.menuDlg = None
+                res = None
                 if val&32: #return
-                    return filePath
-                else:
-                    eg.programCounter = None
-        else:
+                    res = filePath
+                if val&128: #return
+                    res = fpList
+                if res:
+                    return res
+                #elif val&(32+128):
+                #    eg.programCounter = None
+        elif val&(4+32+128):
             eg.programCounter = None
 
 
@@ -761,20 +780,26 @@ class Execute (eg.ActionClass):
         return "%s: %i, %s, %s" % (self.name,val, fileSuff, folderSuff)
 
 
-    def Configure(self, val = 54, fileSuff = "", folderSuff = ""):
+    def Configure(self, val = 22, fileSuff = "", folderSuff = ""):
         panel = eg.ConfigPanel(self)
-        triggFileCheck = wx.CheckBox(panel, -1, self.text.triggerEvent)
+        triggFileCheck = wx.CheckBox(panel, -1, self.text.fileSuffix)
         triggFileCheck.SetValue(val&1)
         openFileCheck = wx.CheckBox(panel, -1, self.text.openFile)
         openFileCheck.SetValue(val&2)
         retFileCheck = wx.CheckBox(panel, -1, self.text.returnFile)
         retFileCheck.SetValue(val&4)
+        #fileSuffLabel = wx.StaticText(panel, -1, self.text.fileSuffix)
+        folderSuffLabel = wx.StaticText(panel, -1, self.text.folderSuffix)
         triggFolderCheck = wx.CheckBox(panel, -1, self.text.triggerEvent)
         triggFolderCheck.SetValue(val&8)
         goFolderCheck = wx.CheckBox(panel, -1, self.text.goIntoFolder)
         goFolderCheck.SetValue(val&16)
         retFolderCheck = wx.CheckBox(panel, -1, self.text.returnFolder)
         retFolderCheck.SetValue(val&32)
+        triggFolderCheck2 = wx.CheckBox(panel, -1, self.text.triggerEvent2)
+        triggFolderCheck2.SetValue(val&64)
+        retFolderCheck2 = wx.CheckBox(panel, -1, self.text.retContents)
+        retFolderCheck2.SetValue(val&128)
         suffixFile = wx.TextCtrl(panel,-1,fileSuff,size=wx.Size(80,-1))
         suffixFolder = wx.TextCtrl(panel,-1,folderSuff,size=wx.Size(80,-1))
         #Sizers
@@ -788,19 +813,87 @@ class Execute (eg.ActionClass):
             wx.StaticBox(panel, -1, self.text.folderBoxLabel),
             wx.VERTICAL
         )
-        folderSuffSizer = wx.BoxSizer(wx.HORIZONTAL)
         fileSuffSizer.Add(triggFileCheck,0,wx.RIGHT,5)
         fileSuffSizer.Add(suffixFile,0,wx.TOP,-4)
+        folderSuffSizer = wx.BoxSizer(wx.HORIZONTAL)
+        folderSuffSizer.Add(folderSuffLabel,0,wx.RIGHT,5)
+        folderSuffSizer.Add(suffixFolder,0,wx.TOP,-4)
         fileSizer.Add(fileSuffSizer,0,wx.TOP,4)
         fileSizer.Add(openFileCheck,0,wx.TOP,6)
-        fileSizer.Add(retFileCheck,0,wx.TOP,9)
-        folderSuffSizer.Add(triggFolderCheck,0,wx.RIGHT,5)
-        folderSuffSizer.Add(suffixFolder,0,wx.TOP,-4)
+        fileSizer.Add(retFileCheck,0,wx.TOP,8)
         folderSizer.Add(folderSuffSizer,0,wx.TOP,4)
-        folderSizer.Add(goFolderCheck,0,wx.TOP,6)
-        folderSizer.Add(retFolderCheck,0,wx.TOP,9)
+        folderSizer.Add(triggFolderCheck,0,wx.TOP,6)
+        folderSizer.Add(triggFolderCheck2,0,wx.TOP,8)
+        folderSizer.Add(retFolderCheck,0,wx.TOP,8)
+        folderSizer.Add(retFolderCheck2,0,wx.TOP,8)
+        folderSizer.Add(goFolderCheck,0,wx.TOP,8)
         mainSizer.Add(fileSizer,0)
         mainSizer.Add(folderSizer,0,wx.TOP,20)
+        
+        def onTriggFolderCheck(evt = None):
+            val = triggFolderCheck.GetValue()
+            triggFolderCheck2.Enable(not val)
+            if val:
+                goFolderCheck.Enable(False)
+            else:
+                if not retFolderCheck.GetValue() and not retFolderCheck2.GetValue():
+                    goFolderCheck.Enable(True)
+            if evt:
+                evt.Skip()
+        onTriggFolderCheck()
+            
+        def onTriggFolderCheck2(evt = None):
+            val = triggFolderCheck2.GetValue()
+            triggFolderCheck.Enable(not val)
+            if val:
+                goFolderCheck.Enable(False)
+            else: 
+                if not retFolderCheck.GetValue() and not retFolderCheck2.GetValue():
+                    goFolderCheck.Enable(True)
+            if evt:
+                evt.Skip()
+        onTriggFolderCheck2()            
+        
+        def onRetFolderCheck(evt = None):
+            val = retFolderCheck.GetValue()
+            retFolderCheck2.Enable(not val)
+            if val:
+                goFolderCheck.Enable(False)
+            else:
+                if not triggFolderCheck.GetValue() and not triggFolderCheck2.GetValue():
+                    goFolderCheck.Enable(True)
+            if evt:
+                evt.Skip()
+        onRetFolderCheck()
+            
+        def onRetFolderCheck2(evt = None):
+            val = retFolderCheck2.GetValue()
+            retFolderCheck.Enable(not val)
+            if val:
+                goFolderCheck.Enable(False)
+            else:
+                if not triggFolderCheck.GetValue() and not triggFolderCheck2.GetValue():
+                    goFolderCheck.Enable(True)
+            if evt:
+                evt.Skip()
+        onRetFolderCheck2()
+        
+        def onGoFolderCheck(evt = None):
+            val = goFolderCheck.GetValue()
+            retFolderCheck.Enable(not val)
+            retFolderCheck2.Enable(not val)
+            triggFolderCheck.Enable(not val)
+            triggFolderCheck2.Enable(not val)
+            if evt:
+                evt.Skip()
+        onGoFolderCheck()
+        
+        triggFolderCheck.Bind(wx.EVT_CHECKBOX, onTriggFolderCheck)
+        triggFolderCheck2.Bind(wx.EVT_CHECKBOX, onTriggFolderCheck2)
+        retFolderCheck.Bind(wx.EVT_CHECKBOX, onRetFolderCheck)
+        retFolderCheck2.Bind(wx.EVT_CHECKBOX, onRetFolderCheck2)
+        goFolderCheck.Bind(wx.EVT_CHECKBOX, onGoFolderCheck)
+        
         while panel.Affirmed():
             val  =      triggFileCheck.GetValue()
             val += 2  * openFileCheck.GetValue()
@@ -808,6 +901,8 @@ class Execute (eg.ActionClass):
             val += 8  * triggFolderCheck.GetValue()
             val += 16 * goFolderCheck.GetValue()
             val += 32 * retFolderCheck.GetValue()
+            val += 64  * triggFolderCheck2.GetValue()
+            val += 128 * retFolderCheck2.GetValue()
             panel.SetResult(val,
                 suffixFile.GetValue(),
                 suffixFolder.GetValue()
@@ -902,12 +997,13 @@ class Menu(wx.Frame):
         self.suffix   = suffix or self.suffix
         self.monitor  = monitor or self.monitor
         self.patterns = patterns or self.patterns
+        self.hide     = hide
         try:
-            items  = GetFolderItems(start, self.patterns, hide)
+            items  = GetFolderItems(start, self.patterns, self.hide)
             self.start = start
         except:
             PlaySound('SystemExclamation', SND_ASYNC)
-            items  = GetFolderItems(self.start, self.patterns, hide)
+            items  = GetFolderItems(self.start, self.patterns, self.hide)
         self.choices = [item[0] for item in items]
         self.shortcuts = [item[1] for item in items]
         sizer = self.GetSizer()
@@ -931,7 +1027,9 @@ class Menu(wx.Frame):
             self.eventChoiceCtrl.SetSelectionForeground(self.foreSel)
             if self.flag:
                 self.timer=MyTimer(t = 5.0, plugin = self.plugin)
-        self.eventChoiceCtrl.SetSelection(0)
+#        self.eventChoiceCtrl.SetSelection(0)
+        self.eventChoiceCtrl.SetGridCursor(0, 0)
+        self.eventChoiceCtrl.SelectRow(0)
         monDim = GetMonitorDimensions()
         try:
             x,y,ws,hs = monDim[self.monitor]
@@ -966,11 +1064,16 @@ class Menu(wx.Frame):
 
 
     def GetInfo(self):
-        sel = self.GetSizer().GetChildren()[0].GetWindow().GetSelection()
+        sel = self.GetSizer().GetChildren()[0].GetWindow().GetSelectedRows()[0]
         fp = unicode(self.shortcuts[sel].decode(eg.systemEncoding))
         if not fp:
             fp = os.path.join(self.start,self.choices[sel])
         return fp, self.prefix, self.suffix
+
+
+    def GetItemsFolder(self, fp):
+        return GetFolderItems(fp, self.patterns, self.hide)
+
 
 
     def MoveCursor(self, step):
@@ -989,7 +1092,7 @@ class Menu(wx.Frame):
 
 
     def DefaultAction(self):
-        sel = self.eventChoiceCtrl.GetSelection()
+        sel = self.eventChoiceCtrl.GetSelectedRows()[0]
         filePath = unicode(self.shortcuts[sel].decode(eg.systemEncoding))
         if not filePath:
             filePath = os.path.join(self.start,self.choices[sel])
@@ -1023,14 +1126,13 @@ class Menu(wx.Frame):
     def onFrameCharHook(self, event):
         keyCode = event.GetKeyCode()
         if keyCode == wx.WXK_RETURN or keyCode == wx.WXK_NUMPAD_ENTER:
-            row = self.eventChoiceCtrl.GetSelection()
             self.DefaultAction()
         elif keyCode == wx.WXK_ESCAPE:
             self.Close()
         elif keyCode == wx.WXK_UP or keyCode == wx.WXK_NUMPAD_UP:
-            self.MoveCursor(-1)
+            self.eventChoiceCtrl.MoveCursor(-1)
         elif keyCode == wx.WXK_DOWN or keyCode == wx.WXK_NUMPAD_DOWN:
-            self.MoveCursor(1)
+            self.eventChoiceCtrl.MoveCursor(1)
         else:
             event.Skip()
 
