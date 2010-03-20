@@ -23,7 +23,7 @@
 eg.RegisterPlugin(
     name = "Media Player Classic",
     author = "MonsterMagnet",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.2." + "$LastChangedRevision$".split()[1],
     kind = "program",
     guid = "{DD75104D-D586-438A-B63D-3AD01A4D4BD3}",
     createMacrosOnAdd = True,
@@ -52,6 +52,11 @@ eg.RegisterPlugin(
 )
     
 # changelog:
+# 1.2 by Pako
+#     - added actions: Toggle OSD Elapsed Time
+#                      Open Directory
+#                      Send user message
+#                      Get recent files
 # 1.1 by bitmonster
 #     - changed code to use new AddActionsFromList
 # 1.0 by MonsterMagnet
@@ -87,6 +92,7 @@ ACTIONS = (
     ('OpenFile', 'Open File', None, 800),
     ('OpenDVD', 'Open DVD', None, 801),
     ('QuickOpen', 'Quick Open File', None, 968),
+    ('OpenDirectory', 'Open Directory', None, 33208),
     ('FrameStep', 'Frame Step', None, 891),
     ('FrameStepBack', 'Frame Step Back', None, 892),
     ('GoTo', 'Go To', None, 893),
@@ -98,6 +104,9 @@ ACTIONS = (
     ('FullscreenWOR', 'Fullscreen without resolution change', None, 831),
     ('PnSIncSize', 'Pan & Scan Increase Size', None, 862),
     ('PnSDecSize', 'Pan & Scan Decrease Size', None, 863),
+    ('PnSTo169', 'Pan & Scan Scale to 16:9', None, 4100),
+    ('PnSToWidescreen', 'Pan & Scan to Widescreen', None, 4101),
+    ('PnSToUltraWidescreen', 'Pan & Scan to Ultra-Widescreen', None, 4102),
     ('ViewMinimal', 'View Minimal', None, 827),
     ('ViewCompact', 'View Compact', None, 828),
     ('ViewNormal', 'View Normal', None, 829),
@@ -189,13 +198,59 @@ ACTIONS = (
     ('TogglePlaylistBar', 'Toggle Playlist Bar', None, 824),
     ('ToggleCaptureBar', 'Toggle Capture Bar', None, 825),
     ('ToggleShaderEditorBar', 'Toggle Shader Editor Bar', None, 826),
+    ('ToggleElapsedTime', 'Toggle OSD Elapsed Time', None, 32778),
 )),
 )
+#===============================================================================
 
 from eg.WinApi import FindWindow, SendMessageTimeout, WM_COMMAND
+from os import path
+from win32gui import GetMenu, GetSubMenu, GetMenuItemCount
+from ctypes import windll, c_buffer, c_int
+MF_BYPOSITION = 1024
+#===============================================================================
+
+class UserMessage(eg.ActionClass):
+
+    name = "Send user message"
+    description = u"""<rst>Sends user message.
+
+If you can not find in the menu of features some of the functions you can get it (maybe) add yourself.
+Go to the menu "**View-Options...-Player- Hotkeys**".
+If you find there a function, what you need, then write the number that is in the column "**ID**".
+Type this number into the edit box "**User message ID:**".
+You can of course also use an expression such as **{eg.result}** or **{eg.event.payload}**."""
 
 
-class ActionPrototype(eg.ActionClass):
+    class text:
+        label = "User message ID:"
+        error = "ValueError: invalid literal for int() with base 10: '%s'"
+
+
+    def __call__(self, val=""):
+        try:
+            hWnd = FindWindow("MediaPlayerClassicW")
+        except:
+            raise self.Exceptions.ProgramNotRunning
+        try:
+            val = eg.ParseString(val)
+            val = int(val)
+        except:
+            raise self.Exception(self.text.error % val)
+        return SendMessageTimeout(hWnd, WM_COMMAND, val, 0)
+
+
+    def Configure(self, val=""):
+        panel = eg.ConfigPanel()
+        textLabel = wx.StaticText(panel, -1, self.text.label)
+        textControl = wx.TextCtrl(panel, -1, val, size = (200,-1))
+        panel.sizer.Add(textLabel, 0, wx.TOP, 20)
+        panel.sizer.Add(textControl, 0, wx.TOP, 3)
+        while panel.Affirmed():
+            panel.SetResult(textControl.GetValue())
+#===============================================================================
+
+class ActionPrototype(eg.ActionBase):
     
     def __call__(self):
         try:
@@ -203,11 +258,38 @@ class ActionPrototype(eg.ActionClass):
             return SendMessageTimeout(hWnd, WM_COMMAND, self.value, 0)
         except:
             raise self.Exceptions.ProgramNotRunning
-    
+#===============================================================================
 
+class GetRecentFiles(eg.ActionBase):
 
-class MediaPlayerClassic(eg.PluginClass):
+    name = "Get recent files"
+    description = "From MPC menu retrieves a list of recent files."
+
+    def __call__(self):
+        try:
+            hWnd = FindWindow("MediaPlayerClassicW")
+        except:
+            eg.programCounter = None
+            raise self.Exceptions.ProgramNotRunning
+        else:
+            itemName = c_buffer("\000" * 128)
+            menu = GetMenu(hWnd)
+            menu = GetSubMenu(menu,0)
+            menu = GetSubMenu(menu,7)
+            count = GetMenuItemCount(menu)
+            itemList = []
+            for i in range(2,count):
+                windll.user32.GetMenuStringA(c_int(menu), c_int(i), itemName, c_int(len(itemName)), MF_BYPOSITION)
+                item = itemName.value
+                if path.isfile(item):
+                    itemList.append((path.split(item)[1],str(i+33300-2)))
+            return itemList
+#===============================================================================
+
+class MediaPlayerClassic(eg.PluginBase):
 
     def __init__(self):
         self.AddActionsFromList(ACTIONS, ActionPrototype)
+        self.AddAction(GetRecentFiles)
+        self.AddAction(UserMessage)
 
