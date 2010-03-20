@@ -212,8 +212,8 @@ MF_BYPOSITION = 1024
 
 class UserMessage(eg.ActionClass):
 
-    name = "Send user message"
-    description = u"""<rst>Sends user message.
+    name = "Send user's message"
+    description = u"""<rst>**Sends user's message.**
 
 If you can not find in the menu of features some of the functions you can get it (maybe) add yourself.
 Go to the menu "**View-Options...-Player- Hotkeys**".
