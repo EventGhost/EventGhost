@@ -55,7 +55,7 @@ eg.RegisterPlugin(
 
 
 from sys import maxint as MAX_INT
-from ctypes import Structure, c_char_p, POINTER, cast, addressof
+from ctypes import Structure, c_char_p, c_wchar_p, POINTER, cast, addressof
 from eg.WinApi import FindWindow
 from eg.WinApi.Dynamic import (
     RegisterWindowMessage,
@@ -102,7 +102,7 @@ COPY_AVAILABLESUBTITLE_NEXT = 12  # lpData points to buffer where next file
                                   # string
 COPY_GETPARAMSTR = 13             # lpData points to buffer where param value 
                                   # will be stored
-COPY_GET_PRESETLIST = 14          # Get the list of presets (array of strings)
+COPY_GET_PRESETLIST = 21          # Get the list of presets (array of strings)
 COPY_GET_SOURCEFILE = 15          # Get the filename currently played
 
 
@@ -717,9 +717,9 @@ class SetPreset(eg.ActionWithStringParameter):
             
         cds = COPYDATASTRUCT()
         cds.dwData = COPY_SETACTIVEPRESET
-        cds.lpData = cast(c_char_p(preset), PVOID)
-        cds.cbData = len(preset) + 1
-        SendMessage(hwnd, WM_COPYDATA, eg.messageReceiver.hwnd, addressof(cds))
+        cds.lpData = cast(c_wchar_p(preset), PVOID)
+        cds.cbData = (len(preset) + 1)*2
+        return SendMessage(hwnd, WM_COPYDATA, eg.messageReceiver.hwnd, addressof(cds))
         
         
     
@@ -735,4 +735,4 @@ class GetPresets(eg.ActionClass):
         cds = COPYDATASTRUCT()
         cds.dwData = COPY_GET_PRESETLIST
         SendMessage(hwnd, WM_COPYDATA, eg.messageReceiver.hwnd, addressof(cds))
-        
+        return cds
