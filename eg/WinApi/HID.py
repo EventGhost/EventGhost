@@ -170,7 +170,9 @@ DIGCF_PROFILE         = 0x00000008
 DIGCF_DEVICEINTERFACE = 0x00000010
 
 class HIDThread(threading.Thread):
-    def __init__(self, deviceName, devicePath):
+    def __init__(self, deviceName, devicePath, threadName = None):
+        self.lockObject = threading.Lock()
+        self.lockObject.acquire()
         self.handle = None
         self.text = Text
         self.deviceName = deviceName
@@ -184,8 +186,9 @@ class HIDThread(threading.Thread):
         self.ButtonCallback = None
         self.ValueCallback = None
         self.StopCallback = None
-        threading.Thread.__init__(self, name = self.devicePath)
+        threading.Thread.__init__(self, name = threadName if threadName else self.devicePath)
 
+    @eg.LogIt
     def AbortThread(self):
         self.abort = True
         if self._overlappedWrite:
@@ -203,11 +206,21 @@ class HIDThread(threading.Thread):
 
     def SetStopCallback(self, callback):
         self.StopCallback = callback
-        
+
+    @eg.LogIt    
     def WaitForInit(self):
-        if not self.initialized:
-            win32event.WaitForSingleObject(self._overlappedRead.hEvent, win32event.INFINITE)
-        
+        try:
+            self.lockObject.acquire()
+            if not self.initialized:
+                if eg.debugLevel:
+                    print "waiting for init of HID-Thread " + self.getName()
+                win32event.WaitForSingleObject(self._overlappedRead.hEvent, win32event.INFINITE)
+                if eg.debugLevel:
+                    print "finished waiting for init of HID-Thread " + self.getName()
+        finally:
+            self.lockObject.release()
+            
+    @eg.LogIt    
     def SetFeature(self, buffer):
         if self.handle:
             bufferLength = ULONG(len(buffer))
@@ -215,23 +228,30 @@ class HIDThread(threading.Thread):
             if not result:
                 raise Exception("could not set feature")
 
+    @eg.LogIt
     def Write(self, data, timeout):
         if self.handle:
-            if not self._overlappedWrite:
-                self._overlappedWrite = win32file.OVERLAPPED()
-            err, n = win32file.WriteFile(self.handle, data, self._overlappedWrite)
-            if err: #will be ERROR_IO_PENDING:
-                # Wait for the write to complete.
-                n = win32file.GetOverlappedResult(self.handle, self._overlappedWrite, 1)
-                if n != len(data):
+            try:
+                self.lockObject.acquire()
+                if eg.debugLevel:
+                    print "writing " + str(len(data)) + " bytes to " + self.getName()
+                if not self._overlappedWrite:
+                    self._overlappedWrite = win32file.OVERLAPPED()
+                err, n = win32file.WriteFile(self.handle, data, self._overlappedWrite)
+                if err: #will be ERROR_IO_PENDING:
+                    # Wait for the write to complete.
+                    n = win32file.GetOverlappedResult(self.handle, self._overlappedWrite, 1)
+                    if n != len(data):
+                        raise Exception("could not write full data")
+                elif n != len(data):
                     raise Exception("could not write full data")
-            elif n != len(data):
-                raise Exception("could not write full data")
-            if timeout:#waits for response from device
-                win32event.ResetEvent(self._overlappedRead.hEvent)
-                res = win32event.WaitForSingleObject(self._overlappedRead.hEvent, timeout)
-                if res == win32event.WAIT_TIMEOUT:
-                    raise Exception("no response from device within timeout")
+                if timeout:#waits for response from device
+                    win32event.ResetEvent(self._overlappedRead.hEvent)
+                    res = win32event.WaitForSingleObject(self._overlappedRead.hEvent, timeout)
+                    if res == win32event.WAIT_TIMEOUT:
+                        raise Exception("no response from device within timeout")
+            finally:
+                self.lockObject.release()
         else:
             raise Exception("invalid handle")
             return
@@ -251,8 +271,10 @@ class HIDThread(threading.Thread):
         except:
             eg.PrintError(self.text.errorOpen + self.deviceName)
             win32event.SetEvent(self._overlappedRead.hEvent)
+            self.lockObject.release()
             return
-
+        
+        
         hidDLL =  ctypes.windll.hid
         setupapiDLL = ctypes.windll.setupapi
 
@@ -336,10 +358,13 @@ class HIDThread(threading.Thread):
         #initializing finished
         try:
             self.handle = handle;
-            win32event.SetEvent(self._overlappedRead.hEvent) #allows waiting threads to wait
             self.initialized = True
             rc, newBuf = win32file.ReadFile(handle, n, self._overlappedRead)
-
+            if eg.debugLevel:
+                print self.getName() + "init done. Entering loop" 
+            
+            self.lockObject.release()
+            
             while not self.abort:
                 if rc == 997: #error_io_pending
                     win32event.WaitForSingleObject(
