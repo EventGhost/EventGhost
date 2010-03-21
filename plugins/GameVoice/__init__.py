@@ -65,7 +65,7 @@ class GameVoice(eg.PluginClass):
     
     def SetupHidThread(self, newDevicePath):
         #create thread
-        self.thread = HIDThread(self.name, newDevicePath)
+        self.thread = HIDThread(self.name, newDevicePath, self.name)
         self.thread.start()
         self.thread.SetStopCallback(self.StopCallback)
         self.thread.SetButtonCallback(self.ButtonCallback)

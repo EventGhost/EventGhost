@@ -171,7 +171,7 @@ class FS20PCS(eg.PluginClass):
 
     def SetupHidThread(self, newDevicePath):
         #create thread
-        thread = HIDThread(self.name, newDevicePath)
+        thread = HIDThread(self.name, newDevicePath, self.name)
         thread.SetStopCallback(self.StopCallback)
         thread.SetRawCallback(self.RawCallback)
         thread.start()
