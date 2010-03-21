@@ -7,6 +7,7 @@ import threading
 import win32con
 import win32event
 import win32file
+import pywintypes
 import re
 
 from ctypes import Structure, Union, c_byte, c_char, c_int, c_long, c_ulong, c_ushort, c_wchar
@@ -19,6 +20,7 @@ class Text:
     errorFind = "Error finding HID device: "
     errorOpen = "Error opening HID device: "
     errorRead = "Error reading HID device: "
+    errorDisconnected = "Error HID device disconected: "
     errorInvalidDataIndex = "Found data index not defined as button or control value."
     errorReportLength = "Report length must not be zero for device."
     errorRetrieval = "Error getting HID device info."
@@ -214,11 +216,11 @@ class HIDThread(threading.Thread):
             if not self.initialized:
                 if eg.debugLevel:
                     print "waiting for init of HID-Thread " + self.getName()
-                win32event.WaitForSingleObject(self._overlappedRead.hEvent, win32event.INFINITE)
-                if eg.debugLevel:
-                    print "finished waiting for init of HID-Thread " + self.getName()
         finally:
             self.lockObject.release()
+            if eg.debugLevel:
+                print "finished waiting for init of HID-Thread " + self.getName()
+
             
     @eg.LogIt    
     def SetFeature(self, buffer):
@@ -268,10 +270,9 @@ class HIDThread(threading.Thread):
                 win32con.FILE_ATTRIBUTE_NORMAL | win32con.FILE_FLAG_OVERLAPPED,
                 0
             )
-        except:
-            eg.PrintError(self.text.errorOpen + self.deviceName)
-            win32event.SetEvent(self._overlappedRead.hEvent)
+        except pywintypes.error as (errno, function, strerror):
             self.lockObject.release()
+            eg.PrintError(self.text.errorOpen + self.deviceName + " (" + strerror + ")") 
             return
         
         
@@ -376,10 +377,13 @@ class HIDThread(threading.Thread):
                     
                     win32event.ResetEvent(self._overlappedRead.hEvent)
                     rc, newBuf = win32file.ReadFile(handle, n, self._overlappedRead)
-                except:
+                except pywintypes.error as (errno, function, strerror):
                     #device got disconnected so set status to waiting
                     self.abort = True
-                    eg.PrintError(self.text.errorRead + self.deviceName)
+                    if errno == 1167:
+                        eg.PrintError(self.text.errorDisconnected + self.deviceName)
+                    else:
+                        eg.PrintError(self.text.errorRead + self.deviceName + " (" + strerror + ")") 
 
                 #parse data
                 if len(buf) == n and not self.abort:
