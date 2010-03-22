@@ -1,4 +1,4 @@
-version="0.1.2" 
+version="0.1.3" 
 
 # Plugins/RadioSure/__init__.py
 #
@@ -20,7 +20,7 @@ version="0.1.2"
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-# Last change: 2010-03-18 14:06 GMT+1
+# Last change: 2010-03-22 09:09 GMT+1
 # ==============================================================================
 
 eg.RegisterPlugin(
@@ -29,10 +29,10 @@ eg.RegisterPlugin(
     version = version,
     kind = "program",
     guid = "{84703620-87B4-4982-A9AB-DA1B3F8D22EA}",
-    description = (
-        'Adds actions to control the <a href="http://www.radiosure.com/">'
-        'RadioSure</a>.'
-    ),
+    description = ur'''<rst>
+Adds actions to control the `Radio? Sure!`_
+    
+.. _Radio? Sure!: http://www.radiosure.com/ ''',
     createMacrosOnAdd = True,
     url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=2359",
     icon = (
@@ -63,10 +63,11 @@ eg.RegisterPlugin(
 #===============================================================================
 
 import os
+import wx.grid
 import subprocess
 import xml.sax as sax
 from xml.sax.handler import ContentHandler
-from threading import Timer
+from threading import Timer, Thread, Event
 from eg.WinApi.Utils import GetMonitorDimensions
 from eg.WinApi.Dynamic import CreateEvent, SetEvent
 from time import sleep
@@ -87,8 +88,8 @@ SYS_VSCROLL_X = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
 #===============================================================================
 
 class Text:
-    label1 = "Folder with RadioSure.exe:"
-    label2 = "Folder with RadioSure.xml:"
+    label1 = "The folder containing the file RadioSure.exe:"
+    label2 = "The folder containing the file RadioSure.xml:"
     filemask = "RadioSure.exe|RadioSure.exe|All-Files (*.*)|*.*"
     text1 = "Couldn't find RadioSure window !"
     browseTitle = "Selected folder:"
@@ -452,6 +453,42 @@ def HandleRS():
     return res
 #===============================================================================
 
+class ObservationThread(Thread):
+    def __init__(
+        self,
+        period,
+        evtName,
+    ):
+        self.abort = False
+        self.aborted = False
+        self.oldData = ""
+        self.threadFlag = Event()
+        
+        self.period = period
+        self.evtName = evtName
+        Thread.__init__(self, name = self.evtName.encode('unicode_escape')+'_Thread')
+
+    def run(self):
+        while 1:
+            hwnd = HandleRS()
+            if hwnd:
+                data = GetWindowText(hwnd).decode(eg.systemEncoding)
+                if data != self.oldData and data != "Radio? Sure!":
+                    self.oldData = data
+                    eg.TriggerEvent(self.evtName, payload = data, prefix = "RadioSure")
+  
+            if self.abort:
+                break
+            self.threadFlag.wait(self.period)
+            self.threadFlag.clear()
+        self.aborted = True
+
+
+    def AbortObservation(self):
+        self.abort = True
+        self.threadFlag.set()
+#===============================================================================
+
 def GetCtrlByID(id):
     res = None
     hwnd = HandleRS()
@@ -518,6 +555,7 @@ class RadioSure(eg.PluginClass):
 
 
     def __init__(self):
+        self.observThread = None
         text=Text
         self.AddActionsFromList(Actions)
 
@@ -525,6 +563,20 @@ class RadioSure(eg.PluginClass):
     def __start__(self, path, xmlpath):
         self.RadioSurePath = path
         self.xmlPath = xmlpath
+
+    def __stop__(self):
+        if self.observThread:
+            ot = self.observThread
+            if ot.isAlive():
+                ot.AbortObservation()
+            del self.observThread
+        self.observThread = None
+
+    def __close__(self):
+        if self.observThread:
+            ot = self.observThread
+            if ot.isAlive():
+                ot.AbortObservation()
 
 
     def Configure(self, path = None, xmlpath = None):
@@ -973,6 +1025,77 @@ class GetPlayingTitle(eg.ActionClass):
             return self.plugin.text.text1
 #===============================================================================
 
+class StartTitlebarObservation(eg.ActionClass):
+
+
+    class text:
+        intervalLabel = "Refresh interval (s):"
+        label = "Event suffix:"
+        timeStamp = "Insert timestamp"
+
+
+    def __call__(
+        self,
+        period = 1.0,
+        evtName ="titlebar",
+    ):
+        if self.plugin.observThread:
+            ot = self.plugin.observThread
+            if ot.isAlive():
+                ot.AbortObservation()
+            del self.plugin.observThread
+        ot = ObservationThread(
+            period,
+            evtName,
+        )
+        ot.start()
+        self.plugin.observThread = ot
+
+
+    def Configure(
+        self,
+        period = 1.0,
+        evtName = "titlebar",
+    ):
+        panel = eg.ConfigPanel()
+        periodNumCtrl = eg.SpinNumCtrl(
+            panel,
+            -1,
+            period,
+            integerWidth = 5,
+            fractionWidth = 1,
+            allowNegative = False,
+            min = 0.1,
+            increment = 0.1,
+        )
+        intervalLbl = wx.StaticText(panel, -1, self.text.intervalLabel)
+        textLabel = wx.StaticText(panel, -1, self.text.label)
+        textControl = wx.TextCtrl(panel, -1, evtName, size = (200,-1))
+        AddCtrl = panel.sizer.Add
+        AddCtrl(intervalLbl, 0, wx.TOP, 20)
+        AddCtrl(periodNumCtrl, 0, wx.TOP, 3)
+        AddCtrl(textLabel, 0, wx.TOP, 20)
+        AddCtrl(textControl, 0, wx.TOP, 3)
+        textLabel.SetFocus()
+        while panel.Affirmed():
+            panel.SetResult(
+            periodNumCtrl.GetValue(),
+            textControl.GetValue(),
+        )
+        
+#===============================================================================
+
+class StopTitlebarObservation(eg.ActionClass):
+
+    def __call__(self):
+        if self.plugin.observThread:
+            ot = self.plugin.observThread
+            if ot.isAlive():
+                ot.AbortObservation()
+            del self.plugin.observThread
+        self.plugin.observThread = None
+#===============================================================================
+
 class ShowMenu(eg.ActionClass):
     panel = None
 
@@ -1246,6 +1369,9 @@ Actions = (
     (SetVolume,"SetVolume","Set volume","Set volume.", 0),
     (SetVolume,"VolumeUp","Volume up","Volume up.", 1),
     (SetVolume,"VolumeDown","Volume down","Volume down.", 2),
+    (GetPlayingTitle,"GetPlayingTitle","Get currently playing station/title","Gets the name of currently playing station/title.", None),
+    (StartTitlebarObservation,"StartTitlebarObservation","Start observation of titlebar","Starts observation of titlebar.", None),
+    (StopTitlebarObservation,"StopTitlebarObservation","Stop observation of titlebar","Stops observation of titlebar.", None),
     (eg.ActionGroup, 'Equalizer', 'Equalizer', 'Equalizer',(
         (SendMessageActions,"EqualizerOff","Equalizer Off","Equalizer Off.", 2000),
         (SendMessageActions,"EqualizerJazz","Equalizer Jazz","Equalizer Jazz.", 2001),
@@ -1261,7 +1387,6 @@ Actions = (
         (NextPrevFav,"PreviousFav","Previous favorite","Previous favorite.", -1),
         (SendMessageActions,"PreviousHist","Back in history","Back in history.",1038),
         (SendMessageActions,"ForwardHist","Forward in history","Forward in history.",1039),
-        (GetPlayingTitle,"GetPlayingTitle","Get currently playing station/title","Gets the name of currently playing station/title.", None),
         (eg.ActionGroup, 'Menu', 'Menu', 'Menu',(
             (ShowMenu, 'ShowFavMenu', 'Show favorites menu', 'Show favorites on screen menu.', True),
             (ShowMenu, 'ShowHistMenu', 'Show history menu', 'Show history on screen menu.', False),
