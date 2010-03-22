@@ -1,6 +1,6 @@
-version="0.1.3" 
+version="0.1.4" 
 # This file is part of EventGhost.
-# Copyright (C)  2008 Pako  (lubos.ruckl@quick.cz)
+# Copyright (C)  2008-2010 Pako  (lubos.ruckl@quick.cz)
 # 
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@ version="0.1.3"
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2010-02-10 12:47 GMT+1
+#Last change: 2010-03-22 08:36 GMT+1
 
 eg.RegisterPlugin(
     name = "File Operations",
@@ -885,7 +885,7 @@ class Write(eg.ActionClass):
         outPage = "",
     ):
         modeStr = 'w' if mode==0 else 'a'
-        stamp = time.strftime('%c')+'  ' if times else ''
+        stamp = time.strftime('%y-%m-%d %H:%M:%S')+'  ' if times else ''
         cr = '\r\n' if mode == 2 else ''        
         errorList = ('strict','ignore','replace')
         string = eg.ParseString(string)
