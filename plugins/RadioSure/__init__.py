@@ -1,4 +1,4 @@
-version="0.1.3" 
+version="0.1.4" 
 
 # Plugins/RadioSure/__init__.py
 #
@@ -20,7 +20,11 @@ version="0.1.3"
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-# Last change: 2010-03-22 09:09 GMT+1
+# changelog:
+# 0.1.4 by Pako 2010-03-23 11:20 GMT+1
+#     - added action Random favorite
+# 0.1.3 by Pako 2010-03-22 09:09 GMT+1
+#     - added actions Start and Stop observation of titlebar
 # ==============================================================================
 
 eg.RegisterPlugin(
@@ -73,6 +77,7 @@ from time import sleep
 from win32gui import GetWindowText, MessageBox, GetWindow, GetDlgCtrlID, GetDlgItem, GetClassName
 from win32api import GetSystemMetrics
 from eg.WinApi.Dynamic import SendMessage
+from random import randrange
 import _winreg
 
 WM_COMMAND    = 273
@@ -1013,6 +1018,25 @@ class NextPrevFav(eg.ActionClass):
             return self.plugin.text.text1
 #===============================================================================
 
+class RandomFav(eg.ActionClass):
+
+    def __call__(self):
+        hwnd = HandleRS()
+        if hwnd:
+            self.plugin.RefreshVariables()
+            ix = self.plugin.FavIx
+            lng = len(self.plugin.Favorites)
+            if lng > 1:
+                newIx = randrange(lng)
+                while newIx == ix:
+                    newIx = randrange(lng)
+                SendMessage(hwnd, WM_COMMAND, 1326+newIx, 0)
+                return (str(newIx+1)+": "+self.plugin.Favorites[newIx][1])
+        else:
+            self.PrintError(self.plugin.text.text1)
+            return self.plugin.text.text1
+#===============================================================================
+
 class GetPlayingTitle(eg.ActionClass):
 
     def __call__(self):
@@ -1384,6 +1408,7 @@ Actions = (
         (SelectFav,"SelectFav","Select favorite (preset number)","Select favorite by preset number (order).", None),
         (NextPrevFav,"NextFav","Next favorite","Next favorite.", 1),
         (NextPrevFav,"PreviousFav","Previous favorite","Previous favorite.", -1),
+        (RandomFav,"RandomFav","Random favorite","Random favorite.", None),
         (SendMessageActions,"PreviousHist","Back in history","Back in history.",1038),
         (SendMessageActions,"ForwardHist","Forward in history","Forward in history.",1039),
         (eg.ActionGroup, 'Menu', 'Menu', 'Menu',(
