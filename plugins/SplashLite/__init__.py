@@ -1,4 +1,4 @@
-version="0.0.0"
+version="0.0.1"
 # Plugins/SplashLite/__init__.py
 #
 # Copyright (C)  2010 Pako  (lubos.ruckl@quick.cz)
@@ -148,6 +148,10 @@ class SplashLite(eg.PluginBase):
     def __init__(self):
         text=Text
         self.AddActionsFromList(ACTIONS)
+
+
+    def __start__(self, SplashPath = None):
+        self.SplashPath = SplashPath
 
 
     def Configure(self, SplashPath = None):
