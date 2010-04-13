@@ -1,4 +1,4 @@
-version="0.1.4" 
+version="0.1.5" 
 # This file is part of EventGhost.
 # Copyright (C)  2008-2010 Pako  (lubos.ruckl@quick.cz)
 # 
@@ -16,7 +16,7 @@ version="0.1.4"
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2010-03-22 08:36 GMT+1
+#Last change: 2010-04-13 18:37 GMT+1
 
 eg.RegisterPlugin(
     name = "File Operations",
@@ -72,7 +72,7 @@ class ObservationThread(Thread):
         #self.firstRun = True
         
         self.inCoding = stp[0]
-        self.fileName = stp[1]
+        self.fileName = eg.ParseString(stp[1])
         self.mode = stp[2]
         self.errDecMode = stp[3]
         self.inPage = stp[4]
