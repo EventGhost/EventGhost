@@ -1,4 +1,4 @@
-version="0.1.5" 
+version="0.1.6" 
 # This file is part of EventGhost.
 # Copyright (C)  2008-2010 Pako  (lubos.ruckl@quick.cz)
 # 
@@ -16,7 +16,7 @@ version="0.1.5"
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2010-04-13 18:37 GMT+1
+#Last change: 2010-04-15 15:27 GMT+1
 
 eg.RegisterPlugin(
     name = "File Operations",
@@ -358,7 +358,7 @@ class Read(eg.ActionClass):
         direction = 0,
         lines = 1,
     ):
-    
+        fileName = eg.ParseString(fileName)
         errorList = ('strict', 'ignore', 'replace')
         try:
             input = codecs.open(fileName, 'r', inPage, errorList[errDecMode])
