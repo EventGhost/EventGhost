@@ -1334,16 +1334,18 @@ class DVBViewerWorkerThread(eg.ThreadWorker):
         return True
 
 
+        
+
 
     def IfMustInList( self, now, record, active, recordingsIDsService ) :
 
         if record[ 4 ] not in recordingsIDsService :
 
-            tStart = mktime( strptime( str(record[5])+str(record[6]),"%d.%m.%Y 00:00:0030.12.1899 %H:%M:%S" ) )
+            tStart = toDateTime( record[5], record[6] )
 
             if tStart <= now :
 
-                tStop  = mktime( strptime( str(record[5])+str(record[7]),"%d.%m.%Y 00:00:0030.12.1899 %H:%M:%S" ) )
+                tStop  = toDateTime( record[5], record[7] )
 
                 if tStart > tStop :
                     tStop = tStop + 24*60*60
@@ -1460,6 +1462,10 @@ class DVBViewerWorkerThread(eg.ThreadWorker):
         return True
 
 
+def toDateTime( dateP, timeP ) :
+    temp = mktime( localtime(int(dateP)) ) + float( timeP ) * 60 * 60 * 24
+    #print localtime( temp )
+    return temp
 
 
 class DVBViewerWatchDogThread( Thread ) :
@@ -3666,12 +3672,9 @@ class GetDateOfRecordings( eg.ActionClass ) :
 
                         if record[18] ==1 and record[0] == "EPG-Update by EventGhost" :
                             continue
-
-                        nextDate = record[5]
-                        nextTime = record[6]
-
-                        #nextDate =  19.07.2008 00:00:00    nextTime =  30.12.1899 05:15:00
-                        t = mktime( strptime( str(nextDate)+str(nextTime),"%d.%m.%Y 00:00:0030.12.1899 %H:%M:%S" ) )
+                            
+                            
+                        t = toDateTime( record[5], record[6] )
 
                         if t < now :
                             continue
