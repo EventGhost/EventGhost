@@ -25,10 +25,11 @@ import eg
 eg.RegisterPlugin(
     name = "Broadcaster",
     author = "Kingtd/Bitmonster",
-    version = "2.1." + "$LastChangedRevision: 500 $".split()[1],
+    version = "2.2." + "$LastChangedRevision: 500 $".split()[1],
     description = (
         "Listens for and Transmits UDP Broadcasts"
     ),
+    guid = "{5E8DA56B-24AC-4092-9521-169343C5171C}",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeT"
         "AAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH1gEECzsZ7j1DbAAAAu1JREFUOMul"
@@ -69,6 +70,7 @@ class Server(asyncore.dispatcher):
         if listenAddr in self.addresses:
             self.listenAddr = listenAddr
         else:
+            addrs = socket.gethostbyname_ex(socket.gethostname())[2]
             self.listenAddr = addrs[0]
         
         asyncore.dispatcher.__init__(self)
