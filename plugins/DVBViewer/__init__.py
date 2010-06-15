@@ -695,7 +695,7 @@ from win32com.client import GetObject
 from win32com.taskscheduler import taskscheduler
 from eg.WinApi import SendMessageTimeout
 from threading import Thread, Event, Timer, Lock
-from time import time, strptime, mktime, ctime, strftime, localtime, asctime
+from time import time, strptime, mktime, ctime, strftime, localtime, asctime, sleep
 from eg.WinApi.Dynamic import (
     byref, sizeof, CreateProcess, WaitForSingleObject, FormatError,
     CloseHandle, create_unicode_buffer,
@@ -1176,26 +1176,44 @@ class DVBViewerTerminateThread( Thread ) :
 
         plugin.lockedByTerminate |= plugin.executionStatusChangeLock.acquire( blocking = False, timeout = TERMINATE_TIMEOUT )
         events = None
+        
+        finished = True
+        eventsUsed = True
 
         try :
             events = WMI.ExecNotificationQuery( queryA )
         except :
-            events = WMI.ExecNotificationQuery( queryU )
+            try :
+                events = WMI.ExecNotificationQuery( queryU )
+            except :
+                timeCounter = TERMINATE_TIMEOUT
+                
+                finished   = False
 
+                while ( timeCounter > 0 ) :
+                
+                    if len( WMI.ExecQuery('select * from Win32_Process where Name="dvbviewer.exe"') ) == 0 :
+                        finished   = True
+                        break
+                    sleep( 1.0 )
+                    timeCounter -= 1
+
+                eventsUsed = False
+                
         plugin.lockedByTerminate |= plugin.executionStatusChangeLock.acquire( blocking = False, timeout = TERMINATE_TIMEOUT )
 
-        finished = True
-
-        if len( WMI.ExecQuery('select * from Win32_Process where Name="dvbviewer.exe"') ) > 0 :
+        if len( WMI.ExecQuery('select * from Win32_Process where Name="dvbviewer.exe"') ) > 0 and eventsUsed :
 
             try :
                 events.NextEvent( TERMINATE_TIMEOUT * 1000 )
-
             except :
 
-                eg.PrintDebugNotice("DVBViewer could not be terminated")
-                plugin.TriggerEvent( "DVBViewerCouldNotBeTerminated" )
                 finished = False
+            
+        if not finished :
+            eg.PrintDebugNotice("DVBViewer could not be terminated")
+            plugin.TriggerEvent( "DVBViewerCouldNotBeTerminated" )
+            
 
         plugin.lockedByTerminate |= plugin.executionStatusChangeLock.acquire( blocking = False, timeout = TERMINATE_TIMEOUT )
 
@@ -1505,15 +1523,21 @@ class DVBViewerWatchDogThread( Thread ) :
         eventSource = None
         startType = 'Win32_ProcessStartTrace'
         stopType  = 'Win32_ProcessStopTrace'
+        
+        eventsUsed = True
 
         try :
             eventSource = WMI.ExecNotificationQuery( queryA )
             #print "Administrator rights"
         except :
-            eventSource = WMI.ExecNotificationQuery( queryU )
-            startType = '__InstanceCreationEvent'
-            stopType  = '__InstanceDeletionEvent'
-            #print "User rights"
+            try :
+                eventSource = WMI.ExecNotificationQuery( queryU )
+                startType = '__InstanceCreationEvent'
+                stopType  = '__InstanceDeletionEvent'
+                #print "User rights"
+            except :
+                eventsUsed = False
+                #print "Fallback"
 
 
         self.started = len( WMI.ExecQuery('select * from Win32_Process where Name="dvbviewer.exe"') ) > 0
@@ -1523,21 +1547,43 @@ class DVBViewerWatchDogThread( Thread ) :
         timeout = True
 
         while not self.abort :
-            try :
-                eventType = eventSource.NextEvent( 500 ).Path_.Class
-                if eventType == startType and not self.started :
-                    #print "DVBViewer started"
-                    eg.PrintDebugNotice("DVBViewer started")
-                elif eventType == stopType and self.started:
-                    #print "DVBViewer terminated"
-                    eg.PrintDebugNotice("DVBViewer terminated")
-                elif time() < nextTimeViewer :
-                    continue
-            except :
-                #print "Timeout"
-                if time() < nextTimeViewer :
-                    continue
-                timeout = True
+            if ( eventsUsed ) :
+                try :
+                    eventType = eventSource.NextEvent( 500 ).Path_.Class
+                    if eventType == startType and not self.started :
+                        #print "DVBViewer started"
+                        eg.PrintDebugNotice("DVBViewer started")
+                    elif eventType == stopType and self.started:
+                        #print "DVBViewer terminated"
+                        eg.PrintDebugNotice("DVBViewer terminated")
+                    elif time() < nextTimeViewer :
+                        continue
+                except :
+                    #print "Timeout"
+                    if time() < nextTimeViewer :
+                        continue
+                    timeout = True
+                    
+            else :
+            
+                while time() < nextTimeViewer and not self.abort :
+                
+                    started = len( WMI.ExecQuery('select * from Win32_Process where Name="dvbviewer.exe"') ) > 0
+                    
+                    if started and not self.started :
+                        #print "DVBViewer started"
+                        eg.PrintDebugNotice("DVBViewer started")
+                        break
+                    elif not started and self.started:
+                        #print "DVBViewer terminated"
+                        eg.PrintDebugNotice("DVBViewer terminated")
+                        break
+                    else :
+                        timeCount = queryTime / 0.5
+                        while ( timeCount > 0 and not self.abort ) :
+                            sleep( 0.5 )
+                            timeCount -= 1
+                            #print "wait"
 
             plugin.executionStatusChangeLock.acquire( timeout = TERMINATE_TIMEOUT )
 
