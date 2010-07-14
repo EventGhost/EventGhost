@@ -36,7 +36,7 @@ eg.RegisterPlugin(
     name = "VLC media player",
     author = "MonsterMagnet",
     version = "0.4." + "$LastChangedRevision$".split()[1],
-    kind = "program",
+        kind = "program",
     guid = "{02929D1C-7567-414C-84D1-F8D71D6FD7B3}",
     canMultiLoad = True,
     createMacrosOnAdd = True,
@@ -90,6 +90,7 @@ def GetVlcPath():
             eg.folderPath.ProgramFiles, 
             "VideoLAN\\VLC\\vlc.exe"
         )
+
 
 def GetChoices():
     f = codecs.open(eg.folderPath.RoamingAppData+"\\vlc\\vlcrc",'r','utf-8')
@@ -301,6 +302,26 @@ class GetSomeInfo(eg.ActionBase):
             return self.plugin.lastMessage
         else:
             return None
+
+
+    def GetLabel(self, index):
+        return "%s: %s" % (self.name,self.text.choices[index])
+ 
+ 
+    def Configure(self, index = 0):
+        panel = eg.ConfigPanel()
+        mySizer = panel.sizer
+        staticText = panel.StaticText(self.text.label)
+        choiceCtrl=wx.Choice(
+            panel,
+            choices=self.text.choices,
+        )
+        choiceCtrl.SetSelection(index)
+        mySizer.Add(staticText, 0, wx.TOP, 15)
+        mySizer.Add(choiceCtrl, 0, wx.TOP, 2)
+        while panel.Affirmed():
+            panel.SetResult(choiceCtrl.GetSelection())
+ 
 
 
 class SimulateKey(eg.ActionBase):
