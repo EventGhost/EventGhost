@@ -21,7 +21,7 @@ import sys
 import os
 import hashlib
 import _winreg
-from cStringIO import StringIO
+from StringIO import StringIO
 from eg.WinApi.Dynamic import (
     MEMORYSTATUSEX, GlobalMemoryStatusEx, byref, sizeof
 )
