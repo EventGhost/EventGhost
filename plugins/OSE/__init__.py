@@ -18,14 +18,14 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2010-03-17 14:07 GMT+1
+#Last change: 2010-07-17 11:40 GMT+1
 
 
 
 eg.RegisterPlugin(
     name = "On screen explorer",
     author = "Pako",
-    version = "0.2.2",
+    version = "0.2.3",
     kind = "other",
     guid = "{D3D2DDD1-9BEB-4A26-969B-C82FA8EAB280}",
     description = u"""<rst>
@@ -80,7 +80,12 @@ from win32file import GetFileAttributes
 from fnmatch import fnmatch
 from winsound import PlaySound, SND_ASYNC
 
+FO_DELETE = 3
+FOF_ALLOWUNDO = 64
+FOF_NOCONFIRMATION = 16
+ERROR_ACCESS_DENIED  = 5
 ERROR_NO_ASSOCIATION = 1155
+FILE_ATTRIBUTE_READONLY = 1
 FILE_ATTRIBUTE_HIDDEN = 2
 FILE_ATTRIBUTE_SYSTEM = 4
 SYS_VSCROLL_X = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
@@ -92,10 +97,10 @@ shortcut_ID = u"|•"
 
 class Text:
     noAssoc  = 'Error: No application is associated with the "%s" file type for operation "Open" !'
+    accDeni  = 'The file "%s" can not be deleted. Access denied.'
     myComp   = "My computer"
     folder   = "Folder identifier string (must not be empty):"
     shortcut = "Shortcut identifier string (may be empty):"
-    picker   = "Colour Picker"
 #===============================================================================
 
 newEVT_BUTTON_AFTER = wx.NewEventType()
@@ -119,6 +124,11 @@ class EventAfter(wx.PyCommandEvent):
 
 class extColourSelectButton(eg.ColourSelectButton):
 
+    def __init__(self,*args,**kwargs):
+        eg.ColourSelectButton.__init__(self, *args)
+        self.title = kwargs['title']
+
+
     def OnButton(self, event):
         colourData = wx.ColourData()
         colourData.SetChooseFull(True)
@@ -126,7 +136,7 @@ class extColourSelectButton(eg.ColourSelectButton):
         for i, colour in enumerate(eg.config.colourPickerCustomColours):
             colourData.SetCustomColour(i, colour)
         dialog = wx.ColourDialog(self.GetParent(), colourData)
-        dialog.SetTitle(Text.picker)
+        dialog.SetTitle(self.title)
         if dialog.ShowModal() == wx.ID_OK:
             colourData = dialog.GetColourData()
             self.SetValue(colourData.GetColour().Get())
@@ -239,26 +249,6 @@ class MenuGrid(wx.grid.Grid):
         self.SetGridCursor(new, 0)
         self.SelectRow(new)
 #===============================================================================
-
-def MyComputer():
-    mc_reg = None
-    try:
-        mc_reg = _winreg.OpenKey(
-            _winreg.HKEY_CLASSES_ROOT,
-            "CLSID\\{20D04FE0-3AEA-1069-A2D8-08002B30309D}"
-        )
-        value, type = _winreg.QueryValueEx(mc_reg, "LocalizedString")
-        dll = os.path.split(value.split(",")[0][1:])[1]
-        index = -1*int(value.split(",")[1])
-        myComputer = LoadString(LoadLibrary(dll), index)
-    except:
-        myComputer = Text.myComp
-    if mc_reg:
-        _winreg.CloseKey(mc_reg)
-    return myComputer
-
-MY_COMPUTER = MyComputer()    
-
 
 def CaseInsensitiveSort(list):
     tmp = [(item[0].upper(), item) for item in list] # Schwartzian transform
@@ -388,7 +378,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
                 suffix,
                 monitor,
                 start,
-                patterns
+                patterns,
+                hide
             )
             eg.actionThread.WaitOnEvent(self.event)
 
@@ -471,16 +462,16 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         OSElbl = wx.StaticText(panel, -1, self.text.OSELabel)
         #Button Text Colour
         foreLbl=wx.StaticText(panel, -1, self.text.txtColour+':')
-        foreColourButton = extColourSelectButton(panel,fore)
+        foreColourButton = extColourSelectButton(panel, fore, title = self.text.txtColour)
         #Button Background Colour
         backLbl=wx.StaticText(panel, -1, self.text.background+':')
-        backColourButton = extColourSelectButton(panel,back)
+        backColourButton = extColourSelectButton(panel,back, title = self.text.background)
         #Button Selected Text Colour
         foreSelLbl=wx.StaticText(panel, -1, self.text.txtColourSel+':')
-        foreSelColourButton = extColourSelectButton(panel,foreSel)
+        foreSelColourButton = extColourSelectButton(panel,foreSel, title = self.text.txtColourSel)
         #Button Selected Background Colour
         backSelLbl=wx.StaticText(panel, -1, self.text.backgroundSel+':')
-        backSelColourButton = extColourSelectButton(panel,backSel)
+        backSelColourButton = extColourSelectButton(panel,backSel, title = self.text.backgroundSel)
         folderLabel = wx.StaticText(panel, -1, self.text.folder)
         folderCtrl = MyDirBrowseButton(
             panel, 
@@ -488,7 +479,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
             dialogTitle = self.text.browseTitle,
             buttonText = eg.text.General.browse,
         )
-        compBtn = wx.Button(panel,-1,MY_COMPUTER)
+        compBtn = wx.Button(panel, -1, MY_COMPUTER)
         compBtn.SetToolTip(wx.ToolTip(self.text.compBtnToolTip % MY_COMPUTER))
         folderCtrl.GetTextCtrl().SetEditable(False)
         folderCtrl.SetValue(start)
@@ -616,7 +607,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
                     suffixCtrl.GetValue(),
                     displayChoice.GetSelection(),
                     folderCtrl.GetValue(),
-                    patternsCtrl.GetValue()
+                    patternsCtrl.GetValue(),
+                    hideSystem.GetValue()
                 )
                 eg.actionThread.WaitOnEvent(self.event)
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
@@ -688,6 +680,7 @@ class Execute (eg.ActionClass):
         folderBoxLabel = "Action with the folder"
         returnFile     = "Return path to the file as eg.result"
         openFile       = "Open the file in associated application"
+        deleteFile     = "Delete the file"
         goIntoFolder   = "Go into that folder"
         returnFolder   = "Return path to this folder as eg.result"
         fileSuffix     = "Trigger event with this suffix:"
@@ -711,11 +704,23 @@ class Execute (eg.ActionClass):
                 if val&2: #open in associated
                     try:
                         os.startfile(filePath)
-                    except WindowsError,e:
+                    except WindowsError, e:
                         if e.winerror == ERROR_NO_ASSOCIATION:
-                            eg.PrintError(Text.noAssoc % os.path.splitext(filePath)[1])
+                            eg.PrintError(self.plugin.text.noAssoc % os.path.splitext(filePath)[1])
                         else:
                             raise
+                if val&256: #delete file
+                    if GetFileAttributes(filePath) & FILE_ATTRIBUTE_READONLY:
+                        eg.PrintError(self.plugin.text.accDeni % filePath)
+                    else:
+                        try:
+                            shell.SHFileOperation((0, FO_DELETE, filePath, None, 
+                            FOF_ALLOWUNDO|FOF_NOCONFIRMATION))
+                        except WindowsError, e:
+                            if e.winerror == ERROR_ACCESS_DENIED:
+                                eg.PrintError(self.plugin.text.accDeni % filePath)
+                            else:
+                                raise
                 self.plugin.menuDlg.destroyMenu()
                 self.plugin.menuDlg = None
                 if val&4: #return
@@ -786,9 +791,10 @@ class Execute (eg.ActionClass):
         triggFileCheck.SetValue(val&1)
         openFileCheck = wx.CheckBox(panel, -1, self.text.openFile)
         openFileCheck.SetValue(val&2)
+        deleteFileCheck = wx.CheckBox(panel, -1, self.text.deleteFile)
+        deleteFileCheck.SetValue(val&256)
         retFileCheck = wx.CheckBox(panel, -1, self.text.returnFile)
         retFileCheck.SetValue(val&4)
-        #fileSuffLabel = wx.StaticText(panel, -1, self.text.fileSuffix)
         folderSuffLabel = wx.StaticText(panel, -1, self.text.folderSuffix)
         triggFolderCheck = wx.CheckBox(panel, -1, self.text.triggerEvent)
         triggFolderCheck.SetValue(val&8)
@@ -820,6 +826,7 @@ class Execute (eg.ActionClass):
         folderSuffSizer.Add(suffixFolder,0,wx.TOP,-4)
         fileSizer.Add(fileSuffSizer,0,wx.TOP,4)
         fileSizer.Add(openFileCheck,0,wx.TOP,6)
+        fileSizer.Add(deleteFileCheck,0,wx.TOP,6)
         fileSizer.Add(retFileCheck,0,wx.TOP,8)
         folderSizer.Add(folderSuffSizer,0,wx.TOP,4)
         folderSizer.Add(triggFolderCheck,0,wx.TOP,6)
@@ -888,11 +895,27 @@ class Execute (eg.ActionClass):
                 evt.Skip()
         onGoFolderCheck()
         
+        def onOpenFileCheck(evt = None):
+            val = openFileCheck.GetValue()
+            deleteFileCheck.Enable(not val)
+            if evt:
+                evt.Skip()
+        onOpenFileCheck()
+        
+        def onDeleteFileCheck(evt = None):
+            val = deleteFileCheck.GetValue()
+            openFileCheck.Enable(not val)
+            if evt:
+                evt.Skip()
+        onDeleteFileCheck()
+        
         triggFolderCheck.Bind(wx.EVT_CHECKBOX, onTriggFolderCheck)
         triggFolderCheck2.Bind(wx.EVT_CHECKBOX, onTriggFolderCheck2)
         retFolderCheck.Bind(wx.EVT_CHECKBOX, onRetFolderCheck)
         retFolderCheck2.Bind(wx.EVT_CHECKBOX, onRetFolderCheck2)
         goFolderCheck.Bind(wx.EVT_CHECKBOX, onGoFolderCheck)
+        openFileCheck.Bind(wx.EVT_CHECKBOX, onOpenFileCheck)
+        deleteFileCheck.Bind(wx.EVT_CHECKBOX, onDeleteFileCheck)
         
         while panel.Affirmed():
             val  =      triggFileCheck.GetValue()
@@ -903,6 +926,7 @@ class Execute (eg.ActionClass):
             val += 32 * retFolderCheck.GetValue()
             val += 64  * triggFolderCheck2.GetValue()
             val += 128 * retFolderCheck2.GetValue()
+            val += 256  * deleteFileCheck.GetValue()
             panel.SetResult(val,
                 suffixFile.GetValue(),
                 suffixFolder.GetValue()
@@ -922,8 +946,30 @@ ACTIONS = (
 
 class OSE(eg.PluginClass):
     menuDlg = None
+    text=Text
+
+
+    def MyComputer(self):
+        mc_reg = None
+        try:
+            mc_reg = _winreg.OpenKey(
+                _winreg.HKEY_CLASSES_ROOT,
+                "CLSID\\{20D04FE0-3AEA-1069-A2D8-08002B30309D}"
+            )
+            value, type = _winreg.QueryValueEx(mc_reg, "LocalizedString")
+            dll = os.path.split(value.split(",")[0][1:])[1]
+            index = -1*int(value.split(",")[1])
+            myComputer = LoadString(LoadLibrary(dll), index)
+        except:
+            myComputer = self.text.myComp
+        if mc_reg:
+            _winreg.CloseKey(mc_reg)
+        return myComputer
+
 
     def __init__(self):
+        global MY_COMPUTER
+        MY_COMPUTER = self.MyComputer()
         self.AddActionsFromList(ACTIONS)
 
 
@@ -967,6 +1013,7 @@ class Menu(wx.Frame):
         self.prefix = "OSE"
         self.suffix = "Open"
         self.patterns = "*.*"
+        self.hide = False
 
 
     def ShowMenu(
@@ -984,7 +1031,7 @@ class Menu(wx.Frame):
         monitor=None,
         start=None,
         patterns=None,
-        hide = True
+        hide = None
     ):
         self.fore     = fore or self.fore
         self.back     = back or self.back
@@ -997,7 +1044,7 @@ class Menu(wx.Frame):
         self.suffix   = suffix or self.suffix
         self.monitor  = monitor or self.monitor
         self.patterns = patterns or self.patterns
-        self.hide     = hide
+        self.hide     = hide or self.hide
         try:
             items  = GetFolderItems(start, self.patterns, self.hide)
             self.start = start
@@ -1027,7 +1074,6 @@ class Menu(wx.Frame):
             self.eventChoiceCtrl.SetSelectionForeground(self.foreSel)
             if self.flag:
                 self.timer=MyTimer(t = 5.0, plugin = self.plugin)
-#        self.eventChoiceCtrl.SetSelection(0)
         self.eventChoiceCtrl.SetGridCursor(0, 0)
         self.eventChoiceCtrl.SelectRow(0)
         monDim = GetMonitorDimensions()
@@ -1075,7 +1121,6 @@ class Menu(wx.Frame):
         return GetFolderItems(fp, self.patterns, self.hide)
 
 
-
     def MoveCursor(self, step):
         max=len(self.choices)
         if max > 0:
@@ -1112,7 +1157,7 @@ class Menu(wx.Frame):
                 os.startfile(filePath)
             except WindowsError, e:
                 if e.winerror == ERROR_NO_ASSOCIATION:
-                    eg. Error(Text.noAssoc % os.path.splitext(filePath)[1])
+                    eg. Error(self.plugin.text.noAssoc % os.path.splitext(filePath)[1])
                 else:
                     raise
         else:
