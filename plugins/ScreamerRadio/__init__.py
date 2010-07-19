@@ -1,4 +1,4 @@
-version="0.1.5" 
+version="0.1.6" 
 
 # Plugins/ScreamerRadio/__init__.py
 #
@@ -29,6 +29,7 @@ eg.RegisterPlugin(
     author = "Pako",
     version = version,
     kind = "program",
+    guid = "{22D52B5E-D1D9-4352-AC53-A620441C67CC}",
     description = (
         'Adds actions to control the <a href="http://www.screamer-radio.com/">'
         'Screamer radio</a>.'
@@ -77,6 +78,10 @@ eg.RegisterPlugin(
 # 2008-09-01 Pako
 #     * add option Start/Stop Event Sender
 #     * increased version to 0.1.5
+# 2010-07-19 Pako
+#     * bugfix (UnicodeEncodeError when non-ascii filepath)
+#     * guid attribute added
+#     * increased version to 0.1.6
 #===============================================================================
 
 class MyDirBrowseButton(eg.DirBrowseButton):
@@ -221,9 +226,9 @@ class ScreamerRadio(eg.PluginClass):
         self.path2 = path2
         xmltoparse = ScreamerPath+'\\screamer.xml'
         self.dh = my_xml_handler1()
-        sax.parse(xmltoparse, self.dh)
+        sax.parse(xmltoparse.encode(eg.systemEncoding), self.dh)
         xmltoparse = self.dh.document['LanguageFile']
-        sax.parse(xmltoparse, self.dh)
+        sax.parse(xmltoparse.encode(eg.systemEncoding), self.dh)
                    
     def Configure(self, ScreamerPath=None, path2 = None):
         panel = eg.ConfigPanel(self)
@@ -376,7 +381,7 @@ class Run(eg.ActionClass):
                         ScreamerPath = self.plugin.ScreamerPath
                         xmltoparse = ScreamerPath+'\\favorites.xml'
                         self.dh2 = my_xml_handler2()
-                        sax.parse(xmltoparse, self.dh2)
+                        sax.parse(xmltoparse.encode(eg.systemEncoding), self.dh2)
                         if fav <= len(self.plugin.favList):
                             self.plugin.fav_num=fav-1
                             PostMessage(hwnds[0], WM_COMMAND, 9216+fav, 0)
@@ -572,7 +577,7 @@ class SelectFav(eg.ActionClass):
             ScreamerPath = self.plugin.ScreamerPath
             xmltoparse = ScreamerPath+'\\favorites.xml'
             self.dh2 = my_xml_handler2()
-            sax.parse(xmltoparse, self.dh2)
+            sax.parse(xmltoparse.encode(eg.systemEncoding), self.dh2)
             if fav <= len(self.plugin.favList):
                 self.plugin.fav_num=fav-1
                 PostMessage(hwnds[0], WM_COMMAND, 9216+fav, 0)
@@ -613,7 +618,7 @@ class NextPrevFav(eg.ActionClass):
             ScreamerPath = self.plugin.ScreamerPath
             xmltoparse = ScreamerPath+'\\favorites.xml'
             self.dh2 = my_xml_handler2()
-            sax.parse(xmltoparse, self.dh2)
+            sax.parse(xmltoparse.encode(eg.systemEncoding), self.dh2)
             if eval(self.value[2]):        
                 self.plugin.fav_num += self.value[0]
             else:
@@ -797,7 +802,7 @@ class ShowMenu(eg.ActionClass):
         ScreamerPath = self.plugin.ScreamerPath
         xmltoparse = ScreamerPath+'\\favorites.xml'
         self.dh2 = my_xml_handler2()
-        sax.parse(xmltoparse, self.dh2)
+        sax.parse(xmltoparse.encode(eg.systemEncoding), self.dh2)
         choices = self.plugin.favList
 
         self.plugin.menuDlg = wx.Frame(
@@ -892,7 +897,7 @@ class ShowMenu(eg.ActionClass):
         ScreamerPath = self.plugin.ScreamerPath
         xmltoparse = ScreamerPath+'\\favorites.xml'
         self.dh2 = my_xml_handler2()
-        sax.parse(xmltoparse, self.dh2)
+        sax.parse(xmltoparse.encode(eg.systemEncoding), self.dh2)
         choices = self.plugin.favList
         self.fore = fore
         self.back = back
