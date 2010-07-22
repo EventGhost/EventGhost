@@ -1,4 +1,4 @@
-version="0.1.6"
+version="0.1.7"
 
 # Plugins/RadioSure/__init__.py
 #
@@ -21,7 +21,9 @@ version="0.1.6"
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 # changelog:
-# 0.1.6 by Pako 2010-07-10 08:21 GMT+1
+# 0.1.7 by Pako 2010-07-22 20:27 GMT+1
+#     - bugfix
+# 0.1.6 by Pako 2010-07-22 10:30 GMT+1
 #     - added wx.ComboBox for Scheduler actions
 # 0.1.5 by Pako 2010-07-10 08:21 GMT+1
 #     - added Scheduler
@@ -1496,7 +1498,11 @@ class RadioSure(eg.PluginBase):
                 args.append('/duration=%i' % duration)
             if params[5]:
                 recfile = eg.ParseString(params[5])
-                args.append(u'/filename="%s"' % eval(recfile))
+                try:
+                    recfile = eval(recfile)
+                except:
+                    pass
+                args.append(u'/filename="%s"' % recfile)
             elif playRec:
                 args.append(u'/filename="%s"' % params[1])
             subprocess.Popen(args)
