@@ -1,4 +1,4 @@
-version="0.1.5"
+version="0.1.6"
 
 # Plugins/RadioSure/__init__.py
 #
@@ -21,6 +21,8 @@ version="0.1.5"
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 # changelog:
+# 0.1.6 by Pako 2010-07-10 08:21 GMT+1
+#     - added wx.ComboBox for Scheduler actions
 # 0.1.5 by Pako 2010-07-10 08:21 GMT+1
 #     - added Scheduler
 #     - added guid attribute
@@ -1053,7 +1055,7 @@ class schedulerDialog(wx.Dialog):
             buttonText = eg.text.General.browse,
             startDirectory = folder
         )
-        recordCtrl.GetTextCtrl().SetEditable(False)
+#        recordCtrl.GetTextCtrl().SetEditable(False)
 
 
         def onSchedulerTitle(evt):
@@ -1493,7 +1495,8 @@ class RadioSure(eg.PluginBase):
             if duration:
                 args.append('/duration=%i' % duration)
             if params[5]:
-                args.append(u'/filename="%s"' % params[5])
+                recfile = eg.ParseString(params[5])
+                args.append(u'/filename="%s"' % eval(recfile))
             elif playRec:
                 args.append(u'/filename="%s"' % params[1])
             subprocess.Popen(args)
@@ -2662,7 +2665,12 @@ class EnableSchedule(eg.ActionBase):
 
     def Configure(self, schedule=""):
         panel = eg.ConfigPanel()
-        textControl = wx.TextCtrl(panel, -1, schedule, size = (300,-1))
+        xmlfile = u'%s\\Scheduler.xml' % self.plugin.xmlpath
+        if not os.path.exists(xmlfile):
+            return
+        data = self.plugin.xmlToData()
+        choices = [item[1] for item in data]
+        textControl = wx.ComboBox(panel, -1, schedule, size = (300,-1), choices = choices)
         panel.sizer.Add(wx.StaticText(panel,-1,self.text.scheduleTitle), 0,wx.LEFT|wx.TOP, 10)
         panel.sizer.Add(textControl, 0, wx.LEFT, 10)
         while panel.Affirmed():
@@ -2704,7 +2712,12 @@ class DeleteSchedule(eg.ActionBase):
 
     def Configure(self, schedule=""):
         panel = eg.ConfigPanel()
-        textControl = wx.TextCtrl(panel, -1, schedule, size = (300,-1))
+        xmlfile = u'%s\\Scheduler.xml' % self.plugin.xmlpath
+        if not os.path.exists(xmlfile):
+            return
+        data = self.plugin.xmlToData()
+        choices = [item[1] for item in data]
+        textControl = wx.ComboBox(panel, -1, schedule, size = (300,-1), choices = choices)
         panel.sizer.Add(wx.StaticText(panel,-1,self.text.scheduleTitle), 0,wx.LEFT|wx.TOP, 10)
         panel.sizer.Add(textControl, 0, wx.LEFT, 10)
         while panel.Affirmed():
