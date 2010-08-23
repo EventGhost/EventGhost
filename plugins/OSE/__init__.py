@@ -18,14 +18,12 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2010-07-17 11:40 GMT+1
-
-
+#Last change: 2010-08-23 18:25 GMT+1
 
 eg.RegisterPlugin(
     name = "On screen explorer",
     author = "Pako",
-    version = "0.2.3",
+    version = "0.2.4",
     kind = "other",
     guid = "{D3D2DDD1-9BEB-4A26-969B-C82FA8EAB280}",
     description = u"""<rst>
@@ -97,7 +95,7 @@ shortcut_ID = u"|•"
 
 class Text:
     noAssoc  = 'Error: No application is associated with the "%s" file type for operation "Open" !'
-    accDeni  = 'The file "%s" can not be deleted. Access denied.'
+    accDeni  = 'The file or folder "%s" can not be deleted. Access denied.'
     myComp   = "My computer"
     folder   = "Folder identifier string (must not be empty):"
     shortcut = "Shortcut identifier string (may be empty):"
@@ -681,6 +679,7 @@ class Execute (eg.ActionClass):
         returnFile     = "Return path to the file as eg.result"
         openFile       = "Open the file in associated application"
         deleteFile     = "Delete the file"
+        deleteFolder     = "Delete the folder"
         goIntoFolder   = "Go into that folder"
         returnFolder   = "Return path to this folder as eg.result"
         fileSuffix     = "Trigger event with this suffix:"
@@ -700,7 +699,7 @@ class Execute (eg.ActionClass):
                 if val&1: #trigger event
                     if fileSuff:
                         suffix = fileSuff
-                    eg.TriggerEvent(prefix = prefix, suffix = suffix, payload = filePath) 
+                    eg.TriggerEvent(prefix = prefix, suffix = suffix, payload = filePath)
                 if val&2: #open in associated
                     try:
                         os.startfile(filePath)
@@ -714,7 +713,7 @@ class Execute (eg.ActionClass):
                         eg.PrintError(self.plugin.text.accDeni % filePath)
                     else:
                         try:
-                            shell.SHFileOperation((0, FO_DELETE, filePath, None, 
+                            shell.SHFileOperation((0, FO_DELETE, filePath, None,
                             FOF_ALLOWUNDO|FOF_NOCONFIRMATION))
                         except WindowsError, e:
                             if e.winerror == ERROR_ACCESS_DENIED:
@@ -732,7 +731,7 @@ class Execute (eg.ActionClass):
                     if len(filePath) == 5:
                         filePath = MY_COMPUTER
                     else:
-                        filePath = os.path.split(filePath[:-3])[0]                
+                        filePath = os.path.split(filePath[:-3])[0]
                 if val&(64+128):
                     items = self.plugin.menuDlg.GetItemsFolder(filePath)
                     fpList = []
@@ -756,6 +755,18 @@ class Execute (eg.ActionClass):
                     eg.TriggerEvent(prefix = prefix, suffix = suffix, payload = filePath)
                 if val&64:
                     eg.TriggerEvent(prefix = prefix, suffix = suffix, payload = fpList)
+                if val&512: #delete file
+                    if GetFileAttributes(filePath) & FILE_ATTRIBUTE_READONLY:
+                        eg.PrintError(self.plugin.text.accDeni % filePath)
+                    else:
+                        try:
+                            shell.SHFileOperation((0, FO_DELETE, filePath, None,
+                            FOF_ALLOWUNDO|FOF_NOCONFIRMATION))
+                        except WindowsError, e:
+                            if e.winerror == ERROR_ACCESS_DENIED:
+                                eg.PrintError(self.plugin.text.accDeni % filePath)
+                            else:
+                                raise
                 if val&16: #go to the folder
                     event = CreateEvent(None, 0, 0, None)
                     wx.CallAfter(self.plugin.menuDlg.ShowMenu,
@@ -775,8 +786,6 @@ class Execute (eg.ActionClass):
                     res = fpList
                 if res:
                     return res
-                #elif val&(32+128):
-                #    eg.programCounter = None
         elif val&(4+32+128):
             eg.programCounter = None
 
@@ -793,6 +802,8 @@ class Execute (eg.ActionClass):
         openFileCheck.SetValue(val&2)
         deleteFileCheck = wx.CheckBox(panel, -1, self.text.deleteFile)
         deleteFileCheck.SetValue(val&256)
+        deleteFolderCheck = wx.CheckBox(panel, -1, self.text.deleteFolder)
+        deleteFolderCheck.SetValue(val&512)
         retFileCheck = wx.CheckBox(panel, -1, self.text.returnFile)
         retFileCheck.SetValue(val&4)
         folderSuffLabel = wx.StaticText(panel, -1, self.text.folderSuffix)
@@ -831,84 +842,82 @@ class Execute (eg.ActionClass):
         folderSizer.Add(folderSuffSizer,0,wx.TOP,4)
         folderSizer.Add(triggFolderCheck,0,wx.TOP,6)
         folderSizer.Add(triggFolderCheck2,0,wx.TOP,8)
+        folderSizer.Add(deleteFolderCheck,0,wx.TOP,6)
         folderSizer.Add(retFolderCheck,0,wx.TOP,8)
         folderSizer.Add(retFolderCheck2,0,wx.TOP,8)
         folderSizer.Add(goFolderCheck,0,wx.TOP,8)
         mainSizer.Add(fileSizer,0)
         mainSizer.Add(folderSizer,0,wx.TOP,20)
-        
-        def onTriggFolderCheck(evt = None):
-            val = triggFolderCheck.GetValue()
-            triggFolderCheck2.Enable(not val)
-            if val:
-                goFolderCheck.Enable(False)
-            else:
-                if not retFolderCheck.GetValue() and not retFolderCheck2.GetValue():
-                    goFolderCheck.Enable(True)
+
+        def EnableGo2Folder(evt = None):
+            val0 = not triggFolderCheck.GetValue()
+            val1 = not triggFolderCheck2.GetValue()
+            val2 = not retFolderCheck.GetValue()
+            val3 = not retFolderCheck2.GetValue()
+            val4 = not deleteFolderCheck.GetValue()
+            goFolderCheck.Enable(val0 and val1 and val2 and val3 and val4)
             if evt:
                 evt.Skip()
-        onTriggFolderCheck()
-            
-        def onTriggFolderCheck2(evt = None):
-            val = triggFolderCheck2.GetValue()
-            triggFolderCheck.Enable(not val)
-            if val:
-                goFolderCheck.Enable(False)
-            else: 
-                if not retFolderCheck.GetValue() and not retFolderCheck2.GetValue():
-                    goFolderCheck.Enable(True)
-            if evt:
-                evt.Skip()
-        onTriggFolderCheck2()            
-        
-        def onRetFolderCheck(evt = None):
-            val = retFolderCheck.GetValue()
-            retFolderCheck2.Enable(not val)
-            if val:
-                goFolderCheck.Enable(False)
-            else:
-                if not triggFolderCheck.GetValue() and not triggFolderCheck2.GetValue():
-                    goFolderCheck.Enable(True)
-            if evt:
-                evt.Skip()
-        onRetFolderCheck()
-            
-        def onRetFolderCheck2(evt = None):
-            val = retFolderCheck2.GetValue()
-            retFolderCheck.Enable(not val)
-            if val:
-                goFolderCheck.Enable(False)
-            else:
-                if not triggFolderCheck.GetValue() and not triggFolderCheck2.GetValue():
-                    goFolderCheck.Enable(True)
-            if evt:
-                evt.Skip()
-        onRetFolderCheck2()
-        
+
         def onGoFolderCheck(evt = None):
             val = goFolderCheck.GetValue()
             retFolderCheck.Enable(not val)
             retFolderCheck2.Enable(not val)
             triggFolderCheck.Enable(not val)
             triggFolderCheck2.Enable(not val)
+            deleteFolderCheck.Enable(not val)
             if evt:
                 evt.Skip()
         onGoFolderCheck()
-        
+
+        def onTriggFolderCheck(evt = None):
+            val = triggFolderCheck.GetValue()
+            triggFolderCheck2.Enable(not val)
+            EnableGo2Folder()
+            if evt:
+                evt.Skip()
+        onTriggFolderCheck()
+
+        def onTriggFolderCheck2(evt = None):
+            val = triggFolderCheck2.GetValue()
+            triggFolderCheck.Enable(not val)
+            EnableGo2Folder()
+            if evt:
+                evt.Skip()
+        onTriggFolderCheck2()
+
+        def onRetFolderCheck(evt = None):
+            val = retFolderCheck.GetValue()
+            retFolderCheck2.Enable(not val)
+            EnableGo2Folder()
+            if evt:
+                evt.Skip()
+        onRetFolderCheck()
+
+        def onRetFolderCheck2(evt = None):
+            val = retFolderCheck2.GetValue()
+            retFolderCheck.Enable(not val)
+            EnableGo2Folder()
+            if evt:
+                evt.Skip()
+        onRetFolderCheck2()
+
         def onOpenFileCheck(evt = None):
             val = openFileCheck.GetValue()
             deleteFileCheck.Enable(not val)
             if evt:
                 evt.Skip()
         onOpenFileCheck()
-        
+
         def onDeleteFileCheck(evt = None):
             val = deleteFileCheck.GetValue()
             openFileCheck.Enable(not val)
             if evt:
                 evt.Skip()
         onDeleteFileCheck()
-        
+
+        EnableGo2Folder()
+
         triggFolderCheck.Bind(wx.EVT_CHECKBOX, onTriggFolderCheck)
         triggFolderCheck2.Bind(wx.EVT_CHECKBOX, onTriggFolderCheck2)
         retFolderCheck.Bind(wx.EVT_CHECKBOX, onRetFolderCheck)
@@ -916,7 +925,8 @@ class Execute (eg.ActionClass):
         goFolderCheck.Bind(wx.EVT_CHECKBOX, onGoFolderCheck)
         openFileCheck.Bind(wx.EVT_CHECKBOX, onOpenFileCheck)
         deleteFileCheck.Bind(wx.EVT_CHECKBOX, onDeleteFileCheck)
-        
+        deleteFolderCheck.Bind(wx.EVT_CHECKBOX, EnableGo2Folder)
+
         while panel.Affirmed():
             val  =      triggFileCheck.GetValue()
             val += 2  * openFileCheck.GetValue()
@@ -927,6 +937,7 @@ class Execute (eg.ActionClass):
             val += 64  * triggFolderCheck2.GetValue()
             val += 128 * retFolderCheck2.GetValue()
             val += 256  * deleteFileCheck.GetValue()
+            val += 512  * deleteFolderCheck.GetValue()
             panel.SetResult(val,
                 suffixFile.GetValue(),
                 suffixFolder.GetValue()
