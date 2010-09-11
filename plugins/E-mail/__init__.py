@@ -1,6 +1,6 @@
-version = "0.1.6"
+version = "0.1.7"
 # This file is part of EventGhost.
-# Copyright (C) 2008 Pako <lubos.ruckl@quick.cz>
+# Copyright (C) 2008-2010 Pako <lubos.ruckl@quick.cz>
 #
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@ version = "0.1.6"
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# Last change: 2009-02-19 21:08
+# Last change: 2010-09-11 07:49 GMT+1
 
 #===============================================================================
 #Structure of setup/account (one record):
@@ -82,6 +82,7 @@ eg.RegisterPlugin(
     author = "Pako",
     version = version,
     kind = "other",
+    guid = "{8BEB93CE-242E-46B5-A17A-D9737D362E1E}",
     createMacrosOnAdd = True,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAADAFBMVEX////KysqhoaGA"
@@ -2212,6 +2213,7 @@ class SendMailThread(Thread):
         Copy = self.Copy
         Txt = self.Txt
         Txt = eg.ParseString(Txt)
+        text = self.plugin.text
         Append = self.Append
         Append = eg.ParseString(Append)
         toName = self.toName
