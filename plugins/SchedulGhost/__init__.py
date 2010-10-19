@@ -40,7 +40,7 @@ version="0.1.0"
 #     - added "Time span" schedule type
 #     - titlebar of every window displays SchedulGhost icon
 #     - some bugfixes
-# 0.1.0 by Pako 2010-10-19 08:18 GMT+1
+# 0.1.0 by Pako 2010-10-19 10:32 GMT+1
 #     - some textfixes by krambriw
 #     - first version, placed in SVN repository
 #===============================================================================
@@ -1047,7 +1047,7 @@ class schedulerDialog(wx.Dialog):
                     wx.StaticBox(self, -1, self.text.chooseTime6 if type == 6 else self.text.chooseTime),
                     wx.HORIZONTAL
                 )
-                dynamicSizer.Add(bottomSizer, 0, wx.EXPAND | wx.TOP, 16)
+                dynamicSizer.Add(bottomSizer, 0, wx.EXPAND | wx.TOP, 16 if type != 2 else 5)
                 bottomSizer.Add(timeSizer, 0, wx.EXPAND)
                 stEvLbl = wx.StaticText(self, -1, self.text.start)
                 timeSizer.Add(stEvLbl, (0, 0), (1, 2))
