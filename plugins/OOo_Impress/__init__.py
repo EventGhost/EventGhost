@@ -1,5 +1,5 @@
 ﻿version="0.1.1" 
-# Plugins/OOo_Impress/__init__.py
+# plugins/OOo_Impress/__init__.py
 #
 # Copyright (C)  2008 Pako  (lubos.ruckl@quick.cz)
 #
@@ -33,7 +33,7 @@ eg.RegisterPlugin(
         'OOo Impress</a>.'
     ),
     createMacrosOnAdd = True,    
-    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1052",
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=1052",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAGk0lEQVR42pVWW4hdZxX+"
         "/svZ+5w517kkZzIzycyYiylpIjY2aZOaVJGaeEFDBQsFESuiCLUPVdAHiwhC6YM+iaUW"

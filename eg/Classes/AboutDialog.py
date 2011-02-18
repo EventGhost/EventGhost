@@ -32,24 +32,11 @@ from StringIO import StringIO
 from eg.WinApi.Dynamic import (
     MEMORYSTATUSEX, GlobalMemoryStatusEx, byref, sizeof
 )
-from htmlentitydefs import codepoint2name
 try:
     import stackless
     is_stackless = True
 except ImportError:
     is_stackless = False
-
-
-
-def unicode2htmlentities(unicodeString):
-
-   htmlString = []
-   for char in unicodeString:
-      if ord(char) < 128:
-         htmlString.append(char)
-      else:
-         htmlString.append('&%s;' % codepoint2name[ord(char)])
-   return ''.join(htmlString) 
 
 
 def GetPluginAuthors():
@@ -306,12 +293,12 @@ class SpecialThanksPanel(HtmlPanel):
             elif cols == 1:
                 for name, descr in persons:
                     write('<TR><TD ALIGN=CENTER WIDTH="50%" COLSPAN="2"><B>')
-                    write(unicode2htmlentities(name))
+                    write(name)
                     write('</B></RIGHT></TD></TR>')
             else:
                 for name, descr in persons:
                     write('<TR><TD ALIGN=RIGHT VALIGN=TOP WIDTH="50%"><B>')
-                    write(unicode2htmlentities(name))                        
+                    write(name)                     
                     write('</B></RIGHT></TD><TD WIDTH="50%"><I>')
                     write(descr)
                     write('</I></RIGHT></TD></TR>')

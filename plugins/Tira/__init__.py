@@ -39,7 +39,7 @@ eg.RegisterPlugin(
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
     description = __doc__,
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=569",
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=569",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAADYUlEQVR42m2Te0yTVxjG"
         "n9Pv0tJ26BQbWkMrif5hgBoU4pgsBJhx08RKtIrxAmJkKiwo848RGRabsZvJQDQRLyFe"

@@ -1,4 +1,6 @@
 # This file is part of EventGhost.
+# plugins/DynamicWebserver/__init__.py
+#
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
 #
 # EventGhost is free software; you can redistribute it and/or modify
@@ -16,21 +18,21 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# $LastChangedDate: 2008-10-04 17:50:01 +0200 (Sa, 04 Okt 2008) $
+# $LastChangedRevision: 503 $
+# $LastChangedBy: bitmonster $
 
-import eg
 
 eg.RegisterPlugin(
-    name = "Webserver",
-    author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    name = "Dynamic Webserver",
+    author = "Bitmonster/Kingtd",
+    version = "1.0." + "$LastChangedRevision: 503 $".split()[1],
+    guid = "{2FC713FF-0093-4271-A520-F0F6BB05A0E8}",
     description = (
         "Implements a small webserver, that you can use to generate events "
         "through HTML-pages."
     ),
-    canMultiLoad = True,
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=1610",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeT"
         "AAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH1gEECzsZ7j1DbAAAAu1JREFUOMul"
@@ -52,118 +54,151 @@ eg.RegisterPlugin(
     ),
 )
 
-import wx
+
+import BaseHTTPServer
+import SimpleHTTPServer
 import os
 import posixpath
+import urllib
 import threading
 import httplib
+import mimetypes
 import base64
-from BaseHTTPServer import HTTPServer
-from SimpleHTTPServer import SimpleHTTPRequestHandler
-from urllib import unquote, unquote_plus
+import re
 
 
-class MyServer(HTTPServer):
-    
-    def __init__(self, address, handler, basepath, authRealm, authString):
-        HTTPServer.__init__(self, address, handler)
-        self.basepath = basepath
-        self.authRealm = authRealm
-        self.authString = authString
-        
+
+class MyServer(BaseHTTPServer.HTTPServer):
+    pass
     #def handle_error(self, request, client_address):
     #    eg.PrintError("HTTP Error")
 
 
 
-class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
+class MyHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
-    def Authenticate(self):
-        # only authenticate, if set
-        if self.server.authString is None:
-            return True
-        
-        # do Basic HTTP-Authentication
-        authHeader = self.headers.get('authorization')
-        if authHeader is not None:
-            (authType, authData) = authHeader.split(' ', 2)
-            if authType.lower() == 'basic':
-                if base64.decodestring(authData) == self.server.authString:
-                    return True
-                
-        self.send_response(401)
-        self.send_header(
-            'WWW-Authenticate', 
-            'Basic realm="%s"' % self.server.authRealm
-        )
-        self.end_headers()
-        return False
 
-        
+    def webvars(self, match ):
+	try:
+		value=getattr(eg.globals,match.group()[13:-2])
+		return value
+	except:
+		return ""
+
     def do_GET(self):
         """Serve a GET request."""
+
         # First do Basic HTTP-Authentication, if set
-        if not self.Authenticate():
-            return
-        
+        if self.server.authString != None:
+            authenticated = False
+            authHeader = self.headers.get('authorization')
+            if authHeader is not None:
+                (authType, authData) = authHeader.split(' ', 2)
+                if authType.lower() == 'basic':
+                    if base64.decodestring(authData) == self.server.authString:
+                        authenticated= True
+            if not authenticated:
+                self.send_response(401)
+                self.send_header(
+                    'WWW-Authenticate', 
+                    'Basic realm="%s"' % self.server.authRealm
+                )
+                self.end_headers()
+                return
+
         # Main Handler
-        infile = None
+        f = None
         try:
-            pathParts = self.path.split('?', 1)
-            self.path = pathParts[0]
-            
-            infile = self.send_head()
-            if not infile:
+            p = self.path.split('?', 1)
+            self.path = p[0]
+            f = self.send_head()
+            if not f:
                 return
-            self.copyfile(infile, self.wfile)
-            infile.close()
-            infile = None
-            
-            if len(pathParts) < 2:
+	    tempwpage=f.read()
+	    tempwpage=re.sub('{{eg.globals..*?}}', self.webvars, tempwpage)
+    	    self.wfile.write(tempwpage)
+	    # self.copyfile(f, self.wfile)
+            f.close()
+            f = None
+            if len(p) < 2:
                 return
-            queryParts = [
-                unquote_plus(part).decode("latin1")
-                    for part in pathParts[1].split('&')
-            ]
-            event = queryParts[0]
+            a = p[1].split('&')
+            event = urllib.unquote_plus(a[0]).decode("latin1")
             withoutRelease = False
             payload = None
-            if len(queryParts) > 1:
+            if len(a) > 1:
                 startPos = 1
-                if queryParts[1] == "withoutRelease":
+                if a[1] == "withoutRelease":
                     withoutRelease = True
                     startPos = 2
-                if len(queryParts) > startPos:
-                    payload = queryParts[startPos:]
+                if len(a) > startPos:
+                    payload = []
+                    for i in range(startPos, len(a)):
+                        payload.append(
+                            urllib.unquote_plus(a[i]).decode("latin1")
+                        )
             if event.strip() == "ButtonReleased":
                 self.EndLastEvent()
             elif withoutRelease:
                 self.TriggerEnduringEvent(event, payload)
             else:
                 self.TriggerEvent(event, payload)
-        except Exception, exc:
-            self.EndLastEvent()
+        except Exception, ex:
             eg.PrintError("Webserver socket error", self.path)
-            eg.PrintError(Exception, exc)
-            if infile is not None:
-                infile.close()
-            if exc.args[0] == 10053: # Software caused connection abort
+            eg.PrintError(Exception, ex)
+            if f is not None:
+                f.close()
+            if ex.args[0] == 10053: # Software caused connection abort
                 pass
-            elif exc.args[0] == 10054: # Connection reset by peer
+            elif ex.args[0] == 10054: # Connection reset by peer
                 pass
             else:
                 raise
-
 
     def log_message(self, format, *args):
         # suppress all messages
         pass
 
 
-    def copyfile(self, src, dst):
-        dst.write(src.read())
-        
-        
+    def send_head(self):
+        """Common code for GET and HEAD commands.
+
+        This sends the response code and MIME headers.
+
+        Return value is either a file object (which has to be copied
+        to the outputfile by the caller unless the command was HEAD,
+        and must be closed by the caller under all circumstances), or
+        None, in which case the caller has nothing further to do.
+
+        """
+        path = self.translate_path(self.path)
+        f = None
+        if os.path.isdir(path):
+            for index in "index.html", "index.htm":
+                index = os.path.join(path, index)
+                if os.path.exists(index):
+                    path = index
+                    break
+            else:
+                return self.list_directory(path)
+        ctype = self.guess_type(path)
+        if ctype.startswith('text/'):
+            mode = 'r'
+        else:
+            mode = 'rb'
+        try:
+            f = open(path, mode)
+        except IOError:
+            self.send_error(404, "File not found")
+            return None
+        self.send_response(200)
+        self.send_header("Content-type", ctype)
+        self.end_headers()
+        return f
+
+
+
+
     def translate_path(self, path):
         """Translate a /-separated PATH to the local filename syntax.
 
@@ -175,24 +210,32 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
         # stolen from SimpleHTTPServer.SimpleHTTPRequestHandler
         # but changed to handle files from a defined basepath instead
         # of os.getcwd()
-        path = posixpath.normpath(unquote(path))
-        words = [word for word in path.split('/') if word]
+        path = posixpath.normpath(urllib.unquote(path))
+        words = path.split('/')
+        words = filter(None, words)
         path = self.server.basepath
         for word in words:
             drive, word = os.path.splitdrive(word)
             head, word = os.path.split(word)
-            if word in (os.curdir, os.pardir): 
-                continue
+            if word in (os.curdir, os.pardir): continue
             path = os.path.join(path, word)
         return path
 
-    extensions_map = SimpleHTTPRequestHandler.extensions_map.copy()
-    extensions_map['.ico'] = 'image/x-icon'
-    extensions_map['.manifest'] = 'text/cache-manifest'
+    extensions_map = mimetypes.types_map.copy()
+    extensions_map.update(
+        {
+            '': 'application/octet-stream', # Default
+            '.py': 'text/plain',
+            '.c': 'text/plain',
+            '.h': 'text/plain',
+            '.ico': 'image/x-icon',
+        }
+    )
 
 
 
-class Webserver(eg.PluginBase):
+class DynamicWebserver(eg.PluginClass):
+    canMultiLoad = True
 
     class text:
         generalBox = "General Settings"
@@ -206,7 +249,6 @@ class Webserver(eg.PluginBase):
 
 
     def __init__(self):
-        self.AddEvents()
         self.running = False
 
 
@@ -226,41 +268,36 @@ class Webserver(eg.PluginBase):
         self.authUsername = authUsername
         self.authPassword = authPassword
         self.abort = False
-        self.httpdThread = threading.Thread(
-            name="WebserverThread", 
-            target=self.ThreadLoop
-        )
-        self.httpdThread.start()
+        self.httpd_thread = threading.Thread(target=self.ThreadLoop)
+        self.httpd_thread.start()
         self.running = True
 
 
     def __stop__(self):
         if self.running:
             self.abort = True
-            conn = httplib.HTTPConnection("127.0.0.1:%d" % self.port)
+            conn = httplib.HTTPConnection("localhost:%d" % self.port)
             conn.request("QUIT", "/")
             conn.getresponse()
-            self.httpdThread = None
+            self.httpd_thread = None
             self.running = False
 
 
     def ThreadLoop(self):
-        class MySubHandler(MyHTTPRequestHandler):
+        class mySubHandler(MyHTTPRequestHandler):
             TriggerEvent = self.TriggerEvent
             TriggerEnduringEvent = self.TriggerEnduringEvent
             EndLastEvent = self.EndLastEvent
 
-        if self.authUsername or self.authPassword:
-            authString = self.authUsername + ':' + self.authPassword
+        server = MyServer(('', self.port), mySubHandler)
+        server.basepath = self.basepath
+
+        server.authRealm = self.authRealm
+        if self.authUsername != '' or self.authPassword != '':
+            server.authString = self.authUsername + ':' + self.authPassword
         else:
-            authString = None
-        server = MyServer(
-            ('', self.port), 
-            MySubHandler,
-            self.basepath,
-            self.authRealm,
-            authString
-        )
+            server.authString = None
+
         # Handle one request at a time until stopped
         while not self.abort:
             server.handle_request()
@@ -276,7 +313,7 @@ class Webserver(eg.PluginBase):
         authPassword=""
     ):
         text = self.text
-        panel = eg.ConfigPanel()
+        panel = eg.ConfigPanel(self)
 
         portCtrl = panel.SpinIntCtrl(port, min=1, max=65535)
         filepathCtrl = panel.DirBrowseButton(basepath)
@@ -295,13 +332,13 @@ class Webserver(eg.PluginBase):
         )
         eg.EqualizeWidths(labels)
 
-        acv = wx.ALIGN_CENTER_VERTICAL
+        ACV = wx.ALIGN_CENTER_VERTICAL
         sizer = wx.FlexGridSizer(3, 2, 5, 5)
-        sizer.Add(labels[0], 0, acv)
+        sizer.Add(labels[0], 0, ACV)
         sizer.Add(portCtrl)
-        sizer.Add(labels[1], 0, acv)
+        sizer.Add(labels[1], 0, ACV)
         sizer.Add(filepathCtrl)
-        sizer.Add(labels[2], 0, acv)
+        sizer.Add(labels[2], 0, ACV)
         sizer.Add(editCtrl)
         staticBox = wx.StaticBox(panel, label=text.generalBox)
         staticBoxSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
@@ -309,11 +346,11 @@ class Webserver(eg.PluginBase):
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
         
         sizer = wx.FlexGridSizer(3, 2, 5, 5)
-        sizer.Add(labels[3], 0, acv)
+        sizer.Add(labels[3], 0, ACV)
         sizer.Add(authRealmCtrl)
-        sizer.Add(labels[4], 0, acv)
+        sizer.Add(labels[4], 0, ACV)
         sizer.Add(authUsernameCtrl)
-        sizer.Add(labels[5], 0, acv)
+        sizer.Add(labels[5], 0, ACV)
         sizer.Add(authPasswordCtrl)
         staticBox = wx.StaticBox(panel, label=text.authBox)
         staticBoxSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)

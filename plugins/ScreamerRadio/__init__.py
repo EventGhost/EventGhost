@@ -1,6 +1,6 @@
 version="0.1.6" 
 
-# Plugins/ScreamerRadio/__init__.py
+# plugins/ScreamerRadio/__init__.py
 #
 # Copyright (C)  2008 Pako  (lubos.ruckl@quick.cz)
 #
@@ -35,7 +35,7 @@ eg.RegisterPlugin(
         'Screamer radio</a>.'
     ),
     createMacrosOnAdd = True,    
-    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=840",
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=840",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAADAFBMVEUAAACuEALHOgfL"
         "WiLTbzX6xmX/337/5m//2Vv/00n+szDXZAf3rFL/2Wn/zSnxoAT/8s7/5JT/xQz/6Kr/"

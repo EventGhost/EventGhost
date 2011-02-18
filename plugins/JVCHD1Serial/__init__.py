@@ -24,7 +24,7 @@ eg.RegisterPlugin(
     version = "1.0.0",
     canMultiLoad = True,
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=650",
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=650",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARn"
         "QU1BAACxjwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdw"

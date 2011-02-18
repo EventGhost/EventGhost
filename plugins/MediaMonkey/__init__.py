@@ -1,4 +1,4 @@
-# Plugins/MediaMonkey/__init__.py
+# plugins/MediaMonkey/__init__.py
 #
 # Copyright (C)  2009 Pako  <lubos.ruckl@quick.cz>
 #
@@ -49,7 +49,7 @@ Adds support functions to control MediaMonkey_.
  "EventGhost.vbs" file to *MediaMonkey/Scripts/Auto* folder.
 
 .. _MediaMonkey: http://www.MediaMonkey.com/ ''',
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=563",
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=563",
     icon = (
         "R0lGODlhEAAQAPcAADQyNLyaTHRmRJSWlPzGNFxOPGxqbFROVKSGRJyWfOzSlOTCdGRmZ"
         "HReRERCPIRyTNy2dIyCbPzSZMSylExOTFxaXOTe5HxyVOS2ROzCTFxWPIx+ZKSajDw6PP"

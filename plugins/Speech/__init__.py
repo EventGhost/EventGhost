@@ -1,5 +1,5 @@
 #
-# Plugins/Speech/__init__.py
+# plugins/Speech/__init__.py
 #
 # Copyright (C) 2006 MonsterMagnet
 #

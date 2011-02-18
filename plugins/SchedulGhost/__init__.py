@@ -1,4 +1,4 @@
-version="0.1.0"
+version="0.1.2"
 
 # plugins/SchedulGhost/__init__.py
 #
@@ -22,27 +22,31 @@ version="0.1.0"
 #
 # Revision history:
 # -----------------
-# 0.0.0 by Pako 2010-08-28 13:07 GMT+1
-#     - initial version
-# 0.0.1 by Pako 2010-08-29 13:21 GMT+1
-#     - forum URL settings
-# 0.0.2 by Pako 2010-09-02 18:52 GMT+1
-#     - bugfix: Egg timer - popup window is opened (blank), although it has been disabled
-# 0.0.3 by Pako 2010-09-11 19:07 GMT+1
-#     - added action "Start egg timer" (without the possibility of adjust of time to elapse)
-# 0.0.4 by Pako 2010-09-21 18:28 GMT+1
-#     - Closing of popup window (egg timer) causes the stop of sound playback
-# 0.0.5 by Pako 2010-10-09 10:04 GMT+1
-#     - added button "Show SchedulGhost manager ..." in the plugin configuration dialog
-#     - added action "Run schedule immediately"
+# 0.1.2 by Pako 2011-02-12 10:03 GMT+1
+#     - FixedTimeCtrl replaced by eg.TimeCtrl
+# 0.1.1 by Pako 2010-12-07 10:32 GMT+1
+#     - wx.lib.masked.TimeCtrl bug workaround (http://trac.wxwidgets.org/ticket/11171)
+# 0.1.0 by Pako 2010-10-19 10:32 GMT+1
+#     - some textfixes by krambriw
+#     - first version, placed in SVN repository
 # 0.0.6 by Pako 2010-10-16 18:50 GMT+1
 #     - added action "Show currently running egg-timers"
 #     - added "Time span" schedule type
 #     - titlebar of every window displays SchedulGhost icon
 #     - some bugfixes
-# 0.1.0 by Pako 2010-10-19 10:32 GMT+1
-#     - some textfixes by krambriw
-#     - first version, placed in SVN repository
+# 0.0.5 by Pako 2010-10-09 10:04 GMT+1
+#     - added button "Show SchedulGhost manager ..." in the plugin configuration dialog
+#     - added action "Run schedule immediately"
+# 0.0.4 by Pako 2010-09-21 18:28 GMT+1
+#     - Closing of popup window (egg timer) causes the stop of sound playback
+# 0.0.3 by Pako 2010-09-11 19:07 GMT+1
+#     - added action "Start egg timer" (without the possibility of adjust of time to elapse)
+# 0.0.2 by Pako 2010-09-02 18:52 GMT+1
+#     - bugfix: Egg timer - popup window is opened (blank), although it has been disabled
+# 0.0.1 by Pako 2010-08-29 13:21 GMT+1
+#     - forum URL settings
+# 0.0.0 by Pako 2010-08-28 13:07 GMT+1
+#     - initial version
 #===============================================================================
 
 eg.RegisterPlugin(
@@ -55,7 +59,7 @@ eg.RegisterPlugin(
  be triggered at any time of the day or night. Events can be scheduled to be
  triggered periodically, once only, daily, weekly, monthly or yearly.''',
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=2740",
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=2740",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAADAFBMVEUA//+tra1+fn5q"
         "ampnZ2ePj49mZmYuLi4ICAgAAAAvLy+lpaVPT08PDw8QEBCGhoYmJiYAAgACHAEIPgMO"
@@ -249,12 +253,6 @@ def FindMonthDay(year, month, weekday, index):
     if day > length:
         day = 0
     return day
-#===============================================================================
-
-class MyTimeCtrl(maskedlib.TimeCtrl):
-
-    def _TimeCtrl__OnSetToNow(self, evt):
-        return False
 #===============================================================================
 
 class MySpinIntCtrl(eg.SpinIntCtrl):
@@ -1064,7 +1062,7 @@ class schedulerDialog(wx.Dialog):
                 initTime.SetSecond(0)
                 initTime.AddTS(wx.TimeSpan.Minute())
                 val = data[0] if data and data[0] else initTime
-                timeCtrl = maskedlib.TimeCtrl(
+                timeCtrl = eg.TimeCtrl(
                     self, 
                     self.ctrls[0],
                     val,
@@ -1082,7 +1080,7 @@ class schedulerDialog(wx.Dialog):
                     wx.SP_VERTICAL
                 )
                 val = data[1] if data and data[1] else "00:00:00"
-                lenCtrl = MyTimeCtrl(
+                lenCtrl = eg.TimeCtrl_Duration(
                     self,
                     self.ctrls[1],
                     val,
@@ -2935,7 +2933,7 @@ class EggTimerFrame(wx.Frame):
         initTime = wx.DateTime_Now()
         initTime.SetSecond(0)
         initTime.AddTS(wx.TimeSpan.Minute())
-        timeCtrl = MyTimeCtrl(self, -1, self.val, fmt24hr = True, style = wx.BORDER_SUNKEN)
+        timeCtrl = eg.TimeCtrl_Duration(self, -1, self.val, fmt24hr = True, style = wx.BORDER_SUNKEN)
         fnt = timeCtrl.GetFont()
         fnt.SetPointSize(4 * fnt.GetPointSize())
         timeCtrl.SetFont(fnt)
@@ -3189,7 +3187,7 @@ class SetEggTimer(eg.ActionBase):
             (-1, 22),
             wx.SP_VERTICAL
         )
-        defTime = MyTimeCtrl(
+        defTime = eg.TimeCtrl_Duration(
             panel,
             -1,
             self.args[0],

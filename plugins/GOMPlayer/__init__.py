@@ -1,5 +1,5 @@
 #
-# Plugins/GOMlayer/__init__.py
+# plugins/GOMlayer/__init__.py
 #
 # Copyright (C) 2008 CHeitkamp
 #
@@ -32,7 +32,7 @@ eg.RegisterPlugin(
         "<p>The plugin may not work with other versions of GOM Player!</p>"
         "<p><a href=\"http://www.gomplayer.com/\">GOM Player Homepage</a></p>"
     ),
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=854",
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=854",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACQUlEQVR4nKWTTUhVQRSA"
         "v7n/plj+BYKFKAlGi8pwEVZgLkqiRS0DSXla4MLaWFRuBFvloo1kGVSuo8gQoqhFWYtK"

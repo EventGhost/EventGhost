@@ -32,7 +32,7 @@ eg.RegisterPlugin(
         '\n\n<p><b>Notice:</b><br>'
         'To make it work, you have to enable TCP control in TheaterTek. '
     ),
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=559",
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=559",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAACGElEQVR42m1RPWhaURQ+"
         "gg6lCjooxnZIH9iARAi9QqwQTcBmioNQcWskwxV5i+AgDqHERZdsEfreUE3BDFJI4XUq"

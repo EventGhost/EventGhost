@@ -26,7 +26,7 @@ Enable the RC Interface or start VLC with:
 If you are using "MyCommand" remember that you can only execute commands that 
 are enabled in VLC!
 
-`Help and bugreports <http://www.eventghost.org/forum/viewtopic.php?t=693>`_
+`Help and bugreports <http://www.eventghost.net/forum/viewtopic.php?t=693>`_
 
 .. _VLC media player: http://www.videolan.org/
 """
@@ -57,7 +57,7 @@ eg.RegisterPlugin(
         "Hdn5XEojkgbFIE6sJwWm6hDwYr/okIz367GENRMtqihs9Df+Brue2BE7hqGjAAAAAElF"
         "TkSuQmCC"
     ),
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=693",
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=693",
 )
 
 

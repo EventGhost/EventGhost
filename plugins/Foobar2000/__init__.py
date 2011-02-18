@@ -1,4 +1,4 @@
-# Plugins/Foobar2000/__init__.py
+# plugins/Foobar2000/__init__.py
 #
 # Copyright (C) 2006 MonsterMagnet
 #
@@ -26,8 +26,10 @@
 eg.RegisterPlugin(
     name = "Foobar2000",
     author = "MonsterMagnet",
-    version = "1.3." + "$LastChangedRevision$".split()[1],
+#    version = "1.3." + "$LastChangedRevision$".split()[1],
+    version = "1.3.1423",
     kind = "program",
+    guid = "{50257196-DB5B-4291-BD62-FF3DE53DDCA2}",
     description = (
         'Adds actions to control the <a href="http://www.foobar2000.org/">'
         'Foobar2000</a> audio player.<br />'
@@ -101,7 +103,7 @@ ACTIONS = (
         "Quits foobar.", 
         ( "/exit", "/exit" )
     ), 
-    ( eg.ActionGroup, "Playback Control", "Playback Control", "Playback Control Functions\ne.g. Play/Pause",(
+    ( eg.ActionGroup, "Playback_Control", "Playback Control", "Playback Control Functions\ne.g. Play/Pause",(
         (
             "Play",
             "Play", 
@@ -144,7 +146,7 @@ ACTIONS = (
             "Simulate a press on the next track button.", 
             ( "/next", "/next" )
         ), 
-        ( eg.ActionGroup, "Seek Functions", "Seek Functions", "Seek Functions",(
+        ( eg.ActionGroup, "Seek_Functions", "Seek Functions", "Seek Functions",(
             (
                 "SeekAhead1s", 
                 "Seek ahead by 1 seconds", 
@@ -243,24 +245,24 @@ ACTIONS = (
             ),
         ) ),
     ) ),
-    ( eg.ActionGroup, "Volume Control", "Volume Control", "Volume Control Functions",(
+    ( eg.ActionGroup, "Volume_Control", "Volume Control", "Volume Control Functions",(
         (
             "VolumeUp", 
             "Volume Up", 
             "Turn Volume Up.",
-	    ( '/command:"Volume up"', '/runcmd="Playback/Volume/Up"' )
+        ( '/command:"Volume up"', '/runcmd="Playback/Volume/Up"' )
         ),
         (
             "VolumeDown", 
             "Volume Down", 
             "Turn Volume Down.", 
-	    ( '/command:"Volume down"', '/runcmd="Playback/Volume/Down"' )
+        ( '/command:"Volume down"', '/runcmd="Playback/Volume/Down"' )
         ),
         (
             "VolumeMute", 
             "Volume Mute", 
             "Turn Volume Mute.", 
-	    ( '/command:"Volume mute"', '/runcmd="Playback/Volume/Mute"' )
+        ( '/command:"Volume mute"', '/runcmd="Playback/Volume/Mute"' )
         ),
     ) ),
     ( eg.ActionGroup, "Miscellaneous", "Miscellaneous", "Miscellaneous Functions",(

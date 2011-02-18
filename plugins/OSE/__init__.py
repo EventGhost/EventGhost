@@ -40,7 +40,7 @@ to explicitly use the **"Stop processing this event"**,
 Only it is necessary to place the folder with the OSE as high
 as possible in the configuration tree.""",
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=2194",
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=2194",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAADAFBMVEUAAADT7f+34f+s"
         "2v+n1/+r2P/F4//G5v/F5P/Z7v/e7//e7v/V6/+y1/+t0P/S7P/E5P/f7//Q6f/G5P/D"

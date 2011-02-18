@@ -73,7 +73,7 @@ eg.RegisterPlugin(
     author = "Thierry Couquillou, Tim Delaney",
     version = "3.0.0",
     kind = "remote",
-    url="http://www.eventghost.org/forum/viewtopic.php?t=640",
+    url="http://www.eventghost.net/forum/viewtopic.php?t=640",
     description = "Hardware plugin for the PS3 Bluetooth Remote (based on the HID code of Bartman)",
     canMultiLoad = True,
     help = README,

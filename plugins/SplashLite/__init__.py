@@ -1,5 +1,5 @@
 version="0.0.1"
-# Plugins/SplashLite/__init__.py
+# plugins/SplashLite/__init__.py
 #
 # Copyright (C)  2010 Pako  (lubos.ruckl@quick.cz)
 #
@@ -38,7 +38,7 @@ It takes about one second to start application and High Definition video playbac
 .. _Splash Lite: http://www.mirillis.com/splash.html
 """,
     createMacrosOnAdd = True,    
-    #url = "http://www.eventghost.org/forum/viewtopic.php?t=XXXX",
+    #url = "http://www.eventghost.net/forum/viewtopic.php?t=XXXX",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAADAFBMVEX+/v6zs7OEhIRy"
         "cnKTk5Oampujo6OLjIxbW1vLy8vDw8Pc3Nxra2tjY2NTU1NCQkI7OzvZ3uTW2uHT09Os"

@@ -117,7 +117,7 @@ eg.RegisterPlugin(
     description = (
         "Adds E-mail actions."
     ),
-    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1168",
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=1168",
 )
 from wx.lib.intctrl import IntCtrl as intCtrl
 from threading import Thread, Event

@@ -10,7 +10,7 @@ eg.RegisterPlugin(
     author = "Micke Prag",
     version = "1.2.2",
     kind = "external",
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=455",
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=455",
     description = 'Plugin to control TellStick devices.',
     help = """
         <a href="http://www.telldus.se">Telldus Hompage</a>

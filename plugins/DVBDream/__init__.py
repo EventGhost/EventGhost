@@ -1,5 +1,5 @@
 #
-# Plugins/DVBDream/__init__.py
+# plugins/DVBDream/__init__.py
 #
 # Copyright (C) 2007 townkat
 #
@@ -24,7 +24,7 @@ eg.RegisterPlugin(
     author = "townkat",
     version = "4.1" + "$LastChangedRevision$".split()[1],
     kind = "program",
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=612",
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=612",
     createMacrosOnAdd = True,
     description = (
         'Adds actions to control '

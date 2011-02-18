@@ -8,7 +8,7 @@ eg.RegisterPlugin(
     description = (
         'Adds actions to control <a href="http://www.meedio.com/">Meedio</a>.'
     ),
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=260",
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=260",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAB3RJTUUH1wgDEBgNAaYl"
         "jAAAABd0RVh0U29mdHdhcmUAR0xEUE5HIHZlciAzLjRxhaThAAAACHRwTkdHTEQzAAAA"

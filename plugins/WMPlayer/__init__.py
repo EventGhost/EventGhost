@@ -1,5 +1,5 @@
 #
-# Plugins/WMPlayer/__init__.py
+# plugins/WMPlayer/__init__.py
 #
 # Copyright (C) 2007 Oystein Hansen
 #
@@ -26,7 +26,7 @@ eg.RegisterPlugin(
     version = "0.1." + "$LastChangedRevision$".split()[1],
     kind = "program",
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=284",
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=284",
     description = (
         'Adds actions to control the '
         '<a href="http://www.microsoft.com/windows/windowsmedia/">'

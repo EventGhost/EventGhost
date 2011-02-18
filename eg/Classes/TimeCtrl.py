@@ -16,8 +16,8 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate: 2010-12-07 14:06:00 +0100 (Tu, 07 Dec 2010) $
-# $LastChangedRevision: r1481 $
+# $LastChangedDate: 2011-02-12 09:14:00 +0100 (Su, 12 Feb 2011) $
+# $LastChangedRevision: r1486 $
 # $LastChangedBy: Pako $
 
 import wx
@@ -25,8 +25,23 @@ import wx.lib.masked
 
 class TimeCtrl(wx.lib.masked.TimeCtrl):
 
-    '''Workaround of wx.lib.masked.TimeCtrl bug.
+    '''Work-around of wx.lib.masked.TimeCtrl bug.
        See http://trac.wxwidgets.org/ticket/11171'''
+
+    def _TimeCtrl__validateValue(self, value):
+        if not value:
+            raise ValueError('%s not a valid time value' % repr(value))
+        try:
+            #value = self.GetWxDateTime(value) - THIS CAUSES THE PROBLEM !!!!!!!
+            args = [int(slice) for slice in value.split(":")]
+            value = wx.DateTimeFromHMS(*args)
+        except:
+            raise
+        if self.IsLimited() and not self.IsInBounds(value):
+            raise ValueError (
+                'value %s is not within the bounds of the control' % str(value) )
+        return value
+
 
     def _TimeCtrl__IncrementValue(self, key, pos):
         text = self.GetValue()

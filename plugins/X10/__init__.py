@@ -52,7 +52,7 @@ eg.RegisterPlugin(
     kind = "remote",
     canMultiLoad = True,
     description = __doc__,
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=1589",
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=1589",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAYklEQVR42mNkoBAwwhgq"
         "uf//k6LxzmRGRrgBpGpGNoSRXM1wL1DFgNuTGBhU8xCCyHx0Ngggq4W7AKYQlwZchqJ4"

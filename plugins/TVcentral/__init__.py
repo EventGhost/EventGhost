@@ -32,7 +32,7 @@ eg.RegisterPlugin(
     """,
     kind="program",
     author="Bitmonster",
-    url="http://www.eventghost.org/forum/viewtopic.php?t=917",
+    url="http://www.eventghost.net/forum/viewtopic.php?t=917",
     createMacrosOnAdd = True,
     version="1.0." + "$LastChangedRevision$".split()[1],
     icon = (

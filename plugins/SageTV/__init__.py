@@ -4,7 +4,7 @@ eg.RegisterPlugin(
     version = "1.2." + "$LastChangedRevision$".split()[1],
     kind = "program",
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=795",
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=795",
     description = (
         'Adds actions to control the <a href="http://www.sagetv.com/">'
         'SageTV Media Center</a>.'
