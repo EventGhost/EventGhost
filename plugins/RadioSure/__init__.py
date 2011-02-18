@@ -1,8 +1,8 @@
-version="0.1.7"
+version="0.2.10"
 
 # Plugins/RadioSure/__init__.py
 #
-# Copyright (C)  2009 Pako  (lubos.ruckl@quick.cz)
+# Copyright (C)  2009, 2010, 2011   Pako (lubos.ruckl@quick.cz)
 #
 # This file is a plugin for EventGhost.
 #
@@ -20,7 +20,44 @@ version="0.1.7"
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-# changelog:
+# Changelog (in reverse chronological order):
+# -------------------------------------------
+# 0.2.10 by Pako 2011-02-12 09:53 UTC+1
+#     - FixedTimeCtrl replaced by eg.TimeCtrl
+# 0.2.9 by Pako 2011-01-15 11:50 UTC+1
+#     - different shape of the cursor on the table of schedules indicate that there is context menu available
+# 0.2.8 by Pako 2011-01-11 14:25 UTC+1
+#     - if you turn on logging then into the log file is written whole command line
+# 0.2.7 by Pako 2011-01-07 18:39 UTC+1
+#     - fixed bug - the Scheduler window opens although in Scheduler.xml there not the attribute "Position"
+#       (this can happen when you upgrade from version 0.2.0 and lower)
+# 0.2.6 by Pako 2011-01-07 11:39 UTC+1
+#     - fixed bug - incorrect reading favorites, when applied a new structure of RadioSure.xml file
+# 0.2.5 by Pako 2010-12-28 16:02 UTC+1
+#     - added popup menu and features "Move schedule up/down"
+# 0.2.4 by Pako 2010-12-24 12:08 UTC+1
+#     - there is no need to reinstall this plugin, when changing the way the installation (especially the paths) of Radio?Sure!
+# 0.2.3 by Pako 2010-12-24 08:30 UTC+1
+#     - scheduler dialog opens, even though there is no node "Favorites" in RadioSure.xml
+# 0.2.2 by Pako 2010-12-19 15:54 UTC+1
+#     - changed the way of paths settings to the RadioSure.exe and RadioSure.xml
+# 0.2.1 by Pako 2010-12-19 08:19 UTC+1
+#     - scheduler dialog remembers its position even after closing EventGhost
+#     - bugfix - "Add schedule" enable buttons, when schedule list is empty
+# 0.2.0 by Pako 2010-12-14 11:13 UTC+1
+#     - a comprehensive rework according to the plugin SchedulGhost:
+#     - addded new types of schedule
+#     - changed format of "Scheduler.xml" file 
+#     - added ability to affect certain types of schedules according to public holidays
+#     - added option to select the first day of the week (Sunday or Monday)
+#     - scheduler dialog remembers its position
+#     - scheduler dialog is not modal and can be minimized
+#     - added Apply button (scheduler dialog)
+#     - added new actions - "Run schedule immediately"
+# 0.1.9 by Pako 2010-12-09 13:52 UTC+1
+#     - correction of previous versions (moreover redefine one pseudo-private method)
+# 0.1.8 by Pako 2010-12-06 20:10 UTC+1
+#     - wx.lib.masked.TimeCtrl workaround (see http://trac.wxwidgets.org/ticket/11171)
 # 0.1.7 by Pako 2010-07-22 20:27 GMT+1
 #     - bugfix
 # 0.1.6 by Pako 2010-07-22 10:30 GMT+1
@@ -76,8 +113,11 @@ import os
 import wx.grid as gridlib
 import wx.lib.masked as maskedlib
 import subprocess
+import wx.calendar as wxCal
 from calendar import day_name, month_name, monthrange
-from _winreg import OpenKey, HKEY_CURRENT_USER, EnumValue, CloseKey
+from wx.lib.mixins.listctrl import CheckListCtrlMixin
+from _winreg import OpenKey, HKEY_CURRENT_USER, EnumValue, QueryValueEx, CloseKey
+from time import sleep, mktime, strptime, strftime, localtime
 from datetime import datetime as dt
 from datetime import timedelta as td
 from copy import deepcopy as cpy
@@ -85,9 +125,10 @@ from xml.dom import minidom as miniDom
 from threading import Timer, Thread, Event
 from eg.WinApi.Utils import GetMonitorDimensions
 from eg.WinApi.Dynamic import CreateEvent, SetEvent
-from time import sleep, mktime, strptime, strftime
-from win32gui import GetWindowText, MessageBox, GetWindow, GetDlgCtrlID, GetDlgItem, GetClassName
-from eg.WinApi.Dynamic import SendMessage
+from eg.WinApi.Dynamic import SendMessage, ShowWindow
+from win32gui import GetWindowText, MessageBox, GetWindow, GetDlgCtrlID
+from win32gui import GetWindowPlacement, GetDlgItem, GetClassName
+from win32file import GetFileAttributes
 from random import randrange
 from codecs import lookup
 from codecs import open as openFile
@@ -95,13 +136,16 @@ from winsound import PlaySound, SND_ASYNC
 from sys import getfilesystemencoding
 fse = getfilesystemencoding()
 
-WM_COMMAND    = 273
-WM_SYSCOMMAND = 274
-TBM_GETPOS    = 1024
-TBM_SETPOS    = 1029
-SC_RESTORE    = 61728
-GW_CHILD      = 5
-GW_HWNDNEXT   = 2
+WM_COMMAND            = 273
+WM_SYSCOMMAND         = 274
+TBM_GETPOS            = 1024
+TBM_SETPOS            = 1029
+SC_RESTORE            = 61728
+SW_RESTORE            = 9
+GW_CHILD              = 5
+GW_HWNDNEXT           = 2
+FILE_ATTRIBUTE_HIDDEN = 2
+FILE_ATTRIBUTE_SYSTEM = 4
 SYS_VSCROLL_X = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
 #===============================================================================
 
@@ -120,6 +164,7 @@ class Text:
     nextRun = "Next run: %s"
     none = "None"
     execut = 'Schedule "%s" - execution. Next run: %s'
+    cmdLine = 'Commandline: %s'
     cancAndDel = 'Schedule "%s" canceled and deleted'
     cancAndDis = 'Schedule "%s" canceled (disabled)'
     newSched = 'Schedule "%s" scheduled. Next run: %s'
@@ -128,6 +173,116 @@ class Text:
     stop = 'RadioSure plugin stoped. All scheduled schedules will be canceled:'
     canc = 'Schedule "%s" canceled'
     launched = "Schedule.Launched"
+    holidButton = "Public holidays ..."
+    managerButton = "Show scheduler"
+    fixBoxLabel = "Fixed public holidays:"
+    varBoxLabel = "Variable public holidays:"
+    ok = "OK"
+    cancel = "Cancel"
+    add = "Add"
+    delete = "Delete"
+    first_day = "The first day of the week:"
+    xmlComment = "Radio?Sure! scheduler configuration file. Updated at %s."
+
+
+    class OpenScheduler:
+        dialogTitle = "Radio?Sure! Scheduler %s  (plugin for EventGhost)"
+        header = (
+            "Enabled",
+            "Schedule title",
+            "Last run",
+            "Next run",
+        )
+        sched_type = (
+            "Only once (or yearly)",
+            "Daily",
+            "Weekly",
+            "Monthly / weekday",
+            "Monthly / day",
+            "Periodically",
+        )
+        toolTipFile = """Press button and browse to select file ...
+File type (as .mp3) need not be completed. Will be added automatically."""
+
+        browseTitle = "Select a folder and enter file name (without file type):"
+        serial_num = (
+            "first",
+            "second",
+            "third",
+            "fourth",
+            "fifth",
+            "last"
+        )
+        the = "The"
+        in_ = "in"
+        buttons = (
+            "Add new",
+            "Duplicate",
+            "Delete",
+            "OK",
+            "Cancel",
+            "Apply"
+        )
+        type_label = "Schedule type:"
+        source = "Source URL:"
+        favorite = "Favorite station title:"
+        filename = "Destination file name (optional):"
+        chooseDay = "Choose day"
+        theEvery = "The every"
+        yearly = "Every year on the same day"
+        chooseTime = "Choose start time and duration (00:00 = constantly)"
+        choosePeriod = "Choose period"
+        andThenEvery = "Repeat every"
+        units = (
+            "hours",
+            "days",
+            "weeks",
+            "months",
+            "years",
+        )
+        start = "Start time (HH:MM:SS):"
+        length = "Duration (HH:MM):"
+        boxTitle = "Your setup is not properly configured !"
+        boxTexts = (
+            "Schedule title must not be an empty string !",
+            "Schedule title must be unique !",
+            'Determine the source URL, or set the mode "Do nothing" !',
+            'Not allowed to set "Do nothing" while also "None" event !',
+            'Must be chosen Schedule type !',
+            "The span must be shorter than the period !",
+        )
+        workModeLabel = "Radio?Sure! working mode:"
+        workModes = (
+            "Playing (audibly)",
+            "Recording (audibly)",
+            "Recording (soundlessly)",
+            "Do nothing"
+        )
+        windOpenLabel = "Window open:"
+        windOpenChoices =(
+            "Visible",
+            "Hidden"
+        )
+        triggEvtLabel = "Trigger an event:"
+        triggEvtChoices = (
+            "None",
+            "Schedule title",
+            "All parameters"
+        )
+        testButton = "Test now"
+        testRun = 'Schedule "%s" - TEST execution. Possible next run: %s'
+        holidCheck_1 = "Do not trigger events for a chosen day if it happens to be a holiday"
+        holidCheck_2 = "Do also trigger events for a non-chosen day if it happens to be a holiday"
+        popup = (
+            "Add schedule",
+            "Duplicate schedule",
+            "Delete schedule",
+            "Enable all schedules",
+            "Disable all schedules",
+            "Move schedule up",
+            "Move schedule down",
+        )
+
 #===============================================================================
 
 class MyDirBrowseButton(eg.DirBrowseButton):
@@ -140,10 +295,38 @@ class MyFileBrowseButton(eg.FileBrowseButton):
         return self.textControl     #  non-editable !!!
 #===============================================================================
 
+class MySpinIntCtrl(eg.SpinIntCtrl):
+
+    def SetNumCtrlId(self, id):
+        self.numCtrl.SetId(id)
+#===============================================================================
+
 newEVT_BUTTON_AFTER = wx.NewEventType()
 EVT_BUTTON_AFTER = wx.PyEventBinder(newEVT_BUTTON_AFTER, 1)
 
 class EventAfter(wx.PyCommandEvent):
+
+    def __init__(self, evtType, id):
+        wx.PyCommandEvent.__init__(self, evtType, id)
+        self.myVal = None
+
+
+    def SetValue(self, val):
+        self.myVal = val
+
+
+    def GetValue(self):
+        return self.myVal
+#===============================================================================
+
+newEVT_UPDATE_DIALOG = wx.NewEventType()
+EVT_UPDATE_DIALOG = wx.PyEventBinder(newEVT_UPDATE_DIALOG, 1)
+#===============================================================================
+
+newEVT_CHECKLISTCTRL = wx.NewEventType()
+EVT_CHECKLISTCTRL = wx.PyEventBinder(newEVT_CHECKLISTCTRL, 1)
+
+class Evt_ChecklistCtrl(wx.PyCommandEvent):
 
     def __init__(self, evtType, id):
         wx.PyCommandEvent.__init__(self, evtType, id)
@@ -327,9 +510,9 @@ class Menu(wx.Frame):
         except IndexError:
             x,y,ws,hs = monDim[0]
         # menu height calculation:
-        h=self.GetCharHeight()+4
+        h=self.GetCharHeight() + 4
         for i in range(len(self.choices)):
-            self.stationChoiceCtrl.SetCellValue(i,0,self.choices[i][1])
+            self.stationChoiceCtrl.SetCellValue(i, 0, self.choices[i][1])
             self.stationChoiceCtrl.SetRowSize(i,h)
         height0 = len(self.choices)*h
         height1 = h*((hs-20)/h)
@@ -418,182 +601,403 @@ class MyTimer():
         self.timer.cancel()
 #===============================================================================
 
-class SchedulerTable(gridlib.PyGridTableBase):
+class HolidaysFrame(wx.Dialog):
+    fixWin = None
+    varWin = None
+    fixHolidays = []
+    varHolidays = []
 
-    def __init__(self, header):
-        gridlib.PyGridTableBase.__init__(self)
-        self.colLabels = header
-        self.dataTypes = [gridlib.GRID_VALUE_BOOL,
-                          gridlib.GRID_VALUE_STRING,
-                          gridlib.GRID_VALUE_DATETIME,
-                          gridlib.GRID_VALUE_DATETIME
-                          ]
-
-        self.data = [[0,""," ",""],]
-
-
-    def GetNumberRows(self):
-        return len(self.data)
-
-
-    def GetNumberCols(self):
-        return len(self.data[0])
-
-
-    def IsEmptyCell(self, row, col):
-        try:
-            return not self.data[row][col]
-        except IndexError:
-            return True
+    def __init__(self, parent, plugin):
+        self.plugin = plugin
+        wx.Dialog.__init__(
+            self,
+            parent,
+            -1,
+            style = wx.DEFAULT_DIALOG_STYLE,
+            name = self.plugin.text.holidButton
+        )
+        self.SetIcon(self.plugin.info.icon.GetWxIcon())
+        self.panel = parent
+        self.fixHolidays, self.varHolidays = cpy(self.panel.holidays)
+        self.Bind(wxCal.EVT_CALENDAR_DAY, self.OnChangeDay)
 
 
-    def GetValue(self, row, col):
-        try:
-            return self.data[row][col]
-        except IndexError:
-            return ''
+    def ShowHolidaysFrame(self):
+        text = self.plugin.text
+        self.SetTitle(self.plugin.text.holidButton)
+        self.fixWin = CalendarPopup(self, False, self.plugin.first_day)
+        self.varWin = CalendarPopup(self, True, self.plugin.first_day)
+        calW, calH = self.fixWin.GetWinSize()
+        fixLbl = wx.StaticText(self, -1, text.fixBoxLabel)
+        variableLbl = wx.StaticText(self, -1, text.varBoxLabel)
+        widthList = [self.GetTextExtent("30. %s 2000" % month)[0] +
+            SYS_VSCROLL_X for month in list(month_name)]
+        widthList.append(fixLbl.GetSize()[0])
+        widthList.append(variableLbl.GetSize()[0])
+        w = max(widthList) + 5
+        self.SetMinSize((w + calW + 30, 2 * calH + 128))
+        self.fixListBox = HolidaysBox(
+            self,
+            -1,
+            size = wx.Size(w, 130),
+            style = wx.LB_SINGLE|wx.LB_NEEDED_SB
+        )
+        self.fix_add_Btn = wx.Button(self, -1, text.add)
+        self.fix_del_Btn = wx.Button(self, -1, text.delete)
+        self.fix_del_Btn.Enable(False)
+        self.varListBox = HolidaysBox(
+            self,
+            -1,
+            size = wx.Size(w, 130),
+            style = wx.LB_SINGLE|wx.LB_NEEDED_SB
+        )
+        self.var_add_Btn = wx.Button(self, -1, text.add)
+        self.var_del_Btn = wx.Button(self, -1, text.delete)
+        self.var_del_Btn.Enable(False)
+        line = wx.StaticLine(self, -1, style = wx.LI_HORIZONTAL)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        fixSizer = wx.GridBagSizer(2, 8)
+        fixSizer.SetMinSize((w + 8 + calW, -1))
+        varSizer = wx.GridBagSizer(2, 8)
+        varSizer.SetMinSize((w + 8 + calW, -1))
+        fixSizer.Add(fixLbl, (0, 0))
+        fixSizer.Add(self.fixListBox, (1, 0), (3, 1))
+        fixSizer.Add(self.fix_add_Btn, (1, 1))
+        fixSizer.Add((-1, 15), (2, 1))
+        fixSizer.Add(self.fix_del_Btn, (3, 1))
+        varSizer.Add(variableLbl, (0, 0))
+        varSizer.Add(self.varListBox, (1, 0), (3,1))
+        varSizer.Add(self.var_add_Btn, (1, 1))
+        varSizer.Add((-1, 15), (2, 1))
+        varSizer.Add(self.var_del_Btn, (3, 1))
+        sizer.Add(fixSizer, 0, wx.EXPAND|wx.ALL, 8)
+        sizer.Add((-1, 12))
+        sizer.Add(varSizer, 0, wx.EXPAND|wx.ALL, 8)
+        sizer.Add((1, 16))
+        btn1 = wx.Button(self, wx.ID_OK)
+        btn1.SetLabel(text.ok)
+        btn1.SetDefault()
+        btn2 = wx.Button(self, wx.ID_CANCEL)
+        btn2.SetLabel(text.cancel)
+        btnsizer = wx.StdDialogButtonSizer()
+        btnsizer.AddButton(btn1)
+        btnsizer.AddButton(btn2)
+        btnsizer.Realize()
+        sizer.Add(line, 0, wx.EXPAND)
+        sizer.Add((1,5))
+        sizer.Add(btnsizer, 0, wx.EXPAND|wx.RIGHT, 10)
+        sz = self.GetMinSize()
+        self.SetSize(sz)
+        self.fixListBox.Reset(self.fixHolidays)
+        self.varListBox.Reset(self.varHolidays)
+        self.Bind(wx.EVT_CLOSE, self.onClose)
+        btn2.Bind(wx.EVT_BUTTON, self.onCancel)
+        btn1.Bind(wx.EVT_BUTTON, self.onOK)
+        self.fix_add_Btn.Bind(wx.EVT_BUTTON, self.onFixAddBtn)
+        self.var_add_Btn.Bind(wx.EVT_BUTTON, self.onVarAddBtn)
+        self.fix_del_Btn.Bind(wx.EVT_BUTTON, self.onFixDelBtn)
+        self.var_del_Btn.Bind(wx.EVT_BUTTON, self.onVarDelBtn)
+        self.Bind(wx.EVT_LISTBOX, self.onHolBoxSel)
+        sizer.Layout()
+        self.SetSizer(sizer)
+        self.MakeModal(True)
+        self.Show(True)
 
 
-    def SetValue(self, row, col, value):
-        self.data[row][col] = value
+    def onClose(self, evt):
+        self.MakeModal(False)
+        self.GetParent().GetParent().Raise()
+        self.Destroy()
 
 
-    def GetColLabelValue(self, col):
-        return self.colLabels[col]
+    def onCancel(self, evt):
+        self.Close()
 
 
-    def GetTypeName(self, row, col):
-        return self.dataTypes[col]
+    def onOK(self, evt):
+        self.panel.holidays = (self.fixHolidays, self.varHolidays)
+        self.Close()
 
 
-    def CanGetValueAs(self, row, col, typeName):
-        colType = self.dataTypes[col].split(':')[0]
-        if typeName == colType:
-            return True
+    def onHolBoxSel(self, evt):
+        if  evt.GetId() == self.fixListBox.GetId():
+            self.fix_del_Btn.Enable(True)
         else:
-            return False
-
-
-    def CanSetValueAs(self, row, col, typeName):
-        return self.CanGetValueAs(row, col, typeName)
-
-
-    def AppendRow(self):
-        self.data.append([1,"", " ", ""])
-        msg = gridlib.GridTableMessage(self,            # The table
-                gridlib.GRIDTABLE_NOTIFY_ROWS_APPENDED, # what we did to it
-                1                                       # how many
-                )
-        self.GetView().ProcessTableMessage(msg)
-
-
-    def DeleteRow(self, row):
-        self.data.pop(row)
-        msg = gridlib.GridTableMessage(self,           # The table
-                gridlib.GRIDTABLE_NOTIFY_ROWS_DELETED, # what we did to it
-                row,1                                  # which and how many
-                )
-        self.GetView().ProcessTableMessage(msg)
-#===============================================================================
-
-class SchedulerGrid(gridlib.Grid):
-
-    def __init__(self, parent, text, width):
-        gridlib.Grid.__init__(self, parent, -1, style = wx.BORDER_SIMPLE )
-        self.back = self.GetDefaultCellBackgroundColour()
-        self.fore = self.GetDefaultCellTextColour()
-        self.selBack = self.GetSelectionBackground()
-        self.selFore = self.GetSelectionForeground()
-        self.table = SchedulerTable(text.header)
-        self.SetTable(self.table, True)
-        self.SetRowLabelSize(0)
-        self.SetMargins(0,0)
-        self.EnableDragColSize(False)
-        self.EnableDragRowSize(False)
-        self.EnableDragGridSize(False)
-        self.AutoSizeColumns(False)
-        self.SetScrollLineX(1)
-        self.SetScrollLineY(self.GetRowSize(0))
-
-        border = self.GetWindowBorderSize()[0]
-        const_width = self.GetColSize(0)+2*96+SYS_VSCROLL_X+border
-        self.SetColSize(1,width - const_width)
-        self.SetColSize(2,96)
-        self.SetColSize(3,96)
-
-        self.SetSize((width,154))
-        self.SetMinSize((width,154))
-        attr = gridlib.GridCellAttr()
-        attr.SetAlignment(wx.ALIGN_CENTRE, wx.ALIGN_CENTRE)
-        self.SetColAttr(0,attr)
-        attr = gridlib.GridCellAttr()
-        attr.SetReadOnly()
-        self.SetColAttr(1,attr)
-        self.SetColAttr(2,attr)
-        self.SetColAttr(3,attr)
-
-        gridlib.EVT_GRID_SELECT_CELL(self, self.onGridSelectCell)
-
-
-    def onGridSelectCell(self, evt):
-        for row in range(self.GetNumberRows()):
-            if self.GetCellTextColour(row, 0) == self.selFore:
-                attr = gridlib.GridCellAttr()
-                attr.SetBackgroundColour(self.back)
-                attr.SetTextColour(self.fore)
-                self.SetRowAttr(row, attr)
-        attr = gridlib.GridCellAttr()
-        attr.SetBackgroundColour(self.selBack)
-        attr.SetTextColour(self.selFore)
-        self.SetRowAttr(evt.GetRow(), attr)
-        self.ForceRefresh()
+            self.var_del_Btn.Enable(True)
         evt.Skip()
 
 
-    def AppendRow(self):
-        self.table.AppendRow()
+    def onFixAddBtn(self, evt):
+        pos = self.ClientToScreen(self.fix_add_Btn.GetPosition())
+        self.fixWin.PopUp(pos, self.fixHolidays)
 
 
-    def DeleteRow(self, row):
-        col = self.GetGridCursorCol()
-        self.table.DeleteRow(row)
-        lngth = self.table.GetNumberRows()
+    def onVarAddBtn(self, evt):
+        pos = self.ClientToScreen(self.var_add_Btn.GetPosition())
+        self.varWin.PopUp(pos, self.varHolidays)
+
+
+    def onFixDelBtn(self, evt):
+        self.fixHolidays.pop(self.fixListBox.GetSelection())
+        if self.fixListBox.Reset(self.fixHolidays):
+            self.fix_del_Btn.Enable(False)
+
+
+    def onVarDelBtn(self, evt):
+        self.varHolidays.pop(self.varListBox.GetSelection())
+        if self.varListBox.Reset(self.varHolidays):
+            self.var_del_Btn.Enable(False)
+
+
+    def OnChangeDay(self, evt):
+        if evt.GetId() == self.fixWin.GetCalId():
+            self.fixListBox.Reset(self.fixHolidays)
+        else:
+            self.varListBox.Reset(self.varHolidays)
+        evt.Skip()
+#===============================================================================
+
+class HolidaysBox(wx.ListBox):
+
+    def __init__ (self, parent, id, size, style):
+        wx.ListBox.__init__(
+            self,
+            parent = parent,
+            id = id,
+            size = size,
+            style = style
+        )
+        self.sel = -1
+        self.Bind(wx.EVT_LISTBOX, self.onHolBoxSel)
+
+
+    def Reset(self, list):
+        tmpList = []
+        for item in list:
+            day = item[-1]
+            day = "  %i" % day if day < 10 else "%i" % day
+            if len(item) == 2:
+                tmpList.append("%s. %s" % (day, month_name[item[0]]))
+            else:
+                tmpList.append("%s. %s %i" % (day, month_name[item[1]], item[0]))
+        self.Set(tmpList)
+        if self.sel > -1 and self.sel < self.GetCount():
+            self.SetSelection(self.sel)
+            return False
+        else:
+            return True
+
+
+    def  onHolBoxSel(self, evt):
+        self.sel = evt.GetSelection()
+        evt.Skip()
+#===============================================================================
+
+class CalendarPopup(wx.PopupWindow):
+    yearChange = True
+
+    def __init__(self, parent, yearChange, first_day):
+        self.yearChange = yearChange
+        wx.PopupWindow.__init__(self, parent)
+        startDate = wx.DateTime()
+        startDate.Set(1, 0)
+        self.cal = wxCal.CalendarCtrl(
+            self,
+            -1,
+            startDate,
+            style = (wxCal.CAL_MONDAY_FIRST, wxCal.CAL_SUNDAY_FIRST)[first_day]
+                | wxCal.CAL_SHOW_HOLIDAYS
+                | wxCal.CAL_SEQUENTIAL_MONTH_SELECTION
+                | wxCal.CAL_SHOW_SURROUNDING_WEEKS 
+        )
+        self.cal.EnableYearChange(yearChange)
+        sz = self.cal.GetBestSize()
+        self.SetSize(sz)
+        self.cal.Bind(wxCal.EVT_CALENDAR_DAY, self.OnChangeDay)
+        self.cal.Bind(wxCal.EVT_CALENDAR_MONTH, self.OnChangeMonth)
+        self.cal.Bind(wxCal.EVT_CALENDAR_YEAR, self.OnChangeMonth)
+        self.cal.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeaveWindow)
+
+
+    def OnLeaveWindow(self, evt):
+        self.PopDown()
+        evt.Skip()
+
+
+    def GetCalId(self):
+        return self.cal.GetId()
+
+
+    def GetWinSize(self):
+        return self.GetSize()
+
+
+    def OnChangeDay(self, evt):
+        date = evt.GetDate()
+        day, month, year = date.GetDay(), 1 + date.GetMonth(), date.GetYear()
+        newHoliday = (year, month, day) if self.yearChange else (month, day)
+        if not newHoliday in self.holidays:
+            self.holidays.append(newHoliday)
+            self.holidays.sort()
+        date = self.cal.GetDate()
+        self.cal.SetHoliday(day)
+        date.AddDS(wx.DateSpan.Day())
+        self.cal.SetDate(date)
+        self.Refresh()
+        evt.Skip()
+
+
+    def OnChangeMonth(self, evt = None):
+        date = self.cal.GetDate()
+        cur_month = date.GetMonth() + 1   # convert wx.DateTime 0-11 => 1-12
+        if self.yearChange:
+            cur_year = date.GetYear()
+            for year, month, day in self.holidays:
+                if year == cur_year and month == cur_month:
+                    self.cal.SetHoliday(day)
+        else:
+            for month, day in self.holidays:
+                if month == cur_month:
+                    self.cal.SetHoliday(day)
+
+
+    def PopUp(self, position, holidays):
+        self.cal.EnableHolidayDisplay(False)
+        self.cal.EnableHolidayDisplay(True)
+        self.SetPosition(position)
+        self.holidays = holidays
+        self.OnChangeMonth()
+        self.Show(True)
+
+
+    def PopDown(self):
+        self.Show(False)
+        self.Close()
+#===============================================================================
+
+class CheckListCtrl(wx.ListCtrl, CheckListCtrlMixin):
+
+    def __init__(self, parent, text, width):
+        wx.ListCtrl.__init__(
+            self,
+            parent,
+            -1,
+            size = (width, 164),
+            style = wx.LC_REPORT|wx.LC_HRULES|wx.LC_VRULES|wx.LC_SINGLE_SEL
+        )
+        curString = (
+            "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAADAFBMVEX/AAAAAAAUFBQV"
+            "FRUWFhYTExMCAgI1NTXp6ekEBAQzMzPV1dWPj4+goKCAgIAbGxsBAQHa2tq4uLi/v7/C"
+            "wsLBwcG8vLy6uro5OTkNDQ0QEBAHBwcFBQXR0dFra2s9PT0oKCgGBgYXFxdsbGxLS0t0"
+            "dHQyMjJhYWFOTk5SUlJWVlYqKirGxsb8/PylpaUrKyudnZ2kpKTHx8e7urp6enrX19fP"
+            "z8+RkZEiJCRfX18REREtLS2EhISXl5dERERVVVVZWVkdHR1/gYE0NDSUlJQaGhoYGBgZ"
+            "GRkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA5GIQAACQAAAAAAAAA"
+            "AAAAAAAAAAAAADQAABNBfeQAAAAAAAA5GLg5GLgAACQAAAAAAAAAAAAAAAAAAAAAAGgA"
+            "ABNBfeQAAAAAAAA5GOw5GOwAACQAAAAAAAAAAAAAABAAAAAAANAAABNBfeQAAAAAAABh"
+            "FgiPH4AAJtwAAAAAAAAAAAAAAAAAAIAAAAA5ELy/IqwAAGgAAAA/6bw5AjwAAFgAAAAA"
+            "AAAAAAAAAAAAAAAAAAA5EpBmS+wAADQAAAA5GYg5GYgAACQAAAAAAAAAAAAAAAAAAAAA"
+            "AWwAABNBfeQAAAAAAABhFgiPH4AAJkAAAAAAAAAAAAAAAACAAAAAAABhFgiPH4AAJhwA"
+            "AABhFgiPH4AAJgwAAAAAAAAAAAAAAAAAgAAAAABhFgiPH4AAJegAAAA5GiQ5GiQAASgA"
+            "AAAAAAACAAAAAAAAAAAAAAA5E8g5E8gAAQQAAAA5Glg5GlgAACQAAAAAAAAAAAAAAAAA"
+            "AAAAADQAABNBfeQAAAAAAAA5Gow5GowAAIwAAAAAAAAAAAAAAAAAAAAAAADJSBkDAAAA"
+            "AXRSTlMAQObYZgAAAAlwSFlzAAABiQAAAYkBni4RNQAAAP1JREFUeNqF09lWwjAQBuD5"
+            "KVZZBJcCUmQpICrKJiooixuW938jmLZJKZQzc9E2ydeZJCchEgMikAQkAUlAEpAEJAFJ"
+            "QBKQBCQBSUAS2BNIGEkvDCN5ggMAMiN/xyzTpFPVc6ZBih9pBTLZcy9yYQbKhykuLq+u"
+            "LauwjWLJCkDAbtSky7C5XVFD3H2rUwBVKteUJX0mGdSDjzQacBw0IxujF+K02i3QHTr3"
+            "D4/d3Z1j8LR9237WZ1AveuQZ9D0w4FRDvQ8qRkHDppcxXt+yeJ/EXxouMf349Mfiwcyb"
+            "73y/RAgWy6/vzs8v/o6X4NWujpUw/10Ow3XX64R4s4k2SJ0PWZEnDEUAAAAASUVORK5C"
+            "YII="
+        )
+
+        from cStringIO import StringIO
+        from base64 import b64decode
+        from Image import open as openImage
+        stream = StringIO(b64decode(curString))
+        pil = openImage(stream).convert("RGBA")
+        stream.close()
+        bmp = wx.BitmapFromBufferRGBA(pil.size[0],pil.size[1],pil.tostring())
+        img = bmp.ConvertToImage()
+        img.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 1)
+        img.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 1)
+        cursor = wx.CursorFromImage(img)
+        self.SetCursor(cursor)
+        self.selRow = -1
+        self.back = self.GetBackgroundColour()
+        self.fore = self.GetForegroundColour()
+        self.selBack = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
+        self.selFore = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
+        for i in range(len(text.header)):
+            self.InsertColumn(i, text.header[i])
+        self.SetColumnWidth(0, wx.LIST_AUTOSIZE_USEHEADER)
+        self.SetColumnWidth(
+            1,
+            width - self.GetColumnWidth(0) - 2 * 116 - SYS_VSCROLL_X - self.GetWindowBorderSize()[0]
+        )
+        self.SetColumnWidth(2, 116)
+        self.SetColumnWidth(3, 116)
+        CheckListCtrlMixin.__init__(self)
+        self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnItemSelected)
+
+    def OnItemSelected(self, evt):
+        self.SelRow(evt.m_itemIndex)
+        evt.Skip()
+
+
+    # this is called by the base class when an item is checked/unchecked !!!!!!!
+    def OnCheckItem(self, index, flag):
+        evt = Evt_ChecklistCtrl(newEVT_CHECKLISTCTRL, self.GetId())
+        evt.SetValue((index, flag))
+        self.GetEventHandler().ProcessEvent(evt)
 
 
     def SelRow(self, row):
-        if self.GetNumberRows()-1 >= row:
-            self.SetGridCursor(row, 1)
+        if row != self.selRow:
+            if self.selRow in range(self.GetItemCount()):
+                item = self.GetItem(self.selRow)
+                item.SetTextColour(self.fore)
+                item.SetBackgroundColour(self.back)
+                self.SetItem(item)
+            self.selRow = row
+        if self.GetItemBackgroundColour(row) != self.selBack:
+            item = self.GetItem(row)
+            item.SetTextColour(self.selFore)
+            item.SetBackgroundColour(self.selBack)
+            self.SetItem(item)
+            self.SetItemState(row, 0, wx.LIST_STATE_SELECTED)
 
 
-    def SetValue(self, cell, value):
-        self.table.SetValue(cell[0], cell[1], value)
-        self.ForceRefresh()
-
-
-    def GetValue(self, row, col):
-        return self.table.GetValue(row, col)
+    def AppendRow(self):
+        ix = self.GetItemCount()
+        self.InsertStringItem(ix, "")
+        self.CheckItem(ix)
+        self.EnsureVisible(ix)
+        self.SelRow(ix)
 #===============================================================================
 
 class schedulerDialog(wx.Dialog):
-
     lastRow = -1
-    data = []
+    applyBttn = None
 
     def __init__(self, text, plugin):
         wx.Dialog.__init__(
             self,
             None,
             -1,
-            text.dialogTitle,
-            style=wx.CAPTION | wx. STAY_ON_TOP,
+            text.dialogTitle % version,
+            style = wx.DEFAULT_DIALOG_STYLE|wx.MINIMIZE_BOX|wx.CLOSE_BOX,
         )
 
         #import locale as l
         #l.setlocale(l.LC_ALL, "us") # only for testing
 
-        bttns=[]
+        bttns = []
         self.ctrls=[]
         self.plugin = plugin
+        self.SetIcon(self.plugin.info.icon.GetWxIcon())
+        self.plugin.dialog = self
+        self.tmpData = self.plugin.tmpData = cpy(self.plugin.data)
         self.text = text
 
         def fillDynamicSizer(type, data = None, old_type = 255):
@@ -601,28 +1005,25 @@ class schedulerDialog(wx.Dialog):
             if flag:
                 dynamicSizer.Clear(True)
                 self.ctrls=[]
-                id=wx.NewId()
-                self.ctrls.append(id)
-                id=wx.NewId()
-                self.ctrls.append(id)
+                self.ctrls.append(wx.NewId())
+                self.ctrls.append(wx.NewId())
             if type == -1:
                 return
+            if type != 1 and flag:
+                topSizer = wx.StaticBoxSizer(
+                    wx.StaticBox(self, -1, self.text.chooseDay),
+                    wx.HORIZONTAL
+                )
             if type == 0:
                 if flag:
-                    topSizer = wx.StaticBoxSizer(
-                        wx.StaticBox(self, -1, self.text.chooseDay),
-                        wx.HORIZONTAL
-                    )
-                    id=wx.NewId()
-                    self.ctrls.append(id)
-                    dp = wx.DatePickerCtrl(self, self.ctrls[2], size=(86,-1),
-                            style=wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
+                    self.ctrls.append(wx.NewId())
+                    dp = wx.DatePickerCtrl(self, self.ctrls[2], size = (86, -1),
+                            style = wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
                     topSizer.Add(dp,0,wx.EXPAND)
-                    id=wx.NewId()
-                    self.ctrls.append(id)
+                    self.ctrls.append(wx.NewId())
                     yearlyCtrl = wx.CheckBox(self, self.ctrls[3], self.text.yearly)
-                    topSizer.Add(yearlyCtrl, 0, wx.EXPAND|wx.LEFT, 30)                    
-                    dynamicSizer.Add(topSizer,0,wx.EXPAND|wx.TOP,2)
+                    topSizer.Add(yearlyCtrl, 0, wx.EXPAND|wx.LEFT, 30)
+                    dynamicSizer.Add(topSizer, 0, wx.EXPAND|wx.TOP, 2)
                 else:
                     dp = wx.FindWindowById(self.ctrls[2])
                     yearlyCtrl = wx.FindWindowById(self.ctrls[3])
@@ -630,134 +1031,326 @@ class schedulerDialog(wx.Dialog):
                     if not data[2]:
                         val = wx.DateTime_Now()
                         data[2] = str(dt.now())[:10]
-                    wxDttm=wx.DateTime()
-                    wxDttm.Set(int(data[2][8:10]),int(data[2][5:7])-1,int(data[2][:4]))
+                    wxDttm = wx.DateTime()
+                    wxDttm.Set(
+                        int(data[2][8:10]),
+                        int(data[2][5:7]) - 1,
+                        int(data[2][:4])
+                    )
                     dp.SetValue(wxDttm)
                     yearlyCtrl.SetValue(data[3])
             elif type == 2:
                 if flag:
-                    choices = list(day_name)
-                    id=wx.NewId()
-                    self.ctrls.append(id)
+                    if self.plugin.first_day:
+                        choices = list(day_name)[:-1]
+                        choices.insert(0, list(day_name)[-1])
+                    else:
+                        choices = list(day_name)
+                    self.ctrls.append(wx.NewId())
                     weekdayCtrl = wx.CheckListBox(
                         self,
                         self.ctrls[2],
                         choices = choices,
                         size=((-1,110)),
                     )
-                    topSizer = wx.StaticBoxSizer(
-                        wx.StaticBox(self, -1, self.text.chooseDay),
-                        wx.HORIZONTAL
+                    self.ctrls.append(wx.NewId())
+                    holidCheck_2 = wx.CheckBox(
+                        self,
+                        self.ctrls[3],
+                        self.text.holidCheck_2
                     )
-                    topSizer.Add((40,1),0,wx.ALIGN_CENTER)
-                    topSizer.Add(wx.StaticText(self,-1,self.text.theEvery),0,wx.ALIGN_CENTER|wx.RIGHT,10)
-                    topSizer.Add(weekdayCtrl,0,wx.TOP)
-                    dynamicSizer.Add(topSizer,0,wx.EXPAND|wx.TOP,2)
+                    self.ctrls.append(wx.NewId())
+                    holidCheck_1 = wx.CheckBox(
+                        self,
+                        self.ctrls[4],
+                        self.text.holidCheck_1
+                    )
+                    topSizer.Add((40,1), 0, wx.ALIGN_CENTER)
+                    topSizer.Add(
+                        wx.StaticText(
+                            self,
+                            -1,
+                            self.text.theEvery
+                        ),
+                        0,
+                        wx.ALIGN_CENTER | wx.RIGHT, 10
+                    )
+                    topSizer.Add(weekdayCtrl, 0, wx.TOP)
+                    dynamicSizer.Add(topSizer, 0, wx.EXPAND | wx.TOP,2)
+                    dynamicSizer.Add(holidCheck_1, 0, wx.TOP, 2)
+                    dynamicSizer.Add(holidCheck_2, 0, wx.TOP, 2)
                 else:
                     weekdayCtrl = wx.FindWindowById(self.ctrls[2])
+                    holidCheck_2 = wx.FindWindowById(self.ctrls[3])
+                    holidCheck_1 = wx.FindWindowById(self.ctrls[4])
                 val = 127 if not data else data[2]
+                if self.plugin.first_day:
+                    exp = [6, 0, 1, 2, 3, 4, 5]
+                else:
+                    exp = [0, 1, 2, 3, 4, 5, 6]
                 for i in range(7):
-                    weekdayCtrl.Check(i, bool(val&(2**i)))
-            elif type == 3: # Monthly ...
+                    weekdayCtrl.Check(i, bool(val & (2 ** exp[i])))
+                enable = val & 31 and not val & 96
+                holidCheck_1.Enable(enable)
+                check = 0 if (not data or not enable) else data[4]
+                holidCheck_1.SetValue(check)
+                enable = val & 96 and not val & 31
+                holidCheck_2.Enable(enable)
+                check = 0 if (not data or not enable) else data[3]
+                holidCheck_2.SetValue(check)
+            elif type == 3: # Monthly/weekday ...
                 if flag:
                     dateSizer = wx.BoxSizer(wx.HORIZONTAL)
-                    dateSizer.Add(wx.StaticText(self,-1,self.text.the),0,wx.ALIGN_CENTER)
-                    topSizer = wx.StaticBoxSizer(
-                        wx.StaticBox(self, -1, self.text.chooseDay),
-                        wx.VERTICAL
+                    dateSizer.Add(
+                        wx.StaticText(
+                            self,
+                            -1,
+                            self.text.the
+                        ),
+                        0,
+                        wx.ALIGN_CENTER
                     )
-                    topSizer.Add(dateSizer,0,wx.EXPAND)
-                    dynamicSizer.Add(topSizer,0,wx.EXPAND|wx.TOP,2)
-
-                    id=wx.NewId()
-                    self.ctrls.append(id)
+                    topSizer.Add(dateSizer, 0, wx.EXPAND)
+                    dynamicSizer.Add(topSizer, 0, wx.EXPAND | wx.TOP,2)
+                    self.ctrls.append(wx.NewId())
                     serialCtrl = wx.CheckListBox(
                         self,
                         self.ctrls[2],
                         choices = self.text.serial_num,
-                        size=((-1,95)),
+                        size = ((-1, 95)),
                     )
-                    dateSizer.Add(serialCtrl,0,wx.ALIGN_CENTER|wx.LEFT,10)
-
-                    choices = list(day_name)
-                    id=wx.NewId()
-                    self.ctrls.append(id)
+                    dateSizer.Add(serialCtrl, 0, wx.ALIGN_CENTER | wx.LEFT, 10)
+                    if self.plugin.first_day:
+                        choices = list(day_name)[0:-1]
+                        choices.insert(0, list(day_name)[-1])
+                    else:
+                        choices = list(day_name)
+                    self.ctrls.append(wx.NewId())
                     weekdayCtrl = wx.CheckListBox(
                         self,
                         self.ctrls[3],
                         choices = choices,
-                        size=((-1,110)),
+                        size = ((-1, 110)),
                     )
-                    dateSizer.Add(weekdayCtrl,0,wx.ALIGN_CENTER|wx.LEFT,10)
-                    dateSizer.Add(wx.StaticText(self,-1,self.text.in_),0,wx.ALIGN_CENTER|wx.LEFT,10)
-                    id=wx.NewId()
-                    self.ctrls.append(id)
+                    dateSizer.Add(weekdayCtrl, 0, wx.ALIGN_CENTER | wx.LEFT, 10)
+                    dateSizer.Add(
+                        wx.StaticText(
+                            self,
+                            -1,
+                            self.text.in_
+                        ),
+                        0,
+                        wx.ALIGN_CENTER | wx.LEFT, 10
+                    )
+                    self.ctrls.append(wx.NewId())
                     monthsCtrl_1 = wx.CheckListBox(
                         self,
                         self.ctrls[4],
                         choices = list(month_name)[1:7],
-                        size=((-1,95)),
+                        size = ((-1, 95)),
                     )
-                    dateSizer.Add(monthsCtrl_1,0,wx.ALIGN_CENTER|wx.LEFT,10)
-                    id=wx.NewId()
-                    self.ctrls.append(id)
+                    dateSizer.Add(monthsCtrl_1, 0, wx.ALIGN_CENTER | wx.LEFT, 10)
+                    self.ctrls.append(wx.NewId())
                     monthsCtrl_2 = wx.CheckListBox(
                         self,
                         self.ctrls[5],
                         choices = list(month_name)[7:],
-                        size=((-1,95)),
+                        size = ((-1, 95)),
                     )
-                    dateSizer.Add(monthsCtrl_2,0,wx.ALIGN_CENTER|wx.LEFT,-1)
+                    dateSizer.Add(monthsCtrl_2, 0, wx.ALIGN_CENTER | wx.LEFT, -1)
+                    self.ctrls.append(wx.NewId())
+                    holidCheck_1 = wx.CheckBox(
+                        self,
+                        self.ctrls[6],
+                        self.text.holidCheck_1
+                    )
+                    dynamicSizer.Add(holidCheck_1, 0, wx.TOP, 2)
                 else:
                     serialCtrl = wx.FindWindowById(self.ctrls[2])
                     weekdayCtrl = wx.FindWindowById(self.ctrls[3])
                     monthsCtrl_1 = wx.FindWindowById(self.ctrls[4])
                     monthsCtrl_2 = wx.FindWindowById(self.ctrls[5])
+                    holidCheck_1 = wx.FindWindowById(self.ctrls[6])
                 val = 0 if not data else data[2]
                 for i in range(6):
-                    serialCtrl.Check(i, bool(val&(2**i)))
+                    serialCtrl.Check(i, bool(val & (2 ** i)))
                 val = 0 if not data else data[3]
+                if self.plugin.first_day:
+                    exp = [6, 0, 1, 2, 3, 4, 5]
+                else:
+                    exp = [0, 1, 2, 3, 4, 5, 6]
                 for i in range(7):
-                    weekdayCtrl.Check(i, bool(val&(2**i)))
+                    weekdayCtrl.Check(i, bool(val & (2 ** exp[i])))
+                enable = val & 31 and not val & 96
+                holidCheck_1.Enable(enable)
                 val = 63 if not data else data[4]
                 for i in range(6):
-                    monthsCtrl_1.Check(i, bool(val&(2**i)))
+                    monthsCtrl_1.Check(i, bool(val & (2 ** i)))
                 val = 63 if not data else data[5]
                 for i in range(6):
-                    monthsCtrl_2.Check(i, bool(val&(2**i)))
-
-            #else: # type == 1 (daily):
+                    monthsCtrl_2.Check(i, bool(val & (2 ** i)))
+                check = 0 if (not data or not enable) else data[6]
+                holidCheck_1.SetValue(check)
+            elif type == 4: # Monthly/day ...
+                if flag:
+                    dateSizer = wx.BoxSizer(wx.HORIZONTAL)
+                    topSizer.Add(dateSizer, 0, wx.EXPAND)
+                    dynamicSizer.Add(topSizer, 0, wx.EXPAND | wx.TOP, 2)
+                    self.ctrls.append(wx.NewId())
+                    q_1_Ctrl = wx.CheckListBox(
+                        self,
+                        self.ctrls[2],
+                        choices = [str(i) + '.' for i in range(1, 9)],
+                        size = ((40, 125)),
+                    )
+                    dateSizer.Add(q_1_Ctrl, 0, wx.LEFT, 5)
+                    self.ctrls.append(wx.NewId())
+                    q_2_Ctrl = wx.CheckListBox(
+                        self,
+                        self.ctrls[3],
+                        choices = [str(i) + '.' for i in range(9, 17)],
+                        size = ((46, 125)),
+                    )
+                    dateSizer.Add(q_2_Ctrl, 0, wx.LEFT, -1)
+                    self.ctrls.append(wx.NewId())
+                    q_3_Ctrl = wx.CheckListBox(
+                        self,
+                        self.ctrls[4],
+                        choices = [str(i) + '.' for i in range(17, 25)],
+                        size = ((46, 125)),
+                    )
+                    dateSizer.Add(q_3_Ctrl, 0, wx.LEFT, -1)
+                    self.ctrls.append(wx.NewId())
+                    q_4_Ctrl = wx.CheckListBox(
+                        self,
+                        self.ctrls[5],
+                        choices = [str(i) + '.' for i in range(25, 32)],
+                        size = ((46, 125)),
+                    )
+                    dateSizer.Add(q_4_Ctrl, 0, wx.LEFT, -1)
+                    dateSizer.Add((-1, 1), 1, wx.EXPAND)
+                    self.ctrls.append(wx.NewId())
+                    monthsCtrl_1 = wx.CheckListBox(
+                        self,
+                        self.ctrls[6],
+                        choices = list(month_name)[1:7],
+                        size = ((-1, 95)),
+                    )
+                    dateSizer.Add(monthsCtrl_1, 0, wx.ALIGN_CENTER | wx.LEFT, 10)
+                    self.ctrls.append(wx.NewId())
+                    monthsCtrl_2 = wx.CheckListBox(
+                        self,
+                        self.ctrls[7],
+                        choices = list(month_name)[7:],
+                        size = ((-1, 95)),
+                    )
+                    dateSizer.Add(monthsCtrl_2, 0, wx.ALIGN_CENTER | wx.LEFT, -1)
+                    dateSizer.Add((5, 1), 0)
+                else:
+                    q_1_Ctrl = wx.FindWindowById(self.ctrls[2])
+                    q_2_Ctrl = wx.FindWindowById(self.ctrls[3])
+                    q_3_Ctrl = wx.FindWindowById(self.ctrls[4])
+                    q_4_Ctrl = wx.FindWindowById(self.ctrls[5])
+                    monthsCtrl_1 = wx.FindWindowById(self.ctrls[6])
+                    monthsCtrl_2 = wx.FindWindowById(self.ctrls[7])
+                val = 0 if not data else data[2]
+                for i in range(8):
+                    q_1_Ctrl.Check(i, bool(val & (2 ** i)))
+                val = 0 if not data else data[3]
+                for i in range(8):
+                    q_2_Ctrl.Check(i, bool(val & (2 ** i)))
+                val = 0 if not data else data[4]
+                for i in range(8):
+                    q_3_Ctrl.Check(i, bool(val & (2 ** i)))
+                val = 0 if not data else data[5]
+                for i in range(7):
+                    q_4_Ctrl.Check(i, bool(val & (2 ** i)))
+                val = 63 if not data else data[6]
+                for i in range(6):
+                    monthsCtrl_1.Check(i, bool(val & (2 ** i)))
+                val = 63 if not data else data[7]
+                for i in range(6):
+                    monthsCtrl_2.Check(i, bool(val & (2 ** i)))
+            elif type == 5:
+                if flag:
+                    self.ctrls.append(wx.NewId())
+                    dp = wx.DatePickerCtrl(self, self.ctrls[2], size = (86, -1),
+                            style = wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
+                    topSizer.Add(dp, 0, wx.EXPAND)
+                    dynamicSizer.Add(topSizer, 0, wx.EXPAND | wx.TOP, 2)
+                else:
+                    dp = wx.FindWindowById(self.ctrls[2])
+                if data:
+                    if not data[2]:
+                        val = wx.DateTime_Now()
+                        data[2] = str(dt.now())[:10]
+                    wxDttm = wx.DateTime()
+                    wxDttm.Set(
+                        int(data[2][8:10]),
+                        int(data[2][5:7])-1,
+                        int(data[2][:4])
+                    )
+                    dp.SetValue(wxDttm)
+            #elif type == 1: # daily
             #    pass
             if flag:
-                timeSizer = wx.GridBagSizer(0,0)
+                timeSizer = wx.GridBagSizer(0, 0)
                 bottomSizer = wx.StaticBoxSizer(
-                    wx.StaticBox(self, -1, self.text.chooseTime),
+                    wx.StaticBox(self, -1, self.text.chooseTime6 if type == 6 else self.text.chooseTime),
                     wx.HORIZONTAL
                 )
-                dynamicSizer.Add(bottomSizer,0,wx.EXPAND|wx.TOP,5)
+                dynamicSizer.Add(bottomSizer, 0, wx.EXPAND | wx.TOP, 16 if type != 2 else 5)
                 bottomSizer.Add(timeSizer, 0, wx.EXPAND)
-                timeSizer.Add(wx.StaticText(self,-1,self.text.start),(0,0),(1,2))
-                id=wx.NewId()
-                self.ctrls.append(id)
-                durLabel = wx.StaticText(self, id, self.text.length)
-                timeSizer.Add(durLabel, (0,3), (1,2))
-                spinBtn = wx.SpinButton(self,-1, wx.DefaultPosition, (-1,22), wx.SP_VERTICAL )
-                val = data[0] if data and data[0] else wx.DateTime_Now()
-                timeCtrl = maskedlib.TimeCtrl(
-                    self, self.ctrls[0], val, fmt24hr = True, spinButton = spinBtn)
-                timeSizer.Add(timeCtrl,(1,0),(1,1))
-                timeSizer.Add(spinBtn,(1,1),(1,1))
-                timeSizer.Add((40,-1),(1,2), (1,1))
-                spinBtn2 = wx.SpinButton(self,-1, wx.DefaultPosition, (-1,22), wx.SP_VERTICAL )
+                stEvLbl = wx.StaticText(self, -1, self.text.start)
+                timeSizer.Add(stEvLbl, (0, 0), (1, 2))
+                durLabel = wx.StaticText(self, -1, self.text.length)
+                timeSizer.Add(durLabel, (0, 3), (1, 2))
+                spinBtn = wx.SpinButton(
+                    self,
+                    -1,
+                    wx.DefaultPosition,
+                    (-1, 22),
+                    wx.SP_VERTICAL
+                )
+                initTime = wx.DateTime_Now()
+                initTime.SetSecond(0)
+                initTime.AddTS(wx.TimeSpan.Minute())
+                val = data[0] if data and data[0] else initTime
+                timeCtrl = eg.TimeCtrl(
+                    self, 
+                    self.ctrls[0],
+                    val,
+                    fmt24hr = True,
+                    spinButton = spinBtn
+                )
+                timeSizer.Add(timeCtrl, (1, 0), (1, 1))
+                timeSizer.Add(spinBtn, (1, 1), (1, 1))
+                timeSizer.Add((40, -1), (1, 2), (1, 1))
+                spinBtn2 = wx.SpinButton(
+                    self,
+                    -1,
+                    wx.DefaultPosition,
+                    (-1, 22),
+                    wx.SP_VERTICAL
+                )
                 val = data[1] if data and data[1] else "00:00"
-                lenCtrl = maskedlib.TimeCtrl(
-                    self, self.ctrls[1], val, fmt24hr = True, spinButton = spinBtn2, displaySeconds = False)
-                timeSizer.Add(lenCtrl,(1,3),(1,1))
-                timeSizer.Add(spinBtn2,(1,4),(1,1))
+                lenCtrl = eg.TimeCtrl_Duration(
+                    self,
+                    self.ctrls[1],
+                    val,
+                    fmt24hr = True,
+                    spinButton = spinBtn2,
+                    displaySeconds = False
+                )
+                timeSizer.Add(lenCtrl, (1, 3), (1, 1))
+                timeSizer.Add(spinBtn2, (1, 4), (1, 1))
                 bottomSizer.Add((-1,-1), 1, wx.EXPAND)
-                testBttn = wx.Button(self, -1 if len(bttns) == 0 else bttns[5], self.text.testButton)
-                bottomSizer.Add(testBttn, 0, wx.EXPAND|wx.RIGHT)
-                dynamicSizer.Layout()
+                testBttn = wx.Button(
+                    self,
+                    -1 if len(bttns) == 0 else bttns[-1],
+                    self.text.testButton
+                )
+                bottomSizer.Add(testBttn, 0, wx.EXPAND | wx.RIGHT)
             else:
                 timeCtrl = wx.FindWindowById(self.ctrls[0])
                 val = data[0] if data and data[0] else wx.DateTime_Now()
@@ -765,13 +1358,53 @@ class schedulerDialog(wx.Dialog):
                 lenCtrl = wx.FindWindowById(self.ctrls[1])
                 val = data[1] if data and data[1] else "00:00"
                 lenCtrl.SetValue(val)
-            return dynamicSizer.GetMinSize()
+            if type == 5: #periodically
+                if flag:
+                    bottomSizer = wx.StaticBoxSizer(
+                        wx.StaticBox(self, -1, self.text.choosePeriod),
+                        wx.HORIZONTAL
+                    )
+                    self.ctrls.append(wx.NewId())
+                    numCtrl = MySpinIntCtrl(self, -1, value = 1, min = 1)
+                    numCtrl.SetNumCtrlId(self.ctrls[3])
+                    bottomSizer.Add(
+                        wx.StaticText(
+                            self,
+                            -1,
+                            self.text.andThenEvery
+                        ),
+                        0,
+                        wx.ALIGN_CENTER
+                    )
+                    bottomSizer.Add(numCtrl, 0, wx.LEFT, 4)
+                    self.ctrls.append(wx.NewId())
+                    unitCtrl = wx.Choice(
+                        self,
+                        self.ctrls[4],
+                        choices = self.text.units
+                    )
+                    bottomSizer.Add(unitCtrl, 0, wx.LEFT, 8)
+                    dynamicSizer.Add(bottomSizer, 0, wx.EXPAND|wx.TOP, 16)
+                    dynamicSizer.Layout()
+                else:
+                    numCtrl = wx.FindWindowById(self.ctrls[3])
+                    unitCtrl = wx.FindWindowById(self.ctrls[4])
+                if data:
+                    numCtrl.SetValue(str(data[3]))
+                    unitCtrl.SetSelection(data[4])
+            elif flag:
+                dynamicSizer.Layout()
+            if type == 6:
+                stEvLbl.Show(False)
+                timeCtrl.Show(False)
+                spinBtn.Show(False)
+            return dynamicSizer.GetMinSize()[0]
 
-        dynamicSizer = wx.BoxSizer(wx.VERTICAL)
-        wDynamic = fillDynamicSizer(3)[0]
-        fillDynamicSizer(-1)
-        self.SetSize(wx.Size(wDynamic+37, 645))
-        grid = SchedulerGrid(self, text, wDynamic+20)
+
+        def Diff():
+            applyBttn = wx.FindWindowById(bttns[5])
+            flg = self.tmpData != self.plugin.data
+            applyBttn.Enable(flg)        
 
 
         def onCheckListBox(evt):
@@ -779,83 +1412,107 @@ class schedulerDialog(wx.Dialog):
             sel = evt.GetSelection()
             box = self.FindWindowById(id)
             ix = self.ctrls.index(id)
+            type = self.tmpData[self.lastRow][2]
+            cond = (type == 2 and ix == 2) or (type == 3 and ix == 3)
+            if cond and self.plugin.first_day:
+                exp = (6, 0, 1, 2, 3, 4, 5)[sel]
+            else:
+                exp = sel
             if box.IsChecked(sel):
-                self.data[self.lastRow][3][ix] |= 2**sel
+                self.tmpData[self.lastRow][3][ix] |= 2 ** exp
             else:
-                self.data[self.lastRow][3][ix] &= 255-2**sel
-            next = self.plugin.NextRun(self.data[self.lastRow][2],self.data[self.lastRow][3])
-            if next:
-                grid.SetValue((self.lastRow, 3), next[:-3])
-            else:
-                grid.SetValue((self.lastRow, 3), "")
-        wx.EVT_CHECKLISTBOX(self, -1, onCheckListBox)
+                self.tmpData[self.lastRow][3][ix] &= 255 - 2 ** exp
+            if cond:
+                holidCheck_1 = wx.FindWindowById(self.ctrls[-1])
+                val = self.tmpData[self.lastRow][3][ix]
+                flg = val & 31 and not val & 96
+                holidCheck_1.Enable(flg)
+                if not flg:
+                    holidCheck_1.SetValue(0)
+                    self.tmpData[self.lastRow][3][-1] = 0
+                if type == 2:
+                    holidCheck_2 = wx.FindWindowById(self.ctrls[3])
+                    val = self.tmpData[self.lastRow][3][2]
+                    flg = val & 96 and not val & 31
+                    holidCheck_2.Enable(flg)
+                    if not flg:
+                        holidCheck_2.SetValue(0)
+                        self.tmpData[self.lastRow][3][3] = 0
+            next = self.plugin.NextRun(
+                self.tmpData[self.lastRow][2],
+                self.tmpData[self.lastRow][3]
+            )
+            grid.SetStringItem(self.lastRow, 3, next)
+            Diff()
 
 
         def OnTimeChange(evt):
             ix = self.ctrls.index(evt.GetId())
-            self.data[self.lastRow][3][ix]=evt.GetValue()
-            next = self.plugin.NextRun(self.data[self.lastRow][2],self.data[self.lastRow][3])
-            if next:
-                grid.SetValue((self.lastRow, 3), next[:-3])
+            self.tmpData[self.lastRow][3][ix] = evt.GetValue()
+            next = self.plugin.NextRun(
+                self.tmpData[self.lastRow][2],
+                self.tmpData[self.lastRow][3]
+            )
+            grid.SetStringItem(self.lastRow, 3, next)
+            Diff()
+
+
+        def onPeriodUnit(evt):
+            if len(self.ctrls) == 5 and evt.GetId() == self.ctrls[4]:
+                self.tmpData[self.lastRow][3][4] = evt.GetSelection()
+                next = self.plugin.NextRun(
+                    self.tmpData[self.lastRow][2],
+                    self.tmpData[self.lastRow][3]
+                )
+                grid.SetStringItem(self.lastRow, 3, next)
             else:
-                grid.SetValue((self.lastRow, 3), "")
-        maskedlib.EVT_TIMEUPDATE(self, -1, OnTimeChange)
+                evt.Skip()
+            Diff()
 
 
         def onDatePicker(evt):
             val = str(dt.fromtimestamp(evt.GetDate().GetTicks()))[:10]
-            self.data[self.lastRow][3][2] = val
-            next = self.plugin.NextRun(self.data[self.lastRow][2],self.data[self.lastRow][3])
-            if next:
-                grid.SetValue((self.lastRow, 3), next[:-3])
-            else:
-                grid.SetValue((self.lastRow, 3), "")
-        wx.EVT_DATE_CHANGED(self, -1, onDatePicker)
+            self.tmpData[self.lastRow][3][2] = val
+            next = self.plugin.NextRun(
+                self.tmpData[self.lastRow][2],
+                self.tmpData[self.lastRow][3]
+            )
+            grid.SetStringItem(self.lastRow, 3, next)
+            Diff()
 
 
-        def onYearlyCtrl(evt):
+        def onCheckBox(evt):
             val = evt.IsChecked()
-            self.data[self.lastRow][3][3] = int(val)
-            next = self.plugin.NextRun(self.data[self.lastRow][2],self.data[self.lastRow][3])
-            if next:
-                grid.SetValue((self.lastRow, 3), next[:-3])
+            ix = self.ctrls.index(evt.GetId())
+            if self.tmpData[self.lastRow][2] == 2 and ix == 3:
+                self.tmpData[self.lastRow][3][3] = int(val)
             else:
-                grid.SetValue((self.lastRow, 3), "")
-        wx.EVT_CHECKBOX(self, -1, onYearlyCtrl)
+                self.tmpData[self.lastRow][3][-1] = int(val)
+            next = self.plugin.NextRun(
+                self.tmpData[self.lastRow][2],
+                self.tmpData[self.lastRow][3]
+            )
+            grid.SetStringItem(self.lastRow, 3, next)
+            Diff()
 
 
-        def OpenSchedule():
-            schedulerName.ChangeValue(self.data[self.lastRow][1])
-            type = self.data[self.lastRow][2]
-            fillDynamicSizer(type, self.data[self.lastRow][3], typeChoice.GetSelection())
-            typeChoice.SetSelection(type)
-            modes = self.data[self.lastRow][7]
-            rsMode = (modes>>1)&3
-            workModeCtrl.SetSelection(rsMode)
-            recordCtrl.GetTextCtrl().ChangeValue(self.data[self.lastRow][5])
-            sourceCtrl.SetValue(self.data[self.lastRow][4])
-            if rsMode == 3:
-                windOpenCtrl.SetSelection(-1)
-                windOpenCtrl.Enable(False)
-                windOpenLbl.Enable(False)
-            else:
-                windOpenCtrl.SetSelection(modes&1)
-                windOpenCtrl.Enable(True)
-                windOpenLbl.Enable(True)
-            triggEvtCtrl.SetSelection((modes>>3)&3)
+        def OnUpdateDialog(evt):
+            if self.lastRow == evt.GetId():
+                OpenSchedule()
 
 
-        def OnLeftClick(evt):
-            self.lastRow = evt.GetRow()
+        def OnSelectCell(evt):
+            self.lastRow = evt.m_itemIndex
             OpenSchedule()
+            Diff()
             evt.Skip() # necessary !!!
-        self.Bind(gridlib.EVT_GRID_CELL_LEFT_CLICK, OnLeftClick)
 
 
         def enableBttns(value):
-            for i in range(1,3):
-                bttn=self.FindWindowById(bttns[i])
+            for i in (1, 2):
+                bttn = self.FindWindowById(bttns[i])
                 bttn.Enable(value)
+            Diff()
 
 
         def ShowMessageBox(mess):
@@ -869,134 +1526,216 @@ class schedulerDialog(wx.Dialog):
 
 
         def FindNewTitle(title):
-            tmpLst=[]
-            for item in self.data:
-                if item[1].startswith(title+" ("):
-                    tmpLst.append(item[1][2+len(title):])
-            if len(tmpLst)==0:
+            tmpLst = []
+            for item in self.tmpData:
+                if item[1].startswith(title + " ("):
+                    tmpLst.append(item[1][2 + len(title):])
+            if len(tmpLst) == 0:
                 return "%s (1)" % title
-            tmpLst2=[]
+            tmpLst2 = []
             for item in tmpLst:
-                if item[-1]==")":
+                if item[-1] == ")":
                     try:
                         tmpLst2.append(int(item[:-1]))
                     except:
                         pass
-            if len(tmpLst2)==0:
+            if len(tmpLst2) == 0:
                 return "%s (1)" % title
             else:
-                return "%s (%i)" % (title, 1+max(tmpLst2))
+                return "%s (%i)" % (title, 1 + max(tmpLst2))
 
 
-        def testValidity(data, test):
+        def testValidity(data, test = False):
             mssgs = []
-            if test:
-                data = [data,]
             tempDict = dict([(item[1].strip(), item[2]) for item in data])
-            if "" in tempDict:
+            if "" in tempDict.iterkeys():
                 mssgs.append(self.text.boxTexts[0])
             if not test and len(tempDict) < len(data):
                 mssgs.append(self.text.boxTexts[1])
+            if -1 in tempDict.itervalues():
+                mssgs.append(self.text.boxTexts[4])
             for item in data:
                 val = item[7]
                 if (val & 6) == 6: # = Do nothing
                     if not val & 24:
                         if not self.text.boxTexts[3] in mssgs:
                             mssgs.append(self.text.boxTexts[3])
-                else:
-                    if "" in [item[4].strip() for item in data]:
+                else: # Not "Do nothing"
+                    if not item[5]:
                         if not self.text.boxTexts[2] in mssgs:
-                            mssgs.append(self.text.boxTexts[2])
-                if item[2] == -1:
-                    if not self.text.boxTexts[4] in mssgs:
-                        mssgs.append(self.text.boxTexts[4])
-            flag = len(mssgs) == 0
-            if not flag:
+                            mssgs.append(self.text.boxTexts[2])                    
+                if item[2] == 5 and item[3][4] < 2:
+                    period = item[3][3] * (3600, 86400)[item[3][4]]
+                    span = 60 * int(item[3][1][3:]) + 3600 * int(item[3][1][:2])
+                    if period <= span:
+                        if self.text.boxTexts[5] not in mssgs:
+                            mssgs.append(self.text.boxTexts[5])
+            flag = len(mssgs) > 0
+            if flag:
                 ShowMessageBox("\n".join(mssgs))
             return flag
 
 
+        def addSchedule(evt = None):
+            empty = [1, "", -1, [], " ", "", "", 5]
+            self.lastRow = len(self.tmpData)
+            self.tmpData.append(empty)
+            Tidy()
+            grid.AppendRow()
+            grid.SelRow(self.lastRow)
+            if not self.lastRow:
+                enableBttns(True)
+                EnableCtrls(True)
+            Diff()
+
+
+        def duplSchedule(evt = None):
+            lngth = len(self.tmpData)
+            item = cpy(self.tmpData[self.lastRow])
+            nxt = grid.GetItem(self.lastRow, 3).GetText()
+            item[4] = ""
+            self.lastRow = lngth
+            self.tmpData.append(item)
+            newTitle = FindNewTitle(self.tmpData[lngth][1])
+            self.tmpData[lngth][1] = newTitle
+            grid.AppendRow()
+            grid.SelRow(lngth)
+            grid.SetStringItem(lngth, 1, newTitle)
+            grid.SetStringItem(lngth, 3, nxt)
+            OpenSchedule()
+            Diff()
+
+
+        def delSchedule(evt = None):
+            self.tmpData.pop(self.lastRow)
+            grid.DeleteItem(self.lastRow)
+            if len(self.tmpData) > 0:
+                if self.lastRow == len(self.tmpData):
+                    self.lastRow -= 1
+                OpenSchedule()
+                grid.SelRow(self.lastRow)
+            else:
+                self.lastRow = -1
+                Tidy()
+                EnableCtrls(False)
+                enableBttns(False)
+            Diff()
+
+
+        def Move(direction):
+            lst = cpy(self.tmpData)
+            index = self.lastRow
+            max = len(lst)-1
+            #Last to first position, other down
+            if index == max and direction == 1:
+                self.tmpData[1:] = lst[:-1]
+                self.tmpData[0] = lst[max]
+                index2 = 0
+            #First to last position, other up
+            elif index == 0 and direction == -1:
+                self.tmpData[:-1] = lst[1:]
+                self.tmpData[max] = lst[0]
+                index2 = max
+            else:
+                index2 = index + direction
+                self.tmpData[index] = lst[index2]
+                self.tmpData[index2] = lst[index]
+            del lst
+            return index2
+
+
+        def moveUp(evt = None):
+            newSel = Move(-1)
+            fillGrid(False)
+            self.grid.SelRow(newSel)
+            Diff()
+
+
+        def moveDown(evt = None):
+            newSel = Move(1)
+            fillGrid(False)
+            self.grid.SelRow(newSel)
+            Diff()
+
+
         def onButton(evt):
             id = evt.GetId()
-            lngth = len(self.data)
             if id == bttns[0]:   # Add new
-                grid.AppendRow()
-                empty = [1, "", -1, [], "", "", " ",5]
-                if lngth == 0:
-                    self.lastRow = 0
-                    self.data=[empty,]
-                    enableBttns(True)
-                else:
-                    self.lastRow = lngth
-                    self.data.append(empty)
-                    Tidy()
-                grid.SelRow(self.lastRow)
-                EnableCtrls(True)
+                addSchedule()
             elif id == bttns[1]: # Duplicate
-                item = cpy(self.data[self.lastRow])
-                self.lastRow = lngth
-                self.data.append(item)
-                newTitle = FindNewTitle(self.data[lngth][1])
-                self.data[lngth][1] = newTitle
-                grid.AppendRow()
-                grid.SelRow(lngth)
-                grid.SetValue((lngth, 1), newTitle)
-                OpenSchedule()
+                duplSchedule()
             elif id == bttns[2]: # Delete
-                self.data.pop(self.lastRow)
-                grid.DeleteRow(self.lastRow)
-                if len(self.data) > 0:
-                    if self.lastRow == len(self.data):
-                        self.lastRow -= 1
-                    OpenSchedule()
-                    grid.SelRow(self.lastRow)
-                else:
-                    self.lastRow = -1
-                    Tidy()
-                    EnableCtrls(False)
-                    enableBttns(False)
+                delSchedule()
             elif id == bttns[3]: # OK
-                if not testValidity(self.data, False):
+                if testValidity(self.tmpData):
+                    evt.Skip()
                     return
-                for i in range(len(self.data)):
-                    value = int(grid.GetValue(i, 0))
-                    self.data[i][0]=value
-                self.plugin.dataToXml(self.data)
+                self.plugin.data = cpy(self.tmpData)
+                self.tmpData = []
+                self.plugin.dataToXml()
                 self.plugin.UpdateEGscheduler()
-                self.Show(False)
-                self.MakeModal(False)
-                self.Destroy()
+                self.Close()
             elif id == bttns[4]: # Cancel
-                self.Show(False)
-                self.MakeModal(False)
-                self.Destroy()
+                self.tmpData = []
+                self.Close()
+            elif id == bttns[5]: # Apply
+                applyBttn = wx.FindWindowById(bttns[5])
+                applyBttn.Enable(False)
+                if testValidity(self.tmpData):
+                    evt.Skip()
+                    return
+                self.plugin.data = cpy(self.tmpData)
+                self.plugin.dataToXml()
+                self.plugin.UpdateEGscheduler()
+            evt.Skip()
 
 
         def EnableCtrls(value):
-            favChoice.Enable(value)
             typeChoice.Enable(value)
-            sourceCtrl.Enable(value)
             schedulerName.Enable(value)
-            workModeCtrl.Enable(value)
-            windOpenCtrl.Enable(value)
-            triggEvtCtrl.Enable(value)
             name_label.Enable(value)
             type_label.Enable(value)
-            source_label.Enable(value)
             favorite_label.Enable(value)
             workModeLbl.Enable(value)
-            windOpenLbl.Enable(value)
             triggEvtLbl.Enable(value)
+            windOpenLbl.Enable(value)
+            source_label.Enable(value)
             filename_label.Enable(value)
+            favChoice.Enable(value)
+            sourceCtrl.Enable(value)
             recordCtrl.Enable(value)
+            workModeCtrl.Enable(value)
+            triggEvtCtrl.Enable(value)
+            windOpenCtrl.Enable(value)
             if not value:
-                windOpenCtrl.SetSelection(-1)
                 workModeCtrl.SetSelection(-1)
                 triggEvtCtrl.SetSelection(-1)
+                windOpenCtrl.SetSelection(-1)
+
+
+        def OpenSchedule():
+            schedulerName.ChangeValue(self.tmpData[self.lastRow][1])
+            type = self.tmpData[self.lastRow][2]
+            fillDynamicSizer(
+                type,
+                self.tmpData[self.lastRow][3],
+                typeChoice.GetSelection()
+            )
+            typeChoice.SetSelection(type)
+            modes = self.tmpData[self.lastRow][7]
+            rsMode = (modes>>1)&3
+            workModeCtrl.SetSelection(rsMode)
+            recordCtrl.GetTextCtrl().ChangeValue(self.tmpData[self.lastRow][6])
+            sourceCtrl.SetValue(self.tmpData[self.lastRow][5])
+            if rsMode == 3:
+                windOpenCtrl.SetSelection(-1)
+                windOpenCtrl.Enable(False)
+                windOpenLbl.Enable(False)
             else:
-                windOpenCtrl.SetSelection(1)
-                workModeCtrl.SetSelection(2)
-                triggEvtCtrl.SetSelection(0)
+                windOpenCtrl.SetSelection(modes&1)
+                windOpenCtrl.Enable(True)
+                windOpenLbl.Enable(True)
+            triggEvtCtrl.SetSelection((modes>>3)&3)
 
 
         def Tidy():
@@ -1012,44 +1751,127 @@ class schedulerDialog(wx.Dialog):
             filename_label.Enable(True)
             recordCtrl.Enable(True)
 
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(grid, 0, wx.ALL, 5)
-        bttnSizer=wx.BoxSizer(wx.HORIZONTAL)
-        bttnSizer.Add((5, -1))
-        i=0
-        for bttn in self.text.buttons:
-            id=wx.NewId()
-            bttns.append(id)
-            b = wx.Button(self, id, bttn)
-            bttnSizer.Add(b,1)
-            if i in (1,2):
-                b.Enable(False)
-            b.Bind(wx.EVT_BUTTON, onButton)
-            bttnSizer.Add((5, -1))
-            i+=1
 
-        #testBttn event handling:
-        id=wx.NewId()
-        bttns.append(id)
+        def onCheckListCtrl(evt):
+            index, flag = evt.GetValue()
+            if self.tmpData[index][0] != int(flag):
+                self.tmpData[index][0] = int(flag)
+                Diff()
+
+
+        def onSchedulerTitle(evt):
+            txt = evt.GetString()
+            grid.SetStringItem(self.lastRow, 1, txt)
+            self.tmpData[self.lastRow][1] = txt
+            Diff()
+
+
+        def onPeriodNumber(evt):
+            if len(self.ctrls) == 5 and evt.GetId() == self.ctrls[3]:
+                self.tmpData[self.lastRow][3][3] = int(evt.GetString())
+                next = self.plugin.NextRun(
+                    self.tmpData[self.lastRow][2],
+                    self.tmpData[self.lastRow][3]
+                )
+                grid.SetStringItem(self.lastRow, 3, next)
+                Diff()
+            else:
+                evt.Skip()
+
+
         def onTestButton(evt):
-            data = self.data[self.lastRow]
-            if not testValidity(data, True):
+            data = self.tmpData[self.lastRow]
+            if testValidity([data,], True):
                 return
-            next = self.plugin.Execute(data)
+            ticks = mktime(localtime())
+            next, cmdline = self.plugin.Execute(data, True)
             next = next[:19] if next else self.plugin.text.none
             self.plugin.updateLogFile(self.text.testRun % (data[1], next))
-        self.Bind(wx.EVT_BUTTON, onTestButton, id = id)
+            self.plugin.updateLogFile(self.plugin.text.cmdLine % cmdline)
 
-        sizer.Add(bttnSizer,0,wx.EXPAND)
-        schedulerName = wx.TextCtrl(self,-1,"")
+
+        def OnRightClick(evt):
+            if not hasattr(self, "popupID1"):
+                self.popupID1 = wx.NewId()
+                self.popupID2 = wx.NewId()
+                self.popupID3 = wx.NewId()
+                self.popupID4 = wx.NewId()
+                self.popupID5 = wx.NewId()
+                self.popupID6 = wx.NewId()
+                self.popupID7 = wx.NewId()
+                self.Bind(wx.EVT_MENU, addSchedule, id=self.popupID1)
+                self.Bind(wx.EVT_MENU, duplSchedule, id=self.popupID2)
+                self.Bind(wx.EVT_MENU, delSchedule, id=self.popupID3)
+                self.Bind(wx.EVT_MENU, self.EnableAll, id=self.popupID4)
+                self.Bind(wx.EVT_MENU, self.DisableAll, id=self.popupID5)
+                self.Bind(wx.EVT_MENU, moveUp, id=self.popupID6)
+                self.Bind(wx.EVT_MENU, moveDown, id=self.popupID7)
+            # make a menu
+            menu = wx.Menu()
+            menu.Append(self.popupID1, self.text.popup[0])
+            menu.Append(self.popupID2, self.text.popup[1])
+            menu.Append(self.popupID3, self.text.popup[2])
+            menu.AppendSeparator()
+            menu.Append(self.popupID4, self.text.popup[3])
+            menu.Append(self.popupID5, self.text.popup[4])
+            menu.AppendSeparator()
+            menu.Append(self.popupID6, self.text.popup[5])
+            menu.Append(self.popupID7, self.text.popup[6])
+            self.PopupMenu(menu)
+            menu.Destroy()
+            evt.Skip()
+
+
+        def fillGrid(flag):
+            grid.DeleteAllItems()
+            rows = len(self.tmpData)
+            if rows > 0:
+                for row in range(rows):
+                    grid.InsertStringItem(row, "")
+                    if self.tmpData[row][0]:
+                        grid.CheckItem(row)
+                    grid.SetStringItem(row, 1, self.tmpData[row][1])
+                    grid.SetStringItem(row, 2, self.tmpData[row][4])
+                    next = self.plugin.NextRun(self.tmpData[row][2], self.tmpData[row][3])
+                    grid.SetStringItem(row, 3, next)
+                if flag:
+                    self.lastRow = 0
+                    grid.SelRow(0)
+                    OpenSchedule()
+                    enableBttns(True)
+            else:
+                EnableCtrls(False)
+                grid.DeleteItem(0)
+
+        dynamicSizer = wx.BoxSizer(wx.VERTICAL)
+        wDynamic = fillDynamicSizer(3)
+        fillDynamicSizer(-1)
+        self.SetSize(wx.Size(wDynamic + 37, 684))
+        grid = self.grid = CheckListCtrl(self, text, wDynamic + 20)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(grid, 0, wx.ALL, 5)
+        favorite_label = wx.StaticText(self, -1, self.text.favorite)
+        workModeLbl = wx.StaticText(self, -1, self.text.workModeLabel)
+        workModeCtrl = wx.Choice(self, -1, choices = self.text.workModes)
+        triggEvtLbl = wx.StaticText(self, -1, self.text.triggEvtLabel)
+        triggEvtCtrl = wx.Choice(self, -1, choices = self.text.triggEvtChoices)
+        windOpenLbl = wx.StaticText(self, -1, self.text.windOpenLabel)
+        windOpenCtrl = wx.Choice(self, -1, choices = self.text.windOpenChoices)
+        source_label = wx.StaticText(self, -1, self.text.source)
         self.favorites = self.plugin.RefreshVariables()
         favChoice = wx.Choice(self, -1, choices = [item[1] for item in self.favorites])
-        typeChoice = wx.Choice(self, -1, choices = self.text.sched_type)
         sourceCtrl = wx.TextCtrl(self,-1,"")
+        filename_label = wx.StaticText(self, -1, self.text.filename)
+        schedulerName = wx.TextCtrl(self, -1, "")
+        typeChoice = wx.Choice(self, -1, choices = self.text.sched_type)
         xmltoparse = u'%s\\RadioSure.xml' % self.plugin.xmlpath
-        xmldoc = miniDom.parse(xmltoparse.encode(eg.systemEncoding))
-        recordings = xmldoc.getElementsByTagName('Recordings')[0]
-        folder = recordings.getElementsByTagName('Folder')[0].firstChild.data
+        xmltoparse = xmltoparse.encode(fse) if isinstance(xmltoparse, unicode) else xmltoparse
+        xmldoc = miniDom.parse(xmltoparse)
+        recordings = xmldoc.getElementsByTagName('Recordings')
+        if not recordings:
+            folder = u'%s\\RadioSure Recordings' % self.plugin.xmlpath
+        else:
+            folder = recordings[0].getElementsByTagName('Folder')[0].firstChild.data
         recordCtrl = MyFileBrowseButton(
             self,
             toolTip = self.text.toolTipFile,
@@ -1057,15 +1879,7 @@ class schedulerDialog(wx.Dialog):
             buttonText = eg.text.General.browse,
             startDirectory = folder
         )
-#        recordCtrl.GetTextCtrl().SetEditable(False)
-
-
-        def onSchedulerTitle(evt):
-            txt = evt.GetString()
-            grid.SetValue((self.lastRow,1), txt)
-            self.data[self.lastRow][1] = txt
-        schedulerName.Bind(wx.EVT_TEXT, onSchedulerTitle)
-
+        self.grid.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, OnRightClick)
 
         def onSource(evt):
             src = evt.GetString()
@@ -1075,8 +1889,8 @@ class schedulerDialog(wx.Dialog):
             else:
                 ix = -1
             favChoice.SetSelection(ix)
-            txt = evt.GetString()
-            self.data[self.lastRow][4] = txt
+            self.tmpData[self.lastRow][5] = src
+            Diff()
             evt.Skip()
         sourceCtrl.Bind(wx.EVT_TEXT, onSource)
 
@@ -1085,53 +1899,36 @@ class schedulerDialog(wx.Dialog):
             sel = evt.GetSelection()
             txt = self.favorites[sel][0]
             sourceCtrl.ChangeValue(txt)
-            self.data[self.lastRow][4] = txt
+            self.tmpData[self.lastRow][5] = txt
+            Diff()
             evt.Skip()
         favChoice.Bind(wx.EVT_CHOICE, onFavChoice)
 
 
         def onRecordCtrl(evt):
             txt = evt.GetString()
-            self.data[self.lastRow][5] = txt
+            self.tmpData[self.lastRow][6] = txt
+            Diff()
             evt.Skip()
         recordCtrl.GetTextCtrl().Bind(wx.EVT_TEXT, onRecordCtrl)
 
 
         def onTypeChoice(evt):
             type = evt.GetSelection()
-            if self.data[self.lastRow][2] != type:
-                empty_data=[["","",0,0],["",""],["","",127],["","",0,0,63,63]]
-                self.data[self.lastRow][2] = type
-                self.data[self.lastRow][3]=empty_data[self.data[self.lastRow][2]]
-                data = empty_data[self.data[self.lastRow][2]]
+            if self.tmpData[self.lastRow][2] != type:
+                empty_data = [
+                    ["", "", 0, 0],
+                    ["", ""],
+                    ["", "", 127, 0, 0],
+                    ["", "", 0, 0, 63, 63, 0],
+                    ["", "", 0, 0, 0, 0, 63, 63],
+                    ["", "", 0, 1, 0],
+                ]
+                self.tmpData[self.lastRow][2] = type
+                data = empty_data[self.tmpData[self.lastRow][2]]
+                self.tmpData[self.lastRow][3] = data
                 fillDynamicSizer(type, data)
-        typeChoice.Bind(wx.EVT_CHOICE, onTypeChoice)
-
-        nameSizer = wx.FlexGridSizer(2,0,0,20)
-        nameSizer.AddGrowableCol(0,1)
-        name_label = wx.StaticText(self, -1, self.text.header[1]+":")
-        nameSizer.Add(name_label)
-        type_label = wx.StaticText(self, -1, self.text.type_label)
-        nameSizer.Add(type_label)
-        nameSizer.Add(schedulerName, 0, wx.EXPAND)
-        nameSizer.Add(typeChoice)
-        typeSizer = wx.StaticBoxSizer(
-            wx.StaticBox(self, -1, ""),
-            wx.VERTICAL
-        )
-        dynamicSizer.SetMinSize((-1,197))
-        typeSizer.Add(nameSizer, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
-        typeSizer.Add(dynamicSizer, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, 5)
-        sizer.Add(typeSizer, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 5)
-        source_label = wx.StaticText(self, -1, self.text.source)
-        sizer.Add(source_label, 0, wx.TOP|wx.LEFT, 5)
-        sizer.Add(sourceCtrl,0,wx.EXPAND|wx.LEFT|wx.RIGHT, 5)
-        sizer.Add((1,4))
-        favorite_label = wx.StaticText(self, -1, self.text.favorite)
-        workModeLbl = wx.StaticText(self, -1, self.text.workModeLabel)
-        workModeCtrl = wx.Choice(self, -1, choices = self.text.workModes)
-        triggEvtLbl = wx.StaticText(self, -1, self.text.triggEvtLabel)
-        triggEvtCtrl = wx.Choice(self, -1, choices = self.text.triggEvtChoices)
+            Diff()
 
 
         def onWorkMode(evt):
@@ -1147,21 +1944,21 @@ class schedulerDialog(wx.Dialog):
                     windOpenCtrl.SetSelection(1)
                     windOpenCtrl.Enable(True)
                     windOpenLbl.Enable(True)
-            val = self.data[self.lastRow][7]
+            val = self.tmpData[self.lastRow][7]
             val &= (255-6)
             val |= (sel<<1)
-            self.data[self.lastRow][7] = val
+            self.tmpData[self.lastRow][7] = val
+            Diff()
         workModeCtrl.Bind(wx.EVT_CHOICE, onWorkMode)
-        windOpenLbl = wx.StaticText(self, -1, self.text.windOpenLabel)
-        windOpenCtrl = wx.Choice(self, -1, choices = self.text.windOpenChoices)
 
 
         def onWindOpen(evt):
             sel = evt.GetSelection()
-            val = self.data[self.lastRow][7]
+            val = self.tmpData[self.lastRow][7]
             val &= (255-1)
             val |= sel
-            self.data[self.lastRow][7] = val
+            self.tmpData[self.lastRow][7] = val
+            Diff()
         windOpenCtrl.Bind(wx.EVT_CHOICE, onWindOpen)
 
 
@@ -1170,12 +1967,64 @@ class schedulerDialog(wx.Dialog):
             workMode = workModeCtrl.GetSelection()
             if sel == 0 and workMode == 3:
                 ShowMessageBox(self.text.boxTexts[3])
-            val = self.data[self.lastRow][7]
+            val = self.tmpData[self.lastRow][7]
             val &= (255-24)
             val |= (sel<<3)
-            self.data[self.lastRow][7] = val
+            self.tmpData[self.lastRow][7] = val
+            Diff()
         triggEvtCtrl.Bind(wx.EVT_CHOICE, onTriggEvtCtrl)
 
+        bttnSizer = wx.BoxSizer(wx.HORIZONTAL)
+        bttnSizer.Add((5, -1))
+        i = 0
+        for bttn in self.text.buttons:
+            id = wx.NewId()
+            bttns.append(id)
+            b = wx.Button(self, id, bttn)
+            bttnSizer.Add(b,1)
+            if i in (1, 2, 5):
+                b.Enable(False)
+            if i == 3:
+                b.SetDefault()
+            if i == 5:
+                self.applyBttn = b
+            b.Bind(wx.EVT_BUTTON, onButton, id = id)
+            bttnSizer.Add((5, -1))
+            i += 1
+        sizer.Add(bttnSizer,0,wx.EXPAND)
+        id = wx.NewId() #testBttn
+        bttns.append(id)
+        self.Bind(wx.EVT_BUTTON, onTestButton, id = id)
+        wx.EVT_CHECKLISTBOX(self, -1, onCheckListBox)
+        maskedlib.EVT_TIMEUPDATE(self, -1, OnTimeChange)
+        wx.EVT_TEXT(self, -1, onPeriodNumber)
+        wx.EVT_CHOICE(self, -1, onPeriodUnit)
+        wx.EVT_DATE_CHANGED(self, -1, onDatePicker)
+        wx.EVT_CHECKBOX(self, -1, onCheckBox)
+        self.Bind(EVT_UPDATE_DIALOG, OnUpdateDialog)
+        self.Bind(wx.EVT_LIST_ITEM_SELECTED, OnSelectCell)
+        typeChoice.Bind(wx.EVT_CHOICE, onTypeChoice)
+        schedulerName.Bind(wx.EVT_TEXT, onSchedulerTitle)
+        self.Bind(EVT_CHECKLISTCTRL, onCheckListCtrl)
+        nameSizer = wx.FlexGridSizer(2, 0, 0, 20)
+        nameSizer.AddGrowableCol(0,1)
+        name_label = wx.StaticText(self, -1, self.text.header[1] + ":")
+        nameSizer.Add(name_label)
+        type_label = wx.StaticText(self, -1, self.text.type_label)
+        nameSizer.Add(type_label)
+        nameSizer.Add(schedulerName, 0, wx.EXPAND)
+        nameSizer.Add(typeChoice)
+        typeSizer = wx.StaticBoxSizer(
+            wx.StaticBox(self, -1, ""),
+            wx.VERTICAL
+        )
+        dynamicSizer.SetMinSize((-1, 226))
+        typeSizer.Add(nameSizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
+        typeSizer.Add(dynamicSizer, 0, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT, 5)
+        sizer.Add(typeSizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 5)
+        sizer.Add(source_label, 0, wx.TOP|wx.LEFT, 5)
+        sizer.Add(sourceCtrl,0,wx.EXPAND|wx.LEFT|wx.RIGHT, 5)
+        sizer.Add((1,4))
         sizer.Add(favorite_label, 0, wx.TOP|wx.LEFT, 5)
         sizer.Add(favChoice,0,wx.EXPAND|wx.LEFT|wx.RIGHT, 5)
         sizer.Add((1,4))
@@ -1187,34 +2036,97 @@ class schedulerDialog(wx.Dialog):
         choicesSizer.Add(workModeCtrl,0,wx.EXPAND)
         choicesSizer.Add(triggEvtCtrl,0,wx.EXPAND)
         sizer.Add(choicesSizer,0,wx.ALL, 5)
-        filename_label = wx.StaticText(self, -1, self.text.filename)
         sizer.Add(filename_label, 0, wx.LEFT, 5)
         sizer.Add(recordCtrl,0,wx.EXPAND|wx.LEFT|wx.RIGHT, 5)
-        self.data = self.plugin.xmlToData()
-        rows = len(self.data)
-        if rows > 0:
-            for row in range(rows):
-                grid.SetValue((row,0), self.data[row][0])
-                grid.SetValue((row,1), self.data[row][1])
-                grid.SetValue((row,2), self.data[row][6])
-                next = self.plugin.NextRun(self.data[row][2], self.data[row][3])
-                val = next[:-3] if next else ""
-                grid.SetValue((row,3), val)
-                if row < rows-1:
-                    grid.AppendRow()
-            self.lastRow = 0
-            grid.SelRow(0)
-            OpenSchedule()
-            enableBttns(True)
-        else:
-            EnableCtrls(False)
-            grid.DeleteRow(0)
-
+        fillGrid(True)
+        self.Bind(wx.EVT_CLOSE, self.onClose)
         self.SetSizer(sizer)
         sizer.Layout()
-        self.Center()
-        self.MakeModal(True)
+        if self.plugin.pos:
+            self.SetPosition(self.plugin.pos)
+        else:
+            self.Center()
         self.Show(True)
+
+
+    def EnableAll(self, flag):
+        if isinstance(flag, wx.CommandEvent):
+            schedule = self.tmpData[self.lastRow][1]
+            flag = 1
+        for ix in range(len(self.tmpData)):
+            self.tmpData[ix][0] = flag
+            if self.grid.GetItem(ix, 1).GetText() == self.tmpData[ix][1]:
+                if flag:
+                    self.grid.CheckItem(ix)
+                elif self.grid.IsChecked(ix):
+                    self.grid.ToggleItem(ix)
+        self.applyBttn.Enable(self.tmpData != self.plugin.data)
+
+
+    def DisableAll(self, evt):
+        self.EnableAll(0)
+
+
+    def EnableSchedule(self, schedule, flag):
+        tmpList = [item[1] for item in self.tmpData]
+        if schedule in tmpList:
+            ix = tmpList.index(schedule)
+            self.tmpData[ix][0] = flag
+            if self.grid.GetItem(ix, 1).GetText() == self.tmpData[ix][1]:
+                if flag:
+                    self.grid.CheckItem(ix)
+                elif self.grid.IsChecked(ix):
+                    self.grid.ToggleItem(ix)
+
+
+    def DeleteSchedule(self, schedule):
+        tmpList = [item[1] for item in self.tmpData]
+        if schedule in tmpList:
+            ix = tmpList.index(schedule)
+            if self.grid.GetItem(ix, 1).GetText() == self.tmpData[ix][1]:
+                self.grid.DeleteItem(ix)
+                self.grid.Refresh()
+            self.tmpData.pop(ix)
+
+
+    def AddSchedule(self, schedule):
+        tmpList = [item[1] for item in self.tmpData]
+        if schedule[1] in tmpList:
+            ix = tmpList.index(schedule[1])
+            self.tmpData[ix] = schedule
+            if not self.grid.GetItem(ix, 1).GetText() == self.tmpData[ix][1]:
+                return
+        else:
+            ix = len(self.tmpData)
+            self.tmpData.append(schedule)
+            self.grid.InsertStringItem(ix, "")
+        if schedule[0]:
+            self.grid.CheckItem(ix)
+        elif self.grid.IsChecked(ix):
+            self.grid.ToggleItem(ix)
+        self.grid.SetStringItem(ix, 1, schedule[1])
+        next = self.plugin.NextRun(schedule[2], schedule[3])
+        self.grid.SetStringItem(ix, 3, next)
+        if self.lastRow == ix:
+            evt = wx.PyCommandEvent(newEVT_UPDATE_DIALOG, ix)
+            self.GetEventHandler().ProcessEvent(evt)
+
+
+    def RefreshGrid(self, ix, last, next):
+        if self.grid.GetItem(ix, 1).GetText() == self.tmpData[ix][1]:
+            self.grid.SetStringItem(ix, 2, last)
+            self.grid.SetStringItem(ix, 3, next)
+
+
+    def onClose(self, evt):
+        hwnd = self.GetHandle()
+        wp = GetWindowPlacement(hwnd)
+        self.plugin.pos = (wp[4][0], wp[4][1])
+        #Note: GetPosition() return (-32000, -32000), if window is minimized !!!
+        self.Show(False)
+        self.plugin.dialog = None
+        self.Destroy()
+        evt.Skip()
 #===============================================================================
 
 def HandleRS():
@@ -1317,7 +2229,7 @@ def FindMonthDay(year, month, weekday, index):
         day += 7
     if index == 5:
         index = 4 if day <= length % 7 else 3
-    day += 7 * (index)
+    day += 7 * index
     if day > length:
         day = 0
     return day
@@ -1329,6 +2241,10 @@ class RadioSure(eg.PluginBase):
     menuDlg = None
     RadioSurePath = u''
     xmlPath = u''
+    data = []
+    tmpData = []
+    dialog = None
+    pos = None
     Favorites = []
     History = []
     Current = ['','']
@@ -1349,18 +2265,42 @@ class RadioSure(eg.PluginBase):
                 tmp1.append(item)
             return tmp1
 
+        def getList2(nodelist):
+            tmp = []
+            for item in nodelist.childNodes:
+                if item.nodeName[:5] == "Item-":
+                    title = item.getElementsByTagName('Title')[0].firstChild.data
+                    source = item.getElementsByTagName('Source')[0].firstChild.data
+                    tmp.append((source, title))
+            return tmp
+
         xmltoparse = u'%s\\RadioSure.xml' % self.xmlpath
+        xmltoparse = xmltoparse.encode(fse) if isinstance(xmltoparse, unicode) else xmltoparse
         if not os.path.exists(xmltoparse):
             return
-        xmldoc = miniDom.parse(xmltoparse.encode(eg.systemEncoding))
+        xmldoc = miniDom.parse(xmltoparse)
         currURL = xmldoc.getElementsByTagName('Station_URL')[0].firstChild
         if currURL:
             self.Current[0] = currURL.data
         currTitle = xmldoc.getElementsByTagName('Station_Title')[0].firstChild
         if currTitle:
             self.Current[1] = currTitle.data
-        self.History = getList(xmldoc.getElementsByTagName('History')[0])
-        self.Favorites = getList(xmldoc.getElementsByTagName('Favorites')[0])
+        histNode = xmldoc.getElementsByTagName('History')
+        if histNode:
+            if histNode[0].childNodes[0].nodeName == "Source_1": # Old xml format
+                self.History = getList(histNode[0])
+            else: # New xml format
+                self.History = getList2(histNode[0])
+        else:
+            self.History = []
+        favNode = xmldoc.getElementsByTagName('Favorites')
+        if favNode:
+            if favNode[0].childNodes[0].nodeName == "Source_1": # Old xml format
+                self.Favorites = getList(favNode[0])
+            else: # New xml format
+                self.Favorites = getList2(favNode[0])
+        else:
+            self.Favorites = []
         if self.Current in self.Favorites:
             self.FavIx = self.Favorites.index(self.Current)
         else:
@@ -1373,7 +2313,32 @@ class RadioSure(eg.PluginBase):
 
 
     def NextRun(self, type, data):
+
+        def FindRunDateTime(runList, cond):
+            runList.sort()
+            runDateTime = ""
+            if len(runList) > 0:
+                if not cond:
+                    return runList[0]
+                found = False
+                for item in runList:
+                    if item.weekday() > 4:
+                        found = True
+                        break
+                    else:
+                        if (item.month, item.day) in self.holidays[0]:
+                            pass
+                        elif (item.year, item.month, item.day) in self.holidays[1]:
+                            pass
+                        else:
+                            found = True
+                            break
+                if found:
+                    runDateTime = item
+            return runDateTime
+
         now = dt.now()
+        now = now.replace(microsecond = 0) + td(seconds = 2)
         runTime = dt.strptime(data[0], "%H:%M:%S").time()
         if type == 0: # once or yearly
             runDate = dt.strptime(data[2], '%Y-%m-%d')
@@ -1381,79 +2346,259 @@ class RadioSure(eg.PluginBase):
             if now < runDateTime:
                 return str(runDateTime)
             elif not data[3]:
-                return None
+                return ""
             else:
                 if runDateTime.replace(year = now.year) < now:
                     return str(runDateTime.replace(year = now.year + 1))
                 else:
                     return str(runDateTime.replace(year = now.year))
         elif type == 1: # daily
-            runDateTime = dt.combine(now.date(),runTime)
+            runDateTime = dt.combine(now.date(), runTime)
             if now.time() > runTime:
-                runDateTime += td(days=1)
+                runDateTime += td(days = 1)
             return str(runDateTime)
         elif type == 2: # weekly
+            if not data[2]:
+                return ""
             runDateTime = dt.combine(now.date(), runTime)
-            weekdays = []
+            weekdaysLower = []
+            weekdaysLarger = []
             nowDay = now.weekday()
             for weekday in range(7):
                 if 2**weekday & data[2]:
-                    weekdays.append(weekday)
-            if now.time() < runTime and nowDay in weekdays:
-                return str(runDateTime)
-            deltas = []
-            for day in weekdays:
-                deltas.append(day - nowDay if day > nowDay else 7 + day - nowDay)
-            return str(runDateTime + td(days=min(deltas)))
-        else: # 3 = monthly
+                    if weekday < nowDay or (weekday == nowDay and now.time() > runTime):
+                        weekdaysLower.append(weekday)
+                    else:
+                        weekdaysLarger.append(weekday)
+            if not data[4] and not data[3]: # without holiday check
+                if len(weekdaysLarger) > 0:
+                    delta = weekdaysLarger[0] - nowDay
+                    return str(runDateTime + td(days = delta))
+                delta = 7 + weekdaysLower[0] - nowDay
+                return str(runDateTime + td(days = delta))
+            elif data[4]: # holiday check
+                found = False
+                shift = 0
+                while True:
+                    for day in weekdaysLarger:
+                        delta = day + shift - nowDay
+                        tmpRunDT = runDateTime + td(days = delta)
+                        if tmpRunDT.weekday() > 4: # weekend
+                            found = True
+                            break
+                        else: # workday
+                            if (tmpRunDT.month, tmpRunDT.day) in self.holidays[0]:
+                                pass
+                            elif (tmpRunDT.year, tmpRunDT.month, tmpRunDT.day) in self.holidays[1]:
+                                pass
+                            else:
+                                found = True
+                                break
+                    if found:
+                        break
+                    shift += 7
+                    for day in weekdaysLower:
+                        delta = day + shift - nowDay
+                        tmpRunDT = runDateTime + td(days = delta)
+                        if tmpRunDT.weekday() > 4: # weekend
+                            found = True
+                            break
+                        else: # workday
+                            if (tmpRunDT.month, tmpRunDT.day) in self.holidays[0]:
+                                pass
+                            elif (tmpRunDT.year, tmpRunDT.month, tmpRunDT.day) in self.holidays[1]:
+                                pass
+                            else:
+                                found = True
+                                break
+                    if found:
+                        break
+                return str(tmpRunDT)
+            else: # holiday_2 check
+                if len(weekdaysLarger) > 0:
+                    Delta = weekdaysLarger[0] - nowDay
+                else:
+                    Delta = 7 + weekdaysLower[0] - nowDay
+                start = 0 if now.time() < runTime else 1
+                found = False
+                for delta in range(start, Delta):
+                    tmpRunDT = runDateTime + td(days = delta)
+                    if tmpRunDT.weekday() < 5:
+                        if (tmpRunDT.month, tmpRunDT.day) in self.holidays[0]:
+                            found = True
+                            break
+                        elif (tmpRunDT.year, tmpRunDT.month, tmpRunDT.day) in self.holidays[1]:
+                            found = True
+                            break
+                return str(tmpRunDT if found else runDateTime + td(days = Delta))
+        elif type == 3: # monthly/weekday
             if data[2] == 0 or data[3] == 0 or (data[4] + data[5]) == 0:
-                return None
-            runList=[]
+                return ""
             currMonth = now.month
             currYear = now.year
-            monthsInt = data[4]+(data[5]<<6)
+            monthsInt = data[4] + (data[5] << 6)
             months = []
             for month in range(1,13):
-                if 2**(month-1) & monthsInt:
+                if 2 ** (month - 1) & monthsInt:
                     months.append(month)
             if currMonth in months:
+                runList = []
                 for ix in range(6):
-                    if 2**ix & data[2]:
+                    if 2 ** ix & data[2]:
                         for weekday in range(7):
-                            if 2**weekday & data[3]:
-                                day=FindMonthDay(currYear,currMonth,weekday,ix)
+                            if 2 ** weekday & data[3]:
+                                day = FindMonthDay(currYear, currMonth, weekday, ix)
                                 if day:
-                                    runDateTime = dt.combine(dt(currYear,currMonth,day).date(),runTime)
+                                    runDateTime = dt.combine(dt(currYear, currMonth, day).date(), runTime)
                                     if now < runDateTime:
                                         runList.append(runDateTime)
+                tmpRunDT = FindRunDateTime(runList, data[6])
+                if tmpRunDT:
+                    return str(tmpRunDT)
+            lower = []
+            larger = []
+            for month in months:
+                if month > currMonth:
+                    larger.append(month)
+                else: #month <= currMonth:
+                    lower.append(month)
+            year = currYear
+            tmpRunDT = None
+            while True:
+                for month in larger:
+                    runList = []
+                    for ix in range(6):
+                        if 2 ** ix & data[2]:
+                            for weekday in range(7):
+                                if 2 ** weekday & data[3]:
+                                    day = FindMonthDay(year, month, weekday, ix)
+                                    if day:
+                                        runDateTime = dt.combine(dt(year, month, day).date(), runTime)
+                                        runList.append(runDateTime)
+                    tmpRunDT = FindRunDateTime(runList, data[6])
+                    if tmpRunDT:
+                        break
+                if tmpRunDT:
+                    break
+                year += 1
+                for month in lower:
+                    runList = []
+                    for ix in range(6):
+                        if 2 ** ix & data[2]:
+                            for weekday in range(7):
+                                if 2 ** weekday & data[3]:
+                                    day=FindMonthDay(year, month, weekday, ix)
+                                    if day:
+                                        runDateTime = dt.combine(dt(year, month, day).date(), runTime)
+                                        runList.append(runDateTime)
+                    tmpRunDT = FindRunDateTime(runList, data[6])
+                    if tmpRunDT:
+                        break
+                if tmpRunDT:
+                    break
+            return str(tmpRunDT)
+        elif type == 4: #monthly/day
+            if (data[2] + data[3] + data[4] + data[5]) == 0 or (data[6] + data[7]) == 0:
+                return ""
+            runList = []
+            currMonth = now.month
+            currYear = now.year
+            monthsInt = data[6] + (data[7] << 6)
+            daysInt = data[2] + (data[3] << 8) + (data[4] << 16) + (data[5] << 24)
+            days = []
+            for day in range(1, 32):
+                if 2 ** (day - 1) & daysInt:
+                    days.append(day)
+            months = []
+            for month in range(1, 13):
+                if 2 ** (month - 1) & monthsInt:
+                    months.append(month)
+            if currMonth in months:
+                for day in days:
+                    if day > monthrange(currYear, currMonth)[1]:
+                        break
+                    runDateTime = dt.combine(dt(currYear, currMonth, day).date(), runTime)
+                    if now < runDateTime:
+                        runList.append(runDateTime)
             if len(runList) == 0:
                 lower = []
                 larger = []
                 nextMonth = None
                 for month in months:
-                    if month>currMonth:
+                    if month > currMonth:
                         larger.append(month)
                     else: #month<=currMonth:
                         lower.append(month)
                 if len(larger) > 0:
-                    nextMonth = min(larger)
                     nextYear = currYear
-                elif len(lower)>0:
-                    nextMonth = min(lower)
-                    nextYear = currYear+1
-                if nextMonth:
-                    for ix in range(6):
-                        if 2**ix & data[2]:
-                            for weekday in range(7):
-                                if 2**weekday & data[3]:
-                                    day=FindMonthDay(nextYear,nextMonth,weekday,ix)
-                                    if day:
-                                        runDateTime = dt.combine(dt(nextYear,nextMonth,day).date(),runTime)
-                                        runList.append(runDateTime)
+                    for month in larger:
+                        for day in days:
+                            if day > monthrange(nextYear, month)[1]:
+                                break
+                            runDateTime = dt.combine(dt(nextYear, month, day).date(), runTime)
+                            runList.append(runDateTime)
+                if len(runList) == 0 and len(lower) > 0:
+                    nextYear = currYear + 1
+                    for month in lower:
+                        for day in days:
+                            if day > monthrange(nextYear, month)[1]:
+                                break
+                            runDateTime = dt.combine(dt(nextYear, month, day).date(), runTime)
+                            runList.append(runDateTime)
             if len(runList) > 0:
                 return str(min(runList))
             else:
-                return None
+                return ""
+        else: #type == 5: #periodically
+            runDate = dt.strptime(data[2], '%Y-%m-%d')
+            runDateTime = dt.combine(runDate, runTime)
+            if now < runDateTime:
+                return str(runDateTime)
+            elif data[4] == 0: #unit =  hour
+                period = data[3] * 3600
+                if period < 86400 and not 86400 % period:
+                    if now.time() > runTime:
+                        date = now.date()
+                    else:
+                        date = now.date() - td(days = 1)
+                    runDateTime = dt.combine(date, runTime)
+                delta = now - runDateTime
+                delta = delta.seconds + 86400 * delta.days
+                share = delta / period
+                share += 1
+                delta = td(seconds = share * period)
+                return str(runDateTime + delta)
+            elif data[4] == 1 or data[4] == 2: #unit = day or week
+                period = data[3] if data[4] == 1 else 7 * data[3]
+                delta = (now - runDateTime).days
+                share = delta / period
+                if not delta % period:
+                    if now.time() < runTime:
+                        return str(dt.combine(now.date(), runTime))
+                share += 1
+                delta = td(days = share * period)
+                return str(runDateTime + delta)
+            elif data[4] == 3: #unit = month
+                period = data[3]
+                month = runDateTime.month
+                year = runDateTime.year
+                while now > runDateTime:
+                    year += period / 12
+                    m = month+period % 12
+                    if m > 12:
+                        year += 1
+                        month = m % 12
+                    else:
+                        month = m
+                    runDateTime = runDateTime.replace(year = year).replace(month = month)
+                return str(runDateTime)
+            else: # data[4] == 6: #unit = year
+                period = data[3]
+                year = runDateTime.year
+                while now > runDateTime:
+                    year += period
+                    runDateTime = runDateTime.replace(year = year)
+                return str(runDateTime)
 
 
     def updateLogFile(self, line, blank = False):
@@ -1466,7 +2611,7 @@ class RadioSure(eg.PluginBase):
         f.close()
 
 
-    def Execute(self, params):
+    def Execute(self, params, immed = False):
 
         def my_list2cmdline(seq):
             """ FIXING subprocess.list2cmdline
@@ -1492,12 +2637,12 @@ class RadioSure(eg.PluginBase):
                 args.append("/mute")
             if modes & 1:
                 args.append("/hidden")
-            args.append(u'/source="%s"' % params[4])
+            args.append(u'/source="%s"' % params[5])
             duration = 60*int(params[3][1][:2])+int(params[3][1][-2:])
             if duration:
                 args.append('/duration=%i' % duration)
-            if params[5]:
-                recfile = eg.ParseString(params[5])
+            if params[6]:
+                recfile = eg.ParseString(params[6])
                 try:
                     recfile = eval(recfile)
                 except:
@@ -1506,7 +2651,7 @@ class RadioSure(eg.PluginBase):
             elif playRec:
                 args.append(u'/filename="%s"' % params[1])
             subprocess.Popen(args)
-        if next: # new schedule, if valid next run time
+        if not immed and next: # new schedule, if valid next run time and not TEST/IMMEDIATELY run
             startTicks = mktime(strptime(next, "%Y-%m-%d %H:%M:%S"))
             eg.scheduler.AddTaskAbsolute(startTicks, self.RadioSureScheduleRun, params[1])
         triggEvt = modes & 24
@@ -1514,24 +2659,28 @@ class RadioSure(eg.PluginBase):
             eg.TriggerEvent(self.text.launched, prefix = "RadioSure", payload = params[1])
         elif triggEvt == 16:
             eg.TriggerEvent(self.text.launched, prefix = "RadioSure", payload = params)
-        return next
+        return (next, my_list2cmdline(args))
 
 
     def RadioSureScheduleRun(self, schedule):
-        data = self.xmlToData()
+        data = self.data
         ix = [item[1] for item in data].index(schedule)
-        next = self.Execute(data[ix])
-        data[ix][6] = str(dt.now())[:16]
-        self.dataToXml(data)
-        mssg = next[:19] if next else self.text.none
-        self.updateLogFile(self.text.execut % (data[ix][1], mssg))
+        next, cmdline = self.Execute(data[ix])
+        last = str(dt.now())[:19]
+        self.data[ix][4] = last
+        if self.dialog:
+            tmpList = [item[1] for item in self.tmpData]
+            if schedule in tmpList:
+                ixTmp = tmpList.index(schedule)
+                self.tmpData[ixTmp][4] = last
+            self.dialog.RefreshGrid(ixTmp, last, next)
+        nxt = next[:19] if next else self.text.none        
+        self.updateLogFile(self.text.execut % (data[ix][1], nxt))
+        self.updateLogFile(self.text.cmdLine % cmdline)
 
 
     def UpdateEGscheduler(self):
-        xmlfile = u'%s\\Scheduler.xml' % self.xmlpath
-        if not os.path.exists(xmlfile):
-            return
-        data = self.xmlToData()
+        data = self.data
         tmpList = []
         sched_list = eg.scheduler.__dict__['heap']
         for sched in sched_list:
@@ -1547,27 +2696,34 @@ class RadioSure(eg.PluginBase):
             if not startMoment:
                 continue
             startTicks = mktime(strptime(startMoment,"%Y-%m-%d %H:%M:%S"))
-
             nameList = [item[2][0] for item in sched_list]
             if schedule[1] in nameList:
                 sched = sched_list[nameList.index(schedule[1])]
                 if not schedule[0]: # schedule is disabled !
                     eg.scheduler.CancelTask(sched)
                     self.updateLogFile(self.text.cancAndDis % schedule[1])
-                elif sched[0] != startTicks:
+                elif sched[0] != startTicks: #Re-schedule
                     self.updateLogFile(self.text.re_Sched % (schedule[1], startMoment))
                     eg.scheduler.CancelTask(sched)
                     eg.scheduler.AddTaskAbsolute(startTicks, self.RadioSureScheduleRun, schedule[1])
-            elif schedule[0]:
+            elif schedule[0]: #New schedule
                     eg.scheduler.AddTaskAbsolute(startTicks, self.RadioSureScheduleRun, schedule[1])
                     self.updateLogFile(self.text.newSched % (schedule[1], startMoment))
 
 
-    def dataToXml(self, data):
+    def dataToXml(self):
         impl = miniDom.getDOMImplementation()
         dom = impl.createDocument(None, u'Document', None)
         root = dom.documentElement
-        for item in data:
+        if self.dialog:
+            wp = GetWindowPlacement(self.dialog.GetHandle())
+            pos = (wp[4][0], wp[4][1])
+        else:
+            pos = self.pos     
+        root.setAttribute(u'Position', str(pos))
+        commentNode = dom.createComment(self.text.xmlComment % str(dt.now())[:19])
+        dom.insertBefore(commentNode, root)
+        for item in self.data:
             schedNode = dom.createElement(u'Schedule')
             schedNode.setAttribute(u'Name', unicode(item[1]))
             schedNode.setAttribute(u'Type', unicode(item[2]))
@@ -1575,61 +2731,113 @@ class RadioSure(eg.PluginBase):
             enableText = dom.createTextNode(unicode(item[0]))
             enableNode.appendChild(enableText)
             schedNode.appendChild(enableNode)
+            last_runNode = dom.createElement(u'Last_run')
+            last_runText = dom.createTextNode(unicode(item[4]))
+            last_runNode.appendChild(last_runText)
+            schedNode.appendChild(last_runNode)
             sourceNode = dom.createElement(u'Source')
-            sourceText = dom.createTextNode(unicode(item[4]))
+            sourceText = dom.createTextNode(unicode(item[5]))
             sourceNode.appendChild(sourceText)
             schedNode.appendChild(sourceNode)
             filenameNode = dom.createElement(u'Filename')
-            filenameText = dom.createTextNode(unicode(item[5]))
+            filenameText = dom.createTextNode(unicode(item[6]))
             filenameNode.appendChild(filenameText)
             schedNode.appendChild(filenameNode)
-            last_runNode = dom.createElement(u'Last_run')
-            last_runText = dom.createTextNode(unicode(item[6]))
-            last_runNode.appendChild(last_runText)
-            schedNode.appendChild(last_runNode)
             modesNode = dom.createElement(u'Modes')
             modesText = dom.createTextNode(unicode(item[7]))
             modesNode.appendChild(modesText)
             schedNode.appendChild(modesNode)
+            dateTimeNode = dom.createElement(u'Datetime')
             start_timeNode = dom.createElement(u'Start_time')
             start_timeText = dom.createTextNode(unicode(item[3][0]))
             start_timeNode.appendChild(start_timeText)
-            schedNode.appendChild(start_timeNode)
+            dateTimeNode.appendChild(start_timeNode)
             durationNode = dom.createElement(u'Duration')
             durationText = dom.createTextNode(unicode(item[3][1]))
             durationNode.appendChild(durationText)
-            schedNode.appendChild(durationNode)
+            dateTimeNode.appendChild(durationNode)
             if item[2] == 0:
                 dateNode = dom.createElement(u'Date')
                 dateText = dom.createTextNode(unicode(item[3][2]))
                 dateNode.appendChild(dateText)
-                schedNode.appendChild(dateNode)
+                dateTimeNode.appendChild(dateNode)
                 yearlyNode = dom.createElement(u'Yearly')
                 yearlyText = dom.createTextNode(unicode(item[3][3]))
                 yearlyNode.appendChild(yearlyText)
-                schedNode.appendChild(yearlyNode)
+                dateTimeNode.appendChild(yearlyNode)
             if item[2] == 2:
                 weekdayNode = dom.createElement(u'Weekday')
                 weekdayText = dom.createTextNode(unicode(item[3][2]))
                 weekdayNode.appendChild(weekdayText)
-                schedNode.appendChild(weekdayNode)
+                dateTimeNode.appendChild(weekdayNode)
+                holidayNode = dom.createElement(u'HolidayCheck')
+                holidayText = dom.createTextNode(unicode(item[3][4]))
+                holidayNode.appendChild(holidayText)
+                dateTimeNode.appendChild(holidayNode)
+                holiday2Node = dom.createElement(u'HolidayCheck_2')
+                holiday2Text = dom.createTextNode(unicode(item[3][3]))
+                holiday2Node.appendChild(holiday2Text)
+                dateTimeNode.appendChild(holiday2Node)
             if item[2] == 3:
                 orderNode = dom.createElement(u'Order')
                 orderText = dom.createTextNode(unicode(item[3][2]))
                 orderNode.appendChild(orderText)
-                schedNode.appendChild(orderNode)
+                dateTimeNode.appendChild(orderNode)
                 weekdayNode = dom.createElement(u'Weekday')
                 weekdayText = dom.createTextNode(unicode(item[3][3]))
                 weekdayNode.appendChild(weekdayText)
-                schedNode.appendChild(weekdayNode)
+                dateTimeNode.appendChild(weekdayNode)
                 first_halfNode = dom.createElement(u'First_half')
                 first_halfText = dom.createTextNode(unicode(item[3][4]))
                 first_halfNode.appendChild(first_halfText)
-                schedNode.appendChild(first_halfNode)
+                dateTimeNode.appendChild(first_halfNode)
                 second_halfNode = dom.createElement(u'Second_half')
                 second_halfText = dom.createTextNode(unicode(item[3][5]))
                 second_halfNode.appendChild(second_halfText)
-                schedNode.appendChild(second_halfNode)
+                dateTimeNode.appendChild(second_halfNode)
+                holidayNode = dom.createElement(u'HolidayCheck')
+                holidayText = dom.createTextNode(unicode(item[3][6]))
+                holidayNode.appendChild(holidayText)
+                dateTimeNode.appendChild(holidayNode)
+            if item[2] == 4:
+                q_1_Node = dom.createElement(u'Q_1')
+                q_1_Text = dom.createTextNode(unicode(item[3][2]))
+                q_1_Node.appendChild(q_1_Text)
+                dateTimeNode.appendChild(q_1_Node)
+                q_2_Node = dom.createElement(u'Q_2')
+                q_2_Text = dom.createTextNode(unicode(item[3][3]))
+                q_2_Node.appendChild(q_2_Text)
+                dateTimeNode.appendChild(q_2_Node)
+                q_3_Node = dom.createElement(u'Q_3')
+                q_3_Text = dom.createTextNode(unicode(item[3][4]))
+                q_3_Node.appendChild(q_3_Text)
+                dateTimeNode.appendChild(q_3_Node)
+                q_4_Node = dom.createElement(u'Q_4')
+                q_4_Text = dom.createTextNode(unicode(item[3][5]))
+                q_4_Node.appendChild(q_4_Text)
+                dateTimeNode.appendChild(q_4_Node)
+                first_halfNode = dom.createElement(u'First_half')
+                first_halfText = dom.createTextNode(unicode(item[3][6]))
+                first_halfNode.appendChild(first_halfText)
+                dateTimeNode.appendChild(first_halfNode)
+                second_halfNode = dom.createElement(u'Second_half')
+                second_halfText = dom.createTextNode(unicode(item[3][7]))
+                second_halfNode.appendChild(second_halfText)
+                dateTimeNode.appendChild(second_halfNode)
+            if item[2] == 5:
+                dateNode = dom.createElement(u'Date')
+                dateText = dom.createTextNode(unicode(item[3][2]))
+                dateNode.appendChild(dateText)
+                dateTimeNode.appendChild(dateNode)
+                numberNode = dom.createElement(u'Number')
+                numberText = dom.createTextNode(unicode(item[3][3]))
+                numberNode.appendChild(numberText)
+                dateTimeNode.appendChild(numberNode)
+                unitNode = dom.createElement(u'Unit')
+                unitText = dom.createTextNode(unicode(item[3][4]))
+                unitNode.appendChild(unitText)
+                dateTimeNode.appendChild(unitNode)
+            schedNode.appendChild(dateTimeNode)
             root.appendChild(schedNode)
         f = file(u'%s\\Scheduler.xml' % self.xmlpath, 'wb')
         writer = lookup('utf-8')[3](f)
@@ -1644,47 +2852,79 @@ class RadioSure(eg.PluginBase):
             return data
         xmldoc = miniDom.parse(xmlfile)
         document = xmldoc.getElementsByTagName('Document')[0]
-        schedules = document.getElementsByTagName('Schedule')
+        if "Position" in document.attributes.keys():
+            pos = document.attributes["Position"].value
+            self.pos = eval(pos)
+        else:
+            self.pos = (0, 0)
+        schedules = tuple(document.getElementsByTagName('Schedule'))
         for schedule in schedules:
             dataItem = []
             enable = int(schedule.getElementsByTagName('Enable')[0].firstChild.data)
             dataItem.append(enable)
             name = schedule.attributes["Name"].value
             dataItem.append(name)
-            type = int(schedule.attributes["Type"].value)
-            dataItem.append(type)
+            schedType = int(schedule.attributes["Type"].value)
+            dataItem.append(schedType)
+            dateTime = schedule.getElementsByTagName('Datetime')[0]
             params = []
-            start_time = schedule.getElementsByTagName('Start_time')[0].firstChild.data
+            start_time = dateTime.getElementsByTagName('Start_time')[0].firstChild.data
             params.append(start_time)
-            duration = schedule.getElementsByTagName('Duration')[0].firstChild.data
+            duration = dateTime.getElementsByTagName('Duration')[0].firstChild.data
             params.append(duration)
-            if type == 0:
-                date = schedule.getElementsByTagName('Date')[0].firstChild.data
+            if schedType == 0:
+                date = dateTime.getElementsByTagName('Date')[0].firstChild.data
                 params.append(date)
-                date = int(schedule.getElementsByTagName('Yearly')[0].firstChild.data)
+                date = int(dateTime.getElementsByTagName('Yearly')[0].firstChild.data)
                 params.append(date)
-            if type == 2:
-                weekday = int(schedule.getElementsByTagName('Weekday')[0].firstChild.data)
+            if schedType == 2:
+                weekday = int(dateTime.getElementsByTagName('Weekday')[0].firstChild.data)
                 params.append(weekday)
-            if type == 3:
-                order = int(schedule.getElementsByTagName('Order')[0].firstChild.data)
+                holiday2 = int(dateTime.getElementsByTagName('HolidayCheck_2')[0].firstChild.data)
+                params.append(holiday2)
+                holiday = int(dateTime.getElementsByTagName('HolidayCheck')[0].firstChild.data)
+                params.append(holiday)
+            if schedType == 3:
+                order = int(dateTime.getElementsByTagName('Order')[0].firstChild.data)
                 params.append(order)
-                weekday = int(schedule.getElementsByTagName('Weekday')[0].firstChild.data)
+                weekday = int(dateTime.getElementsByTagName('Weekday')[0].firstChild.data)
                 params.append(weekday)
-                first_half = int(schedule.getElementsByTagName('First_half')[0].firstChild.data)
+                first_half = int(dateTime.getElementsByTagName('First_half')[0].firstChild.data)
                 params.append(first_half)
-                second_half = int(schedule.getElementsByTagName('Second_half')[0].firstChild.data)
+                second_half = int(dateTime.getElementsByTagName('Second_half')[0].firstChild.data)
                 params.append(second_half)
+                holiday = int(dateTime.getElementsByTagName('HolidayCheck')[0].firstChild.data)
+                params.append(holiday)
+            if schedType == 4:
+                q_1 = int(dateTime.getElementsByTagName('Q_1')[0].firstChild.data)
+                params.append(q_1)
+                q_2 = int(dateTime.getElementsByTagName('Q_2')[0].firstChild.data)
+                params.append(q_2)
+                q_3 = int(dateTime.getElementsByTagName('Q_3')[0].firstChild.data)
+                params.append(q_3)
+                q_4 = int(dateTime.getElementsByTagName('Q_4')[0].firstChild.data)
+                params.append(q_4)
+                first_half = int(dateTime.getElementsByTagName('First_half')[0].firstChild.data)
+                params.append(first_half)
+                second_half = int(dateTime.getElementsByTagName('Second_half')[0].firstChild.data)
+                params.append(second_half)
+            if schedType == 5:
+                date = dateTime.getElementsByTagName('Date')[0].firstChild.data
+                params.append(date)
+                number = int(dateTime.getElementsByTagName('Number')[0].firstChild.data)
+                params.append(number)
+                unit = int(dateTime.getElementsByTagName('Unit')[0].firstChild.data)
+                params.append(unit)
             dataItem.append(params)
+            last_run = schedule.getElementsByTagName('Last_run')[0].firstChild
+            last_run = last_run.data if last_run else " "
+            dataItem.append(last_run)
             source = schedule.getElementsByTagName('Source')[0].firstChild
             source = source.data if source else ""
             dataItem.append(source)
             filename = schedule.getElementsByTagName('Filename')[0].firstChild
             filename = filename.data if filename else ""
             dataItem.append(filename)
-            last_run = schedule.getElementsByTagName('Last_run')[0].firstChild
-            last_run = last_run.data if last_run else " "
-            dataItem.append(last_run)
             modes = schedule.getElementsByTagName('Modes')[0].firstChild.data
             dataItem.append(int(modes))
             data.append(dataItem)
@@ -1711,11 +2951,24 @@ class RadioSure(eg.PluginBase):
         self.AddActionsFromList(Actions)
 
 
-    def __start__(self, path = None, xmlpath = None, logfile = None):
+    def __start__(
+        self,
+        path = None,
+        xmlpath = None,
+        logfile = None,
+        holidays = [[], []],
+        first_day = 0
+        ):
         self.RadioSurePath = path
         self.xmlpath = xmlpath
         self.logfile = logfile
-        if xmlpath:
+        self.holidays = holidays
+        self.first_day = first_day
+        self.data = []
+        self.tmpData = []
+        if self.xmlpath:
+            if os.path.exists(self.xmlpath):
+                self.data = self.xmlToData()
             if logfile:
                  self.updateLogFile(self.text.start, True)
             self.UpdateEGscheduler()
@@ -1738,6 +2991,10 @@ class RadioSure(eg.PluginBase):
             for sched in tmpLst:
                 eg.scheduler.CancelTask(sched)
                 self.updateLogFile(self.text.canc % sched[2][0])
+        if self.dialog:
+            self.dialog.Close()
+        self.dataToXml()
+
 
 
     def __close__(self):
@@ -1747,15 +3004,27 @@ class RadioSure(eg.PluginBase):
                 ot.AbortObservation()
 
 
-    def Configure(self, path = None, xmlpath = None, logfile = None):
+    def Configure(
+        self,
+        path = "",
+        xmlpath = "",
+        logfile = None,
+        holidays = [[], []],
+        first_day = 0
+        ):
+        panel = eg.ConfigPanel(self)
+        panel.holidays = cpy(holidays)
+        del holidays
+        managerButton = wx.Button(panel, -1, self.text.managerButton)
+        if not path: #First run after plugin insert
+            managerButton.Enable(False)
         self.RadioSurePath = path
         self.xmlpath = xmlpath
         self.logfile = logfile
-        panel = eg.ConfigPanel(self)
+        self.first_day = first_day
         label1Text = wx.StaticText(panel, -1, self.text.label1)
         rsPathCtrl = MyDirBrowseButton(
             panel,
-            size=(410,-1),
             toolTip = self.text.toolTipFolder,
             dialogTitle = self.text.browseTitle,
             buttonText = eg.text.General.browse
@@ -1764,7 +3033,6 @@ class RadioSure(eg.PluginBase):
         label2Text = wx.StaticText(panel, -1, self.text.label2)
         xmlPathCtrl = MyDirBrowseButton(
             panel,
-            size=(410,-1),
             toolTip = self.text.toolTipFolder,
             dialogTitle = self.text.browseTitle,
             buttonText = eg.text.General.browse
@@ -1772,30 +3040,61 @@ class RadioSure(eg.PluginBase):
         xmlPathCtrl.GetTextCtrl().SetEditable(False)
         logFileCtrl = MyFileBrowseButton(
             panel,
-            size=(410,-1),
             toolTip = self.text.toolTipFile,
             dialogTitle = self.text.browseFile,
             buttonText = eg.text.General.browse
         )
         logFileCtrl.GetTextCtrl().SetEditable(False)
         logCheckBox = wx.CheckBox(panel, -1, self.text.logLabel)
-
-        if self.RadioSurePath is None:
-            RSpath = getPathFromReg()
-            if RSpath:
-                self.RadioSurePath = RSpath
-                rsPathCtrl.GetTextCtrl().ChangeValue(self.RadioSurePath)
-            else:
-                self.RadioSurePath = "%s\\RadioSure" % unicode(eg.folderPath.ProgramFiles)
-                rsPathCtrl.GetTextCtrl().ChangeValue("")
-        rsPathCtrl.GetTextCtrl().ChangeValue(self.RadioSurePath)
-        if self.xmlpath is None:
+        if not self.RadioSurePath or not os.path.exists(self.RadioSurePath):
+            RSpath = getPathFromReg() #Try get path from registry
+            if RSpath: #Regular installation
+                if os.path.exists(RSpath):
+                    self.RadioSurePath = RSpath
+            else: #Portable installation
+                self.RadioSurePath = u"%s\\RadioSure" % unicode(eg.folderPath.LocalAppData) 
             xmlPath = u"%s\\RadioSure" % unicode(eg.folderPath.LocalAppData)
-            self.xmlpath = xmlPath if os.path.exists(xmlPath) else ""
-        xmlPathCtrl.GetTextCtrl().ChangeValue(self.xmlpath)
+            if os.path.exists(xmlPath):
+                self.xmlpath = xmlPath
+        if os.path.exists(os.path.join(self.RadioSurePath, "RadioSure.exe")):
+            rsPathCtrl.GetTextCtrl().ChangeValue(self.RadioSurePath)
+            rsPathCtrl.Enable(False)
+            label1Text.Enable(False)
+        if os.path.exists(os.path.join(self.xmlpath, "RadioSure.xml")):
+            xmlPathCtrl.GetTextCtrl().ChangeValue(self.xmlpath)
+            xmlPathCtrl.Enable(False)
+            label2Text.Enable(False)
+
+
+        def NotHidden():
+            try:
+                nssh = OpenKey(
+                    HKEY_CURRENT_USER,
+                    "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced"
+                )
+                res = QueryValueEx(nssh, "Hidden")[0] != 2
+                CloseKey(nssh)
+            except:
+                res = False
+            return res            
+
+
+        def NotHiddenAttr(path):
+            attr = GetFileAttributes(path)
+            if attr & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM):
+                return False
+            else:
+                p = os.path.split(path)[0]
+                if len(p) > 3:
+                    return NotHiddenAttr(p)
+                return True
+
         if self.logfile is None:
             logCheckBox.SetValue(True)
-            self.logfile = u'%s\\SchedulerLog.txt' % self.xmlpath if self.xmlpath else ""
+            if NotHiddenAttr(self.xmlpath) or NotHidden():
+                self.logfile = u'%s\\RadioSureSchedulerLog.txt' % self.xmlpath
+            else:
+                self.logfile = u'%s\\RadioSureSchedulerLog.txt' % unicode(eg.folderPath.Documents)
         else:
             val = self.logfile != ""
             logCheckBox.SetValue(val)
@@ -1806,12 +3105,63 @@ class RadioSure(eg.PluginBase):
         xmlPathCtrl.startDirectory = self.xmlpath
         logFileCtrl.startDirectory = self.logfile or u"%s\\RadioSure" % unicode(eg.folderPath.LocalAppData)
         sizerAdd = panel.sizer.Add
-        sizerAdd(label1Text, 0, wx.TOP,15)
-        sizerAdd(rsPathCtrl,0,wx.TOP,2)
+        sizerAdd(label1Text, 0)
+        sizerAdd(rsPathCtrl,0,wx.TOP|wx.EXPAND,2)
         sizerAdd(label2Text, 0, wx.TOP,15)
-        sizerAdd(xmlPathCtrl,0,wx.TOP,2)
+        sizerAdd(xmlPathCtrl,0,wx.TOP|wx.EXPAND,2)
         sizerAdd(logCheckBox, 0, wx.TOP,15)
-        sizerAdd(logFileCtrl, 0, wx.TOP,2)
+        sizerAdd(logFileCtrl, 0, wx.TOP|wx.EXPAND,2)
+        firstDayLabel = wx.StaticText(panel, -1, self.text.first_day)
+        firstDayCtrl = wx.Choice(
+            panel,
+            -1,
+            choices = (
+                day_name[0],
+                day_name[6]
+            ),
+            size = (firstDayLabel.GetSize()[0], -1)
+        )
+        firstDayCtrl.SetSelection(first_day)
+        panel.holidButton = wx.Button(panel, -1, self.text.holidButton)
+
+
+        def OnApplyBtn(evt):
+            managerButton.Enable(True)
+            evt.Skip()
+        panel.dialog.buttonRow.applyButton.Bind(wx.EVT_BUTTON, OnApplyBtn)
+
+
+        def onManagerButton(evt):
+            if not self.dialog:
+                wx.CallAfter(schedulerDialog, self.text.OpenScheduler, self)
+            else:
+                if self.dialog.GetPosition() == (-32000, -32000):
+                    ShowWindow(self.dialog.GetHandle(), SW_RESTORE) 
+                wx.CallAfter(self.dialog.Raise)
+            evt.Skip()
+        managerButton.Bind(wx.EVT_BUTTON, onManagerButton)
+
+
+        def onHolidButton(evt):
+            dlg = HolidaysFrame(
+                parent = panel,
+                plugin = self,
+            )
+            dlg.Centre()
+            wx.CallAfter(dlg.ShowHolidaysFrame)
+            evt.Skip()
+        panel.holidButton.Bind(wx.EVT_BUTTON, onHolidButton)
+
+        bottomSizer = wx.GridBagSizer(1, 1)
+        bottomSizer.AddGrowableCol(1,1)
+        bottomSizer.AddGrowableCol(3,1)
+        bottomSizer.Add(firstDayLabel, (0, 0), flag = wx.LEFT)
+        bottomSizer.Add(firstDayCtrl, (1, 0), flag = wx.LEFT)
+        bottomSizer.Add((1, -1), (1, 1), flag = wx.EXPAND)
+        bottomSizer.Add((1, -1), (1, 3), flag = wx.EXPAND)
+        bottomSizer.Add(panel.holidButton, (1, 2))
+        bottomSizer.Add(managerButton, (1, 4), flag = wx.RIGHT)
+        sizerAdd(bottomSizer, 1, wx.TOP | wx.EXPAND, 15)
 
 
         def Validation():
@@ -1884,6 +3234,8 @@ class RadioSure(eg.PluginBase):
                 rsPathCtrl.GetValue(),
                 xmlPathCtrl.GetValue(),
                 logFileCtrl.GetValue(),
+                panel.holidays,
+                firstDayCtrl.GetSelection()
             )
 #===============================================================================
 #cls types for Actions list:
@@ -1905,8 +3257,8 @@ class Run(eg.ActionBase):
         hwnd = HandleRS()
         if hwnd is None:
             rs = '%s\\RadioSure.exe' % self.plugin.RadioSurePath
+            rs = rs.encode(fse) if isinstance(rs, unicode) else rs
             if os.path.isfile(rs):
-#                wx.CallAfter(subprocess.Popen,[rs])
                 subprocess.Popen([rs])
                 if play:
                     for n in range(50):
@@ -2300,6 +3652,7 @@ class StartTitlebarObservation(eg.ActionBase):
         AddCtrl(textLabel, 0, wx.TOP, 20)
         AddCtrl(textControl, 0, wx.TOP, 3)
         textLabel.SetFocus()
+
         while panel.Affirmed():
             panel.SetResult(
             periodNumCtrl.GetValue(),
@@ -2369,7 +3722,6 @@ class ShowMenu(eg.ActionBase):
         backSel,
     ):
         return self.name
-
 
     def Configure(
         self,
@@ -2539,14 +3891,14 @@ class MoveCursor(eg.ActionBase):
 
     def __call__(self):
         if self.plugin.menuDlg is not None:
-            max=len(self.plugin.Favorites)
+            max = len(self.plugin.Favorites)
             if max > 0:
                 stationChoiceCtrl = self.plugin.menuDlg.stationChoiceCtrl
-                sel=stationChoiceCtrl.GetSelectedRows()[0]
+                sel = stationChoiceCtrl.GetSelectedRows()[0]
                 if sel == eval(self.value[0]):
                     sel = eval(self.value[1])
-                stationChoiceCtrl.SetGridCursor(sel+self.value[2], 0)
-                stationChoiceCtrl.SelectRow(sel+self.value[2])
+                stationChoiceCtrl.SetGridCursor(sel + self.value[2], 0)
+                stationChoiceCtrl.SelectRow(sel + self.value[2])
 #===============================================================================
 
 class OK_Btn(eg.ActionBase):
@@ -2565,83 +3917,20 @@ class Cancel_Btn(eg.ActionBase):
 
 class OpenScheduler(eg.ActionBase):
 
-    class text:
-        dialogTitle = "Radio?Sure! Scheduler (EventGhost plugin by Pako)"
-        header = (
-            "Enabled",
-            "Schedule title",
-            "Last run",
-            "Next run",
-        )
-        sched_type = (
-            "Only once (or yearly)",
-            "Daily",
-            "Weekly",
-            "Monthly"
-        )
-        toolTipFile = """Press button and browse to select file ...
-File type (as .mp3) need not be completed. Will be added automatically."""
+    def __call__(self):
+        if not self.plugin.dialog:
+            wx.CallAfter(schedulerDialog, self.text, self.plugin)
+        else:
+            if self.plugin.dialog.GetPosition() == (-32000, -32000):
+                ShowWindow(self.plugin.dialog.GetHandle(), SW_RESTORE) 
+            wx.CallAfter(self.plugin.dialog.Raise)
+#===============================================================================
 
-        browseTitle = "Select a folder and enter file name (without file type):"
-        serial_num = (
-            "first",
-            "second",
-            "third",
-            "fourth",
-            "fifth",
-            "last"
-        )
-        the = "The"
-        in_ = "in"
-        buttons = (
-            "Add new",
-            "Duplicate",
-            "Delete",
-            "OK",
-            "Cancel",
-        )
-        type_label = "Schedule type:"
-        source = "Source URL:"
-        favorite = "Favorite station title:"
-        filename = "Destination file name (optional):"
-        chooseDay = "Choose day"
-        theEvery = "The every"
-        yearly = "Every year on the same day"
-        chooseTime = "Choose start time (HH:MM:SS) and duration (HH:MM)"
-        start = "Start time:"
-        length = "Duration (00:00 = constantly):"
-        boxTitle = "Your setup is wrong !"
-        boxTexts = (
-            "Schedule title must not be an empty string !",
-            "Schedule title must be unique !",
-            'Determine the source URL, or set the mode "Do nothing" !',
-            'Not allowed to set "Do nothing" while also "None" event !',
-            'Must be chosen Schedule type !',
-        )
-        workModeLabel = "Radio?Sure! working mode:"
-        workModes = (
-            "Playing (audibly)",
-            "Recording (audibly)",
-            "Recording (soundlessly)",
-            "Do nothing"
-        )
-        windOpenLabel = "Window open:"
-        windOpenChoices =(
-            "Visible",
-            "Hidden"
-        )
-        triggEvtLabel = "Trigger an event:"
-        triggEvtChoices = (
-            "None",
-            "Schedule title",
-            "All parameters"
-        )
-        testButton = "Test now"
-        testRun = 'Schedule "%s" - TEST execution. Possible next run: %s'
-
+class HideScheduler(eg.ActionBase):
 
     def __call__(self):
-        wx.CallAfter(schedulerDialog, self.text, self.plugin)
+        if self.plugin.dialog:
+            wx.CallAfter(self.plugin.dialog.Close)
 #===============================================================================
 
 class EnableSchedule(eg.ActionBase):
@@ -2656,14 +3945,16 @@ class EnableSchedule(eg.ActionBase):
         xmlfile = u'%s\\Scheduler.xml' % self.plugin.xmlpath
         if not os.path.exists(xmlfile):
             return
-        data = self.plugin.xmlToData()
+        data = self.plugin.data
         tmpLst = [item[1] for item in data]
         if schedule in tmpLst:
             ix = tmpLst.index(schedule)
             if self.value > -1:
                 data[ix][0] = self.value
-                self.plugin.dataToXml(data)
+                self.plugin.dataToXml()
                 self.plugin.UpdateEGscheduler()
+                if self.plugin.dialog:
+                    wx.CallAfter(self.plugin.dialog.EnableSchedule, schedule, self.value)
             return data[tmpLst.index(schedule)]
         else:
             return self.text.notFound % schedule
@@ -2679,6 +3970,7 @@ class EnableSchedule(eg.ActionBase):
         textControl = wx.ComboBox(panel, -1, schedule, size = (300,-1), choices = choices)
         panel.sizer.Add(wx.StaticText(panel,-1,self.text.scheduleTitle), 0,wx.LEFT|wx.TOP, 10)
         panel.sizer.Add(textControl, 0, wx.LEFT, 10)
+
         while panel.Affirmed():
             panel.SetResult(textControl.GetValue())
 #===============================================================================
@@ -2689,11 +3981,13 @@ class EnableAll(eg.ActionBase):
         xmlfile = u'%s\\Scheduler.xml' % self.plugin.xmlpath
         if not os.path.exists(xmlfile):
             return
-        data = self.plugin.xmlToData()
+        data = self.plugin.data
         for schedule in data:
             schedule[0] = self.value
-        self.plugin.dataToXml(data)
+        self.plugin.dataToXml()
         self.plugin.UpdateEGscheduler()
+        if self.plugin.dialog:
+            wx.CallAfter(self.plugin.dialog.EnableAll, self.value)
 #===============================================================================
 
 class DeleteSchedule(eg.ActionBase):
@@ -2707,13 +4001,15 @@ class DeleteSchedule(eg.ActionBase):
         xmlfile = u'%s\\Scheduler.xml' % self.plugin.xmlpath
         if not os.path.exists(xmlfile):
             return
-        data = self.plugin.xmlToData()
+        data = self.plugin.data
         tmpLst = [item[1] for item in data]
         if schedule in tmpLst:
             ix = tmpLst.index(schedule)
             data.pop(ix)
-            self.plugin.dataToXml(data)
+            self.plugin.dataToXml()
             self.plugin.UpdateEGscheduler()
+            if self.plugin.dialog:
+                wx.CallAfter(self.plugin.dialog.DeleteSchedule, schedule)
 
 
     def Configure(self, schedule=""):
@@ -2726,6 +4022,49 @@ class DeleteSchedule(eg.ActionBase):
         textControl = wx.ComboBox(panel, -1, schedule, size = (300,-1), choices = choices)
         panel.sizer.Add(wx.StaticText(panel,-1,self.text.scheduleTitle), 0,wx.LEFT|wx.TOP, 10)
         panel.sizer.Add(textControl, 0, wx.LEFT, 10)
+
+        while panel.Affirmed():
+            panel.SetResult(textControl.GetValue())
+#===============================================================================
+
+class RunScheduleImmediately(eg.ActionBase):
+
+    class text:
+        scheduleTitle = "Schedule title:"
+        notFound = 'Can not find schedule "%s" !'
+        immedRun = 'Schedule "%s" - IMMEDIATELY execution. Possible next time: %s'
+
+    def __call__(self, schedule=""):
+        schedule = eg.ParseString(schedule)
+        data = self.plugin.data
+        tmpLst = [item[1] for item in data]
+        if schedule in tmpLst:
+            ix = tmpLst.index(schedule)
+            sched = self.plugin.data[ix]
+            if sched[0]:
+                for sch in eg.scheduler.__dict__['heap']:
+                    if sch[1] == self.plugin.RadioSureScheduleRun:
+                        if sch[2][0] == sched[1]:
+                            eg.scheduler.CancelTask(sch)
+                            self.plugin.updateLogFile(self.plugin.text.canc % sch[2][0])
+                            break
+                next, cmdline = self.plugin.Execute(sched, True)
+                next = next[:19] if next else self.plugin.text.none
+                self.plugin.updateLogFile(self.text.immedRun % (sched[1], next))
+                self.plugin.updateLogFile(self.plugin.text.cmdLine % cmdline)
+        else:
+            self.PrintError(self.text.notFound % schedule)
+            return self.text.notFound % schedule
+
+
+    def Configure(self, schedule = ""):
+        panel = eg.ConfigPanel()
+        data = self.plugin.data
+        choices = [item[1] for item in data]
+        textControl = wx.ComboBox(panel, -1, schedule, size = (300, -1), choices = choices)
+        panel.sizer.Add(wx.StaticText(panel, -1, self.text.scheduleTitle), 0, wx.LEFT | wx.TOP, 10)
+        panel.sizer.Add(textControl, 0, wx.LEFT, 10)
+
         while panel.Affirmed():
             panel.SetResult(textControl.GetValue())
 #===============================================================================
@@ -2746,20 +4085,18 @@ This action works in two ways (depending on the title of the schedule):
 2. If the title does not exist yet, the schedule is added to the list as new.'''
 
     def __call__(self, expr = ""):
-        xmlfile = u'%s\\Scheduler.xml' % self.plugin.xmlpath
-        if not os.path.exists(xmlfile):
-            return
         schedule = eg.ParseString(expr)
         schedule = eval(schedule)
         if len(schedule) == 8 and isinstance(schedule[1], unicode):
-            data = self.plugin.xmlToData()
+            data = self.plugin.data
             tmpLst = [item[1] for item in data]
             if schedule[1] in tmpLst:
                 data[tmpLst.index(schedule[1])] = schedule
             else:
                 data.append(schedule)
-            self.plugin.dataToXml(data)
             self.plugin.UpdateEGscheduler()
+            if self.plugin.dialog:
+                wx.CallAfter(self.plugin.dialog.AddSchedule, schedule)
 
 
     def Configure(self, expr=""):
@@ -2822,6 +4159,7 @@ Actions = (
     )),
     (eg.ActionGroup, 'Scheduler', 'Scheduler', 'Scheduler',(
         (OpenScheduler,"OpenScheduler","Open scheduler","Open scheduler.", None),
+        (HideScheduler,"HideScheduler","Hide scheduler","Hide scheduler.", None),
         (EnableSchedule,"EnableSchedule","Enable schedule","Enable schedule.", 1),
         (EnableSchedule,"DisableSchedule","Disable schedule","Disable schedule.", 0),
         (EnableAll,"EnableAll","Enable all schedules","Enable all schedules.", 1),
@@ -2829,5 +4167,7 @@ Actions = (
         (EnableSchedule,"GetSchedule","Get schedule","Get schedule.", -1),
         (AddSchedule,"AddSchedule","Add schedule",AddSchedule.text.descr, None),
         (DeleteSchedule,"DeleteSchedule","Delete schedule","Delete schedule.", None),
+        (RunScheduleImmediately, "RunScheduleImmediately", "Run schedule immediately", "Runs schedule immediately.", None),
     )),
 )
+#===============================================================================

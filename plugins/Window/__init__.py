@@ -19,7 +19,7 @@ import eg
 eg.RegisterPlugin(
     name = "Window",
     author = "Bitmonster",
-    version = "1.0.0",
+    version = "1.0." + "$LastChangedRevision$".split()[1],
     description = (
         "Actions that are related to the control of windows on the desktop, "
         "like finding specific windows, move, resize and send keypresses to "
@@ -36,7 +36,8 @@ eg.RegisterPlugin(
 
 
 import wx
-from eg.WinApi.Utils import BringHwndToFront, CloseHwnd
+from win32api import EnumDisplayMonitors
+from eg.WinApi.Utils import BringHwndToFront, CloseHwnd, GetMonitorDimensions
 from eg.WinApi.Dynamic import (
     # functions:
     SendNotifyMessage, GetAncestor, GetWindowLong, ShowWindow, GetWindowRect,
@@ -103,39 +104,73 @@ class BringToFront(eg.ActionBase):
 class MoveTo(eg.ActionBase):
     name = "Move Absolute"
     class text:
-        label = "Move window to %s"
-        text1 = "Set horizontal position X to"
-        text2 = "pixels"
-        text3 = "Set vertical position Y to"
-        text4 = "pixels"
+        label   = "Move window to: Monitor: %i, X: %s, Y: %s"
+        text1   = "Set horizontal position X to"
+        text2   = "pixels"
+        text3   = "Set vertical position Y to"
+        text4   = "pixels"
+        display = "Window show on monitor"
 
 
-    def __call__(self, x, y):
+    def __call__(self, x, y, displayNumber = 0):
+        monitorDimensions = GetMonitorDimensions()
+        try:
+            displayRect = monitorDimensions[displayNumber]
+        except IndexError:
+            displayRect = monitorDimensions[0]
         rect = RECT()
+        mons = EnumDisplayMonitors(None, None)
+        mons = [item[2] for item in mons]
         for hwnd in GetTopLevelOfTargetWindows():
             GetWindowRect(hwnd, byref(rect))
+            X = rect.left
+            Y = rect.top
+            for mon in range(len(mons)):
+                if mons[mon][0] <= X and X <= mons[mon][2] and mons[mon][1] <= Y and Y <= mons[mon][3]:
+                    break
+            if mon == len(mons):
+                mon = 0
             if x is None:
-                x = rect.left
+                x = rect.left - mons[mon][0]
             if y is None:
-                y = rect.top
+                y = rect.top - mons[mon][1]
+            x += displayRect[0]
+            y += displayRect[1]
             MoveWindow(
                 hwnd, x, y, rect.right - rect.left, rect.bottom - rect.top, 1
             )
 
 
-    def GetLabel(self, x, y):
-        return self.text.label % ('X:' + str(x) + ', Y:' + str(y))
+    def GetLabel(self, x, y, displayNumber):
+        return self.text.label % (displayNumber + 1, str(x), str(y))
 
 
-    def Configure(self, x=0, y=0):
+    def Configure(self, x=0, y=0, displayNumber = None):
         text = self.text
         panel = eg.ConfigPanel()
-        xCheckBox = panel.CheckBox(x is not None, text.text1)
-        xCtrl = panel.SpinIntCtrl(0 if x is None else x, min=-32768, max=32767)
-        xCtrl.Enable(x is not None)
-        yCheckBox = panel.CheckBox(y is not None, text.text3)
-        yCtrl = panel.SpinIntCtrl(0 if y is None else y, min=-32768, max=32767)
-        yCtrl.Enable(y is not None)
+#        enableDisplay = displayNumber is not None
+        enableX = x is not None
+        enableY = y is not None
+        displayLabel = wx.StaticText(panel, -1, text.display)
+#        displayCheckBox = wx.CheckBox(panel, -1, text.display)
+#        displayCheckBox.SetValue(enableDisplay)
+        if displayNumber is None:
+            displayNumber = 0
+        displayChoice = eg.DisplayChoice(panel, displayNumber)
+#        displayChoice.Enable(enableDisplay)
+        xCheckBox = wx.CheckBox(panel, -1, text.text1)
+        xCheckBox.SetValue(enableX)
+        xCtrl = eg.SpinIntCtrl(panel, -1, 0 if not enableX else x, min=-32768, max=32767)
+        xCtrl.Enable(enableX)
+        yCheckBox = wx.CheckBox(panel, -1, text.text3)
+        yCheckBox.SetValue(enableY)
+        yCtrl = eg.SpinIntCtrl(panel, -1, 0 if not enableY else y, min=-32768, max=32767)
+        yCtrl.Enable(enableY)
+        panelAdd = panel.AddLine
+        panelAdd(xCheckBox, xCtrl, text.text2)
+        panelAdd(yCheckBox, yCtrl, text.text4)
+        panelAdd((-1,0),(-1,-1),(-1,-1))
+        panelAdd(displayLabel,displayChoice,(-1,-1))
 
         def HandleXCheckBox(event):
             xCtrl.Enable(event.IsChecked())
@@ -147,18 +182,16 @@ class MoveTo(eg.ActionBase):
             event.Skip()
         yCheckBox.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)
 
-        panel.AddLine(xCheckBox, xCtrl, text.text2)
-        panel.AddLine(yCheckBox, yCtrl, text.text4)
-
         while panel.Affirmed():
             panel.SetResult(
                 xCtrl.GetValue() if xCtrl.IsEnabled() else None,
                 yCtrl.GetValue() if yCtrl.IsEnabled() else None,
+                displayChoice.GetValue()
             )
 
 
 
-class Resize(MoveTo):
+class Resize(eg.ActionBase):
     name = "Resize"
     description = "Resizes a window to the specified dimension."
     class text:
@@ -184,6 +217,35 @@ class Resize(MoveTo):
         return self.text.label % (str(x), str(y))
 
 
+    def Configure(self, x=0, y=0):
+        text = self.text
+        panel = eg.ConfigPanel()
+        xCheckBox = panel.CheckBox(x is not None, text.text1)
+        xCtrl = panel.SpinIntCtrl(0 if x is None else x, min=-32768, max=32767)
+        xCtrl.Enable(x is not None)
+        yCheckBox = panel.CheckBox(y is not None, text.text3)
+        yCtrl = panel.SpinIntCtrl(0 if y is None else y, min=-32768, max=32767)
+        yCtrl.Enable(y is not None)
+        
+        def HandleXCheckBox(event):
+            xCtrl.Enable(event.IsChecked())
+            event.Skip()
+        xCheckBox.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)    
+
+        def HandleYCheckBox(event):
+            yCtrl.Enable(event.IsChecked())
+            event.Skip()
+        yCheckBox.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)    
+
+        panel.AddLine(xCheckBox, xCtrl, text.text2)
+        panel.AddLine(yCheckBox, yCtrl, text.text4)
+
+        while panel.Affirmed():
+            panel.SetResult(
+                xCtrl.GetValue() if xCtrl.IsEnabled() else None,
+                yCtrl.GetValue() if yCtrl.IsEnabled() else None,
+            )        
+        
 
 class Maximize(eg.ActionBase):
     name = "Maximize"

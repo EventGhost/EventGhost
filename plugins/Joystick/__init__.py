@@ -45,12 +45,12 @@ eg.RegisterPlugin(
 )
 
 
-EVT_DIRECTION = 0
+EVT_DIRECTION    = 0
 EVT_BTN_RELEASED = 1
-EVT_BTN_PUSHED = 2
-EVT_X_AXIS = 3
-EVT_Y_AXIS = 4
-EVT_Z_AXIS = 5
+EVT_BTN_PUSHED   = 2
+EVT_X_AXIS       = 3
+EVT_Y_AXIS       = 4
+EVT_Z_AXIS       = 5
 
 
 
