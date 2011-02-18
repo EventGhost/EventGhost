@@ -1,4 +1,4 @@
-# Plugins/Foobar2000/__init__.py
+# plugins/Foobar2000/__init__.py
 #
 # Copyright (C) 2006 MonsterMagnet
 #

@@ -1,5 +1,5 @@
 #
-# Plugins/DVBDream/__init__.py
+# plugins/DVBDream/__init__.py
 #
 # Copyright (C) 2007 townkat
 #

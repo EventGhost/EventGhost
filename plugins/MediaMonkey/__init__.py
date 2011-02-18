@@ -1,4 +1,4 @@
-# Plugins/MediaMonkey/__init__.py
+# plugins/MediaMonkey/__init__.py
 #
 # Copyright (C)  2009 Pako  <lubos.ruckl@quick.cz>
 #

@@ -1,5 +1,5 @@
 #
-# Plugins/DScaler/__init__.py
+# plugins/DScaler/__init__.py
 # DScaler Plugin for EventGhost.
 # Version 1.0a
 # Written by Lee Woolf

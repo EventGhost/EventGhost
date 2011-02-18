@@ -1,5 +1,5 @@
 ﻿version="0.1.1" 
-# Plugins/OOo_Impress/__init__.py
+# plugins/OOo_Impress/__init__.py
 #
 # Copyright (C)  2008 Pako  (lubos.ruckl@quick.cz)
 #

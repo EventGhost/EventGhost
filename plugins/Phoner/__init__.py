@@ -1,4 +1,4 @@
-# Plugins/Phoner/__init__.py
+# plugins/Phoner/__init__.py
 #
 # Copyright (C)  2009 Pako  <lubos.ruckl@quick.cz>
 #

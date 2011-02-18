@@ -1,4 +1,4 @@
-# Plugins/MediaPlayerClassic/__init__.py
+# plugins/MediaPlayerClassic/__init__.py
 #
 # Copyright (C) 2006 MonsterMagnet
 #

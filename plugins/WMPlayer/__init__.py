@@ -1,5 +1,5 @@
 #
-# Plugins/WMPlayer/__init__.py
+# plugins/WMPlayer/__init__.py
 #
 # Copyright (C) 2007 Oystein Hansen
 #

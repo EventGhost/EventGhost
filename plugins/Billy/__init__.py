@@ -1,5 +1,5 @@
 version="0.3.5"
-# Plugins/Billy/__init__.py
+# plugins/Billy/__init__.py
 #
 # Copyright (C)  2007 Pako  (lubos.ruckl@quick.cz)
 #

@@ -1,6 +1,6 @@
 version="0.1.6" 
 
-# Plugins/ScreamerRadio/__init__.py
+# plugins/ScreamerRadio/__init__.py
 #
 # Copyright (C)  2008 Pako  (lubos.ruckl@quick.cz)
 #

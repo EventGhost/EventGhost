@@ -1,6 +1,6 @@
 version="0.2.10"
 
-# Plugins/RadioSure/__init__.py
+# plugins/RadioSure/__init__.py
 #
 # Copyright (C)  2009, 2010, 2011   Pako (lubos.ruckl@quick.cz)
 #

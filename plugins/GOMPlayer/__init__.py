@@ -1,5 +1,5 @@
 #
-# Plugins/GOMlayer/__init__.py
+# plugins/GOMlayer/__init__.py
 #
 # Copyright (C) 2008 CHeitkamp
 #

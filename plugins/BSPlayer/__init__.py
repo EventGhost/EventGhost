@@ -1,5 +1,5 @@
 #
-# Plugins/BSlayer/__init__.py
+# plugins/BSlayer/__init__.py
 #
 # Copyright (C) 2010 CHeitkamp
 #

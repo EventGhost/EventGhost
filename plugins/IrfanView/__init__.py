@@ -1,6 +1,6 @@
 version="0.2.4" 
 
-# Plugins/IrfanView/__init__.py
+# plugins/IrfanView/__init__.py
 #
 # Copyright (C)  2007 Pako  <lubos.ruckl@quick.cz>
 #
