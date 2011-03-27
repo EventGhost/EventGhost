@@ -174,7 +174,7 @@ class PluginItem(ActionItem):
         self.helpDialog = eg.HtmlDialog(
             parent,
             eg.text.General.pluginLabel % plugin.name,
-            plugin.description,
+            eg.Utils.MergeUrl(plugin.description, plugin.info.url),
             plugin.info.icon.GetWxIcon(),
             basePath=plugin.info.GetPath()
         )

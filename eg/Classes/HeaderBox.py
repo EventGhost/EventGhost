@@ -62,6 +62,8 @@ class HeaderBox(wx.PyWindow):
             self.GetForegroundColour().GetAsString(wx.C2S_HTML_SYNTAX),
             text
         )
+        if hasattr(item, "info"):
+            self.text = eg.Utils.MergeUrl(self.text, item.info.url)
         descBox = eg.HtmlWindow(self, style=wx.html.HW_NO_SELECTION)
         descBox.SetBorders(1)
         descBox.SetFonts("Arial", "Times New Roman", [8, 8, 8, 8, 8, 8, 8])
@@ -112,4 +114,3 @@ class HeaderBox(wx.PyWindow):
 
     def AcceptsFocus(self):
         return False
-

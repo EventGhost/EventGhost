@@ -59,6 +59,8 @@ class Default:
         unnamedEvent = "<unnamed event>"
         unnamedFile = "<unnamed file>"
         moreTag = "more..."
+        supportSentence = "Support for this plugin can be found"
+        supportLink = "here"
         settingsPluginCaption = "Plugin Item Settings"
         settingsActionCaption = "Action Item Settings"
         settingsEventCaption = "Event Item Settings"

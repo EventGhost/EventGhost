@@ -392,4 +392,19 @@ def GetFirstParagraph(text):
                 break
             result += " " + line
         return ' '.join(result.split())
+        
+def MergeUrl(description, url):
+    if url:
+        txt = '<p><div align=right><i><font color="#999999" size=-1>%s <a href="%s">%s</a>.</font></i></div></p>' % (
+            eg.text.General.supportSentence,
+            url,
+            eg.text.General.supportLink
+        )
+    else:
+        txt = ""
+    pos = description.find("<rst>")
+    if pos != -1:
+        description = description[pos + 5:]
+        description = DecodeReST(description)
+    return description + txt
 

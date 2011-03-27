@@ -55,9 +55,11 @@ eg.RegisterPlugin(
     version = version,
     kind = "other",
     guid = "{39EFE2FF-6CA9-4450-B0E3-1AA125420B37}",
-    description = ur'''<rst>This plugin is designed to easily schedule events to
- be triggered at any time of the day or night. Events can be scheduled to be
- triggered periodically, once only, daily, weekly, monthly or yearly.''',
+    description = u'''<rst>This plugin is designed to easily schedule events ... 
+
+... to be triggered at any time of the day or night.
+Events can be scheduled to be triggered periodically, 
+once only, daily, weekly, monthly or yearly.''',
     createMacrosOnAdd = True,
     url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=2740",
     icon = (
