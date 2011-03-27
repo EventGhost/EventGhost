@@ -63,7 +63,7 @@ eg.RegisterPlugin(
         '<br\n><br\n>'
         '<center><img src="suntracker_plugin.png" /></center>'
     ),
-    url = "http://www.eventghost.org/forumThread",
+    url = "http://www.eventghost.net/forumThread",
 )
 
 import eg

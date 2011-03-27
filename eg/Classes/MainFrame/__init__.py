@@ -942,17 +942,17 @@ class MainFrame(wx.Frame):
 
     def OnCmdWebHomepage(self):
         import webbrowser
-        webbrowser.open("http://www.eventghost.org/", 2, 1)
+        webbrowser.open("http://www.eventghost.net/", 2, 1)
 
 
     def OnCmdWebForum(self):
         import webbrowser
-        webbrowser.open("http://www.eventghost.org/forum/", 2, 1)
+        webbrowser.open("http://www.eventghost.net/forum/", 2, 1)
 
 
     def OnCmdWebWiki(self):
         import webbrowser
-        webbrowser.open("http://www.eventghost.org/wiki/", 2, 1)
+        webbrowser.open("http://www.eventghost.net/wiki/", 2, 1)
 
 
     def OnCmdCheckUpdate(self):

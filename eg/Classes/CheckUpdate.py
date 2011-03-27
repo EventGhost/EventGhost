@@ -124,7 +124,7 @@ def _checkUpdate(manually=False):
     try:
         if manually:
             dialog = ShowWaitDialog()
-        conn = httplib.HTTPConnection("www.eventghost.org")
+        conn = httplib.HTTPConnection("www.eventghost.net")
         conn.connect()
         conn.sock.settimeout(10.0)
         conn.request("GET", "/latest_version.txt")

@@ -24,7 +24,7 @@ Plugin for the Logitech UltraX Media Remote.
 **Notice:** You need a special driver to use the remote with this plugin. 
 Please `download it here`__ and install it while the device is connected.
 
-__ http://www.eventghost.org/downloads/USB-Remote-Driver.exe
+__ http://www.eventghost.net/downloads/USB-Remote-Driver.exe
 """
 
 

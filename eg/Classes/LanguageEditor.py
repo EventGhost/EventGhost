@@ -231,7 +231,7 @@ class LanguageEditor(wx.Frame):
         info.Version = "1.0.2"
         info.Copyright = "(C) 2006-2009 EventGhost Project"
         info.Developers = ["Bitmonster", ]
-        info.WebSite = ("http://www.eventghost.org", "EventGhost home page")
+        info.WebSite = ("http://www.eventghost.net", "EventGhost home page")
         wx.AboutBox(info)
 
 

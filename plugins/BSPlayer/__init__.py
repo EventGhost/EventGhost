@@ -29,7 +29,7 @@ eg.RegisterPlugin(
     description = (
         "Adds support functions to control BSPlayer."
     ),
-    url = "http://www.eventghost.org/forum/",
+    url = "http://www.eventghost.net/forum/",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAAZi"
         "S0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9oCBhEoHQNl"

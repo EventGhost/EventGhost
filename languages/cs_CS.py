@@ -1018,7 +1018,7 @@ class Plugin:
             writeToLog = u"Zapsat také  do logu EventGhostu"
     class Foobar2000:
         name = u"Foobar2000"
-        description = u'Přidává podporu funkcí pro řízení aplikace Foobar2000.\n\n<p><a href="http://www.foobar2000.org/">Domovská stránka aplikace Foobar2000</a>'
+        description = u'Přidává podporu funkcí pro řízení aplikace Foobar2000.\n\n<p><a href="http://www.foobar2000.net/">Domovská stránka aplikace Foobar2000</a>'
         class Exit:
             name = u"Ukončit"
             description = u"Ukončí foobar."
@@ -1716,7 +1716,7 @@ class Plugin:
                 Tempo = u"Tempo"
     class MediaPlayerClassic:
         name = u"Media Player Classic"
-        description = u"Přidává podporu funkcí k ovládání aplikace  Media Player Classic.\n\n<p>Pouze pro verzi <b>6.4.8.9</b> nebo novější.</p>\n<p>Plugin nebude pracovat se staršími verzemi MPC !</p>\n<p>\n<a href=http://www.eventghost.org/forum/viewtopic.php?t=17>Hlášení o chybách</a></p>\n<p><a href=http://sourceforge.net/projects/guliverkli/>\nMedia Player Classic SourceForge Project</a></p>"
+        description = u"Přidává podporu funkcí k ovládání aplikace  Media Player Classic.\n\n<p>Pouze pro verzi <b>6.4.8.9</b> nebo novější.</p>\n<p>Plugin nebude pracovat se staršími verzemi MPC !</p>\n<p>\n<a href=http://www.eventghost.net/forum/viewtopic.php?t=17>Hlášení o chybách</a></p>\n<p><a href=http://sourceforge.net/projects/guliverkli/>\nMedia Player Classic SourceForge Project</a></p>"
         class AlwaysOnTop:
             name = u"Vždy na vrchu"
             description = u"Vždy na vrchu"
