@@ -75,7 +75,7 @@ class Text:
             "\n\n<p>"
             "This action returns the data through <i>eg.result</i>, as any "
             "action does that is returning data. So you have to use "
-            '<a href="http://www.eventghost.net/wiki/Scripting">'
+            '<a href="http://www.eventghost.net/docs/scripting">'
             "Python scripting</a> to do anything with the result."
             "<p>"
             "Using this action and enabling event generation in the plugin "

@@ -139,7 +139,7 @@ SPECIAL_THANKS_DATA = (
             (
                 'Benjamin Webb',
                 (
-                    'for the nice <a href="http://www.eventghost.net/wiki/'
+                    'for the nice <a href="http://www.eventghost.net/mediawiki/'
                     'Controlling_Your_Living_Room_with_EventGhost">'
                     'wiki article</a>'
                 )
@@ -218,7 +218,7 @@ class AboutPanel(wx.Panel):
             self,
             wx.ID_ANY,
             eg.text.MainFrame.Menu.WebWiki.replace("&", ""),
-            URL="http://www.eventghost.net/wiki/"
+            URL="http://www.eventghost.net/mediawiki/"
         )
         hypelink3.SetFont(font)
 
