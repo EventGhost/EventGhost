@@ -158,14 +158,32 @@ SPECIAL_THANKS_DATA = (
 def GetRegistryValue(key, value):
     key, subkey = key.split("\\", 1)
     handle = _winreg.OpenKey(getattr(_winreg, key), subkey)
-    return _winreg.QueryValueEx(handle, value)[0]
+    try:
+        val = _winreg.QueryValueEx(handle, value)[0]
+    except WindowsError, err:
+        val = None
+        if err[0] == 2:
+            eg.PrintError("%s: %s" % (err[1].decode(eg.systemEncoding), value))
+        else:
+            raise
+    return val
 
 
 def GetCpuName():
-    return GetRegistryValue(
+    name = GetRegistryValue(
         r"HKEY_LOCAL_MACHINE\HARDWARE\DESCRIPTION\System\CentralProcessor\0",
         "ProcessorNameString"
     )
+    if name:
+        return name
+    else:
+        id = GetRegistryValue(
+            r"HKEY_LOCAL_MACHINE\HARDWARE\DESCRIPTION\System\CentralProcessor\0",
+            "Identifier")
+        vendor = GetRegistryValue(
+            r"HKEY_LOCAL_MACHINE\HARDWARE\DESCRIPTION\System\CentralProcessor\0",
+            "VendorIdentifier")
+        return "%s, %s" % (id, vendor)
 
 
 def GetRam():
