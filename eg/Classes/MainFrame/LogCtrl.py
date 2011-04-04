@@ -45,6 +45,10 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
                 |wx.LC_NO_HEADER
             )
         )
+        if eg.config.useFixedFont:
+            df = self.GetFont()
+            font = wx.Font(df.GetPointSize(), wx.DEFAULT, wx.NORMAL, wx.NORMAL, False, "Courier New")
+            self.SetFont(font)
         listmix.ListCtrlAutoWidthMixin.__init__(self)
         self.SetImageList(eg.Icons.gImageList, wx.IMAGE_LIST_SMALL)
 

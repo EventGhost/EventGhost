@@ -90,6 +90,7 @@ class Config(Section):
     logActions = True
     logMacros = True
     hideOnClose = False
+    useFixedFont = False
     onlyLogAssigned = False
     autoloadFilePath = False
     limitMemory = False
