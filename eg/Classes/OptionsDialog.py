@@ -35,6 +35,7 @@ class Text(eg.TranslatableStrings):
     HideOnStartup = "Hide on startup"
     HideOnClose = "Minimize to system tray on close"
     UseAutoloadFile = "Autoload file"
+    UseFixedFont = "Use fixed font in the logger"
     LanguageGroup = "Language"
     Warning = \
         "Language changes only take effect after restarting the application."
@@ -89,6 +90,18 @@ class OptionsDialog(eg.TaskletDialog):
             config.hideOnClose,
             text.HideOnClose
         )
+        useFixedFontCtrl = page1.CheckBox(
+            config.useFixedFont,
+            text.UseFixedFont
+        )
+        def OnFixedFontBox(evt):
+            font = eg.document.frame.treeCtrl.GetFont()
+            #if useFixedFontCtrl.GetValue():
+            if evt.IsChecked():
+                font = wx.Font(font.GetPointSize(), wx.DEFAULT, wx.NORMAL, wx.NORMAL, False, "Courier New")
+            wx.CallAfter(eg.document.frame.logCtrl.SetFont, font)            
+        useFixedFontCtrl.Bind(wx.EVT_CHECKBOX, OnFixedFontBox)
+
         #checkUpdateCtrl = page1.CheckBox(config.checkUpdate, text.CheckUpdate)
         memoryLimitCtrl = page1.CheckBox(config.limitMemory, text.limitMemory1)
         memoryLimitSpinCtrl = page1.SpinIntCtrl(
@@ -135,6 +148,7 @@ class OptionsDialog(eg.TaskletDialog):
             (
                 (startWithWindowsCtrl, 0, flags),
                 (hideOnCloseCtrl, 0, flags),
+                (useFixedFontCtrl, 0, flags),
                 #(checkUpdateCtrl, 0, flags),
                 (memoryLimitSizer, 0, flags),
                 (confirmDeleteCtrl, 0, flags),
@@ -186,6 +200,7 @@ class OptionsDialog(eg.TaskletDialog):
                         pass
 
             config.hideOnClose = hideOnCloseCtrl.GetValue()
+            config.useFixedFont = useFixedFontCtrl.GetValue()
             #config.checkUpdate = checkUpdateCtrl.GetValue()
             config.limitMemory = bool(memoryLimitCtrl.GetValue())
             config.limitMemorySize = memoryLimitSpinCtrl.GetValue()
