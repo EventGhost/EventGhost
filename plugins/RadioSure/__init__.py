@@ -1,4 +1,4 @@
-version="0.2.10"
+version="0.2.12"
 
 # plugins/RadioSure/__init__.py
 #
@@ -22,6 +22,13 @@ version="0.2.10"
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.12 by Pako 2011-04-05 17:38 UTC+1
+#     - Added first version of Favorites manager
+#     - Added "menu browser"
+#     - Added many new actions
+# 0.2.11 by Pako 2011-03-03 09:08 UTC+1
+#     - The cursor is changed to indicate the existence of a context menu
+#     - If exists file "contextCursor.cur", used as the cursor where there is a contextual menu
 # 0.2.10 by Pako 2011-02-12 09:53 UTC+1
 #     - FixedTimeCtrl replaced by eg.TimeCtrl
 # 0.2.9 by Pako 2011-01-15 11:50 UTC+1
@@ -109,38 +116,60 @@ Adds actions to control the `Radio?Sure!`_
 )
 #===============================================================================
 
-import os
 import wx.grid as gridlib
-import wx.lib.masked as maskedlib
 import subprocess
 import wx.calendar as wxCal
+from wx.lib.masked import EVT_TIMEUPDATE
+from subprocess import Popen
+from os import listdir, remove, rename
+from os.path import abspath, join, dirname, split, isfile, exists
 from calendar import day_name, month_name, monthrange
 from wx.lib.mixins.listctrl import CheckListCtrlMixin
 from _winreg import OpenKey, HKEY_CURRENT_USER, EnumValue, QueryValueEx, CloseKey
-from time import sleep, mktime, strptime, strftime, localtime
+from time import sleep, mktime, strptime, localtime
 from datetime import datetime as dt
 from datetime import timedelta as td
 from copy import deepcopy as cpy
 from xml.dom import minidom as miniDom
 from threading import Timer, Thread, Event
 from eg.WinApi.Utils import GetMonitorDimensions
-from eg.WinApi.Dynamic import CreateEvent, SetEvent
-from eg.WinApi.Dynamic import SendMessage, ShowWindow
-from win32gui import GetWindowText, MessageBox, GetWindow, GetDlgCtrlID
-from win32gui import GetWindowPlacement, GetDlgItem, GetClassName
+from eg.WinApi.Dynamic import CreateEvent, SetEvent, PostMessage
+from eg.WinApi.Dynamic import SendMessage, ShowWindow, RegisterWindowMessage
+from eg.WinApi import SendMessageTimeout
+from win32gui import GetWindowText, GetWindow, GetDlgCtrlID, GetMenuItemCount
+from win32gui import GetWindowPlacement, GetDlgItem, GetClassName, GetSubMenu
 from win32file import GetFileAttributes
 from random import randrange
 from codecs import lookup
 from codecs import open as openFile
 from winsound import PlaySound, SND_ASYNC
+from locale import strxfrm
+from ctypes import c_long, c_ulong, c_int, byref, sizeof, Structure, c_buffer
+from ctypes.wintypes import WinDLL
+_kernel32 = WinDLL("kernel32")
+_user32 = WinDLL("user32")
 from sys import getfilesystemencoding
-fse = getfilesystemencoding()
+FSE = getfilesystemencoding()
 
+if eg.Version.base >= "0.4.0":
+    from eg.Classes.MainFrame.TreeCtrl import DropTarget as EventDropTarget
+    IMAGES_DIR = eg.imagesDir 
+else:
+    from eg.Classes.MainFrame.TreeCtrl import EventDropTarget
+    IMAGES_DIR = eg.IMAGES_DIR 
+
+ARIAL_INFO  = "0;-35;0;0;0;700;0;0;0;0;3;2;1;34;Arial"
+TAHOMA_INFO = "0;-27;0;0;0;400;0;0;0;0;3;2;1;34;Tahoma"
+
+PROCESS_TERMINATE     = 1
+WM_CLOSE              = 16
 WM_COMMAND            = 273
 WM_SYSCOMMAND         = 274
 TBM_GETPOS            = 1024
 TBM_SETPOS            = 1029
 SC_RESTORE            = 61728
+#SW_HIDE               = 0
+#SW_MINIMIZE           = 6
 SW_RESTORE            = 9
 GW_CHILD              = 5
 GW_HWNDNEXT           = 2
@@ -149,10 +178,80 @@ FILE_ATTRIBUTE_SYSTEM = 4
 SYS_VSCROLL_X = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
 #===============================================================================
 
+CUR_STRING = (
+    "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAABnRSTlMA/wBmAADomHeP"
+    "AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAMK0lEQVR42gEgDN/zAQAAAOns8xZ6DQAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAApKDTXa9EAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAA////AQEB1tLSKZQuAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAP///youLtds0gAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAD///8qLi7XbNIAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAACAAAAAAAA/wD+AAAA////Ki4u12zSAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAgAAAAAAAP7///8A/gAAAP///youLtds0wAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAIAAAAAAAAAAAD+////AP4AAAD//PwqLi3YbNQAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAA"
+    "AAAAAAAAAAAA/gD/APwAAAMD9PjwKS4s2W3UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAA"
+    "AAABAAH6AQAAAPb69gkHC+ns9CgtLdlt1AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAQAC+wLz"
+    "+/P0+/QB+QHw8fEWEwvs6ecoLS/VcN8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAA/////vv+9/32AwMDAvsC"
+    "AQkABQEHAAAAAAAAAAAAAQEJ/2b4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAIFAgsIDObm8gYKBwUBBwEB"
+    "AQEBDQEBAQEBCAAA+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAADz9vsjIBicn6UAAAAAABTd2Nj/"
+    "ZgD/Zvn/ZgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAABAAAA////8/X6DgwH/2YAAZoA////9fHwDBAR/2YAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAgAAAAAAAA4MB+Pk6wAAAAAAFMnFwgsPEAAEGLtQxAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAQAAAABAQHe3+YcghUAAADk59ocGRL////o4coYGx7/ZgAAAAAAAAAEoBoA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD8YOYAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAE/2YAAAAAAIcaAAAAAAAAG38SAAAQ8u7qFxodAAAAAAAAAAAAAAAAAAAAiodz+Pj4"
+    "DAwMAQEBBQUF/Pz8+Pj47e3tCAgIg4aaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAA"
+    "AAAAAAAAAAAAAAAAAAAAAPz/7wQBASEkOszP2ACXKAAAAAAAAAAAAFBQUCMjIwAAAAAA"
+    "AAAAAAAAAAAAAHJycoeHh4OGmgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAA"
+    "AAAAAAAAAAAAAAADZwH/ZgAAAMYAlygAAAAAAAAAAAAAAAAiIiLMzMwFBQULCwsAAAAB"
+    "AQHn5+cXFxcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAeHh46OjoAAAABQUF6enp+fn5CAgI"
+    "BgYGISEhAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM7OzqysrA8PD4WFhYKCgvz8/AgICIKCgouL"
+    "iwMGGgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH/ZgAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAEoBr9+uY2NjbKysogICDg4OAAAAAAAAAAAAAAAAADBhr8"
+    "YOYAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAwcHBlZWVAAAA39/fZWVlAAAAysrKnZ2ds7OzAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAD4+PqysrAAAAAAAAJqamgAAAKmpqRMTE0xMTAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAtLS0AAADb29sEBAQAAAAxMTHt7e0AAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAB/2YAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABKAa"
+    "/PnlAAAADQ0NCQkJs7OzZmZm0dHRAAAAAAAABAcb/GDmAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMrKygEB"
+    "AfT09Ovr65aWlmRkZAEBAURERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA2Njb/////////"
+    "///u7u79/f3n5+e8vLwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB/2YAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABKAaAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAA/GDmAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf9mAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADPbTswenz69gAAAABJRU5ErkJggg=="
+)
+#===============================================================================
+class ConfigData(eg.PersistentData):
+    pos = None
+    plcmnt = None
+
 class Text:
     label1 = "Radio?Sure! installation folder:"
     label2 = "RadioSure.xml and Scheduler.xml folder location:"
-    filemask = "RadioSure.exe|RadioSure.exe|All-Files (*.*)|*.*"
+#    filemask = "RadioSure.exe|RadioSure.exe|All-Files (*.*)|*.*"
     text1 = "Couldn't find RadioSure window !"
     browseTitle = "Selected folder:"
     toolTipFolder = "Press button and browse to select folder ..."
@@ -161,7 +260,7 @@ class Text:
     browseFile = 'Select the logfile'
     boxMessage1 = 'Missing file %s !'
     logLabel = "Log scheduler events to following logfile:"
-    nextRun = "Next run: %s"
+#    nextRun = "Next run: %s"
     none = "None"
     execut = 'Schedule "%s" - execution. Next run: %s'
     cmdLine = 'Commandline: %s'
@@ -179,11 +278,87 @@ class Text:
     varBoxLabel = "Variable public holidays:"
     ok = "OK"
     cancel = "Cancel"
+    yes = "Yes"
+    no = "No"
     add = "Add"
     delete = "Delete"
     first_day = "The first day of the week:"
     xmlComment = "Radio?Sure! scheduler configuration file. Updated at %s."
+    messBoxTit0 = "EventGhost - Radio?Sure! plugin"
+    messBoxTit1 = "Attention !"
+    message2 = """You can not start another instance of Radio?Sure!,
+because the maximum number of instances %i is exhausted!"""
+    message3 = '''You can not start another instance of Radio?Sure!,
+because the option "Allow only one instance" is chosen!'''
+    autoClose = "Auto close after %i s"
+    toolTip = "Drag-and-drop an event from the log into the box."
+    popup = (
+        "Delete item",
+        "Delete all items",
+    )
+    clear  = "Clear all"
+    opened = "Opened"
+    closed = "Closed"
+    root = "Main (root) menu"
 
+    class OpenManager:
+        dialogTitle = "Radio?Sure! Favorites manager %s  (plugin for EventGhost)"
+        toolTipDelete = "Delete item(s)"
+        toolTipUp = "Move item(s) up"
+        toolTipDown = "Move item(s) down"
+        moveTop = "Move item(s) top"
+        moveBottom = "Move item(s) bottom"
+        exportSel = "Export selected item(s) to XML file"
+        exportAll = "Export all items to XML file"
+        toolTipExport = "Export selected (if any) or all items to XML file"
+        toolTipImport = "Import from XML file"
+        toolTipImportSR = "Import from Screamer Radio"
+        sort  = "Sort alphabetically"
+        play = "Play selected favorite just now !"
+        refresh = "Refresh favorites list from RadioSure.xml"
+        export = "Export"
+        imprt = "Import"
+        importSR = "Import SR"
+        lblSource = "Source:"
+        lblGenre = "Genre:"
+        lblLanguage = "Language:"
+        lblCountry = "Country:"
+        ok = "OK"
+        cancel = "Cancel"
+        apply = "Apply"
+        lblList = "Favorites list:"
+        xmlComment1 = "Radio?Sure! favorites backup file."
+        xmlComment2 = 'Saved at %s by EventGhost.'
+        choose = 'Choose a XML file to be import'
+        save = 'Backup favorites as XML file ...'
+        wildcard = "XML file (*.xml)|*.xml"
+        removeDupl = "Remove duplications"
+        messBoxTit2 = """Attention !
+Radio?Sure! is running !"""
+        messBoxTit3 = """Attention !
+Recording is in progress !"""
+        messBoxTit5 = "Congratulations!"
+        messBoxTit6 = "Announcement"
+        messBoxTit7 = "Warning"
+        message1 = """Your version of Radio?Sure! allows you to save only the first %i favorite stations !
+Other favorites will be ignored."""
+        message2 = """If you want to save the modified list of favorite stations,
+must be overwritten file RadioSure.xml.
+You can not overwrite the file RadioSure.xml,
+if the Radio?Sure! is currently running.
+Otherwise, the favorites list is returned to its original condition.
+
+Press button %s, if the program Radio?Sure! can be closed.
+Press button %s, if the program Radio?Sure! can not be closed."""
+        message3 = "Failed to save data to the file RadioSure.xml !"
+        message4 = 'It is not possible to import because there is a problem.\n\
+The file "%s" does not have the expected structure.'
+        message5 = "Your list of favorite stations has been successfully updated!"
+        message6 = "Failed to close Radio?Sure!"
+        message7 = "Your list of favorite stations has not been updated!"
+        message8 = """Your list of favorite stations contain (in sources) duplications!
+They will be saved only unique items."""
+        message9 = "Failed to open Radio?Sure!"
 
     class OpenScheduler:
         dialogTitle = "Radio?Sure! Scheduler %s  (plugin for EventGhost)"
@@ -282,7 +457,18 @@ File type (as .mp3) need not be completed. Will be added automatically."""
             "Move schedule up",
             "Move schedule down",
         )
+#===============================================================================
 
+def my_list2cmdline(seq):
+    """ FIXING subprocess.list2cmdline
+    Workaround, because subprocess.list2cmdline does not work with arguments like: 
+    filename="... ...". Ie, when we need quotes inside the string, and somewhere 
+    inside is a space character. When you properly prepare all items 
+    (including the quotes), it works!
+    There is also done simultaneously filesystemencode encoding 
+    (otherwise there UnicodeDecodeError occurs...)"""
+    return ' '.join([arg.encode(FSE) if isinstance(arg, unicode) else arg for arg in seq])
+subprocess.list2cmdline = my_list2cmdline
 #===============================================================================
 
 class MyDirBrowseButton(eg.DirBrowseButton):
@@ -296,37 +482,19 @@ class MyFileBrowseButton(eg.FileBrowseButton):
 #===============================================================================
 
 class MySpinIntCtrl(eg.SpinIntCtrl):
-
     def SetNumCtrlId(self, id):
         self.numCtrl.SetId(id)
 #===============================================================================
 
 newEVT_BUTTON_AFTER = wx.NewEventType()
 EVT_BUTTON_AFTER = wx.PyEventBinder(newEVT_BUTTON_AFTER, 1)
-
-class EventAfter(wx.PyCommandEvent):
-
-    def __init__(self, evtType, id):
-        wx.PyCommandEvent.__init__(self, evtType, id)
-        self.myVal = None
-
-
-    def SetValue(self, val):
-        self.myVal = val
-
-
-    def GetValue(self):
-        return self.myVal
-#===============================================================================
-
 newEVT_UPDATE_DIALOG = wx.NewEventType()
 EVT_UPDATE_DIALOG = wx.PyEventBinder(newEVT_UPDATE_DIALOG, 1)
-#===============================================================================
-
 newEVT_CHECKLISTCTRL = wx.NewEventType()
 EVT_CHECKLISTCTRL = wx.PyEventBinder(newEVT_CHECKLISTCTRL, 1)
+#===============================================================================
 
-class Evt_ChecklistCtrl(wx.PyCommandEvent):
+class UserEvent(wx.PyCommandEvent):
 
     def __init__(self, evtType, id):
         wx.PyCommandEvent.__init__(self, evtType, id)
@@ -341,7 +509,7 @@ class Evt_ChecklistCtrl(wx.PyCommandEvent):
         return self.myVal
 #===============================================================================
 
-class extColourSelectButton(eg.ColourSelectButton):
+class ExtColourSelectButton(eg.ColourSelectButton):
 
     def __init__(self,*args,**kwargs):
         eg.ColourSelectButton.__init__(self, *args)
@@ -364,15 +532,16 @@ class extColourSelectButton(eg.ColourSelectButton):
             colourData.GetCustomColour(i).Get() for i in range(16)
         ]
         dialog.Destroy()
-        evt = EventAfter(newEVT_BUTTON_AFTER, self.GetId())
+        evt = UserEvent(newEVT_BUTTON_AFTER, self.GetId())
         evt.SetValue(self.GetValue())
         self.GetEventHandler().ProcessEvent(evt)
 #===============================================================================
 
-class extFontSelectButton(eg.FontSelectButton):
+class ExtFontSelectButton(eg.FontSelectButton):
 
     def OnButton(self, event):
         fontData = wx.FontData()
+        fontData.EnableEffects(False)
         if self.value is not None:
             font = wx.FontFromNativeInfoString(self.value)
             fontData.SetInitialFont(font)
@@ -387,199 +556,146 @@ class extFontSelectButton(eg.FontSelectButton):
             self.value = font.GetNativeFontInfo().ToString()
             event.Skip()
         dialog.Destroy()
-        evt = EventAfter(newEVT_BUTTON_AFTER, self.GetId())
+        evt = UserEvent(newEVT_BUTTON_AFTER, self.GetId())
         evt.SetValue(self.GetValue())
         self.GetEventHandler().ProcessEvent(evt)
 #===============================================================================
 
-class MenuGrid(gridlib.Grid):
+class MessageBoxDialog(wx.Dialog):
 
-    def __init__(self, parent, lngth):
-        gridlib.Grid.__init__(self, parent)
-        self.SetRowLabelSize(0)
-        self.SetColLabelSize(0)
-        self.SetDefaultRowSize(16)
-        self.SetScrollLineX(1)
-        self.SetScrollLineY(1)
-        self.EnableEditing(False)
-        self.EnableDragColSize(False)
-        self.EnableDragRowSize(False)
-        self.EnableDragGridSize(False)
-        self.EnableGridLines(False)
-        attr = gridlib.GridCellAttr()
-        attr.SetAlignment(wx.ALIGN_LEFT, wx.ALIGN_CENTRE)
-        self.SetColAttr(0,attr)
-        self.CreateGrid(lngth, 1)
-        self.SetSelectionMode(gridlib.Grid.wxGridSelectRows)
-        self.Bind(gridlib.EVT_GRID_CMD_SELECT_CELL, self.onGridSelectCell, self)
-
-
-    def SetBackgroundColour(self, colour):
-        self.SetDefaultCellBackgroundColour(colour)
-
-
-    def SetForegroundColour(self, colour):
-        self.SetDefaultCellTextColour(colour)
-
-
-    def SetFont(self, font):
-        self.SetDefaultCellFont(font)
-
-
-    def Set(self, choices):
-        oldLen = self.GetNumberRows()
-        newLen = len(choices)
-        h = self.GetDefaultRowSize()
-        if oldLen > newLen:
-            self.DeleteRows(0, oldLen-newLen, False)
-        elif oldLen < newLen:
-            self.AppendRows(newLen-oldLen, False)
-        for i in range(len(choices)):
-            self.SetCellValue(i,0,choices[i])
-            self.SetRowSize(i,h)
-
-
-    def onGridSelectCell(self, event):
-        row = event.GetRow()
-        self.SelectRow(row)
-        if not self.IsVisible(row,0):
-            self.MakeCellVisible(row,0)
-        event.Skip()
-
-
-    def MoveCursor(self, step):
-        max = self.GetNumberRows()
-        sel = self.GetSelectedRows()[0]
-        new = sel + step
-        if new < 0:
-            new += max
-        elif new > max-1:
-            new -= max
-        self.SetGridCursor(new, 0)
-        self.SelectRow(new)
-#===============================================================================
-
-class Menu(wx.Frame):
-
-    def __init__(self):
-        wx.Frame.__init__(
-            self,
-            None,
-            -1,
-            'RadioSure OS Menu',
-            style = wx.STAY_ON_TOP|wx.SIMPLE_BORDER
-        )
-
-
-    def ShowMenu(
+    def __init__(
         self,
-        fore,
-        back,
-        foreSel,
-        backSel,
-        fontInfo,
-        flag,
-        plugin,
-        event,
-        monitor,
-        List
+        parent,
+        message,
+        caption = eg.APP_NAME,
+        flags=wx.OK,
+        time=0,
+        plugin=None,
+        pos=wx.DefaultPosition
     ):
-        self.monitor = monitor
-        self.fore    = fore
-        self.back    = back
-        self.foreSel    = foreSel
-        self.backSel    = backSel
-        self.plugin  = plugin
-        self.plugin.RefreshVariables()
-        self.plugin.List = List
-        self.choices = self.plugin.Favorites if List else self.plugin.History
-        if len(self.choices) == 0:
-            return
-        self.stationChoiceCtrl = MenuGrid(self, len(self.choices))
-        if fontInfo is None:
-            font = self.stationChoiceCtrl.GetFont()
-            font.SetPointSize(36)
-            fontInfo = font.GetNativeFontInfoDesc()
+        PlaySound('SystemExclamation', SND_ASYNC)
+        if parent is None and eg.document.frame:
+            parent = eg.document.frame
+        dialogStyle = wx.DEFAULT_DIALOG_STYLE
+        if flags & wx.STAY_ON_TOP:
+            dialogStyle |= wx.STAY_ON_TOP
+        wx.Dialog.__init__(self, parent, -1, caption, pos, style=dialogStyle)
+        self.SetTitle(plugin.text.messBoxTit0)
+        self.SetIcon(plugin.info.icon.GetWxIcon())
+        bttns = []
+        if flags:
+            art = None
+            if flags & wx.ICON_EXCLAMATION:
+                art = wx.ART_WARNING            
+            elif flags & wx.ICON_ERROR:
+                art = wx.ART_ERROR
+            elif flags & wx.ICON_QUESTION:
+                art = wx.ART_QUESTION
+            elif flags & wx.ICON_INFORMATION:
+                art = wx.ART_INFORMATION
+            if art is not None:
+                bmp = wx.ArtProvider.GetBitmap(art, wx.ART_MESSAGE_BOX, (32,32))
+                icon = wx.StaticBitmap(self, -1, bmp)
+                icon2 = wx.StaticBitmap(self, -1, bmp)
+            else:
+                icon = (32,32)
+                icon2 = (32,32)
+            flag = True
+            if flags & wx.YES:
+                default = False
+                if not flags & wx.NO_DEFAULT:
+                    default = True
+                    flag = False
+                bttns.append((wx.ID_YES, plugin.text.yes, default))
+            if flags & wx.NO:
+                default = False
+                if flags & wx.NO_DEFAULT:
+                    default = True
+                    flag = False
+                bttns.append((wx.ID_NO, plugin.text.no, default))
+            if flags & wx.OK:   
+                bttns.append((wx.ID_OK, plugin.text.ok, flag))
+            if flags & wx.CANCEL:
+                bttns.append((wx.ID_CANCEL, plugin.text.cancel, False))
+            if not flags & (wx.OK | wx.CANCEL | wx.YES | wx.NO):
+                bttns.append((wx.ID_OK, plugin.text.ok, True))
         else:
-            font = wx.FontFromNativeInfoString(fontInfo)
-        self.stationChoiceCtrl.SetFont(font)
-        self.SetFont(font)
-        monDim = GetMonitorDimensions()
-        try:
-            x,y,ws,hs = monDim[self.monitor]
-        except IndexError:
-            x,y,ws,hs = monDim[0]
-        # menu height calculation:
-        h=self.GetCharHeight() + 4
-        for i in range(len(self.choices)):
-            self.stationChoiceCtrl.SetCellValue(i, 0, self.choices[i][1])
-            self.stationChoiceCtrl.SetRowSize(i,h)
-        height0 = len(self.choices)*h
-        height1 = h*((hs-20)/h)
-        height = min(height0, height1)+6
-        # menu width calculation:
-        width_lst=[]
-        for item in self.choices:
-            width_lst.append(self.GetTextExtent(item[1]+' ')[0])
-        width = max(width_lst)+8
-        self.stationChoiceCtrl.SetColSize(0,width)
-        if height1 < height0:
-            width += SYS_VSCROLL_X
-        width = min((width,ws-50))+6
-        x_pos = x+(ws-width)/2
-        y_pos = y + (hs-height)/2
-        self.SetDimensions(x_pos,y_pos,width,height)
-        self.stationChoiceCtrl.SetDimensions(2,2,width-6,height-6,wx.SIZE_AUTO)
+            bttns.append((wx.ID_OK, plugin.text.ok, True))
+        if caption:
+            caption = wx.StaticText(self, -1, caption)
+#            caption.SetFont(wx.Font(16, wx.SWISS, wx.NORMAL, wx.BOLD))
+            caption.SetFont(wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD))
+        message = wx.StaticText(self, -1, message)
+        line = wx.StaticLine(self, -1, size=(1,-1), style = wx.LI_HORIZONTAL)
+        bottomSizer = wx.BoxSizer(wx.HORIZONTAL)
+        bottomSizer.Add((10, 1)) 
+
+        if time:
+            self.cnt = time
+            txt = plugin.text.autoClose % self.cnt
+            info = wx.StaticText(self, -1, txt)
+            info.Enable(False)
+            bottomSizer.Add(info, 0, wx.TOP, 3)
+            
+            def UpdateInfoLabel(evt):
+                self.cnt -= 1
+                txt = plugin.text.autoClose % self.cnt
+                info.SetLabel(txt)
+                if not self.cnt:
+                    self.Close()
+
+            self.Bind(wx.EVT_TIMER, UpdateInfoLabel)
+            self.timer = wx.Timer(self)
+            self.timer.Start(1000)
+        else:
+            self.timer = None
+
+        bottomSizer.Add((5,1),1,wx.EXPAND)
+        for bttn in bttns:
+            b = wx.Button(self, bttn[0], bttn[1])
+            if bttn[2]:
+                #b.SetDefault()
+                defBtn = b # SetDefault() workaround
+            bottomSizer.Add(b, 0, wx.LEFT, 5)
+        bottomSizer.Add((10, 1)) 
+        topSizer = wx.BoxSizer(wx.HORIZONTAL)
+        topSizer.Add(icon,0,wx.LEFT|wx.RIGHT,10)
+        topSizer.Add((1,1),1,wx.EXPAND)
+        topSizer.Add(caption,0,wx.TOP,5)
+        topSizer.Add((1,1),1,wx.EXPAND)
+        topSizer.Add(icon2,0,wx.LEFT|wx.RIGHT,10)
         mainSizer = wx.BoxSizer(wx.VERTICAL)
-        self.SetSizer(mainSizer)
-        ix = self.plugin.FavIx if List else self.plugin.HistIx
-        self.stationChoiceCtrl.SetGridCursor(ix, 0)
-        self.stationChoiceCtrl.SelectRow(ix)
-        self.SetBackgroundColour((0,0,0))
-        self.stationChoiceCtrl.SetBackgroundColour(self.back)
-        self.stationChoiceCtrl.SetForegroundColour(self.fore)
-        self.stationChoiceCtrl.SetSelectionBackground(self.backSel)
-        self.stationChoiceCtrl.SetSelectionForeground(self.foreSel)
-        mainSizer.Add(self.stationChoiceCtrl, 0, wx.EXPAND)
-        self.Bind(wx.EVT_CLOSE, self.onClose)
-        self.Bind(gridlib.EVT_GRID_CMD_CELL_LEFT_DCLICK, self.onDoubleClick, self.stationChoiceCtrl)
-        self.Bind(wx.EVT_CHAR_HOOK, self.onFrameCharHook)
-        if flag:
-            self.timer = MyTimer(t = 5.0, plugin = self.plugin)
-        self.Show(True)
-        self.Raise()
-        wx.Yield()
-        SetEvent(event)
+        mainSizer.Add(topSizer, 0, wx.EXPAND|wx.TOP|wx.BOTTOM,10)
+        mainSizer.Add(message, 0, wx.EXPAND|wx.LEFT|wx.RIGHT,10)
+        mainSizer.Add(line, 0, wx.EXPAND|wx.ALL,5)
+        mainSizer.Add(bottomSizer, 0, wx.EXPAND|wx.BOTTOM,5)
+        # SetDefault() workaround:
+        defBtn.SetFocus()
 
-
-    def DefaultAction(self):
-        sel=self.stationChoiceCtrl.GetSelectedRows()[0]
-        self.plugin.PlayFromMenu()
-
-
-    def onFrameCharHook(self, event):
-        keyCode = event.GetKeyCode()
-        if keyCode == wx.WXK_RETURN or keyCode == wx.WXK_NUMPAD_ENTER:
-            self.DefaultAction()
-        elif keyCode == wx.WXK_ESCAPE:
+        def OnButton(evt):
+            self.SetReturnCode(evt.GetId())
             self.Close()
-        elif keyCode == wx.WXK_UP or keyCode == wx.WXK_NUMPAD_UP:
-            self.stationChoiceCtrl.MoveCursor(-1)
-        elif keyCode == wx.WXK_DOWN or keyCode == wx.WXK_NUMPAD_DOWN:
-            self.stationChoiceCtrl.MoveCursor(1)
-        else:
-            event.Skip()
+            evt.Skip()
+        wx.EVT_BUTTON(self, -1, OnButton)
 
+        def onClose(evt):
+            if self.GetReturnCode() not in (wx.ID_OK, wx.ID_CANCEL, wx.ID_YES, wx.ID_NO):
+                self.SetReturnCode(wx.ID_CANCEL)
+            if self.timer:
+                self.timer.Stop()
+                del self.timer
+            self.MakeModal(False)
+            self.GetParent().Raise()
+            self.Destroy()
+        self.Bind(wx.EVT_CLOSE, onClose)
 
-    def onDoubleClick(self, event):
-        self.DefaultAction()
-        event.Skip()
+        self.SetSizer(mainSizer)
+        self.Fit()
 
-
-    def onClose(self, event):
-        self.plugin.menuDlg = None
-        self.Show(False)
-        self.Destroy()
+def MessageBox(parent, message, caption='', flags=0, time = 0, plugin = None):
+    mssgbx = MessageBoxDialog(parent, message, caption, flags, time, plugin)
+    val = mssgbx.ShowModal()
+    return val
 #===============================================================================
 
 class MyTimer():
@@ -885,44 +1001,20 @@ class CheckListCtrl(wx.ListCtrl, CheckListCtrlMixin):
             size = (width, 164),
             style = wx.LC_REPORT|wx.LC_HRULES|wx.LC_VRULES|wx.LC_SINGLE_SEL
         )
-        curString = (
-            "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAADAFBMVEX/AAAAAAAUFBQV"
-            "FRUWFhYTExMCAgI1NTXp6ekEBAQzMzPV1dWPj4+goKCAgIAbGxsBAQHa2tq4uLi/v7/C"
-            "wsLBwcG8vLy6uro5OTkNDQ0QEBAHBwcFBQXR0dFra2s9PT0oKCgGBgYXFxdsbGxLS0t0"
-            "dHQyMjJhYWFOTk5SUlJWVlYqKirGxsb8/PylpaUrKyudnZ2kpKTHx8e7urp6enrX19fP"
-            "z8+RkZEiJCRfX18REREtLS2EhISXl5dERERVVVVZWVkdHR1/gYE0NDSUlJQaGhoYGBgZ"
-            "GRkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA5GIQAACQAAAAAAAAA"
-            "AAAAAAAAAAAAADQAABNBfeQAAAAAAAA5GLg5GLgAACQAAAAAAAAAAAAAAAAAAAAAAGgA"
-            "ABNBfeQAAAAAAAA5GOw5GOwAACQAAAAAAAAAAAAAABAAAAAAANAAABNBfeQAAAAAAABh"
-            "FgiPH4AAJtwAAAAAAAAAAAAAAAAAAIAAAAA5ELy/IqwAAGgAAAA/6bw5AjwAAFgAAAAA"
-            "AAAAAAAAAAAAAAAAAAA5EpBmS+wAADQAAAA5GYg5GYgAACQAAAAAAAAAAAAAAAAAAAAA"
-            "AWwAABNBfeQAAAAAAABhFgiPH4AAJkAAAAAAAAAAAAAAAACAAAAAAABhFgiPH4AAJhwA"
-            "AABhFgiPH4AAJgwAAAAAAAAAAAAAAAAAgAAAAABhFgiPH4AAJegAAAA5GiQ5GiQAASgA"
-            "AAAAAAACAAAAAAAAAAAAAAA5E8g5E8gAAQQAAAA5Glg5GlgAACQAAAAAAAAAAAAAAAAA"
-            "AAAAADQAABNBfeQAAAAAAAA5Gow5GowAAIwAAAAAAAAAAAAAAAAAAAAAAADJSBkDAAAA"
-            "AXRSTlMAQObYZgAAAAlwSFlzAAABiQAAAYkBni4RNQAAAP1JREFUeNqF09lWwjAQBuD5"
-            "KVZZBJcCUmQpICrKJiooixuW938jmLZJKZQzc9E2ydeZJCchEgMikAQkAUlAEpAEJAFJ"
-            "QBKQBCQBSUAS2BNIGEkvDCN5ggMAMiN/xyzTpFPVc6ZBih9pBTLZcy9yYQbKhykuLq+u"
-            "LauwjWLJCkDAbtSky7C5XVFD3H2rUwBVKteUJX0mGdSDjzQacBw0IxujF+K02i3QHTr3"
-            "D4/d3Z1j8LR9237WZ1AveuQZ9D0w4FRDvQ8qRkHDppcxXt+yeJ/EXxouMf349Mfiwcyb"
-            "73y/RAgWy6/vzs8v/o6X4NWujpUw/10Ow3XX64R4s4k2SJ0PWZEnDEUAAAAASUVORK5C"
-            "YII="
-        )
-
-        from cStringIO import StringIO
-        from base64 import b64decode
-        from Image import open as openImage
-        stream = StringIO(b64decode(curString))
-        pil = openImage(stream).convert("RGBA")
-        stream.close()
-        bmp = wx.BitmapFromBufferRGBA(pil.size[0],pil.size[1],pil.tostring())
-        img = bmp.ConvertToImage()
-        img.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 1)
-        img.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 1)
-        cursor = wx.CursorFromImage(img)
-        self.SetCursor(cursor)
+        curFile = abspath(join(dirname(__file__), "contextCursor.cur"))
+        img = None
+        if exists(curFile):
+            img = wx.EmptyImage(32, 32)
+            img.LoadFile(curFile, wx.BITMAP_TYPE_CUR)
+        if not img or not img.IsOk():
+            from cStringIO import StringIO
+            from base64 import b64decode
+            stream = StringIO(b64decode(CUR_STRING))
+            img = wx.ImageFromStream(stream)
+            stream.close()
+            img.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 0)
+            img.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 0)
+        self.SetCursor(wx.CursorFromImage(img))
         self.selRow = -1
         self.back = self.GetBackgroundColour()
         self.fore = self.GetForegroundColour()
@@ -947,7 +1039,7 @@ class CheckListCtrl(wx.ListCtrl, CheckListCtrlMixin):
 
     # this is called by the base class when an item is checked/unchecked !!!!!!!
     def OnCheckItem(self, index, flag):
-        evt = Evt_ChecklistCtrl(newEVT_CHECKLISTCTRL, self.GetId())
+        evt = UserEvent(newEVT_CHECKLISTCTRL, self.GetId())
         evt.SetValue((index, flag))
         self.GetEventHandler().ProcessEvent(evt)
 
@@ -976,7 +1068,845 @@ class CheckListCtrl(wx.ListCtrl, CheckListCtrlMixin):
         self.SelRow(ix)
 #===============================================================================
 
-class schedulerDialog(wx.Dialog):
+class ManagerDialog(wx.Dialog):
+
+    def __init__(self, text, plugin):
+        wx.Dialog.__init__(
+            self,
+            None,
+            -1,
+            text.dialogTitle % version,
+            style = wx.DEFAULT_DIALOG_STYLE|wx.MINIMIZE_BOX|wx.CLOSE_BOX|wx.RESIZE_BORDER,
+        )
+
+        #self.plugin = eg.Utils.GetPlugin(self) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        self.plugin = plugin
+
+        statusRS = self.plugin.GetStatusRS()
+
+        self.idUp      = wx.NewId()
+        self.idDown    = wx.NewId()
+        self.idTop     = wx.NewId()
+        self.idBottom  = wx.NewId()
+        self.idSort    = wx.NewId()
+        self.idRefr    = wx.NewId()
+        self.idPlay    = wx.NewId()
+        self.SetIcon(self.plugin.info.icon.GetWxIcon())
+        self.plugin.manager = self
+        self.text = text
+        self.Bind(wx.EVT_CLOSE, self.onClose)
+
+        statPath = self.plugin.RadioSurePath+"\\Stations"
+        rsd_files = [x for x in listdir(statPath) if x.endswith('.rsd') and x.startswith('stations-')]
+        stations = statPath+"\\"+rsd_files[0]
+
+        def unique(seq):
+            res = set(seq)
+            res = list(res)
+            res.sort()
+            return res
+            
+        f = openFile(stations, encoding='utf-8', mode='r')
+        data = self.data = [item.split("\t") for item in f.readlines()]
+        genres = [item[2] for item in data]
+        genres = unique(genres)
+        countrys = [item[3] for item in data]
+        countrys = unique(countrys)
+        languages = [item[4] for item in data]
+        languages = unique(languages)
+        titles = [item[0] for item in data]
+        titles = unique(titles)
+        f.close()
+
+        curFile = abspath(join(dirname(__file__), "contextCursor.cur"))
+        img = None
+        if exists(curFile):
+            img = wx.EmptyImage(32, 32)
+            img.LoadFile(curFile, wx.BITMAP_TYPE_CUR)
+        if not img or not img.IsOk():
+            from cStringIO import StringIO
+            from base64 import b64decode
+            stream = StringIO(b64decode(CUR_STRING))
+            img = wx.ImageFromStream(stream)
+            stream.close()
+            img.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 0)
+            img.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 0)
+        self.grid = wx.ListCtrl(self, style = wx.LC_REPORT|wx.LC_NO_HEADER|wx.LC_HRULES|wx.LC_VRULES)
+        self.grid.SetCursor(wx.CursorFromImage(img))
+        self.grid.InsertColumn(0,"")
+
+        #Button UP
+        bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_UP, wx.ART_OTHER, (16, 16))
+        btnUP = wx.BitmapButton(self, self.idUp, bmp)
+        btnUP.SetToolTipString(self.text.toolTipUp)
+        #Button DOWN
+        bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_DOWN, wx.ART_OTHER, (16, 16))
+        btnDOWN = wx.BitmapButton(self, self.idDown, bmp)
+        btnDOWN.SetToolTipString(self.text.toolTipDown)
+        #Button DEL
+        bmp = wx.ArtProvider.GetBitmap(wx.ART_DELETE, wx.ART_OTHER, (16, 16))
+        btnDEL = wx.BitmapButton(self, -1, bmp)
+        btnDEL.SetToolTipString(self.text.toolTipDelete)
+
+        btnExp = wx.Button(self, wx.ID_SAVEAS, self.text.export)
+        btnExp.SetToolTipString(self.text.toolTipExport)
+
+        btnImp = wx.Button(self, wx.ID_OPEN, self.text.imprt)
+        btnImp.SetToolTipString(self.text.toolTipImport)
+
+        btnImpSR = wx.Button(self, wx.ID_FILE, self.text.importSR)
+        btnImpSR.SetToolTipString(self.text.toolTipImportSR)
+
+        bmp = wx.ArtProvider.GetBitmap(wx.ART_HELP_SETTINGS, wx.ART_OTHER, (16, 16))
+        btnSort = wx.BitmapButton(self, self.idSort, bmp)
+        btnSort.SetToolTipString(self.text.sort)
+
+        bmp = wx.ArtProvider.GetBitmap(wx.ART_REDO, wx.ART_OTHER, (16, 16))
+        btnRefr = wx.BitmapButton(self, self.idRefr, bmp)
+        btnRefr.SetToolTipString(self.text.refresh)
+
+
+
+        def EnableCtrls():
+            first = self.grid.GetFirstSelected()
+            cnt = self.grid.GetSelectedItemCount()
+            subseq = True
+            for ix in range(first, first + cnt):
+                if not self.grid.IsSelected(ix):
+                    subseq = False
+                    break
+            one = cnt==1
+            self.menuFlagM = subseq
+
+            itemCnt = self.grid.GetItemCount()
+            upDown = cnt > 0 and cnt < itemCnt and subseq
+            sourceLabel.Enable(one)
+            genreLabel.Enable(one)
+            langLabel.Enable(one)
+            countryLabel.Enable(one)
+            sourceCtrl.Enable(one)
+            btnUP.Enable(upDown)
+            btnDOWN.Enable(upDown)
+            btnDEL.Enable(cnt > 0)
+            btnExp.Enable(itemCnt > 0)
+            btnSort.Enable(itemCnt > 1)
+
+
+        def ListSelection(event=None):
+            EnableCtrls()
+            first = self.grid.GetFirstSelected()
+            cnt = self.grid.GetSelectedItemCount()
+            if cnt == 1:
+                item = self.tmpFavs[first]
+                src = item[0]
+                sourceCtrl.Clear()
+                srcs = ()
+                i = -1
+                for ix in range(5, 11):
+                    srcIx = [itm[ix] for itm in data]
+                    if src in srcIx:
+                        i = srcIx.index(src)
+                        break
+                if i > -1:
+                    srcs = data[i][5:]
+                    sourceCtrl.AppendItems(srcs)
+                if not src in srcs:
+                    sourceCtrl.Append(src)
+                sourceCtrl.SetStringSelection(src)
+                if item[2] in genres:
+                    genreCtrl.SetStringSelection(item[2])
+                if item[3] in languages:
+                    langCtrl.SetStringSelection(item[3])
+                if item[4] in countrys:
+                    countryCtrl.SetStringSelection(item[4])
+            else:
+                sourceCtrl.SetSelection(-1)
+                genreCtrl.SetSelection(-1)
+                langCtrl.SetSelection(-1)
+                countryCtrl.SetSelection(-1)        
+            if event:
+                event.Skip()
+        self.grid.Bind(wx.EVT_LIST_ITEM_SELECTED, ListSelection)
+        self.grid.Bind(wx.EVT_LIST_ITEM_DESELECTED, ListSelection)
+
+
+        def onRefresh(evt = None, seq = None):
+            self.favs = seq if seq else self.plugin.RefreshVariables()
+            self.tmpFavs = cpy(self.favs)
+            self.grid.DeleteAllItems()
+            for row in range(len(self.tmpFavs)):
+                self.grid.InsertStringItem(row, self.tmpFavs[row][1])
+            self.grid.SetColumnWidth(0, -1)
+            self.grid.SetColumnWidth(0, self.grid.GetColumnWidth(0) + 6)
+            ListSelection()
+            self.Diff()
+            EnableCtrls()
+            #evt.Skip
+        btnRefr.Bind(wx.EVT_BUTTON, onRefresh)
+
+
+        def onSort(evt):
+            self.tmpFavs = sorted(self.tmpFavs, key=lambda i: strxfrm(i[1].encode(eg.systemEncoding)))
+            self.grid.DeleteAllItems()
+            for row in range(len(self.tmpFavs)):
+                self.grid.InsertStringItem(row, self.tmpFavs[row][1])
+            ListSelection()
+            self.Diff()
+            self.Colour()
+        btnSort.Bind(wx.EVT_BUTTON, onSort)
+
+        sourceLabel = wx.StaticText(self, -1, self.text.lblSource)
+        genreLabel = wx.StaticText(self, -1, self.text.lblGenre)
+        langLabel = wx.StaticText(self, -1, self.text.lblLanguage)
+        countryLabel = wx.StaticText(self, -1, self.text.lblCountry)
+        sourceCtrl = wx.Choice(self, -1, choices=[])
+        genreCtrl = wx.Choice(self, -1, choices=genres)
+        langCtrl = wx.Choice(self, -1, choices=languages)
+        countryCtrl = wx.Choice(self, -1, choices=countrys)
+        genreCtrl.Enable(False)
+        langCtrl.Enable(False)
+        countryCtrl.Enable(False)
+        line = wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL)
+        btn1 = wx.Button(self, wx.ID_OK, self.text.ok)
+        btn1.SetDefault()
+        btn2 = wx.Button(self, wx.ID_CANCEL, self.text.cancel)
+        btn3 = wx.Button(self, wx.ID_APPLY, self.text.apply)
+        btn1.Bind(wx.EVT_BUTTON, self.onBtn)
+        btn2.Bind(wx.EVT_BUTTON, self.onBtn)
+        btn3.Bind(wx.EVT_BUTTON, self.onBtn)
+        btnExp.Bind(wx.EVT_BUTTON, self.onBtnsInOut)
+        btnImp.Bind(wx.EVT_BUTTON, self.onBtnsInOut)
+        btnImpSR.Bind(wx.EVT_BUTTON, self.onBtnsInOut)
+        btnsizer = wx.BoxSizer(wx.HORIZONTAL)
+        btnsizer.Add(btnExp,0,wx.LEFT)
+        btnsizer.Add((8,-1),0)
+        btnsizer.Add(btnImp,0,wx.CENTER)
+        btnsizer.Add((8,-1),0)
+        btnsizer.Add(btnImpSR,0,wx.CENTER)
+        btnsizer.Add((-1,-1),1)
+        btnsizer.Add(btn1,0,wx.CENTER)
+        btnsizer.Add((8,-1),0)
+        btnsizer.Add(btn2,0,wx.CENTER)
+        btnsizer.Add((8,-1),0)
+        btnsizer.Add(btn3,0,wx.RIGHT)
+        btnsizer.Layout()
+        w = btn1.GetSize()[0]+btn2.GetSize()[0]+btn3.GetSize()[0]+btnExp.GetSize()[0]+btnImp.GetSize()[0]+btnImpSR.GetSize()[0]+5*8
+        w1 = btnUP.GetSize()[0]+8
+
+        onRefresh()
+
+        self.grid.SetMinSize((w-w1,-1))
+        szr = wx.BoxSizer(wx.VERTICAL)
+        sizer = wx.GridBagSizer(1,5)
+        sizer.AddGrowableCol(1)
+        sizer.AddGrowableRow(7)
+        sizer.Add(wx.StaticText(self, -1, self.text.lblList),(0,0),(1,2))
+        sizer.Add(self.grid, (1,0), (7, 2), wx.EXPAND, 5)
+        sizer.Add(btnUP, (1,2), (1, 1),flag=wx.RIGHT)
+        sizer.Add(btnDOWN, (2,2), (1, 1),flag=wx.RIGHT)
+        sizer.Add(btnDEL, (3,2), (1, 1),flag=wx.RIGHT)
+        sizer.Add((5,20), (4,2), (1, 1),flag=wx.RIGHT)
+        sizer.Add(btnRefr, (5,2), (1, 1),flag=wx.RIGHT)
+        sizer.Add(btnSort, (6,2), (1, 1),flag=wx.RIGHT)
+
+
+        sizer.Add(sourceLabel, (8,0), (1, 1),wx.TOP, 10)
+        sizer.Add(sourceCtrl, (8,1), (1, 2), wx.EXPAND|wx.TOP, 5)
+        sizer.Add(genreLabel, (9,0), (1, 1),wx.TOP, 10)
+        sizer.Add(genreCtrl, (9,1), (1, 2), wx.EXPAND|wx.TOP, 5)
+        sizer.Add(langLabel, (10,0), (1, 1),wx.TOP, 10)
+        sizer.Add(langCtrl, (10,1), (1, 2), wx.EXPAND|wx.TOP, 5)
+        sizer.Add(countryLabel, (11,0), (1, 1),wx.TOP, 10)
+        sizer.Add(countryCtrl, (11,1), (1, 2), wx.EXPAND|wx.TOP, 5)
+        szr.Add(sizer, 1, wx.EXPAND|wx.ALL, 5)
+        szr.Add(line, 0, wx.EXPAND|wx.TOP, 3)
+        szr.Add(btnsizer, 0, wx.EXPAND|wx.ALL, 5)
+        self.SetSizer(szr)
+        self.Fit()
+
+        #Learn New MINSIZE:
+        #====================
+        if ConfigData.plcmnt:
+    #    if 0:
+            self.SetPosition(ConfigData.plcmnt[0])
+            sz = ConfigData.plcmnt[1]
+            minsz = ConfigData.plcmnt[2]
+        else:
+            self.Center()
+            sz = (w+w1, self.GetSize()[1] + btn1.GetSize()[1] + 10)
+            minsz = sz
+        self.SetMinSize(minsz)
+        self.SetSize(sz)
+        self.Show(True)
+
+
+        def onSource(evt):
+            if self.grid.GetSelectedItemCount() == 1:
+                self.tmpFavs[self.grid.GetFirstSelected()][0] = evt.GetString()
+                self.Diff()
+        sourceCtrl.Bind(wx.EVT_CHOICE, onSource)
+
+
+        def Move(evt):
+            id = evt.GetId()
+            first = self.grid.GetFirstSelected()
+            cnt = self.grid.GetSelectedItemCount()
+            if id == self.idUp:
+                if first:
+                    bit = self.tmpFavs.pop(first-1)
+                    self.tmpFavs.insert(first-1+cnt, bit)
+                else:
+                    id = self.idBottom
+            elif id == self.idDown:
+                if first+cnt < len(self.tmpFavs):
+                    bit = self.tmpFavs.pop(first+cnt)
+                    self.tmpFavs.insert(first, bit)
+                else:
+                    id = self.idTop
+            if id in (self.idBottom, self.idTop):
+                p1=self.tmpFavs[:first]
+                p2=self.tmpFavs[first:first+cnt]
+                p3=self.tmpFavs[first+cnt:]
+                if id == self.idTop:
+                    p2.extend(p1)
+                    p2.extend(p3)
+                    self.tmpFavs = p2
+                elif id == self.idBottom:
+                    p1.extend(p3)
+                    p1.extend(p2)
+                    self.tmpFavs = p1
+            self.grid.DeleteAllItems()
+            for row in range(len(self.tmpFavs)):
+                self.grid.InsertStringItem(row, self.tmpFavs[row][1])
+            if id == self.idUp:
+                if first:
+                    b, e = (first-1, first-1+cnt)
+            elif id == self.idDown:
+                if first+cnt < len(self.tmpFavs):
+                    b, e = (first+1,first+1+cnt)
+            elif id == self.idBottom:
+                ln = len(self.tmpFavs)
+                b, e = (ln-cnt, ln)
+            elif id == self.idTop:
+                b, e = (0, cnt)
+            for ix in range(b, e):
+                    self.grid.Select(ix, True)
+            self.grid.EnsureVisible(ix)
+            self.Diff()
+            self.Colour()
+        btnUP.Bind(wx.EVT_BUTTON, Move)
+        btnDOWN.Bind(wx.EVT_BUTTON, Move)
+
+
+        def onRemDupl(evt):
+            indexes=dict(map(None,[item[0] for item in self.tmpFavs],range(len(self.tmpFavs)))).values()
+            indexes.sort()
+            tmp = []
+            for ix in indexes:
+                tmp.append(self.tmpFavs[ix])
+            onRefresh(None, tmp)
+            self.Diff()
+            self.Colour()
+
+
+        def onDelete(evt):
+            cnt = self.grid.GetItemCount()
+            for ix in range(cnt-1, -1, -1):
+                if self.grid.IsSelected(ix):
+                    self.grid.DeleteItem(ix)
+                    self.tmpFavs.pop(ix)
+            EnableCtrls()
+            self.Diff()
+            self.Colour()
+        btnDEL.Bind(wx.EVT_BUTTON, onDelete)
+
+
+        def onPlayNow(evt):
+            ix = self.grid.GetFirstSelected()
+            self.plugin.RefreshVariables()
+            sel = self.tmpFavs[ix][1]
+            src = sourceCtrl.GetStringSelection()
+            rsList = [item[1] for item in self.plugin.Favorites]
+            hwnds = HandleRS()
+            indx = None
+            if sel in [item[1] for item in self.plugin.Favorites]:
+                indx = rsList.index(sel)
+                if src != self.plugin.Favorites[indx][0]:
+                    indx = None
+            if indx is not None: # start with favorite index
+                if not hwnds:
+                    hwnds = self.plugin.GetNewHwnd()
+                    if hwnds:
+                        SendMessage(hwnds[0], WM_COMMAND, 4102+indx, 0)
+                    else:
+                        self.FailedToOpen()
+                else:
+                    for hwnd in hwnds:
+                        x, rec = self.plugin.GetStatusRS([hwnd])
+                        if rec != 1:
+                            SendMessage(hwnd, WM_COMMAND, 4102+indx, 0)
+                            break
+                    if rec or rec is None:
+                        hwnds = self.plugin.GetNewHwnd(hwnds)
+                        if hwnds:
+                            SendMessage(hwnds[0], WM_COMMAND, 4102+indx, 0)
+                        else:
+                            self.FailedToOpen()
+            else: #start with source="blablabla"
+                if not hwnds:
+                    hwnds = self.plugin.GetNewHwnd(hwnds, src=src)
+                    if not hwnds:
+                        self.FailedToOpen()
+                else:
+                    for hwnd in hwnds:
+                        x, rec = self.plugin.GetStatusRS([hwnd])
+                        if rec != 1:
+                            PostMessage(hwnd, WM_COMMAND, 1, 0) #close
+                            i = 0
+                            while hwnd in hwnds and i < 100:
+                                hwnds = HandleRS()
+                                i += 1
+                            if i == 100:
+                                self.PrintError(self.text.message6)
+                                rec = 1
+                            else:
+                                hwnds = self.plugin.GetNewHwnd(hwnds, src=src)
+                                if not hwnds:
+                                    self.FailedToOpen()
+                                    rec = 1
+                                else:
+                                    break
+                    if rec or rec is None:
+                        hwnds = self.plugin.GetNewHwnd(hwnds, src=src)
+                        if not hwnds:
+                            self.FailedToOpen()
+        self.grid.Bind(wx.EVT_LIST_ITEM_ACTIVATED, onPlayNow)
+
+
+        def AreDuplications():
+            srcList = [item[0] for item in self.tmpFavs]
+            return len(srcList) > len(set(srcList))
+
+
+        def OnRightClick(evt):
+            if not hasattr(self, "popupID1"):
+                self.popupID1 = wx.NewId()
+                self.popupID2 = wx.NewId()
+                self.Bind(wx.EVT_MENU, onDelete, id = self.popupID1)
+                self.Bind(wx.EVT_MENU, onRemDupl, id = self.popupID2)
+                self.Bind(wx.EVT_MENU, Move, id = self.idUp)
+                self.Bind(wx.EVT_MENU, Move, id = self.idDown)
+                self.Bind(wx.EVT_MENU, Move, id = self.idTop)
+                self.Bind(wx.EVT_MENU, Move, id = self.idBottom)
+                self.Bind(wx.EVT_MENU, onPlayNow, id = self.idPlay)
+                self.Bind(wx.EVT_MENU, onSort, id = self.idSort)
+                self.Bind(wx.EVT_MENU, onRefresh, id = self.idRefr)
+                self.Bind(wx.EVT_MENU, self.onBtnsInOut, id = wx.ID_SAVEAS)
+                self.Bind(wx.EVT_MENU, self.onBtnsInOut, id = wx.ID_SAVE)
+                self.Bind(wx.EVT_MENU, self.onBtnsInOut, id = wx.ID_OPEN)
+                self.Bind(wx.EVT_MENU, self.onBtnsInOut, id = wx.ID_FILE)
+            menu = wx.Menu()
+            if self.grid.GetSelectedItemCount() == 1:
+                menu.Append(self.idPlay, self.text.play)
+                menu.AppendSeparator()                
+            menu.Append(self.popupID1, self.text.toolTipDelete)
+            if AreDuplications():
+                menu.Append(self.popupID2, self.text.removeDupl)
+            if self.grid.GetItemCount() > 1:
+                menu.Append(self.idSort, self.text.sort)
+            if self.menuFlagM:
+                menu.AppendSeparator()
+                menu.Append(self.idUp, self.text.toolTipUp)
+                menu.Append(self.idDown, self.text.toolTipDown)
+                menu.Append(self.idTop, self.text.moveTop)
+                menu.Append(self.idBottom, self.text.moveBottom)
+            menu.AppendSeparator()
+            menu.Append(self.idRefr, self.text.refresh)
+            menu.Append(wx.ID_SAVEAS, self.text.exportSel)
+            menu.Append(wx.ID_SAVE, self.text.exportAll)
+            menu.Append(wx.ID_OPEN, self.text.toolTipImport)
+            menu.Append(wx.ID_FILE, self.text.toolTipImportSR)
+            self.PopupMenu(menu)
+            menu.Destroy()
+            evt.Skip()
+        self.grid.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, OnRightClick)
+
+
+    def FailedToOpen(self):
+        return MessageBox(
+            self,
+            self.text.message9, #failed to open
+            self.text.messBoxTit6,
+            wx.ICON_EXCLAMATION,
+            15,
+            plugin = self.plugin,
+            )
+
+
+    def CreateFavorites(self, dom, node, itmList = None, save = False):
+        max = self.plugin.maxFav
+        mssgs = []
+        if save:
+            #Duplications check
+            indexes = dict(map(None,[item[0] for item in self.tmpFavs],range(len(self.tmpFavs)))).values()
+            indexes.sort()
+            tmp = []
+            for ix in indexes:
+                tmp.append(self.tmpFavs[ix])
+            itmList = range(len(tmp))
+            if len(self.tmpFavs) > len(tmp):
+                mssgs.append(self.text.message8)
+        else:
+            tmp = self.tmpFavs
+        flag = save and len(itmList) > max
+        if flag:
+            mssgs.append(self.text.message1 % self.plugin.maxFav)
+        if mssgs:
+            MessageBox(
+                self,
+                "\n".join(mssgs),
+                self.plugin.text.messBoxTit1,
+                wx.ICON_EXCLAMATION,
+                plugin = self.plugin,
+                )
+        elm = 0
+        for i in itmList:
+            elm += 1
+            if flag and elm > max:
+                break
+            item = tmp[i]
+            itemNode = dom.createElement(u'Item-%i' % elm)
+            sourceNode = dom.createElement(u'Source')
+            sourceText = dom.createTextNode(unicode(item[0]))
+            sourceNode.appendChild(sourceText)
+            itemNode.appendChild(sourceNode)
+            titleNode = dom.createElement(u'Title')
+            titleText = dom.createTextNode(unicode(item[1]))
+            titleNode.appendChild(titleText)
+            itemNode.appendChild(titleNode)
+            genreNode = dom.createElement(u'Genre')
+            genreText = dom.createTextNode(unicode(item[2]))
+            genreNode.appendChild(genreText)
+            itemNode.appendChild(genreNode)
+            languageNode = dom.createElement(u'Language')
+            languageText = dom.createTextNode(unicode(item[3]))
+            languageNode.appendChild(languageText)
+            itemNode.appendChild(languageNode)
+            countryNode = dom.createElement(u'Country')
+            countryText = dom.createTextNode(unicode(item[4]))
+            countryNode.appendChild(countryText)
+            itemNode.appendChild(countryNode)          
+            node.appendChild(itemNode)
+
+
+    def UpdateRadioSureXml(self):
+        # create a backup of original file
+        new_file_name = u'%s\\RadioSure.xml' % self.plugin.xmlpath
+        old_file_name = new_file_name + "~"
+        if exists(old_file_name):
+            remove(old_file_name)
+        rename(new_file_name, old_file_name)
+        try:
+            # change Favorites node
+            doc = miniDom.parse(old_file_name)
+            node = doc.getElementsByTagName('XMLConfigSettings')[0]
+            oldFavorites = node.getElementsByTagName('Favorites')[0]
+            newFavorites = doc.createElement(u'Favorites')
+            self.CreateFavorites(doc, newFavorites, save = True)
+            node.replaceChild(newFavorites, oldFavorites)
+            # persist changes to new file
+            f = file(new_file_name, "wb")
+            writer = lookup('utf-8')[3](f)
+            doc.writexml(writer, encoding = 'utf-8')
+            f.close()
+            MessageBox(
+                self,
+                self.text.message5, #updated
+                self.text.messBoxTit5,
+                wx.ICON_INFORMATION,
+                15,
+                plugin = self.plugin,
+                )
+            return True
+        except:
+            raise
+            MessageBox(
+                self,
+                self.text.message3,
+                self.plugin.text.messBoxTit1,
+                wx.ICON_EXCLAMATION,
+                plugin = self.plugin,
+                )
+            if exists(new_file_name):
+                remove(new_file_name)
+            rename(old_file_name, new_file_name)                
+            return False
+
+    def onBtn(self, evt):
+
+        def UpdateXml():
+            closeFlag = self.UpdateRadioSureXml()
+            rs = u'%s\\RadioSure.exe' % self.plugin.RadioSurePath
+            rs = rs.encode(FSE) if isinstance(rs, unicode) else rs
+            args = [rs]
+            if isfile(rs):
+                Popen(args)
+            return closeFlag
+
+        closeFlag = False
+        id = evt.GetId()
+        if id == wx.ID_APPLY or (id == wx.ID_OK and self.favs != self.tmpFavs):
+            hwnds = HandleRS()
+            rec = 0
+            for hwnd in hwnds:
+                rec = self.plugin.GetStatusRS([hwnd])[1]
+                if rec:
+                    break
+            title = self.text.messBoxTit3 if rec else self.text.messBoxTit2
+
+            if hwnds:
+                # RS is running !
+                res = MessageBox(
+                    self,
+                    self.text.message2 % (self.plugin.text.yes, self.plugin.text.no),
+                    title,
+                    wx.ICON_EXCLAMATION|wx.YES_NO|wx.YES_DEFAULT,
+                    plugin = self.plugin,
+                    )
+                if res == wx.ID_YES:
+                    for hwnd in hwnds:
+                        rec = self.plugin.GetStatusRS([hwnd])[1]
+                        if rec:
+                            PostMessage(hwnd, WM_COMMAND, 1051, 0) # Stop Rec
+                            i=0
+                            while rec and i < 100:
+                                i+=1
+                                rec = self.plugin.GetStatusRS([hwnd])[1]
+                            if not rec:
+                                PostMessage(hwnd, WM_COMMAND, 1, 0) # Close
+                        else:
+                            PostMessage(hwnd, WM_COMMAND, 1, 0) # Close
+                    i = 0
+                    while hwnds and i < 100:
+                        i += 1
+                        hwnds = HandleRS()
+                    if hwnds:
+                        pid = eg.WinApi.Utils.PyGetWindowThreadProcessId(hwnd)[1]
+                        handle = _kernel32.OpenProcess(PROCESS_TERMINATE, False, pid)
+                        succ = _kernel32.TerminateProcess(handle, -1)
+                        _kernel32.CloseHandle(handle)
+                        if not succ:
+                            MessageBox(
+                                self,
+                                self.text.message6, #failed to close
+                                self.text.messBoxTit6,
+                                wx.ICON_EXCLAMATION,
+                                15,
+                                plugin = self.plugin,
+                                )
+                        else:
+                            closeFlag = UpdateXml()
+                    else:
+                        closeFlag = UpdateXml()
+                else:
+                    MessageBox(
+                        self,
+                        self.text.message7, #no update
+                        self.text.messBoxTit7,
+                        wx.ICON_EXCLAMATION,
+                        15,
+                        plugin = self.plugin,
+                        )
+            else:
+                closeFlag = self.UpdateRadioSureXml()
+
+        if id == wx.ID_APPLY and closeFlag:
+            self.favs = cpy(self.tmpFavs)
+            self.Diff()
+
+        if id != wx.ID_APPLY:
+            if id != wx.ID_OK or closeFlag or self.favs == self.tmpFavs:
+                self.Close()
+        #evt.Skip()
+        
+
+    def Import(self, data):
+        # ToDo: Add check of duplications ???
+        self.tmpFavs.extend(data)
+        self.grid.DeleteAllItems()
+        for row in range(len(self.tmpFavs)):
+            self.grid.InsertStringItem(row, self.tmpFavs[row][1])
+        self.grid.SetColumnWidth(0, -1)
+        self.grid.SetColumnWidth(0, self.grid.GetColumnWidth(0) + 6)
+        self.grid.EnsureVisible(len(self.tmpFavs)-1)
+        self.grid.SetFocus()
+        self.Colour()
+        self.Diff()
+
+
+    def Colour(self):
+        maxF = self.plugin.maxFav
+        cnt = self.grid.GetItemCount()
+        fore = self.grid.GetTextColour()
+        for row in range(min(maxF, cnt)):
+            item = self.grid.GetItem(row)
+            item.SetTextColour(fore)
+            self.grid.SetItem(item)
+        if maxF >= cnt:
+            return
+        for row in range(maxF, cnt):
+            item = self.grid.GetItem(row)
+            item.SetTextColour("red")
+            self.grid.SetItem(item)
+
+
+    def onBtnsInOut(self, evt):
+        id = evt.GetId()
+        if id == wx.ID_SAVEAS or id == wx.ID_SAVE:
+            dlg = wx.FileDialog(
+                self,
+                message = self.text.save,
+                defaultDir = self.plugin.xmlpath, 
+                defaultFile = "Favorites.xml",
+                wildcard = self.text.wildcard,
+                style=wx.SAVE
+                )
+            if dlg.ShowModal() == wx.ID_OK:
+                self.Export(dlg.GetPath(), id)
+            dlg.Destroy()
+        elif id == wx.ID_OPEN: # Import
+            dlg = wx.FileDialog(
+                self,
+                message = self.text.choose,
+                defaultDir = self.plugin.xmlpath, 
+                defaultFile = "*.xml",
+                wildcard = self.text.wildcard,
+                style = wx.OPEN | wx.CHANGE_DIR
+                )
+            flg = True
+            filePath = None
+            if dlg.ShowModal() == wx.ID_OK:
+                filePath = dlg.GetPath()
+                dlg.Destroy()
+                xmldoc = miniDom.parse(filePath)
+                document = xmldoc.getElementsByTagName('Favorites')
+                if len(document) > 0:
+                    stations = getStations(document[0])
+                    if stations:
+                        flg = False
+                        self.Import(stations)
+            if flg and filePath:
+                MessageBox(
+                    self,
+                    self.text.message4 % split(filePath)[1],
+                    self.plugin.text.messBoxTit1,
+                    wx.ICON_EXCLAMATION,
+                    plugin = self.plugin,
+                    )
+        elif id == wx.ID_FILE: # Import SR
+            dlg = wx.FileDialog(
+                self,
+                message = self.text.choose,
+                defaultDir = eg.folderPath.ProgramFiles+'\\Screamer', 
+                defaultFile = "favorites.xml",
+                wildcard = self.text.wildcard,
+                style = wx.OPEN | wx.CHANGE_DIR
+                )
+            if dlg.ShowModal() == wx.ID_OK:
+                filePath = dlg.GetPath()
+                dlg.Destroy()
+                stations = self.ImportSR(filePath)
+                if not stations:
+                    MessageBox(
+                        self,
+                        self.text.message4 % split(filePath)[1],
+                        self.plugin.text.messBoxTit1,
+                        wx.ICON_EXCLAMATION,
+                        plugin = self.plugin,
+                        )
+                else:
+                    self.Import(stations)
+        evt.Skip()
+        return
+
+
+    def Diff(self):
+        wx.FindWindowById(wx.ID_APPLY).Enable(self.favs != self.tmpFavs)
+
+
+    def onClose(self, evt):
+        hwnd = self.GetHandle()
+        wp = GetWindowPlacement(hwnd)[4]
+        #Note: GetPosition() return (-32000, -32000), if window is minimized !!!
+        plcmnt = (
+            (wp[0], wp[1]),                                              # pos
+            (wp[2] - wp[0], wp[3] - wp[1]),                              # size
+            (self.GetMinSize().GetWidth(),self.GetMinSize().GetHeight()) # min size
+        ) 
+        if plcmnt != ConfigData.plcmnt:
+            ConfigData.plcmnt = plcmnt
+            #if not eg.document.IsDirty():
+            #    wx.CallAfter(eg.Notify, "DocumentChange", True)
+        self.Show(False)
+        self.plugin.manager = None
+        self.Destroy()
+        evt.Skip()
+
+
+    def ImportSR(self, filePath):
+        xmldoc = miniDom.parse(filePath)        
+        document = xmldoc.getElementsByTagName('Screamer')
+        if len(document) > 0:
+            res = []
+            stations = tuple(document[0].getElementsByTagName('Station'))
+            for station in stations:
+                if "title" in station.attributes.keys():
+                    title = station.attributes["title"].value
+                else:
+                    return None
+                src = station.getElementsByTagName('Source')
+                if len(src)>0:
+                    src = src[0].firstChild.data
+                    i = -1
+                    for ix in range(5, 11):
+                        srcIx = [itm[ix] for itm in self.data]
+                        if src in srcIx:
+                            i = srcIx.index(src)
+                            break
+                    if i > -1:
+                        station = self.data[i]
+                        itm = (src, station[0], station[2], station[4], station[3])
+                    else:
+                        itm = (src, title, "-", "-", "-")
+                    res.append(itm)
+                else:
+                    return None
+            return res
+        return None
+
+
+    def Export(self, path, id):
+        impl = miniDom.getDOMImplementation()
+        dom = impl.createDocument(None, u'XMLConfigSettings', None)
+        root = dom.documentElement
+        commentNode = dom.createComment(self.text.xmlComment1)
+        dom.insertBefore(commentNode, root)
+        commentNode = dom.createComment(self.text.xmlComment2 % str(dt.now())[:19])
+        dom.insertBefore(commentNode, root)
+        favNode = dom.createElement(u'Favorites')
+        root.appendChild(favNode)
+        if id == wx.ID_SAVEAS and self.grid.GetSelectedItemCount():
+            itmList = [itm for itm in range(len(self.tmpFavs)) if self.grid.IsSelected(itm)]
+        else:
+            itmList = range(len(self.tmpFavs))
+        self.CreateFavorites(dom, favNode, itmList)
+        f = file(path, 'wb')
+        writer = lookup('utf-8')[3](f)
+        dom.writexml(writer, encoding = 'utf-8')
+        f.close()
+#===============================================================================
+
+class SchedulerDialog(wx.Dialog):
     lastRow = -1
     applyBttn = None
 
@@ -1516,12 +2446,12 @@ class schedulerDialog(wx.Dialog):
 
 
         def ShowMessageBox(mess):
-            PlaySound('SystemExclamation', SND_ASYNC)
             MessageBox(
-                self.GetHandle(),
+                self,
                 mess,
                 self.text.boxTitle,
-                    48
+                wx.ICON_EXCLAMATION,
+                plugin = self.plugin
                 )
 
 
@@ -1848,6 +2778,7 @@ class schedulerDialog(wx.Dialog):
         fillDynamicSizer(-1)
         self.SetSize(wx.Size(wDynamic + 37, 684))
         grid = self.grid = CheckListCtrl(self, text, wDynamic + 20)
+#        grid = self.grid = CheckListCtrl(self, text, wDynamic + 20)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(grid, 0, wx.ALL, 5)
         favorite_label = wx.StaticText(self, -1, self.text.favorite)
@@ -1865,7 +2796,7 @@ class schedulerDialog(wx.Dialog):
         schedulerName = wx.TextCtrl(self, -1, "")
         typeChoice = wx.Choice(self, -1, choices = self.text.sched_type)
         xmltoparse = u'%s\\RadioSure.xml' % self.plugin.xmlpath
-        xmltoparse = xmltoparse.encode(fse) if isinstance(xmltoparse, unicode) else xmltoparse
+        xmltoparse = xmltoparse.encode(FSE) if isinstance(xmltoparse, unicode) else xmltoparse
         xmldoc = miniDom.parse(xmltoparse)
         recordings = xmldoc.getElementsByTagName('Recordings')
         if not recordings:
@@ -1996,7 +2927,7 @@ class schedulerDialog(wx.Dialog):
         bttns.append(id)
         self.Bind(wx.EVT_BUTTON, onTestButton, id = id)
         wx.EVT_CHECKLISTBOX(self, -1, onCheckListBox)
-        maskedlib.EVT_TIMEUPDATE(self, -1, OnTimeChange)
+        EVT_TIMEUPDATE(self, -1, OnTimeChange)
         wx.EVT_TEXT(self, -1, onPeriodNumber)
         wx.EVT_CHOICE(self, -1, onPeriodUnit)
         wx.EVT_DATE_CHANGED(self, -1, onDatePicker)
@@ -2042,8 +2973,8 @@ class schedulerDialog(wx.Dialog):
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.SetSizer(sizer)
         sizer.Layout()
-        if self.plugin.pos:
-            self.SetPosition(self.plugin.pos)
+        if ConfigData.pos:
+            self.SetPosition(ConfigData.pos)
         else:
             self.Center()
         self.Show(True)
@@ -2120,9 +3051,13 @@ class schedulerDialog(wx.Dialog):
 
     def onClose(self, evt):
         hwnd = self.GetHandle()
-        wp = GetWindowPlacement(hwnd)
-        self.plugin.pos = (wp[4][0], wp[4][1])
+        wp = GetWindowPlacement(hwnd)[4]
         #Note: GetPosition() return (-32000, -32000), if window is minimized !!!
+        pos = (wp[0], wp[1])
+        if pos != ConfigData.pos:
+            ConfigData.pos = pos
+            #if not eg.document.IsDirty():
+            #    wx.CallAfter(eg.Notify, "DocumentChange", True)
         self.Show(False)
         self.plugin.dialog = None
         self.Destroy()
@@ -2143,16 +3078,17 @@ def HandleRS():
                 0
             )
     hwnds = FindRS()
-    res = None
+    res = []
     for hwnd in hwnds:
-        curhw = GetWindow(hwnd,GW_CHILD)
-        while curhw > 0:
-            if GetDlgCtrlID(curhw) == 1016 and GetClassName(curhw) == 'SysListView32':
-                res = hwnd
-                break
-            curhw = GetWindow(curhw,GW_HWNDNEXT)
-        if res:
-            break
+        try: #maybe already closed !!!
+            curhw = GetWindow(hwnd, GW_CHILD)
+            while curhw > 0:
+                if GetDlgCtrlID(curhw) == 1016 and GetClassName(curhw) == 'SysListView32':
+                    res.append(hwnd)
+                    break
+                curhw = GetWindow(curhw, GW_HWNDNEXT)
+        except:
+            pass
     return res
 #===============================================================================
 
@@ -2177,7 +3113,7 @@ class ObservationThread(Thread):
         while 1:
             hwnd = HandleRS()
             if hwnd:
-                data = GetWindowText(hwnd).decode(eg.systemEncoding)
+                data = GetWindowText(hwnd[0]).decode(eg.systemEncoding)
                 if data != self.oldData and data != "Radio? Sure!":
                     self.oldData = data
                     eg.TriggerEvent(self.evtName, payload = data, prefix = "RadioSure")
@@ -2196,10 +3132,10 @@ class ObservationThread(Thread):
 def GetCtrlByID(id):
 
     res = None
-    hwnd = HandleRS()
-    if hwnd:
+    hwnds = HandleRS()
+    if hwnds:
         try:
-            res = GetDlgItem(hwnd,id)
+            res = GetDlgItem(hwnds[0], id)
         except:
             pass
     return res
@@ -2235,6 +3171,667 @@ def FindMonthDay(year, month, weekday, index):
     return day
 #===============================================================================
 
+def getStations(nodelist):
+    tmp = []
+    for item in nodelist.childNodes:
+        if item.nodeName[:5] == "Item-":
+            title = item.getElementsByTagName('Title')[0].firstChild
+            if title:
+                title = title.data
+            source = item.getElementsByTagName('Source')[0].firstChild
+            if source:
+                source = source.data
+            genre  = item.getElementsByTagName('Genre')[0].firstChild
+            if genre:
+                genre = genre.data
+            language = item.getElementsByTagName('Language')[0].firstChild
+            if language:
+                language = language.data
+            country = item.getElementsByTagName('Country')[0].firstChild
+            if country:
+                country = country.data
+            tmp.append([source, title, genre, language, country])
+    return tmp
+#===============================================================================
+
+class MenuGrid(gridlib.Grid):
+
+    def __init__(self, parent, lngth):
+        gridlib.Grid.__init__(self, parent)
+        self.SetRowLabelSize(0)
+        self.SetColLabelSize(0)
+        self.SetDefaultRowSize(16)
+        self.SetScrollLineX(1)
+        self.SetScrollLineY(1)
+        self.EnableEditing(False)
+        self.EnableDragColSize(False)
+        self.EnableDragRowSize(False)
+        self.EnableDragGridSize(False)
+        self.EnableGridLines(False)
+        self.SetColMinimalAcceptableWidth(8)
+        self.CreateGrid(lngth, 3)
+        attr = gridlib.GridCellAttr()
+        attr.SetAlignment(wx.ALIGN_LEFT, wx.ALIGN_CENTRE)
+        self.SetColAttr(1,attr)
+        self.SetSelectionMode(gridlib.Grid.wxGridSelectRows)
+        self.Bind(gridlib.EVT_GRID_CMD_SELECT_CELL, self.onGridSelectCell, self)
+
+
+    def SetBackgroundColour(self, colour):
+        self.SetDefaultCellBackgroundColour(colour)
+
+
+    def SetForegroundColour(self, colour):
+        self.SetDefaultCellTextColour(colour)
+
+
+    def SetFont(self, font):
+        self.SetDefaultCellFont(font)
+
+
+    def GetSelection(self):
+        return self.GetSelectedRows()[0]
+
+
+    def Set(self, choices):
+        oldLen = self.GetNumberRows()
+        newLen = len(choices)
+        h = self.GetDefaultRowSize()
+        if oldLen > newLen:
+            self.DeleteRows(0, oldLen-newLen, False)
+        elif oldLen < newLen:
+            self.AppendRows(newLen-oldLen, False)
+        for i in range(len(choices)):
+            chr = u"\u25a0" if choices[i][2] else ""
+            self.SetCellValue(i,0,chr)
+            self.SetCellValue(i,1," "+choices[i][0])
+            chr = u"\u25ba" if choices[i][3] == -1 else ""
+            self.SetCellValue(i,2, chr)
+            self.SetRowSize(i,h)
+
+
+    def onGridSelectCell(self, event):
+        row = event.GetRow()
+        self.SelectRow(row)
+        if not self.IsVisible(row,1):
+            self.MakeCellVisible(row,1)
+        event.Skip()
+
+
+    def MoveCursor(self, step):
+        max = self.GetNumberRows()
+        sel = self.GetSelectedRows()[0]
+        new = sel + step
+        if new < 0:
+            new += max
+        elif new > max-1:
+            new -= max
+        self.SetGridCursor(new, 1)
+        self.SelectRow(new)
+#===============================================================================
+
+class MyTextDropTarget(EventDropTarget):
+
+    def __init__(self, object):
+        EventDropTarget.__init__(self, object)
+        self.object = object
+
+
+    def OnDragOver(self, x, y, dragResult):
+        return wx.DragMove
+
+
+    def OnData(self, dummyX, dummyY, dragResult):
+        if self.GetData() and self.customData.GetDataSize() > 0:
+            txt = self.customData.GetData()
+            ix, evtList = self.object.GetEvtList()
+            flag = True
+            for lst in evtList:
+                if txt in lst:
+                    flag = False
+                    break
+            if flag:
+                self.object.InsertImageStringItem(len(evtList[ix]), txt, 0)
+                self.object.UpdateEvtList(ix, txt)
+            else:
+                PlaySound('SystemExclamation', SND_ASYNC)
+
+
+    def OnLeave(self):
+        pass
+#===============================================================================
+
+class EventListCtrl(wx.ListCtrl):
+
+    def __init__(self, parent, id, evtList, ix, plugin):
+        width = 205
+        wx.ListCtrl.__init__(self, parent, id, style=wx.LC_REPORT | 
+            wx.LC_NO_HEADER | wx.LC_SINGLE_SEL, size = (width, -1))
+        self.parent = parent
+        self.id = id
+        self.evtList = evtList
+        self.ix = ix
+        self.plugin = plugin
+        self.sel = -1
+        self.il = wx.ImageList(16, 16)
+        self.il.Add(wx.BitmapFromImage(wx.Image(join(IMAGES_DIR, "event.png"), wx.BITMAP_TYPE_PNG)))
+        self.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
+        self.InsertColumn(0, '')
+        self.SetColumnWidth(0, width - 5 - SYS_VSCROLL_X)
+        self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnSelect)
+        self.Bind(wx.EVT_SET_FOCUS, self.OnChange) 
+        self.Bind(wx.EVT_LIST_INSERT_ITEM, self.OnChange) 
+        self.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.OnChange) 
+        self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnRightClick)
+        self.SetToolTipString(self.plugin.text.toolTip)
+
+
+    def OnSelect(self, event):
+        self.sel = event.GetIndex()
+        evt = UserEvent(newEVT_BUTTON_AFTER, self.id)
+        evt.SetValue(self)
+        self.GetEventHandler().ProcessEvent(evt)
+        event.Skip()
+
+
+    def OnChange(self, event):
+        evt = UserEvent(newEVT_BUTTON_AFTER, self.id)
+        evt.SetValue(self)
+        self.GetEventHandler().ProcessEvent(evt)
+        event.Skip()
+
+
+    def OnRightClick(self, event):
+        if not hasattr(self, "popupID1"):
+            self.popupID1 = wx.NewId()
+            self.popupID2 = wx.NewId()
+            self.Bind(wx.EVT_MENU, self.OnDeleteButton, id=self.popupID1)
+            self.Bind(wx.EVT_MENU, self.OnDeleteAllButton, id=self.popupID2)
+        # make a menu
+        menu = wx.Menu()
+        # add some items
+        menu.Append(self.popupID1, self.plugin.text.popup[0])
+        menu.Append(self.popupID2, self.plugin.text.popup[1])
+        # Popup the menu.  If an item is selected then its handler
+        # will be called before PopupMenu returns.
+        self.PopupMenu(menu)
+        menu.Destroy()
+
+
+    def OnDeleteButton(self, event=None):
+        self.DeleteItem(self.sel)
+        self.evtList[self.ix].pop(self.sel)
+        evt = UserEvent(newEVT_BUTTON_AFTER, self.id)
+        evt.SetValue(self)
+        self.GetEventHandler().ProcessEvent(evt)        
+        if event:
+            event.Skip()
+        
+
+    def OnDeleteAllButton(self, event=None):
+        self.DeleteAllItems()
+        evt = UserEvent(newEVT_BUTTON_AFTER, self.id)
+        evt.SetValue(self)
+        self.GetEventHandler().ProcessEvent(evt)
+        self.evtList[self.ix] = []
+        if event:
+            event.Skip()
+
+
+    def GetEvtList(self):
+        return self.ix, self.evtList
+
+
+    def UpdateEvtList(self, ix, txt):
+        self.evtList[ix].append(txt)
+
+
+    def SetItems(self, evtList):
+        for i in range(len(evtList)):
+            self.InsertImageStringItem(i, evtList[i], 0) 
+#===============================================================================
+
+class MenuEventsDialog(wx.MiniFrame):
+
+    def __init__(self, parent, plugin):
+        wx.MiniFrame.__init__(
+            self,
+            parent,
+            -1,
+            style=wx.CAPTION,
+            name="Menu events dialog"
+        )
+        self.panel = parent
+        self.plugin = plugin
+        self.evtList = cpy(self.panel.evtList)
+        self.SetBackgroundColour(wx.NullColour)
+        self.ctrl = None
+        self.sel = -1
+
+
+    def ShowMenuEventsDialog(self, title, labels):
+        self.panel.Enable(False)
+        self.panel.dialog.buttonRow.cancelButton.Enable(False)
+        self.panel.EnableButtons(False)
+        self.SetTitle(title)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.SetMinSize((450, 308))
+        topSizer=wx.GridBagSizer(2, 20)
+        textLbl_0=wx.StaticText(self, -1, labels[0])        
+        id = wx.NewId()
+        eventsCtrl_0 = EventListCtrl(self, id, self.evtList, 0, self.plugin)
+        eventsCtrl_0.SetItems(self.evtList[0])
+        dt0 = MyTextDropTarget(eventsCtrl_0)
+        eventsCtrl_0.SetDropTarget(dt0)
+        textLbl_1=wx.StaticText(self, -1, labels[1])       
+        id = wx.NewId()        
+        eventsCtrl_1 = EventListCtrl(self, id, self.evtList, 1, self.plugin)
+        eventsCtrl_1.SetItems(self.evtList[1])
+        dt1 = MyTextDropTarget(eventsCtrl_1)
+        eventsCtrl_1.SetDropTarget(dt1)
+        textLbl_2=wx.StaticText(self, -1, labels[2])        
+        id = wx.NewId()
+        eventsCtrl_2 = EventListCtrl(self, id, self.evtList, 2, self.plugin)
+        eventsCtrl_2.SetItems(self.evtList[2])
+        dt2 = MyTextDropTarget(eventsCtrl_2)
+        eventsCtrl_2.SetDropTarget(dt2)
+        textLbl_3=wx.StaticText(self, -1, labels[3])        
+        id = wx.NewId()        
+        eventsCtrl_3 = EventListCtrl(self, id, self.evtList, 3, self.plugin)
+        eventsCtrl_3.SetItems(self.evtList[3])
+        dt3 = MyTextDropTarget(eventsCtrl_3)
+        eventsCtrl_3.SetDropTarget(dt3)
+        textLbl_4=wx.StaticText(self, -1, labels[4])        
+        id = wx.NewId()
+        eventsCtrl_4 = EventListCtrl(self, id, self.evtList, 4, self.plugin)
+        eventsCtrl_4.SetItems(self.evtList[4])
+        dt4 = MyTextDropTarget(eventsCtrl_4)
+        eventsCtrl_4.SetDropTarget(dt4)
+        deleteSizer = wx.BoxSizer(wx.VERTICAL)
+        delOneBtn = wx.Button(self, -1, self.plugin.text.popup[0])
+        delBoxBtn = wx.Button(self, -1, self.plugin.text.popup[1])
+        clearBtn  = wx.Button(self, -1, self.plugin.text.clear)
+        deleteSizer.Add(delOneBtn, 1, wx.EXPAND)
+        deleteSizer.Add(delBoxBtn, 1, wx.EXPAND|wx.TOP,5)
+        deleteSizer.Add(clearBtn, 1, wx.EXPAND|wx.TOP,5)
+        
+        topSizer.Add(textLbl_0, (0,0))
+        topSizer.Add(eventsCtrl_0, (1,0), flag = wx.EXPAND)
+        topSizer.Add(textLbl_1, (0,1))
+        topSizer.Add(eventsCtrl_1, (1,1), flag = wx.EXPAND)
+        topSizer.Add(textLbl_2, (2,0),flag = wx.TOP, border = 8)
+        topSizer.Add(eventsCtrl_2, (3,0), flag = wx.EXPAND)
+        topSizer.Add(textLbl_3, (2,1), flag = wx.TOP, border = 8)
+        topSizer.Add(eventsCtrl_3, (3,1), flag = wx.EXPAND)
+        topSizer.Add(textLbl_4, (4,0), flag = wx.TOP, border = 8)
+        topSizer.Add(eventsCtrl_4, (5,0), flag = wx.EXPAND)
+        topSizer.Add(deleteSizer, (5,1), flag = wx.EXPAND)
+
+        line = wx.StaticLine(self, -1, size=(20,-1),pos = (200,0), style=wx.LI_HORIZONTAL)
+        btn1 = wx.Button(self, wx.ID_OK)
+        btn1.SetLabel(self.plugin.text.ok)
+        btn1.SetDefault()
+        btn2 = wx.Button(self, wx.ID_CANCEL)
+        btn2.SetLabel(self.plugin.text.cancel)
+        btnsizer = wx.StdDialogButtonSizer()
+        btnsizer.AddButton(btn1)
+        btnsizer.AddButton(btn2)
+        btnsizer.Realize()
+        sizer.Add(topSizer,0,wx.ALL,10)
+        sizer.Add(line, 0, wx.EXPAND|wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM,5)
+        sizer.Add(btnsizer, 0, wx.EXPAND|wx.RIGHT, 10)
+        sizer.Add((1,6))
+        self.SetSizer(sizer)
+        sizer.Fit(self)
+
+
+        def onFocus(evt):
+            ctrl = evt.GetValue()
+            if ctrl != self.ctrl:
+                if self.ctrl:
+                    self.ctrl.SetItemState(-1, wx.LIST_MASK_STATE, wx.LIST_STATE_SELECTED)
+                self.ctrl = ctrl
+            sel = self.ctrl.sel
+            if sel != -1:
+                self.sel = sel
+            flag = self.ctrl.GetSelectedItemCount() > 0
+            delOneBtn.Enable(flag)
+            delBoxBtn.Enable(flag)
+            evt.Skip()
+        eventsCtrl_0.Bind(EVT_BUTTON_AFTER, onFocus)        
+        eventsCtrl_1.Bind(EVT_BUTTON_AFTER, onFocus)        
+        eventsCtrl_2.Bind(EVT_BUTTON_AFTER, onFocus)        
+        eventsCtrl_3.Bind(EVT_BUTTON_AFTER, onFocus)        
+        eventsCtrl_4.Bind(EVT_BUTTON_AFTER, onFocus)      
+      
+
+        def onDelOneBtn(evt):
+            self.ctrl.OnDeleteButton()
+            delOneBtn.Enable(False)
+            delBoxBtn.Enable(False)
+            evt.Skip()
+        delOneBtn.Bind(wx.EVT_BUTTON, onDelOneBtn)
+        
+
+        def onDelBoxBtn(evt):
+            self.ctrl.OnDeleteAllButton()
+            delOneBtn.Enable(False)
+            delBoxBtn.Enable(False)
+            evt.Skip()
+        delBoxBtn.Bind(wx.EVT_BUTTON, onDelBoxBtn)
+
+
+        def onClearBtn(evt):
+            eventsCtrl_0.DeleteAllItems()
+            eventsCtrl_1.DeleteAllItems()
+            eventsCtrl_2.DeleteAllItems()
+            eventsCtrl_3.DeleteAllItems()
+            eventsCtrl_4.DeleteAllItems()
+            delOneBtn.Enable(False)
+            delBoxBtn.Enable(False)
+            self.evtList = [[],[],[],[],[]]
+            evt.Skip()
+        clearBtn.Bind(wx.EVT_BUTTON, onClearBtn)
+
+
+        def onClose(evt):
+            self.panel.Enable(True)
+            self.panel.dialog.buttonRow.cancelButton.Enable(True)
+            self.panel.EnableButtons(True)
+            self.GetParent().GetParent().Raise()
+            self.Destroy()
+            self.panel.setFocus()
+        self.Bind(wx.EVT_CLOSE, onClose)
+        
+
+        def onCancel(evt):
+            self.panel.Enable(True)
+            self.panel.dialog.buttonRow.cancelButton.Enable(True)
+            self.panel.EnableButtons(True)
+            self.Close()
+        btn2.Bind(wx.EVT_BUTTON,onCancel)
+        
+
+        def onOK(evt):
+            self.panel.evtList = self.evtList
+            self.Close()
+        btn1.Bind(wx.EVT_BUTTON,onOK)
+        
+        sizer.Layout()
+        self.Raise()
+        self.Show()
+#===============================================================================
+
+class Menu(wx.Frame):
+
+    def __init__(self):
+        wx.Frame.__init__(
+            self,
+            None,
+            -1,
+            'MPC_menu',
+            style = wx.STAY_ON_TOP|wx.SIMPLE_BORDER
+        )
+        self.flag = False
+        self.monitor = 0
+        self.oldMenu = []
+
+
+    def DrawMenu(self, ix):
+        self.Show(False)
+        self.menuGridCtrl.SetGridCursor(ix, 1)
+        self.menuGridCtrl.SelectRow(ix)
+        monDim = GetMonitorDimensions()
+        try:
+            x,y,ws,hs = monDim[self.monitor]
+        except IndexError:
+            x,y,ws,hs = monDim[0]
+        # menu height calculation:                                
+        h=self.GetCharHeight()+4
+        for i in range(len(self.choices)):
+            self.menuGridCtrl.SetRowSize(i,h)
+            self.menuGridCtrl.SetCellValue(i,1," "+self.choices[i])
+            if self.items[i][3] == -1:
+                self.menuGridCtrl.SetCellValue(i,2, u"\u25ba")
+        height0 = len(self.choices)*h
+        height1 = h*((hs-20)/h)
+        height = min(height0, height1)+6
+        # menu width calculation:
+        width_lst=[]
+        for item in self.choices:
+            width_lst.append(self.GetTextExtent(item+' ')[0])
+        width = max(width_lst)+8
+        self.menuGridCtrl.SetColSize(0,self.w0)
+        self.menuGridCtrl.SetColSize(1,width)
+        self.menuGridCtrl.SetColSize(2,self.w2)
+        self.menuGridCtrl.ForceRefresh()
+        width = width + self.w0 + self.w2
+        if height1 < height0:
+            width += SYS_VSCROLL_X
+        if width > ws-50:
+            if height + SYS_HSCROLL_Y < hs:
+                height += SYS_HSCROLL_Y
+            width = ws-50
+        width += 6
+        x_pos = x + (ws - width)/2
+        y_pos = y + (hs - height)/2
+        self.SetDimensions(x_pos,y_pos,width,height)
+        self.menuGridCtrl.SetDimensions(2, 2, width-6, height-6, wx.SIZE_AUTO)
+        self.Show(True)
+        self.Raise()
+
+
+    def ShowMenu(
+        self,
+        fore,
+        back,
+        foreSel,
+        backSel,
+        fontInfo,
+        flag,
+        plugin,
+        event,
+        monitor,
+        hWnd,
+        evtList,
+        ix,
+    ):
+        self.fore     = fore
+        self.back     = back
+        self.foreSel  = foreSel
+        self.backSel  = backSel
+        self.fontInfo = fontInfo
+        self.flag     = flag
+        self.plugin   = plugin
+        self.monitor  = monitor
+        self.hWnd     = hWnd
+        self.evtList  = evtList
+        eg.TriggerEvent("OnScreenMenu.%s" % self.plugin.text.opened, prefix = "RadioSure")
+        for evt in self.evtList[0]:
+            eg.Bind(evt, self.onUp)
+        for evt in self.evtList[1]:
+            eg.Bind(evt, self.onDown)
+        for evt in self.evtList[2]:
+            eg.Bind(evt, self.onLeft)
+        for evt in self.evtList[3]:
+            eg.Bind(evt, self.onRight)
+        for evt in self.evtList[4]:
+            eg.Bind(evt, self.onEscape)
+        self.menuHwnd, self.menu = self.plugin.GetRS_Menu(self.hWnd)
+        self.items = self.plugin.GetItemList(self.menuHwnd, self.menu)
+        self.choices = [item[0] for item in self.items]
+        self.menuGridCtrl = MenuGrid(self, len(self.choices))
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(mainSizer)
+        mainSizer.Add(self.menuGridCtrl, 0, wx.EXPAND)
+        self.Bind(wx.EVT_CLOSE, self.onClose)
+        self.Bind(gridlib.EVT_GRID_CMD_CELL_LEFT_DCLICK, self.onDoubleClick, self.menuGridCtrl)
+        self.Bind(wx.EVT_CHAR_HOOK, self.onFrameCharHook)
+        font = wx.FontFromNativeInfoString(fontInfo)
+        self.menuGridCtrl.SetFont(font)
+        arial = wx.FontFromNativeInfoString(ARIAL_INFO)
+        self.SetFont(font)            
+        hght = self.GetTextExtent('X')[1]
+        for n in range(1,1000):
+            arial.SetPointSize(n)
+            self.SetFont(arial)
+            h = self.GetTextExtent(u"\u25a0")[1]
+            if h > hght:
+                break
+        arial.SetPointSize(2*n/3)
+        self.SetFont(arial)            
+        self.w0 = 2 * self.GetTextExtent(u"\u25a0")[0]
+        attr = gridlib.GridCellAttr()
+        attr.SetFont(arial)
+        attr.SetAlignment(wx.ALIGN_CENTRE, wx.ALIGN_CENTRE)
+        self.menuGridCtrl.SetColAttr(0,attr)
+        for n in range(1,1000):
+            arial.SetPointSize(n)
+            self.SetFont(arial)
+            h = self.GetTextExtent(u"\u25ba")[1]
+            if h > hght:
+                break
+        arial.SetPointSize(n/2)
+        self.SetFont(arial)            
+        self.w2 = 2 * self.GetTextExtent(u"\u25ba")[0]
+        attr = gridlib.GridCellAttr()
+        attr.SetFont(arial)
+        attr.SetAlignment(wx.ALIGN_RIGHT, wx.ALIGN_CENTRE)
+        self.menuGridCtrl.SetColAttr(2,attr)
+        self.SetFont(font)                        
+        self.SetBackgroundColour((0, 0, 0))
+        self.menuGridCtrl.SetBackgroundColour(self.back)
+        self.menuGridCtrl.SetForegroundColour(self.fore)
+        self.menuGridCtrl.SetSelectionBackground(self.backSel)
+        self.menuGridCtrl.SetSelectionForeground(self.foreSel)
+        if self.flag:
+            self.timer=MyTimer(t = 5.0, plugin = self.plugin)
+        self.menuGridCtrl.Set(self.items)
+        self.UpdateMenu(ix == 0, ix)    
+        wx.Yield()
+        SetEvent(event)
+
+
+    def UpdateMenu(self, root = False, ix = 0):
+        if root:
+            self.menuHwnd, self.menu = self.plugin.GetRS_Menu(self.hWnd)
+        else:
+            self.menuHwnd, self.menu = self.GetSubMenuExt(self.hWnd, ix)
+            ix = 0
+        self.items = self.plugin.GetItemList(self.menuHwnd, self.menu)
+        if len(self.items)==0:
+            PlaySound('SystemExclamation', SND_ASYNC)
+            eg.PrintError("Please report: %i, %i, %i, %i" % (ix, int(root), self.menuHwnd, self.menu))
+            #self.menu,ix = self.oldMenu.pop()
+            #self.items = self.plugin.GetItemList(self.hWnd, self.menu)
+        self.choices = [item[0] for item in self.items]
+        self.menuGridCtrl.Set(self.items)
+        self.DrawMenu(ix)    
+
+
+    def MoveCursor(self, step):
+        max=len(self.choices)
+        if max > 0:
+            self.menuGridCtrl.MoveCursor(step)
+
+
+    def onUp(self, event):
+        wx.CallAfter(self.menuGridCtrl.MoveCursor, -1)
+
+
+    def onDown(self, event):
+        wx.CallAfter(self.menuGridCtrl.MoveCursor, 1)
+
+
+    def onLeft(self, event):
+        if len(self.oldMenu) > 0:
+            ix = self.oldMenu.pop()
+            wx.CallAfter(self.UpdateMenu, True, ix)
+        else:
+            wx.CallAfter(self.destroyMenu)
+
+
+    def onRight(self, event):
+        wx.CallAfter(self.DefaultAction)
+
+
+    def onEscape(self, event):
+        wx.CallAfter(self.destroyMenu)
+
+
+    def GetSubMenuExt(self, hWnd, ix):
+        menu, hMenu = self.plugin.GetRS_Menu(hWnd)
+        if menu:
+            hMenu = GetSubMenu(hMenu, ix)
+            return (menu, hMenu)
+
+
+    def DefaultAction(self):
+        sel = self.menuGridCtrl.GetSelection()
+        item = self.items[sel]
+        id = item[3]
+        if id != -1:
+            self.destroyMenu()
+            SendMessage(self.hWnd, WM_COMMAND, id, 0)
+        else:
+            self.oldMenu.append(sel)
+            wx.CallAfter(self.UpdateMenu, False, item[1])
+
+
+    def onFrameCharHook(self, event):
+        keyCode = event.GetKeyCode()
+        if keyCode == wx.WXK_F4:
+            if event.AltDown():
+                self.destroyMenu()
+        elif keyCode == wx.WXK_RETURN or keyCode == wx.WXK_NUMPAD_ENTER:
+            self.DefaultAction()
+        elif keyCode == wx.WXK_RIGHT or keyCode == wx.WXK_NUMPAD_RIGHT:
+            self.DefaultAction()
+        elif keyCode == wx.WXK_ESCAPE:
+            self.destroyMenu()
+        elif keyCode == wx.WXK_UP or keyCode == wx.WXK_NUMPAD_UP:
+            self.menuGridCtrl.MoveCursor(-1)
+        elif keyCode == wx.WXK_DOWN or keyCode == wx.WXK_NUMPAD_DOWN:
+            self.menuGridCtrl.MoveCursor(1)
+        elif keyCode == wx.WXK_LEFT or keyCode == wx.WXK_NUMPAD_LEFT:
+            if len(self.oldMenu) > 0:
+                ix = self.oldMenu.pop()
+                wx.CallAfter(self.UpdateMenu, True, ix)
+            else:
+                self.destroyMenu()
+        else:
+            event.Skip()
+
+
+    def onDoubleClick(self, event):
+        self.DefaultAction()
+        event.Skip()
+
+
+    def onClose(self, event):
+        self.Show(False)
+        self.Destroy()
+        self.plugin.menuDlg = None
+
+
+    def destroyMenu(self, event = None):
+        for evt in self.evtList[0]:
+            eg.Unbind(evt, self.onUp)
+        for evt in self.evtList[1]:
+            eg.Unbind(evt, self.onDown)
+        for evt in self.evtList[2]:
+            eg.Unbind(evt, self.onLeft)
+        for evt in self.evtList[3]:
+            eg.Unbind(evt, self.onRight)
+        for evt in self.evtList[4]:
+            eg.Unbind(evt, self.onEscape)
+        if self.flag:
+            self.timer.Cancel()
+        eg.TriggerEvent("OnScreenMenu.%s" % self.plugin.text.closed, prefix = "RadioSure")
+        self.Close()
+#===============================================================================
+
+
 class RadioSure(eg.PluginBase):
 
     text=Text
@@ -2244,69 +3841,229 @@ class RadioSure(eg.PluginBase):
     data = []
     tmpData = []
     dialog = None
-    pos = None
+    manager = None
     Favorites = []
     History = []
     Current = ['','']
     FavIx = -1
     HistIx = -1
     List = None
+    maxFav = None
+    submenus = None
+
+
+    def GetRS_Menu(self, hwnd):
+
+        WM_CONTEXTMENU   = 0x007B
+        OBJID_CLIENT     = 0xFFFFFFFC
+
+        class RECT(Structure):
+            _fields_ = [
+                ('left', c_long),
+                ('top', c_long),
+                ('right', c_long),
+                ('bottom', c_long),
+            ]
+
+        class MENUBARINFO(Structure):
+            _fields_ = [
+                ('cbSize',  c_ulong),
+                ('rcBar',  RECT),            # rect of bar, popup, item
+                ('hMenu',  c_long),          # real menu handle of bar, popup
+                ('hwndMenu',  c_long),       # hwnd of item submenu if one
+                ('fBarFocused',  c_int, 1),  # bar, popup has the focus
+                ('fFocused',  c_int, 1),     # item has the focus
+            ]
+
+        findMenu = eg.WindowMatcher(
+                    u'RadioSure.exe',
+                    None,
+                    u'#32768',
+                    None,
+                    None,
+                    None,
+                    True,
+                    0.0,
+                    0
+                )
+        PostMessage(hwnd, WM_CONTEXTMENU, hwnd, 0x00010001)
+        menu = []
+        i = 0
+        while len(menu) == 0:
+            menu = findMenu()
+            i+=1
+            if i > 1000:
+                break
+        if menu:
+            menu = menu[0]
+            mbi = MENUBARINFO()
+            mbi.cbSize = sizeof(mbi)
+            if _user32.GetMenuBarInfo(
+                menu,
+                OBJID_CLIENT,
+                0,
+                byref(mbi)
+            ):
+                return (menu, mbi.hMenu)
+        return (None, None)
+
+
+    def GetItemList(self, hWnd, hMenu):
+        WM_INITMENUPOPUP = 0x0117
+        MF_BYPOSITION    = 1024
+        MF_GRAYED        = 1
+        MF_DISABLED      = 2
+        MF_CHECKED       = 8
+        MF_SEPARATOR     = 2048
+        SendMessage(hWnd, WM_INITMENUPOPUP, hMenu, 0) #REFRESH MENU STATE !!!
+        itemList = []
+        itemName = c_buffer("\000" * 128)
+        count = GetMenuItemCount(hMenu)
+        for i in range(count):
+            _user32.GetMenuStringA(c_int(hMenu),
+                                         c_int(i),
+                                         itemName,
+                                         c_int(len(itemName)),
+                                         MF_BYPOSITION)
+            hMenuState = _user32.GetMenuState(c_int(hMenu),
+                                                   c_int(i),
+                                                   MF_BYPOSITION)
+            id = _user32.GetMenuItemID(c_int(hMenu), c_int(i))
+    #        if hMenuState & (MF_GRAYED|MF_DISABLED|MF_SEPARATOR):
+            if hMenuState & (MF_GRAYED|MF_DISABLED):
+                continue
+            item = itemName.value.replace("&","").split("\t")[0]
+            if item == "" and id == 0:
+                continue
+            checked = bool(hMenuState & MF_CHECKED)
+            itemList.append((item, i, checked, id))
+        PostMessage(hWnd, WM_CLOSE, 0, 0)
+        return itemList
+
+
+    def GetLanguageXml(self):
+        xmltoparse = u'%s\\RadioSure.xml' % self.xmlpath
+        xmltoparse = xmltoparse.encode(FSE) if isinstance(xmltoparse, unicode) else xmltoparse
+        xmldoc = miniDom.parse(xmltoparse)
+        language = xmldoc.getElementsByTagName('Language')
+        if language:
+            langFile = abspath(join(self.RadioSurePath+"\\Lang", language[0].firstChild.data))
+            langFile = langFile.encode(FSE) if isinstance(langFile, unicode) else langFile
+            language = miniDom.parse(langFile)
+        return language
+
+
+    def GetOneInstance(self):
+        xmltoparse = u'%s\\RadioSure.xml' % self.xmlpath
+        xmltoparse = xmltoparse.encode(FSE) if isinstance(xmltoparse, unicode) else xmltoparse
+        xmldoc = miniDom.parse(xmltoparse)
+        advanced = xmldoc.getElementsByTagName('Advanced')
+        if advanced:
+            oneInstance = advanced[0].getElementsByTagName('One_instance')[0].firstChild.data 
+            return oneInstance
+
+
+    def GetStrings(self):
+        language = self.GetLanguageXml()
+        if language:
+            res = {}
+            mainWindow = language.getElementsByTagName('MainWindow')
+            res['stop'] = mainWindow[0].getElementsByTagName('Stop')[0].firstChild.data            
+            res['unmute'] = mainWindow[0].getElementsByTagName('Unmute')[0].firstChild.data            
+            res['stopRec'] = mainWindow[0].getElementsByTagName('StopRecording')[0].firstChild.data
+            #res['play'] = mainWindow[0].getElementsByTagName('Play')[0].firstChild.data            
+            #res['mute'] = mainWindow[0].getElementsByTagName('Mute')[0].firstChild.data            
+            #res['rec'] = mainWindow[0].getElementsByTagName('Recording')[0].firstChild.data            
+            return res
+
+
+    def GetSubmenuStrings(self):
+        choices = [self.text.root]
+        language = self.GetLanguageXml()
+        if language:
+            mainWindow = language.getElementsByTagName('MainWindow')
+            favorites = language.getElementsByTagName('Favorites')
+            equaliser = language.getElementsByTagName('EQUALIZER')
+            sleeptimer = language.getElementsByTagName('SleepTimer')
+            choices.append(favorites[0].getElementsByTagName('Title')[0].firstChild.data)          
+            choices.append(mainWindow[0].getElementsByTagName('Back')[0].firstChild.data)          
+            choices.append(equaliser[0].getElementsByTagName('Title')[0].firstChild.data)          
+            choices.append(mainWindow[0].getElementsByTagName('WindowMenu')[0].firstChild.data)          
+            choices.append(mainWindow[0].getElementsByTagName('ClipboardMenu')[0].firstChild.data)          
+            choices.append(sleeptimer[0].getElementsByTagName('Title')[0].firstChild.data)          
+            choices.append(mainWindow[0].getElementsByTagName('Language')[0].firstChild.data)
+        return choices
+
+
+    def GetRS_Status(self, hwnd):
+        menu, hMenu = self.GetRS_Menu(hwnd)
+        if menu:
+            menuItems = self.GetItemList(menu, hMenu)
+            #PostMessage(menu, WM_CLOSE, 0, 0)
+            strings = self.GetStrings()
+            if menuItems and strings:
+                res = [
+                    strings['stop'] == menuItems[0][0],    # Playing
+                    strings['unmute'] == menuItems[1][0],  # Muted
+                    strings['stopRec'] == menuItems[2][0], # Recording
+                    menuItems[3][2]        # Record only current track
+                ]
+                return res
+
+
+    def GetMenuItem(self, hwnd, indx): # indx = 7 for Fav, 8 for Hist, 9 for Equalizer
+        menu, hMenu = self.GetRS_Menu(hwnd)
+        if menu:
+            hMenu = GetSubMenu(hMenu, indx)
+            menuItems = self.GetItemList(menu, hMenu)
+            flags = [item[2] for item in menuItems]
+            if True in flags:
+                ix = flags.index(True)
+                return (ix, menuItems[ix][0])
+        return (-1, "")
+
 
     def RefreshVariables(self):
-
-        def getList(nodelist):
-            tmp1 = []
-            tmp0 = []
-            for item in nodelist.childNodes:
-                if item.hasChildNodes():
-                    tmp0.append(item.firstChild.data)
-            for i in range(0, len(tmp0), 2):
-                item = [tmp0[i], tmp0[i+1]]
-                tmp1.append(item)
-            return tmp1
-
-        def getList2(nodelist):
-            tmp = []
-            for item in nodelist.childNodes:
-                if item.nodeName[:5] == "Item-":
-                    title = item.getElementsByTagName('Title')[0].firstChild.data
-                    source = item.getElementsByTagName('Source')[0].firstChild.data
-                    tmp.append((source, title))
-            return tmp
-
         xmltoparse = u'%s\\RadioSure.xml' % self.xmlpath
-        xmltoparse = xmltoparse.encode(fse) if isinstance(xmltoparse, unicode) else xmltoparse
-        if not os.path.exists(xmltoparse):
+        xmltoparse = xmltoparse.encode(FSE) if isinstance(xmltoparse, unicode) else xmltoparse
+        if not exists(xmltoparse):
             return
         xmldoc = miniDom.parse(xmltoparse)
-        currURL = xmldoc.getElementsByTagName('Station_URL')[0].firstChild
-        if currURL:
-            self.Current[0] = currURL.data
-        currTitle = xmldoc.getElementsByTagName('Station_Title')[0].firstChild
-        if currTitle:
-            self.Current[1] = currTitle.data
+        lastPlayed = xmldoc.getElementsByTagName('LastPlayed')
+        if lastPlayed:
+            lastPlayed=lastPlayed[0]
+            src = lastPlayed.getElementsByTagName('Source')
+            if src:
+                src = src[0].firstChild.data
+            else:
+                src = ""
+                
+            ttl = lastPlayed.getElementsByTagName('Title')
+            if ttl:
+                ttl = ttl[0].firstChild.data
+            else:
+                ttl = ""
+            self.Current = [src, ttl]
+        else:
+            self.Current = ["", ""]         
         histNode = xmldoc.getElementsByTagName('History')
         if histNode:
-            if histNode[0].childNodes[0].nodeName == "Source_1": # Old xml format
-                self.History = getList(histNode[0])
-            else: # New xml format
-                self.History = getList2(histNode[0])
+            self.History = getStations(histNode[0])
         else:
             self.History = []
         favNode = xmldoc.getElementsByTagName('Favorites')
         if favNode:
-            if favNode[0].childNodes[0].nodeName == "Source_1": # Old xml format
-                self.Favorites = getList(favNode[0])
-            else: # New xml format
-                self.Favorites = getList2(favNode[0])
+            self.Favorites = getStations(favNode[0])
         else:
             self.Favorites = []
-        if self.Current in self.Favorites:
-            self.FavIx = self.Favorites.index(self.Current)
+        tmp = [item[:2] for item in self.Favorites]
+        if self.Current in tmp:
+            self.FavIx = tmp.index(self.Current)
         else:
             self.FavIx = -1
-        if self.Current in self.History:
-            self.HistIx = self.History.index(self.Current)
+        tmp = [item[:2] for item in self.History]
+        if self.Current in tmp:
+            self.HistIx = tmp.index(self.Current)
         else:
             self.HistIx = -1
         return self.Favorites
@@ -2612,18 +4369,6 @@ class RadioSure(eg.PluginBase):
 
 
     def Execute(self, params, immed = False):
-
-        def my_list2cmdline(seq):
-            """ FIXING subprocess.list2cmdline
-            Workaround, because subprocess.list2cmdline does not work with arguments like: 
-            filename="... ...". Ie, when we need quotes inside the string, and somewhere 
-            inside is a space character. When you properly prepare all items 
-            (including the quotes), it works!
-            There is also done simultaneously filesystemencode encoding 
-            (otherwise there UnicodeDecodeError occurs...)"""
-            return ' '.join([arg.encode(fse) if isinstance(arg, unicode) else arg for arg in seq])
-        subprocess.list2cmdline = my_list2cmdline
-
         next = self.NextRun(params[2], params[3])
         modes = params[7]
         playRec = modes & 6
@@ -2650,7 +4395,7 @@ class RadioSure(eg.PluginBase):
                 args.append(u'/filename="%s"' % recfile)
             elif playRec:
                 args.append(u'/filename="%s"' % params[1])
-            subprocess.Popen(args)
+            Popen(args)
         if not immed and next: # new schedule, if valid next run time and not TEST/IMMEDIATELY run
             startTicks = mktime(strptime(next, "%Y-%m-%d %H:%M:%S"))
             eg.scheduler.AddTaskAbsolute(startTicks, self.RadioSureScheduleRun, params[1])
@@ -2715,12 +4460,6 @@ class RadioSure(eg.PluginBase):
         impl = miniDom.getDOMImplementation()
         dom = impl.createDocument(None, u'Document', None)
         root = dom.documentElement
-        if self.dialog:
-            wp = GetWindowPlacement(self.dialog.GetHandle())
-            pos = (wp[4][0], wp[4][1])
-        else:
-            pos = self.pos     
-        root.setAttribute(u'Position', str(pos))
         commentNode = dom.createComment(self.text.xmlComment % str(dt.now())[:19])
         dom.insertBefore(commentNode, root)
         for item in self.data:
@@ -2843,20 +4582,16 @@ class RadioSure(eg.PluginBase):
         writer = lookup('utf-8')[3](f)
         dom.writexml(writer, encoding = 'utf-8')
         f.close()
+        return f.closed
 
 
     def xmlToData(self):
         data = []
         xmlfile = u'%s\\Scheduler.xml' % self.xmlpath
-        if not os.path.exists(xmlfile):
+        if not exists(xmlfile):
             return data
         xmldoc = miniDom.parse(xmlfile)
         document = xmldoc.getElementsByTagName('Document')[0]
-        if "Position" in document.attributes.keys():
-            pos = document.attributes["Position"].value
-            self.pos = eval(pos)
-        else:
-            self.pos = (0, 0)
         schedules = tuple(document.getElementsByTagName('Schedule'))
         for schedule in schedules:
             dataItem = []
@@ -2931,24 +4666,107 @@ class RadioSure(eg.PluginBase):
         return data
 
 
-    def PlayFromMenu(self):
-        if self.menuDlg is not None:
-            sel=self.menuDlg.stationChoiceCtrl.GetSelectedRows()[0]
-            self.menuDlg.Close()
-        hwnd = HandleRS()
-        if hwnd:
-            List = self.Favorites if self.List else self.History
-            Base = 1326 if self.List else 1374
-            if sel <= len(List)-1:
-                SendMessage(hwnd, WM_COMMAND, Base+sel, 0)
+    def GetStatusRS(self, hwnds = None):
+        hwnds = hwnds or HandleRS()
+        maxFav = None
+        recording = None
+        if hwnds:
+            for hwnd in hwnds:
+                try:
+                    maxFav = SendMessageTimeout(hwnd, self.favMesg, 0, 0)
+                    recording = SendMessageTimeout(hwnd, self.recMesg, 0, 0)
+                except:
+                    #raise
+                    pass
+                if maxFav is not None and recording is not None:
+                    #pass
+                    break
+        if maxFav is not None and recording is not None:
+            return (maxFav, recording)
         else:
-            self.PrintError(self.text.text1)
+            return (None, None)
 
+
+    def GetNewHwnd(self, oldHwnds = [], src = None, hid = False, mut = False):
+        hwnds = HandleRS()
+        if len(hwnds) > 0 and self.GetOneInstance():
+            wx.CallAfter(
+                MessageBox,
+                None,
+                self.text.message3,
+                self.text.messBoxTit1,
+                wx.ICON_EXCLAMATION,
+                15,
+                plugin = self,
+                )
+            return []
+        maxInst = 2 if self.maxFav == 30 else 10
+        if len(oldHwnds) >= maxInst:
+            wx.CallAfter(
+                MessageBox,
+                None,
+                self.text.message2 % maxInst,
+                self.text.messBoxTit1,
+                wx.ICON_EXCLAMATION,
+                15,
+                plugin = self,
+                )
+            return []
+        i = 0
+        hwnds = oldHwnds if oldHwnds else []
+        rs = u'%s\\RadioSure.exe' % self.RadioSurePath
+        rs = rs.encode(FSE) if isinstance(rs, unicode) else rs
+        args = [rs, "/play"]
+        if mut:
+            args.append("/mute")
+        if hid:
+            args.append("/hidden")
+        if src:
+            args.append(u'/source="%s"' % src)
+        if isfile(rs):
+            Popen(args)
+            while i < 100 and hwnds == oldHwnds:
+                i += 1
+                hwnds = HandleRS()
+            sleep(1.5)
+        return list(set(hwnds)-set(oldHwnds))
+
+
+    def SetMaxFavs(self):
+        maxFav = 30
+        hwnds = HandleRS()
+        if hwnds:
+            maxFav, rec = self.GetStatusRS(hwnds)
+            if not maxFav: # ToDo: kill process ???
+                hwnds = self.GetNewHwnd(hwnds, hid = True, mut = True)
+                if hwnds:
+                    maxFav, rec = self.GetStatusRS(hwnds)
+                    PostMessage(hwnds[0], WM_COMMAND, 1, 0) # Close
+        else:
+            hwnds = self.GetNewHwnd(hid = True, mut = True)
+            if hwnds:
+                maxFav, rec = self.GetStatusRS(hwnds)
+                PostMessage(hwnds[0], WM_COMMAND, 1, 0) # Close
+        self.maxFav = maxFav
 
     def __init__(self):
         self.observThread = None
         text=Text
-        self.AddActionsFromList(Actions)
+        self.AddActionsFromList(ACTIONS)
+
+    def GetLabel(
+        self,
+        path = None,
+        xmlpath = None,
+        logfile = None,
+        holidays = [[], []],
+        first_day = 0,
+    ):
+        if not self.submenus:
+            self.RadioSurePath = path
+            self.xmlpath = xmlpath
+            self.submenus = self.GetSubmenuStrings()
+        return self.name
 
 
     def __start__(
@@ -2957,17 +4775,24 @@ class RadioSure(eg.PluginBase):
         xmlpath = None,
         logfile = None,
         holidays = [[], []],
-        first_day = 0
+        first_day = 0,
         ):
+
+        self.recMesg = RegisterWindowMessage("WM_RADIOSURE_GET_RECORDING_STATUS")
+        self.favMesg = RegisterWindowMessage("WM_RADIOSURE_GET_MAX_FAVORITES")
+
+        if not self.submenus:
+            self.submenus = self.GetSubmenuStrings()
         self.RadioSurePath = path
         self.xmlpath = xmlpath
+        wx.CallAfter(self.SetMaxFavs)
         self.logfile = logfile
         self.holidays = holidays
         self.first_day = first_day
         self.data = []
         self.tmpData = []
         if self.xmlpath:
-            if os.path.exists(self.xmlpath):
+            if exists(self.xmlpath):
                 self.data = self.xmlToData()
             if logfile:
                  self.updateLogFile(self.text.start, True)
@@ -2975,6 +4800,8 @@ class RadioSure(eg.PluginBase):
 
 
     def __stop__(self):
+        if self.dataToXml():
+            self.updateLogFile("File Scheduler.xml saved")
         if self.observThread:
             ot = self.observThread
             if ot.isAlive():
@@ -2993,8 +4820,8 @@ class RadioSure(eg.PluginBase):
                 self.updateLogFile(self.text.canc % sched[2][0])
         if self.dialog:
             self.dialog.Close()
-        self.dataToXml()
-
+        if self.manager:
+            self.manager.Close()
 
 
     def __close__(self):
@@ -3010,7 +4837,7 @@ class RadioSure(eg.PluginBase):
         xmlpath = "",
         logfile = None,
         holidays = [[], []],
-        first_day = 0
+        first_day = 0,
         ):
         panel = eg.ConfigPanel(self)
         panel.holidays = cpy(holidays)
@@ -3046,21 +4873,21 @@ class RadioSure(eg.PluginBase):
         )
         logFileCtrl.GetTextCtrl().SetEditable(False)
         logCheckBox = wx.CheckBox(panel, -1, self.text.logLabel)
-        if not self.RadioSurePath or not os.path.exists(self.RadioSurePath):
+        if not self.RadioSurePath or not exists(self.RadioSurePath):
             RSpath = getPathFromReg() #Try get path from registry
             if RSpath: #Regular installation
-                if os.path.exists(RSpath):
+                if exists(RSpath):
                     self.RadioSurePath = RSpath
             else: #Portable installation
                 self.RadioSurePath = u"%s\\RadioSure" % unicode(eg.folderPath.LocalAppData) 
             xmlPath = u"%s\\RadioSure" % unicode(eg.folderPath.LocalAppData)
-            if os.path.exists(xmlPath):
+            if exists(xmlPath):
                 self.xmlpath = xmlPath
-        if os.path.exists(os.path.join(self.RadioSurePath, "RadioSure.exe")):
+        if exists(join(self.RadioSurePath, "RadioSure.exe")):
             rsPathCtrl.GetTextCtrl().ChangeValue(self.RadioSurePath)
             rsPathCtrl.Enable(False)
             label1Text.Enable(False)
-        if os.path.exists(os.path.join(self.xmlpath, "RadioSure.xml")):
+        if exists(join(self.xmlpath, "RadioSure.xml")):
             xmlPathCtrl.GetTextCtrl().ChangeValue(self.xmlpath)
             xmlPathCtrl.Enable(False)
             label2Text.Enable(False)
@@ -3084,7 +4911,7 @@ class RadioSure(eg.PluginBase):
             if attr & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM):
                 return False
             else:
-                p = os.path.split(path)[0]
+                p = split(path)[0]
                 if len(p) > 3:
                     return NotHiddenAttr(p)
                 return True
@@ -3100,7 +4927,6 @@ class RadioSure(eg.PluginBase):
             logCheckBox.SetValue(val)
             logFileCtrl.Enable(val)
         logFileCtrl.GetTextCtrl().ChangeValue(self.logfile)
-
         rsPathCtrl.startDirectory = self.RadioSurePath
         xmlPathCtrl.startDirectory = self.xmlpath
         logFileCtrl.startDirectory = self.logfile or u"%s\\RadioSure" % unicode(eg.folderPath.LocalAppData)
@@ -3133,7 +4959,7 @@ class RadioSure(eg.PluginBase):
 
         def onManagerButton(evt):
             if not self.dialog:
-                wx.CallAfter(schedulerDialog, self.text.OpenScheduler, self)
+                wx.CallAfter(SchedulerDialog, self.text.OpenScheduler, self)
             else:
                 if self.dialog.GetPosition() == (-32000, -32000):
                     ShowWindow(self.dialog.GetHandle(), SW_RESTORE) 
@@ -3151,7 +4977,6 @@ class RadioSure(eg.PluginBase):
             wx.CallAfter(dlg.ShowHolidaysFrame)
             evt.Skip()
         panel.holidButton.Bind(wx.EVT_BUTTON, onHolidButton)
-
         bottomSizer = wx.GridBagSizer(1, 1)
         bottomSizer.AddGrowableCol(1,1)
         bottomSizer.AddGrowableCol(3,1)
@@ -3165,8 +4990,8 @@ class RadioSure(eg.PluginBase):
 
 
         def Validation():
-            flag1 = "%s\\RadioSure.exe" % os.path.exists(rsPathCtrl.GetValue())
-            flag2 = "%s\\RadioSure.xml" % os.path.exists(xmlPathCtrl.GetValue())
+            flag1 = "%s\\RadioSure.exe" % exists(rsPathCtrl.GetValue())
+            flag2 = "%s\\RadioSure.xml" % exists(xmlPathCtrl.GetValue())
             flag3 = logCheckBox.IsChecked() and logFileCtrl.GetValue() != "" or not logCheckBox.IsChecked()
             flag = flag1 and flag2 and flag3
             panel.dialog.buttonRow.okButton.Enable(flag)
@@ -3176,12 +5001,13 @@ class RadioSure(eg.PluginBase):
 
         def OnPathChange(event):
             path = rsPathCtrl.GetValue()
-            if not os.path.exists("%s\\RadioSure.exe" % path):
+            if not exists("%s\\RadioSure.exe" % path):
                 MessageBox(
-                    panel.GetHandle(),
+                    panel,
                     self.text.boxMessage1 % 'RadioSure.exe',
                     self.text.boxTitle % path,
-                        48
+                    wx.ICON_EXCLAMATION,
+                    plugin = self
                     )
             if path != "":
                 rsPathCtrl.startDirectory = path
@@ -3193,12 +5019,13 @@ class RadioSure(eg.PluginBase):
 
         def OnPath2Change(event):
             path2 = xmlPathCtrl.GetValue()
-            if not os.path.exists("%s\\RadioSure.xml" % path2):
+            if not exists("%s\\RadioSure.xml" % path2):
                 MessageBox(
-                    panel.GetHandle(),
+                    panel,
                     self.text.boxMessage1 % 'RadioSure.xml',
                     self.text.boxTitle % path2,
-                        48
+                    wx.ICON_EXCLAMATION,
+                    plugin = self
                     )
             if path2 != "":
                 self.xmlpath = path2
@@ -3213,7 +5040,7 @@ class RadioSure(eg.PluginBase):
             tmpVal = self.logfile
             if not tmpVal:
                 tmpPath = u"%s\\RadioSure" % unicode(eg.folderPath.LocalAppData)
-                tmpVal = tmpPath if os.path.exists(tmpPath) else self.RadioSurePath
+                tmpVal = tmpPath if exists(tmpPath) else self.RadioSurePath
             logFileCtrl.startDirectory = tmpVal
             Validation()
             event.Skip()
@@ -3235,7 +5062,7 @@ class RadioSure(eg.PluginBase):
                 xmlPathCtrl.GetValue(),
                 logFileCtrl.GetValue(),
                 panel.holidays,
-                firstDayCtrl.GetSelection()
+                firstDayCtrl.GetSelection(),
             )
 #===============================================================================
 #cls types for Actions list:
@@ -3248,50 +5075,46 @@ class Run(eg.ActionBase):
         default = "Use start settings RadioSure"
         label = "Select favorite:"
         over = "Too large number (%s > %s) !"
-        alt_ret = "Default start"
         alr_run = "RadioSure is already running !"
-        text2 = "Couldn't find file %s !"
 
 
     def __call__(self, play = False, fav = 1):
-        hwnd = HandleRS()
-        if hwnd is None:
-            rs = '%s\\RadioSure.exe' % self.plugin.RadioSurePath
-            rs = rs.encode(fse) if isinstance(rs, unicode) else rs
-            if os.path.isfile(rs):
-                subprocess.Popen([rs])
-                if play:
-                    for n in range(50):
-                        sleep(.1)
-                        hwnd = HandleRS()
-                        if hwnd:
-                            flag = True
-                            break
-                    if flag:
-                        SendMessage(hwnd, WM_COMMAND, 1008, 0) #Stop playing
-                        sleep(2.5)
-                        self.plugin.RefreshVariables()
-                        if fav <= len(self.plugin.Favorites):
-                            SendMessage(hwnd, WM_COMMAND, 1325+fav, 0)
-                            return str(fav)+": "+self.plugin.Favorites[self.plugin.FavIx][1]
-                        else:
-                            return self.text.over % (str(fav),\
-                                str(len(self.plugin.Favorites)))
-                    else:
-                        self.PrintError(self.plugin.text.text1)
-                        return self.plugin.text.text1
+
+        def Play(hwnds):
+                self.plugin.RefreshVariables()
+                if fav <= len(self.plugin.Favorites):
+                    if play:
+                        SendMessage(hwnds[0], WM_COMMAND, 4101+fav, 0)
+                    return str(fav)+": "+self.plugin.Favorites[self.plugin.FavIx][1]
                 else:
-                    return self.text.alt_ret
+                    return self.text.over % (str(fav),\
+                        str(len(self.plugin.Favorites)))
+        hwnds = HandleRS()
+        if not hwnds:
+            hwnds = self.plugin.GetNewHwnd()
+            if hwnds:       
+                return Play(hwnds)             
             else:
-                self.PrintError(self.text.text2 % 'RadioSure.exe')
-                return self.text.text2 % 'RadioSure.exe'
+                self.PrintError(self.plugin.text.text1)
+                return self.plugin.text.text1
+        elif play:
+            for hwnd in hwnds:
+                x, rec = self.plugin.GetStatusRS([hwnd])
+                if rec != 1:
+                    SendMessage(hwnd, WM_COMMAND, 4101+fav, 0)
+                    break
+            if rec or rec is None:
+                hwnds = self.plugin.GetNewHwnd(hwnds)
+                if hwnds:
+                    return Play(hwnds)
         else:
+            self.PrintError(self.text.alr_run)
             return self.text.alr_run
 
 
-    def GetLabel(self, play ,fav):
-        num = ':'+str(fav) if play else ''
-        return self.name+num
+    def GetLabel(self, play, fav):
+        num = str(fav) if play else ''
+        return "%s:  %s" % (self.name, num)
 
 
     def Configure(self, play = False, fav = 1):
@@ -3332,38 +5155,47 @@ class Run(eg.ActionBase):
 #===============================================================================
 
 class WindowControl(eg.ActionBase):
-
     def __call__(self):
         hwnd = HandleRS()
         if hwnd:
-            SendMessage(hwnd, WM_SYSCOMMAND, self.value, 0)
+            SendMessage(hwnd[0], WM_SYSCOMMAND, self.value, 0)
         else:
             self.PrintError(self.plugin.text.text1)
             return self.plugin.text.text1
 #===============================================================================
 
 class SendMessageActions(eg.ActionBase):
-
     def __call__(self):
         hwnd = HandleRS()
         if hwnd:
-            SendMessage(hwnd, WM_COMMAND, self.value, 0)
+            SendMessage(hwnd[0], WM_COMMAND, self.value, 0)
         else:
             self.PrintError(self.plugin.text.text1)
             return self.plugin.text.text1
 #===============================================================================
 
-class Play(eg.ActionBase):
-
+class CheckAndChange(eg.ActionBase):
     def __call__(self):
         hwnd = HandleRS()
         if hwnd:
-            self.plugin.RefreshVariables()
-            SendMessage(hwnd, WM_COMMAND, 1374+self.plugin.HistIx, 0)
-            return self.plugin.History[self.plugin.HistIx][1]
-        else:
-            self.PrintError(self.plugin.text.text1)
-            return self.plugin.text.text1
+            status = self.plugin.GetRS_Status(hwnd[0])
+            if status[self.value[0]] == self.value[1]:
+                SendMessage(hwnd[0], WM_COMMAND, self.value[2], 0)
+#===============================================================================
+
+class GetStatus(eg.ActionBase):
+    def __call__(self):
+        hwnd = HandleRS()
+        if hwnd:
+            status = self.plugin.GetRS_Status(hwnd[0])
+            return status[self.value]
+#===============================================================================
+
+class GetMenuItem(eg.ActionBase):
+    def __call__(self):
+        hwnd = HandleRS()
+        if hwnd:
+            return self.plugin.GetMenuItem(hwnd[0], self.value)
 #===============================================================================
 
 class SetVolume(eg.ActionBase):
@@ -3473,7 +5305,7 @@ class SelectFav(eg.ActionBase):
                 indx = int(eg.ParseString(number))
             self.plugin.RefreshVariables()
             if indx <= len(self.plugin.Favorites):
-                SendMessage(hwnd, WM_COMMAND, 1325+indx, 0)
+                SendMessage(hwnd[0], WM_COMMAND, 4101+indx, 0)
                 return str(indx)+": "+self.plugin.Favorites[indx-1][1]
             else:
                 self.PrintError(
@@ -3484,10 +5316,8 @@ class SelectFav(eg.ActionBase):
             return self.plugin.text.text1
 
 
-    def GetLabel(self, fav,mode,number):
-        if mode == 2:
-            number = str(fav)
-        return self.text.txtLabel+number
+    def GetLabel(self, fav, mode, number):
+        return "%s %s" % (self.text.txtLabel, str(fav) if mode == 2 else number)
 
 
     def Configure(self, fav = 1, mode = 0, number = '{eg.event.payload}'):
@@ -3559,12 +5389,13 @@ class NextPrevFav(eg.ActionBase):
         hwnd = HandleRS()
         if hwnd:
             self.plugin.RefreshVariables()
-            ix = self.plugin.FavIx
+            #ix = self.plugin.FavIx
+            ix = self.plugin.GetMenuItem(hwnd[0], 7)[0]
             if self.value == 1 and ix == len(self.plugin.Favorites) - 1 :
                 ix = -1
             elif self.value == -1 and ix == 0:
                 ix = len(self.plugin.Favorites)
-            SendMessage(hwnd, WM_COMMAND, 1326+ix+self.value, 0)
+            SendMessage(hwnd[0], WM_COMMAND, 4102+ix+self.value, 0)
             return (str(ix+self.value+1)+": "+self.plugin.Favorites[ix+self.value][1])
         else:
             self.PrintError(self.plugin.text.text1)
@@ -3577,13 +5408,13 @@ class RandomFav(eg.ActionBase):
         hwnd = HandleRS()
         if hwnd:
             self.plugin.RefreshVariables()
-            ix = self.plugin.FavIx
+            ix = self.plugin.GetMenuItem(hwnd[0], 7)[0]
             lng = len(self.plugin.Favorites)
             if lng > 1:
                 newIx = randrange(lng)
                 while newIx == ix:
                     newIx = randrange(lng)
-                SendMessage(hwnd, WM_COMMAND, 1326+newIx, 0)
+                SendMessage(hwnd[0], WM_COMMAND, 4102+newIx, 0)
                 return (str(newIx+1)+": "+self.plugin.Favorites[newIx][1])
         else:
             self.PrintError(self.plugin.text.text1)
@@ -3595,7 +5426,7 @@ class GetPlayingTitle(eg.ActionBase):
     def __call__(self):
         hwnd = HandleRS()
         if hwnd:
-            return GetWindowText(hwnd)
+            return GetWindowText(hwnd[0])
         else:
             self.PrintError(self.plugin.text.text1)
             return self.plugin.text.text1
@@ -3671,255 +5502,29 @@ class StopTitlebarObservation(eg.ActionBase):
         self.plugin.observThread = None
 #===============================================================================
 
-class ShowMenu(eg.ActionBase):
+class OpenManager(eg.ActionBase):
 
-    panel = None
-
-    class text:
-        osmLabel = 'OSM show on:'
-        menuPreview = 'On screen menu preview:'
-        menuFont = 'Menu font:'
-        txtColour = 'Text colour'
-        backColour = 'Background colour'
-        txtSelColour = 'Selected text colour'
-        backSelColour = 'Selected background colour'
-
-
-    def __call__(
-        self,
-        fore,
-        back,
-        fontInfo,
-        monitor=0,
-        foreSel = (180, 180, 180),
-        backSel = (75, 75, 75),
-    ):
-        if not self.plugin.menuDlg:
-            self.plugin.menuDlg = Menu()
-            self.event = CreateEvent(None, 0, 0, None)
-            wx.CallAfter(self.plugin.menuDlg.ShowMenu,
-                fore,
-                back,
-                foreSel,
-                backSel,
-                fontInfo,
-                False,
-                self.plugin,
-                self.event,
-                monitor,
-                self.value
-            )
-            eg.actionThread.WaitOnEvent(self.event)
-#===============================================================================
-
-    def GetLabel(
-        self,
-        fore,
-        back,
-        fontInfo,
-        monitor,
-        foreSel,
-        backSel,
-    ):
-        return self.name
-
-    def Configure(
-        self,
-        fore = (75, 75, 75),
-        back = (180, 180, 180),
-        fontInfo = None,
-        monitor = 0,
-        foreSel = (180, 180, 180),
-        backSel = (75, 75, 75),
-    ):
-        self.plugin.RefreshVariables()
-        self.List = self.plugin.Favorites if self.value else self.plugin.History
-        choices = [item[1] for item in self.List]
-        self.fore = fore
-        self.back = back
-        self.foreSel = foreSel
-        self.backSel = backSel
-        global panel
-        panel = eg.ConfigPanel(self)
-        mainSizer = panel.sizer
-        topSizer=wx.BoxSizer(wx.HORIZONTAL)
-        topRightSizer=wx.FlexGridSizer(5,2,8,10)
-        previewLbl=wx.StaticText(panel, -1, self.text.menuPreview)
-        mainSizer.Add(previewLbl)
-        mainSizer.Add(topSizer,0,wx.TOP,5)
-        #Font button
-        fontLbl=wx.StaticText(panel, -1, self.text.menuFont)
-        fontButton = extFontSelectButton(panel, value = fontInfo)
-        #Button Text Colour
-        foreLbl=wx.StaticText(panel, -1, self.text.txtColour+':')
-        foreColourButton = extColourSelectButton(panel,self.fore, title = self.text.txtColour)
-        #Button Background Colour
-        backLbl=wx.StaticText(panel, -1, self.text.backColour+':')
-        backColourButton = extColourSelectButton(panel,self.back,title = self.text.backColour)
-        #Button Selected Text Colour
-        foreSelLbl=wx.StaticText(panel, -1, self.text.txtSelColour+':')
-        foreSelColourButton = extColourSelectButton(panel,self.foreSel,title = self.text.txtSelColour)
-        #Button Selected Background Colour
-        backSelLbl=wx.StaticText(panel, -1, self.text.backSelColour+':')
-        backSelColourButton = extColourSelectButton(panel,self.backSel, title = self.text.backSelColour)
-        ch = len(choices) if len(choices) > 0 else 1
-        listBoxCtrl = MenuGrid(panel, ch)
-        listBoxCtrl.SetMinSize(wx.Size(220, 177))
-        listBoxCtrl.SetBackgroundColour(self.back)
-        listBoxCtrl.SetForegroundColour(self.fore)
-        listBoxCtrl.SetSelectionBackground(self.backSel)
-        listBoxCtrl.SetSelectionForeground(self.foreSel)
-        if fontInfo is None:
-            font = listBoxCtrl.GetFont()
-            font.SetPointSize(36)
-            fontInfo = font.GetNativeFontInfoDesc()
+    def __call__(self):
+        if not self.plugin.manager:
+            wx.CallAfter(ManagerDialog, self.text, self.plugin)
         else:
-            font = wx.FontFromNativeInfoString(fontInfo)
-        for n in range(10,20):
-            font.SetPointSize(n)
-            fontButton.SetFont(font)
-            hght = fontButton.GetTextExtent('X')[1]
-            if hght > 20:
-                break
-        listBoxCtrl.SetDefaultCellFont(font)
-        listBoxCtrl.SetDefaultRowSize(hght+4, True)
-        for i in range(len(choices)):
-            listBoxCtrl.SetCellFont(i,0,font)
-            listBoxCtrl.SetCellValue(i,0,choices[i])
-        wdth = 220
-        if (hght+4)*len(choices) > 177:
-            wdth -=  SYS_VSCROLL_X
-        listBoxCtrl.SetColSize(0, wdth)
-        topSizer.Add(listBoxCtrl)
-        topSizer.Add((20,1))
-        topSizer.Add(topRightSizer)
-        osmLbl = wx.StaticText(panel, -1, self.text.osmLabel)
-        displayChoice = eg.DisplayChoice(panel, monitor)
-        topRightSizer.Add(fontLbl,0,wx.TOP,4)
-        topRightSizer.Add(fontButton,0,wx.TOP,0)
-        topRightSizer.Add(foreLbl,0,wx.TOP,4)
-        topRightSizer.Add(foreColourButton,0,wx.TOP,0)
-        topRightSizer.Add(backLbl,0,wx.TOP,4)
-        topRightSizer.Add(backColourButton,0,wx.TOP,0)
-        topRightSizer.Add(foreSelLbl,0,wx.TOP,4)
-        topRightSizer.Add(foreSelColourButton,0,wx.TOP,0)
-        topRightSizer.Add(backSelLbl,0,wx.TOP,4)
-        topRightSizer.Add(backSelColourButton,0,wx.TOP,0)
-        topRightSizer.Add(osmLbl, 0, wx.TOP, 4)
-        topRightSizer.Add(displayChoice, 0, wx.TOP, 0)
-        listBoxCtrl.SetFocus()
-        listBoxCtrl.SetGridCursor(0, 0)
-        listBoxCtrl.SelectRow(0)
-        mainSizer.Layout()
-
-        def onMonitor(evt):
-            listBoxCtrl.SetFocus()
-            evt.Skip()
-        displayChoice.Bind(wx.EVT_CHOICE, onMonitor)
-
-
-        def OnFontBtn(evt):
-            value = evt.GetValue()
-            font = wx.FontFromNativeInfoString(value)
-            for n in range(10,20):
-                font.SetPointSize(n)
-                fontButton.SetFont(font)
-                hght = fontButton.GetTextExtent('X')[1]
-                if hght > 20:
-                    break
-            listBoxCtrl.SetDefaultCellFont(font)
-            listBoxCtrl.SetDefaultRowSize(hght+4, True)
-            for i in range(listBoxCtrl.GetNumberRows()):
-                listBoxCtrl.SetCellFont(i,0,font)
-            listBoxCtrl.SetFocus()
-            evt.Skip()
-        fontButton.Bind(EVT_BUTTON_AFTER, OnFontBtn)
-
-
-        def OnColourBtn(evt):
-            id = evt.GetId()
-            value = evt.GetValue()
-            if id == foreColourButton.GetId():
-                listBoxCtrl.SetForegroundColour(value)
-            elif id == backColourButton.GetId():
-                listBoxCtrl.SetBackgroundColour(value)
-            elif id == backSelColourButton.GetId():
-                listBoxCtrl.SetSelectionBackground(value)
-            elif id == foreSelColourButton.GetId():
-                listBoxCtrl.SetSelectionForeground(value)
-            listBoxCtrl.Refresh()
-            listBoxCtrl.SetFocus()
-            evt.Skip()
-        foreColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-        backColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-        foreSelColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-        backSelColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-
-
-        # re-assign the test button
-        def OnButton(event):
-            if not self.plugin.menuDlg:
-                self.plugin.menuDlg = Menu()
-                self.event = CreateEvent(None, 0, 0, None)
-                wx.CallAfter(self.plugin.menuDlg.ShowMenu,
-                    foreColourButton.GetValue(),
-                    backColourButton.GetValue(),
-                    foreSelColourButton.GetValue(),
-                    backSelColourButton.GetValue(),
-                    fontButton.GetValue(),
-                    True,
-                    self.plugin,
-                    self.event,
-                    displayChoice.GetSelection(),
-                    self.value
-                )
-                eg.actionThread.WaitOnEvent(self.event)
-        panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
-
-        while panel.Affirmed():
-            panel.SetResult(
-            foreColourButton.GetValue(),
-            backColourButton.GetValue(),
-            fontButton.GetValue(),
-            displayChoice.GetSelection(),
-            foreSelColourButton.GetValue(),
-            backSelColourButton.GetValue(),
-        )
+            if self.plugin.manager.GetPosition() == (-32000, -32000):
+                ShowWindow(self.plugin.manager.GetHandle(), SW_RESTORE) 
+            wx.CallAfter(self.plugin.manager.Raise)
 #===============================================================================
 
-class MoveCursor(eg.ActionBase):
+class HideManager(eg.ActionBase):
 
     def __call__(self):
-        if self.plugin.menuDlg is not None:
-            max = len(self.plugin.Favorites)
-            if max > 0:
-                stationChoiceCtrl = self.plugin.menuDlg.stationChoiceCtrl
-                sel = stationChoiceCtrl.GetSelectedRows()[0]
-                if sel == eval(self.value[0]):
-                    sel = eval(self.value[1])
-                stationChoiceCtrl.SetGridCursor(sel + self.value[2], 0)
-                stationChoiceCtrl.SelectRow(sel + self.value[2])
-#===============================================================================
-
-class OK_Btn(eg.ActionBase):
-
-    def __call__(self):
-        if self.plugin.menuDlg is not None:
-            self.plugin.PlayFromMenu()
-#===============================================================================
-
-class Cancel_Btn(eg.ActionBase):
-
-    def __call__(self):
-        if self.plugin.menuDlg is not None:
-            self.plugin.menuDlg.Close()
+        if self.plugin.manager:
+            wx.CallAfter(self.plugin.manager.Close)
 #===============================================================================
 
 class OpenScheduler(eg.ActionBase):
 
     def __call__(self):
         if not self.plugin.dialog:
-            wx.CallAfter(schedulerDialog, self.text, self.plugin)
+            wx.CallAfter(SchedulerDialog, self.text, self.plugin)
         else:
             if self.plugin.dialog.GetPosition() == (-32000, -32000):
                 ShowWindow(self.plugin.dialog.GetHandle(), SW_RESTORE) 
@@ -3943,7 +5548,7 @@ class EnableSchedule(eg.ActionBase):
     def __call__(self, schedule=""):
         schedule = eg.ParseString(schedule)
         xmlfile = u'%s\\Scheduler.xml' % self.plugin.xmlpath
-        if not os.path.exists(xmlfile):
+        if not exists(xmlfile):
             return
         data = self.plugin.data
         tmpLst = [item[1] for item in data]
@@ -3963,7 +5568,7 @@ class EnableSchedule(eg.ActionBase):
     def Configure(self, schedule=""):
         panel = eg.ConfigPanel()
         xmlfile = u'%s\\Scheduler.xml' % self.plugin.xmlpath
-        if not os.path.exists(xmlfile):
+        if not exists(xmlfile):
             return
         data = self.plugin.xmlToData()
         choices = [item[1] for item in data]
@@ -3979,7 +5584,7 @@ class EnableAll(eg.ActionBase):
 
     def __call__(self):
         xmlfile = u'%s\\Scheduler.xml' % self.plugin.xmlpath
-        if not os.path.exists(xmlfile):
+        if not exists(xmlfile):
             return
         data = self.plugin.data
         for schedule in data:
@@ -3999,7 +5604,7 @@ class DeleteSchedule(eg.ActionBase):
     def __call__(self, schedule=""):
         schedule = eg.ParseString(schedule)
         xmlfile = u'%s\\Scheduler.xml' % self.plugin.xmlpath
-        if not os.path.exists(xmlfile):
+        if not exists(xmlfile):
             return
         data = self.plugin.data
         tmpLst = [item[1] for item in data]
@@ -4015,7 +5620,7 @@ class DeleteSchedule(eg.ActionBase):
     def Configure(self, schedule=""):
         panel = eg.ConfigPanel()
         xmlfile = u'%s\\Scheduler.xml' % self.plugin.xmlpath
-        if not os.path.exists(xmlfile):
+        if not exists(xmlfile):
             return
         data = self.plugin.xmlToData()
         choices = [item[1] for item in data]
@@ -4108,36 +5713,410 @@ This action works in two ways (depending on the title of the schedule):
             panel.SetResult(textControl.GetValue())
 #===============================================================================
 
-Actions = (
+class ShowMenu(eg.ActionClass):
+
+    name = "Show Radio Sure menu"
+    description = "Show Radio Sure menu."
+    panel = None
+
+    class text:
+        OSELabel = 'Menu show on:'
+        menuPreview = 'RS On Screen Menu preview:'
+        menuFont = 'Font:'
+        txtColour = 'Text colour'
+        background = 'Background colour'
+        txtColourSel = 'Selected text colour'
+        backgroundSel = 'Selected background colour'
+        dialog = "Events ..."
+        btnToolTip = """Press this button to assign events to control the menu !!!"""
+        evtAssignTitle = "Menu control - events assignement"
+        events = (
+            "Cursor up:",
+            "Cursor down:",
+            "Back from the (sub)menu:",
+            "Submenu, or select an item:",
+            "Cancel (Escape):",
+        )
+        inverted = "Use inverted colours"
+        submenuLbl = "Show main menu or submenu:"
+
+
+    def __call__(
+        self,
+        fore,
+        back,
+        fontInfo = TAHOMA_INFO,
+        monitor = 0,
+        foreSel = (180, 180, 180),
+        backSel = (75, 75, 75),
+        evtList = [],
+        inverted = True,
+        submenu = 0
+    ):
+        hwnd = HandleRS()
+        if hwnd:
+            if not self.plugin.menuDlg:
+                self.plugin.menuDlg = Menu()
+                self.event = CreateEvent(None, 0, 0, None)
+                wx.CallAfter(self.plugin.menuDlg.ShowMenu,
+                    fore,
+                    back,
+                    foreSel,
+                    backSel,
+                    fontInfo,
+                    False,
+                    self.plugin,
+                    self.event,
+                    monitor,
+                    hwnd[0],
+                    evtList,
+                    (0, 7, 8, 9, 10, 11, 12, 14)[submenu],
+                )
+                eg.actionThread.WaitOnEvent(self.event)
+
+
+    def GetLabel(
+        self,
+        fore,
+        back,
+        fontInfo,
+        monitor,
+        foreSel,
+        backSel,
+        evtList,
+        inverted,
+        submenu = 0
+    ):
+        return "%s: %s" % (self.name, self.plugin.submenus[submenu])
+
+
+    def Configure(
+        self,
+        fore = (75, 75, 75),
+        back = (180, 180, 180),
+        fontInfo = TAHOMA_INFO,
+        monitor = 0,
+        foreSel = (180, 180, 180),
+        backSel = (75, 75, 75),
+        evtList = [[],[],[],[],[]],
+        inverted = True,
+        submenu = 0
+    ):
+        self.fontInfo = fontInfo
+        self.fore = fore
+        self.back = back
+        self.foreSel = foreSel
+        self.backSel = backSel
+        self.oldSel=0
+        self.inverted = inverted
+        global panel
+        panel = eg.ConfigPanel(self)
+        panel.evtList = cpy(evtList)
+        previewLbl=wx.StaticText(panel, -1, self.text.menuPreview)
+        listBoxCtrl = MenuGrid(panel, 3)
+        items = (("Blabla_1",0,True,804),
+                 ("Blabla_2",1,False,804),
+                 ("Blabla_3",2,False,-1),)
+        listBoxCtrl.Set(items)
+        listBoxCtrl.SetBackgroundColour(self.back)
+        listBoxCtrl.SetForegroundColour(self.fore)
+        listBoxCtrl.SetSelectionBackground(self.backSel)
+        listBoxCtrl.SetSelectionForeground(self.foreSel)
+        #Font button
+        fontLbl=wx.StaticText(panel, -1, self.text.menuFont)
+        fontButton = ExtFontSelectButton(panel, value = fontInfo)
+        font = wx.FontFromNativeInfoString(fontInfo)
+        for n in range(10,20):
+            font.SetPointSize(n)
+            fontButton.SetFont(font)
+            hght = fontButton.GetTextExtent('X')[1]
+            if hght > 20:
+                break
+        listBoxCtrl.SetDefaultCellFont(font)
+        arial = wx.FontFromNativeInfoString(ARIAL_INFO)
+        fontButton.SetFont(font)            
+        for n in range(1,1000):
+            arial.SetPointSize(n)
+            fontButton.SetFont(arial)
+            h = fontButton.GetTextExtent(u"\u25a0")[1]
+            if h > hght:
+                break
+        arial.SetPointSize(2*n/3)
+        fontButton.SetFont(arial)            
+        w0 = 2 * fontButton.GetTextExtent(u"\u25a0")[0]
+        attr = gridlib.GridCellAttr()
+        attr.SetFont(arial)
+        attr.SetAlignment(wx.ALIGN_CENTRE, wx.ALIGN_CENTRE)
+        listBoxCtrl.SetColAttr(0,attr)
+        for n in range(1,1000):
+            arial.SetPointSize(n)
+            fontButton.SetFont(arial)
+            h = fontButton.GetTextExtent(u"\u25ba")[1]
+            if h > hght:
+                break
+        arial.SetPointSize(n/2)
+        fontButton.SetFont(arial)            
+        w2 = 2 * fontButton.GetTextExtent(u"\u25ba")[0]
+        attr = gridlib.GridCellAttr()
+        attr.SetFont(arial)
+        attr.SetAlignment(wx.ALIGN_RIGHT, wx.ALIGN_CENTRE)
+        listBoxCtrl.SetColAttr(2,attr)
+        listBoxCtrl.SetDefaultRowSize(hght+4, True)
+        displayChoice = eg.DisplayChoice(panel, monitor)
+        w = displayChoice.GetSize()[0]
+        OSElbl = wx.StaticText(panel, -1, self.text.OSELabel)
+        useInvertedCtrl = wx.CheckBox(panel, -1, self.text.inverted)
+        useInvertedCtrl.SetValue(inverted)
+        subMenuLbl = wx.StaticText(panel, -1, self.text.submenuLbl)
+        if self.plugin.submenus:
+            choices = self.plugin.submenus
+        else:
+            choices = self.plugin.GetSubmenuStrings()
+        subMenuCtrl = wx.Choice(panel, -1, choices = choices)
+        subMenuCtrl.SetSelection(submenu)
+        #Button Text Colour
+        foreLbl=wx.StaticText(panel, -1, self.text.txtColour+':')
+        foreColourButton = ExtColourSelectButton(panel,fore,title = self.text.txtColour)
+        #Button Background Colour
+        backLbl=wx.StaticText(panel, -1, self.text.background+':')
+        backColourButton = ExtColourSelectButton(panel,back,title = self.text.background)
+        #Button Selected Text Colour
+        foreSelLbl=wx.StaticText(panel, -1, self.text.txtColourSel+':')
+        foreSelColourButton = ExtColourSelectButton(panel,foreSel,title = self.text.txtColourSel)
+        #Button Selected Background Colour
+        backSelLbl=wx.StaticText(panel, -1, self.text.backgroundSel+':')
+        backSelColourButton = ExtColourSelectButton(panel,backSel,title = self.text.backgroundSel)
+        #Button Dialog "Menu control - assignement of events"
+        dialogButton = wx.Button(panel,-1,self.text.dialog)
+        dialogButton.SetToolTipString(self.text.btnToolTip)
+        foreSelLbl.Enable(not inverted)
+        foreSelColourButton.Enable(not inverted)
+        backSelLbl.Enable(not inverted)
+        backSelColourButton.Enable(not inverted)
+        #Sizers
+        mainSizer = panel.sizer
+        topSizer=wx.GridBagSizer(2, 30)
+        mainSizer.Add(topSizer)
+        topSizer.Add(previewLbl,(0, 0),flag = wx.TOP,border = 0)
+        topSizer.Add(listBoxCtrl,(1, 0),(4, 1))        
+        topSizer.Add(useInvertedCtrl,(6, 0),flag = wx.TOP, border = 8)        
+        topSizer.Add(subMenuLbl,(8, 0), flag = wx.TOP,border = 8)        
+        topSizer.Add(subMenuCtrl,(9, 0), flag = wx.TOP)        
+        topSizer.Add(fontLbl,(0, 1),flag = wx.TOP)
+        topSizer.Add(fontButton,(1, 1),flag = wx.TOP)        
+        topSizer.Add(foreLbl,(2, 1),flag = wx.TOP,border = 8)
+        topSizer.Add(foreColourButton,(3, 1),flag = wx.TOP)
+        topSizer.Add(backLbl,(4, 1),flag = wx.TOP,border = 8)
+        topSizer.Add(backColourButton,(5, 1),flag = wx.TOP)        
+        topSizer.Add(OSElbl,(0, 2), flag = wx.TOP)
+        topSizer.Add(displayChoice,(1, 2),flag = wx.TOP)        
+        topSizer.Add(foreSelLbl,(6, 1), (1, 2), flag = wx.TOP,border = 8)
+        topSizer.Add(foreSelColourButton, (7, 1), flag = wx.TOP)
+        topSizer.Add(backSelLbl,(8, 1), (1, 2), flag = wx.TOP,border = 8)
+        topSizer.Add(backSelColourButton, (9, 1), flag = wx.TOP)
+        topSizer.Add(dialogButton, (3, 2), flag = wx.TOP|wx.EXPAND)
+        panel.sizer.Layout()
+        wdth = 160
+        if (hght+4)*listBoxCtrl.GetNumberRows() > listBoxCtrl.GetSize()[1]: #after Layout() !!!
+            wdth -=  SYS_VSCROLL_X
+        listBoxCtrl.SetColSize(0, w0)
+        listBoxCtrl.SetColSize(1, wdth - w0 - w2)
+        listBoxCtrl.SetColSize(2, w2)
+        listBoxCtrl.SetGridCursor(-1, 1)
+        listBoxCtrl.SelectRow(0)
+
+
+        def OnMonitor(evt):
+            listBoxCtrl.SetFocus()
+            evt.Skip
+        displayChoice.Bind(wx.EVT_CHOICE, OnMonitor)
+
+
+        def OnInverted(evt):
+            flag = evt.IsChecked()
+            foreSelLbl.Enable(not flag)
+            foreSelColourButton.Enable(not flag)
+            backSelLbl.Enable(not flag)
+            backSelColourButton.Enable(not flag)
+            self.inverted = flag
+            if flag:
+                self.foreSel = self.back
+                self.backSel = self.fore
+                backSelColourButton.SetValue(self.backSel)
+                foreSelColourButton.SetValue(self.foreSel)
+                listBoxCtrl.SetSelectionForeground(self.foreSel)
+                listBoxCtrl.SetSelectionBackground(self.backSel)
+            listBoxCtrl.SetFocus()
+            evt.Skip
+        useInvertedCtrl.Bind(wx.EVT_CHECKBOX, OnInverted)
+
+
+        def OnDialogBtn(evt):
+            dlg = MenuEventsDialog(
+                parent = panel,
+                plugin = self.plugin,
+            )
+            dlg.Centre()
+            wx.CallAfter(dlg.ShowMenuEventsDialog, self.text.evtAssignTitle, self.text.events)
+            evt.Skip()
+        dialogButton.Bind(wx.EVT_BUTTON, OnDialogBtn)
+
+
+        def OnFontBtn(evt):
+            value = evt.GetValue()
+            self.fontInfo = value
+            font = wx.FontFromNativeInfoString(value)
+            for n in range(10,20):
+                font.SetPointSize(n)
+                fontButton.SetFont(font)
+                hght = fontButton.GetTextExtent('X')[1]
+                if hght > 20:
+                    break
+            listBoxCtrl.SetDefaultCellFont(font)
+            listBoxCtrl.SetDefaultRowSize(hght+4, True)
+            for i in range(listBoxCtrl.GetNumberRows()):
+                listBoxCtrl.SetCellFont(i,1,font)
+            listBoxCtrl.SetFocus()
+            if evt:
+                evt.Skip()
+        fontButton.Bind(EVT_BUTTON_AFTER, OnFontBtn)
+
+        def OnColourBtn(evt):
+            id = evt.GetId()
+            value = evt.GetValue()
+            if id == foreColourButton.GetId():
+                listBoxCtrl.SetForegroundColour(value)
+                if self.inverted:
+                    self.backSel = self.fore
+                    listBoxCtrl.SetSelectionBackground(value)
+                    backSelColourButton.SetValue(value)
+            elif id == backColourButton.GetId():
+                listBoxCtrl.SetBackgroundColour(value)
+                if self.inverted:
+                    self.foreSel = self.back
+                    listBoxCtrl.SetSelectionForeground(value)
+                    foreSelColourButton.SetValue(value)
+            elif id == foreSelColourButton.GetId():
+                listBoxCtrl.SetSelectionForeground(value)
+            elif id == backSelColourButton.GetId():
+                listBoxCtrl.SetSelectionBackground(value)
+            listBoxCtrl.Refresh()
+            listBoxCtrl.SetFocus()
+            evt.Skip()
+        foreColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
+        backColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
+        foreSelColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
+        backSelColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
+
+
+        def setFocus():
+            listBoxCtrl.SetFocus()
+        panel.setFocus = setFocus
+
+        # re-assign the test button
+        def OnButton(event):
+            hwnds = HandleRS()
+            if hwnds:
+                if not self.plugin.menuDlg:
+                    self.plugin.menuDlg = Menu()
+                    self.event = CreateEvent(None, 0, 0, None)
+                    wx.CallAfter(self.plugin.menuDlg.ShowMenu,
+                        foreColourButton.GetValue(),
+                        backColourButton.GetValue(),
+                        foreSelColourButton.GetValue(),
+                        backSelColourButton.GetValue(),
+                        self.fontInfo, 
+                        True,
+                        self.plugin,
+                        self.event,
+                        displayChoice.GetSelection(),
+                        hwnds[0],
+                        panel.evtList,
+                        (0, 7, 8, 9, 10, 11, 12, 14)[subMenuCtrl.GetSelection()]
+                    )
+                    eg.actionThread.WaitOnEvent(self.event)
+        panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
+
+        while panel.Affirmed():
+            fontInfo = fontButton.GetValue()
+            if not fontInfo:
+                font = listBoxCtrl.GetFont()
+                font.SetPointSize(36)
+                fontInfo = font.GetNativeFontInfoDesc()
+            panel.SetResult(
+            foreColourButton.GetValue(),
+            backColourButton.GetValue(),
+            fontInfo,
+            displayChoice.GetSelection(),
+            foreSelColourButton.GetValue(),
+            backSelColourButton.GetValue(),
+            panel.evtList,
+            useInvertedCtrl.GetValue(),
+            subMenuCtrl.GetSelection()
+        )
+#===============================================================================
+
+ACTIONS = (
     (Run,"Run","Run RadioSure","Run RadioSure with its default settings.",None),
-    (SendMessageActions,"Minimize","Minimize window","Minimize window.",2),
-    (WindowControl,"Restore","Restore window","Restore window.",SC_RESTORE),
-    (SendMessageActions,"MinimRest","Minimize/Restore","Minimize/Restore window.",1075),
     (SendMessageActions,"Close","Close window (exit RadioSure)","Close window (exit RadioSure).",1),
-    (SendMessageActions,"Expand","Collapse/Expand window","Collapse/Expand window.",1076),
-    (SendMessageActions,"OnTop","Stay on top On/Off","Stay on top On/Off.",1077),
-    (SendMessageActions,"PlayStop","Play/Stop","Play/Stop.",1000),
-    (SendMessageActions,"MuteOnOff","Mute On/Off","Mute On/Off.",1027),
-    (SendMessageActions,"RecOnOff","Record On/Off","Record On/Off.",1051),
-    (Play,"Play","Play","Play last playing station.",None),
-    (SendMessageActions,"Stop","Stop","Stop.",1008),
-#    (SendMessageActions,"RecOn","Rec on","Rec on.",0),
-#    (SendMessageActions,"RecOff","Rec off","Rec off.",0),
-#    (SendMessageActions,"MuteOn","Mute on","Mute on.",0),
-#    (SendMessageActions,"MuteOff","Mute off","Mute off.",0),
-    (GetVolume,"GetVolume","Get volume","Get volume.", None),
-    (SetVolume,"SetVolume","Set volume","Set volume.", 0),
-    (SetVolume,"VolumeUp","Volume up","Volume up.", 1),
-    (SetVolume,"VolumeDown","Volume down","Volume down.", 2),
     (GetPlayingTitle,"GetPlayingTitle","Get currently playing station/title","Gets the name of currently playing station/title.", None),
     (StartTitlebarObservation,"StartTitlebarObservation","Start observation of titlebar","Starts observation of titlebar.", None),
     (StopTitlebarObservation,"StopTitlebarObservation","Stop observation of titlebar","Stops observation of titlebar.", None),
+    (ShowMenu,"ShowMenu","ShowMenu","ShowMenu.",None),
+    (eg.ActionGroup, 'Window', 'Window', 'Window',(
+        (SendMessageActions,"Minimize","Minimize window","Minimize window.",2),
+        (WindowControl,"Restore","Restore window","Restore window.",SC_RESTORE),
+        (SendMessageActions,"MinimRest","Minimize/Restore","Minimize/Restore window.",1075),
+        (SendMessageActions,"Expand","Collapse/Expand window","Collapse/Expand window.",1076),
+        (SendMessageActions,"OnTop","Stay on top On/Off","Stay on top On/Off.",1077),
+    )),
+    (eg.ActionGroup, 'MainControl', 'Main control', 'Main control',(
+        (SendMessageActions,"PlayStop","Play/Stop","Play/Stop.",1000),
+        (CheckAndChange,"Play","Play","Play.",(0, False, 1000)),
+        (SendMessageActions,"Stop","Stop","Stop.",1008),
+        (GetStatus,"GetPlaying","Get status of playing","Get status of playing.",0),
+        (SendMessageActions,"MuteOnOff","Mute On/Off","Mute On/Off.",1027),
+        (CheckAndChange,"MuteOn","Mute on","Mute on.",(1, False, 1027)),
+        (CheckAndChange,"MuteOff","Mute off","Mute off.",(1, True, 1027)),
+        (GetStatus,"GetMuted","Get muted","Get muted.",1),
+        (SendMessageActions,"RecOnOff","Recording On/Off","Recording On/Off.",1051),
+        (CheckAndChange,"RecOn","Recording on","Recording on.",(2, False, 1051)),
+        (CheckAndChange,"RecOff","Recording off","Recording off.",(2, True, 1051)),
+        (GetStatus,"GetRecording","Get recording","Get recording.",2),
+        (SendMessageActions,"RecOnlyCurr",'Toggle "Record only current track"','Toggle "Record only current track".', 4036),
+        (CheckAndChange,"RecOnlyOn",'Set "Record only current track"','Set "Record only current track".',(3, False, 4036)),
+        (CheckAndChange,"RecOnlyOff",'Clear "Record only current track"','Clear "Record only current track".',(3, True, 4036)),
+        (GetStatus,"GetRecOnlyCurr",'Get "Record only current track"','Get "Record only current track".',3),
+    )),
+    (eg.ActionGroup, 'Volume', 'Volume', 'Volume',(
+        (GetVolume,"GetVolume","Get volume","Get volume.", None),
+        (SetVolume,"SetVolume","Set volume","Set volume.", 0),
+        (SetVolume,"VolumeUp","Volume up","Volume up.", 1),
+        (SetVolume,"VolumeDown","Volume down","Volume down.", 2),
+    )),
+    (eg.ActionGroup, 'Clipboard', 'Clipboard', 'Clipboard',(
+        (SendMessageActions,"CopyURLtoClipboard","Copy URL to Clipboard","Copy URL to Clipboard.", 4037),
+        (SendMessageActions,"CopyTitleToClipboard","Copy Title to Clipboard","Copy Title to Clipboard.", 4038),
+        (SendMessageActions,"PlayURLfromClipboard","Play URL from Clipboard","Play URL from Clipboard.", 4039),
+    )),
     (eg.ActionGroup, 'Equalizer', 'Equalizer', 'Equalizer',(
-        (SendMessageActions,"EqualizerOff","Equalizer Off","Equalizer Off.", 2000),
-        (SendMessageActions,"EqualizerJazz","Equalizer Jazz","Equalizer Jazz.", 2001),
-        (SendMessageActions,"EqualizerPop","Equalizer Pop","Equalizer Pop.", 2002),
-        (SendMessageActions,"EqualizerRock","Equalizer Rock","Equalizer Rock.", 2003),
-        (SendMessageActions,"EqualizerClassic","Equalizer Classic","Equalizer Classic.", 2004),
+        (SendMessageActions,"EqualizerOff","Equalizer Off","Equalizer Off.", 4040),
+        (SendMessageActions,"EqualizerJazz","Equalizer Jazz","Equalizer Jazz.", 4041),
+        (SendMessageActions,"EqualizerPop","Equalizer Pop","Equalizer Pop.", 4042),
+        (SendMessageActions,"EqualizerRock","Equalizer Rock","Equalizer Rock.", 4043),
+        (SendMessageActions,"EqualizerClassic","Equalizer Classic","Equalizer Classic.", 4044),
+        (GetMenuItem, "GetEqualizerIndex", "Get Equalizer", "Get Equalizer.", 9),
+    )),
+    (eg.ActionGroup, 'SleepTimer', 'Sleep timer', 'Sleep timer',(
+        (SendMessageActions,"SleepTimerOff","Sleep timer Off","Sleep timer Off.", 4034),
+        (SendMessageActions,"SleepIn5Min","Sleep in 5 min","Sleep in 5 min.", 4026),
+        (SendMessageActions,"SleepIn10Min","Sleep in 10 min","Sleep in 10 min.", 4027),
+        (SendMessageActions,"SleepIn15Min","Sleep in 15 min","Sleep in 15 min.", 4028),
+        (SendMessageActions,"SleepIn20Min","Sleep in 20 min","Sleep in 20 min.", 4029),
+        (SendMessageActions,"SleepIn30Min","Sleep in 30 min","Sleep in 30 min.", 4030),
+        (SendMessageActions,"SleepIn60Min","Sleep in 60 min","Sleep in 60 min.", 4031),
+        (SendMessageActions,"SleepIn90Min","Sleep in 90 min","Sleep in 90 min.", 4032),
+        (SendMessageActions,"SleepIn120Min","Sleep in 120 min","Sleep in 120 min.", 4033),
     )),
     (eg.ActionGroup, 'Fav_and_Hist', 'Favorites and History', 'Favorites and History',(
         (SendMessageActions,"AddFav","Add to favorites","Add current station to favorites.",1324),
@@ -4148,14 +6127,8 @@ Actions = (
         (RandomFav,"RandomFav","Random favorite","Random favorite.", None),
         (SendMessageActions,"PreviousHist","Back in history","Back in history.",1038),
         (SendMessageActions,"ForwardHist","Forward in history","Forward in history.",1039),
-        (eg.ActionGroup, 'Menu', 'Menu', 'Menu',(
-            (ShowMenu, 'ShowFavMenu', 'Show favorites menu', 'Show favorites on screen menu.', True),
-            (ShowMenu, 'ShowHistMenu', 'Show history menu', 'Show history on screen menu.', False),
-            (MoveCursor, 'MoveDown', 'Cursor down', 'Cursor down.', ('max-1', '-1', 1)),
-            (MoveCursor, 'MoveUp', 'Cursor up', 'Cursor up.', ('0', 'max', -1)),
-            (OK_Btn, 'OK_Btn', 'OK', 'OK button pressed.', None),
-            (Cancel_Btn, 'Cancel_Btn', 'Cancel', 'Cancel button pressed.', None),
-        )),
+        (OpenManager,"OpenManager","Open manager","Open manager.", None),
+        (HideManager,"HideManager","Hide manager","Hide manager.", None),
     )),
     (eg.ActionGroup, 'Scheduler', 'Scheduler', 'Scheduler',(
         (OpenScheduler,"OpenScheduler","Open scheduler","Open scheduler.", None),
