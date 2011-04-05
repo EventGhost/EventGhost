@@ -150,6 +150,7 @@ class System(eg.PluginBase):
         group.AddAction(MuteOn)
         group.AddAction(MuteOff)
         group.AddAction(ToggleMute)
+        group.AddAction(GetMute)
         group.AddAction(SetMasterVolume)
         group.AddAction(ChangeMasterVolumeBy)
         group.AddAction(PlaySound)
@@ -238,6 +239,9 @@ class System(eg.PluginBase):
                 vistaVolumeDll.SetMute(newValue)
                 return newValue
 
+            def GetMute2(self, deviceId=0):
+                return vistaVolumeDll.GetMute()
+               
             def SetMasterVolume2(self, value, deviceId=0):
                 vistaVolumeDll.SetMasterVolume(value / 100.0)
                 return vistaVolumeDll.GetMasterVolume() * 100.0
@@ -251,6 +255,7 @@ class System(eg.PluginBase):
             actions["MuteOn"].__call__ = MuteOn2
             actions["MuteOff"].__call__ = MuteOff2
             actions["ToggleMute"].__call__ = ToggleMute2
+            actions["GetMute"].__call__ = GetMute2
             actions["SetMasterVolume"].__call__ = SetMasterVolume2
             actions["ChangeMasterVolumeBy"].__call__ = ChangeMasterVolumeBy2
 
@@ -830,6 +835,27 @@ class ToggleMute(eg.ActionBase):
         deviceCtrl = panel.Choice(
             deviceId, choices=SoundMixer.GetMixerDevices()
         )
+        panel.AddLine("Device:", deviceCtrl)
+        while panel.Affirmed():
+            panel.SetResult(deviceCtrl.GetValue())
+
+
+
+class GetMute(eg.ActionBase):
+    name = "Get Mute Status"
+    iconFile = "icons/SoundCard"
+    
+    def __call__(self, deviceId=0):
+        return SoundMixer.GetMute(deviceId)
+
+
+    def GetLabel(self, *args):
+        return self.text.name
+         
+        
+    def Configure(self, deviceId=0):
+        panel = eg.ConfigPanel()
+        deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
         panel.AddLine("Device:", deviceCtrl)
         while panel.Affirmed():
             panel.SetResult(deviceCtrl.GetValue())
