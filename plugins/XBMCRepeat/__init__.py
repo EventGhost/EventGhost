@@ -28,12 +28,12 @@ from xml.dom.minidom import Node
 eg.RegisterPlugin(
     name = "XBMC2",
     author = "Joni Boren",
-    version = "0.5.6",
+    version = "0.6.0",
     kind = "program",
     guid = "{2DD98E35-F060-4444-9F11-168CD8131A6B}",
     canMultiLoad = True,
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.net/forum/viewtopic.php?t=1005",
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=10&t=1562",
     description = "Adds actions buttons to control <a href='http://www.xbmc.org/'>XBMC</a>.",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsRAAALEQF/ZF+RAAAA"
@@ -170,7 +170,7 @@ GENERAL_ACTIONS = (
 # actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#General_actions_available_while_video_or_music_are_playing
 
 MEDIA_PLAYING_ACTIONS = (
-(eg.ActionGroup, "Media playing", "Media playing", None, (
+(eg.ActionGroup, "MediaPlaying", "Media playing", None, (
     ("Play", "Play", "Play the selected item (or folder of items), or unpause a paused item..", "Play"),
     ("Pause", "Pause", " Pause the currently playing item. .", "Pause"),
     ("Stop", "Stop", " Stop the currently playing item. .", "Stop"),
@@ -212,7 +212,7 @@ PLAYLIST_ACTIONS = (
 # Actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#Actions_available_only_in_Full_Screen_Video
 
 FULLSCREEN_VIDEO_ACTIONS = (
-(eg.ActionGroup, "Fullscreen video", "FullScreen Video", None, (
+(eg.ActionGroup, "FullscreenVideo", "FullScreen Video", None, (
     ("StepForward", "StepForward", "Step forward 1% in the movie..", "StepForward"),
     ("StepBack", "StepBack", "Step back 1% in the movie..", "StepBack"),
     ("BigStepForward", "BigStepForward", "Step forward 10% in the movie..", "BigStepForward"),
@@ -236,7 +236,7 @@ FULLSCREEN_VIDEO_ACTIONS = (
 # Actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#Actions_available_during_a_picture_slideshow
 
 SLIDESHOW_ACTIONS = (
-(eg.ActionGroup, "Picture slideshow", "Picture slideshow", None, (
+(eg.ActionGroup, "PictureSlideshow", "Picture slideshow", None, (
     ("NextPicture", "NextPicture", "Move to the next picture in a slideshow..", "NextPicture"),
     ("PreviousPicture", "PreviousPicture", "Move to the previous picture in a slideshow..", "PreviousPicture"),
     ("ZoomOut", "ZoomOut", "Used in picture or slideshow to zoom out of the current image..", "ZoomOut"),
@@ -258,7 +258,7 @@ SLIDESHOW_ACTIONS = (
 # Actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#Actions_available_in_screen_calibration
 
 CALIBRATION_ACTIONS = (
-(eg.ActionGroup, "Screen calibration", "Screen calibration", None, (
+(eg.ActionGroup, "ScreenCalibration", "Screen calibration", None, (
     ("NextCalibration", "NextCalibration", "Used in Video + GUI calibration.", "NextCalibration"),
     ("ResetCalibration", "ResetCalibration", "Used in Video + GUI calibration.", "ResetCalibration"),
     ("AnalogMove", "AnalogMove", "Move in the calibration screens, and while zoomed in My Pictures..", "AnalogMove"),
@@ -269,7 +269,7 @@ CALIBRATION_ACTIONS = (
 # Actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#Actions_available_in_the_File_Manager
 
 FILEMANAGER_ACTIONS = (
-(eg.ActionGroup, "File Manager", "File Manager", None, (
+(eg.ActionGroup, "FileManager", "File Manager", None, (
     ("Delete", "Delete", "Used in My Files to delete a file..", "Delete"),
     ("Copy", "Copy", "Used in My Files to copy a file..", "Copy"),
     ("Move", "Move", "Used in My Files to move a file..", "Move"),
@@ -279,7 +279,7 @@ FILEMANAGER_ACTIONS = (
 # Actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#Actions_available_in_the_on-screen_keyboard
 
 ON_SCREEN_KEYBOARD_ACTIONS = (
-(eg.ActionGroup, "On-screen keyboard", "On-screen keyboard", None, (
+(eg.ActionGroup, "On-screenKeyboard", "On-screen keyboard", None, (
     ("BackSpace", "BackSpace", "Used in the virtual keyboards to delete one letter..", "BackSpace"),
     ("Shift", "Shift", "Used in Virtual Keyboard to switch to upper or lower case letters.", "Shift"),
     ("Symbols", "Symbols", "Used in Virtual Keyboard to switch to or from symbols mode.", "Symbols"),
@@ -291,7 +291,7 @@ ON_SCREEN_KEYBOARD_ACTIONS = (
 # Actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#Actions_available_during_a_music_visualisation
 
 VISUALISATION_ACTIONS = (
-(eg.ActionGroup, "Music visualisation", "Music visualisation", None, (
+(eg.ActionGroup, "MusicVisualisation", "Music visualisation", None, (
     ("OSD", "OSD", "Toggles the OSD while playing an item..", "OSD"),
     ("ShowPreset", "ShowPreset", "Shows the current visualisation preset (milkdrop/spectrum).", "ShowPreset"),
     ("PresetList", "PresetList", "Pops up the visualisation preset list (milkdrop/spectrum).", "PresetList"),
@@ -305,7 +305,7 @@ VISUALISATION_ACTIONS = (
 )
 
 SHUTDOWN_ACTIONS = (
-(eg.ActionGroup, "Shutdown related", "Shutdown related", None, (
+(eg.ActionGroup, "ShutdownRelated", "Shutdown related", None, (
     ("Quit", "Quit XBMC", "Quit XBMC.", "Quit"),
     ("RestartApp", "Restart XBMC", "Restarts XBMC.", "RestartApp"),
     ("Reset", "Reset Computer", "Reset the computer.", "Reset"),
@@ -319,7 +319,7 @@ SHUTDOWN_ACTIONS = (
 )
 
 UNCATEGORIZED_ACTIONS = (
-(eg.ActionGroup, "Uncategorized actions", "Uncategorized actions", None, (
+(eg.ActionGroup, "UncategorizedActions", "Uncategorized actions", None, (
     ("JumpSMS2", "JumpSMS2", "JumpSMS2.", "JumpSMS2"),
     ("JumpSMS3", "JumpSMS3", "JumpSMS3.", "JumpSMS3"),
     ("JumpSMS4", "JumpSMS4", "JumpSMS4.", "JumpSMS4"),
@@ -387,8 +387,8 @@ REMOTE_BUTTONS = (
     ("RemotePause", "Pause", "", "pause"),
     ("RemoteReverse", "Reverse", "", "reverse"),
     ("RemoteForward", "Forward", "", "forward"),
-    ("RemoteSkip +", "Skip +", "", "skipplus"),
-    ("RemoteSkip -", "Skip -", "", "skipminus"),
+    ("RemoteSkipPlus", "Skip +", "", "skipplus"),
+    ("RemoteSkipMinus", "Skip -", "", "skipminus"),
     ("RemoteStop", "Stop", "", "stop"),
     ("Remote0", "0", "", "zero"),
     ("Remote1", "1", "", "one"),
@@ -407,16 +407,16 @@ REMOTE_BUTTONS = (
     ("RemoteMyVideo", "My Video", "", "myvideo"),
     ("RemoteRecord", "Record", "", "record"),
     ("RemoteStart", "Start", "", "start"),
-    ("RemoteVol +", "Vol +", "", "volumeplus"),
-    ("RemoteVol -", "Vol -", "", "volumeminus"),
+    ("RemoteVolPlus", "Vol +", "", "volumeplus"),
+    ("RemoteVolMinus", "Vol -", "", "volumeminus"),
     ("Remotechannelplus", "channelplus", "", "channelplus"),
     ("Remotechannelminus", "channelminus", "", "channelminus"),
     ("Remotepageplus", "pageplus", "", "pageplus"),
     ("Remotepageminus", "pageminus", "", "pageminus"),
     ("RemoteMute", "Mute", "", "mute"),
-    ("RemoteRecorded TV", "Recorded TV", "", "recordedtv"),
-    ("RemoteLive TV", "Live TV", "", "livetv"),
-    ("Remote*", "*", "", "star"),
+    ("RemoteRecordedTV", "Recorded TV", "", "recordedtv"),
+    ("RemoteLiveTV", "Live TV", "", "livetv"),
+    ("RemoteStar", "*", "", "star"),
     ("Remote#", "#", "", "hash"),
     ("RemoteClear", "Clear", "", "clear"),
     ("Remoteguide", "guide", "", "guide"),
@@ -558,7 +558,8 @@ class XBMC_HTTP_API:
 		try:
 			responce = urllib.urlopen('http://'+self.ip+':'+self.port+'/xbmcCmds/xbmcHttp?command='+method+'('+urllib.quote(eg.ParseString(params), ':\\')+')').readlines()
 		except IOError:
-			print 'HTTP API connection error:'+' http://'+self.ip+':'+self.port+'\n'+method+'('+urllib.quote(eg.ParseString(params), ':\\')+')'
+#			print 'HTTP API connection error:'+' http://'+self.ip+':'+self.port+'\n'+method+'('+urllib.quote(eg.ParseString(params), ':\\')+')'
+			eg.PrintError('HTTP API connection error:'+' http://'+self.ip+':'+self.port+'\n'+method+'('+urllib.quote(eg.ParseString(params), ':\\')+')')
 		else:
 			if (''.join(responce).find('<html>') != -1):
 				responce2 = {}
@@ -602,7 +603,8 @@ class XBMC_JSON_RPC:
 		try:
 			responce = urllib.urlopen('http://'+self.ip+':'+self.port+'/jsonrpc', json.dumps(self.jsoninit)).read()
 		except IOError:
-			print 'JSON-RPC connection error:'+' http://'+self.ip+':'+self.port+'\n'+json.dumps(self.jsoninit)
+#			print 'JSON-RPC connection error:'+' http://'+self.ip+':'+self.port+'\n'+json.dumps(self.jsoninit)
+			eg.PrintError('JSON-RPC connection error:'+' http://'+self.ip+':'+self.port+'\n'+json.dumps(self.jsoninit))
 		else:
 #			print responce
 			return json.loads(responce)
@@ -652,7 +654,8 @@ class SendNotification(eg.ActionClass):
 		try:
 			self.plugin.xbmc.send_notification(str(eg.ParseString(title)), str(eg.ParseString(message)))
 		except UnicodeEncodeError:
-			print "Error: ascii charecters only."
+#			print "Error: ascii charecters only."
+			eg.PrintError("Error: ascii charecters only.")
 		except:
 			raise self.Exceptions.ProgramNotRunning
 	def Configure(self, title='Hello', message='world'):
@@ -695,11 +698,12 @@ class HTTPAPI(eg.ActionClass):
 		def OnUpdate(event):
 			UpdateCommands()
 			try:
-				with open(os.path.join(os.path.abspath(os.path.split(__file__)[0]), 'httpapi.dat'), 'rb') as f:
+				with open(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2', 'httpapi.dat'), 'rb') as f:
 					import pickle
 					httpapi.Headers, httpapi.Commands = pickle.load(f)
 			except IOError:
-				print 'Failed to open: httpapi.dat'
+#				print 'Failed to open: httpapi.dat'
+				eg.PrintError('Failed to open: httpapi.dat')
 			else:
 				category = OldCategory
 				HBoxControl.Clear()
@@ -734,7 +738,7 @@ class HTTPAPI(eg.ActionClass):
 				for span in h3.getElementsByTagName("span"):
 					httpapi.Headers.append(span.childNodes[0].data)
 			Header = 0
-			for node in doc.getElementsByTagName("table")[2:8]:
+			for node in doc.getElementsByTagName("table")[3:8]:
 				for node2 in node.getElementsByTagName("tr")[1:]:
 					httpapi.Commands.append([[],[],[]])
 					node3 = node2.getElementsByTagName("td")[0]
@@ -752,13 +756,16 @@ class HTTPAPI(eg.ActionClass):
 					httpapi.Commands[Header][2].append(GetText(node2.getElementsByTagName("td")[1]).strip())
 				Header += 1
 #			import os
-			with open(os.path.join(os.path.abspath(os.path.split(__file__)[0]), 'httpapi.dat'), 'wb') as f:
+			if not os.path.exists(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2')):
+				os.makedirs(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2'))
+
+			with open(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2', 'httpapi.dat'), 'wb') as f:
 				import pickle
 				pickle.dump((httpapi.Headers, httpapi.Commands), f, 1)
 
 		import os
 		try:
-			with open(os.path.join(os.path.abspath(os.path.split(__file__)[0]), 'httpapi.dat'), 'rb') as f:
+			with open(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2', 'httpapi.dat'), 'rb') as f:
 				import pickle
 				httpapi.Headers, httpapi.Commands = pickle.load(f)
 		except IOError:
@@ -816,9 +823,11 @@ class JSONRPC(eg.ActionClass):
 					print 'Result:\n', json.dumps(responce['result'], sort_keys=True, indent=2)
 				return responce['result']
 			elif responce.has_key('error'):
-				print 'Error:\n', json.dumps(responce['error'], sort_keys=True, indent=2)
+#				print 'Error:\n', json.dumps(responce['error'], sort_keys=True, indent=2)
+				eg.PrintError('Error:\n', json.dumps(responce['error'], sort_keys=True, indent=2))
 			else:
-				print 'Got bad JSON-RPC responce', responce
+#				print 'Got bad JSON-RPC responce', responce
+				eg.PrintError('Got bad JSON-RPC responce', responce)
 		else:
 			raise self.Exceptions.ProgramNotRunning
 
@@ -833,10 +842,11 @@ class JSONRPC(eg.ActionClass):
 		def OnUpdate(event):
 			UpdateMethods()
 			try:
-				with open(os.path.join(os.path.abspath(os.path.split(__file__)[0]), 'jsonrpc.dat'), 'rb') as f:
+				with open(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2', 'jsonrpc.dat'), 'rb') as f:
 					jsonrpc.Namespaces, jsonrpc.Methods, jsonrpc.Descriptions = pickle.load(f)
 			except IOError:
-				print 'Error opening: jsonrpc.dat'
+#				print 'Error opening: jsonrpc.dat'
+				eg.PrintError('Error opening: jsonrpc.dat')
 			else:
 				HBoxControl.Clear()
 				for i in jsonrpc.Namespaces:
@@ -860,14 +870,18 @@ class JSONRPC(eg.ActionClass):
 						OldNamespace = namespace
 						jsonrpc.Methods[namespace].append(method['command'][method['command'].find('.')+1:])
 						jsonrpc.Descriptions[namespace].append(method['description'])
-					with open(os.path.join(os.path.abspath(os.path.split(__file__)[0]), 'jsonrpc.dat'), 'wb') as f:
+					if not os.path.exists(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2')):
+						os.makedirs(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2'))
+					with open(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2', 'jsonrpc.dat'), 'wb') as f:
 						pickle.dump((jsonrpc.Namespaces, jsonrpc.Methods, jsonrpc.Descriptions), f, 1)
 					return False
 				elif responce.has_key('error'):
-					print 'Error', responce['error']
+#					print 'Error', responce['error']
+					eg.PrintError('Error', responce['error'])
 					return responce['error']
 				else:
-					print 'Got bad JSON-RPC responce', responce
+#					print 'Got bad JSON-RPC responce', responce
+					eg.PrintError('Got bad JSON-RPC responce', responce)
 					return False
 			else:
 				return False
@@ -888,10 +902,11 @@ class JSONRPC(eg.ActionClass):
 
 		panel = eg.ConfigPanel()
 		try:
-			with open(os.path.join(os.path.abspath(os.path.split(__file__)[0]), 'jsonrpc.dat'), 'rb') as f:
+			with open(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2', 'jsonrpc.dat'), 'rb') as f:
 				jsonrpc.Namespaces, jsonrpc.Methods, jsonrpc.Descriptions = pickle.load(f)
 		except IOError:
-			print 'Error opening: jsonrpc.dat'
+#			print 'Error opening: jsonrpc.dat'
+			eg.PrintError('Error opening: jsonrpc.dat')
 		HBoxControl = wx.ComboBox(panel, -1, value=method[:method.find('.')], choices=jsonrpc.Namespaces, style=wx.CB_READONLY)
 		comboBoxControl = wx.ComboBox(panel, -1, value=method[method.find('.')+1:], choices=jsonrpc.Methods[jsonrpc.Namespaces[HBoxControl.GetSelection()]] , style=wx.CB_READONLY)
 		textControl2 = wx.TextCtrl(panel, -1, param, size=(500, -1))
@@ -934,7 +949,7 @@ class JSONRPC(eg.ActionClass):
 
 # And now we define the actual plugin:
 
-class XBMC(eg.PluginClass):
+class XBMC2(eg.PluginClass):
     def __init__(self):
 #        self.ip = "127.0.0.1"
 #        self.port = port
