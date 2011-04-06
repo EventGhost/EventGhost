@@ -1,4 +1,4 @@
-version="0.2.12"
+version="0.2.13"
 
 # plugins/RadioSure/__init__.py
 #
@@ -22,6 +22,8 @@ version="0.2.12"
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.13 by Pako 2011-04-06 11:07 UTC+1
+#     - Bug fix - bad name of language file
 # 0.2.12 by Pako 2011-04-05 17:38 UTC+1
 #     - Added first version of Favorites manager
 #     - Added "menu browser"
@@ -3945,12 +3947,14 @@ class RadioSure(eg.PluginBase):
         xmltoparse = u'%s\\RadioSure.xml' % self.xmlpath
         xmltoparse = xmltoparse.encode(FSE) if isinstance(xmltoparse, unicode) else xmltoparse
         xmldoc = miniDom.parse(xmltoparse)
-        language = xmldoc.getElementsByTagName('Language')
-        if language:
-            langFile = abspath(join(self.RadioSurePath+"\\Lang", language[0].firstChild.data))
-            langFile = langFile.encode(FSE) if isinstance(langFile, unicode) else langFile
-            language = miniDom.parse(langFile)
-        return language
+        general = xmldoc.getElementsByTagName('General')
+        if general: #NOTE: don't use general[0].getElementsByTagName('Language') !!!!!!!!!!!!!!
+            langNodes = [node for node in general[0].childNodes if node.localName =="Language"]
+            if langNodes:
+                langFile = abspath(join(self.RadioSurePath+"\\Lang", langNodes[0].firstChild.data))
+                langFile = langFile.encode(FSE) if isinstance(langFile, unicode) else langFile
+                languageXml = miniDom.parse(langFile)
+                return languageXml
 
 
     def GetOneInstance(self):
