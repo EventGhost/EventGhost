@@ -1,6 +1,6 @@
 ﻿# plugins/OSM/__init__.py
 #
-# Copyright (C)  2009 Pako  (lubos.ruckl@quick.cz)
+# Copyright (C)  2009-2011 Pako  (lubos.ruckl@quick.cz)
 #
 # This file is a plugin for EventGhost.
 #
@@ -18,13 +18,17 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2010-03-10 18:46 GMT+1
-
+# Changelog (in reverse chronological order):
+# -------------------------------------------
+# 0.2.3  by Pako 2011-04-11 13:41 UTC+1
+#        - Added some missing strings
+# 0.2.2  by Pako 2010-03-10 18:46 GMT+1
+#===============================================================================
 
 eg.RegisterPlugin(
     name = "OS Menu",
     author = "Pako",
-    version = "0.2.2",
+    version = "0.2.3",
     kind = "other",
     guid = "{FCF3C7A7-FBC1-444D-B768-9477521946DC}",
     description = u"""<rst>
@@ -372,7 +376,7 @@ class ShowMenu(eg.ActionClass):
         foreSel,
         backSel,
     ):
-        res=self.text.showMenu+' '
+        res = self.name+': '
         for n in range(0,min(3,len(choices))):
             res=res+choices[n][0]+', '
         res = res[:-2]
@@ -1038,6 +1042,9 @@ class CreateMenuFromList(eg.ActionClass):
 #===============================================================================
 
 class MoveCursor(eg.ActionClass):
+
+    class text:
+        step = "Step (1 - 25):"
 
     def __call__(self, step = 1):
         if self.plugin.menuDlg:
