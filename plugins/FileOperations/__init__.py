@@ -1,6 +1,6 @@
-version="0.1.6" 
+version="0.1.7" 
 # This file is part of EventGhost.
-# Copyright (C)  2008-2010 Pako  (lubos.ruckl@quick.cz)
+# Copyright (C)  2008-2011 Pako  (lubos.ruckl@quick.cz)
 # 
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,7 +16,12 @@ version="0.1.6"
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2010-04-15 15:27 GMT+1
+# Changelog (in reverse chronological order):
+# -------------------------------------------
+# 0.1.7  by Pako 2011-04-11 08:33 UTC+1
+#        - added eg.ParseString for some inputs
+# 0.1.6  by Pako 2010-04-15 15:27 GMT+1
+#===============================================================================
 
 eg.RegisterPlugin(
     name = "File Operations",
@@ -80,7 +85,7 @@ class ObservationThread(Thread):
         self.direction = stp[6]
         self.lines = stp[7]
         self.period = stp[8]
-        self.evtName = stp[9]
+        self.evtName = eg.ParseString(stp[9])
         self.trigger = stp[10]
         self.oldData = None
         Thread.__init__(self, name = self.evtName.encode('unicode_escape')+'_Thread')
@@ -176,7 +181,7 @@ class FileOperations(eg.PluginClass):
         self,
         stp,
     ):
-        observName = stp[9]
+        observName = eg.ParseString(stp[9])
         if observName in self.observThreads:
             ot = self.observThreads[observName]
             if ot.isAlive():
@@ -560,6 +565,7 @@ class AbortPeriodicalRead(eg.ActionClass):
     description = "Aborts periodical reading of text from selected file."
         
     def __call__(self, observName='', file = ''):
+        observName = eg.ParseString(observName)
         self.plugin.AbortObservation(observName)
     
     def GetLabel(self, observName, file):
@@ -889,6 +895,7 @@ class Write(eg.ActionClass):
         cr = '\r\n' if mode == 2 else ''        
         errorList = ('strict','ignore','replace')
         string = eg.ParseString(string)
+        fileName = eg.ParseString(fileName)
         if hex:
             if outPage != 'unicode_internal':
                 string = string.encode(outPage,errorList[errEncMode])
