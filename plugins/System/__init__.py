@@ -241,7 +241,7 @@ class System(eg.PluginBase):
 
             def GetMute2(self, deviceId=0):
                 return vistaVolumeDll.GetMute()
-               
+
             def SetMasterVolume2(self, value, deviceId=0):
                 vistaVolumeDll.SetMasterVolume(value / 100.0)
                 return vistaVolumeDll.GetMasterVolume() * 100.0
@@ -844,15 +844,15 @@ class ToggleMute(eg.ActionBase):
 class GetMute(eg.ActionBase):
     name = "Get Mute Status"
     iconFile = "icons/SoundCard"
-    
+
     def __call__(self, deviceId=0):
         return SoundMixer.GetMute(deviceId)
 
 
     def GetLabel(self, *args):
         return self.text.name
-         
-        
+
+
     def Configure(self, deviceId=0):
         panel = eg.ConfigPanel()
         deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
