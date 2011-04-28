@@ -13,6 +13,11 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Changelog (in reverse chronological order):
+# -------------------------------------------
+# by Pako 2011-04-28 15:22 UTC+1
+#     - Added option "Stop macro if target found"
 
 import eg
 import wx
@@ -191,7 +196,11 @@ class FindWindow(eg.ActionBase):
         def OnSearchOnlyFrontmostCheckbox(event):
             flag = not cbOnlyFrontmost.IsChecked()
             cbIncludeInvisible.Enable(flag)
-            stopMacroCtrl.Enable(flag)
+            if not flag:
+                stopMacroCtrl_1.SetValue(False)
+                stopMacroCtrl_2.SetValue(False)            
+            stopMacroCtrl_1.Enable(flag)
+            stopMacroCtrl_2.Enable(flag)
             waitCtrl.Enable(flag)
             for checkBox, textCtrl in self.options[:-1]:
                 checkBox.Enable(flag)
@@ -212,9 +221,35 @@ class FindWindow(eg.ActionBase):
         cbIncludeInvisible.Bind(wx.EVT_CHECKBOX, OnIncludeInvisibleCheckbox)
 
         # the stop-macro choice
-        stopMacroCtrl = wx.CheckBox(panel, -1, text.stopMacro[0])
-        if stop != 2:
-            stopMacroCtrl.SetValue(True)
+        id_1 = wx.NewId()
+        stopMacroCtrl_1 = wx.CheckBox(panel, id_1, text.stopMacro[0])
+        id_2 = wx.NewId()
+        stopMacroCtrl_2 = wx.CheckBox(panel, id_2, text.stopMacro[1])
+
+        if stop == STOP_IF_NOT_FOUND:
+            stopMacroCtrl_1.SetValue(True)
+            stopMacroCtrl_2.Enable(False)
+        elif stop == STOP_IF_FOUND:
+            stopMacroCtrl_2.SetValue(True)
+            stopMacroCtrl_1.Enable(False)
+
+        def OnStopMacroCtrl(event):
+           # if cbOnlyFrontmost.IsChecked():
+            id = event.GetId()
+            flag = event.IsChecked()
+            if id == id_1:
+                stopMacroCtrl_2.Enable(not flag)
+                if flag:
+                    stopMacroCtrl_2.SetValue(False)
+            else:
+                stopMacroCtrl_1.Enable(not flag)
+                if flag:
+                    stopMacroCtrl_1.SetValue(False)
+            event.Skip()
+        stopMacroCtrl_1.Bind(wx.EVT_CHECKBOX, OnStopMacroCtrl)
+        stopMacroCtrl_2.Bind(wx.EVT_CHECKBOX, OnStopMacroCtrl)
+
+
 
         finderTool = eg.WindowDragFinder(
             panel,
@@ -253,7 +288,8 @@ class FindWindow(eg.ActionBase):
         leftTopSizer = wx.BoxSizer(wx.VERTICAL)
         leftTopSizer.Add(cbOnlyFrontmost, 0, wx.BOTTOM, 5)
         leftTopSizer.Add(cbIncludeInvisible, 0, wx.BOTTOM, 5)
-        leftTopSizer.Add(stopMacroCtrl, 0, wx.BOTTOM, 5)
+        leftTopSizer.Add(stopMacroCtrl_1, 0, wx.BOTTOM, 5)
+        leftTopSizer.Add(stopMacroCtrl_2, 0, wx.BOTTOM, 5)
 
         topSizer = wx.BoxSizer(wx.HORIZONTAL)
         topSizer.Add(leftTopSizer, 1, wx.EXPAND)
@@ -361,8 +397,10 @@ class FindWindow(eg.ActionBase):
                     resultList.append(textCtrl.GetValue())
             resultList.append(self.tree.includeInvisible)
             resultList.append(waitCtrl.GetValue())
-            if stopMacroCtrl.IsChecked():
+            if stopMacroCtrl_1.IsChecked():
                 resultList.append(STOP_IF_NOT_FOUND)
+            elif stopMacroCtrl_2.IsChecked():
+                resultList.append(STOP_IF_FOUND)
             else:
                 resultList.append(STOP_NEVER)
             return resultList
