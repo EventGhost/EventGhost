@@ -1,4 +1,4 @@
-version="0.2.4" 
+version="0.2.5" 
 
 # plugins/IrfanView/__init__.py
 #
@@ -19,7 +19,12 @@ version="0.2.4"
 # You should have received a copy of the GNU General Public License
 # along width EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
+#
+# Changelog (in reverse chronological order):
+# -------------------------------------------
+# 0.2.5 by Pako 2011-04-28 13:31 UTC+1
+#     - Now can be file i_view32.ini also in RoamingAppData+"\\IrfanView\\"
+#     - Added actions Scroll right and Scroll left
 
 eg.RegisterPlugin(
     name = "IrfanView",
@@ -92,6 +97,8 @@ Actions =((#Tuple 0 - most important actions
     ("OpenDialog","Show open dialog","Show open dialog.",u'{O}'),
     ("ShowNextPgOrFile","Show next page OR file","Show next page in a multipage image OR load next file in directory.",u'{Ctrl+PgDown}'),
     ("ShowPrevPgOrFile","Show previous page OR file","Show previous page in a multipage image OR load previous file in directory.",u'{Ctrl+PgUp}'),
+    ("ScrollRight","Scroll right","Scroll image right OR next image in directory.",u'{Right}'),
+    ("ScrollLeft","Scroll left","Scroll image left OR previous image in directory.",u'{Left}'),
     ("LoadFirstFile","First file in directory","Load first file in the directory.",u'{Ctrl+Home}'),
     ("LoadLastFile","Last file in directory","Load last file in the directory.",u'{Ctrl+End}'),
     ("CloseActualWindow","Close actual window","Close actual window (main window, slideshow, full screen,thumbnails or a dialog).",u'{Esc}'),
@@ -470,7 +477,12 @@ class RunSlideshow(eg.ActionClass):
         head, tail = os.path.split(self.plugin.IrfanViewPath)            
         cp = SafeConfigParser()
         cp.optionxform = str #Case sensitive !
-        cp.read(head+"\\i_view32.ini")        
+        cp.read(head+"\\i_view32.ini")
+        if cp.has_option('Others','INI_Folder'): 
+            INI_Folder = cp.get('Others','INI_Folder',True)
+            if INI_Folder == '%APPDATA%\\IrfanView':
+                INI_Folder = eg.folderPath.RoamingAppData+"\\IrfanView\\"
+            cp.read(INI_Folder+"\\i_view32.ini")
         sec="Slideshow"
         if not cp.has_section(sec):
             cp.add_section(sec)
@@ -495,6 +507,8 @@ class RunSlideshow(eg.ActionClass):
         cp.set(sec, "ShowFullScreen", str(options["fit_"]))
         cp.set(sec, "FSResample", str(int(options["resample_"])))
         cp.set(sec, "FSAlpha", str(int(options["alpha_"])))
+        if cp.has_option('Others','INI_Folder'): 
+            cp.remove_option('Others','INI_Folder')
         fp = open(eg.folderPath.RoamingAppData+"\\EventGhost\\i_view32.ini",'wb') 
         cp.write(fp) 
         fp.close()
@@ -517,7 +531,7 @@ class RunSlideshow(eg.ActionClass):
     def GetLabel(self, kwargs):
         options = self.defaults.copy()
         options.update(kwargs)
-        return self.text.runslideshow+options["label_"]
+        return self.text.runslideshow+":"+options["label_"]
         
     def Configure(self, kwargs={}):
         options = self.defaults.copy()
@@ -921,6 +935,11 @@ class RunWithOptions(eg.ActionClass):
         cp = SafeConfigParser()
         cp.optionxform = str #Case sensitive !
         cp.read(head+"\\i_view32.ini")        
+        if cp.has_option('Others','INI_Folder'): 
+            INI_Folder = cp.get('Others','INI_Folder',True)
+            if INI_Folder == '%APPDATA%\\IrfanView':
+                INI_Folder = eg.folderPath.RoamingAppData+"\\IrfanView\\"
+            cp.read(INI_Folder+"\\i_view32.ini")
         sec="WinPosition"
         if not cp.has_section(sec):
             cp.add_section(sec)
@@ -943,11 +962,13 @@ class RunWithOptions(eg.ActionClass):
         cp.set(sec, "ShowFullScreen", str(options["fullMode_"]))
         if len(options["mask_"])>0:
             cp.set(sec, "FullText", options["mask_"])
+        if cp.has_option('Others','INI_Folder'): 
+            cp.remove_option('Others','INI_Folder')
         fp = open(eg.folderPath.RoamingAppData+"\\EventGhost\\i_view32.ini",'wb') 
         cp.write(fp) 
         fp.close()
         params=options["filepath_"]+' /hide='+str(8*options["caption_"]\
-            +4*options["menuBar_"]+2*options["toolBar_"]+options["statusBar_"])
+            +4*options["menuBar_"]+2*options["statusBar_"]+options["toolBar_"])
         params+=' /ini="'+eg.folderPath.RoamingAppData+'\\EventGhost\\" /pos=('\
             +str(options["xCoord_"])+','+str(options["yCoord_"])+')'
         if len(options["lineOpt_"])>0:
@@ -968,7 +989,7 @@ class RunWithOptions(eg.ActionClass):
     def GetLabel(self, kwargs):
         options = self.defaults.copy()
         options.update(kwargs)
-        return self.text.runwithoption+options["label_"]
+        return self.text.runwithoption+":"+options["label_"]
         
     def Configure(self, kwargs={}):
         options = self.defaults.copy()
