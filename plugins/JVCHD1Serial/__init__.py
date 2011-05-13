@@ -22,6 +22,7 @@ eg.RegisterPlugin(
     kind = "external",
     author = "Oliver Wagner",
     version = "1.0.0",
+    guid = "{A35CC4DC-BC72-4EF8-BC8E-27F88A2686D4}",
     canMultiLoad = True,
     createMacrosOnAdd = True,
     url = "http://www.eventghost.net/forum/viewtopic.php?t=650",

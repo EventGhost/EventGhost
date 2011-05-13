@@ -16,6 +16,7 @@
 
 import os
 from os.path import join, splitext
+import pysvn
 import builder
 
 HEADER = """# -*- coding: utf-8 -*-
@@ -87,6 +88,7 @@ class CheckSources(builder.Task):
         for plugin in PLUGINS:
             searchDirs.append(join(sourceDir, "plugins", plugin))
         serialDir = join(sourceDir, "eg", "WinApi", "serial")
+        client = pysvn.Client()
         for searchDir in searchDirs:
             for root, dirs, files in os.walk(searchDir):
                 for filename in files:
@@ -94,9 +96,13 @@ class CheckSources(builder.Task):
                         path = join(root, filename)
                         if path.startswith(serialDir):
                             continue
-                        self.FixTrailingWhitespace(path)
                         self.CheckHeader(path)
                         self.CheckLineLength(path)
+                        # don't fix files that are versioned but haven't changed
+                        status = client.status(path, ignore=True)[0]
+                        if status.text_status == pysvn.wc_status_kind.normal:
+                            continue
+                        self.FixTrailingWhitespace(path)
 
 
     def FixTrailingWhitespace(self, path):

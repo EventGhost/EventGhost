@@ -1,8 +1,9 @@
 eg.RegisterPlugin(
     name = "SageTV",
     author = "Bitmonster",
-    version = "1.2." + "$LastChangedRevision$".split()[1],
+    version = "1.2." + "$LastChangedRevision: 1093 $".split()[1],
     kind = "program",
+    guid = "{654FC50A-3052-42F7-AE26-84A752FFDCA6}",
     createMacrosOnAdd = True,
     url = "http://www.eventghost.net/forum/viewtopic.php?t=795",
     description = (

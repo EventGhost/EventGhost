@@ -1,24 +1,23 @@
-# This file is part of EventGhost.
-# Copyright (C) 2007 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# -*- coding: utf-8 -*-
+#
+# This file is a plugin for EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 #
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# $LastChangedDate: 2009-11-30 17:36:52 +0100 (po, 30 11 2009) $
+# $LastChangedRevision: 1246 $
+# $LastChangedBy: Bitmonster $
 
 import eg
 
@@ -26,13 +25,13 @@ eg.RegisterPlugin(
     name="FHZ 1000 PC",
     kind="external",
     author="Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],    
+    guid="{463CB248-A4CB-4EF0-B1FE-F35895A2D4F2}",
+    version = "1.0." + "$LastChangedRevision: 1246 $".split()[1],    
 )
 
 import wx
 import time
 import os
-from functools import partial
 import wx.lib.masked as masked
 from eg.WinApi.Dynamic import (
     byref, 
@@ -216,7 +215,7 @@ class Fhz1000Pc(eg.PluginBase):
         """
         data = self.GetTimeData()
         for i in range(repeats):
-            eg.actionThread.CallWait(partial(self.WriteFhzNoWait, *data))
+            eg.actionThread.Func(self.WriteFhzNoWait)(*data)
         self.nextTaskTime += 60.0
         self.timeTask = eg.scheduler.AddTaskAbsolute(
             self.nextTaskTime, 

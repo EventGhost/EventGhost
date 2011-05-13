@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 class TreePosition:
     """
@@ -33,40 +27,25 @@ class TreePosition:
 
     def __init__(self, item):
         self.root = item.root
-        parent = item.parent
-        if parent is None:
-            self.GetItem = self.GetRootItem
-            return
-        self.path = parent.GetPath()
-        pos = parent.childs.index(item)
-        if pos + 1 >= len(parent.childs):
-            pos = -1
-        self.pos = pos
-
-
-    def GetRootItem(self):
-        return self.root
+        self.path = item.GetPath()
 
 
     def GetItem(self):
         """
         Returns the item this TreePosition is pointing to.
         """
-        searchParent = self.root
-        for parentPos in self.path:
-            searchParent = searchParent.childs[parentPos]
-        return searchParent.childs[self.pos]
+        item = self.root
+        for pos in self.path:
+            item = item.childs[pos]
+        return item
 
 
-    def GetPosition(self):
+    def GetParentAndPosition(self):
         """
         Return the parent item and the index inside the parents childs.
-
-        If the item is the last in the parents childs it will return -1 as
-        index.
         """
-        searchParent = self.root
-        for parentPos in self.path:
-            searchParent = searchParent.childs[parentPos]
-        return searchParent, self.pos
+        parent = self.root
+        for pos in self.path[:-1]:
+            parent = parent.childs[pos]
+        return parent, self.path[-1]
 

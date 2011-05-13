@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2007 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
 :var gImageList: The global wx.ImageList of the module.
@@ -31,8 +25,9 @@ from os.path import abspath, dirname, join
 from base64 import b64decode
 from cStringIO import StringIO
 import Image
+import eg
 
-IMAGES_PATH = abspath(join(dirname(__file__), "..", "images"))
+IMAGES_PATH = eg.imagesDir
 
 gImageList = wx.ImageList(16, 16)
 DISABLED_PIL = Image.open(join(IMAGES_PATH, "disabled.png"))
@@ -65,7 +60,7 @@ def GetInternalBitmap(name):
 
 
 def GetInternalImage(name):
-    return wx.Image(join(eg.IMAGES_DIR, name + ".png"), wx.BITMAP_TYPE_PNG)
+    return wx.Image(join(eg.imagesDir, name + ".png"), wx.BITMAP_TYPE_PNG)
 
 
 def CreateBitmapOnTopOfIcon(foregroundIcon, backgroundIcon, size=(12, 12)):
@@ -100,6 +95,10 @@ class IconBase(object):
         cls.cache[key] = self
         self.key = key
         return self
+
+
+    def __getnewargs__(self):
+        return (self.key,)
 
 
     def _GetPil(self):

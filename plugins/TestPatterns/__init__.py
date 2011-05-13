@@ -1,32 +1,27 @@
-# This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# -*- coding: utf-8 -*-
+#
+# This file is a plugin for EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 
 eg.RegisterPlugin(
     name = "Test Pattern",
     author = "Bitmonster",
-    version = "0.1." + "$LastChangedRevision$".split()[1],
+    version = "0.1",
     description = "Plugin to show some test patterns.",
+    guid = "{17BC05D0-C600-4244-ABB1-02C1DA6229A0}",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAV0lEQVR42mNkoBAwgogD"
         "Bw78B9H29g5Qwf/I0gz/GVH5SPKMowaMGkA9A4BK/qNogCpgZECXhvCBFoJpBwcHmAEH"
@@ -50,7 +45,7 @@ class Text:
     display = "Display:"
     aspectRatio = "Aspect ratio:"
     aspectRatios = [
-        "1:1 Pixelmapping", 
+        "1:1 Pixelmapping",
         "4:3 Frame",
         "16:9 Frame",
         "4:3 ITU-R BT.601 PAL",
@@ -73,7 +68,7 @@ class Text:
     lineSize = "Line Size:"
     radius1 = "Radius:"
     radius2 = "% (0=fill entire screen)"
-    
+
 
 #FOCUS_PATTERN = b64decode(
 #    "iVBORw0KGgoAAAANSUhEUgAAACgAAAAoAQMAAAC2MCouAAAABlBMVEUAAAD///+l2Z/d"
@@ -86,8 +81,8 @@ FOCUS_PATTERN = b64decode(
     "AAAAZElEQVR4nGNgAIP6fwz2/6FkAhODAjNDftX39dUMmV5TVnpDyfxf/9f/Zkh0ElF0"
     "hrJRZMHqIXrr/wMBAwOQzcDADxSvYOAEqvGAkvxAvT8YGIHmOEDZKLJg9RC9EHOo4B6E"
     "7wDEgFt9VLehNwAAAABJRU5ErkJggg=="
-)        
-        
+)
+
 FOCUS_IMAGE = wx.ImageFromStream(cStringIO.StringIO(FOCUS_PATTERN))
 
 ASPECT_RATIOS = [
@@ -101,10 +96,12 @@ ASPECT_RATIOS = [
 
 
 class DrawingFrame(wx.Frame):
-    
+
     def __init__(self, parent=None):
         wx.Frame.__init__(
-            self, parent, -1, style=wx.NO_BORDER|wx.FRAME_NO_TASKBAR|wx.CLIP_CHILDREN
+            self,
+            parent,
+            style=wx.NO_BORDER|wx.FRAME_NO_TASKBAR|wx.CLIP_CHILDREN
         )
         self.drawing = None
         self.displayNum = 0
@@ -114,14 +111,14 @@ class DrawingFrame(wx.Frame):
         self.Bind(wx.EVT_MOTION, self.ShowCursor)
         self.timer = None
         self.SetBackgroundColour((0, 0, 0))
-        
-        
+
+
     def OnChar(self, event):
         if event.GetKeyCode() == wx.WXK_ESCAPE:
             wx.Frame.Show(self, False)
         event.Skip()
-            
-        
+
+
     def OnPaint(self, event=None):
         wx.BufferedPaintDC(self, self._buffer)
 
@@ -141,8 +138,8 @@ class DrawingFrame(wx.Frame):
 
     def LeftDblClick(self, event):
         wx.Frame.Show(self, False)
-    
-    
+
+
     def ShowCursor(self, event):
         self.SetCursor(wx.NullCursor)
         if self.timer:
@@ -150,8 +147,8 @@ class DrawingFrame(wx.Frame):
         self.timer = Timer(2.0, self.HideCursor)
         self.timer.start()
         event.Skip()
-        
-        
+
+
     def HideCursor(self):
         wx.CallAfter(self.SetCursor, wx.StockCursor(wx.CURSOR_BLANK))
 
@@ -159,7 +156,7 @@ class DrawingFrame(wx.Frame):
 
 class TestPatterns(eg.PluginBase):
     text = Text
-    
+
     def __init__(self):
         self.frame = DrawingFrame(None)
         self.AddAction(SetDisplay)
@@ -186,47 +183,47 @@ class TestPatterns(eg.PluginBase):
 
 
 class TestPatternAction(eg.ActionBase):
-    
+
     def __call__(self, *args):
         self.plugin.frame.SetDrawing(self.Draw, args)
-        
-        
+
+
     def Draw(self, *args):
         raise NotImplemented
-    
-    
+
+
     def GetLabel(self, *dummyArgs):
         return self.name
-        
 
 
-class SetDisplay(eg.ActionBase):      
+
+class SetDisplay(eg.ActionBase):
     name = "Set Display"
-    
+
     def __call__(self, display=0):
         self.plugin.frame.displayNum = display
-        
-        
+
+
     def GetLabel(self, display=0):
         return self.name + ": %d" % (display + 1)
-        
-    
+
+
     def Configure(self, display=0):
         panel = eg.ConfigPanel()
         displayChoice = panel.DisplayChoice(display)
         panel.AddLine(self.plugin.text.display, displayChoice)
         while panel.Affirmed():
             panel.SetResult(displayChoice.GetValue())
-        
+
 
 
 class Focus(TestPatternAction):
-        
+
     def Draw(
-        self, 
+        self,
         dc,
-        foregroundColour, 
-        backgroundColour, 
+        foregroundColour,
+        backgroundColour,
         display=0, # deprecated
     ):
         image = FOCUS_IMAGE.Copy()
@@ -234,7 +231,7 @@ class Focus(TestPatternAction):
         bmp = wx.BitmapFromImage(image, 1)
         bmpWidth, bmpHeight = bmp.GetSize()
         #bmp.SetMask(None)
-        
+
         mdc = wx.MemoryDC()
         bmp2 = wx.EmptyBitmap(bmpWidth, bmpHeight, 1)
         mdc.SelectObject(bmp2)
@@ -243,7 +240,7 @@ class Focus(TestPatternAction):
         mdc.DrawBitmap(bmp, 0, 0, False)
         mdc.SelectObject(wx.NullBitmap)
         bmp = bmp2
-        
+
         dc.SetTextForeground(backgroundColour)
         dc.SetTextBackground(foregroundColour)
         w, h = dc.GetSizeTuple()
@@ -252,39 +249,39 @@ class Focus(TestPatternAction):
         for x in range(-startX, w, bmpWidth):
             for y in range(-startY, h, bmpHeight):
                 dc.DrawBitmap(bmp, x, y, False)
-    
-    
+
+
     def Configure(
-        self, 
-        foregroundColour=(255, 255, 255), 
+        self,
+        foregroundColour=(255, 255, 255),
         backgroundColour=(0, 0, 0),
         display=0, #deprecated
     ):
         text = self.plugin.text
         panel = eg.ConfigPanel()
-        foregroundColourCtrl = panel.ColourSelectButton(foregroundColour)       
+        foregroundColourCtrl = panel.ColourSelectButton(foregroundColour)
         backgroundColourCtrl = panel.ColourSelectButton(backgroundColour)
-        
+
         panel.AddLine(text.foregroundColour, foregroundColourCtrl)
         panel.AddLine(text.backgroundColour, backgroundColourCtrl)
-        
+
         while panel.Affirmed():
             panel.SetResult(
-                foregroundColourCtrl.GetValue(), 
-                backgroundColourCtrl.GetValue(), 
+                foregroundColourCtrl.GetValue(),
+                backgroundColourCtrl.GetValue(),
             )
-        
-            
-    
+
+
+
 class IreWindow(TestPatternAction):
     name = "IRE Window"
-    
+
     def Draw(
-        self, 
+        self,
         dc,
-        foregroundColour, 
-        backgroundColour, 
-        coverage, 
+        foregroundColour,
+        backgroundColour,
+        coverage,
         aspectRatio=0,
         display=0, # deprecated
     ):
@@ -298,11 +295,11 @@ class IreWindow(TestPatternAction):
         area = (w * h) * coverage / 100
         width = height = sqrt(area)
         dc.DrawRectangle((w - width) / 2, (h - height) / 2, width, height)
-    
-    
+
+
     def Configure(
-        self, 
-        foregroundColour=(255, 255, 255), 
+        self,
+        foregroundColour=(255, 255, 255),
         backgroundColour=(0, 0, 0),
         coverage=25.0,
         aspectRatio=0,
@@ -310,7 +307,7 @@ class IreWindow(TestPatternAction):
     ):
         text = self.plugin.text
         panel = eg.ConfigPanel()
-        
+
         foregroundColourCtrl = panel.ColourSelectButton(foregroundColour)
         backgroundColourCtrl = panel.ColourSelectButton(backgroundColour)
         coverageCtrl = panel.SpinNumCtrl(coverage, min=0, max=100)
@@ -320,25 +317,25 @@ class IreWindow(TestPatternAction):
         panel.AddLine(text.backgroundColour, backgroundColourCtrl)
         panel.AddLine(text.coverage, coverageCtrl)
         panel.AddLine(text.aspectRatio, aspectChoice)
-        
+
         while panel.Affirmed():
             panel.SetResult(
-                foregroundColourCtrl.GetValue(), 
-                backgroundColourCtrl.GetValue(), 
+                foregroundColourCtrl.GetValue(),
+                backgroundColourCtrl.GetValue(),
                 coverageCtrl.GetValue(),
                 aspectChoice.GetValue(),
             )
-        
-        
-        
+
+
+
 class Checkerboard(TestPatternAction):
-    
+
     def Draw(
-        self, 
+        self,
         dc,
-        foregroundColour=(255, 255, 255), 
+        foregroundColour=(255, 255, 255),
         backgroundColour=(0, 0, 0),
-        hCount=4, 
+        hCount=4,
         vCount=4,
         display=0, #deprecated
     ):
@@ -356,18 +353,18 @@ class Checkerboard(TestPatternAction):
                 ypos1 = int(round(height * y))
                 ypos2 = int(round(height * (y + 1)))
                 dc.DrawRectangle(
-                    xpos1, 
-                    ypos1, 
-                    xpos2 - xpos1, 
+                    xpos1,
+                    ypos1,
+                    xpos2 - xpos1,
                     ypos2 - ypos1
                 )
-    
-    
+
+
     def Configure(
-        self, 
-        foregroundColour=(255, 255, 255), 
+        self,
+        foregroundColour=(255, 255, 255),
         backgroundColour=(0, 0, 0),
-        hCount=4, 
+        hCount=4,
         vCount=4,
         display=0, #deprecated
     ):
@@ -382,11 +379,11 @@ class Checkerboard(TestPatternAction):
         panel.AddLine(text.backgroundColour, backgroundColourCtrl)
         panel.AddLine(text.numHorizontalElements, hCountCtrl)
         panel.AddLine(text.numVerticalElements, vCountCtrl)
-        
+
         while panel.Affirmed():
             panel.SetResult(
-                foregroundColourCtrl.GetValue(), 
-                backgroundColourCtrl.GetValue(), 
+                foregroundColourCtrl.GetValue(),
+                backgroundColourCtrl.GetValue(),
                 hCountCtrl.GetValue(),
                 vCountCtrl.GetValue(),
             )
@@ -394,13 +391,13 @@ class Checkerboard(TestPatternAction):
 
 
 class Grid(TestPatternAction):
-    
+
     def Draw(
-        self, 
+        self,
         dc,
         foregroundColour=(255, 255, 255),
         backgroundColour=(0, 0, 0),
-        hCount=4, 
+        hCount=4,
         vCount=4,
         display=0, # deprecated
     ):
@@ -423,13 +420,13 @@ class Grid(TestPatternAction):
         dc.DrawLine(w, 0, w, h)
         dc.DrawLine(0, 0, w, 0)
         dc.DrawLine(0, h, w, h)
-    
-    
+
+
     def Configure(
-        self, 
-        foregroundColour=(255, 255, 255), 
+        self,
+        foregroundColour=(255, 255, 255),
         backgroundColour=(0, 0, 0),
-        hCount=16, 
+        hCount=16,
         vCount=9,
         display=0, # deprecated
     ):
@@ -445,25 +442,25 @@ class Grid(TestPatternAction):
         panel.AddLine(text.backgroundColour, backgroundColourCtrl)
         panel.AddLine(text.numHorizontalElements, hCountCtrl)
         panel.AddLine(text.numVerticalElements, vCountCtrl)
-        
+
         while panel.Affirmed():
             panel.SetResult(
-                foregroundColourCtrl.GetValue(), 
-                backgroundColourCtrl.GetValue(), 
+                foregroundColourCtrl.GetValue(),
+                backgroundColourCtrl.GetValue(),
                 hCountCtrl.GetValue(),
                 vCountCtrl.GetValue(),
             )
 
-        
-        
+
+
 class Dots(TestPatternAction):
-    
+
     def Draw(
-        self, 
+        self,
         dc,
         foregroundColour=(255, 255, 255),
         backgroundColour=(0, 0, 0),
-        hCount=4, 
+        hCount=4,
         vCount=4,
         diameter=1,
         antialiasing=False
@@ -494,17 +491,17 @@ class Dots(TestPatternAction):
         else:
             yOffset = -1
             height = (h - diameter) / (vCount - 1)
-            
+
         for y in range(vCount):
             for x in range(hCount):
                 gc.DrawEllipse(x * width + xOffset, y * height + yOffset, d, d)
-                
-    
+
+
     def Configure(
-        self, 
-        foregroundColour=(255,255,255), 
+        self,
+        foregroundColour=(255,255,255),
         backgroundColour=(0,0,0),
-        hCount=16, 
+        hCount=16,
         vCount=9,
         diameter=1,
         antialiasing=False
@@ -525,25 +522,25 @@ class Dots(TestPatternAction):
         panel.AddLine(text.numVerticalElements, vCountCtrl)
         panel.AddLine(text.dotDiameter, diameterCtrl)
         panel.AddLine(anialiasingCtrl)
-        
+
         while panel.Affirmed():
             panel.SetResult(
-                foregroundColourCtrl.GetValue(), 
-                backgroundColourCtrl.GetValue(), 
+                foregroundColourCtrl.GetValue(),
+                backgroundColourCtrl.GetValue(),
                 hCountCtrl.GetValue(),
                 vCountCtrl.GetValue(),
                 diameterCtrl.GetValue(),
                 anialiasingCtrl.GetValue(),
             )
 
-        
+
 class ZonePlate(TestPatternAction):
-    
+
     def Draw(self, dc, scale=128):
         dc.Clear()
         width, height = dc.GetSizeTuple()
         sineTab = [
-            int(127.5 * sin(math.pi * (i - 127.5) / 127.5) + 127.5) 
+            int(127.5 * sin(math.pi * (i - 127.5) / 127.5) + 127.5)
             for i in range(256)
         ]
         cx = width / 2
@@ -563,25 +560,25 @@ class ZonePlate(TestPatternAction):
             y += 1
             pixels.MoveTo(pixelData, 0, y + cy)
         dc.DrawBitmap(bmp, 0, 0, False)
-           
-                
+
+
     def Configure(self, scale=128):
         panel = eg.ConfigPanel()
         scaleCtrl = panel.SpinIntCtrl(scale, min=0)
         panel.AddLine("Scale:", scaleCtrl)
         while panel.Affirmed():
             panel.SetResult(scaleCtrl.GetValue())
-        
-        
-        
+
+
+
 class Lines(TestPatternAction):
-    
+
     def Draw(
-        self, 
+        self,
         dc,
         foregroundColour=(255,255,255),
         backgroundColour=(0,0,0),
-        lineSize=1, 
+        lineSize=1,
         orientation=0,
         display=0, # deprecated
     ):
@@ -596,13 +593,13 @@ class Lines(TestPatternAction):
         elif orientation == 1:
             for x in range(0, w, lineSize * 2):
                 dc.DrawLine(x, 0, x, h)
-    
-    
+
+
     def Configure(
-        self, 
-        foregroundColour=(255,255,255), 
+        self,
+        foregroundColour=(255,255,255),
         backgroundColour=(0,0,0),
-        lineSize=1, 
+        lineSize=1,
         orientation=0,
         display=0, # deprecated
     ):
@@ -617,25 +614,25 @@ class Lines(TestPatternAction):
         panel.AddLine(text.foregroundColour, foregroundColourCtrl)
         panel.AddLine(text.backgroundColour, backgroundColourCtrl)
         panel.AddLine(text.lineSize, lineSizeCtrl)
-        
+
         while panel.Affirmed():
             panel.SetResult(
-                foregroundColourCtrl.GetValue(), 
-                backgroundColourCtrl.GetValue(), 
+                foregroundColourCtrl.GetValue(),
+                backgroundColourCtrl.GetValue(),
                 lineSizeCtrl.GetValue(),
                 orientationCtrl.GetSelection(),
             )
 
 
 
-class Bars(TestPatternAction):        
-    
+class Bars(TestPatternAction):
+
     def Draw(
-        self, 
+        self,
         dc,
-        firstColour=(0,0,0), 
+        firstColour=(0,0,0),
         lastColour=(255,255,255),
-        barCount=16, 
+        barCount=16,
         orientation=0,
         makeDoubleBars=False,
         showNumbers=True,
@@ -697,13 +694,13 @@ class Bars(TestPatternAction):
                 dc.DrawText(numberStr, tx1, ty1)
                 if makeDoubleBars:
                     dc.DrawText(numberStr, tx2, ty2)
-    
-    
+
+
     def Configure(
-        self, 
-        firstColour=(0,0,0), 
+        self,
+        firstColour=(0,0,0),
         lastColour=(255,255,255),
-        barCount=16, 
+        barCount=16,
         orientation=0,
         makeDoubleBars=False,
         showNumbers=True,
@@ -715,7 +712,10 @@ class Bars(TestPatternAction):
         firstColourButton = panel.ColourSelectButton(firstColour)
         lastColourButton = panel.ColourSelectButton(lastColour)
         barCountCtrl = panel.SpinIntCtrl(barCount, min=1, max=100)
-        makeDoubleBarsCtrl = panel.CheckBox(makeDoubleBars, text.makeDoubleBars)
+        makeDoubleBarsCtrl = panel.CheckBox(
+            makeDoubleBars,
+            text.makeDoubleBars
+        )
         showNumbersCtrl = panel.CheckBox(showNumbers, text.showNumbers)
         fontCtrl = panel.FontSelectButton(fontStr)
         panel.AddLine(text.orientation, orientationCtrl)
@@ -725,23 +725,23 @@ class Bars(TestPatternAction):
         panel.AddLine(makeDoubleBarsCtrl)
         panel.AddLine(showNumbersCtrl)
         panel.AddLine(text.numberFont, fontCtrl)
-        
+
         while panel.Affirmed():
             panel.SetResult(
-                firstColourButton.GetValue(), 
-                lastColourButton.GetValue(), 
+                firstColourButton.GetValue(),
+                lastColourButton.GetValue(),
                 barCountCtrl.GetValue(),
                 orientationCtrl.GetValue(),
                 makeDoubleBarsCtrl.GetValue(),
                 showNumbersCtrl.GetValue(),
                 fontCtrl.GetValue()
             )
-    
-    
-        
-class SiemensStar(TestPatternAction):   
-    name = "Siemens Star"     
-    
+
+
+
+class SiemensStar(TestPatternAction):
+    name = "Siemens Star"
+
     def Draw(
         self,
         dc,
@@ -778,8 +778,8 @@ class SiemensStar(TestPatternAction):
         gc.FillPath(path2)
         gc.SetBrush(wx.Brush(secondColour))
         gc.FillPath(path)
-    
-    
+
+
     def Configure(
         self,
         backgroundColour=(0, 0, 0),
@@ -796,27 +796,27 @@ class SiemensStar(TestPatternAction):
         secondColourButton = panel.ColourSelectButton(secondColour)
         beamCountCtrl = panel.SpinIntCtrl(numBeams, min=2)
         radiusCtrl = panel.SpinNumCtrl(radius, max=100.0)
-        
+
         panel.AddLine(text.backgroundColour, backgroundColourCtrl)
         panel.AddLine(text.firstColour, firstColourButton)
         panel.AddLine(text.secondColour, secondColourButton)
         panel.AddLine(text.numElements, beamCountCtrl)
         panel.AddLine(text.radius1, radiusCtrl, text.radius2)
-        
+
         while panel.Affirmed():
             panel.SetResult(
-                backgroundColourCtrl.GetValue(), 
-                firstColourButton.GetValue(), 
-                secondColourButton.GetValue(), 
+                backgroundColourCtrl.GetValue(),
+                firstColourButton.GetValue(),
+                secondColourButton.GetValue(),
                 beamCountCtrl.GetValue(),
                 radiusCtrl.GetValue(),
             )
 
 
-class Burst(TestPatternAction):    
-    
+class Burst(TestPatternAction):
+
     def Draw(
-        self, 
+        self,
         dc,
         firstColour,
         secondColour,
@@ -835,8 +835,8 @@ class Burst(TestPatternAction):
             rgb = [c1 * factor + c2 * (1.0 - factor) for c1, c2 in rgbTuples]
             dc.SetPen(wx.Pen(rgb, 1))
             dc.DrawLine(x, 0, x, h)
-        
-        
+
+
     def Configure(
         self,
         firstColour=(0, 0, 0),
@@ -848,22 +848,22 @@ class Burst(TestPatternAction):
         firstColourButton = panel.ColourSelectButton(firstColour)
         secondColourButton = panel.ColourSelectButton(secondColour)
         beamCountCtrl = panel.SpinIntCtrl(numBeams, min=1)
-        
+
         panel.AddLine(text.firstColour, firstColourButton)
         panel.AddLine(text.secondColour, secondColourButton)
         panel.AddLine(text.numElements, beamCountCtrl)
-        
+
         while panel.Affirmed():
             panel.SetResult(
-                firstColourButton.GetValue(), 
-                secondColourButton.GetValue(), 
+                firstColourButton.GetValue(),
+                secondColourButton.GetValue(),
                 beamCountCtrl.GetValue(),
             )
-        
-        
-        
-class Geometry(TestPatternAction):        
-    
+
+
+
+class Geometry(TestPatternAction):
+
     def Draw(
         self,
         dc,
@@ -876,7 +876,7 @@ class Geometry(TestPatternAction):
         gc.PushState()
         gc.SetPen(wx.Pen("white", 3.0))
         gc.SetBrush(wx.TRANSPARENT_BRUSH)
-        
+
         aspectRatio, isCCIR601 = ASPECT_RATIOS[aspectRatioIndex]
         if aspectRatio is None:
             gc.Scale(h / 1000.0, h / 1000.0)
@@ -892,17 +892,17 @@ class Geometry(TestPatternAction):
             dc.SetBrush(wx.GREY_BRUSH)
             dc.DrawRectangle(1, 1, offset-1, h-1)
             dc.DrawRectangle(w-offset, 1, offset, h-1)
-            
+
         dc.SetBrush(wx.TRANSPARENT_BRUSH)
         dc.DrawRectangle(1, 1, w-1, h-1)
         dc.DrawLine(0, h/2, w, h/2)
         dc.DrawLine(w/2, 0, w/2, h)
-        
-        
+
+
     def GetLabel(self, aspektRatio):
         return self.name + ": " + self.plugin.text.aspectRatios[aspektRatio]
-    
-    
+
+
     def Configure(
         self,
         aspectRatio=0,
@@ -910,16 +910,16 @@ class Geometry(TestPatternAction):
         text = self.plugin.text
         panel = eg.ConfigPanel()
         aspectCtrl = panel.Choice(aspectRatio, text.aspectRatios)
-        
+
         panel.AddLine(text.aspectRatio, aspectCtrl)
         while panel.Affirmed():
             panel.SetResult(aspectCtrl.GetValue())
 
-        
-        
-class PixelCropping(TestPatternAction):        
+
+
+class PixelCropping(TestPatternAction):
     name = "Pixel Cropping"
-    
+
     def Draw(self, dc):
         numLines = 40
         textColour = (255, 255, 255)
@@ -932,33 +932,33 @@ class PixelCropping(TestPatternAction):
         space = w / 200 # separation between connecting lines and text
         minConnectionLineLength = w / 100
         cornerLength = w / 50
-        
+
         lineLength = space + numLines + minConnectionLineLength
         textOffset = lineLength + space
-        
+
         dc.SetBackground(wx.Brush("black"))
         dc.Clear()
         dc.SetTextForeground(textColour)
         dc.SetBrush(wx.TRANSPARENT_BRUSH)
         font = wx.Font(
-            w / 65.0, 
-            wx.FONTFAMILY_SWISS, 
-            wx.FONTSTYLE_NORMAL, 
+            w / 65.0,
+            wx.FONTFAMILY_SWISS,
+            wx.FONTSTYLE_NORMAL,
             wx.FONTWEIGHT_BOLD
         )
         dc.SetFont(font)
-        
+
         textWidth, textHeight = dc.GetTextExtent(str(numLines))
-        
+
         hBoxWidth = numLines + 2 * space + textWidth
         vBoxWidth = numLines + 2 * space + textHeight
-        
+
         hBarLength = int((w - hBoxWidth * 3.0) / numLines)
         vBarLength = int((h - vBoxWidth * 2.0) / numLines)
-        
+
         hOffset = (w - (hBarLength * numLines)) / 2
         vOffset = (h - (vBarLength * numLines)) / 2
-        
+
         numPositions = [0] + range(4, numLines, 5)
         dc.SetPen(wx.Pen((128, 128, 128), 1))
         dc.DrawRectangle(0, 0, w, h)
@@ -966,16 +966,16 @@ class PixelCropping(TestPatternAction):
 
         dc.DrawLine(0, 0, cornerLength, 0)
         dc.DrawLine(0, 0, 0, cornerLength)
-        
+
         dc.DrawLine(0, yMax, cornerLength, yMax)
         dc.DrawLine(0, yMax, 0, yMax - cornerLength)
-        
+
         dc.DrawLine(xMax, 0, xMax - cornerLength, 0)
         dc.DrawLine(xMax, 0, xMax, cornerLength)
-        
+
         dc.DrawLine(xMax, yMax, xMax - cornerLength, yMax)
         dc.DrawLine(xMax, yMax, xMax, yMax - cornerLength)
-        
+
         for n in range(numLines):
             x1 = hOffset + n * hBarLength
             x2 = x1 + hBarLength
@@ -983,43 +983,47 @@ class PixelCropping(TestPatternAction):
             y2 = yMax - n
             dc.DrawLine(x1, y1, x2, y1)
             dc.DrawLine(x1, y2, x2, y2)
-            
+
             x1 = n
             x2 = xMax - n
             y1 = vOffset + n * vBarLength
             y2 = y1 + vBarLength
             dc.DrawLine(x1, y1, x1, y2)
             dc.DrawLine(x2, y1, x2, y2)
-            
+
         for n in numPositions:
             numStr = str(n+1)
-            textWidth, textHeight = dc.GetTextExtent(numStr)
-            textWidth, textHeight, descent, externalLeading = dc.GetFullTextExtent(numStr)
+            (
+                textWidth,
+                textHeight,
+                descent,
+                externalLeading
+            ) = dc.GetFullTextExtent(numStr)
             vCenterTextOffset = (textHeight - descent) / 2
-            
+
             x1 = hOffset + (n * hBarLength) + (hBarLength / 2)
             y1 = n + space
             dc.DrawLine(x1, y1, x1, lineLength)
             dc.DrawLine(x1, yMax - y1 , x1, yMax - lineLength)
-            
+
             x2 = x1 - (textWidth / 2)
             dc.DrawText(numStr, x2, textOffset - descent)
             dc.DrawText(numStr, x2, yMax - (textOffset + textHeight - descent))
-            
+
             x1 = n + space
             y1 = vOffset + (n * vBarLength) + (vBarLength / 2)
             dc.DrawLine(x1, y1, lineLength, y1)
             dc.DrawLine(xMax - x1, y1, xMax - lineLength, y1)
-            
+
             y2 = y1 - vCenterTextOffset
             dc.DrawText(numStr, textOffset, y2)
             dc.DrawText(numStr, xMax - (textOffset + textWidth), y2)
-            
+
         # draw centered description
         font = wx.Font(
-            w / 40.0, 
-            wx.FONTFAMILY_SWISS, 
-            wx.FONTSTYLE_NORMAL, 
+            w / 40.0,
+            wx.FONTFAMILY_SWISS,
+            wx.FONTSTYLE_NORMAL,
             wx.FONTWEIGHT_BOLD
         )
         dc.SetFont(font)#, textColour)
@@ -1034,13 +1038,13 @@ class PixelCropping(TestPatternAction):
         offset = (h - y) / 2
         for line, x, y in data:
             dc.DrawText(line, x, offset + y)
-        
+
 
 
 class Readability(TestPatternAction):
-    
+
     def Draw(
-        self, 
+        self,
         dc,
         testText,
         textColour,
@@ -1070,10 +1074,10 @@ class Readability(TestPatternAction):
                 x += tw
             y += th
             lineNum += 1
-        
-        
+
+
     def Configure(
-        self, 
+        self,
         testText="The quick brown fox jumps over the lazy dog. ",
         textColour=(255, 255, 255),
         backgroundColour=(0, 0, 0),
@@ -1099,13 +1103,11 @@ class Readability(TestPatternAction):
                 fontCtrl.GetValue(),
                 offsetCtrl.GetValue()
             )
-        
 
-        
+
+
 class Close(eg.ActionBase):
-    
+
     def __call__(self):
         self.plugin.frame.Show(False)
-        
-        
-        
+

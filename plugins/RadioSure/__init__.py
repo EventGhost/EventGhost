@@ -1,27 +1,29 @@
-version="0.2.13"
+# -*- coding: utf-8 -*-
+
+version="0.2.14"
 
 # plugins/RadioSure/__init__.py
 #
 # Copyright (C)  2009, 2010, 2011   Pako (lubos.ruckl@quick.cz)
 #
 # This file is a plugin for EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.14 by Pako 2011-05-08 18:28 UTC+1
+#     - Bug fix - action Minimize/Restore
 # 0.2.13 by Pako 2011-04-06 11:07 UTC+1
 #     - Bug fix - bad name of language file
 # 0.2.12 by Pako 2011-04-05 17:38 UTC+1
@@ -5178,6 +5180,20 @@ class SendMessageActions(eg.ActionBase):
             return self.plugin.text.text1
 #===============================================================================
 
+class MinimRest(eg.ActionBase):
+    def __call__(self):
+        hwnd = HandleRS()
+        if hwnd:
+            winState = GetWindowPlacement(hwnd[0])[1]
+            if winState == 1:
+                SendMessage(hwnd[0], WM_COMMAND, 1075, 0)
+            elif winState == 2:
+                SendMessage(hwnd[0], WM_SYSCOMMAND, SC_RESTORE, 0)
+        else:
+            self.PrintError(self.plugin.text.text1)
+            return self.plugin.text.text1
+#===============================================================================
+
 class CheckAndChange(eg.ActionBase):
     def __call__(self):
         hwnd = HandleRS()
@@ -6070,7 +6086,8 @@ ACTIONS = (
     (eg.ActionGroup, 'Window', 'Window', 'Window',(
         (SendMessageActions,"Minimize","Minimize window","Minimize window.",2),
         (WindowControl,"Restore","Restore window","Restore window.",SC_RESTORE),
-        (SendMessageActions,"MinimRest","Minimize/Restore","Minimize/Restore window.",1075),
+#        (SendMessageActions,"MinimRest","Minimize/Restore","Minimize/Restore window.",1075),
+        (MinimRest,"MinimRest","Minimize/Restore","Minimize/Restore window.",None),
         (SendMessageActions,"Expand","Collapse/Expand window","Collapse/Expand window.",1076),
         (SendMessageActions,"OnTop","Stay on top On/Off","Stay on top On/Off.",1077),
     )),

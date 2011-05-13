@@ -1,264 +1,142 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2007 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import with_statement
-import eg
 import os
-import cPickle as pickle
-from os import stat
 from os.path import isdir, join, exists
+import eg
+
+
+class LoadErrorPlugin(eg.PluginBase):
+
+    def __init__(self):
+        raise self.Exceptions.PluginLoadError
+
+    def __start__(self, *dummyArgs):
+        raise self.Exceptions.PluginLoadError
 
 
 
-class RegisterPluginException(Exception):
-    """
-    RegisterPlugin will raise this exception to interrupt the loading
-    of the plugin module file.
-    """
+class NonexistentPlugin(eg.PluginBase):
+    class text:
+        pass
+
+    def __init__(self):
+        raise self.Exceptions.PluginNotFound
+
+    def __start__(self, *dummyArgs):
+        raise self.Exceptions.PluginNotFound
+
+    def GetLabel(self, *dummyArgs):
+        return '<Unknown Plugin "%s">' % self.name
+
+
+
+class ActionsMapping(object):
+
+    def __init__(self, info):
+        self.info = info
+        self.actions = {}
+
+    def __getitem__(self, name):
+        if name in self.actions:
+            return self.actions[name]
+        class Action(eg.ActionBase):
+            pass
+        Action.__name__ = name
+        action = self.info.actionGroup.AddAction(Action, hidden=True)
+        self.actions[name] = action
+        return action
+
+
+    def __setitem__(self, name, value):
+        self.actions[name] = value
+
+
+
+class NonexistentPluginInfo(eg.PluginInstanceInfo):
     pass
-
-
-
-class PluginModuleInfo:
-    # some informational fields
-    name = "unknown name"
-    author = "unknown author"
-    version = "unknow version"
-
-    # kind gives a hint in which group the plugin should be shown in
-    # the AddPluginDialog
-    kind = "other"
-
-    dirname = None
 
 
 
 class PluginManager:
 
-    # the PluginInfo currently been processed
-    currentInfo = None
-
     def __init__(self):
-        self.databasePath = join(eg.configDir, "pluginManager")
-        eg.RegisterPlugin = self.RegisterPluginDummy
-        self.RegisterPluginDummy.__doc__ = self.RegisterPlugin.__doc__
-        self.Refresh()
+        self.database = {}
+        self.ScanAllPlugins()
 
 
     @eg.TimeIt
-    def Refresh(self, forceRebuild=(eg.debugLevel > 0)):
+    def ScanAllPlugins(self):
         """
-        Scans the plugin directory to get all needed information for all
+        Scans the plugin directories to get all needed information for all
         plugins.
-
-        This will use a simple database file to avoid time consuming processing
-        of unchanged plugins. If 'forceRebuild' is True, the old database file
-        will be ignored and a new one completely rebuild.
         """
-
-        # load the database file if exists
-        self.database = {}
-        if not forceRebuild:
-            self.Load()
-        database = self.database
-
-        # a new database will be created at the end if a plugin has changed
-        hasChanged = False
-        newDatabase = {}
-
-        # prepare the interruption of plugin module import on RegisterPlugin
-        eg.RegisterPlugin = self.RegisterPlugin
+        self.database.clear()
 
         # scan through all directories in the plugin directory
-        for dirname in os.listdir(eg.PLUGIN_DIR):
-            # filter out non-plugin names
-            if dirname.startswith(".") or dirname.startswith("_"):
-                continue
-            pluginDir = join(eg.PLUGIN_DIR, dirname)
-            if not isdir(pluginDir):
-                continue
-            if not exists(join(pluginDir, "__init__.py")):
-                continue
-
-            # get the highest timestamp of all files in that directory
-            highestTimestamp = 0
-            for dirpath, dirnames, filenames in os.walk(pluginDir):
-                for filename in filenames:
-                    timestamp = stat(join(dirpath, filename)).st_mtime
-                    if timestamp > highestTimestamp:
-                        highestTimestamp = timestamp
-                # little hack to avoid scanning of SVN directories
-                for directory in dirnames[:]:
-                    if directory.startswith(".svn"):
-                        dirnames.remove(directory)
-
-
-            # if the highest timestamp doesn't differ from the database's one
-            # we can use the old entry and skip further processing
-            if dirname in database:
-                if database[dirname].timestamp == highestTimestamp:
-                    newDatabase[dirname] = database[dirname]
-                    del database[dirname]
+        for root in eg.pluginDirs:
+            for dirname in os.listdir(root):
+                # filter out non-plugin names
+                if dirname.startswith(".") or dirname.startswith("_"):
                     continue
-
-            hasChanged = True
-            pluginInfo = self.LoadPluginInfo(dirname)
-            if pluginInfo is None:
-                print dirname
-            else:
-                pluginInfo.timestamp = highestTimestamp
-                newDatabase[dirname] = pluginInfo
-            #print repr(pluginInfo)
-
-        # let RegisterPlugin be a normal (and useless) function again
-        eg.RegisterPlugin = self.RegisterPluginDummy
-
-        # only save if something has changed
-        needsSave = hasChanged or len(database)
-        self.database = newDatabase
-        if needsSave:
-            self.Save()
-
-
-    @eg.LogIt
-    def Save(self):
-        """
-        Save the database to disc.
-        """
-        with file(self.databasePath, "wb") as databaseFile:
-            pickle.dump(eg.Version.string, databaseFile, -1)
-            pickle.dump(self.database, databaseFile, -1)
-
-
-    def Load(self):
-        """
-        Load the database from disc.
-        """
-        if not exists(self.databasePath):
-            return
-        with file(self.databasePath, "rb") as databaseFile:
-            try:
-                version = pickle.load(databaseFile)
-                if version != eg.Version.string:
-                    eg.PrintDebugNotice("pluginManager version mismatch")
-                    return
-                self.database = pickle.load(databaseFile)
-            except:
-                eg.PrintTraceback()
-
-
-    def GetPluginInfo(self, pluginName):
-        return self.database[pluginName]
-
-
-    def LoadPluginInfo(self, pluginDir):
-        self.currentInfo = PluginModuleInfo()
-        self.currentInfo.dirname = pluginDir
-
-        try:
-            eg.PluginInfo.ImportPlugin(pluginDir)
-        # It is expected that the loading will raise RegisterPluginException
-        # because RegisterPlugin is called inside the module
-        except RegisterPluginException:
-            return self.currentInfo
-        except:
-            eg.PrintTraceback(eg.text.Error.pluginLoadError % pluginDir)
-            return
-        finally:
-            self.currentInfo = None
-
-
-    def RegisterPlugin(
-        self,
-        name = None,
-        description = None,
-        kind = "other",
-        author = "unknown author",
-        version = "unknown version",
-        icon = None,
-        canMultiLoad = False,
-        createMacrosOnAdd = False,
-        url = None,
-        help = None,
-        **kwargs
-    ):
-        """
-        Registers information about a plugin to EventGhost.
-
-        :param name: should be a short descriptive string with the name of the
-           plugin.
-        :param description: the description of the plugin.
-        :param kind: gives a hint about the category the plugin belongs to. It
-           should be a string with a value out of "remote" (for remote receiver
-           plugins), "program" (for program control plugins), "external" (for
-           plugins that control external hardware) or "other" (if none of the
-           other categories match).
-        :param author: can be set to the name of the developer of the plugin.
-        :param version: can be set to a version string.
-        :param canMultiLoad: set this to ``True``, if a configuration can have
-           more than one instance of this plugin.
-        :param \*\*kwargs: just to consume unknown parameters, to make the call
-           backward compatible.
-        """
-        if name is None:
-            name = self.currentInfo.dirname
-        if description is None:
-            description = name
-        if help is not None:
-            help = "\n".join([s.strip() for s in help.splitlines()])
-            help = help.replace("\n\n", "<p>")
-            description += "\n\n<p>" + help
-        self.currentInfo.__dict__.update(locals())
-        del self.currentInfo.__dict__["self"]
-        # we are done with this plugin module, so we can interrupt further
-        # processing by raising RegisterPluginException
-        raise RegisterPluginException
-
-
-    @staticmethod
-    def RegisterPluginDummy(
-        name = None,
-        description = None,
-        kind = "other",
-        author = "unknown author",
-        version = "unknown version",
-        icon = None,
-        canMultiLoad = False,
-        createMacrosOnAdd = False,
-        url = None,
-        help = None,
-        **kwargs
-    ):
-        pass
+                pluginDir = join(root, dirname)
+                if not isdir(pluginDir):
+                    continue
+                if not exists(join(pluginDir, "__init__.py")):
+                    continue
+                info = eg.PluginModuleInfo(pluginDir)
+                self.database[info.guid] = info
 
 
     def GetPluginInfoList(self):
         """
         Get a list of all PluginInfo for all plugins in the plugin directory
         """
-        infoList = [
-            eg.PluginInfo.GetPluginInfo(pluginName)
-            for pluginName in self.database.iterkeys()
-        ]
-        infoList.sort(key=lambda x: x.name.lower())
+        self.ScanAllPlugins()
+        infoList = self.database.values()
+        infoList.sort(key=lambda pluginInfo: pluginInfo.name.lower())
         return infoList
+
+
+    def GetPluginInfo(self, ident):
+        if ident in self.database:
+            return self.database[ident]
+        else:
+            for guid, info in self.database.iteritems():
+                if info.pluginName == ident:
+                    return info
+        return None
+
+
+    def OpenPlugin(self, ident, evalName, args, treeItem=None):
+        moduleInfo = self.GetPluginInfo(ident)
+        if moduleInfo is None:
+            # we don't have such plugin
+            clsInfo = NonexistentPluginInfo()
+            clsInfo.guid = ident
+            clsInfo.name = evalName
+            clsInfo.pluginName = evalName
+            class Plugin(NonexistentPlugin):
+                pass
+            Plugin.__name__ = evalName
+            clsInfo.pluginCls = Plugin
+        else:
+            clsInfo = eg.PluginInstanceInfo.FromModuleInfo(moduleInfo)
+        info = clsInfo.CreateInstance(args, evalName, treeItem)
+        if moduleInfo is None:
+            info.actions = ActionsMapping(info)
+        return info
 

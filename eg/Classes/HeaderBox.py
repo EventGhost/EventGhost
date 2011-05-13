@@ -1,30 +1,23 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 import wx
 import wx.html
 import re
-from eg.Utils import GetFirstParagraph
 
 REPLACE_BR_TAG = re.compile('<br[ \/]*>')
 REMOVE_HTML_PATTERN = re.compile('<([^!>]([^>]|\n)*)>')
@@ -35,14 +28,9 @@ class HeaderBox(wx.PyWindow):
     The top description box of every tree item configuration dialog.
     """
 
-    def __init__(self, parent, item):
-        name = item.GetTypeName()
-        description = item.GetDescription().strip()
-        text = GetFirstParagraph(description)
-
+    def __init__(self, parent, name="", text="", icon=None, url = None):
         text = REPLACE_BR_TAG.sub('\n', text)
         text = REMOVE_HTML_PATTERN.sub('', text).strip()
-        hasAdditionalHelp = (description != text)
         if text == name:
             text = ""
         self.parent = parent
@@ -55,15 +43,13 @@ class HeaderBox(wx.PyWindow):
         font = wx.Font(8, wx.SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD )
         nameBox.SetFont(font)
 
-        if hasAdditionalHelp:
-            text += ' <a href="ShowMoreHelp">%s</a>' % eg.text.General.moreTag
         self.text = '<html><body bgcolor="%s" text="%s">%s</body></html>' % (
             self.GetBackgroundColour().GetAsString(wx.C2S_HTML_SYNTAX),
             self.GetForegroundColour().GetAsString(wx.C2S_HTML_SYNTAX),
             text
         )
-        if hasattr(item, "info"):
-            self.text = eg.Utils.MergeUrl(self.text, item.info.url)
+        if url:
+            self.text = eg.Utils.AppUrl(self.text, url)
         descBox = eg.HtmlWindow(self, style=wx.html.HW_NO_SELECTION)
         descBox.SetBorders(1)
         descBox.SetFonts("Arial", "Times New Roman", [8, 8, 8, 8, 8, 8, 8])
@@ -71,7 +57,7 @@ class HeaderBox(wx.PyWindow):
         self.descBox = descBox
 
         staticBitmap = wx.StaticBitmap(self)
-        staticBitmap.SetIcon(item.icon.GetWxIcon())
+        staticBitmap.SetIcon(icon.GetWxIcon())
 
         mainSizer = eg.HBoxSizer(
             ((4, 4)),
@@ -106,7 +92,6 @@ class HeaderBox(wx.PyWindow):
 
     def OnLinkClicked(self, event):
         if event.GetLinkInfo().GetHref() == "ShowMoreHelp":
-            #self.parent.configureItem.ShowHelp(self.GetParent())
             self.parent.configureItem.ShowHelp(eg.document.frame)
         else:
             event.Skip()
@@ -114,3 +99,4 @@ class HeaderBox(wx.PyWindow):
 
     def AcceptsFocus(self):
         return False
+

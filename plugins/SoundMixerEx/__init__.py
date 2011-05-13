@@ -1,7 +1,7 @@
 eg.RegisterPlugin(
     name = "Sound Mixer Ex",
     author = "Dexter",
-    version = "1.1." + "$LastChangedRevision$".split()[1],
+    version = "1.1." + "$LastChangedRevision: 1204 $".split()[1],
     description = (
         "This plugin allows you to set virtually any control available on "
         "your soundcard.\n\n<p>"
@@ -9,6 +9,7 @@ eg.RegisterPlugin(
     ),
     url = "http://www.eventghost.net/forum/viewtopic.php?t=748",
     kind = "other",
+    guid = "{B619678F-0C6F-425E-9240-3ADA82360DD2}",
 )
 
 # changelog
@@ -18,7 +19,7 @@ eg.RegisterPlugin(
 #     - root node of tree now starts expanded.
 
 
-from eg.WinApi.Dynamic import (
+from eg.WinApi.Dynamic.Mmsystem import (
     byref, sizeof, addressof, pointer,
     HMIXER, 
     MIXERCAPS,

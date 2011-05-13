@@ -11,7 +11,7 @@ import win32event # We use events and the WaitFor[Single|Multiple]Objects functi
 import win32con   # constants.
 from serialutil import *
 
-VERSION = "$Revision$".split()[1]     #extract CVS version
+VERSION = "$Revision: 947 $".split()[1]     #extract CVS version
 
 #from winbase.h. these should realy be in win32con
 MS_CTS_ON  = 16

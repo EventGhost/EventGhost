@@ -21,7 +21,8 @@ Parses the command line arguments of the program.
 import os
 import sys
 import locale
-from os.path import join, dirname, basename, splitext, abspath
+import ctypes
+from os.path import join, dirname, abspath
 
 ENCODING = locale.getdefaultlocale()[1]
 locale.setlocale(locale.LC_ALL, '')
@@ -29,11 +30,10 @@ argvIter = (val.decode(ENCODING) for val in sys.argv)
 scriptPath = argvIter.next()
 
 # get program directory
-mainDir = abspath(
-    join(dirname(__file__.decode(sys.getfilesystemencoding())), "..")
-)
+mainDir = abspath(join(dirname(__file__.decode('mbcs')), ".."))
 
 # determine the commandline parameters
+import __main__
 class args:
     hideOnStartup = False
     startupEvent = None
@@ -43,9 +43,9 @@ class args:
     translate = False
     configDir = None
     install = False
-    isMain = splitext(basename(scriptPath))[0].lower() == "eventghost"
+    isMain = hasattr(__main__, "isMain") #splitext(basename(scriptPath))[0].lower() == "eventghost"
     pluginFile = None
-    execScript = None
+    pluginDir = None
 
 
 for arg in argvIter:
@@ -82,23 +82,43 @@ for arg in argvIter:
         args.startupFile = abspath(argvIter.next())
     elif arg in ('-p', '-plugin'):
         args.pluginFile = abspath(argvIter.next())
-        args.isMain = False
+        #args.isMain = False
+    elif arg == '-plugindir':
+        args.plugindir = argvIter.next()
     elif arg == '-configdir':
         args.configDir = argvIter.next()
     elif arg == '-translate':
         args.translate = True
-    elif arg == '-execscript':
-        args.isMain = False
-        args.execScript = argvIter.next().encode(sys.getfilesystemencoding())
+    elif arg == "-restart":
+        import time
+        while True:
+            appMutex = ctypes.windll.kernel32.CreateMutexA(
+                None,
+                0,
+                "Global\\EventGhost:7EB106DC-468D-4345-9CFE-B0021039114B"
+            )
+            err = ctypes.GetLastError()
+            if appMutex:
+                ctypes.windll.kernel32.CloseHandle(appMutex)
+            if err == 0:
+                break
+            time.sleep(0.1)
+
+    else:
+        path = abspath(arg)
+        ext = os.path.splitext(path)[1].lower()
+        if ext == ".egplugin":
+            args.pluginFile = path
+        elif ext in (".egtree", ".xml"):
+            args.startupFile = path
 
 if (
     not args.allowMultiLoad
     and not args.translate
     and args.isMain
-    and not args.pluginFile
+    #and not args.pluginFile
 ):
     # check if another instance of the program is running
-    import ctypes
     appMutex = ctypes.windll.kernel32.CreateMutexA(
         None,
         0,
@@ -113,6 +133,8 @@ if (
                 e.OpenFile(args.startupFile)
             if args.startupEvent is not None:
                 e.TriggerEvent(args.startupEvent[0], args.startupEvent[1])
+            elif args.pluginFile:
+                e.InstallPlugin(args.pluginFile)
             else:
                 e.BringToFront()
         finally:

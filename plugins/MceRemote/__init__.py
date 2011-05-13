@@ -1,36 +1,34 @@
+# -*- coding: utf-8 -*-
 #
 # plugins/MceRemote/__init__.py
 #
-# Copyright (C) 2005 Lars-Peter Voss
+# This file is a plugin for EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# This file is part of EventGhost.
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 #
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# $LastChangedDate: 2009-07-06 19:11:56 +0200 (po, 06 7 2009) $
+# $LastChangedRevision: 1093 $
+# $LastChangedBy: Bitmonster $
 
 import eg
 
 eg.RegisterPlugin(
     name = "Microsoft MCE Remote",
     author = "Bitmonster & James Lee",
-    version = "1.1." + "$LastChangedRevision$".split()[1],
+    version = "1.1." + "$LastChangedRevision: 1093 $".split()[1],
     kind = "remote",
+    guid = "{02181DB1-F29D-4CCB-BF91-7A86EFB0D22C}",
     description = 'Plugin for the Microsoft MCE remote.',
     help = """
         <center><img src="MCEv2.jpg"/></center>

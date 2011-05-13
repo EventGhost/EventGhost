@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 from time import clock
@@ -27,22 +21,40 @@ EVENT_ICON_INDEX = eg.EventItem.icon.index
 
 
 class ActionThread(eg.ThreadWorker):
+    corePluginInfos = None
 
-    @staticmethod
     @eg.LogItWithReturn
-    def StartSession(filename):
+    def StartSession(self, filename):
         eg.eventTable.clear()
-        for pluginIdent in eg.CORE_PLUGINS:
-            # pylint: disable-msg=W0702
+        self.corePluginInfos = []
+        for guid in eg.CORE_PLUGIN_GUIDS:
             try:
-                pluginInfo = eg.PluginInfo.Open(pluginIdent, None, ())
+                pluginInfo = eg.pluginManager.OpenPlugin(guid, None, ())
                 pluginInfo.instance.__start__()
                 pluginInfo.isStarted = True
-            except:
+                self.corePluginInfos.append(pluginInfo)
+            except: # pylint: disable-msg=W0702
                 eg.PrintTraceback()
         start = clock()
         eg.document.Load(filename)
         eg.PrintDebugNotice("XML loaded in %f seconds." % (clock() - start))
+
+        missingHardwareIds = (
+            set(eg.WinUsb.ListDevices().iterkeys())
+            - set(pluginInfo.info.hardwareId for pluginInfo in eg.pluginList)
+        )
+        missingPlugins = [
+            pluginInfo for pluginInfo in eg.pluginManager.database.itervalues()
+                if pluginInfo.hardwareId in missingHardwareIds
+        ]
+        if missingPlugins:
+            print "EventGhost has found devices on your system, that can be "
+            print "handled by the following plugins and are not loaded by your"
+            print "current configuration:"
+            for pluginInfo in missingPlugins:
+                print "   -", pluginInfo.name
+            print "If you want to use them, please add the missing plugins."
+
         eg.programCounter = (eg.document.autostartMacro, None)
         eg.RunProgram()
 
@@ -59,17 +71,14 @@ class ActionThread(eg.ThreadWorker):
         eg.SetProcessingState(1, event)
 
 
-    @staticmethod
     @eg.LogIt
-    def StopSession():
+    def StopSession(self):
         eg.document.autostartMacro.UnloadPlugins()
-        for pluginIdent in eg.CORE_PLUGINS:
-            # pylint: disable-msg=W0702
+        for pluginInfo in self.corePluginInfos:
             try:
-                pluginInfo = getattr(eg.plugins, pluginIdent).plugin.info
                 pluginInfo.Close()
                 pluginInfo.RemovePluginInstance()
-            except:
+            except: # pylint: disable-msg=W0702
                 eg.PrintTraceback()
 
 
@@ -80,7 +89,7 @@ class ActionThread(eg.ThreadWorker):
             pluginInfo = exc.obj.info
             eg.PrintError(exc.message, source=pluginInfo.treeItem)
             pluginInfo.lastException = exc
-            pluginInfo.treeItem.SetErrorState()
+            pluginInfo.treeItem.Refresh()
 
 
     @staticmethod
@@ -88,10 +97,9 @@ class ActionThread(eg.ThreadWorker):
         """Calls OnComputerSuspend of every enabled plugin."""
         for plugin in eg.pluginList:
             if plugin.info.isStarted:
-                # pylint: disable-msg=W0702
                 try:
                     plugin.OnComputerSuspend(None)
-                except:
+                except: # pylint: disable-msg=W0702
                     eg.PrintTraceback()
 
 
@@ -100,9 +108,8 @@ class ActionThread(eg.ThreadWorker):
         """Calls OnComputerResume of every enabled plugin."""
         for plugin in eg.pluginList:
             if plugin.info.isStarted:
-                # pylint: disable-msg=W0702
                 try:
                     plugin.OnComputerResume(None)
-                except:
+                except: # pylint: disable-msg=W0702
                     eg.PrintTraceback()
 

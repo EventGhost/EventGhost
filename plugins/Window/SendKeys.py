@@ -1,35 +1,29 @@
-# This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# -*- coding: utf-8 -*-
+#
+# This file is a plugin for EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """<rst>
-This action emulates keystrokes to control other programs. Just type the text 
-you want into the edit-box. 
+This action emulates keystrokes to control other programs. Just type the text
+you want into the edit-box.
 
-To emulate special-keys, you have to enclose a keyword in curly braces. 
+To emulate special-keys, you have to enclose a keyword in curly braces.
 For example if you want to have a cursor-up-key you write **{Up}**. You
-can combine multiple keywords with the plus sign to get key-combinations like 
+can combine multiple keywords with the plus sign to get key-combinations like
 **{Shift+Ctrl+F1}** or **{Ctrl+V}**.
 
-Some keys differentiate between the left or the right side of the keyboard 
+Some keys differentiate between the left or the right side of the keyboard
 and can then be prefixed with an "L" or "R", like the Windows-Key:
 
 **{Win}** or **{LWin}** or **{RWin}**
@@ -73,10 +67,10 @@ And here is the list of the remaining keywords EventGhost understands:
 import eg
 import wx
 
-    
+
 class SendKeys(eg.ActionBase):
     name = "Emulate Keystrokes"
-    description = __doc__ 
+    description = __doc__
     iconFile = "icons/SendKeys"
     class text:
         useAlternativeMethod = "Use alternate method to emulate keypresses"
@@ -99,7 +93,7 @@ class SendKeys(eg.ActionBase):
             home = "Home"
             end = "End"
             pageUp = "Page Up"
-            pageDown = "Page Down"   
+            pageDown = "Page Down"
             win = "Windows key"
             context = "Context menu key"
             numDivide = "Numpad Divide"
@@ -117,8 +111,8 @@ class SendKeys(eg.ActionBase):
             num7 = "Numpad 7"
             num8 = "Numpad 8"
             num9 = "Numpad 9"
-            
-        
+
+
     def __call__(self, data, useAlternateMethod=False):
         hwnds = eg.lastFoundWindows
         if not hwnds:
@@ -126,16 +120,16 @@ class SendKeys(eg.ActionBase):
         else:
             hwnd = hwnds[0]
         eg.SendKeys(hwnd, data, useAlternateMethod)
-        
-        
+
+
     def Configure(self, data="", useAlternateMethod=False):
         panel = eg.ConfigPanel()
         text = self.text
         key = text.Keys
         keyChoices = [
-            (key.returnKey, "Return"), 
+            (key.returnKey, "Return"),
             (key.enter, "Enter"),
-            (key.tabulator, "Tabulator"), 
+            (key.tabulator, "Tabulator"),
             (key.backspace, "Backspace"),
             (key.escape, "Escape"),
             (key.space, "Space"),
@@ -169,7 +163,7 @@ class SendKeys(eg.ActionBase):
         ]
         fKeys = (
             "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10",
-            "F11", "F12", "F13", "F14", "F15", "F16", "F17", "F18", "F19", 
+            "F11", "F12", "F13", "F14", "F15", "F16", "F17", "F18", "F19",
             "F20", "F21", "F22", "F23", "F24"
         )
         keyLabels, keyWords = zip(*keyChoices)
@@ -177,10 +171,10 @@ class SendKeys(eg.ActionBase):
         keyWords += fKeys
         textCtrl = panel.TextCtrl(data, style=wx.TE_NOHIDESEL)
         alternateMethodCB = panel.CheckBox(
-            useAlternateMethod, 
+            useAlternateMethod,
             text.useAlternativeMethod
         )
-        
+
         shiftCB = wx.CheckBox(panel, -1, "Shift")
         ctrlCB = wx.CheckBox(panel, -1, "Ctrl")
         altCB = wx.CheckBox(panel, -1, "Alt")
@@ -193,7 +187,7 @@ class SendKeys(eg.ActionBase):
         ctrlCB.Bind(wx.EVT_CHECKBOX, DummyHandler)
         altCB.Bind(wx.EVT_CHECKBOX, DummyHandler)
         keyChoice.Bind(wx.EVT_CHOICE, DummyHandler)
-        
+
         def OnInsert(dummyEvent):
             res = []
             if shiftCB.GetValue():
@@ -205,7 +199,7 @@ class SendKeys(eg.ActionBase):
             res.append(keyWords[keyChoice.GetSelection()])
             textCtrl.WriteText("{%s}" % "+".join(res))
         insertButton.Bind(wx.EVT_BUTTON, OnInsert)
-        
+
         cbSizer = eg.VBoxSizer(
             (shiftCB, 0, wx.EXPAND|wx.BOTTOM, 5),
             (ctrlCB, 0, wx.EXPAND|wx.BOTTOM, 5),
@@ -220,7 +214,7 @@ class SendKeys(eg.ActionBase):
         specialKeySizer.Add(cbSizer)
         specialKeySizer.Add((15, 15))
         specialKeySizer.Add(rightSizer)
-        
+
         panel.sizer.AddMany(
             (
                 (panel.StaticText(text.textToType)),
@@ -231,7 +225,7 @@ class SendKeys(eg.ActionBase):
                 (alternateMethodCB),
             )
         )
-        
+
         while panel.Affirmed():
             panel.SetResult(textCtrl.GetValue(), alternateMethodCB.GetValue())
 

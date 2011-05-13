@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 import wx
@@ -37,26 +31,6 @@ class Config(eg.PersistentData):
 
 class UnassignedValue:
     pass
-
-
-def LoadModules():
-    # pylint: disable-msg=W0104
-    eg.CheckUpdate
-    eg.AboutDialog
-    eg.AddActionDialog
-    eg.AddPluginDialog
-    eg.AddActionGroupDialog
-    eg.OptionsDialog
-    eg.FindDialog
-    eg.Exceptions
-    eg.EventItem
-    #import MainFrame
-    # pylint: enable-msg=W0104
-
-    for plugin in os.listdir(eg.PLUGIN_DIR):
-        if not plugin.startswith("."):
-            eg.PluginInfo.Open(plugin, plugin, ()).Close()
-
 
 
 def ExpandKeyname(key):
@@ -97,11 +71,11 @@ class LanguageEditor(wx.Frame):
 
         imageList = wx.ImageList(16, 16)
         for pathName in (
-            join(eg.PLUGIN_DIR, "EventGhost", "icons", "DisableItem.png"),
-            join(eg.PLUGIN_DIR, "EventGhost", "icons", "EnableItem.png"),
-            join(eg.IMAGES_DIR, "folder.png"),
-            join(eg.IMAGES_DIR, "root.png"),
-            join(eg.IMAGES_DIR, "new.png"),
+            join(eg.corePluginDir, "EventGhost", "icons", "DisableItem.png"),
+            join(eg.corePluginDir, "EventGhost", "icons", "EnableItem.png"),
+            join(eg.imagesDir, "folder.png"),
+            join(eg.imagesDir, "root.png"),
+            join(eg.imagesDir, "new.png"),
         ):
             imageList.Add(
                 wx.BitmapFromImage(wx.Image(pathName, wx.BITMAP_TYPE_PNG))
@@ -111,7 +85,14 @@ class LanguageEditor(wx.Frame):
         tree.AssignImageList(imageList)
         self.rootId = tree.AddRoot("Language Strings", 3)
         tree.SetPyData(self.rootId, ["", None, None])
-        LoadModules()
+
+        eg.Init.ImportAll()
+        eg.actionThread.Start()
+        def LoadPlugins():
+            for plugin in os.listdir(eg.corePluginDir):
+                if not plugin.startswith("."):
+                    eg.pluginManager.OpenPlugin(plugin, plugin, ()).Close()
+        eg.actionThread.CallWait(LoadPlugins)
 
         rightPanel = wx.Panel(splitter)
         self.disabledColour = rightPanel.GetBackgroundColour()
@@ -246,9 +227,9 @@ class LanguageEditor(wx.Frame):
         tree.Unbind(wx.EVT_TREE_SEL_CHANGING)
         tree.DeleteChildren(self.rootId)
         translation = eg.Bunch()
-        languagePath = os.path.join(eg.LANGUAGES_DIR, "%s.py" % language)
+        languagePath = os.path.join(eg.languagesDir, "%s.py" % language)
         if os.path.exists(languagePath):
-            execfile(languagePath, {}, translation.__dict__)
+            eg.ExecFile(languagePath, {}, translation.__dict__)
         self.translationDict = translation.__dict__
         self.translationDict["__builtins__"] = {}
 
@@ -265,6 +246,7 @@ class LanguageEditor(wx.Frame):
             "OptionsDialog",
             "FindDialog",
             "AboutDialog",
+            "WinUsb",
         ):
             newId = tree.AppendItem(self.rootId, name, 2)
             value = getattr(eg.text, name)
@@ -360,6 +342,7 @@ class LanguageEditor(wx.Frame):
         Config.size = self.GetSizeTuple()
         Config.splitPosition = self.tree.GetSizeTuple()[0]
         eg.config.Save()
+        eg.actionThread.Stop()
         wx.GetApp().ExitMainLoop()
 
 
@@ -410,7 +393,7 @@ class LanguageEditor(wx.Frame):
             return "".join(res)
 
         outFile = codecs.open(
-            join(eg.LANGUAGES_DIR, "%s.py" % Config.language),
+            join(eg.languagesDir, "%s.py" % Config.language),
             "wt",
             "utf_8"
         )

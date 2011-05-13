@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 import wx
@@ -50,7 +44,7 @@ class FindDialog(wx.Dialog):
             title = Text.title,
             style = wx.DEFAULT_DIALOG_STYLE
         )
-        self.document = document
+        self.parent = parent
         self.choices = [""]
         textCtrl = wx.TextCtrl(self)
         wholeWordsOnlyCb = wx.CheckBox(self, -1, Text.wholeWordsOnly)
@@ -115,6 +109,7 @@ class FindDialog(wx.Dialog):
 
 
     def Show(self):
+        self.CenterOnParent()
         eg.Utils.EnsureVisible(self)
         wx.Dialog.Show(self)
         self.Raise()
@@ -128,8 +123,7 @@ class FindDialog(wx.Dialog):
 
 
     def OnFindButton(self, event=None):
-        tree = self.document.tree
-        item = tree.GetPyData(tree.GetSelection())
+        item = self.parent.treeCtrl.GetSelectedNode()
         startItem = item
         originalSearchValue = self.textCtrl.GetValue()
         if self.caseSensitiveCb.GetValue():
@@ -179,7 +173,7 @@ class FindDialog(wx.Dialog):
                 item.Select()
                 return
             if searchParameters and isinstance(item, ActionItem):
-                for arg in item.GetArgs():
+                for arg in item.GetArguments():
                     if type(arg) in StringTypes:
                         text = convertFunc(arg)
                         try:

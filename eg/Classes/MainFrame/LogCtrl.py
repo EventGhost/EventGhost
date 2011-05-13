@@ -1,26 +1,18 @@
 # -*- coding: utf-8 -*-
-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 import wx
@@ -57,6 +49,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             df = self.GetFont()
             font = wx.Font(df.GetPointSize(), wx.DEFAULT, wx.NORMAL, wx.NORMAL, False, "Courier New")
             self.SetFont(font)
+
         listmix.ListCtrlAutoWidthMixin.__init__(self)
         self.SetImageList(eg.Icons.gImageList, wx.IMAGE_LIST_SMALL)
 
@@ -122,7 +115,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         event.Skip()
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def SetData(self, data):
         #self.Freeze()
         self.data = collections.deque(data)
@@ -178,10 +171,6 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 
     def CanPaste(self):
         return False
-
-
-    def Copy(self):
-        self.OnCmdCopy()
 
 
     def OnCmdCopy(self, dummyEvent=None):
@@ -241,9 +230,9 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         if flags & wx.LIST_HITTEST_ONITEM:
             icon, wref = self.GetItemData(item)[1:3]
             if icon != eg.EventItem.icon and wref is not None:
-                obj = wref()
-                if obj is not None and not obj.isDeleted:
-                    obj.Select()
+                node = wref()
+                if node is not None and not node.isDeleted:
+                    node.Select()
 
 
     def GetItemData(self, item):
@@ -285,7 +274,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         return self.data[item][1].index
 
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def WriteLine(self, line, icon, wRef, when, indent):
         data = self.data
         if len(data) >= self.maxlength:

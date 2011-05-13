@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 version="0.2.5" 
 
 # plugins/IrfanView/__init__.py
@@ -5,20 +7,18 @@ version="0.2.5"
 # Copyright (C)  2007 Pako  <lubos.ruckl@quick.cz>
 #
 # This file is a plugin for EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but widthOUT ANY WARRANTY; widthout even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along width EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
@@ -31,6 +31,7 @@ eg.RegisterPlugin(
     author = "Pako",
     version = version,
     kind = "program",
+    guid = "{9593B4E9-5089-4C1F-BCE5-4A0B07F63DEE}",
     description = (
         'Adds actions to control <a href="http://www.irfanview.com/">'
         'IrfanView</a>.'

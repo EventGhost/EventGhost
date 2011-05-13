@@ -1,8 +1,9 @@
 eg.RegisterPlugin(
     name = "Generic HID",
     author = "Bartman",
-    #version = "1.5." + "$LastChangedRevision$".split()[1],
+    #version = "1.5." + "$LastChangedRevision: 1246 $".split()[1],
     kind = "remote",
+    guid = "{05A690D9-27C2-4AC5-B0DD-2F562619E922}",
     canMultiLoad = True,
     description = (
         'Communication with devices that follow the '

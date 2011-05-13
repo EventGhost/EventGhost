@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 import wx
@@ -40,8 +34,8 @@ if IS_VISTA:
 else:
     ShutdownBlockReasonCreate = lambda hwnd, msg: None
     ShutdownBlockReasonDestroy = lambda hwnd: None
-    
-    
+
+
 class App(wx.App):
 
     def __init__(self):
@@ -67,7 +61,7 @@ class App(wx.App):
         else:
             self.Bind(wx.EVT_QUERY_END_SESSION, self.OnQueryEndSessionXp)
         self.Bind(wx.EVT_END_SESSION, self.OnEndSession)
-            
+
         return True
 
 
@@ -79,8 +73,8 @@ class App(wx.App):
         if eg.document.CheckFileNeedsSave() == wx.ID_CANCEL:
             event.Veto()
         wx.CallAfter(self.Reset)
-            
-    
+
+
     @eg.LogItWithReturn
     def OnQueryEndSessionVista(self, event):
         if self.shouldVeto:
@@ -88,7 +82,7 @@ class App(wx.App):
             return
         if not self.firstQuery:
             return
-        if eg.document.IsDirty():
+        if eg.document.isDirty:
             self.firstQuery = False
             self.shouldVeto = True
             event.Veto(True)
@@ -110,16 +104,39 @@ class App(wx.App):
                 self.shouldVeto = True
                 wx.CallAfter(self.Reset)
                 return
-                
-                
+
+
     @eg.LogItWithReturn
     def Reset(self):
         self.shouldVeto = False
         self.firstQuery = True
         ShutdownBlockReasonDestroy(self.hwnd)
-        
-        
-    
+
+
+    def Restart(self):
+        def Do():
+            from eg.WinApi.PipedProcess import RunAs
+            args = []
+            if sys.argv[0] != sys.executable:
+                args.append(sys.argv[0])
+            args.append("-restart")
+            if eg.debugLevel:
+                args.append("-debug")
+                args.append(str(eg.debugLevel))
+            if eg.startupArguments.configDir:
+                args.append("-configdir")
+                args.append(eg.startupArguments.configDir)
+            if self.Exit():
+                RunAs(sys.executable, False, *args)
+                return True
+            else:
+                return False
+        if threading.currentThread() == eg.mainThread:
+            return Do()
+        else:
+            return eg.CallWait(Do)
+
+
     @eg.LogItWithReturn
     def OnEndSession(self, dummyEvent):
         if self.endSession:
@@ -132,16 +149,17 @@ class App(wx.App):
         eg.taskBarIcon.Close()
         self.OnExit()
 
-    
+
     @eg.LogIt
     def Exit(self, dummyEvent=None):
         if eg.document.CheckFileNeedsSave() == wx.ID_CANCEL:
-            return
+            return False
         if eg.pyCrustFrame:
             eg.pyCrustFrame.Close()
         eg.document.Close()
         eg.taskBarIcon.Close()
         self.ExitMainLoop()
+        return True
 
 
     @eg.LogIt

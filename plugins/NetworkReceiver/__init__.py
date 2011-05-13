@@ -1,32 +1,27 @@
-# This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# -*- coding: utf-8 -*-
+#
+# This file is a plugin for EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 
 eg.RegisterPlugin(
     name = "Network Event Receiver",
     description = "Receives events from Network Event Sender plugins.",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.0",
     author = "Bitmonster",
+    guid = "{8F35AE6D-AF12-4A94-AA91-4B63F0CBBE1C}",
     canMultiLoad = True,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QAAAAAAAD5Q7t/"
@@ -56,23 +51,23 @@ class Text:
     tcpBox = "TCP/IP Settings"
     securityBox = "Security"
     eventGenerationBox = "Event generation"
-    
-    
+
+
 DEBUG = False
 if DEBUG:
     log = eg.Print
 else:
     def log(dummyMesg):
         pass
-    
+
 
 class ServerHandler(asynchat.async_chat):
     """Telnet engine class. Implements command line user interface."""
-    
+
     def __init__(self, sock, addr, hex_md5, cookie, plugin, server):
         log("Server Handler inited")
         self.plugin = plugin
-        
+
         # Call constructor of the parent class
         asynchat.async_chat.__init__(self, sock)
 
@@ -86,13 +81,13 @@ class ServerHandler(asynchat.async_chat):
         self.payload = [self.ip]
         self.hex_md5 = hex_md5
         self.cookie = cookie
-                  
-                
+
+
     def handle_close(self):
         self.plugin.EndLastEvent()
         asynchat.async_chat.handle_close(self)
-    
-    
+
+
     def collect_incoming_data(self, data):
         """Put data read from socket to a buffer
         """
@@ -105,13 +100,13 @@ class ServerHandler(asynchat.async_chat):
         def push(self, data):
             log(">>", repr(data))
             asynchat.async_chat.push(self, data)
-    
-    
+
+
     def found_terminator(self):
         """
         This method is called by asynchronous engine when it finds
         command terminator in the input stream
-        """   
+        """
         # Take the complete line
         line = self.data
 
@@ -128,7 +123,7 @@ class ServerHandler(asynchat.async_chat):
         #asynchat.async_chat.handle_close(self)
         self.plugin.EndLastEvent()
         self.state = self.state1
- 
+
 
     def state1(self, line):
         """
@@ -139,8 +134,8 @@ class ServerHandler(asynchat.async_chat):
             self.push(self.cookie + "\n")
         else:
             self.initiate_close()
-                
-                
+
+
     def state2(self, line):
         """get md5 digest
         """
@@ -153,8 +148,8 @@ class ServerHandler(asynchat.async_chat):
         else:
             eg.PrintError("NetworkReceiver md5 error")
             self.initiate_close()
-            
-            
+
+
     def state3(self, line):
         line = line.decode(eg.systemEncoding)
         if line == "close":
@@ -170,11 +165,11 @@ class ServerHandler(asynchat.async_chat):
                 else:
                     self.plugin.TriggerEvent(line, self.payload)
             self.payload = [self.ip]
-            
-            
+
+
 
 class Server(asyncore.dispatcher):
-    
+
     def __init__ (self, port, password, handler):
         self.handler = handler
         self.cookie = hex(random.randrange(65536))
@@ -183,16 +178,16 @@ class Server(asyncore.dispatcher):
 
         # Call parent class constructor explicitly
         asyncore.dispatcher.__init__(self)
-        
+
         # Create socket of requested type
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        
+
         # restart the asyncore loop, so it notices the new socket
         eg.RestartAsyncore()
 
         # Set it to re-use address
         #self.set_reuse_addr()
-        
+
         # Bind to all interfaces of this host at specified port
         self.bind(('', port))
 
@@ -207,11 +202,11 @@ class Server(asyncore.dispatcher):
         log("handle_accept")
         (sock, addr) = self.accept()
         ServerHandler(
-            sock, 
-            addr, 
-            self.hex_md5, 
-            self.cookie, 
-            self.handler, 
+            sock,
+            addr,
+            self.hex_md5,
+            self.cookie,
+            self.handler,
             self
         )
 
@@ -219,10 +214,10 @@ class Server(asyncore.dispatcher):
 
 class NetworkReceiver(eg.PluginBase):
     text = Text
-    
+
     def __init__(self):
         self.AddEvents()
-    
+
     def __start__(self, port, password, prefix):
         self.port = port
         self.password = password
@@ -231,8 +226,8 @@ class NetworkReceiver(eg.PluginBase):
             self.server = Server(self.port, self.password, self)
         except socket.error, exc:
             raise self.Exception(exc[1])
-        
-        
+
+
     def __stop__(self):
         if self.server:
             self.server.close()
@@ -242,7 +237,6 @@ class NetworkReceiver(eg.PluginBase):
     def Configure(self, port=1024, password="", prefix="TCP"):
         text = self.text
         panel = eg.ConfigPanel()
-        
         portCtrl = panel.SpinIntCtrl(port, max=65535)
         passwordCtrl = panel.TextCtrl(password, style=wx.TE_PASSWORD)
         eventPrefixCtrl = panel.TextCtrl(prefix)
@@ -260,11 +254,10 @@ class NetworkReceiver(eg.PluginBase):
             (box2, 0, wx.EXPAND|wx.TOP, 10),
             (box3, 0, wx.EXPAND|wx.TOP, 10),
         ])
-        
         while panel.Affirmed():
             panel.SetResult(
-                portCtrl.GetValue(), 
-                passwordCtrl.GetValue(), 
+                portCtrl.GetValue(),
+                passwordCtrl.GetValue(),
                 eventPrefixCtrl.GetValue()
             )
 

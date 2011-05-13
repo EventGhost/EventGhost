@@ -1,31 +1,24 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 import wx
 import time
 import sys
 import os
-import platform
 import hashlib
 import _winreg
 from StringIO import StringIO
@@ -63,7 +56,7 @@ def GetPluginAuthors():
     tmp.sort(key=lambda x: (-len(x[1]), x[0].lower()))
     authorList = []
     for author, pluginNames in tmp:
-        pluginNames.sort(key=str.lower)
+        pluginNames.sort(key=lambda s: s.lower())
         authorList.append((author, ",<BR>".join(pluginNames)))
     return authorList
 
@@ -74,12 +67,14 @@ SPECIAL_THANKS_DATA = (
         "Translators:",
         2,
         (
-            ("Lubo&scaron; R&uuml;ckl", "Czech"),
+            ("Pako", "Czech"),
             ("Fredrik Jacobsson", "Swedish"),
             ("karlr", "Spanish"),
             ("peter", "Dutch"),
             ("noc123", "Polish"),
             ("somainit", "Japanese"),
+            ("PedroV9", "Portuguese (Brazilian)"),
+            ("batto", "Vietnamese"),
         ),
     ),
     (
@@ -113,6 +108,21 @@ SPECIAL_THANKS_DATA = (
             "Paul Tonkes",       # 22. Feb 2009
             "Ina Henderson",     # 05. May 2009
             "Kosta Krauth",      # 06. May 2009
+            "Leandre da Silva",  # 15. May 2009
+            "Franz Pentenrieder",# 27. May 2009
+            "David Grenker",     # 30. May 2009
+            "Anthony Field",     # 09. Jun 2009
+            "Nikhil Kapur",      # 16. Jun 2009
+            "Tom Browning",      # 02. Jul 2009
+            "Ludwig Strydom",    # 22. Jul 2009
+            "Christoph Heins",   # 26. Aug 2009
+            "Jeffrey Sonnabend", #  2. Sep 2009
+            "Stephen Evans",     #  6. Sep 2009
+            "Sven Buerger",      #  9. Sep 2009
+            "Erik Josefsson",    # 11. Nov 2009
+            "Harry Hartenstine", #  7. Dec 2009
+            "Mathew Bentley",    #  8. Jan 2010
+            "Jonas Ernst",       # 17. Jan 2010
         ),
     ),
     (
@@ -140,7 +150,7 @@ SPECIAL_THANKS_DATA = (
                 'Benjamin Webb',
                 (
                     'for the nice <a href="http://www.eventghost.net/mediawiki/'
-                    'Controlling_Your_Living_Room_with_EventGhost">'
+                    'Controlling%20your%20living%20room%20with%20EventGhost">'
                     'wiki article</a>'
                 )
             ),
@@ -316,7 +326,7 @@ class SpecialThanksPanel(HtmlPanel):
             else:
                 for name, descr in persons:
                     write('<TR><TD ALIGN=RIGHT VALIGN=TOP WIDTH="50%"><B>')
-                    write(name)                     
+                    write(name)
                     write('</B></RIGHT></TD><TD WIDTH="50%"><I>')
                     write(descr)
                     write('</I></RIGHT></TD></TR>')
@@ -338,30 +348,39 @@ class LicensePanel(HtmlPanel):
 class SystemInfoPanel(HtmlPanel):
 
     def __init__(self, parent):
+        from eg.WinApi.SystemInformation import GetWindowsVersionString
         buildTime = time.strftime(
             Text.CreationDate,
             time.gmtime(eg.Version.buildTime)
         ).decode(eg.systemEncoding)
-        totalMemory, availableMemory = GetRam()
+        totalMemory = GetRam()[0]
         pythonVersion = "%d.%d.%d %s %d" % sys.version_info
         if is_stackless:
             pythonVersion = "Stackless Python " + pythonVersion
-        self.sysInfos = (
-            ("EventGhost Version", eg.Version.string),
+        self.sysInfos = [
+            "Software",
+            ("Program Version", eg.Version.string),
             ("Build Time", buildTime),
             ("Python Version", pythonVersion),
             ("wxPython Version", wx.VERSION_STRING),
-            ("Platform", platform.platform()),
+            "\nSystem",
+            ("Operating System", GetWindowsVersionString()),
             ("CPU", GetCpuName()),
-            ("Total RAM", "%s MB" % totalMemory),
-            ("Available RAM", "%s MB" % availableMemory),
-        )
-
-        sysInfoTemplate = "".join(
-            ['<tr><td align="right"><b>%s:</b></td><td>%s</td></tr>' % sysInfo
-                for sysInfo in self.sysInfos]
-        )
-        page = "<center><table>%s</table></center>" % sysInfoTemplate
+            ("RAM", "%s MB" % totalMemory),
+            "\nUSB-Devices",
+        ]
+        devices = eg.WinUsb.ListDevices()
+        for hardwareId in sorted(devices.keys()):
+            device = devices[hardwareId]
+            self.sysInfos.append((device.name, device.hardwareId))
+        lines = []
+        for line in self.sysInfos:
+            if isinstance(line, tuple):
+                lines.append('<tr><td>%s:</td><td>%s</td></tr>' % line)
+            else:
+                lines.append('</table><p><b>%s</b><br><table>' % line)
+        lines.append('</table>')
+        page = "\n".join(lines)
         HtmlPanel.__init__(self, parent, page)
         self.htmlWindow.Bind(wx.EVT_RIGHT_DOWN, self.OnRightClick)
         self.htmlWindow.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
@@ -388,12 +407,19 @@ class SystemInfoPanel(HtmlPanel):
 
     @eg.LogIt
     def OnCmdCopy(self, dummyEvent):
-        if wx.TheClipboard.Open():
-            text = "\r\n".join(["%s: %s" % x for x in self.sysInfos])
-            tdata = wx.TextDataObject(text)
-            wx.TheClipboard.SetData(tdata)
-            wx.TheClipboard.Close()
-            wx.TheClipboard.Flush()
+        if not wx.TheClipboard.Open():
+            return
+        lines = []
+        for line in self.sysInfos:
+            if isinstance(line, tuple):
+                lines.append("%s: %s" % line)
+            else:
+                lines.append("%s" % line)
+        text = "\n".join(lines)
+        tdata = wx.TextDataObject(text.replace("\n", "\r\n"))
+        wx.TheClipboard.SetData(tdata)
+        wx.TheClipboard.Close()
+        wx.TheClipboard.Flush()
 
 
 
@@ -402,7 +428,7 @@ class ChangelogPanel(HtmlPanel):
     @eg.TimeIt
     def __init__(self, parent):
         try:
-            infile = open(os.path.join(eg.MAIN_DIR, "CHANGELOG.TXT"))
+            infile = open(os.path.join(eg.mainDir, "CHANGELOG.TXT"))
             text = infile.read()
         except IOError:
             text = ""
@@ -459,7 +485,7 @@ class AboutDialog(eg.TaskletDialog):
         notebook.AddPage(SpecialThanksPanel(notebook), Text.tabSpecialThanks)
         notebook.AddPage(LicensePanel(notebook), Text.tabLicense)
         notebook.AddPage(SystemInfoPanel(notebook), Text.tabSystemInfo)
-        notebook.AddPage(ChangelogPanel(notebook), Text.tabChangelog)
+        #notebook.AddPage(ChangelogPanel(notebook), Text.tabChangelog)
 
         def OnPageChanged(event):
             pageNum = event.GetSelection()

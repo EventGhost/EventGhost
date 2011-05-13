@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 from types import ClassType
@@ -49,7 +43,7 @@ class ActionGroup(object):
             self.icon = plugin.info.icon
         else:
             self.icon = eg.Icons.PathIcon(
-                join(plugin.info.GetPath(), iconFile + ".png")
+                join(plugin.info.path, iconFile + ".png")
             )
         self.items = []
 
@@ -101,7 +95,7 @@ class ActionGroup(object):
         icon = pluginInfo.icon
         if actionCls.iconFile:
             try:
-                path = join(pluginInfo.GetPath(), actionCls.iconFile + ".png")
+                path = join(pluginInfo.path, actionCls.iconFile + ".png")
                 icon = eg.Icons.PathIcon(path)
             except:
                 eg.PrintError(
@@ -187,7 +181,6 @@ class ActionGroup(object):
                         "Wrong number of fields in the list",
                         parts
                     )
-
                 group.AddAction(actionCls, clsName, name, description, value)
 
         Recurse(theList, self)

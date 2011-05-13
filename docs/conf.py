@@ -41,7 +41,7 @@ master_doc = 'index'
 
 # General substitutions.
 project = u'EventGhost'
-copyright = u'2008, EventGhost.org'
+copyright = u'2008, EventGhost.net'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.

@@ -1,48 +1,46 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 import wx
 import threading
 import os
-from os.path import join
+import sys
+from os.path import join, dirname, abspath
 from eg.WinApi.Utils import GetMonitorDimensions
 from eg.WinApi.Dynamic import (
-    CreateEvent, 
-    SetEvent, 
-    SetWindowPos, 
-    SWP_HIDEWINDOW, 
+    CreateEvent,
+    SetEvent,
+    SetWindowPos,
+    SWP_HIDEWINDOW,
     SWP_FRAMECHANGED,
-    SWP_NOACTIVATE, 
-    SWP_NOOWNERZORDER, 
+    SWP_NOACTIVATE,
+    SWP_NOOWNERZORDER,
     SWP_SHOWWINDOW
 )
 
 HWND_FLAGS = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_FRAMECHANGED
-SKIN_DIR = join(os.path.abspath(os.path.split(__file__)[0]), "OsdSkins")
+SKIN_DIR = join(
+    abspath(dirname(__file__.decode('mbcs'))),
+    "OsdSkins"
+)
 DEFAULT_FONT_INFO = wx.Font(
-    18, 
-    wx.SWISS, 
-    wx.NORMAL, 
+    18,
+    wx.SWISS,
+    wx.NORMAL,
     wx.BOLD
 ).GetNativeFontInfoDesc()
 
@@ -58,7 +56,7 @@ def AlignCenter(width, offset):
 def AlignRight(width, offset):
     return width - offset
 
-         
+
 ALIGNMENT_FUNCS = (
     (AlignLeft, AlignLeft), # Top Left
     (AlignRight, AlignLeft), # Top Right
@@ -76,19 +74,19 @@ def DrawTextLines(deviceContext, textLines, textHeights, xOffset=0, yOffset=0):
     for i, textLine in enumerate(textLines):
         deviceContext.DrawText(textLine, xOffset, yOffset)
         yOffset += textHeights[i]
-        
-        
+
+
 
 class OSDFrame(wx.Frame):
     """ A shaped frame to display the OSD. """
-    
+
     @eg.LogIt
     def __init__(self, parent):
         wx.Frame.__init__(
-            self, 
-            parent, 
+            self,
+            parent,
             -1,
-            "OSD Window", 
+            "OSD Window",
             size=(0, 0),
             style=wx.FRAME_SHAPED
                 |wx.NO_BORDER
@@ -102,21 +100,21 @@ class OSDFrame(wx.Frame):
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
-        
+
     @eg.LogIt
     def ShowOSD(
-        self, 
-        osdText="", 
+        self,
+        osdText="",
         fontInfo=None,
-        textColour=(255, 255, 255), 
+        textColour=(255, 255, 255),
         outlineColour=(0, 0, 0),
-        alignment=0, 
-        offset=(0, 0), 
-        displayNumber=0, 
-        timeout=3.0, 
+        alignment=0,
+        offset=(0, 0),
+        displayNumber=0,
+        timeout=3.0,
         event=None,
         skin=None,
-    ):        
+    ):
         self.timer.cancel()
         if osdText.strip() == "":
             self.bitmap = wx.EmptyBitmap(0, 0)
@@ -127,7 +125,7 @@ class OSDFrame(wx.Frame):
         #self.Freeze()
         memoryDC = wx.MemoryDC()
 
-        # make sure the mask colour is not used by foreground or 
+        # make sure the mask colour is not used by foreground or
         # background colour
         forbiddenColours = (textColour, outlineColour)
         maskColour = (255, 0, 255)
@@ -142,22 +140,22 @@ class OSDFrame(wx.Frame):
             fontInfo = DEFAULT_FONT_INFO
         font = wx.FontFromNativeInfoString(fontInfo)
         memoryDC.SetFont(font)
-        
+
         textLines = osdText.splitlines()
         sizes = [memoryDC.GetTextExtent(line or " ") for line in textLines]
         textWidths, textHeights = zip(*sizes)
         textWidth = max(textWidths)
         textHeight = sum(textHeights)
-        
+
         if skin:
             bitmap = self.GetSkinnedBitmap(
-                textLines, 
-                textWidths, 
-                textHeights, 
+                textLines,
+                textWidths,
+                textHeights,
                 textWidth,
                 textHeight,
-                memoryDC, 
-                textColour, 
+                memoryDC,
+                textColour,
                 "Default"
             )
             width, height = bitmap.GetSize()
@@ -167,8 +165,8 @@ class OSDFrame(wx.Frame):
             memoryDC.SelectObject(bitmap)
 
             # fill the DC background with the maskColour
-            memoryDC.Clear() 
-            
+            memoryDC.Clear()
+
             # draw the text with the foreground colour
             memoryDC.SetTextForeground(textColour)
             DrawTextLines(memoryDC, textLines, textHeights)
@@ -177,10 +175,10 @@ class OSDFrame(wx.Frame):
             # region of the window
             memoryDC.SelectObject(wx.NullBitmap)
             bitmap.SetMask(wx.Mask(bitmap, maskColour))
-            
+
             # fill the anti-aliased pixels of the text with the foreground
             # colour, because the region of the window will add these
-            # half filled pixels also. Otherwise we would get an ugly 
+            # half filled pixels also. Otherwise we would get an ugly
             # border with mask-coloured pixels.
             memoryDC.SetBackground(wx.Brush(textColour, wx.SOLID))
             memoryDC.SelectObject(bitmap)
@@ -198,12 +196,12 @@ class OSDFrame(wx.Frame):
             outlineDC.SelectObject(wx.NullBitmap)
             outlineBitmap.SetMask(wx.Mask(outlineBitmap))
             outlineDC.SelectObject(outlineBitmap)
-            
+
             bitmap = wx.EmptyBitmap(width, height)
             memoryDC.SetTextForeground(outlineColour)
             memoryDC.SelectObject(bitmap)
             memoryDC.Clear()
-            
+
             Blit = memoryDC.Blit
             logicalFunc = wx.COPY
             for x in xrange(5):
@@ -216,7 +214,7 @@ class OSDFrame(wx.Frame):
             DrawTextLines(memoryDC, textLines, textHeights, 2, 2)
             memoryDC.SelectObject(wx.NullBitmap)
             bitmap.SetMask(wx.Mask(bitmap, maskColour))
-                
+
         region = wx.RegionFromBitmap(bitmap)
         self.SetShape(region)
         self.bitmap = bitmap
@@ -231,29 +229,31 @@ class OSDFrame(wx.Frame):
         y = displayRect.y + yFunc((displayRect.height - height), yOffset)
         deviceContext = wx.ClientDC(self)
         deviceContext.DrawBitmap(self.bitmap, 0, 0, False)
-        SetWindowPos(self.hwnd, 0, x, y, width, height, HWND_FLAGS|SWP_SHOWWINDOW)
+        SetWindowPos(
+            self.hwnd, 0, x, y, width, height, HWND_FLAGS|SWP_SHOWWINDOW
+        )
 
         if timeout > 0.0:
             self.timer = threading.Timer(timeout, self.OnTimeout)
             self.timer.start()
         eg.app.Yield(True)
         SetEvent(event)
-        
+
 
     def GetSkinnedBitmap(
-        self, 
-        textLines,                 
-        textWidths, 
-        textHeights, 
+        self,
+        textLines,
+        textWidths,
+        textHeights,
         textWidth,
         textHeight,
-        memoryDC, 
-        textColour, 
+        memoryDC,
+        textColour,
         skinName
     ):
-        image = wx.Image(join(SKIN_DIR, skinName + ".png"))        
+        image = wx.Image(join(SKIN_DIR, skinName + ".png"))
         option = eg.Bunch()
-        
+
         def Setup(minWidth, minHeight, xMargin, yMargin, transparentColour):
             width = textWidth + 2 * xMargin
             if width < minWidth:
@@ -268,20 +268,20 @@ class OSDFrame(wx.Frame):
             option.bitmap = bitmap
             memoryDC.SelectObject(bitmap)
             return width, height
-            
+
         def Copy(x, y, width, height, toX, toY):
             bmp = wx.BitmapFromImage(image.GetSubImage((x, y, width, height)))
             memoryDC.DrawBitmap(bmp, toX, toY)
-            
+
         def Scale(x, y, width, height, toX, toY, toWidth, toHeight):
             subImage = image.GetSubImage((x, y, width, height))
             subImage.Rescale(toWidth, toHeight, wx.IMAGE_QUALITY_HIGH)
             bmp = wx.BitmapFromImage(subImage)
             memoryDC.DrawBitmap(bmp, toX, toY)
-            
+
         scriptGlobals = dict(Setup=Setup, Copy=Copy, Scale=Scale)
-        execfile(join(SKIN_DIR, skinName + ".py"), scriptGlobals)
-        
+        eg.ExecFile(join(SKIN_DIR, skinName + ".py"), scriptGlobals)
+
         bitmap = option.bitmap
         memoryDC.SelectObject(wx.NullBitmap)
         bitmap.SetMask(wx.Mask(bitmap, option.transparentColour))
@@ -293,33 +293,33 @@ class OSDFrame(wx.Frame):
         )
         memoryDC.SelectObject(wx.NullBitmap)
         return bitmap
-    
-    
+
+
     @eg.LogIt
     def OnTimeout(self):
         wx.CallAfter(
             SetWindowPos, self.hwnd, 0, 0, 0, 0, 0, HWND_FLAGS|SWP_HIDEWINDOW
         )
-        
-        
+
+
     @eg.LogIt
     def OnPaint(self, dummyEvent=None):
         wx.BufferedPaintDC(self, self.bitmap)
 
 
     def OnClose(self, dummyEvent=None):
-        # BUGFIX: Just hooking this event makes sure that nothing happens 
+        # BUGFIX: Just hooking this event makes sure that nothing happens
         # when this OSD window is closed
         pass
-    
-    
+
+
     if eg.debugLevel:
         @eg.LogIt
         def __del__(self):
             pass
-        
-     
-    
+
+
+
 class ShowOSD(eg.ActionBase):
     name = "Show OSD"
     description = "Shows a simple On Screen Display."
@@ -332,10 +332,10 @@ class ShowOSD(eg.ActionBase):
         outlineFont = "Outline OSD"
         alignment = "Alignment:"
         alignmentChoices = [
-            "Top Left", 
-            "Top Right", 
+            "Top Left",
+            "Top Right",
             "Bottom Left",
-            "Bottom Right", 
+            "Bottom Right",
             "Screen Center",
             "Bottom Center",
             "Top Center",
@@ -349,7 +349,7 @@ class ShowOSD(eg.ActionBase):
         wait2 = "seconds (0 = never)"
         skin = "Use skin"
 
-    
+
     @classmethod
     def OnAddAction(cls):
         def MakeOSD():
@@ -359,41 +359,41 @@ class ShowOSD(eg.ActionBase):
                 cls.osdFrame.Close()
             eg.app.onExitFuncs.append(CloseOSD)
         wx.CallAfter(MakeOSD)
-        
+
 
     @eg.LogIt
     def OnClose(self):
         #self.osdFrame.timer.cancel()
         #wx.CallAfter(self.osdFrame.Close)
         self.osdFrame = None
-        
-        
+
+
     def __call__(
-        self, 
-        osdText="", 
+        self,
+        osdText="",
         fontInfo=None,
-        foregroundColour=(255, 255, 255), 
+        foregroundColour=(255, 255, 255),
         backgroundColour=(0, 0, 0),
-        alignment=0, 
-        offset=(0, 0), 
-        displayNumber=0, 
+        alignment=0,
+        offset=(0, 0),
+        displayNumber=0,
         timeout=3.0,
         skin=None
     ):
-                
+
         self.osdFrame.timer.cancel()
         osdText = eg.ParseString(osdText)
         event = CreateEvent(None, 0, 0, None)
         wx.CallAfter(
-            self.osdFrame.ShowOSD, 
-            osdText, 
-            fontInfo, 
+            self.osdFrame.ShowOSD,
+            osdText,
+            fontInfo,
             foregroundColour,
-            backgroundColour, 
+            backgroundColour,
             alignment,
-            offset, 
-            displayNumber, 
-            timeout, 
+            offset,
+            displayNumber,
+            timeout,
             event,
             skin
         )
@@ -402,20 +402,20 @@ class ShowOSD(eg.ActionBase):
 
     def GetLabel(self, osdText, *dummyArgs):
         return self.text.label % osdText.replace("\n", r"\n")
-    
-    
+
+
     def Configure(
-        self, 
-        osdText="", 
+        self,
+        osdText="",
         fontInfo=None,
-        foregroundColour=(255, 255, 255), 
+        foregroundColour=(255, 255, 255),
         backgroundColour=(0, 0, 0),
-        alignment=0, 
-        offset=(0, 0), 
-        displayNumber=0, 
+        alignment=0,
+        offset=(0, 0),
+        displayNumber=0,
         timeout=3.0,
         skin=None,
-    ):                   
+    ):
         if fontInfo is None:
             fontInfo = DEFAULT_FONT_INFO
         panel = eg.ConfigPanel()
@@ -431,10 +431,10 @@ class ShowOSD(eg.ActionBase):
         xOffsetCtrl = panel.SpinIntCtrl(offset[0], -32000, 32000)
         yOffsetCtrl = panel.SpinIntCtrl(offset[1], -32000, 32000)
         timeCtrl = panel.SpinNumCtrl(timeout)
-        
+
         fontButton = panel.FontSelectButton(fontInfo)
         foregroundColourButton = panel.ColourSelectButton(foregroundColour)
-        
+
         if backgroundColour is None:
             tmpColour = (0, 0, 0)
         else:
@@ -442,12 +442,12 @@ class ShowOSD(eg.ActionBase):
         outlineCheckBox = panel.CheckBox(
             backgroundColour is not None, text.outlineFont
         )
-        
+
         backgroundColourButton = panel.ColourSelectButton(tmpColour)
         if backgroundColour is None:
             backgroundColourButton.Enable(False)
         skinCtrl = panel.CheckBox(bool(skin), text.skin)
-        
+
         sizer = wx.GridBagSizer(5, 5)
         expand = wx.EXPAND
         align = wx.ALIGN_CENTER_VERTICAL
@@ -473,16 +473,16 @@ class ShowOSD(eg.ActionBase):
             (timeCtrl, (5, 1), (1, 1), expand),
             (panel.StaticText(text.wait2), (5, 2), (1, 3), align),
         ])
-            
+
         sizer.AddGrowableCol(2)
         panel.sizer.Add(sizer, 1, wx.EXPAND)
-        
+
         def OnCheckBox(event):
             backgroundColourButton.Enable(outlineCheckBox.IsChecked())
             event.Skip()
-            
+
         outlineCheckBox.Bind(wx.EVT_CHECKBOX, OnCheckBox)
-        
+
         while panel.Affirmed():
             if outlineCheckBox.IsChecked():
                 outlineColour = backgroundColourButton.GetValue()
@@ -490,8 +490,8 @@ class ShowOSD(eg.ActionBase):
                 outlineColour = None
             panel.SetResult(
                 editTextCtrl.GetValue(),
-                fontButton.GetValue(), 
-                foregroundColourButton.GetValue(), 
+                fontButton.GetValue(),
+                foregroundColourButton.GetValue(),
                 outlineColour,
                 alignmentChoice.GetValue(),
                 (xOffsetCtrl.GetValue(), yOffsetCtrl.GetValue()),
@@ -499,5 +499,4 @@ class ShowOSD(eg.ActionBase):
                 timeCtrl.GetValue(),
                 skinCtrl.GetValue()
             )
-        
-        
+

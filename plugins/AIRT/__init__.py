@@ -4,8 +4,9 @@ import eg
 eg.RegisterPlugin(
     name = "Advanced IR-Transceiver",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.0." + "$LastChangedRevision: 1093 $".split()[1],
     kind = "remote",
+    guid = "{9BE52B40-66A0-46D4-B88B-A8C1B6B42CAA}",
     description = 'Hardware plugin for the "Advanced IR-Transceiver".',
     canMultiLoad = True,
 )

@@ -1,30 +1,23 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
-import wx
 import time
 from ContainerItem import ContainerItem
-from TreeItem import HINT_NO_DROP, HINT_MOVE_INSIDE
+from TreeItem import HINT_MOVE_INSIDE
 
 
 class RootItem(ContainerItem):
@@ -34,51 +27,53 @@ class RootItem(ContainerItem):
     guid = None
     isDeactivatable = False
     isRenameable = False
+    isMoveable = False
+    dropBehaviour = {
+        "Macro": HINT_MOVE_INSIDE,
+        "Folder": HINT_MOVE_INSIDE,
+    }
 
     def GetData(self):
         from comtypes import GUID
-        attr, text = ContainerItem.GetData(self)
         self.guid = str(GUID.create_new())
         self.time = str(time.time())
+        attr = []
         attr.append(('Version', str(eg.revision)))
         attr.append(('Guid', self.guid))
         attr.append(('Time', self.time))
-        return attr, text
+        return attr, None
 
 
     def __init__(self, parent, node):
         parent = None
+        passwords = node.find("Passwords")
+        if passwords is not None:
+            eg.Password.SetDatabaseContent(passwords.text.decode("base64"))
+            node.remove(passwords)
+        else:
+            eg.Password.SetDatabaseContent("")
         ContainerItem.__init__(self, parent, node)
         self.guid = node.attrib.get("guid", "0")
         self.time = node.attrib.get("time", "0")
         self.name = eg.text.General.configTree
+        self.expanded = True
 
 
-    def CreateTreeItem(self, tree, parentId):
-        self.id = tree.AddRoot(
-            self.name,
-            self.icon.index,
-            -1,
-            wx.TreeItemData(self)
-        )
-        tree.SetItemHasChildren(self.id, True)
-        return id
+    def WriteXmlChilds(self, streamWriter, indent):
+        content = eg.Password.GetDatabaseContent()
+        if content:
+            streamWriter("    <Passwords>\r\n")
+            for line in content.encode("base64").splitlines():
+                streamWriter("        %s\r\n" % line)
+            streamWriter("    </Passwords>\r\n")
+        for child in self.childs:
+            child.WriteXmlString(streamWriter, indent)
 
 
-    def _Delete(self):
+    def Delete(self):
         childs = self.childs[:]
         for child in childs:
-            child._Delete()
-
-
-    #@eg.AssertNotMainThread
-    def Select(self):
-        if self.tree:
-            self.tree.SelectItem(self.id)
-
-
-    def EnsureValidId(self, tree):
-        pass
+            child.Delete()
 
 
     def CanCut(self):
@@ -95,12 +90,4 @@ class RootItem(ContainerItem):
 
     def Enable(self, flag=True):
         pass
-
-
-    def DropTest(self, cls):
-        if cls == eg.MacroItem:
-            return HINT_MOVE_INSIDE
-        if cls == eg.FolderItem:
-            return HINT_MOVE_INSIDE
-        return HINT_NO_DROP
 

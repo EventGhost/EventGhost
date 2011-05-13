@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 from threading import Thread, Lock, Condition, currentThread
@@ -381,7 +375,9 @@ class SerialThread(Thread):
                         self.HandleReceive(lpBuf.raw)
                         continue
 
-            ret = MsgWaitForMultipleObjects(2, pHandles, 0, 100000, QS_ALLINPUT)
+            ret = MsgWaitForMultipleObjects(
+                2, pHandles, 0, 100000, QS_ALLINPUT
+            )
             if ret == WAIT_OBJECT_0:
                 returnValue = GetOverlappedResult(
                     hFile,
@@ -410,7 +406,6 @@ class SerialThread(Thread):
     @eg.LogItWithReturn
     def CallbackThreadProc(self):
         while self.keepAlive:
-            #print "CallbackThreadProc"
             self.readCondition.acquire()
             while len(self.buffer):
                 if self.readEventLock.acquire(0):
@@ -463,7 +458,9 @@ class SerialThread(Thread):
                 # Wait a little while for an event to occur.
                 res = WaitForSingleObject(osStatus.hEvent, 1000)
                 if res == WAIT_OBJECT_0:
-                    if GetOverlappedResult(hComm, byref(osStatus), byref(dwOvRes), 0):
+                    if GetOverlappedResult(
+                        hComm, byref(osStatus), byref(dwOvRes), 0
+                    ):
                         # Status event is stored in the event flag
                         # specified in the original WaitCommEvent call.
                         # Deal with the status event as appropriate.

@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 import os
@@ -29,8 +23,8 @@ import pythoncom
 
 class EventGhostCom:
     _public_methods_ = [
-        'TriggerEvent', 
-        'BringToFront', 
+        'TriggerEvent',
+        'BringToFront',
         'OpenFile',
         'InstallPlugin',
     ]
@@ -50,9 +44,10 @@ class EventGhostCom:
         eg.document.Open(filePath)
 
 
-    def InstallPlugin(self, filePath):
-        pass
-    
+    def InstallPlugin(self, pluginFile):
+        import wx
+        wx.CallAfter(eg.PluginInstall.Import, pluginFile)
+
 
 # Patch win32com to use the gen_py directory in the programs
 # application data directory instead of its package directory.
@@ -81,7 +76,9 @@ except pywintypes.error, data:
 sys.coinit_flags = 2
 from win32com.server import factory
 try:
-    __factory_infos = factory.RegisterClassFactories([EventGhostCom._reg_clsid_])
+    __factory_infos = factory.RegisterClassFactories(
+        [EventGhostCom._reg_clsid_]
+    )
 except:
     __factory_infos = []
     eg.PrintError("RegisterClassFactories failed!")

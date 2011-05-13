@@ -1,29 +1,29 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 """
 Definition of the abstract plugin class.
 """
 
+from threading import Lock
+import wx
 import eg
+
+
+gTriggerEventLock = Lock()
 
 
 class PluginBase(object):
@@ -127,11 +127,12 @@ class PluginBase(object):
         an event with a longer duration, it has to use
         :meth:`!TriggerEnduringEvent`.
         """
-        info = self.info
-        info.lastEvent.SetShouldEnd()
-        event = eg.TriggerEvent(suffix, payload, info.eventPrefix, self)
-        info.lastEvent = event
-        return event
+        with gTriggerEventLock:
+            info = self.info
+            info.lastEvent.SetShouldEnd()
+            event = eg.TriggerEvent(suffix, payload, info.eventPrefix, self)
+            info.lastEvent = event
+            return event
 
 
     def TriggerEnduringEvent(self, suffix, payload=None):
@@ -147,16 +148,17 @@ class PluginBase(object):
         :meth:`!TriggerEvent` or :meth:`!TriggerEnduringEvent`. This will
         ensure, that only one event per plugin can be active at the same time.
         """
-        info = self.info
-        info.lastEvent.SetShouldEnd()
-        event = eg.TriggerEnduringEvent(
-            suffix,
-            payload,
-            info.eventPrefix,
-            self
-        )
-        info.lastEvent = event
-        return event
+        with gTriggerEventLock:
+            info = self.info
+            info.lastEvent.SetShouldEnd()
+            event = eg.TriggerEnduringEvent(
+                suffix,
+                payload,
+                info.eventPrefix,
+                self
+            )
+            info.lastEvent = event
+            return event
 
 
     def EndLastEvent(self):
@@ -262,8 +264,13 @@ class PluginBase(object):
         """
         panel = eg.ConfigPanel()
         panel.dialog.buttonRow.applyButton.Enable(False)
-        label = panel.StaticText(eg.text.General.noOptionsPlugin)
-        panel.sizer.Add(label)
+        label = panel.StaticText(
+            eg.text.General.noOptionsPlugin,
+            style=wx.ALIGN_CENTRE|wx.ST_NO_AUTORESIZE
+        )
+        panel.sizer.Add((0, 0), 1, wx.EXPAND)
+        panel.sizer.Add(label, 0, wx.ALIGN_CENTRE)
+        panel.sizer.Add((0, 0), 1, wx.EXPAND)
         while panel.Affirmed():
             panel.SetResult()
 

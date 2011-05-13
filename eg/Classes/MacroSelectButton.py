@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 import wx
@@ -26,14 +20,17 @@ import wx
 
 class MacroSelectButton(wx.Window):
 
-    def __init__(self, parent, label, title, mesg, macro=None):
-        if macro is None:
+    def __init__(self, parent, label, title, mesg, treeLink=None):
+        if treeLink is None:
+            treeLink = eg.TreeLink(eg.Utils.GetTopLevelWindow(parent).treeItem)
+        self.treeLink = treeLink
+        self.macro = treeLink.target
+        if self.macro is None:
             macroName = ""
         else:
-            macroName = macro.name
+            macroName = self.macro.name
         self.title = title
         self.mesg = mesg
-        self.macro = macro
         wx.Window.__init__(self, parent, -1)
         self.textBox = eg.StaticTextBox(self, -1, macroName, size=(200, -1))
         self.button = wx.Button(self, -1, label)
@@ -75,5 +72,6 @@ class MacroSelectButton(wx.Window):
 
 
     def GetValue(self):
-        return self.macro
+        self.treeLink.SetTarget(self.macro)
+        return self.treeLink
 

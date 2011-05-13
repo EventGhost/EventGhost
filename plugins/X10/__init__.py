@@ -1,43 +1,37 @@
-# This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# -*- coding: utf-8 -*-
+#
+# This file is a plugin for EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """<rst>
 Hardware plugin for X10 compatible RF remotes.
 
 This includes remotes like:
 
-* `ATI Remote Wonder 
+* `ATI Remote Wonder
   <http://www.ati.com/products/remotewonder/index.html>`_
-* `ATI Remote Wonder PLUS 
+* `ATI Remote Wonder PLUS
   <http://www.ati.com/products/remotewonderplus/index.html>`_
-* `SnapStream Firefly 
+* `SnapStream Firefly
   <http://www.snapstream.com/products/firefly/>`_
-* `NVIDIA Personal Cinema Remote 
+* `NVIDIA Personal Cinema Remote
   <http://www.nvidia.com/object/feature_PC_remote.html>`_
-* `Marmitek PC Control 
+* `Marmitek PC Control
   <http://www.marmitek.com/>`_
-* `Pearl Q-Sonic Master Remote 6in1 
+* `Pearl Q-Sonic Master Remote 6in1
   <http://www.pearl.de/product.jsp?pdid=PE4444&catid=1601&vid=916&curr=DEM>`_
-* `Niveus PC Remote Control 
+* `Niveus PC Remote Control
   <http://www.niveusmedia.com/>`_
 * Medion RF Remote Control
 * Packard Bell RF MCE Remote Control OR32E
@@ -48,8 +42,10 @@ import eg
 eg.RegisterPlugin(
     name = "X10 Remote",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.0",
     kind = "remote",
+    hardwareId = "USB\\VID_0BC7&PID_0006",
+    guid = "{C3E96757-E507-4CC3-A2E6-465D48B87D09}",
     canMultiLoad = True,
     description = __doc__,
     url = "http://www.eventghost.net/forum/viewtopic.php?t=1589",
@@ -70,7 +66,7 @@ class Text:
     remoteBox = "Remote type:"
     idBox = "Active IDs:"
     usePrefix = "Event prefix:"
-    errorMesg = "No X10 receiver found!"    
+    errorMesg = "No X10 receiver found!"
 
 
 REMOTES = [
@@ -143,7 +139,7 @@ REMOTES = [
         }
     ],
     [
-        "Generic X10", 
+        "Generic X10",
         {
             'One': 'Num1',
             'Two': 'Num2',
@@ -158,7 +154,7 @@ REMOTES = [
         }
     ],
     [
-        "SnapStream FireFly", 
+        "SnapStream FireFly",
         {
             'One': 'Num1',
             'Two': 'Num2',
@@ -192,7 +188,7 @@ REMOTES = [
             'D': 'B',
             'E': 'C',
             'F': 'D',
-        }        
+        }
     ],
 ]
 
@@ -221,16 +217,16 @@ REMOTE_IDS = {
 
 class X10Events:
     plugin = None
-    
+
     #@eg.LogIt
     def OnX10Command(
-        self, 
-        bszCommand, 
-        eCommand, 
-        lAddress, 
+        self,
+        bszCommand,
+        eCommand,
+        lAddress,
         eKeyState,
-        lSequence, 
-        eCommandType, 
+        lSequence,
+        eCommandType,
         varTimestamp
     ):
         if eKeyState == 3:
@@ -244,43 +240,43 @@ class X10Events:
             plugin.TriggerEnduringEvent(plugin.mappingTable.get(event, event))
         elif eKeyState == 2:
             plugin.EndLastEvent()
-        
-                
- 
+
+
+
 class X10ThreadWorker(eg.ThreadWorker):
     comInstance = None
     plugin = None
     eventHandler = None
-    
+
     def Setup(self, plugin, eventHandler):
         self.plugin = plugin
         self.eventHandler = eventHandler
         self.comInstance = DispatchWithEvents(
-            'X10net.X10Control.1', 
+            'X10net.X10Control.1',
             eventHandler
         )
-        
-        
+
+
     def Finish(self):
         if self.comInstance:
             self.comInstance.Close()
             del self.comInstance
-        
-        
-        
+
+
+
 class X10(eg.PluginBase):
     text = Text
-    
+
     def __init__(self):
         self.AddEvents()
 
-    
+
     def __start__(self, remoteType=None, ids=None, prefix=None):
         self.remoteType = remoteType
         self.ids = ids
         self.info.eventPrefix = prefix
         self.mappingTable = REMOTES[remoteType][1]
-        
+
         class SubX10Events(X10Events):
             plugin = self
         self.workerThread = X10ThreadWorker(self, SubX10Events)
@@ -288,16 +284,16 @@ class X10(eg.PluginBase):
             self.workerThread.Start(20)
         except:
             raise self.Exception(self.text.errorMesg)
-        
+
 
     def __stop__(self):
         self.workerThread.Stop(10)
-            
-            
+
+
     def GetLabel(self, remoteType, *dummyArgs):
         return "X10: " + REMOTES[remoteType][0]
-        
-        
+
+
     def Configure(self, remoteType=2, ids=None, prefix="X10"):
         panel = eg.ConfigPanel()
         text = self.text
@@ -309,7 +305,7 @@ class X10(eg.PluginBase):
                 selection = i
         remoteTypeCtrl = panel.Choice(selection, fbtypes)
         prefixCtrl = panel.TextCtrl(prefix)
-        
+
         btnsizer = wx.FlexGridSizer(4, 4)
         idBtns = []
         for i in xrange(16):
@@ -318,14 +314,14 @@ class X10(eg.PluginBase):
                 btn.SetValue(True)
             btnsizer.Add(btn)
             idBtns.append(btn)
-            
+
         selectAllButton = panel.Button(text.allButton, style=wx.BU_EXACTFIT)
         def OnSelectAll(event):
             for item in idBtns:
                 item.SetValue(True)
             event.Skip()
         selectAllButton.Bind(wx.EVT_BUTTON, OnSelectAll)
-        
+
         selectNoneButton = panel.Button(text.noneButton, style=wx.BU_EXACTFIT)
         def OnSelectNone(event):
             for item in idBtns:
@@ -362,11 +358,11 @@ class X10(eg.PluginBase):
             ((0, 0), 1, wx.EXPAND),
         )
         panel.sizer.Add(mainSizer, 1, wx.EXPAND)
-        
+
         while panel.Affirmed():
             panel.SetResult(
-                REMOTES_SORT_ORDER[remoteTypeCtrl.GetValue()], 
-                [i+1 for i, button in enumerate(idBtns) if button.GetValue()], 
+                REMOTES_SORT_ORDER[remoteTypeCtrl.GetValue()],
+                [i+1 for i, button in enumerate(idBtns) if button.GetValue()],
                 prefixCtrl.GetValue()
             )
 

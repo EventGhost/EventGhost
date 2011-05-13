@@ -27,7 +27,7 @@ class Text:
     errorReportLength = "Report length must not be zero for device "
     errorMultipleDevices = "Multiple devices found. Don't know which to use."
     vendorID = "Vendor ID "
-    
+
 #structures for ctypes
 class GUID(Structure):
     _fields_ = [
@@ -199,17 +199,17 @@ class HIDThread(threading.Thread):
 
     def SetRawCallback(self, callback):
         self.RawCallback = callback;
-        
+
     def SetButtonCallback(self, callback):
         self.ButtonCallback = callback
-        
+
     def SetValueCallback(self, callback):
         self.ValueCallback = callback
 
     def SetStopCallback(self, callback):
         self.StopCallback = callback
 
-    @eg.LogIt    
+    @eg.LogIt
     def WaitForInit(self):
         try:
             self.lockObject.acquire()
@@ -221,8 +221,8 @@ class HIDThread(threading.Thread):
             if eg.debugLevel:
                 print "finished waiting for init of HID-Thread " + self.getName()
 
-            
-    @eg.LogIt    
+
+    @eg.LogIt
     def SetFeature(self, buffer):
         if self.handle:
             bufferLength = ULONG(len(buffer))
@@ -272,10 +272,10 @@ class HIDThread(threading.Thread):
             )
         except pywintypes.error as (errno, function, strerror):
             self.lockObject.release()
-            eg.PrintError(self.text.errorOpen + self.deviceName + " (" + strerror + ")") 
+            eg.PrintError(self.text.errorOpen + self.deviceName + " (" + strerror + ")")
             return
-        
-        
+
+
         hidDLL =  ctypes.windll.hid
         setupapiDLL = ctypes.windll.setupapi
 
@@ -294,7 +294,7 @@ class HIDThread(threading.Thread):
         if n == 0:
             self.abort = True
             eg.PrintError(self.text.errorReportLength + self.deviceName)
-            
+
         rt = c_int(0)   #report type input
         rl = c_ulong(n)  #report length
         maxDataL = hidDLL.HidP_MaxDataListLength(rt, preparsedData)
@@ -355,17 +355,17 @@ class HIDThread(threading.Thread):
         #prepare data array with maximum possible length
         DataArrayType = HIDP_DATA * maxDataL
         data = DataArrayType()
-        
+
         #initializing finished
         try:
             self.handle = handle;
             self.initialized = True
             rc, newBuf = win32file.ReadFile(handle, n, self._overlappedRead)
             if eg.debugLevel:
-                print self.getName() + "init done. Entering loop" 
-            
+                print self.getName() + "init done. Entering loop"
+
             self.lockObject.release()
-            
+
             while not self.abort:
                 if rc == 997: #error_io_pending
                     win32event.WaitForSingleObject(
@@ -374,7 +374,7 @@ class HIDThread(threading.Thread):
 
                 buf = newBuf
                 try:
-                    
+
                     win32event.ResetEvent(self._overlappedRead.hEvent)
                     rc, newBuf = win32file.ReadFile(handle, n, self._overlappedRead)
                 except pywintypes.error as (errno, function, strerror):
@@ -383,7 +383,7 @@ class HIDThread(threading.Thread):
                     if errno == 1167:
                         eg.PrintError(self.text.errorDisconnected + self.deviceName)
                     else:
-                        eg.PrintError(self.text.errorRead + self.deviceName + " (" + strerror + ")") 
+                        eg.PrintError(self.text.errorRead + self.deviceName + " (" + strerror + ")")
 
                 #parse data
                 if len(buf) == n and not self.abort:
@@ -393,7 +393,7 @@ class HIDThread(threading.Thread):
                             self.RawCallback(buf)
                         except Exception:
                             eg.PrintTraceback()
-    
+
                     #handling button presses and values
                     if maxDataL != 0:
                         dataL = c_ulong(maxDataL)
@@ -419,14 +419,14 @@ class HIDThread(threading.Thread):
                                 values[tmpIndex] = int(data[i].Data.RawValue)
                             else:
                                 eg.PrintError(self.text.errorInvalidDataIndex)
-    
+
                         #value events
                         if (self.ValueCallback):
                             try:
                                 self.ValueCallback(values)
                             except Exception:
                                 eg.PrintTraceback()
-                        
+
                         #button events
                         if self.ButtonCallback:
                             try:
@@ -442,14 +442,14 @@ class HIDThread(threading.Thread):
 
             #free references
             hidDLL.HidD_FreePreparsedData(ctypes.byref(preparsedData))
-    
+
             #HID thread finished
             if self.StopCallback:
                 try:
                     self.StopCallback()
                 except Exception:
                     eg.PrintTraceback()
-            
+
             self.handle = None
 
 class DeviceDescription():
@@ -460,7 +460,7 @@ class DeviceDescription():
         self.productId = productId
         self.productString = productString
         self.versionNumber = versionNumber
-        
+
 def GetDeviceDescriptions():
     """
     gets inforamtions about the available HID as a list of DeviceDescription objects
@@ -577,7 +577,7 @@ def GetDeviceDescriptions():
             productString,
             hiddAttributes.VersionNumber)
         vendorString
-            
+
         #add device to internal list
         deviceList.append(device)
 
@@ -605,9 +605,9 @@ def GetDevicePath(
     vendorId,
     productId,
     versionNumber, #pass None to ignore
-    useDeviceIndex, #use True to get a specific device 
+    useDeviceIndex, #use True to get a specific device
     deviceIndex, #use -1 to require the same devicePath if multiple found
-    noOtherPort, #if True the devicePath has to be the same 
+    noOtherPort, #if True the devicePath has to be the same
     deviceList = None
 ):
     """
@@ -648,3 +648,4 @@ def GetDevicePath(
         eg.PrintError(Text.errorMultipleDevices)
 
     return None
+

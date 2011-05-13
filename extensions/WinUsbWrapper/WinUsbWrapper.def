@@ -5,5 +5,5 @@ LIBRARY      "USB-PC-Remote"
 EXPORTS
     ; Explicit exports can go here
 	Start
-	End
+	Stop
 	

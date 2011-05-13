@@ -1,36 +1,30 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """<rst>
 This plugin generates events on keypresses (hotkeys).
 
-**Notice:** If such a keyboard event is assigned to a macro, the plugin will 
-block the key, so Windows or another application will not see it anymore. This 
-is needed to permit remapping of keys as otherwise the old key would reach the 
-target in conjunction of another action you might want to do and this is 
+**Notice:** If such a keyboard event is assigned to a macro, the plugin will
+block the key, so Windows or another application will not see it anymore. This
+is needed to permit remapping of keys as otherwise the old key would reach the
+target in conjunction of another action you might want to do and this is
 mostly not what you intend.
 
-But this blocking only happens, if a macro would actually execute in 
-succession of the event. So if the macro or any of its parents is disabled, 
+But this blocking only happens, if a macro would actually execute in
+succession of the event. So if the macro or any of its parents is disabled,
 the keypress will pass through.
 """
 
@@ -40,8 +34,9 @@ import eg
 eg.RegisterPlugin(
     name = "Keyboard",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.0." + "$LastChangedRevision: 1175 $".split()[1],
     kind = "remote",
+    guid = "{59CBD10F-C1D8-4ADB-999B-9B76BA360F1F}",
     description = __doc__,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeT"
@@ -63,21 +58,21 @@ eg.RegisterPlugin(
 from eg import HasActiveHandler
 from eg.cFunctions import SetKeyboardCallback
 
-    
+
 class Keyboard(eg.PluginBase):
-    
+
     def __init__(self):
         self.AddEvents()
-        
-    
+
+
     def __start__(self, *dummyArgs):
         SetKeyboardCallback(self.KeyboardCallback)
-        
-        
+
+
     def __stop__(self):
         SetKeyboardCallback(None)
-        
-        
+
+
     def KeyboardCallback(self, codes):
         if codes == "":
             self.EndLastEvent()
@@ -85,5 +80,4 @@ class Keyboard(eg.PluginBase):
             shouldBlock = HasActiveHandler("Keyboard." + codes)
             self.TriggerEnduringEvent(codes)
             return shouldBlock
-                
-    
+

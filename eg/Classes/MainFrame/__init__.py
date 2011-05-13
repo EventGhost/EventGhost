@@ -1,30 +1,25 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 import wx
 import wx.aui
 import os
 import re
+from os.path import join
 from collections import defaultdict
 
 from eg.WinApi.Dynamic import HtmlHelp, HH_DISPLAY_TOPIC, GetDesktopWindow
@@ -82,7 +77,7 @@ class MainFrame(wx.Frame):
     style = (wx.MINIMIZE_BOX | wx.MAXIMIZE_BOX | wx.RESIZE_BORDER | wx.CAPTION
         | wx.SYSTEM_MENU | wx.CLOSE_BOX | wx.CLIP_CHILDREN | wx.TAB_TRAVERSAL)
 
-    @eg.AssertNotMainThread
+    @eg.AssertInMainThread
     def __init__(self, document):
         """ Create the MainFrame """
         self.document = document
@@ -90,6 +85,8 @@ class MainFrame(wx.Frame):
         self.openDialogs = []
         self.lastClickedTool = None
         self.egEvent = None
+        self.lastFocus = None
+
         wx.Frame.__init__(
             self,
             None,
@@ -114,21 +111,12 @@ class MainFrame(wx.Frame):
         # tree popup menu
         self.popupMenu = self.CreateTreePopupMenu()
 
-        eg.Bind("DocumentFileChange", self.OnDocumentFileChange)
-        isDirty = eg.Bind("DocumentChange", self.OnDocumentChange)
-        self.toolBar.EnableTool(wx.ID_SAVE, isDirty)
-
         iconBundle = wx.IconBundle()
         iconBundle.AddIcon(eg.taskBarIcon.stateIcons[0])
         icon = wx.EmptyIcon()
-        icon.LoadFile(
-            os.path.join(eg.IMAGES_DIR, "icon32x32.png"),
-            wx.BITMAP_TYPE_PNG
-        )
+        icon.LoadFile(join(eg.imagesDir, "icon32x32.png"), wx.BITMAP_TYPE_PNG)
         iconBundle.AddIcon(icon)
         self.SetIcons(iconBundle)
-
-        self.lastFocus = "None"
 
         self.Bind(wx.EVT_ICONIZE, self.OnIconize)
         self.Bind(wx.EVT_MENU_OPEN, self.OnMenuOpen)
@@ -140,15 +128,19 @@ class MainFrame(wx.Frame):
         self.Bind(wx.aui.EVT_AUI_PANE_RESTORE, self.OnPaneRestore)
         self.UpdateViewOptions()
         self.SetSize(Config.size)
+        eg.Bind("DocumentFileChange", self.OnDocumentFileChange)
+        eg.Bind("DocumentChange", self.OnDocumentChange)
         eg.Bind("DialogCreate", self.OnAddDialog)
         eg.Bind("DialogDestroy", self.OnRemoveDialog)
-        undoState = eg.Bind("UndoChange", self.OnUndoChange)
-        self.OnUndoChange(undoState)
-        selection = eg.Bind("SelectionChange", self.OnSelectionChange)
-        if selection is not None:
-            self.OnSelectionChange(selection)
+        eg.Bind("UndoChange", self.OnUndoChange)
+        self.OnUndoChange(document.undoState)
+        eg.Bind("SelectionChange", self.OnSelectionChange)
+        if document.selection is not None:
+            self.OnSelectionChange(document.selection)
+        eg.Bind("FocusChange", self.OnFocusChange)
+        self.OnFocusChange(self.treeCtrl)
+        eg.Bind("ClipboardChange", self.OnClipboardChange)
         # tell FrameManager to manage this frame
-
         if (
             eg.config.revision == eg.revision
             and Config.perspective is not None
@@ -177,9 +169,6 @@ class MainFrame(wx.Frame):
         auiManager.Update()
         auiManager.GetPane("logger").MinSize((100, 100))\
             .Caption(" " + Text.Logger.caption)
-        lastFocus = eg.Bind("FocusChange", self.OnFocusChange)
-        self.OnFocusChange(lastFocus)
-        eg.Bind("ClipboardChange", self.OnClipboardChange)
 
         # create an accelerator for the "Log only assigned and activated
         # events" checkbox. An awfull hack.
@@ -206,12 +195,12 @@ class MainFrame(wx.Frame):
         # (see TreeCtrl.py OnBeginLabelEdit and OnEndLabelEdit)
 
         def OnDelKey(dummyEvent):
-            self.DispatchCommand('Clear')
+            self.DispatchCommand('OnCmdDelete')
         delId = wx.NewId()
         wx.EVT_MENU(self, delId, OnDelKey)
 
         def OnEnterKey(dummyEvent):
-            if self.lastFocus == "Edit":
+            if self.lastFocus == self.treeCtrl.editControl:
                 self.treeCtrl.EndEditLabel(self.treeCtrl.editLabelId, False)
         enterId = wx.NewId()
         wx.EVT_MENU(self, enterId, OnEnterKey)
@@ -230,7 +219,6 @@ class MainFrame(wx.Frame):
     @eg.LogItWithReturn
     def Destroy(self):
         self.Hide()
-        self.document.SetTree(None)
         eg.log.SetCtrl(None)
         Config.perspective = self.auiManager.SavePerspective()
         eg.Unbind("DocumentFileChange", self.OnDocumentFileChange)
@@ -246,7 +234,7 @@ class MainFrame(wx.Frame):
         self.SetStatusBar(None)
         self.statusBar.Destroy()
         result = wx.Frame.Destroy(self)
-        eg.Icons.ClearImageList()
+        self.popupMenu.Destroy()
         return result
 
 
@@ -291,6 +279,7 @@ class MainFrame(wx.Frame):
         if eg.debugLevel:
             Append("Reset", GetInternalBitmap("error"))
 
+        toolBar.EnableTool(wx.ID_SAVE, self.document.isDirty)
         toolBar.Realize()
         self.SetToolBar(toolBar)
 
@@ -307,11 +296,12 @@ class MainFrame(wx.Frame):
         x, y = event.GetPosition()
         item = self.toolBar.FindToolForPosition(x, y)
         if item and item.GetId() == ID_TOOLBAR_EXECUTE:
-            if not self.document.selection.isExecutable:
+            node = self.treeCtrl.GetSelectedNode()
+            if not node.isExecutable:
                 self.DisplayError(Text.Messages.cantExecute)
             else:
                 self.lastClickedTool = item
-                self.egEvent = self.document.ExecuteSelected()
+                self.egEvent = self.document.ExecuteNode(node)
         event.Skip()
 
 
@@ -430,10 +420,13 @@ class MainFrame(wx.Frame):
             Append("Import")
             menu.AppendSeparator()
             Append("Reload")
-            Append("GetInfo")
             Append("CollectGarbage")
             Append("Reset", "\tPause")
             Append("AddEventDialog")
+            menu.AppendSeparator()
+            Append("ExportPlugin")
+            Append("VirtualTree")
+            Append("RestartProgram")
 
         self.SetMenuBar(menuBar)
         return menuBar
@@ -474,8 +467,8 @@ class MainFrame(wx.Frame):
 
 
     def CreateTreeCtrl(self):
+        #treeCtrl = TreeCtrl(self, document=self.document)
         treeCtrl = TreeCtrl(self, document=self.document)
-        self.document.SetTree(treeCtrl)
         self.auiManager.AddPane(
             treeCtrl,
             wx.aui.AuiPaneInfo().
@@ -599,19 +592,19 @@ class MainFrame(wx.Frame):
     @eg.LogIt
     def OnClipboardChange(self, dummyValue):
         if self.lastFocus == self.treeCtrl:
-            canPaste = self.document.selection.CanPaste()
+            canPaste = self.treeCtrl.GetSelectedNode().CanPaste()
             self.toolBar.EnableTool(wx.ID_PASTE, canPaste)
 
 
     def OnFocusChange(self, focus):
         if focus == self.lastFocus:
             return
-        if focus == "Edit":
+        if focus == self.treeCtrl.editControl:
             # avoid programmatic change of the selected item while editing
             self.UpdateViewOptions()
             # temporarily disable the "Del" accelerator
             #self.SetAcceleratorTable(wx.AcceleratorTable([]))
-        elif self.lastFocus == "Edit":
+        elif self.lastFocus == self.treeCtrl.editControl:
             # restore the "Del" accelerator
             #self.SetAcceleratorTable(self.acceleratorTable)
             self.UpdateViewOptions()
@@ -662,27 +655,18 @@ class MainFrame(wx.Frame):
 
     def GetEditCmdState(self):
         focus = self.lastFocus
-        if focus == "Edit":
-            editCtrl = self.treeCtrl.GetEditControl()
-            start, end = editCtrl.GetSelection()
+        if focus == self.treeCtrl.editControl:
             return (
-                editCtrl.CanCut(),
-                editCtrl.CanCopy(),
-                editCtrl.CanPaste(),
-                (start != end)
+                focus.CanCut(),
+                focus.CanCopy(),
+                focus.CanPaste(),
+                focus.CanDelete()
             )
         elif focus == self.logCtrl:
             return (False, True, False, False)
-        elif focus == self.treeCtrl and self.document.selection:
-            selection = self.document.selection
-            return (
-                selection.CanCut(),
-                selection.CanCopy(),
-                selection.CanPaste(),
-                selection.CanDelete(),
-            )
-        else:
-            return (False, False, False, False)
+        elif focus == self.treeCtrl:
+            return self.treeCtrl.GetEditCmdState()
+        return (False, False, False, False)
 
 
     def OnSelectionChange(self, dummySelection):
@@ -719,7 +703,7 @@ class MainFrame(wx.Frame):
         menu.Enable(wx.ID_COPY, canCopy)
         menu.Enable(wx.ID_PASTE, canPaste)
         menu.Enable(wx.ID_DELETE, canDelete)
-        selection = self.document.selection
+        selection = self.treeCtrl.GetSelectedNode()
         menu.Check(ID_DISABLED, selection and not selection.isEnabled)
 
 
@@ -729,21 +713,17 @@ class MainFrame(wx.Frame):
             and Config.expandOnEvents
             and (self.treeCtrl and self.treeCtrl.editLabelId is None)
         )
-        eg.ActionItem.shouldSelectOnExecute = expandOnEvents
-        eg.MacroItem.shouldSelectOnExecute = expandOnEvents
+        self.document.ActionItem.shouldSelectOnExecute = expandOnEvents
+        self.document.MacroItem.shouldSelectOnExecute = expandOnEvents
 
 
     @eg.LogIt
     def DispatchCommand(self, command):
-        if self.lastFocus == "Edit" and command == "Clear":
-            editCtrl = self.treeCtrl.GetEditControl()
-            start, end = editCtrl.GetSelection()
-            if end - start == 0:
-                end += 1
-            editCtrl.Remove(start, end)
-            return
         focus = self.FindFocus()
-        getattr(focus, command)()
+        if focus is self.treeCtrl:
+            getattr(self.document, command[2:])()
+        else:
+            getattr(focus, command)()
 
     #-------------------------------------------------------------------------
     #---- Menu Handlers ------------------------------------------------------
@@ -766,7 +746,6 @@ class MainFrame(wx.Frame):
 
 
     @eg.AsTasklet
-    @eg.LogItWithReturn
     def OnCmdOptions(self):
         eg.OptionsDialog.GetResult(self)
 
@@ -784,19 +763,19 @@ class MainFrame(wx.Frame):
 
 
     def OnCmdCut(self):
-        self.DispatchCommand("Cut")
+        self.DispatchCommand("OnCmdCut")
 
 
     def OnCmdCopy(self):
-        self.DispatchCommand("Copy")
+        self.DispatchCommand("OnCmdCopy")
 
 
     def OnCmdPaste(self):
-        self.DispatchCommand("Paste")
+        self.DispatchCommand("OnCmdPaste")
 
 
     def OnCmdDelete(self):
-        self.DispatchCommand("Clear")
+        self.DispatchCommand("OnCmdDelete")
 
 
     def OnCmdFind(self):
@@ -817,69 +796,43 @@ class MainFrame(wx.Frame):
 
     @eg.AsTasklet
     def OnCmdAddPlugin(self):
-        result = eg.AddPluginDialog.GetModalResult(self)
-        if result:
-            eg.UndoHandler.NewPlugin().Do(self.document, result[0])
+        self.document.CmdAddPlugin()
 
 
     @eg.AsTasklet
     def OnCmdAddEvent(self):
-        if not self.document.selection.DropTest(eg.EventItem):
-            self.DisplayError(Text.Messages.cantAddEvent)
-            return
-        eg.UndoHandler.NewEvent().Do(self.document)
+        self.document.CmdAddEvent()
 
 
     def OnCmdAddFolder(self):
-        eg.UndoHandler.NewFolder().Do(self.document)
+        self.document.CmdAddFolder()
 
 
     @eg.AsTasklet
     def OnCmdAddMacro(self):
-        eg.UndoHandler.NewMacro().Do(self.document)
+        self.document.CmdAddMacro()
 
 
     @eg.AsTasklet
     def OnCmdAddAction(self):
-        if not self.document.selection.DropTest(eg.ActionItem):
-            self.DisplayError(Text.Messages.cantAddAction)
-            return
-        # let the user choose an action
-        result = eg.AddActionDialog.GetModalResult(self)
-        # if user canceled the dialog, take a quick exit
-        if result is None:
-            return
-        eg.UndoHandler.NewAction().Do(self.document, result[0])
+        self.document.CmdAddAction()
 
 
-    @eg.LogIt
     def OnCmdRename(self):
-        if not self.document.selection.isRenameable:
-            self.DisplayError(Text.Messages.cantRename)
-        else:
-            self.treeCtrl.SetFocus()
-            self.treeCtrl.EditLabel(self.treeCtrl.GetSelection())
+        self.document.CmdRename()
 
 
+    @eg.AsTasklet
     def OnCmdConfigure(self):
-        if not self.document.selection.isConfigurable:
-            self.DisplayError(Text.Messages.cantConfigure)
-        else:
-            eg.UndoHandler.Configure().Try(self.document)
+        self.document.CmdConfigure()
 
 
     def OnCmdExecute(self):
-        if not self.document.selection.isExecutable:
-            self.DisplayError(Text.Messages.cantExecute)
-        else:
-            self.document.ExecuteSelected().SetShouldEnd()
+        self.document.CmdExecute()
 
 
     def OnCmdDisabled(self):
-        if not self.document.selection.isDeactivatable:
-            self.DisplayError(Text.Messages.cantDisable)
-        else:
-            eg.UndoHandler.ToggleEnable(self.document)
+        self.document.CmdToggleEnable()
 
 
     def OnCmdHideShowToolbar(self):
@@ -920,11 +873,11 @@ class MainFrame(wx.Frame):
 
 
     def OnCmdExpandAll(self):
-        self.treeCtrl.OnCmdExpandAll()
+        self.treeCtrl.ExpandAll()
 
 
     def OnCmdCollapseAll(self):
-        self.treeCtrl.OnCmdCollapseAll()
+        self.treeCtrl.CollapseAll()
 
 
     def OnCmdClearLog(self):
@@ -934,7 +887,7 @@ class MainFrame(wx.Frame):
     def OnCmdHelpContents(self):
         HtmlHelp(
             GetDesktopWindow(),
-            os.path.join(eg.MAIN_DIR, "EventGhost.chm"),
+            join(eg.mainDir, "EventGhost.chm"),
             HH_DISPLAY_TOPIC,
             0
         )
@@ -966,7 +919,62 @@ class MainFrame(wx.Frame):
 
         import wx.py as py
 
-        fileName = os.path.join(eg.configDir, 'PyCrust')
+        # The FillingTree of the pyCrustFrame has some bug, that will raise
+        # a UnicodeError if some item has a non-ascii str-representation.
+        # For example a module that resides in a non-ascii file-system path
+        # will trigger that error.
+        # Thus we monkey-path the responsible code here with a bug-fixed
+        # version.
+        from wx.py.filling import FillingTree
+        def display(self):
+            item = self.item
+            if not item:
+                return
+            if self.IsExpanded(item):
+                self.addChildren(item)
+            self.setText('')
+            obj = self.GetPyData(item)
+            if wx.Platform == '__WXMSW__':
+                if obj is None: # Windows bug fix.
+                    return
+            self.SetItemHasChildren(item, self.objHasChildren(obj))
+            otype = type(obj)
+            text = u''
+            text += self.getFullName(item)
+            text += '\n\nType: ' + str(otype)
+            try:
+                # BUGFIX: Here is the problematic code. We replace str(obj)
+                #         with unicode(obj) and everything seems to be fine.
+                #value = str(obj)
+                value = unicode(obj)
+            except:
+                value = ''
+            if otype is types.StringType or otype is types.UnicodeType:
+                value = repr(obj)
+            text += '\n\nValue: ' + value
+            if otype not in SIMPLETYPES:
+                try:
+                    text += '\n\nDocstring:\n\n"""' + \
+                            inspect.getdoc(obj).strip() + '"""'
+                except:
+                    pass
+            if otype is types.InstanceType:
+                try:
+                    text += '\n\nClass Definition:\n\n' + \
+                            inspect.getsource(obj.__class__)
+                except:
+                    pass
+            else:
+                try:
+                    text += '\n\nSource Code:\n\n' + \
+                            inspect.getsource(obj)
+                except:
+                    pass
+            self.setText(text)
+        FillingTree.display.im_func.func_code = display.func_code
+
+
+        fileName = join(eg.configDir, 'PyCrust')
         pyCrustConfig = wx.FileConfig(localFilename=fileName)
         pyCrustConfig.SetRecordDefaults(True)
 
@@ -1017,23 +1025,20 @@ class MainFrame(wx.Frame):
         self.document.StartSession(self.document.filePath)
 
 
-    def OnCmdGetInfo(self):
-        self.document.selection.ShowInfo()
-
-
     def OnCmdCollectGarbage(self):
         import gc
-        gc.set_debug(gc.DEBUG_SAVEALL)
-
+        #gc.set_debug(gc.DEBUG_SAVEALL)
+        #gc.set_debug(gc.DEBUG_UNCOLLECTABLE)
         from pprint import pprint
+        print "threshold:", gc.get_threshold()
         print "unreachable object count:", gc.collect()
         garbageList = gc.garbage[:]
         for i, obj in enumerate(garbageList):
             print "Object Num %d:" % i
             pprint(obj)
-            print "Referrers:"
+            #print "Referrers:"
             #print(gc.get_referrers(o))
-            print "Referents:"
+            #print "Referents:"
             #print(gc.get_referents(o))
         print "Done."
         #print "unreachable object count:", gc.collect()
@@ -1056,5 +1061,22 @@ class MainFrame(wx.Frame):
         if result is None:
             return
         label = result[0]
-        eg.UndoHandler.NewEvent().Do(self.document, label)
+        eg.UndoHandler.NewEvent(self.document).Do(
+            self.treeCtrl.GetSelectedNode(),
+            label=label
+        )
+
+
+    def OnCmdExportPlugin(self):
+        eg.PluginInstall.Export(self)
+
+
+    def OnCmdVirtualTree(self):
+        frame = wx.Frame(None, size=(500, 600))
+        TreeCtrl(frame, self.document)
+        frame.Show()
+
+
+    def OnCmdRestartProgram(self):
+        eg.app.Restart()
 

@@ -1,26 +1,21 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
+import wx
 
 
 class TreeLink(object):
@@ -30,12 +25,12 @@ class TreeLink(object):
     unresolvedIds = {}
     linkList = []
     inUndo = False
-    __slots__ = ["target", "owner", "id"]
+    __slots__ = ["target", "owner", "xmlId"]
 
     def __init__(self, owner):
         self.target = None
         self.owner = owner
-        self.id = -1
+        self.xmlId = -1
 
 
     @classmethod
@@ -49,40 +44,40 @@ class TreeLink(object):
 
     @classmethod
     def StopLoad(cls):
-        for link, id in cls.linkList:
-            if id is not None and id != -1:
-                if id in cls.sessionId2target:
-                    target = cls.sessionId2target[id]
-                elif id in cls.id2target:
-                    target = cls.id2target[id]
+        for link, xmlId in cls.linkList:
+            if xmlId is not None and xmlId != -1:
+                if xmlId in cls.sessionId2target:
+                    target = cls.sessionId2target[xmlId]
+                elif xmlId in cls.id2target:
+                    target = cls.id2target[xmlId]
                 else:
-                    eg.PrintDebugNotice("target id %d not found" % id)
+                    eg.PrintDebugNotice("target id %d not found" % xmlId)
                     continue
                 cls.id2target[target.xmlId] = target
-                link.id = target.xmlId
+                link.xmlId = target.xmlId
                 link.target = target
                 if target.dependants is None:
                     target.dependants = [link]
                 else:
                     target.dependants.append(link)
-                link.owner.Refresh()
+                wx.CallAfter(eg.Notify, "NodeChanged", link.owner)
         del cls.linkList[:]
 
 
     @classmethod
-    def NewXmlId(cls, id, obj):
+    def NewXmlId(cls, xmlId, obj):
         if TreeLink.inUndo:
-            if id != -1:
-                cls.id2target[id] = obj
-                if id in cls.unresolvedIds:
-                    obj.dependants = cls.unresolvedIds[id]
+            if xmlId != -1:
+                cls.id2target[xmlId] = obj
+                if xmlId in cls.unresolvedIds:
+                    obj.dependants = cls.unresolvedIds[xmlId]
                     for link in obj.dependants:
                         link.target = obj
                         if link.owner:
                             link.owner.Refresh()
-                return id
-        if id != -1:
-            cls.sessionId2target[id] = obj
+                return xmlId
+        if xmlId != -1:
+            cls.sessionId2target[xmlId] = obj
         cls.currentXmlId += 1
         return cls.currentXmlId
 
@@ -96,20 +91,20 @@ class TreeLink(object):
     def StopUndo(cls):
         cls.inUndo = False
         notFoundLinks = []
-        for link, id in cls.linkList:
-            if id is not None and id != -1:
-                if id not in cls.id2target:
-                    notFoundLinks.append((link, id))
+        for link, xmlId in cls.linkList:
+            if xmlId is not None and xmlId != -1:
+                if xmlId not in cls.id2target:
+                    notFoundLinks.append((link, xmlId))
                     continue
-                target = cls.id2target[id]
+                target = cls.id2target[xmlId]
 
-                link.id = target.xmlId
+                link.xmlId = target.xmlId
                 link.target = target
                 if target.dependants is None:
                     target.dependants = [link]
                 else:
                     target.dependants.append(link)
-                link.owner.Refresh()
+                eg.Notify("NodeChanged", link.owner)
         cls.linkList = notFoundLinks
 
 
@@ -118,16 +113,15 @@ class TreeLink(object):
         for link in target.dependants:
             link.target = None
             if link.owner:
-                link.owner.Refresh()
+                eg.Notify("NodeChanged", link.owner)
         cls.unresolvedIds[target.xmlId] = target.dependants
-        #del cls.id2target[target.xmlId] # = None
         target.dependants = None
 
 
     @classmethod
-    def CreateFromArgument(cls, owner, id):
+    def CreateFromArgument(cls, owner, xmlId):
         self = TreeLink(owner)
-        cls.linkList.append((self, id))
+        cls.linkList.append((self, xmlId))
         return self
 
 
@@ -142,13 +136,13 @@ class TreeLink(object):
                 target.dependants = [self]
             else:
                 target.dependants.append(self)
-            self.id = target.xmlId
+            self.xmlId = target.xmlId
             self.id2target[target.xmlId] = target
-        self.owner.Refresh()
+        eg.Notify("NodeChanged", self.owner)
 
 
     def Refresh(self):
-        self.owner.Refresh()
+        eg.Notify("NodeChanged", self.owner)
 
 
     def Delete(self):
@@ -158,7 +152,7 @@ class TreeLink(object):
 
 
     def __repr__(self):
-        return "XmlIdLink(%d)" % self.id
+        return "XmlIdLink(%d)" % self.xmlId
 
 
     if eg.debugLevel:

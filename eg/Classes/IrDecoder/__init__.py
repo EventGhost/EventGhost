@@ -1,29 +1,26 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 import os
+import sys
 from glob import glob
 from collections import deque
+
+DECODERS_DIR = os.path.dirname(__file__.decode('mbcs'))
 
 
 class DecodeError(Exception):
@@ -162,7 +159,7 @@ def GetBitString(value, numdigits=8):
 
 def GetDecoders():
     decoders = []
-    for path in glob(os.path.join(os.path.dirname(__file__), "*.py")):
+    for path in glob(os.path.join(DECODERS_DIR, "*.py")):
         name = os.path.basename(path)
         moduleName = os.path.splitext(name)[0]
         if moduleName.startswith("_"):

@@ -1,24 +1,18 @@
-# This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# -*- coding: utf-8 -*-
+#
+# This file is a plugin for EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 
@@ -26,7 +20,8 @@ eg.RegisterPlugin(
     name = "MediaPortal",
     kind = "program",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.0",
+    guid = "{50B10A24-77AC-4248-85E5-16A04983170E}",
     createMacrosOnAdd = True,
     description = (
         "Adds actions to control <a href='http://www.team-mediaportal.com/'>"
@@ -116,7 +111,7 @@ gWindowMatcher = eg.WindowMatcher("MediaPortal.exe")
 
 
 class ActionPrototype(eg.ActionBase):
-    
+
     def __call__(self):
         try:
             hwnd = gWindowMatcher()[0]
@@ -127,7 +122,7 @@ class ActionPrototype(eg.ActionBase):
 
 
 class MediaPortal(eg.PluginBase):
-    
+
     def __init__(self):
         self.AddActionsFromList(ACTIONS, ActionPrototype)
 

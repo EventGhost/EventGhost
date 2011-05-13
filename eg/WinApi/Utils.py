@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import wx
 import sys
@@ -31,7 +25,7 @@ from Dynamic import (
     GetAncestor, Rectangle, IsWindow, IsIconic, GetStockObject, SelectObject,
     ShowWindow, BringWindowToTop, UpdateWindow, GetForegroundWindow,
     InvalidateRect, GetCurrentThreadId, GetWindowThreadProcessId,
-    SendNotifyMessage, GetWindowRect, GetCursorPos, EnumProcesses,
+    SendNotifyMessage, GetWindowRect, GetCursorPos,
     EnumDisplayMonitors, FindWindow,
     IsWindowVisible, GetParent, GetWindowDC, GetClassLong, EnumChildWindows,
     ReleaseDC, GetDC, DeleteObject, CreatePen, GetSystemMetrics,
@@ -43,6 +37,9 @@ from Dynamic import (
     WM_GETICON, ICON_SMALL, ICON_BIG, SMTO_ABORTIFHUNG, GCL_HICONSM, GCL_HICON,
     R2_NOT, PS_INSIDEFRAME, SM_CXBORDER, NULL_BRUSH, GA_ROOT, SW_RESTORE,
     WM_SYSCOMMAND, SC_CLOSE, SW_SHOWNA, SMTO_BLOCK, SMTO_ABORTIFHUNG,
+)
+from Dynamic.PsApi import (
+    EnumProcesses,
 )
 
 ENUM_CHILD_PROC = WINFUNCTYPE(BOOL, HWND, LPARAM)
@@ -345,19 +342,26 @@ def PyFindWindow(className=None, windowName=None):
 
 import ctypes
 from ctypes.wintypes import LPWSTR, GetLastError
-FORMAT_MESSAGE_ALLOCATE_BUFFER = 256
-FORMAT_MESSAGE_FROM_SYSTEM = 4096
+from eg.WinApi.Dynamic import _kernel32
+
+FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x00000100
+FORMAT_MESSAGE_FROM_SYSTEM = 0x00001000
+FORMAT_MESSAGE_IGNORE_INSERTS = 0x00000200
 
 def FormatError(code=None):
     """
-    A replacement for ctypes.FormtError, but always returns a unicode string.
+    A replacement for ctypes.FormtError, but always returns the string
+    encoded in CP1252 (ANSI Code Page).
     """
     if code is None:
         code = GetLastError()
-    kernel32 = ctypes.windll.kernel32
     lpMsgBuf = LPWSTR()
-    numChars = kernel32.FormatMessageW(
-            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+    numChars = _kernel32.FormatMessageW(
+            (
+                FORMAT_MESSAGE_ALLOCATE_BUFFER
+                | FORMAT_MESSAGE_FROM_SYSTEM
+                | FORMAT_MESSAGE_IGNORE_INSERTS
+            ),
             None,
             code,
             0,
@@ -366,12 +370,23 @@ def FormatError(code=None):
             None
         )
     if numChars == 0:
-        raise Exception("FormatMessage failed", GetLastError())
+        return "No error message available."
+    #raise Exception("FormatMessage failed on 0x%X with 0x%X" % (code & 0xFFFFFFFF, GetLastError()))
     message = lpMsgBuf.value.strip()
-    kernel32.LocalFree(lpMsgBuf)
-    return message
+    _kernel32.LocalFree(lpMsgBuf)
+    return message.encode("CP1252", 'backslashreplace')
 
 # Monkey patch the new FormatError into ctypes
 ctypes.FormatError = FormatError
 import Dynamic
 Dynamic.FormatError = FormatError
+
+
+def IsWin64():
+    try:
+        if _kernel32.GetSystemWow64DirectoryW(None, 0) == 0:
+            return False
+    except:
+        return False
+    return True
+

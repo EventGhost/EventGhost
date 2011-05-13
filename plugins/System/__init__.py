@@ -1,36 +1,31 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 
 eg.RegisterPlugin(
     name = "System",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.1.1",
     description = (
         "Controls different aspects of your system, like sound card, "
         "graphics card, power management, et cetera."
     ),
     kind = "core",
+    guid = "{A21F443B-221D-44E4-8596-E1ED7100E0A4}",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QAAAAAAAD5Q7t/"
         "AAAACXBIWXMAAAsSAAALEgHS3X78AAAAB3RJTUUH1QsEFTMTHK3EDwAAAUhJREFUOMul"
@@ -256,12 +251,13 @@ class System(eg.PluginBase):
                 vistaVolumeDll.SetMasterVolume((old * 100.0 + value) / 100.0)
                 return vistaVolumeDll.GetMasterVolume() * 100.0
 
-            self.info.actions["MuteOn"].__call__ = MuteOn2
-            self.info.actions["MuteOff"].__call__ = MuteOff2
-            self.info.actions["ToggleMute"].__call__ = ToggleMute2
-            self.info.actions["GetMute"].__call__ = GetMute2
-            self.info.actions["SetMasterVolume"].__call__ = SetMasterVolume2
-            self.info.actions["ChangeMasterVolumeBy"].__call__ = ChangeMasterVolumeBy2
+            actions = self.info.actions
+            actions["MuteOn"].__call__ = MuteOn2
+            actions["MuteOff"].__call__ = MuteOff2
+            actions["ToggleMute"].__call__ = ToggleMute2
+            actions["GetMute"].__call__ = GetMute2
+            actions["SetMasterVolume"].__call__ = SetMasterVolume2
+            actions["ChangeMasterVolumeBy"].__call__ = ChangeMasterVolumeBy2
 
 
     @eg.LogItWithReturn
@@ -503,15 +499,19 @@ class SetClipboard(eg.ActionWithStringParameter):
 
     def __call__(self, text):
         self.clipboardString = eg.ParseString(text)
-        if wx.TheClipboard.Open():
-            tdata = wx.TextDataObject(self.clipboardString)
-            wx.TheClipboard.Clear()
-            wx.TheClipboard.AddData(tdata)
-            wx.TheClipboard.Close()
-            wx.TheClipboard.Flush()
-        else:
-            self.PrintError(self.text.error)
-
+        def Do():
+            if wx.TheClipboard.Open():
+                tdata = wx.TextDataObject(self.clipboardString)
+                wx.TheClipboard.Clear()
+                wx.TheClipboard.AddData(tdata)
+                wx.TheClipboard.Close()
+                wx.TheClipboard.Flush()
+            else:
+                self.PrintError(self.text.error)
+        # We call the hot stuff in the main thread. Otherwise we get
+        # a "CoInitialize not called" error form wxPython (even though we
+        # surely have called CoInitialize for this thread.
+        eg.CallWait(Do)
 
 
 class StartScreenSaver(eg.ActionBase):
@@ -700,13 +700,17 @@ class SetWallpaper(eg.ActionWithStringParameter):
             "Tiled",
             "Stretched"
         )
-        fileMask = "All Image Files|*.jpg;*.bmp;*.gif;*.png|All Files (*.*)|*.*"
+        fileMask = (
+            "All Image Files|*.jpg;*.bmp;*.gif;*.png|All Files (*.*)|*.*"
+        )
 
 
     def __call__(self, imageFileName='', style=1):
         if imageFileName:
             image = wx.Image(imageFileName)
-            imageFileName = eg.folderPath.RoamingAppData + '\\Microsoft\\Wallpaper1.bmp'
+            imageFileName = os.path.join(
+                eg.folderPath.RoamingAppData, "Microsoft", "Wallpaper1.bmp"
+            )
             image.SaveFile(imageFileName, wx.BITMAP_TYPE_BMP)
         tile, wstyle = (("0", "0"), ("1", "0"), ("0", "2"))[style]
         hKey = _winreg.CreateKey(
@@ -782,7 +786,9 @@ class MuteOn(eg.ActionBase):
 
     def Configure(self, deviceId=0):
         panel = eg.ConfigPanel()
-        deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
+        deviceCtrl = panel.Choice(
+            deviceId, choices=SoundMixer.GetMixerDevices()
+        )
         panel.AddLine("Device:", deviceCtrl)
         while panel.Affirmed():
             panel.SetResult(deviceCtrl.GetValue())
@@ -804,7 +810,9 @@ class MuteOff(eg.ActionBase):
 
     def Configure(self, deviceId=0):
         panel = eg.ConfigPanel()
-        deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
+        deviceCtrl = panel.Choice(
+            deviceId, choices=SoundMixer.GetMixerDevices()
+        )
         panel.AddLine("Device:", deviceCtrl)
         while panel.Affirmed():
             panel.SetResult(deviceCtrl.GetValue())
@@ -825,11 +833,12 @@ class ToggleMute(eg.ActionBase):
 
     def Configure(self, deviceId=0):
         panel = eg.ConfigPanel()
-        deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
+        deviceCtrl = panel.Choice(
+            deviceId, choices=SoundMixer.GetMixerDevices()
+        )
         panel.AddLine("Device:", deviceCtrl)
         while panel.Affirmed():
             panel.SetResult(deviceCtrl.GetValue())
-
 
 
 class GetMute(eg.ActionBase):
@@ -847,10 +856,11 @@ class GetMute(eg.ActionBase):
     def Configure(self, deviceId=0):
         panel = eg.ConfigPanel()
         deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
+
+
         panel.AddLine("Device:", deviceCtrl)
         while panel.Affirmed():
             panel.SetResult(deviceCtrl.GetValue())
-
 
 
 class SetMasterVolume(eg.ActionBase):

@@ -1,29 +1,23 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 __all__ = ["Bunch", "NotificationHandler", "LogIt", "LogItWithReturn",
-    "TimeIt", "AssertNotMainThread", "AssertNotActionThread", "ParseString",
+    "TimeIt", "AssertInMainThread", "AssertInActionThread", "ParseString",
     "SetDefault", "EnsureVisible", "VBoxSizer", "HBoxSizer", "EqualizeWidths",
-    "AsTasklet",
+    "AsTasklet", "ExecFile", "GetTopLevelWindow",
 ]
 
 import eg
@@ -68,10 +62,9 @@ class Bunch(object):
 
 
 class NotificationHandler(object):
-    __slots__ = ["value", "listeners"]
+    __slots__ = ["listeners"]
 
-    def __init__(self, initialValue=None):
-        self.value = initialValue
+    def __init__(self):
         self.listeners = []
 
 
@@ -153,20 +146,27 @@ def TimeIt(func):
     return update_wrapper(TimeItWrapper, func)
 
 
-def AssertNotMainThread(func):
+def AssertInMainThread(func):
     if not eg.debugLevel:
         return func
     def AssertWrapper(*args, **kwargs):
-        assert eg.mainThread == threading.currentThread()
+        if eg.mainThread != threading.currentThread():
+            raise AssertionError("Called outside MainThread: %s in %s" %
+                (func.__name__, func.__module__)
+            )
         return func(*args, **kwargs)
     return update_wrapper(AssertWrapper, func)
 
 
-def AssertNotActionThread(func):
+def AssertInActionThread(func):
     if not eg.debugLevel:
         return func
     def AssertWrapper(*args, **kwargs):
-        assert eg.actionThread == threading.currentThread()
+        if eg.actionThread._ThreadWorker__thread != threading.currentThread():
+            raise AssertionError("Called outside ActionThread: %s() in %s" %
+                (func.__name__, func.__module__)
+            )
+        return func(*args, **kwargs)
         return func(*args, **kwargs)
     return update_wrapper(AssertWrapper, func)
 
@@ -220,72 +220,81 @@ def SetDefault(targetCls, defaultCls):
             SetDefault(targetDict[defaultKey], defaultValue)
 
 
+def GetTopLevelWindow(window):
+    """
+    Returns the top level parent window of a wx.Window. This is in most
+    cases a wx.Dialog or wx.Frame.
+    """
+    result = window
+    while True:
+        parent = result.GetParent()
+        if parent is None:
+            return result
+        elif isinstance(parent, wx.TopLevelWindow):
+            return parent
+        result = parent
+
+
 def EnsureVisible(window):
     """
     Ensures the given wx.TopLevelWindow is visible on the screen.
     Moves and resizes it if necessary.
     """
-    # get all display rectangles
-    displayRects = [
-        wx.Display(i).GetClientArea()
-        for i in range(wx.Display.GetCount())
-    ]
+    from eg.WinApi.Dynamic import (
+        sizeof, byref, GetMonitorInfo, MonitorFromWindow, GetWindowRect,
+        MONITORINFO, RECT, MONITOR_DEFAULTTONEAREST,
+        # MonitorFromRect, MONITOR_DEFAULTTONULL,
+    )
 
-    # wx.Display.GetFromPoint doesn't take GetClientArea into account, so
-    # we have to define our own function
-    def GetDisplayFromPoint(point):
-        for displayNum, displayRect in enumerate(displayRects):
-            if displayRect.Contains(point):
-                return displayNum
-        else:
-            return wx.NOT_FOUND
+    hwnd = window.GetHandle()
+    windowRect = RECT()
+    GetWindowRect(hwnd, byref(windowRect))
 
-    windowRect = window.GetScreenRect()
+   # hMonitor = MonitorFromRect(byref(windowRect), MONITOR_DEFAULTTONULL)
+    #if hMonitor:
+    #    return
 
-    # if the entire window is contained on the display, take a quick exit
-    if (
-        GetDisplayFromPoint(windowRect.TopLeft) != wx.NOT_FOUND
-        and GetDisplayFromPoint(windowRect.BottomRight) != wx.NOT_FOUND
-    ):
-        return
+    parent = window.GetParent()
+    if parent:
+        hwnd = parent.GetHandle()
+    hMonitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST)
 
-    # get the nearest display
-    displayNum = wx.Display.GetFromWindow(window)
-    if displayNum == wx.NOT_FOUND:
-        displayNum = 0
-        parent = window.GetParent()
-        if parent:
-            displayNum = wx.Display.GetFromWindow(parent)
+    monInfo = MONITORINFO()
+    monInfo.cbSize = sizeof(MONITORINFO)
+    GetMonitorInfo(hMonitor, byref(monInfo))
+    displayRect = monInfo.rcWork
 
-    displayRect = displayRects[displayNum]
+    left = windowRect.left
+    right = windowRect.right
+    top = windowRect.top
+    bottom = windowRect.bottom
 
-    # shift the dialog horizontally into the display area
-    if windowRect.Left < displayRect.Left:
-        windowRect.Right += (displayRect.Left - windowRect.Left)
-        windowRect.Left = displayRect.Left
-        if windowRect.Right > displayRect.Right:
-            windowRect.Right = displayRect.Right
-    elif windowRect.Right > displayRect.Right:
-        windowRect.Left += (displayRect.Right - windowRect.Right)
-        windowRect.Right = displayRect.Right
-        if windowRect.Left < displayRect.Left:
-            windowRect.Left = displayRect.Left
+    # shift the window horizontally into the display area
+    if left < displayRect.left:
+        right += (displayRect.left - left)
+        left = displayRect.left
+        if right > displayRect.right:
+            right = displayRect.right
+    elif right > displayRect.right:
+        left += (displayRect.right - right)
+        right = displayRect.right
+        if left < displayRect.left:
+            left = displayRect.left
 
-    # shift the dialog vertically into the display area
-    if windowRect.Top < displayRect.Top:
-        windowRect.Bottom += (displayRect.Top - windowRect.Top)
-        windowRect.Top = displayRect.Top
-        if windowRect.Bottom > displayRect.Bottom:
-            windowRect.Bottom = displayRect.Bottom
-    elif windowRect.Bottom > displayRect.Bottom:
-        windowRect.Top += (displayRect.Bottom - windowRect.Bottom)
-        windowRect.Bottom = displayRect.Bottom
-        if windowRect.Top < displayRect.Top:
-            windowRect.Top = displayRect.Top
+    # shift the window vertically into the display area
+    if top < displayRect.top:
+        bottom += (displayRect.top - top)
+        top = displayRect.top
+        if bottom > displayRect.bottom:
+            bottom = displayRect.bottom
+    elif bottom > displayRect.bottom:
+        top += (displayRect.bottom - bottom)
+        bottom = displayRect.bottom
+        if top < displayRect.top:
+            top = displayRect.top
 
     # set the new position and size
-    window.SetRect(windowRect)
-
+    window.SetRect((left, top, right - left, bottom - top))
 
 
 class VBoxSizer(wx.BoxSizer): #IGNORE:R0904
@@ -340,14 +349,14 @@ def DecodeReST(source):
     return res['body']
 
 
-def PrepareDocstring(s):
+def PrepareDocstring(docstring):
     """
     Convert a docstring into lines of parseable reST.  Return it as a list of
     lines usable for inserting into a docutils ViewList (used as argument
-    of nested_parse().)  An empty line is added to act as a separator between
+    of nested_parse()). An empty line is added to act as a separator between
     this docstring and following content.
     """
-    lines = s.expandtabs().splitlines()
+    lines = docstring.expandtabs().splitlines()
     # Find minimum indentation of any non-blank lines after first line.
     margin = sys.maxint
     for line in lines[1:]:
@@ -392,8 +401,37 @@ def GetFirstParagraph(text):
                 break
             result += " " + line
         return ' '.join(result.split())
-        
-def MergeUrl(description, url):
+
+
+def SplitFirstParagraph(text):
+    """
+    Split the first paragraph of a description string.
+
+    The string can be encoded in HTML or reStructuredText.
+    The paragraph is returned as HTML.
+    """
+    text = text.lstrip()
+    pos = text.find("<rst>")
+    if pos != -1:
+        text = text[pos+5:]
+        text = DecodeReST(text)
+        start = text.find("<p>")
+        end = text.find("</p>")
+        return text[start+3:end].replace("\n", " "), text[end+4:].replace("\n", " ")
+    else:
+        result = ""
+        remaining = ""
+        firstLine = []
+        lines = text.splitlines()
+        for i, line in enumerate(lines):
+            if line.strip() == "":
+                remaining = " ".join(lines[i:])
+                break
+            result += " " + line
+        return ' '.join(result.split()), remaining
+
+
+def AppUrl(description, url):
     if url:
         txt = '<p><div align=right><i><font color="#999999" size=-1>%s <a href="%s">%s</a>.</font></i></div></p>' % (
             eg.text.General.supportSentence,
@@ -401,10 +439,18 @@ def MergeUrl(description, url):
             eg.text.General.supportLink
         )
     else:
-        txt = ""
+        return description ####################################################################
     pos = description.find("<rst>")
     if pos != -1:
         description = description[pos + 5:]
         description = DecodeReST(description)
     return description + txt
+
+
+def ExecFile(filename, globals=None, locals=None):
+    """
+    Replacement for the Python built-in execfile() function, but handles
+    unicode filenames right.
+    """
+    return execfile(filename.encode('mbcs'), globals, locals)
 

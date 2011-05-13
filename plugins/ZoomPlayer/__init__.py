@@ -1,24 +1,18 @@
-# This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# -*- coding: utf-8 -*-
+#
+# This file is a plugin for EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """<rst>
 Adds actions to control the famous `Zoom Player <http://www.inmatrix.com/>`_.
@@ -26,7 +20,7 @@ Adds actions to control the famous `Zoom Player <http://www.inmatrix.com/>`_.
 |
 
 **Notice:**
-To make it work, you have to enable TCP control in Zoom Player. Either enable 
+To make it work, you have to enable TCP control in Zoom Player. Either enable
 it in the options of Zoom Player under:
 
 *Option/Setup => Values & Tools => Interface => Enable External TCP Control*
@@ -34,9 +28,9 @@ it in the options of Zoom Player under:
 or call the executable with the option */TCP:[port]*
 
 **Hint:**
-Disable scroll acceleration in Zoom Player. Otherwise scrolling in 
-navigators might be jumpy if you use autorepeat in EventGhost (which 
-has a more sophisticated scroll acceleration). You find the setting 
+Disable scroll acceleration in Zoom Player. Otherwise scrolling in
+navigators might be jumpy if you use autorepeat in EventGhost (which
+has a more sophisticated scroll acceleration). You find the setting
 in Zoom Player under:
 
 *Option/Setup => OSD => Navigators => Settings => Disable Scroll Acceleration*
@@ -48,8 +42,9 @@ eg.RegisterPlugin(
     name = "Zoom Player",
     description = __doc__,
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.0",
     kind = "program",
+    guid = "{C5E2609E-C1C4-4432-A532-EDA79A7EE41D}",
     canMultiLoad = True,
     createMacrosOnAdd = True,
     icon = (
@@ -534,7 +529,7 @@ import socket
 import asyncore
 import threading
 from types import ClassType
-                
+
 
 class Text:
     tcpBox = "TCP/IP Settings"
@@ -542,14 +537,14 @@ class Text:
     portLabel = "Port:"
     eventBox = "Event generation"
     useNewEvents = "Use new events"
-   
-   
-   
+
+
+
 class ZoomPlayerSession(asynchat.async_chat):
     """
     Handles a Zoom Player TCP/IP session.
     """
-    
+
     def __init__ (self, plugin, address):
         self.plugin = plugin
 
@@ -561,7 +556,7 @@ class ZoomPlayerSession(asynchat.async_chat):
 
         # Initialize input data buffer
         self.buffer = ''
-        
+
         # create and connect a socket
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         eg.RestartAsyncore()
@@ -574,11 +569,11 @@ class ZoomPlayerSession(asynchat.async_chat):
 
     def handle_connect(self):
         """
-        Called when the active opener's socket actually makes a connection. 
+        Called when the active opener's socket actually makes a connection.
         """
         self.plugin.TriggerEvent("Connected")
-         
-       
+
+
     def handle_expt(self):
         # connection failed
         self.plugin.isSessionRunning = False
@@ -604,42 +599,42 @@ class ZoomPlayerSession(asynchat.async_chat):
 
     def found_terminator(self):
         """
-        Called when the incoming data stream matches the termination 
+        Called when the incoming data stream matches the termination
         condition set by set_terminator.
         """
         # call the plugins handler method
         self.plugin.ValueUpdate(self.buffer.decode('utf-8'))
-        
+
         # reset the buffer
         self.buffer = ''
-         
-         
-         
+
+
+
 class NvAction(eg.ActionBase):
-    
+
     def __call__(self):
         self.plugin.DoCommand("5120 " + self.value)
-       
-       
-       
+
+
+
 class FnAction(eg.ActionBase):
-    
+
     def __call__(self):
         self.plugin.DoCommand("5100 " + self.value)
-       
-       
-       
+
+
+
 class ExAction(eg.ActionWithStringParameter):
-    
+
     def __call__(self, param="0"):
         self.plugin.DoCommand("5110 " + self.value + "," + param)
-                
-       
-       
-       
+
+
+
+
 class ZoomPlayer(eg.PluginBase):
     text = Text
-    
+
     def __init__(self):
         self.host = "localhost"
         self.port = 4769
@@ -653,7 +648,7 @@ class ZoomPlayer(eg.PluginBase):
         self.lastSubtitlesEnabled = False
         self.lastAudioTrackNum = 0
         self.session = None
-       
+
         group = self.AddGroup('Navigational Commands')
         for className, descr, scancode in NV_ACTIONS:
             clsAttributes = dict(name=descr, value=scancode)
@@ -663,30 +658,30 @@ class ZoomPlayer(eg.PluginBase):
         group = self.AddGroup('Regular Functions')
         for className, descr in FN_ACTIONS:
             clsAttributes = dict(
-                name=className[2:], 
-                description=descr, 
+                name=className[2:],
+                description=descr,
                 value=className
             )
             cls = ClassType(className, (FnAction,), clsAttributes)
             group.AddAction(cls)
 
         group = self.AddGroup('Extended Functions')
-        for className, descr in EX_ACTIONS:           
+        for className, descr in EX_ACTIONS:
             clsAttributes = dict(
-                name=descr.splitlines()[0].strip(), 
-                description=descr, 
+                name=descr.splitlines()[0].strip(),
+                description=descr,
                 value=className
             )
             cls = ClassType(className, (ExAction,), clsAttributes)
             group.AddAction(cls)
-            
+
         self.AddAction(self.MyCommand)
         self.AddEvents()
-        
+
 
     def __start__(
         self,
-        host="localhost", 
+        host="localhost",
         port=4769,
         dummy1=None,
         dummy2=None,
@@ -699,13 +694,13 @@ class ZoomPlayer(eg.PluginBase):
             self.zpEvents = self.zpEvents2
         else:
             self.zpEvents = self.zpEvents1
-        
-    
+
+
     def __stop__(self):
         if self.isSessionRunning:
             self.session.close()
-    
-    
+
+
     zpEvents1 = {
         "1201": "OSDClosed",
         "1300": {
@@ -714,7 +709,7 @@ class ZoomPlayer(eg.PluginBase):
             "2": "ModeAudio",
         },
         "1420": {
-            "0": "DvdMenuOff", 
+            "0": "DvdMenuOff",
             "1": "DvdMenuOn"
         },
         "2210": {
@@ -740,7 +735,7 @@ class ZoomPlayer(eg.PluginBase):
         },
        "3110": "NavigatorClosed",
     }
-        
+
     zpEvents2 = {
         "1000": (
             "State",
@@ -763,7 +758,7 @@ class ZoomPlayer(eg.PluginBase):
         "1420": (
             "DvdMenu",
             {
-                "0": "Off", 
+                "0": "Off",
                 "1": "On"
             },
         ),
@@ -845,7 +840,7 @@ class ZoomPlayer(eg.PluginBase):
             }
         )
     }
-                
+
     def ValueUpdate(self, text):
         if text == self.waitStr:
             self.waitStr = None
@@ -890,7 +885,7 @@ class ZoomPlayer(eg.PluginBase):
             elif state == 1:
                 self.TriggerEvent("StateStopped")
             elif state == 2:
-                self.TriggerEvent("StatePaused")         
+                self.TriggerEvent("StatePaused")
             elif state == 3:
                 self.TriggerEvent("StatePlaying")
             else:
@@ -916,8 +911,8 @@ class ZoomPlayer(eg.PluginBase):
             text = state[4:]
             self.TriggerEvent("SubtitleName", (num, text))
             if (
-                self.lastSubtitlesEnabled 
-                and num == self.lastSubtitleNum 
+                self.lastSubtitlesEnabled
+                and num == self.lastSubtitleNum
             ):
                 self.TriggerEvent("CurrentSubtitleName", text)
         elif header == "1704":
@@ -963,10 +958,10 @@ class ZoomPlayer(eg.PluginBase):
     ):
         text = self.text
         panel = eg.ConfigPanel()
-        hostCtrl = panel.TextCtrl(host)       
+        hostCtrl = panel.TextCtrl(host)
         portCtrl = panel.SpinIntCtrl(port, max=65535)
         newEventCtrl = panel.CheckBox(useNewEvents, text.useNewEvents)
-        
+
         tcpBox = panel.BoxedGroup(
             text.tcpBox,
             (text.hostLabel, hostCtrl),
@@ -981,19 +976,18 @@ class ZoomPlayer(eg.PluginBase):
         panel.sizer.Add(eventBox, 0, wx.TOP|wx.EXPAND, 10)
         while panel.Affirmed():
             panel.SetResult(
-                hostCtrl.GetValue(), 
-                portCtrl.GetValue(), 
+                hostCtrl.GetValue(),
+                portCtrl.GetValue(),
                 None,
                 None,
                 newEventCtrl.GetValue(),
             )
-    
-    
-    
+
+
+
     class MyCommand(eg.ActionWithStringParameter):
         name = "Raw Command"
-        
+
         def __call__(self, cmd):
             self.plugin.DoCommand(cmd)
-            
-            
+

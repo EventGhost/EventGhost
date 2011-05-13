@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of EventGhost.
+# This file is a plugin for EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
 # EventGhost is free software; you can redistribute it and/or modify it under
@@ -19,7 +19,7 @@ import eg
 eg.RegisterPlugin(
     name = "Window",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.0." + "$LastChangedRevision: 1486 $".split()[1],
     description = (
         "Actions that are related to the control of windows on the desktop, "
         "like finding specific windows, move, resize, grab text(s) "
@@ -132,7 +132,7 @@ def pack_int(x):
         res.append(chr(x&0xff))
         x >>= 8
     return ''.join(res)
- 
+
 
 def match_cls(cls, lst):
     if cls in lst:
@@ -625,7 +625,7 @@ For example: ComboBox, ListBox, ListVieW"""
         lvitem_buffer = create_string_buffer(lvitem_str)
         num_items = win32guiSendMessage(hwnd, LVM_GETITEMCOUNT)
         res = []
-        for column_index in range(col_count): 
+        for column_index in range(col_count):
             lvitem_buffer.__setslice__(8, 12, pack_int(column_index)) #column index increment
             _kernel32.WriteProcessMemory(hProcHnd, pLVI, addressof(lvitem_buffer), sizeof(lvitem_buffer), 0)
             target_buff = create_string_buffer(4096)
@@ -642,3 +642,4 @@ For example: ComboBox, ListBox, ListVieW"""
         _kernel32.VirtualFreeEx(hProcHnd, pLVI, 0, MEM_RELEASE)
         CloseHandle(hProcHnd)
         return map(list, zip(*res)) #Transposing Two-Dimensional Arrays by Steve Holden
+

@@ -1,36 +1,29 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 import wx
-#import codecs
 import sys
-import traceback
 import codecs
-from weakref import ref
-from threading import currentThread
 from collections import deque
-from types import UnicodeType
+from threading import currentThread
 from time import time, strftime
+from traceback import format_exception_only, format_stack, extract_tb
+from types import UnicodeType
+from weakref import ref
 
 _oldStdOut = sys.stdout
 _oldStdErr = sys.stderr
@@ -63,7 +56,10 @@ class Log(object):
             class StdOut:
                 def write(self, data):
                     log.Write(data, INFO_ICON)
-                    oldStdOut.write(data)
+                    try:
+                        oldStdOut.write(data)
+                    except:
+                        oldStdOut.write(data.decode('mbcs'))
 
             class StdErr:
                 def write(self, data):
@@ -124,7 +120,7 @@ class Log(object):
         self.ctrl.WriteLine(line, icon, wRef, when, indent)
 
 
-    def Write(self, text, icon, wRef=None, indent=0):
+    def Write(self, text, icon, wRef=None):
         try:
             lines = (self.buffer + text).split("\n")
         except UnicodeDecodeError:
@@ -139,13 +135,11 @@ class Log(object):
                 data.popleft()
 
 
-    def _Print(
-        self, args, sep=" ", end="\n", icon=INFO_ICON, source=None, indent=0
-    ):
+    def _Print(self, args, sep=" ", end="\n", icon=INFO_ICON, source=None):
         if source is not None:
             source = ref(source)
-        strs = [unicode(arg) for arg in args]
-        self.Write(sep.join(strs) + end, icon, source, indent)
+        #strs = [unicode(arg) for arg in args]
+        self.Write(sep.join(args) + end, icon, source)
 
 
     def Print(self, *args, **kwargs):
@@ -161,42 +155,42 @@ class Log(object):
         kwargs.setdefault("icon", ERROR_ICON)
         self._Print(args, **kwargs)
 
-#        def convert(s):
-#            if type(s) == type(u""):
-#                return s
-#            else:
-#                return str(s)
-#        text = " ".join([convert(arg) for arg in args])
-#        self.Write(text + "\n", ERROR_ICON, None)
-
 
     def PrintNotice(self, *args, **kwargs):
         kwargs.setdefault("icon", NOTICE_ICON)
         self._Print(args, **kwargs)
-#        text = " ".join([str(arg) for arg in args])
-#        self.Write(text + "\n", NOTICE_ICON, None)
 
 
-    def PrintTraceback(self, msg=None, skip=0, source=None):
+    def PrintTraceback(self, msg=None, skip=0, source=None, excInfo=None):
         if msg:
             self.PrintError(msg, source=source)
-        tbType, tbValue, tbTraceback = sys.exc_info()
+        if excInfo is None:
+            excInfo = sys.exc_info()
+        tbType, tbValue, tbTraceback = excInfo
         slist = ['Traceback (most recent call last) (%d):\n' % eg.revision]
         if tbTraceback:
-            slist += traceback.format_tb(tbTraceback)[skip:]
-        slist += traceback.format_exception_only(tbType, tbValue)
-
+            decode = codecs.getdecoder('mbcs')
+            for fname, lno, funcName, text in extract_tb(tbTraceback)[skip:]:
+                slist.append(
+                    u'  File "%s", line %d, in %s\n' % (
+                        decode(fname)[0], lno, funcName
+                    )
+                )
+                if text:
+                    slist.append("    %s\n" % text)
+        for line in format_exception_only(tbType, tbValue):
+            slist.append(decode(line)[0])
         error = "".join(slist)
         if source is not None:
             source = ref(source)
         self.Write(error.rstrip() + "\n", ERROR_ICON, source)
         if eg.debugLevel:
-            sys.stderr.write(error)
+            oldStdErr.write(error)
 
 
     def PrintStack(self, skip=0):
         strs = ['Stack trace (most recent call last) (%d):\n' % eg.revision]
-        strs += traceback.format_stack(sys._getframe().f_back)[skip:]
+        strs += format_stack(sys._getframe().f_back)[skip:]
         error = "".join(strs)
         self.Write(error.rstrip() + "\n", ERROR_ICON)
         if eg.debugLevel:

@@ -19,6 +19,7 @@ eg.RegisterPlugin(
     name = "JVC DILA Projector",
     description = "This plug in is for controlling JVC DILA projectors via RS-232",
     kind = "external",
+    guid = "{8E683B10-7A5E-42CF-84CF-BA8559CEAD2B}",
     author = "Bartman",
     version = "0.1.", # + "$LastChangedRevision$".split()[1],
     canMultiLoad = True,

@@ -146,7 +146,7 @@ class AddActionGroupDialog:
 class EventItem:
     eventItem = u"Ereignis-Element"
     eventName = u"Ereignis Name:"
-    notice = u"Hinweis: Sie können Ereignis-Elemente auch zuweisen, indem Sie es vom Log auf ein Makro-Element ziehen."
+    notice = u"Hinweis: Sie können ein Ereignis-Element auch zuweisen, indem Sie es vom Log auf ein Makro-Element ziehen."
 class OptionsDialog:
     CheckUpdate = u"Auf neuere Version prüfen beim Programmstart"
     HideOnClose = u"Minimiere wenn Schließen-Schaltfläche gedrückt wird"

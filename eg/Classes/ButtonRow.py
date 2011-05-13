@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 import wx
@@ -28,7 +22,7 @@ STANDARD_IDS = (wx.ID_OK, wx.ID_CANCEL, wx.ID_APPLY, wx.ID_HELP)
 
 class ButtonRow(object):
 
-    def __init__(self, parent, buttonIds, resizeGrip=False):
+    def __init__(self, parent, buttonIds, resizeGrip=False, center=False):
         self.parent = parent
         self.numSpecialCtrls = 0
         buttonSizer = wx.StdDialogButtonSizer()
@@ -75,13 +69,24 @@ class ButtonRow(object):
         self.sizer = sizer = wx.BoxSizer(wx.HORIZONTAL)
         if resizeGrip:
             self.sizeGrip = eg.SizeGrip(parent)
-            sizer.Add(self.sizeGrip.GetSize(), 1)
-            sizer.Add(buttonSizer, 0, wx.TOP|wx.BOTTOM, 6)
+            if center:
+                sizer.Add(self.sizeGrip.GetSize(), 0, wx.EXPAND)
+                sizer.Add((1, 1), 1, wx.EXPAND)
+                sizer.Add(buttonSizer, 0, wx.TOP|wx.BOTTOM, 6)
+                sizer.Add((1, 1), 1, wx.EXPAND)
+            else:
+                sizer.Add(self.sizeGrip.GetSize(), 1, wx.EXPAND)
+                sizer.Add(buttonSizer, 0, wx.TOP|wx.BOTTOM, 6)
             sizer.Add(self.sizeGrip, 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT)
         else:
-            sizer.Add((3, 3), 1)
-            sizer.Add(buttonSizer, 0, wx.TOP|wx.BOTTOM, 6)
-            sizer.Add((2, 2), 0)
+            if center:
+                sizer.Add((3, 3), 1, wx.EXPAND)
+                sizer.Add(buttonSizer, 0, wx.TOP|wx.BOTTOM, 6)
+                sizer.Add((3, 3), 1, wx.EXPAND)
+            else:
+                sizer.Add((3, 3), 1)
+                sizer.Add(buttonSizer, 0, wx.TOP|wx.BOTTOM, 6)
+                sizer.Add((3, 3), 0)
 
 
     def Add(

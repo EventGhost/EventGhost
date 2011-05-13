@@ -1,49 +1,40 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 import wx
 import sys
 import os
-from time import gmtime
+#from time import gmtime
 from types import ModuleType
 
 
 def InitPil():
     """Initialize PIL's Image module."""
-    import Image
-    import PngImagePlugin #IGNORE:W0612
-    import JpegImagePlugin #IGNORE:W0612
-    import BmpImagePlugin #IGNORE:W0612
-    import GifImagePlugin #IGNORE:W0612
-    Image._initialized = 2
+    import PIL.Image
+    import PIL.PngImagePlugin
+    import PIL.JpegImagePlugin
+    import PIL.BmpImagePlugin
+    import PIL.GifImagePlugin
+    PIL.Image._initialized = 2
 
 
 def InitPathesAndBuiltins():
-    sys.path.insert(0, eg.MAIN_DIR)
-    sys.path.insert(
-        1,
-        os.path.join(eg.MAIN_DIR, "lib%d%d" % sys.version_info[:2], "site-packages")
-    )
+    sys.path.insert(0, eg.mainDir.encode('mbcs'))
+    sys.path.insert(1, eg.sitePackagesDir.encode('mbcs'))
 
     import cFunctions
     sys.modules["eg.cFunctions"] = cFunctions
@@ -55,12 +46,20 @@ def InitPathesAndBuiltins():
 
     # we create a package 'PluginModule' and set its path to the plugin-dir
     # so we can simply use __import__ to load a plugin file
-    pluginPackage = ModuleType("eg.PluginModule")
-    pluginPackage.__path__ = [eg.PLUGIN_DIR]
-    sys.modules["eg.PluginModule"] = pluginPackage
-    eg.PluginModule = pluginPackage
-    
-    
+    corePluginPackage = ModuleType("eg.CorePluginModule")
+    corePluginPackage.__path__ = [eg.corePluginDir]
+    sys.modules["eg.CorePluginModule"] = corePluginPackage
+    eg.CorePluginModule = corePluginPackage # Added by Pako
+    # we create a package 'PluginModule' and set its path to the plugin-dir
+    # so we can simply use __import__ to load a plugin file
+    if not os.path.exists(eg.localPluginDir):
+        os.makedirs(eg.localPluginDir)
+    userPluginPackage = ModuleType("eg.UserPluginModule")
+    userPluginPackage.__path__ = [eg.localPluginDir]
+    sys.modules["eg.UserPluginModule"] = userPluginPackage
+    eg.UserPluginModule = userPluginPackage  # Added by Pako
+
+
 # replace builtin raw_input() with a small dialog
 def RawInput(prompt=None):
     return eg.SimpleInputDialog.RawInput(prompt)
@@ -121,7 +120,7 @@ def InitGui():
 
 def DeInit():
     eg.PrintDebugNotice("stopping threads")
-    eg.actionThread.CallWait(eg.actionThread.StopSession)
+    eg.actionThread.Func(eg.actionThread.StopSession)()
     eg.scheduler.Stop()
     eg.actionThread.Stop()
     eg.eventThread.Stop()
@@ -131,4 +130,39 @@ def DeInit():
     eg.messageReceiver.Close()
     if eg.dummyAsyncoreDispatcher:
         eg.dummyAsyncoreDispatcher.close()
+
+
+def ImportAll():
+    from os.path import join, basename
+
+    def Traverse(root, moduleRoot):
+        for name in os.listdir(root):
+            path = join(root, name)
+            if os.path.isdir(path):
+                name = basename(path)
+                if name == ".svn":
+                    continue
+                if not os.path.exists(join(path, "__init__.py")):
+                    continue
+                moduleName = moduleRoot + "." + name
+                #print moduleName
+                __import__(moduleName)
+                Traverse(path, moduleName)
+                continue
+            base, ext = os.path.splitext(name)
+            if ext != ".py":
+                continue
+            if base == "__init__":
+                continue
+            moduleName = moduleRoot + "." + base
+            if moduleName in (
+                "eg.StaticImports",
+                "eg.CorePluginModule.EventGhost.OsdSkins.Default",
+            ):
+                continue
+            #print moduleName
+            __import__(moduleName)
+
+    Traverse(join(eg.mainDir, "eg"), "eg")
+    Traverse(eg.corePluginDir, "eg.CorePluginModule")
 

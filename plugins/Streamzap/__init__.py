@@ -1,24 +1,18 @@
-# This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# -*- coding: utf-8 -*-
+#
+# This file is a plugin for EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """<rst>
 
@@ -37,8 +31,10 @@ import eg
 eg.RegisterPlugin(
     name = "Streamzap PC Remote",
     author = "Bitmonster",
-    version = "1.1." + "$LastChangedRevision$".split()[1],
+    version = "1.1",
     kind = "remote",
+    hardwareId = "USB\\VID_0E9C&PID_0000",
+    guid = "{C188351F-44E3-459D-92FC-66F51104B1DB}",
     description = __doc__,
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAOElEQVR42mNkoBAwDl4D"
@@ -152,12 +148,12 @@ def Decode(data):
 
 
 class Streamzap(eg.PluginBase):
-    
+
     def __init__(self):
         eg.PluginBase.__init__(self)
         self.AddEvents()
-        
-    
+
+
     def __start__(self):
         self.timer = eg.ResettableTimer(self.OnTimeout)
         self.lastCode = None
@@ -165,7 +161,7 @@ class Streamzap(eg.PluginBase):
         self.lastException = None
         startupEvent = threading.Event()
         self.thread = threading.Thread(
-            target=self.ReceiveThread, 
+            target=self.ReceiveThread,
             name="StreamzapReceiveThread",
             args=(startupEvent,)
         )
@@ -174,30 +170,30 @@ class Streamzap(eg.PluginBase):
         if self.lastException:
             self.timer.Stop()
             raise self.lastException
-        
+
 
     def __stop__(self):
         self.abortThread = True
         self.timer.Stop()
         self.thread.join(5.0)
-        
-        
+
+
     def ReceiveThread(self, startupEvent):
-        # This is the code executing in the new thread. 
+        # This is the code executing in the new thread.
         try:
             dll = cdll.LoadLibrary(DLL_PATH)
         except WindowsError:
             self.lastException = self.Exceptions.DriverNotFound
             startupEvent.set()
             return
-        
+
         if dll.sz_Open() != 1:
             self.lastException = self.Exceptions.DriverNotOpen
             startupEvent.set()
             return
-            
+
         dll.sz_Flush()
-        
+
         dwNumBytesRead = DWORD()
         byteIRdata = c_ubyte()
         irData = []
@@ -229,8 +225,9 @@ class Streamzap(eg.PluginBase):
                 irData.append(val)
 
         dll.sz_Close()
- 
- 
+
+
     def OnTimeout(self):
         self.EndLastEvent()
         self.lastCode = None
+

@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 import wx
@@ -37,8 +31,11 @@ class Text(eg.TranslatableStrings):
     UseAutoloadFile = "Autoload file"
     UseFixedFont = "Use fixed font in the logger"
     LanguageGroup = "Language"
-    Warning = \
+    confirmRestart = (
         "Language changes only take effect after restarting the application."
+        "\n\n"
+        "Do you want to restart EventGhost now?"
+    )
     StartWithWindows = "Autostart EventGhost on system startup"
     CheckUpdate = "Check for newer version on startup"
     limitMemory1 = "Limit memory consumption while minimized to"
@@ -50,8 +47,28 @@ class Text(eg.TranslatableStrings):
 class OptionsDialog(eg.TaskletDialog):
     instance = None
 
+    def UpdateFont(self, val):
+        font = eg.document.frame.treeCtrl.GetFont()
+        if val:
+            font = wx.Font(font.GetPointSize(), wx.DEFAULT, wx.NORMAL, wx.NORMAL, False, "Courier New")
+        wx.CallAfter(eg.document.frame.logCtrl.SetFont, font)
+
+
+    @eg.LogItWithReturn
+    def OnClose(self, event):
+        self.UpdateFont(self.useFixedFont)
+        self.DispatchEvent(event, wx.ID_CANCEL)
+
+
+    @eg.LogItWithReturn
+    def OnCancel(self, event):
+        self.UpdateFont(self.useFixedFont)
+        self.DispatchEvent(event, wx.ID_CANCEL)
+
+
     @eg.LogItWithReturn
     def Configure(self, parent=None):
+
         if OptionsDialog.instance:
             OptionsDialog.instance.Raise()
             return
@@ -59,6 +76,7 @@ class OptionsDialog(eg.TaskletDialog):
 
         text = Text
         config = eg.config
+        self.useFixedFont = config.useFixedFont
 
         eg.TaskletDialog.__init__(
             self,
@@ -68,7 +86,7 @@ class OptionsDialog(eg.TaskletDialog):
 
         languageNames = eg.Translation.languageNames
         languageList = ["en_EN"]
-        for item in os.listdir(eg.LANGUAGES_DIR):
+        for item in os.listdir(eg.languagesDir):
             name, ext = os.path.splitext(item)
             if ext == ".py" and name in languageNames:
                 languageList.append(name)
@@ -95,11 +113,7 @@ class OptionsDialog(eg.TaskletDialog):
             text.UseFixedFont
         )
         def OnFixedFontBox(evt):
-            font = eg.document.frame.treeCtrl.GetFont()
-            #if useFixedFontCtrl.GetValue():
-            if evt.IsChecked():
-                font = wx.Font(font.GetPointSize(), wx.DEFAULT, wx.NORMAL, wx.NORMAL, False, "Courier New")
-            wx.CallAfter(eg.document.frame.logCtrl.SetFont, font)            
+            self.UpdateFont(evt.IsChecked())
         useFixedFontCtrl.Bind(wx.EVT_CHECKBOX, OnFixedFontBox)
 
         #checkUpdateCtrl = page1.CheckBox(config.checkUpdate, text.CheckUpdate)
@@ -121,7 +135,7 @@ class OptionsDialog(eg.TaskletDialog):
 
         languageChoice = BitmapComboBox(page1, style=wx.CB_READONLY)
         for name, code in zip(languageNameList, languageList):
-            filename = os.path.join(eg.IMAGES_DIR, "flags", "%s.png" % code)
+            filename = os.path.join(eg.imagesDir, "flags", "%s.png" % code)
             if os.path.exists(filename):
                 image = wx.Image(filename)
                 image.Resize((16, 16), (0, 3))
@@ -132,7 +146,7 @@ class OptionsDialog(eg.TaskletDialog):
         languageChoice.SetSelection(languageList.index(config.language))
         languageChoice.SetMinSize((150, -1))
 
-        buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL, wx.ID_APPLY))
+        buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL))
 
         # construction of the layout with sizers
 
@@ -177,6 +191,7 @@ class OptionsDialog(eg.TaskletDialog):
         self.SetMinSize(self.GetSize())
         notebook.ChangeSelection(0)
 
+        oldLanguage = config.language
         while self.Affirmed():
             tmp = startWithWindowsCtrl.GetValue()
             if tmp != eg.config.startWithWindows:
@@ -190,7 +205,7 @@ class OptionsDialog(eg.TaskletDialog):
                     eg.Shortcut.Create(
                         path=path,
                         target=os.path.abspath(sys.executable),
-                        arguments="-hide"
+                        arguments="-h -e OnInitAfterBoot"
                     )
                 else:
                     # remove shortcut from autostart dir
@@ -206,18 +221,23 @@ class OptionsDialog(eg.TaskletDialog):
             config.limitMemorySize = memoryLimitSpinCtrl.GetValue()
             config.confirmDelete = confirmDeleteCtrl.GetValue()
 
-            language = languageList[languageChoice.GetSelection()]
-            if config.language != language:
-                dlg = wx.MessageDialog(
-                    self,
-                    text.Warning,
-                    "",
-                    wx.OK|wx.ICON_INFORMATION
-                )
-                dlg.ShowModal()
-                dlg.Destroy()
-            config.language = language
+            config.language = languageList[languageChoice.GetSelection()]
             config.Save()
             self.SetResult()
+        if config.language != oldLanguage:
+            wx.CallAfter(self.ShowLanguageWarning)
         OptionsDialog.instance = None
+
+
+    def ShowLanguageWarning(self):
+        dlg = wx.MessageDialog(
+            eg.document.frame,
+            Text.confirmRestart,
+            "",
+            wx.YES_NO|wx.ICON_QUESTION
+        )
+        res = dlg.ShowModal()
+        dlg.Destroy()
+        if res == wx.ID_YES:
+            eg.app.Restart()
 

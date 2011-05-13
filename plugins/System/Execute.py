@@ -110,7 +110,7 @@ class Execute(eg.ActionBase):
             WaitForSingleObject(processInformation.hProcess, INFINITE)
             exitCode = DWORD()
             if not GetExitCodeProcess(
-                processInformation.hProcess, 
+                processInformation.hProcess,
                 byref(exitCode)
             ):
                 raise self.Exception(FormatError())

@@ -1,29 +1,29 @@
+# -*- coding: utf-8 -*-
 #
-# plugins/Speech/__init__.py
+# Plugins/Speech/__init__.py
 #
 # Copyright (C) 2006 MonsterMagnet
 #
 # This file is a plugin for EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
 eg.RegisterPlugin(
     name = "Speech",
     author = "MonsterMagnet",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    guid = "{76A1638D-1D7D-4582-A726-A17B1A6FC723}",
+    version = "1.0." + "$LastChangedRevision: 1093 $".split()[1],
     description = (
         "Uses the Text-To-Speech service of the Microsoft Speech API (SAPI)."
     ),

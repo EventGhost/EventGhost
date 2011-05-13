@@ -1,46 +1,44 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
+from eg.Classes.UndoHandler import UndoHandlerBase
 
 
-class Clear:
+class Clear(UndoHandlerBase):
     name = eg.text.MainFrame.Menu.Delete.replace("&", "")
 
-    def __init__(self, document, item):
+    @eg.AssertInMainThread
+    @eg.LogIt
+    def Do(self, item):
         if not item.CanDelete() or not item.AskDelete():
             return
-
         self.data = item.GetFullXml()
-        self.positionData = eg.TreePosition(item)
-        document.AppendUndoHandler(self)
-        item.Delete()
+        self.treePosition = eg.TreePosition(item)
+        eg.actionThread.Func(item.Delete)()
+        self.document.AppendUndoHandler(self)
 
 
-    def Undo(self, document):
-        item = document.RestoreItem(self.positionData, self.data)
+    @eg.AssertInActionThread
+    def Undo(self):
+        item = self.document.RestoreItem(self.treePosition, self.data)
         item.Select()
 
 
-    def Redo(self, document):
-        self.positionData.GetItem().Delete()
+    @eg.AssertInActionThread
+    def Redo(self):
+        self.treePosition.GetItem().Delete()
 

@@ -1018,7 +1018,7 @@ class Plugin:
             writeToLog = u"Zapsat také  do logu EventGhostu"
     class Foobar2000:
         name = u"Foobar2000"
-        description = u'Přidává podporu funkcí pro řízení aplikace Foobar2000.\n\n<p><a href="http://www.foobar2000.net/">Domovská stránka aplikace Foobar2000</a>'
+        description = u'Přidává podporu funkcí pro řízení aplikace Foobar2000.\n\n<p><a href="http://www.foobar2000.org/">Domovská stránka aplikace Foobar2000</a>'
         class Exit:
             name = u"Ukončit"
             description = u"Ukončí foobar."

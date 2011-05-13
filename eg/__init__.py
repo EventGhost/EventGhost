@@ -28,10 +28,6 @@ import win32api
 import Cli
 from Utils import *
 
-# This is only here to make pylint happy. It is never really imported
-if "pylint" in sys.modules:
-    from StaticImports import *
-
 
 class DynamicModule(object):
 
@@ -46,10 +42,7 @@ class DynamicModule(object):
 
 
     def __getattr__(self, name):
-        try:
-            mod = __import__("eg.Classes." + name, None, None, [name], 0)
-        except ImportError:
-            raise AttributeError("'eg' object has not attribute '%s'" % name)
+        mod = __import__("eg.Classes." + name, None, None, [name], 0)
         self.__dict__[name] = attr = getattr(mod, name)
         return attr
 
@@ -72,29 +65,6 @@ class DynamicModule(object):
         self.__class__.__setattr__ = __setattr__
 
 
-    def ExecScript(self, mainFilePath):
-        try:
-            import imp
-            from os.path import dirname, basename, splitext
-            os.chdir(dirname(mainFilePath))
-            sys.path.insert(0, dirname(mainFilePath))
-            sys.argv = sys.argv[2:]
-            moduleName = splitext(basename(mainFilePath))[0]
-            module = imp.load_module(
-                "__main__",
-                *imp.find_module(moduleName, [dirname(mainFilePath)])
-            )
-        except BaseException:
-            import traceback
-            import wx.lib.dialogs
-            dlg = wx.lib.dialogs.ScrolledMessageDialog(
-                None, traceback.format_exc(), "Information"
-            )
-            dlg.ShowModal()
-            sys.exit(1)
-        sys.exit(0)
-
-
     def Main(self):
         if Cli.args.install:
             return
@@ -102,16 +72,23 @@ class DynamicModule(object):
             eg.LanguageEditor()
         elif Cli.args.pluginFile:
             eg.PluginInstall.Import(Cli.args.pluginFile)
-        elif Cli.args.execScript:
-            self.ExecScript(Cli.args.execScript)
+            return
         else:
             eg.Init.InitGui()
+        if eg.debugLevel:
+            eg.Init.ImportAll()
         eg.Tasklet(eg.app.MainLoop)().run()
         stackless.run()
 
 
 eg = DynamicModule()
+# This is only here to make pylint happy. It is never really imported
+if "pylint" in sys.modules:
+    from Init import ImportAll
+    ImportAll()
+    from StaticImports import *
+    from Core import *
 import Core
-#if eg.debugLevel:
-#    eg.RaiseAssignments()
+if eg.debugLevel:
+    eg.RaiseAssignments()
 

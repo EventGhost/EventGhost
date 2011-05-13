@@ -3,6 +3,7 @@ eg.RegisterPlugin(
     author = 'ldobson',
     version = '1.0.5',
     kind = 'remote',
+    guid = "{695FA442-24CE-4D82-B38B-8A772BBEA8FD}",
     canMultiLoad = True,
     description = '''\
         Hardware plugin for the 

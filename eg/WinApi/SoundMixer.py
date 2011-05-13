@@ -1,26 +1,20 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from eg.WinApi.Dynamic import (
+from eg.WinApi.Dynamic.Mmsystem import (
     byref, sizeof, addressof, pointer,
     HMIXER,
     MIXERCAPS,
@@ -283,7 +277,7 @@ def GetDeviceLines(deviceId=0):
                 print "            Control:", name
 
 
-from Dynamic import (
+from Dynamic.Mmsystem import (
     MIXERCONTROL_CT_CLASS_MASK,
 
     MIXERCONTROL_CT_CLASS_FADER,
@@ -420,7 +414,9 @@ def GetControls(hmixer, mixerline):
     for i in range(numCtrls):
         mixerControl = mixerControlArray[i]
         dwControlType = mixerControl.dwControlType
-        controlClass = MIXER_CONTROL_CLASSES[dwControlType & MIXERCONTROL_CT_CLASS_MASK]
+        controlClass = MIXER_CONTROL_CLASSES[
+            dwControlType & MIXERCONTROL_CT_CLASS_MASK
+        ]
         controlClassTypeName = controlClass["types"][dwControlType]
         flagNames = []
         fdwControl =  mixerControl.fdwControl

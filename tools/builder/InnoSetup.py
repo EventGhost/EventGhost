@@ -35,7 +35,7 @@ class StdHandler(object):
         try:
             self.buf += data
         except UnicodeError:
-            self.buf += data.decode(sys.getfilesystemencoding())
+            self.buf += data.decode('mbcs')
         lines = self.buf.split("\n")
         for line in self.buf.split("\n")[:-1]:
             line = (self.indent * 4 * " ") + line.rstrip()

@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 import wx
@@ -33,18 +27,17 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
     def __init__(
         self,
         executable=None,
-        resizable=None,
+        resizable=True,
         showLine=True
     ):
         #if resizable is None:
         #    resizable = bool(eg.debugLevel)
-        item = eg.currentConfigureItem
-
-        dialog = item.openConfigDialog
+        dialog = eg.ConfigDialog.currentDialog
         dialog.panel = self
-        dialog.__init__(item, resizable, showLine)
+        dialog.__init__(resizable, showLine)
         self.dialog = dialog
-        wx.PyPanel.__init__(self, dialog)
+        wx.PyPanel.__init__(self, dialog.notebook)
+        dialog.notebook.AddPage(self, "Settings")
         self.lines = []
         dialog.sizer.Add(self, 1, wx.EXPAND)
         self.sizerProps = (6, 5)
@@ -90,8 +83,11 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         self.shown = True
         if self.lines:
             self.AddGrid(self.lines, *self.sizerProps)
-        else:
-            self.SetSizerAndFit(self.sizer)
+        spaceSizer = wx.BoxSizer(wx.HORIZONTAL)
+        spaceSizer.Add((2, 2))
+        spaceSizer.Add(self.sizer, 1, wx.EXPAND|wx.TOP|wx.BOTTOM, 3)
+        spaceSizer.Add((4, 4))
+        self.SetSizerAndFit(spaceSizer)
 
         #self.dialog.FinishSetup()
         def OnEvent(dummyEvent):
@@ -165,7 +161,7 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
 
             if colNum < columns - 1:
                 sizer.SetItemSpan(ctrl, (1, columns - colNum + 1))
-        self.SetSizer(sizer)
+        self.sizer.Add(sizer, 1, wx.EXPAND)
 
 
     def EnableButtons(self, flag=True):

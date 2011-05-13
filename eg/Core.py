@@ -1,24 +1,19 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2008 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 """
 .. attribute:: globals
 
@@ -36,70 +31,76 @@
 """
 
 import wx
-import os
 import sys
 import asyncore
 import socket
 import time
 import threading
 import locale
+from os.path import join
 from wx.lib.newevent import NewCommandEvent
-from os.path import dirname, abspath, join
 import eg
 import Init
-import Cli
 
 
 eg.APP_NAME = "EventGhost"
-eg.CORE_PLUGINS = ("EventGhost", "System", "Window", "Mouse")
-eg.MAIN_DIR = abspath(join(dirname(__file__), ".."))
-eg.PLUGIN_DIR = join(eg.MAIN_DIR, "plugins")
-eg.IMAGES_DIR = join(eg.MAIN_DIR, "images")
-eg.LANGUAGES_DIR = join(eg.MAIN_DIR, "languages")
+eg.CORE_PLUGIN_GUIDS = (
+    "{9D499A2C-72B6-40B0-8C8C-995831B10BB4}", # "EventGhost"
+    "{A21F443B-221D-44E4-8596-E1ED7100E0A4}", # "System"
+    "{E974D074-B0A3-4D0C-BBD1-992475DDD69D}", # "Window"
+    "{6B1751BF-F94E-4260-AB7E-64C0693FD959}", # "Mouse"
+)
 eg.ID_TEST = wx.NewId()
+eg.mainDir = eg.Cli.mainDir
+eg.imagesDir = join(eg.mainDir, "images")
+eg.languagesDir = join(eg.mainDir, "languages")
+eg.sitePackagesDir = join(
+    eg.mainDir,
+    "lib%d%d" % sys.version_info[:2],
+    "site-packages"
+)
 eg.revision = eg.Version.revision
-eg.startupArguments = Cli.args
+eg.startupArguments = eg.Cli.args
 eg.debugLevel = eg.startupArguments.debugLevel
 eg.systemEncoding = locale.getdefaultlocale()[1]
-eg.result = None
-eg.event = None
-eg.eventString = ""
-eg.EventString = "" # eg.EventString is deprecated
 eg.document = None
+eg.result = None
 eg.plugins = eg.Bunch()
 eg.globals = eg.Bunch()
 eg.globals.eg = eg
+eg.event = None
 eg.eventTable = {}
+eg.eventString = ""
+eg.EventString = "" # eg.EventString is deprecated
 eg.notificationHandlers = {}
 eg.programCounter = None
 eg.programReturnStack = []
 eg.indent = 0
 eg.pluginList = []
-eg.pluginClassInfo = {}
 eg.mainThread = threading.currentThread()
 eg.stopExecutionFlag = False
 eg.lastFoundWindows = []
 eg.currentItem = None
-eg.currentConfigureItem = None
 eg.actionGroup = eg.Bunch()
 eg.actionGroup.items = []
 eg.folderPath = eg.FolderPath()
-eg.APPDATA = eg.folderPath.RoamingAppData
-eg.PROGRAMFILES = eg.folderPath.ProgramFiles
 eg.ValueChangedEvent, eg.EVT_VALUE_CHANGED = NewCommandEvent()
 eg.pyCrustFrame = None
 eg.dummyAsyncoreDispatcher = None
 
 if eg.startupArguments.configDir is None:
-    eg.configDir = os.path.join(eg.folderPath.RoamingAppData, eg.APP_NAME)
+    eg.configDir = join(eg.folderPath.RoamingAppData, eg.APP_NAME)
 else:
     eg.configDir = eg.startupArguments.configDir
-
+eg.localPluginDir = join(eg.folderPath.ProgramData, eg.APP_NAME, "plugins")
+eg.corePluginDir = join(eg.mainDir, "plugins")
+eg.pluginDirs = [eg.corePluginDir, eg.localPluginDir]
+if eg.startupArguments.pluginDir is not None:
+    eg.pluginDirs.append(eg.startupArguments.pluginDir)
 Init.InitPathesAndBuiltins()
 from eg.WinApi.Dynamic import GetCurrentProcessId
 eg.processId = GetCurrentProcessId()
 Init.InitPil()
-
 
 def RestartAsyncore():
     """ Informs the asyncore loop of a new socket to handle. """
@@ -112,7 +113,6 @@ def RestartAsyncore():
     if oldDispatcher is None:
         # create a global asyncore loop thread
         threading.Thread(target=asyncore.loop, name="AsyncoreThread").start()
-
 
 
 def Exit():
@@ -160,7 +160,6 @@ def Bind(notification, listener):
     else:
         notificationHandler = eg.notificationHandlers[notification]
     notificationHandler.listeners.append(listener)
-    return notificationHandler.value
 
 
 def Unbind(notification, listener):
@@ -168,13 +167,9 @@ def Unbind(notification, listener):
 
 
 def Notify(notification, value=None):
-    if notification not in eg.notificationHandlers:
-        eg.notificationHandlers[notification] = eg.NotificationHandler(value)
-        return
-    notificationHandler = eg.notificationHandlers[notification]
-    notificationHandler.value = value
-    for listener in notificationHandler.listeners:
-        listener(value)
+    if notification in eg.notificationHandlers:
+        for listener in eg.notificationHandlers[notification].listeners:
+            listener(value)
 
 
 def StopMacro(ignoreReturn=False):
@@ -187,12 +182,12 @@ def StopMacro(ignoreReturn=False):
         del eg.programReturnStack[:]
 
 
-def CallWait(func):
+def CallWait(func, *args, **kwargs):
     result = [None]
     event = threading.Event()
     def CallWaitWrapper():
         try:
-            result[0] = func()
+            result[0] = func(*args, **kwargs)
         finally:
             event.set()
     wx.CallAfter(CallWaitWrapper)
@@ -234,8 +229,10 @@ def RunProgram():
 class Exception(Exception):
 
     def __unicode__(self):
-        return "\n".join([unicode(arg) for arg in self.args])
-
+        try:
+            return "\n".join([unicode(arg) for arg in self.args])
+        except UnicodeDecodeError:
+            return "\n".join([str(arg).decode('mbcs') for arg in self.args])
 
 
 class StopException(Exception):
@@ -256,6 +253,44 @@ def MessageBox(message, caption=eg.APP_NAME, style=wx.OK, parent=None):
     return result
 
 
+# pylint: disable-msg=W0613
+def RegisterPlugin(
+    name = None,
+    description = None,
+    kind = "other",
+    author = "unknown author",
+    version = "unknown version",
+    icon = None,
+    canMultiLoad = False,
+    createMacrosOnAdd = False,
+    url = None,
+    help = None,
+    guid = None,
+    **kwargs
+):
+    """
+    Registers information about a plugin to EventGhost.
+
+    :param name: should be a short descriptive string with the name of the
+       plugin.
+    :param description: the description of the plugin.
+    :param kind: gives a hint about the category the plugin belongs to. It
+       should be a string with a value out of "remote" (for remote receiver
+       plugins), "program" (for program control plugins), "external" (for
+       plugins that control external hardware) or "other" (if none of the
+       other categories match).
+    :param author: can be set to the name of the developer of the plugin.
+    :param version: can be set to a version string.
+    :param canMultiLoad: set this to ``True``, if a configuration can have
+       more than one instance of this plugin.
+    :param \*\*kwargs: just to consume unknown parameters, to make the call
+       backward compatible.
+    """
+    pass
+# pylint: enable-msg=W0613
+
+eg.RegisterPlugin = RegisterPlugin
+
 # now assign all the functions above to `eg`
 eg.RestartAsyncore = RestartAsyncore
 eg.Exit = Exit
@@ -273,7 +308,7 @@ eg.StopException = StopException
 eg.HiddenAction = HiddenAction
 eg.MessageBox = MessageBox
 
-eg.messageReceiver = eg.MessageReceiver()
+eg.messageReceiver = eg.MainMessageReceiver()
 eg.app = eg.App()
 
 import Icons # we can't import the Icons module earlier, because wx.App
@@ -287,6 +322,10 @@ eg.PrintNotice = eg.log.PrintNotice
 eg.PrintTraceback = eg.log.PrintTraceback
 eg.PrintDebugNotice = eg.log.PrintDebugNotice
 eg.PrintStack = eg.log.PrintStack
+
+def TracebackHook(tType, tValue, traceback):
+    eg.log.PrintTraceback(excInfo=(tType, tValue, traceback))
+sys.excepthook = TracebackHook
 
 eg.colour = eg.Colour()
 eg.config = eg.Config()
@@ -312,6 +351,7 @@ eg.taskBarIcon = eg.TaskBarIcon(
     eg.startupArguments.isMain
     and not eg.startupArguments.translate
     and not eg.startupArguments.install
+    and not eg.startupArguments.pluginFile
 )
 eg.SetProcessingState = eg.taskBarIcon.SetProcessingState
 

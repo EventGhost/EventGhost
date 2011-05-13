@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of EventGhost.
+# This file is a plugin for EventGhost.
 # Copyright (C) 2005-2010 Lars-Peter Voss <bitmonster@eventghost.org>
 #                         André Weber <WeberAndre@gmx.de>
 #

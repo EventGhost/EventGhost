@@ -1,24 +1,18 @@
-# This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# -*- coding: utf-8 -*-
+#
+# This file is a plugin for EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 
@@ -41,8 +35,9 @@ I="""
 eg.RegisterPlugin(
     name = "Joystick",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.0." + "$LastChangedRevision: 1175 $".split()[1],
     kind = "remote",
+    guid = "{615F3B89-FB7E-4FD9-B7D5-9F07FEF0BED9}",
     description = (
         "Use joysticks and gamepads as input devices for EventGhost."
     ),
@@ -50,33 +45,33 @@ eg.RegisterPlugin(
 )
 
 
-EVT_DIRECTION       = 0
-EVT_BTN_RELEASED    = 1
-EVT_BTN_PUSHED  	= 2
-EVT_X_AXIS          = 3
-EVT_Y_AXIS          = 4
-EVT_Z_AXIS          = 5
+EVT_DIRECTION = 0
+EVT_BTN_RELEASED = 1
+EVT_BTN_PUSHED = 2
+EVT_X_AXIS = 3
+EVT_Y_AXIS = 4
+EVT_Z_AXIS = 5
 
 
 
 class Joystick(eg.PluginBase):
-    
+
     def __init__(self):
         self.AddEvents()
 
-    
+
     def __start__(self):
         self.x = 0
         self.y = 0
         import _dxJoystick
         self._dxJoystick = _dxJoystick
         self._dxJoystick.RegisterEventFunc(self.EventFunc)
-        
-        
+
+
     def __stop__(self):
         self._dxJoystick.RegisterEventFunc(None)
-        
-        
+
+
     def EventFunc(self, joynum, eventtype, value):
         if eventtype == EVT_BTN_PUSHED:
             self.TriggerEnduringEvent("Button" + str(value + 1))
@@ -108,5 +103,4 @@ class Joystick(eg.PluginBase):
                 self.TriggerEnduringEvent("Down")
             elif value == -1:
                 self.TriggerEnduringEvent("Up")
-        
-        
+

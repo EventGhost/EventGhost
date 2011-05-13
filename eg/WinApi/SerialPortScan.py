@@ -1,23 +1,40 @@
-import ctypes
+# -*- coding: utf-8 -*-
+#
+# This file is part of EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 import re
 
-def ValidHandle(value):
-    if value == 0:
-        raise ctypes.WinError()
-    return value
-
-NULL = 0
-
 from Dynamic import (
-    byref, sizeof, cast,
+    byref,
+    sizeof,
+    cast,
+    WinError,
+    GetLastError,
+    create_unicode_buffer,
+    Structure,
+    c_ubyte,
+    DWORD,
+    PBYTE,
+    TCHAR,
+)
+from Dynamic.SetupApi import (
     SetupDiDestroyDeviceInfoList,
     SetupDiEnumDeviceInterfaces,
     SetupDiGetClassDevs,
     SetupDiGetDeviceInterfaceDetail,
     SetupDiGetDeviceRegistryProperty,
-    DWORD,
-    PBYTE,
-    TCHAR,
     GUID,
     SP_DEVINFO_DATA,
     SP_DEVICE_INTERFACE_DATA,
@@ -26,8 +43,12 @@ from Dynamic import (
     DIGCF_PRESENT,
 )
 
-GUID_CLASS_COMPORT = GUID(0x86e0d1e0L, 0x8089, 0x11d0,
-    (ctypes.c_ubyte*8)(0x9c, 0xe4, 0x08, 0x00, 0x3e, 0x30, 0x1f, 0x73))
+GUID_CLASS_COMPORT = GUID(
+    0x86e0d1e0L,
+    0x8089,
+    0x11d0,
+    (c_ubyte * 8)(0x9c, 0xe4, 0x08, 0x00, 0x3e, 0x30, 0x1f, 0x73)
+)
 
 DIGCF_PRESENT = 2
 DIGCF_DEVICEINTERFACE = 16
@@ -37,19 +58,24 @@ SPDRP_HARDWAREID = 1
 SPDRP_FRIENDLYNAME = 12
 ERROR_NO_MORE_ITEMS = 259
 
+
 def GetComPorts(availableOnly=True):
     """
-    This generator scans the device registry for com ports and yields port,
-    desc, hwid.
+    Scans the registry for serial ports and return a list of (port, desc, hwid)
+    tuples.
     If availableOnly is true only return currently existing ports.
     """
-    stringBuffer = ctypes.create_unicode_buffer(256)
+    result = []
+    stringBuffer = create_unicode_buffer(256)
     flags = DIGCF_DEVICEINTERFACE
     if availableOnly:
         flags |= DIGCF_PRESENT
-    hdi = SetupDiGetClassDevs(byref(GUID_CLASS_COMPORT), None, NULL, flags)
-    #~ for i in range(256):
-    for dwIndex in range(256):
+    hdi = SetupDiGetClassDevs(byref(GUID_CLASS_COMPORT), None, 0, flags)
+    if hdi == INVALID_HANDLE_VALUE:
+        raise WinError()
+    dwRequiredSize = DWORD()
+    dwIndex = 0
+    while True:
         did = SP_DEVICE_INTERFACE_DATA()
         did.cbSize = sizeof(did)
 
@@ -60,28 +86,29 @@ def GetComPorts(availableOnly=True):
             dwIndex,
             byref(did)
         ):
-            if ctypes.GetLastError() != ERROR_NO_MORE_ITEMS:
-                raise ctypes.WinError()
+            err = GetLastError()
+            if err != ERROR_NO_MORE_ITEMS:
+                raise WinError(err)
             break
 
-        dwNeeded = DWORD()
         # get the size
         if not SetupDiGetDeviceInterfaceDetail(
             hdi,
             byref(did),
             None,
             0,
-            byref(dwNeeded),
+            byref(dwRequiredSize),
             None
         ):
             # Ignore ERROR_INSUFFICIENT_BUFFER
-            if ctypes.GetLastError() != ERROR_INSUFFICIENT_BUFFER:
-                raise ctypes.WinError()
+            err = GetLastError()
+            if err != ERROR_INSUFFICIENT_BUFFER:
+                raise WinError(err)
         # allocate buffer
-        class _SP_DEVICE_INTERFACE_DETAIL_DATA(ctypes.Structure):
+        class _SP_DEVICE_INTERFACE_DETAIL_DATA(Structure):
             _fields_ = [
                 ('cbSize', DWORD),
-                ('DevicePath', TCHAR*(dwNeeded.value - sizeof(DWORD))),
+                ('DevicePath', TCHAR*(dwRequiredSize.value - sizeof(DWORD))),
             ]
         idd = _SP_DEVICE_INTERFACE_DETAIL_DATA()
         idd.cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA)
@@ -91,12 +118,11 @@ def GetComPorts(availableOnly=True):
             hdi,
             byref(did),
             cast(byref(idd), PSP_DEVICE_INTERFACE_DETAIL_DATA),
-            dwNeeded,
+            dwRequiredSize,
             None,
             byref(devinfo)
         ):
-            raise ctypes.WinError()
-        #print idd.DevicePath, sizeof(idd)
+            raise WinError()
         # hardware ID
         if not SetupDiGetDeviceRegistryProperty(
             hdi,
@@ -104,39 +130,38 @@ def GetComPorts(availableOnly=True):
             SPDRP_HARDWAREID,
             None,
             cast(stringBuffer, PBYTE),
-            sizeof(stringBuffer) - 1,
+            sizeof(stringBuffer)-1,
             None
         ):
             # Ignore ERROR_INSUFFICIENT_BUFFER
-            if ctypes.GetLastError() != ERROR_INSUFFICIENT_BUFFER:
-                raise ctypes.WinError()
+            err = GetLastError()
+            if err != ERROR_INSUFFICIENT_BUFFER:
+                raise WinError(err)
         szHardwareID = stringBuffer.value
         # friendly name
-        #szFriendlyName = ctypes.create_string_buffer('\0' * 250)
         if not SetupDiGetDeviceRegistryProperty(
             hdi,
             byref(devinfo),
             SPDRP_FRIENDLYNAME,
             None,
             cast(stringBuffer, PBYTE),
-            sizeof(stringBuffer) - 1,
+            sizeof(stringBuffer)-1,
             None
         ):
             # Ignore ERROR_INSUFFICIENT_BUFFER
-            if ctypes.GetLastError() != ERROR_INSUFFICIENT_BUFFER:
-                raise ctypes.WinError()
+            err = GetLastError()
+            if err != ERROR_INSUFFICIENT_BUFFER:
+                raise WinError(err)
         szFriendlyName = stringBuffer.value
         portName = re.search(r"\((.*)\)", szFriendlyName).group(1)
-        yield portName, szFriendlyName, szHardwareID
+        result.append((portName, szFriendlyName, szHardwareID))
+        dwIndex += 1
 
     SetupDiDestroyDeviceInfoList(hdi)
+    return result
 
 
 if __name__ == '__main__':
-    for i in range(10):
-        import time
-        start = time.clock()
-        for port, desc, hwid in GetComPorts():
-            print "%s: %s" % (port, desc)
-        print time.clock() - start
+    for port, desc, hwid in GetComPorts():
+        print "%s: %s" % (port, desc)
 

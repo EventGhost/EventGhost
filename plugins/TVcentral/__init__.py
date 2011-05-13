@@ -1,24 +1,38 @@
-# This file is part of EventGhost.
-# Copyright (C) 2008 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# -*- coding: utf-8 -*-
+#
+# This file is a plugin for EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+import eg
+
+ICON = (
+    "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAC7klEQVR42qWTa0iTYRTH/+/uz"
+    "uUFs6mo4KXSCDTTFLKiQBGkoiXrgwR9qA8lZhfDxLIiTKQiSUtQKFposmDiJWNpJWiZ2QdXXq"
+    "dOy9wcOJ1zbW5urrMxBb/WAz84z3nP8+Phfc5h8J+LWQ8KGhMP+rCE8WwOK4HPFsQJ+NztDpf"
+    "J1/LHqnHZecNm69yI08YZq74woaTyFcK5Ifisee2I9kuB3qSBxabH/NIUjHYtDOZZGG2/YHIO"
+    "gO0AeFwRfHxYqLlkTJ1Vu9R01MwUKZIaSjM/SIW+/puuNqEbQGxooifOlzOokro8cZmSi5/DD"
+    "nXdFZyh7SBT/ia7Jz06J43LESApKgdcNgdq/XvIv53Fjewpz6EShRhlEr0nLmpmsDKLhcd5KK"
+    "FtO3OvLUMTsy0hsln1ABUnhhAetAu3WkPRMTKHrot28ARc1H+SIne/HCaLDnfehiGQhdWbEpS"
+    "RQM6UtR92sMCDSqvEo5OjCAnYiWe9WWhRKVF1qg8RgfvQPXofB+KuYdKgRE1XFsJFwOUsVJCg"
+    "nilu2mFehV6gNS6hUjKOYL9YvOjNQOtgJwqPVCMtJg+Tuh7EhKajf/ohmlSFCBHSq2WikgQyp"
+    "vBV8A+ecDlet7SC8mPjEPvHQkaCDnUncnafxvG9so0f2/5diq8zr8FewkppLp5S6iVzXR7Wwx"
+    "UupmkXrKjKMdMz+aKx/yg+jrUhOSIB5w4NbAga+tIwY+zDIr1yxXmPoJEpqBPd3RqxVmwwWXA"
+    "1ox/hAckkyMTA7w4Ei3iUs8HusoLH+KC2Wwgny4pOGdSKWjwngcLdSEH5T/gt4khXqnnVjjXq"
+    "r0A/QMQFHBQbqeeYNaqiNggQAMNfoK+9jXbKvCO63AIqRXTsHkYSEOxKEUchUkwvxedTng5ZL"
+    "XAatFjWTmFep4FeO41Zqh8iegnN+iyQG2IizH0jIpDY4pW7l51YJhYJA6Ej5gjbxjB554Lnlb"
+    "nhEyzvN/fg2LxDZPMKXZum8V/XX7yzG1mzdIOwAAAAAElFTkSuQmCC"
+)
 
 eg.RegisterPlugin(
     name="Sceneo TVcentral",
@@ -34,24 +48,9 @@ eg.RegisterPlugin(
     author="Bitmonster",
     url="http://www.eventghost.net/forum/viewtopic.php?t=917",
     createMacrosOnAdd = True,
-    version="1.0." + "$LastChangedRevision$".split()[1],
-    icon = (
-        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAC7klEQVR42qWTa0iTYRTH/+/uzuUF"
-        "s6mo4KXSCDTTFLKiQBGkoiXrgwR9qA8lZhfDxLIiTKQiSUtQKFposmDiJWNpJWiZ2QdXXqdOy9wc"
-        "OJ1zbW5urrMxBb/WAz84z3nP8+Phfc5h8J+LWQ8KGhMP+rCE8WwOK4HPFsQJ+NztDpfJ1/LHqnHZ"
-        "ecNm69yI08YZq74woaTyFcK5Ifisee2I9kuB3qSBxabH/NIUjHYtDOZZGG2/YHIOgO0AeFwRfHxY"
-        "qLlkTJ1Vu9R01MwUKZIaSjM/SIW+/puuNqEbQGxooifOlzOokro8cZmSi5/DDnXdFZyh7SBT/ia7"
-        "Jz06J43LESApKgdcNgdq/XvIv53Fjewpz6EShRhlEr0nLmpmsDKLhcd5KKFtO3OvLUMTsy0hsln1"
-        "ABUnhhAetAu3WkPRMTKHrot28ARc1H+SIne/HCaLDnfehiGQhdWbEpSRQM6UtR92sMCDSqvEo5Oj"
-        "CAnYiWe9WWhRKVF1qg8RgfvQPXofB+KuYdKgRE1XFsJFwOUsVJCgnilu2mFehV6gNS6hUjKOYL9Y"
-        "vOjNQOtgJwqPVCMtJg+Tuh7EhKajf/ohmlSFCBHSq2WikgQypvBV8A+ecDlet7SC8mPjEPvHQkaC"
-        "DnUncnafxvG9so0f2/5diq8zr8FewkppLp5S6iVzXR7WwxUupmkXrKjKMdMz+aKx/yg+jrUhOSIB"
-        "5w4NbAga+tIwY+zDIr1yxXmPoJEpqBPd3RqxVmwwWXA1ox/hAckkyMTA7w4Ei3iUs8HusoLH+KC2"
-        "Wwgny4pOGdSKWjwngcLdSEH5T/gt4khXqnnVjjXqr0A/QMQFHBQbqeeYNaqiNggQAMNfoK+9jXbK"
-        "vCO63AIqRXTsHkYSEOxKEUchUkwvxedTng5ZLXAatFjWTmFep4FeO41Zqh8iegnN+iyQG2IizH0j"
-        "IpDY4pW7l51YJhYJA6Ej5gjbxjB554LnlbnhEyzvN/fg2LxDZPMKXZum8V/XX7yzG1mzdIOwAAAA"
-        "AElFTkSuQmCC"
-    ),
+    version="1.0",
+    guid="{D80421DF-8D70-4127-BC80-7B746AD62996}",
+    icon=ICON,
 )
 
 ACTIONS = (
@@ -147,14 +146,14 @@ from eg.WinApi import FindWindow, SendMessageTimeout, WM_COMMAND
 
 
 class ActionPrototype(eg.ActionClass):
-    
+
     def __call__(self):
         try:
             hWnd = FindWindow("TVcCore-RemoteMSG-Class")
             return SendMessageTimeout(hWnd, WM_COMMAND, self.value, 0)
         except:
             raise self.Exceptions.ProgramNotRunning
-    
+
 
 
 class TVcentral(eg.PluginClass):

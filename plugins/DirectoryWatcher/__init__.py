@@ -1,37 +1,32 @@
-# This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# -*- coding: utf-8 -*-
+#
+# This file is a plugin for EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import eg
 
 eg.RegisterPlugin(
     name = "Directory Watcher",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.0",
+    guid = "{003FABA6-AA6A-4395-9DB6-DC88EB07F5FE}",
     canMultiLoad = True,
     description = (
         "Monitors a directory and generates events if files are created, "
         "deleted or changed in it."
     ),
 )
-
 
 import os
 import threading
@@ -85,12 +80,12 @@ WCHAR_SIZE = sizeof(WCHAR)
 class Text:
     watchPath = "Watch path:"
     watchSubDirs = "Watch subdirectories also"
-    
-    
+
+
 
 class DirectoryWatcher(eg.PluginClass):
     text = Text
-    
+
     def __start__(self, path, includeSubdirs):
         self.stopEvent = CreateEvent(None, 1, 0, None)
         self.path = path
@@ -98,22 +93,22 @@ class DirectoryWatcher(eg.PluginClass):
         self.includeSubdirs = includeSubdirs
         startupEvent = threading.Event()
         self.thread = threading.Thread(
-            target=self.ThreadLoop, 
-            name="DirectoryWatcherThread", 
+            target=self.ThreadLoop,
+            name="DirectoryWatcherThread",
             args=(startupEvent,)
         )
         self.thread.start()
         startupEvent.wait(3)
         if self.startException is not None:
             raise self.Exception(self.startException)
-        
-        
+
+
     def __stop__(self):
         if self.thread is not None:
             PulseEvent(self.stopEvent)
             self.thread.join(5.0)
-        
-        
+
+
     def ThreadLoop(self, startupEvent):
         try:
             hDir = CreateFile(
@@ -160,7 +155,7 @@ class DirectoryWatcher(eg.PluginClass):
                 rc = MsgWaitForMultipleObjects(
                     2, events, 0, INFINITE, QS_ALLINPUT
                 )
-                if rc == WAIT_OBJECT_0:    
+                if rc == WAIT_OBJECT_0:
                     res = GetOverlappedResult(
                         hDir, byref(overlapped), byref(bytesReturned), 1
                     )
@@ -171,17 +166,17 @@ class DirectoryWatcher(eg.PluginClass):
                         fileName = wstring_at(address + 12, length)
                         action = fni.Action
                         fullFilename = os.path.join(self.path, fileName)
-                        if action == FILE_ACTION_ADDED: 
+                        if action == FILE_ACTION_ADDED:
                             self.TriggerEvent("Created", (fullFilename,))
-                        elif action == FILE_ACTION_REMOVED: 
+                        elif action == FILE_ACTION_REMOVED:
                             self.TriggerEvent("Deleted", (fullFilename,))
-                        elif action == FILE_ACTION_MODIFIED: 
+                        elif action == FILE_ACTION_MODIFIED:
                             self.TriggerEvent("Updated", (fullFilename,))
                         elif action == FILE_ACTION_RENAMED_OLD_NAME:
                             renamePath = fullFilename
                         elif action == FILE_ACTION_RENAMED_NEW_NAME:
                             self.TriggerEvent(
-                                "Renamed", 
+                                "Renamed",
                                 (renamePath, fullFilename)
                             )
                             renamePath = None
@@ -194,19 +189,21 @@ class DirectoryWatcher(eg.PluginClass):
         except:
             self.thread = None
             raise
-                
-            
+
+
     def Configure(self, path="", includeSubdirs=False):
         panel = eg.ConfigPanel()
         dirpathCtrl = panel.DirBrowseButton(path)
-        includeSubdirsCB = panel.CheckBox(includeSubdirs, self.text.watchSubDirs)
-        
+        includeSubdirsCB = panel.CheckBox(
+            includeSubdirs, self.text.watchSubDirs
+        )
+
         panel.AddLine(self.text.watchPath, dirpathCtrl)
         panel.AddLine(includeSubdirsCB)
 
         while panel.Affirmed():
             panel.SetResult(
-                dirpathCtrl.GetValue(), 
+                dirpathCtrl.GetValue(),
                 includeSubdirsCB.GetValue(),
             )
-    
+

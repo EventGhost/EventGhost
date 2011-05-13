@@ -1,3 +1,19 @@
+# -*- coding: utf-8 -*-
+#
+# This file is a plugin for EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 from __future__ import with_statement
 
 import eg
@@ -8,6 +24,7 @@ eg.RegisterPlugin(
     kind = "external",
     author = "Bitmonster",
     version = "1.0.0",
+    guid = "{74902850-2F8B-4384-95D0-59E9D96D0BF9}",
     canMultiLoad = True,
     createMacrosOnAdd = True,
     icon = (
@@ -77,30 +94,32 @@ ALL_BYTE_VALUES = frozenset(range(256))
 
 
 class ActionBase(eg.ActionBase):
-    
+
     def __call__(self):
         with self.plugin.serialThread as serial:
             self.SendCommand(serial, *self.value)
 
 
-    def SendCommand(self, serial, cmd, dat1=0, dat2=0, dat3=0, dat4=0, block=None):
+    def SendCommand(
+        self, serial, cmd, dat1=0, dat2=0, dat3=0, dat4=0, block=None
+    ):
         data = [self.plugin.address, cmd, dat1, dat2, dat3, dat4]
         checksum = sum(data) % 256
         data.append(checksum)
-        
+
         if block is not None:
             data2 = [ord(x) for x in block]
             checksum2 = sum(data2) % 256
             data += data2
             data.append(checksum2)
-            
+
         offset = 0
         if STX in data:
             offset = 1
             while offset in data:
                 offset += 1
             offset = (STX - offset) % 256
-    
+
         data = [STX, offset] + [(x + offset) % 256 for x in data]
         s = "".join([chr(x) for x in data])
         if eg.debugLevel:
@@ -126,25 +145,25 @@ class ActionBase(eg.ActionBase):
         if chks != sum(answer[:6]) % 256:
             raise self.Exceptions.DeviceNotFound("Wrong checksum received!")
         return dat1, dat2, dat3, dat4
-    
-    
+
+
 
 class SendCustom(ActionBase):
-    
+
     def __call__(self, cmd, dat1, dat2, dat3, dat4):
         with self.plugin.serialThread as serial:
             self.SendCommand(serial, cmd, dat1, dat2, dat3, dat4)
-            
-            
+
+
     def GetLabel(self, *args):
             return " ".join("%02X" % arg for arg in args)
-        
-            
+
+
     def Configure(self, cmd=0, dat1=0, dat2=0, dat3=0, dat4=0):
         panel = eg.ConfigPanel()
         values = cmd, dat1, dat2, dat3, dat4
         ctrls = [
-            panel.SpinIntCtrl(values[i], min=0, max=255) 
+            panel.SpinIntCtrl(values[i], min=0, max=255)
             for i in range(5)
         ]
         hexCtrl = panel.StaticText("")
@@ -158,29 +177,29 @@ class SendCustom(ActionBase):
 
         panel.AddLine("CMD:", ctrls[0])
         panel.AddLine(
-            "DAT1:", ctrls[1], None, 
-            "DAT2:", ctrls[2], None, 
-            "DAT3:", ctrls[3], None, 
+            "DAT1:", ctrls[1], None,
+            "DAT2:", ctrls[2], None,
+            "DAT3:", ctrls[3], None,
             "DAT4:", ctrls[4]
         )
         panel.AddLine()
         panel.AddLine("Hex string:", hexCtrl)
         while panel.Affirmed():
             panel.SetResult(*(ctrl.GetValue() for ctrl in ctrls))
-            
-            
-            
+
+
+
 class SetText(ActionBase, eg.ActionWithStringParameter):
-    
+
     def __call__(self, s):
         s = s + (chr(0) * (208 - len(s)))
         with self.plugin.serialThread as serial:
             self.SendCommand(serial, 0x70, 0x01, 0x01, 0x01, 0x0c, s)
-    
-    
-    
+
+
+
 class ReadTime(ActionBase):
-    
+
     def __call__(self):
         with self.plugin.serialThread as serial:
             self.SendCommand(serial, 0x60)
@@ -188,11 +207,11 @@ class ReadTime(ActionBase):
             result = dat1 * 256 + dat2
             print "Hours:", result
             return result
-        
-        
-        
+
+
+
 class ReadStatus(ActionBase):
-    
+
     def __call__(self):
         with self.plugin.serialThread as serial:
             self.SendCommand(serial, 0x4b)
@@ -211,29 +230,33 @@ class ReadStatus(ActionBase):
                 print "Orbiting installed:", bool(dat4 & (1 << 0))
                 print "Soft edge installed:", bool(dat4 & (1 << 1))
                 print "Contrast modulation installed:", bool(dat4 & (1 << 2))
-                print "NS is mounted on the convergence:", bool(dat4 & (1 << 3))
+                print "NS is mounted on the convergence:", bool(
+                    dat4 & (1 << 3)
+                )
                 print "Controller with ASIC:", bool(dat4 & (1 << 4))
                 print "IRIS is installed:", bool(dat4 & (1 << 5))
                 print "Dynamic stigmators:", bool(dat4 & (1 << 6))
-            
-        
-        
-        
+
+
+
+
 class ReadVersion(ActionBase):
-    
+
     def __call__(self):
         with self.plugin.serialThread as serial:
             self.SendCommand(serial, 0x4c)
             dat1, dat2, dat3, dat4 = self.GetResponse(serial, 0x4c)
             print "Identifier:", chr(dat1)
-            print "Version: %d%d.%d%d" % (dat2 / 16, dat2 & 0x0f, dat3 / 16, dat3 & 0x0f)
+            print "Version: %d%d.%d%d" % (
+                dat2 / 16, dat2 & 0x0f, dat3 / 16, dat3 & 0x0f
+            )
             print "Model:", dat4
-            
-        
-        
-        
+
+
+
+
 class ReadSerialNumber(ActionBase):
-    
+
     def __call__(self):
         with self.plugin.serialThread as serial:
             self.SendCommand(serial, 0x4d)
@@ -249,12 +272,12 @@ class ReadSerialNumber(ActionBase):
             )
             s = "".join(digits)
             print "Serial Number:", s
-            return 
-        
-        
-        
-class GetInfo(ActionBase):        
-    
+            return
+
+
+
+class GetInfo(ActionBase):
+
     def __call__(self):
         with self.plugin.serialThread as serial:
             self.SendCommand(serial, 0x4b)
@@ -273,7 +296,9 @@ class GetInfo(ActionBase):
                 print "Orbiting installed:", bool(dat4 & (1 << 0))
                 print "Soft edge installed:", bool(dat4 & (1 << 1))
                 print "Contrast modulation installed:", bool(dat4 & (1 << 2))
-                print "NS is mounted on the convergence:", bool(dat4 & (1 << 3))
+                print "NS is mounted on the convergence:", bool(
+                    dat4 & (1 << 3)
+                )
                 print "Controller with ASIC:", bool(dat4 & (1 << 4))
                 print "IRIS is installed:", bool(dat4 & (1 << 5))
                 print "Dynamic stigmators:", bool(dat4 & (1 << 6))
@@ -297,7 +322,9 @@ class GetInfo(ActionBase):
             self.SendCommand(serial, 0x4c)
             dat1, dat2, dat3, dat4 = self.GetResponse(serial, 0x4c)
             print "Identifier:", chr(dat1)
-            print "Version: %d%d.%d%d" % (dat2 / 16, dat2 & 0x0f, dat3 / 16, dat3 & 0x0f)
+            print "Version: %d%d.%d%d" % (
+                dat2 / 16, dat2 & 0x0f, dat3 / 16, dat3 & 0x0f
+            )
             print "Model:", dat4
             self.SendCommand(serial, 0x4a)
             dat1, dat2, dat3, dat4 = self.GetResponse(serial, 0x4a)
@@ -321,19 +348,24 @@ class GetInfo(ActionBase):
                 0xC: "Forced RGBS",
             }
             print "Source: " + SOURCES.get(dat3 / 16, "Unknown")
-            INSTALLATIONS = ["Rear/ Ceiling", "Front / Table", "Front/ Ceiling", "Rear / Table"]
+            INSTALLATIONS = [
+                "Rear/ Ceiling",
+                "Front / Table",
+                "Front/ Ceiling",
+                "Rear / Table"
+            ]
             print "Installation: " + INSTALLATIONS[dat3 & 0x03]
             print "HDTV:", dat3 & 0x04
-            
-            
-            
+
+
+
 class RequestShape(ActionBase):
-    
+
     def __call__(self, shape=0, x=0, y=0, colours=0x07):
         with self.plugin.serialThread as serial:
             self.SendCommand(serial, 0x78, shape, y * 16 + x, colours)
-        
-        
+
+
     def Configure(self, shape=0, x=0, y=0, colours=0x07):
         choices = [
             ("Internal convergence pattern", 0x00),
@@ -368,7 +400,7 @@ class RequestShape(ActionBase):
                 yCtrl.GetValue(),
                 colours,
             )
-        
+
 
 
 class LockIr(ActionBase):
@@ -376,18 +408,18 @@ class LockIr(ActionBase):
     description = (
         "Programs the projector to filter out certain infrared commands."
     )
-    
+
     def __call__(self, flags=0x7f):
         with self.plugin.serialThread as serial:
             self.SendCommand(serial, 0x50, flags)
-        
-        
+
+
     def Configure(self, flags=0x7f):
         panel = eg.ConfigPanel()
         choices = [
-            "Stand by", 
-            "Pause", 
-            "Text", 
+            "Stand by",
+            "Pause",
+            "Text",
             "Adjust keys (Adj, Enter, Exit, cursors)",
             "Numeric keys",
             "Picture control keys",
@@ -404,19 +436,19 @@ class LockIr(ActionBase):
             for i, ctrl in enumerate(ctrls):
                 flags |= (1 << i) * int(ctrl.GetValue())
             panel.SetResult(flags)
-        
-        
-        
+
+
+
 class ReadPotentiometer(ActionBase):
-    
+
     def __call__(self, kind, x=0, y=0):
         with self.plugin.serialThread as serial:
             self.SendCommand(serial, 0x7a, kind, y * 16 + x)
             dat1, dat2, dat3, dat4 = self.GetResponse(serial, 0x7a)
             print "Value:", dat1, dat2, dat3, dat4
             return dat3
-            
-        
+
+
     def Configure(self, kind=0, x=0, y=0):
         panel = eg.ConfigPanel()
         kindCtrl = panel.SpinIntCtrl(kind, max=255)
@@ -431,17 +463,17 @@ class ReadPotentiometer(ActionBase):
                 xCtrl.GetValue(),
                 yCtrl.GetValue(),
             )
-        
-        
-        
+
+
+
 class WritePotentiometer(ActionBase):
-    
+
     def __call__(self, kind, x=0, y=0, value=128, flags=3):
         print kind, x, y, value, flags
         with self.plugin.serialThread as serial:
             self.SendCommand(serial, 0x79, kind, y * 16 + x, value, flags)
-            
-        
+
+
     def Configure(self, kind=0, x=0, y=0, value=128, flags=3):
         panel = eg.ConfigPanel()
         kindCtrl = panel.SpinIntCtrl(kind, max=255)
@@ -456,7 +488,7 @@ class WritePotentiometer(ActionBase):
         panel.AddLine("Value/Delta:", valueCtrl)
         panel.AddLine(deltaCb)
         panel.AddLine(storeCb)
-        
+
         while panel.Affirmed():
             panel.SetResult(
                 kindCtrl.GetValue(),
@@ -465,10 +497,10 @@ class WritePotentiometer(ActionBase):
                 valueCtrl.GetValue(),
                 int(not deltaCb.GetValue()) + int(not storeCb.GetValue()) * 2
             )
-        
-        
+
+
 class Barco(eg.PluginBase):
-    
+
     def __init__(self):
         self.AddActionsFromList(ACTIONS, ActionBase)
         group = self.AddGroup("Unfinished")
@@ -483,8 +515,8 @@ class Barco(eg.PluginBase):
         group.AddAction(ReadPotentiometer)
         group.AddAction(WritePotentiometer)
         group.AddAction(SendCustom)
-    
-    
+
+
     @eg.LogIt
     def __start__(self, port=0, address=0, baudrate=9600):
         self.port = port
@@ -494,17 +526,17 @@ class Barco(eg.PluginBase):
         self.serialThread.Open(port, baudrate)
         self.serialThread.SetRts()
         self.serialThread.Start()
-        
-        
+
+
     def __stop__(self):
         self.serialThread.Close()
-        
-        
+
+
     def OnReceive(self, serial):
         data = serial.Read(512)
         print "Barco: " + " ".join(["%02X" % ord(c) for c in data])
-    
-    
+
+
     def Configure(self, port=0, address=0, baudrate=9600):
         panel = eg.ConfigPanel()
         portCtrl = panel.SerialPortChoice(port)
@@ -516,11 +548,8 @@ class Barco(eg.PluginBase):
         panel.AddLine("Projector address:", addrCtrl)
         while panel.Affirmed():
             panel.SetResult(
-                portCtrl.GetValue(), 
+                portCtrl.GetValue(),
                 addrCtrl.GetValue(),
                 BAUDRATES[baudrateCtrl.GetValue()],
             )
-            
-    
-    
-        
+

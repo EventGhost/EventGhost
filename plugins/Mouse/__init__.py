@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 
@@ -41,12 +35,13 @@ Jrhy/+AqGrAMOnH86mAAAAAElFTkSuQmCC"""
 eg.RegisterPlugin(
     name = "Mouse",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.0.0",
     description = (
         "Gives you actions to control the mouse pointer and emulation of "
         "mouse events."
     ),
     kind = "core",
+    guid = "{6B1751BF-F94E-4260-AB7E-64C0693FD959}",
     icon = ICON,
 )
 
@@ -101,8 +96,8 @@ class MouseThread(Thread):
             if upTime != 0 and clock() - upTime > 0.05:
                 self.acceleration = 0
                 self.speed = 0
-                
-                    
+
+
             if self.acceleration == 0:
                 sleep(0.05)
                 continue
@@ -124,7 +119,7 @@ class MouseThread(Thread):
                 self.speed = self.maxSpeed
             elif self.speed <= 0:
                 self.speed = 0
-                
+
             factor = self.speed * (ticks / 10)
             xCurrent =  sin(self.currentAngle) * factor + self.xRemainder
             yCurrent = -1 * cos(self.currentAngle) * factor + self.yRemainder
@@ -145,14 +140,14 @@ class MouseThread(Thread):
             if waitTicks < 0:
                 waitTicks = 0.0
             sleep(waitTicks)
-        
+
 
 
 class Mouse(eg.PluginBase):
-    
+
     def __init__(self):
         self.AddEvents()
-        
+
         self.AddAction(GoDirection)
         self.AddAction(LeftButton)
         self.AddAction(MiddleButton)
@@ -163,27 +158,27 @@ class Mouse(eg.PluginBase):
         self.AddAction(MoveAbsolute)
         self.AddAction(MoveRelative)
         self.AddAction(MouseWheel)
-    
-    
+
+
     def __start__(self):
         self.thread = MouseThread()
         self.leftMouseButtonDown = False
         self.lastMouseEvent = None
         self.mouseButtonWasBlocked = [False, False, False, False, False]
         SetMouseCallback(self.MouseCallBack)
-        
-        
+
+
     @eg.LogIt
     def __stop__(self):
         SetMouseCallback(None)
         self.thread.receiveQueue.put(-1)
-        
-        
+
+
     @eg.LogIt
     def __close__(self):
         pass
-        
-        
+
+
     def MouseCallBack(self, buttonName, buttonNum, param):
         if param:
             if self.lastMouseEvent:
@@ -197,27 +192,27 @@ class Mouse(eg.PluginBase):
                 self.lastMouseEvent.SetShouldEnd()
             return self.mouseButtonWasBlocked[buttonNum]
         return False
-    
-    
-        
+
+
+
 class GoDirection(eg.ActionBase):
     name = "Start mouse movement in a direction"
     class text:
         label = u"Start mouse movement in direction %.2f\u00B0"
         text1 = "Start moving mouse pointer in direction"
         text2 = "degrees. (0-360)"
-    
+
     def __call__(self, direction=0):
         def UpFunc():
             self.plugin.thread.receiveQueue.put(-2)
         self.plugin.thread.receiveQueue.put(float(direction))
         eg.event.AddUpFunc(UpFunc)
-        
-    
+
+
     def GetLabel(self, direction=0):
         direction = float(direction)
         return self.text.label % direction
-    
+
 
     def Configure(self, direction=0):
         panel = eg.ConfigPanel()
@@ -231,7 +226,7 @@ class GoDirection(eg.ActionBase):
 
 class LeftButton(eg.ActionBase):
     name = "Left mouse button"
-    
+
     def __call__(self):
         def UpFunc():
             mouse_event(0x0004, 0, 0, 0, 0)
@@ -244,29 +239,29 @@ class LeftButton(eg.ActionBase):
 
 class MiddleButton(eg.ActionBase):
     name = "Middle mouse button"
-    
+
     def __call__(self):
         def UpFunc():
             mouse_event(0x0040, 0, 0, 0, 0)
         mouse_event(0x0020, 0, 0, 0, 0)
         eg.event.AddUpFunc(UpFunc)
-        
+
 
 
 class RightButton(eg.ActionBase):
     name = "Right mouse button"
-    
+
     def __call__(self):
         def UpFunc():
             mouse_event(0x0010, 0, 0, 0, 0)
         mouse_event(0x0008, 0, 0, 0, 0)
         eg.event.AddUpFunc(UpFunc)
-        
-        
-        
+
+
+
 class LeftDoubleClick(eg.ActionBase):
     name = "Left mouse button double-click"
-    
+
     def __call__(self):
         def UpFunc():
             mouse_event(0x0004, 0, 0, 0, 0)
@@ -280,7 +275,7 @@ class LeftDoubleClick(eg.ActionBase):
 
 class RightDoubleClick(eg.ActionBase):
     name = "Right mouse button double-click"
-    
+
     def __call__(self):
         def UpFunc():
             mouse_event(0x0010, 0, 0, 0, 0)
@@ -288,12 +283,12 @@ class RightDoubleClick(eg.ActionBase):
         mouse_event(0x0010, 0, 0, 0, 0)
         mouse_event(0x0008, 0, 0, 0, 0)
         eg.event.AddUpFunc(UpFunc)
-        
-        
-        
+
+
+
 class ToggleLeftButton(eg.ActionBase):
     name = "Toggle left mouse button"
-    
+
     def __call__(self):
         if self.plugin.leftMouseButtonDown:
             mouse_event(0x0004, 0, 0, 0, 0)
@@ -301,9 +296,9 @@ class ToggleLeftButton(eg.ActionBase):
         else:
             mouse_event(0x0002, 0, 0, 0, 0)
             self.plugin.leftMouseButtonDown = True
-            
-            
-            
+
+
+
 class MoveAbsolute(eg.ActionBase):
     name = "Move Absolute"
     class text:
@@ -321,12 +316,12 @@ class MoveAbsolute(eg.ActionBase):
         if y is None:
             y = point.y
         SetCursorPos(x, y)
-            
-            
+
+
     def GetLabel(self, x, y):
         return self.text.label % (str(x), str(y))
 
-    
+
     def Configure(self, x=0, y=0):
         panel = eg.ConfigPanel()
         text = self.text
@@ -335,20 +330,20 @@ class MoveAbsolute(eg.ActionBase):
         def HandleXCheckBox(event):
             xCtrl.Enable(event.IsChecked())
             event.Skip()
-        xCB.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)    
+        xCB.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)
 
         xCtrl = panel.SpinIntCtrl(x or 0, min=-maxint-1, max=maxint)
         xCtrl.Enable(x is not None)
-        
+
         yCB = panel.CheckBox(y is not None, text.text3)
         def HandleYCheckBox(event):
-            yCtrl.Enable(event.IsChecked())  
+            yCtrl.Enable(event.IsChecked())
             event.Skip()
-        yCB.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)    
+        yCB.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)
 
         yCtrl = panel.SpinIntCtrl(y or 0, min=-maxint-1, max=maxint)
         yCtrl.Enable(y is not None)
-        
+
         panel.AddLine(xCB, xCtrl, text.text2)
         panel.AddLine(yCB, yCtrl, text.text4)
 
@@ -357,7 +352,7 @@ class MoveAbsolute(eg.ActionBase):
                 x = xCtrl.GetValue()
             else:
                 x = None
-                
+
             if yCtrl.IsEnabled():
                 y = yCtrl.GetValue()
             else:
@@ -374,7 +369,7 @@ class MoveRelative(eg.ActionBase):
         text2 = "pixels"
         text3 = "Change vertical position Y by"
         text4 = "pixels"
-    
+
     def __call__(self, x, y):
         point = POINT()
         GetCursorPos(point)
@@ -384,11 +379,11 @@ class MoveRelative(eg.ActionBase):
             y = 0
         SetCursorPos(point.x + x, point.y + y)
 
-            
+
     def GetLabel(self, x, y):
         return self.text.label % (str(x), str(y))
 
-    
+
     def Configure(self, x=0, y=0):
         panel = eg.ConfigPanel()
         text = self.text
@@ -397,20 +392,20 @@ class MoveRelative(eg.ActionBase):
         def HandleXCheckBox(event):
             xCtrl.Enable(event.IsChecked())
             event.Skip()
-        xCB.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)    
+        xCB.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)
 
         xCtrl = panel.SpinIntCtrl(x or 0, min=-maxint-1, max=maxint)
         xCtrl.Enable(x is not None)
-        
+
         yCB = panel.CheckBox(y is not None, text.text3)
         def HandleYCheckBox(event):
-            yCtrl.Enable(event.IsChecked())  
+            yCtrl.Enable(event.IsChecked())
             event.Skip()
-        yCB.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)    
+        yCB.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)
 
         yCtrl = panel.SpinIntCtrl(y or 0, min=-maxint-1, max=maxint)
         yCtrl.Enable(y is not None)
-        
+
         panel.AddLine(xCB, xCtrl, text.text2)
         panel.AddLine(yCB, yCtrl, text.text4)
 
@@ -419,7 +414,7 @@ class MoveRelative(eg.ActionBase):
                 x = xCtrl.GetValue()
             else:
                 x = None
-                
+
             if yCtrl.IsEnabled():
                 y = yCtrl.GetValue()
             else:
@@ -434,19 +429,19 @@ class MouseWheel(eg.ActionBase):
         label = u"Turn mouse wheel %d clicks"
         text1 = "Turn mouse wheel by"
         text2 = "clicks. (Negative values turn down)"
-    
+
     def __call__(self, direction=0):
         mouse_event(0x0800, 0, 0, direction * 120, 0)
-        
-    
+
+
     def GetLabel(self, direction=0):
         return self.text.label % direction
-    
+
 
     def Configure(self, direction=0):
         panel = eg.ConfigPanel()
         valueCtrl = panel.SpinIntCtrl(direction, min=-100, max=100)
-        panel.AddLine(self.text.text1, valueCtrl, self.text.text2)     
+        panel.AddLine(self.text.text1, valueCtrl, self.text.text2)
         while panel.Affirmed():
             panel.SetResult(valueCtrl.GetValue())
 

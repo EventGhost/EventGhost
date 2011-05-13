@@ -1,8 +1,9 @@
 eg.RegisterPlugin(
     name = "Marantz AV Receiver",
     author = "Dexter",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.0." + "$LastChangedRevision: 1093 $".split()[1],
     kind = "external",
+    guid = "{2189A326-0BAC-4D81-B69A-DCCD19060BAB}",
     url = "http://www.eventghost.net/forum/viewtopic.php?t=747",
     description = ('This plugin allows you to control your <a href="http://www.marantz.com">Marantz</a> \
                     SR-series receiver through it\'s serial port.\n\n\

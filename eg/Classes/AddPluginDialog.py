@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 import wx
@@ -57,7 +51,10 @@ class AddPluginDialog(eg.TaskletDialog):
     instance = None
 
     @eg.LogItWithReturn
-    def Configure(self, parent):
+    def Configure(self, parent, checkMultiLoad=True, title=None):
+        if title is None:
+            title = Text.title
+        self.checkMultiLoad = checkMultiLoad
         if self.__class__.instance:
             self.__class__.instance.Raise()
             return
@@ -69,7 +66,7 @@ class AddPluginDialog(eg.TaskletDialog):
             self,
             parent,
             -1,
-            Text.title,
+            title,
             style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
         )
 
@@ -117,7 +114,7 @@ class AddPluginDialog(eg.TaskletDialog):
 
             treeId = treeCtrl.AppendItem(typeIds[info.kind], info.name, idx)
             treeCtrl.SetPyData(treeId, info)
-            if info.GetPath() == Config.lastSelection:
+            if info.path == Config.lastSelection:
                 itemToSelect = treeId
 
 
@@ -152,10 +149,8 @@ class AddPluginDialog(eg.TaskletDialog):
             wx.StaticBox(rightPanel, label=Text.descriptionBox)
         )
 
-        descrBox = eg.HtmlWindow(rightPanel)
-        descrBox.SetBasePath(eg.PLUGIN_DIR)
-        self.descrBox = descrBox
-        staticBoxSizer.Add(descrBox, 1, wx.EXPAND)
+        self.descrBox = eg.HtmlWindow(rightPanel)
+        staticBoxSizer.Add(self.descrBox, 1, wx.EXPAND)
 
         rightSizer.Add(staticBoxSizer, 1, wx.EXPAND|wx.LEFT, 5)
 
@@ -214,7 +209,7 @@ class AddPluginDialog(eg.TaskletDialog):
         else:
             name = info.name
             description = info.description
-            self.descrBox.SetBasePath(info.GetPath())
+            self.descrBox.SetBasePath(info.path)
             self.authorLabel.SetLabel(Text.author)
             self.authorText.SetLabel(info.author.replace("&", "&&"))
             self.versionLabel.SetLabel(Text.version)
@@ -222,17 +217,18 @@ class AddPluginDialog(eg.TaskletDialog):
             self.okButton.Enable(True)
         self.nameText.SetLabel(name)
         url = info.url if info else None
-        self.descrBox.SetPage(eg.Utils.MergeUrl(description, url))
+        self.descrBox.SetPage(eg.Utils.AppUrl(description, url))
 
 
     def CheckMultiload(self):
+        if not self.checkMultiLoad:
+            return True
         info = self.resultData
-        if (
-            info
-            and info.pluginCls
-            and not info.canMultiLoad
-            and info.instances
-        ):
+        if not info:
+            return True
+        if info.canMultiLoad:
+            return True
+        if any((plugin.info.path == info.path) for plugin in eg.pluginList):
             eg.MessageBox(
                 Text.noMultiload,
                 Text.noMultiloadTitle,

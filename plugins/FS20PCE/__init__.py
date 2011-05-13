@@ -19,7 +19,7 @@ Setting up groups is optional as events with the house code and device address a
 eg.RegisterPlugin(
     name = "ELV FS20 PCE",
     author = "Bartman",
-    version = "1.1." + "$LastChangedRevision$".split()[1],
+    version = "1.1." + "$LastChangedRevision: 1486 $".split()[1],
     kind = "remote",
     canMultiLoad = False,
     description = __doc__,

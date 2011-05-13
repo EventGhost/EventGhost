@@ -1,19 +1,18 @@
-# This file is part of EventGhost.
-# Copyright (C) 2008 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+# -*- coding: utf-8 -*-
+#
+# This file is a plugin for EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 ur"""<rst>
 Plugin for the `Conceptronic Remote Control for Windows\u00ae Media Center`__.
@@ -23,11 +22,8 @@ Plugin for the `Conceptronic Remote Control for Windows\u00ae Media Center`__.
 .. image:: picture.jpg
    :align: center
 
-**Notice:** You need a special driver to use the remote with this plugin. 
-Please `download it here`__ and install it while the device is connected.
-
-__ http://www.conceptronic.net/site/desktopdefault.aspx?tabindex=1&tabid=242&cid=40&gid=4050&pid=CLLRCMCE
-__ http://www.eventghost.net/downloads/USB-Remote-Driver.exe
+__ http://www.conceptronic.net/site/desktopdefault.aspx
+   ?tabindex=1&tabid=242&cid=40&gid=4050&pid=CLLRCMCE
 """
 
 import eg
@@ -37,7 +33,9 @@ eg.RegisterPlugin(
     author = "Bitmonster",
     version = "1.0.0",
     kind = "remote",
+    guid = "{F809DB61-4F57-483B-A867-C5081571755F}",
     description = __doc__,
+    hardwareId = "USB\\VID_1784&PID_0004",
 )
 
 
@@ -74,7 +72,7 @@ BUTTON_CODES = {
     (32, 0, 0, 0): 'VolumeUp',
     (64, 0, 0, 0): 'VolumeDown',
 }
-    
+
 KEYPAD_CODES = {
     (0, 0, 30, 0, 0, 0, 0, 0): "Num1",
     (0, 0, 31, 0, 0, 0, 0, 0): "Num2",
@@ -98,41 +96,42 @@ KEYPAD_CODES = {
 
 
 class Conceptronic(eg.PluginBase):
-                
+
     def __start__(self):
         self.buffer = []
         self.expectedLength = 0
-        self.usb1 = eg.WinUsbRemote(
-            "{4228C963-EE0F-4B33-9E5E-D17FB07FB80F}",
-            self.ButtonsCallback,
-            1,
-         )
-        self.usb2 = eg.WinUsbRemote(
-            "{8C3D8375-AF7B-4AF6-8CD7-463C8E935675}",
-            self.KeypadCallback,
-            8,
-            True
+        self.winUsb = eg.WinUsb(self)
+        self.winUsb.Device(self.KeypadCallback, 8, True).AddHardwareId(
+            "Conceptronic CLLRCMCE (Keypad)", "USB\\VID_1784&PID_0004&MI_00"
         )
-        if not self.usb1.IsOk() or not self.usb2.IsOk():
-            raise self.Exceptions.DeviceNotFound
+        self.winUsb.Device(self.ButtonsCallback, 1).AddHardwareId(
+            "Conceptronic CLLRCMCE (Buttons)", "USB\\VID_1784&PID_0004&MI_01"
+        )
+        self.winUsb.Start()
 
-         
+
     def __stop__(self):
-        self.usb1.Close()
-        self.usb2.Close()
+        self.winUsb.Stop()
+
+
+    def KeypadCallback(self, data):
+        if data == (0, 0, 0, 0, 0, 0, 0, 0):
+            self.EndLastEvent()
+        else:
+            self.TriggerEnduringEvent(KEYPAD_CODES[data])
 
 
     def ButtonsCallback(self, data):
-        c = data[0]
+        value = data[0]
         numReceived = len(self.buffer)
         if self.expectedLength == 0:
-            if c not in (2, 3, 4):
+            if value not in (2, 3, 4):
                 return
-            self.expectedLength = {2: 1, 3: 4, 4: 2}[c]
+            self.expectedLength = {2: 1, 3: 4, 4: 2}[value]
         elif numReceived < self.expectedLength - 1:
-            self.buffer.append(c)
+            self.buffer.append(value)
         elif numReceived == self.expectedLength - 1:
-            self.buffer.append(c)
+            self.buffer.append(value)
             value = tuple(self.buffer)
             if value in BUTTON_CODES:
                 self.TriggerEnduringEvent(BUTTON_CODES[value])
@@ -145,11 +144,4 @@ class Conceptronic(eg.PluginBase):
             self.buffer = []
             self.expectedLength = 0
             self.EndLastEvent()
-
-
-    def KeypadCallback(self, data):
-        if data == (0, 0, 0, 0, 0, 0, 0, 0):
-            self.EndLastEvent()
-        else:
-            self.TriggerEnduringEvent(KEYPAD_CODES[data])
 

@@ -1,24 +1,18 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
 import wx
@@ -42,7 +36,6 @@ class Document(object):
     def __init__(self):
         class ItemMixin:
             document = self
-            tree = None
             root = None
         self.ItemMixin = ItemMixin
         itemNamespace = {}
@@ -51,12 +44,12 @@ class Document(object):
         def MakeCls(name):
             baseCls = getattr(eg, name)
             cls = ClassType(name, (ItemMixin, baseCls), itemNamespace)
-            self.XMLTag2ClassDict[cls.xmlTag] = cls
+            self.XMLTag2ClassDict[cls.xmlTag.lower()] = cls
             return cls
 
         self.TreeLink = eg.TreeLink
-        self.TreeItem = MakeCls("TreeItem")
-        self.ContainerItem = MakeCls("ContainerItem")
+#        self.TreeItem = MakeCls("TreeItem")
+#        self.ContainerItem = MakeCls("ContainerItem")
         self.EventItem = MakeCls("EventItem")
         self.ActionItem = MakeCls("ActionItem")
         self.PluginItem = MakeCls("PluginItem")
@@ -65,36 +58,34 @@ class Document(object):
         self.RootItem = MakeCls("RootItem")
         self.AutostartItem = MakeCls("AutostartItem")
 
+        self.selection = None
         self.stockUndo = []
         self.stockRedo = []
-        self.lastUndoId = 0
+        self.undoId = 0
         self.undoIdOnSave = 0
-        self.listeners = {}
-        eg.Notify("UndoChange", (False, False, "", ""))
-        eg.Notify("DocumentChange", False)
+        self.undoState = (False, False, "", "")
+        self.isDirty = False
         self.filePath = None
         self.root = None
         self.firstVisibleItem = None
         self.frame = None
-        self.tree = None
-        self._selection = None
         self.reentrantLock = Lock()
-
-
-    def GetSelection(self):
-        return self._selection
-
-
-    def SetSelection(self, selection):
-        self._selection = selection
-        eg.Notify("SelectionChange", selection)
-
-    selection = property(fget=GetSelection, fset=SetSelection)
+        self.expandedNodes = set()
 
 
     def SetFilePath(self, filePath):
         self.filePath = filePath
         eg.Notify("DocumentFileChange", filePath)
+
+
+    def SetIsDirty(self, flag=True):
+        self.isDirty = flag
+        eg.Notify("DocumentChange", flag)
+
+
+    def SetUndoState(self, undoState):
+        self.undoState = undoState
+        eg.Notify("UndoChange", undoState)
 
 
     def GetTitle(self):
@@ -107,25 +98,19 @@ class Document(object):
         return "EventGhost %s - %s" % (eg.Version.string, filename)
 
 
-    @eg.LogIt
-    def SetTree(self, tree):
-        self.tree = tree
-        self.ItemMixin.tree = tree
-        if tree and self.root:
-            tree.SetData()
-
-
     def ResetUndoState(self):
         del self.stockUndo[:]
         del self.stockRedo[:]
-        self.undoState = 0
-        self.undoStateOnSave = 0
-        eg.Notify("UndoChange", (False, False, "", ""))
+        self.undoId = 0
+        self.undoIdOnSave = 0
+        self.SetUndoState((False, False, "", ""))
 
 
     @eg.LogIt
     def LoadEmpty(self):
         self.ResetUndoState()
+#        if self.root:
+#            self.root.Delete()
         self.SetFilePath(None)
         eg.TreeLink.StartLoad()
         node = ElementTree.Element("EventGhost")
@@ -137,22 +122,20 @@ class Document(object):
         self.autostartMacro = self.AutostartItem(root, node)
         root.childs.append(self.autostartMacro)
         eg.TreeLink.StopLoad()
-        eg.Notify("DocumentChange", False)
-        if self.tree:
-            wx.CallAfter(self.tree.SetData)
+        self.SetIsDirty(False)
+        wx.CallAfter(eg.Notify, "DocumentNewRoot", root)
         return root
 
 
     @eg.LogIt
     def Load(self, filePath):
-        if self.tree:
-            self.tree.DeleteAllItems()
         if filePath is None:
             return self.LoadEmpty()
         self.ResetUndoState()
-
+#        if self.root:
+#            self.root.Delete()
         if not filePath:
-            filePath = os.path.join(eg.MAIN_DIR, "Example.xml")
+            filePath = os.path.join(eg.mainDir, "Example.xml")
             self.SetFilePath(False)
         else:
             self.SetFilePath(filePath)
@@ -164,15 +147,14 @@ class Document(object):
         self.root = root
         self.selection = root
         eg.TreeLink.StopLoad()
-        eg.Notify("DocumentChange", False)
+        self.SetIsDirty(False)
         self.AfterLoad()
-        if self.tree:
-            wx.CallAfter(self.tree.SetData)
+        wx.CallAfter(eg.Notify, "DocumentNewRoot", root)
         return root
 
 
     def StartSession(self, filePath):
-        eg.eventThread.CallWait(eg.eventThread.StopSession)
+        eg.eventThread.Func(eg.eventThread.StopSession)()
         eg.eventThread.Call(eg.eventThread.StartSession, filePath)
 
 
@@ -198,15 +180,15 @@ class Document(object):
         try:
             tmpFile = file(tmpPath, "wb+")
             tmpFile.write('<?xml version="1.0" encoding="UTF-8" ?>\r\n')
-            self.root.GetXmlString(tmpFile.write)
+            self.root.WriteXmlString(tmpFile.write)
             tmpFile.close()
             try:
                 os.remove(filePath)
             except:
                 pass
             os.rename(tmpPath, filePath)
-            eg.Notify("DocumentChange", False)
-            self.undoStateOnSave = self.undoState
+            self.SetIsDirty(False)
+            self.undoIdOnSave = self.undoId
             success = True
         except:
             eg.PrintTraceback("Error while saving file")
@@ -237,20 +219,20 @@ class Document(object):
         if len(stockUndo) >= 20:
             del stockUndo[0]
         stockUndo.append(handler)
-        self.undoState += 1
+        self.undoId += 1
         del self.stockRedo[:]
+        self.SetIsDirty()
+        self.SetUndoState((True, False, ": " + handler.name, ""))
 
-        eg.Notify("DocumentChange", True)
-        eg.Notify("UndoChange", (True, False, ": " + handler.name, ""))
 
-
+    @eg.AssertInMainThread
     def Undo(self):
         if len(self.stockUndo) == 0:
             return
         handler = self.stockUndo.pop()
-        handler.Undo(self)
-        self.undoState -= 1
-        eg.Notify("DocumentChange", self.undoState != self.undoStateOnSave)
+        eg.actionThread.Func(handler.Undo)()
+        self.undoId -= 1
+        self.SetIsDirty(self.undoId != self.undoIdOnSave)
         self.stockRedo.append(handler)
         if len(self.stockUndo):
             undoName = ": " + self.stockUndo[-1].name
@@ -258,17 +240,18 @@ class Document(object):
         else:
             undoName = ""
             hasUndo = False
-        eg.Notify("UndoChange", (hasUndo, True, undoName, ": " + handler.name))
+        self.SetUndoState((hasUndo, True, undoName, ": " + handler.name))
 
 
+    @eg.AssertInMainThread
     @eg.LogIt
     def Redo(self):
         if len(self.stockRedo) == 0:
             return
         handler = self.stockRedo.pop()
-        handler.Redo(self)
-        self.undoState += 1
-        eg.Notify("DocumentChange", self.undoState != self.undoStateOnSave)
+        eg.actionThread.Func(handler.Redo)()
+        self.undoId += 1
+        self.SetIsDirty(self.undoId != self.undoIdOnSave)
         self.stockUndo.append(handler)
         if len(self.stockRedo):
             redoName = ": " + self.stockRedo[-1].name
@@ -276,14 +259,15 @@ class Document(object):
         else:
             redoName = ""
             hasRedo = False
-        eg.Notify("UndoChange", (True, hasRedo, ": " + handler.name, redoName))
+        self.SetUndoState((True, hasRedo, ": " + handler.name, redoName))
 
 
-    def RestoreItem(self, positionData, xmlData):
+    @eg.AssertInActionThread
+    def RestoreItem(self, treePosition, xmlData):
         eg.TreeLink.StartUndo()
-        parent, pos = positionData.GetPosition()
+        parent, pos = treePosition.GetParentAndPosition()
         node = ElementTree.fromstring(xmlData)
-        cls = self.XMLTag2ClassDict[node.tag]
+        cls = self.XMLTag2ClassDict[node.tag.lower()]
         item = cls(parent, node)
         parent.AddChild(item, pos)
         eg.TreeLink.StopUndo()
@@ -304,10 +288,10 @@ class Document(object):
     @eg.LogItWithReturn
     def HideFrame(self):
         # NOTICE:
-        # If the program is started through a shortcut with "minimise" option
+        # If the program is started through a shortcut with "minimize" option
         # set, we get an iconize event while ShowFrame() is executing.
         # Therefore we have to use this CallLater workaround.
-        # TODO: Find a better way. Preferable detect the minimise option
+        # TODO: Find a better way. Preferable detect the minimize option
         #       before we create the MainFrame.
         if self.reentrantLock.acquire(False):
             if self.frame is not None:
@@ -319,10 +303,6 @@ class Document(object):
             wx.CallLater(100, self.HideFrame)
 
 
-    def IsDirty(self):
-        return eg.notificationHandlers["DocumentChange"].value
-    
-    
     @eg.LogItWithReturn
     def CheckFileNeedsSave(self):
         """
@@ -334,7 +314,7 @@ class Document(object):
                  wx.ID_NO     if file was not saved
                  wx.ID_CANCEL if user canceled possible save
         """
-        if not self.IsDirty():
+        if not self.isDirty:
             return wx.ID_OK
         dialog = SaveChangesDialog(self.frame)
         result = dialog.ShowModal()
@@ -356,7 +336,7 @@ class Document(object):
     def Open(self, filePath=None):
         self.ShowFrame()
         if filePath is not None:
-            res = wx.MessageBox (
+            res = wx.MessageBox(
                 "Do you really want to load the tree file:\n%s" % filePath,
                 eg.APP_NAME,
                 wx.YES_NO|wx.CENTRE|wx.ICON_QUESTION,
@@ -405,10 +385,9 @@ class Document(object):
             fileDialog.Destroy()
 
 
-    def ExecuteSelected(self):
-        item = self.selection
+    def ExecuteNode(self, node):
         event = eg.EventGhostEvent("OnCmdExecute")
-        eg.actionThread.Call(eg.actionThread.ExecuteTreeItem, item, event)
+        eg.actionThread.Call(eg.actionThread.ExecuteTreeItem, node, event)
         return event
 
 
@@ -432,7 +411,7 @@ class Document(object):
         def Traverse(item, i):
             if isinstance(item, ContainerItem):
                 i += 1
-                if item.isExpanded:
+                if item in self.expandedNodes:
                     add(i)
                 for child in item.childs:
                     i = Traverse(child, i)
@@ -441,20 +420,127 @@ class Document(object):
         return expanded
 
 
-    #@eg.LogIt
+    @eg.LogIt
     def SetExpandState(self, expanded):
         if expanded is None:
             return
+        self.expandedNodes.clear()
         ContainerItem = eg.ContainerItem
         def Traverse(item, i):
             if isinstance(item, ContainerItem):
                 i += 1
-                item.isExpanded = (i in expanded)
+                if i in expanded:
+                    self.expandedNodes.add(item)
                 for child in item.childs:
                     i = Traverse(child, i)
             return i
-
         Traverse(self.root, -1)
+
+
+    @eg.AssertInMainThread
+    def DisplayError(self, ident):
+        self.frame.DisplayError(getattr(eg.text.MainFrame.Messages, ident))
+
+
+    def OnCmdConfigure(self, node):
+        eg.AsTasklet(eg.UndoHandler.Configure(self).Do)(node)
+
+
+    @eg.AssertInMainThread
+    def CmdAddPlugin(self):
+        result = eg.AddPluginDialog.GetModalResult(self.frame)
+        if result:
+            eg.UndoHandler.NewPlugin(self).Do(result[0])
+
+
+    @eg.AssertInMainThread
+    def CmdAddFolder(self):
+        folderNode = eg.UndoHandler.NewFolder(self).Do(self.selection)
+        wx.CallAfter(self.frame.treeCtrl.EditNodeLabel, folderNode)
+
+
+    @eg.AssertInMainThread
+    def CmdAddMacro(self):
+        return eg.UndoHandler.NewMacro(self).Do(self.selection)
+
+
+    @eg.AssertInMainThread
+    def CmdAddAction(self, selection=None, action=None):
+        if selection is None:
+            selection = self.selection
+        if not selection.DropTest(eg.ActionItem):
+            self.DisplayError("cantAddAction")
+            return
+        if action is None:
+            # let the user choose an action
+            result = eg.AddActionDialog.GetModalResult(self.frame)
+            # if user canceled the dialog, take a quick exit
+            if result is None:
+                return
+            action = result[0]
+        return eg.UndoHandler.NewAction(self).Do(selection, action)
+
+
+    @eg.AssertInMainThread
+    def CmdAddEvent(self):
+        if not self.selection.DropTest(eg.EventItem):
+            self.DisplayError("cantAddEvent")
+            return
+        return eg.UndoHandler.NewEvent(self).Do(self.selection)
+
+
+    @eg.AssertInMainThread
+    def CmdConfigure(self, item=None, isFirstConfigure=False):
+        if item is None:
+            item = self.selection
+        if not item.isConfigurable:
+            self.DisplayError("cantConfigure")
+        else:
+            return eg.UndoHandler.Configure(self).Do(item, isFirstConfigure)
+
+
+    @eg.AssertInMainThread
+    def CmdCut(self):
+        eg.UndoHandler.Cut(self).Do(self.selection)
+
+
+    @eg.AssertInMainThread
+    def CmdCopy(self):
+        self.selection.OnCmdCopy()
+
+
+    @eg.AssertInMainThread
+    def CmdPaste(self):
+        eg.UndoHandler.Paste(self).Do(self.selection)
+
+
+    @eg.AssertInMainThread
+    def CmdDelete(self):
+        eg.UndoHandler.Clear(self).Do(self.selection)
+
+
+    @eg.AssertInMainThread
+    def CmdRename(self):
+        if not self.selection.isRenameable:
+            self.DisplayError("cantRename")
+        else:
+            self.frame.treeCtrl.EditNodeLabel(self.selection)
+
+
+    @eg.AssertInMainThread
+    def CmdExecute(self):
+        if not self.selection.isExecutable:
+            self.DisplayError("cantExecute")
+        else:
+            self.ExecuteNode(self.selection).SetShouldEnd()
+
+
+    @eg.AssertInMainThread
+    def CmdToggleEnable(self):
+        if not self.selection.isDeactivatable:
+            self.DisplayError("cantDisable")
+        else:
+            eg.UndoHandler.ToggleEnable(self).Do(self.selection)
 
 
 

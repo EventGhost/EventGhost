@@ -16,6 +16,7 @@ eg.RegisterPlugin(
     author = "jinxdone / Bartman",
     version = "0.1.3." + "$LastChangedRevision: 348 $".split()[1],
     kind = "remote",
+    guid = "{00F14717-738A-40C0-8BEC-F56F5D9AAF7E}",
     canMultiLoad = False,
     description = __doc__,
     icon = (
