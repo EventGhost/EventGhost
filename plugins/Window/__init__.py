@@ -22,11 +22,12 @@ eg.RegisterPlugin(
     version = "1.0." + "$LastChangedRevision$".split()[1],
     description = (
         "Actions that are related to the control of windows on the desktop, "
-        "like finding specific windows, move, resize and send keypresses to "
-        "them."
+        "like finding specific windows, move, resize, grab text(s) "
+        "and send keypresses to them."
     ),
     kind = "core",
     guid = "{E974D074-B0A3-4D0C-BBD1-992475DDD69D}",
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=3220",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAV0lEQVR42u2TsRGAAAjE"
         "YDJ+NNgMJ0OwUTo5GgvTfJUcDUxLWFVjHQAwFt2d0r0DwOwQ1eNdIALEzLnRtuQWqJOm"
@@ -36,7 +37,7 @@ eg.RegisterPlugin(
 
 
 import wx
-from win32api import EnumDisplayMonitors
+from win32api import EnumDisplayMonitors, CloseHandle
 from eg.WinApi.Utils import BringHwndToFront, CloseHwnd, GetMonitorDimensions
 from eg.WinApi.Dynamic import (
     # functions:
@@ -57,6 +58,59 @@ from eg.WinApi.Dynamic import PostMessage as WinApiPostMessage
 from FindWindow import FindWindow
 from SendKeys import SendKeys
 
+from win32gui import GetClassName, IsChild, GetParent
+from win32gui import SendMessage as win32guiSendMessage
+from ctypes import create_string_buffer, addressof, sizeof, c_int
+from ctypes import create_unicode_buffer, WinError, Structure
+from ctypes.wintypes import UINT, INT, LPWSTR
+from eg.WinApi import GetWindowThreadProcessId
+from eg.WinApi.Dynamic import _kernel32
+
+from win32con import PAGE_READWRITE, MEM_COMMIT, MEM_RESERVE, MEM_RELEASE,\
+    PROCESS_ALL_ACCESS
+
+class LVCOLUMN(Structure):
+    _fields_ = [("mask", UINT),
+                ("fmt", INT),
+                ("cx", INT),
+                ("pszText", LPWSTR),
+                ("cchTextMax", INT),
+                ("iSubItem", INT),
+                ("iImage", INT),
+                ("iOrder", INT)]
+
+PROCESS_VM_OPERATION      = 8
+PROCESS_VM_READ           = 16
+#PROCESS_VM_WRITE          = 32
+PROCESS_QUERY_INFORMATION = 1024
+
+LVCF_FMT         =  1
+LVCF_WIDTH       =  2
+LVCF_TEXT        =  4
+LVCF_SUBITEM     =  8
+LVCF_IMAGE       = 16
+LVCF_ORDER       = 32
+LVM_GETCOLUMN    = 4121
+CB_GETCOUNT      = 326
+CB_GETCURSEL     = 327
+CB_GETLBTEXT     = 328
+LB_ERR           = -1
+LB_GETCOUNT      = 395
+LB_GETCURSEL     = 392
+LB_GETTEXT       = 393
+LB_GETSELCOUNT   = 400
+LB_GETSELITEMS   = 401
+SB_GETPARTS      = 1030
+SB_GETTEXTW      = 1037
+EM_GETLINECOUNT  = 186
+EM_GETLINE       = 196
+LVM_GETITEMCOUNT = 4100
+LVM_GETITEMSTATE = 4140
+LVM_GETITEMTEXT  = 4141
+#LVM_GETSELECTIONMARK = 4162
+#LVM_GETSELECTEDCOUNT = 4146
+LVIS_SELECTED    = 2
+#===============================================================================
 
 def GetTargetWindows():
     hwnds = eg.lastFoundWindows
@@ -72,6 +126,24 @@ def GetTopLevelOfTargetWindows():
     return list(set([GetAncestor(hwnd, GA_ROOT) for hwnd in hwnds]))
 
 
+def pack_int(x):
+    res=[]
+    for i in range(4):
+        res.append(chr(x&0xff))
+        x >>= 8
+    return ''.join(res)
+
+
+def match_cls(cls, lst):
+    if cls in lst:
+        return True
+    match = False
+    for item in lst:
+        if item in cls:
+            match = True
+            break
+    return match
+#===============================================================================
 
 class Window(eg.PluginBase):
 
@@ -87,6 +159,7 @@ class Window(eg.PluginBase):
         self.AddAction(Close)
         self.AddAction(SendMessage)
         self.AddAction(SetAlwaysOnTop)
+        self.AddAction(GrabText)
 
 
 
@@ -190,7 +263,6 @@ class MoveTo(eg.ActionBase):
             )
 
 
-
 class Resize(eg.ActionBase):
     name = "Resize"
     description = "Resizes a window to the specified dimension."
@@ -281,7 +353,6 @@ class Close(eg.ActionBase):
     def __call__(self):
         for hwnd in GetTopLevelOfTargetWindows():
             CloseHwnd(hwnd)
-
 
 
 class SendMessage(eg.ActionBase):
@@ -407,3 +478,167 @@ class SetAlwaysOnTop(eg.ActionBase):
         while panel.Affirmed():
             panel.SetResult(radioBox.GetSelection())
 
+
+class GrabText(eg.ActionBase):
+    name = "Grab text(s)"
+#=========================================================================================================
+# Sources:
+# winGuiAuto.py (Simon Brunning - simon@brunningonline.net)
+# http://www.java2s.com/Open-Source/Python/Windows/Venster/venster-0.72/venster/comctl.py.htm
+# http://www.java2s.com/Open-Source/Python/GUI/Python-Win32-GUI-Automation/pywinauto-0.4.0/pywinauto/controls/common_controls.py.htm
+# http://www.java2s.com/Open-Source/Python/GUI/Python-Win32-GUI-Automation/pywinauto-0.4.0/pywinauto/controls/win32_controls.py.htm
+# http://stackoverflow.com/questions/1872480/use-python-to-extract-listview-items-from-another-application
+# Note: this only works on 32 bit Python, and only for 32 bit 'other' processes.
+#=========================================================================================================
+
+    class text:
+        onlySel = "Return only selected item(s)"
+        onlySelToolTip = """Return only selected item(s).
+For example: ComboBox, ListBox, ListVieW"""
+
+    def Configure(self, only_sel = False):
+        panel = eg.ConfigPanel(self)
+        onlySelCtrl = wx.CheckBox(panel, -1, '  '+self.text.onlySel)
+        onlySelCtrl.SetValue(only_sel)
+        onlySelCtrl.SetToolTip(wx.ToolTip(self.text.onlySelToolTip))
+        panel.AddCtrl(onlySelCtrl)
+
+        while panel.Affirmed():
+            panel.SetResult(onlySelCtrl.GetValue(),
+            )
+
+    def GetLabel(self, only_sel = False):
+        return "%s: %s: %s" % (self.name, self.text.onlySel, str(only_sel))
+
+
+    def __call__(self, only_sel = False):
+        self.only_sel = only_sel
+        from win32_ctrls import win32_ctrls
+        res = []
+        for hwnd in GetTargetWindows():
+            if not IsWindow(hwnd):
+                self.PrintError("Not a window")
+                continue
+            clsName = GetClassName(hwnd)
+            if not IsChild(GetParent(hwnd), hwnd) or clsName in win32_ctrls['statics']:
+                val = eg.WinApi.GetWindowText(hwnd)
+            elif clsName in win32_ctrls['edits']:
+                val = self.getEditText(hwnd)
+            elif clsName in win32_ctrls['combos']:
+                val = self.getComboboxItems(hwnd)
+            elif clsName in win32_ctrls['listboxes']:
+                val = self.getListboxItems(hwnd)
+            elif clsName in win32_ctrls['listviews']:
+                val = self.getListViewItems(hwnd)
+            elif match_cls(clsName, win32_ctrls['statusbars']):
+                val = self.getStatusBarItems(hwnd)
+            else:
+                val = None
+            res.append(val)
+        return res
+
+
+    def getMultipleValues(self, hwnd, CountMessg, ValMessg, selected = None):
+        buf_size = 512
+        buf = create_string_buffer(pack_int(buf_size), buf_size)
+        indexes = selected if selected else range(win32guiSendMessage(hwnd, CountMessg, 0, 0))
+        val = []
+        for ix in indexes:
+            valLngth = win32guiSendMessage(hwnd, ValMessg, ix, addressof(buf))
+            val.append(buf.value[:valLngth].decode(eg.systemEncoding))
+        return val
+
+
+    def getEditText(self, hwnd):
+        return self.getMultipleValues(hwnd, EM_GETLINECOUNT, EM_GETLINE)
+
+
+    def getListboxItems(self, hwnd):
+        if self.only_sel:
+            num_selected = win32guiSendMessage(hwnd, LB_GETSELCOUNT, 0, 0)
+            if num_selected == LB_ERR: # if we got LB_ERR then it is a single selection list box
+                items = (win32guiSendMessage(hwnd, LB_GETCURSEL, 0, 0), )
+            else: # otherwise it is a multiselection list box
+                items = (c_int * num_selected)()
+                win32guiSendMessage(hwnd, LB_GETSELITEMS, num_selected, addressof(items))
+                items = tuple(items) # Convert from Ctypes array to a python tuple
+        else:
+            items = None
+        return self.getMultipleValues(hwnd, LB_GETCOUNT, LB_GETTEXT, items)
+
+
+    def getComboboxItems(self, hwnd):
+        if self.only_sel:
+            items = (win32guiSendMessage(hwnd, CB_GETCURSEL, 0, 0), )
+        else:
+            items = None
+        return self.getMultipleValues(hwnd, CB_GETCOUNT, CB_GETLBTEXT, items)
+
+
+    def getStatusBarItems(self, hwnd, buf_len = 512):
+        """If success, return statusbar texts like list of strings.
+        Otherwise return either '>>> No process ! <<<' or '>>> No parts ! <<<'.
+        Mandatory argument: handle of statusbar.
+        Option argument: length of text buffer."""
+        pid = GetWindowThreadProcessId(hwnd)[1]
+        process = _kernel32.OpenProcess(PROCESS_VM_OPERATION|PROCESS_VM_READ|PROCESS_QUERY_INFORMATION, False, pid)
+        res_val = ['>>> No process ! <<<',]
+        if process:
+            parts = win32guiSendMessage(hwnd, SB_GETPARTS, 0, 0)
+            partList = []
+            res_val = ['>>> No parts ! <<<',]
+            if parts > 0:
+                remBuf = _kernel32.VirtualAllocEx(process, None, buf_len, MEM_COMMIT, PAGE_READWRITE)
+                locBuf = create_unicode_buffer(buf_len)
+                for item in range(parts):
+                    win32guiSendMessage(hwnd, SB_GETTEXTW, item, remBuf)
+                    _kernel32.ReadProcessMemory(process, remBuf, locBuf, buf_len, None) #copy remBuf to locBuf
+                    partList.append(locBuf.value)
+                res_val =  partList
+                _kernel32.VirtualFreeEx(process, remBuf, 0, MEM_RELEASE)
+                CloseHandle(process)
+        return res_val
+
+
+    def getListViewItems(self, hwnd):
+        col = LVCOLUMN()
+        col.mask = LVCF_FMT | LVCF_IMAGE | LVCF_ORDER | LVCF_SUBITEM | LVCF_TEXT | LVCF_WIDTH
+        pid = GetWindowThreadProcessId(hwnd)[1]
+        hProcHnd = _kernel32.OpenProcess(PROCESS_ALL_ACCESS, False, pid)
+        pLVI = _kernel32.VirtualAllocEx(hProcHnd, 0, 4096, MEM_RESERVE |MEM_COMMIT, PAGE_READWRITE)
+        col.cchTextMax = 2000
+        col.pszText = pLVI + sizeof(col) + 1
+        ret = _kernel32.WriteProcessMemory(hProcHnd, pLVI, addressof(col), sizeof(col), 0)
+        if not ret:
+            raise WinError()
+        retval = 1
+        col_count = 0
+        while retval: # Columns enumeration
+            try:
+                retval = win32guiSendMessage(hwnd, LVM_GETCOLUMN, col_count, pLVI)
+            except:
+                retval = 0
+                raise
+            col_count += 1
+        pBuffer = _kernel32.VirtualAllocEx(hProcHnd, 0, 4096, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE)
+        lvitem_str = 20 * "\x00" + pack_int(pBuffer) + pack_int(4096) + 8 * "\x00"
+        lvitem_buffer = create_string_buffer(lvitem_str)
+        num_items = win32guiSendMessage(hwnd, LVM_GETITEMCOUNT)
+        res = []
+        for column_index in range(col_count): 
+            lvitem_buffer.__setslice__(8, 12, pack_int(column_index)) #column index increment
+            _kernel32.WriteProcessMemory(hProcHnd, pLVI, addressof(lvitem_buffer), sizeof(lvitem_buffer), 0)
+            target_buff = create_string_buffer(4096)
+            item_texts = []
+            for item_index in range(num_items):
+                if self.only_sel:
+                    if not win32guiSendMessage(hwnd, LVM_GETITEMSTATE, item_index, LVIS_SELECTED):
+                        continue
+                win32guiSendMessage(hwnd, LVM_GETITEMTEXT, item_index, pLVI)
+                _kernel32.ReadProcessMemory(hProcHnd, pBuffer, addressof(target_buff), 4096, 0)
+                item_texts.append(target_buff.value)
+            res.append(item_texts)
+        _kernel32.VirtualFreeEx(hProcHnd, pBuffer, 0, MEM_RELEASE)
+        _kernel32.VirtualFreeEx(hProcHnd, pLVI, 0, MEM_RELEASE)
+        CloseHandle(hProcHnd)
+        return map(list, zip(*res)) #Transposing Two-Dimensional Arrays by Steve Holden

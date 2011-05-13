@@ -24,6 +24,7 @@ eg.RegisterPlugin(
     author = "Pako",
     version = version,
     kind = "program",
+    guid = "{95217A88-AB62-4193-90D7-791E78C28232}",
     description = """<rst>
 Adds actions to control the `Splash Lite`_ - next generation player.
 

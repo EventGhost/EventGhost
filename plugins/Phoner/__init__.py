@@ -61,7 +61,7 @@ eg.RegisterPlugin(
 Adds support functions to control Phoner_.
 
 .. _Phoner: http://www.phoner.de/index_en.htm''',
-#    url = "http://www.eventghost.net/forum/viewtopic.php?....",
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=2170",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAADAFBMVEUzzMz/AACAAAAA"
         "AAAAAID///+AAIDAwMCAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"

@@ -85,7 +85,7 @@ eg.RegisterPlugin(
     author = "Pako",
     version = version,
     kind = "program",
-    guid = "{1A68AA88-3C92-4B98-92A0-CB627B27D422}",
+    guid = "{84703620-87B4-4982-A9AB-DA1B3F8D22EA}",
     description = ur'''<rst>
 Adds actions to control the `Radio?Sure!`_
 
