@@ -396,6 +396,7 @@ eg.RegisterPlugin(
     author = "Bitmonster & Stefan Gollmer & Nativityplay",
     version = "2.0." + "$LastChangedRevision$".split()[1],
     kind = "program",
+    guid = "{747B54F6-59F6-4602-A777-984EA76D2D8C}",
     createMacrosOnAdd = True,
     description = (
         'Adds support functions to control <a href="http://www.dvbviewer.com/">'
