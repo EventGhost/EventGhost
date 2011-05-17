@@ -71,7 +71,11 @@ class ConfigDialog(eg.TaskletDialog):
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.headerBox = eg.HeaderBox(
-            self, name, firstParagraph, treeItem.icon
+            self,
+            name,
+            firstParagraph,
+            treeItem.icon,
+            treeItem.url if hasattr(treeItem, "url") else None
         )
         mainSizer.SetMinSize(size)
         mainSizer.AddMany(

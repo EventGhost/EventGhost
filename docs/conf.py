@@ -41,13 +41,14 @@ master_doc = 'index'
 
 # General substitutions.
 project = u'EventGhost'
-copyright = u'2008, EventGhost.org'
+copyright = u'2011, EventGhost.net'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '0.3.7'
+from eg.Classes.Version import Version
+version = Version.base
 # The full version, including alpha/beta/rc tags.
 release = version
 

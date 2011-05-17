@@ -15,7 +15,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 class Version:
-    base = "0.4.0"
+    base = "0.4.1"
     try:
         from VersionRevision import revision, buildTime
         string = base + ".r%s" % revision

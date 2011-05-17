@@ -49,7 +49,7 @@ def InitPathesAndBuiltins():
     corePluginPackage = ModuleType("eg.CorePluginModule")
     corePluginPackage.__path__ = [eg.corePluginDir]
     sys.modules["eg.CorePluginModule"] = corePluginPackage
-
+    eg.CorePluginModule = corePluginPackage
     # we create a package 'PluginModule' and set its path to the plugin-dir
     # so we can simply use __import__ to load a plugin file
     if not os.path.exists(eg.localPluginDir):
@@ -57,6 +57,7 @@ def InitPathesAndBuiltins():
     userPluginPackage = ModuleType("eg.UserPluginModule")
     userPluginPackage.__path__ = [eg.localPluginDir]
     sys.modules["eg.UserPluginModule"] = userPluginPackage
+    eg.UserPluginModule = userPluginPackage
 
 
 # replace builtin raw_input() with a small dialog
