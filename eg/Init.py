@@ -49,7 +49,7 @@ def InitPathesAndBuiltins():
     corePluginPackage = ModuleType("eg.CorePluginModule")
     corePluginPackage.__path__ = [eg.corePluginDir]
     sys.modules["eg.CorePluginModule"] = corePluginPackage
-    eg.CorePluginModule = corePluginPackage # Added by Pako
+    eg.CorePluginModule = corePluginPackage
     # we create a package 'PluginModule' and set its path to the plugin-dir
     # so we can simply use __import__ to load a plugin file
     if not os.path.exists(eg.localPluginDir):
@@ -57,7 +57,7 @@ def InitPathesAndBuiltins():
     userPluginPackage = ModuleType("eg.UserPluginModule")
     userPluginPackage.__path__ = [eg.localPluginDir]
     sys.modules["eg.UserPluginModule"] = userPluginPackage
-    eg.UserPluginModule = userPluginPackage  # Added by Pako
+    eg.UserPluginModule = userPluginPackage
 
 
 # replace builtin raw_input() with a small dialog
@@ -127,7 +127,7 @@ def DeInit():
 
     eg.PrintDebugNotice("shutting down")
     eg.config.Save()
-    eg.messageReceiver.Close()
+    eg.messageReceiver.Stop()
     if eg.dummyAsyncoreDispatcher:
         eg.dummyAsyncoreDispatcher.close()
 
