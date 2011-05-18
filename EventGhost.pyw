@@ -18,7 +18,10 @@ import sys
 
 if hasattr(sys, "frozen"):
     from os.path import dirname
-    sys.path.append(dirname(sys.executable.encode('mbcs')))
+    FSE = sys.getfilesystemencoding()
+    filePath = sys.executable.encode(FSE) if isinstance(sys.executable, unicode) else sys.executable
+    sys.path.append(dirname(filePath))
+#    sys.path.append(dirname(sys.executable.encode('mbcs')))
 
 if len(sys.argv) > 2 and sys.argv[1] == "-execfile":   
     import imp
