@@ -22,7 +22,6 @@ __all__ = ["Bunch", "NotificationHandler", "LogIt", "LogItWithReturn",
 
 import eg
 import wx
-import sys
 import threading
 import time
 import inspect
@@ -436,5 +435,8 @@ def ExecFile(filename, globals=None, locals=None):
     Replacement for the Python built-in execfile() function, but handles
     unicode filenames right.
     """
-    return execfile(filename.encode('mbcs'), globals, locals)
+    from sys import getfilesystemencoding as gfse
+    FSE = gfse()
+    flnm = filename.encode(FSE) if isinstance(filename, unicode) else filename
+    return execfile(flnm, globals, locals)
 
