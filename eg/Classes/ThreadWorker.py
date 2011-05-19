@@ -96,6 +96,7 @@ class ThreadWorker(object):
         self.__queue = deque()
         self.__setupFunc = partial(self.Setup, *args, **kwargs)
         self.__wakeEvent = CreateEvent(None, 0, 0, None)
+        self.__dummyEvent = CreateEvent(None, 0, 0, None)
         self.__events = (HANDLE * 1)(self.__wakeEvent)
         self.__thread = Thread(
             group=None,
@@ -232,6 +233,30 @@ class ThreadWorker(object):
             This function is deprecated. Use the :meth:`Func` wrapper instead.
         """
         return self.Func(func, timeout)()
+
+
+    def Wait(self, timeout):
+        endTime = clock() + timeout
+        events = (HANDLE * 1)(self.__dummyEvent)
+        while True:
+            resultCode = MsgWaitForMultipleObjects(
+                1,
+                events,
+                0,
+                int(timeout * 1000),
+                QS_ALLINPUT
+            )
+            if resultCode == WAIT_OBJECT_0:
+                # event signaled - should never happen!
+                raise Exception("Got unknown event in ThreadWorker.Wait()")
+            elif resultCode == WAIT_TIMEOUT:
+                # Timeout expired.
+                return
+            # must be a message.
+            self.__PumpWaitingMessages()
+            timeout = endTime - clock()
+            if timeout < 0:
+                return
 
 
     def WaitOnEvent(self, event, timeout=10):
