@@ -18,12 +18,27 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2010-08-23 18:25 GMT+1
-
+# Changelog (in reverse chronological order):
+# -------------------------------------------
+# 0.2.5 by Pako 2011-05-26 12:30 UTC+1
+#     - Added action "Reopen last opened folder"
+#     - Added action "Go back one level"
+#     - After the action "Go back one level" the cursor is on previously opened directory
+#     - Expanded the number of keys, which can be used to control of the menu:
+#        wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER, wx.WXK_RIGHT, wx.WXK_NUMPAD_RIGHT
+#        wx.WXK_LEFT, wx.WXK_NUMPAD_LEFT
+#        wx.WXK_UP, wx.WXK_NUMPAD_UP
+#        wx.WXK_DOWN, wx.WXK_NUMPAD_DOWN
+#        wx.WXK_PAGEUP, wx.WXK_NUMPAD_PAGEUP
+#        wx.WXK_PAGEDOWN, wx.WXK_NUMPAD_PAGEDOWN
+#        wx.WXK_ESCAPE
+# 0.2.4 by Pako 2010-08-23 18:25 UTC+1
+#     - Added option "Delete folder" 
+#
 eg.RegisterPlugin(
     name = "On screen explorer",
     author = "Pako",
-    version = "0.2.4",
+    version = "0.2.5",
     kind = "other",
     guid = "{D3D2DDD1-9BEB-4A26-969B-C82FA8EAB280}",
     description = u"""<rst>
@@ -72,9 +87,10 @@ from threading import Timer
 from eg.WinApi.Utils import GetMonitorDimensions
 from eg.WinApi.Dynamic import CreateEvent, SetEvent
 import _winreg
-from win32api import LoadLibrary, LoadString, GetLogicalDriveStrings, GetVolumeInformation
+from win32api import LoadLibrary, LoadString, GetVolumeInformation #, GetLogicalDriveStrings
 from win32com.shell import shell
-from win32file import GetFileAttributes
+from win32file import GetFileAttributes, GetLogicalDrives
+
 from fnmatch import fnmatch
 from winsound import PlaySound, SND_ASYNC
 
@@ -101,6 +117,10 @@ class Text:
     shortcut = "Shortcut identifier string (may be empty):"
 #===============================================================================
 
+class ConfigData(eg.PersistentData):
+    lastFolder = None
+
+#===============================================================================
 newEVT_BUTTON_AFTER = wx.NewEventType()
 EVT_BUTTON_AFTER = wx.PyEventBinder(newEVT_BUTTON_AFTER, 1)
 
@@ -122,7 +142,7 @@ class EventAfter(wx.PyCommandEvent):
 
 class extColourSelectButton(eg.ColourSelectButton):
 
-    def __init__(self,*args,**kwargs):
+    def __init__(self, *args, **kwargs):
         eg.ColourSelectButton.__init__(self, *args)
         self.title = kwargs['title']
 
@@ -152,6 +172,7 @@ class extFontSelectButton(eg.FontSelectButton):
 
     def OnButton(self, event):
         fontData = wx.FontData()
+        fontData.EnableEffects(False)
         if self.value is not None:
             font = wx.FontFromNativeInfoString(self.value)
             fontData.SetInitialFont(font)
@@ -159,6 +180,7 @@ class extFontSelectButton(eg.FontSelectButton):
             fontData.SetInitialFont(
                 wx.SystemSettings_GetFont(wx.SYS_ANSI_VAR_FONT)
             )
+        fontData.EnableEffects(False)
         dialog = wx.FontDialog(self.GetParent(), fontData)
         if dialog.ShowModal() == wx.ID_OK:
             fontData = dialog.GetFontData()
@@ -169,6 +191,7 @@ class extFontSelectButton(eg.FontSelectButton):
         evt = EventAfter(newEVT_BUTTON_AFTER, self.GetId())
         evt.SetValue(self.GetValue())
         self.GetEventHandler().ProcessEvent(evt)
+
 #===============================================================================
 
 class MyDirBrowseButton(eg.DirBrowseButton):
@@ -200,6 +223,7 @@ class MenuGrid(wx.grid.Grid):
         self.SetColAttr(0,attr)
         self.CreateGrid(lngth, 1)
         self.SetSelectionMode(wx.grid.Grid.wxGridSelectRows)
+
         self.Bind(wx.grid.EVT_GRID_CMD_SELECT_CELL, self.onGridSelectCell, self)
 
 
@@ -231,8 +255,8 @@ class MenuGrid(wx.grid.Grid):
     def onGridSelectCell(self, event):
         row = event.GetRow()
         self.SelectRow(row)
-        if not self.IsVisible(row,0):
-            self.MakeCellVisible(row,0)
+        if not self.IsVisible(row, 0):
+            self.MakeCellVisible(row, 0)  
         event.Skip()
 
 
@@ -307,21 +331,32 @@ def GetFolderItems(folder, patterns, hide):
         fs.extend(ds)
         return fs
     else: #pseudo-folder "My computer"
-        drives = GetLogicalDriveStrings().split('\000')[:-1]
-        drvs = []
-        for dr in drives:
-            try:
-               name = GetVolumeInformation(dr)[0]
-               drvs.append(("%s%s (%s)" % (folder_ID,name,dr[:2]),""))
-            except:
-                pass
-        return drvs
-
+        #drives = GetLogicalDriveStrings().split('\000')[:-1]
+        drives = []
+        mask = 1
+        ordA = ord('A')
+        drivebits = GetLogicalDrives()
+        for c in range(26):
+            if drivebits & mask:
+                drv = '%c:\\' % chr(ordA+c)
+                if os.path.isdir(drv):
+                    try:
+                        name = GetVolumeInformation(drv)[0]
+                        drives.append(("%s%s (%s)" % (
+                            folder_ID,
+                            name,
+                            drv[:2]),
+                            ""
+                        ))
+                    except:
+                        pass
+            mask = mask << 1
+        return drives
 #===============================================================================
 #cls types for ACTIONS list :
 #===============================================================================
 
-class ShowMenu(eg.ActionClass):
+class ShowMenu(eg.ActionBase):
     panel = None
 
     class text:
@@ -356,11 +391,20 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         patterns = "*.*",
         hide = True,
         foreSel = (180, 180, 180),
-        backSel = (75, 75, 75)
+        backSel = (75, 75, 75),
     ):
         if not self.plugin.menuDlg:
-            if not os.path.isdir(start) and start != MY_COMPUTER:
-                start = eg.folderPath.Documents
+            if not self.value:
+                start = self.plugin.lastFolder
+            if not start:
+                start = MY_COMPUTER
+            if start != MY_COMPUTER:
+                while not os.path.isdir(start):
+                    if len(start) == 3:
+                        start = MY_COMPUTER
+                        break
+                    start = os.path.split(start)[0]
+            self.plugin.lastFolder = start
             self.plugin.menuDlg = Menu()
             self.event = CreateEvent(None, 0, 0, None)
             wx.CallAfter(self.plugin.menuDlg.ShowMenu,
@@ -417,7 +461,6 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         self.back = back
         self.foreSel = foreSel
         self.backSel = backSel
-        self.oldSel=0
         global panel
         panel = eg.ConfigPanel(self)
         previewLbl=wx.StaticText(panel, -1, self.text.menuPreview)
@@ -460,28 +503,33 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         OSElbl = wx.StaticText(panel, -1, self.text.OSELabel)
         #Button Text Colour
         foreLbl=wx.StaticText(panel, -1, self.text.txtColour+':')
-        foreColourButton = extColourSelectButton(panel, fore, title = self.text.txtColour)
+        foreColourButton = extColourSelectButton(
+            panel,
+            fore,
+            title = self.text.txtColour
+        )
         #Button Background Colour
         backLbl=wx.StaticText(panel, -1, self.text.background+':')
-        backColourButton = extColourSelectButton(panel,back, title = self.text.background)
+        backColourButton = extColourSelectButton(
+            panel,
+            back,
+            title = self.text.background
+        )
         #Button Selected Text Colour
         foreSelLbl=wx.StaticText(panel, -1, self.text.txtColourSel+':')
-        foreSelColourButton = extColourSelectButton(panel,foreSel, title = self.text.txtColourSel)
+        foreSelColourButton = extColourSelectButton(
+            panel,
+            foreSel,
+            title = self.text.txtColourSel
+        )
         #Button Selected Background Colour
         backSelLbl=wx.StaticText(panel, -1, self.text.backgroundSel+':')
-        backSelColourButton = extColourSelectButton(panel,backSel, title = self.text.backgroundSel)
-        folderLabel = wx.StaticText(panel, -1, self.text.folder)
-        folderCtrl = MyDirBrowseButton(
-            panel, 
-            toolTip = self.text.toolTipFolder,
-            dialogTitle = self.text.browseTitle,
-            buttonText = eg.text.General.browse,
+        backSelColourButton = extColourSelectButton(
+            panel,
+            backSel,
+            title = self.text.backgroundSel
         )
-        compBtn = wx.Button(panel, -1, MY_COMPUTER)
-        compBtn.SetToolTip(wx.ToolTip(self.text.compBtnToolTip % MY_COMPUTER))
-        folderCtrl.GetTextCtrl().SetEditable(False)
-        folderCtrl.SetValue(start)
-        folderCtrl.SetStartDirectory()
+
         patternsLabel = wx.StaticText(panel, -1, self.text.patterns)
         patternsCtrl = wx.TextCtrl(panel,-1,patterns)
         patternsCtrl.SetToolTip(wx.ToolTip(self.text.patternsToolTip))
@@ -509,11 +557,24 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         topSizer.Add(foreSelColourButton, (7, 1), flag = wx.TOP)
         topSizer.Add(backSelLbl,(8, 1), (1, 2), flag = wx.TOP,border = 8)
         topSizer.Add(backSelColourButton, (9, 1), flag = wx.TOP,border = 0)
-        mainSizer.Add(folderLabel,0,wx.TOP,8)
-        folderSizer = wx.BoxSizer(wx.HORIZONTAL)
-        folderSizer.Add(folderCtrl,1,wx.EXPAND)
-        folderSizer.Add(compBtn,0,wx.LEFT,20)
-        mainSizer.Add(folderSizer,0,wx.TOP|wx.EXPAND,2)
+        if self.value:
+            folderLabel = wx.StaticText(panel, -1, self.text.folder)
+            folderCtrl = MyDirBrowseButton(
+                panel, 
+                toolTip = self.text.toolTipFolder,
+                dialogTitle = self.text.browseTitle,
+                buttonText = eg.text.General.browse,
+            )
+            compBtn = wx.Button(panel, -1, MY_COMPUTER)
+            compBtn.SetToolTip(wx.ToolTip(self.text.compBtnToolTip % MY_COMPUTER))
+            folderCtrl.GetTextCtrl().SetEditable(False)
+            folderCtrl.SetValue(start)
+            folderCtrl.SetStartDirectory()
+            folderSizer = wx.BoxSizer(wx.HORIZONTAL)
+            folderSizer.Add(folderCtrl,1,wx.EXPAND)
+            folderSizer.Add(compBtn,0,wx.LEFT,20)
+            mainSizer.Add(folderLabel,0,wx.TOP,8)
+            mainSizer.Add(folderSizer,0,wx.TOP|wx.EXPAND,2)
         mainSizer.Add(patternsLabel,0,wx.TOP,8)
         mainSizer.Add(patternsCtrl,1,wx.TOP|wx.EXPAND,2)
         mainSizer.Add(hideSystem,0,wx.TOP,10)
@@ -565,11 +626,10 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         def OnCompBtn(evt):
             folderCtrl.SetValue(MY_COMPUTER)
             evt.Skip()
-        compBtn.Bind(wx.EVT_BUTTON, OnCompBtn)
 
 
         def OnTextChange(evt):
-            folder = folderCtrl.GetValue()
+            folder = folderCtrl.GetValue() if self.value else "",
             patterns = patternsCtrl.GetValue()
             hide = hideSystem.GetValue()
             if not patterns:
@@ -582,7 +642,9 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
                 except:
                     pass
             evt.Skip()
-        folderCtrl.Bind(wx.EVT_TEXT, OnTextChange)
+        if self.value:
+            compBtn.Bind(wx.EVT_BUTTON, OnCompBtn)
+            folderCtrl.Bind(wx.EVT_TEXT, OnTextChange)
         patternsCtrl.Bind(wx.EVT_TEXT, OnTextChange)
         hideSystem.Bind(wx.EVT_CHECKBOX, OnTextChange)
 
@@ -604,7 +666,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
                     prefixCtrl.GetValue(),
                     suffixCtrl.GetValue(),
                     displayChoice.GetSelection(),
-                    folderCtrl.GetValue(),
+                    folderCtrl.GetValue() if self.value else "",
                     patternsCtrl.GetValue(),
                     hideSystem.GetValue()
                 )
@@ -624,7 +686,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
             prefixCtrl.GetValue(),
             suffixCtrl.GetValue(),
             displayChoice.GetSelection(),
-            folderCtrl.GetValue(),
+            folderCtrl.GetValue() if self.value else "",
             patternsCtrl.GetValue(),
             hideSystem.GetValue(),
             foreSelColourButton.GetValue(),
@@ -632,7 +694,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         )
 #===============================================================================
 
-class MoveCursor(eg.ActionClass):
+class MoveCursor(eg.ActionBase):
 
     class text:
         step = "Step size:"
@@ -654,7 +716,7 @@ class MoveCursor(eg.ActionClass):
                 )
 #===============================================================================
 
-class PageUpDown(eg.ActionClass):
+class PageUpDown(eg.ActionBase):
 
     def __call__(self):
         if self.plugin.menuDlg:
@@ -662,7 +724,7 @@ class PageUpDown(eg.ActionClass):
             eg.event.skipEvent = True
 #===============================================================================
 
-class Cancel(eg.ActionClass):
+class Cancel(eg.ActionBase):
 
     def __call__(self):
         if self.plugin.menuDlg:
@@ -670,8 +732,31 @@ class Cancel(eg.ActionClass):
             self.plugin.menuDlg = None
             eg.event.skipEvent = True
 #===============================================================================
+class GoBack(eg.ActionBase):
 
-class Execute (eg.ActionClass):
+    def __call__(self):
+        if self.plugin.menuDlg:
+            eg.event.skipEvent = True
+            filePath, prefix, suffix = self.plugin.menuDlg.GetInfo()
+            filePath = self.plugin.lastFolder
+            if filePath == MY_COMPUTER:
+                return
+            if filePath[-2] == ":": #root of drive
+                filePath = MY_COMPUTER
+            else:
+                filePath = os.path.split(filePath)[0]
+            event = CreateEvent(None, 0, 0, None)
+            self.plugin.lastFolder = filePath
+            wx.CallAfter(self.plugin.menuDlg.ShowMenu,
+                prefix = prefix,
+                suffix = suffix,
+                start = filePath,
+                event = event,
+            )
+            eg.actionThread.WaitOnEvent(event)
+        #    eg.programCounter = None
+#===============================================================================
+class Execute(eg.ActionBase):
 
     class text:
         fileBoxLabel   = "Action with the file"
@@ -769,6 +854,7 @@ class Execute (eg.ActionClass):
                                 raise
                 if val&16: #go to the folder
                     event = CreateEvent(None, 0, 0, None)
+                    self.plugin.lastFolder = filePath
                     wx.CallAfter(self.plugin.menuDlg.ShowMenu,
                         prefix = prefix,
                         suffix = suffix,
@@ -945,19 +1031,22 @@ class Execute (eg.ActionClass):
 #===============================================================================
 
 ACTIONS = (
-    (ShowMenu, 'ShowMenu', 'Show explorer', 'Show on screen explorer.', None),
+    (ShowMenu, 'ShowMenu', 'Show explorer', 'Show on screen explorer.', True),
+    (ShowMenu, 'ShowLastMenu', 'Reopen last opened folder', 'Reopen last opened folder.', False),
     (MoveCursor, 'MoveUp', 'Cursor Up', 'Cursor Up.', -1),
     (MoveCursor, 'MoveDown', 'Cursor Down', 'Cursor Down.', 1),
     (PageUpDown, 'PageUp', 'Page Up', 'Page Up.', -1),
     (PageUpDown, 'PageDown', 'Page Down', 'Page Down.', 1),
     (Execute, 'Execute', 'Execute', 'Execute.', None),
+    (GoBack, 'GoBack', 'Go back one level', 'Go back one level.', None),
     (Cancel, 'Cancel', 'Cancel', 'Cancel button pressed.', None),
 )
 #===============================================================================
 
-class OSE(eg.PluginClass):
+class OSE(eg.PluginBase):
     menuDlg = None
-    text=Text
+    lastFolder = ""
+    text = Text
 
 
     def MyComputer(self):
@@ -984,10 +1073,16 @@ class OSE(eg.PluginClass):
         self.AddActionsFromList(ACTIONS)
 
 
+    def __stop__(self):
+        ConfigData.lastFolder = self.lastFolder
+
+
     def __start__(self, fid = u">> ", sid = u"|•"):
         global shortcut_ID, folder_ID
         shortcut_ID = sid
         folder_ID = fid
+        if ConfigData.lastFolder:
+            self.lastFolder = ConfigData.lastFolder
 
 
     def Configure(self, fid = u">> ", sid = u"|•"):
@@ -1011,7 +1106,10 @@ class OSE(eg.PluginClass):
 
 class Menu(wx.Frame):
 
+    oldStart = ""
+
     def __init__(self):
+
         wx.Frame.__init__(
             self,
             None,
@@ -1075,7 +1173,7 @@ class Menu(wx.Frame):
             self.Bind(wx.EVT_CLOSE, self.onClose)
             self.Bind(wx.grid.EVT_GRID_CMD_CELL_LEFT_DCLICK, self.onDoubleClick, self.eventChoiceCtrl)
             self.Bind(wx.EVT_CHAR_HOOK, self.onFrameCharHook)
-            font = wx.FontFromNativeInfoString(fontInfo)
+            font = wx.FontFromNativeInfoString(self.fontInfo)
             self.eventChoiceCtrl.SetFont(font)
             self.SetFont(font)
             self.SetBackgroundColour((0, 0, 0))
@@ -1085,8 +1183,6 @@ class Menu(wx.Frame):
             self.eventChoiceCtrl.SetSelectionForeground(self.foreSel)
             if self.flag:
                 self.timer=MyTimer(t = 5.0, plugin = self.plugin)
-        self.eventChoiceCtrl.SetGridCursor(0, 0)
-        self.eventChoiceCtrl.SelectRow(0)
         monDim = GetMonitorDimensions()
         try:
             x,y,ws,hs = monDim[self.monitor]
@@ -1097,6 +1193,7 @@ class Menu(wx.Frame):
         for i in range(len(self.choices)):
             self.eventChoiceCtrl.SetCellValue(i,0,self.choices[i])
             self.eventChoiceCtrl.SetRowSize(i,h)
+
         height0 = len(self.choices)*h
         height1 = h*((hs-20)/h)
         height = min(height0, height1)+6
@@ -1113,6 +1210,19 @@ class Menu(wx.Frame):
         y_pos = y + (hs-height)/2
         self.SetDimensions(x_pos,y_pos,width,height)
         self.eventChoiceCtrl.SetDimensions(2,2,width-6,height-6,wx.SIZE_AUTO)
+
+        head, tail = os.path.split(self.oldStart)
+        if start != MY_COMPUTER:
+            items = self.choices
+            itm = folder_ID + tail if head == start else "#"
+        else:
+            items = [itm[-3:-1] for itm in self.choices]
+            itm = self.oldStart[:2]
+        itm = items.index(itm) if itm in items else 0
+        self.oldStart = start
+        self.plugin.lastFolder = start
+        self.eventChoiceCtrl.SetGridCursor(itm, 0)
+
         self.Show(True)
         self.Raise()
         if event:
@@ -1147,6 +1257,16 @@ class Menu(wx.Frame):
                 self.eventChoiceCtrl.MovePageUp()
 
 
+    def GoBack(self):
+        if self.start != MY_COMPUTER:
+            strt = MY_COMPUTER if len(self.start) == 3 else os.path.split(self.start)[0]
+            self.ShowMenu(
+                prefix = self.prefix,
+                suffix = self.suffix,
+                start = strt,
+            )
+
+
     def DefaultAction(self):
         sel = self.eventChoiceCtrl.GetSelectedRows()[0]
         filePath = unicode(self.shortcuts[sel].decode(eg.systemEncoding))
@@ -1161,17 +1281,18 @@ class Menu(wx.Frame):
                 else:
                     filePath = os.path.split(filePath[:-3])[0]
         eg.TriggerEvent(prefix = self.prefix, suffix = self.suffix, payload = filePath)
-        if os.path.isfile(filePath):
+        if os.path.isfile(filePath): 
             self.destroyMenu()
             self.plugin.menuDlg = None
             try:
                 os.startfile(filePath)
             except WindowsError, e:
                 if e.winerror == ERROR_NO_ASSOCIATION:
-                    eg. Error(self.plugin.text.noAssoc % os.path.splitext(filePath)[1])
+                    eg.PrintError(self.plugin.text.noAssoc % os.path.splitext(filePath)[1])
                 else:
                     raise
-        else:
+        elif os.path.isdir(filePath) or filePath == MY_COMPUTER:
+            self.plugin.lastFolder = filePath
             self.ShowMenu(
                 prefix = self.prefix,
                 suffix = self.suffix,
@@ -1181,14 +1302,20 @@ class Menu(wx.Frame):
 
     def onFrameCharHook(self, event):
         keyCode = event.GetKeyCode()
-        if keyCode == wx.WXK_RETURN or keyCode == wx.WXK_NUMPAD_ENTER:
+        if   keyCode in (wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER, wx.WXK_RIGHT, wx.WXK_NUMPAD_RIGHT):
             self.DefaultAction()
+        elif keyCode in (wx.WXK_LEFT, wx.WXK_NUMPAD_LEFT):
+            self.GoBack()
+        elif keyCode in (wx.WXK_UP, wx.WXK_NUMPAD_UP):
+            self.eventChoiceCtrl.MoveCursor(-1)
+        elif keyCode in (wx.WXK_DOWN, wx.WXK_NUMPAD_DOWN):
+            self.eventChoiceCtrl.MoveCursor(1)
+        elif keyCode in (wx.WXK_PAGEUP, wx.WXK_NUMPAD_PAGEUP):
+            self.PageUpDown(-1)
+        elif keyCode in (wx.WXK_PAGEDOWN, wx.WXK_NUMPAD_PAGEDOWN):
+            self.PageUpDown(1)
         elif keyCode == wx.WXK_ESCAPE:
             self.Close()
-        elif keyCode == wx.WXK_UP or keyCode == wx.WXK_NUMPAD_UP:
-            self.eventChoiceCtrl.MoveCursor(-1)
-        elif keyCode == wx.WXK_DOWN or keyCode == wx.WXK_NUMPAD_DOWN:
-            self.eventChoiceCtrl.MoveCursor(1)
         else:
             event.Skip()
 
