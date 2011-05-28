@@ -49,7 +49,7 @@ import ctypes
 import socket
 import struct
 import Image
-from threading import Timer
+from threading import Timer, Thread
 
 from eg.WinApi.Dynamic import (
     # functions:
@@ -462,30 +462,64 @@ class PlaySound(eg.ActionWithStringParameter):
     class text:
         text1 = "Path to soundfile:"
         text2 = "Wait for completion"
+        text3 = "Trigger event after completion"
         fileMask = "Wav-Files (*.WAV)|*.wav|All-Files (*.*)|*.*"
+        eventSuffix = "Completion"
 
 
-    def __call__(self, wavfile, flags=wx.SOUND_ASYNC):
+    def __call__(self, wavfile, flags=wx.SOUND_ASYNC, evt = False):
         self.sound = wx.Sound(wavfile)
-        self.sound.Play(flags)
+        suffix = "%s.%s" % (
+                "%s.%s" % (self.name.replace(' ', ''), self.text.eventSuffix),
+                os.path.splitext(os.path.split(wavfile)[1])[0].replace('.', '_')
+            )
+        prefix = self.plugin.name.replace(' ', '')
+        if flags == wx.SOUND_SYNC:
+            self.sound.Play(flags)
+            if evt:
+                eg.TriggerEvent(suffix, prefix = prefix)
+        elif evt:
+            te=self.TriggerEvent(self.sound, suffix, prefix)
+            te.start()
+        else:
+            self.sound.Play(flags)
 
 
-    def Configure(self, wavfile='', flags=wx.SOUND_ASYNC):
+    class TriggerEvent(Thread):
+
+        def __init__(self, sound, suffix, prefix):
+            Thread.__init__(self)
+            self.sound = sound
+            self.suffix = suffix
+            self.prefix = prefix
+    
+        def run(self):
+            self.sound.Play(wx.SOUND_SYNC)
+            eg.TriggerEvent(self.suffix, prefix = self.prefix)
+
+
+    def Configure(self, wavfile='', flags=wx.SOUND_ASYNC, evt = False):
         panel = eg.ConfigPanel()
         text = self.text
         filepathCtrl = panel.FileBrowseButton(wavfile, fileMask=text.fileMask)
         waitCheckbox = panel.CheckBox(flags == wx.SOUND_SYNC, text.text2)
+        eventCheckbox = panel.CheckBox(evt, text.text3)
 
         panel.sizer.Add(panel.StaticText(text.text1), 0, wx.EXPAND)
         panel.sizer.Add(filepathCtrl, 0, wx.EXPAND)
-        panel.sizer.Add(waitCheckbox, 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 10)
+        panel.sizer.Add(waitCheckbox, 0, wx.EXPAND|wx.TOP, 10)
+        panel.sizer.Add(eventCheckbox, 0, wx.EXPAND|wx.TOP, 8)
 
         while panel.Affirmed():
             if waitCheckbox.IsChecked():
                 flags = wx.SOUND_SYNC
             else:
                 flags = wx.SOUND_ASYNC
-            panel.SetResult(filepathCtrl.GetValue(), flags)
+            panel.SetResult(
+                filepathCtrl.GetValue(),
+                flags,
+                eventCheckbox.IsChecked()
+            )
 
 
 

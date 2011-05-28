@@ -16,7 +16,8 @@
 
 import eg
 import wx
-from os.path import basename, dirname, abspath
+from os.path import basename, dirname, abspath, split, splitext
+from threading import Thread
 
 from eg.WinApi.Dynamic import (
     sizeof, byref, CreateProcess, WaitForSingleObject, FormatError,
@@ -67,6 +68,8 @@ class Execute(eg.ActionBase):
             "Idle"
         )
         WaitCheckbox = "Wait till application is terminated before proceeding"
+        eventCheckbox = "Trigger event when application is terminated"
+        eventSuffix = "Application.Terminated"
         browseExecutableDialogTitle = "Choose the executable"
         browseWorkingDirDialogTitle = "Choose the working directory"
 
@@ -78,7 +81,8 @@ class Execute(eg.ActionBase):
         winState=0,
         waitForCompletion=False,
         priority=2,
-        workingDir=""
+        workingDir="",
+        triggerEvent=False,
     ):
         returnValue = None
         pathname = eg.ParseString(pathname)
@@ -91,7 +95,7 @@ class Execute(eg.ActionBase):
         startupInfo.dwFlags = STARTF_USESHOWWINDOW
         startupInfo.wShowWindow = WINSTATE_FLAGS[winState]
         priorityFlag = PRIORITY_FLAGS[priority]
-        processInformation = PROCESS_INFORMATION()
+        processInformation = self.processInformation = PROCESS_INFORMATION()
         res = CreateProcess(
             None,              # lpApplicationName
             commandLine,       # lpCommandLine
@@ -104,6 +108,11 @@ class Execute(eg.ActionBase):
             startupInfo,       # lpStartupInfo
             processInformation # lpProcessInformation
         )
+        suffix = "%s.%s" % (
+                self.text.eventSuffix,
+                splitext(split(pathname)[1])[0]
+            )
+        prefix = self.plugin.name.replace(' ', '')
         if res == 0:
             raise self.Exception(FormatError())
         if waitForCompletion:
@@ -115,9 +124,38 @@ class Execute(eg.ActionBase):
             ):
                 raise self.Exception(FormatError())
             returnValue = exitCode.value
-        CloseHandle(processInformation.hProcess)
-        CloseHandle(processInformation.hThread)
-        return returnValue
+            if triggerEvent:
+                eg.TriggerEvent(suffix, prefix = prefix)
+            CloseHandle(processInformation.hProcess)
+            CloseHandle(processInformation.hThread)
+            return returnValue
+        elif triggerEvent:
+            te=self.TriggerEvent(processInformation, suffix, prefix)
+            te.start()
+        else:
+            CloseHandle(processInformation.hProcess)
+            CloseHandle(processInformation.hThread)
+
+
+    class TriggerEvent(Thread):
+
+        def __init__(self, processInformation, suffix, prefix):
+            Thread.__init__(self)
+            self.processInformation = processInformation
+            self.suffix = suffix
+            self.prefix = prefix
+    
+        def run(self):
+            WaitForSingleObject(self.processInformation.hProcess, INFINITE)
+            exitCode = DWORD()
+            if not GetExitCodeProcess(
+                self.processInformation.hProcess,
+                byref(exitCode)
+            ):
+                raise self.Exception(FormatError())
+            CloseHandle(self.processInformation.hProcess)
+            CloseHandle(self.processInformation.hThread)
+            eg.TriggerEvent(self.suffix, prefix = self.prefix)
 
 
     def GetLabel(self, pathname='', *dummyArgs):
@@ -131,7 +169,8 @@ class Execute(eg.ActionBase):
         winState=0,
         waitForCompletion=False,
         priority=2,
-        workingDir=""
+        workingDir="",
+        triggerEvent=False,
     ):
         panel = eg.ConfigPanel()
         text = self.text
@@ -151,6 +190,10 @@ class Execute(eg.ActionBase):
         waitCheckBox = panel.CheckBox(
             bool(waitForCompletion),
             text.WaitCheckbox
+        )
+        eventCheckBox = panel.CheckBox(
+            bool(triggerEvent),
+            text.eventCheckbox
         )
 
         SText = panel.StaticText
@@ -178,6 +221,8 @@ class Execute(eg.ActionBase):
             (lowerSizer, 0, wx.EXPAND),
             ((10, 15)),
             (waitCheckBox),
+            ((10, 8)),
+            (eventCheckBox),
         ])
 
         while panel.Affirmed():
@@ -187,6 +232,7 @@ class Execute(eg.ActionBase):
                 winStateChoice.GetValue(),
                 waitCheckBox.GetValue(),
                 4 - priorityChoice.GetValue(),
-                workingDirCtrl.GetValue()
+                workingDirCtrl.GetValue(),
+                eventCheckBox.GetValue()
             )
 
