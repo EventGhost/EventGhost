@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # Copyright (C) 2008 Chris Longo <cal@chrislongo.net> and Tobias Arrskog (topfs2)
 #
 # This file is a plugin for EventGhost.
@@ -28,7 +26,7 @@ from xml.dom.minidom import Node
 eg.RegisterPlugin(
     name = "XBMC2",
     author = "Joni Boren",
-    version = "0.6.0",
+    version = "0.6.1",
     kind = "program",
     guid = "{8C8B850C-773F-4583-AAD9-A568262B7933}",
     canMultiLoad = True,
@@ -145,25 +143,25 @@ GENERAL_ACTIONS = (
     ("ParentDir", "ParentDir", "Go up a folder to the parent folder.", "parentdir"),
     ("PreviousMenu", "PreviousMenu", "Go back to the previous menu screen.", "previousmenu"),
     ("Info", "Info", "Show the information about the currently highlighted item, or currently playing item.", "info"),
-    ("Screenshot", "Screenshot", "Take a screenshot of the current screen..", "Screenshot"),
+    ("Screenshot", "Screenshot", "Take a screenshot of the current screen.", "Screenshot"),
     ("PowerOff", "PowerOff", "Shutdown and power off.", "PowerOff"),
-    ("VolumeUp", "VolumeUp", "Increase the volume of playback..", "VolumeUp"),
-    ("VolumeDown", "VolumeDown", "Decrease the volume of playback..", "VolumeDown"),
-    ("Mute", "Mute", "Mute the volume..", "Mute"),
-    ("ContextMenu", "ContextMenu", "Pops up a contextual menu.", "ContextMenu"),
-    ("ScrollUp", "ScrollUp", "Variable speed scroll up for analog keys (stick or triggers).", "ScrollUp"),
-    ("ScrollDown", "ScrollDown", "Variable speed scroll down for analog keys (stick or triggers).", "ScrollDown"),
-    ("Close", "Close", "Used to close a dialog.", "Close"),
-    ("Number0", "Number0", "Used to input the number 0.", "Number0"),
-    ("Number1", "Number1", "Used to input the number 1.", "Number1"),
-    ("Number2", "Number2", "Used to input the number 2.", "Number2"),
-    ("Number3", "Number3", "Used to input the number 3.", "Number3"),
-    ("Number4", "Number4", "Used to input the number 4.", "Number4"),
-    ("Number5", "Number5", "Used to input the number 5.", "Number5"),
-    ("Number6", "Number6", "Used to input the number 6.", "Number6"),
-    ("Number7", "Number7", "Used to input the number 7.", "Number7"),
-    ("Number8", "Number8", "Used to input the number 8.", "Number8"),
-    ("Number9", "Number9", "Used to input the number 9.", "Number9"),
+    ("VolumeUp", "VolumeUp", "Increase the volume of playback.", "VolumeUp"),
+    ("VolumeDown", "VolumeDown", "Decrease the volume of playback.", "VolumeDown"),
+    ("Mute", "Mute", "Mute the volume.", "Mute"),
+    ("ContextMenu", "ContextMenu", "Pops up a contextual menu", "ContextMenu"),
+    ("ScrollUp", "ScrollUp", "Variable speed scroll up for analog keys (stick or triggers)", "ScrollUp"),
+    ("ScrollDown", "ScrollDown", "Variable speed scroll down for analog keys (stick or triggers)", "ScrollDown"),
+    ("Close", "Close", "Used to close a dialog", "Close"),
+    ("Number0", "Number0", "Used to input the number 0", "Number0"),
+    ("Number1", "Number1", "Used to input the number 1", "Number1"),
+    ("Number2", "Number2", "Used to input the number 2", "Number2"),
+    ("Number3", "Number3", "Used to input the number 3", "Number3"),
+    ("Number4", "Number4", "Used to input the number 4", "Number4"),
+    ("Number5", "Number5", "Used to input the number 5", "Number5"),
+    ("Number6", "Number6", "Used to input the number 6", "Number6"),
+    ("Number7", "Number7", "Used to input the number 7", "Number7"),
+    ("Number8", "Number8", "Used to input the number 8", "Number8"),
+    ("Number9", "Number9", "Used to input the number 9", "Number9"),
 )),
 )
 
@@ -171,19 +169,19 @@ GENERAL_ACTIONS = (
 
 MEDIA_PLAYING_ACTIONS = (
 (eg.ActionGroup, "MediaPlaying", "Media playing", None, (
-    ("Play", "Play", "Play the selected item (or folder of items), or unpause a paused item..", "Play"),
-    ("Pause", "Pause", " Pause the currently playing item. .", "Pause"),
-    ("Stop", "Stop", " Stop the currently playing item. .", "Stop"),
-    ("FastForward", "FastForward", "Toggle the fastforward speed between normal play, 2x, 4x, 8x, 16x, and 32x..", "FastForward"),
-    ("Rewind", "Rewind", "Toggle the rewind speed between normal play, 2x, 4x, 8x, 16x, and 32x..", "Rewind"),
-    ("SkipNext", "SkipNext", "Skip to the next item in a playlist..", "SkipNext"),
-    ("SkipPrevious", "SkipPrevious", "Skip to the previous item in a playlist..", "SkipPrevious"),
-    ("FullScreen", "FullScreen", "Toggles fullscreen modes (either visualisation or video playback).", "FullScreen"),
-    ("CodecInfo", "CodecInfo", "Show codec information about the currently playing item (during video or visualisation playback).", "CodecInfo"),
-    ("AnalogSeekForward", "AnalogSeekForward", "Variable speed seeking for analog keys (stick or triggers).", "AnalogSeekForward"),
-    ("AnalogSeekBack", "AnalogSeekBack", "Variable speed seeking for analog keys (stick or triggers).", "AnalogSeekBack"),
-    ("AnalogFastForward", "AnalogFastForward", "Variable speed fast forward for analog keys (stick or triggers).", "AnalogFastForward"),
-    ("AnalogRewind", "AnalogRewind", "Variable speed rewind for analog keys (stick or triggers).", "AnalogRewind"),
+    ("Play", "Play", "Play the selected item (or folder of items), or unpause a paused item.", "Play"),
+    ("Pause", "Pause", "Pause the currently playing item.", "Pause"),
+    ("Stop", "Stop", "Stop the currently playing item.", "Stop"),
+    ("FastForward", "FastForward", "Toggle the fastforward speed between normal play, 2x, 4x, 8x, 16x, and 32x.", "FastForward"),
+    ("Rewind", "Rewind", "Toggle the rewind speed between normal play, 2x, 4x, 8x, 16x, and 32x.", "Rewind"),
+    ("SkipNext", "SkipNext", "Skip to the next item in a playlist.", "SkipNext"),
+    ("SkipPrevious", "SkipPrevious", "Skip to the previous item in a playlist.", "SkipPrevious"),
+    ("FullScreen", "FullScreen", "Toggles fullscreen modes (either visualisation or video playback)", "FullScreen"),
+    ("CodecInfo", "CodecInfo", "Show codec information about the currently playing item (during video or visualisation playback)", "CodecInfo"),
+    ("AnalogSeekForward", "AnalogSeekForward", "Variable speed seeking for analog keys (stick or triggers)", "AnalogSeekForward"),
+    ("AnalogSeekBack", "AnalogSeekBack", "Variable speed seeking for analog keys (stick or triggers)", "AnalogSeekBack"),
+    ("AnalogFastForward", "AnalogFastForward", "Variable speed fast forward for analog keys (stick or triggers)", "AnalogFastForward"),
+    ("AnalogRewind", "AnalogRewind", "Variable speed rewind for analog keys (stick or triggers)", "AnalogRewind"),
     ("PartyMode", "Party Mode", "Party mode.", "PlayerControl(PartyMode)"),
     ("Random", "Random", "Random.", "PlayerControl(Random)"),
     ("Repeat", "Repeat", "Repeat.", "PlayerControl(Repeat)"),
@@ -202,10 +200,10 @@ MEDIA_PLAYING_ACTIONS = (
 
 PLAYLIST_ACTIONS = (
 (eg.ActionGroup, "Playlist", "Playlist", None, (
-    ("Playlist", "Playlist", "Toggle to playlist view from My Music or My Videos.", "Playlist"),
-    ("Queue", "Queue", "Queue the item to the current playlist.", "Queue"),
-    ("MoveItemUp", "MoveItemUp", "Used to rearrange playlists.", "MoveItemUp"),
-    ("MoveItemDown", "MoveItemDown", "Used to rearrange playlists.", "MoveItemDown"),
+    ("Playlist", "Playlist", "Toggle to playlist view from My Music or My Videos", "Playlist"),
+    ("Queue", "Queue", "Queue the item to the current playlist", "Queue"),
+    ("MoveItemUp", "MoveItemUp", "Used to rearrange playlists", "MoveItemUp"),
+    ("MoveItemDown", "MoveItemDown", "Used to rearrange playlists", "MoveItemDown"),
 )),
 )
 
@@ -213,23 +211,23 @@ PLAYLIST_ACTIONS = (
 
 FULLSCREEN_VIDEO_ACTIONS = (
 (eg.ActionGroup, "FullscreenVideo", "FullScreen Video", None, (
-    ("StepForward", "StepForward", "Step forward 1% in the movie..", "StepForward"),
-    ("StepBack", "StepBack", "Step back 1% in the movie..", "StepBack"),
-    ("BigStepForward", "BigStepForward", "Step forward 10% in the movie..", "BigStepForward"),
-    ("BigStepBack", "BigStepBack", "Step back 10% in the movie..", "BigStepBack"),
-    ("SmallStepBack", "SmallStepBack", "Step back 7 seconds in the current video..", "SmallStepBack"),
-    ("OSD", "OSD", "Toggles the OSD while playing an item..", "OSD"),
-    ("AspectRatio", "AspectRatio", "Toggle through the various aspect ratio modes (Normal is the preferred option)..", "AspectRatio"),
-    ("ShowSubtitles", "ShowSubtitles", "Toggles whether subtitles are shown or not..", "ShowSubtitles"),
-    ("NextSubtitle", "NextSubtitle", "Change to the next subtitle language, if there is more than one..", "NextSubtitle"),
-    ("SubtitleDelayMinus", "SubtitleDelayMinus", "Decrease the delay amount of subtitles (use if subtitles are displaying too late).", "SubtitleDelayMinus"),
-    ("SubtitleDelayPlus", "SubtitleDelayPlus", "Increase the delay amount of subtitles (use if subtitles are displaying too early).", "SubtitleDelayPlus"),
-    ("AudioDelayMinus", "AudioDelayMinus", "Decrease the delay amount of audio (use if audio is being heard too early).", "AudioDelayMinus"),
-    ("AudioDelayPlus", "AudioDelayPlus", "Increase the delay amount of audio (use if audio is being heard too late).", "AudioDelayPlus"),
-    ("AudioNextLanguage", "AudioNextLanguage", "Change to the next audio track in a video with multiple audio tracks..", "AudioNextLanguage"),
+    ("StepForward", "StepForward", "Step forward 1% in the movie.", "StepForward"),
+    ("StepBack", "StepBack", "Step back 1% in the movie.", "StepBack"),
+    ("BigStepForward", "BigStepForward", "Step forward 10% in the movie.", "BigStepForward"),
+    ("BigStepBack", "BigStepBack", "Step back 10% in the movie.", "BigStepBack"),
+    ("SmallStepBack", "SmallStepBack", "Step back 7 seconds in the current video.", "SmallStepBack"),
+    ("OSD", "OSD", "Toggles the OSD while playing an item.", "OSD"),
+    ("AspectRatio", "AspectRatio", "Toggle through the various aspect ratio modes (Normal is the preferred option).", "AspectRatio"),
+    ("ShowSubtitles", "ShowSubtitles", "Toggles whether subtitles are shown or not.", "ShowSubtitles"),
+    ("NextSubtitle", "NextSubtitle", "Change to the next subtitle language, if there is more than one.", "NextSubtitle"),
+    ("SubtitleDelayMinus", "SubtitleDelayMinus", "Decrease the delay amount of subtitles (use if subtitles are displaying too late)", "SubtitleDelayMinus"),
+    ("SubtitleDelayPlus", "SubtitleDelayPlus", "Increase the delay amount of subtitles (use if subtitles are displaying too early)", "SubtitleDelayPlus"),
+    ("AudioDelayMinus", "AudioDelayMinus", "Decrease the delay amount of audio (use if audio is being heard too early)", "AudioDelayMinus"),
+    ("AudioDelayPlus", "AudioDelayPlus", "Increase the delay amount of audio (use if audio is being heard too late)", "AudioDelayPlus"),
+    ("AudioNextLanguage", "AudioNextLanguage", "Change to the next audio track in a video with multiple audio tracks.", "AudioNextLanguage"),
     ("mplayerosd", "mplayerosd", "Show Mplayer's OSD.", "mplayerosd"),
-    ("ShowTime", "ShowTime", "Used to show the current play time in music + video playback.", "ShowTime"),
-    ("ShowVideoMenu", "ShowVideoMenu", "Go to the DVD Video menu when playing a DVD..", "ShowVideoMenu"),
+    ("ShowTime", "ShowTime", "Used to show the current play time in music + video playback", "ShowTime"),
+    ("ShowVideoMenu", "ShowVideoMenu", "Go to the DVD Video menu when playing a DVD.", "ShowVideoMenu"),
 )),
 )
 
@@ -237,10 +235,10 @@ FULLSCREEN_VIDEO_ACTIONS = (
 
 SLIDESHOW_ACTIONS = (
 (eg.ActionGroup, "PictureSlideshow", "Picture slideshow", None, (
-    ("NextPicture", "NextPicture", "Move to the next picture in a slideshow..", "NextPicture"),
-    ("PreviousPicture", "PreviousPicture", "Move to the previous picture in a slideshow..", "PreviousPicture"),
-    ("ZoomOut", "ZoomOut", "Used in picture or slideshow to zoom out of the current image..", "ZoomOut"),
-    ("ZoomIn", "ZoomIn", "Used in picture or slideshow to zoom in to the current image..", "ZoomIn"),
+    ("NextPicture", "NextPicture", "Move to the next picture in a slideshow.", "NextPicture"),
+    ("PreviousPicture", "PreviousPicture", "Move to the previous picture in a slideshow.", "PreviousPicture"),
+    ("ZoomOut", "ZoomOut", "Used in picture or slideshow to zoom out of the current image.", "ZoomOut"),
+    ("ZoomIn", "ZoomIn", "Used in picture or slideshow to zoom in to the current image.", "ZoomIn"),
     ("ZoomNormal", "ZoomNormal", "Normal (fullscreen) viewing in My Pictures.", "ZoomNormal"),
     ("ZoomLevel1", "ZoomLevel1", "Zoom to 120% in My Pictures.", "ZoomLevel1"),
     ("ZoomLevel2", "ZoomLevel2", "Zoom to 150% in My Pictures.", "ZoomLevel2"),
@@ -251,18 +249,18 @@ SLIDESHOW_ACTIONS = (
     ("ZoomLevel7", "ZoomLevel7", "Zoom to 900% in My Pictures.", "ZoomLevel7"),
     ("ZoomLevel8", "ZoomLevel8", "Zoom to 1350% in My Pictures.", "ZoomLevel8"),
     ("ZoomLevel9", "ZoomLevel9", "Zoom to 2000% in My Pictures.", "ZoomLevel9"),
-    ("AnalogMove", "AnalogMove", "Move in the calibration screens, and while zoomed in My Pictures..", "AnalogMove"),
-    ("Rotate", "Rotate", "Rotate a picture in My Pictures.", "Rotate"),
+    ("AnalogMove", "AnalogMove", "Move in the calibration screens, and while zoomed in My Pictures.", "AnalogMove"),
+    ("Rotate", "Rotate", "Rotate a picture in My Pictures", "Rotate"),
 )),
 )
 # Actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#Actions_available_in_screen_calibration
 
 CALIBRATION_ACTIONS = (
 (eg.ActionGroup, "ScreenCalibration", "Screen calibration", None, (
-    ("NextCalibration", "NextCalibration", "Used in Video + GUI calibration.", "NextCalibration"),
-    ("ResetCalibration", "ResetCalibration", "Used in Video + GUI calibration.", "ResetCalibration"),
-    ("AnalogMove", "AnalogMove", "Move in the calibration screens, and while zoomed in My Pictures..", "AnalogMove"),
-    ("NextResolution", "NextResolution", "Used in Video calibration.", "NextResolution"),
+    ("NextCalibration", "NextCalibration", "Used in Video + GUI calibration", "NextCalibration"),
+    ("ResetCalibration", "ResetCalibration", "Used in Video + GUI calibration", "ResetCalibration"),
+    ("AnalogMove", "AnalogMove", "Move in the calibration screens, and while zoomed in My Pictures.", "AnalogMove"),
+    ("NextResolution", "NextResolution", "Used in Video calibration", "NextResolution"),
 )),
 )
 
@@ -270,21 +268,21 @@ CALIBRATION_ACTIONS = (
 
 FILEMANAGER_ACTIONS = (
 (eg.ActionGroup, "FileManager", "File Manager", None, (
-    ("Delete", "Delete", "Used in My Files to delete a file..", "Delete"),
-    ("Copy", "Copy", "Used in My Files to copy a file..", "Copy"),
-    ("Move", "Move", "Used in My Files to move a file..", "Move"),
-    ("Rename", "Rename", "Used in My Files to rename a file..", "Rename"),
+    ("Delete", "Delete", "Used in My Files to delete a file.", "Delete"),
+    ("Copy", "Copy", "Used in My Files to copy a file.", "Copy"),
+    ("Move", "Move", "Used in My Files to move a file.", "Move"),
+    ("Rename", "Rename", "Used in My Files to rename a file.", "Rename"),
 )),
 )
 # Actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#Actions_available_in_the_on-screen_keyboard
 
 ON_SCREEN_KEYBOARD_ACTIONS = (
 (eg.ActionGroup, "On-screenKeyboard", "On-screen keyboard", None, (
-    ("BackSpace", "BackSpace", "Used in the virtual keyboards to delete one letter..", "BackSpace"),
-    ("Shift", "Shift", "Used in Virtual Keyboard to switch to upper or lower case letters.", "Shift"),
-    ("Symbols", "Symbols", "Used in Virtual Keyboard to switch to or from symbols mode.", "Symbols"),
-    ("CursorLeft", "CursorLeft", "Used in Virtual Keyboard to move the current cursor point to the left.", "CursorLeft"),
-    ("CursorRight", "CursorRight", "Used in Virtual Keyboard to move the current cursor point to the right.", "CursorRight"),
+    ("BackSpace", "BackSpace", "Used in the virtual keyboards to delete one letter.", "BackSpace"),
+    ("Shift", "Shift", "Used in Virtual Keyboard to switch to upper or lower case letters", "Shift"),
+    ("Symbols", "Symbols", "Used in Virtual Keyboard to switch to or from symbols mode", "Symbols"),
+    ("CursorLeft", "CursorLeft", "Used in Virtual Keyboard to move the current cursor point to the left", "CursorLeft"),
+    ("CursorRight", "CursorRight", "Used in Virtual Keyboard to move the current cursor point to the right", "CursorRight"),
 )),
 )
 
@@ -292,15 +290,15 @@ ON_SCREEN_KEYBOARD_ACTIONS = (
 
 VISUALISATION_ACTIONS = (
 (eg.ActionGroup, "MusicVisualisation", "Music visualisation", None, (
-    ("OSD", "OSD", "Toggles the OSD while playing an item..", "OSD"),
-    ("ShowPreset", "ShowPreset", "Shows the current visualisation preset (milkdrop/spectrum).", "ShowPreset"),
-    ("PresetList", "PresetList", "Pops up the visualisation preset list (milkdrop/spectrum).", "PresetList"),
-    ("NextPreset", "NextPreset", "Next visualisation preset.", "NextPreset"),
-    ("PreviousPreset", "PreviousPreset", "Previous visualisation preset.", "PreviousPreset"),
-    ("LockPreset", "LockPreset", "Lock the current visualisation preset.", "LockPreset"),
-    ("RandomPreset", "RandomPreset", "Switch to a new random preset.", "RandomPreset"),
-    ("increasevisrating", "increasevisrating", "increasevisrating.", "increasevisrating"),
-    ("decreasevisrating", "decreasevisrating", "decreasevisrating.", "decreasevisrating"),
+    ("OSD", "OSD", "Toggles the OSD while playing an item.", "OSD"),
+    ("ShowPreset", "ShowPreset", "Shows the current visualisation preset (milkdrop/spectrum)", "ShowPreset"),
+    ("PresetList", "PresetList", "Pops up the visualisation preset list (milkdrop/spectrum)", "PresetList"),
+    ("NextPreset", "NextPreset", "Next visualisation preset", "NextPreset"),
+    ("PreviousPreset", "PreviousPreset", "Previous visualisation preset", "PreviousPreset"),
+    ("LockPreset", "LockPreset", "Lock the current visualisation preset", "LockPreset"),
+    ("RandomPreset", "RandomPreset", "Switch to a new random preset", "RandomPreset"),
+    ("increasevisrating", "increasevisrating", "increasevisrating", "increasevisrating"),
+    ("decreasevisrating", "decreasevisrating", "decreasevisrating", "decreasevisrating"),
 )),
 )
 
@@ -320,27 +318,27 @@ SHUTDOWN_ACTIONS = (
 
 UNCATEGORIZED_ACTIONS = (
 (eg.ActionGroup, "UncategorizedActions", "Uncategorized actions", None, (
-    ("JumpSMS2", "JumpSMS2", "JumpSMS2.", "JumpSMS2"),
-    ("JumpSMS3", "JumpSMS3", "JumpSMS3.", "JumpSMS3"),
-    ("JumpSMS4", "JumpSMS4", "JumpSMS4.", "JumpSMS4"),
-    ("JumpSMS5", "JumpSMS5", "JumpSMS5.", "JumpSMS5"),
-    ("JumpSMS6", "JumpSMS6", "JumpSMS6.", "JumpSMS6"),
-    ("JumpSMS7", "JumpSMS7", "JumpSMS7.", "JumpSMS7"),
-    ("JumpSMS8", "JumpSMS8", "JumpSMS8.", "JumpSMS8"),
-    ("JumpSMS9", "JumpSMS9", "JumpSMS9.", "JumpSMS9"),
+    ("JumpSMS2", "JumpSMS2", "Jump through a list using SMS-style input (eg press 2 twice to jump to the B's.)", "JumpSMS2"),
+    ("JumpSMS3", "JumpSMS3", "Jump through a list using SMS-style input (eg press 2 twice to jump to the B's.)", "JumpSMS3"),
+    ("JumpSMS4", "JumpSMS4", "Jump through a list using SMS-style input (eg press 2 twice to jump to the B's.)", "JumpSMS4"),
+    ("JumpSMS5", "JumpSMS5", "Jump through a list using SMS-style input (eg press 2 twice to jump to the B's.)", "JumpSMS5"),
+    ("JumpSMS6", "JumpSMS6", "Jump through a list using SMS-style input (eg press 2 twice to jump to the B's.)", "JumpSMS6"),
+    ("JumpSMS7", "JumpSMS7", "Jump through a list using SMS-style input (eg press 2 twice to jump to the B's.)", "JumpSMS7"),
+    ("JumpSMS8", "JumpSMS8", "Jump through a list using SMS-style input (eg press 2 twice to jump to the B's.)", "JumpSMS8"),
+    ("JumpSMS9", "JumpSMS9", "Jump through a list using SMS-style input (eg press 2 twice to jump to the B's.)", "JumpSMS9"),
     ("FilterClear", "FilterClear", "FilterClear.", "FilterClear"),
-    ("FilterSMS2", "FilterSMS2", "FilterSMS2.", "FilterSMS2"),
-    ("FilterSMS3", "FilterSMS3", "FilterSMS3.", "FilterSMS3"),
-    ("FilterSMS4", "FilterSMS4", "FilterSMS4.", "FilterSMS4"),
-    ("FilterSMS5", "FilterSMS5", "FilterSMS5.", "FilterSMS5"),
-    ("FilterSMS6", "FilterSMS6", "FilterSMS6.", "FilterSMS6"),
-    ("FilterSMS7", "FilterSMS7", "FilterSMS7.", "FilterSMS7"),
-    ("FilterSMS8", "FilterSMS8", "FilterSMS8.", "FilterSMS8"),
-    ("FilterSMS9", "FilterSMS9", "FilterSMS9.", "FilterSMS9"),
+    ("FilterSMS2", "FilterSMS2", "Filter a list in music or videos using SMS-style input.", "FilterSMS2"),
+    ("FilterSMS3", "FilterSMS3", "Filter a list in music or videos using SMS-style input.", "FilterSMS3"),
+    ("FilterSMS4", "FilterSMS4", "Filter a list in music or videos using SMS-style input.", "FilterSMS4"),
+    ("FilterSMS5", "FilterSMS5", "Filter a list in music or videos using SMS-style input.", "FilterSMS5"),
+    ("FilterSMS6", "FilterSMS6", "Filter a list in music or videos using SMS-style input.", "FilterSMS6"),
+    ("FilterSMS7", "FilterSMS7", "Filter a list in music or videos using SMS-style input.", "FilterSMS7"),
+    ("FilterSMS8", "FilterSMS8", "Filter a list in music or videos using SMS-style input.", "FilterSMS8"),
+    ("FilterSMS9", "FilterSMS9", "Filter a list in music or videos using SMS-style input.", "FilterSMS9"),
     ("FirstPage", "FirstPage", "FirstPage.", "FirstPage"),
     ("LastPage", "LastPage", "LastPage.", "LastPage"),
 
-    ("HideSubMenu", "HideSubMenu", "<Depreciated>.", "HideSubMenu"),
+    ("HideSubMenu", "HideSubMenu", "<Depreciated>", "HideSubMenu"),
 
     ("ToggleSource", "ToggleSource", "ToggleSource.", "ToggleSource"),
     ("Remove", "Remove", "Remove.", "Remove"),
@@ -355,7 +353,7 @@ UNCATEGORIZED_ACTIONS = (
     ("OSDValuePlus", "OSDValuePlus", "OSDValuePlus.", "OSDValuePlus"),
     ("OSDValueMinus", "OSDValueMinus", "OSDValueMinus.", "OSDValueMinus"),
 
-    ("ToggleWatched", "ToggleWatched", "ToggleWatched.", "ToggleWatched"),
+    ("ToggleWatched", "ToggleWatched", "ToggleWatched", "ToggleWatched"),
     ("ScanItem", "ScanItem", "ScanItem.", "ScanItem"),
 
     ("Enter", "Enter", "Enter.", "Enter"),
@@ -369,7 +367,7 @@ UNCATEGORIZED_ACTIONS = (
 )),
 )
 
-# Remote buttons handled by XBMC.  For a list of all buttons see: http://xbmc.org/wiki/?title=Keymap.xml#Remote_Buttons
+# Remote buttons handled by XBMC.  For a list of all buttons see: http://wiki.xbmc.org/?title=Keymap.xml#Remote_Section
 
 REMOTE_BUTTONS = (
 (eg.ActionGroup, "Remote", "Remote", None, (
@@ -431,7 +429,7 @@ REMOTE_BUTTONS = (
     ("Remotelanguage", "language", "", "language"),
 )),
 )
-# Remote buttons handled by XBMC.  For a list of all buttons see: http://xbmc.org/wiki/?title=Keymap.xml#Gamepad_Buttons
+# Remote buttons handled by XBMC.  For a list of all buttons see: http://wiki.xbmc.org/?title=Keymap.xml#Gamepad_Section
 
 GAMEPAD_BUTTONS = (
 (eg.ActionGroup, "Gamepad", "Gamepad", None, (
@@ -599,7 +597,11 @@ class XBMC_JSON_RPC:
 
 	def send(self, method, params = None):
 		self.jsoninit['method'] = method
-		if params: self.jsoninit['params'] = params
+		if params:
+			self.jsoninit['params'] = params
+		else:
+			if self.jsoninit.has_key('params'):
+				del self.jsoninit['params']
 		try:
 			responce = urllib.urlopen('http://'+self.ip+':'+self.port+'/jsonrpc', json.dumps(self.jsoninit)).read()
 		except IOError:
@@ -738,7 +740,7 @@ class HTTPAPI(eg.ActionClass):
 				for span in h3.getElementsByTagName("span"):
 					httpapi.Headers.append(span.childNodes[0].data)
 			Header = 0
-			for node in doc.getElementsByTagName("table")[3:8]:
+			for node in doc.getElementsByTagName("table")[3:9]:
 				for node2 in node.getElementsByTagName("tr")[1:]:
 					httpapi.Commands.append([[],[],[]])
 					node3 = node2.getElementsByTagName("td")[0]
@@ -853,38 +855,71 @@ class JSONRPC(eg.ActionClass):
 					HBoxControl.Append(i)
 				HBoxControl.SetValue(method[:method.find('.')])
 				UpdateMethodCtrl(HBoxControl.GetSelection())
+
 		def UpdateMethods():
-			jsonrpc.Namespaces = []
-			jsonrpc.Methods = {}
-			jsonrpc.Descriptions = {}
-			OldNamespace = ''
-			responce = self.plugin.JSON_RPC.send('JSONRPC.Introspect', json.loads('{"getdescriptions": true, "getpermissions": false}'))
-			if responce != None:
-				if responce.has_key('result'):
-					for method in responce['result']['commands']:
-						namespace = method['command'][:method['command'].find('.')]
-						if OldNamespace != namespace:
-							jsonrpc.Namespaces.append(namespace)
-							jsonrpc.Methods[namespace] = []
-							jsonrpc.Descriptions[namespace] = []
-						OldNamespace = namespace
-						jsonrpc.Methods[namespace].append(method['command'][method['command'].find('.')+1:])
-						jsonrpc.Descriptions[namespace].append(method['description'])
-					if not os.path.exists(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2')):
-						os.makedirs(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2'))
-					with open(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2', 'jsonrpc.dat'), 'wb') as f:
-						pickle.dump((jsonrpc.Namespaces, jsonrpc.Methods, jsonrpc.Descriptions), f, 1)
-					return False
-				elif responce.has_key('error'):
+			responce = self.plugin.JSON_RPC.send('JSONRPC.Version')
+			if responce:
+				jsonrpc.Namespaces = []
+				jsonrpc.Methods = {}
+				jsonrpc.Descriptions = {}
+				if responce['result']['version'] > 2:
+					responce = self.plugin.JSON_RPC.send('JSONRPC.Introspect', json.loads('{"filterbytransport": false}'))
+					if responce != None:
+						if responce.has_key('result'):
+							for method in responce['result']['methods']:
+								namespace = method[:method.find('.')]
+								if namespace not in jsonrpc.Namespaces:
+									jsonrpc.Namespaces.append(namespace)
+									jsonrpc.Methods[namespace] = []
+									jsonrpc.Descriptions[namespace] = []
+								jsonrpc.Methods[namespace].append(method[method.find('.')+1:])
+								if responce['result']['methods'][method].has_key('description'):
+									jsonrpc.Descriptions[namespace].append(responce['result']['methods'][method]['description'])
+								else:
+									jsonrpc.Descriptions[namespace].append('')
+							if not os.path.exists(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2')):
+								os.makedirs(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2'))
+							with open(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2', 'jsonrpc.dat'), 'wb') as f:
+								pickle.dump((jsonrpc.Namespaces, jsonrpc.Methods, jsonrpc.Descriptions), f, 1)
+							return False
+						elif responce.has_key('error'):
 #					print 'Error', responce['error']
-					eg.PrintError('Error', responce['error'])
-					return responce['error']
-				else:
+							eg.PrintError('Error', responce['error'])
+							return responce['error']
+						else:
 #					print 'Got bad JSON-RPC responce', responce
-					eg.PrintError('Got bad JSON-RPC responce', responce)
-					return False
-			else:
-				return False
+							eg.PrintError('Got bad JSON-RPC responce', responce)
+							return False
+					else:
+						return False
+				else:
+					responce = self.plugin.JSON_RPC.send('JSONRPC.Introspect', json.loads('{"getdescriptions": true, "getpermissions": false}'))
+					if responce != None:
+						if responce.has_key('result'):
+							for method in responce['result']['commands']:
+								namespace = method['command'][:method['command'].find('.')]
+								if namespace not in jsonrpc.Namespaces:
+									jsonrpc.Namespaces.append(namespace)
+									jsonrpc.Methods[namespace] = []
+									jsonrpc.Descriptions[namespace] = []
+								jsonrpc.Methods[namespace].append(method['command'][method['command'].find('.')+1:])
+								jsonrpc.Descriptions[namespace].append(method['description'])
+							if not os.path.exists(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2')):
+								os.makedirs(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2'))
+							with open(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2', 'jsonrpc.dat'), 'wb') as f:
+								pickle.dump((jsonrpc.Namespaces, jsonrpc.Methods, jsonrpc.Descriptions), f, 1)
+							return False
+						elif responce.has_key('error'):
+#					print 'Error', responce['error']
+							eg.PrintError('Error', responce['error'])
+							return responce['error']
+						else:
+#					print 'Got bad JSON-RPC responce', responce
+							eg.PrintError('Got bad JSON-RPC responce', responce)
+							return False
+					else:
+						return False
+
 		def UpdateMethodCtrl(Selection):
 			comboBoxControl.Clear()
 			for i in jsonrpc.Methods[jsonrpc.Namespaces[Selection]]:
