@@ -29,8 +29,10 @@ class ColourSelectButton(wx.BitmapButton):
         style=wx.BU_AUTODRAW,
         validator=wx.DefaultValidator,
         name="ColourSelectButton",
+        title = "Colour Picker"
     ):
         self.value = value
+        self.title = title
         wx.BitmapButton.__init__(
             self, parent, -1, wx.NullBitmap, pos, size, style, validator, name
         )
@@ -45,7 +47,7 @@ class ColourSelectButton(wx.BitmapButton):
         for i, colour in enumerate(eg.config.colourPickerCustomColours):
             colourData.SetCustomColour(i, colour)
         dialog = wx.ColourDialog(self.GetParent(), colourData)
-        dialog.SetTitle("Colour Picker")
+        dialog.SetTitle(self.title)
         if dialog.ShowModal() == wx.ID_OK:
             colourData = dialog.GetColourData()
             self.SetValue(colourData.GetColour().Get())
@@ -54,6 +56,8 @@ class ColourSelectButton(wx.BitmapButton):
             colourData.GetCustomColour(i).Get() for i in range(16)
         ]
         dialog.Destroy()
+        evt = eg.ValueChangedEvent(self.GetId(), value = self.value)
+        wx.PostEvent(self, evt)
 
 
     def GetValue(self):

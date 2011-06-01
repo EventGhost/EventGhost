@@ -50,6 +50,7 @@ class FontSelectButton(wx.BitmapButton):
 
     def OnButton(self, event):
         fontData = wx.FontData()
+        fontData.EnableEffects(False)
         if self.value is not None:
             font = wx.FontFromNativeInfoString(self.value)
             fontData.SetInitialFont(font)
@@ -64,6 +65,8 @@ class FontSelectButton(wx.BitmapButton):
             self.value = font.GetNativeFontInfo().ToString()
             event.Skip()
         dialog.Destroy()
+        evt = eg.ValueChangedEvent(self.GetId(), value = self.value)
+        wx.PostEvent(self, evt)
 
 
     def GetValue(self):
