@@ -38,7 +38,6 @@ import time
 import threading
 import locale
 from os.path import join
-from wx.lib.newevent import NewCommandEvent
 import eg
 import Init
 
@@ -84,7 +83,33 @@ eg.currentItem = None
 eg.actionGroup = eg.Bunch()
 eg.actionGroup.items = []
 eg.folderPath = eg.FolderPath()
-eg.ValueChangedEvent, eg.EVT_VALUE_CHANGED = NewCommandEvent()
+
+
+def _CommandEvent():
+    """Generate new (CmdEvent, Binder) tuple
+        e.g. MooCmdEvent, EVT_MOO = EgCommandEvent()
+    """
+    evttype = wx.NewEventType()
+
+    class _Event(wx.PyCommandEvent):
+
+        def __init__(self, id, **kw):
+            wx.PyCommandEvent.__init__(self, evttype, id)
+            self.__dict__.update(kw)
+            if not hasattr(self, "value"):
+                self.value = None
+
+        def SetValue(self, value):
+            self.value = value
+
+        def GetValue(self):
+            return self.value
+    
+    return _Event, wx.PyEventBinder(evttype, 1)
+    
+eg.CommandEvent = _CommandEvent
+eg.ValueChangedEvent, eg.EVT_VALUE_CHANGED = eg.CommandEvent()
+
 eg.pyCrustFrame = None
 eg.dummyAsyncoreDispatcher = None
 
