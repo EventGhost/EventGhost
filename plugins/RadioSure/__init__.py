@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-version="0.2.14"
+version="0.2.15"
 
 # plugins/RadioSure/__init__.py
 #
@@ -22,6 +22,8 @@ version="0.2.14"
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.15 by Pako 2011-06-05 18:31 UTC+1
+#     - Used eg.EVT_VALUE_CHANGED instead of EVT_BUTTON_AFTER
 # 0.2.14 by Pako 2011-05-08 18:28 UTC+1
 #     - Bug fix - action Minimize/Restore
 # 0.2.13 by Pako 2011-04-06 11:07 UTC+1
@@ -488,81 +490,6 @@ class MyFileBrowseButton(eg.FileBrowseButton):
 class MySpinIntCtrl(eg.SpinIntCtrl):
     def SetNumCtrlId(self, id):
         self.numCtrl.SetId(id)
-#===============================================================================
-
-newEVT_BUTTON_AFTER = wx.NewEventType()
-EVT_BUTTON_AFTER = wx.PyEventBinder(newEVT_BUTTON_AFTER, 1)
-newEVT_UPDATE_DIALOG = wx.NewEventType()
-EVT_UPDATE_DIALOG = wx.PyEventBinder(newEVT_UPDATE_DIALOG, 1)
-newEVT_CHECKLISTCTRL = wx.NewEventType()
-EVT_CHECKLISTCTRL = wx.PyEventBinder(newEVT_CHECKLISTCTRL, 1)
-#===============================================================================
-
-class UserEvent(wx.PyCommandEvent):
-
-    def __init__(self, evtType, id):
-        wx.PyCommandEvent.__init__(self, evtType, id)
-        self.myVal = None
-
-
-    def SetValue(self, val):
-        self.myVal = val
-
-
-    def GetValue(self):
-        return self.myVal
-#===============================================================================
-
-class ExtColourSelectButton(eg.ColourSelectButton):
-
-    def __init__(self,*args,**kwargs):
-        eg.ColourSelectButton.__init__(self, *args)
-        self.title = kwargs['title']
-
-
-    def OnButton(self, event):
-        colourData = wx.ColourData()
-        colourData.SetChooseFull(True)
-        colourData.SetColour(self.value)
-        for i, colour in enumerate(eg.config.colourPickerCustomColours):
-            colourData.SetCustomColour(i, colour)
-        dialog = wx.ColourDialog(self.GetParent(), colourData)
-        dialog.SetTitle(self.title)
-        if dialog.ShowModal() == wx.ID_OK:
-            colourData = dialog.GetColourData()
-            self.SetValue(colourData.GetColour().Get())
-            event.Skip()
-        eg.config.colourPickerCustomColours = [
-            colourData.GetCustomColour(i).Get() for i in range(16)
-        ]
-        dialog.Destroy()
-        evt = UserEvent(newEVT_BUTTON_AFTER, self.GetId())
-        evt.SetValue(self.GetValue())
-        self.GetEventHandler().ProcessEvent(evt)
-#===============================================================================
-
-class ExtFontSelectButton(eg.FontSelectButton):
-
-    def OnButton(self, event):
-        fontData = wx.FontData()
-        fontData.EnableEffects(False)
-        if self.value is not None:
-            font = wx.FontFromNativeInfoString(self.value)
-            fontData.SetInitialFont(font)
-        else:
-            fontData.SetInitialFont(
-                wx.SystemSettings_GetFont(wx.SYS_ANSI_VAR_FONT)
-            )
-        dialog = wx.FontDialog(self.GetParent(), fontData)
-        if dialog.ShowModal() == wx.ID_OK:
-            fontData = dialog.GetFontData()
-            font = fontData.GetChosenFont()
-            self.value = font.GetNativeFontInfo().ToString()
-            event.Skip()
-        dialog.Destroy()
-        evt = UserEvent(newEVT_BUTTON_AFTER, self.GetId())
-        evt.SetValue(self.GetValue())
-        self.GetEventHandler().ProcessEvent(evt)
 #===============================================================================
 
 class MessageBoxDialog(wx.Dialog):
@@ -1036,6 +963,7 @@ class CheckListCtrl(wx.ListCtrl, CheckListCtrlMixin):
         CheckListCtrlMixin.__init__(self)
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnItemSelected)
 
+
     def OnItemSelected(self, evt):
         self.SelRow(evt.m_itemIndex)
         evt.Skip()
@@ -1043,9 +971,8 @@ class CheckListCtrl(wx.ListCtrl, CheckListCtrlMixin):
 
     # this is called by the base class when an item is checked/unchecked !!!!!!!
     def OnCheckItem(self, index, flag):
-        evt = UserEvent(newEVT_CHECKLISTCTRL, self.GetId())
-        evt.SetValue((index, flag))
-        self.GetEventHandler().ProcessEvent(evt)
+        evt = eg.ValueChangedEvent(self.GetId(), value = (index, flag))
+        wx.PostEvent(self, evt)
 
 
     def SelRow(self, row):
@@ -1851,9 +1778,9 @@ class ManagerDialog(wx.Dialog):
             ConfigData.plcmnt = plcmnt
             #if not eg.document.IsDirty():
             #    wx.CallAfter(eg.Notify, "DocumentChange", True)
-        self.Show(False)
         self.plugin.manager = None
-        self.Destroy()
+        wx.CallAfter(self.Show, False)
+        wx.CallAfter(self.Destroy)
         evt.Skip()
 
 
@@ -2783,6 +2710,7 @@ class SchedulerDialog(wx.Dialog):
         self.SetSize(wx.Size(wDynamic + 37, 684))
         grid = self.grid = CheckListCtrl(self, text, wDynamic + 20)
 #        grid = self.grid = CheckListCtrl(self, text, wDynamic + 20)
+
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(grid, 0, wx.ALL, 5)
         favorite_label = wx.StaticText(self, -1, self.text.favorite)
@@ -2936,11 +2864,11 @@ class SchedulerDialog(wx.Dialog):
         wx.EVT_CHOICE(self, -1, onPeriodUnit)
         wx.EVT_DATE_CHANGED(self, -1, onDatePicker)
         wx.EVT_CHECKBOX(self, -1, onCheckBox)
-        self.Bind(EVT_UPDATE_DIALOG, OnUpdateDialog)
+        self.Bind(eg.EVT_VALUE_CHANGED, OnUpdateDialog)
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, OnSelectCell)
         typeChoice.Bind(wx.EVT_CHOICE, onTypeChoice)
         schedulerName.Bind(wx.EVT_TEXT, onSchedulerTitle)
-        self.Bind(EVT_CHECKLISTCTRL, onCheckListCtrl)
+        self.grid.Bind(eg.EVT_VALUE_CHANGED, onCheckListCtrl)
         nameSizer = wx.FlexGridSizer(2, 0, 0, 20)
         nameSizer.AddGrowableCol(0,1)
         name_label = wx.StaticText(self, -1, self.text.header[1] + ":")
@@ -3043,8 +2971,8 @@ class SchedulerDialog(wx.Dialog):
         next = self.plugin.NextRun(schedule[2], schedule[3])
         self.grid.SetStringItem(ix, 3, next)
         if self.lastRow == ix:
-            evt = wx.PyCommandEvent(newEVT_UPDATE_DIALOG, ix)
-            self.GetEventHandler().ProcessEvent(evt)
+            evt = eg.ValueChangedEvent(ix)
+            wx.PostEvent(self, evt)
 
 
     def RefreshGrid(self, ix, last, next):
@@ -3062,9 +2990,9 @@ class SchedulerDialog(wx.Dialog):
             ConfigData.pos = pos
             #if not eg.document.IsDirty():
             #    wx.CallAfter(eg.Notify, "DocumentChange", True)
-        self.Show(False)
         self.plugin.dialog = None
-        self.Destroy()
+        wx.CallAfter(self.Show, False)
+        wx.CallAfter(self.Destroy)
         evt.Skip()
 #===============================================================================
 
@@ -3332,16 +3260,14 @@ class EventListCtrl(wx.ListCtrl):
 
     def OnSelect(self, event):
         self.sel = event.GetIndex()
-        evt = UserEvent(newEVT_BUTTON_AFTER, self.id)
-        evt.SetValue(self)
-        self.GetEventHandler().ProcessEvent(evt)
+        evt = eg.ValueChangedEvent(self.id, value = self)
+        wx.PostEvent(self, evt)
         event.Skip()
 
 
     def OnChange(self, event):
-        evt = UserEvent(newEVT_BUTTON_AFTER, self.id)
-        evt.SetValue(self)
-        self.GetEventHandler().ProcessEvent(evt)
+        evt = eg.ValueChangedEvent(self.id, value = self)
+        wx.PostEvent(self, evt)
         event.Skip()
 
 
@@ -3365,18 +3291,16 @@ class EventListCtrl(wx.ListCtrl):
     def OnDeleteButton(self, event=None):
         self.DeleteItem(self.sel)
         self.evtList[self.ix].pop(self.sel)
-        evt = UserEvent(newEVT_BUTTON_AFTER, self.id)
-        evt.SetValue(self)
-        self.GetEventHandler().ProcessEvent(evt)        
+        evt = eg.ValueChangedEvent(self.id, value = self)
+        wx.PostEvent(self, evt)       
         if event:
             event.Skip()
         
 
     def OnDeleteAllButton(self, event=None):
         self.DeleteAllItems()
-        evt = UserEvent(newEVT_BUTTON_AFTER, self.id)
-        evt.SetValue(self)
-        self.GetEventHandler().ProcessEvent(evt)
+        evt = eg.ValueChangedEvent(self.id, value = self)
+        wx.PostEvent(self, evt)
         self.evtList[self.ix] = []
         if event:
             event.Skip()
@@ -3502,11 +3426,11 @@ class MenuEventsDialog(wx.MiniFrame):
             delOneBtn.Enable(flag)
             delBoxBtn.Enable(flag)
             evt.Skip()
-        eventsCtrl_0.Bind(EVT_BUTTON_AFTER, onFocus)        
-        eventsCtrl_1.Bind(EVT_BUTTON_AFTER, onFocus)        
-        eventsCtrl_2.Bind(EVT_BUTTON_AFTER, onFocus)        
-        eventsCtrl_3.Bind(EVT_BUTTON_AFTER, onFocus)        
-        eventsCtrl_4.Bind(EVT_BUTTON_AFTER, onFocus)      
+        eventsCtrl_0.Bind(eg.EVT_VALUE_CHANGED, onFocus)        
+        eventsCtrl_1.Bind(eg.EVT_VALUE_CHANGED, onFocus)        
+        eventsCtrl_2.Bind(eg.EVT_VALUE_CHANGED, onFocus)        
+        eventsCtrl_3.Bind(eg.EVT_VALUE_CHANGED, onFocus)        
+        eventsCtrl_4.Bind(eg.EVT_VALUE_CHANGED, onFocus)      
       
 
         def onDelOneBtn(evt):
@@ -4825,9 +4749,9 @@ class RadioSure(eg.PluginBase):
                 eg.scheduler.CancelTask(sched)
                 self.updateLogFile(self.text.canc % sched[2][0])
         if self.dialog:
-            self.dialog.Close()
+            self.dialog.onClose(wx.CommandEvent())
         if self.manager:
-            self.manager.Close()
+            self.manager.onClose(wx.CommandEvent())
 
 
     def __close__(self):
@@ -5706,7 +5630,7 @@ This may be for example *eg.result*, *eg.event.payload* or the entire list
 
 This action works in two ways (depending on the title of the schedule):
 
-1. If the schedule with the same title already exists, its parameters are overwritten by new ones.
+1. If a schedule with the same title already exists, its parameters are overwritten by new ones.
 2. If the title does not exist yet, the schedule is added to the list as new.'''
 
     def __call__(self, expr = ""):
@@ -5716,7 +5640,7 @@ This action works in two ways (depending on the title of the schedule):
             data = self.plugin.data
             tmpLst = [item[1] for item in data]
             if schedule[1] in tmpLst:
-                data[tmpLst.index(schedule[1])] = schedule
+                data[tmpLst.index(schedule[1])] = cpy(schedule)
             else:
                 data.append(schedule)
             self.plugin.UpdateEGscheduler()
@@ -5844,7 +5768,7 @@ class ShowMenu(eg.ActionClass):
         listBoxCtrl.SetSelectionForeground(self.foreSel)
         #Font button
         fontLbl=wx.StaticText(panel, -1, self.text.menuFont)
-        fontButton = ExtFontSelectButton(panel, value = fontInfo)
+        fontButton = eg.FontSelectButton(panel, value = fontInfo)
         font = wx.FontFromNativeInfoString(fontInfo)
         for n in range(10,20):
             font.SetPointSize(n)
@@ -5896,16 +5820,16 @@ class ShowMenu(eg.ActionClass):
         subMenuCtrl.SetSelection(submenu)
         #Button Text Colour
         foreLbl=wx.StaticText(panel, -1, self.text.txtColour+':')
-        foreColourButton = ExtColourSelectButton(panel,fore,title = self.text.txtColour)
+        foreColourButton = eg.ColourSelectButton(panel,fore,title = self.text.txtColour)
         #Button Background Colour
         backLbl=wx.StaticText(panel, -1, self.text.background+':')
-        backColourButton = ExtColourSelectButton(panel,back,title = self.text.background)
+        backColourButton = eg.ColourSelectButton(panel,back,title = self.text.background)
         #Button Selected Text Colour
         foreSelLbl=wx.StaticText(panel, -1, self.text.txtColourSel+':')
-        foreSelColourButton = ExtColourSelectButton(panel,foreSel,title = self.text.txtColourSel)
+        foreSelColourButton = eg.ColourSelectButton(panel,foreSel,title = self.text.txtColourSel)
         #Button Selected Background Colour
         backSelLbl=wx.StaticText(panel, -1, self.text.backgroundSel+':')
-        backSelColourButton = ExtColourSelectButton(panel,backSel,title = self.text.backgroundSel)
+        backSelColourButton = eg.ColourSelectButton(panel,backSel,title = self.text.backgroundSel)
         #Button Dialog "Menu control - assignement of events"
         dialogButton = wx.Button(panel,-1,self.text.dialog)
         dialogButton.SetToolTipString(self.text.btnToolTip)
@@ -5999,7 +5923,7 @@ class ShowMenu(eg.ActionClass):
             listBoxCtrl.SetFocus()
             if evt:
                 evt.Skip()
-        fontButton.Bind(EVT_BUTTON_AFTER, OnFontBtn)
+        fontButton.Bind(eg.EVT_VALUE_CHANGED, OnFontBtn)
 
         def OnColourBtn(evt):
             id = evt.GetId()
@@ -6023,10 +5947,10 @@ class ShowMenu(eg.ActionClass):
             listBoxCtrl.Refresh()
             listBoxCtrl.SetFocus()
             evt.Skip()
-        foreColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-        backColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-        foreSelColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-        backSelColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
+        foreColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
+        backColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
+        foreSelColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
+        backSelColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
 
 
         def setFocus():

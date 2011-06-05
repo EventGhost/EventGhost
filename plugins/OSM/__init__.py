@@ -20,15 +20,17 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.4 by Pako 2011-06-05 17:03 UTC+1
+#     - Used eg.EVT_VALUE_CHANGED instead of EVT_BUTTON_AFTER
 # 0.2.3  by Pako 2011-04-11 13:41 UTC+1
-#        - Added some missing strings
+#     - Added some missing strings
 # 0.2.2  by Pako 2010-03-10 18:46 GMT+1
 #===============================================================================
 
 eg.RegisterPlugin(
     name = "OS Menu",
     author = "Pako",
-    version = "0.2.3",
+    version = "0.2.4",
     kind = "other",
     guid = "{FCF3C7A7-FBC1-444D-B768-9477521946DC}",
     description = u"""<rst>
@@ -146,71 +148,6 @@ the seconds items are applied as **"Back part(s) of event string"** (see the edi
 
 Please see the description of the action **"Show menu"**. There are examples,
 which naturally also applies to this action.'''
-#===============================================================================
-
-newEVT_BUTTON_AFTER = wx.NewEventType()
-EVT_BUTTON_AFTER = wx.PyEventBinder(newEVT_BUTTON_AFTER, 1)
-
-
-class EventAfter(wx.PyCommandEvent):
-
-    def __init__(self, evtType, id):
-        wx.PyCommandEvent.__init__(self, evtType, id)
-        self.myVal = None
-
-
-    def SetValue(self, val):
-        self.myVal = val
-
-
-    def GetValue(self):
-        return self.myVal
-#===============================================================================
-
-class extColourSelectButton(eg.ColourSelectButton):
-
-    def OnButton(self, event):
-        colourData = wx.ColourData()
-        colourData.SetChooseFull(True)
-        colourData.SetColour(self.value)
-        for i, colour in enumerate(eg.config.colourPickerCustomColours):
-            colourData.SetCustomColour(i, colour)
-        dialog = wx.ColourDialog(self.GetParent(), colourData)
-        dialog.SetTitle(Text.picker)
-        if dialog.ShowModal() == wx.ID_OK:
-            colourData = dialog.GetColourData()
-            self.SetValue(colourData.GetColour().Get())
-            event.Skip()
-        eg.config.colourPickerCustomColours = [
-            colourData.GetCustomColour(i).Get() for i in range(16)
-        ]
-        dialog.Destroy()
-        evt = EventAfter(newEVT_BUTTON_AFTER, self.GetId())
-        evt.SetValue(self.GetValue())
-        self.GetEventHandler().ProcessEvent(evt)
-#===============================================================================
-
-class extFontSelectButton(eg.FontSelectButton):
-
-    def OnButton(self, event):
-        fontData = wx.FontData()
-        if self.value is not None:
-            font = wx.FontFromNativeInfoString(self.value)
-            fontData.SetInitialFont(font)
-        else:
-            fontData.SetInitialFont(
-                wx.SystemSettings_GetFont(wx.SYS_ANSI_VAR_FONT)
-            )
-        dialog = wx.FontDialog(self.GetParent(), fontData)
-        if dialog.ShowModal() == wx.ID_OK:
-            fontData = dialog.GetFontData()
-            font = fontData.GetChosenFont()
-            self.value = font.GetNativeFontInfo().ToString()
-            event.Skip()
-        dialog.Destroy()
-        evt = EventAfter(newEVT_BUTTON_AFTER, self.GetId())
-        evt.SetValue(self.GetValue())
-        self.GetEventHandler().ProcessEvent(evt)
 #===============================================================================
 
 class MenuGrid(wx.grid.Grid):
@@ -488,19 +425,19 @@ class ShowMenu(eg.ActionClass):
         topMiddleSizer.Add(btnApp,0,wx.TOP,9)
         #Font button
         fontLbl=wx.StaticText(panel, -1, self.text.menuFont)
-        fontButton = extFontSelectButton(panel, value = fontInfo)
+        fontButton = eg.FontSelectButton(panel, value = fontInfo)
         #Button Text Colour
         foreLbl=wx.StaticText(panel, -1, self.text.txtColour+':')
-        foreColourButton = extColourSelectButton(panel,self.fore)
+        foreColourButton = eg.ColourSelectButton(panel,self.fore, title = self.text.txtColour)
         #Button Background Colour
         backLbl=wx.StaticText(panel, -1, self.text.background+':')
-        backColourButton = extColourSelectButton(panel,self.back)
+        backColourButton = eg.ColourSelectButton(panel,self.back, title = self.text.background)
         #Button Selected Text Colour
         foreSelLbl=wx.StaticText(panel, -1, self.text.txtColourSel+':')
-        foreSelColourButton = extColourSelectButton(panel,self.foreSel)
+        foreSelColourButton = eg.ColourSelectButton(panel,self.foreSel, title = self.text.txtColourSel)
         #Button Selected Background Colour
         backSelLbl=wx.StaticText(panel, -1, self.text.backgroundSel+':')
-        backSelColourButton = extColourSelectButton(panel,self.backSel)
+        backSelColourButton = eg.ColourSelectButton(panel,self.backSel, title = self.text.backgroundSel)
         topRightSizer.Add(fontLbl,0,wx.TOP,4)
         topRightSizer.Add(fontButton,0,wx.TOP,0)
         topRightSizer.Add(foreLbl,0,wx.TOP,4)
@@ -554,7 +491,7 @@ class ShowMenu(eg.ActionClass):
                 listBoxCtrl.SetCellFont(i,0,font)
             listBoxCtrl.SetFocus()
             evt.Skip()
-        fontButton.Bind(EVT_BUTTON_AFTER, OnFontBtn)
+        fontButton.Bind(eg.EVT_VALUE_CHANGED, OnFontBtn)
 
 
         def OnColourBtn(evt):
@@ -571,10 +508,10 @@ class ShowMenu(eg.ActionClass):
             listBoxCtrl.Refresh()
             listBoxCtrl.SetFocus()
             evt.Skip()
-        foreColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-        backColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-        foreSelColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-        backSelColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
+        foreColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
+        backColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
+        foreSelColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
+        backSelColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
 
 
         def OnClick(evt):
@@ -828,19 +765,19 @@ class CreateMenuFromList(eg.ActionClass):
         mainSizer.Add(bottomSizer,0,wx.TOP,6)
         #Font button
         fontLbl=wx.StaticText(panel, -1, self.text.menuFont)
-        fontButton = extFontSelectButton(panel, value = fontInfo)
+        fontButton = eg.FontSelectButton(panel, value = fontInfo)
         #Button Text Colour
         foreLbl=wx.StaticText(panel, -1, self.text.txtColour+':')
-        foreColourButton = extColourSelectButton(panel,self.fore)
+        foreColourButton = eg.ColourSelectButton(panel,self.fore, title = self.text.txtColour)
         #Button Background Colour
         backLbl=wx.StaticText(panel, -1, self.text.background+':')
-        backColourButton = extColourSelectButton(panel,self.back)
+        backColourButton = eg.ColourSelectButton(panel,self.back, title = self.text.background)
         #Button Selected Text Colour
         foreSelLbl=wx.StaticText(panel, -1, self.text.txtColourSel+':')
-        foreSelColourButton = extColourSelectButton(panel,self.foreSel)
+        foreSelColourButton = eg.ColourSelectButton(panel,self.foreSel, title = self.text.txtColourSel)
         #Button Selected Background Colour
         backSelLbl=wx.StaticText(panel, -1, self.text.backgroundSel+':')
-        backSelColourButton = extColourSelectButton(panel,self.backSel)
+        backSelColourButton = eg.ColourSelectButton(panel,self.backSel, title = self.text.backgroundSel)
         try:
             lst = eg.ParseString(choices)
             lst =  eval(lst)
@@ -939,7 +876,7 @@ class CreateMenuFromList(eg.ActionClass):
                 listBoxCtrl.SetCellFont(i,0,font)
             listBoxCtrl.SetFocus()
             evt.Skip()
-        fontButton.Bind(EVT_BUTTON_AFTER, OnFontBtn)
+        fontButton.Bind(eg.EVT_VALUE_CHANGED, OnFontBtn)
 
 
         def OnColourBtn(evt):
@@ -956,10 +893,10 @@ class CreateMenuFromList(eg.ActionClass):
             listBoxCtrl.Refresh()
             listBoxCtrl.SetFocus()
             evt.Skip()
-        foreColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-        backColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-        foreSelColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-        backSelColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
+        foreColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
+        backColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
+        foreSelColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
+        backSelColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
 
 
         def OnTextChange(evt=None):

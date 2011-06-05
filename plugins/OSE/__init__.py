@@ -19,6 +19,9 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.6 by Pako 2011-06-05 19:05 UTC+1
+#     - Used eg.EVT_VALUE_CHANGED instead of EVT_BUTTON_AFTER
+#     - Action ShowMenu: defined default values
 # 0.2.5 by Pako 2011-05-26 12:30 UTC+1
 #     - Added action "Reopen last opened folder"
 #     - Added action "Go back one level"
@@ -37,7 +40,7 @@
 eg.RegisterPlugin(
     name = "On screen explorer",
     author = "Pako",
-    version = "0.2.5",
+    version = "0.2.6",
     kind = "other",
     guid = "{D3D2DDD1-9BEB-4A26-969B-C82FA8EAB280}",
     description = u"""<rst>
@@ -118,79 +121,6 @@ class Text:
 
 class ConfigData(eg.PersistentData):
     lastFolder = None
-
-#===============================================================================
-newEVT_BUTTON_AFTER = wx.NewEventType()
-EVT_BUTTON_AFTER = wx.PyEventBinder(newEVT_BUTTON_AFTER, 1)
-
-
-class EventAfter(wx.PyCommandEvent):
-
-    def __init__(self, evtType, id):
-        wx.PyCommandEvent.__init__(self, evtType, id)
-        self.myVal = None
-
-
-    def SetValue(self, val):
-        self.myVal = val
-
-
-    def GetValue(self):
-        return self.myVal
-#===============================================================================
-
-class extColourSelectButton(eg.ColourSelectButton):
-
-    def __init__(self, *args, **kwargs):
-        eg.ColourSelectButton.__init__(self, *args)
-        self.title = kwargs['title']
-
-
-    def OnButton(self, event):
-        colourData = wx.ColourData()
-        colourData.SetChooseFull(True)
-        colourData.SetColour(self.value)
-        for i, colour in enumerate(eg.config.colourPickerCustomColours):
-            colourData.SetCustomColour(i, colour)
-        dialog = wx.ColourDialog(self.GetParent(), colourData)
-        dialog.SetTitle(self.title)
-        if dialog.ShowModal() == wx.ID_OK:
-            colourData = dialog.GetColourData()
-            self.SetValue(colourData.GetColour().Get())
-            event.Skip()
-        eg.config.colourPickerCustomColours = [
-            colourData.GetCustomColour(i).Get() for i in range(16)
-        ]
-        dialog.Destroy()
-        evt = EventAfter(newEVT_BUTTON_AFTER, self.GetId())
-        evt.SetValue(self.GetValue())
-        self.GetEventHandler().ProcessEvent(evt)
-#===============================================================================
-
-class extFontSelectButton(eg.FontSelectButton):
-
-    def OnButton(self, event):
-        fontData = wx.FontData()
-        fontData.EnableEffects(False)
-        if self.value is not None:
-            font = wx.FontFromNativeInfoString(self.value)
-            fontData.SetInitialFont(font)
-        else:
-            fontData.SetInitialFont(
-                wx.SystemSettings_GetFont(wx.SYS_ANSI_VAR_FONT)
-            )
-        fontData.EnableEffects(False)
-        dialog = wx.FontDialog(self.GetParent(), fontData)
-        if dialog.ShowModal() == wx.ID_OK:
-            fontData = dialog.GetFontData()
-            font = fontData.GetChosenFont()
-            self.value = font.GetNativeFontInfo().ToString()
-            event.Skip()
-        dialog.Destroy()
-        evt = EventAfter(newEVT_BUTTON_AFTER, self.GetId())
-        evt.SetValue(self.GetValue())
-        self.GetEventHandler().ProcessEvent(evt)
-
 #===============================================================================
 
 class MyDirBrowseButton(eg.DirBrowseButton):
@@ -380,12 +310,12 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
 
     def __call__(
         self,
-        fore,
-        back,
-        fontInfo,
-        prefix,
-        suffix,
-        monitor=0,
+        fore = (75, 75, 75),
+        back = (180, 180, 180),
+        fontInfo = "0;-48;0;0;0;400;0;0;0;238;0;0;0;0;MS Shell Dlg 2",
+        prefix = "OSE",
+        suffix = "Open",
+        monitor = 0,
         start = "",
         patterns = "*.*",
         hide = True,
@@ -446,7 +376,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         self,
         fore = (75, 75, 75),
         back = (180, 180, 180),
-        fontInfo = None,
+        fontInfo = "0;-48;0;0;0;400;0;0;0;238;0;0;0;0;MS Shell Dlg 2",
         prefix = 'OSE',
         suffix = 'Open',
         monitor = 0,
@@ -478,13 +408,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         listBoxCtrl.SetSelectionForeground(self.foreSel)
         #Font button
         fontLbl=wx.StaticText(panel, -1, self.text.menuFont)
-        fontButton = extFontSelectButton(panel, value = fontInfo)
-        if fontInfo is None:
-            font = listBoxCtrl.GetFont()
-            font.SetPointSize(36)
-            fontInfo = font.GetNativeFontInfoDesc()
-        else:
-            font = wx.FontFromNativeInfoString(fontInfo)
+        fontButton = eg.FontSelectButton(panel, value = fontInfo)
+        font = wx.FontFromNativeInfoString(fontInfo)
         for n in range(10,20):
             font.SetPointSize(n)
             fontButton.SetFont(font)
@@ -502,28 +427,28 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         OSElbl = wx.StaticText(panel, -1, self.text.OSELabel)
         #Button Text Colour
         foreLbl=wx.StaticText(panel, -1, self.text.txtColour+':')
-        foreColourButton = extColourSelectButton(
+        foreColourButton = eg.ColourSelectButton(
             panel,
             fore,
             title = self.text.txtColour
         )
         #Button Background Colour
         backLbl=wx.StaticText(panel, -1, self.text.background+':')
-        backColourButton = extColourSelectButton(
+        backColourButton = eg.ColourSelectButton(
             panel,
             back,
             title = self.text.background
         )
         #Button Selected Text Colour
         foreSelLbl=wx.StaticText(panel, -1, self.text.txtColourSel+':')
-        foreSelColourButton = extColourSelectButton(
+        foreSelColourButton = eg.ColourSelectButton(
             panel,
             foreSel,
             title = self.text.txtColourSel
         )
         #Button Selected Background Colour
         backSelLbl=wx.StaticText(panel, -1, self.text.backgroundSel+':')
-        backSelColourButton = extColourSelectButton(
+        backSelColourButton = eg.ColourSelectButton(
             panel,
             backSel,
             title = self.text.backgroundSel
@@ -599,7 +524,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
                 listBoxCtrl.SetCellFont(i,0,font)
             listBoxCtrl.SetFocus()
             evt.Skip()
-        fontButton.Bind(EVT_BUTTON_AFTER, OnFontBtn)
+        fontButton.Bind(eg.EVT_VALUE_CHANGED, OnFontBtn)
 
 
         def OnColourBtn(evt):
@@ -616,10 +541,10 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
             listBoxCtrl.Refresh()
             listBoxCtrl.SetFocus()
             evt.Skip()
-        foreColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-        backColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-        foreSelColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-        backSelColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
+        foreColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
+        backColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
+        foreSelColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
+        backSelColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
 
 
         def OnCompBtn(evt):
@@ -673,15 +598,10 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
 
         while panel.Affirmed():
-            fontInfo = fontButton.GetValue()
-            if not fontInfo:
-                font = listBoxCtrl.GetFont()
-                font.SetPointSize(36)
-                fontInfo = font.GetNativeFontInfoDesc()
             panel.SetResult(
             foreColourButton.GetValue(),
             backColourButton.GetValue(),
-            fontInfo,
+            fontButton.GetValue(),
             prefixCtrl.GetValue(),
             suffixCtrl.GetValue(),
             displayChoice.GetSelection(),

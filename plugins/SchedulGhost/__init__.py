@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-version="0.1.2"
+version="0.1.3"
 
 # plugins/SchedulGhost/__init__.py
 #
@@ -22,6 +22,8 @@ version="0.1.2"
 #
 # Revision history:
 # -----------------
+# 0.1.3 by Pako 2011-06-05 18:53 UTC+1
+#     - Used eg.EVT_VALUE_CHANGED instead of EVT_BUTTON_AFTER 
 # 0.1.2 by Pako 2011-02-12 10:03 GMT+1
 #     - FixedTimeCtrl replaced by eg.TimeCtrl
 # 0.1.1 by Pako 2010-12-07 10:32 GMT+1
@@ -112,6 +114,9 @@ from winsound import PlaySound, SND_ASYNC
 
 SYS_VSCROLL_X = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
 #===============================================================================
+class ConfigData(eg.PersistentData):
+    pos = None
+    plcmnt = None
 
 class Text:
     Suspend = "System session suspend."
@@ -290,100 +295,6 @@ class MyFileBrowseButton(eg.FileBrowseButton):
 
     def GetTextCtrl(self):          #  now I can make build-in textCtrl
         return self.textControl     #  non-editable !!!
-#===============================================================================
-
-newEVT_UPDATE_DIALOG = wx.NewEventType()
-EVT_UPDATE_DIALOG = wx.PyEventBinder(newEVT_UPDATE_DIALOG, 1)
-#===============================================================================
-
-newEVT_CHECKLISTCTRL = wx.NewEventType()
-EVT_CHECKLISTCTRL = wx.PyEventBinder(newEVT_CHECKLISTCTRL, 1)
-
-
-class Evt_ChecklistCtrl(wx.PyCommandEvent):
-
-    def __init__(self, evtType, id):
-        wx.PyCommandEvent.__init__(self, evtType, id)
-        self.myVal = None
-
-
-    def SetValue(self, val):
-        self.myVal = val
-
-
-    def GetValue(self):
-        return self.myVal
-#===============================================================================
-
-newEVT_BUTTON_AFTER = wx.NewEventType()
-EVT_BUTTON_AFTER = wx.PyEventBinder(newEVT_BUTTON_AFTER, 1)
-
-
-class EventAfter(wx.PyCommandEvent):
-
-    def __init__(self, evtType, id):
-        wx.PyCommandEvent.__init__(self, evtType, id)
-        self.myVal = None
-
-
-    def SetValue(self, val):
-        self.myVal = val
-
-
-    def GetValue(self):
-        return self.myVal
-#===============================================================================
-
-class extColourSelectButton(eg.ColourSelectButton):
-
-    def __init__(self,*args,**kwargs):
-        eg.ColourSelectButton.__init__(self, *args)
-        self.title = kwargs['title']
-
-
-    def OnButton(self, event):
-        colourData = wx.ColourData()
-        colourData.SetChooseFull(True)
-        colourData.SetColour(self.value)
-        for i, colour in enumerate(eg.config.colourPickerCustomColours):
-            colourData.SetCustomColour(i, colour)
-        dialog = wx.ColourDialog(self.GetParent(), colourData)
-        dialog.SetTitle(self.title)
-        if dialog.ShowModal() == wx.ID_OK:
-            colourData = dialog.GetColourData()
-            self.SetValue(colourData.GetColour().Get())
-            event.Skip()
-        eg.config.colourPickerCustomColours = [
-            colourData.GetCustomColour(i).Get() for i in range(16)
-        ]
-        dialog.Destroy()
-        evt = EventAfter(newEVT_BUTTON_AFTER, self.GetId())
-        evt.SetValue(self.GetValue())
-        self.GetEventHandler().ProcessEvent(evt)
-#===============================================================================
-
-class extFontSelectButton(eg.FontSelectButton):
-
-    def OnButton(self, event):
-        fontData = wx.FontData()
-        if self.value is not None:
-            font = wx.FontFromNativeInfoString(self.value)
-            fontData.SetInitialFont(font)
-            fontData.EnableEffects(False)
-        else:
-            fontData.SetInitialFont(
-                wx.SystemSettings_GetFont(wx.SYS_ANSI_VAR_FONT)
-            )
-        dialog = wx.FontDialog(self.GetParent(), fontData)
-        if dialog.ShowModal() == wx.ID_OK:
-            fontData = dialog.GetFontData()
-            font = fontData.GetChosenFont()
-            self.value = font.GetNativeFontInfo().ToString()
-            event.Skip()
-        dialog.Destroy()
-        evt = EventAfter(newEVT_BUTTON_AFTER, self.GetId())
-        evt.SetValue(self.GetValue())
-        self.GetEventHandler().ProcessEvent(evt)
 #===============================================================================
 
 class HolidaysFrame(wx.Dialog):
@@ -695,9 +606,8 @@ class CheckListCtrl(wx.ListCtrl, CheckListCtrlMixin):
 
     # this is called by the base class when an item is checked/unchecked !!!!!!!
     def OnCheckItem(self, index, flag):
-        evt = Evt_ChecklistCtrl(newEVT_CHECKLISTCTRL, self.GetId())
-        evt.SetValue((index, flag))
-        self.GetEventHandler().ProcessEvent(evt)
+        evt = eg.ValueChangedEvent(self.GetId(), value = (index, flag))
+        wx.PostEvent(self, evt)
 
 
     def SelRow(self, row):
@@ -1555,7 +1465,7 @@ class schedulerDialog(wx.Dialog):
         wx.EVT_CHOICE(self, -1, onPeriodUnit)
         wx.EVT_DATE_CHANGED(self, -1, onDatePicker)
         wx.EVT_CHECKBOX(self, -1, onCheckBox)
-        self.Bind(EVT_UPDATE_DIALOG, OnUpdateDialog)
+        self.Bind(eg.EVT_VALUE_CHANGED, OnUpdateDialog)
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, OnSelectCell)
         typeChoice.Bind(wx.EVT_CHOICE, onTypeChoice)
         schedulerName.Bind(wx.EVT_TEXT, onSchedulerTitle)
@@ -1563,7 +1473,7 @@ class schedulerDialog(wx.Dialog):
         startCtrl.Bind(wx.EVT_TEXT, onStart)
         stopCtrl.Bind(wx.EVT_TEXT, onStop)
         payloadCtrl.Bind(wx.EVT_TEXT, onPayload)
-        self.Bind(EVT_CHECKLISTCTRL, onCheckListCtrl)
+        self.grid.Bind(eg.EVT_VALUE_CHANGED, onCheckListCtrl)
 
         nameSizer = wx.FlexGridSizer(2, 0, 0, 20)
         nameSizer.AddGrowableCol(0,1)
@@ -1612,8 +1522,8 @@ class schedulerDialog(wx.Dialog):
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.SetSizer(sizer)
         sizer.Layout()
-        if self.plugin.pos:
-            self.SetPosition(self.plugin.pos)
+        if ConfigData.pos:
+            self.SetPosition(ConfigData.pos)
         else:
             self.Center()
         self.Show(True)
@@ -1670,8 +1580,8 @@ class schedulerDialog(wx.Dialog):
         next = self.plugin.NextRun(schedule[2], schedule[3])
         self.grid.SetStringItem(ix, 3, next)
         if self.lastRow == ix:
-            evt = wx.PyCommandEvent(newEVT_UPDATE_DIALOG, ix)
-            self.GetEventHandler().ProcessEvent(evt)
+            evt = eg.ValueChangedEvent(ix)
+            wx.PostEvent(self, evt)
 
 
     def RefreshGrid(self, ix, last, next):
@@ -1682,12 +1592,13 @@ class schedulerDialog(wx.Dialog):
 
     def onClose(self, evt):
         hwnd = self.GetHandle()
-        wp = GetWindowPlacement(hwnd)
-        self.plugin.pos = (wp[4][0], wp[4][1])
-        #Note: GetPosition() return (-32000, -32000), if window is minimized !!!
-        self.Show(False)
+        wp = GetWindowPlacement(hwnd)[4]
+        pos = (wp[0], wp[1])
+        if pos != ConfigData.pos:
+            ConfigData.pos = pos
         self.plugin.dialog = None
-        self.Destroy()
+        wx.CallAfter(self.Show, False)
+        wx.CallAfter(self.Destroy)
         evt.Skip()
 #===============================================================================
 
@@ -1701,9 +1612,9 @@ class SchedulGhost(eg.PluginBase):
     pos = None
     eggTimer = None
     eggTimersList = None
-    reminder = None
+#    reminder = None
     eggTimers = {}
-    reminders = {}
+#    reminders = {}
     eggPos = None
     eggListPos = None
     prefix = None
@@ -1758,13 +1669,13 @@ class SchedulGhost(eg.PluginBase):
         eg.Unbind("System.SessionLock", self.OnSystemMessage)
         eg.Unbind("System.SessionUnlock", self.OnSystemMessage)
         if self.dialog:
-            self.dialog.Close()
+            self.dialog.onClose(wx.CommandEvent())
         if self.eggTimer:
-            self.eggTimer.Close()
-        if self.reminder:
-            self.reminder.Close()
+            self.eggTimer.onClose(wx.CommandEvent())
+        #if self.reminder:
+        #    self.reminder.onClose(wx.CommandEvent())
         if self.eggTimersList:
-            self.eggTimersList.Close()
+            self.eggTimersList.onClose(wx.CommandEvent())
 
 
     def Configure(
@@ -2796,7 +2707,7 @@ This action works in two ways (depending on the existence of the schedule):
             data = self.plugin.data
             tmpLst = [item[1] for item in data]
             if schedule[1] in tmpLst:
-                data[tmpLst.index(schedule[1])] = schedule
+                data[tmpLst.index(schedule[1])] = cpy(schedule)
             else:
                 data.append(schedule)
             self.plugin.UpdateEGscheduler()
@@ -2966,7 +2877,7 @@ class EggTimerFrame(wx.Frame):
         self.startBtn.Bind(wx.EVT_BUTTON, self.onStart)
         timeCtrl.Bind(maskedlib.EVT_TIMEUPDATE, self.OnTimeChange)
         self.Bind(wx.EVT_CHAR_HOOK, self.onFrameCharHook)
-        self.MakeModal(True)
+        #self.MakeModal(True)
         self.Show(True)
         self.startBtn.Show(self.val != "00:00:00")
         timeCtrl.SetSelection(3, 5)
@@ -2992,11 +2903,11 @@ class EggTimerFrame(wx.Frame):
  
 
     def onClose(self, evt):
-        self.MakeModal(False)
+        #self.MakeModal(False)
         self.plugin.eggPos = self.GetPosition()
-        self.Show(False)
         self.plugin.eggTimer = None
-        self.Destroy()
+        wx.CallAfter(self.Show, False)
+        wx.CallAfter(self.Destroy)
         evt.Skip()
 #===============================================================================
 
@@ -3109,9 +3020,9 @@ class EggTimersList(wx.Frame):
         del self.timer
         self.MakeModal(False)
         self.plugin.eggListPos = self.GetPosition()
-        self.Show(False)
         self.plugin.eggTimersList = None
-        self.Destroy()
+        wx.CallAfter(self.Show, False)
+        wx.CallAfter(self.Destroy)
         evt.Skip()
 #===============================================================================
 
@@ -3231,12 +3142,12 @@ class SetEggTimer(eg.ActionBase):
         backColorLbl = wx.StaticText(panel, -1, self.text.backColour + ":")
         foreColorLbl = wx.StaticText(panel, -1, self.text.foreColour + ":")
         fontLbl = wx.StaticText(panel, -1, self.text.fontBtn)
-        backColorBtn = extColourSelectButton(
+        backColorBtn = eg.ColourSelectButton(
             panel,
             self.args[5],
             title = self.text.backColour
         )
-        foreColorBtn = extColourSelectButton(
+        foreColorBtn = eg.ColourSelectButton(
             panel,
             self.args[6],
             title = self.text.foreColour
@@ -3246,7 +3157,7 @@ class SetEggTimer(eg.ActionBase):
             font = fontLbl.GetFont()
             font.SetPointSize(42)
             fontInfo = font.GetNativeFontInfoDesc()
-        fontBtn = extFontSelectButton(panel, value = fontInfo)
+        fontBtn = eg.FontSelectButton(panel, value = fontInfo)
         popSizer = wx.FlexGridSizer(2,5,0,0)
         popSizer.AddGrowableCol(1,1)
         popSizer.AddGrowableCol(3,1)
@@ -3341,7 +3252,7 @@ class SetEggTimer(eg.ActionBase):
                 font = wx.FontFromNativeInfoString(evt.GetValue())
                 self.panel.popupFrame.UpdateText(font = font)
             evt.Skip()
-        fontBtn.Bind(EVT_BUTTON_AFTER, OnFontBtn)
+        fontBtn.Bind(eg.EVT_VALUE_CHANGED, OnFontBtn)
 
 
         def OnColourBtn(evt):
@@ -3353,8 +3264,8 @@ class SetEggTimer(eg.ActionBase):
                 else:
                     self.panel.popupFrame.SetColor(back = value)
             evt.Skip()
-        foreColorBtn.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-        backColorBtn.Bind(EVT_BUTTON_AFTER, OnColourBtn)
+        foreColorBtn.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
+        backColorBtn.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
 
 
         def OnCancelBtn(evt):
