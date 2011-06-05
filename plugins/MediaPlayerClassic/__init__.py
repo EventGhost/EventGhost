@@ -18,11 +18,35 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+# Changelog (in reverse chronological order):
+# -------------------------------------------
+# 1.6 by Pako 2011-06-05 18:57 UTC+1
+#     - Used eg.EVT_VALUE_CHANGED instead of EVT_BUTTON_AFTER
+# 1.5 by Pako
+#     - bugfix (On Screen GoTo is always on primary monitor)
+# 1.4 by Pako
+#     - bugfix (ShowMenu when fullscreen is on second monitor)
+# 1.3 by Pako
+#     - added actions:
+#                      Get Times
+#                      Show Menu
+#                      On Screen GoTo
+#     - deleted action:
+#                      Get recent files (replaced Show Menu)
+# 1.2 by Pako
+#     - added actions: Toggle OSD Elapsed Time
+#                      Open Directory
+#                      Send user message
+#                      Get recent files
+# 1.1 by bitmonster
+#     - changed code to use new AddActionsFromList
+# 1.0 by MonsterMagnet
+#     - initial version
 
 eg.RegisterPlugin(
     name = "Media Player Classic",
     author = "MonsterMagnet",
-    version = "1.5." + "$LastChangedRevision$".split()[1],
+    version = "1.6",
     kind = "program",
     guid = "{DD75104D-D586-438A-B63D-3AD01A4D4BD3}",
     createMacrosOnAdd = True,
@@ -50,28 +74,6 @@ eg.RegisterPlugin(
     url = "http://www.eventghost.net/forum/viewtopic.php?t=694"
 )
     
-# changelog:
-# 1.5 by Pako
-#     - bugfix (On Screen GoTo is always on primary monitor)
-# 1.4 by Pako
-#     - bugfix (ShowMenu when fullscreen is on second monitor)
-# 1.3 by Pako
-#     - added actions:
-#                      Get Times
-#                      Show Menu
-#                      On Screen GoTo
-#     - deleted action:
-#                      Get recent files (replaced Show Menu)
-# 1.2 by Pako
-#     - added actions: Toggle OSD Elapsed Time
-#                      Open Directory
-#                      Send user message
-#                      Get recent files
-# 1.1 by bitmonster
-#     - changed code to use new AddActionsFromList
-# 1.0 by MonsterMagnet
-#     - initial version
-
 
 ACTIONS = (
 (eg.ActionGroup, 'GroupMainControls', 'Main controls', None, (
@@ -300,76 +302,6 @@ def GetModuleFrom_hWnd(hWnd):
     return modBasName.value
 #===============================================================================
 
-newEVT_BUTTON_AFTER = wx.NewEventType()
-EVT_BUTTON_AFTER = wx.PyEventBinder(newEVT_BUTTON_AFTER, 1)
-
-
-class EventAfter(wx.PyCommandEvent):
-
-    def __init__(self, evtType, id):
-        wx.PyCommandEvent.__init__(self, evtType, id)
-        self.myVal = None
-
-
-    def SetValue(self, val):
-        self.myVal = val
-
-
-    def GetValue(self):
-        return self.myVal
-#===============================================================================
-
-class extColourSelectButton(eg.ColourSelectButton):
-    
-
-    def __init__(self,*args,**kwargs):
-        eg.ColourSelectButton.__init__(self, *args)
-        self.title = kwargs['title']
-
-    def OnButton(self, event):
-        colourData = wx.ColourData()
-        colourData.SetChooseFull(True)
-        colourData.SetColour(self.value)
-        for i, colour in enumerate(eg.config.colourPickerCustomColours):
-            colourData.SetCustomColour(i, colour)
-        dialog = wx.ColourDialog(self.GetParent(), colourData)
-        dialog.SetTitle(self.title)
-        if dialog.ShowModal() == wx.ID_OK:
-            colourData = dialog.GetColourData()
-            self.SetValue(colourData.GetColour().Get())
-            event.Skip()
-        eg.config.colourPickerCustomColours = [
-            colourData.GetCustomColour(i).Get() for i in range(16)
-        ]
-        evt = EventAfter(newEVT_BUTTON_AFTER, self.GetId())
-        evt.SetValue(self.GetValue())
-        self.GetEventHandler().ProcessEvent(evt)
-        dialog.Destroy()
-#===============================================================================
-
-class extFontSelectButton(eg.FontSelectButton):
-
-    def OnButton(self, event):
-        fontData = wx.FontData()
-        if self.value is not None:
-            font = wx.FontFromNativeInfoString(self.value)
-            fontData.SetInitialFont(font)
-        else:
-            fontData.SetInitialFont(
-                wx.SystemSettings_GetFont(wx.SYS_ANSI_VAR_FONT)
-            )
-        dialog = wx.FontDialog(self.GetParent(), fontData)
-        if dialog.ShowModal() == wx.ID_OK:
-            fontData = dialog.GetFontData()
-            font = fontData.GetChosenFont()
-            self.value = font.GetNativeFontInfo().ToString()
-            event.Skip()
-        evt = EventAfter(newEVT_BUTTON_AFTER, self.GetId())
-        evt.SetValue(self.GetValue())
-        self.GetEventHandler().ProcessEvent(evt)
-        dialog.Destroy()
-#===============================================================================
-
 def GetSec(timeStr):
     sec = int(timeStr[-2:])
     min = timeStr[-5:-3]
@@ -546,16 +478,14 @@ class EventListCtrl(wx.ListCtrl):
 
     def OnSelect(self, event):
         self.sel = event.GetIndex()
-        evt = EventAfter(newEVT_BUTTON_AFTER, self.id)
-        evt.SetValue(self)
-        self.GetEventHandler().ProcessEvent(evt)
+        evt = eg.ValueChangedEvent(self.id, value = self)
+        wx.PostEvent(self, evt)
         event.Skip()
 
 
     def OnChange(self, event):
-        evt = EventAfter(newEVT_BUTTON_AFTER, self.id)
-        evt.SetValue(self)
-        self.GetEventHandler().ProcessEvent(evt)
+        evt = eg.ValueChangedEvent(self.id, value = self)
+        wx.PostEvent(self, evt)
         event.Skip()
 
 
@@ -579,18 +509,16 @@ class EventListCtrl(wx.ListCtrl):
     def OnDeleteButton(self, event=None):
         self.DeleteItem(self.sel)
         self.evtList[self.ix].pop(self.sel)
-        evt = EventAfter(newEVT_BUTTON_AFTER, self.id)
-        evt.SetValue(self)
-        self.GetEventHandler().ProcessEvent(evt)        
+        evt = eg.ValueChangedEvent(self.id, value = self)
+        wx.PostEvent(self, evt)
         if event:
             event.Skip()
         
 
     def OnDeleteAllButton(self, event=None):
         self.DeleteAllItems()
-        evt = EventAfter(newEVT_BUTTON_AFTER, self.id)
-        evt.SetValue(self)
-        self.GetEventHandler().ProcessEvent(evt)
+        evt = eg.ValueChangedEvent(self.id, value = self)
+        wx.PostEvent(self, evt)
         self.evtList[self.ix] = []
         if event:
             event.Skip()
@@ -1020,11 +948,11 @@ class MenuEventsDialog(wx.MiniFrame):
             delOneBtn.Enable(flag)
             delBoxBtn.Enable(flag)
             evt.Skip()
-        eventsCtrl_0.Bind(EVT_BUTTON_AFTER, onFocus)        
-        eventsCtrl_1.Bind(EVT_BUTTON_AFTER, onFocus)        
-        eventsCtrl_2.Bind(EVT_BUTTON_AFTER, onFocus)        
-        eventsCtrl_3.Bind(EVT_BUTTON_AFTER, onFocus)        
-        eventsCtrl_4.Bind(EVT_BUTTON_AFTER, onFocus)      
+        eventsCtrl_0.Bind(eg.EVT_VALUE_CHANGED, onFocus)        
+        eventsCtrl_1.Bind(eg.EVT_VALUE_CHANGED, onFocus)        
+        eventsCtrl_2.Bind(eg.EVT_VALUE_CHANGED, onFocus)        
+        eventsCtrl_3.Bind(eg.EVT_VALUE_CHANGED, onFocus)        
+        eventsCtrl_4.Bind(eg.EVT_VALUE_CHANGED, onFocus)      
       
 
         def onDelOneBtn(evt):
@@ -1577,16 +1505,16 @@ class GoTo_OSD(eg.ActionBase):
         OSElbl = wx.StaticText(panel, -1, self.text.OSELabel)
         #Button Text Colour
         foreLbl=wx.StaticText(panel, -1, self.text.txtColour+':')
-        foreColourButton = extColourSelectButton(panel,fore, title = self.text.txtColour)
+        foreColourButton = eg.ColourSelectButton(panel,fore, title = self.text.txtColour)
         #Button Background Colour
         backLbl=wx.StaticText(panel, -1, self.text.background+':')
-        backColourButton = extColourSelectButton(panel,back, title = self.text.background)
+        backColourButton = eg.ColourSelectButton(panel,back, title = self.text.background)
         #Button Selected Text Colour
         foreSelLbl=wx.StaticText(panel, -1, self.text.txtColourSel+':')
-        foreSelColourButton = extColourSelectButton(panel,foreSel, title = self.text.txtColourSel)
+        foreSelColourButton = eg.ColourSelectButton(panel,foreSel, title = self.text.txtColourSel)
         #Button Selected Background Colour
         backSelLbl=wx.StaticText(panel, -1, self.text.backgroundSel+':')
-        backSelColourButton = extColourSelectButton(panel,backSel, title = self.text.backgroundSel)
+        backSelColourButton = eg.ColourSelectButton(panel,backSel, title = self.text.backgroundSel)
         #Button Dialog "Menu control - assignement of events"
         dialogButton = wx.Button(panel,-1,self.text.dialog, size = (w, -1))
         dialogButton.SetToolTipString(self.text.btnToolTip)
@@ -1742,10 +1670,10 @@ class GoTo_OSD(eg.ActionBase):
             previewPanel.Refresh()
             OnFontFaceChoice()
             evt.Skip()
-        foreColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-        backColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-        foreSelColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-        backSelColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
+        foreColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
+        backColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
+        foreSelColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
+        backSelColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
 
         def setFocus():
             pass
@@ -1905,7 +1833,7 @@ class ShowMenu(eg.ActionClass):
         listBoxCtrl.SetSelectionForeground(self.foreSel)
         #Font button
         fontLbl=wx.StaticText(panel, -1, self.text.menuFont)
-        fontButton = extFontSelectButton(panel, value = fontInfo)
+        fontButton = eg.FontSelectButton(panel, value = fontInfo)
         font = wx.FontFromNativeInfoString(fontInfo)
         for n in range(10,20):
             font.SetPointSize(n)
@@ -1950,16 +1878,16 @@ class ShowMenu(eg.ActionClass):
         useInvertedCtrl.SetValue(inverted)
         #Button Text Colour
         foreLbl=wx.StaticText(panel, -1, self.text.txtColour+':')
-        foreColourButton = extColourSelectButton(panel,fore,title = self.text.txtColour)
+        foreColourButton = eg.ColourSelectButton(panel,fore,title = self.text.txtColour)
         #Button Background Colour
         backLbl=wx.StaticText(panel, -1, self.text.background+':')
-        backColourButton = extColourSelectButton(panel,back,title = self.text.background)
+        backColourButton = eg.ColourSelectButton(panel,back,title = self.text.background)
         #Button Selected Text Colour
         foreSelLbl=wx.StaticText(panel, -1, self.text.txtColourSel+':')
-        foreSelColourButton = extColourSelectButton(panel,foreSel,title = self.text.txtColourSel)
+        foreSelColourButton = eg.ColourSelectButton(panel,foreSel,title = self.text.txtColourSel)
         #Button Selected Background Colour
         backSelLbl=wx.StaticText(panel, -1, self.text.backgroundSel+':')
-        backSelColourButton = extColourSelectButton(panel,backSel,title = self.text.backgroundSel)
+        backSelColourButton = eg.ColourSelectButton(panel,backSel,title = self.text.backgroundSel)
         #Button Dialog "Menu control - assignement of events"
         dialogButton = wx.Button(panel,-1,self.text.dialog)
         dialogButton.SetToolTipString(self.text.btnToolTip)
@@ -2052,7 +1980,7 @@ class ShowMenu(eg.ActionClass):
             listBoxCtrl.SetFocus()
             if evt:
                 evt.Skip()
-        fontButton.Bind(EVT_BUTTON_AFTER, OnFontBtn)
+        fontButton.Bind(eg.EVT_VALUE_CHANGED, OnFontBtn)
 
         def OnColourBtn(evt):
             id = evt.GetId()
@@ -2076,10 +2004,10 @@ class ShowMenu(eg.ActionClass):
             listBoxCtrl.Refresh()
             listBoxCtrl.SetFocus()
             evt.Skip()
-        foreColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-        backColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-        foreSelColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
-        backSelColourButton.Bind(EVT_BUTTON_AFTER, OnColourBtn)
+        foreColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
+        backColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
+        foreSelColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
+        backSelColourButton.Bind(eg.EVT_VALUE_CHANGED, OnColourBtn)
 
 
         def setFocus():
