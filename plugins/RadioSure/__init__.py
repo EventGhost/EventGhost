@@ -1,4 +1,4 @@
-version="0.2.15"
+version="0.2.16"
 
 # plugins/RadioSure/__init__.py
 #
@@ -22,6 +22,8 @@ version="0.2.15"
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.16 by Pako 2011-06-08 18:21 UTC+1
+#     - eg.scheduler used instead of the Threading
 # 0.2.15 by Pako 2011-06-05 18:31 UTC+1
 #     - Used eg.EVT_VALUE_CHANGED instead of EVT_BUTTON_AFTER
 # 0.2.14 by Pako 2011-05-08 18:28 UTC+1
@@ -137,7 +139,7 @@ from datetime import datetime as dt
 from datetime import timedelta as td
 from copy import deepcopy as cpy
 from xml.dom import minidom as miniDom
-from threading import Timer, Thread, Event
+from threading import Timer
 from eg.WinApi.Utils import GetMonitorDimensions
 from eg.WinApi.Dynamic import CreateEvent, SetEvent, PostMessage
 from eg.WinApi.Dynamic import SendMessage, ShowWindow, RegisterWindowMessage
@@ -3024,41 +3026,41 @@ def HandleRS():
     return res
 #===============================================================================
 
-class ObservationThread(Thread):
+class ObservationThread:
 
-    def __init__(
-        self,
-        period,
-        evtName,
-    ):
-        self.abort = False
-        self.aborted = False
-        self.oldData = ""
-        self.threadFlag = Event()
-
+    def __init__(self, period, evtName):
+        self.alive = False
         self.period = period
         self.evtName = evtName
-        Thread.__init__(self, name = self.evtName.encode('unicode_escape')+'_Thread')
+        self.task = None
+        self.oldData = ""
 
 
-    def run(self):
-        while 1:
+    def RS_ObservationThread(self):
             hwnd = HandleRS()
             if hwnd:
                 data = GetWindowText(hwnd[0]).decode(eg.systemEncoding)
                 if data != self.oldData and data != "Radio? Sure!":
                     self.oldData = data
                     eg.TriggerEvent(self.evtName, payload = data, prefix = "RadioSure")
-            if self.abort:
-                break
-            self.threadFlag.wait(self.period)
-            self.threadFlag.clear()
-        self.aborted = True
+        if self.alive:
+            self.task = eg.scheduler.AddTask(self.period, self.RS_ObservationThread)
+
+
+    def start(self):
+        self.alive = True
+        self.RS_ObservationThread()
+       
+
+    def isAlive(self):
+        return self.alive
 
 
     def AbortObservation(self):
-        self.abort = True
-        self.threadFlag.set()
+        eg.scheduler.CancelTask(self.task)
+        self.alive = False
+        self.task = None
+       
 #===============================================================================
 
 def GetCtrlByID(id):
@@ -3912,10 +3914,15 @@ class RadioSure(eg.PluginBase):
         language = self.GetLanguageXml()
         if language:
             mainWindow = language.getElementsByTagName('MainWindow')
-            favorites = language.getElementsByTagName('Favorites')
             equaliser = language.getElementsByTagName('EQUALIZER')
             sleeptimer = language.getElementsByTagName('SleepTimer')
-            choices.append(favorites[0].getElementsByTagName('Title')[0].firstChild.data)          
+            favorites = language.getElementsByTagName('Favorites')
+#            choices.append(favorites[0].getElementsByTagName('Title')[0].firstChild.data)          
+            for fav in favorites:
+                title = fav.getElementsByTagName('Title')
+                if title:
+                    break
+            choices.append(title[0].firstChild.data)          
             choices.append(mainWindow[0].getElementsByTagName('Back')[0].firstChild.data)          
             choices.append(equaliser[0].getElementsByTagName('Title')[0].firstChild.data)          
             choices.append(mainWindow[0].getElementsByTagName('WindowMenu')[0].firstChild.data)          
