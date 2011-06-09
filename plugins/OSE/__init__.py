@@ -20,6 +20,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.7 by Pako 2011-06-09 19:31 UTC+1
+#     - Action "Reopen last opened folder" - bugfix
 # 0.2.6 by Pako 2011-06-05 19:05 UTC+1
 #     - Used eg.EVT_VALUE_CHANGED instead of EVT_BUTTON_AFTER
 #     - Action ShowMenu: defined default values
@@ -41,7 +43,7 @@
 eg.RegisterPlugin(
     name = "On screen explorer",
     author = "Pako",
-    version = "0.2.6",
+    version = "0.2.7",
     kind = "other",
     guid = "{D3D2DDD1-9BEB-4A26-969B-C82FA8EAB280}",
     description = u"""<rst>
@@ -399,8 +401,11 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         listBoxCtrl.SetMaxSize(wx.Size(160, 439))
         if not patterns:
             patterns = "*.*"
-        if not os.path.isdir(start) and start != MY_COMPUTER:
-            start = eg.folderPath.Documents
+        if not self.value:
+            start = self.plugin.lastFolder if self.plugin.lastFolder else eg.folderPath.Documents
+        else:
+            if not os.path.isdir(start) and start != MY_COMPUTER:
+                start = eg.folderPath.Documents
         items = [item[0] for item in GetFolderItems(start, patterns, hide)]
         listBoxCtrl.Set(items)
         listBoxCtrl.SetBackgroundColour(self.back)
@@ -554,7 +559,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
 
 
         def OnTextChange(evt):
-            folder = folderCtrl.GetValue() if self.value else "",
+            folder = folderCtrl.GetValue() if self.value else ""
             patterns = patternsCtrl.GetValue()
             hide = hideSystem.GetValue()
             if not patterns:
@@ -567,6 +572,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
                 except:
                     pass
             evt.Skip()
+
         if self.value:
             compBtn.Bind(wx.EVT_BUTTON, OnCompBtn)
             folderCtrl.Bind(wx.EVT_TEXT, OnTextChange)
@@ -591,7 +597,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
                     prefixCtrl.GetValue(),
                     suffixCtrl.GetValue(),
                     displayChoice.GetSelection(),
-                    folderCtrl.GetValue() if self.value else "",
+                    folderCtrl.GetValue() if self.value else start,
                     patternsCtrl.GetValue(),
                     hideSystem.GetValue()
                 )
