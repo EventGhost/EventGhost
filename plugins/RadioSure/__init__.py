@@ -22,6 +22,8 @@ version="0.2.17"
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.18 by Pako 2011-06-10 18:25 UTC+1
+#     - Bugfix - write to logfile when Schedule title is non-ascii
 # 0.2.17 by Pako 2011-06-10 16:27 UTC+1
 #     - Added action "Get favorites"
 #     - Added period "minutes" for schedule type "Periodically"
@@ -2654,7 +2656,8 @@ class SchedulerDialog(wx.Dialog):
             next, cmdline = self.plugin.Execute(data, True)
             next = next[:19] if next else self.plugin.text.none
             self.plugin.updateLogFile(self.text.testRun % (data[1], next))
-            self.plugin.updateLogFile(self.plugin.text.cmdLine % cmdline)
+            if cmdline:
+                self.plugin.updateLogFile(self.plugin.text.cmdLine % cmdline.decode(FSE))
 
 
         def OnRightClick(evt):
@@ -4313,7 +4316,9 @@ class RadioSure(eg.PluginBase):
         next = self.NextRun(params[2], params[3])
         modes = params[7]
         playRec = modes & 6
-            args = [u'%s\\RadioSure.exe' % self.RadioSurePath,]
+        args = []
+        if playRec != 6:
+            args.append(u'%s\\RadioSure.exe' % self.RadioSurePath)
             if playRec:
                 args.append("/record")
             else:
@@ -4335,7 +4340,6 @@ class RadioSure(eg.PluginBase):
                 args.append(u'/filename="%s"' % recfile)
             elif playRec:
                 args.append(u'/filename="%s"' % params[1])
-        if playRec != 6:
             Popen(args)
         if not immed and next: # new schedule, if valid next run time and not TEST/IMMEDIATELY run
             startTicks = mktime(strptime(next, "%Y-%m-%d %H:%M:%S"))
@@ -4345,7 +4349,7 @@ class RadioSure(eg.PluginBase):
             eg.TriggerEvent(self.text.launched, prefix = "RadioSure", payload = params[1])
         elif triggEvt == 16:
             eg.TriggerEvent(self.text.launched, prefix = "RadioSure", payload = params)
-        return (next, my_list2cmdline(args))
+        return (next, my_list2cmdline(args) if args else None)
 
 
     def RadioSureScheduleRun(self, schedule):
@@ -4362,7 +4366,8 @@ class RadioSure(eg.PluginBase):
             self.dialog.RefreshGrid(ixTmp, last, next)
         nxt = next[:19] if next else self.text.none        
         self.updateLogFile(self.text.execut % (data[ix][1], nxt))
-        self.updateLogFile(self.text.cmdLine % cmdline)
+        if cmdline:
+            self.updateLogFile(self.text.cmdLine % cmdline.decode(FSE))
 
 
     def UpdateEGscheduler(self):
@@ -5604,7 +5609,8 @@ class RunScheduleImmediately(eg.ActionBase):
                 next, cmdline = self.plugin.Execute(sched, True)
                 next = next[:19] if next else self.plugin.text.none
                 self.plugin.updateLogFile(self.text.immedRun % (sched[1], next))
-                self.plugin.updateLogFile(self.plugin.text.cmdLine % cmdline)
+                if cmdline:
+                    self.plugin.updateLogFile(self.plugin.text.cmdLine % cmdline.decode(FSE))
         else:
             self.PrintError(self.text.notFound % schedule)
             return self.text.notFound % schedule
