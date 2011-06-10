@@ -1,4 +1,4 @@
-version="0.2.16"
+version="0.2.17"
 
 # plugins/RadioSure/__init__.py
 #
@@ -22,6 +22,9 @@ version="0.2.16"
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.17 by Pako 2011-06-10 16:27 UTC+1
+#     - Added action "Get favorites"
+#     - Added period "minutes" for schedule type "Periodically"
 # 0.2.16 by Pako 2011-06-08 18:21 UTC+1
 #     - eg.scheduler used instead of the Threading
 # 0.2.15 by Pako 2011-06-05 18:31 UTC+1
@@ -417,6 +420,7 @@ File type (as .mp3) need not be completed. Will be added automatically."""
         choosePeriod = "Choose period"
         andThenEvery = "Repeat every"
         units = (
+            "minutes",
             "hours",
             "days",
             "weeks",
@@ -4248,8 +4252,8 @@ class RadioSure(eg.PluginBase):
             runDateTime = dt.combine(runDate, runTime)
             if now < runDateTime:
                 return str(runDateTime)
-            elif data[4] == 0: #unit =  hour
-                period = data[3] * 3600
+            elif data[4] in (0, 1): #unit =  minute or hour
+                period =  data[3] * 60 if not data[4] else data[3] * 3600
                 if period < 86400 and not 86400 % period:
                     if now.time() > runTime:
                         date = now.date()
@@ -4262,8 +4266,8 @@ class RadioSure(eg.PluginBase):
                 share += 1
                 delta = td(seconds = share * period)
                 return str(runDateTime + delta)
-            elif data[4] == 1 or data[4] == 2: #unit = day or week
-                period = data[3] if data[4] == 1 else 7 * data[3]
+            elif data[4] in (2, 3): #unit = day or week
+                period = data[3] if data[4] == 2 else 7 * data[3]
                 delta = (now - runDateTime).days
                 share = delta / period
                 if not delta % period:
@@ -4272,7 +4276,7 @@ class RadioSure(eg.PluginBase):
                 share += 1
                 delta = td(days = share * period)
                 return str(runDateTime + delta)
-            elif data[4] == 3: #unit = month
+            elif data[4] == 4: #unit = month
                 period = data[3]
                 month = runDateTime.month
                 year = runDateTime.year
@@ -4309,7 +4313,6 @@ class RadioSure(eg.PluginBase):
         next = self.NextRun(params[2], params[3])
         modes = params[7]
         playRec = modes & 6
-        if playRec != 6:
             args = [u'%s\\RadioSure.exe' % self.RadioSurePath,]
             if playRec:
                 args.append("/record")
@@ -4332,6 +4335,7 @@ class RadioSure(eg.PluginBase):
                 args.append(u'/filename="%s"' % recfile)
             elif playRec:
                 args.append(u'/filename="%s"' % params[1])
+        if playRec != 6:
             Popen(args)
         if not immed and next: # new schedule, if valid next run time and not TEST/IMMEDIATELY run
             startTicks = mktime(strptime(next, "%Y-%m-%d %H:%M:%S"))
@@ -5457,6 +5461,13 @@ class HideManager(eg.ActionBase):
             wx.CallAfter(self.plugin.manager.Close)
 #===============================================================================
 
+class GetFavorites(eg.ActionBase):
+
+    def __call__(self):
+        self.plugin.RefreshVariables()
+        return self.plugin.Favorites
+#===============================================================================
+
 class OpenScheduler(eg.ActionBase):
 
     def __call__(self):
@@ -6066,6 +6077,7 @@ ACTIONS = (
         (SendMessageActions,"ForwardHist","Forward in history","Forward in history.",1039),
         (OpenManager,"OpenManager","Open manager","Open manager.", None),
         (HideManager,"HideManager","Hide manager","Hide manager.", None),
+        (GetFavorites,"GetFavorites","Get favorites","Get favorites.", None),
     )),
     (eg.ActionGroup, 'Scheduler', 'Scheduler', 'Scheduler',(
         (OpenScheduler,"OpenScheduler","Open scheduler","Open scheduler.", None),
