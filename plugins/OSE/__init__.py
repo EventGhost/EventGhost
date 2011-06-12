@@ -19,6 +19,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.9 by Pako 2011-06-12 16:06 UTC+1
+#     - Added action "Get value"
 # 0.2.8 by Pako 2011-06-12 12:08 UTC+1
 #     - Action "Go back one level" renamed to "Go to parent directory/folder"
 #     - Added action "Go back"
@@ -45,7 +47,7 @@
 eg.RegisterPlugin(
     name = "On screen explorer",
     author = "Pako",
-    version = "0.2.8",
+    version = "0.2.9",
     kind = "other",
     guid = "{D3D2DDD1-9BEB-4A26-969B-C82FA8EAB280}",
     description = u"""<rst>
@@ -694,6 +696,48 @@ class GoBack(eg.ActionBase):
             wx.CallAfter(self.plugin.menuDlg.GoBack)
 #===============================================================================
 
+class GetValue(eg.ActionBase):
+
+    class text:
+        radiobox = 'Choice of menu attribute'
+        boxLbls = (
+            'Menu item string',
+            'Absolute path',
+            'Both'
+        )
+        labelGet = 'Get'
+
+    def __call__(self, val = 1):
+        if self.plugin.menuDlg:
+            eg.event.skipEvent = True
+            if val < 2:
+                return self.plugin.menuDlg.GetValue()[val]
+            else:
+                return self.plugin.menuDlg.GetValue()
+
+
+    def GetLabel(self,val):
+        return "%s: %s %s" % (self.name, self.text.labelGet, self.text.boxLbls[val])
+
+
+    def Configure(self, val = 1):
+        panel = eg.ConfigPanel(self)
+        radioBoxItems = wx.RadioBox(
+            panel,
+            -1,
+            self.text.radiobox,
+            (0,0),
+            (200,90),
+            choices = self.text.boxLbls,
+            style=wx.RA_SPECIFY_ROWS
+        )
+        radioBoxItems.SetSelection(val)
+        panel.AddCtrl(radioBoxItems)
+
+        while panel.Affirmed():
+            panel.SetResult(radioBoxItems.GetSelection())
+#===============================================================================
+
 class Execute(eg.ActionBase):
 
     class text:
@@ -979,6 +1023,7 @@ ACTIONS = (
     (GoToParent, 'GoToParent', 'Go to parent directory/folder', 'Go to parent directory/folder.', None),
     (GoBack, 'GoBack', 'Go back', 'Go back.', None),
     (Cancel, 'Cancel', 'Cancel', 'Cancel button pressed.', None),
+    (GetValue, 'GetValue', 'Get value', 'Get value.', None),
 )
 #===============================================================================
 
@@ -1218,16 +1263,14 @@ class Menu(wx.Frame):
 
     def GoBack(self):
         if len(self.goBackList) >= 2:
-            #self.plugin.lastFolder = self.goBackList[-1]
             self.ShowMenu(
                 prefix = self.prefix,
                 suffix = self.suffix,
                 goBack = True,
             )
-        
 
 
-    def DefaultAction(self):
+    def GetFilePath(self):
         sel = self.eventChoiceCtrl.GetSelectedRows()[0]
         filePath = unicode(self.shortcuts[sel].decode(eg.systemEncoding))
         if not filePath:
@@ -1240,6 +1283,16 @@ class Menu(wx.Frame):
                     filePath = MY_COMPUTER
                 else:
                     filePath = os.path.split(filePath[:-3])[0]
+        return sel, filePath
+        
+
+    def GetValue(self):
+        sel, filePath = self.GetFilePath()
+        return [self.choices[sel], filePath]
+
+
+    def DefaultAction(self):
+        sel, filePath = self.GetFilePath()
         eg.TriggerEvent(prefix = self.prefix, suffix = self.suffix, payload = filePath)
         if os.path.isfile(filePath): 
             self.destroyMenu()
@@ -1265,7 +1318,6 @@ class Menu(wx.Frame):
         if   keyCode in (wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER, wx.WXK_RIGHT, wx.WXK_NUMPAD_RIGHT):
             self.DefaultAction()
         elif keyCode in (wx.WXK_LEFT, wx.WXK_NUMPAD_LEFT):
-#            self.GoToParent()
             self.GoBack()
         elif keyCode in (wx.WXK_UP, wx.WXK_NUMPAD_UP):
             self.eventChoiceCtrl.MoveCursor(-1)
