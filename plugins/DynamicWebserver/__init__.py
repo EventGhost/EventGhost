@@ -15,21 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
-#
-# $LastChangedDate: 2008-10-04 17:50:01 +0200 (Sa, 04 Okt 2008) $
-# $LastChangedRevision: 503 $
-# $LastChangedBy: bitmonster $
-
 
 eg.RegisterPlugin(
     name = "Dynamic Webserver",
     author = "Bitmonster/Kingtd",
     version = "1.0." + "$LastChangedRevision: 503 $".split()[1],
     guid = "{2FC713FF-0093-4271-A520-F0F6BB05A0E8}",
-    description = (
-        "Implements a small webserver, that you can use to generate events "
-        "through HTML-pages."
-    ),
+    description = u'''<rst>Implements a small webserver, 
+that you can use to generate events through HTML-pages.
+
+========================
+This plugin is obsolete!
+========================
+Use the Webserver plugin instead.
+---------------------------------''',
     url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=1610",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeT"
