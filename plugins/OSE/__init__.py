@@ -19,6 +19,9 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.8 by Pako 2011-06-12 12:08 UTC+1
+#     - Action "Go back one level" renamed to "Go to parent directory/folder"
+#     - Added action "Go back"
 # 0.2.7 by Pako 2011-06-09 19:31 UTC+1
 #     - Action "Reopen last opened folder" - bugfix
 # 0.2.6 by Pako 2011-06-05 19:05 UTC+1
@@ -42,7 +45,7 @@
 eg.RegisterPlugin(
     name = "On screen explorer",
     author = "Pako",
-    version = "0.2.7",
+    version = "0.2.8",
     kind = "other",
     guid = "{D3D2DDD1-9BEB-4A26-969B-C82FA8EAB280}",
     description = u"""<rst>
@@ -91,7 +94,7 @@ from threading import Timer
 from eg.WinApi.Utils import GetMonitorDimensions
 from eg.WinApi.Dynamic import CreateEvent, SetEvent
 import _winreg
-from win32api import LoadLibrary, LoadString, GetVolumeInformation #, GetLogicalDriveStrings
+from win32api import LoadLibrary, LoadString, GetVolumeInformation
 from win32com.shell import shell
 from win32file import GetFileAttributes, GetLogicalDrives
 
@@ -352,7 +355,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
                 monitor,
                 start,
                 patterns,
-                hide
+                hide,
             )
             eg.actionThread.WaitOnEvent(self.event)
 
@@ -657,30 +660,40 @@ class Cancel(eg.ActionBase):
             self.plugin.menuDlg = None
             eg.event.skipEvent = True
 #===============================================================================
+
+class GoToParent(eg.ActionBase):
+
+    def __call__(self):
+        if self.plugin.menuDlg:
+            wx.CallAfter(self.plugin.menuDlg.GoToParent)
+            #eg.event.skipEvent = True
+            #filePath, prefix, suffix = self.plugin.menuDlg.GetInfo()
+            #filePath = self.plugin.lastFolder
+            #if filePath == MY_COMPUTER:
+            #    return
+            #if filePath[-2] == ":": #root of drive
+            #    filePath = MY_COMPUTER
+            #else:
+            #    filePath = os.path.split(filePath)[0]
+            #event = CreateEvent(None, 0, 0, None)
+            #self.plugin.lastFolder = filePath
+            #wx.CallAfter(self.plugin.menuDlg.ShowMenu,
+            #    prefix = prefix,
+            #    suffix = suffix,
+            #    start = filePath,
+            #    event = event,
+            #)
+            #eg.actionThread.WaitOnEvent(event)
+        #    eg.programCounter = None
+#===============================================================================
+
 class GoBack(eg.ActionBase):
 
     def __call__(self):
         if self.plugin.menuDlg:
-            eg.event.skipEvent = True
-            filePath, prefix, suffix = self.plugin.menuDlg.GetInfo()
-            filePath = self.plugin.lastFolder
-            if filePath == MY_COMPUTER:
-                return
-            if filePath[-2] == ":": #root of drive
-                filePath = MY_COMPUTER
-            else:
-                filePath = os.path.split(filePath)[0]
-            event = CreateEvent(None, 0, 0, None)
-            self.plugin.lastFolder = filePath
-            wx.CallAfter(self.plugin.menuDlg.ShowMenu,
-                prefix = prefix,
-                suffix = suffix,
-                start = filePath,
-                event = event,
-            )
-            eg.actionThread.WaitOnEvent(event)
-        #    eg.programCounter = None
+            wx.CallAfter(self.plugin.menuDlg.GoBack)
 #===============================================================================
+
 class Execute(eg.ActionBase):
 
     class text:
@@ -963,7 +976,8 @@ ACTIONS = (
     (PageUpDown, 'PageUp', 'Page Up', 'Page Up.', -1),
     (PageUpDown, 'PageDown', 'Page Down', 'Page Down.', 1),
     (Execute, 'Execute', 'Execute', 'Execute.', None),
-    (GoBack, 'GoBack', 'Go back one level', 'Go back one level.', None),
+    (GoToParent, 'GoToParent', 'Go to parent directory/folder', 'Go to parent directory/folder.', None),
+    (GoBack, 'GoBack', 'Go back', 'Go back.', None),
     (Cancel, 'Cancel', 'Cancel', 'Cancel button pressed.', None),
 )
 #===============================================================================
@@ -1048,6 +1062,7 @@ class Menu(wx.Frame):
         self.suffix = "Open"
         self.patterns = "*.*"
         self.hide = False
+        self.goBackList = []
 
 
     def ShowMenu(
@@ -1065,8 +1080,12 @@ class Menu(wx.Frame):
         monitor=None,
         start=None,
         patterns=None,
-        hide = None
+        hide = None,
+        goBack = False
     ):
+        if goBack:
+            self.goBackList.pop()
+            start = self.goBackList.pop()
         self.fore     = fore or self.fore
         self.back     = back or self.back
         self.foreSel  = foreSel or self.foreSel
@@ -1085,6 +1104,11 @@ class Menu(wx.Frame):
         except:
             PlaySound('SystemExclamation', SND_ASYNC)
             items  = GetFolderItems(self.start, self.patterns, self.hide)
+        self.goBackList.append(self.start)
+        if len(self.goBackList) >= 4:
+            if self.goBackList[-2:] == self.goBackList[-4:-2]:
+                self.goBackList.pop()
+                self.goBackList.pop()
         self.choices = [item[0] for item in items]
         self.shortcuts = [item[1] for item in items]
         sizer = self.GetSizer()
@@ -1182,7 +1206,7 @@ class Menu(wx.Frame):
                 self.eventChoiceCtrl.MovePageUp()
 
 
-    def GoBack(self):
+    def GoToParent(self):
         if self.start != MY_COMPUTER:
             strt = MY_COMPUTER if len(self.start) == 3 else os.path.split(self.start)[0]
             self.ShowMenu(
@@ -1190,6 +1214,17 @@ class Menu(wx.Frame):
                 suffix = self.suffix,
                 start = strt,
             )
+
+
+    def GoBack(self):
+        if len(self.goBackList) >= 2:
+            #self.plugin.lastFolder = self.goBackList[-1]
+            self.ShowMenu(
+                prefix = self.prefix,
+                suffix = self.suffix,
+                goBack = True,
+            )
+        
 
 
     def DefaultAction(self):
@@ -1230,6 +1265,7 @@ class Menu(wx.Frame):
         if   keyCode in (wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER, wx.WXK_RIGHT, wx.WXK_NUMPAD_RIGHT):
             self.DefaultAction()
         elif keyCode in (wx.WXK_LEFT, wx.WXK_NUMPAD_LEFT):
+#            self.GoToParent()
             self.GoBack()
         elif keyCode in (wx.WXK_UP, wx.WXK_NUMPAD_UP):
             self.eventChoiceCtrl.MoveCursor(-1)
