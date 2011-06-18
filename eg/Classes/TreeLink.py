@@ -113,7 +113,7 @@ class TreeLink(object):
         for link in target.dependants:
             link.target = None
             if link.owner:
-                eg.Notify("NodeChanged", link.owner)
+                wx.CallAfter(eg.Notify, "NodeChanged", link.owner)
         cls.unresolvedIds[target.xmlId] = target.dependants
         target.dependants = None
 
