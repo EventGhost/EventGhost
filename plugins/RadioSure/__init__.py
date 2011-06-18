@@ -1,4 +1,4 @@
-version="0.2.17"
+version="0.2.18"
 
 # plugins/RadioSure/__init__.py
 #
@@ -22,7 +22,7 @@ version="0.2.17"
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
-# 0.2.18 by Pako 2011-06-10 18:25 UTC+1
+# 0.2.18 by Pako 2011-06-10 18:44 UTC+1
 #     - Bugfix - write to logfile when Schedule title is non-ascii
 # 0.2.17 by Pako 2011-06-10 16:27 UTC+1
 #     - Added action "Get favorites"
