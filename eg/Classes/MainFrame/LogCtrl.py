@@ -251,7 +251,8 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     def OnGetItemTextWithTime(self, item, dummyColumn):
         line, _, _, when, indent = self.data[item]
         return (
-            strftime(" %X   ", localtime(when))
+            #strftime(" %X   ", localtime(when))
+            strftime(" %H:%M:%S   ", localtime(when))
             + indent * self.indent
             + line
         )
