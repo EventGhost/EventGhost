@@ -122,8 +122,7 @@ class EnableItem(eg.ActionBase):
         if link:
             node = link.target
             if node:
-                node.isEnabled = True
-                node.Refresh()
+                node.SetEnable(True)
                 return node
 
 
@@ -188,8 +187,8 @@ class DisableItem(EnableItem):
         if link:
             node = link.target
             if node and node.isDeactivatable:
-                node.isEnabled = False
-                node.Refresh()
+                node.SetEnable(False)
+                return node
 
 
 
@@ -217,12 +216,10 @@ class EnableExclusive(EnableItem):
         if not node:
             return
         def DoIt():
-            node.isEnabled = True
-            node.Refresh()
+            node.SetEnable(True)
             for child in node.parent.childs:
                 if child is not node and child.isDeactivatable:
-                    child.isEnabled = False
-                    child.Refresh()
+                    child.SetEnable(False)
         eg.actionThread.Call(DoIt)
 
 
