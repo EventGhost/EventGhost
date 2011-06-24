@@ -20,17 +20,21 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.5 by Pako 2011-06-24 14:22 UTC+1
+#     - bugfix: If an OSM menu stays open and in the background some other event
+#       is triggered that emulates keystrokes forcing a change of active window
+#       (for example SendKeys {Win}), EG may become unstable and possibly freeze
 # 0.2.4 by Pako 2011-06-05 17:03 UTC+1
 #     - Used eg.EVT_VALUE_CHANGED instead of EVT_BUTTON_AFTER
-# 0.2.3  by Pako 2011-04-11 13:41 UTC+1
+# 0.2.3 by Pako 2011-04-11 13:41 UTC+1
 #     - Added some missing strings
-# 0.2.2  by Pako 2010-03-10 18:46 GMT+1
+# 0.2.2 by Pako 2010-03-10 18:46 GMT+1
 #===============================================================================
 
 eg.RegisterPlugin(
     name = "OS Menu",
     author = "Pako",
-    version = "0.2.4",
+    version = "0.2.5",
     kind = "other",
     guid = "{FCF3C7A7-FBC1-444D-B768-9477521946DC}",
     description = u"""<rst>
@@ -78,7 +82,6 @@ as possible in the configuration tree.""",
 import wx.grid
 from threading import Timer
 from eg.WinApi.Utils import GetMonitorDimensions
-from eg.WinApi.Dynamic import CreateEvent, SetEvent
 
 SYS_VSCROLL_X = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
 #===============================================================================
@@ -282,9 +285,8 @@ class ShowMenu(eg.ActionClass):
         backSel = (75, 75, 75),
     ):
         if not self.plugin.menuDlg:
-            self.plugin.menuDlg = Menu()
-            self.event = CreateEvent(None, 0, 0, None)
-            wx.CallAfter(self.plugin.menuDlg.ShowMenu,
+            wx.CallAfter(
+                Menu,
                 choices,
                 fore,
                 back,
@@ -293,12 +295,10 @@ class ShowMenu(eg.ActionClass):
                 fontInfo,
                 False,
                 self.plugin,
-                self.event,
                 eg.ParseString(prefix),
                 monitor,
                 mode
             )
-            eg.actionThread.WaitOnEvent(self.event)
 
 
     def GetLabel(
@@ -640,9 +640,8 @@ class ShowMenu(eg.ActionClass):
         # re-assign the test button
         def OnButton(event):
             if not self.plugin.menuDlg:
-                self.plugin.menuDlg = Menu()
-                self.event = CreateEvent(None, 0, 0, None)
-                wx.CallAfter(self.plugin.menuDlg.ShowMenu,
+                wx.CallAfter(
+                    Menu,
                     self.choices,
                     foreColourButton.GetValue(),
                     backColourButton.GetValue(),
@@ -651,12 +650,10 @@ class ShowMenu(eg.ActionClass):
                     fontButton.GetValue(), 
                     True,
                     self.plugin,
-                    self.event,
                     prefixCtrl.GetValue(),
                     displayChoice.GetSelection(),
                     modeCtrl.GetSelection()
                 )
-                eg.actionThread.WaitOnEvent(self.event)
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
 
         while panel.Affirmed():
@@ -717,9 +714,8 @@ class CreateMenuFromList(eg.ActionClass):
                         chcs.append((item[0], item[0]))
                     else:
                         chcs.append(item)
-            self.plugin.menuDlg = Menu()
-            self.event = CreateEvent(None, 0, 0, None)
-            wx.CallAfter(self.plugin.menuDlg.ShowMenu,
+            wx.CallAfter(
+                Menu,
                 chcs,
                 fore,
                 back,
@@ -728,12 +724,10 @@ class CreateMenuFromList(eg.ActionClass):
                 fontInfo,
                 False,
                 self.plugin,
-                self.event,
                 eg.ParseString(prefix),
                 monitor,
                 mode
             )
-            eg.actionThread.WaitOnEvent(self.event)
 
 
     def Configure(
@@ -945,9 +939,8 @@ class CreateMenuFromList(eg.ActionClass):
                                 chcs.append((item[0], item[0]))
                             else:
                                 chcs.append(item)
-                        self.plugin.menuDlg = Menu()
-                        self.event = CreateEvent(None, 0, 0, None)
-                        wx.CallAfter(self.plugin.menuDlg.ShowMenu,
+                        wx.CallAfter(
+                            Menu,
                             chcs,
                             foreColourButton.GetValue(),
                             backColourButton.GetValue(),
@@ -956,12 +949,10 @@ class CreateMenuFromList(eg.ActionClass):
                             fontButton.GetValue(), 
                             True,
                             self.plugin,
-                            self.event,
                             prefixCtrl.GetValue(),
                             displayChoice.GetSelection(),
                             modeCtrl.GetSelection()
                         )
-                        eg.actionThread.WaitOnEvent(self.event)
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
 
         while panel.Affirmed():
@@ -1107,17 +1098,7 @@ class OSM(eg.PluginClass):
 
 class Menu(wx.Frame):
 
-    def __init__(self):
-        wx.Frame.__init__(
-            self,
-            None,
-            -1,
-            'OS_Menu',
-            style = wx.STAY_ON_TOP|wx.SIMPLE_BORDER
-        )
-
-
-    def ShowMenu(
+    def __init__(
         self,
         choices,
         fore,
@@ -1127,20 +1108,31 @@ class Menu(wx.Frame):
         fontInfo,
         flag,
         plugin,
-        event,
         prefix,
         monitor,
         mode
-    ):
+):
+        wx.Frame.__init__(
+            self,
+            None,
+            -1,
+            'OS_Menu',
+            style = wx.STAY_ON_TOP|wx.SIMPLE_BORDER
+        )
+        self.plugin  = plugin
+        self.plugin.menuDlg = self
+
+        self.choices = choices
         self.fore    = fore
         self.back    = back
-        self.foreSel    = foreSel
-        self.backSel    = backSel
-        self.plugin  = plugin
-        self.choices = choices
+        self.foreSel = foreSel
+        self.backSel = backSel
         self.flag    = flag
         self.prefix  = prefix
+        self.monitor = monitor
         self.mode    = mode
+
+    #def ShowMenu(self):
         self.SetBackgroundColour((0, 0, 0))
         if len(self.choices) == 0:
             return
@@ -1175,7 +1167,7 @@ class Menu(wx.Frame):
         width_lst=[]
         for item in choices:
             width_lst.append(self.GetTextExtent(item+' ')[0])
-        width = max(width_lst)+8
+        width = max(width_lst) + 8
         self.eventChoiceCtrl.SetColSize(0,width)
         if height1 < height0:
             width += SYS_VSCROLL_X
@@ -1190,12 +1182,11 @@ class Menu(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.Bind(wx.grid.EVT_GRID_CMD_CELL_LEFT_DCLICK, self.onDoubleClick, self.eventChoiceCtrl)
         self.Bind(wx.EVT_CHAR_HOOK, self.onFrameCharHook)
+
         if self.flag:
             self.timer=MyTimer(t = 5.0, plugin = self.plugin)
         self.Show(True)
         self.Raise()
-        wx.Yield()
-        SetEvent(event)
 
 
     def PageUpDown(self, direction):
@@ -1240,8 +1231,8 @@ class Menu(wx.Frame):
 
     def onClose(self, event):
         self.plugin.menuDlg = None
-        self.Show(False)
-        self.Destroy()
+        wx.CallAfter(self.Show, False)
+        wx.CallAfter(self.Destroy)
 
 
     def onFrameCharHook(self, event):
