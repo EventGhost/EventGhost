@@ -20,30 +20,34 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
-# 0.2.9 by Pako 2011-06-12 16:06 UTC+1
-#     - Added action "Get value"
-# 0.2.8 by Pako 2011-06-12 12:08 UTC+1
-#     - Action "Go back one level" renamed to "Go to parent directory/folder"
-#     - Added action "Go back"
-# 0.2.7 by Pako 2011-06-09 19:31 UTC+1
-#     - Action "Reopen last opened folder" - bugfix
-# 0.2.6 by Pako 2011-06-05 19:05 UTC+1
-#     - Used eg.EVT_VALUE_CHANGED instead of EVT_BUTTON_AFTER
-#     - Action ShowMenu: defined default values
-# 0.2.5 by Pako 2011-05-26 12:30 UTC+1
-#     - Added action "Reopen last opened folder"
-#     - Added action "Go back one level"
-#     - After the action "Go back one level" the cursor is on previously opened directory
-#     - Expanded the number of keys, which can be used to control of the menu:
-#        wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER, wx.WXK_RIGHT, wx.WXK_NUMPAD_RIGHT
-#        wx.WXK_LEFT, wx.WXK_NUMPAD_LEFT
-#        wx.WXK_UP, wx.WXK_NUMPAD_UP
-#        wx.WXK_DOWN, wx.WXK_NUMPAD_DOWN
-#        wx.WXK_PAGEUP, wx.WXK_NUMPAD_PAGEUP
-#        wx.WXK_PAGEDOWN, wx.WXK_NUMPAD_PAGEDOWN
-#        wx.WXK_ESCAPE
-# 0.2.4 by Pako 2010-08-23 18:25 UTC+1
-#     - Added option "Delete folder" 
+# 0.2.10 by Pako 2011-06-26 06:56 UTC+1
+#      - bugfix: If an OSE menu stays open and in the background some other event
+#        is triggered that emulates keystrokes forcing a change of active window
+#        (for example SendKeys {Win}), EG may become unstable and possibly freeze
+# 0.2.9  by Pako 2011-06-12 16:06 UTC+1
+#      - Added action "Get value"
+# 0.2.8  by Pako 2011-06-12 12:08 UTC+1
+#      - Action "Go back one level" renamed to "Go to parent directory/folder"
+#      - Added action "Go back"
+# 0.2.7  by Pako 2011-06-09 19:31 UTC+1
+#      - Action "Reopen last opened folder" - bugfix
+# 0.2.6  by Pako 2011-06-05 19:05 UTC+1
+#      - Used eg.EVT_VALUE_CHANGED instead of EVT_BUTTON_AFTER
+#      - Action ShowMenu: defined default values
+# 0.2.5  by Pako 2011-05-26 12:30 UTC+1
+#      - Added action "Reopen last opened folder"
+#      - Added action "Go back one level"
+#      - After the action "Go back one level" the cursor is on previously opened directory
+#      - Expanded the number of keys, which can be used to control of the menu:
+#         wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER, wx.WXK_RIGHT, wx.WXK_NUMPAD_RIGHT
+#         wx.WXK_LEFT, wx.WXK_NUMPAD_LEFT
+#         wx.WXK_UP, wx.WXK_NUMPAD_UP
+#         wx.WXK_DOWN, wx.WXK_NUMPAD_DOWN
+#         wx.WXK_PAGEUP, wx.WXK_NUMPAD_PAGEUP
+#         wx.WXK_PAGEDOWN, wx.WXK_NUMPAD_PAGEDOWN
+#         wx.WXK_ESCAPE
+# 0.2.4  by Pako 2010-08-23 18:25 UTC+1
+#      - Added option "Delete folder" 
 #
 eg.RegisterPlugin(
     name = "On screen explorer",
@@ -95,7 +99,6 @@ import wx.grid
 import pythoncom
 from threading import Timer
 from eg.WinApi.Utils import GetMonitorDimensions
-from eg.WinApi.Dynamic import CreateEvent, SetEvent
 import _winreg
 from win32api import LoadLibrary, LoadString, GetVolumeInformation
 from win32com.shell import shell
@@ -342,9 +345,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
                         break
                     start = os.path.split(start)[0]
             self.plugin.lastFolder = start
-            self.plugin.menuDlg = Menu()
-            self.event = CreateEvent(None, 0, 0, None)
-            wx.CallAfter(self.plugin.menuDlg.ShowMenu,
+            wx.CallAfter(
+                Menu,
                 fore,
                 back,
                 foreSel,
@@ -352,7 +354,6 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
                 fontInfo,
                 False,
                 self.plugin,
-                self.event,
                 prefix,
                 suffix,
                 monitor,
@@ -360,7 +361,6 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
                 patterns,
                 hide,
             )
-            eg.actionThread.WaitOnEvent(self.event)
 
 
     def GetLabel(
@@ -588,9 +588,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         # re-assign the test button
         def OnButton(event):
             if not self.plugin.menuDlg:
-                self.plugin.menuDlg = Menu()
-                self.event = CreateEvent(None, 0, 0, None)
-                wx.CallAfter(self.plugin.menuDlg.ShowMenu,
+                wx.CallAfter(
+                    Menu,
                     foreColourButton.GetValue(),
                     backColourButton.GetValue(),
                     foreSelColourButton.GetValue(),
@@ -598,7 +597,6 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
                     fontButton.GetValue(), 
                     True,
                     self.plugin,
-                    self.event,
                     prefixCtrl.GetValue(),
                     suffixCtrl.GetValue(),
                     displayChoice.GetSelection(),
@@ -606,7 +604,6 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
                     patternsCtrl.GetValue(),
                     hideSystem.GetValue()
                 )
-                eg.actionThread.WaitOnEvent(self.event)
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
 
         while panel.Affirmed():
@@ -669,25 +666,6 @@ class GoToParent(eg.ActionBase):
     def __call__(self):
         if self.plugin.menuDlg:
             wx.CallAfter(self.plugin.menuDlg.GoToParent)
-            #eg.event.skipEvent = True
-            #filePath, prefix, suffix = self.plugin.menuDlg.GetInfo()
-            #filePath = self.plugin.lastFolder
-            #if filePath == MY_COMPUTER:
-            #    return
-            #if filePath[-2] == ":": #root of drive
-            #    filePath = MY_COMPUTER
-            #else:
-            #    filePath = os.path.split(filePath)[0]
-            #event = CreateEvent(None, 0, 0, None)
-            #self.plugin.lastFolder = filePath
-            #wx.CallAfter(self.plugin.menuDlg.ShowMenu,
-            #    prefix = prefix,
-            #    suffix = suffix,
-            #    start = filePath,
-            #    event = event,
-            #)
-            #eg.actionThread.WaitOnEvent(event)
-        #    eg.programCounter = None
 #===============================================================================
 
 class GoBack(eg.ActionBase):
@@ -836,15 +814,14 @@ class Execute(eg.ActionBase):
                             else:
                                 raise
                 if val&16: #go to the folder
-                    event = CreateEvent(None, 0, 0, None)
                     self.plugin.lastFolder = filePath
-                    wx.CallAfter(self.plugin.menuDlg.ShowMenu,
-                        prefix = prefix,
-                        suffix = suffix,
-                        start = filePath,
-                        event = event,
+                    wx.CallAfter(
+                        self.plugin.menuDlg.ShowMenu,
+                        prefix,
+                        suffix,
+                        filePath,
+                        False,
                     )
-                    eg.actionThread.WaitOnEvent(event)
                 else:
                     self.plugin.menuDlg.destroyMenu()
                     self.plugin.menuDlg = None
@@ -1093,7 +1070,22 @@ class Menu(wx.Frame):
 
     oldStart = ""
 
-    def __init__(self):
+    def __init__(
+        self,
+        fore=None,
+        back=None,
+        foreSel=None,
+        backSel=None,
+        fontInfo=None,
+        flag=False,
+        plugin=None,
+        prefix="OSE",
+        suffix="Open",
+        monitor=0,
+        start=None,
+        patterns="*.*",
+        hide = False,
+        ):
 
         wx.Frame.__init__(
             self,
@@ -1102,48 +1094,36 @@ class Menu(wx.Frame):
             'OS_Explorer',
             style = wx.STAY_ON_TOP|wx.SIMPLE_BORDER
         )
-        self.flag = False
-        self.monitor = 0
-        self.prefix = "OSE"
-        self.suffix = "Open"
-        self.patterns = "*.*"
-        self.hide = False
+        self.plugin  = plugin
+        self.plugin.menuDlg = self
         self.goBackList = []
 
+        self.fore     = fore
+        self.back     = back
+        self.foreSel  = foreSel
+        self.backSel  = backSel
+        self.fontInfo = fontInfo
+        self.flag     = flag
+        self.monitor  = monitor
+        self.patterns = patterns
+        self.hide     = hide
+
+
+        self.ShowMenu(prefix, suffix, start, False)
 
     def ShowMenu(
         self,
-        fore=None,
-        back=None,
-        foreSel=None,
-        backSel=None,
-        fontInfo=None,
-        flag=None,
-        plugin=None,
-        event=None,
-        prefix=None,
-        suffix=None,
-        monitor=None,
-        start=None,
-        patterns=None,
-        hide = None,
-        goBack = False
+        prefix,
+        suffix,
+        start,
+        goBack
     ):
         if goBack:
             self.goBackList.pop()
             start = self.goBackList.pop()
-        self.fore     = fore or self.fore
-        self.back     = back or self.back
-        self.foreSel  = foreSel or self.foreSel
-        self.backSel  = backSel or self.backSel
-        self.fontInfo = fontInfo or self.fontInfo
-        self.flag     = flag or self.flag
-        self.plugin   = plugin or self.plugin
-        self.prefix   = prefix or self.prefix
-        self.suffix   = suffix or self.suffix
-        self.monitor  = monitor or self.monitor
-        self.patterns = patterns or self.patterns
-        self.hide     = hide or self.hide
+        self.prefix = prefix
+        self.suffix = suffix
+        self.start = start
         try:
             items  = GetFolderItems(start, self.patterns, self.hide)
             self.start = start
@@ -1220,9 +1200,6 @@ class Menu(wx.Frame):
 
         self.Show(True)
         self.Raise()
-        if event:
-            wx.Yield()
-            SetEvent(event)
 
 
     def GetInfo(self):
@@ -1256,18 +1233,20 @@ class Menu(wx.Frame):
         if self.start != MY_COMPUTER:
             strt = MY_COMPUTER if len(self.start) == 3 else os.path.split(self.start)[0]
             self.ShowMenu(
-                prefix = self.prefix,
-                suffix = self.suffix,
-                start = strt,
+                self.prefix,
+                self.suffix,
+                strt,
+                False,
             )
 
 
     def GoBack(self):
         if len(self.goBackList) >= 2:
             self.ShowMenu(
-                prefix = self.prefix,
-                suffix = self.suffix,
-                goBack = True,
+                self.prefix,
+                self.suffix,
+                None,
+                True,
             )
 
 
@@ -1308,9 +1287,10 @@ class Menu(wx.Frame):
         elif os.path.isdir(filePath) or filePath == MY_COMPUTER:
             self.plugin.lastFolder = filePath
             self.ShowMenu(
-                prefix = self.prefix,
-                suffix = self.suffix,
-                start = filePath,
+                self.prefix,
+                self.suffix,
+                filePath,
+                goBack = False
             )
 
 
