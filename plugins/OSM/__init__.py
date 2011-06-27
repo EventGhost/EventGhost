@@ -20,6 +20,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.6 by Pako 2011-06-27 12:40 UTC+1
+#     - bugfix: problem when any menu action is called too soon after its opening
 # 0.2.5 by Pako 2011-06-24 14:22 UTC+1
 #     - bugfix: If an OSM menu stays open and in the background some other event
 #       is triggered that emulates keystrokes forcing a change of active window
@@ -34,7 +36,7 @@
 eg.RegisterPlugin(
     name = "OS Menu",
     author = "Pako",
-    version = "0.2.5",
+    version = "0.2.6",
     kind = "other",
     guid = "{FCF3C7A7-FBC1-444D-B768-9477521946DC}",
     description = u"""<rst>
@@ -82,6 +84,7 @@ as possible in the configuration tree.""",
 import wx.grid
 from threading import Timer
 from eg.WinApi.Utils import GetMonitorDimensions
+from eg.WinApi.Dynamic import CreateEvent, SetEvent
 
 SYS_VSCROLL_X = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
 #===============================================================================
@@ -285,6 +288,7 @@ class ShowMenu(eg.ActionClass):
         backSel = (75, 75, 75),
     ):
         if not self.plugin.menuDlg:
+            event = CreateEvent(None, 0, 0, None)
             wx.CallAfter(
                 Menu,
                 choices,
@@ -297,8 +301,10 @@ class ShowMenu(eg.ActionClass):
                 self.plugin,
                 eg.ParseString(prefix),
                 monitor,
-                mode
+                mode,
+                event
             )
+            eg.actionThread.WaitOnEvent(event)
 
 
     def GetLabel(
@@ -652,8 +658,10 @@ class ShowMenu(eg.ActionClass):
                     self.plugin,
                     prefixCtrl.GetValue(),
                     displayChoice.GetSelection(),
-                    modeCtrl.GetSelection()
+                    modeCtrl.GetSelection(),
+                    CreateEvent(None, 0, 0, None)
                 )
+
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
 
         while panel.Affirmed():
@@ -714,6 +722,7 @@ class CreateMenuFromList(eg.ActionClass):
                         chcs.append((item[0], item[0]))
                     else:
                         chcs.append(item)
+            event = CreateEvent(None, 0, 0, None)
             wx.CallAfter(
                 Menu,
                 chcs,
@@ -726,8 +735,10 @@ class CreateMenuFromList(eg.ActionClass):
                 self.plugin,
                 eg.ParseString(prefix),
                 monitor,
-                mode
+                mode,
+                event
             )
+            eg.actionThread.WaitOnEvent(event)
 
 
     def Configure(
@@ -951,7 +962,8 @@ class CreateMenuFromList(eg.ActionClass):
                             self.plugin,
                             prefixCtrl.GetValue(),
                             displayChoice.GetSelection(),
-                            modeCtrl.GetSelection()
+                            modeCtrl.GetSelection(),
+                            CreateEvent(None, 0, 0, None)
                         )
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
 
@@ -1110,7 +1122,8 @@ class Menu(wx.Frame):
         plugin,
         prefix,
         monitor,
-        mode
+        mode,
+        event
 ):
         wx.Frame.__init__(
             self,
@@ -1120,7 +1133,6 @@ class Menu(wx.Frame):
             style = wx.STAY_ON_TOP|wx.SIMPLE_BORDER
         )
         self.plugin  = plugin
-        self.plugin.menuDlg = self
 
         self.choices = choices
         self.fore    = fore
@@ -1185,8 +1197,12 @@ class Menu(wx.Frame):
 
         if self.flag:
             self.timer=MyTimer(t = 5.0, plugin = self.plugin)
+
+        self.plugin.menuDlg = self 
         self.Show(True)
         self.Raise()
+        wx.Yield()
+        SetEvent(event)
 
 
     def PageUpDown(self, direction):
