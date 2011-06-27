@@ -19,6 +19,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.11 by Pako 2011-06-27 12:42 UTC+1
+#      - bugfix: problem when any menu action is called too soon after its opening
 # 0.2.10 by Pako 2011-06-26 06:56 UTC+1
 #      - bugfix: If an OSE menu stays open and in the background some other event
 #        is triggered that emulates keystrokes forcing a change of active window
@@ -51,7 +53,7 @@
 eg.RegisterPlugin(
     name = "On screen explorer",
     author = "Pako",
-    version = "0.2.9",
+    version = "0.2.11",
     kind = "other",
     guid = "{D3D2DDD1-9BEB-4A26-969B-C82FA8EAB280}",
     description = u"""<rst>
@@ -96,9 +98,10 @@ as possible in the configuration tree.""",
 import os
 import wx.grid
 import pythoncom
+import _winreg
 from threading import Timer
 from eg.WinApi.Utils import GetMonitorDimensions
-import _winreg
+from eg.WinApi.Dynamic import CreateEvent, SetEvent
 from win32api import LoadLibrary, LoadString, GetVolumeInformation
 from win32com.shell import shell
 from win32file import GetFileAttributes, GetLogicalDrives
@@ -344,6 +347,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
                         break
                     start = os.path.split(start)[0]
             self.plugin.lastFolder = start
+            event = CreateEvent(None, 0, 0, None)
             wx.CallAfter(
                 Menu,
                 fore,
@@ -359,7 +363,9 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
                 start,
                 patterns,
                 hide,
+                event
             )
+            eg.actionThread.WaitOnEvent(event)
 
 
     def GetLabel(
@@ -601,7 +607,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
                     displayChoice.GetSelection(),
                     folderCtrl.GetValue() if self.value else start,
                     patternsCtrl.GetValue(),
-                    hideSystem.GetValue()
+                    hideSystem.GetValue(),
+                    CreateEvent(None, 0, 0, None)
                 )
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
 
@@ -1071,19 +1078,20 @@ class Menu(wx.Frame):
 
     def __init__(
         self,
-        fore=None,
-        back=None,
-        foreSel=None,
-        backSel=None,
-        fontInfo=None,
-        flag=False,
-        plugin=None,
-        prefix="OSE",
-        suffix="Open",
-        monitor=0,
-        start=None,
-        patterns="*.*",
-        hide = False,
+        fore,
+        back,
+        foreSel,
+        backSel,
+        fontInfo,
+        flag,
+        plugin,
+        prefix,
+        suffix,
+        monitor,
+        start,
+        patterns,
+        hide,
+        event
         ):
 
         wx.Frame.__init__(
@@ -1094,7 +1102,6 @@ class Menu(wx.Frame):
             style = wx.STAY_ON_TOP|wx.SIMPLE_BORDER
         )
         self.plugin  = plugin
-        self.plugin.menuDlg = self
         self.goBackList = []
 
         self.fore     = fore
@@ -1107,15 +1114,16 @@ class Menu(wx.Frame):
         self.patterns = patterns
         self.hide     = hide
 
+        self.ShowMenu(prefix, suffix, start, False, event)
 
-        self.ShowMenu(prefix, suffix, start, False)
 
     def ShowMenu(
         self,
         prefix,
         suffix,
         start,
-        goBack
+        goBack,
+        event = None
     ):
         if goBack:
             self.goBackList.pop()
@@ -1197,8 +1205,12 @@ class Menu(wx.Frame):
         self.plugin.lastFolder = start
         self.eventChoiceCtrl.SetGridCursor(itm, 0)
 
+        self.plugin.menuDlg = self
         self.Show(True)
         self.Raise()
+        if event:
+            wx.Yield()
+            SetEvent(event)
 
 
     def GetInfo(self):
