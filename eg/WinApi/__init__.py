@@ -25,7 +25,7 @@ from cFunctions import (
     GetWindowText,
     GetClassName,
     GetProcessName,
-    GetTopLevelWindowList,
+    GetTopLevelWindowList as _GetTopLevelWindowList,
     GetWindowChildsList,
 )
 from Dynamic import (
@@ -34,3 +34,17 @@ from Dynamic import (
 )
 import Clipboard
 
+def GetTopLevelWindowList(includeInvisible):
+    """cFunctions.GetTopLevelWindowList() may return hwnds that are a larger positive number than can be converted
+    to a signed int. We need to convert such hwnds to a negative value before passing them to any function that
+    takes a hwnd."""
+
+    topWindowsHwnds = _GetTopLevelWindowList(includeInvisible)
+
+    for i, hwnd in enumerate(topWindowsHwnds):
+        if hwnd & 0x80000000:
+            hwnd2 = hwnd - 0x100000000
+            #print 'hwnd too large: %s -> %s' % (hwnd, hwnd2)
+            topWindowsHwnds[i] = hwnd2
+
+    return topWindowsHwnds

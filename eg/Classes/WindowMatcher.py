@@ -19,7 +19,7 @@ from re import compile, escape
 from types import StringTypes
 from time import clock
 from eg.WinApi.Utils import GetWindowProcessName
-from eg.cFunctions import (
+from eg.WinApi import (
     GetTopLevelWindowList, GetWindowChildsList, GetWindowText, GetClassName
 )
 
