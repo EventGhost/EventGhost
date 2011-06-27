@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-version="0.2.18"
+version="0.2.19"
 
 # plugins/RadioSure/__init__.py
 #
@@ -22,8 +22,14 @@ version="0.2.18"
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.19 by Pako 2011-06-27 13:54 UTC+1
+#     - added action "Get last played favorite station" (retrieved from RS menu)
+#     - action name "Start (Stop) observation of titlebar" changed to
+#                   "Start (Stop) periodical observation"
+#     - added option to observation of last played station (from file RadioSure.xml)
+#     - bugfix - extended timeout for temporarily launched RS during plugin start
 # 0.2.18 by Pako 2011-06-10 18:44 UTC+1
-#     - Bugfix - write to logfile when Schedule title is non-ascii
+#     - bugfix - write to logfile when Schedule title is non-ascii
 # 0.2.17 by Pako 2011-06-10 16:27 UTC+1
 #     - Added action "Get favorites"
 #     - Added period "minutes" for schedule type "Periodically"
@@ -1621,6 +1627,7 @@ class ManagerDialog(wx.Dialog):
                             while rec and i < 100:
                                 i+=1
                                 rec = self.plugin.GetStatusRS([hwnd])[1]
+                                sleep(0.1)
                             if not rec:
                                 PostMessage(hwnd, WM_COMMAND, 1, 0) # Close
                         else:
@@ -2718,7 +2725,6 @@ class SchedulerDialog(wx.Dialog):
         fillDynamicSizer(-1)
         self.SetSize(wx.Size(wDynamic + 37, 684))
         grid = self.grid = CheckListCtrl(self, text, wDynamic + 20)
-#        grid = self.grid = CheckListCtrl(self, text, wDynamic + 20)
 
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(grid, 0, wx.ALL, 5)
@@ -3035,21 +3041,30 @@ def HandleRS():
 
 class ObservationThread:
 
-    def __init__(self, period, evtName):
+    def __init__(self, period, evtName, evtName2, plugin):
         self.alive = False
         self.period = period
         self.evtName = evtName
+        self.evtName2 = evtName2
         self.task = None
         self.oldData = ""
+        self.oldData2 = ""
+        self.plugin = plugin
 
 
     def RS_ObservationThread(self):
         hwnd = HandleRS()
         if hwnd:
-            data = GetWindowText(hwnd[0]).decode(eg.systemEncoding)
-            if data != self.oldData and data != "Radio? Sure!":
-                self.oldData = data
-                eg.TriggerEvent(self.evtName, payload = data, prefix = "RadioSure")
+            if self.evtName:
+                data = GetWindowText(hwnd[0]).decode(eg.systemEncoding)
+                if data != self.oldData and data != "Radio? Sure!":
+                    self.oldData = data
+                    eg.TriggerEvent(self.evtName, payload = data, prefix = "RadioSure")
+            if self.evtName2:
+                data = self.plugin.GetLastPlayed()
+                if data and data[0] != self.oldData2:
+                    self.oldData2 = data[0]            
+                    eg.TriggerEvent(self.evtName2, payload = data, prefix = "RadioSure")
         if self.alive:
             self.task = eg.scheduler.AddTask(self.period, self.RS_ObservationThread)
 
@@ -3501,64 +3516,7 @@ class MenuEventsDialog(wx.MiniFrame):
 
 class Menu(wx.Frame):
 
-    def __init__(self):
-        wx.Frame.__init__(
-            self,
-            None,
-            -1,
-            'MPC_menu',
-            style = wx.STAY_ON_TOP|wx.SIMPLE_BORDER
-        )
-        self.flag = False
-        self.monitor = 0
-        self.oldMenu = []
-
-
-    def DrawMenu(self, ix):
-        self.Show(False)
-        self.menuGridCtrl.SetGridCursor(ix, 1)
-        self.menuGridCtrl.SelectRow(ix)
-        monDim = GetMonitorDimensions()
-        try:
-            x,y,ws,hs = monDim[self.monitor]
-        except IndexError:
-            x,y,ws,hs = monDim[0]
-        # menu height calculation:                                
-        h=self.GetCharHeight()+4
-        for i in range(len(self.choices)):
-            self.menuGridCtrl.SetRowSize(i,h)
-            self.menuGridCtrl.SetCellValue(i,1," "+self.choices[i])
-            if self.items[i][3] == -1:
-                self.menuGridCtrl.SetCellValue(i,2, u"\u25ba")
-        height0 = len(self.choices)*h
-        height1 = h*((hs-20)/h)
-        height = min(height0, height1)+6
-        # menu width calculation:
-        width_lst=[]
-        for item in self.choices:
-            width_lst.append(self.GetTextExtent(item+' ')[0])
-        width = max(width_lst)+8
-        self.menuGridCtrl.SetColSize(0,self.w0)
-        self.menuGridCtrl.SetColSize(1,width)
-        self.menuGridCtrl.SetColSize(2,self.w2)
-        self.menuGridCtrl.ForceRefresh()
-        width = width + self.w0 + self.w2
-        if height1 < height0:
-            width += SYS_VSCROLL_X
-        if width > ws-50:
-            if height + SYS_HSCROLL_Y < hs:
-                height += SYS_HSCROLL_Y
-            width = ws-50
-        width += 6
-        x_pos = x + (ws - width)/2
-        y_pos = y + (hs - height)/2
-        self.SetDimensions(x_pos,y_pos,width,height)
-        self.menuGridCtrl.SetDimensions(2, 2, width-6, height-6, wx.SIZE_AUTO)
-        self.Show(True)
-        self.Raise()
-
-
-    def ShowMenu(
+    def __init__(
         self,
         fore,
         back,
@@ -3572,7 +3530,18 @@ class Menu(wx.Frame):
         hWnd,
         evtList,
         ix,
-    ):
+        ):
+        wx.Frame.__init__(
+            self,
+            None,
+            -1,
+            'MPC_menu',
+            style = wx.STAY_ON_TOP|wx.SIMPLE_BORDER
+        )
+        self.flag = False
+        self.monitor = 0
+        self.oldMenu = []
+
         self.fore     = fore
         self.back     = back
         self.foreSel  = foreSel
@@ -3644,9 +3613,54 @@ class Menu(wx.Frame):
         if self.flag:
             self.timer=MyTimer(t = 5.0, plugin = self.plugin)
         self.menuGridCtrl.Set(self.items)
-        self.UpdateMenu(ix == 0, ix)    
+        self.UpdateMenu(ix == 0, ix)
+        self.plugin.menuDlg = self
         wx.Yield()
         SetEvent(event)
+
+
+    def DrawMenu(self, ix):
+        self.Show(False)
+        self.menuGridCtrl.SetGridCursor(ix, 1)
+        self.menuGridCtrl.SelectRow(ix)
+        monDim = GetMonitorDimensions()
+        try:
+            x,y,ws,hs = monDim[self.monitor]
+        except IndexError:
+            x,y,ws,hs = monDim[0]
+        # menu height calculation:                                
+        h=self.GetCharHeight()+4
+        for i in range(len(self.choices)):
+            self.menuGridCtrl.SetRowSize(i,h)
+            self.menuGridCtrl.SetCellValue(i,1," "+self.choices[i])
+            if self.items[i][3] == -1:
+                self.menuGridCtrl.SetCellValue(i,2, u"\u25ba")
+        height0 = len(self.choices)*h
+        height1 = h*((hs-20)/h)
+        height = min(height0, height1)+6
+        # menu width calculation:
+        width_lst=[]
+        for item in self.choices:
+            width_lst.append(self.GetTextExtent(item+' ')[0])
+        width = max(width_lst)+8
+        self.menuGridCtrl.SetColSize(0,self.w0)
+        self.menuGridCtrl.SetColSize(1,width)
+        self.menuGridCtrl.SetColSize(2,self.w2)
+        self.menuGridCtrl.ForceRefresh()
+        width = width + self.w0 + self.w2
+        if height1 < height0:
+            width += SYS_VSCROLL_X
+        if width > ws-50:
+            if height + SYS_HSCROLL_Y < hs:
+                height += SYS_HSCROLL_Y
+            width = ws-50
+        width += 6
+        x_pos = x + (ws - width)/2
+        y_pos = y + (hs - height)/2
+        self.SetDimensions(x_pos,y_pos,width,height)
+        self.menuGridCtrl.SetDimensions(2, 2, width-6, height-6, wx.SIZE_AUTO)
+        self.Show(True)
+        self.Raise()
 
 
     def UpdateMenu(self, root = False, ix = 0):
@@ -3663,7 +3677,7 @@ class Menu(wx.Frame):
             #self.items = self.plugin.GetItemList(self.hWnd, self.menu)
         self.choices = [item[0] for item in self.items]
         self.menuGridCtrl.Set(self.items)
-        self.DrawMenu(ix)    
+        self.DrawMenu(ix)  
 
 
     def MoveCursor(self, step):
@@ -3892,6 +3906,29 @@ class RadioSure(eg.PluginBase):
                 return languageXml
 
 
+    def GetLastPlayed(self):
+        xmltoparse = u'%s\\RadioSure.xml' % self.xmlpath
+        xmltoparse = xmltoparse.encode(FSE) if isinstance(xmltoparse, unicode) else xmltoparse
+        xmldoc = miniDom.parse(xmltoparse)
+        lastPlayed = xmldoc.getElementsByTagName('LastPlayed')
+        if lastPlayed:
+            try:
+                source = lastPlayed[0].getElementsByTagName('Source')[0].firstChild 
+                source = source.data if source else ""
+                title = lastPlayed[0].getElementsByTagName('Title')[0].firstChild
+                title = title.data  if title else ""
+                genre = lastPlayed[0].getElementsByTagName('Genre')[0].firstChild
+                genre = genre.data if genre else ""
+                language = lastPlayed[0].getElementsByTagName('Language')[0].firstChild
+                language = language.data if language else ""
+                country = lastPlayed[0].getElementsByTagName('Country')[0].firstChild
+                country = country.data if country else ""
+                return (source, title, genre, language, country)
+            except:
+                pass
+        return None
+
+
     def GetOneInstance(self):
         xmltoparse = u'%s\\RadioSure.xml' % self.xmlpath
         xmltoparse = xmltoparse.encode(FSE) if isinstance(xmltoparse, unicode) else xmltoparse
@@ -3909,10 +3946,7 @@ class RadioSure(eg.PluginBase):
             mainWindow = language.getElementsByTagName('MainWindow')
             res['stop'] = mainWindow[0].getElementsByTagName('Stop')[0].firstChild.data            
             res['unmute'] = mainWindow[0].getElementsByTagName('Unmute')[0].firstChild.data            
-            res['stopRec'] = mainWindow[0].getElementsByTagName('StopRecording')[0].firstChild.data
-            #res['play'] = mainWindow[0].getElementsByTagName('Play')[0].firstChild.data            
-            #res['mute'] = mainWindow[0].getElementsByTagName('Mute')[0].firstChild.data            
-            #res['rec'] = mainWindow[0].getElementsByTagName('Recording')[0].firstChild.data            
+            res['stopRec'] = mainWindow[0].getElementsByTagName('StopRecording')[0].firstChild.data           
             return res
 
 
@@ -3943,7 +3977,6 @@ class RadioSure(eg.PluginBase):
         menu, hMenu = self.GetRS_Menu(hwnd)
         if menu:
             menuItems = self.GetItemList(menu, hMenu)
-            #PostMessage(menu, WM_CLOSE, 0, 0)
             strings = self.GetStrings()
             if menuItems and strings:
                 res = [
@@ -3963,7 +3996,7 @@ class RadioSure(eg.PluginBase):
             flags = [item[2] for item in menuItems]
             if True in flags:
                 ix = flags.index(True)
-                return (ix, menuItems[ix][0])
+                return (ix, unicode(menuItems[ix][0].decode(eg.systemEncoding)))
         return (-1, "")
 
 
@@ -4646,7 +4679,7 @@ class RadioSure(eg.PluginBase):
                 plugin = self,
                 )
             return []
-        maxInst = 2 if self.maxFav == 30 else 10
+        maxInst = 2 if (not self.maxFav or self.maxFav == 30) else 10
         if len(oldHwnds) >= maxInst:
             wx.CallAfter(
                 MessageBox,
@@ -4674,6 +4707,7 @@ class RadioSure(eg.PluginBase):
             while i < 100 and hwnds == oldHwnds:
                 i += 1
                 hwnds = HandleRS()
+                sleep(0.1)
             sleep(1.5)
         return list(set(hwnds)-set(oldHwnds))
 
@@ -5396,32 +5430,47 @@ class StartTitlebarObservation(eg.ActionBase):
 
     class text:
         intervalLabel = "Refresh interval (s):"
-        label = "Event suffix:"
-        timeStamp = "Insert timestamp"
+        label = "Tilebar event suffix (empty = no event):"
+        label2 = "Station event suffix (empty = no event):"
+        toolSuffix = """Here you specify the desired event suffix.
+If the string is empty, the event is not triggered."""
 
 
     def __call__(
         self,
         period = 1.0,
         evtName ="titlebar",
+        evtName2 ="station",
     ):
-        if self.plugin.observThread:
-            ot = self.plugin.observThread
-            if ot.isAlive():
-                ot.AbortObservation()
-            del self.plugin.observThread
-        ot = ObservationThread(
-            period,
-            evtName,
-        )
-        ot.start()
-        self.plugin.observThread = ot
+        if evtName or evtName2:
+            if self.plugin.observThread:
+                ot = self.plugin.observThread
+                if ot.isAlive():
+                    ot.AbortObservation()
+                del self.plugin.observThread
+            ot = ObservationThread(
+                period,
+                evtName,
+                evtName2,
+                self.plugin
+            )
+            ot.start()
+            self.plugin.observThread = ot
 
+
+    def GetLabel(
+        self,
+        period = 1.0,
+        evtName ="",
+        evtName2 ="",
+    ):
+        return "%s: %.1fs, %s, %s" % (self.name, period, evtName, evtName2)
 
     def Configure(
         self,
         period = 1.0,
         evtName = "titlebar",
+        evtName2 ="station",
     ):
         panel = eg.ConfigPanel()
         periodNumCtrl = eg.SpinNumCtrl(
@@ -5437,17 +5486,24 @@ class StartTitlebarObservation(eg.ActionBase):
         intervalLbl = wx.StaticText(panel, -1, self.text.intervalLabel)
         textLabel = wx.StaticText(panel, -1, self.text.label)
         textControl = wx.TextCtrl(panel, -1, evtName, size = (200,-1))
+        textControl.SetToolTipString(self.text.toolSuffix)
+        textLabel2 = wx.StaticText(panel, -1, self.text.label2)
+        textControl2 = wx.TextCtrl(panel, -1, evtName2, size = (200,-1))
+        textControl2.SetToolTipString(self.text.toolSuffix)
         AddCtrl = panel.sizer.Add
         AddCtrl(intervalLbl, 0, wx.TOP, 20)
         AddCtrl(periodNumCtrl, 0, wx.TOP, 3)
         AddCtrl(textLabel, 0, wx.TOP, 20)
         AddCtrl(textControl, 0, wx.TOP, 3)
+        AddCtrl(textLabel2, 0, wx.TOP, 20)
+        AddCtrl(textControl2, 0, wx.TOP, 3)
         textLabel.SetFocus()
 
         while panel.Affirmed():
             panel.SetResult(
             periodNumCtrl.GetValue(),
             textControl.GetValue(),
+            textControl2.GetValue(),
         )
 #===============================================================================
 
@@ -5724,9 +5780,9 @@ class ShowMenu(eg.ActionClass):
         hwnd = HandleRS()
         if hwnd:
             if not self.plugin.menuDlg:
-                self.plugin.menuDlg = Menu()
-                self.event = CreateEvent(None, 0, 0, None)
-                wx.CallAfter(self.plugin.menuDlg.ShowMenu,
+                event = CreateEvent(None, 0, 0, None)
+                wx.CallAfter(
+                    Menu,
                     fore,
                     back,
                     foreSel,
@@ -5734,13 +5790,13 @@ class ShowMenu(eg.ActionClass):
                     fontInfo,
                     False,
                     self.plugin,
-                    self.event,
+                    event,
                     monitor,
                     hwnd[0],
                     evtList,
                     (0, 7, 8, 9, 10, 11, 12, 14)[submenu],
                 )
-                eg.actionThread.WaitOnEvent(self.event)
+                eg.actionThread.WaitOnEvent(event)
 
 
     def GetLabel(
@@ -5986,9 +6042,8 @@ class ShowMenu(eg.ActionClass):
             hwnds = HandleRS()
             if hwnds:
                 if not self.plugin.menuDlg:
-                    self.plugin.menuDlg = Menu()
-                    self.event = CreateEvent(None, 0, 0, None)
-                    wx.CallAfter(self.plugin.menuDlg.ShowMenu,
+                    wx.CallAfter(
+                        Menu,
                         foreColourButton.GetValue(),
                         backColourButton.GetValue(),
                         foreSelColourButton.GetValue(),
@@ -5996,13 +6051,13 @@ class ShowMenu(eg.ActionClass):
                         self.fontInfo, 
                         True,
                         self.plugin,
-                        self.event,
+                        CreateEvent(None, 0, 0, None),
                         displayChoice.GetSelection(),
                         hwnds[0],
                         panel.evtList,
                         (0, 7, 8, 9, 10, 11, 12, 14)[subMenuCtrl.GetSelection()]
                     )
-                    eg.actionThread.WaitOnEvent(self.event)
+
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
 
         while panel.Affirmed():
@@ -6028,8 +6083,8 @@ ACTIONS = (
     (Run,"Run","Run RadioSure","Run RadioSure with its default settings.",None),
     (SendMessageActions,"Close","Close window (exit RadioSure)","Close window (exit RadioSure).",1),
     (GetPlayingTitle,"GetPlayingTitle","Get currently playing station/title","Gets the name of currently playing station/title.", None),
-    (StartTitlebarObservation,"StartTitlebarObservation","Start observation of titlebar","Starts observation of titlebar.", None),
-    (StopTitlebarObservation,"StopTitlebarObservation","Stop observation of titlebar","Stops observation of titlebar.", None),
+    (StartTitlebarObservation,"StartTitlebarObservation","Start periodical observation","Starts periodical observation.", None),
+    (StopTitlebarObservation,"StopTitlebarObservation","Stop periodical observation","Stops periodical observation.", None),
     (ShowMenu,"ShowMenu","ShowMenu","ShowMenu.",None),
     (eg.ActionGroup, 'Window', 'Window', 'Window',(
         (SendMessageActions,"Minimize","Minimize window","Minimize window.",2),
@@ -6099,6 +6154,7 @@ ACTIONS = (
         (OpenManager,"OpenManager","Open manager","Open manager.", None),
         (HideManager,"HideManager","Hide manager","Hide manager.", None),
         (GetFavorites,"GetFavorites","Get favorites","Get favorites.", None),
+        (GetMenuItem, "GetFavoritesIndex", "Get last played favorite station", "Get last played favorite station.", 7),
     )),
     (eg.ActionGroup, 'Scheduler', 'Scheduler', 'Scheduler',(
         (OpenScheduler,"OpenScheduler","Open scheduler","Open scheduler.", None),
