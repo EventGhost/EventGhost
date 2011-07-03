@@ -20,6 +20,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.7 by Pako 2011-07-03 19:16 UTC+1
+#     - added option "Trigger an event if the user has moved the selection in the menu"
 # 0.2.6 by Pako 2011-06-27 12:40 UTC+1
 #     - bugfix: problem when any menu action is called too soon after its opening
 # 0.2.5 by Pako 2011-06-24 14:22 UTC+1
@@ -36,7 +38,7 @@
 eg.RegisterPlugin(
     name = "OS Menu",
     author = "Pako",
-    version = "0.2.6",
+    version = "0.2.7",
     kind = "other",
     guid = "{FCF3C7A7-FBC1-444D-B768-9477521946DC}",
     description = u"""<rst>
@@ -91,6 +93,8 @@ SYS_VSCROLL_X = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
 
 class Text:
     picker = "Colour Picker"
+    triggEvt = "Trigger an event if the user has moved the selection in the menu"
+    selMoved = "SelectionMoved"
     showMenu = u'''<rst>The selected monitor shows the menu, created by user.
 
 *Basic rules for the compilation of event string:*
@@ -234,7 +238,7 @@ class MenuGrid(wx.grid.Grid):
 #cls types for ACTIONS list :
 #===============================================================================
 
-class ShowMenu(eg.ActionClass):
+class ShowMenu(eg.ActionBase):
     panel = None
 
     class text:
@@ -286,6 +290,7 @@ class ShowMenu(eg.ActionClass):
         mode = 0,
         foreSel = (180, 180, 180),
         backSel = (75, 75, 75),
+        triggEvt = False
     ):
         if not self.plugin.menuDlg:
             event = CreateEvent(None, 0, 0, None)
@@ -302,7 +307,8 @@ class ShowMenu(eg.ActionClass):
                 eg.ParseString(prefix),
                 monitor,
                 mode,
-                event
+                event,
+                triggEvt
             )
             eg.actionThread.WaitOnEvent(event)
 
@@ -318,6 +324,7 @@ class ShowMenu(eg.ActionClass):
         mode,
         foreSel,
         backSel,
+        triggEvt
     ):
         res = self.name+': '
         for n in range(0,min(3,len(choices))):
@@ -339,6 +346,7 @@ class ShowMenu(eg.ActionClass):
         mode = 0,
         foreSel = (180, 180, 180),
         backSel = (75, 75, 75),
+        triggEvt = False
     ):
         self.choices = choices[:]
         self.fore = fore
@@ -405,6 +413,9 @@ class ShowMenu(eg.ActionClass):
         prefixCtrl = wx.TextCtrl(panel,-1,prefix,size=wx.Size(96,-1))
         osmLbl = wx.StaticText(panel, -1, self.text.osmLabel)
         displayChoice = eg.DisplayChoice(panel, monitor)
+        triggEvtCtrl = wx.CheckBox(panel, -1, self.plugin.text.triggEvt)
+        triggEvtCtrl.SetValue(triggEvt)
+        mainSizer.Add(triggEvtCtrl,0,wx.TOP,10)
         bottomSizer.Add((20,-1),(2, 2))
         bottomSizer.Add((20,-1),(2, 5))
         bottomSizer.Add(labelLbl,(0, 0),(1,1),flag = wx.TOP,border = 8)
@@ -659,7 +670,8 @@ class ShowMenu(eg.ActionClass):
                     prefixCtrl.GetValue(),
                     displayChoice.GetSelection(),
                     modeCtrl.GetSelection(),
-                    CreateEvent(None, 0, 0, None)
+                    CreateEvent(None, 0, 0, None),
+                    triggEvtCtrl.GetValue()
                 )
 
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
@@ -675,10 +687,11 @@ class ShowMenu(eg.ActionClass):
             modeCtrl.GetSelection(),
             foreSelColourButton.GetValue(),
             backSelColourButton.GetValue(),
+            triggEvtCtrl.GetValue()
         )
 #===============================================================================
 
-class CreateMenuFromList(eg.ActionClass):
+class CreateMenuFromList(eg.ActionBase):
     panel = None
 
     class text:
@@ -706,6 +719,7 @@ class CreateMenuFromList(eg.ActionClass):
         mode = 0,
         foreSel = (180, 180, 180),
         backSel = (75, 75, 75),
+        triggEvt = False
     ):
         if not self.plugin.menuDlg:
             try:
@@ -736,7 +750,8 @@ class CreateMenuFromList(eg.ActionClass):
                 eg.ParseString(prefix),
                 monitor,
                 mode,
-                event
+                event,
+                triggEvt
             )
             eg.actionThread.WaitOnEvent(event)
 
@@ -752,6 +767,7 @@ class CreateMenuFromList(eg.ActionClass):
         mode = 0,
         foreSel = (180, 180, 180),
         backSel = (75, 75, 75),
+        triggEvt = False
     ):
         self.fore = fore
         self.back = back
@@ -834,6 +850,9 @@ class CreateMenuFromList(eg.ActionClass):
         prefixCtrl = wx.TextCtrl(panel,-1,prefix,size=wx.Size(96,-1))
         osmLbl = wx.StaticText(panel, -1, self.text.osmLabel)
         displayChoice = eg.DisplayChoice(panel, monitor)
+        triggEvtCtrl = wx.CheckBox(panel, -1, self.plugin.text.triggEvt)
+        triggEvtCtrl.SetValue(triggEvt)
+        mainSizer.Add(triggEvtCtrl,0,wx.TOP,10)
         bottomSizer.Add((30,-1),(2, 2))
         bottomSizer.Add((30,-1),(2, 5))
         bottomSizer.Add(listLbl,(0, 0), (1, 1),flag = wx.TOP,border = 8)
@@ -963,7 +982,8 @@ class CreateMenuFromList(eg.ActionClass):
                             prefixCtrl.GetValue(),
                             displayChoice.GetSelection(),
                             modeCtrl.GetSelection(),
-                            CreateEvent(None, 0, 0, None)
+                            CreateEvent(None, 0, 0, None),
+                            triggEvtCtrl.GetValue()
                         )
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
 
@@ -978,10 +998,11 @@ class CreateMenuFromList(eg.ActionClass):
             modeCtrl.GetSelection(),
             foreSelColourButton.GetValue(),
             backSelColourButton.GetValue(),
+            triggEvtCtrl.GetValue()
         )
 #===============================================================================
 
-class MoveCursor(eg.ActionClass):
+class MoveCursor(eg.ActionBase):
 
     class text:
         step = "Step (1 - 25):"
@@ -1002,7 +1023,7 @@ class MoveCursor(eg.ActionClass):
                 )
 #===============================================================================
 
-class PageUpDown(eg.ActionClass):
+class PageUpDown(eg.ActionBase):
 
     def __call__(self):
         if self.plugin.menuDlg:
@@ -1010,7 +1031,7 @@ class PageUpDown(eg.ActionClass):
             eg.event.skipEvent = True
 #===============================================================================
 
-class OK_Btn(eg.ActionClass):
+class OK_Btn(eg.ActionBase):
 
     def __call__(self):
         if self.plugin.menuDlg:
@@ -1018,7 +1039,7 @@ class OK_Btn(eg.ActionClass):
             eg.event.skipEvent = True
 #===============================================================================
 
-class Num_Btn(eg.ActionClass):
+class Num_Btn(eg.ActionBase):
 
     def __call__(self):
         if self.plugin.menuDlg:
@@ -1026,7 +1047,7 @@ class Num_Btn(eg.ActionClass):
             eg.event.skipEvent = True
 #===============================================================================
 
-class Cancel_Btn(eg.ActionClass):
+class Cancel_Btn(eg.ActionBase):
 
     def __call__(self):
         if self.plugin.menuDlg:
@@ -1034,27 +1055,33 @@ class Cancel_Btn(eg.ActionClass):
             eg.event.skipEvent = True
 #===============================================================================
 
-class Get_Btn (eg.ActionClass):
+class Get_Btn (eg.ActionBase):
 
     class text:
         radiobox = 'Choice of menu attribute'
         boxLabel = 'Label'
         boxEvent = 'Event string'
-        boxBoth  = 'Both'
+        boxIndex = 'Index'
+        boxBoth  = 'All'
         labelGet = 'Get'
 
 
     def __call__(self,val = 0):
         if self.plugin.menuDlg:
             eg.event.skipEvent = True
-            if val < 2:
+            if val < 3:
                 return self.plugin.menuDlg.GetValue()[val]
             else:
                 return self.plugin.menuDlg.GetValue()
 
 
     def GetLabel(self,val):
-        LabelList = (self.text.boxLabel, self.text.boxEvent, self.text.boxBoth)
+        LabelList = (
+            self.text.boxLabel,
+            self.text.boxEvent,
+            self.text.boxIndex,
+            self.text.boxBoth
+        )
         return self.text.labelGet+' '+LabelList[val]
 
 
@@ -1065,8 +1092,13 @@ class Get_Btn (eg.ActionClass):
             -1,
             self.text.radiobox,
             (0,0),
-            (200,90),
-            choices=[self.text.boxLabel, self.text.boxEvent,self.text.boxBoth],
+            (200, 104),
+            choices=[
+                self.text.boxLabel,
+                self.text.boxEvent,
+                self.text.boxIndex,
+                self.text.boxBoth
+            ],
             style=wx.RA_SPECIFY_ROWS
         )
         radioBoxItems.SetSelection(val)
@@ -1101,8 +1133,9 @@ ACTIONS = (
 )
 #===============================================================================
 
-class OSM(eg.PluginClass):
+class OSM(eg.PluginBase):
     menuDlg = None
+    text = Text
 
     def __init__(self):
         self.AddActionsFromList(ACTIONS)
@@ -1123,7 +1156,8 @@ class Menu(wx.Frame):
         prefix,
         monitor,
         mode,
-        event
+        event,
+        triggEvt
 ):
         wx.Frame.__init__(
             self,
@@ -1143,6 +1177,8 @@ class Menu(wx.Frame):
         self.prefix  = prefix
         self.monitor = monitor
         self.mode    = mode
+        self.triggEvt = triggEvt
+        self.sel = 0
 
     #def ShowMenu(self):
         self.SetBackgroundColour((0, 0, 0))
@@ -1193,6 +1229,7 @@ class Menu(wx.Frame):
         mainSizer.Add(self.eventChoiceCtrl, 0, wx.EXPAND)
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.Bind(wx.grid.EVT_GRID_CMD_CELL_LEFT_DCLICK, self.onDoubleClick, self.eventChoiceCtrl)
+        self.Bind(wx.grid.EVT_GRID_CMD_CELL_LEFT_CLICK, self.onClick, self.eventChoiceCtrl)
         self.Bind(wx.EVT_CHAR_HOOK, self.onFrameCharHook)
 
         if self.flag:
@@ -1205,6 +1242,24 @@ class Menu(wx.Frame):
         SetEvent(event)
 
 
+
+    def testSelChange(self, sel = None):
+        if sel is None:
+            sel = self.eventChoiceCtrl.GetSelection()
+        if sel != self.sel:
+            self.sel = sel
+            if self.triggEvt:
+                eg.TriggerEvent(
+                    self.plugin.text.selMoved,
+                    prefix = self.prefix,
+                    payload = (
+                        self.choices[sel][0],
+                        self.choices[sel][1],
+                        sel
+                    )
+                )
+
+
     def PageUpDown(self, direction):
         max=len(self.choices)
         if max > 0:
@@ -1212,17 +1267,23 @@ class Menu(wx.Frame):
                 self.eventChoiceCtrl.MovePageDown()
             else:
                 self.eventChoiceCtrl.MovePageUp()
+        self.testSelChange()
 
 
     def MoveCursor(self, step):
         max=len(self.choices)
         if max > 0:
             self.eventChoiceCtrl.MoveCursor(step)
+        self.testSelChange()
 
 
     def GetValue(self):
         sel = self.eventChoiceCtrl.GetSelection()
-        return self.choices[sel]
+        return (
+            self.choices[sel][0],
+            self.choices[sel][1],
+            sel
+        )
 
 
     def SendEventSel(self, sel):
@@ -1258,12 +1319,22 @@ class Menu(wx.Frame):
             self.SendEventSel(row)
         elif keyCode == wx.WXK_ESCAPE:
             self.Close()
-        elif keyCode == wx.WXK_UP or keyCode == wx.WXK_NUMPAD_UP:
+        elif keyCode in (wx.WXK_UP, wx.WXK_NUMPAD_UP):
             self.MoveCursor(-1)
-        elif keyCode == wx.WXK_DOWN or keyCode == wx.WXK_NUMPAD_DOWN:
+        elif keyCode in (wx.WXK_DOWN, wx.WXK_NUMPAD_DOWN):
             self.MoveCursor(1)
+        elif keyCode in (wx.WXK_PAGEUP, wx.WXK_NUMPAD_PAGEUP):
+            self.PageUpDown(-1)
+        elif keyCode in (wx.WXK_PAGEDOWN, wx.WXK_NUMPAD_PAGEDOWN):
+            self.PageUpDown(1)
         else:
             event.Skip()
+
+
+    def onClick(self, event):
+        row = event.GetRow()
+        self.testSelChange(row)
+        event.Skip()
 
 
     def onDoubleClick(self, event):
