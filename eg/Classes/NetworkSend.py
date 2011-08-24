@@ -17,6 +17,7 @@
 import socket
 import locale
 from hashlib import md5
+import wx
 
 ENCODING = locale.getdefaultlocale()[1]
 
@@ -26,7 +27,19 @@ def NetworkSend(host, port, password, eventString, payload=None):
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.settimeout(2.0)
     try:
-        sock.connect((host, port))
+        try:
+            sock.connect((host, port))
+        except Exception, e:
+            if e[0] == 10061:
+                app = wx.PySimpleApp()
+                win = wx.MessageBox(
+                    '%s.\n\nMaybe the destination computer has not installed\nthe plugin "Network event receiver" ?' % e[1],
+                    caption = "EventGhost - warning",
+                    style=wx.ICON_EXCLAMATION|wx.OK,
+                    parent = None
+                )
+            sock.close()
+            return False
         sock.settimeout(1.0)
         # First wake up the server, for security reasons it does not
         # respond by it self it needs this string, why this odd word ?
