@@ -30,6 +30,7 @@ class Text(eg.TranslatableStrings):
     HideOnClose = "Minimize to system tray on close"
     UseAutoloadFile = "Autoload file"
     UseFixedFont = "Use fixed font in the logger"
+    propResize = "Use proportional resize"
     LanguageGroup = "Language"
     confirmRestart = (
         "Language changes only take effect after restarting the application."
@@ -91,6 +92,10 @@ class OptionsDialog(eg.TaskletDialog):
             config.useFixedFont,
             text.UseFixedFont
         )
+        propResizeCtrl = page1.CheckBox(
+            config.propResize,
+            text.propResize
+        )
         def OnFixedFontBox(evt):
             font = eg.document.frame.treeCtrl.GetFont()
             #if useFixedFontCtrl.GetValue():
@@ -146,6 +151,7 @@ class OptionsDialog(eg.TaskletDialog):
                 (startWithWindowsCtrl, 0, flags),
                 (hideOnCloseCtrl, 0, flags),
                 (useFixedFontCtrl, 0, flags),
+                (propResizeCtrl, 0, flags),
                 #(checkUpdateCtrl, 0, flags),
                 (memoryLimitSizer, 0, flags),
                 (confirmDeleteCtrl, 0, flags),
@@ -199,6 +205,7 @@ class OptionsDialog(eg.TaskletDialog):
 
             config.hideOnClose = hideOnCloseCtrl.GetValue()
             config.useFixedFont = useFixedFontCtrl.GetValue()
+            config.propResize = propResizeCtrl.GetValue()
             #config.checkUpdate = checkUpdateCtrl.GetValue()
             config.limitMemory = bool(memoryLimitCtrl.GetValue())
             config.limitMemorySize = memoryLimitSpinCtrl.GetValue()

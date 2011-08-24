@@ -25,7 +25,7 @@ EVENT_ICON = eg.EventItem.icon
 ERROR_ICON = eg.Icons.ERROR_ICON
 
 
-class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
+class LogCtrl(wx.ListCtrl):
     """Implementation of a ListCtrl with a circular buffer."""
 
     def __init__(self, parent):
@@ -49,7 +49,6 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             df = self.GetFont()
             font = wx.Font(df.GetPointSize(), wx.DEFAULT, wx.NORMAL, wx.NORMAL, False, "Courier New")
             self.SetFont(font)
-        listmix.ListCtrlAutoWidthMixin.__init__(self)
         self.SetImageList(eg.Icons.gImageList, wx.IMAGE_LIST_SMALL)
 
         sysColour = eg.colour.windowBackground

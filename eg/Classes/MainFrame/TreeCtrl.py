@@ -314,7 +314,8 @@ class EditControlProxy(object):
         self.realControl.Paste()
 
 
-    def OnCmdClear(self):
+    #def OnCmdClear(self):
+    def OnCmdDelete(self): #Pako
         start, end = self.realControl.GetSelection()
         if end - start == 0:
             end += 1
