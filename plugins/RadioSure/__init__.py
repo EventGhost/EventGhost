@@ -1,4 +1,4 @@
-version="0.2.19"
+version="0.2.20"
 
 # plugins/RadioSure/__init__.py
 #
@@ -22,6 +22,8 @@ version="0.2.19"
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.20 by Pako 2011-08-24 09:12 UTC+1
+#     - bugfix - wrong stored last position of manager and scheduler
 # 0.2.19 by Pako 2011-06-27 13:54 UTC+1
 #     - added action "Get last played favorite station" (retrieved from RS menu)
 #     - action name "Start (Stop) observation of titlebar" changed to
@@ -1783,9 +1785,10 @@ class ManagerDialog(wx.Dialog):
     def onClose(self, evt):
         hwnd = self.GetHandle()
         wp = GetWindowPlacement(hwnd)[4]
+        cdr = wx.GetClientDisplayRect()
         #Note: GetPosition() return (-32000, -32000), if window is minimized !!!
         plcmnt = (
-            (wp[0], wp[1]),                                              # pos
+            (wp[0] + cdr[0], wp[1] + cdr[1]),                            # pos
             (wp[2] - wp[0], wp[3] - wp[1]),                              # size
             (self.GetMinSize().GetWidth(),self.GetMinSize().GetHeight()) # min size
         ) 
@@ -3000,7 +3003,8 @@ class SchedulerDialog(wx.Dialog):
         hwnd = self.GetHandle()
         wp = GetWindowPlacement(hwnd)[4]
         #Note: GetPosition() return (-32000, -32000), if window is minimized !!!
-        pos = (wp[0], wp[1])
+        cdr = wx.GetClientDisplayRect()
+        pos = (wp[0] + cdr[0], wp[1] + cdr[1])
         if pos != ConfigData.pos:
             ConfigData.pos = pos
             #if not eg.document.IsDirty():
