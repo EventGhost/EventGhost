@@ -63,6 +63,10 @@ BUTTONS1 = {
     (3, 0, 9, 0, 0, 0, 0, 0): "FastForward",
     (3, 0, 16, 0, 0, 0, 0, 0): "Dvd",
     (12, 0, 40, 0, 0, 0, 0, 0): "Start",
+    (3, 0, 23, 0, 0, 0, 0, 0): "Yellow",
+    (1, 0, 16, 0, 0, 0, 0, 0): "Blue",
+    (1, 0, 12, 0, 0, 0, 0, 0): "Green",	
+    (1, 0, 8, 0, 0, 0, 0, 0): "Red",
 }
 
 BUTTONS2 = {
@@ -75,6 +79,9 @@ BUTTONS2 = {
     (2, 0, 0, 1, 85): "Stop",
     (3, 2, 85, 85, 85): "Power",
     (2, 2, 0, 0, 85): "Internet",
+    (1, 2, 0, 0, 0): "RightClickInfo",
+    (1, 1, 0, 0, 0): "LeftClick",
+    (1, 0, 0, 0, 0): "MouseButtonUp",
 }
 
 
@@ -100,7 +107,6 @@ class Auvisio(eg.PluginBase):
             self.TriggerEnduringEvent(BUTTONS1[data])
         else:
             self.EndLastEvent()
-            print data
 
 
     def Callback2(self, data):
@@ -113,10 +119,11 @@ class Auvisio(eg.PluginBase):
                 if y > 127:
                     y -= 256
                 degree = (round((atan2(x, -y) / pi) * 180)) % 360
-                print degree
+                self.TriggerEnduringEvent('MouseDir', degree)
         if data in BUTTONS2:
-            self.TriggerEnduringEvent(BUTTONS2[data])
+            if data[0] == 1 and data[1] == 0:
+                self.TriggerEvent(BUTTONS2[data])
+            else:
+                self.TriggerEnduringEvent(BUTTONS2[data])
         else:
             self.EndLastEvent()
-            print data
-
