@@ -91,6 +91,7 @@ class Config(Section):
     logMacros = True
     hideOnClose = False
     useFixedFont = False
+    propResize = True
     onlyLogAssigned = False
     autoloadFilePath = False
     limitMemory = False

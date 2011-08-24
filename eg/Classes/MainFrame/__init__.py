@@ -68,6 +68,7 @@ class Config(eg.PersistentData):
     expandOnEvents = False
     perspective = None
     perspective2 = None
+    ratio = 2.0
 
 
 
@@ -102,6 +103,8 @@ class MainFrame(wx.Frame):
         self.auiManager = auiManager
 
         self.logCtrl = self.CreateLogCtrl()
+        self.corConst = self.logCtrl.GetWindowBorderSize()[0] + \
+            wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
         self.treeCtrl = self.CreateTreeCtrl()
         self.toolBar = self.CreateToolBar()
         self.menuBar = self.CreateMenuBar()
@@ -121,6 +124,9 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_ICONIZE, self.OnIconize)
         self.Bind(wx.EVT_MENU_OPEN, self.OnMenuOpen)
         self.Bind(wx.EVT_CLOSE, self.OnClose)
+        self.mainSizeFlag = True
+        self.ratioLock = False
+        self.ratio = Config.ratio
         self.Bind(wx.EVT_SIZE, self.OnSize)
         self.Bind(wx.EVT_MOVE, self.OnMove)
         self.Bind(wx.aui.EVT_AUI_PANE_CLOSE, self.OnPaneClose)
@@ -178,6 +184,7 @@ class MainFrame(wx.Frame):
             flag = not checkBox.GetValue()
             checkBox.SetValue(flag)
             eg.config.onlyLogAssigned = flag
+            self.statusBar.SetCheckBoxColour(flag)
 
         toggleOnlyLogAssignedId = wx.NewId()
         wx.EVT_MENU(self, toggleOnlyLogAssignedId, ToggleOnlyLogAssigned)
@@ -213,6 +220,7 @@ class MainFrame(wx.Frame):
             ]
         )
         self.SetAcceleratorTable(self.acceleratorTable)
+        self.logCtrl.Bind(wx.EVT_SIZE, self.onLogCtrlSize)
         eg.EnsureVisible(self)
 
 
@@ -468,7 +476,7 @@ class MainFrame(wx.Frame):
 
     def CreateTreeCtrl(self):
         #treeCtrl = TreeCtrl(self, document=self.document)
-        treeCtrl = TreeCtrl(self, document=self.document)
+        treeCtrl = TreeCtrl(self, document=self.document)        
         self.auiManager.AddPane(
             treeCtrl,
             wx.aui.AuiPaneInfo().
@@ -479,11 +487,11 @@ class MainFrame(wx.Frame):
                 Dockable(True).
                 MaximizeButton(True).
                 Caption(" " + Text.Tree.caption).
-                CloseButton(False)
+                CloseButton(False)      
         )
         self.auiManager.Update()
         treeCtrl.SetFocus()
-        return treeCtrl
+        return treeCtrl          
 
 
     def CreateLogCtrl(self):
@@ -551,10 +559,83 @@ class MainFrame(wx.Frame):
             self.auiManager.LoadPerspective(Config.perspective2)
 
 
-    def OnSize(self, event):
-        """ Handle wx.EVT_SIZE """
+    def GetPanelDirection(self, panel):
+        info = self.auiManager.SavePaneInfo(panel)
+        pos = info.find(";dir=") + 5
+        return info[pos]
+        
+
+    def UpdateRatio(self):
+        self.logCtrl.SetColumnWidth(
+            0,
+            self.logCtrl.GetSizeTuple()[0] - self.corConst
+        )
+        if not eg.config.propResize:
+            return
+        panel = self.auiManager.GetPane("logger")
+        if panel.IsDocked():
+            if self.ratioLock:
+                self.ratioLock = False
+                self.UpdateSize()
+                #self.UpdateSize(False)
+            dir = self.GetPanelDirection(panel)
+            coord = None
+            if dir in ("2","4"):
+                coord = 0
+            elif dir in ("1","3"):
+                coord = 1
+            if coord is not None:
+                l_val = self.logCtrl.GetSizeTuple()[coord]
+                t_val = self.treeCtrl.GetSizeTuple()[coord]
+                self.ratio = float(t_val)/float(l_val)
+                Config.ratio = self.ratio
+                self.auiManager.Update()
+        else:
+            self.ratioLock = True
+
+
+    def onLogCtrlSize(self, evt):
+        if self.mainSizeFlag:
+            wx.CallAfter(self.UpdateRatio)
+        evt.Skip()
+
+
+    def UpdateSize(self):
+        if eg.config.propResize:
+            panel = self.auiManager.GetPane("logger")
+            if panel.IsDocked():
+                s = self.auiManager.SavePerspective()
+                dir = self.GetPanelDirection(panel)
+                coord = None
+                if dir in ("2","4"):
+                    coord = 0
+                elif dir in ("1","3"):
+                    coord = 1
+                if coord is not None:
+                    l_val =self.logCtrl.GetSizeTuple()[coord]
+                    t_val = self.treeCtrl.GetSizeTuple()[coord]
+                    c_val = self.GetClientSizeTuple()[coord]
+                    k = c_val - l_val - t_val      
+                    l_val = int((c_val-k)/(1 + self.ratio))
+                    #t_val = (c_val-k)-l_val
+                    b1 = s.find("|dock_size(%s," % dir) + 1
+                    b2 = s.find("=",b1) + 1
+                    e = s.find("|",b1)
+                    s = "%s%i%s" % (s[:b2], l_val, s[e:])
+                    self.auiManager.LoadPerspective(s, True)
+                    self.logCtrl.SetColumnWidth(
+                        0,
+                        self.logCtrl.GetSizeTuple()[0] - self.corConst
+                    )
+        self.mainSizeFlag = True
         if not self.IsMaximized() and not self.IsIconized():
             Config.size = self.GetSizeTuple()
+
+
+    def OnSize(self, event):
+        """ Handle wx.EVT_SIZE """
+        self.mainSizeFlag = False
+        wx.CallAfter(self.UpdateSize)
         event.Skip()
 
 
@@ -722,6 +803,8 @@ class MainFrame(wx.Frame):
         focus = self.FindFocus()
         if focus is self.treeCtrl:
             getattr(self.document, command[2:])()
+        elif isinstance(focus, wx.TextCtrl):                   #Added by Pako
+            getattr(focus.GetParent().editControl, command)()
         else:
             getattr(focus, command)()
 
