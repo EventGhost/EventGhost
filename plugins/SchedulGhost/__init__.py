@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-version="0.1.3"
+version="0.1.4"
 
 # plugins/SchedulGhost/__init__.py
 #
@@ -22,6 +22,8 @@ version="0.1.3"
 #
 # Revision history:
 # -----------------
+# 0.1.4 by Pako 2011-08-24 09:15 UTC+1
+#     - bugfix - wrong stored last position of scheduler frame
 # 0.1.3 by Pako 2011-06-05 18:53 UTC+1
 #     - Used eg.EVT_VALUE_CHANGED instead of EVT_BUTTON_AFTER 
 # 0.1.2 by Pako 2011-02-12 10:03 GMT+1
@@ -1593,7 +1595,8 @@ class schedulerDialog(wx.Dialog):
     def onClose(self, evt):
         hwnd = self.GetHandle()
         wp = GetWindowPlacement(hwnd)[4]
-        pos = (wp[0], wp[1])
+        cdr = wx.GetClientDisplayRect()
+        pos = (wp[0] + cdr[0], wp[1] + cdr[1])
         if pos != ConfigData.pos:
             ConfigData.pos = pos
         self.plugin.dialog = None
