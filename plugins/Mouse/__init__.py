@@ -65,6 +65,7 @@ class MouseThread(Thread):
     accelerationFactor = 0.003
     accelerationStopFactor = 0.1
     maxTicks = 5
+    iniSpeed = 0.06
     yRemainder = 0
     xRemainder = 0
     leftButtonDown = False
@@ -105,7 +106,8 @@ class MouseThread(Thread):
             ticks = 10
             if self.speed == 0:
                 self.currentAngle = self.newAngle
-                self.speed = 0.06
+                self.speed = self.iniSpeed
+                #self.speed = 0.06
             else:
                 diff = self.newAngle - self.currentAngle
                 if diff > pi:
