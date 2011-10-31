@@ -32,8 +32,14 @@ class EventGhostCom:
     _reg_clsid_ = "{7EB106DC-468D-4345-9CFE-B0021039114B}"
     _reg_clsctx_ = pythoncom.CLSCTX_LOCAL_SERVER
 
-    def TriggerEvent(self, eventString, payload=None):
-        eg.TriggerEvent(eventString, payload)
+    def TriggerEvent(self, eventString, payload=None, prefix=None):
+        kwargs = {}
+        if payload:
+            kwargs['payload'] = payload
+        if prefix:
+            kwargs['prefix'] = prefix
+        eg.TriggerEvent(eventString, **kwargs)
+
 
 
     def BringToFront(self):
