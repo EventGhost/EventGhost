@@ -19,7 +19,7 @@ different ways:
     
     <form action="https://www.paypal.com/cgi-bin/webscr" method="post">
     <input type="hidden" name="cmd" value="_donations">
-    <input type="hidden" name="business" value="donations@eventghost.org">
+    <input type="hidden" name="business" value="donations@eventghost.net">
     <input type="hidden" name="item_name" value="Donation to the EventGhost Project">
     <input type="hidden" name="no_shipping" value="1">
     <input type="hidden" name="return" value="http://www.eventghost.net/">
