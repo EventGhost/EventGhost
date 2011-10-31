@@ -45,6 +45,7 @@ eg.RegisterPlugin(
     version = "1.0",
     kind = "program",
     guid = "{C5E2609E-C1C4-4432-A532-EDA79A7EE41D}",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=3498", 
     canMultiLoad = True,
     createMacrosOnAdd = True,
     icon = (
@@ -76,195 +77,349 @@ eg.RegisterPlugin(
 ===================================================================
 
  When the SendMessage interface is used, the message number is returned
-on the "WParam" value and the message content is returned on the "LParam"
-value.  If the LParam contain a string, it is stored as an ATOM String.
+ on the "WParam" value and the message content is returned on the "LParam"
+ value.  If the LParam contain a string, it is stored as an ATOM String.
 
-When the TCP interface is used, the message number is always returned/sent
-as a 4-digit code. The message content is seperated by a space character
-following the message number.  All content is string based and UTF-8
-encoded to preserve country specific text codes.
+ When the TCP interface is used, the message number is always returned/sent
+ as a 4-digit code. The message content is separated by a space character
+ following the message number.  All content is string based and UTF-8
+ encoded to preserve country specific text codes.
 
-When sending Zoom Player TCP commands, make sure to terminate each
-command with CRLF (Ascii #13#10)..
+ When sending Zoom Player TCP commands, make sure to terminate each
+ command with CRLF (Ascii #13#10)..
 
-The default TCP/IP port is 4769, but a user can change it under
-Advanced Options / Values / Interface.
+ The default TCP/IP port is 4769, but a user can change it under
+ Advanced Options / Values / Interface.
 
-External Messages (ZP -> Program, TCP/IP or SendMessage):
+ External Messages (ZP -> Program, TCP/IP or SendMessage):
 
-[WParam]                             | [LParam]
--------------------------------------+----------------------------------------------
-0000 - Application Name              | String describing the Application
-0001 - Application Version           | String with the version text
-1000 - State Change                  | 0  - Closed
-                                       1  - Stopped (doesn't apply to DVD,
-                                                     DVD Stop = Closed)
-                                       2  - Paused
-                                       3  - Playing
-1010 - Current Fullscreen State      | 0  - Windowed
-                                       1  - Fullscreen
-1020 - Current FastForward State     | 0  - Disabled
-                                       1  - Enabled
-1021 - Current Rewind State          | 0  - Disabled
-                                       1  - Enabled
-1100 - TimeLine update               | String containing timeline data
-1110 - Current Duration              | Current Duration in milliseconds
-1120 - Current Position              | Current Position in milliseconds
-1200 - OSD Message                   | String containing the OSD message
-1201 - OSD Message Off               | No value, message just tells that the OSD
-                                       has disappeared
-1300 - Current Play Mode             | 0  - DVD Mode
-                                       1  - Media Mode
-                                       2  - Audio Mode
-1310 - TV/PC Mode                    | 0  - PC Mode
-                                       1  - TV Mode (unused)
-1400 - DVD Title Change              | Current Title
-1401 - DVD Title Count               | Number of Titles
-1410 - DVD Domain Change             | See EC_DVD_DOMAIN_CHANGE in DirectX SDK
-1420 - DVD Menu Mode                 | 0  - Not in a Menu
-                                     | 1  - In a Menu
-1450 - DVD Unique String             | Returns a unique DVD indentifer
-1500 - DVD Chapter Change            | Current Chapter
-1501 - DVD Chapter Count             | Number of Chapters
-1600 - DVD Audio Change              | Current Audio Track
-1601 - DVD Audio Count               | Number of Audio Tracks
-1602 - DVD Audio Name                | Contains the name of the Audio track and a
-                                       padded number for example "001 5.1 AC3"
-1700 - DVD Sub Change                | Current Subtitle Track
-1701 - DVD Sub Count                 | Number of Subtitle Tracks
-1702 - DVD Audio Name                | Contains the name of the Subtitle track and a
-                                       padded number for example "001 5.1 AC3"
-1750 - DVD Angle Change              | Current Angle
-1751 - DVD Angle Count               | Number of Angles in the DVD Title
-1800 - Currently Loaded File         | String containing file name
-1810 - Current Play List             | String containing the Zoom Player Play List
-                                       structure.  Each entry is separated by the
-                                       ">" character.  Each entry is sub-divided
-                                       into additional information:
-                                       |N .. |n - Name
-                                       |E .. |e - Extension
-                                       |D .. |d - Date
-                                       |S .. |s - Size
-                                       |P .. |p - Path
-                                       |R .. |r - Duration
-                                       |F .. |f - Forced Duration
-                                       It is possible addtional tags will be used
-                                       in future version, so code safely.
-1855 - End of File                   | End of file has been reached
-1900 - File PlayList Pos             | String containing file
-                                       position in play list
-2000 - Video Resolution              | String containing the
-                                       video resolution (if there is one)
-2100 - Video Frame Rate              | String containing the
-                                       video frame rate (if there is one)
-2200 - AR Change                     | String containing the AR String
-                                       (same as OSD message)
-2210 - DVD AR Mode Change            | 0  - Unknown
-                                       1  - Full-Frame
-                                       2  - Letterbox
-                                       3  - Anamorphic
-2300 - Current Audio Volume          | The current Audio Volume
-2400 - Media Content Tags            | Returns Media Content Strings
-                                       (ID3/APE/WMA/Etc... Tags)
-2500 - A CD/DVD Was Inserted         | Returns path to drive the disc was inserted to
-3000 - ZP Error Message              | String of error messsage
-                                       Note that there can be multiple errors
-                                       appearing in sequence, only the last
-                                       error may be visible by the user.
-3100 - Nav Dialog Opened             | A Navigator Dialog has opened
-                                        0 - Blanking Navigator
-                                        1 - Chapter Navigator
-                                        2 - Context Navigator
-                                        3 - File Navigator
-                                        4 - GoTo Navigator
-                                        5 - Media Library Navigator
-                                        6 - MouseWheel Navigator
-                                        7 - Color Control Navigator
-                                        8 - Play List Navigator
-                                        9 - Resize Navigator
-                                       10 - Station Navigator
-                                       11 - Web URL Navigator
-3110 - Nav Dialog Closed             | A Navigator Dialog has closed
-                                       (Values are the same as #3100)
-3200 - Screen Saver Mode             | The ZP Screen Saver has:
-                                       0 - Started
-                                       1 - Ended
-5100 - ZP Function Called            | Value contains name of function
-5110 - ZP ExFunction Called          | Value contains name of function
-5120 - ZP ScanCode Called            | Value contains ScanCode.
+ [WParam]                             | [LParam]
+ -------------------------------------+----------------------------------------------
+ 0000 - Application Name              | String describing the Application
+ 0001 - Application Version           | String with the version text
+ 0100 - Ping                          | Result of a call to message 0100,
+                                        indicating the player is responsive
+ 1000 - State Change                  | 0  - Closed
+                                        1  - Stopped (doesn't apply to DVD,
+                                                      DVD Stop = Closed)
+                                        2  - Paused
+                                        3  - Playing
+ 1010 - Current Fullscreen State      | 0  - Windowed
+                                        1  - Fullscreen
+ 1020 - Current FastForward State     | 0  - Disabled
+                                        1  - Enabled
+ 1021 - Current Rewind State          | 0  - Disabled
+                                        1  - Enabled
+ 1100 - Position update               | String containing media [Position / Duration],
+                                        For example:
+                                        00:00:12 / 01:02:35
+ 1110 - Current Duration              | Current Duration in milliseconds
+ 1120 - Current Position              | Current Position in milliseconds
+ 1130 - Current Frame Rate (realtime) | Current Realtime Frame Rate in Frames per second (FPS)
+                                        Only works with DirectShow based content playback
+ 1140 - Estimated Frame Rate          | Estimated Frame Rate in Frames Per Second (FPS)
+                                        Note, some formats don't have a frame rate so the returned
+                                        value is an estimate.
+ 1200 - OSD Message                   | String containing the OSD message
+ 1201 - OSD Message Off               | No value, message just tells that the OSD window
+                                        has disappeared
+ 1300 - Current Play Mode             | 0  - DVD Mode
+                                        1  - Media Mode
+                                        2  - Audio Mode
+ 1310 - TV/PC Mode                    | 0  - PC Mode
+                                        1  - TV Mode (unused)
+ 1400 - DVD Title Change              | Current Title
+ 1401 - DVD Title Count               | Number of Titles
+ 1410 - DVD Domain Change             | See EC_DVD_DOMAIN_CHANGE in DirectX SDK
+ 1420 - DVD Menu Mode                 | 0  - Not in a Menu
+                                      | 1  - In a Menu
+ 1450 - DVD Unique String             | Returns a unique DVD indentifer
+ 1500 - DVD Chapter Change            | Current Chapter
+ 1501 - DVD Chapter Count             | Number of Chapters
+ 1600 - DVD/Media Active Audio Track  | Current Audio Track Index
+ 1601 - DVD/Media Audio Track Count   | Number of Audio Tracks
+ 1602 - DVD Audio Name                | Contains the name of the Audio track and a
+                                        padded number for example "001 5.1 AC3"
+ 1700 - DVD/Media Active Sub          | Current Subtitle Track
+ 1701 - DVD/Media Sub Count           | Number of Subtitle Tracks
+ 1702 - DVD Sub Name                  | Contains the name of the Subtitle track and a
+                                        padded number for example "001 5.1 AC3"
+ 1704 - DVD Sub Disabled              | 0 - Sub Visible
+                                      | 1 - Sub Hidden
+ 1750 - DVD Angle Change              | Current Angle
+ 1751 - DVD Angle Count               | Number of Angles in the DVD Title
+ 1800 - Currently Loaded File         | String containing file name
+ 1810 - Current Playlist              | String containing the Zoom Player Playlist
+                                        structure.  Each entry is separated by the ">"
+                                        character and is further sub-divided
+                                        into additional sections in this structure:
+                                        |T .. |t - Title
+                                        |N .. |n - Name
+                                        |E .. |e - Extension
+                                        |D .. |d - Date
+                                        |S .. |s - Size
+                                        |P .. |p - Path
+                                        |R .. |r - Duration
+                                        |F .. |f - Forced Duration
+                                        It is possible addtional tags will be used
+                                        in future version, so code safely.
+ 1811 - Playlist Count/Change         | Triggered when the playlist is modified and returns the
+                                        Number of items in updated Playlist.
+ 1855 - End of File                   | End of file has been reached
+ 1900 - File PlayList Pos             | String containing file position in playlist
+ 1920 - Playlist Cleared Ack.         | A notification that the playlist has been cleared
+ 1950 - A Play List file was removed  | String containing the file name
+ 2000 - Video Resolution              | String containing the
+                                        video resolution (if there is one)
+ 2100 - Video Frame Rate              | String containing the
+                                        video frame rate (if there is one)
+ 2200 - AR Change                     | String containing the AR String
+                                        (same as OSD message)
+ 2210 - DVD AR Mode Change            | 0  - Unknown
+                                        1  - Full-Frame
+                                        2  - Letterbox
+                                        3  - Anamorphic
+ 2300 - Current Audio Volume          | The current Audio Volume
+ 2400 - Media Content Tags            | Returns Media Content Strings
+                                        (ID3/APE/WMA/Etc... Tags)
+ 2500 - A CD/DVD Was Inserted         | Returns path to drive the disc was inserted to
+ 2611 - Video Display Area X-Ofs      | Integer Value
+ 2621 - Video Display Area Y-Ofs      | Integer Value
+ 2631 - Video Display Area Width      | Integer Value
+ 2641 - Video Display Area Height     | Integer Value
+ 2700 - Play Rate Changed             | In Media Mode the Fast Play/Slow Motion Rate.
+                                        In DVD Mode the Fast Forward/Slow Motion/Rewind Rate.
+                                        Value is play rate multiplied by 1000.  For example:
+                                        A value of "1500" means a play rate of "1.5".
+                                        If you call a function and get this message with the
+                                        play rate value unchanged, it means the function failed
+                                        to change the play rate.
+ 2710 - Random Play State             | 0 - Disabled
+                                        1 - Enabled
+ 3000 - ZP Error Message              | String of error messsage
+                                        Note that there can be multiple errors
+                                        appearing in sequence, only the last
+                                        error may be visible by the user.
+ 3100 - Nav Dialog Opened             | A Navigator Dialog has opened
+                                         0 - Blanking Navigator
+                                         1 - Chapter Navigator
+                                         2 - Context Navigator
+                                         3 - File Navigator
+                                         4 - GoTo Navigator
+                                         5 - Media Library Navigator
+                                         6 - MouseWheel Navigator
+                                         7 - Color Control Navigator
+                                         8 - Playlist Navigator
+                                         9 - Resize Navigator
+                                        10 - Station Navigator
+                                        11 - Web URL Navigator
+                                        12 - Main Navigator
+                                        13 - Media Library Selection Navigator
+                                        14 - Virtual Keyboard Input Navigator
+                                        15 - Equalizer Navigator
+                                        16 - Station Navigator
+                                        17 - Confirmation Navigator
+                                        18 - Play History Navigator
+                                        19 - Navigation Style Navigator
+                                        20 - Download Navigator
+                                        21 - Information Navigator
+ 3110 - Nav Dialog Closed             | A Navigator Dialog has closed
+                                        (Values are the same as #3100)
+ 3200 - Screen Saver Mode             | The ZP Screen Saver has:
+                                        0 - Started
+                                        1 - Ended
+ 4000 - Virtual Keyboard Input Result | This message contains 3 parameters separated by the
+                                        "|" character.
+                                        The first parameter contains a value of "0" (fail) or
+                                        "1" (success).
+                                        The second parameter contains the unique text identifier
+                                        used in the initial 4000 call.  In the cases where the
+                                        call was originated from within Zoom Player, the unique
+                                        identifier is always prefixed by "vk", for example "vkRename".
+                                        The third parameter contains the user entered UTF8 encoded
+                                        text string.
+ 5100 - ZP Function Called            | Value contains name of function
+ 5110 - ZP ExFunction Called          | Value contains name of function
+ 5120 - ZP ScanCode Called            | Value contains ScanCode.
+
+ 6000 - Shared Items List             | Value contains a list of files and folder returned
+                                        by the previous 6000 call.  The returned format is
+                                        the same as message 1810.
+ 6010 - Add Shared files ack.         | This messages acknowledges that a call to message 6010
+                                        has finished processing.
+ 9000 - Flash Mouse Click             | Used to indicate a screen position was clicked if
+                                        when interactive flash mode is enabled.
 
 
-External Messages (Program -> ZP, TCP/IP only)
-Messages that contain parameters should be space seperated,
-for example: "5100 fnPlay"
-and a comma used to seperate multiple parameters,
-for example: "5110 exSetAR,1".
 
-0000 - Get Application Name          | Returns 0000 message
-0001 - Get Version                   | Returns 0001 message
-1000 - Get Play State                | Returns 1000 message
-1010 - Get Fullscreen State          | Returns 1010 message
-1110 - Get Current Duration          | Returns 1110 message
-1120 - Get Current Position          | Returns 1120 message
-1200 - Show a PopUp OSD Text         | Parameter is a UTF8 encoded text to be
-                                       shown as a PopUp OSD
-1201 - Temp Disable PopUp OSD        | Temporarily Disables the PopUp OSD
-1202 - Re-Enable PopUp OSD           | Re-Enables the PopUp OSD
-1210 - Set OSD Visible Duration      | Value in Seconds
-1300 - Get Play Mode                 | Returns 1300 message
-1400 - Request DVD Title             | Returns 1400 message
-1401 - Request DVD Title Count       | Returns 1401 message
-1420 - Request DVD Menu Mode         | Returns 1420 message
-1500 - Request DVD Chapter           | Returns 1500 message
-1501 - Request DVD Chapter Count     | Returns 1501 message
-1600 - Request DVD Audio             | Returns 1600 message
-1601 - Request DVD Audio Count       | Returns 1601 message
-1602 - Request DVD Audio Names       | Returns 1602 message
-1603 - Set DVD Audio Track           | Set the DVD's Audio Track
-                                       Valid values 0-7 or 15 for default track
-1700 - Request DVD Subtitle          | Returns 1700 message
-1701 - Request DVD Subtitle Count    | Returns 1701 message
-1702 - Request DVD Subtitle Names    | Returns 1702 message
-1703 - Set DVD Subtitle Track        | Set the DVD's Subtitle Track
-                                       Valid values 0-31, also enables subtitle
-1704 - Hide DVD Subtitle             | Disable DVD Subtitles from showing
-1750 - Request DVD Angle             | Returns 1750 message
-1751 - Request DVD Angle Count       | Returns 1751 message
-1753 - Set DVD Angle                 | Set the DVD's Angle
-                                       Valid Values 1-9
-1800 - Request File Name             | Returns 1800 message
-1810 - Request Play List             | Returns 1810 message
-1850 - Play File                     | Play a Media File, Value is a UTF8 encoded
-                                       string containing the file name.
-1900 - Get Play List Index           | Returns 1900 message
-1910 - Set Play List Index           | Value from 0 to Number items in
-                                       the play list-1 (plays the file in index).
-1920 - Clear Play List               | Clears the Current Play List
-                                       (will close any playing file)
-1930 - Add Play List File            | Add a file to the Play List
-1940 - Select Play List Item         | Select an Item in the Play List
-1941 - DeSelect Play List Item       | Remove selection of a Play List item
-2200 - Request AR Mode               | Request the current ZP AR Mode
-2210 - Request DVD AR Mode           | Request the DVD AR Mode (see outgoing #2210)
-2300 - Request Audio Volume          | Request the Audio Volume Level
-3000 - Dismiss ZP Error              | Close the ZP Error message (if visible).
-5000 - Set Current Position          | Sets the Current Play Position (in seconds)
-5010 - Play DVD Title                | Plays a DVD Title (depends on DVD Navigation
-                                       accepting the title).
-5020 - Play DVD Title,Chapter        | Same as 5010, Plays a DVD Title at a specific
-                                       chapter, value of "1,5" plays Title #1, Chapter #5
-                                       (without the "" of course).
-5030 - Play DVD Chapter              | Same as 5010, Plays a DVD Chapter in the
-                                       current Title.
-5100 - Call ZP Function              | Calls a Zoom Player function
-                                       by name (see skinning tutorial for list)
-5110 - Call ZP ExFunction            | Calls a Zoom Player extended function
-                                       by name (see skinning tutorial for list)
-                                       Format "exFunctionName,Value"
-5120 - Call ZP ScanCode              | Pass a keyboard scancode number to the
-                                       Zoom Player Interperter (such as VK_DOWN),
-                                       this can be used to access the Navigator
-                                       interfaces, pass the scancode as a parameter.
+
+
+
+
+
+
+
+ External Messages (Program -> ZP, TCP/IP only)
+ Messages that contain parameters should be space separated,
+ for example: "5100 fnPlay"
+ and a comma used to separate multiple parameters,
+ for example: "5110 exSetAR,1".
+
+ 0000 - Get Application Name          | Returns 0000 message
+ 0001 - Get Version                   | Returns 0001 message
+ 0100 - Ping                          | Returns 0100 message
+ 1000 - Get Play State                | Returns 1000 message
+ 1010 - Get Fullscreen State          | Returns 1010 message
+ 1100 - Set Timeline Updates (on/off) | 0 - Stop   Media Position Update messages
+                                        1 - Start  Media Position Update messages
+                                        2 - Resend Media Position Update messages
+ 1110 - Get Current Duration          | Returns 1110 message
+ 1120 - Get Current Position          | Returns 1120 message
+ 1130 - Get Current Frame Rate (FPS)  | Returns 1130 message
+ 1140 - Get Estimated Frame Rate (FPS)| Returns 1140 message
+ 1200 - Show a PopUp OSD Text         | Parameter is a UTF8 encoded text to be
+                                        shown as a PopUp OSD
+ 1201 - Temp Disable PopUp OSD        | Temporarily Disables the PopUp OSD
+ 1202 - Re-Enable PopUp OSD           | Re-Enables the PopUp OSD
+ 1210 - Set OSD "Visible" Duration    | Value in Seconds
+ 1300 - Get Play Mode                 | Returns 1300 message
+ 1400 - Request DVD Title             | Returns 1400 message
+ 1401 - Request DVD Title Count       | Returns 1401 message
+ 1420 - Request DVD Menu Mode         | Returns 1420 message
+ 1450 - Request DVD Unique String     | Returns 1450 message
+ 1500 - Request DVD Chapter           | Returns 1500 message
+ 1501 - Request DVD Chapter Count     | Returns 1501 message
+ 1600 - Request Audio Track           | Returns 1600 message
+ 1601 - Request Audio Track Count     | Returns 1601 message
+ 1602 - Request DVD Audio Names       | Returns 1602 message
+ 1603 - Set Audio Track               | Set the active Audio Track
+                                        Valid DVD values are 0-7 or 15 for default track
+ 1700 - Request Subtitle Index        | Returns 1700 message
+ 1701 - Request Subtitle Count        | Returns 1701 message
+ 1702 - Request DVD Subtitle Names    | Returns 1702 message
+ 1703 - Set Subtitle Track            | Set the DVD's Subtitle Track
+                                        Valid values 0-31, also enables subtitle
+ 1704 - Hide Subtitles                | Disable Subtitles from showing
+ 1750 - Request DVD Angle             | Returns 1750 message
+ 1751 - Request DVD Angle Count       | Returns 1751 message
+ 1753 - Set DVD Angle                 | Set the DVD's Angle
+                                        Valid Values 1-9
+ 1800 - Request Playing File Name     | Returns 1800 message
+ 1810 - Request Playlist              | Returns 1810 message
+ 1811 - Request Playlist Count        | Returns 1811 message
+ 1850 - Play File                     | Play a Media File, Value is a UTF8 encoded
+                                        string containing the file name.
+ 1852 - Close Media File              | Closes the playing media file or stops a DVD in DVD Mode.
+ 1860 - Browse Web                    | Browse a web page, Value is the web address (URL)
+ 1900 - Get Playlist Index            | Returns 1900 message
+ 1910 - Set Playlist Index            | Value from 0 to Number items in
+                                        the playlist-1 (plays the file in index).
+ 1920 - Clear Playlist                | Clears the Current Playlist
+                                        (will close any playing file)
+ 1930 - Add Playlist File             | Add a file to the Playlist
+ 1940 - Select Playlist Item          | Select an Item in the Playlist
+                                        Value from 0 to Number items in
+                                        the playlist-1.
+ 1941 - DeSelect Playlist Item        | Remove selection of a Playlist item
+                                        Value from 0 to Number items in
+                                        the playlist-1.
+ 1950 - Remove Playlist Item          | Remove a Playlist item from the list
+                                        Value from 0 to Number items in
+                                        the playlist-1.
+                                        Returns both an 1950 and 1900 message.
+ 2200 - Request AR Mode               | Request the current ZP AR Mode
+ 2210 - Request DVD AR Mode           | Request the DVD AR Mode (see outgoing #2210)
+ 2300 - Request Audio Volume          | Request the Audio Volume Level
+ 2600 - Set Derived Mode Aspect Ratio | Sets the aspect ratio used for Derived Aspect Ratio
+                                        mode for the currentply playing video.  The aspect
+                                        ratio is specified as:
+                                        "Width Ratio"+"Height Ratio" left shifted 16 bits.
+                                        For Example, 16:9 would be "16+9*65536" or "16+9<<16"
+                                        or "16+(9 shl 16)" (the examples do the same thing
+                                        in a different syntax).
+ 2610 - Set Video Display Area X-Ofs  | Integer Value.
+ 2611 - Get Video Display Area X-Ofs  | Integer Value (Returns 2611 message).
+ 2620 - Set Video Display Area Y-Ofs  | Integer Value.
+ 2621 - Get Video Display Area Y-Ofs  | Integer Value (Returns 2621 message).
+ 2630 - Set Video Display Area Width  | Integer Value.
+ 2631 - Get Video Display Area Width  | Integer Value (Returns 2631 message).
+ 2640 - Set Video Display Area Height | Integer Value.
+ 2641 - Get Video Display Area Height | Integer Value (Returns 2641 message).
+ 2650 - Set Player Window dimensions  | Integer Values representing the Left,Top,Width,Height position
+                                        of the player window.  For example: 50,50,800,600
+ 2660 - Set Player on-top value       | 0 = Standard window mode
+                                        1 = Player window is on-top of other windows
+ 2670 - Set Fullscreen Monitor        | 0 = Monitor where the player window is displayed
+                                        1 = Monitor #1
+                                        2 = Monitor #2
+                                        3 = Monitor #3...
+ 2700 - Get Play Rate                 | Returns 2700 message.
+ 2701 - Set Play Rate                 | Set the Media Mode Fast Play/Slow Motion rate or
+                                        the DVD Mode Fast Forward/Slow Motion/ Rewind rate.
+                                        Value is an integer representing the play rate multiplied
+                                        by 1000.  For example a value of "500" means a play rate of "0.5".
+                                        Do not use negative values in media mode, it will not work.
+                                        Fast Play in media mode has a speed restriction a bit over "2.0"
+                                        unless Reclock is used as the audio renderer (this is a microsoft
+                                        limitation due to sound driver architecture).
+ 2710 - Get Random Play Mode          | Returns a 2710 message.
+ 3000 - Dismiss ZP Error              | Close the ZP Error message (if visible).
+ 4000 - Virtual Keyboard Input Query  | Pop up the Virtual Keyboard interface to ask the user to input
+                                        a text string.
+                                        This message requires three UTF8 encoded text string parameters.
+                                        The first parameter indicates a unique identifier which is returned
+                                        to you in the callback message, which will help you identify which
+                                        message prompted the user for input.
+                                        The second parameter populates the text entry field with the specified
+                                        text (you can leave this empty if you want an empty text input value.
+                                        The third parameter is used to query the user for the type of input
+                                        required.
+                                        For example:
+                                        "4000 eMail||Enter your eMail address"
+                                        or to include an existing text:
+                                        "4000 eMail|no@one.org|Enter your eMail address"
+                                        The result is returned in a 4000 message indicating failure/success,
+                                        the unique identfier and the text entered.  The entered text is returned
+                                        even in the case where the user selected to cancel the operation.
+ 5000 - Set Current Position          | Sets the Current Play Position (in seconds.ms)
+                                      | For example "122.500" will seek to 2min:2sec.500ms
+ 5010 - Play DVD Title                | Plays a DVD Title (depends on DVD Navigation
+                                        accepting the title).
+ 5020 - Play DVD Title,Chapter        | Same as 5010, Plays a DVD Title at a specific
+                                        chapter, value of "1,5" plays Title #1, Chapter #5
+                                        (without the "" of course).
+ 5030 - Play DVD Chapter              | Same as 5010, Plays a DVD Chapter in the
+                                        current Title.
+ 5100 - Call ZP Function              | Calls a Zoom Player function
+                                        by name (see skinning tutorial for list)
+ 5110 - Call ZP ExFunction            | Calls a Zoom Player extended function
+                                        by name (see skinning tutorial for list)
+                                        Format "exFunctionName,Value"
+ 5120 - Call ZP ScanCode              | Pass a keyboard scancode number to the
+                                        Zoom Player Interperter (such as VK_DOWN),
+                                        this can be used to access the Navigator
+                                        interfaces, pass the scancode as a parameter.
+ 5130 - Call ZP nvFunction            | Calls a Zoom Player navigation function
+                                        by name (see skinning tutorial for list)
+ 6000 - List Shared Folder            | Lists the content of the shared folder specified by the "/SharePath:[Path]"
+                                        Command Line Parameter.  If no value is specified, the root path is returned,
+                                        if a path is specified, the content of the path (under the shared folder)
+                                        is returned.  Please note that for security reasons, paths can't begin with
+                                        the ".", "/" or "\" character and may not include any invalid character in
+                                        the path's body (such as "|").
+                                        For Example:
+                                        "6000 TV\Wednesday\"
+                                        If the "/SharePath" parameter is not specified, an empty message is returned.
+ 6010 - Add Shared files to Playlist  | Accept a list of file names separated by the "|" characters as the new playlist.
+                                        The file names are appended to the end of the playlist and a 6010 message is fired
+                                        off to ackknowledge that processing has ended.
+                                        The 'SharePath' value is automatically added to the path of each file.
+                                        For example:
+                                        "6010 MyVideo.avi|MP3\MyAudio.mp3"
+                                        With this example and 'SharePath' specified as "/SharePath:X:\Content\",
+                                        Zoom Player will add the files to the playlist as:
+                                        X:\Content\MyVideo.avi
+                                        X:\Content\MP3\MyAudio.mp3
 """
 
 
@@ -281,12 +436,12 @@ FN_ACTIONS = (
 ('fnPrevFrame', '<b>All:</b> Frame Step Backward.'),
 ('fnNextVid', '<b>Media:</b> Play the Next Video in the current directory.'),
 ('fnPrevVid', '<b>Media:</b> Play the Previous Video in the current directory.'),
-('fnSkipForward', '<b>All:</b> Skip forward a specified number of seconds.'),
-('fnSkipBackward', '<b>All:</b> Skip backward a specified number of seconds.'),
-('fnJumpForward', '<b>All:</b> Jump forward a specified number of seconds.'),
-('fnJumpBackward', '<b>All:</b> Jump backward a specified number of seconds.'),
-('fnSeekForward', '<b>All:</b> Seek forward a specified number of seconds.'),
-('fnSeekBackward', '<b>All:</b> Seek backward a specified number of seconds.'),
+('fnSkipForward', '<b>All:</b> Short seek forward a specified number of seconds.'),
+('fnSkipBackward', '<b>All:</b> Short seek backward a specified number of seconds.'),
+('fnJumpForward', '<b>All:</b> Medium seek forward a specified number of seconds.'),
+('fnJumpBackward', '<b>All:</b> Medium seek backward a specified number of seconds.'),
+('fnSeekForward', '<b>All:</b> Long seek forward a specified number of seconds.'),
+('fnSeekBackward', '<b>All:</b> Long seek backward a specified number of seconds.'),
 ('fnFastForward', '<b>All:</b> Play in Fast Forward.'),
 ('fnRewind', '<b>All:</b> Rewind Playback.'),
 ('fnSlowMotion', '<b>All:</b> Play in Slow Motion.'),
@@ -478,6 +633,23 @@ FN_ACTIONS = (
 ('fnBlankMonitors', "<b>All:</b> Blank (cover with a black window) non-Active monitors."),
 ('fnFSActMonitor', "<b>All:</b> Fullscreen on active monitor."),
 ('fnDownloadNav', "<b>All:</b> Download Manager Navigator (show/hide)."),
+('fnPosToClipboard', "<b>All</b> Copy the current position to the Windows Clipboard"),
+('fnInfoNav', "<b>All</b> Information Navigator (show/hide)"),
+('fnSaveFileAs', "<b>All</b> Save currently playing file"),
+('fnDoSearch', "<b>All</b> Unused at this time"),
+('fnSearchList', "<b>All</b> Unused at this time"),
+('fnDeInterlace', "<b>All</b> DeInterlace Video (enabled/disabled)"),
+('fnSharpen', "<b>All</b> Sharpen Video (enabled/disabled)"),
+('fnOpenWebPage', "<b>All</b> Open Web Page Dialog"),
+('fnRingTone', "<b>All</b> Create a RingTone from a playing media section"),
+('fnZoomTo43Wide', "<b>All</b> Zoom on badly encoded 16:9 content (encoded with black bars)"),
+('fnVolumeWindow', "<b>All</b> Pop-up the Volume-Slider Window"),
+('fnWhiteWash', "<b>All</b> WhiteWash Screen-Burn repair"),
+('fnResetWindows', "<b>All</b> Reset user interface windows to their default location"),
+('fnIncRateEx', "<b>All</b> Increase Play Rate by a user specified value"),
+('fnDecRateEx', "<b>All</b> Decrease Play Rate by a user specified value"),
+('fnZoomInLevel', "<b>All</b> Cycle Zoom-in Levels (16.6%, 33.3%, 50%, 100%)"),
+('fnSkinSelectNav', "<b>All</b> Fullscreen navigation skin selection navigator (show/hide)"),
 )
 
 EX_ACTIONS = (
@@ -487,7 +659,7 @@ EX_ACTIONS = (
 ('exChapterTrack', 'Chapter/Track Selector\n<br>value = 0-9 (Opens chapter/track dialog with 5 seconds timeout for a second key)'),
 ('exBlanking', 'Set Blanking Preset\n<br>value = 0-9 (Automatically enables blanking)'),
 ('exSetMode', 'Set Playback Mode\n<br>value = 0-Media Mode, 1-DVD Mode'),
-('exInterface', 'Toggle Interfaces\n<br>value = 00-Show Control Bar<br>        01-Hide Control Bar<br>        02-Show Play List Editor<br>        03-Hide Play List Editor<br>        04-Show Chapter/Bookmark Editor<br>        05-Hide Chapter/Bookmark Editor<br>        06-Set Windowed Mode<br>        07-Set Zoom Mode<br>        08-Set Fullscreen Mode<br>        09-Show Equalizer<br>        10-Hide Equalizer'),
+('exInterface', 'Toggle Interfaces\n<br>value = 00-Show Control Bar<br>        01-Hide Control Bar<br>        02-Show Play List Editor<br>        03-Hide Play List Editor<br>        04-Show Chapter/Bookmark Editor<br>        05-Hide Chapter/Bookmark Editor<br>        06-Set Windowed Mode<br>        07-Set Zoom Mode<br>        08-Set Fullscreen Mode<br>        09-Show Equalizer<br>        10-Hide Equalizer<br>        11-Enable Pop-up OSD messages<br>        12-Disable Pop-up OSD messages'),
 ('exSetPlayRate', 'Set Media Play Rate\n<br>value = 1-22670 (where 10000 = Standard Play)'),
 ('exSetCustomAR', 'Set Custom Aspect Ratio\n<br>value = 0-9 (Automatically switches AR to Custom mode)'),
 ('exOverlayColor', 'Set Color Control Preset\n<br>value = 0-9'),
@@ -504,6 +676,10 @@ EX_ACTIONS = (
 ('exSetVolume', 'Set the Audio Volume\n<br>value = 0-100 (Percentage of volume level)'),
 ('exEjectDrive', 'Eject/Insert a drive\n<br>value = 0-25 (drives A-Z where 0=A and 25=Z)'),
 ('exEnableTCP', 'Enable TCP/IP interface\n<br>value = TCP Port number'),
+('exZoomTo', 'Zoom Video Size (percent)\n<br>value = 1-1000 Zoom Video Size (percent)'),
+('exTransWin', 'Set player Window Transparency\n<br>value = 1-255, where 255 = disable transparency'),
+('exRandomPlay', 'Set Random Play ON/OFF\n<br>value = 0=Off, 1=On'),
+('exSkinTint', 'Set the User Interface color Tint\n<br>value = RGB Integer Value (Example: "$FF0000" = Red)'),
 )
 
 NV_ACTIONS = (
@@ -520,6 +696,8 @@ NV_ACTIONS = (
 ('KeyDelete', 'Navigational Control Delete', '46'),
 ('KeyBackspace', 'Navigational Control Backspace', '8'),
 ('KeyEscape', 'Navigational Control Escape', '27'),
+('KeyShift', 'Navigational Control Shift', '16'),
+('KeyCapsLock',  'Navigational Control CAPSLOCK', '20'),
 )
 #pylint: enable-msg=C0301
 
@@ -732,6 +910,15 @@ class ZoomPlayer(eg.PluginBase):
             "10": "StationNav",
             "11": "WebNav",
             "12": "MainNav",
+            "13": "LibCategoryNav",
+            "14": "KeyNav",
+            "15": "EQNav",
+            "16": "StationNav",
+            "17": "ConfirmNav",
+            "18": "PlayHistoryNav",
+            "19": "SkinSelectNav",
+            "20": "DownloadNav",
+            "21": "InfoNav",
         },
        "3110": "NavigatorClosed",
     }
@@ -804,6 +991,7 @@ class ZoomPlayer(eg.PluginBase):
                 "18": "PlayHistory",
                 "19": "NavigationStyle",
                 "20": "Download",
+                "21": "Information",
             },
         ),
         "3110": (
@@ -830,6 +1018,7 @@ class ZoomPlayer(eg.PluginBase):
                 "18": "PlayHistory",
                 "19": "NavigationStyle",
                 "20": "Download",
+                "21": "Information",
             },
         ),
         "3200": (

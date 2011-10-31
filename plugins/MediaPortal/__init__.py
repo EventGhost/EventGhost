@@ -29,8 +29,7 @@ eg.RegisterPlugin(
     ),
     help = (
         "<b>Note:</b> You have to install and enable this "
-        '<a href="http://www.team-mediaportal.com/component/'
-        'option,com_remository/Itemid,35/func,fileinfo/id,238/">'
+        '<a href="http://www.team-mediaportal.com/extensions/messageplugin-for-mp1-2">'
         "Message Plugin</a> inside MediaPortal. Please follow the supplied "
         "installation instructions in the ReadMe to accomplish this."
     ),
