@@ -2,7 +2,7 @@
 #
 # plugins/MediaMonkey/__init__.py
 #
-# Copyright (C)  2009 Pako  <lubos.ruckl@quick.cz>
+# Copyright (C)  2009-2011 Pako  <lubos.ruckl@quick.cz>
 #
 # This file is a plugin for EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
@@ -18,10 +18,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
-#Last change: 2010-02-10 12:24  GMT+1
+# Changelog (in reverse chronological order):
+# -------------------------------------------
+# 0.3.0 by Pako 2011-11-28 07:12 UTC+1
+#     - for MM version 4.0 and later
+#     - removed file EventGhost.vbs
+# 0.2.12 by Pako 2010-02-10 12:24  GMT+1
+#     - all previous changes
+#===============================================================================
 
 import wx
-from win32com.client import Dispatch
+from win32gui import MessageBox
+from win32com.client import Dispatch, DispatchWithEvents
+from eg.WinApi import SendMessageTimeout
 from eg.WinApi.Utils import CloseHwnd
 import time
 import datetime
@@ -32,21 +41,43 @@ from os.path import split as path_split
 from os import remove as remove_file
 from functools import partial
 from random import randint
+from _winreg import OpenKey, HKEY_LOCAL_MACHINE, QueryValueEx, CloseKey
 
+WM_SYSCOMMAND = 274
+SC_MINIMIZE   = 61472
 
 eg.RegisterPlugin(
     name = "MediaMonkey",
     author = "Pako",
-    version = "0.2.12",
+    version = "0.3.0",
     kind = "program",
     guid = "{50602341-ABC3-47AD-B859-FCB8C03ED4EF}",
     createMacrosOnAdd = True,
     description = ur'''<rst>
 Adds support functions to control MediaMonkey_.
 
-**Note:**
- To trigger events from MediaMonkey_, you must install
- "EventGhost.vbs" file to *MediaMonkey/Scripts/Auto* folder.
+This plugin requires MediaMonkey version 4.0 or later.
+
+| **Note:**
+| This new version no longer needs for its work the file "EventGhost.vbs" !!!
+| Please remove this file (if installed) and restart MediaMonkey (if running).
+| Then restart EventGhost !
+
+| **Plugin's events:**
+| If you select one (or more) of these options, some actions will trigger
+  an event upon completion and a payload is used to indicate the results of the action. 
+
+| The event triggered will be constructed as follows:
+| *Prefix:* MediaMonkey
+| *Suffix:* a string indicating the particular command (e.g. playlist, or track_added)
+| *Payload:* this will depend on the results of the action
+
+For example, if you try to add a track to a playlist 'test', the payload will be either:
+*u"Track already exists in playlist test"* or *u"Track added to playlist test"*.
+
+| Another example: executing 'Load Playlist by Filter', where you choose name
+  the filter 'Beatles', the result may be: MediaMonkey.playlist (u'Beatles','220') .
+| Number 220 indicates, that there are 220 tracks in the library that match your query.
 
 .. _MediaMonkey: http://www.MediaMonkey.com/ ''',
     url = "http://www.eventghost.net/forum/viewtopic.php?t=563",
@@ -75,9 +106,10 @@ Adds support functions to control MediaMonkey_.
     ),
 )
 #====================================================================
+
 MyWindowMatcher = eg.WindowMatcher(
+    "MediaMonkey.exe",
     None,
-    u'{*}MediaMonkey{*}',
     u'TFMainWindow{*}',
     None,
     None,
@@ -85,6 +117,36 @@ MyWindowMatcher = eg.WindowMatcher(
     True,
     0,
     0
+)
+
+MM_EVENTS = (
+"OnPlay",
+"OnPause",
+"OnStop",
+"OnSeek",
+"OnTrackEnd",
+"OnPlaybackEnd",
+"OnCompletePlaybackEnd",
+"OnTrackSkipped",
+"OnShutdown",
+"OnRepeatClicked",
+"OnShuffleClicked",
+"OnFilterChange",
+"OnOptionsChange",
+"OnChangedSelection",
+"OnNowPlayingModified",
+"OnNowPlayingSelectionChanged",
+"OnBeforeTracksMove",
+"OnTrackAdded",
+"OnTrackConverted",
+"OnTrackDeleting",
+"OnTrackListFilled",
+"OnTrackListFilling",
+"OnTrackListModified",
+"OnTrackListSelectionChanged",
+"OnTrackProperties",
+"OnDownloadFinished",
+"OnIdle",
 )
 
 SONG_TABLE_FIELDS=(
@@ -181,30 +243,166 @@ SONG_TABLE_FIELDS=(
     ("WebUser","T",""),
     ("Year","I","Year"),
 )
-#===============================================================================
-
-#class MyFileBrowseButton(eg.FileBrowseButton):
-#    def GetTextCtrl(self):          #  now I can make build-in textCtrl
-#        return self.textControl     #  non-editable !!!
 #====================================================================
+
+class EventHandler:
+
+    def GetSongInfo(self):
+        currSong = self.MM.Player.CurrentSong
+        title = currSong.Title
+        artistName = currSong.ArtistName
+        albumName = currSong.AlbumName
+        return (title, artistName, albumName)
+
+    def OnBeforeTracksMove(self, *args):
+        #print "OnBeforeTracksMove",args
+        if self.plugin.mm_events['OnBeforeTracksMove']:
+            self.TriggerEvent("BeforeTracksMove")
+
+    def OnCompletePlaybackEnd(self):
+        if self.plugin.mm_events['OnCompletePlaybackEnd']:
+            self.TriggerEvent("CompletePlaybackEnd")
+
+    def OnDownloadFinished(self, *args):
+        if self.plugin.mm_events['OnDownloadFinished']:
+            #print "OnDownloadFinished",args
+            self.TriggerEvent("DownloadFinished")
+
+    def OnFilterChange(self):
+        if self.plugin.mm_events['OnFilterChange']:
+            self.TriggerEvent("FilterChange")
+
+    def OnChangedSelection(self):
+        if self.plugin.mm_events['OnChangedSelection']:
+            self.TriggerEvent("ChangedSelection")
+
+    def OnIdle(self):
+        if self.plugin.mm_events['OnIdle']:
+            self.TriggerEvent("Idle")
+
+    def OnNowPlayingModified(self):
+        if self.plugin.mm_events['OnNowPlayingModified']:
+            self.TriggerEvent("NowPlayingModified")
+
+    def OnNowPlayingSelectionChanged(self):
+        if self.plugin.mm_events['OnNowPlayingSelectionChanged']:
+            self.TriggerEvent("NowPlayingSelectionChanged")
+
+    def OnOptionsChange(self):
+        if self.plugin.mm_events['OnOptionsChange']:
+            self.TriggerEvent("OptionsChange")
+
+    def OnPause(self):
+        if self.plugin.mm_events['OnPause']:
+            paused = ("Unpaused","Paused")[int(getattr(self.MM.Player, 'isPaused'))]
+            self.TriggerEvent(paused)
+
+    def OnPlay(self):
+        if self.plugin.mm_events['OnPlay']:
+            self.TriggerEvent("Play", self.GetSongInfo())
+
+    def OnPlaybackEnd(self):
+        if self.plugin.mm_events['OnPlaybackEnd']:
+            self.TriggerEvent("PlaybackEnd")
+
+    def OnRepeatClicked(self):
+        if self.plugin.mm_events['OnRepeatClicked']:
+            self.TriggerEvent("RepeatClicked")
+
+    def OnSeek(self):
+        if self.plugin.mm_events['OnSeek']:
+            self.TriggerEvent("Seeked",int(getattr(self.MM.Player, 'PlaybackTime')))
+
+    def OnShuffleClicked(self):
+        if self.plugin.mm_events['OnShuffleClicked']:
+            self.TriggerEvent("ShuffleClicked")
+
+    def OnShutdown(self):
+        self.plugin.StopThreads()
+        if self.plugin.mm_events['OnShutdown']:
+            self.TriggerEvent("Shutdown")
+
+    def OnStop(self):
+        if self.plugin.mm_events['OnStop']:
+            self.TriggerEvent("Stoped")
+
+    def OnTrackAdded(self):
+        if self.plugin.mm_events['OnTrackAdded']:
+            self.TriggerEvent("TrackAdded")
+
+    def OnTrackConverted(self, *args):
+        if self.plugin.mm_events['OnTrackConverted']:
+            #print "OnTrackConverted",args
+            self.TriggerEvent("TrackConverted")
+
+    def OnTrackDeleting(self, *args):
+        if self.plugin.mm_events['OnTrackDeleting']:
+            #print "OnTrackDeleting",args
+            self.TriggerEvent("TrackDeleting")
+
+    def OnTrackEnd(self):
+        if self.plugin.mm_events['OnTrackEnd']:
+            self.TriggerEvent("TrackEnd")
+
+    def OnTrackListFilled(self):
+        if self.plugin.mm_events['OnTrackListFilled']:
+            self.TriggerEvent("TrackListFilled")
+
+    def OnTrackListFilling(self):
+        if self.plugin.mm_events['OnTrackListFilling']:
+            self.TriggerEvent("TrackListFilling")
+
+    def OnTrackListModified(self):
+        if self.plugin.mm_events['OnTrackListModified']:
+            self.TriggerEvent("TrackListModified")
+
+    def OnTrackListSelectionChanged(self):
+        if self.plugin.mm_events['OnTrackListSelectionChanged']:
+            self.TriggerEvent("TrackListSelectionChanged")
+
+    def OnTrackProperties(self, *args):
+        if self.plugin.mm_events['OnTrackProperties']:
+            #print "OnTrackProperties",args
+            self.TriggerEvent("TrackProperties")
+
+    def OnTrackSkipped(self, *args):
+        if self.plugin.mm_events['OnTrackSkipped']:
+            #print "OnTrackSkipped",args
+            self.TriggerEvent("TrackSkipped")
+
+#===============================================================================
 
 class MediaMonkeyWorkerThread(eg.ThreadWorker):
     """
     Handles the COM interface in a thread of its own.
     """
-    def Setup(self, plugin):
+    def Setup(self, plugin, events = False):
         """
         This will be called inside the thread at the beginning.
         """
         self.plugin = plugin
+
+        self.MM = None
         self.MM = Dispatch("SongsDB.SDBApplication")
         self.MM.ShutdownAfterDisconnect = False
+
+        if events:
+            class SubEventHandler(EventHandler):
+                MM = self.MM
+                plugin = self.plugin
+                TriggerEvent = self.plugin.TriggerEvent
+            self.EventHandler = SubEventHandler
+
+            self.events = None
+            self.events = DispatchWithEvents(self.MM, self.EventHandler)
             
     def Finish(self):
         """
         This will be called inside the thread when it finishes. It will even
         be called if the thread exits through an exception.
         """
+        if self.events:
+            del self.events
         del self.MM
         self.plugin.workerThread = None
         
@@ -264,10 +462,13 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
             
             for item in SongDataDict.iterkeys():
                 itm = getattr(tmpObject,item)
-                if type(itm) == unicode:
+                if isinstance(itm, unicode):
                     SongDataDict[item] = itm
                 else:
-                    SongDataDict[item] = str(itm)
+                    if type(itm).__name__ == 'time':
+                        SongDataDict[item] = repr(itm)[8:-1]
+                    else:
+                        SongDataDict[item] = str(itm)
             return SongDataDict, index+1
 
     def WriteToMMdatabase(self, command, value, flag):
@@ -296,7 +497,7 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                     self.MM.Player.PlaylistAddTracks(plItems)
                 if self.MM.Player.isPaused or not self.MM.Player.isPlaying:
                     self.MM.Player.Play()
-            if self.plugin.trigger:
+            if self.plugin.eg_events[0]:
                 self.plugin.TriggerEvent(Text.playlistEvt, (plString, str(Total)))
                     
     def GetNotAccessibleTracks(self, filePath):
@@ -343,7 +544,7 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                 res = 2
             if skip:
                 self.MM.Player.Next()
-            if self.plugin.trigger:
+            if self.plugin.eg_events[1]:
                 self.plugin.TriggerEvent(self.plugin.text.resAdded[3],self.plugin.text.resAdded[res] % plString)
 
     def RemoveSongFromPlaylist(self, plString, skip, now_pl):
@@ -368,7 +569,7 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                 res = 2
             if skip:
                 Player.Next()
-            if self.plugin.trigger:
+            if self.plugin.eg_events[2]:
                 self.plugin.TriggerEvent(self.plugin.text.resRemoved[3],self.plugin.text.resRemoved[res] % plString)
 
     def RemoveSongFromNowPlaying(self, skip):
@@ -383,9 +584,9 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                     res = 0
                 if skip:
                     Player.Next()
-            if self.plugin.trigger:
+            if self.plugin.eg_events[3]:
                 self.plugin.TriggerEvent(self.plugin.text.resNowPlay[2],self.plugin.text.resNowPlay[res])
-            
+
     def LoadPlaylist(self,sql,repeat,crossfade,shuffle,clear,Total,plName):
         MyTracks = self.MM.Database.QuerySongs(sql)
         tmpSongList = self.MM.NewSongList
@@ -424,9 +625,8 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                 self.MM.Player.Play()
         else:
             self.MM.Player.PlaylistAddTracks(tmpSongList)            
-        if self.plugin.trigger:
+        if self.plugin.eg_events[0]:
             self.plugin.TriggerEvent(Text.playlistEvt, (plName, str(Total)))
-
 
     def LoadFilterPlaylist(
         self,
@@ -566,9 +766,9 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                         self.MM.Player.CurrentSongIndex = randint(count,count+int(Total)-1)
                 if self.MM.Player.isPaused or not self.MM.Player.isPlaying:
                     self.MM.Player.Play()
-                if self.plugin.trigger:
+                if self.plugin.eg_events[4]:
                     self.plugin.TriggerEvent(Text.albumEvt, res)
-
+            
     def SongJubox(self,ID,clear,stop):
         if self.isRunning():
             sql = 'ID="%s"' % ID
@@ -585,7 +785,7 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                     self.MM.Player.CurrentSongIndex = count
                 if self.MM.Player.isPaused or not self.MM.Player.isPlaying:
                     self.MM.Player.Play()
-                if self.plugin.trigger:
+                if self.plugin.eg_events[5]:
                     self.plugin.TriggerEvent(Text.songEvt, res)
 
     def ExportAlbumList(self,filePath):
@@ -610,8 +810,9 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                 file.close()
             except:
                 pass
-            self.plugin.TriggerEvent("jukebox", str(count))
-                
+            if self.plugin.eg_events[6]:
+                self.plugin.TriggerEvent(self.plugin.text.jukeboxEvt, str(count))
+               
     def ExportSongList(self,filePath):
         if self.isRunning():
             count = 0
@@ -632,10 +833,24 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                 file.close()
             except:
                 pass
-            self.plugin.TriggerEvent("jukebox", str(count))
-#====================================================================
+            if self.plugin.eg_events[6]:
+                self.plugin.TriggerEvent(self.plugin.text.jukeboxEvt, str(count))
+#===============================================================================
 
 class Text:
+    oldVersion = '''You have installed an old version of MediaMonkey.
+This plugin requires MediaMonkey version 4.0 or later.
+Please install latest version of MediaMonkey and then restart EventGhost !'''
+    vbsFile = '''The new version no longer needs for its work the file "EventGhost.vbs",
+which is located in the folder
+%s
+Please remove this file and restart MediaMonkey (if running).
+Then restart EventGhost !'''
+    noMM = '''It seems that you have not installed MediaMonkey.
+This plugin requires MediaMonkey version 4.0 or later.
+Please install latest version of MediaMonkey and then restart EventGhost !'''
+    label_mm = "Trigger these MediaMonkey application's events:"
+    label_eg = "Trigger these plugin's events:"
     unknAlbum = "<unknown album>"
     unknArtist = "<unknown artist>"
     errorNoWindow = "Couldn't find MediaMonkey window"
@@ -671,10 +886,8 @@ class Text:
         'Song title',
         'File path',
     )
-    
     toolTipFolder = "Press button and browse to select file ..."
     browseTitle = "Selected file:"
-  
     please = "Please be patient"
     close = "Close"
     popup = "Add now"
@@ -683,51 +896,34 @@ class Text:
     sepLabel = 'Character or string to use as delimiter:'
     filepath = "File path"
     filename = "File name"
-    triggerEvents = "Trigger events"
-    triggerEventsToolTip = '''If you select this option, some actions (such as %s
-or %s) will trigger an event upon completion,
-a payload is used to indicate the results of the action. 
-
-The event triggered will be constructed as follows:
-Prefix: MediaMonkey
-Suffix: a string indicating the particular command (e.g. playlist, or track_added)
-Payload: this will depend on the results of the action
-
-For example, if you try to add a track to a playlist 'test' the payload will be either:
-u"Track already exists in playlist test" or u"Track added to playlist test"
-
-Another example: executing 'Load Playlist by Filter', where you choose name
-the filter 'Beatles' the result may be: MediaMonkey.playlist (u'Beatles','220')
-220 indicates that there are 220 tracks in the library that match your query.'''
-
     playlistEvt = 'playlist'
     albumEvt = 'album_added'
     songEvt = 'song_added'
-    
+    jukeboxEvt = 'jukebox'
+    playlistEvtTxt = 'Playlist loaded'
+    albumEvtTxt = 'Jukebox - album added'
+    songEvtTxt = 'Jukebox - song added'
+    jukeboxEvtTxt = 'Jukebox - list exported'
     resAdded = (
         "Track added to playlist %s",
         "Track already exists in playlist %s",
         "Playlist %s does not exist",
         "track_added"
     )
-    
     resRemoved = (
         "Track removed from playlist %s",
         "Track does not exist in playlist %s",
         "Playlist %s does not exist",
         "track_removed"
     )
-    
     resNowPlay = (
         "Track removed from Now Playing playlist",
         "Track not removed from Now Playing playlist",
         "removed_from_now_playing"
     )
-    
     sepToolTip = '''Optionally, enter the character
 or string to be used as a delimiter (separator), between items.
 Default is to use the character "\\n" (new line).'''
-
     repeat = "Continous playback"
     shuffle = "Shuffle tracks"
     crossfade = "Crossfade"
@@ -737,7 +933,6 @@ Default is to use the character "\\n" (new line).'''
     randomToolTip = '''(True Shuffle)  Shuffles the playlist (like cards) before starting playback.
 This allows us to see what song will play next, and what played previously.
 Whereas selecting the "%s" checkbox will cause the player to jump randomly through a playlist.'''
-
     SongTableFields = (
         "Album",
         "Album Artist",
@@ -838,7 +1033,7 @@ class MediaMonkey(eg.PluginBase):
     workerThread = None
     workerThread2 = None
     text = Text
-
+    
     def __init__(self):
         group = self.AddGroup(
             self.text.mainGrpName,
@@ -861,7 +1056,6 @@ class MediaMonkey(eg.PluginBase):
         group.AddAction(Jukebox)
         group.AddAction(SongJukebox)
         group.AddAction(SendKeys)
-
         group = self.AddGroup(
             self.text.levelGrpName,
             self.text.levelGrpDescr
@@ -878,13 +1072,11 @@ class MediaMonkey(eg.PluginBase):
         group.AddAction(BalanceRight)
         group.AddAction(BalanceLeft)
         group.AddAction(Seek)
-
         group = self.AddGroup(
             self.text.extrGrpName,
             self.text.extrGrpDescr
         )
         group.AddAction(WritingToMM)
-
         group = self.AddGroup(
             self.text.infoGrpName,
             self.text.infoGrpDescr
@@ -899,49 +1091,177 @@ class MediaMonkey(eg.PluginBase):
         group.AddAction(GetTechnicalSongInfo)
         group.AddAction(GetUniversal)
 
-    def __start__(self, trigger = True):
-        self.volume=None
-        self.muted=False
-        self.trigger = trigger
-        eg.Bind("Main.MM_finishing",self.StopThreads)
+        MMpath, ver = self.GetPathAndVersion()
+        if ver:
+            if ver < "4.0":
+                mssgs = [self.text.oldVersion]
+                if isfile(MMpath+"\\EventGhost.vbs"):
+                    mssgs.extend((" ", self.text.vbsFile % MMpath))
+                self.info.Start = self.DummyStart #Start disabling
+                wx.CallAfter(
+                    MessageBox,
+                    eg.document.frame.GetHandle(),
+                    "\n".join(mssgs),
+                    "EventGhost - MediaMonkey plugin",
+                    48
+                )
+                raise self.Exceptions.InitFailed
+            elif isfile(MMpath+"\\EventGhost.vbs"):
+                self.info.Start = self.DummyStart #Start disabling
+                wx.CallAfter(
+                    MessageBox,
+                    eg.document.frame.GetHandle(),
+                    self.text.vbsFile % MMpath,
+                    "EventGhost - MediaMonkey plugin",
+                    48
+                )
+                raise self.Exceptions.InitFailed
 
+        else:
+            self.info.Start = self.DummyStart #Start disabling
+            wx.CallAfter(
+                MessageBox,
+                eg.document.frame.GetHandle(),
+                self.text.noMM,
+                "EventGhost - MediaMonkey plugin",
+                48
+            )
+            raise self.Exceptions.InitFailed
+
+
+    def DummyStart(self):
+        pass
+
+
+    def __start__(
+        self,
+        events = 4 * [True] + 23 * [False],
+        events2 = 7 * [True]
+    ):
+        self.volume = None
+        self.muted = False
+        if isinstance(events, bool):# For compatibility with old version !!!
+            events = 4 * [True] + 23 * [False]
+            events2 = 7 * [True]
+        self.mm_events = dict(zip(MM_EVENTS, events))
+        self.eg_events = events2
+        self.checkWorkerThread()
+        eg.scheduler.AddTask(1, self.MinimizeMM)   
+
+
+    def GetPathAndVersion(self):
+        """
+        Get the path of LAN Chat's installation directory through querying 
+        the Windows registry.
+        """
+        MMpath = ""
+        ver = ""
+        try:
+            mmp = OpenKey(
+                HKEY_LOCAL_MACHINE,
+                "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\MediaMonkey_is1"
+            )
+            try:
+                MMpath = QueryValueEx(mmp, "InstallLocation")[0]
+                ver = QueryValueEx(mmp, "DisplayVersion")[0]
+            except:
+                pass
+            CloseKey(mmp)
+        except:
+            pass
+        return MMpath + "Scripts\\Auto", ver
+
+
+    def MinimizeMM(self):
+        hwnds=MyWindowMatcher()
+        if hwnds:
+            SendMessageTimeout(hwnds[0],WM_SYSCOMMAND,SC_MINIMIZE,0)
+        else:
+            eg.scheduler.AddTask(1, self.MinimizeMM)
         
+
     def checkWorkerThread(self):
         if not self.workerThread:
-            self.workerThread = MediaMonkeyWorkerThread(self)
-            self.workerThread.Start(100.0)
+            self.workerThread = MediaMonkeyWorkerThread(self, True)
+            self.workerThread.Start(1000.0)
         return True
-        
-    def Configure(self, trigger = True):
+
+
+    def Configure(self, events = 4 * [True] + 23 * [False], events2 = 7*[True]):
+        if isinstance(events, bool): # For compatibility with old version !!!
+            events = 4 * [True] + 23 * [False]
+            events2 = 7 * [True]
         panel = eg.ConfigPanel(self)
-        triggerEventsCtrl = wx.CheckBox(panel, -1, '  '+Text.triggerEvents)
-        triggerEventsCtrl.SetValue(trigger)
-        #triggerEventsCtrl.SetToolTip(wx.ToolTip(self.text.triggerEventsToolTip % (LoadPlaylist.name,AddCurrentSongToPlaylist.name)))
-        staticToolTip = wx.StaticText(panel,-1,self.text.triggerEventsToolTip % (LoadPlaylist.name,AddCurrentSongToPlaylist.name))
-        #staticToolTip.Enable(False)
-        panel.AddCtrl(triggerEventsCtrl)
-        panel.AddCtrl(staticToolTip)
+        label_mm = wx.StaticText(panel, -1, self.text.label_mm)
+        choices = MM_EVENTS
+        eventsCtrl = wx.CheckListBox(
+            panel,
+            -1,
+            choices = choices,
+        )
+        for i in range(len(events)):
+            eventsCtrl.Check(i, events[i])
+        label_eg = wx.StaticText(panel, -1, self.text.label_eg)
+        choices = (
+            self.text.playlistEvtTxt,
+            self.text.resAdded[0] % "",
+            self.text.resRemoved[0] % "",
+            self.text.resNowPlay[0],
+            self.text.albumEvtTxt,
+            self.text.songEvtTxt,
+            self.text.jukeboxEvtTxt,
+        )
+        events2Ctrl = wx.CheckListBox(
+            panel,
+            -1,
+            choices = choices,
+        )
+        for i in range(len(events2)):
+            events2Ctrl.Check(i, events2[i])
+
+        Sizer = wx.FlexGridSizer(2, 2, 1, 10)
+        Sizer.AddGrowableRow(1)
+        Sizer.AddGrowableCol(0)
+        Sizer.AddGrowableCol(1)
+        Sizer.Add(label_mm)
+        Sizer.Add(label_eg)
+        Sizer.Add(eventsCtrl, 1, wx.EXPAND)
+        Sizer.Add(events2Ctrl, 1, wx.EXPAND)
+        panel.sizer.Add(Sizer,1,wx.EXPAND)
 
         while panel.Affirmed():
-            panel.SetResult(triggerEventsCtrl.GetValue(),
+            tmpList = []
+            for i in range(len(events)):
+                tmpList.append(eventsCtrl.IsChecked(i))        
+            tmpList2 = []
+            for i in range(len(events2)):
+                tmpList2.append(events2Ctrl.IsChecked(i))        
+            panel.SetResult(
+                tmpList,
+                tmpList2
             )
         
+
     def SendCommand(self, command):
         if self.checkWorkerThread():
             self.workerThread.CallWait(partial(self.workerThread.DoCommand, command),1000)
+
 
     def SetValue(self, command, value):
         if self.checkWorkerThread():
             self.workerThread.CallWait(partial(self.workerThread.SetValue, command, value),1000)
             
+
     def GetValue(self, command):
         if self.checkWorkerThread():
             return self.workerThread.CallWait(partial(self.workerThread.GetValue, command),1000)
         
+
     def GetSongData(self,index):    
         if self.checkWorkerThread():
             return self.workerThread.CallWait(partial(self.workerThread.GetSongData, index),1000)
         
+
     def Jubox(self, ID, clear=True,repeat=2,shuffle=2,crossfade=2,stop = True):
         if self.checkWorkerThread():
             self.workerThread.Call(partial(
@@ -954,6 +1274,7 @@ class MediaMonkey(eg.PluginBase):
                 stop
             ))
 
+
     def SongJubox(self, ID,clear=False,stop = True):
         if self.checkWorkerThread():
             self.workerThread.Call(partial(
@@ -964,6 +1285,7 @@ class MediaMonkey(eg.PluginBase):
             ))
 #        return res,Total
 
+
     def DeleteSong(self, ID):
         if self.checkWorkerThread():
             res = self.workerThread.CallWait(partial(
@@ -972,11 +1294,12 @@ class MediaMonkey(eg.PluginBase):
             ),1000)
             return res
 
+
     def __stop__(self):
-        eg.Unbind("Main.MM_finishing",self.StopThreads)
         self.StopThreads()
 
-    def StopThreads(self,event=None):
+
+    def StopThreads(self, event = None):
         if self.workerThread:
             self.workerThread.Stop()
             self.workerThread = None
@@ -997,8 +1320,7 @@ class Exit(eg.ActionBase):
     name = "Exit/Disconnect MediaMonkey"
     description = "Disconnect MediaMonkey, with the option to close it."
     
-    def __call__(self,choice=True):
-        self.plugin.StopThreads()
+    def __call__(self,choice = True):
         if choice:
             hwnds = MyWindowMatcher()
             if hwnds:
@@ -1195,7 +1517,7 @@ class SetBalance(eg.ActionBase):
     description = "Sets the balance."
 
     def __call__(self, balance=0.0):
-        self.plugin.SetValue('Panning',balance/100)
+        self.plugin.SetValue('Panning', balance/100)
 
     def GetLabel(self, balance):
         return self.text.label_tree+str(int(balance))+"%"
@@ -1225,10 +1547,7 @@ class SetShuffle(eg.ActionBase):
     description = "Set shuffle tracks mode to on or off."
 
     def __call__(self, switch=0):
-        if switch==0: #
-            self.plugin.SetValue('isShuffle',True)
-        else: #
-            self.plugin.SetValue('isShuffle',False)
+        self.plugin.SetValue('isShuffle', switch == 0)
 
     def GetLabel(self, switch):
         return "Set shuffle tracks "+("ON" if switch==0 else "OFF")
@@ -1259,10 +1578,7 @@ class SetRepeat(eg.ActionBase):
     description = "Turn continuous mode on or off"
 
     def __call__(self, switch=0):
-        if switch==0: #
-            self.plugin.SetValue('isRepeat',True)
-        else: #
-            self.plugin.SetValue('isRepeat',False)
+        self.plugin.SetValue('isRepeat', switch == 0)
 
     def GetLabel(self, switch):
         return "Set continous playback "+("ON" if switch==0 else "OFF")
@@ -1293,10 +1609,7 @@ class SetAutoDJ(eg.ActionBase):
     description = "Turn the AutoDJ on or off."
     
     def __call__(self, switch=0):
-        if switch==0: #
-            self.plugin.SetValue('isAutoDJ', True)
-        else: #
-            self.plugin.SetValue('isAutoDJ', False)
+        self.plugin.SetValue('isAutoDJ', switch == 0)
 
     def GetLabel(self, switch):
         return "Set AutoDJ "+("ON" if switch==0 else "OFF")
@@ -1327,10 +1640,7 @@ class SetCrossfade(eg.ActionBase):
     description = "Sets the crossfade to on or off."
 
     def __call__(self, switch=0):
-        if switch==0: #
-            self.plugin.SetValue('isCrossfade', True)
-        else: #
-            self.plugin.SetValue('isCrossfade', False)
+        self.plugin.SetValue('isCrossfade', switch == 0)
 
     def GetLabel(self, switch):
         return "Set Crossfade "+("ON" if switch==0 else "OFF")
