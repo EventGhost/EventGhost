@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 version="0.1.4"
 
 # plugins/SchedulGhost/__init__.py
@@ -5,20 +7,18 @@ version="0.1.4"
 # Copyright (C)  2010 Pako  (lubos.ruckl@quick.cz)
 #
 # This file is a plugin for EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # Revision history:
 # -----------------
@@ -59,9 +59,11 @@ eg.RegisterPlugin(
     version = version,
     kind = "other",
     guid = "{39EFE2FF-6CA9-4450-B0E3-1AA125420B37}",
-    description = ur'''<rst>This plugin is designed to easily schedule events to
- be triggered at any time of the day or night. Events can be scheduled to be
- triggered periodically, once only, daily, weekly, monthly or yearly.''',
+    description = u'''<rst>This plugin is designed to easily schedule events ... 
+
+... to be triggered at any time of the day or night.
+Events can be scheduled to be triggered periodically, 
+once only, daily, weekly, monthly or yearly.''',
     createMacrosOnAdd = True,
     url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=2740",
     icon = (
