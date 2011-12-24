@@ -20,6 +20,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.3.1 by Pako 2011-12-24 10:05 UTC+1
+#     - plugin automatically connects and disconnects to MM through ActiveX/COM
 # 0.3.0 by Pako 2011-11-28 07:12 UTC+1
 #     - for MM version 4.0 and later
 #     - removed file EventGhost.vbs
@@ -28,35 +30,46 @@
 #===============================================================================
 
 import wx
-from win32gui import MessageBox
-from win32com.client import Dispatch, DispatchWithEvents
-from eg.WinApi import SendMessageTimeout
-from eg.WinApi.Utils import CloseHwnd
 import time
 import datetime
 import wx.lib.masked as masked
 import codecs
-from os.path import isfile
-from os.path import split as path_split
+from win32gui import MessageBox, FindWindowEx
+from win32process import GetWindowThreadProcessId
+from win32com.client import Dispatch, DispatchWithEvents
+from eg.WinApi import SendMessageTimeout
+from eg.WinApi.Utils import CloseHwnd
+from os.path import split as path_split, isfile
 from os import remove as remove_file
 from functools import partial
 from random import randint
 from _winreg import OpenKey, HKEY_LOCAL_MACHINE, QueryValueEx, CloseKey
+from ctypes import windll, c_buffer, c_ulong, byref, sizeof
 
+_psapi = windll.psapi
+_kernel = windll.kernel32
+modBasName = c_buffer(30)
+hModule = c_ulong()
+clength = c_ulong()
+GW_HWNDNEXT = 2
+GW_CHILD = 5
+PROCESS_QUERY_INFORMATION = 0x0400
+PROCESS_VM_READ = 0x0010
 WM_SYSCOMMAND = 274
 SC_MINIMIZE   = 61472
+#====================================================================
 
 eg.RegisterPlugin(
     name = "MediaMonkey",
     author = "Pako",
-    version = "0.3.0",
+    version = "0.3.1",
     kind = "program",
     guid = "{50602341-ABC3-47AD-B859-FCB8C03ED4EF}",
     createMacrosOnAdd = True,
     description = ur'''<rst>
 Adds support functions to control MediaMonkey_.
 
-This plugin requires MediaMonkey version 4.0 or later.
+This plugin requires MediaMonkey_ version 4.0 or later.
 
 | **Note:**
 | This new version no longer needs for its work the file "EventGhost.vbs" !!!
@@ -106,18 +119,6 @@ For example, if you try to add a track to a playlist 'test', the payload will be
     ),
 )
 #====================================================================
-
-MyWindowMatcher = eg.WindowMatcher(
-    "MediaMonkey.exe",
-    None,
-    u'TFMainWindow{*}',
-    None,
-    None,
-    1,
-    True,
-    0,
-    0
-)
 
 MM_EVENTS = (
 "OnPlay",
@@ -243,16 +244,48 @@ SONG_TABLE_FIELDS=(
     ("WebUser","T",""),
     ("Year","I","Year"),
 )
-#====================================================================
+#===============================================================================
+
+MyWindowMatcher = eg.WindowMatcher(
+    "MediaMonkey.exe",
+    None,
+    u'TFMainWindow{*}',
+    None,
+    None,
+    1,
+    True,
+    0,
+    0
+)
+#===============================================================================
+
+def GetModuleFrom_hWnd(hWnd):
+    threadId, processId = GetWindowThreadProcessId(hWnd)
+    hProc = _kernel.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, False, processId)
+    _psapi.EnumProcessModules(hProc, byref(hModule), sizeof(hModule), byref(clength))
+    _psapi.GetModuleBaseNameA(hProc, hModule.value, modBasName, sizeof(modBasName))
+    _kernel.CloseHandle(hProc)
+    return modBasName.value
+#===============================================================================
 
 class EventHandler:
 
     def GetSongInfo(self):
         currSong = self.MM.Player.CurrentSong
-        title = currSong.Title
-        artistName = currSong.ArtistName
-        albumName = currSong.AlbumName
-        return (title, artistName, albumName)
+        return (
+            currSong.Title,
+            currSong.ArtistName,
+            currSong.AlbumName,
+            currSong.Rating,
+            currSong.TrackOrder,
+            currSong.Year,
+            currSong.Genre,
+            currSong.Path,
+            int(currSong.FileLength),
+            currSong.Bitrate,
+            currSong.Channels,
+            currSong.SongLength,
+        )
 
     def OnBeforeTracksMove(self, *args):
         #print "OnBeforeTracksMove",args
@@ -1030,6 +1063,7 @@ Whereas selecting the "%s" checkbox will cause the player to jump randomly throu
 #====================================================================
 
 class MediaMonkey(eg.PluginBase):
+    runFlg = False
     workerThread = None
     workerThread2 = None
     text = Text
@@ -1145,8 +1179,7 @@ class MediaMonkey(eg.PluginBase):
             events2 = 7 * [True]
         self.mm_events = dict(zip(MM_EVENTS, events))
         self.eg_events = events2
-        self.checkWorkerThread()
-        eg.scheduler.AddTask(1, self.MinimizeMM)   
+        eg.scheduler.AddTask(1, self.checkIsRunning)
 
 
     def GetPathAndVersion(self):
@@ -1173,18 +1206,39 @@ class MediaMonkey(eg.PluginBase):
 
 
     def MinimizeMM(self):
-        hwnds=MyWindowMatcher()
+        hwnds = MyWindowMatcher()
         if hwnds:
             SendMessageTimeout(hwnds[0],WM_SYSCOMMAND,SC_MINIMIZE,0)
         else:
             eg.scheduler.AddTask(1, self.MinimizeMM)
         
 
-    def checkWorkerThread(self):
+    def isRunning(self): # the fastest way I found ...
+        hwnd = None
+        while hwnd != 0:
+            hwnd = FindWindowEx(None, hwnd, "Winamp v1.x", None)
+            if hwnd:
+                if GetModuleFrom_hWnd(hwnd).find("MediaMonkey") >= 0:
+                    return True
+        return False
+
+
+    def checkIsRunning(self):
+        eg.scheduler.AddTask(1, self.checkIsRunning) # must run continuously !
+        if not self.isRunning():
+            if self.runFlg:
+                self.runFlg = False
+                self.StopThreads()
+        else:
+            if not self.runFlg:
+                self.runFlg = True
+                eg.scheduler.AddTask(0.5, self.startWorkerThread)
+
+
+    def startWorkerThread(self):
         if not self.workerThread:
             self.workerThread = MediaMonkeyWorkerThread(self, True)
             self.workerThread.Start(1000.0)
-        return True
 
 
     def Configure(self, events = 4 * [True] + 23 * [False], events2 = 7*[True]):
@@ -1243,27 +1297,27 @@ class MediaMonkey(eg.PluginBase):
         
 
     def SendCommand(self, command):
-        if self.checkWorkerThread():
+        if self.workerThread:
             self.workerThread.CallWait(partial(self.workerThread.DoCommand, command),1000)
 
 
     def SetValue(self, command, value):
-        if self.checkWorkerThread():
+        if self.workerThread:
             self.workerThread.CallWait(partial(self.workerThread.SetValue, command, value),1000)
             
 
     def GetValue(self, command):
-        if self.checkWorkerThread():
+        if self.workerThread:
             return self.workerThread.CallWait(partial(self.workerThread.GetValue, command),1000)
         
 
     def GetSongData(self,index):    
-        if self.checkWorkerThread():
+        if self.workerThread:
             return self.workerThread.CallWait(partial(self.workerThread.GetSongData, index),1000)
         
 
     def Jubox(self, ID, clear=True,repeat=2,shuffle=2,crossfade=2,stop = True):
-        if self.checkWorkerThread():
+        if self.workerThread:
             self.workerThread.Call(partial(
                 self.workerThread.Jubox,
                 ID,
@@ -1276,18 +1330,17 @@ class MediaMonkey(eg.PluginBase):
 
 
     def SongJubox(self, ID,clear=False,stop = True):
-        if self.checkWorkerThread():
+        if self.workerThread:
             self.workerThread.Call(partial(
                 self.workerThread.SongJubox,
                 ID,
                 clear,
                 stop
             ))
-#        return res,Total
 
 
     def DeleteSong(self, ID):
-        if self.checkWorkerThread():
+        if self.workerThread:
             res = self.workerThread.CallWait(partial(
                 self.workerThread.DeleteSongFromLibrary,
                 ID,
@@ -1309,11 +1362,16 @@ class MediaMonkey(eg.PluginBase):
 #===============================================================================
 
 class Start(eg.ActionBase):
-    name = "Start/Connect MediaMonkey"
-    description = "Start or Connect MediaMonkey through COM-API."
+    name = "Start MediaMonkey"
+    description = "Starts MediaMonkey."
 
     def __call__(self):
-        dummy = self.plugin.GetValue('isRepeat')
+        if not self.plugin.runFlg:
+            self.plugin.runFlg = True
+            eg.scheduler.AddTask(0.5, self.plugin.startWorkerThread)
+            while not self.plugin.workerThread:
+                eg.Utils.time.sleep(0.1)
+            eg.scheduler.AddTask(5, self.plugin.MinimizeMM)           
 #===============================================================================
 
 class Exit(eg.ActionBase):
@@ -1396,7 +1454,7 @@ class Previous(eg.ActionBase):
     description = "Play previous track."
 
     def __call__(self):
-        if self.plugin.checkWorkerThread():
+        if self.plugin.workerThread:
             self.plugin.workerThread.Call(partial(self.plugin.workerThread.Previous))
 #====================================================================
 
@@ -1794,7 +1852,7 @@ class GetBasicStatistics(eg.ActionBase):
     description = "Get Basic Statistics (number of tracks and albums in the database)."
 
     def __call__(self,sep=''):
-        if self.plugin.checkWorkerThread():
+        if self.plugin.workerThread:
             if sep == '':
                 sep = '\n'
             tracks, albums = self.plugin.workerThread.CallWait(partial(self.plugin.workerThread.GetStatistics),60)
@@ -2498,7 +2556,7 @@ class WritingToMM(eg.ActionBase):
         ndx = [itm[0] for itm in self.propertiesList].index([it[0] for it in SONG_TABLE_FIELDS][i])
         tmpList=[]
         attrib = [itm[2] for itm in SONG_TABLE_FIELDS][i]
-        if self.plugin.checkWorkerThread():
+        if self.plugin.workerThread:
             self.plugin.workerThread.CallWait(partial(
                 self.plugin.workerThread.WriteToMMdatabase,
                 attrib,
@@ -2664,7 +2722,7 @@ class AddCurrentSongToPlaylist(eg.ActionBase):
     description = "Adds the currently playing song to a specific playlist."
 
     def __call__(self, plString, skip):
-        if self.plugin.checkWorkerThread():
+        if self.plugin.workerThread:
             args = (
                 self.plugin.workerThread.AddSongToPlaylist,
                 plString,
@@ -2699,7 +2757,7 @@ class RemoveCurrentSongFromPlaylist(eg.ActionBase):
     description = "Remove the currently playing song from a specific playlist."
 
     def __call__(self, plString, skip, now_pl):
-        if self.plugin.checkWorkerThread():
+        if self.plugin.workerThread:
             args = (
                 self.plugin.workerThread.RemoveSongFromPlaylist,
                 plString,
@@ -2740,7 +2798,7 @@ class RemoveCurrentSongFromNowPlaying(eg.ActionBase):
     description = "Remove the currently playing song from Now Playing playlist."
 
     def __call__(self, skip):
-        if self.plugin.checkWorkerThread():
+        if self.plugin.workerThread:
             self.plugin.workerThread.Call(partial(
                     self.plugin.workerThread.RemoveSongFromNowPlaying,
                     skip
@@ -3927,7 +3985,7 @@ class JukeboxFrame(wx.Frame):
         else:
             self.itemListCtrl.DeleteAllItems()
             self.Update()
-            if self.plugin.checkWorkerThread():
+            if self.plugin.workerThread:
                 self.patientFrame = PatientFrame(self,self.text.please)
                 if self.case=='Album':
                     self.plugin.workerThread.Call(partial(self.plugin.workerThread.ExportAlbumList,self.filePath))
@@ -4124,7 +4182,7 @@ class UnaccessibleTracksFrame(wx.Frame):
         else:
             self.itemListCtrl.DeleteAllItems()
             self.Update()
-            if self.plugin.checkWorkerThread():
+            if self.plugin.workerThread:
                 self.patientFrame = PatientFrame(self,self.text.please)
                 self.plugin.workerThread.Call(partial(self.plugin.workerThread.GetNotAccessibleTracks,self.filePath))
                 self.Enable(False)
