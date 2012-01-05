@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 
-version="0.0.1"
+version="0.0.2"
 
 # This file is a plugin for EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
@@ -18,6 +18,8 @@ version="0.0.1"
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.0.2 by Pako 2012-01-05 07:20 UTC+1
+#     - for Snarl 2.5.1
 # 0.0.1 by Pako 2011-12-12 19:01 UTC+1
 #     - initial version
 #===============================================================================
@@ -178,7 +180,6 @@ def BringDialogToFront(name):
     hwnd = 0
     i=0
     while hwnd == 0 and i < 10000:
-        #print "hwnd =",hwnd
         hwnd = FindWindow("#32770", name)
         i += 1
     if hwnd:
@@ -218,8 +219,6 @@ def GetUid(uids):
 class Text:
     errMess0 = 'Snarl is not running !'
     errMess1 = 'Error during registration to Snarl'
-    #errMess2 = 'Error during connection to Snarl'
-    #errMess3 = "%s\r\nIt is possible that Snarl is not running"
     listLabel = "Notification classes:"
     labelLbl = "Class identifier (name):"
     delete = 'Delete'
@@ -603,7 +602,7 @@ class Snarl(eg.PluginBase):
                 partial(self.thread.Notify, *note[:-1]),1000
             )
             if res == 0:
-                self.suffixes[note[12]] = note[15]
+                self.suffixes[note[12]] = note[-1]
             return res
 
 
@@ -1056,13 +1055,13 @@ class Notify(eg.ActionBase):
   will be merged with it.
 
 | **Replace UID**:
-| The name says it all. However, try the behavior when the Replace UID = UID!
+| The name says it all. However, try the behavior when the *Replace UID = UID* !
 
 | **Priority and duration**:
 | If you set a Low priority, notification can not also be Sticky!'''
 
     class text:
-        typeLabel = "Note type:"
+        typeLabel = "Note class:"
         titleLabel = "Title:"
         iconLabel = "Icon:"
         soundLabel = "Sound:"
@@ -1071,6 +1070,17 @@ class Notify(eg.ActionBase):
         durationLabel2 = "(0 = Sticky; -1 = default)"
         percentLabel = "Percent value:"
         percentLabel2 = "(0 - 100; -1 = feature disabled)"
+        logLabel = "Log:"
+        sensLabel = "Sensitivity:"
+        sensChoices = (
+            "Normal",
+            "Personal",
+            "Private",
+            "Confidential",
+            "Restricted",
+            "Secret",
+            "Top Secret",
+        )
         descrLabel = "Text:"
         mergeLabel = "Merge UID:"
         mergeLabel2 = "(-1 = no merge UID)"
@@ -1102,6 +1112,8 @@ class Notify(eg.ActionBase):
         suffixes = ("", "", ""),
         merge = -1,
         replace = -1,
+        log = True,
+        sens = 0,
         ):
         clsIds = [n[0] for n in self.plugin.classes]
         cls = noteType if noteType in clsIds else ""
@@ -1143,13 +1155,13 @@ class Notify(eg.ActionBase):
             self.plugin.uids[mrg] if mrg > -1 else "",
             priority - 1,
             self.plugin.uids[rplc] if rplc > -1 else "",
-            #eg.ParseString(description) if description else (self.plugin.classes[ix][2] if ix is not None else "Empty text"), 
-            #eg.ParseString(title) if title else (self.plugin.classes[ix][1] if ix is not None else "Empty title"), 
             eg.ParseString(description) if description else "", 
             eg.ParseString(title) if title else "", 
             self.plugin.uids[indx] if indx > -1 else GetUid(self.plugin.uids),
             eg.ParseString(sound), 
             prcnt,
+            int(log),
+            16*sens,
             sffxs,
         )
 
@@ -1169,6 +1181,8 @@ class Notify(eg.ActionBase):
         suffixes,
         merge,
         replace,
+        log,
+        sens,
         ):
         return "%s: %s: %s: %s" % (self.name, noteType, title, description)
 
@@ -1188,6 +1202,8 @@ class Notify(eg.ActionBase):
         suffixes = ("","",""),
         merge = -1,
         replace = -1,
+        log = True,
+        sens = 0,
         ):
 
         if hasattr(self.plugin, "classes"):
@@ -1245,6 +1261,8 @@ class Notify(eg.ActionBase):
         durationLabel2 = wx.StaticText(panel, -1, text.durationLabel2)
         percentLabel = wx.StaticText(panel, -1, text.percentLabel)
         percentLabel2 = wx.StaticText(panel, -1, text.percentLabel2)
+        logLabel = wx.StaticText(panel, -1, text.logLabel)
+        sensLabel = wx.StaticText(panel, -1, text.sensLabel)
         uidIndexLabel = wx.StaticText(panel, -1, self.plugin.text.uidIndexLabel)
         sizer.Add(uidIndexLabel,0,wx.TOP,6)
         uidIndexLabel2 = wx.StaticText(panel, -1, self.plugin.text.uidIndexLabel2)
@@ -1286,7 +1304,11 @@ class Notify(eg.ActionBase):
         priorityCtrl = wx.RadioBox(
             panel, -1, choices = text.priorityChoices, style = wx.RA_SPECIFY_COLS
         )
-        priorityCtrl.SetSelection(priority) 
+        priorityCtrl.SetSelection(priority)
+        logCtrl = wx.CheckBox(panel, -1, "")
+        logCtrl.SetValue(log)
+        sensCtrl = wx.Choice(panel, -1, choices = self.text.sensChoices)
+        sensCtrl.SetSelection(sens)
 
 
         def OnMenu(evt):
@@ -1355,6 +1377,10 @@ class Notify(eg.ActionBase):
         sizer.Add(durationSizer,0,wx.TOP,-5)              #19
         sizer.Add(percentLabel,0,wx.TOP,-2)
         sizer.Add(percentSizer,0,wx.TOP,-5)               #21
+        sizer.Add(logLabel)
+        sizer.Add(logCtrl)
+        sizer.Add(sensLabel,0,wx.TOP,3)
+        sizer.Add(sensCtrl,1,wx.EXPAND)
 
         def CreateCtrl(ctrlType, id, init = True):
             ctrl = wx.FindWindowById(id)
@@ -1409,6 +1435,8 @@ class Notify(eg.ActionBase):
                 suffixCtrl.GetValue(),
                 wx.FindWindowById(panel.mergeId).GetValue(),
                 wx.FindWindowById(panel.replaceId).GetValue(),
+                logCtrl.GetValue(),
+                sensCtrl.GetSelection(),
             )
 #===============================================================================
 
