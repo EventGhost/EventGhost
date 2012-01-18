@@ -20,6 +20,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.9 by Pako 2012-01-18 11:13 UTC+1
+#     - fixed bug - inversion of option "Show a menu without stealing focus (prevents keyboard control)"
 # 0.2.8 by Pako 2012-01-18 10:23 UTC+1
 #     - added option "Show a menu without stealing focus (prevents keyboard control)"
 # 0.2.7 by Pako 2011-07-03 19:16 UTC+1
@@ -40,7 +42,7 @@
 eg.RegisterPlugin(
     name = "OS Menu",
     author = "Pako",
-    version = "0.2.8",
+    version = "0.2.9",
     kind = "other",
     guid = "{FCF3C7A7-FBC1-444D-B768-9477521946DC}",
     description = u"""<rst>
@@ -1258,10 +1260,10 @@ class Menu(wx.Frame):
 
         self.plugin.menuDlg = self 
         if focus:
+            eg.WinApi.Dynamic.ShowWindow(self.GetHandle(), 4)
+        else:
             self.Show(True)
             self.Raise()
-        else:
-            eg.WinApi.Dynamic.ShowWindow(self.GetHandle(), 4)
         wx.Yield()
         SetEvent(event)
 
