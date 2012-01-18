@@ -20,6 +20,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.8 by Pako 2012-01-18 10:23 UTC+1
+#     - added option "Show a menu without stealing focus (prevents keyboard control)"
 # 0.2.7 by Pako 2011-07-03 19:16 UTC+1
 #     - added option "Trigger an event if the user has moved the selection in the menu"
 # 0.2.6 by Pako 2011-06-27 12:40 UTC+1
@@ -38,7 +40,7 @@
 eg.RegisterPlugin(
     name = "OS Menu",
     author = "Pako",
-    version = "0.2.7",
+    version = "0.2.8",
     kind = "other",
     guid = "{FCF3C7A7-FBC1-444D-B768-9477521946DC}",
     description = u"""<rst>
@@ -94,6 +96,7 @@ SYS_VSCROLL_X = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
 class Text:
     picker = "Colour Picker"
     triggEvt = "Trigger an event if the user has moved the selection in the menu"
+    focus = "Show a menu without stealing focus (prevents keyboard control)"
     selMoved = "SelectionMoved"
     showMenu = u'''<rst>The selected monitor shows the menu, created by user.
 
@@ -290,7 +293,8 @@ class ShowMenu(eg.ActionBase):
         mode = 0,
         foreSel = (180, 180, 180),
         backSel = (75, 75, 75),
-        triggEvt = False
+        triggEvt = False,
+        focus = True,
     ):
         if not self.plugin.menuDlg:
             event = CreateEvent(None, 0, 0, None)
@@ -308,7 +312,8 @@ class ShowMenu(eg.ActionBase):
                 monitor,
                 mode,
                 event,
-                triggEvt
+                triggEvt,
+                focus,
             )
             eg.actionThread.WaitOnEvent(event)
 
@@ -324,7 +329,8 @@ class ShowMenu(eg.ActionBase):
         mode,
         foreSel,
         backSel,
-        triggEvt
+        triggEvt,
+        focus,
     ):
         res = self.name+': '
         for n in range(0,min(3,len(choices))):
@@ -346,7 +352,8 @@ class ShowMenu(eg.ActionBase):
         mode = 0,
         foreSel = (180, 180, 180),
         backSel = (75, 75, 75),
-        triggEvt = False
+        triggEvt = False,
+        focus = True,
     ):
         self.choices = choices[:]
         self.fore = fore
@@ -415,7 +422,10 @@ class ShowMenu(eg.ActionBase):
         displayChoice = eg.DisplayChoice(panel, monitor)
         triggEvtCtrl = wx.CheckBox(panel, -1, self.plugin.text.triggEvt)
         triggEvtCtrl.SetValue(triggEvt)
+        focusCtrl = wx.CheckBox(panel, -1, self.plugin.text.focus)
+        focusCtrl.SetValue(focus)
         mainSizer.Add(triggEvtCtrl,0,wx.TOP,10)
+        mainSizer.Add(focusCtrl,0,wx.TOP,10)
         bottomSizer.Add((20,-1),(2, 2))
         bottomSizer.Add((20,-1),(2, 5))
         bottomSizer.Add(labelLbl,(0, 0),(1,1),flag = wx.TOP,border = 8)
@@ -671,7 +681,8 @@ class ShowMenu(eg.ActionBase):
                     displayChoice.GetSelection(),
                     modeCtrl.GetSelection(),
                     CreateEvent(None, 0, 0, None),
-                    triggEvtCtrl.GetValue()
+                    triggEvtCtrl.GetValue(),
+                    focus.GetValue(),
                 )
 
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
@@ -687,7 +698,8 @@ class ShowMenu(eg.ActionBase):
             modeCtrl.GetSelection(),
             foreSelColourButton.GetValue(),
             backSelColourButton.GetValue(),
-            triggEvtCtrl.GetValue()
+            triggEvtCtrl.GetValue(),
+            focusCtrl.GetValue(),
         )
 #===============================================================================
 
@@ -719,7 +731,8 @@ class CreateMenuFromList(eg.ActionBase):
         mode = 0,
         foreSel = (180, 180, 180),
         backSel = (75, 75, 75),
-        triggEvt = False
+        triggEvt = False,
+        focus = True,
     ):
         if not self.plugin.menuDlg:
             try:
@@ -751,7 +764,8 @@ class CreateMenuFromList(eg.ActionBase):
                 monitor,
                 mode,
                 event,
-                triggEvt
+                triggEvt,
+                focus,
             )
             eg.actionThread.WaitOnEvent(event)
 
@@ -767,7 +781,8 @@ class CreateMenuFromList(eg.ActionBase):
         mode = 0,
         foreSel = (180, 180, 180),
         backSel = (75, 75, 75),
-        triggEvt = False
+        triggEvt = False,
+        focus = True,
     ):
         self.fore = fore
         self.back = back
@@ -852,7 +867,10 @@ class CreateMenuFromList(eg.ActionBase):
         displayChoice = eg.DisplayChoice(panel, monitor)
         triggEvtCtrl = wx.CheckBox(panel, -1, self.plugin.text.triggEvt)
         triggEvtCtrl.SetValue(triggEvt)
+        focusCtrl = wx.CheckBox(panel, -1, self.plugin.text.focus)
+        focusCtrl.SetValue(focus)
         mainSizer.Add(triggEvtCtrl,0,wx.TOP,10)
+        mainSizer.Add(focusCtrl,0,wx.TOP,10)
         bottomSizer.Add((30,-1),(2, 2))
         bottomSizer.Add((30,-1),(2, 5))
         bottomSizer.Add(listLbl,(0, 0), (1, 1),flag = wx.TOP,border = 8)
@@ -983,7 +1001,8 @@ class CreateMenuFromList(eg.ActionBase):
                             displayChoice.GetSelection(),
                             modeCtrl.GetSelection(),
                             CreateEvent(None, 0, 0, None),
-                            triggEvtCtrl.GetValue()
+                            triggEvtCtrl.GetValue(),
+                            focusCtrl.GetValue(),
                         )
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
 
@@ -998,7 +1017,8 @@ class CreateMenuFromList(eg.ActionBase):
             modeCtrl.GetSelection(),
             foreSelColourButton.GetValue(),
             backSelColourButton.GetValue(),
-            triggEvtCtrl.GetValue()
+            triggEvtCtrl.GetValue(),
+            focusCtrl.GetValue(),
         )
 #===============================================================================
 
@@ -1157,7 +1177,8 @@ class Menu(wx.Frame):
         monitor,
         mode,
         event,
-        triggEvt
+        triggEvt,
+        focus,
 ):
         wx.Frame.__init__(
             self,
@@ -1236,8 +1257,11 @@ class Menu(wx.Frame):
             self.timer=MyTimer(t = 5.0, plugin = self.plugin)
 
         self.plugin.menuDlg = self 
-        self.Show(True)
-        self.Raise()
+        if focus:
+            self.Show(True)
+            self.Raise()
+        else:
+            eg.WinApi.Dynamic.ShowWindow(self.GetHandle(), 4)
         wx.Yield()
         SetEvent(event)
 
