@@ -19,6 +19,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.13 by Pako 2012-01-19 11:53 UTC+1
+#      - command "self.plugin.menuDlg = self" is used immediately after creation of the wx.Frame
 # 0.2.12 by Pako 2012-01-19 10:32 UTC+1
 #      - added option "Show a menu without stealing focus (prevents keyboard control)"
 # 0.2.11 by Pako 2011-06-27 12:42 UTC+1
@@ -55,7 +57,7 @@
 eg.RegisterPlugin(
     name = "On screen explorer",
     author = "Pako",
-    version = "0.2.12",
+    version = "0.2.13",
     kind = "other",
     guid = "{D3D2DDD1-9BEB-4A26-969B-C82FA8EAB280}",
     description = u"""<rst>
@@ -1112,11 +1114,10 @@ class Menu(wx.Frame):
             None,
             -1,
             'OS_Explorer',
-#            style = wx.STAY_ON_TOP|wx.SIMPLE_BORDER
-            #style = wx.STAY_ON_TOP|wx.BORDER_STATIC 
             style = wx.STAY_ON_TOP|wx.BORDER_NONE 
         )
         self.plugin  = plugin
+        self.plugin.menuDlg = self
         self.goBackList = []
 
         self.fore     = fore
@@ -1221,7 +1222,7 @@ class Menu(wx.Frame):
         self.plugin.lastFolder = start
         self.eventChoiceCtrl.SetGridCursor(itm, 0)
 
-        self.plugin.menuDlg = self
+#        self.plugin.menuDlg = self
 
         eg.WinApi.Dynamic.ShowWindow(self.GetHandle(), 0)
         if self.focus:
