@@ -20,6 +20,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.12 by Pako 2012-01-19 10:32 UTC+1
+#      - added option "Show a menu without stealing focus (prevents keyboard control)"
 # 0.2.11 by Pako 2011-06-27 12:42 UTC+1
 #      - bugfix: problem when any menu action is called too soon after its opening
 # 0.2.10 by Pako 2011-06-26 06:56 UTC+1
@@ -54,7 +56,7 @@
 eg.RegisterPlugin(
     name = "On screen explorer",
     author = "Pako",
-    version = "0.2.11",
+    version = "0.2.12",
     kind = "other",
     guid = "{D3D2DDD1-9BEB-4A26-969B-C82FA8EAB280}",
     description = u"""<rst>
@@ -315,6 +317,7 @@ class ShowMenu(eg.ActionBase):
         folder = "Start folder:"
         browseTitle = "Selected folder:"
         hide = "Do not display system and hidden files and folders"
+        focus = "Show a menu without stealing focus (prevents keyboard control)"
         toolTipFolder = "Press button and browse to select folder ..."
         patterns = "Show only the files corresponding to these patterns:"
         compBtnToolTip = 'Press this button to set "%s" as start folder'
@@ -335,6 +338,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         hide = True,
         foreSel = (180, 180, 180),
         backSel = (75, 75, 75),
+        focus = True,        
     ):
         if not self.plugin.menuDlg:
             if not self.value:
@@ -364,7 +368,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
                 start,
                 patterns,
                 hide,
-                event
+                event,
+                focus,
             )
             eg.actionThread.WaitOnEvent(event)
 
@@ -381,7 +386,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         patterns,
         hide,
         foreSel,
-        backSel
+        backSel,
+        focus,
     ):
         return "%s: %s, [%s]" % (self.name,start,patterns)
 
@@ -398,7 +404,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         patterns = "*.*",
         hide = True,
         foreSel = (180, 180, 180),
-        backSel = (75, 75, 75)
+        backSel = (75, 75, 75),
+        focus = True,
     ):
         self.fore = fore
         self.back = back
@@ -476,6 +483,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         patternsCtrl.SetToolTip(wx.ToolTip(self.text.patternsToolTip))
         hideSystem = wx.CheckBox(panel, -1, self.text.hide)
         hideSystem.SetValue(hide)
+        focusCtrl = wx.CheckBox(panel, -1, self.text.focus)
+        focusCtrl.SetValue(focus)
         #Sizers
         mainSizer = panel.sizer
         topSizer=wx.GridBagSizer(2, 30)
@@ -519,6 +528,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
         mainSizer.Add(patternsLabel,0,wx.TOP,8)
         mainSizer.Add(patternsCtrl,1,wx.TOP|wx.EXPAND,2)
         mainSizer.Add(hideSystem,0,wx.TOP,10)
+        mainSizer.Add(focusCtrl,0,wx.TOP,10)
         panel.sizer.Layout()
         wdth = 160
         if (hght+4)*listBoxCtrl.GetNumberRows() > listBoxCtrl.GetSize()[1]: #after Layout() !!!
@@ -609,7 +619,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
                     folderCtrl.GetValue() if self.value else start,
                     patternsCtrl.GetValue(),
                     hideSystem.GetValue(),
-                    CreateEvent(None, 0, 0, None)
+                    CreateEvent(None, 0, 0, None),
+                    focusCtrl.GetValue(),
                 )
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
 
@@ -626,6 +637,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.'''
             hideSystem.GetValue(),
             foreSelColourButton.GetValue(),
             backSelColourButton.GetValue(),
+            focusCtrl.GetValue(),
         )
 #===============================================================================
 
@@ -1092,7 +1104,8 @@ class Menu(wx.Frame):
         start,
         patterns,
         hide,
-        event
+        event,
+        focus,
         ):
 
         wx.Frame.__init__(
@@ -1100,7 +1113,9 @@ class Menu(wx.Frame):
             None,
             -1,
             'OS_Explorer',
-            style = wx.STAY_ON_TOP|wx.SIMPLE_BORDER
+#            style = wx.STAY_ON_TOP|wx.SIMPLE_BORDER
+            #style = wx.STAY_ON_TOP|wx.BORDER_STATIC 
+            style = wx.STAY_ON_TOP|wx.BORDER_NONE 
         )
         self.plugin  = plugin
         self.goBackList = []
@@ -1114,6 +1129,7 @@ class Menu(wx.Frame):
         self.monitor  = monitor
         self.patterns = patterns
         self.hide     = hide
+        self.focus    = focus
 
         self.ShowMenu(prefix, suffix, start, False, event)
 
@@ -1179,7 +1195,7 @@ class Menu(wx.Frame):
 
         height0 = len(self.choices)*h
         height1 = h*((hs-20)/h)
-        height = min(height0, height1)+6
+        height = min(height0, height1)+4
         # menu width calculation:
         width_lst=[]
         for item in self.choices:
@@ -1188,11 +1204,11 @@ class Menu(wx.Frame):
         self.eventChoiceCtrl.SetColSize(0,width)
         if height1 < height0:
             width += SYS_VSCROLL_X
-        width = min((width,ws-50))+6
+        width = min((width,ws-50))+4
         x_pos = x+(ws-width)/2
         y_pos = y + (hs-height)/2
         self.SetDimensions(x_pos,y_pos,width,height)
-        self.eventChoiceCtrl.SetDimensions(2,2,width-6,height-6,wx.SIZE_AUTO)
+        self.eventChoiceCtrl.SetDimensions(2,2,width-4,height-4,wx.SIZE_AUTO)
 
         head, tail = os.path.split(self.oldStart)
         if start != MY_COMPUTER:
@@ -1207,8 +1223,14 @@ class Menu(wx.Frame):
         self.eventChoiceCtrl.SetGridCursor(itm, 0)
 
         self.plugin.menuDlg = self
-        self.Show(True)
-        self.Raise()
+
+        eg.WinApi.Dynamic.ShowWindow(self.GetHandle(), 0)
+        if self.focus:
+            eg.WinApi.Dynamic.ShowWindow(self.GetHandle(), 4)
+        else:
+            self.Show(True)
+            self.Raise()
+
         if event:
             wx.Yield()
             SetEvent(event)
