@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 version="0.0.2"
 
@@ -455,7 +455,7 @@ class SnarlWorkerThread(eg.ThreadWorker):
         self.snarl = pySnarl.SnarlApp(
             "EventGhost.%s" % eg.Version.string, # signature
             "EventGhost",                        # title
-            join(eg.imagesDir, "icon32x32.png"), # icon
+            join(eg.imagesDir, "logo.png"),      # icon
             "",                                  # configTool
             "",                                  # hint
             True,                                # IsDaemon
