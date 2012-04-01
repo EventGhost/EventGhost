@@ -133,17 +133,17 @@ class EventGhostEvent(object):
         get = eg.eventTable.get
         eventHandlerList = []
         eventHandlerList += get(eventString, [])
-        if self.prefix != "Keyboard":
-            eventHandlerList += get(self.suffix, [])
-            key2 = self.suffix.rsplit(".", 1)[-1]
-            if self.suffix != key2:
-                eventHandlerList += get(key2, [])
-            eventHandlerList += get('*', [])
-            key1 = eventString.rsplit(".", 1)[0] + '.*'
-            eventHandlerList += get(key1, [])
-            key2 = eventString.split(".", 1)[0] + '.*'
-            if key1 != key2:
-                eventHandlerList += get(key2, [])
+        #if self.prefix != "Keyboard":
+        eventHandlerList += get(self.suffix, [])
+        key2 = self.suffix.rsplit(".", 1)[-1]
+        if self.suffix != key2:
+            eventHandlerList += get(key2, [])
+        eventHandlerList += get('*', [])
+        key1 = eventString.rsplit(".", 1)[0] + '.*'
+        eventHandlerList += get(key1, [])
+        key2 = eventString.split(".", 1)[0] + '.*'
+        if key1 != key2:
+            eventHandlerList += get(key2, [])
 
         activeHandlers = set()
         for eventHandler in eventHandlerList:
