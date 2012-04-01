@@ -28,9 +28,9 @@ from xml.dom.minidom import Node
 eg.RegisterPlugin(
     name = "XBMC2",
     author = "Joni Boren",
-    version = "0.6.3",
+    version = "0.6.3d",
     kind = "program",
-    guid = "{2DD98E35-F060-4444-9F11-168CD8131A6B}",
+    guid = "{8C8B850C-773F-4583-AAD9-A568262B7933}",
     canMultiLoad = True,
     createMacrosOnAdd = True,
     url = "http://www.eventghost.net/forum/viewtopic.php?f=10&t=1562",
@@ -515,6 +515,16 @@ GAMEPAD_BUTTONS = (
 )),
 )
 
+# Keyboard keys handled by XBMC.  For a list of all keys see: http://wiki.xbmc.org/index.php?title=List_of_XBMC_keynames
+
+KEYBOARD_KEYS = (
+(eg.ActionGroup, "Keyboard", "Keyboard", None, (
+    ("KeyboardBackspace", "Backspace", "", "backspace"),
+    ("KeyboardEnter", "Enter", "", "enter"),
+    ("KeyboardTab", "Tab", "", "tab"),
+)),
+)
+
 # Support functions
 def ParseString2(text, filterFunc=None):
 	start = 0
@@ -587,6 +597,14 @@ class GamepadPrototype(eg.ActionClass):
     def __call__(self):
         try:
             packet = PacketBUTTON(map_name=str("XG"), button_name=str(self.value), repeat=0)
+            packet.send(self.plugin.xbmc.sock, self.plugin.xbmc.addr, self.plugin.xbmc.uid)
+        except:
+            raise self.Exceptions.ProgramNotRunning
+
+class KeyboardPrototype(eg.ActionClass):
+    def __call__(self):
+        try:
+            packet = PacketBUTTON(map_name=str("KB"), button_name=str(self.value), repeat=0)
             packet.send(self.plugin.xbmc.sock, self.plugin.xbmc.addr, self.plugin.xbmc.uid)
         except:
             raise self.Exceptions.ProgramNotRunning
@@ -1042,6 +1060,7 @@ class XBMC2(eg.PluginClass):
         ButtonsGroup = self.AddGroup("Buttons", "Button actions to send to XBMC")
         ButtonsGroup.AddActionsFromList(REMOTE_BUTTONS, ButtonPrototype)
         ButtonsGroup.AddActionsFromList(GAMEPAD_BUTTONS, GamepadPrototype)
+        ButtonsGroup.AddActionsFromList(KEYBOARD_KEYS, KeyboardPrototype)
         ActionsGroup = self.AddGroup("Actions", "Actions to send to XBMC")
         ActionsGroup.AddActionsFromList(GENERAL_ACTIONS, ActionPrototype)
         ActionsGroup.AddActionsFromList(MEDIA_PLAYING_ACTIONS, ActionPrototype)
