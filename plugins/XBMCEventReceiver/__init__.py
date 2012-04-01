@@ -106,6 +106,7 @@ class Server(asyncore.dispatcher):
         data, addr = self.recvfrom(1024)
 
         if (self.ipadd != addr[0]) or self.selfXbmceventbroadcast:
+            data = unicode(data, 'UTF8')
             #print data
             bits = data.split(str(self.payDelim))
             commandSize=len(bits)
