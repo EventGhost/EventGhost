@@ -148,3 +148,6 @@ class ControlProviderMixin:
     def PasswordCtrl(self, *args, **kwargs):
         return eg.PasswordCtrl(self, -1, *args, **kwargs)
 
+
+    def MonitorsCtrl(self, *args, **kwargs):
+        return eg.MonitorsCtrl(self, -1, *args, **kwargs)
