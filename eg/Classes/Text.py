@@ -60,6 +60,14 @@ class Default:
         settingsEventCaption = "Event Item Settings"
         noOptionsAction = "This action has no options to configure."
         noOptionsPlugin = "This plugin has no options to configure."
+        monitorsLabel = "Identified monitors:"
+        monitorsHeader = (
+            "Monitor nr.",
+            "X coordinate",
+            "Y coordinate",
+            "Width",
+            "Height",
+        )
 
     class Error:
         FileNotFound = "File \"%s\" couldn't be found."
