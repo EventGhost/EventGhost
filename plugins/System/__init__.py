@@ -15,11 +15,12 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import eg
+import traceback
 
 eg.RegisterPlugin(
     name = "System",
     author = "Bitmonster",
-    version = "1.1.1",
+    version = "1.1.2",
     description = (
         "Controls different aspects of your system, like sound card, "
         "graphics card, power management, et cetera."
@@ -81,6 +82,9 @@ from ChangeDisplaySettings import ChangeDisplaySettings
 from Execute import Execute
 from DeviceChangeNotifier import DeviceChangeNotifier
 from PowerBroadcastNotifier import PowerBroadcastNotifier
+from PIL import Image
+from base64 import b64decode
+from StringIO import StringIO
 import Registry
 
 
@@ -116,6 +120,19 @@ def getDeviceHandle(drive):
     return "\\\\.\\%s:" % drive[:1].upper()
 
 
+def Resize(w,h,width_,height_, force = False):
+    if force or (w > width_) or (h > height_):
+        xfactor = (w * 1.0 / width_)
+        yfactor = (h * 1.0 / height_)
+        if xfactor > yfactor:
+            w = width_
+            h = int(round(h / xfactor))
+        else:
+            w = int(round(w / yfactor))
+            h = height_
+    return (w, h)
+
+
 EVENT_LIST = (
     ("Idle", None),
     ("UnIdle", None),
@@ -129,6 +146,26 @@ EVENT_LIST = (
 class System(eg.PluginBase):
     text = Text
     hookStarted = False
+
+    def VolumeEvent(self, mute, volume):
+        try:
+            if mute:
+                self.TriggerEvent("Mute", volume)
+            else:
+                self.TriggerEvent("Volume", volume)
+        except:
+            pass
+
+    def MuteEvent(self, mute, volume):
+        try:
+            if mute:
+                self.TriggerEvent("Mute", volume)
+            else:
+                self.TriggerEvent("UnMute", volume)
+        except:
+            pass
+
+
 
     def __init__(self):
         text = self.text
@@ -165,6 +202,7 @@ class System(eg.PluginBase):
         group.AddAction(MonitorPowerOff)
         group.AddAction(MonitorPowerOn)
         group.AddAction(ShowPicture)
+        group.AddAction(DisplayImage)
         group.AddAction(SetWallpaper)
         group.AddAction(ChangeDisplaySettings)
         group.AddAction(SetDisplayPreset)
@@ -220,36 +258,67 @@ class System(eg.PluginBase):
 
         # Use VistaVolume.dll from stridger for sound volume control on Vista
         if majorVersion > 5:
-            pluginDir = os.path.abspath(os.path.split(__file__)[0])
-            dllPath = os.path.join(pluginDir, "VistaVolume.dll")
-            vistaVolumeDll = ctypes.cdll.LoadLibrary(dllPath)
-            vistaVolumeDll.SetMasterVolume.argtypes = [ctypes.c_float]
-            vistaVolumeDll.GetMasterVolume.restype = ctypes.c_float
+            import VistaVolEvents as vistaVolumeDll
+            vistaVolumeDll.RegisterVolumeHandler(self.VolumeEvent)
+            vistaVolumeDll.RegisterMuteHandler(self.MuteEvent)
 
             def MuteOn2(self, deviceId=0):
-                vistaVolumeDll.SetMute(1)
+                try:
+                    vistaVolumeDll.SetMute(1)
+                except:
+                    return False
+                    pass
                 return True
 
             def MuteOff2(self, deviceId=0):
-                vistaVolumeDll.SetMute(0)
+                try:
+                    vistaVolumeDll.SetMute(0)
+                except:
+                    return True
+                    pass
                 return False
 
             def ToggleMute2(self, deviceId=0):
-                newValue = not vistaVolumeDll.GetMute()
-                vistaVolumeDll.SetMute(newValue)
+                newvalue=None
+                try:
+                    newValue = not vistaVolumeDll.GetMute()
+                    vistaVolumeDll.SetMute(newValue)
+                except:
+                    pass
                 return newValue
 
             def GetMute2(self, deviceId=0):
-                return vistaVolumeDll.GetMute()
+                newvalue=None
+                try:
+                    newvalue=vistaVolumeDll.GetMute()
+                except:
+                    pass
+                return newvalue
 
-            def SetMasterVolume2(self, value, deviceId=0):
-                vistaVolumeDll.SetMasterVolume(value / 100.0)
-                return vistaVolumeDll.GetMasterVolume() * 100.0
+            def SetMasterVolume2(self, value=200, deviceId=0):
+                newvalue=None
+                try:
+                    if value >= 0 and value <= 100:
+                        vistaVolumeDll.SetMasterVolume(value / 100.0)
+                    newvalue=vistaVolumeDll.GetMasterVolume() * 100.0
+                except:
+                    pass
+                return newvalue
 
             def ChangeMasterVolumeBy2(self, value, deviceId=0):
-                old = vistaVolumeDll.GetMasterVolume()
-                vistaVolumeDll.SetMasterVolume((old * 100.0 + value) / 100.0)
-                return vistaVolumeDll.GetMasterVolume() * 100.0
+                newvalue=None
+                try:
+                    old = vistaVolumeDll.GetMasterVolume() * 100
+                    if old + value <= 0:
+                        vistaVolumeDll.SetMasterVolume(0)
+                    elif old + value >= 100:
+                        vistaVolumeDll.SetMasterVolume(1.0)
+                    else:
+                        vistaVolumeDll.SetMasterVolume((old + value) / 100.0)
+                    newvalue = vistaVolumeDll.GetMasterVolume() * 100.0
+                except:
+                    pass
+                return newvalue
 
             actions = self.info.actions
             actions["MuteOn"].__call__ = MuteOn2
@@ -978,8 +1047,229 @@ class ChangeMasterVolumeBy(eg.ActionBase):
                 float(valueCtrl.GetValue()),
                 deviceCtrl.GetValue(),
             )
+#===============================================================================
+
+def piltoimage(pil, hasAlpha):
+    """Convert PIL Image to wx.Image."""
+    image = wx.EmptyImage(*pil.size)
+    rgbPil = pil.convert('RGB')
+    if hasAlpha:
+        image.SetData(rgbPil.tostring())
+        image.SetAlphaData(pil.convert("RGBA").tostring()[3::4])
+    else:
+        new_image = rgbPil
+        data = new_image.tostring()
+        image.SetData(data)
+    return image
+#===============================================================================
+class ShapedFrame(wx.Frame):
+
+    def __init__(
+        self,
+        error,
+        imageFile,
+        sizeMode,
+        fitMode,
+        fit,
+        stretch,
+        resample,
+        onTop,
+        border,
+        timeout,
+        display,
+        x,
+        y,
+        width_,
+        height_,
+        back,
+        shaped,
+        center,
+        noFocus,
+        ):
+        try:
+            pil = Image.open(imageFile)
+        except:
+            try:
+                pil = Image.open(StringIO(b64decode(imageFile)))
+            except:
+                eg.PrintError(error % imageFile[:256])
+                return
+        self.imageFile = imageFile
+        style = wx.FRAME_NO_TASKBAR
+        self.hasAlpha = (pil.mode in ('RGBA', 'LA') or (pil.mode == 'P' and 'transparency' in pil.info))
+        if self.hasAlpha and shaped:
+            style |= wx.FRAME_SHAPED
+        if onTop:
+            style |= wx.STAY_ON_TOP
+        style |= (
+            wx.NO_BORDER,
+            wx.BORDER_SIMPLE,
+            wx.BORDER_DOUBLE,
+            wx.BORDER_SUNKEN,
+            wx.BORDER_RAISED)[border] if sizeMode != 3 else wx.NO_BORDER
+        wx.Frame.__init__(self, None, -1, "EG.System.DisplayImage", style = style)
+        self.SetBackgroundColour(back)
+
+        self.hasShape = False
+        self.shaped = shaped
+        self.delta = (0,0)
+
+        self.Bind(wx.EVT_LEFT_DCLICK, self.OnDoubleClick)
+        self.Bind(wx.EVT_LEFT_DOWN,   self.OnLeftDown)
+        self.Bind(wx.EVT_LEFT_UP,     self.OnLeftUp)
+        self.Bind(wx.EVT_MOTION,      self.OnMouseMove)
+        self.Bind(wx.EVT_RIGHT_UP,    self.OnRightUp)
+        self.Bind(wx.EVT_TIMER,       self.OnExit)
+        self.Bind(wx.EVT_PAINT,       self.OnPaint)
+
+        if timeout:
+            self.timer = wx.Timer(self)
+            self.timer.Start(1000*timeout)
+        else:
+            self.timer = None
+
+        back = list(back)
+        back.append((255,0)[int(self.hasAlpha)])
+        w, h = pil.size
+        res = False
+        monDim = GetMonitorDimensions()
+        try:
+            dummy = monDim[display]
+        except IndexError:
+            display = 0
+        if sizeMode == 0:
+            width_ = w
+            height_ = h
+        elif sizeMode == 3: #FULLSCREEN
+            width_ = monDim[display][2]
+            height_ = monDim[display][3]
+            x = 0
+            y = 0
+        if sizeMode > 0: #SEMI/FIX SIZE or FULLSCREEN
+            if (width_, height_)==(w, h):
+                pass
+            elif stretch and fit:
+                res = True
+            else:
+                if stretch and w <= width_ and h <= height_:
+                    res = True
+                        
+                elif fit and w >= width_ and h >= height_:
+                    res = True
 
 
+        if res: #resize !
+            if fitMode == 0: #ignore aspect
+                w = width_
+                h = height_
+            elif fitMode == 1: #width AND height AND aspect
+                w, h = Resize(w, h, width_, height_, force = True)
+            elif fitMode == 2: #width
+                wpercent = (width_/float(w))
+                w = width_
+                h = int((float(h)*wpercent))
+            else: #height
+                wpercent = (height_/float(h))
+                h = height_
+                w = int((float(w)*wpercent))
+            if sizeMode == 1:
+                width_ = w
+                height_ = h
+            meth = (
+                Image.ANTIALIAS,
+                Image.BILINEAR,
+                Image.BICUBIC,
+                Image.NEAREST)[resample]
+            pil = pil.resize((w,h), meth)
+        if (w, h) != (width_, height_) and width_ >= w and height_ >= h:
+            im = Image.new("RGBA", (width_, height_), tuple(back))
+            im.paste(pil, ((width_-w)/2, (height_-h)/2), pil.convert("RGBA"))
+        else:
+            im = pil
+
+        im = piltoimage(im, self.hasAlpha and shaped)
+        
+
+        cliSize = (width_, height_)
+        self.SetClientSize(cliSize)
+        im.ConvertAlphaToMask()
+        self.bmp = wx.BitmapFromImage(im)
+        if self.hasAlpha and self.shaped:
+            self.SetWindowShape()
+
+        dc = wx.ClientDC(self)
+
+        dc.DrawBitmap(self.bmp, 0, 0, True)
+        if center:
+            w,h = self.GetSize()
+            x = monDim[display][0] + (monDim[display][2] - w) / 2
+            y = monDim[display][1] + (monDim[display][3] - h) / 2
+        self.SetPosition((monDim[display][0] + x, monDim[display][1] + y))
+        if noFocus:
+            eg.WinApi.Dynamic.ShowWindow(self.GetHandle(), 4)
+        else:
+            self.Show(True)
+
+
+    def SetWindowShape(self, *evt):
+        r = wx.RegionFromBitmap(self.bmp)
+        self.hasShape = self.SetShape(r)
+
+
+    def OnDoubleClick(self, evt):
+        eg.TriggerEvent(
+            "DoubleClick",
+            prefix = "System.DisplayImage",
+            payload = self.imageFile
+        )
+        if self.hasAlpha and self.shaped:
+            if self.hasShape:
+                self.SetShape(wx.Region())
+                self.hasShape = False
+            else:
+                self.SetWindowShape()
+
+    def OnPaint(self, evt):
+        dc = wx.PaintDC(self)
+        dc.DrawBitmap(self.bmp, 0,0, True)
+
+
+    def OnExit(self, evt=None):
+        if self.timer:
+            self.timer.Stop()
+        del self.timer
+        self.Close()
+
+
+    def OnLeftDown(self, evt):
+        self.CaptureMouse()
+        x, y = self.ClientToScreen(evt.GetPosition())
+        originx, originy = self.GetPosition()
+        dx = x - originx
+        dy = y - originy
+        self.delta = ((dx, dy))
+
+
+    def OnLeftUp(self, evt):
+        if self.HasCapture():
+            self.ReleaseMouse()
+
+
+    def OnRightUp(self, evt):
+        eg.TriggerEvent(
+            "RightClick",
+            prefix = "System.DisplayImage",
+            payload = self.imageFile
+        )
+        self.OnExit()
+
+
+    def OnMouseMove(self, evt):
+        if evt.Dragging() and evt.LeftIsDown():
+            x, y = self.ClientToScreen(evt.GetPosition())
+            fp = (x - self.delta[0], y - self.delta[1])
+            self.Move(fp)
+#===============================================================================
 
 class ShowPictureFrame(wx.Frame):
     def __init__(self, size=(-1,-1), pic_path=None, display=0):
@@ -1000,30 +1290,24 @@ class ShowPictureFrame(wx.Frame):
         self.timer = Timer(2.0, self.HideCursor)
 
 
-    def SetPicture(self, picturePath=None, display=0):
+    def SetPicture(self, picturePath = None, display = 0):
         if not picturePath:
             return
-        dimension = GetMonitorDimensions()[display]
+        width_ = GetMonitorDimensions()[display][2]
+        height_ = GetMonitorDimensions()[display][3]
         pil = Image.open(picturePath)
-        width, height = pil.size
-        if (width > dimension.width) or (height > dimension.height):
-            xfactor = (width * 1.0 / dimension.width)
-            yfactor = (height * 1.0 / dimension.height)
-            if xfactor > yfactor:
-                width = dimension.width
-                height = int(round(height / xfactor))
-            else:
-                width = int(round(width / yfactor))
-                height = dimension.height
-            pil = pil.resize((width, height), Image.NEAREST)
+        w, h = pil.size
+        w, h = Resize(w, h, width_, height_)
+        if pil.size != (w, h):
+            pil = pil.resize((w, h), Image.NEAREST)
 
         bitmap = wx.BitmapFromBuffer(
-            width, height, pil.convert('RGB').tostring()
+            w, h, pil.convert('RGB').tostring()
         )
         self.staticBitmap.SetBitmap(bitmap)
-        x = dimension.x + (dimension.width - width) / 2
-        y = dimension.y + (dimension.height - height) / 2
-        self.SetDimensions(x, y, width, height)
+        x = GetMonitorDimensions()[display][0] + (width_ - w) / 2
+        y = GetMonitorDimensions()[display][1] + (height_ - h) / 2
+        self.SetDimensions(x, y, w, h)
 
 
     def LeftDblClick(self, dummyEvent):
@@ -1055,8 +1339,477 @@ class ShowPictureFrame(wx.Frame):
             self.staticBitmap.SetCursor,
             wx.StockCursor(wx.CURSOR_BLANK)
         )
+#===============================================================================
+
+class DisplayImage(eg.ActionBase):
+    name = "Display Image"
+    description = "Displays a image on the screen."
+    iconFile = "icons/ShowPicture"
+    class text:
+        path = "Path to image or base64 string:"
+        display = "Monitor:"
+        allImageFiles = 'All Image Files'
+        allFiles = "All files"
+        winSizeLabel = "Window size mode"
+        winSizes = (
+            "Adapt window size to image size",
+            "Use a semi-fixed window size (no margins)",
+            "Use a fixed window size",
+            "Fullscreen"
+            )
+        posAndSize = "Monitor, position and size of window"
+        xCoord = "X coordinate:"
+        yCoord = "Y coordinate:"
+        width = "Width:"
+        high = "Height:"
+        fitModeLabel ="Fit mode"
+        fitModes = (
+            "Fit image to window (ignore the aspect ratio)",
+            "Fit image to window (keep the aspect ratio)",
+            "Fit to window width (keep the aspect ratio)",
+            "Fit to window height (keep the aspect ratio)",
+        )
+        fit = "Fit big images"
+        stretch = "Stretch small images"
+        resample = "Resample method:"
+        resampleMethods = (
+            "Antialias",
+            "Bilinear",
+            "Bicubic",
+            "Nearest",
+        )
+        bckgrnd = "Background and alpha channel"
+        bckgrndColour = "Background colour"
+        shaped = "Shaped window (if alpha channel exists)"
+        timeout1 = "The window automatically disappears after"
+        timeout2 = "seconds (0 = feature disabled)"
+        topFocus = "On top and focus options"
+        onTop = "Stay on top"
+        noFocus = "Show a image without stealing focus"
+        borderLabel = "Window border:"
+        borders = (
+            "No border",
+            "Simple",
+            "Double",
+            "Sunken",
+            "Raised",
+        )
+        other = "Other options"
+        Error = 'Exception in action "%s": Failed to open file "%%s" !'
+        center = "Center on screen"
+        menu = (
+            "Change control to Spin Int",
+            "Change control to Text with {eg.result}",
+            "Change control to Text with {eg.event.payload}",
+            "Change control to (empty) Text"
+        )
+        tooltip = "Use the right mouse button\nto get the context menu !"
+        toolTipFile = """Enter a filename of image
+or insert the image as a base64 string"""
 
 
+    def __call__(
+        self,
+        imageFile = '',
+        winSize = 0,
+        fitMode = 1,
+        fit = True,
+        stretch = False,
+        resample = 0,
+        onTop = True,
+        border = 4,
+        timeout = 10,
+        display = 0,
+        x = 0,
+        y = 0,
+        width_ = 640,
+        height_ = 360,
+        back = (0, 0, 0),
+        shaped = True,
+        center = False,
+        noFocus = True,
+        ):
+        def parseArgument(arg):
+            if isinstance(arg, int):
+                return arg
+            else:
+                from locale import localeconv
+                decimal_point = localeconv()['decimal_point']
+                arg = eg.ParseString(arg).replace(decimal_point, ".")
+                return int(float(arg))
+        imageFile = eg.ParseString(imageFile)
+        x = parseArgument(x)
+        y = parseArgument(y)
+        width_ = parseArgument(width_)
+        height_ = parseArgument(height_)
+        timeout = parseArgument(timeout)
+
+        if imageFile:
+            wx.CallAfter(
+                ShapedFrame,
+                self.text.Error % (self.name),
+                imageFile,
+                winSize,
+                fitMode,
+                fit,
+                stretch,
+                resample,
+                onTop,
+                border,
+                timeout,
+                display,
+                x,
+                y,
+                width_,
+                height_,
+                back,
+                shaped,
+                center,
+                noFocus,
+            )
+
+
+    def Configure(
+        self,
+        imageFile = '',
+        winSize = 0,
+        fitMode = 1,
+        fit = True,
+        stretch = False,
+        resample = 0,
+        onTop = True,
+        border = 4,
+        timeout = 10,
+        display = 0,
+        x = 0,
+        y = 0,
+        width_ = 640,
+        height_ = 360,
+        back = (0, 0, 0),
+        shaped = True,
+        center = False,
+        noFocus = True,
+        ):
+        panel = eg.ConfigPanel()
+        text = self.text
+
+        panel.xCoordId = wx.NewId()
+        panel.yCoordId = wx.NewId()
+        panel.widthId = wx.NewId()
+        panel.heightId = wx.NewId()
+        panel.timeoutId = wx.NewId()
+        panel.ids = (
+            panel.xCoordId,
+            panel.yCoordId,
+            panel.widthId,
+            panel.heightId,
+            panel.timeoutId,
+        )
+        panel.activeCtrl = None
+
+        displayLbl=wx.StaticText(panel, -1, text.display)
+        pathLbl=wx.StaticText(panel, -1, text.path)
+        resampleLbl=wx.StaticText(panel, -1, text.resample)
+        bckgrndLbl=wx.StaticText(panel, -1, text.bckgrndColour + ":")
+        borderLbl=wx.StaticText(panel, -1, text.borderLabel)
+        timeoutLbl_1=wx.StaticText(panel, -1, text.timeout1)
+        timeoutLbl_2=wx.StaticText(panel, -1, text.timeout2)
+        radioBoxWinSizes = wx.RadioBox(
+            panel, 
+            -1, 
+            text.winSizeLabel, 
+            choices=self.text.winSizes, 
+            style=wx.RA_SPECIFY_ROWS
+        )
+        radioBoxWinSizes.SetSelection(winSize)
+        filepathCtrl = eg.FileBrowseButton(
+            panel,
+            size=(340, -1),
+            initialValue=imageFile,
+            labelText="",
+            fileMask='%s|*.jpg;*.bmp;*.gif;*.png|%s (*.*)|*.*' % (
+                text.allImageFiles,
+                text.allFiles
+            ),
+            buttonText=eg.text.General.browse,
+        )
+        filepathCtrl.textControl.SetToolTipString(text.toolTipFile)
+        displayChoice = eg.DisplayChoice(panel, display)
+        xCoordLbl=wx.StaticText(panel, -1, text.xCoord)
+        yCoordLbl=wx.StaticText(panel, -1, text.yCoord)
+        widthLbl=wx.StaticText(panel, -1, text.width)
+        heightLbl=wx.StaticText(panel, -1, text.high)
+        fitCtrl = wx.CheckBox(panel, -1, text.fit)
+        fitCtrl.SetValue(fit)
+        stretchCtrl = wx.CheckBox(panel, -1, text.stretch)
+        stretchCtrl.SetValue(stretch)
+
+        rb0 = wx.RadioButton(panel, -1, text.fitModes[0], style=wx.RB_GROUP)
+        rb0.SetValue(fitMode == 0)
+        rb1 = wx.RadioButton(panel, -1, text.fitModes[1])
+        rb1.SetValue(fitMode == 1)
+        rb2 = wx.RadioButton(panel, -1, text.fitModes[2])
+        rb2.SetValue(fitMode == 2)
+        rb3 = wx.RadioButton(panel, -1, text.fitModes[3])
+        rb3.SetValue(fitMode == 3)
+        resampleCtrl = wx.Choice(panel, -1, choices = text.resampleMethods)
+        resampleCtrl.SetSelection(resample)
+        backColourButton = eg.ColourSelectButton(panel, back, title = text.bckgrndColour)
+        shapedCtrl = wx.CheckBox(panel,-1,text.shaped)
+        shapedCtrl.SetValue(shaped)
+        onTopCtrl = wx.CheckBox(panel,-1,text.onTop)
+        onTopCtrl.SetValue(onTop)
+        noFocusCtrl = wx.CheckBox(panel,-1,text.noFocus)
+        noFocusCtrl.SetValue(noFocus)
+        borderCtrl = wx.Choice(panel, -1, choices = text.borders)
+        borderCtrl.SetSelection(border)
+        centerCtrl = wx.CheckBox(panel,-1,text.center)
+        centerCtrl.SetValue(center)
+
+        xCoordCtrl = wx.TextCtrl(panel, panel.xCoordId, "")
+        yCoordCtrl = wx.TextCtrl(panel, panel.yCoordId, "")
+        widthCtrl = wx.TextCtrl(panel, panel.widthId, "")
+        heightCtrl = wx.TextCtrl(panel, panel.heightId, "")
+        timeoutCtrl = wx.TextCtrl(panel, panel.timeoutId, "")
+
+
+        def onCenter(evt = None):
+            flag = radioBoxWinSizes.GetSelection() != 3 and not centerCtrl.GetValue()
+            wx.FindWindowById(panel.xCoordId).Enable(flag)
+            xCoordLbl.Enable(flag)
+            wx.FindWindowById(panel.yCoordId).Enable(flag)
+            yCoordLbl.Enable(flag)
+            if evt:
+                evt.Skip()
+        centerCtrl.Bind(wx.EVT_CHECKBOX, onCenter)
+
+
+        def enableCtrls_B(evt = None):
+            mode = radioBoxWinSizes.GetSelection()
+            wFlag = mode == 2 or (mode == 1 and (rb1.GetValue() or rb2.GetValue()))
+            hFlag = mode == 2 or (mode == 1 and (rb1.GetValue() or rb3.GetValue()))
+            wx.FindWindowById(panel.widthId).Enable(wFlag)
+            widthLbl.Enable(wFlag)
+            wx.FindWindowById(panel.heightId).Enable(hFlag)
+            heightLbl.Enable(hFlag) 
+            if evt:
+                evt.Skip()
+        rb0.Bind(wx.EVT_RADIOBUTTON, enableCtrls_B)
+        rb1.Bind(wx.EVT_RADIOBUTTON, enableCtrls_B)
+        rb2.Bind(wx.EVT_RADIOBUTTON, enableCtrls_B)
+        rb3.Bind(wx.EVT_RADIOBUTTON, enableCtrls_B)
+
+
+        def enableCtrls_A(evt = None):
+            mode = radioBoxWinSizes.GetSelection()
+            flag = mode != 3
+            centerCtrl.Enable(flag)
+            if not flag:
+                centerCtrl.SetValue(True)
+            borderCtrl.Enable(flag)
+            borderLbl.Enable(flag)
+            if mode == 0:
+                fitCtrl.SetValue(False)
+                stretchCtrl.SetValue(False) 
+            elif mode == 1:
+                if rb0.GetValue():
+                    rb1.SetValue(True)
+                fitCtrl.SetValue(True)
+                stretchCtrl.SetValue(True) 
+            flag = mode != 0 and (fitCtrl.GetValue() or stretchCtrl.GetValue())
+            rb1.Enable(flag)
+            rb2.Enable(flag)
+            rb3.Enable(flag)
+            resampleCtrl.Enable(flag)
+            resampleLbl.Enable(flag)
+            flag = mode > 1
+            fitCtrl.Enable(flag)
+            stretchCtrl.Enable(flag) 
+            flag = flag and (fitCtrl.GetValue() or stretchCtrl.GetValue())
+            rb0.Enable(flag)
+            if evt:
+                evt.Skip()
+            enableCtrls_B()
+            onCenter()
+        radioBoxWinSizes.Bind(wx.EVT_RADIOBOX, enableCtrls_A)
+        fitCtrl.Bind(wx.EVT_CHECKBOX, enableCtrls_A)
+        stretchCtrl.Bind(wx.EVT_CHECKBOX, enableCtrls_A)
+        enableCtrls_A()
+
+        #Sizers
+        borderSizer = wx.BoxSizer(wx.HORIZONTAL)
+        borderSizer.Add(borderLbl,0,wx.TOP,3)
+        borderSizer.Add(borderCtrl,0,wx.LEFT,5)        
+        timeoutSizer = wx.BoxSizer(wx.HORIZONTAL)
+        timeoutSizer.Add(timeoutLbl_1,0,wx.TOP,3)        
+        timeoutSizer.Add(timeoutCtrl,0,wx.LEFT|wx.RIGHT,5)
+        timeoutSizer.Add(timeoutLbl_2,0,wx.TOP,3)        
+        box1 = wx.StaticBox(panel,-1,text.other)
+        otherSizer = wx.StaticBoxSizer(box1,wx.VERTICAL)
+        otherSizer.Add(borderSizer,0,wx.TOP,0)
+        otherSizer.Add(timeoutSizer,0,wx.TOP,4)        #        
+        posAndSizeSizer = wx.FlexGridSizer(6,2,hgap=20,vgap=1)
+        posAndSizeSizer.Add(displayLbl,0,wx.TOP,0)
+        posAndSizeSizer.Add((1, 1),0,wx.TOP,0)
+        posAndSizeSizer.Add(displayChoice,0,wx.TOP,0)
+        posAndSizeSizer.Add(centerCtrl,0,wx.TOP,3)
+        posAndSizeSizer.Add(xCoordLbl,0,wx.TOP,5)
+        posAndSizeSizer.Add(yCoordLbl,0,wx.TOP,5)
+        posAndSizeSizer.Add(xCoordCtrl,0,wx.TOP,0)
+        posAndSizeSizer.Add(yCoordCtrl,0,wx.TOP,0)
+        posAndSizeSizer.Add(widthLbl,0,wx.TOP,5)
+        posAndSizeSizer.Add(heightLbl,0,wx.TOP,5)
+        posAndSizeSizer.Add(widthCtrl,0,wx.TOP,0)
+        posAndSizeSizer.Add(heightCtrl,0,wx.TOP,0)
+        box4 = wx.StaticBox(panel,-1,text.posAndSize)
+        boxSizer4 = wx.StaticBoxSizer(box4,wx.HORIZONTAL)
+        boxSizer4.Add(posAndSizeSizer,0,wx.EXPAND)
+
+        box3 = wx.StaticBox(panel,-1,text.fitModeLabel)
+        fitSizer = wx.StaticBoxSizer(box3,wx.VERTICAL)
+        fitSizer.Add(fitCtrl)
+        fitSizer.Add(stretchCtrl,0,wx.TOP,7)
+        fitSizer.Add(rb0,0,wx.TOP,7)
+        fitSizer.Add(rb1,0,wx.TOP,7)
+        fitSizer.Add(rb2,0,wx.TOP,7)
+        fitSizer.Add(rb3,0,wx.TOP,7)
+        resampleSizer = wx.BoxSizer(wx.HORIZONTAL)
+        resampleSizer.Add(resampleLbl,0,wx.TOP,3)
+        resampleSizer.Add(resampleCtrl,0,wx.LEFT,25)
+        fitSizer.Add(resampleSizer,0,wx.TOP,4)
+
+        box2 = wx.StaticBox(panel,-1,text.bckgrnd)
+        bckgrndSizer = wx.StaticBoxSizer(box2,wx.VERTICAL)
+        colourSizer = wx.BoxSizer(wx.HORIZONTAL)
+        colourSizer.Add(bckgrndLbl,0,wx.TOP,3)
+        colourSizer.Add(backColourButton,0,wx.LEFT,20)
+        bckgrndSizer.Add(colourSizer,0,wx.BOTTOM,5)
+        bckgrndSizer.Add(shapedCtrl,0)
+
+        box5 = wx.StaticBox(panel,-1,text.topFocus)
+        topFocusSizer = wx.StaticBoxSizer(box5, wx.VERTICAL)
+        topFocusSizer.Add(onTopCtrl,0,wx.BOTTOM,4)
+        topFocusSizer.Add(noFocusCtrl,0)
+
+        leftSizer = wx.BoxSizer(wx.VERTICAL)
+        leftSizer.Add(radioBoxWinSizes,0,wx.EXPAND)
+        leftSizer.Add(fitSizer,0,wx.TOP|wx.EXPAND,7)
+
+        rightSizer = wx.BoxSizer(wx.VERTICAL)
+        rightSizer.Add(boxSizer4,0,wx.EXPAND)
+        rightSizer.Add(bckgrndSizer,0,wx.TOP|wx.EXPAND,6)
+        rightSizer.Add(topFocusSizer,0,wx.TOP|wx.EXPAND,6)
+
+        mainSizer = wx.BoxSizer(wx.HORIZONTAL)
+        mainSizer.Add(leftSizer,1,wx.EXPAND)
+        mainSizer.Add(rightSizer,1,wx.EXPAND|wx.LEFT,5)
+        panel.sizer.Add(mainSizer,1,wx.EXPAND)
+        panel.sizer.Add(otherSizer,0,wx.EXPAND|wx.TOP,10)
+        panel.sizer.Add(pathLbl,0,wx.TOP,10)
+        panel.sizer.Add(filepathCtrl,0,wx.EXPAND|wx.TOP,1)
+
+        params = (
+            (posAndSizeSizer,  6,       x, 8000, 0, wx.LEFT, 0),
+            (posAndSizeSizer,  7,       y, 8000, 0, wx.LEFT, 0),
+            (posAndSizeSizer, 10,  width_, 8000, 1, wx.LEFT, 0),
+            (posAndSizeSizer, 11, height_, 8000, 1, wx.LEFT, 0),
+            (timeoutSizer,     1, timeout, 9999, 0, wx.LEFT|wx.RIGHT, 5),
+        ) # (sizer, index, variable, max, min, styles, border)
+
+
+        def OnMenu(evt):
+            CreateCtrl(panel.popups.index(evt.GetId()), panel.activeCtrl, False)
+
+
+        def OnRclick(evt):
+            ctrl = evt.GetEventObject()
+            if "BaseMaskedTextCtrl" in str(ctrl):
+                ctrl = ctrl.GetParent()
+            panel.activeCtrl = ctrl.GetId()
+            if not hasattr(panel, "popupId0"):
+                panel.popupId0 = wx.NewId()
+                panel.popupId1 = wx.NewId()
+                panel.popupId2 = wx.NewId()
+                panel.popupId3 = wx.NewId()
+                panel.popups=(
+                    panel.popupId0,
+                    panel.popupId1,
+                    panel.popupId2,
+                    panel.popupId3
+                )
+                panel.Bind(wx.EVT_MENU, OnMenu, id=panel.popupId0)
+                panel.Bind(wx.EVT_MENU, OnMenu, id=panel.popupId1)
+                panel.Bind(wx.EVT_MENU, OnMenu, id=panel.popupId2)
+                panel.Bind(wx.EVT_MENU, OnMenu, id=panel.popupId3)
+            menu = wx.Menu()
+            for i in range(4):
+                menu.Append(panel.popups[i], text.menu[i])
+            panel.PopupMenu(menu)
+            menu.Destroy()
+
+
+        def CreateCtrl(ctrlType, id, init = True):
+            ctrl = wx.FindWindowById(id)
+            enabled = ctrl.IsEnabled()
+            ix = panel.ids.index(id)
+            szr = params[ix][0]
+            szr.Detach(ctrl)
+            ctrl.Destroy()
+            if ctrlType == 0:
+                ctrl = eg.SpinIntCtrl(
+                    panel,
+                    id,
+                    min = params[ix][4],
+                    max = params[ix][3],
+                )
+                ctrl.numCtrl.Bind(wx.EVT_RIGHT_UP, OnRclick)
+                ctrl.numCtrl.SetToolTipString(text.tooltip)
+                if init:
+                    ctrl.SetValue(params[ix][2])
+            else:
+                ctrl = wx.TextCtrl(panel, id, "")
+                ctrl.Bind(wx.EVT_RIGHT_UP, OnRclick)
+                ctrl.SetToolTipString(text.tooltip)
+                if init:
+                    ctrl.SetValue(params[ix][2])
+                else:
+                    ctrl.SetValue(("","{eg.result}","{eg.event.payload}","")[ctrlType])
+            szr.Insert(params[ix][1], ctrl, 0, params[ix][5], params[ix][6])
+            ctrl.Enable(enabled)
+            szr.Layout()
+        CreateCtrl(int(not isinstance(x,       int)), panel.ids[0])
+        CreateCtrl(int(not isinstance(y,       int)), panel.ids[1])
+        CreateCtrl(int(not isinstance(width_,  int)), panel.ids[2])
+        CreateCtrl(int(not isinstance(height_, int)), panel.ids[3])
+        CreateCtrl(int(not isinstance(timeout, int)), panel.ids[4])
+
+        while panel.Affirmed():
+            i = 0
+            for rb in (rb0, rb1, rb2, rb3):
+                if rb.GetValue():
+                    break
+                i += 1   
+            panel.SetResult(
+                filepathCtrl.GetValue(),
+                radioBoxWinSizes.GetSelection(),
+                i,
+                fitCtrl.GetValue(),
+                stretchCtrl.GetValue(),
+                resampleCtrl.GetSelection(),
+                onTopCtrl.GetValue(),
+                borderCtrl.GetSelection(),
+                wx.FindWindowById(panel.timeoutId).GetValue(),
+                displayChoice.GetValue(),
+                wx.FindWindowById(panel.xCoordId).GetValue(),
+                wx.FindWindowById(panel.yCoordId).GetValue(),
+                wx.FindWindowById(panel.widthId).GetValue(),
+                wx.FindWindowById(panel.heightId).GetValue(),
+                backColourButton.GetValue(),
+                shapedCtrl.GetValue(),
+                centerCtrl.GetValue(),
+                noFocusCtrl.GetValue(),
+            )
+#===============================================================================
 
 class ShowPicture(eg.ActionBase):
     name = "Show Picture"
@@ -1067,7 +1820,6 @@ class ShowPicture(eg.ActionBase):
         display = "Monitor"
         allImageFiles = 'All Image Files'
         allFiles = "All files"
-
 
 
     def __call__(self, imageFile='', display=0):
@@ -1102,6 +1854,7 @@ class ShowPicture(eg.ActionBase):
 
         while panel.Affirmed():
             panel.SetResult(filepathCtrl.GetValue(), displayChoice.GetValue())
+#===============================================================================
 
 def _CreateShowPictureFrame():
     ShowPicture.pictureFrame = ShowPictureFrame()

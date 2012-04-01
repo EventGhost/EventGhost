@@ -90,12 +90,24 @@ class DeviceChangeNotifier:
             ),
             0
         )
+        # Monitor device class
+        self.handle4 = RegisterDeviceNotification(
+            eg.messageReceiver.hwnd,
+            pointer(
+                DEV_BROADCAST_DEVICEINTERFACE(
+                    dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE,
+                    dbcc_classguid = "{E6F07B5F-EE97-4a90-B076-33F57BF4EAA7}"
+                )
+            ),
+            0
+        )
 
 
     def Close(self):
         UnregisterDeviceNotification(self.handle1)
         UnregisterDeviceNotification(self.handle2)
         UnregisterDeviceNotification(self.handle3)
+        UnregisterDeviceNotification(self.handle4)
         eg.messageReceiver.RemoveHandler(WM_DEVICECHANGE, self.OnDeviceChange)
 
 
@@ -126,4 +138,3 @@ class DeviceChangeNotifier:
                 deviceName = wstring_at(lparam + DBD_NAME_OFFSET)
                 self.TriggerEvent("DeviceRemoved", [deviceName])
         return 1
-
