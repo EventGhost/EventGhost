@@ -20,6 +20,8 @@
     
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 1.7 by Pako 2012-01-06 15:18 UTC+1
+#     - Added actions GetWindowState and GetNowPlaying
 # 1.6 by Pako 2011-06-05 18:57 UTC+1
 #     - Used eg.EVT_VALUE_CHANGED instead of EVT_BUTTON_AFTER
 # 1.5 by Pako
@@ -46,25 +48,18 @@
 eg.RegisterPlugin(
     name = "Media Player Classic",
     author = "MonsterMagnet",
-    version = "1.6",
+    version = "1.7",
     kind = "program",
     guid = "{DD75104D-D586-438A-B63D-3AD01A4D4BD3}",
     createMacrosOnAdd = True,
     description = (
         'Adds actions to control '
-        '<a href="http://sourceforge.net/projects/guliverkli/">'
-        'Media Player Classic</a>.'
+        '<a href="http://www.xvidvideo.ru/media-player-classic-home-cinema-x86-x64/">'
+        'Media Player Classic Home Cinema</a>.'
     ),
     help = """
-        Only for version <b>6.4.8.9</b> or above.
-        The plugin will not work with older versions of MPC!
-        
-        <a href=http://www.eventghost.net/forum/viewtopic.php?t=17>
-        Bugreports</a>
-        
-        <p><a href="http://sourceforge.net/projects/guliverkli/">
-        Media Player Classic SourceForge Project</a>
-    """,
+        <p><a href="http://www.xvidvideo.ru/media-player-classic-home-cinema-x86-x64/">
+        Media Player Classic Home Cinema (x86/x64)</a>""",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAhElEQVR42rWRgQqAIAwF"
         "fV+++eWr1V6kiM6gQaTVHYehJEdV7bUG18hCInIDQMNhA+L7cQHBETQrBWERDXANjcxm"
@@ -75,187 +70,27 @@ eg.RegisterPlugin(
 )
 
 
-ACTIONS = (
-(eg.ActionGroup, 'GroupMainControls', 'Main controls', None, (
-    ('Exit', 'Quit Application', None, 816),
-    ('PlayPause', 'Play/Pause', None, 889),
-    ('Play', 'Play', None, 887),
-    ('Pause', 'Pause', None, 888),
-    ('Stop', 'Stop', None, 890),
-    ('JumpForwardSmall', 'Jump Forward Small', None, 900),
-    ('JumpBackwardSmall', 'Jump Backward Small', None, 899),
-    ('JumpForwardMedium', 'Jump Forward Medium', None, 902),
-    ('JumpBackwardMedium', 'Jump Backward Medium', None, 901),
-    ('JumpForwardLarge', 'Jump Forward Large', None, 904),
-    ('JumpBackwardLarge', 'Jump Backward Large', None, 903),
-    ('JumpForwardKeyframe', 'Jump Forward Keyframe', None, 898),
-    ('JumpBackwardKeyframe', 'Jump Backward Keyframe', None, 897),
-    ('IncreaseRate', 'Increase Rate', None, 895),
-    ('DecreaseRate', 'Decrease Rate', None, 894),
-    ('ResetRate', 'Reset Rate', None, 896),
-    ('VolumeUp', 'Volume Up', None, 907),
-    ('VolumeDown', 'Volume Down', None, 908),
-    ('VolumeMute', 'Volume Mute', None, 909),
-    ('BossKey', 'Boss Key', None, 943),
-    ('Next', 'Next', None, 921),
-    ('Previous', 'Previous', None, 920),
-    ('NextPlaylistItem', 'Next Playlist Item', None, 919),
-    ('PreviousPlaylistItem', 'Previous Playlist Item', None, 918),
-    ('OpenFile', 'Open File', None, 800),
-    ('OpenDVD', 'Open DVD', None, 801),
-    ('QuickOpen', 'Quick Open File', None, 968),
-    ('OpenDirectory', 'Open Directory', None, 33208),
-    ('FrameStep', 'Frame Step', None, 891),
-    ('FrameStepBack', 'Frame Step Back', None, 892),
-    ('GoTo', 'Go To', None, 893),
-    ('AudioDelayAdd10ms', 'Audio Delay +10ms', None, 905),
-    ('AudioDelaySub10ms', 'Audio Delay -10ms', None, 906),
-)),
-(eg.ActionGroup, 'GroupViewModes', 'View modes', None, (
-    ('Fullscreen', 'Fullscreen', None, 830),
-    ('FullscreenWOR', 'Fullscreen without resolution change', None, 831),
-    ('PnSIncSize', 'Pan & Scan Increase Size', None, 862),
-    ('PnSDecSize', 'Pan & Scan Decrease Size', None, 863),
-    ('PnSTo169', 'Pan & Scan Scale to 16:9', None, 4100),
-    ('PnSToWidescreen', 'Pan & Scan to Widescreen', None, 4101),
-    ('PnSToUltraWidescreen', 'Pan & Scan to Ultra-Widescreen', None, 4102),
-    ('ViewMinimal', 'View Minimal', None, 827),
-    ('ViewCompact', 'View Compact', None, 828),
-    ('ViewNormal', 'View Normal', None, 829),
-    ('AlwaysOnTop', 'Always On Top', None, 884),
-    ('Zoom50', 'Zoom 50%', None, 832),
-    ('Zoom100', 'Zoom 100%', None, 833),
-    ('Zoom200', 'Zoom 200%', None, 834),
-    ('VidFrmHalf', 'Video Frame Half', None, 835),
-    ('VidFrmNormal', 'Video Frame Normal', None, 836),
-    ('VidFrmDouble', 'Video Frame Double', None, 837),
-    ('VidFrmStretch', 'Video Frame Stretch', None, 838),
-    ('VidFrmInside', 'Video Frame Inside', None, 839),
-    ('VidFrmOutside', 'Video Frame Outside', None, 840),
-    ('PnSReset', 'Pan & Scan Reset', None, 861),
-    ('PnSIncWidth', 'Pan & Scan Increase Width', None, 864),
-    ('PnSIncHeight', 'Pan & Scan Increase Height', None, 866),
-    ('PnSDecWidth', 'Pan & Scan Decrease Width', None, 865),
-    ('PnSDecHeight', 'Pan & Scan Decrease Height', None, 867),
-    ('PnSCenter', 'Pan & Scan Center', None, 876),
-    ('PnSLeft', 'Pan & Scan Left', None, 868),
-    ('PnSRight', 'Pan & Scan Right', None, 869),
-    ('PnSUp', 'Pan & Scan Up', None, 870),
-    ('PnSDown', 'Pan & Scan Down', None, 871),
-    ('PnSUpLeft', 'Pan & Scan Up/Left', None, 872),
-    ('PnSUpRight', 'Pan & Scan Up/Right', None, 873),
-    ('PnSDownLeft', 'Pan & Scan Down/Left', None, 874),
-    ('PnSDownRight', 'Pan & Scan Down/Right', None, 875),
-    ('PnSRotateAddX', 'Pan & Scan Rotate X+', None, 877),
-    ('PnSRotateSubX', 'Pan & Scan Rotate X-', None, 878),
-    ('PnSRotateAddY', 'Pan & Scan Rotate Y+', None, 879),
-    ('PnsRotateSubY', 'Pan & Scan Rotate Y-', None, 880),
-    ('PnSRotateAddZ', 'Pan & Scan Rotate Z+', None, 881),
-    ('PnSRotateSubZ', 'Pan & Scan Rotate Z-', None, 882),
-)),
-(eg.ActionGroup, 'GroupDvdControls', 'DVD controls', None, (
-    ('DVDTitleMenu', 'DVD Title Menu', None, 922),
-    ('DVDRootMenu', 'DVD Root Menu', None, 923),
-    ('DVDSubtitleMenu', 'DVD Subtitle Menu', None, 924),
-    ('DVDAudioMenu', 'DVD Audio Menu', None, 925),
-    ('DVDAngleMenu', 'DVD Angle Menu', None, 926),
-    ('DVDChapterMenu', 'DVD Chapter Menu', None, 927),
-    ('DVDMenuLeft', 'DVD Menu Left', None, 928),
-    ('DVDMenuRight', 'DVD Menu Right', None, 929),
-    ('DVDMenuUp', 'DVD Menu Up', None, 930),
-    ('DVDMenuDown', 'DVD Menu Down', None, 931),
-    ('DVDMenuActivate', 'DVD Menu Activate', None, 932),
-    ('DVDMenuBack', 'DVD Menu Back', None, 933),
-    ('DVDMenuLeave', 'DVD Menu Leave', None, 934),
-    ('DVDNextAngle', 'DVD Next Angle', None, 960),
-    ('DVDPrevAngle', 'DVD Previous Angle', None, 961),
-    ('DVDNextAudio', 'DVD Next Audio', None, 962),
-    ('DVDPrevAudio', 'DVD Prev Audio', None, 963),
-    ('DVDNextSubtitle', 'DVD Next Subtitle', None, 964),
-    ('DVDPrevSubtitle', 'DVD Prev Subtitle', None, 965),
-    ('DVDOnOffSubtitle', 'DVD On/Off Subtitle', None, 966),
-)),
-(eg.ActionGroup, 'GroupExtendedControls', 'Extended controls', None, (
-    ('OpenDevice', 'Open Device', None, 802),
-    ('SaveAs', 'Save As', None, 805),
-    ('SaveImage', 'Save Image', None, 806),
-    ('SaveImageAuto', 'Save Image Auto', None, 807),
-    ('LoadSubTitle', 'Load Subtitle', None, 809),
-    ('SaveSubtitle', 'Save Subtitle', None, 810),
-    ('Close', 'Close File', None, 804),
-    ('Properties', 'Properties', None, 814),
-    ('PlayerMenuShort', 'Player Menu Short', None, 948),
-    ('PlayerMenuLong', 'Player Menu Long', None, 949),
-    ('FiltersMenu', 'Filters Menu', None, 950),
-    ('Options', 'Options', None, 886),
-    ('NextAudio', 'Next Audio', None, 951),
-    ('PrevAudio', 'Previous Audio', None, 952),
-    ('NextSubtitle', 'Next Subtitle', None, 953),
-    ('PrevSubtitle', 'Prev Subtitle', None, 954),
-    ('OnOffSubtitle', 'On/Off Subtitle', None, 955),
-    ('ReloadSubtitles', 'Reload Subtitles', None, 2302),
-    ('NextAudioOGM', 'Next Audio OGM', None, 956),
-    ('PrevAudioOGM', 'Previous Audio OGM', None, 957),
-    ('NextSubtitleOGM', 'Next Subtitle OGM', None, 958),
-    ('PrevSubtitleOGM', 'Previous Subtitle OGM', None, 959),
-)),
-(eg.ActionGroup, 'GroupToggleControls', 'Toggle player controls', None, (
-    ('ToggleCaptionMenu', 'Toggle Caption Menu', None, 817),
-    ('ToggleSeeker', 'Toggle Seeker', None, 818),
-    ('ToggleControls', 'Toggle Controls', None, 819),
-    ('ToggleInformation', 'Toggle Information', None, 820),
-    ('ToggleStatistics', 'Toggle Statistics', None, 821),
-    ('ToggleStatus', 'Toggle Status', None, 822),
-    ('ToggleSubresyncBar', 'Toggle Subresync Bar', None, 823),
-    ('TogglePlaylistBar', 'Toggle Playlist Bar', None, 824),
-    ('ToggleCaptureBar', 'Toggle Capture Bar', None, 825),
-    ('ToggleShaderEditorBar', 'Toggle Shader Editor Bar', None, 826),
-    ('ToggleElapsedTime', 'Toggle OSD Elapsed Time', None, 32778),
-)),
-)
 #===============================================================================
 
 from eg.WinApi import FindWindow, SendMessageTimeout, WM_COMMAND
 from eg.WinApi.Utils import GetMonitorDimensions
 from win32api import EnumDisplayMonitors
 from eg.WinApi.Dynamic import SendMessage, PostMessage
-from eg.WinApi.Dynamic import CreateEvent, SetEvent
+from eg.WinApi.Dynamic import CreateEvent, SetEvent, GetWindowLong
 from os import path
 from threading import Timer
-from win32gui import GetMenu, GetSubMenu, GetMenuItemCount, GetDlgCtrlID, IsWindow
-from win32gui import GetWindowRect, GetClassName, GetWindow, GetWindowText, GetDlgItem
+from win32gui import GetMenu, GetSubMenu, GetMenuItemCount, GetDlgCtrlID 
+from win32gui import GetWindowRect, GetClassName, GetWindow, GetWindowText
+from win32gui import GetWindowPlacement, IsWindowVisible, IsWindow, GetDlgItem
 from copy import deepcopy as cpy
 from time import sleep, strftime, gmtime
 from winsound import PlaySound, SND_ASYNC
 from win32process import GetWindowThreadProcessId
 from ctypes import create_unicode_buffer, addressof, windll, c_int, c_ulong, c_buffer, byref, sizeof
 import wx.grid as gridlib
-#===============================================================================
 
-_psapi = windll.psapi
-_kernel = windll.kernel32
-modBasName = c_buffer(32)
-hModule = c_ulong()
-length = c_ulong()
-PROCESS_QUERY_INFORMATION = 0x0400
-PROCESS_VM_READ = 0x0010
-
-def GetModuleFrom_hWnd(hWnd):
-    threadId, processId = GetWindowThreadProcessId(hWnd)
-    hProc = _kernel.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, False, processId)
-    _psapi.EnumProcessModules(hProc, byref(hModule), sizeof(hModule), byref(length))
-    _psapi.GetModuleBaseNameA(hProc, hModule.value, modBasName, sizeof(modBasName))
-    _kernel.CloseHandle(hProc)
-    return modBasName.value
-
-
-if eg.Version.base >= "0.4.0":
-    from eg.Classes.MainFrame.TreeCtrl import DropTarget as EventDropTarget
-    IMAGES_DIR = eg.imagesDir 
-else:
-    from eg.Classes.MainFrame.TreeCtrl import EventDropTarget
-    IMAGES_DIR = eg.IMAGES_DIR 
-
+GWL_EXSTYLE = -20
+WS_EX_WINDOWEDGE = 0x00000100
 WM_INITMENUPOPUP = 0x0117
 MF_GRAYED        = 1
 MF_DISABLED      = 2
@@ -272,6 +107,33 @@ WM_SETTEXT       = 12
 WM_GETTEXT       = 13
 WM_GETTEXTLENGTH = 14
 WM_CLOSE         = 16
+PROCESS_QUERY_INFORMATION = 0x0400
+PROCESS_VM_READ = 0x0010
+_psapi = windll.psapi
+_kernel = windll.kernel32
+modBasName = c_buffer(32)
+hModule = c_ulong()
+c_length = c_ulong()
+PROCESS_QUERY_INFORMATION = 0x0400
+PROCESS_VM_READ = 0x0010
+#===============================================================================
+
+if eg.Version.base >= "0.4.0":
+    from eg.Classes.MainFrame.TreeCtrl import DropTarget as EventDropTarget
+    IMAGES_DIR = eg.imagesDir 
+else:
+    from eg.Classes.MainFrame.TreeCtrl import EventDropTarget
+    IMAGES_DIR = eg.IMAGES_DIR 
+#===============================================================================
+
+def GetModuleFrom_hWnd(hWnd):
+    threadId, processId = GetWindowThreadProcessId(hWnd)
+    hProc = _kernel.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, False, processId)
+    _psapi.EnumProcessModules(hProc, byref(hModule), sizeof(hModule), byref(c_length))
+    _psapi.GetModuleBaseNameA(hProc, hModule.value, modBasName, sizeof(modBasName))
+    _kernel.CloseHandle(hProc)
+    return modBasName.value
+
 #===============================================================================
 
 class FixedWidth(wx.FontEnumerator):
@@ -285,23 +147,6 @@ class FixedWidth(wx.FontEnumerator):
             self.fontList.append(fontname)
 #===============================================================================
 
-_psapi = windll.psapi
-_kernel = windll.kernel32
-modBasName = c_buffer(32)
-hModule = c_ulong()
-length = c_ulong()
-PROCESS_QUERY_INFORMATION = 0x0400
-PROCESS_VM_READ = 0x0010
-
-def GetModuleFrom_hWnd(hWnd):
-    threadId, processId = GetWindowThreadProcessId(hWnd)
-    hProc = _kernel.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, False, processId)
-    _psapi.EnumProcessModules(hProc, byref(hModule), sizeof(hModule), byref(length))
-    _psapi.GetModuleBaseNameA(hProc, hModule.value, modBasName, sizeof(modBasName))
-    _kernel.CloseHandle(hProc)
-    return modBasName.value
-#===============================================================================
-
 def GetSec(timeStr):
     sec = int(timeStr[-2:])
     min = timeStr[-5:-3]
@@ -311,6 +156,21 @@ def GetSec(timeStr):
     if hr:
         sec += 3600*int(hr)
     return sec
+#===============================================================================
+
+def Find_MPC():
+    mpchc = eg.WindowMatcher(
+        u'mpc-hc.exe',
+        None,
+        u'MediaPlayerClassicW',
+        None,
+        None,
+        None,
+        True,
+        0.0,
+        2
+    )
+    return mpchc()
 #===============================================================================
 
 def GetItemList(menu, hWnd):
@@ -1364,6 +1224,118 @@ class ActionPrototype(eg.ActionBase):
             raise self.Exceptions.ProgramNotRunning
 #===============================================================================
 
+class GetWindowState(eg.ActionBase):
+    
+    class text:
+        rbLabel = "Result type choice"
+        numVal = "Return a numeric value"
+        strVal = "Return a string value"
+        boolVal = "Return True when window is "
+        triggEvent = "Trigger an event"
+        evtPrefix = "Event prefix (or prefix and first suffix):"
+        states = (
+            "Not running",
+            "Tray icon",
+            "Normal",
+            "Minimized",
+            "Maximized",
+            "Full screen",
+        )
+
+    def __call__(self, mode = 0, state = 5, evnt = False, prefix = "MPCHC.Window"):
+        stt = self.plugin.GetWindowState()
+        if evnt:
+            eg.TriggerEvent(
+                "".join([word.capitalize() for word in self.text.states[stt+1].split()]),
+                prefix = prefix
+            )
+        if mode == 0:
+            return stt
+        elif mode == 1:
+            return self.text.states[stt+1]
+        else:
+            return stt == state-1
+
+
+    def Configure(self, mode = 0, state = 5, evnt = False, prefix = "MPCHC.Window"):
+        self.stt = state
+        panel=eg.ConfigPanel(self)
+        topSizer = wx.StaticBoxSizer(
+            wx.StaticBox(panel, -1, self.text.rbLabel),
+            wx.VERTICAL
+        )
+        boolSizer = wx.BoxSizer(wx.HORIZONTAL)
+        rb0 = panel.RadioButton(mode==0, self.text.numVal, style=wx.RB_GROUP)
+        rb1 = panel.RadioButton(mode==1, self.text.strVal)
+        rb2 = panel.RadioButton(mode==2, self.text.boolVal)
+        statChoice = wx.Choice(panel, -1, choices = self.text.states)
+        statChoice.Select(state)
+        triggCtrl = wx.CheckBox(panel, -1, self.text.triggEvent)
+        triggCtrl.SetValue(evnt)
+        prefixLabel = wx.StaticText(panel, -1, self.text.evtPrefix)
+        prefixCtrl = wx.TextCtrl(panel, -1, prefix)
+        prefixSizer = wx.BoxSizer(wx.HORIZONTAL)
+        prefixSizer.Add(prefixLabel,0,wx.TOP,3)
+        prefixSizer.Add(prefixCtrl,0,wx.LEFT,6)
+        boolSizer.Add(rb2,0,wx.TOP,3)
+        boolSizer.Add(statChoice)
+        topSizer.Add(rb0,0,wx.TOP,3)
+        topSizer.Add(rb1,0,wx.TOP,7)
+        topSizer.Add(boolSizer,0,wx.TOP,5)
+        panel.sizer.Add(topSizer)
+        panel.sizer.Add(triggCtrl, 0, wx.TOP, 10)
+        panel.sizer.Add(prefixSizer, 0, wx.TOP, 10)
+
+        def onTriggCtrl(evt = None):
+            flg = triggCtrl.GetValue()
+            prefixLabel.Show(flg)
+            prefixCtrl.Show(flg)
+            if evt:
+                evt.Skip()
+        triggCtrl.Bind(wx.EVT_CHECKBOX, onTriggCtrl)
+        onTriggCtrl()
+
+        def onState(evt):
+            self.stt = evt.GetSelection()
+            evt.Skip()
+        statChoice.Bind(wx.EVT_CHOICE, onState)
+
+        def onRadio(evt = None):
+            flg = rb2.GetValue()
+            statChoice.Enable(flg)
+            sel = self.stt if flg else -1
+            statChoice.SetSelection(sel)
+            if evt:
+                evt.Skip()
+        rb0.Bind(wx.EVT_RADIOBUTTON, onRadio)
+        rb1.Bind(wx.EVT_RADIOBUTTON, onRadio)
+        rb2.Bind(wx.EVT_RADIOBUTTON, onRadio)
+        onRadio()
+
+        while panel.Affirmed():
+            state = state if self.stt == -1 else self.stt
+            panel.SetResult(
+                (rb0.GetValue(),rb1.GetValue(),rb2.GetValue()).index(True),
+                state,
+                triggCtrl.GetValue(),
+                prefixCtrl.GetValue()
+            )
+#===============================================================================
+
+class GetNowPlaying(eg.ActionBase):
+    
+    def __call__(self):
+        hWnd = Find_MPC()
+        if not hWnd:
+            raise self.Exceptions.ProgramNotRunning
+        hWnd = hWnd[0]
+        title = GetWindowText(hWnd)
+        if not title.startswith("Media Player Classic"):
+            ix = title.rfind(".")
+            if ix > -1:
+                return title[:ix]
+#===============================================================================
+
 class GetTimes(eg.ActionBase):
 
     name = "Get Times"
@@ -2077,7 +2049,173 @@ class MediaPlayerClassic(eg.PluginBase):
 
     def __init__(self):
         self.AddActionsFromList(ACTIONS, ActionPrototype)
-        self.AddAction(UserMessage)
-        self.AddAction(GetTimes)
-        self.AddAction(ShowMenu)
-        self.AddAction(GoTo_OSD)
+
+
+    def GetWindowState(self):
+        hWnd = Find_MPC()
+        if not hWnd:
+            return -1
+        else:
+            hWnd = hWnd[0]
+        if not IsWindowVisible(hWnd):
+            return 0
+        state = GetWindowPlacement(hWnd)[1]
+        border = GetWindowLong(hWnd, GWL_EXSTYLE) & WS_EX_WINDOWEDGE
+        if border:
+            return state
+        rect = GetWindowPlacement(hWnd)[-1]
+        mons = EnumDisplayMonitors()
+        fullscreen = False
+        for mon in mons:
+            if rect == mon[2]:
+                fullscreen = True
+                break
+        if fullscreen:
+            return 4
+        return state
+#===============================================================================
+
+ACTIONS = (
+(eg.ActionGroup, 'GroupMainControls', 'Main controls', None, (
+    ('Exit', 'Quit Application', None, 816),
+    ('PlayPause', 'Play/Pause', None, 889),
+    ('Play', 'Play', None, 887),
+    ('Pause', 'Pause', None, 888),
+    ('Stop', 'Stop', None, 890),
+    ('JumpForwardSmall', 'Jump Forward Small', None, 900),
+    ('JumpBackwardSmall', 'Jump Backward Small', None, 899),
+    ('JumpForwardMedium', 'Jump Forward Medium', None, 902),
+    ('JumpBackwardMedium', 'Jump Backward Medium', None, 901),
+    ('JumpForwardLarge', 'Jump Forward Large', None, 904),
+    ('JumpBackwardLarge', 'Jump Backward Large', None, 903),
+    ('JumpForwardKeyframe', 'Jump Forward Keyframe', None, 898),
+    ('JumpBackwardKeyframe', 'Jump Backward Keyframe', None, 897),
+    ('IncreaseRate', 'Increase Rate', None, 895),
+    ('DecreaseRate', 'Decrease Rate', None, 894),
+    ('ResetRate', 'Reset Rate', None, 896),
+    ('VolumeUp', 'Volume Up', None, 907),
+    ('VolumeDown', 'Volume Down', None, 908),
+    ('VolumeMute', 'Volume Mute', None, 909),
+    ('BossKey', 'Boss Key', None, 943),
+    ('Next', 'Next', None, 921),
+    ('Previous', 'Previous', None, 920),
+    ('NextPlaylistItem', 'Next Playlist Item', None, 919),
+    ('PreviousPlaylistItem', 'Previous Playlist Item', None, 918),
+    ('OpenFile', 'Open File', None, 800),
+    ('OpenDVD', 'Open DVD', None, 801),
+    ('QuickOpen', 'Quick Open File', None, 968),
+    ('OpenDirectory', 'Open Directory', None, 33208),
+    ('FrameStep', 'Frame Step', None, 891),
+    ('FrameStepBack', 'Frame Step Back', None, 892),
+    ('GoTo', 'Go To', None, 893),
+    ('AudioDelayAdd10ms', 'Audio Delay +10ms', None, 905),
+    ('AudioDelaySub10ms', 'Audio Delay -10ms', None, 906),
+)),
+(eg.ActionGroup, 'GroupViewModes', 'View modes', None, (
+    ('Fullscreen', 'Fullscreen', None, 830),
+    ('FullscreenWOR', 'Fullscreen without resolution change', None, 831),
+    ('PnSIncSize', 'Pan & Scan Increase Size', None, 862),
+    ('PnSDecSize', 'Pan & Scan Decrease Size', None, 863),
+    ('PnSTo169', 'Pan & Scan Scale to 16:9', None, 4100),
+    ('PnSToWidescreen', 'Pan & Scan to Widescreen', None, 4101),
+    ('PnSToUltraWidescreen', 'Pan & Scan to Ultra-Widescreen', None, 4102),
+    ('ViewMinimal', 'View Minimal', None, 827),
+    ('ViewCompact', 'View Compact', None, 828),
+    ('ViewNormal', 'View Normal', None, 829),
+    ('AlwaysOnTop', 'Always On Top', None, 884),
+    ('Zoom50', 'Zoom 50%', None, 832),
+    ('Zoom100', 'Zoom 100%', None, 833),
+    ('Zoom200', 'Zoom 200%', None, 834),
+    ('VidFrmHalf', 'Video Frame Half', None, 835),
+    ('VidFrmNormal', 'Video Frame Normal', None, 836),
+    ('VidFrmDouble', 'Video Frame Double', None, 837),
+    ('VidFrmStretch', 'Video Frame Stretch', None, 838),
+    ('VidFrmInside', 'Video Frame Inside', None, 839),
+    ('VidFrmOutside', 'Video Frame Outside', None, 840),
+    ('PnSReset', 'Pan & Scan Reset', None, 861),
+    ('PnSIncWidth', 'Pan & Scan Increase Width', None, 864),
+    ('PnSIncHeight', 'Pan & Scan Increase Height', None, 866),
+    ('PnSDecWidth', 'Pan & Scan Decrease Width', None, 865),
+    ('PnSDecHeight', 'Pan & Scan Decrease Height', None, 867),
+    ('PnSCenter', 'Pan & Scan Center', None, 876),
+    ('PnSLeft', 'Pan & Scan Left', None, 868),
+    ('PnSRight', 'Pan & Scan Right', None, 869),
+    ('PnSUp', 'Pan & Scan Up', None, 870),
+    ('PnSDown', 'Pan & Scan Down', None, 871),
+    ('PnSUpLeft', 'Pan & Scan Up/Left', None, 872),
+    ('PnSUpRight', 'Pan & Scan Up/Right', None, 873),
+    ('PnSDownLeft', 'Pan & Scan Down/Left', None, 874),
+    ('PnSDownRight', 'Pan & Scan Down/Right', None, 875),
+    ('PnSRotateAddX', 'Pan & Scan Rotate X+', None, 877),
+    ('PnSRotateSubX', 'Pan & Scan Rotate X-', None, 878),
+    ('PnSRotateAddY', 'Pan & Scan Rotate Y+', None, 879),
+    ('PnsRotateSubY', 'Pan & Scan Rotate Y-', None, 880),
+    ('PnSRotateAddZ', 'Pan & Scan Rotate Z+', None, 881),
+    ('PnSRotateSubZ', 'Pan & Scan Rotate Z-', None, 882),
+)),
+(eg.ActionGroup, 'GroupDvdControls', 'DVD controls', None, (
+    ('DVDTitleMenu', 'DVD Title Menu', None, 922),
+    ('DVDRootMenu', 'DVD Root Menu', None, 923),
+    ('DVDSubtitleMenu', 'DVD Subtitle Menu', None, 924),
+    ('DVDAudioMenu', 'DVD Audio Menu', None, 925),
+    ('DVDAngleMenu', 'DVD Angle Menu', None, 926),
+    ('DVDChapterMenu', 'DVD Chapter Menu', None, 927),
+    ('DVDMenuLeft', 'DVD Menu Left', None, 928),
+    ('DVDMenuRight', 'DVD Menu Right', None, 929),
+    ('DVDMenuUp', 'DVD Menu Up', None, 930),
+    ('DVDMenuDown', 'DVD Menu Down', None, 931),
+    ('DVDMenuActivate', 'DVD Menu Activate', None, 932),
+    ('DVDMenuBack', 'DVD Menu Back', None, 933),
+    ('DVDMenuLeave', 'DVD Menu Leave', None, 934),
+    ('DVDNextAngle', 'DVD Next Angle', None, 960),
+    ('DVDPrevAngle', 'DVD Previous Angle', None, 961),
+    ('DVDNextAudio', 'DVD Next Audio', None, 962),
+    ('DVDPrevAudio', 'DVD Prev Audio', None, 963),
+    ('DVDNextSubtitle', 'DVD Next Subtitle', None, 964),
+    ('DVDPrevSubtitle', 'DVD Prev Subtitle', None, 965),
+    ('DVDOnOffSubtitle', 'DVD On/Off Subtitle', None, 966),
+)),
+(eg.ActionGroup, 'GroupExtendedControls', 'Extended controls', None, (
+    ('OpenDevice', 'Open Device', None, 802),
+    ('SaveAs', 'Save As', None, 805),
+    ('SaveImage', 'Save Image', None, 806),
+    ('SaveImageAuto', 'Save Image Auto', None, 807),
+    ('LoadSubTitle', 'Load Subtitle', None, 809),
+    ('SaveSubtitle', 'Save Subtitle', None, 810),
+    ('Close', 'Close File', None, 804),
+    ('Properties', 'Properties', None, 814),
+    ('PlayerMenuShort', 'Player Menu Short', None, 948),
+    ('PlayerMenuLong', 'Player Menu Long', None, 949),
+    ('FiltersMenu', 'Filters Menu', None, 950),
+    ('Options', 'Options', None, 886),
+    ('NextAudio', 'Next Audio', None, 951),
+    ('PrevAudio', 'Previous Audio', None, 952),
+    ('NextSubtitle', 'Next Subtitle', None, 953),
+    ('PrevSubtitle', 'Prev Subtitle', None, 954),
+    ('OnOffSubtitle', 'On/Off Subtitle', None, 955),
+    ('ReloadSubtitles', 'Reload Subtitles', None, 2302),
+    ('NextAudioOGM', 'Next Audio OGM', None, 956),
+    ('PrevAudioOGM', 'Previous Audio OGM', None, 957),
+    ('NextSubtitleOGM', 'Next Subtitle OGM', None, 958),
+    ('PrevSubtitleOGM', 'Previous Subtitle OGM', None, 959),
+    (GetWindowState,'GetWindowState','Get window state','Gets window state.', None),
+    (GetNowPlaying,'GetNowPlaying','Get currently playing file','Gets currently playing file.', None),
+    (GetTimes,'GetTimes','Get Times','Returns elapsed, remaining and total times.', None),
+    (ShowMenu,'ShowMenu','Show MPC menu','Show MPC menu.', None),
+    (GoTo_OSD,'GoTo_OSD','On Screen Go To ...','Show On Screen "Go To ...".', None),
+    (UserMessage,'UserMessage',"Send user's message",UserMessage.description, None),
+)),
+(eg.ActionGroup, 'GroupToggleControls', 'Toggle player controls', None, (
+    ('ToggleCaptionMenu', 'Toggle Caption Menu', None, 817),
+    ('ToggleSeeker', 'Toggle Seeker', None, 818),
+    ('ToggleControls', 'Toggle Controls', None, 819),
+    ('ToggleInformation', 'Toggle Information', None, 820),
+    ('ToggleStatistics', 'Toggle Statistics', None, 821),
+    ('ToggleStatus', 'Toggle Status', None, 822),
+    ('ToggleSubresyncBar', 'Toggle Subresync Bar', None, 823),
+    ('TogglePlaylistBar', 'Toggle Playlist Bar', None, 824),
+    ('ToggleCaptureBar', 'Toggle Capture Bar', None, 825),
+    ('ToggleShaderEditorBar', 'Toggle Shader Editor Bar', None, 826),
+    ('ToggleElapsedTime', 'Toggle OSD Elapsed Time', None, 32778),
+)),
+)
