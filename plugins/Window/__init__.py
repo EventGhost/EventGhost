@@ -19,7 +19,7 @@ import eg
 eg.RegisterPlugin(
     name = "Window",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision: 1486 $".split()[1],
+    version = "1.1.0",
     description = (
         "Actions that are related to the control of windows on the desktop, "
         "like finding specific windows, move, resize, grab text(s) "
@@ -181,7 +181,6 @@ class MoveTo(eg.ActionBase):
         text1   = "Set horizontal position X to"
         text2   = "pixels"
         text3   = "Set vertical position Y to"
-        text4   = "pixels"
         display = "Window show on monitor"
 
 
@@ -239,11 +238,19 @@ class MoveTo(eg.ActionBase):
         yCheckBox.SetValue(enableY)
         yCtrl = eg.SpinIntCtrl(panel, -1, 0 if not enableY else y, min=-32768, max=32767)
         yCtrl.Enable(enableY)
-        panelAdd = panel.AddLine
-        panelAdd(xCheckBox, xCtrl, text.text2)
-        panelAdd(yCheckBox, yCtrl, text.text4)
-        panelAdd((-1,0),(-1,-1),(-1,-1))
-        panelAdd(displayLabel,displayChoice,(-1,-1))
+
+        monsCtrl = eg.MonitorsCtrl(panel, background = (224, 238, 238))
+        sizer = wx.GridBagSizer(vgap = 6, hgap = 5)
+        sizer.Add(xCheckBox, (0, 0), (1, 1))
+        sizer.Add(xCtrl, (0, 1), (1, 1))
+        sizer.Add(wx.StaticText(panel,- 1, text.text2), (0, 2), (1, 1))
+        sizer.Add(yCheckBox, (1, 0), (1, 1))
+        sizer.Add(yCtrl, (1, 1), (1, 1))
+        sizer.Add(wx.StaticText(panel, -1, text.text2), (1, 2), (1, 1))
+        sizer.Add(displayLabel, (2, 0), (1, 1), flag = wx.TOP, border = 18)
+        sizer.Add(displayChoice, (2, 1), (1, 2), flag = wx.TOP, border = 17)
+        panel.sizer.Add(sizer, 1, wx.EXPAND)
+        panel.sizer.Add(monsCtrl)
 
         def HandleXCheckBox(event):
             xCtrl.Enable(event.IsChecked())
@@ -271,7 +278,6 @@ class Resize(eg.ActionBase):
         text1 = "Set width to"
         text2 = "pixels"
         text3 = "Set height to"
-        text4 = "pixels"
 
 
     def __call__(self, width=None, height=None):
@@ -310,7 +316,7 @@ class Resize(eg.ActionBase):
         yCheckBox.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)
 
         panel.AddLine(xCheckBox, xCtrl, text.text2)
-        panel.AddLine(yCheckBox, yCtrl, text.text4)
+        panel.AddLine(yCheckBox, yCtrl, text.text2)
 
         while panel.Affirmed():
             panel.SetResult(
@@ -489,6 +495,7 @@ class GrabText(eg.ActionBase):
 # http://www.java2s.com/Open-Source/Python/GUI/Python-Win32-GUI-Automation/pywinauto-0.4.0/pywinauto/controls/win32_controls.py.htm
 # http://stackoverflow.com/questions/1872480/use-python-to-extract-listview-items-from-another-application
 # Note: this only works on 32 bit Python, and only for 32 bit 'other' processes.
+# Pako
 #=========================================================================================================
 
     class text:
