@@ -17,6 +17,7 @@
 import eg
 import wx
 from eg.Classes.UndoHandler import UndoHandlerBase
+from copy import deepcopy as cpy
 
 def DoExecute(item, newArgs):
     oldArgs = item.GetArguments()
@@ -36,7 +37,9 @@ class Configure(UndoHandlerBase):
             return False
         ActionThreadFunc = eg.actionThread.Func
         self.oldArgumentString = ActionThreadFunc(item.GetArgumentString)()
-        oldArgs = newArgs = ActionThreadFunc(item.GetArguments)()
+        #oldArgs = newArgs = ActionThreadFunc(item.GetArguments)()
+        newArgs = ActionThreadFunc(item.GetArguments)() # bugfix: http://www.eventghost.net/forum/viewtopic.php?f=4&t=3676
+        oldArgs = cpy(newArgs)                          # bugfix
         revertOnCancel = False
         dialog = eg.ConfigDialog.Create(item, *oldArgs)
         for event, newArgs in dialog:
@@ -54,7 +57,6 @@ class Configure(UndoHandlerBase):
                 ActionThreadFunc(item.SetArguments)(oldArgs)
                 item.Refresh()
             return False
-
         ActionThreadFunc(item.SetArguments)(newArgs)
         newArgumentString = ActionThreadFunc(item.GetArgumentString)()
         if self.oldArgumentString != newArgumentString:
