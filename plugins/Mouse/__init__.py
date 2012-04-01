@@ -35,7 +35,7 @@ Jrhy/+AqGrAMOnH86mAAAAAElFTkSuQmCC"""
 eg.RegisterPlugin(
     name = "Mouse",
     author = "Bitmonster",
-    version = "1.0.0",
+    version = "1.0.1",
     description = (
         "Gives you actions to control the mouse pointer and emulation of "
         "mouse events."
@@ -53,7 +53,10 @@ from math import sin, cos, radians, pi
 from time import sleep, clock
 from eg import HasActiveHandler
 from eg.cFunctions import SetMouseCallback
+from win32api import EnumDisplayMonitors
 from eg.WinApi.Dynamic import mouse_event, GetCursorPos, SetCursorPos, POINT
+from eg.WinApi.Utils import GetMonitorDimensions
+#===============================================================================
 
 # this is the real worker thread
 class MouseThread(Thread):
@@ -142,8 +145,7 @@ class MouseThread(Thread):
             if waitTicks < 0:
                 waitTicks = 0.0
             sleep(waitTicks)
-
-
+#===============================================================================
 
 class Mouse(eg.PluginBase):
 
@@ -194,8 +196,7 @@ class Mouse(eg.PluginBase):
                 self.lastMouseEvent.SetShouldEnd()
             return self.mouseButtonWasBlocked[buttonNum]
         return False
-
-
+#===============================================================================
 
 class GoDirection(eg.ActionBase):
     name = "Start mouse movement in a direction"
@@ -223,8 +224,7 @@ class GoDirection(eg.ActionBase):
         panel.AddLine(self.text.text1, valueCtrl, self.text.text2)
         while panel.Affirmed():
             panel.SetResult(valueCtrl.GetValue())
-
-
+#===============================================================================
 
 class LeftButton(eg.ActionBase):
     name = "Left mouse button"
@@ -236,8 +236,7 @@ class LeftButton(eg.ActionBase):
         mouse_event(0x0002, 0, 0, 0, 0)
         self.plugin.leftMouseButtonDown = True
         eg.event.AddUpFunc(UpFunc)
-
-
+#===============================================================================
 
 class MiddleButton(eg.ActionBase):
     name = "Middle mouse button"
@@ -247,8 +246,7 @@ class MiddleButton(eg.ActionBase):
             mouse_event(0x0040, 0, 0, 0, 0)
         mouse_event(0x0020, 0, 0, 0, 0)
         eg.event.AddUpFunc(UpFunc)
-
-
+#===============================================================================
 
 class RightButton(eg.ActionBase):
     name = "Right mouse button"
@@ -258,8 +256,7 @@ class RightButton(eg.ActionBase):
             mouse_event(0x0010, 0, 0, 0, 0)
         mouse_event(0x0008, 0, 0, 0, 0)
         eg.event.AddUpFunc(UpFunc)
-
-
+#===============================================================================
 
 class LeftDoubleClick(eg.ActionBase):
     name = "Left mouse button double-click"
@@ -272,8 +269,7 @@ class LeftDoubleClick(eg.ActionBase):
         mouse_event(0x0004, 0, 0, 0, 0)
         mouse_event(0x0002, 0, 0, 0, 0)
         eg.event.AddUpFunc(UpFunc)
-
-
+#===============================================================================
 
 class RightDoubleClick(eg.ActionBase):
     name = "Right mouse button double-click"
@@ -285,8 +281,7 @@ class RightDoubleClick(eg.ActionBase):
         mouse_event(0x0010, 0, 0, 0, 0)
         mouse_event(0x0008, 0, 0, 0, 0)
         eg.event.AddUpFunc(UpFunc)
-
-
+#===============================================================================
 
 class ToggleLeftButton(eg.ActionBase):
     name = "Toggle left mouse button"
@@ -298,56 +293,116 @@ class ToggleLeftButton(eg.ActionBase):
         else:
             mouse_event(0x0002, 0, 0, 0, 0)
             self.plugin.leftMouseButtonDown = True
-
-
+#===============================================================================
 
 class MoveAbsolute(eg.ActionBase):
     name = "Move Absolute"
     class text:
-        label = "Move Mouse to x:%s, y:%s"
+        display = "Move the mouse pointer to"
+        label_M = "Monitor: %i,  "
+        label_X = "x: %i,  "
+        label_Y = "y: %i"
         text1 = "Set horizontal position X to"
         text2 = "pixels"
         text3 = "Set vertical position Y to"
-        text4 = "pixels"
+        note = 'Note: The coordinates X and Y are related to the monitor \
+(not to the "virtual screen")'
 
-    def __call__(self, x, y):
+    def __call__(self, x = None, y = None, displayNumber = None):
         point = POINT()
         GetCursorPos(point)
+        X = point.x
+        Y = point.y
+        mons = EnumDisplayMonitors(None, None)
+        mons = [item[2] for item in mons]
+        for mon in range(len(mons)): # on what monitor (= mon) is the pointer ?
+            m = mons[mon]
+            if m[0] <= X and X <= m[2] and m[1] <= Y and Y <= m[3]:
+                break
+        if displayNumber is None:
+            displayNumber = mon
+        monitorDimensions = GetMonitorDimensions()
+        try:
+            displayRect = monitorDimensions[displayNumber]
+        except IndexError:
+            displayRect = monitorDimensions[0]
+
         if x is None:
-            x = point.x
+            x = X - m[0]
         if y is None:
-            y = point.y
+            y = Y - m[1]
+
+        x += displayRect[0]
+        y += displayRect[1]
         SetCursorPos(x, y)
 
 
-    def GetLabel(self, x, y):
-        return self.text.label % (str(x), str(y))
+    def GetLabel(self, x, y, displayNumber):
+        return self.text.display + ":  %s%s%s" % (
+            self.text.label_M % (displayNumber+1) if displayNumber is not None else "",
+            self.text.label_X % x if x is not None else "",
+            self.text.label_Y % y if y is not None else "",
+        )        
 
 
-    def Configure(self, x=0, y=0):
+    def Configure(self, x = None, y = None, displayNumber = None):
         panel = eg.ConfigPanel()
         text = self.text
 
         xCB = panel.CheckBox(x is not None, text.text1)
+        yCB = panel.CheckBox(y is not None, text.text3)
+        displayCB = panel.CheckBox(displayNumber is not None, text.display)
+
         def HandleXCheckBox(event):
             xCtrl.Enable(event.IsChecked())
             event.Skip()
         xCB.Bind(wx.EVT_CHECKBOX, HandleXCheckBox)
 
-        xCtrl = panel.SpinIntCtrl(x or 0, min=-maxint-1, max=maxint)
-        xCtrl.Enable(x is not None)
-
-        yCB = panel.CheckBox(y is not None, text.text3)
         def HandleYCheckBox(event):
             yCtrl.Enable(event.IsChecked())
             event.Skip()
         yCB.Bind(wx.EVT_CHECKBOX, HandleYCheckBox)
 
-        yCtrl = panel.SpinIntCtrl(y or 0, min=-maxint-1, max=maxint)
+        def HandleDisplayCB(event):
+            flag = event.IsChecked()
+            displayChoice.Enable(flag)
+            if flag:
+                display = 0 if displayNumber is None else displayNumber
+            else:
+                display = -1
+            displayChoice.SetValue(display)
+            event.Skip()
+        displayCB.Bind(wx.EVT_CHECKBOX, HandleDisplayCB)
+
+
+        #xCtrl = panel.SpinIntCtrl(x or 0, min = -maxint - 1, max = maxint)
+        xCtrl = panel.SpinIntCtrl(x or 0, min = 0, max = maxint) # since 1.0.1
+        xCtrl.Enable(x is not None)
+
+        #yCtrl = panel.SpinIntCtrl(y or 0, min = -maxint - 1, max = maxint)
+        yCtrl = panel.SpinIntCtrl(y or 0, min = 0, max = maxint) # since 1.0.1
         yCtrl.Enable(y is not None)
 
-        panel.AddLine(xCB, xCtrl, text.text2)
-        panel.AddLine(yCB, yCtrl, text.text4)
+        display = -1 if displayNumber is None else displayNumber
+        displayChoice = eg.DisplayChoice(panel, display)
+        displayChoice.Enable(displayNumber is not None)
+
+
+        monsCtrl = eg.MonitorsCtrl(panel, background = (224, 238, 238))
+        note = wx.StaticText(panel, -1, text.note)
+        note.SetForegroundColour(wx.RED)
+        sizer = wx.GridBagSizer(vgap = 6, hgap = 5)
+        sizer.Add(xCB, (0, 0), (1, 1))
+        sizer.Add(xCtrl, (0, 1), (1, 1))
+        sizer.Add(wx.StaticText(panel,- 1, text.text2), (0, 2), (1, 1))
+        sizer.Add(yCB, (1, 0), (1, 1))
+        sizer.Add(yCtrl, (1, 1), (1, 1))
+        sizer.Add(wx.StaticText(panel, -1, text.text2), (1, 2), (1, 1))
+        sizer.Add(note, (2, 0), (1, 3))
+        sizer.Add(displayCB, (3, 0), (1, 1), flag = wx.TOP, border = 14)
+        sizer.Add(displayChoice, (3, 1), (1, 2), flag = wx.TOP, border = 13)
+        panel.sizer.Add(sizer, 1, wx.EXPAND)
+        panel.sizer.Add(monsCtrl)
 
         while panel.Affirmed():
             if xCtrl.IsEnabled():
@@ -359,9 +414,14 @@ class MoveAbsolute(eg.ActionBase):
                 y = yCtrl.GetValue()
             else:
                 y = None
-            panel.SetResult(x, y)
 
+            if displayChoice.IsEnabled():
+                displayNumber = displayChoice.GetValue()
+            else:
+                displayNumber = None
 
+            panel.SetResult(x, y, displayNumber,)
+#===============================================================================
 
 class MoveRelative(eg.ActionBase):
     name = "Move Relative"
@@ -370,7 +430,6 @@ class MoveRelative(eg.ActionBase):
         text1 = "Change horizontal position X by"
         text2 = "pixels"
         text3 = "Change vertical position Y by"
-        text4 = "pixels"
 
     def __call__(self, x, y):
         point = POINT()
@@ -409,7 +468,7 @@ class MoveRelative(eg.ActionBase):
         yCtrl.Enable(y is not None)
 
         panel.AddLine(xCB, xCtrl, text.text2)
-        panel.AddLine(yCB, yCtrl, text.text4)
+        panel.AddLine(yCB, yCtrl, text.text2)
 
         while panel.Affirmed():
             if xCtrl.IsEnabled():
@@ -422,8 +481,7 @@ class MoveRelative(eg.ActionBase):
             else:
                 y = None
             panel.SetResult(x, y)
-
-
+#===============================================================================
 
 class MouseWheel(eg.ActionBase):
     name = "Turn mouse wheel"
@@ -446,4 +504,4 @@ class MouseWheel(eg.ActionBase):
         panel.AddLine(self.text.text1, valueCtrl, self.text.text2)
         while panel.Affirmed():
             panel.SetResult(valueCtrl.GetValue())
-
+#===============================================================================
