@@ -1,0 +1,427 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>DVBViewer Plugin</title></head>
+<body>
+<table border="0">
+<tbody>
+<tr>
+<td align="right" valign="top">Supported
+DVBViewer versions: </td>
+<td align="left" valign="top">
+%s </td>
+</tr>
+<tr>
+<td align="right" valign="top">Supported
+DVBViewerService versions: </td>
+<td align="left" valign="top">
+%s </td>
+</tr>
+</tbody>
+</table>
+The supported DVBViewer actions are documented in
+<a href="http://wiki.dvbviewer.info/index.php/Actions.ini">this
+wiki</a>
+<br><br>This plugin supports following additional actions, which are executed
+via the COM interface of the DVBViewer:
+<table border="1">
+<tbody>
+<tr>
+<th align="right"> <b>Action</b></th>
+<th align="left"> <b>Description</b></th>
+</tr>
+<tr>
+<td align="right">Start</td>
+<td>Start DVBViewer</td>
+</tr>
+<tr><td align="right">IsConnected</td><td>True if DVBViewer ist started and connected to the
+plugin</td></tr><tr>
+<td align="right">StopActiveRecordings</td>
+<td>Terminate all active recordings</td>
+</tr>
+<tr>
+<td align="right">GetNumberOfActiveRecordings</td>
+<td>Return value will be the number of active recordings</td>
+</tr>
+<tr>
+<td align="right">IsRecording</td>
+<td>True if there is a recording running</td>
+</tr>
+<tr>
+<td align="right">AddRecording</td>
+<td>Add a recording entry to the DVBViewer timer</td>
+</tr>
+<tr>
+<td align="right">GetDateOfRecordings</td>
+<td>Get the list of recording dates of the timer</td>
+</tr>
+<tr>
+<td align="right">GetRecordingsIDs</td>
+<td>Get a list of recording IDs of the timer</td>
+</tr>
+<tr>
+<td align="right">GetTimerDetails</td>
+<td>Get the details of one or&nbsp;all recording timers</td>
+</tr>
+
+<tr><td align="right">GetChannelDetails</td><td>Get the technical details of one or all DVBViewer channels</td></tr><tr><td align="right">TuneChannel</td><td>Tunes DVBViewer to an arbitrary channel with the given channelID</td></tr><tr>
+<td align="right">UpdateEPG</td>
+<td>Update the EPG database of the DVBViewer</td>
+</tr>
+<tr>
+<td align="right">TaskScheduler</td>
+<td>
+Add the next recording date or all recording dates to the Windows task
+scheduler
+(The DVBTaskScheduler can be replaced by this method)
+</td>
+</tr>
+<tr>
+<td align="right">ShowWindow</td>
+<td>
+Shows a OSD Window on the screen.
+</td>
+</tr>
+<tr>
+<td align="right">ShowInfoinTVPic</td>
+<td>
+Show the Infobar in the TVPicture.
+</td>
+</tr>
+<tr>
+<td align="right">DeleteInfoinTVPic</td>
+<td>
+Deletes the Infobar in the TVPicture.
+</td>
+</tr>
+<tr>
+<td align="right">GetNumberOfClients</td>
+<td>
+Get the number of clients connected to the DVBViewerService.
+</td>
+</tr>
+<tr>
+<td align="right">GetSetupValue</td>
+<td>
+Get a setup value of the setup.xml of the DVBViewer.
+</td>
+</tr>
+<tr>
+<td align="right">SendAction</td>
+<td>
+Send an action to the DVBViewer
+(Values are defined in the action.ini of the DVBViewer)
+</td>
+</tr>
+<tr>
+<td align="right">GetNumberOfClients</td>
+<td>
+Get the number of clients which are connected with the DVBViewerService
+</td>
+</tr>
+<tr>
+<td align="right">IsEPGUpdating</td>
+<td>
+True while the DVBViewerService is updating the EPG information
+</td>
+</tr>
+</tbody>
+</table>
+The plugin supports two types of generation events.
+<ol>
+<li>Compatible to the events.of plugin version 1.2</li>
+<li>The event messages is splited into the event string and the
+payload.
+In this case, a event can be better interpreted by a python script or
+command.</li>
+</ol>
+Both types can be used in parallel Following events can be fired:
+<table border="1">
+<tbody>
+<tr>
+<th align="right"> <b>Event</b></th>
+<th align="center"> <b>Result(s)</b></th>
+<th align="center"> <b>Fired by</b></th>
+<th align="left"> <b>Description</b></th>
+</tr>
+<tr>
+<td align="right"> DVBViewerIsConnected</td>
+<td></td>
+<td>Viewer</td>
+<td>The event gets fired when the DVBViewer is connected to
+the plugin.</td>
+</tr>
+<tr>
+<td align="right"> Action</td>
+<td align="center">Action ID</td>
+<td>Viewer</td>
+<td>The event gets fired whenever a new action is
+processed. (Description
+<a href="http://wiki.dvbviewer.info/index.php/Actions.ini">here</a>)</td>
+</tr>
+<tr>
+<td align="right"> Channel</td>
+<td align="center">ChannelNr</td>
+<td>Viewer</td>
+<td>The event gets fired on every channelchange</td>
+</tr>
+<tr>
+<td align="right"> AddRecord</td>
+<td align="center">Timer ID</td>
+<td>Viewer / Service</td>
+<td>The event gets fired whenever a new Timer is added.</td>
+</tr>
+<tr>
+<td align="right"> TimerListUpdated</td>
+<td></td>
+<td>Viewer / Service</td>
+<td>The event gets fired whenever the timer list is
+changed. Watch dog must be enabled.</td>
+</tr>
+<tr>
+<td align="right"> StartRecord</td>
+<td align="center">Timer ID, Number of active
+recordings</td>
+<td>Viewer / Service</td>
+<td>The event gets fired whenever a recording starts.</td>
+</tr>
+<tr>
+<td align="right"> EndRecord</td>
+<td align="center">Timer ID, Number of active
+recordings</td>
+<td>Viewer / Service</td>
+<td>The event gets fired whenever a recording ends.</td>
+</tr>
+<tr>
+<td align="right">AllActiveRecordings<br>
+Finished</td>
+<td align="center"></td>
+<td>Viewer / Service</td>
+<td>The event gets fired whenever the last active recording
+finishs.</td>
+</tr>
+<tr>
+<td align="right"> Window</td>
+<td align="center">OSD Window ID</td>
+<td>Viewer</td>
+<td>The event gets fired whenever a OSD-window is activated.</td>
+</tr>
+<tr>
+</tr>
+<tr>
+<td align="right"> ControlChange</td>
+<td align="center">OSD Window ID, Control ID</td>
+<td>Viewer</td>
+<td>The event gets fired whenever an OSD Control gets the
+focus.</td>
+</tr>
+<tr>
+</tr>
+<tr>
+<td align="right"> SelectedItemChange</td>
+<td></td>
+<td>Viewer</td>
+<td>The event gets fired whenever the selectedItem in an
+OSD list changes.</td>
+</tr>
+<tr>
+</tr>
+<tr>
+<td align="right"> RDS</td>
+<td align="center">RDS Text</td>
+<td>Viewer</td>
+<td>The event gets fired whenever a new RDS Text arrives.</td>
+</tr>
+<tr>
+</tr>
+<tr>
+<td align="right"> Playlist</td>
+<td align="center">Filename</td>
+<td>Viewer</td>
+<td>The event gets fired whenever a new playlistitem starts
+playing.</td>
+</tr>
+<tr>
+</tr>
+<tr>
+<td align="right"> Playbackstart</td>
+<td align="center"></td>
+<td>Viewer</td>
+<td>The event gets fired whenever a media playback starts.</td>
+</tr>
+<tr>
+</tr>
+<tr>
+<td align="right"> PlaybackEnd</td>
+<td align="center"></td>
+<td>Viewer</td>
+<td>The event gets fired whenever a media playback ends.</td>
+</tr>
+<tr>
+</tr>
+<tr>
+<td align="right"> Close</td>
+<td align="center"></td>
+<td>Viewer</td>
+<td>The event gets fired when the DVBViewer is shutting
+down.</td>
+</tr>
+<tr>
+</tr>
+<tr>
+<td align="right"> EPGUpdateFinished</td>
+<td align="center"></td>
+<td>Viewer</td>
+<td>The event gets fired whenever the UpdateEPG action
+finishs.</td>
+</tr>
+<tr>
+</tr>
+<tr>
+<td align="right"> PlaystateChange</td>
+<td align="center">PlayerState</td>
+<td>Viewer</td>
+<td>The event gets fired whenever the play state changes.
+(PLAY, PAUSE or STOP)</td>
+</tr>
+<tr>
+</tr>
+<tr>
+<td align="right"> RatioChange</td>
+<td align="center">Ratio</td>
+<td>Viewer</td>
+<td>The event gets fired whenever the ratio changes. (133 =
+4:3, 178 = 16:9)</td>
+</tr>
+<tr>
+</tr>
+<tr>
+<td align="right"> DisplayChange</td>
+<td align="center">DisplayType</td>
+<td>Viewer</td>
+<td>The event gets fired whenever the display type changes.
+(NONE, OSD, TV, DVD, MEDIA, SLIDESHOW, TELETEXT)</td>
+</tr>
+<tr>
+</tr>
+<tr>
+<td align="right"> RenderPlaystateChange</td>
+<td align="center">RendererType, PlaysState</td>
+<td>Viewer</td>
+<td>The event gets fired whenever the internal playstate
+changes.</td>
+</tr>
+<tr>
+</tr>
+<tr>
+<td align="right"> RendererChange</td>
+<td align="center">RendererType</td>
+<td>Viewer</td>
+<td>The event gets fired whenever the renderer changes.</td>
+</tr>
+<tr>
+</tr>
+<tr>
+<td align="right"> NumberOfClientsChanged</td>
+<td align="center"></td>
+<td>Service</td>
+<td>The event gets fired whenever the number of clients
+connected to the service change.</td>
+</tr>
+<tr>
+</tr>
+<tr>
+<td align="right"> NoClientActive</td>
+<td align="center"></td>
+<td>Service</td>
+<td>The event gets fired whenever the last client
+disconnects from the service.</td>
+</tr>
+<tr>
+</tr>
+<tr>
+<td align="right"> ServiceNotAlive</td>
+<td align="center"></td>
+<td>Service</td>
+<td>The event gets fired whenever the service not alive.</td>
+</tr>
+<tr>
+</tr>
+<tr>
+<td align="right"> DVBViewerEventHandlingNotAlive</td>
+<td align="center"></td>
+<td>Viewer</td>
+<td>The event gets fired whenever the DVBViewer can't sent
+events.</td>
+</tr>
+<tr>
+</tr>
+</tbody>
+</table><br>Follwing table shows the possible RendererTyes and PlaysStates:
+<table border="1">
+<tbody>
+<tr>
+<th align="right"> <b>RendererType</b></th>
+<th align="left"> <b>Type of renderer causing
+the event</b></th>
+</tr>
+<tr>
+<td align="right">-1</td>
+<td>Ratio changed, PlaysState shows ratio (only on
+RenderPlaystateChange event)</td>
+</tr>
+<tr>
+<td align="right">0</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td align="right">1</td>
+<td>VideoAudioDVD</td>
+</tr>
+<tr>
+<td align="right">2</td>
+<td>DVB</td>
+</tr>
+<tr>
+<td align="right">3</td>
+<td>MPG2TS</td>
+</tr>
+</tbody>
+</table><br>
+<table border="1">
+<tbody>
+<tr>
+<th align="right"> <b>PlaysState</b></th>
+<th align="left"> <b>state changed into</b></th>
+</tr>
+<tr>
+<td align="right">0</td>
+<td>Stop</td>
+</tr>
+<tr>
+<td align="right">1</td>
+<td>Pause</td>
+</tr>
+<tr>
+<td align="right">2</td>
+<td>Play</td>
+</tr>
+</tbody>
+</table>
+This plugin contains a watchdog which detects if the DVBViewer is
+running,
+and synchronize the number of active recording with the internal
+counter.
+The watchdog is always enabled and the period of checking can be
+changed in
+the configuration (default: 60s).<br>
+The watchdog is also responsible for monitoring the DVBViewerService.
+Through
+the watchdog is at the beginning and end of each recording an event
+fired.
+Two different start methods of the DVBViewer are supported and can be
+selected in the configuration:
+<ol>
+<li>Via the COM interface (like plugin version 1.2) (Default)</li>
+<li>By command line. Solves some DVBViewer plugin problems.</li>
+</ol>
+</body></html>
