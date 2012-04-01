@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 #
+
+#ToDo 1) vytvorit png soubor z ikony a ulozit ho; davat ho misto (chybejiciho) obalu
+#     2) 
 # plugins/MediaMonkey/__init__.py
 #
 # Copyright (C)  2009-2011 Pako  <lubos.ruckl@quick.cz>
@@ -20,6 +23,10 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.3.3 by Pako 2012-01-06 15:30 UTC+1
+#     - CoverArt support added
+# 0.3.2 by Pako 2012-01-06 15:30 UTC+1
+#     - action Exit renamed
 # 0.3.1 by Pako 2011-12-24 10:05 UTC+1
 #     - plugin automatically connects and disconnects to MM through ActiveX/COM
 # 0.3.0 by Pako 2011-11-28 07:12 UTC+1
@@ -39,7 +46,7 @@ from win32process import GetWindowThreadProcessId
 from win32com.client import Dispatch, DispatchWithEvents
 from eg.WinApi import SendMessageTimeout
 from eg.WinApi.Utils import CloseHwnd
-from os.path import split as path_split, isfile
+from os.path import split as path_split, isfile, abspath, join, dirname
 from os import remove as remove_file
 from functools import partial
 from random import randint
@@ -62,7 +69,7 @@ SC_MINIMIZE   = 61472
 eg.RegisterPlugin(
     name = "MediaMonkey",
     author = "Pako",
-    version = "0.3.1",
+    version = "0.3.3",
     kind = "program",
     guid = "{50602341-ABC3-47AD-B859-FCB8C03ED4EF}",
     createMacrosOnAdd = True,
@@ -95,30 +102,106 @@ For example, if you try to add a track to a playlist 'test', the payload will be
 .. _MediaMonkey: http://www.MediaMonkey.com/ ''',
     url = "http://www.eventghost.net/forum/viewtopic.php?t=563",
     icon = (
-        "R0lGODlhEAAQAPcAADQyNLyaTHRmRJSWlPzGNFxOPGxqbFROVKSGRJyWfOzSlOTCdGRmZ"
-        "HReRERCPIRyTNy2dIyCbPzSZMSylExOTFxaXOTe5HxyVOS2ROzCTFxWPIx+ZKSajDw6PP"
-        "zinExGTPTSfHR2dFRWVKSOVLyibGxiTExKRISKjNy+lIx6VPzOVKyaZLSqnFRSRJyGTNT"
-        "GrOzKfERCRJR6RNS2fPzWdGRiXIx2VMyqXGxWPEQ+RDw2PMSiRIRuVJyenPzKRHRydFRS"
-        "VLSedNS6hHx2ZGRaTIR2TKSSdPzWbMS6pFxeXPzy1IRyVPzKTGRWPKSSXLymhEQ+PPzqt"
-        "PzahHx+fFxWVLymfHRiTJyShMzCpPzSXFxSRKSKTOzWtExGRNy2fMSqZH4HhAAAAAAAAM"
-        "AAAAAIEgAACgAAEwAAAP8JhP8AAP8AAP8AAP8yAP8HAP+RAP98AACreAAGAACRTQB8AAA"
-        "wBADqAAASAAAAAADQ4gA8BBUlAABbAGAIYOlAnhI4gAAAfNJ4IOYARYEAH3wAAMhNAMUA"
-        "ABwAAAAAAErwB+PqAIESAHwAAKBGAHfQAFAmAABbAMgIAMVAQAE4HwAAAGsFAAAAAAAAA"
-        "AAAAJxuAOi9ABIAAAAAAAB4AADqAAASAAAAAAiFAPwrABKDAAB8ABgAaO4AnpAAgHwAfH"
-        "AA/wUA/5EA/3wA//8AYP8Anv8AgP8AfG0pKgW3AJGSAHx8AEogKvRFAIAfAHwAAAA0WAB"
-        "k8RWDEgB8AAD//wD//wD//wD//8gAAMUAABwAAAAAAABcpAHq6wASEgAAAAA09gBkOACD"
-        "TAB8AFcIhPT864ASEnwAAIgYd+ruEBKQTwB8AMgAuMW36xySEgB8AKD/NAD/ZAD/gwD/f"
-        "B8gWgBF7AAfEgAAABE01ABk/wCD/wB8fwSgMADr7AASEgAAAAPnIABkRQCDHwB8AACINA"
-        "BkZACDgwB8fAABIAAARQAAHwAAAAQxbgAAvQAwAAAAAAMBAAAAAAAAAAAAAAAajQAA4gA"
-        "ARwAAACH5BAEAABYALAAAAAAQABAABwjtAC0IFNjDgMEfPQYqtDCAAY8gECCQ4FFjwMIQ"
-        "ViBIOcLxiAcUVgwMPGFlAY0jErJIkBBFCRcrJwQyIIEyywoDI2AoUfLiiQgLIT58OZIlA"
-        "BAKQK5wqFABSJcpXSLQkKACQYyrMRzEeJDCRJcYQ1Ay2dFFqwMtGFReceAASokiBWIAuN"
-        "olg48sRy7o6NJCRwetFBx0IEKACd4UHX7YUIAFCYUOOhwU8KFCgpQlIk2gUMLir2AZlY9"
-        "AiCGzxAQAHbZsASBAwhEYApIMNFHCyIwbAHSMkAKhBJSFSRwsqYKjQJUHUH4ulAmgOQAG"
-        "CwMCADs="
+        "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"
+        "c1G/AAAAAElFTkSuQmCC"
     ),
 )
-#====================================================================
+#===============================================================================
 
 MM_EVENTS = (
 "OnPlay",
@@ -246,7 +329,7 @@ SONG_TABLE_FIELDS=(
 )
 #===============================================================================
 
-MyWindowMatcher = eg.WindowMatcher(
+MM_WindowMatcher = eg.WindowMatcher(
     "MediaMonkey.exe",
     None,
     u'TFMainWindow{*}',
@@ -272,6 +355,26 @@ class EventHandler:
 
     def GetSongInfo(self):
         currSong = self.MM.Player.CurrentSong
+        sql = ' FROM Covers WHERE IDSong="%i"' % currSong.ID
+        count = 0
+        Covers = []
+        covers = self.MM.Database.OpenSQL('SELECT CoverType, CoverPath' + sql)
+        while not covers.EOF:
+            count += 1
+            Covers.append((covers.ValueByIndex(0), covers.ValueByIndex(1)))
+            covers.Next()
+        if count > 0:
+            ix = 0
+            tps = [i[0] for i in Covers]
+            if '3' in tps:
+                ix = tps.index('3')
+            elif '0' in tps:
+                ix = tps.index('0')
+            #artPth = path_split(currSong.Path)[0] + "\\" + Covers[ix][1]
+            artPth = abspath(join(path_split(currSong.Path)[0], Covers[ix][1]))
+        else:
+            artPth = abspath(join(dirname(__file__), "CoverArt.png"))
+
         return (
             currSong.Title,
             currSong.ArtistName,
@@ -285,6 +388,7 @@ class EventHandler:
             currSong.Bitrate,
             currSong.Channels,
             currSong.SongLength,
+            artPth
         )
 
     def OnBeforeTracksMove(self, *args):
@@ -1161,6 +1265,12 @@ class MediaMonkey(eg.PluginBase):
                 48
             )
             raise self.Exceptions.InitFailed
+        icoFile = abspath(join(dirname(__file__), "CoverArt.png"))
+        if not isfile(icoFile):
+            mmIco = self.info.icon.key
+            stream = open(icoFile, "wb")
+            stream.write(mmIco.decode('base64'))
+            stream.close()  
 
 
     def DummyStart(self):
@@ -1172,6 +1282,7 @@ class MediaMonkey(eg.PluginBase):
         events = 4 * [True] + 23 * [False],
         events2 = 7 * [True]
     ):
+        self.runFlg = False
         self.volume = None
         self.muted = False
         if isinstance(events, bool):# For compatibility with old version !!!
@@ -1206,7 +1317,7 @@ class MediaMonkey(eg.PluginBase):
 
 
     def MinimizeMM(self):
-        hwnds = MyWindowMatcher()
+        hwnds = MM_WindowMatcher()
         if hwnds:
             SendMessageTimeout(hwnds[0],WM_SYSCOMMAND,SC_MINIMIZE,0)
         else:
@@ -1365,38 +1476,55 @@ class Start(eg.ActionBase):
     name = "Start MediaMonkey"
     description = "Starts MediaMonkey."
 
-    def __call__(self):
+    def __call__(self, choice=True):
         if not self.plugin.runFlg:
             self.plugin.runFlg = True
             eg.scheduler.AddTask(0.5, self.plugin.startWorkerThread)
-            while not self.plugin.workerThread:
-                eg.Utils.time.sleep(0.1)
-            eg.scheduler.AddTask(5, self.plugin.MinimizeMM)           
-#===============================================================================
-
-class Exit(eg.ActionBase):
-    name = "Exit/Disconnect MediaMonkey"
-    description = "Disconnect MediaMonkey, with the option to close it."
-    
-    def __call__(self,choice = True):
-        if choice:
-            hwnds = MyWindowMatcher()
-            if hwnds:
-                CloseHwnd(hwnds[0])
-            else:
-                raise self.Exceptions.ProgramNotRunning
+            if choice:
+                while not self.plugin.workerThread:
+                    eg.Utils.time.sleep(0.1)
+                eg.scheduler.AddTask(5, self.plugin.MinimizeMM)           
 
     def Configure(self, choice=True):
         panel = eg.ConfigPanel(self)
         choiceCtrl = wx.CheckBox(panel, -1, self.text.choice_label)
         choiceCtrl.SetValue(choice)
-        panel.AddCtrl(choiceCtrl)
+        panel.sizer.Add(choiceCtrl, 0, wx.TOP, 20)
 
         while panel.Affirmed():
             panel.SetResult(choiceCtrl.GetValue())
             
     class text:
-        choice_label = "Close MediaMonkey too"
+        choice_label = "Start minimized"
+#===============================================================================
+
+class Exit(eg.ActionBase):
+    name = "Quit (close) MediaMonkey"
+    description = "Quits (closes) MediaMonkey."
+    
+    def __call__(self, choice = None):
+#    def __call__(self):
+        hwnds = MM_WindowMatcher()
+        if hwnds:
+            CloseHwnd(hwnds[0])
+        else:
+            raise self.Exceptions.ProgramNotRunning
+
+
+    def GetLabel(self):
+        return self.name
+#
+#    def Configure(self, choice=True):
+#        panel = eg.ConfigPanel(self)
+#        choiceCtrl = wx.CheckBox(panel, -1, self.text.choice_label)
+#        choiceCtrl.SetValue(choice)
+#        panel.AddCtrl(choiceCtrl)
+#
+#        while panel.Affirmed():
+#            panel.SetResult(choiceCtrl.GetValue())
+#            
+#    class text:
+#        choice_label = "Close MediaMonkey too"
 #====================================================================
 
 class Play(eg.ActionBase):
@@ -3848,7 +3976,7 @@ type the same (for example *Shift+Alt+E*). In the text box *"Name of hotkey"*
 you can label the keystrokes with your own description.'''
     
     def __call__(self, descr = "",keys = ""):
-        hwnds = MyWindowMatcher()
+        hwnds = MM_WindowMatcher()
         if hwnds:
             eg.SendKeys(hwnds[0],u'{'+keys+u'}', False)
 
