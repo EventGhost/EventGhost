@@ -11,9 +11,9 @@ ShowLanguageDialog=auto
 AppName=EventGhost
 AppId=EventGhost
 AppPublisher=EventGhost Project
-AppPublisherURL=http://www.eventghost.org/
-AppSupportURL=http://www.eventghost.org/
-AppUpdatesURL=http://www.eventghost.org/
+AppPublisherURL=http://www.eventghost.net/
+AppSupportURL=http://www.eventghost.net/
+AppUpdatesURL=http://www.eventghost.net/
 AppCopyright=� 2005-2009 EventGhost Project
 AppVerName=EventGhost %(appVersion)s
 AppVersion=%(appVersion)s
@@ -43,7 +43,7 @@ begin
   else
     begin
       Result := false;
-      MsgBox('You need to install GDI+ first.'#13#10#13#10 + 'Please visit http://www.eventghost.org/docs/faq.html for instructions.', MBError, MB_OK);
+      MsgBox('You need to install GDI+ first.'#13#10#13#10 + 'Please visit http://www.eventghost.net/docs/faq.html for instructions.', MBError, MB_OK);
     end
 end;
 
@@ -76,7 +76,7 @@ Filename: "{app}\\EventGhost.exe"; Flags: postinstall nowait skipifsilent
 [Icons]
 Name: "{group}\EventGhost"; Filename: "{app}\EventGhost.exe"
 Name: "{group}\EventGhost Help"; Filename: "{app}\EventGhost.chm"
-Name: "{group}\EventGhost Web Site"; Filename: "http://www.eventghost.org/"
+Name: "{group}\EventGhost Web Site"; Filename: "http://www.eventghost.net/"
 Name: "{group}\Uninstall EventGhost"; Filename: "{uninstallexe}"
 Name: "{userdesktop}\EventGhost"; Filename: "{app}\EventGhost.exe"; Tasks: desktopicon
 Name: "{userstartup}\EventGhost"; Filename: "{app}\EventGhost.exe"; Parameters: "-h -e OnInitAfterBoot"; Flags: createonlyiffileexists 
