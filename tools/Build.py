@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
@@ -120,7 +120,9 @@ class MyBuilder(builder.Builder):
         files = []
         client = pysvn.Client()
         workingDir = self.sourceDir
-        props = client.propget("noinstall", workingDir, recurse=True)
+        svnRoot = builder.getSvnRoot(workingDir)
+        #props = client.propget("noinstall", workingDir, recurse=True)
+        props = client.propget("noinstall", svnRoot, recurse=True)
         # propget returns the pathes with forward slash as deliminator, but we
         # need backslashes. It also seems to be encoded in UTF-8.
         props = dict(
@@ -128,7 +130,10 @@ class MyBuilder(builder.Builder):
                 for k, v in props.iteritems()
         )
         numPathParts = len(workingDir.split("\\"))
-        for status in client.status(workingDir, ignore=True):
+        #for status in client.status(workingDir, ignore=True):
+        status = client.status(svnRoot, ignore=True)
+        workingDirStatus = [i for i in status if workingDir in i.path]
+        for status in workingDirStatus:
             # we only want versioned files
             if not status.is_versioned:
                 continue
