@@ -23,6 +23,7 @@ import builder
 class CreateSourceArchive(builder.Task):
     description = "Build source archive"
 
+
     def DoTask(self):
         """
         Create a zip archive off all versioned files in the working copy.
@@ -35,8 +36,13 @@ class CreateSourceArchive(builder.Task):
         )
         client = pysvn.Client()
         workingDir = self.buildSetup.sourceDir
+        svnRoot = builder.getSvnRoot(workingDir)
+
         zipFile = zipfile.ZipFile(filename, "w", zipfile.ZIP_DEFLATED)
-        for status in client.status(workingDir, ignore=True):
+        #for status in client.status(workingDir, ignore=True):
+        status = client.status(svnRoot, ignore=True)
+        workingDirStatus = [i for i in status if workingDir in i.path]
+        for status in workingDirStatus:
             if status.is_versioned:
                 path = status.path
                 if not isdir(path):

@@ -79,6 +79,7 @@ PLUGINS = [
 class CheckSources(builder.Task):
     description = "Check source files"
 
+
     def DoTask(self):
         sourceDir = self.buildSetup.sourceDir
         searchDirs = [
@@ -89,6 +90,10 @@ class CheckSources(builder.Task):
             searchDirs.append(join(sourceDir, "plugins", plugin))
         serialDir = join(sourceDir, "eg", "WinApi", "serial")
         client = pysvn.Client()
+        svnRoot = builder.getSvnRoot(sourceDir)
+        status = client.status(svnRoot, ignore = True)
+        paths = [i.path for i in status]
+
         for searchDir in searchDirs:
             for root, dirs, files in os.walk(searchDir):
                 for filename in files:
@@ -99,8 +104,8 @@ class CheckSources(builder.Task):
                         self.CheckHeader(path)
                         self.CheckLineLength(path)
                         # don't fix files that are versioned but haven't changed
-                        status = client.status(path, ignore=True)[0]
-                        if status.text_status == pysvn.wc_status_kind.normal:
+                        itemStatus = status[paths.index(path)]
+                        if itemStatus.text_status == pysvn.wc_status_kind.normal:
                             continue
                         self.FixTrailingWhitespace(path)
 

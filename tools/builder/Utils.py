@@ -67,6 +67,20 @@ def ExecutePy(*args):
     return StartProcess(sys.executable, "-u", "-c", "\n".join(args))
 
 
+def getSvnRoot(path):
+    svnRoot = None
+    while 1:
+        ix = path.rfind("\\")
+        if ix > 0:
+            path = path[:ix]
+            if os.path.isdir(path + "\\.svn"):
+                svnRoot = path
+                break
+        else:
+            break
+    return svnRoot
+
+
 def GetSvnRevision(workingCopyPath):
     """
     Returns the SVN revision of a directory as an integer.
@@ -74,23 +88,38 @@ def GetSvnRevision(workingCopyPath):
     Returns None if anything goes wrong, such as an unexpected
     format of internal SVN files.
     """
-    rev = None
-    entriesPath = os.path.join(workingCopyPath, ".svn", "entries")
+
     try:
-        entries = open(entriesPath, 'r').read()
-    except IOError:
-        pass
-    else:
-        # Versions >= 7 of the entries file are flat text.  The first line is
-        # the version number. The next set of digits after 'dir' is the
-        # revision.
-        if re.match('(\d+)', entries):
-            revMatch = re.search('\d+\s+dir\s+(\d+)', entries)
-            if revMatch:
-                rev = revMatch.groups()[0]
-    if rev:
-        return int(rev)
-    return None
+        import pysvn
+        svnRoot = getSvnRoot(workingCopyPath)
+        client = pysvn.Client()
+        info2 = client.info2(svnRoot)
+        revs = [i[1].data["rev"].number for i in info2]
+        headRev = max(revs)
+    except:
+        headRev = None
+    return headRev
+
+
+
+
+    #rev = None
+    #entriesPath = os.path.join(workingCopyPath, ".svn", "entries")
+    #try:
+    #    entries = open(entriesPath, 'r').read()
+    #except IOError:
+    #    pass
+    #else:
+    #    # Versions >= 7 of the entries file are flat text.  The first line is
+    #    # the version number. The next set of digits after 'dir' is the
+    #    # revision.
+    #    if re.match('(\d+)', entries):
+    #        revMatch = re.search('\d+\s+dir\s+(\d+)', entries)
+    #        if revMatch:
+    #            rev = revMatch.groups()[0]
+    #if rev:
+    #    return int(rev)
+    #return None
 
 
 def UpdateSvn(workingCopy):
