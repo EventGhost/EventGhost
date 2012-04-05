@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-VERSION = "2.1.1"
+VERSION = "2.1.2"
 
 SUPPORTED_DVBVIEWER_VERSIONS        = '4.9.x (older versions might work but are untested)'
 SUPPORTED_DVBVIEWERSERVICE_VERSIONS = '1.9.x (older versions might work but are untested)'
@@ -21,6 +21,8 @@ SUPPORTED_DVBVIEWERSERVICE_VERSIONS = '1.9.x (older versions might work but are 
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # Version history (newest on top):
+# 2.1.2: Fixed Unicode problem in GetChannelDetails; 
+#        channel names with special characters or umlauts caused an exception.
 # 2.1.1: Documentation and exception handling improved (minor changes)
 #        Return type of GetChannelDetails is now always a dictionary with the channelID as key.
 # 2.1.0: Added action GetTimerDetails
@@ -82,7 +84,6 @@ eg.RegisterPlugin(
         "YGVlk+dkZ+kiztQgv0IyleVOLNmEesH/3ZEAJPEK/gVNWWvcNcmGsgAAAABJRU5ErkJg"
         "gg=="
     ),
-    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=1564",
 )
 
 
@@ -1089,10 +1090,10 @@ class DVBViewerWorkerThread(eg.ThreadWorker):
 
         if channelID != None:
             try:
-                channelID = str(channelID).split('|')[0]
+                channelID = unicode(channelID).split('|')[0]
                 result = { channelID: cpy(self.plugin.channelDetailsList[channelID]) }
             except:
-                eg.PrintError("No details for channel with ID '" + str(channelID) + "' found.")
+                eg.PrintError("No details for channel with ID '" + unicode(channelID) + "' found.")
                 result = None
             
         return result
