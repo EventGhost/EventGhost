@@ -650,6 +650,15 @@ FN_ACTIONS = (
 ('fnDecRateEx', "<b>All</b> Decrease Play Rate by a user specified value"),
 ('fnZoomInLevel', "<b>All</b> Cycle Zoom-in Levels (16.6%, 33.3%, 50%, 100%)"),
 ('fnSkinSelectNav', "<b>All</b> Fullscreen navigation skin selection navigator (show/hide)"),
+('fnResetBright', "<b>All</b> Reset Brightness to default value."),
+('fnResetContrast', "<b>All</b> Reset Contrast to default value."),
+('fnResetGamma', "<b>All</b> Reset Gamma to default value."),
+('fnResetHue', "<b>All</b> Reset Hue to default value."),
+('fnResetSatur', "<b>All</b> Reset Saturation to default value."),
+('fnRandDirNedia', "<b>All</b> Random play a media file from the playing directory."),
+('fnRandDirFileExt', "<b>All</b> Random play a file with the same extension from the playing directory."),
+('fnSeekLongForward', "<b>All</b> Long seek forward a specified number of seconds (default 600 seconds = 10 minutes)."),
+('fnSeekLongBackward', "<b>All</b> Long seek backward a specified number of seconds (default 600 seconds = 10 minutes)."),
 )
 
 EX_ACTIONS = (
@@ -680,6 +689,7 @@ EX_ACTIONS = (
 ('exTransWin', 'Set player Window Transparency\n<br>value = 1-255, where 255 = disable transparency'),
 ('exRandomPlay', 'Set Random Play ON/OFF\n<br>value = 0=Off, 1=On'),
 ('exSkinTint', 'Set the User Interface color Tint\n<br>value = RGB Integer Value (Example: "$FF0000" = Red)'),
+('exSkinMode', 'Enable Skin-Specific Mode\n<br>value = 1-6, by default assigned to F4-F9 keys'),
 )
 
 NV_ACTIONS = (
