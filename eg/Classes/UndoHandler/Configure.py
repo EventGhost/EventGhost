@@ -17,7 +17,19 @@
 import eg
 import wx
 from eg.Classes.UndoHandler import UndoHandlerBase
-from copy import deepcopy as cpy
+
+
+def DeepCopy(lst):
+    res = []
+    for item in lst:
+        if type(item) in (list, tuple):
+            res.append(DeepCopy(item))
+        else:
+            res.append(item)
+    if type(lst) is tuple:
+        res = tuple(res)
+    return res
+
 
 def DoExecute(item, newArgs):
     oldArgs = item.GetArguments()
@@ -31,7 +43,7 @@ class Configure(UndoHandlerBase):
 
     @eg.AssertInMainThread
     @eg.LogItWithReturn
-    def Do(self, item, isFirstConfigure=False):
+    def Do(self, item, isFirstConfigure = False):    
         if item.openConfigDialog:
             item.openConfigDialog.Raise()
             return False
@@ -39,9 +51,10 @@ class Configure(UndoHandlerBase):
         self.oldArgumentString = ActionThreadFunc(item.GetArgumentString)()
         #oldArgs = newArgs = ActionThreadFunc(item.GetArguments)()
         newArgs = ActionThreadFunc(item.GetArguments)() # bugfix: http://www.eventghost.net/forum/viewtopic.php?f=4&t=3676
-        oldArgs = cpy(newArgs)                          # bugfix
+        oldArgs = DeepCopy(newArgs)                     # bugfix
         revertOnCancel = False
         dialog = eg.ConfigDialog.Create(item, *oldArgs)
+    
         for event, newArgs in dialog:
             if event == wx.ID_OK:
                 break
@@ -59,6 +72,7 @@ class Configure(UndoHandlerBase):
             return False
         ActionThreadFunc(item.SetArguments)(newArgs)
         newArgumentString = ActionThreadFunc(item.GetArgumentString)()
+       
         if self.oldArgumentString != newArgumentString:
             if not isFirstConfigure:
                 self.treePosition = eg.TreePosition(item)
