@@ -1,28 +1,14 @@
-# -*- coding: utf-8 -*-
-#
-# plugins/OnkyoISCP/__init__.py
-# 
-# This file is a plugin for EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-#
-# EventGhost is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License version 2 as published by the
-# Free Software Foundation;
-#
-# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 import eg
 import socket
+import select
+from time import sleep
+from threading import Event, Thread
+from struct import pack, unpack
 
 eg.RegisterPlugin(
     name = "Onkyo ISCP",
-    author = "Alexander Hartmaier",
-    version = "0.04",
+    author = "Alexander Hartmaier + Sem;colon",
+    version = "0.06",
     kind = "external",
     guid = "{5B3B8AEB-08D7-4FD0-8BEE-8FE50C231E09}",
     description = "Controls any Onkyo Receiver which supports the ISCP protocol.",
@@ -39,7 +25,11 @@ class Text:
         command = "Code to send:"
 
 class OnkyoISCP(eg.PluginBase):
-    text = Text
+    text       = Text
+    header     = 'ISCP'
+    headersize = 16
+    version    = 1
+    unittype   = 1 # receiver
 
     def __init__(self):
         self.AddAction(SendCommand)
@@ -48,25 +38,73 @@ class OnkyoISCP(eg.PluginBase):
         self.ip = ip
         self.port = int(port)
         self.timeout = float(timeout)
+        self.Connect()
+
+    def __stop__(self):
+	if hasattr(self, 'stopThreadEvent'):
+	    self.stopThreadEvent.set()
+
+        self.socket.close()
+
+    def Receive(self):
+        while not self.stopThreadEvent.is_set():
+            try:
+                ready = select.select([self.socket], [], [])
+                # the first element of the returned list is a list of readable sockets
+                if ready[0]:
+                    # 1024 bytes should be enough for every received event
+                    reply = self.socket.recv(1024)
+                    # unpack ISCP header
+                    header, headersize, datasize, version = unpack('!4sIIBxxx',
+		            reply[0:self.headersize]
+			)
+
+                    if header != self.header:
+                        self.PrintError("OnkyoISCP: Received packet not ISCP")
+                        return
+                    if version != self.version:
+                        self.PrintError("OnkyoISCP: ISCP version " + str(version) + " not supported")
+                        return
+
+                    #print "Header: " + header
+                    #print "Header size: " + str(headersize)
+                    #print "Data size: " + str(datasize)
+                    #print "Version: " + str(version)
+
+                    # message ends in EOL CR LF, is three chars shorter than data size
+                    message = reply[headersize:headersize+datasize].rstrip('\x1a\r\n')
+                    #print "Message: " + message
+                    messagesize = len(message)
+
+                    # parse message
+                    #unittype = message[1]
+                    #print "Unit type: " + unittype
+                    command = message[2:5]
+                    parameter = message[5:messagesize]
+                    self.TriggerEvent(command, payload=parameter)
+                    self.TriggerEvent(command + parameter)
+            except Exception as e:
+                self.PrintError("OnkyoISCP: " + str(e))
+
+    def Connect(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.settimeout(self.timeout)
         self.socket = s
-        self.Connect()
 
-    def __stop__(self):
-    	self.socket.close()
-
-    def Connect(self):
-        s = self.socket
         ip = self.ip
         port = self.port
         try:
-	        s.connect((ip, port))
-        except:
-            print "OnkyoISCP failed to connect to " + ip + ":" + str(port)
+            s.connect((ip, port))
+        except Exception as e:
+            self.PrintError("OnkyoISCP: Failed to connect to " + ip + ":" + str(port) + ": " + str(e))
         else:
-            print "OnkyoISCP connected to " + ip + ":" + str(port)
+            print "Connected to " + ip + ":" + str(port)
+	    self.stopThreadEvent = Event()
+	    thread = Thread(
+		target = self.Receive,
+	    )
+            thread.start()
         
 
     def Configure(self, ip="", port="60128", timeout="1"):
@@ -100,21 +138,32 @@ class OnkyoISCP(eg.PluginBase):
 class SendCommand(eg.ActionBase):
 
     def __call__(self, Command):
-        length = len(Command) + 1
-        code = chr(length)
-        line = "ISCP\x00\x00\x00\x10\x00\x00\x00" + code + "\x01\x00\x00\x00!1" + Command + "\x0D"
-    	s = self.plugin.socket
+        message = '!' + str(self.plugin.unittype) + Command + '\x0d'
+        # unlike specified the datasize needs to include the headersize
+        # to make it work for some models (Integra DHC-9.9)
+        # while others (Onkyo PR-SC5507) work fine without it
+        # both work when the headersize is included
+        datasize = self.plugin.headersize + len(message)
+        line = pack('!4sIIBxxx',
+                self.plugin.header,
+                self.plugin.headersize,
+	        datasize,
+                self.plugin.version
+	    ) + message
         try:
-            s.send(line)
-            #data = s.recv(80)
+            self.plugin.socket.sendall(line)
+            sleep(0.1)
         except socket.error, msg:
+            self.PrintError("OnkyoISCP: Error sending command, retrying: " + msg)
             # try to reopen the socket on error
             # happens if no commands are sent for a long time
+            # and the tcp connection got closed because
+            # e.g. the receiver was switched off and on again
+            self.plugin.Connect()
             try:
-                self.plugin.Connect()
-                s.send(line)
+                self.plugin.socket.sendall(line)
             except socket.error, msg:
-                print "Error " + str(msg)
+                self.PrintError("OnkyoISCP: Error sending command: " + msg)
 
     def Configure(self, Command=""):
         panel = eg.ConfigPanel()
@@ -131,4 +180,3 @@ class SendCommand(eg.ActionBase):
 
         while panel.Affirmed():
             panel.SetResult(wx_command.GetValue())
-
