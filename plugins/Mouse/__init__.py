@@ -35,7 +35,7 @@ Jrhy/+AqGrAMOnH86mAAAAAElFTkSuQmCC"""
 eg.RegisterPlugin(
     name = "Mouse",
     author = "Bitmonster",
-    version = "1.0.1",
+    version = "1.0.2",
     description = (
         "Gives you actions to control the mouse pointer and emulation of "
         "mouse events."
@@ -302,13 +302,15 @@ class MoveAbsolute(eg.ActionBase):
         label_M = "Monitor: %i,  "
         label_X = "x: %i,  "
         label_Y = "y: %i"
+        label_C = "Set position to screen center"
+        center = "center"
         text1 = "Set horizontal position X to"
         text2 = "pixels"
         text3 = "Set vertical position Y to"
         note = 'Note: The coordinates X and Y are related to the monitor \
 (not to the "virtual screen")'
 
-    def __call__(self, x = None, y = None, displayNumber = None):
+    def __call__(self, x = None, y = None, displayNumber = None, center = False):
         point = POINT()
         GetCursorPos(point)
         X = point.x
@@ -321,37 +323,100 @@ class MoveAbsolute(eg.ActionBase):
                 break
         if displayNumber is None:
             displayNumber = mon
+
         monitorDimensions = GetMonitorDimensions()
         try:
             displayRect = monitorDimensions[displayNumber]
         except IndexError:
-            displayRect = monitorDimensions[0]
+            displayNumber = 0
+            displayRect = monitorDimensions[displayNumber]
+        if center:
+            x = displayRect[2]/2
+            y = displayRect[3]/2
 
         if x is None:
-            x = X - m[0]
+            x = X - mons[displayNumber][0]
         if y is None:
-            y = Y - m[1]
+            y = Y - mons[displayNumber][1]
 
         x += displayRect[0]
         y += displayRect[1]
         SetCursorPos(x, y)
 
 
-    def GetLabel(self, x, y, displayNumber):
-        return self.text.display + ":  %s%s%s" % (
-            self.text.label_M % (displayNumber+1) if displayNumber is not None else "",
-            self.text.label_X % x if x is not None else "",
-            self.text.label_Y % y if y is not None else "",
-        )        
+    def GetLabel(self, x, y, displayNumber, center):
+        if center:
+            res = self.text.display + " " + self.text.center
+            if displayNumber is not None: 
+                res += ": %s" % (self.text.label_M % (displayNumber+1))
+            return res
+        else: 
+            return self.text.display + ":  %s%s%s" % (
+                self.text.label_M % (displayNumber+1) if displayNumber is not None else "",
+                self.text.label_X % x if x is not None else "",
+                self.text.label_Y % y if y is not None else "",
+            )        
 
 
-    def Configure(self, x = None, y = None, displayNumber = None):
+    def Configure(self, x = None, y = None, displayNumber = None, center = False):
         panel = eg.ConfigPanel()
         text = self.text
 
+        cCB = panel.CheckBox(center, text.label_C)
         xCB = panel.CheckBox(x is not None, text.text1)
         yCB = panel.CheckBox(y is not None, text.text3)
         displayCB = panel.CheckBox(displayNumber is not None, text.display)
+
+
+        #xCtrl = panel.SpinIntCtrl(x or 0, min = -maxint - 1, max = maxint)
+        xCtrl = panel.SpinIntCtrl(x or 0, min = 0, max = maxint) # since 1.0.1
+        xCtrl.Enable(x is not None)
+
+        #yCtrl = panel.SpinIntCtrl(y or 0, min = -maxint - 1, max = maxint)
+        yCtrl = panel.SpinIntCtrl(y or 0, min = 0, max = maxint) # since 1.0.1
+        yCtrl.Enable(y is not None)
+
+        display = -1 if displayNumber is None else displayNumber
+        displayChoice = eg.DisplayChoice(panel, display)
+        displayChoice.Enable(displayNumber is not None)
+
+
+        xPixels = wx.StaticText(panel,- 1, text.text2)
+        yPixels = wx.StaticText(panel, -1, text.text2)
+        monsCtrl = eg.MonitorsCtrl(panel, background = (224, 238, 238))
+        note = wx.StaticText(panel, -1, text.note)
+        note.SetForegroundColour(wx.RED)
+        sizer = wx.GridBagSizer(vgap = 6, hgap = 5)
+        sizer.Add(cCB, (0, 0), (1, 3), flag = wx.BOTTOM, border = 8)
+        sizer.Add(xCB, (1, 0), (1, 1))
+        sizer.Add(xCtrl, (1, 1), (1, 1))
+        sizer.Add(xPixels, (1, 2), (1, 1))
+        sizer.Add(yCB, (2, 0), (1, 1))
+        sizer.Add(yCtrl, (2, 1), (1, 1))
+        sizer.Add(yPixels, (2, 2), (1, 1))
+        sizer.Add(note, (3, 0), (1, 3))
+        sizer.Add(displayCB, (4, 0), (1, 1), flag = wx.TOP, border = 14)
+        sizer.Add(displayChoice, (4, 1), (1, 2), flag = wx.TOP, border = 13)
+        panel.sizer.Add(sizer, 1, wx.EXPAND)
+        panel.sizer.Add(monsCtrl,0,wx.TOP,8)
+
+        def HandleCenterCheckBox(event = None):
+            val = not cCB.GetValue()
+            xCB.Enable(val)
+            xCtrl.Enable(val)
+            xPixels.Enable(val)
+            yCB.Enable(val)
+            yCtrl.Enable(val)
+            yPixels.Enable(val)
+            if not val:
+                xCB.SetValue(False)
+                yCB.SetValue(False)
+                xCtrl.SetValue(0)
+                yCtrl.SetValue(0)
+            if event:
+                event.Skip()
+        cCB.Bind(wx.EVT_CHECKBOX, HandleCenterCheckBox)
+        HandleCenterCheckBox()
 
         def HandleXCheckBox(event):
             xCtrl.Enable(event.IsChecked())
@@ -375,35 +440,6 @@ class MoveAbsolute(eg.ActionBase):
         displayCB.Bind(wx.EVT_CHECKBOX, HandleDisplayCB)
 
 
-        #xCtrl = panel.SpinIntCtrl(x or 0, min = -maxint - 1, max = maxint)
-        xCtrl = panel.SpinIntCtrl(x or 0, min = 0, max = maxint) # since 1.0.1
-        xCtrl.Enable(x is not None)
-
-        #yCtrl = panel.SpinIntCtrl(y or 0, min = -maxint - 1, max = maxint)
-        yCtrl = panel.SpinIntCtrl(y or 0, min = 0, max = maxint) # since 1.0.1
-        yCtrl.Enable(y is not None)
-
-        display = -1 if displayNumber is None else displayNumber
-        displayChoice = eg.DisplayChoice(panel, display)
-        displayChoice.Enable(displayNumber is not None)
-
-
-        monsCtrl = eg.MonitorsCtrl(panel, background = (224, 238, 238))
-        note = wx.StaticText(panel, -1, text.note)
-        note.SetForegroundColour(wx.RED)
-        sizer = wx.GridBagSizer(vgap = 6, hgap = 5)
-        sizer.Add(xCB, (0, 0), (1, 1))
-        sizer.Add(xCtrl, (0, 1), (1, 1))
-        sizer.Add(wx.StaticText(panel,- 1, text.text2), (0, 2), (1, 1))
-        sizer.Add(yCB, (1, 0), (1, 1))
-        sizer.Add(yCtrl, (1, 1), (1, 1))
-        sizer.Add(wx.StaticText(panel, -1, text.text2), (1, 2), (1, 1))
-        sizer.Add(note, (2, 0), (1, 3))
-        sizer.Add(displayCB, (3, 0), (1, 1), flag = wx.TOP, border = 14)
-        sizer.Add(displayChoice, (3, 1), (1, 2), flag = wx.TOP, border = 13)
-        panel.sizer.Add(sizer, 1, wx.EXPAND)
-        panel.sizer.Add(monsCtrl)
-
         while panel.Affirmed():
             if xCtrl.IsEnabled():
                 x = xCtrl.GetValue()
@@ -420,7 +456,7 @@ class MoveAbsolute(eg.ActionBase):
             else:
                 displayNumber = None
 
-            panel.SetResult(x, y, displayNumber,)
+            panel.SetResult(x, y, displayNumber, cCB.GetValue())
 #===============================================================================
 
 class MoveRelative(eg.ActionBase):
