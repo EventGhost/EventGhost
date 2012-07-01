@@ -20,7 +20,7 @@ import traceback
 eg.RegisterPlugin(
     name = "System",
     author = "Bitmonster",
-    version = "1.1.2",
+    version = "1.1.3",
     description = (
         "Controls different aspects of your system, like sound card, "
         "graphics card, power management, et cetera."
@@ -1188,7 +1188,6 @@ class ShapedFrame(wx.Frame):
             im = pil
 
         im = piltoimage(im, self.hasAlpha and shaped)
-        
 
         cliSize = (width_, height_)
         self.SetClientSize(cliSize)
@@ -1198,12 +1197,13 @@ class ShapedFrame(wx.Frame):
             self.SetWindowShape()
 
         dc = wx.ClientDC(self)
-
         dc.DrawBitmap(self.bmp, 0, 0, True)
+
         if center:
             w,h = self.GetSize()
-            x = monDim[display][0] + (monDim[display][2] - w) / 2
-            y = monDim[display][1] + (monDim[display][3] - h) / 2
+            x = (monDim[display][2] - w) / 2
+            y = (monDim[display][3] - h) / 2
+
         self.SetPosition((monDim[display][0] + x, monDim[display][1] + y))
         if noFocus:
             eg.WinApi.Dynamic.ShowWindow(self.GetHandle(), 4)
