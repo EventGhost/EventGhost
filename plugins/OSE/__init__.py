@@ -19,6 +19,9 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.14 by Pako 2012-07-16 07:08 UTC+1
+#      - fixed "hide menu" bug
+#      - fixed "unicode character in filename" bug
 # 0.2.13 by Pako 2012-01-19 11:53 UTC+1
 #      - command "self.plugin.menuDlg = self" is used immediately after creation of the wx.Frame
 # 0.2.12 by Pako 2012-01-19 10:32 UTC+1
@@ -57,7 +60,7 @@
 eg.RegisterPlugin(
     name = "On screen explorer",
     author = "Pako",
-    version = "0.2.13",
+    version = "0.2.14",
     kind = "other",
     guid = "{D3D2DDD1-9BEB-4A26-969B-C82FA8EAB280}",
     description = u"""<rst>
@@ -108,8 +111,7 @@ from eg.WinApi.Utils import GetMonitorDimensions
 from eg.WinApi.Dynamic import CreateEvent, SetEvent
 from win32api import LoadLibrary, LoadString, GetVolumeInformation
 from win32com.shell import shell
-from win32file import GetFileAttributes, GetLogicalDrives
-
+from win32file import GetFileAttributesW, GetLogicalDrives
 from fnmatch import fnmatch
 from winsound import PlaySound, SND_ASYNC
 
@@ -235,21 +237,25 @@ def GetFolderItems(folder, patterns, hide):
     patterns = patterns.split(",")
     if folder != MY_COMPUTER:
         ds = []
-        for f in [f for f in os.listdir(folder) if os.path.isdir(os.path.join(folder,f))]:
+        fs = [("..",""),]
+        try:
+            items = os.listdir(folder)
+        except:
+            return fs
+        for f in [f for f in items if os.path.isdir(os.path.join(folder, f))]:
             if hide:
-                attr = GetFileAttributes(os.path.join(folder,f))
+                attr = GetFileAttributesW(os.path.join(folder, f))
                 if attr & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM):
                     continue
             ds.append(("%s%s" % (folder_ID,f),""))
-        fs = [("..",""),]
-        for f in [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder,f))]:
+        for f in [f for f in items if os.path.isfile(os.path.join(folder, f))]:
             if os.path.splitext(f)[1].lower() == ".lnk":
                 shortcut_path = os.path.join(folder,f)
                 persist_file.Load (shortcut_path)
                 path = shortcut.GetPath(shell.SLGP_RAWPATH)[0]
                 f = os.path.split(shortcut_path)[1][:-4]
                 if hide:
-                    attr = GetFileAttributes(path)
+                    attr = GetFileAttributesW(path)
                     if attr & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM):
                         continue
                 if os.path.isdir(path):
@@ -264,7 +270,7 @@ def GetFolderItems(folder, patterns, hide):
                             break
             else:
                 if hide:
-                    attr = GetFileAttributes(os.path.join(folder,f))
+                    attr = GetFileAttributesW(os.path.join(folder,f))
                     if attr & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM):
                         continue
                 for p in patterns:
@@ -775,7 +781,7 @@ class Execute(eg.ActionBase):
                         else:
                             raise
                 if val&256: #delete file
-                    if GetFileAttributes(filePath) & FILE_ATTRIBUTE_READONLY:
+                    if GetFileAttributesW(filePath) & FILE_ATTRIBUTE_READONLY:
                         eg.PrintError(self.plugin.text.accDeni % filePath)
                     else:
                         try:
@@ -822,7 +828,7 @@ class Execute(eg.ActionBase):
                 if val&64:
                     eg.TriggerEvent(prefix = prefix, suffix = suffix, payload = fpList)
                 if val&512: #delete file
-                    if GetFileAttributes(filePath) & FILE_ATTRIBUTE_READONLY:
+                    if GetFileAttributesW(filePath) & FILE_ATTRIBUTE_READONLY:
                         eg.PrintError(self.plugin.text.accDeni % filePath)
                     else:
                         try:
@@ -1221,15 +1227,13 @@ class Menu(wx.Frame):
         self.oldStart = start
         self.plugin.lastFolder = start
         self.eventChoiceCtrl.SetGridCursor(itm, 0)
-
-#        self.plugin.menuDlg = self
-
-        eg.WinApi.Dynamic.ShowWindow(self.GetHandle(), 0)
-        if self.focus:
-            eg.WinApi.Dynamic.ShowWindow(self.GetHandle(), 4)
-        else:
+        if not self.focus:
             self.Show(True)
             self.Raise()
+        else:
+            hwnd = self.GetHandle()
+            eg.WinApi.Dynamic.ShowWindow(hwnd, 0) # hide
+            eg.WinApi.Dynamic.ShowWindow(hwnd, 1) # show
 
         if event:
             wx.Yield()
