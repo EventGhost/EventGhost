@@ -23,55 +23,30 @@ This time should appears as "HID-compliant game controller"
 
 <u><b>2) Plugin</b></u>
 
-This plugin generates: 
-
-<ul>
-<li>ENDURING events named like "HID.Eject"</li>
-</ul>
-
-and lot of additional NORMAL events for:
-
-<ul>
-<li>short click on remote, events name end with ".S" eg. "HID.Eject.S"</li>
-<li>long click on remote, events name end with ".L"</li>
-<li>double click on remote, events name end with ".D"</li>
-</ul>
-
-and special selectable or not events:
-
-<ul>
-<li>"Sleep" when remote is not used</li>
-<li>"Hibernate" when remote is not use during a long time (also puts the remote into low-power mode
-    if using the Widcomm Bluetooth stack)</li>
-<li>"WakeUp" for first event after "Sleep" or "Hibernate"</li>
-<li>"Zone.X" where X is relative to Zone Key in Remote (see Remote paper manual)
-  event generated when a new key is pressed in another zone.
-  each remote key belong of on zone except one, the key with strange
-  symbol below the directional pad. this is by design.</li>
-<li>"Release" can be generated for each relase of each key.</li>
-</ul>
-
-Of course all these additional events are not needed,
-it's possible to do the same thing by EventGhost configuration
-but it's far more simple to have these events available
-ready to use, than play with timer inside EventGhost.
-
-This remote can generate events when 2 keys are pressed simultaneously.
-In this case the event code genered is an hexadecimal value.
-
-Note: some keys combination generate the same event. 
-This is a Remote issue.
-
-After the "Hibernate" period expires, the remote will be put into a low-power (SNIFF) mode.
-It may take a few seconds for the first button press to be registered in this mode.
-
 The plugin will also automatically re-detect the PS3 remote after being in standby mode.
+
+<u><b>3) Changelog</b></u>
+
+4.0.2:<br>
+Added support for 5 new BT buttons on 2011 PS3 remote:<br> 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. '-/--'<br> 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. 'ChanUp'<br> 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3. 'ChanDown'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4. 'InstantNext'<br> 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5. 'InstantPrev'<br>
+
+4.0.3:<br>
+Added Blu-Link Universal/PS3 Remote support (VID=0x609/PID=0x306).
+
+4.0.4:<br>
+Fix batteryLevel "out of range" error.
+
 """
 
 eg.RegisterPlugin(
     name = "PlayStation 3 Bluetooth Remote",
-    author = "Thierry Couquillou, Tim Delaney, Chris Heitkamp",
-    version = "4.0.0",
+    author = "Thierry Couquillou, Tim Delaney, Chris Heitkamp, Peter Mathiasson, Eric Hodgerson",
+    version = "4.0.4",
     kind = "remote",
     guid = "{7224079E-1823-48B0-8ED6-30973BDDC96D}",    
     url = "http://www.eventghost.org/forum/viewtopic.php?t=640",
@@ -89,7 +64,6 @@ from eg.WinApi.HID import HIDThread
 from eg.WinApi.HID import GetDevicePath
 from eg.WinApi.HID import GetDeviceDescriptions
 from eg.WinApi.HID import DeviceDescription
-
 
 class Text:
     manufacturer = "Manufacturer"
@@ -111,7 +85,7 @@ class Text:
         "good",
         "almost full",
         "full"
-    ]#, THIS IS BUG (comma) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ]
     eventsSettings = "Remote Events Settings"
     ps3Settings = "PS3 Remote Events Settings"
     ps3Release = "Generate PS3 Remote Button.None event"
@@ -136,8 +110,11 @@ class PS3Remote:
         0x08: 'Num9',
         0x09: 'Num0',
         0x0B: 'Enter',
+        0x0C: '-/--',  #2011 remote
         0x0E: 'Return',
         0x0F: 'Clear',
+        0x10: 'ChanUp',  #2011 remote
+        0x11: 'ChanDown',  #2011 remote
         0x16: 'Eject',
         0x1A: 'TopMenu',
         0x28: 'Time',
@@ -172,6 +149,8 @@ class PS3Remote:
         0x64: 'Audio',
         0x65: 'Angle',
         0x70: 'Display',
+        0x75: 'InstantNext',  #2011 remote
+        0x76: 'InstantPrev',  #2011 remote
         0x80: 'Blue',
         0x81: 'Red',
         0x82: 'Green',
@@ -260,7 +239,6 @@ class HIDPS3(eg.PluginClass):
             #        '  Mask: ' + bin(mask),
             #    payload= ( battery, self.text.batteryLevel[battery] )
             #)
-
 
             if( code != 0xff and code not in self.PS3Remote.button ):
                 raise PS3ParseError( 'Key code', 'various', hex(code) )
@@ -486,9 +464,10 @@ class HIDPS3(eg.PluginClass):
         devices = {}
         idx = 0
         for item in deviceList:
+            # eg.Print("VID=%X, PID=%X, name=%s" %(item.vendorId, item.productId, item.productString))
             # filter device list - list only match VID:PID
             if(
-                ( item.vendorId == 0x054C and item.productId == 0x0306 ) or
+                ( ( item.vendorId == 0x054C or item.vendorId == 0x609 ) and item.productId == 0x0306 ) or
                 item.devicePath == path
             ):
                 idx = hidList.InsertStringItem(sys.maxint, item.productString)
