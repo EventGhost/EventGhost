@@ -20,6 +20,10 @@
 
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 2.0 by Pako 2012-08-17 12:23 UTC+1
+#     - Corrected ID at many actions
+#     - Added many new actions
+#     - Plugin now automatically triggers events
 # 1.7 by Pako 2012-01-06 15:18 UTC+1
 #     - Added actions GetWindowState and GetNowPlaying
 # 1.6 by Pako 2011-06-05 18:57 UTC+1
@@ -48,18 +52,24 @@
 eg.RegisterPlugin(
     name = "Media Player Classic",
     author = "MonsterMagnet",
-    version = "1.7",
+    version = "2.0",
     kind = "program",
     guid = "{DD75104D-D586-438A-B63D-3AD01A4D4BD3}",
     createMacrosOnAdd = True,
     description = (
         'Adds actions to control '
-        '<a href="http://www.xvidvideo.ru/media-player-classic-home-cinema-x86-x64/">'
-        'Media Player Classic Home Cinema</a>.'
+        '<br><a href="http://mpc-hc.sourceforge.net/">'
+        'Media Player Classic - Home Cinema</a>.'
+
     ),
     help = """
-        <p><a href="http://www.xvidvideo.ru/media-player-classic-home-cinema-x86-x64/">
-        Media Player Classic Home Cinema (x86/x64)</a>""",
+        For proper functioning of this plugin should be used
+        <br><a href="http://mpc-hc.sourceforge.net/">
+        Media Player Classic - Home Cinema (x86/x64)</a>
+        <br>version 1.6.3.5818 or later.
+        <br><br>There must be selected the option
+        <br><b> Use the same player for each media file</b>
+        <br>in dialogue <i>View/Options.../Player/Open options.</i>""",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAhElEQVR42rWRgQqAIAwF"
         "fV+++eWr1V6kiM6gQaTVHYehJEdV7bUG18hCInIDQMNhA+L7cQHBETQrBWERDXANjcxm"
@@ -68,26 +78,32 @@ eg.RegisterPlugin(
     ),
     url = "http://www.eventghost.net/forum/viewtopic.php?t=694"
 )
-    
-
 #===============================================================================
 
-from eg.WinApi import FindWindow, SendMessageTimeout, WM_COMMAND
+import eg
+import wx
+import _winreg
+from os.path import dirname, join, exists, isfile, split, isabs
+from subprocess import Popen
+from eg.WinApi import SendMessageTimeout, WM_COMMAND
 from eg.WinApi.Utils import GetMonitorDimensions
 from win32api import EnumDisplayMonitors
-from eg.WinApi.Dynamic import SendMessage, PostMessage
+from eg.WinApi.Dynamic import PostMessage
 from eg.WinApi.Dynamic import CreateEvent, SetEvent, GetWindowLong
-from os import path
 from threading import Timer
-from win32gui import GetMenu, GetSubMenu, GetMenuItemCount, GetDlgCtrlID 
-from win32gui import GetWindowRect, GetClassName, GetWindow, GetWindowText
-from win32gui import GetWindowPlacement, IsWindowVisible, IsWindow, GetDlgItem
+from win32gui import GetMenu, GetSubMenu, GetMenuItemCount, GetWindowPlacement 
+from win32gui import GetClassName, GetWindowText, IsWindowVisible, GetWindowRect
+from win32gui import GetDlgItem, SendMessage, FindWindowEx, IsWindow, GetWindow
 from copy import deepcopy as cpy
 from time import sleep, strftime, gmtime
 from winsound import PlaySound, SND_ASYNC
-from win32process import GetWindowThreadProcessId
-from ctypes import create_unicode_buffer, addressof, windll, c_int, c_ulong, c_buffer, byref, sizeof
+from ctypes import create_unicode_buffer, addressof, windll, c_int, c_buffer, byref, sizeof
 import wx.grid as gridlib
+from eg.WinApi.Dynamic import COPYDATASTRUCT, PCOPYDATASTRUCT, WM_COPYDATA
+from ctypes import Structure, cast, wstring_at, c_wchar, c_void_p
+from sys import getfilesystemencoding
+FSE = getfilesystemencoding()
+from eg.Classes.MainFrame.TreeCtrl import DropTarget as EventDropTarget
 
 GWL_EXSTYLE = -20
 WS_EX_WINDOWEDGE = 0x00000100
@@ -101,39 +117,190 @@ SYS_VSCROLL_X    = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
 SYS_HSCROLL_Y    = wx.SystemSettings.GetMetric(wx.SYS_HSCROLL_Y)
 arialInfoString  = "0;-35;0;0;0;700;0;0;0;0;3;2;1;34;Arial"
 GW_CHILD         = 5
-GW_HWNDNEXT      = 2
-BN_CLICKED       = 0
-WM_SETTEXT       = 12
-WM_GETTEXT       = 13
-WM_GETTEXTLENGTH = 14
 WM_CLOSE         = 16
-PROCESS_QUERY_INFORMATION = 0x0400
-PROCESS_VM_READ = 0x0010
-_psapi = windll.psapi
-_kernel = windll.kernel32
-modBasName = c_buffer(32)
-hModule = c_ulong()
-c_length = c_ulong()
-PROCESS_QUERY_INFORMATION = 0x0400
-PROCESS_VM_READ = 0x0010
 #===============================================================================
 
-if eg.Version.base >= "0.4.0":
-    from eg.Classes.MainFrame.TreeCtrl import DropTarget as EventDropTarget
-    IMAGES_DIR = eg.imagesDir 
-else:
-    from eg.Classes.MainFrame.TreeCtrl import EventDropTarget
-    IMAGES_DIR = eg.IMAGES_DIR 
+def Find_MPC():
+    mpchc = eg.WindowMatcher(
+        u'mpc-hc.exe',
+        None,
+        u'MediaPlayerClassicW',
+        None,
+        None,
+        None,
+        True,
+        0.0,
+        2
+    )
+    return mpchc()
 #===============================================================================
 
-def GetModuleFrom_hWnd(hWnd):
-    threadId, processId = GetWindowThreadProcessId(hWnd)
-    hProc = _kernel.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, False, processId)
-    _psapi.EnumProcessModules(hProc, byref(hModule), sizeof(hModule), byref(c_length))
-    _psapi.GetModuleBaseNameA(hProc, hModule.value, modBasName, sizeof(modBasName))
-    _kernel.CloseHandle(hProc)
-    return modBasName.value
+class MPC_OSDDATA(Structure): 
+    _fields_ = [
+        ("nMsgPos", c_int),       #// screen position constant (see OSD_MESSAGEPOS constants)
+        ("nDurationMS", c_int),   #// duration in milliseconds
+        ("strMsg", c_wchar * 128) #// message to display thought OSD
+    ]
+OSDDATA = MPC_OSDDATA()
+#===============================================================================
 
+MPC_LOADSTATE = ("Closed", "Loading", "Loaded", "Closing")
+
+MPC_PLAYSTATE = ("Play", "Pause", "Stop", "Unused")
+
+CMD_CONNECT            = 0x50000000 #Par 1 : MPC window handle (command should be send to this HWnd)
+
+CMD_STATE              = 0x50000001 #Par 1 : current state /see MPC_LOADSTATE enum
+
+CMD_PLAYMODE           = 0x50000002 #Par 1 : current play mode (see MPC_PLAYSTATE enum)
+
+CMD_NOWPLAYING		   = 0x50000003 #;   // Send after opening a new file
+                                    #   // Par 1 : title
+                                    #   // Par 2 : author
+                                    #   // Par 3 : description
+                                    #   // Par 4 : complete filename (path included)
+                                    #   // Par 5 : duration in seconds
+
+CMD_LISTSUBTITLETRACKS = 0x50000004 #   // List of subtitle tracks
+                                    #   // Par 1 : Subtitle track name 0
+                                    #   // Par 2 : Subtitle track name 1
+                                    #   // ...
+                                    #   // Par n : Active subtitle track, -1 if subtitles disabled
+                                    #   //
+                                    #   // if no subtitle track present, returns -1
+                                    #   // if no file loaded, returns -2
+
+CMD_LISTAUDIOTRACKS    = 0x50000005 #   // List of audio tracks
+                                    #   // Par 1 : Audio track name 0
+                                    #   // Par 2 : Audio track name 1
+                                    #   // ...
+                                    #   // Par n : Active audio track
+                                    #   //
+                                    #   // if no audio track present, returns -1
+                                    #   // if no file loaded, returns -2
+
+CMD_PLAYLIST           = 0x50000006 #   // List of files in the playlist
+                                    #   // Par 1 : file path 0
+                                    #   // Par 2 : file path 1
+                                    #   // ...
+                                    #   // Par n : active file, -1 if no active file
+
+CMD_CURRENTPOSITION		= 0x50000007
+	 #Send current playback position in responce
+	 #of CMD_GETCURRENTPOSITION.
+	 #Par 1 : current position in seconds
+	
+
+CMD_NOTIFYSEEK			= 0x50000008
+	 #Send the current playback position after a jump.
+	 #(Automatically sent after a seek event).
+	 #Par 1 : new playback position (in seconds).
+
+CMD_NOTIFYENDOFSTREAM	= 0x50000009
+	 #Notify the end of current playback
+	 #(Automatically sent).
+	 #Par 1 : none.
+
+# ==== Commands from host to MPC
+
+# Open new file
+# Par 1 : file path
+CMD_OPENFILE			= 0xA0000000
+
+# Stop playback but keep file / playlist
+CMD_STOP				= 0xA0000001
+
+# Stop playback and close file / playlist
+CMD_CLOSEFILE			= 0xA0000002
+
+# Pause or restart playback
+CMD_PLAYPAUSE			= 0xA0000003
+
+# Add a new file to playlist (did not start playing)
+# Par 1 : file path
+CMD_ADDTOPLAYLIST		= 0xA0001000
+
+# Remove all files from playlist
+CMD_CLEARPLAYLIST		= 0xA0001001
+
+# Start playing playlist
+CMD_STARTPLAYLIST		= 0xA0001002
+
+CMD_REMOVEFROMPLAYLIST	= 0xA0001003	# TODO
+
+# Cue current file to specific position
+# Par 1 : new position in seconds
+CMD_SETPOSITION			= 0xA0002000
+
+# Set the audio delay
+# Par 1 : new audio delay in ms
+CMD_SETAUDIODELAY		= 0xA0002001
+
+# Set the subtitle delay
+# Par 1 : new subtitle delay in ms
+CMD_SETSUBTITLEDELAY	= 0xA0002002
+
+# Set the active file in the playlist
+# Par 1 : index of the active file -1 for no file selected
+# DOESN'T WORK
+CMD_SETINDEXPLAYLIST	= 0xA0002003
+
+# Set the audio track
+# Par 1 : index of the audio track
+CMD_SETAUDIOTRACK		= 0xA0002004
+
+# Set the subtitle track
+# Par 1 : index of the subtitle track -1 for disabling subtitles
+CMD_SETSUBTITLETRACK	= 0xA0002005
+
+# Ask for a list of the subtitles tracks of the file
+# return a CMD_LISTSUBTITLETRACKS
+CMD_GETSUBTITLETRACKS	= 0xA0003000
+
+# Ask for the current playback position
+# see CMD_CURRENTPOSITION.
+# Par 1 : current position in seconds
+CMD_GETCURRENTPOSITION	= 0xA0003004
+
+# Jump forward/backward of N seconds
+# Par 1 : seconds (negative values for backward)
+CMD_JUMPOFNSECONDS		= 0xA0003005
+
+# Ask for a list of the audio tracks of the file
+# return a CMD_LISTAUDIOTRACKS
+CMD_GETAUDIOTRACKS		= 0xA0003001
+
+# Ask for the properties of the current loaded file
+# return a CMD_NOWPLAYING
+CMD_GETNOWPLAYING		= 0xA0003002
+
+# Ask for the current playlist
+# return a CMD_PLAYLIST
+CMD_GETPLAYLIST			= 0xA0003003
+
+# Toggle FullScreen
+CMD_TOGGLEFULLSCREEN	= 0xA0004000
+
+# Jump forward(medium)
+CMD_JUMPFORWARDMED		= 0xA0004001
+
+# Jump backward(medium)
+CMD_JUMPBACKWARDMED		= 0xA0004002
+
+# Increase Volume
+CMD_INCREASEVOLUME		= 0xA0004003
+
+# Decrease volume
+CMD_DECREASEVOLUME		= 0xA0004004
+
+# Shader toggle
+CMD_SHADER_TOGGLE		= 0xA0004005
+
+# Close App
+CMD_CLOSEAPP			= 0xA0004006
+
+# show host defined OSD message string
+CMD_OSDSHOWMESSAGE		= 0xA0005000
 #===============================================================================
 
 class FixedWidth(wx.FontEnumerator):
@@ -158,21 +325,6 @@ def GetSec(timeStr):
     return sec
 #===============================================================================
 
-def Find_MPC():
-    mpchc = eg.WindowMatcher(
-        u'mpc-hc.exe',
-        None,
-        u'MediaPlayerClassicW',
-        None,
-        None,
-        None,
-        True,
-        0.0,
-        2
-    )
-    return mpchc()
-#===============================================================================
-
 def GetItemList(menu, hWnd):
     SendMessage(hWnd, WM_INITMENUPOPUP, menu, 0) #REFRESH MENU STATE !!!
     itemList = []
@@ -195,11 +347,11 @@ def GetItemList(menu, hWnd):
         if item == "" and id == 0:
             continue
         checked = bool(menuState & MF_CHECKED)
-        if path.isabs(item):
-            if not path.isfile(item):
+        if isabs(item):
+            if not isfile(item):
                 continue
             else:
-                item = path.split(item)[1]
+                item = split(item)[1]
         itemList.append((item, i, checked, id))
     return itemList
 #===============================================================================
@@ -324,7 +476,7 @@ class EventListCtrl(wx.ListCtrl):
         self.plugin = plugin
         self.sel = -1
         self.il = wx.ImageList(16, 16)
-        self.il.Add(wx.BitmapFromImage(wx.Image(path.join(IMAGES_DIR, "event.png"), wx.BITMAP_TYPE_PNG)))
+        self.il.Add(wx.BitmapFromImage(wx.Image(join(eg.imagesDir, "event.png"), wx.BITMAP_TYPE_PNG)))
         self.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
         self.InsertColumn(0, '')
         self.SetColumnWidth(0, width - 5 - SYS_VSCROLL_X)
@@ -414,13 +566,14 @@ class GoToFrame(wx.Frame):
         self.total = None
         self.evtList = [[],[],[],[],[]]
         self.plugin = None
+        #self.sliceFlag = False
 
 
     def UpdateOSD(self, data=None):
         if data:
             self.GoToCtrl.SetValue(data)
         if self.pos > -1:
-            pos = self.posList[self.pos]
+            pos = self.pos
             self.GoToCtrl.SetStyle(0, pos, wx.TextAttr(self.fore, self.back, self.fnt))
             self.GoToCtrl.SetStyle(pos, pos+1, wx.TextAttr(self.foreSel, self.backSel, self.fnt))
             self.GoToCtrl.SetStyle(pos+1, 8, wx.TextAttr(self.fore, self.back, self.fnt))
@@ -437,15 +590,14 @@ class GoToFrame(wx.Frame):
 
     def MoveCursor(self, step):
         max = len(self.posList)-1
-        min = 0
-        value = self.pos
-        value += step
-        if value == -2:
-            value = max
-        elif value > max:
-            value = -1
-        self.pos = value
-        self.UpdateOSD()
+        ix = self.posList.index(self.pos)
+        ix += step
+        if ix > max:
+            ix = 0
+        elif ix == -1:
+            ix = max    
+        self.pos = self.posList[ix]
+        wx.CallAfter(self.UpdateOSD)
 
 
     def Turn(self, step):
@@ -454,7 +606,7 @@ class GoToFrame(wx.Frame):
         if self.pos == -1:
             self.GoTo()
             return
-        pos = self.posList[self.pos]
+        pos = self.pos
         data = list(self.GoToCtrl.GetValue())
         value = int(data[pos])
         if pos == 6:
@@ -475,7 +627,9 @@ class GoToFrame(wx.Frame):
         elif value > max:
             value = min
         data[pos] = str(value)
-        self.UpdateOSD(''.join(data))
+        newTime =''.join(data)
+        if newTime<self.total:
+            wx.CallAfter(self.UpdateOSD, newTime)
 
 
     def ShowGoToFrame(
@@ -498,60 +652,22 @@ class GoToFrame(wx.Frame):
         eg.TriggerEvent("OSD.%s" % self.plugin.text.opened, prefix = "MPC")
         self.flag = False
         self.Bind(wx.EVT_CLOSE, self.onClose)
-        PostMessage(hWnd, WM_COMMAND, 893, 0) #Open MPC GoTo dialog
-        editId = 11060
-        buttonId = 12024
-        moduleName = GetModuleFrom_hWnd(hWnd)
-        fndGoToWin = eg.WindowMatcher(moduleName, None, u'#32770', None, None, None, True, 0.0, 0)
-        for i in range(1000):
-            sleep(0.1)                
-            GoToWin = fndGoToWin()
-            if len(GoToWin) > 0:
-                break
-        if not GoToWin:
-            self.destroyMenu()
-            wx.Yield()
-            SetEvent(event)
-            return
-        button = 0
-        for gotowin in GoToWin:
-            edit = GetWindow(gotowin, GW_CHILD)
-            while edit > 0:
-                if GetDlgCtrlID(edit) == editId and GetClassName(edit) == 'Edit':
-                    break
-                edit = GetWindow(edit, GW_HWNDNEXT)
-            if edit > 0:
-                button = edit
-                break
-        while button > 0:
-            if GetDlgCtrlID(button) == buttonId and GetClassName(button) == 'Button':
-                break
-            button = GetWindow(button, GW_HWNDNEXT)
-        if not button:
-            self.destroyMenu()
-            wx.Yield()
-            SetEvent(event)
-            return
-        self.gotowin = gotowin
-        eg.WinApi.Utils.ShowWindow(gotowin, False)
-        label = GetWindowText(gotowin)
         child = GetDlgItem(hWnd, 10021)
+        self.total = "99:99:99"
         if GetClassName(child) ==  "#32770":
             statText = GetDlgItem(child, 12027)
             if GetClassName(statText) ==  "Static":
-                total = GetWindowText(statText).split(" / ")[1]
+                elaps, total = GetWindowText(statText).split(" / ")
                 totalSec = GetSec(total)
                 self.total = strftime('%H:%M:%S', gmtime(totalSec))
                 if totalSec < 600:                # < 10 min   (skip 3 digits)
-                    self.posList = (4,6,7)
+                    self.posList = (-1,4,6,7)
                 elif totalSec < 3600:             # < 1 hour   (skip 2 digits)
-                    self.posList = (3,4,6,7)
+                    self.posList = (-1,3,4,6,7)
                 elif totalSec < 360000:           # < 10 hour  (skip 1 digit)
-                    self.posList = (1,3,4,6,7)
+                    self.posList = (-1,1,3,4,6,7)
                 else:
-                    self.posList = (0,1,3,4,6,7)  # >= 10 hour  (no skip)
-        self.edit = edit
-        self.button = button
+                    self.posList = (-1,0,1,3,4,6,7)  # >= 10 hour  (no skip)
         self.back = back
         self.fore = fore
         self.foreSel = foreSel
@@ -568,10 +684,10 @@ class GoToFrame(wx.Frame):
             eg.Bind(evt, self.onRight)
         for evt in self.evtList[4]:
             eg.Bind(evt, self.onEscape)
+        label = self.plugin.text.gotoLabel
         self.gotoLbl=wx.StaticText(self, -1, label, pos = (5,5))
         self.gotoLbl.SetBackgroundColour(self.back)
         self.gotoLbl.SetForegroundColour(self.fore)
-        gt = self.gotoLbl.GetTextExtent(label)
         fnt = self.gotoLbl.GetFont()
         border = fontSize/3
         fnt.SetPointSize(6*fontSize/10)
@@ -589,12 +705,9 @@ class GoToFrame(wx.Frame):
         fnt.SetPointSize(fontSize)
         self.GoToCtrl.SetFont(fnt)
         self.fnt = fnt
-        buf_size = 1 + SendMessage(self.edit, WM_GETTEXTLENGTH, 0, 0)
-        locBuf = create_unicode_buffer(buf_size)
-        SendMessage(self.edit,WM_GETTEXT,buf_size,addressof(locBuf)) #Read data from edit box
-        data = locBuf.value.split(".")[0]
+        data = "%s%s" % ("00:00:00"[:8-len(elaps)],elaps)
+        gotoSize = self.GoToCtrl.GetTextExtent(data)
         wx.CallAfter(self.UpdateOSD, data)
-        gotoSize = self.GoToCtrl.GetTextExtent("00:00:00")
         if sizeFlag:
             gotoSize = (1.4*gotoSize[0],gotoSize[1])
         self.GoToCtrl.SetSize(gotoSize)
@@ -613,7 +726,6 @@ class GoToFrame(wx.Frame):
         y_pos = y + (hs - height)/2
         self.SetPosition((x_pos,y_pos) )
         self.Show(True)
-#        self.Raise()
         self.gotoLbl.SetFocus()
         if self.flag:
             self.timer=MyTimer(t = 5.0, plugin = self.plugin)
@@ -645,12 +757,16 @@ class GoToFrame(wx.Frame):
         self,
     ):
         buttonId = 12024
-        data = self.GoToCtrl.GetValue() + ".0"
-        goto = data+"\0"
-        locBuf = create_unicode_buffer(len(goto))
-        locBuf.value = goto
-        SendMessage(self.edit,WM_SETTEXT,0,addressof(locBuf)) #Write data to edit box
-        SendMessage(self.gotowin,WM_COMMAND,buttonId+65536*BN_CLICKED, self.button)
+        data = self.GoToCtrl.GetValue()
+        if data >= self.total:
+            return
+        #if self.sliceFlag:
+        #    data=data[3:]
+        wx.CallAfter(
+            self.plugin.SendCopydata,
+            CMD_SETPOSITION,
+            str(GetSec(data))
+        )
         self.destroyMenu()
 
 
@@ -709,7 +825,7 @@ class MenuEventsDialog(wx.MiniFrame):
             parent,
             -1,
             style=wx.CAPTION,
-            name="Menu events dialog"
+            name="MenuEventsDialog"
         )
         self.panel = parent
         self.plugin = plugin
@@ -1172,6 +1288,80 @@ class MyTimer():
         self.timer.cancel()
 #===============================================================================
 
+class AfterPlaybackOnce(eg.ActionClass):
+
+    class text:
+        label = "Select action after playback:"
+        choices = (
+            "Exit",
+            "Stand By",
+            "Hibernate",
+            "Shutdown",
+            "Log Off",
+            "Lock"
+        )
+
+
+    def __call__(self, action = -1):
+        if action > -1:
+            if self.plugin.runFlg and self.plugin.mpcHwnd:
+                return SendMessage(self.plugin.mpcHwnd, WM_COMMAND, action + 912, 0)
+            else:
+                raise self.Exceptions.ProgramNotRunning
+
+
+    def GetLabel(self, action):
+        return "%s: %s" % (self.name, self.text.choices[action])
+            
+
+    def Configure(self, action = -1):
+        panel = eg.ConfigPanel()
+        label = wx.StaticText(panel, -1, self.text.label)
+        ctrl = wx.Choice(panel, -1, choices = self.text.choices)
+        eg.EqualizeWidths((label, ctrl))        
+        ctrl.SetSelection(action)
+        panel.sizer.Add(label, 0, wx.TOP, 20)
+        panel.sizer.Add(ctrl, 0, wx.TOP, 3)
+        while panel.Affirmed():
+            panel.SetResult(ctrl.GetSelection())
+#===============================================================================
+
+class AfterPlayback(eg.ActionClass):
+
+    class text:
+        label = "Select action after playback (every time):"
+        choices = (
+            "Exit",
+            "Do Nothing",
+            "Play next in the folder",
+        )
+
+
+    def __call__(self, action = -1):
+        if action > -1:
+            if self.plugin.runFlg and self.plugin.mpcHwnd:
+                ids = (33411, 918, 33412)
+                return SendMessageTimeout(self.plugin.mpcHwnd, WM_COMMAND, ids[action], 0)
+            else:
+                raise self.Exceptions.ProgramNotRunning
+            
+
+    def GetLabel(self, action):
+        return "%s: %s" % (self.name, self.text.choices[action])
+
+
+    def Configure(self, action = -1):
+        panel = eg.ConfigPanel()
+        label = wx.StaticText(panel, -1, self.text.label)
+        ctrl = wx.Choice(panel, -1, choices = self.text.choices)
+        eg.EqualizeWidths((label, ctrl))        
+        ctrl.SetSelection(action)
+        panel.sizer.Add(label, 0, wx.TOP, 20)
+        panel.sizer.Add(ctrl, 0, wx.TOP, 3)
+        while panel.Affirmed():
+            panel.SetResult(ctrl.GetSelection())
+#===============================================================================
+
 class UserMessage(eg.ActionClass):
 
     name = "Send user's message"
@@ -1189,19 +1379,18 @@ You can of course also use an expression such as **{eg.result}** or **{eg.event.
         error = "ValueError: invalid literal for int() with base 10: '%s'"
 
 
+
     def __call__(self, val=""):
-        try:
-            hWnd = FindWindow("MediaPlayerClassicW")
-        except:
-            raise self.Exceptions.ProgramNotRunning
-            return
+        if self.plugin.runFlg and self.plugin.mpcHwnd:
         try:
             val = eg.ParseString(val)
             val = int(val)
         except:
             raise self.Exception(self.text.error % val)
             return
-        return SendMessageTimeout(hWnd, WM_COMMAND, val, 0)
+            return SendMessage(self.plugin.mpcHwnd, WM_COMMAND, val, 0)
+        else:
+            raise self.Exceptions.ProgramNotRunning
 
 
     def Configure(self, val=""):
@@ -1217,10 +1406,9 @@ You can of course also use an expression such as **{eg.result}** or **{eg.event.
 class ActionPrototype(eg.ActionBase):
     
     def __call__(self):
-        try:
-            hWnd = FindWindow("MediaPlayerClassicW")
-            return SendMessageTimeout(hWnd, WM_COMMAND, self.value, 0)
-        except:
+        if self.plugin.runFlg and self.plugin.mpcHwnd:
+            return SendMessage(self.plugin.mpcHwnd, WM_COMMAND, self.value, 0)
+        else:
             raise self.Exceptions.ProgramNotRunning
 #===============================================================================
 
@@ -1342,14 +1530,9 @@ class GetTimes(eg.ActionBase):
     description = "Returns elapsed, remaining and total times."
 
     def __call__(self):
+        if self.plugin.runFlg and self.plugin.mpcHwnd:
         try:
-            hWnd = FindWindow("MediaPlayerClassicW")
-        except:
-            eg.programCounter = None
-            raise self.Exceptions.ProgramNotRunning
-        else:
-            try:
-                child = GetDlgItem(hWnd, 10021)
+                child = GetDlgItem(self.plugin.mpcHwnd, 10021)
                 if GetClassName(child) ==  "#32770":
                     statText = GetDlgItem(child, 12027)
                     if GetClassName(statText) ==  "Static":
@@ -1362,6 +1545,9 @@ class GetTimes(eg.ActionBase):
             except:
                 return None, None, None
             return elaps, rem, total
+        else:
+            eg.programCounter = None
+            raise self.Exceptions.ProgramNotRunning
 #===============================================================================
 
 class GoTo_OSD(eg.ActionBase):
@@ -1406,12 +1592,7 @@ class GoTo_OSD(eg.ActionBase):
         sizeFlag,
         inverted
         ):
-        try:
-            hWnd = FindWindow("MediaPlayerClassicW")
-        except:
-            eg.programCounter = None
-            raise self.Exceptions.ProgramNotRunning
-        else:
+        if self.plugin.runFlg and self.plugin.mpcHwnd:
             if not self.plugin.menuDlg:
                 self.plugin.menuDlg = GoToFrame()
                 self.event = CreateEvent(None, 0, 0, None)
@@ -1426,11 +1607,14 @@ class GoTo_OSD(eg.ActionBase):
                     self.plugin,
                     self.event,
                     monitor,
-                    hWnd,
+                    self.plugin.mpcHwnd,
                     evtList,
                     sizeFlag
                 )
                 eg.actionThread.WaitOnEvent(self.event)
+        else:
+            eg.programCounter = None
+            raise self.Exceptions.ProgramNotRunning
 
 
     def GetLabel(
@@ -1617,7 +1801,6 @@ class GoTo_OSD(eg.ActionBase):
         dialogButton.Bind(wx.EVT_BUTTON, OnDialogBtn)
 
 
-
         def OnColourBtn(evt):
             id = evt.GetId()
             value = evt.GetValue()
@@ -1653,11 +1836,8 @@ class GoTo_OSD(eg.ActionBase):
 
         # re-assign the test button
         def OnButton(event):
-            try:
-                hWnd = FindWindow("MediaPlayerClassicW")
-            except:
-                self.PrintError(eg.Classes.Exceptions.Text.ProgramNotRunning)
-            else:
+            if self.plugin.runFlg and self.plugin.mpcHwnd:
+                #else:
                 if not self.plugin.menuDlg:
                     self.plugin.menuDlg = GoToFrame()
                     self.event = CreateEvent(None, 0, 0, None)
@@ -1672,11 +1852,13 @@ class GoTo_OSD(eg.ActionBase):
                         self.plugin,
                         self.event,
                         displayChoice.GetSelection(),
-                        hWnd,
+                            self.plugin.mpcHwnd,
                         panel.evtList,
                         self.sizeFlag
                     )
                     eg.actionThread.WaitOnEvent(self.event)
+            else:
+                self.PrintError(eg.Classes.Exceptions.Text.ProgramNotRunning)
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
 
         while panel.Affirmed():
@@ -1696,10 +1878,8 @@ class GoTo_OSD(eg.ActionBase):
 
 class ShowMenu(eg.ActionClass):
 
-
     name = "Show MPC menu"
     description = "Show MPC menu."
-
     panel = None
 
     class text:
@@ -1722,6 +1902,7 @@ class ShowMenu(eg.ActionClass):
         )
         inverted = "Use inverted colours"
 
+
     def __call__(
         self,
         fore,
@@ -1733,12 +1914,7 @@ class ShowMenu(eg.ActionClass):
         evtList = [],
         inverted = True
     ):
-        try:
-            hWnd = FindWindow("MediaPlayerClassicW")
-        except:
-            eg.programCounter = None
-            raise self.Exceptions.ProgramNotRunning
-        else:
+        if self.plugin.runFlg and self.plugin.mpcHwnd:
             if not self.plugin.menuDlg:
                 self.plugin.menuDlg = Menu()
                 self.event = CreateEvent(None, 0, 0, None)
@@ -1752,10 +1928,13 @@ class ShowMenu(eg.ActionClass):
                     self.plugin,
                     self.event,
                     monitor,
-                    hWnd,
+                    self.plugin.mpcHwnd,
                     evtList,
                 )
                 eg.actionThread.WaitOnEvent(self.event)
+        else:
+            eg.programCounter = None
+            raise self.Exceptions.ProgramNotRunning
 
 
     def GetLabel(
@@ -1930,7 +2109,6 @@ class ShowMenu(eg.ActionClass):
             )
             dlg.Centre()
             wx.CallAfter(dlg.ShowMenuEventsDialog, self.text.evtAssignTitle, self.text.events)
-#            listBoxCtrl.SetFocus()
             evt.Skip()
         dialogButton.Bind(wx.EVT_BUTTON, OnDialogBtn)
 
@@ -1988,11 +2166,8 @@ class ShowMenu(eg.ActionClass):
 
         # re-assign the test button
         def OnButton(event):
-            try:
-                hWnd = FindWindow("MediaPlayerClassicW")
-            except:
-                self.PrintError(eg.Classes.Exceptions.Text.ProgramNotRunning)
-            else:
+            if self.plugin.runFlg and self.plugin.mpcHwnd:
+                #else:
                 if not self.plugin.menuDlg:
                     self.plugin.menuDlg = Menu()
                     self.event = CreateEvent(None, 0, 0, None)
@@ -2010,7 +2185,8 @@ class ShowMenu(eg.ActionClass):
                         panel.evtList
                     )
                     eg.actionThread.WaitOnEvent(self.event)
-#            listBoxCtrl.SetFocus()
+            else:
+                self.PrintError(eg.Classes.Exceptions.Text.ProgramNotRunning)
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
 
         while panel.Affirmed():
@@ -2030,9 +2206,22 @@ class ShowMenu(eg.ActionClass):
             useInvertedCtrl.GetValue()
         )
 #===============================================================================
+class Run(eg.ActionBase):
+
+    def __call__(self):
+        if self.plugin.mpcPath:
+            self.plugin.StartMpcHc()        
+#===============================================================================
 
 class MediaPlayerClassic(eg.PluginBase):
     menuDlg = None
+    state = None
+    mpcHwnd = None
+    event = None
+    result = None
+    runFlg = False
+    mr = None
+
 
     class text:
         popup = (
@@ -2045,10 +2234,167 @@ class MediaPlayerClassic(eg.PluginBase):
         toolTip = "Drag-and-drop an event from the log into the box."
         opened = "Opened"
         closed = "Closed"
+        label = "Path to MPC-HC executable:"
+        fileMask = "MPC-HC executable|mpc-hc.exe|All-Files (*.*)|*.*"
+        gotoLabel = "Go To..."
+
+
+
+    def ParseMsg(self, msg):
+        msg = msg.replace(u"\\|", u"\xb0*\u2734*\xb0")
+        msg = msg.split(u"|")
+        for i in range(len(msg)):
+            msg[i] = msg[i].replace(u"\xb0*\u2734*\xb0", u"|")
+        return msg
+
+
+    @eg.LogIt
+    def Handler(self, hwnd, mesg, wParam, lParam):
+        cpyData = cast(lParam, PCOPYDATASTRUCT)
+        cmd = cpyData.contents.dwData
+        msg = wstring_at(cpyData.contents.lpData)
+        if cmd == CMD_CONNECT:
+            self.mpcHwnd = int(msg)
+        elif cmd == CMD_STATE:
+            state = int(msg)
+            if self.state != state:
+                self.state = state
+                eg.TriggerEvent("State."+MPC_LOADSTATE[state],prefix="MPC-HC")
+
+        elif cmd == CMD_NOWPLAYING:
+            msg = self.ParseMsg(msg)
+            eg.TriggerEvent("NowPlaying",prefix="MPC-HC", payload = msg)
+
+        elif cmd == CMD_PLAYMODE:
+            eg.TriggerEvent("Playstate."+MPC_PLAYSTATE[int(msg)],prefix="MPC-HC")
+
+        elif cmd == CMD_NOTIFYSEEK:
+            eg.TriggerEvent("Seek",prefix="MPC-HC",payload = int(0.5+float(msg)))
+
+        elif cmd in (
+            CMD_CURRENTPOSITION,
+            CMD_LISTSUBTITLETRACKS,
+            CMD_LISTAUDIOTRACKS,
+            CMD_PLAYLIST
+        ):
+            if self.event:
+                self.result = self.ParseMsg(msg)
+                SetEvent(self.event)
+
+        elif cmd == CMD_NOTIFYENDOFSTREAM:
+            eg.TriggerEvent("EndOfStream",prefix="MPC-HC")
+        return True
+
+
+    def StartMpcHc(self):
+        if not self.runFlg:
+            mp = self.mpcPath
+            mp = mp.encode(FSE) if isinstance(mp, unicode) else mp
+            if isfile(mp):
+                self.runFlg = True
+                args = [mp]
+                args.append("/slave")
+                args.append(str(self.mr.hwnd))
+                Popen(args)
+
+
+    def isRunning(self):
+        hwnd = FindWindowEx(None, None, u'MediaPlayerClassicW', None)
+        return hwnd > 0
+
+
+    def mpcIsRunning(self):
+        eg.scheduler.AddTask(2, self.mpcIsRunning) # must run continuously !
+        if not self.isRunning():
+            if self.runFlg:
+                self.runFlg = False
+        else:
+            self.StartMpcHc()
+      
+
+    def SendCopydata(self, cmd, txt):
+        if self.mpcHwnd is not None:        
+            cpyData = create_unicode_buffer(txt)
+            cds = COPYDATASTRUCT()
+            cds.dwData = cmd
+            cds.lpData = cast(cpyData, c_void_p)
+            cds.cbData = sizeof(cpyData)
+            return SendMessage(self.mpcHwnd, WM_COPYDATA, 0, addressof(cds))
 
 
     def __init__(self):
         self.AddActionsFromList(ACTIONS, ActionPrototype)
+
+
+    def __start__(self, mpcPath=None):
+        if mpcPath is None:
+            mpcPath = self.GetMpcHcPath()
+        if not exists(mpcPath):
+            raise self.Exceptions.ProgramNotFound
+        self.mpcPath = mpcPath
+        hWnd = Find_MPC()
+        if hWnd:
+            self.mpcHwnd = hWnd[0]
+        self.mr = eg.MessageReceiver("MPC-HC_plugin_")
+        self.mr.AddHandler(WM_COPYDATA, self.Handler)
+        self.mr.Start()
+        eg.scheduler.AddTask(1, self.mpcIsRunning)
+    
+
+    def __stop__(self):
+        self.mr.RemoveHandler(WM_COPYDATA, self.Handler)
+        self.mr.Stop()
+        self.mr = None
+        self.mpcHwnd = None        
+        self.result = None
+        self.runFlg = False
+       
+
+    def Configure(self, mpcPath=None):
+        if mpcPath is None:
+            mpcPath = self.GetMpcHcPath()
+            if mpcPath is None:
+                mpcPath = join(
+                    eg.folderPath.ProgramFiles, 
+                    "MediaPlayerClassic", 
+                    "mpc-hc.exe"
+                )
+        panel = eg.ConfigPanel()
+        filepathCtrl = eg.FileBrowseButton(
+            panel, 
+            size=(320,-1),
+            initialValue=mpcPath, 
+            startDirectory=eg.folderPath.ProgramFiles,
+            labelText="",
+            fileMask = self.text.fileMask,
+            buttonText=eg.text.General.browse,
+        )
+        panel.AddLabel(self.text.label)
+        panel.AddCtrl(filepathCtrl)
+        while panel.Affirmed():
+            panel.SetResult(filepathCtrl.GetValue())
+
+        
+    def GetMpcHcPath(self):
+        """
+        Get the path of Foobar2000's installation directory through querying 
+        the Windows registry.
+        """
+        try:
+            mpc = _winreg.OpenKey(
+                _winreg.HKEY_LOCAL_MACHINE,
+                "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{2624B969-7135-4EB1-B0F6-2D8C397B45F7}_is1"
+            )
+            try:
+                mpcPath, dummy =_winreg.QueryValueEx(mpc, "InstallLocation")
+            except WindowsError:
+                mpcPath, dummy =_winreg.QueryValueEx(mpc, "UninstallString")
+                mpcPath = dirname(mpcPath)
+            _winreg.CloseKey(mpc)
+            mpcPath = join(mpcPath, "mpc-hc.exe")
+        except WindowsError:
+            mpcPath = None
+        return mpcPath
 
 
     def GetWindowState(self):
@@ -2075,8 +2421,160 @@ class MediaPlayerClassic(eg.PluginBase):
         return state
 #===============================================================================
 
+class SendCmd(eg.ActionBase):
+    def __call__(self):
+        self.plugin.SendCopydata(self.value, u"")
+#===============================================================================
+
+class GetInfo(eg.ActionBase):
+    def __call__(self):
+        self.plugin.result = None
+        self.plugin.event = CreateEvent(None, 0, 0, None)
+        if self.plugin.SendCopydata(self.value, u""):
+            eg.actionThread.WaitOnEvent(self.plugin.event)
+            self.plugin.event = None
+            if self.plugin.result:
+                return self.plugin.result
+#===============================================================================
+
+class OpenFile(eg.ActionBase):
+
+    class text:
+        toolTipFile = 'Type filename or click browse to choose file'
+        browseFile = 'Choose a file'
+
+
+    def __call__(self, filepath = ""):
+        if filepath:
+            filepath = eg.ParseString(filepath)
+            self.plugin.SendCopydata(self.value, filepath)
+
+
+    def Configure(self, filepath = ""):
+        panel = eg.ConfigPanel()    
+        folder = split(filepath)[0] if filepath else eg.folderPath.Videos
+        filepathLabel = wx.StaticText(panel, -1, "%s:" % self.text.browseFile)
+        filepathCtrl = eg.FileBrowseButton(
+            panel,
+            -1,
+            toolTip = self.text.toolTipFile,
+            dialogTitle = self.text.browseFile,
+            buttonText = eg.text.General.browse,
+            startDirectory = folder,
+            initialValue = filepath
+        )
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(filepathLabel,0,wx.TOP,3)
+        sizer.Add(filepathCtrl,1,wx.LEFT|wx.EXPAND,5)
+        panel.sizer.Add(sizer,0,wx.ALL|wx.EXPAND,20)
+        while panel.Affirmed():
+            panel.SetResult(
+                filepathCtrl.GetValue(),
+            )
+#===============================================================================
+
+class GetPosition(eg.ActionBase):
+
+    def __call__(self):
+        self.plugin.result = None
+        self.plugin.event = CreateEvent(None, 0, 0, None)
+        if self.plugin.SendCopydata(CMD_GETCURRENTPOSITION, u""):
+            eg.actionThread.WaitOnEvent(self.plugin.event)
+            self.plugin.event = None
+            if self.plugin.result:
+                return int(0.5+float(self.plugin.result[0]))
+#===============================================================================
+
+class SetInteger(eg.ActionBase):
+
+    class text:
+        labels = (
+            ("Jump of", "seconds (negative values for backward)"),
+            ("New position:", "seconds"),
+            ("Index of the audio track:", ""),
+            ("Index of the subtitle track:", "(-1 for disabling subtitles)"),
+            ("Index of the active file:", "(-1 for no file selected)"),
+            ("New audio delay:", "milliseconds"),
+            ("New subtitle delay:", "milliseconds"),
+        )
+
+
+    def __call__(self, value=0):
+        value = unicode(value)
+        self.plugin.SendCopydata(self.value[0], value)
+
+
+    def Configure(self, value=0):
+        panel = eg.ConfigPanel()
+        label_1 = wx.StaticText(panel,-1,self.text.labels[self.value[1]][0])
+        label_2 = wx.StaticText(panel,-1,self.text.labels[self.value[1]][1])
+        valueCtrl = eg.SpinIntCtrl(panel, -1, value, max=self.value[3],min=self.value[2])
+        sizer = wx.FlexGridSizer(1, 3, 5, 10)
+        sizer.Add(label_1,0,wx.TOP,3)
+        sizer.Add(valueCtrl)
+        sizer.Add(label_2,0,wx.TOP,3)
+        panel.sizer.Add(sizer,0,wx.ALL|wx.EXPAND,20)
+        while panel.Affirmed():
+            panel.SetResult(
+                valueCtrl.GetValue(),
+            )
+#===============================================================================
+
+class SendOSD(eg.ActionBase):
+
+    class text:
+        osdLabel = "OSD text:"
+        durLabel = "Duration [s]:"
+        posLabel = "Position:"
+        position = (
+            "None (clear)",
+            "Top left",
+            "Top right",
+        )
+
+
+    def __call__(self, osd="", dur=3, pos=1):
+        if self.plugin.mpcHwnd is not None:
+            osd = eg.ParseString(osd) + "\0"
+            OSDDATA.nMsgPos     = pos
+            OSDDATA.nDurationMS = 1000*dur
+            OSDDATA.strMsg      = osd.encode(eg.systemEncoding)
+            cds = COPYDATASTRUCT()
+            cds.dwData = CMD_OSDSHOWMESSAGE
+            cds.cbData = sizeof(OSDDATA)
+            cds.lpData = cast(addressof(OSDDATA), c_void_p)
+            SendMessage(self.plugin.mpcHwnd, WM_COPYDATA, 0, addressof(cds))
+
+
+    def Configure(self, osd="", dur=3, pos=1):
+        panel = eg.ConfigPanel()
+        osdLabel = wx.StaticText(panel,-1,self.text.osdLabel)
+        posLabel = wx.StaticText(panel,-1,self.text.posLabel)
+        durLabel = wx.StaticText(panel,-1,self.text.durLabel)
+        osdCtrl = wx.TextCtrl(panel,-1,osd, size=(200,-1))
+        durCtrl = eg.SpinIntCtrl(panel, -1, dur, max=99999)
+        posCtrl = wx.Choice(panel,-1,choices=self.text.position)
+        posCtrl.SetSelection(pos)
+        sizer = wx.FlexGridSizer(3, 2, 5, 10)
+        sizer.Add(osdLabel,0,wx.TOP,3)
+        sizer.Add(osdCtrl)
+        sizer.Add(durLabel,0,wx.TOP,3)
+        sizer.Add(durCtrl)
+        sizer.Add(posLabel,0,wx.TOP,3)
+        sizer.Add(posCtrl)
+        panel.sizer.Add(sizer,0,wx.ALL|wx.EXPAND,20)
+
+        while panel.Affirmed():
+            panel.SetResult(
+                osdCtrl.GetValue(),
+                durCtrl.GetValue(),
+                posCtrl.GetSelection(),
+            )
+#===============================================================================
+
 ACTIONS = (
 (eg.ActionGroup, 'GroupMainControls', 'Main controls', None, (
+    (Run, "Run", "Run MPC-HC", "Run MPC-HC with its default settings." ,None),
     ('Exit', 'Quit Application', None, 816),
     ('PlayPause', 'Play/Pause', None, 889),
     ('Play', 'Play', None, 887),
@@ -2090,26 +2588,57 @@ ACTIONS = (
     ('JumpBackwardLarge', 'Jump Backward Large', None, 903),
     ('JumpForwardKeyframe', 'Jump Forward Keyframe', None, 898),
     ('JumpBackwardKeyframe', 'Jump Backward Keyframe', None, 897),
-    ('IncreaseRate', 'Increase Rate', None, 895),
+    (
+        SetInteger,
+        "Jump",
+        "Jump forward/backward of N seconds",
+        "Jumps forward/backward of N seconds.",
+        (CMD_JUMPOFNSECONDS,0,-99999,99999)
+    ),
+    (
+        SetInteger,
+        "SetPosition",
+        "Cue current file to specific position",
+        "Cues current file to specific position.",
+        (CMD_SETPOSITION,1,1,999999)
+    ),    ('IncreaseRate', 'Increase Rate', None, 895),
     ('DecreaseRate', 'Decrease Rate', None, 894),
     ('ResetRate', 'Reset Rate', None, 896),
     ('VolumeUp', 'Volume Up', None, 907),
     ('VolumeDown', 'Volume Down', None, 908),
     ('VolumeMute', 'Volume Mute', None, 909),
-    ('BossKey', 'Boss Key', None, 943),
-    ('Next', 'Next', None, 921),
-    ('Previous', 'Previous', None, 920),
-    ('NextPlaylistItem', 'Next Playlist Item', None, 919),
-    ('PreviousPlaylistItem', 'Previous Playlist Item', None, 918),
-    ('OpenFile', 'Open File', None, 800),
+    ('BossKey', 'Boss Key', None, 944),
+    ('Next', 'Next', None, 922),
+    ('Previous', 'Previous', None, 921),
+    (SendCmd,"StartPlaylist","Start playing playlist","Starts playing playlist.",CMD_STARTPLAYLIST),
+    (SendCmd,"ClearPlaylist","Remove all files from playlist","Removes all files from playlist.",CMD_CLEARPLAYLIST),
+    ('NextPlaylistItem', 'Next Playlist Item', None, 920),
+    ('PreviousPlaylistItem', 'Previous Playlist Item', None, 919),
+    (OpenFile,"AddFile","Add file to playlist","Add a new file to playlist (did not start playing).",CMD_ADDTOPLAYLIST),
+    #(
+    #    SetInteger,
+    #    "SetActiveFile",
+    #    "Set the active file in the playlist",
+    #    "Sets the active file in the playlist.",
+    #    (CMD_SETINDEXPLAYLIST,4,-1,9)
+    #),    
     ('OpenDVD', 'Open DVD', None, 801),
-    ('QuickOpen', 'Quick Open File', None, 968),
+    ('OpenFileDialog', 'Show dialog "Open file"', None, 800),
+    (OpenFile,"OpenFile","Open file","Opens file.",CMD_OPENFILE),
+    ('QuickOpen', 'Quick Open File', None, 969),
     ('OpenDirectory', 'Open Directory', None, 33208),
     ('FrameStep', 'Frame Step', None, 891),
     ('FrameStepBack', 'Frame Step Back', None, 892),
     ('GoTo', 'Go To', None, 893),
     ('AudioDelayAdd10ms', 'Audio Delay +10ms', None, 905),
     ('AudioDelaySub10ms', 'Audio Delay -10ms', None, 906),
+    (
+        SetInteger,
+        "SetAudioDelay",
+        "Set the audio delay",
+        "Sets the audio delay.",
+        (CMD_SETAUDIODELAY,5,-999999,999999)
+    ),
 )),
 (eg.ActionGroup, 'GroupViewModes', 'View modes', None, (
     ('Fullscreen', 'Fullscreen', None, 830),
@@ -2154,26 +2683,26 @@ ACTIONS = (
     ('PnSRotateSubZ', 'Pan & Scan Rotate Z-', None, 882),
 )),
 (eg.ActionGroup, 'GroupDvdControls', 'DVD controls', None, (
-    ('DVDTitleMenu', 'DVD Title Menu', None, 922),
-    ('DVDRootMenu', 'DVD Root Menu', None, 923),
-    ('DVDSubtitleMenu', 'DVD Subtitle Menu', None, 924),
-    ('DVDAudioMenu', 'DVD Audio Menu', None, 925),
-    ('DVDAngleMenu', 'DVD Angle Menu', None, 926),
-    ('DVDChapterMenu', 'DVD Chapter Menu', None, 927),
-    ('DVDMenuLeft', 'DVD Menu Left', None, 928),
-    ('DVDMenuRight', 'DVD Menu Right', None, 929),
-    ('DVDMenuUp', 'DVD Menu Up', None, 930),
-    ('DVDMenuDown', 'DVD Menu Down', None, 931),
-    ('DVDMenuActivate', 'DVD Menu Activate', None, 932),
-    ('DVDMenuBack', 'DVD Menu Back', None, 933),
-    ('DVDMenuLeave', 'DVD Menu Leave', None, 934),
-    ('DVDNextAngle', 'DVD Next Angle', None, 960),
-    ('DVDPrevAngle', 'DVD Previous Angle', None, 961),
-    ('DVDNextAudio', 'DVD Next Audio', None, 962),
-    ('DVDPrevAudio', 'DVD Prev Audio', None, 963),
-    ('DVDNextSubtitle', 'DVD Next Subtitle', None, 964),
-    ('DVDPrevSubtitle', 'DVD Prev Subtitle', None, 965),
-    ('DVDOnOffSubtitle', 'DVD On/Off Subtitle', None, 966),
+    ('DVDTitleMenu', 'DVD Title Menu', None, 923),
+    ('DVDRootMenu', 'DVD Root Menu', None, 924),
+    ('DVDSubtitleMenu', 'DVD Subtitle Menu', None, 925),
+    ('DVDAudioMenu', 'DVD Audio Menu', None, 926),
+    ('DVDAngleMenu', 'DVD Angle Menu', None, 927),
+    ('DVDChapterMenu', 'DVD Chapter Menu', None, 928),
+    ('DVDMenuLeft', 'DVD Menu Left', None, 929),
+    ('DVDMenuRight', 'DVD Menu Right', None, 930),
+    ('DVDMenuUp', 'DVD Menu Up', None, 931),
+    ('DVDMenuDown', 'DVD Menu Down', None, 932),
+    ('DVDMenuActivate', 'DVD Menu Activate', None, 933),
+    ('DVDMenuBack', 'DVD Menu Back', None, 934),
+    ('DVDMenuLeave', 'DVD Menu Leave', None, 935),
+    ('DVDNextAngle', 'DVD Next Angle', None, 961),
+    ('DVDPrevAngle', 'DVD Previous Angle', None, 962),
+    ('DVDNextAudio', 'DVD Next Audio', None, 963),
+    ('DVDPrevAudio', 'DVD Prev Audio', None, 964),
+    ('DVDNextSubtitle', 'DVD Next Subtitle', None, 965),
+    ('DVDPrevSubtitle', 'DVD Prev Subtitle', None, 966),
+    ('DVDOnOffSubtitle', 'DVD On/Off Subtitle', None, 967),
 )),
 (eg.ActionGroup, 'GroupExtendedControls', 'Extended controls', None, (
     ('OpenDevice', 'Open Device', None, 802),
@@ -2184,25 +2713,50 @@ ACTIONS = (
     ('SaveSubtitle', 'Save Subtitle', None, 810),
     ('Close', 'Close File', None, 804),
     ('Properties', 'Properties', None, 814),
-    ('PlayerMenuShort', 'Player Menu Short', None, 948),
-    ('PlayerMenuLong', 'Player Menu Long', None, 949),
-    ('FiltersMenu', 'Filters Menu', None, 950),
-    ('Options', 'Options', None, 886),
-    ('NextAudio', 'Next Audio', None, 951),
-    ('PrevAudio', 'Previous Audio', None, 952),
-    ('NextSubtitle', 'Next Subtitle', None, 953),
-    ('PrevSubtitle', 'Prev Subtitle', None, 954),
-    ('OnOffSubtitle', 'On/Off Subtitle', None, 955),
+    ('PlayerMenuShort', 'Player Menu Short', None, 949),
+    ('PlayerMenuLong', 'Player Menu Long', None, 950),
+    ('FiltersMenu', 'Filters Menu', None, 951),
+    ('Options', 'Options', None, 815),
+    ('NextAudio', 'Next Audio', None, 952),
+    ('PrevAudio', 'Previous Audio', None, 953),
+    (
+        SetInteger,
+        "SetAudioTrack",
+        "Set the audio track",
+        "Sets the audio track.",
+        (CMD_SETAUDIOTRACK,2,0,9)
+    ),
+    ('NextSubtitle', 'Next Subtitle', None, 954),
+    ('PrevSubtitle', 'Prev Subtitle', None, 955),
+    (
+        SetInteger,
+        "SetSubtitlesTrack",
+        "Set the subtitle track",
+        "Sets the subtitle track.",
+        (CMD_SETSUBTITLETRACK,3,-1,9)
+    ),
+    ('OnOffSubtitle', 'On/Off Subtitle', None, 956),
+    ('GotoNextSubtitle', 'Goto Next Subtitle', None, 32781),
+    ('GotoPrevSubtitle', 'Goto Prev Subtitle', None, 32780),
+    ('SubtitleDelayMinus', 'Subtitle Delay -', None, 24000),
+    ('SubtitleDelayPlus', 'Subtitle Delay +', None, 24001),
+    (
+        SetInteger,
+        "SetSubtitleDelay",
+        "Set the subtitle delay",
+        "Sets the subtitle delay.",
+        (CMD_SETSUBTITLEDELAY,6,-999999,999999)
+    ),
     ('ReloadSubtitles', 'Reload Subtitles', None, 2302),
-    ('NextAudioOGM', 'Next Audio OGM', None, 956),
-    ('PrevAudioOGM', 'Previous Audio OGM', None, 957),
-    ('NextSubtitleOGM', 'Next Subtitle OGM', None, 958),
-    ('PrevSubtitleOGM', 'Previous Subtitle OGM', None, 959),
-    (GetWindowState,'GetWindowState','Get window state','Gets window state.', None),
-    (GetNowPlaying,'GetNowPlaying','Get currently playing file','Gets currently playing file.', None),
-    (GetTimes,'GetTimes','Get Times','Returns elapsed, remaining and total times.', None),
+    ('NextAudioOGM', 'Next Audio OGM', None, 957),
+    ('PrevAudioOGM', 'Previous Audio OGM', None, 958),
+    ('NextSubtitleOGM', 'Next Subtitle OGM', None, 959),
+    ('PrevSubtitleOGM', 'Previous Subtitle OGM', None, 960),
     (ShowMenu,'ShowMenu','Show MPC menu','Show MPC menu.', None),
     (GoTo_OSD,'GoTo_OSD','On Screen Go To ...','Show On Screen "Go To ...".', None),
+    (SendOSD,"SendOSD","Show custom OSD","Shows custom OSD.",None),
+    (AfterPlaybackOnce,"AfterPlaybackOnce","Action after playback (once)","The selected action will be made after playback (once).", None),
+    (AfterPlayback,"AfterPlayback","Action after playback (every time)","The selected action will be made after playback (every time).", None),
     (UserMessage,'UserMessage',"Send user's message",UserMessage.description, None),
 )),
 (eg.ActionGroup, 'GroupToggleControls', 'Toggle player controls', None, (
@@ -2215,7 +2769,19 @@ ACTIONS = (
     ('ToggleSubresyncBar', 'Toggle Subresync Bar', None, 823),
     ('TogglePlaylistBar', 'Toggle Playlist Bar', None, 824),
     ('ToggleCaptureBar', 'Toggle Capture Bar', None, 825),
+    (SendCmd,"ShaderToggle","Toggle shader","Toggles shader.",CMD_SHADER_TOGGLE),
     ('ToggleShaderEditorBar', 'Toggle Shader Editor Bar', None, 826),
     ('ToggleElapsedTime', 'Toggle OSD Elapsed Time', None, 32778),
 )),
+(eg.ActionGroup, 'Various information retrieval',"Retrieve various information", None, (
+    (GetWindowState,'GetWindowState','Get window state','Gets window state.', None),
+    (GetNowPlaying,'GetNowPlaying','Get currently playing file','Gets currently playing file.', None),
+    (GetTimes,'GetTimes','Get Times','Returns elapsed, remaining and total times.', None),
+    (GetPosition,"GetPosition","Get current position","Returns current position.",None),
+    (GetInfo,"GetSubtitles","Get subtitles tracks","Asks for a list of the subtitles tracks of the file.",CMD_GETSUBTITLETRACKS),
+    (GetInfo,"GetAdiotracks","Get audio tracks","Asks for a list of the audio tracks of the file.",CMD_GETAUDIOTRACKS),
+    (GetInfo,"GetPlaylist","Get playlist","Asks for the current playlist.",CMD_GETPLAYLIST),  
+)),
 )
+#===============================================================================
+        
