@@ -33,6 +33,14 @@ class ControlProviderMixin:
         return eg.SpinNumCtrl(self, -1, value, *args, **kwargs)
 
 
+    def SmartSpinIntCtrl(self, value=0, *args, **kwargs):
+        return eg.SmartSpinIntCtrl(self, -1, value, *args, **kwargs)
+
+
+    def SmartSpinNumCtrl(self, value=0, *args, **kwargs):
+        return eg.SmartSpinNumCtrl(self, -1, value, *args, **kwargs)
+
+
     def TextCtrl(
         self,
         value="",
