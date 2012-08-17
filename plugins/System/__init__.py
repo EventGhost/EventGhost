@@ -20,7 +20,7 @@ import traceback
 eg.RegisterPlugin(
     name = "System",
     author = "Bitmonster",
-    version = "1.1.3",
+    version = "1.1.4",
     description = (
         "Controls different aspects of your system, like sound card, "
         "graphics card, power management, et cetera."
@@ -267,7 +267,7 @@ class System(eg.PluginBase):
                     vistaVolumeDll.SetMute(1)
                 except:
                     return False
-                    pass
+                    #pass
                 return True
 
             def MuteOff2(self, deviceId=0):
@@ -275,7 +275,7 @@ class System(eg.PluginBase):
                     vistaVolumeDll.SetMute(0)
                 except:
                     return True
-                    pass
+                    #pass
                 return False
 
             def ToggleMute2(self, deviceId=0):
@@ -283,6 +283,8 @@ class System(eg.PluginBase):
                 try:
                     newValue = not vistaVolumeDll.GetMute()
                     vistaVolumeDll.SetMute(newValue)
+                    eg.Utils.time.sleep(0.1) # workaround
+                    newValue = vistaVolumeDll.GetMute() # workaround
                 except:
                     pass
                 return newValue
@@ -296,16 +298,19 @@ class System(eg.PluginBase):
                 return newvalue
 
             def SetMasterVolume2(self, value=200, deviceId=0):
+                value = float(value) if isinstance(value,(int, float)) else float(eg.ParseString(value))
                 newvalue=None
                 try:
                     if value >= 0 and value <= 100:
                         vistaVolumeDll.SetMasterVolume(value / 100.0)
-                    newvalue=vistaVolumeDll.GetMasterVolume() * 100.0
+                    eg.Utils.time.sleep(0.1) # workaround
+                    newvalue = vistaVolumeDll.GetMasterVolume() * 100.0
                 except:
                     pass
                 return newvalue
 
             def ChangeMasterVolumeBy2(self, value, deviceId=0):
+                value = float(value) if isinstance(value,(int, float)) else float(eg.ParseString(value))
                 newvalue=None
                 try:
                     old = vistaVolumeDll.GetMasterVolume() * 100
@@ -315,6 +320,7 @@ class System(eg.PluginBase):
                         vistaVolumeDll.SetMasterVolume(1.0)
                     else:
                         vistaVolumeDll.SetMasterVolume((old + value) / 100.0)
+                    eg.Utils.time.sleep(0.1) # workaround
                     newvalue = vistaVolumeDll.GetMasterVolume() * 100.0
                 except:
                     pass
@@ -977,21 +983,29 @@ class SetMasterVolume(eg.ActionBase):
 
 
     def __call__(self, value, deviceId=0):
+        value = float(value) if isinstance(value,(int, float)) else float(eg.ParseString(value))
         SoundMixer.SetMasterVolume(value, deviceId)
         return SoundMixer.GetMasterVolume(deviceId)
 
 
     def GetLabel(self, value, deviceId=0):
-        if deviceId > 0:
-            return "%s #%i: %.2f %%" % (self.name, deviceId+1, value)
+        if isinstance(value,(int, float)):
+            value = float(value)
+            if deviceId > 0:
+                return "%s #%i: %.2f %%" % (self.name, deviceId+1, value)
+            else:
+                return "%s: %.2f %%" % (self.name, value)
         else:
-            return "%s: %.2f %%" % (self.name, value)
+            if deviceId > 0:
+                return "%s #%i: %s %%" % (self.name, deviceId+1, value)
+            else:
+                return "%s: %s %%" % (self.name, value)
 
 
     def Configure(self, value=0, deviceId=0):
         panel = eg.ConfigPanel()
         deviceCtrl = panel.Choice(deviceId, SoundMixer.GetMixerDevices())
-        valueCtrl = panel.SpinNumCtrl(value, min=0, max=100)
+        valueCtrl = panel.SmartSpinNumCtrl(value, min=0, max=100)
         sizer = eg.HBoxSizer(
             (panel.StaticText(self.text.text1), 0, wx.ALIGN_CENTER_VERTICAL),
             (valueCtrl, 0, wx.LEFT|wx.RIGHT, 5),
@@ -1001,7 +1015,7 @@ class SetMasterVolume(eg.ActionBase):
         panel.AddLine(sizer)
         while panel.Affirmed():
             panel.SetResult(
-                float(valueCtrl.GetValue()),
+                valueCtrl.GetValue(),
                 deviceCtrl.GetValue(),
             )
 
@@ -1017,15 +1031,23 @@ class ChangeMasterVolumeBy(eg.ActionBase):
 
 
     def __call__(self, value, deviceId=0):
+        value = float(value) if isinstance(value,(int, float)) else float(eg.ParseString(value))
         SoundMixer.ChangeMasterVolumeBy(value, deviceId)
         return SoundMixer.GetMasterVolume(deviceId)
 
 
     def GetLabel(self, value, deviceId=0):
-        if deviceId > 0:
-            return "%s #%i: %.2f %%" % (self.name, deviceId+1, value)
+        if isinstance(value,(int, float)):
+            value = float(value)
+            if deviceId > 0:
+                return "%s #%i: %.2f %%" % (self.name, deviceId+1, value)
+            else:
+                return "%s: %.2f %%" % (self.name, value)
         else:
-            return "%s: %.2f %%" % (self.name, value)
+            if deviceId > 0:
+                return "%s #%i: %s %%" % (self.name, deviceId+1, value)
+            else:
+                return "%s: %s %%" % (self.name, value) 
 
 
     def Configure(self, value=0, deviceId=0):
@@ -1034,17 +1056,19 @@ class ChangeMasterVolumeBy(eg.ActionBase):
             deviceId,
             choices=SoundMixer.GetMixerDevices()
         )
-        valueCtrl = panel.SpinNumCtrl(value, min=-100, max=100)
+
+        valueCtrl = panel.SmartSpinNumCtrl(value, min=-100, max=100)
         sizer = eg.HBoxSizer(
             (panel.StaticText(self.text.text1), 0, wx.ALIGN_CENTER_VERTICAL),
             (valueCtrl, 0, wx.LEFT|wx.RIGHT, 5),
             (panel.StaticText(self.text.text2), 0, wx.ALIGN_CENTER_VERTICAL),
         )
+      
         panel.AddLine("Device:", deviceCtrl)
         panel.AddLine(sizer)
         while panel.Affirmed():
             panel.SetResult(
-                float(valueCtrl.GetValue()),
+                valueCtrl.GetValue(),
                 deviceCtrl.GetValue(),
             )
 #===============================================================================
@@ -1397,13 +1421,6 @@ class DisplayImage(eg.ActionBase):
         other = "Other options"
         Error = 'Exception in action "%s": Failed to open file "%%s" !'
         center = "Center on screen"
-        menu = (
-            "Change control to Spin Int",
-            "Change control to Text with {eg.result}",
-            "Change control to Text with {eg.event.payload}",
-            "Change control to (empty) Text"
-        )
-        tooltip = "Use the right mouse button\nto get the context menu !"
         toolTipFile = """Enter a filename of image
 or insert the image as a base64 string"""
 
@@ -1430,6 +1447,8 @@ or insert the image as a base64 string"""
         noFocus = True,
         ):
         def parseArgument(arg):
+            if not arg:
+                return 0
             if isinstance(arg, int):
                 return arg
             else:
@@ -1493,20 +1512,6 @@ or insert the image as a base64 string"""
         panel = eg.ConfigPanel()
         text = self.text
 
-        panel.xCoordId = wx.NewId()
-        panel.yCoordId = wx.NewId()
-        panel.widthId = wx.NewId()
-        panel.heightId = wx.NewId()
-        panel.timeoutId = wx.NewId()
-        panel.ids = (
-            panel.xCoordId,
-            panel.yCoordId,
-            panel.widthId,
-            panel.heightId,
-            panel.timeoutId,
-        )
-        panel.activeCtrl = None
-
         displayLbl=wx.StaticText(panel, -1, text.display)
         pathLbl=wx.StaticText(panel, -1, text.path)
         resampleLbl=wx.StaticText(panel, -1, text.resample)
@@ -1566,18 +1571,18 @@ or insert the image as a base64 string"""
         centerCtrl = wx.CheckBox(panel,-1,text.center)
         centerCtrl.SetValue(center)
 
-        xCoordCtrl = wx.TextCtrl(panel, panel.xCoordId, "")
-        yCoordCtrl = wx.TextCtrl(panel, panel.yCoordId, "")
-        widthCtrl = wx.TextCtrl(panel, panel.widthId, "")
-        heightCtrl = wx.TextCtrl(panel, panel.heightId, "")
-        timeoutCtrl = wx.TextCtrl(panel, panel.timeoutId, "")
+        xCoordCtrl = eg.SmartSpinIntCtrl(panel, -1, x, size = wx.Size(88,-1), textWidth = 105)
+        yCoordCtrl = eg.SmartSpinIntCtrl(panel, -1, y, size = ((88,-1)), textWidth = 105)
+        widthCtrl = eg.SmartSpinIntCtrl(panel, -1, width_, textWidth = 105)
+        heightCtrl = eg.SmartSpinIntCtrl(panel, -1, height_, textWidth = 105)
+        timeoutCtrl = eg.SmartSpinIntCtrl(panel, -1, timeout, textWidth = 105)
 
 
         def onCenter(evt = None):
             flag = radioBoxWinSizes.GetSelection() != 3 and not centerCtrl.GetValue()
-            wx.FindWindowById(panel.xCoordId).Enable(flag)
+            xCoordCtrl.Enable(flag)
             xCoordLbl.Enable(flag)
-            wx.FindWindowById(panel.yCoordId).Enable(flag)
+            yCoordCtrl.Enable(flag)
             yCoordLbl.Enable(flag)
             if evt:
                 evt.Skip()
@@ -1588,9 +1593,9 @@ or insert the image as a base64 string"""
             mode = radioBoxWinSizes.GetSelection()
             wFlag = mode == 2 or (mode == 1 and (rb1.GetValue() or rb2.GetValue()))
             hFlag = mode == 2 or (mode == 1 and (rb1.GetValue() or rb3.GetValue()))
-            wx.FindWindowById(panel.widthId).Enable(wFlag)
+            widthCtrl.Enable(wFlag)
             widthLbl.Enable(wFlag)
-            wx.FindWindowById(panel.heightId).Enable(hFlag)
+            heightCtrl.Enable(hFlag)
             heightLbl.Enable(hFlag) 
             if evt:
                 evt.Skip()
@@ -1647,7 +1652,7 @@ or insert the image as a base64 string"""
         box1 = wx.StaticBox(panel,-1,text.other)
         otherSizer = wx.StaticBoxSizer(box1,wx.VERTICAL)
         otherSizer.Add(borderSizer,0,wx.TOP,0)
-        otherSizer.Add(timeoutSizer,0,wx.TOP,4)        #        
+        otherSizer.Add(timeoutSizer,0,wx.TOP,4)
         posAndSizeSizer = wx.FlexGridSizer(6,2,hgap=20,vgap=1)
         posAndSizeSizer.Add(displayLbl,0,wx.TOP,0)
         posAndSizeSizer.Add((1, 1),0,wx.TOP,0)
@@ -1708,81 +1713,6 @@ or insert the image as a base64 string"""
         panel.sizer.Add(pathLbl,0,wx.TOP,10)
         panel.sizer.Add(filepathCtrl,0,wx.EXPAND|wx.TOP,1)
 
-        params = (
-            (posAndSizeSizer,  6,       x, 8000, 0, wx.LEFT, 0),
-            (posAndSizeSizer,  7,       y, 8000, 0, wx.LEFT, 0),
-            (posAndSizeSizer, 10,  width_, 8000, 1, wx.LEFT, 0),
-            (posAndSizeSizer, 11, height_, 8000, 1, wx.LEFT, 0),
-            (timeoutSizer,     1, timeout, 9999, 0, wx.LEFT|wx.RIGHT, 5),
-        ) # (sizer, index, variable, max, min, styles, border)
-
-
-        def OnMenu(evt):
-            CreateCtrl(panel.popups.index(evt.GetId()), panel.activeCtrl, False)
-
-
-        def OnRclick(evt):
-            ctrl = evt.GetEventObject()
-            if "BaseMaskedTextCtrl" in str(ctrl):
-                ctrl = ctrl.GetParent()
-            panel.activeCtrl = ctrl.GetId()
-            if not hasattr(panel, "popupId0"):
-                panel.popupId0 = wx.NewId()
-                panel.popupId1 = wx.NewId()
-                panel.popupId2 = wx.NewId()
-                panel.popupId3 = wx.NewId()
-                panel.popups=(
-                    panel.popupId0,
-                    panel.popupId1,
-                    panel.popupId2,
-                    panel.popupId3
-                )
-                panel.Bind(wx.EVT_MENU, OnMenu, id=panel.popupId0)
-                panel.Bind(wx.EVT_MENU, OnMenu, id=panel.popupId1)
-                panel.Bind(wx.EVT_MENU, OnMenu, id=panel.popupId2)
-                panel.Bind(wx.EVT_MENU, OnMenu, id=panel.popupId3)
-            menu = wx.Menu()
-            for i in range(4):
-                menu.Append(panel.popups[i], text.menu[i])
-            panel.PopupMenu(menu)
-            menu.Destroy()
-
-
-        def CreateCtrl(ctrlType, id, init = True):
-            ctrl = wx.FindWindowById(id)
-            enabled = ctrl.IsEnabled()
-            ix = panel.ids.index(id)
-            szr = params[ix][0]
-            szr.Detach(ctrl)
-            ctrl.Destroy()
-            if ctrlType == 0:
-                ctrl = eg.SpinIntCtrl(
-                    panel,
-                    id,
-                    min = params[ix][4],
-                    max = params[ix][3],
-                )
-                ctrl.numCtrl.Bind(wx.EVT_RIGHT_UP, OnRclick)
-                ctrl.numCtrl.SetToolTipString(text.tooltip)
-                if init:
-                    ctrl.SetValue(params[ix][2])
-            else:
-                ctrl = wx.TextCtrl(panel, id, "")
-                ctrl.Bind(wx.EVT_RIGHT_UP, OnRclick)
-                ctrl.SetToolTipString(text.tooltip)
-                if init:
-                    ctrl.SetValue(params[ix][2])
-                else:
-                    ctrl.SetValue(("","{eg.result}","{eg.event.payload}","")[ctrlType])
-            szr.Insert(params[ix][1], ctrl, 0, params[ix][5], params[ix][6])
-            ctrl.Enable(enabled)
-            szr.Layout()
-        CreateCtrl(int(not isinstance(x,       int)), panel.ids[0])
-        CreateCtrl(int(not isinstance(y,       int)), panel.ids[1])
-        CreateCtrl(int(not isinstance(width_,  int)), panel.ids[2])
-        CreateCtrl(int(not isinstance(height_, int)), panel.ids[3])
-        CreateCtrl(int(not isinstance(timeout, int)), panel.ids[4])
-
         while panel.Affirmed():
             i = 0
             for rb in (rb0, rb1, rb2, rb3):
@@ -1798,12 +1728,12 @@ or insert the image as a base64 string"""
                 resampleCtrl.GetSelection(),
                 onTopCtrl.GetValue(),
                 borderCtrl.GetSelection(),
-                wx.FindWindowById(panel.timeoutId).GetValue(),
+                timeoutCtrl.GetValue(),
                 displayChoice.GetValue(),
-                wx.FindWindowById(panel.xCoordId).GetValue(),
-                wx.FindWindowById(panel.yCoordId).GetValue(),
-                wx.FindWindowById(panel.widthId).GetValue(),
-                wx.FindWindowById(panel.heightId).GetValue(),
+                xCoordCtrl.GetValue(),
+                yCoordCtrl.GetValue(),
+                widthCtrl.GetValue(),
+                heightCtrl.GetValue(),
                 backColourButton.GetValue(),
                 shapedCtrl.GetValue(),
                 centerCtrl.GetValue(),
