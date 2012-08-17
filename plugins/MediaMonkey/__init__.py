@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 #
-
-#ToDo 1) vytvorit png soubor z ikony a ulozit ho; davat ho misto (chybejiciho) obalu
-#     2) 
 # plugins/MediaMonkey/__init__.py
 #
 # Copyright (C)  2009-2011 Pako  <lubos.ruckl@quick.cz>
@@ -23,6 +20,10 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.3.4 by Pako 2012-08-17 07:51 UTC+1
+#     - added MediaMonkey.IsRunning event
+#     - added GetPlaylists action
+#     - improved routine for periodic testing "is running ?" 
 # 0.3.3 by Pako 2012-01-06 15:30 UTC+1
 #     - CoverArt support added
 # 0.3.2 by Pako 2012-01-06 15:30 UTC+1
@@ -69,7 +70,7 @@ SC_MINIMIZE   = 61472
 eg.RegisterPlugin(
     name = "MediaMonkey",
     author = "Pako",
-    version = "0.3.3",
+    version = "0.3.4",
     kind = "program",
     guid = "{50602341-ABC3-47AD-B859-FCB8C03ED4EF}",
     createMacrosOnAdd = True,
@@ -342,15 +343,6 @@ MM_WindowMatcher = eg.WindowMatcher(
 )
 #===============================================================================
 
-def GetModuleFrom_hWnd(hWnd):
-    threadId, processId = GetWindowThreadProcessId(hWnd)
-    hProc = _kernel.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, False, processId)
-    _psapi.EnumProcessModules(hProc, byref(hModule), sizeof(hModule), byref(clength))
-    _psapi.GetModuleBaseNameA(hProc, hModule.value, modBasName, sizeof(modBasName))
-    _kernel.CloseHandle(hProc)
-    return modBasName.value
-#===============================================================================
-
 class EventHandler:
 
     def GetSongInfo(self):
@@ -392,7 +384,6 @@ class EventHandler:
         )
 
     def OnBeforeTracksMove(self, *args):
-        #print "OnBeforeTracksMove",args
         if self.plugin.mm_events['OnBeforeTracksMove']:
             self.TriggerEvent("BeforeTracksMove")
 
@@ -402,7 +393,6 @@ class EventHandler:
 
     def OnDownloadFinished(self, *args):
         if self.plugin.mm_events['OnDownloadFinished']:
-            #print "OnDownloadFinished",args
             self.TriggerEvent("DownloadFinished")
 
     def OnFilterChange(self):
@@ -461,20 +451,18 @@ class EventHandler:
 
     def OnStop(self):
         if self.plugin.mm_events['OnStop']:
-            self.TriggerEvent("Stoped")
+            self.TriggerEvent("Stopped")
 
-    def OnTrackAdded(self):
+    def OnTrackAdded(self, newTrack):
         if self.plugin.mm_events['OnTrackAdded']:
             self.TriggerEvent("TrackAdded")
 
     def OnTrackConverted(self, *args):
         if self.plugin.mm_events['OnTrackConverted']:
-            #print "OnTrackConverted",args
             self.TriggerEvent("TrackConverted")
 
     def OnTrackDeleting(self, *args):
         if self.plugin.mm_events['OnTrackDeleting']:
-            #print "OnTrackDeleting",args
             self.TriggerEvent("TrackDeleting")
 
     def OnTrackEnd(self):
@@ -499,12 +487,10 @@ class EventHandler:
 
     def OnTrackProperties(self, *args):
         if self.plugin.mm_events['OnTrackProperties']:
-            #print "OnTrackProperties",args
             self.TriggerEvent("TrackProperties")
 
     def OnTrackSkipped(self, *args):
         if self.plugin.mm_events['OnTrackSkipped']:
-            #print "OnTrackSkipped",args
             self.TriggerEvent("TrackSkipped")
 
 #===============================================================================
@@ -518,48 +504,59 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
         This will be called inside the thread at the beginning.
         """
         self.plugin = plugin
-
+        self.mainThread = events
+        self.events = None
         self.MM = None
+
+        self.initMM()
+
+        flag = True
+        counter = 0
+        while not self.isRunning():
+            counter += 1
+            if counter >= 1000:
+                flag = False
+                break
+            eg.Utils.time.sleep(0.1)
+        if self.mainThread:
+            if flag and self.plugin.eg_events[7]:
+                self.plugin.TriggerEvent(Text.isRunningEvt)
+
+
+    def initMM(self):
+        del self.MM
+        del self.events
+        self.events = None
         self.MM = Dispatch("SongsDB.SDBApplication")
         self.MM.ShutdownAfterDisconnect = False
 
-        if events:
+        if self.mainThread:        
             class SubEventHandler(EventHandler):
                 MM = self.MM
                 plugin = self.plugin
                 TriggerEvent = self.plugin.TriggerEvent
             self.EventHandler = SubEventHandler
-
-            self.events = None
             self.events = DispatchWithEvents(self.MM, self.EventHandler)
-            
+
+
     def Finish(self):
         """
         This will be called inside the thread when it finishes. It will even
         be called if the thread exits through an exception.
         """
-        if self.events:
+        if self.mainThread:
             del self.events
+            self.plugin.workerThread = None
+        else:
+            self.plugin.workerThread2 = None
         del self.MM
-        self.plugin.workerThread = None
         
     def isRunning(self):
-        flag = True
-        counter = 0
         try:
             if self.MM.IsRunning:
                 return True
         except:
-            pass
-        del self.MM
-        self.MM = Dispatch("SongsDB.SDBApplication")
-        self.MM.ShutdownAfterDisconnect = False
-        while not self.MM.IsRunning:
-            counter += 1
-            if counter >= 1000:
-                flag = False
-                break
-        return flag            
+            return False
         
     def DoCommand(self, command):
         if self.isRunning():
@@ -839,8 +836,6 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                 sql+=" order by "+propertiesList[crit][0]+" "+trendList[trend]
             if limit:
                 sql+=" limit "+str(num)
-
-            #print sql #Debuging
             Total=self.MM.Database.OpenSQL("SELECT COUNT(*) FROM Songs WHERE "+sql).ValueByIndex(0)
             if int(Total) > 0:
                 self.LoadPlaylist(sql,repeat,crossfade,shuffle,clear,Total,plName)
@@ -972,6 +967,27 @@ class MediaMonkeyWorkerThread(eg.ThreadWorker):
                 pass
             if self.plugin.eg_events[6]:
                 self.plugin.TriggerEvent(self.plugin.text.jukeboxEvt, str(count))
+               
+    def GetPlaylists(self,flag1 = True, flag2 = True):
+        if self.isRunning():
+            sql = 'SELECT PlaylistName FROM Playlists'
+            if flag1 or flag2:
+                sql += ' WHERE '
+                if flag1:
+                    sql += 'Persistent IS NULL'
+                    if flag2:
+                        sql+=' AND '
+                if flag2:
+                    sql += 'NOT IDFilter IS NULL'
+            playlists = []
+            try:
+                dbPlaylists = self.MM.Database.OpenSQL(sql)  
+                while not dbPlaylists.EOF:
+                    playlists.append(dbPlaylists.ValueByIndex(0))
+                    dbPlaylists.Next()
+            except:
+                pass
+            return playlists
 #===============================================================================
 
 class Text:
@@ -1030,10 +1046,12 @@ Please install latest version of MediaMonkey and then restart EventGhost !'''
     popup = "Add now"
     popup2 = "Delete from library"
     refresh = "Refresh"
-    sepLabel = 'Character or string to use as delimiter:'
+    sepLabel = 'Character or string to use as delimiter (default is "\\n"):'
+    resType = "Result return as one string (otherwise as list)"
     filepath = "File path"
     filename = "File name"
     playlistEvt = 'playlist'
+    isRunningEvt = 'IsRunning'
     albumEvt = 'album_added'
     songEvt = 'song_added'
     jukeboxEvt = 'jukebox'
@@ -1041,6 +1059,7 @@ Please install latest version of MediaMonkey and then restart EventGhost !'''
     albumEvtTxt = 'Jukebox - album added'
     songEvtTxt = 'Jukebox - song added'
     jukeboxEvtTxt = 'Jukebox - list exported'
+    mmIsRunning = 'MediaMonkey is running'
     resAdded = (
         "Track added to playlist %s",
         "Track already exists in playlist %s",
@@ -1167,7 +1186,9 @@ Whereas selecting the "%s" checkbox will cause the player to jump randomly throu
 #====================================================================
 
 class MediaMonkey(eg.PluginBase):
-    runFlg = False
+    manFlg = False
+    autoFlg = False
+    stopFlg = False
     workerThread = None
     workerThread2 = None
     text = Text
@@ -1183,6 +1204,7 @@ class MediaMonkey(eg.PluginBase):
         group.AddAction(TogglePlay)
         group.AddAction(DiscretePause)
         group.AddAction(Stop)
+        group.AddAction(StopAfterCurrent)
         group.AddAction(Next)
         group.AddAction(Previous)
         group.AddAction(LoadPlaylist)
@@ -1219,6 +1241,7 @@ class MediaMonkey(eg.PluginBase):
             self.text.infoGrpName,
             self.text.infoGrpDescr
         )
+        group.AddAction(GetPlaylists)
         group.AddAction(GetBasicStatistics)
         group.AddAction(GetNotAccessibleTracks)
         group.AddActionsFromList(ACTIONS)
@@ -1280,14 +1303,18 @@ class MediaMonkey(eg.PluginBase):
     def __start__(
         self,
         events = 4 * [True] + 23 * [False],
-        events2 = 7 * [True]
+        events2 = 8 * [True]
     ):
-        self.runFlg = False
+        self.manFlg = False
+        self.autoFlg = False
+        self.stopFlg = False
         self.volume = None
         self.muted = False
         if isinstance(events, bool):# For compatibility with old version !!!
             events = 4 * [True] + 23 * [False]
-            events2 = 7 * [True]
+            events2 = 8 * [True]
+        if len(events2) == 7:# For compatibility with version 0.3.3 !!!
+            events2.append(True)
         self.mm_events = dict(zip(MM_EVENTS, events))
         self.eg_events = events2
         eg.scheduler.AddTask(1, self.checkIsRunning)
@@ -1316,46 +1343,47 @@ class MediaMonkey(eg.PluginBase):
         return MMpath + "Scripts\\Auto", ver
 
 
-    def MinimizeMM(self):
+    def checkWinOpened(self):
         hwnds = MM_WindowMatcher()
         if hwnds:
-            SendMessageTimeout(hwnds[0],WM_SYSCOMMAND,SC_MINIMIZE,0)
+            dummy = SendMessageTimeout(hwnds[0],WM_SYSCOMMAND,SC_MINIMIZE,20)
         else:
-            eg.scheduler.AddTask(1, self.MinimizeMM)
+            eg.scheduler.AddTask(1, self.checkWinOpened)
+        
+
+    def minimizeMM(self, hwnds):
+        dummy = SendMessageTimeout(hwnds[0],WM_SYSCOMMAND,SC_MINIMIZE,0)
+
         
 
     def isRunning(self): # the fastest way I found ...
-        hwnd = None
-        while hwnd != 0:
-            hwnd = FindWindowEx(None, hwnd, "Winamp v1.x", None)
-            if hwnd:
-                if GetModuleFrom_hWnd(hwnd).find("MediaMonkey") >= 0:
-                    return True
-        return False
+        hwnd = FindWindowEx(None, None, "TFMainWindow", "MediaMonkey")
+        return hwnd > 0
 
 
     def checkIsRunning(self):
-        eg.scheduler.AddTask(1, self.checkIsRunning) # must run continuously !
+        eg.scheduler.AddTask(2, self.checkIsRunning) # must run continuously !
         if not self.isRunning():
-            if self.runFlg:
-                self.runFlg = False
-                self.StopThreads()
-        else:
-            if not self.runFlg:
-                self.runFlg = True
-                eg.scheduler.AddTask(0.5, self.startWorkerThread)
+                if self.stopFlg:
+                    self.manFlg = False
+                    self.stopFlg = False
+                    self.autoFlg = False
+                    self.StopThreads()
+        elif not self.autoFlg:
+            if not self.manFlg:
+                self.manFlg = True
+                eg.scheduler.AddTask(0.05, self.startWorkerThread)
 
 
     def startWorkerThread(self):
-        if not self.workerThread:
-            self.workerThread = MediaMonkeyWorkerThread(self, True)
-            self.workerThread.Start(1000.0)
+        self.workerThread = MediaMonkeyWorkerThread(self, True)
+        self.workerThread.Start(1000.0)
 
 
-    def Configure(self, events = 4 * [True] + 23 * [False], events2 = 7*[True]):
+    def Configure(self, events = 4 * [True] + 23 * [False], events2 = 8*[True]):
         if isinstance(events, bool): # For compatibility with old version !!!
             events = 4 * [True] + 23 * [False]
-            events2 = 7 * [True]
+            events2 = 8 * [True]
         panel = eg.ConfigPanel(self)
         label_mm = wx.StaticText(panel, -1, self.text.label_mm)
         choices = MM_EVENTS
@@ -1375,6 +1403,7 @@ class MediaMonkey(eg.PluginBase):
             self.text.albumEvtTxt,
             self.text.songEvtTxt,
             self.text.jukeboxEvtTxt,
+            self.text.mmIsRunning,
         )
         events2Ctrl = wx.CheckListBox(
             panel,
@@ -1410,6 +1439,8 @@ class MediaMonkey(eg.PluginBase):
     def SendCommand(self, command):
         if self.workerThread:
             self.workerThread.CallWait(partial(self.workerThread.DoCommand, command),1000)
+        else:
+            self.PrintError("self.workerThread is None !")
 
 
     def SetValue(self, command, value):
@@ -1420,6 +1451,11 @@ class MediaMonkey(eg.PluginBase):
     def GetValue(self, command):
         if self.workerThread:
             return self.workerThread.CallWait(partial(self.workerThread.GetValue, command),1000)
+        
+
+    def GetIsRunning(self):
+        if self.workerThread:
+            return self.workerThread.CallWait(partial(self.workerThread.isRunning),1000)
         
 
     def GetSongData(self,index):    
@@ -1466,10 +1502,8 @@ class MediaMonkey(eg.PluginBase):
     def StopThreads(self, event = None):
         if self.workerThread:
             self.workerThread.Stop()
-            self.workerThread = None
         if self.workerThread2:
             self.workerThread2.Stop()
-            self.workerThread2 = None
 #===============================================================================
 
 class Start(eg.ActionBase):
@@ -1477,13 +1511,11 @@ class Start(eg.ActionBase):
     description = "Starts MediaMonkey."
 
     def __call__(self, choice=True):
-        if not self.plugin.runFlg:
-            self.plugin.runFlg = True
-            eg.scheduler.AddTask(0.5, self.plugin.startWorkerThread)
+        if not self.plugin.isRunning() and not self.plugin.autoFlg:
+            self.plugin.autoFlg = True
+            eg.scheduler.AddTask(0.1, self.plugin.startWorkerThread)
             if choice:
-                while not self.plugin.workerThread:
-                    eg.Utils.time.sleep(0.1)
-                eg.scheduler.AddTask(5, self.plugin.MinimizeMM)           
+                eg.scheduler.AddTask(1, self.plugin.checkWinOpened)           
 
     def Configure(self, choice=True):
         panel = eg.ConfigPanel(self)
@@ -1503,9 +1535,10 @@ class Exit(eg.ActionBase):
     description = "Quits (closes) MediaMonkey."
     
     def __call__(self, choice = None):
-#    def __call__(self):
         hwnds = MM_WindowMatcher()
         if hwnds:
+            self.plugin.stopFlg = True
+            self.plugin.StopThreads()
             CloseHwnd(hwnds[0])
         else:
             raise self.Exceptions.ProgramNotRunning
@@ -1513,18 +1546,6 @@ class Exit(eg.ActionBase):
 
     def GetLabel(self):
         return self.name
-#
-#    def Configure(self, choice=True):
-#        panel = eg.ConfigPanel(self)
-#        choiceCtrl = wx.CheckBox(panel, -1, self.text.choice_label)
-#        choiceCtrl.SetValue(choice)
-#        panel.AddCtrl(choiceCtrl)
-#
-#        while panel.Affirmed():
-#            panel.SetResult(choiceCtrl.GetValue())
-#            
-#    class text:
-#        choice_label = "Close MediaMonkey too"
 #====================================================================
 
 class Play(eg.ActionBase):
@@ -1567,6 +1588,14 @@ class Stop(eg.ActionBase):
 
     def __call__(self):
         return self.plugin.SendCommand('Stop')
+#====================================================================
+
+class StopAfterCurrent(eg.ActionBase):
+    name = "Stop after current song"
+    description = "Stop MediaMonkey Playback After Current Song."
+
+    def __call__(self):
+        return self.plugin.SetValue('StopAfterCurrent', True)
 #====================================================================
 
 class Next(eg.ActionBase):
@@ -1730,22 +1759,24 @@ class SetBalance(eg.ActionBase):
 
 class SetShuffle(eg.ActionBase):
     name = "Set shuffle tracks"
-    description = "Set shuffle tracks mode to on or off."
+    description = "Set shuffle tracks mode to on or off or toggle."
 
-    def __call__(self, switch=0):
-        self.plugin.SetValue('isShuffle', switch == 0)
+    def __call__(self, swt = 0):
+        swt = not self.plugin.GetValue('isShuffle') if swt == 2 else swt == 0
+        self.plugin.SetValue('isShuffle', swt)
+        return swt
 
     def GetLabel(self, switch):
-        return "Set shuffle tracks "+("ON" if switch==0 else "OFF")
+        return "Set shuffle tracks: "+self.text.choices[switch]
 
     def Configure(self, switch=0):
-        text=Text
+        text=self.text
         panel = eg.ConfigPanel(self)
         radioBox = wx.RadioBox(
             panel,
             -1,
-            self.text.radiobox,
-            choices=[self.text.ShuffleON, self.text.ShuffleOFF],
+            text.radiobox,
+            choices=text.choices,
             style=wx.RA_SPECIFY_ROWS
         )
         radioBox.SetSelection(switch)
@@ -1755,8 +1786,11 @@ class SetShuffle(eg.ActionBase):
 
     class text:
         radiobox = "Set shuffle tracks to state ..."
-        ShuffleON = "ON"
-        ShuffleOFF = "OFF"
+        choices = (
+            "ON",
+            "OFF",
+            "Toggle"
+        )
 #====================================================================
 
 class SetRepeat(eg.ActionBase):
@@ -1975,11 +2009,49 @@ class Seek(eg.ActionBase):
         tree_lab3 = "forward"
 #====================================================================
 
+class GetPlaylists(eg.ActionBase):
+    name = "Get playlist names"
+    description = "Gets list of playlist names."
+
+    def __call__(self, flag1 = True, flag2 = True):
+        if self.plugin.workerThread:
+            playlists = self.plugin.workerThread.CallWait(partial(
+                self.plugin.workerThread.GetPlaylists,
+                flag1,
+                flag2
+            ),60)
+            return playlists
+
+
+    def GetLabel(self, flag1, flag2):
+        label = "%s: %s, %s" % (self.name, str(flag1), str(flag2))
+        return label
+
+    def Configure(self, flag1 = True, flag2 = True):
+        panel = eg.ConfigPanel(self)
+        autoCtrl = wx.CheckBox(panel, -1, self.text.auto)
+        autoCtrl.SetValue(flag1)
+        panel.sizer.Add(autoCtrl, 0, wx.TOP, 20)
+        importedCtrl = wx.CheckBox(panel, -1, self.text.imported)
+        importedCtrl.SetValue(flag1)
+        panel.sizer.Add(importedCtrl, 0, wx.TOP, 20)
+
+        while panel.Affirmed():
+            panel.SetResult(
+                autoCtrl.GetValue(),
+                importedCtrl.GetValue(),                
+            )
+            
+    class text:
+        auto = "Ignore auto-playlists"
+        imported = "Ignore imported playlists"
+#====================================================================
+
 class GetBasicStatistics(eg.ActionBase):
     name = "Get Basic Statistics"
     description = "Get Basic Statistics (number of tracks and albums in the database)."
 
-    def __call__(self,sep=''):
+    def __call__(self,sep='',res = True):
         if self.plugin.workerThread:
             if sep == '':
                 sep = '\n'
@@ -1989,19 +2061,36 @@ class GetBasicStatistics(eg.ActionBase):
     def GetLabel(self,sep=''):
         return self.name
         
-    def Configure(self,sep=''):
+    def Configure(self, sep='', res = True):
         panel = eg.ConfigPanel(self)
         sepLbl = wx.StaticText(panel,-1,self.plugin.text.sepLabel)
         sepCtrl = wx.TextCtrl(panel,-1,sep)
         sepLbl.SetToolTip(wx.ToolTip(self.plugin.text.sepToolTip))
         sepCtrl.SetToolTip(wx.ToolTip(self.plugin.text.sepToolTip))
+        resCtrl = wx.CheckBox(panel, -1, self.plugin.text.resType)
+        resCtrl.SetValue(res)
+
+        
+        def onResCtrl(evt = None):
+            enable = resCtrl.GetValue()
+            sepCtrl.Enable(enable)
+            sepLbl.Enable(enable)
+            if evt:
+                evt.Skip()
+        resCtrl.Bind(wx.EVT_CHECKBOX, onResCtrl)
+        onResCtrl()
+
         mySizer = wx.BoxSizer(wx.HORIZONTAL)
-        panel.sizer.Add(mySizer,0,wx.TOP,30)
-        mySizer.Add(sepLbl,0,wx.TOP,4)
+        panel.sizer.Add(resCtrl, 0, wx.TOP, 30)
+        panel.sizer.Add(mySizer,0,wx.TOP,15)
+        mySizer.Add(sepLbl,0,wx.TOP,3)
         mySizer.Add((10,1))
         mySizer.Add(sepCtrl)
         while panel.Affirmed():
-            panel.SetResult(sepCtrl.GetValue(),)
+            panel.SetResult(
+                sepCtrl.GetValue(),
+                resCtrl.GetValue()
+            )
 
     class text():
         tracks = '%s tracks'
@@ -2085,6 +2174,17 @@ class GetSomeInfo(eg.ActionBase):
         return self.value[0]*self.plugin.GetValue(self.value[1])
 #====================================================================
 
+class GetIsRunning(eg.ActionBase):
+    def __call__(self):
+        return self.plugin.GetIsRunning() == True
+#====================================================================
+
+class GetShuffle(eg.ActionBase):
+    def __call__(self):
+        val = self.plugin.GetValue('isShuffle')
+        return val
+#====================================================================
+
 class GetStatus(eg.ActionBase):
     name = "Get Status"
     description = "Get Player Status (returns string: Playing, Paused or Stopped)."
@@ -2107,21 +2207,23 @@ class GetStatus(eg.ActionBase):
 
 class GetSongInfo(eg.ActionBase):
 
-    def __call__(self,arrayInfo,sep=''):
-        #self.value: 0 ... current track
-        #           -1 ... previous track
-        #            1 ... next track 
+    def __call__(self, arrayInfo, sep = '', res = True):
         shuffle = self.plugin.GetValue('isShuffle')
         if not shuffle or self.value == 0:
-            SongData,ix = self.plugin.GetSongData(self.value)
-            if (SongData,ix)==(None,None):
-                return self.text.noData
-            if sep == '':
-                sep = '\n'
+            try:
+                SongData, ix = self.plugin.GetSongData(self.value)
+            except:
+                return None
+            if (SongData, ix)==(None, None):
+                #return self.text.noData
+                return None
             path=SongData['Path']
             indx=path.rfind("\\")+1
-            result=path[:indx]+sep if arrayInfo[0] else ""
-            result+=path[indx:]+sep if arrayInfo[1] else ""
+            result = []
+            if arrayInfo[0]:
+                result.append(path[:indx])
+            if arrayInfo[1]:
+                result.append(path[indx:])
             listPropert=(
                 "Title",
                 "ArtistName",
@@ -2138,11 +2240,17 @@ class GetSongInfo(eg.ActionBase):
                 "Conductor",
                 "Comment"
             )
-            for propert,cond in zip(listPropert,arrayInfo[2:]):
-                result+=SongData[propert]+sep if cond else ""
+            for propert, cond in zip(listPropert, arrayInfo[2:]):
+                if cond:
+                    result.append(SongData[propert])
             if arrayInfo[16]:
-                result+=str(ix)+sep
-            return result[:-len(sep)]
+                result.append(str(ix))
+            if res:
+                if sep == '':
+                    sep = '\n'
+                return sep.join(result)
+            else:
+                return result
         else:
             return self.text.shuffleON
             
@@ -2156,7 +2264,8 @@ class GetSongInfo(eg.ActionBase):
     def Configure(
         self,
         arrayInfo=[False]*17,
-        sep=''
+        sep='',
+        res = True
     ):
         text=dict(zip([item[0] for item in SONG_TABLE_FIELDS],Text.SongTableFields))
         panel = eg.ConfigPanel(self)
@@ -2194,12 +2303,23 @@ class GetSongInfo(eg.ActionBase):
         commentCtrl.SetValue(arrayInfo[15])
         seqNumCtrl = wx.CheckBox(panel, -1, self.text.seqNum)
         seqNumCtrl.SetValue(arrayInfo[16])
+        resCtrl = wx.CheckBox(panel, -1, self.plugin.text.resType)
+        resCtrl.SetValue(res)
         sepCtrl = wx.TextCtrl(panel,-1,sep)
         sepCtrl.SetToolTip(wx.ToolTip(self.plugin.text.sepToolTip))
         sepLabel = wx.StaticText(panel,-1,self.plugin.text.sepLabel)
         sepLabel.SetToolTip(wx.ToolTip(self.plugin.text.sepToolTip))
-        line = wx.StaticLine(panel, -1, size=(440,-1), style=wx.LI_HORIZONTAL)
+        
+        def onResCtrl(evt = None):
+            enable = resCtrl.GetValue()
+            sepCtrl.Enable(enable)
+            sepLabel.Enable(enable)
+            if evt:
+                evt.Skip()
+        resCtrl.Bind(wx.EVT_CHECKBOX, onResCtrl)
+        onResCtrl()
 
+        line = wx.StaticLine(panel, -1, size=(440,-1), style=wx.LI_HORIZONTAL)
         panelSizer = panel.sizer
         bottomSizer = wx.BoxSizer(wx.HORIZONTAL)
         mainSizer=wx.FlexGridSizer(2,2)
@@ -2233,7 +2353,8 @@ class GetSongInfo(eg.ActionBase):
         mainSizer.Add(rightSizer,0)
         panelSizer.Add(mainSizer,0)
         panelSizer.Add(line,0,wx.TOP,10)
-        panelSizer.Add(bottomSizer,0,wx.TOP,10)
+        panelSizer.Add(resCtrl,0,wx.TOP,10)
+        panelSizer.Add(bottomSizer,0,wx.TOP,6)
 
         while panel.Affirmed():
             arrayInfo=[
@@ -2257,7 +2378,8 @@ class GetSongInfo(eg.ActionBase):
             ]
             panel.SetResult(
                 arrayInfo,
-                sepCtrl.GetValue()
+                sepCtrl.GetValue(),
+                resCtrl.GetValue()
             )
 
     class text:
@@ -2270,7 +2392,7 @@ class GetDetailSongInfo(eg.ActionBase):
     name = "Get detailed song info"
     description = "Get detailed information about the currently playing song."
 
-    def __call__(self, arrayInfo, sep=''):
+    def __call__(self, arrayInfo, sep='', res = True):
         SongData,ix = self.plugin.GetSongData(0)
         listPropert=(
         "Lyricist",
@@ -2300,7 +2422,8 @@ class GetDetailSongInfo(eg.ActionBase):
     def Configure(
         self,
         arrayInfo=[False]*10,
-        sep=''
+        sep='',
+        res = True
     ):
         text=dict(zip([item[0] for item in SONG_TABLE_FIELDS],Text.SongTableFields))
         panel = eg.ConfigPanel(self)
@@ -2332,6 +2455,19 @@ class GetDetailSongInfo(eg.ActionBase):
         sepCtrl.SetToolTip(wx.ToolTip(self.plugin.text.sepToolTip))
         sepLabel = wx.StaticText(panel,-1,self.plugin.text.sepLabel)
         sepLabel.SetToolTip(wx.ToolTip(self.plugin.text.sepToolTip))
+        resCtrl = wx.CheckBox(panel, -1, self.plugin.text.resType)
+        resCtrl.SetValue(res)
+
+        
+        def onResCtrl(evt = None):
+            enable = resCtrl.GetValue()
+            sepCtrl.Enable(enable)
+            sepLabel.Enable(enable)
+            if evt:
+                evt.Skip()
+        resCtrl.Bind(wx.EVT_CHECKBOX, onResCtrl)
+        onResCtrl()
+
         line = wx.StaticLine(panel, -1, size=(440,-1), style=wx.LI_HORIZONTAL)
 
         panelSizer = panel.sizer
@@ -2360,6 +2496,7 @@ class GetDetailSongInfo(eg.ActionBase):
         mainSizer.Add(rightSizer,0)
         panelSizer.Add(mainSizer,0)
         panelSizer.Add(line,0,wx.TOP,10)
+        panelSizer.Add(resCtrl,0,wx.TOP,10)
         panelSizer.Add(bottomSizer,0,wx.TOP,10)
 
         while panel.Affirmed():
@@ -2377,7 +2514,8 @@ class GetDetailSongInfo(eg.ActionBase):
             ]
             panel.SetResult(
                 arrayInfo,
-                sepCtrl.GetValue()
+                sepCtrl.GetValue(),
+                resCtrl.GetValue()
             )
 #====================================================================
 
@@ -2385,7 +2523,7 @@ class GetClassificationInfo(eg.ActionBase):
     name = "Get classification song info"
     description = "Get classification song information about the currently playing song."
 
-    def __call__(self, arrayInfo, sep=''):
+    def __call__(self, arrayInfo, sep='', res = True):
         SongData,ix = self.plugin.GetSongData(0)
         listPropert=(
             "Tempo",
@@ -2414,7 +2552,8 @@ class GetClassificationInfo(eg.ActionBase):
     def Configure(
         self,
         arrayInfo=[False]*9,
-        sep=''
+        sep='',
+        res = True
     ):
         text=dict(zip([item[0] for item in SONG_TABLE_FIELDS],Text.SongTableFields))
         panel = eg.ConfigPanel(self)
@@ -2440,6 +2579,19 @@ class GetClassificationInfo(eg.ActionBase):
         sepCtrl.SetToolTip(wx.ToolTip(self.plugin.text.sepToolTip))
         sepLabel = wx.StaticText(panel,-1,self.plugin.text.sepLabel)
         sepLabel.SetToolTip(wx.ToolTip(self.plugin.text.sepToolTip))
+        resCtrl = wx.CheckBox(panel, -1, self.plugin.text.resType)
+        resCtrl.SetValue(res)
+
+        
+        def onResCtrl(evt = None):
+            enable = resCtrl.GetValue()
+            sepCtrl.Enable(enable)
+            sepLabel.Enable(enable)
+            if evt:
+                evt.Skip()
+        resCtrl.Bind(wx.EVT_CHECKBOX, onResCtrl)
+        onResCtrl()
+
         line = wx.StaticLine(panel, -1, size=(440,-1), style=wx.LI_HORIZONTAL)
         panelSizer = panel.sizer
         bottomSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -2466,6 +2618,7 @@ class GetClassificationInfo(eg.ActionBase):
         mainSizer.Add(rightSizer,0)
         panelSizer.Add(mainSizer,0)
         panelSizer.Add(line,0,wx.TOP,10)
+        panelSizer.Add(resCtrl,0,wx.TOP,10)
         panelSizer.Add(bottomSizer,0,wx.TOP,10)
 
         while panel.Affirmed():
@@ -2482,7 +2635,8 @@ class GetClassificationInfo(eg.ActionBase):
             ]
             panel.SetResult(
                 arrayInfo,
-                sepCtrl.GetValue()
+                sepCtrl.GetValue(),
+                resCtrl.GetValue()
             )
 #====================================================================
 
@@ -2490,7 +2644,7 @@ class GetTechnicalSongInfo(eg.ActionBase):
     name = "Get technical song info"
     description = "Get technical information about the currently playing song. (song length, bitrate, etc.)"
 
-    def __call__(self, arrayInfo, sep=''):
+    def __call__(self, arrayInfo, sep='',res = True):
         SongData,ix = self.plugin.GetSongData(0)
         listPropert=(
             "SongLength",
@@ -2519,7 +2673,8 @@ class GetTechnicalSongInfo(eg.ActionBase):
     def Configure(
         self,
         arrayInfo=[False]*9,
-        sep=''
+        sep='',
+        res = True
     ):
         text=dict(zip([item[0] for item in SONG_TABLE_FIELDS],Text.SongTableFields))
         panel = eg.ConfigPanel(self)
@@ -2545,6 +2700,19 @@ class GetTechnicalSongInfo(eg.ActionBase):
         sepCtrl.SetToolTip(wx.ToolTip(self.plugin.text.sepToolTip))
         sepLabel = wx.StaticText(panel,-1,self.plugin.text.sepLabel)
         sepLabel.SetToolTip(wx.ToolTip(self.plugin.text.sepToolTip))
+        resCtrl = wx.CheckBox(panel, -1, self.plugin.text.resType)
+        resCtrl.SetValue(res)
+
+        
+        def onResCtrl(evt = None):
+            enable = resCtrl.GetValue()
+            sepCtrl.Enable(enable)
+            sepLabel.Enable(enable)
+            if evt:
+                evt.Skip()
+        resCtrl.Bind(wx.EVT_CHECKBOX, onResCtrl)
+        onResCtrl()
+
         line = wx.StaticLine(panel, -1, size=(440,-1), style=wx.LI_HORIZONTAL)
 #        seekableCtrl = wx.CheckBox(panel, -1, text.seekable)
 #        seekableCtrl.SetValue(seekable)
@@ -2575,6 +2743,7 @@ class GetTechnicalSongInfo(eg.ActionBase):
         mainSizer.Add(rightSizer,0)
         panelSizer.Add(mainSizer,0)
         panelSizer.Add(line,0,wx.TOP,10)
+        panelSizer.Add(resCtrl,0,wx.TOP,10)
         panelSizer.Add(bottomSizer,0,wx.TOP,10)
 #        panel.AddCtrl(seekableCtrl)
 #        panel.AddCtrl(copyrightedCtrl)
@@ -2597,7 +2766,8 @@ class GetTechnicalSongInfo(eg.ActionBase):
             ]
             panel.SetResult(
                 arrayInfo,
-                sepCtrl.GetValue()
+                sepCtrl.GetValue(),
+                resCtrl.GetValue()
             )
 
     class text:
@@ -2793,6 +2963,7 @@ class LoadPlaylist(eg.ActionBase):
     description = "Loads a MediaMonkey playlist defined by name."
 
     def __call__(self, plString, repeat, shuffle, crossfade, clear):
+        plString = eg.ParseString(plString)
         if not self.plugin.workerThread2:
             self.plugin.workerThread2 = MediaMonkeyWorkerThread(self.plugin)
             self.plugin.workerThread2.Start(100.0)
@@ -3069,7 +3240,6 @@ class LoadPlaylistByFilter(eg.ActionBase):
                                 flag=False
                                 break
                         else:
-                            #if choice1>5 and wx.FindWindowById(i+150).GetValue()<1:
                             if choice1>5 and int(listRules2 [i][2][:-1])<1:
                                 flag=False
                                 break
@@ -4382,10 +4552,11 @@ class PatientFrame(wx.Frame):
 #===============================================================================
 
 ACTIONS = (
+    (GetIsRunning, 'GetIsRunning', 'Get IsRunning', 'Get IsRunning Status.', None),
     (GetSomeInfo, 'GetVolume', 'Get Volume', 'Get Volume.', (100,'Volume')),
     (GetSomeInfo, 'GetBalance', 'Get Balance', 'Get Balance.', (100,'Panning')),
     (GetSomeInfo, 'GetRepeat', 'Get Repeat', 'Get Repeat Status.', (1,'isRepeat')),
-    (GetSomeInfo, 'GetShuffle', 'Get Shuffle', 'Get Shuffle Status.', (1,'isShuffle')),
+    (GetShuffle, 'GetShuffle', 'Get Shuffle', 'Get Shuffle Status.', None),
     (GetSomeInfo, 'GetAutoDJ', 'Get AutoDJ', 'Get AutoDJ Status.', (1,'isAutoDJ')),
     (GetSomeInfo, 'GetCrossfade', 'Get Crossfade', 'Get Crossfade Status.', (1,'isCrossfade')),
     (GetSomeInfo, 'GetPosition', 'Get Position in ms', 'Get Position in ms.', (1,'PlaybackTime')),
