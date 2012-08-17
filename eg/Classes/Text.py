@@ -69,6 +69,15 @@ class Default:
             "Height",
         )
 
+        smartSpinMenu = (
+            'Change control to "Spin Num"',
+            'Change control to "Text" with {eg.result}',
+            'Change control to "Text" with {eg.event.payload}',
+            'Change control to (empty) "Text"'
+        )
+        smartSpinTooltip = "Use the right mouse button\nto get the context menu !"
+
+
     class Error:
         FileNotFound = "File \"%s\" couldn't be found."
         InAction = 'Error in Action: "%s"'

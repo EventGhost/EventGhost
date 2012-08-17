@@ -104,7 +104,8 @@ class TreeLink(object):
                     target.dependants = [link]
                 else:
                     target.dependants.append(link)
-                eg.Notify("NodeChanged", link.owner)
+                #eg.Notify("NodeChanged", link.owner) # August 2012
+                wx.CallAfter(eg.Notify, "NodeChanged", link.owner)
         cls.linkList = notFoundLinks
 
 
