@@ -20,7 +20,7 @@ import traceback
 eg.RegisterPlugin(
     name = "System",
     author = "Bitmonster",
-    version = "1.1.4",
+    version = "1.1.5",
     description = (
         "Controls different aspects of your system, like sound card, "
         "graphics card, power management, et cetera."
@@ -49,7 +49,6 @@ import _winreg
 import ctypes
 import socket
 import struct
-import Image
 from threading import Timer, Thread
 
 from eg.WinApi.Dynamic import (
@@ -146,6 +145,14 @@ EVENT_LIST = (
 class System(eg.PluginBase):
     text = Text
     hookStarted = False
+    images = {}
+
+    def HideImage(self, title):
+        if title in self.images:
+            try:
+                wx.CallAfter(self.images[title].OnExit)
+            except:
+                pass
 
     def VolumeEvent(self, mute, volume):
         try:
@@ -203,6 +210,7 @@ class System(eg.PluginBase):
         group.AddAction(MonitorPowerOn)
         group.AddAction(ShowPicture)
         group.AddAction(DisplayImage)
+        group.AddAction(HideImage)
         group.AddAction(SetWallpaper)
         group.AddAction(ChangeDisplaySettings)
         group.AddAction(SetDisplayPreset)
@@ -1109,6 +1117,8 @@ class ShapedFrame(wx.Frame):
         shaped,
         center,
         noFocus,
+        name,
+        plugin
         ):
         try:
             pil = Image.open(imageFile)
@@ -1118,6 +1128,8 @@ class ShapedFrame(wx.Frame):
             except:
                 eg.PrintError(error % imageFile[:256])
                 return
+        self.name = name
+        self.plugin = plugin
         self.imageFile = imageFile
         style = wx.FRAME_NO_TASKBAR
         self.hasAlpha = (pil.mode in ('RGBA', 'LA') or (pil.mode == 'P' and 'transparency' in pil.info))
@@ -1131,7 +1143,7 @@ class ShapedFrame(wx.Frame):
             wx.BORDER_DOUBLE,
             wx.BORDER_SUNKEN,
             wx.BORDER_RAISED)[border] if sizeMode != 3 else wx.NO_BORDER
-        wx.Frame.__init__(self, None, -1, "EG.System.DisplayImage", style = style)
+        wx.Frame.__init__(self, None, -1, u"EG.System.DisplayImage.%s" % name, style = style)
         self.SetBackgroundColour(back)
 
         self.hasShape = False
@@ -1229,6 +1241,8 @@ class ShapedFrame(wx.Frame):
             y = (monDim[display][3] - h) / 2
 
         self.SetPosition((monDim[display][0] + x, monDim[display][1] + y))
+        if name:
+            self.plugin.images[name] = self
         if noFocus:
             eg.WinApi.Dynamic.ShowWindow(self.GetHandle(), 4)
         else:
@@ -1262,6 +1276,8 @@ class ShapedFrame(wx.Frame):
         if self.timer:
             self.timer.Stop()
         del self.timer
+        if self.name in self.plugin.images:
+            del self.plugin.images[self.name]
         self.Close()
 
 
@@ -1285,7 +1301,7 @@ class ShapedFrame(wx.Frame):
             prefix = "System.DisplayImage",
             payload = self.imageFile
         )
-        self.OnExit()
+        wx.CallAfter(self.OnExit)
 
 
     def OnMouseMove(self, evt):
@@ -1365,12 +1381,36 @@ class ShowPictureFrame(wx.Frame):
         )
 #===============================================================================
 
+class HideImage(eg.ActionBase):
+    name = "Hide Image"
+    description = "Hides an image."
+    
+    class text:
+        title = "Name of image:"
+        
+    def __call__(self, title=""):
+        if title:
+            self.plugin.HideImage(title)
+ 
+ 
+    def Configure(self, title=""):
+        panel = eg.ConfigPanel(self)
+        titleLbl = wx.StaticText(panel, -1, self.text.title)
+        titleCtrl = wx.TextCtrl(panel, -1, title)
+        panel.sizer.Add(titleLbl, 0, wx.TOP, 20)
+        panel.sizer.Add(titleCtrl, 0, wx.TOP, 1)
+
+        while panel.Affirmed():
+            panel.SetResult(titleCtrl.GetValue())
+#===============================================================================
+
 class DisplayImage(eg.ActionBase):
     name = "Display Image"
-    description = "Displays a image on the screen."
+    description = "Displays an image on the screen."
     iconFile = "icons/ShowPicture"
     class text:
         path = "Path to image or base64 string:"
+        titleLbl = "Name of image (required only if you want to close the image window programmatically):"
         display = "Monitor:"
         allImageFiles = 'All Image Files'
         allFiles = "All files"
@@ -1445,6 +1485,7 @@ or insert the image as a base64 string"""
         shaped = True,
         center = False,
         noFocus = True,
+        title = ""
         ):
         def parseArgument(arg):
             if not arg:
@@ -1463,6 +1504,9 @@ or insert the image as a base64 string"""
         height_ = parseArgument(height_)
         timeout = parseArgument(timeout)
 
+
+        if title in self.plugin.images:
+            self.plugin.HideImage(title)
         if imageFile:
             wx.CallAfter(
                 ShapedFrame,
@@ -1485,6 +1529,8 @@ or insert the image as a base64 string"""
                 shaped,
                 center,
                 noFocus,
+                title,
+                self.plugin
             )
 
 
@@ -1508,12 +1554,15 @@ or insert the image as a base64 string"""
         shaped = True,
         center = False,
         noFocus = True,
+        title = ""
         ):
         panel = eg.ConfigPanel()
         text = self.text
 
         displayLbl=wx.StaticText(panel, -1, text.display)
         pathLbl=wx.StaticText(panel, -1, text.path)
+        titleLbl=wx.StaticText(panel, -1, text.titleLbl)
+        titleCtrl=wx.TextCtrl(panel, -1, title)
         resampleLbl=wx.StaticText(panel, -1, text.resample)
         bckgrndLbl=wx.StaticText(panel, -1, text.bckgrndColour + ":")
         borderLbl=wx.StaticText(panel, -1, text.borderLabel)
@@ -1559,7 +1608,7 @@ or insert the image as a base64 string"""
         rb3.SetValue(fitMode == 3)
         resampleCtrl = wx.Choice(panel, -1, choices = text.resampleMethods)
         resampleCtrl.SetSelection(resample)
-        backColourButton = eg.ColourSelectButton(panel, back, title = text.bckgrndColour)
+        backColourButton = eg.ColourSelectButton(panel, back, name = text.bckgrndColour)
         shapedCtrl = wx.CheckBox(panel,-1,text.shaped)
         shapedCtrl.SetValue(shaped)
         onTopCtrl = wx.CheckBox(panel,-1,text.onTop)
@@ -1712,6 +1761,8 @@ or insert the image as a base64 string"""
         panel.sizer.Add(otherSizer,0,wx.EXPAND|wx.TOP,10)
         panel.sizer.Add(pathLbl,0,wx.TOP,10)
         panel.sizer.Add(filepathCtrl,0,wx.EXPAND|wx.TOP,1)
+        panel.sizer.Add(titleLbl,0,wx.TOP,10)
+        panel.sizer.Add(titleCtrl,0,wx.EXPAND|wx.TOP,1)
 
         while panel.Affirmed():
             i = 0
@@ -1738,6 +1789,7 @@ or insert the image as a base64 string"""
                 shapedCtrl.GetValue(),
                 centerCtrl.GetValue(),
                 noFocusCtrl.GetValue(),
+                titleCtrl.GetValue(),
             )
 #===============================================================================
 
