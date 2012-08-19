@@ -20,6 +20,8 @@
     
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 2.1 by Pako 2012-08-19 12:21 UTC+1
+#     - bugfixes
 # 2.0 by Pako 2012-08-17 12:23 UTC+1
 #     - Corrected ID at many actions
 #     - Added many new actions
@@ -52,7 +54,7 @@
 eg.RegisterPlugin(
     name = "Media Player Classic",
     author = "MonsterMagnet",
-    version = "2.0",
+    version = "2.1",
     kind = "program",
     guid = "{DD75104D-D586-438A-B63D-3AD01A4D4BD3}",
     createMacrosOnAdd = True,
@@ -93,7 +95,7 @@ from eg.WinApi.Dynamic import CreateEvent, SetEvent, GetWindowLong
 from threading import Timer
 from win32gui import GetMenu, GetSubMenu, GetMenuItemCount, GetWindowPlacement 
 from win32gui import GetClassName, GetWindowText, IsWindowVisible, GetWindowRect
-from win32gui import GetDlgItem, SendMessage, FindWindowEx, IsWindow, GetWindow
+from win32gui import GetDlgItem, SendMessage, FindWindow, IsWindow, GetWindow
 from copy import deepcopy as cpy
 from time import sleep, strftime, gmtime
 from winsound import PlaySound, SND_ASYNC
@@ -657,7 +659,11 @@ class GoToFrame(wx.Frame):
         if GetClassName(child) ==  "#32770":
             statText = GetDlgItem(child, 12027)
             if GetClassName(statText) ==  "Static":
-                elaps, total = GetWindowText(statText).split(" / ")
+                try:
+                    elaps, total = GetWindowText(statText).split(" / ")
+                except:
+                    self.plugin.menuDlg = None
+                    return
                 totalSec = GetSec(total)
                 self.total = strftime('%H:%M:%S', gmtime(totalSec))
                 if totalSec < 600:                # < 10 min   (skip 3 digits)
@@ -756,12 +762,9 @@ class GoToFrame(wx.Frame):
     def GoTo(
         self,
     ):
-        buttonId = 12024
         data = self.GoToCtrl.GetValue()
         if data >= self.total:
             return
-        #if self.sliceFlag:
-        #    data=data[3:]
         wx.CallAfter(
             self.plugin.SendCopydata,
             CMD_SETPOSITION,
@@ -2214,13 +2217,7 @@ class Run(eg.ActionBase):
 #===============================================================================
 
 class MediaPlayerClassic(eg.PluginBase):
-    menuDlg = None
-    state = None
-    mpcHwnd = None
-    event = None
-    result = None
-    runFlg = False
-    mr = None
+
 
 
     class text:
@@ -2250,11 +2247,15 @@ class MediaPlayerClassic(eg.PluginBase):
 
     @eg.LogIt
     def Handler(self, hwnd, mesg, wParam, lParam):
+        if not self.runFlg:
+            return True
         cpyData = cast(lParam, PCOPYDATASTRUCT)
         cmd = cpyData.contents.dwData
         msg = wstring_at(cpyData.contents.lpData)
         if cmd == CMD_CONNECT:
+            self.connected = True
             self.mpcHwnd = int(msg)
+            eg.PrintNotice("MPC-HC connected %i" % self.mpcHwnd)
         elif cmd == CMD_STATE:
             state = int(msg)
             if self.state != state:
@@ -2287,7 +2288,7 @@ class MediaPlayerClassic(eg.PluginBase):
 
 
     def StartMpcHc(self):
-        if not self.runFlg:
+        if not self.runFlg or not self.connected:
             mp = self.mpcPath
             mp = mp.encode(FSE) if isinstance(mp, unicode) else mp
             if isfile(mp):
@@ -2299,8 +2300,10 @@ class MediaPlayerClassic(eg.PluginBase):
 
 
     def isRunning(self):
-        hwnd = FindWindowEx(None, None, u'MediaPlayerClassicW', None)
-        return hwnd > 0
+        try:
+            return FindWindow(u'MediaPlayerClassicW', None)
+        except:
+            return False
 
 
     def mpcIsRunning(self):
@@ -2308,6 +2311,7 @@ class MediaPlayerClassic(eg.PluginBase):
         if not self.isRunning():
             if self.runFlg:
                 self.runFlg = False
+                self.connected = False
         else:
             self.StartMpcHc()
       
@@ -2323,6 +2327,16 @@ class MediaPlayerClassic(eg.PluginBase):
 
 
     def __init__(self):
+        self.menuDlg = None
+        self.state = None
+        self.mpcHwnd = None
+        self.event = None
+        self.result = None
+        self.runFlg = False
+        self.connected = False
+        self.mr = eg.MessageReceiver("MPC-HC_plugin_")
+        self.mr.AddHandler(WM_COPYDATA, self.Handler)
+        self.mr.Start()
         self.AddActionsFromList(ACTIONS, ActionPrototype)
 
 
@@ -2331,23 +2345,25 @@ class MediaPlayerClassic(eg.PluginBase):
             mpcPath = self.GetMpcHcPath()
         if not exists(mpcPath):
             raise self.Exceptions.ProgramNotFound
+            return
         self.mpcPath = mpcPath
         hWnd = Find_MPC()
         if hWnd:
             self.mpcHwnd = hWnd[0]
-        self.mr = eg.MessageReceiver("MPC-HC_plugin_")
-        self.mr.AddHandler(WM_COPYDATA, self.Handler)
-        self.mr.Start()
         eg.scheduler.AddTask(1, self.mpcIsRunning)
     
 
     def __stop__(self):
-        self.mr.RemoveHandler(WM_COPYDATA, self.Handler)
-        self.mr.Stop()
-        self.mr = None
         self.mpcHwnd = None        
         self.result = None
         self.runFlg = False
+        self.connected = False
+
+  
+    def __close__(self):
+        self.mr.RemoveHandler(WM_COPYDATA, self.Handler)
+        self.mr.Stop()
+        self.mr = None
        
 
     def Configure(self, mpcPath=None):
