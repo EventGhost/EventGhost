@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-version="0.1.4"
+version="0.1.5"
 
 # plugins/SchedulGhost/__init__.py
 #
@@ -22,6 +22,9 @@ version="0.1.4"
 #
 # Revision history:
 # -----------------
+# 0.1.5 by Pako 2012-09-06 06:46 UTC+1
+#     - bugfix - malfunction, when the action "Disable schedule"
+#       is executed between the start and stop events
 # 0.1.4 by Pako 2011-08-24 09:15 UTC+1
 #     - bugfix - wrong stored last position of scheduler frame
 # 0.1.3 by Pako 2011-06-05 18:53 UTC+1
@@ -951,7 +954,9 @@ class schedulerDialog(wx.Dialog):
                         int(data[2][:4])
                     )
                     dp.SetValue(wxDttm)
-            #elif type == 1 or type == 6: # daily/timer
+            elif type == 6: # timer
+                stEvLbl = None        
+            #elif type == 1: # daily
             #    pass
             if flag:
                 timeSizer = wx.GridBagSizer(0, 0)
@@ -1055,9 +1060,10 @@ class schedulerDialog(wx.Dialog):
             elif flag:
                 dynamicSizer.Layout()
             if type == 6:
-                stEvLbl.Show(False)
-                timeCtrl.Show(False)
-                spinBtn.Show(False)
+                if stEvLbl:
+                    stEvLbl.Show(False)
+                    timeCtrl.Show(False)
+                    spinBtn.Show(False)
             return dynamicSizer.GetMinSize()[0]
 
 
@@ -2240,8 +2246,9 @@ class SchedulGhost(eg.PluginBase):
         for sched in sched_list:
             if sched[1] == self.SchedulGhostScheduleRun:
                 if sched[2][0] in [item[1] for item in data]:
-                    tmpList.append(sched)
-                else:
+                    if not sched[2][1]: # ignore stop events
+                        tmpList.append(sched)
+                else: # delete schedule
                     self.updateLogFile(self.text.cancAndDel % sched[2][0])
                     eg.scheduler.CancelTask(sched) # schedule deleted !
         sched_list = tmpList
@@ -2267,15 +2274,15 @@ class SchedulGhost(eg.PluginBase):
                         startTicks
                     )
             elif schedule[0] and startMoment: # new schedule
-                    startTicks = mktime(strptime(startMoment, "%Y-%m-%d %H:%M:%S"))
-                    eg.scheduler.AddTaskAbsolute(
-                        startTicks,
-                        self.SchedulGhostScheduleRun,
-                        schedule[1],
-                        False,
-                        startTicks
-                    )
-                    self.updateLogFile(self.text.newSched % (schedule[1], startMoment))
+                startTicks = mktime(strptime(startMoment, "%Y-%m-%d %H:%M:%S"))
+                eg.scheduler.AddTaskAbsolute(
+                    startTicks,
+                    self.SchedulGhostScheduleRun,
+                    schedule[1],
+                    False,
+                    startTicks
+                )
+                self.updateLogFile(self.text.newSched % (schedule[1], startMoment))
 
 
     def dataToXml(self):
