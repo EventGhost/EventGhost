@@ -22,8 +22,9 @@ version="0.1.5"
 #
 # Revision history:
 # -----------------
-# 0.1.5 by Pako 2012-08-16 19:09 UTC+1
-#     - added DataToXML action (EventGhost4ever request)
+# 0.1.5 by Pako 2012-09-06 06:46 UTC+1
+#     - bugfix - malfunction, when the action "Disable schedule"
+#       is executed between the start and stop events
 # 0.1.4 by Pako 2011-08-24 09:15 UTC+1
 #     - bugfix - wrong stored last position of scheduler frame
 # 0.1.3 by Pako 2011-06-05 18:53 UTC+1
@@ -953,7 +954,9 @@ class schedulerDialog(wx.Dialog):
                         int(data[2][:4])
                     )
                     dp.SetValue(wxDttm)
-            #elif type == 1 or type == 6: # daily/timer
+            elif type == 6: # timer
+                stEvLbl = None        
+            #elif type == 1: # daily
             #    pass
             if flag:
                 timeSizer = wx.GridBagSizer(0, 0)
@@ -1057,9 +1060,10 @@ class schedulerDialog(wx.Dialog):
             elif flag:
                 dynamicSizer.Layout()
             if type == 6:
-                stEvLbl.Show(False)
-                timeCtrl.Show(False)
-                spinBtn.Show(False)
+                if stEvLbl:
+                    stEvLbl.Show(False)
+                    timeCtrl.Show(False)
+                    spinBtn.Show(False)
             return dynamicSizer.GetMinSize()[0]
 
 
@@ -2242,8 +2246,9 @@ class SchedulGhost(eg.PluginBase):
         for sched in sched_list:
             if sched[1] == self.SchedulGhostScheduleRun:
                 if sched[2][0] in [item[1] for item in data]:
-                    tmpList.append(sched)
-                else:
+                    if not sched[2][1]: # ignore stop events
+                        tmpList.append(sched)
+                else: # delete schedule
                     self.updateLogFile(self.text.cancAndDel % sched[2][0])
                     eg.scheduler.CancelTask(sched) # schedule deleted !
         sched_list = tmpList
@@ -2269,15 +2274,15 @@ class SchedulGhost(eg.PluginBase):
                         startTicks
                     )
             elif schedule[0] and startMoment: # new schedule
-                    startTicks = mktime(strptime(startMoment, "%Y-%m-%d %H:%M:%S"))
-                    eg.scheduler.AddTaskAbsolute(
-                        startTicks,
-                        self.SchedulGhostScheduleRun,
-                        schedule[1],
-                        False,
-                        startTicks
-                    )
-                    self.updateLogFile(self.text.newSched % (schedule[1], startMoment))
+                startTicks = mktime(strptime(startMoment, "%Y-%m-%d %H:%M:%S"))
+                eg.scheduler.AddTaskAbsolute(
+                    startTicks,
+                    self.SchedulGhostScheduleRun,
+                    schedule[1],
+                    False,
+                    startTicks
+                )
+                self.updateLogFile(self.text.newSched % (schedule[1], startMoment))
 
 
     def dataToXml(self):
@@ -2696,50 +2701,14 @@ class AddSchedule(eg.ActionBase):
         python_expr = "Python expression:"
         descr = u'''<rst>**Add schedule**.
 
-| In the edit box, enter a python expression with the parameters of the plan.
-| This may be for example *eg.result*, *eg.event.payload* or the entire list
-  (in the same format, what you get as a result of the action **"GetSchedule"**, see the documentation of
-  the python expression in this description.
+In the edit box, enter a python expression with the parameters of the plan.
+This may be for example *eg.result*, *eg.event.payload* or the entire list
+(in the same format, what you get as a result of actions **"GetSchedule"**).
 
-| This action works in two ways (depending on the existence of the schedule):
-| 1. If the schedule with the same title already exists, its parameters are overwritten by the new ones.
-| 2. If the title does not yet exist, the schedule is created and added to the list.
+This action works in two ways (depending on the existence of the schedule):
 
-| An added schedule will not be saved automatically in SchedulGhost.xml. To save the added schedule use the
-  SchedulGhost manager or the action "DataToXML".
-      
-This is the syntax of the python expression::
-
- [enabled?, u'scheduleTitle', scheduleType, [expressionScheduleType], u'dateLastRun timeLastRun',
- u'eventPrefix', u'startEventSuffix', u'stopEventSuffix', u'eventPayload']
-
-| These are the different schedule types and them expressions:
-
-* 0 (only once (or yearly)): u'startEventTime', u'span', u'date', repeatYearly?
-* 1 (daily): u'startEventTime', u'span'
-* 2 (weekly): u'startEventTime', u'span', daysWeek, DoNotTriggerOnAHoliday?,\
-TriggerNotChosenDayOnAHoliday?
-* 3 (monthly  / weekday): u'startEventTime', u'span', daysWeek, monthsYear(Jan-Jun),\
-monthsYear(Jul-Dec), DoNoTriggerOnAHoliday?
-* 4 (monthly / day): u'startEventTime', u'span', daysMonth(1-8), daysMonth(9-16),\
-daysMonth(17-24), daysMonth(24-31), monthsYear(Jan-Jun), monthsYear(Jul-Dec)
-* 5 (periodically): u'startEventTime', u'span', u'date', periodEventRepeat, timeFormat
-* 6 (time span): u'00:00:00', u'span'
-
-Explanation:
-
-* enabled? = boolean expression if it is true or false (0 = false; 1 = true)
-* u'scheduleTitle' = expression with a unicode string (wake_me_up)
-* scheduleType = a number
-* date = year-month-day (2012-12-31)
-* time and span = hours:minutes:seconds (23:59:59)
-* daysWeek = sum of the days (Monday = 1, Tuesday = 2; Wednesday = 4, ..., Sunday = 64)
-* monthsYear(Jan-Jul) = sum of the months (January = 1, ..., June = 32)
-* monthsYear(Jul-Dec) = sum of the months (July = 1, ..., December = 32)
-* timeFormat: seconds = 0, minutes = 1, hours = 2, days = 3, weeks = 4, months = 5, years = 6
-
-| *Make sure to use  \\\\'  instead of  '  within a string literal if you use this function in a python script.*
-'''
+1. If the schedule with the same title already exists, its parameters are overwritten by the new ones.
+2. If the title does not yet exist, the schedule is created and added to the list.'''
 
     def __call__(self, expr = ""):
         schedule = eg.ParseString(expr)
@@ -3386,12 +3355,6 @@ class AbortEggTimers(eg.ActionBase):
         self.plugin.AbortEggTimers()
 #===============================================================================
 
-class DataToXML(eg.ActionBase):
-
-    def __call__(self):
-        self.plugin.dataToXml()
-#===============================================================================
-
 Actions = (
     (SetEggTimer, "SetEggTimer", "Adjust and start egg timer", "Adjust and start egg timer.", 0),
     (SetEggTimer, "StartEggTimer", "Start egg timer", "Start egg timer immediately (without the possibility to adjust the time to elapse).", 1),
@@ -3407,5 +3370,4 @@ Actions = (
     (AddSchedule, "AddSchedule", "Add schedule", AddSchedule.text.descr, None),
     (DeleteSchedule, "DeleteSchedule", "Delete schedule", "Delete schedule.", None),
     (RunScheduleImmediately, "RunScheduleImmediately", "Run schedule immediately", "Runs schedule immediately.", None),
-    (DataToXML, "DataToXML", "Save data to xml", "Saves data to xml.", None),
 )
