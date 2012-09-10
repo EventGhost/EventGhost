@@ -20,6 +20,12 @@
     
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 2.3 by Pako 2012-09-10 08:15 UTC+1
+#     - the function GetMpcHcPath() changed,
+#       due to HKEY_LOCAL_MACHINE -> HKEY_CURRENT_USER change
+# 2.2 by Pako 2012-08-19 12:21 UTC+1
+#     - Added the event "MPC-HC.Connected"
+#     - eg.scheduler.CancelTask added, when plugin is stopped
 # 2.1 by Pako 2012-08-19 12:21 UTC+1
 #     - bugfixes
 # 2.0 by Pako 2012-08-17 12:23 UTC+1
@@ -54,7 +60,7 @@
 eg.RegisterPlugin(
     name = "Media Player Classic",
     author = "MonsterMagnet",
-    version = "2.1",
+    version = "2.3",
     kind = "program",
     guid = "{DD75104D-D586-438A-B63D-3AD01A4D4BD3}",
     createMacrosOnAdd = True,
@@ -62,7 +68,6 @@ eg.RegisterPlugin(
         'Adds actions to control '
         '<br><a href="http://mpc-hc.sourceforge.net/">'
         'Media Player Classic - Home Cinema</a>.'
-
     ),
     help = """
         For proper functioning of this plugin should be used
@@ -1410,9 +1415,7 @@ class ActionPrototype(eg.ActionBase):
     
     def __call__(self):
         if self.plugin.runFlg and self.plugin.mpcHwnd:
-            return SendMessage(self.plugin.mpcHwnd, WM_COMMAND, self.value, 0)
-        else:
-            raise self.Exceptions.ProgramNotRunning
+            wx.CallAfter(SendMessage,self.plugin.mpcHwnd, WM_COMMAND, self.value, 0)
 #===============================================================================
 
 class GetWindowState(eg.ActionBase):
@@ -2213,7 +2216,7 @@ class Run(eg.ActionBase):
 
     def __call__(self):
         if self.plugin.mpcPath:
-            self.plugin.StartMpcHc()        
+            self.plugin.ConnectMpcHc()        
 #===============================================================================
 
 class MediaPlayerClassic(eg.PluginBase):
@@ -2253,9 +2256,9 @@ class MediaPlayerClassic(eg.PluginBase):
         cmd = cpyData.contents.dwData
         msg = wstring_at(cpyData.contents.lpData)
         if cmd == CMD_CONNECT:
-            self.connected = True
             self.mpcHwnd = int(msg)
-            eg.PrintNotice("MPC-HC connected %i" % self.mpcHwnd)
+            self.connected = True
+            eg.TriggerEvent("Connected",prefix="MPC-HC")
         elif cmd == CMD_STATE:
             state = int(msg)
             if self.state != state:
@@ -2287,8 +2290,9 @@ class MediaPlayerClassic(eg.PluginBase):
         return True
 
 
-    def StartMpcHc(self):
-        if not self.runFlg or not self.connected:
+    def ConnectMpcHc(self):
+        #if not self.runFlg or not self.connected:
+        if not self.runFlg:
             mp = self.mpcPath
             mp = mp.encode(FSE) if isinstance(mp, unicode) else mp
             if isfile(mp):
@@ -2307,13 +2311,13 @@ class MediaPlayerClassic(eg.PluginBase):
 
 
     def mpcIsRunning(self):
-        eg.scheduler.AddTask(2, self.mpcIsRunning) # must run continuously !
-        if not self.isRunning():
-            if self.runFlg:
-                self.runFlg = False
-                self.connected = False
+        self.mySched=eg.scheduler.AddTask(2, self.mpcIsRunning) # must run continuously !
+        if not self.isRunning(): #user closed MPC-HC
+            if self.runFlg and self.connected:
+                    self.runFlg = False
+                    self.connected = False
         else:
-            self.StartMpcHc()
+            self.ConnectMpcHc()
       
 
     def SendCopydata(self, cmd, txt):
@@ -2327,6 +2331,7 @@ class MediaPlayerClassic(eg.PluginBase):
 
 
     def __init__(self):
+        self.mySched=None
         self.menuDlg = None
         self.state = None
         self.mpcHwnd = None
@@ -2354,6 +2359,12 @@ class MediaPlayerClassic(eg.PluginBase):
     
 
     def __stop__(self):
+        if self.mySched:
+            try:
+                eg.scheduler.CancelTask(self.mySched)
+            except:
+                pass
+        self.mySched = None
         self.mpcHwnd = None        
         self.result = None
         self.runFlg = False
@@ -2390,24 +2401,19 @@ class MediaPlayerClassic(eg.PluginBase):
         while panel.Affirmed():
             panel.SetResult(filepathCtrl.GetValue())
 
-        
+
     def GetMpcHcPath(self):
         """
-        Get the path of Foobar2000's installation directory through querying 
+        Get the path of MPC-HC's installation directory through querying 
         the Windows registry.
         """
         try:
             mpc = _winreg.OpenKey(
-                _winreg.HKEY_LOCAL_MACHINE,
-                "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{2624B969-7135-4EB1-B0F6-2D8C397B45F7}_is1"
+                _winreg.HKEY_CURRENT_USER,
+                "Software\Classes\Applications\mpc-hc.exe\shell\open\command"
             )
-            try:
-                mpcPath, dummy =_winreg.QueryValueEx(mpc, "InstallLocation")
-            except WindowsError:
-                mpcPath, dummy =_winreg.QueryValueEx(mpc, "UninstallString")
-                mpcPath = dirname(mpcPath)
+            mpcPath =_winreg.QueryValue(mpc, None)[1:-6]
             _winreg.CloseKey(mpc)
-            mpcPath = join(mpcPath, "mpc-hc.exe")
         except WindowsError:
             mpcPath = None
         return mpcPath
