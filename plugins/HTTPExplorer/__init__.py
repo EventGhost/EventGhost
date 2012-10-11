@@ -19,6 +19,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.0.2  by Pako 2012-10-11 14:08 UTC+1
+#      - support url link updated 
 # 0.0.1  by Pako 2012-10-11 13:30 UTC+1
 #      - initial version 
 #
@@ -31,7 +33,7 @@ eg.RegisterPlugin(
     description = u"""<rst>HTTP explorer.""",
     createMacrosOnAdd = True,
     canMultiLoad = False,
-    url = "http://www.eventghost.net/forum/viewtopic.php?f=XXXXXXXX",
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=4048",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA/wD/AP+gvaeT"
         "AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3AoJDgoWmjVRDgAACwFJREFUWEel"
