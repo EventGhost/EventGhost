@@ -19,15 +19,19 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.0.3  by Pako 2012-10-17 10:54 UTC+1
+#      - bugfix (border colour) 
+#      - added option to select the font size and width of the border 
 # 0.0.2  by Pako 2012-10-11 14:08 UTC+1
 #      - support url link updated 
 # 0.0.1  by Pako 2012-10-11 13:30 UTC+1
 #      - initial version 
-#
+#===============================================================================
+
 eg.RegisterPlugin(
     name = "HTTP explorer",
     author = "Pako",
-    version = "0.0.1",
+    version = "0.0.3",
     kind = "other",
     guid = "{6AF3AF9A-D0F3-4DA8-8508-25BE61FB1914}",
     description = u"""<rst>HTTP explorer.""",
@@ -402,9 +406,8 @@ class HTTP_handler(BaseHTTPRequestHandler):
 <title>%s</title>
 <style type="text/css">
 body {background-color: %s;}
-table, td {border: 0px solid %s; border-collapse : collapse;}
-td {font-family: Arial, Helvetica, sans-serif; font-size: 2em;}
-tr {background-color: black;}
+table, td {border: %ipx solid %s; border-collapse : collapse; ;padding : 0px}
+td {font-family: Arial, Helvetica, sans-serif; font-size: %ipx;}
 .file a {width: 100%%; height: 100%%; text-align: left;
        color:%s; background-color: %s; display: block;
        text-decoration: none; padding: 5px 0 5px 0; }
@@ -422,7 +425,7 @@ tr {background-color: black;}
 </style>            
 </head><body>
 <table>''' % (
-    srvr.title, srvr.bckGround, srvr.border,
+    srvr.title, srvr.bckGround, srvr.brdrwdth, srvr.border, srvr.fontsize,
     srvr.filIdlTxt,srvr.filIdlBck,srvr.filIdlTxt,srvr.filIdlBck,srvr.filIdlTxt,
     srvr.filIdlBck,srvr.filActTxt,srvr.filActBck,srvr.filActTxt,srvr.filActBck,
     srvr.folIdlTxt,srvr.folIdlBck,srvr.folIdlTxt,srvr.folIdlBck,srvr.folIdlTxt,
@@ -449,6 +452,8 @@ class HTTP_server(HTTPServer):
         title,
         bckGround,
         border,
+        fontsize,
+        brdrwdth,
         filIdlTxt,
         filIdlBck,
         filActTxt,
@@ -457,12 +462,14 @@ class HTTP_server(HTTPServer):
         folIdlBck,
         folActTxt,
         folActBck,
-        strt
+        strt,
     ):
         self.browser   = browser
         self.title     = title
         self.bckGround = bckGround
         self.border    = border
+        self.fontsize   = fontsize
+        self.brdrwdth  = brdrwdth
         self.filIdlTxt = filIdlTxt
         self.filIdlBck = filIdlBck
         self.filActTxt = filActTxt
@@ -492,6 +499,8 @@ class HTTP_thread (Thread):
         title,
         bckGround,
         border,
+        fontsize,
+        brdrwdth,
         filIdlTxt,
         filIdlBck,
         filActTxt,
@@ -500,7 +509,7 @@ class HTTP_thread (Thread):
         folIdlBck,
         folActTxt,
         folActBck,
-        strt
+        strt,
         ):
         Thread.__init__(self)
         self.plugin    = plugin
@@ -511,6 +520,8 @@ class HTTP_thread (Thread):
         self.title     = title
         self.bckGround = bckGround
         self.border    = border
+        self.fontsize   = fontsize
+        self.brdrwdth  = brdrwdth
         self.filIdlTxt = filIdlTxt
         self.filIdlBck = filIdlBck
         self.filActTxt = filActTxt
@@ -532,6 +543,8 @@ class HTTP_thread (Thread):
             self.title,
             self.bckGround,
             self.border,
+            self.fontsize,
+            self.brdrwdth,
             self.filIdlTxt,
             self.filIdlBck,
             self.filActTxt,
@@ -552,6 +565,8 @@ class StartServer(eg.ActionBase):
     class text:
         bckgrnd = u'Background colour'
         border = u'Border colour'
+        fontsize = u'Font size (px):'
+        brdrwdth = u'Border width (px):'
         filIdleText = u'File idle item text colour'
         filIdleBack = u'File idle item background colour'
         filActivText = u'File active item text colour'
@@ -599,9 +614,11 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
         folActBck = (128, 0, 0),
         prefix    = "HTTPE",
         suffix    = "Open",
-        strt     = u"",
+        strt      = u"",
         patterns  = "*.*",
-        hide      = True
+        hide      = True,
+        fontsize  = 32,
+        brdrwdth  = 1
     ):
         self.plugin.StartServer(
             title,
@@ -610,6 +627,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
             port,
             bckgrnd,
             border,
+            fontsize,
+            brdrwdth,
             filIdlTxt,
             filIdlBck,
             filActTxt,
@@ -646,7 +665,9 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
         suffix,
         strt,
         patterns,
-        hide
+        hide,
+        fontsize,
+        brdrwdth
     ):
         self.plugin.AddServerName(title)
         return '%s: %s  (%s: %s)' % (self.name, title, iFace, port)
@@ -672,7 +693,9 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
         suffix = 'Open',
         strt = u"",
         patterns = "*.*",
-        hide = True
+        hide = True,
+        fontsize = 32,
+        brdrwdth = 1
     ):
         panel = eg.ConfigPanel(self)
         mainSizer = panel.sizer
@@ -773,6 +796,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
         suffixCtrl = wx.TextCtrl(panel,-1,suffix)
         bckgrndLbl   = wx.StaticText(panel, -1, text.bckgrnd+':')
         borderLbl    = wx.StaticText(panel, -1, text.border+':')
+        fontsizeLbl  = wx.StaticText(panel, -1, text.fontsize)
+        brdrwdthLbl  = wx.StaticText(panel, -1, text.brdrwdth)
         filIdlTxtLbl = wx.StaticText(panel, -1, text.filIdleText+':')
         filIdlBckLbl = wx.StaticText(panel, -1, text.filIdleBack+':')
         filActTxtLbl = wx.StaticText(panel, -1, text.filActivText+':')
@@ -781,6 +806,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
         folIdlBckLbl = wx.StaticText(panel, -1, text.folIdleBack+':')
         folActTxtLbl = wx.StaticText(panel, -1, text.folActivText+':')
         folActBckLbl = wx.StaticText(panel, -1, text.folActivBack+':')
+        fontsizeCtrl = eg.SpinIntCtrl(panel, -1, fontsize, max = 999, min = 16)
+        brdrwdthCtrl = eg.SpinIntCtrl(panel, -1, brdrwdth, max = 9, min = 0)
         bckgrndColourButton = eg.ColourSelectButton(
             panel,
             bckgrnd,
@@ -844,6 +871,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
         )
 
         eg.EqualizeWidths((
+            fontsizeCtrl,
+            brdrwdthCtrl,
             prefixCtrl,
             suffixCtrl,
             bckgrndColourButton,
@@ -866,6 +895,10 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
         #Sizers
         colorSizer=wx.FlexGridSizer(6, 4, 10, 5)
         mainSizer.Add(colorSizer,0,wx.TOP,10)
+        colorSizer.Add(fontsizeLbl,0)
+        colorSizer.Add(fontsizeCtrl,0,wx.TOP,-2)
+        colorSizer.Add(brdrwdthLbl,0,wx.LEFT,30)
+        colorSizer.Add(brdrwdthCtrl,0,wx.TOP,-2)
         colorSizer.Add(bckgrndLbl,0)
         colorSizer.Add(bckgrndColourButton,0,wx.TOP,-2)
         colorSizer.Add(borderLbl,0,wx.LEFT,30)
@@ -900,7 +933,6 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
 
 
         def OnTitleChange(evt = None):
-            #val = evt.GetString()
             val = titleCtrl.GetValue()
             flag = val != "" and\
                 (val == title or val not in self.plugin.servers.iterkeys())
@@ -937,6 +969,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
             port = wx.FindWindowById(id2).GetValue()
             bckgrnd = bckgrndColourButton.GetValue()
             border = borderColourButton.GetValue()
+            fontsize = fontsizeCtrl.GetValue()
+            brdrwdth = brdrwdthCtrl.GetValue()
             filIdlTxt = filIdlTxtColourButton.GetValue()
             filIdlBck = filIdlBckColourButton.GetValue()
             filActTxt = filActTxtColourButton.GetValue()
@@ -969,6 +1003,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
                     port,
                     bckgrnd,
                     border,
+                    fontsize,
+                    brdrwdth,
                     filIdlTxt,
                     filIdlBck,
                     filActTxt,
@@ -1003,6 +1039,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
             folder,
             patterns,
             hide,
+            fontsize,
+            brdrwdth
         )
 #===============================================================================
 
@@ -1099,6 +1137,8 @@ class HTTPExplorer(eg.PluginBase):
         port,
         bckgrnd,
         border,
+        fontsize,
+        brdrwdth,
         filIdlTxt,
         filIdlBck,
         filActTxt,
@@ -1131,6 +1171,8 @@ class HTTPExplorer(eg.PluginBase):
             title,
             convertColor(bckgrnd),
             convertColor(border),
+            fontsize,
+            brdrwdth,
             convertColor(filIdlTxt),
             convertColor(filIdlBck),
             convertColor(filActTxt),
@@ -1225,7 +1267,7 @@ class HTTPExplorer(eg.PluginBase):
             serverListCtrl.SetStringItem(0, 4, maxStr((self.text.running, self.text.stopped)))
         width = SYS_VSCROLL_X + serverListCtrl.GetWindowBorderSize()[0]
         for i in range(5):
-            serverListCtrl.SetColumnWidth(i, wx.LIST_AUTOSIZE_USEHEADER) #wx.LIST_AUTOSIZE
+            serverListCtrl.SetColumnWidth(i, wx.LIST_AUTOSIZE_USEHEADER)
             width += serverListCtrl.GetColumnWidth(i)
         serverListCtrl.SetMinSize((width, -1))
         mySizer.Add(serverListCtrl, (0,0), (1, 5), flag = wx.EXPAND)
