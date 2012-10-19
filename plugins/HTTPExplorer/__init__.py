@@ -19,6 +19,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.0.4  by Pako 2012-10-19 16:45 UTC+1
+#      - bugfix (error, when "Start server" is not configured) 
 # 0.0.3  by Pako 2012-10-17 10:54 UTC+1
 #      - bugfix (border colour) 
 #      - added option to select the font size and width of the border 
@@ -31,7 +33,7 @@
 eg.RegisterPlugin(
     name = "HTTP explorer",
     author = "Pako",
-    version = "0.0.3",
+    version = "0.0.4",
     kind = "other",
     guid = "{6AF3AF9A-D0F3-4DA8-8508-25BE61FB1914}",
     description = u"""<rst>HTTP explorer.""",
@@ -124,8 +126,8 @@ LOG = False
 
 class Text:
     myComp   = u"My computer"
-    startMess= u'HTTP server "%s" started on host %s'
-    stopMess = u'HTTP server "%s" on %s stopped'
+    startMess= u'HTTP explorer: Server "%s" started on host %s'
+    stopMess = u'HTTP explorer: Server "%s" on %s stopped'
     listhl = u"Currently enabled servers:"
     colLabels = (
         u"Server name",
@@ -400,7 +402,8 @@ class HTTP_handler(BaseHTTPRequestHandler):
             browser.Execute(int(self.path[5:-5]))
         elif "/Home" in self.path or browser.folder == None:
             browser.GetFolderItems(srvr.strt)
-        htmlPage = u'''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+        htmlPage = u'''
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
 <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <title>%s</title>
@@ -452,8 +455,6 @@ class HTTP_server(HTTPServer):
         title,
         bckGround,
         border,
-        fontsize,
-        brdrwdth,
         filIdlTxt,
         filIdlBck,
         filActTxt,
@@ -463,13 +464,13 @@ class HTTP_server(HTTPServer):
         folActTxt,
         folActBck,
         strt,
+        fontsize,
+        brdrwdth,
     ):
         self.browser   = browser
         self.title     = title
         self.bckGround = bckGround
         self.border    = border
-        self.fontsize   = fontsize
-        self.brdrwdth  = brdrwdth
         self.filIdlTxt = filIdlTxt
         self.filIdlBck = filIdlBck
         self.filActTxt = filActTxt
@@ -479,6 +480,8 @@ class HTTP_server(HTTPServer):
         self.folActTxt = folActTxt
         self.folActBck = folActBck
         self.strt      = strt
+        self.fontsize  = fontsize
+        self.brdrwdth  = brdrwdth
         plugin.servers[title] = self      
         eg.PrintNotice(plugin.text.startMess % (title,"%s:%i" % server_address))
         HTTPServer.__init__(
@@ -499,8 +502,6 @@ class HTTP_thread (Thread):
         title,
         bckGround,
         border,
-        fontsize,
-        brdrwdth,
         filIdlTxt,
         filIdlBck,
         filActTxt,
@@ -510,6 +511,8 @@ class HTTP_thread (Thread):
         folActTxt,
         folActBck,
         strt,
+        fontsize,
+        brdrwdth,
         ):
         Thread.__init__(self)
         self.plugin    = plugin
@@ -520,8 +523,6 @@ class HTTP_thread (Thread):
         self.title     = title
         self.bckGround = bckGround
         self.border    = border
-        self.fontsize   = fontsize
-        self.brdrwdth  = brdrwdth
         self.filIdlTxt = filIdlTxt
         self.filIdlBck = filIdlBck
         self.filActTxt = filActTxt
@@ -531,6 +532,8 @@ class HTTP_thread (Thread):
         self.folActTxt = folActTxt
         self.folActBck = folActBck
         self.strt      = strt
+        self.fontsize  = fontsize
+        self.brdrwdth  = brdrwdth
         self.server    = None
 
 
@@ -543,8 +546,6 @@ class HTTP_thread (Thread):
             self.title,
             self.bckGround,
             self.border,
-            self.fontsize,
-            self.brdrwdth,
             self.filIdlTxt,
             self.filIdlBck,
             self.filActTxt,
@@ -553,7 +554,9 @@ class HTTP_thread (Thread):
             self.folIdlBck,
             self.folActTxt,
             self.folActBck,
-            self.strt
+            self.strt,
+            self.fontsize,
+            self.brdrwdth,
         )
         self.server.serve_forever()
 #===============================================================================
@@ -627,8 +630,6 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
             port,
             bckgrnd,
             border,
-            fontsize,
-            brdrwdth,
             filIdlTxt,
             filIdlBck,
             filActTxt,
@@ -641,7 +642,9 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
             suffix,
             strt,
             patterns,
-            hide
+            hide,
+            fontsize,
+            brdrwdth,
         )
  
 
@@ -667,9 +670,10 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
         patterns,
         hide,
         fontsize,
-        brdrwdth
+        brdrwdth,
     ):
-        self.plugin.AddServerName(title)
+        if title:
+            self.plugin.AddServerName(title)
         return '%s: %s  (%s: %s)' % (self.name, title, iFace, port)
 
 
@@ -695,7 +699,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
         patterns = "*.*",
         hide = True,
         fontsize = 32,
-        brdrwdth = 1
+        brdrwdth = 1,
     ):
         panel = eg.ConfigPanel(self)
         mainSizer = panel.sizer
@@ -969,8 +973,6 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
             port = wx.FindWindowById(id2).GetValue()
             bckgrnd = bckgrndColourButton.GetValue()
             border = borderColourButton.GetValue()
-            fontsize = fontsizeCtrl.GetValue()
-            brdrwdth = brdrwdthCtrl.GetValue()
             filIdlTxt = filIdlTxtColourButton.GetValue()
             filIdlBck = filIdlBckColourButton.GetValue()
             filActTxt = filActTxtColourButton.GetValue()
@@ -984,6 +986,8 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
             folder = folderCtrl.GetValue()
             patterns = patternsCtrl.GetValue()
             hide = hideSystem.GetValue()
+            fontsize = fontsizeCtrl.GetValue()
+            brdrwdth = brdrwdthCtrl.GetValue()
 
             newTitle = titleCtrl.GetValue()
             flag = False
@@ -1003,8 +1007,6 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
                     port,
                     bckgrnd,
                     border,
-                    fontsize,
-                    brdrwdth,
                     filIdlTxt,
                     filIdlBck,
                     filActTxt,
@@ -1017,7 +1019,9 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
                     suffix,
                     strt,
                     patterns,
-                    hide
+                    hide,
+                    fontsize,
+                    brdrwdth,
                 )
             panel.SetResult(
             newTitle,
@@ -1040,7 +1044,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
             patterns,
             hide,
             fontsize,
-            brdrwdth
+            brdrwdth,
         )
 #===============================================================================
 
@@ -1095,6 +1099,9 @@ class HTTPExplorer(eg.PluginBase):
 
 
     def __start__(self):
+        servActions = self.GetActions(self.text.StartServer.name)
+        for title in [item.args[0] for item in servActions]:
+            self.AddServerName(title)
         try:
             pythoncom.CoInitializeEx(pythoncom.COINIT_MULTITHREADED)
         except pythoncom.com_error:
@@ -1137,8 +1144,6 @@ class HTTPExplorer(eg.PluginBase):
         port,
         bckgrnd,
         border,
-        fontsize,
-        brdrwdth,
         filIdlTxt,
         filIdlBck,
         filActTxt,
@@ -1151,8 +1156,10 @@ class HTTPExplorer(eg.PluginBase):
         suffix,
         strt,
         patterns,
-        hide
-    ):
+        hide,
+        fontsize,
+        brdrwdth,
+    ):  
         iFace = eg.ParseString(iFace)
         port = int(eg.ParseString(port))
         if not mode :            
@@ -1171,8 +1178,6 @@ class HTTPExplorer(eg.PluginBase):
             title,
             convertColor(bckgrnd),
             convertColor(border),
-            fontsize,
-            brdrwdth,
             convertColor(filIdlTxt),
             convertColor(filIdlBck),
             convertColor(filActTxt),
@@ -1181,7 +1186,9 @@ class HTTPExplorer(eg.PluginBase):
             convertColor(folIdlBck),
             convertColor(folActTxt),
             convertColor(folActBck),
-            strt                
+            strt,               
+            fontsize,
+            brdrwdth,
         )
         wit.start() 
 
@@ -1213,7 +1220,7 @@ class HTTPExplorer(eg.PluginBase):
         def Traverse(item):
             if item.__class__ == eg.document.ActionItem:
                 if item.executable.name == actName and\
-                item.executable.plugin.name == self.name:
+                item.executable.plugin.name == self.name and item.args:
                     actions.append(item)
             elif item and item.childs:
                     for child in item.childs:
