@@ -1,4 +1,5 @@
 ﻿# -*- coding: utf-8 -*-
+version = "0.1.0"
 #
 # plugins/HTTPExplorer/__init__.py
 # Copyright (C)  2010 Pako  (lubos.ruckl@quick.cz)
@@ -19,6 +20,12 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.1.0  by Pako 2012-11-02 17:54 UTC+1
+#      - extensive reworking for increased stability
+#      - added option to open a file using the default application
+#      - added the possibility of triggering events for folders
+#      - added option to return to any higher level
+#      - incorporated limit -  it is impossible to enter below the server root
 # 0.0.4  by Pako 2012-10-19 16:45 UTC+1
 #      - bugfix (error, when "Start server" is not configured) 
 # 0.0.3  by Pako 2012-10-17 10:54 UTC+1
@@ -33,7 +40,7 @@
 eg.RegisterPlugin(
     name = "HTTP explorer",
     author = "Pako",
-    version = "0.0.4",
+    version = version,
     kind = "other",
     guid = "{6AF3AF9A-D0F3-4DA8-8508-25BE61FB1914}",
     description = u"""<rst>HTTP explorer.""",
@@ -104,7 +111,7 @@ eg.RegisterPlugin(
 
 import pythoncom
 import _winreg
-from os import listdir
+from os import listdir, startfile
 from os.path import abspath, join, dirname, isdir, isfile, split, splitext
 from win32api import LoadLibrary, LoadString, GetVolumeInformation
 from win32com.shell import shell
@@ -112,14 +119,39 @@ from win32file import GetFileAttributesW, GetLogicalDrives
 from fnmatch import fnmatch
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from threading import Thread
+from zlib import decompress
 from sys import getfilesystemencoding
 FSE = getfilesystemencoding()
 
 FILE_ATTRIBUTE_HIDDEN = 2
 FILE_ATTRIBUTE_SYSTEM = 4
+SYS_VSCROLL_X = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
+ICON = decompress(
+    'x\x9c\x95T\xc9J\xc3P\x14}\xa2\xe0RWnu\xe9_(\x88\x14\x07\x1c7E\xacU\x1cq'
+    '\xc0\x19Dl\x14\xad\x1bQ\x91"(\xb8\x11\x07p\xe1\xc2?\x10\x04]\xf8\x01\n'
+    '\x82b\x9bjS\x92&)m\xa5U\xdb\xe3\xbd\xa98\xd0\x16\xeb\x0b\'\x90\x9bw\xee='
+    '\xf7\xbc\x9b\x08Q@Wi\xa9\xa0{\x85\x18*\x12\xa2L\x08QI\xa0\x10E\xd2qk\x15'
+    '\x89\x8c\x05\xe0\x0b\x86$\xc1\\ZB\xe2\xe8\x08\xa9\xbb;\xe9\xe7\xbb|\xf0'
+    '\xdc\xd1\x01oM\r\x9e\xedv\x98n7\xde/.\xcea\x18U\xf9\xf2\x03\x9d\x9d\x90[Z'
+    '\xe0\xb5\xd9 74@\x1d\x1dE\xfc\xe0\x00\xa9\xfb\xfb\xbc\xb4\x04\x1c\x0e\x04'
+    '\x9cN\x04\xfb\xfb\xe1on\x86\xb7\xb6\x16\xac)\xb2\xb1\x81\xf7\xcb\xcb\xf3?'
+    '\xf9]]\x08\x0e\x0c 4=\rud\x04O\xd4\x07\xe7\xf056"4;\x8b\xc4\xc9\tR\x9a\x96'
+    '\xb3\x1f\x85\xf8\xea\xf00\x8c\x85\x05\xe8\xb4_\x1d\x1b\x83Bz|uuV\x1e\xa5'
+    '\xa7\x07\xb1\xedm$\xaf\xaf\xb3j\xe1\xbd\xea\xc4\x04\xc2++0\\.\x84ff\xa0'
+    '\x8e\x8fC\xe9\xed\x85\x9f}!o\xfd\xad\xad\x08\xb3\xb7WW\x199\x98\xafMM!'
+    '\xb2\xb6\x86\xf0\xeaj:\x07\xeb\xa0\x1c\x96\'\xed\xedx\xac\xae\x86\xbf\xad'
+    '\r\xb1\x9d\x1d\xc04\x7f\xf5\xa2twC\xa3\x9a\x91\xcdMD\xd6\xd7\xbfsP,\xd8'
+    '\xd7\x07\xb9\xa9\xc9\xea\x83s%\x8e\x8f\x91Q\x9f\xf8\xfa\xdc\x1c\xa2\x1e'
+    '\x0f\xa2[[\x96\xef\xe6\xf2\xb2\xe5\xa9L\x1e\xb2\x0f\xecI\xfc\xf0\x10\xd0'
+    '\xf5\x0c\x1f\x99\xcf\xde\xc5vw\x11%\x9f\xc2\xcc\xa5\xba\xbe\xfazK;\xcf\xe6'
+    '\xdb\xd9\x19r\xcd\x14\xf3\xb9\xde\xcb\xde\x1ex\x96y\x0e\xb9fpp\xd0\xca\x99'
+    '\xcb\xf7/>\x9d\x0f\xf3\xb4\xc9I\xc84?\x0c}~\x1e\xaf\xa7\xa7Y\xf5f\x9b?'
+    '\x9e;\xd6\xcb\xb3\xc4\x1ed;\xa7\x9c\xf5I?\x9f\r\xd7\x8f\xef\xef#\xf5\xf0'
+    '\xf0\xafo0y{+%on\xa4\xff\xf0d\x08\xf1\xc8X$\x94\x13J\x08\x85\x84\x82\x1f'
+    '\xe0\xe7\xe2\xcfwU\xe9\xbd^\xf0\xbfC\x88\x0f\xef\x02\xfb\xa2'
+)
 
 #global variables:
-SYS_VSCROLL_X = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
 MY_COMPUTER = None
 LOG = False
 #===============================================================================
@@ -145,10 +177,6 @@ class Text:
     stopped = u"Stopped"
     txtAllIfaces = u'All available interfaces'    
 #===============================================================================
-
-def createSubClass(clsName, cls):
-    return type(clsName, (object, cls,), dict(cls.__dict__))
-
 
 def convertColor(color):
     return "#%02x%02x%02x" % (color[0], color[1], color[2])
@@ -220,12 +248,16 @@ class Browser(object):
         suffix,
         patterns,
         hide,
+        strt,
+        suffixD
     ):
-        self.folder = None
         self.prefix = prefix
         self.suffix = suffix
+        self.suffixD = suffixD
         self.patterns = patterns.split(",")
         self.hide = hide
+        self.folder = self.start = strt
+
         self.shortcut = pythoncom.CoCreateInstance (
           shell.CLSID_ShellLink,
           None,
@@ -233,6 +265,15 @@ class Browser(object):
           shell.IID_IShellLink
         )
         self.persist_file = self.shortcut.QueryInterface (pythoncom.IID_IPersistFile)
+        self.GoHome()
+
+
+
+    def GoHome(self):
+        self.Parents = []
+        self.path = ""
+        self.folder = self.start
+        self.GetFolderItems(self.start)
 
 
     def CaseInsensitiveSort(self, list):
@@ -300,7 +341,7 @@ class Browser(object):
             self.ds = self.CaseInsensitiveSort(ds)
             self.fs = self.CaseInsensitiveSort(fs)
         else: #pseudo-folder "My computer"
-            drives = []
+            self.drives = []
             mask = 1
             ordA = ord('A')
             drivebits = GetLogicalDrives()
@@ -310,7 +351,7 @@ class Browser(object):
                     if isdir(drv):
                         try:
                             name = GetVolumeInformation(drv)[0]
-                            drives.append(("%s (%s)" % (
+                            self.drives.append(("%s (%s)" % (
                                 name,
                                 drv[:2]),
                                 u""
@@ -318,29 +359,76 @@ class Browser(object):
                         except:
                             pass
                 mask = mask << 1
-            self.ds = drives
+            self.ds = self.drives[:]
             self.fs = []
             self.folder = MY_COMPUTER
 
 
-    def GoTo(self, ix):
-        itm = self.ds[int(ix)]
-        if self.folder == MY_COMPUTER:
-            fldr = itm[0][-3:-1] + "\\"
+    def TriggEvent(self, pth):
+        ev = pth.find("/Evnt")
+        p = pth[:ev]
+        if p == self.path:
+            ix = pth[ev+5:]
+            if ix:
+                ix = int(ix)
+                if ix < len(self.ds):
+                    itm = self.ds[ix]
+                    suffix = self.suffixD
+                else:
+                    itm = self.fs[ix-len(self.ds)]
+                    suffix = self.suffix
+                if self.folder == MY_COMPUTER:
+                    fl = itm[0][-3:-1] + "\\"
+                else:
+                    fl = itm[1] if itm[1] else join(self.folder, itm[0])
+                eg.TriggerEvent(suffix, prefix = self.prefix, payload = fl)
+
+
+    def Open(self, pth):
+        op = pth.find("/Open")
+        p = pth[:op]
+        if p == self.path: # open file
+            ix = pth[op+5:]
+            if ix:
+                ix = int(ix)-len(self.ds)
+                itm = self.fs[ix]
+                fl = itm[1] if itm[1] else join(self.folder, itm[0])
+                if isfile(fl):
+                    startfile(fl)
         else:
-            fldr = itm[1] if itm[1] else join(self.folder, itm[0])
-        self.GetFolderItems(fldr)
+            pList=p.split("/")
+            pathList=self.path.split("/")
+            if len(pList) > len(pathList):
+                if pList[:-1] == pathList: # go to folder (child)
+                    self.path=p
+                    self.Parents.append(self.folder)
+                    ix=int(pth[1+p.rfind("/"):op]) 
+                    itm = self.ds[ix]           
+                    if self.folder == MY_COMPUTER:
+                        fldr = itm[0][-3:-1] + "\\"
+                    else:
+                        fldr = itm[1] if itm[1] else join(self.folder, itm[0])
+                    self.GetFolderItems(fldr)
+                else:
+                    eg.PrintError("523 pList[:-1] != pathList"),pList[:-1]," != ",pathList
+            else:
+                eg.PrintError("525 p < self.path:"),p," < ",self.path
 
 
-    def Execute(self, ix):
-        itm = self.fs[int(ix)]
-        f = itm[1] if itm[1] else join(self.folder, itm[0])
-        eg.TriggerEvent(prefix = self.prefix, suffix = self.suffix, payload = f)
-            
+    def GetTitle(self, fl):
+        if not len(fl)==3:
+            return split(fl)[1]
+        else:   
+            ix = [item[0][-3:-1] + "\\" for item in self.drives].index(fl)
+            return self.drives[ix][0]
+    
 
-    def GoToParent(self):
-        fldr = self.folder
-        self.folder = MY_COMPUTER if len(fldr) < 4 else split(fldr)[0]
+
+    def GoToParent(self, pth):
+        p = pth[:pth.find("/Parent")]
+        while self.path>p:
+            self.folder = self.Parents.pop()
+            self.path = self.path[:self.path.rfind("/")]
         self.GetFolderItems(self.folder)
 #===============================================================================
 
@@ -348,13 +436,19 @@ class HTTP_handler(BaseHTTPRequestHandler):
     """The user-provided request handler class.
         An instance of this class is created for each request."""
 
+    server_version = "EventGhost_HTTP_explorer/%s" % version
+    protocol_version = "HTTP/1.1"
+
     def __init__(self, request, client_address, server):
-        BaseHTTPRequestHandler.__init__(
-            self,
-            request,
-            client_address,
-            server
-        )
+        try:
+            BaseHTTPRequestHandler.__init__(
+                self,
+                request,
+                client_address,
+                server
+            )
+        except:
+            pass
 
 
     def log_message(self, format, *args):
@@ -362,10 +456,11 @@ class HTTP_handler(BaseHTTPRequestHandler):
             logName = "HTTPserver_%s.log" % self.server.title.replace(" ", "_")
             try:
                 logfile = abspath(join(dirname(__file__), logName))
-                open(logfile, "a").write("%s - - [%s] %s\n" %(
-                    self.address_string(),
+                open(logfile, "a").write("%s -- %s - %s:  %s\n" % ( 
                     self.log_date_time_string(),
-                    format%args
+                    self.client_address,
+                    self.address_string(),
+                    format % args
                 ))
             except eg.Exception, exc:
                 eg.PrintError(unicode(exc))
@@ -376,72 +471,205 @@ class HTTP_handler(BaseHTTPRequestHandler):
                 )
 
 
+    def InconsistencyCheck(self, browser):
+        if self.path.find("/Home")>-1:
+            return False
+        fndOpn=self.path.find("/Open")
+        pth = self.path[:self.path.rfind("/")]
+        if len(self.path)-fndOpn == 5:
+            if pth.split("/")[:-1] == browser.path.split("/"):
+                return False
+        if fndOpn > -1 and len(self.path) - fndOpn > 5:
+            if pth == browser.path[:len(pth)]:
+                return False
+        if self.path=='/' and browser.path=="":
+            return False
+        if self.path.find("/Parent")>-1:
+            if pth == browser.path[:len(pth)]:
+                return False
+        if self.path.find("/Evnt")>-1 and pth==browser.path:
+            return False
+        return True
+
+
+    def WriteWfile(self, page):
+        try:
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.send_header("Content-Length", str(len(page)))  
+            self.end_headers()
+            self.wfile.write(page)
+        except:
+            pass
+
+
+    def Reset(self, srvr):
+        self.WriteWfile(u'''
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+<meta http-equiv="Content-Type"  content="text/html; charset=utf-8">
+<title>%s</title>
+<script type="text/javascript">
+function start()
+{document.location.href = "http://%s:%i";}
+window.onload = start; 
+</script>
+</head>''' % (srvr.title, srvr.server_address[0], srvr.server_address[1]))
+
+
     def do_GET (self):
-        self.do_everything()
-
-
-    def do_HEAD (self):
-        self.do_everything()
-
-
-    def do_POST (self):
-        self.do_everything()
-
-
-    def do_everything (self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/html')
-        self.end_headers()
+        if self.path == '/favicon.ico':
+            self.send_response(200)
+            self.send_header("Content-type", 'text/html')
+            self.send_header("Content-Length", len(ICON))
+            self.end_headers()
+            self.wfile.write(ICON)
+            return    
         srvr = self.server
         browser = srvr.browser
+        if self.InconsistencyCheck(browser):
+            browser.GoHome()
+            self.Reset(srvr)
+            return            
         if "/Parent" in self.path:
-            browser.GoToParent()
-        if "/GoTo" in self.path:
-            browser.GoTo(self.path[5:-5])
-        if "/Exec" in self.path:
-            browser.Execute(int(self.path[5:-5]))
-        elif "/Home" in self.path or browser.folder == None:
-            browser.GetFolderItems(srvr.strt)
+            browser.GoToParent(self.path)
+        elif "/Evnt" in self.path:
+            browser.TriggEvent(self.path)
+        elif "/Open" in self.path:
+            browser.Open(self.path)
+        elif "/Home" in self.path:
+            browser.GoHome()         
         htmlPage = u'''
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
-<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-Type"  content="text/html; charset=utf-8">
 <title>%s</title>
 <style type="text/css">
 body {background-color: %s;}
-table, td {border: %ipx solid %s; border-collapse : collapse; ;padding : 0px}
-td {font-family: Arial, Helvetica, sans-serif; font-size: %ipx;}
-.file a {width: 100%%; height: 100%%; text-align: left;
-       color:%s; background-color: %s; display: block;
-       text-decoration: none; padding: 5px 0 5px 0; }
-.file a:link { color:%s; background-color: %s }          
-.file a:visited { color:%s; background-color: %s }          
-.file a:active { color:%s; background-color: %s }          
-.file a:hover {color: %s; background-color: %s;text-decoration: none }
-.folder a {width: 100%%; height: 100%%; text-align: left;
-       color:%s; background-color: %s; display: block;
-       text-decoration: none; padding: 5px 0 5px 0; }
-.folder a:link { color:%s; background-color: %s }          
-.folder a:visited { color:%s; background-color: %s }          
-.folder a:active { color:%s; background-color: %s }          
-.folder a:hover {color: %s; background-color: %s;text-decoration: none }          
-</style>            
-</head><body>
-<table>''' % (
-    srvr.title, srvr.bckGround, srvr.brdrwdth, srvr.border, srvr.fontsize,
-    srvr.filIdlTxt,srvr.filIdlBck,srvr.filIdlTxt,srvr.filIdlBck,srvr.filIdlTxt,
-    srvr.filIdlBck,srvr.filActTxt,srvr.filActBck,srvr.filActTxt,srvr.filActBck,
-    srvr.folIdlTxt,srvr.folIdlBck,srvr.folIdlTxt,srvr.folIdlBck,srvr.folIdlTxt,
-    srvr.folIdlBck,srvr.folActTxt,srvr.folActBck,srvr.folActTxt,srvr.folActBck
-    )
-        if browser.folder != MY_COMPUTER:
-            htmlPage += u'<tr class="folder"><td><a href="/Parent.html">&nbsp;..&nbsp;</a></td></tr>' 
-        for (ix, item) in enumerate([item[0] for item in browser.fs]):
-            htmlPage += u'<tr class="file"><td><a href="/Exec%i.html">&nbsp;%s&nbsp;</a></td></tr>' % (ix, item)
-        for (ix, item) in enumerate([item[0] for item in browser.ds]):
-            htmlPage += u'<tr class="folder"><td><a href="/GoTo%i.html">&nbsp;%s&nbsp;</a></td></tr>' % (ix, item)
+table {border-collapse: collapse; padding: 0px; font-family: Arial, Helvetica, sans-serif; font-size: %ipx;} 
+tr {border: %ipx solid %s;}
+.evnt {border: %ipx solid %s;  cursor: pointer;}
+.open {border-top: %ipx solid %s; border-bottom: %ipx solid %s;  cursor: pointer;}
+.filN {background-color: %s; color: %s;}
+.filH {background-color: %s; color: %s;} 
+.folN {background-color: %s; color: %s;}
+.folH {background-color: %s; color: %s;}
+.tran {border: 0px; background: transparent; cursor: auto; color: %s}
+.trn2 {border-top-style: hidden;border-bottom-style: hidden; border-right: %ipx solid %s; background: transparent; cursor: auto;width: %ipx }
+</style>      
+<script type="text/javascript">
+function start()
+{
+var table = document.getElementById("myTable");
+var clickAction = function(cl){
+  r = cl.parentNode.rowIndex;
+  pth = "%s";
+  if (pth.length>0){
+    arPath = pth.split("/");
+    path = arPath.slice(0,1+r).join("/");
+  }
+  else {
+    arPath = "";
+    path = "";
+  }
+  if (cl.parentNode.className =="back") {
+    ixs=[0,1,2,3];
+    cmd = path+"/Parent";
+  }
+  else {
+    r = (r - arPath.length).toString();
+    ixs=[2,3];
+    cmd=pth+"/"+r+"/Evnt";
+    if (ixs.indexOf(cl.cellIndex)>-1){
+      if (cl.parentNode.parentNode.className == 'folder'){cmd =pth+"/"+r+"/Open";}
+      else {cmd=pth+"/Open"+r;}
+    }
+    else if (cl.cellIndex==0) {cmd=pth+"/Evnt"+r;} 
+  }
+    document.location.href = "http://%s:%i"+cmd;
+};
+var mouseOut = function(cl){
+ if (cl.parentNode.className =="back") {ixs=[0,1,2,3];}
+ else {ixs=[2,3];}
+ if (cl.parentNode.parentNode.className == 'folder'){cls = 'folN ';}
+ else {cls = 'filN ';}
+ if (ixs.indexOf(cl.cellIndex)>-1)
+  {
+    cls += 'open';
+    row=cl.parentNode;
+    for(var i = 0; i < ixs.length; i++){row.cells[ixs[i]].className = cls;}
+  }
+ else if (cl.cellIndex==0)
+  {
+    cls += 'evnt';
+    cl.className = cls;
+  }		  
+};   
+var mouseOver = function(cl){
+ if (cl.parentNode.className =="back") {ixs=[0,1,2,3];}
+ else {ixs=[2,3];}
+ if (cl.parentNode.parentNode.className == 'folder'){cls = 'folH ';}
+ else{cls = 'filH ';}
+ if (ixs.indexOf(cl.cellIndex)>-1)
+  {
+    cls += 'open';
+    row=cl.parentNode;
+    for(var i = 0; i < ixs.length; i++){row.cells[ixs[i]].className = cls;}
+  }
+ else if (cl.cellIndex==0)
+  {
+    cls += 'evnt';
+    cl.className = cls;
+  }		  
+};     
+ for(var r = 0; r < table.rows.length; r++){
+   var row = table.rows[r];
+     for(var c = 0; c < row.cells.length; c++){
+       if (row.className != "tran"){
+         var	cell = row.cells[c];
+         cell.onmouseout  = function() {mouseOut(this);}
+         cell.onmouseover = function() {mouseOver(this);}
+         cell.onclick = function() {clickAction(this);}   
+         cell.onmouseout();
+       }
+     } 
+   }
+}
+window.onload = start; 
+</script>
+</head>
+<body><table id="myTable">''' % (
+    srvr.title, srvr.bckGround, srvr.fontsize, srvr.brdrwdth, srvr.border,
+    srvr.brdrwdth, srvr.border, srvr.brdrwdth, srvr.border, srvr.brdrwdth, srvr.border,
+    srvr.filIdlBck, srvr.filIdlTxt, srvr.filActBck,srvr.filActTxt,
+    srvr.folIdlBck, srvr.folIdlTxt, srvr.folActBck,srvr.folActTxt,
+    srvr.border, srvr.brdrwdth, srvr.border, srvr.fontsize/8,
+    browser.path, srvr.server_address[0], srvr.server_address[1]
+)
+        if browser.Parents:
+            parents = [srvr.title]
+            for par in browser.Parents[1:]:
+                parents.append(browser.GetTitle(par))
+            htmlPage += '<tbody class="folder">'
+            for par in parents:
+                htmlPage += u'<tr class="back"><td>▲&nbsp;</td><td></td><td>%s</td><td>&nbsp;▲</td></tr>' % par
+            title = browser.GetTitle(browser.folder)
+            htmlPage += '</tbody><tr class="tran"><td></td><td></td><td>%s</td><td></td></tr>' % title
+        if browser.ds:
+            htmlPage += '<tbody class="folder">'
+            for itm in [item[0] for item in browser.ds]:
+                htmlPage += u'<tr><td>&nbsp;✈&nbsp;</td><td class="trn2"></td><td>&nbsp;%s</td><td>&nbsp;►</td></tr>' % itm
+            htmlPage += '</tbody>'
+        if browser.fs:
+            htmlPage += '<tbody class="file">'
+            for itm in [item[0] for item in browser.fs]:
+                htmlPage += u'<tr><td>&nbsp;✈&nbsp;</td><td class="trn2"></td><td>&nbsp;%s</td><td></td></tr>' % itm
+            htmlPage += '</tbody>'
         htmlPage += u"</table></body></html>"
-        self.wfile.write(htmlPage.encode("UTF-8"))
+        htmlPage = htmlPage.encode("UTF-8")
+        self.WriteWfile(htmlPage)
+    do_HEAD = do_GET
+    do_POST = do_GET       
 #===============================================================================
 
 class HTTP_server(HTTPServer):
@@ -482,13 +710,38 @@ class HTTP_server(HTTPServer):
         self.strt      = strt
         self.fontsize  = fontsize
         self.brdrwdth  = brdrwdth
-        plugin.servers[title] = self      
+        plugin.servers[title] = self
         eg.PrintNotice(plugin.text.startMess % (title,"%s:%i" % server_address))
         HTTPServer.__init__(
             self,
             server_address,
             RequestHandlerClass
         )
+
+
+    def server_bind(self):
+        HTTPServer.server_bind(self)
+        self.socket.settimeout(1)
+        self.run = True
+
+
+    def get_request(self):
+        while self.run:
+            try:
+                req = self.socket.accept()
+                req[0].settimeout(None)              
+                return req
+            except socket.timeout:
+                pass
+
+
+    def stop(self):
+        self.run = False
+
+
+    def serve(self):
+        while self.run:
+            self.handle_request()     
 #===============================================================================
 
 class HTTP_thread (Thread):
@@ -516,7 +769,7 @@ class HTTP_thread (Thread):
         ):
         Thread.__init__(self)
         self.plugin    = plugin
-        self.handler   = createSubClass("subhandler", HTTP_handler)
+        self.handler   = HTTP_handler
         self.browser   = browser
         self.iface     = iface
         self.port      = port
@@ -558,7 +811,7 @@ class HTTP_thread (Thread):
             self.fontsize,
             self.brdrwdth,
         )
-        self.server.serve_forever()
+        self.server.serve()
 #===============================================================================
 #cls types for ACTIONS list :
 #===============================================================================
@@ -579,12 +832,13 @@ class StartServer(eg.ActionBase):
         folActivText = u'Folder active item text colour'
         folActivBack = u'Folder active item background colour'
         prefixLabel = u'Event prefix:'
-        suffixLabel = u'Event suffix:'
-        folder = u"Initial folder:"
+        suffixLabel = u'Event suffix (file):'
+        suffixLabelD = u'Event suffix (folder):'
+        folder = u"Server root:"
         browseTitle = u"Selected folder:"
         hide = u"Ignore system and hidden files and folders"
         patterns = u"Show only the files corresponding to these patterns:"
-        compBtnToolTip = u'Press this button to set "%s" as folder'
+        compBtnToolTip = u'Press this button to set "%s" as server root'
         patternsToolTip = u'''Here you can enter the patterns of required files, separated by commas.
 For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
         port = u"TCP/IP port:"
@@ -595,7 +849,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
             u'Interface',
             u'Server IP address (or Python expression)',
         )
-        serverName = u"Server name (must be unique !!!) and initial folder"
+        serverName = u"Server name (must be unique !!!) and server root"
         titleLabel = u"Server name:"
 
 
@@ -616,12 +870,13 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
         folActTxt = (243, 237, 109),
         folActBck = (128, 0, 0),
         prefix    = "HTTPE",
-        suffix    = "Open",
+        suffix    = "File",
         strt      = u"",
         patterns  = "*.*",
         hide      = True,
         fontsize  = 32,
-        brdrwdth  = 1
+        brdrwdth  = 1,
+        suffixD = "Folder"
     ):
         self.plugin.StartServer(
             title,
@@ -645,6 +900,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
             hide,
             fontsize,
             brdrwdth,
+            suffixD,
         )
  
 
@@ -671,6 +927,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
         hide,
         fontsize,
         brdrwdth,
+        suffixD,
     ):
         if title:
             self.plugin.AddServerName(title)
@@ -694,12 +951,13 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
         folActTxt = (243, 237, 109),
         folActBck = (128, 0, 0),
         prefix = 'HTTPE',
-        suffix = 'Open',
+        suffix = 'File',
         strt = u"",
         patterns = "*.*",
         hide = True,
         fontsize = 32,
         brdrwdth = 1,
+        suffixD = "Folder",
     ):
         panel = eg.ConfigPanel(self)
         mainSizer = panel.sizer
@@ -797,7 +1055,9 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
         prefixLbl=wx.StaticText(panel, -1, text.prefixLabel)
         prefixCtrl = wx.TextCtrl(panel,-1,prefix)
         suffixLbl=wx.StaticText(panel, -1, text.suffixLabel)
+        suffixLblD=wx.StaticText(panel, -1, text.suffixLabelD)
         suffixCtrl = wx.TextCtrl(panel,-1,suffix)
+        suffixCtrlD = wx.TextCtrl(panel,-1,suffixD)
         bckgrndLbl   = wx.StaticText(panel, -1, text.bckgrnd+':')
         borderLbl    = wx.StaticText(panel, -1, text.border+':')
         fontsizeLbl  = wx.StaticText(panel, -1, text.fontsize)
@@ -879,6 +1139,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
             brdrwdthCtrl,
             prefixCtrl,
             suffixCtrl,
+            suffixCtrlD,
             bckgrndColourButton,
             borderColourButton,
             filIdlTxtColourButton,
@@ -897,7 +1158,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
         hideSystem = wx.CheckBox(panel, -1, text.hide)
         hideSystem.SetValue(hide)
         #Sizers
-        colorSizer=wx.FlexGridSizer(6, 4, 10, 5)
+        colorSizer=wx.FlexGridSizer(7, 4, 10, 5)
         mainSizer.Add(colorSizer,0,wx.TOP,10)
         colorSizer.Add(fontsizeLbl,0)
         colorSizer.Add(fontsizeCtrl,0,wx.TOP,-2)
@@ -927,7 +1188,11 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
         colorSizer.Add(prefixCtrl,0,wx.TOP,-2)
         colorSizer.Add(suffixLbl,0,wx.LEFT,30)
         colorSizer.Add(suffixCtrl,0,wx.TOP,-2)
-        mainSizer.Add(patternsLabel,0,wx.TOP,8)
+        colorSizer.Add((-1, -1))
+        colorSizer.Add((-1, -1))
+        colorSizer.Add(suffixLblD,0,wx.LEFT,30)
+        colorSizer.Add(suffixCtrlD,0,wx.TOP,-2)
+        mainSizer.Add(patternsLabel)
         mainSizer.Add(patternsCtrl,1,wx.TOP|wx.EXPAND,2)
         mainSizer.Add(hideSystem,0,wx.TOP,10)
 
@@ -988,14 +1253,13 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
             hide = hideSystem.GetValue()
             fontsize = fontsizeCtrl.GetValue()
             brdrwdth = brdrwdthCtrl.GetValue()
+            suffixD = "Folder"
 
             newTitle = titleCtrl.GetValue()
             flag = False
             if title and self.plugin.servers.has_key(title):
                 if self.plugin.servers[title]:
-                    self.plugin.servers[title].shutdown()
-                    address ="%s:%i" % self.plugin.servers[title].server_address
-                    eg.PrintNotice(self.plugin.text.stopMess % (title, address))
+                    self.plugin.StopServer(title)
                     flag = True
                 del self.plugin.servers[title]
             self.plugin.AddServerName(newTitle)
@@ -1022,6 +1286,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
                     hide,
                     fontsize,
                     brdrwdth,
+                    suffixD,
                 )
             panel.SetResult(
             newTitle,
@@ -1045,6 +1310,7 @@ For example, *.mp3, *.ogg, *.flac or e*.ppt, g*.ppt and the like.u'''
             hide,
             fontsize,
             brdrwdth,
+            suffixD,
         )
 #===============================================================================
 
@@ -1110,17 +1376,13 @@ class HTTPExplorer(eg.PluginBase):
 
     def __stop__(self):
         for title in tuple(self.servers.iterkeys()):
-            if self.servers[title]:
-                address ="%s:%i" % self.servers[title].server_address
-                self.servers[title].shutdown()
-                self.servers[title] = None        
-                eg.PrintNotice(self.text.stopMess % (title, address))
+            self.StopServer(title)
 
 
     def StopServer(self, title):
         if self.servers.has_key(title) and self.servers[title]:
             address ="%s:%i" % self.servers[title].server_address
-            self.servers[title].shutdown()
+            self.servers[title].stop()
             self.servers[title] = None
             eg.PrintNotice(self.text.stopMess % (title, address))    
 
@@ -1159,20 +1421,18 @@ class HTTPExplorer(eg.PluginBase):
         hide,
         fontsize,
         brdrwdth,
+        suffixD,
     ):  
         iFace = eg.ParseString(iFace)
         port = int(eg.ParseString(port))
         if not mode :            
             iFace = GetIPAddress(iFace, self.text.txtAllIfaces)
-        self.br = Browser(prefix, suffix, patterns, hide)
+        br = Browser(prefix, suffix, patterns, hide, strt, suffixD)
         if self.servers.has_key(title) and self.servers[title]:
-            address ="%s:%i" % self.servers[title].server_address
-            self.servers[title].shutdown()
-            self.servers[title] = None
-            eg.PrintNotice(self.text.stopMess % (title,address))
+            self.StopServer(title)
         wit = HTTP_thread(
             self,
-            self.br,
+            br,
             iFace,
             port,
             title,
@@ -1190,7 +1450,7 @@ class HTTPExplorer(eg.PluginBase):
             fontsize,
             brdrwdth,
         )
-        wit.start() 
+        wit.start()
 
 
     def AddServerName(self, title):
