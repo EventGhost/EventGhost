@@ -1,5 +1,5 @@
 ﻿# -*- coding: utf-8 -*-
-version = "0.1.0"
+version = "0.1.1"
 #
 # plugins/HTTPExplorer/__init__.py
 # Copyright (C)  2010 Pako  (lubos.ruckl@quick.cz)
@@ -20,6 +20,9 @@ version = "0.1.0"
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.1.1  by Pako 2012-11-05 11:11 UTC+1
+#      - bugfixes - redirect when "All interfaces" is selected
+#                 - StopServer really perform stop
 # 0.1.0  by Pako 2012-11-02 17:54 UTC+1
 #      - extensive reworking for increased stability
 #      - added option to open a file using the default application
@@ -409,10 +412,6 @@ class Browser(object):
                     else:
                         fldr = itm[1] if itm[1] else join(self.folder, itm[0])
                     self.GetFolderItems(fldr)
-                else:
-                    eg.PrintError("523 pList[:-1] != pathList"),pList[:-1]," != ",pathList
-            else:
-                eg.PrintError("525 p < self.path:"),p," < ",self.path
 
 
     def GetTitle(self, fl):
@@ -422,7 +421,6 @@ class Browser(object):
             ix = [item[0][-3:-1] + "\\" for item in self.drives].index(fl)
             return self.drives[ix][0]
     
-
 
     def GoToParent(self, pth):
         p = pth[:pth.find("/Parent")]
@@ -514,7 +512,11 @@ function start()
 {document.location.href = "http://%s:%i";}
 window.onload = start; 
 </script>
-</head>''' % (srvr.title, srvr.server_address[0], srvr.server_address[1]))
+</head>''' % (
+            srvr.title,
+            self.request.getsockname()[0],
+            self.request.getsockname()[1]
+        ))
 
 
     def do_GET (self):
@@ -644,7 +646,7 @@ window.onload = start;
     srvr.filIdlBck, srvr.filIdlTxt, srvr.filActBck,srvr.filActTxt,
     srvr.folIdlBck, srvr.folIdlTxt, srvr.folActBck,srvr.folActTxt,
     srvr.border, srvr.brdrwdth, srvr.border, srvr.fontsize/8,
-    browser.path, srvr.server_address[0], srvr.server_address[1]
+    browser.path, self.request.getsockname()[0], self.request.getsockname()[1]
 )
         if browser.Parents:
             parents = [srvr.title]
@@ -711,6 +713,7 @@ class HTTP_server(HTTPServer):
         self.fontsize  = fontsize
         self.brdrwdth  = brdrwdth
         plugin.servers[title] = self
+        self.req = None
         eg.PrintNotice(plugin.text.startMess % (title,"%s:%i" % server_address))
         HTTPServer.__init__(
             self,
@@ -728,15 +731,19 @@ class HTTP_server(HTTPServer):
     def get_request(self):
         while self.run:
             try:
-                req = self.socket.accept()
-                req[0].settimeout(None)              
-                return req
+                self.req = self.socket.accept()
+                self.req[0].settimeout(None)              
+                return self.req
             except socket.timeout:
                 pass
 
 
     def stop(self):
         self.run = False
+        if self.req:
+            self.req[0].shutdown(2)
+            self.req[0].close()
+        self.req = None
 
 
     def serve(self):
