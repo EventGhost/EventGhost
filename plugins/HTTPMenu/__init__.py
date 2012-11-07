@@ -1,5 +1,5 @@
 ﻿# -*- coding: utf-8 -*-
-version = "0.1.0"
+version = "0.1.1"
 #
 # plugins/HTTPMenu/__init__.py
 # Copyright (C)  2010 Pako  (lubos.ruckl@quick.cz)
@@ -20,6 +20,8 @@ version = "0.1.0"
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.1.1  by Pako 2012-11-07 10:28 UTC+1
+#      - bugfix: reversed colors for submenus and commands
 # 0.1.0  by Pako 2012-11-05 11:33 UTC+1
 #      - extensive reworking for increased stability
 #      - added option to return to any higher level (without event triggering)
@@ -1101,8 +1103,14 @@ class HTTP_server(HTTPServer):
     def stop(self):
         self.run = False
         if self.req:
-            self.req[0].shutdown(2)
-            self.req[0].close()
+            try:
+                self.req[0].shutdown(2)
+            except:
+                pass
+            try:
+                self.req[0].close()
+            except:
+                pass
         self.req = None
 
 
@@ -1506,22 +1514,22 @@ class StartServer(eg.ActionBase):
         commonSizer.Add(bckgrndColourButton)
         commonSizer.Add(borderLbl,0,wx.TOP|wx.EXPAND,2)
         commonSizer.Add(borderColourButton)
-        submenuSizer.Add(filIdlTxtLbl,0,wx.TOP|wx.EXPAND,2)
-        submenuSizer.Add(filIdlTxtColourButton)
-        submenuSizer.Add(filIdlBckLbl,0,wx.TOP|wx.EXPAND,2)
-        submenuSizer.Add(filIdlBckColourButton)
-        submenuSizer.Add(filActTxtLbl,0,wx.TOP|wx.EXPAND,2)
-        submenuSizer.Add(filActTxtColourButton)
-        submenuSizer.Add(filActBckLbl,0,wx.TOP|wx.EXPAND,2)
-        submenuSizer.Add(filActBckColourButton)
-        commandSizer.Add(folIdlTxtLbl,0,wx.TOP|wx.EXPAND,2)
-        commandSizer.Add(folIdlTxtColourButton)
-        commandSizer.Add(folIdlBckLbl,0,wx.TOP|wx.EXPAND,2)
-        commandSizer.Add(folIdlBckColourButton)
-        commandSizer.Add(folActTxtLbl,0,wx.TOP|wx.EXPAND,2)
-        commandSizer.Add(folActTxtColourButton)
-        commandSizer.Add(folActBckLbl,0,wx.TOP|wx.EXPAND,2)
-        commandSizer.Add(folActBckColourButton)
+        submenuSizer.Add(folIdlTxtLbl,0,wx.TOP|wx.EXPAND,2)
+        submenuSizer.Add(folIdlTxtColourButton)
+        submenuSizer.Add(folIdlBckLbl,0,wx.TOP|wx.EXPAND,2)
+        submenuSizer.Add(folIdlBckColourButton)
+        submenuSizer.Add(folActTxtLbl,0,wx.TOP|wx.EXPAND,2)
+        submenuSizer.Add(folActTxtColourButton)
+        submenuSizer.Add(folActBckLbl,0,wx.TOP|wx.EXPAND,2)
+        submenuSizer.Add(folActBckColourButton)
+        commandSizer.Add(filIdlTxtLbl,0,wx.TOP|wx.EXPAND,2)
+        commandSizer.Add(filIdlTxtColourButton)
+        commandSizer.Add(filIdlBckLbl,0,wx.TOP|wx.EXPAND,2)
+        commandSizer.Add(filIdlBckColourButton)
+        commandSizer.Add(filActTxtLbl,0,wx.TOP|wx.EXPAND,2)
+        commandSizer.Add(filActTxtColourButton)
+        commandSizer.Add(filActBckLbl,0,wx.TOP|wx.EXPAND,2)
+        commandSizer.Add(filActBckColourButton)
 
 
         def OnTitleChange(evt = None):
