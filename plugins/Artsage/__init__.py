@@ -1,5 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 #
+# plugins/Artsage/__init__.py
+#
 # This file is a plugin for EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
@@ -17,6 +19,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.0.2 by Pako 2012-11-11 12:47 UTC+1
+#     - bugfix (when filename contains a space character)
 # 0.0.1 by Pako 2012-09-29 15:38 UTC+1
 #     - initial version
 #===============================================================================
@@ -79,7 +83,7 @@ AScatalog = eg.WindowMatcher(
 eg.RegisterPlugin(
     name="Artsage",
     author = "Pako",
-    version = "0.0.1",
+    version = "0.0.2",
     guid = "{FD304FE6-C4F8-4356-BEC2-E786741DD1EB}",
     kind = "program",
     createMacrosOnAdd = True,
@@ -1487,7 +1491,7 @@ class OpenPicture(eg.ActionBase):
             ap = ap.encode(FSE) if isinstance(ap, unicode) else ap
             if isfile(ap) and  isfile(filepath):
                 args = [ap]
-                args.append(filepath)
+                args.append('"%s"' % filepath)
                 Popen(args)
 
 
@@ -1528,7 +1532,7 @@ class OpenFolder(eg.ActionBase):
             ap = ap.encode(FSE) if isinstance(ap, unicode) else ap
             if isfile(ap) and isdir(filepath):
                 args = [ap]
-                args.append(filepath)
+                args.append('"%s"' % filepath)
                 Popen(args)
 
 
