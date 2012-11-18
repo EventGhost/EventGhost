@@ -19,6 +19,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.0.3 by Pako 2012-11-18 10:20 UTC+1
+#     - stop processing event feature added (for Menu and Catalog events)
 # 0.0.2 by Pako 2012-11-11 12:47 UTC+1
 #     - bugfix (when filename contains a space character)
 # 0.0.1 by Pako 2012-09-29 15:38 UTC+1
@@ -83,7 +85,7 @@ AScatalog = eg.WindowMatcher(
 eg.RegisterPlugin(
     name="Artsage",
     author = "Pako",
-    version = "0.0.2",
+    version = "0.0.3",
     guid = "{FD304FE6-C4F8-4356-BEC2-E786741DD1EB}",
     kind = "program",
     createMacrosOnAdd = True,
@@ -928,10 +930,12 @@ class Menu(wx.Frame):
 
     def onUp(self, event):
         wx.CallAfter(self.menuGridCtrl.MoveCursor, -1)
+        return True #stop processing this event !!!
         
 
     def onDown(self, event):
         wx.CallAfter(self.menuGridCtrl.MoveCursor, 1)
+        return True #stop processing this event !!!
         
 
     def onLeft(self, event):
@@ -939,14 +943,17 @@ class Menu(wx.Frame):
             wx.CallAfter(self.UpdateMenu, False, 0, False)
         else:
             wx.CallAfter(self.destroyMenu)
+        return True #stop processing this event !!!
         
 
     def onRight(self, event):
         wx.CallAfter(self.DefaultAction)
+        return True #stop processing this event !!!
         
 
     def onEscape(self, event):
         wx.CallAfter(self.destroyMenu)
+        return True #stop processing this event !!!
         
 
     def GetSubMenuExt(self, hWnd, ix, up):
@@ -1213,26 +1220,32 @@ class Artsage(eg.PluginBase):
 
     def onUp(self, event):
         eg.SendKeys(self.asCat, "{Up}", False)
+        return True #stop processing this event !!!
 
 
     def onDown(self, event):
         eg.SendKeys(self.asCat, "{Down}", False)
+        return True #stop processing this event !!!
 
 
     def onLeft(self, event):
         eg.SendKeys(self.asCat, "{Left}", False)
+        return True #stop processing this event !!!
 
 
     def onRight(self, event):
         eg.SendKeys(self.asCat, "{Right}", False)
+        return True #stop processing this event !!!
         
 
     def onEnter(self, event):
         eg.SendKeys(self.asCat, "{Enter}", False)
+        return True #stop processing this event !!!
         
 
     def onEscape(self, event):
         eg.SendKeys(self.asCat, "{Escape}", False)
+        return True #stop processing this event !!!
  
 
     def bindCatEvents(self):
