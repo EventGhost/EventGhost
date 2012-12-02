@@ -26,7 +26,7 @@ from Dynamic import (
     ShowWindow, BringWindowToTop, UpdateWindow, GetForegroundWindow,
     InvalidateRect, GetCurrentThreadId, GetWindowThreadProcessId,
     SendNotifyMessage, GetWindowRect, GetCursorPos,
-    EnumDisplayMonitors, FindWindow,
+    EnumDisplayMonitors, FindWindow, GetWindowLong,
     IsWindowVisible, GetParent, GetWindowDC, GetClassLong, EnumChildWindows,
     ReleaseDC, GetDC, DeleteObject, CreatePen, GetSystemMetrics,
     SendMessageTimeout, ScreenToClient, WindowFromPoint, SendMessageTimeout,
@@ -37,6 +37,7 @@ from Dynamic import (
     WM_GETICON, ICON_SMALL, ICON_BIG, SMTO_ABORTIFHUNG, GCL_HICONSM, GCL_HICON,
     R2_NOT, PS_INSIDEFRAME, SM_CXBORDER, NULL_BRUSH, GA_ROOT, SW_RESTORE,
     WM_SYSCOMMAND, SC_CLOSE, SW_SHOWNA, SMTO_BLOCK, SMTO_ABORTIFHUNG,
+    GWL_EXSTYLE, WS_EX_TOPMOST,
 )
 from Dynamic.PsApi import (
     EnumProcesses,
@@ -389,4 +390,40 @@ def IsWin64():
     except:
         return False
     return True
+
+
+def GetAlwaysOnTop(hwnd = None):
+    hwnd = GetBestHwnd(hwnd)
+    style = GetWindowLong(hwnd, GWL_EXSTYLE)
+    isAlwaysOnTop = (style & WS_EX_TOPMOST) != 0
+    return isAlwaysOnTop
+
+
+def GetBestHwnd(hwnd = None):
+    if isinstance(hwnd, int):
+        return hwnd
+    elif len(eg.lastFoundWindows):
+        return eg.lastFoundWindows[0]
+    else:
+        return GetForegroundWindow()
+
+
+def GetContainingMonitor(win):
+    monitorDims = GetMonitorDimensions()
+    for i in range(len(monitorDims)):
+        # If window is entirely on one monitor, return that monitor
+        if monitorDims[i].ContainsRect(win):
+            return monitorDims[i], i
+    else:
+        # Otherwise, default to the main monitor
+        return monitorDims[0], 0
+
+
+def GetWindowDimensions(hwnd = None):
+    hwnd = GetBestHwnd(hwnd)
+    windowDims = RECT()
+    GetWindowRect(hwnd, byref(windowDims))
+    width = windowDims.right - windowDims.left
+    height = windowDims.bottom - windowDims.top
+    return wx.Rect(windowDims.left, windowDims.top, width, height)
 
