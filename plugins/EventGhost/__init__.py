@@ -24,7 +24,7 @@ eg.RegisterPlugin(
         "EventGhost."
     ),
     kind = "core",
-    version = "1.0.0",
+    version = "1.0.1",
     guid = "{9D499A2C-72B6-40B0-8C8C-995831B10BB4}",
 )
 
@@ -63,7 +63,7 @@ class EventGhost(eg.PluginBase):
         self.AddAction(TriggerEvent)
         self.AddAction(FlushEvents)
         self.AddAction(ShowOSD)
-
+        self.AddAction(DumpResult)
 
 
 class PythonCommand(eg.ActionWithStringParameter):
@@ -559,4 +559,14 @@ class FlushEvents(eg.ActionBase):
     def __call__(self):
         eg.eventThread.ClearPendingEvents()
         eg.actionThread.ClearPendingEvents()
+
+
+class DumpResult(eg.ActionBase):
+    name = "Dump Result to Log"
+    description = "Outputs the most recent eg.result to your EventGhost log. Useful for debugging."
+
+    def __call__(self):
+        result = eg.result
+        print str(result)
+        return result
 

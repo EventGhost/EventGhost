@@ -18,12 +18,12 @@ import eg
 
 eg.RegisterPlugin(
     name = "Window",
-    author = "Bitmonster",
-    version = "1.1.0",
+    author = "Bitmonster & blackwind",
+    version = "1.1.1",
     description = (
         "Actions that are related to the control of windows on the desktop, "
-        "like finding specific windows, move, resize, grab text(s) "
-        "and send keypresses to them."
+        "like finding specific windows, moving, resizing, and sending "
+        "keypresses to them."
     ),
     kind = "core",
     guid = "{E974D074-B0A3-4D0C-BBD1-992475DDD69D}",
@@ -38,7 +38,11 @@ eg.RegisterPlugin(
 
 import wx
 from win32api import EnumDisplayMonitors, CloseHandle
-from eg.WinApi.Utils import BringHwndToFront, CloseHwnd, GetMonitorDimensions
+from eg.WinApi import GetWindowText
+from eg.WinApi.Utils import (
+    BringHwndToFront, CloseHwnd, GetMonitorDimensions, GetHwndIcon,
+    GetAlwaysOnTop, GetBestHwnd, GetContainingMonitor, GetWindowDimensions,
+)
 from eg.WinApi.Dynamic import (
     # functions:
     SendNotifyMessage, GetAncestor, GetWindowLong, ShowWindow, GetWindowRect,
@@ -160,11 +164,13 @@ class Window(eg.PluginBase):
         self.AddAction(SendMessage)
         self.AddAction(SetAlwaysOnTop)
         self.AddAction(GrabText)
+        self.AddAction(DockWindow)
+        self.AddAction(MinimizeToTray)
 
 
 
 class BringToFront(eg.ActionBase):
-    name = "Bring to front"
+    name = "Bring to Front"
     description = "Bring the specified window to front."
     iconFile = "icons/BringToFront"
 
@@ -442,7 +448,7 @@ class SendMessage(eg.ActionBase):
 
 
 class SetAlwaysOnTop(eg.ActionBase):
-    name = "Set always on top property"
+    name = "Always on Top"
     class text:
         radioBox = "Choose action:"
         actions = (
@@ -456,14 +462,14 @@ class SetAlwaysOnTop(eg.ActionBase):
             if not IsWindow(hwnd):
                 self.PrintError("Not a window")
                 continue
-            style = GetWindowLong(hwnd, GWL_EXSTYLE)
-            isAlwaysOnTop = (style & WS_EX_TOPMOST) != 0
+            isAlwaysOnTop = GetAlwaysOnTop(hwnd)
             if action == 1 or (action == 2 and not isAlwaysOnTop):
                 flag = HWND_TOPMOST
             else:
                 flag = HWND_NOTOPMOST
 
             SetWindowPos(hwnd, flag, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE)
+        return GetAlwaysOnTop(hwnd)
 
 
     def GetLabel(self, action):
@@ -486,7 +492,7 @@ class SetAlwaysOnTop(eg.ActionBase):
 
 
 class GrabText(eg.ActionBase):
-    name = "Grab text(s)"
+    name = "Grab Text Item(s)"
 #=========================================================================================================
 # Sources:
 # winGuiAuto.py (Simon Brunning - simon@brunningonline.net)
@@ -501,11 +507,11 @@ class GrabText(eg.ActionBase):
     class text:
         onlySel = "Return only selected item(s)"
         onlySelToolTip = """Return only selected item(s).
-For example: ComboBox, ListBox, ListVieW"""
+For example: ComboBox, ListBox, ListView"""
 
     def Configure(self, only_sel = False):
         panel = eg.ConfigPanel(self)
-        onlySelCtrl = wx.CheckBox(panel, -1, '  '+self.text.onlySel)
+        onlySelCtrl = wx.CheckBox(panel, -1, self.text.onlySel)
         onlySelCtrl.SetValue(only_sel)
         onlySelCtrl.SetToolTip(wx.ToolTip(self.text.onlySelToolTip))
         panel.AddCtrl(onlySelCtrl)
@@ -649,4 +655,83 @@ For example: ComboBox, ListBox, ListVieW"""
         _kernel32.VirtualFreeEx(hProcHnd, pLVI, 0, MEM_RELEASE)
         CloseHandle(hProcHnd)
         return map(list, zip(*res)) #Transposing Two-Dimensional Arrays by Steve Holden
+
+
+class DockWindow(eg.ActionBase):
+    name = "Dock Window"
+    description = "Moves the specified window to the specified edge(s) of your screen. Respects multi-monitor configurations."
+
+    hChoices = ["[no change]", "Left", "Center", "Right"]
+    vChoices = ["[no change]", "Top", "Center", "Bottom"]
+
+    def __call__(self, h, v, hwnd = None):
+        hwnd = GetBestHwnd(hwnd)
+        win = GetWindowDimensions(hwnd)
+        mon, i = GetContainingMonitor(win)
+
+        # Choose horizontal position
+        if h == 1:
+            x = mon.left
+        elif h == 2:
+            x = mon.left + (mon.width / 2) - (win.width / 2)
+        elif h == 3:
+            x = mon.left + mon.width - win.width
+        else:
+            x = win.left
+
+        # Choose vertical position
+        if v == 1:
+            y = mon.top
+        elif v == 2:
+            y = mon.top + (mon.height / 2) - (win.height / 2)
+        elif v == 3:
+            y = mon.top + mon.height - win.height
+        else:
+            y = win.top
+
+        # Move window to the specified location
+        MoveWindow(hwnd, x, y, win.width, win.height, 1)
+
+
+    def Configure(self, h = 0, v = 0):
+        panel = eg.ConfigPanel()
+        vCtrl = panel.ComboBox(self.vChoices[v], self.vChoices, style = wx.CB_READONLY)
+        hCtrl = panel.ComboBox(self.hChoices[h], self.hChoices, style = wx.CB_READONLY)
+        panel.AddLine("Vertical Position:", vCtrl)
+        panel.AddLine("Horizontal Position:", hCtrl)
+        while panel.Affirmed():
+            panel.SetResult(self.hChoices.index(hCtrl.GetValue()),
+                            self.vChoices.index(vCtrl.GetValue()))
+
+
+    def GetLabel(self, h, v):
+        return "Dock Window: V: " + self.vChoices[v] + ", H: " + self.hChoices[h]
+
+
+class MinimizeToTray(eg.ActionBase):
+    name = "Minimize to Tray"
+    description = "Minimizes the specified window to the system tray."
+
+    def __call__(self, hwnd = None):
+        # Gather info about the target window
+        self.hwnd = GetBestHwnd(hwnd)
+        icon = GetHwndIcon(self.hwnd)
+        title = unicode(GetWindowText(self.hwnd))
+
+        # If valid, minimize target to the systray
+        if isinstance(self.hwnd, int) and isinstance(icon, wx._gdi.Icon):
+            self.trayIcon = wx.TaskBarIcon()
+            self.trayIcon.SetIcon(icon, title)
+            self.trayIcon.Bind(wx.EVT_TASKBAR_LEFT_UP, self.OnClick)
+            ShowWindow(self.hwnd, 0)
+
+
+    def OnClick(self, *dummyArgs):
+        # Remove our tray icon and restore the window
+        try:
+            BringHwndToFront(self.hwnd)
+            self.trayIcon.RemoveIcon()
+            self.trayIcon.Destroy()
+        except:
+            pass
 
