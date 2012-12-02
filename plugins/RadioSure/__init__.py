@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-version="0.2.20"
+version="0.2.21"
 
 # plugins/RadioSure/__init__.py
 #
@@ -22,6 +22,8 @@ version="0.2.20"
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.21 by Pako 2012-12-02 13:06 UTC+1
+#     - added "Stop processing event" feature (Menu frame)
 # 0.2.20 by Pako 2011-08-24 09:12 UTC+1
 #     - bugfix - wrong stored last position of manager and scheduler
 # 0.2.19 by Pako 2011-06-27 13:54 UTC+1
@@ -3692,10 +3694,12 @@ class Menu(wx.Frame):
 
     def onUp(self, event):
         wx.CallAfter(self.menuGridCtrl.MoveCursor, -1)
+        return True #stop processing this event !!!
 
 
     def onDown(self, event):
         wx.CallAfter(self.menuGridCtrl.MoveCursor, 1)
+        return True #stop processing this event !!!
 
 
     def onLeft(self, event):
@@ -3704,14 +3708,17 @@ class Menu(wx.Frame):
             wx.CallAfter(self.UpdateMenu, True, ix)
         else:
             wx.CallAfter(self.destroyMenu)
+        return True #stop processing this event !!!
 
 
     def onRight(self, event):
         wx.CallAfter(self.DefaultAction)
+        return True #stop processing this event !!!
 
 
     def onEscape(self, event):
         wx.CallAfter(self.destroyMenu)
+        return True #stop processing this event !!!
 
 
     def GetSubMenuExt(self, hWnd, ix):

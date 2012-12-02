@@ -20,6 +20,8 @@
     
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 2.4 by Pako 2012-12-02 16:01 UTC+1
+#     - added "Stop processing event" feature (Menu and GoTo frames)
 # 2.3 by Pako 2012-09-10 08:15 UTC+1
 #     - the function GetMpcHcPath() changed,
 #       due to HKEY_LOCAL_MACHINE -> HKEY_CURRENT_USER change
@@ -60,7 +62,7 @@
 eg.RegisterPlugin(
     name = "Media Player Classic",
     author = "MonsterMagnet",
-    version = "2.3",
+    version = "2.4",
     kind = "program",
     guid = "{DD75104D-D586-438A-B63D-3AD01A4D4BD3}",
     createMacrosOnAdd = True,
@@ -746,22 +748,27 @@ class GoToFrame(wx.Frame):
 
     def onUp(self, event):
         wx.CallAfter(self.Turn, 1)
+        return True #stop processing this event !!!
 
 
     def onDown(self, event):
         wx.CallAfter(self.Turn, -1)
+        return True #stop processing this event !!!
 
 
     def onLeft(self, event):
         wx.CallAfter(self.MoveCursor, -1)
+        return True #stop processing this event !!!
 
 
     def onRight(self, event):
         wx.CallAfter(self.MoveCursor, 1)
+        return True #stop processing this event !!!
 
 
     def onEscape(self, event):
         wx.CallAfter(self.destroyMenu)
+        return True #stop processing this event !!!
 
 
     def GoTo(
@@ -1185,10 +1192,12 @@ class Menu(wx.Frame):
 
     def onUp(self, event):
         wx.CallAfter(self.menuGridCtrl.MoveCursor, -1)
+        return True #stop processing this event !!!
 
 
     def onDown(self, event):
         wx.CallAfter(self.menuGridCtrl.MoveCursor, 1)
+        return True #stop processing this event !!!
 
 
     def onLeft(self, event):
@@ -1197,14 +1206,17 @@ class Menu(wx.Frame):
             wx.CallAfter(self.UpdateMenu, ix)
         else:
             wx.CallAfter(self.destroyMenu)
+        return True #stop processing this event !!!
 
 
     def onRight(self, event):
         wx.CallAfter(self.DefaultAction)
+        return True #stop processing this event !!!
 
 
     def onEscape(self, event):
         wx.CallAfter(self.destroyMenu)
+        return True #stop processing this event !!!
 
 
     def DefaultAction(self):
