@@ -310,6 +310,11 @@ class EditControlProxy(object):
         self.realControl.Copy()
 
 
+    def OnCmdPython(self):
+        eg.PrintNotice("DEBUG: TreeCtrl: OnCmdPython")
+        #self.realControl.Copy()
+
+
     def OnCmdPaste(self):
         self.realControl.Paste()
 
@@ -329,6 +334,10 @@ class EditControlProxy(object):
 
     def CanCopy(self):
         return self.realControl.CanCopy()
+
+
+    #def CanPython(self):
+    #    return self.realControl.CanPython()
 
 
     def CanPaste(self):
@@ -546,10 +555,11 @@ class TreeCtrl(wx.TreeCtrl):
     def GetEditCmdState(self):
         node = self.GetSelectedNode()
         if node is None:
-            return (False, False, False, False)
+            return (False, False, False, False, False)
         return (
             node.CanCut(),
             node.CanCopy(),
+            node.CanPython(),
             node.CanPaste(),
             node.CanDelete()
         )
@@ -629,6 +639,10 @@ class TreeCtrl(wx.TreeCtrl):
         Handles wx.EVT_TREE_BEGIN_LABEL_EDIT
         """
         node = self.GetPyData(event.GetItem())
+        if node.__class__ == self.document.EventItem: #2012-12-02
+            wx.CallAfter(self.document.OnCmdConfigure, node)
+            event.Veto()
+            return
         if not node.isRenameable or self.FindFocus() is not self:
             event.Veto()
             return

@@ -122,6 +122,7 @@ class Default:
             Redo = "&Redo"
             Cut = "Cu&t"
             Copy = "&Copy"
+            Python = "Copy As Python"
             Paste = "&Paste"
             Delete = "&Delete"
             SelectAll = "Select &All"

@@ -510,6 +510,11 @@ class Document(object):
 
 
     @eg.AssertInMainThread
+    def CmdPython(self):   
+        self.selection.OnCmdPython()
+
+
+    @eg.AssertInMainThread
     def CmdPaste(self):
         eg.UndoHandler.Paste(self).Do(self.selection)
 
@@ -521,7 +526,9 @@ class Document(object):
 
     @eg.AssertInMainThread
     def CmdRename(self):
-        if not self.selection.isRenameable:
+        if self.selection.__class__ == self.EventItem: #2012-12-02
+            self.frame.treeCtrl.EditNodeLabel(self.selection)
+        elif not self.selection.isRenameable:
             self.DisplayError("cantRename")
         else:
             self.frame.treeCtrl.EditNodeLabel(self.selection)

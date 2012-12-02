@@ -42,6 +42,7 @@ RESET_ICON = eg.Icons.ERROR_ICON.GetBitmap()
 
 ID_DISABLED = wx.NewId()
 ID_EXECUTE = wx.NewId()
+ID_PYTHON = wx.NewId()
 ID_TOOLBAR_EXECUTE = wx.NewId()
 
 ID = defaultdict(wx.NewId, {
@@ -50,6 +51,7 @@ ID = defaultdict(wx.NewId, {
     "Redo": wx.ID_REDO,
     "Cut": wx.ID_CUT,
     "Copy": wx.ID_COPY,
+    "Python": ID_PYTHON,
     "Paste": wx.ID_PASTE,
     "Delete": wx.ID_DELETE,
     "Disabled": ID_DISABLED,
@@ -263,6 +265,7 @@ class MainFrame(wx.Frame):
         toolBar.AddSeparator()
         Append("Cut", GetInternalBitmap("Cut"))
         Append("Copy", GetInternalBitmap("Copy"))
+        Append("Python", GetInternalBitmap("Python"))
         Append("Paste", GetInternalBitmap("Paste"))
         toolBar.AddSeparator()
         Append("Undo", GetInternalBitmap("Undo"))
@@ -363,6 +366,7 @@ class MainFrame(wx.Frame):
         menu.AppendSeparator()
         Append("Cut", "\tCtrl+X")
         Append("Copy", "\tCtrl+C")
+        Append("Python", "\tShift+Ctrl+C")
         Append("Paste", "\tCtrl+V")
         # notice that we add a ascii zero byte at the end of the hotkey.
         # this way we prevent the normal accelerator to happen. We will later
@@ -451,12 +455,12 @@ class MainFrame(wx.Frame):
             item.SetBitmap(image)
             menu.AppendItem(item)
             return item
-
         Append("Undo")
         Append("Redo")
         menu.AppendSeparator()
         Append("Cut")
         Append("Copy")
+        Append("Python")
         Append("Paste")
         Append("Delete")
         menu.AppendSeparator()
@@ -475,7 +479,6 @@ class MainFrame(wx.Frame):
 
 
     def CreateTreeCtrl(self):
-        #treeCtrl = TreeCtrl(self, document=self.document)
         treeCtrl = TreeCtrl(self, document=self.document)        
         self.auiManager.AddPane(
             treeCtrl,
@@ -692,9 +695,10 @@ class MainFrame(wx.Frame):
 
         self.lastFocus = focus
         toolBar = self.toolBar
-        canCut, canCopy, canPaste = self.GetEditCmdState()[:3]
+        canCut, canCopy, canPython, canPaste = self.GetEditCmdState()[:4]
         toolBar.EnableTool(wx.ID_CUT, canCut)
         toolBar.EnableTool(wx.ID_COPY, canCopy)
+        toolBar.EnableTool(ID_PYTHON, canPython)
         toolBar.EnableTool(wx.ID_PASTE, canPaste)
 
 
@@ -735,25 +739,28 @@ class MainFrame(wx.Frame):
 
 
     def GetEditCmdState(self):
+
         focus = self.lastFocus
         if focus == self.treeCtrl.editControl:
             return (
                 focus.CanCut(),
                 focus.CanCopy(),
+                False,
                 focus.CanPaste(),
                 focus.CanDelete()
             )
         elif focus == self.logCtrl:
-            return (False, True, False, False)
+            return (False, True, False, False, False)
         elif focus == self.treeCtrl:
             return self.treeCtrl.GetEditCmdState()
-        return (False, False, False, False)
+        return (False, False, False, False, False)
 
 
     def OnSelectionChange(self, dummySelection):
-        canCut, canCopy, canPaste = self.GetEditCmdState()[:3]
+        canCut, canCopy, canPython, canPaste = self.GetEditCmdState()[:4]
         self.toolBar.EnableTool(wx.ID_CUT, canCut)
         self.toolBar.EnableTool(wx.ID_COPY, canCopy)
+        self.toolBar.EnableTool(ID_PYTHON, canPython)
         self.toolBar.EnableTool(wx.ID_PASTE, canPaste)
 
 
@@ -779,9 +786,10 @@ class MainFrame(wx.Frame):
 
 
     def SetupEditMenu(self, menu):
-        canCut, canCopy, canPaste, canDelete = self.GetEditCmdState()
+        canCut, canCopy, canPython, canPaste, canDelete = self.GetEditCmdState()
         menu.Enable(wx.ID_CUT, canCut)
         menu.Enable(wx.ID_COPY, canCopy)
+        menu.Enable(ID_PYTHON, canPython)
         menu.Enable(wx.ID_PASTE, canPaste)
         menu.Enable(wx.ID_DELETE, canDelete)
         selection = self.treeCtrl.GetSelectedNode()
@@ -851,6 +859,10 @@ class MainFrame(wx.Frame):
 
     def OnCmdCopy(self):
         self.DispatchCommand("OnCmdCopy")
+
+
+    def OnCmdPython(self):
+        self.DispatchCommand("OnCmdPython")
 
 
     def OnCmdPaste(self):

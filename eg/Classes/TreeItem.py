@@ -234,6 +234,10 @@ class TreeItem(object):
         return True
 
 
+    def CanPython(self):
+        return self.__class__ == self.document.ActionItem
+
+
     def CanPaste(self):
         if not wx.TheClipboard.Open():
             return False
@@ -277,6 +281,16 @@ class TreeItem(object):
     def OnCmdCopy(self):
         data = self.GetXmlString()
         if data and wx.TheClipboard.Open():
+            wx.TheClipboard.SetData(wx.TextDataObject(data))
+            wx.TheClipboard.Close()
+
+
+    def OnCmdPython(self):
+        data = self.GetXmlString()
+        if data and wx.TheClipboard.Open():
+            ix1 = 10 + data.find("<Action>\r\n")
+            ix2 = data.find("\r\n    </Action>")
+            data = "eg.plugins."+data[ix1:ix2].strip()
             wx.TheClipboard.SetData(wx.TextDataObject(data))
             wx.TheClipboard.Close()
 
