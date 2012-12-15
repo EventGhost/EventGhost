@@ -18,6 +18,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.0.2  by Pako 2012-12-15 10:50 UTC+1
+#      - url for support is set
 # 0.0.1  by Pako 2012-12-14 19:11 UTC+1
 #      - initial version 
 #===============================================================================
@@ -52,10 +54,10 @@ Works as a simple NTP client.
     kind="other",
     author="Pako",
     guid = "{DCD090E9-D561-4FBA-9BAB-31A7DE66455F}",
-    version="0.0.1",
+    version="0.0.2",
     createMacrosOnAdd=True,
     canMultiLoad = False,
-    #url = "http://www.eventghost.net/forum/viewtopic.php?f=XXXXXXX",
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=5088",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAADAFBMVEUA///g4OCYmJha"
         "Wlo6OjpZWVmQkJDa2tqfn59LS0sbGxsICAgDAwMEBAQFBQUaGhpKSkqcnJyPj48gICAA"
