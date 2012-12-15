@@ -18,6 +18,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.0.3  by Pako 2012-12-15 11:04 UTC+1
+#      - bugfix
 # 0.0.2  by Pako 2012-12-15 10:50 UTC+1
 #      - url for support is set
 # 0.0.1  by Pako 2012-12-14 19:11 UTC+1
@@ -429,9 +431,12 @@ class NTP(eg.PluginBase):
 
 
     def InstantSynchro(self):
-        server = self.serverCtrl.GetValue()
-        self.Log(self.text.syncStart % server)
-        self.Synchro((server,))  
+        if self.log:
+            server = self.serverCtrl.GetValue()
+            self.Log(self.text.syncStart % server)
+            self.Synchro((server,))
+        else:
+            self.Synchro()
 
 
     def SetStatusLabel(self):
