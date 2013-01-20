@@ -19,7 +19,7 @@ import eg
 eg.RegisterPlugin(
     name = "Webserver",
     author = "Bitmonster",
-    version = "1.0",
+    version = "1.1",
     guid = "{E4305D8E-A3D3-4672-B06E-4EA1F0F6C673}",
     description = (
         "Implements a small webserver, that you can use to generate events "
@@ -148,6 +148,7 @@ class MyServer(ThreadingMixIn, HTTPServer):
 class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
     extensions_map = SimpleHTTPRequestHandler.extensions_map.copy()
     extensions_map['.ico'] = 'image/x-icon'
+    extensions_map['.svg'] = 'image/svg+xml'
     extensions_map['.manifest'] = 'text/cache-manifest'
     # these class attributes will be set by the plugin
     authString = None
