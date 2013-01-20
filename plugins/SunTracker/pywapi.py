@@ -24,55 +24,39 @@
 """
 Fetches weather reports from Google Weather, Yahoo Wheather and NOAA
 """
+##############################################################################
+#28-08-2012 Modifications by Walter Kraembring (krambriw)
+##############################################################################
 
-import urllib2, re
+import urllib2, string
 from xml.dom import minidom
-from urllib import quote
 
-GOOGLE_WEATHER_URL   = 'http://www.google.com/ig/api?weather=%s&hl=%s'
-GOOGLE_COUNTRIES_URL = 'http://www.google.com/ig/countries?output=xml&hl=%s'
-GOOGLE_CITIES_URL    = 'http://www.google.com/ig/cities?output=xml&country=%s&hl=%s'
+GOOGLE_WEATHER_URL = 'http://www.google.com/ig/api?weather=%s&hl=%s'
 
-YAHOO_WEATHER_URL    = 'http://xml.weather.yahoo.com/forecastrss?p=%s&u=%s'
-YAHOO_WEATHER_NS     = 'http://xml.weather.yahoo.com/ns/rss/1.0'
+#YAHOO_WEATHER_URL    = 'http://xml.weather.yahoo.com/forecastrss?p=%s&u=%s' #krambriw
+YAHOO_WEATHER_URL    = 'http://weather.yahooapis.com/forecastrss?w=%s&u=%s&d=5' #krambriw
+YAHOO_WEATHER_NS = 'http://xml.weather.yahoo.com/ns/rss/1.0'
 
-NOAA_WEATHER_URL     = 'http://www.weather.gov/xml/current_obs/%s.xml'
+NOAA_WEATHER_URL = 'http://www.weather.gov/xml/current_obs/%s.xml'
 
 def get_weather_from_google(location_id, hl = ''):
     """
     Fetches weather report from Google
 
     Parameters 
-      location_id: a zip code (10001); city name, state (weather=woodland,PA); city name, country (weather=london, england);
-      latitude/longitude(weather=,,,30670000,104019996) or possibly other.
-      hl: the language parameter (language code). Default value is empty string, in this case Google will use English.
+      location_id: a zip code (10001); city name, state (weather=woodland,PA); city name, country (weather=london,england); or possibly others.
+      hl: the language parameter (language code)
 
     Returns:
       weather_data: a dictionary of weather data that exists in XML feed. 
     """
-    location_id, hl = map(quote, (location_id, hl))
+
     url = GOOGLE_WEATHER_URL % (location_id, hl)
-    weather_data = {}
-
-##### Modified by Walter Kraembring 31.12.2009
-    try:
-        handler = urllib2.urlopen(url)
-    except:
-        eg.PrintError("URL Error")
-        return weather_data
-######
-
-    content_type = handler.info().dict['content-type']
-    charset = re.search('charset\=(.*)',content_type).group(1)
-    if not charset:
-        charset = 'utf-8'
-    if charset.lower() != 'utf-8':
-        xml_response = handler.read().decode(charset).encode('utf-8')
-    else:
-        xml_response = handler.read()
-    dom = minidom.parseString(xml_response)    
+    handler = urllib2.urlopen(url)
+    dom = minidom.parse(handler)    
     handler.close()
-    
+
+    weather_data = {}
     weather_dom = dom.getElementsByTagName('weather')[0]
 
     data_structure = { 
@@ -82,10 +66,7 @@ def get_weather_from_google(location_id, hl = ''):
     for (tag, list_of_tags2) in data_structure.iteritems():
         tmp_conditions = {}
         for tag2 in list_of_tags2:
-            try: 
-                tmp_conditions[tag2] =  weather_dom.getElementsByTagName(tag)[0].getElementsByTagName(tag2)[0].getAttribute('data')
-            except IndexError:
-                pass
+            tmp_conditions[tag2] =  weather_dom.getElementsByTagName(tag)[0].getElementsByTagName(tag2)[0].getAttribute('data')
         weather_data[tag] = tmp_conditions
 
     forecast_conditions = ('day_of_week', 'low', 'high', 'icon', 'condition')
@@ -97,86 +78,12 @@ def get_weather_from_google(location_id, hl = ''):
             tmp_forecast[tag] = forecast.getElementsByTagName(tag)[0].getAttribute('data')
         forecasts.append(tmp_forecast)
 
-    weather_data['forecasts'] = forecasts
+    weather_data['forecasts'] = forecasts    
     dom.unlink()
 
-    #print weather_data
     return weather_data
     
-    
-def get_countries_from_google(hl = ''):
-    """
-    Get list of countries in specified language from Google
-    
-    Parameters
-      hl: the language parameter (language code). Default value is empty string, in this case Google will use English.
-    Returns:
-      countries: a list of elements(all countries that exists in XML feed). Each element is a dictionary with 'name' and 'iso_code' keys. 
-      For example: [{'iso_code': 'US', 'name': 'USA'}, {'iso_code': 'FR', 'name': 'France'}]
-    """
-    url = GOOGLE_COUNTRIES_URL % hl
-    
-    handler = urllib2.urlopen(url)
-    content_type = handler.info().dict['content-type']
-    charset = re.search('charset\=(.*)',content_type).group(1)
-    if not charset:
-        charset = 'utf-8'
-    if charset.lower() != 'utf-8':
-        xml_response = handler.read().decode(charset).encode('utf-8')
-    else:
-        xml_response = handler.read()
-    dom = minidom.parseString(xml_response)
-    handler.close()
 
-    countries = []
-    countries_dom = dom.getElementsByTagName('country')
-    
-    for country_dom in countries_dom:
-        country = {}
-        country['name'] = country_dom.getElementsByTagName('name')[0].getAttribute('data')
-        country['iso_code'] = country_dom.getElementsByTagName('iso_code')[0].getAttribute('data')
-        countries.append(country)
-    
-    dom.unlink()
-    return countries
-
-def get_cities_from_google(country_code, hl = ''):
-    """
-    Get list of cities of necessary country in specified language from Google
-    
-    Parameters
-      country_code: code of the necessary country. For example 'de' or 'fr'.
-      hl: the language parameter (language code). Default value is empty string, in this case Google will use English.
-    Returns:
-      cities: a list of elements(all cities that exists in XML feed). Each element is a dictionary with 'name', 'latitude_e6' and 'longitude_e6' keys. For example: [{'longitude_e6': '1750000', 'name': 'Bourges', 'latitude_e6': '47979999'}]
-    """
-    url = GOOGLE_CITIES_URL % (country_code.lower(), hl)
-    
-    handler = urllib2.urlopen(url)
-    content_type = handler.info().dict['content-type']
-    charset = re.search('charset\=(.*)',content_type).group(1)
-    if not charset:
-        charset = 'utf-8'
-    if charset.lower() != 'utf-8':
-        xml_response = handler.read().decode(charset).encode('utf-8')
-    else:
-        xml_response = handler.read()
-    dom = minidom.parseString(xml_response)
-    handler.close()
-
-    cities = []
-    cities_dom = dom.getElementsByTagName('city')
-    
-    for city_dom in cities_dom:
-        city = {}
-        city['name'] = city_dom.getElementsByTagName('name')[0].getAttribute('data')
-        city['latitude_e6'] = city_dom.getElementsByTagName('latitude_e6')[0].getAttribute('data')
-        city['longitude_e6'] = city_dom.getElementsByTagName('longitude_e6')[0].getAttribute('data')
-        cities.append(city)
-    
-    dom.unlink()
-    
-    return cities
 
 def get_weather_from_yahoo(location_id, units = 'metric'):
     """
@@ -193,45 +100,47 @@ def get_weather_from_yahoo(location_id, units = 'metric'):
     Returns:
     weather_data: a dictionary of weather data that exists in XML feed. See  http://developer.yahoo.com/weather/#channel
     """
-    location_id = quote(location_id)
+    weather_data = {} #krambriw
     if units == 'metric':
         unit = 'c'
     else:
         unit = 'f'
-    url = YAHOO_WEATHER_URL % (location_id, unit)
-    handler = urllib2.urlopen(url)
-    dom = minidom.parse(handler)    
-    handler.close()
+    try: #krambriw
+        url = YAHOO_WEATHER_URL % (location_id, unit)
+        handler = urllib2.urlopen(url)
+        dom = minidom.parse(handler)    
+        handler.close()
+            
+        weather_data['title'] = dom.getElementsByTagName('title')[0].firstChild.data
+        weather_data['link'] = dom.getElementsByTagName('link')[0].firstChild.data
+    
+        ns_data_structure = { 
+            'location': ('city', 'region', 'country'),
+            'units': ('temperature', 'distance', 'pressure', 'speed'),
+            'wind': ('chill', 'direction', 'speed'),
+            'atmosphere': ('humidity', 'visibility', 'pressure', 'rising'),
+            'astronomy': ('sunrise', 'sunset'),
+            'condition': ('text', 'code', 'temp', 'date')
+        }       
         
-    weather_data = {}
-    weather_data['title'] = dom.getElementsByTagName('title')[0].firstChild.data
-    weather_data['link'] = dom.getElementsByTagName('link')[0].firstChild.data
-
-    ns_data_structure = { 
-        'location': ('city', 'region', 'country'),
-        'units': ('temperature', 'distance', 'pressure', 'speed'),
-        'wind': ('chill', 'direction', 'speed'),
-        'atmosphere': ('humidity', 'visibility', 'pressure', 'rising'),
-        'astronomy': ('sunrise', 'sunset'),
-        'condition': ('text', 'code', 'temp', 'date')
-    }       
+        for (tag, attrs) in ns_data_structure.iteritems():
+            weather_data[tag] = xml_get_ns_yahoo_tag(dom, YAHOO_WEATHER_NS, tag, attrs)
     
-    for (tag, attrs) in ns_data_structure.iteritems():
-        weather_data[tag] = xml_get_ns_yahoo_tag(dom, YAHOO_WEATHER_NS, tag, attrs)
-
-    weather_data['geo'] = {}
-    weather_data['geo']['lat'] = dom.getElementsByTagName('geo:lat')[0].firstChild.data
-    weather_data['geo']['long'] = dom.getElementsByTagName('geo:long')[0].firstChild.data
-
-    weather_data['condition']['title'] = dom.getElementsByTagName('item')[0].getElementsByTagName('title')[0].firstChild.data
-    weather_data['html_description'] = dom.getElementsByTagName('item')[0].getElementsByTagName('description')[0].firstChild.data
+        weather_data['geo'] = {}
+        weather_data['geo']['lat'] = dom.getElementsByTagName('geo:lat')[0].firstChild.data
+        weather_data['geo']['long'] = dom.getElementsByTagName('geo:long')[0].firstChild.data
     
-    forecasts = []
-    for forecast in dom.getElementsByTagNameNS(YAHOO_WEATHER_NS, 'forecast'):
-        forecasts.append(xml_get_attrs(forecast,('date', 'low', 'high', 'text', 'code')))
-    weather_data['forecasts'] = forecasts
-    
-    dom.unlink()
+        weather_data['condition']['title'] = dom.getElementsByTagName('item')[0].getElementsByTagName('title')[0].firstChild.data
+        weather_data['html_description'] = dom.getElementsByTagName('item')[0].getElementsByTagName('description')[0].firstChild.data
+        
+        forecasts = []
+        for forecast in dom.getElementsByTagNameNS(YAHOO_WEATHER_NS, 'forecast'):
+            forecasts.append(xml_get_attrs(forecast,('date', 'low', 'high', 'text', 'code')))
+        weather_data['forecasts'] = forecasts
+        
+        dom.unlink()
+    except: #krambriw
+        pass #krambriw
 
     return weather_data
 
@@ -257,7 +166,7 @@ def get_weather_from_noaa(station_id):
 
     (useful icons: http://www.weather.gov/xml/current_obs/weather.php)
     """
-    station_id = quote(station_id)
+
     url = NOAA_WEATHER_URL % (station_id)
     handler = urllib2.urlopen(url)
     dom = minidom.parse(handler)    
@@ -311,19 +220,19 @@ def get_weather_from_noaa(station_id):
 
 
     
-def xml_get_ns_yahoo_tag(dom, ns, tag, attrs):
+def xml_get_ns_yahoo_tag(dom, YAHOO_WEATHER_NS, tag, attrs):
     """
     Parses the necessary tag and returns the dictionary with values
     
     Parameters:
     dom - DOM
-    ns - namespace
+    YAHOO_WEATHER_NS - namespace
     tag - necessary tag
     attrs - tuple of attributes
 
     Returns: a dictionary of elements 
     """
-    element = dom.getElementsByTagNameNS(ns, tag)[0]
+    element = dom.getElementsByTagNameNS(YAHOO_WEATHER_NS, tag)[0]
     return xml_get_attrs(element,attrs)
 
 
@@ -342,4 +251,3 @@ def xml_get_attrs(xml_element, attrs):
     for attr in attrs:
         result[attr] = xml_element.getAttribute(attr)   
     return result
-
