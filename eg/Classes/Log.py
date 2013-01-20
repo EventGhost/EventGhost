@@ -43,10 +43,11 @@ class DummyLogCtrl(object):
         oldStdOut.write("%s\n" % line)
 
 
-
 class Log(object):
 
     def __init__(self):
+        self.logListeners = []
+        self.NativeLog = True
         self.buffer = ""
         self.data = deque()
         self.maxlength = 5000
@@ -115,9 +116,26 @@ class Log(object):
         data = list(self.data)
         return data[start:end]
 
+   
+    def AddLogListener(self, listener):
+        if listener not in self.logListeners:
+            self.logListeners.append(listener)
+
+
+    def RemoveLogListener(self, listener):
+        if listener in self.logListeners:
+            self.logListeners.remove(listener)
+   
 
     def _WriteLine(self, line, icon, wRef, when, indent):
-        self.ctrl.WriteLine(line, icon, wRef, when, indent)
+        if self.NativeLog:
+            self.ctrl.WriteLine(line, icon, wRef, when, indent)
+        for listener in self.logListeners:
+            listener.WriteLine(line, icon, wRef, when, indent)
+
+
+    def NativeLogOn(self, value):
+        self.NativeLog = value
 
 
     def Write(self, text, icon, wRef=None):
