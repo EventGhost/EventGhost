@@ -19,6 +19,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.0.4 by Pako 2013-01-20 11:08 UTC+1
+#     - Catalog events - Button label changed
 # 0.0.3 by Pako 2012-11-18 10:20 UTC+1
 #     - stop processing event feature added (for Menu and Catalog events)
 # 0.0.2 by Pako 2012-11-11 12:47 UTC+1
@@ -85,7 +87,7 @@ AScatalog = eg.WindowMatcher(
 eg.RegisterPlugin(
     name="Artsage",
     author = "Pako",
-    version = "0.0.3",
+    version = "0.0.4",
     guid = "{FD304FE6-C4F8-4356-BEC2-E786741DD1EB}",
     kind = "program",
     createMacrosOnAdd = True,
@@ -1084,7 +1086,7 @@ class Text:
     closed = "Closed"
     ok = "OK"
     cancel = "Cancel"
-    dialog = "Catalog events ..."
+    dialog = "Events to control ArtSage Catalog ..."
     btnToolTip = """Press this button to assign events to control the Catalog !!!"""
     evtAssignTitle = "Catalog control - events assignement"
     events = (
