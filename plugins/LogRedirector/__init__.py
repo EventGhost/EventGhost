@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-version="0.0.6"
+version="0.0.7"
 
 # plugins/LogRedirector/__init__.py
 #
@@ -22,6 +22,8 @@ version="0.0.6"
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.0.7 by Pako 2013-01-20 10:02 GMT+1
+#     - the new eg.Log API taken into consideration
 # 0.0.6 by Pako 2011-10-03 07:25 GMT+1
 #     - bugfix - "Only selected text file" option
 # 0.0.5 by Pako 2011-05-17 15:13 GMT+1
@@ -93,8 +95,8 @@ class Text:
     fileSize = "Current log file size:"
     logMode = "Logging mode"
     modes = (
-        "Only standard EventGhost log",
-        "Standard EventGhost log and selected text file",
+        "Only native EventGhost log",
+        "Native EventGhost log and selected text file",
         "Only selected text file",
     )
     boxTitle = 'Folder "%s" is incorrect'
@@ -328,6 +330,48 @@ class LogRedirector(eg.PluginBase):
         self.flag = val
 
 
+    def WriteLine(self, line, icon, wRef, when, indent):
+        wref = wRef.__repr__().split(" ") if wRef else ""
+        if len(wref) == 1:
+            wref = "EVENT: "
+        elif len(wref) == 7:
+            wref = wref[4][1:-5].upper()+": "
+        if wref == "PLUGIN: ":
+            wref = ""
+        if self.check:
+            if not self.fMode:
+                self.q.put("%s  %s%s%s\r\n" % (str(dt.fromtimestamp(when))[:19],indent*3*" ",wref,line.strip()))
+                if self.flag:
+                    while not self.q.empty():
+                        self.ioFile.write(self.q.get())
+                return
+            elif wref == "EVENT: ":
+                if self.fMode == 1:
+                    self.filterFlag = False
+                    for evt in self.evtList:
+                        if line.find(evt,0,1+len(evt)) == 0:
+                            self.filterFlag = True
+                            break
+                elif self.fMode == 2:
+                    self.filterFlag = True
+                    for evt in self.evtList:
+                        if line.find(evt,0,1+len(evt)) == 0:
+                            self.filterFlag = False
+                            break                    
+                if not self.filterFlag:
+                    return
+            if not indent:
+                self.filterFlag = True
+            if not self.filterFlag:
+                return
+            self.q.put("%s  %s%s%s\r\n" % (str(dt.fromtimestamp(when))[:19],indent*3*" ",wref,line.strip()))
+            if self.flag:
+                while not self.q.empty():
+                    self.ioFile.write(self.q.get())
+        else:
+            self.ioFile.write("%s  %s%s%s\r\n" % (str(dt.fromtimestamp(when))[:19],indent*3*" ",wref,line.strip()))
+
+
     def __start__(
         self,
         mode = 0,
@@ -339,75 +383,24 @@ class LogRedirector(eg.PluginBase):
         evtList = [],
         fMode = 0
     ):
-        if not mode:
-            self.task = None
         self.interval = interval
         self.maxSize = maxSize
         self.minSize = minSize
         if check:
             self.q = Queue()
             self.flag = True
-        self.default = eg.Log._WriteLine
         self.check = check
-        
-
-        def WriteLine2File(when, indent, wRef, line):
-            wref = wRef.__repr__().split(" ") if wRef else ""
-            if len(wref) == 1:
-                wref = "EVENT: "
-            elif len(wref) == 7:
-                wref = wref[4][1:-5].upper()+": "
-            if wref == "PLUGIN: ":
-                wref = ""
-            if self.check:
-                if not fMode:
-                    self.q.put("%s  %s%s%s\r\n" % (str(dt.fromtimestamp(when))[:19],indent*3*" ",wref,line.strip()))
-                    if self.flag:
-                        while not self.q.empty():
-                            self.ioFile.write(self.q.get())
-                    return
-                elif wref == "EVENT: ":
-                    if fMode == 1:
-                        self.filterFlag = False
-                        for evt in evtList:
-                            if line.find(evt,0,1+len(evt)) == 0:
-                                self.filterFlag = True
-                                break
-                    elif fMode == 2:
-                        self.filterFlag = True
-                        for evt in evtList:
-                            if line.find(evt,0,1+len(evt)) == 0:
-                                self.filterFlag = False
-                                break                    
-                    if not self.filterFlag:
-                        return
-                if not indent:
-                    self.filterFlag = True
-                if not self.filterFlag:
-                    return
-                self.q.put("%s  %s%s%s\r\n" % (str(dt.fromtimestamp(when))[:19],indent*3*" ",wref,line.strip()))
-                if self.flag:
-                    while not self.q.empty():
-                        self.ioFile.write(self.q.get())
-            else:
-                self.ioFile.write("%s  %s%s%s\r\n" % (str(dt.fromtimestamp(when))[:19],indent*3*" ",wref,line.strip()))
-
-
+        self.fMode = fMode
+        self.evtList = evtList
         if mode == 0:
-            def extWriteLine(self, line, icon, wRef, when, indent):
-                self.ctrl.WriteLine(line, icon, wRef, when, indent)
+            eg.log.RemoveLogListener(self)
+            self.task = None
             self.ioFile = None
         else:          
             self.OpenFile(logfile)
             self.task = eg.scheduler.AddTask(self.interval, self.CheckFileTask)
-        if mode == 1:
-            def extWriteLine(self, line, icon, wRef, when, indent):
-                self.ctrl.WriteLine(line, icon, wRef, when, indent)
-                WriteLine2File(when, indent, wRef, line)
-        elif mode == 2:
-            def extWriteLine(self, line, icon, wRef, when, indent):
-                WriteLine2File(when, indent, wRef, line)
-        eg.Log._WriteLine = extWriteLine
+            eg.log.AddLogListener(self)
+            eg.log.NativeLogOn(not bool(mode-1))
 
 
     def CheckFileTask(self):
@@ -440,7 +433,8 @@ class LogRedirector(eg.PluginBase):
         if self.task:
             eg.scheduler.CancelTask(self.task)
         self.task = None
-        eg.Log._WriteLine = self.default
+        eg.log.NativeLogOn(True)
+        eg.log.RemoveLogListener(self)
         if self.ioFile:
             if self.check:
                 while not self.q.empty():
