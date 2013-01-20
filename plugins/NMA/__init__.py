@@ -23,6 +23,8 @@ version = "0.0.0"
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.0.1 by Pako 2013-01-20 17:03 GMT+1
+#     - support link (EG forum) added
 # 0.0.0 by Pako 2013-01-20 14:00 GMT+1
 #     - initial version
 #===============================================================================
@@ -86,9 +88,12 @@ An account is required to use NMA_ on your Android.
 After registration, you can create any number 
 of API keys on the 'My Account' page.
 
-.. _NMA:  https://www.notifymyandroid.com
+Plugin is based on a library PyNMA_.
+
+.. _NMA:   https://www.notifymyandroid.com
+.. _PyNMA: http://github.com/uskr/pynma
     ''',
-    #url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=xxxx",
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=5207",
 )
 
 from pynma import PyNMA
