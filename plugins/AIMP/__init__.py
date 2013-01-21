@@ -18,6 +18,9 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.0.2  by Pako 2013-01-21 19:40 UTC+1
+#      - bugfix (error in logger, when AIMP is not running)
+#      - support link (EG forum) added
 # 0.0.1  by Pako 2012-11-11 09:22 UTC+1
 #      - initial version 
 #===============================================================================
@@ -47,10 +50,10 @@ __ http://aimp.ru/index.php
     kind="program",
     author="Pako",
     guid = "{E3E85C61-03D7-4E8F-8A98-45B2234D9490}",
-    version="0.0.1",
+    version="0.0.2",
     createMacrosOnAdd=True,
     canMultiLoad = True,
-    #url = "http://www.eventghost.net/forum/viewtopic.php?f=XXXXXXX",
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=4090",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAALTUlEQVR42pVXC3BU5RX+"
         "/v/e3buvZPPiEQJBUho0CIOEokSgKghaLCKtFHm1oIzWYarjOFDHQUfUzljrAI46qLUD"
@@ -195,10 +198,21 @@ class AIMP(eg.PluginBase):
 
 
     def GetConnection(self):
-        host = "127.0.0.1" if self.host == "localhost" else self.host 
+        host = "127.0.0.1" if self.host == "localhost" else self.host
+        def test(con):
+            con.request("GET", "/?action=get_volume")
+            res = con.getresponse()
+            if res.status == 200:
+                res.read()
+        if self.con:
+            try:
+                test(self.con)
+            except:
+                self.con = None
         if not self.con:
             try:
                 self.con = HTTPConnection("%s:%i" % (host, self.port))
+                test(self.con)
             except:
                 self.con = None
         return self.con is not None
@@ -218,7 +232,7 @@ class AIMP(eg.PluginBase):
 
 
     def MakeRequest(self, name, tp):
-        if self.GetConnection(): 
+        if self.GetConnection():
             try:
                 self.con.request("GET", "/?action=%s" % name)
                 res = self.con.getresponse()
@@ -230,7 +244,7 @@ class AIMP(eg.PluginBase):
                     else:
                         return True
             except:
-                raise    
+                raise  
 
 
     def GetId(self, name):
@@ -271,36 +285,40 @@ class AIMP(eg.PluginBase):
 
     def Polling(self):
         self.sched = eg.scheduler.AddTask(self.poll, self.Polling)
+        if not self.GetConnection():
+            return
         text = self.text
         keys = ("Player", "Repeat song", "Shuffle", "Volume", "Mute")        
         for i in range(len(self.events)):
             if i==0:
                 if self.events[0]:
                     song = self.MakeRequest("get_song_current", "json")
-                    val = song[u'PlayingFileName']
-                    if val != self.oldStat[0]:
-                        self.oldStat[0] = val
-                        eg.TriggerEvent(
-                            self.Cap(text.events[0]),
-                            prefix = self.prefix,
-                            payload = val
-                        )
+                    if song:
+                        val = song[u'PlayingFileName']
+                        if val != self.oldStat[0]:
+                            self.oldStat[0] = val
+                            eg.TriggerEvent(
+                                self.Cap(text.events[0]),
+                                prefix = self.prefix,
+                                payload = val
+                            )
             elif i==1:
                 if self.events[1]:
                     if not self.events[0]:
                         song = self.MakeRequest("get_song_current", "json")
-                    val = song[u'PlayingList']
-                    if val != self.oldStat[1]:
-                        self.oldStat[1] = val
-                        eg.TriggerEvent(
-                            self.Cap(text.events[1]),
-                            prefix = self.prefix,
-                            payload = self.GetName(val)
-                        )
+                    if song:
+                        val = song[u'PlayingList']
+                        if val != self.oldStat[1]:
+                            self.oldStat[1] = val
+                            eg.TriggerEvent(
+                                self.Cap(text.events[1]),
+                                prefix = self.prefix,
+                                payload = self.GetName(val)
+                            )
             elif i==2:
                 if self.events[2]:
                     val = int(self.GetCustomStatus(keys[i-2]))
-                    if val != self.oldStat[i]:
+                    if val is not None and val != self.oldStat[i]:
                         self.oldStat[i] = val
                         eg.TriggerEvent(
                             "%s.%s" % (self.Cap(text.events[i]),text.status[val]),
@@ -308,7 +326,7 @@ class AIMP(eg.PluginBase):
                         )
             elif self.events[i]:
                 val = int(self.GetCustomStatus(keys[i-2]))
-                if val != self.oldStat[i]:
+                if val is not None and val != self.oldStat[i]:
                     self.oldStat[i] = val
                     eg.TriggerEvent(
                         self.Cap(text.events[i]),
