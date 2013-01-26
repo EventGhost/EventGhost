@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-version="0.2.21"
+version="0.2.22"
 
 # plugins/RadioSure/__init__.py
 #
-# Copyright (C)  2009, 2010, 2011   Pako (lubos.ruckl@quick.cz)
+# Copyright (C)  2009 - 2013   Pako (lubos.ruckl@quick.cz)
 #
 # This file is a plugin for EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
@@ -22,6 +22,8 @@ version="0.2.21"
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.22 by Pako 2013-01-26 12:17 UTC+1
+#     - bugfix - scheduler size, when system font > 100%
 # 0.2.21 by Pako 2012-12-02 13:06 UTC+1
 #     - added "Stop processing event" feature (Menu frame)
 # 0.2.20 by Pako 2011-08-24 09:12 UTC+1
@@ -572,7 +574,6 @@ class MessageBoxDialog(wx.Dialog):
             bttns.append((wx.ID_OK, plugin.text.ok, True))
         if caption:
             caption = wx.StaticText(self, -1, caption)
-#            caption.SetFont(wx.Font(16, wx.SWISS, wx.NORMAL, wx.BOLD))
             caption.SetFont(wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD))
         message = wx.StaticText(self, -1, message)
         line = wx.StaticLine(self, -1, size=(1,-1), style = wx.LI_HORIZONTAL)
@@ -950,6 +951,7 @@ class CheckListCtrl(wx.ListCtrl, CheckListCtrlMixin):
             size = (width, 164),
             style = wx.LC_REPORT|wx.LC_HRULES|wx.LC_VRULES|wx.LC_SINGLE_SEL
         )
+        CheckListCtrlMixin.__init__(self)
         curFile = abspath(join(dirname(__file__), "contextCursor.cur"))
         img = None
         if exists(curFile):
@@ -969,16 +971,20 @@ class CheckListCtrl(wx.ListCtrl, CheckListCtrlMixin):
         self.fore = self.GetForegroundColour()
         self.selBack = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
         self.selFore = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
-        for i in range(len(text.header)):
-            self.InsertColumn(i, text.header[i])
+        for i, colLabel in enumerate(text.header):
+            self.InsertColumn(i, colLabel)
+        self.InsertStringItem(0, " ")
         self.SetColumnWidth(0, wx.LIST_AUTOSIZE_USEHEADER)
+        self.SetStringItem(0, 1, "Test Name")
+        self.SetStringItem(0, 2, "8888-88-88 88:88:88")
+        self.SetColumnWidth(2, wx.LIST_AUTOSIZE_USEHEADER)
+        col0 = self.GetColumnWidth(0)
+        col23 = self.GetColumnWidth(2)
+        self.SetColumnWidth(3, col23)
         self.SetColumnWidth(
             1,
-            width - self.GetColumnWidth(0) - 2 * 116 - SYS_VSCROLL_X - self.GetWindowBorderSize()[0]
+            width - col0 - 2*col23 - SYS_VSCROLL_X-self.GetWindowBorderSize()[0]
         )
-        self.SetColumnWidth(2, 116)
-        self.SetColumnWidth(3, 116)
-        CheckListCtrlMixin.__init__(self)
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnItemSelected)
 
 
@@ -1028,9 +1034,7 @@ class ManagerDialog(wx.Dialog):
             style = wx.DEFAULT_DIALOG_STYLE|wx.MINIMIZE_BOX|wx.CLOSE_BOX|wx.RESIZE_BORDER,
         )
 
-        #self.plugin = eg.Utils.GetPlugin(self) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         self.plugin = plugin
-
         statusRS = self.plugin.GetStatusRS()
 
         self.idUp      = wx.NewId()
@@ -2279,7 +2283,7 @@ class SchedulerDialog(wx.Dialog):
                 stEvLbl.Show(False)
                 timeCtrl.Show(False)
                 spinBtn.Show(False)
-            return dynamicSizer.GetMinSize()[0]
+            return dynamicSizer.GetMinSize()
 
 
         def Diff():
@@ -2728,8 +2732,8 @@ class SchedulerDialog(wx.Dialog):
         dynamicSizer = wx.BoxSizer(wx.VERTICAL)
         wDynamic = fillDynamicSizer(3)
         fillDynamicSizer(-1)
-        self.SetSize(wx.Size(wDynamic + 37, 684))
-        grid = self.grid = CheckListCtrl(self, text, wDynamic + 20)
+        grid = CheckListCtrl(self, text, wDynamic[0])
+        self.grid = grid
 
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(grid, 0, wx.ALL, 5)
@@ -2743,6 +2747,7 @@ class SchedulerDialog(wx.Dialog):
         source_label = wx.StaticText(self, -1, self.text.source)
         self.favorites = self.plugin.RefreshVariables()
         favChoice = wx.Choice(self, -1, choices = [item[1] for item in self.favorites])
+        hgh =  48 + favChoice.GetSize()[1]
         sourceCtrl = wx.TextCtrl(self,-1,"")
         filename_label = wx.StaticText(self, -1, self.text.filename)
         schedulerName = wx.TextCtrl(self, -1, "")
@@ -2901,7 +2906,8 @@ class SchedulerDialog(wx.Dialog):
             wx.StaticBox(self, -1, ""),
             wx.VERTICAL
         )
-        dynamicSizer.SetMinSize((-1, 226))
+        #dynamicSizer.SetMinSize((-1, 226))
+        dynamicSizer.SetMinSize((-1, wDynamic[1]))
         typeSizer.Add(nameSizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
         typeSizer.Add(dynamicSizer, 0, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT, 5)
         sizer.Add(typeSizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 5)
@@ -2925,6 +2931,16 @@ class SchedulerDialog(wx.Dialog):
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.SetSizer(sizer)
         sizer.Layout()
+        hgh += grid.GetSize()[1]
+        hgh += bttnSizer.GetSize()[1]
+        hgh += typeSizer.GetSize()[1]
+        hgh += source_label.GetSize()[1]
+        hgh += sourceCtrl.GetSize()[1]
+        hgh += favorite_label.GetSize()[1]
+        hgh += choicesSizer.GetSize()[1]
+        hgh += filename_label.GetSize()[1]
+        hgh += recordCtrl.GetSize()[1]
+        self.SetClientSize(wx.Size(wDynamic[0] + 10, hgh))
         if ConfigData.pos:
             self.SetPosition(ConfigData.pos)
         else:
