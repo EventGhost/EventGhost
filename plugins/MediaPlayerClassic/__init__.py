@@ -20,6 +20,8 @@
     
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 2.5 by Pako 2013-02-08 19:05 UTC+1
+#     - we must wait with the connection, if MPC-HC is "Not responding"
 # 2.4 by Pako 2012-12-02 16:01 UTC+1
 #     - added "Stop processing event" feature (Menu and GoTo frames)
 # 2.3 by Pako 2012-09-10 08:15 UTC+1
@@ -62,7 +64,7 @@
 eg.RegisterPlugin(
     name = "Media Player Classic",
     author = "MonsterMagnet",
-    version = "2.4",
+    version = "2.5",
     kind = "program",
     guid = "{DD75104D-D586-438A-B63D-3AD01A4D4BD3}",
     createMacrosOnAdd = True,
@@ -575,7 +577,6 @@ class GoToFrame(wx.Frame):
         self.total = None
         self.evtList = [[],[],[],[],[]]
         self.plugin = None
-        #self.sliceFlag = False
 
 
     def UpdateOSD(self, data=None):
@@ -1361,7 +1362,12 @@ class AfterPlayback(eg.ActionClass):
         if action > -1:
             if self.plugin.runFlg and self.plugin.mpcHwnd:
                 ids = (33411, 918, 33412)
-                return SendMessageTimeout(self.plugin.mpcHwnd, WM_COMMAND, ids[action], 0)
+                return SendMessageTimeout(
+                    self.plugin.mpcHwnd,
+                    WM_COMMAND,
+                    ids[action],
+                    0
+                )
             else:
                 raise self.Exceptions.ProgramNotRunning
             
@@ -1855,26 +1861,25 @@ class GoTo_OSD(eg.ActionBase):
         # re-assign the test button
         def OnButton(event):
             if self.plugin.runFlg and self.plugin.mpcHwnd:
-                #else:
-                    if not self.plugin.menuDlg:
-                        self.plugin.menuDlg = GoToFrame()
-                        self.event = CreateEvent(None, 0, 0, None)
-                        wx.CallAfter(self.plugin.menuDlg.ShowGoToFrame,
-                            foreColourButton.GetValue(),
-                            backColourButton.GetValue(),
-                            foreSelColourButton.GetValue(),
-                            backSelColourButton.GetValue(),
-                            fontFaceCtrl.GetStringSelection(),
-                            fontSizeCtrl.GetValue(),
-                            True,
-                            self.plugin,
-                            self.event,
-                            displayChoice.GetSelection(),
-                            self.plugin.mpcHwnd,
-                            panel.evtList,
-                            self.sizeFlag
-                        )
-                        eg.actionThread.WaitOnEvent(self.event)
+                if not self.plugin.menuDlg:
+                    self.plugin.menuDlg = GoToFrame()
+                    self.event = CreateEvent(None, 0, 0, None)
+                    wx.CallAfter(self.plugin.menuDlg.ShowGoToFrame,
+                        foreColourButton.GetValue(),
+                        backColourButton.GetValue(),
+                        foreSelColourButton.GetValue(),
+                        backSelColourButton.GetValue(),
+                        fontFaceCtrl.GetStringSelection(),
+                        fontSizeCtrl.GetValue(),
+                        True,
+                        self.plugin,
+                        self.event,
+                        displayChoice.GetSelection(),
+                        self.plugin.mpcHwnd,
+                        panel.evtList,
+                        self.sizeFlag
+                    )
+                    eg.actionThread.WaitOnEvent(self.event)
             else:
                 self.PrintError(eg.Classes.Exceptions.Text.ProgramNotRunning)
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
@@ -2185,24 +2190,23 @@ class ShowMenu(eg.ActionClass):
         # re-assign the test button
         def OnButton(event):
             if self.plugin.runFlg and self.plugin.mpcHwnd:
-                #else:
-                    if not self.plugin.menuDlg:
-                        self.plugin.menuDlg = Menu()
-                        self.event = CreateEvent(None, 0, 0, None)
-                        wx.CallAfter(self.plugin.menuDlg.ShowMenu,
-                            foreColourButton.GetValue(),
-                            backColourButton.GetValue(),
-                            foreSelColourButton.GetValue(),
-                            backSelColourButton.GetValue(),
-                            self.fontInfo, 
-                            True,
-                            self.plugin,
-                            self.event,
-                            displayChoice.GetSelection(),
-                            hWnd,
-                            panel.evtList
-                        )
-                        eg.actionThread.WaitOnEvent(self.event)
+                if not self.plugin.menuDlg:
+                    self.plugin.menuDlg = Menu()
+                    self.event = CreateEvent(None, 0, 0, None)
+                    wx.CallAfter(self.plugin.menuDlg.ShowMenu,
+                        foreColourButton.GetValue(),
+                        backColourButton.GetValue(),
+                        foreSelColourButton.GetValue(),
+                        backSelColourButton.GetValue(),
+                        self.fontInfo, 
+                        True,
+                        self.plugin,
+                        self.event,
+                        displayChoice.GetSelection(),
+                        hWnd,
+                        panel.evtList
+                    )
+                    eg.actionThread.WaitOnEvent(self.event)
             else:
                 self.PrintError(eg.Classes.Exceptions.Text.ProgramNotRunning)
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
@@ -2233,7 +2237,16 @@ class Run(eg.ActionBase):
 
 class MediaPlayerClassic(eg.PluginBase):
 
-
+    mySched = None
+    myStart = None
+    menuDlg = None
+    state = None
+    mpcHwnd = None
+    event = None
+    result = None
+    runFlg = False
+    strtFlg = False
+    connected = False
 
     class text:
         popup = (
@@ -2249,7 +2262,6 @@ class MediaPlayerClassic(eg.PluginBase):
         label = "Path to MPC-HC executable:"
         fileMask = "MPC-HC executable|mpc-hc.exe|All-Files (*.*)|*.*"
         gotoLabel = "Go To..."
-
 
 
     def ParseMsg(self, msg):
@@ -2276,7 +2288,6 @@ class MediaPlayerClassic(eg.PluginBase):
             if self.state != state:
                 self.state = state
                 eg.TriggerEvent("State."+MPC_LOADSTATE[state],prefix="MPC-HC")
-
         elif cmd == CMD_NOWPLAYING:
             msg = self.ParseMsg(msg)
             eg.TriggerEvent("NowPlaying",prefix="MPC-HC", payload = msg)
@@ -2303,16 +2314,24 @@ class MediaPlayerClassic(eg.PluginBase):
 
 
     def ConnectMpcHc(self):
-        #if not self.runFlg or not self.connected:
         if not self.runFlg:
             mp = self.mpcPath
             mp = mp.encode(FSE) if isinstance(mp, unicode) else mp
             if isfile(mp):
                 self.runFlg = True
+                self.strtFlg = False
                 args = [mp]
                 args.append("/slave")
                 args.append(str(self.mr.hwnd))
                 Popen(args)
+
+
+    def isResponding(self, hwnd):
+        try:
+            SendMessageTimeout(hwnd, 0, timeout = 1000) # 0 = WM_NULL
+            return True
+        except:
+            return False
 
 
     def isRunning(self):
@@ -2322,14 +2341,31 @@ class MediaPlayerClassic(eg.PluginBase):
             return False
 
 
+    def waitBeforeConnect(self):
+        hwnd = self.isRunning()
+        if hwnd:
+            if self.isResponding(hwnd):
+                eg.scheduler.AddTask(1, self.ConnectMpcHc)
+            else:
+                self.myStart = eg.scheduler.AddTask(2, self.waitBeforeConnect)
+        else:
+            self.strtFlg = False
+
+
     def mpcIsRunning(self):
         self.mySched=eg.scheduler.AddTask(2, self.mpcIsRunning) # must run continuously !
-        if not self.isRunning(): #user closed MPC-HC
+        if not self.isRunning(): #user closed MPC-HC ?
             if self.runFlg and self.connected:
                     self.runFlg = False
                     self.connected = False
-        else:
-            self.ConnectMpcHc()
+                    self.strtFlg = False
+                    self.myStart = None
+                    self.mpcHwnd = None
+        elif self.runFlg:
+            pass
+        elif not self.strtFlg:
+            self.strtFlg = True
+            self.myStart = eg.scheduler.AddTask(2, self.waitBeforeConnect)
       
 
     def SendCopydata(self, cmd, txt):
@@ -2343,14 +2379,6 @@ class MediaPlayerClassic(eg.PluginBase):
 
 
     def __init__(self):
-        self.mySched=None
-        self.menuDlg = None
-        self.state = None
-        self.mpcHwnd = None
-        self.event = None
-        self.result = None
-        self.runFlg = False
-        self.connected = False
         self.mr = eg.MessageReceiver("MPC-HC_plugin_")
         self.mr.AddHandler(WM_COPYDATA, self.Handler)
         self.mr.Start()
@@ -2358,6 +2386,16 @@ class MediaPlayerClassic(eg.PluginBase):
 
 
     def __start__(self, mpcPath=None):
+        self.mySched=None
+        self.myStart=None
+        self.menuDlg = None
+        self.state = None
+        self.mpcHwnd = None
+        self.event = None
+        self.result = None
+        self.runFlg = False
+        self.strtFlg = False
+        self.connected = False
         if mpcPath is None:
             mpcPath = self.GetMpcHcPath()
         if not exists(mpcPath):
@@ -2376,11 +2414,11 @@ class MediaPlayerClassic(eg.PluginBase):
                 eg.scheduler.CancelTask(self.mySched)
             except:
                 pass
-        self.mySched = None
-        self.mpcHwnd = None        
-        self.result = None
-        self.runFlg = False
-        self.connected = False
+        if self.myStart:
+            try:
+                eg.scheduler.CancelTask(self.myStart)
+            except:
+                pass
 
   
     def __close__(self):
@@ -2807,7 +2845,7 @@ ACTIONS = (
     ('ToggleShaderEditorBar', 'Toggle Shader Editor Bar', None, 826),
     ('ToggleElapsedTime', 'Toggle OSD Elapsed Time', None, 32778),
 )),
-(eg.ActionGroup, 'Various information retrieval',"Retrieve various information", None, (
+(eg.ActionGroup, 'VariousInformationRetrieval',"Retrieve various information", None, (
     (GetWindowState,'GetWindowState','Get window state','Gets window state.', None),
     (GetNowPlaying,'GetNowPlaying','Get currently playing file','Gets currently playing file.', None),
     (GetTimes,'GetTimes','Get Times','Returns elapsed, remaining and total times.', None),
