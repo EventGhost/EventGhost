@@ -20,6 +20,8 @@
     
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 2.6 by Pako 2013-02-10 10:56 UTC+1
+#     - the function GetMpcHcPath() improved - now works also in x64 environment
 # 2.5 by Pako 2013-02-08 19:05 UTC+1
 #     - we must wait with the connection, if MPC-HC is "Not responding"
 # 2.4 by Pako 2012-12-02 16:01 UTC+1
@@ -94,6 +96,7 @@ eg.RegisterPlugin(
 import eg
 import wx
 import _winreg
+from os import environ
 from os.path import dirname, join, exists, isfile, split, isabs
 from subprocess import Popen
 from eg.WinApi import SendMessageTimeout, WM_COMMAND
@@ -2398,7 +2401,7 @@ class MediaPlayerClassic(eg.PluginBase):
         self.connected = False
         if mpcPath is None:
             mpcPath = self.GetMpcHcPath()
-        if not exists(mpcPath):
+        if not mpcPath or not exists(mpcPath):
             raise self.Exceptions.ProgramNotFound
             return
         self.mpcPath = mpcPath
@@ -2458,11 +2461,12 @@ class MediaPlayerClassic(eg.PluginBase):
         the Windows registry.
         """
         try:
-            mpc = _winreg.OpenKey(
-                _winreg.HKEY_CURRENT_USER,
-                "Software\Classes\Applications\mpc-hc.exe\shell\open\command"
-            )
-            mpcPath =_winreg.QueryValue(mpc, None)[1:-6]
+            args = [_winreg.HKEY_CURRENT_USER,            
+                "Software\Gabest\Media Player Classic"]
+            if "PROCESSOR_ARCHITEW6432" in environ:
+                args.extend((0, _winreg.KEY_READ | _winreg.KEY_WOW64_64KEY))
+            mpc = _winreg.OpenKey(*args)
+            mpcPath =_winreg.QueryValueEx(mpc, "ExePath")[0]
             _winreg.CloseKey(mpc)
         except WindowsError:
             mpcPath = None
