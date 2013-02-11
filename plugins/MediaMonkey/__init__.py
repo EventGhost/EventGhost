@@ -20,6 +20,9 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.3.5 by Pako 2013-02-11 19:37 UTC+1
+#     - on Windows 7, FindWindowEx returns None without raising an error
+#     - on older versions, it raises a FILE_NOT_FOUND error
 # 0.3.4 by Pako 2012-08-17 07:51 UTC+1
 #     - added MediaMonkey.IsRunning event
 #     - added GetPlaylists action
@@ -42,7 +45,7 @@ import time
 import datetime
 import wx.lib.masked as masked
 import codecs
-from win32gui import MessageBox, FindWindowEx
+from win32gui import MessageBox, FindWindow
 from win32process import GetWindowThreadProcessId
 from win32com.client import Dispatch, DispatchWithEvents
 from eg.WinApi import SendMessageTimeout
@@ -70,7 +73,7 @@ SC_MINIMIZE   = 61472
 eg.RegisterPlugin(
     name = "MediaMonkey",
     author = "Pako",
-    version = "0.3.4",
+    version = "0.3.5",
     kind = "program",
     guid = "{50602341-ABC3-47AD-B859-FCB8C03ED4EF}",
     createMacrosOnAdd = True,
@@ -1191,6 +1194,8 @@ class MediaMonkey(eg.PluginBase):
     stopFlg = False
     workerThread = None
     workerThread2 = None
+    checkTask = None
+    checkOpened = None
     text = Text
     
     def __init__(self):
@@ -1317,7 +1322,7 @@ class MediaMonkey(eg.PluginBase):
             events2.append(True)
         self.mm_events = dict(zip(MM_EVENTS, events))
         self.eg_events = events2
-        eg.scheduler.AddTask(1, self.checkIsRunning)
+        self.checkTask = eg.scheduler.AddTask(1, self.checkIsRunning)
 
 
     def GetPathAndVersion(self):
@@ -1346,23 +1351,21 @@ class MediaMonkey(eg.PluginBase):
     def checkWinOpened(self):
         hwnds = MM_WindowMatcher()
         if hwnds:
-            dummy = SendMessageTimeout(hwnds[0],WM_SYSCOMMAND,SC_MINIMIZE,20)
+            dummy = SendMessageTimeout(hwnds[0], WM_SYSCOMMAND, SC_MINIMIZE, 20)
+            self.checkOpened = None
         else:
-            eg.scheduler.AddTask(1, self.checkWinOpened)
+            self.checkOpened.eg.scheduler.AddTask(1, self.checkWinOpened)
         
 
-    def minimizeMM(self, hwnds):
-        dummy = SendMessageTimeout(hwnds[0],WM_SYSCOMMAND,SC_MINIMIZE,0)
-
-        
-
-    def isRunning(self): # the fastest way I found ...
-        hwnd = FindWindowEx(None, None, "TFMainWindow", "MediaMonkey")
-        return hwnd > 0
+    def isRunning(self):
+        try:
+            return FindWindow("TFMainWindow", "MediaMonkey") > 0
+        except:
+            return False
 
 
     def checkIsRunning(self):
-        eg.scheduler.AddTask(2, self.checkIsRunning) # must run continuously !
+        self.checkTask = eg.scheduler.AddTask(2, self.checkIsRunning) # must run continuously !
         if not self.isRunning():
                 if self.stopFlg:
                     self.manFlg = False
@@ -1491,12 +1494,18 @@ class MediaMonkey(eg.PluginBase):
             res = self.workerThread.CallWait(partial(
                 self.workerThread.DeleteSongFromLibrary,
                 ID,
-            ),1000)
+            ), 1000)
             return res
 
 
     def __stop__(self):
         self.StopThreads()
+        if self.checkTask:
+            eg.scheduler.CancelTask(self.checkTask)
+        self.checkTask = None
+        if self.checkOpened:
+            eg.scheduler.CancelTask(self.checkOpened)
+        self.checkOpened = None
 
 
     def StopThreads(self, event = None):
@@ -1515,7 +1524,10 @@ class Start(eg.ActionBase):
             self.plugin.autoFlg = True
             eg.scheduler.AddTask(0.1, self.plugin.startWorkerThread)
             if choice:
-                eg.scheduler.AddTask(1, self.plugin.checkWinOpened)           
+                self.plugin.checkOpened = eg.scheduler.AddTask(
+                    1,
+                    self.plugin.checkWinOpened
+                )           
 
     def Configure(self, choice=True):
         panel = eg.ConfigPanel(self)
@@ -2214,7 +2226,7 @@ class GetSongInfo(eg.ActionBase):
                 SongData, ix = self.plugin.GetSongData(self.value)
             except:
                 return None
-            if (SongData, ix)==(None, None):
+            if (SongData, ix) == (None, None):
                 #return self.text.noData
                 return None
             path=SongData['Path']
@@ -3252,7 +3264,7 @@ class LoadPlaylistByFilter(eg.ActionBase):
         choicesS=choices[:]
         choicesS.sort()
         
-        listRules2=[] #working copy (after Cancel flush it)
+        listRules2 = [] #working copy (after Cancel flush it)
         for i in range(0,len(listRules)):
             listRules2.append(listRules[i][:])
         maxRules=10
@@ -3584,7 +3596,7 @@ class LoadPlaylistByFilter(eg.ActionBase):
                 if self.i==maxRules:
                     for x in range(0,maxRules):
                         self.mySizer.FindItemAtPosition((x,3)).GetWindow().Enable(False)
-            panel.EnableButtons(False) #New row is empty => allways not valid
+            panel.EnableButtons(False) # New row is empty => allways not valid
 
         def OnRemoveButton(evt):
             """Event handler for the button '-' click."""
@@ -3671,7 +3683,7 @@ class LoadPlaylistByFilter(eg.ActionBase):
         limitChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnLimitSwitch)
         OnRandom()
         OnLimitSwitch()
-#================================================
+#----------------------
         self.i=len(listRules2)
         CheckEnable=False #validityCheck "OFF"
         for x in range(0,len(listRules2)):
