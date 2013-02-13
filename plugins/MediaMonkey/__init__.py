@@ -20,6 +20,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.3.6 by Pako 2013-02-13 08:38 UTC+1
+#     - bugfix (typing error)
 # 0.3.5 by Pako 2013-02-11 19:37 UTC+1
 #     - on Windows 7, FindWindowEx returns None without raising an error
 #     - on older versions, it raises a FILE_NOT_FOUND error
@@ -73,7 +75,7 @@ SC_MINIMIZE   = 61472
 eg.RegisterPlugin(
     name = "MediaMonkey",
     author = "Pako",
-    version = "0.3.5",
+    version = "0.3.6",
     kind = "program",
     guid = "{50602341-ABC3-47AD-B859-FCB8C03ED4EF}",
     createMacrosOnAdd = True,
@@ -1354,7 +1356,7 @@ class MediaMonkey(eg.PluginBase):
             dummy = SendMessageTimeout(hwnds[0], WM_SYSCOMMAND, SC_MINIMIZE, 20)
             self.checkOpened = None
         else:
-            self.checkOpened.eg.scheduler.AddTask(1, self.checkWinOpened)
+            self.checkOpened = eg.scheduler.AddTask(1, self.checkWinOpened)
         
 
     def isRunning(self):
