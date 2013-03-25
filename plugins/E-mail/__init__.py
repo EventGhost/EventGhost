@@ -1,6 +1,7 @@
-version = "0.1.7"
+version = "0.1.8"
 # This file is part of EventGhost.
-# Copyright (C) 2008-2010 Pako <lubos.ruckl@quick.cz>
+# This file is part of EventGhost.
+# Copyright (C) 2008-2013 Pako <lubos.ruckl@quick.cz>
 #
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,8 +18,10 @@ version = "0.1.7"
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# Last change: 2010-09-11 07:49 GMT+1
-
+# Changelog (in reverse chronological order):
+# -------------------------------------------
+# 0.1.8 by Pako 2013-03-25 08:42 UTC+1
+#     - added wx.ComboBox for event suffix (action "Start observation")
 #===============================================================================
 #Structure of setup/account (one record):
 #-----------------------------------------
@@ -2555,10 +2558,15 @@ class WorkThread(Thread):
                         messId = parts[1]                                        
                     if self.setup[11]: #trigger event for each email ?
                         if not messId in idList:
+                            itms = self.plugin.text.field_1[1:]
+                            suff = self.setup[12]
+                            if suff in itms:
+                                suff = itms.index(suff)
+                                suff = u"%s.%s" % (self.setup[12],parts[suff])                                                                
                             if self.setup[13] > 0:
-                                eg.TriggerEvent(self.setup[12], payload = parts[self.setup[13]-1], prefix = 'E-mail')
+                                eg.TriggerEvent(suff, payload = parts[self.setup[13]-1], prefix = 'E-mail')
                             else:
-                                eg.TriggerEvent(self.setup[12], prefix = 'E-mail')
+                                eg.TriggerEvent(suff, prefix = 'E-mail')
                         if self.setup[14]: #~ delete
                             if account[1] == 0: #POP 
                                 resp = mailbox.dele(id)
@@ -2759,7 +2767,7 @@ class StartObservation(eg.ActionClass):
         self.plugin.StartObservation(stp, self.notifFrame)
 
     def __call__(self, stp):
-        stp        
+        #stp
         accounts=[]
         accList = [item[0] for item in self.plugin.configs]
         for i in range(len(accList)):
@@ -2913,10 +2921,17 @@ class StartObservation(eg.ActionClass):
         event2Ctrl.Enable(False)
         evtNameLbl=wx.StaticText(panel, -1, text.evtName)
         evtNameCtrl=wx.TextCtrl(panel,-1,self.stp[3])
-        evtName2Ctrl=wx.TextCtrl(panel,-1,self.stp[12])
+        #evtName2Ctrl=wx.TextCtrl(panel,-1,self.stp[12])
+        evtName2Ctrl = wx.ComboBox(
+            panel,
+            -1,
+            choices = self.plugin.text.field_1[1:],
+            style = wx.CB_DROPDOWN
+        )
+        evtName2Ctrl.SetValue(self.stp[12])
         payloadLbl=wx.StaticText(panel, -1, text.payload)
         payloadCtrl = wx.Choice(panel, -1, choices =text.totalPayload)
-        payload2Ctrl = wx.Choice(panel, -1, choices=text.field_1)
+        payload2Ctrl = wx.Choice(panel, -1, choices=self.plugin.text.field_1)
         payloadCtrl.SetSelection(self.stp[8])
         payload2Ctrl.SetSelection(self.stp[13])
         deleteCtrl = wx.CheckBox(panel, label = text.delete)
@@ -2924,7 +2939,7 @@ class StartObservation(eg.ActionClass):
         deleteCtrl.SetToolTipString(text.tip1)
         filterSizer = wx.FlexGridSizer(4,3,0,0)
         for n in range(6):
-            fieldCtrl_1 = wx.Choice(panel,id=100+n,choices=text.field_1)
+            fieldCtrl_1 = wx.Choice(panel,id=100+n,choices=self.plugin.text.field_1)
             fieldCtrl_1.Bind(wx.EVT_CHOICE,onFilter)
             indx0 = self.stp[5][n][0]
             fieldCtrl_1.SetSelection(indx0)
@@ -3058,7 +3073,8 @@ class StartObservation(eg.ActionClass):
             if not flag:
                 payload2Ctrl.SetSelection(0)
                 deleteCtrl.SetValue(False)            
-                evtName2Ctrl.ChangeValue('')
+                #evtName2Ctrl.ChangeValue('')
+                evtName2Ctrl.SetValue('')
                 self.stp[12] = ''
             self.stp[11] = flag
             if evt:
@@ -3082,7 +3098,8 @@ class StartObservation(eg.ActionClass):
             evtNameCtrl.Enable(flag)
             payloadCtrl.Enable(flag)
             if not flag:
-                evtNameCtrl.ChangeValue('')
+                #evtNameCtrl.ChangeValue('')
+                evtNameCtrl.SetValue('')
                 self.stp[3] = ''
             if evt:
                 evt.Skip()
@@ -3104,6 +3121,7 @@ class StartObservation(eg.ActionClass):
             evt.Skip()
             validation()
         evtName2Ctrl.Bind(wx.EVT_TEXT, onEvtName2Ctrl)
+        evtName2Ctrl.Bind(wx.EVT_COMBOBOX, onEvtName2Ctrl)
 
         def onMessageCtrl(evt=None):
             self.stp[6] = messageCtrl.GetValue()
@@ -3170,12 +3188,6 @@ class StartObservation(eg.ActionClass):
         accounts = 'Accounts to observation:'
         interval_1 = 'Interval:'
         interval_2 = 'minutes'
-        field_1 = (
-            'None',
-            'Subject',
-            'From',
-            'Body',
-        )
         field_2 = (
             'contains',
             "doesn't contain ",
@@ -4107,4 +4119,10 @@ class E_mail(eg.PluginClass):
         observStarts = 'Observation "%s" starts'
         warning = 'When any change in the configuration, will all running observations stopped!'
         wrote = '%s wrote:'
+        field_1 = (
+            'None',
+            'Subject',
+            'From',
+            'Body',
+        )        
 #===============================================================================
