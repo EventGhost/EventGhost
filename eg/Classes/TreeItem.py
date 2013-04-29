@@ -288,7 +288,8 @@ class TreeItem(object):
     def OnCmdPython(self):
         data = self.GetXmlString()
         if data and wx.TheClipboard.Open():
-            ix1 = 10 + data.find("<Action>\r\n")
+            ix1 = data.find("<Action")
+            ix1 = 3 + data.find(">\r\n        ", ix1)
             ix2 = data.find("\r\n    </Action>")
             data = "eg.plugins."+data[ix1:ix2].strip()
             wx.TheClipboard.SetData(wx.TextDataObject(data))
