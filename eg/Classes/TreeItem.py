@@ -291,7 +291,15 @@ class TreeItem(object):
             ix1 = data.find("<Action")
             ix1 = 3 + data.find(">\r\n        ", ix1)
             ix2 = data.find("\r\n    </Action>")
-            data = "eg.plugins."+data[ix1:ix2].strip()
+            data = data[ix1:ix2].strip()
+            if data[:24] == "EventGhost.PythonScript(":
+                #data = data[24:-1]
+                data = data[26:-2].replace('\\n',chr(10)) + chr(10)
+            elif data[:25] == "EventGhost.PythonCommand(":
+                #data = data[25:-1]
+                data = data[27:-2].replace('\\n',chr(10)) + chr(10)
+            else:
+                data = "eg.plugins." + data
             wx.TheClipboard.SetData(wx.TextDataObject(data))
             wx.TheClipboard.Close()
 
