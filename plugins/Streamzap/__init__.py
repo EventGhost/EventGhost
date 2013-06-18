@@ -12,6 +12,11 @@ class PluginInfo(eg.PluginInfo):
         'Streamzap, Inc. Homepage<p>'
         '<img src="crr.jpg" alt="Streamzap" /></a></center>'
     )
+    icon = (
+        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAOElEQVR42mNkoBAwDl4D"
+        "/gMRIxEWMFKimWgD8BnISIlmkg3AZhh9DaBPIBJjK0EDSDFkEOcFYgEAwk8kEWJRdKUA"
+        "AAAASUVORK5CYII="
+    )
 
 
 import thread

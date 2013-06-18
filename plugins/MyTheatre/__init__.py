@@ -1,5 +1,5 @@
 #
-# Plugins/MyTheatre/__init__.py
+# plugins/MyTheatre/__init__.py
 #
 #
 # This file is a plugin for EventGhost.
@@ -19,6 +19,39 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 import eg
+
+class PluginInfo(eg.PluginInfo):
+    name = "MyTheatre"
+    author = "Milbrot"
+    version = "1.0.0"
+    kind = "program"
+    description = (
+        'Adds support functions to control MyTheatre '
+        '\n\n<p>'
+        '<a href=http://www.dvbcore.com/>www.dvbcore.com</a>'
+    )
+    icon = (
+        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAADMklEQVR42m1TX0xScRT+"
+        "Ln+7dCkEiTCFm5ZiW2WLP0FZuVHZU6tcL2091dbW5nzsqS3XWy++Vw/W2mpzPeVsjbUF"
+        "BiikBs7WNBVUQpA/FxHw3gt14YFZ9m3n4bed853vfL9zCPwH60sz3eks44SMovco9oEk"
+        "yWWK2uuiqAbPv7nEzkdkPejIzbqGRFHWslhWoKLS40CTEfThVjQ2asFxpUC5zA0olWrv"
+        "LgL37PjtH/LPzw7GY2Tb/F4kCR22tUYcMraDbm2DQqGo5VUqlWI6Hbun1ba8rhOEvy84"
+        "hj2Ei9V/I03t0zgTK0Oe0GFd2YImugOtR45CKpXWlZbLfJFhNpwajd5bI3j+fHgyvEJb"
+        "CkKB7tQKTGoPiu+j8MxuoEF3CDdu9sFsNtdVVBGPRwN6vdFKzIa93TO+gDubq4CTGJGR"
+        "GDAz9wprk250dh6HkqKwtraKvr6+WsjlcrAsi83NnBCJ84T78+jjlUjikUQsAimTYikS"
+        "x7v3ozh31g6tVguRSASe5xAMBtHf3w+appHP55FKbUAsZgeJiQn3cCadv6NUKgWJJPw+"
+        "P7z+CfT09CAUCiGbzcJmOyMQBARFJtisNuQLBWzlN6HXa14SX79+GSZJ1R21WlObMRwO"
+        "482bt7BYLNjeLgmd0tU9qBG0GZpgMplQ2GaFMTjB3OaXxPj4h8cnTjgeVYvFYjEYhhFM"
+        "fVEzSqVSoVQqCYbF4Q0twdbVAz2VQ4VjIJKJYDjSPEhMT3u6DQaTW61urDsci8UwMjKC"
+        "pcVF5LIZSH4n0XDFLEi/Di6yBSUbhkbxC86rF87XvnFs7O1kb+8ty86trHadmQoiEVkA"
+        "TaRROFaAT3IQ80EbuLX9OCwbCzx98tBaI5iacjsIQubq6rKR1TfP80gmk1hcmEdi9Seo"
+        "zCr2y5IItRcwx7cgPaErPrjU6bRaLnrrqzw6+uo2Reme2e0Xyarz1TFWostIxVchZX6h"
+        "hU1jy1CCh98smtW9925cu/v6r1uoIhD45PD5PEPNzR0Wcg8FJpdDPpMAn4mDSEWRItiA"
+        "89b9AavVufuYdsLv/9gdCn1zsixPVyplyKTi5ZNdp112++Vd5/wHnkdmfX7nue8AAAAA"
+        "SUVORK5CYII="
+    )
+    
+
 from win32gui import FindWindow, SendMessageTimeout
 from win32con import SMTO_ABORTIFHUNG, SMTO_NORMAL
 import _winreg

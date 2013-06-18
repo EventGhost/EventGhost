@@ -19,8 +19,34 @@
 # 0.1 - initial
 # 0.2 - EventGhost 0.3.1+ compatibility
 #
-import wx
+
 import eg
+
+class PluginInfo(eg.PluginInfo):
+    name = "Optoma H79 Serial"
+    author = "Oliver Wagner"
+    version = "0.2"
+    kind = "external"
+    description = "Control an Optoma H79 projector via RS232"
+    icon = (
+        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARn"
+        "QU1BAACxjwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdw"
+        "nLpRPAAAABZ0RVh0U29mdHdhcmUAUGFpbnQuTkVUIDIuNmyodLUAAAJCSURBVDhPpZNb"
+        "bxJRFIWtIQVaBmFA7jCUAcr9futQSoFQKIg0sfqs6YMmPumbhsQHr9E02liDiZqmbQoo"
+        "tMVL/CU+6K9ZPTMppHFoYuIk83L2Wd9ee2edqd9/fl34r48H/PVLvv8cYvPNJlqPWnj8"
+        "/Cn2DnYx4Z6gOyuWfNxpo7l+De5ABJ5QDPOhKFhfEDZ2HuVaHa9ev0Snt8/DFCPgGNDt"
+        "7aLWXEN0YQneaAI2lwdmhoXZ7oTDG4DTFwK3XMR2ewuHx/2xozGAp6fzJYSSGegtDJS0"
+        "DiatA15DGHaLG3Mev+Bq485tDI6+iAF8gStViF03KLUWCpUGapUeJpqFy+CF3mhFIJZG"
+        "oVJDb9AVAxrr14mDImidUehOa+xwmMJgaQYqAqK1BrKPEFK5ZXT7EwArjSYSpHhJo4NR"
+        "ZycCC+RKGlL5LKZlM8TVZWEPqVwBnw8njFBavYLF8ioMNh8BeODUBkERgEyugJQANAYz"
+        "vOE4cuUqBsOBeIRCeQXF+hpiXBW0MULGsGKGUkE6q4SSuLLMuUhtCaV6A19/DMWAmxu3"
+        "EE5lka9eRWrxBsxsFmodAxPjINaDCMTTcPkjuHvvPi/OiHIw/NYX5o9zeXDFChYKdSET"
+        "vkgC0UwOvlgKSS6Hvc7kIE3xxAeth2RpFKzErj+aRDidFTqb7C4hjVvvtkfdnSIHpwfK"
+        "Jy+egSGXZQoV5JQaFK0HRwL2YefTSHyR3JWcB+CTyc/n3O8c4G37PQbHR7xw+l8e0yjW"
+        "44dynujs+Qnye/WIemQx5AAAAABJRU5ErkJggg=="
+    )
+
+import wx
 import thread
 import time
 import re

@@ -1,4 +1,25 @@
 import eg
+
+class PluginInfo(eg.PluginInfo):
+    name = "Y.A.R.D."
+    author = "Bitmonster"
+    version = "0.0.1"
+    kind = "remote"
+    description = (
+        'Hardware plugin for the Y.A.R.D. IR-transceiver from Andre Weber.'
+        '\n\n<p>'
+        '<a href=http://eldo.gotdns.com/yard/index.html>'
+        'Y.A.R.D. Homepage (german only)<p>'
+        '<img src="logo.png" alt="Y.A.R.D." /></a>'
+    )
+    icon = (
+        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAfklEQVR42rWTCQrAMAgE"
+        "4/8fbYnV4rG22FIJSYjsuLloDYOlrUXStPsCoS5pQa6IF+55AGRhDgOZ0MFUzIwMKf3M"
+        "JaG5cADJUBXrOnJBwXqGAKjffwV40aWIjp4BTeX/APAKGwA8xCkAXmOBNKefq+t62v7b"
+        "pzyJ2880Ee/xAO1+Z/119F9AAAAAAElFTkSuQmCC"
+    )
+
+
 import wx
 
 import os

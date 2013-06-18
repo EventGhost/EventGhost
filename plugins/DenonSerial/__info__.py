@@ -1,5 +1,0 @@
-name = "Denon AV Serial"
-author = "Oliver Wagner"
-version = "0.5"
-kind = "external"
-description = "Control Denon A/V Amps/Receivers via RS232"

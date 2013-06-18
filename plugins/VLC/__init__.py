@@ -25,10 +25,45 @@
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+import eg
+
+class PluginInfo(eg.PluginInfo):
+    name = "VLC media player"
+    author = "MonsterMagnet"
+    version = "0.3"
+    kind = "program"
+    description = (
+        'Adds support functions to control VideoLan Media Player.'
+        '\n\n</p>'
+        '<p>Enable the RC Interface or start VLC with:</p>'
+        '<p><b>vlc.exe --extraintf=rc --rc-host=localhost:1234 '
+        '--rc-quiet --rc-show-pos</b></p>'
+        '<p>If you are using "MyCommand" remember that you can only execute '
+        'commands that are enabled in VLC!</p>'
+        '<p><a href=http://www.eventghost.org/forum/viewtopic.php?t=43>'
+        'Help and Bugreport</a></p>'
+        '<p><a href=http://www.videolan.org>VideoLan Media Player</a></p>'
+    )
+    icon = (
+        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACZElEQVR42pXSa0iTURgH"
+        "8P/Z+8528TYJp7kPXqZUMOe8RFoRWFlUJKMIjBKDTEO6SBcSKgJBKmrYzchZoV2+CCFd"
+        "zEG2D5EKsXQJbU1WTZemJpvOten7unUYEkRo88DD4eE5/DjPcw7BIquvQnQOAZ7N0vMX"
+        "FzpDFio82itTbFrhGmIFQMeXqNQDbZ6vSwJaTu0s2yp3PCAkgI7h5MpS3cu7SwKaW589"
+        "zdGotbMcD1Pvx/byfdodYQOXr9+JzFitcihTU+J4fg6WzwOTzm+25DPHjrjDApoOaooy"
+        "NxYZYlM0CDLAaP97WLo6d1U87HseFtBaLLqVr/BXRQuBiBjAPQ4Y7cuaSgwz5f8FGkoy"
+        "mDSvzZqZAqWEVoUU8HuBLjMczviV6ZWPrdyiQJ2uITNr6rVZFfgAqe8n2CjgF4lD96QK"
+        "1qTtuTXVVaYFAfu93bJ2t/pEkqrwQmKcBBFzfhABgYcjcIy68cPSXZf+vfWq9vYn1z/A"
+        "4JOy9Uxny6vOhFKpbNtxIpMIIWAYCAiBz+fHiGsSY4b7wbz+Zq8vb23x5ks9b/4Cxm5q"
+        "boy/6z1qn46GfMseCNLWISiJpwhBwDOCGetbOA1tWD47hficNL1aZz/8Bxg21jJSU711"
+        "YmBCOTQEJMQCEhHAsgRCOkmG/sapCcA2DCQpaH1VzCC3oUYpLzjLhQCX8WS22HzNhDnA"
+        "N0an7qEyDwiCFImgO8UC9D8w9FnFclqjOZd7Pl+SXdsTAjjDmiss7zwd6sVHY3q+r8D8"
+        "Hdn5XEojkgbFIE6sJwWm6hDwYr/okIz367GENRMtqihs9Df+Brue2BE7hqGjAAAAAElF"
+        "TkSuQmCC"
+    )
+
 import asynchat, socket
 import wx
 import wx.lib.intctrl as IntCtrl
-import eg
 
 fnList = (
 ('Play', 'Start playing', 'pause'),

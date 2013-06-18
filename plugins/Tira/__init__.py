@@ -1,4 +1,39 @@
 import eg
+
+class PluginInfo(eg.PluginInfo):
+    name = "Tira"
+    author = "Bitmonster"
+    version = "1.0.0"
+    kind = "remote"
+    description = (
+        'Hardware plugin for the "Tira" transceivers from Home Electronics.'
+        '\n\n<p>'
+        '<a href=http://www.home-electro.com/>Home Electronics<p>'
+        '<center><img src="tira.png" alt="Tira2" /></a></center>'
+    )
+    icon = (
+        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAADYUlEQVR42m2Te0yTVxjG"
+        "n9Pv0tJ26BQbWkMrif5hgBoU4pgsBJhx08RKtIrxAmJkKiwo848RGRabsZvJQDQRLyFe"
+        "g6BGTUB0Ik1M8EbjhsPLlMJENGQtVVCgX/v17HydWyTuTZ6cNyfn/Z3nvHkPwYSgwDa2"
+        "VL+718K05G1uE4AzbOWZrjItDBFWxP939ghTKk6hHXHQURnjhINm8CVIsw14KQFp0Jek"
+        "4vVrpeQJ0yyQyK1vIwYBePeITxPqRuOe9AuIjXmBZ896AjKytcDtGAITs2NiFUQGxjng"
+        "4nYFsPpfwCRRwqtvhJ/uZu6MXb05V96U38B9XzN36K8Ru0EQfjOp1RiwJg3CPPU51LwH"
+        "R4+KOQqAFhQcgetqBhKy7uFWUhq2eA/jYH0eZqb9iZvLrHLwXqCXiH6OjprNwqQhGuNq"
+        "Cwe7Z6u8b76OAIIm0wD8/smIMoxjeH00F3IK5B9L7FnbhrEveh/Kqzfih6pDWL6uCLn2"
+        "Itk3nMX9crl7acRBYWEd2q5kISH9Pm4kp8F42I+eXiOdtchDPIkm+nFHHb3RvR4L5p9Q"
+        "tbR8gWnWb+VwOs/5ag0KIEynTBlindVBYxjDWL4WD1ZkY5m9FotKr6FxZDm2DlXjQFMx"
+        "SopqaWmpg6zN3xzyTp7OtVabIw7kiopKnD2dA2vm73DNziC2rnPkdOMaasp8QfqTDJjv"
+        "OonbD+34KLUJl1vXQp/ohJCth79GbyMWSy9taFiFL7fuRXxKH9oTM6m3xEBFIQDJoMaH"
+        "G32kkt9Bfj5WRr/a/iOKi6oI9Pu9MKuCuB/OI2r1WJ/Sr0BADVV0GPrCEcvwng9woGYT"
+        "zvfkoDXwKdI76+F+ZEfynPPBjo7PBNBaO8BdADREeQJ5d3BnxHuuhIJxluP1ufTarwu5"
+        "c9cLzN0XRSJGSZDGxBDQz0O1dwUoA9AofsIkRn4D4zU3X8DnixuhIo+1tsWNI23Xdapb"
+        "7RnYUHMCdx7GQXTvXilRXRNzIEy4XQlCKMrLK7C70ql40ybP7bzU/9Si8z2fRlPsXbL7"
+        "gZEXPc4dkqx1MQD/HkCJsrIyVFV9F8mt1k4M+qZjcMCIlDNdcI8aIeY5IYF9D2jwvwCH"
+        "w4FduxyRfN48t6a3bwYGHpvwSXEn3H/EQrzrlKSwNqwA/gbEbU6NEWivbAAAAABJRU5E"
+        "rkJggg=="
+    )
+    
+    
 import wx
 import time
 import threading

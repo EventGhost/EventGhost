@@ -1,8 +1,66 @@
+#
+# plugins/X10/__init__.py
+#
+# Copyright (C) 2005 Lars-Peter Voss
+#
+# This file is part of EventGhost.
+# 
+# EventGhost is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# EventGhost is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with EventGhost; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
+import eg
+
+class PluginInfo(eg.PluginInfo):
+    name = "X10 Remote"
+    author = "Bitmonster"
+    version = "1.0.0"
+    kind = "remote"
+    description = (
+        'Hardware plugin for X10 compatible RF remotes.'
+        '}n\nThis includes remotes like:<br>'
+        '<ul>'
+        '<li><a href="http://www.ati.com/products/remotewonder/index.html">'
+        'ATI Remote Wonder</a></li>'
+        '<li><a href="http://www.snapstream.com/">'
+        'SnapStream Firefly</a></li>'
+        '<li><a href="http://www.nvidia.com/object/feature_PC_remote.html">'
+        'NVIDIA Personal Cinema Remote</a></li>'
+        '<li><a href="http://www.marmitek.com/">'
+        'Marmitek PC Control</a></li>'
+        '<li><a href="http://www.pearl.de/product.jsp?pdid=PE4444&catid=1601">'
+        'Pearl Q-Sonic Master Remote 6in1</a></li>'
+        '<li><a href="http://www.niveusmedia.com/support/PCremote.htm">'
+        'Niveus PC Remote Control</a></li>'
+        '<li>Medion RF Remote Control</li>'
+        '</ul>'
+    )
+    icon = (
+        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAYklEQVR42mNkoBAwwhgq"
+        "uf//k6LxzmRGRrgBpGpGNoSRXM1wL1DFgNuTGBhU8xCCyHx0Ngggq4W7AKYQlwZchqJ4"
+        "Ad0l+AymvgHYFBJtAFUCkaJopMgAEEFRUoZxKMpMlAAAoBBdp8TBL7gAAAAASUVORK5C"
+        "YII="
+    )
+
 import threading
 import win32event
 
 import wx
-import eg
 
 from X10com import X10Control
 

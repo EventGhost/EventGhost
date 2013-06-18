@@ -1,4 +1,34 @@
 import eg
+
+class PluginInfo(eg.PluginInfo):
+    name = "USB-UIRT"
+    author = "Jon Rhees"
+    version = "1.0.0"
+    kind = "remote"
+    description = (
+        'Hardware plugin for the USB-UIRT transceiver.'
+        '\n\n<p>'
+        '<a href=http://www.usbuirt.com/>USB-UIRT Home<p>'
+        '<center><img src="picture.jpg" alt="USB-UIRT" /></a></center>'
+    )
+    icon = (
+        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACbklEQVR42mXTa4hMYRzH"
+        "8f9zzoxmsblMJrzYRHgj140XkiG1Vomd1OwoRVHKreSyRWSRvJHSZktKq0E7LvvCFG/k"
+        "kh0ZG7UoS1q7G7vjuqsxu2vOeXyfzvPO1Odc5jzP//+cc35HicgQOrEaU3EMO5HAdlxC"
+        "NRrQjgfoxyrUKTaDeIz1mIwdOIvX2IgPWIt7uIubuIK3OGIKfLeVTYGo7WoK5BFCM7Lo"
+        "s5O/4g2WYY8poNFmloOxOIBGjMESHMZSTMd1dOOJbXRQ0aKpLLKQk62YhNm4jd04jzW2"
+        "SNxOvIPLzOswY5QoFqH1CvsQu2yXcTiEEUzBSYTtyswtTLTjnirWP5cS78yoCnwROc35"
+        "BA6LcPALpkGfL9LC/hyONgYPtV4NxWKD4UKhKyJSW63UzA6tM1x4jz+20zCqcMI+h+Xc"
+        "3+YY3ceLLFa9iUQpPDAQieZyN44rdarS82r9oLOZnMMMxFhVN4Hxf4g83CdyplckyaBh"
+        "cwteIR733WIxFM3n59tQmd9e+wodm40LPWw+8sAp9pImZfau8h1Ha8cp99fUuNFsNs2f"
+        "2xjnsa9n/xmPTDJLIs9IVicRbGFpKap6NA8pKvkqOHHZpxm8xa5gnSmE+0jxOj4RyXZi"
+        "m+Y4Za+55hZ8lM19E702qm+aE6x7v02eSWDDb5GLz0V+UuQWQdnAdd8kVVFNEzmP1+fy"
+        "FSUJfSutF1UEUW22H800mlwzbWfRYKVIhsh6I3YFpVGRyFUSRpfkPC4wo8oNAlMM5oh5"
+        "fn93sTDGKjKTIZZ1lSKjijh534jlK/JuosaxamVVSv7/NXGtJwiI5rt/QdoW/AOsdcg6"
+        "Kwb6cgAAAABJRU5ErkJggg=="
+    )
+
+
 import wx
 import locale
 import USB_UIRT as UUIRT
