@@ -15,11 +15,8 @@ consumer remote for example.
 Requirements
 ------------
 
-EventGhost runs on MS Windows 2000/XP/Vista or above (older OS versions are 
-not supported).
-
-If you want to use EventGhost together with an IR or RF remote, you need a 
-:doc:`supported hardware receiver <SupportedReceivers>`. 
+EventGhost runs on Microsoft Windows 2000/XP/Vista or above (older OS versions 
+are not supported).
 
 
 License
@@ -49,9 +46,7 @@ corresponding forum post.
 Installation
 ------------
  
-If you are running Windows 2000, you might need to install GDI+ (gdiplus.dll) 
-first. For all other Windows versions just run the Setup.exe and follow the 
-instructions.
+Just run the Setup.exe and follow the instructions.
 
 
 Documentation

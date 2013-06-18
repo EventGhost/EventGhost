@@ -1,8 +1,10 @@
+.. _internationalisation:
+
 ========================================
-Internationalization support for plugins
+Internationalisation Support for Plugins
 ========================================
 
-Giving your plugins internationalization support is quite easy and 
+Giving your plugin internationalisation support is quite easy and 
 straightforward.
 
 Somewhere in your code (preferable at the beginning) you should create a class 

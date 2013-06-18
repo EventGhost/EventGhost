@@ -37,7 +37,8 @@ through plugins.
 You can take a look at the list of plugins to find out, what has been 
 implemented also.
 
-The plugin system is the most integral part of the program. Every action 
+The plugin system is the most integral part of the program. Actually EventGhost
+is designed "around" the plugin idea from the beginning. Every action 
 EventGhost does and every event it sees, is implemented through a plugin, even 
 the most basic ones. So every plugin has equal rights as built-in functions, 
 because they are actually the same. The user can configure and use them 
@@ -45,7 +46,7 @@ through a consistent and hopefully easy to learn interface.
 
 EventGhost is written mostly in Python with some low-level parts in C. 
 Plugins can be written in any language that can produce DLLs, like C, C++, 
-Delphi and Visual Basic. But of course they can (and mostly are) also easily 
-be written in Python. 
+Delphi and Visual Basic. But of course they can (and mostly are) be written in 
+Python. 
 
 

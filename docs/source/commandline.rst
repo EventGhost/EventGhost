@@ -1,5 +1,5 @@
-Command line reference
-======================
+Command Line Options
+====================
 
 The EventGhost main executable accepts the following command line arguments: 
 

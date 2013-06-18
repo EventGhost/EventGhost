@@ -9,13 +9,6 @@ This article is a thank-worthy contribution by Benjamin Webb.
 Introduction
 ============
 
-.. sidebar:: ...
-    
-    .. image:: 180px-CYLRWE_IR_remote.jpg
-       
-    The Panasonic universal remote bundled with a SA-HT700 surround sound system, as a remote of choice for this project
-
-
 Yes, I've been there. You have your HTPC all set up to go. Then you realize 
 that you have no way to seamlessly use your HTPC with your current living 
 room set up. You may be sitting there with a wireless keyboard and mouse 
@@ -259,8 +252,8 @@ usual in the free software HTPC world you have to become your own hardware
 expert to pull off what your striving to do.  This program cannot exceed 
 beyond what the hardware is capable of.  
 
-On a side note, I highly suggest :ref:`donating or contributing <contributing>`
+On a side note, I highly suggest :doc:`donating or contributing <../contributing>`
 to this project to ensure its future success. If your 
-device is not currently supported just check back at the 
-[[Receivers|supported hardware]] from time to time to see what they're working 
-on.
+device is not currently supported just check back at the :doc:`supported 
+hardware <../supported_receivers>` page from time to time to see what they're 
+working on.

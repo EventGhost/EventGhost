@@ -5,5 +5,5 @@ Developer documentation
 
    writing_plugins
    internationalisation
-   eg
+   eg/eg
    codingstyle
