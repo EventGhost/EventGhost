@@ -1,4 +1,4 @@
-version="0.1.4"
+version="0.1.6"
 
 # Plugins/MediaMonkey/__init__.py
 #
@@ -20,9 +20,7 @@ version="0.1.4"
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#Last change: 2007-12-14 15:57
-
-#import eg
+#Last change: 2008-03-18 10:59
 
 eg.RegisterPlugin(
     name = "MediaMonkey",
@@ -38,37 +36,44 @@ eg.RegisterPlugin(
         '<BR>file "EventGhost.vbs" to MediaMonkey/Scripts/Auto folder.'
     ),
     url = "http://www.eventghost.org/forum/viewtopic.php?t=563",
-    icon = (
-        "R0lGODlhEAAQAPcAAAQCBMSORFxKLLSupExKVOy2ZKRiLCwyZJyGbERCRHRiXNzOlPTmpO"
-        "QCpCwqLCQynOSmXGRifGRSNPzejNTe3KSWZJRKFJxiPIR6XCwyVNS2jCwyfLSejNTW1LRO"
-        "XGxKPIQ6DJxyXHxCHCw6ZOTWnPz+/KRyTNSudNyeTNS+pDxCdPzWjPz+tFQ6JCQ6nPTenO"
-        "Tm3MyWXJxqTNTGjHxKLAwKBNyWRNS2dMRiJBwqdERKTNzWjEQqJGxSRPTelLRaHJxqRJR6"
-        "ZMy2nHRKTKx6XLSujCQ6pNSeXMSOTLS2rGxSVOy+bKxiLCwybLSObHRiZOzezOSuXGxihN"
-        "ze5KRiPIx6XHQuVNS2lCwyhLSmjNTW3NRKhGxKRIQ6FHxKHDQ6ZNS+rDxCfPz+vOTm5NSW"
-        "XIRKLBQKBExKTOTWlFQyJGRaTPzelKxaJKx6ZLyujCw6pAD98wAAAAAAvgAAAgAwBADqAA"
-        "ASAAAAAADQ4gA8BBUlAABbAGDYYOnqnhISgAAAfNLzwOYAK4EAFnwAADi+APYCABkAAAAA"
-        "AErwB+PqAIESAHwAAKBgAHfaAFAlAABbADjYAPbqIAESFgAAAGsDAAAAAAAAAAAAAJxKAO"
-        "h4ABIAAAAAAAB4AADqAAASAAAAAAiFAPwrABKDAAB8ABgAaO4AnpAAgHwAfHAA/wUA/5EA"
-        "/3wA//8AYP8Anv8AgP8AfG0pKAW3AJGSAHx8AErAKPQrAIAWAHwAAAA0WABk8RWDEgB8AA"
-        "D//wD//wD//wD//zgAAPYAABkAAAAAAABcpAHq6wASEgAAAAA09gBkOACDTAB8AFcIhPT8"
-        "64ASEnwAAIgYd+ruEBKQTwB8ADgAuPa36xmSEgB8AKD/NAD/ZAD/gwD/fB/AWAAr7AAWEg"
-        "AAABE01gBk/wCD/wB8fwSgMADr7AASEgAAAAPnwABkKwCDFgB8AACINABkZACDgwB8fAAB"
-        "wAAAKwAAFgAAAAQxSgAAeAAAAAAAAAMBAAAAAAAAAAAAAAAajQAA4gAARwAAACH5BAEAAA"
-        "AALAAAAAAQABAABwjfAAEIHOigoIOBCBEeFHIFwMGEBC2w+fHDgIWHCROAMEEFBw4DJkAk"
-        "yNgDSIkxbNiMKSHjw0iBCjLwSEGBQhsiFDqASZPhCQAEGw60gHLGgRs3Ds5AaXEASxAlRk"
-        "bw4OBmBgsxM9xk4XHAiBIuD5qo2cGAxIIFaBig6XHgQY8yOVT4qDJgzBgYMJJgeKEiBw0n"
-        "XKRMqJAgQcEEZypMiPDBiZMuXk6sMIOwxoobIkQ4ERgiwAQBVrZssSJgQoAQCUNAWOKhQQ"
-        "MPS6KghqjBRgEyZAqgaAhR4JUYR47E4D0wIAA7"
+    icon = (    
+        "R0lGODlhEAAQAPcAADQyNLyaTHRmRJSWlPzGNFxOPGxqbFROVKSGRJyWfOzSlOTCdGRmZ"
+        "HReRERCPIRyTNy2dIyCbPzSZMSylExOTFxaXOTe5HxyVOS2ROzCTFxWPIx+ZKSajDw6PP"
+        "zinExGTPTSfHR2dFRWVKSOVLyibGxiTExKRISKjNy+lIx6VPzOVKyaZLSqnFRSRJyGTNT"
+        "GrOzKfERCRJR6RNS2fPzWdGRiXIx2VMyqXGxWPEQ+RDw2PMSiRIRuVJyenPzKRHRydFRS"
+        "VLSedNS6hHx2ZGRaTIR2TKSSdPzWbMS6pFxeXPzy1IRyVPzKTGRWPKSSXLymhEQ+PPzqt"
+        "PzahHx+fFxWVLymfHRiTJyShMzCpPzSXFxSRKSKTOzWtExGRNy2fMSqZH4HhAAAAAAAAM"
+        "AAAAAIEgAACgAAEwAAAP8JhP8AAP8AAP8AAP8yAP8HAP+RAP98AACreAAGAACRTQB8AAA"
+        "wBADqAAASAAAAAADQ4gA8BBUlAABbAGAIYOlAnhI4gAAAfNJ4IOYARYEAH3wAAMhNAMUA"
+        "ABwAAAAAAErwB+PqAIESAHwAAKBGAHfQAFAmAABbAMgIAMVAQAE4HwAAAGsFAAAAAAAAA"
+        "AAAAJxuAOi9ABIAAAAAAAB4AADqAAASAAAAAAiFAPwrABKDAAB8ABgAaO4AnpAAgHwAfH"
+        "AA/wUA/5EA/3wA//8AYP8Anv8AgP8AfG0pKgW3AJGSAHx8AEogKvRFAIAfAHwAAAA0WAB"
+        "k8RWDEgB8AAD//wD//wD//wD//8gAAMUAABwAAAAAAABcpAHq6wASEgAAAAA09gBkOACD"
+        "TAB8AFcIhPT864ASEnwAAIgYd+ruEBKQTwB8AMgAuMW36xySEgB8AKD/NAD/ZAD/gwD/f"
+        "B8gWgBF7AAfEgAAABE01ABk/wCD/wB8fwSgMADr7AASEgAAAAPnIABkRQCDHwB8AACINA"
+        "BkZACDgwB8fAABIAAARQAAHwAAAAQxbgAAvQAwAAAAAAMBAAAAAAAAAAAAAAAajQAA4gA"
+        "ARwAAACH5BAEAABYALAAAAAAQABAABwjtAC0IFNjDgMEfPQYqtDCAAY8gECCQ4FFjwMIQ"
+        "ViBIOcLxiAcUVgwMPGFlAY0jErJIkBBFCRcrJwQyIIEyywoDI2AoUfLiiQgLIT58OZIlA"
+        "BAKQK5wqFABSJcpXSLQkKACQYyrMRzEeJDCRJcYQ1Ay2dFFqwMtGFReceAASokiBWIAuN"
+        "olg48sRy7o6NJCRwetFBx0IEKACd4UHX7YUIAFCYUOOhwU8KFCgpQlIk2gUMLir2AZlY9"
+        "AiCGzxAQAHbZsASBAwhEYApIMNFHCyIwbAHSMkAKhBJSFSRwsqYKjQJUHUH4ulAmgOQAG"
+        "CwMCADs="
     ),
 )
-    
+
         
-#import wx
+
 from win32com.client import Dispatch
 from eg.WinAPI.Utils import CloseHwnd
+import time
+import datetime
+import wx.lib.masked as masked
+from os.path import isfile
+
 
 #====================================================================
 class Text:
+        
     errorNoWindow = "Couldn't find MediaMonkey window"    
     errorConnect = "MediaMonkey is not running or connected"    
     mainGrpName = "Main control of MediaMonkey"
@@ -105,6 +110,7 @@ class MediaMonkey(eg.PluginClass):
         group.AddAction(Next)
         group.AddAction(Previous)
         group.AddAction(LoadPlaylist)
+        group.AddAction(LoadPlaylistByFilter)
         
         group = self.AddGroup(
             self.text.levelGrpName, 
@@ -115,6 +121,10 @@ class MediaMonkey(eg.PluginClass):
         group.AddAction(VolumeUp)
         group.AddAction(VolumeDown)
         group.AddAction(SetBalance)
+        group.AddAction(SetRepeat)
+        group.AddAction(SetShuffle)
+        group.AddAction(SetAutoDJ)
+        group.AddAction(SetCrossfade)
         group.AddAction(BalanceRight)
         group.AddAction(BalanceLeft)
         group.AddAction(Seek)
@@ -130,10 +140,12 @@ class MediaMonkey(eg.PluginClass):
             self.text.infoGrpDescr
         )
         group.AddAction(GetVolume)
-        group.AddAction(GetBalance)
         group.AddAction(GetStatus)
+        group.AddAction(GetBalance)
         group.AddAction(GetRepeat)
         group.AddAction(GetShuffle)
+        group.AddAction(GetAutoDJ)
+        group.AddAction(GetCrossfade)
         group.AddAction(GetPosition)
         group.AddAction(GetBasicSongInfo)
         group.AddAction(GetDetailSongInfo)
@@ -412,6 +424,140 @@ class SetBalance(eg.ActionClass):
             panel.SetResult(balanceCtrl.GetValue())
 
 #====================================================================
+class SetShuffle(eg.ActionClass):
+    name = "Set Shuffle tracks"
+    description = "Sets the shuffle tracks."
+    class text:
+        radiobox = "Set Shuffle tracks to state ..."
+        ShuffleON = "ON"
+        ShuffleOFF = "OFF"
+    def __call__(self, switch):
+        length=self.plugin.DispMM().Player.CurrentSongLength
+        pos=self.plugin.DispMM().Player.PlaybackTime
+        if switch==0: #
+            self.plugin.DispMM().Player.isShuffle=True
+        else: #
+            self.plugin.DispMM().Player.isShuffle=False
+            
+    def GetLabel(self, switch):
+        return "Set Shuffle tracks "+("ON" if switch==0 else "OFF")
+        
+    def Configure(self, switch=0):
+        text=Text
+        panel = eg.ConfigPanel(self)
+        radioBox = wx.RadioBox(
+            panel, 
+            -1, 
+            self.text.radiobox, 
+            choices=[self.text.ShuffleON, self.text.ShuffleOFF], 
+            style=wx.RA_SPECIFY_ROWS
+        )
+        radioBox.SetSelection(switch)
+        panel.sizer.Add(radioBox, 0, wx.EXPAND)
+        while panel.Affirmed():
+            panel.SetResult(radioBox.GetSelection(),)
+            
+#====================================================================
+class SetRepeat(eg.ActionClass):
+    name = "Set Continous playback"
+    description = "Sets the continous playback."
+    class text:
+        radiobox = "Set Continous playback to state ..."
+        RepeatON = "ON"
+        RepeatOFF = "OFF"
+    def __call__(self, switch):
+        length=self.plugin.DispMM().Player.CurrentSongLength
+        pos=self.plugin.DispMM().Player.PlaybackTime
+        if switch==0: #
+            self.plugin.DispMM().Player.isRepeat=True
+        else: #
+            self.plugin.DispMM().Player.isRepeat=False
+            
+    def GetLabel(self, switch):
+        return "Set Continous playback "+("ON" if switch==0 else "OFF")
+        
+    def Configure(self, switch=0):
+        text=Text
+        panel = eg.ConfigPanel(self)
+        radioBox = wx.RadioBox(
+            panel, 
+            -1, 
+            self.text.radiobox, 
+            choices=[self.text.RepeatON, self.text.RepeatOFF], 
+            style=wx.RA_SPECIFY_ROWS
+        )
+        radioBox.SetSelection(switch)
+        panel.sizer.Add(radioBox, 0, wx.EXPAND)
+        while panel.Affirmed():
+            panel.SetResult(radioBox.GetSelection(),)
+#====================================================================
+class SetAutoDJ(eg.ActionClass):
+    name = "Set AutoDJ"
+    description = "Sets the AutoDJ."
+    class text:
+        radiobox = "Set AutoDJ to state ..."
+        AutoDJON = "ON"
+        AutoDJOFF = "OFF"
+    def __call__(self, switch):
+        length=self.plugin.DispMM().Player.CurrentSongLength
+        pos=self.plugin.DispMM().Player.PlaybackTime
+        if switch==0: #
+            self.plugin.DispMM().Player.isAutoDJ=True
+        else: #
+            self.plugin.DispMM().Player.isAutoDJ=False
+            
+    def GetLabel(self, switch):
+        return "Set AutoDJ "+("ON" if switch==0 else "OFF")
+        
+    def Configure(self, switch=0):
+        text=Text
+        panel = eg.ConfigPanel(self)
+        radioBox = wx.RadioBox(
+            panel, 
+            -1, 
+            self.text.radiobox, 
+            choices=[self.text.AutoDJON, self.text.AutoDJOFF], 
+            style=wx.RA_SPECIFY_ROWS
+        )
+        radioBox.SetSelection(switch)
+        panel.sizer.Add(radioBox, 0, wx.EXPAND)
+        while panel.Affirmed():
+            panel.SetResult(radioBox.GetSelection(),)
+#====================================================================
+class SetCrossfade(eg.ActionClass):
+    name = "Set Crossfade"
+    description = "Sets the crossfade."
+    class text:
+        radiobox = "Set Crossfade to state ..."
+        CrossfadeON = "ON"
+        CrossfadeOFF = "OFF"
+    def __call__(self, switch):
+        length=self.plugin.DispMM().Player.CurrentSongLength
+        pos=self.plugin.DispMM().Player.PlaybackTime
+        if switch==0: #
+            self.plugin.DispMM().Player.isCrossfade=True
+        else: #
+            self.plugin.DispMM().Player.isCrossfade=False
+            
+    def GetLabel(self, switch):
+        return "Set Crossfade "+("ON" if switch==0 else "OFF")
+        
+    def Configure(self, switch=0):
+        text=Text
+        panel = eg.ConfigPanel(self)
+        radioBox = wx.RadioBox(
+            panel, 
+            -1, 
+            self.text.radiobox, 
+            choices=[self.text.CrossfadeON, self.text.CrossfadeOFF], 
+            style=wx.RA_SPECIFY_ROWS
+        )
+        radioBox.SetSelection(switch)
+        panel.sizer.Add(radioBox, 0, wx.EXPAND)
+        while panel.Affirmed():
+            panel.SetResult(radioBox.GetSelection(),)
+            
+#====================================================================
 class BalanceRight(eg.ActionClass):
     name = "Balance Right x%"
     description = "Balance Right x%."
@@ -576,6 +722,22 @@ class GetShuffle(eg.ActionClass):
 
 
 #====================================================================
+class GetAutoDJ(eg.ActionClass):
+    name = "Get AutoDJ"
+    description = "Get AutoDJ Status."
+    def __call__(self):
+        return self.plugin.DispMM().Player.isAutoDJ
+
+
+#====================================================================
+class GetCrossfade(eg.ActionClass):
+    name = "Get Crossfade"
+    description = "Get Crossfade Status."
+    def __call__(self):
+        return self.plugin.DispMM().Player.isCrossfade
+
+
+#====================================================================
 class GetPosition(eg.ActionClass):
     name = "Get Position in ms"
     description = "Get Position in ms."
@@ -591,12 +753,17 @@ class GetBasicSongInfo(eg.ActionClass):
         filename = "File name"
         tracktitle = "Track title"
         artist = "Artist"
-        album = "Album"
-        albumartist = "Album artist"
-        year = "Year"
-        track = "Track #"
         genre = "Genre"
         rating = "Rating"
+        album = "Album"
+        disc = "Disc #"
+        track = "Track #"
+        albumartist = "Album artist"
+        year = "Year"
+        grouping = "Grouping"
+        origDate = "Original year"
+        composer = "Composer"
+        conductor = "Conductor"
         comment = "Comment"
 
     def __call__(self,arrayInfo):
@@ -607,23 +774,33 @@ class GetBasicSongInfo(eg.ActionClass):
         listPropert=(
             "Title",
             "ArtistName",
-            "AlbumName",
-            "AlbumArtistName",
-            "Year",
-            "TrackOrder",
             "Genre",
             "Rating",
+            "AlbumName",
+            "DiscNumber",
+            "TrackOrder",
+            "AlbumArtistName",
+            "Year",
+            "Grouping",
+            "OriginalYear",
+            "MusicComposer",
+            "Conductor",
             "Comment"
         )
         listNum=(
             False,
             False,
             False,
-            False,
-            True,
             True,
             False,
             True,
+            True,
+            False,
+            True,
+            False,
+            True,
+            False,
+            False,
             False
         )
         for propert,cond,numeric in zip(listPropert,arrayInfo[2:],listNum):
@@ -644,7 +821,7 @@ class GetBasicSongInfo(eg.ActionClass):
 
     def Configure(
         self,
-        arrayInfo=[False]*11
+        arrayInfo=[False]*16
     ):
         text=self.text
         panel = eg.ConfigPanel(self)
@@ -656,32 +833,56 @@ class GetBasicSongInfo(eg.ActionClass):
         tracktitleCtrl.SetValue(arrayInfo[2])
         artistCtrl = wx.CheckBox(panel, -1, self.text.artist)
         artistCtrl.SetValue(arrayInfo[3])
-        albumCtrl = wx.CheckBox(panel, -1, self.text.album)
-        albumCtrl.SetValue(arrayInfo[4])
-        albumartistCtrl = wx.CheckBox(panel, -1, self.text.albumartist)
-        albumartistCtrl.SetValue(arrayInfo[5])
-        yearCtrl = wx.CheckBox(panel, -1, self.text.year)
-        yearCtrl.SetValue(arrayInfo[6])
-        trackCtrl = wx.CheckBox(panel, -1, self.text.track)
-        trackCtrl.SetValue(arrayInfo[7])
         genreCtrl = wx.CheckBox(panel, -1, self.text.genre)
-        genreCtrl.SetValue(arrayInfo[8])
+        genreCtrl.SetValue(arrayInfo[4])
         ratingCtrl = wx.CheckBox(panel, -1, self.text.rating)
-        ratingCtrl.SetValue(arrayInfo[9])
+        ratingCtrl.SetValue(arrayInfo[5])
+        albumCtrl = wx.CheckBox(panel, -1, self.text.album)
+        albumCtrl.SetValue(arrayInfo[6])
+        discCtrl = wx.CheckBox(panel, -1, self.text.disc)
+        discCtrl.SetValue(arrayInfo[7])
+        trackCtrl = wx.CheckBox(panel, -1, self.text.track)
+        trackCtrl.SetValue(arrayInfo[8])
+        albumartistCtrl = wx.CheckBox(panel, -1, self.text.albumartist)
+        albumartistCtrl.SetValue(arrayInfo[9])
+        yearCtrl = wx.CheckBox(panel, -1, self.text.year)
+        yearCtrl.SetValue(arrayInfo[10])
+        groupingCtrl = wx.CheckBox(panel, -1, self.text.grouping)
+        groupingCtrl.SetValue(arrayInfo[11])
+        origDateCtrl = wx.CheckBox(panel, -1, self.text.origDate)
+        origDateCtrl.SetValue(arrayInfo[12])
+        composerCtrl = wx.CheckBox(panel, -1, self.text.composer)
+        composerCtrl.SetValue(arrayInfo[13])
+        conductorCtrl = wx.CheckBox(panel, -1, self.text.conductor)
+        conductorCtrl.SetValue(arrayInfo[14])
         commentCtrl = wx.CheckBox(panel, -1, self.text.comment)
-        commentCtrl.SetValue(arrayInfo[10])
+        commentCtrl.SetValue(arrayInfo[15])
 
-        panel.AddCtrl(filepathCtrl)
-        panel.AddCtrl(filenameCtrl)
-        panel.AddCtrl(tracktitleCtrl)
-        panel.AddCtrl(artistCtrl)
-        panel.AddCtrl(albumCtrl)
-        panel.AddCtrl(albumartistCtrl)
-        panel.AddCtrl(yearCtrl)
-        panel.AddCtrl(trackCtrl)
-        panel.AddCtrl(genreCtrl)
-        panel.AddCtrl(ratingCtrl)
-        panel.AddCtrl(commentCtrl)
+        mainSizer=wx.FlexGridSizer(2,2)
+        leftSizer=wx.BoxSizer(wx.VERTICAL)
+        rightSizer=wx.BoxSizer(wx.VERTICAL)
+
+        leftSizer.Add(tracktitleCtrl,0)
+        leftSizer.Add(artistCtrl,0,wx.TOP,10)
+        leftSizer.Add(genreCtrl,0,wx.TOP,10)
+        leftSizer.Add(albumCtrl,0,wx.TOP,10)
+        leftSizer.Add(albumartistCtrl,0,wx.TOP,10)
+        leftSizer.Add(groupingCtrl,0,wx.TOP,10)
+        leftSizer.Add(composerCtrl,0,wx.TOP,10)
+        leftSizer.Add(conductorCtrl,0,wx.TOP,10)
+        rightSizer.Add(filepathCtrl,0)
+        rightSizer.Add(filenameCtrl,0,wx.TOP,10)
+        rightSizer.Add(yearCtrl,0,wx.TOP,10)
+        rightSizer.Add(origDateCtrl,0,wx.TOP,10)
+        rightSizer.Add(discCtrl,0,wx.TOP,10)
+        rightSizer.Add(trackCtrl,0,wx.TOP,10)
+        rightSizer.Add(ratingCtrl,0,wx.TOP,10)
+        rightSizer.Add(commentCtrl,0,wx.TOP,10)
+        mainSizer.Add((200,1))
+        mainSizer.Add((200,1))
+        mainSizer.Add(leftSizer,0)
+        mainSizer.Add(rightSizer,0)
+        panel.AddCtrl(mainSizer)
 
 
         while panel.Affirmed():
@@ -690,30 +891,32 @@ class GetBasicSongInfo(eg.ActionClass):
                 filenameCtrl.GetValue(),
                 tracktitleCtrl.GetValue(),
                 artistCtrl.GetValue(),
-                albumCtrl.GetValue(),
-                albumartistCtrl.GetValue(),
-                yearCtrl.GetValue(),
-                trackCtrl.GetValue(),
                 genreCtrl.GetValue(),
                 ratingCtrl.GetValue(),
+                albumCtrl.GetValue(),
+                discCtrl.GetValue(),
+                trackCtrl.GetValue(),
+                albumartistCtrl.GetValue(),
+                yearCtrl.GetValue(),
+                groupingCtrl.GetValue(),
+                origDateCtrl.GetValue(),
+                composerCtrl.GetValue(),
+                conductorCtrl.GetValue(),
                 commentCtrl.GetValue()
             ]
             panel.SetResult(arrayInfo)
-
 
 #====================================================================
 class GetDetailSongInfo(eg.ActionClass):
     name = "Get detail song info"
     description = "Get detail song info."
     class text:
-        composer = "Composer"
         lyricist = "Lyricist"
-        involvedpeople = "Involved people"
-        originaltitle = "Original title"
-        originalartist = "Original artist"
-        originallyricist = "Original lyricist"
-        originalyear = "Original year"
         BPM = "BPM"
+        involvedpeople = "Involved people"
+        originalartist = "Original artist"
+        originaltitle = "Original album title"
+        originallyricist = "Original lyricist"
         ISRC = "ISRC"
         publisher = "Publisher"
         encoder = "Encoder"
@@ -721,14 +924,12 @@ class GetDetailSongInfo(eg.ActionClass):
 
     def __call__(self, arrayInfo):
         listPropert=(
-        "MusicComposer",
         "Lyricist",
-        "InvolvedPeople",
-        "OriginalTitle",
-        "OriginalArtist",
-        "OriginalLyricist",
-        "OriginalYear",
         "BPM",
+        "InvolvedPeople",
+        "OriginalArtist",
+        "OriginalTitle",
+        "OriginalLyricist",
         "ISRC",
         "Publisher",
         "Encoder",
@@ -736,14 +937,12 @@ class GetDetailSongInfo(eg.ActionClass):
         )
         listNum=(
             False,
-            False,
+            True,
             False,
             False,
             False,
             False,
             True,
-            True,
-            False,
             False,
             False,
             False
@@ -766,63 +965,64 @@ class GetDetailSongInfo(eg.ActionClass):
 
     def Configure(
         self,
-        arrayInfo=[False]*12
+        arrayInfo=[False]*10
     ):
         text=self.text
         panel = eg.ConfigPanel(self)
-        composerCtrl = wx.CheckBox(panel, -1, self.text.composer)
-        composerCtrl.SetValue(arrayInfo[0])
         lyricistCtrl = wx.CheckBox(panel, -1, self.text.lyricist)
-        lyricistCtrl.SetValue(arrayInfo[1])
+        lyricistCtrl.SetValue(arrayInfo[0])
+        BPMCtrl = wx.CheckBox(panel, -1, self.text.BPM)
+        BPMCtrl.SetValue(arrayInfo[1])
         involvedpeopleCtrl = wx.CheckBox(panel, -1, self.text.involvedpeople)
         involvedpeopleCtrl.SetValue(arrayInfo[2])
-        originaltitleCtrl = wx.CheckBox(panel, -1, self.text.originaltitle)
-        originaltitleCtrl.SetValue(arrayInfo[3])
         originalartistCtrl = wx.CheckBox(panel, -1, self.text.originalartist)
-        originalartistCtrl.SetValue(arrayInfo[4])
+        originalartistCtrl.SetValue(arrayInfo[3])
+        originaltitleCtrl = wx.CheckBox(panel, -1, self.text.originaltitle)
+        originaltitleCtrl.SetValue(arrayInfo[4])
         originallyricistCtrl = wx.CheckBox(
             panel,
             -1,
             self.text.originallyricist
         )
         originallyricistCtrl.SetValue(arrayInfo[5])
-        originalyearCtrl = wx.CheckBox(panel, -1, self.text.originalyear)
-        originalyearCtrl.SetValue(arrayInfo[6])
-        BPMCtrl = wx.CheckBox(panel, -1, self.text.BPM)
-        BPMCtrl.SetValue(arrayInfo[7])
         ISRCCtrl = wx.CheckBox(panel, -1, self.text.ISRC)
-        ISRCCtrl.SetValue(arrayInfo[8])
+        ISRCCtrl.SetValue(arrayInfo[6])
         publisherCtrl = wx.CheckBox(panel, -1, self.text.publisher)
-        publisherCtrl.SetValue(arrayInfo[9])
+        publisherCtrl.SetValue(arrayInfo[7])
         encoderCtrl = wx.CheckBox(panel, -1, self.text.encoder)
-        encoderCtrl.SetValue(arrayInfo[10])
+        encoderCtrl.SetValue(arrayInfo[8])
         copyrightCtrl = wx.CheckBox(panel, -1, self.text.copyright)
-        copyrightCtrl.SetValue(arrayInfo[11])
+        copyrightCtrl.SetValue(arrayInfo[9])
 
-        panel.AddCtrl(composerCtrl)
-        panel.AddCtrl(lyricistCtrl)
-        panel.AddCtrl(involvedpeopleCtrl)
-        panel.AddCtrl(originaltitleCtrl)
-        panel.AddCtrl(originalartistCtrl)
-        panel.AddCtrl(originallyricistCtrl)
-        panel.AddCtrl(originalyearCtrl)
-        panel.AddCtrl(BPMCtrl)
-        panel.AddCtrl(ISRCCtrl)
-        panel.AddCtrl(publisherCtrl)
-        panel.AddCtrl(encoderCtrl)
-        panel.AddCtrl(copyrightCtrl)
+        mainSizer=wx.FlexGridSizer(2,2)
+        leftSizer=wx.BoxSizer(wx.VERTICAL)
+        rightSizer=wx.BoxSizer(wx.VERTICAL)
+
+        leftSizer.Add(lyricistCtrl,0)
+        leftSizer.Add(involvedpeopleCtrl,0,wx.TOP,10)
+        leftSizer.Add(originalartistCtrl,0,wx.TOP,10)
+        leftSizer.Add(originaltitleCtrl,0,wx.TOP,10)
+        leftSizer.Add(originallyricistCtrl,0,wx.TOP,10)
+        rightSizer.Add(BPMCtrl,0)
+        rightSizer.Add(ISRCCtrl,0,wx.TOP,10)
+        rightSizer.Add(publisherCtrl,0,wx.TOP,10)
+        rightSizer.Add(encoderCtrl,0,wx.TOP,10)
+        rightSizer.Add(copyrightCtrl,0,wx.TOP,10)
+        mainSizer.Add((200,1))
+        mainSizer.Add((200,1))
+        mainSizer.Add(leftSizer,0)
+        mainSizer.Add(rightSizer,0)
+        panel.AddCtrl(mainSizer)
 
 
         while panel.Affirmed():
             arrayInfo=[
-                composerCtrl.GetValue(),
                 lyricistCtrl.GetValue(),
-                involvedpeopleCtrl.GetValue(),
-                originaltitleCtrl.GetValue(),
-                originalartistCtrl.GetValue(),
-                originallyricistCtrl.GetValue(),
-                originalyearCtrl.GetValue(),
                 BPMCtrl.GetValue(),
+                involvedpeopleCtrl.GetValue(),
+                originalartistCtrl.GetValue(),
+                originaltitleCtrl.GetValue(),
+                originallyricistCtrl.GetValue(),
                 ISRCCtrl.GetValue(),
                 publisherCtrl.GetValue(),
                 encoderCtrl.GetValue(),
@@ -843,6 +1043,8 @@ class GetClassificationInfo(eg.ActionClass):
         custom1 = "Custom 1"
         custom2 = "Custom 2"
         custom3 = "Custom 3"
+        custom4 = "Custom 4"
+        custom5 = "Custom 5"
 
     def __call__(self,arrayInfo):
         listPropert=(
@@ -852,14 +1054,15 @@ class GetClassificationInfo(eg.ActionClass):
             "Quality",
             "Custom1",
             "Custom2",
-            "Custom3"
+            "Custom3",
+            "Custom4",
+            "Custom5"
         )
         result=""
         for propert,cond in zip(listPropert,arrayInfo):
             result+=getattr(self.plugin.DispMM().Player.CurrentSong,propert)\
                 +"," if cond else ""
         return result[:-1]
-
     def GetLabel(self, arrayInfo):
         result=""
         for condition in arrayInfo:
@@ -868,7 +1071,7 @@ class GetClassificationInfo(eg.ActionClass):
 
     def Configure(
         self,
-        arrayInfo=[False]*7
+        arrayInfo=[False]*9
     ):
         text=self.text
         panel = eg.ConfigPanel(self)
@@ -886,14 +1089,28 @@ class GetClassificationInfo(eg.ActionClass):
         custom2Ctrl.SetValue(arrayInfo[5])
         custom3Ctrl = wx.CheckBox(panel, -1, self.text.custom3)
         custom3Ctrl.SetValue(arrayInfo[6])
+        custom4Ctrl = wx.CheckBox(panel, -1, self.text.custom4)
+        custom4Ctrl.SetValue(arrayInfo[7])
+        custom5Ctrl = wx.CheckBox(panel, -1, self.text.custom5)
+        custom5Ctrl.SetValue(arrayInfo[8])
+        mainSizer=wx.FlexGridSizer(2,2)
+        leftSizer=wx.BoxSizer(wx.VERTICAL)
+        rightSizer=wx.BoxSizer(wx.VERTICAL)
 
-        panel.AddCtrl(tempoCtrl)
-        panel.AddCtrl(moodCtrl)
-        panel.AddCtrl(occasionCtrl)
-        panel.AddCtrl(qualityCtrl)
-        panel.AddCtrl(custom1Ctrl)
-        panel.AddCtrl(custom2Ctrl)
-        panel.AddCtrl(custom3Ctrl)
+        leftSizer.Add(tempoCtrl,0)
+        leftSizer.Add(moodCtrl,0,wx.TOP,10)
+        leftSizer.Add(occasionCtrl,0,wx.TOP,10)
+        leftSizer.Add(qualityCtrl,0,wx.TOP,10)
+        rightSizer.Add(custom1Ctrl,0)
+        rightSizer.Add(custom2Ctrl,0,wx.TOP,10)
+        rightSizer.Add(custom3Ctrl,0,wx.TOP,10)
+        rightSizer.Add(custom4Ctrl,0,wx.TOP,10)
+        rightSizer.Add(custom5Ctrl,0,wx.TOP,10)
+        mainSizer.Add((200,1))
+        mainSizer.Add((200,1))
+        mainSizer.Add(leftSizer,0)
+        mainSizer.Add(rightSizer,0)
+        panel.AddCtrl(mainSizer)
 
         while panel.Affirmed():
             arrayInfo=[
@@ -903,7 +1120,9 @@ class GetClassificationInfo(eg.ActionClass):
                 qualityCtrl.GetValue(),
                 custom1Ctrl.GetValue(),
                 custom2Ctrl.GetValue(),
-                custom3Ctrl.GetValue()
+                custom3Ctrl.GetValue(),
+                custom4Ctrl.GetValue(),
+                custom5Ctrl.GetValue()
             ]
             panel.SetResult(arrayInfo)
 #====================================================================
@@ -912,29 +1131,29 @@ class GetTechnicalSongInfo(eg.ActionClass):
     description = "Get technical song info."
     class text:
         length = "Length"
+        filesize = "File size"
         bitrate = "Bitrate"
-#        seekable = "Seekable"
+        VBR = "VBR"
         frequency = "Frequency"
         stereo = "Stereo"
+        counter = "Play counter"
+        leveling = "Leveling"
+        lastplayed = "Last played"
+#        seekable = "Seekable"
 #        copyrighted = "Copyrighted"
 #        original = "Original"
-        counter = "Play counter"
-        lastplayed = "Last played"
-        filesize = "File size"
-        VBR = "VBR"
-        leveling = "Leveling"
 
     def __call__(self, arrayInfo):
         listPropert=(
             "SongLength",
+            "FileLength",
             "Bitrate",
+            "VBR",
             "SampleRate",
             "Channels",
             "PlayCounter",
-            "LastPlayed",
-            "FileLength",
-            "VBR",
-            "Leveling"
+            "Leveling",
+            "LastPlayed"
         )
         result=""
         for propert,cond in zip(listPropert,arrayInfo):
@@ -956,56 +1175,63 @@ class GetTechnicalSongInfo(eg.ActionClass):
         panel = eg.ConfigPanel(self)
         lengthCtrl = wx.CheckBox(panel, -1, self.text.length)
         lengthCtrl.SetValue(arrayInfo[0])
+        filesizeCtrl = wx.CheckBox(panel, -1, self.text.filesize)
+        filesizeCtrl.SetValue(arrayInfo[1])
         bitrateCtrl = wx.CheckBox(panel, -1, self.text.bitrate)
-        bitrateCtrl.SetValue(arrayInfo[1])
+        bitrateCtrl.SetValue(arrayInfo[2])
+        VBRCtrl = wx.CheckBox(panel, -1, self.text.VBR)
+        VBRCtrl.SetValue(arrayInfo[3])
+        frequencyCtrl = wx.CheckBox(panel, -1, self.text.frequency)
+        frequencyCtrl.SetValue(arrayInfo[4])
+        stereoCtrl = wx.CheckBox(panel, -1, self.text.stereo)
+        stereoCtrl.SetValue(arrayInfo[5])
+        counterCtrl = wx.CheckBox(panel, -1, self.text.counter)
+        counterCtrl.SetValue(arrayInfo[6])
+        levelingCtrl = wx.CheckBox(panel, -1, self.text.leveling)
+        levelingCtrl.SetValue(arrayInfo[7])
+        lastplayedCtrl = wx.CheckBox(panel, -1, self.text.lastplayed)
+        lastplayedCtrl.SetValue(arrayInfo[8])
 #        seekableCtrl = wx.CheckBox(panel, -1, self.text.seekable)
 #        seekableCtrl.SetValue(seekable)
-        frequencyCtrl = wx.CheckBox(panel, -1, self.text.frequency)
-        frequencyCtrl.SetValue(arrayInfo[2])
-        stereoCtrl = wx.CheckBox(panel, -1, self.text.stereo)
-        stereoCtrl.SetValue(arrayInfo[3])
 #        copyrightedCtrl = wx.CheckBox(panel, -1, self.text.copyrighted)
 #        copyrightedCtrl.SetValue(copyrighted)
 #        originalCtrl = wx.CheckBox(panel, -1, self.text.original)
 #        originalCtrl.SetValue(original)
-        counterCtrl = wx.CheckBox(panel, -1, self.text.counter)
-        counterCtrl.SetValue(arrayInfo[4])
-        lastplayedCtrl = wx.CheckBox(panel, -1, self.text.lastplayed)
-        lastplayedCtrl.SetValue(arrayInfo[5])
-        filesizeCtrl = wx.CheckBox(panel, -1, self.text.filesize)
-        filesizeCtrl.SetValue(arrayInfo[6])
-        VBRCtrl = wx.CheckBox(panel, -1, self.text.VBR)
-        VBRCtrl.SetValue(arrayInfo[7])
-        levelingCtrl = wx.CheckBox(panel, -1, self.text.leveling)
-        levelingCtrl.SetValue(arrayInfo[8])
-
-        panel.AddCtrl(lengthCtrl)
-        panel.AddCtrl(bitrateCtrl)
+        mainSizer=wx.FlexGridSizer(2,2)
+        leftSizer=wx.BoxSizer(wx.VERTICAL)
+        rightSizer=wx.BoxSizer(wx.VERTICAL)
+        leftSizer.Add(lengthCtrl,0)
+        leftSizer.Add(bitrateCtrl,0,wx.TOP,10)
+        leftSizer.Add(frequencyCtrl,0,wx.TOP,10)
+        leftSizer.Add(counterCtrl,0,wx.TOP,10)
+        leftSizer.Add(lastplayedCtrl,0,wx.TOP,10)
+        rightSizer.Add(filesizeCtrl,0)
+        rightSizer.Add(VBRCtrl,0,wx.TOP,10)
+        rightSizer.Add(stereoCtrl,0,wx.TOP,10)
+        rightSizer.Add(levelingCtrl,0,wx.TOP,10)
+        mainSizer.Add((200,1))
+        mainSizer.Add((200,1))
+        mainSizer.Add(leftSizer,0)
+        mainSizer.Add(rightSizer,0)
+        panel.AddCtrl(mainSizer)
 #        panel.AddCtrl(seekableCtrl)
-        panel.AddCtrl(frequencyCtrl)
-        panel.AddCtrl(stereoCtrl)
 #        panel.AddCtrl(copyrightedCtrl)
 #        panel.AddCtrl(originalCtrl)
-        panel.AddCtrl(counterCtrl)
-        panel.AddCtrl(lastplayedCtrl)
-        panel.AddCtrl(filesizeCtrl)
-        panel.AddCtrl(VBRCtrl)
-        panel.AddCtrl(levelingCtrl)
 
         while panel.Affirmed():
             arrayInfo=[
                 lengthCtrl.GetValue(),
+                filesizeCtrl.GetValue(),
                 bitrateCtrl.GetValue(),
-#                seekableCtrl.GetValue(),
+                VBRCtrl.GetValue(),
                 frequencyCtrl.GetValue(),
                 stereoCtrl.GetValue(),
+                counterCtrl.GetValue(),
+                levelingCtrl.GetValue(),
+                lastplayedCtrl.GetValue(),
+#                seekableCtrl.GetValue(),
 #                copyrightedCtrl.GetValue(),
 #                originalCtrl.GetValue(),
-                counterCtrl.GetValue(),
-                lastplayedCtrl.GetValue(),
-                filesizeCtrl.GetValue(),
-                VBRCtrl.GetValue(),
-                levelingCtrl.GetValue(),
             ]
             panel.SetResult(arrayInfo)
 
@@ -1017,7 +1243,7 @@ class GetUniversal(eg.ActionClass):
     description = "Get Universal."
     class text:
         label="Select requested property:"
-        get = "Get "
+        get = "Get"
         class Properties:
             AlbumName = "Album Name"
             AlbumLength = "AlbumLength"
@@ -1036,11 +1262,14 @@ class GetUniversal(eg.ActionClass):
             Custom1 = "Custom 1"
             Custom2 = "Custom 2"
             Custom3 = "Custom 3"
+            Custom4 = "Custom 4"
+            Custom5 = "Custom 5"
             DateAdded = "Date Added"
             Encoder = "Encoder"
             FileLength = "File Length"
             FileModified = "File Modified"
             Genre = "Genre"
+            Grouping = "Grouping"
             Channels = "Stereo"
             InvolvedPeople = "Involved People"
             IsntInDB = "Is not in DB"
@@ -1075,85 +1304,92 @@ class GetUniversal(eg.ActionClass):
             SongLengthString = "Song Length String"
             Tempo = "Tempo"
             Title = "Title"
+            DiscNumber = "Disc Number"
             TrackOrder = "Track Order"
             VBR = "VBR"
             Year = "Year"
+            canCrossfade = "Can Crossfade"
+            isShuffleIgnored = "Shuffle Is Ignored"
             
-    @classmethod
-    def OnAddAction(cls):
-        text=cls.text
-        txt=text.Properties
-        cls.infoList=(
-            ("AlbumName",txt.AlbumName),
-            ("Album.AlbumLength",txt.AlbumLength),
-            ("Album.AlbumLengthString",txt.AlbumLengthString),
-            ("AlbumArtistName",txt.AlbumArtistName),
-            ("AlbumArt.Count",txt.AlbumArtCount),
-            ("ArtistName",txt.ArtistName),
-            ("Artist.Count",txt.ArtistCount),
-            ("Author",txt.Author),
-            ("Band",txt.Band),
-            ("Bitrate",txt.Bitrate),
-            ("BPM",txt.BPM),
-            ("Comment",txt.Comment),
-            ("Conductor",txt.Conductor),
-            ("Copyright",txt.Copyright),
-            ("Custom1",txt.Custom1),
-            ("Custom2",txt.Custom2),
-            ("Custom3",txt.Custom3),
-            ("DateAdded",txt.DateAdded),
-            ("Encoder",txt.Encoder),
-            ("FileLength",txt.FileLength),
-            ("FileModified",txt.FileModified),
-            ("Genre",txt.Genre),
-            ("Channels",txt.Channels),
-            ("InvolvedPeople",txt.InvolvedPeople),
-            ("IsntInDB",txt.IsntInDB),
-            ("ISRC",txt.ISRC),
-            ("LastPlayed",txt.LastPlayed),
-            ("Leveling",txt.Leveling),
-            ("Lyricist",txt.Lyricist),
-            ("Lyrics",txt.Lyrics),
-            ("Media.DriveLetter",txt.MediaDriveLetter),
-            ("Media.DriveType",txt.MediaDriveType),
-            ("Media.SerialNumber",txt.MediaSerialNumber),
-            ("MediaLabel",txt.MediaLabel),
-            ("Mood",txt.Mood),
-            ("MusicComposer",txt.MusicComposer),
-            ("Occasion",txt.Occasion),
-            ("OriginalArtist",txt.OriginalArtist),
-            ("OriginalLyricist",txt.OriginalLyricist),
-            ("OriginalTitle",txt.OriginalTitle),
-            ("OriginalYear",txt.OriginalYear),
-            ("Path",txt.Path),
-            ("PeakValue",txt.PeakValue),
-            ("PlayCounter",txt.PlayCounter),
-            ("PlaylistOrder",txt.PlaylistOrder),
-            ("PreviewPath",txt.PreviewPath),
-            ("Preview",txt.Preview),
-            ("Publisher",txt.Publisher),
-            ("Quality",txt.Quality),
-            ("Rating",txt.Rating),
-            ("RatingString",txt.RatingString),
-            ("SampleRate",txt.SampleRate),
-            ("SongLength",txt.SongLength),
-            ("SongLengthString",txt.SongLengthString),
-            ("Tempo",txt.Tempo),
-            ("Title",txt.Title),
-            ("TrackOrder",txt.TrackOrder),
-            ("VBR",txt.VBR),
-            ("Year",txt.Year),
-        )
-        
+    def __init__(self):
+        text=self.text
+        self.propertiesList=(
+            ("AlbumName","AlbumName"),
+            ("Album.AlbumLength","AlbumLength"),
+            ("Album.AlbumLengthString","AlbumLengthString"),
+            ("AlbumArtistName","AlbumArtistName"),
+            ("AlbumArt.Count","AlbumArtCount"),
+            ("ArtistName","ArtistName"),
+            ("Artist.Count","ArtistCount"),
+            ("Author","Author"),
+            ("Band","Band"),
+            ("Bitrate","Bitrate"),
+            ("BPM","BPM"),
+            ("Comment","Comment"),
+            ("Conductor","Conductor"),
+            ("Copyright","Copyright"),
+            ("Custom1","Custom1"),
+            ("Custom2","Custom2"),
+            ("Custom3","Custom3"),
+            ("Custom4","Custom4"),
+            ("Custom5","Custom5"),
+            ("DateAdded","DateAdded"),
+            ("Encoder","Encoder"),
+            ("FileLength","FileLength"),
+            ("FileModified","FileModified"),
+            ("Genre","Genre"),
+            ("Grouping","Grouping"),
+            ("Channels","Channels"),
+            ("InvolvedPeople","InvolvedPeople"),
+            ("IsntInDB","IsntInDB"),
+            ("ISRC","ISRC"),
+            ("LastPlayed","LastPlayed"),
+            ("Leveling","Leveling"),
+            ("Lyricist","Lyricist"),
+            ("Lyrics","Lyrics"),
+            ("Media.DriveLetter","MediaDriveLetter"),
+            ("Media.DriveType","MediaDriveType"),
+            ("Media.SerialNumber","MediaSerialNumber"),
+            ("MediaLabel","MediaLabel"),
+            ("Mood","Mood"),
+            ("MusicComposer","MusicComposer"),
+            ("Occasion","Occasion"),
+            ("OriginalArtist","OriginalArtist"),
+            ("OriginalLyricist","OriginalLyricist"),
+            ("OriginalTitle","OriginalTitle"),
+            ("OriginalYear","OriginalYear"),
+            ("Path","Path"),
+            ("PeakValue","PeakValue"),
+            ("PlayCounter","PlayCounter"),
+            ("PlaylistOrder","PlaylistOrder"),
+            ("PreviewPath","PreviewPath"),
+            ("Preview","Preview"),
+            ("Publisher","Publisher"),
+            ("Quality","Quality"),
+            ("Rating","Rating"),
+            ("RatingString","RatingString"),
+            ("SampleRate","SampleRate"),
+            ("SongLength","SongLength"),
+            ("SongLengthString","SongLengthString"),
+            ("Tempo","Tempo"),
+            ("Title","Title"),
+            ("DiscNumberStr","DiscNumber"),
+            ("TrackOrder","TrackOrder"),
+            ("VBR","VBR"),
+            ("Year","Year"),
+            ("canCrossfade","canCrossfade"),
+            ("isShuffleIgnored","isShuffleIgnored"),
+        )    
     def __call__(self, i):
-        return getattr(self.plugin.DispMM().Player.CurrentSong,self.infoList[i][0])
+        return getattr(self.plugin.DispMM().Player.CurrentSong,self.propertiesList[i][0])
 
     def GetLabel(self, i):
-        return self.text.get+self.infoList[i][1]
-        
+        return self.text.get+" "+eval("self.text.Properties."+self.propertiesList[i][1])
+#        exec 'from %s import Demo' % demo
     def Configure(self, i=0):
-        #text=Text
-        choices=[tpl[1] for tpl in self.infoList]
+        #text=self.text
+        #txt=Text.ListProperties
+        choices=[eval("self.text.Properties."+tpl[1]) for tpl in self.propertiesList]
         panel=eg.ConfigPanel(self)
         panel.AddLabel(self.text.label)
         infoCtrl=wx.Choice(
@@ -1179,49 +1415,50 @@ class WritingToMM(eg.ActionClass):
             Custom1 = "Custom 1"
             Custom2 = "Custom 2"
             Custom3 = "Custom 3"
+            Custom4 = "Custom 4"
+            Custom5 = "Custom 5"
             Genre = "Genre"
             Mood = "Mood"
             Occasion = "Occasion"
             Quality = "Quality"
             Rating = "Rating"
             Tempo = "Tempo"
-            
-    @classmethod
-    def OnAddAction(cls):
-        text=cls.text
-        txt=text.Properties
-        cls.listCtrl=(
+    def __init__(self):
+        text=self.text
+        self.listCtrl=(
             "wx.TextCtrl(panel, -1, arrayValue0[%s])",
             (
                 "eg.SpinNumCtrl(panel,-1,arrayValue0[%s],max=100.0,min=0.0,"
                 "fractionWidth=1,increment=10,style=wx.TE_READONLY)"
             )
         )
-        cls.infoList=(
-            ("Tempo",txt.Tempo,0,False),
-            ("Mood",txt.Mood,0,False),
-            ("Occasion",txt.Occasion,0,False),
-            ("Quality",txt.Quality,0,False),
-            ("Custom1",txt.Custom1,0,False),
-            ("Custom2",txt.Custom2,0,False),
-            ("Custom3",txt.Custom3,0,False),
-            ("Comment",txt.Comment,0,True),
-            ("Genre",txt.Genre,0,True),
-            ("Rating",txt.Rating,1,True),
+        self.propertiesList=(
+            ("Tempo","Tempo",0,False),
+            ("Mood","Mood",0,False),
+            ("Occasion","Occasion",0,False),
+            ("Quality","Quality",0,False),
+            ("Custom1","Custom1",0,False),
+            ("Custom2","Custom2",0,False),
+            ("Custom3","Custom3",0,False),
+            ("Custom4","Custom4",0,False),
+            ("Custom5","Custom5",0,False),
+            ("Comment","Comment",0,True),
+            ("Genre","Genre",0,True),
+            ("Rating","Rating",1,True),
         )
-        
     def __call__(self, i, arrayValue0, arrayValue1):
-        setattr(self.plugin.DispMM().Player.CurrentSong,self.infoList[i][0]\
+        setattr(self.plugin.DispMM().Player.CurrentSong,self.propertiesList[i][0]\
             ,arrayValue0[i])
         self.plugin.DispMM().Player.CurrentSong.UpdateDB()
         if arrayValue1[i]:
             self.plugin.DispMM().Player.CurrentSong.WriteTags()
         
     def GetLabel(self, i, arrayValue0, arrayValue1):
-        if self.infoList[i][2]==0:
-            result = self.text.set+self.infoList[i][1]+"="+arrayValue0[i]
+        if self.propertiesList[i][2]==0:
+#            result = self.text.set+self.propertiesList[i][1]+"="+arrayValue0[i]
+            result = eval("self.text.set+"+"self.text.Properties."+self.propertiesList[i][1])+"="+arrayValue0[i]
         else:
-            result = self.text.set+self.infoList[i][1]+"="+str(int(arrayValue0[i]))
+            result = eval("self.text.set+"+"self.text.Properties."+self.propertiesList[i][1])+"="+str(int(arrayValue0[i]))
         if arrayValue1[i]:
             result += " (+ID3)"
         return result
@@ -1240,12 +1477,13 @@ class WritingToMM(eg.ActionClass):
             "",
             "",
             "",
+            "",
+            "",
             50,
         ],
-        arrayValue1 = [False] * 10
+        arrayValue1 = [False] * 12
     ):
-        #text=Text
-        choices=[tpl[1] for tpl in self.infoList]
+        choices=[eval("self.text.Properties."+tpl[1]) for tpl in self.propertiesList]
         panel = eg.ConfigPanel(self)
         choiceLbl=wx.StaticText(panel, -1, self.text.label)
         choiceCtrl=wx.Choice(
@@ -1267,15 +1505,18 @@ class WritingToMM(eg.ActionClass):
             dynLbl = wx.StaticText(
                 panel,
                 -1,
-                self.infoList[choiceCtrl.GetSelection()][1]+":"
+                eval("self.text.Properties."+self.propertiesList[choiceCtrl.GetSelection()][1])+":"
             )
-            indx=self.infoList[choiceCtrl.GetSelection()][2]
+            
+            #eval("self.text.set+"+"self.text.Properties."+self.propertiesList[i][1]+"="+arrayValue0[i])
+            
+            indx=self.propertiesList[choiceCtrl.GetSelection()][2]
             dummy = arrayValue0[0] # otherwise error:
 # >>>  NameError: name 'arrayValue0' is not defined  <<<   ??????????????????????
             dynCtrl = eval(self.listCtrl[indx] % str(choiceCtrl.GetSelection()))
             dynSizer.Add(dynLbl, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
             dynSizer.Add(dynCtrl, 0, wx.EXPAND)
-            if self.infoList[choiceCtrl.GetSelection()][3]:
+            if self.propertiesList[choiceCtrl.GetSelection()][3]:
                 chkBoxCtrl = wx.CheckBox(panel, label=self.text.checkboxlabel)
                 chkBoxCtrl.SetValue(arrayValue1[choiceCtrl.GetSelection()])
                 dynSizer.Add((5,5))
@@ -1288,7 +1529,7 @@ class WritingToMM(eg.ActionClass):
         while panel.Affirmed():
             arrayValue0[choiceCtrl.GetSelection()]=\
                 dynSizer.GetChildren()[1].GetWindow().GetValue()
-            if self.infoList[choiceCtrl.GetSelection()][3]:
+            if self.propertiesList[choiceCtrl.GetSelection()][3]:
                 arrayValue1[choiceCtrl.GetSelection()]=\
                     dynSizer.GetChildren()[3].GetWindow().GetValue()
             panel.SetResult(choiceCtrl.GetSelection(),arrayValue0, arrayValue1 )
@@ -1297,24 +1538,911 @@ class LoadPlaylist(eg.ActionClass):
     name = "Load Playlist by Name"
     description = "Loads a MediaMonkey playlist defined by name."
     class text:
-        playlistName = "Name of Playlist:"
+        playlistName = "Playlist name:"
+        found = "found (%s songs)"
+        noFound = "not found or empty"
+        repeat = "Continous playback"
+        shuffle = "Shuffle tracks"
+        crossfade = "Crossfade"
+        
 
-    def __call__(self, plString):
-        MMobj = self.plugin.DispMM()
-        MMobj.Player.Stop()
-        MMobj.Player.PlaylistClear()
+    def __call__(self, plString,repeat,shuffle,crossfade):
+        MMobj = self.plugin.DispMM()                
         plItems = MMobj.PlaylistByTitle(plString).Tracks
-        MMobj.Player.PlaylistAddTracks(plItems)
-        MMobj.Player.currentSongIndex = 0
-        MMobj.Player.Play()
+        num = plItems.Count
+        if num >0:
+            MMobj.Player.Stop()
+            MMobj.Player.PlaylistClear()
+            MMobj.Player.PlaylistAddTracks(plItems)
+            if repeat<2:
+                MMobj.Player.isRepeat=bool(repeat)
+            if crossfade<2:
+                MMobj.Player.isCrossfade=bool(crossfade)
+            if shuffle<2:
+                MMobj.Player.isShuffle=bool(shuffle)
+            MMobj.Player.Play()
+            return plString+" "+self.text.found % str(num)
+        else:
+            return plString+" "+self.text.noFound
+
+        
        
-    def Configure(self, plString=""):
+    def Configure(self, plString="",repeat=2,shuffle=2,crossfade=2):
         panel = eg.ConfigPanel(self)
         text = self.text
         textCtrl = wx.TextCtrl(panel, -1, plString, style=wx.TE_NOHIDESEL)
         SizerAdd = panel.sizer.Add
         SizerAdd(wx.StaticText(panel, -1, text.playlistName))
         SizerAdd(textCtrl, 0, wx.EXPAND)
+        repeatChkBoxCtrl = wx.CheckBox(panel, label=self.text.repeat,style=wx.CHK_3STATE|wx.CHK_ALLOW_3RD_STATE_FOR_USER)
+        repeatChkBoxCtrl.Set3StateValue(repeat)
+        SizerAdd(repeatChkBoxCtrl,0,wx.TOP,15,)
+        shuffleChkBoxCtrl = wx.CheckBox(panel, label=self.text.shuffle,style=wx.CHK_3STATE|wx.CHK_ALLOW_3RD_STATE_FOR_USER)
+        shuffleChkBoxCtrl.Set3StateValue(shuffle)
+        SizerAdd(shuffleChkBoxCtrl,0,wx.TOP,15)
+        crossfadeChkBoxCtrl = wx.CheckBox(panel, label=self.text.crossfade,style=wx.CHK_3STATE|wx.CHK_ALLOW_3RD_STATE_FOR_USER)
+        crossfadeChkBoxCtrl.Set3StateValue(crossfade)
+        SizerAdd(crossfadeChkBoxCtrl,0,wx.TOP,15)
 
         while panel.Affirmed():
-            panel.SetResult(textCtrl.GetValue())            
+            panel.SetResult(
+                textCtrl.GetValue(),
+                repeatChkBoxCtrl.Get3StateValue(),
+                shuffleChkBoxCtrl.Get3StateValue(),
+                crossfadeChkBoxCtrl.Get3StateValue()
+            )  
+
+            
+class LoadPlaylistByFilter(eg.ActionClass):
+    name = "Load Playlist by Filter"
+    description = "Loads a MediaMonkey playlist defined by filter (SQL query)."
+    
+    class text:
+        radioboxMode = "Select songs ..."
+        modeAnd = "Matches all rules (AND)"
+        modeOr = "Matches at least one rule (OR)"
+        equal = "is equal to"
+        notEqual = "is not equal to"
+        greater = "is greater than"
+        greatOrEqual = "is greater than or equal to"
+        less = "is less than"
+        lowerOrEqual = "is less than or equal to"
+        notStartsWith = "not starts with"
+        startsWith = "starts with"
+        endsWith = "ends with"
+        notEndsWith = "does not end with"
+        includes = "includes"
+        notIncludes = "excludes"
+        isEmpty = "is empty"
+        isNotEmpty = "is non-empty"
+        beforeLess = "was earlier than - before ..."   #RELATIVE TO 'NOW' MODE
+        beforeMore = "was later than - before ..."     #RELATIVE TO 'NOW' MODE
+        filterName = "Filter name:"
+        found = "%s/%s songs found"
+        noFound = "no song found"
+        asc = "ascending"
+        desc = "descending"
+        order1 = "Songs found are sorted in"
+        order2 = "order by:"
+        limit1 = "Select only the first"
+        limit2 = "entry"
+        repeat = "Continous playback"
+        shuffle = "Shuffle tracks"
+        crossfade = "Crossfade"
+        accessible = "Load only accessible tracks (low speed)"
+        #seconds = "seconds"
+        minutes = "minutes"
+        hours = "hours"
+        days = "days"
+        months = "months"
+        years = "years"
+       
+        class Properties:
+            Artist = "Artist"
+            Album = "Album"
+            AlbumArtist = "Album Artist"
+            AudioCDTrack = "Audio CD Track"
+            Author = "Author"
+            Band = "Band"
+            Bitrate = "Bitrate"
+            BPM = "BPM"
+            Broadcast = "Broadcast"
+            CacheName = "Cache Name"
+            CacheStatus = "Cache Status"
+            Comment = "Comment"
+            Conductor = "Conductor"
+            Copyright = "Copyright"
+            Copyrighted = "Copyrighted"
+            Custom1 = "Custom1"
+            Custom2 = "Custom2"
+            Custom3 = "Custom3"
+            Custom4 = "Custom4"
+            Custom5 = "Custom5"
+            DateAdded = "Date Added"
+            DiscNumber = "Disc Number"
+            EncodedBy = "Encoded By"
+            Encoder = "Encoder"
+            FileLength = "File Length"
+            FileModified = "File Modified"
+            GaplessBytes = "Gapless Bytes"
+            Genre = "Genre"
+            GroupDesc = "Group Desc"
+            IDAlbum = "ID Album"
+            IDFolder = "ID Folder"
+            IDMedia = "ID Media"
+            InitialKey = "Initial Key"
+            InvolvedPeople = "Involved People"
+            ISRC = "ISRC"
+            Language = "Language"
+            LastTimePlayed = "Last Time Played"
+            Lyricist = "Lyricist"
+            Lyrics = "Lyrics"
+            MaxSample = "Max Sample"
+            MediaType = "Media Type"
+            Mood = "Mood"
+            NormalizeAlbum = "Normalize Album"
+            NormalizeTrack = "Normalize Track"
+            Occasion = "Occasion"
+            OrigArtist = "Original Artist"
+            OrigFileLength = "Original FileLength"
+            Original = "Original"
+            OrigLyricist = "Original Lyricist"
+            OrigTitle = "Original Title"
+            OrigYear = "Original Year"
+            PlaybackPos = "Playback Position"
+            PlayCounter = "Play Counter"
+            PostGap = "Post Gap"
+            PreGap = "Pre Gap"
+            PreviewLength = "Preview Length"
+            PreviewName = "Preview Name"
+            PreviewStartTime = "Preview StartTime"
+            PreviewState = "Preview State"
+            Publisher = "Publisher"
+            Quality = "Quality"
+            Rating = "Rating"
+            RatingString = "Rating String"
+            Remixer = "Remixer"
+            SamplingFrequency = "Sampling Frequency"
+            Seekable = "Seekable"
+            SignPart1 = "Sign Part1"
+            SignPart2 = "Sign Part2"
+            SignPart3 = "Sign Part3"
+            SignPart4 = "Sign Part4"
+            SignType = "Sign Type"
+            SongLength = "Song Length"
+            SongPath = "Song Path"
+            SongTitle = "Song Title"
+            Stereo = "Stereo"
+            SubTitle = "SubTitle"
+            Tempo = "Tempo"
+            TotalSamples = "Total Samples"
+            TrackModified = "Track Modified"
+            TrackNumber = "Track Number"
+            VBR = "VBR"
+            WebArtist = "Web Artist"
+            WebCommercial = "Web Commercial"
+            WebCopyright = "Web Copyright"
+            WebFilepage = "Web Filepage"
+            WebPayment = "Web Payment"
+            WebPublisher = "Web Publisher"
+            WebRadio = "Web Radio"
+            WebSource = "Web Source"
+            WebUser = "Web User"
+            Year = "Year"
+                
+    
+    def __init__(self):
+        self.myDirty=None
+        text=self.text
+        self.propertiesList=(
+            ("Artist","T"),
+            ("Album","T"),
+            ("AlbumArtist","T"),
+            ("AudioCDTrack","I"),
+            ("Author","T"),
+            ("Band","T"),
+            ("Bitrate","I"),
+            ("BPM","I"),
+            ("Broadcast","I"),
+            ("CacheName","T"),
+            ("CacheStatus","I"),
+            ("Comment","T"),
+            ("Conductor","T"),
+            ("Copyright","T"),
+            ("Copyrighted","I"),
+            ("Custom1","T"),
+            ("Custom2","T"),
+            ("Custom3","T"),
+            ("Custom4","T"),
+            ("Custom5","T"),
+            ("DateAdded","D"),
+            ("DiscNumber","T"),
+            ("EncodedBy","T"),
+            ("Encoder","T"),
+            ("FileLength","I"),
+            ("FileModified","D"),
+            ("GaplessBytes","I"),
+            ("Genre","T"),
+            ("GroupDesc","T"),
+            ("IDAlbum","I"),
+            ("IDFolder","I"),
+            ("IDMedia","I"),
+            ("InitialKey","T"),
+            ("InvolvedPeople","T"),
+            ("ISRC","T"),
+            ("Language","T"),
+            ("LastTimePlayed","D"),
+            ("Lyricist","T"),
+            ("Lyrics","T"),
+            ("MaxSample","R"),
+            ("MediaType","T"),
+            ("Mood","T"),
+            ("NormalizeAlbum","R"),
+            ("NormalizeTrack","R"),
+            ("Occasion","T"),
+            ("OrigArtist","T"),
+            ("OrigFileLength","I"),
+            ("Original","I"),
+            ("OrigLyricist","T"),
+            ("OrigTitle","T"),
+            ("OrigYear","I"),
+            ("PlaybackPos","I"),
+            ("PlayCounter","I"),
+            ("PostGap","I"),
+            ("PreGap","I"),
+            ("PreviewLength","I"),
+            ("PreviewName","T"),
+            ("PreviewStartTime","I"),
+            ("PreviewState","I"),
+            ("Publisher","T"),
+            ("Quality","T"),
+            ("Rating","I"),
+            ("RatingString","T"),
+            ("Remixer","T"),
+            ("SamplingFrequency","I"),
+            ("Seekable","I"),
+            ("SignPart1","I"),
+            ("SignPart2","I"),
+            ("SignPart3","I"),
+            ("SignPart4","I"),
+            ("SignType","I"),
+            ("SongLength","I"),
+            ("SongPath","T"),
+            ("SongTitle","T"),
+            ("Stereo","I"),
+            ("SubTitle","T"),
+            ("Tempo","T"),
+            ("TotalSamples","I"),
+            ("TrackModified","D"),
+            ("TrackNumber","T"),
+            ("VBR","I"),
+            ("WebArtist","T"),
+            ("WebCommercial","T"),
+            ("WebCopyright","T"),
+            ("WebFilepage","T"),
+            ("WebPayment","T"),
+            ("WebPublisher","T"),
+            ("WebRadio","T"),
+            ("WebSource","T"),
+            ("WebUser","T"),
+            ("Year","I")
+        )
+
+        self.unitList=(
+           # "seconds",
+            "minutes",
+            "hours",
+            "days",
+            "months",
+            "years"
+        )
+        
+        self.trendList=(
+            "asc",
+            "desc"
+        )
+        
+        self.exprList1=(
+            "equal",
+            "notEqual",
+            "greater",
+            "greatOrEqual",
+            "less",
+            "lowerOrEqual",
+            "beforeLess",
+            "beforeMore",
+        )
+        
+        self.exprList=[
+            "equal",
+            "notEqual",
+            "greater",
+            "greatOrEqual",
+            "less",
+            "lowerOrEqual",
+            "startsWith",
+            "notStartsWith",
+            "endsWith",
+            "notEndsWith",
+            "includes",
+            "notIncludes",
+            "isEmpty",
+            "isNotEmpty",
+        ]
+    
+
+    def __call__(
+        self,
+        plName,
+        mode,
+        listRules,
+        order,
+        trend,
+        crit,
+        limit,
+        num,
+        repeat,
+        shuffle,
+        crossfade,
+        accessible
+    ):
+        MMobj = self.plugin.DispMM()
+        
+            
+        sql=""
+        op=' AND ' if mode==0 else ' OR '        
+        for rule in listRules:
+            i=listRules.index(rule)
+            substValues1=(op,self.propertiesList[rule[0]][0],rule[2])
+            substValues2=(op,rule[2],self.propertiesList[rule[0]][0])
+            substValues3=(op,self.propertiesList[rule[0]][0])
+            dateType=self.propertiesList[rule[0]][1]
+            emptVal = '""'  if dateType=="T" else '"-1"'
+            tuplOper=("=","<>",">",">=","<","<=")
+            
+            if dateType=="D":
+                if rule[1]<6:
+                    for ix in range(0,6):
+                        if rule[1]==ix:
+                            substValues=(op,self.propertiesList[rule[0]][0],tuplOper[ix],rule[2])
+                            sql+="%sstrftime('%%Y-%%m-%%d %%H:%%M:%%S',%s+2415018.5)%s'%s'" % substValues
+                            break
+                else: 
+                    substValues=(op,self.propertiesList[rule[0]][0],rule[2][:-1],self.unitList[int(rule[2][-1])])
+                    if rule[1]==6:
+                        sql+="%s(%s+2415018.5)>julianday('now','-%s %s','localtime')" % substValues
+                    if rule[1]==7:
+                        sql+="%s(%s+2415018.5)<julianday('now','-%s %s','localtime')" % substValues
+            else: # (No "DateType")
+                for ix in range(0,6):
+                    if rule[1]==ix:
+                        substValues=(op,self.propertiesList[rule[0]][0],tuplOper[ix],rule[2])
+                        sql+='%s%s%s"%s"' % substValues
+                        break
+                if rule[1]==6:
+                    sql+='%slike("%s%%",%s)' % substValues2
+                if rule[1]==7:
+                    sql+='%sNOT like("%s%%",%s)' % substValues2
+                elif rule[1]==8:
+                    sql+='%slike("%%%s",%s)' % substValues2
+                elif rule[1]==9:
+                    sql+='%sNOT like("%%%s",%s)' % substValues2
+                elif rule[1]==10:
+                    sql+='%sinstr(%s,"%s")' %  substValues1
+                elif rule[1]==11:
+                    sql+='%sNOT (instr(%s,"%s"))' %  substValues1                                       
+                elif rule[1]==12:
+                    sql+='%s%s=' % substValues3 + emptVal
+                elif rule[1]==13:
+                    sql+='%s%s<>' % substValues3 + emptVal
+        sql=(sql[5:] if mode==0 else sql[4:])
+        if order:
+            sql+=" order by "+self.propertiesList[crit][0]+" "+self.trendList[trend]
+        if limit:
+            sql+=" limit "+str(num)
+            
+        #print sql #Debuging        
+        Total=MMobj.Database.OpenSQL("SELECT COUNT(*) FROM Songs WHERE "+sql).ValueByIndex(0)
+        if Total>0:        
+            MMobj.Player.Stop()
+            MMobj.Player.PlaylistClear()            
+            n=0
+            MyTrack = MMobj.Database.QuerySongs(sql)
+            while not MyTrack.EOF:
+                if accessible:
+                    if isfile(MyTrack.Item.Path):
+                        MMobj.Player.PlaylistAddTrack(MyTrack.Item)
+                        n+=1
+                else:
+                    MMobj.Player.PlaylistAddTrack(MyTrack.Item)
+                    n+=1                    
+                MyTrack.Next()
+            if n>0:
+                if repeat<2:
+                    MMobj.Player.isRepeat=bool(repeat)
+                if crossfade<2:
+                    MMobj.Player.isCrossfade=bool(crossfade)
+                if shuffle<2:
+                    MMobj.Player.isShuffle=bool(shuffle)
+                MMobj.Player.Play()
+                return plName+": "+self.text.found % (str(n),str(Total))
+            else:
+                return plName+": "+self.text.noFound
+            
+      
+    def Configure(
+        self,
+        plName="",
+        mode=0,
+        listRules=[[-1,-1,u""]],
+        order=False,
+        trend=0,
+        crit=0,
+        limit=False,
+        num="100",
+        repeat=2,
+        shuffle=2,
+        crossfade=2,
+        accessible=False
+    ):
+        def validityCheck():
+            if CheckEnable:
+                flag=True
+                for i in range(0,self.i):
+                    choice0=listRules2[i][0]
+                    choice1=listRules2[i][1]
+                    if choice0<0 or choice1<0:
+                        flag=False
+                        break
+                    else:
+                        if self.propertiesList[choice0][1] <> "D":
+                            if choice1 < 12 and listRules2[i][2]==u"":
+                                flag=False
+                                break
+                        else:
+                            #if choice1>5 and wx.FindWindowById(i+150).GetValue()<1:
+                            if choice1>5 and int(listRules2 [i][2][:-1])<1:
+                                flag=False
+                                break
+                if not self.myDirty:
+                    panel.SetIsDirty(True)
+                    myDirty=True
+                panel.EnableButtons(flag)           
+    
+        listRules2=[] #working copy (after Cancel flush it)
+        for i in range(0,len(listRules)):
+            listRules2.append(listRules[i][:])
+        maxRules=10
+        panel = eg.ConfigPanel(self)
+        panel.sizer.SetMinSize((560, 110+29*maxRules))
+        text = self.text
+        radioBoxMode = wx.RadioBox(
+            panel, 
+            -1, 
+            text.radioboxMode,
+            choices=[text.modeAnd, text.modeOr],
+            style=wx.RA_SPECIFY_COLS
+        )
+        radioBoxMode.SetMinSize((556,43))
+        radioBoxMode.SetSelection(mode) 
+        panel.sizer.Add(radioBoxMode, 0)
+        self.mySizer = wx.GridBagSizer(vgap=8,hgap=10)
+        self.mySizer.SetMinSize((560, 6+29*maxRules))
+        panelAdd = panel.sizer.Add
+        panelAdd(self.mySizer, 0,wx.TOP,10)
+        
+        statBox_1 = wx.StaticBox(panel, -1, "")
+        stBsizer_1 = wx.StaticBoxSizer(statBox_1, wx.VERTICAL)
+        stBsizer_1.SetMinSize((426,-1))
+        statBox_2 = wx.StaticBox(panel, -1, "")
+        stBsizer_2 = wx.StaticBoxSizer(statBox_2, wx.VERTICAL)
+        stBsizer_2.SetMinSize((120,69))
+        nameCtrl = wx.TextCtrl(panel, -1, plName, style=wx.TE_NOHIDESEL,size=(100,22))
+        stBsizer_2.Add(wx.StaticText(panel, -1, text.filterName),0,wx.LEFT|wx.TOP,4)
+        stBsizer_2.Add(nameCtrl, 0,wx.LEFT|wx.TOP,4)
+        
+        orderSizer=wx.BoxSizer(wx.HORIZONTAL)        
+        orderChkBoxCtrl = wx.CheckBox(panel, label="")
+        orderChkBoxCtrl.SetValue(order)
+        orderSizer.Add(orderChkBoxCtrl,0,wx.TOP,4)
+        dirTxt1=wx.StaticText(panel, -1, self.text.order1)
+        orderSizer.Add(dirTxt1,0,wx.LEFT|wx.TOP,4)
+        trends=[eval("self.text."+tpl) for tpl in self.trendList]
+        dirCtrl=wx.Choice(panel, -1, choices=trends,size=(-1, -1))
+        dirCtrl.SetSelection(trend)
+        orderSizer.Add(dirCtrl,0,wx.LEFT,4)        
+        dirTxt2=wx.StaticText(panel, -1, self.text.order2)
+        orderSizer.Add(dirTxt2,0,wx.LEFT|wx.TOP,4)
+        criters=[eval("self.text.Properties."+tpl[0]) for tpl in self.propertiesList]
+        critCtrl=wx.Choice(panel, -1, choices=criters,size=(-1, -1))
+        critCtrl.SetSelection(crit)
+        orderSizer.Add(critCtrl,0,wx.LEFT,4)
+
+        limitSizer=wx.BoxSizer(wx.HORIZONTAL)        
+        limitChkBoxCtrl = wx.CheckBox(panel, label="")
+        limitChkBoxCtrl.SetValue(limit)
+        limitSizer.Add(limitChkBoxCtrl,0,wx.TOP,4)
+        limitTxt1=wx.StaticText(panel, -1, self.text.limit1)
+        limitSizer.Add(limitTxt1,0,wx.LEFT|wx.TOP,4)
+        numCtrl = masked.NumCtrl(
+            panel, -1, num,
+            min=1,integerWidth=6,
+            allowNegative=False,groupDigits=False)
+        limitSizer.Add(numCtrl, 0,wx.LEFT,4)
+        limitTxt2=wx.StaticText(panel, -1, self.text.limit2)
+        limitSizer.Add(limitTxt2,0,wx.LEFT|wx.TOP,4)
+        
+        stBsizer_1.Add(orderSizer,0,wx.TOP,4)
+        stBsizer_1.Add(limitSizer,0,wx.TOP,8)
+        
+        middleSizer=wx.BoxSizer(wx.HORIZONTAL)
+        middleSizer.Add(stBsizer_1,0)
+        middleSizer.Add(stBsizer_2,0,wx.LEFT,10)
+        panelAdd(middleSizer)
+        bottomSizer = wx.GridSizer(rows=2, cols=2, hgap=5, vgap=10)
+        repeatChkBoxCtrl = wx.CheckBox(panel, label=self.text.repeat,style=wx.CHK_3STATE|wx.CHK_ALLOW_3RD_STATE_FOR_USER)
+        repeatChkBoxCtrl.Set3StateValue(repeat)
+        bottomSizer.Add(repeatChkBoxCtrl,0,wx.LEFT,5)
+        shuffleChkBoxCtrl = wx.CheckBox(panel, label=self.text.shuffle,style=wx.CHK_3STATE|wx.CHK_ALLOW_3RD_STATE_FOR_USER)
+        shuffleChkBoxCtrl.Set3StateValue(shuffle)
+        bottomSizer.Add(shuffleChkBoxCtrl,0)
+        crossfadeChkBoxCtrl = wx.CheckBox(panel, label=self.text.crossfade,style=wx.CHK_3STATE|wx.CHK_ALLOW_3RD_STATE_FOR_USER)
+        crossfadeChkBoxCtrl.Set3StateValue(crossfade)
+        bottomSizer.Add(crossfadeChkBoxCtrl,0,wx.LEFT,5)
+        accessibleChkBoxCtrl = wx.CheckBox(panel, label=self.text.accessible)
+        accessibleChkBoxCtrl.SetValue(accessible)
+        bottomSizer.Add(accessibleChkBoxCtrl,0)
+        panelAdd(bottomSizer,0,wx.TOP,10)
+                
+        def CreateExprCtrl(row):
+#Call from:	 AddRow,UpdateChoiceExpr
+            if self.propertiesList[listRules2[row][0]][1]=="D": # Date & Time
+                choicExpr=[eval("self.text."+tpl) for tpl in self.exprList1]
+            else:
+                choicExpr=[eval("self.text."+tpl) for tpl in self.exprList]
+            exprCtrl=wx.Choice(panel, row+100, choices=choicExpr,size=(182, 22))
+            exprCtrl.SetSelection(listRules2[row][1])
+            exprCtrl.Bind(wx.EVT_CHOICE, OnExprChoice)
+            self.mySizer.Add(exprCtrl,(row,1))
+            self.mySizer.Layout()    
+            
+        def ConvToWxDt(dt):
+#Call from: CreateStrCtrl, UpdateStr
+            """Conversion of data record to wx.DateTime format."""
+            wxDttm=wx.DateTime()
+            wxDttm.Set(int(dt[8:10]),int(dt[5:7])-1,int(dt[:4]))
+            return wxDttm
+            
+        def CreateStrCtrl(row):
+#Call from: UpdateStr, AddRow
+            tp=self.propertiesList[listRules2[row][0]][1]
+            if tp<>"D":
+                strCtrl=wx.TextCtrl(panel, row+150, "", style=wx.TE_NOHIDESEL,size=(168, 22))
+                strCtrl.Bind(wx.EVT_TEXT, OnStrChange)
+                strCtrl.SetValue(listRules2[row][2])
+                if listRules2[row][1]>11:
+                    strCtrl.Enable(False)
+                infoSizer=wx.BoxSizer(wx.HORIZONTAL)
+                infoSizer.Add(strCtrl)
+            else: # Date & Time Ctrl
+                if listRules2[row][1]<6: #for absolute date/time type
+                    clndrCtrl=wx.DatePickerCtrl(panel,row+150, size=(85,22),
+                        style=wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
+                    clndrCtrl.SetRange(ConvToWxDt('1900-01-01'),ConvToWxDt('2050-12-31'))
+                    clndrCtrl.SetValue(ConvToWxDt(listRules2[row][2]))
+                    clndrCtrl.Bind(wx.EVT_DATE_CHANGED, OnClndrChange)
+                    infoSizer=wx.BoxSizer(wx.HORIZONTAL)
+                    infoSizer.Add(clndrCtrl)
+                    spinBtn = wx.SpinButton(panel,row+250, wx.DefaultPosition, (-1,22), wx.SP_VERTICAL )
+                    timeCtrl = masked.TimeCtrl(
+                        panel, row+200, name="24hrCtrl", fmt24hr=True,
+                        spinButton=spinBtn
+                        )
+                    timeCtrl.SetValue(listRules2[row][2][11:])
+                    timeCtrl.Bind(masked.EVT_TIMEUPDATE, OnTimeChange )
+                    infoSizer.Add(timeCtrl,0,wx.LEFT,2)
+                    infoSizer.Add(spinBtn)
+                else: #for time  relative (NOW) type
+                    periodCtrl = masked.NumCtrl(
+                        panel, row+150, num,
+                        size=(85,22),min=1,integerWidth=9,
+                        allowNegative=False,groupDigits=False,
+                        autoSize=False,invalidBackgroundColour = "White",)
+                    #periodCtrl.Bind(masked.EVT_NUM, OnPeriodChange)
+                    periodCtrl.Bind(wx.EVT_TEXT, OnPeriodChange) #Otherwise problem with Dirty flag !
+                    periodCtrl.SetValue(int(listRules2[row][2][:-1]))
+                    infoSizer=wx.BoxSizer(wx.HORIZONTAL)
+                    infoSizer.Add(periodCtrl)
+                    choicUnit=[eval("self.text."+tpl) for tpl in self.unitList]
+                    unitCtrl=wx.Choice(panel, row+200, choices=choicUnit,size=(81, 22))
+                    unitCtrl.SetSelection(int(listRules2[row][2][-1])) 
+                    unitCtrl.Bind(wx.EVT_CHOICE, OnUnitChoice)
+                    infoSizer.Add(unitCtrl,0,wx.LEFT,2)
+            self.mySizer.Add(infoSizer,(row,2))
+            self.mySizer.Layout()
+                    
+        def AddRow(x):
+#Call from: OnAddButton, Main
+            choices=[eval("self.text.Properties."+tpl[0]) for tpl in self.propertiesList]
+            propertCtrl=wx.Choice(panel,x+50 , choices=choices,size=(132, 22))
+            propertCtrl.Bind(wx.EVT_CHOICE, OnPropertChoice)
+            self.mySizer.Add(propertCtrl,(x,0))
+            CreateExprCtrl(x)
+            CreateStrCtrl(x)
+            btnAdd = wx.Button(panel, x, "+",size=(22, 22))
+            btnAdd.Bind(wx.EVT_BUTTON,OnAddButton)
+            btnRemove = wx.Button(panel, x, "-",size=(22, 22))
+            btnRemove.Bind(wx.EVT_BUTTON,OnRemoveButton)
+            self.mySizer.Add(btnAdd,(x,3))
+            self.mySizer.Add(btnRemove,(x,4),flag=wx.LEFT,border=-10)
+            self.mySizer.Layout()            
+            
+        def UpdateChoiceExpr(row):
+#Call from: updateRow, OnPropertChoice
+            cnt=self.mySizer.FindItemAtPosition((row,1)).GetWindow().GetCount()
+            tp=self.propertiesList[listRules2[row][0]][1]
+            myWnd=wx.FindWindowById(row+100)
+            if cnt==0 or (tp=="D" and cnt==14) or (tp<>"D" and cnt<>14):
+                self.mySizer.Detach(myWnd)
+                myWnd.Destroy()
+                CreateExprCtrl(row)
+            else:
+                myWnd.SetSelection(listRules2[row][1])
+
+                
+        def UpdateStr(row):
+#Call from: updateRow, OnPropertChoice, OnExprChoice
+            infoSizer=self.mySizer.FindItemAtPosition((row,2)).GetSizer()
+            lng=len(infoSizer.GetChildren()) # old column 2 type markant          
+            tp=self.propertiesList[listRules2[row][0]][1]
+            tp2=listRules2[row][1]
+            flag=False
+            #First: Destroy old Ctrl(s)
+            if tp=="D":
+                if lng==1:
+                    rng=(0,)
+                    flag=True
+                elif lng==2 and tp2<6 :
+                    rng=(1,0)
+                    flag=True
+                elif lng==3 and tp2>5:
+                    rng=(2,1,0)
+                    flag=True
+                    
+            else: #tp<>"D"
+                if lng==2:
+                    rng=(1,0,)
+                    flag=True
+                elif lng==3:
+                    rng=(2,1,0)
+                    flag=True
+            if flag: #  update panel and value    
+                for indx in rng:
+                    wnd=infoSizer.GetChildren()[indx].GetWindow()
+                    infoSizer.Detach(wnd)
+                    wnd.Destroy()
+                self.mySizer.Detach(infoSizer)
+                infoSizer.Destroy()                
+                #Second: Create new Ctrl(s)
+                CreateStrCtrl(row) #Create and update value
+            else: # update only value
+                val=listRules2[row][2]
+                wnd1=wx.FindWindowById(row+150)
+                wnd2=wx.FindWindowById(row+200)
+                if lng==1:
+                    wnd1.SetValue(val)
+                    if tp2>11:
+                        wnd1.Enable(False)
+                    else:
+                        wnd1.Enable(True)
+                    
+                else:
+                    if tp2<6: # absolute date/time
+                        wnd1.SetValue(ConvToWxDt(val))
+                        wnd2.SetValue(val[11:])
+                    else: # relative date/time
+                        wnd1.SetValue(int(val[:-1]))
+                        wnd2.SetSelection(int(val[-1]))
+        def updateRow(row):
+#Call from: OnAddButton, OnRemoveButton, Main
+            wx.FindWindowById(row+50).SetSelection(listRules2[row][0])
+            UpdateChoiceExpr(row)            
+            UpdateStr(row)                                                
+        
+        def OnPropertChoice(evt):
+            row=evt.GetId()-50
+            listRules2[row][0]=wx.FindWindowById(evt.GetId()).GetSelection()
+            infoSizer=self.mySizer.FindItemAtPosition((row,2)).GetSizer()
+            lng=len(infoSizer.GetChildren()) # old column 2 type markant
+            tp=self.propertiesList[listRules2[row][0]][1]
+            cnt=self.mySizer.FindItemAtPosition((row,1)).GetWindow().GetCount()
+            flg=False
+            if tp=="D" and cnt==14: # change to absolute date/time format
+                listRules2[row][2]=str(datetime.datetime.today())[:11]+'00:00:00'
+                flg=True
+            elif tp<>"D" and cnt<>14: #change to no date/time (single column) format
+                listRules2[row][2]=""
+                flg=True
+            if flg: # set selection Expr to "no selection"     
+                listRules2[row][1]=-1
+                wx.FindWindowById(row+100).SetSelection(-1)
+            UpdateChoiceExpr(row)
+            UpdateStr(row)
+            validityCheck()
+
+        def OnExprChoice(evt):
+            row=evt.GetId()-100
+            value=wx.FindWindowById(evt.GetId()).GetSelection() #
+            listRules2[row][1]=value
+            #enable=False if value>11 else True
+            wnd=wx.FindWindowById(row+150)
+            if self.propertiesList[listRules2[row][0]][1]<>"D":
+                if value>11:
+                    wnd.Enable(False)
+                    wnd.Clear()
+                else:
+                    wnd.Enable(True)
+            else: # date/time format
+                infoSizer=self.mySizer.FindItemAtPosition((row,2)).GetSizer()
+                lng=len(infoSizer.GetChildren())           
+                if lng==2 and value<6:
+                    listRules2[row][2]=str(datetime.datetime.today())[:11]+'00:00:00'
+                elif lng==3 and value>5:
+                    listRules2[row][2]='13'
+                UpdateStr(row)
+            validityCheck()
+            
+        def OnStrChange(evt): 
+            row=evt.GetId()-150
+            listRules2[row][2]=wx.FindWindowById(evt.GetId()).GetValue()            
+            validityCheck()
+            
+        def OnClndrChange(evt):
+            """Event handler for date change."""
+            row=evt.GetId()-150            
+            dt=wx.FindWindowById(evt.GetId()).GetValue()
+            listRules2[row][2]=time.strftime('%Y-%m-%d',time.strptime(str(dt),'%d.%m.%Y %H:%M:%S'))+' '+listRules2[row][2][11:]
+            validityCheck()
+            
+        def OnTimeChange(evt):
+            """Event handler for time change."""
+            row=evt.GetId()-200
+            listRules2[row][2]=listRules2[row][2][:11]+wx.FindWindowById(evt.GetId()).GetValue()
+            validityCheck()            
+                            
+        def OnPeriodChange(evt):
+            row=evt.GetId()-150
+            wnd=wx.FindWindowById(evt.GetId())
+            oldVal=listRules2[row][2]
+            newVal=wnd.GetValue()
+            listRules2[row][2]=str(newVal)+oldVal[-1]
+            validityCheck()
+                            
+        def OnUnitChoice(evt):
+            row=evt.GetId()-200
+            val=listRules2[row][2]
+            listRules2[row][2]=val[:-1]+str(wx.FindWindowById(evt.GetId()).GetSelection())
+            validityCheck()
+                                
+        def OnAddButton(evt):
+            """Event handler for the button '+' click."""
+            if self.i<maxRules:
+                #Insert new record at requested position
+                listRules2.insert(evt.GetId()+1,[-1,-1,u""])
+                #Create new row (bottom)
+                AddRow(self.i)
+                self.i+=1
+                for x in range(evt.GetId()+1,self.i):
+                    updateRow(x)
+                self.mySizer.Layout()
+                if self.i==2:
+                    self.mySizer.FindItemAtPosition((0,4)).GetWindow().Enable(True)
+                if self.i==maxRules:
+                    for x in range(0,maxRules):
+                        self.mySizer.FindItemAtPosition((x,3)).GetWindow().Enable(False)                    
+            panel.EnableButtons(False) #New row is empty => allways not valid
+            
+        def OnRemoveButton(evt):
+            """Event handler for the button '-' click."""
+            CheckEnable=False #validityCheck "OFF"
+            row=evt.GetId()
+            if self.i>1:
+                tp=self.propertiesList[listRules2[self.i-1][0]][1]
+                if tp<>"D":              
+                    rng=(0,)
+                else:
+                    if listRules2[self.i-1][1]>5:
+                        rng=(1,0)
+                    else:
+                        rng=(2,1,0)
+                #Remove last record
+                del listRules2[row]
+                #Remove last row
+                infoSizer=self.mySizer.FindItemAtPosition((self.i-1,2)).GetSizer()
+                for indx in rng:
+                    wnd=infoSizer.GetChildren()[indx].GetWindow()
+                    infoSizer.Detach(wnd)
+                    wnd.Destroy()
+                self.mySizer.Detach(infoSizer)
+                infoSizer.Destroy()
+                for col in (0,1,3,4):
+                    myWnd=self.mySizer.FindItemAtPosition((self.i-1,col)).GetWindow()
+                    self.mySizer.Detach(myWnd)
+                    myWnd.Destroy()
+                if self.i==maxRules:
+                    for x in range(0,maxRules-1):
+                        self.mySizer.FindItemAtPosition((x,3)).GetWindow().Enable(True)
+                if self.i==2:
+                    self.mySizer.FindItemAtPosition((0,4)).GetWindow().Enable(False)
+                self.mySizer.Layout()
+                self.i-=1
+                for x in range(row,self.i):
+                    updateRow(x)
+            CheckEnable=True #validityCheck "ON"
+            validityCheck()
+            
+        def OnOrderSwitch(evt=None):
+            enbl=orderChkBoxCtrl.GetValue()
+            if enbl and critCtrl.GetSelection()==-1:
+                critCtrl.SetSelection(wx.FindWindowById(50).GetSelection())
+            dirCtrl.Enable(enbl)
+            dirTxt1.Enable(enbl)
+            dirTxt2.Enable(enbl)
+            critCtrl.Enable(enbl)            
+            if evt is not None:
+                validityCheck()
+
+        def OnLimitSwitch(evt=None):
+            enbl=limitChkBoxCtrl.GetValue()
+            numCtrl.Enable(enbl)
+            limitTxt1.Enable(enbl)
+            limitTxt2.Enable(enbl)
+            if evt is not None:
+                validityCheck()
+                
+        def OnEventInterception(evt):
+            validityCheck()
+        radioBoxMode.Bind(wx.EVT_RADIOBOX, OnEventInterception)
+        nameCtrl.Bind(wx.EVT_TEXT, OnEventInterception)
+        repeatChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnEventInterception)
+        shuffleChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnEventInterception)
+        crossfadeChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnEventInterception)
+        accessibleChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnEventInterception)
+        
+        orderChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnOrderSwitch)
+        limitChkBoxCtrl.Bind(wx.EVT_CHECKBOX, OnLimitSwitch)
+        OnOrderSwitch()
+        OnLimitSwitch()
+
+#================================================
+        self.i=len(listRules2)
+        CheckEnable=False #validityCheck "OFF"
+        for x in range(0,len(listRules2)):
+            AddRow(x)
+            updateRow(x)
+        if self.i==1:
+            self.mySizer.FindItemAtPosition((0,4)).GetWindow().Enable(False)
+        if self.i==maxRules:
+            for x in range(0,maxRules):
+                self.mySizer.FindItemAtPosition((x,3)).GetWindow().Enable(False)
+        if listRules2[0][0]==-1: #For new created empty filter
+            panel.EnableButtons(False)
+        CheckEnable=True #validityCheck "ON"
+        self.myDirty=False
+
+        
+        while panel.Affirmed():
+            panel.SetResult(
+            nameCtrl.GetValue(),
+            radioBoxMode.GetSelection(),
+            listRules2,
+            orderChkBoxCtrl.GetValue(),
+            dirCtrl.GetSelection(),
+            critCtrl.GetSelection(),
+            limitChkBoxCtrl.GetValue(),
+            numCtrl.GetValue(),
+            repeatChkBoxCtrl.Get3StateValue(),
+            shuffleChkBoxCtrl.Get3StateValue(),
+            crossfadeChkBoxCtrl.Get3StateValue(),
+            accessibleChkBoxCtrl.GetValue(),            
+            )            
