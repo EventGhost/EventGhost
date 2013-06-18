@@ -11,8 +11,8 @@ echo %1
 pushd %1
 RMDIR build /S /Q
 %PY25DIR%Python.exe setup.py build
-COPY build\lib.win32-2.5\*.pyd ..\..\tools\Python25\
+COPY build\lib.win32-2.5\*.pyd ..\..\lib25\site-packages\
 %PY26DIR%Python.exe setup.py build
-COPY build\lib.win32-2.6\*.pyd ..\..\tools\Python26\
+COPY build\lib.win32-2.6\*.pyd ..\..\lib26\site-packages\
 popd
 goto:eof

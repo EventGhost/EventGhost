@@ -232,7 +232,10 @@ class InnoInstaller(object):
         InstallPy2exePatch()
         import py2exe
         if exists(self.libraryDir):
-            shutil.rmtree(self.libraryDir)
+            for filename in os.listdir(self.libraryDir):
+                path = join(self.libraryDir, filename)
+                if not os.path.isdir(path):
+                    os.remove(path)
         setup(**self.py2exeOptions)
         pythonDir = dirname(sys.executable)
         dllNames = [
