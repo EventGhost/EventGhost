@@ -19,13 +19,14 @@
 from xbmcclient import *
 
 # expose some information about the plugin through an eg.PluginInfo subclass
+
 eg.RegisterPlugin(
     name = "XBMC",
     author = "Chris Longo",
-    version = "0.2",
+    version = "0.2." + "$LastChangedRevision$".split()[1],
     kind = "program",
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=894",
+    url = "http://www.eventghost.org/forum/viewtopic.php?t=1005",
     description = "Adds actions to control <a href='http://www.xbmc.org/'>XBMC</a>.",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsRAAALEQF/ZF+RAAAA"
@@ -85,14 +86,10 @@ BUTTONS = (
     ("Title", "Title", "Simulate a press on the title button.", "title"),
     ("Info", "Info", "Simulate a press on the info button.", "info"),
     ("Clear", "Clear", "Simulate a press on the clear button.", "clear"),
-    ("MyVideo", "My Video", "Simulate a press on the My Video button.", "myvideo"),
-    ("MyMusic", "My Music", "Simulate a press on the My Music button.", "mymusic"),
-    ("MyPictures", "My Pictures", "Simulate a press on the My Pictures button.", "mypictures"),
-    ("MyTV", "My TV", "Simulate a press on the My TV button.", "mytv"),
     ("Power", "Power", "Simulate a press on the power button.", "power"),
 )
 
-# actions above and beyond what the simple remote can do for people with Harmony Remotes, etc
+# actions above and beyond what the simple remote can do for people with Harmony Remotes, etc.
 
 ACTIONS = (   
     ("BigSkipBackward", "Big Skip Backward", "Big skip backward.", "PlayerControl(BigSkipBackWard)"),
@@ -109,15 +106,33 @@ ACTIONS = (
     ("PlayDVD", "Play DVD", "Plays the inserted CD or DVD media from the DVD-ROM Drive.", "PlayDVD"),
     ("UpdateVideoLibrary", "Update Video Library", "Update the video library.", "UpdateLibrary(Video)"),
     ("UpdateMusicLibrary", "Update Music Library", "Update the music library.", "UpdateLibrary(Music)"),
+    ("Home", "Show Home Screen", "Show Home screen.", "ActivateWindow(Home)"),
+    ("MyVideos", "Show Videos Screen", "Show Videos screen.", "ActivateWindow(MyVideos)"),
+    ("MyMusic", "Show Music Screen", "Show Music screen.", "ActivateWindow(MyMusic)"),
+    ("MyPictures", "Show Pictures Screen", "Show Pictures screen.", "ActivateWindow(MyPictures)"),
+    ("Weather", "Show Weather Screen", "Show Weather screen.", "ActivateWindow(Weather)"),
+    ("Settings", "Show Settings Screen", "Show Settings screen.", "ActivateWindow(Settings)"),
+    ("Favorites", "Show Favorites Screen", "Show Favorites screen.", "ActivateWindow(Favourites)"),
+    ("SystemInfo", "Show System Info Screen", "Show System Info screen.", "ActivateWindow(SystemInfo)"),
+    ("ShutdownMenu", "Show Shutdown Menu", "Show Shutdown Menu.", "ActivateWindow(ShutdownMenu)"),
+    ("Quit", "Quit XBMC", "Quit XBMC.", "Quit"),
+    ("Shutdown", "Shutdown Computer", "Trigger default shutdown behavior from settings.", "Shutdown"),
+    ("Powerdown", "Powerdown Computer", "Powerdown the computer.", "Powerdown"),
+    ("Suspend", "Suspend Computer", "Suspend the computer.", "Suspend"),
+    ("Hibernate", "Hibernate Computer", "Hibernate the computer.", "Hibernate"),
     ("Reset", "Reset Computer", "Reset the computer.", "Reset"),
 )    
+
+# prototype for remote button presses
 
 class ButtonPrototype(eg.ActionClass):
     def __call__(self):
         try:
-            self.plugin.xbmc.send_remote_button(self.value)
+            self.plugin.xbmc.send_remote_button(self.value, 0, 1)
         except:
             raise self.Exceptions.ProgramNotRunning        
+
+# prototype for actions
 
 class ActionPrototype(eg.ActionClass):
     def __call__(self):
@@ -129,7 +144,6 @@ class ActionPrototype(eg.ActionClass):
 # And now we define the actual plugin:
 
 class XBMC(eg.PluginClass):
-   
     def __init__(self):
         self.AddActionsFromList(BUTTONS, ButtonPrototype)
         self.AddActionsFromList(ACTIONS, ActionPrototype)
