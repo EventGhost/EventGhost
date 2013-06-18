@@ -1,0 +1,5 @@
+name = "X10 Home Appliance"
+author = "Bitmonster"
+version = "0.0.1"
+kind = "external"
+description = "Control X10 home appliance modules through a C11a device."

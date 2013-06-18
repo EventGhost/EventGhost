@@ -1,0 +1,5 @@
+name = "Optoma H79 Serial"
+author = "Oliver Wagner"
+version = "0.2"
+kind = "external"
+description = "Control an Optoma H79 projector via RS232"

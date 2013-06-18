@@ -1,0 +1,5 @@
+name = "UIRT2"
+author = "Bitmonster"
+version = "1.0.0"
+kind = "remote"
+description = "Hardware plugin for the \"Universal InfraRed Transceiver V2\"."

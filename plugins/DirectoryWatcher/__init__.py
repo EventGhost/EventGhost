@@ -1,0 +1,184 @@
+import eg
+
+class PluginInfo(eg.PluginInfo):
+    name = "Directory Watcher"
+    author = "Bitmonster"
+    version = "1.0.0"
+    description = (
+        "Generates events if files in a defined directory are created, "
+        "deleted or changed."
+    )
+
+import wx
+
+import os
+import threading
+
+import win32file
+import win32con
+import win32event
+import pywintypes
+
+FILE_LIST_DIRECTORY = 0x0001
+
+class Text:
+    watchPath = "Watch path:"
+    watchSubDirs = "Watch subdirectories also"
+    
+    
+
+class DirectoryWatcher(eg.PluginClass):
+    text = Text
+    canMultiLoad = True
+    
+    def __init__(self):
+        eg.whoami()
+        self.isEnabled = False
+
+
+    def __start__(self, path, includeSubdirs):
+        eg.whoami()
+        self.isEnabled = True
+        self.stopEvent = win32event.CreateEvent(None, 1, 0, None)
+        self.path = path
+        self.includeSubdirs = includeSubdirs
+        startupEvent = threading.Event()
+        self.thread = threading.Thread(target=self.ThreadLoop, args=(startupEvent,))
+        self.thread.start()
+        startupEvent.wait(3)
+        
+        
+    def __stop__(self):
+        eg.whoami()
+        self.isEnabled = False
+        if self.thread is not None:
+            win32event.PulseEvent(self.stopEvent)
+            self.thread.join(5.0)
+        
+        
+    def __close__(self):
+        eg.whoami()
+        pass
+        
+        
+    def TestFile(self, path):
+        try:
+            handle = win32file.CreateFile(
+                path,
+                win32file.GENERIC_READ,
+                0,
+                None,
+                win32con.OPEN_EXISTING,
+                0,
+                None
+            )
+            win32file.CloseHandle(handle)
+            return True
+        except:
+            return False
+        
+        
+    def ThreadLoop(self, startupEvent):
+        try:
+            from win32event import (
+                INFINITE, 
+                QS_ALLINPUT, 
+                WAIT_OBJECT_0,
+                MsgWaitForMultipleObjects
+            )
+            from win32file import (
+                ReadDirectoryChangesW, 
+                GetOverlappedResult,
+                FILE_NOTIFY_INFORMATION
+            )
+                
+            try:
+                hDir = win32file.CreateFile(
+                    self.path,
+                    FILE_LIST_DIRECTORY,
+                    win32con.FILE_SHARE_READ|win32con.FILE_SHARE_WRITE,
+                    None,
+                    win32con.OPEN_EXISTING,
+                    win32con.FILE_FLAG_BACKUP_SEMANTICS|win32con.FILE_FLAG_OVERLAPPED,
+                    None
+                )
+            except pywintypes.error, e:
+                self.PrintError(e[2])
+                startupEvent.set()
+                return
+            overlapped = win32file.OVERLAPPED()
+            overlapped.hEvent = win32event.CreateEvent(None, 1, 0, None)
+            buffer = win32file.AllocateReadBuffer(1024)
+            events = (overlapped.hEvent, self.stopEvent)
+            flags = (
+                win32con.FILE_NOTIFY_CHANGE_FILE_NAME |
+                win32con.FILE_NOTIFY_CHANGE_DIR_NAME |
+                win32con.FILE_NOTIFY_CHANGE_ATTRIBUTES |
+                win32con.FILE_NOTIFY_CHANGE_SIZE |
+                win32con.FILE_NOTIFY_CHANGE_LAST_WRITE |
+                win32con.FILE_NOTIFY_CHANGE_SECURITY
+            )
+            includeSubdirs = self.includeSubdirs
+            renamePath = None
+            startupEvent.set()
+            while 1:
+                ReadDirectoryChangesW(
+                    hDir,
+                    buffer,
+                    includeSubdirs,
+                    flags,
+                    overlapped,
+                )
+                rc = MsgWaitForMultipleObjects(events, 0, INFINITE, QS_ALLINPUT)
+                if rc == WAIT_OBJECT_0:    
+                    size = GetOverlappedResult(hDir, overlapped, 1)
+                    results = FILE_NOTIFY_INFORMATION(buffer, size)
+                    for action, file in results:
+                        full_filename = os.path.join(self.path, file)
+                        if action ==  1: 
+                            self.TriggerEvent("Created", (full_filename,))
+                        elif action ==  2: 
+                            self.TriggerEvent("Deleted", (full_filename,))
+                        elif action ==  3: 
+                            self.TriggerEvent("Updated", (full_filename,))
+                        elif action == 4:
+                            renamePath = full_filename
+                        elif action == 5:
+                            self.TriggerEvent(
+                                "Renamed", 
+                                (renamePath, full_filename)
+                            )
+                            renamePath = None
+                elif rc == WAIT_OBJECT_0+1:
+                    break
+            win32file.CloseHandle(hDir)
+        except:
+            self.thread = None
+            raise
+                
+            
+    def Configure(self, path="", includeSubdirs=False):
+        dialog = eg.ConfigurationDialog(self)
+        staticText1 = wx.StaticText(dialog, -1, self.text.watchPath)
+        dirpathCtrl = eg.DirBrowseButton(
+            dialog, -1, size=(320,-1),
+            startDirectory=path, 
+            labelText="",
+            buttonText=eg.text.General.browse
+        )
+        dirpathCtrl.SetValue(path)
+        includeSubdirsCB = wx.CheckBox(dialog, -1, self.text.watchSubDirs)
+        includeSubdirsCB.SetValue(includeSubdirs)
+        
+        Add = dialog.sizer.Add
+        Add(staticText1, 0, wx.EXPAND)
+        Add(dirpathCtrl, 0, wx.EXPAND)
+        Add((5, 5))
+        Add(includeSubdirsCB, 0, wx.EXPAND)
+        
+        if dialog.AffirmedShowModal():
+            return (
+                dirpathCtrl.GetValue(),
+                includeSubdirsCB.GetValue(),
+            )
+    
