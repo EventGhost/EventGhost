@@ -5,6 +5,24 @@ class PluginInfo(eg.PluginInfo):
     author = "Bitmonster"
     version = ""
     description = ""
+    kind = "hidden"
+    icon = (
+        "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeT"
+        "AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH1QQIDRgEM71mAAAAADV0RVh0Q29t"
+        "bWVudAAoYykgMjAwNCBKYWt1YiBTdGVpbmVyCgpDcmVhdGVkIHdpdGggVGhlIEdJTVCQ"
+        "2YtvAAACHElEQVQ4y42QzUtUURjGf/fcyatz73Wiklwo2R/QplXQ/AURlLYJcrJNQrvQ"
+        "ahYFI0wQ7lu0azNtYlAj2rUJRFciUfkRgUwOM6Y5jePXfNzznhZ+NOpIvpvD+5zn/M7D"
+        "Y3Fo0ul0JzBQLpdvG2M8wHi++6r7Zs+Tet/Yu9HrW5tb/Yqjc2m7vB3zfPd7LBbzPd/t"
+        "K/5Zu5ZKpZZSb1LZ0bGRG7u+F2E3PG0dfp1MJl+2tvq9xeLaJvAxkUj01aW7UKtV3xvY"
+        "am525nq6b92znieHEkqpIWwLpRSV7YBoNEoun2VhIUOTY6ODAAmkqJT68PRZorf+w1Ao"
+        "FBq63//A2LZthcNhhoeH0VrjNLVgYTHw8DGlUonC6u/IyEj6DnAAoAAq1ar1c3FxX8zl"
+        "clQqlX97Po/XGrEa9MWREuPxOPl8nmw2Szwe538Tql9WVlZoa2tjcHDwgHZiwGqhwGqh"
+        "gO/7dHZ0MDM7e7IEG6V1zp05uy/WghrLv5YPaBul9eMBnufuRLXAwsIYQYsgRhCt0SK0"
+        "n2/nuBKnxBi00YhotA7QohERRAsiBiOy559qBJjVWmMrmyAQtNboYBcmgojQdMrZ8083"
+        "Anyan5/D8zxaWpqxlEKLoPVOfNd1iZyOMDPzDeBHow7efv3yuc9xnGhX10U8z8MAGMPO"
+        "YchkFlhaygG8bgSoVavVu5MT448mJ8YvA1cadJUBrgJrhy/+AqGrAMOnH86mAAAAAElF"
+        "TkSuQmCC"
+    )
 
 import wx
 
