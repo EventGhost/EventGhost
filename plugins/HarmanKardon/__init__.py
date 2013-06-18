@@ -93,7 +93,7 @@
 
 eg.RegisterPlugin(
     name = "Harman Kardon Serial Control",
-    author = "Kingtd/Bitmonster",
+    author = "Kingtd & Bitmonster",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     description = "Allows control of a Harman Kardon AVR4xx/6xx series receiver through a serial port.",
     kind = "external",
