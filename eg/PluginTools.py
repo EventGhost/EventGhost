@@ -305,12 +305,13 @@ def GetPluginInfo(pluginName):
         fd = StringIO(data)
         info.icon = Image.open(fd).convert("RGBA")
         fd.close()
-        
     else:
-        try:
-            info.icon = Image.open(join(pluginPath, "/icon.png")).convert("RGBA")
-        except:
-            pass
+        iconPath = join(pluginPath, "icon.png")
+        if exists(iconPath):
+            #try:
+            info.icon = Image.open(join(pluginPath, "icon.png")).convert("RGBA")
+        #except:
+        #    pass
     
     info.actionClassList = []
     return info

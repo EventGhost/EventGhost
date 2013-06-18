@@ -335,7 +335,7 @@ Type: filesandordirs; Name: "{app}\eg"
 ;Source: "%(DIST)s\*.exe"; DestDir: "{app}"; Flags: ignoreversion
 %(INSTALL_FILES)s
 Source: "%(TRUNK)s\Example.xml"; DestDir: "{userappdata}\EventGhost"; DestName: "MyConfig.xml"; Flags: onlyifdoesntexist uninsneveruninstall
-Source: "%(TRUNK)s\plugins\Task\hook.dll"; DestDir: "{app}\plugins\Task"; Flags: ignoreversion
+Source: "%(TRUNK)s\plugins\TechnoTrendIr\TTUSBIR.dll"; DestDir: "{app}\plugins\TechnoTrendIr"; Flags: ignoreversion
 
 """
 
