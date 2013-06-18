@@ -30,28 +30,28 @@ class AddActionGroup(eg.UndoHandler.NewItem):
             return
         parentItem = parentItem[0][0]
         
-        def Traverse(parentItem, info):
+        def Traverse(parentItem, actionGroup):
             folderItem = document.FolderItem.Create(
                 parentItem, 
-                name=info.name
+                name=actionGroup.name
             )
-            for action in info.actionList:
-                if isinstance(action, eg.ActionGroup):
-                    Traverse(folderItem, action)
+            for item in actionGroup.items:
+                if isinstance(item, eg.ActionGroup):
+                    Traverse(folderItem, item)
                 else:
                     macroItem = document.MacroItem.Create(
                         folderItem, 
-                        name=action.name
+                        name=item.name
                     )
                     actionItem = document.ActionItem.Create(
                         macroItem,
                         text = "%s.%s()" % (
-                            action.plugin.info.evalName, 
-                            action.__name__
+                            item.plugin.info.evalName, 
+                            item.__name__
                         ),
                     )
             return folderItem
-        folderItem = Traverse(parentItem, pluginItem.executable.info)
+        folderItem = Traverse(parentItem, pluginItem.executable.info.actionGroup)
         self.StoreItem(folderItem)
         folderItem.Select()
         folderItem.tree.Expand(folderItem.id)

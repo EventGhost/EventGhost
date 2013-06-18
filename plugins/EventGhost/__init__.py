@@ -85,13 +85,17 @@ class PythonCommand(eg.ActionWithStringParameter):
             except SyntaxError:
                 exec(pythonstring, {}, eg.globals.__dict__)
                 return eg.result
-        finally:
-            pass
-#        except:
-#            eg.PrintError(eg.text.Error.InAction % pythonstring)
+        #finally:
+        #    pass
+        except:
+            eg.PrintTraceback(
+                eg.text.Error.InAction % pythonstring,
+                skip=1,
+                source=eg.currentItem
+            )
+#            treeItem.PrintError(eg.text.Error.InAction % pythonstring)
 #            errorlines = traceback.format_exc().splitlines()
-#            for i in range(4, len(errorlines)):
-#                eg.PrintError(errorlines[i])
+#            treeItem.PrintError("\n".join(errorlines[4:]))
 #            return
         
         
@@ -668,7 +672,7 @@ class JumpIf(eg.ActionClass, eg.HiddenAction):
             result = eval(evalstr, {}, eg.globals.__dict__)
         except:
             result = False
-            eg.PrintError("Error in evaluating Python expression")
+            self.PrintError("Error in evaluating Python expression")
         if result:
             if gosub:
                 eg.programReturnStack.append(eg.programCounter)

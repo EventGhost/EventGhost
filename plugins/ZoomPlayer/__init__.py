@@ -669,9 +669,6 @@ class ZoomPlayer(eg.PluginClass):
             cls = ClassType(className, (FnAction,), clsAttributes)
             action = group.AddAction(cls)
 
-            # TODO: is this really needed anymore?
-            setattr(self, className[2:], action)
-
         group = self.AddGroup('Extended Functions')
         for className, descr in exList:           
             clsAttributes = dict(
@@ -681,9 +678,6 @@ class ZoomPlayer(eg.PluginClass):
             )
             cls = ClassType(className, (ExAction,), clsAttributes)
             action = group.AddAction(cls)
-            
-            # TODO: is this really needed anymore?
-            setattr(self, className[2:], action)
             
         self.AddAction(self.MyCommand)
 

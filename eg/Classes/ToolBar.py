@@ -25,6 +25,7 @@ GetIcon = eg.Icons.GetIcon
 #GetIcon = wx.Bitmap
 
 class ToolBarButton:
+    
     def __init__(self, toolbar, id):
         self.toolbar = toolbar
         self.id = id        
@@ -51,21 +52,11 @@ class ToolBar(wx.ToolBar):
     
     def __init__(self, *args, **kwargs):
         wx.ToolBar.__init__(self, *args, **kwargs)
-        #self.SetThemeEnabled(True)
-        self.Bind(wx.EVT_TOOL_ENTER, self.OnEvent)
-        self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftClick)
+        self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
         self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
-        #self.Bind(wx.EVT_SIZE, self.OnSize)
-        self.curTool = -1
         self.lastClickedTool = None
-        #self.SetBackgroundColour(wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DSHADOW))
         
 
-    @eg.LogIt
-    def OnSize(self, event):
-        event.Skip()
-        
-        
     def SetParams(self, parent, stringMappingObj):
         self.parent = parent
         self.myStrings = stringMappingObj
@@ -92,9 +83,9 @@ class ToolBar(wx.ToolBar):
                 def FuncWrapper(event):
                     func()
             self.Bind(wx.EVT_TOOL, FuncWrapper, id=id)
-        setattr(self.buttons, name, obj)
+        ident = name[0].lower() + name[1:]
+        setattr(self.buttons, ident, obj)
         return obj
-        
         
         
     def AddTextButton(self, name=None):
@@ -109,11 +100,6 @@ class ToolBar(wx.ToolBar):
         return obj
         
         
-    def OnEvent(self, event):
-        self.curTool = event.GetSelection()
-        event.Skip()
-                
-                
     def AddCheckButton(self, name):
         id = wx.NewId()
         image = GetIcon("images/" + name + ".png")
@@ -125,7 +111,10 @@ class ToolBar(wx.ToolBar):
         
         
     @eg.LogIt
-    def OnLeftClick(self, event):
+    def OnLeftDown(self, event):
+        """
+        Handles the wx.EVT_LEFT_DOWN events.
+        """
         x, y = event.GetPosition()
         item = self.FindToolForPosition(x, y)
         if item:
@@ -137,6 +126,9 @@ class ToolBar(wx.ToolBar):
         
         
     def OnLeftUp(self, event):
+        """
+        Handles the wx.EVT_LEFT_UP events.
+        """
         if self.lastClickedTool:
             obj = self.lastClickedTool.GetClientData()
             if hasattr(obj, "upFunc"):

@@ -211,15 +211,15 @@ class PythonEditorCtrl(StyledTextCtrl):
         
         # popup menu
         popupMenu = self.popupMenu = eg.Menu(self, "", eg.text.MainFrame.Menu)
-        popupMenu.Item("Undo")
-        popupMenu.Item("Redo")
-        popupMenu.Separator()
-        popupMenu.Item("Cut")
-        popupMenu.Item("Copy")
-        popupMenu.Item("Paste")
-        popupMenu.Item("Delete")
-        popupMenu.Separator()
-        popupMenu.Item("SelectAll")
+        popupMenu.AddItem("Undo")
+        popupMenu.AddItem("Redo")
+        popupMenu.AddItem()
+        popupMenu.AddItem("Cut")
+        popupMenu.AddItem("Copy")
+        popupMenu.AddItem("Paste")
+        popupMenu.AddItem("Delete")
+        popupMenu.AddItem()
+        popupMenu.AddItem("SelectAll")
         self.Bind(wx.EVT_RIGHT_UP, self.OnRightClick)
         
         self.SetText(value)
@@ -252,13 +252,13 @@ class PythonEditorCtrl(StyledTextCtrl):
 
 
     def ValidateEditMenu(self, menu):
-        menu.Undo.Enable(self.CanUndo())
-        menu.Redo.Enable(self.CanRedo())
+        menu.undo.Enable(self.CanUndo())
+        menu.redo.Enable(self.CanRedo())
         first, last = self.GetSelection()
-        menu.Cut.Enable(first != last)
-        menu.Copy.Enable(first != last)
-        menu.Paste.Enable(self.CanPaste())
-        menu.Delete.Enable(True)
+        menu.cut.Enable(first != last)
+        menu.copy.Enable(first != last)
+        menu.paste.Enable(self.CanPaste())
+        menu.delete.Enable(True)
 
         
     def OnCmdUndo(self, event):

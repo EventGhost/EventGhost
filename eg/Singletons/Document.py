@@ -132,7 +132,7 @@ class Document(object):
 
 
     @eg.LogIt
-    def New(self):
+    def LoadEmpty(self):
         self.ResetUndoState()
         self.SetFilePath(None)
         eg.TreeLink.StartLoad()
@@ -157,7 +157,7 @@ class Document(object):
         if self.tree:
             self.tree.DeleteAllItems()
         if not filePath:
-            return self.New()
+            return self.LoadEmpty()
         self.ResetUndoState()
         
         self.SetFilePath(filePath)
@@ -174,6 +174,11 @@ class Document(object):
         if self.tree:
             wx.CallAfter(self.tree.SetData)
         return root
+        
+        
+    def StartSession(self, filePath):
+        eg.eventThread.CallWait(eg.eventThread.StopSession)
+        eg.eventThread.Call(eg.eventThread.StartSession, filePath)
         
         
     def AfterLoad(self):
@@ -347,6 +352,21 @@ class Document(object):
             return wx.ID_NO
             
 
+    def New(self):
+        if self.CheckFileNeedsSave() == wx.ID_CANCEL:
+            return
+        self.StartSession(None)
+        
+    
+    def Open(self):
+        if self.CheckFileNeedsSave() == wx.ID_CANCEL:
+            return wx.ID_CANCEL
+        filePath = self.AskFile(wx.OPEN)
+        if filePath is None:
+            return wx.ID_CANCEL
+        self.StartSession(filePath)
+        
+    
     def Save(self):
         if self.filePath is None:
             return self.SaveAs()
@@ -355,21 +375,28 @@ class Document(object):
 
 
     def SaveAs(self):
+        filePath = self.AskFile(style=wx.SAVE|wx.OVERWRITE_PROMPT)
+        if filePath is None:
+            return wx.ID_CANCEL
+        self.WriteFile(filePath)
+        return wx.ID_YES            
+
+
+    def AskFile(self, style):
         fileDialog = wx.FileDialog(
             self.frame, 
             message="", 
             wildcard="*.xml", 
-            style=wx.SAVE|wx.OVERWRITE_PROMPT
+            style=style
         )
         result = fileDialog.ShowModal()
         if result == wx.ID_CANCEL:
-            return result
+            return None
         filePath = fileDialog.GetPath()
         fileDialog.Destroy()
-        self.WriteFile(filePath)
-        return wx.ID_YES
-
-
+        return filePath
+        
+    
     def ExecuteSelected(self):
         item = self.selection
         event = eg.EventGhostEvent("OnCmdExecute")

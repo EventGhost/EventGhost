@@ -97,7 +97,11 @@ class DirectoryWatcher(eg.PluginClass):
         self.startException = None
         self.includeSubdirs = includeSubdirs
         startupEvent = threading.Event()
-        self.thread = threading.Thread(target=self.ThreadLoop, name="DirectoryWatcherThread", args=(startupEvent,))
+        self.thread = threading.Thread(
+            target=self.ThreadLoop, 
+            name="DirectoryWatcherThread", 
+            args=(startupEvent,)
+        )
         self.thread.start()
         startupEvent.wait(3)
         if self.startException is not None:

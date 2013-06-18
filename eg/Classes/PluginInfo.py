@@ -89,7 +89,6 @@ class PluginInfo(object):
     
     evalName = None
     instances = None
-    actionList = None
     expanded = False
     lastEvent = eg.EventGhostEvent()
     actionClassList = None
@@ -251,8 +250,10 @@ class PluginInfo(object):
         else:
             pluginInfoCls.instances.append(pluginObj.info)
         info.instance = pluginObj
-        info.actionList = []
-        eg.actionList.append(pluginObj)
+        info.actionGroup = eg.ActionGroup(pluginObj, pluginObj.name, pluginObj.description)
+        eg.actionGroup.items.append(info.actionGroup)
+        pluginObj.AddAction = info.actionGroup.AddAction
+        pluginObj.AddGroup = info.actionGroup.AddGroup
         try:
             pluginObj.__init__()
             info.initFailed = False
@@ -260,7 +261,6 @@ class PluginInfo(object):
             pass
         except eg.Exception, e:
             eg.PrintError(e.message)
-            print "kokoko", repr(e)
         except:
             eg.PrintTraceback()
         
@@ -304,7 +304,7 @@ class PluginInfo(object):
             self.lastException = exc
             msg = eg.text.Error.pluginStartError % self.name
             msg += "\n" + unicode(exc)
-            eg.log.PrintItem(msg, eg.Icons.ERROR_ICON, self.treeItem)
+            eg.PrintError(msg, source=self.treeItem)
             self.treeItem.SetErrorState()
         except Exception, exc:
             self.lastException = exc
@@ -330,11 +330,11 @@ class PluginInfo(object):
             self.lastException = exc
             msg = eg.text.Error.pluginStartError % self.name
             msg += "\n" + unicode(exc)
-            eg.log.PrintItem(msg, eg.Icons.ERROR_ICON, self.treeItem)
+            self.treeItem.PrintError(msg)
             self.treeItem.SetErrorState()
         except Exception, exc:
             self.lastException = exc
-            eg.PrintError(eg.text.Error.pluginStartError % self.name)
+            self.treeItem.PrintError(eg.text.Error.pluginStartError % self.name)
             eg.PrintTraceback()
             self.treeItem.SetErrorState()
             
@@ -350,21 +350,21 @@ class PluginInfo(object):
     @eg.LogIt
     def RemovePluginInstance(self):
         plugin = self.instance
-        def DeleteActionListItems(actionList):
-            if actionList is not None:
-                for item in actionList:
+        def DeleteActionListItems(items):
+            if items is not None:
+                for item in items:
                     if isinstance(item, type) and issubclass(item, eg.ActionClass):
                         item.plugin = None
                     else:
-                        DeleteActionListItems(item.actionList)
+                        DeleteActionListItems(item.items)
                         item.plugin = None
-                del actionList
+                del items
                 
         delattr(eg.plugins, self.evalName)
         eg.pluginList.remove(plugin)
-        DeleteActionListItems(self.actionList)
+        DeleteActionListItems(self.actionGroup.items)
         try:
-            eg.actionList.remove(plugin)
+            eg.actionGroup.items.remove(self.actionGroup)
         except:
             pass
         self.instances.remove(self)

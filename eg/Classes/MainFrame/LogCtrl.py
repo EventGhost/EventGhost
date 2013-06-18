@@ -40,12 +40,8 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         pos=wx.DefaultPosition, 
         size=wx.DefaultSize
     ):
-        if eg.debugLevel:
-            self.maxlength = 2000
-            self.removeOnMax = 200
-        else:
-            self.maxlength = 2000
-            self.removeOnMax = 200
+        self.maxlength = 2000
+        self.removeOnMax = 200
         wx.ListCtrl.__init__(
             self, 
             parent, 
@@ -104,7 +100,7 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         # logger popup menu
         menu = eg.Menu(self, "EditMenu", eg.text.MainFrame.Menu)
         menu.AddItem("Copy")
-        menu.AddSeparator()
+        menu.AddItem()
         menu.AddItem("ClearLog")
         self.contextMenu = menu
         
@@ -128,8 +124,6 @@ class LogCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     @eg.LogIt
     def Destroy(self):
         eg.log.SetCtrl(None)
-        return
-        return wx.ListCtrl.Destroy(self)
         
 
     def OnSetFocus(self, event):

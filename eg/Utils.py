@@ -32,7 +32,6 @@ import time
 import inspect
 from types import ClassType
 
-
 def P(*args, **kwargs):
     return (args, kwargs)
 
@@ -117,7 +116,7 @@ def LogIt(func):
         return func
     
     if func.func_code.co_flags & 0x20:
-        raise "Can't wrap generator function"
+        raise TypeError("Can't wrap generator function")
     
     def LogItWrapper(*args, **kwargs):
         fname, argString = GetFuncArgString(func, args, kwargs)

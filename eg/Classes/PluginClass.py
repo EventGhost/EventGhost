@@ -23,9 +23,9 @@
 __docformat__ = 'reStructuredText'
 
 """ Definition of the abstract PluginClass. """
-
+from types import ClassType
 from PluginMetaClass import PluginMetaClass
-CreateAction = eg.ActionGroup.CreateAction
+AddAction = eg.ActionGroup.AddAction
         
        
 class PluginClass(object):
@@ -161,7 +161,7 @@ class PluginClass(object):
         self.info.lastEvent.SetShouldEnd()
         
         
-    def AddAction(self, actionCls, hidden=False):
+    def AddAction(self, actionCls, clsName=None, name=None, description=None, value=None, hidden=False):
         """
         Add an action to the AddActionDialog of EventGhost for this plugin.
         
@@ -172,11 +172,11 @@ class PluginClass(object):
             If set to True, the action will not show up in the AddActionDialog
             but is otherwise fully functional.
         """
-        action = CreateAction(actionCls, self)
-        if not hidden:
-            self.info.actionList.append(action)
-        return action
-    
+        # Here it is only defined as an abstract method. 
+        # The real AddAction method will be assigned shortly before the plugin
+        # is instantiated (for speed purposes).
+        pass
+        
     
     def AddGroup(self, name=None, description=None, iconFile=None):
         """
@@ -198,9 +198,10 @@ class PluginClass(object):
         :rtype: eg.ActionGroup instance
             
         """
-        group = eg.ActionGroup(self, name, description, iconFile)
-        self.info.actionList.append(group)
-        return group
+        # Here it is only defined as an abstract method. 
+        # The real AddGroup method will be assigned shortly before the plugin
+        # is instantiated (for speed purposes).
+        pass
     
     
     def GetLabel(self, *args):
@@ -228,7 +229,7 @@ class PluginClass(object):
           `msg` : string
             The error message you want to have printed to the logger
         """
-        eg.log.PrintItem(msg, eg.Icons.ERROR_ICON, self.info.treeItem)
+        eg.PrintError(msg, source=self.info.treeItem)
         
         
     def Configure(self, *args):
@@ -277,29 +278,4 @@ class PluginClass(object):
         
     
     def AddActionsFromList(self, theList, defaultAction=None):
-        def Recurse(theList, group):
-            for parts in theList:
-                length = len(parts)
-                if parts[0] is eg.ActionGroup:
-                    # this is a new sub-group
-                    cls, aName, aDescription, aList = parts
-                    newGroup = group.AddGroup(aName, aDescription)
-                    Recurse(aList, newGroup)
-                    continue
-                elif length == 3:
-                    evalName, tmpName, tmpValue = parts
-                    tmpDescription = None
-                elif length == 4:
-                    # this is a new action
-                    evalName, tmpName, tmpDescription, tmpValue = parts
-                else:
-                    raise Exception("Wrong number of fields in the list")
-                       
-                class NewAction(defaultAction):
-                    name = tmpName
-                    description = tmpDescription
-                    value = tmpValue
-                NewAction.__name__ = evalName
-                group.AddAction(NewAction)
-                
-        Recurse(theList, self)
+        self.info.actionGroup.AddActionsFromList(theList, defaultAction)

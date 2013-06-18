@@ -35,7 +35,7 @@ imp.load_source("__main__", mainFilePath)
 
 # The "imports" module file is created by the tools/MakeImports.py script
 # and is located in the "tools" directory also.
-# It includes all modules the program might need. This way we force py2exe
+# It includes all modules the program might need. This way we trick py2exe
 # to include them in the distribution.
 if False:
     import greenlet

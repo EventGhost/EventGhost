@@ -115,26 +115,26 @@ class LanguageEditor(wx.Frame):
 
         # file menu
         menu = menuBar.AddMenu("File")
-        menu.Item("Open", hotkey="Ctrl+O")
-        menu.Item("Save", hotkey="Ctrl+S")
-        menu.Separator()
-        menu.Item("Exit", hotkey="Alt+F4")
+        menu.AddItem("Open", hotkey="Ctrl+O")
+        menu.AddItem("Save", hotkey="Ctrl+S")
+        menu.AddItem()
+        menu.AddItem("Exit", hotkey="Alt+F4")
 
         # edit menu        
         menu = menuBar.AddMenu("Edit")
-        menu.Item("Undo", False, hotkey="Ctrl+Z")
-        menu.Item("Redo", False, hotkey="Ctrl+Y")
-        menu.Separator()
-        menu.Item("Cut", hotkey="Ctrl+X")
-        menu.Item("Copy", hotkey="Ctrl+C")
-        menu.Item("Paste", hotkey="Ctrl+V")
-        menu.Item("Delete")        
-        menu.Separator()
-        menu.Item("FindNext", hotkey="F3")  
+        menu.AddItem("Undo", False, hotkey="Ctrl+Z")
+        menu.AddItem("Redo", False, hotkey="Ctrl+Y")
+        menu.AddItem()
+        menu.AddItem("Cut", hotkey="Ctrl+X")
+        menu.AddItem("Copy", hotkey="Ctrl+C")
+        menu.AddItem("Paste", hotkey="Ctrl+V")
+        menu.AddItem("Delete")        
+        menu.AddItem()
+        menu.AddItem("FindNext", hotkey="F3")  
 
         # help menu
         menu = menuBar.AddMenu("Help")
-        menu.Item("About")  
+        menu.AddItem("About")  
         
         menuBar.Realize()
         
@@ -608,23 +608,23 @@ class LanguageEditor(wx.Frame):
     
     
     def OnValidateMenus(self, event):    
-        self.menuBar.File.Save.Enable(self.isDirty)
+        self.menuBar.File.save.Enable(self.isDirty)
         newValueCtrl = self.newValueCtrl
         editMenu = self.menuBar.Edit
         if self.FindFocus() == newValueCtrl:
-            editMenu.Undo.Enable(newValueCtrl.CanUndo())
-            editMenu.Redo.Enable(newValueCtrl.CanRedo())
-            editMenu.Cut.Enable(newValueCtrl.CanCut())
-            editMenu.Copy.Enable(newValueCtrl.CanCopy())
-            editMenu.Paste.Enable(newValueCtrl.CanPaste())
-            editMenu.Delete.Enable(True)
+            editMenu.undo.Enable(newValueCtrl.CanUndo())
+            editMenu.redo.Enable(newValueCtrl.CanRedo())
+            editMenu.cut.Enable(newValueCtrl.CanCut())
+            editMenu.copy.Enable(newValueCtrl.CanCopy())
+            editMenu.paste.Enable(newValueCtrl.CanPaste())
+            editMenu.delete.Enable(True)
         else:
-            editMenu.Undo.Enable(False)
-            editMenu.Redo.Enable(False)
-            editMenu.Cut.Enable(False)
-            editMenu.Copy.Enable(False)
-            editMenu.Paste.Enable(False)
-            editMenu.Delete.Enable(False)
+            editMenu.undo.Enable(False)
+            editMenu.redo.Enable(False)
+            editMenu.cut.Enable(False)
+            editMenu.copy.Enable(False)
+            editMenu.paste.Enable(False)
+            editMenu.delete.Enable(False)
             
             
             

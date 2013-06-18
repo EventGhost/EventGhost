@@ -19,9 +19,11 @@
 # $LastChangedDate$
 # $LastChangedRevision$
 # $LastChangedBy$
-
-from sys import exc_info
+import sys
+from sys import exc_info, _getframe
 from threading import Event, Thread, Lock
+from traceback import extract_stack, format_list
+from inspect import stack, currentframe, getouterframes
 from functools import partial
 from collections import deque
 from time import clock
@@ -40,7 +42,7 @@ def PumpWaitingMessages():
         DispatchMessage(byref(msg))
 
 
-class ThreadWorkerAction:
+class ThreadWorkerAction(object):
     """ 
     Represents an item that will be put on the ThreadWorker queue to be
     executed there.
@@ -51,16 +53,18 @@ class ThreadWorkerAction:
         "returnValue", 
         "processed", 
         "exceptionInfo", 
-        "raiseException"
+        "raiseException",
+        "callersFrame",
     ]
     
-    def __init__(self, func, raiseException=True):
+    def __init__(self, func, raiseException=True, callersFrame=None):
         self.time = clock()
         self.func = func
         self.returnValue = None
         self.processed = Event()
         self.raiseException = raiseException
         self.exceptionInfo = None
+        self.callersFrame = callersFrame
                
                
     def __call__(self):
@@ -68,7 +72,7 @@ class ThreadWorkerAction:
             self.returnValue = self.func()
         except Exception, exc:
             if self.raiseException:
-                raise exc
+                raise
             else:
                 self.exceptionInfo = exc_info()
         finally:
@@ -202,8 +206,18 @@ class ThreadWorker:
         try:
             action()
         except:
+            lines = [
+                "Unhandled exception in WorkerThread <%s>:\n" % self.__thread.getName(),
+                "Callers stack:\n"
+            ]
+            lines += format_list(extract_stack(action.callersFrame))
+            eg.PrintError("".join(lines).rstrip())
             eg.PrintTraceback()
-        
+        finally:
+            callersFrame = action.callersFrame
+            action.callersFrame = None
+            del callersFrame
+            
     
     def Wait(self, timeout):
         otimeout = timeout
@@ -274,7 +288,11 @@ class ThreadWorker:
         Transmit a function and arguments to the thread and let it execute 
         there. Doesn't wait for the completion.
         """
-        action = ThreadWorkerAction(partial(func, *args, **kwargs))
+        action = ThreadWorkerAction(
+            partial(func, *args, **kwargs),
+            True,
+            _getframe()
+        )
         self.__queue.append(action)
         SetEvent(self.__wakeEvent)
         return action

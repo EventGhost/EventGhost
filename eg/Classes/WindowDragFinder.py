@@ -98,6 +98,9 @@ class WindowDragFinder(wx.PyWindow):
         
         
     def OnSize(self, event):
+        """
+        Handles the wx.EVT_SIZE events.
+        """
         if self.GetAutoLayout():
             self.Layout()        
         

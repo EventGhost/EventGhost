@@ -24,7 +24,7 @@
 class NewEvent(eg.UndoHandler.NewItem):
     
     def Do(self, document, label=None, parent=None, pos=-1):
-        self.name = eg.text.MainFrame.Menu.NewEvent.replace("&", "")
+        self.name = eg.text.MainFrame.Menu.AddEvent.replace("&", "")
         if parent is None:
             obj = document.selection
             if isinstance(obj, document.MacroItem):

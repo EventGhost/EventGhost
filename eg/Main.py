@@ -137,4 +137,4 @@ from Init import EventGhost
 eg = EventGhost(args)
 if not args.install:
     eg.app.MainLoop()
-ctypes.windll.kernel32.ExitProcess(0)
+#ctypes.windll.kernel32.ExitProcess(0)

@@ -68,25 +68,32 @@ class WindowTree(wx.TreeCtrl):
         self.root = self.AddRoot("")
         
         # tree context menu
-        menu = eg.Menu(self, "")
+        self.contextMenu = eg.Menu(self, "")
         
         def OnCmdHighlight(event):
             hwnd = self.GetPyData(self.GetSelection())
             for i in range(10):
                 HighlightWindow(hwnd)
                 sleep(0.1)
-        menu.Append("Highlight", OnCmdHighlight)
+        self.contextMenu.Append("Highlight", OnCmdHighlight)
         
-        def OnPopupMenu(event):
-            self.PopupMenu(menu)        
-        self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, OnPopupMenu)
-        
+        self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.OnItemRightClick)
         self.Bind(wx.EVT_TREE_ITEM_EXPANDING, self.OnItemExpanding)
         self.Bind(wx.EVT_TREE_ITEM_COLLAPSED, self.OnItemCollapsed)
         self.AppendPrograms()
         
         
+    def OnItemRightClick(self, event):
+        """
+        Handles wx.EVT_TREE_ITEM_RIGHT_CLICK events.
+        """
+        self.PopupMenu(self.contextMenu)
+        
+    
     def OnItemExpanding(self, event):
+        """
+        Handles wx.EVT_TREE_ITEM_EXPANDING events.
+        """
         item = event.GetItem()
         if self.IsExpanded(item):  
             # This event can happen twice in the self.Expand call
@@ -102,6 +109,9 @@ class WindowTree(wx.TreeCtrl):
 
 
     def OnItemCollapsed(self, event):
+        """
+        Handles wx.EVT_TREE_ITEM_COLLAPSED events.
+        """
         # We need to remove all children here, otherwise we'll see all
         # that old rubbish again after the next expansion.
         self.DeleteChildren(event.GetItem())

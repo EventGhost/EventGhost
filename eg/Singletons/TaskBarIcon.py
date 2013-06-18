@@ -31,7 +31,7 @@ class TaskBarIcon(wx.TaskBarIcon):
             wx.Icon("images\\Tray3.png", wx.BITMAP_TYPE_PNG),
             wx.Icon("images\\Tray2.png", wx.BITMAP_TYPE_PNG),
         )
-        self.tooltip = eg.APP_NAME + " " + eg.versionStr
+        self.tooltip = eg.APP_NAME + " " + eg.Version.string
         wx.TaskBarIcon.__init__(self)
         self.iconTime = 0
         self.SetIcon(self.stateIcons[0], self.tooltip)

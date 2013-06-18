@@ -226,7 +226,7 @@ class ActionItem(TreeItem):
         if not action:
             return
         if not action.plugin.info.isStarted:
-            eg.PrintError(
+            self.PrintError(
                 eg.text.Error.pluginNotActivated % action.plugin.name
             )
             return
@@ -234,11 +234,11 @@ class ActionItem(TreeItem):
             eg.result = self.compiled()
         except eg.Exception, e:
             #eg.PrintError(e.message)
-            eg.log.PrintItem(unicode(e), eg.Icons.ERROR_ICON, self)
+            self.PrintError(unicode(e))
         except:
             wx.CallAfter(self.Select)
             label = self.GetLabel()
-            eg.PrintTraceback(eg.text.Error.InAction % label, 1)
+            eg.PrintTraceback(eg.text.Error.InAction % label, 1, source=self)
         finally:
             pass
 
