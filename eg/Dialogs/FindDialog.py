@@ -76,11 +76,8 @@ class FindDialog(eg.Dialog):
         sizer.Add(leftSizer, 1, wx.EXPAND)
         sizer.Add(btnSizer, 0, wx.EXPAND|wx.ALL, 5)
         
-        self.SetSizer(sizer)
-        self.SetAutoLayout(True)
-        sizer.Fit(self)
-        minSize = self.GetSize()
-        self.SetMinSize(minSize)
+        self.SetSizerAndFit(sizer)
+        self.SetMinSize(self.GetSize())
         
         searchButton.Bind(wx.EVT_BUTTON, self.OnFindButton)
         def EnableSearchButton(event):

@@ -59,10 +59,7 @@ class PluginInfo(eg.PluginInfo):
 
 import threading
 import win32event
-
 import wx
-
-from X10com import X10Control
 
 
 class Text:
@@ -260,8 +257,12 @@ class X10(eg.PluginClass):
         from pythoncom import CoInitialize, CoUninitialize, PumpWaitingMessages        
         
         CoInitialize()
+        #import win32com.client
+        #win32com.client.gencache.EnsureModule('X10net.X10Control', 0, 1, 0)
+
         try:
-            comInstance = DispatchWithEvents(X10Control(), X10Events)
+            #comInstance = DispatchWithEvents(X10Control(), X10Events)
+            comInstance = DispatchWithEvents('X10net.X10Control.1', X10Events)
         except:
             self.errorState = 1
             CoUninitialize()

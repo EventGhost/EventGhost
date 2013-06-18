@@ -104,9 +104,7 @@ class OptionsDialog(eg.Dialog):
 
         self.buttonRow = eg.ButtonRow(self, (wx.ID_OK, wx.ID_CANCEL))
         
-        #-----------------------------------------
         # construction of the layout with sizers
-        #-----------------------------------------
         
         memoryLimitSizer = wx.BoxSizer(wx.HORIZONTAL)
         memoryLimitSizer.Add(memoryLimitCheckBox, 0, wx.ALIGN_CENTER_VERTICAL)
@@ -148,12 +146,8 @@ class OptionsDialog(eg.Dialog):
         sizer.Add(notebookSizer, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, 5)
         sizer.Add(self.buttonRow.sizer, 0, wx.EXPAND)
 
-        self.SetSizer(sizer)
-        self.SetAutoLayout(True)
-        sizer.Fit(self)
-        
-        minSize = self.GetSize()
-        self.SetMinSize(minSize)
+        self.SetSizerAndFit(sizer)
+        self.SetMinSize(self.GetSize())
         notebook.ChangeSelection(0)
         
 

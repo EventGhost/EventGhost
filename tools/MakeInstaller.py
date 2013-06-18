@@ -40,12 +40,6 @@ SourcePattern = [
 ]
 
 def GetFiles(files, pattern):
-    sources = [
-        "EventGhost.pyw",
-        "EventGhost.ico",
-        "Example.xml",
-        "LICENSE.TXT",
-    ]
     for directory in ("eg", "plugins", "languages", "images"):
         for path in locate(pattern, join(trunkDir, directory)):
             files.append(path[len(trunkDir)+1:])
@@ -337,6 +331,7 @@ Type: filesandordirs; Name: "{app}\eg"
 Source: "%(DIST)s\*.exe"; DestDir: "{app}"; Flags: ignoreversion
 %(INSTALL_FILES)s
 Source: "%(TRUNK)s\Example.xml"; DestDir: "{userappdata}\EventGhost"; DestName: "MyConfig.xml"; Flags: onlyifdoesntexist uninsneveruninstall
+
 """
 
 

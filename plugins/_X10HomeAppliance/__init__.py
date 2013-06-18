@@ -13,6 +13,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+import eg
+
+class PluginInfo(eg.PluginInfo):
+    name = "X10 Home Appliance"
+    author = "Bitmonster"
+    version = "0.0.1"
+    kind = "external"
+    description = "Control X10 home appliance modules through a C11a device."
+
 from __future__ import with_statement
 
 

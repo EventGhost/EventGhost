@@ -21,9 +21,7 @@ class SimpleInputDialog(wx.Dialog):
         mainSizer.Add((5,5), 1, wx.EXPAND)
         mainSizer.Add(wx.StaticLine(self), 0, wx.EXPAND)
         mainSizer.Add(btnrow.sizer, 0, wx.EXPAND)        
-        self.SetSizer(mainSizer)
-        self.SetAutoLayout(True)
-        mainSizer.Fit(self)
+        self.SetSizerAndFit(mainSizer)
         self.SetMinSize(self.GetSize())
         
         

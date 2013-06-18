@@ -488,6 +488,15 @@ class EventGhost(object):
         
         
     def __InitComServer(self):
+        __gen_path__ = os.path.join(self.APPDATA, "EventGhost", "gen_py")
+        if not os.path.exists(__gen_path__):
+            os.makedirs(__gen_path__)
+        import win32com
+        win32com.__gen_path__ = __gen_path__
+        sys.modules["win32com.gen_py"].__path__ = [__gen_path__]
+        import win32com.client
+        win32com.client.gencache.is_readonly = False
+        
         # Support for the COM-Server
         if hasattr(sys, "frozen"):
             pythoncom.frozen = 1
@@ -506,7 +515,6 @@ class EventGhost(object):
         #pythoncom.EnableQuitMessage(win32api.GetCurrentThreadId())	
         pythoncom.CoResumeClassObjects()
 
-        import win32com.client
         e = win32com.client.Dispatch("EventGhost")        
         
         

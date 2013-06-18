@@ -273,9 +273,7 @@ class AboutDialog(eg.Dialog):
         mainSizer.Add(nb, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, 5)
         mainSizer.Add(btnSizer, 0, wx.EXPAND)
 
-        self.SetSizer(mainSizer)
-        self.SetAutoLayout(True)
-        mainSizer.Fit(self)
+        self.SetSizerAndFit(mainSizer)
         self.SetMinSize(self.GetSize())
 
         self.contextMenu = eg.Menu(self, "EditMenu", eg.text.MainFrame.Menu)

@@ -166,10 +166,8 @@ class AddPluginDialog(eg.Dialog):
         mainSizer.Add(splitter, 1, wx.EXPAND|wx.ALL, 5)
         mainSizer.Add(self.buttonRow.sizer, 0, wx.EXPAND)
         
-        self.SetSizer(mainSizer)
-        self.SetAutoLayout(True)
-        mainSizer.Fit(self)
-        minSize = mainSizer.GetMinSize()
+        self.SetSizerAndFit(mainSizer)
+        #minSize = mainSizer.GetMinSize()
         #self.SetMinSize(minSize)
         self.SetSize(config.size)
         splitter.SetSashPosition(config.splitPosition)

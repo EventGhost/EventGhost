@@ -40,9 +40,7 @@ class HTMLDialog(eg.Dialog):
         
         mainSizer.Add(btnSizer, 0, wx.EXPAND)
         
-        self.SetSizer(mainSizer)
-        self.SetAutoLayout(True)
-        mainSizer.Fit(self)
+        self.SetSizerAndFit(mainSizer)
         if config.position is not None:
             self.SetPosition(config.position)
         self.SetSize(config.size)

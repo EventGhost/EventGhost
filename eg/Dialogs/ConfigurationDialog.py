@@ -10,6 +10,9 @@ REMOVE_HTML_PATTERN = re.compile('<([^!>]([^>]|\n)*)>')
 
 
 class HeaderBox(wx.PyWindow):
+    """
+    The top description box of every action/plugin configuration dialog.
+    """
     
     def __init__(self, parent, obj):
         description = obj.description.strip()
@@ -67,11 +70,9 @@ class HeaderBox(wx.PyWindow):
         mainSizer.Add((4, 4))
         mainSizer.Add(rightSizer, 1, wx.EXPAND)
         
-        self.SetSizer(mainSizer)
-        self.SetAutoLayout(True)
-        mainSizer.Fit(self)
-        mainSizer.Layout()
-        self.Layout()
+        self.SetSizerAndFit(mainSizer)
+        #mainSizer.Layout()
+        #self.Layout()
         self.Bind(wx.EVT_SIZE, self.OnSize)
         
         
@@ -94,6 +95,9 @@ class HeaderBox(wx.PyWindow):
         
         
 class ConfigurationDialog(eg.Dialog):
+    """
+    A configuration dialog for all plug-ins and actions.
+    """
     __postInited = False
     
     def __init__(self, obj, resizeable=None, showLine=True):
@@ -126,13 +130,14 @@ class ConfigurationDialog(eg.Dialog):
             self, 
             (wx.ID_OK, wx.ID_CANCEL)
         )
-        self.mainSizer = wx.BoxSizer(wx.VERTICAL)
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
         paramSizer = wx.BoxSizer(wx.VERTICAL)
         self.headerBox = HeaderBox(self, obj)
-        self.mainSizer.SetMinSize((450, 300))
-        self.mainSizer.Add(self.headerBox, 0, wx.EXPAND, 0)
-        self.mainSizer.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.ALIGN_CENTER, 0)
-        self.mainSizer.Add(paramSizer, 1, flags|wx.ALIGN_CENTER_VERTICAL, 15)
+        mainSizer.SetMinSize((450, 300))
+        mainSizer.Add(self.headerBox, 0, wx.EXPAND, 0)
+        mainSizer.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.ALIGN_CENTER, 0)
+        mainSizer.Add(paramSizer, 1, flags|wx.ALIGN_CENTER_VERTICAL, 15)
+        self.mainSizer = mainSizer
         self.sizer = paramSizer
 
 
@@ -153,11 +158,9 @@ class ConfigurationDialog(eg.Dialog):
                 flag = wx.EXPAND|wx.RIGHT
                 border = 10
             self.mainSizer.Add(self.buttonRow.sizer, 0, flag, border)
-            self.SetSizer(self.mainSizer)
-            self.SetAutoLayout(True)
-            self.mainSizer.Fit(self)
+            self.SetSizerAndFit(self.mainSizer)
             self.SetMinSize(self.GetSize())
-            self.Layout()
+            #self.Layout()
             self.__postInited = True
         self.Centre()
         if self.ShowModal() == wx.ID_OK:
@@ -165,9 +168,9 @@ class ConfigurationDialog(eg.Dialog):
         return False
 
 
-    def OnHelp(self, event):
-        self.configureItem.ShowHelp()
-
+#    def OnHelp(self, event):
+#        self.configureItem.ShowHelp()
+#
 
     def AddLabel(self, label):
         labelCtrl = wx.StaticText(self, -1, label)

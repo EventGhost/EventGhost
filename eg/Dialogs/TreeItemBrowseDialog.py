@@ -44,9 +44,7 @@ class TreeItemBrowseDialog(eg.Dialog):
         mainSizer.Add(tree, 1, wx.EXPAND)
         mainSizer.Add(btnrowSizer, 0, wx.EXPAND)
 
-        self.SetSizer(mainSizer)
-        self.SetAutoLayout(True)
-        mainSizer.Fit(self)
+        self.SetSizerAndFit(mainSizer)
         #self.SetMinSize(self.GetSize())
         self.SetSize((450,400))
         if not searchItem:
