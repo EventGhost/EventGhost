@@ -97,7 +97,11 @@ def UpdateChangeLog(templateOptions):
         time.strftime("%m/%d/%Y"),
     )
     fd = open(path, "r")
-    s2 = fd.read()
+    s2 = fd.read(100) # read some data from the beginning
+    if s2.strip().startswith("Version "):
+        # no new lines, so skip the addition of a new header
+        return
+    s2 += fd.read() # read the remaining contents
     fd.close()
     fd = open(path, "w+")
     fd.write(s1 + s2)
