@@ -42,13 +42,14 @@ system_template = """
 ST = (
     (
         "Plugin Developers:",
-        1,
+        2,
         (
-            ("MonsterMagnet", ""),
-            ("Bartman", ""),
-            ("Milbrot", ""),
-            ("Oliver Wagner", ""),
-            ("Matthew Jacob Edwards", ""),
+            ("MonsterMagnet", "Foobar2000, MPC, VLC, Speech"),
+            ("Bartman", "Timer, HID, Registry"),
+            ("Oliver Wagner", "Denon AV, Optoma H79"),
+            ("Milbrot", "MyTheatre"),
+            ("Matthew Jacob Edwards", "Winamp Extensions"),
+            ("jorel1969", "Medio"),
         ),
     ),
     (
