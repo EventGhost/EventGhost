@@ -65,12 +65,19 @@ except pywintypes.error, data:
         raise
 sys.coinit_flags = 2
 from win32com.server import factory
-__factory_infos = factory.RegisterClassFactories(["EventGhost"])
+try:
+    __factory_infos = factory.RegisterClassFactories([EventGhostCom._reg_clsid_])
+except:
+    __factory_infos = []
+    eg.PrintError("RegisterClassFactories failed!")
 #import win32api
 #pythoncom.EnableQuitMessage(win32api.GetCurrentThreadId())    
 pythoncom.CoResumeClassObjects()
 
-e = win32com.client.Dispatch("EventGhost")       
+try:
+    e = win32com.client.Dispatch("{7EB106DC-468D-4345-9CFE-B0021039114B}")   
+except:
+    eg.PrintError("Unable to establish COM disptach!")    
 
 
 def DeInit():
