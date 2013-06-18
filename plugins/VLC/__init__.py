@@ -122,6 +122,7 @@ class VLC_Session(asynchat.async_chat):
     def handle_connect(self):
         # connection succeeded
         self.handler.TriggerEvent("Connected")
+        self.sendall(self.handler.connectedevent)
          
         
     def handle_expt(self):
@@ -194,13 +195,15 @@ class VLC(eg.PluginClass):
     def push(self, data):
         if not self.dispatcher_running:
             self.dispatcher = VLC_Session(self, (self.host, self.port))
+            self.connectedevent = data
             self.dispatcher_running = True
         try:
-            self.dispatcher.sendall(data)
+            if self.dispatcher.connected:
+                self.dispatcher.sendall(data)
             return True
         except:
             self.dispatcher_running = False
-            self.PrintError("Couldn't connect to VLC.")
+            self.PrintError("Error sending data to VLC.")
             self.dispatcher.close()
             return False
 
