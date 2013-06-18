@@ -173,6 +173,19 @@ class ConfigurationDialog(eg.Dialog):
         mainSizer.Add(paramSizer, 1, flags|wx.ALIGN_CENTER_VERTICAL, 15)
         self.mainSizer = mainSizer
         self.sizer = paramSizer
+        
+        def ShowHelp(event):
+            self.configureItem.ShowHelp()
+        wx.EVT_MENU(self, wx.ID_HELP, ShowHelp)
+        
+        self.SetAcceleratorTable(
+            wx.AcceleratorTable(
+                [
+                    (wx.ACCEL_NORMAL, wx.WXK_F1, wx.ID_HELP),
+                ]
+            )
+        )        
+        
 
 
     def AffirmedShowModal(self):

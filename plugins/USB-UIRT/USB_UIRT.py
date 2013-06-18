@@ -364,7 +364,9 @@ class USB_UIRT:
             else:
                 codeFormat = UUIRTDRV_IRFMT_LEARN_FORCESTRUC
         else:
-            codeFormat = UUIRTDRV_IRFMT_UUIRT
+            repeatCount = 0
+            codeFormat = UUIRTDRV_IRFMT_PRONTO
+            code = ""
         if not self.dll.UUIRTTransmitIR(
             self.hDrvHandle,    # hHandle
             c_char_p(code),     # IRCode

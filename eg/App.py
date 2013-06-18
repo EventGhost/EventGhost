@@ -138,8 +138,8 @@ class MyApp(wx.App):
         self.taskBarIcon.alive = False
         self.taskBarIcon.Destroy()
         #self.ExitMainLoop()
-	eg.CallWait(self.OnExit)
-	return 0
+    	eg.CallWait(self.OnExit)
+    	return 0
          
         
     @eg.LogIt

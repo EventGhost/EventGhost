@@ -23,6 +23,7 @@
 import os
 import sys
 import gc
+import re
 
 import wx
 import wx.aui
@@ -346,12 +347,36 @@ class MainFrame(wx.Frame):
         eg.app.clipboardEvent.Bind(self.OnClipboardChange)
         self.UpdateTitle(self.document.filePath)
         
+        # create an accelerator for the "Log only assigned and activated 
+        # events" checkbox. An awfull hack.
+        @eg.LogIt
+        def ToggleOnlyLogAssigned(event):
+            cb = self.statusBar.cb
+            flag = not cb.GetValue()
+            cb.SetValue(flag)
+            eg.onlyLogAssigned = flag
+
+        toggleOnlyLogAssignedId = wx.NewId()
+        wx.EVT_MENU(self, toggleOnlyLogAssignedId, ToggleOnlyLogAssigned)
+        
+        # find the accelerator key in the label of the checkbox
+        labelText = eg.text.MainFrame.onlyLogAssigned
+        result = re.search(r'&([a-z])', labelText, re.IGNORECASE)
+        if result:
+            hotKey = result.groups()[0].upper()
+        else:
+            hotKey = "L"
+
         # create an accelerator for the "Del" key. This way we can temporarly
         # disable it while editing a tree label. 
         # (see TreeCtrl.py OnBeginLabelEdit and OnEndLabelEdit)
         delId = menuItems.delete.GetId()
+        
         self.acceleratorTable = wx.AcceleratorTable(
-            [(wx.ACCEL_NORMAL, wx.WXK_DELETE, delId)]
+            [
+                (wx.ACCEL_NORMAL, wx.WXK_DELETE, delId),
+                (wx.ACCEL_ALT, ord(hotKey), toggleOnlyLogAssignedId),
+            ]
         )        
         self.SetAcceleratorTable(self.acceleratorTable)
         

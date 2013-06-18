@@ -125,7 +125,8 @@ class EnableItem(eg.ActionClass):
         if link:
             obj = link.target
             if obj:
-                obj.Enable()
+                obj.isEnabled = True
+                wx.CallAfter(obj.Enable, True)
     
     
     def GetLabel(self, link):
@@ -205,7 +206,8 @@ class DisableItem(EnableItem):
         if link:
             obj = link.target
             if obj:
-                obj.Enable(False)
+                obj.isEnabled = False
+                wx.CallAfter(obj.Enable, False)
 
 
 
@@ -230,10 +232,12 @@ class EnableExclusive(EnableItem):
         if not item:
             return
         def DoIt():
-            item.Enable(True)
+            item.isEnabled = True
+            wx.CallAfter(item.Enable, True)
             for child in item.parent.childs:
                 if child is not item:
-                    child.Enable(False)
+                    child.isEnabled = False
+                    wx.CallAfter(child.Enable, False)
         eg.actionThread.Call(DoIt)
                 
                 
@@ -391,12 +395,15 @@ class AutoRepeat(eg.ActionClass):
             if x < firstDelay * 0.90:
                 res = firstDelay
             else:
-                x = x + firstDelay
-                s = startDelay - endDelay
-                d = (s / sweepTime) * (sweepTime - x)
-                if d < 0:
-                    d = 0
-                res = d + endDelay
+                if sweepTime > 0.0:
+                    x = x + firstDelay
+                    s = startDelay - endDelay
+                    d = (s / sweepTime) * (sweepTime - x)
+                    if d < 0:
+                        d = 0
+                    res = d + endDelay
+                else:
+                    res = endDelay
             event.shouldEnd.wait(res)
             #wait_event.wait(res)
             if not event.shouldEnd.isSet():

@@ -97,8 +97,8 @@ class RootItem(ContainerItem):
         pass
             
             
-    def HasValidId(self):
-        return self.tree is not None
+    def _HasValidId(self):
+        return True
     
         
     def CanCut(self):

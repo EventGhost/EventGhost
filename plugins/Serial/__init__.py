@@ -100,6 +100,7 @@ class Serial(eg.RawReceiverPlugin):
                 rtscts=rtscts,
             )
         except:
+            eg.PrintTraceback()
             self.serial = None
             raise eg.Exception("Can't open COM port.")
         self.serial.timeout = 1.0
@@ -284,6 +285,17 @@ class Serial(eg.RawReceiverPlugin):
         
         
     class Write(eg.ActionWithStringParameter):
+        description = (
+            "Writes some text through the serial port."
+            "\n\n<p>"
+            "You can use Python string escapes to send non-printable "
+            "characters. Some examples:<p>"
+            "\\n will send a Linefeed (LF)<br>"
+            "\\r will send a Carriage Return (CR)<br>"
+            "\\t will send a Horizontal Tab (TAB)<br>"
+            "\\x0B will send the ASCII character with the hexcode 0B<br>"
+            "\\\\ will send a single Backslash."            
+        )
         
         def __call__(self, data):
             data = eg.ParseString(data, self.replaceFunc)

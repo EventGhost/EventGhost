@@ -177,10 +177,15 @@ class TreeItem(object):
             tree.Expand(parent.id)
             
         
-        
     def HasValidId(self):
+        if not self.tree:
+            return False
+        return self._HasValidId()
+    
+    
+    def _HasValidId(self):
         parent = self.parent
-        if not parent.HasValidId():
+        if not parent._HasValidId():
             return False
         return self.tree.IsExpanded(parent.id)
     
@@ -380,7 +385,7 @@ class TreeItem(object):
         return id
             
     
-    #@eg.AssertNotMainThread
+    @eg.AssertNotMainThread
     def Enable(self, enable=True):
         self.isEnabled = enable
         if self.HasValidId():

@@ -217,7 +217,8 @@ class TransmitIR(eg.ActionClass):
     def Configure(self, code='', repeatCount=None, inactivityWaitTime=None):
         text = self.text
         dialog = eg.ConfigurationDialog(self)
-        repeatCount = repeatCount or self.repeatCount
+        if repeatCount is None:
+            repeatCount = self.repeatCount
         inactivityWaitTime = inactivityWaitTime or self.inactivityWaitTime
         if len(code) > 0:
             zone = 0

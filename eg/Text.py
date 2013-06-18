@@ -65,7 +65,7 @@ class Text:
 
     
     class MainFrame:
-        onlyLogAssigned = "Log only assigned and activated events"
+        onlyLogAssigned = "&Log only assigned and activated events"
         
         class TaskBarMenu:
             Show = "Show EventGhost"
