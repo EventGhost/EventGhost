@@ -29,7 +29,7 @@ import eg
 class PluginInfo(eg.PluginInfo):
     name = "Microsoft MCE Remote"
     author = "Bitmonster"
-    version = "1.0.0"
+    version = "1.0." + "$LastChangedRevision$".split()[1]
     kind = "remote"
     description = (
         'Plugin for the Microsoft MCE remote.'
