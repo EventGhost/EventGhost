@@ -19,14 +19,19 @@
 ###
 ###
 ### changelog:
-### V0.7.0      - Added support for sending lirc events along with a
+### v0.7.1      - Added fixes/changes as suggested by BitMonster
+### 2007-12-16  - Moved all strings to the Text -class
+###             - Fixed some bugs in the Send(eg.ActionClass)'s
+###               configuration dialog
+### 
+### v0.7.0      - Added support for sending lirc events along with a
 ### 2007-12-16    nice little dialog configuration screen
 ###             - The plugin now tries to get information about
 ###               remotes/actions/buttons on startup by querying
 ###               the server with LIST commands
 ###             - Small changes to the plugin description
 ###
-### V0.6.0      - Removed the internal enduring-event generation
+### v0.6.0      - Removed the internal enduring-event generation
 ### 2007-07-??  - Added adjustable enduring event timeout value
 ###             - some other minor changes
 ###
@@ -37,7 +42,7 @@
 ###
 ###
 ###
-############### BEGIN CODE ###############
+##############################################################################
 
 
 
@@ -122,15 +127,27 @@ class Text:
     actaction = "Action"
     actrepeat = "Repeat"
     actstring = "Event String:"
-    acthelp = """
-You may use the fields in the Command selection to help form a string to send.
-Or simply just type in the string directly into the field below."""
+    acthelp = (
+       "You may use the fields in the Command selection to help form a string to send.\n"
+       "Or simply just type in the string directly into the field below."
+    )
+    acterrormsg = "Error sending event! Send buffer is missing!"
+    noremotesfound = "No remotes found! (bad lirc configuration?)"
+    disconnected = "Disconnected from the LIRC server!"
+    startupexception = (
+       "Could not connect to the LIRC server!\n"
+       "Please doublecheck your configuration and that the "
+       "LIRC server is reachable"
+    )
+
 ###
 ############################### END TEXT CLASS ###############################
 
 
 
+
 class Lirc_Reader(asyncore.dispatcher):
+    text = Text
 
     ### Initializing all the variables and open the tcp connection..
     ###
@@ -174,9 +191,8 @@ class Lirc_Reader(asyncore.dispatcher):
     ###
     def handle_close(self):
         self.handler.reader = None
-        print "Lirc: Closing the lirc-reader.."
         self.close()
-        eg.actionThread.Call(self.handler.HandleException, "Disconnected from the LIRC server!")
+        eg.actionThread.Call(self.handler.HandleException, self.text.disconnected)
 
 
     ### This will be run if theres a problem opening the connection
@@ -184,14 +200,7 @@ class Lirc_Reader(asyncore.dispatcher):
     def handle_expt(self):
         self.handler.reader = None
         self.close()
-        eg.actionThread.Call(
-            self.handler.HandleException,
-            (
-                "Could not connect to the LIRC server!\n"
-                "Please doublecheck your configuration and that the "
-                "LIRC server is reachable"
-            )            
-        )
+        eg.actionThread.Call(self.handler.HandleException, self.text.startupexception)
 
     ### This gets run whenever asyncore detects there is data waiting
     ### for us to be read at the socket, so this is where it's all at..
@@ -295,12 +304,13 @@ class Lirc_Reader(asyncore.dispatcher):
 ### The EventGhost classes and functions are over here..
 class Lirc(eg.RawReceiverPlugin):
     text = Text
-    
+
     def __init__(self):
+        eg.RawReceiverPlugin.__init__(self)
         self.AddAction(self.Send)
-        
-        
+
     def __start__(self, host, port, onlyfirst, addremote, addrepeat, ignoretime, timeout):
+        text = self.text
         self.port = port
         self.host = host
         self.onlyfirst = onlyfirst
@@ -322,7 +332,6 @@ class Lirc(eg.RawReceiverPlugin):
         # Send LIST commands to the server..
         # In order to get remote-names and buttons in response
         self.reader.sbuffer += "LIST\n"
-        print self.reader.sbuffer
         # Have to wait a bit and force asyncore to poll to check for a response
         time.sleep(0.05)
         asyncore.poll()
@@ -331,14 +340,13 @@ class Lirc(eg.RawReceiverPlugin):
         while len(self.Send.remotelist) == 0:
            time.sleep(0.1)
            if self.maxsleep > 40:
-              print "No remotes found! (bad lirc configuration?)"
+              print self.text.noremotesfound
               break
            self.maxsleep += 1
 
         if len(self.Send.remotelist) > 0:
            for self.remote in self.Send.remotelist:
               self.reader.sbuffer += "LIST " + self.remote + "\n"
-              print self.reader.sbuffer
            asyncore.poll()
 
     def __stop__(self):
@@ -428,7 +436,6 @@ class Lirc(eg.RawReceiverPlugin):
     class Send(eg.ActionClass):
 
 
-
 ########################## BEGIN ACTION DESCRIPTION ##########################
 ###
         name = "Send Event"
@@ -468,12 +475,11 @@ the LIRC documentation
 ########################### END ACTION DESCRIPTION ###########################
 
 
-
 # The workhorse method.. (how tiny)!
         def __call__(self, msg):
             try: self.plugin.reader.sbuffer
             except AttributeError:
-               raise self.Exception("Error sending event! Send buffer is missing!")
+               raise self.Exception(self.plugin.text.acterrormsg)
             else:
                self.plugin.reader.sbuffer = msg + "\n"
                asyncore.poll()
@@ -490,24 +496,24 @@ the LIRC documentation
             actionParam = "0"
             if len(remotes) == 0:
                remotes.append(["N/A", ['N/A']])
+               remotelist = ["N/A"]
+            else:
+               self.UpdateRemoteList()
+
 
             def OnCmdChoice(event):
                UpdateActionText()
-               event.Skip()
 
             def OnRemoteChoice(event):
                 actionCtrl.SetItems(remotes[remoteCtrl.GetSelection()][1])
                 actionCtrl.SetSelection(0)
                 UpdateActionText()
-                event.Skip()
 
             def OnActionChoice(event):
                 UpdateActionText()
-                event.Skip()
 
             def OnRepeatSpin(event):
                 UpdateActionText()
-                event.Skip()
 
             def UpdateActionText():
                 newstr = " ".join(
@@ -520,7 +526,23 @@ the LIRC documentation
                       newstr = newstr + " " + str(repeatCtrl.GetValue())
                 textCtrl.SetValue(newstr)
 
-            self.UpdateRemoteList()
+            def UpdateCtrl(string, list, control):
+                i = 0
+                for item in list:
+                   if string == item:
+                      control.SetSelection(i)
+                      return True
+                   else:
+                      i += 1
+                return False
+
+            def IsInt(str):
+               try:
+                  num = int(str)
+               except ValueError:
+                  return 0
+               return num
+
             panel = eg.ConfigPanel(self)
 
             cmdlist = ["SEND_ONCE","SEND_START","SEND_STOP"]
@@ -536,7 +558,7 @@ the LIRC documentation
             actionCtrl.SetSelection(0)
             actionText = wx.StaticText(panel, -1, text.actaction)
 
-            repeatCtrl = eg.SpinIntCtrl(panel, -1, actionParam, max=600)
+            repeatCtrl = wx.SpinCtrl(panel, -1, actionParam, max=600)
             repeatText = wx.StaticText(panel, -1, text.actrepeat)
 
             stringText = wx.StaticText(panel, -1, text.actstring)
@@ -570,8 +592,20 @@ the LIRC documentation
             actionCtrl.Bind(wx.EVT_CHOICE, OnActionChoice)
             repeatCtrl.Bind(wx.EVT_SPINCTRL, OnRepeatSpin)
 
+            def UpdateControls():
+                items = actionStr.split()
+                if len(items) >= 3:
+                   if UpdateCtrl(items[0], cmdlist, cmdCtrl):
+                      if UpdateCtrl(items[1], remotelist, remoteCtrl):
+                         actionCtrl.SetItems(remotes[remoteCtrl.GetSelection()][1])
+                         UpdateCtrl(items[2], remotes[remoteCtrl.GetSelection()][1], actionCtrl)
+                         if len(items) >= 4:
+                            repeat = IsInt(items[3])
+                            if 0 < repeat <= 600:
+                               repeatCtrl.SetValue(repeat)
+
+            UpdateControls()
+
             while panel.Affirmed():
                 panel.SetResult(textCtrl.GetValue())
-
-
 
