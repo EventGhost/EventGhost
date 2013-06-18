@@ -324,10 +324,10 @@ class MainFrame(wx.Frame):
             eg.config.buildNum == eg.buildNum 
             and config.perspective is not None
         ):
-            pass
-            #auiManager.LoadPerspective(config.perspective, False)
+            #pass
+            auiManager.LoadPerspective(config.perspective, False)
         auiManager.GetArtProvider().SetMetric(wx.aui.AUI_DOCKART_PANE_BORDER_SIZE, 0)
-
+        #auiManager.SetFlags(auiManager.GetFlags() ^ wx.aui.AUI_MGR_ALLOW_ACTIVE_PANE)
         #auiManager.GetPane("tree").Caption(" " + Text.Tree.caption)
         toolBar.Show(config.showToolbar)
         auiManager.Update()

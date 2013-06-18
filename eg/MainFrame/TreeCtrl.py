@@ -268,7 +268,6 @@ class TreeCtrl(wx.TreeCtrl):
         
         Bind = self.Bind
         Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
-        Bind(wx.EVT_RIGHT_UP, self.OnRightUp)
         Bind(wx.EVT_TREE_ITEM_EXPANDING, self.OnItemExpanding)
         Bind(wx.EVT_TREE_ITEM_COLLAPSING, self.OnItemCollapsing)
         Bind(wx.EVT_TREE_BEGIN_LABEL_EDIT, self.OnBeginLabelEdit)
@@ -279,6 +278,7 @@ class TreeCtrl(wx.TreeCtrl):
         Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnItemActivate)
         Bind(wx.EVT_TREE_BEGIN_DRAG, self.OnBeginDrag)
         Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
+        Bind(wx.EVT_TREE_ITEM_MENU, self.OnContextMenu)
         
         if eg.debugLevel:
             Bind(wx.EVT_TREE_ITEM_GETTOOLTIP, self.OnToolTip)
@@ -332,6 +332,7 @@ class TreeCtrl(wx.TreeCtrl):
         return wx.TreeCtrl.Destroy(self)
 
     
+    @eg.LogIt
     def OnRightDown(self, event):
         self.EndEditLabel(self.GetSelection(), False)
         # seems like newer wxPython doesn't select the item on right-click
@@ -342,12 +343,13 @@ class TreeCtrl(wx.TreeCtrl):
             self.SelectItem(id)
         
 
-    def OnRightUp(self, event):
+    @eg.LogIt
+    def OnContextMenu(self, event):
         self.SetFocus()
         self.frame.SetupEditMenu(self.frame.popupMenuItems)
-        self.PopupMenu(self.frame.popupMenu)
+        self.PopupMenu(self.frame.popupMenu, event.GetPoint())
 
-        
+    
     #@eg.LogIt
     def OnSelectionChanged(self, event):
         id = event.GetItem()

@@ -52,7 +52,7 @@ class MessageReceiver(ThreadWorker):
         classAtom = win32gui.RegisterClass(wc)
         self.hwnd = win32gui.CreateWindow(
             classAtom,
-            "HiddenMessageReceiver",
+            "EventGhost Message Receiver",
             win32con.WS_OVERLAPPED|win32con.WS_SYSMENU,
             0, 
             0,
