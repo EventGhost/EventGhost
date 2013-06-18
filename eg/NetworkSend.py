@@ -59,7 +59,7 @@ def NetworkSend(host, port, password, eventString, payload=None):
         token = cookie + ":" + password
 
         # Calculate the digest
-        digest = md5.new(token).hexdigest()
+        digest = md5(token).hexdigest()
 
         # add the enters
         digest = digest + "\n"

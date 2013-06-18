@@ -42,7 +42,7 @@ eg.RegisterPlugin(
 
 import asynchat
 import asyncore
-import md5
+from hashlib import md5
 import random
 import socket
 
@@ -162,11 +162,9 @@ class Server(asyncore.dispatcher):
     
     def __init__ (self, port, password, handler):
         self.handler = handler
-        m = md5.new()
         self.cookie = hex(random.randrange(65536))
         self.cookie = self.cookie[len(self.cookie) - 4:]
-        m.update(self.cookie + ":" + password)
-        self.hex_md5 = m.hexdigest().upper()
+        self.hex_md5 = md5(self.cookie + ":" + password).hexdigest().upper()
 
         # Call parent class constructor explicitly
         asyncore.dispatcher.__init__(self)

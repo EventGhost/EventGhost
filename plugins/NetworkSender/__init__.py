@@ -43,7 +43,7 @@ eg.RegisterPlugin(
 
 
 import socket
-import md5
+from hashlib import md5
 
 
 class Text:
@@ -136,7 +136,7 @@ class NetworkSender(eg.PluginClass):
             token = cookie + ":" + self.password
 
             # Calculate the digest
-            digest = md5.new(token).hexdigest()
+            digest = md5(token).hexdigest()
 
             # add the enters
             digest = digest + "\n"
