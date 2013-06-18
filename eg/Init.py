@@ -69,8 +69,8 @@ class EventGhost(object):
         eg.CallAfter = wx.CallAfter
         eg.APP_NAME = "EventGhost"
         eg.PLUGIN_DIR = os.path.abspath("plugins")
-        #eg.APPDATA = eg.folderPath.RoamingAppData
-        #eg.PROGRAMFILES = eg.folderPath.ProgramFiles
+        eg.APPDATA = eg.folderPath.RoamingAppData
+        eg.PROGRAMFILES = eg.folderPath.ProgramFiles
         eg.CONFIG_DIR = os.path.join(eg.folderPath.RoamingAppData, eg.APP_NAME)
         eg.CORE_PLUGINS = (
             "EventGhost",

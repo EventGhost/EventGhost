@@ -35,6 +35,7 @@ class PluginItem(ActionItem):
     xmlTag = "Plugin"
     icon = eg.Icons.PLUGIN_ICON
     isRenameable = False            
+    info = None
     
     def WriteToXML(self):
         attr, text, childs = TreeItem.WriteToXML(self)
@@ -76,7 +77,7 @@ class PluginItem(ActionItem):
             
     
     def SetAttributes(self, tree, id):
-        if self.info.lastException:
+        if self.info and self.info.lastException:
             tree.SetItemTextColour(id, eg.colour.pluginError)
     
     
