@@ -282,8 +282,9 @@ class ChangelogPanel(Panel2):
     
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
-        fd = open("CHANGELOG.TXT")
-        if not fd:
+        try:
+            fd = open("CHANGELOG.TXT")
+        except:
             return
         res = ["<TABLE>"]
         headerTemplate = (
@@ -329,7 +330,7 @@ class AboutDialog(eg.Dialog):
         notebook.AddPage(Panel3(notebook), Text.tabLicense)
         notebook.AddPage(Panel4(notebook), Text.tabSystemInfo)
         if eg.debugLevel:
-            notebook.AddPage(ChangeLogPanel(notebook), Text.tabChangelog)
+            notebook.AddPage(ChangelogPanel(notebook), Text.tabChangelog)
 
         okButton = wx.Button(self, wx.ID_OK, eg.text.General.ok)
         okButton.SetDefault()
