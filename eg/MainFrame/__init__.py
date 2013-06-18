@@ -225,7 +225,9 @@ class MainFrame(wx.Frame):
         # notice that we add a ascii zero byte at the end of the hotkey.
         # this way we prevent the normal accelerator to happen. We will later
         # catch the key ourself.
+        oldLogging = wx.Log.EnableLogging(False) # suppress warning
         menuItems.delete = AddItem("Delete", hotkey="Del\x00")
+        wx.Log.EnableLogging(oldLogging)
         AddItem()
         AddItem("Find", hotkey="Ctrl+F")
         AddItem("FindNext", hotkey="F3")

@@ -284,7 +284,7 @@ class Document(object):
     
     @eg.LogItWithReturn
     def ShowFrame(self):
-        if self.reentrantLock.acquire():
+        if self.reentrantLock.acquire(False):
             if self.frame is None:
                 from MainFrame import MainFrame
                 self.frame = MainFrame(self)

@@ -303,7 +303,7 @@ class FindWindow(eg.ActionClass):
         if type(winName) in (types.TupleType, types.ListType):
             class OldFindWindow:
                 exe_path = program
-                win_chain= winName
+                win_chain = winName
                 include_invisible = winClass
                 timeout = childName
                 def __call__(self):
@@ -439,17 +439,17 @@ class FindWindow(eg.ActionClass):
         # construction of the layout with sizers
         #-----------------------------------------
         
-        drag_sizer = wx.StaticBoxSizer(
+        dragSizer = wx.StaticBoxSizer(
             wx.StaticBox(dialog, -1, "Drag Finder"), 
             wx.VERTICAL
         )
-        drag_sizer.Add(finderTool, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.BOTTOM, 4)
-        drag_sizer.Add(cbHideOnDrag)
+        dragSizer.Add(finderTool, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.BOTTOM, 4)
+        dragSizer.Add(cbHideOnDrag)
 
-        top_sizer = wx.GridBagSizer(vgap=0, hgap=0)
-        top_sizer.AddGrowableCol(2, 100)
-        top_sizer.SetEmptyCellSize((0, 0))
-        Add = top_sizer.Add
+        topSizer = wx.GridBagSizer(vgap=0, hgap=0)
+        topSizer.AddGrowableCol(2, 100)
+        topSizer.SetEmptyCellSize((0, 0))
+        Add = topSizer.Add
         Add(force_front_cb, (0, 0), (1, 2), wx.ALIGN_CENTER_VERTICAL)
         Add(cbIncludeInvisible, (1, 0), (1, 2), wx.ALIGN_CENTER_VERTICAL)
         Add(
@@ -460,7 +460,7 @@ class FindWindow(eg.ActionClass):
             3
         )
         Add((10,1), (0, 2), (2, 1))
-        Add(drag_sizer, (0, 3), (3, 1), wx.ALIGN_TOP)
+        Add(dragSizer, (0, 3), (3, 1), wx.ALIGN_TOP)
         
         sizer1 = wx.GridBagSizer(vgap=4, hgap=4)
         sizer1.AddGrowableCol(2, 100)
@@ -471,30 +471,30 @@ class FindWindow(eg.ActionClass):
         
         self.options = options = []
         
-        def wrapper(tb, cb):
+        def Wrapper(textCtrl, checkBox):
             def OnCheckBox(event):
-                tb.Enable(cb.GetValue())
+                textCtrl.Enable(checkBox.GetValue())
             return OnCheckBox
         
-        def make_line(line, cb_text, value):
-            cb = wx.CheckBox(dialog, -1, cb_text)
-            sizer1.Add(cb, (line, 0), (1, 1), wx.ALIGN_CENTER_VERTICAL)
-            tb = wx.TextCtrl(dialog, -1, size=(20, -1))
+        def MakeLine(line, checkBoxText, value):
+            checkBox = wx.CheckBox(dialog, -1, checkBoxText)
+            sizer1.Add(checkBox, (line, 0), (1, 1), wx.ALIGN_CENTER_VERTICAL)
+            textCtrl = wx.TextCtrl(dialog, -1, size=(20, -1))
             if value is not None:
-                cb.SetValue(True)
-                tb.SetValue(value)
+                checkBox.SetValue(True)
+                textCtrl.SetValue(value)
             else:
-                tb.Enable(False)
-            sizer1.Add(tb, (line, 1), (1, 3), wx.EXPAND)
-            cb.Bind(wx.EVT_CHECKBOX, wrapper(tb, cb))
-            options.append((cb, tb))
+                textCtrl.Enable(False)
+            sizer1.Add(textCtrl, (line, 1), (1, 3), wx.EXPAND)
+            checkBox.Bind(wx.EVT_CHECKBOX, Wrapper(textCtrl, checkBox))
+            options.append((checkBox, textCtrl))
             line += 1
             
-        make_line(1, text.options[0], program)    
-        make_line(2, text.options[1], winName)    
-        make_line(3, text.options[2], winClass)    
-        make_line(4, text.options[3], childName)    
-        make_line(5, text.options[4], childClass)  
+        MakeLine(1, text.options[0], program)    
+        MakeLine(2, text.options[1], winName)    
+        MakeLine(3, text.options[2], winClass)    
+        MakeLine(4, text.options[3], childName)    
+        MakeLine(5, text.options[4], childClass)  
         line = 6
         numMatchCB = wx.CheckBox(dialog, -1, text.matchNum1)
         numMatchCB.SetValue(bool(matchNum))
@@ -507,7 +507,7 @@ class FindWindow(eg.ActionClass):
             (1, 3), 
             wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT
         )
-        numMatchCB.Bind(wx.EVT_CHECKBOX, wrapper(numMatchCtrl, numMatchCB))
+        numMatchCB.Bind(wx.EVT_CHECKBOX, Wrapper(numMatchCtrl, numMatchCB))
         options.append((numMatchCB, numMatchCtrl))
         line += 1
         
@@ -539,33 +539,32 @@ class FindWindow(eg.ActionClass):
         
         # group the main lines together
         Add = dialog.sizer.Add
-        Add(top_sizer, 0, wx.EXPAND)
+        Add(topSizer, 0, wx.EXPAND)
         Add((5,5))
         Add(sizer1, 1, wx.EXPAND)
 
         # the test button
         testButton = wx.Button(dialog, -1, text.testButton)
         def OnButton(event):
-            WindowMatcher(*get_result()).Test()
+            WindowMatcher(*GetResult()).Test()
         testButton.Bind(wx.EVT_BUTTON, OnButton)
         dialog.buttonRow.Add(testButton)
         
         @eg.LogIt
-        def get_result():
-            res_list = []
+        def GetResult():
+            resultList = []
             for cb, tb in options:
                 if not cb.IsChecked():
-                    res_list.append(None)
+                    resultList.append(None)
                 else:
-                    res_list.append(tb.GetValue())
-            res_list.append(tree.includeInvisible)
-            res_list.append(waitCtrl.GetValue())
+                    resultList.append(tb.GetValue())
+            resultList.append(tree.includeInvisible)
+            resultList.append(waitCtrl.GetValue())
             if stopMacroCtrl.IsChecked():
-                res_list.append(0)
+                resultList.append(0)
             else:
-                res_list.append(2)
-            #res_list.append(stopMacroCtrl.GetSelection())
-            return res_list
+                resultList.append(2)
+            return resultList
         
         hwnds = WindowMatcher(
             program, 
@@ -591,7 +590,7 @@ class FindWindow(eg.ActionClass):
             if force_front_cb.IsChecked():
                 return (None, None, None, None, None, None, None, None, None)
             else:
-                return get_result()
+                return GetResult()
     
 
     if eg.debugLevel:
@@ -622,19 +621,19 @@ class FindWindow(eg.ActionClass):
         self.lastHwnd = hwnd
         exe = basename(GetNameOfPID(pid))
         
-        def set_option(flag, option, value):                
-            cb, tb = option
-            cb.SetValue(flag)
-            tb.SetValue(value)
-            tb.Enable(flag)
+        def SetOption(flag, option, value):                
+            checkBox, textCtrl = option
+            checkBox.SetValue(flag)
+            textCtrl.SetValue(value)
+            textCtrl.Enable(flag)
         
         data = [0]
         def EnumChildProc(hwnd, data):
             if not tree.includeInvisible and not IsWindowVisible(hwnd):
                 return True
-            if GetClassName(hwnd) != search_class:
+            if GetClassName(hwnd) != targetWinClass:
                 return True
-            if GetWindowText(hwnd) != search_name:
+            if GetWindowText(hwnd) != targetWinName:
                 return True
             data[0] += 1
             return hwnd != search_hwnd
@@ -642,48 +641,48 @@ class FindWindow(eg.ActionClass):
         def EnumWindowsProc(hwnd, data):
             if not tree.includeInvisible and not IsWindowVisible(hwnd):
                 return True
-            if GetClassName(hwnd) != search_class:
+            if GetClassName(hwnd) != targetWinClass:
                 return True
-            if GetWindowText(hwnd) != search_name:
+            if GetWindowText(hwnd) != targetWinName:
                 return True
             if GetWindowThreadProcessId(hwnd)[1] != pid:
                 return True
             data[0] += 1
-            return hwnd != root_hwnd
+            return hwnd != rootHwnd
 
-        root_hwnd = None
+        rootHwnd = None
         options = self.options
-        set_option(bool(exe), options[0], exe)
+        SetOption(bool(exe), options[0], exe)
         if hwnd is not None:
-            root_hwnd = GetAncestor(hwnd, GA_ROOT)
-            search_name = GetWindowText(root_hwnd)
-            search_class = GetClassName(root_hwnd)
-            set_option(True, options[1], search_name)
-            set_option(True, options[2], search_class)
+            rootHwnd = GetAncestor(hwnd, GA_ROOT)
+            targetWinName = GetWindowText(rootHwnd)
+            targetWinClass = GetClassName(rootHwnd)
+            SetOption(True, options[1], targetWinName)
+            SetOption(True, options[2], targetWinClass)
         else:
-            set_option(False, options[1], "")
-            set_option(False, options[2], "")
-        if root_hwnd is not None and root_hwnd != hwnd:
-            search_name = GetWindowText(hwnd)
-            search_class = GetClassName(hwnd)
-            set_option(True, options[3], search_name)
-            set_option(True, options[4], search_class)
+            SetOption(False, options[1], "")
+            SetOption(False, options[2], "")
+        if rootHwnd is not None and rootHwnd != hwnd:
+            targetWinName = GetWindowText(hwnd)
+            targetWinClass = GetClassName(hwnd)
+            SetOption(True, options[3], targetWinName)
+            SetOption(True, options[4], targetWinClass)
             search_hwnd = hwnd
             try:
-                EnumChildWindows(root_hwnd, EnumChildProc, data)
+                EnumChildWindows(rootHwnd, EnumChildProc, data)
             except:
                 pass
         else:
-            set_option(False, options[3], "")
-            set_option(False, options[4], "")
-            if root_hwnd is not None:
+            SetOption(False, options[3], "")
+            SetOption(False, options[4], "")
+            if rootHwnd is not None:
                 try:
                     EnumWindows(EnumWindowsProc, data)
                 except:
                     pass
                     
         count = data[0]
-        set_option(count > 0, options[5], count or 1)
+        SetOption(count > 0, options[5], count or 1)
         
             
     @eg.LogIt
@@ -794,17 +793,17 @@ class WindowTree(wx.TreeCtrl):
         for pid in processes:
             if len(self.pids[pid]) == 0:
                 continue
-            icon_index = 0
+            iconIndex = 0
             for hwnd in self.pids[pid]:
                 icon = GetHwndIcon(hwnd)
                 if icon:
-                    icon_index = self.imageList.AddIcon(icon)
+                    iconIndex = self.imageList.AddIcon(icon)
                     break
             exe = os.path.basename(GetNameOfPID(pid))
             item = self.AppendItem(self.root, exe)
             self.SetItemHasChildren(item, True)
             self.SetPyData(item, pid)
-            self.SetItemImage(item, icon_index, which=wx.TreeItemIcon_Normal)
+            self.SetItemImage(item, iconIndex, which=wx.TreeItemIcon_Normal)
                  
                 
     def AppendToplevelWindows(self, pid, item):
@@ -833,8 +832,8 @@ class WindowTree(wx.TreeCtrl):
                 self.SetItemHasChildren(new_item, True)
             
             
-    def AppendChildWindows(self, parent_hwnd, item):
-        for hwnd in GetHwndChildren(parent_hwnd, self.includeInvisible):
+    def AppendChildWindows(self, parentHwnd, item):
+        for hwnd in GetHwndChildren(parentHwnd, self.includeInvisible):
             try:
                 name = GetWindowText(hwnd)
                 className = GetClassName(hwnd)
@@ -850,13 +849,13 @@ class WindowTree(wx.TreeCtrl):
                 self.SetItemImage(index, 2, which=wx.TreeItemIcon_Normal)
             elif className == "Button" or className == "TButton":
                 self.SetItemImage(index, 3, which=wx.TreeItemIcon_Normal)
-            elif GetClassName(parent_hwnd) == "MDIClient":
+            elif GetClassName(parentHwnd) == "MDIClient":
                 icon = GetHwndIcon(hwnd)
                 if icon:
-                    icon_index = self.imageList.AddIcon(icon)
+                    iconIndex = self.imageList.AddIcon(icon)
                     self.SetItemImage(
                         index, 
-                        icon_index, 
+                        iconIndex, 
                         which=wx.TreeItemIcon_Normal
                     )
                 
@@ -892,22 +891,22 @@ class WindowTree(wx.TreeCtrl):
                 return
 
         chain = [hwnd]
-        root_hwnd = GetAncestor(hwnd, GA_ROOT)
+        rootHwnd = GetAncestor(hwnd, GA_ROOT)
         tmp = hwnd
-        while tmp != root_hwnd:
+        while tmp != rootHwnd:
             tmp = GetAncestor(tmp, GA_PARENT)
             chain.append(tmp)
         
-        last_item = item
+        lastItem = item
         for child in chain[::-1]:
             self.Expand(item)
-            item, cookie = self.GetFirstChild(last_item)
+            item, cookie = self.GetFirstChild(lastItem)
             while self.GetPyData(item) != child:
-                item, cookie = self.GetNextChild(last_item, cookie)
+                item, cookie = self.GetNextChild(lastItem, cookie)
                 if not item.IsOk():
                     return
-            last_item = item
-        self.SelectItem(last_item)            
+            lastItem = item
+        self.SelectItem(lastItem)            
         
         
     if eg.debugLevel:
