@@ -87,16 +87,18 @@ class ActionItem(TreeItem):
         plugin = getattr(eg.plugins, pluginStr).plugin
         try:
             action = plugin.info.actions[actionStr]
-        except:
+        except KeyError:
             eg.PrintError("Can't find action: " + text)
             action = None
         if action is None or not issubclass(action, eg.ActionClass):
-            action = eg.plugins.EventGhost.PythonCommand
+            action = eg.plugins.EventGhost.plugin.info.actions["PythonCommand"]
             argString = repr(text)
         try:
             self.executable = action()
         except:
             eg.PrintTraceback(msg="Error in action: " + repr(text))
+            self.executable = eg.plugins.EventGhost.PythonCommand
+            argString = repr(text)
             
         self.icon = action.info.icon            
         self.SetArgumentString(argString)

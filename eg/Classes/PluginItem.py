@@ -48,7 +48,10 @@ class PluginItem(ActionItem):
     def __init__(self, parent, node):
         TreeItem.__init__(self, parent, node)
         if node.text:
-            args = pickle.loads(base64.b64decode(node.text))
+            try:
+                args = pickle.loads(base64.b64decode(node.text))
+            except AttributeError:
+                args = ()
         else:
             args = ()
         ident = node.attrib.get('identifier', None)
