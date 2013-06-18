@@ -100,11 +100,11 @@ class LoggerCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         
         class print_class:
             def write(self2, data):
-                wx.CallAfter(self.__OnWrite, data, 0)
+                wx.CallAfter(self._LoggerCtrl__OnWrite, data, 0)
         
         class print_err_class:
             def write(self2, data):
-                wx.CallAfter(self.__OnWrite, data, 1)
+                wx.CallAfter(self._LoggerCtrl__OnWrite, data, 1)
         
         if not eg._debug:
             sys.stdout = print_class()

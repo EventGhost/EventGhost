@@ -1,3 +1,7 @@
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
+
 import wx
 import sys
 from os.path import basename, dirname, abspath, join, exists
