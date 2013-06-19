@@ -26,6 +26,7 @@ eg.RegisterPlugin(
     author = "Jon Rhees",
     version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "remote",
+    canMultiLoad = True,
     description = (
         'Hardware plugin for the <a href="http://www.usbuirt.com/">'
         'USB-UIRT</a> transceiver.'
@@ -152,7 +153,7 @@ class USB_UIRT(eg.RawReceiverPlugin):
         ledRX=True, 
         ledTX=True, 
         legacyRX=False, 
-        repeatStopCodes=False
+        repeatStopCodes=False,
     ):
         self.args = (ledRX, ledTX, legacyRX, repeatStopCodes)
         self.codeFormat = UUIRTDRV_IRFMT_PRONTO
@@ -166,7 +167,11 @@ class USB_UIRT(eg.RawReceiverPlugin):
         if puDrvVersion.value != 0x0100:
             raise self.Exception("Invalid uuirtdrv version!")
 
-        hDrvHandle = dll.UUIRTOpen()
+        if self.info.evalName[-1].isdigit():
+            deviceStr = "USB-UIRT-%s" % self.info.evalName[-1]
+        else:
+            deviceStr = "USB-UIRT"
+        hDrvHandle = dll.UUIRTOpenEx(deviceStr, 0, 0, 0)
         if hDrvHandle == INVALID_HANDLE_VALUE:
             err = GetLastError()
             if err == UUIRTDRV_ERR_NO_DLL:
@@ -251,7 +256,7 @@ class USB_UIRT(eg.RawReceiverPlugin):
         ledRx=True, 
         ledTx=True, 
         legacyRx=None, 
-        repeatStopCodes=False
+        repeatStopCodes=False,
     ):
         text = self.text
         if self.dll:
@@ -332,7 +337,7 @@ class TransmitIR(eg.ActionClass):
             else:
                 codeFormat = UUIRTDRV_IRFMT_LEARN_FORCESTRUC
         else:
-            repeatCount = 1
+            repeatCount = 0
             codeFormat = UUIRTDRV_IRFMT_PRONTO
             code = ""
         if not self.plugin.dll.UUIRTTransmitIR(

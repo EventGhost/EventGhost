@@ -1,0 +1,16 @@
+; -----------------------------------------------------------------
+; EventGhost.def
+; Declares the module parameters for the plug-in DLL.
+;
+; -----------------------------------------------------------------
+
+LIBRARY      "EventGhost"
+
+EXPORTS	
+	WhatKeysDoYouWant PRIVATE
+	EnumerateProgrammableFunction PRIVATE
+	Configure PRIVATE	
+	AreYouInFocus PRIVATE	
+	HandleKey PRIVATE
+	UseWhenNotInFocus PRIVATE
+		
