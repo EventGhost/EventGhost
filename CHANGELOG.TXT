@@ -1,3 +1,11 @@
+Version 0.3.6.1353 (04/03/2008)
++ Spanish translation from karl.
++ First version of a CyberLink PowerDVD plugin.
++ Some Internet shortcuts to the project get added to the Startmenu folder.
++ Member eruji added some more actions to the SageTV plugin.
++ The ShowOSD action now has a new option "Use Skin". It will draw a skinned background to the OSD. Currently there is only one fixed skin, but I hope more will be added in the future. 
+
+Version 0.3.6.1285 (03/04/2008)
 + Sound Mixer Ex plugin from Dexter.
 + Marantz Serial plugin from Dexter.
 + X10 CM15A plugin from Dean Owens.
