@@ -1,3 +1,6 @@
+Version 0.3.6.1401 (05/16/2008)
++ Added the executables py.exe and pyw.exe to the installer. These are python interpreters, that use the EventGhost library files. You can use them to run your own Python code, without the need to install a Python distribution or to start EventGhost. The py.exe executable is a replacemant for the python.exe you would normally find in a Python distribution and pyw.exe accordingly for pythonw.exe (that runs code without a console, e.g. for scripts that have their own GUI). They don't support the command line options of a real python interpreter, but they are neverless handy for many tasks.
+
 Version 0.3.6.1397 (05/07/2008)
 * The "Show OSD" action now supports multiline text.
 

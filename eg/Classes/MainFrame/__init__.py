@@ -53,7 +53,6 @@ RESET_ICON = eg.Icons.PathIcon('images/error.png').GetBitmap()
 
 Text = eg.text.MainFrame
 
-
         
 class DefaultConfig:
     position = (50, 50)

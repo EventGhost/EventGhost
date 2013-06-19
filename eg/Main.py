@@ -24,6 +24,7 @@ import os
 import sys
 import locale
 import ctypes
+from os.path import join, dirname
 
 encoding = locale.getdefaultlocale()[1]
 locale.setlocale(locale.LC_ALL, '')
@@ -31,16 +32,16 @@ locale.setlocale(locale.LC_ALL, '')
 
 # get program directory
 if hasattr(sys, "frozen"):
-    mainDir = os.path.dirname(unicode(sys.executable, sys.getfilesystemencoding()))
+    mainDir = dirname(unicode(sys.executable, sys.getfilesystemencoding()))
 else:
-    mainDir = os.path.abspath(os.path.dirname(sys.argv[0]))
+    mainDir = os.path.abspath(dirname(sys.argv[0]))
 
 # change working directory to program directory
 os.chdir(mainDir)
 
 # append our pathes to sys.path
-sys.path.append(mainDir + "\\eg")
-sys.path.append(mainDir + "\\plugins")
+sys.path.append(join(mainDir, "eg"))
+sys.path.append(join(mainDir, "plugins"))
 
 # determine the commadline parameters
 class args:
@@ -80,7 +81,7 @@ while True:
         for root, dirs, files in os.walk(mainDir):
             for name in files:
                 if name.lower().endswith(".pyc"):
-                    os.remove(os.path.join(root, name))
+                    os.remove(join(root, name))
         sys.exit(0)
     elif arg == '-m' or arg == '-multiload':
         args.allowMultiLoad = True
