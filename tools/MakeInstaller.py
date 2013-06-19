@@ -11,11 +11,39 @@ import zipfile
 import subprocess
 import win32process
 import win32con
+import _winreg
+from ftplib import FTP
+from urlparse import urlparse
 
+
+SUBWCREV_PATH = r"\Programme\TortoiseSVN\bin\SubWCRev.exe"
 
 tmpDir = tempfile.mkdtemp()
 trunkDir = abspath(join(dirname(sys.argv[0]), ".."))
-outDir = abspath(join(trunkDir, "../.."))
+outDir = abspath(join(trunkDir, "..", ".."))
+
+SourcePattern = (
+    "*.py", 
+    "*.pyw", 
+    "*.pyd", 
+    "*.txt", 
+    "*.png", 
+    "*.jpg", 
+    "*.gif", 
+    "*.xml", 
+    "*.ico",
+)
+
+def GetSourceFiles():
+    sources = [
+        join(trunkDir, "EventGhost.pyw"),
+        join(trunkDir, "EventGhost.ico"),
+        join(trunkDir, "Example.xml"),
+        join(trunkDir, "LICENSE.TXT"),
+    ]
+    for directory in ("eg", "plugins", "languages", "images"):
+        sources += locate(SourcePattern, join(trunkDir, directory))
+    return sources
 
 
 def UpdateVersionFile(svnRevision):
@@ -32,30 +60,22 @@ def UpdateVersionFile(svnRevision):
     fd.close()        return data
     
     
-def locate(pattern, root=os.curdir):
+def locate(patterns, root=os.curdir):
     '''
-    Locate all files matching supplied filename pattern in and below
+    Locate all files matching supplied filename patterns in and below
     supplied root directory.
     '''
     for path, dirs, files in os.walk(root):
-        for filename in fnmatch.filter(files, pattern):
-            yield join(path, filename)
+        for pattern in patterns:
+            for filename in fnmatch.filter(files, pattern):
+                yield join(path, filename)
 
     
-def xcopy(srcdir, destdir, pattern):
-    if not exists(destdir):
-        os.makedirs(destdir)
-    for root, dirs, files in os.walk(srcdir):
-        destdir2 = join(destdir, root[len(srcdir) + 1:])
-        for dir in dirs:
-            if not exists(join(destdir2, dir)):
-                os.makedirs(join(destdir2, dir))
-        for file in files:
-            if fnmatch.fnmatch(file, pattern):
-                copy(join(root, file), join(destdir2, file))
-                
-                
-def removedir(path):
+def RemoveDirectory(path):
+    """
+    Remove a directory and all its contents.
+    DANGEROUS!
+    """
     for root, dirs, files in os.walk(path, topdown=False):
         for name in files:
             try:
@@ -99,34 +119,6 @@ def GetDir(theDir, extension=None):
 #            f.write(newdata)
 #            f.close()
 #
-#
-#
-#for pattern in ("*.py", "*.pyd", "*.png", "*.txt"):
-#    xcopy("eg", join(tmpDir, "source\\eg"), pattern)
-#for pattern in ("*.png", "*.ico", "*.gif"):
-#    xcopy("images", join(tmpDir, "source\\images"), pattern)
-#for pattern in ("*.py", "*.pyd", "*.png", "*.gif", "*.jpg"):
-#    xcopy("plugins", join(tmpDir, "source\\plugins"), pattern)
-#    
-#
-#xcopy("Languages", join(tmpSourceDir, "languages"), "*.py")
-#
-#for dir in os.listdir(join(tmpSourceDir, "plugins")):
-#    if dir[:1] == "_":
-#        removedir(join(tmpSourceDir, "plugins", dir))
-#
-#copy("EventGhost.pyw", tmpSourceDir)
-#copy("EventGhost.ico", tmpSourceDir)
-#copy("LICENSE.TXT", tmpSourceDir)
-#copy("Example.xml", tmpSourceDir)
-
-def MakeSourceArchive(filepath):
-    archive = zipfile.ZipFile(filepath, "w", zipfile.ZIP_DEFLATED)
-    for root, dirs, files in os.walk(tmpSourceDir):
-        destdir = root[len(tmpSourceDir) + 1:]
-        for file in files:
-            archive.write(join(destdir, file))
-    archive.close()
 
 
 # The manifest will be inserted as resource into the exe.  This
@@ -161,7 +153,6 @@ RT_MANIFEST = 24
 shortpgm = "EventGhost"
 
 
-
 py2exeOptions = dict(
     options = dict(
         build = dict(
@@ -193,7 +184,12 @@ py2exeOptions = dict(
                 "PIL.ImageTk", 
                 "FixTk",
             ],
-            dll_excludes = ["DINPUT8.dll", "w9xpopen.exe", "gdiplus.dll", "msvcr71.dll"],
+            dll_excludes = [
+                "DINPUT8.dll", 
+                "w9xpopen.exe", 
+                "gdiplus.dll", 
+                "msvcr71.dll"
+            ],
             dist_dir = join(tmpDir, "dist"),
         )
     ),
@@ -204,19 +200,19 @@ py2exeOptions = dict(
         dict(
             script = join(trunkDir, "EventGhost.pyw"),
             icon_resources = [(1, join(trunkDir, "EventGhost.ico"))],
-            other_resources = [(RT_MANIFEST, 1, manifest_template % dict(prog=shortpgm))],
+            other_resources = [
+                (RT_MANIFEST, 1, manifest_template % dict(prog=shortpgm))
+            ],
             dest_base = shortpgm
         )
     ],
     # use out build_installer class as extended py2exe build command
     #cmdclass = {"py2exe": py2exe.run},
+    verbose = 0,
 )
 
 
 inno_script = """
-; WARNING: This script has been created by py2exe. Changes to this script
-; will be overwritten the next time py2exe is run!
-
 [Tasks]
 Name: "desktopicon"; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:AdditionalIcons}
 
@@ -361,19 +357,17 @@ def InstallPy2exePatch():
         pass
 
 
-def GetInnoCompilePath(filename):
+def CompileInnoScript(innoScriptPath):
     """
-    Return command line to compile the Inno Script File 'filename'
+    Return command line to compile the Inno Script File
     """
-    return 'C:\\Programme\\Inno Setup 5\\ISCC.exe "%s"' % filename
-    import _winreg
     key = _winreg.OpenKey(
-        _winreg.HKEY_CLASSES_ROOT, 
-        "InnoSetupScriptFile\\shell\\Compile"
+        _winreg.HKEY_LOCAL_MACHINE, 
+        r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Inno Setup 5_is1"
     )
-    value = _winreg.QueryValue(key, "command")
+    installPath, _ = _winreg.QueryValueEx(key, "InstallLocation")
     _winreg.CloseKey(key)
-    return value.replace("%1", filename)
+    Execute(join(installPath, "ISCC.exe"), innoScriptPath)
     
     
 def GetSvnVersion():
@@ -391,10 +385,8 @@ def GetSvnVersion():
     fd.close()
     fd, resultPath = tempfile.mkstemp(text=True)
     os.close(fd)
-    SUBWCREV_PATH = r"\programme\tortoisesvn\bin\subwcrev.exe"
     repository = abspath(sys.argv[0])
-    commandline = '"%s" "%s" "%s" "%s"' % (SUBWCREV_PATH, repository, templatePath, resultPath)
-    ExecuteAndWait(commandline, invisible=True)
+    Execute(SUBWCREV_PATH, repository, templatePath, resultPath)
     data = {}
     execfile(resultPath, {}, data)
     os.remove(templatePath)
@@ -402,38 +394,30 @@ def GetSvnVersion():
     return data['Revision']
     
 
-def ExecuteAndWait(commandLine, workingDir=None, invisible=False):
-    import win32event
-    import win32con
-    import win32process
-
-    si = win32process.STARTUPINFO()
-    si.dwFlags = win32con.STARTF_USESHOWWINDOW
-    if invisible:
-        si.wShowWindow = win32con.SW_HIDE 
-    else:
-        si.wShowWindow = win32con.SW_SHOWNORMAL
-    hProcess, _, _, _ = win32process.CreateProcess(
-        None,         # AppName
-        commandLine,  # Command line
-        None,         # Process Security
-        None,         # ThreadSecurity
-        0,            # Inherit Handles?
-        win32con.NORMAL_PRIORITY_CLASS|win32con.CREATE_NEW_CONSOLE,
-        None,         # New environment
-        workingDir,   # Current directory
-        si            # startup info.
+def Execute(*args):
+    si = subprocess.STARTUPINFO()
+    si.dwFlags = subprocess.STARTF_USESHOWWINDOW
+    si.wShowWindow = subprocess.SW_HIDE 
+    subprocess.call(
+        args, 
+        stdout=sys.stdout.fileno(),
+        startupinfo=si
     )
-    win32event.WaitForSingleObject(hProcess, win32event.INFINITE)
 
+
+def MakeSourceArchive(sourcePath, filepath):
+    archive = zipfile.ZipFile(filepath, "w", zipfile.ZIP_DEFLATED)
+    headerLength = len(sourcePath)
+    for filename in GetSourceFiles():
+        arcname = filename[headerLength + 1:]
+        archive.write(filename, arcname)
+    archive.close()
 
 
 def MakeInstaller(isUpdate):
     from distutils.core import setup
     import py2exe
 
-    os.chdir(tmpDir)
-    
     templateOptions = UpdateVersionFile(GetSvnVersion())
     VersionStr = templateOptions['version'] + '_build_' + str(templateOptions['buildNum'])
     templateOptions['VersionStr'] = VersionStr
@@ -442,15 +426,21 @@ def MakeInstaller(isUpdate):
     templateOptions["TRUNK"] = trunkDir
     templateOptions["DIST"] = join(tmpDir, "dist")
 
+    print "Creating source ZIP file"
+    MakeSourceArchive(
+        trunkDir, 
+        join(outDir, "EventGhost_%s_Source.zip" % VersionStr)
+    )
+        
     InstallPy2exePatch()
     setup(**py2exeOptions)
     
     if isUpdate:
-        innoScriptPath = abspath("Update.iss")
+        innoScriptPath = abspath(join(tmpDir, "Update.iss"))
         template = inno_update
         outFileBase = "EventGhost_%s_Update" % VersionStr
     else:
-        innoScriptPath = abspath("Setup.iss")
+        innoScriptPath = abspath(join(tmpDir, "Setup.iss"))
         template = inno_script
         outFileBase = "EventGhost_%s_Setup" % VersionStr
         
@@ -460,29 +450,15 @@ def MakeInstaller(isUpdate):
     fd.write(template % templateOptions)
     fd.close()
     
-    print innoScriptPath
-    si = subprocess.STARTUPINFO()
-    si.dwFlags = subprocess.STARTF_USESHOWWINDOW
-    si.wShowWindow = subprocess.SW_HIDE 
-    subprocess.call(
-        ['/Programme/Inno Setup 5/ISCC.exe', innoScriptPath], 
-        stdout=sys.stdout.fileno(),
-        startupinfo=si
-    )
-    #os.spawnl(os.P_WAIT, '/Programme/Inno Setup 5/ISCC.exe', innoScriptPath"')
-    #ExecuteAndWait(GetInnoCompilePath(innoScriptPath))
-    print "Building Installer done!"
-    os.chdir(trunkDir)
-    removedir(tmpDir)
+    print "Calling Inno Setup Compiler"
+    CompileInnoScript(innoScriptPath)
+    print "Building installer done!"
+    RemoveDirectory(tmpDir)
     return join(outDir, outFileBase + ".exe")
 
 
 def UploadFile(filename, url):
-    from ftplib import FTP
-    from urlparse import urlparse
-    urlComponents = urlparse(url)
     
-
     class progress:
         def __init__(self, filepath):
             self.size = os.path.getsize(filepath)
@@ -510,6 +486,7 @@ def UploadFile(filename, url):
         def close(self):
             self.fd.close()
 
+    urlComponents = urlparse(url)
     fd = progress(filename)
     ftp = FTP(
         urlComponents.hostname, 
@@ -517,13 +494,23 @@ def UploadFile(filename, url):
         urlComponents.password
     )
     ftp.cwd(urlComponents.path)
-    ftp.storbinary("STOR " + basename(filename), fd)
+    try:
+        fileList = ftp.nlst()
+    except:
+        fileList = []
+    for i in range(0, 999999):
+        tempFileName = "tmp%06d" % i
+        if tempFileName not in fileList:
+            break
+    ftp.storbinary("STOR " + tempFileName, fd)
+    ftp.rename(tempFileName, basename(filename))
+    ftp.quit()
     fd.close()
     print "Upload done!"
     fd.dialog.Destroy()
     
-    
-    
+
+
 class MainDialog(wx.Dialog):
     
     def __init__(self, url=""):
@@ -572,7 +559,8 @@ class MainDialog(wx.Dialog):
         
     def OnCancel(self, event):
         app.ExitMainLoop()
-        
+     
+
 app = wx.App(0)
 app.SetExitOnFrameDelete(False)
 if len(sys.argv) == 1:
