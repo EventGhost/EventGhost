@@ -28,7 +28,6 @@ from os.path import join, dirname, basename, splitext
 ENCODING = locale.getdefaultlocale()[1]
 locale.setlocale(locale.LC_ALL, '')
 
-
 # get program directory
 if hasattr(sys, "frozen"):
     MAIN_DIR = dirname(unicode(sys.executable, sys.getfilesystemencoding()))

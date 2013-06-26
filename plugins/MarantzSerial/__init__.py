@@ -1,7 +1,7 @@
 eg.RegisterPlugin(
     name = "Marantz AV Receiver",
     author = "Dexter",
-    version = "1.0." + "$LastChangedRevision: 302 $".split()[1],
+    version = "1.0." + "$LastChangedRevision$".split()[1],
     kind = "external",
     url = "http://www.eventghost.org/forum/viewtopic.php?t=747",
     description = ('This plugin allows you to control your <a href="http://www.marantz.com">Marantz</a> \

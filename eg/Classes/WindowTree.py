@@ -1,24 +1,24 @@
 # This file is part of EventGhost.
 # Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
+#
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # EventGhost is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-# $LastChangedDate: 2007-12-12 21:48:49 +0100 (Mi, 12 Dez 2007) $
-# $LastChangedRevision: 314 $
-# $LastChangedBy: bitmonster $
+# $LastChangedDate$
+# $LastChangedRevision$
+# $LastChangedBy$
 
 import eg
 import wx
@@ -26,38 +26,38 @@ from time import sleep
 
 from eg.Icons import GetInternalBitmap
 from eg.WinApi import (
-    GetTopLevelWindowList, 
-    GetWindowText, 
+    GetTopLevelWindowList,
+    GetWindowText,
     GetClassName,
     GetWindowThreadProcessId,
-    GetProcessName, 
+    GetProcessName,
     EnumProcesses,
 )
 from eg.WinApi.Dynamic import (
-    GetAncestor, 
-    GA_ROOT, 
+    GetAncestor,
+    GA_ROOT,
     GA_PARENT,
 )
 from eg.WinApi.Utils import (
-    GetHwndIcon, 
-    GetHwndChildren, 
+    GetHwndIcon,
+    GetHwndChildren,
     HwndHasChildren,
     HighlightWindow,
 )
 
 
 class WindowTree(wx.TreeCtrl):
-    
+
     def __init__(self, parent, includeInvisible=False):
         self.includeInvisible = includeInvisible
         self.pids = {}
         wx.TreeCtrl.__init__(
-            self, 
-            parent, 
-            -1, 
+            self,
+            parent,
+            -1,
             style=wx.TR_DEFAULT_STYLE
                 |wx.TR_HIDE_ROOT
-                |wx.TR_FULL_ROW_HIGHLIGHT, 
+                |wx.TR_FULL_ROW_HIGHLIGHT,
             size=(-1, 150)
         )
         self.imageList = imageList = wx.ImageList(16, 16)
@@ -67,7 +67,7 @@ class WindowTree(wx.TreeCtrl):
         imageList.Add(GetInternalBitmap("cbutton"))
         self.SetImageList(imageList)
         self.root = self.AddRoot("")
-        
+
         # tree context menu
         def OnCmdHighlight(dummyEvent=None):
             hwnd = self.GetPyData(self.GetSelection())
@@ -79,29 +79,29 @@ class WindowTree(wx.TreeCtrl):
         menu.Append(menuId, "Highlight")
         self.Bind(wx.EVT_MENU, OnCmdHighlight, id=menuId)
         self.contextMenu = menu
-        
+
         self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.OnItemRightClick)
         self.Bind(wx.EVT_TREE_ITEM_EXPANDING, self.OnItemExpanding)
         self.Bind(wx.EVT_TREE_ITEM_COLLAPSED, self.OnItemCollapsed)
         self.AppendPrograms()
-        
-        
+
+
     def OnItemRightClick(self, dummyEvent):
         """
         Handles wx.EVT_TREE_ITEM_RIGHT_CLICK events.
         """
         self.PopupMenu(self.contextMenu)
-        
-    
+
+
     def OnItemExpanding(self, event):
         """
         Handles wx.EVT_TREE_ITEM_EXPANDING events.
         """
         item = event.GetItem()
-        if self.IsExpanded(item):  
+        if self.IsExpanded(item):
             # This event can happen twice in the self.Expand call
             return
-            
+
         res = self.GetItemParent(item)
         if res == self.root:
             pid = self.GetPyData(item)
@@ -118,16 +118,16 @@ class WindowTree(wx.TreeCtrl):
         # We need to remove all children here, otherwise we'll see all
         # that old rubbish again after the next expansion.
         self.DeleteChildren(event.GetItem())
-        
-        
+
+
     def AppendPrograms(self):
         self.pids.clear()
         processes = EnumProcesses()    # get PID list
         for pid in processes:
             self.pids[pid] = []
-            
+
         hwnds = GetTopLevelWindowList(self.includeInvisible)
-        
+
         for hwnd in hwnds:
             pid = GetWindowThreadProcessId(hwnd)[1]
             if pid == eg.processId:
@@ -148,8 +148,8 @@ class WindowTree(wx.TreeCtrl):
             self.SetItemHasChildren(item, True)
             self.SetPyData(item, pid)
             self.SetItemImage(item, iconIndex, which=wx.TreeItemIcon_Normal)
-                 
-                
+
+
     def AppendToplevelWindows(self, pid, item):
         hwnds = self.pids[pid]
         for hwnd in hwnds:
@@ -168,14 +168,14 @@ class WindowTree(wx.TreeCtrl):
             self.SetPyData(newItem, hwnd)
             self.SetItemText(newItem, name + className)
             self.SetItemImage(
-                newItem, 
-                iconIndex, 
+                newItem,
+                iconIndex,
                 which=wx.TreeItemIcon_Normal
             )
             if HwndHasChildren(hwnd, self.includeInvisible):
                 self.SetItemHasChildren(newItem, True)
-            
-            
+
+
     def AppendChildWindows(self, parentHwnd, item):
         for hwnd in GetHwndChildren(parentHwnd, self.includeInvisible):
             name = GetWindowText(hwnd)
@@ -195,30 +195,30 @@ class WindowTree(wx.TreeCtrl):
                 if icon:
                     iconIndex = self.imageList.AddIcon(icon)
                     self.SetItemImage(
-                        index, 
-                        iconIndex, 
+                        index,
+                        iconIndex,
                         which=wx.TreeItemIcon_Normal
                     )
-                
+
             if HwndHasChildren(hwnd, self.includeInvisible):
                 self.SetItemHasChildren(index, True)
-                
-                
+
+
     @eg.LogIt
     def Refresh(self):
         self.Freeze()
         self.DeleteChildren(self.root)
         self.AppendPrograms()
         self.Thaw()
-                          
-                        
+
+
     @eg.LogIt
     def Destroy(self):
         self.Unselect()
         self.imageList.Destroy()
         return wx.TreeCtrl.Destroy(self)
-    
-    
+
+
     @eg.LogIt
     def SelectHwnd(self, hwnd):
         if hwnd is None:
@@ -237,7 +237,7 @@ class WindowTree(wx.TreeCtrl):
         while tmp != rootHwnd:
             tmp = GetAncestor(tmp, GA_PARENT)
             chain.append(tmp)
-        
+
         lastItem = item
         for child in chain[::-1]:
             self.Expand(item)
@@ -247,12 +247,11 @@ class WindowTree(wx.TreeCtrl):
                 if not item.IsOk():
                     return
             lastItem = item
-        self.SelectItem(lastItem)            
-        
-        
+        self.SelectItem(lastItem)
+
+
     if eg.debugLevel:
         @eg.LogIt
         def __del__(self):
             pass
-        
-        
+
