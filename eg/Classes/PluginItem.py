@@ -39,8 +39,12 @@ class PluginItem(ActionItem):
     def GetData(self):
         attr, text = TreeItem.GetData(self)
         del attr[0]
-        attr.append(('File', self.pluginFile))
         attr.append(('Identifier', self.executable.info.evalName))
+        guid = self.executable.info.guid
+        if guid:
+            #attr.append(('File', self.pluginName))
+            attr.append(('Guid', guid))
+        attr.append(('File', self.pluginName))            
         text = base64.b64encode(pickle.dumps(self.info.args, 2))
         return attr, text
 
@@ -54,10 +58,16 @@ class PluginItem(ActionItem):
                 args = ()
         else:
             args = ()
-        ident = node.attrib.get('identifier', None)
-        pluginStr = node.attrib['file']
-        self.pluginFile = pluginStr
-        self.info = info = eg.PluginInfo.Open(pluginStr, ident, args, self)
+        evalName = node.attrib.get('identifier', None)
+        guid = node.attrib.get('guid', None)
+        self.pluginName = node.attrib.get('file', None)
+        self.info = info = eg.pluginManager.OpenPlugin(
+            self.pluginName, 
+            evalName, 
+            args, 
+            self, 
+            guid
+        )
         self.name = eg.text.General.pluginLabel % info.label
         if info.icon != self.icon:
             self.icon = eg.Icons.PluginSubIcon(info.icon)
@@ -176,13 +186,13 @@ class PluginItem(ActionItem):
             eg.text.General.pluginLabel % plugin.name,
             plugin.description,
             plugin.info.icon.GetWxIcon(),
-            basePath=plugin.info.GetPath()
+            basePath=plugin.info.path
         )
         def OnClose(dummyEvent):
             self.helpDialog.Destroy()
             del self.helpDialog
         self.helpDialog.Bind(wx.EVT_CLOSE, OnClose)
-        self.helpDialog.okButton.Bind(wx.EVT_BUTTON, OnClose)
+        self.helpDialog.buttonRow.okButton.Bind(wx.EVT_BUTTON, OnClose)
         self.helpDialog.Show()
 
 

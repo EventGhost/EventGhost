@@ -1,5 +1,5 @@
 # This file is part of EventGhost.
-# Copyright (C) 2005 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
 # EventGhost is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,11 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with EventGhost; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
-# $LastChangedDate$
-# $LastChangedRevision$
-# $LastChangedBy$
 
 import eg
 import wx
@@ -57,7 +52,8 @@ class AddPluginDialog(eg.TaskletDialog):
     instance = None
 
     @eg.LogItWithReturn
-    def Configure(self, parent):
+    def Configure(self, parent, checkMultiLoad=True):
+        self.checkMultiLoad = checkMultiLoad
         if self.__class__.instance:
             self.__class__.instance.Raise()
             return
@@ -117,7 +113,7 @@ class AddPluginDialog(eg.TaskletDialog):
 
             treeId = treeCtrl.AppendItem(typeIds[info.kind], info.name, idx)
             treeCtrl.SetPyData(treeId, info)
-            if info.GetPath() == Config.lastSelection:
+            if info.path == Config.lastSelection:
                 itemToSelect = treeId
 
 
@@ -214,7 +210,7 @@ class AddPluginDialog(eg.TaskletDialog):
         else:
             name = info.name
             description = info.description
-            self.descrBox.SetBasePath(info.GetPath())
+            self.descrBox.SetBasePath(info.path)
             self.authorLabel.SetLabel(Text.author)
             self.authorText.SetLabel(info.author.replace("&", "&&"))
             self.versionLabel.SetLabel(Text.version)
@@ -225,13 +221,14 @@ class AddPluginDialog(eg.TaskletDialog):
 
 
     def CheckMultiload(self):
+        if not self.checkMultiLoad:
+            return True
         info = self.resultData
-        if (
-            info
-            and info.pluginCls
-            and not info.canMultiLoad
-            and info.instances
-        ):
+        if not info:
+            return True
+        if info.canMultiLoad:
+            return True
+        if any((plugin.info.path == info.path) for plugin in eg.pluginList):
             eg.MessageBox(
                 Text.noMultiload,
                 Text.noMultiloadTitle,

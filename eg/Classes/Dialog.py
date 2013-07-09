@@ -30,3 +30,8 @@ class Dialog(wx.Dialog, eg.ControlProviderMixin):
         wx.Dialog.__init__(self, *args, **kwargs)
         eg.Notify("DialogCreate", self)
 
+
+    @eg.LogIt
+    def Destroy(self):
+        eg.Notify("DialogDestroy", self)
+        wx.Dialog.Destroy(self)

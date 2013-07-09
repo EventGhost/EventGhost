@@ -49,7 +49,7 @@ class ActionGroup(object):
             self.icon = plugin.info.icon
         else:
             self.icon = eg.Icons.PathIcon(
-                join(plugin.info.GetPath(), iconFile + ".png")
+                join(plugin.info.path, iconFile + ".png")
             )
         self.items = []
 
@@ -101,7 +101,7 @@ class ActionGroup(object):
         icon = pluginInfo.icon
         if actionCls.iconFile:
             try:
-                path = join(pluginInfo.GetPath(), actionCls.iconFile + ".png")
+                path = join(pluginInfo.path, actionCls.iconFile + ".png")
                 icon = eg.Icons.PathIcon(path)
             except:
                 eg.PrintError(

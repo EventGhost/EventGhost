@@ -22,7 +22,7 @@
 
 
 class Version:
-    base = "0.3.7"
+    base = "0.3.8"
     try:
         from VersionRevision import revision, buildTime
         string = base + ".r%s" % revision

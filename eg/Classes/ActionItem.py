@@ -210,13 +210,13 @@ class ActionItem(TreeItem):
             action.name,
             action.description,
             action.info.icon.GetWxIcon(),
-            action.plugin.info.GetPath()
+            action.plugin.info.path
         )
         def OnClose(dummyEvent):
             self.helpDialog.Destroy()
             del self.helpDialog
         self.helpDialog.Bind(wx.EVT_CLOSE, OnClose)
-        self.helpDialog.okButton.Bind(wx.EVT_BUTTON, OnClose)
+        self.helpDialog.buttonRow.okButton.Bind(wx.EVT_BUTTON, OnClose)
         self.helpDialog.Show()
 
 

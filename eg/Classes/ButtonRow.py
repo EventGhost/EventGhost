@@ -28,7 +28,7 @@ STANDARD_IDS = (wx.ID_OK, wx.ID_CANCEL, wx.ID_APPLY, wx.ID_HELP)
 
 class ButtonRow(object):
 
-    def __init__(self, parent, buttonIds, resizeGrip=False):
+    def __init__(self, parent, buttonIds, resizeGrip=False, center=False):
         self.parent = parent
         self.numSpecialCtrls = 0
         buttonSizer = wx.StdDialogButtonSizer()
@@ -75,13 +75,24 @@ class ButtonRow(object):
         self.sizer = sizer = wx.BoxSizer(wx.HORIZONTAL)
         if resizeGrip:
             self.sizeGrip = eg.SizeGrip(parent)
-            sizer.Add(self.sizeGrip.GetSize(), 1)
-            sizer.Add(buttonSizer, 0, wx.TOP|wx.BOTTOM, 6)
+            if center:
+                sizer.Add(self.sizeGrip.GetSize(), 0, wx.EXPAND)
+                sizer.Add((1, 1), 1, wx.EXPAND)
+                sizer.Add(buttonSizer, 0, wx.TOP|wx.BOTTOM, 6)
+                sizer.Add((1, 1), 1, wx.EXPAND)
+            else:
+                sizer.Add(self.sizeGrip.GetSize(), 1, wx.EXPAND)
+                sizer.Add(buttonSizer, 0, wx.TOP|wx.BOTTOM, 6)                
             sizer.Add(self.sizeGrip, 0, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT)
         else:
-            sizer.Add((3, 3), 1)
-            sizer.Add(buttonSizer, 0, wx.TOP|wx.BOTTOM, 6)
-            sizer.Add((2, 2), 0)
+            if center:
+                sizer.Add((3, 3), 1, wx.EXPAND)
+                sizer.Add(buttonSizer, 0, wx.TOP|wx.BOTTOM, 6)
+                sizer.Add((3, 3), 1, wx.EXPAND)
+            else:
+                sizer.Add((3, 3), 1)
+                sizer.Add(buttonSizer, 0, wx.TOP|wx.BOTTOM, 6)
+                sizer.Add((3, 3), 0)
 
 
     def Add(

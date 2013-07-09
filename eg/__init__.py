@@ -66,6 +66,8 @@ class LazyModule(ModuleType):
             return
         if Cli.args.translate:
             eg.LanguageEditor()
+        elif Cli.args.pluginFile:
+            eg.PluginInstall.Import(Cli.args.pluginFile)
         else:
             eg.Init.InitGui()
         eg.Tasklet(eg.app.MainLoop)().run()

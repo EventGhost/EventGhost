@@ -100,8 +100,12 @@ class IconBase(object):
         cls.cache[key] = self
         self.key = key
         return self
+    
 
-
+    def __getnewargs__(self):
+        return (self.key,)
+    
+    
     def _GetPil(self):
         """
         Return a PIL image of the icon.

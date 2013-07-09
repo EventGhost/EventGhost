@@ -434,6 +434,9 @@ class MainFrame(wx.Frame):
             Append("CollectGarbage")
             Append("Reset", "\tPause")
             Append("AddEventDialog")
+            menu.AppendSeparator()
+            Append("ExportPlugin")
+            
 
         self.SetMenuBar(menuBar)
         return menuBar
@@ -1057,4 +1060,8 @@ class MainFrame(wx.Frame):
             return
         label = result[0]
         eg.UndoHandler.NewEvent().Do(self.document, label)
+
+    
+    def OnCmdExportPlugin(self):
+        eg.PluginInstall.Export()
 
