@@ -43,7 +43,7 @@ TEMPLATE = u"""
     <tr>
         <td><b>Support:</b>&nbsp;</td>
         <td>
-            <a href="http://www.eventghost.org/forum/viewforum.php?f=9">
+            <a href="http://www.eventghost.net/forum/viewforum.php?f=9">
                 Forum Thread
             </a>
         </td>

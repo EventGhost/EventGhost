@@ -59,7 +59,7 @@ eg.RegisterPlugin(
  be triggered at any time of the day or night. Events can be scheduled to be
  triggered periodically, once only, daily, weekly, monthly or yearly.''',
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=2740",
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=2740",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAADAFBMVEUA//+tra1+fn5q"
         "ampnZ2ePj49mZmYuLi4ICAgAAAAvLy+lpaVPT08PDw8QEBCGhoYmJiYAAgACHAEIPgMO"

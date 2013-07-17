@@ -37,7 +37,7 @@ eg.RegisterPlugin(
 	'For v1.0 you need I <a href="http://foosion.foobar2000.org/components/?id=runcmd">foosion\'s Run Command (foo_runcmd) plugin</a>.'
     ),
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=695",
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=695",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAC0UlEQVR42m1TO0hjURA9"
         "1/8nH+OPJdoYRIWgLgZhwUJsLFZUkG0iYiGCgnZpJKRQUDfEVhAsDWIRFSzURtlO0YiC"

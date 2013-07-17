@@ -7,7 +7,7 @@ eg.RegisterPlugin(
         "your soundcard.\n\n<p>"
         "Doesn't work under Windows Vista currently.</p>"
     ),
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=748",
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=748",
     kind = "other",
     guid = "{B619678F-0C6F-425E-9240-3ADA82360DD2}",
 )

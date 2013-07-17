@@ -18,7 +18,7 @@ eg.RegisterPlugin(
     kind = "other",
     canMultiLoad = False,
     description = __doc__,
-    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1945",
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=1945",
     guid = '{017848B7-CC6D-45A8-989A-752A5CB1A8C9}'
 )
 

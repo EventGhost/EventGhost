@@ -34,7 +34,7 @@ eg.RegisterPlugin(
         'mode!</p>'
     ),
     createMacrosOnAdd = True,    
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=537",
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=537",
     icon = (
         "R0lGODlhEAAQAPcAAAQCBMz+tPz+/AAAABkEFSEAAAAAAAAAAGECDR4AAAAAAAAAAAAADQ"
         "AAABUAAAAAAA0AyAAAHgAAEAAAagAAXQIABAAAhQAAAwAAFwMAAAAAAAAAAIgBAeIAABIA"

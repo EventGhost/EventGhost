@@ -161,7 +161,7 @@ SPECIAL_THANKS_DATA = (
             (
                 'Benjamin Webb',
                 (
-                    'for the nice <a href="http://www.eventghost.org/wiki/'
+                    'for the nice <a href="http://www.eventghost.net/wiki/'
                     'Controlling%20your%20living%20room%20with%20EventGhost">'
                     'wiki article</a>'
                 )
@@ -223,7 +223,7 @@ class AboutPanel(wx.Panel):
             self,
             wx.ID_ANY,
             eg.text.MainFrame.Menu.WebHomepage.replace("&", ""),
-            URL="http://www.eventghost.org/"
+            URL="http://www.eventghost.net/"
         )
         font = hypelink1.GetFont()
         font.SetPointSize(11)
@@ -233,14 +233,14 @@ class AboutPanel(wx.Panel):
             self,
             wx.ID_ANY,
             eg.text.MainFrame.Menu.WebForum.replace("&", ""),
-            URL="http://www.eventghost.org/forum/"
+            URL="http://www.eventghost.net/forum/"
         )
         hypelink2.SetFont(font)
         hypelink3 = eg.HyperLinkCtrl(
             self,
             wx.ID_ANY,
             eg.text.MainFrame.Menu.WebWiki.replace("&", ""),
-            URL="http://www.eventghost.org/wiki/"
+            URL="http://www.eventghost.net/wiki/"
         )
         hypelink3.SetFont(font)
 

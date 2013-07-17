@@ -32,7 +32,7 @@ eg.RegisterPlugin(
         'IrfanView</a>.'
     ),
     createMacrosOnAdd = True,  
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=579",  
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=579",  
     icon = (
         "R0lGODlhEAAQAPcAAAQCBISChIQCBMTCxPwCBPz+/AAAAAAAAHoDFR0AAAAAAAAAAAAEFQ"
         "AAABUAAAAAAA0CDQAAAAAAAAAAAAAADQIAAAAAAAAAAAAABAEADwAAEAAABygArukABBIA"

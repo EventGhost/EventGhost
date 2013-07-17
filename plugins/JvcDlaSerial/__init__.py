@@ -23,7 +23,7 @@ eg.RegisterPlugin(
     version = "0.1.", # + "$LastChangedRevision$".split()[1],
     canMultiLoad = True,
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=650",
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=650",
 )
 
 

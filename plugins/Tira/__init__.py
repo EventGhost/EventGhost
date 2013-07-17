@@ -34,7 +34,7 @@ eg.RegisterPlugin(
     kind = "remote",
     guid = "{B0E45461-630A-4FFC-BA92-9A8281DC112C}",
     description = __doc__,
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=569",
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=569",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAADYUlEQVR42m2Te0yTVxjG"
         "n9Pv0tJ26BQbWkMrif5hgBoU4pgsBJhx08RKtIrxAmJkKiwo848RGRabsZvJQDQRLyFe"

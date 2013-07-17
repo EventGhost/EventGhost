@@ -31,7 +31,7 @@ import eg
 eg.RegisterPlugin(
     name="ATI Remote Wonder II (WinUSB)",
     description=__doc__,
-    url="http://www.eventghost.org/forum/viewtopic.php?t=915",
+    url="http://www.eventghost.net/forum/viewtopic.php?t=915",
     author="Bitmonster",
     version="1.0.2",
     kind="remote",

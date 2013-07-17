@@ -48,7 +48,7 @@ eg.RegisterPlugin(
     guid = "{C3E96757-E507-4CC3-A2E6-465D48B87D09}",
     canMultiLoad = True,
     description = __doc__,
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=1589",
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=1589",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAYklEQVR42mNkoBAwwhgq"
         "uf//k6LxzmRGRrgBpGpGNoSRXM1wL1DFgNuTGBhU8xCCyHx0Ngggq4W7AKYQlwZchqJ4"

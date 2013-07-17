@@ -27,7 +27,7 @@ eg.RegisterPlugin(
     kind = "program",
     guid = "{87D26B8D-990C-457C-85C2-8D634868E1D2}",
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=284",
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=284",
     description = (
         'Adds actions to control the '
         '<a href="http://www.microsoft.com/windows/windowsmedia/">'

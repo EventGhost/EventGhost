@@ -35,7 +35,7 @@ eg.RegisterPlugin(
         Only for version <b>6.4.8.9</b> or above.
         The plugin will not work with older versions of MPC!
         
-        <a href=http://www.eventghost.org/forum/viewtopic.php?t=17>
+        <a href=http://www.eventghost.net/forum/viewtopic.php?t=17>
         Bugreports</a>
         
         <p><a href="http://sourceforge.net/projects/guliverkli/">
@@ -47,7 +47,7 @@ eg.RegisterPlugin(
         "Ee6CyFxd6ArkynZT5l7KK9gFbs3CrGgEPLzM1FonAn9kz59stqhnhdhEwK/j3m0Tgj8K"
         "OPmCr4eYpmMaASt3JS44ADcFoxFdcIMPAAAAAElFTkSuQmCC"
     ),
-    url = "http://www.eventghost.org/forum/viewtopic.php?t=694"
+    url = "http://www.eventghost.net/forum/viewtopic.php?t=694"
 )
     
 # changelog:

@@ -82,7 +82,7 @@ Adds actions to control the `Radio?Sure!`_
 
 .. _Radio?Sure!: http://www.radiosure.com/ ''',
     createMacrosOnAdd = True,
-    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=2359",
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=2359",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAADAFBMVEUA//+Gh4ju7/Ds"
         "7e7q6+zo6evm5+nk5efi4+Xg4ePd3+Db3N7Z2tzW2Nrr7e5+g4bo6erm5+js7e3a3N7Y"

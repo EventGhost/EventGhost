@@ -70,7 +70,7 @@ eg.RegisterPlugin(
     description = (
         "Adds Multitapper actions."
     ),
-    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=1024",
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=1024",
 )
 from eg.WinApi.Utils import GetMonitorDimensions
 from threading import Timer
