@@ -793,7 +793,7 @@ class MainFrame(wx.Frame):
         menu.Enable(wx.ID_PASTE, canPaste)
         menu.Enable(wx.ID_DELETE, canDelete)
         selection = self.treeCtrl.GetSelectedNode()
-        menu.Check(ID_DISABLED, selection and not selection.isEnabled)
+        menu.Check(ID_DISABLED, selection is not None and not selection.isEnabled)
 
 
     def UpdateViewOptions(self):
