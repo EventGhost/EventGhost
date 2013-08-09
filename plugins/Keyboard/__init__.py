@@ -33,8 +33,8 @@ import eg
 
 eg.RegisterPlugin(
     name = "Keyboard",
-    author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision: 1175 $".split()[1],
+    author = "Bitmonster & blackwind",
+    version = "1.1.1",
     kind = "remote",
     guid = "{59CBD10F-C1D8-4ADB-999B-9B76BA360F1F}",
     description = __doc__,
@@ -59,25 +59,41 @@ from eg import HasActiveHandler
 from eg.cFunctions import SetKeyboardCallback
 
 
+class Text:
+    label = "Universal modifiers"
+
+
 class Keyboard(eg.PluginBase):
+
+    text = Text
 
     def __init__(self):
         self.AddEvents()
 
 
-    def __start__(self, *dummyArgs):
-        SetKeyboardCallback(self.KeyboardCallback)
+    def __start__(self, universalMods = False, *dummyArgs):
+        SetKeyboardCallback(self.KeyboardCallback, int(universalMods))
 
 
     def __stop__(self):
-        SetKeyboardCallback(None)
+        SetKeyboardCallback(None, 0)
 
 
-    def KeyboardCallback(self, codes):
+    def Configure(self, universalMods = True):
+        panel = eg.ConfigPanel()
+        universalModsCtrl = panel.CheckBox(universalMods, self.text.label)
+        panel.sizer.Add(universalModsCtrl, 0, wx.ALL, 20)
+        while panel.Affirmed():
+            panel.SetResult(universalModsCtrl.GetValue())
+
+
+    def KeyboardCallback(self, codes, num, lastNum):
         if codes == "":
             self.EndLastEvent()
         else:
-            shouldBlock = HasActiveHandler("Keyboard." + codes)
-            self.TriggerEnduringEvent(codes)
-            return shouldBlock
+            if num >= lastNum:
+                self.TriggerEnduringEvent(codes)
+            else:
+                self.EndLastEvent()
+            return HasActiveHandler("Keyboard." + codes)
 

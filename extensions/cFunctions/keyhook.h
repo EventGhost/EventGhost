@@ -15,6 +15,7 @@ extern BOOL CheckKeyState(void);
 
 typedef struct{
 	BYTE numPressedKeys;
+  BYTE lastNumPressedKeys;
 	DWORD lastVkCode;
 	DWORD lastScanCode;
 	DWORD lastFlags;
