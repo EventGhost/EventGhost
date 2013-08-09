@@ -43,6 +43,9 @@ from Dynamic.PsApi import (
     EnumProcesses,
 )
 
+from win32api import OpenProcess, TerminateProcess
+from win32com.client import GetObject
+
 ENUM_CHILD_PROC = WINFUNCTYPE(BOOL, HWND, LPARAM)
 EnumChildWindows.argtypes = [HWND, ENUM_CHILD_PROC, LPARAM]
 
@@ -419,6 +422,64 @@ def GetContainingMonitor(win):
         return monitorDims[0], 0
 
 
+def GetHwnds(pid = None, processName = None):
+    if pid:
+        pass
+    elif processName:
+        pids = GetPids(processName = processName)
+        if pids:
+            pid = pids[0]
+        else:
+            return False
+    else:
+        return False
+
+    def callback(hwnd, hwnds):
+        if IsWindowVisible(hwnd):
+            _, result = GetWindowThreadProcessId(hwnd)
+            if result == pid:
+                hwnds.append(hwnd)
+        return True
+
+    from win32gui import EnumWindows, IsWindowVisible
+    from win32process import GetWindowThreadProcessId
+    hwnds = []
+    EnumWindows(callback, hwnds)
+    return hwnds
+
+
+def GetPids(processName = None, hwnd = None):
+    if processName:
+        pass
+    elif hwnd:
+        return PyGetWindowThreadProcessId(hwnd)[::-1]
+    else:
+        return False
+
+    try:
+        pids = []
+        for proc in GetObject("winmgmts:").ExecQuery("SELECT * FROM Win32_Process WHERE Name = '" + str(processName.replace("'", "\\'")) + "'"):
+            pids.append(proc.ProcessID)
+        return pids
+    except:
+        return False
+
+
+def GetProcessNameEx(pid = None, hwnd = None, fullPath = False):
+    if pid:
+        pass
+    elif hwnd:
+        pid = PyGetWindowThreadProcessId(hwnd)[-1]
+    else:
+        return False
+
+    try:
+        result = GetObject("winmgmts:").ExecQuery("SELECT * FROM Win32_Process WHERE ProcessID = '" + str(int(pid)) + "'")[0]
+        return result.ExecutablePath.strip('"') if fullPath else result.Name
+    except:
+        return False
+
+
 def GetWindowDimensions(hwnd = None):
     hwnd = GetBestHwnd(hwnd)
     windowDims = RECT()
@@ -426,4 +487,50 @@ def GetWindowDimensions(hwnd = None):
     width = windowDims.right - windowDims.left
     height = windowDims.bottom - windowDims.top
     return wx.Rect(windowDims.left, windowDims.top, width, height)
+
+
+def KillProcess(pid = None, processName = None, hwnd = None, signal = 0, restart = False):
+    if pid:
+        pass
+    elif processName:
+        pids = GetPids(processName = processName)
+        if pids:
+            pid = pids[0]
+        else:
+            return False
+    elif hwnd:
+        hwnd = GetBestHwnd(hwnd)
+        pids = GetPids(hwnd = hwnd)
+        if pids:
+            pid = pids[0]
+        else:
+            return False
+    else:
+        return False
+
+    fullPath = GetProcessNameEx(pid = pid, fullPath = True)
+
+    try:
+        proc = OpenProcess(1, 0, pid)
+        TerminateProcess(proc, signal)
+        if restart:
+            eg.plugins.System.Execute(fullPath)
+        return True
+    except:
+        return False
+
+
+def PluginIsEnabled(plugin):
+    return PluginIsLoaded(plugin) and eg.plugins.__dict__[plugin].plugin.info.isStarted
+
+
+def PluginIsLoaded(plugin):
+    return hasattr(eg.plugins, plugin)
+
+
+def ProcessExists(pid):
+    try:
+        return bool(GetObject("winmgmts:").ExecQuery("SELECT * FROM Win32_Process WHERE ProcessId = " + str(int(pid))).count)
+    except:
+        return False
 

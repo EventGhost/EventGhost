@@ -18,13 +18,22 @@ import eg
 import wx
 from os.path import basename, dirname, abspath, split, splitext
 from threading import Thread
+from time import sleep
+from win32file import Wow64DisableWow64FsRedirection, Wow64RevertWow64FsRedirection
+
+from eg.WinApi import IsWin64
 
 from eg.WinApi.Dynamic import (
     sizeof, byref, CreateProcess, WaitForSingleObject, FormatError,
     CloseHandle, create_unicode_buffer,
     STARTUPINFO, PROCESS_INFORMATION,
     CREATE_NEW_CONSOLE, STARTF_USESHOWWINDOW, INFINITE,
-    GetExitCodeProcess, DWORD
+    GetExitCodeProcess, DWORD,
+    IsWindowVisible, RegisterWindowMessage,
+)
+
+from eg.WinApi.Utils import (
+    BringHwndToFront, GetHwnds, GetPids, PluginIsEnabled, ProcessExists,
 )
 
 WINSTATE_FLAGS = (
@@ -67,8 +76,9 @@ class Execute(eg.ActionBase):
             "Below normal",
             "Idle"
         )
-        WaitCheckbox = "Wait till application is terminated before proceeding"
+        waitCheckbox = "Wait until application is terminated before proceeding"
         eventCheckbox = "Trigger event when application is terminated"
+        wow64Checkbox = "Disable WOW64 filesystem redirection for this application"
         eventSuffix = "Application.Terminated"
         browseExecutableDialogTitle = "Choose the executable"
         browseWorkingDirDialogTitle = "Choose the working directory"
@@ -83,6 +93,7 @@ class Execute(eg.ActionBase):
         priority=2,
         workingDir="",
         triggerEvent=False,
+        disableWOW64=False,
     ):
         returnValue = None
         pathname = eg.ParseString(pathname)
@@ -96,6 +107,9 @@ class Execute(eg.ActionBase):
         startupInfo.wShowWindow = WINSTATE_FLAGS[winState]
         priorityFlag = PRIORITY_FLAGS[priority]
         processInformation = self.processInformation = PROCESS_INFORMATION()
+        disableWOW64 = disableWOW64 and IsWin64()
+        if disableWOW64:
+            prevVal = Wow64DisableWow64FsRedirection()
         res = CreateProcess(
             None,              # lpApplicationName
             commandLine,       # lpCommandLine
@@ -108,6 +122,8 @@ class Execute(eg.ActionBase):
             startupInfo,       # lpStartupInfo
             processInformation # lpProcessInformation
         )
+        if disableWOW64:
+            Wow64RevertWow64FsRedirection(prevVal)
         suffix = "%s.%s" % (
                 self.text.eventSuffix,
                 splitext(split(pathname)[1])[0]
@@ -115,6 +131,41 @@ class Execute(eg.ActionBase):
         prefix = self.plugin.name.replace(' ', '')
         if res == 0:
             raise self.Exception(FormatError())
+        if winState != 3 and PluginIsEnabled("Task"):
+            def callback(dummyHwnd, dummyMesg, wParam, lParam):
+                pids = GetPids(hwnd = lParam)
+                pid = pids[0] if pids else False
+                if pid == processInformation.dwProcessId:
+                    try:
+                        eg.messageReceiver.RemoveHandler(WM_SHELLHOOKMESSAGE, refCallback)
+                    except:
+                        pass
+                    sleep(0.3)  # Wait for windows to appear
+                    hwnds = GetHwnds(pid = processInformation.dwProcessId)
+                    if hwnds:
+                        #print "Focused via GetHwnds"
+                        for hwnd in hwnds:
+                            if IsWindowVisible(hwnd):
+                                BringHwndToFront(hwnd)
+                                break
+                    elif IsWindowVisible(lParam):
+                        #print "Focused via ShellHook"
+                        BringHwndToFront(lParam)
+                elif not ProcessExists(processInformation.dwProcessId):
+                    try:
+                        eg.messageReceiver.RemoveHandler(WM_SHELLHOOKMESSAGE, refCallback)
+                    except:
+                        pass
+                    try:
+                        eg.plugins.Window.FindWindow(basename(pathname))
+                        if len(eg.lastFoundWindows):
+                            #print "Focused via FindWindow"
+                            BringHwndToFront(eg.lastFoundWindows[0])
+                    except:
+                        pass
+            refCallback = callback
+            WM_SHELLHOOKMESSAGE = RegisterWindowMessage("SHELLHOOK")
+            eg.messageReceiver.AddHandler(WM_SHELLHOOKMESSAGE, callback)
         if waitForCompletion:
             WaitForSingleObject(processInformation.hProcess, INFINITE)
             exitCode = DWORD()
@@ -144,7 +195,7 @@ class Execute(eg.ActionBase):
             self.processInformation = processInformation
             self.suffix = suffix
             self.prefix = prefix
-    
+
         def run(self):
             WaitForSingleObject(self.processInformation.hProcess, INFINITE)
             exitCode = DWORD()
@@ -171,6 +222,7 @@ class Execute(eg.ActionBase):
         priority=2,
         workingDir="",
         triggerEvent=False,
+        disableWOW64=False,
     ):
         panel = eg.ConfigPanel()
         text = self.text
@@ -189,11 +241,15 @@ class Execute(eg.ActionBase):
         priorityChoice = panel.Choice(4 - priority, text.ProcessOptions)
         waitCheckBox = panel.CheckBox(
             bool(waitForCompletion),
-            text.WaitCheckbox
+            text.waitCheckbox
         )
         eventCheckBox = panel.CheckBox(
             bool(triggerEvent),
             text.eventCheckbox
+        )
+        wow64CheckBox = panel.CheckBox(
+            bool(disableWOW64),
+            text.wow64Checkbox
         )
 
         SText = panel.StaticText
@@ -223,6 +279,8 @@ class Execute(eg.ActionBase):
             (waitCheckBox),
             ((10, 8)),
             (eventCheckBox),
+            ((10, 8)),
+            (wow64CheckBox),
         ])
 
         while panel.Affirmed():
@@ -233,6 +291,7 @@ class Execute(eg.ActionBase):
                 waitCheckBox.GetValue(),
                 4 - priorityChoice.GetValue(),
                 workingDirCtrl.GetValue(),
-                eventCheckBox.GetValue()
+                eventCheckBox.GetValue(),
+                wow64CheckBox.GetValue()
             )
 
