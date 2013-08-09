@@ -19,7 +19,7 @@ import eg
 eg.RegisterPlugin(
     name = "Window",
     author = "Bitmonster & blackwind",
-    version = "1.1.1",
+    version = "1.1.2",
     description = (
         "Actions that are related to the control of windows on the desktop, "
         "like finding specific windows, moving, resizing, and sending "
@@ -38,7 +38,7 @@ eg.RegisterPlugin(
 
 import wx
 from win32api import EnumDisplayMonitors, CloseHandle
-from eg.WinApi import GetWindowText
+from eg.WinApi import GetTopLevelWindowList, GetWindowText
 from eg.WinApi.Utils import (
     BringHwndToFront, CloseHwnd, GetMonitorDimensions, GetHwndIcon,
     GetAlwaysOnTop, GetBestHwnd, GetContainingMonitor, GetWindowDimensions,
@@ -714,24 +714,23 @@ class MinimizeToTray(eg.ActionBase):
 
     def __call__(self, hwnd = None):
         # Gather info about the target window
-        self.hwnd = GetBestHwnd(hwnd)
-        icon = GetHwndIcon(self.hwnd)
-        title = unicode(GetWindowText(self.hwnd))
+        hwnd = GetBestHwnd(hwnd)
+        icon = GetHwndIcon(hwnd)
+        title = unicode(GetWindowText(hwnd))
 
         # If valid, minimize target to the systray
-        if isinstance(self.hwnd, int) and isinstance(icon, wx._gdi.Icon):
-            self.trayIcon = wx.TaskBarIcon()
-            self.trayIcon.SetIcon(icon, title)
-            self.trayIcon.Bind(wx.EVT_TASKBAR_LEFT_UP, self.OnClick)
-            ShowWindow(self.hwnd, 0)
-
-
-    def OnClick(self, *dummyArgs):
-        # Remove our tray icon and restore the window
-        try:
-            BringHwndToFront(self.hwnd)
-            self.trayIcon.RemoveIcon()
-            self.trayIcon.Destroy()
-        except:
-            pass
+        if hwnd in eg.WinApi.GetTopLevelWindowList(False) and isinstance(icon, wx._gdi.Icon):
+            trayIcon = wx.TaskBarIcon()
+            trayIcon.SetIcon(icon, title)
+            def OnClick(self, *dummyArgs):
+                # Remove our tray icon and restore the window
+                try:
+                    BringHwndToFront(hwnd)
+                except:
+                    pass
+                finally:
+                    trayIcon.RemoveIcon()
+                    trayIcon.Destroy()
+            trayIcon.Bind(wx.EVT_TASKBAR_LEFT_UP, OnClick)
+            ShowWindow(hwnd, 0)
 
