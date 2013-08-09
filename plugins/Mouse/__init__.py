@@ -34,8 +34,8 @@ Jrhy/+AqGrAMOnH86mAAAAAElFTkSuQmCC"""
 
 eg.RegisterPlugin(
     name = "Mouse",
-    author = "Bitmonster",
-    version = "1.0.2",
+    author = "Bitmonster & Sem;colon",
+    version = "1.0.3",
     description = (
         "Gives you actions to control the mouse pointer and emulation of "
         "mouse events."
@@ -284,15 +284,39 @@ class RightDoubleClick(eg.ActionBase):
 #===============================================================================
 
 class ToggleLeftButton(eg.ActionBase):
-    name = "Toggle left mouse button"
+    class text:
+        name = "Toggle left mouse button"
+        description = "Changes the status of the left mouse button."
+        radioBoxLabel = "Option"
+        radioBoxOptions = [
+            "Toggle left mouse button",
+            "Set left mouse button \"Up\"",
+            "Set left mouse button \"Down\""
+        ]
 
-    def __call__(self):
-        if self.plugin.leftMouseButtonDown:
+    def __call__(self,data=0):
+        if self.plugin.leftMouseButtonDown and data==0 or data==1:
             mouse_event(0x0004, 0, 0, 0, 0)
             self.plugin.leftMouseButtonDown = False
         else:
             mouse_event(0x0002, 0, 0, 0, 0)
             self.plugin.leftMouseButtonDown = True
+
+    def GetLabel(self, data=0):
+        return self.plugin.label + ': ' + self.text.radioBoxOptions[data]
+
+    def Configure(self, data=0):
+        panel = eg.ConfigPanel()
+        radioBox = wx.RadioBox(
+            panel,
+            label=self.text.radioBoxLabel,
+            choices=self.text.radioBoxOptions,
+            style=wx.RA_SPECIFY_ROWS
+        )
+        radioBox.SetSelection(data)
+        panel.sizer.Add(radioBox, 0, wx.EXPAND)
+        while panel.Affirmed():
+            panel.SetResult(radioBox.GetSelection())
 #===============================================================================
 
 class MoveAbsolute(eg.ActionBase):
@@ -347,15 +371,15 @@ class MoveAbsolute(eg.ActionBase):
     def GetLabel(self, x, y, displayNumber, center):
         if center:
             res = self.text.display + " " + self.text.center
-            if displayNumber is not None: 
+            if displayNumber is not None:
                 res += ": %s" % (self.text.label_M % (displayNumber+1))
             return res
-        else: 
+        else:
             return self.text.display + ":  %s%s%s" % (
                 self.text.label_M % (displayNumber+1) if displayNumber is not None else "",
                 self.text.label_X % x if x is not None else "",
                 self.text.label_Y % y if y is not None else "",
-            )        
+            )
 
 
     def Configure(self, x = None, y = None, displayNumber = None, center = False):
@@ -541,3 +565,4 @@ class MouseWheel(eg.ActionBase):
         while panel.Affirmed():
             panel.SetResult(valueCtrl.GetValue())
 #===============================================================================
+
