@@ -13,13 +13,31 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+#
+# Changelog (in reverse chronological order):
+# -------------------------------------------
+# 1.4 by Pako 2013-08-09 11:02 UTC+1
+#     - bugfixes
+# 1.3 by Pako 2013-08-05 20:30 UTC+1
+#     - bugfixes
+#     - class text added to SendEventExt action
+# 1.2 by Pako 2013-08-02 14:57 UTC+1
+#     - added url support link to forum
+#     - added support of variables (temporary and persistent)
+#     - added actions Get/Set (Persistent) Value and Set Clients Flags
+#     - do_POST method "TriggerEvent" can now use another prefixes too
+#     - new methods for do_POST: Get/Set (Persistent) Value, Get All Values, ...
+#     - ... Get Changed Values, Execute Script (return a result !)
+#     - do_POST is no longer limited to JSON Request (author: Sem;colon)
+#     - new action SendEventExt (author: Sem;colon)
 
 import eg
 
 eg.RegisterPlugin(
     name = "Webserver",
-    author = "Bitmonster",
-    version = "1.1",
+    author = "Bitmonster (enhancements Pako and Sem;colon)",
+    version = "1.4",
     guid = "{E4305D8E-A3D3-4672-B06E-4EA1F0F6C673}",
     description = (
         "Implements a small webserver, that you can use to generate events "
@@ -45,6 +63,7 @@ eg.RegisterPlugin(
         "V6o9Jv2beq++WywWf3IcZ/hgmNKh9JnVk4+d31CCyRXDljEAx9T6zrC+dzYrribCcn9z"
         "c/ObTqdzALjiIQmNArF76gcMYAB0gT7g3l/+ByWIP9hU8ktfAAAAAElFTkSuQmCC"
     ),
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=1663",
 )
 
 import wx
@@ -56,15 +75,237 @@ import time
 import urllib2
 import socket
 import httplib
+import json
+import jinja2
+import cStringIO
+import re
 from threading import Thread, Event
 from BaseHTTPServer import HTTPServer
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from SocketServer import ThreadingMixIn
 from urllib import unquote, unquote_plus
 from os.path import getmtime
-import json
-import jinja2
-import cStringIO
+from wx.lib.mixins.listctrl import TextEditMixin
+SYS_VSCROLL_X = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
+
+class VarTable(wx.ListCtrl, TextEditMixin):
+
+    def __init__(self, parent, txt, edit):
+        wx.ListCtrl.__init__(
+            self,
+            parent,
+            -1,
+            style = wx.LC_REPORT|wx.LC_HRULES|wx.LC_VRULES|wx.LC_EDIT_LABELS,
+        )
+        self.edit = edit
+        self.edCell = None
+        self.Show(False)
+        TextEditMixin.__init__(self)
+        self.editor.SetBackgroundColour(wx.Colour(135, 206, 255))
+
+        self.InsertColumn(0, txt.vrbl)
+        self.InsertColumn(1, txt.defVal, wx.LIST_FORMAT_LEFT)       
+        self.SetColumnWidth(0, wx.LIST_AUTOSIZE_USEHEADER)
+        self.SetColumnWidth(1, wx.LIST_AUTOSIZE_USEHEADER)
+        self.InsertStringItem(0, "dummy")
+        rect = self.GetItemRect(0, wx.LIST_RECT_BOUNDS)
+        hh = rect[1] #header height
+        hi = rect[3] #item height
+        self.DeleteAllItems()
+        self.w0 = self.GetColumnWidth(0)
+        self.w1 = self.GetColumnWidth(1)
+        self.wk = SYS_VSCROLL_X+self.GetWindowBorderSize()[0]+self.w0 + self.w1
+        width = self.wk
+        rows = 10
+        self.SetMinSize((max(width, 200), 2 + hh + rows * hi))
+        self.Bind(wx.EVT_SIZE, self.OnSize)
+        self.Show(True)
+
+
+    def SetWidth(self):
+        w = (self.GetSize().width - self.wk)
+        w0_ = w/2 + self.w0
+        w1_ = w/2 + self.w1
+        self.SetColumnWidth(0, w0_)
+        self.SetColumnWidth(1, w1_)
+
+
+    def OnSize(self, event):
+        wx.CallAfter(self.SetWidth)
+        event.Skip()
+
+
+    def FillData(self, data):
+        self.DeleteAllItems()
+        cnt = len(data)
+        i = 0
+        for key, value in data.iteritems():
+            self.InsertStringItem(i, key)
+            self.SetStringItem(i, 1, value)
+            i += 1
+        self.Enable(i > 0)
+
+
+    def OpenEditor(self, col, row): #Hack of default method
+        if self.edit:
+            self.edCell = (row, col, self.GetItem(row, col).GetText()) #Remember pos and value!!!
+            TextEditMixin.OpenEditor(self, col, row)
+
+
+    def CloseEditor(self, event = None): #Hack of default method
+        TextEditMixin.CloseEditor(self, event)
+        if not event:
+            self.SetStringItem(*self.edCell) #WORKAROUND !!!
+        elif isinstance(event, wx.CommandEvent):
+            row, col, oldVal = self.edCell
+            newVal = self.GetItem(row, col).GetText()
+            evt = eg.ValueChangedEvent(self.GetId(), value = (row, col, newVal))
+            wx.PostEvent(self, evt)
+
+
+    def DeleteSelectedItems(self):
+        item = self.GetFirstSelected()
+        selits = []
+        while item != -1:
+            selits.append(item)
+            item = self.GetNextSelected(item)
+        selits.reverse()
+        for item in selits:
+            self.DeleteItem(item)
+
+
+    def GetData(self):
+        data = {}
+        for row in range(self.GetItemCount()):
+            data[self.GetItemText(row)] = self.GetItem(row, 1).GetText()
+        return data
+#===============================================================================
+
+class VariableDialog(wx.Frame):
+
+    def __init__(self, parent, plugin, pers=False):
+        wx.Frame.__init__(
+            self,
+            parent,
+            -1,
+            style = wx.DEFAULT_DIALOG_STYLE | wx.TAB_TRAVERSAL|wx.RESIZE_BORDER,
+            name="Variable manager/viewer"
+        )
+        self.panel = parent
+        self.plugin = plugin
+        self.text = plugin.text
+        self.SetIcon(self.plugin.info.icon.GetWxIcon())
+        self.pers = pers
+
+
+    def ShowVariableDialog(self, title):
+        self.panel.Enable(False)
+        self.panel.dialog.buttonRow.cancelButton.Enable(False)
+        self.panel.EnableButtons(False)
+        self.SetTitle(title)
+
+
+        text = self.plugin.text
+        panel = wx.Panel(self)
+        varTable = VarTable(panel, self.text, self.pers)
+        varTable.FillData(self.plugin.pubPerVars)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        panel.SetSizer(sizer)
+        intSizer = wx.BoxSizer(wx.VERTICAL)
+        intSizer.Add(varTable,1,wx.EXPAND|wx.BOTTOM, 5)
+        sizer.Add(intSizer,1,wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT,10)
+        if self.pers: # Persistent variable manager
+            varTable.FillData(self.plugin.pubPerVars)
+            btn3 = wx.Button(panel, -1, self.text.delete)
+            btn3.Enable(False)
+            btn4 = wx.Button(panel, -1, self.text.clear)
+            delSizer = wx.BoxSizer(wx.HORIZONTAL)
+            delSizer.Add(btn3)
+            delSizer.Add(btn4,0,wx.LEFT,10)
+            intSizer.Add(delSizer)
+
+            def onDelete(evt):
+                varTable.DeleteSelectedItems()
+                btn3.Enable(False)
+                evt.Skip()
+            btn3.Bind(wx.EVT_BUTTON, onDelete)
+
+            def onClear(evt):
+                varTable.DeleteAllItems()
+                evt.Skip()
+            btn4.Bind(wx.EVT_BUTTON, onClear)
+
+            def OnItemSelected(event):
+                selCnt = varTable.GetSelectedItemCount()
+                btn3.Enable(selCnt>0)
+                varTable.GetSelectedItemCount()
+                event.Skip()
+            varTable.Bind(wx.EVT_LIST_ITEM_SELECTED, OnItemSelected)
+            varTable.Bind(wx.EVT_LIST_ITEM_DESELECTED, OnItemSelected)       
+            btn1 = wx.Button(panel, wx.ID_OK)
+            btn1.SetLabel(text.ok)
+            btn1.SetDefault()
+
+            def onOK(evt):
+                flag = False
+                data = varTable.GetData()
+                pubPerVars = self.plugin.pubPerVars
+                old = list(pubPerVars.iterkeys())
+                new = list(data.iterkeys())
+                deleted = list(set(old)-set(new))
+                #renamed = list(set(new)-set(old))
+                for key in deleted:
+                    self.plugin.DelPersistentValue(key)
+                for key, value in data.iteritems():
+                    if key not in pubPerVars or value != pubPerVars[key]:
+                        pubPerVars[key] = value
+                        flag = True
+                if flag or len(deleted):
+                    wx.CallAfter(self.plugin.SetDocIsDirty)
+                self.Close()
+            btn1.Bind(wx.EVT_BUTTON,onOK)
+
+            line = wx.StaticLine(
+                panel,
+                -1,
+                size = (20,-1),
+                style = wx.LI_HORIZONTAL
+            )
+            sizer.Add(line, 0, wx.EXPAND|wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM,5)
+        else:  # Temporary variable viewer
+            varTable.FillData(self.plugin.pubVars)
+
+        btn2 = wx.Button(panel, wx.ID_CANCEL)
+        btn2.SetLabel(text.cancel)
+        btnsizer = wx.StdDialogButtonSizer()
+        if self.pers:
+            btnsizer.AddButton(btn1)
+        btnsizer.AddButton(btn2)
+        btnsizer.Realize()
+        sizer.Add(btnsizer, 0, wx.EXPAND|wx.RIGHT, 10)
+        sizer.Add((1,6))
+        sizer.Fit(self)
+
+        def onClose(evt):
+            self.MakeModal(False)
+            self.panel.Enable(True)
+            self.panel.dialog.buttonRow.cancelButton.Enable(True)
+            self.panel.EnableButtons(True)
+            self.GetParent().GetParent().Raise()
+            self.Destroy()
+        self.Bind(wx.EVT_CLOSE, onClose)
+   
+        def onCancel(evt):
+            self.Close()
+        btn2.Bind(wx.EVT_BUTTON, onCancel)
+             
+        self.SetSize((500, -1))
+        self.SetMinSize((500, -1))
+        sizer.Layout()
+        self.Raise()
+        self.MakeModal(True)
+        self.Show()
+#===============================================================================
 
 class FileLoader(jinja2.BaseLoader):
     """Loads templates from the file system."""
@@ -97,7 +338,6 @@ class MyServer(ThreadingMixIn, HTTPServer):
         self.abort = False
         for res in socket.getaddrinfo(None, port, socket.AF_UNSPEC,
                               socket.SOCK_STREAM, 0, socket.AI_PASSIVE):
-            #print res
             self.address_family = res[0]
             self.socket_type = res[1]
             address = res[4]
@@ -140,10 +380,6 @@ class MyServer(ThreadingMixIn, HTTPServer):
             self.socket.close()
             self.RequestHandlerClass.repeatTimer.Stop()
 
-    #def handle_error(self, request, client_address):
-    #    eg.PrintError("HTTP Error")
-
-
 
 class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
     extensions_map = SimpleHTTPRequestHandler.extensions_map.copy()
@@ -157,6 +393,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
     repeatTimer = None
     environment = None
     plugin = None
+
 
     def version_string(self):
         """Return the server software version string."""
@@ -209,50 +446,103 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
             self.send_error(404, "File not found")
             return
         content = template.render()
+        self.end_request(content)
+
+
+    def end_request(self, content, case = 'text/html'):
         self.send_response(200)
-        self.send_header("Content-type", 'text/html')
-        self.send_header("Content-Length", len(content))
-        self.end_headers()
-        self.wfile.write(content.encode("UTF-8"))
-
-
-    def do_POST(self):
-        """Serve a POST request."""
-        # First do Basic HTTP-Authentication, if set
-        #print "do post"
-        #print self.headers
-        contentLength = int(self.headers.get('content-length'))
-        content = self.rfile.read(contentLength)
-        #print content
-        if not self.Authenticate():
-            return
-
-        try:
-            data = json.loads(content)
-        except:
-            eg.PrintTraceback()
-        print data
-        methodName = data["method"]
-        args = data.get("args", [])
-        kwargs = data.get("kwargs", {})
-        result = None
-        if methodName == "TriggerEvent":
-            self.plugin.TriggerEvent(*args, **kwargs)
-        elif methodName == "TriggerEnduringEvent":
-            self.plugin.TriggerEnduringEvent(*args, **kwargs)
-            self.repeatTimer.Reset(2000)
-        elif methodName == "RepeatEnduringEvent":
-            self.repeatTimer.Reset(2000)
-        elif methodName == "EndLastEvent":
-            self.repeatTimer.Reset(None)
-            self.plugin.EndLastEvent()
-        content = json.dumps(result)
-        self.send_response(200)
-        self.send_header("Content-type", 'application/json; charset=UTF-8')
+        self.send_header("Content-type", case)
         self.send_header("Content-Length", len(content))
         self.end_headers()
         self.wfile.write(content.encode("UTF-8"))
         self.wfile.close()
+
+       
+    def do_POST(self):
+        """Serve a POST request."""
+        # First do Basic HTTP-Authentication, if set
+        if not self.Authenticate():
+            return
+        contentLength = int(self.headers.get('content-length'))
+        content = self.rfile.read(contentLength)
+        result = None
+        try:
+            data = json.loads(content)
+        except:
+            eg.PrintTraceback()
+
+# Enhancement by Sem;colon - START
+            data=content.split("&")
+            if data[0]=="request":
+              self.SendContent(self.path)
+              if len(data)>1:
+                self.plugin.TriggerEvent(data[1], data[2:])
+            elif data[0][0:8]=="request=" and len(data[0])>8:
+              content = self.environment.globals[data[0][8:]]
+              self.end_request(content)
+              if len(data)>1:
+                self.plugin.TriggerEvent(data[1], data[2:])
+            else:
+              self.plugin.TriggerEvent(data[0], data[1:])
+              self.end_request("null")
+# Enhancement by Sem;colon - END
+
+        else: # JSON request
+            plugin = self.plugin
+            methodName = data["method"]
+            args = data.get("args", [])
+            kwargs = data.get("kwargs", {})
+            if methodName == "GetValue":   
+                if len(args):
+                    try:
+                        result = plugin.GetValue(args[0], self.client_address[0])
+                    except:
+                        result = None
+            if methodName == "GetPersistentValue":   
+                if len(args):
+                    try:
+                        result = plugin.GetPersistentValue(args[0], self.client_address[0])
+                    except:
+                        result = None
+            elif methodName == "SetValue":
+                if len(args):
+                    try:
+                        plugin.pubVars[args[0]] = args[1]
+                        result = True
+                    except:
+                        result = False     
+            elif methodName == "SetPersistentValue":
+                if len(args):
+                    try:
+                        plugin.pubPerVars[args[0]] = args[1]
+                        result = True
+                        wx.CallAfter(plugin.SetDocIsDirty)
+                    except:
+                        result = False     
+            elif methodName == "GetAllValues":
+                result = plugin.GetAllValues(self.client_address[0])
+            elif methodName == "GetChangedValues":
+                result = plugin.GetChangedValues(self.client_address[0])
+            elif methodName == "ExecuteScript":
+                try:
+                    result = eval(args[0])
+                except:
+                    result = None
+            elif methodName == "TriggerEvent":
+                if 'prefix' in kwargs:
+                    eg.TriggerEvent(*args, **kwargs)
+                else:
+                    plugin.TriggerEvent(*args, **kwargs)
+            elif methodName == "TriggerEnduringEvent":
+                plugin.TriggerEnduringEvent(*args, **kwargs)
+                self.repeatTimer.Reset(2000)
+            elif methodName == "RepeatEnduringEvent":
+                self.repeatTimer.Reset(2000)
+            elif methodName == "EndLastEvent":
+                self.repeatTimer.Reset(None)
+                plugin.EndLastEvent()
+            content = json.dumps(result)
+            self.end_request(content, 'application/json; charset=UTF-8')
 
 
     def do_GET(self):
@@ -264,6 +554,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
         path, dummy, remaining = self.path.partition("?")
         if remaining:
             queries = remaining.split("#", 1)[0].split("&")
+            #print "queries =",queries
             queries = [unquote_plus(part).decode("latin1") for part in queries]
             if len(queries) > 0:
                 event = queries.pop(0).strip()
@@ -293,7 +584,6 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 
 
     def log_message(self, format, *args):
-        # suppress all messages
         pass
 
 
@@ -324,12 +614,173 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
                 continue
             path = os.path.join(path, word)
         return path
+     
+       
+class SetClientsFlags(eg.ActionBase):
 
+    class text:
+        varname = "Dummy variable name:"
+
+    def __call__(self, varname = ""):
+        key = eg.ParseString(varname)
+        self.plugin.SetClientsFlags(key)
+       
+
+    def Configure(self, varname = ""):
+        panel = eg.ConfigPanel(self)
+        varnameCtrl = panel.TextCtrl(varname)
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        varnameLbl = panel.StaticText(self.text.varname)
+        mainSizer.Add(varnameLbl)
+        mainSizer.Add(varnameCtrl, 0, wx.EXPAND|wx.TOP, 1)
+        panel.sizer.Add(mainSizer, 0, wx.EXPAND|wx.ALL, 10)
+        while panel.Affirmed():
+            panel.SetResult(
+                varnameCtrl.GetValue(),
+            )       
+
+   
+class GetValue(eg.ActionBase):
+
+    class text:
+        varname = "Variable name:"
+        err = 'Error in action "GetValue(%s)"'
+
+    def __call__(self, varname = ""):
+        try:
+            key = eg.ParseString(varname)
+            return self.plugin.GetValue(key)
+        except:
+            eg.PrintError(self.text.err % str(varname))
+       
+    def Configure(self, varname = ""):
+        panel = eg.ConfigPanel(self)
+        varnameCtrl = panel.TextCtrl(varname)
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        varnameLbl = panel.StaticText(self.text.varname)
+        mainSizer.Add(varnameLbl)
+        mainSizer.Add(varnameCtrl, 0, wx.EXPAND|wx.TOP, 1)
+        panel.sizer.Add(mainSizer, 0, wx.EXPAND|wx.ALL, 10)
+       
+        while panel.Affirmed():
+            panel.SetResult(
+                varnameCtrl.GetValue(),
+            )       
+
+
+class GetPersistentValue(eg.ActionBase):
+
+    class text:
+        varname = "Persistent variable name:"
+        err = 'Error in action "GetPersistentValue(%s)"'
+
+    def __call__(self, varname = ""):
+        try:
+            key = eg.ParseString(varname)
+            return self.plugin.GetPersistentValue(key)
+        except:
+            eg.PrintError(self.text.err % str(varname))
+       
+    def Configure(self, varname = ""):
+        panel = eg.ConfigPanel(self)
+        varnameCtrl = panel.TextCtrl(varname)
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        varnameLbl = panel.StaticText(self.text.varname)
+        mainSizer.Add(varnameLbl)
+        mainSizer.Add(varnameCtrl, 0, wx.EXPAND|wx.TOP, 1)
+        panel.sizer.Add(mainSizer, 0, wx.EXPAND|wx.ALL, 10)
+        while panel.Affirmed():
+            panel.SetResult(
+                varnameCtrl.GetValue(),
+            )       
+
+
+class SetValue(eg.ActionBase):
+
+    class text:
+        varname = "Variable name:"
+        value = "Value:"
+        err = 'Error in action "SetValue(%s, %s)"'
+
+    def __call__(self, varname = "", value = "{eg.event.payload}"):
+        try:
+            key = eg.ParseString(varname)
+            value = eg.ParseString(value)
+            self.plugin.SetValue(key, value)
+        except:
+            eg.PrintError(self.text.err % (str(varname), str(value)))
+
+    def GetLabel(self, varname, value):
+        return "%s: %s: %s" % (self.name, varname, value)
+       
+    def Configure(self, varname = "", value = "{eg.event.payload}"):
+        panel = eg.ConfigPanel(self)
+        varnameCtrl = panel.TextCtrl(varname)
+        valueCtrl = panel.TextCtrl(value)
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        varnameLbl = panel.StaticText(self.text.varname)
+        valueLbl = panel.StaticText(self.text.value)
+        mainSizer.Add(varnameLbl)
+        mainSizer.Add(varnameCtrl, 0, wx.EXPAND|wx.TOP, 1)
+        mainSizer.Add(valueLbl, 0, wx.EXPAND|wx.TOP, 20)
+        mainSizer.Add(valueCtrl, 0, wx.EXPAND|wx.TOP, 1)
+        panel.sizer.Add(mainSizer, 0, wx.EXPAND|wx.ALL, 10)
+        while panel.Affirmed():
+            panel.SetResult(
+                varnameCtrl.GetValue(),
+                valueCtrl.GetValue(),
+            )       
+
+
+class SetPersistentValue(eg.ActionBase):
+
+    class text:
+        varname = "Persistent variable name:"
+        value = "Value:"
+        err = 'Error in action "SetValue(%s, %s)"'
+
+    def __call__(self, varname = "", value = "{eg.event.payload}"):
+        try:
+            key = eg.ParseString(varname)
+            value = eg.ParseString(value)
+            self.plugin.SetPersistentValue(key, value)
+        except:
+            eg.PrintError(self.text.err % (str(varname), str(value)))
+
+    def GetLabel(self, varname, value):
+        return "%s: %s: %s" % (self.name, varname, value)
+       
+    def Configure(self, varname = "", value = "{eg.event.payload}"):
+        panel = eg.ConfigPanel(self)
+        varnameCtrl = panel.TextCtrl(varname)
+        valueCtrl = panel.TextCtrl(value)
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        varnameLbl = panel.StaticText(self.text.varname)
+        valueLbl = panel.StaticText(self.text.value)
+        mainSizer.Add(varnameLbl)
+        mainSizer.Add(varnameCtrl, 0, wx.EXPAND|wx.TOP, 1)
+        mainSizer.Add(valueLbl, 0, wx.EXPAND|wx.TOP, 20)
+        mainSizer.Add(valueCtrl, 0, wx.EXPAND|wx.TOP, 1)
+        panel.sizer.Add(mainSizer, 0, wx.EXPAND|wx.ALL, 10)
+        while panel.Affirmed():
+            panel.SetResult(
+                varnameCtrl.GetValue(),
+                valueCtrl.GetValue(),
+            )       
 
 
 class SendEvent(eg.ActionBase):
 
+    class text:
+        event = "Event:"
+        host = "Host:"
+        port ="Port:"
+        username = "Username:"
+        passsword = "Password:"
+        errmsg = "Target server returned status %s"       
+
     def __call__(self, event="", host="", port=80, user="", password=""):
+        text = self.text
         def Request(methodName, *args, **kwargs):
             data = {"method": methodName}
             if len(args):
@@ -374,7 +825,7 @@ class SendEvent(eg.ActionBase):
             sock.close()
             if response.status != 200:
                 raise Exception(
-                    "Target server returned status %s" % response.status
+                    text.errmsg % response.status
                 )
             return json.loads(content)
 
@@ -392,8 +843,8 @@ class SendEvent(eg.ActionBase):
         Thread(target=RepeatLoop).start()
 
 
-
     def Configure(self, event="", host="", port=80, user="", password=""):
+        text = self.text
         panel = eg.ConfigPanel(self)
         eventCtrl = panel.TextCtrl(event)
         hostCtrl = panel.TextCtrl(host)
@@ -401,15 +852,15 @@ class SendEvent(eg.ActionBase):
         userCtrl = panel.TextCtrl(user)
         passwordCtrl = panel.TextCtrl(password)
         panel.sizer.AddMany([
-            panel.StaticText("Event:"),
+            panel.StaticText(text.event),
             eventCtrl,
-            panel.StaticText("Host:"),
+            panel.StaticText(text.host),
             hostCtrl,
-            panel.StaticText("Port:"),
+            panel.StaticText(text.port),
             portCtrl,
-            panel.StaticText("Username:"),
+            panel.StaticText(text.username),
             userCtrl,
-            panel.StaticText("Password:"),
+            panel.StaticText(text.password),
             passwordCtrl,
         ])
         while panel.Affirmed():
@@ -422,8 +873,99 @@ class SendEvent(eg.ActionBase):
             )
 
 
+# Enhancement by Sem;colon - START
+class SendEventExt(eg.ActionBase):
+
+    class text:
+        url = "Url: (like you would put it into a webbrowser)"
+        event = "Event:"
+        username = "Username:"
+        passsword = "Password:"
+        msg1 = "This page isn't protected by authentication."
+        msg2 = 'But we failed for another reason.'
+        msg3 = 'A 401 error without an authentication response header - very weird.'
+        msg4 = 'The authentication line is badly formed.'
+        msg5 = 'This example only works with BASIC authentication.'
+        msg6 = "url, username or password is wrong."
+
+    def __call__(self, event="", host="", user="", password=""):
+        text = self.text
+        req = urllib2.Request(host,event)
+        try:
+            handle = urllib2.urlopen(req)
+        except IOError, e:
+            # If we fail then the page could be protected
+            if not hasattr(e, 'code') or e.code != 401:                 
+                # we got an error - but not a 401 error
+                print text.msg1
+                print text.msg2
+           
+            authline = e.headers.get('www-authenticate', '')               
+            # this gets the www-authenticat line from the headers - which has the authentication scheme and realm in it
+            if not authline:
+                print text.msg3
+               
+            authobj = re.compile(r'''(?:\s*www-authenticate\s*:)?\s*(\w*)\s+realm=['"](\w+)['"]''', re.IGNORECASE)         
+            # this regular expression is used to extract scheme and realm
+            matchobj = authobj.match(authline)
+            if not matchobj:                                       
+                # if the authline isn't matched by the regular expression then something is wrong
+                print text.msg4
+            scheme = matchobj.group(1)
+            realm = matchobj.group(2)
+            if scheme.lower() != 'basic':
+                print text.msg5
+           
+            base64string = base64.encodestring('%s:%s' % (user, password))[:-1]
+            authheader =  "Basic %s" % base64string
+            req.add_header("Authorization", authheader)
+            try:
+                handle = urllib2.urlopen(req)
+            except IOError, e:
+                print text.msg6
+        #else:
+            # If we don't fail then the page isn't protected
+            #print "This page isn't protected by authentication."
+
+        thepage = unicode(urllib2.unquote(handle.read()).decode(eg.systemEncoding,'replace')) # handle.read()
+       
+        #print thepage
+        return thepage
+
+
+    def Configure(self, event="", host="http://127.0.0.1:80", user="", password=""):
+        text = self.text
+        panel = eg.ConfigPanel(self)
+        eventCtrl = panel.TextCtrl(event)
+        hostCtrl = panel.TextCtrl(host)
+        userCtrl = panel.TextCtrl(user)
+        passwordCtrl = panel.TextCtrl(password)
+        panel.sizer.AddMany([
+            panel.StaticText(text.event),
+            eventCtrl,
+            panel.StaticText(text.url),
+            hostCtrl,
+            panel.StaticText(text.username),
+            userCtrl,
+            panel.StaticText(text.password),
+            passwordCtrl,
+        ])
+        while panel.Affirmed():
+            panel.SetResult(
+                eventCtrl.GetValue(),
+                hostCtrl.GetValue(),
+                userCtrl.GetValue(),
+                passwordCtrl.GetValue(),
+            )
+# Enhancement by Sem;colon - END
+
 
 class Webserver(eg.PluginBase):
+
+    knowlClients = {}
+    pubPerClients = {}
+    pubVars = {}
+    pubPerVars = {}
 
     class text:
         generalBox = "General Settings"
@@ -434,13 +976,19 @@ class Webserver(eg.PluginBase):
         authRealm = "Realm:"
         authUsername = "Username:"
         authPassword = "Password:"
-
+        dialogPers = "Persistent variable manager"
+        dialogTemp = "Temporary variable viewer"
+        ok = "OK"
+        cancel = "Cancel"
+        vrbl = "Variable name"
+        defVal = "Variable value"
+        delete = "Delete selected variables"
+        clear = "Clear all variables"
 
     def __init__(self):
         self.AddEvents()
-        self.AddAction(SendEvent)
+        self.AddActionsFromList(ACTIONS)
         self.running = False
-
 
     def __start__(
         self,
@@ -450,12 +998,20 @@ class Webserver(eg.PluginBase):
         authRealm="Eventghost",
         authUsername="",
         authPassword="",
+        pubPerVars = {},
     ):
         self.info.eventPrefix = prefix
         if authUsername or authPassword:
             authString = base64.b64encode(authUsername + ':' + authPassword)
         else:
             authString = None
+        self.knowlClients = {}
+        self.pubPerClients = {}
+        self.pubVars = {}
+        self.pubPerVars = pubPerVars
+        for key in self.pubPerVars.iterkeys():
+            self.pubPerClients[key] = []
+        eg.PrintNotice("Persistent values: " + repr(self.pubPerVars))
         class RequestHandler(MyHTTPRequestHandler):
             plugin = self
             environment = jinja2.Environment(loader=FileLoader())
@@ -472,18 +1028,107 @@ class Webserver(eg.PluginBase):
         self.server.Stop()
 
 
+    def GetValue(self, key, client = None):
+        if key in self.pubVars:
+            if client:
+                tmp = self.knowlClients[key]
+                if not client in tmp:
+                    tmp.append(client)
+                return self.pubVars[key]
+            else:
+                return self.pubVars[key]
+
+
+    def DelPersistentValue(self, key):
+        if key in self.pubPerVars:
+            del self.pubPerVars[key]
+            wx.CallAfter(self.SetDocIsDirty)
+        if key in self.pubPerClients:
+            del self.pubPerClients[key]
+
+
+    def ClearPersistentValues(self):
+        tmpLst = list(self.pubPerVars.iterkeys())
+        for key in tmpLst:
+            del self.pubPerVars[key]
+        self.pubPerClients = {}
+        wx.CallAfter(self.SetDocIsDirty)
+
+
+    def GetPersistentValue(self, key, client = None):
+        if key in self.pubPerVars:
+            if client:
+                tmp = self.pubPerClients[key]
+                if not client in tmp:
+                    tmp.append(client)
+                return self.pubPerVars[key]
+            else:
+                return self.pubPerVars[key]
+
+
+    def SetValue(self, key, value):
+        if key not in self.pubPerVars:
+            if key not in self.pubVars or value != self.pubVars[key]:
+                self.pubVars[key] = unicode(value)
+                self.knowlClients[key] = []
+           
+
+    def SetPersistentValue(self, key, value):
+        if key not in self.pubVars:
+            if key not in self.pubPerVars or value != self.pubPerVars[key]:
+                self.pubPerVars[key] = unicode(value)
+                self.pubPerClients[key] = []
+                wx.CallAfter(self.SetDocIsDirty)
+           
+
+    def SetClientsFlags(self, key):
+        if key not in self.pubVars:
+            self.pubVars[key] = "dummy"
+        self.knowlClients[key] = []
+           
+
+    def GetChangedValues(self, client):
+        tmpDict = {}
+        for key, value in self.pubVars.iteritems():
+            if not client in self.knowlClients[key]:
+                tmpDict[key] = value
+                self.knowlClients[key].append(client)
+        for key, value in self.pubPerVars.iteritems():
+            if not client in self.pubPerClients[key]:
+                tmpDict[key] = value
+                self.pubPerClients[key].append(client)
+        return tmpDict
+
+
+    def GetAllValues(self, client):
+        tmpDict = {}
+        for key, value in self.pubVars.iteritems():
+            if not client in self.knowlClients[key]:
+                self.knowlClients[key].append(client)
+            tmpDict[key] = value
+        for key, value in self.pubPerVars.iteritems():
+            if not client in self.pubPerClients[key]:
+                self.pubPerClients[key].append(client)
+            tmpDict[key] = value
+        return tmpDict
+
+
+    def SetDocIsDirty(self):     
+        eg.document.SetIsDirty()
+       
+
     def Configure(
         self,
         prefix="HTTP",
-        port=80,
+        port = 80,
         basepath="",
         authRealm="EventGhost",
         authUsername="",
         authPassword="",
+        pubPerVars = {}
     ):
         text = self.text
         panel = eg.ConfigPanel()
-
         portCtrl = panel.SpinIntCtrl(port, min=1, max=65535)
         filepathCtrl = panel.DirBrowseButton(basepath)
         editCtrl = panel.TextCtrl(prefix)
@@ -533,6 +1178,43 @@ class Webserver(eg.PluginBase):
 #        configureTargetsButton = panel.Button("Configure Targets")
 #        configureTargetsButton.Bind(wx.EVT_BUTTON, ConfigureTargets)
 #        panel.sizer.Add(configureTargetsButton)
+        dialogButton = wx.Button(panel,-1,self.text.dialogPers + " ...")
+        dialogButton2 = wx.Button(panel,-1,self.text.dialogTemp + " ...")
+        dialogSizer = wx.BoxSizer(wx.HORIZONTAL)
+        dialogSizer.Add(dialogButton)
+        dialogSizer.Add(dialogButton2,0,wx.LEFT,15)
+        panel.sizer.Add(dialogSizer,0,wx.TOP,5)
+
+        def OnDialogBtn(evt):
+            dlg = VariableDialog(
+                parent = panel,
+                plugin = self,
+                pers = True
+            )
+            dlg.Centre()
+            wx.CallAfter(
+                dlg.ShowVariableDialog,
+                self.text.dialogPers,
+            )
+            evt.Skip()
+        dialogButton.Bind(wx.EVT_BUTTON, OnDialogBtn)
+
+
+        def OnDialog2Btn(evt):
+            dlg = VariableDialog(
+                parent = panel,
+                plugin = self,
+            )
+            dlg.Centre()
+            wx.CallAfter(
+                dlg.ShowVariableDialog,
+                self.text.dialogTemp,
+            )
+            evt.Skip()
+        dialogButton2.Bind(wx.EVT_BUTTON, OnDialog2Btn)     
+
+
+
         while panel.Affirmed():
             panel.SetResult(
                 editCtrl.GetValue(),
@@ -541,6 +1223,7 @@ class Webserver(eg.PluginBase):
                 authRealmCtrl.GetValue(),
                 authUsernameCtrl.GetValue(),
                 authPasswordCtrl.GetValue(),
+                self.pubPerVars
             )
 
 
@@ -594,4 +1277,56 @@ class ConfigureTargetsDialog(eg.Dialog):
     def OnDelete(self, event):
         if self.selectedItem is not None:
             self.listCtrl.DeleteItem(self.selectedItem)
+#===============================================================================
 
+ACTIONS = (
+    (
+        SendEvent,
+        "SendEvent",
+        "Send event to another EventGhost",
+        "Sends event to another EventGhost webserver.",
+        None
+    ),
+    (
+        SendEventExt,
+        "SendEventExt",
+        "Send event to another webserver",
+        "Sends event to another webserver.",
+       None
+    ),
+    (
+        GetValue,
+        "GetValue",
+        "Get temporary value",
+        "Gets value of temporary variable.",
+        None
+    ),
+    (
+        GetPersistentValue,
+        "GetPersistentValue",
+        "Get persistent value",
+        "Gets value of persistent variable.",
+        None
+    ),
+    (
+        SetValue,
+        "SetValue",
+        "Set temporary value",
+        "Sets value of temporary variable.",
+        None
+    ),
+    (
+        SetPersistentValue,
+        "SetPersistentValue",
+        "Set persistent value",
+        "Sets value of persistent variable.",
+        None
+    ),
+    (
+        SetClientsFlags,
+        "SetClientsFlags",
+        "Set clients flags",
+        "Sets clients flags of dummy variable.",
+        None
+    ),
+)
