@@ -54,6 +54,7 @@ def GetMixerControl(componentType, ctrlType, deviceId=0):
     This function attempts to obtain a mixer control. Raises
     SoundMixerException if not successful.
     '''
+    deviceId = GetDeviceId(deviceId)
     hmixer = HMIXER()
 
     # Obtain the hmixer struct
@@ -143,6 +144,7 @@ def SetControlValue(hmixer, mixerControl, value):
 
 def GetMute(deviceId=0):
     # Obtain the volumne control object
+    deviceId = GetDeviceId(deviceId)
     hmixer, mixerControl = GetMixerControl(
         MIXERLINE_COMPONENTTYPE_DST_SPEAKERS,
         MIXERCONTROL_CONTROLTYPE_MUTE,
@@ -155,6 +157,7 @@ def GetMute(deviceId=0):
 
 def SetMute(mute=True, deviceId=0):
     # Obtain the volumne control object
+    deviceId = GetDeviceId(deviceId)
     hmixer, mixerControl = GetMixerControl(
         MIXERLINE_COMPONENTTYPE_DST_SPEAKERS,
         MIXERCONTROL_CONTROLTYPE_MUTE,
@@ -166,6 +169,7 @@ def SetMute(mute=True, deviceId=0):
 
 
 def ToggleMute(deviceId=0):
+    deviceId = GetDeviceId(deviceId)
     flag = not GetMute(deviceId)
     SetMute(flag, deviceId)
     return flag
@@ -173,6 +177,7 @@ def ToggleMute(deviceId=0):
 
 def GetMasterVolume(deviceId=0):
     # Obtain the volumne control object
+    deviceId = GetDeviceId(deviceId)
     hmixer, mixerControl = GetMixerControl(
         MIXERLINE_COMPONENTTYPE_DST_SPEAKERS,
         MIXERCONTROL_CONTROLTYPE_VOLUME,
@@ -190,6 +195,7 @@ def GetMasterVolume(deviceId=0):
 
 def SetMasterVolume(value, deviceId=0):
     # Obtain the volumne control object
+    deviceId = GetDeviceId(deviceId)
     hmixer, volCtrl = GetMixerControl(
         MIXERLINE_COMPONENTTYPE_DST_SPEAKERS,
         MIXERCONTROL_CONTROLTYPE_VOLUME,
@@ -208,6 +214,7 @@ def SetMasterVolume(value, deviceId=0):
 
 def ChangeMasterVolumeBy(value, deviceId=0):
     # Obtain the volumne control object
+    deviceId = GetDeviceId(deviceId)
     hmixer, mixerControl = GetMixerControl(
         MIXERLINE_COMPONENTTYPE_DST_SPEAKERS,
         MIXERCONTROL_CONTROLTYPE_VOLUME,
@@ -227,21 +234,46 @@ def ChangeMasterVolumeBy(value, deviceId=0):
     SetControlValue(hmixer, mixerControl, newVolume)
 
 
-def GetMixerDevices():
+def GetMixerDevices(useList=False):
     """ Returns a list of all mixer device names available on the system."""
     mixcaps = MIXERCAPS()
     result = []
     # get the number of Mixer devices in this computer
+    result.append("Primary Sound Driver")
     for i in range(mixerGetNumDevs()):
         # get info about the device
         if mixerGetDevCaps(i, byref(mixcaps), sizeof(MIXERCAPS)):
             continue
         # store the name of the device
         result.append(mixcaps.szPname)
-    return result
+    return result if useList else dict((i-1, result[i]) for i in range(len(result)))
+
+
+def GetDeviceId(deviceId, strVal=False):
+    if strVal and deviceId == "Primary Sound Driver":
+        deviceId = 0
+    if isinstance(deviceId, int):
+        if strVal:
+            devices = GetMixerDevices()
+            if deviceId < len(devices) and deviceId > -1:
+                return devices[deviceId]
+            else:
+                return devices[0]
+        else:
+            return deviceId
+    else:
+        if strVal:
+            return deviceId
+        else:
+            devices = GetMixerDevices(True)
+            if deviceId in devices:
+                return devices.index(deviceId) - 1
+            else:
+                return 0
 
 
 def GetDeviceLines(deviceId=0):
+    deviceId = GetDeviceId(deviceId)
     mixercaps = MIXERCAPS()
     mixerline = MIXERLINE()
     hmixer = HMIXER()
@@ -251,7 +283,7 @@ def GetDeviceLines(deviceId=0):
     if rc != MMSYSERR_NOERROR:
         raise SoundMixerException()
 
-    if mixerGetDevCaps(hmixer, byref(mixercaps), sizeof(MIXERCAPS)):
+    if mixerGetDevCaps(deviceId, byref(mixercaps), sizeof(MIXERCAPS)):
         raise SoundMixerException()
 
     for destinationNum in range(mixercaps.cDestinations):

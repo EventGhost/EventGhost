@@ -19,8 +19,8 @@ import traceback
 
 eg.RegisterPlugin(
     name = "System",
-    author = "Bitmonster",
-    version = "1.1.5",
+    author = "Bitmonster & blackwind",
+    version = "1.1.6",
     description = (
         "Controls different aspects of your system, like sound card, "
         "graphics card, power management, et cetera."
@@ -107,8 +107,9 @@ class Text:
             "the computer. Can also lock the workstation and logoff the "
             "current user."
         )
-    forced   = "Forced: %s"
-    forcedCB = "Force close of all programs"
+    forced        = "Forced: %s"
+    forcedCB      = "Force close of all programs"
+    primaryDevice = "Primary Sound Driver"
 
     RegistryGroup = Registry.Text
 
@@ -271,65 +272,71 @@ class System(eg.PluginBase):
             vistaVolumeDll.RegisterMuteHandler(self.MuteEvent)
 
             def MuteOn2(self, deviceId=0):
+                deviceId = SoundMixer.GetDeviceId(deviceId, True)
                 try:
-                    vistaVolumeDll.SetMute(1)
+                    vistaVolumeDll.SetMute(1, deviceId)
                 except:
                     return False
                     #pass
                 return True
 
             def MuteOff2(self, deviceId=0):
+                deviceId = SoundMixer.GetDeviceId(deviceId, True)
                 try:
-                    vistaVolumeDll.SetMute(0)
+                    vistaVolumeDll.SetMute(0, deviceId)
                 except:
                     return True
                     #pass
                 return False
 
             def ToggleMute2(self, deviceId=0):
+                deviceId = SoundMixer.GetDeviceId(deviceId, True)
                 newvalue=None
                 try:
-                    newValue = not vistaVolumeDll.GetMute()
-                    vistaVolumeDll.SetMute(newValue)
+                    newValue = not vistaVolumeDll.GetMute(deviceId)
+                    vistaVolumeDll.SetMute(newValue, deviceId)
                     eg.Utils.time.sleep(0.1) # workaround
-                    newValue = vistaVolumeDll.GetMute() # workaround
+                    newValue = vistaVolumeDll.GetMute(deviceId) # workaround
                 except:
                     pass
                 return newValue
 
             def GetMute2(self, deviceId=0):
+                deviceId = SoundMixer.GetDeviceId(deviceId, True)
                 newvalue=None
                 try:
-                    newvalue=vistaVolumeDll.GetMute()
+                    newvalue=vistaVolumeDll.GetMute(deviceId)
                 except:
                     pass
                 return newvalue
 
             def SetMasterVolume2(self, value=200, deviceId=0):
+                deviceId = SoundMixer.GetDeviceId(deviceId, True)
                 value = float(value) if isinstance(value,(int, float)) else float(eg.ParseString(value))
                 newvalue=None
                 try:
                     if value >= 0 and value <= 100:
-                        vistaVolumeDll.SetMasterVolume(value / 100.0)
+                        vistaVolumeDll.SetMasterVolume(value / 100.0, deviceId)
                     eg.Utils.time.sleep(0.1) # workaround
-                    newvalue = vistaVolumeDll.GetMasterVolume() * 100.0
+                    newvalue = vistaVolumeDll.GetMasterVolume(deviceId) * 100.0
                 except:
                     pass
                 return newvalue
 
             def ChangeMasterVolumeBy2(self, value, deviceId=0):
+                deviceId = SoundMixer.GetDeviceId(deviceId, True)
                 value = float(value) if isinstance(value,(int, float)) else float(eg.ParseString(value))
                 newvalue=None
                 try:
-                    old = vistaVolumeDll.GetMasterVolume() * 100
+                    old = vistaVolumeDll.GetMasterVolume(deviceId) * 100
                     if old + value <= 0:
-                        vistaVolumeDll.SetMasterVolume(0)
+                        vistaVolumeDll.SetMasterVolume(0, deviceId)
                     elif old + value >= 100:
-                        vistaVolumeDll.SetMasterVolume(1.0)
+                        vistaVolumeDll.SetMasterVolume(1.0, deviceId)
                     else:
-                        vistaVolumeDll.SetMasterVolume((old + value) / 100.0)
+                        vistaVolumeDll.SetMasterVolume((old + value) / 100.0, deviceId)
                     eg.Utils.time.sleep(0.1) # workaround
-                    newvalue = vistaVolumeDll.GetMasterVolume() * 100.0
+                    newvalue = vistaVolumeDll.GetMasterVolume(deviceId) * 100.0
                 except:
                     pass
                 return newvalue
@@ -575,7 +582,7 @@ class PlaySound(eg.ActionWithStringParameter):
             self.sound = sound
             self.suffix = suffix
             self.prefix = prefix
-    
+
         def run(self):
             self.sound.Play(wx.SOUND_SYNC)
             eg.TriggerEvent(self.suffix, prefix = self.prefix)
@@ -893,6 +900,7 @@ class MuteOn(eg.ActionBase):
     iconFile = "icons/SoundCard"
 
     def __call__(self, deviceId=0):
+        deviceId = SoundMixer.GetDeviceId(deviceId)
         SoundMixer.SetMute(True, deviceId)
         return True
 
@@ -902,13 +910,17 @@ class MuteOn(eg.ActionBase):
 
 
     def Configure(self, deviceId=0):
+        deviceId = SoundMixer.GetDeviceId(deviceId)
         panel = eg.ConfigPanel()
         deviceCtrl = panel.Choice(
-            deviceId, choices=SoundMixer.GetMixerDevices()
+            deviceId+1, choices=SoundMixer.GetMixerDevices(True)
         )
+        """if sys.getwindowsversion()[0] > 5:
+            deviceCtrl.SetValue(0)
+            deviceCtrl.Enable(False)"""
         panel.AddLine("Device:", deviceCtrl)
         while panel.Affirmed():
-            panel.SetResult(deviceCtrl.GetValue())
+            panel.SetResult(deviceCtrl.GetStringSelection())
 
 
 
@@ -917,6 +929,7 @@ class MuteOff(eg.ActionBase):
     iconFile = "icons/SoundCard"
 
     def __call__(self, deviceId=0):
+        deviceId = SoundMixer.GetDeviceId(deviceId)
         SoundMixer.SetMute(False, deviceId)
         return False
 
@@ -926,13 +939,17 @@ class MuteOff(eg.ActionBase):
 
 
     def Configure(self, deviceId=0):
+        deviceId = SoundMixer.GetDeviceId(deviceId)
         panel = eg.ConfigPanel()
         deviceCtrl = panel.Choice(
-            deviceId, choices=SoundMixer.GetMixerDevices()
+            deviceId+1, choices=SoundMixer.GetMixerDevices(True)
         )
+        """if sys.getwindowsversion()[0] > 5:
+            deviceCtrl.SetValue(0)
+            deviceCtrl.Enable(False)"""
         panel.AddLine("Device:", deviceCtrl)
         while panel.Affirmed():
-            panel.SetResult(deviceCtrl.GetValue())
+            panel.SetResult(deviceCtrl.GetStringSelection())
 
 
 
@@ -941,6 +958,7 @@ class ToggleMute(eg.ActionBase):
     iconFile = "icons/SoundCard"
 
     def __call__(self, deviceId=0):
+        deviceId = SoundMixer.GetDeviceId(deviceId)
         return SoundMixer.ToggleMute(deviceId)
 
 
@@ -949,13 +967,17 @@ class ToggleMute(eg.ActionBase):
 
 
     def Configure(self, deviceId=0):
+        deviceId = SoundMixer.GetDeviceId(deviceId)
         panel = eg.ConfigPanel()
         deviceCtrl = panel.Choice(
-            deviceId, choices=SoundMixer.GetMixerDevices()
+            deviceId+1, choices=SoundMixer.GetMixerDevices(True)
         )
+        """if sys.getwindowsversion()[0] > 5:
+            deviceCtrl.SetValue(0)
+            deviceCtrl.Enable(False)"""
         panel.AddLine("Device:", deviceCtrl)
         while panel.Affirmed():
-            panel.SetResult(deviceCtrl.GetValue())
+            panel.SetResult(deviceCtrl.GetStringSelection())
 
 
 class GetMute(eg.ActionBase):
@@ -963,6 +985,7 @@ class GetMute(eg.ActionBase):
     iconFile = "icons/SoundCard"
 
     def __call__(self, deviceId=0):
+        deviceId = SoundMixer.GetDeviceId(deviceId)
         return SoundMixer.GetMute(deviceId)
 
 
@@ -971,13 +994,17 @@ class GetMute(eg.ActionBase):
 
 
     def Configure(self, deviceId=0):
+        deviceId = SoundMixer.GetDeviceId(deviceId)
         panel = eg.ConfigPanel()
-        deviceCtrl = panel.Choice(deviceId, choices=SoundMixer.GetMixerDevices())
-
-
+        deviceCtrl = panel.Choice(
+            deviceId+1, choices=SoundMixer.GetMixerDevices(True)
+        )
+        """if sys.getwindowsversion()[0] > 5:
+            deviceCtrl.SetValue(0)
+            deviceCtrl.Enable(False)"""
         panel.AddLine("Device:", deviceCtrl)
         while panel.Affirmed():
-            panel.SetResult(deviceCtrl.GetValue())
+            panel.SetResult(deviceCtrl.GetStringSelection())
 
 
 class SetMasterVolume(eg.ActionBase):
@@ -991,28 +1018,35 @@ class SetMasterVolume(eg.ActionBase):
 
 
     def __call__(self, value, deviceId=0):
+        deviceId = SoundMixer.GetDeviceId(deviceId)
         value = float(value) if isinstance(value,(int, float)) else float(eg.ParseString(value))
         SoundMixer.SetMasterVolume(value, deviceId)
         return SoundMixer.GetMasterVolume(deviceId)
 
 
     def GetLabel(self, value, deviceId=0):
+        primaryDevice = (deviceId == self.plugin.text.primaryDevice)
+        deviceId = SoundMixer.GetDeviceId(deviceId)
         if isinstance(value,(int, float)):
             value = float(value)
-            if deviceId > 0:
+            if not primaryDevice:
                 return "%s #%i: %.2f %%" % (self.name, deviceId+1, value)
             else:
                 return "%s: %.2f %%" % (self.name, value)
         else:
-            if deviceId > 0:
+            if not primaryDevice:
                 return "%s #%i: %s %%" % (self.name, deviceId+1, value)
             else:
                 return "%s: %s %%" % (self.name, value)
 
 
     def Configure(self, value=0, deviceId=0):
+        deviceId = SoundMixer.GetDeviceId(deviceId)
         panel = eg.ConfigPanel()
         deviceCtrl = panel.Choice(deviceId, SoundMixer.GetMixerDevices())
+        """if sys.getwindowsversion()[0] > 5:
+            deviceCtrl.SetValue(0)
+            deviceCtrl.Enable(False)"""
         valueCtrl = panel.SmartSpinNumCtrl(value, min=0, max=100)
         sizer = eg.HBoxSizer(
             (panel.StaticText(self.text.text1), 0, wx.ALIGN_CENTER_VERTICAL),
@@ -1024,7 +1058,7 @@ class SetMasterVolume(eg.ActionBase):
         while panel.Affirmed():
             panel.SetResult(
                 valueCtrl.GetValue(),
-                deviceCtrl.GetValue(),
+                deviceCtrl.GetStringSelection(),
             )
 
 
@@ -1039,31 +1073,37 @@ class ChangeMasterVolumeBy(eg.ActionBase):
 
 
     def __call__(self, value, deviceId=0):
+        deviceId = SoundMixer.GetDeviceId(deviceId)
         value = float(value) if isinstance(value,(int, float)) else float(eg.ParseString(value))
         SoundMixer.ChangeMasterVolumeBy(value, deviceId)
         return SoundMixer.GetMasterVolume(deviceId)
 
 
     def GetLabel(self, value, deviceId=0):
+        primaryDevice = (deviceId == self.plugin.text.primaryDevice)
+        deviceId = SoundMixer.GetDeviceId(deviceId)
         if isinstance(value,(int, float)):
             value = float(value)
-            if deviceId > 0:
+            if not primaryDevice:
                 return "%s #%i: %.2f %%" % (self.name, deviceId+1, value)
             else:
                 return "%s: %.2f %%" % (self.name, value)
         else:
-            if deviceId > 0:
+            if not primaryDevice:
                 return "%s #%i: %s %%" % (self.name, deviceId+1, value)
             else:
-                return "%s: %s %%" % (self.name, value) 
+                return "%s: %s %%" % (self.name, value)
 
 
     def Configure(self, value=0, deviceId=0):
+        deviceId = SoundMixer.GetDeviceId(deviceId)
         panel = eg.ConfigPanel()
         deviceCtrl = panel.Choice(
-            deviceId,
-            choices=SoundMixer.GetMixerDevices()
+            deviceId+1, choices=SoundMixer.GetMixerDevices(True)
         )
+        """if sys.getwindowsversion()[0] > 5:
+            deviceCtrl.SetValue(0)
+            deviceCtrl.Enable(False)"""
 
         valueCtrl = panel.SmartSpinNumCtrl(value, min=-100, max=100)
         sizer = eg.HBoxSizer(
@@ -1071,13 +1111,13 @@ class ChangeMasterVolumeBy(eg.ActionBase):
             (valueCtrl, 0, wx.LEFT|wx.RIGHT, 5),
             (panel.StaticText(self.text.text2), 0, wx.ALIGN_CENTER_VERTICAL),
         )
-      
+
         panel.AddLine("Device:", deviceCtrl)
         panel.AddLine(sizer)
         while panel.Affirmed():
             panel.SetResult(
                 valueCtrl.GetValue(),
-                deviceCtrl.GetValue(),
+                deviceCtrl.GetStringSelection(),
             )
 #===============================================================================
 
@@ -1189,7 +1229,7 @@ class ShapedFrame(wx.Frame):
             else:
                 if stretch and w <= width_ and h <= height_:
                     res = True
-                        
+
                 elif fit and w >= width_ and h >= height_:
                     res = True
 
@@ -1384,15 +1424,15 @@ class ShowPictureFrame(wx.Frame):
 class HideImage(eg.ActionBase):
     name = "Hide Image"
     description = "Hides an image."
-    
+
     class text:
         title = "Name of image:"
-        
+
     def __call__(self, title=""):
         if title:
             self.plugin.HideImage(title)
- 
- 
+
+
     def Configure(self, title=""):
         panel = eg.ConfigPanel(self)
         titleLbl = wx.StaticText(panel, -1, self.text.title)
@@ -1569,10 +1609,10 @@ or insert the image as a base64 string"""
         timeoutLbl_1=wx.StaticText(panel, -1, text.timeout1)
         timeoutLbl_2=wx.StaticText(panel, -1, text.timeout2)
         radioBoxWinSizes = wx.RadioBox(
-            panel, 
-            -1, 
-            text.winSizeLabel, 
-            choices=self.text.winSizes, 
+            panel,
+            -1,
+            text.winSizeLabel,
+            choices=self.text.winSizes,
             style=wx.RA_SPECIFY_ROWS
         )
         radioBoxWinSizes.SetSelection(winSize)
@@ -1645,7 +1685,7 @@ or insert the image as a base64 string"""
             widthCtrl.Enable(wFlag)
             widthLbl.Enable(wFlag)
             heightCtrl.Enable(hFlag)
-            heightLbl.Enable(hFlag) 
+            heightLbl.Enable(hFlag)
             if evt:
                 evt.Skip()
         rb0.Bind(wx.EVT_RADIOBUTTON, enableCtrls_B)
@@ -1664,12 +1704,12 @@ or insert the image as a base64 string"""
             borderLbl.Enable(flag)
             if mode == 0:
                 fitCtrl.SetValue(False)
-                stretchCtrl.SetValue(False) 
+                stretchCtrl.SetValue(False)
             elif mode == 1:
                 if rb0.GetValue():
                     rb1.SetValue(True)
                 fitCtrl.SetValue(True)
-                stretchCtrl.SetValue(True) 
+                stretchCtrl.SetValue(True)
             flag = mode != 0 and (fitCtrl.GetValue() or stretchCtrl.GetValue())
             rb1.Enable(flag)
             rb2.Enable(flag)
@@ -1678,7 +1718,7 @@ or insert the image as a base64 string"""
             resampleLbl.Enable(flag)
             flag = mode > 1
             fitCtrl.Enable(flag)
-            stretchCtrl.Enable(flag) 
+            stretchCtrl.Enable(flag)
             flag = flag and (fitCtrl.GetValue() or stretchCtrl.GetValue())
             rb0.Enable(flag)
             if evt:
@@ -1693,11 +1733,11 @@ or insert the image as a base64 string"""
         #Sizers
         borderSizer = wx.BoxSizer(wx.HORIZONTAL)
         borderSizer.Add(borderLbl,0,wx.TOP,3)
-        borderSizer.Add(borderCtrl,0,wx.LEFT,5)        
+        borderSizer.Add(borderCtrl,0,wx.LEFT,5)
         timeoutSizer = wx.BoxSizer(wx.HORIZONTAL)
-        timeoutSizer.Add(timeoutLbl_1,0,wx.TOP,3)        
+        timeoutSizer.Add(timeoutLbl_1,0,wx.TOP,3)
         timeoutSizer.Add(timeoutCtrl,0,wx.LEFT|wx.RIGHT,5)
-        timeoutSizer.Add(timeoutLbl_2,0,wx.TOP,3)        
+        timeoutSizer.Add(timeoutLbl_2,0,wx.TOP,3)
         box1 = wx.StaticBox(panel,-1,text.other)
         otherSizer = wx.StaticBoxSizer(box1,wx.VERTICAL)
         otherSizer.Add(borderSizer,0,wx.TOP,0)
@@ -1769,7 +1809,7 @@ or insert the image as a base64 string"""
             for rb in (rb0, rb1, rb2, rb3):
                 if rb.GetValue():
                     break
-                i += 1   
+                i += 1
             panel.SetResult(
                 filepathCtrl.GetValue(),
                 radioBoxWinSizes.GetSelection(),
