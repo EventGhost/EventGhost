@@ -19,7 +19,7 @@
 eg.RegisterPlugin(
     name = "Winamp",
     author = "Bitmonster & blackwind & Matthew Jacob Edwards",
-    version = "1.3.0",
+    version = "1.3.1",
     kind = "program",
     guid = "{4A22DD6A-5E2C-4500-90B4-47F5C58FD9CA}",
     createMacrosOnAdd = True,
@@ -469,7 +469,7 @@ class GetPlayingSongTitle(ActionBase):
         strWinAmpTitle = strWinAmpTitle.replace("[Paused]", "")
 
         decPos = strWinAmpTitle.find(" ") - 1
-        if decPos > 0 and strWinAmpTitle[decPos] == "." and int(strWinAmpTitle[:decPos]) > 0:
+        if decPos > 0 and strWinAmpTitle[decPos] == "." and strWinAmpTitle[:decPos].isdigit():
             strWinAmpTitle = strWinAmpTitle[decPos + 2:]
 
         strWinAmpTitle = strWinAmpTitle.strip()
