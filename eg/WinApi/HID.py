@@ -410,9 +410,7 @@ class HIDThread(threading.Thread):
                         values = {}
                         for i in range(dataL.value):
                             tmpIndex = data[i].DataIndex
-                            if  tmpIndex >= len(dataIndexType):
-                                eg.PrintError("invalid index for dataIndexType %d/%d" % (tmpIndex, len(dataIndexType)));
-                            elif dataIndexType[tmpIndex] == 1:#button
+                            if tmpIndex >= len(dataIndexType) or dataIndexType[tmpIndex] == 1:#button
                                 #collect buttons pressed
                                 btnPressed.append(tmpIndex)
                             elif dataIndexType[tmpIndex] == 2:#control value
