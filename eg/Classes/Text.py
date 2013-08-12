@@ -97,6 +97,7 @@ class Default:
             "execute in the current configuration. So you should *not* check\n"
             "this, while you want to assign new events."
         )
+        scrollLog = "Scroll log"
         class TaskBarMenu:
             Show = "Show EventGhost"
             Hide = "Hide EventGhost"
