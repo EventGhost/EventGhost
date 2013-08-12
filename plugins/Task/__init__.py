@@ -19,7 +19,7 @@ import eg
 eg.RegisterPlugin(
     name = "Task Create/Switch Events",
     author = "Bitmonster",
-    version = "1.0.2",
+    version = "1.0.3",
     guid = "{D1748551-C605-4423-B392-FB77E6842437}",
     description = (
         "Generates events if an application starts, exits or "
@@ -99,6 +99,7 @@ class Task(eg.PluginBase):
 
     def __start__(self, *dummyArgs):
         self.names, self.hwnds = EnumProcesses()
+        self.flashing = set()
         self.lastActivated = None
         eg.messageReceiver.AddHandler(WM_APP+1, self.WindowGotFocusProc)
         eg.messageReceiver.AddHandler(WM_APP+2, self.WindowCreatedProc)
@@ -173,9 +174,18 @@ class Task(eg.PluginBase):
                 self.names.pop(name, None)
 
 
+    def WindowFlashedProc(self, dummyHwnd, dummyMesg, hwnd, dummyLParam):
+        processInfo = self.hwnds.get(hwnd, None)
+        if processInfo and hwnd not in self.flashing:
+            self.flashing.add(hwnd)
+            self.TriggerEvent("Flashed." + processInfo.name)
+
+
     def WindowGotFocusProc(self, dummyHwnd, dummyMesg, hwnd, dummyLParam):
         ident = self.CheckWindow(hwnd)
         if ident and ident != self.lastActivated:
+            if hwnd in self.flashing:
+                self.flashing.remove(hwnd)
             if self.lastActivated:
                 self.TriggerEvent("Deactivated." + self.lastActivated[0])
             self.TriggerEvent("Activated." + ident[0])
@@ -187,5 +197,7 @@ class Task(eg.PluginBase):
             self.WindowDestroyedProc(None, None, lParam, None)
         elif wParam == HSHELL_WINDOWACTIVATED or wParam == 0x8004:
             self.WindowGotFocusProc(None, None, lParam, None)
+        elif wParam == 0x8006:
+            self.WindowFlashedProc(None, None, lParam, None)
         return 1
 
