@@ -93,6 +93,7 @@ class Config(Section):
     useFixedFont = False
     propResize = True
     onlyLogAssigned = False
+    scrollLog = True
     autoloadFilePath = False
     limitMemory = False
     limitMemorySize = 8

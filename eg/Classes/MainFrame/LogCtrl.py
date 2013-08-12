@@ -105,6 +105,7 @@ class LogCtrl(wx.ListCtrl):
 
 
     def OnSetFocus(self, event):
+        self.FocusLastItem()
         eg.Notify("FocusChange", self)
         event.Skip()
 
@@ -216,6 +217,8 @@ class LogCtrl(wx.ListCtrl):
         self.DeleteAllItems()
         self.data.clear()
         eg.log.data.clear()
+        eg.Print(eg.text.MainFrame.Logger.welcomeText)
+        self.FocusLastItem()
         self.ScrollList(0, 1000000)
         self.Refresh()
 
@@ -285,8 +288,16 @@ class LogCtrl(wx.ListCtrl):
             self.Thaw()
         data.append((line, icon, wRef, when, indent))
         self.SetItemCount(len(data))
-        self.ScrollList(0, 1000000)
+        if eg.config.scrollLog:
+            self.ScrollList(0, 1000000)
         self.Update()
+
+
+    def FocusLastItem(self):
+        if self.GetFocusedItem() == -1:
+            item = len(self.data) - 1
+            self.Focus(item)
+            self.SetItemState(item, 0, wx.LIST_STATE_SELECTED)
 
 
     if eg.debugLevel:
