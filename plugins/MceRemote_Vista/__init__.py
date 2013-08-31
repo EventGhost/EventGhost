@@ -17,14 +17,12 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 #
-# $LastChangedDate: 2009-04-23 18:49:25 +0200 (Thu, 23 Apr 2009) $
-# $LastChangedRevision: 911 $
-# $LastChangedBy: Bitmonster $
+
 
 eg.RegisterPlugin(
     name = "Microsoft MCE Remote - Vista/Win7",
     author = "Brett Stottlemyer",
-    version = "1.0.0.1",
+    version = "1.0.2",
     kind = "remote",
     guid = "{A7DB04BB-9F0A-486A-BCA1-CA87B9620D54}",
     description = 'Plugin for the Microsoft MCE remote.  Requires installation of AlternateMceIrService.',
@@ -163,21 +161,22 @@ class IRLearnDialog(wx.Dialog):
         sizer.Fit(self)
         self.SetMinSize(self.GetSize())
         self.Bind(wx.EVT_CLOSE, self.OnClose)
+        self.exit = 0
 
     def OnClose(self, event):
         event.Skip()
         
     def OnCancel(self, event):
-        self.exit = wx.ID_CANCEL
         self.Close()
 
     def GotCode(self, freqs, code):
         median_freq = sorted(freqs)[len(freqs)/2]
-        self.carrierFreqCtrl.SetLabel(
-            "%d.%03d kHz" % (median_freq / 1000, median_freq % 1000)
-        )
+        #the following line causes EG to crash
+        #self.carrierFreqCtrl.SetLabel(
+        #    "%d.%03d kHz" % (median_freq / 1000, median_freq % 1000)
+        #)
         self.code = ConvertIrCodeToProntoRaw(median_freq,code)
-        self.exit = wx.ID_OK
+        self.exit = 1
         self.Close()
         
 class GetDeviceInfo(eg.ActionBase):
@@ -345,9 +344,9 @@ class MceMessageReceiver(object):
         self.result = []
         self.learnDialog = IRLearnDialog()
         self.learnDialog.ShowModal()
-        if self.learnDialog.exit == wx.ID_OK:
+        if self.learnDialog.exit == 1:
             code = self.learnDialog.code
-        self.learnDialog.Destroy()
+        #self.learnDialog.Destroy()
         self.ChangeReceiveMode("n".encode("ascii"))
         #reset some variables for normal processing
         self.learnDialog = None
