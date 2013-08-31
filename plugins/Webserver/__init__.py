@@ -17,6 +17,9 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 1.5 by Sem;colon 2013-08-31 09:32 UTC+1
+#     - extended the POST enhancement by Sem;colon
+#       to match the functionality of the AJAX JSON POST
 # 1.4 by Pako 2013-08-09 11:02 UTC+1
 #     - bugfixes
 # 1.3 by Pako 2013-08-05 20:30 UTC+1
@@ -37,7 +40,7 @@ import eg
 eg.RegisterPlugin(
     name = "Webserver",
     author = "Bitmonster (enhancements Pako and Sem;colon)",
-    version = "1.4",
+    version = "1.5",
     guid = "{E4305D8E-A3D3-4672-B06E-4EA1F0F6C673}",
     description = (
         "Implements a small webserver, that you can use to generate events "
@@ -465,30 +468,83 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
             return
         contentLength = int(self.headers.get('content-length'))
         content = self.rfile.read(contentLength)
-        result = None
+        plugin = self.plugin
         try:
             data = json.loads(content)
         except:
-            eg.PrintTraceback()
 
 # Enhancement by Sem;colon - START
             data=content.split("&")
             if data[0]=="request":
-              self.SendContent(self.path)
-              if len(data)>1:
-                self.plugin.TriggerEvent(data[1], data[2:])
-            elif data[0][0:8]=="request=" and len(data[0])>8:
-              content = self.environment.globals[data[0][8:]]
-              self.end_request(content)
-              if len(data)>1:
-                self.plugin.TriggerEvent(data[1], data[2:])
+                self.SendContent(self.path)
+                if len(data)>1:
+                    plugin.TriggerEvent(data[1], data[2:])
             else:
-              self.plugin.TriggerEvent(data[0], data[1:])
-              self.end_request("null")
+                content = "True"
+                if data[0][0:8]=="request=" and len(data[0])>8:
+                    try:
+                        content = self.environment.globals[data[0][8:]]
+                    except:
+                        content = "None"
+                    if len(data)>1:
+                        plugin.TriggerEvent(data[1], data[2:])
+                elif data[0]=="ExecuteScript":
+                    try:
+                        content = eval(data[1])
+                        if type(content)!=str and type(content)!=unicode:
+                            content = "True"
+                    except:
+                        content = "False"
+                elif data[0]=="GetValue":
+                    try:
+                        content = plugin.GetValue(data[1], self.client_address[0])
+                    except:
+                        content = "None"
+                elif data[0]=="GetPersistentValue":
+                    try:
+                        content = plugin.GetPersistentValue(data[1], self.client_address[0])
+                    except:
+                        content = "None"
+                elif data[0]=="SetValue":
+                    try:
+                        plugin.pubVars[data[1]] = data[2]
+                    except:
+                        content = "False"
+                elif data[0]=="SetPersistentValue":
+                    try:
+                        plugin.pubPerVars[data[1]] = data[2]
+                        wx.CallAfter(plugin.SetDocIsDirty)
+                    except:
+                        content = "False"
+                elif data[0]=="GetAllValues":
+                    content = plugin.GetAllValues(self.client_address[0])
+                elif data[0]=="GetChangedValues":
+                    content = plugin.GetChangedValues(self.client_address[0])
+                elif data[0]=="GetChangedValues":
+                    content = plugin.GetChangedValues(self.client_address[0])
+                elif data[0] == "TriggerEnduringEvent":
+                    plugin.TriggerEnduringEvent(data[1], data[2:])
+                    self.repeatTimer.Reset(2000)
+                elif data[0] == "RepeatEnduringEvent":
+                    self.repeatTimer.Reset(2000)
+                elif data[0] == "EndLastEvent":
+                    self.repeatTimer.Reset(None)
+                    plugin.EndLastEvent()
+                elif data[0]=="TriggerEvent":
+                    if data[1][0:7]=="prefix=" and len(data)>2:
+                        data[2]=data[2].replace("suffix=","")
+                        if len(data)>3:
+                          data[3]=data[3].replace("payload=","")
+                        eg.TriggerEvent(prefix=data[1][7:], suffix=data[2], payload=data[3:])
+                    else:
+                        plugin.TriggerEvent(data[1], data[2:])
+                else:
+                    plugin.TriggerEvent(data[0], data[1:])
+                self.end_request(content)
 # Enhancement by Sem;colon - END
 
         else: # JSON request
-            plugin = self.plugin
+            result = None
             methodName = data["method"]
             args = data.get("args", [])
             kwargs = data.get("kwargs", {})
@@ -498,7 +554,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
                         result = plugin.GetValue(args[0], self.client_address[0])
                     except:
                         result = None
-            if methodName == "GetPersistentValue":   
+            elif methodName == "GetPersistentValue":   
                 if len(args):
                     try:
                         result = plugin.GetPersistentValue(args[0], self.client_address[0])
