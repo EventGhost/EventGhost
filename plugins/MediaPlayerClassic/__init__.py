@@ -20,6 +20,8 @@
 
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 2.7 by Pako 2013-09-02 10:14 UTC+1
+#     - bugfix (Show menu - Test button)
 # 2.6 by Pako 2013-02-10 10:56 UTC+1
 #     - the function GetMpcHcPath() improved - now works also in x64 environment
 # 2.5 by Pako 2013-02-08 19:05 UTC+1
@@ -66,7 +68,7 @@
 eg.RegisterPlugin(
     name = "Media Player Classic",
     author = "MonsterMagnet",
-    version = "2.5",
+    version = "2.7",
     kind = "program",
     guid = "{DD75104D-D586-438A-B63D-3AD01A4D4BD3}",
     createMacrosOnAdd = True,
@@ -2209,7 +2211,7 @@ class ShowMenu(eg.ActionClass):
                         self.plugin,
                         self.event,
                         displayChoice.GetSelection(),
-                        hWnd,
+                        self.plugin.mpcHwnd,
                         panel.evtList
                     )
                     eg.actionThread.WaitOnEvent(self.event)
