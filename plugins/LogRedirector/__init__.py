@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-version="0.0.7"
+version="0.0.8"
 
 # plugins/LogRedirector/__init__.py
 #
@@ -22,6 +22,8 @@ version="0.0.7"
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.0.8 by Pako 2013-09-03 10:40 GMT+1
+#     - support url updated
 # 0.0.7 by Pako 2013-01-20 10:02 GMT+1
 #     - the new eg.Log API taken into consideration
 # 0.0.6 by Pako 2011-10-03 07:25 GMT+1
@@ -49,7 +51,7 @@ eg.RegisterPlugin(
     description = u'''<rst>This plugin is designed to easily redirection of
 EventGhost log to text file.''',
     createMacrosOnAdd = False,
-    url = "http://www.eventghost.org/forum/viewtopic.php?f=9&t=2740",
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=2852",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAADAFBMVEUA////AAD/fHz/"
         "jIz/vb3/TU3/p6f/aGj/mpr/srL/x8f/2dn/0NAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
