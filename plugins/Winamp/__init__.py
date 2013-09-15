@@ -15,8 +15,8 @@
 # expose some information about the plugin through an eg.PluginInfo subclass
 eg.RegisterPlugin(
     name = "Winamp",
-    author = "Bitmonster & blackwind & Matthew Jacob Edwards",
-    version = "1.3.1",
+    author = "Bitmonster & blackwind & Matthew Jacob Edwards & Sem;colon",
+    version = "1.4.0",
     kind = "program",
     guid = "{4A22DD6A-5E2C-4500-90B4-47F5C58FD9CA}",
     createMacrosOnAdd = True,
@@ -43,6 +43,7 @@ eg.RegisterPlugin(
 
 # Now we import some other things we will need later
 import math
+from threading import Event, Thread
 from eg.WinApi import (
     SendMessageTimeout, 
     GetWindowText, 
@@ -94,7 +95,15 @@ class ActionBase(eg.ActionClass):
     def GetShuffle(self):
         return self.SendCommand(WM_WA_IPC, 0, WA_GETSHUFFLESTATUS)
 
-
+        
+    def GetEQ(self):
+        return self.SendCommand(WM_WA_IPC, 11, WA_GETEQDATA)
+        
+        
+    def GetEQAutoload(self):
+        return self.SendCommand(WM_WA_IPC, 12, WA_GETEQDATA)
+        
+            
     def SetRepeat(self, newVal = None):
         newVal = int(newVal if (1 >= newVal >= 0) else not self.GetRepeat())
         self.SendCommand(WM_WA_IPC, newVal, WA_SETREPEATSTATUS)
@@ -111,6 +120,26 @@ class ActionBase(eg.ActionClass):
         newVal = int(newVal if (1 >= newVal >= 0) else not self.GetShuffle())
         self.SendCommand(WM_WA_IPC, newVal, WA_SETSHUFFLESTATUS)
         return newVal
+        
+        
+    def SetEQ(self, newVal = 2):
+        oldVal=self.GetEQ()
+        if newVal==2 and oldVal==0:
+          newVal=1
+        elif newVal==2:
+          newVal=0
+        self.SendCommand(WM_WA_IPC, newVal, WA_SETEQDATA)
+        return newVal
+
+        
+    def SetEQAutoload(self, newVal = 2):
+        oldVal=self.GetEQAutoload()
+        if newVal==2 and oldVal==0:
+          newVal=1
+        elif newVal==2:
+          newVal=0
+        self.SendCommand(WM_WA_IPC, newVal, WA_SETEQDATA)
+        return newVal
 
 
 # And now we define the actual plugin:
@@ -124,7 +153,11 @@ class Winamp(eg.PluginClass):
             "They can for example be used to display these informations on a "
             "small LCD/VFD."
         )
-        
+        infoGroupEQName = "EQ"
+        infoGroupEQDescription = (
+            "Here you find actions that change and query Equalizer settings of Winamp."
+        )
+
     def __init__(self):
         self.AddAction(TogglePlay)
         self.AddAction(Play)
@@ -152,6 +185,25 @@ class Winamp(eg.PluginClass):
         self.AddAction(ChangeVolume)
         self.AddAction(JumpToFile)
         self.AddAction(ToggleAlwaysOnTop)
+        self.AddAction(JumpToTime)
+        self.AddAction(JumpToTrackNr)
+        self.AddAction(ClearPlaylist)
+        self.AddAction(Command, hidden=True)
+        
+        groupEQ = self.AddGroup(
+            self.text.infoGroupEQName,
+            self.text.infoGroupEQDescription
+        )
+        groupEQ.AddAction(ChangeEQBand)
+        groupEQ.AddAction(ResetAllEQBands)
+        groupEQ.AddAction(ChangeEQPreamp)
+        groupEQ.AddAction(ChangeEQStatus)
+        groupEQ.AddAction(ChangeEQAutoloadStatus)
+        groupEQ.AddAction(GetEQBand)
+        groupEQ.AddAction(GetEQPreamp)
+        groupEQ.AddAction(GetEQStatus)
+        groupEQ.AddAction(GetEQAutoloadStatus)
+        
         
         group = self.AddGroup(
             self.text.infoGroupName, 
@@ -169,9 +221,51 @@ class Winamp(eg.PluginClass):
         group.AddAction(GetLength)
         group.AddAction(GetElapsed)
         group.AddAction(GetDuration)
-        
+        group.AddAction(GetPlayingStatusNow)
 
-# Here we define our first action. Actions are always subclasses of 
+# Here we define a thread for listening to some changes of winamp and trigger events
+    def __start__(self):
+        self.oldPlaylistLength=u""
+        self.oldPlaylistPosition=u""
+        self.oldPlayStatus=u""
+        self.oldPlayerStatus=2
+        self.stopThreadEvent = Event()
+        thread = Thread(
+            target=self.Receive,
+            args=(self.stopThreadEvent, )
+        )
+        thread.start()
+
+    def __stop__(self):
+        self.stopThreadEvent.set()
+
+    def Receive(self, stopThreadEvent):
+        while not stopThreadEvent.isSet():
+            try:
+                tempObject=GetLength()
+                newPlaylistLength=unicode(tempObject())
+                tempObject=GetPosition()
+                newPlaylistPosition=unicode(tempObject())
+                tempObject=GetPlayingStatusNow()
+                newPlayStatus=unicode(tempObject())
+                if self.oldPlayerStatus!=1:
+                  self.oldPlayerStatus=1
+                  self.TriggerEvent("Status.Changed.On")
+                if self.oldPlaylistPosition!=newPlaylistPosition:
+                  self.oldPlaylistPosition=newPlaylistPosition
+                  self.TriggerEvent("PlayingTrack.Changed",newPlaylistPosition)
+                if self.oldPlaylistLength!=newPlaylistLength:
+                  self.oldPlaylistLength=newPlaylistLength
+                  self.TriggerEvent("PlaylistLength.Changed",newPlaylistLength)
+                if self.oldPlayStatus!=newPlayStatus:
+                  self.oldPlayStatus=newPlayStatus
+                  self.TriggerEvent("Status.Changed."+newPlayStatus)
+            except:
+                if self.oldPlayerStatus!=0:
+                  self.oldPlayerStatus=0
+                  self.TriggerEvent("Status Changed.Off")
+            stopThreadEvent.wait(0.5)
+# Here we define our first action. Actions are always subclasses of
 # ActionBase.
 
 class TogglePlay(ActionBase):
@@ -341,36 +435,51 @@ class ToggleRepeat(ActionBase, eg.HiddenAction):
 
 # ===========================================================================
 # the following are additional actions added by Matthew Jacob Edwards
-# with slight modifications by Bitmonster
+# with slight modifications by Bitmonster and Sem;colon
 # ===========================================================================
 
-WA_GETSHUFFLESTATUS = 250
-WA_GETREPEATSTATUS  = 251
-WA_SETSHUFFLESTATUS = 252
-WA_SETREPEATSTATUS  = 253
+WA_GETSHUFFLESTATUS = 250#1 set, 0 not set
+WA_GETREPEATSTATUS  = 251#1 set, 0 not set
+WA_SETSHUFFLESTATUS = 252#1 on, 0 off
+WA_SETREPEATSTATUS  = 253#1 on, 0 off
+WA_REFRESHPLCACHE   = 247
+WA_RESTARTWINAMP    = 135
 WA_GETREPTRACKSTATUS = 634
 WA_SETREPTRACKSTATUS = 635
 
-WA_REFRESHPLCACHE   = 247
-WA_RESTARTWINAMP    = 135
-
-WA_PLAYFILE         = 100
+WA_PLAYFILE         = 100#sent as a WM_COPYDATA, with IPC_PLAYFILE as the dwData, and the string to play as the lpData. Just enqueues, does not clear the playlist or change the playback state
 WA_CLEARPLAYLIST    = 101
-WA_STARTPLAY        = 102
-WA_ISPLAYING        = 104
-WA_GETOUTPUTTIME    = 105
-WA_JUMPTOTIME       = 106
+WA_STARTPLAY        = 102#play
+WA_CHDIR            = 103#sent as a WM_COPYDATA, with IPC_CHDIR as the dwData, and the directory to change to as the lpData
+WA_ISPLAYING        = 104#1 playing 0 not playing 3 paused
+WA_GETOUTPUTTIME    = 105#-1 not playing 0:position in ms 1:length in ms
+WA_JUMPTOTIME       = 106#position in ms: -1 not playing, 1 on eof, 0 if successful 
 
-WA_WRITEPLAYLIST    = 120
-WA_SETTRACK         = 121
-WA_SETVOLUME        = 122
-WA_SETBALANCE       = 123
-WA_GETLISTLENGTH    = 124
-WA_GETLISTPOS       = 125
+WA_WRITEPLAYLIST    = 120#writes the current playlist to <winampdir>\\Winamp.m3u, and returns the current playlist position. Kinda obsoleted by some of the 2.x new stuff, but still good for when using a front-end (instead of a plug-in)
+WA_SETTRACK         = 121#choose tracknumber in playlist, you have to tell it you want to play it afterwards
+WA_SETVOLUME        = 122#from 0-255
+WA_SETBALANCE       = 123#from 0 center, 1-127 right, 255-128 left
+WA_GETLISTLENGTH    = 124#returns listlength in tracks
+WA_GETLISTPOS       = 125#returns tracknumber of currently playing track
 WA_GETINFO          = 126
+#Mode      Meaning
+#------------------
+#0         Samplerate (i.e. 44100)
+#1         Bitrate  (i.e. 128)
+#2         Channels (i.e. 2)
+#3 (5+)    Video LOWORD=w HIWORD=h
+#4 (5+)    > 65536, string (video description)
 WA_GETEQDATA        = 127
-WA_ENQUEUEPLAYLIST  = 129
-WA_GETPLAYLISTTITLE = 212
+#Value      Meaning
+#------------------
+#0-9        The 10 bands of EQ data. 0-63 (+20db - -20db)
+#10         The preamp value. 0-63 (+20db - -20db)
+#11         Enabled. zero if disabled, nonzero if enabled.
+#12         Autoload. zero if disabled, nonzero if enabled.
+WA_SETEQDATA        = 128#SendMessage(hwnd_winamp,WM_WA_IPC,pos,IPC_GETEQDATA); SendMessage(hwnd_winamp,WM_WA_IPC,value,IPC_SETEQDATA); IPC_SETEQDATA sets the value of the last position retrieved by IPC_GETEQDATA. New (2.92+): if the high byte is set to 0xDB, then the third byte specifies which band, and the bottom word specifies the value.
+#eg: self.SendCommand(WM_WA_IPC, 2, WA_GETEQDATA) and then self.SendCommand(WM_WA_IPC, 50, WA_SETEQDATA): sets band 3 to 50
+WA_ENQUEUEPLAYLIST  = 129#??
+WA_GETPLAYLISTTITLE = 212#?!
 
 WM_USER = 1024
 WM_WA_IPC = WM_USER
@@ -443,7 +552,7 @@ class ChangeShuffleStatus(ChangeRepeatStatus):
     def __call__(self,data):
         return self.SetShuffle(data)
 
-
+        
 class GetPlayingSongTitle(ActionBase):
     name = "Get Playing Song Title"
     description = "Gets the currently playing song title."
@@ -462,9 +571,11 @@ class GetPlayingSongTitle(ActionBase):
         
         strWinAmpTitle = strWinAmpTitle.replace("*","").strip()
         strWinAmpTitle = strWinAmpTitle.replace(" - Winamp", "")
-        strWinAmpTitle = strWinAmpTitle.replace("[Stopped]", "")
-        strWinAmpTitle = strWinAmpTitle.replace("[Paused]", "")
-
+        strWinAmpTitle = strWinAmpTitle.replace(" [Stopped]", "")
+        strWinAmpTitle = strWinAmpTitle.replace(" [Paused]", "")
+        strWinAmpTitle = strWinAmpTitle.replace(" [Stopp]", "")
+        strWinAmpTitle = strWinAmpTitle.replace(" [Pause]", "")
+        
         decPos = strWinAmpTitle.find(" ") - 1
         if decPos > 0 and strWinAmpTitle[decPos] == "." and strWinAmpTitle[:decPos].isdigit():
             strWinAmpTitle = strWinAmpTitle[decPos + 2:]
@@ -540,8 +651,69 @@ class ChangeVolume(ActionBase):
         panel.AddLine(self.text.text1, valueCtrl, self.text.text2)
         while panel.Affirmed():
             panel.SetResult(float(valueCtrl.GetValue()))
+  
          
         
+class JumpToTime(ActionBase):
+    name = "Jump To Trackposition"
+    description = "Jumps to a Trackposition in secounds."
+    class text:
+        text1 = "Jump to"
+        text2 = "secounds."
+        label = "Jump to secound "
+    
+    def __call__(self, position=0):
+        self.SendCommand(WM_WA_IPC, int(position * 1000), WA_JUMPTOTIME)
+        return position
+
+
+    def GetLabel(self, sec):
+        return self.text.label+str(sec)
+        
+        
+    def Configure(self, sec=0):
+        panel = eg.ConfigPanel()
+        valueCtrl = panel.SpinNumCtrl(sec, min=0)
+        panel.AddLine(self.text.text1, valueCtrl, self.text.text2)
+        while panel.Affirmed():
+            panel.SetResult(float(valueCtrl.GetValue()))
+       
+       
+       
+class JumpToTrackNr(ActionBase):
+    name = "Jump To Track Nr"
+    description = "Jumps to a specific track number"
+    class text:
+        text1 = "Jump to track"
+        label = "Jump to track number "
+    
+    def __call__(self, newtrack):
+        self.SendCommand(WM_WA_IPC, newtrack-1, 121)
+        play2=Play()
+        play2()
+        return play2()
+        
+    def GetLabel(self, nr):
+        return self.text.label+str(nr)
+    
+    def Configure(self, nr=1):
+        panel = eg.ConfigPanel()
+        valueCtrl = panel.SpinIntCtrl(nr, min=1)
+        panel.AddLine(self.text.text1, valueCtrl)
+        while panel.Affirmed():
+            panel.SetResult(int(valueCtrl.GetValue()))
+            
+         
+      
+class GetShuffleStatus(ActionBase):
+    name = "Get Shuffle Status"
+    description = "Gets the shuffle status 1 = shuffle on,  0 = shuffle off."
+    
+    def __call__(self):
+        return self.SendCommand(WM_WA_IPC, 0, WA_GETSHUFFLESTATUS)
+
+      
+            
 class GetRepeatStatus(ActionBase):
     name = "Get Repeat Status"
     description = "Gets the repeat playlist status: 1 = repeat on, 0 = repeat off."
@@ -633,6 +805,14 @@ class GetDuration(ActionBase):
         return self.SendCommand(WM_WA_IPC, 1, WA_GETOUTPUTTIME)
 
         
+class GetPlayingStatusNow(ActionBase):
+    name = "Get Play Status"
+    description = "Gets the play status, returns \"playing\", \"paused\" or \"stopped\"."
+
+    def __call__(self):
+        return self.GetPlayingStatus()
+
+
 class JumpToFile(ActionBase):
     name = "Jump to File"
     description = 'Opens and focuses the "Jump to File" window.'
@@ -662,3 +842,170 @@ class ToggleAlwaysOnTop(ActionBase):
     def __call__(self):
         return self.SendCommand(WM_COMMAND, 40019)
 
+
+class ClearPlaylist(ActionBase):
+    name = "Clear Playlist"
+    description = 'Clears the playlist.'
+
+    def __call__(self):
+        return self.SendCommand(WM_WA_IPC, 0, WA_CLEARPLAYLIST)
+
+
+class Command(ActionBase):
+    name = "Custom Command"
+    description = "Runs a custom command"
+    class text:
+        text1 = "ID Message:"
+        text2 = "wParam:"
+        text3 = "lParam:"
+        label = "Custom Command: "
+    
+    def __call__(self, idMessage=1024, wParam=0, lParam=0):
+        return self.SendCommand(idMessage, wParam, lParam)
+        
+    def GetLabel(self, idMessage, wParam, lParam):
+        return self.text.label+str(idMessage)+","+str(wParam)+","+str(lParam)
+        
+    def Configure(self, idMessage=1024, wParam="0", lParam="0"):
+        panel = eg.ConfigPanel()
+        valueCtrl1 = panel.SpinIntCtrl(idMessage, min=0)
+        valueCtrl2 = panel.SpinIntCtrl(wParam, min=0)
+        valueCtrl3 = panel.SpinIntCtrl(lParam, min=0)
+        panel.AddLine(self.text.text1, valueCtrl1)
+        panel.AddLine(self.text.text2, valueCtrl2)
+        panel.AddLine(self.text.text3, valueCtrl3)
+        while panel.Affirmed():
+            panel.SetResult(valueCtrl1.GetValue(),valueCtrl2.GetValue(),valueCtrl3.GetValue())
+           
+
+class ChangeEQBand(ActionBase):
+    name = "Change EQ Band"
+    description = "Changes the value of one specific EQ Band: -31 = min/-12db, 32 = max/+12db"
+    class text:
+        text1 = "Band Number:"
+        text2 = "New Value:"
+        label = "Change EQ Band "
+    
+    def __call__(self, band=1, value=0):
+        value=int(value)*-1+31
+        self.SendCommand(WM_WA_IPC, band-1, WA_GETEQDATA)
+        self.SendCommand(WM_WA_IPC, value, WA_SETEQDATA)
+        return True
+        
+    def GetLabel(self, band, value):
+        return self.text.label+str(band)+" to "+str(value)
+        
+    def Configure(self, band=1, value=0):
+        panel = eg.ConfigPanel()
+        valueCtrl1 = panel.SpinIntCtrl(band, min=1, max=10)
+        valueCtrl2 = panel.SpinIntCtrl(value, min=-31, max=32)
+        panel.AddLine(self.text.text1, valueCtrl1)
+        panel.AddLine(self.text.text2, valueCtrl2)
+        while panel.Affirmed():
+            panel.SetResult(valueCtrl1.GetValue(),valueCtrl2.GetValue())
+            
+            
+class ChangeEQPreamp(ActionBase):
+    name = "Change EQ Preamplification"
+    description = "Changes the EQ preamplification value: -31 = min/-12db, 32 = max/+12db"
+    class text:
+        text1 = "New Value:"
+    
+    def __call__(self, value=0):
+        value=int(value)*-1+31
+        self.SendCommand(WM_WA_IPC, 10, WA_GETEQDATA)
+        self.SendCommand(WM_WA_IPC, value, WA_SETEQDATA)
+        return True
+        
+    def Configure(self, value=0):
+        panel = eg.ConfigPanel()
+        valueCtrl = panel.SpinIntCtrl(value, min=-31, max=32)
+        panel.AddLine(self.text.text1, valueCtrl)
+        while panel.Affirmed():
+            panel.SetResult(valueCtrl1.GetValue())
+
+        
+class ResetAllEQBands(ActionBase):
+    name = "Reset All EQ Bands"
+    description = "Reset all EQ bands to +/-0."
+    
+    def __call__(self):
+        i=0
+        while i<10:
+          self.SendCommand(WM_WA_IPC, i, WA_GETEQDATA)
+          self.SendCommand(WM_WA_IPC, 31, WA_SETEQDATA)
+          i+=1
+        return True
+
+
+class ChangeEQStatus(ChangeRepeatStatus):
+    class text:
+        name = "Change EQ Status"
+        description = "Changes the EQ status."
+        radioBoxLabel = "Option"
+        radioBoxOptions = [
+            "EQ Off",
+            "EQ On",
+            "Toggle EQ status",
+        ]
+
+
+    def __call__(self, data):
+        return self.SetEQ(data)
+        
+        
+class ChangeEQAutoloadStatus(ChangeRepeatStatus):
+    class text:
+        name = "Change EQ Autoload Status"
+        description = "Changes the EQ autoload status."
+        radioBoxLabel = "Option"
+        radioBoxOptions = [
+            "EQ autoload Off",
+            "EQ autoload On",
+            "Toggle EQ autoload status",
+        ]
+
+
+    def __call__(self, data):
+        return self.SetEQAutoload(data)         
+            
+class GetEQStatus(ActionBase):
+    name = "Get EQ Status"
+    description = "Gets the EQ status: 1 = EQ on, 0 = EQ off."
+
+    def __call__(self):
+        return self.GetEQ()
+        
+        
+class GetEQAutoloadStatus(ActionBase):
+    name = "Get EQ Autoload Status"
+    description = "Gets the EQ autoload status: 1 = EQ autoload on, 0 = EQ autoload off."
+
+    def __call__(self):
+        return self.GetEQAutoload()
+        
+        
+class GetEQBand(ActionBase):
+    name = "Get EQ Band Value"
+    description = "Gets the value of one specific EQ Band: -31 = min/-12db, 32 = max/+12db"
+    class text:
+        text1 = "Band Number:"
+    
+    def __call__(self, band=1):
+        return self.SendCommand(WM_WA_IPC, band-1, WA_GETEQDATA)
+        
+    def Configure(self, band=1):
+        panel = eg.ConfigPanel()
+        valueCtrl = panel.SpinIntCtrl(band, min=1, max=10)
+        panel.AddLine(self.text.text1, valueCtrl)
+        while panel.Affirmed():
+            panel.SetResult(valueCtrl.GetValue())
+        
+        
+class GetEQPreamp(ActionBase):
+    name = "Get EQ Preamp Value"
+    description = "Gets the EQ preamp value: -31 = min/-12db, 32 = max/+12db"
+
+    def __call__(self):
+        return self.SendCommand(WM_WA_IPC, 10, WA_GETEQDATA)
+        
