@@ -17,6 +17,16 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 1.7 by Pako 2013-09-15 08:58 UTC+1
+#     - added Autosave option (when a persistent value changed)
+#     - added do_POST (Ajax/JSON) method "GetGlobalValue"
+#     - fixed do_POST (Ajax/JSON) methods "Set(Persistent)Value"
+# 1.6 by Sem;colon 2013-09-07 22:00 UTC+1
+#     - edited the POST enhancement by Sem;colon:
+#       -changed the function "request=" to GetGlobalValue
+#       -added loop for GetValue requests to be able to request multible values at once
+#       -fixed bug: GetValue didn't return a value
+#     - changed "author" line, so that it showes up correctly under "Special Thanks"
 # 1.5 by Sem;colon 2013-08-31 09:32 UTC+1
 #     - extended the POST enhancement by Sem;colon
 #       to match the functionality of the AJAX JSON POST
@@ -39,8 +49,8 @@ import eg
 
 eg.RegisterPlugin(
     name = "Webserver",
-    author = "Bitmonster (enhancements Pako and Sem;colon)",
-    version = "1.5",
+    author = "Bitmonster & Pako & Sem;colon",
+    version = "1.7",
     guid = "{E4305D8E-A3D3-4672-B06E-4EA1F0F6C673}",
     description = (
         "Implements a small webserver, that you can use to generate events "
@@ -480,56 +490,90 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
                 if len(data)>1:
                     plugin.TriggerEvent(data[1], data[2:])
             else:
-                content = "True"
-                if data[0][0:8]=="request=" and len(data[0])>8:
-                    try:
-                        content = self.environment.globals[data[0][8:]]
-                    except:
-                        content = "None"
-                    if len(data)>1:
-                        plugin.TriggerEvent(data[1], data[2:])
+                content = ""
+                i=1
+                if data[0]=="GetGlobalValue":
+                    while i<len(data):
+                        try:
+                            content += self.environment.globals[data[i]]
+                        except:
+                            content += "None"
+                        i+=1
+                        if i<len(data):
+                            content+=";;"
                 elif data[0]=="ExecuteScript":
-                    try:
-                        content = eval(data[1])
-                        if type(content)!=str and type(content)!=unicode:
-                            content = "True"
-                    except:
-                        content = "False"
+                    while i<len(data):
+                        try:
+                            output = eval(data[i])
+                            if type(output)!=str and type(output)!=unicode:
+                                content += "True"
+                            else:
+                                content += output
+                        except:
+                            content += "False"
+                        i+=1
+                        if i<len(data):
+                            content+=";;"
                 elif data[0]=="GetValue":
-                    try:
-                        content = plugin.GetValue(data[1], self.client_address[0])
-                    except:
-                        content = "None"
+                    while i<len(data):
+                        try:
+                            content += plugin.GetValue(data[i], self.client_address[0])
+                        except:
+                            content += "None"
+                        i+=1
+                        if i<len(data):
+                            content+=";;"
                 elif data[0]=="GetPersistentValue":
-                    try:
-                        content = plugin.GetPersistentValue(data[1], self.client_address[0])
-                    except:
-                        content = "None"
+                    while i<len(data):
+                        try:
+                            content += plugin.GetPersistentValue(data[i], self.client_address[0])
+                        except:
+                            content += "None"
+                        i+=1
+                        if i<len(data):
+                            content+=";;"
                 elif data[0]=="SetValue":
                     try:
-                        plugin.pubVars[data[1]] = data[2]
+                        plugin.SetValue(data[1], data[2])
+                        content = "True"
                     except:
                         content = "False"
                 elif data[0]=="SetPersistentValue":
                     try:
-                        plugin.pubPerVars[data[1]] = data[2]
-                        wx.CallAfter(plugin.SetDocIsDirty)
+                        plugin.SetPersistentValue(data[1], data[2])
+                        content = "True"
                     except:
                         content = "False"
                 elif data[0]=="GetAllValues":
-                    content = plugin.GetAllValues(self.client_address[0])
+                    try:
+                        content = json.dumps(plugin.GetAllValues(self.client_address[0]))
+                    except:
+                        content = "False"
                 elif data[0]=="GetChangedValues":
-                    content = plugin.GetChangedValues(self.client_address[0])
-                elif data[0]=="GetChangedValues":
-                    content = plugin.GetChangedValues(self.client_address[0])
+                    try:
+                        content = json.dumps(plugin.GetChangedValues(self.client_address[0]))
+                    except:
+                        content = "False"
                 elif data[0] == "TriggerEnduringEvent":
-                    plugin.TriggerEnduringEvent(data[1], data[2:])
-                    self.repeatTimer.Reset(2000)
+                    try:
+                        plugin.TriggerEnduringEvent(data[1], data[2:])
+                        self.repeatTimer.Reset(2000)
+                        content = "True"
+                    except:
+                        content = "False"
                 elif data[0] == "RepeatEnduringEvent":
-                    self.repeatTimer.Reset(2000)
+                    try:
+                        self.repeatTimer.Reset(2000)
+                        content = "True"
+                    except:
+                        content = "False"
                 elif data[0] == "EndLastEvent":
-                    self.repeatTimer.Reset(None)
-                    plugin.EndLastEvent()
+                    try:
+                        self.repeatTimer.Reset(None)
+                        plugin.EndLastEvent()
+                        content = "True"
+                    except:
+                        content = "False"
                 elif data[0]=="TriggerEvent":
                     if data[1][0:7]=="prefix=" and len(data)>2:
                         data[2]=data[2].replace("suffix=","")
@@ -548,6 +592,12 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
             methodName = data["method"]
             args = data.get("args", [])
             kwargs = data.get("kwargs", {})
+            if methodName == "GetGlobalValue":   
+                if len(args):
+                    try:
+                        result = self.environment.globals[args[0]]
+                    except:
+                        result = None
             if methodName == "GetValue":   
                 if len(args):
                     try:
@@ -563,16 +613,15 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
             elif methodName == "SetValue":
                 if len(args):
                     try:
-                        plugin.pubVars[args[0]] = args[1]
+                        plugin.SetValue(args[0], args[1])
                         result = True
                     except:
                         result = False     
             elif methodName == "SetPersistentValue":
                 if len(args):
                     try:
-                        plugin.pubPerVars[args[0]] = args[1]
+                        plugin.SetPersistentValue(args[0], args[1])
                         result = True
-                        wx.CallAfter(plugin.SetDocIsDirty)
                     except:
                         result = False     
             elif methodName == "GetAllValues":
@@ -982,10 +1031,7 @@ class SendEventExt(eg.ActionBase):
         #else:
             # If we don't fail then the page isn't protected
             #print "This page isn't protected by authentication."
-
-        thepage = unicode(urllib2.unquote(handle.read()).decode(eg.systemEncoding,'replace')) # handle.read()
-       
-        #print thepage
+        thepage = urllib2.unquote(handle.read()).decode(eg.systemEncoding,'replace') # handle.read()
         return thepage
 
 
@@ -1040,6 +1086,7 @@ class Webserver(eg.PluginBase):
         defVal = "Variable value"
         delete = "Delete selected variables"
         clear = "Clear all variables"
+        autosave = "Automatically save the document when the value of a persistent variable is changed"
 
     def __init__(self):
         self.AddEvents()
@@ -1055,6 +1102,7 @@ class Webserver(eg.PluginBase):
         authUsername="",
         authPassword="",
         pubPerVars = {},
+        autosave = False
     ):
         self.info.eventPrefix = prefix
         if authUsername or authPassword:
@@ -1065,6 +1113,7 @@ class Webserver(eg.PluginBase):
         self.pubPerClients = {}
         self.pubVars = {}
         self.pubPerVars = pubPerVars
+        self.autosave = autosave
         for key in self.pubPerVars.iterkeys():
             self.pubPerClients[key] = []
         eg.PrintNotice("Persistent values: " + repr(self.pubPerVars))
@@ -1171,6 +1220,8 @@ class Webserver(eg.PluginBase):
 
     def SetDocIsDirty(self):     
         eg.document.SetIsDirty()
+        if self.autosave:
+            eg.document.Save()
        
 
     def Configure(
@@ -1181,7 +1232,8 @@ class Webserver(eg.PluginBase):
         authRealm="EventGhost",
         authUsername="",
         authPassword="",
-        pubPerVars = {}
+        pubPerVars = {},
+        autosave = False
     ):
         text = self.text
         panel = eg.ConfigPanel()
@@ -1234,11 +1286,14 @@ class Webserver(eg.PluginBase):
 #        configureTargetsButton = panel.Button("Configure Targets")
 #        configureTargetsButton.Bind(wx.EVT_BUTTON, ConfigureTargets)
 #        panel.sizer.Add(configureTargetsButton)
+        aSaveCtrl = wx.CheckBox(panel, -1, self.text.autosave)
+        aSaveCtrl.SetValue(autosave)
         dialogButton = wx.Button(panel,-1,self.text.dialogPers + " ...")
         dialogButton2 = wx.Button(panel,-1,self.text.dialogTemp + " ...")
         dialogSizer = wx.BoxSizer(wx.HORIZONTAL)
         dialogSizer.Add(dialogButton)
         dialogSizer.Add(dialogButton2,0,wx.LEFT,15)
+        panel.sizer.Add(aSaveCtrl,0,wx.TOP,5)
         panel.sizer.Add(dialogSizer,0,wx.TOP,5)
 
         def OnDialogBtn(evt):
@@ -1279,7 +1334,8 @@ class Webserver(eg.PluginBase):
                 authRealmCtrl.GetValue(),
                 authUsernameCtrl.GetValue(),
                 authPasswordCtrl.GetValue(),
-                self.pubPerVars
+                self.pubPerVars,
+                aSaveCtrl.GetValue()
             )
 
 
