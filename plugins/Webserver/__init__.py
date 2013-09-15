@@ -17,6 +17,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 1.8 by Sem;colon 2013-09-15 12:47 UTC+1
+#     - ExecuteScript method (Sem;colon part) can now handle list outputs
 # 1.7 by Pako 2013-09-15 08:58 UTC+1
 #     - added Autosave option (when a persistent value changed)
 #     - added do_POST (Ajax/JSON) method "GetGlobalValue"
@@ -50,7 +52,7 @@ import eg
 eg.RegisterPlugin(
     name = "Webserver",
     author = "Bitmonster & Pako & Sem;colon",
-    version = "1.7",
+    version = "1.8",
     guid = "{E4305D8E-A3D3-4672-B06E-4EA1F0F6C673}",
     description = (
         "Implements a small webserver, that you can use to generate events "
@@ -505,10 +507,12 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
                     while i<len(data):
                         try:
                             output = eval(data[i])
-                            if type(output)!=str and type(output)!=unicode:
-                                content += "True"
+                            if isinstance(output, str) or isinstance(output, unicode) or isinstance(output, int):
+                                content += unicode(output)
+                            elif isinstance(output, list):
+                                content += u", ".join(output)
                             else:
-                                content += output
+                                content += "True"
                         except:
                             content += "False"
                         i+=1
