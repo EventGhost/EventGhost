@@ -17,8 +17,12 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
-# 1.8 by Sem;colon 2013-09-15 12:47 UTC+1
-#     - ExecuteScript method (Sem;colon part) can now handle list outputs
+# 1.9 by Pako 2013-12-04 14:36 UTC+1
+#     - added option to disable parsing of strings (Sem;colon's solutions)
+# 1.8 by Sem;colon 2013-11-06 20:10 UTC+1
+#     - added menue entries (plugin configuration) to customize the join strings in the do_POST Enhancement by Sem;colon
+#     - improved handling of some returned datatypes in the do_POST Enhancement by Sem;colon
+#     - fixed bug in end_request
 # 1.7 by Pako 2013-09-15 08:58 UTC+1
 #     - added Autosave option (when a persistent value changed)
 #     - added do_POST (Ajax/JSON) method "GetGlobalValue"
@@ -52,7 +56,7 @@ import eg
 eg.RegisterPlugin(
     name = "Webserver",
     author = "Bitmonster & Pako & Sem;colon",
-    version = "1.8",
+    version = "1.9",
     guid = "{E4305D8E-A3D3-4672-B06E-4EA1F0F6C673}",
     description = (
         "Implements a small webserver, that you can use to generate events "
@@ -465,11 +469,12 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 
 
     def end_request(self, content, case = 'text/html'):
+        content=content.encode("UTF-8")
         self.send_response(200)
         self.send_header("Content-type", case)
         self.send_header("Content-Length", len(content))
         self.end_headers()
-        self.wfile.write(content.encode("UTF-8"))
+        self.wfile.write(content)
         self.wfile.close()
 
        
@@ -497,27 +502,27 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
                 if data[0]=="GetGlobalValue":
                     while i<len(data):
                         try:
-                            content += self.environment.globals[data[i]]
+                            content += unicode(self.environment.globals[data[i]])
                         except:
                             content += "None"
                         i+=1
                         if i<len(data):
-                            content+=";;"
+                            content+=self.plugin.valueSplitter
                 elif data[0]=="ExecuteScript":
                     while i<len(data):
                         try:
                             output = eval(data[i])
-                            if isinstance(output, str) or isinstance(output, unicode) or isinstance(output, int):
+                            if isinstance(output, str) or isinstance(output, unicode) or isinstance(output, int) or isinstance(output, float) or isinstance(output, long):
                                 content += unicode(output)
                             elif isinstance(output, list):
-                                content += u", ".join(output)
+                                content += self.plugin.listSplitter.join(unicode(x) for x in output)
                             else:
                                 content += "True"
                         except:
                             content += "False"
                         i+=1
                         if i<len(data):
-                            content+=";;"
+                            content+=self.plugin.valueSplitter
                 elif data[0]=="GetValue":
                     while i<len(data):
                         try:
@@ -526,7 +531,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
                             content += "None"
                         i+=1
                         if i<len(data):
-                            content+=";;"
+                            content+=self.plugin.valueSplitter
                 elif data[0]=="GetPersistentValue":
                     while i<len(data):
                         try:
@@ -535,7 +540,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
                             content += "None"
                         i+=1
                         if i<len(data):
-                            content+=";;"
+                            content+=self.plugin.valueSplitter
                 elif data[0]=="SetValue":
                     try:
                         plugin.SetValue(data[1], data[2])
@@ -599,7 +604,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
             if methodName == "GetGlobalValue":   
                 if len(args):
                     try:
-                        result = self.environment.globals[args[0]]
+                        result = unicode(self.environment.globals[args[0]])
                     except:
                         result = None
             if methodName == "GetValue":   
@@ -729,23 +734,30 @@ class SetClientsFlags(eg.ActionBase):
 
     class text:
         varname = "Dummy variable name:"
+        err = 'Error in action "Set clients flags(%s)"'
 
-    def __call__(self, varname = ""):
-        key = eg.ParseString(varname)
-        self.plugin.SetClientsFlags(key)
-       
+    def __call__(self, varname = "", pars = False):
+        try:
+            key = eg.ParseString(varname) if not pars else varname
+            self.plugin.SetClientsFlags(key)
+        except:
+            eg.PrintError(self.text.err % str(varname))       
 
-    def Configure(self, varname = ""):
+    def Configure(self, varname = "", pars = False):
         panel = eg.ConfigPanel(self)
         varnameCtrl = panel.TextCtrl(varname)
+        parsCtrl = wx.CheckBox(panel, -1, self.plugin.text.parsing)
+        parsCtrl.SetValue(pars)
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         varnameLbl = panel.StaticText(self.text.varname)
         mainSizer.Add(varnameLbl)
         mainSizer.Add(varnameCtrl, 0, wx.EXPAND|wx.TOP, 1)
+        mainSizer.Add(parsCtrl, 0, wx.TOP, 4)
         panel.sizer.Add(mainSizer, 0, wx.EXPAND|wx.ALL, 10)
         while panel.Affirmed():
             panel.SetResult(
                 varnameCtrl.GetValue(),
+                parsCtrl.GetValue()
             )       
 
    
@@ -753,55 +765,46 @@ class GetValue(eg.ActionBase):
 
     class text:
         varname = "Variable name:"
-        err = 'Error in action "GetValue(%s)"'
+        err = 'Error in action "Get temporary value(%s)"'
 
-    def __call__(self, varname = ""):
+    def __call__(self, varname = "", pars = False):
         try:
-            key = eg.ParseString(varname)
+            key = eg.ParseString(varname) if not pars else varname
             return self.plugin.GetValue(key)
         except:
             eg.PrintError(self.text.err % str(varname))
        
-    def Configure(self, varname = ""):
+    def Configure(self, varname = "", pars = False):
         panel = eg.ConfigPanel(self)
         varnameCtrl = panel.TextCtrl(varname)
+        parsCtrl = wx.CheckBox(panel, -1, self.plugin.text.parsing)
+        parsCtrl.SetValue(pars)
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         varnameLbl = panel.StaticText(self.text.varname)
         mainSizer.Add(varnameLbl)
         mainSizer.Add(varnameCtrl, 0, wx.EXPAND|wx.TOP, 1)
+        mainSizer.Add(parsCtrl, 0, wx.TOP, 4)
         panel.sizer.Add(mainSizer, 0, wx.EXPAND|wx.ALL, 10)
        
         while panel.Affirmed():
             panel.SetResult(
                 varnameCtrl.GetValue(),
+                parsCtrl.GetValue()
             )       
 
 
-class GetPersistentValue(eg.ActionBase):
+class GetPersistentValue(GetValue):
 
     class text:
         varname = "Persistent variable name:"
-        err = 'Error in action "GetPersistentValue(%s)"'
+        err = 'Error in action "Get persistent value(%s)"'
 
-    def __call__(self, varname = ""):
+    def __call__(self, varname = "", pars = False):
         try:
-            key = eg.ParseString(varname)
+            key = eg.ParseString(varname) if not pars else varname
             return self.plugin.GetPersistentValue(key)
         except:
-            eg.PrintError(self.text.err % str(varname))
-       
-    def Configure(self, varname = ""):
-        panel = eg.ConfigPanel(self)
-        varnameCtrl = panel.TextCtrl(varname)
-        mainSizer = wx.BoxSizer(wx.VERTICAL)
-        varnameLbl = panel.StaticText(self.text.varname)
-        mainSizer.Add(varnameLbl)
-        mainSizer.Add(varnameCtrl, 0, wx.EXPAND|wx.TOP, 1)
-        panel.sizer.Add(mainSizer, 0, wx.EXPAND|wx.ALL, 10)
-        while panel.Affirmed():
-            panel.SetResult(
-                varnameCtrl.GetValue(),
-            )       
+            eg.PrintError(self.text.err % str(varname))       
 
 
 class SetValue(eg.ActionBase):
@@ -809,73 +812,78 @@ class SetValue(eg.ActionBase):
     class text:
         varname = "Variable name:"
         value = "Value:"
-        err = 'Error in action "SetValue(%s, %s)"'
+        err = 'Error in action "Set temporary value(%s, %s)"'
 
-    def __call__(self, varname = "", value = "{eg.event.payload}"):
+    def __call__(
+        self,
+        varname = "",
+        value = "{eg.event.payload}",
+        pars1 = False,
+        pars2 = False,
+    ):
         try:
-            key = eg.ParseString(varname)
-            value = eg.ParseString(value)
-            self.plugin.SetValue(key, value)
+            key = eg.ParseString(varname) if not pars1 else varname
+            val = eg.ParseString(value) if not pars2 else value
+            self.plugin.SetValue(key, val)
         except:
             eg.PrintError(self.text.err % (str(varname), str(value)))
 
-    def GetLabel(self, varname, value):
+    def GetLabel(self, varname, value, pars1, pars2):
         return "%s: %s: %s" % (self.name, varname, value)
        
-    def Configure(self, varname = "", value = "{eg.event.payload}"):
+    def Configure(
+        self,
+        varname = "",
+        value = "{eg.event.payload}",
+        pars1 = False,
+        pars2 = False,
+    ):
         panel = eg.ConfigPanel(self)
         varnameCtrl = panel.TextCtrl(varname)
+        pars1Ctrl = wx.CheckBox(panel, -1, self.plugin.text.parsing)
+        pars1Ctrl.SetValue(pars1)
         valueCtrl = panel.TextCtrl(value)
+        pars2Ctrl = wx.CheckBox(panel, -1, self.plugin.text.parsing)
+        pars2Ctrl.SetValue(pars2)
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         varnameLbl = panel.StaticText(self.text.varname)
         valueLbl = panel.StaticText(self.text.value)
         mainSizer.Add(varnameLbl)
         mainSizer.Add(varnameCtrl, 0, wx.EXPAND|wx.TOP, 1)
+        mainSizer.Add(pars1Ctrl, 0, wx.EXPAND|wx.TOP, 4)
         mainSizer.Add(valueLbl, 0, wx.EXPAND|wx.TOP, 20)
         mainSizer.Add(valueCtrl, 0, wx.EXPAND|wx.TOP, 1)
+        mainSizer.Add(pars2Ctrl, 0, wx.EXPAND|wx.TOP, 4)
         panel.sizer.Add(mainSizer, 0, wx.EXPAND|wx.ALL, 10)
         while panel.Affirmed():
             panel.SetResult(
                 varnameCtrl.GetValue(),
                 valueCtrl.GetValue(),
+                pars1Ctrl.GetValue(),
+                pars2Ctrl.GetValue(),
             )       
 
 
-class SetPersistentValue(eg.ActionBase):
+class SetPersistentValue(SetValue):
 
     class text:
         varname = "Persistent variable name:"
         value = "Value:"
-        err = 'Error in action "SetValue(%s, %s)"'
+        err = 'Error in action "Set persistent value(%s, %s)"'
 
-    def __call__(self, varname = "", value = "{eg.event.payload}"):
+    def __call__(
+        self,
+        varname = "",
+        value = "{eg.event.payload}",
+        pars1 = False,
+        pars2 = False,
+    ):
         try:
-            key = eg.ParseString(varname)
-            value = eg.ParseString(value)
-            self.plugin.SetPersistentValue(key, value)
+            key = eg.ParseString(varname) if not pars1 else varname
+            val = eg.ParseString(value) if not pars2 else value
+            self.plugin.SetPersistentValue(key, val)
         except:
-            eg.PrintError(self.text.err % (str(varname), str(value)))
-
-    def GetLabel(self, varname, value):
-        return "%s: %s: %s" % (self.name, varname, value)
-       
-    def Configure(self, varname = "", value = "{eg.event.payload}"):
-        panel = eg.ConfigPanel(self)
-        varnameCtrl = panel.TextCtrl(varname)
-        valueCtrl = panel.TextCtrl(value)
-        mainSizer = wx.BoxSizer(wx.VERTICAL)
-        varnameLbl = panel.StaticText(self.text.varname)
-        valueLbl = panel.StaticText(self.text.value)
-        mainSizer.Add(varnameLbl)
-        mainSizer.Add(varnameCtrl, 0, wx.EXPAND|wx.TOP, 1)
-        mainSizer.Add(valueLbl, 0, wx.EXPAND|wx.TOP, 20)
-        mainSizer.Add(valueCtrl, 0, wx.EXPAND|wx.TOP, 1)
-        panel.sizer.Add(mainSizer, 0, wx.EXPAND|wx.ALL, 10)
-        while panel.Affirmed():
-            panel.SetResult(
-                varnameCtrl.GetValue(),
-                valueCtrl.GetValue(),
-            )       
+            eg.PrintError(self.text.err % (str(varname), str(value)))      
 
 
 class SendEvent(eg.ActionBase):
@@ -885,10 +893,18 @@ class SendEvent(eg.ActionBase):
         host = "Host:"
         port ="Port:"
         username = "Username:"
-        passsword = "Password:"
+        password = "Password:"
         errmsg = "Target server returned status %s"       
 
-    def __call__(self, event="", host="", port=80, user="", password=""):
+    def __call__(
+        self,
+        event="",
+        host="",
+        port=80,
+        user="",
+        password="",
+        pars = False
+    ):
         text = self.text
         def Request(methodName, *args, **kwargs):
             data = {"method": methodName}
@@ -938,7 +954,7 @@ class SendEvent(eg.ActionBase):
                 )
             return json.loads(content)
 
-        event = eg.ParseString(event)
+        event = eg.ParseString(event) if not pars else event
         Request("TriggerEnduringEvent", event)
         stopEvent = Event()
         eg.event.AddUpFunc(stopEvent.set)
@@ -952,26 +968,40 @@ class SendEvent(eg.ActionBase):
         Thread(target=RepeatLoop).start()
 
 
-    def Configure(self, event="", host="", port=80, user="", password=""):
+    def Configure(
+        self,
+        event="",
+        host="",
+        port=80,
+        user="",
+        password="",
+        pars = False
+    ):
         text = self.text
         panel = eg.ConfigPanel(self)
         eventCtrl = panel.TextCtrl(event)
+        parsCtrl = wx.CheckBox(panel, -1, self.plugin.text.parsing)
+        parsCtrl.SetValue(pars)
         hostCtrl = panel.TextCtrl(host)
         portCtrl = panel.SpinIntCtrl(port, min=1, max=65535)
         userCtrl = panel.TextCtrl(user)
         passwordCtrl = panel.TextCtrl(password)
-        panel.sizer.AddMany([
-            panel.StaticText(text.event),
-            eventCtrl,
-            panel.StaticText(text.host),
-            hostCtrl,
-            panel.StaticText(text.port),
-            portCtrl,
-            panel.StaticText(text.username),
-            userCtrl,
-            panel.StaticText(text.password),
-            passwordCtrl,
-        ])
+        fl = wx.EXPAND|wx.TOP
+        box=wx.GridBagSizer(2, 5)
+        box.AddGrowableCol(1)
+        box.Add(panel.StaticText(text.event), (0, 0), flag = wx.TOP, border=12)
+        box.Add(eventCtrl, (0, 1), flag = fl, border=9)    
+        box.Add(parsCtrl, (1, 0), (1, 2))    
+        box.Add(panel.StaticText(text.host), (2, 0), flag = wx.TOP, border=12)    
+        box.Add(hostCtrl, (2, 1), flag = fl, border=9)
+        box.Add(panel.StaticText(text.port), (3, 0), flag = wx.TOP, border=12)    
+        box.Add(portCtrl, (3, 1), flag = wx.TOP, border=9)
+        box.Add(panel.StaticText(text.username), (4, 0), flag=wx.TOP, border=12)    
+        box.Add(userCtrl, (4, 1), flag = fl, border=9)       
+        box.Add(panel.StaticText(text.password), (5, 0), flag=wx.TOP, border=12)    
+        box.Add(passwordCtrl, (5, 1), flag = fl, border=9)
+        panel.sizer.Add(box, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
+
         while panel.Affirmed():
             panel.SetResult(
                 eventCtrl.GetValue(),
@@ -979,6 +1009,7 @@ class SendEvent(eg.ActionBase):
                 portCtrl.GetValue(),
                 userCtrl.GetValue(),
                 passwordCtrl.GetValue(),
+                parsCtrl.GetValue()
             )
 
 
@@ -989,7 +1020,7 @@ class SendEventExt(eg.ActionBase):
         url = "Url: (like you would put it into a webbrowser)"
         event = "Event:"
         username = "Username:"
-        passsword = "Password:"
+        password = "Password:"
         msg1 = "This page isn't protected by authentication."
         msg2 = 'But we failed for another reason.'
         msg3 = 'A 401 error without an authentication response header - very weird.'
@@ -1091,6 +1122,10 @@ class Webserver(eg.PluginBase):
         delete = "Delete selected variables"
         clear = "Clear all variables"
         autosave = "Automatically save the document when the value of a persistent variable is changed"
+        nonAjaxBox = "Additional settings for non-AJAX POST requests"
+        listSplitter = "String between list items:"
+        valueSplitter = "String between returned values:"
+        parsing = "disable parsing of string"
 
     def __init__(self):
         self.AddEvents()
@@ -1106,7 +1141,9 @@ class Webserver(eg.PluginBase):
         authUsername="",
         authPassword="",
         pubPerVars = {},
-        autosave = False
+        autosave = False,
+        listSplitter =",",
+        valueSplitter =";;"
     ):
         self.info.eventPrefix = prefix
         if authUsername or authPassword:
@@ -1118,6 +1155,8 @@ class Webserver(eg.PluginBase):
         self.pubVars = {}
         self.pubPerVars = pubPerVars
         self.autosave = autosave
+        self.listSplitter = unicode(listSplitter)
+        self.valueSplitter = unicode(valueSplitter)
         for key in self.pubPerVars.iterkeys():
             self.pubPerClients[key] = []
         eg.PrintNotice("Persistent values: " + repr(self.pubPerVars))
@@ -1237,7 +1276,10 @@ class Webserver(eg.PluginBase):
         authUsername="",
         authPassword="",
         pubPerVars = {},
-        autosave = False
+        autosave = False,
+        listSplitter =",",
+        valueSplitter =";;"
+        
     ):
         text = self.text
         panel = eg.ConfigPanel()
@@ -1247,6 +1289,8 @@ class Webserver(eg.PluginBase):
         authRealmCtrl = panel.TextCtrl(authRealm)
         authUsernameCtrl = panel.TextCtrl(authUsername)
         authPasswordCtrl = panel.TextCtrl(authPassword)
+        listSplitterCtrl = panel.TextCtrl(listSplitter)
+        valueSplitterCtrl = panel.TextCtrl(valueSplitter)
 
         labels = (
             panel.StaticText(text.port),
@@ -1255,6 +1299,8 @@ class Webserver(eg.PluginBase):
             panel.StaticText(text.authRealm),
             panel.StaticText(text.authUsername),
             panel.StaticText(text.authPassword),
+            panel.StaticText(text.listSplitter),
+            panel.StaticText(text.valueSplitter)
         )
         eg.EqualizeWidths(labels)
 
@@ -1283,6 +1329,16 @@ class Webserver(eg.PluginBase):
         staticBoxSizer.Add(sizer, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND|wx.TOP, 10)
 
+        sizer = wx.FlexGridSizer(3, 2, 5, 5)
+        sizer.Add(labels[6], 0, acv)
+        sizer.Add(listSplitterCtrl)
+        sizer.Add(labels[7], 0, acv)
+        sizer.Add(valueSplitterCtrl)
+        staticBox = wx.StaticBox(panel, label=text.nonAjaxBox)
+        staticBoxSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
+        staticBoxSizer.Add(sizer, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
+        panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND|wx.TOP, 10)
+        
 #        def ConfigureTargets(event):
 #            dialog = ConfigureTargetsDialog(panel, [])
 #            dialog.ShowModal()
@@ -1339,7 +1395,9 @@ class Webserver(eg.PluginBase):
                 authUsernameCtrl.GetValue(),
                 authPasswordCtrl.GetValue(),
                 self.pubPerVars,
-                aSaveCtrl.GetValue()
+                aSaveCtrl.GetValue(),
+                listSplitterCtrl.GetValue(),
+                valueSplitterCtrl.GetValue()
             )
 
 
