@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-version="0.1.5"
+version="0.1.10"
 
 # plugins/SchedulGhost/__init__.py
 #
@@ -22,9 +22,19 @@ version="0.1.5"
 #
 # Revision history:
 # -----------------
-# 0.1.5 by Pako 2012-09-06 06:46 UTC+1
+# 0.1.10 by Pako 2014-06-06 15:20 UTC+1
+#     - added action "Force to run schedule immediately"
+# 0.1.9 by Pako 2014-05-17 18:15 UTC+1
+#     - added option to abort egg-timer by name
+# 0.1.8 by Pako 2014-03-09 10:48 UTC+1
+#     - http://www.eventghost.net/forum/viewtopic.php?f=9&t=2740&start=75#p30126
+# 0.1.7 by Pako 2013-05-05 11:06 UTC+1
+#     - added ReloadXML action (rekall request)
+# 0.1.6 by Pako 2012-09-06 06:46 UTC+1
 #     - bugfix - malfunction, when the action "Disable schedule"
 #       is executed between the start and stop events
+# 0.1.5 by Pako 2012-08-16 19:09 UTC+1
+#     - added DataToXML action (EventGhost4ever request)
 # 0.1.4 by Pako 2011-08-24 09:15 UTC+1
 #     - bugfix - wrong stored last position of scheduler frame
 # 0.1.3 by Pako 2011-06-05 18:53 UTC+1
@@ -162,7 +172,7 @@ class Text:
     xmlComment = "SchedulGhost configuration file. Updated at %s."
     eggStart = 'Egg timer "%s.%s" (%s) started.'
     eggElaps = 'Egg timer "%s.%s" - time %s has elapsed.'
-    eggCancel = 'Egg timer "%s.%s" (%s) canceled.'
+    eggCancel = 'Egg timer "%s: %s.%s" (%s) canceled.'
     popupTitle = 'Egg Timer Popup Window'
     popupTip1 = 'Right click to close window and stop playing the sound \nTime elapsed at %s'
     popupTip2 = 'Drag-and-move to setup of window position'
@@ -2535,7 +2545,7 @@ class SchedulGhost(eg.PluginBase):
         eg.scheduler.AddTask(val, self.SchedulGhost_EggFunction, now)
 
 
-    def AbortEggTimers(self):
+    def AbortEggTimers(self, eggName = None):
         egg_list = eg.scheduler.__dict__['heap']
         tmpLst = []
         for egg in egg_list:
@@ -2544,9 +2554,12 @@ class SchedulGhost(eg.PluginBase):
         if len(tmpLst) > 0:
             for egg in tmpLst:
                 args = self.eggTimers[egg[2][0]]
-                delta = Ticks2Delta(egg[2][0], egg[0])
-                self.updateLogFile(self.text.eggCancel % (args[1], args[2], delta))
-                eg.scheduler.CancelTask(egg)
+                if eggName is None or eggName == args[9]:
+                    delta = Ticks2Delta(egg[2][0], egg[0])
+                    self.updateLogFile(
+                        self.text.eggCancel % (args[9], args[1], args[2], delta)
+                    )
+                    eg.scheduler.CancelTask(egg)
 #===============================================================================
 #cls types for Actions list:
 #===============================================================================
@@ -2669,7 +2682,7 @@ class RunScheduleImmediately(eg.ActionBase):
         if schedule in tmpLst:
             ix = tmpLst.index(schedule)
             sched = self.plugin.data[ix]
-            if sched[0]:
+            if sched[0] or self.value:
                 for sch in eg.scheduler.__dict__['heap']:
                     if sch[1] == self.plugin.SchedulGhostScheduleRun:
                         if sch[2][0] == sched[1]:
@@ -2701,14 +2714,53 @@ class AddSchedule(eg.ActionBase):
         python_expr = "Python expression:"
         descr = u'''<rst>**Add schedule**.
 
-In the edit box, enter a python expression with the parameters of the plan.
-This may be for example *eg.result*, *eg.event.payload* or the entire list
-(in the same format, what you get as a result of actions **"GetSchedule"**).
+| In the edit box, enter a python expression with the parameters of the plan.
+| This may be for example *eg.result*, *eg.event.payload* or the entire list
+  (in the same format, what you get as a result of the action **"GetSchedule"**, see the documentation of
+  the python expression in this description.
 
-This action works in two ways (depending on the existence of the schedule):
+| This action works in two ways (depending on the existence of the schedule):
+| 1. If the schedule with the same title already exists, its parameters are overwritten by the new ones.
+| 2. If the title does not yet exist, the schedule is created and added to the list.
 
-1. If the schedule with the same title already exists, its parameters are overwritten by the new ones.
-2. If the title does not yet exist, the schedule is created and added to the list.'''
+| An added schedule will not be saved automatically in SchedulGhost.xml. To save the added schedule use the
+  SchedulGhost manager or the action "DataToXML".
+      
+This is the syntax of the python expression::
+
+ [enabled?, u'scheduleTitle', scheduleType, [expressionScheduleType], u'dateLastRun timeLastRun',
+ u'eventPrefix', u'startEventSuffix', u'stopEventSuffix', u'eventPayload']
+
+| These are the different schedule types and them expressions:
+
+* 0 (only once (or yearly)): u'startEventTime', u'span', u'date', repeatYearly?
+* 1 (daily): u'startEventTime', u'span'
+* 2 (weekly): u'startEventTime', u'span', daysWeek, DoNotTriggerOnAHoliday?,\
+TriggerNotChosenDayOnAHoliday?
+* 3 (monthly  / weekday): u'startEventTime', u'span', orderOfDay, daysWeek, monthsYear(Jan-Jun),\
+monthsYear(Jul-Dec), DoNoTriggerOnAHoliday?
+* 4 (monthly / day): u'startEventTime', u'span', daysMonth(1-8), daysMonth(9-16),\
+daysMonth(17-24), daysMonth(24-31), monthsYear(Jan-Jun), monthsYear(Jul-Dec)
+* 5 (periodically): u'startEventTime', u'span', u'date', periodEventRepeat, timeFormat
+* 6 (time span): u'00:00:00', u'span'
+
+Explanation:
+
+* enabled? = boolean expression if it is true or false (0 = false; 1 = true)
+* u'scheduleTitle' = expression with a unicode string (wake_me_up)
+* scheduleType = a number
+* date = year-month-day (2012-12-31)
+* time and span = hours:minutes:seconds (23:59:59)
+* orderOfDay = sum of the days (first = 1, second = 2; thirt = 4, ..., last = 32)
+* daysWeek = sum of the days (Monday = 1, Tuesday = 2; Wednesday = 4, ..., Sunday = 64)
+* monthsYear(Jan-Jul) = sum of the months (January = 1, ..., June = 32)
+* monthsYear(Jul-Dec) = sum of the months (July = 1, ..., December = 32)
+* timeFormat: seconds = 0, minutes = 1, hours = 2, days = 3, weeks = 4, months = 5, years = 6
+
+::
+
+ Make sure to use '\\\\' instead of '\\' within a string literal if you use this function in a python script.
+'''
 
     def __call__(self, expr = ""):
         schedule = eg.ParseString(expr)
@@ -2717,7 +2769,11 @@ This action works in two ways (depending on the existence of the schedule):
             data = self.plugin.data
             tmpLst = [item[1] for item in data]
             if schedule[1] in tmpLst:
-                data[tmpLst.index(schedule[1])] = cpy(schedule)
+                ix = tmpLst.index(schedule[1])
+                if data[ix][0]:
+                    data[ix][0] = 0
+                    self.plugin.UpdateEGscheduler()
+                data[ix] = cpy(schedule)
             else:
                 data.append(schedule)
             self.plugin.UpdateEGscheduler()
@@ -2930,7 +2986,7 @@ class EggTimersList(wx.Frame):
             None,
             -1,
             text.title,
-            style = wx.DEFAULT_DIALOG_STYLE | wx.CLOSE_BOX | wx.TAB_TRAVERSAL | wx.RESIZE_BORDER ,
+            style = wx.DEFAULT_DIALOG_STYLE | wx.CLOSE_BOX | wx.TAB_TRAVERSAL | wx.RESIZE_BORDER,
             name = text.title
         )
         self.SetIcon(self.plugin.info.icon.GetWxIcon())
@@ -2945,6 +3001,7 @@ class EggTimersList(wx.Frame):
         self.Bind(wx.EVT_CHAR_HOOK, self.onFrameCharHook)
 
         mainSizer = wx.GridBagSizer(0, 0)
+        self.SetSizer(mainSizer)
         mainSizer.AddGrowableRow(0)
         mainSizer.AddGrowableCol(0)
         eggListCtrl = wx.ListCtrl(
@@ -2959,14 +3016,14 @@ class EggTimersList(wx.Frame):
             eggListCtrl.InsertColumn(
                 i,
                 text.header[i-1],
-                wx.LIST_FORMAT_CENTRE if i in (1, 4) else wx.LIST_FORMAT_LEFT
+                wx.LIST_FORMAT_CENTRE if i in (2, 5) else wx.LIST_FORMAT_LEFT
             )
         size = 0
-        for i in range(5):
+        for i in range(6):
             if i == 0:
                 eggListCtrl.SetColumnWidth(i, 0)
-            elif i==2:
-                eggListCtrl.SetColumnWidth(i, 120)
+            elif i == 3:
+                eggListCtrl.SetColumnWidth(i, 80)
             else:
                 eggListCtrl.SetColumnWidth(i, wx.LIST_AUTOSIZE_USEHEADER)
             size += eggListCtrl.GetColumnWidth(i)
@@ -2975,14 +3032,16 @@ class EggTimersList(wx.Frame):
         rect = eggListCtrl.GetItemRect(0, wx.LIST_RECT_BOUNDS)
         hh = rect[1]
         hi = rect[3]
-        rem2Size = size  - eggListCtrl.GetColumnWidth(3) + 4
+        self.SetClientSize((size, -1))
+        self.SetMinSize((1.5*size, -1))
+        rem2Size = size  - eggListCtrl.GetColumnWidth(4) + 4
         mainSizer.Add(eggListCtrl, (0,0), (1,1), flag = wx.EXPAND)
 
 
         def OnSize(event):
-            eggListCtrl.SetColumnWidth(2, wx.LIST_AUTOSIZE)
-            w1 = eggListCtrl.GetColumnWidth(2)
-            eggListCtrl.SetColumnWidth(3, 120 + self.GetClientSize()[0] - rem2Size  - w1)
+            eggListCtrl.SetColumnWidth(3, wx.LIST_AUTOSIZE)
+            w1 = eggListCtrl.GetColumnWidth(3)
+            eggListCtrl.SetColumnWidth(4, 80 + self.GetClientSize()[0] - rem2Size  - w1)
             event.Skip()
         self.Bind(wx.EVT_SIZE, OnSize)
 
@@ -3001,17 +3060,16 @@ class EggTimersList(wx.Frame):
                 for row in range(cnt):
                     args = self.plugin.eggTimers[tmpLst[row][2][0]]
                     eggListCtrl.InsertStringItem(row, "")  #Dummy column 0
-                    eggListCtrl.SetStringItem(row, 1, Ticks2Delta(mktime(localtime()), tmpLst[row][0]))
-                    eggListCtrl.SetStringItem(row, 2, "%s.%s" % (args[1], args[2]))
-                    eggListCtrl.SetStringItem(row, 3, args[4])
-                    eggListCtrl.SetStringItem(row, 4, self.text.yes if len(args[3]) > 0 else "")
+                    eggListCtrl.SetStringItem(row, 1, args[9])
+                    eggListCtrl.SetStringItem(row, 2, Ticks2Delta(mktime(localtime()), tmpLst[row][0]))
+                    eggListCtrl.SetStringItem(row, 3, "%s.%s" % (args[1], args[2]))
+                    eggListCtrl.SetStringItem(row, 4, args[4])
+                    eggListCtrl.SetStringItem(row, 5, self.text.yes if len(args[3]) > 0 else "")
             self.SetClientSize((self.GetClientSize()[0], 4 + hh + cnt * hi))
             if event:
                 event.Skip()
 
         self.Bind(wx.EVT_TIMER, FillListCtrl)
-        self.SetSizer(mainSizer)
-        self.SetClientSize(mainSizer.GetMinSize())
         self.timer = wx.Timer(self)
         self.timer.Start(1000)
         FillListCtrl()
@@ -3054,8 +3112,9 @@ class SetEggTimer(eg.ActionBase):
         playWav = "Wav file test"
         defaultPopup = "Wake up, eggs are cooked !!!"
         defaultTime = ("Default time:", "Time to elapse:")
-        treeLabel = "%s: %s.%s: %s"
+        treeLabel = "%s: %s: %s.%s: %s"
         defSuffix = "EggTimer"
+        nameLbl = "Egg timer name:"
 
     def __call__(self, args = [
         "00:03:00",
@@ -3066,8 +3125,13 @@ class SetEggTimer(eg.ActionBase):
         (191, 191, 255),
         (64, 0, 128),
         "",
-        (10, 10)
+        (10, 10),
+        "EggTimer"
     ]):
+        if len(args) == 9:
+            args=list(args)
+            args.append("EggTimer")
+            args=tuple(args)
         if not self.value:
             if not self.plugin.eggTimer:
                 wx.CallAfter(EggTimerFrame, self.text, self.plugin, args)
@@ -3076,7 +3140,17 @@ class SetEggTimer(eg.ActionBase):
 
 
     def GetLabel(self, args):
-        return self.text.treeLabel % (self.name, args[1], args[2], args[4])
+        if len(args) == 9:
+            args=list(args)
+            args.append("EggTimer")
+            args=tuple(args)
+        return self.text.treeLabel % (
+            self.name,
+            args[9],
+            args[1],
+            args[2],
+            args[4]
+        )
 
 
     def Configure(self, args = [
@@ -3088,10 +3162,15 @@ class SetEggTimer(eg.ActionBase):
         (191, 191, 255),
         (64, 0, 128),
         "",
-        (10, 10)
+        (10, 10),
+        "EggTimer"
     ]):
         panel = self.panel = eg.ConfigPanel()
-        self.args = args[:]
+        if len(args) == 9:
+            args=list(args)
+            args.append("EggTimer")
+            args=tuple(args)
+        self.args = cpy(args)
         del args
         self.panel.popupFrame = None
         if self.args[2] is None:
@@ -3100,9 +3179,11 @@ class SetEggTimer(eg.ActionBase):
             self.args[1] = self.plugin.prefix
         prefCtrl = wx.TextCtrl(panel, -1, self.args[1], size = (100, -1))
         suffCtrl = wx.TextCtrl(panel, -1, self.args[2], size = (100, -1))
+        nameCtrl = wx.TextCtrl(panel, -1, self.args[9], size = (100, -1))
         topSizer = wx.GridBagSizer(1,1)
         topSizer.AddGrowableCol(2,1)
         topSizer.AddGrowableCol(4,1)
+        topSizer.AddGrowableCol(6,1)
         spinBtn = wx.SpinButton(
             panel,
             -1,
@@ -3124,8 +3205,10 @@ class SetEggTimer(eg.ActionBase):
         topSizer.Add(spinBtn, (1, 1))
         topSizer.Add(wx.StaticText(panel, -1, self.text.prefLbl), (0, 3),(1,2))
         topSizer.Add(wx.StaticText(panel, -1, self.text.suffLbl), (0, 5))
+        topSizer.Add(wx.StaticText(panel, -1, self.text.nameLbl), (0, 7))
         topSizer.Add(prefCtrl, (1, 3))
         topSizer.Add(suffCtrl, (1, 5))
+        topSizer.Add(nameCtrl, (1, 7))
         sizerAdd = panel.sizer.Add
         sizerAdd(topSizer,0,wx.LEFT|wx.RIGHT|wx.EXPAND, 10)
         sizerAdd((-1,10))
@@ -3326,7 +3409,8 @@ class SetEggTimer(eg.ActionBase):
                 backColorBtn.GetValue(),
                 foreColorBtn.GetValue(),
                 fontBtn.GetValue(),
-                popPos
+                popPos,
+                nameCtrl.GetValue(),
             ),)
 #===============================================================================
 
@@ -3336,6 +3420,7 @@ class ShowRunningEggTimers(eg.ActionBase):
         title = "SchedulGhost: Currently running egg-timers"
         yes = "Yes"
         header = (
+            "Timer name",
             "Remaining time",
             "Event string",
             "Pop-up text",
@@ -3355,10 +3440,57 @@ class AbortEggTimers(eg.ActionBase):
         self.plugin.AbortEggTimers()
 #===============================================================================
 
+class DataToXML(eg.ActionBase):
+
+    def __call__(self):
+        self.plugin.dataToXml()
+#===============================================================================
+
+class ReloadXML(eg.ActionBase):
+
+    def __call__(self):
+        self.plugin.data = self.plugin.xmlToData()
+        self.plugin.tmpData = cpy(self.plugin.data)
+        self.plugin.UpdateEGscheduler()
+        if self.plugin.dialog:
+            self.plugin.dialog.onClose(wx.CommandEvent())
+            wx.CallAfter(
+                schedulerDialog,
+                self.plugin.text.ShowSchedulGhost,
+                self.plugin
+            )            
+#===============================================================================
+
+class AbortEggTimer(eg.ActionBase):
+
+    class text:
+        lbl = "Egg timer name:"
+
+    def __call__(self, ttl = ""):
+        ttl = eg.ParseString(ttl)
+        self.plugin.AbortEggTimers(ttl)
+
+
+    def Configure(self, ttl = ""):
+        panel = eg.ConfigPanel()
+        lbl = wx.StaticText(panel, -1, self.text.lbl)
+        eggCtrl = wx.TextCtrl(panel, -1, ttl)
+        mainSizer = wx.BoxSizer(wx.HORIZONTAL)
+        mainSizer.Add(lbl,0,wx.ALIGN_CENTER_VERTICAL)
+        mainSizer.Add(eggCtrl,1,wx.EXPAND|wx.LEFT, 8)
+        panel.sizer.Add(mainSizer,0,wx.EXPAND|wx.ALL, 10)
+        
+        while panel.Affirmed():
+            panel.SetResult(
+                eggCtrl.GetValue(),
+            )
+#===============================================================================
+
 Actions = (
     (SetEggTimer, "SetEggTimer", "Adjust and start egg timer", "Adjust and start egg timer.", 0),
     (SetEggTimer, "StartEggTimer", "Start egg timer", "Start egg timer immediately (without the possibility to adjust the time to elapse).", 1),
     (ShowRunningEggTimers, "ShowRunningEggTimers", "Show currently running egg-timers", "Shows currently running egg-timers.", None),
+    (AbortEggTimer, "AbortEggTimer", "Abort egg timer by name", "Aborts egg timer by name.", None),
     (AbortEggTimers, "AbortEggTimers", "Abort egg timer(s)", "Abort egg timer(s).", None),
     (ShowSchedulGhost, "ShowSchedulGhost", "Show SchedulGhost", "Show SchedulGhost manager.", None),
     (HideSchedulGhost, "HideSchedulGhost", "Hide SchedulGhost", "Hide SchedulGhost manager.", None),
@@ -3370,4 +3502,7 @@ Actions = (
     (AddSchedule, "AddSchedule", "Add schedule", AddSchedule.text.descr, None),
     (DeleteSchedule, "DeleteSchedule", "Delete schedule", "Delete schedule.", None),
     (RunScheduleImmediately, "RunScheduleImmediately", "Run schedule immediately", "Runs schedule immediately.", None),
+    (RunScheduleImmediately, "ForceScheduleImmediately", "Force to run schedule immediately", "Force starts schedule immediately.", True),
+    (DataToXML, "DataToXML", "Save data to xml", "Saves data to xml.", None),
+    (ReloadXML, "ReloadXML", "Reload data from xml", "Reloads data from xml.", None),
 )
