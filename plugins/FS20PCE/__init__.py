@@ -19,7 +19,7 @@ Setting up groups is optional as events with the house code and device address a
 eg.RegisterPlugin(
     name = "ELV FS20 PCE",
     author = "Bartman",
-    version = "1.1." + "$LastChangedRevision: 1486 $".split()[1],
+    version = "1.2",
     kind = "remote",
     canMultiLoad = False,
     description = __doc__,
@@ -170,7 +170,7 @@ class FS20PCE(eg.PluginClass):
                 
             if (commandStr1):
                 if (eventTime > 0):
-                    timerEntry = eg.scheduler.AddTask(eventTime, self.SchedulerCallback, deviceName, commandStr1)
+                    timerEntry = eg.scheduler.AddShortTask(eventTime, self.SchedulerCallback, deviceName, commandStr1)
                     self.PendingEvents[deviceName] = timerEntry
                 else:
                     self.TriggerEvent(deviceName + "." + commandStr1)

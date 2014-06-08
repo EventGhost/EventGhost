@@ -20,6 +20,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.3.7 by Pako 2014-06-08 12:06 UTC+1
+#     - - changes caused by a new eg.Scheduler
 # 0.3.6 by Pako 2013-02-13 08:38 UTC+1
 #     - bugfix (typing error)
 # 0.3.5 by Pako 2013-02-11 19:37 UTC+1
@@ -75,7 +77,7 @@ SC_MINIMIZE   = 61472
 eg.RegisterPlugin(
     name = "MediaMonkey",
     author = "Pako",
-    version = "0.3.6",
+    version = "0.3.7",
     kind = "program",
     guid = "{50602341-ABC3-47AD-B859-FCB8C03ED4EF}",
     createMacrosOnAdd = True,
@@ -1377,7 +1379,7 @@ class MediaMonkey(eg.PluginBase):
         elif not self.autoFlg:
             if not self.manFlg:
                 self.manFlg = True
-                eg.scheduler.AddTask(0.05, self.startWorkerThread)
+                eg.scheduler.AddShortTask(0.05, self.startWorkerThread)
 
 
     def startWorkerThread(self):
@@ -1524,7 +1526,7 @@ class Start(eg.ActionBase):
     def __call__(self, choice=True):
         if not self.plugin.isRunning() and not self.plugin.autoFlg:
             self.plugin.autoFlg = True
-            eg.scheduler.AddTask(0.1, self.plugin.startWorkerThread)
+            eg.scheduler.AddShortTask(0.1, self.plugin.startWorkerThread)
             if choice:
                 self.plugin.checkOpened = eg.scheduler.AddTask(
                     1,

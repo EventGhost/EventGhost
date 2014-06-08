@@ -2,7 +2,7 @@
 eg.RegisterPlugin(
     name = "Timer",
     author = "Bartman",
-    version = "1.0." + "$LastChangedRevision: 1430 $".split()[1],
+    version = "2.0",
     guid = "{6149CA99-1FCD-4450-9160-7543BC20CFD3}",
     description = (
         "Triggers an event after an adjustable time and optionally repeats it "
@@ -135,7 +135,7 @@ class TimerObject():
         else:
             raise ValueError("unknown startTimeType")
         
-        eg.scheduler.AddTaskAbsolute(self.nextEventAt, self.TriggerScheduledEvent, self.nextEventAt)
+        eg.scheduler.AddShortTaskAbsolute(self.nextEventAt, self.TriggerScheduledEvent, self.nextEventAt)
                     
     def TriggerScheduledEvent(self, scheduledTime):
         if not self.plugin.started or not self.active or self.nextEventAt != scheduledTime:
@@ -161,7 +161,7 @@ class TimerObject():
             #no more event to schedule
             return
         self.nextEventAt += self.interval
-        eg.scheduler.AddTaskAbsolute(self.nextEventAt, self.TriggerScheduledEvent, self.nextEventAt)
+        eg.scheduler.AddShortTaskAbsolute(self.nextEventAt, self.TriggerScheduledEvent, self.nextEventAt)
     
     def Restart(self):
         #just reschedule

@@ -24,7 +24,7 @@ eg.RegisterPlugin(
         "EventGhost."
     ),
     kind = "core",
-    version = "1.0.1",
+    version = "1.0.2",
     guid = "{9D499A2C-72B6-40B0-8C8C-995831B10BB4}",
 )
 
@@ -501,7 +501,7 @@ class TriggerEvent(eg.ActionBase):
         if not waitTime:
             eg.TriggerEvent(eventString)
         else:
-            eg.scheduler.AddTask(waitTime, eg.TriggerEvent, eventString)
+            eg.scheduler.AddShortTask(waitTime, eg.TriggerEvent, eventString)
 
 
     def GetLabel(self, eventString="", waitTime=0):
