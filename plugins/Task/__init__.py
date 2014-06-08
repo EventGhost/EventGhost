@@ -18,8 +18,8 @@ import eg
 
 eg.RegisterPlugin(
     name = "Task Create/Switch Events",
-    author = "Bitmonster",
-    version = "1.0.3",
+    author = "Bitmonster & blackwind",
+    version = "1.0.4",
     guid = "{D1748551-C605-4423-B392-FB77E6842437}",
     description = (
         "Generates events if an application starts, exits or "
@@ -195,7 +195,7 @@ class Task(eg.PluginBase):
     def MyWndProc(self, dummyHwnd, dummyMesg, wParam, lParam):
         if wParam == HSHELL_WINDOWDESTROYED:
             self.WindowDestroyedProc(None, None, lParam, None)
-        elif wParam == HSHELL_WINDOWACTIVATED or wParam == 0x8004:
+        elif wParam in (HSHELL_WINDOWACTIVATED, HSHELL_WINDOWCREATED, 0x8004):
             self.WindowGotFocusProc(None, None, lParam, None)
         elif wParam == 0x8006:
             self.WindowFlashedProc(None, None, lParam, None)
