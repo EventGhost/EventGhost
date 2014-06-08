@@ -17,6 +17,12 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 2.1 by Pako 2014-02-14 11:14 UTC+1
+#     - added option to serve with secured protocol (https://)
+# 2.0 by Sem;colon 2014-01-04 22:15 UTC+1
+#     - fixed bug (eventghost crashes if submitting the Set (persistent) value configuration window)
+#     - removed decoding of the return value for the SendEventExt action (could cause problems sometimes)
+#       the code must now be decoded in a script manually (if decoding is needed)
 # 1.9 by Pako 2013-12-04 14:36 UTC+1
 #     - added option to disable parsing of strings (Sem;colon's solutions)
 # 1.8 by Sem;colon 2013-11-06 20:10 UTC+1
@@ -56,7 +62,7 @@ import eg
 eg.RegisterPlugin(
     name = "Webserver",
     author = "Bitmonster & Pako & Sem;colon",
-    version = "1.9",
+    version = "2.1",
     guid = "{E4305D8E-A3D3-4672-B06E-4EA1F0F6C673}",
     description = (
         "Implements a small webserver, that you can use to generate events "
@@ -88,6 +94,7 @@ eg.RegisterPlugin(
 import wx
 import os
 import sys
+import ssl
 import posixpath
 import base64
 import time
@@ -103,7 +110,7 @@ from BaseHTTPServer import HTTPServer
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from SocketServer import ThreadingMixIn
 from urllib import unquote, unquote_plus
-from os.path import getmtime
+from os.path import getmtime, isfile
 from wx.lib.mixins.listctrl import TextEditMixin
 SYS_VSCROLL_X = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
 
@@ -352,7 +359,7 @@ class FileLoader(jinja2.BaseLoader):
 class MyServer(ThreadingMixIn, HTTPServer):
     address_family = getattr(socket, 'AF_INET6', None)
 
-    def __init__(self, requestHandler, port):
+    def __init__(self, requestHandler, port, certfile, keyfile):
         self.httpdThread = None
         self.abort = False
         for res in socket.getaddrinfo(None, port, socket.AF_UNSPEC,
@@ -363,7 +370,13 @@ class MyServer(ThreadingMixIn, HTTPServer):
             break
 
         HTTPServer.__init__(self, address, requestHandler)
-
+        if isfile(certfile) and isfile(keyfile):
+            self.socket = ssl.wrap_socket(
+                self.socket,
+                certfile = certfile,
+                keyfile = keyfile,
+                server_side=True
+            )
 
     def server_bind(self):
         """Called by constructor to bind the socket."""
@@ -433,6 +446,8 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 
         self.send_response(401)
         self.send_header('WWW-Authenticate', 'Basic realm="%s"' % self.authRealm)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()        
         return False
 
 
@@ -1066,7 +1081,7 @@ class SendEventExt(eg.ActionBase):
         #else:
             # If we don't fail then the page isn't protected
             #print "This page isn't protected by authentication."
-        thepage = urllib2.unquote(handle.read()).decode(eg.systemEncoding,'replace') # handle.read()
+        thepage = urllib2.unquote(handle.read()) # handle.read()
         return thepage
 
 
@@ -1126,6 +1141,21 @@ class Webserver(eg.PluginBase):
         listSplitter = "String between list items:"
         valueSplitter = "String between returned values:"
         parsing = "disable parsing of string"
+        certfile = "SSL certificate"
+        keyfile = "SSL private key"
+        sslTool = "Select the appropriate file if you want to use a secure "\
+"protocol (https).\n If this field remains blank, the server will use an "\
+"unsecure protocol (http). "
+        cMask = (
+            "crt files (*.crt)|*.crt"
+            "|pem files (*.pem)|*.pem"
+            "|All files (*.*)|*.*"
+        )
+        kMask = (
+            "key files (*.key)|*.key"
+            "|pem files (*.pem)|*.pem"
+            "|All files (*.*)|*.*"
+        )
 
     def __init__(self):
         self.AddEvents()
@@ -1143,7 +1173,9 @@ class Webserver(eg.PluginBase):
         pubPerVars = {},
         autosave = False,
         listSplitter =",",
-        valueSplitter =";;"
+        valueSplitter =";;",
+        certfile = "",
+        keyfile = ""
     ):
         self.info.eventPrefix = prefix
         if authUsername or authPassword:
@@ -1168,7 +1200,7 @@ class Webserver(eg.PluginBase):
         RequestHandler.basepath = basepath
         RequestHandler.authRealm = authRealm
         RequestHandler.authString = authString
-        self.server = MyServer(RequestHandler, port)
+        self.server = MyServer(RequestHandler, port, certfile, keyfile)
         self.server.Start()
 
 
@@ -1278,13 +1310,34 @@ class Webserver(eg.PluginBase):
         pubPerVars = {},
         autosave = False,
         listSplitter =",",
-        valueSplitter =";;"
-        
+        valueSplitter =";;",
+        certfile = "",
+        keyfile = ""                
     ):
         text = self.text
         panel = eg.ConfigPanel()
         portCtrl = panel.SpinIntCtrl(port, min=1, max=65535)
         filepathCtrl = panel.DirBrowseButton(basepath)
+        certfileCtrl = eg.FileBrowseButton(
+            panel,
+            -1,
+            toolTip = text.sslTool,
+            dialogTitle = text.certfile,
+            buttonText = eg.text.General.browse,
+            startDirectory = "",
+            initialValue = certfile,
+            fileMask = text.cMask,
+        )
+        keyfileCtrl = eg.FileBrowseButton(
+            panel,
+            -1,
+            toolTip = text.sslTool,
+            dialogTitle = text.keyfile,
+            buttonText = eg.text.General.browse,
+            startDirectory = "",
+            initialValue = keyfile,
+            fileMask = text.kMask,
+        )
         editCtrl = panel.TextCtrl(prefix)
         authRealmCtrl = panel.TextCtrl(authRealm)
         authUsernameCtrl = panel.TextCtrl(authUsername)
@@ -1300,21 +1353,30 @@ class Webserver(eg.PluginBase):
             panel.StaticText(text.authUsername),
             panel.StaticText(text.authPassword),
             panel.StaticText(text.listSplitter),
-            panel.StaticText(text.valueSplitter)
+            panel.StaticText(text.valueSplitter),
+            panel.StaticText(text.certfile + ":"),
+            panel.StaticText(text.keyfile + ":")
         )
         eg.EqualizeWidths(labels)
+        labels[8].SetToolTipString(text.sslTool)
+        labels[9].SetToolTipString(text.sslTool)
 
         acv = wx.ALIGN_CENTER_VERTICAL
-        sizer = wx.FlexGridSizer(3, 2, 5, 5)
+        sizer = wx.FlexGridSizer(5, 2, 5, 5)
+        sizer.AddGrowableCol(1)
         sizer.Add(labels[0], 0, acv)
         sizer.Add(portCtrl)
         sizer.Add(labels[1], 0, acv)
-        sizer.Add(filepathCtrl)
+        sizer.Add(filepathCtrl, 0, wx.EXPAND)
+        sizer.Add(labels[8], 0, acv)
+        sizer.Add(certfileCtrl, 0, wx.EXPAND)
+        sizer.Add(labels[9], 0, acv)
+        sizer.Add(keyfileCtrl, 0, wx.EXPAND)
         sizer.Add(labels[2], 0, acv)
         sizer.Add(editCtrl)
         staticBox = wx.StaticBox(panel, label=text.generalBox)
         staticBoxSizer = wx.StaticBoxSizer(staticBox, wx.VERTICAL)
-        staticBoxSizer.Add(sizer, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
+        staticBoxSizer.Add(sizer, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, 5)
         panel.sizer.Add(staticBoxSizer, 0, wx.EXPAND)
 
         sizer = wx.FlexGridSizer(3, 2, 5, 5)
@@ -1385,7 +1447,6 @@ class Webserver(eg.PluginBase):
         dialogButton2.Bind(wx.EVT_BUTTON, OnDialog2Btn)     
 
 
-
         while panel.Affirmed():
             panel.SetResult(
                 editCtrl.GetValue(),
@@ -1397,7 +1458,9 @@ class Webserver(eg.PluginBase):
                 self.pubPerVars,
                 aSaveCtrl.GetValue(),
                 listSplitterCtrl.GetValue(),
-                valueSplitterCtrl.GetValue()
+                valueSplitterCtrl.GetValue(),
+                certfileCtrl.GetValue(),
+                keyfileCtrl.GetValue()
             )
 
 
