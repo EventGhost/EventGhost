@@ -19,6 +19,7 @@ import wx
 from os.path import basename, dirname, abspath, split, splitext
 from threading import Thread
 from time import sleep
+from win32con import SPI_SETFOREGROUNDLOCKTIMEOUT, SPIF_SENDWININICHANGE, SPIF_UPDATEINIFILE
 from win32file import Wow64DisableWow64FsRedirection, Wow64RevertWow64FsRedirection
 
 from eg.WinApi import IsWin64
@@ -30,6 +31,8 @@ from eg.WinApi.Dynamic import (
     CREATE_NEW_CONSOLE, STARTF_USESHOWWINDOW, INFINITE,
     GetExitCodeProcess, DWORD,
     IsWindowVisible, RegisterWindowMessage,
+    AttachThreadInput, GetCurrentThreadId, GetForegroundWindow,
+    GetWindowThreadProcessId, SystemParametersInfoW,
 )
 
 from eg.WinApi.Utils import (
@@ -110,6 +113,10 @@ class Execute(eg.ActionBase):
         disableWOW64 = disableWOW64 and IsWin64()
         if disableWOW64:
             prevVal = Wow64DisableWow64FsRedirection()
+        activeThread = GetWindowThreadProcessId(GetForegroundWindow(), None)
+        currentThread = GetCurrentThreadId()
+        attached = AttachThreadInput(currentThread, activeThread, True)
+        SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_SENDWININICHANGE | SPIF_UPDATEINIFILE)
         res = CreateProcess(
             None,              # lpApplicationName
             commandLine,       # lpCommandLine
@@ -122,6 +129,8 @@ class Execute(eg.ActionBase):
             startupInfo,       # lpStartupInfo
             processInformation # lpProcessInformation
         )
+        if attached:
+            AttachThreadInput(currentThread, activeThread, False)
         if disableWOW64:
             Wow64RevertWow64FsRedirection(prevVal)
         suffix = "%s.%s" % (
@@ -131,41 +140,6 @@ class Execute(eg.ActionBase):
         prefix = self.plugin.name.replace(' ', '')
         if res == 0:
             raise self.Exception(FormatError())
-        if winState != 3 and PluginIsEnabled("Task"):
-            def callback(dummyHwnd, dummyMesg, wParam, lParam):
-                pids = GetPids(hwnd = lParam)
-                pid = pids[0] if pids else False
-                if pid == processInformation.dwProcessId:
-                    try:
-                        eg.messageReceiver.RemoveHandler(WM_SHELLHOOKMESSAGE, refCallback)
-                    except:
-                        pass
-                    sleep(0.3)  # Wait for windows to appear
-                    hwnds = GetHwnds(pid = processInformation.dwProcessId)
-                    if hwnds:
-                        #print "Focused via GetHwnds"
-                        for hwnd in hwnds:
-                            if IsWindowVisible(hwnd):
-                                BringHwndToFront(hwnd)
-                                break
-                    elif IsWindowVisible(lParam):
-                        #print "Focused via ShellHook"
-                        BringHwndToFront(lParam)
-                elif not ProcessExists(processInformation.dwProcessId):
-                    try:
-                        eg.messageReceiver.RemoveHandler(WM_SHELLHOOKMESSAGE, refCallback)
-                    except:
-                        pass
-                    try:
-                        eg.plugins.Window.FindWindow(basename(pathname))
-                        if len(eg.lastFoundWindows):
-                            #print "Focused via FindWindow"
-                            BringHwndToFront(eg.lastFoundWindows[0])
-                    except:
-                        pass
-            refCallback = callback
-            WM_SHELLHOOKMESSAGE = RegisterWindowMessage("SHELLHOOK")
-            eg.messageReceiver.AddHandler(WM_SHELLHOOKMESSAGE, callback)
         if waitForCompletion:
             WaitForSingleObject(processInformation.hProcess, INFINITE)
             exitCode = DWORD()
