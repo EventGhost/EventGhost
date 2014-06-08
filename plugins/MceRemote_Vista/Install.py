@@ -2,6 +2,7 @@ import sys
 from os.path import dirname, join, abspath
 from eg.WinApi.Service import Service
 import _winreg as reg
+import shutil, os
 
 ServiceKey = "SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application"
     
@@ -33,7 +34,13 @@ def Install():
     if Is64BitOS():
         osExtension = "x64"
     pluginDir =  dirname(__file__.decode(sys.getfilesystemencoding()))
-    myExe = join(pluginDir, "AlternateMceIrService_%s.exe"%osExtension)
+    tmpExe = join(pluginDir, "AlternateMceIrService_%s.exe"%osExtension)
+    myExe = join(pluginDir, "AlternateMceIrService.exe")
+    try:
+        os.remove(myExe)
+    except:
+        pass
+    shutil.copyfile(tmpExe,myExe)
     key = reg.CreateKey(reg.HKEY_LOCAL_MACHINE, ServiceKey+"\\AlternateMceIrService")
     reg.SetValueEx(key, "EventMessageFile", 0, reg.REG_SZ, myExe)
     reg.SetValueEx(key, "TypesSupported", 0, reg.REG_DWORD, 7)
