@@ -20,7 +20,7 @@ import traceback
 eg.RegisterPlugin(
     name = "System",
     author = "Bitmonster & blackwind",
-    version = "1.1.6",
+    version = "1.1.7",
     description = (
         "Controls different aspects of your system, like sound card, "
         "graphics card, power management, et cetera."
@@ -110,6 +110,7 @@ class Text:
     forced        = "Forced: %s"
     forcedCB      = "Force close of all programs"
     primaryDevice = "Primary Sound Driver"
+    device        = "Device:"
 
     RegistryGroup = Registry.Text
 
@@ -918,7 +919,8 @@ class MuteOn(eg.ActionBase):
         """if sys.getwindowsversion()[0] > 5:
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
-        panel.AddLine("Device:", deviceCtrl)
+        #panel.AddLine("Device:", deviceCtrl)
+        panel.AddLine(self.plugin.text.device, deviceCtrl)
         while panel.Affirmed():
             panel.SetResult(deviceCtrl.GetStringSelection())
 
@@ -947,7 +949,8 @@ class MuteOff(eg.ActionBase):
         """if sys.getwindowsversion()[0] > 5:
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
-        panel.AddLine("Device:", deviceCtrl)
+        #panel.AddLine("Device:", deviceCtrl)
+        panel.AddLine(self.plugin.text.device, deviceCtrl)
         while panel.Affirmed():
             panel.SetResult(deviceCtrl.GetStringSelection())
 
@@ -975,7 +978,8 @@ class ToggleMute(eg.ActionBase):
         """if sys.getwindowsversion()[0] > 5:
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
-        panel.AddLine("Device:", deviceCtrl)
+        #panel.AddLine("Device:", deviceCtrl)
+        panel.AddLine(self.plugin.text.device, deviceCtrl)
         while panel.Affirmed():
             panel.SetResult(deviceCtrl.GetStringSelection())
 
@@ -1002,7 +1006,8 @@ class GetMute(eg.ActionBase):
         """if sys.getwindowsversion()[0] > 5:
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
-        panel.AddLine("Device:", deviceCtrl)
+        #panel.AddLine("Device:", deviceCtrl)
+        panel.AddLine(self.plugin.text.device, deviceCtrl)
         while panel.Affirmed():
             panel.SetResult(deviceCtrl.GetStringSelection())
 
@@ -1043,25 +1048,39 @@ class SetMasterVolume(eg.ActionBase):
     def Configure(self, value=0, deviceId=0):
         deviceId = SoundMixer.GetDeviceId(deviceId)
         panel = eg.ConfigPanel()
-        deviceCtrl = panel.Choice(deviceId, SoundMixer.GetMixerDevices())
+        deviceCtrl = panel.Choice(
+            deviceId+1, choices=SoundMixer.GetMixerDevices(True)
+        )
+#        deviceCtrl = panel.Choice(deviceId, SoundMixer.GetMixerDevices())
         """if sys.getwindowsversion()[0] > 5:
             deviceCtrl.SetValue(0)
             deviceCtrl.Enable(False)"""
         valueCtrl = panel.SmartSpinNumCtrl(value, min=0, max=100)
-        sizer = eg.HBoxSizer(
-            (panel.StaticText(self.text.text1), 0, wx.ALIGN_CENTER_VERTICAL),
-            (valueCtrl, 0, wx.LEFT|wx.RIGHT, 5),
+        label1 = panel.StaticText(self.text.text1)
+        label3 = panel.StaticText(self.plugin.text.device)
+        eg.EqualizeWidths((label1, label3))
+        sizer1 = eg.HBoxSizer(
+            (label3, 0, wx.ALIGN_CENTER_VERTICAL),
+            (deviceCtrl, 1, wx.LEFT|wx.RIGHT, 5),
+        )
+        style1 = wx.LEFT|wx.RIGHT
+        style2 = wx.TOP
+        if isinstance(valueCtrl.ctrl, wx._controls.TextCtrl):
+            style1 |= wx.EXPAND
+            style2 |= wx.EXPAND
+        sizer2 = eg.HBoxSizer(
+            (label1, 0, wx.ALIGN_CENTER_VERTICAL),
+            (valueCtrl, 1, style1, 5),
             (panel.StaticText(self.text.text2), 0, wx.ALIGN_CENTER_VERTICAL),
         )
-        panel.AddLine("Device:", deviceCtrl)
-        panel.AddLine(sizer)
+        panel.sizer.Add(sizer1, 0, wx.TOP, 10)
+        panel.sizer.Add(sizer2, 0, style2, 10)
         while panel.Affirmed():
             panel.SetResult(
                 valueCtrl.GetValue(),
                 deviceCtrl.GetStringSelection(),
             )
-
-
+#===============================================================================
 
 class ChangeMasterVolumeBy(eg.ActionBase):
     name = "Change Master Volume"
@@ -1112,7 +1131,8 @@ class ChangeMasterVolumeBy(eg.ActionBase):
             (panel.StaticText(self.text.text2), 0, wx.ALIGN_CENTER_VERTICAL),
         )
 
-        panel.AddLine("Device:", deviceCtrl)
+        #panel.AddLine("Device:", deviceCtrl)
+        panel.AddLine(self.plugin.text.device, deviceCtrl)
         panel.AddLine(sizer)
         while panel.Affirmed():
             panel.SetResult(
@@ -1134,7 +1154,9 @@ def piltoimage(pil, hasAlpha):
         image.SetData(data)
     return image
 #===============================================================================
+
 class ShapedFrame(wx.Frame):
+    timer = None
 
     def __init__(
         self,
@@ -1173,7 +1195,7 @@ class ShapedFrame(wx.Frame):
         self.imageFile = imageFile
         style = wx.FRAME_NO_TASKBAR
         self.hasAlpha = (pil.mode in ('RGBA', 'LA') or (pil.mode == 'P' and 'transparency' in pil.info))
-        if self.hasAlpha and shaped:
+        if self.hasAlpha:
             style |= wx.FRAME_SHAPED
         if onTop:
             style |= wx.STAY_ON_TOP
@@ -1230,10 +1252,9 @@ class ShapedFrame(wx.Frame):
                 if stretch and w <= width_ and h <= height_:
                     res = True
 
-                elif fit and w >= width_ and h >= height_:
+                #elif fit and w >= width_ and h >= height_:
+                elif fit and w >= width_ or h >= height_:
                     res = True
-
-
         if res: #resize !
             if fitMode == 0: #ignore aspect
                 w = width_
@@ -1263,14 +1284,16 @@ class ShapedFrame(wx.Frame):
         else:
             im = pil
 
-        im = piltoimage(im, self.hasAlpha and shaped)
+        im = piltoimage(im, self.hasAlpha)
 
         cliSize = (width_, height_)
         self.SetClientSize(cliSize)
-        im.ConvertAlphaToMask()
         self.bmp = wx.BitmapFromImage(im)
-        if self.hasAlpha and self.shaped:
-            self.SetWindowShape()
+        if self.hasAlpha:
+            im.ConvertAlphaToMask() # Here we can set threshold of alpha channel
+            self.region = wx.RegionFromBitmap(wx.BitmapFromImage(im))
+            if self.shaped:
+                self.SetWindowShape()
 
         dc = wx.ClientDC(self)
         dc.DrawBitmap(self.bmp, 0, 0, True)
@@ -1290,8 +1313,7 @@ class ShapedFrame(wx.Frame):
 
 
     def SetWindowShape(self, *evt):
-        r = wx.RegionFromBitmap(self.bmp)
-        self.hasShape = self.SetShape(r)
+        self.hasShape = self.SetShape(self.region)
 
 
     def OnDoubleClick(self, evt):
@@ -1300,7 +1322,7 @@ class ShapedFrame(wx.Frame):
             prefix = "System.DisplayImage",
             payload = self.imageFile
         )
-        if self.hasAlpha and self.shaped:
+        if self.hasAlpha:
             if self.hasShape:
                 self.SetShape(wx.Region())
                 self.hasShape = False
