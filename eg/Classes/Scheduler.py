@@ -43,7 +43,16 @@ class Scheduler(threading.Thread):
         )
 
 
-    def AddTask(self, waitTime, func, *args, **kwargs):
+    def LongTask(self, *args, **kwargs):
+        thrd = threading.Thread(
+            target = args[-1],
+            args = args[:-1],
+            kwargs = kwargs
+        )
+        thrd.start()
+
+
+    def AddShortTask(self, waitTime, func, *args, **kwargs):
         """
         This function will call the callable `func` after `waitTime`
         seconds (expressed as a floating point number) with optional
@@ -52,7 +61,7 @@ class Scheduler(threading.Thread):
             def MyTestFunc(myArgument):
                 print "MyTestFunc was called with:", repr(myArgument)
 
-            eg.scheduler.AddTask(10.0, MyTestFunc, "just some test data")
+            eg.scheduler.AddShortTask(10.0, MyTestFunc, "just some test data")
 
         Ten seconds after invocation of the code it will print the following
         message to the log::
@@ -76,19 +85,19 @@ class Scheduler(threading.Thread):
           An object to identify the task.
 
         """
-        return self.AddTaskAbsolute(time() + waitTime, func, *args, **kwargs)
+        return self.AddShortTaskAbsolute(time() + waitTime, func, *args, **kwargs)
 
 
-    def AddTaskAbsolute(self, startTime, func, *args, **kwargs):
+    def AddShortTaskAbsolute(self, startTime, func, *args, **kwargs):
         """
-        This does the same as :meth:`AddTask`, but the `startTime` parameter
+        This does the same as :meth:`AddShortTask`, but the `startTime` parameter
         specifies an absolute time expressed in floating point seconds since
         the epoch. Take a look at the documentation of `Python's time module`_,
         for more information about this time format. Again a little example::
 
             import time
             startTime = time.mktime((2007, 8, 15, 16, 53, 0, 0, 0, -1))
-            eg.scheduler.AddTaskAbsolute(startTime, eg.TriggerEvent, "MyEvent")
+            eg.scheduler.AddShortTaskAbsolute(startTime, eg.TriggerEvent, "MyEvent")
 
         This will trigger the event "Main.MyEvent" at 16:53:00 on 15 August
         2007. If you run this code after this point of time, the
@@ -106,10 +115,22 @@ class Scheduler(threading.Thread):
         return task
 
 
+    def AddTask(self, waitTime, func, *args, **kwargs):
+        args = list(args)
+        args.append(func)
+        return self.AddShortTask(waitTime, self.LongTask, *args, **kwargs)
+
+
+    def AddTaskAbsolute(self, startTime, func, *args, **kwargs):
+        args = list(args)
+        args.append(func)
+        return self.AddShortTaskAbsolute(startTime, self.LongTask, *args, **kwargs)
+
+
     def CancelTask(self, task):
         """
-        This will cancel a task formerly added by :meth:`AddTask` or
-        :meth:`AddTaskAbsolute`, if the task hasn't been started yet.
+        This will cancel a task formerly added by :meth:`AddShortTask` or
+        :meth:`AddShortTaskAbsolute`, if the task hasn't been started yet.
 
         If the task has already been called or simply wasn't added before, the
         function will raise an IndexError.
@@ -146,5 +167,5 @@ class Scheduler(threading.Thread):
     def Stop(self):
         def DoIt():
             self.keepRunning = False
-        self.AddTask(-1, DoIt)
+        self.AddShortTask(-1, DoIt)
 
