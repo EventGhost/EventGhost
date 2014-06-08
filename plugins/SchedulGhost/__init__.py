@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-version="0.1.10"
+version="0.1.11"
 
 # plugins/SchedulGhost/__init__.py
 #
@@ -22,6 +22,8 @@ version="0.1.10"
 #
 # Revision history:
 # -----------------
+# 0.1.11 by Pako 2014-06-08 10:00 UTC+1
+#     - changes caused by a new eg.Scheduler
 # 0.1.10 by Pako 2014-06-06 15:20 UTC+1
 #     - added action "Force to run schedule immediately"
 # 0.1.9 by Pako 2014-05-17 18:15 UTC+1
@@ -2195,7 +2197,7 @@ class SchedulGhost(eg.PluginBase):
             span = params[3][1]
             if span != "00:00:00":
                 stopTicks = ticks + int(span[6:]) + 60 * int(span[3:5]) + 3600 * int(span[:2])
-                eg.scheduler.AddTaskAbsolute(
+                eg.scheduler.AddShortTaskAbsolute(
                     stopTicks,
                     self.SchedulGhostScheduleRun,
                     params[1],
@@ -2204,7 +2206,7 @@ class SchedulGhost(eg.PluginBase):
             next = self.NextRun(params[2], params[3])
             if not immed and next: # new schedule, if valid next run time and not TEST/IMMEDIATELY run
                 startTicks = mktime(strptime(next, "%Y-%m-%d %H:%M:%S"))
-                eg.scheduler.AddTaskAbsolute(
+                eg.scheduler.AddShortTaskAbsolute(
                     startTicks,
                     self.SchedulGhostScheduleRun,
                     params[1],
@@ -2276,7 +2278,7 @@ class SchedulGhost(eg.PluginBase):
                 if not sched[2][1] and sched[0] != startTicks: # re-scheduling
                     self.updateLogFile(self.text.re_Sched % (schedule[1], startMoment))
                     eg.scheduler.CancelTask(sched)
-                    eg.scheduler.AddTaskAbsolute(
+                    eg.scheduler.AddShortTaskAbsolute(
                         startTicks,
                         self.SchedulGhostScheduleRun, 
                         schedule[1],
@@ -2285,7 +2287,7 @@ class SchedulGhost(eg.PluginBase):
                     )
             elif schedule[0] and startMoment: # new schedule
                 startTicks = mktime(strptime(startMoment, "%Y-%m-%d %H:%M:%S"))
-                eg.scheduler.AddTaskAbsolute(
+                eg.scheduler.AddShortTaskAbsolute(
                     startTicks,
                     self.SchedulGhostScheduleRun,
                     schedule[1],
@@ -2542,7 +2544,7 @@ class SchedulGhost(eg.PluginBase):
         val =  int(val[6:]) + 60 * int(val[3:5]) + 3600 * int(val[:2])
         now = mktime(localtime())
         self.eggTimers[now] = args
-        eg.scheduler.AddTask(val, self.SchedulGhost_EggFunction, now)
+        eg.scheduler.AddShortTask(val, self.SchedulGhost_EggFunction, now)
 
 
     def AbortEggTimers(self, eggName = None):
