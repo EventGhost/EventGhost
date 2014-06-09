@@ -17,18 +17,23 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from xbmcclient import *
-import urllib
+import urllib2
 import json
 import ast
 import xml.dom.minidom
 from xml.dom.minidom import Node
+import socket
+import base64
+from urlparse import urlparse
+
+from threading import Event, Thread
 
 # expose some information about the plugin through an eg.PluginInfo subclass
 
 eg.RegisterPlugin(
     name = "XBMC2",
     author = "Joni Boren",
-    version = "0.6.3d",
+    version = "0.6.14",
     kind = "program",
     guid = "{8C8B850C-773F-4583-AAD9-A568262B7933}",
     canMultiLoad = True,
@@ -515,6 +520,61 @@ GAMEPAD_BUTTONS = (
 )),
 )
 
+# Remote buttons handled by XBMC.  For a list of all buttons see: http://wiki.xbmc.org/?title=Keymap.xml#Custom_Joystick_Configuration
+
+APPLEREMOTE_BUTTONS = (
+(eg.ActionGroup, "AppleRemote", "AppleRemote", None, (
+	("AppleRemote1", "plus", "AppleRemote", 1),
+	("AppleRemote2", "minus", "AppleRemote", 2),
+	("AppleRemote3", "left", "AppleRemote", 3),
+	("AppleRemote4", "right", "AppleRemote", 4),
+	("AppleRemote5", "center", "AppleRemote", 5),
+	("AppleRemote6", "menu", "AppleRemote", 6),
+	("AppleRemote7", "hold center", "AppleRemote", 7),
+	("AppleRemote8", "hold menu", "AppleRemote", 8),
+
+	#<!-- old buttons for ATV1 <2.2, used on OSX  -->
+	("AppleRemote9", "hold left", "AppleRemote:\nold buttons for ATV1 <2.2, used on OSX", 9),
+	("AppleRemote10", "hold right", "AppleRemote:\nold buttons for ATV1 <2.2, used on OSX", 10),
+
+	#<!-- new aluminium remote buttons  -->
+	("AppleRemote12", "play/pause", "AppleRemote:\nnew aluminium remote buttons", 12),
+
+	#<!-- Additional buttons via Harmony Apple TV remote profile - these are also the learned buttons on Apple TV 2gen-->
+	("AppleRemote13", "pageup", "AppleRemote:\nAdditional buttons via Harmony Apple TV remote profile - these are also the learned buttons on Apple TV 2gen", 13),
+	("AppleRemote14", "pagedown", "AppleRemote:\nAdditional buttons via Harmony Apple TV remote profile - these are also the learned buttons on Apple TV 2gen", 14),
+	("AppleRemote15", "pause", "AppleRemote:\nAdditional buttons via Harmony Apple TV remote profile - these are also the learned buttons on Apple TV 2gen", 15),
+	("AppleRemote16", "play2", "AppleRemote:\nAdditional buttons via Harmony Apple TV remote profile - these are also the learned buttons on Apple TV 2gen", 16),
+	("AppleRemote17", "stop", "AppleRemote:\nAdditional buttons via Harmony Apple TV remote profile - these are also the learned buttons on Apple TV 2gen", 17),
+	("AppleRemote18", "fast fwd", "AppleRemote:\nAdditional buttons via Harmony Apple TV remote profile - these are also the learned buttons on Apple TV 2gen", 18),
+	("AppleRemote19", "rewind", "AppleRemote:\nAdditional buttons via Harmony Apple TV remote profile - these are also the learned buttons on Apple TV 2gen", 19),
+	("AppleRemote20", "skip fwd", "AppleRemote:\nAdditional buttons via Harmony Apple TV remote profile - these are also the learned buttons on Apple TV 2gen", 20),
+	("AppleRemote21", "skip back", "AppleRemote:\nAdditional buttons via Harmony Apple TV remote profile - these are also the learned buttons on Apple TV 2gen", 21),
+
+	#<!-- Learned remote buttons (ATV1 >2.3) -->
+	("AppleRemote70", "Play", "AppleRemote:\nLearned remote buttons (ATV1 >2.3)", 70),
+	("AppleRemote71", "Pause", "AppleRemote:\nLearned remote buttons (ATV1 >2.3)", 71),
+	("AppleRemote72", "Stop", "AppleRemote:\nLearned remote buttons (ATV1 >2.3)", 72),
+	("AppleRemote73", "Previous", "AppleRemote:\nLearned remote buttons (ATV1 >2.3)", 73),
+	("AppleRemote74", "Next", "AppleRemote:\nLearned remote buttons (ATV1 >2.3)", 74),
+	("AppleRemote75", "Rewind", "AppleRemote:\nLearned remote buttons (ATV1 >2.3)", 75),
+	("AppleRemote76", "Forward", "AppleRemote:\nLearned remote buttons (ATV1 >2.3)", 76),
+	("AppleRemote77", "Return", "AppleRemote:\nLearned remote buttons (ATV1 >2.3)", 77),
+	("AppleRemote78", "Enter", "AppleRemote:\nLearned remote buttons (ATV1 >2.3)", 78),
+
+	#<!-- few gestures from Apple's iPhone Remote (ATV1 > 2.3 ?) -->
+	("AppleRemote80", "SwipeLeft", "AppleRemote:\nfew gestures from Apple's iPhone Remote (ATV1 > 2.3 ?)", 80),
+	("AppleRemote81", "SwipeRight", "AppleRemote:\nfew gestures from Apple's iPhone Remote (ATV1 > 2.3 ?)", 81),
+	("AppleRemote82", "SwipeUp", "AppleRemote:\nfew gestures from Apple's iPhone Remote (ATV1 > 2.3 ?)", 82),
+	("AppleRemote83", "SwipeDown", "AppleRemote:\nfew gestures from Apple's iPhone Remote (ATV1 > 2.3 ?)", 83),
+
+	("AppleRemote85", "FlickLeft", "AppleRemote:\nfew gestures from Apple's iPhone Remote (ATV1 > 2.3 ?)", 85),
+	("AppleRemote86", "FlickRight", "AppleRemote:\nfew gestures from Apple's iPhone Remote (ATV1 > 2.3 ?)", 86),
+	("AppleRemote87", "FlickUp", "AppleRemote:\nfew gestures from Apple's iPhone Remote (ATV1 > 2.3 ?)", 87),
+	("AppleRemote88", "FlickDown", "AppleRemote:\nfew gestures from Apple's iPhone Remote (ATV1 > 2.3 ?)", 88),
+)),
+)
+
 # Keyboard keys handled by XBMC.  For a list of all keys see: http://wiki.xbmc.org/index.php?title=List_of_XBMC_keynames
 
 KEYBOARD_KEYS = (
@@ -601,6 +661,14 @@ class GamepadPrototype(eg.ActionClass):
         except:
             raise self.Exceptions.ProgramNotRunning
 
+class AppleRemotePrototype(eg.ActionClass):
+    def __call__(self):
+        try:
+            packet = PacketBUTTON(map_name=str("JS0:AppleRemote"), code=self.value, repeat=0)
+            packet.send(self.plugin.xbmc.sock, self.plugin.xbmc.addr, self.plugin.xbmc.uid)
+        except:
+            raise self.Exceptions.ProgramNotRunning
+
 class KeyboardPrototype(eg.ActionClass):
     def __call__(self):
         try:
@@ -612,21 +680,23 @@ class KeyboardPrototype(eg.ActionClass):
 class XBMC_HTTP_API:
 
 	def __init__(self):
-		self.ip = "127.0.0.1"
-		self.port = "80"
-		return
+		pass
 
-	def connect(self, ip=None, port=None):
-		if ip: self.ip = ip
-		if port: self.port = port
+	def connect(self, ip="127.0.0.1", port="80", username='', password=''):
+		self.ip = ip
+		self.port = port
+		#import base64
+		self.base64string = base64.encodestring('%s:%s' % (username, password)).replace('\n', '')
 		print 'HTTP API connected'
 
 	def send(self, method, params = ""):
+		request = urllib2.Request('http://'+self.ip+':'+self.port+'/xbmcCmds/xbmcHttp?command='+method+'('+urllib2.quote(eg.ParseString(params), ':\\')+')')
+		request.add_header("Authorization", "Basic %s" % self.base64string)
 		try:
-			responce = urllib.urlopen('http://'+self.ip+':'+self.port+'/xbmcCmds/xbmcHttp?command='+method+'('+urllib.quote(eg.ParseString(params), ':\\')+')').readlines()
+			responce = urllib2.urlopen(request).readlines()
 		except IOError:
-#			print 'HTTP API connection error:'+' http://'+self.ip+':'+self.port+'\n'+method+'('+urllib.quote(eg.ParseString(params), ':\\')+')'
-			eg.PrintError('HTTP API connection error:'+' http://'+self.ip+':'+self.port+'\n'+method+'('+urllib.quote(eg.ParseString(params), ':\\')+')')
+			#eg.PrintError('HTTP API connection error:'+' http://'+self.ip+':'+self.port+'\n'+method+'('+urllib2.quote(eg.ParseString(params), ':\\')+')')
+			raise
 		else:
 			if (''.join(responce).find('<html>') != -1):
 				responce2 = {}
@@ -655,13 +725,13 @@ class XBMC_JSON_RPC:
 
 	def __init__(self):
 		self.jsoninit = {'jsonrpc':'2.0', 'id':1}
-		self.ip = "127.0.0.1"
-		self.port = "80"
-		return
 
-	def connect(self, ip=None, port=None):
-		if ip: self.ip = ip
-		if port: self.port = port
+	def connect(self, ip="127.0.0.1", port=80, username='', password=''):
+		self.ip = ip
+		self.port = str(port)
+		#import base64
+		self.base64string = base64.encodestring('%s:%s' % (username, password)).replace('\n', '')
+		#self.base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
 		print 'JSON-RPC connected'
 
 	def send(self, method, params = None):
@@ -671,14 +741,39 @@ class XBMC_JSON_RPC:
 		else:
 			if self.jsoninit.has_key('params'):
 				del self.jsoninit['params']
+		request = urllib2.Request('http://'+self.ip+':'+self.port+'/jsonrpc',json.dumps(self.jsoninit))
+		request.add_header("Authorization", "Basic %s" % self.base64string)
+		request.add_header('Content-Type', 'application/json')
 		try:
-			responce = urllib.urlopen('http://'+self.ip+':'+self.port+'/jsonrpc', json.dumps(self.jsoninit)).read()
-		except IOError:
-#			print 'JSON-RPC connection error:'+' http://'+self.ip+':'+self.port+'\n'+json.dumps(self.jsoninit)
-			eg.PrintError('JSON-RPC connection error:'+' http://'+self.ip+':'+self.port+'\n'+json.dumps(self.jsoninit))
+			responce = urllib2.urlopen(request).read()
+		except urllib2.HTTPError as e:
+			#print 'HTTPError', e.args
+			#if hasattr(e, 'reason'): # <--
+			#		print 'We failed to reach a server.'
+			#		print 'Reason: ', e.reason
+			#if hasattr(e, 'code'): # <--
+			#		print 'The server couldn\'t fulfill the request.'
+			#		import BaseHTTPServer
+			#		print 'Error code: ', e.code, BaseHTTPServer.BaseHTTPRequestHandler.responses[e.code]
+			raise
+		except urllib2.URLError as e:
+			#print 'URLError', e.reason, e.args
+			raise
+		except:
+			#import sys
+			#eg.PrintError('JSON-RPC connect error: ' + str(sys.exc_info()))
+			raise
+		#except IOError:
+		#eg.PrintError('JSON-RPC connection error:'+' http://'+self.ip+':'+self.port+'\n'+json.dumps(self.jsoninit))
 		else:
-#			print responce
-			return json.loads(responce)
+			try:
+				#print responce
+				return json.loads(responce)
+			except ValueError as e:
+				#import sys
+				#eg.PrintError("Server responded but didn't provide valid JSON data: " + str(sys.exc_info()))
+				#eg.PrintError("Error data: " + str(e)+': "'+str(responce)+'"')
+				raise
 
 	def close(self):
 		print 'JSON-RPC connection closed'
@@ -804,8 +899,8 @@ class HTTPAPI(eg.ActionClass):
 			return Text
 		def UpdateCommands():
 			httpapi.Headers = [];httpapi.Commands = []
-			doc = xml.dom.minidom.parse(urllib.urlopen('http://wiki.xbmc.org/index.php?title=Web_Server_HTTP_API'))
-			for h3 in doc.getElementsByTagName("h3")[11:-1]:
+			doc = xml.dom.minidom.parse(urllib2.urlopen('http://wiki.xbmc.org/index.php?title=Web_Server_HTTP_API'))
+			for h3 in doc.getElementsByTagName("h3")[10:-1]:
 				for span in h3.getElementsByTagName("span"):
 					httpapi.Headers.append(span.childNodes[0].data)
 			Header = 0
@@ -1038,6 +1133,15 @@ class JSONRPC(eg.ActionClass):
 		panel.sizer.Add(Bottom)
 		panel.Bind(wx.EVT_COMBOBOX, OnMethodChange)
 		while panel.Affirmed():
+			if 'jsonrpc' in json.loads(textControl2.GetValue()):
+				namespaceTemp, methodTemp = json.loads(textControl2.GetValue())['method'].split('.')
+				HBoxControl.SetValue(namespaceTemp)
+				comboBoxControl.Clear()
+				for i in jsonrpc.Methods[jsonrpc.Namespaces[HBoxControl.GetSelection()]]:
+					comboBoxControl.Append(i)
+				comboBoxControl.SetValue(methodTemp)
+				textControl2.SetValue(json.dumps(json.loads(textControl2.GetValue())['params']))
+
 			panel.SetResult(HBoxControl.GetValue()+'.'+comboBoxControl.GetValue(), textControl2.GetValue(), CheckBox.GetValue())
 
 #class StopRepeating(eg.ActionClass):
@@ -1050,16 +1154,119 @@ class JSONRPC(eg.ActionClass):
 #        except:
 #            raise self.Exceptions.ProgramNotRunning
 
+def ssdpSearch():
+	import socket
+	from urlparse import urlparse
+	import os
+	def Headers(data):
+		headers = {}
+		for line in data.splitlines():
+			if not line.split(':', 1)[0]:
+				continue
+			try:
+				headers[line.split(':', 1)[0].upper()] = line.split(':', 1)[1]
+			except:
+				headers['Start-line'] = line.split(':', 1)[0]
+		return headers
+
+	MCAST_GRP = '239.255.255.250'
+	MCAST_PORT = 1900
+	LIB_ID = 'upnp'
+	DISCOVERY_MSG = ('M-SEARCH * HTTP/1.1\r\n' +
+									'ST: %(library)s:%(service)s\r\n' +
+									'MX: 3\r\n' +
+									'MAN: "ssdp:discover"\r\n' +
+									'HOST: 239.255.255.250:1900\r\n\r\n')
+
+	def interface_addresses(family=socket.AF_INET):
+			for fam, _, _, _, sockaddr in socket.getaddrinfo('', None):
+					if family == fam:
+							yield sockaddr[0]
+
+	msg = DISCOVERY_MSG % dict(service='rootdevice', library=LIB_ID)
+	#socket.setdefaulttimeout(3)
+	USNCache = []
+	ssdpResultList = []
+	XBMCResultList = {}
+	for addr in interface_addresses():
+		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+		sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+		sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
+		sock.settimeout(3)
+		sock.bind((addr, 0))
+
+		for _ in xrange(2):
+			sock.sendto(msg, (MCAST_GRP, MCAST_PORT))
+
+		while True:
+			try:
+				#data = sock.recv(1024).splitlines()
+				data = sock.recv(1024)
+			except socket.timeout:
+					print 'XBMC2: Search finished, results in address dropbox.'
+					break
+			else:
+				headers = Headers(data)
+				if "HTTP/1.1 200 OK" == headers['Start-line']:
+					if headers['USN'] not in USNCache:
+						USNCache.append(headers['USN'])
+						ssdpResultList.append(headers['LOCATION'])
+						#with open(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2', 'ssdp.log'), 'a') as f:
+						#	f.write(data)
+
+	for result in ssdpResultList:
+		#with open(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2', 'ssdp.log'), 'a') as f:
+		#	f.write(urllib2.urlopen(result).read())
+		doc = xml.dom.minidom.parse(urllib2.urlopen(result))
+		for modelName in doc.getElementsByTagName("modelName"):
+			if modelName.firstChild.data == 'XBMC Media Center':
+				XBMCResultList[urlparse(doc.getElementsByTagName("presentationURL")[0].firstChild.data).netloc] = doc.getElementsByTagName("friendlyName")[0].firstChild.data
+	return XBMCResultList
+
+def CheckDefault(Dict1, Dict2):
+	for i in Dict1.iterkeys():
+		if type(Dict1[i]) is dict:
+			try:
+				CheckDefault(Dict1[i], Dict2[i])
+			except KeyError:
+				Dict2[i] = Dict1[i].copy()
+		else:
+			if not Dict2.has_key(i):
+				Dict2[i] = Dict1[i]
 
 # And now we define the actual plugin:
 
 class XBMC2(eg.PluginClass):
+    pluginConfigDefault = {
+    	'XBMC': {
+    		'ip': '127.0.0.1',
+    		'port': 80,
+    		'username': '',
+    		'password': '',
+    	},
+    	'EventServer': {
+    		'enable': True,
+    		'port': 9777,
+    	},
+    	'JSONRPC': {
+    		'enable': False,
+    		'port': 9090,
+    		#'retrys': 5,
+    		#'retryTime': 5,
+    	},
+    	'Broadcast':{
+				'enable': False,
+				'port': 8278,
+				#'workaround': False,
+    	},
+    	'logRawEvents': False,
+    }
+
     def __init__(self):
-#        self.ip = "127.0.0.1"
-#        self.port = port
         ButtonsGroup = self.AddGroup("Buttons", "Button actions to send to XBMC")
         ButtonsGroup.AddActionsFromList(REMOTE_BUTTONS, ButtonPrototype)
         ButtonsGroup.AddActionsFromList(GAMEPAD_BUTTONS, GamepadPrototype)
+        ButtonsGroup.AddActionsFromList(APPLEREMOTE_BUTTONS, AppleRemotePrototype)
         ButtonsGroup.AddActionsFromList(KEYBOARD_KEYS, KeyboardPrototype)
         ActionsGroup = self.AddGroup("Actions", "Actions to send to XBMC")
         ActionsGroup.AddActionsFromList(GENERAL_ACTIONS, ActionPrototype)
@@ -1087,46 +1294,268 @@ class XBMC2(eg.PluginClass):
         self.xbmc = XBMCClient("EventGhost")
         self.JSON_RPC = XBMC_JSON_RPC()
         self.HTTP_API = XBMC_HTTP_API()
+        self.stopJSONRPCNotifications = Event()
+        self.stopBroadcastEvents = Event()
 
-    def Configure(self, ip="127.0.0.1", port="80"):
-#    def Configure(self, ip="127.0.0.1", IPs = ['127.0.0.1', '192.168.0.100']):
-        panel = eg.ConfigPanel()
-        textControl = wx.TextCtrl(panel, -1, ip)
-        textControl2 = wx.TextCtrl(panel, -1, port)
+    def Configure(self, pluginConfig={}, *args):
+				def ConnectionTest(event):
+					print "XBMC2: Starting connection test, trying to connect to XBMC using", panel.combo_box_IP.GetValue()
+
+					self.JSON_RPC.connect(ip=panel.combo_box_IP.GetValue().split(':')[0], port=panel.combo_box_IP.GetValue().split(':')[1], username=panel.text_ctrl_Username.GetValue(), password=panel.text_ctrl_Password.GetValue())
+					try:
+						result = self.JSON_RPC.send('GUI.ShowNotification', ast.literal_eval("['XBMC2 for EventGhost','Connection test, JSON-RPC works.']"))
+					except urllib2.HTTPError as e:
+						eg.PrintError('XBMC2:', str(e))
+						print 'XBMC2: Please check that your username and password are correct.'
+					except urllib2.URLError as e:
+						eg.PrintError('XBMC2:', str(e.reason))
+						print 'XBMC2: Please check that XBMC is running, that your IP address and port are correct.\nXBMC2: Also in XBMCs settings\\Services\\Webserver, "Allow control of XBMC via HTTP" needs to be set.'
+					except ValueError as e:
+						eg.PrintError("XBMC2: Server responded but didn't provide valid JSON data. Check that your IP and port are correct.")
+					except:
+						import sys
+						eg.PrintError('XBMC2: Unknown error: ' + str(sys.exc_info()))
+					finally:
+						self.JSON_RPC.close()
+
+					try:
+						if result['result'] == 'OK':
+							print 'XBMC2: JSON-RPC works.'
+					#except KeyError:
+					#	eg.PrintError('XBMC2: JSON-RPC error: ', str(result['error']['message']))
+					except:
+						self.HTTP_API.connect(ip=panel.combo_box_IP.GetValue().split(':')[0], port=panel.combo_box_IP.GetValue().split(':')[1], username=panel.text_ctrl_Username.GetValue(), password=panel.text_ctrl_Password.GetValue())
+						try:
+							result = self.HTTP_API.send('ExecBuiltIn', 'Notification(XBMC2 for EventGhost, Connection test. HTTPAPI works.)')
+						except urllib2.HTTPError as e:
+							if e.code == 401:
+								eg.PrintError('XBMC2:', str(e))
+								print 'XBMC2: Please check that your username and password are correct.'
+							else:
+								eg.PrintError('XBMC2:', str(e))
+								print 'XBMC2: Please check that XBMC is running, that your IP address and port are correct.\nXBMC2: Also in XBMCs settings\\Network\\Services\\ "Allow control of XBMC via HTTP" needs to be set.'
+						except urllib2.URLError as e:
+							eg.PrintError('XBMC2:', str(e.reason))
+							print 'XBMC2: Please check that XBMC is running, that your IP address and port are correct.\nXBMC2: Also in XBMCs settings\\Network\\Services\\ "Allow control of XBMC via HTTP" needs to be set.'
+						except:
+							import sys
+							eg.PrintError('XBMC2: Unknown error: ' + str(sys.exc_info()))
+						else:
+								if result == 'OK':
+									print 'XBMC2: HTTPAPI works.', result
+								else:
+									eg.PrintError('XBMC2: HTTPAPI error: ', result)
+									self.xbmc.connect(ip=panel.combo_box_IP.GetValue().split(':')[0])
+									self.xbmc.send_notification('XBMC2 for EventGhost', 'Connection test, if you see this your IP address is correct.')
+									self.xbmc.close()
+						finally:
+							self.HTTP_API.close()
+
+				def SearchForXBMC(event):
+					for i in ssdpSearch().keys():
+						panel.combo_box_IP.Append(i)
+
+				def initPanel(self):
+					self.combo_box_IP = wx.ComboBox(self, wx.ID_ANY, value=pluginConfig['XBMC']['ip']+':'+str(pluginConfig['XBMC']['port']), choices=["127.0.0.1:80"], style=wx.CB_DROPDOWN)
+					self.button_IPTest = wx.Button(self, wx.ID_ANY, "Test")
+					self.button_Search = wx.Button(self, wx.ID_ANY, "Search")
+					self.label_Username = wx.StaticText(self, wx.ID_ANY, "Username")
+					self.text_ctrl_Username = wx.TextCtrl(self, wx.ID_ANY, pluginConfig['XBMC']['username'])
+					self.label_Password = wx.StaticText(self, wx.ID_ANY, "Password")
+					self.text_ctrl_Password = wx.TextCtrl(self, wx.ID_ANY, pluginConfig['XBMC']['password'], style=wx.TE_PASSWORD)
+					self.sizer_Global_staticbox = wx.StaticBox(self, wx.ID_ANY, "IP address and port of XBMC (127.0.01 is this computer)")
+					self.checkbox_EventServerEnable = wx.CheckBox(self, wx.ID_ANY, "Enable")
+					self.label_EventServerPort = wx.StaticText(self, wx.ID_ANY, "Port")
+					self.spin_ctrl_EventServerPort = wx.SpinCtrl(self, wx.ID_ANY, str(pluginConfig['EventServer']['port']), min=0, max=65535)
+					self.sizer_EventServer_staticbox = wx.StaticBox(self, wx.ID_ANY, "EventServer")
+					self.checkbox_JSONRPCEnable = wx.CheckBox(self, wx.ID_ANY, "Enable")
+					self.label_Port = wx.StaticText(self, wx.ID_ANY, "Port")
+					self.spin_ctrl_JSONRPCPort = wx.SpinCtrl(self, wx.ID_ANY, str(pluginConfig['JSONRPC']['port']), min=0, max=65535)
+					self.label_Retrys = wx.StaticText(self, wx.ID_ANY, "Retrys")
+					self.spin_ctrl_Retrys = wx.SpinCtrl(self, wx.ID_ANY, "5", min=0, max=100)
+					self.label_Time = wx.StaticText(self, wx.ID_ANY, "Time between retrys")
+					self.spin_ctrl_Time = wx.SpinCtrl(self, wx.ID_ANY, "5", min=0, max=100)
+					self.label_Seconds = wx.StaticText(self, wx.ID_ANY, "Seconds")
+					self.sizer_JSONRPC_staticbox = wx.StaticBox(self, wx.ID_ANY, "JSON-RPC notifications")
+					self.checkbox_BroadcastEnable = wx.CheckBox(self, wx.ID_ANY, "Enable")
+					self.label_BroadcastPort = wx.StaticText(self, wx.ID_ANY, "Port")
+					self.spin_ctrl_BroadcastPort = wx.SpinCtrl(self, wx.ID_ANY, str(pluginConfig['Broadcast']['port']), min=0, max=65535)
+					self.checkbox_BroadcastWorkaround = wx.CheckBox(self, wx.ID_ANY, "Repeating events workaround")
+					self.sizer_Broadcast_staticbox = wx.StaticBox(self, wx.ID_ANY, "Broadcast events")
+					self.checkbox_logRawEvents = wx.CheckBox(self, wx.ID_ANY, "Log raw events")
+					self.sizer_Events_staticbox = wx.StaticBox(self, wx.ID_ANY, "Event settings")
+					self.button_IPTest.Bind(wx.EVT_BUTTON, ConnectionTest)
+					self.button_Search.Bind(wx.EVT_BUTTON, SearchForXBMC)
+					setPanelProperties(self)
+					doPanelLayout(self)
+				def setPanelProperties(self):
+					self.combo_box_IP.SetMinSize((147, 21))
+					self.combo_box_IP.SetToolTipString("IP address of the XBMC you want to control.")
+					self.button_IPTest.SetToolTipString("Test to connect to XBMC")
+					self.button_Search.SetToolTipString("Search for any XBMCs that are running and reachable over the LAN.")
+					self.text_ctrl_Username.SetToolTipString("Username that are specified in XBMC")
+					self.text_ctrl_Password.SetToolTipString("Password that are specified in XBMC")
+					self.checkbox_EventServerEnable.Enable(False)
+					self.checkbox_EventServerEnable.SetValue(1)
+					self.spin_ctrl_EventServerPort.SetMinSize((60, -1))
+					self.spin_ctrl_EventServerPort.SetToolTipString("Port used by XBMC to recieve notifications")
+					self.checkbox_JSONRPCEnable.SetToolTipString("Enable JSON-RPC notifications")
+					self.checkbox_JSONRPCEnable.SetValue(pluginConfig['JSONRPC']['enable'])
+					self.checkbox_BroadcastEnable.SetValue(pluginConfig['Broadcast']['enable'])
+					self.checkbox_logRawEvents.SetValue(pluginConfig['logRawEvents'])
+					self.spin_ctrl_JSONRPCPort.SetMinSize((60, -1))
+					self.spin_ctrl_JSONRPCPort.SetToolTipString("Port used by XBMC to recieve notifications")
+					self.spin_ctrl_Retrys.SetMinSize((50, -1))
+					self.spin_ctrl_Time.SetMinSize((50, -1))
+					self.checkbox_logRawEvents.SetToolTipString("Show any events from XBMC in the log, exactly as XBMC sends them.")
+				def doPanelLayout(self):
+					self.sizer = wx.BoxSizer(wx.VERTICAL)
+					self.sizer_Events_staticbox.Lower()
+					sizer_Events = wx.StaticBoxSizer(self.sizer_Events_staticbox, wx.VERTICAL)
+					self.sizer_Broadcast_staticbox.Lower()
+					sizer_Broadcast = wx.StaticBoxSizer(self.sizer_Broadcast_staticbox, wx.HORIZONTAL)
+					sizer_BroadcastEnable = wx.BoxSizer(wx.VERTICAL)
+					sizer_BroadcastPort = wx.BoxSizer(wx.HORIZONTAL)
+					self.sizer_JSONRPC_staticbox.Lower()
+					sizer_JSONRPC = wx.StaticBoxSizer(self.sizer_JSONRPC_staticbox, wx.VERTICAL)
+					sizer_14 = wx.BoxSizer(wx.HORIZONTAL)
+					sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
+					self.sizer_EventServer_staticbox.Lower()
+					sizer_EventServer = wx.StaticBoxSizer(self.sizer_EventServer_staticbox, wx.VERTICAL)
+					sizer_1 = wx.BoxSizer(wx.HORIZONTAL)
+					self.sizer_Global_staticbox.Lower()
+					sizer_Global = wx.StaticBoxSizer(self.sizer_Global_staticbox, wx.VERTICAL)
+					sizer_Password = wx.BoxSizer(wx.HORIZONTAL)
+					sizer_IPPort = wx.BoxSizer(wx.HORIZONTAL)
+					sizer_IPPort.Add(self.combo_box_IP, 0, 0, 0)
+					sizer_IPPort.Add(self.button_IPTest, 0, 0, 0)
+					sizer_IPPort.Add(self.button_Search, 0, 0, 0)
+					sizer_Global.Add(sizer_IPPort, 1, wx.EXPAND, 0)
+					sizer_Password.Add(self.label_Username, 0, 0, 0)
+					sizer_Password.Add(self.text_ctrl_Username, 0, 0, 0)
+					sizer_Password.Add(self.label_Password, 0, 0, 0)
+					sizer_Password.Add(self.text_ctrl_Password, 0, 0, 0)
+					sizer_Global.Add(sizer_Password, 1, wx.EXPAND, 0)
+					sizer_2.Add(sizer_Global, 0, 0, 0)
+					sizer_EventServer.Add(self.checkbox_EventServerEnable, 0, 0, 0)
+					sizer_1.Add(self.label_EventServerPort, 0, 0, 0)
+					sizer_1.Add(self.spin_ctrl_EventServerPort, 0, 0, 0)
+					sizer_EventServer.Add(sizer_1, 1, wx.SHAPED, 0)
+					sizer_2.Add(sizer_EventServer, 0, wx.SHAPED, 0)
+					self.sizer.Add(sizer_2, 0, wx.EXPAND, 0)
+					sizer_JSONRPC.Add(self.checkbox_JSONRPCEnable, 0, 0, 0)
+					sizer_14.Add(self.label_Port, 0, 0, 0)
+					sizer_14.Add(self.spin_ctrl_JSONRPCPort, 0, 0, 0)
+					sizer_14.Add(self.label_Retrys, 0, 0, 0)
+					sizer_14.Add(self.spin_ctrl_Retrys, 0, 0, 0)
+					sizer_14.Add(self.label_Time, 0, 0, 0)
+					sizer_14.Add(self.spin_ctrl_Time, 0, 0, 0)
+					sizer_14.Add(self.label_Seconds, 0, 0, 0)
+					sizer_JSONRPC.Add(sizer_14, 1, wx.EXPAND, 0)
+					sizer_Events.Add(sizer_JSONRPC, 1, wx.EXPAND, 0)
+					sizer_BroadcastEnable.Add(self.checkbox_BroadcastEnable, 0, 0, 0)
+					sizer_BroadcastPort.Add(self.label_BroadcastPort, 0, 0, 0)
+					sizer_BroadcastPort.Add(self.spin_ctrl_BroadcastPort, 0, 0, 0)
+					sizer_BroadcastPort.Add(self.checkbox_BroadcastWorkaround, 0, 0, 0)
+					sizer_BroadcastEnable.Add(sizer_BroadcastPort, 1, wx.EXPAND, 0)
+					sizer_Broadcast.Add(sizer_BroadcastEnable, 1, wx.EXPAND, 0)
+					sizer_Events.Add(sizer_Broadcast, 1, wx.EXPAND, 0)
+					sizer_Events.Add(self.checkbox_logRawEvents, 0, 0, 0)
+					self.sizer.Add(sizer_Events, 1, wx.EXPAND, 0)
+					self.sizer.Fit(self)
+
+				if type(pluginConfig) is not dict:
+					pluginConfig = {}
+				CheckDefault(self.pluginConfigDefault, pluginConfig)
+
+				panel = eg.ConfigPanel()
+				initPanel(panel)
 #        textControl = panel.ComboBox(
 #            ip,
 #            IPs,
 #            style=wx.CB_DROPDOWN,
 #            validator=eg.DigitOnlyValidator()
 #        )
-        panel.sizer.Add(wx.StaticText(panel, -1, "IP address of XBMC ( 127.0.0.1 is this computer )"))
-#        panel.sizer.Add(textControl, 1, wx.EXPAND)
-        panel.sizer.Add(textControl)
-        panel.sizer.Add(textControl2)
-        while panel.Affirmed():
-            panel.SetResult(textControl.GetValue(), textControl2.GetValue())
+				while panel.Affirmed():
+					changed = False
+					if pluginConfig['XBMC']['ip'] != panel.combo_box_IP.GetValue().split(':')[0]:
+						pluginConfig['XBMC']['ip'] = panel.combo_box_IP.GetValue().split(':')[0]
+						changed = True
+					if pluginConfig['XBMC']['port'] != int(panel.combo_box_IP.GetValue().split(':')[1]):
+						pluginConfig['XBMC']['port'] = int(panel.combo_box_IP.GetValue().split(':')[1])
+						changed = True
+					if pluginConfig['XBMC']['username'] != panel.text_ctrl_Username.GetValue():
+						pluginConfig['XBMC']['username'] = panel.text_ctrl_Username.GetValue()
+						changed = True
+					if pluginConfig['XBMC']['password'] != panel.text_ctrl_Password.GetValue():
+						pluginConfig['XBMC']['password'] = panel.text_ctrl_Password.GetValue()
+						changed = True
+					if pluginConfig['EventServer']['port'] != int(panel.spin_ctrl_EventServerPort.GetValue()):
+						pluginConfig['EventServer']['port'] = int(panel.spin_ctrl_EventServerPort.GetValue())
+						changed = True
+					if pluginConfig['JSONRPC']['enable'] != panel.checkbox_JSONRPCEnable.GetValue():
+						pluginConfig['JSONRPC']['enable'] = panel.checkbox_JSONRPCEnable.GetValue()
+						changed = True
+					if pluginConfig['JSONRPC']['port'] != int(panel.spin_ctrl_JSONRPCPort.GetValue()):
+						pluginConfig['JSONRPC']['port'] = int(panel.spin_ctrl_JSONRPCPort.GetValue())
+						changed = True
+					if pluginConfig['Broadcast']['enable'] != panel.checkbox_BroadcastEnable.GetValue():
+						pluginConfig['Broadcast']['enable'] = panel.checkbox_BroadcastEnable.GetValue()
+						changed = True
+					if pluginConfig['Broadcast']['port'] != int(panel.spin_ctrl_BroadcastPort.GetValue()):
+						pluginConfig['Broadcast']['port'] = int(panel.spin_ctrl_BroadcastPort.GetValue())
+						changed = True
+					if pluginConfig['logRawEvents'] != panel.checkbox_logRawEvents.GetValue():
+						pluginConfig['logRawEvents'] = panel.checkbox_logRawEvents.GetValue()
+						changed = True
+					#pluginConfig['JSONRPC']['retrys'] = int(JSONRPCNotificationRetrys.GetValue())
+					#pluginConfig['JSONRPC']['retryTime'] = int(JSONRPCNotificationRetryTime.GetValue())
+					try:
+						panel.SetResult(pluginConfig, (args[0], not(args[0]))[changed])
+					except:
+						panel.SetResult(pluginConfig, changed)
 
-    def __start__(self, ip='127.0.0.1', port='80'):
-        self.ip = ip
-        self.port = port
-        try:
-            self.xbmc.connect(ip=ip)
-#            self.xbmc.connect()
-#            self.xbmc.connect(ip="192.168.0.100")
-#            self.stopThreadEvent = Event()
-#            thread = Thread(target=self.ThreadWorker, args=(self.stopThreadEvent,))
-#            thread.start()
-        except:
-            raise self.Exceptions.ProgramNotRunning
-        self.JSON_RPC.connect(ip=ip, port=port)
-        self.HTTP_API.connect(ip=ip, port=port)
+    def __start__(self, pluginConfig={}, *args):
+				if type(pluginConfig) is not dict:
+					pluginConfig = {}
+				CheckDefault(self.pluginConfigDefault, pluginConfig)
+
+				self.pluginConfig = pluginConfig
+				try:
+						self.xbmc.connect(ip=pluginConfig['XBMC']['ip'], port=pluginConfig['EventServer']['port'])
+				except:
+						raise self.Exceptions.ProgramNotRunning
+				self.JSON_RPC.connect(ip=pluginConfig['XBMC']['ip'], port=pluginConfig['XBMC']['port'], username=pluginConfig['XBMC']['username'], password=pluginConfig['XBMC']['password'])
+				self.HTTP_API.connect(ip=pluginConfig['XBMC']['ip'], port=pluginConfig['XBMC']['port'], username=pluginConfig['XBMC']['username'], password=pluginConfig['XBMC']['password'])
+				if self.pluginConfig['JSONRPC']['enable']:
+					try:
+						self.JSONRPCNotificationsThread.join(10)
+					except:
+						self.stopJSONRPCNotifications.clear()
+						self.JSONRPCNotificationsThread = Thread(target=self.JSONRPCNotifications, args=(self.stopJSONRPCNotifications,))
+						self.JSONRPCNotificationsThread.start()
+					else:
+						if not self.JSONRPCNotificationsThread.isAlive():
+							self.stopJSONRPCNotifications.clear()
+							self.JSONRPCNotificationsThread = Thread(target=self.JSONRPCNotifications, args=(self.stopJSONRPCNotifications,))
+							self.JSONRPCNotificationsThread.start()
+						else:
+							print "XBMC2: Can't stop old JSON-RPC notification thread, will not start a new one."
+
+				if self.pluginConfig['Broadcast']['enable']:
+					self.stopBroadcastEvents.clear()
+					BroadcastEventsThread = Thread(target=self.BroadcastEvents, args=(self.stopBroadcastEvents,))
+					BroadcastEventsThread.start()
 
     def __stop__(self):
-        try:
-#            self.stopThreadEvent.set()
-            self.xbmc.close()
-        except:
-            pass
+				#if self.pluginConfig['JSONRPC']['enable']:
+				self.stopJSONRPCNotifications.set()
+				#if self.pluginConfig['Broadcast']['enable']:
+				self.stopBroadcastEvents.set()
+				try:
+						self.xbmc.close()
+				except:
+						pass
 
     def __close__(self):
         pass
@@ -1135,3 +1564,613 @@ class XBMC2(eg.PluginClass):
 #        while not stopThreadEvent.isSet():
 #            self.TriggerEvent("MyTimerEvent")
 #            stopThreadEvent.wait(10.0)
+
+    def JSONRPCNotifications(self, stopJSONRPCNotifications):
+			import os
+			debug = False
+			#import socket
+			#socket.setdefaulttimeout(3)
+			def Headers(data):
+				headers = {}
+				for line in data.splitlines():
+					if not line.split(':', 1)[0]:
+						continue
+					try:
+						headers[line.split(':', 1)[0].upper()] = line.split(':', 1)[1]
+					except:
+						headers['Start-line'] = line.split(':', 1)[0]
+				return headers
+			def interface_addresses(family=socket.AF_INET):
+				for fam, _, _, _, sockaddr in socket.getaddrinfo('', None):
+					if family == fam:
+						yield sockaddr[0]
+
+			def JSONSplit(data):
+				parts = []
+				rest = data
+				while rest:
+					part = ''
+					while True:
+						try:
+							part += rest[:rest.index('}')+1]
+						except ValueError:
+							rest = ''
+							break
+						else:
+							rest = rest[rest.find('}')+1:]
+							try:
+								parts.append(json.loads(part))
+								break
+							except:
+								continue
+				return parts
+			def WaitForXBMC():
+				import struct
+				USNCache = []
+				XBMCDetected = False
+
+				sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+				sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+				mreq = struct.pack("4sl", socket.inet_aton(SSDP_IP), socket.INADDR_ANY)
+				sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+				sock.settimeout(10)
+				sock.bind(('', SSDP_PORT))
+
+				if debug:
+					print 'XBMC2: SSDP is on'
+				while not (stopJSONRPCNotifications.isSet() or XBMCDetected):
+					if debug:
+						print 'XBMC2: SSDP: Wait for event.'
+					try:
+						data = sock.recv(4096)
+						headers = Headers(data)
+						#headers = Headers(sock.recv(4096))
+					except socket.timeout:
+						if debug:
+							print 'XBMC2: SSDP: Wait for event: Timeout.'
+						pass
+					else:
+						if "NOTIFY * HTTP/1.1" == headers['Start-line']:
+							if headers['USN'].split(':', 2)[1] not in USNCache:
+								try:
+									doc = xml.dom.minidom.parse(urllib2.urlopen(headers['LOCATION']))
+								except:
+									continue
+								else:
+									for modelName in doc.getElementsByTagName("modelName"):
+										if modelName.firstChild.data == 'XBMC Media Center':
+											if debug:
+												with open(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2', 'ssdp.log'), 'a') as f:
+													f.write(data)
+													f.write(urllib2.urlopen(headers['LOCATION']).read())
+												print 'XBMC2: SSDP modelName:', modelName.firstChild.data
+											#from urlparse import urlparse
+											if self.pluginConfig['XBMC']['ip'] == '127.0.0.1':
+												for ip in interface_addresses():
+													#if urlparse(doc.getElementsByTagName("presentationURL")[0].firstChild.data).netloc == ip+':'+str(self.pluginConfig['XBMC']['port']):
+													if urlparse(doc.getElementsByTagName("presentationURL")[0].firstChild.data).netloc.split(":")[0] == ip:
+														try:
+															if urlparse(doc.getElementsByTagName("presentationURL")[0].firstChild.data).netloc.split(":")[1] == str(self.pluginConfig['XBMC']['port']):
+																XBMCDetected = True
+																break
+															else:
+																continue
+														except:
+															pass
+														XBMCDetected = True
+														break
+											else:
+												if debug:
+													print 'XBMC2: SSDP address:', urlparse(doc.getElementsByTagName("presentationURL")[0].firstChild.data).netloc
+												if urlparse(doc.getElementsByTagName("presentationURL")[0].firstChild.data).netloc == self.pluginConfig['XBMC']['ip']+':'+str(self.pluginConfig['XBMC']['port']):
+													XBMCDetected = True
+									USNCache.append(headers['USN'].split(':', 2)[1])
+				sock.close()
+				if debug:
+					print 'XBMC2: SSDP is off'
+
+			SSDP_IP = '239.255.255.250'
+			SSDP_PORT = 1900
+			print "XBMC2: Activating JSON-RPC notifications"
+			while not stopJSONRPCNotifications.isSet():
+				s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+				s.settimeout(10)
+				try:
+					if debug:
+						print "XBMC2: Connecting to XBMC, to be able to recive JSON-RPC notifications."
+					s.connect((self.pluginConfig['XBMC']['ip'], self.pluginConfig['JSONRPC']['port']))
+				except socket.error:
+					#import sys
+					#eg.PrintError('XBMC2: connection error: ' + str(sys.exc_info()))
+					#print "XBMC2: Not able to connect to XBMC, will use SSDP to detect when XBMC is available."
+					WaitForXBMC()
+				else:
+					print "XBMC2: Connected to XBMC (", self.pluginConfig['XBMC']['ip'], ":", self.pluginConfig['JSONRPC']['port'], "), ready to recive JSON-RPC notifications."
+					self.TriggerEvent('System.OnStart')
+					message = ''
+					while not stopJSONRPCNotifications.isSet():
+						try:
+							if debug:
+								print "XBMC2: JSON-RPC notifications: Wait for event."
+							message += s.recv(4096)
+							#print len(message)
+							if not message:
+								break
+						except socket.timeout:
+							if debug:
+								print "XBMC2: JSON-RPC notifications: Wait for event: Timeout."
+							continue
+						except socket.error:
+							import sys
+							eg.PrintError('XBMC2: JSON socket.error: ' + str(sys.exc_info()[1]))
+							break
+						except:
+							import sys
+							eg.PrintError('XBMC2: Error: JSON-RPC event ' + str(sys.exc_info()))
+							break
+						else:
+							if self.pluginConfig['logRawEvents']:
+								print "XBMC2: Raw event: %s" % repr(message)
+							try:
+								messages = [json.loads(message)]
+							except:
+								#import sys
+								#eg.PrintError('XBMC2: Error: JSON-RPC event ' + str(sys.exc_info()))
+								#eg.PrintError('XBMC2: Error decoding: JSON-RPC event \n' + "Raw event: %s" % repr(message))
+								#continue
+								messages = JSONSplit(message)
+							#else:
+							for message in messages:
+								if self.pluginConfig['logRawEvents']:
+									print "Raw event: %s" % repr(message)
+								try:
+									event = message['method']
+								except:
+									eg.PrintError('XBMC2: Error: JSON-RPC event, "method" missing ' + repr(message))
+									self.PrintError('JSON unrecogniced event type: \n' + "Raw event: %s" % repr(message))
+								else:
+									try:
+										payload = message['params']['data']
+									except KeyError:
+										pass
+									else:
+										if not payload==None:
+											try:
+												event += '.' + payload['item']['type']
+												del payload['item']['type']
+												if not payload['item']:
+													del payload['item']
+											except KeyError:
+												try:
+													event += '.' + payload['type']
+													del payload['type']
+												except KeyError:
+													#self.PrintError('JSON unrecogniced event type: \n' + "Raw event: %s" % repr(message))
+													pass
+											except TypeError:
+												#self.PrintError('XBMC2: JSON unrecogniced event type: \n' + "Raw event: %s" % repr(message))
+												pass
+											except:
+												self.PrintError('XBMC2: JSON unrecogniced event type: \n' + "Raw event: %s" % repr(message))
+
+									if not stopJSONRPCNotifications.isSet():
+										self.TriggerEvent(event, payload)
+						message = ''
+					s.close()
+					print "XBMC2: Disconnected from XBMC, not receiving JSON-RPC notifications."
+			print "XBMC2: Deactivating JSON-RPC notifications"
+
+    def BroadcastEvents(self, stopBroadcastEvents):
+			ActionList = {
+# actions that we have defined...
+'0':'ACTION_NONE',
+'1':'ACTION_MOVE_LEFT',
+'2':'ACTION_MOVE_RIGHT',
+'3':'ACTION_MOVE_UP',
+'4':'ACTION_MOVE_DOWN',
+'5':'ACTION_PAGE_UP',
+'6':'ACTION_PAGE_DOWN',
+'7':'ACTION_SELECT_ITEM',
+'8':'ACTION_HIGHLIGHT_ITEM',
+'9':'ACTION_PARENT_DIR',
+'10':'ACTION_PREVIOUS_MENU',
+'11':'ACTION_SHOW_INFO',
+
+'12':'ACTION_PAUSE',
+'13':'ACTION_STOP',
+'14':'ACTION_NEXT_ITEM',
+'15':'ACTION_PREV_ITEM',
+'16':'ACTION_FORWARD', # Can be used to specify specific action in a window, Playback control is handled in ACTION_PLAYER_*
+'17':'ACTION_REWIND', # Can be used to specify specific action in a window, Playback control is handled in ACTION_PLAYER_*
+
+'18':'ACTION_SHOW_GUI', # toggle between GUI and movie or GUI and visualisation.
+'19':'ACTION_ASPECT_RATIO', # toggle quick-access zoom modes. Can b used in videoFullScreen.zml window id=2005
+'20':'ACTION_STEP_FORWARD', # seek +1% in the movie. Can b used in videoFullScreen.xml window id=2005
+'21':'ACTION_STEP_BACK', # seek -1% in the movie. Can b used in videoFullScreen.xml window id=2005
+'22':'ACTION_BIG_STEP_FORWARD', # seek +10% in the movie. Can b used in videoFullScreen.xml window id=2005
+'23':'ACTION_BIG_STEP_BACK', # seek -10% in the movie. Can b used in videoFullScreen.xml window id=2005
+'24':'ACTION_SHOW_OSD', # show/hide OSD. Can b used in videoFullScreen.xml window id=2005
+'25':'ACTION_SHOW_SUBTITLES', # turn subtitles on/off. Can b used in videoFullScreen.xml window id=2005
+'26':'ACTION_NEXT_SUBTITLE', # switch to next subtitle of movie. Can b used in videoFullScreen.xml window id=2005
+'27':'ACTION_SHOW_CODEC', # show information about file. Can b used in videoFullScreen.xml window id=2005 and in slideshow.xml window id=2007
+'28':'ACTION_NEXT_PICTURE', # show next picture of slideshow. Can b used in slideshow.xml window id=2007
+'29':'ACTION_PREV_PICTURE', # show previous picture of slideshow. Can b used in slideshow.xml window id=2007
+'30':'ACTION_ZOOM_OUT', # zoom in picture during slideshow. Can b used in slideshow.xml window id=2007
+'31':'ACTION_ZOOM_IN', # zoom out picture during slideshow. Can b used in slideshow.xml window id=2007
+'32':'ACTION_TOGGLE_SOURCE_DEST', # used to toggle between source view and destination view. Can be used in myfiles.xml window id=3
+'33':'ACTION_SHOW_PLAYLIST', # used to toggle between current view and playlist view. Can b used in all mymusic xml files
+'34':'ACTION_QUEUE_ITEM', # used to queue a item to the playlist. Can b used in all mymusic xml files
+'35':'ACTION_REMOVE_ITEM', # not used anymore
+'36':'ACTION_SHOW_FULLSCREEN', # not used anymore
+'37':'ACTION_ZOOM_LEVEL_NORMAL', # zoom 1x picture during slideshow. Can b used in slideshow.xml window id=2007
+'38':'ACTION_ZOOM_LEVEL_1', # zoom 2x picture during slideshow. Can b used in slideshow.xml window id=2007
+'39':'ACTION_ZOOM_LEVEL_2', # zoom 3x picture during slideshow. Can b used in slideshow.xml window id=2007
+'40':'ACTION_ZOOM_LEVEL_3', # zoom 4x picture during slideshow. Can b used in slideshow.xml window id=2007
+'41':'ACTION_ZOOM_LEVEL_4', # zoom 5x picture during slideshow. Can b used in slideshow.xml window id=2007
+'42':'ACTION_ZOOM_LEVEL_5', # zoom 6x picture during slideshow. Can b used in slideshow.xml window id=2007
+'43':'ACTION_ZOOM_LEVEL_6', # zoom 7x picture during slideshow. Can b used in slideshow.xml window id=2007
+'44':'ACTION_ZOOM_LEVEL_7', # zoom 8x picture during slideshow. Can b used in slideshow.xml window id=2007
+'45':'ACTION_ZOOM_LEVEL_8', # zoom 9x picture during slideshow. Can b used in slideshow.xml window id=2007
+'46':'ACTION_ZOOM_LEVEL_9', # zoom 10x picture during slideshow. Can b used in slideshow.xml window id=2007
+
+'47':'ACTION_CALIBRATE_SWAP_ARROWS', # select next arrow. Can b used in: settingsScreenCalibration.xml windowid=11
+'48':'ACTION_CALIBRATE_RESET', # reset calibration to defaults. Can b used in: settingsScreenCalibration.xml windowid=11/settingsUICalibration.xml windowid=10
+'49':'ACTION_ANALOG_MOVE', # analog thumbstick move. Can b used in: slideshow.xml window id=2007/settingsScreenCalibration.xml windowid=11/settingsUICalibration.xml windowid=10
+'50':'ACTION_ROTATE_PICTURE', # rotate current picture during slideshow. Can b used in slideshow.xml window id=2007
+
+'52':'ACTION_SUBTITLE_DELAY_MIN', # Decrease subtitle/movie Delay. Can b used in videoFullScreen.xml window id=2005
+'53':'ACTION_SUBTITLE_DELAY_PLUS', # Increase subtitle/movie Delay. Can b used in videoFullScreen.xml window id=2005
+'54':'ACTION_AUDIO_DELAY_MIN', # Increase avsync delay. Can b used in videoFullScreen.xml window id=2005
+'55':'ACTION_AUDIO_DELAY_PLUS', # Decrease avsync delay. Can b used in videoFullScreen.xml window id=2005
+'56':'ACTION_AUDIO_NEXT_LANGUAGE', # Select next language in movie. Can b used in videoFullScreen.xml window id=2005
+'57':'ACTION_CHANGE_RESOLUTION', # switch 2 next resolution. Can b used during screen calibration settingsScreenCalibration.xml windowid=11
+
+'58':'REMOTE_0', # remote keys 0-9. are used by multiple windows
+'59':'REMOTE_1', # for example in videoFullScreen.xml window id=2005 you can
+'60':'REMOTE_2', # enter time (mmss) to jump to particular point in the movie
+'61':'REMOTE_3',
+'62':'REMOTE_4', # with spincontrols you can enter 3digit number to quickly set
+'63':'REMOTE_5', # spincontrol to desired value
+'64':'REMOTE_6',
+'65':'REMOTE_7',
+'66':'REMOTE_8',
+'67':'REMOTE_9',
+
+'68':'ACTION_PLAY', # Unused at the moment
+'69':'ACTION_OSD_SHOW_LEFT', # Move left in OSD. Can b used in videoFullScreen.xml window id=2005
+'70':'ACTION_OSD_SHOW_RIGHT', # Move right in OSD. Can b used in videoFullScreen.xml window id=2005
+'71':'ACTION_OSD_SHOW_UP', # Move up in OSD. Can b used in videoFullScreen.xml window id=2005
+'72':'ACTION_OSD_SHOW_DOWN', # Move down in OSD. Can b used in videoFullScreen.xml window id=2005
+'73':'ACTION_OSD_SHOW_SELECT', # toggle/select option in OSD. Can b used in videoFullScreen.xml window id=2005
+'74':'ACTION_OSD_SHOW_VALUE_PLUS', # increase value of current option in OSD. Can b used in videoFullScreen.xml window id=2005
+'75':'ACTION_OSD_SHOW_VALUE_MIN', # decrease value of current option in OSD. Can b used in videoFullScreen.xml window id=2005
+'76':'ACTION_SMALL_STEP_BACK', # jumps a few seconds back during playback of movie. Can b used in videoFullScreen.xml window id=2005
+
+'77':'ACTION_PLAYER_FORWARD', # FF in current file played. global action, can be used anywhere
+'78':'ACTION_PLAYER_REWIND', # RW in current file played. global action, can be used anywhere
+'79':'ACTION_PLAYER_PLAY', # Play current song. Unpauses song and sets playspeed to 1x. global action, can be used anywhere
+
+'80':'ACTION_DELETE_ITEM', # delete current selected item. Can be used in myfiles.xml window id=3 and in myvideoTitle.xml window id=25
+'81':'ACTION_COPY_ITEM', # copy current selected item. Can be used in myfiles.xml window id=3
+'82':'ACTION_MOVE_ITEM', # move current selected item. Can be used in myfiles.xml window id=3
+'83':'ACTION_SHOW_MPLAYER_OSD', # toggles mplayers OSD. Can be used in videofullscreen.xml window id=2005
+'84':'ACTION_OSD_HIDESUBMENU', # removes an OSD sub menu. Can be used in videoOSD.xml window id=2901
+'85':'ACTION_TAKE_SCREENSHOT', # take a screenshot
+'87':'ACTION_RENAME_ITEM', # rename item
+
+'88':'ACTION_VOLUME_UP',
+'89':'ACTION_VOLUME_DOWN',
+'91':'ACTION_MUTE',
+'92':'ACTION_NAV_BACK',
+
+'100':'ACTION_MOUSE_START',
+'100':'ACTION_MOUSE_LEFT_CLICK',
+'101':'ACTION_MOUSE_RIGHT_CLICK',
+'102':'ACTION_MOUSE_MIDDLE_CLICK',
+'103':'ACTION_MOUSE_DOUBLE_CLICK',
+'104':'ACTION_MOUSE_WHEEL_UP',
+'105':'ACTION_MOUSE_WHEEL_DOWN',
+'106':'ACTION_MOUSE_DRAG',
+'107':'ACTION_MOUSE_MOVE',
+'109':'ACTION_MOUSE_END',
+
+'110':'ACTION_BACKSPACE',
+'111':'ACTION_SCROLL_UP',
+'112':'ACTION_SCROLL_DOWN',
+'113':'ACTION_ANALOG_FORWARD',
+'114':'ACTION_ANALOG_REWIND',
+
+'115':'ACTION_MOVE_ITEM_UP', # move item up in playlist
+'116':'ACTION_MOVE_ITEM_DOWN', # move item down in playlist
+'117':'ACTION_CONTEXT_MENU', # pops up the context menu
+
+
+# stuff for virtual keyboard shortcuts
+'118':'ACTION_SHIFT',
+'119':'ACTION_SYMBOLS',
+'120':'ACTION_CURSOR_LEFT',
+'121':'ACTION_CURSOR_RIGHT',
+
+'122':'ACTION_BUILT_IN_FUNCTION',
+
+'123':'ACTION_SHOW_OSD_TIME', # displays current time, can be used in videoFullScreen.xml window id=2005
+'124':'ACTION_ANALOG_SEEK_FORWARD', # seeks forward, and displays the seek bar.
+'125':'ACTION_ANALOG_SEEK_BACK', # seeks backward, and displays the seek bar.
+
+'126':'ACTION_VIS_PRESET_SHOW',
+'127':'ACTION_VIS_PRESET_LIST',
+'128':'ACTION_VIS_PRESET_NEXT',
+'129':'ACTION_VIS_PRESET_PREV',
+'130':'ACTION_VIS_PRESET_LOCK',
+'131':'ACTION_VIS_PRESET_RANDOM',
+'132':'ACTION_VIS_RATE_PRESET_PLUS',
+'133':'ACTION_VIS_RATE_PRESET_MINUS',
+
+'134':'ACTION_SHOW_VIDEOMENU',
+'135':'ACTION_ENTER',
+
+'136':'ACTION_INCREASE_RATING',
+'137':'ACTION_DECREASE_RATING',
+
+'138':'ACTION_NEXT_SCENE', # switch to next scene/cutpoint in movie
+'139':'ACTION_PREV_SCENE', # switch to previous scene/cutpoint in movie
+
+'140':'ACTION_NEXT_LETTER', # jump through a list or container by letter
+'141':'ACTION_PREV_LETTER',
+
+'142':'ACTION_JUMP_SMS2', # jump direct to a particular letter using SMS-style input
+'143':'ACTION_JUMP_SMS3',
+'144':'ACTION_JUMP_SMS4',
+'145':'ACTION_JUMP_SMS5',
+'146':'ACTION_JUMP_SMS6',
+'147':'ACTION_JUMP_SMS7',
+'148':'ACTION_JUMP_SMS8',
+'149':'ACTION_JUMP_SMS9',
+
+'150':'ACTION_FILTER_CLEAR',
+'151':'ACTION_FILTER_SMS2',
+'152':'ACTION_FILTER_SMS3',
+'153':'ACTION_FILTER_SMS4',
+'154':'ACTION_FILTER_SMS5',
+'155':'ACTION_FILTER_SMS6',
+'156':'ACTION_FILTER_SMS7',
+'157':'ACTION_FILTER_SMS8',
+'158':'ACTION_FILTER_SMS9',
+
+'159':'ACTION_FIRST_PAGE',
+'160':'ACTION_LAST_PAGE',
+
+'161':'ACTION_AUDIO_DELAY',
+'162':'ACTION_SUBTITLE_DELAY',
+
+'180':'ACTION_PASTE',
+'181':'ACTION_NEXT_CONTROL',
+'182':'ACTION_PREV_CONTROL',
+'183':'ACTION_CHANNEL_SWITCH',
+
+'199':'ACTION_TOGGLE_FULLSCREEN', # switch 2 desktop resolution
+'200':'ACTION_TOGGLE_WATCHED', # Toggle watched status (videos)
+'201':'ACTION_SCAN_ITEM', # scan item
+'202':'ACTION_TOGGLE_DIGITAL_ANALOG', # switch digital <-> analog
+'203':'ACTION_RELOAD_KEYMAPS', # reloads CButtonTranslator's keymaps
+'204':'ACTION_GUIPROFILE_BEGIN', # start the GUIControlProfiler running
+
+'215':'ACTION_TELETEXT_RED', # Teletext Color buttons to control TopText
+'216':'ACTION_TELETEXT_GREEN', # " " " " " "
+'217':'ACTION_TELETEXT_YELLOW', # " " " " " "
+'218':'ACTION_TELETEXT_BLUE', # " " " " " "
+
+'219':'ACTION_INCREASE_PAR',
+'220':'ACTION_DECREASE_PAR',
+
+'221':'ACTION_GESTURE_NOTIFY',
+'222':'ACTION_GESTURE_BEGIN',
+'223':'ACTION_GESTURE_ZOOM', #sendaction with point and currentPinchScale (fingers together < 1.0 -> fingers apart > 1.0)
+'224':'ACTION_GESTURE_ROTATE',
+'225':'ACTION_GESTURE_PAN',
+'226':'ACTION_GESTURE_END',
+'227':'ACTION_VSHIFT_UP', # shift up video image in DVDPlayer
+'228':'ACTION_VSHIFT_DOWN', # shift down video image in DVDPlayer
+
+'229':'ACTION_PLAYER_PLAYPAUSE', # Play/pause. If playing it pauses, if paused it plays.
+
+# The NOOP action can be specified to disable an input event. This is
+# useful in user keyboard.xml etc to disable actions specified in the
+# system mappings.
+'999':'ACTION_NOOP',
+
+'230':'ACTION_SUBTITLE_VSHIFT_UP', # shift up subtitles in DVDPlayer
+'231':'ACTION_SUBTITLE_VSHIFT_DOWN', # shift down subtitles in DVDPlayer
+'232':'ACTION_SUBTITLE_ALIGN', # toggle vertical alignment of subtitles
+
+# Window ID defines to make the code a bit more readable
+'9999':'WINDOW_INVALID',
+'10000':'WINDOW_HOME',
+'10001':'WINDOW_PROGRAMS',
+'10002':'WINDOW_PICTURES',
+'10003':'WINDOW_FILES',
+'10004':'WINDOW_SETTINGS_MENU',
+'10005':'WINDOW_MUSIC', # virtual window to return the music start window.
+'10006':'WINDOW_VIDEOS',
+'10007':'WINDOW_SYSTEM_INFORMATION',
+'10008':'WINDOW_TEST_PATTERN',
+'10011':'WINDOW_SCREEN_CALIBRATION',
+
+'10012':'WINDOW_SETTINGS_MYPICTURES',
+'10013':'WINDOW_SETTINGS_MYPROGRAMS',
+'10014':'WINDOW_SETTINGS_MYWEATHER',
+'10015':'WINDOW_SETTINGS_MYMUSIC',
+'10016':'WINDOW_SETTINGS_SYSTEM',
+'10017':'WINDOW_SETTINGS_MYVIDEOS',
+'10018':'WINDOW_SETTINGS_NETWORK',
+'10019':'WINDOW_SETTINGS_APPEARANCE',
+
+'10020':'WINDOW_SCRIPTS', # virtual window for backward compatibility
+
+'10024':'WINDOW_VIDEO_FILES',
+'10025':'WINDOW_VIDEO_NAV',
+'10028':'WINDOW_VIDEO_PLAYLIST',
+
+'10029':'WINDOW_LOGIN_SCREEN',
+'10034':'WINDOW_SETTINGS_PROFILES',
+
+'10040':'WINDOW_ADDON_BROWSER',
+
+'10099':'WINDOW_DIALOG_POINTER',
+'10100':'WINDOW_DIALOG_YES_NO',
+'10101':'WINDOW_DIALOG_PROGRESS',
+'10103':'WINDOW_DIALOG_KEYBOARD',
+'10104':'WINDOW_DIALOG_VOLUME_BAR',
+'10105':'WINDOW_DIALOG_SUB_MENU',
+'10106':'WINDOW_DIALOG_CONTEXT_MENU',
+'10107':'WINDOW_DIALOG_KAI_TOAST',
+'10109':'WINDOW_DIALOG_NUMERIC',
+'10110':'WINDOW_DIALOG_GAMEPAD',
+'10111':'WINDOW_DIALOG_BUTTON_MENU',
+'10112':'WINDOW_DIALOG_MUSIC_SCAN',
+'10113':'WINDOW_DIALOG_MUTE_BUG',
+'10114':'WINDOW_DIALOG_PLAYER_CONTROLS',
+'10115':'WINDOW_DIALOG_SEEK_BAR',
+'10120':'WINDOW_DIALOG_MUSIC_OSD',
+'10121':'WINDOW_DIALOG_VIS_SETTINGS',
+'10122':'WINDOW_DIALOG_VIS_PRESET_LIST',
+'10123':'WINDOW_DIALOG_VIDEO_OSD_SETTINGS',
+'10124':'WINDOW_DIALOG_AUDIO_OSD_SETTINGS',
+'10125':'WINDOW_DIALOG_VIDEO_BOOKMARKS',
+'10126':'WINDOW_DIALOG_FILE_BROWSER',
+'10128':'WINDOW_DIALOG_NETWORK_SETUP',
+'10129':'WINDOW_DIALOG_MEDIA_SOURCE',
+'10130':'WINDOW_DIALOG_PROFILE_SETTINGS',
+'10131':'WINDOW_DIALOG_LOCK_SETTINGS',
+'10132':'WINDOW_DIALOG_CONTENT_SETTINGS',
+'10133':'WINDOW_DIALOG_VIDEO_SCAN',
+'10134':'WINDOW_DIALOG_FAVOURITES',
+'10135':'WINDOW_DIALOG_SONG_INFO',
+'10136':'WINDOW_DIALOG_SMART_PLAYLIST_EDITOR',
+'10137':'WINDOW_DIALOG_SMART_PLAYLIST_RULE',
+'10138':'WINDOW_DIALOG_BUSY',
+'10139':'WINDOW_DIALOG_PICTURE_INFO',
+'10140':'WINDOW_DIALOG_ADDON_SETTINGS',
+'10141':'WINDOW_DIALOG_ACCESS_POINTS',
+'10142':'WINDOW_DIALOG_FULLSCREEN_INFO',
+'10143':'WINDOW_DIALOG_KARAOKE_SONGSELECT',
+'10144':'WINDOW_DIALOG_KARAOKE_SELECTOR',
+'10145':'WINDOW_DIALOG_SLIDER',
+'10146':'WINDOW_DIALOG_ADDON_INFO',
+'10147':'WINDOW_DIALOG_TEXT_VIEWER',
+'10148':'WINDOW_DIALOG_PLAY_EJECT',
+'10149':'WINDOW_DIALOG_PERIPHERAL_MANAGER',
+'10150':'WINDOW_DIALOG_PERIPHERAL_SETTINGS',
+
+'10500':'WINDOW_MUSIC_PLAYLIST',
+'10501':'WINDOW_MUSIC_FILES',
+'10502':'WINDOW_MUSIC_NAV',
+'10503':'WINDOW_MUSIC_PLAYLIST_EDITOR',
+
+'10600':'WINDOW_DIALOG_OSD_TELETEXT',
+
+#'11000':'WINDOW_VIRTUAL_KEYBOARD',
+'12000':'WINDOW_DIALOG_SELECT',
+'12001':'WINDOW_DIALOG_MUSIC_INFO',
+'12002':'WINDOW_DIALOG_OK',
+'12003':'WINDOW_DIALOG_VIDEO_INFO',
+'12005':'WINDOW_FULLSCREEN_VIDEO',
+'12006':'WINDOW_VISUALISATION',
+'12007':'WINDOW_SLIDESHOW',
+'12008':'WINDOW_DIALOG_FILESTACKING',
+'12009':'WINDOW_KARAOKELYRICS',
+'12600':'WINDOW_WEATHER',
+'12900':'WINDOW_SCREENSAVER',
+'12901':'WINDOW_DIALOG_VIDEO_OSD',
+
+'12902':'WINDOW_VIDEO_MENU',
+'12903':'WINDOW_DIALOG_MUSIC_OVERLAY',
+'12904':'WINDOW_DIALOG_VIDEO_OVERLAY',
+'12905':'WINDOW_VIDEO_TIME_SEEK', # virtual window for time seeking during fullscreen video
+
+'12998':'WINDOW_START', # first window to load
+'12999':'WINDOW_STARTUP_ANIM', # for startup animations
+
+# WINDOW_ID's from 13000 to 13099 reserved for Python
+
+'13000':'WINDOW_PYTHON_START',
+'13099':'WINDOW_PYTHON_END',
+}
+			import socket
+			s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+			s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+			s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+			s.settimeout(3)
+			s.bind(('', self.pluginConfig['Broadcast']['port']))
+			print 'XBMC2: Listening for XBMC broadcast events'
+			while not stopBroadcastEvents.isSet():
+				#s.settimeout(None)
+				message = ''
+				addr = ''
+				try:
+					message, addr = s.recvfrom(4096)
+				except socket.timeout:
+					#print "XBMC2: Broadcast timeout"
+					continue
+				except socket.error:
+					import sys
+					eg.PrintError('XBMC2: socket.error: ' + str(sys.exc_info()[1]))
+					continue
+				except:
+					import sys
+					eg.PrintError('XBMC2: Error: get1: ' + str(sys.exc_info()))
+					continue
+				if self.pluginConfig['logRawEvents']:
+					print "XBMC2: Raw event: %s %s" % (repr(message), repr(addr))
+				if self.pluginConfig['XBMC']['ip'] != addr[0]:
+					if self.pluginConfig['XBMC']['ip'] == '127.0.0.1':
+						if not addr[0] in socket.gethostbyname_ex('')[2]: continue
+					else:
+						continue
+				"""
+				if self.pluginConfig['Broadcast']['workaround']:
+					s.settimeout(0)
+					try:
+						message2 = ''
+						addr2 = ''
+						if self.pluginConfig['logRawEvents']:
+							message2, addr2 = s.recvfrom(4096)
+							print "XBMC2: Raw event2: %s %s" % (repr(message2), repr(addr2))
+						else:
+							s.recvfrom(4096)
+					except:
+						eg.PrintError('XBMC2: Error: get2')
+					try:
+						message2 = ''
+						addr2 = ''
+						if self.pluginConfig['logRawEvents']:
+							message2, addr2 = s.recvfrom(4096)
+							print "XBMC2: Raw event3: %s %s" % (repr(message2), repr(addr2))
+						else:
+							s.recvfrom(4096)
+					except:
+						eg.PrintError('XBMC2: Error: get3')
+				"""
+				import re
+				parts = re.sub('<[^<]+?>', '', message).split(';', 1)
+				try:
+					event, payload = parts[0].split(':', 1)
+					if event != 'OnAction':
+						event += '.' + payload.split(':', 1)[0]
+					else:
+						try:
+							event += '.' + ActionList[payload.split(':', 1)[0]]
+						except:
+							event += '.' + payload.split(':', 1)[0]
+					try:
+						payload = unicode(payload.split(':', 1)[1], 'UTF8')
+					except:
+						payload = None
+				except:
+					event = parts[0].split(':', 1)[0]
+					payload = None
+				if not stopBroadcastEvents.isSet():
+					self.TriggerEvent('Broadcast.' + event, payload)
+
+			s.close()
+			print 'XBMC2: Not listening for XBMC broadcast events'
