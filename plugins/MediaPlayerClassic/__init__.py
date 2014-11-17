@@ -5,7 +5,7 @@
 # Copyright (C) 2006 MonsterMagnet
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2012 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2014 Lars-Peter Voss <bitmonster@eventghost.org>
 #
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
@@ -20,6 +20,8 @@
     
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 2.8 by Pako 2014-11-17 11:46 UTC+1
+#     - bugfix (Show menu - when fullscreen)
 # 2.7 by Pako 2013-09-02 10:14 UTC+1
 #     - bugfix (Show menu - Test button)
 # 2.6 by Pako 2013-02-10 10:56 UTC+1
@@ -68,7 +70,7 @@
 eg.RegisterPlugin(
     name = "Media Player Classic",
     author = "MonsterMagnet",
-    version = "2.7",
+    version = "2.8",
     kind = "program",
     guid = "{DD75104D-D586-438A-B63D-3AD01A4D4BD3}",
     createMacrosOnAdd = True,
@@ -1107,7 +1109,7 @@ class Menu(wx.Frame):
             eg.Bind(evt, self.onEscape)
         child = GetWindow(self.hWnd, GW_CHILD)
         clsName = GetClassName(child)
-        if clsName[:4] == "Afx:" and len(clsName) == 41:
+        if clsName[:4] == "Afx:" and len(clsName) >= 41:
             childRect = GetWindowRect(child)
             mons = EnumDisplayMonitors()
             fullscreen = False
