@@ -154,7 +154,10 @@ class EventGhostEvent(object):
                 obj = obj.parent
             else:
                 activeHandlers.add(eventHandler)
-
+        
+        for listener in eg.log.eventListeners:
+            listener.LogEvent(self)
+            
         if config.onlyLogAssigned and len(activeHandlers) == 0:
             self.SetStarted()
             return
