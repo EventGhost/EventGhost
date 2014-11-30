@@ -85,6 +85,8 @@ class Execute(eg.ActionBase):
         eventSuffix = "Application.Terminated"
         browseExecutableDialogTitle = "Choose the executable"
         browseWorkingDirDialogTitle = "Choose the working directory"
+        disableParsing = "Disable parsing of string"
+        additionalSuffix = "Additional Suffix:"
 
 
     def __call__(
@@ -97,12 +99,20 @@ class Execute(eg.ActionBase):
         workingDir="",
         triggerEvent=False,
         disableWOW64=False,
+        additionalSuffix="",
+        disableParsingPathname=False,
+        disableParsingArguments=False,
+        disableParsingAdditionalSuffix=False,
     ):
         returnValue = None
-        pathname = eg.ParseString(pathname)
+        if not disableParsingPathname:
+            pathname = eg.ParseString(pathname)
         if not workingDir:
             workingDir = dirname(abspath(pathname))
-        arguments = eg.ParseString(arguments)
+        if not disableParsingArguments:
+            arguments = eg.ParseString(arguments)
+        if not disableParsingAdditionalSuffix:
+            additionalSuffix = eg.ParseString(additionalSuffix)
         commandLine = create_unicode_buffer('"%s" %s' % (pathname, arguments))
         startupInfo = STARTUPINFO()
         startupInfo.cb = sizeof(STARTUPINFO)
@@ -137,6 +147,8 @@ class Execute(eg.ActionBase):
                 self.text.eventSuffix,
                 splitext(split(pathname)[1])[0]
             )
+        if additionalSuffix!="":
+            suffix=suffix+"."+additionalSuffix
         prefix = self.plugin.name.replace(' ', '')
         if res == 0:
             raise self.Exception(FormatError())
@@ -197,6 +209,10 @@ class Execute(eg.ActionBase):
         workingDir="",
         triggerEvent=False,
         disableWOW64=False,
+        additionalSuffix="",
+        disableParsingPathname=False,
+        disableParsingArguments=False,
+        disableParsingAdditionalSuffix=False,
     ):
         panel = eg.ConfigPanel()
         text = self.text
@@ -205,7 +221,15 @@ class Execute(eg.ActionBase):
             fileMask="*.*",
             dialogTitle=text.browseExecutableDialogTitle
         )
+        disableParsingPathnameBox = panel.CheckBox(
+            bool(disableParsingPathname),
+            text.disableParsing
+        )
         argumentsCtrl = panel.TextCtrl(arguments)
+        disableParsingArgumentsBox = panel.CheckBox(
+            bool(disableParsingArguments),
+            text.disableParsing
+        )
         workingDirCtrl = panel.DirBrowseButton(
             workingDir or "",
             dialogTitle=text.browseWorkingDirDialogTitle
@@ -220,6 +244,11 @@ class Execute(eg.ActionBase):
         eventCheckBox = panel.CheckBox(
             bool(triggerEvent),
             text.eventCheckbox
+        )
+        additionalSuffixCtrl = panel.TextCtrl(additionalSuffix)
+        disableParsingAdditionalSuffixBox = panel.CheckBox(
+            bool(disableParsingAdditionalSuffix),
+            text.disableParsing
         )
         wow64CheckBox = panel.CheckBox(
             bool(disableWOW64),
@@ -239,12 +268,40 @@ class Execute(eg.ActionBase):
             ((1, 1), (0, 3), (1, 1), wx.EXPAND),
         ])
 
+        lowerSizer2 = wx.GridBagSizer(2, 0)
+        lowerSizer2.AddGrowableCol(1)
+        lowerSizer2.AddGrowableCol(3)
+        stTxt = SText(text.additionalSuffix)
+        lowerSizer2.AddMany([
+            ((eventCheckBox), (0, 0), (1, 1), wx.ALIGN_BOTTOM),
+            ((1, 1), (0, 1), (1, 1), wx.EXPAND),
+            (stTxt, (0, 2), (1, 1), wx.ALIGN_BOTTOM),
+            (additionalSuffixCtrl, (1, 2)),
+            (disableParsingAdditionalSuffixBox, (2, 2)),
+            ((1, 1), (0, 3), (1, 1), wx.EXPAND),
+        ])
+        
+        def onEventCheckBox(evt = None):
+            enable = eventCheckBox.GetValue()
+            stTxt.Enable(enable)
+            additionalSuffixCtrl.Enable(enable)
+            disableParsingAdditionalSuffixBox.Enable(enable)
+            if not enable:
+                additionalSuffixCtrl.ChangeValue("")
+            if evt:
+                evt.Skip()
+        eventCheckBox.Bind(wx.EVT_CHECKBOX, onEventCheckBox)
+        onEventCheckBox()
+        
         panel.sizer.AddMany([
             (SText(text.FilePath)),
             (filepathCtrl, 0, wx.EXPAND),
+            (disableParsingPathnameBox),
             ((10, 10)),
             (SText(text.Parameters)),
             (argumentsCtrl, 0, wx.EXPAND),
+            ((10, 2)),
+            (disableParsingArgumentsBox),
             ((10, 10)),
             (SText(text.WorkingDir)),
             (workingDirCtrl, 0, wx.EXPAND),
@@ -252,7 +309,7 @@ class Execute(eg.ActionBase):
             ((10, 15)),
             (waitCheckBox),
             ((10, 8)),
-            (eventCheckBox),
+            (lowerSizer2, 0, wx.EXPAND),
             ((10, 8)),
             (wow64CheckBox),
         ])
@@ -266,6 +323,10 @@ class Execute(eg.ActionBase):
                 4 - priorityChoice.GetValue(),
                 workingDirCtrl.GetValue(),
                 eventCheckBox.GetValue(),
-                wow64CheckBox.GetValue()
+                wow64CheckBox.GetValue(),
+                additionalSuffixCtrl.GetValue(),
+                disableParsingPathnameBox.GetValue(),
+                disableParsingArgumentsBox.GetValue(),
+                disableParsingAdditionalSuffixBox.GetValue()
             )
 

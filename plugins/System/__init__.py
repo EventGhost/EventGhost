@@ -86,7 +86,11 @@ from base64 import b64decode
 from StringIO import StringIO
 import Registry
 
-
+oldGetDeviceId = SoundMixer.GetDeviceId
+def GetDeviceId_(*args, **kwargs):
+    id = oldGetDeviceId(*args, **kwargs)
+    return id.encode(eg.systemEncoding) if not isinstance(id, int) else id
+SoundMixer.GetDeviceId = GetDeviceId_
 
 class Text:
     class MonitorGroup:
@@ -303,13 +307,18 @@ class System(eg.PluginBase):
                 return newValue
 
             def GetMute2(self, deviceId=0):
-                deviceId = SoundMixer.GetDeviceId(deviceId, True)
-                newvalue=None
                 try:
-                    newvalue=vistaVolumeDll.GetMute(deviceId)
+                    #deviceId = SoundMixer.GetDeviceId(deviceId, True).encode(eg.systemEncoding)
+                    deviceId = SoundMixer.GetDeviceId(deviceId, True)
+                    print "repr(deviceId) =",repr(deviceId) 
+                    newvalue=None
+                    try:
+                        newvalue = vistaVolumeDll.GetMute(deviceId)
+                    except:
+                        pass
+                    return newvalue
                 except:
-                    pass
-                return newvalue
+                    eg.PrintTraceback()
 
             def SetMasterVolume2(self, value=200, deviceId=0):
                 deviceId = SoundMixer.GetDeviceId(deviceId, True)
@@ -989,7 +998,6 @@ class GetMute(eg.ActionBase):
     iconFile = "icons/SoundCard"
 
     def __call__(self, deviceId=0):
-        deviceId = SoundMixer.GetDeviceId(deviceId)
         return SoundMixer.GetMute(deviceId)
 
 
