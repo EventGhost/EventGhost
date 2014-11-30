@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-version="0.1.11"
+version="0.1.12"
 
 # plugins/SchedulGhost/__init__.py
 #
@@ -22,6 +22,8 @@ version="0.1.11"
 #
 # Revision history:
 # -----------------
+# 0.1.12 by Sem;colon 2014-11-26 22:00 UTC+1
+#     - added option "Update 'Last run' field when executed" to "Run schedule immediately"
 # 0.1.11 by Pako 2014-06-08 10:00 UTC+1
 #     - changes caused by a new eg.Scheduler
 # 0.1.10 by Pako 2014-06-06 15:20 UTC+1
@@ -2676,8 +2678,9 @@ class RunScheduleImmediately(eg.ActionBase):
         scheduleTitle = "Schedule title:"
         notFound = 'Can not find schedule "%s" !'
         immedRun = 'Schedule "%s" - IMMEDIATELY execution. Possible next time: %s'
+        update = 'Update "Last run" field when executed'
 
-    def __call__(self, schedule=""):
+    def __call__(self, schedule="", update=False):
         schedule = eg.ParseString(schedule)
         data = self.plugin.data
         tmpLst = [item[1] for item in data]
@@ -2692,6 +2695,9 @@ class RunScheduleImmediately(eg.ActionBase):
                             self.plugin.updateLogFile(self.plugin.text.canc % sch[2][0])
                             break
                 next = self.plugin.Execute(sched, False, mktime(localtime()), True)
+                if update:
+                    last = str(dt.now())[:19]
+                    self.plugin.data[ix][4] = last
                 next = next[:19] if next else self.plugin.text.none
                 self.plugin.updateLogFile(self.text.immedRun % (sched[1], next))
         else:
@@ -2699,15 +2705,18 @@ class RunScheduleImmediately(eg.ActionBase):
             return self.text.notFound % schedule
 
 
-    def Configure(self, schedule = ""):
+    def Configure(self, schedule = "", update=False):
         panel = eg.ConfigPanel()
         data = self.plugin.data
         choices = [item[1] for item in data]
         textControl = wx.ComboBox(panel, -1, schedule, size = (300, -1), choices = choices)
+        updateCtrl = wx.CheckBox(panel, -1, self.text.update)
+        updateCtrl.SetValue(update)
         panel.sizer.Add(wx.StaticText(panel, -1, self.text.scheduleTitle), 0, wx.LEFT | wx.TOP, 10)
         panel.sizer.Add(textControl, 0, wx.LEFT, 10)
+        panel.sizer.Add(updateCtrl, 0, wx.LEFT|wx.TOP, 10)
         while panel.Affirmed():
-            panel.SetResult(textControl.GetValue())
+            panel.SetResult(textControl.GetValue(),updateCtrl.GetValue())
 #===============================================================================
 
 class AddSchedule(eg.ActionBase):
