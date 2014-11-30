@@ -38,6 +38,8 @@ from eg import ContainerItem, FolderItem, MacroItem, RootItem, AutostartItem
 from PythonScript import PythonScript
 from ShowOSD import ShowOSD
 from NewJumpIf import NewJumpIf
+from win32gui import FindWindow
+from eg.WinApi.Utils import BringHwndToFront
 
 
 class EventGhost(eg.PluginBase):
@@ -53,9 +55,11 @@ class EventGhost(eg.PluginBase):
         self.AddAction(Comment)
         self.AddAction(EnableItem)
         self.AddAction(DisableItem)
+        self.AddAction(GetItemState)
         self.AddAction(EnableExclusive)
         self.AddAction(Wait)
         self.AddAction(StopProcessing)
+        self.AddAction(OpenConfig)
         self.AddAction(NewJumpIf)
         self.AddAction(JumpIfLongPress)
         self.AddAction(JumpIfDoubleEvent)
@@ -192,6 +196,26 @@ class DisableItem(EnableItem):
 
 
 
+class GetItemState(EnableItem):
+    name = "Get item enable state"
+    description = "Gets item enable state (True when enabled)"
+    iconFile = 'icons/DisableItem'
+    class text:
+        label = "Item: %s"
+        text1 = "Please select the item whose enable state should be detected:"
+        cantSelect = (
+            "The enable state of selected item can't be detected.\n\n"
+            "Please select another item."
+        )
+
+
+    def __call__(self, link):
+        if link:
+            node = link.target
+            if node and node.isDeactivatable:
+                return node.isEnabled
+
+
 class EnableExclusive(EnableItem):
     name = "Exclusive enable a folder/macro"
     description = """
@@ -269,6 +293,63 @@ class StopProcessing(eg.ActionBase):
     def __call__(self):
         eg.event.skipEvent = True
 
+
+def BringDialogToFront(name):
+    hwnd = 0
+    i = 0
+    while hwnd == 0 and i < 10000:
+        hwnd = FindWindow("#32770", name)
+        i += 1
+    if hwnd:
+        BringHwndToFront(hwnd)
+
+
+
+class OpenConfig(eg.ActionBase):
+    name = "Open configuration dialogue"
+    description = """
+        Opens selected configuration dialogue.
+    """
+    iconFile = "icons/Dialog"
+    class text:
+        text0 = "Action or plugin: "
+        text1 = "Select action or plugin..."
+        text2 = \
+            "Please select the action or plugin, whose configuration dialogue "\
+            "should be opened."
+
+
+    def __call__(self, link):
+        wx.CallAfter(eg.document.OnCmdConfigure, link.target)
+        wx.CallAfter(
+            BringDialogToFront,
+            eg.text.General.settingsActionCaption
+        )
+
+
+    def GetLabel(self, link):
+        label = link.target.GetLabel() if link else ""
+        return "%s: %s" % (self.name, label)
+
+
+    def Configure(self, link=None):
+        panel = eg.ConfigPanel()
+        text = self.text
+        actionCtrl = eg.ActionSelectButton(
+            panel,
+            eg.text.General.choose,
+            text.text1,
+            text.text2,
+            link
+        )
+        mySizer = wx.FlexGridSizer(2, 2, 5, 5)
+        mySizer.AddGrowableCol(1)
+        mySizer.Add(panel.StaticText(text.text0), 0, wx.ALIGN_CENTER_VERTICAL)
+        mySizer.Add(actionCtrl, 1, wx.EXPAND)
+        panel.sizer.Add(mySizer, 1, wx.EXPAND|wx.ALL, 5)
+
+        while panel.Affirmed():
+            panel.SetResult(actionCtrl.GetValue())
 
 
 class JumpIfLongPress(eg.ActionBase):
