@@ -20,6 +20,8 @@
     
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 2.9 by Pako 2014-12-18 08:09 UTC+1
+#     - bugfix (GetNowPlaying action)
 # 2.8 by Pako 2014-11-17 11:46 UTC+1
 #     - bugfix (Show menu - when fullscreen)
 # 2.7 by Pako 2013-09-02 10:14 UTC+1
@@ -70,7 +72,7 @@
 eg.RegisterPlugin(
     name = "Media Player Classic",
     author = "MonsterMagnet",
-    version = "2.8",
+    version = "2.9",
     kind = "program",
     guid = "{DD75104D-D586-438A-B63D-3AD01A4D4BD3}",
     createMacrosOnAdd = True,
@@ -1316,7 +1318,7 @@ class MyTimer():
         self.timer.cancel()
 #===============================================================================
 
-class AfterPlaybackOnce(eg.ActionClass):
+class AfterPlaybackOnce(eg.ActionBase):
 
     class text:
         label = "Select action after playback:"
@@ -1354,7 +1356,7 @@ class AfterPlaybackOnce(eg.ActionClass):
             panel.SetResult(ctrl.GetSelection())
 #===============================================================================
 
-class AfterPlayback(eg.ActionClass):
+class AfterPlayback(eg.ActionBase):
 
     class text:
         label = "Select action after playback (every time):"
@@ -1395,7 +1397,7 @@ class AfterPlayback(eg.ActionClass):
             panel.SetResult(ctrl.GetSelection())
 #===============================================================================
 
-class UserMessage(eg.ActionClass):
+class UserMessage(eg.ActionBase):
 
     name = "Send user's message"
     description = u"""<rst>**Sends user's message.**
@@ -1544,15 +1546,16 @@ class GetWindowState(eg.ActionBase):
 class GetNowPlaying(eg.ActionBase):
     
     def __call__(self):
-        hWnd = Find_MPC()
-        if not hWnd:
+        if self.plugin.runFlg and self.plugin.mpcHwnd:
+            hWnd = self.plugin.mpcHwnd
+            title = GetWindowText(hWnd)
+            if not title.startswith("Media Player Classic"):
+                ix = title.rfind(".")
+                if ix > -1:
+                    return title[:ix]
+        else:
+            eg.programCounter = None
             raise self.Exceptions.ProgramNotRunning
-        hWnd = hWnd[0]
-        title = GetWindowText(hWnd)
-        if not title.startswith("Media Player Classic"):
-            ix = title.rfind(".")
-            if ix > -1:
-                return title[:ix]
 #===============================================================================
 
 class GetTimes(eg.ActionBase):
@@ -1906,7 +1909,7 @@ class GoTo_OSD(eg.ActionBase):
         )
 #===============================================================================
 
-class ShowMenu(eg.ActionClass):
+class ShowMenu(eg.ActionBase):
 
     name = "Show MPC menu"
     description = "Show MPC menu."
@@ -2614,7 +2617,7 @@ class SendOSD(eg.ActionBase):
 
 
     def __call__(self, osd="", dur=3, pos=1):
-        if self.plugin.mpcHwnd is not None:
+        if self.plugin.runFlg and self.plugin.mpcHwnd:
             osd = eg.ParseString(osd) + "\0"
             OSDDATA.nMsgPos     = pos
             OSDDATA.nDurationMS = 1000*dur
