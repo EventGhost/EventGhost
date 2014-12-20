@@ -20,7 +20,7 @@ import traceback
 eg.RegisterPlugin(
     name = "System",
     author = "Bitmonster & blackwind",
-    version = "1.1.7",
+    version = "1.1.8",
     description = (
         "Controls different aspects of your system, like sound card, "
         "graphics card, power management, et cetera."
@@ -191,6 +191,8 @@ class System(eg.PluginBase):
         self.AddAction(WakeOnLan)
         self.AddAction(SetIdleTime)
         self.AddAction(ResetIdleTimer)
+        self.AddAction(GetUpTime)
+        self.AddAction(GetBootTimestamp)
 
         group = self.AddGroup(
             text.SoundGroup.name,
@@ -430,6 +432,54 @@ class SetIdleTime(eg.ActionBase):
         panel.AddLine(self.text.label1, waitTimeCtrl, self.text.label2)
         while panel.Affirmed():
             panel.SetResult(waitTimeCtrl.GetValue())
+
+
+
+class GetUpTime(eg.ActionBase):
+    class text:
+        name = "Get Uptime"
+        description  = """
+            Returns a runtime of system in seconds. 
+            If checkbox is not checked, returns the number of days, 
+            hours, minutes and seconds.
+        """
+        ticks = "Return result as the number of seconds (ticks)"
+
+    def __call__(self, ticks = True):
+        return eg.Utils.GetUpTime(seconds = ticks)
+
+
+    def Configure(self, ticks = True):
+        panel = eg.ConfigPanel()
+        checkbox = panel.CheckBox(ticks, self.text.ticks)
+        panel.sizer.Add(checkbox, 0, wx.ALL, 10)
+        while panel.Affirmed():
+            panel.SetResult(checkbox.GetValue())
+
+
+
+
+class GetBootTimestamp(eg.ActionBase):
+    class text:
+        name = "Get Boot Timestamp"
+        description  = """
+            Returns the time of the last system boot. 
+            If checkbox is checked, result is a unix temestamp. 
+            Otherwise it is in human readable form.
+        """
+        timestamp = "Result return as an unix timestamp"
+
+
+    def __call__(self, timestamp = True):
+        return eg.Utils.GetBootTimestamp(unix_timestamp = timestamp)
+    
+
+    def Configure(self, timestamp = True):
+        panel = eg.ConfigPanel()
+        checkbox = panel.CheckBox(timestamp, self.text.timestamp)
+        panel.sizer.Add(checkbox, 0, wx.ALL, 10)
+        while panel.Affirmed():
+            panel.SetResult(checkbox.GetValue())
 
 
 
