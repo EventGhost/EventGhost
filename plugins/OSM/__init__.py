@@ -20,6 +20,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.10 by Pako 2014-12-23 15:59 UTC+1
+#     - bugfix - Test button on dialog "Show menu"
 # 0.2.9 by Pako 2012-01-18 11:13 UTC+1
 #     - fixed bug - inversion of option "Show a menu without stealing focus (prevents keyboard control)"
 # 0.2.8 by Pako 2012-01-18 10:23 UTC+1
@@ -42,7 +44,7 @@
 eg.RegisterPlugin(
     name = "OS Menu",
     author = "Pako",
-    version = "0.2.9",
+    version = "0.2.10",
     kind = "other",
     guid = "{FCF3C7A7-FBC1-444D-B768-9477521946DC}",
     description = u"""<rst>
@@ -684,7 +686,7 @@ class ShowMenu(eg.ActionBase):
                     modeCtrl.GetSelection(),
                     CreateEvent(None, 0, 0, None),
                     triggEvtCtrl.GetValue(),
-                    focus.GetValue(),
+                    focusCtrl.GetValue(),
                 )
 
         panel.dialog.buttonRow.testButton.Bind(wx.EVT_BUTTON, OnButton)
