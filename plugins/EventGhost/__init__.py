@@ -24,7 +24,7 @@ eg.RegisterPlugin(
         "EventGhost."
     ),
     kind = "core",
-    version = "1.0.2",
+    version = "1.0.3",
     guid = "{9D499A2C-72B6-40B0-8C8C-995831B10BB4}",
 )
 
@@ -38,6 +38,7 @@ from eg import ContainerItem, FolderItem, MacroItem, RootItem, AutostartItem
 from PythonScript import PythonScript
 from ShowOSD import ShowOSD
 from NewJumpIf import NewJumpIf
+from JumpIfElse import JumpIfElse
 from win32gui import FindWindow
 from eg.WinApi.Utils import BringHwndToFront
 
@@ -61,6 +62,7 @@ class EventGhost(eg.PluginBase):
         self.AddAction(StopProcessing)
         self.AddAction(OpenConfig)
         self.AddAction(NewJumpIf)
+        self.AddAction(JumpIfElse)
         self.AddAction(JumpIfLongPress)
         self.AddAction(JumpIfDoubleEvent)
         self.AddAction(AutoRepeat)
