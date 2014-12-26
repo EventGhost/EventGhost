@@ -5,7 +5,7 @@
 # Copyright (C) 2006 MonsterMagnet
 #
 # This file is a plugin for EventGhost.
-# Copyright (C) 2005-2014 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2012 Lars-Peter Voss <bitmonster@eventghost.org>
 #
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
@@ -20,11 +20,9 @@
     
 # Changelog (in reverse chronological order):
 # -------------------------------------------
-# 2.9 by Pako 2014-12-18 08:09 UTC+1
-#     - bugfix (GetNowPlaying action)
-# 2.8 by Pako 2014-11-17 11:46 UTC+1
-#     - bugfix (Show menu - when fullscreen)
-# 2.7 by Pako 2013-09-02 10:14 UTC+1
+# 2.8 by Pako 2014-12-26 10:38 UTC+1
+#     - bugfix - the function GetMpcHcPath() improved
+# 2.7 by Pako 2014-12-18 08:09 UTC+1
 #     - bugfix (Show menu - Test button)
 # 2.6 by Pako 2013-02-10 10:56 UTC+1
 #     - the function GetMpcHcPath() improved - now works also in x64 environment
@@ -72,7 +70,7 @@
 eg.RegisterPlugin(
     name = "Media Player Classic",
     author = "MonsterMagnet",
-    version = "2.9",
+    version = "2.8",
     kind = "program",
     guid = "{DD75104D-D586-438A-B63D-3AD01A4D4BD3}",
     createMacrosOnAdd = True,
@@ -1111,7 +1109,7 @@ class Menu(wx.Frame):
             eg.Bind(evt, self.onEscape)
         child = GetWindow(self.hWnd, GW_CHILD)
         clsName = GetClassName(child)
-        if clsName[:4] == "Afx:" and len(clsName) >= 41:
+        if clsName[:4] == "Afx:" and len(clsName) == 41:
             childRect = GetWindowRect(child)
             mons = EnumDisplayMonitors()
             fullscreen = False
@@ -1318,7 +1316,7 @@ class MyTimer():
         self.timer.cancel()
 #===============================================================================
 
-class AfterPlaybackOnce(eg.ActionBase):
+class AfterPlaybackOnce(eg.ActionClass):
 
     class text:
         label = "Select action after playback:"
@@ -1356,7 +1354,7 @@ class AfterPlaybackOnce(eg.ActionBase):
             panel.SetResult(ctrl.GetSelection())
 #===============================================================================
 
-class AfterPlayback(eg.ActionBase):
+class AfterPlayback(eg.ActionClass):
 
     class text:
         label = "Select action after playback (every time):"
@@ -1397,7 +1395,7 @@ class AfterPlayback(eg.ActionBase):
             panel.SetResult(ctrl.GetSelection())
 #===============================================================================
 
-class UserMessage(eg.ActionBase):
+class UserMessage(eg.ActionClass):
 
     name = "Send user's message"
     description = u"""<rst>**Sends user's message.**
@@ -1546,16 +1544,15 @@ class GetWindowState(eg.ActionBase):
 class GetNowPlaying(eg.ActionBase):
     
     def __call__(self):
-        if self.plugin.runFlg and self.plugin.mpcHwnd:
-            hWnd = self.plugin.mpcHwnd
-            title = GetWindowText(hWnd)
-            if not title.startswith("Media Player Classic"):
-                ix = title.rfind(".")
-                if ix > -1:
-                    return title[:ix]
-        else:
-            eg.programCounter = None
+        hWnd = Find_MPC()
+        if not hWnd:
             raise self.Exceptions.ProgramNotRunning
+        hWnd = hWnd[0]
+        title = GetWindowText(hWnd)
+        if not title.startswith("Media Player Classic"):
+            ix = title.rfind(".")
+            if ix > -1:
+                return title[:ix]
 #===============================================================================
 
 class GetTimes(eg.ActionBase):
@@ -1909,7 +1906,7 @@ class GoTo_OSD(eg.ActionBase):
         )
 #===============================================================================
 
-class ShowMenu(eg.ActionBase):
+class ShowMenu(eg.ActionClass):
 
     name = "Show MPC menu"
     description = "Show MPC menu."
@@ -2270,7 +2267,7 @@ class MediaPlayerClassic(eg.PluginBase):
         opened = "Opened"
         closed = "Closed"
         label = "Path to MPC-HC executable:"
-        fileMask = "MPC-HC executable|mpc-hc.exe|All-Files (*.*)|*.*"
+        fileMask = "MPC-HC executable|mpc-hc*.exe|All EXE files (*.exe)|*.exe"
         gotoLabel = "Go To..."
 
 
@@ -2468,10 +2465,13 @@ class MediaPlayerClassic(eg.PluginBase):
         the Windows registry.
         """
         try:
-            args = [_winreg.HKEY_CURRENT_USER,            
-                "Software\Gabest\Media Player Classic"]
             if "PROCESSOR_ARCHITEW6432" in environ:
+                args = [_winreg.HKEY_CURRENT_USER,            
+                    "Software\MPC-HC\MPC-HC"]
                 args.extend((0, _winreg.KEY_READ | _winreg.KEY_WOW64_64KEY))
+            else:
+                args = [_winreg.HKEY_CURRENT_USER,            
+                    "Software\Gabest\Media Player Classic"]
             mpc = _winreg.OpenKey(*args)
             mpcPath =_winreg.QueryValueEx(mpc, "ExePath")[0]
             _winreg.CloseKey(mpc)
@@ -2617,7 +2617,7 @@ class SendOSD(eg.ActionBase):
 
 
     def __call__(self, osd="", dur=3, pos=1):
-        if self.plugin.runFlg and self.plugin.mpcHwnd:
+        if self.plugin.mpcHwnd is not None:
             osd = eg.ParseString(osd) + "\0"
             OSDDATA.nMsgPos     = pos
             OSDDATA.nDurationMS = 1000*dur
