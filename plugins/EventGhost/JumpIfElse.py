@@ -98,7 +98,7 @@ class JumpIfElse(eg.ActionBase):
             labels[4] % (target2.name if target2 is not None else "None")
         ) if link2 is not None else ""
         res += labels[3] if link2 is not None and gosub2 else ""
-        return res
+        return res if res else self.name
 
 
     def Configure(
