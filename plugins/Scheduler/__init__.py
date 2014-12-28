@@ -20,7 +20,7 @@ eg.RegisterPlugin(
     name = "Scheduler",
     guid = '{5C822DE2-97E7-4DB8-8281-CD77ED216A63}',
     author = "Walter Kraembring",
-    version = "1.2.1",
+    version = "1.2.2",
     description = (
         "Triggers an event at configurable dates & times"
     ),
@@ -30,6 +30,10 @@ eg.RegisterPlugin(
 ##############################################################################
 # Revision history:
 #
+# 2014-08-11  Added default params to ensure correct startup
+#             Added plugin setting for customizing the event prefix
+#             Added event to allow controlling restart of threads when
+#             changing 'empty house' and 'vacation' modes
 # 2014-05-12  Plugin settings updated for 'empty house' and 'vacation' modes
 #             when changed via actions from externals 
 # 2014-05-10  Plugin termination problem improved/solved
@@ -117,6 +121,7 @@ class Text:
     txtRestoreState_2 = "Earlier Today Set to OFF at: "
     txtRestoreState_3 = "Yesterday or Earlier Set to ON at: "
     txtRestoreState_4 = "Yesterday or Earlier Set to OFF at: "
+    eventPrefix = "Event prefix (default is 'Main'):"
 
     class SchedulerAction:
         name = "Start new or control running scheduler"
@@ -325,14 +330,22 @@ class SchedulerThread(Thread):
                 if i % 2 == 0: #Try ON settings
                     if trigTime == self.dayTimeSettings[i]:
                         for i in range(self.iNbrOfBurstsON):
-                            eg.TriggerEvent(self.eventNameOn)
+                            eg.TriggerEvent(
+                                self.eventNameOn,
+                                None,
+                                eg.plugins.Scheduler.plugin.eventPrefix
+                            )
                             self.finished.wait(self.cmdDelay)
                         LogToFile(self.eventNameOn)
                   
                 if i % 2 == 1: #Try OFF settings
                     if trigTime == self.dayTimeSettings[i]:
                         for i in range(self.iNbrOfBurstsOFF):
-                            eg.TriggerEvent(self.eventNameOff)
+                            eg.TriggerEvent(
+                                self.eventNameOff,
+                                None,
+                                eg.plugins.Scheduler.plugin.eventPrefix
+                            )
                             self.finished.wait(self.cmdDelay)
                         LogToFile(self.eventNameOff)
             
@@ -351,14 +364,22 @@ class SchedulerThread(Thread):
                                     if init == 1:
                                         LogToFile(self.eventNameOn)
                                     for i in range(self.iNbrOfBurstsON):
-                                        eg.TriggerEvent(self.eventNameOn)
+                                        eg.TriggerEvent(
+                                            self.eventNameOn,
+                                            None,
+                                            eg.plugins.Scheduler.plugin.eventPrefix
+                                        )
                                         self.finished.wait(self.cmdDelay)
                                     break
                                 if index % 2 == 0:
                                     if init == 1:
                                         LogToFile(self.eventNameOff)
                                     for i in range(self.iNbrOfBurstsOFF):
-                                        eg.TriggerEvent(self.eventNameOff)
+                                        eg.TriggerEvent(
+                                            self.eventNameOff,
+                                            None,
+                                            eg.plugins.Scheduler.plugin.eventPrefix
+                                        )
                                         self.finished.wait(self.cmdDelay)
                                     break
 
@@ -367,14 +388,22 @@ class SchedulerThread(Thread):
                                 if init == 1:
                                     LogToFile(self.eventNameOn)
                                 for i in range(self.iNbrOfBurstsON):
-                                    eg.TriggerEvent(self.eventNameOn)
+                                    eg.TriggerEvent(
+                                        self.eventNameOn,
+                                        None,
+                                        eg.plugins.Scheduler.plugin.eventPrefix
+                                    )
                                     self.finished.wait(self.cmdDelay)
                                 break
                             if index % 2 == 0:
                                 if init == 1:
                                     LogToFile(self.eventNameOff)
                                 for i in range(self.iNbrOfBurstsOFF):
-                                    eg.TriggerEvent(self.eventNameOff)
+                                    eg.TriggerEvent(
+                                        self.eventNameOff,
+                                        None,
+                                        eg.plugins.Scheduler.plugin.eventPrefix
+                                    )
                                     self.finished.wait(self.cmdDelay)
                                 break
 
@@ -511,16 +540,18 @@ class Scheduler(eg.PluginClass):
 
     def __start__(
         self,
-        fixedHolidays,
-        variableHolidays,
-        vacation_m,
-        emptyHouse_m        
+        fixedHolidays = "0101,0501,0606,1224,1225,1226,1231",
+        variableHolidays = "0106,0321,0324,0620",
+        vacation_m = False,
+        emptyHouse_m = False,
+        eventPrefix = "Main"
     ):
         print self.text.started
         self.vacation_m = vacation_m
         self.emptyHouse_m = emptyHouse_m
         self.fixedHolidays = fixedHolidays
         self.variableHolidays = variableHolidays
+        self.eventPrefix = eventPrefix
         if self.OkButtonClicked:
             self.RestartAllSchedulers()
         if self.restarted:
@@ -548,6 +579,11 @@ class Scheduler(eg.PluginClass):
         eg.actionThread.Func(trItem.SetArguments)(args) # __stop__ / __start__        
         eg.document.SetIsDirty()
         eg.document.Save()
+        eg.TriggerEvent(
+            'Restart threads',
+            None,
+            self.eventPrefix
+        )
 
 
     def SetVar(self, prm):
@@ -567,6 +603,11 @@ class Scheduler(eg.PluginClass):
                 trItem.SetArguments(args) # __stop__ / __start__      
                 eg.document.SetIsDirty()
                 eg.document.Save()
+                eg.TriggerEvent(
+                    'Restart threads',
+                    None,
+                    self.eventPrefix
+                )
             else:
                 eg.scheduler.AddTask(0.5, self.SetVarMain, trItem, args)
             print 'Vacation/Empty House modes changed for Scheduler: ', prm
@@ -661,6 +702,7 @@ class Scheduler(eg.PluginClass):
         variableHolidays = "0106,0321,0324,0620",
         vacation_m = False,
         emptyHouse_m = False,
+        eventPrefix = "Main",
         *args
     ):
         
@@ -738,6 +780,18 @@ class Scheduler(eg.PluginClass):
             (3,0)
         )
         mySizer.Add(variableHolidaysCtrl,(3,1))
+
+        eventPrefixCtrl = wx.TextCtrl(panel, -1, eventPrefix)
+        eventPrefixCtrl.SetInitialSize((100,-1))
+        mySizer.Add(
+            wx.StaticText(
+                panel,
+                -1,
+                self.text.eventPrefix
+            ),
+           (4,0)
+        )
+        mySizer.Add(eventPrefixCtrl,(4,1))
 
         vacation_mCtrl = wx.CheckBox(panel, -1, self.text.txtVacation_m)
         vacation_mCtrl.SetValue(vacation_m)
@@ -828,11 +882,13 @@ class Scheduler(eg.PluginClass):
             variableHolidays = variableHolidaysCtrl.GetValue()
             vacation_m = vacation_mCtrl.GetValue()
             emptyHouse_m = emptyHouse_mCtrl.GetValue()
+            eventPrefix = eventPrefixCtrl.GetValue()
             panel.SetResult(
                         fixedHolidays,
                         variableHolidays,
                         vacation_m,
                         emptyHouse_m,
+                        eventPrefix,
                         *args
             )
 

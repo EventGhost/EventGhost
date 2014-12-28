@@ -9,6 +9,11 @@
 ##############################################################################
 # Revision history:
 #
+# 2014-08-11  Added event to allow controlling restart of threads when
+#             changing 'empty house' and 'vacation' modes
+# 2014-08-04  Added default params to ensure correct startup
+#             Bugfix in MovingGhost feature: OFF is forced at sunrise if
+#             a running ghost is still ON
 # 2014-05-13  Added actions to set plugin configurations for
 #             - your location specific data including latitude, longitude, time zone
 #             and others
@@ -119,7 +124,7 @@ eg.RegisterPlugin(
     name = "SunTracker",
     guid = '{6AE8C0C3-93B4-4446-BC77-FDFA2528E531}',
     author = "Walter Kraembring",
-    version = "1.5.4",
+    version = "1.5.6",
     description =(
         'Triggers an event at sunset/sunrise and configurable dates & times'
         '<br\n><br\n>'
@@ -1445,6 +1450,10 @@ class SuntrackerThread(Thread):
                         if iRndm > 1:
                             iRndm -= 1
             
+                    if(trigTime <= csSS and trigTime >= csSR):
+                        if lightON:
+                            light = 0
+    
             if(
                 self.moving_Ghost_G
                 and not ConfigData.movingGhost
@@ -1549,22 +1558,22 @@ class Suntracker(eg.PluginClass):
 
     def __start__(
         self,
-        myLongitude,
-        myLatitude,
-        location_id,
-        fixedHolidays,
-        variableHolidays,
-        summerSeasonBegins,
-        summerSeasonEnds,
-        vacation_m,
-        sunStatus,
-        weatherStatus,
-        iTimeZone,
-        unit,
-        weatherUpdateRate,
-        emptyHouse_m,
-        eventPrefix,
-        weatherChange
+        myLongitude = "18.0000",
+        myLatitude = "59.2500",
+        location_id = "905335",
+        fixedHolidays = "0101,0501,0606,1224,1225,1226",
+        variableHolidays = "0106,0402,0405,0512,0522,0523,0625",
+        summerSeasonBegins = "--",
+        summerSeasonEnds = "--",
+        vacation_m = False,
+        sunStatus = True,
+        weatherStatus = True,
+        iTimeZone = '+01.00',
+        unit = "metric",
+        weatherUpdateRate = 5,
+        emptyHouse_m = False,
+        eventPrefix = "Main",
+        weatherChange = False
     ):
         print self.text.started
         self.myLongitude = myLongitude
@@ -1638,30 +1647,14 @@ class Suntracker(eg.PluginClass):
         eg.actionThread.Func(trItem.SetArguments)(args) # __stop__ / __start__        
         eg.document.SetIsDirty()
         eg.document.Save()
+        eg.TriggerEvent(
+            'Restart threads',
+            None,
+            self.eventPrefix
+        )
 
 
     def SetVar(self, prm):
-
-#            prm = {
-#                '0':myLongitude,
-#                '1':myLatitude,
-#                '2':location_id,
-#                '3':fixedHolidays,
-#                '4':variableHolidays,
-#                '5':summerSeasonBegins,
-#                '6':summerSeasonEnds,
-#                '7':self.plugin.vacation_m,
-#                '8':self.plugin.sunStatus,
-#                '9':self.plugin.weatherStatus,
-#                '10':iTimeZone,
-#                '11':self.plugin.unit,
-#                '12':self.plugin.weatherUpdateRate,
-#                '13':self.plugin.emptyHouse_m,
-#                '14':self.plugin.eventPrefix,
-#                '15':self.plugin.weatherChange
-#            }
-
-
         from threading import currentThread
         trItem = self.info.treeItem
         args = list(trItem.GetArguments())
@@ -1674,8 +1667,14 @@ class Suntracker(eg.PluginClass):
             trItem.SetArguments(args) # __stop__ / __start__      
             eg.document.SetIsDirty()
             eg.document.Save()
+            eg.TriggerEvent(
+                'Restart threads',
+                None,
+                self.eventPrefix
+            )
         else:
             eg.scheduler.AddTask(0.5, self.SetVarMain, trItem, args)
+        print 'Vacation/Empty House modes changed for SunTracker: ', prm
 
 
     def LogToFile(self, s, fName):
@@ -2101,7 +2100,6 @@ class Suntracker(eg.PluginClass):
         eventPrefix,
         weatherChange
     ):
-
         if self.suntrackerThreads.has_key(suntrackerName):
             t = self.suntrackerThreads[suntrackerName]
             if t.isAlive():
