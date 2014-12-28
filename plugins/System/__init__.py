@@ -20,7 +20,7 @@ import traceback
 eg.RegisterPlugin(
     name = "System",
     author = "Bitmonster & blackwind",
-    version = "1.1.8",
+    version = "1.1.9",
     description = (
         "Controls different aspects of your system, like sound card, "
         "graphics card, power management, et cetera."
@@ -79,6 +79,7 @@ from eg.cFunctions import SetIdleTime as HookSetIdleTime
 
 from ChangeDisplaySettings import ChangeDisplaySettings
 from Execute import Execute
+from Command import Command
 from DeviceChangeNotifier import DeviceChangeNotifier
 from PowerBroadcastNotifier import PowerBroadcastNotifier
 from PIL import Image
@@ -186,6 +187,7 @@ class System(eg.PluginBase):
         self.AddEvents(*EVENT_LIST)
 
         self.AddAction(Execute)
+        self.AddAction(Command)
         self.AddAction(OpenDriveTray)
         self.AddAction(SetClipboard)
         self.AddAction(WakeOnLan)
