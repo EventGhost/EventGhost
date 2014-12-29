@@ -24,7 +24,6 @@ from os import devnull
 
 def popen(cmd, si):
     return Popen(
-        #'call %s' % cmd,
         'cmd /C %s' % cmd,
         stdout = PIPE,
         stderr = open(devnull),
@@ -45,6 +44,7 @@ class Command(eg.ActionBase):
         eventSuffix = "WindowsCommand"
         disableParsing = "Disable parsing of string"
         additionalSuffix = "Additional Suffix:"
+        payload = "The result to use as payload"
 
 
     def __call__(
@@ -55,6 +55,7 @@ class Command(eg.ActionBase):
         additionalSuffix = "",
         disableParsingCommand = True,
         disableParsingAdditionalSuffix = True,
+        payload = False,
     ):
         prefix = self.plugin.info.eventPrefix
         suffix = self.text.eventSuffix
@@ -70,20 +71,23 @@ class Command(eg.ActionBase):
             proc = popen("chcp", si) #DOS console codepage
             data = proc.communicate()[0]
             if not proc.returncode:
-                cp = "cp" + data.split()[-1]
+                cp = "cp" + data.split()[-1].replace(".","")
                 proc = popen(command, si)
                 data = proc.communicate()[0]
                 if not proc.returncode:
                     data = data.decode(cp)
                     if triggerEvent:
-                        eg.TriggerEvent(
-                            suffix,
-                            prefix = prefix,
-                            payload = data.rstrip()
-                        )
+                        if payload:
+                            eg.TriggerEvent(
+                                suffix,
+                                prefix = prefix,
+                                payload = data.rstrip()
+                            )
+                        else:
+                            eg.TriggerEvent(suffix, prefix = prefix)
                     return data.rstrip()
         elif triggerEvent:
-            te = self.TriggerEvent(command, si, suffix, prefix)
+            te = self.TriggerEvent(command, si, suffix, prefix, payload)
             te.start()
         else:
             proc = popen(command, si)
@@ -91,30 +95,34 @@ class Command(eg.ActionBase):
 
     class TriggerEvent(Thread):
 
-        def __init__(self, cmd, si, suffix, prefix):
+        def __init__(self, cmd, si, suffix, prefix, pld):
             Thread.__init__(self)
             self.cmd = cmd
             self.si = si
             self.suffix = suffix
             self.prefix = prefix
+            self.pld = pld
 
         def run(self):
             proc = popen("chcp", self.si) #DOS console codepage
             data = proc.communicate()[0]
             if not proc.returncode:
-                cp = "cp" + data.split()[-1]
+                cp = "cp" + data.split()[-1].replace(".","")
                 proc = popen(self.cmd, self.si)
                 data = proc.communicate()[0]
                 if not proc.returncode:
                     data = data.decode(cp)
-                    eg.TriggerEvent(
-                        self.suffix,
-                        prefix = self.prefix,
-                        payload = data.rstrip()
-                    )
+                    if self.pld:
+                        eg.TriggerEvent(
+                            self.suffix,
+                            prefix = self.prefix,
+                            payload = data.rstrip()
+                        )
+                    else:
+                        eg.TriggerEvent(self.suffix, prefix = self.prefix)
 
 
-    def GetLabel(self, command='', *dummyArgs):
+    def GetLabel(self, command = '', *dummyArgs):
         return self.text.label % basename(command)
 
 
@@ -126,6 +134,7 @@ class Command(eg.ActionBase):
         additionalSuffix = "",
         disableParsingCommand = True,
         disableParsingAdditionalSuffix = False,
+        payload = False,
     ):
         panel = eg.ConfigPanel()
         text = self.text
@@ -142,6 +151,10 @@ class Command(eg.ActionBase):
             bool(triggerEvent),
             text.eventCheckbox
         )
+        pldCheckBox = panel.CheckBox(
+            bool(payload),
+            text.payload
+        )
         additionalSuffixCtrl = panel.TextCtrl(additionalSuffix)
         disableParsingAdditionalSuffixBox = panel.CheckBox(
             bool(disableParsingAdditionalSuffix),
@@ -156,9 +169,10 @@ class Command(eg.ActionBase):
         lowerSizer2.AddMany([
             ((eventCheckBox), (0, 0), (1, 1), wx.ALIGN_BOTTOM),
             ((1, 1), (0, 1), (1, 1), wx.EXPAND),
-            (stTxt, (0, 2), (1, 1), wx.ALIGN_BOTTOM),
-            (additionalSuffixCtrl, (1, 2)),
-            (disableParsingAdditionalSuffixBox, (2, 2)),
+            (pldCheckBox, (0, 2), (1, 1)),
+            (stTxt, (1, 2), (1, 1), wx.ALIGN_BOTTOM),
+            (additionalSuffixCtrl, (2, 2)),
+            (disableParsingAdditionalSuffixBox, (3, 2)),
             ((1, 1), (0, 3), (1, 1), wx.EXPAND),
         ])
         
@@ -168,9 +182,11 @@ class Command(eg.ActionBase):
             additionalSuffixCtrl.Enable(enable)
             disableParsingAdditionalSuffixBox.Enable(enable)
             disableParsingAdditionalSuffixBox.SetValue(enable)
+            pldCheckBox.Enable(enable)
             if not enable:
                 additionalSuffixCtrl.ChangeValue("")
             if evt:
+                pldCheckBox.SetValue(False)
                 evt.Skip()
         eventCheckBox.Bind(wx.EVT_CHECKBOX, onEventCheckBox)
         onEventCheckBox()
@@ -194,6 +210,7 @@ class Command(eg.ActionBase):
                 eventCheckBox.GetValue(),
                 additionalSuffixCtrl.GetValue(),
                 disableParsingCommandBox.GetValue(),
-                disableParsingAdditionalSuffixBox.GetValue()
+                disableParsingAdditionalSuffixBox.GetValue(),
+                pldCheckBox.GetValue()
             )
 
