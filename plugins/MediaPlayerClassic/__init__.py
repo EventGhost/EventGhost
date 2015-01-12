@@ -20,6 +20,8 @@
     
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 2.9 by Pako 2015-01-12 19:23 UTC+1
+#     - bugfix - Find_MPC() function now works also in 64-bit system
 # 2.8 by Pako 2014-12-26 10:38 UTC+1
 #     - bugfix - the function GetMpcHcPath() improved
 # 2.7 by Pako 2014-12-18 08:09 UTC+1
@@ -70,7 +72,7 @@
 eg.RegisterPlugin(
     name = "Media Player Classic",
     author = "MonsterMagnet",
-    version = "2.8",
+    version = "2.9",
     kind = "program",
     guid = "{DD75104D-D586-438A-B63D-3AD01A4D4BD3}",
     createMacrosOnAdd = True,
@@ -140,7 +142,7 @@ WM_CLOSE         = 16
 
 def Find_MPC():
     mpchc = eg.WindowMatcher(
-        u'mpc-hc.exe',
+        u'mpc-hc{*}.exe',
         None,
         u'MediaPlayerClassicW',
         None,
