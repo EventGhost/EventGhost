@@ -281,7 +281,7 @@ class TreeItem(object):
     def OnCmdCopy(self):
         data = self.GetXmlString()
         if data and wx.TheClipboard.Open():
-            wx.TheClipboard.SetData(wx.TextDataObject(data))
+            wx.TheClipboard.SetData(wx.TextDataObject(data.decode("utf-8")))
             wx.TheClipboard.Close()
 
 

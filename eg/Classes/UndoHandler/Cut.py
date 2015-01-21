@@ -31,7 +31,7 @@ class Cut(UndoHandlerBase):
             self.treePosition = eg.TreePosition(selection)
             data = selection.GetXmlString()
             selection.Delete()
-            return data
+            return data.decode("utf-8")
         data = eg.actionThread.Func(ProcessInActionThread)()
         self.document.AppendUndoHandler(self)
         if data and wx.TheClipboard.Open():
