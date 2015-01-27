@@ -726,17 +726,6 @@ class MinimizeToTray(eg.ActionBase):
     name = "Minimize to Tray"
     description = "Minimizes the specified window to the system tray."
 
-    #def OnClick(self, *dummyArgs):
-    #    # Remove our tray icon and restore the window
-    #    try:
-    #        BringHwndToFront(hwnd)
-    #        #wx.CallAfter(BringHwndToFront, hwnd)
-    #    except:
-    #        pass
-    #    finally:
-    #        trayIcon.RemoveIcon()
-    #        trayIcon.Destroy()
-
     def __call__(self, hwnd = None):
         # Gather info about the target window
         hwnd = GetBestHwnd(hwnd)
@@ -749,16 +738,6 @@ class MinimizeToTray(eg.ActionBase):
             trayIcon.SetIcon(icon, title)
             self.plugin.iconDict[hwnd] = trayIcon
 
-            #def OnClick(self, *dummyArgs):
-            #    # Remove our tray icon and restore the window
-            #    try:
-            #        BringHwndToFront(hwnd)
-            #    except:
-            #        pass
-            #    finally:
-            #        trayIcon.RemoveIcon()
-            #        trayIcon.Destroy()
-
             def OnClick2():
                 # Remove our tray icon and restore the window
                 try:
@@ -769,10 +748,10 @@ class MinimizeToTray(eg.ActionBase):
                 finally:
                     trayIcon.RemoveIcon()
                     trayIcon.Destroy()
+
             def OnClick(*dummyArgs):
                 wx.CallAfter(OnClick2)
                 
-
             trayIcon.Bind(wx.EVT_TASKBAR_LEFT_UP, OnClick)
             wx.CallAfter(ShowWindow, hwnd, 0)
 
