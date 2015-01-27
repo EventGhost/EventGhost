@@ -167,7 +167,7 @@ class Window(eg.PluginBase):
         self.AddAction(DockWindow)
         self.AddAction(MinimizeToTray)
 
-
+        self.iconDict = {}
 
 class BringToFront(eg.ActionBase):
     name = "Bring to Front"
@@ -177,8 +177,14 @@ class BringToFront(eg.ActionBase):
     def __call__(self):
         for hwnd in GetTargetWindows():
             BringHwndToFront(hwnd)
-
-
+            if self.plugin.iconDict.has_key(hwnd):
+                try:  
+                    trayIcon = self.plugin.iconDict[hwnd] 
+                    del self.plugin.iconDict[hwnd]
+                    trayIcon.RemoveIcon()
+                    trayIcon.Destroy()
+                except:
+                    pass
 
 class MoveTo(eg.ActionBase):
     name = "Move Absolute"
@@ -355,6 +361,14 @@ class Restore(eg.ActionBase):
     def __call__(self):
         for hwnd in GetTopLevelOfTargetWindows():
             ShowWindow(hwnd, SW_RESTORE)
+            if self.plugin.iconDict.has_key(hwnd):
+                try:  
+                    trayIcon = self.plugin.iconDict[hwnd]
+                    del self.plugin.iconDict[hwnd]
+                    trayIcon.RemoveIcon()
+                    trayIcon.Destroy()
+                except:
+                    pass
 
 
 
@@ -712,6 +726,17 @@ class MinimizeToTray(eg.ActionBase):
     name = "Minimize to Tray"
     description = "Minimizes the specified window to the system tray."
 
+    #def OnClick(self, *dummyArgs):
+    #    # Remove our tray icon and restore the window
+    #    try:
+    #        BringHwndToFront(hwnd)
+    #        #wx.CallAfter(BringHwndToFront, hwnd)
+    #    except:
+    #        pass
+    #    finally:
+    #        trayIcon.RemoveIcon()
+    #        trayIcon.Destroy()
+
     def __call__(self, hwnd = None):
         # Gather info about the target window
         hwnd = GetBestHwnd(hwnd)
@@ -722,15 +747,32 @@ class MinimizeToTray(eg.ActionBase):
         if hwnd in eg.WinApi.GetTopLevelWindowList(False) and isinstance(icon, wx._gdi.Icon):
             trayIcon = wx.TaskBarIcon()
             trayIcon.SetIcon(icon, title)
-            def OnClick(self, *dummyArgs):
+            self.plugin.iconDict[hwnd] = trayIcon
+
+            #def OnClick(self, *dummyArgs):
+            #    # Remove our tray icon and restore the window
+            #    try:
+            #        BringHwndToFront(hwnd)
+            #    except:
+            #        pass
+            #    finally:
+            #        trayIcon.RemoveIcon()
+            #        trayIcon.Destroy()
+
+            def OnClick2():
                 # Remove our tray icon and restore the window
                 try:
                     BringHwndToFront(hwnd)
+                    del self.plugin.iconDict[hwnd]
                 except:
                     pass
                 finally:
                     trayIcon.RemoveIcon()
                     trayIcon.Destroy()
+            def OnClick(*dummyArgs):
+                wx.CallAfter(OnClick2)
+                
+
             trayIcon.Bind(wx.EVT_TASKBAR_LEFT_UP, OnClick)
-            ShowWindow(hwnd, 0)
+            wx.CallAfter(ShowWindow, hwnd, 0)
 
