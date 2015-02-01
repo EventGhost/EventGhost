@@ -20,6 +20,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 0.2.11 by Pako 2015-02-01 18:41 UTC+1
+#     - The Back part is divided only by the first found dot
 # 0.2.10 by Pako 2014-12-23 15:59 UTC+1
 #     - bugfix - Test button on dialog "Show menu"
 # 0.2.9 by Pako 2012-01-18 11:13 UTC+1
@@ -44,7 +46,7 @@
 eg.RegisterPlugin(
     name = "OS Menu",
     author = "Pako",
-    version = "0.2.10",
+    version = "0.2.11",
     kind = "other",
     guid = "{FCF3C7A7-FBC1-444D-B768-9477521946DC}",
     description = u"""<rst>
@@ -110,6 +112,7 @@ class Text:
 2) If the string contains more than three parts, truncated to three parts.
 3) Truncating is performed by slicing the front parts
 4) The third part is applied either as a suffix or as a payload
+5) The Back part is divided only by the first found dot !
 
 Some examples of event string compilation in mode **"suffix"**:
 
@@ -1317,7 +1320,13 @@ class Menu(wx.Frame):
     def SendEventSel(self, sel):
         self.destroyMenu()
         evtString = self.prefix.split(".")
-        evtString.extend(self.choices[sel][1].split("."))
+        sp = self.choices[sel][1]
+        ix = sp.find(".")
+        if ix > -1:
+            evtString.append(sp[:ix])
+            evtString.append(sp[ix+1:])
+        else:
+            evtString.append(sp)
         evtString = evtString[-3:]
         if len(evtString) == 3:
             if self.mode:
