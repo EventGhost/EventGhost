@@ -33,7 +33,7 @@ from threading import Event, Thread
 eg.RegisterPlugin(
     name = "XBMC2",
     author = "Joni Boren",
-    version = "0.6.14",
+    version = "0.6.19",
     kind = "program",
     guid = "{8C8B850C-773F-4583-AAD9-A568262B7933}",
     canMultiLoad = True,
@@ -58,9 +58,17 @@ eg.RegisterPlugin(
     ),
 )
 
+"""
+'http://www.xbmc.org/'
+'http://wiki.xbmc.org/index.php?title=Web_Server_HTTP_API'
+http://xbmc.org/wiki/?title=Window_IDs
+http://xbmc.org/wiki/?title=Action_IDs#General_actions_available_throughout_most_of_XBMC
+'http://wiki.xbmc.org/?title=Action_IDs'
+'https://raw.githubusercontent.com/xbmc/xbmc/master/xbmc/input/ButtonTranslator.cpp'
+"""
 # from threading import Event, Thread
 
-# Windows availible in XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Window_IDs
+# Windows availible in XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Window_IDs http://kodi.wiki/view/Window_IDs
 """
 """
 
@@ -135,7 +143,7 @@ WINDOWS = (
     ("PlayerControls", "Player Controls", "WINDOW_DIALOG_PLAYER_CONTROLS", "Activatewindow(Playercontrols)"),
 )),
 )
-# actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#General_actions_available_throughout_most_of_XBMC
+# actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#General_actions_available_throughout_most_of_XBMC http://kodi.wiki/view/Action_IDs#General_actions_available_throughout_most_of_XBMC
 
 GENERAL_ACTIONS = (
 (eg.ActionGroup, "General", "General", None, (
@@ -174,7 +182,7 @@ GENERAL_ACTIONS = (
 )),
 )
 
-# actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#General_actions_available_while_video_or_music_are_playing
+# actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#General_actions_available_while_video_or_music_are_playing http://kodi.wiki/view/Action_IDs#General_actions_available_while_video_or_music_are_playing
 
 MEDIA_PLAYING_ACTIONS = (
 (eg.ActionGroup, "MediaPlaying", "Media playing", None, (
@@ -206,7 +214,7 @@ MEDIA_PLAYING_ACTIONS = (
 )),
 )
 
-# Actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#Actions_available_only_in_Music_and_Videos_windows_only
+# Actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#Actions_available_only_in_Music_and_Videos_windows_only http://kodi.wiki/view/Action_IDs#Actions_available_only_in_Music_and_Videos_windows_only
 
 PLAYLIST_ACTIONS = (
 (eg.ActionGroup, "Playlist", "Playlist", None, (
@@ -217,7 +225,7 @@ PLAYLIST_ACTIONS = (
 )),
 )
 
-# Actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#Actions_available_only_in_Full_Screen_Video
+# Actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#Actions_available_only_in_Full_Screen_Video http://kodi.wiki/view/Action_IDs#Actions_available_only_in_Full_Screen_Video
 
 FULLSCREEN_VIDEO_ACTIONS = (
 (eg.ActionGroup, "FullscreenVideo", "FullScreen Video", None, (
@@ -245,7 +253,7 @@ FULLSCREEN_VIDEO_ACTIONS = (
 )),
 )
 
-# Actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#Actions_available_during_a_picture_slideshow
+# Actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#Actions_available_during_a_picture_slideshow http://kodi.wiki/view/Action_IDs#Actions_available_during_a_picture_slideshow
 
 SLIDESHOW_ACTIONS = (
 (eg.ActionGroup, "PictureSlideshow", "Picture slideshow", None, (
@@ -267,7 +275,7 @@ SLIDESHOW_ACTIONS = (
     ("Rotate", "Rotate", "Rotate a picture in My Pictures", "rotate"),
 )),
 )
-# Actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#Actions_available_in_screen_calibration
+# Actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#Actions_available_in_screen_calibration http://kodi.wiki/view/Action_IDs#Actions_available_in_screen_calibration
 
 CALIBRATION_ACTIONS = (
 (eg.ActionGroup, "ScreenCalibration", "Screen calibration", None, (
@@ -278,7 +286,7 @@ CALIBRATION_ACTIONS = (
 )),
 )
 
-# Actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#Actions_available_in_the_File_Manager
+# Actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#Actions_available_in_the_File_Manager http://kodi.wiki/view/Action_IDs#Actions_available_in_the_File_Manager
 
 FILEMANAGER_ACTIONS = (
 (eg.ActionGroup, "FileManager", "File Manager", None, (
@@ -288,7 +296,7 @@ FILEMANAGER_ACTIONS = (
     ("Rename", "Rename", "Used in My Files to rename a file.", "rename"),
 )),
 )
-# Actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#Actions_available_in_the_on-screen_keyboard
+# Actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#Actions_available_in_the_on-screen_keyboard http://kodi.wiki/view/Action_IDs#Actions_available_in_the_on-screen_keyboard
 
 ON_SCREEN_KEYBOARD_ACTIONS = (
 (eg.ActionGroup, "On-screenKeyboard", "On-screen keyboard", None, (
@@ -300,7 +308,7 @@ ON_SCREEN_KEYBOARD_ACTIONS = (
 )),
 )
 
-# Actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#Actions_available_during_a_music_visualisation
+# Actions handled by XBMC.  For a list of all actions see: http://xbmc.org/wiki/?title=Action_IDs#Actions_available_during_a_music_visualisation http://kodi.wiki/view/Action_IDs#Actions_available_during_a_music_visualisation
 
 VISUALISATION_ACTIONS = (
 (eg.ActionGroup, "MusicVisualisation", "Music visualisation", None, (
@@ -423,7 +431,7 @@ UNCATEGORIZED_ACTIONS = (
 )),
 )
 
-# Remote buttons handled by XBMC.  For a list of all buttons see: http://wiki.xbmc.org/?title=Keymap.xml#Remote_Section
+# Remote buttons handled by XBMC.  For a list of all buttons see: http://wiki.xbmc.org/?title=Keymap.xml#Remote_Section http://kodi.wiki/view/Keymap.xml#Remotes
 
 REMOTE_BUTTONS = (
 (eg.ActionGroup, "Remote", "Remote", None, (
@@ -485,7 +493,7 @@ REMOTE_BUTTONS = (
     ("Remotelanguage", "Language", "", "language"),
 )),
 )
-# Remote buttons handled by XBMC.  For a list of all buttons see: http://wiki.xbmc.org/?title=Keymap.xml#Gamepad_Section
+# Remote buttons handled by XBMC.  For a list of all buttons see: http://wiki.xbmc.org/?title=Keymap.xml#Gamepad_Section http://kodi.wiki/view/Keymap.xml#Gamepads
 
 GAMEPAD_BUTTONS = (
 (eg.ActionGroup, "Gamepad", "Gamepad", None, (
@@ -520,7 +528,7 @@ GAMEPAD_BUTTONS = (
 )),
 )
 
-# Remote buttons handled by XBMC.  For a list of all buttons see: http://wiki.xbmc.org/?title=Keymap.xml#Custom_Joystick_Configuration
+# Remote buttons handled by XBMC.  For a list of all buttons see: http://wiki.xbmc.org/?title=Keymap.xml#Custom_Joystick_Configuration http://kodi.wiki/view/Keymap.xml#Custom_Joystick_Configuration
 
 APPLEREMOTE_BUTTONS = (
 (eg.ActionGroup, "AppleRemote", "AppleRemote", None, (
@@ -575,7 +583,7 @@ APPLEREMOTE_BUTTONS = (
 )),
 )
 
-# Keyboard keys handled by XBMC.  For a list of all keys see: http://wiki.xbmc.org/index.php?title=List_of_XBMC_keynames
+# Keyboard keys handled by XBMC.  For a list of all keys see: http://wiki.xbmc.org/index.php?title=List_of_XBMC_keynames http://kodi.wiki/view/List_of_XBMC_keynames
 
 KEYBOARD_KEYS = (
 (eg.ActionGroup, "Keyboard", "Keyboard", None, (
@@ -1133,14 +1141,22 @@ class JSONRPC(eg.ActionClass):
 		panel.sizer.Add(Bottom)
 		panel.Bind(wx.EVT_COMBOBOX, OnMethodChange)
 		while panel.Affirmed():
-			if 'jsonrpc' in json.loads(textControl2.GetValue()):
-				namespaceTemp, methodTemp = json.loads(textControl2.GetValue())['method'].split('.')
-				HBoxControl.SetValue(namespaceTemp)
-				comboBoxControl.Clear()
-				for i in jsonrpc.Methods[jsonrpc.Namespaces[HBoxControl.GetSelection()]]:
-					comboBoxControl.Append(i)
-				comboBoxControl.SetValue(methodTemp)
-				textControl2.SetValue(json.dumps(json.loads(textControl2.GetValue())['params']))
+			try:
+				jsonTemp = json.loads(textControl2.GetValue())
+			except:
+				pass
+			else:
+				if 'jsonrpc' in jsonTemp:
+					namespaceTemp, methodTemp = jsonTemp['method'].split('.')
+					HBoxControl.SetValue(namespaceTemp)
+					comboBoxControl.Clear()
+					for i in jsonrpc.Methods[jsonrpc.Namespaces[HBoxControl.GetSelection()]]:
+						comboBoxControl.Append(i)
+					comboBoxControl.SetValue(methodTemp)
+					try:
+						textControl2.SetValue(json.dumps(jsonTemp['params']))
+					except:
+						textControl2.SetValue('')
 
 			panel.SetResult(HBoxControl.GetValue()+'.'+comboBoxControl.GetValue(), textControl2.GetValue(), CheckBox.GetValue())
 
@@ -1219,7 +1235,7 @@ def ssdpSearch():
 		#	f.write(urllib2.urlopen(result).read())
 		doc = xml.dom.minidom.parse(urllib2.urlopen(result))
 		for modelName in doc.getElementsByTagName("modelName"):
-			if modelName.firstChild.data == 'XBMC Media Center':
+			if modelName.firstChild.data in ('XBMC Media Center', 'Kodi'):
 				XBMCResultList[urlparse(doc.getElementsByTagName("presentationURL")[0].firstChild.data).netloc] = doc.getElementsByTagName("friendlyName")[0].firstChild.data
 	return XBMCResultList
 
@@ -1280,6 +1296,17 @@ class XBMC2(eg.PluginClass):
         ActionsGroup.AddActionsFromList(VISUALISATION_ACTIONS, ActionPrototype)
         ActionsGroup.AddActionsFromList(SHUTDOWN_ACTIONS, ActionPrototype)
         ActionsGroup.AddActionsFromList(UNCATEGORIZED_ACTIONS, ActionPrototype)
+        try:
+          import os
+          with open(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2', 'actions.dat'), 'rb') as f:
+            import pickle
+            MANUALLYUPDATED_ACTIONS = [[eg.ActionGroup, "ManuallyUpdated", "Manually Updated", None, pickle.load(f)]]
+        except IOError:
+          #eg.PrintError('Failed to open: httpapi.dat')
+          pass
+        else:
+          ActionsGroup.AddActionsFromList(MANUALLYUPDATED_ACTIONS, ActionPrototype)
+
 #        ConfigurableGroup = ActionsGroup.AddGroup("Configurable", "Actions that have configurable settings")
 #        ConfigurableGroup.AddAction(UpdateLibrary)
         self.AddActionsFromList(WINDOWS, ActionPrototype)
@@ -1298,6 +1325,113 @@ class XBMC2(eg.PluginClass):
         self.stopBroadcastEvents = Event()
 
     def Configure(self, pluginConfig={}, *args):
+				def UpdateActions(event):
+					def GetActions():
+						URL = 'https://raw.githubusercontent.com/xbmc/xbmc/master/xbmc/input/ButtonTranslator.cpp'
+						request = urllib2.Request(URL)
+						#try:
+						w = urllib2.urlopen(request)
+						#except urllib2.HTTPError:
+						#	#Page = Cache[URL]['Page']
+						#	pass
+						#else:
+						Page1 = w.read().splitlines(False)
+						#print repr(Page1)
+
+						#print Page1.index("static const ActionMapping actions[] =")
+						#print Page1[Page1.index("static const ActionMapping actions[] ="):].index("};")
+						Page1a = Page1[Page1.index("static const ActionMapping actions[] =") + 2:Page1.index("};")]
+						#print Page1a[0]
+						#print len(Page1a)
+
+						ActionList = []
+						for i in Page1a:
+							try:
+								#print repr(i.split('"')[1])
+								ActionList.append(i.split('"')[1])
+							except IndexError:
+								pass
+						return ActionList
+
+					def GetActionDescriptions():
+						def XMLText(Node):
+							text = ''
+							#print "Info:", Node.nodeValue, Node.nodeName
+							try:
+								for n in Node.childNodes:
+									text += n.nodeValue if n.nodeName == '#text' else XMLText(n)
+								#print "Text:", text
+							except:
+								print "Try:", Node.nodeValue, Node.nodeName
+
+							return text
+
+						URL = 'http://wiki.xbmc.org/?title=Action_IDs'
+						#URL = 'http://kodi.wiki/view/Action_IDs'
+						request = urllib2.Request(URL)
+						w = urllib2.urlopen(request)
+
+						Page2 = w.read()
+
+						ActionDict = {}
+						for tr in xml.dom.minidom.parseString(Page2).getElementsByTagName("tr"):
+							#for code in xml.dom.minidom.parseString(Page2).getElementsByTagName("code"):
+							for code in tr.getElementsByTagName("code")[0:1]:
+								#code = tr.getElementsByTagName("code")[0]
+								#print "code:", code.nodeValue, code.nodeName
+								#print repr(code.childNodes.item(0).nodeValue)
+								if '2-9' in XMLText(code).strip():
+									for i in range(2, 10):
+										#print i
+										#print repr((XMLText(code).strip()[:-5] + str(i)).lower()),
+										#print repr(XMLText(code.parentNode.nextSibling.nextSibling).strip())
+										ActionDict[(XMLText(code).strip()[:-5] + str(i)).lower()] = ((XMLText(code).strip()[:-5] + str(i)), XMLText(code.parentNode.nextSibling.nextSibling).strip())
+								elif '0-9' in XMLText(code).strip():
+									for i in range(10):
+										#print i
+										#print repr((XMLText(code).strip()[:-5] + str(i)).lower()),
+										#print repr(XMLText(code.parentNode.nextSibling.nextSibling).strip())
+										ActionDict[(XMLText(code).strip()[:-5] + str(i)).lower()] = ((XMLText(code).strip()[:-5] + str(i)), XMLText(code.parentNode.nextSibling.nextSibling).strip())
+								else:
+									if XMLText(code).strip().lower() not in ActionDict:
+										#print repr(XMLText(code).strip().lower()),
+										#print repr(XMLText(code.parentNode.nextSibling.nextSibling).strip())
+										ActionDict[XMLText(code).strip().lower()] = (XMLText(code).strip(), XMLText(code.parentNode.nextSibling.nextSibling).strip())
+										#print "End"
+						return ActionDict
+
+					ActionList = GetActions()
+					ActionDict = GetActionDescriptions()
+
+					for a in GENERAL_ACTIONS[0][4] + MEDIA_PLAYING_ACTIONS[0][4] + PLAYLIST_ACTIONS[0][4] + FULLSCREEN_VIDEO_ACTIONS[0][4] + SLIDESHOW_ACTIONS[0][4] + CALIBRATION_ACTIONS[0][4] + FILEMANAGER_ACTIONS[0][4] + ON_SCREEN_KEYBOARD_ACTIONS[0][4] + VISUALISATION_ACTIONS[0][4] + SHUTDOWN_ACTIONS[0][4] + UNCATEGORIZED_ACTIONS[0][4]:
+						#print a
+						if a[3].lower() in ActionList:
+							ActionList.remove(a[3])
+						#else:
+						#	print repr(a)
+
+					EGActionList = []
+					for action in sorted(ActionList):
+						try:
+							ActionDict[action]
+							#print repr((action, ActionDict[action][0], ActionDict[action][1], action))
+							EGActionList.append((action, ActionDict[action][0], ActionDict[action][1], action))
+						except KeyError:
+							#print "Description missing:", action
+							pass
+					#print repr(EGActionList)
+
+					import os
+					if not os.path.exists(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2')):
+					#if not os.path.exists(os.path.join('EventGhost', 'plugins', 'XBMC2')):
+						os.makedirs(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2'))
+						#os.makedirs(os.path.join('EventGhost', 'plugins', 'XBMC2'))
+
+					with open(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2', 'actions.dat'), 'wb') as f:
+					#with open(os.path.join('EventGhost', 'plugins', 'XBMC2', 'actions.dat'), 'wb') as f:
+						import pickle
+						pickle.dump(EGActionList, f, 1)
+					print 'XBMC2: "Manually added" actions updated, restart EventGhost to use.'
 				def ConnectionTest(event):
 					print "XBMC2: Starting connection test, trying to connect to XBMC using", panel.combo_box_IP.GetValue()
 
@@ -1358,6 +1492,9 @@ class XBMC2(eg.PluginClass):
 				def initPanel(self):
 					self.combo_box_IP = wx.ComboBox(self, wx.ID_ANY, value=pluginConfig['XBMC']['ip']+':'+str(pluginConfig['XBMC']['port']), choices=["127.0.0.1:80"], style=wx.CB_DROPDOWN)
 					self.button_IPTest = wx.Button(self, wx.ID_ANY, "Test")
+
+					self.button_UpdateActions = wx.Button(self, wx.ID_ANY, "Update Actions")
+
 					self.button_Search = wx.Button(self, wx.ID_ANY, "Search")
 					self.label_Username = wx.StaticText(self, wx.ID_ANY, "Username")
 					self.text_ctrl_Username = wx.TextCtrl(self, wx.ID_ANY, pluginConfig['XBMC']['username'])
@@ -1385,6 +1522,9 @@ class XBMC2(eg.PluginClass):
 					self.checkbox_logRawEvents = wx.CheckBox(self, wx.ID_ANY, "Log raw events")
 					self.sizer_Events_staticbox = wx.StaticBox(self, wx.ID_ANY, "Event settings")
 					self.button_IPTest.Bind(wx.EVT_BUTTON, ConnectionTest)
+
+					self.button_UpdateActions.Bind(wx.EVT_BUTTON, UpdateActions)
+
 					self.button_Search.Bind(wx.EVT_BUTTON, SearchForXBMC)
 					setPanelProperties(self)
 					doPanelLayout(self)
@@ -1392,6 +1532,9 @@ class XBMC2(eg.PluginClass):
 					self.combo_box_IP.SetMinSize((147, 21))
 					self.combo_box_IP.SetToolTipString("IP address of the XBMC you want to control.")
 					self.button_IPTest.SetToolTipString("Test to connect to XBMC")
+
+					self.button_UpdateActions.SetToolTipString('Add any new XBMC actions to a category "Manually Updated". You need to restart EventGhost for the new actions to be visible')
+
 					self.button_Search.SetToolTipString("Search for any XBMCs that are running and reachable over the LAN.")
 					self.text_ctrl_Username.SetToolTipString("Username that are specified in XBMC")
 					self.text_ctrl_Password.SetToolTipString("Password that are specified in XBMC")
@@ -1461,6 +1604,9 @@ class XBMC2(eg.PluginClass):
 					sizer_Broadcast.Add(sizer_BroadcastEnable, 1, wx.EXPAND, 0)
 					sizer_Events.Add(sizer_Broadcast, 1, wx.EXPAND, 0)
 					sizer_Events.Add(self.checkbox_logRawEvents, 0, 0, 0)
+
+					sizer_Events.Add(self.button_UpdateActions, 0, 0, 0)
+
 					self.sizer.Add(sizer_Events, 1, wx.EXPAND, 0)
 					self.sizer.Fit(self)
 
@@ -1630,41 +1776,48 @@ class XBMC2(eg.PluginClass):
 							print 'XBMC2: SSDP: Wait for event: Timeout.'
 						pass
 					else:
-						if "NOTIFY * HTTP/1.1" == headers['Start-line']:
-							if headers['USN'].split(':', 2)[1] not in USNCache:
-								try:
-									doc = xml.dom.minidom.parse(urllib2.urlopen(headers['LOCATION']))
-								except:
-									continue
-								else:
-									for modelName in doc.getElementsByTagName("modelName"):
-										if modelName.firstChild.data == 'XBMC Media Center':
-											if debug:
-												with open(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2', 'ssdp.log'), 'a') as f:
-													f.write(data)
-													f.write(urllib2.urlopen(headers['LOCATION']).read())
-												print 'XBMC2: SSDP modelName:', modelName.firstChild.data
-											#from urlparse import urlparse
-											if self.pluginConfig['XBMC']['ip'] == '127.0.0.1':
-												for ip in interface_addresses():
-													#if urlparse(doc.getElementsByTagName("presentationURL")[0].firstChild.data).netloc == ip+':'+str(self.pluginConfig['XBMC']['port']):
-													if urlparse(doc.getElementsByTagName("presentationURL")[0].firstChild.data).netloc.split(":")[0] == ip:
-														try:
-															if urlparse(doc.getElementsByTagName("presentationURL")[0].firstChild.data).netloc.split(":")[1] == str(self.pluginConfig['XBMC']['port']):
-																XBMCDetected = True
-																break
-															else:
-																continue
-														except:
-															pass
-														XBMCDetected = True
-														break
-											else:
+						try:
+							if "NOTIFY * HTTP/1.1" == headers['Start-line']:
+								if headers['USN'].split(':', 2)[1] not in USNCache:
+									try:
+										doc = xml.dom.minidom.parse(urllib2.urlopen(headers['LOCATION']))
+									except:
+										continue
+									else:
+										for modelName in doc.getElementsByTagName("modelName"):
+											if modelName.firstChild.data in ('XBMC Media Center', 'Kodi'):
 												if debug:
-													print 'XBMC2: SSDP address:', urlparse(doc.getElementsByTagName("presentationURL")[0].firstChild.data).netloc
-												if urlparse(doc.getElementsByTagName("presentationURL")[0].firstChild.data).netloc == self.pluginConfig['XBMC']['ip']+':'+str(self.pluginConfig['XBMC']['port']):
-													XBMCDetected = True
-									USNCache.append(headers['USN'].split(':', 2)[1])
+													with open(os.path.join(eg.folderPath.RoamingAppData, 'EventGhost', 'plugins', 'XBMC2', 'ssdp.log'), 'a') as f:
+														f.write(data)
+														f.write(urllib2.urlopen(headers['LOCATION']).read())
+													print 'XBMC2: SSDP modelName:', modelName.firstChild.data
+												#from urlparse import urlparse
+												if self.pluginConfig['XBMC']['ip'] == '127.0.0.1':
+													for ip in interface_addresses():
+														#if urlparse(doc.getElementsByTagName("presentationURL")[0].firstChild.data).netloc == ip+':'+str(self.pluginConfig['XBMC']['port']):
+														if urlparse(doc.getElementsByTagName("presentationURL")[0].firstChild.data).netloc.split(":")[0] == ip:
+															try:
+																if urlparse(doc.getElementsByTagName("presentationURL")[0].firstChild.data).netloc.split(":")[1] == str(self.pluginConfig['XBMC']['port']):
+																	XBMCDetected = True
+																	break
+																else:
+																	continue
+															except:
+																pass
+															XBMCDetected = True
+															break
+												else:
+													if debug:
+														print 'XBMC2: SSDP address:', urlparse(doc.getElementsByTagName("presentationURL")[0].firstChild.data).netloc
+													if urlparse(doc.getElementsByTagName("presentationURL")[0].firstChild.data).netloc == self.pluginConfig['XBMC']['ip']+':'+str(self.pluginConfig['XBMC']['port']):
+														XBMCDetected = True
+										USNCache.append(headers['USN'].split(':', 2)[1])
+						except KeyError:
+							if debug:
+								print 'XBMC2: SSDP: "Start-line" test failed: Content of headers:', headers
+								import sys
+								eg.PrintError('JSON-RPC connect error: ' + str(sys.exc_info()))
+
 				sock.close()
 				if debug:
 					print 'XBMC2: SSDP is off'
