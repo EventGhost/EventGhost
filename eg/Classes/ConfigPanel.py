@@ -103,7 +103,7 @@ class ConfigPanel(wx.PyPanel, eg.ControlProviderMixin):
         self.Bind(wx.EVT_DATE_CHANGED, OnEvent)
         self.Bind(eg.EVT_VALUE_CHANGED, OnEvent)
         self.Bind(wx.EVT_CHECKLISTBOX, OnEvent)
-
+        self.Bind(wx.EVT_SCROLL, OnEvent)
 
     def Affirmed(self):
         """

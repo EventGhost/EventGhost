@@ -89,6 +89,8 @@ class Slider(wx.Window):
             self.valueLabelCtrl.SetLabel(self.valueLabel % {"1": value})
         else:
             self.valueLabelCtrl.SetLabel(self.levelCallback(value))
+        if dummyEvent:
+            dummyEvent.Skip()
 
 
     def GetValue(self):
