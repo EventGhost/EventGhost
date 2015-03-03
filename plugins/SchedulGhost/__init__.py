@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-version="0.1.12"
+version="0.1.13"
 
 # plugins/SchedulGhost/__init__.py
 #
@@ -22,6 +22,8 @@ version="0.1.12"
 #
 # Revision history:
 # -----------------
+# 0.1.13 by Pako 2015-03-03 17:51 UTC+1
+#     - Immediate start schedule now has no effect on the scheduled run
 # 0.1.12 by Sem;colon 2014-11-26 22:00 UTC+1
 #     - added option "Update 'Last run' field when executed" to "Run schedule immediately"
 # 0.1.11 by Pako 2014-06-08 10:00 UTC+1
@@ -2687,19 +2689,35 @@ class RunScheduleImmediately(eg.ActionBase):
         if schedule in tmpLst:
             ix = tmpLst.index(schedule)
             sched = self.plugin.data[ix]
-            if sched[0] or self.value:
-                for sch in eg.scheduler.__dict__['heap']:
-                    if sch[1] == self.plugin.SchedulGhostScheduleRun:
-                        if sch[2][0] == sched[1]:
-                            eg.scheduler.CancelTask(sch)
-                            self.plugin.updateLogFile(self.plugin.text.canc % sch[2][0])
-                            break
-                next = self.plugin.Execute(sched, False, mktime(localtime()), True)
+            if sched[0] or self.value: #enabled or force
+                eg.TriggerEvent(
+                    sched[6],
+                    sched[8],
+                    sched[5]
+                )
+                span = sched[3][1]
+                if span != "00:00:00":
+                    stopTicks = mktime(localtime()) + int(span[6:])\
+                        + 60 * int(span[3:5]) + 3600 * int(span[:2])
+                    eg.scheduler.AddShortTaskAbsolute(
+                        stopTicks,
+                        eg.TriggerEvent,
+                        sched[7],
+                        sched[8],
+                        sched[5]
+                    )                 
+                #for sch in eg.scheduler.__dict__['heap']:
+                #    if sch[1] == self.plugin.SchedulGhostScheduleRun:
+                #        if sch[2][0] == sched[1]:
+                #            eg.scheduler.CancelTask(sch)
+                #            self.plugin.updateLogFile(self.plugin.text.canc % sch[2][0])
+                #            break
+                #next = self.plugin.Execute(sched, False, mktime(localtime()), True)
                 if update:
                     last = str(dt.now())[:19]
                     self.plugin.data[ix][4] = last
-                next = next[:19] if next else self.plugin.text.none
-                self.plugin.updateLogFile(self.text.immedRun % (sched[1], next))
+                #next = next[:19] if next else self.plugin.text.none
+                #self.plugin.updateLogFile(self.text.immedRun % (sched[1], next))
         else:
             self.PrintError(self.text.notFound % schedule)
             return self.text.notFound % schedule
