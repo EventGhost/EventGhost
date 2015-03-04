@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-version = "3.4"
+version = "3.7"
 #
 # This file is part of EventGhost.
-# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+# Copyright (C) 2005-2015 Lars-Peter Voss <bitmonster@eventghost.org>
 #
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
@@ -18,6 +18,15 @@ version = "3.4"
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+
+# 3.7 by krambriw & Pako 2015-03-04 07:00 UTC+1
+#     - treatment of some unexpected communication status WebSocket client
+# 3.6 by Pako 2015-03-02 09:41 UTC+1
+#     - message can now include the word Ping
+# 3.5 by krambriw 2014-02-26
+#     - Added support for client initiated high level ping/pong
+#     - Detecting 'WebSocket Protocol Error' and 'Masked frame from server' errors in handle_one_request function
+#       to improve session keep alive
 # 3.4 by Pako 2014-12-28 11:30 UTC+1
 #     - WebSocket client actions added
 # 3.3 by Pako 2014-11-30 06:57 UTC+1
@@ -73,7 +82,7 @@ import eg
 
 eg.RegisterPlugin(
     name = "Webserver",
-    author = "Bitmonster & Pako & Sem;colon",
+    author = "Bitmonster & Pako & Sem;colon & krambriw",
     version = version,
     guid = "{E4305D8E-A3D3-4672-B06E-4EA1F0F6C673}",
     description = ur'''<rst>
@@ -156,7 +165,8 @@ METHODS = (
     "GetChangedValues",
     "TriggerEnduringEvent",
     "RepeatEnduringEvent",
-    "EndLastEvent"
+    "EndLastEvent",
+    "Ping"
 )
 #===============================================================================
 
@@ -902,22 +912,37 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
             pass
         try:
             data = loads(message)
-        except: 
-            self.plugin.TriggerEvent(
-                u"ClientMessage.%s" % message,
-                payload = (self.clAddr, message)
-            )
+        except:
+            if message.find('WebSocket Protocol Error') > -1:
+                eg.PrintNotice('message: '+message)
+                self.on_ws_closed()
+            elif message.find('Masked frame from server') > -1:
+                eg.PrintNotice('message: '+message)
+                self.on_ws_closed()
+            else:
+                self.plugin.TriggerEvent(
+                    u"ClientMessage.%s" % message,
+                    payload = (self.clAddr, message)
+                )
             return
         # JSON request
-        try:
-            methodName = data["method"]
-        except:
+        if not isinstance(data, dict) or "method" not in data.iterkeys():
             self.plugin.TriggerEvent(
                 "ClientMessage",
                 payload = (self.clAddr, data)
             )
         else:
+            methodName = data["method"]
             if methodName in METHODS:
+                if methodName == "Ping":
+                    id = data["id"] if "id" in data else -1
+                    content = dumps({
+                        "method":"Pong", 
+                        "id":id,
+                        "client_address":self.clAddr
+                    })
+                    self.plugin.ServerSendMessage(self.clAddr, content)
+                    return
                 try:
                     args = data.get("args", [])
                     kwargs = data.get("kwargs", {})
@@ -938,12 +963,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
                 )        
 
     def on_ws_closed(self):
-        #self.send_close()
         self.handshake_done = False
-        #self.plugin.TriggerEvent(
-        #    self.plugin.text.wsClientDisconn,
-        #    payload = [self.clAddr]
-        #)
         if self.clAddr in self.plugin.wsClients and self.close_connection == 0:
             self.send_close()
             self.close_connection = 1
@@ -967,11 +987,14 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 
     def handle_one_request(self):
         if not self.handshake_done:
-            #try:
-            #    SimpleHTTPRequestHandler.handle_one_request(self)
-            #except:
-            #    pass
-            SimpleHTTPRequestHandler.handle_one_request(self)
+            try:
+                SimpleHTTPRequestHandler.handle_one_request(self)
+            except Exception, exc:
+                eg.PrintError(
+                    "Webserver: Exception on handle_one_request:", 
+                    unicode(exc)
+                )
+            #SimpleHTTPRequestHandler.handle_one_request(self)
         else: # WebSocket read next message
             try:
                 opcode = self.rfile.read(1)
@@ -1001,32 +1024,52 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
             _pong = 0xa
 
             opcode = ord(opcode) & 0x0F
+
+### krambriw
+            #if decoded.find('Ping') > -1:
+            #    opcode = _ping
+            #if decoded.find('WebSocket Protocol Error') > -1:
+            #    opcode = _close
+            #    eg.PrintNotice('decoded: '+decoded)
+            #    decoded = 'WebSocket Protocol Error'
+            #if decoded.find('Masked frame from server') > -1:
+            #    opcode = _close
+            #    eg.PrintNotice('decoded: '+decoded)
+            #    decoded = 'Masked frame from server'
+            
             # close
             if opcode == _close:
-                self.on_ws_closed()
+               eg.PrintNotice('closing: '+decoded)
+               self.on_ws_closed()
             # ping
             elif opcode == _ping:
-                pass
+                #print 'ping'
+                resp = ['Pong', self.client_address]
+                self.write_message(repr(resp)) 
             # pong
             elif opcode == _pong:
                 pass
             # data
             elif opcode == _stream or opcode == _text or opcode == _binary:
                 self.on_ws_message(decoded)
-
-
+###
+                
+              
     def write_message(self, message):
-        self.request.send(chr(129))
-        length = len(message)
-        if length <= 125:
-            self.request.send(chr(length))
-        elif length >= 126 and length <= 65535:
-            self.request.send(chr(126))
-            self.request.send(pack(">H", length))
-        else:
-            self.request.send(chr(127))
-            self.request.send(pack(">Q", length))
-        self.request.send(message)
+        try:
+            self.request.send(chr(129))
+            length = len(message)
+            if length <= 125:
+                self.request.send(chr(length))
+            elif length >= 126 and length <= 65535:
+                self.request.send(chr(126))
+                self.request.send(pack(">H", length))
+            else:
+                self.request.send(chr(127))
+                self.request.send(pack(">Q", length))
+            self.request.send(message)
+        except:
+            pass
 
 
     def handshake(self):
@@ -3727,8 +3770,10 @@ class Webserver(eg.PluginBase):
                 client.write_message(message)
             except Exception, exc:
                 if exc.args[0] in (10053, 10054, 10060):
-                    del self.wsClients[client]
-                    del self.wsClientsTime[client]
+                    if client in self.wsClients:
+                        del self.wsClients[client]
+                    if client in self.wsClientsTime:
+                        del self.wsClientsTime[client]
                     eg.PrintNotice(self.text.forcDel % repr(client))
                     self.TriggerEvent(
                         self.text.wsClientDisconn,
