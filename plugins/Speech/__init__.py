@@ -20,6 +20,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 2.1 by Pako 2015-03-09 19:06 UTC+1
+#     - added option for selection of output device
 # 2.0 by Pako 2015-03-09 18:14 UTC+1
 #     - added event after speaking finished
 #     - {DATE} context is working properly
@@ -31,10 +33,11 @@ eg.RegisterPlugin(
     name = "Speech",
     author = "MonsterMagnet",
     guid = "{76A1638D-1D7D-4582-A726-A17B1A6FC723}",
-    version = "2.0",
+    version = "2.1",
     description = (
         "Uses the Text-To-Speech service of the Microsoft Speech API (SAPI)."
     ),
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=9&t=6828",
     icon = (
         "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAA7DAAAOwwHH"
         "b6hkAAADh0lEQVR4nIXSW0yTBxgG4P/GxRkZ2+gWtR2YCBoOlsL/87fQg4WldkLHqQZo"
@@ -86,6 +89,7 @@ class Text:
     textBoxLabel = "Text"
     suffix = "SpeakingFinished"
     addSuffix = "Additional event suffix:"
+    device = "Output device:"
     
 
 class CustomSlider(wx.Window):
@@ -173,7 +177,8 @@ class Speaker(Thread):
         voiceName,
         rate,
         volume,
-        suff
+        suff,
+        device
         ):
         super(Speaker, self).__init__()
         self.plugin = plugin
@@ -182,6 +187,7 @@ class Speaker(Thread):
         self.rate = rate
         self.volume = volume
         self.suff = suff
+        self.device = device
         self.start()
 
     def run(self):
@@ -193,11 +199,17 @@ class Speaker(Thread):
             self.plugin.PrintError(self.plugin.text.errorCreate)
             return
         vcs = tts.GetVoices()
-        voices = [(voice.GetDescription(),voice) for voice in vcs]
-        voices.sort()
+        voices = [(voice.GetDescription(), voice) for voice in vcs]
         tmp = [item[0] for item in voices]
         ix = tmp.index(self.voiceName) if self.voiceName in tmp else 0
         tts.Voice = voices[ix][1]
+        
+        devs = tts.GetAudioOutputs()
+        devices = [(dev.GetDescription(), dev) for dev in devs]
+        tmp = [item[0] for item in devices]
+        ix = tmp.index(self.device) if self.device in tmp else 0
+        tts.AudioOutput = devices[ix][1]       
+        
         tts.Rate = self.rate
         tts.Volume = self.volume        
         tts.Speak(self.text,0) 
@@ -219,7 +231,7 @@ class Speech(eg.PluginClass):
 class TextToSpeech(eg.ActionClass):
     text = Text
     
-    def __call__(self, voiceName, rate, voiceText, suff, volume):
+    def __call__(self, voiceName, rate, voiceText, suff, volume, device = None):
         self.suff = suff if suff != 0 else ""            
 
         def filterFunc(s):
@@ -245,11 +257,12 @@ class TextToSpeech(eg.ActionClass):
             voiceName,
             rate,
             volume,
-            suff
+            suff,
+            device
         )
      
     
-    def GetLabel(self, voiceName, rate, voiceText, suff, volume):
+    def GetLabel(self, voiceName, rate, voiceText, suff, volume, device = None):
         return self.text.label % voiceText
    
 
@@ -259,9 +272,9 @@ class TextToSpeech(eg.ActionClass):
         rate=0,
         voiceText="", 
         suff="", 
-        volume=100
+        volume=100,
+        device = None
     ):
-        print "voiceName=",voiceName
         suff = suff if suff != 0 else "" 
         text = self.text
         panel = eg.ConfigPanel()
@@ -289,11 +302,19 @@ class TextToSpeech(eg.ActionClass):
             self.PrintError(self.text.errorCreate)
             return
         voices = [voice.GetDescription() for voice in VoiceObj.GetVoices()]
-        voices.sort()
+        devs = [dev.GetDescription() for dev in VoiceObj.GetAudioOutputs()]
         del VoiceObj
+
         voiceChoice = wx.Choice(panel, -1, choices=voices)
         voiceName = voiceName if voiceName  else voices[0]
         voiceChoice.SetStringSelection(voiceName)
+        devChoice = wx.Choice(panel, -1, choices=devs)
+        devName = device if device  else devs[0]
+        devChoice.SetStringSelection(devName)
+        
+        
+        
+        
 
         rateCtrl = CustomSlider(
             panel,
@@ -338,6 +359,8 @@ class TextToSpeech(eg.ActionClass):
             (
                 (panel.StaticText(text.labelVoice), 0, ACV|wx.BOTTOM, 10),
                 (voiceChoice, 0, wx.EXPAND|wx.BOTTOM, 10),
+                (panel.StaticText(text.device), 0, ACV|wx.BOTTOM, 10),
+                (devChoice, 0, wx.EXPAND|wx.BOTTOM, 10),
                 (panel.StaticText(text.labelRate), 0, ACV),
                 (rateCtrl, 0, wx.EXPAND),
                 (panel.StaticText(text.labelVolume), 0, ACV),
@@ -361,6 +384,7 @@ class TextToSpeech(eg.ActionClass):
                 rateCtrl.GetValue(), 
                 textCtrl.GetValue(), 
                 suffCtrl.GetValue(),
-                volumeCtrl.GetValue()
+                volumeCtrl.GetValue(),
+                devChoice.GetStringSelection()
             )
 
