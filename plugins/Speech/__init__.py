@@ -17,13 +17,21 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Changelog (in reverse chronological order):
+# -------------------------------------------
+# 2.0 by Pako 2015-03-09 18:14 UTC+1
+#     - added event after speaking finished
+#     - {DATE} context is working properly
+# 1.0 by MonsterMagnet
+#     - initial version
 
 
 eg.RegisterPlugin(
     name = "Speech",
     author = "MonsterMagnet",
     guid = "{76A1638D-1D7D-4582-A726-A17B1A6FC723}",
-    version = "1.0." + "$LastChangedRevision: 1093 $".split()[1],
+    version = "2.0",
     description = (
         "Uses the Text-To-Speech service of the Microsoft Speech API (SAPI)."
     ),
@@ -52,9 +60,33 @@ eg.RegisterPlugin(
 )
 
 
-from win32com.client import Dispatch
+from win32com.client import Dispatch, DispatchWithEvents
 from time import strftime
+from threading import Thread
+from datetime import datetime as dt
+import pythoncom
 
+
+class Text:
+    name = "Text to speech"
+    description = "Uses the Microsoft Speech API (SAPI) to speak a text."
+    label = "Speak: %s"
+    errorCreate = "Cannot create voice object"
+    buttonInsertTime = "Insert time"    
+    buttonInsertDate = "Insert date"
+    normal = "Normal"
+    slow = "Slow"
+    fast = "Fast"
+    silent = "Silent"
+    loud = "Loud"
+    labelVoice = "Voice:"
+    labelRate = "Rate:"
+    labelVolume = "Volume:"
+    voiceProperties = "Voice properties"
+    textBoxLabel = "Text"
+    suffix = "SpeakingFinished"
+    addSuffix = "Additional event suffix:"
+    
 
 class CustomSlider(wx.Window):
     
@@ -125,83 +157,99 @@ class CustomSlider(wx.Window):
     def SetValue(self):
         self.slider.SetValue()
         
-        
-        
+
+#class SpeechEvents:
+#    def OnEndStream(self, StreamNumber, StreamPosition):
+#        print 'OnEndStream: StreamNumber=%s, StreamPosition=%s' % (
+#            StreamNumber,
+#            StreamPosition
+#        )
+
+class Speaker(Thread):
+    def __init__(
+        self,
+        plugin,
+        text,
+        voiceName,
+        rate,
+        volume,
+        suff
+        ):
+        super(Speaker, self).__init__()
+        self.plugin = plugin
+        self.text = text
+        self.voiceName = voiceName
+        self.rate = rate
+        self.volume = volume
+        self.suff = suff
+        self.start()
+
+    def run(self):
+        try:
+            pythoncom.CoInitializeEx(pythoncom.COINIT_MULTITHREADED)
+            #tts = DispatchWithEvents("SAPI.SpVoice.1", SpeechEvents)
+            tts = Dispatch('SAPI.SpVoice')
+        except:
+            self.plugin.PrintError(self.plugin.text.errorCreate)
+            return
+        vcs = tts.GetVoices()
+        voices = [(voice.GetDescription(),voice) for voice in vcs]
+        voices.sort()
+        tmp = [item[0] for item in voices]
+        ix = tmp.index(self.voiceName) if self.voiceName in tmp else 0
+        tts.Voice = voices[ix][1]
+        tts.Rate = self.rate
+        tts.Volume = self.volume        
+        tts.Speak(self.text,0) 
+        suffix = self.plugin.text.suffix if self.suff == "" else "%s.%s" % (
+            self.plugin.text.suffix,
+            self.suff
+        )
+        self.plugin.TriggerEvent(suffix)
+
+
 class Speech(eg.PluginClass):
-    
+    text = Text    
+
     def __init__(self):
         self.AddAction(TextToSpeech)
 
-
-    def __start__(self):
-        try:
-            self.VoiceObj = Dispatch("Sapi.SpVoice")
-        except:
-            self.PrintError(self.text.errorCreate)
-            return
-        
-        # enumerate all available voices and store them in a dict with their
-        # name as key
-        voices = {}
-        for voice in self.VoiceObj.GetVoices():
-            voices[voice.GetDescription()] = voice
-        self.voices = voices
-
-
-
-class Text:
-    name = "Text to speech"
-    description = "Uses the Microsoft Speech API (SAPI) to speak a text."
-    label = "Speak: %s"
-    errorNoVoice = "Voice with name %s is not available"
-    errorCreate = "Cannot create voice object"
-    buttonInsertTime = "Insert time"    
-    buttonInsertDate = "Insert date"
-    normal = "Normal"
-    slow = "Slow"
-    fast = "Fast"
-    silent = "Silent"
-    loud = "Loud"
-    labelVoice = "Voice:"
-    labelRate = "Rate:"
-    labelVolume = "Volume:"
-    voiceProperties = "Voice properties"
-    textBoxLabel = "Text"
-    
     
     
 class TextToSpeech(eg.ActionClass):
     text = Text
     
-    def __call__(self, voiceName, rate, voiceText, time, volume):
-            
-        voiceObj = self.plugin.VoiceObj
-        try:
-            voiceObj.Voice = self.plugin.voices[voiceName]
-        except:
-            self.PrintError (self.text.errorNoVoice % voiceName)
-        voiceObj.Rate = rate
-        voiceObj.Volume = volume
+    def __call__(self, voiceName, rate, voiceText, suff, volume):
+        self.suff = suff if suff != 0 else ""            
+
         def filterFunc(s):
             if s == "DATE":
-                return '</context><context ID="time">' + strftime("%x") + '</context><context>'
+                return '</context><context ID="date_ymd">' + str(dt.now().date()) + '</context><context>'
             elif s == "TIME":
                 return '</context><context ID="time">' + strftime("%X") + '</context><context>'
             else:
                 return None
                 
         voiceText = eg.ParseString(voiceText, filterFunc)
-        voiceObj.Speak("<context>" + voiceText + "</context>", 1)
-        print repr(voiceText)
-        if time == 1:
-            voiceObj.Speak(strftime("%X"), 1)
-        elif time == 2:
-            voiceObj.Speak(strftime("%x"), 1)
-        elif time == 3:
-            voiceObj.Speak(strftime("%x %X"), 1)
-       
+        voiceText = "<context>" + voiceText + "</context>"
+        if voiceText.startswith('<context></context>'):
+            voiceText = voiceText[19:]
+        voiceText = voiceText.replace(
+            '</context><context></context>',
+            '</context>'
+        )      
+        
+        sp=Speaker(
+            self.plugin,
+            voiceText,
+            voiceName,
+            rate,
+            volume,
+            suff
+        )
+     
     
-    def GetLabel(self, voiceName, rate, voiceText, time, volume):
+    def GetLabel(self, voiceName, rate, voiceText, suff, volume):
         return self.text.label % voiceText
    
 
@@ -210,14 +258,17 @@ class TextToSpeech(eg.ActionClass):
         voiceName=None, 
         rate=0,
         voiceText="", 
-        time=0, 
+        suff="", 
         volume=100
     ):
+        print "voiceName=",voiceName
+        suff = suff if suff != 0 else "" 
         text = self.text
         panel = eg.ConfigPanel()
         plugin = self.plugin
             
         textCtrl = wx.TextCtrl(panel, -1, voiceText)           
+        suffCtrl = wx.TextCtrl(panel, -1, suff)           
        
         insertTimeButton = wx.Button(panel, -1, text.buttonInsertTime)
         def OnButton(event):
@@ -232,18 +283,17 @@ class TextToSpeech(eg.ActionClass):
         insertDateButton.Bind(wx.EVT_BUTTON, OnButton)
         
         try:
-            VoiceObj = self.plugin.VoiceObj
-            allVoices = self.plugin.voices.keys()
-            allVoices.sort()
-            try:
-                voiceIndex = allVoices.index(voiceName)
-            except:
-                voiceIndex = 0
+            #self.VoiceObj = DispatchWithEvents("SAPI.SpVoice.1", SpeechEvents)
+            VoiceObj = Dispatch("Sapi.SpVoice")
         except:
-            voiceIndex = 0
-            allVoices = []
-        voiceChoice = wx.Choice(panel, -1, choices=allVoices)
-        voiceChoice.Select(voiceIndex)
+            self.PrintError(self.text.errorCreate)
+            return
+        voices = [voice.GetDescription() for voice in VoiceObj.GetVoices()]
+        voices.sort()
+        del VoiceObj
+        voiceChoice = wx.Choice(panel, -1, choices=voices)
+        voiceName = voiceName if voiceName  else voices[0]
+        voiceChoice.SetStringSelection(voiceName)
 
         rateCtrl = CustomSlider(
             panel,
@@ -282,7 +332,7 @@ class TextToSpeech(eg.ActionClass):
             (sizer2, 0, wx.EXPAND|wx.ALL, 5),
         )
         ACV = wx.ALIGN_CENTER_VERTICAL
-        sizer3 = wx.FlexGridSizer(3, 2, 5, 5)
+        sizer3 = wx.FlexGridSizer(4, 2, 5, 5)
         sizer3.AddGrowableCol(1, 1)
         sizer3.AddMany(
             (
@@ -292,6 +342,8 @@ class TextToSpeech(eg.ActionClass):
                 (rateCtrl, 0, wx.EXPAND),
                 (panel.StaticText(text.labelVolume), 0, ACV),
                 (volumeCtrl, 0, wx.EXPAND),
+                (panel.StaticText(text.addSuffix), 0, ACV),
+                (suffCtrl, 0, wx.EXPAND)
             )
         )
         
@@ -308,7 +360,7 @@ class TextToSpeech(eg.ActionClass):
                 voiceChoice.GetStringSelection(),
                 rateCtrl.GetValue(), 
                 textCtrl.GetValue(), 
-                0,
+                suffCtrl.GetValue(),
                 volumeCtrl.GetValue()
             )
 
