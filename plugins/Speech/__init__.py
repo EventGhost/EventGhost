@@ -20,6 +20,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 2.2 by Pako 2015-04-20 17:18 UTC+1
+#     - added option for selection of date and time format
 # 2.1 by Pako 2015-03-09 19:06 UTC+1
 #     - added option for selection of output device
 # 2.0 by Pako 2015-03-09 18:14 UTC+1
@@ -33,7 +35,7 @@ eg.RegisterPlugin(
     name = "Speech",
     author = "MonsterMagnet",
     guid = "{76A1638D-1D7D-4582-A726-A17B1A6FC723}",
-    version = "2.1",
+    version = "2.2",
     description = (
         "Uses the Text-To-Speech service of the Microsoft Speech API (SAPI)."
     ),
@@ -66,7 +68,6 @@ eg.RegisterPlugin(
 from win32com.client import Dispatch, DispatchWithEvents
 from time import strftime
 from threading import Thread
-from datetime import datetime as dt
 import pythoncom
 
 
@@ -75,8 +76,10 @@ class Text:
     description = "Uses the Microsoft Speech API (SAPI) to speak a text."
     label = "Speak: %s"
     errorCreate = "Cannot create voice object"
-    buttonInsertTime = "Insert time"    
-    buttonInsertDate = "Insert date"
+    buttonInsertTime = "Insert time HH:MM:SS"    
+    buttonInsertTime1 = "Insert time HH:MM"    
+    buttonInsertDate = "Insert date (20XX)"
+    buttonInsertDate1 = "Insert date (XX)"
     normal = "Normal"
     slow = "Slow"
     fast = "Fast"
@@ -236,9 +239,13 @@ class TextToSpeech(eg.ActionClass):
 
         def filterFunc(s):
             if s == "DATE":
-                return '</context><context ID="date_ymd">' + str(dt.now().date()) + '</context><context>'
+                return '</context><context ID = "date_mdy">' + strftime("%m/%d/%Y") + '</context><context>'
+            elif s == "DATE1":
+                return '</context><context ID = "date_mdy">' + strftime("%m/%d/%y") + '</context><context>'
             elif s == "TIME":
-                return '</context><context ID="time">' + strftime("%X") + '</context><context>'
+                return '</context><context ID = "time">' + strftime("%H:%M:%S") + '</context><context>'
+            elif s == "TIME1":
+                return '</context><context ID = "time">' + strftime("%H:%M") + '</context><context>'
             else:
                 return None
                 
@@ -289,11 +296,25 @@ class TextToSpeech(eg.ActionClass):
             textCtrl.SetFocus()
         insertTimeButton.Bind(wx.EVT_BUTTON, OnButton)
         
+        insertTimeButton1 = wx.Button(panel, -1, text.buttonInsertTime1)
+        def OnButton(event):
+            textCtrl.WriteText('{TIME1}')
+            textCtrl.SetFocus()
+        insertTimeButton1.Bind(wx.EVT_BUTTON, OnButton)
+        
         insertDateButton = wx.Button(panel, -1, text.buttonInsertDate)
         def OnButton(event):
             textCtrl.WriteText('{DATE}')
             textCtrl.SetFocus()
         insertDateButton.Bind(wx.EVT_BUTTON, OnButton)
+        
+        insertDateButton1 = wx.Button(panel, -1, text.buttonInsertDate1)
+        def OnButton(event):
+            textCtrl.WriteText('{DATE1}')
+            textCtrl.SetFocus()
+        insertDateButton1.Bind(wx.EVT_BUTTON, OnButton)
+        
+
         
         try:
             #self.VoiceObj = DispatchWithEvents("SAPI.SpVoice.1", SpeechEvents)
@@ -344,8 +365,10 @@ class TextToSpeech(eg.ActionClass):
         )
         sizer2 = eg.HBoxSizer(
             (insertTimeButton),
-            (insertDateButton, 0, wx.LEFT|wx.EXPAND|wx.ALIGN_LEFT, 5),
-            ((5, 5), 1),
+            (insertTimeButton1, 0, wx.ALIGN_LEFT,3),
+            ((10, 5),0),
+            (insertDateButton, 0, wx.ALIGN_RIGHT, 3),
+            (insertDateButton1, 0, wx.ALIGN_RIGHT)
         )
         staticBoxSizer1 = panel.VStaticBoxSizer(
             text.textBoxLabel,
