@@ -77,6 +77,12 @@ class SendKeys(eg.ActionBase):
         insertButton = "&Insert"
         specialKeyTool = "Special key tool"
         textToType = "Text to type:"
+        radioBoxLabel = "Trigger mode"
+        radioBoxOptions = [
+            "Set button(s) Up",
+            "Set button(s) Down",
+            "Trigger button(s) Down+Up (Default!)"
+        ]
         class Keys:
             returnKey = "Return"
             enter = "Enter"
@@ -113,16 +119,16 @@ class SendKeys(eg.ActionBase):
             num9 = "Numpad 9"
 
 
-    def __call__(self, data, useAlternateMethod=False):
+    def __call__(self, data, useAlternateMethod=False, mode=2):
         hwnds = eg.lastFoundWindows
         if not hwnds:
             hwnd = None
         else:
             hwnd = hwnds[0]
-        eg.SendKeys(hwnd, data, useAlternateMethod)
+        eg.SendKeys(hwnd, data, useAlternateMethod, mode)
 
 
-    def Configure(self, data="", useAlternateMethod=False):
+    def Configure(self, data="", useAlternateMethod=False, mode=2):
         panel = eg.ConfigPanel()
         text = self.text
         key = text.Keys
@@ -174,6 +180,13 @@ class SendKeys(eg.ActionBase):
             useAlternateMethod,
             text.useAlternativeMethod
         )
+        radioBox = wx.RadioBox(
+            panel,
+            label=text.radioBoxLabel,
+            choices=text.radioBoxOptions,
+            style=wx.RA_SPECIFY_ROWS
+        )
+        radioBox.SetSelection(mode)
 
         shiftCB = wx.CheckBox(panel, -1, "Shift")
         ctrlCB = wx.CheckBox(panel, -1, "Ctrl")
@@ -223,9 +236,10 @@ class SendKeys(eg.ActionBase):
                 (specialKeySizer, 0, wx.ALIGN_RIGHT),
                 ((10, 10), 1),
                 (alternateMethodCB),
+                (radioBox),
             )
         )
 
         while panel.Affirmed():
-            panel.SetResult(textCtrl.GetValue(), alternateMethodCB.GetValue())
+            panel.SetResult(textCtrl.GetValue(), alternateMethodCB.GetValue(),radioBox.GetSelection())
 
