@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-version = "3.7"
+version = "3.8"
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2015 Lars-Peter Voss <bitmonster@eventghost.org>
@@ -19,6 +19,9 @@ version = "3.7"
 # Changelog (in reverse chronological order):
 # -------------------------------------------
 
+# 3.8 by Filandre 2015-03-29
+#     - add support for Hixie-76 protocol (for browsers 2010-2011)
+#     - fix connection for IE
 # 3.7 by krambriw & Pako 2015-03-04 07:00 UTC+1
 #     - treatment of some unexpected communication status WebSocket client
 # 3.6 by Pako 2015-03-02 09:41 UTC+1
@@ -138,7 +141,7 @@ from json import dumps, loads
 from re import IGNORECASE, compile as re_compile 
 from struct import pack, unpack
 from base64 import b64encode, encodestring as b64_encStr
-from hashlib import sha1
+from hashlib import sha1, md5
 from threading import Thread, Event
 from BaseHTTPServer import HTTPServer
 from SimpleHTTPServer import SimpleHTTPRequestHandler
@@ -998,23 +1001,36 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
         else: # WebSocket read next message
             try:
                 opcode = self.rfile.read(1)
-                if not opcode:
-                    return # ??????????
+#F              if not opcode:
+#F                  return # ??????????
             except Exception, exc:
                 if exc.args[0] in (10053, 10054, 10060):
                     return self.on_ws_closed()
                 else:
                     eg.PrintTraceback() # debugging ...
-
-            length = ord(self.rfile.read(1)) & 127
-            if length == 126:
-                length = unpack(">H", self.rfile.read(2))[0]
-            elif length == 127:
-                length = unpack(">Q", self.rfile.read(8))[0]
-            masks = [ord(byte) for byte in self.rfile.read(4)]
-            decoded = ""
-            for char in self.rfile.read(length):
-                decoded += chr(ord(char) ^ masks[len(decoded) % 4])
+### Filandre
+            if self.protocol == 1:
+                decoded = ""
+                next = True
+                while next:
+                    try:
+                        char = self.rfile.read(1)
+                    except:
+                        return self.on_ws_closed()
+                    next = char != chr(255)
+                    if next:
+                        decoded += char
+            else:
+###
+                length = ord(self.rfile.read(1)) & 127
+                if length == 126:
+                    length = unpack(">H", self.rfile.read(2))[0]
+                elif length == 127:
+                    length = unpack(">Q", self.rfile.read(8))[0]
+                masks = [ord(byte) for byte in self.rfile.read(4)]
+                decoded = ""
+                for char in self.rfile.read(length):
+                    decoded += chr(ord(char) ^ masks[len(decoded) % 4])
 
             _stream = 0x0
             _text = 0x1
@@ -1057,6 +1073,13 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
               
     def write_message(self, message):
         try:
+### Filandre
+          if self.protocol == 1:
+            self.request.send(chr(0))
+            self.request.send(message)
+            self.request.send(chr(255))
+          else:
+###
             self.request.send(chr(129))
             length = len(message)
             if length <= 125:
@@ -1074,18 +1097,48 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 
     def handshake(self):
         headers=self.headers
-        if headers.get("Upgrade", None) != "websocket":
+        if str(headers.get("Upgrade", None)).lower() != "websocket":
             return
-        key = headers['Sec-WebSocket-Key']
-        try:
-            digest = b64encode(sha1(key + self.magic).hexdigest().decode('hex'))
-        except:
-            eg.PrintTraceback()
-        self.send_response(101, 'Switching Protocols')
-        self.send_header('Upgrade', 'websocket')
-        self.send_header('Connection', 'Upgrade')
-        self.send_header('Sec-WebSocket-Accept', str(digest))
-        self.end_headers()
+### Filandre
+        key = ''
+        try: # RFC 6455
+            key = headers['Sec-WebSocket-Key']
+        except: # Hixie-76
+            key1 = headers['Sec-WebSocket-Key1']
+            key2 = headers['Sec-WebSocket-Key2']
+            key3 = self.rfile.read(8)
+        if key == '':
+#            for line in headers:
+#                eg.PrintNotice(str(line) + ': ' + headers[str(line)])
+#            eg.PrintNotice('key3: ' + key3)
+            spaces1 = key1.count(" ")
+            spaces2 = key2.count(" ")
+            num1 = int("".join([c for c in key1 if c.isdigit()])) / spaces1
+            num2 = int("".join([c for c in key2 if c.isdigit()])) / spaces2
+            digest = md5(pack('>II8s', num1, num2, key3)).digest()
+#            digest = md5(pack('>II', num1, num2) + key3).digest()
+#            eg.PrintNotice('digest: ' + str(digest))
+            self.send_response(101, 'WebSocket Protocol Handshake')
+            self.send_header('Upgrade', 'WebSocket')
+            self.send_header('Connection', 'Upgrade')
+            self.send_header('Sec-WebSocket-Origin', headers['Origin'])
+            self.send_header('Sec-WebSocket-Location', headers['Origin'].replace('http', 'ws') + '/')
+            self.end_headers()
+            self.wfile.write(digest)
+            self.wfile.flush()
+            self.protocol = 1
+        else:
+###
+            try:
+                digest = b64encode(sha1(key + self.magic).hexdigest().decode('hex'))
+            except:
+                eg.PrintTraceback()
+            self.send_response(101, 'Switching Protocols')
+            self.send_header('Upgrade', 'websocket')
+            self.send_header('Connection', 'Upgrade')
+            self.send_header('Sec-WebSocket-Accept', str(digest))
+            self.end_headers()
+            self.protocol = 0
         self.handshake_done = True
         self.close_connection = 0
 #  ws_connected
@@ -1308,7 +1361,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
         self.clAddr = self.getClientAddress()
         if self.plugin.noAutWs:
             # First test, if WebSocket connection
-            if self.headers.get("Upgrade", None) == "websocket":
+            if str(self.headers.get("Upgrade", None)).lower() == "websocket":
                 return self.handshake() #switch to WebSocket !
             if not self.Authenticate():
                 return
@@ -1316,7 +1369,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
             # First do Basic HTTP-Authentication, if set
             if not self.Authenticate():
                 return
-            if self.headers.get("Upgrade", None) == "websocket":
+            if str(self.headers.get("Upgrade", None)).lower() == "websocket":
                 return self.handshake() #switch to WebSocket !
 
         path, dummy, remaining = self.path.partition("?")
