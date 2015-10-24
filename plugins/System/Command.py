@@ -16,11 +16,19 @@
 
 import eg
 import wx
-from os.path import basename
 from threading import Thread
 from subprocess import STARTUPINFO, STARTF_USESHOWWINDOW, PIPE, Popen
-from os import devnull
-
+from eg.WinApi import IsWin64
+from win32file import Wow64DisableWow64FsRedirection, Wow64RevertWow64FsRedirection
+from eg.WinApi.Dynamic import (
+    sizeof, byref, WaitForSingleObject, FormatError,
+    CloseHandle, INFINITE, GetExitCodeProcess, DWORD,
+    SHELLEXECUTEINFO, SEE_MASK_NOCLOSEPROCESS, windll
+)
+from time import time as ttime
+from codecs import open as code_open
+from os import devnull, remove
+from os.path import join
 
 def popen(cmd, si):
     return Popen(
@@ -34,17 +42,18 @@ def popen(cmd, si):
 
 class Command(eg.ActionBase):
     name = "Windows Command"
-    description = "Executes a single Windows Command Line statement."
+    description = "Executes a single windows Command line statement."
     iconFile = "icons/Execute"
     class text:
-        label = "Windows Command: %s"
         Command = "Command Line:"
         waitCheckbox = "Wait until command is terminated before proceeding"
         eventCheckbox = "Trigger event when command is terminated"
+        wow64Checkbox = "Disable WOW64 filesystem redirection for this command"
         eventSuffix = "WindowsCommand"
         disableParsing = "Disable parsing of string"
         additionalSuffix = "Additional Suffix:"
-        payload = "The result to use as payload"
+        payload = "Use result as payload"
+        runAsAdminCheckbox = "Run as Administrator (UAC prompt will appear if UAC is enabled!)"
 
 
     def __call__(
@@ -56,6 +65,8 @@ class Command(eg.ActionBase):
         disableParsingCommand = True,
         disableParsingAdditionalSuffix = True,
         payload = False,
+        disableWOW64=False,
+        runAsAdmin = False,
     ):
         prefix = self.plugin.info.eventPrefix
         suffix = self.text.eventSuffix
@@ -65,65 +76,118 @@ class Command(eg.ActionBase):
             command = eg.ParseString(command)
         if not disableParsingAdditionalSuffix:
             additionalSuffix = eg.ParseString(additionalSuffix)
-        si = STARTUPINFO()
-        si.dwFlags |= STARTF_USESHOWWINDOW
-        if waitForCompletion:
+
+        processInformation = self.processInformation = SHELLEXECUTEINFO()
+        processInformation.cbSize = sizeof(processInformation)
+        processInformation.hwnd = 0
+        processInformation.lpFile = 'cmd.exe'
+        if waitForCompletion or triggerEvent:
+            si = STARTUPINFO()
+            si.dwFlags |= STARTF_USESHOWWINDOW
             proc = popen("chcp", si) #DOS console codepage
             data = proc.communicate()[0]
             if not proc.returncode:
-                cp = "cp" + data.split()[-1].replace(".","")
-                proc = popen(command, si)
-                data = proc.communicate()[0]
-                if not proc.returncode:
-                    data = data.decode(cp)
-                    if triggerEvent:
-                        if payload:
-                            eg.TriggerEvent(
-                                suffix,
-                                prefix = prefix,
-                                payload = data.rstrip()
-                            )
-                        else:
-                            eg.TriggerEvent(suffix, prefix = prefix)
-                    return data.rstrip()
+                cp = "cp" + data.split()[-1].replace(".", "")
+            proc.stdout.close()
+            filename = join(
+                eg.folderPath.TemporaryFiles,
+                "EventGhost-output-%s.txt" % ttime()
+            )
+            processInformation.lpParameters = '/C %s > %s' % (command, filename)
+            processInformation.fMask = SEE_MASK_NOCLOSEPROCESS
+        else:
+            processInformation.lpParameters = '/C %s' % command
+        if runAsAdmin:
+            processInformation.lpVerb = "runas"
+        processInformation.nShow = 0
+        processInformation.hInstApp = 0
+
+        disableWOW64 = disableWOW64 and IsWin64()
+        if disableWOW64:
+            prevVal = Wow64DisableWow64FsRedirection()
+        if not windll.shell32.ShellExecuteExW(byref(processInformation)):
+            raise self.Exception(FormatError())
+        if disableWOW64:
+            Wow64RevertWow64FsRedirection(prevVal)
+        if waitForCompletion:
+            WaitForSingleObject(processInformation.hProcess, INFINITE)
+            exitCode = DWORD()
+            if not GetExitCodeProcess(
+                processInformation.hProcess,
+                byref(exitCode)
+            ):
+                raise self.Exception(FormatError())
+            try:
+                data = code_open(filename, 'r', cp)
+                lines = data.readlines()
+                returnValue = "".join(lines)
+                data.close()
+                remove(filename)
+            except:
+                returnValue = ""
+
+            if triggerEvent:
+                if payload:
+                    eg.TriggerEvent(
+                        suffix,
+                        prefix = prefix,
+                        payload = returnValue.rstrip()
+                    )
+                else:
+                    eg.TriggerEvent(suffix, prefix = prefix)
+            CloseHandle(processInformation.hProcess)
+            return returnValue.rstrip()
         elif triggerEvent:
-            te = self.TriggerEvent(command, si, suffix, prefix, payload)
+            te = self.TriggerEvent(processInformation, suffix, prefix, filename, cp, payload)
             te.start()
         else:
-            proc = popen(command, si)
+            CloseHandle(processInformation.hProcess)
+
 
 
     class TriggerEvent(Thread):
 
-        def __init__(self, cmd, si, suffix, prefix, pld):
+        def __init__(self, processInformation, suffix, prefix, filename, cp, pld):
             Thread.__init__(self)
-            self.cmd = cmd
-            self.si = si
+            self.processInformation = processInformation
             self.suffix = suffix
             self.prefix = prefix
+            self.filename = filename
+            self.cp = cp
             self.pld = pld
 
         def run(self):
-            proc = popen("chcp", self.si) #DOS console codepage
-            data = proc.communicate()[0]
-            if not proc.returncode:
-                cp = "cp" + data.split()[-1].replace(".","")
-                proc = popen(self.cmd, self.si)
-                data = proc.communicate()[0]
-                if not proc.returncode:
-                    data = data.decode(cp)
-                    if self.pld:
-                        eg.TriggerEvent(
-                            self.suffix,
-                            prefix = self.prefix,
-                            payload = data.rstrip()
-                        )
-                    else:
-                        eg.TriggerEvent(self.suffix, prefix = self.prefix)
+            WaitForSingleObject(self.processInformation.hProcess, INFINITE)
+            exitCode = DWORD()
+            if not GetExitCodeProcess(
+                self.processInformation.hProcess,
+                byref(exitCode)
+            ):
+                raise self.Exception(FormatError())
+            CloseHandle(self.processInformation.hProcess)
+            if hasattr(self.processInformation, "hThread"):
+                CloseHandle(self.processInformation.hThread)
+            if self.pld:
+                try:
+                    data = code_open(self.filename, 'r', self.cp)
+                    lines = data.readlines()
+                    returnValue = "".join(lines)
+                    data.close()
+                    remove(self.filename)
+                except:
+                    returnValue = ""
+
+                eg.TriggerEvent(
+                    self.suffix,
+                    prefix = self.prefix,
+                    payload = returnValue.rstrip()
+                )
+            else:
+                eg.TriggerEvent(self.suffix, prefix = self.prefix)
 
 
     def GetLabel(self, command = '', *dummyArgs):
-        return self.text.label % basename(command)
+        return "%s: %s" % (self.name, command)
 
 
     def Configure(
@@ -135,6 +199,8 @@ class Command(eg.ActionBase):
         disableParsingCommand = True,
         disableParsingAdditionalSuffix = False,
         payload = False,
+        disableWOW64=False,
+        runAsAdmin = False,
     ):
         panel = eg.ConfigPanel()
         text = self.text
@@ -160,6 +226,14 @@ class Command(eg.ActionBase):
             bool(disableParsingAdditionalSuffix),
             text.disableParsing
         )
+        wow64CheckBox = panel.CheckBox(
+            bool(disableWOW64),
+            text.wow64Checkbox
+        )
+        runAsAdminCheckBox = panel.CheckBox(
+            bool(runAsAdmin),
+            text.runAsAdminCheckbox
+        )
 
         SText = panel.StaticText
         lowerSizer2 = wx.GridBagSizer(2, 0)
@@ -175,7 +249,7 @@ class Command(eg.ActionBase):
             (disableParsingAdditionalSuffixBox, (3, 2)),
             ((1, 1), (0, 3), (1, 1), wx.EXPAND),
         ])
-        
+
         def onEventCheckBox(evt = None):
             enable = eventCheckBox.GetValue()
             stTxt.Enable(enable)
@@ -190,7 +264,7 @@ class Command(eg.ActionBase):
                 evt.Skip()
         eventCheckBox.Bind(wx.EVT_CHECKBOX, onEventCheckBox)
         onEventCheckBox()
-        
+
         panel.sizer.AddMany([
             (SText(text.Command)),
             ((1, 2)),
@@ -201,6 +275,10 @@ class Command(eg.ActionBase):
             (waitCheckBox),
             ((10, 8)),
             (lowerSizer2, 0, wx.EXPAND),
+            ((10, 8)),
+            (wow64CheckBox),
+            ((10, 8)),
+            (runAsAdminCheckBox),
         ])
 
         while panel.Affirmed():
@@ -211,6 +289,8 @@ class Command(eg.ActionBase):
                 additionalSuffixCtrl.GetValue(),
                 disableParsingCommandBox.GetValue(),
                 disableParsingAdditionalSuffixBox.GetValue(),
-                pldCheckBox.GetValue()
+                pldCheckBox.GetValue(),
+                wow64CheckBox.GetValue(),
+                runAsAdminCheckBox.GetValue()
             )
 

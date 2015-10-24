@@ -18,26 +18,15 @@ import eg
 import wx
 from os.path import basename, dirname, abspath, split, splitext
 from threading import Thread
-from time import sleep
-from win32con import SPI_SETFOREGROUNDLOCKTIMEOUT, SPIF_SENDWININICHANGE, SPIF_UPDATEINIFILE
 from win32file import Wow64DisableWow64FsRedirection, Wow64RevertWow64FsRedirection
-
 from eg.WinApi import IsWin64
-
 from eg.WinApi.Dynamic import (
-    sizeof, byref, CreateProcess, WaitForSingleObject, FormatError,
-    CloseHandle, create_unicode_buffer,
-    STARTUPINFO, PROCESS_INFORMATION,
-    CREATE_NEW_CONSOLE, STARTF_USESHOWWINDOW, INFINITE,
-    GetExitCodeProcess, DWORD,
-    IsWindowVisible, RegisterWindowMessage,
+    sizeof, byref, WaitForSingleObject, FormatError,
+    CloseHandle, INFINITE, GetExitCodeProcess, DWORD,
     AttachThreadInput, GetCurrentThreadId, GetForegroundWindow,
-    GetWindowThreadProcessId, SystemParametersInfoW,
+    GetWindowThreadProcessId, SHELLEXECUTEINFO, SEE_MASK_NOCLOSEPROCESS, windll
 )
-
-from eg.WinApi.Utils import (
-    BringHwndToFront, GetHwnds, GetPids, PluginIsEnabled, ProcessExists,
-)
+from win32process import GetPriorityClass, SetPriorityClass
 
 WINSTATE_FLAGS = (
     1, # SW_SHOWNORMAL
@@ -51,6 +40,7 @@ PRIORITY_FLAGS = (
     16384, # BELOW_NORMAL_PRIORITY_CLASS
     32,    # NORMAL_PRIORITY_CLASS
     32768, # ABOVE_NORMAL_PRIORITY_CLASS
+    128,   # HIGH_PRIORITY_CLASS
     256,   # REALTIME_PRIORITY_CLASS
 )
 
@@ -74,6 +64,7 @@ class Execute(eg.ActionBase):
         ProcessOptionsDesc = "Process priority:"
         ProcessOptions = (
             "Realtime",
+            "High",
             "Above normal",
             "Normal",
             "Below normal",
@@ -82,11 +73,13 @@ class Execute(eg.ActionBase):
         waitCheckbox = "Wait until application is terminated before proceeding"
         eventCheckbox = "Trigger event when application is terminated"
         wow64Checkbox = "Disable WOW64 filesystem redirection for this application"
+        runAsAdminCheckbox = "Run as Administrator (UAC prompt will appear if UAC is enabled!)"
         eventSuffix = "Application.Terminated"
         browseExecutableDialogTitle = "Choose the executable"
         browseWorkingDirDialogTitle = "Choose the working directory"
         disableParsing = "Disable parsing of string"
         additionalSuffix = "Additional Suffix:"
+        priorityIssue = "WARNING: Couldn't set priority!"
 
 
     def __call__(
@@ -103,6 +96,7 @@ class Execute(eg.ActionBase):
         disableParsingPathname=False,
         disableParsingArguments=False,
         disableParsingAdditionalSuffix=False,
+        runAsAdmin = False,
     ):
         returnValue = None
         if not disableParsingPathname:
@@ -113,45 +107,52 @@ class Execute(eg.ActionBase):
             arguments = eg.ParseString(arguments)
         if not disableParsingAdditionalSuffix:
             additionalSuffix = eg.ParseString(additionalSuffix)
-        commandLine = create_unicode_buffer('"%s" %s' % (pathname, arguments))
-        startupInfo = STARTUPINFO()
-        startupInfo.cb = sizeof(STARTUPINFO)
-        startupInfo.dwFlags = STARTF_USESHOWWINDOW
-        startupInfo.wShowWindow = WINSTATE_FLAGS[winState]
-        priorityFlag = PRIORITY_FLAGS[priority]
-        processInformation = self.processInformation = PROCESS_INFORMATION()
+        processInformation = self.processInformation = SHELLEXECUTEINFO()
+        processInformation.cbSize = sizeof(processInformation)
+        processInformation.hwnd = 0
+        processInformation.lpFile = pathname
+        processInformation.lpParameters = arguments
+        processInformation.lpDirectory = workingDir
+        processInformation.nShow = WINSTATE_FLAGS[winState]
+        processInformation.hInstApp = 0
+        processInformation.fMask = SEE_MASK_NOCLOSEPROCESS
+        if runAsAdmin:
+            processInformation.lpVerb = "runas"
         disableWOW64 = disableWOW64 and IsWin64()
         if disableWOW64:
             prevVal = Wow64DisableWow64FsRedirection()
         activeThread = GetWindowThreadProcessId(GetForegroundWindow(), None)
         currentThread = GetCurrentThreadId()
         attached = AttachThreadInput(currentThread, activeThread, True)
-        SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_SENDWININICHANGE | SPIF_UPDATEINIFILE)
-        res = CreateProcess(
-            None,              # lpApplicationName
-            commandLine,       # lpCommandLine
-            None,              # lpProcessAttributes
-            None,              # lpThreadAttributes
-            False,             # bInheritHandles
-            priorityFlag|CREATE_NEW_CONSOLE, # dwCreationFlags
-            None,              # lpEnvironment
-            workingDir,        # lpCurrentDirectory
-            startupInfo,       # lpStartupInfo
-            processInformation # lpProcessInformation
-        )
+
+        if not windll.shell32.ShellExecuteExW(byref(processInformation)):
+            raise self.Exception(FormatError())
+
         if attached:
             AttachThreadInput(currentThread, activeThread, False)
         if disableWOW64:
             Wow64RevertWow64FsRedirection(prevVal)
+        if priority != 2:
+            try:
+                SetPriorityClass(processInformation.hProcess, PRIORITY_FLAGS[priority])
+                if GetPriorityClass(processInformation.hProcess) != PRIORITY_FLAGS[priority]:
+                    raise
+            except:
+                pid = windll.kernel32.GetProcessId(processInformation.hProcess)
+                pi = SHELLEXECUTEINFO()
+                pi.cbSize = sizeof(pi)
+                pi.lpFile = r"C:\Windows\System32\wbem\wmic.exe"
+                pi.lpParameters = "process where processid=%d CALL setpriority %d" % (pid, PRIORITY_FLAGS[priority])
+                pi.lpVerb = "runas"
+                if not windll.shell32.ShellExecuteExW(byref(pi)):
+                    eg.PrintError(self.text.priorityIssue)
         suffix = "%s.%s" % (
                 self.text.eventSuffix,
                 splitext(split(pathname)[1])[0]
             )
         if additionalSuffix!="":
-            suffix=suffix+"."+additionalSuffix
+            suffix = suffix + "." + additionalSuffix
         prefix = self.plugin.name.replace(' ', '')
-        if res == 0:
-            raise self.Exception(FormatError())
         if waitForCompletion:
             WaitForSingleObject(processInformation.hProcess, INFINITE)
             exitCode = DWORD()
@@ -164,14 +165,12 @@ class Execute(eg.ActionBase):
             if triggerEvent:
                 eg.TriggerEvent(suffix, prefix = prefix)
             CloseHandle(processInformation.hProcess)
-            CloseHandle(processInformation.hThread)
             return returnValue
         elif triggerEvent:
-            te=self.TriggerEvent(processInformation, suffix, prefix)
+            te = self.TriggerEvent(processInformation, suffix, prefix)
             te.start()
         else:
             CloseHandle(processInformation.hProcess)
-            CloseHandle(processInformation.hThread)
 
 
     class TriggerEvent(Thread):
@@ -191,7 +190,8 @@ class Execute(eg.ActionBase):
             ):
                 raise self.Exception(FormatError())
             CloseHandle(self.processInformation.hProcess)
-            CloseHandle(self.processInformation.hThread)
+            if hasattr(self.processInformation, "hThread"):
+                CloseHandle(self.processInformation.hThread)
             eg.TriggerEvent(self.suffix, prefix = self.prefix)
 
 
@@ -213,6 +213,7 @@ class Execute(eg.ActionBase):
         disableParsingPathname=False,
         disableParsingArguments=False,
         disableParsingAdditionalSuffix=False,
+        runAsAdmin = False,
     ):
         panel = eg.ConfigPanel()
         text = self.text
@@ -236,7 +237,7 @@ class Execute(eg.ActionBase):
         )
         #workingDirCtrl.SetValue(workingDir)
         winStateChoice = panel.Choice(winState, text.WindowOptions)
-        priorityChoice = panel.Choice(4 - priority, text.ProcessOptions)
+        priorityChoice = panel.Choice(5 - priority, text.ProcessOptions)
         waitCheckBox = panel.CheckBox(
             bool(waitForCompletion),
             text.waitCheckbox
@@ -254,8 +255,13 @@ class Execute(eg.ActionBase):
             bool(disableWOW64),
             text.wow64Checkbox
         )
+        runAsAdminCheckBox = panel.CheckBox(
+            bool(runAsAdmin),
+            text.runAsAdminCheckbox
+        )
 
         SText = panel.StaticText
+        procPriorLabel = SText(text.ProcessOptionsDesc)
         lowerSizer = wx.GridBagSizer(0, 0)
         lowerSizer.AddGrowableCol(1)
         lowerSizer.AddGrowableCol(3)
@@ -263,7 +269,7 @@ class Execute(eg.ActionBase):
             (SText(text.WindowOptionsDesc), (0, 0), (1, 1), wx.ALIGN_BOTTOM),
             (winStateChoice, (1, 0)),
             ((1, 1), (0, 1), (1, 1), wx.EXPAND),
-            (SText(text.ProcessOptionsDesc), (0, 2), (1, 1), wx.ALIGN_BOTTOM),
+            (procPriorLabel, (0, 2), (1, 1), wx.ALIGN_BOTTOM),
             (priorityChoice, (1, 2)),
             ((1, 1), (0, 3), (1, 1), wx.EXPAND),
         ])
@@ -280,7 +286,7 @@ class Execute(eg.ActionBase):
             (disableParsingAdditionalSuffixBox, (2, 2)),
             ((1, 1), (0, 3), (1, 1), wx.EXPAND),
         ])
-        
+
         def onEventCheckBox(evt = None):
             enable = eventCheckBox.GetValue()
             stTxt.Enable(enable)
@@ -292,7 +298,8 @@ class Execute(eg.ActionBase):
                 evt.Skip()
         eventCheckBox.Bind(wx.EVT_CHECKBOX, onEventCheckBox)
         onEventCheckBox()
-        
+
+
         panel.sizer.AddMany([
             (SText(text.FilePath)),
             (filepathCtrl, 0, wx.EXPAND),
@@ -312,6 +319,8 @@ class Execute(eg.ActionBase):
             (lowerSizer2, 0, wx.EXPAND),
             ((10, 8)),
             (wow64CheckBox),
+            ((10, 8)),
+            (runAsAdminCheckBox),
         ])
 
         while panel.Affirmed():
@@ -320,13 +329,14 @@ class Execute(eg.ActionBase):
                 argumentsCtrl.GetValue(),
                 winStateChoice.GetValue(),
                 waitCheckBox.GetValue(),
-                4 - priorityChoice.GetValue(),
+                5 - priorityChoice.GetValue(),
                 workingDirCtrl.GetValue(),
                 eventCheckBox.GetValue(),
                 wow64CheckBox.GetValue(),
                 additionalSuffixCtrl.GetValue(),
                 disableParsingPathnameBox.GetValue(),
                 disableParsingArgumentsBox.GetValue(),
-                disableParsingAdditionalSuffixBox.GetValue()
+                disableParsingAdditionalSuffixBox.GetValue(),
+                runAsAdminCheckBox.GetValue()
             )
 
