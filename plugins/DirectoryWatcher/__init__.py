@@ -26,6 +26,7 @@ eg.RegisterPlugin(
         "Monitors a directory and generates events if files are created, "
         "deleted or changed in it."
     ),
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=2&t=3215",
 )
 
 import os

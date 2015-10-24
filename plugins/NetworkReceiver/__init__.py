@@ -34,6 +34,7 @@ eg.RegisterPlugin(
         "WRlxsa4sp1ydkiRxkstmlEFRrWT4nrRer3vmlf6mb883fK8AoF1d+Bqc6Xkt+cufT6e3"
         "dnb9DJJrq+uYpunZ2WcFfA0ol8v8N5Qgvr/EN8Lzfbs+L0goAAAAAElFTkSuQmCC"
     ),
+    url = "http://www.eventghost.net/forum/viewtopic.php?f=4&t=959",
 )
 
 import wx
