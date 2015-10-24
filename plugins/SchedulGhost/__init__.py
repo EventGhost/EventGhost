@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-version="0.1.13"
+version="0.1.14"
 
 # plugins/SchedulGhost/__init__.py
 #
@@ -12,6 +12,9 @@ version="0.1.13"
 # EventGhost is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the
 # Free Software Foundation;
+
+
+
 #
 # EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
@@ -22,6 +25,8 @@ version="0.1.13"
 #
 # Revision history:
 # -----------------
+# 0.1.14 by Sem;colon 2015-10-15 20:00 UTC+1
+#     - removed the distinction between weekend days and workdays
 # 0.1.13 by Pako 2015-03-03 17:51 UTC+1
 #     - Immediate start schedule now has no effect on the scheduled run
 # 0.1.12 by Sem;colon 2014-11-26 22:00 UTC+1
@@ -769,11 +774,14 @@ class schedulerDialog(wx.Dialog):
                     exp = [0, 1, 2, 3, 4, 5, 6]
                 for i in range(7):
                     weekdayCtrl.Check(i, bool(val & (2 ** exp[i])))
-                enable = val & 31 and not val & 96
+                enable = data[3]==0
                 holidCheck_1.Enable(enable)
                 check = 0 if (not data or not enable) else data[4]
                 holidCheck_1.SetValue(check)
-                enable = val & 96 and not val & 31
+                if enable:
+                    enable = data[4]==0
+                else:
+                    enable = True
                 holidCheck_2.Enable(enable)
                 check = 0 if (not data or not enable) else data[3]
                 holidCheck_2.SetValue(check)
@@ -860,7 +868,7 @@ class schedulerDialog(wx.Dialog):
                     exp = [0, 1, 2, 3, 4, 5, 6]
                 for i in range(7):
                     weekdayCtrl.Check(i, bool(val & (2 ** exp[i])))
-                enable = val & 31 and not val & 96
+                enable = True
                 holidCheck_1.Enable(enable)
                 val = 63 if not data else data[4]
                 for i in range(6):
@@ -1104,22 +1112,6 @@ class schedulerDialog(wx.Dialog):
                 self.tmpData[self.lastRow][3][ix] |= 2 ** exp
             else:
                 self.tmpData[self.lastRow][3][ix] &= 255 - 2 ** exp
-            if cond:
-                holidCheck_1 = wx.FindWindowById(self.ctrls[-1])
-                val = self.tmpData[self.lastRow][3][ix]
-                flg = val & 31 and not val & 96
-                holidCheck_1.Enable(flg)
-                if not flg:
-                    holidCheck_1.SetValue(0)
-                    self.tmpData[self.lastRow][3][-1] = 0
-                if type == 2:
-                    holidCheck_2 = wx.FindWindowById(self.ctrls[3])
-                    val = self.tmpData[self.lastRow][3][2]
-                    flg = val & 96 and not val & 31
-                    holidCheck_2.Enable(flg)
-                    if not flg:
-                        holidCheck_2.SetValue(0)
-                        self.tmpData[self.lastRow][3][3] = 0
             next = self.plugin.NextRun(
                 self.tmpData[self.lastRow][2],
                 self.tmpData[self.lastRow][3]
@@ -1175,10 +1167,26 @@ class schedulerDialog(wx.Dialog):
         def onCheckBox(evt):
             val = evt.IsChecked()
             ix = self.ctrls.index(evt.GetId())
-            if self.tmpData[self.lastRow][2] == 2 and ix == 3:
+            type = self.tmpData[self.lastRow][2]
+            if type == 2 and ix == 3:
                 self.tmpData[self.lastRow][3][3] = int(val)
+                holidCheck_2 = wx.FindWindowById(self.ctrls[-1])
+                if int(val) == 1:
+                    self.tmpData[self.lastRow][3][-1] = 0
+                    holidCheck_2.SetValue(0)
+                    holidCheck_2.Enable(False)
+                else:
+                    holidCheck_2.Enable(True)
             else:
                 self.tmpData[self.lastRow][3][-1] = int(val)
+                if type == 2:
+                    holidCheck_1 = wx.FindWindowById(self.ctrls[3])
+                    if int(val) == 1:
+                        self.tmpData[self.lastRow][3][3] = 0
+                        holidCheck_1.SetValue(0)
+                        holidCheck_1.Enable(False)
+                    else:
+                        holidCheck_1.Enable(True)
             next = self.plugin.NextRun(
                 self.tmpData[self.lastRow][2],
                 self.tmpData[self.lastRow][3]
@@ -1902,17 +1910,13 @@ class SchedulGhost(eg.PluginBase):
                     return runList[0]
                 found = False
                 for item in runList:
-                    if item.weekday() > 4:
+                    if (item.month, item.day) in self.holidays[0]:
+                        pass
+                    elif (item.year, item.month, item.day) in self.holidays[1]:
+                        pass
+                    else:
                         found = True
                         break
-                    else:
-                        if (item.month, item.day) in self.holidays[0]:
-                            pass
-                        elif (item.year, item.month, item.day) in self.holidays[1]:
-                            pass
-                        else:
-                            found = True
-                            break
                 if found:
                     runDateTime = item
             return runDateTime
@@ -1963,34 +1967,26 @@ class SchedulGhost(eg.PluginBase):
                     for day in weekdaysLarger:
                         delta = day + shift - nowDay
                         tmpRunDT = runDateTime + td(days = delta)
-                        if tmpRunDT.weekday() > 4: # weekend
+                        if (tmpRunDT.month, tmpRunDT.day) in self.holidays[0]:
+                            pass
+                        elif (tmpRunDT.year, tmpRunDT.month, tmpRunDT.day) in self.holidays[1]:
+                            pass
+                        else:
                             found = True
                             break
-                        else: # workday
-                            if (tmpRunDT.month, tmpRunDT.day) in self.holidays[0]:
-                                pass
-                            elif (tmpRunDT.year, tmpRunDT.month, tmpRunDT.day) in self.holidays[1]:
-                                pass
-                            else:
-                                found = True
-                                break
                     if found:
                         break
                     shift += 7
                     for day in weekdaysLower:
                         delta = day + shift - nowDay
                         tmpRunDT = runDateTime + td(days = delta)
-                        if tmpRunDT.weekday() > 4: # weekend
+                        if (tmpRunDT.month, tmpRunDT.day) in self.holidays[0]:
+                            pass
+                        elif (tmpRunDT.year, tmpRunDT.month, tmpRunDT.day) in self.holidays[1]:
+                            pass
+                        else:
                             found = True
                             break
-                        else: # workday
-                            if (tmpRunDT.month, tmpRunDT.day) in self.holidays[0]:
-                                pass
-                            elif (tmpRunDT.year, tmpRunDT.month, tmpRunDT.day) in self.holidays[1]:
-                                pass
-                            else:
-                                found = True
-                                break
                     if found:
                         break
                 return str(tmpRunDT)
@@ -2003,13 +1999,12 @@ class SchedulGhost(eg.PluginBase):
                 found = False
                 for delta in range(start, Delta):
                     tmpRunDT = runDateTime + td(days = delta)
-                    if tmpRunDT.weekday() < 5:
-                        if (tmpRunDT.month, tmpRunDT.day) in self.holidays[0]:
-                            found = True
-                            break
-                        elif (tmpRunDT.year, tmpRunDT.month, tmpRunDT.day) in self.holidays[1]:
-                            found = True
-                            break
+                    if (tmpRunDT.month, tmpRunDT.day) in self.holidays[0]:
+                        found = True
+                        break
+                    elif (tmpRunDT.year, tmpRunDT.month, tmpRunDT.day) in self.holidays[1]:
+                        found = True
+                        break
                 return str(tmpRunDT if found else runDateTime + td(days = Delta))
         elif type == 3: # monthly/weekday
             if data[2] == 0 or data[3] == 0 or (data[4] + data[5]) == 0:
