@@ -20,6 +20,8 @@
 #
 # Changelog (in reverse chronological order):
 # -------------------------------------------
+# 2.3 by Pako 2016-01-17 07:18 UTC+1
+#     - bugfix
 # 2.2 by Pako 2015-04-20 17:18 UTC+1
 #     - added option for selection of date and time format
 # 2.1 by Pako 2015-03-09 19:06 UTC+1
@@ -223,8 +225,7 @@ class Speaker(Thread):
         self.plugin.TriggerEvent(suffix)
 
 
-class Speech(eg.PluginClass):
-    text = Text    
+class Speech(eg.PluginClass):  
 
     def __init__(self):
         self.AddAction(TextToSpeech)
