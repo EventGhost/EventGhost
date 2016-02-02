@@ -20,7 +20,7 @@ import traceback
 eg.RegisterPlugin(
     name = "System",
     author = "Bitmonster & blackwind",
-    version = "1.1.9",
+    version = "1.1.10",
     description = (
         "Controls different aspects of your system, like sound card, "
         "graphics card, power management, et cetera."
@@ -83,9 +83,12 @@ from Command import Command
 from DeviceChangeNotifier import DeviceChangeNotifier
 from PowerBroadcastNotifier import PowerBroadcastNotifier
 from PIL import Image
-from base64 import b64decode
+from base64 import b64decode, b64encode
 from StringIO import StringIO
+from qrcode import QRCode, constants as QRconstants
 import Registry
+
+ACV          = wx.ALIGN_CENTER_VERTICAL
 
 oldGetDeviceId = SoundMixer.GetDeviceId
 def GetDeviceId_(*args, **kwargs):
@@ -220,6 +223,7 @@ class System(eg.PluginBase):
         group.AddAction(MonitorPowerOn)
         group.AddAction(ShowPicture)
         group.AddAction(DisplayImage)
+        group.AddAction(ShowQRcode)
         group.AddAction(HideImage)
         group.AddAction(SetWallpaper)
         group.AddAction(ChangeDisplaySettings)
@@ -1240,16 +1244,24 @@ class ShapedFrame(wx.Frame):
         center,
         noFocus,
         name,
-        plugin
+        plugin,
+        data = None
         ):
-        try:
-            pil = Image.open(imageFile)
-        except:
+        if data is None:
+            try:
+                pil = Image.open(imageFile)
+            except:
+                try:
+                    pil = Image.open(StringIO(b64decode(imageFile)))
+                except:
+                    eg.PrintError(error % imageFile[:256])
+                    return
+        else:
             try:
                 pil = Image.open(StringIO(b64decode(imageFile)))
             except:
-                eg.PrintError(error % imageFile[:256])
-                return
+                eg.PrintError(error % data)
+                return            
         self.name = name
         self.plugin = plugin
         self.imageFile = imageFile
@@ -1366,6 +1378,7 @@ class ShapedFrame(wx.Frame):
         self.SetPosition((monDim[display][0] + x, monDim[display][1] + y))
         if name:
             self.plugin.images[name] = self
+            self.plugin.TriggerEvent("ImageDisplayed", payload = name)
         if noFocus:
             eg.WinApi.Dynamic.ShowWindow(self.GetHandle(), 4)
         else:
@@ -1652,7 +1665,7 @@ or insert the image as a base64 string"""
                 center,
                 noFocus,
                 title,
-                self.plugin
+                self.plugin,
             )
 
 
@@ -1958,6 +1971,180 @@ class ShowPicture(eg.ActionBase):
 
         while panel.Affirmed():
             panel.SetResult(filepathCtrl.GetValue(), displayChoice.GetValue())
+#===============================================================================
+
+class ShowQRcode(eg.ActionBase):
+    name = "Show QR code"
+    description = "Shows a QR code on the screen."
+    iconFile = "icons/QRcode"
+    class text:
+        data = "Data:"
+        display = "Monitor:"
+        Error = 'Exception in action "%s": Failed to show data "%%s" !'
+        timeout1 = "The QR code automatically disappears after"
+        timeout2 = "seconds (0 = feature disabled)"
+        main = "Mandatory parameters"
+        other = "Options"
+        box = "Box size [px]:"
+        border = "Border width [box]:"
+        title = "Name of image:"
+        sizeMode = "Fullscreen:"
+        titleTool = """Required only if you want to close the image window 
+programmatically\nUse the action: Hide image"""
+
+
+    def __call__(
+        self,
+        data = '',
+        display = 0,
+        timeout = 0,
+        box = 12,
+        border = 4,
+        title = 'QRcode',
+        sizeMode = 0
+        ):
+        data = eg.ParseString(data)
+        title = eg.ParseString(title)
+        def parseArgument(arg):
+            if not arg:
+                return 0
+            if isinstance(arg, int):
+                return arg
+            else:
+                from locale import localeconv
+                decimal_point = localeconv()['decimal_point']
+                arg = eg.ParseString(arg).replace(decimal_point, ".")
+                return int(float(arg))
+        timeout = parseArgument(timeout)
+        box = parseArgument(box)
+        border = parseArgument(border)
+        if data:
+            qr = QRCode(
+                version = None, 
+                border = border,
+                error_correction = QRconstants.ERROR_CORRECT_M,
+                box_size = box,
+            )
+            qr.add_data(data)
+            qr.make(fit = True)
+            img = qr.make_image()        
+            buff = StringIO()
+            img.save(buff)
+            b64 = b64encode(buff.getvalue())
+            if title in self.plugin.images:
+                self.plugin.HideImage(title)
+            wx.CallAfter(
+                ShapedFrame,
+                self.text.Error % (self.name),
+                b64,
+                (0, 3)[int(sizeMode)],
+                1,
+                False,
+                False,
+                0,
+                True,
+                1,
+                timeout,
+                display,
+                0,
+                0,
+                640,
+                360,
+                (0, 0, 0), 
+                True,
+                True,
+                True,
+                title if title else 'QRcode',
+                self.plugin,
+                data
+            )
+
+
+    def Configure(
+        self,
+        data='',
+        display=0,
+        timeout = 0,
+        box = 12,
+        border = 4,
+        title = 'QRcode',
+        sizeMode = 0
+        ):
+        panel = eg.ConfigPanel()
+        text = self.text
+        dataCtrl = wx.TextCtrl(panel, -1, data)
+        displayChoice = eg.DisplayChoice(panel, display)
+        timeoutLbl_1=wx.StaticText(panel, -1, text.timeout1)
+        timeoutLbl_2=wx.StaticText(panel, -1, text.timeout2)
+        timeoutCtrl = eg.SmartSpinIntCtrl(panel, -1, timeout, textWidth = 105)
+        boxLbl = wx.StaticText(panel, -1, text.box)
+        borderLbl = wx.StaticText(panel, -1, text.border)
+        titleLbl = wx.StaticText(panel, -1, text.title)
+        boxCtrl = eg.SmartSpinIntCtrl(
+            panel,
+            -1,
+            box,
+            min = 5,
+            max = 50,
+            textWidth = 105
+        )
+        borderCtrl = eg.SmartSpinIntCtrl(
+            panel,
+            -1,
+            border,
+            min = 1,
+            max = 20,
+            textWidth = 105
+        )
+        titleCtrl = wx.TextCtrl(panel, -1, title)
+        titleLbl.SetToolTipString(self.text.titleTool)
+        titleCtrl.SetToolTipString(self.text.titleTool)
+        sizeModeLbl = wx.StaticText(panel, -1, self.text.sizeMode)
+        sizeModeCtrl = wx.CheckBox(panel, -1, "")
+        sizeModeCtrl.SetValue(sizeMode)
+        box0 = wx.StaticBox(panel,-1,text.main)
+        box1 = wx.StaticBox(panel,-1,text.other)
+        inTopSizer = wx.FlexGridSizer(1, 2, 5, 5)
+        inTopSizer.AddGrowableCol(1)
+        inTopSizer.Add(wx.StaticText(panel, -1, text.data),0,ACV)
+        inTopSizer.Add(dataCtrl,0,wx.EXPAND)
+        topSizer = wx.StaticBoxSizer(box0, wx.VERTICAL)
+        topSizer.Add(inTopSizer,0,wx.EXPAND)
+
+        inOtherSizer = wx.FlexGridSizer(5, 2, 5, 5)
+        inOtherSizer.AddGrowableCol(1)
+        inOtherSizer.Add(wx.StaticText(panel, -1, text.display),0,ACV)
+        inOtherSizer.Add(displayChoice)
+        inOtherSizer.Add(sizeModeLbl,0,ACV)
+        inOtherSizer.Add(sizeModeCtrl,0,wx.EXPAND)
+        inOtherSizer.Add(boxLbl,0,ACV)
+        inOtherSizer.Add(boxCtrl,0,wx.EXPAND)
+        inOtherSizer.Add(borderLbl,0,ACV)
+        inOtherSizer.Add(borderCtrl,0,wx.EXPAND)
+        inOtherSizer.Add(titleLbl,0,ACV)
+        inOtherSizer.Add(titleCtrl,0,wx.EXPAND)
+        timeoutSizer = wx.BoxSizer(wx.HORIZONTAL)
+        timeoutSizer.Add(timeoutLbl_1,0,ACV)
+        timeoutSizer.Add(timeoutCtrl,0,wx.LEFT|wx.RIGHT,5)
+        timeoutSizer.Add(timeoutLbl_2,0,ACV)
+        otherSizer = wx.StaticBoxSizer(box1, wx.VERTICAL)
+        otherSizer.Add(inOtherSizer,0,wx.EXPAND)
+        otherSizer.Add(timeoutSizer,0,wx.TOP,5)
+
+        panel.sizer.Add(topSizer,0,wx.EXPAND)
+        panel.sizer.Add(otherSizer,0,wx.EXPAND|wx.TOP,5)
+
+
+        while panel.Affirmed():
+            panel.SetResult(
+                dataCtrl.GetValue(),
+                displayChoice.GetValue(),
+                timeoutCtrl.GetValue(),
+                boxCtrl.GetValue(),
+                borderCtrl.GetValue(),
+                titleCtrl.GetValue(),
+                sizeModeCtrl.GetValue()
+            )
 #===============================================================================
 
 def _CreateShowPictureFrame():
