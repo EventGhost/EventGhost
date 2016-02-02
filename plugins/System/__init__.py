@@ -318,7 +318,6 @@ class System(eg.PluginBase):
                 try:
                     #deviceId = SoundMixer.GetDeviceId(deviceId, True).encode(eg.systemEncoding)
                     deviceId = SoundMixer.GetDeviceId(deviceId, True)
-                    print "repr(deviceId) =",repr(deviceId) 
                     newvalue=None
                     try:
                         newvalue = vistaVolumeDll.GetMute(deviceId)
