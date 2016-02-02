@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-version = "3.8"
+version = "3.10"
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2015 Lars-Peter Voss <bitmonster@eventghost.org>
@@ -19,6 +19,10 @@ version = "3.8"
 # Changelog (in reverse chronological order):
 # -------------------------------------------
 
+# 3.10 by by Pako 2016-01-12 11:01 UTC+1
+#     - bugfix (handle_one_request & self.rfile.read(1) == "")
+# 3.9 by Sem;colon 2015-12-28 01:10 UTC+1
+#     - The Method TriggerEnduringEvent now supports "prefix" as keyword argument on POST requests
 # 3.8 by Filandre 2015-03-29
 #     - add support for Hixie-76 protocol (for browsers 2010-2011)
 #     - fix connection for IE
@@ -152,6 +156,17 @@ from wx.lib.mixins.listctrl import TextEditMixin
 #syspath.append(mod_pth + "\\lib")
 from websocket import WebSocketApp
 SYS_VSCROLL_X = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
+
+CLOSE_CODE = {
+    "\x03\xe8":"NORMAL_CLOSURE", 
+    "\x03\xe9":"GOING_AWAY", 
+    "\x03\xea":"PROTOCOL_ERROR", 
+    "\x03\xee":"ABNORMAL_CLOSURE", 
+    "\x03\xf3":"SERVER_ERROR", 
+    "\x03\x00":"UNKNOWN_ERROR", 
+}
+
+
 true = True
 false = False
 METHODS = (
@@ -1022,15 +1037,20 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
                         decoded += char
             else:
 ###
-                length = ord(self.rfile.read(1)) & 127
-                if length == 126:
-                    length = unpack(">H", self.rfile.read(2))[0]
-                elif length == 127:
-                    length = unpack(">Q", self.rfile.read(8))[0]
-                masks = [ord(byte) for byte in self.rfile.read(4)]
-                decoded = ""
-                for char in self.rfile.read(length):
-                    decoded += chr(ord(char) ^ masks[len(decoded) % 4])
+                length = self.rfile.read(1)
+                if length:
+                    length = ord(length) & 127
+                    if length == 126:
+                        length = unpack(">H", self.rfile.read(2))[0]
+                    elif length == 127:
+                        length = unpack(">Q", self.rfile.read(8))[0]
+                    masks = [ord(byte) for byte in self.rfile.read(4)]
+                    decoded = ""
+                    for char in self.rfile.read(length):
+                        decoded += chr(ord(char) ^ masks[len(decoded) % 4])
+                else:
+                    opcode = "\x08"
+                    decoded = "\x03\xe9"
 
             _stream = 0x0
             _text = 0x1
@@ -1055,7 +1075,8 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
             
             # close
             if opcode == _close:
-               eg.PrintNotice('closing: '+decoded)
+               decoded = decoded if decoded in CLOSE_CODE else "\x03\x00"
+               eg.PrintNotice('Websocket closing: ' + CLOSE_CODE[decoded])
                self.on_ws_closed()
             # ping
             elif opcode == _ping:
@@ -1239,11 +1260,12 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
             if data[0]=="request":
                 self.SendContent(self.path)
                 if len(data)>1:
-                    plugin.TriggerEvent(data[1], data[2:])
+                    self.plugin.TriggerEvent(data[1], data[2:])
             else:
-                content = ""
+                content = "True"
                 i=1
                 if data[0]=="GetGlobalValue":
+                    content = ""
                     while i<len(data):
                         try:
                             content += unicode(self.environment.globals[data[i]])
@@ -1253,6 +1275,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
                         if i<len(data):
                             content+=self.plugin.valueSplitter
                 elif data[0]=="ExecuteScript":
+                    content = ""
                     while i < len(data):
                         try:
                             output = eval(data[i])
@@ -1270,18 +1293,20 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
                         if i < len(data):
                             content += self.plugin.valueSplitter
                 elif data[0] == "GetValue":
+                    content = ""
                     while i < len(data):
                         try:
-                            content += plugin.GetValue(data[i], self.clAddr[0])
+                            content += self.plugin.GetValue(data[i], self.clAddr[0])
                         except:
                             content += "None"
                         i+=1
                         if i<len(data):
                             content+=self.plugin.valueSplitter
                 elif data[0]=="GetPersistentValue":
+                    content = ""
                     while i<len(data):
                         try:
-                            content += plugin.GetPersistentValue(data[i], self.clAddr[0])
+                            content += self.plugin.GetPersistentValue(data[i], self.clAddr[0])
                         except:
                             content += "None"
                         i+=1
@@ -1289,56 +1314,50 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
                             content+=self.plugin.valueSplitter
                 elif data[0]=="SetValue":
                     try:
-                        plugin.SetValue(data[1], data[2])
-                        content = "True"
+                        self.plugin.SetValue(data[1], data[2])
                     except:
                         content = "False"
                 elif data[0]=="SetPersistentValue":
                     try:
-                        plugin.SetPersistentValue(data[1], data[2])
-                        content = "True"
+                        self.plugin.SetPersistentValue(data[1], data[2])
                     except:
                         content = "False"
                 elif data[0]=="GetAllValues":
                     try:
-                        content = dumps(plugin.GetAllValues(self.clAddr[0]))
+                        content = dumps(self.plugin.GetAllValues(self.clAddr[0]))
                     except:
                         content = "False"
                 elif data[0]=="GetChangedValues":
                     try:
-                        content = dumps(plugin.GetChangedValues(self.clAddr[0]))
+                        content = dumps(self.plugin.GetChangedValues(self.clAddr[0]))
                     except:
                         content = "False"
                 elif data[0] == "TriggerEnduringEvent":
-                    try:
-                        plugin.TriggerEnduringEvent(data[1], data[2:])
-                        self.repeatTimer.Reset(2000)
-                        content = "True"
-                    except:
-                        content = "False"
+                    self.plugin.EndLastEnduringEvent()
+                    if data[1][0:7]=="prefix=" and len(data)>2:
+                        data[2]=data[2].replace("suffix=","")
+                        if len(data)>3:
+                            data[3]=data[3].replace("payload=","")
+                        self.plugin.lastEnduringEvent=eg.TriggerEnduringEvent(prefix=data[1][7:], suffix=data[2], payload=data[3:])
+                    else:
+                        self.plugin.lastEnduringEvent=self.plugin.TriggerEnduringEvent(data[1], data[2:])
+                    self.repeatTimer.Reset(2000)
                 elif data[0] == "RepeatEnduringEvent":
-                    try:
-                        self.repeatTimer.Reset(2000)
-                        content = "True"
-                    except:
-                        content = "False"
+                    self.repeatTimer.Reset(2000)
                 elif data[0] == "EndLastEvent":
-                    try:
-                        self.repeatTimer.Reset(None)
-                        plugin.EndLastEvent()
-                        content = "True"
-                    except:
-                        content = "False"
+                    self.repeatTimer.Reset(None)
+                    #self.plugin.EndLastEvent()
+                    self.plugin.EndLastEnduringEvent()
                 elif data[0]=="TriggerEvent":
                     if data[1][0:7]=="prefix=" and len(data)>2:
                         data[2]=data[2].replace("suffix=","")
                         if len(data)>3:
-                          data[3]=data[3].replace("payload=","")
+                            data[3]=data[3].replace("payload=","")
                         eg.TriggerEvent(prefix=data[1][7:], suffix=data[2], payload=data[3:])
                     else:
-                        plugin.TriggerEvent(data[1], data[2:])
+                        self.plugin.TriggerEvent(data[1], data[2:])
                 else:
-                    plugin.TriggerEvent(data[0], data[1:])
+                    self.plugin.TriggerEvent(data[0], data[1:])
                 self.end_request(content)
 # Enhancement by Sem;colon - END
 
@@ -3511,23 +3530,26 @@ class SendEventExt(eg.ActionBase):
                 # we got an error - but not a 401 error
                 print text.msg1
                 print text.msg2
-           
+                print "ERROR "+str(e.code)
+                return None
             authline = e.headers.get('www-authenticate', '')               
             # this gets the www-authenticat line from the headers - which has the authentication scheme and realm in it
             if not authline:
                 print text.msg3
-               
+                return None
             authobj = re_compile(r'''(?:\s*www-authenticate\s*:)?\s*(\w*)\s+realm=['"](\w+)['"]''', IGNORECASE)         
             # this regular expression is used to extract scheme and realm
             matchobj = authobj.match(authline)
             if not matchobj:                                       
                 # if the authline isn't matched by the regular expression then something is wrong
                 print text.msg4
+                #authheader=b'Basic ' + b64encode(user + b':' + password)
+                return None
             scheme = matchobj.group(1)
             realm = matchobj.group(2)
             if scheme.lower() != 'basic':
                 print text.msg5
-           
+                return None
             base64string = b64_encStr('%s:%s' % (user, password))[:-1]
             authheader =  "Basic %s" % base64string
             req.add_header("Authorization", authheader)
@@ -3535,9 +3557,8 @@ class SendEventExt(eg.ActionBase):
                 handle = urlopen(req)
             except IOError, e:
                 print text.msg6
-        #else:
-            # If we don't fail then the page isn't protected
-            #print "This page isn't protected by authentication."
+                print "ERROR "+str(e.code)
+                return None
         thepage = unquote(handle.read()) # handle.read()
         return thepage
 
@@ -3578,6 +3599,7 @@ class Webserver(eg.PluginBase):
     pubVars = {}
     pubPerVars = {}
     wsServers = {}
+    lastEnduringEvent = None
 
     class text:
         generalBox = "General Settings"
@@ -3709,7 +3731,8 @@ class Webserver(eg.PluginBase):
             plugin = self
             environment = Environment(loader=FileLoader())
             environment.globals = eg.globals.__dict__
-            repeatTimer = eg.ResettableTimer(self.EndLastEvent)
+            #repeatTimer = eg.ResettableTimer(self.EndLastEvent)
+            repeatTimer = eg.ResettableTimer(self.EndLastEnduringEvent)
         RequestHandler.basepath = basepath
         RequestHandler.authRealm = authRealm
         RequestHandler.authString = authString
@@ -3718,14 +3741,19 @@ class Webserver(eg.PluginBase):
         sr = int(not (isfile(certfile) and isfile(keyfile)))
         print self.text.started % (self.text.secur[sr], port)
         eg.PrintNotice("Persistent values: " + repr(self.pubPerVars))
-
-
+        
+        
     def __stop__(self):
         self.server.Stop()
         print self.text.stopped % self.port
         self.StopAllClients()
 
 
+    def EndLastEnduringEvent(self):
+        if self.lastEnduringEvent:
+            self.lastEnduringEvent.SetShouldEnd()
+        
+        
     def GetValue(self, key, client = None):
         if key in self.pubVars:
             if client:
@@ -3925,13 +3953,18 @@ class Webserver(eg.PluginBase):
             else:
                 self.TriggerEvent(*args, **kwargs)
         elif methodName == "TriggerEnduringEvent":
-            self.TriggerEnduringEvent(*args, **kwargs)
+            self.EndLastEnduringEvent()
+            if 'prefix' in kwargs:
+                self.lastEnduringEvent=eg.TriggerEnduringEvent(*args, **kwargs)
+            else:
+                self.lastEnduringEvent=self.TriggerEnduringEvent(*args, **kwargs)
             handler.repeatTimer.Reset(2000)
         elif methodName == "RepeatEnduringEvent":
             handler.repeatTimer.Reset(2000)
         elif methodName == "EndLastEvent":
             handler.repeatTimer.Reset(None)
-            self.EndLastEvent()
+            #self.EndLastEvent()
+            self.EndLastEnduringEvent()
         return result
 
 
@@ -3995,13 +4028,18 @@ class Webserver(eg.PluginBase):
             else:
                 self.TriggerEvent(*args, **kwargs)
         #elif methodName == "TriggerEnduringEvent":
-        #    plugin.TriggerEnduringEvent(*args, **kwargs)
-        #    handler.repeatTimer.Reset(2000)
+        #    self.EndLastEnduringEvent()  
+        #    if 'prefix' in kwargs:
+        #        self.lastEnduringEvent=eg.TriggerEnduringEvent(*args, **kwargs)
+        #    else:
+        #        self.lastEnduringEvent=self.TriggerEnduringEvent(*args, **kwargs)
+        #    self.repeatTimer.Reset(2000)
         #elif methodName == "RepeatEnduringEvent":
-        #    handler.repeatTimer.Reset(2000)
+        #    self.repeatTimer.Reset(2000)
         #elif methodName == "EndLastEvent":
-        #    handler.repeatTimer.Reset(None)
-        #    plugin.EndLastEvent()
+        #    self.repeatTimer.Reset(None)
+        #    #self.EndLastEvent()
+        #    self.EndLastEnduringEvent()
         return result
 
 
