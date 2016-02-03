@@ -1191,6 +1191,9 @@ Whereas selecting the "%s" checkbox will cause the player to jump randomly throu
         "Year",
     )
 #====================================================================
+def getHwnd():
+    if eg.document is not None:
+        return eg.document.frame.GetHandle()
 
 class MediaMonkey(eg.PluginBase):
     manFlg = False
@@ -1268,9 +1271,10 @@ class MediaMonkey(eg.PluginBase):
                 if isfile(MMpath+"\\EventGhost.vbs"):
                     mssgs.extend((" ", self.text.vbsFile % MMpath))
                 self.info.Start = self.DummyStart #Start disabling
+                hwnd = getHwnd()
                 wx.CallAfter(
                     MessageBox,
-                    eg.document.frame.GetHandle(),
+                    hwnd,
                     "\n".join(mssgs),
                     "EventGhost - MediaMonkey plugin",
                     48
@@ -1278,9 +1282,10 @@ class MediaMonkey(eg.PluginBase):
                 raise self.Exceptions.InitFailed
             elif isfile(MMpath+"\\EventGhost.vbs"):
                 self.info.Start = self.DummyStart #Start disabling
+                hwnd = getHwnd()
                 wx.CallAfter(
                     MessageBox,
-                    eg.document.frame.GetHandle(),
+                    hwnd,
                     self.text.vbsFile % MMpath,
                     "EventGhost - MediaMonkey plugin",
                     48
@@ -1289,9 +1294,10 @@ class MediaMonkey(eg.PluginBase):
 
         else:
             self.info.Start = self.DummyStart #Start disabling
+            hwnd = getHwnd()
             wx.CallAfter(
                 MessageBox,
-                eg.document.frame.GetHandle(),
+                hwnd,
                 self.text.noMM,
                 "EventGhost - MediaMonkey plugin",
                 48
