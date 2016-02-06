@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-version = "3.10"
+version = "3.11"
 #
 # This file is part of EventGhost.
 # Copyright (C) 2005-2015 Lars-Peter Voss <bitmonster@eventghost.org>
@@ -19,6 +19,8 @@ version = "3.10"
 # Changelog (in reverse chronological order):
 # -------------------------------------------
 
+# 3.11 by by Pako 2016-02-06 08:44 UTC+1
+#     - bugfix (Send or Broadcast Value, when value is persistent)
 # 3.10 by by Pako 2016-01-12 11:01 UTC+1
 #     - bugfix (handle_one_request & self.rfile.read(1) == "")
 # 3.9 by Sem;colon 2015-12-28 01:10 UTC+1
@@ -1591,7 +1593,7 @@ class WsSendValue(eg.ActionBase):
             vals = {}
             for key in keys:
                 k = self.plugin.EvalString(key)
-                vals[k] = self.plugin.GetValue(k)
+                vals[k] = self.plugin.GetUniValue(k)
         except:
             eg.PrintError(self.text.err % str(varnames))
         client = eg.event.payload[0] if modeClient else (
@@ -3068,7 +3070,7 @@ class WsBroadcastValue(eg.ActionBase):
             vals = {}
             for key in keys:
                 k = self.plugin.EvalString(key)
-                vals[k] = self.plugin.GetValue(k)
+                vals[k] = self.plugin.GetUniValue(k)
         except:
             eg.PrintError(self.text.err % str(varnames))
         return self.plugin.BroadcastMessage(
@@ -3763,6 +3765,13 @@ class Webserver(eg.PluginBase):
                 return self.pubVars[key]
             else:
                 return self.pubVars[key]
+
+
+    def GetUniValue(self, key, client = None):
+        if key in self.pubVars:
+            return self.GetValue(key, client)
+        elif key in self.pubPerVars:
+            return self.GetPersistentValue(key, client)
 
 
     def DelPersistentValue(self, key):
@@ -4654,7 +4663,7 @@ class ClSendValue(eg.ActionBase):
             vals = {}
             for key in keys:
                 k = self.plugin.EvalString(key)
-                vals[k] = self.plugin.GetValue(k)
+                vals[k] = self.plugin.GetUniValue(k)
         except:
             eg.PrintError(self.text.err % str(varnames))
         return self.plugin.ClientSendMessage(
