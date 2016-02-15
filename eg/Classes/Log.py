@@ -47,6 +47,7 @@ class Log(object):
 
     def __init__(self):
         self.logListeners = []
+        self.eventListeners = []
         self.NativeLog = True
         self.buffer = ""
         self.data = deque()
@@ -98,7 +99,6 @@ class Log(object):
         wx.Log.SetActiveTarget(MyLog())
 
 
-
     def SetCtrl(self, logCtrl):
         if logCtrl is not None:
             self.ctrl = logCtrl
@@ -125,6 +125,16 @@ class Log(object):
     def RemoveLogListener(self, listener):
         if listener in self.logListeners:
             self.logListeners.remove(listener)
+   
+
+    def AddEventListener(self, listener):
+        if listener not in self.eventListeners:
+            self.eventListeners.append(listener)
+
+
+    def RemoveEventListener(self, listener):
+        if listener in self.eventListeners:
+            self.eventListeners.remove(listener)
    
 
     def _WriteLine(self, line, icon, wRef, when, indent):

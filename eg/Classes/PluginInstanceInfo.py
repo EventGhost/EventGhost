@@ -154,8 +154,8 @@ class PluginInstanceInfo(PluginModuleInfo):
             self.initFailed = False
         except eg.Exceptions.PluginNotFound, exc:
             pass
-        except eg.Exception, exc:
-            eg.PrintError(exc.message)
+        except eg.Exception as exc:
+            eg.PrintError(exc.text.decode(eg.systemEncoding))
         except:
             eg.PrintTraceback()
 

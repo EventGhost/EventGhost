@@ -48,6 +48,24 @@ class Text(eg.TranslatableStrings):
 class OptionsDialog(eg.TaskletDialog):
     instance = None
 
+    def UpdateFont(self, val):
+        font = eg.document.frame.treeCtrl.GetFont()
+        if val:
+            font = wx.Font(font.GetPointSize(), wx.DEFAULT, wx.NORMAL, wx.NORMAL, False, "Courier New")
+        wx.CallAfter(eg.document.frame.logCtrl.SetFont, font)
+
+    @eg.LogItWithReturn
+    def OnClose(self, event):
+        self.UpdateFont(self.useFixedFont)
+        self.DispatchEvent(event, wx.ID_CANCEL)
+
+
+    @eg.LogItWithReturn
+    def OnCancel(self, event):
+        self.UpdateFont(self.useFixedFont)
+        self.DispatchEvent(event, wx.ID_CANCEL)
+
+
     @eg.LogItWithReturn
     def Configure(self, parent=None):
         if OptionsDialog.instance:
@@ -57,6 +75,7 @@ class OptionsDialog(eg.TaskletDialog):
 
         text = Text
         config = eg.config
+        self.useFixedFont = config.useFixedFont
 
         eg.TaskletDialog.__init__(
             self,
@@ -97,11 +116,7 @@ class OptionsDialog(eg.TaskletDialog):
             text.propResize
         )
         def OnFixedFontBox(evt):
-            font = eg.document.frame.treeCtrl.GetFont()
-            #if useFixedFontCtrl.GetValue():
-            if evt.IsChecked():
-                font = wx.Font(font.GetPointSize(), wx.DEFAULT, wx.NORMAL, wx.NORMAL, False, "Courier New")
-            wx.CallAfter(eg.document.frame.logCtrl.SetFont, font)            
+            self.UpdateFont(evt.IsChecked())
         useFixedFontCtrl.Bind(wx.EVT_CHECKBOX, OnFixedFontBox)
 
         #checkUpdateCtrl = page1.CheckBox(config.checkUpdate, text.CheckUpdate)

@@ -1000,7 +1000,7 @@ class MainFrame(wx.Frame):
 
     def OnCmdWebWiki(self):
         import webbrowser
-        webbrowser.open("http://www.eventghost.net/wiki/", 2, 1)
+        webbrowser.open("http://www.eventghost.net/mediawiki/", 2, 1)
 
 
     def OnCmdCheckUpdate(self):

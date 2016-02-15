@@ -1,26 +1,30 @@
+# -*- coding: utf-8 -*-
+#
 # plugins/MediaPlayerClassic/__init__.py
 #
 # Copyright (C) 2006 MonsterMagnet
 #
 # This file is a plugin for EventGhost.
+# Copyright (C) 2005-2012 Lars-Peter Voss <bitmonster@eventghost.org>
 #
-# EventGhost is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
 #
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+    
 # Changelog (in reverse chronological order):
 # -------------------------------------------
-# 2.7 by Pako 2013-09-02 10:14 UTC+1
+# 2.9 by Pako 2015-01-12 19:23 UTC+1
+#     - bugfix - Find_MPC() function now works also in 64-bit system
+# 2.8 by Pako 2014-12-26 10:38 UTC+1
+#     - bugfix - the function GetMpcHcPath() improved
+# 2.7 by Pako 2014-12-18 08:09 UTC+1
 #     - bugfix (Show menu - Test button)
 # 2.6 by Pako 2013-02-10 10:56 UTC+1
 #     - the function GetMpcHcPath() improved - now works also in x64 environment
@@ -68,7 +72,7 @@
 eg.RegisterPlugin(
     name = "Media Player Classic",
     author = "MonsterMagnet",
-    version = "2.7",
+    version = "2.9",
     kind = "program",
     guid = "{DD75104D-D586-438A-B63D-3AD01A4D4BD3}",
     createMacrosOnAdd = True,
@@ -76,7 +80,6 @@ eg.RegisterPlugin(
         'Adds actions to control '
         '<br><a href="http://mpc-hc.sourceforge.net/">'
         'Media Player Classic - Home Cinema</a>.'
-
     ),
     help = """
         For proper functioning of this plugin should be used
@@ -122,7 +125,7 @@ from sys import getfilesystemencoding
 FSE = getfilesystemencoding()
 from eg.Classes.MainFrame.TreeCtrl import DropTarget as EventDropTarget
 
-GWL_EXSTYLE = -20
+GWL_EXSTYLE      = -20
 WS_EX_WINDOWEDGE = 0x00000100
 WM_INITMENUPOPUP = 0x0117
 MF_GRAYED        = 1
@@ -139,7 +142,7 @@ WM_CLOSE         = 16
 
 def Find_MPC():
     mpchc = eg.WindowMatcher(
-        u'mpc-hc.exe',
+        u'mpc-hc{*}.exe',
         None,
         u'MediaPlayerClassicW',
         None,
@@ -537,7 +540,7 @@ class EventListCtrl(wx.ListCtrl):
 
     def OnDeleteButton(self, event=None):
         self.DeleteItem(self.sel)
-        self.evtList[self.ix].pop(self.sel)
+        self.evtList[self.ix].pop(self.sel)       
         evt = eg.ValueChangedEvent(self.id, value = self)
         wx.PostEvent(self, evt)
         if event:
@@ -729,7 +732,7 @@ class GoToFrame(wx.Frame):
         gotoSize = self.GoToCtrl.GetTextExtent(data)
         wx.CallAfter(self.UpdateOSD, data)
         if sizeFlag:
-            gotoSize = (1.4*gotoSize[0],gotoSize[1])
+            gotoSize = (1.4 * gotoSize[0],gotoSize[1])
         self.GoToCtrl.SetSize(gotoSize)
         self.GoToCtrl.SetPosition((border, 1.5*border+labelSize[1]))
         self.SetSize((4+gotoSize[0]+2*border,2+labelSize[1]+gotoSize[1]+2.5*border))
@@ -1414,12 +1417,12 @@ You can of course also use an expression such as **{eg.result}** or **{eg.event.
 
     def __call__(self, val=""):
         if self.plugin.runFlg and self.plugin.mpcHwnd:
-        try:
-            val = eg.ParseString(val)
-            val = int(val)
-        except:
-            raise self.Exception(self.text.error % val)
-            return
+            try:
+                val = eg.ParseString(val)
+                val = int(val)
+            except:
+                raise self.Exception(self.text.error % val)
+                return
             return SendMessage(self.plugin.mpcHwnd, WM_COMMAND, val, 0)
         else:
             raise self.Exceptions.ProgramNotRunning
@@ -1439,9 +1442,7 @@ class ActionPrototype(eg.ActionBase):
     
     def __call__(self):
         if self.plugin.runFlg and self.plugin.mpcHwnd:
-            return SendMessage(self.plugin.mpcHwnd, WM_COMMAND, self.value, 0)
-        else:
-            raise self.Exceptions.ProgramNotRunning
+            wx.CallAfter(SendMessage,self.plugin.mpcHwnd, WM_COMMAND, self.value, 0)
 #===============================================================================
 
 class GetWindowState(eg.ActionBase):
@@ -1563,7 +1564,7 @@ class GetTimes(eg.ActionBase):
 
     def __call__(self):
         if self.plugin.runFlg and self.plugin.mpcHwnd:
-        try:
+            try:
                 child = GetDlgItem(self.plugin.mpcHwnd, 10021)
                 if GetClassName(child) ==  "#32770":
                     statText = GetDlgItem(child, 12027)
@@ -1883,7 +1884,7 @@ class GoTo_OSD(eg.ActionBase):
                         self.plugin,
                         self.event,
                         displayChoice.GetSelection(),
-                            self.plugin.mpcHwnd,
+                        self.plugin.mpcHwnd,
                         panel.evtList,
                         self.sizeFlag
                     )
@@ -2240,7 +2241,7 @@ class Run(eg.ActionBase):
 
     def __call__(self):
         if self.plugin.mpcPath:
-            self.plugin.StartMpcHc()        
+            self.plugin.ConnectMpcHc()        
 #===============================================================================
 
 class MediaPlayerClassic(eg.PluginBase):
@@ -2268,7 +2269,7 @@ class MediaPlayerClassic(eg.PluginBase):
         opened = "Opened"
         closed = "Closed"
         label = "Path to MPC-HC executable:"
-        fileMask = "MPC-HC executable|mpc-hc.exe|All-Files (*.*)|*.*"
+        fileMask = "MPC-HC executable|mpc-hc*.exe|All EXE files (*.exe)|*.exe"
         gotoLabel = "Go To..."
 
 
@@ -2288,9 +2289,9 @@ class MediaPlayerClassic(eg.PluginBase):
         cmd = cpyData.contents.dwData
         msg = wstring_at(cpyData.contents.lpData)
         if cmd == CMD_CONNECT:
-            self.connected = True
             self.mpcHwnd = int(msg)
-            eg.PrintNotice("MPC-HC connected %i" % self.mpcHwnd)
+            self.connected = True
+            eg.TriggerEvent("Connected",prefix="MPC-HC")
         elif cmd == CMD_STATE:
             state = int(msg)
             if self.state != state:
@@ -2364,8 +2365,8 @@ class MediaPlayerClassic(eg.PluginBase):
         self.mySched=eg.scheduler.AddTask(2, self.mpcIsRunning) # must run continuously !
         if not self.isRunning(): #user closed MPC-HC ?
             if self.runFlg and self.connected:
-                self.runFlg = False
-                self.connected = False
+                    self.runFlg = False
+                    self.connected = False
                     self.strtFlg = False
                     self.myStart = None
                     self.mpcHwnd = None
@@ -2459,21 +2460,23 @@ class MediaPlayerClassic(eg.PluginBase):
         while panel.Affirmed():
             panel.SetResult(filepathCtrl.GetValue())
 
-        
+
     def GetMpcHcPath(self):
         """
-        Get the path of Foobar2000's installation directory through querying 
+        Get the path of MPC-HC's installation directory through querying 
         the Windows registry.
         """
         try:
-            args = [_winreg.HKEY_CURRENT_USER,            
-                "Software\Gabest\Media Player Classic"]
             if "PROCESSOR_ARCHITEW6432" in environ:
+                args = [_winreg.HKEY_CURRENT_USER,            
+                    "Software\MPC-HC\MPC-HC"]
                 args.extend((0, _winreg.KEY_READ | _winreg.KEY_WOW64_64KEY))
+            else:
+                args = [_winreg.HKEY_CURRENT_USER,            
+                    "Software\Gabest\Media Player Classic"]
             mpc = _winreg.OpenKey(*args)
             mpcPath =_winreg.QueryValueEx(mpc, "ExePath")[0]
             _winreg.CloseKey(mpc)
-            mpcPath = join(mpcPath, "mpc-hc.exe")
         except WindowsError:
             mpcPath = None
         return mpcPath

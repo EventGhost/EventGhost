@@ -1,3 +1,20 @@
+# -*- coding: utf-8 -*-
+#
+# This file is part of EventGhost.
+# Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+
 import eg
 import wx
 import _winreg
@@ -651,6 +668,7 @@ class RegistryChange(eg.ActionBase):
             'Change "%s" to %s if exists only',
             'Delete "%s"'
         )
+        disableParsing = "Disable parsing of string"
 
 
     @classmethod
@@ -658,7 +676,18 @@ class RegistryChange(eg.ActionBase):
         cls.text2 = cls.plugin.text.RegistryGroup
 
 
-    def __call__(self, key, subkey, valueName, action, keyType, newValue):
+    def __call__(
+        self,
+        key,
+        subkey,
+        valueName,
+        action,
+        keyType,
+        newValue,
+        disableParsing=False
+    ):
+        if not disableParsing:
+            newValue = eg.ParseString(newValue)
         if not key:
             self.PrintError(self.text2.noKeyError)
             return 0
@@ -731,7 +760,16 @@ class RegistryChange(eg.ActionBase):
             return 0
 
 
-    def GetLabel(self, key, subkey, valueName, action, keyType, newValue):
+    def GetLabel(
+        self,
+        key,
+        subkey,
+        valueName,
+        action,
+        keyType,
+        newValue,
+        disableParsing=False
+    ):
         hkey = FullKeyName(key, subkey, valueName)
         if action == 2:
             return self.text.labels[action] % hkey
@@ -745,7 +783,8 @@ class RegistryChange(eg.ActionBase):
         valueName = None,
         action = 0,
         keyType = None,
-        newValue = ""
+        newValue = "",
+        disableParsing=False
     ):
         text = self.text
         text2 = self.text2
@@ -760,7 +799,10 @@ class RegistryChange(eg.ActionBase):
             Config.lastValueNameSelected = valueName
 
         panel = eg.ConfigPanel(resizable=True)
-
+        disableParsingBox = panel.CheckBox(
+            bool(disableParsing),
+            text.disableParsing
+        )
         #keyChooser
         regChooserCtrl = RegistryChooser(
             panel,
@@ -817,7 +859,7 @@ class RegistryChange(eg.ActionBase):
         panel.sizer.Add(wx.Size(5, 5))
 
         #new Value Input
-        newValueSizer = wx.FlexGridSizer(1, 4, 5, 5)
+        newValueSizer = wx.FlexGridSizer(2, 4, 5, 5)
         newValueSizer.AddGrowableCol(1)
 
         newValueSizer.Add(
@@ -840,6 +882,8 @@ class RegistryChange(eg.ActionBase):
                 typeChoice.SetSelection(i)
 
         newValueSizer.Add(typeChoice)
+        newValueSizer.Add((-1,-1))
+        newValueSizer.Add(disableParsingBox)
 
         OnRadioButton(wx.CommandEvent())
         rb[0].Bind(wx.EVT_RADIOBUTTON, OnRadioButton)
@@ -860,5 +904,13 @@ class RegistryChange(eg.ActionBase):
 
             newValue = newValueCtrl.GetValue()
 
-            panel.SetResult(key, subkey, valueName, action, keyType, newValue)
+            panel.SetResult(
+                key,
+                subkey,
+                valueName,
+                action,
+                keyType,
+                newValue,
+                disableParsingBox.GetValue()
+            )
 

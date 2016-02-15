@@ -5,25 +5,25 @@
 extern PyObject *
 SetKeyboardCallback(PyObject *self, PyObject *args);
 
-extern void 
+extern void
 SetKeyboardHook(HINSTANCE hMod);
 
-extern void 
+extern void
 UnsetKeyboardHook(void);
 
 extern BOOL CheckKeyState(void);
 
-typedef struct{
-	BYTE numPressedKeys;
+typedef struct {
+  BYTE numPressedKeys;
   BYTE lastNumPressedKeys;
-	DWORD lastVkCode;
-	DWORD lastScanCode;
-	DWORD lastFlags;
-	BOOL lastWasBlocked;
-	BOOL ignoreNextWinKey;
-	BYTE blockedWinKey;
-	BYTE pressedKeys[16];
-	HANDLE lock;
-}KEYHOOK_DATA;
+  DWORD lastVkCode;
+  DWORD lastScanCode;
+  DWORD lastFlags;
+  BOOL lastWasBlocked;
+  BOOL blockNextWin;
+  BYTE lastWin;
+  BYTE pressedKeys[16];
+  HANDLE lock;
+} KEYHOOK_DATA;
 
 extern KEYHOOK_DATA khData;

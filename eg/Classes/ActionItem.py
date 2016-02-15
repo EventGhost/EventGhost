@@ -41,6 +41,7 @@ class ActionItem(TreeItem):
     openConfigDialog = None
     helpDialog = None
     shouldSelectOnExecute = False
+    url = None
 
     def GetData(self):
         attr, text = TreeItem.GetData(self)

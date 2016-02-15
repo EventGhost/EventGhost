@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of EventGhost.
+# This file is a plugin for EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
 #
 # EventGhost is free software; you can redistribute it and/or modify it under
@@ -28,7 +28,7 @@ import eg
 eg.RegisterPlugin(
     name = "Desktop Remote",
     author = "Bitmonster",
-    version = "1.0." + "$LastChangedRevision$".split()[1],
+    version = "1.0." + "$LastChangedRevision: 1158 $".split()[1],
     guid = "{5DFFBD61-7582-4D6F-8EA9-9CB36284C9CF}",
     canMultiLoad = True,
     url = "http://www.eventghost.net/forum/viewtopic.php?t=513",

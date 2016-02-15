@@ -1,5 +1,7 @@
+# -*- coding: utf-8 -*-
+
 version = "0.1.8"
-# This file is part of EventGhost.
+
 # This file is part of EventGhost.
 # Copyright (C) 2008-2013 Pako <lubos.ruckl@quick.cz>
 #

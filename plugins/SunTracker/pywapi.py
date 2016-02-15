@@ -31,13 +31,13 @@ Fetches weather reports from Google Weather, Yahoo Wheather and NOAA
 import urllib2, string
 from xml.dom import minidom
 
-GOOGLE_WEATHER_URL   = 'http://www.google.com/ig/api?weather=%s&hl=%s'
+GOOGLE_WEATHER_URL = 'http://www.google.com/ig/api?weather=%s&hl=%s'
 
 #YAHOO_WEATHER_URL    = 'http://xml.weather.yahoo.com/forecastrss?p=%s&u=%s' #krambriw
 YAHOO_WEATHER_URL    = 'http://weather.yahooapis.com/forecastrss?w=%s&u=%s&d=5' #krambriw
-YAHOO_WEATHER_NS     = 'http://xml.weather.yahoo.com/ns/rss/1.0'
+YAHOO_WEATHER_NS = 'http://xml.weather.yahoo.com/ns/rss/1.0'
 
-NOAA_WEATHER_URL     = 'http://www.weather.gov/xml/current_obs/%s.xml'
+NOAA_WEATHER_URL = 'http://www.weather.gov/xml/current_obs/%s.xml'
 
 def get_weather_from_google(location_id, hl = ''):
     """
@@ -52,10 +52,10 @@ def get_weather_from_google(location_id, hl = ''):
     """
 
     url = GOOGLE_WEATHER_URL % (location_id, hl)
-        handler = urllib2.urlopen(url)
+    handler = urllib2.urlopen(url)
     dom = minidom.parse(handler)    
     handler.close()
-    
+
     weather_data = {}
     weather_dom = dom.getElementsByTagName('weather')[0]
 
@@ -66,7 +66,7 @@ def get_weather_from_google(location_id, hl = ''):
     for (tag, list_of_tags2) in data_structure.iteritems():
         tmp_conditions = {}
         for tag2 in list_of_tags2:
-                tmp_conditions[tag2] =  weather_dom.getElementsByTagName(tag)[0].getElementsByTagName(tag2)[0].getAttribute('data')
+            tmp_conditions[tag2] =  weather_dom.getElementsByTagName(tag)[0].getElementsByTagName(tag2)[0].getAttribute('data')
         weather_data[tag] = tmp_conditions
 
     forecast_conditions = ('day_of_week', 'low', 'high', 'icon', 'condition')
@@ -78,13 +78,13 @@ def get_weather_from_google(location_id, hl = ''):
             tmp_forecast[tag] = forecast.getElementsByTagName(tag)[0].getAttribute('data')
         forecasts.append(tmp_forecast)
 
-    weather_data['forecasts'] = forecasts
+    weather_data['forecasts'] = forecasts    
     dom.unlink()
 
     return weather_data
     
-    
-    
+
+
 def get_weather_from_yahoo(location_id, units = 'metric'):
     """
     Fetches weather report from Yahoo!
@@ -106,39 +106,39 @@ def get_weather_from_yahoo(location_id, units = 'metric'):
     else:
         unit = 'f'
     try: #krambriw
-    url = YAHOO_WEATHER_URL % (location_id, unit)
-    handler = urllib2.urlopen(url)
-    dom = minidom.parse(handler)    
-    handler.close()
+        url = YAHOO_WEATHER_URL % (location_id, unit)
+        handler = urllib2.urlopen(url)
+        dom = minidom.parse(handler)    
+        handler.close()
+            
+        weather_data['title'] = dom.getElementsByTagName('title')[0].firstChild.data
+        weather_data['link'] = dom.getElementsByTagName('link')[0].firstChild.data
+    
+        ns_data_structure = { 
+            'location': ('city', 'region', 'country'),
+            'units': ('temperature', 'distance', 'pressure', 'speed'),
+            'wind': ('chill', 'direction', 'speed'),
+            'atmosphere': ('humidity', 'visibility', 'pressure', 'rising'),
+            'astronomy': ('sunrise', 'sunset'),
+            'condition': ('text', 'code', 'temp', 'date')
+        }       
         
-    weather_data['title'] = dom.getElementsByTagName('title')[0].firstChild.data
-    weather_data['link'] = dom.getElementsByTagName('link')[0].firstChild.data
-
-    ns_data_structure = { 
-        'location': ('city', 'region', 'country'),
-        'units': ('temperature', 'distance', 'pressure', 'speed'),
-        'wind': ('chill', 'direction', 'speed'),
-        'atmosphere': ('humidity', 'visibility', 'pressure', 'rising'),
-        'astronomy': ('sunrise', 'sunset'),
-        'condition': ('text', 'code', 'temp', 'date')
-    }       
+        for (tag, attrs) in ns_data_structure.iteritems():
+            weather_data[tag] = xml_get_ns_yahoo_tag(dom, YAHOO_WEATHER_NS, tag, attrs)
     
-    for (tag, attrs) in ns_data_structure.iteritems():
-        weather_data[tag] = xml_get_ns_yahoo_tag(dom, YAHOO_WEATHER_NS, tag, attrs)
-
-    weather_data['geo'] = {}
-    weather_data['geo']['lat'] = dom.getElementsByTagName('geo:lat')[0].firstChild.data
-    weather_data['geo']['long'] = dom.getElementsByTagName('geo:long')[0].firstChild.data
-
-    weather_data['condition']['title'] = dom.getElementsByTagName('item')[0].getElementsByTagName('title')[0].firstChild.data
-    weather_data['html_description'] = dom.getElementsByTagName('item')[0].getElementsByTagName('description')[0].firstChild.data
+        weather_data['geo'] = {}
+        weather_data['geo']['lat'] = dom.getElementsByTagName('geo:lat')[0].firstChild.data
+        weather_data['geo']['long'] = dom.getElementsByTagName('geo:long')[0].firstChild.data
     
-    forecasts = []
-    for forecast in dom.getElementsByTagNameNS(YAHOO_WEATHER_NS, 'forecast'):
-        forecasts.append(xml_get_attrs(forecast,('date', 'low', 'high', 'text', 'code')))
-    weather_data['forecasts'] = forecasts
-    
-    dom.unlink()
+        weather_data['condition']['title'] = dom.getElementsByTagName('item')[0].getElementsByTagName('title')[0].firstChild.data
+        weather_data['html_description'] = dom.getElementsByTagName('item')[0].getElementsByTagName('description')[0].firstChild.data
+        
+        forecasts = []
+        for forecast in dom.getElementsByTagNameNS(YAHOO_WEATHER_NS, 'forecast'):
+            forecasts.append(xml_get_attrs(forecast,('date', 'low', 'high', 'text', 'code')))
+        weather_data['forecasts'] = forecasts
+        
+        dom.unlink()
     except: #krambriw
         pass #krambriw
 

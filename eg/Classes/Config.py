@@ -113,6 +113,10 @@ class Config(Section):
             os.makedirs(configDir)
         configFilePath = os.path.join(configDir, "config.py")
         self._configFilePath = configFilePath
+        
+        # BUG: of the python function 'ExecFile'. It doesn't handle unicode
+        # filenames right.
+        configFilePath = configFilePath.encode(sys.getfilesystemencoding())
 
         if exists(configFilePath):
             try:

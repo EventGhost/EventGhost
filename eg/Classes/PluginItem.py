@@ -48,7 +48,7 @@ class PluginItem(ActionItem):
         if node.text:
             try:
                 args = pickle.loads(base64.b64decode(node.text))
-            except:
+            except AttributeError:
                 args = ()
         else:
             args = ()
@@ -65,6 +65,7 @@ class PluginItem(ActionItem):
         if info.icon != self.icon:
             self.icon = eg.Icons.PluginSubIcon(info.icon)
         #self.icon = info.icon
+        self.url = info.url
         self.executable = info.instance
 
 
@@ -85,8 +86,6 @@ class PluginItem(ActionItem):
     def SetAttributes(self, tree, itemId):
         if self.info.lastException or self.info.initFailed:
             tree.SetItemTextColour(itemId, eg.colour.pluginError)
-        else:
-            tree.SetItemTextColour(itemId, None)
 
 
     @eg.AssertInActionThread

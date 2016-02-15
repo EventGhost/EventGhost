@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of EventGhost.
+# This file is a plugin for EventGhost.
 # Copyright (C) 2005-2010 Lars-Peter Voss <bitmonster@eventghost.org>
 #
 # EventGhost is free software; you can redistribute it and/or modify it under
@@ -124,6 +124,6 @@ class Auvisio(eg.PluginBase):
             if data[0] == 1 and data[1] == 0:
                 self.TriggerEvent(BUTTONS2[data])
             else:
-            self.TriggerEnduringEvent(BUTTONS2[data])
+                self.TriggerEnduringEvent(BUTTONS2[data])
         else:
             self.EndLastEvent()

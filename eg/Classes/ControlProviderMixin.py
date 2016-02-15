@@ -80,7 +80,7 @@ class ControlProviderMixin:
 
     def RadioBox(self, value, choices, *args, **kwargs):
         kwargs["choices"] = choices
-        radioBox = eg.RadioBox(self, -1, *args, **kwargs)
+        radioBox = eg.RadioBox(self, *args, **kwargs)
         radioBox.SetValue(value)
         return radioBox
 

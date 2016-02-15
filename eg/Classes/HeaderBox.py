@@ -28,7 +28,7 @@ class HeaderBox(wx.PyWindow):
     The top description box of every tree item configuration dialog.
     """
 
-    def __init__(self, parent, name="", text="", icon=None):
+    def __init__(self, parent, name="", text="", icon=None, url=None):
         text = REPLACE_BR_TAG.sub('\n', text)
         text = REMOVE_HTML_PATTERN.sub('', text).strip()
         if text == name:
@@ -38,6 +38,8 @@ class HeaderBox(wx.PyWindow):
         self.SetBackgroundColour(
             wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW)
         )
+        if url:
+            self.text = eg.Utils.AppUrl(self.text, url)
 
         nameBox = wx.StaticText(self, -1, name)
         font = wx.Font(8, wx.SWISS, wx.NORMAL, wx.FONTWEIGHT_BOLD )

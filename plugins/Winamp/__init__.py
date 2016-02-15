@@ -1,22 +1,25 @@
-# This file is part of EventGhost.
+# -*- coding: utf-8 -*-
+#
 # This file is part of EventGhost.
 # Copyright (C) 2005-2009 Lars-Peter Voss <bitmonster@eventghost.org>
-# 
-# EventGhost is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
+#
+# EventGhost is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# EventGhost is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
 # You should have received a copy of the GNU General Public License
-# along with EventGhost; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
 # expose some information about the plugin through an eg.PluginInfo subclass
 eg.RegisterPlugin(
     name = "Winamp",
     author = "Bitmonster & blackwind & Matthew Jacob Edwards & Sem;colon",
-    version = "1.4.0",
+    version = "1.4.2",
     kind = "program",
     guid = "{4A22DD6A-5E2C-4500-90B4-47F5C58FD9CA}",
     createMacrosOnAdd = True,
@@ -45,34 +48,44 @@ eg.RegisterPlugin(
 import math
 from threading import Event, Thread
 from eg.WinApi import (
-    SendMessageTimeout, 
-    GetWindowText, 
-    FindWindow, 
-    WM_COMMAND, 
+    SendMessageTimeout,
+    GetWindowText,
+    FindWindow,
+    WM_COMMAND,
     WM_USER
 )
 from eg.WinApi.Utils import BringHwndToFront
+from time import sleep
+global sendWAActive
+sendWAActive=False
 
 # Next we define a prototype of an action, with some helper methods
 
 class ActionBase(eg.ActionClass):
-    
+
     def SendCommand(self, idMessage, wParam, lParam=0):
         """
-        Find Winamp's message window and send it a message with 
+        Find Winamp's message window and send it a message with
         SendMessageTimeout.
         """
+        global sendWAActive
+        while sendWAActive:
+          sleep(0.1)
+        sendWAActive =True
         try:
             hWinamp = FindWindow('Winamp v1.x')
-            return SendMessageTimeout(hWinamp, idMessage, wParam, lParam)
+            data = SendMessageTimeout(hWinamp, idMessage, wParam, lParam)
+            sendWAActive =False
+            return data
         except:
+            sendWAActive =False
             raise self.Exceptions.ProgramNotRunning
 
 
     def GetPlayingStatus(self):
         """
         Get the current status of Winamp.
-        
+
         The return value is one of the strings 'playing', 'paused' or 'stopped'.
         """
         iStatus = self.SendCommand(WM_USER, 0, 104)
@@ -145,7 +158,7 @@ class ActionBase(eg.ActionClass):
 # And now we define the actual plugin:
 
 class Winamp(eg.PluginClass):
-    
+
     class text:
         infoGroupName = "Scripting"
         infoGroupDescription = (
@@ -183,6 +196,7 @@ class Winamp(eg.PluginClass):
         self.AddAction(ChangeShuffleStatus)
         self.AddAction(SetVolume)
         self.AddAction(ChangeVolume)
+        self.AddAction(SetBalance)
         self.AddAction(JumpToFile)
         self.AddAction(ToggleAlwaysOnTop)
         self.AddAction(JumpToTime)
@@ -206,7 +220,7 @@ class Winamp(eg.PluginClass):
         
         
         group = self.AddGroup(
-            self.text.infoGroupName, 
+            self.text.infoGroupName,
             self.text.infoGroupDescription
         )
         group.AddAction(GetPlayingSongTitle)
@@ -214,6 +228,7 @@ class Winamp(eg.PluginClass):
         group.AddAction(GetRepeatTrackStatus)
         group.AddAction(GetShuffleStatus)
         group.AddAction(GetVolume)
+        group.AddAction(GetBalance)
         group.AddAction(GetSampleRate)
         group.AddAction(GetBitRate)
         group.AddAction(GetChannels)
@@ -263,20 +278,20 @@ class Winamp(eg.PluginClass):
             except:
                 if self.oldPlayerStatus!=0:
                   self.oldPlayerStatus=0
-                  self.TriggerEvent("Status Changed.Off")
+                  self.TriggerEvent("Status.Changed.Off")
             stopThreadEvent.wait(0.5)
 # Here we define our first action. Actions are always subclasses of
 # ActionBase.
 
 class TogglePlay(ActionBase):
-    # We start with a descriptive definition of the member-variables 'name' 
-    # and 'description'. 
+    # We start with a descriptive definition of the member-variables 'name'
+    # and 'description'.
     #
     # 'name' is shown as the action's name in the add-action-dialog
     # 'description' is used as a help-string for the user
     name = "Toggle Play"
     description = "Toggles between play and pause of Winamp."
-    
+
     # Every action should have a __call__ method that will do the actual work
     # of the action.
     def __call__(self):
@@ -286,8 +301,8 @@ class TogglePlay(ActionBase):
         else:
             # Pause
             return self.SendCommand(WM_COMMAND, 40046)
-    
-    
+
+
 # The remaining actions all follow the same pattern:
 #   1. Define a subclass of ActionBase.
 #   2. Add a descriptive 'name' and 'description' member-variable.
@@ -298,14 +313,14 @@ class Play(ActionBase):
     # If we don't define a 'name' member, EventGhost creates one with the
     # class-name as content.
     description = "Simulate a press on the play button."
-    
+
     def __call__(self):
         return self.SendCommand(WM_COMMAND, 40045)
 
 
 class Pause(ActionBase):
     description = "Simulate a press on the pause button."
-    
+
     def __call__(self):
         return self.SendCommand(WM_COMMAND, 40046)
 
@@ -316,7 +331,7 @@ class DiscretePause(ActionBase):
         "Pauses Winamp if it is playing, but won't do anything if "
         "Winamp is already paused."
     )
-    
+
     def __call__(self):
         if self.GetPlayingStatus() == "playing":
             return self.SendCommand(WM_COMMAND, 40046)
@@ -324,7 +339,7 @@ class DiscretePause(ActionBase):
 
 class Stop(ActionBase):
     description = "Simulate a press on the stop button."
-    
+
     def __call__(self):
         return self.SendCommand(WM_COMMAND, 40047)
 
@@ -332,7 +347,7 @@ class Stop(ActionBase):
 class PreviousTrack(ActionBase):
     name = "Previous Track"
     description = "Simulate a press on the previous track button."
-    
+
     def __call__(self):
         return self.SendCommand(WM_COMMAND, 40044)
 
@@ -340,7 +355,7 @@ class PreviousTrack(ActionBase):
 class NextTrack(ActionBase):
     name = "Next Track"
     description = "Simulate a press on the next track button."
-    
+
     def __call__(self):
         return self.SendCommand(WM_COMMAND, 40048)
 
@@ -348,7 +363,7 @@ class NextTrack(ActionBase):
 class FastForward(ActionBase):
     name = "Fast Forward"
     description = "Fast-forward 5 seconds."
-    
+
     def __call__(self):
         return self.SendCommand(WM_COMMAND, 40148)
 
@@ -356,7 +371,7 @@ class FastForward(ActionBase):
 class FastRewind(ActionBase):
     name = "Fast Rewind"
     description = "Fast-rewind 5 seconds."
-    
+
     def __call__(self):
         return self.SendCommand(WM_COMMAND, 40144)
 
@@ -364,7 +379,7 @@ class FastRewind(ActionBase):
 class Fadeout(ActionBase):
     name = "Stop w/ Fadeout"
     description = "Fade out and stop."
-    
+
     def __call__(self):
         return self.SendCommand(WM_COMMAND, 40147)
 
@@ -372,7 +387,7 @@ class Fadeout(ActionBase):
 class VolumeUp(ActionBase):
     name = "Volume Up"
     description = "Raises Winamp's volume by 1%."
-    
+
     def __call__(self):
         return self.SendCommand(WM_COMMAND, 40058)
 
@@ -380,7 +395,7 @@ class VolumeUp(ActionBase):
 class VolumeDown(ActionBase):
     name = "Volume Down"
     description = "Lower Winamp's volume by 1%."
-    
+
     def __call__(self):
         return self.SendCommand(WM_COMMAND, 40059)
 
@@ -388,7 +403,7 @@ class VolumeDown(ActionBase):
 class Exit(ActionBase):
     name = "Exit"
     description = "Closes Winamp."
-    
+
     def __call__(self):
         return self.SendCommand(WM_COMMAND, 40001)
 
@@ -396,7 +411,7 @@ class Exit(ActionBase):
 class ShowFileinfo(ActionBase):
     name = "Show File Info"
     description = "Opens file info box."
-    
+
     def __call__(self):
         return self.SendCommand(WM_COMMAND, 40188)
 
@@ -404,7 +419,7 @@ class ShowFileinfo(ActionBase):
 class ChooseFile(ActionBase):
     name = "Choose File"
     description = "Opens the file dialog."
-    
+
     def __call__(self):
         return self.SendCommand(WM_COMMAND, 40029)
 
@@ -412,7 +427,7 @@ class ChooseFile(ActionBase):
 class ExVis(ActionBase):
     name = "Execute Visualization"
     description = "Execute current visualization plug-in."
-    
+
     def __call__(self):
         return self.SendCommand(WM_COMMAND, 40192)
 
@@ -420,7 +435,7 @@ class ExVis(ActionBase):
 class ToggleShuffle(ActionBase, eg.HiddenAction):
     name = "Toggle Shuffle"
     description = "Toggles Shuffle."
-    
+
     def __call__(self):
         return self.SendCommand(WM_COMMAND, 40023)
 
@@ -428,7 +443,7 @@ class ToggleShuffle(ActionBase, eg.HiddenAction):
 class ToggleRepeat(ActionBase, eg.HiddenAction):
     name = "Toggle Repeat"
     description = "Toggles Repeat."
-    
+
     def __call__(self):
         return self.SendCommand(WM_COMMAND, 40022)
 
@@ -491,11 +506,11 @@ class ChangeRepeatStatus(ActionBase):
         description = "Changes the repeat playlist status."
         radioBoxLabel = "Option"
         radioBoxOptions = [
-            "Clear Repeat", 
+            "Clear Repeat",
             "Set Repeat",
-            "Toggle Repeat", 
+            "Toggle Repeat",
         ]
-        
+
     def __call__(self, data=0):
         return self.SetRepeat(data)
 
@@ -507,20 +522,20 @@ class ChangeRepeatStatus(ActionBase):
     def Configure(self, data=0):
         panel = eg.ConfigPanel()
         radioBox = wx.RadioBox(
-            panel, 
+            panel,
             label=self.text.radioBoxLabel,
             choices=self.text.radioBoxOptions,
-            style=wx.RA_SPECIFY_ROWS 
+            style=wx.RA_SPECIFY_ROWS
         )
         radioBox.SetSelection(data)
         panel.sizer.Add(radioBox, 0, wx.EXPAND)
         while panel.Affirmed():
             panel.SetResult(radioBox.GetSelection())
-        
-        
+
+
 # The following action is a subclass of ChangeRepeatStatus, so it inherits
 # the configuration dialog.
-        
+
 class ChangeRepeatTrackStatus(ChangeRepeatStatus):
     class text:
         name = "Change Repeat Track Status"
@@ -543,20 +558,20 @@ class ChangeShuffleStatus(ChangeRepeatStatus):
         description = "Changes the shuffle status."
         radioBoxLabel = "Option"
         radioBoxOptions = [
-            "Clear Shuffle", 
+            "Clear Shuffle",
             "Set Shuffle",
-            "Toggle Shuffle", 
+            "Toggle Shuffle",
         ]
-        
 
-    def __call__(self,data):
+
+    def __call__(self, data):
         return self.SetShuffle(data)
 
         
 class GetPlayingSongTitle(ActionBase):
     name = "Get Playing Song Title"
     description = "Gets the currently playing song title."
-    
+
     def __call__(self):         #-- v2.0
         try:
             hWnd = FindWindow("Winamp v1.x")
@@ -568,7 +583,7 @@ class GetPlayingSongTitle(ActionBase):
             strWinAmpTitle = sx[1] + sx[0]
         except:
             pass
-        
+
         strWinAmpTitle = strWinAmpTitle.replace("*","").strip()
         strWinAmpTitle = strWinAmpTitle.replace(" - Winamp", "")
         strWinAmpTitle = strWinAmpTitle.replace(" [Stopped]", "")
@@ -581,13 +596,13 @@ class GetPlayingSongTitle(ActionBase):
             strWinAmpTitle = strWinAmpTitle[decPos + 2:]
 
         strWinAmpTitle = strWinAmpTitle.strip()
-        return strWinAmpTitle        
-        
-        
+        return strWinAmpTitle
+
+
 class GetVolume(ActionBase):
     name = "Get Volume Level"
     description = "Gets the volume level as a percentage (%)."
-    
+
     def __call__(self):
         volume = self.SendCommand(WM_WA_IPC, -666, WA_SETVOLUME)
         if volume is None:
@@ -602,7 +617,7 @@ class SetVolume(ActionBase):
         text1 = "Set volume to"
         text2 = "percent."
         label = "Set Volume to %.2f %%"
-    
+
     def __call__(self, volume):
         self.SendCommand(WM_WA_IPC, int(math.ceil(volume * 2.55)), WA_SETVOLUME)
         return volume
@@ -610,25 +625,25 @@ class SetVolume(ActionBase):
 
     def GetLabel(self, percentage):
         return self.text.label % percentage
-        
-        
+
+
     def Configure(self, percentage=1.0):
         panel = eg.ConfigPanel()
         valueCtrl = panel.SpinNumCtrl(percentage, min=-100, max=100)
         panel.AddLine(self.text.text1, valueCtrl, self.text.text2)
         while panel.Affirmed():
             panel.SetResult(float(valueCtrl.GetValue()))
-        
-        
-class ChangeVolume(ActionBase):      
+
+
+class ChangeVolume(ActionBase):
     name = "Change Volume Level"
     description = "Changes the volume relative to the current value."
     class text:
         text1 = "Change volume by"
         text2 = "percent."
         label = "Change Volume by %.2f %%"
-        
-    def __call__(self, percentage=1.0):  
+
+    def __call__(self, percentage=1.0):
         volume = self.SendCommand(WM_WA_IPC, -666, WA_SETVOLUME)
         if volume is None:
             return
@@ -639,12 +654,12 @@ class ChangeVolume(ActionBase):
             volume = 100.0
         self.SendCommand(WM_WA_IPC, int(math.ceil(volume * 2.55)), WA_SETVOLUME)
         return volume
-        
-        
+
+
     def GetLabel(self, percentage):
         return self.text.label % percentage
-        
-        
+
+
     def Configure(self, percentage=1.0):
         panel = eg.ConfigPanel()
         valueCtrl = panel.SpinNumCtrl(percentage, min=-100, max=100)
@@ -652,6 +667,46 @@ class ChangeVolume(ActionBase):
         while panel.Affirmed():
             panel.SetResult(float(valueCtrl.GetValue()))
   
+
+
+class GetBalance(ActionBase):
+    name = "Get Balance Value"
+    description = "Gets the balance between right and left chennel in percent (%) right."
+
+    def __call__(self):
+        balance = self.SendCommand(WM_WA_IPC, -666, WA_SETBALANCE)
+        if balance is None:
+            return
+        else:
+            if balance>128:
+                balance-=4294967296
+        return math.floor(balance / 1.27)
+
+
+class SetBalance(ActionBase):
+    name = "Set Balance Value"
+    description = "Sets the balance to a specific value in percent (%) right."
+    class text:
+        text1 = "Set balance to"
+        text2 = "percent right."
+        label = "Set Balance to %.2f %%"
+
+    def __call__(self, balance):
+        self.SendCommand(WM_WA_IPC, int(math.ceil(balance * 1.27)), WA_SETBALANCE)
+        return balance
+
+
+    def GetLabel(self, percentage):
+        return self.text.label % percentage
+
+
+    def Configure(self, percentage=0.0):
+        panel = eg.ConfigPanel()
+        valueCtrl = panel.SpinNumCtrl(percentage, min=-100, max=100)
+        panel.AddLine(self.text.text1, valueCtrl, self.text.text2)
+        while panel.Affirmed():
+            panel.SetResult(float(valueCtrl.GetValue()))            
+
          
         
 class JumpToTime(ActionBase):
@@ -717,10 +772,10 @@ class GetShuffleStatus(ActionBase):
 class GetRepeatStatus(ActionBase):
     name = "Get Repeat Status"
     description = "Gets the repeat playlist status: 1 = repeat on, 0 = repeat off."
-        
+
     def __call__(self):
         return self.GetRepeat()
-    
+
 
 class GetRepeatTrackStatus(ActionBase):
     name = "Get Repeat Track Status"
@@ -729,39 +784,39 @@ class GetRepeatTrackStatus(ActionBase):
     def __call__(self):
         return self.GetRepeatTrack()
 
-      
+
 class GetShuffleStatus(ActionBase):
     name = "Get Shuffle Status"
     description = "Gets the shuffle status: 1 = shuffle on, 0 = shuffle off."
-            
+
     def __call__(self):
         return self.GetShuffle()
 
 
 class GetSampleRate(ActionBase):
     name = "Get Sample Rate"
-    description = "Gets the sample rate (khz) of the currently playing song."
-    
+    description = "Gets the sample rate (kHz) of the currently playing song."
+
     def __call__(self):
         return self.SendCommand(WM_WA_IPC, 0, WA_GETINFO)
 
-        
+
 class GetBitRate(ActionBase):
     name = "Get Bit Rate"
     description = "Gets the bit rate (kbps) of the currently playing song."
-    
+
     def __call__(self):
         return self.SendCommand(WM_WA_IPC, 1, WA_GETINFO)
 
-        
+
 class GetChannels(ActionBase):
     name = "Get Channels"
     description = "Gets the # of channels (mono,stereo) of the currently playing song."
-    
+
     def __call__(self):
         return self.SendCommand(WM_WA_IPC, 2, WA_GETINFO)
 
-        
+
 class GetPosition(ActionBase):
     name = "Get Playlist Position"
     description = (
@@ -772,23 +827,23 @@ class GetPosition(ActionBase):
     def __call__(self):
         intReturn = self.SendCommand(WM_WA_IPC, 0, WA_GETLISTPOS)
         if intReturn is not None:
-            return intReturn + 1 
+            return intReturn + 1
         else:
             return None
 
-        
+
 class GetLength(ActionBase):
     name = "Get Playlist Length"
     description = "Gets the number of songs in the playlist."
-    
+
     def __call__(self):
         return self.SendCommand(WM_WA_IPC, 0, WA_GETLISTLENGTH)
 
-        
+
 class GetElapsed(ActionBase):
     name = "Get Song Elapsed"
     description = "Gets the elapsed time, in seconds, into the currently playing song."
-    
+
     def __call__(self):
         intReturn = self.SendCommand(WM_WA_IPC, 0, WA_GETOUTPUTTIME)
         if intReturn is not None:
@@ -796,15 +851,15 @@ class GetElapsed(ActionBase):
         else:
             return None
 
-        
+
 class GetDuration(ActionBase):
     name = "Get Song Duration"
     description = "Gets the duration, in seconds, of the currently playing song."
-    
+
     def __call__(self):
         return self.SendCommand(WM_WA_IPC, 1, WA_GETOUTPUTTIME)
 
-        
+
 class GetPlayingStatusNow(ActionBase):
     name = "Get Play Status"
     description = "Gets the play status, returns \"playing\", \"paused\" or \"stopped\"."
@@ -880,7 +935,7 @@ class Command(ActionBase):
 
 class ChangeEQBand(ActionBase):
     name = "Change EQ Band"
-    description = "Changes the value of one specific EQ Band: -31 = min/-12db, 32 = max/+12db"
+    description = "Changes the value of one specific EQ Band: -31 = min/-12db, 31 = max/+12db"
     class text:
         text1 = "Band Number:"
         text2 = "New Value:"
@@ -898,7 +953,7 @@ class ChangeEQBand(ActionBase):
     def Configure(self, band=1, value=0):
         panel = eg.ConfigPanel()
         valueCtrl1 = panel.SpinIntCtrl(band, min=1, max=10)
-        valueCtrl2 = panel.SpinIntCtrl(value, min=-31, max=32)
+        valueCtrl2 = panel.SpinIntCtrl(value, min=-31, max=31)
         panel.AddLine(self.text.text1, valueCtrl1)
         panel.AddLine(self.text.text2, valueCtrl2)
         while panel.Affirmed():
@@ -907,7 +962,7 @@ class ChangeEQBand(ActionBase):
             
 class ChangeEQPreamp(ActionBase):
     name = "Change EQ Preamplification"
-    description = "Changes the EQ preamplification value: -31 = min/-12db, 32 = max/+12db"
+    description = "Changes the EQ preamplification value: -31 = min/-12db, 31 = max/+12db"
     class text:
         text1 = "New Value:"
     
@@ -919,10 +974,10 @@ class ChangeEQPreamp(ActionBase):
         
     def Configure(self, value=0):
         panel = eg.ConfigPanel()
-        valueCtrl = panel.SpinIntCtrl(value, min=-31, max=32)
+        valueCtrl = panel.SpinIntCtrl(value, min=-31, max=31)
         panel.AddLine(self.text.text1, valueCtrl)
         while panel.Affirmed():
-            panel.SetResult(valueCtrl1.GetValue())
+            panel.SetResult(valueCtrl.GetValue())
 
         
 class ResetAllEQBands(ActionBase):
@@ -987,12 +1042,12 @@ class GetEQAutoloadStatus(ActionBase):
         
 class GetEQBand(ActionBase):
     name = "Get EQ Band Value"
-    description = "Gets the value of one specific EQ Band: -31 = min/-12db, 32 = max/+12db"
+    description = "Gets the value of one specific EQ Band: -31 = min/-12db, 31 = max/+12db"
     class text:
         text1 = "Band Number:"
     
     def __call__(self, band=1):
-        return self.SendCommand(WM_WA_IPC, band-1, WA_GETEQDATA)
+        return (int(self.SendCommand(WM_WA_IPC, band-1, WA_GETEQDATA))-31)*-1
         
     def Configure(self, band=1):
         panel = eg.ConfigPanel()
@@ -1004,8 +1059,8 @@ class GetEQBand(ActionBase):
         
 class GetEQPreamp(ActionBase):
     name = "Get EQ Preamp Value"
-    description = "Gets the EQ preamp value: -31 = min/-12db, 32 = max/+12db"
+    description = "Gets the EQ preamp value: -31 = min/-12db, 31 = max/+12db"
 
     def __call__(self):
-        return self.SendCommand(WM_WA_IPC, 10, WA_GETEQDATA)
+        return (int(self.SendCommand(WM_WA_IPC, 10, WA_GETEQDATA))-31)*-1
         

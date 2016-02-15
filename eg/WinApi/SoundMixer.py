@@ -255,21 +255,22 @@ def GetDeviceId(deviceId, strVal=False):
     if isinstance(deviceId, int):
         if strVal:
             devices = GetMixerDevices()
-            if deviceId < len(devices) and deviceId > -1:
+            if deviceId < len(devices)-1 and deviceId > -1:
                 return devices[deviceId]
             else:
-                return devices[0]
+                raise SoundMixerException()
         else:
             return deviceId
     else:
-        if strVal:
-            return deviceId
-        else:
-            devices = GetMixerDevices(True)
-            if deviceId in devices:
-                return devices.index(deviceId) - 1
+        deviceId = deviceId[:31]
+        devices = GetMixerDevices(True)
+        if deviceId in devices:
+            if strVal:
+                return deviceId
             else:
-                return 0
+                return devices.index(deviceId) - 1
+        else:
+            raise SoundMixerException()
 
 
 def GetDeviceLines(deviceId=0):

@@ -216,7 +216,8 @@ class AddPluginDialog(eg.TaskletDialog):
             self.versionText.SetLabel(info.version)
             self.okButton.Enable(True)
         self.nameText.SetLabel(name)
-        self.descrBox.SetPage(description)
+        url = info.url if info else None
+        self.descrBox.SetPage(eg.Utils.AppUrl(description, url))
 
 
     def CheckMultiload(self):
